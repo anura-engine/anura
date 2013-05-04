@@ -1,0 +1,573 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{3CB048B6-E289-404D-914B-03A65D7E4CDF}</ProjectGuid>
+    <RootNamespace>Frogatto</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>false</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>v110</PlatformToolset>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+    <PlatformToolset>Windows7.1SDK</PlatformToolset>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <OutDir>$(SolutionDir)$(Configuration)\$(Platform)\</OutDir>
+    <IntDir>$(Platform)\$(Configuration)\</IntDir>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;USE_BOX2D;USE_GLES2;UTILITY_IN_PROC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
+      <AdditionalIncludeDirectories>..\..\..\zlib-1.2.7;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost_1_50_0;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <StackReserveSize>10000000</StackReserveSize>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;USE_BOX2D;USE_GLES2;UTILITY_IN_PROC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <BasicRuntimeChecks>Default</BasicRuntimeChecks>
+      <AdditionalIncludeDirectories>..\..\..\zlib-1.2.7;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost_1_50_0;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <SubSystem>Windows</SubSystem>
+      <StackReserveSize>10000000</StackReserveSize>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_GLES2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <DisableSpecificWarnings>4250</DisableSpecificWarnings>
+      <ExceptionHandling>SyncCThrow</ExceptionHandling>
+      <AdditionalIncludeDirectories>..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Console</SubSystem>
+      <StackReserveSize>10000000</StackReserveSize>
+      <IgnoreSpecificDefaultLibraries>libcmt</IgnoreSpecificDefaultLibraries>
+      <AdditionalLibraryDirectories>..\..\..\glew-1.9.0\build\vc10\shared\release;..\..\..\SDL_ttf\VisualC\Release;..\..\..\SDL_mixer\VisualC\Release;..\..\..\SDL_image\VisualC\Win32\Release;..\..\..\SDL\VisualC\SDL\Win32\Release;..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release;..\..\..\zlib;..\..\..\lpng160;..\..\..\boost\stage32-release-static\lib</AdditionalLibraryDirectories>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;USE_BOX2D;USE_GLES2;UTILITY_IN_PROC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <StringPooling>true</StringPooling>
+      <AdditionalIncludeDirectories>..\..\..\zlib-1.2.7;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost_1_50_0;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <SubSystem>Windows</SubSystem>
+      <StackReserveSize>10000000</StackReserveSize>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\..\anura\src\achievements.hpp" />
+    <ClInclude Include="..\..\..\anura\src\animation_creator.hpp" />
+    <ClInclude Include="..\..\..\anura\src\animation_preview_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\animation_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\asserts.hpp" />
+    <ClInclude Include="..\..\..\anura\src\b2d_ffl.hpp" />
+    <ClInclude Include="..\..\..\anura\src\background.hpp" />
+    <ClInclude Include="..\..\..\anura\src\background_task_pool.hpp" />
+    <ClInclude Include="..\..\..\anura\src\blur.hpp" />
+    <ClInclude Include="..\..\..\anura\src\border_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\button.hpp" />
+    <ClInclude Include="..\..\..\anura\src\character_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\checkbox.hpp" />
+    <ClInclude Include="..\..\..\anura\src\checksum.hpp" />
+    <ClInclude Include="..\..\..\anura\src\clipboard.hpp" />
+    <ClInclude Include="..\..\..\anura\src\code_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\code_editor_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\collision_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\color_chart.hpp" />
+    <ClInclude Include="..\..\..\anura\src\color_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\compat.hpp" />
+    <ClInclude Include="..\..\..\anura\src\concurrent_cache.hpp" />
+    <ClInclude Include="..\..\..\anura\src\controls.hpp" />
+    <ClInclude Include="..\..\..\anura\src\controls_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\current_generator.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object_callable.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object_functions.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object_type.hpp" />
+    <ClInclude Include="..\..\..\anura\src\custom_object_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\debug_console.hpp" />
+    <ClInclude Include="..\..\..\anura\src\decimal.hpp" />
+    <ClInclude Include="..\..\..\anura\src\dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\difficulty.hpp" />
+    <ClInclude Include="..\..\..\anura\src\drag_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\draw_number.hpp" />
+    <ClInclude Include="..\..\..\anura\src\draw_primitive.hpp" />
+    <ClInclude Include="..\..\..\anura\src\draw_scene.hpp" />
+    <ClInclude Include="..\..\..\anura\src\draw_tile.hpp" />
+    <ClInclude Include="..\..\..\anura\src\dropdown_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_dialogs.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_formula_functions.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_layers_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_level_properties_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_module_properties_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_stats_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\editor_variable_info.hpp" />
+    <ClInclude Include="..\..\..\anura\src\eglport.h" />
+    <ClInclude Include="..\..\..\anura\src\entity.hpp" />
+    <ClInclude Include="..\..\..\anura\src\entity_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\external_text_editor.hpp" />
+    <ClInclude Include="..\..\..\anura\src\filesystem.hpp" />
+    <ClInclude Include="..\..\..\anura\src\file_chooser_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\font.hpp" />
+    <ClInclude Include="..\..\..\anura\src\foreach.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formatter.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_callable.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_callable_definition.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_callable_definition_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_callable_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_constants.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_function.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_function_registry.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_profiler.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_tokenizer.hpp" />
+    <ClInclude Include="..\..\..\anura\src\formula_variable_storage.hpp" />
+    <ClInclude Include="..\..\..\anura\src\frame.hpp" />
+    <ClInclude Include="..\..\..\anura\src\framed_gui_element.hpp" />
+    <ClInclude Include="..\..\..\anura\src\functional.hpp" />
+    <ClInclude Include="..\..\..\anura\src\game_registry.hpp" />
+    <ClInclude Include="..\..\..\anura\src\geometry.hpp" />
+    <ClInclude Include="..\..\..\anura\src\gles2.hpp" />
+    <ClInclude Include="..\..\..\anura\src\globals.h" />
+    <ClInclude Include="..\..\..\anura\src\graphical_font.hpp" />
+    <ClInclude Include="..\..\..\anura\src\graphical_font_label.hpp" />
+    <ClInclude Include="..\..\..\anura\src\graphics.hpp" />
+    <ClInclude Include="..\..\..\anura\src\grid_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\grid_widget_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\group_property_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\gui_formula_functions.hpp" />
+    <ClInclude Include="..\..\..\anura\src\gui_section.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hex_map.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hex_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hex_object_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hex_tile.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hex_tileset_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\hi_res_timer.hpp" />
+    <ClInclude Include="..\..\..\anura\src\http_client.hpp" />
+    <ClInclude Include="..\..\..\anura\src\http_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\i18n.hpp" />
+    <ClInclude Include="..\..\..\anura\src\image_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\image_widget_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\IMG_savepng.h" />
+    <ClInclude Include="..\..\..\anura\src\input.hpp" />
+    <ClInclude Include="..\..\..\anura\src\ipc.hpp" />
+    <ClInclude Include="..\..\..\anura\src\iphone_controls.hpp" />
+    <ClInclude Include="..\..\..\anura\src\iphone_device_info.h" />
+    <ClInclude Include="..\..\..\anura\src\iphone_sound.h" />
+    <ClInclude Include="..\..\..\anura\src\joystick.hpp" />
+    <ClInclude Include="..\..\..\anura\src\json_parser.hpp" />
+    <ClInclude Include="..\..\..\anura\src\json_tokenizer.hpp" />
+    <ClInclude Include="..\..\..\anura\src\key_button.hpp" />
+    <ClInclude Include="..\..\..\anura\src\label.hpp" />
+    <ClInclude Include="..\..\..\anura\src\language_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\level.hpp" />
+    <ClInclude Include="..\..\..\anura\src\level_logic.hpp" />
+    <ClInclude Include="..\..\..\anura\src\level_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\level_runner.hpp" />
+    <ClInclude Include="..\..\..\anura\src\level_solid_map.hpp" />
+    <ClInclude Include="..\..\..\anura\src\light.hpp" />
+    <ClInclude Include="..\..\..\anura\src\loading_screen.hpp" />
+    <ClInclude Include="..\..\..\anura\src\map_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\md5.hpp" />
+    <ClInclude Include="..\..\..\anura\src\message_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\module.hpp" />
+    <ClInclude Include="..\..\..\anura\src\module_web_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\movement_script.hpp" />
+    <ClInclude Include="..\..\..\anura\src\multiplayer.hpp" />
+    <ClInclude Include="..\..\..\anura\src\multi_tile_pattern.hpp" />
+    <ClInclude Include="..\..\..\anura\src\object_events.hpp" />
+    <ClInclude Include="..\..\..\anura\src\of_bridge.h" />
+    <ClInclude Include="..\..\..\anura\src\options_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\particle_system.hpp" />
+    <ClInclude Include="..\..\..\anura\src\pathfinding.hpp" />
+    <ClInclude Include="..\..\..\anura\src\pause_game_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\playable_custom_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\player_info.hpp" />
+    <ClInclude Include="..\..\..\anura\src\point_map.hpp" />
+    <ClInclude Include="..\..\..\anura\src\poly_line_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\preferences.hpp" />
+    <ClInclude Include="..\..\..\anura\src\preprocessor.hpp" />
+    <ClInclude Include="..\..\..\anura\src\preview_tileset_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\progress_bar.hpp" />
+    <ClInclude Include="..\..\..\anura\src\property_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\random.hpp" />
+    <ClInclude Include="..\..\..\anura\src\raster.hpp" />
+    <ClInclude Include="..\..\..\anura\src\raster_distortion.hpp" />
+    <ClInclude Include="..\..\..\anura\src\rectangle_rotator.hpp" />
+    <ClInclude Include="..\..\..\anura\src\reference_counted_object.hpp" />
+    <ClInclude Include="..\..\..\anura\src\regex_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\rich_text_label.hpp" />
+    <ClInclude Include="..\..\..\anura\src\SampleOFDelegate.h" />
+    <ClInclude Include="..\..\..\anura\src\scoped_resource.hpp" />
+    <ClInclude Include="..\..\..\anura\src\scrollable_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\scrollbar_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\SDLMain.h" />
+    <ClInclude Include="..\..\..\anura\src\segment_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\selector_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\settings_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\shaders.hpp" />
+    <ClInclude Include="..\..\..\anura\src\slider.hpp" />
+    <ClInclude Include="..\..\..\anura\src\solid_map.hpp" />
+    <ClInclude Include="..\..\..\anura\src\solid_map_fwd.hpp" />
+    <ClInclude Include="..\..\..\anura\src\sound.hpp" />
+    <ClInclude Include="..\..\..\anura\src\speech_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\stats.hpp" />
+    <ClInclude Include="..\..\..\anura\src\stats_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\stats_web_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\string_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\surface.hpp" />
+    <ClInclude Include="..\..\..\anura\src\surface_cache.hpp" />
+    <ClInclude Include="..\..\..\anura\src\surface_formula.hpp" />
+    <ClInclude Include="..\..\..\anura\src\surface_palette.hpp" />
+    <ClInclude Include="..\..\..\anura\src\surface_scaling_generated.hpp" />
+    <ClInclude Include="..\..\..\anura\src\sys.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_ai_player.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_bot.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_client.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_functions.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_game.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_internal_client.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_internal_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_server_base.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tbs_web_server.hpp" />
+    <ClInclude Include="..\..\..\anura\src\texture.hpp" />
+    <ClInclude Include="..\..\..\anura\src\texture_frame_buffer.hpp" />
+    <ClInclude Include="..\..\..\anura\src\text_editor_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\thread.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tileset_editor_dialog.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tile_map.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tooltip.hpp" />
+    <ClInclude Include="..\..\..\anura\src\translate.hpp" />
+    <ClInclude Include="..\..\..\anura\src\tree_view_widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\unit_test.hpp" />
+    <ClInclude Include="..\..\..\anura\src\userevents.h" />
+    <ClInclude Include="..\..\..\anura\src\utility_query.hpp" />
+    <ClInclude Include="..\..\..\anura\src\utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\variant.hpp" />
+    <ClInclude Include="..\..\..\anura\src\variant_callable.hpp" />
+    <ClInclude Include="..\..\..\anura\src\variant_utils.hpp" />
+    <ClInclude Include="..\..\..\anura\src\vecmath.hpp" />
+    <ClInclude Include="..\..\..\anura\src\vector_text.hpp" />
+    <ClInclude Include="..\..\..\anura\src\water.hpp" />
+    <ClInclude Include="..\..\..\anura\src\water_particle_system.hpp" />
+    <ClInclude Include="..\..\..\anura\src\weather_particle_system.hpp" />
+    <ClInclude Include="..\..\..\anura\src\widget.hpp" />
+    <ClInclude Include="..\..\..\anura\src\widget_factory.hpp" />
+    <ClInclude Include="..\..\..\anura\src\wml_formula_callable.hpp" />
+    <ClInclude Include="..\..\src\bar_widget.hpp" />
+    <ClInclude Include="..\..\src\data_blob.hpp" />
+    <ClInclude Include="..\..\src\fbo_scene.hpp" />
+    <ClInclude Include="..\..\src\variant_type.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\..\anura\src\achievements.cpp" />
+    <ClCompile Include="..\..\..\anura\src\animation_creator.cpp" />
+    <ClCompile Include="..\..\..\anura\src\animation_preview_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\animation_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\asserts.cpp" />
+    <ClCompile Include="..\..\..\anura\src\b2d_ffl.cpp" />
+    <ClCompile Include="..\..\..\anura\src\background.cpp" />
+    <ClCompile Include="..\..\..\anura\src\background_task_pool.cpp" />
+    <ClCompile Include="..\..\..\anura\src\base64.cpp" />
+    <ClCompile Include="..\..\..\anura\src\blur.cpp" />
+    <ClCompile Include="..\..\..\anura\src\border_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\button.cpp" />
+    <ClCompile Include="..\..\..\anura\src\character_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\checkbox.cpp" />
+    <ClCompile Include="..\..\..\anura\src\checksum.cpp" />
+    <ClCompile Include="..\..\..\anura\src\clipboard.cpp" />
+    <ClCompile Include="..\..\..\anura\src\code_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\code_editor_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\collision_utils.cpp" />
+    <ClCompile Include="..\..\..\anura\src\color_chart.cpp" />
+    <ClCompile Include="..\..\..\anura\src\color_utils.cpp" />
+    <ClCompile Include="..\..\..\anura\src\compress.cpp" />
+    <ClCompile Include="..\..\..\anura\src\controls.cpp" />
+    <ClCompile Include="..\..\..\anura\src\controls_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\current_generator.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object_callable.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object_functions.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object_type.cpp" />
+    <ClCompile Include="..\..\..\anura\src\custom_object_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\debug_console.cpp" />
+    <ClCompile Include="..\..\..\anura\src\decimal.cpp" />
+    <ClCompile Include="..\..\..\anura\src\dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\difficulty.cpp" />
+    <ClCompile Include="..\..\..\anura\src\drag_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\draw_number.cpp" />
+    <ClCompile Include="..\..\..\anura\src\draw_primitive.cpp" />
+    <ClCompile Include="..\..\..\anura\src\draw_scene.cpp" />
+    <ClCompile Include="..\..\..\anura\src\draw_tile.cpp" />
+    <ClCompile Include="..\..\..\anura\src\dropdown_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_dialogs.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_formula_functions.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_layers_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_level_properties_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_module_properties_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_stats_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\editor_variable_info.cpp" />
+    <ClCompile Include="..\..\..\anura\src\entity.cpp" />
+    <ClCompile Include="..\..\..\anura\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\..\anura\src\filesystem-android.cpp" />
+    <ClCompile Include="..\..\..\anura\src\filesystem.cpp" />
+    <ClCompile Include="..\..\..\anura\src\file_chooser_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\font.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_callable_definition.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_constants.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_function.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_function_registry.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_object.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_profiler.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_test.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_tokenizer.cpp" />
+    <ClCompile Include="..\..\..\anura\src\formula_variable_storage.cpp" />
+    <ClCompile Include="..\..\..\anura\src\frame.cpp" />
+    <ClCompile Include="..\..\..\anura\src\framed_gui_element.cpp" />
+    <ClCompile Include="..\..\..\anura\src\game_registry.cpp" />
+    <ClCompile Include="..\..\..\anura\src\geometry.cpp" />
+    <ClCompile Include="..\..\..\anura\src\gles2.cpp" />
+    <ClCompile Include="..\..\..\anura\src\globals.cpp" />
+    <ClCompile Include="..\..\..\anura\src\graphical_font.cpp" />
+    <ClCompile Include="..\..\..\anura\src\graphical_font_label.cpp" />
+    <ClCompile Include="..\..\..\anura\src\grid_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\group_property_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\gui_formula_functions.cpp" />
+    <ClCompile Include="..\..\..\anura\src\gui_section.cpp" />
+    <ClCompile Include="..\..\..\anura\src\hex_map.cpp" />
+    <ClCompile Include="..\..\..\anura\src\hex_object.cpp" />
+    <ClCompile Include="..\..\..\anura\src\hex_tile.cpp" />
+    <ClCompile Include="..\..\..\anura\src\hex_tileset_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\http_client.cpp" />
+    <ClCompile Include="..\..\..\anura\src\http_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\i18n.cpp" />
+    <ClCompile Include="..\..\..\anura\src\image_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\IMG_savepng.cpp" />
+    <ClCompile Include="..\..\..\anura\src\input.cpp" />
+    <ClCompile Include="..\..\..\anura\src\ipc.cpp" />
+    <ClCompile Include="..\..\..\anura\src\iphone_controls.cpp" />
+    <ClCompile Include="..\..\..\anura\src\joystick.cpp" />
+    <ClCompile Include="..\..\..\anura\src\json_parser.cpp" />
+    <ClCompile Include="..\..\..\anura\src\json_tokenizer.cpp" />
+    <ClCompile Include="..\..\..\anura\src\key_button.cpp" />
+    <ClCompile Include="..\..\..\anura\src\label.cpp" />
+    <ClCompile Include="..\..\..\anura\src\language_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\level.cpp" />
+    <ClCompile Include="..\..\..\anura\src\level_logic.cpp" />
+    <ClCompile Include="..\..\..\anura\src\level_object.cpp" />
+    <ClCompile Include="..\..\..\anura\src\level_runner.cpp" />
+    <ClCompile Include="..\..\..\anura\src\level_solid_map.cpp" />
+    <ClCompile Include="..\..\..\anura\src\light.cpp" />
+    <ClCompile Include="..\..\..\anura\src\loading_screen.cpp" />
+    <ClCompile Include="..\..\..\anura\src\load_level_nothread.cpp" />
+    <ClCompile Include="..\..\..\anura\src\main.cpp" />
+    <ClCompile Include="..\..\..\anura\src\md5.cpp" />
+    <ClCompile Include="..\..\..\anura\src\message_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\module.cpp" />
+    <ClCompile Include="..\..\..\anura\src\module_web_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\movement_script.cpp" />
+    <ClCompile Include="..\..\..\anura\src\multiplayer.cpp" />
+    <ClCompile Include="..\..\..\anura\src\multi_tile_pattern.cpp" />
+    <ClCompile Include="..\..\..\anura\src\object_events.cpp" />
+    <ClCompile Include="..\..\..\anura\src\options_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\particle_system.cpp" />
+    <ClCompile Include="..\..\..\anura\src\pathfinding.cpp" />
+    <ClCompile Include="..\..\..\anura\src\pause_game_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\playable_custom_object.cpp" />
+    <ClCompile Include="..\..\..\anura\src\player_info.cpp" />
+    <ClCompile Include="..\..\..\anura\src\preferences.cpp" />
+    <ClCompile Include="..\..\..\anura\src\preprocessor.cpp" />
+    <ClCompile Include="..\..\..\anura\src\preview_tileset_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\progress_bar.cpp" />
+    <ClCompile Include="..\..\..\anura\src\property_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\random.cpp" />
+    <ClCompile Include="..\..\..\anura\src\raster.cpp" />
+    <ClCompile Include="..\..\..\anura\src\raster_distortion.cpp" />
+    <ClCompile Include="..\..\..\anura\src\rectangle_rotator.cpp" />
+    <ClCompile Include="..\..\..\anura\src\rich_text_label.cpp" />
+    <ClCompile Include="..\..\..\anura\src\scrollable_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\scrollbar_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\segment_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\selector_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\settings_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\shaders.cpp" />
+    <ClCompile Include="..\..\..\anura\src\slider.cpp" />
+    <ClCompile Include="..\..\..\anura\src\solid_map.cpp" />
+    <ClCompile Include="..\..\..\anura\src\sound.cpp" />
+    <ClCompile Include="..\..\..\anura\src\speech_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\stats.cpp" />
+    <ClCompile Include="..\..\..\anura\src\stats_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\stats_server_main.cpp" />
+    <ClCompile Include="..\..\..\anura\src\stats_web_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\string_utils.cpp" />
+    <ClCompile Include="..\..\..\anura\src\surface.cpp" />
+    <ClCompile Include="..\..\..\anura\src\surface_cache.cpp" />
+    <ClCompile Include="..\..\..\anura\src\surface_formula.cpp" />
+    <ClCompile Include="..\..\..\anura\src\surface_palette.cpp" />
+    <ClCompile Include="..\..\..\anura\src\surface_scaling.cpp" />
+    <ClCompile Include="..\..\..\anura\src\sys.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_ai_player.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_bot.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_client.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_functions.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_game.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_internal_client.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_internal_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_server_base.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tbs_web_server.cpp" />
+    <ClCompile Include="..\..\..\anura\src\texture.cpp" />
+    <ClCompile Include="..\..\..\anura\src\texture_frame_buffer.cpp" />
+    <ClCompile Include="..\..\..\anura\src\text_editor_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\thread.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tileset_editor_dialog.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tile_map.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tooltip.cpp" />
+    <ClCompile Include="..\..\..\anura\src\translate.cpp" />
+    <ClCompile Include="..\..\..\anura\src\tree_view_widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\unit_test.cpp" />
+    <ClCompile Include="..\..\..\anura\src\utility_object_compiler.cpp" />
+    <ClCompile Include="..\..\..\anura\src\utility_query.cpp" />
+    <ClCompile Include="..\..\..\anura\src\utility_render_level.cpp" />
+    <ClCompile Include="..\..\..\anura\src\utils.cpp" />
+    <ClCompile Include="..\..\..\anura\src\variant.cpp" />
+    <ClCompile Include="..\..\..\anura\src\variant_callable.cpp" />
+    <ClCompile Include="..\..\..\anura\src\variant_utils.cpp" />
+    <ClCompile Include="..\..\..\anura\src\vector_text.cpp" />
+    <ClCompile Include="..\..\..\anura\src\water.cpp" />
+    <ClCompile Include="..\..\..\anura\src\water_particle_system.cpp" />
+    <ClCompile Include="..\..\..\anura\src\weather_particle_system.cpp" />
+    <ClCompile Include="..\..\..\anura\src\widget.cpp" />
+    <ClCompile Include="..\..\..\anura\src\widget_factory.cpp" />
+    <ClCompile Include="..\..\..\anura\src\wml_formula_callable.cpp" />
+    <ClCompile Include="..\..\src\bar_widget.cpp" />
+    <ClCompile Include="..\..\src\fbo_scene.cpp" />
+    <ClCompile Include="..\..\src\variant_type.cpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="..\..\..\anura\src\anura-resouces.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Library Include="..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
+    <Library Include="..\..\..\glew-1.9.0\lib\glew32s.lib" />
+    <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDLmain.lib" />
+    <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL.lib" />
+    <Library Include="..\..\..\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
+    <Library Include="..\..\..\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
+    <Library Include="..\..\..\SDL_ttf\VisualC\Release\SDL2_ttf.lib" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
