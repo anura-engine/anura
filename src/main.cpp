@@ -469,10 +469,12 @@ extern "C" int main(int argcount, char* argvec[])
 				return -1;
 			}
 			++modules_loaded;
+		} else if(arg == "--tests") {
+			unit_tests_only = true;
 		}
 	}
 
-	if(modules_loaded == 0) {
+	if(modules_loaded == 0 && !unit_tests_only) {
 		if(load_module(DEFAULT_MODULE, &argv) != 0) {
 			std::cerr << "FAILED TO LOAD MODULE: " << DEFAULT_MODULE << "\n";
 			return -1;
@@ -517,7 +519,7 @@ extern "C" int main(int argcount, char* argvec[])
 			run_benchmarks = true;
 			benchmarks_list = util::split(arg_value);
 		} else if(arg == "--tests") {
-			unit_tests_only = true;
+			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
 		} else if(arg_name == "--width") {
