@@ -1,0 +1,23 @@
+    MinGW Build Instructions
+     
+    1. Set up MinGW. You need the compiler and MSYS environment too.
+    2. Download source for SDL, freetype, jpeg, libogg, libpng, libvorbis, zlib, SDL_image, SDL_mixer, SDL_ttf.
+    3. Try to configure and make install all of them. I set --prefix=/mingw for all of them. All of them worked without issues for me, except for SDL_mixer. I had to manually prevent it from compiling the two test apps (playwav and playmus).
+    4. Follow instructions on http://www.gaia-gis.it/spatialite-3.0.0-BETA/mingw_how_to.html#pkg-config to get pkg-config. There's probably a better way but I didn't know it.
+    5. Download source for glew. This doesn't have a configure, I had to run "GLEW_DEST=/mingw make install" to get it to work.
+    6. Make a glu.pc file so pkg-config will recognize it. Creating /mingw/lib/pkgconfig/glu.pc with these contents will work:
+            prefix=/mingw
+            exec_prefix=${prefix}
+            libdir=${exec_prefix}/lib
+            includedir=${prefix}/include
+     
+            Name: glu
+            Description: Mesa OpenGL Utility library
+            Version: 1.3
+            Libs: -lopengl32 -lglu32
+            Cflags: -I${includedir}
+    7. Get Boost. Building it isn't ideal.
+      a. First need bootstrap: ./bootstrap.sh --toolset=mingw --with-libraries=system,regex. You'll need more libraries for Frogatto server. I didn't build it. To try, I'd add thread and iostreams at minimum.
+      b. Fix up generated files. See http://stackoverflow.com/questions/5012429/building-boost-under-msys-cant-find-mingw-jam and replace mingw with gcc in project-config.jam.
+      c. Build boost. Make sure you build the multi-threaded libs.
+    8. Build Frogatto with the Makefile.mingw. (make -f Makefile.mingw)
