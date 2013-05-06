@@ -95,6 +95,9 @@ server: $(server_objects)
 
 clean:
 	rm -f src/*.o src/*.d src/server/*.o src/server/*.d *.o *.d game server
+
+unittests: game
+	./game --tests
 	
 assets:
 	./game --utility=compile_levels
