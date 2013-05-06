@@ -283,7 +283,6 @@
     <ClInclude Include="..\..\..\anura\src\multiplayer.hpp" />
     <ClInclude Include="..\..\..\anura\src\multi_tile_pattern.hpp" />
     <ClInclude Include="..\..\..\anura\src\object_events.hpp" />
-    <ClInclude Include="..\..\..\anura\src\of_bridge.h" />
     <ClInclude Include="..\..\..\anura\src\options_dialog.hpp" />
     <ClInclude Include="..\..\..\anura\src\particle_system.hpp" />
     <ClInclude Include="..\..\..\anura\src\pathfinding.hpp" />

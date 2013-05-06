@@ -390,9 +390,6 @@
     <ClInclude Include="..\..\..\anura\src\object_events.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\anura\src\of_bridge.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\anura\src\options_dialog.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
