@@ -55,12 +55,7 @@ LIBS := $(shell pkg-config --libs x11 ) -lSDLmain \
 	$(shell pkg-config --libs sdl glu glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
 endif
 
-deploy_path = $(ANURA_DEPLOY_PATH)
-ifdef deploy_path
-TARBALL := $(ANURA_DEPLOY_PATH)/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
-else
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
-endif
 
 include Makefile.common
 
