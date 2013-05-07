@@ -24,7 +24,7 @@
 #if defined(__MACOSX__) || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR || defined(TARGET_BLACKBERRY) || defined(_WIN32) || defined(__ANDROID__)
 	#include <SDL_image.h>
 #else	
-	#include <SDL/SDL_image.h>
+	#include <SDL_image.h>
 #endif
 
 #include <assert.h>
