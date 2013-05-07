@@ -83,7 +83,7 @@ public:
 	int cursor_row() const { return cursor_.row; }
 	int cursor_col() const { return cursor_.col; }
 
-	void set_cursor(int row, int col);
+	void set_cursor(int row, int col, bool move_selection=true);
 
 	//convert a row/col cursor position to a position within the text()
 	//string that is returned.
@@ -97,6 +97,8 @@ public:
 	std::pair<int, int> char_position_on_screen(int row, int col) const;
 
 	void set_row_contents(int row, const std::string& value);
+
+	void highlight(Loc begin, Loc end);
 
 protected:
 	virtual void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);

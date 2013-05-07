@@ -52,6 +52,7 @@ namespace {
 
 	bool g_strict_formula_checking = false;
 
+	std::set<game_logic::formula*> all_formulae;
 }
 
 std::string output_formula_error_info() {
@@ -64,6 +65,9 @@ std::string output_formula_error_info() {
 
 namespace game_logic
 {
+	const std::set<formula*>& formula::get_all() {
+		return all_formulae;
+	}
 
 	void set_verbatim_string_expressions(bool verbatim) {
 		_verbatim_string_expressions = verbatim;
@@ -364,6 +368,10 @@ private:
 	variant execute(const formula_callable& variables) const {
 		return static_evaluate(variables);
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		return std::vector<const_expression_ptr>(items_.begin(), items_.end());
+	}
 	
 	std::vector<expression_ptr> items_;
 };
@@ -447,6 +455,17 @@ private:
 		return false;
 	}
 
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(expr_);
+		for(std::map<std::string, expression_ptr>::const_iterator i = generators_.begin(); i != generators_.end(); ++i) {
+			result.push_back(i->second);
+		}
+
+		result.insert(result.end(), filters_.begin(), filters_.end());
+		return result;
+	}
+
 	expression_ptr expr_;
 	std::map<std::string, expression_ptr> generators_;
 	std::vector<std::string> generator_names_;
@@ -523,6 +542,11 @@ private:
 		result.set_source_expression(this);
 		return result;
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result(items_.begin(), items_.end());
+		return result;
+	}
 	
 	std::vector<expression_ptr> items_;
 };
@@ -564,6 +588,13 @@ private:
 				return -res;
 		}
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(operand_);
+		return result;
+	}
+
 	enum OP { NOT, OP_SUB };
 	OP op_;
 	expression_ptr operand_;
@@ -785,6 +816,12 @@ private:
 	variant_type_ptr get_variant_type() const {
 		return variant_type::get_function_type(variant_types_, return_type_, variant_types_.size() - default_args_.size());
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(fml_->expr());
+		return result;
+	}
 	
 	std::vector<std::string> args_;
 	game_logic::const_formula_ptr fml_;
@@ -857,6 +894,13 @@ private:
 			}
 		}
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.insert(result.end(), args_.begin(), args_.end());
+		return result;
+	}
 	
 	expression_ptr left_;
 	std::vector<expression_ptr> args_;
@@ -922,6 +966,13 @@ private:
 		}
 
 		return const_formula_callable_definition_ptr();
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(right_);
+		return result;
 	}
 	
 	expression_ptr left_, right_;
@@ -989,6 +1040,13 @@ private:
 
 		ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '[]' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(key_);
+		return result;
+	}
 	
 	expression_ptr left_, key_;
 };
@@ -1047,6 +1105,14 @@ private:
 
 	variant_type_ptr get_variant_type() const {
 		return left_->query_variant_type();
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(start_);
+		result.push_back(end_);
+		return result;
 	}
 	
 	expression_ptr left_, start_, end_;
@@ -1108,6 +1174,13 @@ private:
 		return const_formula_callable_definition_ptr();
 	}
 
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(right_);
+		return result;
+	}
+
 	expression_ptr left_, right_;
 };
 
@@ -1144,6 +1217,13 @@ private:
 		}
 
 		return const_formula_callable_definition_ptr();
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(right_);
+		return result;
 	}
 
 	expression_ptr left_, right_;
@@ -1470,6 +1550,13 @@ private:
 
 		return const_formula_callable_definition_ptr();
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		result.push_back(right_);
+		return result;
+	}
 	
 	enum OP { OP_IN, OP_NOT_IN, OP_AND, OP_OR, OP_NEQ, OP_LTE, OP_GTE, OP_GT='>', OP_LT='<', OP_EQ='=',
 		OP_ADD='+', OP_SUB='-', OP_MUL='*', OP_DIV='/', OP_DICE='d', OP_POW='^', OP_MOD='%' };
@@ -1557,6 +1644,13 @@ private:
 		formula_callable_ptr wrapped_variables(new where_variables(variables, info_));
 		return body_->evaluate(*wrapped_variables);
 	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(body_);
+		result.insert(result.end(), info_->entries.begin(), info_->entries.end());
+		return result;
+	}
 };
 
 class type_expression : public formula_expression {
@@ -1577,6 +1671,12 @@ private:
 	variant execute(const formula_callable& variables) const {
 		const variant result = expression_->evaluate(variables);
 		ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " AT " << debug_pinpoint_location());
+		return result;
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(expression_);
 		return result;
 	}
 };
@@ -1617,6 +1717,13 @@ private:
 
 	variant_type_ptr get_variant_type() const {
 		return body_->query_variant_type();
+	}
+	
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(body_);
+		result.push_back(debug_);
+		return result;
 	}
 };
 
@@ -1950,7 +2057,6 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		if(function_name != NULL && *function_name == "if" && n >= 1) {
 			const_formula_callable_definition_ptr new_def = res->front()->query_modified_definition_based_on_result(n == 1, callable_def);
 			if(new_def) {
-				std::cerr << "XX4: NEW DEF\n";
 				callable_def = new_def;
 			}
 		}
@@ -2799,6 +2905,12 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 	} else {
 		expr_ = expression_ptr(new null_expression());
 	}	
+
+	str_.add_formula_using_this(this);
+
+#ifndef NO_EDITOR
+	all_formulae.insert(this);
+#endif
 }
 
 const_formula_callable_ptr formula::wrap_callable_with_global_where(const formula_callable& callable) const
@@ -2918,6 +3030,11 @@ formula::~formula() {
 	if(last_executed_formula == this) {
 		last_executed_formula = NULL;
 	}
+
+	str_.remove_formula_using_this(this);
+#ifndef NO_EDITOR
+	all_formulae.erase(this);
+#endif
 }
 
 std::string formula::output_debug_info() const

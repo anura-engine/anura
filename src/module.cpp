@@ -248,6 +248,8 @@ const std::string make_base_module_path(const std::string& name) {
 		}
 	}
 
+	ASSERT_LOG(false, "could not find base module path for module: " << name);
+
 	return "";
 }
 

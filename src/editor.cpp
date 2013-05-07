@@ -1078,19 +1078,14 @@ bool editor::handle_event(const SDL_Event& event, bool swallowed)
 		}
 	case SDL_WINDOWEVENT:
 		if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-		SDL_Window* result = graphics::set_video_mode(event.window.data1, event.window.data2, SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0));
-		
-		if(result) {
+			video_resize(event);
+			level_runner::get_current()->video_resize_event(event);
 			editor_x_resolution = event.window.data1;
 			editor_y_resolution = event.window.data2;
-			preferences::set_actual_screen_width(event.window.data1);
-			preferences::set_actual_screen_height(event.window.data2);
-		
 			reset_dialog_positions();
 		}
 
 		return false;
-	}
 #else
 	case SDL_VIDEORESIZE: {
 		const SDL_ResizeEvent* const resize = reinterpret_cast<const SDL_ResizeEvent*>(&event);
@@ -3096,12 +3091,12 @@ void editor::draw_gui() const
 	if(lvl_->previous_level().empty()) {
 		previous_level = "(no previous level)";
 	}
-	graphics::texture t = font::render_text(previous_level, graphics::color_salmon(), 24);
+	graphics::texture t = font::render_text(previous_level, graphics::color_black(), 24);
 	int x = lvl_->boundaries().x() - t.width();
 	int y = ypos_ + graphics::screen_height()/2;
 
 	graphics::blit_texture(t, x, y);
-	t = font::render_text(next_level, graphics::color_salmon(), 24);
+	t = font::render_text(next_level, graphics::color_black(), 24);
 	x = lvl_->boundaries().x2();
 	graphics::blit_texture(t, x, y);
 	}

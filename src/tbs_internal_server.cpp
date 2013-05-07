@@ -120,7 +120,6 @@ namespace tbs
 
 			client_info& cli_info = clients[info.session_id];
 			if(cli_info.msg_queue.empty() == false) {
-			std::cerr << "SEND MESSAGE: (((" << cli_info.msg_queue.front() << ")))\n";
 				messages.push_back(std::pair<send_function,variant>(send_fn, game_logic::deserialize_doc_with_objects(cli_info.msg_queue.front())));
 				cli_info.msg_queue.pop_front();
 			} else if(send_heartbeat) {
@@ -189,7 +188,6 @@ namespace tbs
 		if(cli_info.msg_queue.empty() == false) {
 			const std::string msg = cli_info.msg_queue.front();
 			cli_info.msg_queue.pop_front();
-			std::cerr << "SEND MESSAGE: (((" << msg << ")))\n";
 			send_fn(game_logic::deserialize_doc_with_objects(msg));
 		}
 	}

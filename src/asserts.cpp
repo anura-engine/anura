@@ -21,6 +21,7 @@
 #endif
 
 #include "asserts.hpp"
+#include "code_editor_dialog.hpp"
 #include "level.hpp"
 #include "preferences.hpp"
 #include "stats.hpp"
@@ -42,6 +43,11 @@ void report_assert_msg(const std::string& m)
 #else
 		obj[variant("editor")] = variant(false);
 #endif
+
+		if(preferences::edit_and_continue()) {
+			edit_and_continue_assert(m);
+		}
+
 		stats::record(variant(&obj), level::current_ptr()->id());
 		stats::flush_and_quit();
 	}

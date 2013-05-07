@@ -352,7 +352,7 @@ bool is_skipping_game() {
 	return skipping_game > 0;
 }
 
-void video_resize(SDL_Event &event) 
+void video_resize(const SDL_Event &event) 
 {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	int width = event.window.data1;

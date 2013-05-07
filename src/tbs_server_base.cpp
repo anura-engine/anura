@@ -21,6 +21,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
+#include "preferences.hpp"
 #include "tbs_server_base.hpp"
 #include "variant_utils.hpp"
 
@@ -362,13 +363,16 @@ namespace tbs
 		}
 	}
 
+	PREF_INT(tbs_server_delay_ms, 100);
+	PREF_INT(tbs_server_heartbeat_freq, 10);
+
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
 		if(error == boost::asio::error::operation_aborted) {
 			std::cerr << "tbs_server::heartbeat cancelled" << std::endl;
 			return;
 		}
-		timer_.expires_from_now(boost::posix_time::milliseconds(100));
+		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_server_delay_ms));
 		timer_.async_wait(boost::bind(&server_base::heartbeat, this, 
 			boost::asio::placeholders::error));
 
@@ -377,7 +381,7 @@ namespace tbs
 		}
 
 		nheartbeat_++;
-		if(nheartbeat_%10 != 0) {
+		if(nheartbeat_ <= 1 || nheartbeat_%g_tbs_server_heartbeat_freq != 0) {
 			return;
 		}
 

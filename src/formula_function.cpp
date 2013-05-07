@@ -79,6 +79,12 @@ namespace game_logic {
 formula_expression::formula_expression(const char* name) : name_(name), begin_str_(EmptyStr.begin()), end_str_(EmptyStr.end()), ntimes_called_(0)
 {}
 
+std::vector<const_expression_ptr> formula_expression::query_children() const {
+	std::vector<const_expression_ptr> result = get_children();
+	result.erase(std::remove(result.begin(), result.end(), const_expression_ptr()), result.end());
+	return result;
+}
+
 void formula_expression::copy_debug_info_from(const formula_expression& o)
 {
 	set_debug_info(o.parent_formula_, o.begin_str_, o.end_str_);
@@ -118,7 +124,8 @@ std::string pinpoint_location(variant v, std::string::const_iterator begin)
 }
 
 std::string pinpoint_location(variant v, std::string::const_iterator begin,
-                                         std::string::const_iterator end)
+                                         std::string::const_iterator end,
+						                 PinpointedLoc* pos_info)
 {
 	std::string str(begin, end);
 	if(!v.is_string() || !v.get_debug_info()) {
@@ -126,12 +133,18 @@ std::string pinpoint_location(variant v, std::string::const_iterator begin,
 	}
 
 	int line_num = v.get_debug_info()->line;
+	int begin_line_base = v.get_debug_info()->column;
 
 	std::string::const_iterator begin_line = v.as_string().begin();
 	while(std::find(begin_line, begin, '\n') != begin) {
+		begin_line_base = 0;
 		begin_line = std::find(begin_line, begin, '\n')+1;
 		++line_num;
 	}
+
+	//this is the real start of the line. begin_line will advance
+	//to the first non-whitespace character.
+	std::string::const_iterator real_start_of_line = begin_line;
 
 	while(begin_line != begin && util::c_isspace(*begin_line)) {
 		++begin_line;
@@ -141,6 +154,26 @@ std::string pinpoint_location(variant v, std::string::const_iterator begin,
 
 	std::string line(begin_line, end_line);
 	int pos = begin - begin_line;
+
+	if(pos_info) {
+		const int col = (begin - real_start_of_line) + begin_line_base;
+		pos_info->begin_line = line_num;
+		pos_info->begin_col = col+1;
+
+		int end_line = line_num;
+		int end_col = col+1;
+		for(std::string::const_iterator itor = begin; itor != end; ++itor) {
+			if(*itor == '\n') {
+				end_col = 1;
+				end_line++;
+			} else {
+				end_col++;
+			}
+		}
+
+		pos_info->end_line = end_line;
+		pos_info->end_col = end_col;
+	}
 
 	if(pos > 40) {
 		line.erase(line.begin(), line.begin() + pos - 40);
@@ -169,16 +202,27 @@ std::string pinpoint_location(variant v, std::string::const_iterator begin,
 	}
 
 	s << "\n";
+
+
 	return s.str();
 }
 
-std::string formula_expression::debug_pinpoint_location() const
+std::string formula_expression::debug_pinpoint_location(PinpointedLoc* loc) const
 {
 	if(!has_debug_info()) {
 		return "Unknown Location (" + str_ + ")\n";
 	}
 
-	return pinpoint_location(parent_formula_, begin_str_, end_str_);
+	return pinpoint_location(parent_formula_, begin_str_, end_str_, loc);
+}
+
+std::pair<int,int> formula_expression::debug_loc_in_file() const
+{
+	if(!has_debug_info()) {
+		return std::pair<int,int>(-1,-1);
+	}
+	return std::pair<int,int>(begin_str_ - parent_formula_.as_string().begin(),
+	                          end_str_ - parent_formula_.as_string().begin());
 }
 
 variant formula_expression::execute_member(const formula_callable& variables, std::string& id, variant* variant_id) const
@@ -1851,6 +1895,10 @@ FUNCTION_DEF(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choos
 	}
 
 	const variant items = args()[0]->evaluate(variables);
+	if(items.num_elements() == 0) {
+		return variant();
+	}
+
 	int max_index = -1;
 	variant max_value;
 	boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
@@ -1864,17 +1912,13 @@ FUNCTION_DEF(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choos
 			val = variant(rand());
 		}
 
-		if(max_index == -1 || val > max_value) {
+		if(n == 0 || val > max_value) {
 			max_index = n;
 			max_value = val;
 		}
 	}
 
-	if(max_index == -1) {
-		return variant();
-	} else {
-		return items[max_index];
-	}
+	return items[max_index];
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type()->is_list_of();
 END_FUNCTION_DEF(choose)
@@ -2788,7 +2832,7 @@ FUNCTION_DEF(debug, 1, -1, "debug(...): outputs arguments to the console")
 	return variant(new debug_command(str));
 
 FUNCTION_TYPE_DEF
-	return variant_type::get_any();
+	return variant_type::get_commands();
 END_FUNCTION_DEF(debug)
 
 namespace {
@@ -2820,7 +2864,6 @@ FUNCTION_DEF(debug_fn, 2, 2, "debug_fn(msg, expr): evaluates and returns expr. W
 	return res;
 END_FUNCTION_DEF(debug_fn)
 
-namespace {
 bool consecutive_periods(char a, char b) {
 	return a == '.' && b == '.';
 }
@@ -2829,7 +2872,150 @@ std::map<std::string, variant>& get_doc_cache() {
 	static std::map<std::string, variant> cache;
 	return cache;
 }
+
+class backed_map : public game_logic::formula_callable {
+public:
+	static void flush_all() {
+		foreach(backed_map* m, all_backed_maps) {
+			m->write_file();
+		}
+	}
+
+	backed_map(const std::string& docname, variant generator, variant m)
+	  : docname_(docname), generator_(generator)
+	{
+		all_backed_maps.insert(this);
+
+		if(m.is_map()) {
+			foreach(const variant::map_pair& p, m.as_map()) {
+				map_[p.first.as_string()].value = p.second;
+			}
+		}
+
+		if(sys::file_exists(docname_)) {
+			try {
+				variant v = json::parse(sys::read_file(docname_));
+
+				if(sys::file_exists(docname_ + ".stats")) {
+					variant stats = json::parse(sys::read_file(docname_ + ".stats"));
+					foreach(const variant::map_pair& p, stats.as_map()) {
+						map_[p.first.as_string()] = NodeInfo(p.second);
+					}
+				}
+
+				foreach(const variant::map_pair& p, v.as_map()) {
+					if(p.first.as_string() != "_stats") {
+						map_[p.first.as_string()].value = p.second;
+					}
+				}
+			} catch(json::parse_error& e) {
+				ASSERT_LOG(false, "Eerror parsing json for backed map in " << docname_ << ": " << e.error_message());
+			}
+		}
+
+		write_file();
+	}
+
+	~backed_map() {
+		write_file();
+		all_backed_maps.erase(this);
+	}
+private:
+	variant get_value(const std::string& key) const {
+		std::map<std::string, NodeInfo>::const_iterator i = map_.find(key);
+		if(i != map_.end()) {
+			i->second.last_session_reads++;
+			i->second.lifetime_reads++;
+			return i->second.value;
+		}
+
+		std::vector<variant> args;
+		variant new_value = generator_(args);
+		const_cast<backed_map*>(this)->mutate_value(key, new_value);
+		return new_value;
+	}
+
+	void set_value(const std::string& key, const variant& value) {
+		map_[key].value = value;
+
+		write_file();
+	}
+
+	void write_file()
+	{
+		std::map<variant, variant> v;
+		std::map<variant, variant> stats;
+		for(std::map<std::string,NodeInfo>::const_iterator i = map_.begin();
+		    i != map_.end(); ++i) {
+			v[variant(i->first)] = i->second.value;
+			stats[variant(i->first)] = i->second.write();
+		}
+
+		sys::write_file(docname_, variant(&v).write_json());
+		sys::write_file(docname_ + ".stats", variant(&stats).write_json());
+	}
+
+	struct NodeInfo {
+		NodeInfo() : last_session_reads(0), lifetime_reads(0), value(0)
+		{}
+
+		NodeInfo(variant v) : last_session_reads(0), lifetime_reads(v["lifetime_reads"].as_int()), value(0)
+		{}
+		
+		variant write() const {
+			std::map<variant,variant> m;
+			m[variant("last_session_reads")] = variant(last_session_reads);
+			m[variant("lifetime_reads")] = variant(lifetime_reads);
+			return variant(&m);
+		}
+
+		mutable int last_session_reads;
+		mutable int lifetime_reads;
+
+		variant value;
+	};
+
+	std::string docname_;
+	std::map<std::string, NodeInfo> map_;
+	variant generator_;
+	static std::set<backed_map*> all_backed_maps;
+};
+
+std::set<backed_map*> backed_map::all_backed_maps;
+} //namespace {
+
+void flush_all_backed_maps()
+{
+	backed_map::flush_all();
 }
+
+namespace {
+
+FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function generate_new, map initial_values)")
+	formula::fail_if_static_context();
+	std::string docname = args()[0]->evaluate(variables).as_string();
+
+	if(docname.empty()) {
+		return variant("DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
+	}
+	if(sys::is_path_absolute(docname)) {
+		return variant(formatter() << "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
+	}
+	if(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) != docname.end()) {
+		return variant(formatter() << "RELATIVE PATH OUTSIDE ALLOWED " << docname);
+	}
+
+	docname = preferences::user_data_path() + docname;
+
+	variant fn = args()[1]->evaluate(variables);
+
+	variant m;
+	if(args().size() > 2) {
+		m = args()[2]->evaluate(variables);
+	}
+
+	return variant(new backed_map(docname, fn, m));
+END_FUNCTION_DEF(file_backed_map)
 
 FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes 'doc' to the given filename")
 	formula::fail_if_static_context();

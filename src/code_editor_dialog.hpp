@@ -24,9 +24,10 @@
 #include <string>
 
 #include "animation_preview_widget.hpp"
-#include "code_editor_widget.hpp"
 #include "asserts.hpp"
+#include "code_editor_widget.hpp"
 #include "dialog.hpp"
+#include "formula_visualize_widget.hpp"
 #include "geometry.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
@@ -75,6 +76,8 @@ private:
 
 	bool modified_;
 
+	bool file_contents_set_;
+
 	gui::code_editor_widget_ptr editor_;
 	gui::text_editor_widget_ptr search_;
 	gui::text_editor_widget_ptr replace_;
@@ -104,6 +107,7 @@ private:
 	assert_recover_scope assert_recovery_;
 
 	gui::animation_preview_widget_ptr animation_preview_;
+	gui::formula_visualize_widget_ptr visualize_widget_;
 
 	struct KnownFile {
 		std::string fname;
@@ -137,6 +141,8 @@ typedef boost::intrusive_ptr<code_editor_dialog> code_editor_dialog_ptr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
 void edit_and_continue_fn(const std::string& fname, const std::string& error, boost::function<void()> fn);
+
+void edit_and_continue_assert(const std::string& msg);
 
 #endif // !NO_EDITOR
 #endif

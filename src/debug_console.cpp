@@ -290,7 +290,7 @@ void draw()
 	}
 }
 
-console_dialog::console_dialog(level& lvl, entity& obj)
+console_dialog::console_dialog(level& lvl, game_logic::formula_callable& obj)
    : dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
      history_pos_(0)
 {
@@ -363,15 +363,19 @@ bool console_dialog::on_begin_enter()
 			info.line = info.column = 0;
 			ffl_variant.set_debug_info(info);
 
-			game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), focus_->get_definition());
+			entity* ent = dynamic_cast<entity*>(focus_.get());
+
+			game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->get_definition() : NULL);
 			variant v = f.execute(*focus_);
-			try {
-				focus_->execute_command(v);
-			} catch(validation_failure_exception& e) {
-				//if this was a failure due to it not being a real command,
-				//that's fine, since we just want to output the result.
-				if(!strstr(e.msg.c_str(), "COMMAND WAS EXPECTED, BUT FOUND")) {
-					throw e;
+			if(ent) {
+				try {
+					ent->execute_command(v);
+				} catch(validation_failure_exception& e) {
+					//if this was a failure due to it not being a real command,
+					//that's fine, since we just want to output the result.
+					if(!strstr(e.msg.c_str(), "COMMAND WAS EXPECTED, BUT FOUND")) {
+						throw e;
+					}
 				}
 			}
 
@@ -459,11 +463,14 @@ void console_dialog::load_history()
 	text_editor_->set_cursor(text_editor_->get_data().size()-1, text_editor_->get_data().back().size());
 }
 
-void console_dialog::set_focus(entity_ptr e)
+void console_dialog::set_focus(game_logic::formula_callable_ptr e)
 {
 	focus_ = e;
 	text_editor_->set_focus(true);
-	add_message(formatter() << "Selected object: " << e->debug_description());
+	entity* ent = dynamic_cast<entity*>(focus_.get());
+	if(ent) {
+		add_message(formatter() << "Selected object: " << ent->debug_description());
+	}
 }
 
 }

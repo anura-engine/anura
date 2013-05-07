@@ -363,6 +363,17 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 			case Token::TYPE_STRING:
 			case Token::TYPE_IDENTIFIER: {
 				std::string s(t.begin, t.end);
+				variant::debug_info str_debug_info = debug_info;
+				str_debug_info.end_line = str_debug_info.line;
+				str_debug_info.end_column = str_debug_info.column;
+				for(std::string::const_iterator i = s.begin(); i != s.end(); ++i) {
+					if(*i == '\n') {
+						str_debug_info.end_line++;
+						str_debug_info.end_column = 0;
+					} else {
+						str_debug_info.end_column++;
+					}
+				}
 
 				if(t.type == Token::TYPE_STRING) {
 					escape_string(s);
@@ -423,8 +434,8 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 						CHECK_PARSE(false, "Repeated attribute: " + v.write_json(), t.begin - doc.c_str());
 					}
 
-					stack.push_back(JsonObject(debug_info, use_preprocessor));
-					v.set_debug_info(debug_info);
+					stack.push_back(JsonObject(str_debug_info, use_preprocessor));
+					v.set_debug_info(str_debug_info);
 					stack.back().name = v;
 					stack.back().require_colon = true;
 
@@ -442,7 +453,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 				} else {
 					const char* begin_macro = stack.back().begin_macro;
 					variant name = stack.back().name;
-					v.set_debug_info(debug_info);
+					v.set_debug_info(str_debug_info);
 					stack.pop_back();
 
 					if(begin_macro) {
@@ -526,6 +537,16 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 {
 	try {
 		std::string data = get_file_contents(fname);
+
+		typedef std::pair<std::string, JSON_PARSE_OPTIONS> CacheKey;
+		static std::map<CacheKey, variant> cache;
+
+		CacheKey key(md5::sum(data), options);
+		std::map<CacheKey, variant>::iterator cache_itor = cache.find(key);
+		if(cache_itor != cache.end()) {
+			return cache_itor->second;
+		}
+
 		checksum::verify_file(fname, data);
 
 		if(data.empty()) {
@@ -533,6 +554,19 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 		}
 
 		variant result = parse_internal(data, fname, options, NULL, NULL);
+
+		for(std::map<CacheKey, variant>::iterator i = cache.begin(); i != cache.end(); ) {
+			if(i->second.refcount() == 1) {
+				std::cerr << "JSON CACHE: REMOVE ITEM\n";
+				cache.erase(i++);
+			} else {
+				++i;
+			}
+		}
+
+		std::cerr << "JSON CACHE: HAS " << cache.size() << " ITEMS\n";
+
+		cache[key] = result;
 		return result;
 	} catch(parse_error& e) {
 		std::cerr << e.error_message() << "\n";

@@ -41,16 +41,22 @@ class variant_type;
 typedef boost::shared_ptr<const variant_type> variant_type_ptr;
 typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
 
-void push_call_stack(const game_logic::formula_expression* frame);
+struct CallStackEntry {
+	const game_logic::formula_expression* expression;
+	const game_logic::formula_callable* callable;
+	bool operator<(const CallStackEntry& o) const { return expression < o.expression || expression == o.expression && callable < o.callable; }
+};
+
+void push_call_stack(const game_logic::formula_expression* frame, const game_logic::formula_callable* callable);
 void pop_call_stack();
 std::string get_call_stack();
 std::string get_full_call_stack();
 
-const std::vector<const game_logic::formula_expression*>& get_expression_call_stack();
+const std::vector<CallStackEntry>& get_expression_call_stack();
 
 struct call_stack_manager {
-	explicit call_stack_manager(const game_logic::formula_expression* str) {
-		push_call_stack(str);
+	explicit call_stack_manager(const game_logic::formula_expression* str, const game_logic::formula_callable* callable) {
+		push_call_stack(str, callable);
 	}
 
 	~call_stack_manager() {
@@ -287,6 +293,12 @@ public:
 	void set_debug_info(const debug_info& info);
 	const debug_info* get_debug_info() const;
 	std::string debug_location() const;
+
+	//API for accessing formulas that are defined by this variant. The variant
+	//must be a string.
+	void add_formula_using_this(const game_logic::formula* f);
+	void remove_formula_using_this(const game_logic::formula* f);
+	const std::vector<const game_logic::formula*>* formulae_using_this() const;
 
 	std::pair<variant*,variant*> range() const;
 

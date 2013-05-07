@@ -111,8 +111,8 @@ int main_thread;
 
 int empty_samples = 0;
 
-std::map<std::vector<const game_logic::formula_expression*>, int> expression_call_stack_samples;
-std::vector<const game_logic::formula_expression*> current_expression_call_stack;
+std::map<std::vector<CallStackEntry>, int> expression_call_stack_samples;
+std::vector<CallStackEntry> current_expression_call_stack;
 
 std::vector<custom_object_event_frame> event_call_stack_samples;
 int num_samples = 0;
@@ -251,18 +251,18 @@ void end_profiling()
 
 		int total_expr_samples = 0;
 
-		for(std::map<std::vector<const game_logic::formula_expression*>, int>::const_iterator i = expression_call_stack_samples.begin(); i != expression_call_stack_samples.end(); ++i) {
-			const std::vector<const game_logic::formula_expression*>& sample = i->first;
+		for(std::map<std::vector<CallStackEntry>, int>::const_iterator i = expression_call_stack_samples.begin(); i != expression_call_stack_samples.end(); ++i) {
+			const std::vector<CallStackEntry>& sample = i->first;
 			const int nsamples = i->second;
 			if(sample.empty()) {
 				continue;
 			}
 
-			foreach(const game_logic::formula_expression* fe, sample) {
-				cum_expr_samples[fe] += nsamples;
+			foreach(const CallStackEntry& entry, sample) {
+				cum_expr_samples[entry.expression] += nsamples;
 			}
 
-			expr_samples[sample.back()] += nsamples;
+			expr_samples[sample.back().expression] += nsamples;
 
 			total_expr_samples += nsamples;
 		}

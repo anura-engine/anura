@@ -989,7 +989,7 @@ parse_optional_function_type(const variant& original_str,
 		return_type = parse_variant_type(original_str, i1, i2);
 	}
 
-	return variant_type::get_function_type(args, return_type, optional_args);
+	return variant_type::get_function_type(args, return_type, args.size() - optional_args);
 }
 
 variant_type_ptr parse_optional_function_type(const variant& type)

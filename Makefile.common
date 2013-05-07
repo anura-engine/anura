@@ -71,6 +71,7 @@ objects = \
 	src/formula_profiler.o \
 	src/formula_tokenizer.o \
 	src/formula_variable_storage.o \
+	src/formula_visualize_widget.o \
 	src/frame.o \
 	src/framed_gui_element.o \
 	src/game_registry.o \

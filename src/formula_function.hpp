@@ -38,9 +38,14 @@ class formula_expression;
 typedef boost::intrusive_ptr<formula_expression> expression_ptr;
 typedef boost::intrusive_ptr<const formula_expression> const_expression_ptr;
 
+struct PinpointedLoc {
+	int begin_line, end_line, begin_col, end_col;
+};
+
 std::string pinpoint_location(variant v, std::string::const_iterator begin);
 std::string pinpoint_location(variant v, std::string::const_iterator begin,
-                                         std::string::const_iterator end);
+                                         std::string::const_iterator end,
+										 PinpointedLoc* pos_info=0);
 
 class formula_expression : public reference_counted_object {
 public:
@@ -61,14 +66,14 @@ public:
 	variant evaluate(const formula_callable& variables) const {
 #if !TARGET_OS_IPHONE
 		++ntimes_called_;
-		call_stack_manager manager(this);
+		call_stack_manager manager(this, &variables);
 #endif
 		return execute(variables);
 	}
 
 	variant evaluate_with_member(const formula_callable& variables, std::string& id, variant* variant_id=NULL) const {
 #if !TARGET_OS_IPHONE
-		call_stack_manager manager(this);
+		call_stack_manager manager(this, &variables);
 #endif
 		return execute_member(variables, id, variant_id);
 	}
@@ -95,7 +100,8 @@ public:
 	                            std::string::const_iterator begin_str,
 	                            std::string::const_iterator end_str);
 	bool has_debug_info() const;
-	std::string debug_pinpoint_location() const;
+	std::string debug_pinpoint_location(PinpointedLoc* loc=NULL) const;
+	std::pair<int, int> debug_loc_in_file() const;
 
 	void set_str(const std::string& str) { str_ = str; }
 	const std::string& str() const { return str_; }
@@ -108,6 +114,8 @@ public:
 
 	const_formula_callable_definition_ptr query_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const { return get_modified_definition_based_on_result(result, current_def); }
 
+	std::vector<const_expression_ptr> query_children() const;
+
 protected:
 	virtual variant_type_ptr get_variant_type() const { return variant_type_ptr(); }
 	virtual variant execute_member(const formula_callable& variables, std::string& id, variant* variant_id) const;
@@ -115,6 +123,8 @@ private:
 	virtual variant execute(const formula_callable& variables) const = 0;
 	virtual void static_error_analysis() const {}
 	virtual const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const { return NULL; }
+
+	virtual std::vector<const_expression_ptr> get_children() const { return std::vector<const_expression_ptr>(); }
 
 	const char* name_;
 
@@ -141,6 +151,10 @@ protected:
 	const std::string& name() const { return name_; }
 	const args_list& args() const { return args_; }
 private:
+	std::vector<const_expression_ptr> get_children() const {
+		return std::vector<const_expression_ptr>(args_.begin(), args_.end());
+	}
+
 	std::string name_;
 	args_list args_;
 	int min_args_, max_args_;

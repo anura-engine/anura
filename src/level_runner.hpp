@@ -61,6 +61,8 @@ public:
 	void toggle_pause();
 	void toggle_history_trails();
 
+	void video_resize_event(const SDL_Event &event);
+
 #ifndef NO_EDITOR
 	void replay_level_from_start();
 #endif
@@ -97,7 +99,6 @@ private:
 	point last_stats_point_;
 	std::string last_stats_point_level_;
 	bool handle_mouse_events(const SDL_Event &event);
-	void video_resize_event(const SDL_Event &event);
 	void show_pause_title();
 
 	editor* editor_;
@@ -131,6 +132,6 @@ void begin_skipping_game();
 void end_skipping_game();
 bool is_skipping_game();
 
-void video_resize( SDL_Event &event );
+void video_resize(const SDL_Event &event );
 
 #endif

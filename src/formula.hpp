@@ -73,6 +73,8 @@ public:
 		bool old_value;
 	};
 
+	static const std::set<formula*>& get_all();
+
 	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL);
 	explicit formula(const variant& val, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL);
 	~formula();

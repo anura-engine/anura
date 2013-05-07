@@ -26,6 +26,7 @@
 #include "custom_object.hpp"
 #include "custom_object_callable.hpp"
 #include "custom_object_type.hpp"
+#include "debug_console.hpp"
 #include "drag_widget.hpp"
 #include "filesystem.hpp"
 #include "font.hpp"
@@ -41,12 +42,14 @@
 #include "level_runner.hpp"
 #include "module.hpp"
 #include "object_events.hpp"
+#include "preferences.hpp"
 #include "raster.hpp"
 #include "surface_cache.hpp"
 #include "text_editor_widget.hpp"
 #include "tile_map.hpp"
 #include "tileset_editor_dialog.hpp"
 #include "unit_test.hpp"
+#include "variant_utils.hpp"
 
 namespace game_logic
 {
@@ -57,7 +60,8 @@ std::set<level*>& get_all_levels_set();
 
 code_editor_dialog::code_editor_dialog(const rect& r)
   : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), modified_(false),
-    suggestions_prefix_(-1), have_close_buttons_(false)
+    file_contents_set_(true), suggestions_prefix_(-1),
+	have_close_buttons_(false)
 {
 	init();
 }
@@ -232,6 +236,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 		f.editor.reset(new code_editor_widget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 		std::string text = json::get_file_contents(fname);
 		try {
+			file_contents_set_ = true;
 			variant doc = json::parse(text, json::JSON_NO_PREPROCESSOR);
 			std::cerr << "CHECKING FOR PROTOTYPES: " << doc["prototype"].write_json() << "\n";
 			if(doc["prototype"].is_list()) {
@@ -246,6 +251,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 				}
 			}
 		} catch(...) {
+			file_contents_set_ = false;
 		}
 
 		f.editor->set_text(json::get_file_contents(fname));
@@ -322,6 +328,13 @@ bool code_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
 		}
 	}
 
+	if(visualize_widget_) {
+		claimed = visualize_widget_->process_event(event, claimed) || claimed;
+		if(claimed) {
+			return claimed;
+		}
+	}
+
 	if(suggestions_grid_) {
 		//since an event could cause removal of the suggestions grid,
 		//make sure the object doesn't get cleaned up until after the event.
@@ -378,6 +391,10 @@ void code_editor_dialog::handle_draw_children() const
 		animation_preview_->draw();
 	}
 
+	if(visualize_widget_) {
+		visualize_widget_->draw();
+	}
+
 	if(suggestions_grid_) {
 		suggestions_grid_->draw();
 	}
@@ -403,6 +420,7 @@ void code_editor_dialog::process()
 #endif
 
 
+			file_contents_set_ = true;
 			if(op_fn_) {
 				json::parse(editor_->text());
 				json::set_file_contents(fname_, editor_->text());
@@ -478,6 +496,7 @@ void code_editor_dialog::process()
 				optional_error_text_area_->set_text("No errors");
 			}
 		} catch(validation_failure_exception& e) {
+			file_contents_set_ = false;
 			error_label_->set_text("Error");
 			error_label_->set_tooltip(e.msg);
 
@@ -485,12 +504,14 @@ void code_editor_dialog::process()
 				optional_error_text_area_->set_text(e.msg);
 			}
 		} catch(json::parse_error& e) {
+			file_contents_set_ = false;
 			error_label_->set_text("Error");
 			error_label_->set_tooltip(e.error_message());
 			if(optional_error_text_area_) {
 				optional_error_text_area_->set_text(e.error_message());
 			}
 		} catch(...) {
+			file_contents_set_ = false;
 			error_label_->set_text("Error");
 			error_label_->set_tooltip("Unknown error");
 
@@ -718,6 +739,9 @@ void code_editor_dialog::process()
 		animation_preview_->process();
 	}
 
+	if(visualize_widget_) {
+		visualize_widget_->process();
+	}
 }
 
 void code_editor_dialog::change_width(int amount)
@@ -817,9 +841,75 @@ void code_editor_dialog::on_code_changed()
 	}
 }
 
+namespace {
+void visit_potential_formula_str(variant candidate, variant* result, int row, int col)
+{
+	if(candidate.is_string() && candidate.get_debug_info()) {
+		const variant::debug_info* info = candidate.get_debug_info();
+		if(row > info->line && row < info->end_line ||
+		   row == info->line && col >= info->column && (row < info->end_line || col <= info->end_column) ||
+		   row == info->end_line && col <= info->end_column && (row > info->line || col >= info->column)) {
+			*result = candidate;
+		}
+	}
+}
+}
+
 void code_editor_dialog::on_move_cursor()
 {
+	visualize_widget_.reset();
+
 	status_label_->set_text(formatter() << "Line " << (editor_->cursor_row()+1) << " Col " << (editor_->cursor_col()+1) << (modified_ ? " (Modified)" : ""));
+
+	if(file_contents_set_) {
+		try {
+			variant v = json::parse_from_file(fname_);
+			variant formula_str;
+			assert(v.is_map());
+			visit_variants(v, boost::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursor_row()+1, editor_->cursor_col()+1));
+
+			if(formula_str.is_string()) {
+
+				const variant::debug_info& str_info = *formula_str.get_debug_info();
+				const std::set<game_logic::formula*>& formulae = game_logic::formula::get_all();
+				int best_result = -1;
+				variant result_variant;
+				const game_logic::formula* best_formula = NULL;
+				foreach(const game_logic::formula* f, formulae) {
+					const variant::debug_info* info = f->str_var().get_debug_info();
+					if(!info || !info->filename || *info->filename != *str_info.filename) {
+						continue;
+					}
+
+					variant result;
+					visit_potential_formula_str(f->str_var(), &result, editor_->cursor_row()+1, editor_->cursor_col()+1);
+					if(result.is_null()) {
+						continue;
+					}
+
+					const int result_scope = (info->end_line - info->line)*1024 + (info->end_column - info->column);
+					if(best_result == -1 || result_scope <= best_result) {
+						result_variant = result;
+						best_result = result_scope;
+						best_formula = f;
+					}
+				}
+
+				if(best_formula) {
+					const variant::debug_info& info = *result_variant.get_debug_info();
+					const int text_pos = editor_->row_col_to_text_pos(editor_->cursor_row(), editor_->cursor_col()) - editor_->row_col_to_text_pos(info.line-1, info.column-1);
+					visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursor_row()+1, editor_->cursor_col()+1, 20, 20, 500, 400, editor_.get()));
+				}
+			} else {
+				std::cerr << "NOT IN STRING\n";
+			}
+
+		} catch(...) {
+			std::cerr << "ERROR PARSING FORMULA SET\n";
+		}
+	} else {
+		std::cerr << "NO FORMULA SET\n";
+	}
 }
 
 void code_editor_dialog::set_animation_rect(rect r)
@@ -956,6 +1046,94 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 
 	if(d->cancelled()) {
 		_exit(0);
+	}
+}
+
+namespace {
+void try_fix_assert()
+{
+}
+}
+
+void edit_and_continue_assert(const std::string& msg)
+{
+	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
+	std::vector<CallStackEntry> reverse_stack = stack;
+	std::reverse(reverse_stack.begin(), reverse_stack.end());
+	if(stack.empty() || !level::current_ptr()) {
+		return;
+	}
+
+	const SDL_DisplayMode mode = graphics::set_video_mode_auto_select();
+	preferences::set_actual_screen_width(mode.w);
+	preferences::set_actual_screen_height(mode.h);
+	preferences::set_virtual_screen_width(mode.w);
+	preferences::set_virtual_screen_height(mode.h);
+
+
+	using namespace gui;
+
+	using debug_console::console_dialog;
+
+	boost::intrusive_ptr<console_dialog> console(new console_dialog(level::current(), *const_cast<game_logic::formula_callable*>(stack.back().callable)));
+
+	grid_ptr call_grid(new grid(1));
+	call_grid->set_max_height(graphics::screen_height() - console->y());
+	call_grid->allow_selection();
+	call_grid->must_select();
+	foreach(const CallStackEntry& entry, reverse_stack) {
+		std::string str = entry.expression->str();
+		std::string::iterator i = std::find(str.begin(), str.end(), '\n');
+		if(i != str.end()) {
+			str.erase(i, str.end());
+		}
+		call_grid->add_col(widget_ptr(new label(str)));
+	}
+
+	call_grid->set_loc(console->x() + console->width() + 6, console->y());
+	call_grid->set_dim(graphics::screen_width() - call_grid->x(), graphics::screen_height() - call_grid->y());
+
+	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(graphics::screen_width()/2,0,graphics::screen_width()/2,console->y())));
+
+	d->set_close_buttons();
+	d->init();
+
+	const variant::debug_info* debug_info = stack.back().expression->parent_formula().get_debug_info();
+	if(debug_info && debug_info->filename) {
+		boost::function<void()> fn(try_fix_assert);
+		d->load_file(*debug_info->filename, true, &fn);
+		d->jump_to_error(msg);
+	}
+
+	std::vector<widget_ptr> widgets;
+	widgets.push_back(d);
+	widgets.push_back(console);
+	widgets.push_back(call_grid);
+
+	bool quit = false;
+	while(!quit) {
+
+		SDL_Event event;
+		while(SDL_PollEvent(&event)) {
+			switch(event.type) {
+				case SDL_QUIT: {
+					quit = true;
+					break;
+				}
+			}
+
+			bool swallowed = false;
+			foreach(widget_ptr w, widgets) {
+				if(!swallowed) {
+					swallowed = w->process_event(event, swallowed) || swallowed;
+				}
+			}
+		}
+		console->prepare_draw();
+		foreach(widget_ptr w, widgets) {
+			w->draw();
+		}
+		console->complete_draw();
 	}
 }
 

@@ -71,13 +71,15 @@ public:
 	static void draw_last_scene();
 	virtual widget_ptr get_widget_by_id(const std::string& id);
 	virtual const_widget_ptr get_widget_by_id(const std::string& id) const;
+
+	void prepare_draw();
+	void complete_draw();
+
 protected:
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 	virtual bool handle_event_children(const SDL_Event& event, bool claimed);
 	virtual void handle_draw() const;
 	virtual void handle_draw_children() const;
-	void prepare_draw();
-	void complete_draw();
 	void set_clear_bg(bool clear) { clear_bg_ = clear; };
 	void set_clear_bg_amount(int amount) { clear_bg_ = amount; }
 	int clear_bg() const { return clear_bg_; };

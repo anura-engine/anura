@@ -250,6 +250,28 @@ void text_editor_widget::set_row_contents(int row, const std::string& value)
 	on_change();
 }
 
+void text_editor_widget::highlight(Loc begin, Loc end)
+{
+	search_matches_.clear();
+
+	for(int n = begin.row; n <= end.row && n < text_.size(); ++n) {
+		int begin_col = 0;
+		if(n == begin.row) {
+			begin_col = begin.col;
+		}
+
+		int end_col = text_[n].size();
+		if(n == end.row) {
+			end_col = end.col;
+		}
+
+		Loc a(n, begin_col);
+		Loc b(n, end_col);
+
+		search_matches_.push_back(std::pair<Loc,Loc>(a, b));
+	}
+}
+
 void text_editor_widget::set_text(const std::string& value, bool reset_cursor)
 {
 	std::string txt = value;
@@ -536,7 +558,7 @@ void text_editor_widget::set_focus(bool value)
 	}
 }
 
-void text_editor_widget::set_cursor(int row, int col)
+void text_editor_widget::set_cursor(int row, int col, bool move_selection)
 {
 	if(row < 0) {
 		row = 0;
@@ -554,7 +576,11 @@ void text_editor_widget::set_cursor(int row, int col)
 		col = text_[row].size();
 	}
 
-	select_ = cursor_ = Loc(row, col);
+	cursor_ = Loc(row, col);
+	
+	if(move_selection) {
+		select_ = cursor_;
+	}
 
 	on_move_cursor();
 }

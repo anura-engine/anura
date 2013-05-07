@@ -26,6 +26,8 @@
 namespace tbs
 {
 
+PREF_INT(tbs_bot_delay_ms, 100);
+
 bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   : service_(service), timer_(service), host_(host), port_(port), script_(v["script"].as_list()),
     on_create_(game_logic::formula::create_optional_formula(v["on_create"])),
@@ -33,7 +35,7 @@ bot::bot(boost::asio::io_service& service, const std::string& host, const std::s
 
 {
 	std::cerr << "CREATE BOT\n";
-	timer_.expires_from_now(boost::posix_time::milliseconds(100));
+	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
 	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
 }
 
@@ -66,8 +68,6 @@ void bot::process(const boost::system::error_code& error)
 			session_id = script["session_id"].as_int();
 		}
 
-		std::cerr << "BOT SEND REQUEST\n";
-
 		ASSERT_LOG(send.is_map(), "NO REQUEST TO SEND: " << send.write_json() << " IN " << script.write_json());
 		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
 		if(preferences::internal_tbs_server()) {
@@ -80,13 +80,12 @@ void bot::process(const boost::system::error_code& error)
 		}
 	}
 
-	timer_.expires_from_now(boost::posix_time::milliseconds(100));
+	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
 	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
 }
 
 void bot::handle_response(const std::string& type, game_logic::formula_callable_ptr callable)
 {
-	std::cerr << "ZZ: BOT HANDLE RESPONSE...\n";
 	if(on_create_) {
 		execute_command(on_create_->execute(*this));
 		on_create_.reset();

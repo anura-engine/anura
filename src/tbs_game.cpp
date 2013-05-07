@@ -34,8 +34,13 @@
 #include "tbs_game.hpp"
 #include "tbs_web_server.hpp"
 #include "string_utils.hpp"
+#include "unit_test.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
+
+namespace game_logic {
+void flush_all_backed_maps();
+}
 
 namespace tbs {
 
@@ -437,12 +442,21 @@ variant game::get_value(const std::string& key) const
 		return doc_;
 	} else if(key == "state_id") {
 		return variant(state_id_);
+	} else if(key == "bots") {
+		std::vector<variant> v;
+		for(int n = 0; n != bots_.size(); ++n) {
+			v.push_back(variant(bots_[n].get()));
+		}
+
+		return variant(&v);
 	} else if(backup_callable_) {
 		return backup_callable_->query_value(key);
 	} else {
 		return variant();
 	}
 }
+
+PREF_INT(tbs_game_exit_on_winner, 0);
 
 void game::set_value(const std::string& key, const variant& value)
 {
@@ -462,7 +476,9 @@ void game::set_value(const std::string& key, const variant& value)
 		bots_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			std::cerr << "BOT_ADD: " << value[n].write_json() << "\n";
-			if(preferences::internal_tbs_server()) {
+			if(value[n].is_callable() && value[n].try_convert<tbs::bot>()) {
+				bots_.push_back(boost::intrusive_ptr<tbs::bot>(value[n].try_convert<tbs::bot>()));
+			} else if(preferences::internal_tbs_server()) {
 				boost::intrusive_ptr<bot> new_bot(new bot(tbs::internal_server::get_io_service(), "localhost", "23456", value[n]));
 				bots_.push_back(new_bot);
 			} else {
@@ -472,6 +488,12 @@ void game::set_value(const std::string& key, const variant& value)
 		}
 	} else if(key == "state_id") {
 		state_id_ = value.as_int();
+	} else if(key == "winner") {
+		std::cout << "WINNER: " << value.write_json() << std::endl;
+		if(g_tbs_game_exit_on_winner) {
+			game_logic::flush_all_backed_maps();
+			_exit(0);
+		}
 	} else if(backup_callable_) {
 		backup_callable_->mutate_value(key, value);
 	}
@@ -562,4 +584,47 @@ void game::execute_command(variant cmd)
 	}
 }
 
+}
+
+namespace {
+bool g_create_bot_game = false;
+void create_game_return(const std::string& msg) {
+	g_create_bot_game = true;
+	std::cerr << "GAME CREATED\n";
+}
+
+void start_game_return(const std::string& msg) {
+	std::cerr << "GAME STARTED\n";
+}
+}
+
+COMMAND_LINE_UTILITY(tbs_bot_game) {
+	using namespace tbs;
+	using namespace game_logic;
+
+	bool found_create_game = false;
+	variant create_game_request = json::parse("{type: 'create_game', game_type: 'citadel', users: [{user: 'a', bot: true, bot_type: 'goblins', session_id: 1}, {user: 'b', bot: true, bot_type: 'goblins', session_id: 2}]}");
+	for(int i = 0; i != args.size(); ++i) {
+		if(args[i] == "--request" && i+1 != args.size()) {
+			create_game_request = json::parse(args[i+1]);
+			found_create_game = true;
+		}
+	}
+
+	ASSERT_LOG(found_create_game, "MUST PROVIDE --request");
+
+	variant start_game_request = json::parse("{type: 'start_game'}");
+
+	boost::intrusive_ptr<map_formula_callable> callable(new map_formula_callable);
+	boost::intrusive_ptr<internal_client> client(new internal_client);
+	client->send_request(create_game_request, -1, callable, create_game_return);
+	while(!g_create_bot_game) {
+		internal_server::process();
+	}
+
+	client->send_request(start_game_request, 1, callable, start_game_return);
+
+	for(;;) {
+		internal_server::process();
+	}
 }
