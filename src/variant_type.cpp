@@ -807,7 +807,59 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_IDENTIFIER && i1->equals("class")) {
+		if(i1->type == TOKEN_IDENTIFIER && i1->equals("function")) {
+			++i1;
+			ASSERT_COND(i1 != i2 && i1->equals("("), "EXPECTED PARENS AFTER 'function':\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+
+			++i1;
+
+			int min_args = -1;
+			std::vector<variant_type_ptr> arg_types;
+			while(i1 != i2 && !i1->equals(")")) {
+				arg_types.push_back(parse_variant_type(original_str, i1, i2, allow_failure));
+				if(allow_failure && !arg_types.back()) {
+					return variant_type_ptr();
+				}
+
+				if(i1->equals("=")) {
+					++i1;
+					if(i1 != i2) {
+						if(min_args == -1) {
+							min_args = arg_types.size();
+						}
+						++i1;
+					}
+				}
+
+				ASSERT_COND(i1 == i2 || i1->equals(")") || i1->equals(","), "UNEXPECTED TOKENS WHEN PARSING FUNCTION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+
+				if(i1->equals(",")) {
+					++i1;
+				}
+			}
+
+			ASSERT_COND(i1 != i2, "UNEXPECTED END OF INPUT WHILE PARSING FUNCTION DEF:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+
+			++i1;
+
+			variant_type_ptr return_type;
+
+			if(i1 != i2 && i1->equals("->")) {
+				++i1;
+
+				ASSERT_COND(i1 != i2, "UNEXPECTED END OF INPUT WHILE PARSING FUNCTION DEF:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+				
+				return_type = parse_variant_type(original_str, i1, i2, allow_failure);
+			} else {
+				return_type = variant_type::get_any();
+			}
+
+			if(min_args == -1) {
+				min_args = arg_types.size();
+			}
+
+			return variant_type::get_function_type(arg_types, return_type, min_args);
+		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("class")) {
 			++i1;
 			ASSERT_COND(i1 != i2, "EXPECTED CLASS BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 			std::string class_name(i1->begin, i1->end);
