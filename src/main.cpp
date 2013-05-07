@@ -950,8 +950,6 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.draw_and_increment(_("Initializing GUI"));
 		framed_gui_element::init(gui_node);
 
-		preferences::set_edit_and_continue(true);
-
 		game_logic::formula_object::load_all_classes();
 
 	} catch(const json::parse_error& e) {
