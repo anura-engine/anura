@@ -55,6 +55,8 @@ LIBS := $(shell pkg-config --libs x11 ) -lSDLmain \
 	$(shell pkg-config --libs sdl glu glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
 endif
 
+TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
+
 include Makefile.common
 
 src/%.o : src/%.cpp
@@ -95,6 +97,12 @@ server: $(server_objects)
 
 clean:
 	rm -f src/*.o src/*.d src/server/*.o src/server/*.d *.o *.d game server
+
+unittests: game
+	./game --tests
+	
+tarball: unittests
+	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) game data/ images/
 	
 assets:
 	./game --utility=compile_levels

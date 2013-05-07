@@ -469,10 +469,12 @@ extern "C" int main(int argcount, char* argvec[])
 				return -1;
 			}
 			++modules_loaded;
+		} else if(arg == "--tests") {
+			unit_tests_only = true;
 		}
 	}
 
-	if(modules_loaded == 0) {
+	if(modules_loaded == 0 && !unit_tests_only) {
 		if(load_module(DEFAULT_MODULE, &argv) != 0) {
 			std::cerr << "FAILED TO LOAD MODULE: " << DEFAULT_MODULE << "\n";
 			return -1;
@@ -517,7 +519,7 @@ extern "C" int main(int argcount, char* argvec[])
 			run_benchmarks = true;
 			benchmarks_list = util::split(arg_value);
 		} else if(arg == "--tests") {
-			unit_tests_only = true;
+			// ignore as already processed.
 		} else if(arg == "--no-tests") {
 			skip_tests = true;
 		} else if(arg_name == "--width") {
@@ -613,7 +615,15 @@ extern "C" int main(int argcount, char* argvec[])
 #endif
 
 	LOG( "Start of main" );
-	
+
+	if(!skip_tests && !test::run_tests()) {
+		return -1;
+	}
+
+	if(unit_tests_only) {
+		return 0;
+	}
+
 #if !defined(__native_client__)
 	Uint32 sdl_init_flags = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
 #if defined(_WINDOWS) || defined(TARGET_OS_IPHONE)
@@ -955,13 +965,6 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 #endif
 
-	if(!skip_tests && !test::run_tests()) {
-		return -1;
-	}
-
-	if(unit_tests_only) {
-		return 0;
-	}
 #if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_GLES2)
 	GLint swapInterval = 1;
 	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &swapInterval);
