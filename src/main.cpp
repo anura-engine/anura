@@ -323,8 +323,7 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	if(mod_info["arguments"].is_list()) {
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
 		argv->insert(argv->end(), arguments.begin(), arguments.end());
-	}
-	preferences::set_preferences_path_from_module(module::get_module_name());
+	}	
 	return 0;
 }
 

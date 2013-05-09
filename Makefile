@@ -84,7 +84,7 @@ game: $(objects)
 	@$(CCACHE) $(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) \
 		$(objects) -o game \
-		$(LIBS) -lboost_regex -lboost_system -lpthread -fthreadsafe-statics
+		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
 
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
