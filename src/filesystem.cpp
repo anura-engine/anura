@@ -122,7 +122,8 @@ namespace sys
 		ASSERT_LOG(p.has_filename(), "No filename found in write_file path: " << fname);
 
 		// Create any needed directories
-		create_directories(p);
+		boost::system::error_code ec;
+		create_directories(p, ec);
 
 		// Write the file.
 		std::ofstream file(fname.c_str(), std::ios_base::binary);

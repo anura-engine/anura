@@ -278,7 +278,6 @@ void load(const std::string& mod_file_name, bool initial)
 	}
 
 	if(v.is_map()) {
-		preferences::set_preferences_path_from_module(v["id"].as_string());
 		ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");
 		ASSERT_LOG(v["min_engine_version"] <= preferences::version_decimal(), "The engine version being used (" << preferences::version_decimal()
 			<< ") to run the module is older than required by the module (" << v["min_engine_version"] << ").");
@@ -307,6 +306,7 @@ void load(const std::string& mod_file_name, bool initial)
 }
 
 void reload(const std::string& name) {
+	preferences::set_preferences_path_from_module(name);
 	loaded_paths().clear();
 	loaded_paths().push_back(core);
 	load(name, true);
