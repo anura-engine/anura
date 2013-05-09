@@ -37,6 +37,14 @@
 #define GL_MODELVIEW_MATRIX               0x0BA6
 #define GL_PROJECTION_MATRIX              0x0BA7
 
+#define GL_POINT_SMOOTH					  0x0B10
+#define GL_POINT_SIZE					  0x0B11
+#define GL_POINT_SIZE_RANGE				  0x0B12
+#define GL_POINT_SIZE_GRANULARITY		  0x0B13
+
+#define GL_BLEND_DST					  0x0BE0
+#define GL_BLEND_SRC					  0x0BE1
+
 extern "C" {
 
 void glPushMatrix();
@@ -56,6 +64,8 @@ void glGetFloatv_1(GLenum pname, GLfloat* params);
 void glShadeModel(GLenum mode);
 
 void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar);
+
+void glPointSize(GLfloat size);
 
 }
 

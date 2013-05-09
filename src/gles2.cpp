@@ -37,6 +37,7 @@ namespace {
 	float colors[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
 	GLenum shade_model = GL_FLAT;
+	GLfloat point_size = 1.0f;
 }
 
 #if defined(GL_ES_VERSION_2_0)
@@ -164,6 +165,11 @@ void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat 
 	} else if(matrix_mode == GL_PROJECTION) {
 		proj_matrix = ortho * proj_matrix;
 	}
+}
+
+void glPointSize(GLfloat size)
+{
+	point_size = size;
 }
 
 }
@@ -473,9 +479,13 @@ namespace gles2 {
 
 	GLfloat get_point_size()
 	{
+#if defined(GL_ES_VERSION_2_0)
+		return point_size;
+#else
 		GLfloat pt_size;
 		glGetFloatv(GL_POINT_SIZE, &pt_size);
 		return pt_size;
+#endif
 	}
 
 	void init_default_shader()

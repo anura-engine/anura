@@ -95,10 +95,6 @@
 #include "b2d_ffl.hpp"
 #endif
 
-#if defined(__ANDROID__)
-#include "prof.h"
-#endif
-
 #if defined(TARGET_PANDORA) || defined(TARGET_TEGRA)
 #include "eglport.h"
 #elif defined(TARGET_BLACKBERRY)
@@ -890,12 +886,12 @@ extern "C" int main(int argcount, char* argvec[])
 	std::cerr << "Stencil bits: " << stencil_bits << std::endl;
 
 #if defined(USE_GLES2)
+#if !defined(GL_ES_VERSION_2_0)
 	GLfloat min_pt_sz;
 	glGetFloatv(GL_POINT_SIZE_MIN, &min_pt_sz);
 	GLfloat max_pt_sz;
 	glGetFloatv(GL_POINT_SIZE_MAX, &max_pt_sz);
 	std::cerr << "Point size range: " << min_pt_sz << " < size < " << max_pt_sz << std::endl;
-#if !defined(GL_ES_VERSION_2_0)
 	glEnable(GL_POINT_SPRITE);
 	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
 #endif
