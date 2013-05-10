@@ -1057,6 +1057,7 @@ void try_fix_assert()
 
 void edit_and_continue_assert(const std::string& msg)
 {
+#if SDL_VERSION_ATLEAST(2, 0, 0)
 	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
@@ -1135,6 +1136,7 @@ void edit_and_continue_assert(const std::string& msg)
 		}
 		console->complete_draw();
 	}
+#endif //SDL >=2
 }
 
 COMMAND_LINE_UTILITY(codeedit)
