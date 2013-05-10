@@ -298,7 +298,7 @@ void iphone_controls::draw()
 #if defined(USE_GLES2)
 		glColor4ub(255, 0, 0, 255);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
+		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
 		glDrawArrays(GL_LINES, 0, (sizeof(varray)/sizeof(*varray))/2);
 #else
 		glDisable(GL_TEXTURE_2D);

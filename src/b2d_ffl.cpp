@@ -16,6 +16,7 @@
 */
 #include "asserts.hpp"
 #include "b2d_ffl.hpp"
+#include "graphics.hpp"			// -- needed for debug functions
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "raster.hpp"

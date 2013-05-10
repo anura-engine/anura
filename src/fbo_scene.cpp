@@ -27,7 +27,11 @@
 #include "texture_frame_buffer.hpp"
 
 #if defined(__ANDROID__)
+#if defined(USE_GLES2)
+#include <GLES2/gl2ext.h>
+#else
 #include <GLES/glext.h>
+#endif
 #endif
 
 #if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)

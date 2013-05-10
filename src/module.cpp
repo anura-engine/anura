@@ -306,6 +306,7 @@ void load(const std::string& mod_file_name, bool initial)
 }
 
 void reload(const std::string& name) {
+	preferences::set_preferences_path_from_module(name);
 	loaded_paths().clear();
 	loaded_paths().push_back(core);
 	load(name, true);
