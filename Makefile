@@ -41,9 +41,9 @@ BASE_CXXFLAGS += -g -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dto
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
 ifeq ($(USE_SDL2),yes)
-INC := -Isrc -Isrc/server $(shell pkg-config --cflags x11 sdl2 glu glew SDL2_image libpng zlib)
+INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glu glew SDL2_image libpng zlib)
 else
-INC := -Isrc -Isrc/server $(shell pkg-config --cflags x11 sdl glu glew SDL_image libpng zlib)
+INC := -Isrc $(shell pkg-config --cflags x11 sdl glu glew SDL_image libpng zlib)
 endif
 
 # Linker library options.
@@ -69,16 +69,6 @@ src/%.o : src/%.cpp
 		sed -e 's/^ *//' -e 's/$$/:/' >> src/$*.d
 	@rm -f $*.d.tmp
 
-src/server/%.o : src/server/%.cpp
-	@echo "Building: " $<
-	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
-	@$(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -MM $< > $*.d
-	@mv -f $*.d $*.d.tmp
-	@sed -e 's|.*:|src/server/$*.o:|' < $*.d.tmp > src/server/$*.d
-	@sed -e 's/.*://' -e 's/\\$$//' < $*.d.tmp | fmt -1 | \
-		sed -e 's/^ *//' -e 's/$$/:/' >> src/server/$*.d
-	@rm -f $*.d.tmp
-
 game: $(objects)
 	@echo "Linking : game"
 	@$(CCACHE) $(CXX) \
@@ -89,14 +79,8 @@ game: $(objects)
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
 
-server: $(server_objects)
-	$(CCACHE) $(CXX) \
-		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) \
-		$(server_objects) -o server \
-		$(LIBS) -lboost_regex -lboost_system -lboost_thread -lboost_iostreams
-
 clean:
-	rm -f src/*.o src/*.d src/server/*.o src/server/*.d *.o *.d game server
+	rm -f src/*.o src/*.d *.o *.d game
 
 unittests: game
 	./game --tests

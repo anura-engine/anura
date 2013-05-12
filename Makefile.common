@@ -197,8 +197,3 @@ ifneq ($(USE_SDL2),yes)
 objects += src/wm.o
 endif
 
-
-# Server
-server_objects = \
-	src/server/server.o \
-	src/server/simple_wml.o
