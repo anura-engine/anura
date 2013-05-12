@@ -26,7 +26,7 @@ compiled-*
 tiles-compiled-*
 
 compiled/
-modules/Citadel
+modules/[Cc]itadel
 modules/frogatto
 modules/elisa
 modules/weregild
