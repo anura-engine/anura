@@ -38,7 +38,7 @@ if use_sdl2:
 else:
     env.ParseConfig("sdl-config --libs --cflags")
     env.Append(LIBS = ["SDL_mixer", "SDL_image", "SDL_ttf"])
-env.Append(LIBS = ["GL", "GLU", "GLEW", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
+env.Append(LIBS = ["GL", "GLU", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
 env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG"], LINKFLAGS = ["-pthread"])
 if sys.platform.startswith('linux'):
     env.Append(LIBS = ["X11"])
