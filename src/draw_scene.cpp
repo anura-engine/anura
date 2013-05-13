@@ -148,6 +148,18 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 	const int screen_height = graphics::screen_height() - (lvl.in_editor() ? codebar_height : 0);
 
 	if(focus) {
+
+		const float target_zoom = lvl.zoom_level().as_float();
+		const float ZoomSpeed = 0.03;
+		const float prev_zoom = pos.zoom;
+		if(std::abs(target_zoom - pos.zoom) < ZoomSpeed) {
+			pos.zoom = target_zoom;
+		} else if(pos.zoom > target_zoom) {
+			pos.zoom -= ZoomSpeed;
+		} else {
+			pos.zoom += ZoomSpeed;
+		}
+
 		// If the camera is automatically moved along by the level (e.g. a 
 		// hurtling through the sky level) do that here.
 		pos.x += lvl.auto_move_camera_x()*100;
@@ -166,13 +178,12 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		//of the level. These boundaries keep the camera from ever going out
 		//of the bounds of the level.
 		
-		const decimal inverse_zoom_level = lvl.zoom_level() != decimal(0) ? (decimal(1.0)/lvl.zoom_level()) : decimal(0);
+		const float inverse_zoom_level = 1.0/pos.zoom;
 		
-		
-		const int min_x = lvl.boundaries().x() + ((screen_width/2 - x_screen_pad/2)*inverse_zoom_level).as_int();
-		const int max_x = lvl.boundaries().x2() - ((screen_width/2 + x_screen_pad/2)*inverse_zoom_level).as_int();
-		const int min_y = lvl.boundaries().y() + ((screen_height/2 - y_screen_pad/2)*inverse_zoom_level).as_int();
-		const int max_y = lvl.boundaries().y2() - ((screen_height/2 + y_screen_pad/2)*inverse_zoom_level).as_int();
+		const int min_x = lvl.boundaries().x() + ((screen_width/2 - x_screen_pad/2)*inverse_zoom_level);
+		const int max_x = lvl.boundaries().x2() - ((screen_width/2 + x_screen_pad/2)*inverse_zoom_level);
+		const int min_y = lvl.boundaries().y() + ((screen_height/2 - y_screen_pad/2)*inverse_zoom_level);
+		const int max_y = lvl.boundaries().y2() - ((screen_height/2 + y_screen_pad/2)*inverse_zoom_level);
 
 		//std::cerr << "BOUNDARIES: " << lvl.boundaries().x() << ", " << lvl.boundaries().x2() << " WIDTH: " << screen_width << " PAD: " << x_screen_pad << "\n";
 
@@ -260,6 +271,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 			pos.y = target_ypos;
 			pos.init = true;
 		} else {
+
 			//Make (pos.x, pos.y) converge toward (target_xpos,target_ypos).
 			//We do this by moving asymptotically toward the target, which
 			//makes the camera have a nice acceleration/decceleration effect
@@ -271,6 +283,21 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 
 			pos.x += xdiff;
 			pos.y += ydiff;
+
+			//If we zoom we have an adjustment in our horizontal position
+			//so that if we're flush against the edge of the level we make
+			//sure we maintain this position to make zooming attractive.
+			const int zoom_adjust_horz_speed = abs((pos.zoom - prev_zoom)*screen_width/2)*100;
+
+			if(pos.x != target_xpos && zoom_adjust_horz_speed) {
+				if(abs(pos.x - target_xpos < zoom_adjust_horz_speed)) {
+					pos.x = target_xpos;
+				} else if(pos.x < target_xpos) {
+					pos.x += zoom_adjust_horz_speed;
+				} else {
+					pos.x -= zoom_adjust_horz_speed;
+				}
+			}
 		}
 		
 		
@@ -315,15 +342,6 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 			}
 		}
 
-		const float target_zoom = lvl.zoom_level().as_float();
-		const float ZoomSpeed = 0.03;
-		if(std::abs(target_zoom - pos.zoom) < ZoomSpeed) {
-			pos.zoom = target_zoom;
-		} else if(pos.zoom > target_zoom) {
-			pos.zoom -= ZoomSpeed;
-		} else {
-			pos.zoom += ZoomSpeed;
-		}
 	}
 
 	last_position = pos;
