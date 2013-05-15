@@ -42,6 +42,9 @@ class formula_object : public game_logic::wml_serializable_formula_callable
 public:
 	static void visit_variants(variant v, boost::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
 
+	static variant deep_clone(variant v);
+	static variant deep_clone(variant v, std::map<formula_object*,formula_object*>& mapping);
+
 	static void reload_classes();
 	static void load_all_classes();
 	static void try_load_class(const std::string& name);

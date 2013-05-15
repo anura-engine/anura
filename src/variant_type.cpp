@@ -359,7 +359,7 @@ public:
 			}
 		}
 
-		return variant_type::get_list(get_union(types));
+		return get_union(types);
 	}
 
 	std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const {

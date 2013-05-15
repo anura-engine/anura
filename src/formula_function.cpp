@@ -1223,6 +1223,24 @@ FUNCTION_DEF(zip, 3, 3, "zip(list1, list2, expr) -> list")
 		return variant(&retMap);
 	}
 	return variant();
+FUNCTION_TYPE_DEF
+	variant_type_ptr type_a = args()[0]->query_variant_type();
+	variant_type_ptr type_b = args()[1]->query_variant_type();
+
+	if(type_a->is_list_of()) {
+		return variant_type::get_list(args()[2]->query_variant_type());
+	} else {
+		std::pair<variant_type_ptr,variant_type_ptr> map_a = type_a->is_map_of();
+		std::pair<variant_type_ptr,variant_type_ptr> map_b = type_b->is_map_of();
+		if(map_a.first && map_b.first) {
+			std::vector<variant_type_ptr> key;
+			key.push_back(map_a.first);
+			key.push_back(map_b.first);
+			return variant_type::get_map(variant_type::get_union(key), args()[2]->query_variant_type());
+		}
+	}
+
+	return variant_type::get_any();
 END_FUNCTION_DEF(zip)
 
 FUNCTION_DEF(float_array, 1, 2, "float_array(list, (opt) num_elements) -> callable: Converts a list of floating point values into an efficiently accessible object.")
@@ -2862,6 +2880,8 @@ FUNCTION_DEF(debug_fn, 2, 2, "debug_fn(msg, expr): evaluates and returns expr. W
 	}
 
 	return res;
+FUNCTION_TYPE_DEF
+	return args()[1]->query_variant_type();
 END_FUNCTION_DEF(debug_fn)
 
 bool consecutive_periods(char a, char b) {
@@ -2897,9 +2917,12 @@ public:
 				variant v = json::parse(sys::read_file(docname_));
 
 				if(sys::file_exists(docname_ + ".stats")) {
-					variant stats = json::parse(sys::read_file(docname_ + ".stats"));
-					foreach(const variant::map_pair& p, stats.as_map()) {
-						map_[p.first.as_string()] = NodeInfo(p.second);
+					try {
+						variant stats = json::parse(sys::read_file(docname_ + ".stats"));
+						foreach(const variant::map_pair& p, stats.as_map()) {
+							map_[p.first.as_string()] = NodeInfo(p.second);
+						}
+					} catch(json::parse_error& e) {
 					}
 				}
 
@@ -2909,7 +2932,7 @@ public:
 					}
 				}
 			} catch(json::parse_error& e) {
-				ASSERT_LOG(false, "Eerror parsing json for backed map in " << docname_ << ": " << e.error_message());
+				ASSERT_LOG(false, "Error parsing json for backed map in " << docname_ << ": " << e.error_message());
 			}
 		}
 
@@ -3005,7 +3028,11 @@ FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function g
 		return variant(formatter() << "RELATIVE PATH OUTSIDE ALLOWED " << docname);
 	}
 
-	docname = preferences::user_data_path() + docname;
+	if(sys::file_exists(module::map_file(docname))) {
+		docname = module::map_file(docname);
+	} else {
+		docname = preferences::user_data_path() + docname;
+	}
 
 	variant fn = args()[1]->evaluate(variables);
 
@@ -3688,6 +3715,54 @@ FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically 
 	ASSERT_LOG(type.get() != NULL, "NULL VALUE RETURNED FROM TYPE QUERY");
 	return variant(type->to_string());
 END_FUNCTION_DEF(typeof)
+
+class mod_object_callable : public formula_callable {
+public:
+	explicit mod_object_callable(boost::intrusive_ptr<formula_object> obj) : obj_(obj), v_(obj.get())
+	{}
+
+private:
+	variant get_value(const std::string& key) const {
+		if(key == "object") {
+			return v_;
+		} else {
+			ASSERT_LOG(false, "Unknown key: " << key);
+		}
+
+		return variant();
+	}
+
+	variant get_value_by_slot(int slot) const {
+		if(slot == 0) {
+			return v_;
+		}
+
+		ASSERT_LOG(false, "Unknown key: " << slot);
+		return variant();
+	}
+
+	boost::intrusive_ptr<formula_object> obj_;
+	variant v_;
+};
+
+FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
+	boost::intrusive_ptr<formula_object> obj(args()[0]->evaluate(variables).convert_to<formula_object>());
+
+	obj = formula_object::deep_clone(variant(obj.get())).convert_to<formula_object>();
+
+	variant commands_fn = args()[1]->evaluate(variables);
+
+	std::vector<variant> args;
+	args.push_back(variant(obj.get()));
+	variant commands = commands_fn(args);
+
+	obj->execute_command(commands);
+
+	return variant(obj.get());
+
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type();
+END_FUNCTION_DEF(get_modified_object)
 
 }
 
