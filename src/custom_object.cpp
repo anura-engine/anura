@@ -1028,6 +1028,9 @@ void custom_object::draw(int xx, int yy) const
 
 	if(type_->hidden_in_game() && !level::current().in_editor()) {
 		//pass
+	} else if(custom_draw_xy_.size() >= 6 &&
+	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
 		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
 	} else if(draw_scale_) {
@@ -2754,6 +2757,26 @@ variant custom_object::get_value_by_slot(int slot) const
 		}
 	case CUSTOM_OBJECT_HAS_FEET: return variant::from_bool(has_feet_);
 
+	case CUSTOM_OBJECT_UV_ARRAY: {
+		std::vector<variant> result;
+		result.reserve(custom_draw_uv_.size());
+		foreach(GLfloat f, custom_draw_uv_) {
+			result.push_back(variant(decimal(f)));
+		}
+
+		return variant(&result);
+	}
+
+	case CUSTOM_OBJECT_XY_ARRAY: {
+		std::vector<variant> result;
+		result.reserve(custom_draw_xy_.size());
+		foreach(GLfloat f, custom_draw_xy_) {
+			result.push_back(variant(decimal(f)));
+		}
+
+		return variant(&result);
+	}
+
 	case CUSTOM_OBJECT_EVENT_HANDLERS: {
 		return variant(new event_handlers_callable(*this));
 	}
@@ -3981,6 +4004,68 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 
 		v->swap(draw_order);
 
+		break;
+	}
+
+	case CUSTOM_OBJECT_UV_ARRAY: {
+		if(value.is_null()) {
+			custom_draw_uv_.clear();
+		} else {
+			custom_draw_uv_.clear();
+			foreach(const variant& v, value.as_list()) {
+				custom_draw_uv_.push_back(v.as_decimal().as_float());
+			}
+		}
+
+		break;
+	}
+
+	case CUSTOM_OBJECT_XY_ARRAY: {
+		if(value.is_null()) {
+			custom_draw_xy_.clear();
+		} else {
+			custom_draw_xy_.clear();
+			foreach(const variant& v, value.as_list()) {
+				custom_draw_xy_.push_back(v.as_decimal().as_float());
+			}
+		}
+
+		break;
+	}
+
+	case CUSTOM_OBJECT_UV_SEGMENTS: {
+		const std::vector<variant>& items = value.as_list();
+		ASSERT_LOG(items.size() == 2, "Invalid value passed to uv_segments: " << value.write_json() << ". Requires [int,int]");
+		const int xdim = items[0].as_int() + 2;
+		const int ydim = items[1].as_int() + 2;
+
+		custom_draw_xy_.clear();
+		custom_draw_uv_.clear();
+
+		for(int ypos = 0; ypos < ydim-1; ++ypos) {
+			const GLfloat y = GLfloat(ypos)/GLfloat(ydim-1);
+			const GLfloat y2 = GLfloat(ypos+1)/GLfloat(ydim-1);
+			for(int xpos = 0; xpos < xdim; ++xpos) {
+				const GLfloat x = GLfloat(xpos)/GLfloat(xdim-1);
+
+				if(xpos == 0 && ypos > 0) {
+					custom_draw_uv_.push_back(x);
+					custom_draw_uv_.push_back(y);
+				}
+
+				custom_draw_uv_.push_back(x);
+				custom_draw_uv_.push_back(y);
+				custom_draw_uv_.push_back(x);
+				custom_draw_uv_.push_back(y2);
+
+				if(xpos == xdim-1 && ypos != ydim-2) {
+					custom_draw_uv_.push_back(x);
+					custom_draw_uv_.push_back(y2);
+				}
+			}
+		}
+
+		custom_draw_xy_ = custom_draw_uv_;
 		break;
 	}
 

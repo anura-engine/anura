@@ -101,14 +101,14 @@ namespace {
 }
 
 program::program() 
-	: object_(0), u_mvp_matrix_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 }
 
 
 program::program(const std::string& name, const shader& vs, const shader& fs)
-	: object_(0)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 	init(name, vs, fs);
@@ -119,7 +119,8 @@ void program::init(const std::string& name, const shader& vs, const shader& fs)
 	name_ = name;
 	vs_ = vs;
 	fs_ = fs;
-	ASSERT_LOG(link(), "Error linking program: " << name_);
+	const bool link_result = link();
+	ASSERT_LOG(link_result, "Error linking program: " << name_);
 }
 
 bool program::link()
@@ -883,30 +884,21 @@ void program::vertex_attrib_array(GLint ndx, GLint size, GLenum type, GLboolean 
 
 void program::vertex_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-	if(stored_attributes_.has_key("vertex")) {
-		const variant& v = stored_attributes_["vertex"];
-		if(v.is_string()) {
-			vertex_attrib_array(get_attribute(v.as_string()), size, type, normalized, stride, ptr);
-		} else {
-			ASSERT_LOG(false, "Expected vertex attribute to be string.");
-		}
-	} else {
-		ASSERT_LOG(false, "No attribute mapping found for: 'vertex', program: " << name());
+	if(vertex_location_ == -1) {
+		ASSERT_LOG(vertex_attribute_.empty() == false, "No attribute mapping found for 'vertex', program: " << name());
+		vertex_location_ = get_attribute(vertex_attribute_);
 	}
+	vertex_attrib_array(vertex_location_, size, type, normalized, stride, ptr);
 }
 
 void program::texture_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-	if(stored_attributes_.has_key("texcoord")) {
-		const variant& v = stored_attributes_["texcoord"];
-		if(v.is_string()) {
-			vertex_attrib_array(get_attribute(v.as_string()), size, type, normalized, stride, ptr);
-		} else {
-			ASSERT_LOG(false, "Expected texcoord attribute to be string.");
-		}
-	} else {
-		ASSERT_LOG(false, "No attribute mapping found for: 'texcoord', program: " << name());
+	if(texcoord_location_ == -1) {
+		ASSERT_LOG(texcoord_attribute_.empty() == false, "No attribute mapping found for 'texcoord', program: " << name());
+		texcoord_location_ = get_attribute(texcoord_attribute_);
 	}
+
+	vertex_attrib_array(texcoord_location_, size, type, normalized, stride, ptr);
 }
 
 void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
@@ -926,6 +918,9 @@ void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei
 void program::set_fixed_attributes(const variant& node)
 {
 	stored_attributes_ = node;
+
+	vertex_attribute_ = node["vertex"].as_string_default();
+	texcoord_attribute_ = node["texcoord"].as_string_default();
 }
 
 void program::set_fixed_uniforms(const variant& node)
@@ -936,6 +931,21 @@ void program::set_fixed_uniforms(const variant& node)
 	} else {
 		u_mvp_matrix_ = -1;
 	}
+
+	if(node.has_key("sprite_area")) {
+		u_sprite_area_ = GLint(get_uniform(node["sprite_area"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "sprite_area uniform given but nothing in corresponding shader.");
+	} else {
+		u_sprite_area_ = -1;
+	}
+
+	if(node.has_key("sprite_area")) {
+		u_cycle_ = GLint(get_uniform(node["cycle"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "cycle uniform given but nothing in corresponding shader.");
+	} else {
+		u_cycle_ = -1;
+	}
+
 	if(node.has_key("color")) {
 		u_color_ = GLint(get_uniform(node["color"].as_string()));
 		ASSERT_LOG(u_color_ != -1, "color uniform given but nothing in corresponding shader.");
@@ -1060,6 +1070,24 @@ void program::set_known_uniforms()
 		GLfloat pt_size;
 		glGetFloatv(GL_POINT_SIZE, &pt_size);
 		glUniform1f(u_point_size_, pt_size);
+	}
+#endif
+}
+
+void program::set_sprite_area(const GLfloat* fl)
+{
+#if defined(USE_GLES2)
+	if(u_sprite_area_ != -1) {
+		glUniform4fv(u_sprite_area_, 1, fl);
+	}
+#endif
+}
+
+void program::set_cycle(int cycle)
+{
+#if defined(USE_GLES2)
+	if(u_cycle_ != -1) {
+		glUniform1f(u_cycle_, static_cast<GLfloat>(cycle));
 	}
 #endif
 }
@@ -1233,7 +1261,11 @@ void shader_program::prepare_draw()
 //#if defined(WIN32)
 //	profile::manager manager("SHADER_INFO:" + program_object_->name());
 //#endif
+	glGetError();
+	ASSERT_LOG(glGetError() == GL_NONE, "XXX Error in shader");
+	ASSERT_LOG(glIsProgram(program_object_->get()), "NOT A PROGRAM");
 	glUseProgram(program_object_->get());
+	ASSERT_LOG(glGetError() == GL_NONE, "Error in shader");
 	program_object_->set_deferred_uniforms();
 	program_object_->set_known_uniforms();
 	game_logic::formula_callable* e = this;

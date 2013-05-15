@@ -38,6 +38,28 @@ namespace {
 
 	GLenum shade_model = GL_FLAT;
 	GLfloat point_size = 1.0f;
+
+	std::string gl_error_to_string(GLenum error) {
+#define DEFINE_ERROR(err) case err: return #err
+		switch(error) {
+			DEFINE_ERROR(GL_NO_ERROR);
+			DEFINE_ERROR(GL_INVALID_ENUM);
+			DEFINE_ERROR(GL_INVALID_VALUE);
+			DEFINE_ERROR(GL_INVALID_OPERATION);
+			DEFINE_ERROR(GL_INVALID_FRAMEBUFFER_OPERATION);
+			DEFINE_ERROR(GL_OUT_OF_MEMORY);
+			DEFINE_ERROR(GL_STACK_UNDERFLOW);
+			DEFINE_ERROR(GL_STACK_OVERFLOW);
+			default:
+				return "Unknown error";
+		}
+#undef DEFINE_ERROR
+	}
+
+	void check_gl_errors() {
+		GLenum err = glGetError();
+		ASSERT_LOG(err == GL_NONE, "Error in shader code: " << " : 0x" << std::hex << err << ": " << gl_error_to_string(err));
+	}
 }
 
 #if defined(GL_ES_VERSION_2_0)
@@ -565,10 +587,11 @@ namespace gles2 {
 			active_shader_program = shader;
 		}
 		ASSERT_LOG(active_shader_program != NULL, "Active shader was NULL");
+		check_gl_errors();
 		active_shader_program->prepare_draw();
 
 		GLenum err = glGetError();
-		ASSERT_LOG(err == GL_NONE, "Error in shader code: " << shader->name() << " : 0x" << std::hex << err);
+		ASSERT_LOG(err == GL_NONE, "Error in shader code: " << shader->name() << " : 0x" << std::hex << err << ": " << gl_error_to_string(err));
 	}
 
 	manager::~manager()

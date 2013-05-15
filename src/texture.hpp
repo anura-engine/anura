@@ -34,6 +34,7 @@ class texture
 public:
 	static unsigned int next_power_of_2(unsigned int n);
 	static bool allows_npot();
+	static void debug_dump_textures(const char* path);
 
 	enum {NO_STRIP_SPRITESHEET_ANNOTATIONS = 1};
 	//error thrown if an operation is done from a worker thread that

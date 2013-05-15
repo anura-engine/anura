@@ -73,6 +73,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	"x_schedule", "y_schedule", "rotation_schedule", "schedule_speed",
 	"schedule_expires",
 	"platform_area", "platform_offsets", "custom_draw",
+	"uv_array", "xy_array", "uv_segments",
 	"draw_primitives", "event_handlers",
 	"use_absolute_screen_coordinates",
 	"widgets", "textv", "body", "mouseover_delay", "mouseover_area",

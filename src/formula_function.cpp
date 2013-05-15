@@ -3716,6 +3716,36 @@ FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically 
 	return variant(type->to_string());
 END_FUNCTION_DEF(typeof)
 
+class gc_command : public game_logic::command_callable
+{
+public:
+	virtual void execute(game_logic::formula_callable& ob) const 
+	{
+		custom_object::run_garbage_collection();
+	}
+};
+
+FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
+	return variant(new gc_command);
+END_FUNCTION_DEF(trigger_garbage_collection)
+
+class debug_dump_textures_command : public game_logic::command_callable
+{
+	std::string fname_;
+public:
+	explicit debug_dump_textures_command(const std::string& fname) : fname_(fname)
+	{}
+	virtual void execute(game_logic::formula_callable& ob) const 
+	{
+		graphics::texture::debug_dump_textures(fname_.c_str());
+	}
+};
+
+FUNCTION_DEF(debug_dump_textures, 1, 1, "debug_dump_textures(string dir): dump textures to the given directory")
+	std::string path = args()[0]->evaluate(variables).as_string();
+	return variant(new debug_dump_textures_command(path));
+END_FUNCTION_DEF(debug_dump_textures)
+
 class mod_object_callable : public formula_callable {
 public:
 	explicit mod_object_callable(boost::intrusive_ptr<formula_object> obj) : obj_(obj), v_(obj.get())

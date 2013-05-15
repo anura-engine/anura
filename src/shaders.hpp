@@ -118,6 +118,8 @@ public:
 	static std::map<std::string, gles2::program_ptr>& get_shaders();
 	static void clear_shaders();
 	void set_known_uniforms();
+	void set_sprite_area(const GLfloat* fl);
+	void set_cycle(int cycle);
 protected:
 	bool link();
 	bool queryUniforms();
@@ -137,9 +139,17 @@ private:
 	std::map<std::string, actives> attribs_;
 	std::map<std::string, actives> uniforms_;
 
+	//"vertex" and "texcoord" values within stored_attributes_
+	std::string vertex_attribute_;
+	std::string texcoord_attribute_;
+
+	GLint vertex_location_, texcoord_location_;
+
 	std::vector<std::map<std::string, actives>::iterator> uniforms_to_update_;
 
 	GLint u_mvp_matrix_;
+	GLint u_sprite_area_;
+	GLint u_cycle_;
 	GLint u_color_;
 	GLint u_point_size_;
 

@@ -197,6 +197,27 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 {
 	static SDL_Window* wnd = NULL;
 	static SDL_GLContext ctx = NULL;
+	static int wnd_flags = 0;
+
+	if(wnd) {
+		SDL_DisplayMode mode;
+		if(SDL_GetWindowDisplayMode(wnd, &mode) == 0) {
+			mode.w = w;
+			mode.h = h;
+			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
+				SDL_SetWindowSize(wnd, w, h);
+				SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+				return wnd;
+			} else {
+				fprintf(stderr, "ERROR: Failed to set window display mode. Destroying window and creating a new one.\n");
+			}
+
+		} else {
+			fprintf(stderr, "ERROR: Failed to get window display mode. Destroying window and creating a new one.\n");
+		}
+	}
+
+	wnd_flags = flags;
 	
 	graphics::texture::unbuild_all();
 #if defined(USE_GLES2) 

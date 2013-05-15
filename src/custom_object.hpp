@@ -451,6 +451,9 @@ private:
 
 	boost::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
 
+	std::vector<GLfloat> custom_draw_xy_;
+	std::vector<GLfloat> custom_draw_uv_;
+
 	void set_platform_area(const rect& area);
 
 	std::vector<int> platform_offsets_;
