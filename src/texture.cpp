@@ -294,6 +294,25 @@ texture::texture(unsigned int id, int width, int height)
 	id_->height = height;
 	id_->info = "fbo";
 
+	id_->unbuild_id();
+
+	surface s = id_->s;
+
+	const int npixels = s->w*s->h;
+	for(int n = 0; n != npixels; ++n) {
+		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->pixels) + n*4;
+		if(pixel[3] == 0) {
+			const int x = n%s->w;
+			const int y = n/s->w;
+			if(x < width_ && y < height_) {
+				(*alpha_map_)[y*width_ + x] = true;
+			}
+		}
+	}
+
+	id_->s = surface();
+
+	//TEMPORARY DEBUG CODE ONLY
 	{
 	int nfbo = 0, ninit = 0;
 	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
@@ -796,6 +815,23 @@ void texture::clear_modified_files_from_cache()
 	files_updated = error_paths;
 }
 #endif // NO_EDITOR
+
+surface texture::get_surface()
+{
+	if(!id_ || !id_->init()) {
+		return surface();
+	}
+
+	if(id_->s.get()) {
+		return id_->s;
+	}
+
+	id_->unbuild_id();
+
+	surface result = id_->s;
+	id_->s = surface();
+	return result;
+}
 
 const unsigned char* texture::color_at(int x, int y) const
 {

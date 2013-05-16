@@ -84,6 +84,8 @@ public:
 	unsigned int width() const { return width_; }
 	unsigned int height() const { return height_; }
 
+	surface get_surface();
+
 	bool is_alpha(int x, int y) const { return (*alpha_map_)[y*width_ + x]; }
 	std::vector<bool>::const_iterator get_alpha_row(int x, int y) const { return alpha_map_->begin() + y*width_ + x; }
 	std::vector<bool>::const_iterator end_alpha() const { return alpha_map_->end(); }

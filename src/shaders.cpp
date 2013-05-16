@@ -1130,6 +1130,7 @@ shader_program::shader_program(const std::string& program_name)
 {
 	name_ = program_name;
 	program_object_ = program::find_program(name_);
+	ASSERT_LOG(program_object_.get(), "COULD NOT FIND SHADER: " << name_);
 	uniform_commands_->set_program(program_object_);
 	attribute_commands_->set_program(program_object_);
 }

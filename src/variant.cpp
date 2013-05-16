@@ -783,6 +783,8 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		return variant();
 	}
 
+	must_be(VARIANT_TYPE_FUNCTION);
+
 	std::vector<variant> args_buf;
 	if(fn_->bound_args.empty() == false) {
 		args_buf = fn_->bound_args;
@@ -791,7 +793,6 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	const std::vector<variant>* args = args_buf.empty() ? &passed_args : &args_buf;
 
-	must_be(VARIANT_TYPE_FUNCTION);
 	boost::intrusive_ptr<game_logic::slot_formula_callable> callable = new game_logic::slot_formula_callable;
 	if(fn_->callable) {
 		callable->set_fallback(fn_->callable);

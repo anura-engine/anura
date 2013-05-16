@@ -21,6 +21,7 @@
 #include <string>
 #include <time.h>
 
+#include "IMG_savepng.h"
 #include "achievements.hpp"
 #include "asserts.hpp"
 #include "blur.hpp"
@@ -64,6 +65,7 @@
 #include "speech_dialog.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
+#include "surface.hpp"
 #include "thread.hpp"
 #include "unit_test.hpp"
 #include "preferences.hpp"
@@ -175,7 +177,7 @@ FUNCTION_DEF(performance, 0, 0, "performance(): returns an object with current p
 	return variant(performance_data::current());
 END_FUNCTION_DEF(performance)
 
-FUNCTION_DEF(texture, 2, 2, "texture(objects, rect): render a texture")
+FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
 	variant objects = args()[0]->evaluate(variables);
 	variant area = args()[1]->evaluate(variables);
 
@@ -189,7 +191,22 @@ FUNCTION_DEF(texture, 2, 2, "texture(objects, rect): render a texture")
 
 	const rect r(area);
 
-	const graphics::texture t = render_fbo(r, obj);
+	graphics::texture t = render_fbo(r, obj);
+
+	if(args().size() > 2 && args()[2]->evaluate(variables).as_bool()) {
+		using namespace graphics;
+		surface src = t.get_surface();
+		surface dst(SDL_CreateRGBSurface(0, src->w/2, src->h/2, 32, SURFACE_MASK));
+
+		SDL_Rect src_rect = {0,0,src->w,src->h};
+		SDL_Rect dst_rect = {0,0,dst->w,dst->h};
+
+		SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
+
+		SDL_SoftStretch(src.get(), &src_rect, dst.get(), &dst_rect);
+		t = texture::get_no_cache(dst);
+	}
+
 	return variant(new texture_object(t));
 
 END_FUNCTION_DEF(texture)

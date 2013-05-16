@@ -620,9 +620,9 @@ void code_editor_dialog::process()
 				if(selected && selected->type == formula_tokenizer::TOKEN_IDENTIFIER) {
 					const std::string identifier(selected->begin, selected->end);
 
-					static const custom_object_callable obj_definition;
-					for(int n = 0; n != obj_definition.num_slots(); ++n) {
-						const std::string id = obj_definition.get_entry(n)->id;
+					static const boost::intrusive_ptr<custom_object_callable> obj_definition(new custom_object_callable);
+					for(int n = 0; n != obj_definition->num_slots(); ++n) {
+						const std::string id = obj_definition->get_entry(n)->id;
 						if(id.size() > identifier.size() && std::equal(identifier.begin(), identifier.end(), id.begin())) {
 							Suggestion s = { id, "", "", 0 };
 							suggestions.push_back(s);

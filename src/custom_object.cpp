@@ -2356,9 +2356,9 @@ class event_handlers_callable : public formula_callable {
 		}
 	}
 	void set_value(const std::string& key, const variant& value) {
-		static custom_object_callable custom_object_definition;
+		static boost::intrusive_ptr<custom_object_callable> custom_object_definition(new custom_object_callable);
 
-		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), &custom_object_definition));
+		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
 		obj_->set_event_handler(get_object_event_id(key), f);
 	}
 public:
@@ -3270,6 +3270,9 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			set_frame(value.as_string());
 		} else if(value.is_map()) {
 			frame_ptr f(new frame(value));
+			if(type_->use_image_for_collisions()) {
+				f->set_image_as_solid();
+			}
 			set_frame(*f);
 		} else {
 			set_frame(*value.convert_to<frame>());
