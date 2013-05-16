@@ -561,7 +561,6 @@ void texture::set_as_current_texture() const
 	current_texture = id;
 
 	glBindTexture(GL_TEXTURE_2D,id);
-	//std::cerr << gluErrorString(glGetError()) << "~set_as_current_texture~\n";
 }
 
 unsigned int texture::get_current_texture()

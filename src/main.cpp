@@ -1066,9 +1066,6 @@ extern "C" int main(int argcount, char* argvec[])
 	
 	preferences::save_preferences();
 	std::cerr << SDL_GetError() << "\n";
-#if !defined(TARGET_OS_HARMATTAN) && !defined(TARGET_TEGRA) && !defined(TARGET_BLACKBERRY) && !defined(__ANDROID__) && !defined(USE_GLES2)
-	std::cerr << gluErrorString(glGetError()) << "\n";
-#endif
 
 #if !defined(_MSC_VER) && defined(UTILITY_IN_PROC)
 	if(create_utility_in_new_process) {
