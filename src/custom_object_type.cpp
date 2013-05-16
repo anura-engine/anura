@@ -998,6 +998,15 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 		}
 	}
 	init_event_handlers(node, event_handlers_, function_symbols(), base_type ? &base_type->event_handlers_ : NULL);
+
+	if(node.has_key("blend_mode_source") || node.has_key("blend_mode_dest")) {
+		blend_mode_.reset(new graphics::blend_mode);
+		blend_mode_->sfactor = GL_ONE;
+		blend_mode_->dfactor = GL_ONE;
+
+		blend_mode_->sfactor = get_blend_mode(node["blend_mode_source"]);
+		blend_mode_->dfactor = get_blend_mode(node["blend_mode_dest"]);
+	}
 }
 
 custom_object_type::~custom_object_type()

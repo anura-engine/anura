@@ -251,4 +251,6 @@ typedef boost::intrusive_ptr<const shader_program> const_shader_ptr;
 
 }
 
+GLenum get_blend_mode(variant v);
+
 #endif

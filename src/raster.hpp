@@ -34,6 +34,11 @@ extern int xypos_draw_mask;
 namespace graphics
 {
 
+struct blend_mode
+{
+	GLenum sfactor, dfactor;
+};
+
 struct flip_draw_scope
 {
 	flip_draw_scope();

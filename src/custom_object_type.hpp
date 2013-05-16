@@ -29,6 +29,7 @@
 #include "formula_function.hpp"
 #include "frame.hpp"
 #include "particle_system.hpp"
+#include "raster.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 #ifdef USE_BOX2D
@@ -240,6 +241,8 @@ public:
 
 	bool is_strict() const { return is_strict_; }
 
+	const graphics::blend_mode* blend_mode() const { return blend_mode_.get(); }
+
 private:
 	//recreate an object type, optionally given the old version to base
 	//things off where possible
@@ -362,6 +365,8 @@ private:
 
 	//does this object use strict checking?
 	bool is_strict_;
+
+	boost::shared_ptr<graphics::blend_mode> blend_mode_;
 };
 
 #endif

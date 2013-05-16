@@ -994,6 +994,10 @@ void custom_object::draw(int xx, int yy) const
 		adjusted_draw_position_.y = yy;
 	}
 
+	if(type_->blend_mode()) {
+		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
+	}
+
 #if defined(USE_GLES2)
 #ifndef NO_EDITOR
 	try {
@@ -1200,6 +1204,10 @@ void custom_object::draw(int xx, int yy) const
 
 	if(use_absolute_screen_coordinates_) {
 		glPopMatrix();
+	}
+
+	if(type_->blend_mode()) {
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 }
 

@@ -474,35 +474,6 @@ namespace {
 		return GL_POINTS;
 	}
 
-	GLenum get_blend_mode(variant v)
-	{
-		if(v.is_string()) {
-			const std::string s = v.as_string();
-			if(s == "zero") {
-				return GL_ZERO;
-			} else if(s == "one") {
-				return GL_ONE;
-			} else if(s == "src_color") {
-				return GL_SRC_COLOR;
-			} else if(s == "one_minus_src_color") {
-				return GL_ONE_MINUS_SRC_COLOR;
-			} else if(s == "src_alpha") {
-				return GL_SRC_ALPHA;
-			} else if(s == "one_minus_src_alpha") {
-				return GL_ONE_MINUS_SRC_ALPHA;
-			} else if(s == "dst_alpha") {
-				return GL_DST_ALPHA;
-			} else if(s == "one_minus_dst_alpha") {
-				return GL_ONE_MINUS_DST_ALPHA;
-			} 
-			ASSERT_LOG(false, "Unrecognised blend mode (maybe needs adding): " << s);
-		} else if(v.is_int()) {
-			return v.as_int();
-		}
-		ASSERT_LOG(false, "Expected blend mode to be a string or integer");
-		return GL_ZERO;
-	}
-
 	class get_mvp_matrix_function : public game_logic::function_expression
 	{
 	public:
@@ -1468,4 +1439,37 @@ void shader_program::attribute_commands_callable::set_value(const std::string& k
 	}
 }
 
+}
+
+GLenum get_blend_mode(variant v)
+{
+	if(v.is_string()) {
+		const std::string s = v.as_string();
+		if(s == "zero") {
+			return GL_ZERO;
+		} else if(s == "one") {
+			return GL_ONE;
+		} else if(s == "src_color") {
+			return GL_SRC_COLOR;
+		} else if(s == "one_minus_src_color") {
+			return GL_ONE_MINUS_SRC_COLOR;
+		} else if(s == "dst_color") {
+			return GL_DST_COLOR;
+		} else if(s == "one_minus_dst_color") {
+			return GL_ONE_MINUS_DST_COLOR;
+		} else if(s == "src_alpha") {
+			return GL_SRC_ALPHA;
+		} else if(s == "one_minus_src_alpha") {
+			return GL_ONE_MINUS_SRC_ALPHA;
+		} else if(s == "dst_alpha") {
+			return GL_DST_ALPHA;
+		} else if(s == "one_minus_dst_alpha") {
+			return GL_ONE_MINUS_DST_ALPHA;
+		} 
+		ASSERT_LOG(false, "Unrecognised blend mode (maybe needs adding): " << s);
+	} else if(v.is_int()) {
+		return v.as_int();
+	}
+	ASSERT_LOG(false, "Expected blend mode to be a string or integer");
+	return GL_ZERO;
 }
