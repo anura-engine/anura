@@ -2052,6 +2052,11 @@ void level::draw(int x, int y, int w, int h) const
 		water_zorder = water_->zorder();
 	}
 
+	graphics::stencil_scope stencil_settings(true, 0x02, GL_ALWAYS, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_REPLACE);
+	glClear(GL_STENCIL_BUFFER_BIT);
+	glEnable(GL_ALPHA_TEST);
+	glAlphaFunc(GL_GREATER, 0.0);
+
 #ifdef USE_GLES2
 	frame_buffer_enter_zorder(-100000);
 #endif

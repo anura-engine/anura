@@ -1015,8 +1015,12 @@ void custom_object::draw(int xx, int yy) const
 	}
 #endif
 
+	boost::scoped_ptr<graphics::clip_scope> clip_scope;
+	boost::scoped_ptr<graphics::stencil_scope> stencil_scope;
 	if(clip_area_) {
-		graphics::push_clip(clip_area_->sdl_rect());
+		clip_scope.reset(new graphics::clip_scope(clip_area_->sdl_rect()));
+	} else if(type_->is_shadow()) {
+		stencil_scope.reset(new graphics::stencil_scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP));
 	}
 
 	if(driver_) {
@@ -1111,9 +1115,7 @@ void custom_object::draw(int xx, int yy) const
 		glColor4ub(255, 255, 255, 255);
 	}
 	
-	if(clip_area_) {
-		graphics::pop_clip();
-	}
+	clip_scope.reset();
 
 #if defined(USE_GLES2)
 	for(size_t n = 0; n < effects_.size(); ++n) {

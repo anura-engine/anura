@@ -727,7 +727,8 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
-	is_strict_(node["is_strict"].as_bool(false))
+	is_strict_(node["is_strict"].as_bool(false)),
+	is_shadow_(node["is_shadow"].as_bool(false))
 {
 	callable_definition_.reset(new custom_object_callable);
 

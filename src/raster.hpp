@@ -17,6 +17,8 @@
 #ifndef RASTER_HPP_INCLUDED
 #define RASTER_HPP_INCLUDED
 
+#include <boost/scoped_ptr.hpp>
+
 #include <vector>
 
 #include "graphics.hpp"
@@ -33,6 +35,17 @@ extern int xypos_draw_mask;
 
 namespace graphics
 {
+
+class stencil_scope
+{
+public:
+	explicit stencil_scope(bool enabled, int write_mask, GLenum func, GLenum ref, GLenum ref_mask, GLenum sfail, GLenum dpfail, GLenum dppass);
+	~stencil_scope();
+	void apply_settings();
+	void revert_settings();
+private:
+	bool init_;
+};
 
 struct blend_mode
 {
@@ -166,13 +179,11 @@ void push_clip(const SDL_Rect& rect);
 void pop_clip();
 
 struct clip_scope {
-	clip_scope(const SDL_Rect& rect) {
-		push_clip(rect);
-	}
+	clip_scope(const SDL_Rect& rect);
 
-	~clip_scope() {
-		pop_clip();
-	}
+	~clip_scope();
+
+	boost::scoped_ptr<stencil_scope> stencil_;
 };
 
 }

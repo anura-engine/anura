@@ -1051,11 +1051,65 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		gluProjectf(sx, sy, sz, model, proj, view, dx, dy, dz);
 	}
 
-	void push_clip(const SDL_Rect& r)
+	namespace {
+	struct stencil_buffer_settings {
+		bool enabled;
+		GLint mask;
+		GLenum func;
+		GLint ref;
+		GLuint ref_mask;
+
+		GLenum sfail, dpfail, dppass;
+	};
+
+	std::stack<stencil_buffer_settings> stencil_buffer_stack;
+
+	}
+
+	stencil_scope::stencil_scope(bool enabled, int mask, GLenum func, GLenum ref, GLenum ref_mask, GLenum sfail, GLenum dpfail, GLenum dppass)
+	  : init_(true)
 	{
-		glEnable(GL_STENCIL_TEST);
+		stencil_buffer_settings settings = { enabled, mask, func, ref, ref_mask, sfail, dpfail, dppass };
+		stencil_buffer_stack.push(settings);
+		apply_settings();
+	}
+
+	stencil_scope::~stencil_scope() {
+		if(init_) {
+			revert_settings();
+		}
+	}
+
+	void stencil_scope::apply_settings() {
+		assert(!stencil_buffer_stack.empty());
+		const stencil_buffer_settings& settings = stencil_buffer_stack.top();
+		if(settings.enabled) {
+			glEnable(GL_STENCIL_TEST);
+		} else {
+			glDisable(GL_STENCIL_TEST);
+		}
+
+		glStencilMask(settings.mask);
+		glStencilFunc(settings.func, settings.ref, settings.ref_mask);
+		glStencilOp(settings.sfail, settings.dpfail, settings.dppass);
+	}
+	
+	void stencil_scope::revert_settings() {
+		assert(!stencil_buffer_stack.empty());
+		stencil_buffer_stack.pop();
+		if(stencil_buffer_stack.empty()) {
+			glDisable(GL_STENCIL_TEST);
+			glStencilMask(0x0);
+		} else {
+			apply_settings();
+		}
+	}
+
+	clip_scope::clip_scope(const SDL_Rect& r)
+	{
+		{
+		stencil_scope stencil_settings(true, 0x01, GL_NEVER, 0x01, 0xff, GL_REPLACE, GL_KEEP, GL_KEEP);
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glStencilMask(0xff);
 		glClear(GL_STENCIL_BUFFER_BIT);
 		
 		GLfloat varray[] = {
@@ -1064,8 +1118,6 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x, r.y+r.h,
 			r.x+r.w, r.y+r.h
 		};
-		glStencilFunc(GL_NEVER, 0x1, 0xff);
-		glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
 #if defined(USE_GLES2)
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
@@ -1080,13 +1132,14 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 #endif
-		glStencilMask(0);
+		}
+
+		stencil_.reset(new stencil_scope(true, 0x0, GL_EQUAL, 0x1, 0x1, GL_KEEP, GL_KEEP, GL_KEEP));
+
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glStencilFunc(GL_EQUAL, 0x1, 0x1);
 	}
 	
-	void pop_clip() {
-		glDisable(GL_STENCIL_TEST);
+	clip_scope::~clip_scope() {
 	}
 	
 	namespace {

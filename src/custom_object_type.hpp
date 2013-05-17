@@ -243,6 +243,8 @@ public:
 
 	const graphics::blend_mode* blend_mode() const { return blend_mode_.get(); }
 
+	bool is_shadow() const { return is_shadow_; }
+
 private:
 	//recreate an object type, optionally given the old version to base
 	//things off where possible
@@ -367,6 +369,10 @@ private:
 	bool is_strict_;
 
 	boost::shared_ptr<graphics::blend_mode> blend_mode_;
+
+	//if this is a shadow, it will render only on top of foreground level
+	//components.
+	bool is_shadow_;
 };
 
 #endif
