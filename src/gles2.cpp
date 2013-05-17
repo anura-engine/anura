@@ -290,6 +290,7 @@ namespace {
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * u_color;\n"
+		"	if(gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_tex = 
 		"uniform mat4 mvp_matrix;\n"
@@ -325,6 +326,7 @@ namespace {
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * v_color;\n"
+		"	if(gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_texcol = 
 		"uniform mat4 mvp_matrix;\n"
