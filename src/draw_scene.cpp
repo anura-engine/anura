@@ -326,10 +326,18 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		const int minmax_x_adjust = screen_width*(1.0 - inverse_zoom_level)*0.5;
 		const int minmax_y_adjust = screen_height*(1.0 - inverse_zoom_level)*0.5;
 	
-		const int min_x = (lvl.boundaries().x() - minmax_x_adjust)*100;
-		const int min_y = (lvl.boundaries().y() - minmax_y_adjust)*100;
-		const int max_x = (lvl.boundaries().x2() - minmax_x_adjust - screen_width*inverse_zoom_level)*100;
-		const int max_y = (lvl.boundaries().y2() - minmax_y_adjust - screen_height*inverse_zoom_level)*100;
+		int min_x = (lvl.boundaries().x() - minmax_x_adjust)*100;
+		int min_y = (lvl.boundaries().y() - minmax_y_adjust)*100;
+		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - screen_width*inverse_zoom_level)*100;
+		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - screen_height*inverse_zoom_level)*100;
+
+		if(min_x > max_x) {
+			min_x = max_x = (min_x + max_x)/2;
+		}
+
+		if(min_y > max_y) {
+			min_y = max_y = (min_y + max_y)/2;
+		}
 
 		pos.x = std::min(std::max(pos.x_pos, min_x), max_x);
 		pos.y = std::min(std::max(pos.y_pos, min_y), max_y);
