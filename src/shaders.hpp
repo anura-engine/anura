@@ -152,6 +152,7 @@ private:
 	GLint u_cycle_;
 	GLint u_color_;
 	GLint u_point_size_;
+	GLint u_discard_;
 
 	friend class shader_program;
 };

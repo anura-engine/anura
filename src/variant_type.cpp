@@ -106,6 +106,10 @@ public:
 			if(type->is_map_of().first) {
 				return true;
 			}
+		} else if(type_ == variant::VARIANT_TYPE_FUNCTION) {
+			if(type->is_function(NULL, NULL, NULL)) {
+				return true;
+			}
 		}
 
 		return false;
@@ -807,11 +811,8 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_IDENTIFIER && i1->equals("function")) {
-			++i1;
-			ASSERT_COND(i1 != i2 && i1->equals("("), "EXPECTED PARENS AFTER 'function':\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
-
-			++i1;
+		if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
+			i1 += 2;
 
 			int min_args = -1;
 			std::vector<variant_type_ptr> arg_types;

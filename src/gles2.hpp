@@ -129,6 +129,8 @@ namespace gles2 {
 
 	void init_default_shader();
 	const mat4& get_mvp_matrix();
+	void set_alpha_test(bool value);
+	bool get_alpha_test();
 	GLfloat get_alpha();
 	GLfloat* get_color();
 }

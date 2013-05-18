@@ -2062,6 +2062,7 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		}
 
 		res->push_back(parse_expression(formula_str, args[n].first, args[n].second, symbols, callable_def, can_optimize));
+		res->back()->set_definition_used_by_expression(callable_def);
 	}
 }
 

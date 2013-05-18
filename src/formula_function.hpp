@@ -116,6 +116,9 @@ public:
 
 	std::vector<const_expression_ptr> query_children() const;
 
+	void set_definition_used_by_expression(const_formula_callable_definition_ptr def) { definition_used_ = def; }
+	const_formula_callable_definition_ptr get_definition_used_by_expression() const { return definition_used_; }
+
 protected:
 	virtual variant_type_ptr get_variant_type() const { return variant_type_ptr(); }
 	virtual variant execute_member(const formula_callable& variables, std::string& id, variant* variant_id) const;
@@ -133,6 +136,8 @@ private:
 	std::string str_;
 
 	mutable int ntimes_called_;
+
+	const_formula_callable_definition_ptr definition_used_;
 };
 
 class function_expression : public formula_expression {
@@ -150,6 +155,9 @@ public:
 protected:
 	const std::string& name() const { return name_; }
 	const args_list& args() const { return args_; }
+
+	void check_arg_type(int narg, const std::string& type) const;
+
 private:
 	std::vector<const_expression_ptr> get_children() const {
 		return std::vector<const_expression_ptr>(args_.begin(), args_.end());

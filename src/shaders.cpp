@@ -896,6 +896,8 @@ void program::set_fixed_attributes(const variant& node)
 
 void program::set_fixed_uniforms(const variant& node)
 {
+	u_discard_ = get_uniform("u_discard");
+
 	if(node.has_key("mvp_matrix")) {
 		u_mvp_matrix_ = GLint(get_uniform(node["mvp_matrix"].as_string()));
 		ASSERT_LOG(u_mvp_matrix_ != -1, "mvp_matrix uniform given but nothing in corresponding shader.");
@@ -1031,6 +1033,11 @@ void program::set_deferred_uniforms()
 void program::set_known_uniforms()
 {
 #if defined(USE_GLES2)
+	if(u_discard_ >= 0) {
+		int value = gles2::get_alpha_test() ? 1 : 0;
+		glUniform1i(u_discard_, value);
+	}
+
 	if(u_mvp_matrix_ != -1) {
 		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, (GLfloat*)(&gles2::get_mvp_matrix().x.x));
 	}

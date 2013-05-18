@@ -286,11 +286,12 @@ namespace {
 	const std::string fs_tex = 
 		"uniform sampler2D u_tex_map;\n"
 		"uniform vec4 u_color;\n"
+		"uniform bool u_discard;\n"
 		"varying vec2 v_texcoord;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * u_color;\n"
-		"	if(gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_tex = 
 		"uniform mat4 mvp_matrix;\n"
@@ -323,10 +324,11 @@ namespace {
 		"uniform sampler2D u_tex_map;\n"
 		"varying vec4 v_color;\n"
 		"varying vec2 v_texcoord;\n"
+		"uniform bool u_discard;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * v_color;\n"
-		"	if(gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_texcol = 
 		"uniform mat4 mvp_matrix;\n"
@@ -489,6 +491,18 @@ namespace gles2 {
 	#endif
 		mvp = proj_matrix * modelview_matrix;
 		return mvp;
+	}
+
+	namespace {
+	bool g_alpha_test = false;
+	}
+
+	void set_alpha_test(bool value) {
+		g_alpha_test = value;
+	}
+
+	bool get_alpha_test() {
+		return g_alpha_test;
 	}
 
 	GLfloat get_alpha()

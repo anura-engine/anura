@@ -2057,6 +2057,7 @@ void level::draw(int x, int y, int w, int h) const
 
 #ifdef USE_GLES2
 	frame_buffer_enter_zorder(-100000);
+	gles2::set_alpha_test(true);
 #endif
 
 	std::set<int>::const_iterator layer = layers_.begin();
@@ -2097,6 +2098,7 @@ void level::draw(int x, int y, int w, int h) const
 	}
 
 #ifdef USE_GLES2
+	gles2::set_alpha_test(false);
 	frame_buffer_enter_zorder(1000000);
 #endif
 
