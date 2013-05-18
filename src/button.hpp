@@ -47,6 +47,8 @@ protected:
 	virtual void handle_process();
 	BUTTON_RESOLUTION button_resolution() const { return button_resolution_; }
 private:
+	virtual void visit_values(game_logic::formula_callable_visitor& visitor);
+
 	void setup();
 
 	void handle_draw() const;

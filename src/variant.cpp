@@ -1083,6 +1083,22 @@ variant variant::bind_args(const std::vector<variant>& args)
 	return result;
 }
 
+void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::formula_callable>*>& result)
+{
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			multi_fn_->functions[n].get_mutable_closure_ref(result);
+		}
+
+		return;
+	}
+
+	must_be(VARIANT_TYPE_FUNCTION);
+	if(fn_->callable) {
+		result.push_back(&fn_->callable);
+	}
+}
+
 int variant::min_function_arguments() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);

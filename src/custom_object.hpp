@@ -33,6 +33,7 @@
 #include "entity.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_visitor.hpp"
 #include "formula_variable_storage.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
@@ -297,6 +298,7 @@ private:
 		entity* target;
 		variant* from_variant;
 		entity_ptr* from_ptr;
+		boost::shared_ptr<game_logic::formula_callable_visitor> visitor;
 	};
 
 	void extract_gc_object_references(std::vector<gc_object_reference>& v);

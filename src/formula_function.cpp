@@ -3731,19 +3731,28 @@ END_FUNCTION_DEF(trigger_garbage_collection)
 
 class debug_dump_textures_command : public game_logic::command_callable
 {
-	std::string fname_;
+	std::string fname_, info_;
 public:
-	explicit debug_dump_textures_command(const std::string& fname) : fname_(fname)
+	debug_dump_textures_command(const std::string& fname, const std::string& info) : fname_(fname), info_(info)
 	{}
 	virtual void execute(game_logic::formula_callable& ob) const 
 	{
-		graphics::texture::debug_dump_textures(fname_.c_str());
+		const std::string* info = NULL;
+		if(info_.empty() == false) {
+			info = &info_;
+		}
+		graphics::texture::debug_dump_textures(fname_.c_str(), info);
 	}
 };
 
-FUNCTION_DEF(debug_dump_textures, 1, 1, "debug_dump_textures(string dir): dump textures to the given directory")
+FUNCTION_DEF(debug_dump_textures, 1, 2, "debug_dump_textures(string dir, string name=null): dump textures to the given directory")
 	std::string path = args()[0]->evaluate(variables).as_string();
-	return variant(new debug_dump_textures_command(path));
+	std::string name;
+	if(args().size() > 1) {
+		name = args()[1]->evaluate(variables).as_string();
+	}
+
+	return variant(new debug_dump_textures_command(path, name));
 END_FUNCTION_DEF(debug_dump_textures)
 
 class mod_object_callable : public formula_callable {

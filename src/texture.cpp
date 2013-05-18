@@ -860,11 +860,14 @@ void texture::unbuild_all()
 	}
 }
 
-void texture::debug_dump_textures(const char* path)
+void texture::debug_dump_textures(const char* path, const std::string* info_name)
 {
-	
 	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
 	    i != texture_id_registry().end(); ++i) {
+		if(info_name && (*i)->info != *info_name) {
+			continue;
+		}
+
 		(*i)->unbuild_id();
 		std::ostringstream fname;
 		fname << path << "/img-" << (*i)->id << ".png";

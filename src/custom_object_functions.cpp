@@ -1086,6 +1086,16 @@ FUNCTION_DEF(set_var, 2, 2, "set_var(string varname, variant value): sets the va
 	return variant(cmd);
 END_FUNCTION_DEF(set_var)
 
+FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
+	std::vector<variant> v;
+	foreach(custom_object* obj, custom_object::get_all()) {
+		v.push_back(variant(obj));
+	}
+
+	return variant(&v);
+END_FUNCTION_DEF(debug_all_custom_objects)
+
+
 class add_debug_chart_command : public game_logic::command_callable {
 	std::string id_;
 	decimal value_;

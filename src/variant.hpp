@@ -191,9 +191,13 @@ public:
 	variant* get_attr_mutable(variant key);
 	variant* get_index_mutable(int index);
 
+	const void* get_addr() const { return list_; }
+
 	//binds a closure to a lambda function.
 	variant bind_closure(const game_logic::formula_callable* callable);
 	variant bind_args(const std::vector<variant>& args);
+
+	void get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::formula_callable>*>& result);
 
 	//precondition: is_function(). Gives the min/max arguments the function
 	//accepts.

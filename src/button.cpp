@@ -19,8 +19,9 @@
 #include "asserts.hpp"
 #include "button.hpp"
 #include "custom_object_functions.hpp"
-#include "iphone_controls.hpp"
 #include "formula.hpp"
+#include "formula_callable_visitor.hpp"
+#include "iphone_controls.hpp"
 #include "label.hpp"
 #include "raster.hpp"
 #include "surface_cache.hpp"
@@ -210,6 +211,11 @@ variant button::get_value(const std::string& key) const
 		return variant(label_.get());
 	}
 	return widget::get_value(key);
+}
+
+void button::visit_values(game_logic::formula_callable_visitor& visitor)
+{
+	visitor.visit(&handler_arg_);
 }
 
 }

@@ -18,6 +18,7 @@
 #include <boost/bind.hpp>
 
 #include "foreach.hpp"
+#include "formula_callable_visitor.hpp"
 #include "grid_widget.hpp"
 #include "raster.hpp"
 #include "widget_factory.hpp"
@@ -379,6 +380,13 @@ void grid::recalculate_dimensions()
 	}
 
 	update_scrollbar();
+}
+
+void grid::visit_values(game_logic::formula_callable_visitor& visitor)
+{
+	foreach(widget_ptr& cell, cells_) {
+		visitor.visit(&cell);
+	}
 }
 
 void grid::on_set_yscroll(int old_value, int value)

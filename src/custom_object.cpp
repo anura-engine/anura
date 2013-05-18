@@ -38,6 +38,7 @@
 #include "font.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_visitor.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "geometry.hpp"
@@ -4795,6 +4796,21 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 	foreach(variant& var, tmp_vars_->values()) {
 		extract_gc_object_references(var, v);
 	}
+
+	gc_object_reference visitor;
+	visitor.owner = this;
+	visitor.target = NULL;
+	visitor.from_variant = NULL;
+	visitor.visitor.reset(new game_logic::formula_callable_visitor);
+	foreach(gui::widget_ptr w, widgets_) {
+		w->perform_visit_values(*visitor.visitor);
+	}
+
+	foreach(game_logic::formula_callable_suspended_ptr ptr, visitor.visitor->pointers()) {
+		if(dynamic_cast<const custom_object*>(ptr->value())) {
+			ptr->destroy_ref();
+		}
+	}
 }
 
 void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v)
@@ -4839,7 +4855,11 @@ void custom_object::extract_gc_object_references(variant& var, std::vector<gc_ob
 
 void custom_object::restore_gc_object_reference(gc_object_reference ref)
 {
-	if(ref.from_variant) {
+	if(ref.visitor) {
+		foreach(game_logic::formula_callable_suspended_ptr ptr, ref.visitor->pointers()) {
+			ptr->restore_ref();
+		}
+	} else if(ref.from_variant) {
 		*ref.from_variant = variant(ref.target);
 	} else {
 		ref.from_ptr->reset(ref.target);
