@@ -32,6 +32,8 @@
 int parse_zorder(const variant& v);
 variant write_zorder(int zorder);
 
+int get_named_zorder(const std::string& key, int default_value=0);
+
 struct tile_pattern;
 struct multi_tile_pattern;
 

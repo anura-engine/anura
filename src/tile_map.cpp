@@ -89,6 +89,16 @@ variant write_zorder(int zorder)
 	return variant(zorder);
 }
 
+int get_named_zorder(const std::string& key, int default_value)
+{
+	std::map<std::string, int>::const_iterator itor = str_to_zorder().find(key);
+	if(itor == str_to_zorder().end()) {
+		return default_value;
+	}
+
+	return itor->second;
+}
+
 namespace {
 
 typedef std::map<const boost::regex*, bool> regex_match_map;

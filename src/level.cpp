@@ -74,6 +74,8 @@ std::set<level*>& get_all_levels_set() {
 
 namespace {
 
+PREF_INT(debug_shadows, 0);
+
 boost::intrusive_ptr<level> current_level;
 
 std::map<std::string, level::summary> load_level_summaries() {
@@ -2057,7 +2059,8 @@ void level::draw(int x, int y, int w, int h) const
 
 #ifdef USE_GLES2
 	frame_buffer_enter_zorder(-100000);
-	gles2::set_alpha_test(true);
+	const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
+	const int end_alpha_test = get_named_zorder("shadows");
 #endif
 
 	std::set<int>::const_iterator layer = layers_.begin();
@@ -2065,6 +2068,9 @@ void level::draw(int x, int y, int w, int h) const
 	for(; layer != layers_.end(); ++layer) {
 #ifdef USE_GLES2
 		frame_buffer_enter_zorder(*layer);
+		const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
+		gles2::set_alpha_test(alpha_test);
+		glStencilMask(alpha_test ? 0x02 : 0x0);
 #endif
 		if(!water_drawn && *layer > water_zorder) {
 			water_->draw(x, y, w, h);
@@ -2090,6 +2096,9 @@ void level::draw(int x, int y, int w, int h) const
 		if((*entity_itor)->zorder() != last_zorder) {
 			last_zorder = (*entity_itor)->zorder();
 			frame_buffer_enter_zorder(last_zorder);
+			const bool alpha_test = last_zorder >= begin_alpha_test && last_zorder < end_alpha_test;
+			gles2::set_alpha_test(alpha_test);
+			glStencilMask(alpha_test ? 0x02 : 0x0);
 		}
 #endif
 
@@ -2163,6 +2172,11 @@ void level::draw(int x, int y, int w, int h) const
 	gles2::manager manager(shader_);
 #endif
 	calculate_lighting(start_x, start_y, start_w, start_h);
+	}
+
+	if(g_debug_shadows) {
+		graphics::stencil_scope scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP);
+		graphics::draw_rect(rect(x,y,w,h), graphics::color(255, 255, 255, 196 + sin(SDL_GetTicks()/100.0)*8.0));
 	}
 }
 
