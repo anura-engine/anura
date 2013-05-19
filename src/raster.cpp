@@ -187,7 +187,7 @@ SDL_DisplayMode set_video_mode_auto_select()
 		best_mode.h = 768;
 	}
 
-	const bool result = set_video_mode(best_mode.w, best_mode.h);
+	const bool result = set_video_mode(best_mode.w, best_mode.h,SDL_WINDOW_OPENGL);
 	ASSERT_LOG(result, "FAILED TO SET AUTO SELECT VIDEO MODE: " << best_mode.w << "x" << best_mode.h);
 	
 	return best_mode;
