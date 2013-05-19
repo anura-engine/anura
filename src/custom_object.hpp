@@ -408,9 +408,9 @@ private:
 
 #ifdef USE_GLES2
 	//current shader we're using to draw with.
-	gles2::shader_ptr shader_;
+	gles2::shader_program_ptr shader_;
 	// List of shader effects to run.
-	std::vector<gles2::shader_ptr> effects_;
+	std::vector<gles2::shader_program_ptr> effects_;
 #endif
 
 #ifdef USE_BOX2D

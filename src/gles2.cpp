@@ -286,12 +286,12 @@ namespace {
 	const std::string fs_tex = 
 		"uniform sampler2D u_tex_map;\n"
 		"uniform vec4 u_color;\n"
-		"uniform bool u_discard;\n"
+		"uniform bool u_anura_discard;\n"
 		"varying vec2 v_texcoord;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * u_color;\n"
-		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_anura_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_tex = 
 		"uniform mat4 mvp_matrix;\n"
@@ -324,11 +324,11 @@ namespace {
 		"uniform sampler2D u_tex_map;\n"
 		"varying vec4 v_color;\n"
 		"varying vec2 v_texcoord;\n"
-		"uniform bool u_discard;\n"
+		"uniform bool u_anura_discard;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * v_color;\n"
-		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_anura_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_texcol = 
 		"uniform mat4 mvp_matrix;\n"
@@ -361,13 +361,13 @@ namespace {
         "    },\n"
 		"}\n";
 
-	static gles2::shader_ptr tex_shader_program;
-	static gles2::shader_ptr texcol_shader_program;
-	static gles2::shader_ptr simple_shader_program;
-	static gles2::shader_ptr simple_col_shader_program;
+	static gles2::shader_program_ptr tex_shader_program;
+	static gles2::shader_program_ptr texcol_shader_program;
+	static gles2::shader_program_ptr simple_shader_program;
+	static gles2::shader_program_ptr simple_col_shader_program;
 
-	std::stack<gles2::shader_ptr> shader_stack;
-	gles2::shader_ptr active_shader_program;
+	std::stack<gles2::shader_program_ptr> shader_stack;
+	gles2::shader_program_ptr active_shader_program;
 
 	struct blend_mode 
 	{
@@ -457,27 +457,27 @@ namespace gles2 {
 		std::cerr << std::endl;
 	}
 
-	shader_ptr get_tex_shader()
+	shader_program_ptr get_tex_shader()
 	{
 		return tex_shader_program;
 	}
 
-	shader_ptr get_texcol_shader()
+	shader_program_ptr get_texcol_shader()
 	{
 		return texcol_shader_program;
 	}
 
-	shader_ptr get_simple_shader()
+	shader_program_ptr get_simple_shader()
 	{
 		return simple_shader_program;
 	}
 
-	shader_ptr get_simple_col_shader()
+	shader_program_ptr get_simple_col_shader()
 	{
 		return simple_col_shader_program;
 	}
 
-	shader_ptr active_shader()
+	shader_program_ptr active_shader()
 	{
 		return active_shader_program;
 	}
@@ -578,7 +578,7 @@ namespace gles2 {
 		active_shader_program = tex_shader_program;
 	}
 
-	manager::manager(shader_ptr shader)
+	manager::manager(shader_program_ptr shader)
 	{
 		// Reset errors, so we can track errors that happened here.
 		glGetError();

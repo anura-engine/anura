@@ -60,7 +60,7 @@ private:
 
 	graphics::color color_;
 
-	shader_ptr shader_;
+	shader_program_ptr shader_;
 
 	mutable std::vector<GLfloat> varray_;
 };

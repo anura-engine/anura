@@ -139,7 +139,7 @@ public:
 	void clear_hex_tile_rect(int x1, int y1, int x2, int y2);
 
 #if defined(USE_GLES2)
-	gles2::shader_ptr shader() const { return shader_; }
+	gles2::shader_program_ptr shader() const { return shader_; }
 #endif
 
 	//function to do 'magic wand' selection -- given an x/y pixel position,
@@ -572,23 +572,23 @@ private:
 	std::map<int, hex::hex_map_ptr> hex_maps_;
 	//current shader we're using to draw with.
 #ifdef USE_GLES2
-	gles2::shader_ptr shader_;
+	gles2::shader_program_ptr shader_;
 
 	struct FrameBufferShaderEntry {
 		int begin_zorder, end_zorder;
 		variant shader_node;
-		mutable gles2::shader_ptr shader;
+		mutable gles2::shader_program_ptr shader;
 	};
 
 	std::vector<FrameBufferShaderEntry> fb_shaders_;
 	mutable variant fb_shaders_variant_;
 
-	mutable std::vector<gles2::shader_ptr> active_fb_shaders_;
+	mutable std::vector<gles2::shader_program_ptr> active_fb_shaders_;
 
 	void frame_buffer_enter_zorder(int zorder) const;
 
 	void flush_frame_buffer_shaders_to_screen() const;
-	void apply_shader_to_frame_buffer_texture(gles2::shader_ptr shader, bool render_to_screen) const;
+	void apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const;
 
 #endif
 
