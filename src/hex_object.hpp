@@ -81,7 +81,7 @@ private:
 
 #ifdef USE_GLES2
 	// shader to draw tile with
-	gles2::shader_ptr shader_;
+	gles2::shader_program_ptr shader_;
 #endif
 
 	// Private default constructor and copy constructor to stop them

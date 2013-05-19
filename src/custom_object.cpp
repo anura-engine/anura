@@ -3069,13 +3069,13 @@ void custom_object::set_value(const std::string& key, const variant& value)
 				if(value[n].is_map()) {
 					effects_.push_back(new shader_program(value[n]));
 				} else {
-					effects_.push_back(shader_ptr(value[n].try_convert<shader_program>()));
+					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
 				}
 			}
 		} else if(value.is_map()) {
 			effects_.push_back(new shader_program(value));
 		} else {
-			effects_.push_back(shader_ptr(value.try_convert<shader_program>()));
+			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
 		}
 #endif
@@ -3679,13 +3679,13 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 				if(value[n].is_map()) {
 					effects_.push_back(new shader_program(value[n]));
 				} else {
-					effects_.push_back(shader_ptr(value[n].try_convert<shader_program>()));
+					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
 				}
 			}
 		} else if(value.is_map()) {
 			effects_.push_back(new shader_program(value));
 		} else {
-			effects_.push_back(shader_ptr(value.try_convert<shader_program>()));
+			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
 		}
 		break;

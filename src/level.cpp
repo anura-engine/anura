@@ -2183,7 +2183,7 @@ void level::draw(int x, int y, int w, int h) const
 #ifdef USE_GLES2
 void level::frame_buffer_enter_zorder(int zorder) const
 {
-	std::vector<gles2::shader_ptr> shaders;
+	std::vector<gles2::shader_program_ptr> shaders;
 	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
 		if(zorder >= e.begin_zorder && zorder <= e.end_zorder) {
 			if(!e.shader) {
@@ -2207,7 +2207,7 @@ void level::frame_buffer_enter_zorder(int zorder) const
 			texture_frame_buffer::set_render_to_screen();
 		} else {
 			bool add_shaders = false;
-			foreach(const gles2::shader_ptr& s, shaders) {
+			foreach(const gles2::shader_program_ptr& s, shaders) {
 				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
 					add_shaders = true;
 					break;
@@ -2222,7 +2222,7 @@ void level::frame_buffer_enter_zorder(int zorder) const
 				glClear(GL_COLOR_BUFFER_BIT);
 			} else {
 				//we must just be removing shaders.
-				foreach(const gles2::shader_ptr& s, active_fb_shaders_) {
+				foreach(const gles2::shader_program_ptr& s, active_fb_shaders_) {
 					if(std::count(shaders.begin(), shaders.end(), s) == 0) {
 						apply_shader_to_frame_buffer_texture(s, false);
 					}
@@ -2241,7 +2241,7 @@ void level::flush_frame_buffer_shaders_to_screen() const
 	}
 }
 
-void level::apply_shader_to_frame_buffer_texture(gles2::shader_ptr shader, bool render_to_screen) const
+void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const
 {
 	gles2::manager manager(shader);
 	texture_frame_buffer::set_as_current_texture();

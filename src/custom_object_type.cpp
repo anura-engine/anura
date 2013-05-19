@@ -971,7 +971,7 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 	if(node.has_key("effects")) {
 		effects_.clear();
 		for(size_t n = 0; n < node["effects"].num_elements(); ++n) {
-			effects_.push_back(gles2::shader_ptr(new gles2::shader_program(node["effects"][n])));
+			effects_.push_back(gles2::shader_program_ptr(new gles2::shader_program(node["effects"][n])));
 		}
 	}
 #endif

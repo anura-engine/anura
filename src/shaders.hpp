@@ -247,8 +247,8 @@ private:
 	bool enabled_;
 };
 
-typedef boost::intrusive_ptr<shader_program> shader_ptr;
-typedef boost::intrusive_ptr<const shader_program> const_shader_ptr;
+typedef boost::intrusive_ptr<shader_program> shader_program_ptr;
+typedef boost::intrusive_ptr<const shader_program> const_shader_program_ptr;
 
 }
 
