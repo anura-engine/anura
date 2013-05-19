@@ -294,39 +294,12 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 	
 	void prepare_raster()
 	{
-		//	int real_w, real_h;
-		//	bool rotated;
-		
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		//	real_w = 320;
-		//	real_h = 480;
-		//	rotated = true;
-#elif defined(__native_client__)
-		// do nothing.
-#else
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-		const SDL_Surface* fb = SDL_GetWindowSurface(graphics::get_window());
-#else
-		const SDL_Surface* fb = SDL_GetVideoSurface();
-#endif
-		if(fb == NULL) {
-			std::cerr << "Framebuffer was null in prepare_raster\n";
-			return;
-		}
-		//	real_w = fb->w;
-		//	real_h = fb->h;
-		//	rotated = false;
-#endif
-		
 		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
-//		glClearColor(0.0, 0.0, 0.0, 0.0);
-//		glClear(GL_COLOR_BUFFER_BIT);
 		glShadeModel(GL_FLAT);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		
 		if(preferences::screen_rotated()) {
-			//		glOrtho(0, 640, 960, 0, -1.0, 1.0);
 			int top = screen_width();
 			int bot = 0;
 			if(g_flip_draws) {
@@ -350,14 +323,11 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 #endif
 		}
 		
-		//glOrtho(0, real_w, real_h, 0, -1.0, 1.0);
 		if(preferences::screen_rotated()) {
 			// Rotate 90 degrees ccw, then move real_h pixels down
 			// This has to be in opposite order since A(); B(); means A(B(x))
 			glTranslatef(screen_height(), 0.0f, 0.0f);
 			glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
-			//glTranslatef(0.0f, 0.5f, 0.0f);
-			//glScalef(0.5f, 0.5f, 1.0f);
 		}
 		
 		glMatrixMode(GL_MODELVIEW);
@@ -371,45 +341,6 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 		
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 	}
-	
-	/*void prepare_raster()
-	 {
-	 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	 int w = 320;
-	 int h = 480;
-	 #else
-	 const SDL_Surface* fb = SDL_GetVideoSurface();
-	 if(fb == NULL) {
-	 std::cerr << "Framebuffer was null in prepare_raster\n";
-	 return;
-	 }
-	 int w = fb->w;
-	 int h = fb->h;
-	 #endif
-	 
-	 glViewport(0,0,w,h);
-	 glClearColor(0.0,0.0,0.0,0.0);
-	 glClear(GL_COLOR_BUFFER_BIT);
-	 glShadeModel(GL_FLAT);
-	 glMatrixMode(GL_PROJECTION);
-	 glLoadIdentity();
-	 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	 glScalef(0.25f, 0.25f, 1.0f);
-	 glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-	 #endif
-	 #ifdef SDL_VIDEO_OPENGL_ES
-	 #define glOrtho glOrthof
-	 #endif
-	 glOrtho(0,screen_width(),screen_height(),0,-1.0,1.0);
-	 glMatrixMode(GL_MODELVIEW);
-	 glLoadIdentity();
-	 
-	 glDisable(GL_DEPTH_TEST);
-	 glDisable(GL_LIGHTING);
-	 glDisable(GL_LIGHT0);
-	 
-	 glColor4f(1.0, 1.0, 1.0, 1.0);
-	 }*/
 	
 	namespace {
 		struct draw_detection_rect {
