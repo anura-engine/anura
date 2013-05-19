@@ -80,7 +80,7 @@ public:
 	void init(const std::string& name, const shader& vs, const shader& fs);
 	GLuint get() const { return object_; }
 	GLuint get_attribute(const std::string& attr) const;
-	GLuint get_uniform(const std::string& attr) const;
+	GLint get_uniform(const std::string& attr) const;
 	std::string name() const { return name_; }
 	game_logic::formula_ptr create_formula(const variant& v);
 	bool execute_command(const variant& var);
@@ -105,6 +105,8 @@ public:
 	virtual void color_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr);
 	virtual void set_fixed_attributes(const variant& node);
 	virtual void set_fixed_uniforms(const variant& node);
+	virtual void set_fixed_attributes();
+	virtual void set_fixed_uniforms();
 
 	void disable_vertex_attrib(GLint);
 
@@ -119,8 +121,9 @@ public:
 	static void clear_shaders();
 	void set_known_uniforms();
 	void set_sprite_area(const GLfloat* fl);
+	void set_draw_area(const GLfloat* fl);
 	void set_cycle(int cycle);
-protected:
+private:
 	bool link();
 	bool queryUniforms();
 	bool queryAttributes();
@@ -128,7 +131,7 @@ protected:
 	std::vector<GLint> active_attributes_;
 	variant stored_attributes_;
 	variant stored_uniforms_;
-private:
+
 	DECLARE_CALLABLE(program)
 
 	game_logic::formula_callable* environ_;
@@ -147,8 +150,10 @@ private:
 
 	std::vector<std::map<std::string, actives>::iterator> uniforms_to_update_;
 
+	GLint u_tex_map_;
 	GLint u_mvp_matrix_;
 	GLint u_sprite_area_;
+	GLint u_draw_area_;
 	GLint u_cycle_;
 	GLint u_color_;
 	GLint u_point_size_;

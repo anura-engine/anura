@@ -754,8 +754,10 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 
 #if defined(USE_GLES2)
 	{
+		GLfloat draw_area[] = {x, y, x+w, y+h};
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->set_sprite_area(rect);
+		gles2::active_shader()->shader()->set_draw_area(draw_area);
 		gles2::active_shader()->shader()->set_cycle(cycle);
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());

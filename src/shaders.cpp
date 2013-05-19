@@ -101,14 +101,14 @@ namespace {
 }
 
 program::program() 
-	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 }
 
 
 program::program(const std::string& name, const shader& vs, const shader& fs)
-	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 	init(name, vs, fs);
@@ -161,12 +161,12 @@ GLuint program::get_attribute(const std::string& attr) const
 	return it->second.location;
 }
 
-GLuint program::get_uniform(const std::string& attr) const
+GLint program::get_uniform(const std::string& attr) const
 {
 	std::map<std::string, actives>::const_iterator it = uniforms_.find(attr);
 	//ASSERT_LOG(it != uniforms_.end(), "Uniform \"" << attr << "\" not found in list.");
 	if(it == uniforms_.end()) {
-		return 0xffffffffUL;
+		return -1;
 	}
 	return it->second.location;
 }
@@ -894,9 +894,15 @@ void program::set_fixed_attributes(const variant& node)
 	texcoord_attribute_ = node["texcoord"].as_string_default();
 }
 
+void program::set_fixed_attributes()
+{
+	vertex_attribute_ = "a_anura_vertex";
+	texcoord_attribute_ = "a_anura_texcoord";
+}
+
 void program::set_fixed_uniforms(const variant& node)
 {
-	u_discard_ = get_uniform("u_discard");
+	u_discard_ = get_uniform("u_anura_discard");
 
 	if(node.has_key("mvp_matrix")) {
 		u_mvp_matrix_ = GLint(get_uniform(node["mvp_matrix"].as_string()));
@@ -912,7 +918,14 @@ void program::set_fixed_uniforms(const variant& node)
 		u_sprite_area_ = -1;
 	}
 
-	if(node.has_key("sprite_area")) {
+	if(node.has_key("draw_area")) {
+		u_draw_area_ = GLint(get_uniform(node["draw_area"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "draw_area uniform given but nothing in corresponding shader.");
+	} else {
+		u_draw_area_ = -1;
+	}
+
+	if(node.has_key("cycle")) {
 		u_cycle_ = GLint(get_uniform(node["cycle"].as_string()));
 		ASSERT_LOG(u_mvp_matrix_ != -1, "cycle uniform given but nothing in corresponding shader.");
 	} else {
@@ -932,6 +945,48 @@ void program::set_fixed_uniforms(const variant& node)
 		u_point_size_ = -1;
 	}
 	stored_uniforms_ = node;
+}
+
+void program::set_fixed_uniforms()
+{
+	std::set<std::string> anura_uniforms;
+#define INIT_UNIFORM(name, var_type) { \
+	const char* name_str = "u_anura_" #name; \
+	anura_uniforms.insert(name_str); \
+	std::map<std::string, actives>::const_iterator it = uniforms_.find(name_str); \
+	if(it != uniforms_.end()) { \
+		u_##name##_ = it->second.location; \
+		ASSERT_LOG(var_type == it->second.type, "Uniform " << name_str << " is not the correct type. Expected " << #var_type); \
+	} else { \
+		u_##name##_ = -1; \
+	} }
+
+	INIT_UNIFORM(discard, GL_BOOL);
+	INIT_UNIFORM(tex_map, GL_SAMPLER_2D);
+	INIT_UNIFORM(mvp_matrix, GL_FLOAT_MAT4);
+	INIT_UNIFORM(sprite_area, GL_FLOAT_VEC4);
+	INIT_UNIFORM(draw_area, GL_FLOAT_VEC4);
+	INIT_UNIFORM(cycle, GL_FLOAT);
+	INIT_UNIFORM(color, GL_FLOAT_VEC4);
+	INIT_UNIFORM(point_size, GL_FLOAT);
+
+#undef INIT_UNIFORM
+
+	const std::string AnuraUniformPrefix = "u_anura_";
+	for(std::map<std::string, actives>::const_iterator i = uniforms_.begin();
+	    i != uniforms_.end(); ++i) {
+		const std::string& key = i->first;
+		if(key.size() >= AnuraUniformPrefix.size() &&
+		   std::equal(AnuraUniformPrefix.begin(), AnuraUniformPrefix.end(), key.begin()) &&
+		   anura_uniforms.count(key) == 0) {
+			ASSERT_LOG(false, "Unrecognized uniform in shader: " << i->first);
+		}
+	}
+
+	if(u_tex_map_ != -1) {
+		//the tex map defaults to a binding of 0.
+		glUniform1i(u_tex_map_, 0);
+	}
 }
 
 void program::load_shaders(const std::string& shader_data)
@@ -1061,6 +1116,15 @@ void program::set_sprite_area(const GLfloat* fl)
 #endif
 }
 
+void program::set_draw_area(const GLfloat* fl)
+{
+#if defined(USE_GLES2)
+	if(u_draw_area_ != -1) {
+		glUniform4fv(u_draw_area_, 1, fl);
+	}
+#endif
+}
+
 void program::set_cycle(int cycle)
 {
 #if defined(USE_GLES2)
@@ -1132,9 +1196,14 @@ void shader_program::configure(const variant& node, entity* obj)
 
 		if(node.has_key("attributes")) {
 			program_object_->set_fixed_attributes(node["attributes"]);
+		} else {
+			program_object_->set_fixed_attributes();
 		}
+
 		if(node.has_key("uniforms")) {
 			program_object_->set_fixed_uniforms(node["uniforms"]);
+		} else {
+			program_object_->set_fixed_uniforms();
 		}
 	}
 

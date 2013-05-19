@@ -286,12 +286,12 @@ namespace {
 	const std::string fs_tex = 
 		"uniform sampler2D u_tex_map;\n"
 		"uniform vec4 u_color;\n"
-		"uniform bool u_discard;\n"
+		"uniform bool u_anura_discard;\n"
 		"varying vec2 v_texcoord;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * u_color;\n"
-		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_anura_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_tex = 
 		"uniform mat4 mvp_matrix;\n"
@@ -324,11 +324,11 @@ namespace {
 		"uniform sampler2D u_tex_map;\n"
 		"varying vec4 v_color;\n"
 		"varying vec2 v_texcoord;\n"
-		"uniform bool u_discard;\n"
+		"uniform bool u_anura_discard;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_FragColor = texture2D(u_tex_map, v_texcoord) * v_color;\n"
-		"	if(u_discard && gl_FragColor[3] == 0.0) { discard; }\n"
+		"	if(u_anura_discard && gl_FragColor[3] == 0.0) { discard; }\n"
 		"}\n";
 	const std::string vs_texcol = 
 		"uniform mat4 mvp_matrix;\n"
