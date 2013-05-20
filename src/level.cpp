@@ -3915,6 +3915,8 @@ variant level::get_value(const std::string& key) const
 		}
 
 		return variant();
+	} else if(key == "preferences") {
+		return variant(preferences::get_settings_obj());
 	} else {
 		const_entity_ptr e = get_entity_by_label(key);
 		if(e) {

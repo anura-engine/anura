@@ -35,6 +35,8 @@ std::string GetAppDataPath();
 #endif
 
 namespace preferences {
+	game_logic::formula_callable* get_settings_obj();
+
 	int register_string_setting(const std::string& id, bool persistent, std::string* value);
 	int register_int_setting(const std::string& id, bool persistent, int* value);
 
