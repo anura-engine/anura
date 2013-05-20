@@ -2531,7 +2531,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_string());
+			return variant::from_bool(args()[0]->evaluate(variables).is_string());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2546,7 +2546,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_null());
+			return variant::from_bool(args()[0]->evaluate(variables).is_null());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2561,7 +2561,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_int());
+			return variant::from_bool(args()[0]->evaluate(variables).is_int());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2576,7 +2576,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_bool());
+			return variant::from_bool(args()[0]->evaluate(variables).is_bool());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2591,7 +2591,22 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_decimal());
+			return variant::from_bool(args()[0]->evaluate(variables).is_decimal());
+		}
+		variant_type_ptr get_variant_type() const {
+			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+		}
+	};
+
+	class is_number_function : public function_expression { //Sometimes, you just want to make sure a thing is numeric, sod the semantics.
+	public:
+		explicit is_number_function(const args_list& args)
+			: function_expression("is_number", args, 1, 1)
+		{}
+
+	private:
+		variant execute(const formula_callable& variables) const {
+			return variant::from_bool(args()[0]->evaluate(variables).is_decimal() || args()[0]->evaluate(variables).is_int());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2606,7 +2621,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_map());
+			return variant::from_bool(args()[0]->evaluate(variables).is_map());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2640,7 +2655,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_function());
+			return variant::from_bool(args()[0]->evaluate(variables).is_function());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2655,7 +2670,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_list());
+			return variant::from_bool(args()[0]->evaluate(variables).is_list());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2670,7 +2685,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_callable());
+			return variant::from_bool(args()[0]->evaluate(variables).is_callable());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -3509,7 +3524,9 @@ namespace {
 			FUNCTION(is_string);
 			FUNCTION(is_null);
 			FUNCTION(is_int);
+			FUNCTION(is_bool);
 			FUNCTION(is_decimal);
+			FUNCTION(is_number);
 			FUNCTION(is_map);
 			FUNCTION(mod);
 			FUNCTION(is_function);
