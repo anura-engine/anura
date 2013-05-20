@@ -24,6 +24,7 @@
 #include "foreach.hpp"
 #include "frame.hpp"
 #include "object_events.hpp"
+#include "preferences.hpp"
 #include "raster.hpp"
 #include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
@@ -35,6 +36,7 @@
 #include "variant_utils.hpp"
 
 namespace {
+
 std::set<frame*>& palette_frames() {
 	static std::set<frame*>* instance = new std::set<frame*>;
 	return *instance;
@@ -702,6 +704,8 @@ void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, co
 	glPopMatrix();
 }
 
+PREF_INT(debug_custom_draw, 0);
+
 void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
 {
 	texture_.set_as_current_texture();
@@ -755,6 +759,9 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 #if defined(USE_GLES2)
 	{
 		GLfloat draw_area[] = {x, y, x+w, y+h};
+		if(face_right) {
+			std::swap(draw_area[0], draw_area[2]);
+		}
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->set_sprite_area(rect);
 		gles2::active_shader()->shader()->set_draw_area(draw_area);
@@ -764,11 +771,14 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
 	}
 
-	{
-		glColor4f(1.0,1.0,1.0,0.25);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
+	if(g_debug_custom_draw) {
+		static graphics::texture tex = graphics::texture::get("white2x2.png");
+		tex.set_as_current_texture();
+
+		glColor4f(1.0,1.0,1.0,1.0);
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
 		glDrawArrays(GL_LINE_STRIP, 0, vqueue.size()/2);
 	}
 #else
