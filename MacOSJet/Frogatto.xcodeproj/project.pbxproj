@@ -199,7 +199,9 @@
 		C02ACCAF16FD6200006274BC /* fbo_scene.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C02ACCAD16FD6200006274BC /* fbo_scene.cpp */; };
 		C0649522171361DE00D8F372 /* shaders.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C6E2160AFD4D006E7D90 /* shaders.cpp */; };
 		C06495251713620E00D8F372 /* gles2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06495231713620E00D8F372 /* gles2.cpp */; };
-		C089D452162BDF7B009D2878 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C089D451162BDF7B009D2878 /* master-config.cfg */; };
+		C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */; };
+		C06FF3F31741751800377772 /* libboost_filesystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
+		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -230,6 +232,7 @@
 			files = (
 				C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */,
 				C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */,
+				C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */,
 				C0EF2A5A1622296E004CD227 /* libboost_iostreams.dylib in CopyFiles */,
 				C0EF2A5B16222973004CD227 /* libboost_regex.dylib in CopyFiles */,
 				C0EF2A5C16222978004CD227 /* libboost_system.dylib in CopyFiles */,
@@ -642,6 +645,9 @@
 		C0406534163F790000F84F94 /* sys.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = sys.hpp; sourceTree = "<group>"; };
 		C06495231713620E00D8F372 /* gles2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = gles2.cpp; sourceTree = "<group>"; };
 		C06495241713620E00D8F372 /* gles2.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = gles2.hpp; sourceTree = "<group>"; };
+		C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_visualize_widget.cpp; sourceTree = "<group>"; };
+		C06FF3F01740B9F000377772 /* formula_visualize_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_visualize_widget.hpp; sourceTree = "<group>"; };
+		C06FF3F21741751800377772 /* libboost_filesystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_filesystem.dylib; sourceTree = "<group>"; };
 		C089D451162BDF7B009D2878 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../master-config.cfg"; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
@@ -682,9 +688,10 @@
 				C017635C17160D220005478B /* SDL2_image.framework in Frameworks */,
 				C017635D17160D220005478B /* SDL2_mixer.framework in Frameworks */,
 				C017635E17160D220005478B /* SDL2_ttf.framework in Frameworks */,
+				C0EF2A5816215F78004CD227 /* libboost_system.dylib in Frameworks */,
+				C06FF3F31741751800377772 /* libboost_filesystem.dylib in Frameworks */,
 				C0EF2A5616215F78004CD227 /* libboost_iostreams.dylib in Frameworks */,
 				C0EF2A5716215F78004CD227 /* libboost_regex.dylib in Frameworks */,
-				C0EF2A5816215F78004CD227 /* libboost_system.dylib in Frameworks */,
 				C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */,
 				C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */,
 			);
@@ -757,6 +764,7 @@
 				C0D78B5E171F215D00980007 /* libpng15.15.dylib */,
 				C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */,
 				C0EF2A5316215F78004CD227 /* libboost_iostreams.dylib */,
+				C06FF3F21741751800377772 /* libboost_filesystem.dylib */,
 				C0EF2A5416215F78004CD227 /* libboost_regex.dylib */,
 				C0EF2A5516215F78004CD227 /* libboost_system.dylib */,
 				C010C5B6160AFC7C006E7D90 /* libz.dylib */,
@@ -918,6 +926,8 @@
 				C010C643160AFD4C006E7D90 /* formula_tokenizer.hpp */,
 				C010C644160AFD4C006E7D90 /* formula_variable_storage.cpp */,
 				C010C645160AFD4C006E7D90 /* formula_variable_storage.hpp */,
+				C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */,
+				C06FF3F01740B9F000377772 /* formula_visualize_widget.hpp */,
 				C010C646160AFD4C006E7D90 /* frame.cpp */,
 				C010C647160AFD4C006E7D90 /* frame.hpp */,
 				C010C648160AFD4C006E7D90 /* framed_gui_element.cpp */,
@@ -1241,7 +1251,6 @@
 				C010C800160AFD82006E7D90 /* data in Resources */,
 				C010C801160AFD82006E7D90 /* images in Resources */,
 				C010C802160AFD82006E7D90 /* modules in Resources */,
-				C089D452162BDF7B009D2878 /* master-config.cfg in Resources */,
 				C00E2A9D1687D11100DEB111 /* icon.icns in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
@@ -1437,6 +1446,7 @@
 				C02ACCAC16FD5F05006274BC /* variant_type.cpp in Sources */,
 				C02ACCAF16FD6200006274BC /* fbo_scene.cpp in Sources */,
 				C06495251713620E00D8F372 /* gles2.cpp in Sources */,
+				C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1526,7 +1536,7 @@
 					./dylibs/SDL2_image.framework/Headers,
 					./dylibs/SDL2_mixer.framework/Headers,
 					./dylibs/SDL2_ttf.framework/Headers,
-					./boost/include,
+					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
 				);
@@ -1572,7 +1582,7 @@
 					./dylibs/SDL2_image.framework/Headers,
 					./dylibs/SDL2_mixer.framework/Headers,
 					./dylibs/SDL2_ttf.framework/Headers,
-					./boost/include,
+					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
 				);
