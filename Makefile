@@ -48,10 +48,10 @@ endif
 
 # Linker library options.
 ifeq ($(USE_SDL2),yes)
-LIBS := $(shell pkg-config --libs x11 ) -lSDL2main \
+LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
 else
-LIBS := $(shell pkg-config --libs x11 ) -lSDLmain \
+LIBS := $(shell pkg-config --libs x11 gl ) -lSDLmain \
 	$(shell pkg-config --libs sdl glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
 endif
 
