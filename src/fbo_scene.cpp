@@ -16,6 +16,7 @@
 */
 #include "IMG_savepng.h"
 #include "asserts.hpp"
+#include "controls.hpp"
 #include "draw_scene.hpp"
 #include "fbo_scene.hpp"
 #include "foreach.hpp"
@@ -59,7 +60,14 @@
 
 texture_object::texture_object(const graphics::texture& texture)
   : texture_(texture)
-{}
+{
+	std::cerr << "CREATE TEXTURE_OBJECT\n";
+}
+
+texture_object::~texture_object()
+{
+	std::cerr << "DESTROY TEXTURE_OBJECT\n";
+}
 
 variant texture_object::get_value(const std::string& key) const
 {
@@ -68,8 +76,10 @@ variant texture_object::get_value(const std::string& key) const
 
 graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> objects)
 {
-	const int tex_width = graphics::texture::allows_npot() ? graphics::texture::next_power_of_2(area.w()) : area.w();
-	const int tex_height = graphics::texture::allows_npot() ? graphics::texture::next_power_of_2(area.h()) : area.h();
+	const controls::control_backup_scope ctrl_backup;
+
+	const int tex_width = graphics::texture::allows_npot() ? area.w() : graphics::texture::next_power_of_2(area.w());
+	const int tex_height = graphics::texture::allows_npot() ? area.h() : graphics::texture::next_power_of_2(area.h());
 	GLint video_framebuffer_id = 0;
 	glGetIntegerv(EXT_MACRO(GL_FRAMEBUFFER_BINDING), &video_framebuffer_id);
 
@@ -101,17 +111,21 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 	level_ptr lvl(new level("empty.cfg"));
 	foreach(const entity_ptr& e, objects) {
 		lvl->add_character(e);
+		lvl->add_draw_character(e);
 	}
 
 	lvl->set_boundaries(area);
 	screen_position pos;
-	pos.x = area.x();
-	pos.y = area.y();
+	pos.x = area.x()*100;
+	pos.y = area.y()*100;
 	{
 		preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
 		graphics::flip_draw_scope flip_draws;
 		lvl->process();
 		lvl->process_draw();
+		foreach(const entity_ptr& e, objects) {
+			lvl->add_draw_character(e);
+		}
 		render_scene(*lvl, pos);
 	}
 

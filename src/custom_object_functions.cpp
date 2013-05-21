@@ -21,6 +21,7 @@
 #include <string>
 #include <time.h>
 
+#include "IMG_savepng.h"
 #include "achievements.hpp"
 #include "asserts.hpp"
 #include "blur.hpp"
@@ -64,6 +65,7 @@
 #include "speech_dialog.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
+#include "surface.hpp"
 #include "thread.hpp"
 #include "unit_test.hpp"
 #include "preferences.hpp"
@@ -175,7 +177,7 @@ FUNCTION_DEF(performance, 0, 0, "performance(): returns an object with current p
 	return variant(performance_data::current());
 END_FUNCTION_DEF(performance)
 
-FUNCTION_DEF(texture, 2, 2, "texture(objects, rect): render a texture")
+FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
 	variant objects = args()[0]->evaluate(variables);
 	variant area = args()[1]->evaluate(variables);
 
@@ -189,7 +191,24 @@ FUNCTION_DEF(texture, 2, 2, "texture(objects, rect): render a texture")
 
 	const rect r(area);
 
-	const graphics::texture t = render_fbo(r, obj);
+	graphics::texture t = render_fbo(r, obj);
+
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+	if(args().size() > 2 && args()[2]->evaluate(variables).as_bool()) {
+		using namespace graphics;
+		surface src = t.get_surface();
+		surface dst(SDL_CreateRGBSurface(0, src->w/2, src->h/2, 32, SURFACE_MASK));
+
+		SDL_Rect src_rect = {0,0,src->w,src->h};
+		SDL_Rect dst_rect = {0,0,dst->w,dst->h};
+
+		SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
+
+		SDL_SoftStretch(src.get(), &src_rect, dst.get(), &dst_rect);
+		t = texture::get_no_cache(dst);
+	}
+#endif
+
 	return variant(new texture_object(t));
 
 END_FUNCTION_DEF(texture)
@@ -1069,6 +1088,16 @@ FUNCTION_DEF(set_var, 2, 2, "set_var(string varname, variant value): sets the va
 	return variant(cmd);
 END_FUNCTION_DEF(set_var)
 
+FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
+	std::vector<variant> v;
+	foreach(custom_object* obj, custom_object::get_all()) {
+		v.push_back(variant(obj));
+	}
+
+	return variant(&v);
+END_FUNCTION_DEF(debug_all_custom_objects)
+
+
 class add_debug_chart_command : public game_logic::command_callable {
 	std::string id_;
 	decimal value_;
@@ -1152,6 +1181,31 @@ FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(level, object, int x, int
 
 	return variant(point_standable(*lvl, *obj, x, y));
 END_FUNCTION_DEF(object_can_stand)
+
+FUNCTION_DEF(find_point_object_can_stand_on, 6, 7, "find_point_object_can_stand_on(level, object, int x, int y, int dx, int dy, int max_search=1000) -> [int,int]|null: returns the first point that an object can stand on, starting at [x,y] and incrementing by [dx,dy] until the point is found")
+	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	entity* obj = args()[1]->evaluate(variables).convert_to<entity>();
+	int x = args()[2]->evaluate(variables).as_int();
+	int y = args()[3]->evaluate(variables).as_int();
+	const int dx = args()[4]->evaluate(variables).as_int();
+	const int dy = args()[5]->evaluate(variables).as_int();
+	const int niterations = args().size() > 6 ? args()[6]->evaluate(variables).as_int() : 1000;
+
+	for(int n = 0; n < niterations; ++n) {
+		if(point_standable(*lvl, *obj, x, y)) {
+			std::vector<variant> result;
+			result.reserve(2);
+			result.push_back(variant(x));
+			result.push_back(variant(y));
+			return variant(&result);
+		}
+
+		x += dx;
+		y += dy;
+	}
+
+	return variant();
+END_FUNCTION_DEF(find_point_object_can_stand_on)
 
 FUNCTION_DEF(standable, 3, 5, "standable(level, int x, int y, (optional)int w=1, (optional) int h=1) -> boolean: returns true iff the level contains standable space within the given (x,y,w,h) rectangle")
 	level* lvl = args()[0]->evaluate(variables).convert_to<level>();

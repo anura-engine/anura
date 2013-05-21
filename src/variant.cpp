@@ -783,6 +783,8 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		return variant();
 	}
 
+	must_be(VARIANT_TYPE_FUNCTION);
+
 	std::vector<variant> args_buf;
 	if(fn_->bound_args.empty() == false) {
 		args_buf = fn_->bound_args;
@@ -791,7 +793,6 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	const std::vector<variant>* args = args_buf.empty() ? &passed_args : &args_buf;
 
-	must_be(VARIANT_TYPE_FUNCTION);
 	boost::intrusive_ptr<game_logic::slot_formula_callable> callable = new game_logic::slot_formula_callable;
 	if(fn_->callable) {
 		callable->set_fallback(fn_->callable);
@@ -1080,6 +1081,22 @@ variant variant::bind_args(const std::vector<variant>& args)
 	result.fn_->bound_args.insert(result.fn_->bound_args.end(), args.begin(), args.end());
 
 	return result;
+}
+
+void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::formula_callable>*>& result)
+{
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			multi_fn_->functions[n].get_mutable_closure_ref(result);
+		}
+
+		return;
+	}
+
+	must_be(VARIANT_TYPE_FUNCTION);
+	if(fn_->callable) {
+		result.push_back(&fn_->callable);
+	}
 }
 
 int variant::min_function_arguments() const

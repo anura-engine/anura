@@ -338,6 +338,8 @@ FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL c
 		max_entries = args()[0]->evaluate(variables).as_int();
 	}
 	return variant(new ffl_cache(max_entries));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int");
 END_FUNCTION_DEF(create_cache)
 
 FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
@@ -447,6 +449,9 @@ FUNCTION_TYPE_DEF
 	} else {
 		return variant_type::get_type(variant::VARIANT_TYPE_FUNCTION);
 	}
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("function");
 END_FUNCTION_DEF(bind)
 
 FUNCTION_DEF(bind_command, 1, -1, "bind_command(fn, args..)")
@@ -463,6 +468,9 @@ FUNCTION_DEF(bind_command, 1, -1, "bind_command(fn, args..)")
 	ASSERT_LOG(fn.function_call_valid(args_list, &message), "Error in bind_command: functions args do not match: " << message);
 	
 	return variant(new bound_command(fn, args_list));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("function");
 FUNCTION_TYPE_DEF
 	return variant_type::get_commands();
 END_FUNCTION_DEF(bind_command)
@@ -471,6 +479,8 @@ FUNCTION_DEF(bind_closure, 2, 2, "bind_closure(fn, obj): binds the given lambda 
 	variant fn = args()[0]->evaluate(variables);
 	return fn.bind_closure(args()[1]->evaluate(variables).as_callable());
 
+FUNCTION_ARGS_DEF
+	ARG_TYPE("function");
 END_FUNCTION_DEF(bind_closure)
 
 FUNCTION_DEF(singleton, 1, 1, "singleton(string typename): create a singleton object with the given typename")
@@ -552,6 +562,9 @@ FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the g
 
 	ASSERT_LOG(f.get() != NULL, "ILLEGAL FORMULA GIVEN TO eval: " << s.as_string());
 	return f->execute(*callable);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 END_FUNCTION_DEF(eval_no_recover)
 
 FUNCTION_DEF(eval, 1, 2, "eval(str, [arg]): evaluate the given string as FFL")
@@ -587,6 +600,9 @@ FUNCTION_DEF(eval, 1, 2, "eval(str, [arg]): evaluate the given string as FFL")
 	}
 	std::cerr << "ERROR IN EVAL\n";
 	return variant();
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 END_FUNCTION_DEF(eval)
 
 FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
@@ -646,6 +662,10 @@ FUNCTION_TYPE_DEF
 	}
 
 	return variant_type_ptr();
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("function");
+	ARG_TYPE("list");
 END_FUNCTION_DEF(call)
 
 
@@ -658,6 +678,9 @@ FUNCTION_DEF(abs, 1, 1, "abs(value) -> value: evaluates the absolute value of th
 		const int n = v.as_int();
 		return variant(n >= 0 ? n : -n);
 	}
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(abs)
@@ -671,6 +694,9 @@ FUNCTION_DEF(sign, 1, 1, "sign(value) -> value: evaluates to 1 if positive, -1 i
 	} else {
 		return variant(0);
 	}
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(sign)
@@ -813,6 +839,9 @@ FUNCTION_DEF(keys, 1, 1, "keys(map) -> list: gives the keys for a map")
 	}
 
 	return map.get_keys();
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("map");
 FUNCTION_TYPE_DEF
 	return variant_type::get_list(args()[0]->query_variant_type()->is_map_of().first);
 END_FUNCTION_DEF(keys)
@@ -820,6 +849,8 @@ END_FUNCTION_DEF(keys)
 FUNCTION_DEF(values, 1, 1, "values(map) -> list: gives the values for a map")
 	const variant map = args()[0]->evaluate(variables);
 	return map.get_values();
+FUNCTION_ARGS_DEF
+	ARG_TYPE("map");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type()->is_map_of().second;
 END_FUNCTION_DEF(values)
@@ -828,6 +859,8 @@ FUNCTION_DEF(wave, 1, 1, "wave(int) -> int: a wave with a period of 1000 and hei
 	const int value = args()[0]->evaluate(variables).as_int()%1000;
 	const double angle = 2.0*3.141592653589*(static_cast<double>(value)/1000.0);
 	return variant(static_cast<int>(sin(angle)*1000.0));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(wave)
@@ -847,6 +880,8 @@ END_FUNCTION_DEF(integer)
 FUNCTION_DEF(sin, 1, 1, "sin(x): Standard sine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(sin(angle/radians_to_degrees)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(sin)
@@ -854,6 +889,8 @@ END_FUNCTION_DEF(sin)
 FUNCTION_DEF(cos, 1, 1, "cos(x): Standard cosine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(cos(angle/radians_to_degrees)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(cos)
@@ -861,6 +898,8 @@ END_FUNCTION_DEF(cos)
 FUNCTION_DEF(tan, 1, 1, "tan(x): Standard tangent function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(tan(angle/radians_to_degrees)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(tan)
@@ -868,6 +907,8 @@ END_FUNCTION_DEF(tan)
 FUNCTION_DEF(asin, 1, 1, "asin(x): Standard arc sine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(asin(ratio)*radians_to_degrees));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(asin)
@@ -875,6 +916,8 @@ END_FUNCTION_DEF(asin)
 FUNCTION_DEF(acos, 1, 1, "acos(x): Standard arc cosine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(acos(ratio)*radians_to_degrees));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(acos)
@@ -882,6 +925,8 @@ END_FUNCTION_DEF(acos)
 FUNCTION_DEF(atan, 1, 1, "atan(x): Standard arc tangent function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(atan(ratio)*radians_to_degrees));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(atan)
@@ -889,6 +934,8 @@ END_FUNCTION_DEF(atan)
 FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(sinh(angle)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(sinh)
@@ -896,6 +943,8 @@ END_FUNCTION_DEF(sinh)
 FUNCTION_DEF(cosh, 1, 1, "cosh(x): Standard hyperbolic cosine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(cosh(angle)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(cosh)
@@ -903,6 +952,8 @@ END_FUNCTION_DEF(cosh)
 FUNCTION_DEF(tanh, 1, 1, "tanh(x): Standard hyperbolic tangent function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(tanh(angle)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(tanh)
@@ -910,6 +961,8 @@ END_FUNCTION_DEF(tanh)
 FUNCTION_DEF(asinh, 1, 1, "asinh(x): Standard arc hyperbolic sine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(asinh(ratio)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(asinh)
@@ -917,6 +970,8 @@ END_FUNCTION_DEF(asinh)
 FUNCTION_DEF(acosh, 1, 1, "acosh(x): Standard arc hyperbolic cosine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(acosh(ratio)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(acosh)
@@ -924,6 +979,8 @@ END_FUNCTION_DEF(acosh)
 FUNCTION_DEF(atanh, 1, 1, "atanh(x): Standard arc hyperbolic tangent function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(atanh(ratio)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(atanh)
@@ -931,6 +988,8 @@ END_FUNCTION_DEF(atanh)
 FUNCTION_DEF(sqrt, 1, 1, "sqrt(x): Returns the square root of x.")
 	const double value = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(decimal(sqrt(value)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(sqrt)
@@ -941,6 +1000,11 @@ FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from
 	const float c = args()[2]->evaluate(variables).as_int();
 	const float d = args()[3]->evaluate(variables).as_int();
 	return variant(static_cast<int>(round((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(angle)
@@ -957,6 +1021,9 @@ FUNCTION_DEF(angle_delta, 2, 2, "angle_delta(a, b) -> int: Given two angles, ret
 	}
 
 	return variant(b - a);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(angle_delta)
@@ -976,6 +1043,11 @@ FUNCTION_DEF(orbit, 4, 4, "orbit(x, y, angle, dist) -> [x,y]: Returns the point 
 	result.push_back(variant(decimal(v)));
 	
 	return variant(&result);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
 	return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_DECIMAL));
 END_FUNCTION_DEF(orbit)
@@ -985,6 +1057,10 @@ FUNCTION_DEF(regex_replace, 3, 3, "regex_replace(string, string, string) -> stri
 	const boost::regex re(args()[1]->evaluate(variables).as_string());
 	const std::string value = args()[2]->evaluate(variables).as_string();
 	return variant(boost::regex_replace(str, re, value));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	ARG_TYPE("string");
+	ARG_TYPE("string");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_STRING);
 END_FUNCTION_DEF(regex_replace)
@@ -1004,6 +1080,9 @@ FUNCTION_DEF(regex_match, 2, 2, "regex_match(string, re_string) -> string: retur
 		v.push_back(variant(std::string(m[i].first, m[i].second)));
 	}
 	return variant(&v);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	ARG_TYPE("string");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_STRING)));
@@ -1151,6 +1230,8 @@ FUNCTION_DEF(fold, 2, 3, "fold(list, expr, [default]) -> value")
 	}
 
 	return a;
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(args()[1]->query_variant_type());
@@ -1191,6 +1272,8 @@ FUNCTION_DEF(unzip, 1, 1, "unzip(list of lists) -> list of lists: Converts [[1,4
 		vl.push_back(variant(&v[n]));
 	}
 	return variant(&vl);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[list]");
 END_FUNCTION_DEF(unzip)
 
 FUNCTION_DEF(zip, 3, 3, "zip(list1, list2, expr) -> list")
@@ -1223,6 +1306,27 @@ FUNCTION_DEF(zip, 3, 3, "zip(list1, list2, expr) -> list")
 		return variant(&retMap);
 	}
 	return variant();
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list|map");
+	ARG_TYPE("list|map");
+FUNCTION_TYPE_DEF
+	variant_type_ptr type_a = args()[0]->query_variant_type();
+	variant_type_ptr type_b = args()[1]->query_variant_type();
+
+	if(type_a->is_list_of()) {
+		return variant_type::get_list(args()[2]->query_variant_type());
+	} else {
+		std::pair<variant_type_ptr,variant_type_ptr> map_a = type_a->is_map_of();
+		std::pair<variant_type_ptr,variant_type_ptr> map_b = type_b->is_map_of();
+		if(map_a.first && map_b.first) {
+			std::vector<variant_type_ptr> key;
+			key.push_back(map_a.first);
+			key.push_back(map_b.first);
+			return variant_type::get_map(variant_type::get_union(key), args()[2]->query_variant_type());
+		}
+	}
+
+	return variant_type::get_any();
 END_FUNCTION_DEF(zip)
 
 FUNCTION_DEF(float_array, 1, 2, "float_array(list, (opt) num_elements) -> callable: Converts a list of floating point values into an efficiently accessible object.")
@@ -1234,6 +1338,9 @@ FUNCTION_DEF(float_array, 1, 2, "float_array(list, (opt) num_elements) -> callab
 		floats.push_back(GLfloat(f[n].as_decimal().as_float()));
 	}
 	return variant(new float_array_callable(&floats, num_elems));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[decimal|int]");
+	ARG_TYPE("int");
 END_FUNCTION_DEF(float_array)
 
 FUNCTION_DEF(short_array, 1, 2, "short_array(list) -> callable: Converts a list of integer values into an efficiently accessible object.")
@@ -1245,6 +1352,8 @@ FUNCTION_DEF(short_array, 1, 2, "short_array(list) -> callable: Converts a list 
 		shorts.push_back(GLshort(s[n].as_int()));
 	}
 	return variant(new short_array_callable(&shorts, num_elems));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[int]");
 END_FUNCTION_DEF(short_array)
 
 /* XXX Krista to be reworked
@@ -1402,6 +1511,8 @@ FUNCTION_DEF(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. I
 	}
 
 	return variant(&vars);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(sort)
@@ -1443,6 +1554,8 @@ FUNCTION_DEF(shuffle, 1, 1, "shuffle(list) - Returns a shuffled version of the l
 	myshuffle(vars.begin(), vars.end());
 
 	return variant(&vars);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(shuffle)
@@ -1452,6 +1565,8 @@ FUNCTION_DEF(remove_from_map, 2, 2, "remove_from_map(map, key): Removes the give
 	ASSERT_LOG(m.is_map(), "ARG PASSED TO remove_from_map() IS NOT A MAP");
 	variant key = args()[1]->evaluate(variables);
 	return m.remove_attr(key);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("map");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(remove_from_map)
@@ -1676,6 +1791,8 @@ FUNCTION_DEF(count, 2, 2, "count(list, expr): Returns an integer count of how ma
 		return variant(res);
 	}
 
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list|map");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(count)
@@ -1739,6 +1856,17 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
+		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
+		if(def) {
+			def = args()[1]->query_modified_definition_based_on_result(true, def);
+			if(def) {
+				const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
+				if(value_entry != NULL && value_entry->variant_type) {
+					return variant_type::get_list(value_entry->variant_type);
+				}
+			}
+		}
+
 		return args()[0]->query_variant_type();
 	}
 };
@@ -1919,6 +2047,8 @@ FUNCTION_DEF(choose, 1, 2, "choose(list, (optional)scoring_expr) -> value: choos
 	}
 
 	return items[max_index];
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type()->is_list_of();
 END_FUNCTION_DEF(choose)
@@ -1999,6 +2129,9 @@ FUNCTION_DEF(sum, 1, 2, "sum(list[, counter]): Adds all elements of the list tog
 	}
 
 	return res;
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(args()[0]->query_variant_type()->is_list_of());
@@ -2047,6 +2180,8 @@ FUNCTION_DEF(reverse, 1, 1, "reverse(list): reverses the given list")
 	std::vector<variant> items = args()[0]->evaluate(variables).as_list();
 	std::reverse(items.begin(), items.end());
 	return variant(&items);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(reverse)
@@ -2058,6 +2193,8 @@ FUNCTION_DEF(head, 1, 1, "head(list): gives the first element of a list, or null
 	} else {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
@@ -2072,6 +2209,8 @@ FUNCTION_DEF(back, 1, 1, "back(list): gives the last element of a list, or null 
 	} else {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
@@ -2088,6 +2227,8 @@ FUNCTION_DEF(get_all_files_under_dir, 1, 1, "get_all_files_under_dir(path): Retu
 		v.push_back(variant(i->second));
 	}
 	return variant(&v);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 FUNCTION_TYPE_DEF
 	return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_STRING));
 END_FUNCTION_DEF(get_all_files_under_dir)
@@ -2105,6 +2246,8 @@ FUNCTION_DEF(get_files_in_dir, 1, 1, "get_files_in_dir(path): Returns a list of 
 		v.push_back(variant(*i));
 	}
 	return variant(&v);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 FUNCTION_TYPE_DEF
 	return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_STRING));
 END_FUNCTION_DEF(get_files_in_dir)
@@ -2144,6 +2287,8 @@ FUNCTION_DEF(index, 2, 2, "index(list, value) -> index of value in list: Returns
 		}
 	}
 	return variant(-1);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(index)
@@ -2169,6 +2314,8 @@ FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Co
 	}
 	const std::string s = args()[0]->evaluate(variables).as_string();
 	return variant(new zip::compressed_data(std::vector<char>(s.begin(), s.end()), compression_level));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 END_FUNCTION_DEF(compress)
 
 FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given object, returns the data if successful.")
@@ -2384,7 +2531,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_string());
+			return variant::from_bool(args()[0]->evaluate(variables).is_string());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2399,7 +2546,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_null());
+			return variant::from_bool(args()[0]->evaluate(variables).is_null());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2414,7 +2561,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_int());
+			return variant::from_bool(args()[0]->evaluate(variables).is_int());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2429,7 +2576,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_bool());
+			return variant::from_bool(args()[0]->evaluate(variables).is_bool());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2444,7 +2591,22 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_decimal());
+			return variant::from_bool(args()[0]->evaluate(variables).is_decimal());
+		}
+		variant_type_ptr get_variant_type() const {
+			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+		}
+	};
+
+	class is_number_function : public function_expression { //Sometimes, you just want to make sure a thing is numeric, sod the semantics.
+	public:
+		explicit is_number_function(const args_list& args)
+			: function_expression("is_number", args, 1, 1)
+		{}
+
+	private:
+		variant execute(const formula_callable& variables) const {
+			return variant::from_bool(args()[0]->evaluate(variables).is_decimal() || args()[0]->evaluate(variables).is_int());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2459,7 +2621,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_map());
+			return variant::from_bool(args()[0]->evaluate(variables).is_map());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2493,7 +2655,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_function());
+			return variant::from_bool(args()[0]->evaluate(variables).is_function());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2508,7 +2670,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_list());
+			return variant::from_bool(args()[0]->evaluate(variables).is_list());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2523,7 +2685,7 @@ END_FUNCTION_DEF(int)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			return variant(args()[0]->evaluate(variables).is_callable());
+			return variant::from_bool(args()[0]->evaluate(variables).is_callable());
 		}
 		variant_type_ptr get_variant_type() const {
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
@@ -2862,6 +3024,8 @@ FUNCTION_DEF(debug_fn, 2, 2, "debug_fn(msg, expr): evaluates and returns expr. W
 	}
 
 	return res;
+FUNCTION_TYPE_DEF
+	return args()[1]->query_variant_type();
 END_FUNCTION_DEF(debug_fn)
 
 bool consecutive_periods(char a, char b) {
@@ -2897,9 +3061,12 @@ public:
 				variant v = json::parse(sys::read_file(docname_));
 
 				if(sys::file_exists(docname_ + ".stats")) {
-					variant stats = json::parse(sys::read_file(docname_ + ".stats"));
-					foreach(const variant::map_pair& p, stats.as_map()) {
-						map_[p.first.as_string()] = NodeInfo(p.second);
+					try {
+						variant stats = json::parse(sys::read_file(docname_ + ".stats"));
+						foreach(const variant::map_pair& p, stats.as_map()) {
+							map_[p.first.as_string()] = NodeInfo(p.second);
+						}
+					} catch(json::parse_error& e) {
 					}
 				}
 
@@ -2909,7 +3076,7 @@ public:
 					}
 				}
 			} catch(json::parse_error& e) {
-				ASSERT_LOG(false, "Eerror parsing json for backed map in " << docname_ << ": " << e.error_message());
+				ASSERT_LOG(false, "Error parsing json for backed map in " << docname_ << ": " << e.error_message());
 			}
 		}
 
@@ -3005,7 +3172,11 @@ FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function g
 		return variant(formatter() << "RELATIVE PATH OUTSIDE ALLOWED " << docname);
 	}
 
-	docname = preferences::user_data_path() + docname;
+	if(sys::file_exists(module::map_file(docname))) {
+		docname = module::map_file(docname);
+	} else {
+		docname = preferences::user_data_path() + docname;
+	}
 
 	variant fn = args()[1]->evaluate(variables);
 
@@ -3086,6 +3257,8 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [string] flags):
 		ASSERT_LOG(false, "COULD NOT LOAD DOCUMENT: " << e.error_message());
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
 FUNCTION_TYPE_DEF
 	std::vector<variant_type_ptr> types;
 	types.push_back(variant_type::get_type(variant::VARIANT_TYPE_MAP));
@@ -3098,6 +3271,24 @@ END_FUNCTION_DEF(get_document)
 void remove_formula_function_cached_doc(const std::string& name)
 {
 	get_doc_cache().erase(name);
+}
+
+void function_expression::check_arg_type(int narg, const std::string& type_str) const
+{
+	if(narg >= args().size()) {
+		return;
+	}
+
+	variant type_v(type_str);
+	variant_type_ptr type;
+	try {
+		type = parse_variant_type(type_v);
+	} catch(...) {
+		ASSERT_LOG(false, "BAD ARG TYPE SPECIFIED: " << type);
+	}
+
+	variant_type_ptr provided = args()[narg]->query_variant_type();
+	ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << " " << debug_pinpoint_location())
 }
 
 formula_function_expression::formula_function_expression(const std::string& name, const args_list& args, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types)
@@ -3333,7 +3524,9 @@ namespace {
 			FUNCTION(is_string);
 			FUNCTION(is_null);
 			FUNCTION(is_int);
+			FUNCTION(is_bool);
 			FUNCTION(is_decimal);
+			FUNCTION(is_number);
 			FUNCTION(is_map);
 			FUNCTION(mod);
 			FUNCTION(is_function);
@@ -3688,6 +3881,93 @@ FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically 
 	ASSERT_LOG(type.get() != NULL, "NULL VALUE RETURNED FROM TYPE QUERY");
 	return variant(type->to_string());
 END_FUNCTION_DEF(typeof)
+
+class gc_command : public game_logic::command_callable
+{
+public:
+	virtual void execute(game_logic::formula_callable& ob) const 
+	{
+		custom_object::run_garbage_collection();
+	}
+};
+
+FUNCTION_DEF(trigger_garbage_collection, 0, 0, "trigger_garbage_collection(): trigger an FFL garbage collection")
+	return variant(new gc_command);
+END_FUNCTION_DEF(trigger_garbage_collection)
+
+class debug_dump_textures_command : public game_logic::command_callable
+{
+	std::string fname_, info_;
+public:
+	debug_dump_textures_command(const std::string& fname, const std::string& info) : fname_(fname), info_(info)
+	{}
+	virtual void execute(game_logic::formula_callable& ob) const 
+	{
+		const std::string* info = NULL;
+		if(info_.empty() == false) {
+			info = &info_;
+		}
+		graphics::texture::debug_dump_textures(fname_.c_str(), info);
+	}
+};
+
+FUNCTION_DEF(debug_dump_textures, 1, 2, "debug_dump_textures(string dir, string name=null): dump textures to the given directory")
+	std::string path = args()[0]->evaluate(variables).as_string();
+	std::string name;
+	if(args().size() > 1) {
+		name = args()[1]->evaluate(variables).as_string();
+	}
+
+	return variant(new debug_dump_textures_command(path, name));
+END_FUNCTION_DEF(debug_dump_textures)
+
+class mod_object_callable : public formula_callable {
+public:
+	explicit mod_object_callable(boost::intrusive_ptr<formula_object> obj) : obj_(obj), v_(obj.get())
+	{}
+
+private:
+	variant get_value(const std::string& key) const {
+		if(key == "object") {
+			return v_;
+		} else {
+			ASSERT_LOG(false, "Unknown key: " << key);
+		}
+
+		return variant();
+	}
+
+	variant get_value_by_slot(int slot) const {
+		if(slot == 0) {
+			return v_;
+		}
+
+		ASSERT_LOG(false, "Unknown key: " << slot);
+		return variant();
+	}
+
+	boost::intrusive_ptr<formula_object> obj_;
+	variant v_;
+};
+
+FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
+	boost::intrusive_ptr<formula_object> obj(args()[0]->evaluate(variables).convert_to<formula_object>());
+
+	obj = formula_object::deep_clone(variant(obj.get())).convert_to<formula_object>();
+
+	variant commands_fn = args()[1]->evaluate(variables);
+
+	std::vector<variant> args;
+	args.push_back(variant(obj.get()));
+	variant commands = commands_fn(args);
+
+	obj->execute_command(commands);
+
+	return variant(obj.get());
+
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type();
+END_FUNCTION_DEF(get_modified_object)
 
 }
 

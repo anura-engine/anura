@@ -187,7 +187,7 @@ SDL_DisplayMode set_video_mode_auto_select()
 		best_mode.h = 768;
 	}
 
-	const bool result = set_video_mode(best_mode.w, best_mode.h);
+	const bool result = set_video_mode(best_mode.w, best_mode.h,SDL_WINDOW_OPENGL);
 	ASSERT_LOG(result, "FAILED TO SET AUTO SELECT VIDEO MODE: " << best_mode.w << "x" << best_mode.h);
 	
 	return best_mode;
@@ -197,6 +197,27 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 {
 	static SDL_Window* wnd = NULL;
 	static SDL_GLContext ctx = NULL;
+	static int wnd_flags = 0;
+
+	if(wnd) {
+		SDL_DisplayMode mode;
+		if(SDL_GetWindowDisplayMode(wnd, &mode) == 0) {
+			mode.w = w;
+			mode.h = h;
+			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
+				SDL_SetWindowSize(wnd, w, h);
+				SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+				return wnd;
+			} else {
+				fprintf(stderr, "ERROR: Failed to set window display mode. Destroying window and creating a new one.\n");
+			}
+
+		} else {
+			fprintf(stderr, "ERROR: Failed to get window display mode. Destroying window and creating a new one.\n");
+		}
+	}
+
+	wnd_flags = flags;
 	
 	graphics::texture::unbuild_all();
 #if defined(USE_GLES2) 
@@ -273,39 +294,12 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 	
 	void prepare_raster()
 	{
-		//	int real_w, real_h;
-		//	bool rotated;
-		
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		//	real_w = 320;
-		//	real_h = 480;
-		//	rotated = true;
-#elif defined(__native_client__)
-		// do nothing.
-#else
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-		const SDL_Surface* fb = SDL_GetWindowSurface(graphics::get_window());
-#else
-		const SDL_Surface* fb = SDL_GetVideoSurface();
-#endif
-		if(fb == NULL) {
-			std::cerr << "Framebuffer was null in prepare_raster\n";
-			return;
-		}
-		//	real_w = fb->w;
-		//	real_h = fb->h;
-		//	rotated = false;
-#endif
-		
 		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
-//		glClearColor(0.0, 0.0, 0.0, 0.0);
-//		glClear(GL_COLOR_BUFFER_BIT);
 		glShadeModel(GL_FLAT);
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 		
 		if(preferences::screen_rotated()) {
-			//		glOrtho(0, 640, 960, 0, -1.0, 1.0);
 			int top = screen_width();
 			int bot = 0;
 			if(g_flip_draws) {
@@ -329,14 +323,11 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 #endif
 		}
 		
-		//glOrtho(0, real_w, real_h, 0, -1.0, 1.0);
 		if(preferences::screen_rotated()) {
 			// Rotate 90 degrees ccw, then move real_h pixels down
 			// This has to be in opposite order since A(); B(); means A(B(x))
 			glTranslatef(screen_height(), 0.0f, 0.0f);
 			glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
-			//glTranslatef(0.0f, 0.5f, 0.0f);
-			//glScalef(0.5f, 0.5f, 1.0f);
 		}
 		
 		glMatrixMode(GL_MODELVIEW);
@@ -350,45 +341,6 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 		
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 	}
-	
-	/*void prepare_raster()
-	 {
-	 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	 int w = 320;
-	 int h = 480;
-	 #else
-	 const SDL_Surface* fb = SDL_GetVideoSurface();
-	 if(fb == NULL) {
-	 std::cerr << "Framebuffer was null in prepare_raster\n";
-	 return;
-	 }
-	 int w = fb->w;
-	 int h = fb->h;
-	 #endif
-	 
-	 glViewport(0,0,w,h);
-	 glClearColor(0.0,0.0,0.0,0.0);
-	 glClear(GL_COLOR_BUFFER_BIT);
-	 glShadeModel(GL_FLAT);
-	 glMatrixMode(GL_PROJECTION);
-	 glLoadIdentity();
-	 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	 glScalef(0.25f, 0.25f, 1.0f);
-	 glRotatef(-90.0f, 0.0f, 0.0f, 1.0f);
-	 #endif
-	 #ifdef SDL_VIDEO_OPENGL_ES
-	 #define glOrtho glOrthof
-	 #endif
-	 glOrtho(0,screen_width(),screen_height(),0,-1.0,1.0);
-	 glMatrixMode(GL_MODELVIEW);
-	 glLoadIdentity();
-	 
-	 glDisable(GL_DEPTH_TEST);
-	 glDisable(GL_LIGHTING);
-	 glDisable(GL_LIGHT0);
-	 
-	 glColor4f(1.0, 1.0, 1.0, 1.0);
-	 }*/
 	
 	namespace {
 		struct draw_detection_rect {
@@ -1030,11 +982,65 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		gluProjectf(sx, sy, sz, model, proj, view, dx, dy, dz);
 	}
 
-	void push_clip(const SDL_Rect& r)
+	namespace {
+	struct stencil_buffer_settings {
+		bool enabled;
+		GLint mask;
+		GLenum func;
+		GLint ref;
+		GLuint ref_mask;
+
+		GLenum sfail, dpfail, dppass;
+	};
+
+	std::stack<stencil_buffer_settings> stencil_buffer_stack;
+
+	}
+
+	stencil_scope::stencil_scope(bool enabled, int mask, GLenum func, GLenum ref, GLenum ref_mask, GLenum sfail, GLenum dpfail, GLenum dppass)
+	  : init_(true)
 	{
-		glEnable(GL_STENCIL_TEST);
+		stencil_buffer_settings settings = { enabled, mask, func, ref, ref_mask, sfail, dpfail, dppass };
+		stencil_buffer_stack.push(settings);
+		apply_settings();
+	}
+
+	stencil_scope::~stencil_scope() {
+		if(init_) {
+			revert_settings();
+		}
+	}
+
+	void stencil_scope::apply_settings() {
+		assert(!stencil_buffer_stack.empty());
+		const stencil_buffer_settings& settings = stencil_buffer_stack.top();
+		if(settings.enabled) {
+			glEnable(GL_STENCIL_TEST);
+		} else {
+			glDisable(GL_STENCIL_TEST);
+		}
+
+		glStencilMask(settings.mask);
+		glStencilFunc(settings.func, settings.ref, settings.ref_mask);
+		glStencilOp(settings.sfail, settings.dpfail, settings.dppass);
+	}
+	
+	void stencil_scope::revert_settings() {
+		assert(!stencil_buffer_stack.empty());
+		stencil_buffer_stack.pop();
+		if(stencil_buffer_stack.empty()) {
+			glDisable(GL_STENCIL_TEST);
+			glStencilMask(0x0);
+		} else {
+			apply_settings();
+		}
+	}
+
+	clip_scope::clip_scope(const SDL_Rect& r)
+	{
+		{
+		stencil_scope stencil_settings(true, 0x01, GL_NEVER, 0x01, 0xff, GL_REPLACE, GL_KEEP, GL_KEEP);
 		glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-		glStencilMask(0xff);
 		glClear(GL_STENCIL_BUFFER_BIT);
 		
 		GLfloat varray[] = {
@@ -1043,8 +1049,6 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x, r.y+r.h,
 			r.x+r.w, r.y+r.h
 		};
-		glStencilFunc(GL_NEVER, 0x1, 0xff);
-		glStencilOp(GL_REPLACE, GL_KEEP, GL_KEEP);
 #if defined(USE_GLES2)
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
@@ -1059,13 +1063,14 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 #endif
-		glStencilMask(0);
+		}
+
+		stencil_.reset(new stencil_scope(true, 0x0, GL_EQUAL, 0x1, 0x1, GL_KEEP, GL_KEEP, GL_KEEP));
+
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-		glStencilFunc(GL_EQUAL, 0x1, 0x1);
 	}
 	
-	void pop_clip() {
-		glDisable(GL_STENCIL_TEST);
+	clip_scope::~clip_scope() {
 	}
 	
 	namespace {

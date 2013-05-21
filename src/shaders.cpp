@@ -101,14 +101,14 @@ namespace {
 }
 
 program::program() 
-	: object_(0), u_mvp_matrix_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 }
 
 
 program::program(const std::string& name, const shader& vs, const shader& fs)
-	: object_(0)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 	init(name, vs, fs);
@@ -119,7 +119,8 @@ void program::init(const std::string& name, const shader& vs, const shader& fs)
 	name_ = name;
 	vs_ = vs;
 	fs_ = fs;
-	ASSERT_LOG(link(), "Error linking program: " << name_);
+	const bool link_result = link();
+	ASSERT_LOG(link_result, "Error linking program: " << name_);
 }
 
 bool program::link()
@@ -160,12 +161,12 @@ GLuint program::get_attribute(const std::string& attr) const
 	return it->second.location;
 }
 
-GLuint program::get_uniform(const std::string& attr) const
+GLint program::get_uniform(const std::string& attr) const
 {
 	std::map<std::string, actives>::const_iterator it = uniforms_.find(attr);
 	//ASSERT_LOG(it != uniforms_.end(), "Uniform \"" << attr << "\" not found in list.");
 	if(it == uniforms_.end()) {
-		return 0xffffffffUL;
+		return -1;
 	}
 	return it->second.location;
 }
@@ -471,35 +472,6 @@ namespace {
 		}
 		ASSERT_LOG(false, "Unexpected mode type: " << smode);
 		return GL_POINTS;
-	}
-
-	GLenum get_blend_mode(variant v)
-	{
-		if(v.is_string()) {
-			const std::string s = v.as_string();
-			if(s == "zero") {
-				return GL_ZERO;
-			} else if(s == "one") {
-				return GL_ONE;
-			} else if(s == "src_color") {
-				return GL_SRC_COLOR;
-			} else if(s == "one_minus_src_color") {
-				return GL_ONE_MINUS_SRC_COLOR;
-			} else if(s == "src_alpha") {
-				return GL_SRC_ALPHA;
-			} else if(s == "one_minus_src_alpha") {
-				return GL_ONE_MINUS_SRC_ALPHA;
-			} else if(s == "dst_alpha") {
-				return GL_DST_ALPHA;
-			} else if(s == "one_minus_dst_alpha") {
-				return GL_ONE_MINUS_DST_ALPHA;
-			} 
-			ASSERT_LOG(false, "Unrecognised blend mode (maybe needs adding): " << s);
-		} else if(v.is_int()) {
-			return v.as_int();
-		}
-		ASSERT_LOG(false, "Expected blend mode to be a string or integer");
-		return GL_ZERO;
 	}
 
 	class get_mvp_matrix_function : public game_logic::function_expression
@@ -883,30 +855,21 @@ void program::vertex_attrib_array(GLint ndx, GLint size, GLenum type, GLboolean 
 
 void program::vertex_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-	if(stored_attributes_.has_key("vertex")) {
-		const variant& v = stored_attributes_["vertex"];
-		if(v.is_string()) {
-			vertex_attrib_array(get_attribute(v.as_string()), size, type, normalized, stride, ptr);
-		} else {
-			ASSERT_LOG(false, "Expected vertex attribute to be string.");
-		}
-	} else {
-		ASSERT_LOG(false, "No attribute mapping found for: 'vertex', program: " << name());
+	if(vertex_location_ == -1) {
+		ASSERT_LOG(vertex_attribute_.empty() == false, "No attribute mapping found for 'vertex', program: " << name());
+		vertex_location_ = get_attribute(vertex_attribute_);
 	}
+	vertex_attrib_array(vertex_location_, size, type, normalized, stride, ptr);
 }
 
 void program::texture_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-	if(stored_attributes_.has_key("texcoord")) {
-		const variant& v = stored_attributes_["texcoord"];
-		if(v.is_string()) {
-			vertex_attrib_array(get_attribute(v.as_string()), size, type, normalized, stride, ptr);
-		} else {
-			ASSERT_LOG(false, "Expected texcoord attribute to be string.");
-		}
-	} else {
-		ASSERT_LOG(false, "No attribute mapping found for: 'texcoord', program: " << name());
+	if(texcoord_location_ == -1) {
+		ASSERT_LOG(texcoord_attribute_.empty() == false, "No attribute mapping found for 'texcoord', program: " << name());
+		texcoord_location_ = get_attribute(texcoord_attribute_);
 	}
+
+	vertex_attrib_array(texcoord_location_, size, type, normalized, stride, ptr);
 }
 
 void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
@@ -926,16 +889,49 @@ void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei
 void program::set_fixed_attributes(const variant& node)
 {
 	stored_attributes_ = node;
+
+	vertex_attribute_ = node["vertex"].as_string_default();
+	texcoord_attribute_ = node["texcoord"].as_string_default();
+}
+
+void program::set_fixed_attributes()
+{
+	vertex_attribute_ = "a_anura_vertex";
+	texcoord_attribute_ = "a_anura_texcoord";
 }
 
 void program::set_fixed_uniforms(const variant& node)
 {
+	u_discard_ = get_uniform("u_anura_discard");
+
 	if(node.has_key("mvp_matrix")) {
 		u_mvp_matrix_ = GLint(get_uniform(node["mvp_matrix"].as_string()));
 		ASSERT_LOG(u_mvp_matrix_ != -1, "mvp_matrix uniform given but nothing in corresponding shader.");
 	} else {
 		u_mvp_matrix_ = -1;
 	}
+
+	if(node.has_key("sprite_area")) {
+		u_sprite_area_ = GLint(get_uniform(node["sprite_area"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "sprite_area uniform given but nothing in corresponding shader.");
+	} else {
+		u_sprite_area_ = -1;
+	}
+
+	if(node.has_key("draw_area")) {
+		u_draw_area_ = GLint(get_uniform(node["draw_area"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "draw_area uniform given but nothing in corresponding shader.");
+	} else {
+		u_draw_area_ = -1;
+	}
+
+	if(node.has_key("cycle")) {
+		u_cycle_ = GLint(get_uniform(node["cycle"].as_string()));
+		ASSERT_LOG(u_mvp_matrix_ != -1, "cycle uniform given but nothing in corresponding shader.");
+	} else {
+		u_cycle_ = -1;
+	}
+
 	if(node.has_key("color")) {
 		u_color_ = GLint(get_uniform(node["color"].as_string()));
 		ASSERT_LOG(u_color_ != -1, "color uniform given but nothing in corresponding shader.");
@@ -949,6 +945,48 @@ void program::set_fixed_uniforms(const variant& node)
 		u_point_size_ = -1;
 	}
 	stored_uniforms_ = node;
+}
+
+void program::set_fixed_uniforms()
+{
+	std::set<std::string> anura_uniforms;
+#define INIT_UNIFORM(name, var_type) { \
+	const char* name_str = "u_anura_" #name; \
+	anura_uniforms.insert(name_str); \
+	std::map<std::string, actives>::const_iterator it = uniforms_.find(name_str); \
+	if(it != uniforms_.end()) { \
+		u_##name##_ = it->second.location; \
+		ASSERT_LOG(var_type == it->second.type, "Uniform " << name_str << " is not the correct type. Expected " << #var_type); \
+	} else { \
+		u_##name##_ = -1; \
+	} }
+
+	INIT_UNIFORM(discard, GL_BOOL);
+	INIT_UNIFORM(tex_map, GL_SAMPLER_2D);
+	INIT_UNIFORM(mvp_matrix, GL_FLOAT_MAT4);
+	INIT_UNIFORM(sprite_area, GL_FLOAT_VEC4);
+	INIT_UNIFORM(draw_area, GL_FLOAT_VEC4);
+	INIT_UNIFORM(cycle, GL_FLOAT);
+	INIT_UNIFORM(color, GL_FLOAT_VEC4);
+	INIT_UNIFORM(point_size, GL_FLOAT);
+
+#undef INIT_UNIFORM
+
+	const std::string AnuraUniformPrefix = "u_anura_";
+	for(std::map<std::string, actives>::const_iterator i = uniforms_.begin();
+	    i != uniforms_.end(); ++i) {
+		const std::string& key = i->first;
+		if(key.size() >= AnuraUniformPrefix.size() &&
+		   std::equal(AnuraUniformPrefix.begin(), AnuraUniformPrefix.end(), key.begin()) &&
+		   anura_uniforms.count(key) == 0) {
+			ASSERT_LOG(false, "Unrecognized uniform in shader: " << i->first);
+		}
+	}
+
+	if(u_tex_map_ != -1) {
+		//the tex map defaults to a binding of 0.
+		glUniform1i(u_tex_map_, 0);
+	}
 }
 
 void program::load_shaders(const std::string& shader_data)
@@ -1050,6 +1088,11 @@ void program::set_deferred_uniforms()
 void program::set_known_uniforms()
 {
 #if defined(USE_GLES2)
+	if(u_discard_ >= 0) {
+		int value = gles2::get_alpha_test() ? 1 : 0;
+		glUniform1i(u_discard_, value);
+	}
+
 	if(u_mvp_matrix_ != -1) {
 		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, (GLfloat*)(&gles2::get_mvp_matrix().x.x));
 	}
@@ -1060,6 +1103,33 @@ void program::set_known_uniforms()
 		GLfloat pt_size;
 		glGetFloatv(GL_POINT_SIZE, &pt_size);
 		glUniform1f(u_point_size_, pt_size);
+	}
+#endif
+}
+
+void program::set_sprite_area(const GLfloat* fl)
+{
+#if defined(USE_GLES2)
+	if(u_sprite_area_ != -1) {
+		glUniform4fv(u_sprite_area_, 1, fl);
+	}
+#endif
+}
+
+void program::set_draw_area(const GLfloat* fl)
+{
+#if defined(USE_GLES2)
+	if(u_draw_area_ != -1) {
+		glUniform4fv(u_draw_area_, 1, fl);
+	}
+#endif
+}
+
+void program::set_cycle(int cycle)
+{
+#if defined(USE_GLES2)
+	if(u_cycle_ != -1) {
+		glUniform1f(u_cycle_, static_cast<GLfloat>(cycle));
 	}
 #endif
 }
@@ -1102,6 +1172,7 @@ shader_program::shader_program(const std::string& program_name)
 {
 	name_ = program_name;
 	program_object_ = program::find_program(name_);
+	ASSERT_LOG(program_object_.get(), "COULD NOT FIND SHADER: " << name_);
 	uniform_commands_->set_program(program_object_);
 	attribute_commands_->set_program(program_object_);
 }
@@ -1125,9 +1196,14 @@ void shader_program::configure(const variant& node, entity* obj)
 
 		if(node.has_key("attributes")) {
 			program_object_->set_fixed_attributes(node["attributes"]);
+		} else {
+			program_object_->set_fixed_attributes();
 		}
+
 		if(node.has_key("uniforms")) {
 			program_object_->set_fixed_uniforms(node["uniforms"]);
+		} else {
+			program_object_->set_fixed_uniforms();
 		}
 	}
 
@@ -1233,7 +1309,11 @@ void shader_program::prepare_draw()
 //#if defined(WIN32)
 //	profile::manager manager("SHADER_INFO:" + program_object_->name());
 //#endif
+	glGetError();
+	ASSERT_LOG(glGetError() == GL_NONE, "XXX Error in shader");
+	ASSERT_LOG(glIsProgram(program_object_->get()), "NOT A PROGRAM");
 	glUseProgram(program_object_->get());
+	ASSERT_LOG(glGetError() == GL_NONE, "Error in shader");
 	program_object_->set_deferred_uniforms();
 	program_object_->set_known_uniforms();
 	game_logic::formula_callable* e = this;
@@ -1435,4 +1515,37 @@ void shader_program::attribute_commands_callable::set_value(const std::string& k
 	}
 }
 
+}
+
+GLenum get_blend_mode(variant v)
+{
+	if(v.is_string()) {
+		const std::string s = v.as_string();
+		if(s == "zero") {
+			return GL_ZERO;
+		} else if(s == "one") {
+			return GL_ONE;
+		} else if(s == "src_color") {
+			return GL_SRC_COLOR;
+		} else if(s == "one_minus_src_color") {
+			return GL_ONE_MINUS_SRC_COLOR;
+		} else if(s == "dst_color") {
+			return GL_DST_COLOR;
+		} else if(s == "one_minus_dst_color") {
+			return GL_ONE_MINUS_DST_COLOR;
+		} else if(s == "src_alpha") {
+			return GL_SRC_ALPHA;
+		} else if(s == "one_minus_src_alpha") {
+			return GL_ONE_MINUS_SRC_ALPHA;
+		} else if(s == "dst_alpha") {
+			return GL_DST_ALPHA;
+		} else if(s == "one_minus_dst_alpha") {
+			return GL_ONE_MINUS_DST_ALPHA;
+		} 
+		ASSERT_LOG(false, "Unrecognised blend mode (maybe needs adding): " << s);
+	} else if(v.is_int()) {
+		return v.as_int();
+	}
+	ASSERT_LOG(false, "Expected blend mode to be a string or integer");
+	return GL_ZERO;
 }

@@ -28,6 +28,7 @@ class texture_object : public game_logic::formula_callable
 {
 public:
 	explicit texture_object(const graphics::texture& texture);
+	~texture_object();
 	const graphics::texture& texture() const { return texture_; }
 private:
 	variant get_value(const std::string& key) const;

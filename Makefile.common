@@ -63,7 +63,9 @@ objects = \
 	src/filesystem.o \
 	src/font.o \
 	src/formula.o \
+	src/formula_callable.o \
 	src/formula_callable_definition.o \
+	src/formula_callable_visitor.o \
 	src/formula_constants.o \
 	src/formula_function.o \
 	src/formula_function_registry.o \

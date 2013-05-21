@@ -797,7 +797,7 @@ extern "C" int main(int argcount, char* argvec[])
 		preferences::set_actual_screen_height(mode.h);
 		preferences::set_virtual_screen_width(mode.w);
 		preferences::set_virtual_screen_height(mode.h);
-	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height())) {
+	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL)) {
 #else
 	if(SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_OPENGL|(preferences::resizable() ? SDL_RESIZABLE : 0)|(preferences::fullscreen() ? SDL_FULLSCREEN : 0)) == NULL) {
 #endif
@@ -1066,9 +1066,6 @@ extern "C" int main(int argcount, char* argvec[])
 	
 	preferences::save_preferences();
 	std::cerr << SDL_GetError() << "\n";
-#if !defined(TARGET_OS_HARMATTAN) && !defined(TARGET_TEGRA) && !defined(TARGET_BLACKBERRY) && !defined(__ANDROID__) && !defined(USE_GLES2)
-	std::cerr << gluErrorString(glGetError()) << "\n";
-#endif
 
 #if !defined(_MSC_VER) && defined(UTILITY_IN_PROC)
 	if(create_utility_in_new_process) {

@@ -74,6 +74,8 @@ std::set<level*>& get_all_levels_set() {
 
 namespace {
 
+PREF_INT(debug_shadows, 0);
+
 boost::intrusive_ptr<level> current_level;
 
 std::map<std::string, level::summary> load_level_summaries() {
@@ -2052,8 +2054,13 @@ void level::draw(int x, int y, int w, int h) const
 		water_zorder = water_->zorder();
 	}
 
+	graphics::stencil_scope stencil_settings(true, 0x02, GL_ALWAYS, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_REPLACE);
+	glClear(GL_STENCIL_BUFFER_BIT);
+
 #ifdef USE_GLES2
 	frame_buffer_enter_zorder(-100000);
+	const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
+	const int end_alpha_test = get_named_zorder("shadows");
 #endif
 
 	std::set<int>::const_iterator layer = layers_.begin();
@@ -2061,6 +2068,9 @@ void level::draw(int x, int y, int w, int h) const
 	for(; layer != layers_.end(); ++layer) {
 #ifdef USE_GLES2
 		frame_buffer_enter_zorder(*layer);
+		const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
+		gles2::set_alpha_test(alpha_test);
+		glStencilMask(alpha_test ? 0x02 : 0x0);
 #endif
 		if(!water_drawn && *layer > water_zorder) {
 			water_->draw(x, y, w, h);
@@ -2086,6 +2096,9 @@ void level::draw(int x, int y, int w, int h) const
 		if((*entity_itor)->zorder() != last_zorder) {
 			last_zorder = (*entity_itor)->zorder();
 			frame_buffer_enter_zorder(last_zorder);
+			const bool alpha_test = last_zorder >= begin_alpha_test && last_zorder < end_alpha_test;
+			gles2::set_alpha_test(alpha_test);
+			glStencilMask(alpha_test ? 0x02 : 0x0);
 		}
 #endif
 
@@ -2094,6 +2107,7 @@ void level::draw(int x, int y, int w, int h) const
 	}
 
 #ifdef USE_GLES2
+	gles2::set_alpha_test(false);
 	frame_buffer_enter_zorder(1000000);
 #endif
 
@@ -2159,12 +2173,17 @@ void level::draw(int x, int y, int w, int h) const
 #endif
 	calculate_lighting(start_x, start_y, start_w, start_h);
 	}
+
+	if(g_debug_shadows) {
+		graphics::stencil_scope scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP);
+		graphics::draw_rect(rect(x,y,w,h), graphics::color(255, 255, 255, 196 + sin(SDL_GetTicks()/100.0)*8.0));
+	}
 }
 
 #ifdef USE_GLES2
 void level::frame_buffer_enter_zorder(int zorder) const
 {
-	std::vector<gles2::shader_ptr> shaders;
+	std::vector<gles2::shader_program_ptr> shaders;
 	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
 		if(zorder >= e.begin_zorder && zorder <= e.end_zorder) {
 			if(!e.shader) {
@@ -2188,7 +2207,7 @@ void level::frame_buffer_enter_zorder(int zorder) const
 			texture_frame_buffer::set_render_to_screen();
 		} else {
 			bool add_shaders = false;
-			foreach(const gles2::shader_ptr& s, shaders) {
+			foreach(const gles2::shader_program_ptr& s, shaders) {
 				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
 					add_shaders = true;
 					break;
@@ -2203,7 +2222,7 @@ void level::frame_buffer_enter_zorder(int zorder) const
 				glClear(GL_COLOR_BUFFER_BIT);
 			} else {
 				//we must just be removing shaders.
-				foreach(const gles2::shader_ptr& s, active_fb_shaders_) {
+				foreach(const gles2::shader_program_ptr& s, active_fb_shaders_) {
 					if(std::count(shaders.begin(), shaders.end(), s) == 0) {
 						apply_shader_to_frame_buffer_texture(s, false);
 					}
@@ -2222,7 +2241,7 @@ void level::flush_frame_buffer_shaders_to_screen() const
 	}
 }
 
-void level::apply_shader_to_frame_buffer_texture(gles2::shader_ptr shader, bool render_to_screen) const
+void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const
 {
 	gles2::manager manager(shader);
 	texture_frame_buffer::set_as_current_texture();
@@ -3896,6 +3915,8 @@ variant level::get_value(const std::string& key) const
 		}
 
 		return variant();
+	} else if(key == "preferences") {
+		return variant(preferences::get_settings_obj());
 	} else {
 		const_entity_ptr e = get_entity_by_label(key);
 		if(e) {

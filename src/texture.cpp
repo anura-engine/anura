@@ -18,6 +18,7 @@
 
 #include "graphics.hpp"
 
+#include "IMG_savepng.h"
 #include "asserts.hpp"
 #include "concurrent_cache.hpp"
 #include "filesystem.hpp"
@@ -185,6 +186,11 @@ namespace {
 			return "??";
 		}
 	}
+
+std::set<texture::ID*>& texture_id_registry() {
+	static std::set<texture::ID*>* instance = new std::set<texture::ID*>;
+	return *instance;
+}
 }
 
 unsigned int texture::next_power_of_2(unsigned int n)
@@ -286,6 +292,41 @@ texture::texture(unsigned int id, int width, int height)
 	id_->id = id;
 	id_->width = width;
 	id_->height = height;
+	id_->info = "fbo";
+
+	id_->unbuild_id();
+
+	surface s = id_->s;
+
+	const int npixels = s->w*s->h;
+	for(int n = 0; n != npixels; ++n) {
+		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->pixels) + n*4;
+		if(pixel[3] == 0) {
+			const int x = n%s->w;
+			const int y = n/s->w;
+			if(x < width_ && y < height_) {
+				(*alpha_map_)[y*width_ + x] = true;
+			}
+		}
+	}
+
+	id_->s = surface();
+
+	//TEMPORARY DEBUG CODE ONLY
+	{
+	int nfbo = 0, ninit = 0;
+	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
+	    i != texture_id_registry().end(); ++i) {
+		if((*i)->init()) {
+			++ninit;
+			if((*i)->info == "fbo") {
+				++nfbo;
+			}
+		}
+	}
+
+	fprintf(stderr, "CREATE FBO TEXTURE: HAVE %d/%d FBO/TEXTURES\n", nfbo, ninit);
+	}
 }
 
 texture::~texture()
@@ -520,7 +561,6 @@ void texture::set_as_current_texture() const
 	current_texture = id;
 
 	glBindTexture(GL_TEXTURE_2D,id);
-	//std::cerr << gluErrorString(glGetError()) << "~set_as_current_texture~\n";
 }
 
 unsigned int texture::get_current_texture()
@@ -541,8 +581,6 @@ texture texture::get(data_blob_ptr blob)
 		surfs.push_back(surface_cache::get_no_cache(blob));
 		entry.t = result = texture(surfs, 0);
 		result.id_->info = (*blob)();
-
-		fprintf(stderr, "LOADTEXTURE: %s -> %p\n", (*blob)().c_str(), result.id_.get());
 
 		texture_cache().put((*blob)(), entry);
 	}
@@ -573,8 +611,6 @@ texture texture::get(const std::string& str, int options)
 		entry.t = result = texture(surfs, options);
 		result.id_->info = str;
 
-		fprintf(stderr, "LOADTEXTURE: %s -> %p\n", str.c_str(), result.id_.get());
-
 		texture_cache().put(str_key, entry);
 		//std::cerr << (next_power_of_2(result.width())*next_power_of_2(result.height())*2)/1024 << "KB TEXTURE " << str << ": " << result.width() << "x" << result.height() << "\n";
 	}
@@ -598,7 +634,6 @@ texture texture::get(const std::string& str, const std::string& algorithm)
 			entry.mod_time = sys::file_mod_time(entry.path);
 		}
 		entry.t = result = texture(surfs);
-		fprintf(stderr, "LOADTEXTURE: %s -> %p\n", str.c_str(), result.id_.get());
 		algorithm_texture_cache().put(k, entry);
 	}
 
@@ -620,7 +655,6 @@ texture texture::get_palette_mapped(const std::string& str, int palette)
 		if(s.get() != NULL) {
 			surfs.push_back(map_palette(s, palette));
 			entry.t = result = texture(surfs);
-			fprintf(stderr, "get palette mapped: %s, %d -> %p\n", str.c_str(), palette, result.id_.get());
 		} else {
 			std::cerr << "COULD NOT FIND IMAGE FOR PALETTE MAPPING: '" << str << "'\n";
 		}
@@ -781,6 +815,23 @@ void texture::clear_modified_files_from_cache()
 }
 #endif // NO_EDITOR
 
+surface texture::get_surface()
+{
+	if(!id_ || !id_->init()) {
+		return surface();
+	}
+
+	if(id_->s.get()) {
+		return id_->s;
+	}
+
+	id_->unbuild_id();
+
+	surface result = id_->s;
+	id_->s = surface();
+	return result;
+}
+
 const unsigned char* texture::color_at(int x, int y) const
 {
 	if(!id_ || !id_->s) {
@@ -789,13 +840,6 @@ const unsigned char* texture::color_at(int x, int y) const
 
 	const unsigned char* pixels = reinterpret_cast<const unsigned char*>(id_->s->pixels);
 	return pixels + (y*id_->s->w + x)*id_->s->format->BytesPerPixel;
-}
-
-namespace {
-std::set<texture::ID*>& texture_id_registry() {
-	static std::set<texture::ID*>* instance = new std::set<texture::ID*>;
-	return *instance;
-}
 }
 
 void texture::rebuild_all()
@@ -813,6 +857,22 @@ void texture::unbuild_all()
 	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
 	    i != texture_id_registry().end(); ++i) {
 		(*i)->unbuild_id();
+	}
+}
+
+void texture::debug_dump_textures(const char* path, const std::string* info_name)
+{
+	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
+	    i != texture_id_registry().end(); ++i) {
+		if(info_name && (*i)->info != *info_name) {
+			continue;
+		}
+
+		(*i)->unbuild_id();
+		std::ostringstream fname;
+		fname << path << "/img-" << (*i)->id << ".png";
+		const std::string image_path = fname.str();
+		IMG_SavePNG(image_path.c_str(), (*i)->s.get());
 	}
 }
 

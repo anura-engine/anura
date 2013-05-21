@@ -36,6 +36,8 @@ struct formula_input {
 	{}
 };
 
+class formula_callable_visitor;
+
 //interface for objects that can have formulae run on them
 class formula_callable : public reference_counted_object {
 public:
@@ -96,6 +98,10 @@ public:
 	//is some kind of command to the engine.
 	virtual bool is_command() const { return false; }
 
+	void perform_visit_values(formula_callable_visitor& visitor) {
+		visit_values(visitor);
+	}
+
 protected:
 	virtual ~formula_callable() {}
 
@@ -106,9 +112,12 @@ protected:
 	}
 
 	virtual void serialize_to_string(std::string& str) const;
+
+	virtual void visit_values(formula_callable_visitor& visitor) {}
 private:
 	virtual variant get_value(const std::string& key) const = 0;
 	virtual variant get_value_by_slot(int slot) const;
+
 	bool has_self_;
 };
 
@@ -202,6 +211,8 @@ private:
 	variant get_value_by_slot(int slot) const {
 		return fallback_->query_value_by_slot(slot);
 	}
+
+	virtual void visit_values(formula_callable_visitor& visitor);
 
 	variant get_value(const std::string& key) const;
 	void get_inputs(std::vector<formula_input>* inputs) const;

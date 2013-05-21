@@ -52,7 +52,10 @@ namespace {
 
 	bool g_strict_formula_checking = false;
 
-	std::set<game_logic::formula*> all_formulae;
+	std::set<game_logic::formula*>& all_formulae() {
+		static std::set<game_logic::formula*> instance;
+		return instance;
+	}
 }
 
 std::string output_formula_error_info() {
@@ -66,7 +69,7 @@ std::string output_formula_error_info() {
 namespace game_logic
 {
 	const std::set<formula*>& formula::get_all() {
-		return all_formulae;
+		return all_formulae();
 	}
 
 	void set_verbatim_string_expressions(bool verbatim) {
@@ -2062,6 +2065,7 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		}
 
 		res->push_back(parse_expression(formula_str, args[n].first, args[n].second, symbols, callable_def, can_optimize));
+		res->back()->set_definition_used_by_expression(callable_def);
 	}
 }
 
@@ -2909,7 +2913,7 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 	str_.add_formula_using_this(this);
 
 #ifndef NO_EDITOR
-	all_formulae.insert(this);
+	all_formulae().insert(this);
 #endif
 }
 
@@ -3033,7 +3037,7 @@ formula::~formula() {
 
 	str_.remove_formula_using_this(this);
 #ifndef NO_EDITOR
-	all_formulae.erase(this);
+	all_formulae().erase(this);
 #endif
 }
 

@@ -26,6 +26,10 @@
 #include "tooltip.hpp"
 #include "framed_gui_element.hpp"
 
+namespace game_logic {
+class formula_callable_visitor;
+}
+
 namespace gui {
 
 class widget;
@@ -108,6 +112,10 @@ public:
 	virtual std::vector<widget_ptr> get_children() const { return std::vector<widget_ptr>(); }
 
 	void process();
+
+	void perform_visit_values(game_logic::formula_callable_visitor& visitor) {
+		visit_values(visitor);
+	}
 protected:
 	widget();
 	explicit widget(const variant& v, game_logic::formula_callable* e);
@@ -121,6 +129,8 @@ protected:
 	virtual void recalc_loc();
 	virtual bool in_widget(int xloc, int yloc) const;
 private:
+	virtual void visit_values(game_logic::formula_callable_visitor& visitor) {}
+
 	int x_, y_;
 	int w_, h_;
 	int true_x_;

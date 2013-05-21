@@ -36,7 +36,6 @@ int generate() {
 }
 
 void set_seed(unsigned int seed) {
-	std::cerr << "RANDOM SEED: " << seed << "\n";
 	next = seed;
 }
 

@@ -29,6 +29,7 @@
 #include "formula_function.hpp"
 #include "frame.hpp"
 #include "particle_system.hpp"
+#include "raster.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 #ifdef USE_BOX2D
@@ -232,13 +233,17 @@ public:
 	bool hidden_in_game() const { return hidden_in_game_; }
 
 #if defined(USE_GLES2)
-	const gles2::shader_ptr& shader() const { return shader_; }
-	const std::vector<gles2::shader_ptr>& effects() const { return effects_; }
+	const gles2::shader_program_ptr& shader() const { return shader_; }
+	const std::vector<gles2::shader_program_ptr>& effects() const { return effects_; }
 #endif
 
 	static void reload_file_paths();
 
 	bool is_strict() const { return is_strict_; }
+
+	const graphics::blend_mode* blend_mode() const { return blend_mode_.get(); }
+
+	bool is_shadow() const { return is_shadow_; }
 
 private:
 	//recreate an object type, optionally given the old version to base
@@ -352,8 +357,8 @@ private:
 	std::vector<int> platform_offsets_;
 
 #ifdef USE_GLES2
-	gles2::shader_ptr shader_;
-	std::vector<gles2::shader_ptr> effects_;
+	gles2::shader_program_ptr shader_;
+	std::vector<gles2::shader_program_ptr> effects_;
 #endif
 
 #ifdef USE_BOX2D
@@ -362,6 +367,12 @@ private:
 
 	//does this object use strict checking?
 	bool is_strict_;
+
+	boost::shared_ptr<graphics::blend_mode> blend_mode_;
+
+	//if this is a shadow, it will render only on top of foreground level
+	//components.
+	bool is_shadow_;
 };
 
 #endif

@@ -41,18 +41,18 @@ BASE_CXXFLAGS += -g -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dto
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
 ifeq ($(USE_SDL2),yes)
-INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glu glew SDL2_image libpng zlib)
+INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image libpng zlib)
 else
-INC := -Isrc $(shell pkg-config --cflags x11 sdl glu glew SDL_image libpng zlib)
+INC := -Isrc $(shell pkg-config --cflags x11 sdl glew SDL_image libpng zlib)
 endif
 
 # Linker library options.
 ifeq ($(USE_SDL2),yes)
-LIBS := $(shell pkg-config --libs x11 ) -lSDL2main \
-	$(shell pkg-config --libs sdl2 glu glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
+LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
+	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
 else
-LIBS := $(shell pkg-config --libs x11 ) -lSDLmain \
-	$(shell pkg-config --libs sdl glu glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
+LIBS := $(shell pkg-config --libs x11 gl ) -lSDLmain \
+	$(shell pkg-config --libs sdl glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
 endif
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2

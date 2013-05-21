@@ -209,7 +209,7 @@ graphics::texture render_text(const std::string& text,
 	graphics::texture res = render_text_uncached(text, color, size, font_name);
 
 	if(res.width()*res.height() <= 256*256) {
-		if(cache().size() > 512) {
+		if(cache().size() > 16) {
 			cache().clear();
 			g_render_cache_size = 0;
 		}

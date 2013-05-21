@@ -29,10 +29,15 @@ class draw_primitive : public game_logic::formula_callable
 public:
 	static boost::intrusive_ptr<draw_primitive> create(const variant& v);
 
+	explicit draw_primitive(const variant& v);
+
+
 	void draw() const;
 private:
 
 	virtual void handle_draw() const = 0;
+
+	GLenum src_factor_, dst_factor_;
 };
 
 typedef boost::intrusive_ptr<draw_primitive> draw_primitive_ptr;

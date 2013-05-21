@@ -79,6 +79,8 @@ public:
 	};
 
 	void draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const;
+
+	void draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const;
 	void set_image_as_solid();
 	const_solid_info_ptr solid() const { return solid_; }
 	int collide_x() const { return collide_rect_.x()*scale_; }
@@ -123,10 +125,13 @@ public:
 	int process_event_id() const { return process_event_id_; }
 
 	struct frame_info {
-		frame_info() : x_adjust(0), y_adjust(0), x2_adjust(0), y2_adjust(0)
+		frame_info() : x_adjust(0), y_adjust(0), x2_adjust(0), y2_adjust(0), draw_rect_init(false)
 		{}
 		int x_adjust, y_adjust, x2_adjust, y2_adjust;
 		rect area;
+
+		mutable bool draw_rect_init;
+		mutable GLfloat draw_rect[4];
 	};
 
 	const std::vector<frame_info>& frame_layout() const { return frames_; }

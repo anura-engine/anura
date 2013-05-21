@@ -27,15 +27,107 @@
 #include "draw_primitive.hpp"
 #include "foreach.hpp"
 #include "geometry.hpp"
+#include "gles2.hpp"
+#include "raster.hpp"
+#include "shaders.hpp"
 #include "texture.hpp"
 
 namespace graphics
 {
 
+using namespace gles2;
+
 namespace
 {
 
 typedef boost::array<GLfloat, 2> FPoint;
+
+class circle_primitive : public draw_primitive
+{
+public:
+	explicit circle_primitive(const variant& v);
+
+private:
+	void init();
+
+	void handle_draw() const;
+
+	variant get_value(const std::string& key) const;
+	void set_value(const std::string& key, const variant& value);
+
+	FPoint center_;
+	float radius_;
+
+	graphics::color color_;
+
+	shader_program_ptr shader_;
+
+	mutable std::vector<GLfloat> varray_;
+};
+
+circle_primitive::circle_primitive(const variant& v)
+   : draw_primitive(v),
+     radius_(v["radius"].as_decimal().as_float()),
+     shader_(gles2::get_simple_shader())
+{
+	if(v.has_key("shader")) {
+		shader_.reset(new shader_program(v["shader"].as_string()));
+	}
+
+	center_[0] = v["x"].as_decimal().as_float();
+	center_[1] = v["y"].as_decimal().as_float();
+
+	if(v.has_key("color")) {
+		color_ = color(v["color"]);
+	} else {
+		color_ = color(200, 0, 0, 255);
+	}
+
+	init();
+}
+
+void circle_primitive::init()
+{
+	varray_.clear();
+	varray_.push_back(center_[0]);
+	varray_.push_back(center_[1]);
+	for(double angle = 0; angle < 3.1459*2.0; angle += 0.1) {
+		const double xpos = center_[0] + radius_*cos(angle);
+		const double ypos = center_[1] + radius_*sin(angle);
+		varray_.push_back(xpos);
+		varray_.push_back(ypos);
+	}
+
+	//repeat the first coordinate to complete the circle.
+	varray_.push_back(varray_[2]);
+	varray_.push_back(varray_[3]);
+
+}
+
+void circle_primitive::handle_draw() const
+{
+#if defined(USE_GLES2)
+	
+	color_.set_as_current_color();
+
+	gles2::manager gles2_manager(shader_);
+	gles2::active_shader()->prepare_draw();
+	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
+	glDrawArrays(GL_TRIANGLE_FAN, 0, varray_.size()/2);
+
+	glColor4f(1.0, 1.0, 1.0, 1.0);
+	
+#endif
+}
+
+variant circle_primitive::get_value(const std::string& key) const
+{
+	return variant();
+}
+
+void circle_primitive::set_value(const std::string& key, const variant& value)
+{
+}
 
 class arrow_primitive : public draw_primitive
 {
@@ -73,7 +165,8 @@ private:
 };
 
 arrow_primitive::arrow_primitive(const variant& v)
-  : granularity_(v["granularity"].as_decimal(decimal(0.005)).as_float()),
+  : draw_primitive(v),
+    granularity_(v["granularity"].as_decimal(decimal(0.005)).as_float()),
     arrow_head_length_(v["arrow_head_length"].as_int(10)),
     arrow_head_width_(v["arrow_head_width"].as_decimal(decimal(2.0)).as_float()),
 	fade_in_length_(v["fade_in_length"].as_int(50)),
@@ -309,15 +402,37 @@ draw_primitive_ptr draw_primitive::create(const variant& v)
 	const std::string type = v["type"].as_string();
 	if(type == "arrow") {
 		return draw_primitive_ptr(new arrow_primitive(v));
+	} else if(type == "circle") {
+		return draw_primitive_ptr(new circle_primitive(v));
 	}
 
 	ASSERT_LOG(false, "UNKNOWN DRAW PRIMITIVE TYPE: " << v["type"].as_string());
 	return draw_primitive_ptr();
 }
 
+draw_primitive::draw_primitive(const variant& v)
+  : src_factor_(GL_SRC_ALPHA), dst_factor_(GL_ONE_MINUS_SRC_ALPHA)
+{
+	if(v.has_key("blend")) {
+		const std::string blend_mode = v["blend"].as_string();
+		if(blend_mode == "overwrite") {
+			src_factor_ = GL_ONE;
+			dst_factor_ = GL_ZERO;
+		} else {
+			ASSERT_LOG(false, "Unrecognized blend mode: " << blend_mode);
+		}
+	}
+}
+
 void draw_primitive::draw() const
 {
-	handle_draw();
+	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
+		glBlendFunc(src_factor_, dst_factor_);
+		handle_draw();
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	} else {
+		handle_draw();
+	}
 }
 
 }

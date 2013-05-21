@@ -38,6 +38,7 @@
 #include "font.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_visitor.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
 #include "geometry.hpp"
@@ -994,6 +995,10 @@ void custom_object::draw(int xx, int yy) const
 		adjusted_draw_position_.y = yy;
 	}
 
+	if(type_->blend_mode()) {
+		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
+	}
+
 #if defined(USE_GLES2)
 #ifndef NO_EDITOR
 	try {
@@ -1011,8 +1016,12 @@ void custom_object::draw(int xx, int yy) const
 	}
 #endif
 
+	boost::scoped_ptr<graphics::clip_scope> clip_scope;
+	boost::scoped_ptr<graphics::stencil_scope> stencil_scope;
 	if(clip_area_) {
-		graphics::push_clip(clip_area_->sdl_rect());
+		clip_scope.reset(new graphics::clip_scope(clip_area_->sdl_rect()));
+	} else if(type_->is_shadow()) {
+		stencil_scope.reset(new graphics::stencil_scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP));
 	}
 
 	if(driver_) {
@@ -1028,6 +1037,9 @@ void custom_object::draw(int xx, int yy) const
 
 	if(type_->hidden_in_game() && !level::current().in_editor()) {
 		//pass
+	} else if(custom_draw_xy_.size() >= 6 &&
+	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
 		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
 	} else if(draw_scale_) {
@@ -1104,9 +1116,7 @@ void custom_object::draw(int xx, int yy) const
 		glColor4ub(255, 255, 255, 255);
 	}
 	
-	if(clip_area_) {
-		graphics::pop_clip();
-	}
+	clip_scope.reset();
 
 #if defined(USE_GLES2)
 	for(size_t n = 0; n < effects_.size(); ++n) {
@@ -1197,6 +1207,10 @@ void custom_object::draw(int xx, int yy) const
 
 	if(use_absolute_screen_coordinates_) {
 		glPopMatrix();
+	}
+
+	if(type_->blend_mode()) {
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 }
 
@@ -2353,9 +2367,9 @@ class event_handlers_callable : public formula_callable {
 		}
 	}
 	void set_value(const std::string& key, const variant& value) {
-		static custom_object_callable custom_object_definition;
+		static boost::intrusive_ptr<custom_object_callable> custom_object_definition(new custom_object_callable);
 
-		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), &custom_object_definition));
+		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
 		obj_->set_event_handler(get_object_event_id(key), f);
 	}
 public:
@@ -2754,6 +2768,26 @@ variant custom_object::get_value_by_slot(int slot) const
 		}
 	case CUSTOM_OBJECT_HAS_FEET: return variant::from_bool(has_feet_);
 
+	case CUSTOM_OBJECT_UV_ARRAY: {
+		std::vector<variant> result;
+		result.reserve(custom_draw_uv_.size());
+		foreach(GLfloat f, custom_draw_uv_) {
+			result.push_back(variant(decimal(f)));
+		}
+
+		return variant(&result);
+	}
+
+	case CUSTOM_OBJECT_XY_ARRAY: {
+		std::vector<variant> result;
+		result.reserve(custom_draw_xy_.size());
+		foreach(GLfloat f, custom_draw_xy_) {
+			result.push_back(variant(decimal(f)));
+		}
+
+		return variant(&result);
+	}
+
 	case CUSTOM_OBJECT_EVENT_HANDLERS: {
 		return variant(new event_handlers_callable(*this));
 	}
@@ -3035,13 +3069,13 @@ void custom_object::set_value(const std::string& key, const variant& value)
 				if(value[n].is_map()) {
 					effects_.push_back(new shader_program(value[n]));
 				} else {
-					effects_.push_back(shader_ptr(value[n].try_convert<shader_program>()));
+					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
 				}
 			}
 		} else if(value.is_map()) {
 			effects_.push_back(new shader_program(value));
 		} else {
-			effects_.push_back(shader_ptr(value.try_convert<shader_program>()));
+			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
 		}
 #endif
@@ -3247,6 +3281,9 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			set_frame(value.as_string());
 		} else if(value.is_map()) {
 			frame_ptr f(new frame(value));
+			if(type_->use_image_for_collisions()) {
+				f->set_image_as_solid();
+			}
 			set_frame(*f);
 		} else {
 			set_frame(*value.convert_to<frame>());
@@ -3642,13 +3679,13 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 				if(value[n].is_map()) {
 					effects_.push_back(new shader_program(value[n]));
 				} else {
-					effects_.push_back(shader_ptr(value[n].try_convert<shader_program>()));
+					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
 				}
 			}
 		} else if(value.is_map()) {
 			effects_.push_back(new shader_program(value));
 		} else {
-			effects_.push_back(shader_ptr(value.try_convert<shader_program>()));
+			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
 			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
 		}
 		break;
@@ -3981,6 +4018,68 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 
 		v->swap(draw_order);
 
+		break;
+	}
+
+	case CUSTOM_OBJECT_UV_ARRAY: {
+		if(value.is_null()) {
+			custom_draw_uv_.clear();
+		} else {
+			custom_draw_uv_.clear();
+			foreach(const variant& v, value.as_list()) {
+				custom_draw_uv_.push_back(v.as_decimal().as_float());
+			}
+		}
+
+		break;
+	}
+
+	case CUSTOM_OBJECT_XY_ARRAY: {
+		if(value.is_null()) {
+			custom_draw_xy_.clear();
+		} else {
+			custom_draw_xy_.clear();
+			foreach(const variant& v, value.as_list()) {
+				custom_draw_xy_.push_back(v.as_decimal().as_float());
+			}
+		}
+
+		break;
+	}
+
+	case CUSTOM_OBJECT_UV_SEGMENTS: {
+		const std::vector<variant>& items = value.as_list();
+		ASSERT_LOG(items.size() == 2, "Invalid value passed to uv_segments: " << value.write_json() << ". Requires [int,int]");
+		const int xdim = items[0].as_int() + 2;
+		const int ydim = items[1].as_int() + 2;
+
+		custom_draw_xy_.clear();
+		custom_draw_uv_.clear();
+
+		for(int ypos = 0; ypos < ydim-1; ++ypos) {
+			const GLfloat y = GLfloat(ypos)/GLfloat(ydim-1);
+			const GLfloat y2 = GLfloat(ypos+1)/GLfloat(ydim-1);
+			for(int xpos = 0; xpos < xdim; ++xpos) {
+				const GLfloat x = GLfloat(xpos)/GLfloat(xdim-1);
+
+				if(xpos == 0 && ypos > 0) {
+					custom_draw_uv_.push_back(x);
+					custom_draw_uv_.push_back(y);
+				}
+
+				custom_draw_uv_.push_back(x);
+				custom_draw_uv_.push_back(y);
+				custom_draw_uv_.push_back(x);
+				custom_draw_uv_.push_back(y2);
+
+				if(xpos == xdim-1 && ypos != ydim-2) {
+					custom_draw_uv_.push_back(x);
+					custom_draw_uv_.push_back(y2);
+				}
+			}
+		}
+
+		custom_draw_xy_ = custom_draw_uv_;
 		break;
 	}
 
@@ -4697,6 +4796,21 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 	foreach(variant& var, tmp_vars_->values()) {
 		extract_gc_object_references(var, v);
 	}
+
+	gc_object_reference visitor;
+	visitor.owner = this;
+	visitor.target = NULL;
+	visitor.from_variant = NULL;
+	visitor.visitor.reset(new game_logic::formula_callable_visitor);
+	foreach(gui::widget_ptr w, widgets_) {
+		w->perform_visit_values(*visitor.visitor);
+	}
+
+	foreach(game_logic::formula_callable_suspended_ptr ptr, visitor.visitor->pointers()) {
+		if(dynamic_cast<const custom_object*>(ptr->value())) {
+			ptr->destroy_ref();
+		}
+	}
 }
 
 void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v)
@@ -4741,7 +4855,11 @@ void custom_object::extract_gc_object_references(variant& var, std::vector<gc_ob
 
 void custom_object::restore_gc_object_reference(gc_object_reference ref)
 {
-	if(ref.from_variant) {
+	if(ref.visitor) {
+		foreach(game_logic::formula_callable_suspended_ptr ptr, ref.visitor->pointers()) {
+			ptr->restore_ref();
+		}
+	} else if(ref.from_variant) {
 		*ref.from_variant = variant(ref.target);
 	} else {
 		ref.from_ptr->reset(ref.target);

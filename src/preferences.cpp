@@ -156,6 +156,51 @@ namespace preferences {
 		static std::map<std::string, RegisteredSetting> instance;
 		return instance;
 	}
+
+	class SettingsObject : public game_logic::formula_callable
+	{
+	public:
+	private:
+		variant get_value(const std::string& key) const {
+			std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
+			if(itor == g_registered_settings().end()) {
+				return variant();
+			}
+
+			if(itor->second.int_value) {
+				return variant(*itor->second.int_value);
+			} else if(itor->second.string_value) {
+				return variant(*itor->second.string_value);
+			} else {
+				return variant();
+			}
+		}
+
+		void set_value(const std::string& key, const variant& value) {
+			std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
+			if(itor == g_registered_settings().end()) {
+				return;
+			}
+
+			if(itor->second.int_value) {
+				*itor->second.int_value = value.as_int();
+			} else if(itor->second.string_value) {
+				*itor->second.string_value = value.as_string();
+			}
+		}
+
+		void get_inputs(std::vector<game_logic::formula_input>* inputs) const {
+			for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+				inputs->push_back(game_logic::formula_input(itor->first, game_logic::FORMULA_READ_WRITE));
+			}
+		}
+	};
+	}
+
+	game_logic::formula_callable* get_settings_obj()
+	{
+		static boost::intrusive_ptr<game_logic::formula_callable> obj(new SettingsObject);
+		return obj.get();
 	}
 
 	int register_string_setting(const std::string& id, bool persistent, std::string* value)

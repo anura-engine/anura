@@ -24,6 +24,7 @@
 #include "foreach.hpp"
 #include "frame.hpp"
 #include "object_events.hpp"
+#include "preferences.hpp"
 #include "raster.hpp"
 #include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
@@ -35,6 +36,7 @@
 #include "variant_utils.hpp"
 
 namespace {
+
 std::set<frame*>& palette_frames() {
 	static std::set<frame*>* instance = new std::set<frame*>;
 	return *instance;
@@ -702,6 +704,92 @@ void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, co
 	glPopMatrix();
 }
 
+PREF_INT(debug_custom_draw, 0);
+
+void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
+{
+	texture_.set_as_current_texture();
+
+	const frame_info* info = NULL;
+	GLfloat rect[4];
+	get_rect_in_texture(time, &rect[0], info);
+	rect[0] = texture_.translate_coord_x(rect[0]);
+	rect[1] = texture_.translate_coord_y(rect[1]);
+	rect[2] = texture_.translate_coord_x(rect[2]);
+	rect[3] = texture_.translate_coord_y(rect[3]);
+
+	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
+	y += info->y_adjust*scale_;
+
+	int w = info->area.w()*scale_*(face_right ? 1 : -1);
+	int h = info->area.h()*scale_*(upside_down ? -1 : 1);
+
+	if(w < 0) {
+		std::swap(rect[0], rect[2]);
+		w *= -1;
+	}
+
+	if(h < 0) {
+		std::swap(rect[1], rect[3]);
+		h *= -1;
+	}
+	
+
+	std::vector<GLfloat> tcqueue;
+	std::vector<GLshort> vqueue;
+
+	const GLfloat center_x = x + GLfloat(w)/2.0;
+	const GLfloat center_y = y + GLfloat(h)/2.0;
+
+	glPushMatrix();
+//	glTranslatef(center_x, center_y, 0.0);
+//	glRotatef(rotate,0.0,0.0,1.0);
+
+	for(int n = 0; n < nelements; ++n) {
+		vqueue.push_back(x + w*xy[0]);
+		vqueue.push_back(y + h*xy[1]);
+
+		tcqueue.push_back(rect[0] + (rect[2]-rect[0])*uv[0]);
+		tcqueue.push_back(rect[1] + (rect[3]-rect[1])*uv[1]);
+
+		xy += 2;
+		uv += 2;
+	}
+
+#if defined(USE_GLES2)
+	{
+		GLfloat draw_area[] = {x, y, x+w, y+h};
+		if(face_right) {
+			std::swap(draw_area[0], draw_area[2]);
+		}
+		gles2::active_shader()->prepare_draw();
+		gles2::active_shader()->shader()->set_sprite_area(rect);
+		gles2::active_shader()->shader()->set_draw_area(draw_area);
+		gles2::active_shader()->shader()->set_cycle(cycle);
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
+	}
+
+	if(g_debug_custom_draw) {
+		static graphics::texture tex = graphics::texture::get("white2x2.png");
+		tex.set_as_current_texture();
+
+		glColor4f(1.0,1.0,1.0,1.0);
+		gles2::active_shader()->prepare_draw();
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
+		glDrawArrays(GL_LINE_STRIP, 0, vqueue.size()/2);
+	}
+#else
+	glVertexPointer(2, GL_SHORT, 0, &vqueue.front());
+	glTexCoordPointer(2, GL_FLOAT, 0, &tcqueue.front());
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
+#endif
+
+	glPopMatrix();
+}
+
 void frame::get_rect_in_texture(int time, GLfloat* output_rect, const frame_info*& info) const
 {
 	//picks out a single frame to draw from a whole animation, based on time
@@ -712,6 +800,11 @@ void frame::get_rect_in_frame_number(int nframe, GLfloat* output_rect, const fra
 {
 	const frame_info& info = frames_[nframe];
 	info_result = &info;
+
+	if(info.draw_rect_init) {
+		memcpy(output_rect, info.draw_rect, sizeof(*output_rect)*4);
+		return;
+	}
 
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
@@ -725,6 +818,9 @@ void frame::get_rect_in_frame_number(int nframe, GLfloat* output_rect, const fra
 	output_rect[1] = GLfloat(info.area.y() + TextureEpsilon) / GLfloat(texture_.height());
 	output_rect[2] = GLfloat(info.area.x() + info.area.w() - TextureEpsilon)/GLfloat(texture_.width());
 	output_rect[3] = GLfloat(info.area.y() + info.area.h() - TextureEpsilon)/GLfloat(texture_.height());
+
+	memcpy(info.draw_rect, output_rect, sizeof(*output_rect)*4);
+	info.draw_rect_init = true;
 }
 
 int frame::duration() const

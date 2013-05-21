@@ -114,21 +114,23 @@ namespace gles2 {
 	typedef boost::intrusive_ptr<fixed_program> fixed_program_ptr;
 	typedef boost::intrusive_ptr<const fixed_program> const_fixed_program_ptr;
 
-	shader_ptr get_tex_shader();
-	shader_ptr get_texcol_shader();
-	shader_ptr get_simple_shader();
-	shader_ptr get_simple_col_shader();
+	shader_program_ptr get_tex_shader();
+	shader_program_ptr get_texcol_shader();
+	shader_program_ptr get_simple_shader();
+	shader_program_ptr get_simple_col_shader();
 	
-	shader_ptr active_shader();
+	shader_program_ptr active_shader();
 
 	struct manager
 	{
-		manager(shader_ptr shader = NULL);
+		manager(shader_program_ptr shader = NULL);
 		~manager();
 	};
 
 	void init_default_shader();
 	const mat4& get_mvp_matrix();
+	void set_alpha_test(bool value);
+	bool get_alpha_test();
 	GLfloat get_alpha();
 	GLfloat* get_color();
 }

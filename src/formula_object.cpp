@@ -671,6 +671,52 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 	}
 }
 
+variant formula_object::deep_clone(variant v)
+{
+	std::map<formula_object*,formula_object*> mapping;
+	return deep_clone(v, mapping);
+}
+
+variant formula_object::deep_clone(variant v, std::map<formula_object*,formula_object*>& mapping)
+{
+	if(v.is_callable()) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			std::map<formula_object*,formula_object*>::iterator itor = mapping.find(obj);
+			if(itor != mapping.end()) {
+				return variant(itor->second);
+			}
+
+			boost::intrusive_ptr<formula_object> duplicate = obj->clone();
+			mapping[obj] = duplicate.get();
+
+			for(int n = 0; n != duplicate->variables_.size(); ++n) {
+				duplicate->variables_[n] = deep_clone(duplicate->variables_[n], mapping);
+			}
+
+			return variant(duplicate.get());
+		} else {
+			return v;
+		}
+	} else if(v.is_list()) {
+		std::vector<variant> items;
+		for(int n = 0; n != v.num_elements(); ++n) {
+			items.push_back(deep_clone(v[n], mapping));
+		}
+
+		return variant(&items);
+	} else if(v.is_map()) {
+		std::map<variant, variant> m;
+		foreach(const variant::map_pair& p, v.as_map()) {
+			m[deep_clone(p.first, mapping)] = deep_clone(p.second, mapping);
+		}
+
+		return variant(&m);
+	} else {
+		return v;
+	}
+}
+
 void formula_object::reload_classes()
 {
 	classes_.clear();

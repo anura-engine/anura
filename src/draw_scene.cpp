@@ -162,8 +162,8 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 
 		// If the camera is automatically moved along by the level (e.g. a 
 		// hurtling through the sky level) do that here.
-		pos.x += lvl.auto_move_camera_x()*100;
-		pos.y += lvl.auto_move_camera_y()*100;
+		pos.x_pos += lvl.auto_move_camera_x()*100;
+		pos.y_pos += lvl.auto_move_camera_y()*100;
 
 		//find how much padding will have to be on the edge of the screen due
 		//to the level being wider than the screen. This value will be 0
@@ -179,11 +179,6 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		//of the bounds of the level.
 		
 		const float inverse_zoom_level = 1.0/pos.zoom;
-		
-		const int min_x = lvl.boundaries().x() + ((screen_width/2 - x_screen_pad/2)*inverse_zoom_level);
-		const int max_x = lvl.boundaries().x2() - ((screen_width/2 + x_screen_pad/2)*inverse_zoom_level);
-		const int min_y = lvl.boundaries().y() + ((screen_height/2 - y_screen_pad/2)*inverse_zoom_level);
-		const int max_y = lvl.boundaries().y2() - ((screen_height/2 + y_screen_pad/2)*inverse_zoom_level);
 
 		//std::cerr << "BOUNDARIES: " << lvl.boundaries().x() << ", " << lvl.boundaries().x2() << " WIDTH: " << screen_width << " PAD: " << x_screen_pad << "\n";
 
@@ -204,7 +199,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 
 		//find the point we want the camera to converge toward. It will be the
 		//feet of the player, but inside the boundaries we calculated above.
-		int x = std::min(std::max(focus->feet_x() + displacement_x*PredictiveFramesHorz, min_x), max_x);
+		int x = focus->feet_x() + displacement_x*PredictiveFramesHorz;
 
 		//calculate the adjustment to the camera's target position based on
 		//our vertical look. This is calculated as the square root of the
@@ -212,7 +207,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		const int vertical_look = focus->vertical_look();
 
 		//find the y point for the camera to converge toward
-		int y = std::min(std::max(focus->feet_y() - (screen_height/(5*lvl.zoom_level())).as_int() + displacement_y*PredictiveFramesVert + vertical_look, min_y), max_y);
+		int y = focus->feet_y() - (screen_height/(5*lvl.zoom_level())).as_int() + displacement_y*PredictiveFramesVert + vertical_look;
 
 		//std::cerr << "POSITION: " << x << "," << y << " IN " << min_x << "," << min_y << "," << max_x << "," << max_y << "\n";
 
@@ -241,8 +236,8 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 				v.pop_back();
 			}
 
-			x = std::min(std::max((left + right)/2, min_x), max_x);
-			y = std::min(std::max(((top + bottom)/2 - screen_height/(5*lvl.zoom_level())).as_int(), min_y), max_y);
+			x = (left + right)/2;
+			y = ((top + bottom)/2 - screen_height/(5*lvl.zoom_level())).as_int();
 		}
 
 
@@ -256,7 +251,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		//for small screens the speech dialog arrows cover the entities they are
 		//pointing to. adjust to that by looking up a little bit.
 		if (lvl.current_speech_dialog() && preferences::virtual_screen_height() < 600)
-			y = std::min((y + (600 - screen_height)/(2*lvl.zoom_level())).as_int(), max_y);
+			y = (y + (600 - screen_height)/(2*lvl.zoom_level())).as_int();
 
 		//find the target x,y position of the camera in centi-pixels. Note that
 		//(x,y) represents the position the camera should center on, while
@@ -267,37 +262,22 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		const int target_ypos = 100*(y - screen_height/2);
 
 		if(pos.init == false) {
-			pos.x = target_xpos;
-			pos.y = target_ypos;
+			pos.x_pos = target_xpos;
+			pos.y_pos = target_ypos;
 			pos.init = true;
 		} else {
 
-			//Make (pos.x, pos.y) converge toward (target_xpos,target_ypos).
+			//Make (pos.x_pos, pos.y_pos) converge toward (target_xpos,target_ypos).
 			//We do this by moving asymptotically toward the target, which
 			//makes the camera have a nice acceleration/decceleration effect
 			//as the target position moves.
 			const int horizontal_move_speed = (30/lvl.zoom_level()).as_int();
 			const int vertical_move_speed = (10/lvl.zoom_level()).as_int();
-			int xdiff = (target_xpos - pos.x)/horizontal_move_speed;
-			int ydiff = (target_ypos - pos.y)/vertical_move_speed;
+			int xdiff = (target_xpos - pos.x_pos)/horizontal_move_speed;
+			int ydiff = (target_ypos - pos.y_pos)/vertical_move_speed;
 
-			pos.x += xdiff;
-			pos.y += ydiff;
-
-			//If we zoom we have an adjustment in our horizontal position
-			//so that if we're flush against the edge of the level we make
-			//sure we maintain this position to make zooming attractive.
-			const int zoom_adjust_horz_speed = abs((pos.zoom - prev_zoom)*screen_width/2)*100;
-
-			if(pos.x != target_xpos && zoom_adjust_horz_speed) {
-				if(abs(pos.x - target_xpos < zoom_adjust_horz_speed)) {
-					pos.x = target_xpos;
-				} else if(pos.x < target_xpos) {
-					pos.x += zoom_adjust_horz_speed;
-				} else {
-					pos.x -= zoom_adjust_horz_speed;
-				}
-			}
+			pos.x_pos += xdiff;
+			pos.y_pos += ydiff;
 		}
 		
 		
@@ -305,8 +285,8 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		//it will automatically return to equilibrium
 		
 		//shake speed		
-		pos.x += (pos.shake_x_offset);
-		pos.y += (pos.shake_y_offset);
+		pos.x_pos += (pos.shake_x_offset);
+		pos.y_pos += (pos.shake_y_offset);
 		
 		//shake velocity
 		pos.shake_x_offset += pos.shake_x_vel;
@@ -324,25 +304,45 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 			//which causes the spring to come to rest.
 			//These values are very sensitive, and tweaking them wrongly will cause the spring to 'explode',
 			//and increase its motion out of game-bounds. 
-			if (pos.shake_x_offset > 0){
+			if(pos.shake_x_offset > 0) {
 				pos.shake_x_vel -= (1 * pos.shake_x_offset/3 + pos.shake_x_vel/15);
-			}else if(pos.shake_x_offset < 0) {
+			} else if(pos.shake_x_offset < 0) {
 				pos.shake_x_vel += (-1 * pos.shake_x_offset/3 - pos.shake_x_vel/15);
 			}
 		}
-		if ((std::abs(pos.shake_y_vel) < 50) && (std::abs(pos.shake_y_offset) < 50)){
+
+		if((std::abs(pos.shake_y_vel) < 50) && (std::abs(pos.shake_y_offset) < 50)) {
 			//prematurely end the oscillation if it's in the asymptote
 			pos.shake_y_offset = 0;
 			pos.shake_y_vel = 0;
-		}else{
-			if (pos.shake_y_offset > 0){
+		} else {
+			if(pos.shake_y_offset > 0) {
 				pos.shake_y_vel -= (1 * pos.shake_y_offset/3 + pos.shake_y_vel/15);
-			}else if(pos.shake_y_offset < 0) {
+			} else if(pos.shake_y_offset < 0) {
 				pos.shake_y_vel += (-1 * pos.shake_y_offset/3 - pos.shake_y_vel/15);
 			}
 		}
 
+		const int minmax_x_adjust = screen_width*(1.0 - inverse_zoom_level)*0.5;
+		const int minmax_y_adjust = screen_height*(1.0 - inverse_zoom_level)*0.5;
+	
+		int min_x = (lvl.boundaries().x() - minmax_x_adjust)*100;
+		int min_y = (lvl.boundaries().y() - minmax_y_adjust)*100;
+		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - screen_width*inverse_zoom_level)*100;
+		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - screen_height*inverse_zoom_level)*100;
+
+		if(min_x > max_x) {
+			min_x = max_x = (min_x + max_x)/2;
+		}
+
+		if(min_y > max_y) {
+			min_y = max_y = (min_y + max_y)/2;
+		}
+
+		pos.x = std::min(std::max(pos.x_pos, min_x), max_x);
+		pos.y = std::min(std::max(pos.y_pos, min_y), max_y);
 	}
+
 
 	last_position = pos;
 

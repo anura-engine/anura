@@ -33,6 +33,7 @@
 #include "entity.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_visitor.hpp"
 #include "formula_variable_storage.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
@@ -297,6 +298,7 @@ private:
 		entity* target;
 		variant* from_variant;
 		entity_ptr* from_ptr;
+		boost::shared_ptr<game_logic::formula_callable_visitor> visitor;
 	};
 
 	void extract_gc_object_references(std::vector<gc_object_reference>& v);
@@ -406,9 +408,9 @@ private:
 
 #ifdef USE_GLES2
 	//current shader we're using to draw with.
-	gles2::shader_ptr shader_;
+	gles2::shader_program_ptr shader_;
 	// List of shader effects to run.
-	std::vector<gles2::shader_ptr> effects_;
+	std::vector<gles2::shader_program_ptr> effects_;
 #endif
 
 #ifdef USE_BOX2D
@@ -450,6 +452,9 @@ private:
 	int min_difficulty_, max_difficulty_;
 
 	boost::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
+
+	std::vector<GLfloat> custom_draw_xy_;
+	std::vector<GLfloat> custom_draw_uv_;
 
 	void set_platform_area(const rect& area);
 

@@ -34,6 +34,7 @@ class texture
 public:
 	static unsigned int next_power_of_2(unsigned int n);
 	static bool allows_npot();
+	static void debug_dump_textures(const char* path, const std::string* info_name=NULL);
 
 	enum {NO_STRIP_SPRITESHEET_ANNOTATIONS = 1};
 	//error thrown if an operation is done from a worker thread that
@@ -82,6 +83,8 @@ public:
 
 	unsigned int width() const { return width_; }
 	unsigned int height() const { return height_; }
+
+	surface get_surface();
 
 	bool is_alpha(int x, int y) const { return (*alpha_map_)[y*width_ + x]; }
 	std::vector<bool>::const_iterator get_alpha_row(int x, int y) const { return alpha_map_->begin() + y*width_ + x; }

@@ -727,7 +727,8 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
-	is_strict_(node["is_strict"].as_bool(false))
+	is_strict_(node["is_strict"].as_bool(false)),
+	is_shadow_(node["is_shadow"].as_bool(false))
 {
 	callable_definition_.reset(new custom_object_callable);
 
@@ -970,7 +971,7 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 	if(node.has_key("effects")) {
 		effects_.clear();
 		for(size_t n = 0; n < node["effects"].num_elements(); ++n) {
-			effects_.push_back(gles2::shader_ptr(new gles2::shader_program(node["effects"][n])));
+			effects_.push_back(gles2::shader_program_ptr(new gles2::shader_program(node["effects"][n])));
 		}
 	}
 #endif
@@ -998,6 +999,15 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 		}
 	}
 	init_event_handlers(node, event_handlers_, function_symbols(), base_type ? &base_type->event_handlers_ : NULL);
+
+	if(node.has_key("blend_mode_source") || node.has_key("blend_mode_dest")) {
+		blend_mode_.reset(new graphics::blend_mode);
+		blend_mode_->sfactor = GL_ONE;
+		blend_mode_->dfactor = GL_ONE;
+
+		blend_mode_->sfactor = get_blend_mode(node["blend_mode_source"]);
+		blend_mode_->dfactor = get_blend_mode(node["blend_mode_dest"]);
+	}
 }
 
 custom_object_type::~custom_object_type()
