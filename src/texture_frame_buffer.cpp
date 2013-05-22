@@ -55,7 +55,7 @@
 namespace texture_frame_buffer {
 
 namespace {
-bool supported = true;
+bool supported = false;
 GLuint texture_id = 0, texture_id_back = 0;  //ID of the texture which the frame buffer is stored in
 GLuint framebuffer_id = 0, framebuffer_id_back = 0; //framebuffer object
 GLint video_framebuffer_id = 0; //the original frame buffer object
@@ -110,7 +110,6 @@ void init_internal(int buffer_width, int buffer_height)
 	GLenum err = glGetError();
 
 	glGenTextures(1, &texture_id);
-	fprintf(stderr, "TEXTURE: CREATE NORMAL %d\n", texture_id);
 	glBindTexture(GL_TEXTURE_2D, texture_id);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width(), height(), 0,
              GL_RGBA, GL_UNSIGNED_BYTE, 0);
@@ -201,7 +200,6 @@ void rebuild()
 		return;
 	}
 	EXT_CALL(glDeleteFramebuffers)(1, &framebuffer_id);
-	fprintf(stderr, "TEXTURE: DESTROY: %d\n", texture_id);
 	glDeleteTextures(1, &texture_id);
 	init(preferences::actual_screen_width(), preferences::actual_screen_height());
 }

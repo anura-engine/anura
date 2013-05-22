@@ -2187,8 +2187,11 @@ void level::frame_buffer_enter_zorder(int zorder) const
 	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
 		if(zorder >= e.begin_zorder && zorder <= e.end_zorder) {
 			if(!e.shader) {
-				e.shader.reset(new gles2::shader_program(e.shader_node));
-				e.shader->configure(e.shader_node);
+				if(e.shader_node.is_string()) {
+					e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
+				} else {
+					e.shader.reset(new gles2::shader_program(e.shader_node));
+				}
 			}
 
 			shaders.push_back(e.shader);
@@ -2243,7 +2246,6 @@ void level::flush_frame_buffer_shaders_to_screen() const
 
 void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const
 {
-	gles2::manager manager(shader);
 	texture_frame_buffer::set_as_current_texture();
 
 	if(render_to_screen) {
@@ -2259,11 +2261,17 @@ void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shade
 	const int w = preferences::actual_screen_width();
 	const int h = preferences::actual_screen_height();
 
-	const GLfloat tcarray[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
+	const GLfloat tcarray[] = { 0, 1, 0, 0, 1, 1, 1, 0 };
 	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
-	GLfloat varray[] = { -1, -1, -1, 1, 1, -1, 1, 1 };
+	GLfloat varray[] = { 0, 0, 0, h, w, 0, w, h };
 
-	gles2::active_shader()->prepare_draw();
+	GLfloat sprite_area[] = {0, 0, 1, 1};
+	GLfloat draw_area[] = {0, 0, w, h};
+
+	gles2::manager manager(shader);
+	gles2::active_shader()->shader()->set_sprite_area(sprite_area);
+	gles2::active_shader()->shader()->set_draw_area(draw_area);
+	gles2::active_shader()->shader()->set_cycle(cycle());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, 
 		preferences::screen_rotated() ? tcarray_rotated : tcarray);
@@ -3992,8 +4000,11 @@ void level::set_value(const std::string& key, const variant& value)
 			}
 
 			if(!e.shader) {
-				e.shader.reset(new gles2::shader_program(e.shader_node));
-				e.shader->configure(e.shader_node);
+				if(e.shader_node.is_string()) {
+					e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
+				} else {
+					e.shader.reset(new gles2::shader_program(e.shader_node));
+				}
 			}
 
 			fb_shaders_.push_back(e);

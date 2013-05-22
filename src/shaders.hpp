@@ -165,6 +165,7 @@ private:
 class shader_program : public game_logic::formula_callable
 {
 public:
+	static boost::intrusive_ptr<shader_program> get_global(const std::string& key);
 	shader_program();
 	shader_program(const shader_program& o);
 	explicit shader_program(const variant& node, entity* obj = NULL);

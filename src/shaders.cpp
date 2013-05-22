@@ -98,6 +98,7 @@ bool shader::compile(const std::string& code)
 
 namespace {
 	std::map<std::string, gles2::program_ptr> shader_programs;
+	std::map<std::string, gles2::shader_program_ptr> g_global_shaders;
 }
 
 program::program() 
@@ -245,12 +246,12 @@ void program::set_uniform(const std::map<std::string,actives>::iterator& it, con
 		break;
 	}
 	case GL_FLOAT_VEC4: {
-		WRITE_LOG(value.num_elements() == 4, "Must be four(4) elements in vector.");
-		GLfloat v[4];
+		ASSERT_LOG(value.num_elements() % 4 == 0 && value.num_elements()/4 <= u.num_elements, "Elements in vector must be divisible by 4 and fit in the array");
+		std::vector<GLfloat> v(value.num_elements());
 		for(size_t n = 0; n < value.num_elements(); ++n) {
 			v[n] = GLfloat(value[n].as_decimal().as_float());
 		}
-		glUniform4fv(u.location, u.num_elements, &v[0]);
+		glUniform4fv(u.location, v.size()/4, &v[0]);
 		break;
 	}
 	case GL_INT:		glUniform1i(u.location, value.as_int()); break;
@@ -997,6 +998,15 @@ void program::load_shaders(const std::string& shader_data)
 		"shaders.cfg must be a map with \"shaders\" and \"programs\" attributes.");
 	for(size_t n = 0; n < node["programs"].num_elements(); ++n) {
 		const variant& prog = node["programs"][n];
+
+		if(prog.has_key("new")) {
+			boost::intrusive_ptr<shader_program> sp(new shader_program);
+			sp->configure(prog);
+			shader_programs[prog["name"].as_string()] = sp->shader();
+			continue;
+
+		}
+
 		ASSERT_LOG(prog.has_key("vertex") 
 			&& prog.has_key("fragment") 
 			&& prog.has_key("name"),
@@ -1035,6 +1045,14 @@ void program::load_shaders(const std::string& shader_data)
 		ASSERT_LOG(it != shader_programs.end(), "Error! Something bad happened adding the shader.");
 		std::cerr << "Loaded shader program: \"" << program_name << "\"(" << it->second->get() << ") from file. (" 
 			<< vs_name << ", " << fs_name << ")." << std::endl;
+	}
+
+	if(node.has_key("instances")) {
+		foreach(variant prog, node["instances"].as_list()) {
+			boost::intrusive_ptr<shader_program> sp(new shader_program);
+			sp->configure(prog);
+			g_global_shaders[sp->name()] = sp;
+		}
 	}
 }
 
@@ -1136,6 +1154,14 @@ void program::set_cycle(int cycle)
 
 ///////////////////////////////////////////////////////////////////////////
 // shader_program
+
+shader_program_ptr shader_program::get_global(const std::string& key)
+{
+	std::map<std::string, gles2::shader_program_ptr>::const_iterator itor = g_global_shaders.find(key);
+	ASSERT_LOG(itor != g_global_shaders.end(), "Could not find shader instance: " << key);
+
+	return itor->second;
+}
 
 shader_program::shader_program()
 	: vars_(new game_logic::formula_variable_storage()), parent_(NULL), zorder_(-1),
@@ -1241,7 +1267,7 @@ void shader_program::configure(const variant& node, entity* obj)
 				draw_formulas_.push_back(e->create_formula(node[cmd]));
 			}
 		} else if(d.is_string()) {
-			draw_formulas_.push_back(e->create_formula(variant(d.as_string())));
+			draw_formulas_.push_back(e->create_formula(d));
 		} else {
 			ASSERT_LOG(false, "draw must be string or list");
 		}
@@ -1310,7 +1336,7 @@ void shader_program::prepare_draw()
 //	profile::manager manager("SHADER_INFO:" + program_object_->name());
 //#endif
 	glGetError();
-	ASSERT_LOG(glGetError() == GL_NONE, "XXX Error in shader");
+	ASSERT_LOG(glGetError() == GL_NONE, "Error in shader");
 	ASSERT_LOG(glIsProgram(program_object_->get()), "NOT A PROGRAM");
 	glUseProgram(program_object_->get());
 	ASSERT_LOG(glGetError() == GL_NONE, "Error in shader");
@@ -1320,6 +1346,8 @@ void shader_program::prepare_draw()
 	for(size_t n = 0; n < draw_formulas_.size(); ++n) {
 		e->execute_command(draw_formulas_[n]->execute(*e));
 	}
+
+	refresh_for_draw();
 }
 
 void shader_program::refresh_for_draw()
@@ -1346,6 +1374,8 @@ DEFINE_FIELD(5, enabled, "bool")
 	value = variant(enabled_);
 DEFINE_SET_FIELD
 	enabled_ = value.as_bool();
+DEFINE_FIELD(6, level, "object")
+	value = variant(level::current_ptr());
 END_DEFINE_CALLABLE(shader_program, program, program_object_)
 
 /*

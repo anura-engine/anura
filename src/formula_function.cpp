@@ -3776,6 +3776,15 @@ FUNCTION_DEF(lower, 1, 1, "lower(s) -> string: lowercase version of string")
 	return variant(s);
 END_FUNCTION_DEF(lower)
 
+FUNCTION_DEF(rects_intersect, 2, 2, "rects_intersect([int], [int]) ->bool")
+	rect a(args()[0]->evaluate(variables));
+	rect b(args()[1]->evaluate(variables));
+
+	return variant::from_bool(rects_intersect(a, b));
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+END_FUNCTION_DEF(rects_intersect)
+
 namespace {
 void run_expression_for_edit_and_continue(expression_ptr expr, const game_logic::formula_callable* variables, bool* success)
 {
