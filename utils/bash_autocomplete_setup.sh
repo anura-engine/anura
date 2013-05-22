@@ -1,4 +1,4 @@
-#To run: ". bash_autocomplete.sh". The period and space is very, very important. ./ won't work.
+#To run: ". bash_autocomplete_setup.sh". The period and space is very, very important. ./ won't work. (". utils/bash_autocomplete_setup.sh" also works.)
 
 set -e
 set -u
