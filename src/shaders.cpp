@@ -198,6 +198,7 @@ bool program::queryUniforms()
 	glGetProgramiv(object_, GL_ACTIVE_UNIFORMS, &active_uniforms);
 	GLint uniform_max_len;
 	glGetProgramiv(object_, GL_ACTIVE_UNIFORM_MAX_LENGTH, &uniform_max_len);
+	fprintf(stderr, "PROGRAM queryUniforms(%s): %d/%d\n", name_.c_str(), (int)active_uniforms, (int)uniform_max_len);
 	std::vector<char> name;
 	name.resize(uniform_max_len+1);
 	for(int i = 0; i < active_uniforms; i++) {
@@ -208,6 +209,7 @@ bool program::queryUniforms()
 		u.location = glGetUniformLocation(object_, u.name.c_str());
 		ASSERT_LOG(u.location >= 0, "Unable to determine the location of the uniform: " << u.name);
 		uniforms_[u.name] = u;
+		fprintf(stderr, "  PROGRAM uniform %d/%d: %s\n", i, (int)active_uniforms, u.name.c_str());
 	}
 	return true;
 }
