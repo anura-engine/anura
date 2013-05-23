@@ -1042,6 +1042,7 @@ void texture::ID::unbuild_id()
 	s = surface(SDL_CreateRGBSurface(SDL_SWSURFACE,width,height,32,SURFACE_MASK));
 #endif
 
+	ASSERT_LOG(glIsTexture(id), "Not a valid texture: " << id);
 	glBindTexture(GL_TEXTURE_2D, id);
 #if defined(USE_GLES2)
 #if defined(GL_ES_VERSION_2_0)

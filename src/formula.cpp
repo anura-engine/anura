@@ -53,8 +53,8 @@ namespace {
 	bool g_strict_formula_checking = false;
 
 	std::set<game_logic::formula*>& all_formulae() {
-		static std::set<game_logic::formula*> instance;
-		return instance;
+		static std::set<game_logic::formula*>* instance = new std::set<game_logic::formula*>;
+		return *instance;
 	}
 }
 
