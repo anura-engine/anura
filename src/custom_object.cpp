@@ -4797,6 +4797,7 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 		extract_gc_object_references(var, v);
 	}
 
+/*  TODO: David -- fix how these visitors work.
 	gc_object_reference visitor;
 	visitor.owner = this;
 	visitor.target = NULL;
@@ -4811,6 +4812,7 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 			ptr->destroy_ref();
 		}
 	}
+*/
 }
 
 void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v)
