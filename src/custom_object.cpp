@@ -2294,7 +2294,7 @@ void custom_object::run_garbage_collection()
 		references.push_back(entity_ptr(obj));
 	}
 
-	std::set<entity*> safe;
+	std::set<const void*> safe;
 	std::vector<gc_object_reference> refs;
 
 	foreach(custom_object* obj, get_all()) {
@@ -2323,6 +2323,18 @@ void custom_object::run_garbage_collection()
 			if(safe.count(ref.owner)) {
 				restore_gc_object_reference(ref);
 				ref.owner = NULL;
+			}
+		}
+	}
+
+	foreach(gc_object_reference& ref, refs) {
+		if(ref.owner == NULL || !ref.visitor) {
+			continue;
+		}
+
+		foreach(game_logic::formula_callable_suspended_ptr ptr, ref.visitor->pointers()) {
+			if(safe.count(ptr->value())) {
+				ptr->restore_ref();
 			}
 		}
 	}
@@ -4797,7 +4809,6 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 		extract_gc_object_references(var, v);
 	}
 
-/*  TODO: David -- fix how these visitors work.
 	gc_object_reference visitor;
 	visitor.owner = this;
 	visitor.target = NULL;
@@ -4812,7 +4823,8 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 			ptr->destroy_ref();
 		}
 	}
-*/
+
+	v.push_back(visitor);
 }
 
 void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v)
