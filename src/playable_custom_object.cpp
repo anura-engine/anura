@@ -1,3 +1,10 @@
+#ifdef TARGET_OS_IPHONE
+#error "YOU HAVE TARGET_OS_IPHONE #defined"
+#endif
+
+#ifdef TARGET_IPHONE_SIMULATOR
+#error "YOU HAVE TARGET_IPHONE_SIMULATOR #defined"
+#endif
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
