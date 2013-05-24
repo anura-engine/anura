@@ -362,12 +362,12 @@ END_FUNCTION_DEF(query_cache)
 	class if_function : public function_expression {
 	public:
 		explicit if_function(const args_list& args)
-			: function_expression("if", args, 2, 3)
+			: function_expression("if", args, 2, -1)
 		{}
 
 		expression_ptr optimize() const {
 			variant v;
-			if(args()[0]->can_reduce_to_variant(v)) {
+			if(args().size() <= 3 && args()[0]->can_reduce_to_variant(v)) {
 				if(v.as_bool()) {
 					return args()[1];
 				} else {
@@ -384,26 +384,38 @@ END_FUNCTION_DEF(query_cache)
 
 	private:
 		variant execute(const formula_callable& variables) const {
-			const int i = args()[0]->evaluate(variables).as_bool() ? 1 : 2;
-			if(i >= args().size()) {
+			const int nargs = args().size();
+			for(int n = 0; n < nargs-1; n += 2) {
+				const bool result = args()[n]->evaluate(variables).as_bool();
+				if(result) {
+					return args()[n+1]->evaluate(variables);
+				}
+			}
+
+			if(nargs%2 == 0) {
 				return variant();
 			}
-			return args()[i]->evaluate(variables);
+
+			return args()[nargs-1]->evaluate(variables);
 		}
 
 
 		variant_type_ptr get_variant_type() const {
 			std::vector<variant_type_ptr> types;
 			types.push_back(args()[1]->query_variant_type());
-			if(args().size() > 2) {
-				types.push_back(args()[2]->query_variant_type());
+			const int nargs = args().size();
+			for(int n = 1; n < nargs; n += 2) {
+				types.push_back(args()[n]->query_variant_type());
+			}
+
+			if(nargs%2 == 1) {
+				types.push_back(args()[nargs-1]->query_variant_type());
 			} else {
 				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 			}
 
 			return variant_type::get_union(types);
 		}
-
 	};
 
 class bound_command : public game_logic::command_callable
