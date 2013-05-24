@@ -854,8 +854,6 @@ private:
 			if(left_->str() == "null" && args_.empty()) {
 				return variant();
 			}
-
-			std::cerr << "ERROR: " << left_->str() << " IS NOT A VALID FUNCTION\n";
 		}
 		
 		return left(args);
@@ -895,6 +893,9 @@ private:
 						       "FUNCTION CALL DOES NOT MATCH: " << debug_pinpoint_location() << " ARGUMENT " << (n+1) << " TYPE " << t->to_string() << msg << arg_types[n]->to_string() << "\n");
 				}
 			}
+
+			ASSERT_LOG(min_args < 0 || args_.size() >= min_args, "Too few arguments to function. Provided " << args_.size() << ", expected at least " << min_args << ": " << debug_pinpoint_location() << "\n");
+			ASSERT_LOG(args_.size() <= arg_types.size(), "Too many arguments to function. Provided " << args_.size() << ", expected at most " << arg_types.size() << ": " << debug_pinpoint_location() << "\n");
 		}
 	}
 

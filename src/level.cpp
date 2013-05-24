@@ -287,6 +287,7 @@ level::level(const std::string& level_cfg, variant node)
 	music_ = node["music"].as_string_default();
 	replay_data_ = node["replay_data"].as_string_default();
 	cycle_ = node["cycle"].as_int();
+	paused_ = false;
 	time_freeze_ = 0;
 	x_resolution_ = node["x_resolution"].as_int();
 	y_resolution_ = node["y_resolution"].as_int();
@@ -2581,7 +2582,10 @@ void level::do_processing()
 		}
 	}
 
-	++cycle_;
+	if(!paused_) {
+		++cycle_;
+	}
+
 	if(!player_) {
 		return;
 	}
@@ -3784,6 +3788,8 @@ variant level::get_value(const std::string& key) const
 {
 	if(key == "cycle") {
 		return variant(cycle_);
+	} else if(key == "paused") {
+		return variant::from_bool(paused_);
 	} else if(key == "player") {
 		return variant(last_touched_player_.get());
 	} else if(key == "in_dialog") {
@@ -3955,6 +3961,20 @@ void level::set_value(const std::string& key, const variant& value)
 		}
 
 		return;
+	} else if(key == "paused") {
+		const bool new_value = value.as_bool();
+		if(new_value == paused_) {
+			return;
+		}
+		paused_ = new_value;
+		if(paused_) {
+			before_pause_controls_backup_.reset(new controls::control_backup_scope);
+		} else {
+			before_pause_controls_backup_.reset();
+		}
+		foreach(entity_ptr e, chars_) {
+			e->mutate_value("paused", value);
+		}
 	} else if(key == "in_dialog") {
 		in_dialog_ = value.as_bool();
 	} else if(key == "time_freeze") {

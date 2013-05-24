@@ -475,6 +475,8 @@ private:
 	mutable screen_position adjusted_draw_position_;
 
 	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
+
+	bool paused_;
 };
 
 #endif

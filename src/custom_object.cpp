@@ -153,7 +153,8 @@ custom_object::custom_object(variant node)
 	parent_prev_x_(INT_MIN), parent_prev_y_(INT_MIN), parent_prev_facing_(true),
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
-	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates()))
+	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates())),
+	paused_(false)
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -424,7 +425,8 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	swallow_mouse_event_(false),
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
-	use_absolute_screen_coordinates_(type_->use_absolute_screen_coordinates())
+	use_absolute_screen_coordinates_(type_->use_absolute_screen_coordinates()),
+	paused_(false)
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -549,7 +551,8 @@ custom_object::custom_object(const custom_object& o) :
 	custom_draw_(o.custom_draw_),
 	platform_offsets_(o.platform_offsets_),
 	currently_handling_die_event_(0),
-	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_)
+	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_),
+	paused_(o.paused_)
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -1235,6 +1238,10 @@ void custom_object::create_object()
 
 void custom_object::process(level& lvl)
 {
+	if(paused_) {
+		return;
+	}
+
 #if defined(USE_BOX2D)
 	box2d::world_ptr world = box2d::world::our_world_ptr();
 	if(body_) {
@@ -2818,6 +2825,10 @@ variant custom_object::get_value_by_slot(int slot) const
 	}
 #endif
 
+	case CUSTOM_OBJECT_PAUSED: {
+		return variant::from_bool(paused_);
+	}
+
 	case CUSTOM_OBJECT_TEXTV: {
 		std::vector<variant> v;
 		foreach(const gui::vector_text_ptr& vt, vector_text_) {
@@ -3986,6 +3997,11 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	}
 #endif
 
+	case CUSTOM_OBJECT_PAUSED: {
+		paused_ = value.as_bool();
+		break;
+	}
+
 	case CUSTOM_OBJECT_CUSTOM_DRAW: {
 		if(value.is_null()) {
 			custom_draw_.reset();
@@ -4477,6 +4493,10 @@ struct die_event_scope {
 
 bool custom_object::handle_event_internal(int event, const formula_callable* context, bool execute_commands_now)
 {
+	if(paused_) {
+		return false;
+	}
+
 	const die_event_scope die_scope(event, currently_handling_die_event_);
 	if(hitpoints_ <= 0 && !currently_handling_die_event_) {
 		return false;

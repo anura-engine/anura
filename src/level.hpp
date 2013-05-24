@@ -423,6 +423,9 @@ private:
 
 	int time_freeze_;
 
+	bool paused_;
+	boost::shared_ptr<controls::control_backup_scope> before_pause_controls_backup_;
+
 	bool in_dialog_;
 
 	//preferred screen dimensions to play the level on.
