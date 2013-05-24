@@ -47,7 +47,7 @@
 #if defined(USE_GLES2)
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
-#elif defined(TARGET_OS_HARMATTAN) || defined(TARGET_OS_IPHONE) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
+#elif defined(TARGET_OS_HARMATTAN) || TARGET_OS_IPHONE || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
 #define EXT_CALL(call) call##OES
 #define EXT_MACRO(macro) macro##_OES
 #elif defined(__APPLE__)
