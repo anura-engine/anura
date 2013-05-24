@@ -205,6 +205,7 @@ variant playable_custom_object::get_value(const std::string& key) const
 			}
 		}
 #else
+		fprintf(stderr, "ZZZ: DETECTED SDL <2\n");
 		const Uint8* key_state = SDL_GetKeyState(&ary_length);
 		for(int count = 0; count < ary_length; ++count) {
 			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
@@ -217,6 +218,8 @@ variant playable_custom_object::get_value(const std::string& key) const
 			}
 		}
 #endif
+#else
+		fprintf(stderr, "ZZZ: DETECTED IPHONE\n");
 #endif
 		return variant(&result);
 	} else if(key == "ctrl_mice") {
