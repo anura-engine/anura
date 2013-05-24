@@ -59,7 +59,7 @@ std::string run_benchmark(const std::string& name, BenchmarkTest fn);
 #define CHECK_GT(a, b) CHECK_CMP(a, b, >)
 
 //on mobile phones we don't do unit tests or benchmarks.
-#if defined(TARGET_OS_IPHONE) || defined(TARGET_OS_HARMATTAN)
+#if TARGET_OS_IPHONE || defined(TARGET_OS_HARMATTAN)
 
 #define UNIT_TEST(name) \
 	void TEST_##name()
