@@ -58,7 +58,27 @@ std::string shader::get_and_clear_runtime_error()
 shader::shader(GLenum type, const std::string& name, const std::string& code)
 	: type_(type), shader_(0), name_(name)
 {
-	ASSERT_LOG(compile(code), "Error compiling shader for " << name_);
+	const bool compile_result = compile(code);
+	std::string working_version_str;
+
+	if(compile_result == false) {
+		//compiling the shader failed. Try to add #version n where
+		//n = 120,130,140 at the top of the shader and see if that makes
+		//it work so we can give a nice error message.
+		for(int n = 120; n <= 140; n += 10) {
+			std::ostringstream version_code;
+			version_code << "#version " << n << "\n" << code;
+			const bool result = compile(version_code.str());
+			if(result) {
+				std::ostringstream err_msg;
+				err_msg << " (Adding '#version " << n << "' to the top of this shader will make it work).";
+				working_version_str = err_msg.str();
+				break;
+			}
+		}
+	}
+
+	ASSERT_LOG(compile_result, "Error compiling shader for " << name_ << working_version_str);
 }
 
 bool shader::compile(const std::string& code)
