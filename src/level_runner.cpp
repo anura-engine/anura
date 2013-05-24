@@ -1391,7 +1391,7 @@ bool level_runner::play_cycle()
 				iphone_controls::handle_event(event);
 				handle_mouse_events(event);
 				break;
-#elif defined(TARGET_IPHONE_SIMULATOR) || defined(TARGET_OS_IPHONE)                    
+#elif TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
                 case SDL_MOUSEMOTION:
                 case SDL_MOUSEBUTTONDOWN:
                 case SDL_MOUSEBUTTONUP:

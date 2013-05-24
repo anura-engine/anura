@@ -621,7 +621,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 #if !defined(__native_client__)
 	Uint32 sdl_init_flags = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
-#if defined(_WINDOWS) || defined(TARGET_OS_IPHONE)
+#if defined(_WINDOWS) || TARGET_OS_IPHONE
 	sdl_init_flags |= SDL_INIT_TIMER;
 #endif
 	if(SDL_Init(sdl_init_flags) < 0) {
@@ -640,7 +640,7 @@ extern "C" int main(int argcount, char* argvec[])
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
 	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
-#if defined(TARGET_OS_IPHONE) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
+#if TARGET_OS_IPHONE || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
 	//on the iPhone and PlayBook, try to restore the auto-save if it exists
 	if(sys::file_exists(preferences::auto_save_file_path()) && sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
 		level_cfg = "autosave.cfg";

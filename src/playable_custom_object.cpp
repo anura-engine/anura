@@ -172,30 +172,18 @@ variant playable_custom_object::get_value(const std::string& key) const
 		return variant(SDL_GetModState());
 	} else if(key == "ctrl_keys") {
 		std::vector<variant> result;
-		fprintf(stderr, "ZZZ: ctrl_keys...\n");
 		if(level_runner::get_current() && level_runner::get_current()->get_debug_console() && level_runner::get_current()->get_debug_console()->has_keyboard_focus()) {
-			fprintf(stderr, "ZZZ: DEBUG CONSOLE STEALS KEYSTROKES\n");
 			//the debug console is stealing all keystrokes.
 			return variant(&result);
 		}
 
-#if !defined(TARGET_OS_IPHONE) && !defined(TARGET_IPHONE_SIMULATOR)
+#if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 		Uint8* key_state = SDL_GetKeyboardState(&ary_length);
-		int npressed = 0;
-		for(int count = 0; count < ary_length; ++count) {
-			if(key_state[count]) {
-				++npressed;
-			}
-		}
-
-		fprintf(stderr, "ZZZ: KEYS PRESSED: %d/%d\n", npressed, ary_length);
-
 		for(int count = 0; count < ary_length; ++count) {
 			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
 				SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));
-				fprintf(stderr, "ZZZ: KEY PRESS: %d -> %d\n", count, (int)k);
 				if(k < 128 && util::c_isprint(k)) {
 					std::string str(1,k);
 					result.push_back(variant(str));
