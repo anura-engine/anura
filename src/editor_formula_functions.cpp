@@ -293,11 +293,11 @@ void load_scripts()
 		return;
 	}
 
-	if(!sys::file_exists("data/editor/scripts.cfg")) {
+	if(!sys::file_exists("data/editor_scripts.cfg")) {
 		return;
 	}
 
-	variant node = json::parse_from_file("data/editor/scripts.cfg");
+	variant node = json::parse_from_file("data/editor_scripts.cfg");
 
 	//load any functions defined here.
 	foreach(variant function_node, node["function"].as_list()) {
