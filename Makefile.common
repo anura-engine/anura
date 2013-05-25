@@ -69,6 +69,7 @@ objects = \
 	src/formula_constants.o \
 	src/formula_function.o \
 	src/formula_function_registry.o \
+	src/formula_interface.o \
 	src/formula_object.o \
 	src/formula_profiler.o \
 	src/formula_tokenizer.o \

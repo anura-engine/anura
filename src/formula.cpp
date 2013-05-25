@@ -33,6 +33,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_constants.hpp"
 #include "formula_function.hpp"
+#include "formula_interface.hpp"
 #include "formula_object.hpp"
 #include "formula_tokenizer.hpp"
 #include "i18n.hpp"
@@ -838,14 +839,38 @@ class function_call_expression : public formula_expression {
 public:
 	function_call_expression(expression_ptr left, const std::vector<expression_ptr>& args)
 	: formula_expression("_fn"), left_(left), args_(args)
-	{}
+	{
+		variant_type_ptr fn_type = left->query_variant_type();
+		std::vector<variant_type_ptr> arg_types;
+		if(fn_type->is_function(&arg_types, NULL, NULL)) {
+			for(int n = 0; n < arg_types.size() && n < args.size(); ++n) {
+				const formula_interface* interface = arg_types[n]->is_interface();
+
+				boost::intrusive_ptr<formula_interface_instance_factory> interface_factory;
+				if(interface) {
+					try {
+						interface_factory.reset(interface->create_factory(args[n]->query_variant_type()));
+					} catch(formula_interface::interface_mismatch_error&) {
+					}
+				}
+
+				interfaces_.push_back(interface_factory);
+			}
+		}
+	}
 private:
 	variant execute(const formula_callable& variables) const {
 		const variant left = left_->evaluate(variables);
 		std::vector<variant> args;
 		args.reserve(args_.size());
+		int nindex = 0;
 		foreach(const expression_ptr& e, args_) {
-			args.push_back(e->evaluate(variables));
+			if(nindex < interfaces_.size() && interfaces_[nindex]) {
+				args.push_back(interfaces_[nindex]->create(e->evaluate(variables)));
+			} else {
+				args.push_back(e->evaluate(variables));
+			}
+			++nindex;
 		}
 
 		if(!left.is_function()) {
@@ -908,6 +933,7 @@ private:
 	
 	expression_ptr left_;
 	std::vector<expression_ptr> args_;
+	std::vector<boost::intrusive_ptr<formula_interface_instance_factory> > interfaces_;
 };
 
 class dot_expression : public formula_expression {

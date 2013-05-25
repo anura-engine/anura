@@ -31,6 +31,7 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_utils.hpp"
+#include "formula_interface.hpp"
 #include "formula_object.hpp"
 
 #include "i18n.hpp"
@@ -830,6 +831,18 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 					args = &args_buf;
 
 					args_buf[n] = variant(obj.get());
+
+				} else if(const game_logic::formula_interface* interface = fn_->variant_types[n]->is_interface()) {
+					if((*args)[n].is_map() == false && (*args)[n].is_callable() == false) {
+						generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED INTERFACE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
+					}
+
+					variant obj = interface->get_dynamic_factory()->create((*args)[n]);
+
+					args_buf = *args;
+					args = &args_buf;
+
+					args_buf[n] = obj;
 
 				} else {
 					generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());

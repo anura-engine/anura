@@ -29,9 +29,8 @@ namespace game_logic
 void formula_callable_definition::entry::set_variant_type(variant_type_ptr type)
 {
 	variant_type = type;
-	std::string class_name;
-	if(type && type->is_class(&class_name)) {
-		type_definition = get_class_definition(class_name);
+	if(type) {
+		type_definition.reset(type->get_definition());
 	}
 }
 
