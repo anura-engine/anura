@@ -61,6 +61,9 @@ class control_backup_scope {
 public:
 	control_backup_scope();
 	~control_backup_scope();
+
+	void restore_state();
+	void cancel();
 private:
 	boost::scoped_ptr<control_backup_scope_impl> impl_;
 };

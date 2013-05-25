@@ -544,6 +544,10 @@ level::~level()
 			e->cleanup_references();
 		}
 	}
+
+	if(before_pause_controls_backup_) {
+		before_pause_controls_backup_->cancel();
+	}
 }
 
 void level::read_compiled_tiles(variant node, std::vector<level_tile>::iterator& out)
@@ -3970,6 +3974,9 @@ void level::set_value(const std::string& key, const variant& value)
 		if(paused_) {
 			before_pause_controls_backup_.reset(new controls::control_backup_scope);
 		} else {
+			if(this != current_ptr()) {
+				before_pause_controls_backup_->cancel();
+			}
 			before_pause_controls_backup_.reset();
 		}
 		foreach(entity_ptr e, chars_) {

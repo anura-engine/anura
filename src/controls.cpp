@@ -138,11 +138,23 @@ control_backup_scope::control_backup_scope() : impl_(new control_backup_scope_im
 
 control_backup_scope::~control_backup_scope()
 {
-	starting_cycles = impl_->starting_cycles;
-	for(int n = 0; n != MAX_PLAYERS; ++n) {
-		controls[n] = impl_->controls[n];
-		highest_confirmed[n] = impl_->highest_confirmed[n];
+	restore_state();
+}
+
+void control_backup_scope::restore_state()
+{
+	if(impl_) {
+		starting_cycles = impl_->starting_cycles;
+		for(int n = 0; n != MAX_PLAYERS; ++n) {
+			controls[n] = impl_->controls[n];
+			highest_confirmed[n] = impl_->highest_confirmed[n];
+		}
 	}
+}
+
+void control_backup_scope::cancel()
+{
+	impl_.reset();
 }
 
 int their_highest_confirmed() {
