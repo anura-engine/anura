@@ -101,6 +101,7 @@ void init_internal(int buffer_width, int buffer_height)
 	}
 #endif
 	fprintf(stderr, "FRAME BUFFER OBJECT IS SUPPORTED\n");
+	supported = true;
 
 #ifndef TARGET_TEGRA
 	glGetIntegerv(EXT_MACRO(GL_FRAMEBUFFER_BINDING), &video_framebuffer_id);
