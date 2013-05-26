@@ -122,7 +122,12 @@ variant dynamic_interface_instance::get_value(const std::string& key) const
 
 variant dynamic_interface_instance::get_value_by_slot(int slot) const
 {
-	return obj_[factory_->translate_slot(slot)];
+	const std::string& key = factory_->translate_slot(slot);
+	if(obj_.is_callable()) {
+		return obj_.as_callable()->query_value(key);
+	} else {
+		return obj_[key];
+	}
 }
 
 void dynamic_interface_instance::set_value(const std::string& key, const variant& value)

@@ -326,6 +326,10 @@ public:
 	const game_logic::formula_callable_definition* get_definition() const {
 		return interface_->get_definition().get();
 	}
+
+	const game_logic::formula_interface* is_interface() const {
+		return interface_.get();
+	}
 private:
 	const_formula_interface_ptr interface_;
 };
