@@ -21,8 +21,12 @@
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "formula_function.hpp"
+#include "formula_interface.hpp"
 #include "formula_object.hpp"
 #include "formula_tokenizer.hpp"
+#include "json_parser.hpp"
+#include "module.hpp"
+#include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_type.hpp"
 
@@ -35,6 +39,43 @@ variant_type::~variant_type()
 }
 
 namespace {
+
+std::map<std::string, variant> load_named_variant_info()
+{
+	std::map<std::string, variant> result;
+
+	const std::string path = module::map_file("data/types.cfg");
+	if(sys::file_exists(path)) {
+		variant node = json::parse_from_file(path);
+		foreach(const variant::map_pair& p, node.as_map()) {
+			result[p.first.as_string()] = p.second;
+		}
+	}
+
+	return result;
+}
+
+variant_type_ptr get_named_variant_type(const std::string& name)
+{
+	static std::map<std::string, variant> info = load_named_variant_info();
+	static std::map<std::string, variant_type_ptr> cache;
+	std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
+	if(itor != cache.end()) {
+		return itor->second;
+	}
+
+	std::map<std::string, variant>::const_iterator info_itor = info.find(name);
+	if(info_itor != info.end()) {
+		//insert into the cache a null entry to symbolize we're parsing
+		//this, to avoid infinite recursion.
+		variant_type_ptr& ptr = cache[name];
+		ptr = parse_variant_type(info_itor->second);
+		return ptr;
+	}
+
+	return variant_type_ptr();
+
+}
 
 class variant_type_simple : public variant_type
 {
@@ -241,8 +282,56 @@ public:
 
 		return false;
 	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		return game_logic::get_class_definition(type_).get();
+	}
 private:
 	std::string type_;
+};
+
+class variant_type_interface : public variant_type
+{
+public:
+	explicit variant_type_interface(const_formula_interface_ptr i)
+	  : interface_(i)
+	{}
+
+	bool match(const variant& v) const {
+		return interface_->match(v);
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_interface* other = dynamic_cast<const variant_type_interface*>(&o);
+		return other && other->interface_ == interface_;
+	}
+
+	std::string to_string() const {
+		return interface_->to_string();
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		if(type->is_map_of().first) {
+			return true;
+		}
+
+		try {
+			interface_->create_factory(type);
+			return true;
+		} catch(game_logic::formula_interface::interface_mismatch_error&) {
+			return false;
+		}
+	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		return interface_->get_definition().get();
+	}
+
+	const game_logic::formula_interface* is_interface() const {
+		return interface_.get();
+	}
+private:
+	const_formula_interface_ptr interface_;
 };
 
 class variant_type_union : public variant_type
@@ -811,7 +900,44 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
+		if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
+			v.push_back(get_named_variant_type(std::string(i1->begin, i1->end)));
+			++i1;
+		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("interface") && i1+1 != i2 && (i1+1)->equals("{")) {
+			i1 += 2;
+
+			std::map<std::string, variant_type_ptr> types;
+
+			while(i1 != i2 && !i1->equals("}")) {
+				if(i1->type == TOKEN_IDENTIFIER) {
+					std::string id(i1->begin, i1->end);
+					++i1;
+
+					ASSERT_COND(i1 != i2 && i1->equals(":"), "Expected : after " << id << " in interface definition");
+
+					++i1;
+					variant_type_ptr type = parse_variant_type(original_str, i1, i2, allow_failure);
+					if(!type) {
+						return variant_type_ptr();
+					}
+
+					types[id] = type;
+
+					if(i1 != i2 && i1->equals(",")) {
+						++i1;
+					}
+				} else {
+					ASSERT_COND(false, "Expected identifier or } in interface definition");
+				}
+			}
+
+			if(i1 != i2) {
+				++i1;
+			}
+
+			v.push_back(variant_type_ptr(new variant_type_interface(
+			    const_formula_interface_ptr(new game_logic::formula_interface(types)))));
+		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
 			i1 += 2;
 
 			int min_args = -1;

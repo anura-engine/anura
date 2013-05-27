@@ -123,7 +123,7 @@ namespace sys
 
 		// Create any needed directories
 		boost::system::error_code ec;
-		create_directories(p, ec);
+		create_directories(p.parent_path(), ec);
 
 		// Write the file.
 		std::ofstream file(fname.c_str(), std::ios_base::binary);

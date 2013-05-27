@@ -25,6 +25,12 @@
 #include "formula_tokenizer.hpp"
 #include "variant.hpp"
 
+namespace game_logic
+{
+class formula_callable_definition;
+class formula_interface;
+}
+
 class variant_type;
 typedef boost::shared_ptr<const variant_type> variant_type_ptr;
 typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
@@ -59,6 +65,10 @@ public:
 
 	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args) const { return false; }
 	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
+
+	virtual const game_logic::formula_callable_definition* get_definition() const { return NULL; }
+
+	virtual const game_logic::formula_interface* is_interface() const { return NULL; }
 
 	void set_str(const std::string& s) const { str_ = s; }
 	const std::string& str() const { return str_; }
