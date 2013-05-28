@@ -1,19 +1,3 @@
-/*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
-	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
-
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
-
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
-*/
 
 #include <boost/bind.hpp>
 
@@ -51,27 +35,29 @@ class grid {
 	int cell_height_;
 	int h_padding_;
 	int v_padding_;
+	int start_x_;
+	int start_y_;
 	int column_count_;
 	int widget_count_;
 
 	public:
-	grid(gui::dialog& dialog, int cell_width, int cell_height, int h_padding, int v_padding, int column_count) :
-   dialog_(dialog), cell_width_(cell_width), cell_height_(cell_height), h_padding_(h_padding), v_padding_(v_padding), column_count_(column_count), widget_count_(0) {
+	grid(gui::dialog& dialog, int cell_width, int cell_height, int h_padding, int v_padding, int start_x, int start_y, int column_count) :
+   dialog_(dialog), cell_width_(cell_width), cell_height_(cell_height), h_padding_(h_padding), v_padding_(v_padding), start_x_(start_x), start_y_(start_y), column_count_(column_count), widget_count_(0) {
 	}
 
 	void add_widget(gui::widget_ptr widget) {
 		dialog_.add_widget(widget,
-			h_padding_ + (widget_count_ % column_count_) * (cell_width_ + h_padding_),
-			v_padding_ + (widget_count_ / column_count_) * (cell_height_ + v_padding_));
+			start_x_ + h_padding_ + (widget_count_ % column_count_) * (cell_width_ + h_padding_),
+			start_y_ + v_padding_ + (widget_count_ / column_count_) * (cell_height_ + v_padding_));
 		widget_count_++;
 	}
 
 	int total_width() {
-		return column_count_ * (cell_width_ + h_padding_);
+		return start_x_ + column_count_ * (cell_width_ + h_padding_);
 	}
 
 	int total_height() {
-		return (widget_count_ / column_count_) * (cell_height_ + v_padding_);
+		return start_y_ + (widget_count_ + column_count_ - 1) / column_count_ * (cell_height_ + v_padding_);
 	}
 };
 }
@@ -79,24 +65,24 @@ class grid {
 void show_language_dialog()
 {
 	using namespace gui;
-	int height = preferences::virtual_screen_height() - 20;
-	if (preferences::virtual_screen_height() > 480)
-		height -= 100;
-	dialog d(50, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-100, height);
+	dialog d(0, 0, 0, 0);
 	d.set_background_frame("empty_window");
 	d.set_draw_background_fn(do_draw_scene);
 
 	const int button_width = 300;
 	const int button_height = 50;
 	const int padding = 20;
-	grid g(d, button_width, button_height, padding, padding, 2);
+
+	d.add_widget(widget_ptr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
+
+	grid g(d, button_width, button_height, padding, padding, 0, 40, 2);
 
 	typedef std::map<variant, variant> variant_map;
 	variant_map languages = json::parse_from_file("data/languages.cfg").as_map();
 	int index = 0;
 	foreach(variant_map::value_type pair, languages) {
 		widget_ptr b(new button(
-			widget_ptr(new graphical_font_label(pair.second.as_string(), "door_label", 2)),
+			widget_ptr(new graphical_font_label(pair.second.as_string(), "language_names", 2)),
 			boost::bind(set_locale, pair.first.as_string()),
 			BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
 		b->set_dim(button_width, button_height);
@@ -114,6 +100,10 @@ void show_language_dialog()
 	back_button->set_dim(button_width, button_height);
 	g.add_widget(back_button);
 
+        int dialog_width = g.total_width() + padding;
+        int dialog_height = g.total_height() + padding;
+        d.set_loc((preferences::virtual_screen_width() - dialog_width) / 2,
+		(preferences::virtual_screen_height() - dialog_height) / 2);
 	d.set_dim(g.total_width() + padding, g.total_height() + padding);
 
 	d.show_modal();
