@@ -65,10 +65,7 @@ class grid {
 void show_language_dialog()
 {
 	using namespace gui;
-	int height = preferences::virtual_screen_height() - 20;
-	if (preferences::virtual_screen_height() > 480)
-		height -= 100;
-	dialog d(50, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-100, height);
+	dialog d(0, 0, 0, 0);
 	d.set_background_frame("empty_window");
 	d.set_draw_background_fn(do_draw_scene);
 
@@ -103,6 +100,10 @@ void show_language_dialog()
 	back_button->set_dim(button_width, button_height);
 	g.add_widget(back_button);
 
+        int dialog_width = g.total_width() + padding;
+        int dialog_height = g.total_height() + padding;
+        d.set_loc((preferences::virtual_screen_width() - dialog_width) / 2,
+		(preferences::virtual_screen_height() - dialog_height) / 2);
 	d.set_dim(g.total_width() + padding, g.total_height() + padding);
 
 	d.show_modal();
