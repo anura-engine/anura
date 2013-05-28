@@ -277,10 +277,13 @@ rect graphical_font::dimensions(const std::string& text, int size) const
 
 // Initialize the graphical font for the given locale
 void graphical_font::init_for_locale(const std::string& locale) {
-	std::string filename = "data/fonts." + locale + ".cfg";
-	if (!sys::file_exists(filename))
-		filename = "data/fonts.cfg";
-	std::cerr << "LOADING FONT: " << filename << " -> " << module::map_file(filename) << "\\n";
-	graphical_font::init(json::parse_from_file(filename));
+	std::string names[] = {"fonts", "base_fonts"};
+	foreach(std::string name, names) {
+		std::string filename = "data/" + name + "." + locale + ".cfg";
+		if (!sys::file_exists(filename))
+			filename = "data/" + name + ".cfg";
+		std::cerr << "LOADING FONT: " << filename << " -> " << module::map_file(filename) << "\\n";
+		graphical_font::init(json::parse_from_file(filename));
+	}
 }
 
