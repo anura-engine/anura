@@ -204,6 +204,8 @@
 		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
 		C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */; };
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
+		C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B0F17533AA7004307B0 /* formula_interface.cpp */; };
+		C0917B13175480F7004307B0 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -654,6 +656,9 @@
 		C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable_visitor.cpp; sourceTree = "<group>"; };
 		C08C43EC174C6BF300A46B15 /* formula_callable_visitor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_callable_visitor.hpp; sourceTree = "<group>"; };
 		C08C43EE174C6D8900A46B15 /* formula_callable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable.cpp; sourceTree = "<group>"; };
+		C0917B0F17533AA7004307B0 /* formula_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_interface.cpp; sourceTree = "<group>"; };
+		C0917B1017533AA7004307B0 /* formula_interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_interface.hpp; sourceTree = "<group>"; };
+		C0917B12175480F7004307B0 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../../master-config.cfg"; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
@@ -752,6 +757,7 @@
 		C010C595160AFB8F006E7D90 /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				C0917B12175480F7004307B0 /* master-config.cfg */,
 				C00E2A9C1687D11000DEB111 /* icon.icns */,
 				C0B87BB9166603C300D66B15 /* icon.iconset */,
 				C0C2918D1665DFFC00DB88A6 /* signature.cfg */,
@@ -925,6 +931,8 @@
 				C010C63C160AFD4C006E7D90 /* formula_function_registry.cpp */,
 				C010C63D160AFD4C006E7D90 /* formula_function_registry.hpp */,
 				C010C63E160AFD4C006E7D90 /* formula_fwd.hpp */,
+				C0917B0F17533AA7004307B0 /* formula_interface.cpp */,
+				C0917B1017533AA7004307B0 /* formula_interface.hpp */,
 				C0B87BD21667256F00D66B15 /* formula_object.cpp */,
 				C0B87BD31667256F00D66B15 /* formula_object.hpp */,
 				C010C63F160AFD4C006E7D90 /* formula_profiler.cpp */,
@@ -1260,6 +1268,7 @@
 				C010C801160AFD82006E7D90 /* images in Resources */,
 				C010C802160AFD82006E7D90 /* modules in Resources */,
 				C00E2A9D1687D11100DEB111 /* icon.icns in Resources */,
+				C0917B13175480F7004307B0 /* master-config.cfg in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1457,6 +1466,7 @@
 				C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */,
 				C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */,
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
+				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
