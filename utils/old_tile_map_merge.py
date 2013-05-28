@@ -3,14 +3,14 @@
 # Output: One FSON-formatted level, in plain text. The zorders you request will be set beside each other on the level, with some space left for padding. Relative layer positioning is preserved.
 # Flags: --zorder int[ int[ …]]: Specifies the zorders of the tiles you want to copy. Defaults to "all".
 #        --input [file[ file[ …]]]: Read the levels from this file. Defaults to reading input piped to it.
-#        --output file: Writes the output to the file. Defaults to simply piping output onward.
+#        --output file: Defines the ID of the written file.
 #        --help: Print a help message and exit.
 
 import sys, os, datetime
 
 ### DEFINE FUNCTIONS ###
 
-def printHelp(args):
+def printHelp():
 	help="""merge.py is a python 3.x script that takes old-style levels and copies their
   tiles in to a new-style level.
 Input: FML-formatted levels (plain text). 
@@ -19,18 +19,22 @@ Output: One FSON-formatted level, in plain text. The zorders you request will
   Relative layer positioning is preserved.
 Flags: --zorder int[ int[ …]]: Specifies the zorders of the tiles you want to
                                copy. Defaults to "all".
-       --input [file[ file[ …]]]: Read the levels from this file. Defaults to
-                                  reading input piped to it.
-       --output file: Writes the output to the file. Defaults to simply piping
-                      output onward.
+       --input file[ file[ …]]: Read the levels from this file. Defaults to
+                                reading input piped to it.
+       --output file: Defines the ID of the written file.
        --help: Print this help message and exit.
+       --mask mnemonic zorder: Interpret any of the input tiles as this output.
+                               Empty tiles are treated as transparent.
 For example, to merge tiles with zorders 4 and 5 from 71_bable.cfg and
   56_DDR06_Mt_Upriayr_Road.cfg and write the output to out.cfg, you'd run:
-python old_tile_map_merge.py --zorder 5 4 --input levels/71_bable.cfg levels/56_DDR06_Mt_Upriayr_Road.cfg --output out.cfg > out.cfg"""
+python old_tile_map_merge.py --zorder 5 4 --input levels/71_bable.cfg levels/56_DDR06_Mt_Upriayr_Road.cfg --output out.cfg > out.cfg
+  or, to take a mask of what is on layers 4 and 5, you might run:
+python old_tile_map_merge.py --zorder 5 4 --mask nrk 5 --input levels/52_DDR00_The_200_Shoes.cfg --output out.cfg > out.cfg
+"""
 	sys.exit(help)
 
 def parseArgs(args):
-	global output
+	global output, maskAcronym, maskZ
 	
 	def eatZorder(args):
 		global zorders
@@ -58,7 +62,11 @@ def parseArgs(args):
 		elif(args[0] == '--output'):
 			output = args[1]
 			parseArgs(args[2:])
-		elif(args[0] == '--help' or args[0] == '--h'):
+		elif(args[0] == '--mask'):
+			maskAcronym = args[1]
+			maskZ = int(args[2])
+			parseArgs(args[3:])
+		elif(args[0] == '--help' or args[0] == '-h'):
 			printHelp()
 		else:
 			sys.exit('Error: Unrecognised arg '+args[0]+'. Args are --zorder; --input; --output and --help, which you probably need.')
@@ -127,21 +135,24 @@ def combineTileMaps(data):
 				zs += [tilemapz]
 	zs.sort() #The zindexs will be our index from 0 of the output list.
 	
-	compiledMaps = [{'w':0, 'h':0, 'z':0, 'data':[]} for x in range(len(zs))]
+	if(maskAcronym): compiledMaps = [{'w':0, 'h':0, 'z':maskZ, 'data':[]}]
+	else: compiledMaps = [{'w':0, 'h':0, 'z':0, 'data':[]} for x in range(len(zs))]
 	for files in data:
 		f_offsetX = files['minX']
 		f_offsetY = files['minY']
 		f_width = files['maxX'] - files['minX']
 		f_height = files['maxY'] - files['minY']
 		for tilemap in files['maps']:
-			mapIndex = zs.index(int(tilemap['zorder']))
+			if(maskAcronym): mapIndex = 0
+			else: mapIndex = zs.index(int(tilemap['zorder']))
 			mapToAddTo = compiledMaps[mapIndex]
-			mapToAddTo['z'] = int(tilemap['zorder'])
+			if(not maskAcronym): mapToAddTo['z'] = int(tilemap['zorder'])
 			mapToAddTo['h'] = max(mapToAddTo['h'], f_height)
+			mapToAddTo['w'] += f_width + 5 #Make a five-tile margin so that boundaries are easy to select.
 			squareArrayTo(mapToAddTo['data'], mapToAddTo['w'], mapToAddTo['h'])
 			for lineNo in range(len(tilemap['tiles'])):
-				mapToAddTo['data'][lineNo] += tilemap['tiles'][lineNo]
-			mapToAddTo['w'] += f_width + 5 #Make a five-tile margin so that boundaries are easy to select.
+				for columnNo in range(len(tilemap['tiles'][lineNo])):
+					mapToAddTo['data'][lineNo][columnNo] = (tilemap['tiles'][lineNo][columnNo] and maskAcronym) or tilemap['tiles'][lineNo][columnNo] or mapToAddTo['data'][lineNo][columnNo]
 	return compiledMaps
 	
 def tilemapTostring(tilemap):
@@ -159,6 +170,8 @@ def tilemapTostring(tilemap):
 zorders = []
 levels = []
 output = ""		
+maskAcronym = ""
+maskZ = 0
 
 parseArgs(sys.argv[1:])
 
