@@ -277,7 +277,7 @@ rect graphical_font::dimensions(const std::string& text, int size) const
 
 // Initialize the graphical font for the given locale
 void graphical_font::init_for_locale(const std::string& locale) {
-	std::string names[] = {"fonts", "base_fonts"};
+	std::string names[] = {"base_fonts", "fonts"};
 	foreach(std::string name, names) {
 		std::string filename = "data/" + name + "." + locale + ".cfg";
 		if (!sys::file_exists(filename))
