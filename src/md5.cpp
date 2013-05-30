@@ -169,7 +169,7 @@ void MD5Final(uint8_t digest[16], struct MD5Context *ctx)
     MD5Transform(ctx->buf, (uint32_t *) ctx->in);
     byteReverse((uint8_t *) ctx->buf, 4);
     std::memcpy(digest, ctx->buf, 16);
-    std::memset(ctx, 0, sizeof(ctx));        /* In case it's sensitive */
+    std::memset(ctx, 0, sizeof(*ctx));        /* In case it's sensitive */
 }
 
 
