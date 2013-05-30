@@ -2525,7 +2525,7 @@ FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given 
 		ASSERT_LOG(compressed.is_string(), "decompress takes either a compressed_data object or string.");
 		std::string s = compressed.as_string();
 		std::string key = s.length() > 10 ? s.substr(0,10) : s;
-		int n;
+		size_t n;
 		if((n = s.find(':')) != std::string::npos) {
 			key = s.substr(0, n);
 			s = s.substr(n+1);
@@ -2542,7 +2542,7 @@ FUNCTION_DEF(unencode, 1, 1, "unencode(expr) -> data_blob: Tries to unencode the
 	ASSERT_LOG(encoded.is_string(), "encoded data must be a string");
 	std::string s = encoded.as_string();
 	std::string key = s.length() > 10 ? s.substr(0,10) : s;
-	int n;
+	size_t n;
 	if((n = s.find(':')) != std::string::npos) {
 		key = s.substr(0, n);
 		s = s.substr(n+1);
