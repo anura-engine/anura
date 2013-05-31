@@ -56,8 +56,9 @@ private: \
 #define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new specific_function_creator<name##_function>());
 
 #define FUNCTION_ARGS_DEF } void static_error_analysis() const { int narg_number = 0;
-#define ARG_TYPE(str) check_arg_type(narg_number++, str)
+#define ARG_TYPE(str) check_arg_type(narg_number++, str);
 #define FUNCTION_TYPE_DEF } variant_type_ptr get_variant_type() const {
+#define RETURN_TYPE(str) } variant_type_ptr get_variant_type() const { return parse_variant_type(variant(str));
 
 #define EVAL_ARG(n) (args()[n]->evaluate(variables))
 #define NUM_ARGS (args().size())

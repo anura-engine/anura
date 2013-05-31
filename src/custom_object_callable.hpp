@@ -23,6 +23,7 @@
 #include "formula_callable_definition.hpp"
 
 enum CUSTOM_OBJECT_PROPERTY {
+	CUSTOM_OBJECT_VALUE,
 	CUSTOM_OBJECT_DATA,
 	CUSTOM_OBJECT_CONSTS,
 	CUSTOM_OBJECT_TYPE,
@@ -182,12 +183,14 @@ public:
 
 	explicit custom_object_callable(bool is_singleton=false);
 
+	void set_object_type(variant_type_ptr type);
+
 	int get_slot(const std::string& key) const;
 	entry* get_entry(int slot);
 	const entry* get_entry(int slot) const;
 	int num_slots() const { return entries_.size(); }
 
-	void add_property(const std::string& id);
+	void add_property(const std::string& id, variant_type_ptr type);
 
 private:
 	std::vector<entry> entries_;

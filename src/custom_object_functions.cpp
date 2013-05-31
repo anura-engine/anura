@@ -127,6 +127,7 @@ FUNCTION_DEF(set_language, 1, 1, "set_language(str): set the language using a ne
 	i18n::init();
 	graphical_font::init_for_locale(i18n::get_locale());
 	return variant(0);
+RETURN_TYPE("int")
 END_FUNCTION_DEF(set_language)
 /*
 FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
@@ -166,15 +167,22 @@ FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
 		time_->add("weekday", variant(weekday));
 		
 	return variant(time_);
+RETURN_TYPE("map")
 END_FUNCTION_DEF(time)
 
 FUNCTION_DEF(translate, 1, 1, "translate(str): returns the translated version of the given string")
 	return variant(i18n::tr(args()[0]->evaluate(variables).as_string()));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("string")
 END_FUNCTION_DEF(translate)
 
 FUNCTION_DEF(performance, 0, 0, "performance(): returns an object with current performance stats")
 	formula::fail_if_static_context();
 	return variant(performance_data::current());
+
+RETURN_TYPE("object")
 END_FUNCTION_DEF(performance)
 
 FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): render a texture")
@@ -211,11 +219,18 @@ FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): rende
 
 	return variant(new texture_object(t));
 
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[object]")
+	ARG_TYPE("[int]")
+	ARG_TYPE("bool")
+RETURN_TYPE("object")
+
 END_FUNCTION_DEF(texture)
 
 FUNCTION_DEF(get_clipboard_text, 0, 0, "get_clipboard_text(): returns the text currentl in the windowing clipboard")
 	formula::fail_if_static_context();
 	return variant(copy_from_clipboard(false));
+RETURN_TYPE("string")
 END_FUNCTION_DEF(get_clipboard_text)
 
 class set_clipboard_text_command : public game_logic::command_callable
@@ -234,6 +249,10 @@ FUNCTION_DEF(set_clipboard_text, 1, 1, "set_clipboard_text(str): sets the clipbo
 	set_clipboard_text_command* cmd = new set_clipboard_text_command(args()[0]->evaluate(variables).as_string());
 	cmd->set_expression(this);
 	return variant(cmd);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_clipboard_text)
 
 #if !defined(__native_client__)
@@ -253,6 +272,12 @@ FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a cl
 	}
 
 	return variant(new tbs::client(host, port, session));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("string|int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(tbs_client)
 
 
@@ -290,6 +315,10 @@ FUNCTION_DEF(tbs_send, 2, 2, "tbs_send(tbs_client, msg): sends a message through
 	tbs_send_command* cmd = new tbs_send_command(client, msg);
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("map|object|list")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(tbs_send)
 
 class tbs_process_command : public entity_command_callable
@@ -316,6 +345,9 @@ FUNCTION_DEF(tbs_process, 1, 1, "tbs_process(tbs_client): processes events for t
 	tbs_process_command* cmd = (new tbs_process_command(client));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(tbs_process)
 #endif // __native_client__
 
@@ -335,6 +367,9 @@ FUNCTION_DEF(report, 1, 1, "report(): Write a key and a value into [custom] in t
 	report_command* cmd = (new report_command(args()[0]->evaluate(variables)));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("any")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(report)
 
 namespace {
@@ -420,6 +455,9 @@ FUNCTION_DEF(set_save_slot, 0, 1, "set_save_slot((optional) int slot): Allows th
 	set_save_slot_command* cmd = (new set_save_slot_command(slot-1));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_save_slot)
 
 class save_game_command : public entity_command_callable
@@ -446,6 +484,7 @@ FUNCTION_DEF(checkpoint_game, 0, 0, "checkpoint_game(): saves a checkpoint of th
 	save_game_command* cmd = (new save_game_command(false));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(checkpoint_game)
 
 FUNCTION_DEF(get_save_document, 1, 1, "get_save_document(int slot): gets the FFL document for the save in the given slot")
@@ -462,12 +501,16 @@ FUNCTION_DEF(get_save_document, 1, 1, "get_save_document(int slot): gets the FFL
 	} catch(json::parse_error&) {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("map|null")
 END_FUNCTION_DEF(get_save_document)
 
 FUNCTION_DEF(save_game, 0, 0, "save_game(): saves the current game state")
 	save_game_command* cmd = (new save_game_command(true));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(save_game)
 
 class load_game_command : public entity_command_callable
@@ -553,10 +596,15 @@ FUNCTION_DEF(load_game, 0, 2, "load_game(transition, slot): loads the saved game
 	load_game_command* cmd = (new load_game_command(transition, slot));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(load_game)
 
 FUNCTION_DEF(can_load_game, 0, 0, "can_load_game(): returns true if there is a saved game available to load")
 	return variant(sys::file_exists(preferences::save_file_path()));
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(can_load_game)
 
 FUNCTION_DEF(available_save_slots, 0, 0, "available_save_slots(): returns a list of numeric indexes of available save slots")
@@ -575,6 +623,7 @@ FUNCTION_DEF(available_save_slots, 0, 0, "available_save_slots(): returns a list
 
 	return variant(&result);
 	
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(available_save_slots)
 
 class move_to_standing_command : public entity_command_callable
@@ -589,6 +638,7 @@ FUNCTION_DEF(move_to_standing, 0, 0, "move_to_standing(): tries to move the obje
 	move_to_standing_command* cmd = (new move_to_standing_command());
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(move_to_standing)
 
 class music_command : public entity_command_callable
@@ -615,6 +665,9 @@ FUNCTION_DEF(music, 1, 1, "music(string id): plays the music file given by 'id' 
 									 true));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(music)
 
 FUNCTION_DEF(music_onetime, 1, 1, "music_onetime(string id): plays the music file given by 'id' once")
@@ -623,6 +676,9 @@ FUNCTION_DEF(music_onetime, 1, 1, "music_onetime(string id): plays the music fil
 									 false));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(music_onetime)
 	
 class sound_command : public entity_command_callable
@@ -665,6 +721,11 @@ FUNCTION_DEF(sound, 1, 3, "sound(string id, decimal volume, decimal fade_in_time
 									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound)
 
 FUNCTION_DEF(sound_loop, 1, 3, "sound_loop(string id, decimal volume, decimal fade_in_time): plays the sound file given by 'id' in a loop, if fade_in_time is given it will reach full volume after this time.")
@@ -675,6 +736,11 @@ FUNCTION_DEF(sound_loop, 1, 3, "sound_loop(string id, decimal volume, decimal fa
 									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound_loop)
 
 
@@ -697,6 +763,9 @@ FUNCTION_DEF(sound_volume, 1, 1, "sound_volume(int volume): sets the volume of s
 									 args()[0]->evaluate(variables).as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound_volume)
 
 class stop_sound_command : public entity_command_callable
@@ -719,6 +788,10 @@ FUNCTION_DEF(stop_sound, 1, 2, "stop_sound(string id, (opt) decimal fade_out_tim
 					args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 0.0f));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("decimal")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(stop_sound)
 
 class preload_sound_command : public entity_command_callable
@@ -739,6 +812,9 @@ FUNCTION_DEF(preload_sound, 1, 1, "preload_sound(string id): preload the given s
 					args()[0]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(preload_sound)
 
 class screen_flash_command : public entity_command_callable
@@ -779,6 +855,11 @@ FUNCTION_DEF(screen_flash, 2, 3, "screen_flash(list int[4] color, (optional) lis
 					  delta_color, duration.as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[int]")
+	ARG_TYPE("[int]")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(screen_flash)
 
 class title_command : public entity_command_callable
@@ -802,6 +883,10 @@ FUNCTION_DEF(title, 1, 2, "title(string text, int duration=50): shows level titl
 	  args().size() >= 2 ? args()[1]->evaluate(variables).as_int() : 50));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(title)
 
 class shake_screen_command : public entity_command_callable
@@ -830,10 +915,20 @@ FUNCTION_DEF(shake_screen, 4, 4, "shake_screen(int x_offset, int y_offset, int x
 									args()[3]->evaluate(variables).as_int() ));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(shake_screen)
 
 FUNCTION_DEF(radial_current, 2, 2, "radial_current(int intensity, int radius) -> current object: creates a current generator with the given intensity and radius")
 	return variant(new radial_current_generator(args()[0]->evaluate(variables).as_int(), args()[1]->evaluate(variables).as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(radial_current)
 
 FUNCTION_DEF(distortion, 3, 3, "distortion(int, int, int): (currently unsupported")
@@ -841,6 +936,11 @@ FUNCTION_DEF(distortion, 3, 3, "distortion(int, int, int): (currently unsupporte
 	                       args()[0]->evaluate(variables).as_int(),
 	                       args()[1]->evaluate(variables).as_int(),
 	                       args()[2]->evaluate(variables).as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(distortion)
 
 class execute_on_command : public entity_command_callable
@@ -862,6 +962,10 @@ FUNCTION_DEF(execute, 2, 2, "execute(object context, command cmd): this function
 	execute_on_command* cmd = (new execute_on_command(e, command));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("commands")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(execute)
 
 class spawn_command : public entity_command_callable
@@ -915,14 +1019,27 @@ FUNCTION_DEF(spawn, 4, 5, "spawn(string type_id, int midpoint_x, int midpoint_y,
 
 	variant commands;
 	if(args().size() > 4) {
-		map_formula_callable_ptr callable = new map_formula_callable(&variables);
-		callable->add("child", variant(obj.get()));
+		//Note that we insert the 'child' argument here, into the slot
+		//formula callable. This relies on code in formula.cpp to look for
+		//spawn() and give a callable definition with the child.
+		boost::intrusive_ptr<slot_formula_callable> callable = new slot_formula_callable;
+		callable->set_fallback(&variables);
+		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
+
+		callable->add(variant(obj.get()));
 		commands = args()[4]->evaluate(*callable);
 	}
 
 	spawn_command* cmd = (new spawn_command(obj, commands));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("commands")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn)
 
 FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) list of commands cmd): identical to spawn except that the new object is playable.")
@@ -939,8 +1056,14 @@ FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, i
 
 	variant commands;
 	if(args().size() > 4) {
-		map_formula_callable_ptr callable = new map_formula_callable(&variables);
-		callable->add("child", variant(obj.get()));
+		//Note that we insert the 'child' argument here, into the slot
+		//formula callable. This relies on code in formula.cpp to look for
+		//spawn() and give a callable definition with the child.
+		boost::intrusive_ptr<slot_formula_callable> callable = new slot_formula_callable;
+		callable->set_fallback(&variables);
+		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
+
+		callable->add(variant(obj.get()));
 		commands = args()[4]->evaluate(*callable);
 	}
 
@@ -948,6 +1071,13 @@ FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, i
 	cmd->set_expression(this);
 	return variant(cmd);
 
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("commands")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_player)
 
 FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object only creates the object and returns it. It may be stored for later use.")
@@ -980,6 +1110,13 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	}
 
 	return variant(obj);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("map")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(object)
 
 FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object_playable only creates the playble object and returns it. It may be stored for later use.")
@@ -1012,6 +1149,13 @@ FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoin
 	}
 
 	return variant(obj);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("map")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(object_playable)
 
 class animation_command : public custom_object_command_callable
@@ -1032,6 +1176,9 @@ FUNCTION_DEF(animation, 1, 1, "animation(string id): changes the current object'
 	animation_command* cmd = (new animation_command(args()[0]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(animation)
 
 class die_command : public custom_object_command_callable
@@ -1046,6 +1193,8 @@ FUNCTION_DEF(die, 0, 0, "die(): causes the current object to die. The object wil
 	die_command* cmd = (new die_command());
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(die)
 
 class facing_command : public custom_object_command_callable
@@ -1064,6 +1213,9 @@ FUNCTION_DEF(facing, 1, 1, "facing(int new_facing): changes the current object's
 	facing_command* cmd = (new facing_command(args()[0]->evaluate(variables).as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(facing)
 
 class set_var_command : public custom_object_command_callable
@@ -1086,6 +1238,10 @@ FUNCTION_DEF(set_var, 2, 2, "set_var(string varname, variant value): sets the va
 		args()[1]->evaluate(variables)));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("any")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_var)
 
 FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
@@ -1095,6 +1251,7 @@ FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets a
 	}
 
 	return variant(&v);
+RETURN_TYPE("[object]")
 END_FUNCTION_DEF(debug_all_custom_objects)
 
 
@@ -1144,6 +1301,14 @@ FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (option
 	}
 
 	return variant(lvl->solid(r));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
 END_FUNCTION_DEF(solid)
 
 FUNCTION_DEF(debug_rect, 2, 4, "debug_rect(int x, int y, (optional)int w=1, (optional) int h=1) -> Draws, for one frame, a rectangle on the level")
@@ -1157,6 +1322,12 @@ FUNCTION_DEF(debug_rect, 2, 4, "debug_rect(int x, int y, (optional)int w=1, (opt
 	add_debug_rect_command* cmd = (new add_debug_rect_command(r));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(debug_rect)
 
 FUNCTION_DEF(plot_x, 1, 1, "plot_x(int x): plots a vertical debug line at the given position")
@@ -1164,6 +1335,9 @@ FUNCTION_DEF(plot_x, 1, 1, "plot_x(int x): plots a vertical debug line at the gi
 	add_debug_rect_command* cmd = (new add_debug_rect_command(rect(x, -32000, 2, 64000)));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(plot_x)
 
 FUNCTION_DEF(plot_y, 1, 1, "plot_y(int x): plots a horizontal debug line at the given position")
@@ -1171,6 +1345,9 @@ FUNCTION_DEF(plot_y, 1, 1, "plot_y(int x): plots a horizontal debug line at the 
 	add_debug_rect_command* cmd = (new add_debug_rect_command(rect(-32000, y, 64000, 2)));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(plot_y)
 
 FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(level, object, int x, int y) -> boolean: returns true iff the given point is standable")
@@ -1180,6 +1357,12 @@ FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(level, object, int x, int
 	const int y = args()[3]->evaluate(variables).as_int();
 
 	return variant(point_standable(*lvl, *obj, x, y));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
 END_FUNCTION_DEF(object_can_stand)
 
 FUNCTION_DEF(find_point_object_can_stand_on, 6, 7, "find_point_object_can_stand_on(level, object, int x, int y, int dx, int dy, int max_search=1000) -> [int,int]|null: returns the first point that an object can stand on, starting at [x,y] and incrementing by [dx,dy] until the point is found")
@@ -1205,6 +1388,15 @@ FUNCTION_DEF(find_point_object_can_stand_on, 6, 7, "find_point_object_can_stand_
 	}
 
 	return variant();
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("[int]|null")
 END_FUNCTION_DEF(find_point_object_can_stand_on)
 
 FUNCTION_DEF(standable, 3, 5, "standable(level, int x, int y, (optional)int w=1, (optional) int h=1) -> boolean: returns true iff the level contains standable space within the given (x,y,w,h) rectangle")
@@ -1217,7 +1409,14 @@ FUNCTION_DEF(standable, 3, 5, "standable(level, int x, int y, (optional)int w=1,
 
 	rect r(x, y, w, h);
 
-	return variant(lvl->standable(r));
+	return variant::from_bool(lvl->standable(r));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
 END_FUNCTION_DEF(standable)
 
 class set_solid_command : public entity_command_callable {
@@ -1242,12 +1441,22 @@ FUNCTION_DEF(set_solid, 4, 5, "set_solid(x1, y1, x2, y2, boolean is_solid=false)
 		args().size() > 4 ? args()[4]->evaluate(variables).as_bool() : false));
 	cmd->set_expression(this);
 	return variant(cmd);
-
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("bool")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_solid)
 
 FUNCTION_DEF(group_size, 2, 2, "group_size(level, int group_id) -> int: gives the number of objects in the object group given by group_id")
 	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
 	return variant(lvl->group_size(args()[1]->evaluate(variables).as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+RETURN_TYPE("int")
 END_FUNCTION_DEF(group_size)
 
 class set_group_command : public entity_command_callable {
@@ -1280,6 +1489,9 @@ FUNCTION_DEF(set_group, 0, 1, "set_group((optional)int group_id): sets the curre
 	set_group_command* cmd = (new set_group_command(group));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_group)
 
 class scroll_to_command : public custom_object_command_callable
@@ -1311,6 +1523,10 @@ FUNCTION_DEF(tiles_at, 2, 2, "tiles_at(x, y): gives a list of the tiles at the g
 	}
 
 	return variant(&v);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("[object]")
 END_FUNCTION_DEF(tiles_at)
 
 FUNCTION_DEF(get_objects_at_point, 2, 2, "get_objects_at_point(x, y): Returns all objects which intersect the specified x,y point, in absolute level-coordinates.")
@@ -1333,6 +1549,10 @@ FUNCTION_DEF(get_objects_at_point, 2, 2, "get_objects_at_point(x, y): Returns al
 	} else {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("[object]")
 END_FUNCTION_DEF(get_objects_at_point)
 	
 	
@@ -1340,6 +1560,9 @@ FUNCTION_DEF(scroll_to, 1, 1, "scroll_to(object target): scrolls the screen to t
 	scroll_to_command* cmd = (new scroll_to_command(args()[0]->evaluate(variables).try_convert<entity>()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(scroll_to)
 
 namespace {
@@ -1418,6 +1641,8 @@ FUNCTION_DEF(transient_speech_dialog, 1, -1, "transient_speech_dialog(...): sche
 	std::reverse(result.begin(), result.end());
 
 	return variant(&result);
+FUNCTION_ARGS_DEF
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(transient_speech_dialog)
 
 namespace {
@@ -1477,6 +1702,7 @@ FUNCTION_DEF(begin_skip_dialog_sequence, 0, 0, "begin_skip_dialog_sequence(): co
 	skip_sequence_command* cmd = (new skip_sequence_command(true));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(begin_skip_dialog_sequence)
 
 FUNCTION_DEF(end_skip_dialog_sequence, 0, 0, "end_skip_dialog_sequence(): ends the sequence begun with begin_skip_dialog_sequence().")
@@ -1484,6 +1710,7 @@ FUNCTION_DEF(end_skip_dialog_sequence, 0, 0, "end_skip_dialog_sequence(): ends t
 	skip_sequence_command* cmd = (new skip_sequence_command(false));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(end_skip_dialog_sequence)
 
 class speech_dialog_command : public custom_object_command_callable {
@@ -1694,6 +1921,7 @@ FUNCTION_DEF(speech_dialog, 1, -1, "speech_dialog(...): schedules a sequence of 
 	speech_dialog_command* cmd = (new speech_dialog_command(v));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(speech_dialog)
 
 FUNCTION_DEF(paused_speech_dialog, 1, -1, "paused_speech_dialog(...): like speech_dialog(), except the game is paused while the dialog is displayed.")
@@ -1705,6 +1933,7 @@ FUNCTION_DEF(paused_speech_dialog, 1, -1, "paused_speech_dialog(...): like speec
 	speech_dialog_command* cmd = (new speech_dialog_command(v, true));
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(paused_speech_dialog)
 
 class end_game_command : public custom_object_command_callable
@@ -1719,6 +1948,7 @@ FUNCTION_DEF(end_game, 0, 0, "end_game(): exits the game")
 	end_game_command* cmd = (new end_game_command());
 	cmd->set_expression(this);
 	return variant(cmd);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(end_game)
 
 class achievement_command : public entity_command_callable
@@ -1745,6 +1975,9 @@ FUNCTION_DEF(achievement, 1, 1, "achievement(id): unlocks the achievement with t
 	achievement_command* cmd = (new achievement_command(args()[0]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(achievement)
 
 static int event_depth = 0;
@@ -1805,6 +2038,11 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 	fire_event_command* cmd = (new fire_event_command(target, event, callable));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object|string")
+	ARG_TYPE("any")
+	ARG_TYPE("any")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(fire_event)
 
 FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) arg): for the given prototype, fire the named event. e.g. proto_event('playable', 'process')")
@@ -1819,7 +2057,12 @@ FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) a
 	fire_event_command* cmd = (new fire_event_command(entity_ptr(), event_name, callable));
 	cmd->set_expression(this);
 	return variant(cmd);
-	
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("string")
+	ARG_TYPE("any")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(proto_event)
 
 FUNCTION_DEF(get_object, 2, 2, "get_object(level, string label) -> object: returns the object that is present in the given level that has the given label")
@@ -1830,6 +2073,10 @@ FUNCTION_DEF(get_object, 2, 2, "get_object(level, string label) -> object: retur
 	}
 
 	return variant();
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(get_object)
 
 //a command which moves an object in a given direction enough to resolve
@@ -1892,6 +2139,12 @@ FUNCTION_DEF(resolve_solid, 1, 4, "resolve_solid(object, int xdir, int ydir, int
 	} else {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(resolve_solid)
 
 class add_object_command : public entity_command_callable {
@@ -1932,6 +2185,9 @@ FUNCTION_DEF(add_object, 1, 1, "add_object(object): inserts the given object int
 		std::cerr << "NOT AN OBJECT!\n";
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_object)
 
 class remove_object_command : public entity_command_callable {
@@ -1955,6 +2211,9 @@ FUNCTION_DEF(remove_object, 1, 1, "remove_object(object): removes the given obje
 	} else {
 		return variant();
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(remove_object)
 
 class teleport_command : public entity_command_callable
@@ -2025,6 +2284,9 @@ FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_level, (optional)string dest_
 	teleport_command* cmd = (new teleport_command(dst_level_str, label, transition, new_playable, no_move_to_standing));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(teleport)
 
 class schedule_command : public entity_command_callable {
@@ -2046,6 +2308,10 @@ FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): 
 	    args()[1]->evaluate(variables)));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("commands")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(schedule)
 
 class add_water_command : public entity_command_callable
@@ -2084,6 +2350,13 @@ FUNCTION_DEF(add_water, 4, 5, "add_water(int x1, int y1, int x2, int y2, (option
 	    args()[3]->evaluate(variables).as_int()), color));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("[int]")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_water)
 
 class remove_water_command : public entity_command_callable
@@ -2107,6 +2380,12 @@ FUNCTION_DEF(remove_water, 4, 4, "remove_water(int x1, int y1, int x2, int y2): 
 	    args()[3]->evaluate(variables).as_int())));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(remove_water)
 
 class add_wave_command : public entity_command_callable
@@ -2140,6 +2419,15 @@ FUNCTION_DEF(add_wave, 7, 7, "add_wave(int x, int y, int xvelocity, int height, 
 	    args()[6]->evaluate(variables).as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_wave)
 
 FUNCTION_DEF(rect_current, 7, 7, "rect_current(int x, int y, int w, int h, int xvelocity, int yvelocity, int strength) -> current generator object: creates a current generator object that has a current with the given parameters. Set the return value of this function to an object's rect_current to attach it to an object and thus place it in the level.")
@@ -2151,6 +2439,15 @@ FUNCTION_DEF(rect_current, 7, 7, "rect_current(int x, int y, int w, int h, int x
 	                  args()[4]->evaluate(variables).as_int(),
 	                  args()[5]->evaluate(variables).as_int(),
 	                  args()[6]->evaluate(variables).as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(rect_current)
 
 class begin_script_command : public entity_command_callable {
@@ -2169,6 +2466,9 @@ FUNCTION_DEF(begin_script, 1, 1, "begin_script(string id): begins the script wit
 	begin_script_command* cmd = (new begin_script_command(args()[0]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(begin_script)
 
 class end_script_command : public entity_command_callable {
@@ -2182,12 +2482,18 @@ FUNCTION_DEF(end_script, 0, 0, "end_script(): ends the most recent script to hav
 	end_script_command* cmd = (new end_script_command);
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(end_script)
 
 FUNCTION_DEF(circle_light, 2, 2, "circle_light(object, radius): creates a circle of light with the given radius")
 	return variant(new circle_light(
 	          *args()[0]->evaluate(variables).convert_to<custom_object>(),
 			  args()[1]->evaluate(variables).as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(circle_light)
 
 class add_particles_command : public custom_object_command_callable {
@@ -2209,20 +2515,33 @@ FUNCTION_DEF(add_particles, 1, 2, "add_particles(string id): adds the particle s
 	    args()[args().size() < 2 ? 0 : 1]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_particles)
 
 FUNCTION_DEF(collides, 4, 4, "collides(object a, string area_a, object b, string area_b) -> boolean: returns true iff area_a within object a collides with area_b within object b.")
-	return variant(entity_user_collision_specific_areas(
+	return variant::from_bool(entity_user_collision_specific_areas(
 	           *args()[0]->evaluate(variables).convert_to<entity>(),
 	           args()[1]->evaluate(variables).as_string(),
 	           *args()[2]->evaluate(variables).convert_to<entity>(),
 	           args()[3]->evaluate(variables).as_string()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+RETURN_TYPE("bool")
 END_FUNCTION_DEF(collides)
 
 FUNCTION_DEF(collides_with_level, 1, 1, "collides_with_level(object) -> boolean: returns true iff the given object collides with the level.")
 	return variant(non_solid_entity_collides_with_level(
 	           level::current(),
 	           *args()[0]->evaluate(variables).convert_to<entity>()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("bool")
 END_FUNCTION_DEF(collides_with_level)
 
 class blur_command : public custom_object_command_callable {
@@ -2250,6 +2569,11 @@ FUNCTION_DEF(blur, 0, 3, "blur(int alpha=0, int fade=10, int granularity=1): cre
 	  args().size() > 2 ? args()[2]->evaluate(variables).as_int() : 1));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(blur)
 
 class text_command : public custom_object_command_callable {
@@ -2293,6 +2617,12 @@ FUNCTION_DEF(text, 1, 4, "text(string text, (optional)string font='default', (op
 	text_command* cmd = (new text_command(text, font, size, align));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("bool")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(text)
 
 class vector_text_command : public custom_object_command_callable 
@@ -2333,6 +2663,9 @@ FUNCTION_DEF(textv, 1, -1, "textv(object, text_map, ...): Adds text objects to t
 	vector_text_command* cmd = (new vector_text_command(target, &textv));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(textv)
 
 class clear_vector_text_command : public custom_object_command_callable 
@@ -2357,14 +2690,19 @@ FUNCTION_DEF(clear_textv, 0, 1, "clear_textv(object): Clears all the custom text
 	clear_vector_text_command* cmd = (new clear_vector_text_command(target));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(clear_textv)
 
 FUNCTION_DEF(swallow_event, 0, 0, "swallow_event(): when used in an instance-specific event handler, this causes the event to be swallowed and not passed to the object's main event handler.")
 	return variant(new swallow_object_command_callable);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(swallow_event)
 
 FUNCTION_DEF(swallow_mouse_event, 0, 0, "swallow_mouse_event(): when used in an instance-specific event handler, this causes the mouse event to be swallowed and not passed to the next object in the z-order stack.")
 	return variant(new swallow_mouse_command_callable);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(swallow_mouse_event)
 
 class set_widgets_command : public entity_command_callable {
@@ -2414,6 +2752,8 @@ FUNCTION_DEF(set_widgets, 1, -1, "set_widgets((optional) obj, widget, ...): Adds
 	set_widgets_command* cmd = (new set_widgets_command(target, widgetsv));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_widgets)
 
 class clear_widgets_command : public entity_command_callable {
@@ -2434,12 +2774,19 @@ FUNCTION_DEF(clear_widgets, 1, 1, "clear_widgets(obj): Clears all widgets from t
 	clear_widgets_command* cmd = (new clear_widgets_command(target));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(clear_widgets)
 
 FUNCTION_DEF(get_widget, 2, 2, "get_widget(object obj, string id): returns the widget with the matching id for given object")
 	boost::intrusive_ptr<custom_object> target = args()[0]->evaluate(variables).try_convert<custom_object>();
 	std::string id = args()[1]->evaluate(variables).as_string();
 	return variant(target->get_widget_by_id(id).get());
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+RETURN_TYPE("object|null")
 END_FUNCTION_DEF(get_widget)
 
 FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined by w and returns it for later use")
@@ -2447,6 +2794,10 @@ FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined
 	game_logic::formula_callable_ptr callable = map_into_callable(args()[0]->evaluate(variables));
 	gui::widget_ptr w = widget_factory::create(args()[1]->evaluate(variables), callable.get());
 	return variant(w.get());
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("map")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(widget)
 
 class add_level_module_command : public entity_command_callable {
@@ -2466,6 +2817,11 @@ FUNCTION_DEF(add_level_module, 3, 3, "add_level_module(string lvl, int xoffset, 
 	add_level_module_command* cmd = (new add_level_module_command(args()[0]->evaluate(variables).string_cast(), args()[1]->evaluate(variables).as_int(), args()[2]->evaluate(variables).as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_level_module)
 
 class remove_level_module_command : public entity_command_callable {
@@ -2483,6 +2839,9 @@ FUNCTION_DEF(remove_level_module, 1, 1, "remove_level_module(string lvl): remove
 	remove_level_module_command* cmd = (new remove_level_module_command(args()[0]->evaluate(variables).string_cast()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(remove_level_module)
 
 class shift_level_position_command : public entity_command_callable {
@@ -2501,6 +2860,10 @@ FUNCTION_DEF(cosmic_shift, 2, 2, "cosmic_shift(int xoffset, int yoffet): adjust 
 	shift_level_position_command* cmd = (new shift_level_position_command(args()[0]->evaluate(variables).as_int(), args()[1]->evaluate(variables).as_int()));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(cosmic_shift)
 
 FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, int rotation, int[8] rect) -> int[8]: rotates rect and returns the result")
@@ -2531,6 +2894,12 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, int rot
 	}
 
 	return variant(&res);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("[int]")
+RETURN_TYPE("[int]")
 
 END_FUNCTION_DEF(rotate_rect)
 
@@ -2572,6 +2941,7 @@ public:
 
 FUNCTION_DEF(module_client, 0, 0, "module_client(): creates a module client object. The object will immediately start retrieving basic module info from the server. module_pump() should be called on it every frame. Has the following fields:\n  is_complete: true iff the current operation is complete and a new operation can be started. When the module_client is first created it automatically starts an operation to get the summary of modules.\n  downloaded_modules: a list of downloaded modules that are currently installed.\n  module_info: info about the modules available on the server.\n  error: contains an error string if the operation resulted in an error, null otherwise.\n  kbytes_transferred: number of kbytes transferred in the current operation\n  kbytes_total: total number of kbytes to transfer to complete the operation.")
 	return variant(new module::client);
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_client)
 
 FUNCTION_DEF(module_pump, 1, 1, "module_pump(module_client): pumps module client events. Should be called every cycle.")
@@ -2580,6 +2950,9 @@ FUNCTION_DEF(module_pump, 1, 1, "module_pump(module_client): pumps module client
 	module_pump_command* cmd = (new module_pump_command(cl));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_pump)
 
 FUNCTION_DEF(module_install, 2, 2, "module_install(module_client, string module_id): begins downloading the given module and installing it. This should only be called when module_client.is_complete = true (i.e. there is no operation currently underway)")
@@ -2589,6 +2962,10 @@ FUNCTION_DEF(module_install, 2, 2, "module_install(module_client, string module_
 	module_install_command* cmd = (new module_install_command(cl, module_id));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_install)
 
 FUNCTION_DEF(module_uninstall, 1, 1, "module_uninstall(string module_id): uninstalls the given module")
@@ -2596,6 +2973,10 @@ FUNCTION_DEF(module_uninstall, 1, 1, "module_uninstall(string module_id): uninst
 	module_uninstall_command* cmd = (new module_uninstall_command(module_id));
 	cmd->set_expression(this);
 	return variant(cmd);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 	
 END_FUNCTION_DEF(module_uninstall)
 
@@ -2628,6 +3009,12 @@ FUNCTION_DEF(module_rate, 3, 4, "module_rate(module_client, string module_id, in
 	module_rate_command* cmd = (new module_rate_command(cl, module_id, num_stars, review));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("string")
+	ARG_TYPE("int")
+	ARG_TYPE("string")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_rate)
 
 class module_launch_command : public entity_command_callable {
@@ -2652,6 +3039,10 @@ FUNCTION_DEF(module_launch, 1, 2, "module_launch(string module_id, (optional) ca
 	module_launch_command* cmd = (new module_launch_command(module_id, callable));
 	cmd->set_expression(this);
 	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("object")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_launch)
 
 FUNCTION_DEF(eval, 1, 1, "eval(str): evaluate the given string as FFL")
@@ -2669,6 +3060,9 @@ FUNCTION_DEF(eval, 1, 1, "eval(str): evaluate the given string as FFL")
 	}
 	std::cerr << "ERROR IN EVAL\n";
 	return variant();
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+RETURN_TYPE("any")
 END_FUNCTION_DEF(eval)
 
 #endif // NO_MODULES

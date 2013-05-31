@@ -3708,6 +3708,271 @@ game_logic::const_formula_callable_definition_ptr level::get_formula_definition(
 	return result;
 }
 
+BEGIN_DEFINE_CALLABLE(level, 0)
+DEFINE_FIELD(0, cycle, "int")
+	value = variant(cycle_);
+DEFINE_SET_FIELD
+	cycle_ = value.as_int();
+DEFINE_FIELD(1, player, "null|custom_obj")
+	value = variant(last_touched_player_.get());
+DEFINE_FIELD(2, in_dialog, "bool")
+	value = variant::from_bool(in_dialog_);
+DEFINE_FIELD(3, local_player, "null|custom_obj")
+	value = variant(player_.get());
+DEFINE_FIELD(4, num_active, "int")
+	value = variant(static_cast<int>(active_chars_.size()));
+DEFINE_FIELD(5, active_chars, "[custom_obj]")
+	std::vector<variant> v;
+	foreach(const entity_ptr& e, active_chars_) {
+		v.push_back(variant(e.get()));
+	}
+	value = variant(&v);
+DEFINE_FIELD(6, chars, "[custom_obj]")
+	std::vector<variant> v;
+	foreach(const entity_ptr& e, chars_) {
+		v.push_back(variant(e.get()));
+	}
+	value = variant(&v);
+DEFINE_FIELD(7, players, "[custom_obj]")
+	std::vector<variant> v;
+	foreach(const entity_ptr& e, players()) {
+		v.push_back(variant(e.get()));
+	}
+	value = variant(&v);
+DEFINE_FIELD(8, in_editor, "bool")
+	value = variant(editor_);
+DEFINE_FIELD(9, zoom, "decimal")
+	value = variant(zoom_level_);
+DEFINE_SET_FIELD
+	zoom_level_ = value.as_decimal();
+DEFINE_FIELD(10, focus, "[custom_obj]")
+	std::vector<variant> v;
+	foreach(const entity_ptr& e, focus_override_) {
+		v.push_back(variant(e.get()));
+	}
+DEFINE_SET_FIELD
+	focus_override_.clear();
+	for(int n = 0; n != value.num_elements(); ++n) {
+		entity* e = value[n].try_convert<entity>();
+		if(e) {
+			focus_override_.push_back(entity_ptr(e));
+		}
+	}
+
+DEFINE_FIELD(11, gui, "[object]|null")
+	if(!gui_algorithm_.empty()) {
+		std::vector<variant> v;
+		foreach(gui_algorithm_ptr g, gui_algorithm_) {
+			v.push_back(variant(g->get_object()));
+		}
+		value = variant(&v);
+	} else {
+		value = variant();
+	}
+
+DEFINE_FIELD(12, id, "string")
+	value = variant(id_);
+
+DEFINE_FIELD(13, dimensions, "[int]")
+	std::vector<variant> v;
+	v.push_back(variant(boundaries_.x()));
+	v.push_back(variant(boundaries_.y()));
+	v.push_back(variant(boundaries_.x2()));
+	v.push_back(variant(boundaries_.y2()));
+	value = variant(&v);
+DEFINE_SET_FIELD
+	ASSERT_EQ(value.num_elements(), 4);
+	boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
+
+DEFINE_FIELD(14, music_volume, "decimal")
+	value = variant(sound::get_engine_music_volume());
+DEFINE_SET_FIELD
+	sound::set_engine_music_volume(value.as_decimal().as_float());
+DEFINE_FIELD(15, paused, "bool")
+	value = variant::from_bool(paused_);
+DEFINE_SET_FIELD
+	const bool new_value = value.as_bool();
+	if(new_value != paused_) {
+		paused_ = new_value;
+		if(paused_) {
+			before_pause_controls_backup_.reset(new controls::control_backup_scope);
+		} else {
+			if(this != current_ptr()) {
+				before_pause_controls_backup_->cancel();
+			}
+			before_pause_controls_backup_.reset();
+		}
+		foreach(entity_ptr e, chars_) {
+			e->mutate_value("paused", value);
+		}
+	}
+
+DEFINE_FIELD(16, module_args, "object")
+	value = variant(module::get_module_args().get());
+
+#if defined(USE_BOX2D)
+DEFINE_FIELD(17, world, "object")
+	value = variant(box2d::world::our_world_ptr().get());
+#else
+DEFINE_FIELD(17, world, "null")
+	value = variant();
+#endif
+
+DEFINE_FIELD(18, time_freeze, "int")
+	value = variant(time_freeze_);
+DEFINE_SET_FIELD
+	time_freeze_ = value.as_int();
+DEFINE_FIELD(19, chars_immune_from_time_freeze, "[custom_obj]")
+	std::vector<variant> v;
+	foreach(const entity_ptr& e, chars_immune_from_time_freeze_) {
+		v.push_back(variant(e.get()));
+	}
+	value = variant(&v);
+DEFINE_SET_FIELD
+	chars_immune_from_time_freeze_.clear();
+	for(int n = 0; n != value.num_elements(); ++n) {
+		entity_ptr e(value[n].try_convert<entity>());
+		if(e) {
+			chars_immune_from_time_freeze_.push_back(e);
+		}
+	}
+
+DEFINE_FIELD(20, segment_width, "int")
+	value = variant(segment_width_);
+DEFINE_FIELD(21, segment_height, "int")
+	value = variant(segment_height_);
+DEFINE_FIELD(22, num_segments, "int")
+	value = variant(unsigned(sub_levels_.size()));
+
+DEFINE_FIELD(23, camera_position, "[int]")
+	std::vector<variant> pos;
+	pos.reserve(4);
+	pos.push_back(variant(last_draw_position().x/100));
+	pos.push_back(variant(last_draw_position().y/100));
+	pos.push_back(variant(graphics::screen_width()));
+	pos.push_back(variant(graphics::screen_height()));
+	value = variant(&pos);
+DEFINE_SET_FIELD
+
+	ASSERT_EQ(value.num_elements(), 2);
+	last_draw_position().x = value[0].as_int();
+	last_draw_position().y = value[1].as_int();
+
+DEFINE_FIELD(24, debug_properties, "[string]")
+	value = vector_to_variant(debug_properties_);
+DEFINE_SET_FIELD
+	if(value.is_null()) {
+		debug_properties_.clear();
+	} else if(value.is_string()) {
+		debug_properties_.clear();
+		debug_properties_.push_back(value.as_string());
+	} else {
+		debug_properties_ = value.as_list_string();
+	}
+
+DEFINE_FIELD(25, hexmap, "null|object")
+	if(hex_maps_.empty() == false) {
+		value = variant(hex_maps_.rbegin()->second.get());
+	} else {
+		value = variant();
+	}
+
+DEFINE_FIELD(26, hexmaps, "{int -> object}")
+	std::map<variant, variant> m;
+	std::map<int, hex::hex_map_ptr>::const_iterator it = hex_maps_.begin();
+	while(it != hex_maps_.end()) {
+		m[variant(it->first)] = variant(it->second.get());
+		++it;
+	}
+	value = variant(&m);
+
+DEFINE_FIELD(27, shader, "null|object")
+#if defined(USE_GLES2)
+	value = variant(shader_.get());
+#else
+	value = variant();
+#endif
+
+DEFINE_FIELD(28, is_paused, "bool")
+	if(level_runner::get_current()) {
+		value = variant::from_bool(level_runner::get_current()->is_paused());
+	}
+
+	value = variant(false);
+
+DEFINE_FIELD(29, editor_selection, "[custom_obj]")
+	std::vector<variant> result;
+	foreach(entity_ptr s, editor_selection_) {
+		result.push_back(variant(s.get()));
+	}
+
+	value = variant(&result);
+
+DEFINE_FIELD(30, frame_buffer_shaders, "[{string -> any}]")
+#if defined(USE_GLES2)
+	std::vector<variant> v;
+	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
+		std::map<variant,variant> m;
+		m[variant("begin_zorder")] = variant(e.begin_zorder);
+		m[variant("end_zorder")] = variant(e.end_zorder);
+		m[variant("shader_info")] = e.shader_node;
+
+		m[variant("shader")] = variant(e.shader.get());
+		v.push_back(variant(&m));
+	}
+
+	fb_shaders_variant_ = variant(&v);
+	value = fb_shaders_variant_;
+#endif
+
+DEFINE_SET_FIELD
+
+#if defined(USE_GLES2)
+	fb_shaders_variant_ = variant();
+	fb_shaders_.clear();
+	foreach(const variant& v, value.as_list()) {
+		FrameBufferShaderEntry e;
+		e.begin_zorder = v["begin_zorder"].as_int();
+		e.end_zorder = v["end_zorder"].as_int();
+		e.shader_node = v["shader_info"];
+
+		if(v.has_key("shader")) {
+			e.shader.reset(v["shader"].try_convert<gles2::shader_program>());
+		}
+
+		if(!e.shader) {
+			if(e.shader_node.is_string()) {
+				e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
+			} else {
+				e.shader.reset(new gles2::shader_program(e.shader_node));
+			}
+		}
+
+		fb_shaders_.push_back(e);
+	}
+#endif
+
+DEFINE_FIELD(31, preferences, "object")
+	value = variant(preferences::get_settings_obj());
+DEFINE_FIELD(32, lock_screen, "null|[int]")
+	if(lock_screen_.get()) {
+		std::vector<variant> v;
+		v.push_back(variant(lock_screen_->x));
+		v.push_back(variant(lock_screen_->y));
+		value = variant(&v);
+	} else {
+		value = variant();
+	}
+DEFINE_SET_FIELD
+	if(value.is_list()) {
+		lock_screen_.reset(new point(value[0].as_int(), value[1].as_int()));
+	} else {
+		lock_screen_.reset();
+	}
+
+END_DEFINE_CALLABLE_NOBASE(level)
+
+/*
 variant level::get_value_by_slot(int slot) const
 {
 	switch(slot) {
@@ -3730,8 +3995,9 @@ variant level::get_value_by_slot(int slot) const
 		return variant(&v);
 	}
 	case LEVEL_CHARS: {
+
 		std::vector<variant> v;
-		foreach(const entity_ptr& e, active_chars_) {
+		foreach(const entity_ptr& e, chars_) {
 			v.push_back(variant(e.get()));
 		}
 
@@ -3787,7 +4053,8 @@ variant level::get_value_by_slot(int slot) const
 	ASSERT_LOG(false, "BAD SLOT IN GET_VALUE FROM LEVEL " << slot);
 	return variant();
 }
-
+*/
+/*
 variant level::get_value(const std::string& key) const
 {
 	if(key == "cycle") {
@@ -3870,6 +4137,7 @@ variant level::get_value(const std::string& key) const
 	} else if(key == "num_segments") {
 		return variant(unsigned(sub_levels_.size()));
 	} else if(key == "camera_position") {
+
 		std::vector<variant> pos;
 		pos.reserve(4);
 		pos.push_back(variant(last_draw_position().x/100));
@@ -3877,6 +4145,7 @@ variant level::get_value(const std::string& key) const
 		pos.push_back(variant(graphics::screen_width()));
 		pos.push_back(variant(graphics::screen_height()));
 		return variant(&pos);
+
 	} else if(key == "debug_properties") {
 		return vector_to_variant(debug_properties_);
 	} else if(key == "hexmap") {
@@ -3919,6 +4188,7 @@ variant level::get_value(const std::string& key) const
 
 		fb_shaders_variant_ = variant(&v);
 		return fb_shaders_variant_;
+
 #endif
 	} else if(key == "editor_selection") {
 		std::vector<variant> result;
@@ -3944,7 +4214,8 @@ variant level::get_value(const std::string& key) const
 		return vars_[key];
 	}
 }
-
+*/
+/*
 void level::set_value(const std::string& key, const variant& value)
 {
 	if(key == "lock_screen") {
@@ -3966,6 +4237,7 @@ void level::set_value(const std::string& key, const variant& value)
 
 		return;
 	} else if(key == "paused") {
+
 		const bool new_value = value.as_bool();
 		if(new_value == paused_) {
 			return;
@@ -3982,6 +4254,7 @@ void level::set_value(const std::string& key, const variant& value)
 		foreach(entity_ptr e, chars_) {
 			e->mutate_value("paused", value);
 		}
+
 	} else if(key == "in_dialog") {
 		in_dialog_ = value.as_bool();
 	} else if(key == "time_freeze") {
@@ -4014,6 +4287,7 @@ void level::set_value(const std::string& key, const variant& value)
 		}
 #ifdef USE_GLES2
 	} else if(key == "frame_buffer_shaders") {
+
 		fb_shaders_variant_ = variant();
 		fb_shaders_.clear();
 		foreach(const variant& v, value.as_list()) {
@@ -4036,11 +4310,13 @@ void level::set_value(const std::string& key, const variant& value)
 
 			fb_shaders_.push_back(e);
 		}
+
 #endif
 	} else {
 		vars_ = vars_.add_attr(variant(key), value);
 	}
 }
+*/
 
 int level::camera_rotation() const
 {

@@ -126,81 +126,6 @@ namespace game_logic
 		return true;
 	}
 
-	namespace {
-	
-	variant_type_ptr get_variant_type_from_value(const variant& value) {
-		if(value.try_convert<formula_object>()) {
-			return variant_type::get_class(value.try_convert<formula_object>()->get_class_name());
-		} else if(value.is_list()) {
-			std::vector<variant_type_ptr> types;
-			foreach(const variant& item, value.as_list()) {
-				variant_type_ptr new_type = get_variant_type_from_value(item);
-				foreach(const variant_type_ptr& existing, types) {
-					if(existing->is_equal(*new_type)) {
-						new_type.reset();
-						break;
-					}
-				}
-
-				if(new_type) {
-					types.push_back(new_type);
-				}
-			}
-
-			return variant_type::get_list(variant_type::get_union(types));
-		} else if(value.is_map()) {
-
-			std::vector<variant_type_ptr> key_types, value_types;
-
-			foreach(const variant::map_pair& p, value.as_map()) {
-				variant_type_ptr new_key_type = get_variant_type_from_value(p.first);
-				variant_type_ptr new_value_type = get_variant_type_from_value(p.second);
-
-				foreach(const variant_type_ptr& existing, key_types) {
-					if(existing->is_equal(*new_key_type)) {
-						new_key_type.reset();
-						break;
-					}
-				}
-
-				if(new_key_type) {
-					key_types.push_back(new_key_type);
-				}
-
-				foreach(const variant_type_ptr& existing, value_types) {
-					if(existing->is_equal(*new_value_type)) {
-						new_value_type.reset();
-						break;
-					}
-				}
-
-				if(new_value_type) {
-					value_types.push_back(new_value_type);
-				}
-			}
-
-			variant_type_ptr key_type, value_type;
-
-			if(key_types.size() == 1) {
-				key_type = variant_type::get_list(key_types[0]);
-			} else {
-				key_type = variant_type::get_list(variant_type::get_union(key_types));
-			}
-
-			if(value_types.size() == 1) {
-				value_type = variant_type::get_list(value_types[0]);
-			} else {
-				value_type = variant_type::get_list(variant_type::get_union(value_types));
-			}
-
-			return variant_type::get_map(key_type, value_type);
-		} else {
-			return variant_type::get_type(value.type());
-		}
-	}
-
-	}
-
 	variant_type_ptr variant_expression::get_variant_type() const {
 		return get_variant_type_from_value(v_);
 	}
@@ -666,7 +591,9 @@ public:
 	slot_identifier_expression(const std::string& id, int slot, const_formula_callable_definition_ptr callable_def)
 	: formula_expression("_id"), slot_(slot), id_(id), callable_def_(callable_def)
 	{
-		ASSERT_LOG(callable_def_->get_entry(slot_) != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
+		const formula_callable_definition::entry* entry = callable_def_->get_entry(slot_);
+		ASSERT_LOG(entry != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
+		entry->access_count++;
 	}
 	
 	const std::string& id() const { return id_; }
@@ -704,10 +631,16 @@ private:
 		return variant_type();
 	}
 
-	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const {
+	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
 		variant_type_ptr current_type = variant_type();
 		if(result && current_type) {
-			variant_type_ptr new_type = variant_type::get_null_excluded(current_type);
+			variant_type_ptr new_type;
+			if(expression_is_this_type) {
+				new_type = expression_is_this_type;
+			} else {
+				new_type = variant_type::get_null_excluded(current_type);
+			}
+
 			if(new_type != current_type) {
 				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
 				return new_def;
@@ -747,6 +680,7 @@ public:
 			if(index != -1) {
 				return expression_ptr(new slot_identifier_expression(id_, index, callable_def_.get()));
 			} else if(callable_def_->is_strict() || g_strict_formula_checking) {
+				fprintf(stderr, "STRICT MODE ENABLED: %d %d\n", (int)callable_def_->is_strict(), (int)g_strict_formula_checking);
 				if(callable_def_->type_name() != NULL) {
 					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location());
 				} else {
@@ -984,11 +918,11 @@ private:
 		ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
 	}
 
-	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const {
+	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
 
 		std::string key_name;
 		if(right_def_ && left_->is_identifier(&key_name)) {
-			const_formula_callable_definition_ptr new_right_def = right_->query_modified_definition_based_on_result(result, right_def_);
+			const_formula_callable_definition_ptr new_right_def = right_->query_modified_definition_based_on_result(result, right_def_, expression_is_this_type);
 			const int slot = current_def->get_slot(key_name);
 			if(new_right_def && slot >= 0) {
 				return modify_formula_callable_definition(current_def, slot, variant_type_ptr(), new_right_def.get());
@@ -1183,7 +1117,11 @@ private:
 	}
 
 	const_formula_callable_definition_ptr
-	get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const {
+	get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
+		if(expression_is_this_type) {
+			return const_formula_callable_definition_ptr();
+		}
+
 		if(result) {
 			const_formula_callable_definition_ptr original_def = current_def;
 			const_formula_callable_definition_ptr def = left_->query_modified_definition_based_on_result(result, current_def);
@@ -1236,7 +1174,11 @@ private:
 	}
 
 	const_formula_callable_definition_ptr
-	get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const {
+	get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
+		if(expression_is_this_type) {
+			return const_formula_callable_definition_ptr();
+		}
+
 		if(result == false) {
 			const_formula_callable_definition_ptr def = right_->query_modified_definition_based_on_result(result, current_def);
 			if(def) {
@@ -1568,7 +1510,11 @@ private:
 
 	}
 
-	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const {
+	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
+		if(expression_is_this_type) {
+			return const_formula_callable_definition_ptr();
+		}
+
 		if(op_ == OP_EQ || op_ == OP_NEQ) {
 			variant value;
 			if(right_->is_literal(value) && value.is_null()) {
@@ -1681,6 +1627,41 @@ private:
 		result.insert(result.end(), info_->entries.begin(), info_->entries.end());
 		return result;
 	}
+};
+
+class is_expression : public formula_expression {
+public:
+	is_expression(variant_type_ptr type, expression_ptr expr)
+	: formula_expression("_is"), type_(type), expression_(expr)
+	{
+	}
+
+private:
+	variant_type_ptr get_variant_type() const {
+		return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+	}
+
+	variant execute(const formula_callable& variables) const {
+		const variant value = expression_->evaluate(variables);
+		return variant::from_bool(type_->match(value));
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(expression_);
+		return result;
+	}
+
+	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
+		if(expression_is_this_type) {
+			return const_formula_callable_definition_ptr();
+		}
+
+		return expression_->query_modified_definition_based_on_result(true, current_def, type_);
+	}
+
+	variant_type_ptr type_;
+	expression_ptr expression_;
 };
 
 class type_expression : public formula_expression {
@@ -1892,6 +1873,7 @@ int operator_precedence(const token& t)
 		precedence_map["or"]    = ++n;
 		precedence_map["and"]   = ++n;
 		precedence_map["in"] = ++n;
+		precedence_map["is"] = ++n;
 		precedence_map["="]     = ++n;
 		precedence_map["!="]    = n;
 		precedence_map["<"]     = n;
@@ -1934,10 +1916,8 @@ void parse_function_args(variant formula_str, const token* &i1, const token* i2,
 	
 	while((i1->type != TOKEN_RPARENS) && (i1 != i2)) {
 		variant_type_ptr variant_type_info;
-		if(i1+1 != i2 && i1->type != TOKEN_COMMA && (i1+1)->type != TOKEN_COMMA && (i1+1)->type != TOKEN_RPARENS && std::string((i1+1)->begin, (i1+1)->end) != "=" && get_formula_callable_definition(std::string(i1->begin, i1->end)) == NULL) {
+		if(i1+1 != i2 && i1->type != TOKEN_COMMA && (i1+1)->type != TOKEN_COMMA && (i1+1)->type != TOKEN_RPARENS && std::string((i1+1)->begin, (i1+1)->end) != "=") {
 			variant_type_info = parse_variant_type(formula_str, i1, i2);
-			std::string class_name;
-			variant_type_info->is_class(&class_name);
 		}
 
 		ASSERT_LOG(i1->type != TOKEN_RPARENS && i1 != i2, "UNEXPECTED END OF FUNCTION DEF: " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
@@ -2082,6 +2062,22 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 			variant_type_ptr sequence_type = (*res)[0]->query_variant_type();
 			variant_type_ptr value_type = sequence_type->is_list_of();
 			callable_def = get_variant_comparator_definition(callable_def, value_type);
+		}
+
+		if(function_name != NULL && n == 4 &&
+		   (*function_name == "spawn" || *function_name == "spawn_player")) {
+			//The spawn custom_object_functions take a special child
+			//argument as their last parameter.
+			static std::string Items[] = { "child" };
+			variant_type_ptr types[1];
+			variant literal;
+			if((*res)[0]->is_literal(literal) && literal.is_string()) {
+				types[0] = variant_type::get_custom_object(literal.as_string());
+			} else {
+				types[0] = variant_type::get_custom_object();
+			}
+
+			callable_def = game_logic::create_formula_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 		}
 
 		if(function_name != NULL && *function_name == "if" && n >= 1) {
@@ -2528,6 +2524,15 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 								}
 								filter_expr.push_back(parse_expression(formula_str, arg.first, arg.second, symbols, def.get(), can_optimize));
 								seen_filter = true;
+
+								//if this filter condition passes, then we
+								//know more about the possible objects that
+								//can be produced by this list comprehension,
+								//so modify the definition appropriately.
+								const_formula_callable_definition_ptr new_def = filter_expr.back()->query_modified_definition_based_on_result(true, def);
+								if(new_def) {
+									def = new_def;
+								}
 							}
 						}
 
@@ -2723,6 +2728,15 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 		expression_ptr right(parse_expression(formula_str, op+1,i2,symbols, callable_def, can_optimize));
 
 		return expression_ptr(new type_expression(type, right));
+	}
+
+	if(op_name == "is") {
+		const token* type_tok = op+1;
+		variant_type_ptr type = parse_variant_type(formula_str, type_tok, i2);
+		ASSERT_LOG(type_tok == i2, "Unexpected tokens after type: " << pinpoint_location(formula_str, type_tok->begin, (i2-1)->end));
+
+		expression_ptr left(parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize));
+		return expression_ptr(new is_expression(type, left));
 	}
 	
 	if(op_name == "(") {

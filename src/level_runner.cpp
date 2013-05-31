@@ -795,7 +795,7 @@ bool level_runner::play_cycle()
 {
 	static settings_dialog settings_dialog;
 
-	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time && SDL_GetModState()&KMOD_ALT);
+	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
 		lvl_->replay_from_cycle(controls::first_invalid_cycle());
 		controls::mark_valid();

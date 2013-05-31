@@ -63,14 +63,22 @@
 class active_property_scope {
 	const custom_object& obj_;
 	int prev_prop_;
+	bool pop_value_stack_;
 public:
-	active_property_scope(const custom_object& obj, int prop_num) : obj_(obj), prev_prop_(obj.active_property_)
+	active_property_scope(const custom_object& obj, int prop_num, const variant* value=NULL) : obj_(obj), prev_prop_(obj.active_property_), pop_value_stack_(false)
 	{
 		obj_.active_property_ = prop_num;
+		if(value) {
+			obj_.value_stack_.push(*value);
+			pop_value_stack_ = true;
+		}
 	}
 
 	~active_property_scope() {
 		obj_.active_property_ = prev_prop_;
+		if(pop_value_stack_) {
+			obj_.value_stack_.pop();
+		}
 	}
 };
 
@@ -117,7 +125,7 @@ custom_object::custom_object(variant node)
     previous_y_(y()),
 	custom_type_(node["custom_type"]),
     type_(custom_type_.is_map() ?
-	      const_custom_object_type_ptr(new custom_object_type(custom_type_)) :
+	      const_custom_object_type_ptr(new custom_object_type(custom_type_["id"].as_string(), custom_type_)) :
 		  custom_object_type::get(node["type"].as_string())),
 	base_type_(type_),
     frame_(&type_->default_frame()),
@@ -587,6 +595,11 @@ custom_object::~custom_object()
 	sound::stop_looped_sounds(this);
 }
 
+bool custom_object::is_a(const std::string& type) const
+{
+	return type_->id() == type;
+}
+
 void custom_object::finish_loading(level* lvl)
 {
 	if(parent_loading_.is_null() == false) {
@@ -845,7 +858,7 @@ variant custom_object::write() const
 
 	std::map<variant, variant> property_map;
 	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
-		if(i->second.storage_slot == -1 || i->second.storage_slot >= property_data_.size()) {
+		if(i->second.storage_slot == -1 || i->second.storage_slot >= property_data_.size() || i->second.persistent == false) {
 			continue;
 		}
 
@@ -2472,6 +2485,10 @@ variant two_element_variant_list(const variant& a, const variant&b)
 variant custom_object::get_value_by_slot(int slot) const
 {
 	switch(slot) {
+	case CUSTOM_OBJECT_VALUE: {
+		ASSERT_LOG(value_stack_.empty() == false, "Query of value in illegal context");
+		return value_stack_.top();
+	}
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Access of 'data' outside of an object property which has data");
 		if(active_property_ < property_data_.size()) {
@@ -2777,7 +2794,7 @@ variant custom_object::get_value_by_slot(int slot) const
 		return variant(&v);
 	}
 
-	case CUSTOM_OBJECT_ALWAYS_ACTIVE: return variant(always_active_);
+	case CUSTOM_OBJECT_ALWAYS_ACTIVE: return variant::from_bool(always_active_);
 	case CUSTOM_OBJECT_TAGS: return variant(tags_.get());
 	case CUSTOM_OBJECT_SCALE:
 		if(draw_scale_) {
@@ -2968,7 +2985,7 @@ void custom_object::set_value(const std::string& key, const variant& value)
 		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
 		callable->add("value", value);
 
-		active_property_scope scope(*this, property_itor->second.storage_slot);
+		active_property_scope scope(*this, property_itor->second.storage_slot, &value);
 		variant value = property_itor->second.setter->execute(*callable);
 		execute_command(value);
 		return;
@@ -4129,11 +4146,13 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 		if(slot >= type_->slot_properties_base() && (size_t(slot - type_->slot_properties_base()) < type_->slot_properties().size())) {
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
 			if(e.setter) {
-				game_logic::map_formula_callable* callable(new game_logic::map_formula_callable(this));
-				callable->add("value", value);
 
-				active_property_scope scope(*this, e.storage_slot);
-				variant value = e.setter->execute(*callable);
+				if(e.set_type) {
+					ASSERT_LOG(e.set_type->match(value), "Setting " << debug_description() << "." << e.id << " to illegal value " << value.write_json() << " of type " << get_variant_type_from_value(value)->to_string() << " expected type " << e.set_type->to_string());
+				}
+
+				active_property_scope scope(*this, e.storage_slot, &value);
+				variant value = e.setter->execute(*this);
 				execute_command(value);
 			} else if(e.storage_slot >= 0) {
 				get_property_data(e.storage_slot) = value;

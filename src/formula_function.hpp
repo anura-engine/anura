@@ -112,7 +112,7 @@ public:
 
 	variant_type_ptr query_variant_type() const { variant_type_ptr res = get_variant_type(); if(res) { return res; } else { return variant_type::get_any(); } }
 
-	const_formula_callable_definition_ptr query_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const { return get_modified_definition_based_on_result(result, current_def); }
+	const_formula_callable_definition_ptr query_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
 
 	std::vector<const_expression_ptr> query_children() const;
 
@@ -125,7 +125,7 @@ protected:
 private:
 	virtual variant execute(const formula_callable& variables) const = 0;
 	virtual void static_error_analysis() const {}
-	virtual const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def) const { return NULL; }
+	virtual const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
 
 	virtual std::vector<const_expression_ptr> get_children() const { return std::vector<const_expression_ptr>(); }
 

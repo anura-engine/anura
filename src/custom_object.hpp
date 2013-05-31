@@ -64,6 +64,8 @@ public:
 	custom_object(const custom_object& o);
 	virtual ~custom_object();
 
+	bool is_a(const std::string& type) const;
+
 	//finish_loading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
 	void finish_loading(level* lvl);
@@ -359,6 +361,10 @@ private:
 	std::vector<variant> property_data_;
 	mutable int active_property_;
 
+	//a stack of items that serve as the 'value' parameter, used in
+	//property setters.
+	mutable std::stack<variant> value_stack_;
+
 	friend class active_property_scope;
 
 	entity_ptr last_hit_by_;
@@ -420,6 +426,7 @@ private:
 	bool always_active_;
 
 	std::stack<const formula_callable*> backup_callable_stack_;
+
 
 	int last_cycle_active_;
 

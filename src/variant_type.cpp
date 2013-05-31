@@ -19,6 +19,8 @@
 #include <stdio.h>
 
 #include "asserts.hpp"
+#include "custom_object.hpp"
+#include "custom_object_type.hpp"
 #include "foreach.hpp"
 #include "formula_function.hpp"
 #include "formula_interface.hpp"
@@ -149,6 +151,10 @@ public:
 			}
 		} else if(type_ == variant::VARIANT_TYPE_FUNCTION) {
 			if(type->is_function(NULL, NULL, NULL)) {
+				return true;
+			}
+		} else if(type_ == variant::VARIANT_TYPE_CALLABLE) {
+			if(type->is_builtin() || type->is_custom_object()) {
 				return true;
 			}
 		}
@@ -290,6 +296,112 @@ private:
 	std::string type_;
 };
 
+class variant_type_custom_object : public variant_type
+{
+public:
+	explicit variant_type_custom_object(const std::string& type) : type_(type)
+	{
+	}
+
+	bool match(const variant& v) const {
+		const custom_object* obj = v.try_convert<custom_object>();
+		if(!obj) {
+			return false;
+		}
+
+		return type_ == "" || obj->is_a(type_);
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(&o);
+		if(!other) {
+			return false;
+		}
+
+		return type_ == other->type_;
+	}
+
+	std::string to_string() const {
+		if(type_ == "") {
+			return "custom_obj";
+		}
+
+		return "obj " + type_;
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(type.get());
+		if(other == NULL) {
+			return false;
+		}
+
+		return type_ == "" || type_ == other->type_;
+	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		if(type_ == "") {
+			return &custom_object_callable::instance();
+		}
+
+		fprintf(stderr, "LOOKUP CUSTOM OBJ DEF: %s\n", type_.c_str());
+		const game_logic::formula_callable_definition* def = custom_object_type::get_definition(type_).get();
+		ASSERT_LOG(def, "Could not find custom object: " << type_);
+		return def;
+	}
+
+	const std::string* is_custom_object() const { return &type_; }
+private:
+	std::string type_;
+};
+
+class variant_type_builtin : public variant_type
+{
+public:
+	variant_type_builtin(const std::string& type, game_logic::const_formula_callable_definition_ptr def) : type_(type), def_(def)
+	{
+	}
+
+	bool match(const variant& v) const {
+		const game_logic::formula_callable* obj = v.try_convert<game_logic::formula_callable>();
+		if(!obj) {
+			return false;
+		}
+
+		return obj->query_id() == type_;
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_builtin* other = dynamic_cast<const variant_type_builtin*>(&o);
+		if(!other) {
+			return false;
+		}
+
+		return type_ == other->type_;
+	}
+
+	std::string to_string() const {
+		return type_;
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		return is_equal(*type);
+	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		if(!def_) {
+			game_logic::const_formula_callable_definition_ptr def = game_logic::get_formula_callable_definition(type_);
+			ASSERT_LOG(def, "Could not find builtin type definition: " << type_);
+			def_ = def;
+		}
+		return def_.get();
+	}
+
+	const std::string* is_builtin() const { return &type_; }
+private:
+	std::string type_;
+	mutable game_logic::const_formula_callable_definition_ptr def_;
+};
+
 class variant_type_interface : public variant_type
 {
 public:
@@ -394,17 +506,26 @@ public:
 		return result;
 	}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
 	{
 		std::vector<std::vector<variant_type_ptr> > arg_lists(types_.size());
 		std::vector<variant_type_ptr> return_types(types_.size());
 		std::vector<int> min_args_list(types_.size());
 
+		if(return_type_specified) {
+			*return_type_specified = true;
+		}
+
 		int max_min_args = -1;
 		int num_args = 0;
 		for(int n = 0; n != types_.size(); ++n) {
-			if(!types_[n]->is_function(&arg_lists[n], &return_types[n], &min_args_list[n])) {
+			bool return_type_spec = false;
+			if(!types_[n]->is_function(&arg_lists[n], &return_types[n], &min_args_list[n], &return_type_spec)) {
 				return false;
+			}
+
+			if(return_type_specified && !return_type_spec) {
+				*return_type_specified = false;
 			}
 
 			if(max_min_args == -1 || min_args_list[n] > max_min_args) {
@@ -602,11 +723,15 @@ class variant_type_function : public variant_type
 public:
 	variant_type_function(const std::vector<variant_type_ptr>& args,
 	                      variant_type_ptr return_type, int min_args)
-	  : args_(args), return_(return_type), min_args_(min_args)
+	  : args_(args), return_(return_type), min_args_(min_args), return_type_specified_(true)
 	{
+		if(!return_) {
+			return_ = get_any();
+			return_type_specified_ = false;
+		}
 	}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
 	{
 		if(args) {
 			*args = args_;
@@ -618,6 +743,10 @@ public:
 
 		if(min_args) {
 			*min_args = min_args_;
+		}
+
+		if(return_type_specified) {
+			*return_type_specified = return_type_specified_;
 		}
 
 		return true;
@@ -713,6 +842,7 @@ private:
 	std::vector<variant_type_ptr> args_;
 	variant_type_ptr return_;
 	int min_args_;
+	bool return_type_specified_;
 };
 
 class variant_type_function_overload : public variant_type
@@ -721,9 +851,9 @@ public:
 	variant_type_function_overload(variant_type_ptr overloaded_fn, const std::vector<variant_type_ptr>& fn) : overloaded_(overloaded_fn), fn_(fn)
 	{}
 
-	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args) const
+	bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified) const
 	{
-		return overloaded_->is_function(args, return_type, min_args);
+		return overloaded_->is_function(args, return_type, min_args, return_type_specified);
 	}
 
 	bool match(const variant& v) const {
@@ -806,6 +936,80 @@ private:
 	std::vector<variant_type_ptr> fn_;
 };
 
+}
+
+variant_type_ptr get_variant_type_from_value(const variant& value) {
+	using namespace game_logic;
+	if(value.try_convert<formula_object>()) {
+		return variant_type::get_class(value.try_convert<formula_object>()->get_class_name());
+	} else if(value.is_list()) {
+		std::vector<variant_type_ptr> types;
+		foreach(const variant& item, value.as_list()) {
+			variant_type_ptr new_type = get_variant_type_from_value(item);
+			foreach(const variant_type_ptr& existing, types) {
+				if(existing->is_equal(*new_type)) {
+					new_type.reset();
+					break;
+				}
+			}
+
+			if(new_type) {
+				types.push_back(new_type);
+			}
+		}
+
+		return variant_type::get_list(variant_type::get_union(types));
+	} else if(value.is_map()) {
+
+		std::vector<variant_type_ptr> key_types, value_types;
+
+		foreach(const variant::map_pair& p, value.as_map()) {
+			variant_type_ptr new_key_type = get_variant_type_from_value(p.first);
+			variant_type_ptr new_value_type = get_variant_type_from_value(p.second);
+
+			foreach(const variant_type_ptr& existing, key_types) {
+				if(existing->is_equal(*new_key_type)) {
+					new_key_type.reset();
+					break;
+				}
+			}
+
+			if(new_key_type) {
+				key_types.push_back(new_key_type);
+			}
+
+			foreach(const variant_type_ptr& existing, value_types) {
+				if(existing->is_equal(*new_value_type)) {
+					new_value_type.reset();
+					break;
+				}
+			}
+
+			if(new_value_type) {
+				value_types.push_back(new_value_type);
+			}
+		}
+
+		variant_type_ptr key_type, value_type;
+
+		if(key_types.size() == 1) {
+			key_type = variant_type::get_list(key_types[0]);
+		} else {
+			key_type = variant_type::get_list(variant_type::get_union(key_types));
+		}
+
+		if(value_types.size() == 1) {
+			value_type = variant_type::get_list(value_types[0]);
+		} else {
+			value_type = variant_type::get_list(variant_type::get_union(value_types));
+		}
+
+		return variant_type::get_map(key_type, value_type);
+	} else if(value.is_callable() && value.as_callable()->is_command()) {
+		return variant_type::get_commands();
+	} else {
+		return variant_type::get_type(value.type());
+	}
 }
 
 std::string variant_type_is_class_or_null(variant_type_ptr type)
@@ -986,9 +1190,13 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 
 			return variant_type::get_function_type(arg_types, return_type, min_args);
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("class")) {
+		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("custom_obj") || i1->equals("object_type"))) {
 			++i1;
-			ASSERT_COND(i1 != i2, "EXPECTED CLASS BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+			v.push_back(variant_type_ptr(new variant_type_custom_object("")));
+		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("class") || i1->equals("obj"))) {
+			const bool is_class = i1->equals("class");
+			++i1;
+			ASSERT_COND(i1 != i2, "EXPECTED TYPE NAME BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 			std::string class_name(i1->begin, i1->end);
 
 			while(i1+1 != i2 && i1+2 != i2 && (i1+1)->equals(".")) {
@@ -996,7 +1204,12 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				i1 += 2;
 				class_name += std::string(i1->begin, i1->end);
 			}
-			v.push_back(variant_type_ptr(new variant_type_class(class_name)));
+
+			if(is_class) {
+				v.push_back(variant_type_ptr(new variant_type_class(class_name)));
+			} else {
+				v.push_back(variant_type_ptr(new variant_type_custom_object(class_name)));
+			}
 
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("any")) {
@@ -1004,6 +1217,14 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("commands")) {
 			v.push_back(variant_type_ptr(new variant_type_commands));
+			++i1;
+		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("builtin") && i1+1 != i2) {
+			++i1;
+
+			v.push_back(variant_type_ptr(new variant_type_builtin(std::string(i1->begin, i1->end), game_logic::const_formula_callable_definition_ptr())));
+			++i1;
+		} else if(i1->type == TOKEN_IDENTIFIER && game_logic::get_formula_callable_definition(std::string(i1->begin, i1->end)).get()) {
+			v.push_back(variant_type::get_builtin(std::string(i1->begin, i1->end)));
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER || (i1->type == TOKEN_KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
 			ASSERT_COND(variant::string_to_type(std::string(i1->begin, i1->end)) != variant::VARIANT_TYPE_INVALID,
@@ -1160,7 +1381,7 @@ parse_optional_function_type(const variant& original_str,
 
 	ASSERT_LOG(i1 != i2 && i1->type == TOKEN_RPARENS, "UNEXPECTED END OF FUNCTION SIGNATURE: " << original_str.debug_location());
 
-	variant_type_ptr return_type = variant_type::get_any();
+	variant_type_ptr return_type;
 
 	++i1;
 	if(i1 != i2 && i1->type == TOKEN_POINTER) {
@@ -1301,6 +1522,21 @@ variant_type_ptr variant_type::get_map(variant_type_ptr key_type, variant_type_p
 variant_type_ptr variant_type::get_class(const std::string& class_name)
 {
 	return variant_type_ptr(new variant_type_class(class_name));
+}
+
+variant_type_ptr variant_type::get_custom_object(const std::string& name)
+{
+	return variant_type_ptr(new variant_type_custom_object(name));
+}
+
+variant_type_ptr variant_type::get_builtin(const std::string& name)
+{
+	game_logic::const_formula_callable_definition_ptr def = game_logic::get_formula_callable_definition(name);
+	if(def) {
+		return variant_type_ptr(new variant_type_builtin(name, def));
+	} else {
+		return variant_type_ptr();
+	}
 }
 
 variant_type_ptr variant_type::get_function_type(const std::vector<variant_type_ptr>& arg_types, variant_type_ptr return_type, int min_args)

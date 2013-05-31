@@ -268,7 +268,7 @@ void custom_object_dialog::init()
 	error_text_.clear();
 	assert_recover_scope recover_from_assert;
 	try {
-		object_ = custom_object_type_ptr(new custom_object_type(object_template_, NULL, NULL));
+		object_ = custom_object_type_ptr(new custom_object_type(object_template_["id"].as_string(), object_template_, NULL, NULL));
 
 		animation_widget_ptr preview(new animation_widget(128, 128, object_template_));
 		add_widget(preview, width() - border_offset - 128, border_offset + 200);

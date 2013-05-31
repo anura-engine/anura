@@ -176,6 +176,9 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 
 	if(new_type) {
 		new_entry.variant_type = new_type;
+		if(!new_def) {
+			new_def = new_type->get_definition();
+		}
 	}
 
 	if(new_def) {
@@ -220,7 +223,12 @@ int register_formula_callable_definition(const std::string& id, const_formula_ca
 
 const_formula_callable_definition_ptr get_formula_callable_definition(const std::string& id)
 {
-	return registry[id];
+	std::map<std::string, const_formula_callable_definition_ptr>::const_iterator itor = registry.find(id);
+	if(itor != registry.end()) {
+		return itor->second;
+	} else {
+		return const_formula_callable_definition_ptr();
+	}
 }
 
 int add_callable_definition_init(void(*fn)())

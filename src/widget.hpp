@@ -85,9 +85,6 @@ public:
 	unsigned get_tooltip_delay() const { return tooltip_display_delay_; }
 	void set_tooltip_delay(unsigned tooltip_delay) { tooltip_display_delay_ = tooltip_delay; }
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
-
 	virtual widget_ptr get_widget_by_id(const std::string& id);
 	virtual const_widget_ptr get_widget_by_id(const std::string& id) const;
 
@@ -129,6 +126,7 @@ protected:
 	virtual void recalc_loc();
 	virtual bool in_widget(int xloc, int yloc) const;
 private:
+DECLARE_CALLABLE(widget);
 	virtual void visit_values(game_logic::formula_callable_visitor& visitor) {}
 
 	int x_, y_;

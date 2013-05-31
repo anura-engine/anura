@@ -109,10 +109,7 @@ const_formula_callable_definition_ptr formula_expression::get_type_definition() 
 {
 	variant_type_ptr type = query_variant_type();
 	if(type) {
-		std::string class_name = variant_type_is_class_or_null(type);
-		if(class_name.empty() == false) {
-			return get_class_definition(class_name);
-		}
+		return const_formula_callable_definition_ptr(type->get_definition());
 	}
 
 	return NULL;
@@ -1936,10 +1933,23 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		std::vector<variant_type_ptr> types;
-		types.push_back(args()[0]->query_variant_type()->is_list_of());
-		types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
-		return variant_type::get_union(types);
+		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
+		if(def) {
+			const_formula_callable_definition_ptr modified = args()[1]->query_modified_definition_based_on_result(true, def);
+			if(modified) {
+				def = modified;
+			}
+
+			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
+			if(value_entry != NULL && value_entry->variant_type) {
+				std::vector<variant_type_ptr> types;
+				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
+				types.push_back(value_entry->variant_type);
+				return variant_type::get_union(types);
+			}
+		}
+
+		return variant_type::get_any();
 	}
 };
 
@@ -2803,6 +2813,48 @@ private:
 	variant value_;
 };
 
+class set_target_by_slot_command : public game_logic::command_callable
+{
+public:
+	set_target_by_slot_command(variant target, int slot, const variant& value)
+	  : target_(target.mutable_callable()), slot_(slot), value_(value)
+	{
+		ASSERT_LOG(target_.get(), "target of set is not a callable");
+	}
+
+	virtual void execute(game_logic::formula_callable& obj) const {
+		target_->mutate_value_by_slot(slot_, value_);
+	}
+
+	void set_value(const variant& value) { value_ = value; }
+
+private:
+	game_logic::formula_callable_ptr target_;
+	int slot_;
+	variant value_;
+};
+
+class add_target_by_slot_command : public game_logic::command_callable
+{
+public:
+	add_target_by_slot_command(variant target, int slot, const variant& value)
+	  : target_(target.mutable_callable()), slot_(slot), value_(value)
+	{
+		ASSERT_LOG(target_.get(), "target of set is not a callable");
+	}
+
+	virtual void execute(game_logic::formula_callable& obj) const {
+		target_->mutate_value_by_slot(slot_, target_->query_value_by_slot(slot_) + value_);
+	}
+
+	void set_value(const variant& value) { value_ = value; }
+
+private:
+	game_logic::formula_callable_ptr target_;
+	int slot_;
+	variant value_;
+};
+
 class add_by_slot_command : public game_logic::command_callable
 {
 public:
@@ -2824,7 +2876,7 @@ private:
 class set_function : public function_expression {
 public:
 	set_function(const args_list& args, const_formula_callable_definition_ptr callable_def)
-	  : function_expression("set", args, 2, 3), slot_(-1) {
+	  : function_expression("set", args, 2, 3), me_slot_(-1), slot_(-1) {
 		if(args.size() == 2) {
 			variant literal;
 			args[0]->is_literal(literal);
@@ -2835,16 +2887,29 @@ public:
 			}
 
 			if(!key_.empty() && callable_def) {
-				slot_ = callable_def->get_slot(key_);
-				if(slot_ != -1) {
-					cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, variant()));
+				me_slot_ = callable_def->get_slot("me");
+				if(me_slot_ != -1 && callable_def->get_entry(me_slot_)->type_definition) {
+					slot_ = callable_def->get_entry(me_slot_)->type_definition->get_slot(key_);
+				} else {
+					slot_ = callable_def->get_slot(key_);
+					if(slot_ != -1) {
+						cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, variant()));
+					}
 				}
 			}
+
 		}
 	}
 private:
 	variant execute(const formula_callable& variables) const {
-		if(slot_ != -1) {
+		if(me_slot_ != -1) {
+			variant target = variables.query_value_by_slot(me_slot_);
+			if(slot_ != -1) {
+				return variant(new set_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
+			} else if(!key_.empty()) {
+				return variant(new set_command(target, key_, variant(), args()[1]->evaluate(variables)));
+			}
+		} else if(slot_ != -1) {
 			if(cmd_->refcount() == 1) {
 				cmd_->set_value(args()[1]->evaluate(variables));
 				cmd_->set_expression(this);
@@ -2892,14 +2957,14 @@ private:
 	}
 
 	std::string key_;
-	int slot_;
+	int me_slot_, slot_;
 	mutable boost::intrusive_ptr<set_by_slot_command> cmd_;
 };
 
 class add_function : public function_expression {
 public:
 	add_function(const args_list& args, const_formula_callable_definition_ptr callable_def)
-	  : function_expression("add", args, 2, 3), slot_(-1) {
+	  : function_expression("add", args, 2, 3), me_slot_(-1), slot_(-1) {
 		if(args.size() == 2) {
 			variant literal;
 			args[0]->is_literal(literal);
@@ -2910,16 +2975,28 @@ public:
 			}
 
 			if(!key_.empty() && callable_def) {
-				slot_ = callable_def->get_slot(key_);
-				if(slot_ != -1) {
-					cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
+				me_slot_ = callable_def->get_slot("me");
+				if(me_slot_ != -1 && callable_def->get_entry(me_slot_)->type_definition) {
+					slot_ = callable_def->get_entry(me_slot_)->type_definition->get_slot(key_);
+				} else {
+					slot_ = callable_def->get_slot(key_);
+					if(slot_ != -1) {
+						cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, variant()));
+					}
 				}
 			}
 		}
 	}
 private:
 	variant execute(const formula_callable& variables) const {
-		if(slot_ != -1) {
+		if(me_slot_ != -1) {
+			variant target = variables.query_value_by_slot(me_slot_);
+			if(slot_ != -1) {
+				return variant(new add_target_by_slot_command(target, slot_, args()[1]->evaluate(variables)));
+			} else if(!key_.empty()) {
+				return variant(new add_command(target, key_, variant(), args()[1]->evaluate(variables)));
+			}
+		} else if(slot_ != -1) {
 			if(cmd_->refcount() == 1) {
 				cmd_->set_value(args()[1]->evaluate(variables));
 				cmd_->set_expression(this);
@@ -2967,7 +3044,7 @@ private:
 	}
 
 	std::string key_;
-	int slot_;
+	int me_slot_, slot_;
 	mutable boost::intrusive_ptr<add_by_slot_command> cmd_;
 };
 
@@ -3357,7 +3434,7 @@ boost::intrusive_ptr<slot_formula_callable> formula_function_expression::calcula
 		variant var = args()[n]->evaluate(variables);
 
 		if(n < variant_types_.size() && variant_types_[n]) {
-			ASSERT_LOG(variant_types_[n]->match(var), "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << variant_types_[n]->str() << " BUT FOUND " << var.write_json() << " AT " << debug_pinpoint_location());
+			ASSERT_LOG(variant_types_[n]->match(var), "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << variant_types_[n]->str() << " BUT FOUND " << var.write_json() << " TYPE " << get_variant_type_from_value(var)->to_string() << " AT " << debug_pinpoint_location());
 		}
 
 		tmp_callable->add(var);

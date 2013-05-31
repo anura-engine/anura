@@ -860,7 +860,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	const variant result = fn_->fn->execute(*callable);
 	if(fn_->return_type && !fn_->return_type->match(result)) {
 		call_stack_manager scope(fn_->fn->expr().get(), callable.get());
-		generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->return_type->to_string() << " but found " << result.write_json() << " FOR " << fn_->fn->str());
+		generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->return_type->to_string() << " but found " << result.write_json() << " (type: " << get_variant_type_from_value(result)->to_string() << ") FOR " << fn_->fn->str());
 	}
 
 	return result;

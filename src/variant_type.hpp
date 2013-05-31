@@ -45,6 +45,8 @@ public:
 	static variant_type_ptr get_list(variant_type_ptr element_type);
 	static variant_type_ptr get_map(variant_type_ptr key_type, variant_type_ptr value_type);
 	static variant_type_ptr get_class(const std::string& class_name);
+	static variant_type_ptr get_custom_object(const std::string& name="");
+	static variant_type_ptr get_builtin(const std::string& id);
 	static variant_type_ptr get_function_type(const std::vector<variant_type_ptr>& arg_types, variant_type_ptr return_type, int min_args);
 	static variant_type_ptr get_function_overload_type(variant_type_ptr overloaded_fn, const std::vector<variant_type_ptr>& fn);
 
@@ -62,8 +64,10 @@ public:
 	virtual std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const { return std::pair<variant_type_ptr,variant_type_ptr>(); }
 	virtual bool is_type(variant::TYPE type) const { return false; }
 	virtual bool is_class(std::string* class_name=NULL) const { return false; }
+	virtual const std::string* is_builtin() const { return NULL; }
+	virtual const std::string* is_custom_object() const { return NULL; }
 
-	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args) const { return false; }
+	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
 	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
 
 	virtual const game_logic::formula_callable_definition* get_definition() const { return NULL; }
@@ -87,6 +91,8 @@ private:
 
 	mutable std::string str_;
 };
+
+variant_type_ptr get_variant_type_from_value(const variant& value);
 
 std::string variant_type_is_class_or_null(variant_type_ptr type);
 

@@ -40,6 +40,19 @@ void invalidate_class_definition(const std::string& class_name);
 
 namespace {
 
+variant flatten_list_of_maps(variant v) {
+	if(v.is_list() && v.num_elements() >= 1) {
+		variant result = flatten_list_of_maps(v[0]);
+		for(int n = 1; n < v.num_elements(); ++n) {
+			result = result + flatten_list_of_maps(v[n]);
+		}
+
+		return result;
+	}
+
+	return v;
+}
+
 boost::intrusive_ptr<const formula_class> get_class(const std::string& type);
 
 struct property_entry {
@@ -62,26 +75,25 @@ struct property_entry {
 
 			entry->set_variant_type(getter->query_variant_type());
 			return;
-		}
-
-		if(node.is_map()) {
+		} else if(node.is_map()) {
 			if(node["variable"].as_bool(true)) {
 				variable_slot = state_slot++;
 			}
-		}
 
-		if(node["get"].is_string()) {
-			getter = game_logic::formula::create_optional_formula(node["get"], NULL, get_class_definition(class_name));
-		}
+			if(node["get"].is_string()) {
+				getter = game_logic::formula::create_optional_formula(node["get"], NULL, get_class_definition(class_name));
+			}
 
-		if(node["set"].is_string()) {
-			setter = game_logic::formula::create_optional_formula(node["set"], NULL, get_class_definition(class_name));
-		}
+			if(node["set"].is_string()) {
+				setter = game_logic::formula::create_optional_formula(node["set"], NULL, get_class_definition(class_name));
+			}
 
-		default_value = node["default"];
+			default_value = node["default"];
 
-#ifndef NO_FFL_TYPE_SAFETY_CHECKS
-		if(preferences::type_safety_checks()) {
+			if(node["initialize"].is_string()) {
+				initializer = game_logic::formula::create_optional_formula(node["initialize"], NULL);
+			}
+
 			variant valid_types = node["type"];
 			if(valid_types.is_null() && variable_slot != -1) {
 				variant default_value = node["default"];
@@ -98,12 +110,15 @@ struct property_entry {
 			if(valid_types.is_null() == false) {
 				set_type = parse_variant_type(valid_types);
 			}
+		} else {
+			variable_slot = state_slot++;
+			default_value = node;
+			set_type = get_type = get_variant_type_from_value(node);
 		}
-#endif
 	}
 
 	std::string name;
-	game_logic::const_formula_ptr getter, setter;
+	game_logic::const_formula_ptr getter, setter, initializer;
 
 	variant_type_ptr get_type, set_type;
 	int variable_slot;
@@ -117,7 +132,7 @@ void load_class_node(const std::string& type, const variant& node)
 {
 	class_node_map[type] = node;
 	
-	const variant classes = node["classes"];
+	const variant classes = flatten_list_of_maps(node["classes"]);
 	if(classes.is_map()) {
 		foreach(variant key, classes.get_keys().as_list()) {
 			load_class_node(type + "." + key.as_string(), classes[key]);
@@ -158,7 +173,7 @@ variant get_class_node(const std::string& type)
 }
 
 enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
-static const std::string BaseFields[] = {"data", "value", "self", "me", "_class", "lib"};
+static const std::string BaseFields[] = {"_data", "value", "self", "me", "_class", "lib"};
 
 class formula_class_definition : public formula_callable_definition
 {
@@ -250,6 +265,8 @@ public:
 							}
 						}
 					}
+				} else {
+					slots_[slot].variant_type = get_variant_type_from_value(prop_node);
 				}
 			}
 		}
@@ -349,6 +366,7 @@ public:
 	void run_unit_tests();
 
 private:
+	void build_nested_classes(variant obj);
 	std::string name_;
 	variant name_variant_;
 	variant private_data_;
@@ -445,13 +463,21 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 
 void formula_class::build_nested_classes()
 {
-	if(nested_classes_.is_map()) {
-		foreach(variant key, nested_classes_.get_keys().as_list()) {
-			const variant class_node = nested_classes_[key];
+	build_nested_classes(nested_classes_);
+	nested_classes_ = variant();
+}
+
+void formula_class::build_nested_classes(variant classes)
+{
+	if(classes.is_list()) {
+		foreach(const variant& v, classes.as_list()) {
+			build_nested_classes(v);
+		}
+	} else if(classes.is_map()) {
+		foreach(variant key, classes.get_keys().as_list()) {
+			const variant class_node = classes[key];
 			sub_classes_[key.as_string()].reset(new formula_class(name_ + "." + key.as_string(), class_node));
 		}
-
-		nested_classes_ = variant();
 	}
 }
 
@@ -558,7 +584,7 @@ void record_classes(const std::string& name, const variant& node)
 {
 	known_classes.insert(name);
 
-	const variant classes = node["classes"];
+	const variant classes = flatten_list_of_maps(node["classes"]);
 	if(classes.is_map()) {
 		foreach(variant key, classes.get_keys().as_list()) {
 			const variant class_node = classes[key];
@@ -754,7 +780,11 @@ formula_object::formula_object(const std::string& type, variant args)
 	variables_.resize(class_->nstate_slots());
 	foreach(const property_entry& slot, class_->slots()) {
 		if(slot.variable_slot != -1) {
-			variables_[slot.variable_slot] = deep_copy_variant(slot.default_value);
+			if(slot.initializer) {
+				variables_[slot.variable_slot] = slot.initializer->execute(*this);
+			} else {
+				variables_[slot.variable_slot] = deep_copy_variant(slot.default_value);
+			}
 		}
 	}
 }
@@ -879,7 +909,7 @@ variant formula_object::get_value(const std::string& key) const
 {
 	/*TODO: MAKE DATA HIDING WORK
 	if(expose_private_data_) */ {
-		if(key == "data") {
+		if(key == "_data") {
 			ASSERT_NE(private_data_, -1);
 			return variables_[private_data_];
 		} else if(key == "value") {
@@ -956,7 +986,7 @@ variant formula_object::get_value_by_slot(int slot) const
 
 void formula_object::set_value(const std::string& key, const variant& value)
 {
-	if(private_data_ != -1 && key == "data") {
+	if(private_data_ != -1 && key == "_data") {
 		variables_[private_data_] = value;
 		return;
 	}

@@ -44,6 +44,8 @@ public:
 	explicit formula_callable(bool has_self=false) : has_self_(has_self)
 	{}
 
+	std::string query_id() const { return get_object_id(); }
+
 	variant query_value(const std::string& key) const {
 		if(has_self_ && key == "self") {
 			return variant(this);
@@ -117,6 +119,8 @@ protected:
 private:
 	virtual variant get_value(const std::string& key) const = 0;
 	virtual variant get_value_by_slot(int slot) const;
+
+	virtual std::string get_object_id() const { return "formula_callable"; }
 
 	bool has_self_;
 };

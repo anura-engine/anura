@@ -26,12 +26,14 @@
 #include "editor_variable_info.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "formula_function.hpp"
 #include "frame.hpp"
 #include "particle_system.hpp"
 #include "raster.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
+#include "variant_type.hpp"
 #ifdef USE_BOX2D
 #include "b2d_ffl.hpp"
 #endif
@@ -51,6 +53,7 @@ typedef boost::shared_ptr<const modifier> const_modifier_ptr;
 class custom_object_type
 {
 public:
+	static game_logic::formula_callable_definition_ptr get_definition(const std::string& id);
 	static variant merge_prototype(variant node, std::vector<std::string>* proto_paths=NULL);
 	static const std::string* get_object_path(const std::string& id);
 	static const_custom_object_type_ptr get(const std::string& id);
@@ -84,7 +87,7 @@ public:
 							 game_logic::function_symbol_table* symbols=0,
 							 const event_handler_map* base_handlers=NULL) const;
 
-	explicit custom_object_type(variant node, const custom_object_type* base_type=NULL, const custom_object_type* old_type=NULL);
+	explicit custom_object_type(const std::string& id, variant node, const custom_object_type* base_type=NULL, const custom_object_type* old_type=NULL);
 	~custom_object_type();
 
 	const_custom_object_type_ptr get_sub_object(const std::string& id) const;
@@ -188,11 +191,14 @@ public:
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : storage_slot(-1) {}
+		property_entry() : storage_slot(-1), persistent(true) {}
+		std::string id;
 		game_logic::const_formula_ptr getter, setter;
 		boost::shared_ptr<variant> const_value;
 		variant default_value;
+		variant_type_ptr type, set_type;
 		int storage_slot;
+		bool persistent;
 	};
 
 	const std::map<std::string, property_entry>& properties() const { return properties_; }
@@ -246,6 +252,8 @@ public:
 	bool is_shadow() const { return is_shadow_; }
 
 private:
+	void init_sub_objects(variant node, const custom_object_type* old_type);
+
 	//recreate an object type, optionally given the old version to base
 	//things off where possible
 	static custom_object_type_ptr recreate(const std::string& id, const custom_object_type* old_type);

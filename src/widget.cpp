@@ -342,123 +342,126 @@ widget_ptr widget::get_widget_by_id(const std::string& id)
 	return widget_ptr();
 }
 
-variant widget::get_value(const std::string& key) const
-{
-	if(key == "draw_area") {
-		std::vector<variant> v;
-		v.push_back(variant(x_));
-		v.push_back(variant(y_));
-		v.push_back(variant(w_));
-		v.push_back(variant(h_));
-		return variant(&v);
-	} else if(key == "tooltip") {
-		if(tooltip_) {
-			return variant(tooltip_->text);
-		} else {
-			return variant();
-		}
-	} else if(key == "is_visible") {
-		return variant(visible_);
-	} else if(key == "id") {
-		return variant(id_);
-	} else if(key == "resolution") {
-		return variant(resolution_);
-	} else if(key == "x") {
-		return variant(x());
-	} else if(key == "y") {
-		return variant(y());
-	} else if(key == "width" || key == "w") {
-		return variant(width());
-	} else if(key == "height" || key == "h") {
-		return variant(height());
-	} else if(key == "frame") {
-		return variant(frame_set_name_);
-	} else if(key == "alpha") {
-		return variant(get_alpha());
-	} else if(key == "frame_pad_width") {
-		return variant(get_pad_width());
-	} else if(key == "frame_pad_height") {
-		return variant(get_pad_height());
-	} else if(key == "frame_padding") {
-		std::vector<variant> v;
-		v.push_back(variant(get_pad_width()));
-		v.push_back(variant(get_pad_height()));
-		return variant(&v);
-	} else if(key == "children") {
-		std::vector<variant> v;
-		std::vector<widget_ptr> w = get_children();
-		foreach(widget_ptr item, w) {
-			v.push_back(variant(item.get()));
-		}
+BEGIN_DEFINE_CALLABLE(widget, 0)
 
-		return variant(&v);
+DEFINE_FIELD(0, draw_area, "[int]")
+	std::vector<variant> v;
+	v.push_back(variant(x_));
+	v.push_back(variant(y_));
+	v.push_back(variant(w_));
+	v.push_back(variant(h_));
+	value = variant(&v);
+DEFINE_SET_FIELD
+	std::vector<int> r = value.as_list_int();
+	ASSERT_LOG(r.size() == 4, "Four values must be supplied to the draw_area attribute");
+	set_loc(r[0], r[1]);
+	set_dim(r[2], r[3]);
+
+DEFINE_FIELD(1, rect, "[int]")
+	std::vector<variant> v;
+	v.push_back(variant(x_));
+	v.push_back(variant(y_));
+	v.push_back(variant(w_));
+	v.push_back(variant(h_));
+	value = variant(&v);
+DEFINE_SET_FIELD
+	std::vector<int> r = value.as_list_int();
+	ASSERT_LOG(r.size() == 4, "Four values must be supplied to the rect attribute");
+	set_loc(r[0], r[1]);
+	set_dim(r[2], r[3]);
+DEFINE_FIELD(2, tooltip, "string|null")
+	if(tooltip_) {
+		value = variant(tooltip_->text);
+	} else {
+		value = variant();
 	}
 
-	return variant();
-}
+DEFINE_FIELD(3, visible, "bool")
+	value = variant::from_bool(visible_);
+DEFINE_SET_FIELD
+	visible_ = value.as_bool();
 
-void widget::set_value(const std::string& key, const variant& v)
-{
-	if(key == "width") {
-		w_ = v.as_int();
-	} else if(key == "height") {
-		h_ = v.as_int();
-	} else if(key == "rect" || key == "draw_area") {
-		std::vector<int> r = v.as_list_int();
-		ASSERT_LOG(r.size() == 4, "Four values must be supplied to the rect attribute");
-		set_loc(r[0], r[1]);
-		set_dim(r[2], r[3]);
-	} else if(key == "xy" || key == "left_top") {
-		std::vector<int> xy = v.as_list_int();
-		ASSERT_LOG(xy.size() == 2, "Two values must be supplied to the X, Y attribute");
-		set_loc(xy[0], xy[1]);
-	} else if(key == "x") {
-		set_loc(v.as_int(), y());
-	} else if(key == "y") {
-		set_loc(x(), v.as_int());
-	} else if(key == "wh") {
-		std::vector<int> wh = v.as_list_int();
-		ASSERT_LOG(wh.size() == 2, "Two values must be supplied to the W, H attribute");
-		set_dim(wh[0], wh[1]);
-	} else if(key == "right_bottom") {
-		std::vector<int> rb = v.as_list_int();
-		ASSERT_LOG(rb.size() == 2, "Two values must be supplied to the R, B attribute");
-		set_dim(rb[0] - x(), rb[1] - y());
-	} else if(key == "left") {
-		x_ = v.as_int();
-	} else if(key == "top") {
-		y_ = v.as_int();
-	} else if(key == "right") {
-		w_ = v.as_int() - x();
-	} else if(key == "bottom") {
-		h_ = v.as_int() - y();
-	} else if(key == "visible") {
-		visible_ = v.as_bool();
-	} else if(key == "id") {
-		id_ = v.as_string();
-	} else if(key == "disable") {
-		disabled_ = v.as_bool();
-	} else if(key == "enable") {
-		disabled_ = !v.as_bool();
-	} else if(key == "disabled_opacity") {
-		int opa = v.as_int();
-		disabled_opacity_ = (opa > 255) ? 255 : (opa < 0) ? 0 : opa;
-	} else if(key == "frame") {
-		set_frame_set(v.as_string());
-	} else if(key == "resolution") {
-		resolution_ = v.as_int();
-	} else if(key == "alpha") {
-		int a = v.as_int();
-		set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
-	} else if(key == "frame_pad_width") {
-		set_padding(v.as_int(), get_pad_height());
-	} else if(key == "frame_pad_height") {
-		set_padding(get_pad_width(), v.as_int());
-	} else if(key == "frame_padding") {
-		ASSERT_LOG(v.is_list() && v.num_elements() == 2, "'pad' must be two element list");
-		set_padding(v[0].as_int(), v[1].as_int());
+DEFINE_FIELD(4, id, "string")
+	value = variant(id_);
+
+DEFINE_FIELD(5, resolution, "int")
+	value = variant(resolution_);
+
+DEFINE_FIELD(6, x, "int")
+	value = variant(x());
+DEFINE_SET_FIELD
+	set_loc(value.as_int(), y());
+
+DEFINE_FIELD(7, y, "int")
+	value = variant(y());
+
+DEFINE_SET_FIELD
+	set_loc(x(), value.as_int());
+
+DEFINE_FIELD(8, w, "int")
+	value = variant(width());
+DEFINE_SET_FIELD
+	w_ = value.as_int();
+
+DEFINE_FIELD(9, width, "int")
+	value = variant(width());
+DEFINE_SET_FIELD
+	w_ = value.as_int();
+
+DEFINE_FIELD(10, h, "int")
+	value = variant(height());
+DEFINE_SET_FIELD
+	h_ = value.as_int();
+
+DEFINE_FIELD(11, height, "int")
+	value = variant(height());
+DEFINE_SET_FIELD
+	h_ = value.as_int();
+
+DEFINE_FIELD(12, frame_set_name, "string")
+	value = variant(frame_set_name_);
+
+DEFINE_FIELD(13, alpha, "int")
+	value = variant(get_alpha());
+
+DEFINE_FIELD(14, frame_pad_width, "int")
+	value = variant(get_pad_width());
+
+DEFINE_FIELD(15, frame_pad_height, "int")
+	value = variant(get_pad_height());
+
+DEFINE_FIELD(16, frame_padding, "[int]")
+	std::vector<variant> v;
+	v.push_back(variant(get_pad_width()));
+	v.push_back(variant(get_pad_height()));
+	value = variant(&v);
+
+DEFINE_FIELD(17, children, "[builtin widget]")
+	std::vector<variant> v;
+	std::vector<widget_ptr> w = get_children();
+	foreach(widget_ptr item, w) {
+		v.push_back(variant(item.get()));
 	}
-}
+
+	value = variant(&v);
+
+DEFINE_FIELD(18, alpha, "int")
+	value = variant();
+DEFINE_SET_FIELD
+	int a = value.as_int();
+	set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
+
+DEFINE_FIELD(19, disabled, "bool")
+	value = variant::from_bool(disabled_);
+DEFINE_SET_FIELD
+	disabled_ = value.as_bool();
+
+DEFINE_FIELD(20, disabled_opacity, "int")
+	value = variant(static_cast<int>(disabled_opacity_));
+DEFINE_SET_FIELD
+	disabled_opacity_ = value.as_int();
+
+END_DEFINE_CALLABLE_NOBASE(widget)
 
 bool widget::in_widget(int xloc, int yloc) const
 {

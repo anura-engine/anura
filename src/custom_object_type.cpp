@@ -26,6 +26,7 @@
 #include "custom_object_functions.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
+#include "formula.hpp"
 #include "formula_constants.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -40,6 +41,9 @@
 #include "unit_test.hpp"
 #include "variant_callable.hpp"
 #include "variant_utils.hpp"
+
+using game_logic::formula_callable_definition;
+using game_logic::formula_callable_definition_ptr;
 
 std::map<std::string, std::string>& prototype_file_paths() {
 	static std::map<std::string, std::string> paths;
@@ -77,9 +81,7 @@ object_map& cache() {
 	return instance;
 }
 
-namespace {
 const std::string BaseStr = "%PROTO%";
-}
 
 variant merge_into_prototype(variant prototype_node, variant node)
 {
@@ -266,6 +268,27 @@ variant merge_into_prototype(variant prototype_node, variant node)
 	return res;
 }
 
+std::map<std::string, formula_callable_definition_ptr>& object_type_definitions()
+{
+	static std::map<std::string, formula_callable_definition_ptr>* instance = new std::map<std::string, formula_callable_definition_ptr>;
+	return *instance;
+}
+
+}
+
+formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
+{
+	std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
+	if(itor != object_type_definitions().end()) {
+		return itor->second;
+	} else {
+		std::cerr << "GET DEFINITION: " << id << "\n";
+		const_custom_object_type_ptr obj = get(id);
+		ASSERT_LOG(obj.get(), "No such object " << id << " when looking for definition");
+		itor = object_type_definitions().find(id);
+		ASSERT_LOG(itor != object_type_definitions().end(), "No definition for object " << id);
+		return itor->second;
+	}
 }
 
 void custom_object_type::reload_file_paths() 
@@ -388,7 +411,7 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 		ASSERT_LOG(node["id"].as_string() == module::get_id(id), "IN " << path_itor->second << " OBJECT ID DOES NOT MATCH FILENAME");
 		
 		//create the object
-		custom_object_type_ptr result(new custom_object_type(node, NULL, old_type));
+		custom_object_type_ptr result(new custom_object_type(node["id"].as_string(), node, NULL, old_type));
 		object_prototype_paths[id] = proto_paths;
 
 		return result;
@@ -674,10 +697,23 @@ void custom_object_type::init_event_handlers(variant node,
 	}
 }
 
+namespace {
+std::vector<std::string> custom_object_type_stack;
+struct custom_object_type_init_scope {
+	explicit custom_object_type_init_scope(const std::string& id) {
+		custom_object_type_stack.push_back(id);
+	}
+
+	~custom_object_type_init_scope() {
+		custom_object_type_stack.pop_back();
+	}
+};
+}
+
 void init_level_definition();
 
-custom_object_type::custom_object_type(variant node, const custom_object_type* base_type, const custom_object_type* old_type)
-  : id_(node["id"].as_string()),
+custom_object_type::custom_object_type(const std::string& id, variant node, const custom_object_type* base_type, const custom_object_type* old_type)
+  : id_(id),
 	hitpoints_(node["hitpoints"].as_int(1)),
 	timer_frequency_(node["timer_frequency"].as_int(-1)),
 	zorder_(node["zorder"].as_int()),
@@ -730,7 +766,12 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 	is_strict_(node["is_strict"].as_bool(false)),
 	is_shadow_(node["is_shadow"].as_bool(false))
 {
+	const custom_object_type_init_scope init_scope(id);
+	const bool is_recursive_call = std::count(custom_object_type_stack.begin(), custom_object_type_stack.end(), id) > 0;
+
+	std::cerr << "CREATE OBJ: " << id << "\n";
 	callable_definition_.reset(new custom_object_callable);
+	callable_definition_->set_type_name("obj " + id);
 
 	custom_object_callable::instance();
 	init_level_definition();
@@ -844,26 +885,11 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 		particle_factories_[particle_node["id"].as_string()] = particle_system_factory::create_factory(particle_node);
 	}
 
-	if(!is_variation) {
-		foreach(variant object_node, node["object_type"].as_list()) {
-			variant merged = merge_prototype(object_node);
-			std::string sub_key = object_node["id"].as_string();
-
-			if(old_type && old_type->sub_objects_.count(sub_key) &&
-			   old_type->sub_objects_.find(sub_key)->second->node_ == merged) {
-				//We are recreating this object, and the sub object node
-				//hasn't changed at all, so just reuse the same sub object.
-				sub_objects_[sub_key] = old_type->sub_objects_.find(sub_key)->second;
-			} else {
-				custom_object_type* type = new custom_object_type(merged);
-				type->id_ = id_ + "." + type->id_;
-				if(old_type && type->node_.is_null()){
-					type->node_ = merged;
-				}
-			//std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
-				sub_objects_[sub_key].reset(type);
-			}
-		}
+	if(!is_variation && !is_recursive_call) {
+		//only initialize sub objects up front if it's not a recursive call
+		//doing it this way means that dependencies between sub objects and
+		//parent objects won't result in infinite recursion.
+		init_sub_objects(node, old_type);
 	}
 
 	if(node.has_key("parallax_scale_x") || node.has_key("parallax_scale_y")) {
@@ -921,24 +947,157 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 		}
 	}
 
-	int storage_slot = 0;
+	std::cerr << "REGISTER CALLABLE " << id_ << "\n";
+
+	object_type_definitions()[id_] = callable_definition_;
+
+	std::set<std::string> properties_to_infer;
 
 	slot_properties_base_ = callable_definition_->num_slots();
 	foreach(variant properties_node, node["properties"].as_list()) {
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
-			callable_definition_->add_property(k);
+			variant value = properties_node[key];
+			variant_type_ptr type;
+			if(value.is_string()) {
+				type = parse_optional_function_type(value);
+				if(is_strict_ && type) {
+					bool return_type_specified = false;
+					type->is_function(NULL, NULL, NULL, &return_type_specified);
+					ASSERT_LOG(return_type_specified, "Property function definition does not specify a return type for the function, which is required in strict mode for object " << id_ << " property " << k);
+				}
+				if(!type) {
+					type = parse_optional_formula_type(value);
+				}
+
+			} else if(value.is_map()) {
+				if(value.has_key("type")) {
+					type = parse_variant_type(value["type"]);
+				} else {
+					ASSERT_LOG(!is_strict_, "Property does not have a type specifier in strict mode object " << id_ << " property " << k);
+				}
+			} else {
+				type = get_variant_type_from_value(value);
+			}
+
+			if(!type) {
+				properties_to_infer.insert(k);
+			}
+
+			callable_definition_->add_property(k, type);
+		}
+	}
+
+	while(is_strict_ && !properties_to_infer.empty()) {
+		const int num_items = properties_to_infer.size();
+		foreach(variant properties_node, node["properties"].as_list()) {
+			foreach(variant key, properties_node.get_keys().as_list()) {
+				const std::string& k = key.as_string();
+				if(properties_to_infer.count(k) == 0) {
+					continue;
+				}
+
+				variant value = properties_node[key];
+				assert(value.is_string());
+
+				for(int n = 0; n != callable_definition_->num_slots(); ++n) {
+					callable_definition_->get_entry(n)->access_count = 0;
+				}
+
+				game_logic::formula_ptr f = game_logic::formula::create_optional_formula(value, NULL, callable_definition_);
+				bool inferred = true;
+				for(int n = 0; n != callable_definition_->num_slots(); ++n) {
+					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(n);
+					if(entry->access_count) {
+						std::cerr << "PROPERTY " << k << " DEPENDS ON " << entry->id << "\n";
+						if(properties_to_infer.count(entry->id)) {
+							inferred = false;
+						}
+					}
+				}
+
+				if(inferred) {
+					formula_callable_definition::entry* entry = callable_definition_->get_entry_by_id(k);
+					assert(entry);
+					entry->set_variant_type(f->query_variant_type());
+					std::cerr << "INFER TYPE " << k << ": " << f->query_variant_type()->to_string() << "\n";
+					properties_to_infer.erase(k);
+				}
+			}
+		}
+
+		if(num_items == properties_to_infer.size()) {
+			std::ostringstream s;
+			foreach(const std::string& k, properties_to_infer) {
+				s << k << ", ";
+			}
+			ASSERT_LOG(false, "Could not infer properties in object " << id_ << ": " << s.str());
+		}
+	}
+
+	fprintf(stderr, "CALLABLE DEFINITION FOR %s: {\n", id_.c_str());
+	for(int n = 0; n != callable_definition_->num_slots(); ++n) {
+		if(callable_definition_->get_entry(n)->variant_type) {
+			fprintf(stderr, "  %s: %s\n", callable_definition_->get_entry(n)->id.c_str(), callable_definition_->get_entry(n)->variant_type->to_string().c_str());
+		} else {
+			fprintf(stderr, "  %s: (none)\n", callable_definition_->get_entry(n)->id.c_str());
+		}
+	}
+	fprintf(stderr, "}\n");
+
+	object_type_definitions()[id_] = callable_definition_;
+	callable_definition_->set_object_type(variant_type::get_custom_object(id_));
+
+	if(!is_variation && is_recursive_call) {
+		//we initialize sub objects here if we are in a recursive call,
+		//to make sure that it's after we've set our definition. This will
+		//avoid infinite recursion.
+		init_sub_objects(node, old_type);
+	}
+
+	int storage_slot = 0;
+
+	const game_logic::formula::strict_check_scope strict_checking(false);
+	foreach(variant properties_node, node["properties"].as_list()) {
+		foreach(variant key, properties_node.get_keys().as_list()) {
+			const game_logic::formula::strict_check_scope strict_checking(is_strict_);
+			const std::string& k = key.as_string();
 			variant value = properties_node[key];
 			property_entry& entry = properties_[k];
+			entry.id = k;
 			if(value.is_string()) {
 				entry.getter = game_logic::formula::create_optional_formula(value, function_symbols(), callable_definition_);
 			} else if(value.is_map()) {
-				entry.getter = game_logic::formula::create_optional_formula(value["get"], function_symbols(), callable_definition_);
-				entry.setter = game_logic::formula::create_optional_formula(value["set"], function_symbols(), callable_definition_);
+				if(value.has_key("type")) {
+					entry.type = parse_variant_type(value["type"]);
+					entry.set_type = entry.type;
+				}
+
+				if(value.has_key("set_type")) {
+					entry.set_type = parse_variant_type(value["set_type"]);
+				}
+
+				game_logic::const_formula_callable_definition_ptr property_def = callable_definition_;
+				if(entry.type) {
+					property_def = modify_formula_callable_definition(property_def, CUSTOM_OBJECT_DATA, entry.type);
+				}
+
+				game_logic::const_formula_callable_definition_ptr setter_def = property_def;
+				if(entry.set_type) {
+					setter_def = modify_formula_callable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
+				}
+
+				entry.getter = game_logic::formula::create_optional_formula(value["get"], function_symbols(), property_def);
+				entry.setter = game_logic::formula::create_optional_formula(value["set"], function_symbols(), setter_def);
 				entry.default_value = value["default"];
 				entry.storage_slot = storage_slot++;
+				entry.persistent = value["persistent"].as_bool(true);
+
 			} else {
-				entry.const_value.reset(new variant(value));
+				entry.set_type = entry.type = get_variant_type_from_value(value);
+				entry.default_value = value;
+				entry.storage_slot = storage_slot++;
+				entry.persistent = true;
 			}
 
 			if(entry.getter) {
@@ -1008,10 +1167,33 @@ custom_object_type::custom_object_type(variant node, const custom_object_type* b
 		blend_mode_->sfactor = get_blend_mode(node["blend_mode_source"]);
 		blend_mode_->dfactor = get_blend_mode(node["blend_mode_dest"]);
 	}
+	std::cerr << "DONE CREATE OBJ: " << id << "\n";
 }
 
 custom_object_type::~custom_object_type()
 {
+}
+
+void custom_object_type::init_sub_objects(variant node, const custom_object_type* old_type)
+{
+	foreach(variant object_node, node["object_type"].as_list()) {
+		variant merged = merge_prototype(object_node);
+		std::string sub_key = object_node["id"].as_string();
+
+		if(old_type && old_type->sub_objects_.count(sub_key) &&
+		   old_type->sub_objects_.find(sub_key)->second->node_ == merged) {
+			//We are recreating this object, and the sub object node
+			//hasn't changed at all, so just reuse the same sub object.
+			sub_objects_[sub_key] = old_type->sub_objects_.find(sub_key)->second;
+		} else {
+			custom_object_type* type = new custom_object_type(id_ + "." + merged["id"].as_string(), merged);
+			if(old_type && type->node_.is_null()){
+				type->node_ = merged;
+			}
+		//std::cerr << "MERGED PROTOTYPE FOR " << type->id_ << ": " << merged.write_json() << "\n";
+			sub_objects_[sub_key].reset(type);
+		}
+	}
 }
 
 const frame& custom_object_type::default_frame() const
@@ -1102,8 +1284,7 @@ const_custom_object_type_ptr custom_object_type::get_variation(const std::vector
 
 		//copy the id over from the parent object, to make sure it's
 		//the same. This is important for nested objects.
-		custom_object_type* obj_type = new custom_object_type(node, this);
-		obj_type->id_ = id_;
+		custom_object_type* obj_type = new custom_object_type(id_, node, this);
 		result.reset(obj_type);
 	}
 

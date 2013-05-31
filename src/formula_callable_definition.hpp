@@ -31,12 +31,14 @@ class formula_callable_definition : public reference_counted_object
 {
 public:
 	struct entry {
-		explicit entry(const std::string& id_) : id(id_), type_definition(0) {}
+		explicit entry(const std::string& id_) : id(id_), type_definition(0), access_count(0) {}
 		void set_variant_type(variant_type_ptr type);
 		std::string id;
 		const_formula_callable_definition_ptr type_definition;
 
 		variant_type_ptr variant_type;
+
+		mutable int access_count;
 	};
 
 	formula_callable_definition();
@@ -57,12 +59,14 @@ public:
 		if(slot < 0) { return NULL; } else { return get_entry(slot); }
 	}
 
-	virtual const std::string* type_name() const { return NULL; }
+	virtual const std::string* type_name() const { return !type_name_.empty() ? &type_name_ : NULL; }
+	void set_type_name(const std::string& name) { type_name_ = name; }
 
 	virtual bool is_strict() const { return is_strict_; }
 	void set_strict(bool value=true) { is_strict_ = value; }
 private:
 	bool is_strict_;
+	std::string type_name_;
 };
 
 formula_callable_definition_ptr modify_formula_callable_definition(const_formula_callable_definition_ptr base_def, int slot, variant_type_ptr new_type, const formula_callable_definition* new_def=NULL);
@@ -83,6 +87,7 @@ public: \
 	virtual variant get_value_by_slot(int slot) const; \
 	virtual void set_value(const std::string& key, const variant& value); \
 	virtual void set_value_by_slot(int slot, const variant& value); \
+	virtual std::string get_object_id() const { return #classname; } \
 public: \
 	int callable_fields_op(int slot, const variant* set_value, variant* get_value); \
 private:
@@ -150,6 +155,8 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 	void init_callable_##classname() { \
 		int i = 0; \
 		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL) != -1) { ++i; } \
+		game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&classname##_fields[0], &classname##_fields[0] + classname##_fields.size(), game_logic::formula_callable_definition_ptr(), &classname##_variant_types[0]); \
+		register_formula_callable_definition(#classname, def); \
 	} \
 	int dummy_var_##classname = game_logic::add_callable_definition_init(init_callable_##classname); \
 	} \
@@ -199,6 +206,8 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 	void init_callable_##classname() { \
 		int i = 0; \
 		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL) != -1) { ++i; } \
+		game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&classname##_fields[0], &classname##_fields[0] + classname##_fields.size(), game_logic::const_formula_callable_definition_ptr(), &classname##_variant_types[0]); \
+		register_formula_callable_definition(#classname, def); \
 	} \
 	int dummy_var_##classname = game_logic::add_callable_definition_init(init_callable_##classname); \
 	} \

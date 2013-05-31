@@ -392,6 +392,7 @@ public:
 #endif
 
 private:
+	DECLARE_CALLABLE(level);
 
 	void read_compiled_tiles(variant node, std::vector<level_tile>::iterator& out);
 
@@ -445,10 +446,6 @@ private:
 	bool is_solid(const level_solid_map& map, const entity& e, const std::vector<point>& points, const surface_info** surf_info) const;
 
 	void set_solid(level_solid_map& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
-
-	variant get_value_by_slot(int slot) const;
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
 
 	std::string title_;
 
