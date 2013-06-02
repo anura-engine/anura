@@ -858,7 +858,7 @@ variant custom_object::write() const
 
 	std::map<variant, variant> property_map;
 	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
-		if(i->second.storage_slot == -1 || i->second.storage_slot >= property_data_.size() || i->second.persistent == false) {
+		if(i->second.storage_slot == -1 || i->second.storage_slot >= property_data_.size() || i->second.persistent == false || i->second.const_value || property_data_[i->second.storage_slot] == i->second.default_value) {
 			continue;
 		}
 
