@@ -53,6 +53,17 @@ variant flatten_list_of_maps(variant v) {
 	return v;
 }
 
+class backup_entry_scope {
+	formula_callable_definition::entry backup_;
+	formula_callable_definition::entry& target_;
+public:
+	backup_entry_scope(formula_callable_definition::entry& e) : backup_(e), target_(e) {
+	}
+	~backup_entry_scope() {
+		target_ = backup_;
+	}
+};
+
 boost::intrusive_ptr<const formula_class> get_class(const std::string& type);
 
 struct property_entry {
@@ -62,6 +73,19 @@ struct property_entry {
 		name = prop_name;
 
 		formula_callable_definition_ptr class_def = get_class_definition(class_name);
+
+		formula_callable_definition::entry* data_entry = class_def->get_entry(class_def->get_slot("_data"));
+		formula_callable_definition::entry* value_entry = class_def->get_entry(class_def->get_slot("value"));
+		formula_callable_definition::entry* prop_entry = class_def->get_entry(class_def->get_slot(prop_name));
+		assert(data_entry);
+		assert(value_entry);
+		assert(prop_entry);
+
+		backup_entry_scope backup1(*data_entry);
+		backup_entry_scope backup2(*value_entry);
+
+		value_entry->set_variant_type(prop_entry->variant_type);
+		*data_entry = *prop_entry;
 
 		const formula::strict_check_scope strict_checking;
 		if(node.is_string()) {
@@ -202,6 +226,8 @@ public:
 			break;
 			case FIELD_LIB:
 			slots_.back().type_definition = get_library_definition().get();
+			slots_.back().variant_type = variant_type::get_builtin("library");
+			assert(slots_.back().variant_type);
 			break;
 			}
 		}
@@ -248,6 +274,11 @@ public:
 
 					if(valid_types.is_null() == false) {
 						slots_[slot].variant_type = parse_variant_type(valid_types);
+					}
+
+					variant set_type = prop_node["set_type"];
+					if(set_type.is_null() == false) {
+						slots_[slot].write_type = parse_variant_type(set_type);
 					}
 				} else if(prop_node.is_string()) {
 					variant_type_ptr fn_type = parse_optional_function_type(prop_node);
@@ -1202,6 +1233,7 @@ formula_callable_definition_ptr get_library_definition()
 
 		if(!types.empty()) {
 			g_library_definition = game_logic::create_formula_callable_definition(&classes[0], &classes[0] + classes.size(), NULL);
+			game_logic::register_formula_callable_definition("library", g_library_definition);
 
 			for(int n = 0; n != g_library_definition->num_slots(); ++n) {
 				g_library_definition->get_entry(n)->set_variant_type(types[n]);

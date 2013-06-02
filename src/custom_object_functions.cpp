@@ -1116,7 +1116,16 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("map")
-RETURN_TYPE("commands")
+
+//TODO: make this dynamically calculate the creature type
+FUNCTION_TYPE_DEF
+	variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		return variant_type::get_custom_object(v.as_string());
+	}
+
+	return parse_variant_type(variant("custom_obj"));
+
 END_FUNCTION_DEF(object)
 
 FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object_playable only creates the playble object and returns it. It may be stored for later use.")
@@ -2797,7 +2806,7 @@ FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("map")
-RETURN_TYPE("object")
+RETURN_TYPE("widget")
 END_FUNCTION_DEF(widget)
 
 class add_level_module_command : public entity_command_callable {

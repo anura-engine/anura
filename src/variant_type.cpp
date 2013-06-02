@@ -384,7 +384,16 @@ public:
 	}
 
 	bool is_compatible(variant_type_ptr type) const {
-		return is_equal(*type);
+		if(is_equal(*type)) {
+			return true;
+		}
+
+		const std::string* builtin = type->is_builtin();
+		if(builtin && game_logic::registered_definition_is_a(*builtin, type_)) {
+			return true;
+		}
+
+		return false;
 	}
 
 	const game_logic::formula_callable_definition* get_definition() const {
@@ -604,6 +613,21 @@ private:
 		}
 	}
 
+	variant_type_ptr subtract(variant_type_ptr type) const {
+		std::vector<variant_type_ptr> new_types;
+		foreach(variant_type_ptr t, types_) {
+			if(t->is_equal(*type) == false) {
+				new_types.push_back(t);
+			}
+		}
+
+		if(new_types.size() != types_.size()) {
+			return get_union(new_types);
+		} else {
+			return variant_type_ptr();
+		}
+	}
+
 	std::vector<variant_type_ptr> types_;
 };
 
@@ -716,6 +740,149 @@ public:
 	}
 private:
 	variant_type_ptr key_type_, value_type_;
+};
+
+class variant_type_specific_map : public variant_type
+{
+public:
+	variant_type_specific_map(const std::map<variant, variant_type_ptr>& type_map, variant_type_ptr key_type, variant_type_ptr value_type)
+	  : type_map_(type_map), key_type_(key_type), value_type_(value_type)
+	{
+		ASSERT_LOG(type_map.empty() == false, "Specific map which is empty");
+		std::vector<std::string> keys;
+		std::vector<variant_type_ptr> values;
+		for(std::map<variant,variant_type_ptr>::const_iterator i = type_map.begin(); i != type_map.end(); ++i) {
+			keys.push_back(i->first.as_string());
+			values.push_back(i->second);
+
+			if(get_null_excluded(i->second) == i->second) {
+				must_have_keys_.insert(i->first);
+			}
+		}
+		def_ = game_logic::create_formula_callable_definition(&keys[0], &keys[0] + keys.size(), game_logic::const_formula_callable_definition_ptr(), &values[0]);
+	}
+
+	bool match(const variant& v) const {
+		if(!v.is_map()) {
+			return false;
+		}
+
+		foreach(const variant::map_pair& p, v.as_map()) {
+			std::map<variant, variant_type_ptr>::const_iterator itor = type_map_.find(p.first);
+			if(itor == type_map_.end()) {
+				return false;
+			}
+
+			if(!itor->second->match(p.second)) {
+				return false;
+			}
+		}
+
+		foreach(const variant& k, must_have_keys_) {
+			if(v.as_map().count(k) == 0) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_specific_map* other = dynamic_cast<const variant_type_specific_map*>(&o);
+		if(!other) {
+			return false;
+		}
+
+		if(type_map_.size() != other->type_map_.size()) {
+			return false;
+		}
+
+		std::map<variant, variant_type_ptr>::const_iterator i1 = type_map_.begin();
+		std::map<variant, variant_type_ptr>::const_iterator i2 = other->type_map_.begin();
+		while(i1 != type_map_.end()) {
+			if(i1->first != i2->first) {
+				return false;
+			}
+
+			if(!i1->second->is_equal(*i2->second)) {
+				return false;
+			}
+
+			++i1;
+			++i2;
+		}
+
+		return false;
+	}
+	std::string to_string() const {
+		std::ostringstream s;
+		s << "{";
+		std::map<variant, variant_type_ptr>::const_iterator i = type_map_.begin();
+		while(i != type_map_.end()) {
+			if(i->first.is_string()) {
+				s << i->first.as_string();
+			} else {
+				s << i->first.write_json();
+			}
+
+			s << ": " << i->second->to_string();
+			++i;
+
+			if(i != type_map_.end()) {
+				s << ", ";
+			}
+		}
+
+		s << "}";
+		return s.str();
+	}
+
+	std::pair<variant_type_ptr, variant_type_ptr> is_map_of() const {
+		return std::pair<variant_type_ptr, variant_type_ptr>(key_type_, value_type_);
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		if(type->is_equal(*this)) {
+			return true;
+		}
+
+		const variant_type_specific_map* other = dynamic_cast<const variant_type_specific_map*>(type.get());
+		if(!other) {
+			return false;
+		}
+
+		for(std::map<variant, variant_type_ptr>::const_iterator i = type_map_.begin(); i != type_map_.end(); ++i) {
+			std::map<variant, variant_type_ptr>::const_iterator other_itor =
+			      other->type_map_.find(i->first);
+			if(other_itor == other->type_map_.end()) {
+				if(must_have_keys_.count(i->first)) {
+					return false;
+				}
+			} else {
+				if(!variant_types_compatible(i->second, other_itor->second)) {
+					return false;
+				}
+			}
+		}
+
+		for(std::map<variant, variant_type_ptr>::const_iterator i = other->type_map_.begin(); i != other->type_map_.end(); ++i) {
+			if(type_map_.count(i->first) == 0) {
+				return false;
+			}
+		}
+
+		return false;
+	}
+
+	const game_logic::formula_callable_definition* get_definition() const
+	{
+		return def_.get();
+	}
+private:
+	std::map<variant, variant_type_ptr> type_map_;
+	std::set<variant> must_have_keys_;
+	variant_type_ptr key_type_, value_type_;
+	game_logic::formula_callable_definition_ptr def_;
 };
 
 class variant_type_function : public variant_type
@@ -936,6 +1103,11 @@ private:
 	std::vector<variant_type_ptr> fn_;
 };
 
+}
+
+bool variant_type::may_be_null(variant_type_ptr type)
+{
+	return type->is_any() || variant_type::get_null_excluded(type) != type;
 }
 
 variant_type_ptr get_variant_type_from_value(const variant& value) {
@@ -1239,18 +1411,46 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			++i1;
 			ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
-			const variant_type_ptr key_type = parse_variant_type(original_str, i1, end, allow_failure);
-			ASSERT_COND(i1->type == TOKEN_POINTER, "ERROR PARSING MAP TYPE, NO ARROW FOUND: " << original_str.debug_location());
+			if(i1->type == TOKEN_IDENTIFIER && i1 != end && (i1+1)->equals(":")) {
+				//a specific map type.
+				std::map<variant, variant_type_ptr> types;
+
+				for(;;) {
+					ASSERT_COND(i1->type == TOKEN_IDENTIFIER && i1+1 != end && i1+2 != end && (i1+1)->equals(":"), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+					variant key(std::string(i1->begin, i1->end));
+					i1 += 2;
+					variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
+					ASSERT_COND(value_type, "");
+
+					types[key] = value_type;
+
+					if(i1 == end) {
+						++i1;
+						break;
+					}
+
+					ASSERT_COND(i1->equals(","), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+					++i1;
+				}
+
+				v.push_back(variant_type::get_specific_map(types));
+			} else {
+
+				const variant_type_ptr key_type = parse_variant_type(original_str, i1, end, allow_failure);
+				ASSERT_COND(key_type, "");
+				ASSERT_COND(i1->type == TOKEN_POINTER, "ERROR PARSING MAP TYPE, NO ARROW FOUND: " << original_str.debug_location());
 		
-			++i1;
-			ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+				++i1;
+				ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
-			const variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
-			ASSERT_COND(i1 == end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+				const variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
+				ASSERT_COND(value_type, "");
+				ASSERT_COND(i1 == end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
-			v.push_back(variant_type_ptr(new variant_type_map(key_type, value_type)));
+				v.push_back(variant_type_ptr(new variant_type_map(key_type, value_type)));
 
-			++i1;
+				++i1;
+			}
 
 		} else if(i1->type == TOKEN_LSQUARE) {
 			const token* end = i1+1;
@@ -1519,6 +1719,17 @@ variant_type_ptr variant_type::get_map(variant_type_ptr key_type, variant_type_p
 	return variant_type_ptr(new variant_type_map(key_type, value_type));
 }
 
+variant_type_ptr variant_type::get_specific_map(const std::map<variant, variant_type_ptr>& type_map)
+{
+	std::vector<variant_type_ptr> keys, values;
+	for(std::map<variant, variant_type_ptr>::const_iterator i = type_map.begin(); i != type_map.end(); ++i) {
+		keys.push_back(get_variant_type_from_value(i->first));
+		values.push_back(i->second);
+	}
+
+	return variant_type_ptr(new variant_type_specific_map(type_map, variant_type::get_union(keys), variant_type::get_union(values)));
+}
+
 variant_type_ptr variant_type::get_class(const std::string& class_name)
 {
 	return variant_type_ptr(new variant_type_class(class_name));
@@ -1552,6 +1763,16 @@ variant_type_ptr variant_type::get_function_overload_type(variant_type_ptr overl
 variant_type_ptr variant_type::get_null_excluded(variant_type_ptr input)
 {
 	variant_type_ptr result = input->null_excluded();
+	if(result) {
+		return result;
+	} else {
+		return input;
+	}
+}
+
+variant_type_ptr variant_type::get_with_exclusion(variant_type_ptr input, variant_type_ptr subtract)
+{
+	variant_type_ptr result = input->subtract(subtract);
 	if(result) {
 		return result;
 	} else {

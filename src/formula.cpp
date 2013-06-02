@@ -410,10 +410,23 @@ public:
 	
 private:
 	variant_type_ptr get_variant_type() const {
+		std::map<variant, variant_type_ptr> types;
+
 		std::vector<variant_type_ptr> key_types, value_types;
+
+		bool is_specific_map = true;
+
 		for(std::vector<expression_ptr>::const_iterator i = items_.begin(); ( i != items_.end() ) && ( i+1 != items_.end() ) ; i+=2) {
+
+			variant key_value;
+			if(!(*i)->can_reduce_to_variant(key_value)) {
+				is_specific_map = false;
+			}
+
 			variant_type_ptr new_key_type = (*i)->query_variant_type();
 			variant_type_ptr new_value_type = (*(i+1))->query_variant_type();
+
+			types[key_value] = new_value_type;
 
 			foreach(const variant_type_ptr& existing, key_types) {
 				if(existing->is_equal(*new_key_type)) {
@@ -436,6 +449,10 @@ private:
 			if(new_value_type) {
 				value_types.push_back(new_value_type);
 			}
+		}
+
+		if(is_specific_map && !types.empty()) {
+			return variant_type::get_specific_map(types);
 		}
 
 		variant_type_ptr key_type, value_type;
@@ -628,7 +645,11 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		return variant_type();
+		return callable_def_->get_entry(slot_)->variant_type;
+	}
+
+	variant_type_ptr get_mutable_type() const {
+		return callable_def_->get_entry(slot_)->get_write_type();
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
@@ -641,6 +662,14 @@ private:
 				new_type = variant_type::get_null_excluded(current_type);
 			}
 
+			if(new_type != current_type) {
+				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
+				return new_def;
+			}
+		}
+
+		if(!result && current_type && expression_is_this_type) {
+			variant_type_ptr new_type = variant_type::get_with_exclusion(current_type, expression_is_this_type);
 			if(new_type != current_type) {
 				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
 				return new_def;
@@ -722,6 +751,10 @@ private:
 	variant_type_ptr get_variant_type() const {
 		return variant_type::get_any();
 	}
+	variant_type_ptr get_mutable_type() const {
+		return variant_type::get_any();
+	}
+
 	std::string id_;
 	const_formula_callable_definition_ptr callable_def_;
 
@@ -912,10 +945,14 @@ private:
 		return right_->query_variant_type();
 	}
 
+	variant_type_ptr get_mutable_type() const {
+		return right_->query_mutable_type();
+	}
+
 	void static_error_analysis() const {
 		variant_type_ptr type = left_->query_variant_type();
 		ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debug_pinpoint_location());
-		ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
+		ASSERT_LOG(variant_type::may_be_null(type) == false, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
@@ -997,6 +1034,10 @@ private:
 		}
 
 		return variant_type::get_any();
+	}
+
+	variant_type_ptr get_mutable_type() const {
+		return query_variant_type();
 	}
 
 	void static_error_analysis() const {
@@ -1657,7 +1698,7 @@ private:
 			return const_formula_callable_definition_ptr();
 		}
 
-		return expression_->query_modified_definition_based_on_result(true, current_def, type_);
+		return expression_->query_modified_definition_based_on_result(result, current_def, type_);
 	}
 
 	variant_type_ptr type_;
@@ -2061,6 +2102,9 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		    n == 2 &&  *function_name == "zip")) {
 			variant_type_ptr sequence_type = (*res)[0]->query_variant_type();
 			variant_type_ptr value_type = sequence_type->is_list_of();
+			if(!value_type && *function_name == "zip") {
+				value_type = sequence_type->is_map_of().second;
+			}
 			callable_def = get_variant_comparator_definition(callable_def, value_type);
 		}
 
@@ -2076,6 +2120,8 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 			} else {
 				types[0] = variant_type::get_custom_object();
 			}
+
+			std::cerr << "SPAWN TYPE: " << types[0]->to_string() << "\n";
 
 			callable_def = game_logic::create_formula_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 		}

@@ -31,8 +31,7 @@ namespace gui
 
 		void set_rotation(GLfloat rotate);
 	private:
-		virtual variant get_value(const std::string& key) const;
-		virtual void set_value(const std::string& key, const variant& value);
+	DECLARE_CALLABLE(bar_widget);
 	protected:
 		virtual void handle_draw() const;
 		virtual void handle_process();

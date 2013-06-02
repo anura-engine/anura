@@ -44,6 +44,7 @@ public:
 	static variant_type_ptr get_union(const std::vector<variant_type_ptr>& items);
 	static variant_type_ptr get_list(variant_type_ptr element_type);
 	static variant_type_ptr get_map(variant_type_ptr key_type, variant_type_ptr value_type);
+	static variant_type_ptr get_specific_map(const std::map<variant, variant_type_ptr>& type_map);
 	static variant_type_ptr get_class(const std::string& class_name);
 	static variant_type_ptr get_custom_object(const std::string& name="");
 	static variant_type_ptr get_builtin(const std::string& id);
@@ -52,6 +53,7 @@ public:
 
 	//get a version of the type that we now know isn't null.
 	static variant_type_ptr get_null_excluded(variant_type_ptr input);
+	static variant_type_ptr get_with_exclusion(variant_type_ptr input, variant_type_ptr subtract);
 
 	variant_type();
 	virtual ~variant_type();
@@ -62,6 +64,7 @@ public:
 	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
 	virtual variant_type_ptr is_list_of() const { return variant_type_ptr(); }
 	virtual std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const { return std::pair<variant_type_ptr,variant_type_ptr>(); }
+	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return NULL; }
 	virtual bool is_type(variant::TYPE type) const { return false; }
 	virtual bool is_class(std::string* class_name=NULL) const { return false; }
 	virtual const std::string* is_builtin() const { return NULL; }
@@ -85,12 +88,15 @@ public:
 
 	virtual bool maybe_convertible_to(variant_type_ptr type) const { return false; }
 
+	static bool may_be_null(variant_type_ptr type);
 
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
+	virtual variant_type_ptr subtract(variant_type_ptr other) const { return variant_type_ptr(); }
 
 	mutable std::string str_;
 };
+
 
 variant_type_ptr get_variant_type_from_value(const variant& value);
 

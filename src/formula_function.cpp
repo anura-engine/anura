@@ -2956,6 +2956,18 @@ private:
 		return variant_type::get_commands();
 	}
 
+	void static_error_analysis() const {
+		variant_type_ptr target_type = args()[0]->query_mutable_type();
+		if(!target_type) {
+			ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+			return;
+		}
+
+		if(!variant_types_compatible(target_type, args()[1]->query_variant_type())) {
+			ASSERT_LOG(false, "STATIC ANALYSIS: " << args()[1]->query_variant_type()->to_string() << " -> " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+		}
+	}
+
 	std::string key_;
 	int me_slot_, slot_;
 	mutable boost::intrusive_ptr<set_by_slot_command> cmd_;
@@ -3275,6 +3287,8 @@ FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function g
 	}
 
 	return variant(new backed_map(docname, fn, m));
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 END_FUNCTION_DEF(file_backed_map)
 
 FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes 'doc' to the given filename")

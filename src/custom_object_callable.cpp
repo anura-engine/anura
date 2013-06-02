@@ -57,13 +57,16 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 		set_type_name("custom_obj");
 	}
 
+	//make sure 'library' is initialized as a valid type.
+	game_logic::get_library_definition();
+
 	static const Property CustomObjectProperties[] = {
 	{ "value", "any" },
 	{ "_data", "any" },
 	{ "consts", "any" },
 	{ "type", "any" },
 	{ "active", "any" },
-	{ "lib", "any" },
+	{ "lib", "library" },
 
 	{ "time_in_animation", "int" },
 	{ "time_in_animation_delta", "int" },
@@ -101,7 +104,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "h", "int" },
 	{ "mid_x", "int" },
 	{ "mid_y", "int" },
-	{ "mid_xy", "int" },
+	{ "mid_xy", "[int]" },
 	{ "midpoint_x", "int" },
 	{ "midpoint_y", "int" },
 	{ "midpoint_xy", "int" }, 
@@ -109,7 +112,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "solid_rect", "object" },
 	{ "solid_mid_x", "int" },
 	{ "solid_mid_y", "int" },
-	{ "solid_mid_xy", "int" }, 
+	{ "solid_mid_xy", "[int]" }, 
 
 	{ "img_mid_x", "int" },
 	{ "img_mid_y", "int" },
@@ -179,8 +182,8 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "is_standing_on_platform", "null|bool|custom_obj" },
 	{ "standing_on", "null|custom_obj" },
 	
-	{ "shader", "null|object" },
-	{ "effects", "any" },
+	{ "shader", "null|shader_program" },
+	{ "effects", "[object]" },
 	{ "variations", "[string]" },
 	
 	{ "attached_objects", "[custom_obj]" },
@@ -222,33 +225,41 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "xy_array", "[decimal]" },
 	{ "uv_segments", "[int]" },
 	
-	{ "draw_primitives", "[object]" },
+	{ "draw_primitives", "[object]/[object|map]|map" },
 	{ "event_handlers", "any" },
 	
 	{ "use_absolute_screen_coordinates", "bool" },
 	
-	{ "widgets", "any" },
+	{ "widgets", "object/[object|map]|object|map" },
 	{ "textv", "any" },
 	{ "body", "any" },
-	{ "paused", "any" },
-	{ "mouseover_delay", "any" },
-	{ "mouseover_area", "any" },
+	{ "paused", "bool" },
+	{ "mouseover_delay", "int" },
+	{ "mouseover_area", "[int]" },
 	
-	{ "ctrl_up", "any" },
-	{ "ctrl_down", "any" },
-	{ "ctrl_left", "any" },
-	{ "ctrl_right", "any" },
+	{ "ctrl_up", "bool" },
+	{ "ctrl_down", "bool" },
+	{ "ctrl_left", "bool" },
+	{ "ctrl_right", "bool" },
 	
-	{ "ctrl_attack", "any" },
-	{ "ctrl_jump", "any" },
-	{ "ctrl_tongue", "any" },
+	{ "ctrl_attack", "bool" },
+	{ "ctrl_jump", "bool" },
+	{ "ctrl_tongue", "bool" },
 };
 	ASSERT_EQ(NUM_CUSTOM_OBJECT_PROPERTIES, sizeof(CustomObjectProperties)/sizeof(*CustomObjectProperties));
 
 	if(global_entries().empty()) {
 		for(int n = 0; n != sizeof(CustomObjectProperties)/sizeof(*CustomObjectProperties); ++n) {
 			global_entries().push_back(entry(CustomObjectProperties[n].id));
-			global_entries().back().set_variant_type(parse_variant_type(variant(CustomObjectProperties[n].type)));
+
+			const std::string& type = CustomObjectProperties[n].type;
+			std::string::const_iterator itor = std::find(type.begin(), type.end(), '/');
+			std::string read_type(type.begin(), itor);
+			global_entries().back().set_variant_type(parse_variant_type(variant(read_type)));
+
+			if(itor != type.end()) {
+				global_entries().back().write_type = parse_variant_type(variant(std::string(itor+1, type.end())));
+			}
 		}
 
 		for(int n = 0; n != global_entries().size(); ++n) {
@@ -312,9 +323,10 @@ const game_logic::formula_callable_definition::entry* custom_object_callable::ge
 	return &entries_[slot];
 }
 
-void custom_object_callable::add_property(const std::string& id, variant_type_ptr type)
+void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type)
 {
 	properties_[id] = entries_.size();
 	entries_.push_back(entry(id));
 	entries_.back().set_variant_type(type);
+	entries_.back().write_type = write_type;
 }

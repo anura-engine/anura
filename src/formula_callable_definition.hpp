@@ -38,6 +38,12 @@ public:
 
 		variant_type_ptr variant_type;
 
+		//if the entry accepts different types for writes vs reads
+		//(i.e. using set() or add()) then record that type here.
+		variant_type_ptr write_type;
+
+		variant_type_ptr get_write_type() const { if(write_type) { return write_type; } return variant_type; }
+
 		mutable int access_count;
 	};
 
@@ -74,6 +80,8 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 formula_callable_definition_ptr create_formula_callable_definition(const std::string* beg, const std::string* end, const_formula_callable_definition_ptr base=NULL, variant_type_ptr* begin_types=NULL);
 
 int register_formula_callable_definition(const std::string& id, const_formula_callable_definition_ptr def);
+int register_formula_callable_definition(const std::string& id, const std::string& base_id, const_formula_callable_definition_ptr def);
+bool registered_definition_is_a(const std::string& derived, const std::string& base);
 const_formula_callable_definition_ptr get_formula_callable_definition(const std::string& id);
 
 int add_callable_definition_init(void(*fn)());
@@ -156,7 +164,7 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 		int i = 0; \
 		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL) != -1) { ++i; } \
 		game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&classname##_fields[0], &classname##_fields[0] + classname##_fields.size(), game_logic::formula_callable_definition_ptr(), &classname##_variant_types[0]); \
-		register_formula_callable_definition(#classname, def); \
+		register_formula_callable_definition(#classname, #base_classname, def); \
 	} \
 	int dummy_var_##classname = game_logic::add_callable_definition_init(init_callable_##classname); \
 	} \

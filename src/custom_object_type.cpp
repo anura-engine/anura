@@ -698,6 +698,19 @@ void custom_object_type::init_event_handlers(variant node,
 }
 
 namespace {
+bool custom_object_strict_mode = false;
+class strict_mode_scope {
+	bool old_value_;
+public:
+	strict_mode_scope() : old_value_(custom_object_strict_mode) {
+		custom_object_strict_mode = true;
+	}
+
+	~strict_mode_scope() {
+		custom_object_strict_mode = old_value_;
+	}
+};
+
 std::vector<std::string> custom_object_type_stack;
 struct custom_object_type_init_scope {
 	explicit custom_object_type_init_scope(const std::string& id) {
@@ -763,9 +776,14 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
-	is_strict_(node["is_strict"].as_bool(false)),
+	is_strict_(node["is_strict"].as_bool(custom_object_strict_mode)),
 	is_shadow_(node["is_shadow"].as_bool(false))
 {
+	boost::scoped_ptr<strict_mode_scope> strict_scope;
+	if(is_strict_) {
+		strict_scope.reset(new strict_mode_scope);
+	}
+
 	const custom_object_type_init_scope init_scope(id);
 	const bool is_recursive_call = std::count(custom_object_type_stack.begin(), custom_object_type_stack.end(), id) > 0;
 
@@ -958,7 +976,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
 			variant value = properties_node[key];
-			variant_type_ptr type;
+			variant_type_ptr type, set_type;
 			if(value.is_string()) {
 				type = parse_optional_function_type(value);
 				if(is_strict_ && type) {
@@ -970,11 +988,17 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					type = parse_optional_formula_type(value);
 				}
 
+				set_type = variant_type::get_type(variant::VARIANT_TYPE_NULL);
+
 			} else if(value.is_map()) {
 				if(value.has_key("type")) {
 					type = parse_variant_type(value["type"]);
 				} else {
 					ASSERT_LOG(!is_strict_, "Property does not have a type specifier in strict mode object " << id_ << " property " << k);
+				}
+
+				if(value.has_key("set_type")) {
+					set_type = parse_variant_type(value["set_type"]);
 				}
 			} else {
 				type = get_variant_type_from_value(value);
@@ -984,7 +1008,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				properties_to_infer.insert(k);
 			}
 
-			callable_definition_->add_property(k, type);
+			callable_definition_->add_property(k, type, set_type);
 		}
 	}
 
@@ -1034,7 +1058,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 			ASSERT_LOG(false, "Could not infer properties in object " << id_ << ": " << s.str());
 		}
 	}
-
+/*
 	fprintf(stderr, "CALLABLE DEFINITION FOR %s: {\n", id_.c_str());
 	for(int n = 0; n != callable_definition_->num_slots(); ++n) {
 		if(callable_definition_->get_entry(n)->variant_type) {
@@ -1044,6 +1068,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 	}
 	fprintf(stderr, "}\n");
+*/
 
 	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->set_object_type(variant_type::get_custom_object(id_));

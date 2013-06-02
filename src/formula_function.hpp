@@ -112,6 +112,8 @@ public:
 
 	variant_type_ptr query_variant_type() const { variant_type_ptr res = get_variant_type(); if(res) { return res; } else { return variant_type::get_any(); } }
 
+	variant_type_ptr query_mutable_type() const { return get_mutable_type(); }
+
 	const_formula_callable_definition_ptr query_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
 
 	std::vector<const_expression_ptr> query_children() const;
@@ -121,6 +123,7 @@ public:
 
 protected:
 	virtual variant_type_ptr get_variant_type() const { return variant_type_ptr(); }
+	virtual variant_type_ptr get_mutable_type() const { return variant_type_ptr(); }
 	virtual variant execute_member(const formula_callable& variables, std::string& id, variant* variant_id) const;
 private:
 	virtual variant execute(const formula_callable& variables) const = 0;

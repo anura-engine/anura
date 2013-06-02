@@ -190,7 +190,7 @@ public:
 	const entry* get_entry(int slot) const;
 	int num_slots() const { return entries_.size(); }
 
-	void add_property(const std::string& id, variant_type_ptr type);
+	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type);
 
 private:
 	std::vector<entry> entries_;
