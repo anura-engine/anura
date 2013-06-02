@@ -492,7 +492,9 @@ extern "C" int main(int argcount, char* argvec[])
 			arg_value = std::string(equal+1, arg.end());
 		}
 		std::cerr << "ARGS: " << arg << std::endl;
-		if(arg_name == "--module") {
+		if(arg.substr(0,4) == "-psn") {
+			// ignore.
+		} else if(arg_name == "--module") {
 			// ignore already processed.
 		} else if(arg_name == "--profile" || arg == "--profile") {
 			profile_output_buf = arg_value;
