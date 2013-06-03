@@ -1117,6 +1117,34 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("map")
 
+	variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
+
+		if(args().size() > 4) {
+			variant_type_ptr map_type = args()[4]->query_variant_type();
+			assert(map_type);
+
+			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
+			if(props) {
+				foreach(int slot, type->slots_requiring_initialization()) {
+					const std::string& prop_id = type->get_entry(slot)->id;
+					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
+				}
+
+				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
+					const int slot = type->get_slot(itor->first.as_string());
+					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
+
+					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.write_type, itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.write_type->to_string() << " is expected " << debug_pinpoint_location());
+				}
+			}
+		}
+	}
+
 //TODO: make this dynamically calculate the creature type
 FUNCTION_TYPE_DEF
 	variant v;

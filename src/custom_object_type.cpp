@@ -977,6 +977,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 			const std::string& k = key.as_string();
 			variant value = properties_node[key];
 			variant_type_ptr type, set_type;
+			bool requires_initialization = false;
 			if(value.is_string()) {
 				type = parse_optional_function_type(value);
 				if(is_strict_ && type) {
@@ -1000,6 +1001,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				if(value.has_key("set_type")) {
 					set_type = parse_variant_type(value["set_type"]);
 				}
+
+
+				if(is_strict_ && type) {
+					variant default_value = value["default"];
+					if(!type->match(default_value)) {
+						ASSERT_LOG(default_value.is_null(), "Default value for " << id_ << "." << k << " is " << default_value.write_json() << " of type " << get_variant_type_from_value(default_value)->to_string() << " does not match type " << type->to_string());
+						requires_initialization = true;
+					}
+				}
 			} else {
 				type = get_variant_type_from_value(value);
 			}
@@ -1008,7 +1018,11 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				properties_to_infer.insert(k);
 			}
 
-			callable_definition_->add_property(k, type, set_type);
+			if(requires_initialization) {
+				std::cerr << "REQUIRES_INIT: " << id_ << "." << k << "\n";
+			}
+
+			callable_definition_->add_property(k, type, set_type, requires_initialization);
 		}
 	}
 
@@ -1132,6 +1146,12 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					entry.const_value.reset(new variant(v));
 				}
 			}
+
+			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value);
+			if(entry.requires_initialization) {
+				properties_requiring_initialization_.push_back(slot_properties_.size());
+			}
+
 			slot_properties_.push_back(entry);
 		}
 	}
@@ -1199,11 +1219,35 @@ custom_object_type::~custom_object_type()
 {
 }
 
+namespace {
+struct stack_scope {
+	stack_scope(std::vector<std::string>* stack, const std::string& item)
+	  : stack_(stack)
+	{
+		stack_->push_back(item);
+	}
+
+	~stack_scope() {
+		stack_->pop_back();
+	}
+
+	std::vector<std::string>* stack_;
+};
+}
+
 void custom_object_type::init_sub_objects(variant node, const custom_object_type* old_type)
 {
+	static std::vector<std::string> init_stack;
 	foreach(variant object_node, node["object_type"].as_list()) {
 		variant merged = merge_prototype(object_node);
 		std::string sub_key = object_node["id"].as_string();
+
+		const std::string init_key = id_ + "." + sub_key;
+		if(std::count(init_stack.begin(), init_stack.end(), init_key)) {
+			continue;
+		}
+
+		stack_scope scope(&init_stack, init_key);
 
 		if(old_type && old_type->sub_objects_.count(sub_key) &&
 		   old_type->sub_objects_.find(sub_key)->second->node_ == merged) {

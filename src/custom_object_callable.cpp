@@ -323,8 +323,12 @@ const game_logic::formula_callable_definition::entry* custom_object_callable::ge
 	return &entries_[slot];
 }
 
-void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type)
+void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization)
 {
+	if(requires_initialization) {
+		slots_requiring_initialization_.push_back(entries_.size());
+	}
+
 	properties_[id] = entries_.size();
 	entries_.push_back(entry(id));
 	entries_.back().set_variant_type(type);

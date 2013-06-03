@@ -190,12 +190,16 @@ public:
 	const entry* get_entry(int slot) const;
 	int num_slots() const { return entries_.size(); }
 
-	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type);
+	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
+
+	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization);
 
 private:
 	std::vector<entry> entries_;
 
 	std::map<std::string, int> properties_;
+
+	std::vector<int> slots_requiring_initialization_;
 };
 
 typedef boost::intrusive_ptr<custom_object_callable> custom_object_callable_ptr;

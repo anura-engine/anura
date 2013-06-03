@@ -191,7 +191,7 @@ public:
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : storage_slot(-1), persistent(true) {}
+		property_entry() : storage_slot(-1), persistent(true), requires_initialization(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter;
 		boost::shared_ptr<variant> const_value;
@@ -199,10 +199,12 @@ public:
 		variant_type_ptr type, set_type;
 		int storage_slot;
 		bool persistent;
+		bool requires_initialization;
 	};
 
 	const std::map<std::string, property_entry>& properties() const { return properties_; }
 	const std::vector<property_entry>& slot_properties() const { return slot_properties_; }
+	const std::vector<int>& properties_requiring_initialization() const { return properties_requiring_initialization_; }
 	int slot_properties_base() const { return slot_properties_base_; }
 
 	game_logic::function_symbol_table* function_symbols() const;
@@ -328,6 +330,7 @@ private:
 
 	std::map<std::string, property_entry> properties_;
 	std::vector<property_entry> slot_properties_;
+	std::vector<int> properties_requiring_initialization_;
 	int slot_properties_base_;
 
 	int teleport_offset_x_, teleport_offset_y_;
