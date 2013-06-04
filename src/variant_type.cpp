@@ -671,6 +671,7 @@ public:
 	bool is_compatible(variant_type_ptr type) const {
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
+			fprintf(stderr, "TEST COMPAT: %s <- %s: %d\n", value_type_->to_string().c_str(), value_type->to_string().c_str(), (int)variant_types_compatible(value_type_, value_type));
 			return variant_types_compatible(value_type_, value_type);
 		}
 
@@ -683,6 +684,90 @@ public:
 	}
 private:
 	variant_type_ptr value_type_;
+};
+
+class variant_type_specific_list : public variant_type
+{
+public:
+	explicit variant_type_specific_list(const std::vector<variant_type_ptr>& value) : value_(value)
+	{
+		list_ = get_union(value);
+	}
+
+	bool match(const variant& v) const {
+		if(!v.is_list()) {
+			return false;
+		}
+
+		if(v.num_elements() != value_.size()) {
+			return false;
+		}
+
+		for(int n = 0; n != v.num_elements(); ++n) {
+			if(!value_[n]->match(v[n])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_specific_list* other = dynamic_cast<const variant_type_specific_list*>(&o);
+		if(!other) {
+			return false;
+		}
+
+		if(value_.size() != other->value_.size()) {
+			return false;
+		}
+
+		for(int n = 0; n != value_.size(); ++n) {
+			if(value_[n]->is_equal(*other->value_[n]) == false) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	std::string to_string() const {
+		std::ostringstream s;
+		s << "[";
+		foreach(variant_type_ptr t, value_) {
+			s << t->to_string() << ",";
+		}
+		s << "]";
+		return s.str();
+	}
+
+	variant_type_ptr is_list_of() const {
+		return list_;
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		if(is_equal(*type)) {
+			return true;
+		}
+
+		const variant_type_specific_list* other = dynamic_cast<const variant_type_specific_list*>(type.get());
+		if(!other || other->value_.size() != value_.size()) {
+			return false;
+		}
+
+		for(int n = 0; n != value_.size(); ++n) {
+			if(!variant_types_compatible(value_[n], other->value_[n])) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	const std::vector<variant_type_ptr>* is_specific_list() const { return &value_; }
+private:
+	variant_type_ptr list_;
+	std::vector<variant_type_ptr> value_;
 };
 
 class variant_type_map : public variant_type
@@ -1120,19 +1205,10 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		std::vector<variant_type_ptr> types;
 		foreach(const variant& item, value.as_list()) {
 			variant_type_ptr new_type = get_variant_type_from_value(item);
-			foreach(const variant_type_ptr& existing, types) {
-				if(existing->is_equal(*new_type)) {
-					new_type.reset();
-					break;
-				}
-			}
-
-			if(new_type) {
-				types.push_back(new_type);
-			}
+			types.push_back(new_type);
 		}
 
-		return variant_type::get_list(variant_type::get_union(types));
+		return variant_type::get_specific_list(types);
 	} else if(value.is_map()) {
 
 		bool all_string_keys = true;
@@ -1480,11 +1556,34 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			ASSERT_COND(i1 != end, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
 			
 			const variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
-			ASSERT_COND(i1 == end, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
-	
-			v.push_back(variant_type_ptr(new variant_type_list(value_type)));
-	
-			++i1;
+			if(!value_type) {
+				return value_type;
+			}
+			if(i1 != end && i1->type == TOKEN_COMMA) {
+				std::vector<variant_type_ptr> types;
+				types.push_back(value_type);
+				++i1;
+				while(i1 != end) {
+					const variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
+					if(!value_type) {
+						return value_type;
+					}
+
+					types.push_back(value_type);
+
+					ASSERT_COND(i1 == end || i1->type == TOKEN_COMMA, "Error parsing array type: " << original_str.debug_location());
+					if(i1->type == TOKEN_COMMA) {
+						++i1;
+					}
+				}
+
+				v.push_back(variant_type::get_specific_list(types));
+				++i1;
+			} else {
+				ASSERT_COND(i1 == end, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
+				v.push_back(variant_type_ptr(new variant_type_list(value_type)));
+				++i1;
+			}
 		} else {
 			ASSERT_COND(false, "UNEXPECTED TOKENS WHEN PARSING TYPE: " << std::string(i1->begin, (i2-1)->end) << " AT " << original_str.debug_location());
 		}
@@ -1733,6 +1832,11 @@ variant_type_ptr variant_type::get_list(variant_type_ptr element_type)
 	return variant_type_ptr(new variant_type_list(element_type));
 }
 
+variant_type_ptr variant_type::get_specific_list(const std::vector<variant_type_ptr>& types)
+{
+	return variant_type_ptr(new variant_type_specific_list(types));
+}
+
 variant_type_ptr variant_type::get_map(variant_type_ptr key_type, variant_type_ptr value_type)
 {
 	return variant_type_ptr(new variant_type_map(key_type, value_type));
@@ -1814,12 +1918,17 @@ UNIT_TEST(variant_type) {
 	TYPES_COMPAT("{int|string -> string}", "{int -> string}");
 	TYPES_COMPAT("map", "{int -> string}");
 
+	TYPES_COMPAT("[int]", "[int,int]");
+	TYPES_COMPAT("[int,int|decimal]", "[int,decimal]");
+
 	TYPES_INCOMPAT("int", "int|bool");
 	TYPES_INCOMPAT("int", "decimal");
 	TYPES_INCOMPAT("int", "decimal");
 	TYPES_INCOMPAT("[int]", "list");
 	TYPES_INCOMPAT("{int -> int}", "map");
 	TYPES_INCOMPAT("{int -> int}", "{string -> int}");
+	TYPES_INCOMPAT("[int]", "[int,int,decimal]");
+	TYPES_INCOMPAT("[int,int]", "[int]");
 
 #undef TYPES_COMPAT	
 }

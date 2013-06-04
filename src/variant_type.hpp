@@ -43,6 +43,7 @@ public:
 	static variant_type_ptr get_type(variant::TYPE type);
 	static variant_type_ptr get_union(const std::vector<variant_type_ptr>& items);
 	static variant_type_ptr get_list(variant_type_ptr element_type);
+	static variant_type_ptr get_specific_list(const std::vector<variant_type_ptr>& types);
 	static variant_type_ptr get_map(variant_type_ptr key_type, variant_type_ptr value_type);
 	static variant_type_ptr get_specific_map(const std::map<variant, variant_type_ptr>& type_map);
 	static variant_type_ptr get_class(const std::string& class_name);
@@ -63,6 +64,7 @@ public:
 	virtual bool is_any() const { return false; }
 	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
 	virtual variant_type_ptr is_list_of() const { return variant_type_ptr(); }
+	virtual const std::vector<variant_type_ptr>* is_specific_list() const { return NULL; }
 	virtual std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const { return std::pair<variant_type_ptr,variant_type_ptr>(); }
 	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return NULL; }
 	virtual bool is_type(variant::TYPE type) const { return false; }

@@ -262,23 +262,10 @@ private:
 		std::vector<variant_type_ptr> types;
 		foreach(const expression_ptr& item, items_) {
 			variant_type_ptr new_type = item->query_variant_type();
-			foreach(const variant_type_ptr& existing, types) {
-				if(existing->is_equal(*new_type)) {
-					new_type.reset();
-					break;
-				}
-			}
-
-			if(new_type) {
-				types.push_back(new_type);
-			}
+			types.push_back(new_type);
 		}
 
-		if(types.size() == 1) {
-			return variant_type::get_list(types[0]);
-		} else {
-			return variant_type::get_list(variant_type::get_union(types));
-		}
+		return variant_type::get_specific_list(types);
 	}
 
 	//a special version of static evaluation that doesn't save a
