@@ -975,6 +975,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	foreach(variant properties_node, node["properties"].as_list()) {
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
+			ASSERT_LOG(callable_definition_->get_slot(k) == -1, "Custom object property " << id_ << "." << k << " has the same name as a builtin");
+
 			variant value = properties_node[key];
 			variant_type_ptr type, set_type;
 			bool requires_initialization = false;
