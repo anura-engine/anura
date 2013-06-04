@@ -254,16 +254,31 @@ public:
 
 			foreach(variant key, properties.get_keys().as_list()) {
 				ASSERT_LOG(std::count(BaseFields, BaseFields + NUM_BASE_FIELDS, key.as_string()) == 0, "Class " << class_name << " has property '" << key.as_string() << "' which is a reserved word");
+				ASSERT_LOG(key.as_string() != "", "Class " << class_name << " has property name which is empty");
 
 				if(properties_.count(key.as_string()) == 0) {
 					properties_[key.as_string()] = slots_.size();
 					slots_.push_back(entry(key.as_string()));
+					if(key.as_string()[0] == '_') {
+						slots_.back().private_counter++;
+					}
 				}
 
 				const int slot = properties_[key.as_string()];
 
 				variant prop_node = properties[key];
 				if(prop_node.is_map()) {
+					variant access = prop_node["access"];
+					if(access.is_null() == false) {
+						if(access.as_string() == "public") {
+							slots_[slot].private_counter = 0;
+						} else if(access.as_string() == "private") {
+							slots_[slot].private_counter = 1;
+						} else {
+							ASSERT_LOG(false, "Unknown property access specifier '" << access.as_string() << "' " << access.debug_location());
+						}
+					}
+
 					variant valid_types = prop_node["type"];
 					if(valid_types.is_null() && prop_node["variable"].is_bool() && prop_node["variable"].as_bool()) {
 						variant default_value = prop_node["default"];
@@ -307,9 +322,8 @@ public:
 
 	void init() {
 		foreach(entry& e, slots_) {
-			std::string class_name;
-			if(e.variant_type && e.variant_type->is_class(&class_name)) {
-				e.type_definition = get_class_definition(class_name);
+			if(e.variant_type && !e.type_definition) {
+				e.type_definition = e.variant_type->get_definition();
 			}
 		}
 	}
@@ -346,13 +360,39 @@ public:
 		return &type_name_;
 	}
 
+	void push_private_access() {
+		foreach(entry& e, slots_) {
+			e.private_counter--;
+		}
+	}
+
+	void pop_private_access() {
+		foreach(entry& e, slots_) {
+			e.private_counter++;
+		}
+	}
+
 private:
 	std::map<std::string, int> properties_;
 	std::vector<entry> slots_;
 	std::string type_name_;
 };
 
-typedef std::map<std::string, formula_class_definition*> class_definition_map;
+struct definition_access_private_in_scope
+{
+	definition_access_private_in_scope(formula_class_definition& def) : def_(def)
+	{
+		def_.push_private_access();
+	}
+	~definition_access_private_in_scope()
+	{
+		def_.pop_private_access();
+	}
+
+	formula_class_definition& def_;
+};
+
+typedef std::map<std::string, boost::intrusive_ptr<formula_class_definition> > class_definition_map;
 class_definition_map class_definitions;
 
 typedef std::map<std::string, boost::intrusive_ptr<formula_class> > classes_map;
@@ -370,7 +410,7 @@ formula_callable_definition_ptr get_class_definition(const std::string& name)
 	}
 
 	formula_class_definition* def = new formula_class_definition(name, get_class_node(name));
-	class_definitions[name] = def;
+	class_definitions[name].reset(def);
 	def->init();
 
 	return def;
@@ -468,6 +508,14 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 		properties = node;
 	}
 
+	formula_callable_definition_ptr class_def = get_class_definition(class_name);
+	assert(class_def);
+
+	formula_class_definition* class_definition = dynamic_cast<formula_class_definition*>(class_def.get());
+	assert(class_definition);
+
+	const definition_access_private_in_scope expose_scope(*class_definition);
+
 	foreach(variant key, properties.get_keys().as_list()) {
 		const variant prop_node = properties[key];
 		property_entry entry(class_name, key.as_string(), prop_node, nstate_slots_);
@@ -485,7 +533,6 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 	if(node["constructor"].is_string()) {
 		const formula::strict_check_scope strict_checking;
 
-		formula_callable_definition_ptr class_def = get_class_definition(class_name);
 		constructor_.push_back(game_logic::formula::create_optional_formula(node["constructor"], NULL, class_def));
 	}
 

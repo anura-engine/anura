@@ -36,6 +36,7 @@ public:
 	};
 
 	explicit formula_interface(const std::map<std::string, variant_type_ptr>& types);
+	const std::map<std::string, variant_type_ptr>& get_types() const { return types_; }
 
 	formula_interface_instance_factory* create_factory(variant_type_ptr type) const; //throw interface_mismatch_error
 	formula_interface_instance_factory* get_dynamic_factory() const;
@@ -49,6 +50,7 @@ public:
 private:
 	variant get_value(const std::string& key) const;
 
+	std::map<std::string, variant_type_ptr> types_;
 	boost::scoped_ptr<formula_interface_impl> impl_;
 };
 

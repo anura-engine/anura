@@ -433,7 +433,28 @@ public:
 
 	bool is_compatible(variant_type_ptr type) const {
 		if(type->is_map_of().first) {
-			return true;
+			const std::map<variant, variant_type_ptr>* spec = type->is_specific_map();
+			if(!spec) {
+				return false;
+			}
+			const std::map<std::string, variant_type_ptr>& interface = interface_->get_types();
+			if(spec) {
+				for(std::map<std::string, variant_type_ptr>::const_iterator i = interface.begin(); i != interface.end(); ++i) {
+					std::map<variant, variant_type_ptr>::const_iterator entry = spec->find(variant(i->first));
+					if(entry == spec->end()) {
+						if(!may_be_null(i->second)) {
+							return false;
+						}
+					} else {
+						if(!variant_types_compatible(i->second, entry->second)) {
+							return false;
+						}
+					}
+				}
+
+				return true;
+			}
+			return false;
 		}
 
 		try {

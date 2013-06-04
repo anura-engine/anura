@@ -2418,6 +2418,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		if(g_strict_formula_checking) {
 			ASSERT_LOG(!result_type || variant_types_compatible(result_type, fml->query_variant_type()), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->query_variant_type()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end));
 		}
+
 		return expression_ptr(new lambda_function_expression(args, fml, callable_def ? callable_def->num_slots() : 0, default_args, variant_types, result_type ? result_type : fml->query_variant_type()));
 	}
 

@@ -60,6 +60,9 @@ public:
 	virtual ~variant_type();
 	virtual bool match(const variant& v) const = 0;
 
+	struct conversion_failure_exception {};
+	variant convert(const variant& v) const { if(match(v)) return v; return convert_impl(v); }
+
 	virtual bool is_numeric() const { return false; }
 	virtual bool is_any() const { return false; }
 	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
@@ -95,6 +98,8 @@ public:
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
 	virtual variant_type_ptr subtract(variant_type_ptr other) const { return variant_type_ptr(); }
+
+	virtual variant convert_impl(const variant& v) const { throw conversion_failure_exception(); }
 
 	mutable std::string str_;
 };

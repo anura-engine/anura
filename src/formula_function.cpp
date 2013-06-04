@@ -1876,7 +1876,12 @@ private:
 			}
 		}
 
-		return args()[0]->query_variant_type();
+		variant_type_ptr list_type = args()[0]->query_variant_type();
+		if(list_type->is_list_of()) {
+			return variant_type::get_list(list_type->is_list_of());
+		} else {
+			return variant_type::get_list(variant_type::get_any());
+		}
 	}
 };
 	
@@ -2205,7 +2210,12 @@ FUNCTION_DEF(reverse, 1, 1, "reverse(list): reverses the given list")
 FUNCTION_ARGS_DEF
 	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type();
+	variant_type_ptr list_type = args()[0]->query_variant_type();
+	if(list_type->is_list_of()) {
+		return variant_type::get_list(list_type->is_list_of());
+	} else {
+		return variant_type::get_list(variant_type::get_any());
+	}
 END_FUNCTION_DEF(reverse)
 
 FUNCTION_DEF(head, 1, 1, "head(list): gives the first element of a list, or null for an empty list")
