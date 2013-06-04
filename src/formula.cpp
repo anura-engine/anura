@@ -666,6 +666,12 @@ private:
 		return NULL;
 	}
 
+	void static_error_analysis() const {
+		const formula_callable_definition::entry* entry = callable_def_->get_entry(slot_);
+		ASSERT_LOG(entry != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debug_pinpoint_location());
+		ASSERT_LOG(entry->is_private() == false, "Identifier " << id_ << " is private " << debug_pinpoint_location());
+	}
+
 	int slot_;
 	std::string id_;
 	const_formula_callable_definition_ptr callable_def_;
@@ -2300,6 +2306,9 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 	
 	if(result) {
 		result->copy_debug_info_from(*original);
+		if(g_strict_formula_checking) {
+			result->perform_static_error_analysis();
+		}
 	}
 
 	return result;

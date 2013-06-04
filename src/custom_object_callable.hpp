@@ -192,7 +192,10 @@ public:
 
 	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
 
-	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization);
+	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private);
+
+	void push_private_access();
+	void pop_private_access();
 
 private:
 	std::vector<entry> entries_;
@@ -200,6 +203,14 @@ private:
 	std::map<std::string, int> properties_;
 
 	std::vector<int> slots_requiring_initialization_;
+};
+
+struct custom_object_callable_expose_private_scope
+{
+	custom_object_callable_expose_private_scope(custom_object_callable& c);
+	~custom_object_callable_expose_private_scope();
+
+	custom_object_callable& c_;
 };
 
 typedef boost::intrusive_ptr<custom_object_callable> custom_object_callable_ptr;

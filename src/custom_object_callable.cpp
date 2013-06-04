@@ -16,6 +16,7 @@
 */
 #include "asserts.hpp"
 #include "custom_object_callable.hpp"
+#include "foreach.hpp"
 #include "formula_object.hpp"
 #include "level.hpp"
 
@@ -323,7 +324,7 @@ const game_logic::formula_callable_definition::entry* custom_object_callable::ge
 	return &entries_[slot];
 }
 
-void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization)
+void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private)
 {
 	if(requires_initialization) {
 		slots_requiring_initialization_.push_back(entries_.size());
@@ -333,4 +334,32 @@ void custom_object_callable::add_property(const std::string& id, variant_type_pt
 	entries_.push_back(entry(id));
 	entries_.back().set_variant_type(type);
 	entries_.back().write_type = write_type;
+	entries_.back().private_counter = is_private ? 1 : 0;
+	if(is_private) {
+		std::cerr << "XXX: PRIVATE: " << id << "\n";
+	}
+}
+
+void custom_object_callable::push_private_access()
+{
+	foreach(entry& e, entries_) {
+		e.private_counter--;
+	}
+}
+
+void custom_object_callable::pop_private_access()
+{
+	foreach(entry& e, entries_) {
+		e.private_counter++;
+	}
+}
+
+custom_object_callable_expose_private_scope::custom_object_callable_expose_private_scope(custom_object_callable& c) : c_(c)
+{
+	c_.push_private_access();
+}
+
+custom_object_callable_expose_private_scope::~custom_object_callable_expose_private_scope()
+{
+	c_.pop_private_access();
 }

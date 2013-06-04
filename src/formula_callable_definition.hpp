@@ -31,7 +31,7 @@ class formula_callable_definition : public reference_counted_object
 {
 public:
 	struct entry {
-		explicit entry(const std::string& id_) : id(id_), type_definition(0), access_count(0) {}
+		explicit entry(const std::string& id_) : id(id_), type_definition(0), access_count(0), private_counter(0) {}
 		void set_variant_type(variant_type_ptr type);
 		std::string id;
 		const_formula_callable_definition_ptr type_definition;
@@ -45,6 +45,9 @@ public:
 		variant_type_ptr get_write_type() const { if(write_type) { return write_type; } return variant_type; }
 
 		mutable int access_count;
+
+		bool is_private() const { return private_counter > 0; }
+		int private_counter;
 	};
 
 	formula_callable_definition();

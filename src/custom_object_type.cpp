@@ -975,6 +975,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	foreach(variant properties_node, node["properties"].as_list()) {
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
+			ASSERT_LOG(k.empty() == false, "property is empty");
+			bool is_private = is_strict_ && k[0] == '_';
 			ASSERT_LOG(callable_definition_->get_slot(k) == -1, "Custom object property " << id_ << "." << k << " has the same name as a builtin");
 
 			variant value = properties_node[key];
@@ -994,6 +996,17 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				set_type = variant_type::get_type(variant::VARIANT_TYPE_NULL);
 
 			} else if(value.is_map()) {
+				if(value.has_key("access")) {
+					const std::string& access = value["access"].as_string();
+					if(access == "public") {
+						is_private = false;
+					} else if(access == "private") {
+						is_private = true;
+					} else {
+						ASSERT_LOG(false, "unknown access: " << access << " " << value["access"].debug_location());
+					}
+				}
+
 				if(value.has_key("type")) {
 					type = parse_variant_type(value["type"]);
 				} else {
@@ -1027,7 +1040,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				std::cerr << "REQUIRES_INIT: " << id_ << "." << k << "\n";
 			}
 
-			callable_definition_->add_property(k, type, set_type, requires_initialization);
+			callable_definition_->add_property(k, type, set_type, requires_initialization, is_private);
 		}
 	}
 
@@ -1103,6 +1116,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	const game_logic::formula::strict_check_scope strict_checking(false);
 	foreach(variant properties_node, node["properties"].as_list()) {
+		const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const game_logic::formula::strict_check_scope strict_checking(is_strict_);
 			const std::string& k = key.as_string();
