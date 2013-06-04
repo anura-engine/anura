@@ -484,6 +484,8 @@ private:
 	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
 
 	bool paused_;
+	
+	std::vector<int> properties_requiring_dynamic_initialization_;
 };
 
 #endif

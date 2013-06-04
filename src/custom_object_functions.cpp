@@ -1006,16 +1006,46 @@ private:
 	variant instantiation_commands_;
 };
 
-FUNCTION_DEF(spawn, 4, 5, "spawn(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
 	formula::fail_if_static_context();
 
 	const std::string type = EVAL_ARG(0).as_string();
 	const int x = EVAL_ARG(1).as_int();
 	const int y = EVAL_ARG(2).as_int();
-	const bool facing = EVAL_ARG(3).as_int() > 0;
+
+	bool facing = true;
+
+	variant arg3 = EVAL_ARG(3);
+
+	if(!arg3.is_map()) {
+		facing = arg3.as_int() > 0;
+	}
+
 	boost::intrusive_ptr<custom_object> obj(new custom_object(type, x, y, facing));
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
+
+	if(arg3.is_map()) {
+		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+
+		variant last_key;
+
+		variant properties = arg3;
+		variant keys = properties.get_keys();
+		for(int n = 0; n != keys.num_elements(); ++n) {
+			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+				last_key = keys[n];
+				continue;
+			}
+			variant value = properties[keys[n]];
+			obj->mutate_value(keys[n].as_string(), value);
+		}
+
+		if(last_key.is_string()) {
+			variant value = properties[last_key];
+			obj->mutate_value(last_key.as_string(), value);
+		}
+	}
 
 	variant commands;
 	if(args().size() > 4) {
@@ -1034,11 +1064,42 @@ FUNCTION_DEF(spawn, 4, 5, "spawn(string type_id, int midpoint_x, int midpoint_y,
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
+	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
 	ARG_TYPE("string")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("int|map")
 	ARG_TYPE("commands")
+
+	variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
+
+		if(args().size() > 3) {
+			variant_type_ptr map_type = args()[3]->query_variant_type();
+			assert(map_type);
+
+			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
+			if(props) {
+				foreach(int slot, type->slots_requiring_initialization()) {
+					const std::string& prop_id = type->get_entry(slot)->id;
+					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
+				}
+
+				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
+					const int slot = type->get_slot(itor->first.as_string());
+					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
+
+					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+				}
+			}
+		}
+
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+	}
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn)
 
@@ -1101,11 +1162,22 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
 
 	if(args().size() > 4) {
+		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+		variant last_key;
 		variant properties = args()[4]->evaluate(variables);
 		variant keys = properties.get_keys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
+			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+				last_key = keys[n];
+				continue;
+			}
 			variant value = properties[keys[n]];
 			obj->mutate_value(keys[n].as_string(), value);
+		}
+
+		if(last_key.is_string()) {
+			variant value = properties[last_key];
+			obj->mutate_value(last_key.as_string(), value);
 		}
 	}
 
@@ -1139,7 +1211,7 @@ FUNCTION_ARGS_DEF
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
 					const formula_callable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.write_type, itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.write_type->to_string() << " is expected " << debug_pinpoint_location());
+					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
@@ -2249,7 +2321,7 @@ FUNCTION_DEF(remove_object, 1, 1, "remove_object(object): removes the given obje
 		return variant();
 	}
 FUNCTION_ARGS_DEF
-	ARG_TYPE("object")
+	ARG_TYPE("null|object")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(remove_object)
 

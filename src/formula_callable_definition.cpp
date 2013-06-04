@@ -173,19 +173,6 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 	ASSERT_LOG(e, "NO DEFINITION FOUND");
 
 	formula_callable_definition::entry new_entry(*e);
-	std::cerr << "MODIFY: " << new_entry.id << ":: ";
-
-	if(new_entry.variant_type) {
-		std::cerr << new_entry.variant_type->to_string() << " | ";
-	} else {
-		std::cerr << "(none) | ";
-	}
-
-	if(new_entry.write_type) {
-		std::cerr << new_entry.write_type->to_string() << " -> ";
-	} else {
-		std::cerr << "(none) -> ";
-	}
 
 	if(new_type) {
 		if(!new_entry.write_type) {
@@ -200,18 +187,6 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 
 	if(new_def) {
 		new_entry.type_definition = new_def;
-	}
-
-	if(new_entry.variant_type) {
-		std::cerr << new_entry.variant_type->to_string() << " | ";
-	} else {
-		std::cerr << "(none) | ";
-	}
-
-	if(new_entry.write_type) {
-		std::cerr << new_entry.write_type->to_string() << "\n";
-	} else {
-		std::cerr << "(none)\n";
 	}
 
 	return formula_callable_definition_ptr(new modified_definition(base_def, slot, new_entry));

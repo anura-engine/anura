@@ -419,7 +419,7 @@ private:
 		for(std::vector<expression_ptr>::const_iterator i = items_.begin(); ( i != items_.end() ) && ( i+1 != items_.end() ) ; i+=2) {
 
 			variant key_value;
-			if(!(*i)->can_reduce_to_variant(key_value)) {
+			if(!(*i)->can_reduce_to_variant(key_value) || !key_value.is_string()) {
 				is_specific_map = false;
 			}
 
@@ -2157,7 +2157,7 @@ void parse_set_args(const variant& formula_str, const token* i1, const token* i2
 
 				if(i1 - beg == 1 && beg->type == TOKEN_IDENTIFIER) {
 					//make it so that {a: 4} is the same as {'a': 4}
-					res->push_back(expression_ptr(new string_expression(std::string(beg->begin, beg->end), false, symbols)));
+					res->push_back(expression_ptr(new variant_expression(variant(std::string(beg->begin, beg->end)))));
 				} else {
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 				}

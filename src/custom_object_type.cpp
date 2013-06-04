@@ -1007,7 +1007,10 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					variant default_value = value["default"];
 					if(!type->match(default_value)) {
 						ASSERT_LOG(default_value.is_null(), "Default value for " << id_ << "." << k << " is " << default_value.write_json() << " of type " << get_variant_type_from_value(default_value)->to_string() << " does not match type " << type->to_string());
-						requires_initialization = true;
+
+						if(value["variable"].as_bool(true) && !value["dynamic_initialization"].as_bool(false)) {
+							requires_initialization = true;
+						}
 					}
 				}
 			} else {
@@ -1101,6 +1104,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const game_logic::formula::strict_check_scope strict_checking(is_strict_);
 			const std::string& k = key.as_string();
+			bool dynamic_initialization = false;
 			variant value = properties_node[key];
 			property_entry& entry = properties_[k];
 			entry.id = k;
@@ -1129,8 +1133,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				entry.getter = game_logic::formula::create_optional_formula(value["get"], function_symbols(), property_def);
 				entry.setter = game_logic::formula::create_optional_formula(value["set"], function_symbols(), setter_def);
 				entry.default_value = value["default"];
-				entry.storage_slot = storage_slot++;
-				entry.persistent = value["persistent"].as_bool(true);
+
+				if(value["variable"].as_bool(true)) {
+					entry.storage_slot = storage_slot++;
+					entry.persistent = value["persistent"].as_bool(true);
+					dynamic_initialization = value["dynamic_initialization"].as_bool(false);
+				} else {
+					entry.storage_slot = -1;
+					entry.persistent = false;
+				}
 
 			} else {
 				entry.set_type = entry.type = get_variant_type_from_value(value);
@@ -1147,9 +1158,17 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				}
 			}
 
-			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value);
+			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization;
 			if(entry.requires_initialization) {
+				if(entry.setter) {
+					ASSERT_LOG(last_initialization_property_ == "", "Object " << id_ << " has multiple properties which require initialization and which have custom setters. This isn't allowed because we wouldn't know which property to initialize first. Properties: " << last_initialization_property_ << ", " << entry.id);
+					last_initialization_property_ = entry.id;
+				}
 				properties_requiring_initialization_.push_back(slot_properties_.size());
+			}
+
+			if(dynamic_initialization) {
+				properties_requiring_dynamic_initialization_.push_back(slot_properties_.size());
 			}
 
 			slot_properties_.push_back(entry);

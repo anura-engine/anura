@@ -164,6 +164,8 @@ custom_object::custom_object(variant node)
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates())),
 	paused_(false)
 {
+	properties_requiring_dynamic_initialization_ = type_->properties_requiring_dynamic_initialization();
+
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
 
@@ -2881,6 +2883,9 @@ variant custom_object::get_value_by_slot(int slot) const
 		if(slot >= type_->slot_properties_base() && (size_t(slot - type_->slot_properties_base()) < type_->slot_properties().size())) {
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
 			if(e.getter) {
+				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot) != properties_requiring_dynamic_initialization_.end()) {
+					ASSERT_LOG(false, "Read of uninitialization property " << debug_description() << "." << e.id);
+				}
 				active_property_scope scope(*this, e.storage_slot);
 				return e.getter->execute(*this);
 			} else if(e.const_value) {
@@ -4157,6 +4162,13 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			} else if(e.storage_slot >= 0) {
 				get_property_data(e.storage_slot) = value;
 			}
+
+			if(!properties_requiring_dynamic_initialization_.empty()) {
+				std::vector<int>::iterator itor = std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot);
+				if(itor != properties_requiring_dynamic_initialization_.end()) {
+					properties_requiring_dynamic_initialization_.erase(itor);
+				}
+			}
 		}
 		break;
 	}
@@ -4845,6 +4857,10 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 	}
 
 	foreach(variant& var, tmp_vars_->values()) {
+		extract_gc_object_references(var, v);
+	}
+
+	foreach(variant& var, property_data_) {
 		extract_gc_object_references(var, v);
 	}
 

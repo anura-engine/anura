@@ -874,6 +874,8 @@ public:
 		return false;
 	}
 
+	const std::map<variant, variant_type_ptr>* is_specific_map() const { return &type_map_; }
+
 	const game_logic::formula_callable_definition* get_definition() const
 	{
 		return def_.get();
@@ -1132,6 +1134,23 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 
 		return variant_type::get_list(variant_type::get_union(types));
 	} else if(value.is_map()) {
+
+		bool all_string_keys = true;
+		foreach(const variant::map_pair& p, value.as_map()) {
+			if(p.first.is_string() == false) {
+				all_string_keys = false;
+				break;
+			}
+		}
+
+		if(all_string_keys) {
+			std::map<variant, variant_type_ptr> type_map;
+			foreach(const variant::map_pair& p, value.as_map()) {
+				type_map[p.first] = get_variant_type_from_value(p.second);
+			}
+
+			return variant_type::get_specific_map(type_map);
+		}
 
 		std::vector<variant_type_ptr> key_types, value_types;
 
