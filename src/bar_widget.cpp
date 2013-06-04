@@ -134,14 +134,17 @@ BEGIN_DEFINE_CALLABLE(bar_widget, this)
 		value = variant(segments_);
 	DEFINE_SET_FIELD
 		segments_ = value.as_int();
+		init();
 	DEFINE_FIELD(1, segment_length, "int")
 		value = variant(segment_length_);
 	DEFINE_SET_FIELD
 		segment_length_ = value.as_int();
+		init();
 	DEFINE_FIELD(2, tick_width, "int")
 		value = variant(tick_width_);
 	DEFINE_SET_FIELD
 		tick_width_ = value.as_int();
+		init();
 	DEFINE_FIELD(3, scale, "decimal")
 		value = variant(decimal(scale_));
 	DEFINE_SET_FIELD
@@ -151,7 +154,22 @@ BEGIN_DEFINE_CALLABLE(bar_widget, this)
 	DEFINE_FIELD(4, drained, "int")
 		value = variant(drained_segments_);
 	DEFINE_SET_FIELD
-		drained_segments_ = value.as_int();
+		int drain = value.as_int();
+		if(drain != drained_segments_) {
+			int animation_start_position = segments_-drained_segments_;
+			animation_current_position_ = 0;
+			drained_segments_after_anim_ = drain;
+			if(drained_segments_after_anim_ < 0) {
+				drained_segments_after_anim_ = 0;
+			}
+			if(drained_segments_after_anim_ > segments_) {
+				drained_segments_after_anim_ = segments_;
+			}
+			int animation_end_position = segments_-drained_segments_after_anim_;
+			animation_end_point_unscaled_ = animation_end_position - animation_start_position;
+			animating_ = true;
+			init();
+		}
 	DEFINE_FIELD(5, drain_rate, "int")
 		value = variant(drain_rate_);
 	DEFINE_SET_FIELD
@@ -160,6 +178,7 @@ BEGIN_DEFINE_CALLABLE(bar_widget, this)
 		value = variant(bar_max_width_);
 	DEFINE_SET_FIELD
 		bar_max_width_ = value.as_int();
+		init();
 	DEFINE_FIELD(7, animation_position, "decimal")
 		value = variant(decimal(0.0));
 	DEFINE_SET_FIELD
