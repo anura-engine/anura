@@ -423,6 +423,9 @@ DEFINE_FIELD(12, frame_set_name, "string")
 
 DEFINE_FIELD(13, alpha, "int")
 	value = variant(get_alpha());
+DEFINE_SET_FIELD
+	int a = value.as_int();
+	set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
 
 DEFINE_FIELD(14, frame_pad_width, "int")
 	value = variant(get_pad_width());
@@ -445,21 +448,19 @@ DEFINE_FIELD(17, children, "[builtin widget]")
 
 	value = variant(&v);
 
-DEFINE_FIELD(18, alpha, "int")
-	value = variant();
-DEFINE_SET_FIELD
-	int a = value.as_int();
-	set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
-
-DEFINE_FIELD(19, disabled, "bool")
+DEFINE_FIELD(18, disabled, "bool")
 	value = variant::from_bool(disabled_);
 DEFINE_SET_FIELD
 	disabled_ = value.as_bool();
 
-DEFINE_FIELD(20, disabled_opacity, "int")
+DEFINE_FIELD(19, disabled_opacity, "int")
 	value = variant(static_cast<int>(disabled_opacity_));
 DEFINE_SET_FIELD
 	disabled_opacity_ = value.as_int();
+
+DEFINE_FIELD(20, reserved__, "null")
+	assert(false);
+	value = variant();
 
 END_DEFINE_CALLABLE_NOBASE(widget)
 

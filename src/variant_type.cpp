@@ -57,27 +57,65 @@ std::map<std::string, variant> load_named_variant_info()
 	return result;
 }
 
+std::vector<std::map<std::string, variant_type_ptr> >& named_type_cache()
+{
+	static std::vector<std::map<std::string, variant_type_ptr> > instance(1);
+	return instance;
+}
+
+std::vector<std::map<std::string, variant> >& named_type_symbols()
+{
+	static std::vector<std::map<std::string, variant> > instance(1, load_named_variant_info());
+	return instance;
+}
+
 variant_type_ptr get_named_variant_type(const std::string& name)
 {
-	static std::map<std::string, variant> info = load_named_variant_info();
-	static std::map<std::string, variant_type_ptr> cache;
-	std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
-	if(itor != cache.end()) {
-		return itor->second;
-	}
+	for(int n = named_type_cache().size()-1; n >= 0; --n) {
+		std::map<std::string, variant>& info = named_type_symbols()[n];
+		std::map<std::string, variant_type_ptr>& cache = named_type_cache()[n];
 
-	std::map<std::string, variant>::const_iterator info_itor = info.find(name);
-	if(info_itor != info.end()) {
-		//insert into the cache a null entry to symbolize we're parsing
-		//this, to avoid infinite recursion.
-		variant_type_ptr& ptr = cache[name];
-		ptr = parse_variant_type(info_itor->second);
-		return ptr;
+		std::map<std::string,variant_type_ptr>::const_iterator itor = cache.find(name);
+		if(itor != cache.end()) {
+			return itor->second;
+		}
+
+		std::map<std::string, variant>::const_iterator info_itor = info.find(name);
+		if(info_itor != info.end()) {
+			//insert into the cache a null entry to symbolize we're parsing
+			//this, to avoid infinite recursion.
+			variant_type_ptr& ptr = cache[name];
+			ptr = parse_variant_type(info_itor->second);
+			return ptr;
+		}
 	}
 
 	return variant_type_ptr();
 
 }
+
+}
+
+types_cfg_scope::types_cfg_scope(variant v)
+{
+	ASSERT_LOG(v.is_null() || v.is_map(), "Unrecognized types definition: " << v.debug_location());
+	std::map<std::string, variant> symbols;
+	if(v.is_map()) {
+		foreach(const variant::map_pair& p, v.as_map()) {
+			symbols[p.first.as_string()] = p.second;
+		}
+	}
+	named_type_cache().resize(named_type_cache().size()+1);
+	named_type_symbols().push_back(symbols);
+}
+
+types_cfg_scope::~types_cfg_scope()
+{
+	named_type_cache().pop_back();
+	named_type_symbols().pop_back();
+}
+
+namespace {
 
 class variant_type_simple : public variant_type
 {
@@ -367,7 +405,7 @@ public:
 			return false;
 		}
 
-		return obj->query_id() == type_;
+		return game_logic::registered_definition_is_a(obj->query_id(), type_);
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -1295,6 +1333,8 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		return variant_type::get_map(key_type, value_type);
 	} else if(value.is_callable() && value.as_callable()->is_command()) {
 		return variant_type::get_commands();
+	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->query_id())) {
+		return variant_type::get_builtin(value.as_callable()->query_id());
 	} else {
 		return variant_type::get_type(value.type());
 	}

@@ -130,28 +130,28 @@ namespace gui
 	}
 
 BEGIN_DEFINE_CALLABLE(bar_widget, this)
-	DEFINE_FIELD(0, segments, "int")
+	DEFINE_FIELD(21, segments, "int")
 		value = variant(segments_);
 	DEFINE_SET_FIELD
 		segments_ = value.as_int();
 		init();
-	DEFINE_FIELD(1, segment_length, "int")
+	DEFINE_FIELD(22, segment_length, "int")
 		value = variant(segment_length_);
 	DEFINE_SET_FIELD
 		segment_length_ = value.as_int();
 		init();
-	DEFINE_FIELD(2, tick_width, "int")
+	DEFINE_FIELD(23, tick_width, "int")
 		value = variant(tick_width_);
 	DEFINE_SET_FIELD
 		tick_width_ = value.as_int();
 		init();
-	DEFINE_FIELD(3, scale, "decimal")
+	DEFINE_FIELD(24, scale, "decimal")
 		value = variant(decimal(scale_));
 	DEFINE_SET_FIELD
 		scale_ = value.as_decimal().as_float();
 		ASSERT_GT(scale_, 0.0f);
 		init();
-	DEFINE_FIELD(4, drained, "int")
+	DEFINE_FIELD(25, drained, "int")
 		value = variant(drained_segments_);
 	DEFINE_SET_FIELD
 		int drain = value.as_int();
@@ -170,16 +170,16 @@ BEGIN_DEFINE_CALLABLE(bar_widget, this)
 			animating_ = true;
 			init();
 		}
-	DEFINE_FIELD(5, drain_rate, "int")
+	DEFINE_FIELD(26, drain_rate, "int")
 		value = variant(drain_rate_);
 	DEFINE_SET_FIELD
 		drain_rate_ = value.as_int();
-	DEFINE_FIELD(6, max_width, "int")
+	DEFINE_FIELD(27, max_width, "int")
 		value = variant(bar_max_width_);
 	DEFINE_SET_FIELD
 		bar_max_width_ = value.as_int();
 		init();
-	DEFINE_FIELD(7, animation_position, "decimal")
+	DEFINE_FIELD(28, animation_position, "decimal")
 		value = variant(decimal(0.0));
 	DEFINE_SET_FIELD
 		animation_current_position_ = value.as_decimal().as_float();

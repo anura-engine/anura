@@ -31,6 +31,12 @@ class formula_callable_definition;
 class formula_interface;
 }
 
+struct types_cfg_scope
+{
+	explicit types_cfg_scope(variant v);
+	~types_cfg_scope();
+};
+
 class variant_type;
 typedef boost::shared_ptr<const variant_type> variant_type_ptr;
 typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;

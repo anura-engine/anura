@@ -115,10 +115,8 @@ protected:
 
 	virtual void on_move_cursor(bool auto_shift=false);
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
-
 private:
+	DECLARE_CALLABLE(text_editor_widget);
 	bool handle_mouse_button_down(const SDL_MouseButtonEvent& event);
 	bool handle_mouse_button_up(const SDL_MouseButtonEvent& event);
 	bool handle_mouse_motion(const SDL_MouseMotionEvent& event);

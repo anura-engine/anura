@@ -75,8 +75,11 @@ public:
 	virtual void draw_later(int x, int y) const;
 	virtual void draw_group() const;
 	virtual void process(level& lvl);
+	virtual void construct();
 	virtual void create_object();
 	void set_level(level& lvl) { }
+
+	void check_initialized();
 
 	int parallax_scale_millis_x() const {
 		if(parallax_scale_millis_.get() == NULL){
@@ -239,7 +242,7 @@ public:
 	void remove_widget(gui::widget_ptr w);
 	gui::widget_ptr get_widget_by_id(const std::string& id);
 	gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
-	std::vector<variant> get_variant_widget_list();
+	std::vector<variant> get_variant_widget_list() const;
 	bool get_clip_area(rect* clip_area) {
 		if(clip_area_ && clip_area) {
 			*clip_area = *clip_area_.get();
@@ -292,6 +295,7 @@ protected:
 	virtual void being_added();
 
 private:
+	void init_properties();
 	custom_object& operator=(const custom_object& o);
 	struct Accessor;
 

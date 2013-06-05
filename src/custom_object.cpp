@@ -165,6 +165,7 @@ custom_object::custom_object(variant node)
 	paused_(false)
 {
 	properties_requiring_dynamic_initialization_ = type_->properties_requiring_dynamic_initialization();
+	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->properties_requiring_initialization().begin(), type_->properties_requiring_initialization().end());
 
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -491,6 +492,8 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	if(type_->mouse_over_area().w() != 0) {
 		set_mouse_over_area(type_->mouse_over_area());
 	}
+
+	init_properties();
 }
 
 custom_object::custom_object(const custom_object& o) :
@@ -595,6 +598,17 @@ custom_object::~custom_object()
 	get_all(base_type_->id()).erase(this);
 
 	sound::stop_looped_sounds(this);
+}
+
+void custom_object::init_properties()
+{
+	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
+		if(!i->second.init || i->second.storage_slot == -1) {
+			continue;
+		}
+
+		get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
+	}
 }
 
 bool custom_object::is_a(const std::string& type) const
@@ -1243,12 +1257,22 @@ void custom_object::draw_group() const
 	}
 }
 
+void custom_object::construct()
+{
+	handle_event(OBJECT_EVENT_CONSTRUCT);
+}
+
 void custom_object::create_object()
 {
 	if(!created_) {
 		created_ = true;
 		handle_event(OBJECT_EVENT_CREATE);
 	}
+}
+
+void custom_object::check_initialized()
+{
+	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << debug_description() << "." << type_->slot_properties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
 }
 
 void custom_object::process(level& lvl)
@@ -2838,6 +2862,11 @@ variant custom_object::get_value_by_slot(int slot) const
 		return variant(new widgets_callable(*this));
 	}
 
+	case CUSTOM_OBJECT_WIDGET_LIST: {
+		std::vector<variant> v = get_variant_widget_list();
+		return variant(&v);
+	}
+
 #if defined(USE_BOX2D)
 	case CUSTOM_OBJECT_BODY: {
 		return variant(body_.get());
@@ -2884,7 +2913,7 @@ variant custom_object::get_value_by_slot(int slot) const
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
 			if(e.getter) {
 				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot) != properties_requiring_dynamic_initialization_.end()) {
-					ASSERT_LOG(false, "Read of uninitialization property " << debug_description() << "." << e.id);
+					ASSERT_LOG(false, "Read of uninitialized property " << debug_description() << "." << e.id);
 				}
 				active_property_scope scope(*this, e.storage_slot);
 				return e.getter->execute(*this);
@@ -3984,7 +4013,8 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 		break;
 	}
 
-	case CUSTOM_OBJECT_WIDGETS: {
+	case CUSTOM_OBJECT_WIDGETS:
+	case CUSTOM_OBJECT_WIDGET_LIST: {
 		std::vector<gui::widget_ptr> w;
 		clear_widgets();
 		if(value.is_list()) {
@@ -5251,7 +5281,7 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 #endif
 }
 
-std::vector<variant> custom_object::get_variant_widget_list()
+std::vector<variant> custom_object::get_variant_widget_list() const
 {
 	std::vector<variant> v;
 	for(widget_list::iterator it = widgets_.begin(); it != widgets_.end(); ++it) {

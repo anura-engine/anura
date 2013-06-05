@@ -232,6 +232,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "use_absolute_screen_coordinates", "bool" },
 	
 	{ "widgets", "object/[object|map]|object|map" },
+	{ "widget_list", "[widget]" },
 	{ "textv", "any" },
 	{ "body", "any" },
 	{ "paused", "bool" },
@@ -332,11 +333,20 @@ void custom_object_callable::add_property(const std::string& id, variant_type_pt
 
 	properties_[id] = entries_.size();
 	entries_.push_back(entry(id));
-	entries_.back().set_variant_type(type);
+
+	//do NOT call set_variant_type() because that will do queries of
+	//objects and such and we want this operation to avoid doing that, because
+	//it might be called at a sensitive time when we don't want to
+	//instantiate new object definitions.
+	entries_.back().variant_type = type;
 	entries_.back().write_type = write_type;
 	entries_.back().private_counter = is_private ? 1 : 0;
-	if(is_private) {
-		std::cerr << "XXX: PRIVATE: " << id << "\n";
+}
+
+void custom_object_callable::finalize_properties()
+{
+	foreach(entry& e, entries_) {
+		e.set_variant_type(e.variant_type);
 	}
 }
 

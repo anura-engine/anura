@@ -845,7 +845,8 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 					args_buf[n] = obj;
 
 				} else {
-					generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
+					variant_type_ptr arg_type = get_variant_type_from_value((*args)[n]);
+					generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json() << " of type " << arg_type->to_string()).str());
 				}
 			}
 		}

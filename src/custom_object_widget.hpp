@@ -36,13 +36,13 @@ namespace gui
 		const_entity_ptr get_entity() const;
 		void init(const variant& v);
 	protected:
-		virtual void set_value(const std::string& key, const variant& v);
-		virtual variant get_value(const std::string& key) const;
 
 		void handle_draw() const;
 		bool handle_event(const SDL_Event& event, bool claimed);
 		virtual void handle_process();
 	private:
+		DECLARE_CALLABLE(custom_object_widget);
+
 		void click(int button);
 		void mouse_enter();
 		void mouse_leave();

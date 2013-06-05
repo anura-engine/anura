@@ -702,11 +702,21 @@ public:
 			if(index != -1) {
 				return expression_ptr(new slot_identifier_expression(id_, index, callable_def_.get()));
 			} else if(callable_def_->is_strict() || g_strict_formula_checking) {
-				fprintf(stderr, "STRICT MODE ENABLED: %d %d\n", (int)callable_def_->is_strict(), (int)g_strict_formula_checking);
+
+				std::vector<std::string> known_v;
+				for(int n = 0; n != callable_def_->num_slots(); ++n) {
+					known_v.push_back(callable_def_->get_entry(n)->id);
+				}
+
+				std::sort(known_v.begin(), known_v.end());
+				std::string known;
+				foreach(const std::string& k, known_v) {
+					known += k + " ";
+				}
 				if(callable_def_->type_name() != NULL) {
-					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location());
+					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
 				} else {
-					ASSERT_LOG(false, "Unknown identifier '" << id_ << "' " << debug_pinpoint_location());
+					ASSERT_LOG(false, "Unknown identifier '" << id_ << "' " << debug_pinpoint_location() << "\nIdentifiers that are valid in this scope: " << known << "\n");
 				}
 			}
 		}

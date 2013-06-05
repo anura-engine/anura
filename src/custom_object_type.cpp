@@ -784,6 +784,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		strict_scope.reset(new strict_mode_scope);
 	}
 
+	const game_logic::formula::strict_check_scope strict_checking(false);
+
 	const custom_object_type_init_scope init_scope(id);
 	const bool is_recursive_call = std::count(custom_object_type_stack.begin(), custom_object_type_stack.end(), id) > 0;
 
@@ -967,7 +969,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	std::cerr << "REGISTER CALLABLE " << id_ << "\n";
 
+	//START OF FIRST PARSE OF PROPERTIES.
+	//Here we get the types of properties and parse them into
+	//callable_definition_. While we're in our first parse we want to make
+	//sure we do not have to query other custom_object_type definitions,
+	//because if we do we could end with infinite recursion.
+
 	object_type_definitions()[id_] = callable_definition_;
+
+	const types_cfg_scope types_scope(node["types"]);
 
 	std::set<std::string> properties_to_infer;
 
@@ -987,7 +997,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				if(is_strict_ && type) {
 					bool return_type_specified = false;
 					type->is_function(NULL, NULL, NULL, &return_type_specified);
-					ASSERT_LOG(return_type_specified, "Property function definition does not specify a return type for the function, which is required in strict mode for object " << id_ << " property " << k);
+					ASSERT_LOG(return_type_specified, "Property function definition does not specify a return type for the function, which is required in strict mode for object " << id_ << "." << k);
 				}
 				if(!type) {
 					type = parse_optional_formula_type(value);
@@ -1075,7 +1085,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				if(inferred) {
 					formula_callable_definition::entry* entry = callable_definition_->get_entry_by_id(k);
 					assert(entry);
-					entry->set_variant_type(f->query_variant_type());
+					entry->variant_type = f->query_variant_type();
 					std::cerr << "INFER TYPE " << k << ": " << f->query_variant_type()->to_string() << "\n";
 					properties_to_infer.erase(k);
 				}
@@ -1090,6 +1100,13 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 			ASSERT_LOG(false, "Could not infer properties in object " << id_ << ": " << s.str());
 		}
 	}
+
+	object_type_definitions()[id_] = callable_definition_;
+	callable_definition_->finalize_properties();
+
+	//END OF FIRST PARSE.
+	//We've now constructed our definition of the object, and we can
+	//safely query other object type definitions
 /*
 	fprintf(stderr, "CALLABLE DEFINITION FOR %s: {\n", id_.c_str());
 	for(int n = 0; n != callable_definition_->num_slots(); ++n) {
@@ -1102,7 +1119,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	fprintf(stderr, "}\n");
 */
 
-	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->set_object_type(variant_type::get_custom_object(id_));
 
 	if(!is_variation && is_recursive_call) {
@@ -1114,7 +1130,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	int storage_slot = 0;
 
-	const game_logic::formula::strict_check_scope strict_checking(false);
 	foreach(variant properties_node, node["properties"].as_list()) {
 		const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
 		foreach(variant key, properties_node.get_keys().as_list()) {
@@ -1148,6 +1163,14 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 				entry.getter = game_logic::formula::create_optional_formula(value["get"], function_symbols(), property_def);
 				entry.setter = game_logic::formula::create_optional_formula(value["set"], function_symbols(), setter_def);
+				if(value["init"].is_null() == false) {
+					entry.init = game_logic::formula::create_optional_formula(value["init"], function_symbols(), game_logic::const_formula_callable_definition_ptr(&custom_object_callable::instance()));
+					assert(entry.init);
+					if(is_strict_) {
+						assert(entry.type);
+						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->query_variant_type()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->query_variant_type()->to_string() << " expected " << entry.type->to_string());
+					}
+				}
 				entry.default_value = value["default"];
 
 				if(value["variable"].as_bool(true)) {
@@ -1158,6 +1181,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					entry.storage_slot = -1;
 					entry.persistent = false;
 				}
+
+				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
 			} else {
 				entry.set_type = entry.type = get_variant_type_from_value(value);
@@ -1174,7 +1199,11 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				}
 			}
 
-			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization;
+			if(entry.init) {
+				properties_with_init_.push_back(slot_properties_.size());
+			}
+
+			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization && !entry.init;
 			if(entry.requires_initialization) {
 				if(entry.setter) {
 					ASSERT_LOG(last_initialization_property_ == "", "Object " << id_ << " has multiple properties which require initialization and which have custom setters. This isn't allowed because we wouldn't know which property to initialize first. Properties: " << last_initialization_property_ << ", " << entry.id);

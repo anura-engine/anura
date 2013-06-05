@@ -997,6 +997,8 @@ public:
 
 		if(entity_collides(lvl, *obj_, MOVE_NONE)) {
 			lvl.remove_character(obj_);
+		} else {
+			obj_->check_initialized();
 		}
 
 		obj_->create_object();
@@ -1046,6 +1048,8 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 			obj->mutate_value(last_key.as_string(), value);
 		}
 	}
+
+	obj->construct();
 
 	variant commands;
 	if(args().size() > 4) {
@@ -1114,6 +1118,7 @@ FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, i
 	boost::intrusive_ptr<custom_object> obj(new custom_object(type, x, y, facing));
 	obj.reset(new playable_custom_object(*obj));
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
+	obj->construct();
 
 	variant commands;
 	if(args().size() > 4) {
@@ -1144,22 +1149,23 @@ END_FUNCTION_DEF(spawn_player)
 FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object only creates the object and returns it. It may be stored for later use.")
 	formula::fail_if_static_context();
 	const std::string type = args()[0]->evaluate(variables).as_string();
-	custom_object* obj;
+	boost::intrusive_ptr<custom_object> obj;
 	
 	if(args().size() > 1) {
 		const int x = args()[1]->evaluate(variables).as_int();
 		const int y = args()[2]->evaluate(variables).as_int();
 		const bool face_right = args()[3]->evaluate(variables).as_int() > 0;
-		obj = new custom_object(type, x, y, face_right);
+		obj.reset(new custom_object(type, x, y, face_right));
 	} else {
 		const int x = 0;
 		const int y = 0;
 		const bool face_right = true;
-		obj = new custom_object(type, x, y, face_right);
+		obj.reset(new custom_object(type, x, y, face_right));
 	}
 		
 	//adjust so the object's x/y is its midpoint.
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
+	obj->construct();
 
 	if(args().size() > 4) {
 		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
@@ -1181,7 +1187,9 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 		}
 	}
 
-	return variant(obj);
+	obj->check_initialized();
+
+	return variant(obj.get());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("int")
@@ -1256,6 +1264,8 @@ FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoin
 			obj->mutate_value(keys[n].as_string(), value);
 		}
 	}
+
+	obj->check_initialized();
 
 	return variant(obj);
 FUNCTION_ARGS_DEF

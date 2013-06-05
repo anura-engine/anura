@@ -30,6 +30,7 @@ std::vector<std::string> create_object_event_names()
 	res.push_back("player_death");
 	res.push_back("load");
 	res.push_back("load_checkpoint");
+	res.push_back("construct");
 	res.push_back("create");
 	res.push_back("done_create");
 	res.push_back("become_active");

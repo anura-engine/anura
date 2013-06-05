@@ -1622,25 +1622,20 @@ void text_editor_widget::on_change()
 	calculate_search_matches();
 }
 
-void text_editor_widget::set_value(const std::string& key, const variant& v)
-{
-	if(key == "text") {
-		set_text(v.as_string());
-	} else if(key == "begin_enter") {
-		begin_enter_return_ = v.as_bool();
-	} else if(key == "color" || key == "colour") {
-		text_color_ = graphics::color(v);
-	}
-	scrollable_widget::set_value(key, v);
-}
-
-variant text_editor_widget::get_value(const std::string& key) const
-{
-	if(key == "text" ) {
-		return variant(text());
-	}
-	return scrollable_widget::get_value(key);
-}
+BEGIN_DEFINE_CALLABLE(text_editor_widget, this)
+	DEFINE_FIELD(21, text, "string")
+		value = variant(text());
+	DEFINE_SET_FIELD
+		set_text(value.as_string());
+	DEFINE_FIELD(22, begin_enter, "bool")
+		value = variant::from_bool(begin_enter_return_);
+	DEFINE_SET_FIELD
+		begin_enter_return_ = value.as_bool();
+	DEFINE_FIELD(23, "color", "string")
+		value = variant("");
+	DEFINE_SET_FIELD
+		text_color_ = graphics::color(value);
+END_DEFINE_CALLABLE(text_editor_widget, widget, const_cast<text_editor_widget*>(this))
 
 void text_editor_widget::change_delegate()
 {
