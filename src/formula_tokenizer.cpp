@@ -39,7 +39,6 @@ const FFL_TOKEN_TYPE* create_single_char_tokens() {
 	chars['}'] = TOKEN_RBRACKET;
 	chars[','] = TOKEN_COMMA;
 	chars[';'] = TOKEN_SEMICOLON;
-	chars[':'] = TOKEN_COLON;
 	chars['.'] = TOKEN_OPERATOR;
 	chars['+'] = TOKEN_OPERATOR;
 	chars['*'] = TOKEN_OPERATOR;
@@ -184,6 +183,17 @@ token get_token(iterator& i1, iterator i2) {
 			++i1;
 		} else {
 			t.type = TOKEN_OPERATOR;
+		}
+
+		t.end = i1;
+		return t;
+	case ':':
+		++i1;
+		if(i1 != i2 && *i1 == ':') {
+			t.type = TOKEN_OPERATOR;
+			++i1;
+		} else {
+			t.type = TOKEN_COLON;
 		}
 
 		t.end = i1;

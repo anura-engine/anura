@@ -226,43 +226,31 @@ bool label::handle_event(const SDL_Event& event, bool claimed)
 			claimed = claim_mouse_events();
 		}
 	}
-	return claimed;}
-
-variant label::get_value(const std::string& key) const
-{
-	if(key == "text") {
-		return variant(text_);
-	} else if(key == "color") {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-		return graphics::color(color_.r, color_.g, color_.b, color_.a).write();
-#else
-		return graphics::color(color_.r, color_.g, color_.b, color_.unused).write();
-#endif
-	} else if(key == "size") {
-		return variant(size_);
-	} else if(key == "font") {
-		return variant(font_);
-	}
-	return widget::get_value(key);
+	return claimed;
 }
 
-void label::set_value(const std::string& key, const variant& v)
-{
-	if(key == "text") {
-		if(v.is_null()) {
+BEGIN_DEFINE_CALLABLE(label, this)
+	DEFINE_FIELD(21, text, "string")
+		value = variant(text_);
+	DEFINE_SET_FIELD
+		if(value.is_null()) {
 			set_text("");
 		} else {
-			set_text(v.as_string());
+			set_text(value.as_string());
 		}
-	} else if(key == "color") {
-		set_color(graphics::color(v).as_sdl_color());
-	} else if(key == "size") {
-		set_font_size(v.as_int());
-	} else if(key == "font") {
-		set_font(v.as_string());
-	}
-	widget::set_value(key, v);
-}
+	DEFINE_FIELD(22, size, "int")
+		value = variant(size_);
+	DEFINE_SET_FIELD
+		set_font_size(value.as_int());
+	DEFINE_FIELD(23, font, "string")
+		value = variant(font_);
+	DEFINE_SET_FIELD
+		set_font(value.as_string());
+	DEFINE_FIELD(24, color, "string")
+	DEFINE_SET_FIELD
+		set_color(graphics::color(value).as_sdl_color());
+
+END_DEFINE_CALLABLE(label, widget, const_cast<label*>(this))
 
 dialog_label::dialog_label(const std::string& text, const SDL_Color& color, int size)
 	: label(text, color, size), progress_(0) {

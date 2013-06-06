@@ -23,6 +23,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "color_chart.hpp"
+#include "formula_callable_definition.hpp"
 #include "graphics.hpp"
 #include "texture.hpp"
 #include "widget.hpp"
@@ -71,9 +72,9 @@ protected:
 
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
 private:
+	DECLARE_CALLABLE(label);
+
 	void handle_draw() const;
 	void inner_set_dim(int x, int y);
 	void reformat_text();

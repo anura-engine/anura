@@ -1708,6 +1708,40 @@ private:
 	expression_ptr expression_;
 };
 
+class static_type_expression : public formula_expression {
+public:
+	static_type_expression(variant_type_ptr type, expression_ptr expr)
+	: formula_expression("_static_type"), type_(type), expression_(expr)
+	{
+	}
+	
+private:
+	variant_type_ptr get_variant_type() const {
+		return type_;
+	}
+
+	variant_type_ptr type_;
+	expression_ptr expression_;
+	
+	variant execute(const formula_callable& variables) const {
+		return expression_->evaluate(variables);
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(expression_);
+		return result;
+	}
+
+	expression_ptr optimize() const {
+		return expression_;
+	}
+
+	void static_error_analysis() const {
+		ASSERT_LOG(variant_types_compatible(type_, expression_->query_variant_type()), "Expression is not declared type. Of type " << expression_->query_variant_type()->to_string() << " when type " << type_->to_string() << " expected " << debug_pinpoint_location());
+	}
+};
+
 class type_expression : public formula_expression {
 public:
 	type_expression(variant_type_ptr type, expression_ptr expr)
@@ -1912,6 +1946,7 @@ int operator_precedence(const token& t)
 		precedence_map["->"] = ++n;
 		precedence_map["where"] = ++n;
 		precedence_map["asserting"] = ++n;
+		precedence_map["::"] = ++n;
 		precedence_map["<-"] = ++n;
 		precedence_map["not"] = ++n;
 		precedence_map["or"]    = ++n;
@@ -2774,13 +2809,17 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 		consume_backwards = 1;
 	}
 
-	if(op_name == "<-") {
+	if(op_name == "<-" || op_name == "::") {
 		variant_type_ptr type = parse_variant_type(formula_str, i1, op);
 		ASSERT_LOG(type && i1 == op, "UNEXPECTED TOKENS WHEN PARSING TYPE: " << pinpoint_location(formula_str, i1->begin, op->end));
 
 		expression_ptr right(parse_expression(formula_str, op+1,i2,symbols, callable_def, can_optimize));
 
-		return expression_ptr(new type_expression(type, right));
+		if(op_name == "<-") {
+			return expression_ptr(new type_expression(type, right));
+		} else {
+			return expression_ptr(new static_type_expression(type, right));
+		}
 	}
 
 	if(op_name == "is") {

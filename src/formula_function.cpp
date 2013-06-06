@@ -1592,6 +1592,26 @@ namespace {
 			
 		}
 	}
+
+	variant_type_ptr flatten_type(variant_type_ptr type) {
+
+		const std::vector<variant_type_ptr>* items = type->is_union();
+		if(items) {
+			std::vector<variant_type_ptr> result;
+			for(auto item : *items) {
+				result.push_back(flatten_type(item));
+			}
+
+			return variant_type::get_union(result);
+		}
+
+		variant_type_ptr result = type->is_list_of();
+		if(result) {
+			return flatten_type(result);
+		} else {
+			return type;
+		}
+	}
 	
 }
 
@@ -1600,6 +1620,9 @@ FUNCTION_DEF(flatten, 1, 1, "flatten(list): Returns a list with a depth of 1 con
 	std::vector<variant> output;
 	flatten_items(input, &output);
 	return variant(&output);
+FUNCTION_TYPE_DEF
+	std::cerr << "FLATTEN: " << args()[0]->query_variant_type()->to_string() << "  ---> " << variant_type::get_list(flatten_type(args()[0]->query_variant_type()))->to_string() << "\n";
+	return variant_type::get_list(flatten_type(args()[0]->query_variant_type()));
 END_FUNCTION_DEF(flatten)
 
 enum MAP_CALLABLE_SLOT { MAP_CALLABLE_VALUE, MAP_CALLABLE_INDEX, MAP_CALLABLE_CONTEXT, MAP_CALLABLE_KEY, NUM_MAP_CALLABLE_SLOTS };
@@ -3354,6 +3377,8 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	docname = preferences::user_data_path() + docname;
 	sys::write_file(docname, doc.write_json());
 	return variant();
+FUNCTION_TYPE_DEF
+	return parse_variant_type(variant("string|null"));
 END_FUNCTION_DEF(write_document)
 
 FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [string] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
