@@ -46,7 +46,7 @@ namespace editor_dialogs
 
 namespace 
 {
-	const char cube_img[266] = {137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 
+	const unsigned char cube_img[266] = {137, 80, 78, 71, 13, 10, 26, 10, 0, 0, 0, 13, 
 		73, 72, 68, 82, 0, 0, 0, 16, 0, 0, 0, 16, 8, 2, 0, 0, 0, 144, 145, 
 		104, 54, 0, 0, 0, 7, 116, 73, 77, 69, 7, 220, 4, 23, 9, 56, 22, 125, 
 		252, 141, 55, 0, 0, 0, 23, 116, 69, 88, 116, 83, 111, 102, 116, 119, 
@@ -306,7 +306,7 @@ void editor_module_properties_dialog::create_new_module() {
 				"\t\t}\n"
 				"\t],\n"
 				"}");
-			sys::write_file(mod_path + "images/cube.png", std::string(cube_img, 266));
+			sys::write_file(mod_path + "images/cube.png", std::string(reinterpret_cast<const char *>(cube_img), 266));
 		}
 	}
 }

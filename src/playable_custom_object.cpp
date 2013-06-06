@@ -180,7 +180,7 @@ variant playable_custom_object::get_value(const std::string& key) const
 #if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-		Uint8* key_state = SDL_GetKeyboardState(&ary_length);
+		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
 		for(int count = 0; count < ary_length; ++count) {
 			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
 				SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));

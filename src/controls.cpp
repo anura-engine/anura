@@ -218,7 +218,7 @@ bool key_ignore[NUM_CONTROLS];
 void ignore_current_keypresses()
 {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-	Uint8 *state = SDL_GetKeyboardState(NULL);
+	const Uint8 *state = SDL_GetKeyboardState(NULL);
 #endif
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -268,7 +268,7 @@ void read_local_controls()
 #if !defined(__ANDROID__)
 		bool ignore_keypresses = false;
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-		Uint8 *key_state = SDL_GetKeyboardState(NULL);
+		const Uint8 *key_state = SDL_GetKeyboardState(NULL);
 		foreach(const key_type& k, control_keys) {
 			if(key_state[SDL_GetScancodeFromKey(k)]) {
 #else

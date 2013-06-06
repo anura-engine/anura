@@ -15,30 +15,46 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef WIN_PROFILE_TIMER_HPP_INCLUDED
-#define WIN_PROFILE_TIMER_HPP_INCLUDED
+#ifndef PROFILE_TIMER_HPP_INCLUDED
+#define PROFILE_TIMER_HPP_INCLUDED
 
-namespace profile {
+#include "SDL.h"
+#include <iostream>
+#include <string>
+
+#if SDL_VERSION_ATLEAST(2,0,0)
+namespace profile 
+{
 	struct manager
 	{
-		LARGE_INTEGER frequency;
-		LARGE_INTEGER t1, t2;
+		Uint64 frequency;
+		Uint64 t1, t2;
 		double elapsedTime;
-		std::string name;
+		const char* name;
 
-		manager(const std::string& str) : name(str)
+		manager(const char* const str) : name(str)
 		{
-			QueryPerformanceFrequency(&frequency);
-			QueryPerformanceCounter(&t1);
+			frequency = SDL_GetPerformanceFrequency();
+			t1 = SDL_GetPerformanceCounter();
 		}
 
 		~manager()
 		{
-			QueryPerformanceCounter(&t2);
-			elapsedTime = (t2.QuadPart - t1.QuadPart) * 1000000.0 / frequency.QuadPart;
-			std::cerr << name << ":" << elapsedTime << std::endl;
+			t2 = SDL_GetPerformanceCounter();
+			elapsedTime = (t2 - t1) * 1000.0 / frequency;
+			std::cerr << name << ": " << elapsedTime << " milliseconds" << std::endl;
 		}
 	};
 }
+#else
+namespace profile
+{
+	struct manager
+	{
+		manager()  {}
+		~manager() {}
+	};
+}
+#endif
 
 #endif 

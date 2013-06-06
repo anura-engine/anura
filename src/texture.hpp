@@ -67,7 +67,7 @@ public:
 	static void set_current_texture(unsigned int id);
 	static unsigned int get_current_texture();
 	void set_as_current_texture() const;
-	bool valid() const { return id_; }
+	bool valid() const { return id_ != NULL; }
 
 	static texture get(data_blob_ptr blob);
 	static texture get(const std::string& str, int options=0);
