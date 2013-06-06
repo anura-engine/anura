@@ -43,12 +43,14 @@ public:
 	explicit shader(GLenum type, const std::string& name, const std::string& code);
 	GLuint get() const { return shader_; }
 	std::string name() const { return name_; }
+	std::string code() const { return code_; }
 protected:
 	bool compile(const std::string& code);
 private:
 	GLenum type_;
 	GLuint shader_;
 	std::string name_;
+	std::string code_;
 };
 
 struct actives
@@ -70,6 +72,9 @@ class program;
 typedef boost::intrusive_ptr<program> program_ptr;
 typedef boost::intrusive_ptr<const program> const_program_ptr;
 
+typedef std::map<std::string,actives>::iterator actives_map_iterator;
+typedef std::map<std::string,actives>::const_iterator const_actives_map_iterator;
+
 class program : public game_logic::formula_callable
 {
 public:
@@ -84,17 +89,21 @@ public:
 	std::string name() const { return name_; }
 	game_logic::formula_ptr create_formula(const variant& v);
 	bool execute_command(const variant& var);
-	std::map<std::string,actives>::iterator get_uniform_reference(const std::string& name);
-	std::map<std::string,actives>::iterator get_attribute_reference(const std::string& name);
-	void set_uniform(const std::map<std::string,actives>::iterator& it, const variant& value);
-	void set_uniform_or_defer(const std::map<std::string,actives>::iterator& it, const variant& value);
+	actives_map_iterator get_uniform_reference(const std::string& name);
+	actives_map_iterator get_attribute_reference(const std::string& name);
+	void set_uniform(const actives_map_iterator& it, const variant& value);
+	void set_uniform(const actives_map_iterator& it, const GLsizei count, const GLfloat* fv);
+	void set_uniform_or_defer(actives_map_iterator& it, const variant& value);
 	void set_uniform_or_defer(const std::string& key, const variant& value);
 	variant get_uniform_value(const std::string& key) const;
 	void set_attributes(const std::string& key, const variant& value);
-	void set_attributes(const std::map<std::string, actives>::iterator& it, const variant& value);
+	void set_attributes(const actives_map_iterator& it, const variant& value);
 	variant get_attributes_value(const std::string& key) const;
 	game_logic::formula_callable* get_environment() { return environ_; }
 	void set_deferred_uniforms();
+	GLint mvp_matrix_uniform() const { return u_mvp_matrix_; }
+	GLint vertex_attribute() const { return vertex_location_; }
+	GLint texcoord_attribute() const { return texcoord_location_; }
 
 	virtual variant write();
 
@@ -123,6 +132,9 @@ public:
 	void set_sprite_area(const GLfloat* fl);
 	void set_draw_area(const GLfloat* fl);
 	void set_cycle(int cycle);
+
+	const shader& vertex_shader() const { return vs_; }
+	const shader& fragment_shader() const { return fs_; }
 private:
 	bool link();
 	bool queryUniforms();

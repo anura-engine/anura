@@ -106,6 +106,10 @@ void reset_opengl_state()
 	glClearColor(0.0,0.0,0.0,0.0);
 	gles2::init_default_shader();
 #endif
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+	glDepthRange(0.0f, 1.0f);
+	glClearDepth(1.0);
 }
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
@@ -187,7 +191,7 @@ SDL_DisplayMode set_video_mode_auto_select()
 		best_mode.h = 768;
 	}
 
-	const bool result = set_video_mode(best_mode.w, best_mode.h,SDL_WINDOW_OPENGL);
+	const bool result = set_video_mode(best_mode.w, best_mode.h, SDL_WINDOW_OPENGL);
 	ASSERT_LOG(result, "FAILED TO SET AUTO SELECT VIDEO MODE: " << best_mode.w << "x" << best_mode.h);
 	
 	return best_mode;
@@ -223,6 +227,13 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 #if defined(USE_GLES2) 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
+	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
+
+	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
+	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 #endif
 	if(global_renderer) {
 		SDL_DestroyRenderer(global_renderer);
@@ -250,7 +261,16 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		graphics::texture::rebuild_all();
 		texture_frame_buffer::rebuild();
 	}
-
+#if defined(USE_GLES2)
+	int depth_size, stencil_size;
+	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth_size);
+	SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil_size);
+	std::cerr << "Depth buffer size: " << depth_size << std::endl;
+	std::cerr << "Stenicl buffer size: " << stencil_size << std::endl;
+	int depth;
+	glGetIntegerv(GL_DEPTH_BITS, &depth);
+	std::cerr << "Depth(from GL) buffer size: " << depth << std::endl;
+#endif
 	return wnd;
 }
 #else
@@ -729,7 +749,71 @@ void queue_blit_texture(const texture& tex, int x, int y, int w, int h, GLfloat 
 	rotate_rect(x+(w/2), y+(h/2), rotate, varray); 
 
 }
+
+void queue_blit_texture_3d(const texture& tex, 
+	GLfloat x, GLfloat y, GLfloat z, 
+	int w, int h, 
+	GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+{
+	x1 = tex.translate_coord_x(x1);
+	y1 = tex.translate_coord_y(y1);
+	x2 = tex.translate_coord_x(x2);
+	y2 = tex.translate_coord_y(y2);
 	
+	if(w < 0) {
+		std::swap(x1, x2);
+		w *= -1;
+	}
+	
+	if(h < 0) {
+		std::swap(y1, y2);
+		h *= -1;
+	}
+	
+	blit_tcqueue.push_back(x1);
+	blit_tcqueue.push_back(y1);
+	blit_tcqueue.push_back(x2);
+	blit_tcqueue.push_back(y1);
+	blit_tcqueue.push_back(x1);
+	blit_tcqueue.push_back(y2);
+	blit_tcqueue.push_back(x2);
+	blit_tcqueue.push_back(y2);
+	
+	blit_vqueue.push_back(x);
+	blit_vqueue.push_back(y);
+	blit_vqueue.push_back(z);
+	blit_vqueue.push_back(x + w);
+	blit_vqueue.push_back(y);
+	blit_vqueue.push_back(z);
+	blit_vqueue.push_back(x);
+	blit_vqueue.push_back(y + h);
+	blit_vqueue.push_back(z);
+	blit_vqueue.push_back(x + w);
+	blit_vqueue.push_back(y + h);
+	blit_vqueue.push_back(z);
+}
+
+void flush_blit_texture_3d()
+{
+	if(!blit_current_texture) {
+		return;
+	}
+	blit_current_texture->set_as_current_texture();
+#if defined(USE_GLES2)
+	gles2::active_shader()->shader()->vertex_array(3, GL_SHORT, 0, 0, &blit_vqueue.front());
+	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0,  &blit_tcqueue.front());
+#else
+	glVertexPointer(3, GL_SHORT, 0, &blit_vqueue.front());
+	glTexCoordPointer(2, GL_FLOAT, 0, &blit_tcqueue.front());
+#endif
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, blit_tcqueue.size()/2);
+
+	blit_current_texture = NULL;
+	blit_tcqueue.clear();
+	blit_vqueue.clear();
+}
+
+
 void flush_blit_texture()
 {
 	if(!blit_current_texture) {

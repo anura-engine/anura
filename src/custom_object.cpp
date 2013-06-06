@@ -162,7 +162,8 @@ custom_object::custom_object(variant node)
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates())),
-	paused_(false)
+	vertex_location_(-1), texcoord_location_(-1),
+	paused_(false)	
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -397,6 +398,27 @@ custom_object::custom_object(variant node)
 	}
 #endif
 
+	if(node.has_key("truez")) {
+		set_truez(node["truez"].as_bool());
+	} else if(type_ != NULL) {
+		set_truez(type_->truez());
+	}
+	if(node.has_key("tx")) {
+		set_tx(node["tx"].as_decimal().as_float());
+	} else if(type_ != NULL) {
+		set_tx(type_->tx());
+	}
+	if(node.has_key("ty")) {
+		set_ty(node["ty"].as_decimal().as_float());
+	} else if(type_ != NULL) {
+		set_ty(type_->ty());
+	}
+	if(node.has_key("tz")) {
+		set_tz(node["tz"].as_decimal().as_float());
+	} else if(type_ != NULL) {
+		set_tz(type_->tz());
+	}
+
 	//fprintf(stderr, "object address= %p, ", this);
 	//fprintf(stderr, "zsub_order=%d,", zsub_order_);
 }
@@ -434,6 +456,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->use_absolute_screen_coordinates()),
+	vertex_location_(-1), texcoord_location_(-1),
 	paused_(false)
 {
 	vars_->disallow_new_keys(type_->is_strict());
@@ -489,6 +512,11 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	if(type_->mouse_over_area().w() != 0) {
 		set_mouse_over_area(type_->mouse_over_area());
 	}
+	set_truez(type_->truez());
+	set_tx(type_->tx());
+	set_ty(type_->ty());
+	set_tz(type_->tz());
+	//std::cerr << type << " " << truez() << " " << tx() << "," << ty() << "," << tz() << std::endl;
 }
 
 custom_object::custom_object(const custom_object& o) :
@@ -560,6 +588,7 @@ custom_object::custom_object(const custom_object& o) :
 	platform_offsets_(o.platform_offsets_),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_),
+	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
 	paused_(o.paused_)
 {
 	vars_->disallow_new_keys(type_->is_strict());
@@ -585,6 +614,11 @@ custom_object::custom_object(const custom_object& o) :
 #endif
 	set_mouseover_delay(o.get_mouseover_delay());
 	set_mouse_over_area(o.mouse_over_area());
+	
+	set_truez(o.truez());
+	set_tx(o.tx());
+	set_ty(o.ty());
+	set_tz(o.tz());
 }
 
 custom_object::~custom_object()
@@ -960,6 +994,13 @@ variant custom_object::write() const
 	if(use_absolute_screen_coordinates_) {
 		res.add("use_absolute_screen_coordinates", use_absolute_screen_coordinates_);
 	}
+
+	if(truez()) {
+		res.add("truez", truez());
+		res.add("tx", tx());
+		res.add("ty", ty());
+		res.add("tz", tz());
+	}
 	
 	return res.build();
 }
@@ -1015,6 +1056,7 @@ void custom_object::draw(int xx, int yy) const
 		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
 	}
 
+	const gles2::shader_program_ptr active = gles2::active_shader();
 #if defined(USE_GLES2)
 #ifndef NO_EDITOR
 	try {
@@ -1026,8 +1068,8 @@ void custom_object::draw(int xx, int yy) const
 		}
 	}
 
-	gles2::manager manager(shader_);
-	if(shader_) {
+	gles2::manager manager(truez() ? 0 : shader_);
+	if(shader_ && truez() == false) {
 		shader_->refresh_for_draw();
 	}
 #endif
@@ -1053,6 +1095,23 @@ void custom_object::draw(int xx, int yy) const
 
 	if(type_->hidden_in_game() && !level::current().in_editor()) {
 		//pass
+#if defined(USE_ISOMAP)
+	} else if(truez()) {
+		//XXX All this is a big hack till I fix up frames/objects to use shaders differently
+		glUseProgram(shader_->shader()->get());
+		if(vertex_location_ == -1) {
+			vertex_location_ = shader_->shader()->get_attribute("a_position");
+		}
+		if(texcoord_location_ == -1) {
+			texcoord_location_ = shader_->shader()->get_attribute("a_texcoord");
+		}
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
+		//ASSERT_LOG(gles2::active_shader()->shader()->mvp_matrix_uniform() != -1, "Invalid mvp uniform.");
+		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+
+		frame_->draw3(tx(), ty(), tz(), face_right(), upside_down(), time_in_frame_, vertex_location_, texcoord_location_);
+		glUseProgram(active->shader()->get());
+#endif
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
 		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()), cycle_);
@@ -2860,6 +2919,19 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_MOUSEOVER_AREA: {
 		return mouse_over_area().write();
 	}
+	case CUSTOM_OBJECT_TRUEZ: {
+		return variant::from_bool(truez());
+	}
+	case CUSTOM_OBJECT_TX: {
+		return variant(tx());
+	}
+	case CUSTOM_OBJECT_TY: {
+		return variant(ty());
+	}
+	case CUSTOM_OBJECT_TZ: {
+		return variant(tz());
+	}
+
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
 		std::vector<variant> v;
 		foreach(boost::intrusive_ptr<graphics::draw_primitive> p, draw_primitives_) {
@@ -3265,6 +3337,14 @@ void custom_object::set_value(const std::string& key, const variant& value)
 #endif
 	} else if(key == "mouseover_area") {
 		set_mouse_over_area(rect(value));
+	} else if(key == "truez") {
+		set_truez(value.as_bool());
+	} else if(key == "tx") {
+		set_tx(value.as_decimal().as_float());
+	} else if(key == "ty") {
+		set_ty(value.as_decimal().as_float());
+	} else if(key == "tz") {
+		set_tz(value.as_decimal().as_float());
 	} else if(!type_->is_strict()) {
 		vars_->add(key, value);
 	} else {
@@ -4000,6 +4080,23 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_MOUSEOVER_AREA: {
 		set_mouse_over_area(rect(value));
+		break;
+	}
+
+	case CUSTOM_OBJECT_TRUEZ: {
+		set_truez(value.as_bool());
+		break;
+	}
+	case CUSTOM_OBJECT_TX: {
+		set_tx(value.as_decimal().as_float());
+		break;
+	}
+	case CUSTOM_OBJECT_TY: {
+		set_ty(value.as_decimal().as_float());
+		break;
+	}
+	case CUSTOM_OBJECT_TZ: {
+		set_tz(value.as_decimal().as_float());
 		break;
 	}
 

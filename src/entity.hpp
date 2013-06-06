@@ -301,6 +301,15 @@ public:
 	unsigned get_mouseover_trigger_cycle() const { return mouseover_trigger_cycle_; }
 	void set_mouseover_trigger_cycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
 
+	bool truez() const { return true_z_; }
+	double tx() const { return tx_; }
+	double ty() const { return ty_; }
+	double tz() const { return tz_; }
+	void set_truez(bool en=false) { true_z_ = en; }
+	void set_tx(double x) { tx_ = x; }
+	void set_ty(double y) { ty_ = y; }
+	void set_tz(double z) { tz_ = z; }
+
 protected:
 	virtual const_solid_info_ptr calculate_solid() const = 0;
 	virtual const_solid_info_ptr calculate_platform() const = 0;
@@ -378,6 +387,9 @@ private:
 	int mouseover_delay_;
 	unsigned mouseover_trigger_cycle_;
 	rect mouse_over_area_;
+
+	bool true_z_;
+	double tx_, ty_, tz_;
 };
 
 bool zorder_compare(const entity_ptr& e1, const entity_ptr& e2);	

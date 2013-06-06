@@ -34,6 +34,7 @@
 #include "b2d_ffl.hpp"
 #endif
 #include "background.hpp"
+#include "camera.hpp"
 #include "color_utils.hpp"
 #include "decimal.hpp"
 #include "entity.hpp"
@@ -43,6 +44,7 @@
 #include "geometry.hpp"
 #include "gui_formula_functions.hpp"
 #include "hex_map.hpp"
+#include "isotile.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "movement_script.hpp"
@@ -62,6 +64,7 @@ public:
 	explicit current_level_scope(level* ptr);
 	~current_level_scope();
 };
+
 
 class level : public game_logic::formula_callable
 {
@@ -141,6 +144,18 @@ public:
 #if defined(USE_GLES2)
 	gles2::shader_program_ptr shader() const { return shader_; }
 #endif
+
+#if defined(USE_ISOMAP)
+	isometric::isomap_ptr isomap() const { return isomap_; }
+	const float* projection() const;
+	const float* view() const;
+	const glm::mat4& view_mat() const { return camera_->view_mat(); }
+	const glm::mat4& projection_mat() const { return camera_->projection_mat(); }
+	camera_callable_ptr camera() const { return camera_; }
+	bool is_mouselook_enabled() const { return mouselook_enabled_; }
+	void set_mouselook(bool ml=true) { mouselook_enabled_ = ml; }
+#endif
+
 
 	//function to do 'magic wand' selection -- given an x/y pixel position,
 	//will return all the solid tiles connected
@@ -674,6 +689,12 @@ private:
 #if defined(USE_BOX2D)
 	// List of static bodies present in the level.
 	std::vector<box2d::body_ptr> bodies_;
+#endif
+
+#if defined(USE_ISOMAP)
+	isometric::isomap_ptr isomap_;
+	camera_callable_ptr camera_;
+	bool mouselook_enabled_;
 #endif
 
 	// Hack to disable the touchscreen controls for the current level -- replace for 1.4

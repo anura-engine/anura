@@ -40,7 +40,8 @@ entity::entity(variant node)
 	weak_solid_dimensions_(0), weak_collide_dimensions_(0),
 	platform_motion_x_(node["platform_motion_x"].as_int()),
 	mouse_over_entity_(false), being_dragged_(false), mouse_button_state_(0),
-	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX)
+	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
+	true_z_(false), tx_(node["x"].as_decimal().as_float()), ty_(node["y"].as_decimal().as_float()), tz_(0.0f)
 {
 	foreach(bool& b, controls_) {
 		b = false;
@@ -54,7 +55,8 @@ entity::entity(int x, int y, bool face_right)
 	respawn_(true), solid_dimensions_(0), collide_dimensions_(0),
 	weak_solid_dimensions_(0), weak_collide_dimensions_(0),	platform_motion_x_(0), 
 	mouse_over_entity_(false), being_dragged_(false), mouse_button_state_(0),
-	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX)
+	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
+	true_z_(false), tx_(double(x)), ty_(double(y)), tz_(0.0f)
 {
 	foreach(bool& b, controls_) {
 		b = false;

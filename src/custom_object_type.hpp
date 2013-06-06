@@ -251,6 +251,11 @@ public:
 
 	bool is_shadow() const { return is_shadow_; }
 
+	bool truez() const { return true_z_; }
+	double tx() const { return tx_; }
+	double ty() const { return ty_; }
+	double tz() const { return tz_; }
+
 private:
 	void init_sub_objects(variant node, const custom_object_type* old_type);
 
@@ -381,6 +386,9 @@ private:
 	//if this is a shadow, it will render only on top of foreground level
 	//components.
 	bool is_shadow_;
+
+	bool true_z_;
+	double tx_, ty_, tz_;
 };
 
 #endif

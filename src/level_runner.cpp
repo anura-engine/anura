@@ -739,7 +739,7 @@ bool level_runner::play_level()
 
 	while(!done && !quit_) {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-		Uint8 *key = SDL_GetKeyboardState(NULL);
+		const Uint8 *key = SDL_GetKeyboardState(NULL);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
 #else
 		if(key[SDLK_t] && preferences::record_history()
@@ -868,6 +868,19 @@ bool level_runner::play_cycle()
 			g_levels_modified.erase(level_path);
 			replay_level_from_start();
 		}
+	}
+#endif
+
+#if defined(USE_ISOMAP)
+	static bool mouselook_state = false;
+	if(mouselook_state != lvl_->is_mouselook_enabled() && editor_ == NULL && !paused) {
+		mouselook_state = lvl_->is_mouselook_enabled();
+		SDL_SetRelativeMouseMode(lvl_->is_mouselook_enabled() ? SDL_TRUE : SDL_FALSE);
+		SDL_GetRelativeMouseState(NULL, NULL);
+	}
+	if(editor_ && mouselook_state) {
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+		mouselook_state = false;
 	}
 #endif
 
@@ -1429,10 +1442,24 @@ bool level_runner::play_cycle()
 		
 		if (should_pause)
 		{
+#if defined(USE_ISOMAP)
+			if(mouselook_state) {
+				SDL_SetRelativeMouseMode(SDL_FALSE);
+			}
+#endif
 			settings_dialog.reset();
 			const PAUSE_GAME_RESULT result = show_pause_game_dialog();
 
 			handle_pause_game_result(result);
+#if defined(USE_ISOMAP)
+			if(done) {
+				mouselook_state = false;
+			}
+			if(mouselook_state) {
+				SDL_SetRelativeMouseMode(SDL_TRUE);
+				SDL_GetRelativeMouseState(NULL, NULL);
+			}
+#endif
 		}
 	}
 
@@ -1496,12 +1523,26 @@ bool level_runner::play_cycle()
 			should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());
 		}
 
+#if defined(USE_ISOMAP)
+		if(mouselook_state) {
+			const camera_callable_ptr& cam = lvl_->camera();
+			if(cam) {
+				int rmx, rmy;
+				SDL_GetRelativeMouseState(&rmx, &rmy);
+				cam->set_hangle(cam->hangle() + cam->mousespeed() * rmx);
+				cam->set_vangle(cam->vangle() + cam->mousespeed() * rmy);
+
+				cam->compute_view();
+			}
+		}
+#endif
+
 		lvl_->process_draw();
 
 		if(should_draw) {
 #ifndef NO_EDITOR
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-			Uint8 *key = SDL_GetKeyboardState(NULL);
+			const Uint8 *key = SDL_GetKeyboardState(NULL);
 			if(editor_ && key[SDL_SCANCODE_L] && !editor_->has_keyboard_focus() && (!console_ || !console_->has_keyboard_focus())) {
 #else
 			if(editor_ && key[SDLK_l] && !editor_->has_keyboard_focus() && (!console_ || !console_->has_keyboard_focus())) {

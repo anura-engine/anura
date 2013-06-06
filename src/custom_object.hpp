@@ -23,6 +23,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <stack>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "blur.hpp"
 #include "color_utils.hpp"
@@ -247,6 +249,8 @@ public:
 		}
 		return false;
 	}
+
+	const GLfloat* model() const { return glm::value_ptr(model_); }
 
 protected:
 	//components of per-cycle process() that can be done even on
@@ -484,6 +488,11 @@ private:
 	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
 
 	bool paused_;
+
+	glm::mat4 model_;
+	// XXX these are hacks.
+	mutable GLint vertex_location_;
+	mutable GLint texcoord_location_;
 };
 
 #endif

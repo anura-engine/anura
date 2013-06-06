@@ -764,7 +764,9 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
 	is_strict_(node["is_strict"].as_bool(false)),
-	is_shadow_(node["is_shadow"].as_bool(false))
+	is_shadow_(node["is_shadow"].as_bool(false)),
+	true_z_(node["truez"].as_bool(false)), tx_(node["tx"].as_decimal().as_float()), 
+	ty_(node["ty"].as_decimal().as_float()), tz_(node["tz"].as_decimal().as_float())
 {
 	const custom_object_type_init_scope init_scope(id);
 	const bool is_recursive_call = std::count(custom_object_type_stack.begin(), custom_object_type_stack.end(), id) > 0;
@@ -1035,15 +1037,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 	}
 
-	fprintf(stderr, "CALLABLE DEFINITION FOR %s: {\n", id_.c_str());
+	//fprintf(stderr, "CALLABLE DEFINITION FOR %s: {\n", id_.c_str());
 	for(int n = 0; n != callable_definition_->num_slots(); ++n) {
 		if(callable_definition_->get_entry(n)->variant_type) {
-			fprintf(stderr, "  %s: %s\n", callable_definition_->get_entry(n)->id.c_str(), callable_definition_->get_entry(n)->variant_type->to_string().c_str());
+			//fprintf(stderr, "  %s: %s\n", callable_definition_->get_entry(n)->id.c_str(), callable_definition_->get_entry(n)->variant_type->to_string().c_str());
 		} else {
-			fprintf(stderr, "  %s: (none)\n", callable_definition_->get_entry(n)->id.c_str());
+			//fprintf(stderr, "  %s: (none)\n", callable_definition_->get_entry(n)->id.c_str());
 		}
 	}
-	fprintf(stderr, "}\n");
+	//fprintf(stderr, "}\n");
 
 	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->set_object_type(variant_type::get_custom_object(id_));

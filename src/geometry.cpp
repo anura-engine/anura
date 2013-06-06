@@ -322,6 +322,129 @@ game_logic::formula_callable* rect::callable() const
 	return new rect_callable(*this);
 }
 
+rectf rectf::from_coordinates(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)
+{
+	if(x1 > x2+1) {
+		std::swap(x1, x2);
+	}
+
+	if(y1 > y2+1) {
+		std::swap(y1, y2);
+	}
+	return rectf(x1, y1, x2-x1+1, y2-y1+1);
+}
+
+rectf rectf::from_area(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+{
+	return rectf(x, y, w, h);
+}
+
+rectf::rectf(const std::string& str)
+{
+	if(str.empty()) {
+		*this = rectf();
+		return;
+	}
+
+	GLfloat items[4];
+	int num_items = 0;
+	std::vector<std::string> buf = util::split(str, ",");
+	for(int n = 0; n != 4 && n != buf.size(); ++n) {
+		items[num_items++] = boost::lexical_cast<GLfloat>(buf[n]);
+	}
+
+	switch(num_items) {
+	case 2:
+		*this = rectf::from_coordinates(items[0], items[1], 1, 1);
+		break;
+	case 3:
+		*this = rectf::from_coordinates(items[0], items[1], items[2], 1);
+		break;
+	case 4:
+		*this = rectf::from_coordinates(items[0], items[1], items[2], items[3]);
+		break;
+	default:
+		*this = rectf();
+		break;
+	}
+}
+
+rectf::rectf(int x, int y, int w, int h)
+	: x_(std::min(x, x+w)), y_(std::min(y, y+h)),
+	x2_(std::max(x, x+w)), y2_(std::max(y, y+h)),
+	w_(w), h_(h)
+{}
+
+rectf::rectf(GLfloat x, GLfloat y, GLfloat w, GLfloat h)
+	: x_(std::min(x, x+w)), y_(std::min(y, y+h)),
+	x2_(std::max(x, x+w)), y2_(std::max(y, y+h)),
+	w_(w), h_(h)
+{
+}
+
+rectf::rectf(const std::vector<GLfloat>& v)
+{
+	switch(v.size()) {
+	case 2:
+		*this = rectf::from_area(v[0], v[1], 0, 0);
+		break;
+	case 3:
+		*this = rectf::from_area(v[0], v[1], v[2], 0);
+		break;
+	case 4:
+		*this = rectf::from_area(v[0], v[1], v[2], v[3]);
+		break;
+	default:
+		*this = rectf();
+		break;
+	}
+}
+
+rectf::rectf(const std::vector<int>& v)
+{
+	switch(v.size()) {
+	case 2:
+		*this = rectf::from_area(v[0], v[1], 0, 0);
+		break;
+	case 3:
+		*this = rectf::from_area(v[0], v[1], v[2], 0);
+		break;
+	case 4:
+		*this = rectf::from_area(v[0], v[1], v[2], v[3]);
+		break;
+	default:
+		*this = rectf();
+		break;
+	}
+}
+
+rectf::rectf(const variant& value)
+{
+	std::vector<decimal> v = value.as_list_decimal();
+	switch(v.size()) {
+	case 2:
+		*this = rectf::from_area(GLfloat(v[0].as_float()), GLfloat(v[1].as_float()), 0, 0);
+		break;
+	case 3:
+		*this = rectf::from_area(GLfloat(v[0].as_float()), GLfloat(v[1].as_float()), GLfloat(v[2].as_float()), 0);
+		break;
+	case 4:
+		*this = rectf::from_area(GLfloat(v[0].as_float()), GLfloat(v[1].as_float()), GLfloat(v[2].as_float()), GLfloat(v[3].as_float()));
+		break;
+	default:
+		*this = rectf();
+		break;
+	}
+}
+
+std::string rectf::to_string() const
+{
+	std::stringstream ss;
+	ss << x() << "," << y() << "," << (x2()-1) << "," << (y2()-1);
+	return ss.str();
+}
+
+
 UNIT_TEST(rect)
 {
 	rect r(10, 10, 10, 10);

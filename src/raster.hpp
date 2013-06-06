@@ -18,6 +18,7 @@
 #define RASTER_HPP_INCLUDED
 
 #include <boost/scoped_ptr.hpp>
+#include <boost/shared_array.hpp>
 
 #include <vector>
 
@@ -35,6 +36,22 @@ extern int xypos_draw_mask;
 
 namespace graphics
 {
+
+struct vbo_deleter
+{
+	vbo_deleter(int n) : n_(n)
+	{}
+
+	void operator()(GLuint* d) 
+	{
+		glDeleteBuffers(n_, d);
+		delete[] d;
+	}
+
+	int n_;
+};
+
+typedef boost::shared_array<GLuint> vbo_array;
 
 class stencil_scope
 {
@@ -93,7 +110,10 @@ void queue_blit_texture(const texture& tex, int x, int y, int w, int h,
                         GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 void queue_blit_texture(const texture& tex, int x, int y, int w, int h, GLfloat rotate,
 						GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
+void queue_blit_texture_3d(const texture& tex, GLfloat x, GLfloat y, GLfloat z, int w, int h,
+                        GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2);
 void flush_blit_texture();
+void flush_blit_texture_3d();
 
 class blit_queue
 {

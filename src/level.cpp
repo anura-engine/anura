@@ -215,6 +215,9 @@ level::level(const std::string& level_cfg, variant node)
 	  palettes_used_(0),
 	  background_palette_(-1),
 	  segment_width_(0), segment_height_(0),
+#if defined(USE_ISOMAP)
+	  mouselook_enabled_(false),
+#endif
 	  allow_touch_controls_(true)
 {
 #ifndef NO_EDITOR
@@ -239,6 +242,19 @@ level::level(const std::string& level_cfg, variant node)
 		shader_.reset(new gles2::shader_program(node["shader"]));
 	} else {
 		shader_.reset();
+	}
+#endif
+
+#if defined(USE_ISOMAP)
+	if(node.has_key("isomap")) {
+		isomap_.reset(new isometric::isomap(node["isomap"]));
+	} else {
+		isomap_.reset();
+	}
+	if(node.has_key("camera")) {
+		camera_.reset(new camera_callable(node["camera"]));
+	} else {
+		camera_.reset();
 	}
 #endif
 
@@ -1519,6 +1535,15 @@ variant level::write() const
 	}
 #endif
 
+#if defined(USE_ISOMAP)
+	if(isomap_) {
+		res.add("isomap", isomap_->write());
+	}
+	if(camera_) {
+		res.add("camera", camera_->write());
+	}
+#endif
+
 #if defined(USE_BOX2D)
 	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin(); 
 		it != bodies_.end();
@@ -1764,10 +1789,10 @@ void level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 
 			solid.first->color.set_as_current_color();
 			GLshort varray[] = {
-			  area.x(), area.y(),
-			  area.x() + area.w(), area.y(),
-			  area.x(), area.y() + area.h(),
-			  area.x() + area.w(), area.y() + area.h(),
+			  GLshort(area.x()), GLshort(area.y()),
+			  GLshort(area.x() + area.w()), GLshort(area.y()),
+			  GLshort(area.x()), GLshort(area.y() + area.h()),
+			  GLshort(area.x() + area.w()), GLshort(area.y() + area.h()),
 			};
 #if defined(USE_GLES2)
 			gles2::manager gles2_manager(gles2::get_simple_shader());
@@ -2006,6 +2031,14 @@ void level::draw(int x, int y, int w, int h) const
 	w += widest_tile_;
 	h += highest_tile_;
 	
+#if defined(USE_ISOMAP)
+	if(isomap_) {
+		// XX hackity hack
+		gles2::shader_program_ptr active = gles2::active_shader();
+		isomap_->draw();
+		glUseProgram(active->shader()->get());
+	}
+#endif
 
 	{
 #if defined(USE_GLES2)
@@ -3708,6 +3741,7 @@ game_logic::const_formula_callable_definition_ptr level::get_formula_definition(
 	return result;
 }
 
+
 BEGIN_DEFINE_CALLABLE(level, 0)
 DEFINE_FIELD(0, cycle, "int")
 	value = variant(cycle_);
@@ -3969,6 +4003,39 @@ DEFINE_SET_FIELD
 	} else {
 		lock_screen_.reset();
 	}
+
+DEFINE_FIELD(33, isomap, "null|object")
+#if defined(USE_ISOMAP)
+	if(isomap_) {
+		value = variant(isomap_.get());
+	} else {
+		value = variant();
+	}
+#else
+	value = variant();
+#endif
+
+DEFINE_FIELD(34, camera, "null|object")
+#if defined(USE_ISOMAP)
+	if(camera_) {
+		value = variant(camera_.get());
+	} else {
+		value = variant();
+	}
+#else
+	value = variant();
+#endif
+
+DEFINE_FIELD(35, mouselook, "bool")
+#if defined(USE_ISOMAP)
+	value = variant::from_bool(is_mouselook_enabled());
+#else
+	value = variant(false);
+#endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	set_mouselook(value.as_bool());
+#endif
 
 END_DEFINE_CALLABLE_NOBASE(level)
 
@@ -4929,6 +4996,20 @@ void level::record_zorders()
 		t.object->record_zorder(t.zorder);
 	}
 }
+
+#if defined(USE_ISOMAP)
+const float* level::projection() const
+{
+	ASSERT_LOG(camera_ != NULL, "level::projection(): Accessing camera_ but is null");
+	return camera_->projection();
+}
+
+const float* level::view() const
+{
+	ASSERT_LOG(camera_ != NULL, "level::view(): Accessing camera_ but is null");
+	return camera_->view();
+}
+#endif
 
 int level::current_difficulty() const
 {

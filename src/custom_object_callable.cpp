@@ -233,6 +233,11 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "paused", "any" },
 	{ "mouseover_delay", "any" },
 	{ "mouseover_area", "any" },
+
+	{ "truez", "bool" },
+	{ "tx", "decimal" },
+	{ "ty", "decimal" },
+	{ "tz", "decimal" },
 	
 	{ "ctrl_up", "any" },
 	{ "ctrl_down", "any" },

@@ -19,6 +19,7 @@ objects = \
 	src/blur.o \
 	src/border_widget.o \
 	src/button.o \
+	src/camera.o \
 	src/character_editor_dialog.o \
 	src/checkbox.o \
 	src/checksum.o \
@@ -98,6 +99,7 @@ objects = \
 	src/input.o \
 	src/ipc.o \
 	src/iphone_controls.o \
+	src/isotile.o \
 	src/joystick.o \
 	src/json_parser.o \
 	src/json_tokenizer.o \
@@ -143,6 +145,7 @@ objects = \
 	src/selector_widget.o \
 	src/settings_dialog.o \
 	src/shaders.o \
+	src/simplex_noise.o \
 	src/sys.o \
 	src/slider.o \
 	src/solid_map.o \

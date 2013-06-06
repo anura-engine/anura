@@ -18,11 +18,13 @@
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
 #include "foreach.hpp"
 #include "frame.hpp"
+#include "level.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
@@ -581,6 +583,76 @@ void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 	                       rect[0], rect[1], rect[2], rect[3]);
 }
 
+#if defined(USE_ISOMAP)
+void frame::draw3(double x, double y, double z, bool face_right, bool upside_down, int time, GLint va, GLint tc) const
+{
+	// XXX fix this up some with the general frame improvement.
+	const frame_info* info = NULL;
+	GLfloat rect[4];
+	get_rect_in_texture(time, &rect[0], info);
+	rect[0] = texture_.translate_coord_x(rect[0]);
+	rect[1] = texture_.translate_coord_y(rect[1]);
+	rect[2] = texture_.translate_coord_x(rect[2]);
+	rect[3] = texture_.translate_coord_y(rect[3]);
+
+	//x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
+	//y += info->y_adjust*scale_;
+	const GLfloat w = info->area.w()*scale_*(face_right ? 1 : -1) / 16.0;
+	const GLfloat h = info->area.h()*scale_*(upside_down ? -1 : 1) / 16.0;
+
+	//glUseProgram(gles2::active_shader()->shader()->get());
+
+	glActiveTexture(GL_TEXTURE0);
+	texture_.set_as_current_texture();
+
+	std::vector<GLfloat> va_ary;
+	std::vector<GLfloat> tc_ary;
+
+	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z);
+	va_ary.push_back(x+w); va_ary.push_back(y); va_ary.push_back(z);
+	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
+
+	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
+	va_ary.push_back(x); va_ary.push_back(y+h); va_ary.push_back(z);
+	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z);
+
+	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[3]);
+	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[3]);
+	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[1]);
+	
+	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[1]);
+	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[1]);
+	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[3]);
+
+	glEnable(GL_DEPTH_TEST);
+	//glEnable(GL_CULL_FACE);
+	glEnableVertexAttribArray(va);
+	glVertexAttribPointer(va, 
+		3,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,					// stride
+		&va_ary[0]			// array buffer offset
+	);
+	glEnableVertexAttribArray(tc);
+	glVertexAttribPointer(tc, 
+		2,                  // size
+		GL_FLOAT,           // type
+		GL_FALSE,           // normalized?
+		0,					// stride
+		&tc_ary[0]			// array buffer offset
+	);
+	glDrawArrays(GL_TRIANGLES, 0, va_ary.size()/3);
+
+	glDisableVertexAttribArray(va);
+	glDisableVertexAttribArray(tc);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glDisable(GL_DEPTH_TEST);
+	glDisable(GL_CULL_FACE);
+	//glUseProgram(0);
+}
+#endif
+
 void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
 	texture_.set_as_current_texture();
@@ -758,7 +830,7 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 
 #if defined(USE_GLES2)
 	{
-		GLfloat draw_area[] = {x, y, x+w, y+h};
+		GLfloat draw_area[] = {GLfloat(x), GLfloat(y), GLfloat(x+w), GLfloat(y+h)};
 		if(face_right) {
 			std::swap(draw_area[0], draw_area[2]);
 		}

@@ -28,9 +28,7 @@
 #include "module.hpp"
 #include "shaders.hpp"
 #include "variant_utils.hpp"
-#if defined(WIN32)
-#include "win_profile_timer.hpp"
-#endif
+#include "profile_timer.hpp"
 
 #define WRITE_LOG(_a,_b) if( !(_a) ) { std::ostringstream _s; _s << __FILE__ << ":" << __LINE__ << " ASSERTION FAILED: " << _b << "\n"; std::cerr << _s.str(); return; }
 
@@ -56,7 +54,7 @@ std::string shader::get_and_clear_runtime_error()
 }
 
 shader::shader(GLenum type, const std::string& name, const std::string& code)
-	: type_(type), shader_(0), name_(name)
+	: type_(type), shader_(0), name_(name), code_(code)
 {
 	const bool compile_result = compile(code);
 	std::string working_version_str;
@@ -243,12 +241,50 @@ bool program::queryUniforms()
 
 variant program::get_uniform_value(const std::string& key) const
 {
-	std::map<std::string, actives>::const_iterator it = uniforms_.find(key);
+	const_actives_map_iterator it = uniforms_.find(key);
 	ASSERT_LOG(it != uniforms_.end(), "No uniform found with name: " << key);
 	return it->second.last_value;
 }
 
-void program::set_uniform(const std::map<std::string,actives>::iterator& it, const variant& value)
+void program::set_uniform(const actives_map_iterator& it, const GLsizei count, const GLfloat* fv)
+{
+	const actives& u = it->second;
+	switch(u.type) {
+	case GL_FLOAT: {
+		glUniform1fv(u.location, count, fv);
+		break;
+	}
+	case GL_FLOAT_VEC2: {
+		glUniform2fv(u.location, count, fv);
+		break;
+	}
+	case GL_FLOAT_VEC3: {
+		glUniform3fv(u.location, count, fv);
+		break;
+	}
+	case GL_FLOAT_VEC4: {
+		glUniform4fv(u.location, count, fv);
+		break;
+	}
+	case GL_FLOAT_MAT2:	{
+		glUniformMatrix2fv(u.location, count, GL_FALSE, fv);
+		break;
+	}
+	case GL_FLOAT_MAT3: {
+		glUniformMatrix3fv(u.location, count, GL_FALSE, fv);
+		break;
+	}
+	case GL_FLOAT_MAT4: {
+		glUniformMatrix4fv(u.location, count, GL_FALSE, fv);
+		break;
+	}
+
+	default:
+		WRITE_LOG(false, "Unhandled uniform type: " << it->second.type);
+	}
+}
+
+void program::set_uniform(const actives_map_iterator& it, const variant& value)
 {
 	const actives& u = it->second;
 	switch(u.type) {
@@ -345,9 +381,9 @@ void program::set_uniform(const std::map<std::string,actives>::iterator& it, con
 	}
 }
 
-std::map<std::string,actives>::iterator program::get_uniform_reference(const std::string& key)
+actives_map_iterator program::get_uniform_reference(const std::string& key)
 {
-	std::map<std::string, actives>::iterator it = uniforms_.find(key);
+	actives_map_iterator it = uniforms_.find(key);
 	ASSERT_LOG(it != uniforms_.end(), "COULD NOT FIND UNIFORM: " << key);
 	return it;
 }
@@ -355,13 +391,13 @@ std::map<std::string,actives>::iterator program::get_uniform_reference(const std
 
 void program::set_uniform_or_defer(const std::string& key, const variant& value)
 {
-	std::map<std::string, actives>::iterator it = uniforms_.find(key);
+	actives_map_iterator it = uniforms_.find(key);
 	WRITE_LOG(it != uniforms_.end(), "No uniform found with name: " << key);
 
 	set_uniform_or_defer(it, value);
 }
 
-void program::set_uniform_or_defer(const std::map<std::string,actives>::iterator& it, const variant& value)
+void program::set_uniform_or_defer(actives_map_iterator& it, const variant& value)
 {
 	it->second.last_value = value;
 
@@ -776,7 +812,7 @@ variant program::get_attributes_value(const std::string& key) const
 }
 
 
-void program::set_attributes(const std::map<std::string, actives>::iterator& it, const variant& value)
+void program::set_attributes(const actives_map_iterator& it, const variant& value)
 {
 	const actives& a = it->second;
 	ASSERT_LOG(it != attribs_.end(), "No attribute found (" << it->first <<  ") prog: " << get());
@@ -845,9 +881,9 @@ void program::set_attributes(const std::string& key, const variant& value)
 	set_attributes(get_attribute_reference(key), value);
 }
 
-std::map<std::string,actives>::iterator program::get_attribute_reference(const std::string& key)
+actives_map_iterator program::get_attribute_reference(const std::string& key)
 {
-	std::map<std::string, actives>::iterator it = attribs_.find(key);
+	actives_map_iterator it = attribs_.find(key);
 	ASSERT_LOG(it != attribs_.end(), "No attribute found with name: " << key << ", prog: " << get());
 	return it;
 }
