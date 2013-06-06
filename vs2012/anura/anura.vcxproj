@@ -120,12 +120,12 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_GLES2;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_GLES2;USE_ISOMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -303,7 +303,6 @@
     <ClInclude Include="..\..\..\anura\src\reference_counted_object.hpp" />
     <ClInclude Include="..\..\..\anura\src\regex_utils.hpp" />
     <ClInclude Include="..\..\..\anura\src\rich_text_label.hpp" />
-    <ClInclude Include="..\..\..\anura\src\SampleOFDelegate.h" />
     <ClInclude Include="..\..\..\anura\src\scoped_resource.hpp" />
     <ClInclude Include="..\..\..\anura\src\scrollable_widget.hpp" />
     <ClInclude Include="..\..\..\anura\src\scrollbar_widget.hpp" />
@@ -362,8 +361,16 @@
     <ClInclude Include="..\..\..\anura\src\widget_factory.hpp" />
     <ClInclude Include="..\..\..\anura\src\wml_formula_callable.hpp" />
     <ClInclude Include="..\..\src\bar_widget.hpp" />
+    <ClInclude Include="..\..\src\base64.hpp" />
+    <ClInclude Include="..\..\src\camera.hpp" />
     <ClInclude Include="..\..\src\data_blob.hpp" />
     <ClInclude Include="..\..\src\fbo_scene.hpp" />
+    <ClInclude Include="..\..\src\formula_callable_visitor.hpp" />
+    <ClInclude Include="..\..\src\formula_interface.hpp" />
+    <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
+    <ClInclude Include="..\..\src\isotile.hpp" />
+    <ClInclude Include="..\..\src\profile_timer.hpp" />
+    <ClInclude Include="..\..\src\simplex_noise.hpp" />
     <ClInclude Include="..\..\src\variant_type.hpp" />
   </ItemGroup>
   <ItemGroup>
@@ -551,7 +558,14 @@
     <ClCompile Include="..\..\..\anura\src\widget_factory.cpp" />
     <ClCompile Include="..\..\..\anura\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
+    <ClCompile Include="..\..\src\camera.cpp" />
     <ClCompile Include="..\..\src\fbo_scene.cpp" />
+    <ClCompile Include="..\..\src\formula_callable.cpp" />
+    <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />
+    <ClCompile Include="..\..\src\formula_interface.cpp" />
+    <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
+    <ClCompile Include="..\..\src\isotile.cpp" />
+    <ClCompile Include="..\..\src\simplex_noise.cpp" />
     <ClCompile Include="..\..\src\variant_type.cpp" />
   </ItemGroup>
   <ItemGroup>
