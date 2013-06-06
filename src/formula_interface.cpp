@@ -189,7 +189,7 @@ struct formula_interface_impl
 	boost::intrusive_ptr<dynamic_bound_factory> dynamic_factory_;
 };
 
-formula_interface::formula_interface(const std::map<std::string, variant_type_ptr>& types_map) : impl_(new formula_interface_impl)
+formula_interface::formula_interface(const std::map<std::string, variant_type_ptr>& types_map) : types_(types_map), impl_(new formula_interface_impl)
 {
 	ASSERT_LOG(!types_map.empty(), "Empty interface");
 

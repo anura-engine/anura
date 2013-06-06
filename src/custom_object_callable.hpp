@@ -159,6 +159,7 @@ enum CUSTOM_OBJECT_PROPERTY {
 	CUSTOM_OBJECT_EVENT_HANDLERS,
 	CUSTOM_OBJECT_USE_ABSOLUTE_SCREEN_COORDINATES,
 	CUSTOM_OBJECT_WIDGETS,
+	CUSTOM_OBJECT_WIDGET_LIST,
 	CUSTOM_OBJECT_TEXTV,
 	CUSTOM_OBJECT_BODY,
 	CUSTOM_OBJECT_PAUSED,
@@ -194,12 +195,29 @@ public:
 	const entry* get_entry(int slot) const;
 	int num_slots() const { return entries_.size(); }
 
-	void add_property(const std::string& id, variant_type_ptr type);
+	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
+
+	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private);
+
+	void finalize_properties();
+
+	void push_private_access();
+	void pop_private_access();
 
 private:
 	std::vector<entry> entries_;
 
 	std::map<std::string, int> properties_;
+
+	std::vector<int> slots_requiring_initialization_;
+};
+
+struct custom_object_callable_expose_private_scope
+{
+	custom_object_callable_expose_private_scope(custom_object_callable& c);
+	~custom_object_callable_expose_private_scope();
+
+	custom_object_callable& c_;
 };
 
 typedef boost::intrusive_ptr<custom_object_callable> custom_object_callable_ptr;

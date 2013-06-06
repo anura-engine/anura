@@ -1423,23 +1423,23 @@ void shader_program::refresh_for_draw()
 
 BEGIN_DEFINE_CALLABLE(shader_program, program_object_)
 
-DEFINE_FIELD(0, vars, "any")
+DEFINE_FIELD(7, vars, "any")
 	value = variant(vars_.get());
-DEFINE_FIELD(1, parent, "object")
+DEFINE_FIELD(8, parent, "object")
 	ASSERT_LOG(parent_ != NULL, "Tried to request parent, when value is null: " << name());
 	value = variant(parent_);
-DEFINE_FIELD(2, object, "object")
+DEFINE_FIELD(9, object, "object")
 	ASSERT_LOG(parent_ != NULL, "Tried to request parent, when value is null: " << name());
 	value = variant(parent_);
-DEFINE_FIELD(3, uniform_commands, "object")
+DEFINE_FIELD(10, uniform_commands, "object")
 	value = variant(uniform_commands_.get());
-DEFINE_FIELD(4, attribute_commands, "object")
+DEFINE_FIELD(11, attribute_commands, "object")
 	value = variant(attribute_commands_.get());
-DEFINE_FIELD(5, enabled, "bool")
+DEFINE_FIELD(12, enabled, "bool")
 	value = variant(enabled_);
 DEFINE_SET_FIELD
 	enabled_ = value.as_bool();
-DEFINE_FIELD(6, level, "object")
+DEFINE_FIELD(13, level, "object")
 	value = variant(level::current_ptr());
 END_DEFINE_CALLABLE(shader_program, program, program_object_)
 

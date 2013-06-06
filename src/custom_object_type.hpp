@@ -191,18 +191,26 @@ public:
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : storage_slot(-1), persistent(true) {}
+		property_entry() : storage_slot(-1), persistent(true), requires_initialization(false) {}
 		std::string id;
-		game_logic::const_formula_ptr getter, setter;
+		game_logic::const_formula_ptr getter, setter, init;
 		boost::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
 		int storage_slot;
 		bool persistent;
+		bool requires_initialization;
 	};
 
 	const std::map<std::string, property_entry>& properties() const { return properties_; }
 	const std::vector<property_entry>& slot_properties() const { return slot_properties_; }
+	const std::vector<int>& properties_with_init() const { return properties_with_init_; }
+	const std::vector<int>& properties_requiring_initialization() const { return properties_requiring_initialization_; }
+	const std::vector<int>& properties_requiring_dynamic_initialization() const { return properties_requiring_dynamic_initialization_; }
+
+	//this is the last required initialization property that should be
+	//initialized. It's the only such property that has a custom setter.
+	const std::string& last_initialization_property() const { return last_initialization_property_; }
 	int slot_properties_base() const { return slot_properties_base_; }
 
 	game_logic::function_symbol_table* function_symbols() const;
@@ -333,6 +341,8 @@ private:
 
 	std::map<std::string, property_entry> properties_;
 	std::vector<property_entry> slot_properties_;
+	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_;
+	std::string last_initialization_property_;
 	int slot_properties_base_;
 
 	int teleport_offset_x_, teleport_offset_y_;

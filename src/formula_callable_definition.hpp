@@ -20,6 +20,7 @@
 #include <string>
 #include <boost/function.hpp>
 
+#include "asserts.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "reference_counted_object.hpp"
 #include "variant_type.hpp"
@@ -31,14 +32,23 @@ class formula_callable_definition : public reference_counted_object
 {
 public:
 	struct entry {
-		explicit entry(const std::string& id_) : id(id_), type_definition(0), access_count(0) {}
+		explicit entry(const std::string& id_) : id(id_), type_definition(0), access_count(0), private_counter(0) {}
 		void set_variant_type(variant_type_ptr type);
 		std::string id;
 		const_formula_callable_definition_ptr type_definition;
 
 		variant_type_ptr variant_type;
 
+		//if the entry accepts different types for writes vs reads
+		//(i.e. using set() or add()) then record that type here.
+		variant_type_ptr write_type;
+
+		variant_type_ptr get_write_type() const { if(write_type) { return write_type; } return variant_type; }
+
 		mutable int access_count;
+
+		bool is_private() const { return private_counter > 0; }
+		int private_counter;
 	};
 
 	formula_callable_definition();
@@ -74,6 +84,8 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 formula_callable_definition_ptr create_formula_callable_definition(const std::string* beg, const std::string* end, const_formula_callable_definition_ptr base=NULL, variant_type_ptr* begin_types=NULL);
 
 int register_formula_callable_definition(const std::string& id, const_formula_callable_definition_ptr def);
+int register_formula_callable_definition(const std::string& id, const std::string& base_id, const_formula_callable_definition_ptr def);
+bool registered_definition_is_a(const std::string& derived, const std::string& base);
 const_formula_callable_definition_ptr get_formula_callable_definition(const std::string& id);
 
 int add_callable_definition_init(void(*fn)());
@@ -89,7 +101,7 @@ public: \
 	virtual void set_value_by_slot(int slot, const variant& value); \
 	virtual std::string get_object_id() const { return #classname; } \
 public: \
-	int callable_fields_op(int slot, const variant* set_value, variant* get_value); \
+	int callable_fields_op(int slot, const variant* set_value, variant* get_value, const char** fieldname=NULL, const char** type_str=NULL); \
 private:
 
 #define BEGIN_DEFINE_CALLABLE(classname, base_ptr) \
@@ -109,7 +121,7 @@ int num_fields_##classname = 0; \
 	} \
 } \
 	\
-	int classname::callable_fields_op(int slot, const variant* set_value, variant* get_value) { \
+	int classname::callable_fields_op(int slot, const variant* set_value, variant* get_value, const char** fieldname_ptr, const char** type_str) { \
 		static boost::function<int(const char*, variant_type_ptr)> op_fn = add_field_##classname; \
 		int& nfields = num_fields_##classname; \
 		switch(slot) { \
@@ -118,9 +130,12 @@ int num_fields_##classname = 0; \
 
 #define DEFINE_FIELD(slot, fieldname, type) \
 	break; } case slot: \
+		if(fieldname_ptr) { *fieldname_ptr = #fieldname; *type_str = type; } \
 		if(this == NULL) { \
 			nfields = slot; \
-			return op_fn(#fieldname, parse_variant_type(variant(type)));  \
+			const int res = op_fn(#fieldname, parse_variant_type(variant(type)));  \
+			ASSERT_EQ(res, slot); \
+			return res; \
 		} else if(get_value) { \
 			variant& value = *get_value;
 
@@ -139,13 +154,18 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 		if(this) { \
 			boost::intrusive_ptr<base_classname> base_obj(base_ptr); \
 			if(base_obj) { \
-				base_obj->callable_fields_op(slot - num_fields_##classname, set_value, get_value); \
+				base_obj->callable_fields_op(slot, set_value, get_value); \
 			} else { \
 				ASSERT_LOG(this == NULL, "UNEXPECTED SLOT CALL: " << slot); \
 			} \
 		} else { \
 			base_classname* ptr = NULL; \
-			ptr->callable_fields_op(slot - num_fields_##classname, set_value, get_value); \
+			const char* fieldname_ptr = NULL; \
+			const char* type_str = NULL; \
+			ptr->callable_fields_op(slot, set_value, get_value, &fieldname_ptr, &type_str); \
+			if(type_str) { \
+				return op_fn(fieldname_ptr, parse_variant_type(variant(type_str)));  \
+			} \
 		} \
 		return -1; \
 	} \
@@ -154,19 +174,19 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 } namespace { \
 	void init_callable_##classname() { \
 		int i = 0; \
-		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL) != -1) { ++i; } \
+		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL, NULL) != -1) { ++i; } \
 		game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&classname##_fields[0], &classname##_fields[0] + classname##_fields.size(), game_logic::formula_callable_definition_ptr(), &classname##_variant_types[0]); \
-		register_formula_callable_definition(#classname, def); \
+		register_formula_callable_definition(#classname, #base_classname, def); \
 	} \
 	int dummy_var_##classname = game_logic::add_callable_definition_init(init_callable_##classname); \
 	} \
 	variant classname::get_value_by_slot(int slot) const { \
 		variant res; \
-		const_cast<classname*>(this)->callable_fields_op(slot, NULL, &res); \
+		const_cast<classname*>(this)->callable_fields_op(slot, NULL, &res, NULL); \
 		return res; \
 	} \
 	void classname::set_value_by_slot(int slot, const variant& value) { \
-		callable_fields_op(slot, &value, NULL); \
+		callable_fields_op(slot, &value, NULL, NULL); \
 	} \
 	variant classname::get_value(const std::string& key) const { \
 		std::map<std::string, int>::const_iterator itor = classname##_properties.find(key); \
@@ -205,7 +225,7 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 } namespace { \
 	void init_callable_##classname() { \
 		int i = 0; \
-		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL) != -1) { ++i; } \
+		while(reinterpret_cast<classname*>(NULL)->callable_fields_op(i, NULL, NULL, NULL) != -1) { ++i; } \
 		game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&classname##_fields[0], &classname##_fields[0] + classname##_fields.size(), game_logic::const_formula_callable_definition_ptr(), &classname##_variant_types[0]); \
 		register_formula_callable_definition(#classname, def); \
 	} \
@@ -213,11 +233,11 @@ void call_callable_fields_op(T* ptr, int slot, const variant* set_value, variant
 	} \
 	variant classname::get_value_by_slot(int slot) const { \
 		variant res; \
-		const_cast<classname*>(this)->callable_fields_op(slot, NULL, &res); \
+		const_cast<classname*>(this)->callable_fields_op(slot, NULL, &res, NULL); \
 		return res; \
 	} \
 	void classname::set_value_by_slot(int slot, const variant& value) { \
-		callable_fields_op(slot, &value, NULL); \
+		callable_fields_op(slot, &value, NULL, NULL); \
 	} \
 	variant classname::get_value(const std::string& key) const { \
 		std::map<std::string, int>::const_iterator itor = classname##_properties.find(key); \

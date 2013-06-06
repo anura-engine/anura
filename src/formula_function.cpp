@@ -1865,20 +1865,46 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
+		variant_type_ptr list_type = args()[0]->query_variant_type();
 		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
 		if(def) {
 			def = args()[1]->query_modified_definition_based_on_result(true, def);
 			if(def) {
 				const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
-				if(value_entry != NULL && value_entry->variant_type) {
+				if(value_entry != NULL && value_entry->variant_type && list_type->is_list_of()) {
 					return variant_type::get_list(value_entry->variant_type);
 				}
 			}
 		}
 
-		return args()[0]->query_variant_type();
+		if(list_type->is_list_of()) {
+			return variant_type::get_list(list_type->is_list_of());
+		} else if(list_type->is_map_of().first) {
+			return variant_type::get_map(list_type->is_map_of().first, list_type->is_map_of().second);
+		} else {
+			std::vector<variant_type_ptr> v;
+			v.push_back(variant_type::get_type(variant::VARIANT_TYPE_LIST));
+			v.push_back(variant_type::get_type(variant::VARIANT_TYPE_MAP));
+			return variant_type::get_union(v);
+		}
 	}
 };
+
+FUNCTION_DEF(unique, 1, 1, "unique(list): returns unique elements of list")
+	std::vector<variant> v = args()[0]->evaluate(variables).as_list();
+	std::sort(v.begin(), v.end());
+	v.erase(std::unique(v.begin(), v.end()), v.end());
+	return variant(&v);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
+FUNCTION_TYPE_DEF
+	variant_type_ptr list_type = args()[0]->query_variant_type();
+	if(list_type->is_list_of()) {
+		return variant_type::get_list(list_type->is_list_of());
+	} else {
+		return variant_type::get_type(variant::VARIANT_TYPE_LIST);
+	}
+END_FUNCTION_DEF(unique)
 	
 FUNCTION_DEF(mapping, -1, -1, "mapping(x): Turns the args passed in into a map. The first arg is a key, the second a value, the third a key, the fourth a value and so on and so forth.")
 	map_formula_callable* callable = new map_formula_callable;
@@ -2205,7 +2231,12 @@ FUNCTION_DEF(reverse, 1, 1, "reverse(list): reverses the given list")
 FUNCTION_ARGS_DEF
 	ARG_TYPE("list");
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type();
+	variant_type_ptr list_type = args()[0]->query_variant_type();
+	if(list_type->is_list_of()) {
+		return variant_type::get_list(list_type->is_list_of());
+	} else {
+		return variant_type::get_list(variant_type::get_any());
+	}
 END_FUNCTION_DEF(reverse)
 
 FUNCTION_DEF(head, 1, 1, "head(list): gives the first element of a list, or null for an empty list")
@@ -2956,6 +2987,18 @@ private:
 		return variant_type::get_commands();
 	}
 
+	void static_error_analysis() const {
+		variant_type_ptr target_type = args()[0]->query_mutable_type();
+		if(!target_type) {
+			ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+			return;
+		}
+
+		if(!variant_types_compatible(target_type, args()[1]->query_variant_type())) {
+			ASSERT_LOG(false, "Writing to value with invalid type " << args()[1]->query_variant_type()->to_string() << " -> " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+		}
+	}
+
 	std::string key_;
 	int me_slot_, slot_;
 	mutable boost::intrusive_ptr<set_by_slot_command> cmd_;
@@ -3041,6 +3084,18 @@ private:
 
 	variant_type_ptr get_variant_type() const {
 		return variant_type::get_commands();
+	}
+
+	void static_error_analysis() const {
+		variant_type_ptr target_type = args()[0]->query_mutable_type();
+		if(!target_type) {
+			ASSERT_LOG(false, "Writing to non-writeable value: " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+			return;
+		}
+
+		if(!variant_types_compatible(target_type, args()[1]->query_variant_type())) {
+			ASSERT_LOG(false, "Writing to value with invalid type " << args()[1]->query_variant_type()->to_string() << " -> " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+		}
 	}
 
 	std::string key_;
@@ -3275,6 +3330,8 @@ FUNCTION_DEF(file_backed_map, 2, 3, "file_backed_map(string filename, function g
 	}
 
 	return variant(new backed_map(docname, fn, m));
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 END_FUNCTION_DEF(file_backed_map)
 
 FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes 'doc' to the given filename")

@@ -129,52 +129,33 @@ namespace gui
 		rotate_ = rotate;
 	}
 
-	variant bar_widget::get_value(const std::string& key) const
-	{
-		if(key == "segments") {
-			return variant(segments_);
-		} else if(key == "segment_length") {
-			return variant(segment_length_);
-		} else if(key == "tick_width") {
-			return variant(tick_width_);
-		} else if(key == "scale") {
-			return variant(decimal(scale_));
-		} else if(key == "drained") {
-			return variant(drained_segments_);
-		} else if(key == "drain_rate") {
-			return variant(drain_rate_);
-		} else if(key == "max_width") { 
-			return variant(bar_max_width_);
-		}
-		return widget::get_value(key);
-	}
-
-	void bar_widget::set_value(const std::string& key, const variant& value)
-	{
-		if(key == "segments") {
-			segments_ = value.as_int();
-			ASSERT_GE(segments_, 0);
-			init();
-		} else if(key == "segment_length") {
-			segment_length_ = value.as_int();
-			ASSERT_GT(segment_length_, 0);
-			init();
-		} else if(key == "tick_width") {
-			tick_width_ = value.as_int();
-			ASSERT_GT(tick_width_, 0);
-			init();
-		} else if(key == "scale") {
-			scale_ = value.as_decimal().as_float();
-			ASSERT_GT(scale_, 0.0f);
-			init();
-		} else if(key == "drain_rate") {
-			drain_rate_ = value.as_decimal().as_float();
-			ASSERT_GE(drain_rate_, 0.0);
-		} else if(key == "drained") {
-			int drain = value.as_int();
-			if(drain == drained_segments_) {
-				return;
-			}
+BEGIN_DEFINE_CALLABLE(bar_widget, this)
+	DEFINE_FIELD(21, segments, "int")
+		value = variant(segments_);
+	DEFINE_SET_FIELD
+		segments_ = value.as_int();
+		init();
+	DEFINE_FIELD(22, segment_length, "int")
+		value = variant(segment_length_);
+	DEFINE_SET_FIELD
+		segment_length_ = value.as_int();
+		init();
+	DEFINE_FIELD(23, tick_width, "int")
+		value = variant(tick_width_);
+	DEFINE_SET_FIELD
+		tick_width_ = value.as_int();
+		init();
+	DEFINE_FIELD(24, scale, "decimal")
+		value = variant(decimal(scale_));
+	DEFINE_SET_FIELD
+		scale_ = value.as_decimal().as_float();
+		ASSERT_GT(scale_, 0.0f);
+		init();
+	DEFINE_FIELD(25, drained, "int")
+		value = variant(drained_segments_);
+	DEFINE_SET_FIELD
+		int drain = value.as_int();
+		if(drain != drained_segments_) {
 			int animation_start_position = segments_-drained_segments_;
 			animation_current_position_ = 0;
 			drained_segments_after_anim_ = drain;
@@ -188,14 +169,21 @@ namespace gui
 			animation_end_point_unscaled_ = animation_end_position - animation_start_position;
 			animating_ = true;
 			init();
-		} else if(key == "max_width") { 
-			bar_max_width_ = value.as_int();
-			init();
-		} else if(key == "animation_position") {
-			animation_current_position_ = value.as_decimal().as_float();
 		}
-		widget::set_value(key, value);
-	}
+	DEFINE_FIELD(26, drain_rate, "int")
+		value = variant(drain_rate_);
+	DEFINE_SET_FIELD
+		drain_rate_ = value.as_int();
+	DEFINE_FIELD(27, max_width, "int")
+		value = variant(bar_max_width_);
+	DEFINE_SET_FIELD
+		bar_max_width_ = value.as_int();
+		init();
+	DEFINE_FIELD(28, animation_position, "decimal")
+		value = variant(decimal(0.0));
+	DEFINE_SET_FIELD
+		animation_current_position_ = value.as_decimal().as_float();
+END_DEFINE_CALLABLE(bar_widget, widget, const_cast<bar_widget*>(this))
 
 	void bar_widget::handle_process()
 	{

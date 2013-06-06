@@ -262,23 +262,10 @@ private:
 		std::vector<variant_type_ptr> types;
 		foreach(const expression_ptr& item, items_) {
 			variant_type_ptr new_type = item->query_variant_type();
-			foreach(const variant_type_ptr& existing, types) {
-				if(existing->is_equal(*new_type)) {
-					new_type.reset();
-					break;
-				}
-			}
-
-			if(new_type) {
-				types.push_back(new_type);
-			}
+			types.push_back(new_type);
 		}
 
-		if(types.size() == 1) {
-			return variant_type::get_list(types[0]);
-		} else {
-			return variant_type::get_list(variant_type::get_union(types));
-		}
+		return variant_type::get_specific_list(types);
 	}
 
 	//a special version of static evaluation that doesn't save a
@@ -410,10 +397,23 @@ public:
 	
 private:
 	variant_type_ptr get_variant_type() const {
+		std::map<variant, variant_type_ptr> types;
+
 		std::vector<variant_type_ptr> key_types, value_types;
+
+		bool is_specific_map = true;
+
 		for(std::vector<expression_ptr>::const_iterator i = items_.begin(); ( i != items_.end() ) && ( i+1 != items_.end() ) ; i+=2) {
+
+			variant key_value;
+			if(!(*i)->can_reduce_to_variant(key_value) || !key_value.is_string()) {
+				is_specific_map = false;
+			}
+
 			variant_type_ptr new_key_type = (*i)->query_variant_type();
 			variant_type_ptr new_value_type = (*(i+1))->query_variant_type();
+
+			types[key_value] = new_value_type;
 
 			foreach(const variant_type_ptr& existing, key_types) {
 				if(existing->is_equal(*new_key_type)) {
@@ -436,6 +436,10 @@ private:
 			if(new_value_type) {
 				value_types.push_back(new_value_type);
 			}
+		}
+
+		if(is_specific_map && !types.empty()) {
+			return variant_type::get_specific_map(types);
 		}
 
 		variant_type_ptr key_type, value_type;
@@ -628,7 +632,11 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		return variant_type();
+		return callable_def_->get_entry(slot_)->variant_type;
+	}
+
+	variant_type_ptr get_mutable_type() const {
+		return callable_def_->get_entry(slot_)->get_write_type();
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
@@ -647,7 +655,21 @@ private:
 			}
 		}
 
+		if(!result && current_type && expression_is_this_type) {
+			variant_type_ptr new_type = variant_type::get_with_exclusion(current_type, expression_is_this_type);
+			if(new_type != current_type) {
+				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
+				return new_def;
+			}
+		}
+
 		return NULL;
+	}
+
+	void static_error_analysis() const {
+		const formula_callable_definition::entry* entry = callable_def_->get_entry(slot_);
+		ASSERT_LOG(entry != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debug_pinpoint_location());
+		ASSERT_LOG(entry->is_private() == false, "Identifier " << id_ << " is private " << debug_pinpoint_location());
 	}
 
 	int slot_;
@@ -680,11 +702,21 @@ public:
 			if(index != -1) {
 				return expression_ptr(new slot_identifier_expression(id_, index, callable_def_.get()));
 			} else if(callable_def_->is_strict() || g_strict_formula_checking) {
-				fprintf(stderr, "STRICT MODE ENABLED: %d %d\n", (int)callable_def_->is_strict(), (int)g_strict_formula_checking);
+
+				std::vector<std::string> known_v;
+				for(int n = 0; n != callable_def_->num_slots(); ++n) {
+					known_v.push_back(callable_def_->get_entry(n)->id);
+				}
+
+				std::sort(known_v.begin(), known_v.end());
+				std::string known;
+				foreach(const std::string& k, known_v) {
+					known += k + " ";
+				}
 				if(callable_def_->type_name() != NULL) {
-					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location());
+					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
 				} else {
-					ASSERT_LOG(false, "Unknown identifier '" << id_ << "' " << debug_pinpoint_location());
+					ASSERT_LOG(false, "Unknown identifier '" << id_ << "' " << debug_pinpoint_location() << "\nIdentifiers that are valid in this scope: " << known << "\n");
 				}
 			}
 		}
@@ -722,6 +754,10 @@ private:
 	variant_type_ptr get_variant_type() const {
 		return variant_type::get_any();
 	}
+	variant_type_ptr get_mutable_type() const {
+		return variant_type::get_any();
+	}
+
 	std::string id_;
 	const_formula_callable_definition_ptr callable_def_;
 
@@ -912,10 +948,14 @@ private:
 		return right_->query_variant_type();
 	}
 
+	variant_type_ptr get_mutable_type() const {
+		return right_->query_mutable_type();
+	}
+
 	void static_error_analysis() const {
 		variant_type_ptr type = left_->query_variant_type();
 		ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debug_pinpoint_location());
-		ASSERT_LOG(variant_type::get_null_excluded(type) == type, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
+		ASSERT_LOG(variant_type::may_be_null(type) == false, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
@@ -997,6 +1037,10 @@ private:
 		}
 
 		return variant_type::get_any();
+	}
+
+	variant_type_ptr get_mutable_type() const {
+		return query_variant_type();
 	}
 
 	void static_error_analysis() const {
@@ -1657,7 +1701,7 @@ private:
 			return const_formula_callable_definition_ptr();
 		}
 
-		return expression_->query_modified_definition_based_on_result(true, current_def, type_);
+		return expression_->query_modified_definition_based_on_result(result, current_def, type_);
 	}
 
 	variant_type_ptr type_;
@@ -2061,6 +2105,9 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		    n == 2 &&  *function_name == "zip")) {
 			variant_type_ptr sequence_type = (*res)[0]->query_variant_type();
 			variant_type_ptr value_type = sequence_type->is_list_of();
+			if(!value_type && *function_name == "zip") {
+				value_type = sequence_type->is_map_of().second;
+			}
 			callable_def = get_variant_comparator_definition(callable_def, value_type);
 		}
 
@@ -2076,6 +2123,8 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 			} else {
 				types[0] = variant_type::get_custom_object();
 			}
+
+			std::cerr << "SPAWN TYPE: " << types[0]->to_string() << "\n";
 
 			callable_def = game_logic::create_formula_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 		}
@@ -2111,7 +2160,7 @@ void parse_set_args(const variant& formula_str, const token* i1, const token* i2
 
 				if(i1 - beg == 1 && beg->type == TOKEN_IDENTIFIER) {
 					//make it so that {a: 4} is the same as {'a': 4}
-					res->push_back(expression_ptr(new string_expression(std::string(beg->begin, beg->end), false, symbols)));
+					res->push_back(expression_ptr(new variant_expression(variant(std::string(beg->begin, beg->end)))));
 				} else {
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 				}
@@ -2267,6 +2316,9 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 	
 	if(result) {
 		result->copy_debug_info_from(*original);
+		if(g_strict_formula_checking) {
+			result->perform_static_error_analysis();
+		}
 	}
 
 	return result;
@@ -2376,6 +2428,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		if(g_strict_formula_checking) {
 			ASSERT_LOG(!result_type || variant_types_compatible(result_type, fml->query_variant_type()), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->query_variant_type()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end));
 		}
+
 		return expression_ptr(new lambda_function_expression(args, fml, callable_def ? callable_def->num_slots() : 0, default_args, variant_types, result_type ? result_type : fml->query_variant_type()));
 	}
 
