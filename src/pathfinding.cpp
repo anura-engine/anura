@@ -91,9 +91,9 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	game_logic::expression_ptr heuristic, 
 	game_logic::map_formula_callable_ptr callable)
 {
-	//std::priority_queue<graph_node_ptr> open_list;
+	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
+	std::priority_queue<gnp, std::vector<gnp> > open_list;
 	std::vector<variant> path;
-	std::deque<graph_node<variant, decimal>::graph_node_ptr> open_list;
 	variant& a = callable->add_direct_access("a");
 	variant& b = callable->add_direct_access("b");
 	b = dst_node;
@@ -105,17 +105,12 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	bool searching = true;
 	try {
 		a = src_node;
-		graph_node<variant, decimal>::graph_node_ptr current = wg->get_graph_node(src_node);
+		gnp current = wg->get_graph_node(src_node);
 		current->set_cost(decimal::from_int(0), heuristic->evaluate(*callable).as_decimal());
 		current->set_on_open_list(true);
-		open_list.push_back(current);
+		open_list.push(current);
 
 		while(searching) {
-			//std::cerr << "OPEN_LIST:\n"; 
-			//foreach(graph_node_ptr g, open_list) {
-			//	std::cerr << *g; 
-			//}
-
 			if(open_list.empty()) {
 				// open list is empty node not found.
 				PathfindingException<variant> path_error = {
@@ -125,7 +120,7 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 				};
 				throw path_error;
 			}
-			current = open_list.front(); open_list.pop_front();
+			current = open_list.top(); open_list.pop();
 			current->set_on_open_list(false);
 
 			if(current->get_node_value() == dst_node) {
@@ -155,9 +150,8 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 						neighbour_node->set_parent(current);
 						neighbour_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal());
 						neighbour_node->set_on_open_list(true);
-						open_list.push_back(neighbour_node);
+						open_list.push(neighbour_node);
 					}
-					std::sort(open_list.begin(), open_list.end(), graph_node_cmp<variant, decimal>);
 				}
 			}
 		}
