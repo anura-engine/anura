@@ -248,9 +248,10 @@ variant a_star_find_path(level_ptr lvl,
 	const int tile_size_x, 
 	const int tile_size_y) 
 {
+	typedef graph_node<point, double>::graph_node_ptr gnp;
 	std::vector<variant> path;
-	std::deque<graph_node<point, double>::graph_node_ptr> open_list;
-	typedef std::map<point, graph_node<point, double>::graph_node_ptr> graph_node_list;
+	std::priority_queue<gnp> open_list;
+	typedef std::map<point, gnp> graph_node_list;
 	graph_node_list node_list;
 	point src_pt(src_pt1), dst_pt(dst_pt1);
 	// Use some outside knowledge to grab the bounding rect for the level
@@ -277,7 +278,7 @@ variant a_star_find_path(level_ptr lvl,
 		graph_node<point, double>::graph_node_ptr current = boost::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(src));
 		current->set_cost(0.0, heuristic->evaluate(*callable).as_decimal().as_float());
 		current->set_on_open_list(true);
-		open_list.push_back(current);
+		open_list.push(current);
 		node_list[src] = current;
 
 		while(searching) {
@@ -290,7 +291,7 @@ variant a_star_find_path(level_ptr lvl,
 				};
 				throw path_error;
 			}
-			current = open_list.front(); open_list.pop_front();
+			current = open_list.top(); open_list.pop();
 			current->set_on_open_list(false);
 
 			//std::cerr << std::endl << "CURRENT: " << *current;
@@ -338,7 +339,7 @@ variant a_star_find_path(level_ptr lvl,
 							new_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal().as_float());
 							new_node->set_on_open_list(true);
 							node_list[p] = new_node;
-							open_list.push_back(new_node);
+							open_list.push(new_node);
 						} else if(neighbour_node->second->on_closed_list() || neighbour_node->second->on_open_list()) {
 							// on closed list.
 							if(g_cost < neighbour_node->second->G()) {
@@ -355,7 +356,6 @@ variant a_star_find_path(level_ptr lvl,
 						}
 					}
 				}
-				std::sort(open_list.begin(), open_list.end(), graph_node_cmp<point, double>);
 			}
 		}
 	} catch (PathfindingException<point>& e) {
@@ -368,18 +368,19 @@ variant a_star_find_path(level_ptr lvl,
 variant path_cost_search(weighted_directed_graph_ptr wg, 
 	const variant src_node, 
 	decimal max_cost ) {
+	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
 	std::vector<variant> reachable;
-	std::deque<graph_node<variant, decimal>::graph_node_ptr> open_list;
+	std::priority_queue<gnp> open_list;
 
 	bool searching = true;
 	try {
 		graph_node<variant, decimal>::graph_node_ptr current = wg->get_graph_node(src_node);
 		current->set_cost(decimal::from_int(0), decimal::from_int(0));
 		current->set_on_open_list(true);
-		open_list.push_back(current);
+		open_list.push(current);
 
 		while(searching && !open_list.empty()) {
-			current = open_list.front(); open_list.pop_front();
+			current = open_list.top(); open_list.pop();
 			current->set_on_open_list(false);
 			if(current->G() <= max_cost) {
 				reachable.push_back(current->get_node_value());
@@ -403,10 +404,9 @@ variant path_cost_search(weighted_directed_graph_ptr wg,
 						neighbour_node->set_on_closed_list(true);
 					} else {
 						neighbour_node->set_on_open_list(true);
-						open_list.push_back(neighbour_node);
+						open_list.push(neighbour_node);
 					}
 				}
-				std::sort(open_list.begin(), open_list.end(), graph_node_cmp<variant, decimal>);
 			}
 		}
 	} catch (PathfindingException<variant>& e) {
@@ -430,5 +430,5 @@ UNIT_TEST(weighted_graph_function) {
 
 UNIT_TEST(cost_path_search_function) {
 	CHECK_EQ(game_logic::formula(variant("path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
-		game_logic::formula(variant("[[1,1], [0,1], [2,1], [1,0], [1,2]]")).execute());
+		game_logic::formula(variant("[[1,1], [1,0], [1,2], [2,1], [0,1]]")).execute());
 }
