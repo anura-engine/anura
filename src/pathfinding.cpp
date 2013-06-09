@@ -429,6 +429,6 @@ UNIT_TEST(weighted_graph_function) {
 }
 
 UNIT_TEST(cost_path_search_function) {
-	CHECK_EQ(game_logic::formula(variant("path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
-		game_logic::formula(variant("[[1,1], [1,0], [1,2], [2,1], [0,1]]")).execute());
+	CHECK_EQ(game_logic::formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
+		game_logic::formula(variant("sort([[1,1], [1,0], [2,1], [1,2], [0,1]])")).execute());
 }
