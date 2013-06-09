@@ -54,6 +54,7 @@ class custom_object_type
 {
 public:
 	static game_logic::formula_callable_definition_ptr get_definition(const std::string& id);
+	static bool is_derived_from(const std::string& base, const std::string& derived);
 	static variant merge_prototype(variant node, std::vector<std::string>* proto_paths=NULL);
 	static const std::string* get_object_path(const std::string& id);
 	static const_custom_object_type_ptr get(const std::string& id);

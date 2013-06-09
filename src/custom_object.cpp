@@ -633,6 +633,21 @@ custom_object::~custom_object()
 	sound::stop_looped_sounds(this);
 }
 
+void custom_object::validate_properties()
+{
+	//TODO: make this more efficient. For now it errs on the side of
+	//providing lots of debug info.
+	for(int n = 0; n != type_->slot_properties().size(); ++n) {
+		const custom_object_type::property_entry& e = type_->slot_properties()[n];
+		if(e.storage_slot >= 0 && e.type) {
+			assert(e.storage_slot < property_data_.size());
+			variant result = property_data_[e.storage_slot];
+			ASSERT_LOG(e.type->match(result), "Object " << debug_description() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string());
+			
+		}
+	}
+}
+
 void custom_object::init_properties()
 {
 	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
@@ -646,7 +661,7 @@ void custom_object::init_properties()
 
 bool custom_object::is_a(const std::string& type) const
 {
-	return type_->id() == type;
+	return custom_object_type::is_derived_from(type, type_->id());
 }
 
 void custom_object::finish_loading(level* lvl)
@@ -1325,12 +1340,15 @@ void custom_object::create_object()
 	if(!created_) {
 		created_ = true;
 		handle_event(OBJECT_EVENT_CREATE);
+		validate_properties();
 	}
 }
 
 void custom_object::check_initialized()
 {
 	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << debug_description() << "." << type_->slot_properties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
+
+	validate_properties();
 }
 
 void custom_object::process(level& lvl)
@@ -2581,6 +2599,16 @@ variant custom_object::get_value_by_slot(int slot) const
 			return variant();
 		}
 	}
+
+	case CUSTOM_OBJECT_ARG: {
+		if(backup_callable_stack_.empty() == false && backup_callable_stack_.top()) {
+			return variant(backup_callable_stack_.top());
+		}
+
+		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
+		return variant(callable.get());
+	}
+
 	case CUSTOM_OBJECT_CONSTS:            return variant(type_->consts().get());
 	case CUSTOM_OBJECT_TYPE:              return variant(type_->id());
 	case CUSTOM_OBJECT_ACTIVE:            return variant::from_bool(last_cycle_active_ >= level::current().cycle() - 2);
@@ -3052,10 +3080,6 @@ variant custom_object::get_value(const std::string& key) const
 	}
 
 	if(backup_callable_stack_.empty() == false && backup_callable_stack_.top()) {
-		if(key == "arg") {
-			return variant(backup_callable_stack_.top());
-		}
-
 		if(backup_callable_stack_.top() != this) {
 			return backup_callable_stack_.top()->query_value(key);
 		}

@@ -249,15 +249,59 @@ variant merge_into_prototype(variant prototype_node, variant node)
 
 	variant proto_properties = prototype_node["properties"];
 	variant node_properties = node["properties"];
-	variant properties = proto_properties + node_properties;
-	if(proto_properties.is_map() && node_properties.is_map()) {
-		foreach(const variant_pair& p, proto_properties.as_map()) {
-			if(node_properties.has_key(p.first)) {
-				const std::string proto_id = prototype_node["id"].as_string() + "_" + p.first.as_string();
-				properties.add_attr(variant(proto_id), p.second);
+
+	if(proto_properties.is_map()) {
+		std::vector<variant> v;
+		v.push_back(proto_properties);
+		proto_properties = variant(&v);
+	} else if(!proto_properties.is_list()) {
+		ASSERT_LOG(proto_properties.is_null(), "Illegal properties: " << proto_properties.debug_location());
+		std::vector<variant> v;
+		proto_properties = variant(&v);
+	}
+
+	//Add a string saying what the name of the prototype is. This will be used
+	//to construct the prototype's definition.
+	std::vector<variant> proto_name;
+	proto_name.push_back(prototype_node["id"]);
+	ASSERT_LOG(proto_name.front().is_string(), "Prototype must provide an id: " << prototype_node.debug_location());
+	proto_properties = proto_properties + variant(&proto_name);
+
+	if(node_properties.is_map()) {
+		std::vector<variant> v;
+		v.push_back(node_properties);
+		node_properties = variant(&v);
+	} else if(!node_properties.is_list()) {
+		ASSERT_LOG(node_properties.is_null(), "Illegal properties: " << node_properties.debug_location());
+		std::vector<variant> v;
+		node_properties = variant(&v);
+	}
+
+	std::map<variant, variant> base_properties;
+	for(int n = 0; n != proto_properties.num_elements(); ++n) {
+		for(auto p : proto_properties[n].as_map()) {
+			base_properties[p.first] = p.second;
+		}
+	}
+
+	std::map<variant, variant> override_properties;
+
+	for(int n = 0; n != node_properties.num_elements(); ++n) {
+		for(auto p : node_properties[n].as_map()) {
+			auto itor = base_properties.find(p.first);
+			if(itor != base_properties.end()) {
+				override_properties[variant(prototype_node["id"].as_string() + "_" + p.first.as_string())] = itor->second;
 			}
 		}
 	}
+
+	variant properties = proto_properties + node_properties;
+	if(override_properties.empty() == false) {
+		std::vector<variant> overrides;
+		overrides.push_back(variant(&override_properties));
+		properties = properties + variant(&overrides);
+	}
+
 	result[variant("properties")] = properties;
 
 	variant res(&result);
@@ -268,12 +312,32 @@ variant merge_into_prototype(variant prototype_node, variant node)
 	return res;
 }
 
+std::map<std::string, std::string>& object_type_inheritance()
+{
+	static std::map<std::string, std::string> instance;
+	return instance;
+}
+
 std::map<std::string, formula_callable_definition_ptr>& object_type_definitions()
 {
 	static std::map<std::string, formula_callable_definition_ptr>* instance = new std::map<std::string, formula_callable_definition_ptr>;
 	return *instance;
 }
 
+}
+
+bool custom_object_type::is_derived_from(const std::string& base, const std::string& derived)
+{
+	if(derived == base) {
+		return true;
+	}
+
+	auto itor = object_type_inheritance().find(derived);
+	if(itor == object_type_inheritance().end()) {
+		return false;
+	}
+
+	return is_derived_from(base, itor->second);
 }
 
 formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
@@ -675,6 +739,9 @@ void custom_object_type::init_event_handlers(variant node,
 											 game_logic::function_symbol_table* symbols,
 											 const event_handler_map* base_handlers) const
 {
+	const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
+	const game_logic::formula::strict_check_scope strict_checking(is_strict_);
+
 	if(symbols == NULL) {
 		symbols = &get_custom_object_functions_symbol_table();
 	}
@@ -796,7 +863,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	callable_definition_->set_type_name("obj " + id);
 
 	custom_object_callable::instance();
-	init_level_definition();
 
 #ifndef NO_EDITOR
 	if(node.has_key("editor_info")) {
@@ -977,19 +1043,48 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	//sure we do not have to query other custom_object_type definitions,
 	//because if we do we could end with infinite recursion.
 
+	std::string prototype_derived_from;
+	std::map<std::string, custom_object_callable_ptr> proto_definitions;
+
 	object_type_definitions()[id_] = callable_definition_;
 
 	const types_cfg_scope types_scope(node["types"]);
 
 	std::set<std::string> properties_to_infer;
 
+	std::map<std::string, bool> property_overridable_state;
+	std::map<std::string, variant_type_ptr> property_override_type;
+
 	slot_properties_base_ = callable_definition_->num_slots();
 	foreach(variant properties_node, node["properties"].as_list()) {
+		if(properties_node.is_string()) {
+			if(prototype_derived_from != "") {
+				object_type_inheritance()[properties_node.as_string()] = prototype_derived_from;
+				std::cerr << "INHERITANCE: " << properties_node.as_string() << " FROM " << prototype_derived_from << "\n";
+			}
+			prototype_derived_from = properties_node.as_string();
+
+			//this indicates the end of a prototype, add the definition of
+			//this prototype.
+			ASSERT_LOG(properties_to_infer.empty(), "Object prototype " << properties_node.as_string() << " has property '" << *properties_to_infer.begin() << "' which does not specify a type. Prototypes must provide types for all properties");
+			if(object_type_definitions().count(properties_node.as_string())) {
+				continue;
+			}
+
+			proto_definitions[properties_node.as_string()].reset(new custom_object_callable(*callable_definition_));
+			continue;
+		}
+
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
 			ASSERT_LOG(k.empty() == false, "property is empty");
 			bool is_private = is_strict_ && k[0] == '_';
-			ASSERT_LOG(callable_definition_->get_slot(k) == -1, "Custom object property " << id_ << "." << k << " has the same name as a builtin");
+			ASSERT_LOG(custom_object_callable::instance().get_slot(k) == -1, "Custom object property " << id_ << "." << k << " has the same name as a builtin");
+
+			ASSERT_LOG(property_overridable_state.count(k) == 0 || property_overridable_state[k], "Variable properties are not overridable: " << id_ << "." << k);
+
+			bool& can_override = property_overridable_state[k];
+			can_override = true;
 
 			variant value = properties_node[key];
 			variant_type_ptr type, set_type;
@@ -1021,6 +1116,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 				if(value.has_key("type")) {
 					type = parse_variant_type(value["type"]);
+				} else if(is_strict_ && value.has_key("default")) {
+					type = get_variant_type_from_value(value["default"]);
 				} else {
 					ASSERT_LOG(!is_strict_, "Property does not have a type specifier in strict mode object " << id_ << " property " << k);
 				}
@@ -1041,12 +1138,26 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					}
 				}
 			} else {
-				type = get_variant_type_from_value(value);
+				if(is_strict_) {
+					type = get_variant_type_from_value(value);
+				}
 			}
 
-			if(!type) {
-				properties_to_infer.insert(k);
+			if(!type && is_strict_) {
+				if(property_override_type.count(k) || !is_strict_) {
+					type = property_override_type[k];
+				} else {
+					properties_to_infer.insert(k);
+				}
+			} else if(property_override_type.count(k)) {
+				ASSERT_LOG(!is_strict_ || property_override_type[k], "Type mis-match for object property " << id_ << "." << k << " derived object gives a type while base object does not");
+
+				if(is_strict_ || property_override_type[k] && type) {
+					ASSERT_LOG(variant_types_compatible(property_override_type[k], type), "Type mis-match for object property " << id_ << "." << k << " has a different type than the definition in the prototype type: " << type->to_string() << " prototype defines as " << property_override_type[k]->to_string());
+				}
 			}
+
+			property_override_type[k] = type;
 
 			if(requires_initialization) {
 				std::cerr << "REQUIRES_INIT: " << id_ << "." << k << "\n";
@@ -1059,6 +1170,10 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	while(is_strict_ && !properties_to_infer.empty()) {
 		const int num_items = properties_to_infer.size();
 		foreach(variant properties_node, node["properties"].as_list()) {
+			if(properties_node.is_string()) {
+				continue;
+			}
+
 			foreach(variant key, properties_node.get_keys().as_list()) {
 				const std::string& k = key.as_string();
 				if(properties_to_infer.count(k) == 0) {
@@ -1103,6 +1218,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 	}
 
+	if(prototype_derived_from != "") {
+		object_type_inheritance()[id_] = prototype_derived_from;
+				std::cerr << "INHERITANCE: " << id << " FROM " << prototype_derived_from << "\n";
+	}
+
+	for(auto p : proto_definitions) {
+		object_type_definitions()[p.first] = p.second;
+	}
+
 	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->finalize_properties();
 
@@ -1129,9 +1253,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		init_sub_objects(node, old_type);
 	}
 
+	std::map<std::string, int> property_to_slot;
+
 	int storage_slot = 0;
 
 	foreach(variant properties_node, node["properties"].as_list()) {
+		if(properties_node.is_string()) {
+			continue;
+		}
+
 		const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const game_logic::formula::strict_check_scope strict_checking(is_strict_);
@@ -1186,7 +1316,9 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
 			} else {
-				entry.set_type = entry.type = get_variant_type_from_value(value);
+				if(is_strict_) {
+					entry.set_type = entry.type = get_variant_type_from_value(value);
+				}
 				entry.default_value = value;
 				entry.storage_slot = storage_slot++;
 				entry.persistent = true;
@@ -1200,8 +1332,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				}
 			}
 
+			int nslot = slot_properties_.size();
+			if(property_to_slot.count(k)) {
+				nslot = property_to_slot[k];
+			} else {
+				property_to_slot[k] = nslot;
+			}
+
 			if(entry.init) {
-				properties_with_init_.push_back(slot_properties_.size());
+				properties_with_init_.push_back(nslot);
 			}
 
 			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization && !entry.init;
@@ -1210,14 +1349,19 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					ASSERT_LOG(last_initialization_property_ == "", "Object " << id_ << " has multiple properties which require initialization and which have custom setters. This isn't allowed because we wouldn't know which property to initialize first. Properties: " << last_initialization_property_ << ", " << entry.id);
 					last_initialization_property_ = entry.id;
 				}
-				properties_requiring_initialization_.push_back(slot_properties_.size());
+				properties_requiring_initialization_.push_back(nslot);
 			}
 
 			if(dynamic_initialization) {
-				properties_requiring_dynamic_initialization_.push_back(slot_properties_.size());
+				properties_requiring_dynamic_initialization_.push_back(nslot);
 			}
 
-			slot_properties_.push_back(entry);
+			if(nslot == slot_properties_.size()) {
+				slot_properties_.push_back(entry);
+			} else {
+				assert(nslot >= 0 && nslot < slot_properties_.size());
+				slot_properties_[nslot] = entry;
+			}
 		}
 	}
 

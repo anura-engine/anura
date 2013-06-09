@@ -383,7 +383,7 @@ public:
 		}
 
 		entries_[ALGO_OBJECT].type_definition = custom_object_type::get("dummy_gui_object")->callable_definition();
-		entries_[ALGO_LEVEL].type_definition = level::get_formula_definition();
+		entries_[ALGO_LEVEL].set_variant_type(variant_type::get_builtin("level"));
 	}
 
 	int get_slot(const std::string& key) const {

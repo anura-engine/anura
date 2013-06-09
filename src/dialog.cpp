@@ -319,6 +319,11 @@ void dialog::complete_draw()
 	last_draw_ = SDL_GetTicks();
 }
 
+std::vector<widget_ptr> dialog::get_children() const
+{
+	return widgets_;
+}
+
 void dialog::handle_draw_children() const {
 	glPushMatrix();
 	glTranslatef(GLfloat(x()),GLfloat(y()),0.0);
@@ -461,25 +466,15 @@ const_widget_ptr dialog::get_widget_by_id(const std::string& id) const
 	return widget::get_widget_by_id(id);
 }
 
-void dialog::set_value(const std::string& key, const variant& v)
-{
-	if(key == "child") {
-		widget_ptr w = widget_factory::create(v, get_environment());
+BEGIN_DEFINE_CALLABLE(dialog, this)
+	DEFINE_FIELD(21, child, "builtin widget")
+	DEFINE_SET_FIELD
+		widget_ptr w = widget_factory::create(value, get_environment());
 		add_widget(w, w->x(), w->y());
-	}
-	widget::set_value(key, v);
-}
-
-variant dialog::get_value(const std::string& key) const
-{
-	if(key == "children") {
-		std::vector<variant> v;
-	    foreach(widget_ptr w, widgets_) {
-			v.push_back(variant(w.get()));
-		}
-		return variant(&v);
-	}
-	return widget::get_value(key);
-}
+	DEFINE_FIELD(22, background_alpha, "decimal")
+		value = variant(bg_alpha_);
+	DEFINE_SET_FIELD
+		bg_alpha_ = value.as_decimal().as_float();
+END_DEFINE_CALLABLE(dialog, widget, const_cast<dialog*>(this))
 
 }

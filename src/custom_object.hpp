@@ -66,6 +66,8 @@ public:
 	custom_object(const custom_object& o);
 	virtual ~custom_object();
 
+	void validate_properties();
+
 	bool is_a(const std::string& type) const;
 
 	//finish_loading(): called when a level finishes loading all objects,

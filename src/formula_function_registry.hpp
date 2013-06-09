@@ -59,6 +59,7 @@ private: \
 #define ARG_TYPE(str) check_arg_type(narg_number++, str);
 #define FUNCTION_TYPE_DEF } variant_type_ptr get_variant_type() const {
 #define RETURN_TYPE(str) } variant_type_ptr get_variant_type() const { return parse_variant_type(variant(str));
+#define DEFINE_RETURN_TYPE } variant_type_ptr get_variant_type() const {
 
 #define EVAL_ARG(n) (args()[n]->evaluate(variables))
 #define NUM_ARGS (args().size())

@@ -64,6 +64,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	static const Property CustomObjectProperties[] = {
 	{ "value", "any" },
 	{ "_data", "any" },
+	{ "arg", "object" },
 	{ "consts", "any" },
 	{ "type", "any" },
 	{ "active", "any" },
@@ -74,7 +75,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "frame_in_animation", "int" },
 	{ "level", "any" },
 
-	{ "animation", "string" },
+	{ "animation", "string|map" },
 	{ "available_animations", "[string]" },
 
 	{ "hitpoints", "int" },
@@ -332,20 +333,24 @@ const game_logic::formula_callable_definition::entry* custom_object_callable::ge
 
 void custom_object_callable::add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private)
 {
-	if(requires_initialization) {
-		slots_requiring_initialization_.push_back(entries_.size());
+	if(properties_.count(id) == 0) {
+		properties_[id] = entries_.size();
+		entries_.push_back(entry(id));
 	}
 
-	properties_[id] = entries_.size();
-	entries_.push_back(entry(id));
+	const int slot = properties_[id];
+
+	if(requires_initialization && std::count(slots_requiring_initialization_.begin(), slots_requiring_initialization_.end(), slot) == 0) {
+		slots_requiring_initialization_.push_back(slot);
+	}
 
 	//do NOT call set_variant_type() because that will do queries of
 	//objects and such and we want this operation to avoid doing that, because
 	//it might be called at a sensitive time when we don't want to
 	//instantiate new object definitions.
-	entries_.back().variant_type = type;
-	entries_.back().write_type = write_type;
-	entries_.back().private_counter = is_private ? 1 : 0;
+	entries_[slot].variant_type = type;
+	entries_[slot].write_type = write_type;
+	entries_[slot].private_counter = is_private ? 1 : 0;
 }
 
 void custom_object_callable::finalize_properties()
