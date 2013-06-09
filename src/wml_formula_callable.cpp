@@ -88,7 +88,7 @@ void add_object_to_set(variant v, std::set<wml_serializable_formula_callable*>* 
 }
 }
 
-variant wml_formula_callable_serialization_scope::write_objects(variant obj) const
+variant wml_formula_callable_serialization_scope::write_objects(variant obj, int* num_objects) const
 {
 	std::map<variant, variant> res;
 	std::set<wml_serializable_formula_callable*> objects;
@@ -105,6 +105,10 @@ variant wml_formula_callable_serialization_scope::write_objects(variant obj) con
 		}
 
 		results_list.push_back(item->write_to_wml());
+	}
+
+	if(num_objects) {
+		*num_objects = objects.size();
 	}
 
 	res[variant("character")] = variant(&results_list);
@@ -159,9 +163,19 @@ bool wml_formula_callable_read_scope::try_load_object(intptr_t id, variant& v)
 
 std::string serialize_doc_with_objects(variant v)
 {
+	variant orig = v;
+	if(!v.is_map()) {
+		std::map<variant,variant> m;
+		m[variant("__serialized_doc")] = v;
+		v = variant(&m);
+	}
 	game_logic::wml_formula_callable_serialization_scope serialization_scope;
-	serialization_scope.write_objects(v);
-	v.add_attr(variant("serialized_objects"), serialization_scope.write_objects(v));
+	int num_objects = 0;
+	variant serialized_objects = serialization_scope.write_objects(v, &num_objects);
+	if(num_objects == 0) {
+		return orig.write_json();
+	}
+	v.add_attr(variant("serialized_objects"), serialized_objects);
 	return v.write_json();
 }
 
@@ -173,9 +187,10 @@ variant deserialize_doc_with_objects(const std::string& msg)
 		try {
 			v = json::parse(msg);
 		} catch(json::parse_error& e) {
-			ASSERT_LOG(false, "ERROR PROCESSING MESSAGE RETURNED FROM TBS SERVER DOC: --BEGIN--" << msg << "--END-- ERROR: " << e.error_message());
+			ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.error_message());
 		}
-		if(v.has_key(variant("serialized_objects"))) {
+
+		if(v.is_map() && v.has_key(variant("serialized_objects"))) {
 			foreach(variant obj_node, v["serialized_objects"]["character"].as_list()) {
 				game_logic::wml_serializable_formula_callable_ptr obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
 				ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
@@ -184,7 +199,13 @@ variant deserialize_doc_with_objects(const std::string& msg)
 
 				game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, obj);
 			}
+
+			v.remove_attr_mutation(variant("serialized_objects"));
 		}
+	}
+
+	if(v.is_map() && v.has_key(variant("__serialized_doc"))) {
+		return v["__serialized_doc"];
 	}
 
 	return v;

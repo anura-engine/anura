@@ -75,6 +75,8 @@ public:
 	void prepare_draw();
 	void complete_draw();
 
+	std::vector<widget_ptr> get_children() const;
+
 protected:
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 	virtual bool handle_event_children(const SDL_Event& event, bool claimed);
@@ -84,12 +86,10 @@ protected:
 	void set_clear_bg_amount(int amount) { clear_bg_ = amount; }
 	int clear_bg() const { return clear_bg_; };
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
-
 	virtual void handle_process();
 	void recalculate_dimensions();
 private:
+DECLARE_CALLABLE(dialog);
 	std::vector<widget_ptr> widgets_;
 	bool opened_;
 	bool cancelled_;

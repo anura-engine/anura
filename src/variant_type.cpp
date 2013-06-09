@@ -373,7 +373,7 @@ public:
 			return false;
 		}
 
-		return type_ == "" || type_ == other->type_;
+		return type_ == "" || custom_object_type::is_derived_from(type_, other->type_);
 	}
 
 	const game_logic::formula_callable_definition* get_definition() const {
@@ -956,7 +956,7 @@ public:
 			++i2;
 		}
 
-		return false;
+		return true;
 	}
 	std::string to_string() const {
 		std::ostringstream s;

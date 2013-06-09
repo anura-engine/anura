@@ -2002,6 +2002,66 @@ private:
 	}
 };
 
+class find_or_die_function : public function_expression {
+public:
+	explicit find_or_die_function(const args_list& args)
+		: function_expression("find_or_die", args, 2, 3)
+	{
+		if(args.size() == 3) {
+			args[1]->is_identifier(&identifier_);
+		}
+	}
+
+private:
+	std::string identifier_;
+	variant execute(const formula_callable& variables) const {
+		const variant items = args()[0]->evaluate(variables);
+
+		if(args().size() == 2) {
+			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+			for(size_t n = 0; n != items.num_elements(); ++n) {
+				callable->set(items[n], n);
+				const variant val = args().back()->evaluate(*callable);
+				if(val.as_bool()) {
+					return items[n];
+				}
+			}
+		} else {
+			boost::intrusive_ptr<map_callable> callable(new map_callable(variables));
+
+			const std::string self = identifier_.empty() ? args()[1]->evaluate(variables).as_string() : identifier_;
+			callable->set_value_name(self);
+
+			for(size_t n = 0; n != items.num_elements(); ++n) {
+				callable->set(items[n], n);
+				const variant val = args().back()->evaluate(*callable);
+				if(val.as_bool()) {
+					return items[n];
+				}
+			}
+		}
+
+		ASSERT_LOG(false, "Failed to find expected item. List has: " << items.write_json());
+	}
+
+	variant_type_ptr get_variant_type() const {
+		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
+		if(def) {
+			const_formula_callable_definition_ptr modified = args()[1]->query_modified_definition_based_on_result(true, def);
+			if(modified) {
+				def = modified;
+			}
+
+			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
+			if(value_entry != NULL && value_entry->variant_type) {
+				return value_entry->variant_type;
+			}
+		}
+
+		return variant_type::get_any();
+	}
+};
+
 	class transform_callable : public formula_callable {
 	public:
 		explicit transform_callable(const formula_callable& backup)
@@ -3375,7 +3435,7 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	get_doc_cache()[docname] = doc;
 
 	docname = preferences::user_data_path() + docname;
-	sys::write_file(docname, doc.write_json());
+	sys::write_file(docname, game_logic::serialize_doc_with_objects(doc));
 	return variant();
 FUNCTION_TYPE_DEF
 	return parse_variant_type(variant("string|null"));
@@ -3415,10 +3475,20 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [string] flags):
 		docname = preferences::user_data_path() + docname;
 	} else {
 		ASSERT_LOG(!sys::is_path_absolute(docname), "DOCUMENT NAME USES AN ABSOLUTE PATH WHICH IS NOT ALLOWED: " << docname);
+		docname = module::map_file(docname);
 	}
 
 	try {
-		const variant v = json::parse_from_file(docname);
+		const std::string contents = sys::read_file(docname);
+		if(contents.empty()) {
+			if(allow_failure) {
+				return variant();
+			}
+
+			ASSERT_LOG(false, "Could not load document: " << docname);
+		}
+
+		const variant v = game_logic::deserialize_doc_with_objects(contents);
 		return v;
 	} catch(json::parse_error& e) {
 		if(allow_failure) {
@@ -3679,6 +3749,7 @@ namespace {
 			FUNCTION(filter);
 			FUNCTION(mapping);
 			FUNCTION(find);
+			FUNCTION(find_or_die);
 			FUNCTION(visit_objects);
 			FUNCTION(map);
 			FUNCTION(sum);
@@ -3933,6 +4004,8 @@ END_FUNCTION_DEF(sha1)
 FUNCTION_DEF(get_module_args, 0, 0, "get_module_args() -> callable: Returns the current module callable environment")
 	formula::fail_if_static_context();
 	return variant(module::get_module_args().get());
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 END_FUNCTION_DEF(get_module_args)
 
 FUNCTION_DEF(seed_rng, 0, 0, "seed_rng() -> none: Seeds the peudo-RNG used.")
@@ -4056,11 +4129,22 @@ FUNCTION_DEF(get_cookie, 0, 0, "get_cookie() -> none: Returns the preferences us
 	return preferences::get_cookie();
 END_FUNCTION_DEF(get_cookie)
 
+FUNCTION_DEF(types_compatible, 2, 2, "types_compatible(string a, string b) ->bool: returns true if type 'b' is a subset of type 'a'")
+	const variant a = args()[0]->evaluate(variables);
+	const variant b = args()[1]->evaluate(variables);
+	return variant::from_bool(variant_types_compatible(parse_variant_type(a), parse_variant_type(b)));
+END_FUNCTION_DEF(types_compatible)
+
 FUNCTION_DEF(typeof, 1, 1, "typeof(expression) -> string: yields the statically known type of the given expression")
+	variant v = args()[0]->evaluate(variables);
+	return variant(get_variant_type_from_value(v)->to_string());
+END_FUNCTION_DEF(typeof)
+
+FUNCTION_DEF(static_typeof, 1, 1, "static_typeof(expression) -> string: yields the statically known type of the given expression")
 	variant_type_ptr type = args()[0]->query_variant_type();
 	ASSERT_LOG(type.get() != NULL, "NULL VALUE RETURNED FROM TYPE QUERY");
 	return variant(type->to_string());
-END_FUNCTION_DEF(typeof)
+END_FUNCTION_DEF(static_typeof)
 
 class gc_command : public game_logic::command_callable
 {

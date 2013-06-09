@@ -53,6 +53,7 @@ namespace gui
 			entity_ = v["object"].try_convert<entity>();
 			ASSERT_LOG(entity_ != NULL, "Couldn't convert 'object' attribue to an entity");
 			entity_->finish_loading(NULL);
+			entity_->validate_properties();
 		}
 		if(v.has_key("properties")) {
 			ASSERT_LOG(v["properties"].is_map(), "properties field must be a map");

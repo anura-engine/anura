@@ -58,7 +58,7 @@ public:
 	wml_formula_callable_serialization_scope();
 	~wml_formula_callable_serialization_scope();
 
-	variant write_objects(variant obj) const;
+	variant write_objects(variant obj, int* num_objects=0) const;
 
 private:
 };

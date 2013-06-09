@@ -277,7 +277,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("string|int")
 	ARG_TYPE("int")
-RETURN_TYPE("commands")
+RETURN_TYPE("object")
 END_FUNCTION_DEF(tbs_client)
 
 
@@ -1147,6 +1147,7 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_player)
 
 FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object only creates the object and returns it. It may be stored for later use.")
+
 	formula::fail_if_static_context();
 	const std::string type = args()[0]->evaluate(variables).as_string();
 	boost::intrusive_ptr<custom_object> obj;
@@ -1186,8 +1187,6 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 			obj->mutate_value(last_key.as_string(), value);
 		}
 	}
-
-	obj->check_initialized();
 
 	return variant(obj.get());
 FUNCTION_ARGS_DEF
@@ -1239,7 +1238,7 @@ END_FUNCTION_DEF(object)
 FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object_playable only creates the playble object and returns it. It may be stored for later use.")
 	formula::fail_if_static_context();
 	const std::string type = args()[0]->evaluate(variables).as_string();
-	playable_custom_object* obj;
+	boost::intrusive_ptr<custom_object> obj;
 	
 	if(args().size() > 1) {
 		const int x = args()[1]->evaluate(variables).as_int();
@@ -1255,26 +1254,73 @@ FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoin
 		
 	//adjust so the object's x/y is its midpoint.
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
+	obj->construct();
 
 	if(args().size() > 4) {
+		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+		variant last_key;
 		variant properties = args()[4]->evaluate(variables);
 		variant keys = properties.get_keys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
+			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+				last_key = keys[n];
+				continue;
+			}
 			variant value = properties[keys[n]];
 			obj->mutate_value(keys[n].as_string(), value);
 		}
+
+		if(last_key.is_string()) {
+			variant value = properties[last_key];
+			obj->mutate_value(last_key.as_string(), value);
+		}
 	}
 
-	obj->check_initialized();
-
-	return variant(obj);
+	return variant(obj.get());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
 	ARG_TYPE("map")
-RETURN_TYPE("commands")
+
+	variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
+
+		if(args().size() > 4) {
+			variant_type_ptr map_type = args()[4]->query_variant_type();
+			assert(map_type);
+
+			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
+			if(props) {
+				foreach(int slot, type->slots_requiring_initialization()) {
+					const std::string& prop_id = type->get_entry(slot)->id;
+					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
+				}
+
+				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
+					const int slot = type->get_slot(itor->first.as_string());
+					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
+
+					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+				}
+			}
+		}
+	}
+
+//TODO: make this dynamically calculate the creature type
+FUNCTION_TYPE_DEF
+	variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		return variant_type::get_custom_object(v.as_string());
+	}
+
+	return parse_variant_type(variant("custom_obj"));
+
 END_FUNCTION_DEF(object_playable)
 
 class animation_command : public custom_object_command_callable
@@ -2296,6 +2342,11 @@ public:
 FUNCTION_DEF(add_object, 1, 1, "add_object(object): inserts the given object into the level. The object should not currently be present in the level. The position of the object is tweaked to make sure there are no solid overlaps, however if it is not possible to reasonably place the object without a solid overlap, then the object will not be placed and the object and caller will both receive the event add_object_fail.")
 
 	entity_ptr e(args()[0]->evaluate(variables).try_convert<entity>());
+	custom_object* obj = dynamic_cast<custom_object*>(e.get());
+	if(obj) {
+		obj->check_initialized();
+	}
+
 	if(e) {
 		add_object_command* cmd = (new add_object_command(e));
 		cmd->set_expression(this);
@@ -2916,7 +2967,8 @@ FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("map")
-RETURN_TYPE("widget")
+DEFINE_RETURN_TYPE
+	return parse_variant_type(variant("widget"));
 END_FUNCTION_DEF(widget)
 
 class add_level_module_command : public entity_command_callable {

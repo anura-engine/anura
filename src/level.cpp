@@ -612,6 +612,10 @@ void level::read_compiled_tiles(variant node, std::vector<level_tile>::iterator&
 void level::load_character(variant c)
 {
 	chars_.push_back(entity::build(c));
+	custom_object* co = dynamic_cast<custom_object*>(chars_.back().get());
+	if(co) {
+		co->validate_properties();
+	}
 	layers_.insert(chars_.back()->zorder());
 	if(!chars_.back()->is_human()) {
 		chars_.back()->set_id(chars_.size());
@@ -717,6 +721,10 @@ void level::finish_loading()
 			if(obj_node.is_map()) {
 				addr_str = obj_node["_addr"].as_string();
 				entity_ptr e(entity::build(obj_node));
+				custom_object* co = dynamic_cast<custom_object*>(e.get());
+				if(co) {
+					co->validate_properties();
+				}
 				objects_not_in_level.push_back(e);
 				obj = e;
 			} else {
@@ -3707,79 +3715,50 @@ void level::set_background_by_id(const std::string& id)
 	background_ = background::get(id, background_palette_);
 }
 
-namespace {
-
-const std::string LevelProperties[] = {
-  "cycle", "player", "in_dialog",
-  "local_player", "num_active", "active_chars", "chars", "players",
-  "in_editor", "zoom", "focus", "gui", "id", "dimensions", "music_volume",
-};
-
-enum LEVEL_PROPERTY_ID {
-	LEVEL_CYCLE, LEVEL_PLAYER, LEVEL_IN_DIALOG,
-	LEVEL_LOCAL_PLAYER, LEVEL_NUM_ACTIVE,
-	LEVEL_ACTIVE_CHARS, LEVEL_CHARS, LEVEL_PLAYERS, LEVEL_IN_EDITOR, LEVEL_ZOOM,
-	LEVEL_FOCUS, LEVEL_GUI, LEVEL_ID, LEVEL_DIMENSIONS, LEVEL_MUSIC_VOLUME,
-};
-
-game_logic::formula_callable_definition_ptr create_level_definition()
-{
-	game_logic::formula_callable_definition_ptr result = game_logic::create_formula_callable_definition(LevelProperties, LevelProperties + sizeof(LevelProperties)/sizeof(*LevelProperties));
-
-	return result;
-}
-}
-
-void init_level_definition()
-{
-	//const_cast<game_logic::formula_callable_definition&>(level::get_formula_definition()).get_entry(LEVEL_PLAYER)->type_definition = &custom_object_callable::instance();
-}
-
-game_logic::const_formula_callable_definition_ptr level::get_formula_definition()
-{
-	static game_logic::formula_callable_definition_ptr result = create_level_definition();
-	return result;
-}
-
-
 BEGIN_DEFINE_CALLABLE(level, 0)
 DEFINE_FIELD(0, cycle, "int")
 	value = variant(cycle_);
 DEFINE_SET_FIELD
 	cycle_ = value.as_int();
-DEFINE_FIELD(1, player, "null|custom_obj")
+DEFINE_FIELD(1, player, "custom_obj")
+	ASSERT_LOG(last_touched_player_, "No player found in level");
 	value = variant(last_touched_player_.get());
-DEFINE_FIELD(2, in_dialog, "bool")
-	value = variant::from_bool(in_dialog_);
-DEFINE_FIELD(3, local_player, "null|custom_obj")
+DEFINE_FIELD(2, player_info, "object")
+	ASSERT_LOG(last_touched_player_, "No player found in level");
+	value = variant(last_touched_player_.get());
+DEFINE_FIELD(3, in_dialog, "int")
+	boost::intrusive_ptr<const game_logic::formula_callable_definition> def(variant_type::get_builtin("level")->get_definition());
+	value = variant(1); //variant::from_bool(in_dialog_);
+DEFINE_FIELD(4, local_player, "null|custom_obj")
+	ASSERT_LOG(player_, "No player found in level");
 	value = variant(player_.get());
-DEFINE_FIELD(4, num_active, "int")
+DEFINE_FIELD(5, num_active, "int")
 	value = variant(static_cast<int>(active_chars_.size()));
-DEFINE_FIELD(5, active_chars, "[custom_obj]")
+DEFINE_FIELD(6, active_chars, "[custom_obj]")
 	std::vector<variant> v;
 	foreach(const entity_ptr& e, active_chars_) {
 		v.push_back(variant(e.get()));
 	}
 	value = variant(&v);
-DEFINE_FIELD(6, chars, "[custom_obj]")
+DEFINE_FIELD(7, chars, "[custom_obj]")
 	std::vector<variant> v;
 	foreach(const entity_ptr& e, chars_) {
 		v.push_back(variant(e.get()));
 	}
 	value = variant(&v);
-DEFINE_FIELD(7, players, "[custom_obj]")
+DEFINE_FIELD(8, players, "[custom_obj]")
 	std::vector<variant> v;
 	foreach(const entity_ptr& e, players()) {
 		v.push_back(variant(e.get()));
 	}
 	value = variant(&v);
-DEFINE_FIELD(8, in_editor, "bool")
+DEFINE_FIELD(9, in_editor, "bool")
 	value = variant(editor_);
-DEFINE_FIELD(9, zoom, "decimal")
+DEFINE_FIELD(10, zoom, "decimal")
 	value = variant(zoom_level_);
 DEFINE_SET_FIELD
 	zoom_level_ = value.as_decimal();
-DEFINE_FIELD(10, focus, "[custom_obj]")
+DEFINE_FIELD(11, focus, "[custom_obj]")
 	std::vector<variant> v;
 	foreach(const entity_ptr& e, focus_override_) {
 		v.push_back(variant(e.get()));
@@ -3793,7 +3772,7 @@ DEFINE_SET_FIELD
 		}
 	}
 
-DEFINE_FIELD(11, gui, "[object]|null")
+DEFINE_FIELD(12, gui, "[object]|null")
 	if(!gui_algorithm_.empty()) {
 		std::vector<variant> v;
 		foreach(gui_algorithm_ptr g, gui_algorithm_) {
@@ -3804,10 +3783,10 @@ DEFINE_FIELD(11, gui, "[object]|null")
 		value = variant();
 	}
 
-DEFINE_FIELD(12, id, "string")
+DEFINE_FIELD(13, id, "string")
 	value = variant(id_);
 
-DEFINE_FIELD(13, dimensions, "[int]")
+DEFINE_FIELD(14, dimensions, "[int]")
 	std::vector<variant> v;
 	v.push_back(variant(boundaries_.x()));
 	v.push_back(variant(boundaries_.y()));
@@ -3818,11 +3797,11 @@ DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
 	boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
 
-DEFINE_FIELD(14, music_volume, "decimal")
+DEFINE_FIELD(15, music_volume, "decimal")
 	value = variant(sound::get_engine_music_volume());
 DEFINE_SET_FIELD
 	sound::set_engine_music_volume(value.as_decimal().as_float());
-DEFINE_FIELD(15, paused, "bool")
+DEFINE_FIELD(16, paused, "bool")
 	value = variant::from_bool(paused_);
 DEFINE_SET_FIELD
 	const bool new_value = value.as_bool();
@@ -3841,22 +3820,22 @@ DEFINE_SET_FIELD
 		}
 	}
 
-DEFINE_FIELD(16, module_args, "object")
+DEFINE_FIELD(17, module_args, "object")
 	value = variant(module::get_module_args().get());
 
 #if defined(USE_BOX2D)
-DEFINE_FIELD(17, world, "object")
+DEFINE_FIELD(18, world, "object")
 	value = variant(box2d::world::our_world_ptr().get());
 #else
-DEFINE_FIELD(17, world, "null")
+DEFINE_FIELD(18, world, "null")
 	value = variant();
 #endif
 
-DEFINE_FIELD(18, time_freeze, "int")
+DEFINE_FIELD(19, time_freeze, "int")
 	value = variant(time_freeze_);
 DEFINE_SET_FIELD
 	time_freeze_ = value.as_int();
-DEFINE_FIELD(19, chars_immune_from_time_freeze, "[custom_obj]")
+DEFINE_FIELD(20, chars_immune_from_time_freeze, "[custom_obj]")
 	std::vector<variant> v;
 	foreach(const entity_ptr& e, chars_immune_from_time_freeze_) {
 		v.push_back(variant(e.get()));
@@ -3871,14 +3850,14 @@ DEFINE_SET_FIELD
 		}
 	}
 
-DEFINE_FIELD(20, segment_width, "int")
+DEFINE_FIELD(21, segment_width, "int")
 	value = variant(segment_width_);
-DEFINE_FIELD(21, segment_height, "int")
+DEFINE_FIELD(22, segment_height, "int")
 	value = variant(segment_height_);
-DEFINE_FIELD(22, num_segments, "int")
+DEFINE_FIELD(23, num_segments, "int")
 	value = variant(unsigned(sub_levels_.size()));
 
-DEFINE_FIELD(23, camera_position, "[int]")
+DEFINE_FIELD(24, camera_position, "[int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
@@ -3892,7 +3871,7 @@ DEFINE_SET_FIELD
 	last_draw_position().x = value[0].as_int();
 	last_draw_position().y = value[1].as_int();
 
-DEFINE_FIELD(24, debug_properties, "[string]")
+DEFINE_FIELD(25, debug_properties, "[string]")
 	value = vector_to_variant(debug_properties_);
 DEFINE_SET_FIELD
 	if(value.is_null()) {
@@ -3904,14 +3883,14 @@ DEFINE_SET_FIELD
 		debug_properties_ = value.as_list_string();
 	}
 
-DEFINE_FIELD(25, hexmap, "null|object")
+DEFINE_FIELD(26, hexmap, "null|object")
 	if(hex_maps_.empty() == false) {
 		value = variant(hex_maps_.rbegin()->second.get());
 	} else {
 		value = variant();
 	}
 
-DEFINE_FIELD(26, hexmaps, "{int -> object}")
+DEFINE_FIELD(27, hexmaps, "{int -> object}")
 	std::map<variant, variant> m;
 	std::map<int, hex::hex_map_ptr>::const_iterator it = hex_maps_.begin();
 	while(it != hex_maps_.end()) {
@@ -3920,21 +3899,21 @@ DEFINE_FIELD(26, hexmaps, "{int -> object}")
 	}
 	value = variant(&m);
 
-DEFINE_FIELD(27, shader, "null|object")
+DEFINE_FIELD(28, shader, "null|object")
 #if defined(USE_GLES2)
 	value = variant(shader_.get());
 #else
 	value = variant();
 #endif
 
-DEFINE_FIELD(28, is_paused, "bool")
+DEFINE_FIELD(29, is_paused, "bool")
 	if(level_runner::get_current()) {
 		value = variant::from_bool(level_runner::get_current()->is_paused());
 	}
 
 	value = variant(false);
 
-DEFINE_FIELD(29, editor_selection, "[custom_obj]")
+DEFINE_FIELD(30, editor_selection, "[custom_obj]")
 	std::vector<variant> result;
 	foreach(entity_ptr s, editor_selection_) {
 		result.push_back(variant(s.get()));
@@ -3942,7 +3921,7 @@ DEFINE_FIELD(29, editor_selection, "[custom_obj]")
 
 	value = variant(&result);
 
-DEFINE_FIELD(30, frame_buffer_shaders, "[{string -> any}]")
+DEFINE_FIELD(31, frame_buffer_shaders, "[{string -> any}]")
 #if defined(USE_GLES2)
 	std::vector<variant> v;
 	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
@@ -3986,9 +3965,9 @@ DEFINE_SET_FIELD
 	}
 #endif
 
-DEFINE_FIELD(31, preferences, "object")
+DEFINE_FIELD(32, preferences, "object")
 	value = variant(preferences::get_settings_obj());
-DEFINE_FIELD(32, lock_screen, "null|[int]")
+DEFINE_FIELD(33, lock_screen, "null|[int]")
 	if(lock_screen_.get()) {
 		std::vector<variant> v;
 		v.push_back(variant(lock_screen_->x));
@@ -4004,7 +3983,7 @@ DEFINE_SET_FIELD
 		lock_screen_.reset();
 	}
 
-DEFINE_FIELD(33, isomap, "null|object")
+DEFINE_FIELD(34, isomap, "null|object")
 #if defined(USE_ISOMAP)
 	if(isomap_) {
 		value = variant(isomap_.get());
@@ -4015,7 +3994,7 @@ DEFINE_FIELD(33, isomap, "null|object")
 	value = variant();
 #endif
 
-DEFINE_FIELD(34, camera, "null|object")
+DEFINE_FIELD(35, camera, "null|object")
 #if defined(USE_ISOMAP)
 	if(camera_) {
 		value = variant(camera_.get());
@@ -4026,7 +4005,7 @@ DEFINE_FIELD(34, camera, "null|object")
 	value = variant();
 #endif
 
-DEFINE_FIELD(35, mouselook, "bool")
+DEFINE_FIELD(36, mouselook, "bool")
 #if defined(USE_ISOMAP)
 	value = variant::from_bool(is_mouselook_enabled());
 #else

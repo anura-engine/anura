@@ -1854,6 +1854,8 @@ public:
 	explicit string_expression(std::string str, bool translate = false, function_symbol_table* symbols = 0) : formula_expression("_string")
 	{
 		if (!_verbatim_string_expressions) {
+			const formula::strict_check_scope strict_checking(false);
+
 			const std::string original = str;
 
 			size_t pos = 0;
@@ -2103,11 +2105,11 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		if(n+1 == args.size()) {
 			//Certain special functions take a special callable definition
 			//to evaluate their last argument. Discover what that is here.
-			static const std::string MapCallableFuncs[] = { "count", "filter", "find", "choose", "map", "count" };
+			static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map", "count" };
 			if(args.size() >= 2 && function_name != NULL && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 				std::string value_name = "value";
 
-				static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "map" };
+				static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "find_or_die", "map" };
 				if(args.size() == 3 && std::count(CustomIdMapCallableFuncs, CustomIdMapCallableFuncs + sizeof(CustomIdMapCallableFuncs)/sizeof(*CustomIdMapCallableFuncs), *function_name)) {
 					//invocation like map(range(5), n, n*n) -- need to discover
 					//the string for the second argument to set that in our
@@ -3372,15 +3374,23 @@ UNIT_TEST(formula_function_default_args) {
 
 UNIT_TEST(formula_typeof) {
 #define TYPEOF_TEST(a, b) CHECK_EQ(formula(variant(a)).execute(), variant(b))
-	TYPEOF_TEST("typeof(def(int n) n+5)", "function(int) -> int");
-	TYPEOF_TEST("typeof(def(int n) n+5.0)", "function(int) -> decimal");
-	TYPEOF_TEST("typeof(def([int] mylist) map(mylist, value+5.0))", "function([int]) -> [decimal]");
-	TYPEOF_TEST("typeof(choose([1,2,3]))", "int");
-	TYPEOF_TEST("typeof(choose([1,2,'abc',4.5]))", "int|string|decimal");
-	TYPEOF_TEST("typeof(if(1d6 = 5, 5))", "int|null");
-	TYPEOF_TEST("typeof(if(1d6 = 2, 5, 8))", "int");
-	TYPEOF_TEST("typeof(if(1d6 = 2, 'abc', 2))", "string|int");
+	TYPEOF_TEST("static_typeof(def(int n) n+5)", "function(int) -> int");
+	TYPEOF_TEST("static_typeof(def(int n) n+5.0)", "function(int) -> decimal");
+	TYPEOF_TEST("static_typeof(def([int] mylist) map(mylist, value+5.0))", "function([int]) -> [decimal]");
+	TYPEOF_TEST("static_typeof(choose([1,2,3]))", "int");
+	TYPEOF_TEST("static_typeof(choose([1,2,'abc',4.5]))", "int|string|decimal");
+	TYPEOF_TEST("static_typeof(if(1d6 = 5, 5))", "int|null");
+	TYPEOF_TEST("static_typeof(if(1d6 = 2, 5, 8))", "int");
+	TYPEOF_TEST("static_typeof(if(1d6 = 2, 'abc', 2))", "string|int");
 #undef TYPEOF_TEST
+}
+
+UNIT_TEST(formula_types_compatible) {
+	CHECK_EQ(formula(variant("types_compatible('any', '[int,int]')")).execute().as_bool(), true);
+	CHECK_EQ(formula(variant("types_compatible('string|int', 'string')")).execute().as_bool(), true);
+	CHECK_EQ(formula(variant("types_compatible('string', 'string|int')")).execute().as_bool(), false);
+	CHECK_EQ(formula(variant("types_compatible('[int]', '[int,int]')")).execute().as_bool(), true);
+	CHECK_EQ(formula(variant("types_compatible('[int,int]', '[int]')")).execute().as_bool(), false);
 }
 
 UNIT_TEST(formula_list_comprehension) {
