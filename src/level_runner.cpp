@@ -1529,6 +1529,9 @@ bool level_runner::play_cycle()
 			if(cam) {
 				int rmx, rmy;
 				SDL_GetRelativeMouseState(&rmx, &rmy);
+				if(lvl_->is_mouselook_inverted()) {
+					rmy = -rmy;
+				}
 				cam->set_hangle(cam->hangle() + cam->mousespeed() * rmx);
 				cam->set_vangle(cam->vangle() + cam->mousespeed() * rmy);
 
