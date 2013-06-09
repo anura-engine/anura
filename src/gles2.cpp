@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "asserts.hpp"
 #include "filesystem.hpp"
 #include "graphics.hpp"
@@ -23,16 +25,16 @@
 #include "module.hpp"
 
 namespace {
-	typedef std::stack<mat4> projection_mat_stack;
-	typedef std::stack<mat4> modelview_mat_stack;
+	typedef std::stack<glm::mat4> projection_mat_stack;
+	typedef std::stack<glm::mat4> modelview_mat_stack;
 
 	GLenum matrix_mode = GL_PROJECTION;
 	projection_mat_stack p_mat_stack;
 	modelview_mat_stack mv_mat_stack;
 
 	// Current project/modelview matricies
-	mat4 proj_matrix = mat4::identity();
-	mat4 modelview_matrix = mat4::identity();
+	glm::mat4 proj_matrix = glm::mat4(1.0f);
+	glm::mat4 modelview_matrix = glm::mat4(1.0f);
 
 	float colors[4] = {1.0f, 1.0f, 1.0f, 1.0f};
 
@@ -95,36 +97,36 @@ void glPopMatrix()
 void glLoadIdentity()
 {
 	if(matrix_mode == GL_MODELVIEW) {
-		modelview_matrix = mat4::identity();
+		modelview_matrix = glm::mat4(1.0f);
 	} else if(matrix_mode == GL_PROJECTION) {
-		proj_matrix = mat4::identity();
+		proj_matrix = glm::mat4(1.0f);
 	}
 }
 
 void glTranslatef(GLfloat x, GLfloat y, GLfloat z)
 {
 	if(matrix_mode == GL_MODELVIEW) {
-		modelview_matrix.translate(x, y, z);
+		modelview_matrix = glm::translate(modelview_matrix, glm::vec3(x,y,z));
 	} else if(matrix_mode == GL_PROJECTION) {
-		proj_matrix.translate(x, y, z);
+		proj_matrix = glm::translate(proj_matrix, glm::vec3(x,y,z));
 	}
 }
 
 void glRotatef(GLfloat angle, GLfloat x, GLfloat y, GLfloat z)
 {
 	if(matrix_mode == GL_MODELVIEW) {
-		modelview_matrix.rotate(angle, x, y, z);
+		modelview_matrix = glm::rotate(modelview_matrix, angle, glm::vec3(x,y,z));
 	} else if(matrix_mode == GL_PROJECTION) {
-		proj_matrix.rotate(angle, x, y, z);
+		proj_matrix = glm::rotate(proj_matrix, angle, glm::vec3(x,y,z));
 	}
 }
 
 void glScalef (GLfloat x, GLfloat y, GLfloat z)
 {
 	if(matrix_mode == GL_MODELVIEW) {
-		modelview_matrix.scale(x, y, z);
+		modelview_matrix = glm::scale(modelview_matrix, glm::vec3(x,y,z));
 	} else if(matrix_mode == GL_PROJECTION) {
-		proj_matrix.scale(x, y, z);
+		proj_matrix = glm::scale(proj_matrix, glm::vec3(x,y,z));
 	}
 }
 
@@ -150,9 +152,9 @@ void glGetFloatv_1(GLenum pname, GLfloat* params)
 	if(pname == GL_CURRENT_COLOR) {
 		memcpy(params, colors, sizeof(colors));
 	} else if(pname == GL_MODELVIEW_MATRIX) {
-		memcpy(params, &modelview_matrix.x.x, sizeof(modelview_matrix));
+		memcpy(params, glm::value_ptr(modelview_matrix), sizeof(modelview_matrix));
 	} else if(pname == GL_PROJECTION_MATRIX) {
-		memcpy(params, &proj_matrix.x.x, sizeof(proj_matrix));
+		memcpy(params, glm::value_ptr(proj_matrix), sizeof(proj_matrix));
 	} else {
 		ASSERT_LOG(false, "Unsupported mode in the call: " << pname);
 	}
@@ -166,26 +168,12 @@ void glShadeModel(GLenum mode)
 
 void glOrthof(GLfloat left, GLfloat right, GLfloat bottom, GLfloat top, GLfloat zNear, GLfloat zFar)
 {
-    float dx = right - left;
-    float dy = top - bottom;
-    float dz = zFar - zNear;
-	mat4 ortho = mat4::identity();
-
-    if((dx == 0.0f) || (dy == 0.0f) || (dz == 0.0f)) {
-        return;
-	}
-
-	ortho.x.x = 2.0f / dx;
-	ortho.w.x = -(right + left) / dx;
-	ortho.y.y = 2.0f / dy;
-    ortho.w.y = -(top + bottom) / dy;
-    ortho.z.z = -2.0f / dz;
-    ortho.w.z = -(zNear + zFar) / dz;
+	glm::mat4 ortho = glm::frustum(left, right, bottom, top, zNear, zFar);
 
 	if(matrix_mode == GL_MODELVIEW) {
-		modelview_matrix = ortho * modelview_matrix;
+		modelview_matrix = ortho;
 	} else if(matrix_mode == GL_PROJECTION) {
-		proj_matrix = ortho * proj_matrix;
+		proj_matrix = ortho;
 	}
 }
 
@@ -482,12 +470,12 @@ namespace gles2 {
 		return active_shader_program;
 	}
 
-	const mat4& get_mvp_matrix()
+	const glm::mat4& get_mvp_matrix()
 	{
-		static mat4 mvp = mat4::identity();
+		static glm::mat4 mvp = glm::mat4();
 	#if !defined(GL_ES_VERSION_2_0)
-		glGetFloatv(GL_MODELVIEW_MATRIX, &modelview_matrix.x.x);
-		glGetFloatv(GL_PROJECTION_MATRIX, &proj_matrix.x.x);
+		glGetFloatv(GL_MODELVIEW_MATRIX, glm::value_ptr(modelview_matrix));
+		glGetFloatv(GL_PROJECTION_MATRIX, glm::value_ptr(proj_matrix));
 	#endif
 		mvp = proj_matrix * modelview_matrix;
 		return mvp;
@@ -563,8 +551,8 @@ namespace gles2 {
 		matrix_mode = GL_PROJECTION;
 		p_mat_stack.empty();
 		mv_mat_stack.empty();
-		proj_matrix = mat4::identity();
-		modelview_matrix = mat4::identity();
+		proj_matrix = glm::mat4(1.0f);
+		modelview_matrix = glm::mat4(1.0f);
 		colors[0] = 1.0f;
 		colors[1] = 1.0f;
 		colors[2] = 1.0f;

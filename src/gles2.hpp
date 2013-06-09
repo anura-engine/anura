@@ -19,8 +19,9 @@
 #define GLES2_HPP_INCLUDED
 
 #include <stack>
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
-#include "vecmath.hpp"
 #include "shaders.hpp"
 
 // tools to help conversion of GLES1.1 to 2.0
@@ -128,7 +129,7 @@ namespace gles2 {
 	};
 
 	void init_default_shader();
-	const mat4& get_mvp_matrix();
+	const glm::mat4& get_mvp_matrix();
 	void set_alpha_test(bool value);
 	bool get_alpha_test();
 	GLfloat get_alpha();

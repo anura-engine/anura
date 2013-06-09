@@ -475,7 +475,7 @@ DEFINE_FIELD(5, point_size, "decimal")
 DEFINE_FIELD(6, mvp_matrix, "any")
 	std::vector<variant> v;
 	for(size_t n = 0; n < 16; n++) {
-		v.push_back(variant(((GLfloat*)(&gles2::get_mvp_matrix().x.x))[n]));
+		v.push_back(variant((glm::value_ptr(get_mvp_matrix()))[n]));
 	}
 	value = variant(&v);
 END_DEFINE_CALLABLE_NOBASE(program)
@@ -552,7 +552,7 @@ namespace {
 			std::vector<variant> v;
 #if defined(USE_GLES2)
 			for(size_t n = 0; n < 16; n++) {
-				v.push_back(variant(((GLfloat*)(&gles2::get_mvp_matrix().x.x))[n]));
+				v.push_back(variant((glm::value_ptr(get_mvp_matrix()))[n]));
 			}
 #endif
 			return variant(&v);
@@ -1177,7 +1177,7 @@ void program::set_known_uniforms()
 	}
 
 	if(u_mvp_matrix_ != -1) {
-		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, (GLfloat*)(&gles2::get_mvp_matrix().x.x));
+		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(gles2::get_mvp_matrix()));
 	}
 	if(u_color_ != -1) {
 		glUniform4fv(u_color_, 1, gles2::get_color());
