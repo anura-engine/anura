@@ -308,7 +308,8 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 		return v;
 	}
 	
-#if defined(SDL_VIDEO_OPENGL_ES) && !defined(__native_client__)
+#if defined(GL_ES_VERSION_2_0) || defined(GL_VERSION_ES_CM_1_0) || defined(GL_VERSION_ES_CL_1_0) \
+	|| defined(GL_VERSION_ES_CM_1_1) || defined(GL_VERSION_ES_CL_1_1)
 #define glOrtho glOrthof
 #endif
 	
@@ -325,22 +326,14 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 			if(g_flip_draws) {
 				std::swap(top, bot);
 			}
-#if defined(USE_GLES2) && defined(GL_ES_VERSION_2_0)
-			glOrthof(0, screen_height(), top, bot, -1.0, 1.0);
-#else
 			glOrtho(0, screen_height(), top, bot, -1.0, 1.0);
-#endif
 		} else {
 			int top = screen_height();
 			int bot = 0;
 			if(g_flip_draws) {
 				std::swap(top, bot);
 			}
-#if defined(USE_GLES2) && defined(GL_ES_VERSION_2_0)
-			glOrthof(0, screen_width(), top, bot, -1.0, 1.0);
-#else
 			glOrtho(0, screen_width(), top, bot, -1.0, 1.0);
-#endif
 		}
 		
 		if(preferences::screen_rotated()) {
@@ -1046,24 +1039,6 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 #endif
-	}
-
-	void coords_to_screen(GLfloat sx, GLfloat sy, GLfloat sz,
-						  GLfloat* dx, GLfloat* dy, GLfloat* dz) 
-	{
-		GLfloat model[16], proj[16];
-		GLint view[4];
-		
-#if defined(USE_GLES2) && defined(GL_ES_VERSION_2_0)
-		glGetFloatv_1(GL_MODELVIEW_MATRIX, model);
-		glGetFloatv_1(GL_PROJECTION_MATRIX, proj);
-#else
-		glGetFloatv(GL_MODELVIEW_MATRIX, model);
-		glGetFloatv(GL_PROJECTION_MATRIX, proj);
-#endif
-		glGetIntegerv(GL_VIEWPORT, view);
-		
-		gluProjectf(sx, sy, sz, model, proj, view, dx, dy, dz);
 	}
 
 	namespace {
