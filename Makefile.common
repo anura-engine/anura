@@ -103,7 +103,6 @@ objects = \
 	src/joystick.o \
 	src/json_parser.o \
 	src/json_tokenizer.o \
-	src/key.o \
 	src/key_button.o \
 	src/label.o \
 	src/language_dialog.o \
@@ -200,6 +199,7 @@ objects = \
     src/vector_text.o 
 
 ifneq ($(USE_SDL2),yes)
-objects += src/wm.o
+objects += src/wm.o \
+	src/key.o
 endif
 

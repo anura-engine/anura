@@ -24,6 +24,7 @@
 //Avoid link error on Linux when compiling with -std=c++0x and linking with
 //a Boost lib not compiled with these flags.
 #define BOOST_NO_SCOPED_ENUMS
+#define BOOST_NO_CXX11_SCOPED_ENUMS
 #endif
 
 #include <boost/filesystem.hpp>
