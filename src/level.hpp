@@ -154,6 +154,8 @@ public:
 	camera_callable_ptr camera() const { return camera_; }
 	bool is_mouselook_enabled() const { return mouselook_enabled_; }
 	void set_mouselook(bool ml=true) { mouselook_enabled_ = ml; }
+	bool is_mouselook_inverted() const { return mouselook_inverted_; }
+	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 #endif
 
 
@@ -693,6 +695,7 @@ private:
 	isometric::isomap_ptr isomap_;
 	camera_callable_ptr camera_;
 	bool mouselook_enabled_;
+	bool mouselook_inverted_;
 #endif
 
 	// Hack to disable the touchscreen controls for the current level -- replace for 1.4

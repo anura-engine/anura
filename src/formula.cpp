@@ -752,9 +752,32 @@ private:
 		return result;
 	}
 	variant_type_ptr get_variant_type() const {
+
+		if(callable_def_) {
+			const formula_callable_definition::entry* e = callable_def_->get_entry(callable_def_->get_slot(id_));
+			if(!e) {
+				e = callable_def_->get_default_entry();
+			}
+
+			if(e) {
+//				return e->variant_type;
+			}
+		}
+
 		return variant_type::get_any();
 	}
 	variant_type_ptr get_mutable_type() const {
+
+		if(callable_def_) {
+			const formula_callable_definition::entry* e = callable_def_->get_entry(callable_def_->get_slot(id_));
+			if(!e) {
+				e = callable_def_->get_default_entry();
+			}
+
+			if(e) {
+//				return e->get_write_type();
+			}
+		}
 		return variant_type::get_any();
 	}
 

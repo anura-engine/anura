@@ -216,7 +216,7 @@ level::level(const std::string& level_cfg, variant node)
 	  background_palette_(-1),
 	  segment_width_(0), segment_height_(0),
 #if defined(USE_ISOMAP)
-	  mouselook_enabled_(false),
+	  mouselook_enabled_(false), mouselook_inverted_(false),
 #endif
 	  allow_touch_controls_(true)
 {
@@ -3983,7 +3983,7 @@ DEFINE_SET_FIELD
 		lock_screen_.reset();
 	}
 
-DEFINE_FIELD(34, isomap, "null|object")
+DEFINE_FIELD(34, isomap, "object|map|null")
 #if defined(USE_ISOMAP)
 	if(isomap_) {
 		value = variant(isomap_.get());
@@ -3993,8 +3993,16 @@ DEFINE_FIELD(34, isomap, "null|object")
 #else
 	value = variant();
 #endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		isomap_.reset(); 
+	} else {
+		isomap_.reset(new isometric::isomap(value));
+	}
+#endif
 
-DEFINE_FIELD(35, camera, "null|object")
+DEFINE_FIELD(35, camera, "object|map|null")
 #if defined(USE_ISOMAP)
 	if(camera_) {
 		value = variant(camera_.get());
@@ -4004,16 +4012,35 @@ DEFINE_FIELD(35, camera, "null|object")
 #else
 	value = variant();
 #endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		camera_.reset(); 
+	} else {
+		camera_.reset(new camera_callable(value));
+	}
+#endif
 
 DEFINE_FIELD(36, mouselook, "bool")
 #if defined(USE_ISOMAP)
 	value = variant::from_bool(is_mouselook_enabled());
 #else
-	value = variant(false);
+	value = variant::from_bool(false);
 #endif
 DEFINE_SET_FIELD
 #if defined(USE_ISOMAP)
 	set_mouselook(value.as_bool());
+#endif
+
+DEFINE_FIELD(37, mouselook_invert, "bool")
+#if defined(USE_ISOMAP)
+	value = variant::from_bool(is_mouselook_inverted());
+#else
+	value = variant::from_bool(false);
+#endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	set_mouselook_inverted(value.as_bool());
 #endif
 
 END_DEFINE_CALLABLE_NOBASE(level)

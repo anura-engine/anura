@@ -121,10 +121,18 @@ public:
 
 	void set_base(const_formula_callable_definition_ptr base) { base_ = base; }
 
+	void set_default(const entry& e) {
+		default_entry_.reset(new entry(e));
+	}
+
+	const entry* get_default_entry() const { return default_entry_.get(); }
+
 private:
 	int base_num_slots() const { return base_ ? base_->num_slots() : 0; }
 	const_formula_callable_definition_ptr base_;
 	std::vector<entry> entries_;
+
+	boost::shared_ptr<entry> default_entry_;
 };
 
 class modified_definition : public formula_callable_definition
@@ -206,6 +214,15 @@ formula_callable_definition_ptr create_formula_callable_definition(const std::st
 		++i1;
 	}
 
+	return formula_callable_definition_ptr(def);
+}
+
+formula_callable_definition_ptr create_map_formula_callable_definition(variant_type_ptr value_type)
+{
+	simple_definition* def = new simple_definition;
+	formula_callable_definition::entry e("");
+	e.set_variant_type(value_type);
+	def->set_default(e);
 	return formula_callable_definition_ptr(def);
 }
 

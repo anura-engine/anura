@@ -61,6 +61,8 @@ private: \
 #define RETURN_TYPE(str) } variant_type_ptr get_variant_type() const { return parse_variant_type(variant(str));
 #define DEFINE_RETURN_TYPE } variant_type_ptr get_variant_type() const {
 
+#define FUNCTION_OPTIMIZE } expression_ptr optimize() const {
+
 #define EVAL_ARG(n) (args()[n]->evaluate(variables))
 #define NUM_ARGS (args().size())
 
