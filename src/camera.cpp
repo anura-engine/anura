@@ -44,7 +44,25 @@ camera_callable::camera_callable(const variant& node)
 			float(node["position"][2].as_decimal().as_float()));
 	}
 
-	compute_view();
+	// If lookat key is specified it overrides the normal compute.
+	if(node.has_key("lookat")) {
+		const variant& la = node["lookat"];
+		ASSERT_LOG(la.has_key("position") && la.has_key("target") && la.has_key("up"),
+			"lookat must be a map having 'position', 'target' and 'up' as tuples");
+		glm::vec3 position(la["position"][0].as_decimal().as_float(), 
+			la["position"][1].as_decimal().as_float(), 
+			la["position"][2].as_decimal().as_float());
+		glm::vec3 target(la["target"][0].as_decimal().as_float(), 
+			la["target"][1].as_decimal().as_float(), 
+			la["target"][2].as_decimal().as_float());
+		glm::vec3 up(la["up"][0].as_decimal().as_float(), 
+			la["up"][1].as_decimal().as_float(), 
+			la["up"][2].as_decimal().as_float());
+		look_at(position, target, up);
+		projection_ = glm::perspective(fov_, float(preferences::actual_screen_width())/float(preferences::actual_screen_height()), 0.01f, 1000.0f);
+	} else {
+		compute_view();
+	}
 }
 
 camera_callable::~camera_callable()
