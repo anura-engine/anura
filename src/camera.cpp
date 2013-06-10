@@ -149,6 +149,18 @@ DEFINE_FIELD(8, mouse_speed, "decimal")
 	value = variant(mousespeed());
 DEFINE_SET_FIELD
 	set_mousespeed(value.as_decimal().as_float());
+DEFINE_FIELD(9, target, "[decimal,decimal,decimal]")
+	std::vector<variant> v;
+	v.push_back(variant(target_.x));
+	v.push_back(variant(target_.y));
+	v.push_back(variant(target_.z));
+	value = variant(&v);
+DEFINE_FIELD(10, up, "[decimal,decimal,decimal]")
+	std::vector<variant> v;
+	v.push_back(variant(up_.x));
+	v.push_back(variant(up_.y));
+	v.push_back(variant(up_.z));
+	value = variant(&v);
 END_DEFINE_CALLABLE_NOBASE(camera_callable)
 
 
@@ -207,7 +219,7 @@ void camera_callable::set_value(const std::string& key, const variant& value)
 void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up)
 {
 	position_ = position;
-	target_ = target_;
+	target_ = target;
 	up_ = up;
 	view_ = glm::lookAt(position_, target_, up_);
 }
