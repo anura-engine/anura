@@ -5,6 +5,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
 #if defined(USE_ISOMAP)
@@ -15,8 +16,8 @@ public:
 	camera_callable();
 	explicit camera_callable(const variant& node);
 	virtual ~camera_callable();
-	virtual variant get_value(const std::string&) const;
-	virtual void set_value(const std::string& key, const variant& value);
+	//virtual variant get_value(const std::string&) const;
+	//virtual void set_value(const std::string& key, const variant& value);
 
 	void compute_view();
 
@@ -31,6 +32,8 @@ public:
 	float vangle() const { return vertical_angle_; }
 	float fov() const { return fov_; }
 	const glm::vec3& position() const { return position_; }
+	const glm::vec3& right() const { return right_; }
+	const glm::vec3& direction() const { return direction_; }
 	void set_position(const glm::vec3& position) { position_ = position; }
 
 	void look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up);
@@ -43,12 +46,16 @@ public:
 	variant write();
 protected:
 private:
+	DECLARE_CALLABLE(camera_callable);
+
 	float fov_;
 	float horizontal_angle_;
 	float vertical_angle_;
 	glm::vec3 position_;
 	glm::vec3 target_;
 	glm::vec3 up_;
+	glm::vec3 right_;
+	glm::vec3 direction_;
 	float speed_;
 	float mouse_speed_;
 
