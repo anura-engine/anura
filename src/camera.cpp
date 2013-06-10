@@ -7,7 +7,7 @@
 
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f)
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f)
 {
 	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
@@ -17,7 +17,7 @@ camera_callable::camera_callable()
 
 camera_callable::camera_callable(const variant& node)
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f)
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f)
 {
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 	if(node.has_key("fov")) {
@@ -59,10 +59,10 @@ camera_callable::camera_callable(const variant& node)
 			la["up"][1].as_decimal().as_float(), 
 			la["up"][2].as_decimal().as_float());
 		look_at(position, target, up);
-		projection_ = glm::perspective(fov_, float(preferences::actual_screen_width())/float(preferences::actual_screen_height()), 0.01f, 1000.0f);
 	} else {
 		compute_view();
 	}
+	compute_projection();
 }
 
 camera_callable::~camera_callable()
@@ -111,7 +111,6 @@ void camera_callable::compute_view()
 	target_ = position_ + direction_;
 
 	view_ = glm::lookAt(position_, target_, up_);
-	projection_ = glm::perspective(fov_, float(preferences::actual_screen_width())/float(preferences::actual_screen_height()), 0.01f, 1000.0f);
 }
 
 BEGIN_DEFINE_CALLABLE(camera_callable, 0)
@@ -179,6 +178,18 @@ DEFINE_FIELD(10, up, "[decimal,decimal,decimal]")
 	v.push_back(variant(up_.y));
 	v.push_back(variant(up_.z));
 	value = variant(&v);
+DEFINE_FIELD(11, fov, "decimal")
+	value = variant(fov());
+DEFINE_SET_FIELD
+	set_fov(value.as_decimal().as_float());
+DEFINE_FIELD(12, clip_planes, "[decimal,decimal]")
+	std::vector<variant> v;
+	v.push_back(variant(near_clip_));
+	v.push_back(variant(far_clip_));
+	value = variant(&v);
+DEFINE_SET_FIELD
+	ASSERT_LOG(value.is_list() && value.num_elements() == 2, "clip_planes takes a tuple of two decimals");
+	set_clip_planes(value[0].as_decimal().as_float(), value[0].as_decimal().as_float());
 END_DEFINE_CALLABLE_NOBASE(camera_callable)
 
 
@@ -243,3 +254,22 @@ void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up
 }
 
 
+void camera_callable::set_fov(float fov)
+{
+	fov_ = fov;
+	compute_projection();
+}
+
+void camera_callable::set_clip_planes(float z_near, float z_far)
+{
+	near_clip_ = z_near;
+	far_clip_ = z_far;
+	compute_projection();
+}
+
+void camera_callable::compute_projection()
+{
+	projection_ = glm::perspective(fov(), 
+		float(preferences::actual_screen_width())/float(preferences::actual_screen_height()), 
+		near_clip(), far_clip());
+}
