@@ -882,8 +882,18 @@ public:
 		return false;
 
 	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		if(!def_) {
+			def_ = game_logic::create_map_formula_callable_definition(value_type_);
+		}
+
+		return def_.get();
+	}
 private:
 	variant_type_ptr key_type_, value_type_;
+
+	mutable game_logic::formula_callable_definition_ptr def_;
 };
 
 class variant_type_specific_map : public variant_type

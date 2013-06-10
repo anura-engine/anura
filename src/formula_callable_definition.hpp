@@ -59,6 +59,8 @@ public:
 	virtual const entry* get_entry(int slot) const = 0;
 	virtual int num_slots() const = 0;
 
+	virtual const entry* get_default_entry() const { return NULL; }
+
 	entry* get_entry_by_id(const std::string& key) {
 		const int slot = get_slot(key);
 		if(slot < 0) { return NULL; } else { return get_entry(slot); }
@@ -82,6 +84,8 @@ private:
 formula_callable_definition_ptr modify_formula_callable_definition(const_formula_callable_definition_ptr base_def, int slot, variant_type_ptr new_type, const formula_callable_definition* new_def=NULL);
 
 formula_callable_definition_ptr create_formula_callable_definition(const std::string* beg, const std::string* end, const_formula_callable_definition_ptr base=NULL, variant_type_ptr* begin_types=NULL);
+
+formula_callable_definition_ptr create_map_formula_callable_definition(variant_type_ptr value_type);
 
 int register_formula_callable_definition(const std::string& id, const_formula_callable_definition_ptr def);
 int register_formula_callable_definition(const std::string& id, const std::string& base_id, const_formula_callable_definition_ptr def);
