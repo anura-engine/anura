@@ -3983,7 +3983,7 @@ DEFINE_SET_FIELD
 		lock_screen_.reset();
 	}
 
-DEFINE_FIELD(34, isomap, "null|object")
+DEFINE_FIELD(34, isomap, "object|map|null")
 #if defined(USE_ISOMAP)
 	if(isomap_) {
 		value = variant(isomap_.get());
@@ -3993,8 +3993,16 @@ DEFINE_FIELD(34, isomap, "null|object")
 #else
 	value = variant();
 #endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		isomap_.reset(); 
+	} else {
+		isomap_.reset(new isometric::isomap(value));
+	}
+#endif
 
-DEFINE_FIELD(35, camera, "null|object")
+DEFINE_FIELD(35, camera, "object|map|null")
 #if defined(USE_ISOMAP)
 	if(camera_) {
 		value = variant(camera_.get());
@@ -4003,6 +4011,14 @@ DEFINE_FIELD(35, camera, "null|object")
 	}
 #else
 	value = variant();
+#endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		camera_.reset(); 
+	} else {
+		camera_.reset(new camera_callable(value));
+	}
 #endif
 
 DEFINE_FIELD(36, mouselook, "bool")
