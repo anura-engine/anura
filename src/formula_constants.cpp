@@ -95,8 +95,8 @@ variant get_constant(const std::string& id)
 		return variant(&v);
 	}
 
-	if(constants_stack.empty() == false) {
-		constants_map& m = constants_stack.back();
+	for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {
+		constants_map& m = *i;
 		constants_map::const_iterator itor = m.find(id);
 		if(itor != m.end()) {
 			return itor->second;
