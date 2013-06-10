@@ -129,18 +129,22 @@ DEFINE_FIELD(4, horizontal_angle, "decimal")
 	value = variant(hangle());
 DEFINE_SET_FIELD
 	set_hangle(value.as_decimal().as_float());
+	compute_view();
 DEFINE_FIELD(5, hangle, "decimal")
 	value = variant(hangle());
 DEFINE_SET_FIELD
 	set_hangle(value.as_decimal().as_float());
+	compute_view();
 DEFINE_FIELD(6, vertical_angle, "decimal")
 	value = variant(vangle());
 DEFINE_SET_FIELD
 	set_vangle(value.as_decimal().as_float());
+	compute_view();
 DEFINE_FIELD(7, vangle, "decimal")
 	value = variant(hangle());
 DEFINE_SET_FIELD
 	set_vangle(value.as_decimal().as_float());
+	compute_view();
 DEFINE_FIELD(8, mouse_speed, "decimal")
 	value = variant(mousespeed());
 DEFINE_SET_FIELD
