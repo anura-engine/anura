@@ -4111,6 +4111,7 @@ FUNCTION_DEF(set_user_details, 1, 2, "set_user_details(string username, (opt) st
 		args().size() > 1 ? args()[1]->evaluate(variables).as_string() : ""));
 END_FUNCTION_DEF(set_user_details)
 
+#if defined(USE_ISOMAP)
 class lookat_command : public game_logic::command_callable
 {
 	camera_callable_ptr cc_;
@@ -4142,6 +4143,7 @@ FUNCTION_DEF(lookat, 4, 4, "lookat(obj camera, vec3 position, vec3 target, vec3 
 		glm::vec3(vt[0].as_decimal().as_float(), vt[1].as_decimal().as_float(), vt[2].as_decimal().as_float()),
 		glm::vec3(vu[0].as_decimal().as_float(), vu[1].as_decimal().as_float(), vu[2].as_decimal().as_float())));
 END_FUNCTION_DEF(lookat)
+#endif
 
 class set_cookie_command : public game_logic::command_callable
 {
