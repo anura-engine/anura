@@ -1127,6 +1127,7 @@ void custom_object::draw(int xx, int yy) const
 		//pass
 #if defined(USE_ISOMAP)
 	} else if(truez()) {
+		ASSERT_LOG(shader_ != nullptr, "No shader found in the object, to use truez a shader must be given.");
 		//XXX All this is a big hack till I fix up frames/objects to use shaders differently
 		glUseProgram(shader_->shader()->get());
 		if(vertex_location_ == -1) {
