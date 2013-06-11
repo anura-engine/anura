@@ -26,6 +26,7 @@
 #include "array_callable.hpp"
 #include "asserts.hpp"
 #include "base64.hpp"
+#include "camera.hpp"
 #include "code_editor_dialog.hpp"
 #include "compress.hpp"
 #include "data_blob.hpp"
@@ -4109,6 +4110,38 @@ FUNCTION_DEF(set_user_details, 1, 2, "set_user_details(string username, (opt) st
 	return variant(new set_user_details_command(args()[0]->evaluate(variables).as_string(),
 		args().size() > 1 ? args()[1]->evaluate(variables).as_string() : ""));
 END_FUNCTION_DEF(set_user_details)
+
+class lookat_command : public game_logic::command_callable
+{
+	camera_callable_ptr cc_;
+	glm::vec3 position_;
+	glm::vec3 target_;
+	glm::vec3 up_;
+public:
+	explicit lookat_command(camera_callable_ptr cc, 
+		const glm::vec3& position, 
+		const glm::vec3& target, 
+		const glm::vec3& up) 
+		: cc_(cc), position_(position), target_(target), up_(up)
+	{}
+	virtual void execute(game_logic::formula_callable& ob) const 
+	{
+		cc_->look_at(position_, target_, up_);
+	}
+};
+
+FUNCTION_DEF(lookat, 4, 4, "lookat(obj camera, vec3 position, vec3 target, vec3 up) -> command: Sets the view matrix parameters for the camera")
+	variant v = args()[0]->evaluate(variables);
+	camera_callable_ptr cam = camera_callable_ptr(v.try_convert<camera_callable>());
+	ASSERT_LOG(cam != NULL, "Couldn't convert parameter 1 to a camera object.");
+	variant vp = args()[1]->evaluate(variables);
+	variant vt = args()[2]->evaluate(variables);
+	variant vu = args()[3]->evaluate(variables);
+	return variant(new lookat_command(cam, 
+		glm::vec3(vp[0].as_decimal().as_float(), vp[1].as_decimal().as_float(), vp[2].as_decimal().as_float()),
+		glm::vec3(vt[0].as_decimal().as_float(), vt[1].as_decimal().as_float(), vt[2].as_decimal().as_float()),
+		glm::vec3(vu[0].as_decimal().as_float(), vu[1].as_decimal().as_float(), vu[2].as_decimal().as_float())));
+END_FUNCTION_DEF(lookat)
 
 class set_cookie_command : public game_logic::command_callable
 {
