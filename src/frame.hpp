@@ -25,7 +25,7 @@
 #include "formula.hpp"
 #include "geometry.hpp"
 #include "solid_map_fwd.hpp"
-#include "texture.hpp"
+#include "raster.hpp"
 #include "variant.hpp"
 #include <glm/glm.hpp>
 
@@ -204,6 +204,11 @@ private:
 	void set_palettes(unsigned int palettes);
 
 	variant get_value(const std::string& key) const;
+
+	std::vector<GLfloat> vertices_;
+	std::vector<GLfloat> texcoords_;
+	int num_vertices_;
+	graphics::vbo_array vbo_array_;
 };
 
 #endif

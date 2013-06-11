@@ -96,7 +96,8 @@ frame::frame(variant node)
 	 sounds_(util::split(node["sound"].as_string_default())),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
-	 current_palette_(-1)
+	 current_palette_(-1), 
+	 num_vertices_(0)
 {
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	foreach(const std::string& f, hit_frames) {
@@ -251,6 +252,69 @@ frame::frame(variant node)
 			}
 		}
 	}
+
+	const int vbo_cnt = 2;
+	vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
+	glGenBuffers(vbo_cnt, &vbo_array_[0]);
+
+	if(node.has_key("vertices")) {
+		const variant& vertices = node["vertices"];
+		ASSERT_LOG(vertices.is_list(), "Attribute 'vertices' must be a list type.");
+
+		num_vertices_ = vertices[0].num_elements();
+		for(int n = 0; n != vertices.num_elements(); ++n) {
+			ASSERT_LOG(vertices[n].is_list(), "Each element of the 'vertices' list must be a list.");
+			ASSERT_LOG(vertices[n].num_elements() == num_vertices_, "Each element in 'vertices' list must have same number of co-ordinates.");
+			for(int m = 0; m != vertices[n].num_elements(); ++m) {
+				vertices_.push_back(GLfloat(vertices[n][m].as_decimal().as_float()));
+			}
+		}
+
+	} else {
+		vertices_.push_back(0);	vertices_.push_back(0);	vertices_.push_back(0);
+		vertices_.push_back(1);	vertices_.push_back(0);	vertices_.push_back(0);
+		vertices_.push_back(1);	vertices_.push_back(1);	vertices_.push_back(0);
+
+		vertices_.push_back(1);	vertices_.push_back(1);	vertices_.push_back(0);
+		vertices_.push_back(0);	vertices_.push_back(1);	vertices_.push_back(0);
+		vertices_.push_back(0);	vertices_.push_back(0);	vertices_.push_back(0);
+		num_vertices_ = 3;
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
+	glBufferData(GL_ARRAY_BUFFER, vertices_.size()*sizeof(GLfloat), &vertices_[0], GL_STATIC_DRAW);
+
+	if(node.has_key("texcoords")) {
+		const variant& tc = node["texcoords"];
+		ASSERT_LOG(tc.is_list(), "Attribute 'texcoords' must be a list type.");
+		for(int n = 0; n != tc.num_elements(); ++n) {
+			ASSERT_LOG(tc[n].is_list(), "Each element of the 'texcoords' list must be a list.");
+			for(int m = 0; m != tc[n].num_elements(); ++m) {
+				texcoords_.push_back(GLfloat(tc[n][m].as_decimal().as_float()));
+			}
+		}
+	} else {
+		const frame_info* info = NULL;
+		GLfloat rect[4];
+
+		for(int t = 0; t < nframes_; ++t) {
+			get_rect_in_texture(t, &rect[0], info);
+			rect[0] = texture_.translate_coord_x(rect[0]);
+			rect[1] = texture_.translate_coord_y(rect[1]);
+			rect[2] = texture_.translate_coord_x(rect[2]);
+			rect[3] = texture_.translate_coord_y(rect[3]);
+
+			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[3]);
+			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[3]);
+			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[1]);
+	
+			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[1]);
+			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[1]);
+			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[3]);
+		}
+	}
+
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
+	glBufferData(GL_ARRAY_BUFFER, texcoords_.size()*sizeof(GLfloat), &texcoords_[0], GL_STATIC_DRAW);
 }
 
 frame::~frame()
@@ -586,70 +650,38 @@ void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 #if defined(USE_ISOMAP)
 void frame::draw3(double x, double y, double z, bool face_right, bool upside_down, int time, GLint va, GLint tc) const
 {
-	// XXX fix this up some with the general frame improvement.
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
-	rect[0] = texture_.translate_coord_x(rect[0]);
-	rect[1] = texture_.translate_coord_y(rect[1]);
-	rect[2] = texture_.translate_coord_x(rect[2]);
-	rect[3] = texture_.translate_coord_y(rect[3]);
-
-	//x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	//y += info->y_adjust*scale_;
-	const GLfloat w = info->area.w()*scale_*(face_right ? 1 : -1);
-	const GLfloat h = info->area.h()*scale_*(upside_down ? -1 : 1);
-
-	//glUseProgram(gles2::active_shader()->shader()->get());
+	const int nframe = frame_number(time);
 
 	glActiveTexture(GL_TEXTURE0);
 	texture_.set_as_current_texture();
 
-	std::vector<GLfloat> va_ary;
-	std::vector<GLfloat> tc_ary;
-
-	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z+w);
-	va_ary.push_back(x+w); va_ary.push_back(y); va_ary.push_back(z);
-	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
-
-	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
-	va_ary.push_back(x); va_ary.push_back(y+h); va_ary.push_back(z+w);
-	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z+w);
-
-	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[3]);
-	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[3]);
-	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[1]);
-	
-	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[1]);
-	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[1]);
-	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[3]);
-
-	glEnable(GL_DEPTH_TEST);
-	//glEnable(GL_CULL_FACE);
+	//glEnable(GL_DEPTH_TEST);
 	glEnableVertexAttribArray(va);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
 	glVertexAttribPointer(va, 
-		3,                  // size
+		num_vertices_,      // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized?
 		0,					// stride
-		&va_ary[0]			// array buffer offset
+		0					// array buffer offset
 	);
+	
 	glEnableVertexAttribArray(tc);
+	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
 	glVertexAttribPointer(tc, 
 		2,                  // size
 		GL_FLOAT,           // type
 		GL_FALSE,           // normalized?
 		0,					// stride
-		&tc_ary[0]			// array buffer offset
+		reinterpret_cast<const GLfloat*>(sizeof(GLfloat)*nframe*12)	// array buffer offset
 	);
-	glDrawArrays(GL_TRIANGLES, 0, va_ary.size()/3);
+	glDrawArrays(GL_TRIANGLES, 0, vertices_.size()/num_vertices_);
 
 	glDisableVertexAttribArray(va);
 	glDisableVertexAttribArray(tc);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
 	glDisable(GL_DEPTH_TEST);
-	glDisable(GL_CULL_FACE);
-	//glUseProgram(0);
 }
 #endif
 
