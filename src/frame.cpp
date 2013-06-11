@@ -597,8 +597,8 @@ void frame::draw3(double x, double y, double z, bool face_right, bool upside_dow
 
 	//x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	//y += info->y_adjust*scale_;
-	const GLfloat w = info->area.w()*scale_*(face_right ? 1 : -1) / 16.0;
-	const GLfloat h = info->area.h()*scale_*(upside_down ? -1 : 1) / 16.0;
+	const GLfloat w = info->area.w()*scale_*(face_right ? 1 : -1);
+	const GLfloat h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
 	//glUseProgram(gles2::active_shader()->shader()->get());
 
@@ -608,13 +608,13 @@ void frame::draw3(double x, double y, double z, bool face_right, bool upside_dow
 	std::vector<GLfloat> va_ary;
 	std::vector<GLfloat> tc_ary;
 
-	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z);
+	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z+w);
 	va_ary.push_back(x+w); va_ary.push_back(y); va_ary.push_back(z);
 	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
 
 	va_ary.push_back(x+w); va_ary.push_back(y+h); va_ary.push_back(z);
-	va_ary.push_back(x); va_ary.push_back(y+h); va_ary.push_back(z);
-	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z);
+	va_ary.push_back(x); va_ary.push_back(y+h); va_ary.push_back(z+w);
+	va_ary.push_back(x); va_ary.push_back(y); va_ary.push_back(z+w);
 
 	tc_ary.push_back(rect[2]); tc_ary.push_back(rect[3]);
 	tc_ary.push_back(rect[0]); tc_ary.push_back(rect[3]);
