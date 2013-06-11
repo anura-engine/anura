@@ -17,6 +17,8 @@
 #ifndef OBJECT_EVENTS_HPP_INCLUDED
 #define OBJECT_EVENTS_HPP_INCLUDED
 
+#include "variant_type.hpp"
+
 enum OBJECT_EVENT_ID {
 	OBJECT_EVENT_ANY,
 	OBJECT_EVENT_START_LEVEL,
@@ -56,10 +58,13 @@ enum OBJECT_EVENT_ID {
 	OBJECT_EVENT_OUTSIDE_LEVEL,
 	OBJECT_EVENT_BEING_ADDED,
 	OBJECT_EVENT_BEING_REMOVED,
+	OBJECT_EVENT_WINDOW_RESIZE,
 	NUM_OBJECT_BUILTIN_EVENT_IDS,
 };
 
 const std::string& get_object_event_str(int id);
 int get_object_event_id(const std::string& str);
+
+variant_type_ptr get_object_event_arg_type(int id);
 
 #endif

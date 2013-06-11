@@ -76,8 +76,12 @@ public:
 
 	virtual bool is_strict() const { return is_strict_; }
 	void set_strict(bool value=true) { is_strict_ = value; }
+
+	bool supports_slot_lookups() const { return supports_slot_lookups_; }
+	void set_supports_slot_lookups(bool value) { supports_slot_lookups_ = value; }
 private:
 	bool is_strict_;
+	bool supports_slot_lookups_;
 	std::string type_name_;
 };
 

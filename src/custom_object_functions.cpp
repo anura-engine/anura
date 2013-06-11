@@ -2172,6 +2172,7 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 	entity_ptr target;
 	std::string event;
 	const_formula_callable_ptr callable;
+	variant arg_value;
 
 	if(args().size() == 3) {
 		variant v1 = args()[0]->evaluate(variables);
@@ -2181,7 +2182,8 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 
 		target = v1.convert_to<entity>();
 		event = args()[1]->evaluate(variables).as_string();
-		callable = map_into_callable(args()[2]->evaluate(variables));
+
+		arg_value = args()[2]->evaluate(variables);
 	} else if(args().size() == 2) {
 		variant v1 = args()[0]->evaluate(variables);
 		if(v1.is_null()) {
@@ -2191,13 +2193,22 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 		variant v2 = args()[1]->evaluate(variables);
 		if(v1.is_string()) {
 			event = v1.as_string();
-			callable = map_into_callable(v2);
+			arg_value = v2;
 		} else {
 			target = v1.convert_to<entity>();
 			event = v2.as_string();
 		}
 	} else {
 		event = args()[0]->evaluate(variables).as_string();
+	}
+
+	variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id(event));
+	if(arg_type) {
+		ASSERT_LOG(arg_type->match(arg_value), "Calling fire_event, arg type does not match. Expected " << arg_type->to_string() << " found " << arg_value.write_json() << " which is a " << get_variant_type_from_value(arg_value)->to_string());
+	}
+
+	if(arg_value.is_null() == false) {
+		callable = map_into_callable(arg_value);
 	}
 
 	fire_event_command* cmd = (new fire_event_command(target, event, callable));

@@ -221,6 +221,18 @@ struct custom_object_callable_expose_private_scope
 	custom_object_callable& c_;
 };
 
+class custom_object_callable_modify_scope
+{
+public:
+	custom_object_callable_modify_scope(const custom_object_callable& c, int slot, variant_type_ptr type);
+	~custom_object_callable_modify_scope();
+
+private:
+	custom_object_callable& c_;
+	game_logic::formula_callable_definition::entry entry_;
+	int slot_;
+};
+
 typedef boost::intrusive_ptr<custom_object_callable> custom_object_callable_ptr;
 typedef boost::intrusive_ptr<const custom_object_callable> const_custom_object_callable_ptr;
 

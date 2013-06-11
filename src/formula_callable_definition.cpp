@@ -34,7 +34,7 @@ void formula_callable_definition::entry::set_variant_type(variant_type_ptr type)
 	}
 }
 
-formula_callable_definition::formula_callable_definition() : is_strict_(false)
+formula_callable_definition::formula_callable_definition() : is_strict_(false), supports_slot_lookups_(true)
 {
 	int x = 4;
 	ASSERT_LOG((char*)&x - (char*)this > 10000 || (char*)this - (char*)&x > 10000 , "BAD BAD");

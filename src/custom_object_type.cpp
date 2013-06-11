@@ -758,6 +758,11 @@ void custom_object_type::init_event_handlers(variant node,
 			if(base_handlers && base_handlers->size() > event_id && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.second.as_string()) {
 				handlers[event_id] = (*base_handlers)[event_id];
 			} else {
+				boost::scoped_ptr<custom_object_callable_modify_scope> modify_scope;
+				const variant_type_ptr arg_type = get_object_event_arg_type(event_id);
+				if(arg_type) {
+					modify_scope.reset(new custom_object_callable_modify_scope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
+				}
 				handlers[event_id] = game_logic::formula::create_optional_formula(value.second, symbols, callable_definition_);
 			}
 		}

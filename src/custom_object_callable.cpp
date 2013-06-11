@@ -383,3 +383,15 @@ custom_object_callable_expose_private_scope::~custom_object_callable_expose_priv
 {
 	c_.pop_private_access();
 }
+
+custom_object_callable_modify_scope::custom_object_callable_modify_scope(const custom_object_callable& c, int slot, variant_type_ptr type)
+	: c_(const_cast<custom_object_callable&>(c)), entry_(*c.get_entry(slot)),
+	  slot_(slot)
+{
+	c_.get_entry(slot_)->set_variant_type(type);
+}
+
+custom_object_callable_modify_scope::~custom_object_callable_modify_scope()
+{
+	*c_.get_entry(slot_) = entry_;
+}
