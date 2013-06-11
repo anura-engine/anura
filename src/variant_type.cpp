@@ -914,6 +914,7 @@ public:
 			}
 		}
 		def_ = game_logic::create_formula_callable_definition(&keys[0], &keys[0] + keys.size(), game_logic::const_formula_callable_definition_ptr(), &values[0]);
+		def_->set_supports_slot_lookups(false);
 	}
 
 	bool match(const variant& v) const {
@@ -1811,7 +1812,7 @@ parse_optional_formula_type(const variant& original_str,
                             const formula_tokenizer::token* i2)
 {
 	variant_type_ptr result = parse_variant_type(original_str, i1, i2, true);
-	if(i1 != i2 && i1->equals("<-")) {
+	if(i1 != i2 && (i1->equals("<-") || i1->equals("::"))) {
 		return result;
 	}
 

@@ -63,6 +63,7 @@ std::vector<std::string> create_object_event_names()
 	res.push_back("outside_level");
 	res.push_back("being_added");
 	res.push_back("being_removed");
+	res.push_back("window_resize");
 
 	ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 	return res;
@@ -107,4 +108,19 @@ int get_object_event_id(const std::string& str)
 	object_event_names().push_back(str);
 
 	return object_event_names().size()-1;
+}
+
+variant_type_ptr get_object_event_arg_type(int id)
+{
+#define EVENT_ARG(event_id, arg_string) \
+	case OBJECT_EVENT_##event_id: { \
+		static const variant_type_ptr p = parse_variant_type(variant(arg_string)); \
+		return p; \
+	}
+	switch(id) {
+		EVENT_ARG(WINDOW_RESIZE, "{width: int, height: int}")
+		default:
+			return variant_type_ptr();
+	}
+#undef EVENT_ARG
 }

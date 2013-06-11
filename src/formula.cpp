@@ -640,7 +640,7 @@ private:
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
-		variant_type_ptr current_type = variant_type();
+		variant_type_ptr current_type = get_variant_type();
 		if(result && current_type) {
 			variant_type_ptr new_type;
 			if(expression_is_this_type) {
@@ -700,7 +700,9 @@ public:
 		if(callable_def_) {
 			const int index = callable_def_->get_slot(id_);
 			if(index != -1) {
-				return expression_ptr(new slot_identifier_expression(id_, index, callable_def_.get()));
+				if(callable_def_->supports_slot_lookups()) {
+					return expression_ptr(new slot_identifier_expression(id_, index, callable_def_.get()));
+				}
 			} else if(callable_def_->is_strict() || g_strict_formula_checking) {
 
 				std::vector<std::string> known_v;
@@ -738,6 +740,38 @@ public:
 	}
 
 private:
+	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {
+		if(!callable_def_) {
+			return const_formula_callable_definition_ptr();
+		}
+
+		variant_type_ptr current_type = get_variant_type();
+		const int slot = callable_def_->get_slot(id_);
+		if(result && current_type && slot != -1) {
+			variant_type_ptr new_type;
+			if(expression_is_this_type) {
+				new_type = expression_is_this_type;
+			} else {
+				new_type = variant_type::get_null_excluded(current_type);
+			}
+
+			if(new_type != current_type) {
+				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot, new_type);
+				return new_def;
+			}
+		}
+
+		if(!result && current_type && expression_is_this_type) {
+			variant_type_ptr new_type = variant_type::get_with_exclusion(current_type, expression_is_this_type);
+			if(new_type != current_type) {
+				formula_callable_definition_ptr new_def = modify_formula_callable_definition(current_def, slot, new_type);
+				return new_def;
+			}
+		}
+
+		return NULL;
+	}
+
 	variant execute_member(const formula_callable& variables, std::string& id, variant* variant_id) const {
 		id = id_;
 		return variables.query_value("self");
@@ -760,7 +794,7 @@ private:
 			}
 
 			if(e) {
-//				return e->variant_type;
+				return e->variant_type;
 			}
 		}
 
@@ -775,7 +809,7 @@ private:
 			}
 
 			if(e) {
-//				return e->get_write_type();
+				return e->get_write_type();
 			}
 		}
 		return variant_type::get_any();
