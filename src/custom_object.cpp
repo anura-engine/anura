@@ -3007,6 +3007,22 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_CTRL_JUMP:
 	case CUSTOM_OBJECT_CTRL_TONGUE:
 		return variant::from_bool(control_status(static_cast<controls::CONTROL_ITEM>(slot - CUSTOM_OBJECT_CTRL_UP)));
+
+	case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
+	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
+	case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS:
+	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY:
+	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS:
+	case CUSTOM_OBJECT_PLAYER_CTRL_MICE:
+	case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
+	case CUSTOM_OBJECT_PLAYER_CTRL_X:
+	case CUSTOM_OBJECT_PLAYER_CTRL_Y:
+	case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB:
+	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
+	case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
+	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
+		return get_player_value_by_slot(slot);
+
 	default:
 		if(slot >= type_->slot_properties_base() && (size_t(slot - type_->slot_properties_base()) < type_->slot_properties().size())) {
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
@@ -3036,6 +3052,19 @@ variant custom_object::get_value_by_slot(int slot) const
 	
 	ASSERT_LOG(false, "UNKNOWN SLOT QUERIED FROM OBJECT: " << slot);
 	return variant();
+}
+
+variant custom_object::get_player_value_by_slot(int slot) const
+{
+	assert(custom_object_callable::instance().get_entry(slot));
+	ASSERT_LOG(false, "Query of value for player objects on non-player object. Key: " << custom_object_callable::instance().get_entry(slot)->id);
+	return variant();
+}
+
+void custom_object::set_player_value_by_slot(int slot, const variant& value)
+{
+	assert(custom_object_callable::instance().get_entry(slot));
+	ASSERT_LOG(false, "Set of value for player objects on non-player object. Key: " << custom_object_callable::instance().get_entry(slot)->id);
 }
 
 variant custom_object::get_value(const std::string& key) const
@@ -4320,6 +4349,23 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 				}
 			}
 		}
+		break;
+
+		case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
+		case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
+		case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS:
+		case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY:
+		case CUSTOM_OBJECT_PLAYER_CTRL_KEYS:
+		case CUSTOM_OBJECT_PLAYER_CTRL_MICE:
+		case CUSTOM_OBJECT_PLAYER_CTRL_TILT:
+		case CUSTOM_OBJECT_PLAYER_CTRL_X:
+		case CUSTOM_OBJECT_PLAYER_CTRL_Y:
+		case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB:
+		case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
+		case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
+		case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
+			set_player_value_by_slot(slot, value);
+
 		break;
 	}
 }

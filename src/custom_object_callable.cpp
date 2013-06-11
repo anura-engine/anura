@@ -253,6 +253,21 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "ctrl_attack", "bool" },
 	{ "ctrl_jump", "bool" },
 	{ "ctrl_tongue", "bool" },
+
+	//player-specific
+	{ "difficulty", "int" },
+	{ "can_interact", "bool" },
+	{ "underwater_controls", "bool" },
+	{ "ctrl_mod_key", "int" },
+	{ "ctrl_keys", "[string]" },
+	{ "ctrl_mice", "[int|string]" },
+	{ "ctrl_tilt", "int" },
+	{ "ctrl_x", "int" },
+	{ "ctrl_y", "int" },
+	{ "ctrl_reverse_ab", "bool" },
+	{ "control_scheme", "string" },
+	{ "vertical_look", "int" },
+	{ "control_lock", "null|[string]" },
 };
 	ASSERT_EQ(NUM_CUSTOM_OBJECT_PROPERTIES, sizeof(CustomObjectProperties)/sizeof(*CustomObjectProperties));
 

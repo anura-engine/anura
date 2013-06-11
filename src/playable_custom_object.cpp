@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "difficulty.hpp"
 #include "formatter.hpp"
@@ -159,18 +160,64 @@ variant playable_custom_object::get_value(const std::string& key) const
 	if(key.substr(0, 11) == "difficulty_") {
 		return variant(difficulty::from_string(key.substr(11)));		
 	} else if(key == "difficulty") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
+	} else if(key == "can_interact") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
+	} else if(key == "underwater_controls") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
+	} else if(key == "ctrl_mod_key") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+	} else if(key == "ctrl_keys") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
+	} else if(key == "ctrl_mice") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
+	} else if(key == "ctrl_tilt") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
+	} else if(key == "ctrl_x") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_X);
+	} else if(key == "ctrl_y") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
+	} else if(key == "ctrl_reverse_ab") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
+	} else if(key == "control_scheme") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
+	}
+
+	for(int n = 0; n < sizeof(ctrl)/sizeof(*ctrl); ++n) {
+		if(key == ctrl[n]) {
+			return variant(control_status(static_cast<controls::CONTROL_ITEM>(n)));
+		}
+	}
+
+	if(key == "player") {
+		return variant::from_bool(true);
+	} else if(key == "vertical_look") {
+		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
+	}
+
+	return custom_object::get_value(key);
+}
+
+variant playable_custom_object::get_player_value_by_slot(int slot) const
+{
+	switch(slot) {
+	case CUSTOM_OBJECT_PLAYER_DIFFICULTY: {
 		if(preferences::force_difficulty() != INT_MIN) {
 			return variant(preferences::force_difficulty());
 		}
 
 		return variant(difficulty_);
-	} else if(key == "can_interact") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT: {
 		return variant(can_interact_);
-	} else if(key == "underwater_controls") {
+	}
+	case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS: {
 		return variant(underwater_controls_);
-	} else if(key == "ctrl_mod_key") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY: {
 		return variant(SDL_GetModState());
-	} else if(key == "ctrl_keys") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
 		std::vector<variant> result;
 		if(level_runner::get_current() && level_runner::get_current()->get_debug_console() && level_runner::get_current()->get_debug_console()->has_keyboard_focus()) {
 			//the debug console is stealing all keystrokes.
@@ -207,7 +254,8 @@ variant playable_custom_object::get_value(const std::string& key) const
 #endif
 #endif
 		return variant(&result);
-	} else if(key == "ctrl_mice") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_MICE: {
 		std::vector<variant> result;
 		
 
@@ -252,44 +300,49 @@ variant playable_custom_object::get_value(const std::string& key) const
 		}
 
 		return variant(&result);
-	} else if(key == "ctrl_tilt") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_TILT: {
 		return variant(-joystick::iphone_tilt());
-	} else if(key == "ctrl_x") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_X: {
 		return variant(underwater_ctrl_x_);
-	} else if(key == "ctrl_y") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_Y: {
 		return variant(underwater_ctrl_y_);
-	} else if(key == "ctrl_reverse_ab") {
-		return variant(reverse_ab_);
-	} else if(key == "control_scheme") {
+	}
+	case CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB: {
+		return variant::from_bool(reverse_ab_);
+	}
+	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME: {
 		return variant(preferences::control_scheme());
 	}
-
-	for(int n = 0; n < sizeof(ctrl)/sizeof(*ctrl); ++n) {
-		if(key == ctrl[n]) {
-			return variant(control_status(static_cast<controls::CONTROL_ITEM>(n)));
-		}
-	}
-
-	if(key == "player") {
-		return variant(1);
-	} else if(key == "vertical_look") {
+	case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK: {
 		return variant(vertical_look_);
 	}
+	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK: {
+		return variant();
+	}
+	}
 
-	return custom_object::get_value(key);
+	ASSERT_LOG(false, "unknown slot in get_player_value_by_slot: " << slot);
 }
 
-void playable_custom_object::set_value(const std::string& key, const variant& value)
+void playable_custom_object::set_player_value_by_slot(int slot, const variant& value)
 {
-	if(key == "difficulty") {
+	switch(slot) {
+	case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
 		difficulty_ = value.as_int();
-	} else if(key == "can_interact") {
+	break;
+	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
 		can_interact_ = value.as_int();
-	} else if(key == "underwater_controls") {
+	break;
+	case CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS:
 		underwater_controls_ = value.as_bool();
-	} else if(key == "vertical_look") {
+	break;
+	case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 		vertical_look_ = value.as_int();
-	} else if(key == "control_lock") {
+	break;
+	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
 		if(value.is_null()) {
 			control_lock_.reset();
 		} else if(value.is_list()) {
@@ -317,6 +370,22 @@ void playable_custom_object::set_value(const std::string& key, const variant& va
 		} else {
 			ASSERT_LOG(false, "BAD VALUE WHEN SETTING control_lock KEY. A LIST OR NULL IS REQUIRED: " << value.to_debug_string());
 		}
+	break;
+	}
+}
+
+void playable_custom_object::set_value(const std::string& key, const variant& value)
+{
+	if(key == "difficulty") {
+		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY, value);
+	} else if(key == "can_interact") {
+		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT, value);
+	} else if(key == "underwater_controls") {
+		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS, value);
+	} else if(key == "vertical_look") {
+		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK, value);
+	} else if(key == "control_lock") {
+		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_LOCK, value);
 	} else {
 		custom_object::set_value(key, value);
 	}

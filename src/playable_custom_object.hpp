@@ -61,6 +61,9 @@ private:
 	variant get_value(const std::string& key) const;	
 	void set_value(const std::string& key, const variant& value);
 
+	variant get_player_value_by_slot(int slot) const;
+	void set_player_value_by_slot(int slot, const variant& value);
+
 	player_info player_info_;
 
 	int difficulty_;
