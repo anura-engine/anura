@@ -315,6 +315,7 @@ frame::frame(variant node)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
 	glBufferData(GL_ARRAY_BUFFER, texcoords_.size()*sizeof(GLfloat), &texcoords_[0], GL_STATIC_DRAW);
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 frame::~frame()
