@@ -19,6 +19,7 @@
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
 #include <boost/math/special_functions/round.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 
 #include <stdio.h>
@@ -163,7 +164,7 @@ custom_object::custom_object(variant node)
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates())),
 	vertex_location_(-1), texcoord_location_(-1),
-	paused_(false)	
+	paused_(false), model_(glm::mat4(1.0f))
 {
 	properties_requiring_dynamic_initialization_ = type_->properties_requiring_dynamic_initialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->properties_requiring_initialization().begin(), type_->properties_requiring_initialization().end());
@@ -460,7 +461,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->use_absolute_screen_coordinates()),
 	vertex_location_(-1), texcoord_location_(-1),
-	paused_(false)
+	paused_(false), model_(glm::mat4(1.0f))
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -593,7 +594,7 @@ custom_object::custom_object(const custom_object& o) :
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_),
 	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
-	paused_(o.paused_)
+	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
@@ -1127,6 +1128,7 @@ void custom_object::draw(int xx, int yy) const
 		//pass
 #if defined(USE_ISOMAP)
 	} else if(truez()) {
+		ASSERT_LOG(shader_ != nullptr, "No shader found in the object, to use truez a shader must be given.");
 		//XXX All this is a big hack till I fix up frames/objects to use shaders differently
 		glUseProgram(shader_->shader()->get());
 		if(vertex_location_ == -1) {
@@ -1135,7 +1137,22 @@ void custom_object::draw(int xx, int yy) const
 		if(texcoord_location_ == -1) {
 			texcoord_location_ = shader_->shader()->get_attribute("a_texcoord");
 		}
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
+
+		glm::mat4 model = model_;
+		if(face_right()) {
+			model = glm::rotate(model_, 180.0f, glm::vec3(0.0f,1.0f,0.0f));
+			//glm::mat4 flip(1.0f);
+			//flip[0][0] = -1;
+			//model *= flip;
+		}
+		model = glm::translate(model, glm::vec3(tx(),ty(),tz()));
+		if(upside_down()) {
+			glm::mat4 flip(1.0f);
+			flip[1][1] = -1;
+			model *= flip;
+		}
+
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
 		//ASSERT_LOG(gles2::active_shader()->shader()->mvp_matrix_uniform() != -1, "Invalid mvp uniform.");
 		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
