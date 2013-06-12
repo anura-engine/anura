@@ -649,14 +649,14 @@ void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 }
 
 #if defined(USE_ISOMAP)
-void frame::draw3(double x, double y, double z, bool face_right, bool upside_down, int time, GLint va, GLint tc) const
+void frame::draw3(int time, GLint va, GLint tc) const
 {
 	const int nframe = frame_number(time);
 
 	glActiveTexture(GL_TEXTURE0);
 	texture_.set_as_current_texture();
 
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	glEnableVertexAttribArray(va);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
 	glVertexAttribPointer(va, 

@@ -3983,37 +3983,27 @@ DEFINE_SET_FIELD
 		lock_screen_.reset();
 	}
 
-DEFINE_FIELD(34, isomap, "object|map|null")
 #if defined(USE_ISOMAP)
+DEFINE_FIELD(34, isomap, "builtin isomap|map|null")
 	if(isomap_) {
 		value = variant(isomap_.get());
 	} else {
 		value = variant();
 	}
-#else
-	value = variant();
-#endif
 DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
 	if(value.is_null()) {
 		isomap_.reset(); 
 	} else {
 		isomap_.reset(new isometric::isomap(value));
 	}
-#endif
 
-DEFINE_FIELD(35, camera, "object|map|null")
-#if defined(USE_ISOMAP)
+DEFINE_FIELD(35, camera, "builtin camera_callable|null")
 	if(camera_) {
 		value = variant(camera_.get());
 	} else {
 		value = variant();
 	}
-#else
-	value = variant();
-#endif
 DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
 	if(value.is_null()) {
 		camera_.reset(); 
 	} else {

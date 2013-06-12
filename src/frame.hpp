@@ -72,7 +72,7 @@ public:
 	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
 	void draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const;
 	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
-	void draw3(double x, double y, double z, bool face_right, bool upside_down, int time, GLint va, GLint tc) const;
+	void draw3(int time, GLint va, GLint tc) const;
 
 	struct CustomPoint {
 		CustomPoint() : pos(0) {}

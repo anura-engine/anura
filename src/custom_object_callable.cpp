@@ -148,7 +148,11 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "vars", "object" },
 	{ "tmp", "object" },
 	{ "group", "int" },
+
 	{ "rotate", "decimal" },
+	{ "rotate_x", "decimal" },
+	{ "rotate_y", "decimal" },
+	{ "rotate_z", "decimal" },
 
 	{ "me", "any" },
 	{ "self", "any" },
