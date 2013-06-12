@@ -293,11 +293,11 @@ frame::frame(variant node)
 			}
 		}
 	} else {
-		const frame_info* info = NULL;
-		GLfloat rect[4];
 
 		for(int t = 0; t < nframes_; ++t) {
-			get_rect_in_texture(t, &rect[0], info);
+			const frame_info* info = NULL;
+			GLfloat rect[4];
+			get_rect_in_texture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
 			rect[0] = texture_.translate_coord_x(rect[0]);
 			rect[1] = texture_.translate_coord_y(rect[1]);
 			rect[2] = texture_.translate_coord_x(rect[2]);
