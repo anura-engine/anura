@@ -54,6 +54,8 @@ protected:
 private:
 	DECLARE_CALLABLE(camera_callable);
 
+	enum {MODE_AUTO, MODE_MANUAL} mode_;
+
 	float fov_;
 	float horizontal_angle_;
 	float vertical_angle_;

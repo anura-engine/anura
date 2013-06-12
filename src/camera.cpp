@@ -7,7 +7,8 @@
 
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f)
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f),
+	mode_(MODE_AUTO)
 {
 	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
@@ -17,7 +18,8 @@ camera_callable::camera_callable()
 
 camera_callable::camera_callable(const variant& node)
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f)
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f),
+	mode_(MODE_AUTO)
 {
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 	if(node.has_key("fov")) {
@@ -59,6 +61,7 @@ camera_callable::camera_callable(const variant& node)
 			la["up"][1].as_decimal().as_float(), 
 			la["up"][2].as_decimal().as_float());
 		look_at(position, target, up);
+		mode_ = MODE_MANUAL;
 	} else {
 		compute_view();
 	}
@@ -95,6 +98,7 @@ variant camera_callable::write()
 
 void camera_callable::compute_view()
 {
+	mode_ = MODE_AUTO;
 	direction_ = glm::vec3(
 		cos(vertical_angle_) * sin(horizontal_angle_), 
 		sin(vertical_angle_),
@@ -125,7 +129,11 @@ DEFINE_SET_FIELD
 	set_position(glm::vec3(float(value[0].as_decimal().as_float()),
 		float(value[1].as_decimal().as_float()),
 		float(value[2].as_decimal().as_float())));
-	compute_view();	
+	if(mode_ == MODE_MANUAL) {
+		view_ = glm::lookAt(position_, target_, up_);
+	} else {
+		compute_view();
+	}
 DEFINE_FIELD(1, speed, "decimal")
 	value = variant(speed());
 DEFINE_SET_FIELD
@@ -247,6 +255,7 @@ void camera_callable::set_value(const std::string& key, const variant& value)
 
 void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up)
 {
+	mode_ = MODE_MANUAL;
 	position_ = position;
 	target_ = target;
 	up_ = up;
