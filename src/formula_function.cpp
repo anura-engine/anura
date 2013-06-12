@@ -4151,6 +4151,21 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(lookat)
 #endif
 
+FUNCTION_DEF(clamp, 3, 3, "clamp(numeric value, numeric min_val, numeric max_val) -> numeric: Clamps the given value inside the given bounds.")
+	variant v  = args()[0]->evaluate(variables);
+	variant mn = args()[1]->evaluate(variables);
+	variant mx = args()[2]->evaluate(variables);
+	if(v.is_decimal() || mn.is_decimal() || mx.is_decimal()) {
+		return variant(std::min(mx.as_decimal(), std::max(mn.as_decimal(), v.as_decimal())));
+	}
+	return variant(std::min(mx.as_int(), std::max(mn.as_int(), v.as_int())));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal|int")
+	ARG_TYPE("decimal|int")
+	ARG_TYPE("decimal|int")
+	RETURN_TYPE("decimal|int")
+END_FUNCTION_DEF(clamp)
+
 class set_cookie_command : public game_logic::command_callable
 {
 	variant cookie_;
