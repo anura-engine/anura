@@ -4142,6 +4142,12 @@ FUNCTION_DEF(lookat, 4, 4, "lookat(obj camera, vec3 position, vec3 target, vec3 
 		glm::vec3(vp[0].as_decimal().as_float(), vp[1].as_decimal().as_float(), vp[2].as_decimal().as_float()),
 		glm::vec3(vt[0].as_decimal().as_float(), vt[1].as_decimal().as_float(), vt[2].as_decimal().as_float()),
 		glm::vec3(vu[0].as_decimal().as_float(), vu[1].as_decimal().as_float(), vu[2].as_decimal().as_float())));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin camera_callable")
+	ARG_TYPE("[decimal,decimal,decimal]")
+	ARG_TYPE("[decimal,decimal,decimal]")
+	ARG_TYPE("[decimal,decimal,decimal]")
+RETURN_TYPE("commands")
 END_FUNCTION_DEF(lookat)
 #endif
 
