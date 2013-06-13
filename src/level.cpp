@@ -3997,7 +3997,6 @@ DEFINE_SET_FIELD
 	} else {
 		obj.isomap_.reset(new isometric::isomap(value));
 	}
-#endif
 
 DEFINE_FIELD(camera, "builtin camera_callable")
 	return variant(obj.camera_.get());

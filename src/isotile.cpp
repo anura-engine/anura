@@ -713,8 +713,8 @@ namespace isometric
 		return variant(); // -- todo
 	}
 
-	BEGIN_DEFINE_CALLABLE(isomap, 0)
-	END_DEFINE_CALLABLE_NOBASE(isomap)
+	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)
+	END_DEFINE_CALLABLE(isomap)
 }
 
 #endif
