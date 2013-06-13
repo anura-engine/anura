@@ -38,6 +38,8 @@ public:
 	const glm::vec3& position() const { return position_; }
 	const glm::vec3& right() const { return right_; }
 	const glm::vec3& direction() const { return direction_; }
+	const glm::vec3& target() const { return target_; }
+	const glm::vec3& up() const { return up_; }
 	void set_position(const glm::vec3& position) { position_ = position; }
 
 	void look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up);
@@ -51,6 +53,8 @@ public:
 protected:
 private:
 	DECLARE_CALLABLE(camera_callable);
+
+	enum {MODE_AUTO, MODE_MANUAL} mode_;
 
 	float fov_;
 	float horizontal_angle_;

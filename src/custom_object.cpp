@@ -138,7 +138,7 @@ custom_object::custom_object(variant node)
 	accel_x_(node["accel_x"].as_int()),
 	accel_y_(node["accel_y"].as_int()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
-	rotate_(), zorder_(node["zorder"].as_int(type_->zorder())),
+	rotate_x_(), rotate_y_(), rotate_z_(), zorder_(node["zorder"].as_int(type_->zorder())),
 	zsub_order_(node["zsub_order"].as_int(type_->zsub_order())),
 	hitpoints_(node["hitpoints"].as_int(type_->hitpoints())),
 	max_hitpoints_(node["max_hitpoints"].as_int(type_->hitpoints()) - type_->hitpoints()),
@@ -437,7 +437,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	time_in_frame_(0), time_in_frame_delta_(1),
 	velocity_x_(0), velocity_y_(0),
 	accel_x_(0), accel_y_(0), gravity_shift_(0),
-	rotate_(), zorder_(type_->zorder()),
+	rotate_x_(), rotate_y_(), rotate_z_(), zorder_(type_->zorder()),
 	zsub_order_(type_->zsub_order()),
 	hitpoints_(type_->hitpoints()),
 	max_hitpoints_(0),
@@ -538,7 +538,7 @@ custom_object::custom_object(const custom_object& o) :
 	velocity_x_(o.velocity_x_), velocity_y_(o.velocity_y_),
 	accel_x_(o.accel_x_), accel_y_(o.accel_y_),
 	gravity_shift_(o.gravity_shift_),
-	rotate_(o.rotate_),
+	rotate_x_(o.rotate_x_), rotate_y_(o.rotate_y_), rotate_z_(o.rotate_z_),
 	zorder_(o.zorder_),
 	zsub_order_(o.zsub_order_),
 	parallax_scale_millis_(new std::pair<int, int>(*o.parallax_scale_millis_)),
@@ -1128,7 +1128,7 @@ void custom_object::draw(int xx, int yy) const
 		//pass
 #if defined(USE_ISOMAP)
 	} else if(truez()) {
-		ASSERT_LOG(shader_ != nullptr, "No shader found in the object, to use truez a shader must be given.");
+		ASSERT_LOG(shader_ != NULL, "No shader found in the object, to use truez a shader must be given.");
 		//XXX All this is a big hack till I fix up frames/objects to use shaders differently
 		glUseProgram(shader_->shader()->get());
 		if(vertex_location_ == -1) {
@@ -1138,38 +1138,36 @@ void custom_object::draw(int xx, int yy) const
 			texcoord_location_ = shader_->shader()->get_attribute("a_texcoord");
 		}
 
-		glm::mat4 model = model_;
+		glm::mat4 flip(1.0f);
 		if(face_right()) {
-			model = glm::rotate(model_, 180.0f, glm::vec3(0.0f,1.0f,0.0f));
-			//glm::mat4 flip(1.0f);
-			//flip[0][0] = -1;
-			//model *= flip;
+			flip = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f,1.0f,0.0f));
 		}
-		model = glm::translate(model, glm::vec3(tx(),ty(),tz()));
 		if(upside_down()) {
-			glm::mat4 flip(1.0f);
-			flip[1][1] = -1;
-			model *= flip;
+			flip = flip * glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f,0.0f,0.0f));
 		}
+		glm::mat4 model = model_ * glm::translate(glm::mat4(1.0f), glm::vec3(tx(),ty(),tz()))
+			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_x_.as_float()), glm::vec3(1.0f,0.0f,0.0f)) 
+			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_y_.as_float()), glm::vec3(0.0f,1.0f,0.0f)) 
+			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_z_.as_float()), glm::vec3(0.0f,0.0f,1.0f)) 
+			* flip;
 
 		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
-		//ASSERT_LOG(gles2::active_shader()->shader()->mvp_matrix_uniform() != -1, "Invalid mvp uniform.");
 		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
-		frame_->draw3(tx(), ty(), tz(), face_right(), upside_down(), time_in_frame_, vertex_location_, texcoord_location_);
+		frame_->draw3(time_in_frame_, vertex_location_, texcoord_location_);
 		glUseProgram(active->shader()->get());
 #endif
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()), cycle_);
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	} else if(draw_scale_) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()), GLfloat(draw_scale_->as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()), GLfloat(draw_scale_->as_float()));
 	} else if(!draw_area_.get()) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	} else {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	}
 
 	if(blur_) {
@@ -1183,7 +1181,7 @@ void custom_object::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.to_color();
 				transform.to_color().set_as_current_color();
-				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_.as_float()));
+				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 			}
 
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1379,7 +1377,7 @@ void custom_object::process(level& lvl)
 	if(body_) {
 		const b2Vec2 v = body_->get_body_ptr()->GetPosition();
 		const float a = body_->get_body_ptr()->GetAngle();
-		rotate_ = decimal(double(a) * 180.0 / M_PI);
+		rotate_z_ = decimal(double(a) * 180.0 / M_PI);
 		set_x(int(v.x * world->scale() - (solid_rect().w() ? (solid_rect().w()/2) : current_frame().width()/2)));
 		set_y(int(v.y * world->scale() - (solid_rect().h() ? (solid_rect().h()/2) : current_frame().height()/2)));
 		//set_y(graphics::screen_height() - v.y * world->scale() - current_frame().height());
@@ -1498,7 +1496,7 @@ void custom_object::process(level& lvl)
 
 	const int start_x = x();
 	const int start_y = y();
-	const decimal start_rotate = rotate_;
+	const decimal start_rotate = rotate_z_;
 	++cycle_;
 
 	if(invincible_) {
@@ -1562,13 +1560,13 @@ void custom_object::process(level& lvl)
 			}
 
 			if(position_schedule_->rotation.empty() == false) {
-				rotate_ = position_schedule_->rotation[pos%position_schedule_->rotation.size()];
-				while(rotate_ >= 360) {
-					rotate_ -= 360;
+				rotate_z_ = position_schedule_->rotation[pos%position_schedule_->rotation.size()];
+				while(rotate_z_ >= 360) {
+					rotate_z_ -= 360;
 				}
 
 				if(next_fraction) {
-					rotate_ = decimal((rotate_*this_fraction + next_fraction*position_schedule_->rotation[(pos+1)%position_schedule_->rotation.size()])/position_schedule_->speed);
+					rotate_z_ = decimal((rotate_z_*this_fraction + next_fraction*position_schedule_->rotation[(pos+1)%position_schedule_->rotation.size()])/position_schedule_->speed);
 				}
 			}
 		}
@@ -2103,7 +2101,7 @@ void custom_object::process(level& lvl)
 	}
 
 	if(blur_) {
-		blur_->next_frame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, face_right(), upside_down(), float(start_rotate.as_float()), float(rotate_.as_float()));
+		blur_->next_frame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, face_right(), upside_down(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
 		if(blur_->destroyed()) {
 			blur_.reset();
 		}
@@ -2740,7 +2738,10 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_VARS:              return variant(vars_.get());
 	case CUSTOM_OBJECT_TMP:               return variant(tmp_vars_.get());
 	case CUSTOM_OBJECT_GROUP:             return variant(group());
-	case CUSTOM_OBJECT_ROTATE:            return variant(rotate_);
+	case CUSTOM_OBJECT_ROTATE:            return variant(rotate_z_);
+	case CUSTOM_OBJECT_ROTATE_X:            return variant(rotate_x_);
+	case CUSTOM_OBJECT_ROTATE_Y:            return variant(rotate_y_);
+	case CUSTOM_OBJECT_ROTATE_Z:            return variant(rotate_z_);
 	case CUSTOM_OBJECT_ME:
 	case CUSTOM_OBJECT_SELF:              return variant(this);
 	case CUSTOM_OBJECT_BRIGHTNESS:		  return variant((draw_color().r() + draw_color().g() + draw_color().b())/3);
@@ -3234,8 +3235,12 @@ void custom_object::set_value(const std::string& key, const variant& value)
 		accel_x_ = value.as_int();
 	} else if(key == "accel_y") {
 		accel_y_ = value.as_int();
-	} else if(key == "rotate") {
-		rotate_ = value.as_decimal();
+	} else if(key == "rotate" || key == "rotate_z") {
+		rotate_z_ = value.as_decimal();
+	} else if(key == "rotate_x") {
+		rotate_x_ = value.as_decimal();
+	} else if(key == "rotate_y") {
+		rotate_y_ = value.as_decimal();
 	} else if(key == "red") {
 		make_draw_color();
 		draw_color_->buf()[0] = truncate_to_char(value.as_int());
@@ -3816,7 +3821,14 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_ROTATE:
-		rotate_ = value.as_decimal();
+	case CUSTOM_OBJECT_ROTATE_Z:
+		rotate_z_ = value.as_decimal();
+		break;
+	case CUSTOM_OBJECT_ROTATE_X:
+		rotate_x_ = value.as_decimal();
+		break;
+	case CUSTOM_OBJECT_ROTATE_Y:
+		rotate_y_ = value.as_decimal();
 		break;
 
 	case CUSTOM_OBJECT_RED:

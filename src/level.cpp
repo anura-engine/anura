@@ -254,7 +254,7 @@ level::level(const std::string& level_cfg, variant node)
 	if(node.has_key("camera")) {
 		camera_.reset(new camera_callable(node["camera"]));
 	} else {
-		camera_.reset();
+		camera_.reset(new camera_callable());
 	}
 #endif
 
@@ -3984,18 +3984,14 @@ DEFINE_SET_FIELD
 		obj.lock_screen_.reset();
 	}
 
-DEFINE_FIELD(isomap, "object|map|null")
 #if defined(USE_ISOMAP)
+DEFINE_FIELD(isomap, "builtin isomap|map|null")
 	if(obj.isomap_) {
 		return variant(obj.isomap_.get());
 	} else {
 		return variant();
 	}
-#else
-	return variant();
-#endif
 DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
 	if(value.is_null()) {
 		obj.isomap_.reset(); 
 	} else {
@@ -4003,20 +3999,11 @@ DEFINE_SET_FIELD
 	}
 #endif
 
-DEFINE_FIELD(camera, "object|map|null")
-#if defined(USE_ISOMAP)
-	if(obj.camera_) {
-		return variant(obj.camera_.get());
-	} else {
-		return variant();
-	}
-#else
-	return variant();
-#endif
+DEFINE_FIELD(camera, "builtin camera_callable")
+	return variant(obj.camera_.get());
 DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
 	if(value.is_null()) {
-		obj.camera_.reset(); 
+		obj.camera_.reset(new camera_callable()); 
 	} else {
 		obj.camera_.reset(new camera_callable(value));
 	}

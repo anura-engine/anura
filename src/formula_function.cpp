@@ -4111,6 +4111,7 @@ FUNCTION_DEF(set_user_details, 1, 2, "set_user_details(string username, (opt) st
 		args().size() > 1 ? args()[1]->evaluate(variables).as_string() : ""));
 END_FUNCTION_DEF(set_user_details)
 
+#if defined(USE_ISOMAP)
 class lookat_command : public game_logic::command_callable
 {
 	camera_callable_ptr cc_;
@@ -4141,7 +4142,53 @@ FUNCTION_DEF(lookat, 4, 4, "lookat(obj camera, vec3 position, vec3 target, vec3 
 		glm::vec3(vp[0].as_decimal().as_float(), vp[1].as_decimal().as_float(), vp[2].as_decimal().as_float()),
 		glm::vec3(vt[0].as_decimal().as_float(), vt[1].as_decimal().as_float(), vt[2].as_decimal().as_float()),
 		glm::vec3(vu[0].as_decimal().as_float(), vu[1].as_decimal().as_float(), vu[2].as_decimal().as_float())));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin camera_callable")
+	ARG_TYPE("[decimal,decimal,decimal]")
+	ARG_TYPE("[decimal,decimal,decimal]")
+	ARG_TYPE("[decimal,decimal,decimal]")
+	RETURN_TYPE("commands")
 END_FUNCTION_DEF(lookat)
+
+FUNCTION_DEF(is_solid_voxel, 1, 1, "is_solid_voxel([int, int, int]) -> bool: Returns true if the voxel at a given location exists and is solid.")
+	variant xyz = args()[0]->evaluate(variables);
+	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
+	return variant::from_bool(level::current().isomap()->is_solid(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[int,int,int]")
+	RETURN_TYPE("bool")
+END_FUNCTION_DEF(is_solid_voxel)
+
+FUNCTION_DEF(get_voxel_type, 1, 1, "get_voxel_type([int, int, int]) -> string: Returns type of the voxel at a given location if it exists.")
+	variant xyz = args()[0]->evaluate(variables);
+	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
+	std::string stype = level::current().isomap()->get_tile_type(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int());
+	return stype.empty() ? variant() : variant(stype);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("[int,int,int]")
+	RETURN_TYPE("string|null")
+END_FUNCTION_DEF(get_voxel_type)
+#endif
+
+FUNCTION_DEF(clamp, 3, 3, "clamp(numeric value, numeric min_val, numeric max_val) -> numeric: Clamps the given value inside the given bounds.")
+	variant v  = args()[0]->evaluate(variables);
+	variant mn = args()[1]->evaluate(variables);
+	variant mx = args()[2]->evaluate(variables);
+	if(v.is_decimal() || mn.is_decimal() || mx.is_decimal()) {
+		return variant(std::min(mx.as_decimal(), std::max(mn.as_decimal(), v.as_decimal())));
+	}
+	return variant(std::min(mx.as_int(), std::max(mn.as_int(), v.as_int())));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal|int")
+	ARG_TYPE("decimal|int")
+	ARG_TYPE("decimal|int")
+	DEFINE_RETURN_TYPE
+	std::vector<variant_type_ptr> result_types;
+	for(int n = 0; n != args().size(); ++n) {
+		result_types.push_back(args()[n]->query_variant_type());
+	}
+	return variant_type::get_union(result_types);
+END_FUNCTION_DEF(clamp)
 
 class set_cookie_command : public game_logic::command_callable
 {

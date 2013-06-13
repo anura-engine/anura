@@ -346,7 +346,9 @@ private:
 	int velocity_x_, velocity_y_;
 	int accel_x_, accel_y_;
 	int gravity_shift_;
-	decimal rotate_;
+	decimal rotate_x_;
+	decimal rotate_y_;
+	decimal rotate_z_;
 
 	boost::scoped_ptr<std::pair<int, int> > parallax_scale_millis_;
 

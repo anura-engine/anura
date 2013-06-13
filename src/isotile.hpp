@@ -14,6 +14,7 @@
 #include "geometry.hpp"
 #include "graphics.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
@@ -49,8 +50,9 @@ namespace isometric
 		virtual void draw() const;
 		variant write();
 
-		virtual variant get_value(const std::string&) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		bool is_solid(int x, int y, int z) const;
+		std::string get_tile_type(int x, int y, int z) const;
+		static variant get_tile_info(const std::string& type);
 	protected:
 		const GLfloat* model() const { return glm::value_ptr(model_); }
 
@@ -60,9 +62,9 @@ namespace isometric
 		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
 		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
 		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-
-		bool is_solid(int x, int y, int z) const;
 	private:
+		DECLARE_CALLABLE(isomap);
+
 		tile_type tiles_;
 		int size_x_;
 		int size_y_;

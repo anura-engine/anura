@@ -252,7 +252,7 @@ frame::frame(variant node)
 			}
 		}
 	}
-/*
+
 	const int vbo_cnt = 2;
 	vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
 	glGenBuffers(vbo_cnt, &vbo_array_[0]);
@@ -293,11 +293,11 @@ frame::frame(variant node)
 			}
 		}
 	} else {
-		const frame_info* info = NULL;
-		GLfloat rect[4];
 
 		for(int t = 0; t < nframes_; ++t) {
-			get_rect_in_texture(t, &rect[0], info);
+			const frame_info* info = NULL;
+			GLfloat rect[4];
+			get_rect_in_texture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
 			rect[0] = texture_.translate_coord_x(rect[0]);
 			rect[1] = texture_.translate_coord_y(rect[1]);
 			rect[2] = texture_.translate_coord_x(rect[2]);
@@ -315,7 +315,7 @@ frame::frame(variant node)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
 	glBufferData(GL_ARRAY_BUFFER, texcoords_.size()*sizeof(GLfloat), &texcoords_[0], GL_STATIC_DRAW);
-	*/
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 frame::~frame()
@@ -649,14 +649,14 @@ void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 }
 
 #if defined(USE_ISOMAP)
-void frame::draw3(double x, double y, double z, bool face_right, bool upside_down, int time, GLint va, GLint tc) const
+void frame::draw3(int time, GLint va, GLint tc) const
 {
 	const int nframe = frame_number(time);
 
 	glActiveTexture(GL_TEXTURE0);
 	texture_.set_as_current_texture();
 
-	//glEnable(GL_DEPTH_TEST);
+	glEnable(GL_DEPTH_TEST);
 	glEnableVertexAttribArray(va);
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
 	glVertexAttribPointer(va, 
