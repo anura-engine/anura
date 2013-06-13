@@ -250,7 +250,9 @@ int register_formula_callable_definition(const std::string& id, const_formula_ca
 
 int register_formula_callable_definition(const std::string& id, const std::string& base_id, const_formula_callable_definition_ptr def)
 {
-	g_builtin_bases()[id] = base_id;
+	if(base_id != "") {
+		g_builtin_bases()[id] = base_id;
+	}
 	return register_formula_callable_definition(id, def);
 }
 

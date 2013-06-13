@@ -39,7 +39,7 @@
 
 namespace gui {
 
-class animation_creator_dialog : public virtual dialog
+class animation_creator_dialog : public dialog
 {
 public:
 	animation_creator_dialog(int x, int y, int w, int h, const variant& anims=variant());

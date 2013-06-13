@@ -152,7 +152,7 @@ text_editor_widget::text_editor_widget(int width, int height)
 }
 
 text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e), scrollable_widget(v,e), last_op_type_(NULL), font_size_(14), 
+	: scrollable_widget(v,e), last_op_type_(NULL), font_size_(14), 
 	select_(0,0), cursor_(0,0), scroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(false), 
@@ -1622,20 +1622,20 @@ void text_editor_widget::on_change()
 	calculate_search_matches();
 }
 
-BEGIN_DEFINE_CALLABLE(text_editor_widget, this)
-	DEFINE_FIELD(21, text, "string")
-		value = variant(text());
+BEGIN_DEFINE_CALLABLE(text_editor_widget, widget)
+	DEFINE_FIELD(text, "string")
+		return variant(obj.text());
 	DEFINE_SET_FIELD
-		set_text(value.as_string());
-	DEFINE_FIELD(22, begin_enter, "bool")
-		value = variant::from_bool(begin_enter_return_);
+		obj.set_text(value.as_string());
+	DEFINE_FIELD(begin_enter, "bool")
+		return variant::from_bool(obj.begin_enter_return_);
 	DEFINE_SET_FIELD
-		begin_enter_return_ = value.as_bool();
-	DEFINE_FIELD(23, "color", "string")
-		value = variant("");
+		obj.begin_enter_return_ = value.as_bool();
+	DEFINE_FIELD("color", "string")
+		return variant("");
 	DEFINE_SET_FIELD
-		text_color_ = graphics::color(value);
-END_DEFINE_CALLABLE(text_editor_widget, widget, const_cast<text_editor_widget*>(this))
+		obj.text_color_ = graphics::color(value);
+END_DEFINE_CALLABLE(text_editor_widget)
 
 void text_editor_widget::change_delegate()
 {

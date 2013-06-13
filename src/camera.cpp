@@ -113,85 +113,84 @@ void camera_callable::compute_view()
 	view_ = glm::lookAt(position_, target_, up_);
 }
 
-BEGIN_DEFINE_CALLABLE(camera_callable, 0)
-DEFINE_FIELD(0, position, "[decimal,decimal,decimal]")
+BEGIN_DEFINE_CALLABLE_NOBASE(camera_callable)
+DEFINE_FIELD(position, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(position().x));
-	v.push_back(variant(position().y));
-	v.push_back(variant(position().z));
-	value = variant(&v);
+	v.push_back(variant(obj.position().x));
+	v.push_back(variant(obj.position().y));
+	v.push_back(variant(obj.position().z));
+	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_LOG(value.is_list() && value.num_elements() == 3, "position must be a list of 3 elements");
-	set_position(glm::vec3(float(value[0].as_decimal().as_float()),
+	obj.set_position(glm::vec3(float(value[0].as_decimal().as_float()),
 		float(value[1].as_decimal().as_float()),
 		float(value[2].as_decimal().as_float())));
-	compute_view();	
-DEFINE_FIELD(1, speed, "decimal")
-	value = variant(speed());
+	obj.compute_view();	
+DEFINE_FIELD(speed, "decimal")
+	return variant(obj.speed());
 DEFINE_SET_FIELD
-	set_speed(value.as_decimal().as_float());
-DEFINE_FIELD(2, right, "[decimal,decimal,decimal]")
+	obj.set_speed(value.as_decimal().as_float());
+DEFINE_FIELD(right, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(right().x));
-	v.push_back(variant(right().y));
-	v.push_back(variant(right().z));
-	value = variant(&v);
-DEFINE_FIELD(3, direction, "[decimal,decimal,decimal]")
+	v.push_back(variant(obj.right().x));
+	v.push_back(variant(obj.right().y));
+	v.push_back(variant(obj.right().z));
+	return variant(&v);
+DEFINE_FIELD(direction, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(direction().x));
-	v.push_back(variant(direction().y));
-	v.push_back(variant(direction().z));
-	value = variant(&v);
-DEFINE_FIELD(4, horizontal_angle, "decimal")
-	value = variant(hangle());
+	v.push_back(variant(obj.direction().x));
+	v.push_back(variant(obj.direction().y));
+	v.push_back(variant(obj.direction().z));
+	return variant(&v);
+DEFINE_FIELD(horizontal_angle, "decimal")
+	return variant(obj.hangle());
 DEFINE_SET_FIELD
-	set_hangle(value.as_decimal().as_float());
-	compute_view();
-DEFINE_FIELD(5, hangle, "decimal")
-	value = variant(hangle());
+	obj.set_hangle(value.as_decimal().as_float());
+	obj.compute_view();
+DEFINE_FIELD(hangle, "decimal")
+	return variant(obj.hangle());
 DEFINE_SET_FIELD
-	set_hangle(value.as_decimal().as_float());
-	compute_view();
-DEFINE_FIELD(6, vertical_angle, "decimal")
-	value = variant(vangle());
+	obj.set_hangle(value.as_decimal().as_float());
+	obj.compute_view();
+DEFINE_FIELD(vertical_angle, "decimal")
+	return variant(obj.vangle());
 DEFINE_SET_FIELD
-	set_vangle(value.as_decimal().as_float());
-	compute_view();
-DEFINE_FIELD(7, vangle, "decimal")
-	value = variant(hangle());
+	obj.set_vangle(value.as_decimal().as_float());
+	obj.compute_view();
+DEFINE_FIELD(vangle, "decimal")
+	return variant(obj.hangle());
 DEFINE_SET_FIELD
-	set_vangle(value.as_decimal().as_float());
-	compute_view();
-DEFINE_FIELD(8, mouse_speed, "decimal")
-	value = variant(mousespeed());
+	obj.set_vangle(value.as_decimal().as_float());
+	obj.compute_view();
+DEFINE_FIELD(mouse_speed, "decimal")
+	return variant(obj.mousespeed());
 DEFINE_SET_FIELD
-	set_mousespeed(value.as_decimal().as_float());
-DEFINE_FIELD(9, target, "[decimal,decimal,decimal]")
+	obj.set_mousespeed(value.as_decimal().as_float());
+DEFINE_FIELD(target, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(target_.x));
-	v.push_back(variant(target_.y));
-	v.push_back(variant(target_.z));
-	value = variant(&v);
-DEFINE_FIELD(10, up, "[decimal,decimal,decimal]")
+	v.push_back(variant(obj.target_.x));
+	v.push_back(variant(obj.target_.y));
+	v.push_back(variant(obj.target_.z));
+	return variant(&v);
+DEFINE_FIELD(up, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(up_.x));
-	v.push_back(variant(up_.y));
-	v.push_back(variant(up_.z));
-	value = variant(&v);
-DEFINE_FIELD(11, fov, "decimal")
-	value = variant(fov());
+	v.push_back(variant(obj.up_.x));
+	v.push_back(variant(obj.up_.y));
+	v.push_back(variant(obj.up_.z));
+	return variant(&v);
+DEFINE_FIELD(fov, "decimal")
+	return variant(obj.fov());
 DEFINE_SET_FIELD
-	set_fov(value.as_decimal().as_float());
-DEFINE_FIELD(12, clip_planes, "[decimal,decimal]")
+	obj.set_fov(value.as_decimal().as_float());
+DEFINE_FIELD(clip_planes, "[decimal,decimal]")
 	std::vector<variant> v;
-	v.push_back(variant(near_clip_));
-	v.push_back(variant(far_clip_));
-	value = variant(&v);
+	v.push_back(variant(obj.near_clip_));
+	v.push_back(variant(obj.far_clip_));
+	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_LOG(value.is_list() && value.num_elements() == 2, "clip_planes takes a tuple of two decimals");
-	set_clip_planes(value[0].as_decimal().as_float(), value[0].as_decimal().as_float());
-END_DEFINE_CALLABLE_NOBASE(camera_callable)
-
+	obj.set_clip_planes(value[0].as_decimal().as_float(), value[0].as_decimal().as_float());
+END_DEFINE_CALLABLE(camera_callable)
 
 /*variant camera_callable::get_value(const std::string& key) const
 {

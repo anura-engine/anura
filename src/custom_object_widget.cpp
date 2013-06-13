@@ -149,20 +149,20 @@ namespace gui
 		return entity_;
 	}
 
-BEGIN_DEFINE_CALLABLE(custom_object_widget, this)
-	DEFINE_FIELD(21, object, "custom_obj")
-		value = variant(entity_.get());
+BEGIN_DEFINE_CALLABLE(custom_object_widget, widget)
+	DEFINE_FIELD(object, "custom_obj")
+		return variant(obj.entity_.get());
 	DEFINE_SET_FIELD
 		std::map<variant, variant> m;
 		m[variant("object")] = value;
-		init(variant(&m));
-	DEFINE_FIELD(22, overlay, "map|builtin widget|null")
-		value = variant(overlay_.get());
+		obj.init(variant(&m));
+	DEFINE_FIELD(overlay, "map|builtin widget|null")
+		return variant(obj.overlay_.get());
 	DEFINE_SET_FIELD
-		overlay_ = widget_factory::create(value, get_environment());
-	DEFINE_FIELD(23, handle_process, "bool")
-		value = variant::from_bool(handle_process_on_entity_);
-END_DEFINE_CALLABLE(custom_object_widget, widget, const_cast<custom_object_widget*>(this))
+		obj.overlay_ = widget_factory::create(value, obj.get_environment());
+	DEFINE_FIELD(handle_process, "bool")
+		return variant::from_bool(obj.handle_process_on_entity_);
+END_DEFINE_CALLABLE(custom_object_widget)
 
 	void custom_object_widget::handle_draw() const
 	{

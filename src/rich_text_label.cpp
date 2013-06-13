@@ -41,7 +41,7 @@ void flatten_recursively(const std::vector<variant>& v, std::vector<variant>* re
 }
 
 rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e)
+	: scrollable_widget(v,e)
 {
 	children_.resize(1);
 	children_.front().clear();

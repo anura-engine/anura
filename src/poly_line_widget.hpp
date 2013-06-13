@@ -30,7 +30,7 @@
 
 namespace gui {
 
-class poly_line_widget : public virtual widget
+class poly_line_widget : public widget
 {
 public:
 	poly_line_widget(std::vector<point>* points, const SDL_Color& c, GLfloat width=1.0)

@@ -466,15 +466,16 @@ const_widget_ptr dialog::get_widget_by_id(const std::string& id) const
 	return widget::get_widget_by_id(id);
 }
 
-BEGIN_DEFINE_CALLABLE(dialog, this)
-	DEFINE_FIELD(21, child, "builtin widget")
+BEGIN_DEFINE_CALLABLE(dialog, widget)
+	DEFINE_FIELD(child, "builtin widget")
+		return variant();
 	DEFINE_SET_FIELD
-		widget_ptr w = widget_factory::create(value, get_environment());
-		add_widget(w, w->x(), w->y());
-	DEFINE_FIELD(22, background_alpha, "decimal")
-		value = variant(bg_alpha_);
+		widget_ptr w = widget_factory::create(value, obj.get_environment());
+		obj.add_widget(w, w->x(), w->y());
+	DEFINE_FIELD(background_alpha, "decimal")
+		return variant(obj.bg_alpha_);
 	DEFINE_SET_FIELD
-		bg_alpha_ = value.as_decimal().as_float();
-END_DEFINE_CALLABLE(dialog, widget, const_cast<dialog*>(this))
+		obj.bg_alpha_ = value.as_decimal().as_float();
+END_DEFINE_CALLABLE(dialog)
 
 }

@@ -29,7 +29,7 @@
 
 namespace gui {
 
-class tree_view_widget : public virtual scrollable_widget
+class tree_view_widget : public scrollable_widget
 {
 public:
 	explicit tree_view_widget(int w, int h, const variant& tree);

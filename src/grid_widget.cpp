@@ -38,7 +38,7 @@ grid::grid(int ncols)
 }
 
 grid::grid(const variant& v, game_logic::formula_callable* e)
-	: widget(v, e), scrollable_widget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
+	: scrollable_widget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
 	allow_selection_(false), must_select_(false),
     swallow_clicks_(false), hpad_(0), show_background_(false),
 	max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
@@ -638,43 +638,24 @@ std::vector<widget_ptr> grid::get_children() const
 	return visible_cells_;
 }
 
-void grid::set_value(const std::string& key, const variant& v)
-{
-	if(key == "children") {
-		reset_contents(v);
-		finish_row();
-		recalculate_dimensions();
-	} else if(key == "child") {
-		add_col(widget_factory::create(v, get_environment()))
-			.finish_row();
-		recalculate_dimensions();
-	} else {
-		gui::widget_ptr w = get_widget_by_id(key);
-		if(v.is_null() && w != NULL) {
-			cells_.erase(std::remove(cells_.begin(), cells_.end(), w), cells_.end());
-			recalculate_dimensions();
-		} else {
-			widget::set_value(key, v);
-		}
-	}
-}
-
-variant grid::get_value(const std::string& key) const
-{
-	if(key == "children") {
+BEGIN_DEFINE_CALLABLE(grid, widget)
+	DEFINE_FIELD(children, "[widget]")
 		std::vector<variant> v;
-	    foreach(widget_ptr w, cells_) {
+	    foreach(widget_ptr w, obj.cells_) {
 			v.push_back(variant(w.get()));
 		}
 		return variant(&v);
-	} else if(key == "selected_row") {
-		return variant(selected_row_);
-	}
-	gui::const_widget_ptr w = get_widget_by_id(key);
-	if(w != NULL) {
-		return variant(w.get());
-	}
-	return widget::get_value(key);
-}
+	DEFINE_SET_FIELD_TYPE("list")
+		obj.reset_contents(value);
+		obj.finish_row();
+		obj.recalculate_dimensions();
+	DEFINE_FIELD(child, "null")
+		return variant();
+	DEFINE_SET_FIELD_TYPE("map")
+		obj.add_col(widget_factory::create(value, obj.get_environment())).finish_row();
+		obj.recalculate_dimensions();
+	DEFINE_FIELD(selected_row, "int")
+		return variant(obj.selected_row_);
+END_DEFINE_CALLABLE(grid)
 
 }

@@ -25,7 +25,7 @@
 
 namespace input {
 
-    class listener : public virtual game_logic::formula_callable {
+    class listener : public game_logic::formula_callable {
     public:
         virtual ~listener() {}
         /** returns true if the event is now claimed */
@@ -58,7 +58,7 @@ namespace input {
 
     typedef boost::intrusive_ptr<listener_container> listener_container_ptr;
 
-    class delegate_listener: public virtual listener {
+    class delegate_listener: public listener {
     public:
         delegate_listener(listener *delegate) : delegate_(delegate) {}
         bool process_event(const SDL_Event &e, bool claimed) {

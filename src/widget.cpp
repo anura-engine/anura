@@ -342,127 +342,123 @@ widget_ptr widget::get_widget_by_id(const std::string& id)
 	return widget_ptr();
 }
 
-BEGIN_DEFINE_CALLABLE(widget, 0)
+BEGIN_DEFINE_CALLABLE_NOBASE(widget)
 
-DEFINE_FIELD(0, draw_area, "[int]")
+DEFINE_FIELD(draw_area, "[int]")
 	std::vector<variant> v;
-	v.push_back(variant(x_));
-	v.push_back(variant(y_));
-	v.push_back(variant(w_));
-	v.push_back(variant(h_));
-	value = variant(&v);
+	v.push_back(variant(obj.x_));
+	v.push_back(variant(obj.y_));
+	v.push_back(variant(obj.w_));
+	v.push_back(variant(obj.h_));
+	return variant(&v);
 DEFINE_SET_FIELD
 	std::vector<int> r = value.as_list_int();
 	ASSERT_LOG(r.size() == 4, "Four values must be supplied to the draw_area attribute");
-	set_loc(r[0], r[1]);
-	set_dim(r[2], r[3]);
+	obj.set_loc(r[0], r[1]);
+	obj.set_dim(r[2], r[3]);
 
-DEFINE_FIELD(1, rect, "[int]")
+DEFINE_FIELD(rect, "[int]")
 	std::vector<variant> v;
-	v.push_back(variant(x_));
-	v.push_back(variant(y_));
-	v.push_back(variant(w_));
-	v.push_back(variant(h_));
-	value = variant(&v);
+	v.push_back(variant(obj.x_));
+	v.push_back(variant(obj.y_));
+	v.push_back(variant(obj.w_));
+	v.push_back(variant(obj.h_));
+	return variant(&v);
 DEFINE_SET_FIELD
 	std::vector<int> r = value.as_list_int();
 	ASSERT_LOG(r.size() == 4, "Four values must be supplied to the rect attribute");
-	set_loc(r[0], r[1]);
-	set_dim(r[2], r[3]);
-DEFINE_FIELD(2, tooltip, "string|null")
-	if(tooltip_) {
-		value = variant(tooltip_->text);
+	obj.set_loc(r[0], r[1]);
+	obj.set_dim(r[2], r[3]);
+DEFINE_FIELD(tooltip, "string|null")
+	if(obj.tooltip_) {
+		return variant(obj.tooltip_->text);
 	} else {
-		value = variant();
+		return variant();
 	}
 
-DEFINE_FIELD(3, visible, "bool")
-	value = variant::from_bool(visible_);
+DEFINE_FIELD(visible, "bool")
+	return variant::from_bool(obj.visible_);
 DEFINE_SET_FIELD
-	visible_ = value.as_bool();
+	obj.visible_ = value.as_bool();
 
-DEFINE_FIELD(4, id, "string")
-	value = variant(id_);
+DEFINE_FIELD(id, "string")
+	return variant(obj.id_);
 
-DEFINE_FIELD(5, resolution, "int")
-	value = variant(resolution_);
+DEFINE_FIELD(resolution, "int")
+	return variant(obj.resolution_);
 
-DEFINE_FIELD(6, x, "int")
-	value = variant(x());
+DEFINE_FIELD(x, "int")
+	return variant(obj.x());
 DEFINE_SET_FIELD
-	set_loc(value.as_int(), y());
+	obj.set_loc(value.as_int(), obj.y());
 
-DEFINE_FIELD(7, y, "int")
-	value = variant(y());
+DEFINE_FIELD(y, "int")
+	return variant(obj.y());
 
 DEFINE_SET_FIELD
-	set_loc(x(), value.as_int());
+	obj.set_loc(obj.x(), value.as_int());
 
-DEFINE_FIELD(8, w, "int")
-	value = variant(width());
+DEFINE_FIELD(w, "int")
+	return variant(obj.width());
 DEFINE_SET_FIELD
-	w_ = value.as_int();
+	obj.w_ = value.as_int();
 
-DEFINE_FIELD(9, width, "int")
-	value = variant(width());
+DEFINE_FIELD(width, "int")
+	return variant(obj.width());
 DEFINE_SET_FIELD
-	w_ = value.as_int();
+	obj.w_ = value.as_int();
 
-DEFINE_FIELD(10, h, "int")
-	value = variant(height());
+DEFINE_FIELD(h, "int")
+	return variant(obj.height());
 DEFINE_SET_FIELD
-	h_ = value.as_int();
+	obj.h_ = value.as_int();
 
-DEFINE_FIELD(11, height, "int")
-	value = variant(height());
+DEFINE_FIELD(height, "int")
+	return variant(obj.height());
 DEFINE_SET_FIELD
-	h_ = value.as_int();
+	obj.h_ = value.as_int();
 
-DEFINE_FIELD(12, frame_set_name, "string")
-	value = variant(frame_set_name_);
+DEFINE_FIELD(frame_set_name, "string")
+	return variant(obj.frame_set_name_);
 
-DEFINE_FIELD(13, alpha, "int")
-	value = variant(get_alpha());
+DEFINE_FIELD(alpha, "int")
+	return variant(obj.get_alpha());
 DEFINE_SET_FIELD
 	int a = value.as_int();
-	set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
+	obj.set_alpha(a < 0 ? 0 : (a > 256 ? 256 : a));
 
-DEFINE_FIELD(14, frame_pad_width, "int")
-	value = variant(get_pad_width());
+DEFINE_FIELD(frame_pad_width, "int")
+	return variant(obj.get_pad_width());
 
-DEFINE_FIELD(15, frame_pad_height, "int")
-	value = variant(get_pad_height());
+DEFINE_FIELD(frame_pad_height, "int")
+	return variant(obj.get_pad_height());
 
-DEFINE_FIELD(16, frame_padding, "[int]")
+DEFINE_FIELD(frame_padding, "[int]")
 	std::vector<variant> v;
-	v.push_back(variant(get_pad_width()));
-	v.push_back(variant(get_pad_height()));
-	value = variant(&v);
+	v.push_back(variant(obj.get_pad_width()));
+	v.push_back(variant(obj.get_pad_height()));
+	return variant(&v);
 
-DEFINE_FIELD(17, children, "[builtin widget]")
+DEFINE_FIELD(children, "[builtin widget]")
 	std::vector<variant> v;
-	std::vector<widget_ptr> w = get_children();
+	std::vector<widget_ptr> w = obj.get_children();
 	foreach(widget_ptr item, w) {
 		v.push_back(variant(item.get()));
 	}
 
-	value = variant(&v);
+	return variant(&v);
 
-DEFINE_FIELD(18, disabled, "bool")
-	value = variant::from_bool(disabled_);
+DEFINE_FIELD(disabled, "bool")
+	return variant::from_bool(obj.disabled_);
 DEFINE_SET_FIELD
-	disabled_ = value.as_bool();
+	obj.disabled_ = value.as_bool();
 
-DEFINE_FIELD(19, disabled_opacity, "int")
-	value = variant(static_cast<int>(disabled_opacity_));
+DEFINE_FIELD(disabled_opacity, "int")
+	return variant(static_cast<int>(obj.disabled_opacity_));
 DEFINE_SET_FIELD
-	disabled_opacity_ = value.as_int();
+	obj.disabled_opacity_ = value.as_int();
 
-DEFINE_FIELD(20, reserved__, "null")
-	assert(false);
-	value = variant();
-
-END_DEFINE_CALLABLE_NOBASE(widget)
+END_DEFINE_CALLABLE(widget)
 
 bool widget::in_widget(int xloc, int yloc) const
 {

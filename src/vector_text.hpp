@@ -31,7 +31,7 @@ namespace gui {
 
 typedef std::pair<graphics::texture, point> offset_texture;
 
-class vector_text : public virtual game_logic::formula_callable
+class vector_text : public game_logic::formula_callable
 {
 public:
 	enum TEXT_ALIGNMENT{ ALIGN_LEFT = -1, ALIGN_CENTER, ALIGN_RIGHT };

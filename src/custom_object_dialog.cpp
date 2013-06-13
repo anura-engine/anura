@@ -51,7 +51,7 @@ const std::string template_directory = "data/object_templates/";
 
 namespace gui {
 
-class item_edit_dialog : public virtual dialog
+class item_edit_dialog : public dialog
 {
 public:
 	item_edit_dialog(int x, int y, int w, int h, const std::string&name, variant items) 

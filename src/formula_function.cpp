@@ -3079,7 +3079,7 @@ private:
 		}
 
 		if(!variant_types_compatible(target_type, args()[1]->query_variant_type())) {
-			ASSERT_LOG(false, "Writing to value with invalid type " << args()[1]->query_variant_type()->to_string() << " -> " << args()[0]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
+			ASSERT_LOG(false, "Writing to value with invalid type " << target_type->to_string() << " <- " << args()[1]->query_variant_type()->to_string() << " in " << str() << " " << debug_pinpoint_location() << "\n");
 		}
 	}
 

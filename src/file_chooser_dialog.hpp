@@ -34,7 +34,7 @@ typedef std::vector<std::string> dir_list;
 typedef std::pair<file_list, dir_list> file_directory_list;
 typedef std::map<std::string, file_directory_list> file_directory_map;
 
-class file_chooser_dialog : public virtual dialog
+class file_chooser_dialog : public dialog
 {
 public:
 	file_chooser_dialog(int x, int y, int w, int h, const filter_list& filters=filter_list(), bool dir_only=false, const std::string& default_path=".");

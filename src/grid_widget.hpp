@@ -80,9 +80,9 @@ protected:
 	virtual void handle_draw() const;
 	virtual void handle_process();
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
 private:
+	DECLARE_CALLABLE(grid);
+
 	int row_at(int x, int y) const;
 	void recalculate_dimensions();
 

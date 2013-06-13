@@ -24,7 +24,7 @@
 
 namespace gui {
 
-class scrollable_widget : virtual public widget
+class scrollable_widget : public widget
 {
 public:
 	scrollable_widget();

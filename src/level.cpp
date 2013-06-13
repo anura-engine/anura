@@ -3715,216 +3715,217 @@ void level::set_background_by_id(const std::string& id)
 	background_ = background::get(id, background_palette_);
 }
 
-BEGIN_DEFINE_CALLABLE(level, 0)
-DEFINE_FIELD(0, cycle, "int")
-	value = variant(cycle_);
+BEGIN_DEFINE_CALLABLE_NOBASE(level)
+DEFINE_FIELD(cycle, "int")
+	return variant(obj.cycle_);
 DEFINE_SET_FIELD
-	cycle_ = value.as_int();
-DEFINE_FIELD(1, player, "custom_obj")
-	ASSERT_LOG(last_touched_player_, "No player found in level");
-	value = variant(last_touched_player_.get());
-DEFINE_FIELD(2, player_info, "object")
-	ASSERT_LOG(last_touched_player_, "No player found in level");
-	value = variant(last_touched_player_.get());
-DEFINE_FIELD(3, in_dialog, "int")
+	obj.cycle_ = value.as_int();
+DEFINE_FIELD(player, "custom_obj")
+	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
+	return variant(obj.last_touched_player_.get());
+DEFINE_FIELD(player_info, "object")
+	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
+	return variant(obj.last_touched_player_.get());
+DEFINE_FIELD(in_dialog, "int")
 	boost::intrusive_ptr<const game_logic::formula_callable_definition> def(variant_type::get_builtin("level")->get_definition());
-	value = variant(1); //variant::from_bool(in_dialog_);
-DEFINE_FIELD(4, local_player, "null|custom_obj")
-	ASSERT_LOG(player_, "No player found in level");
-	value = variant(player_.get());
-DEFINE_FIELD(5, num_active, "int")
-	value = variant(static_cast<int>(active_chars_.size()));
-DEFINE_FIELD(6, active_chars, "[custom_obj]")
+	return variant(1); //variant::from_bool(in_dialog_);
+DEFINE_FIELD(local_player, "null|custom_obj")
+	ASSERT_LOG(obj.player_, "No player found in level");
+	return variant(obj.player_.get());
+DEFINE_FIELD(num_active, "int")
+	return variant(static_cast<int>(obj.active_chars_.size()));
+DEFINE_FIELD(active_chars, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, active_chars_) {
+	foreach(const entity_ptr& e, obj.active_chars_) {
 		v.push_back(variant(e.get()));
 	}
-	value = variant(&v);
-DEFINE_FIELD(7, chars, "[custom_obj]")
+	return variant(&v);
+DEFINE_FIELD(chars, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, chars_) {
+	foreach(const entity_ptr& e, obj.chars_) {
 		v.push_back(variant(e.get()));
 	}
-	value = variant(&v);
-DEFINE_FIELD(8, players, "[custom_obj]")
+	return variant(&v);
+DEFINE_FIELD(players, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, players()) {
+	foreach(const entity_ptr& e, obj.players()) {
 		v.push_back(variant(e.get()));
 	}
-	value = variant(&v);
-DEFINE_FIELD(9, in_editor, "bool")
-	value = variant(editor_);
-DEFINE_FIELD(10, zoom, "decimal")
-	value = variant(zoom_level_);
+	return variant(&v);
+DEFINE_FIELD(in_editor, "bool")
+	return variant(obj.editor_);
+DEFINE_FIELD(zoom, "decimal")
+	return variant(obj.zoom_level_);
 DEFINE_SET_FIELD
-	zoom_level_ = value.as_decimal();
-DEFINE_FIELD(11, focus, "[custom_obj]")
+	obj.zoom_level_ = value.as_decimal();
+DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, focus_override_) {
+	foreach(const entity_ptr& e, obj.focus_override_) {
 		v.push_back(variant(e.get()));
 	}
+	return variant(&v);
 DEFINE_SET_FIELD
-	focus_override_.clear();
+	obj.focus_override_.clear();
 	for(int n = 0; n != value.num_elements(); ++n) {
 		entity* e = value[n].try_convert<entity>();
 		if(e) {
-			focus_override_.push_back(entity_ptr(e));
+			obj.focus_override_.push_back(entity_ptr(e));
 		}
 	}
 
-DEFINE_FIELD(12, gui, "[object]|null")
-	if(!gui_algorithm_.empty()) {
+DEFINE_FIELD(gui, "[object]|null")
+	if(!obj.gui_algorithm_.empty()) {
 		std::vector<variant> v;
-		foreach(gui_algorithm_ptr g, gui_algorithm_) {
+		foreach(gui_algorithm_ptr g, obj.gui_algorithm_) {
 			v.push_back(variant(g->get_object()));
 		}
-		value = variant(&v);
+		return variant(&v);
 	} else {
-		value = variant();
+		return variant();
 	}
 
-DEFINE_FIELD(13, id, "string")
-	value = variant(id_);
+DEFINE_FIELD(id, "string")
+	return variant(obj.id_);
 
-DEFINE_FIELD(14, dimensions, "[int]")
+DEFINE_FIELD(dimensions, "[int]")
 	std::vector<variant> v;
-	v.push_back(variant(boundaries_.x()));
-	v.push_back(variant(boundaries_.y()));
-	v.push_back(variant(boundaries_.x2()));
-	v.push_back(variant(boundaries_.y2()));
-	value = variant(&v);
+	v.push_back(variant(obj.boundaries_.x()));
+	v.push_back(variant(obj.boundaries_.y()));
+	v.push_back(variant(obj.boundaries_.x2()));
+	v.push_back(variant(obj.boundaries_.y2()));
+	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_EQ(value.num_elements(), 4);
-	boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
+	obj.boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
 
-DEFINE_FIELD(15, music_volume, "decimal")
-	value = variant(sound::get_engine_music_volume());
+DEFINE_FIELD(music_volume, "decimal")
+	return variant(sound::get_engine_music_volume());
 DEFINE_SET_FIELD
 	sound::set_engine_music_volume(value.as_decimal().as_float());
-DEFINE_FIELD(16, paused, "bool")
-	value = variant::from_bool(paused_);
+DEFINE_FIELD(paused, "bool")
+	return variant::from_bool(obj.paused_);
 DEFINE_SET_FIELD
 	const bool new_value = value.as_bool();
-	if(new_value != paused_) {
-		paused_ = new_value;
-		if(paused_) {
-			before_pause_controls_backup_.reset(new controls::control_backup_scope);
+	if(new_value != obj.paused_) {
+		obj.paused_ = new_value;
+		if(obj.paused_) {
+			obj.before_pause_controls_backup_.reset(new controls::control_backup_scope);
 		} else {
-			if(this != current_ptr()) {
-				before_pause_controls_backup_->cancel();
+			if(&obj != current_ptr()) {
+				obj.before_pause_controls_backup_->cancel();
 			}
-			before_pause_controls_backup_.reset();
+			obj.before_pause_controls_backup_.reset();
 		}
-		foreach(entity_ptr e, chars_) {
+		foreach(entity_ptr e, obj.chars_) {
 			e->mutate_value("paused", value);
 		}
 	}
 
-DEFINE_FIELD(17, module_args, "object")
-	value = variant(module::get_module_args().get());
+DEFINE_FIELD(module_args, "object")
+	return variant(module::get_module_args().get());
 
 #if defined(USE_BOX2D)
-DEFINE_FIELD(18, world, "object")
-	value = variant(box2d::world::our_world_ptr().get());
+DEFINE_FIELD(world, "object")
+	return variant(box2d::world::our_world_ptr().get());
 #else
-DEFINE_FIELD(18, world, "null")
-	value = variant();
+DEFINE_FIELD(world, "null")
+	return variant();
 #endif
 
-DEFINE_FIELD(19, time_freeze, "int")
-	value = variant(time_freeze_);
+DEFINE_FIELD(time_freeze, "int")
+	return variant(obj.time_freeze_);
 DEFINE_SET_FIELD
-	time_freeze_ = value.as_int();
-DEFINE_FIELD(20, chars_immune_from_time_freeze, "[custom_obj]")
+	obj.time_freeze_ = value.as_int();
+DEFINE_FIELD(chars_immune_from_time_freeze, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, chars_immune_from_time_freeze_) {
+	foreach(const entity_ptr& e, obj.chars_immune_from_time_freeze_) {
 		v.push_back(variant(e.get()));
 	}
-	value = variant(&v);
+	return variant(&v);
 DEFINE_SET_FIELD
-	chars_immune_from_time_freeze_.clear();
+	obj.chars_immune_from_time_freeze_.clear();
 	for(int n = 0; n != value.num_elements(); ++n) {
 		entity_ptr e(value[n].try_convert<entity>());
 		if(e) {
-			chars_immune_from_time_freeze_.push_back(e);
+			obj.chars_immune_from_time_freeze_.push_back(e);
 		}
 	}
 
-DEFINE_FIELD(21, segment_width, "int")
-	value = variant(segment_width_);
-DEFINE_FIELD(22, segment_height, "int")
-	value = variant(segment_height_);
-DEFINE_FIELD(23, num_segments, "int")
-	value = variant(unsigned(sub_levels_.size()));
+DEFINE_FIELD(segment_width, "int")
+	return variant(obj.segment_width_);
+DEFINE_FIELD(segment_height, "int")
+	return variant(obj.segment_height_);
+DEFINE_FIELD(num_segments, "int")
+	return variant(unsigned(obj.sub_levels_.size()));
 
-DEFINE_FIELD(24, camera_position, "[int]")
+DEFINE_FIELD(camera_position, "[int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
 	pos.push_back(variant(last_draw_position().y/100));
 	pos.push_back(variant(graphics::screen_width()));
 	pos.push_back(variant(graphics::screen_height()));
-	value = variant(&pos);
+	return variant(&pos);
 DEFINE_SET_FIELD
 
 	ASSERT_EQ(value.num_elements(), 2);
 	last_draw_position().x = value[0].as_int();
 	last_draw_position().y = value[1].as_int();
 
-DEFINE_FIELD(25, debug_properties, "[string]")
-	value = vector_to_variant(debug_properties_);
+DEFINE_FIELD(debug_properties, "[string]")
+	return vector_to_variant(obj.debug_properties_);
 DEFINE_SET_FIELD
 	if(value.is_null()) {
-		debug_properties_.clear();
+		obj.debug_properties_.clear();
 	} else if(value.is_string()) {
-		debug_properties_.clear();
-		debug_properties_.push_back(value.as_string());
+		obj.debug_properties_.clear();
+		obj.debug_properties_.push_back(value.as_string());
 	} else {
-		debug_properties_ = value.as_list_string();
+		obj.debug_properties_ = value.as_list_string();
 	}
 
-DEFINE_FIELD(26, hexmap, "null|object")
-	if(hex_maps_.empty() == false) {
-		value = variant(hex_maps_.rbegin()->second.get());
+DEFINE_FIELD(hexmap, "null|object")
+	if(obj.hex_maps_.empty() == false) {
+		return variant(obj.hex_maps_.rbegin()->second.get());
 	} else {
-		value = variant();
+		return variant();
 	}
 
-DEFINE_FIELD(27, hexmaps, "{int -> object}")
+DEFINE_FIELD(hexmaps, "{int -> object}")
 	std::map<variant, variant> m;
-	std::map<int, hex::hex_map_ptr>::const_iterator it = hex_maps_.begin();
-	while(it != hex_maps_.end()) {
+	std::map<int, hex::hex_map_ptr>::const_iterator it = obj.hex_maps_.begin();
+	while(it != obj.hex_maps_.end()) {
 		m[variant(it->first)] = variant(it->second.get());
 		++it;
 	}
-	value = variant(&m);
+	return variant(&m);
 
-DEFINE_FIELD(28, shader, "null|object")
+DEFINE_FIELD(shader, "null|object")
 #if defined(USE_GLES2)
-	value = variant(shader_.get());
+	return variant(obj.shader_.get());
 #else
-	value = variant();
+	return variant();
 #endif
 
-DEFINE_FIELD(29, is_paused, "bool")
+DEFINE_FIELD(is_paused, "bool")
 	if(level_runner::get_current()) {
-		value = variant::from_bool(level_runner::get_current()->is_paused());
+		return variant::from_bool(level_runner::get_current()->is_paused());
 	}
 
-	value = variant(false);
+	return variant(false);
 
-DEFINE_FIELD(30, editor_selection, "[custom_obj]")
+DEFINE_FIELD(editor_selection, "[custom_obj]")
 	std::vector<variant> result;
-	foreach(entity_ptr s, editor_selection_) {
+	foreach(entity_ptr s, obj.editor_selection_) {
 		result.push_back(variant(s.get()));
 	}
 
-	value = variant(&result);
+	return variant(&result);
 
-DEFINE_FIELD(31, frame_buffer_shaders, "[{string -> any}]")
+DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
 #if defined(USE_GLES2)
 	std::vector<variant> v;
-	foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
+	foreach(const FrameBufferShaderEntry& e, obj.fb_shaders_) {
 		std::map<variant,variant> m;
 		m[variant("begin_zorder")] = variant(e.begin_zorder);
 		m[variant("end_zorder")] = variant(e.end_zorder);
@@ -3934,15 +3935,15 @@ DEFINE_FIELD(31, frame_buffer_shaders, "[{string -> any}]")
 		v.push_back(variant(&m));
 	}
 
-	fb_shaders_variant_ = variant(&v);
-	value = fb_shaders_variant_;
+	obj.fb_shaders_variant_ = variant(&v);
+	return obj.fb_shaders_variant_;
 #endif
 
 DEFINE_SET_FIELD
 
 #if defined(USE_GLES2)
-	fb_shaders_variant_ = variant();
-	fb_shaders_.clear();
+	obj.fb_shaders_variant_ = variant();
+	obj.fb_shaders_.clear();
 	foreach(const variant& v, value.as_list()) {
 		FrameBufferShaderEntry e;
 		e.begin_zorder = v["begin_zorder"].as_int();
@@ -3961,435 +3962,89 @@ DEFINE_SET_FIELD
 			}
 		}
 
-		fb_shaders_.push_back(e);
+		obj.fb_shaders_.push_back(e);
 	}
 #endif
 
-DEFINE_FIELD(32, preferences, "object")
-	value = variant(preferences::get_settings_obj());
-DEFINE_FIELD(33, lock_screen, "null|[int]")
-	if(lock_screen_.get()) {
+DEFINE_FIELD(preferences, "object")
+	return variant(preferences::get_settings_obj());
+DEFINE_FIELD(lock_screen, "null|[int]")
+	if(obj.lock_screen_.get()) {
 		std::vector<variant> v;
-		v.push_back(variant(lock_screen_->x));
-		v.push_back(variant(lock_screen_->y));
-		value = variant(&v);
+		v.push_back(variant(obj.lock_screen_->x));
+		v.push_back(variant(obj.lock_screen_->y));
+		return variant(&v);
 	} else {
-		value = variant();
+		return variant();
 	}
 DEFINE_SET_FIELD
 	if(value.is_list()) {
-		lock_screen_.reset(new point(value[0].as_int(), value[1].as_int()));
+		obj.lock_screen_.reset(new point(value[0].as_int(), value[1].as_int()));
 	} else {
-		lock_screen_.reset();
+		obj.lock_screen_.reset();
 	}
 
-DEFINE_FIELD(34, isomap, "object|map|null")
+DEFINE_FIELD(isomap, "object|map|null")
 #if defined(USE_ISOMAP)
-	if(isomap_) {
-		value = variant(isomap_.get());
+	if(obj.isomap_) {
+		return variant(obj.isomap_.get());
 	} else {
-		value = variant();
+		return variant();
 	}
 #else
-	value = variant();
-#endif
-DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
-	if(value.is_null()) {
-		isomap_.reset(); 
-	} else {
-		isomap_.reset(new isometric::isomap(value));
-	}
-#endif
-
-DEFINE_FIELD(35, camera, "object|map|null")
-#if defined(USE_ISOMAP)
-	if(camera_) {
-		value = variant(camera_.get());
-	} else {
-		value = variant();
-	}
-#else
-	value = variant();
-#endif
-DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
-	if(value.is_null()) {
-		camera_.reset(); 
-	} else {
-		camera_.reset(new camera_callable(value));
-	}
-#endif
-
-DEFINE_FIELD(36, mouselook, "bool")
-#if defined(USE_ISOMAP)
-	value = variant::from_bool(is_mouselook_enabled());
-#else
-	value = variant::from_bool(false);
-#endif
-DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
-	set_mouselook(value.as_bool());
-#endif
-
-DEFINE_FIELD(37, mouselook_invert, "bool")
-#if defined(USE_ISOMAP)
-	value = variant::from_bool(is_mouselook_inverted());
-#else
-	value = variant::from_bool(false);
-#endif
-DEFINE_SET_FIELD
-#if defined(USE_ISOMAP)
-	set_mouselook_inverted(value.as_bool());
-#endif
-
-END_DEFINE_CALLABLE_NOBASE(level)
-
-/*
-variant level::get_value_by_slot(int slot) const
-{
-	switch(slot) {
-	case LEVEL_CYCLE:
-		return variant(cycle_);
-	case LEVEL_PLAYER:
-		return variant(last_touched_player_.get());
-	case LEVEL_IN_DIALOG:
-		return variant(in_dialog_);
-	case LEVEL_LOCAL_PLAYER:
-		return variant(player_.get());
-	case LEVEL_NUM_ACTIVE:
-		return variant(unsigned(active_chars_.size()));
-	case LEVEL_ACTIVE_CHARS: {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, active_chars_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	}
-	case LEVEL_CHARS: {
-
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, chars_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	}
-	case LEVEL_PLAYERS: {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, players()) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	}
-	case LEVEL_IN_EDITOR:
-		return variant(editor_);
-	case LEVEL_ZOOM:
-		return variant(zoom_level_);
-	case LEVEL_FOCUS: {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, focus_override_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	}
-	case LEVEL_GUI: {
-		if(!gui_algorithm_.empty()) {
-			std::vector<variant> v;
-			foreach(gui_algorithm_ptr g, gui_algorithm_) {
-				v.push_back(variant(g->get_object()));
-			}
-			return variant(&v);
-		} else {
-			return variant();
-		}
-	}
-	case LEVEL_ID: {
-		return variant(id_);
-	}
-	case LEVEL_DIMENSIONS: {
-		std::vector<variant> v;
-		v.push_back(variant(boundaries_.x()));
-		v.push_back(variant(boundaries_.y()));
-		v.push_back(variant(boundaries_.x2()));
-		v.push_back(variant(boundaries_.y2()));
-		return variant(&v);
-	}
-	case LEVEL_MUSIC_VOLUME: {
-		return variant(sound::get_engine_music_volume());
-	}
-	}
-
-	ASSERT_LOG(false, "BAD SLOT IN GET_VALUE FROM LEVEL " << slot);
 	return variant();
-}
-*/
-/*
-variant level::get_value(const std::string& key) const
-{
-	if(key == "cycle") {
-		return variant(cycle_);
-	} else if(key == "paused") {
-		return variant::from_bool(paused_);
-	} else if(key == "player") {
-		return variant(last_touched_player_.get());
-	} else if(key == "in_dialog") {
-		return variant(in_dialog_);
-	} else if(key == "local_player") {
-		return variant(player_.get());
-	} else if(key == "num_active") {
-		return variant(unsigned(active_chars_.size()));
-	} else if(key == "active_chars") {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, active_chars_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	} else if(key == "chars") {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, chars_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	} else if(key == "in_editor") {
-		return variant(editor_);
-	} else if(key == "zoom") {
-		return variant(zoom_level_);
-	} else if(key == "module_args") {
-		return variant(module::get_module_args().get());
-#if defined(USE_BOX2D)
-	} else if(key == "world") {
-		return variant(box2d::world::our_world_ptr().get());
 #endif
-	} else if(key == "focus") {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, focus_override_) {
-			v.push_back(variant(e.get()));
-		}
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		obj.isomap_.reset(); 
+	} else {
+		obj.isomap_.reset(new isometric::isomap(value));
+	}
+#endif
 
-		return variant(&v);
-	} else if(key == "gui") {
-		if(!gui_algorithm_.empty()) {
-			std::vector<variant> v;
-			foreach(gui_algorithm_ptr g, gui_algorithm_) {
-				v.push_back(variant(g->get_object()));
-			}
-			return variant(&v);
-		} else {
-			return variant();
-		}
-	} else if(key == "time_freeze") {
-		return variant(time_freeze_);
-	} else if(key == "chars_immune_from_freeze") {
-		std::vector<variant> v;
-		foreach(const entity_ptr& e, chars_immune_from_time_freeze_) {
-			v.push_back(variant(e.get()));
-		}
-
-		return variant(&v);
-	} else if(key == "id") {
-		return variant(id());
-	} else if(key == "dimensions") {
-		std::vector<variant> v;
-		v.push_back(variant(boundaries_.x()));
-		v.push_back(variant(boundaries_.y()));
-		v.push_back(variant(boundaries_.x2()));
-		v.push_back(variant(boundaries_.y2()));
-		return variant(&v);
-	} else if(key == "music_volume") {
-		return variant(sound::get_engine_music_volume());
-	} else if(key == "segment_width") {
-		return variant(segment_width_);
-	} else if(key == "segment_height") {
-		return variant(segment_height_);
-	} else if(key == "num_segments") {
-		return variant(unsigned(sub_levels_.size()));
-	} else if(key == "camera_position") {
-
-		std::vector<variant> pos;
-		pos.reserve(4);
-		pos.push_back(variant(last_draw_position().x/100));
-		pos.push_back(variant(last_draw_position().y/100));
-		pos.push_back(variant(graphics::screen_width()));
-		pos.push_back(variant(graphics::screen_height()));
-		return variant(&pos);
-
-	} else if(key == "debug_properties") {
-		return vector_to_variant(debug_properties_);
-	} else if(key == "hexmap") {
-		if(hex_maps_.empty() == false) {
-			return variant(hex_maps_.rbegin()->second.get());
-		} else {
-			return variant();
-		}
-	} else if(key == "hexmaps") {
-		std::map<variant, variant> m;
-		std::map<int, hex::hex_map_ptr>::const_iterator it = hex_maps_.begin();
-		while(it != hex_maps_.end()) {
-			m[variant(it->first)] = variant(it->second.get());
-			++it;
-		}
-		return variant(&m);
-	} else if(key == "shader") {
-#if defined(USE_GLES2)
-		return variant(shader_.get());
+DEFINE_FIELD(camera, "object|map|null")
+#if defined(USE_ISOMAP)
+	if(obj.camera_) {
+		return variant(obj.camera_.get());
+	} else {
+		return variant();
+	}
 #else
-		return variant();
+	return variant();
 #endif
-
-#ifdef USE_GLES2
-	} else if(key == "frame_buffer_shaders") {
-//		if(!fb_shaders_variant_.is_null()) {
-//			return fb_shaders_variant_;
-//		}
-
-		std::vector<variant> v;
-		foreach(const FrameBufferShaderEntry& e, fb_shaders_) {
-			std::map<variant,variant> m;
-			m[variant("begin_zorder")] = variant(e.begin_zorder);
-			m[variant("end_zorder")] = variant(e.end_zorder);
-			m[variant("shader_info")] = e.shader_node;
-
-			m[variant("shader")] = variant(e.shader.get());
-			v.push_back(variant(&m));
-		}
-
-		fb_shaders_variant_ = variant(&v);
-		return fb_shaders_variant_;
-
-#endif
-	} else if(key == "editor_selection") {
-		std::vector<variant> result;
-		foreach(entity_ptr s, editor_selection_) {
-			result.push_back(variant(s.get()));
-		}
-
-		return variant(&result);
-	} else if(key == "is_paused") {
-		if(level_runner::get_current()) {
-			return variant::from_bool(level_runner::get_current()->is_paused());
-		}
-
-		return variant();
-	} else if(key == "preferences") {
-		return variant(preferences::get_settings_obj());
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	if(value.is_null()) {
+		obj.camera_.reset(); 
 	} else {
-		const_entity_ptr e = get_entity_by_label(key);
-		if(e) {
-			return variant(e.get());
-		}
-
-		return vars_[key];
+		obj.camera_.reset(new camera_callable(value));
 	}
-}
-*/
-/*
-void level::set_value(const std::string& key, const variant& value)
-{
-	if(key == "lock_screen") {
-		if(value.is_list()) {
-			lock_screen_.reset(new point(value[0].as_int(), value[1].as_int()));
-		} else {
-			lock_screen_.reset();
-		}
-	} else if(key == "zoom") {
-		zoom_level_ = value.as_decimal();
-	} else if(key == "focus") {
-		focus_override_.clear();
-		for(int n = 0; n != value.num_elements(); ++n) {
-			entity* e = value[n].try_convert<entity>();
-			if(e) {
-				focus_override_.push_back(entity_ptr(e));
-			}
-		}
-
-		return;
-	} else if(key == "paused") {
-
-		const bool new_value = value.as_bool();
-		if(new_value == paused_) {
-			return;
-		}
-		paused_ = new_value;
-		if(paused_) {
-			before_pause_controls_backup_.reset(new controls::control_backup_scope);
-		} else {
-			if(this != current_ptr()) {
-				before_pause_controls_backup_->cancel();
-			}
-			before_pause_controls_backup_.reset();
-		}
-		foreach(entity_ptr e, chars_) {
-			e->mutate_value("paused", value);
-		}
-
-	} else if(key == "in_dialog") {
-		in_dialog_ = value.as_bool();
-	} else if(key == "time_freeze") {
-		time_freeze_ = value.as_int();
-	} else if(key == "chars_immune_from_freeze") {
-		chars_immune_from_time_freeze_.clear();
-		for(int n = 0; n != value.num_elements(); ++n) {
-			entity_ptr e(value[n].try_convert<entity>());
-			if(e) {
-				chars_immune_from_time_freeze_.push_back(e);
-			}
-		}
-	} else if(key == "dimensions") {
-		ASSERT_EQ(value.num_elements(), 4);
-		boundaries_ = rect(value[0].as_int(), value[1].as_int(), value[2].as_int() - value[0].as_int(), value[3].as_int() - value[1].as_int());
-	} else if(key == "music_volume") {
-		sound::set_engine_music_volume(value.as_decimal().as_float());
-	} else if(key == "camera_position") {
-		ASSERT_EQ(value.num_elements(), 2);
-		last_draw_position().x = value[0].as_int();
-		last_draw_position().y = value[1].as_int();
-	} else if(key == "debug_properties") {
-		if(value.is_null()) {
-			debug_properties_.clear();
-		} else if(value.is_string()) {
-			debug_properties_.clear();
-			debug_properties_.push_back(value.as_string());
-		} else {
-			debug_properties_ = value.as_list_string();
-		}
-#ifdef USE_GLES2
-	} else if(key == "frame_buffer_shaders") {
-
-		fb_shaders_variant_ = variant();
-		fb_shaders_.clear();
-		foreach(const variant& v, value.as_list()) {
-			FrameBufferShaderEntry e;
-			e.begin_zorder = v["begin_zorder"].as_int();
-			e.end_zorder = v["end_zorder"].as_int();
-			e.shader_node = v["shader_info"];
-
-			if(v.has_key("shader")) {
-				e.shader.reset(v["shader"].try_convert<gles2::shader_program>());
-			}
-
-			if(!e.shader) {
-				if(e.shader_node.is_string()) {
-					e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
-				} else {
-					e.shader.reset(new gles2::shader_program(e.shader_node));
-				}
-			}
-
-			fb_shaders_.push_back(e);
-		}
-
 #endif
-	} else {
-		vars_ = vars_.add_attr(variant(key), value);
-	}
-}
-*/
+
+DEFINE_FIELD(mouselook, "bool")
+#if defined(USE_ISOMAP)
+	return variant::from_bool(obj.is_mouselook_enabled());
+#else
+	return variant::from_bool(false);
+#endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	obj.set_mouselook(value.as_bool());
+#endif
+
+DEFINE_FIELD(mouselook_invert, "bool")
+#if defined(USE_ISOMAP)
+	return variant::from_bool(obj.is_mouselook_inverted());
+#else
+	return variant::from_bool(false);
+#endif
+DEFINE_SET_FIELD
+#if defined(USE_ISOMAP)
+	obj.set_mouselook_inverted(value.as_bool());
+#endif
+
+END_DEFINE_CALLABLE(level)
 
 int level::camera_rotation() const
 {

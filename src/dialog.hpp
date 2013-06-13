@@ -28,7 +28,7 @@ namespace gui {
 std::string get_dialog_file(const std::string& fname);
 void reset_dialog_paths();
 
-class dialog : public virtual widget, public virtual input::listener_container
+class dialog : public widget, public input::listener_container
 {
 public:
 	typedef std::vector<widget_ptr>::const_iterator child_iterator;

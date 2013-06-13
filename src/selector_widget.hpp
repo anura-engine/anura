@@ -29,7 +29,7 @@ namespace gui
 typedef std::pair<std::string, widget_ptr> selector_pair;
 typedef std::vector<selector_pair> selector_list;
 
-class selector_widget : virtual public widget
+class selector_widget : public widget
 {
 public:
 	explicit selector_widget(const std::vector<std::string>& list);

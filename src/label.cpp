@@ -229,28 +229,28 @@ bool label::handle_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-BEGIN_DEFINE_CALLABLE(label, this)
-	DEFINE_FIELD(21, text, "string")
-		value = variant(text_);
+BEGIN_DEFINE_CALLABLE(label, widget)
+	DEFINE_FIELD(text, "string")
+		return variant(obj.text_);
 	DEFINE_SET_FIELD
 		if(value.is_null()) {
-			set_text("");
+			obj.set_text("");
 		} else {
-			set_text(value.as_string());
+			obj.set_text(value.as_string());
 		}
-	DEFINE_FIELD(22, size, "int")
-		value = variant(size_);
+	DEFINE_FIELD(size, "int")
+		return variant(obj.size_);
 	DEFINE_SET_FIELD
-		set_font_size(value.as_int());
-	DEFINE_FIELD(23, font, "string")
-		value = variant(font_);
+		obj.set_font_size(value.as_int());
+	DEFINE_FIELD(font, "string")
+		return variant(obj.font_);
 	DEFINE_SET_FIELD
-		set_font(value.as_string());
-	DEFINE_FIELD(24, color, "string")
+		obj.set_font(value.as_string());
+	DEFINE_FIELD(color, "string")
+		return variant();
 	DEFINE_SET_FIELD
-		set_color(graphics::color(value).as_sdl_color());
-
-END_DEFINE_CALLABLE(label, widget, const_cast<label*>(this))
+		obj.set_color(graphics::color(value).as_sdl_color());
+END_DEFINE_CALLABLE(label)
 
 dialog_label::dialog_label(const std::string& text, const SDL_Color& color, int size)
 	: label(text, color, size), progress_(0) {

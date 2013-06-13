@@ -23,7 +23,7 @@
 
 namespace gui {
 
-class checkbox : public virtual button
+class checkbox : public button
 {
 public:
 	checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION button_resolution=BUTTON_SIZE_NORMAL_RESOLUTION);

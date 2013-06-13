@@ -129,61 +129,61 @@ namespace gui
 		rotate_ = rotate;
 	}
 
-BEGIN_DEFINE_CALLABLE(bar_widget, this)
-	DEFINE_FIELD(21, segments, "int")
-		value = variant(segments_);
+BEGIN_DEFINE_CALLABLE(bar_widget, widget)
+	DEFINE_FIELD(segments, "int")
+		return variant(obj.segments_);
 	DEFINE_SET_FIELD
-		segments_ = value.as_int();
-		init();
-	DEFINE_FIELD(22, segment_length, "int")
-		value = variant(segment_length_);
+		obj.segments_ = value.as_int();
+		obj.init();
+	DEFINE_FIELD(segment_length, "int")
+		return variant(obj.segment_length_);
 	DEFINE_SET_FIELD
-		segment_length_ = value.as_int();
-		init();
-	DEFINE_FIELD(23, tick_width, "int")
-		value = variant(tick_width_);
+		obj.segment_length_ = value.as_int();
+		obj.init();
+	DEFINE_FIELD(tick_width, "int")
+		return variant(obj.tick_width_);
 	DEFINE_SET_FIELD
-		tick_width_ = value.as_int();
-		init();
-	DEFINE_FIELD(24, scale, "decimal")
-		value = variant(decimal(scale_));
+		obj.tick_width_ = value.as_int();
+		obj.init();
+	DEFINE_FIELD(scale, "decimal")
+		return variant(decimal(obj.scale_));
 	DEFINE_SET_FIELD
-		scale_ = value.as_decimal().as_float();
-		ASSERT_GT(scale_, 0.0f);
-		init();
-	DEFINE_FIELD(25, drained, "int")
-		value = variant(drained_segments_);
+		obj.scale_ = value.as_decimal().as_float();
+		ASSERT_GT(obj.scale_, 0.0f);
+		obj.init();
+	DEFINE_FIELD(drained, "int")
+		return variant(obj.drained_segments_);
 	DEFINE_SET_FIELD
 		int drain = value.as_int();
-		if(drain != drained_segments_) {
-			int animation_start_position = segments_-drained_segments_;
-			animation_current_position_ = 0;
-			drained_segments_after_anim_ = drain;
-			if(drained_segments_after_anim_ < 0) {
-				drained_segments_after_anim_ = 0;
+		if(drain != obj.drained_segments_) {
+			int animation_start_position = obj.segments_-obj.drained_segments_;
+			obj.animation_current_position_ = 0;
+			obj.drained_segments_after_anim_ = drain;
+			if(obj.drained_segments_after_anim_ < 0) {
+				obj.drained_segments_after_anim_ = 0;
 			}
-			if(drained_segments_after_anim_ > segments_) {
-				drained_segments_after_anim_ = segments_;
+			if(obj.drained_segments_after_anim_ > obj.segments_) {
+				obj.drained_segments_after_anim_ = obj.segments_;
 			}
-			int animation_end_position = segments_-drained_segments_after_anim_;
-			animation_end_point_unscaled_ = animation_end_position - animation_start_position;
-			animating_ = true;
-			init();
+			int animation_end_position = obj.segments_-obj.drained_segments_after_anim_;
+			obj.animation_end_point_unscaled_ = animation_end_position - animation_start_position;
+			obj.animating_ = true;
+			obj.init();
 		}
-	DEFINE_FIELD(26, drain_rate, "int")
-		value = variant(drain_rate_);
+	DEFINE_FIELD(drain_rate, "int")
+		return variant(obj.drain_rate_);
 	DEFINE_SET_FIELD
-		drain_rate_ = value.as_int();
-	DEFINE_FIELD(27, max_width, "int")
-		value = variant(bar_max_width_);
+		obj.drain_rate_ = value.as_int();
+	DEFINE_FIELD(max_width, "int")
+		return variant(obj.bar_max_width_);
 	DEFINE_SET_FIELD
-		bar_max_width_ = value.as_int();
-		init();
-	DEFINE_FIELD(28, animation_position, "decimal")
-		value = variant(decimal(0.0));
+		obj.bar_max_width_ = value.as_int();
+		obj.init();
+	DEFINE_FIELD(animation_position, "decimal")
+		return variant(decimal(0.0));
 	DEFINE_SET_FIELD
-		animation_current_position_ = value.as_decimal().as_float();
-END_DEFINE_CALLABLE(bar_widget, widget, const_cast<bar_widget*>(this))
+		obj.animation_current_position_ = value.as_decimal().as_float();
+END_DEFINE_CALLABLE(bar_widget)
 
 	void bar_widget::handle_process()
 	{

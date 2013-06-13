@@ -66,14 +66,17 @@ public:
 	void set_highlight_color(const SDL_Color &col) {highlight_color_ = col;}
 	void allow_highlight_on_mouseover(bool val=true) { highlight_on_mouseover_ = val; }
 protected:
+	label(const label&);
+	void operator=(const label&);
 	std::string& current_text();
 	virtual void recalculate_texture();
 	void set_texture(graphics::texture t);
 
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 
-private:
+protected:
 	DECLARE_CALLABLE(label);
+private:
 
 	void handle_draw() const;
 	void inner_set_dim(int x, int y);

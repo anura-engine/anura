@@ -119,7 +119,7 @@ file_chooser_dialog::file_chooser_dialog(int x, int y, int w, int h, const filte
 }
 
 file_chooser_dialog::file_chooser_dialog(variant v, game_logic::formula_callable* e)
-	: dialog(v, e),  widget(v, e), filter_selection_(0), file_open_dialog_(v["open_dialog"].as_bool(true)), 
+	: dialog(v, e), filter_selection_(0), file_open_dialog_(v["open_dialog"].as_bool(true)), 
 	use_relative_paths_(v["use_relative_paths"].as_bool(false))
 {
 	if(v.has_key("filters")) {

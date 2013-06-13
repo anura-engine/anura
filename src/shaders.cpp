@@ -452,33 +452,33 @@ namespace {
 	};
 }
 
-BEGIN_DEFINE_CALLABLE(program, 0)
-DEFINE_FIELD(0, uniforms, "object")
-	value = variant(new uniforms_callable(*this));
-DEFINE_FIELD(1, current_texture, "object")
-	value = variant(graphics::texture::get_current_texture());
-DEFINE_FIELD(2, attributes, "object")
-	value = variant(new attributes_callable(*this));
-DEFINE_FIELD(3, alpha, "decimal")
-	value = variant(get_alpha());
-DEFINE_FIELD(4, color, "[int]")
+BEGIN_DEFINE_CALLABLE_NOBASE(program)
+DEFINE_FIELD(uniforms, "object")
+	return variant(new uniforms_callable(obj));
+DEFINE_FIELD(current_texture, "object")
+	return variant(graphics::texture::get_current_texture());
+DEFINE_FIELD(attributes, "object")
+	return variant(new attributes_callable(obj));
+DEFINE_FIELD(alpha, "decimal")
+	return variant(get_alpha());
+DEFINE_FIELD(color, "[int]")
 	std::vector<variant> v;
 	for(int n = 0; n < 4; ++n) {
 		v.push_back(variant(get_color()[n]));
 	}
-	value = variant(&v);
-DEFINE_FIELD(5, point_size, "decimal")
+	return variant(&v);
+DEFINE_FIELD(point_size, "decimal")
 	GLfloat pt_size;
 	glGetFloatv(GL_POINT_SIZE, &pt_size);
-	value = variant(pt_size);
+	return variant(pt_size);
 
-DEFINE_FIELD(6, mvp_matrix, "any")
+DEFINE_FIELD(mvp_matrix, "any")
 	std::vector<variant> v;
 	for(size_t n = 0; n < 16; n++) {
 		v.push_back(variant((glm::value_ptr(get_mvp_matrix()))[n]));
 	}
-	value = variant(&v);
-END_DEFINE_CALLABLE_NOBASE(program)
+	return variant(&v);
+END_DEFINE_CALLABLE(program)
 
 /*
 variant program::get_value(const std::string& key) const
@@ -1421,55 +1421,28 @@ void shader_program::refresh_for_draw()
 	attribute_commands_->execute_on_draw();
 }
 
-BEGIN_DEFINE_CALLABLE(shader_program, program_object_)
+//TODO: WORK OUT HOW TO ACCESS BASE POINTER
+BEGIN_DEFINE_CALLABLE(shader_program, program)
 
-DEFINE_FIELD(7, vars, "any")
-	value = variant(vars_.get());
-DEFINE_FIELD(8, parent, "object")
-	ASSERT_LOG(parent_ != NULL, "Tried to request parent, when value is null: " << name());
-	value = variant(parent_);
-DEFINE_FIELD(9, object, "object")
-	ASSERT_LOG(parent_ != NULL, "Tried to request parent, when value is null: " << name());
-	value = variant(parent_);
-DEFINE_FIELD(10, uniform_commands, "object")
-	value = variant(uniform_commands_.get());
-DEFINE_FIELD(11, attribute_commands, "object")
-	value = variant(attribute_commands_.get());
-DEFINE_FIELD(12, enabled, "bool")
-	value = variant(enabled_);
+DEFINE_FIELD(vars, "any")
+	return variant(obj.vars_.get());
+DEFINE_FIELD(parent, "object")
+	ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.name());
+	return variant(obj.parent_);
+DEFINE_FIELD(object, "object")
+	ASSERT_LOG(obj.parent_ != NULL, "Tried to request parent, when value is null: " << obj.name());
+	return variant(obj.parent_);
+DEFINE_FIELD(uniform_commands, "object")
+	return variant(obj.uniform_commands_.get());
+DEFINE_FIELD(attribute_commands, "object")
+	return variant(obj.attribute_commands_.get());
+DEFINE_FIELD(enabled, "bool")
+	return variant(obj.enabled_);
 DEFINE_SET_FIELD
-	enabled_ = value.as_bool();
-DEFINE_FIELD(13, level, "object")
-	value = variant(level::current_ptr());
-END_DEFINE_CALLABLE(shader_program, program, program_object_)
-
-/*
-variant shader_program::get_value(const std::string& key) const
-{
-	if(key == "vars") {
-		return variant(vars_.get());
-	} else if(key == "parent" || key == "object") {
-		ASSERT_LOG(parent_ != NULL, "Tried to request parent, when value is null: " << name());
-		return variant(parent_);
-	} else if(key == "uniform_commands") {
-		return variant(uniform_commands_.get());
-	} else if(key == "attribute_commands") {
-		return variant(attribute_commands_.get());
-	} else if(key == "enabled") {
-		return variant(enabled_);
-	}
-
-	return program_object_->get_value(key);
-}
-
-void shader_program::set_value(const std::string& key, const variant& value)
-{
-	if(key == "enabled") {
-		enabled_ = value.as_bool();
-	} else {
-		program_object_->set_value(key, value);
-	}
-}*/
+	obj.enabled_ = value.as_bool();
+DEFINE_FIELD(level, "object")
+	return variant(level::current_ptr());
+END_DEFINE_CALLABLE_BASE_PTR(shader_program, program_object_.get())
 
 program_ptr shader_program::shader() const 
 { 

@@ -28,7 +28,7 @@
 
 namespace gui {
 
-class animation_widget : public virtual widget
+class animation_widget : public widget
 {
 public:
 	animation_widget(int w, int h, const variant& node);

@@ -33,7 +33,7 @@ namespace gui {
 
 typedef std::vector<std::string> dropdown_list;
 
-class dropdown_widget : virtual public widget
+class dropdown_widget : public widget
 {
 public:
 	enum dropdown_type {

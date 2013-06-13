@@ -252,7 +252,7 @@ frame::frame(variant node)
 			}
 		}
 	}
-
+/*
 	const int vbo_cnt = 2;
 	vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
 	glGenBuffers(vbo_cnt, &vbo_array_[0]);
@@ -315,6 +315,7 @@ frame::frame(variant node)
 
 	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
 	glBufferData(GL_ARRAY_BUFFER, texcoords_.size()*sizeof(GLfloat), &texcoords_[0], GL_STATIC_DRAW);
+	*/
 }
 
 frame::~frame()
