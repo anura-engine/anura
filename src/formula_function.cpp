@@ -4150,7 +4150,7 @@ FUNCTION_ARGS_DEF
 	RETURN_TYPE("commands")
 END_FUNCTION_DEF(lookat)
 
-FUNCTION_DEF(is_solid_voxel, 3, 3, "is_solid_voxel([int, int, int]) -> bool: Returns true if the voxel at a given location exists and is solid.")
+FUNCTION_DEF(is_solid_voxel, 1, 1, "is_solid_voxel([int, int, int]) -> bool: Returns true if the voxel at a given location exists and is solid.")
 	variant xyz = args()[0]->evaluate(variables);
 	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
 	return variant::from_bool(level::current().isomap()->is_solid(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int()));
@@ -4159,7 +4159,7 @@ FUNCTION_ARGS_DEF
 	RETURN_TYPE("bool")
 END_FUNCTION_DEF(is_solid_voxel)
 
-FUNCTION_DEF(get_voxel_type, 3, 3, "get_voxel_type([int, int, int]) -> string: Returns type of the voxel at a given location if it exists.")
+FUNCTION_DEF(get_voxel_type, 1, 1, "get_voxel_type([int, int, int]) -> string: Returns type of the voxel at a given location if it exists.")
 	variant xyz = args()[0]->evaluate(variables);
 	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
 	std::string stype = level::current().isomap()->get_tile_type(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int());
