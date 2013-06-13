@@ -191,7 +191,7 @@ namespace isometric
 				for(int z = 0; z != size_z_; ++z) {
 					vec[1] = float(z)/float(size_z_);
 					int h = int(noise::simplex::noise2(&vec[0], seed) * size_y_);
-					h = std::max<int>(0, std::min<int>(size_y_-1, h));
+					h = std::max<int>(1, std::min<int>(size_y_-1, h));
 					for(int y = 0; y != h; ++y) {
 						if(node["random"].has_key("type")) {
 							tiles_[position(x,y,z)] = node["random"]["type"].as_string();
@@ -385,6 +385,8 @@ namespace isometric
 		a_position_it_ = shader_->get_attribute_reference("a_position");
 		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
 		tex0_it_ = shader_->get_uniform_reference("u_tex0");
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
 	void isomap::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
@@ -697,14 +699,22 @@ namespace isometric
 		glUseProgram(0);
 	}
 
-	variant isomap::get_value(const std::string& key) const
+	std::string isomap::get_tile_type(int x, int y, int z) const
 	{
-		return variant();
+		auto it = tiles_.find(position(x, y, z));
+		if(it == tiles_.end()) {
+			return "";
+		}
+		return it->second;
 	}
 
-	void isomap::set_value(const std::string& key, const variant& value)
+	variant isomap::get_tile_info(const std::string& type)
 	{
+		return variant(); // -- todo
 	}
+
+	BEGIN_DEFINE_CALLABLE(isomap, 0)
+	END_DEFINE_CALLABLE_NOBASE(isomap)
 }
 
 #endif
