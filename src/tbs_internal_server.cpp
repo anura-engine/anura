@@ -102,7 +102,9 @@ namespace tbs
 
 		for(std::map<send_function, socket_info, send_function_less>::iterator i = connections_.begin(); i != connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
-				connections_.erase(i);
+				connections_.erase(i->first); // should connections_.erase(i)
+				                              // but bug on Clang causes that
+											  // to be a compile error.
 				return;
 			}
 		}
