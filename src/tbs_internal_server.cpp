@@ -81,7 +81,7 @@ namespace tbs
 	int internal_server::requests_in_flight(int session_id)
 	{
 		int result = 0;
-		for(std::map<send_function, socket_info, send_function_less>::iterator i = server_ptr->connections_.begin(); i != server_ptr->connections_.end(); ++i) {
+		for(auto i = server_ptr->connections_.begin(); i != server_ptr->connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
 			}
 		}
@@ -100,7 +100,7 @@ namespace tbs
 			return;
 		}
 
-		for(std::map<send_function, socket_info, send_function_less>::const_iterator i = connections_.begin(); i != connections_.end(); ++i) {
+		for(auto i = connections_.begin(); i != connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
 				connections_.erase(i);
 				return;
@@ -113,7 +113,7 @@ namespace tbs
 	{
 		std::vector<std::pair<send_function, variant> > messages;
 
-		for(std::map<send_function, socket_info, send_function_less>::iterator i = connections_.begin(); i != connections_.end(); ++i) {
+		for(auto i = connections_.begin(); i != connections_.end(); ++i) {
 			send_function send_fn = i->first;
 			socket_info& info = i->second;
 			ASSERT_LOG(info.session_id != -1, "UNKNOWN SOCKET");
