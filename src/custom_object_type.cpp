@@ -371,6 +371,9 @@ variant custom_object_type::merge_prototype(variant node, std::vector<std::strin
 	}
 
 	std::vector<std::string> protos = node["prototype"].as_list_string();
+	if(protos.size() > 1) {
+		std::cerr << "WARNING: Multiple inheritance of objects is deprecated: " << node["prototype"].debug_location() << "\n";
+	}
 
 	foreach(const std::string& proto, protos) {
 		//look up the object's prototype and merge it in
