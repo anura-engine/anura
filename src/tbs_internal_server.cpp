@@ -100,7 +100,7 @@ namespace tbs
 			return;
 		}
 
-		for(std::map<send_function, socket_info, send_function_less>::iterator i = connections_.begin(); i != connections_.end(); ++i) {
+		for(std::map<send_function, socket_info, send_function_less>::const_iterator i = connections_.begin(); i != connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
 				connections_.erase(i);
 				return;
