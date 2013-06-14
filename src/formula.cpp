@@ -2195,7 +2195,7 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 						ASSERT_LOG(false, "Function " << *function_name << " requires a literal as its second argument: " << pinpoint_location(formula_str, args[1].first->begin, (args[1].second-1)->end));
 					}
 				}
-				ASSERT_LOG(args.size() == 2 || args.size() == 3, std::cerr << "WRONG NUMBER OF ARGS TO " << *function_name << " AT " << pinpoint_location(formula_str, args[0].first->begin, (args[0].second-1)->end));
+				ASSERT_LOG(args.size() == 2 || args.size() == 3, "WRONG NUMBER OF ARGS TO " << *function_name << " AT " << pinpoint_location(formula_str, args[0].first->begin, (args[0].second-1)->end));
 
 				variant_type_ptr key_type, value_type;
 
