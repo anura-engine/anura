@@ -1009,10 +1009,26 @@ private:
 		return right_->query_mutable_type();
 	}
 
+	static bool is_type_valid_left_side(variant_type_ptr type) {
+		const std::vector<variant_type_ptr>* u = type->is_union();
+		if(u) {
+			foreach(variant_type_ptr t, *u) {
+				if(!is_type_valid_left_side(t)) {
+					return false;
+				}
+			}
+
+			return u->empty() == false;
+		}
+
+		return variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_CALLABLE), type) || variant_types_compatible(variant_type::get_type(variant::VARIANT_TYPE_MAP), type);
+	}
+
 	void static_error_analysis() const {
 		variant_type_ptr type = left_->query_variant_type();
 		ASSERT_LOG(type, "Could not find type for left side of '.' operator: " << left_->str() << ": " << debug_pinpoint_location());
 		ASSERT_LOG(variant_type::may_be_null(type) == false, "Left side of '.' operator may be null: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
+		ASSERT_LOG(is_type_valid_left_side(type), "Left side of '.' is of invalid type: " << left_->str() << " is " << type->to_string() << " " << debug_pinpoint_location());
 	}
 
 	const_formula_callable_definition_ptr get_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const {

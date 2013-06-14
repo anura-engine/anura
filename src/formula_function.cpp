@@ -1655,7 +1655,7 @@ public:
 				entries_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_INT);
 				break;
 			case MAP_CALLABLE_CONTEXT:
-				entries_.back().variant_type = value_type_;
+				entries_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_CALLABLE);
 				entries_.back().type_definition = base;
 				break;
 			case MAP_CALLABLE_KEY:

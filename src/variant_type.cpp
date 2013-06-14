@@ -192,7 +192,7 @@ public:
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_CALLABLE) {
-			if(type->is_builtin() || type->is_custom_object()) {
+			if(type->is_builtin() || type->is_custom_object() || type->is_class()) {
 				return true;
 			}
 		}

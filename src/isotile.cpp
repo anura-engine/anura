@@ -713,8 +713,10 @@ namespace isometric
 		return variant(); // -- todo
 	}
 
-	BEGIN_DEFINE_CALLABLE(isomap, 0)
-	END_DEFINE_CALLABLE_NOBASE(isomap)
+	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)
+	DEFINE_FIELD(dummy, "null") //you need to define at least one field right
+		return variant();       //now, or else shit goes sideways.
+	END_DEFINE_CALLABLE(isomap)
 }
 
 #endif
