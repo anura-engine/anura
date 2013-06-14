@@ -3726,9 +3726,9 @@ DEFINE_FIELD(player, "custom_obj")
 DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
-DEFINE_FIELD(in_dialog, "int")
+DEFINE_FIELD(in_dialog, "bool")
 	boost::intrusive_ptr<const game_logic::formula_callable_definition> def(variant_type::get_builtin("level")->get_definition());
-	return variant(1); //variant::from_bool(in_dialog_);
+	return variant(false); //variant::from_bool(in_dialog_);
 DEFINE_FIELD(local_player, "null|custom_obj")
 	ASSERT_LOG(obj.player_, "No player found in level");
 	return variant(obj.player_.get());
