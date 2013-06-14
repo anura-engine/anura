@@ -1323,7 +1323,16 @@ FUNCTION_TYPE_DEF
 	variant_type_ptr type_a = args()[0]->query_variant_type();
 	variant_type_ptr type_b = args()[1]->query_variant_type();
 
-	if(type_a->is_list_of()) {
+	if(type_a->is_specific_list() && type_b->is_specific_list()) {
+		std::vector<variant_type_ptr> types;
+		const int num_elements = std::min(type_a->is_specific_list()->size(), type_b->is_specific_list()->size());
+		const variant_type_ptr type = args()[2]->query_variant_type();
+		for(int n = 0; n != num_elements; ++n) {
+			types.push_back(type);
+		}
+
+		return variant_type::get_specific_list(types);
+	} else if(type_a->is_list_of()) {
 		return variant_type::get_list(args()[2]->query_variant_type());
 	} else {
 		std::pair<variant_type_ptr,variant_type_ptr> map_a = type_a->is_map_of();
@@ -2246,6 +2255,18 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
+		variant_type_ptr spec_type = args()[0]->query_variant_type();
+		if(spec_type->is_specific_list()) {
+			std::vector<variant_type_ptr> types;
+			variant_type_ptr type = args().back()->query_variant_type();
+			const int num_items = spec_type->is_specific_list()->size();
+			for(int n = 0; n != num_items; ++n) {
+				types.push_back(type);
+			}
+
+			return variant_type::get_specific_list(types);
+		}
+
 		return variant_type::get_list(args().back()->query_variant_type());
 	}
 };
