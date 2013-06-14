@@ -1847,15 +1847,34 @@ std::string variant::to_debug_string(std::vector<const game_logic::formula_calla
 		s << buf << "{";
 		if(std::find(seen->begin(), seen->end(), callable_) == seen->end()) {
 			seen->push_back(callable_);
-			std::vector<game_logic::formula_input> v = callable_->inputs();
-			bool first = true;
-			for(size_t i=0; i<v.size(); ++i) {
-				const game_logic::formula_input& input = v[i];
-				if(!first) {
-					s << ",\n";
+
+			const variant_type_ptr type = get_variant_type_from_value(*this);
+			const game_logic::formula_callable_definition* def = type->get_definition();
+			if(def) {
+				bool first = true;
+				for(int slot = 0; slot < def->num_slots(); ++slot) {
+					if(!first) {
+						s << ",\n";
+					}
+
+					variant value;
+
+					try {
+						const assert_recover_scope scope;
+						if(def->supports_slot_lookups()) {
+							value = callable_->query_value_by_slot(slot);
+						} else {
+							value = callable_->query_value(def->get_entry(slot)->id);
+						}
+					} catch(...) {
+						value = variant("(Unknown)");
+					}
+
+					first = false;
+					s << def->get_entry(slot)->id << ": " << value.to_debug_string(seen);
 				}
-				first = false;
-				s << input.name << ": " << callable_->query_value(input.name).to_debug_string(seen);
+			} else {
+				s << "Uninspectable Object: " << type->to_string();
 			}
 		} else {
 			s << "...";

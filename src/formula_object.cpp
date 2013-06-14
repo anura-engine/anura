@@ -775,6 +775,32 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 	}
 }
 
+void formula_object::update_object(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen)
+{
+	std::vector<formula_object*> seen_buf;
+	if(!seen) {
+		seen = &seen_buf;
+	}
+	
+	if(v.try_convert<formula_object>()) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(std::count(seen->begin(), seen->end(), obj)) {
+			return;
+		}
+
+		//update object here.
+
+		seen->push_back(obj);
+
+		foreach(variant& v, obj->variables_) {
+			update_object(v, mapping, seen);
+		}
+
+		seen->pop_back();
+		return;
+	}
+}
+
 variant formula_object::deep_clone(variant v)
 {
 	std::map<formula_object*,formula_object*> mapping;
@@ -852,8 +878,12 @@ boost::intrusive_ptr<formula_object> formula_object::create(const std::string& t
 	return res;
 }
 
+namespace {
+int formula_object_id = 1;
+}
+
 formula_object::formula_object(const std::string& type, variant args)
-  : class_(get_class(type)), private_data_(-1)
+  : id_(formula_object_id++), class_(get_class(type)), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
 	foreach(const property_entry& slot, class_->slots()) {
@@ -908,7 +938,7 @@ void formula_object::call_constructors(variant args)
 }
 
 formula_object::formula_object(variant data)
-  : class_(get_class(data["@class"].as_string())), private_data_(-1)
+  : id_(data["id"].as_int()), class_(get_class(data["@class"].as_string())), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
 
@@ -952,6 +982,7 @@ variant formula_object::serialize_to_wml() const
 {
 	std::map<variant, variant> result;
 	result[variant("@class")] = variant(class_->name());
+	result[variant("id")] = variant(id_);
 
 	std::map<variant,variant> state;
 	foreach(const property_entry& slot, class_->slots()) {
