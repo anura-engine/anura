@@ -31,7 +31,7 @@ namespace tbs
 {
 	struct send_function_less
 	{
-		bool operator()(const send_function& lhs, const send_function& rhs)
+		bool operator()(const send_function& lhs, const send_function& rhs) const
 		{
 			return (&lhs < &rhs);
 		}
