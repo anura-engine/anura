@@ -4319,6 +4319,42 @@ private:
 	variant v_;
 };
 
+FUNCTION_DEF(inspect_object, 1, 1, "inspect_object(object obj) -> map: outputs an object's properties")
+	variant obj = args()[0]->evaluate(variables);
+	variant_type_ptr type = get_variant_type_from_value(obj);
+
+	const game_logic::formula_callable_definition* def = type->get_definition();
+	if(!def) {
+		return variant();
+	}
+
+	std::map<variant, variant> m;
+
+	const game_logic::formula_callable* callable = obj.as_callable();
+
+	for(int slot = 0; slot < def->num_slots(); ++slot) {
+
+		variant value;
+		try {
+			const assert_recover_scope scope;
+			if(def->supports_slot_lookups()) {
+				value = callable->query_value_by_slot(slot);
+			} else {
+				value = callable->query_value(def->get_entry(slot)->id);
+			}
+		} catch(...) {
+			continue;
+		}
+
+		m[variant(def->get_entry(slot)->id)] = value;
+	}
+
+	return variant(&m);
+
+FUNCTION_TYPE_DEF
+	return variant_type::get_map(variant_type::get_type(variant::VARIANT_TYPE_STRING), variant_type::get_any());
+END_FUNCTION_DEF(inspect_object)
+
 FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
 	boost::intrusive_ptr<formula_object> obj(args()[0]->evaluate(variables).convert_to<formula_object>());
 

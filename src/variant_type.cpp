@@ -1271,6 +1271,9 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 	using namespace game_logic;
 	if(value.try_convert<formula_object>()) {
 		return variant_type::get_class(value.try_convert<formula_object>()->get_class_name());
+	} else if(value.try_convert<custom_object>()) {
+		const custom_object* obj = value.try_convert<custom_object>();
+		return variant_type::get_custom_object(obj->query_value("type").as_string());
 	} else if(value.is_list()) {
 		std::vector<variant_type_ptr> types;
 		foreach(const variant& item, value.as_list()) {
