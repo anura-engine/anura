@@ -22,6 +22,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <deque>
+#include <list>
 
 #include "formula_callable.hpp"
 #include "tbs_server_base.hpp"
@@ -29,14 +30,6 @@
 
 namespace tbs
 {
-	struct send_function_less
-	{
-		bool operator()(const send_function& lhs, const send_function& rhs) const
-		{
-			return (&lhs < &rhs);
-		}
-	};
-
 	class internal_server : public server_base
 	{
 	public:
@@ -68,11 +61,11 @@ namespace tbs
 
 		void finish_socket(send_function send_fn, client_info& cli_info);
 		
-		socket_info& get_socket_info(send_function send_fn);
+		socket_info& create_socket_info(send_function send_fn);
 		void disconnect(int session_id);
 		void queue_msg(int session_id, const std::string& msg, bool has_priority);
 
-		std::map<send_function, socket_info, send_function_less> connections_;
+		std::list<std::pair<send_function, socket_info> > connections_;
 		std::deque<boost::tuple<send_function,variant,int> > msg_queue_;
 	};
 

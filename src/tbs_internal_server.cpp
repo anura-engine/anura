@@ -83,15 +83,17 @@ namespace tbs
 		int result = 0;
 		for(auto i = server_ptr->connections_.begin(); i != server_ptr->connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
+				//implementing this causes problems. Investigate.
 			}
 		}
 
 		return result;
 	}
 
-	server_base::socket_info& internal_server::get_socket_info(send_function send_fn)
+	server_base::socket_info& internal_server::create_socket_info(send_function send_fn)
 	{
-		return connections_[send_fn];
+		connections_.push_back(std::pair<send_function, socket_info>(send_fn, socket_info()));
+		return connections_.back().second;
 	}
 
 	void internal_server::disconnect(int session_id)
@@ -100,9 +102,9 @@ namespace tbs
 			return;
 		}
 
-		for(std::map<send_function, socket_info, send_function_less>::iterator i = connections_.begin(); i != connections_.end(); ++i) {
+		for(auto i = connections_.begin(); i != connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
-				connections_.erase(i->first); // should connections_.erase(i)
+				connections_.erase(i); // should connections_.erase(i)
 				                              // but bug on Clang causes that
 											  // to be a compile error.
 				return;
@@ -115,7 +117,7 @@ namespace tbs
 	{
 		std::vector<std::pair<send_function, variant> > messages;
 
-		for(std::map<send_function, socket_info, send_function_less>::iterator i = connections_.begin(); i != connections_.end(); ++i) {
+		for(auto i = connections_.begin(); i != connections_.end(); ++i) {
 			send_function send_fn = i->first;
 			socket_info& info = i->second;
 			ASSERT_LOG(info.session_id != -1, "UNKNOWN SOCKET");
@@ -150,7 +152,7 @@ namespace tbs
 			server_ptr->handle_message(
 				send_fn,
 				boost::bind(&internal_server::finish_socket, this, send_fn, _1),
-				boost::bind(&internal_server::get_socket_info, server_ptr.get(), send_fn),
+				boost::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
 				session_id, 
 				request);
 		}
