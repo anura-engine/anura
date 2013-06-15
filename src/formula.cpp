@@ -1599,7 +1599,7 @@ private:
 			}
 
 			if(left_type->is_list_of()) {
-				return left_type;
+				return variant_type::get_list(left_type->is_list_of());
 			}
 
 			return variant_type::get_any();
