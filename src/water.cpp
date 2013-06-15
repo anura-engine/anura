@@ -28,6 +28,7 @@
 #include "level.hpp"
 #include "raster.hpp"
 #include "string_utils.hpp"
+#include "tile_map.hpp"
 #include "variant_utils.hpp"
 #include "water.hpp"
 
@@ -46,7 +47,7 @@ water::water()
 }
 
 water::water(variant water_node) :
-  zorder_(water_node["zorder"].as_int(WaterZorder)),
+  zorder_(parse_zorder(water_node["zorder"], variant("water"))),
   current_x_formula_(game_logic::formula::create_optional_formula(water_node["current_x_formula"])),
   current_y_formula_(game_logic::formula::create_optional_formula(water_node["current_y_formula"]))
 {
@@ -70,7 +71,7 @@ water::water(variant water_node) :
 variant water::write() const
 {
 	variant_builder result;
-	result.add("zorder", zorder_);
+	result.add("zorder", write_zorder(zorder_));
 	foreach(const area& a, areas_) {
 		variant_builder area_node;
 		area_node.add("rect", a.rect_.write());

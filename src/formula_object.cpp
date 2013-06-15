@@ -799,6 +799,23 @@ void formula_object::update_object(variant& v, const std::map<formula_object*, f
 		seen->pop_back();
 		return;
 	}
+
+	if(v.is_list()) {
+		std::vector<variant> result;
+		foreach(const variant& item, v.as_list()) {
+			result.push_back(item);
+			formula_object::update_object(result.back(), mapping, seen);
+		}
+	} else if(v.is_map()) {
+		std::map<variant, variant> result;
+		foreach(const variant_pair& item, v.as_map()) {
+			variant key = item.first;
+			variant value = item.second;
+			formula_object::update_object(key, mapping, seen);
+			formula_object::update_object(value, mapping, seen);
+			result[key] = value;
+		}
+	}
 }
 
 variant formula_object::deep_clone(variant v)

@@ -29,7 +29,7 @@
 #include "point_map.hpp"
 #include "variant.hpp"
 
-int parse_zorder(const variant& v);
+int parse_zorder(const variant& v, variant default_val=variant());
 variant write_zorder(int zorder);
 
 int get_named_zorder(const std::string& key, int default_value=0);

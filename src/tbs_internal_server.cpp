@@ -104,9 +104,7 @@ namespace tbs
 
 		for(auto i = connections_.begin(); i != connections_.end(); ++i) {
 			if(i->second.session_id == session_id) {
-				connections_.erase(i); // should connections_.erase(i)
-				                              // but bug on Clang causes that
-											  // to be a compile error.
+				connections_.erase(i);
 				return;
 			}
 		}

@@ -69,8 +69,12 @@ const std::map<int, variant>& zorder_to_str() {
 
 }
 
-int parse_zorder(const variant& v)
+int parse_zorder(const variant& v, variant default_val)
 {
+	if(v.is_null() && !default_val.is_null()) {
+		return parse_zorder(default_val);
+	}
+
 	if(v.is_int()) {
 		return v.as_int();
 	}
