@@ -22,7 +22,6 @@ opts.AddVariables(
     EnumVariable('build', 'Build variant: debug, release profile', "release", ["release", "debug", "profile"]),
     PathVariable('build_dir', 'Build all intermediate files(objects, test programs, etc) under this dir', "build", PathVariable.PathAccept),
     BoolVariable('ccache', "Use ccache", False),
-    BoolVariable('cxx0x', 'Use C++0x features.', False),
     BoolVariable('extrawarn', "Use wesnoth-level warnings", False),
     BoolVariable('gles2', "Use GLES2", False),
     BoolVariable('strict', 'Set to strict compilation', False),
@@ -38,8 +37,8 @@ if use_sdl2:
 else:
     env.ParseConfig("sdl-config --libs --cflags")
     env.Append(LIBS = ["SDL_mixer", "SDL_image", "SDL_ttf"])
-env.Append(LIBS = ["GL", "GLU", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
-env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG"], LINKFLAGS = ["-pthread"])
+env.Append(LIBS = ["GL", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
+env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP"], LINKFLAGS = ["-pthread"])
 if sys.platform.startswith('linux'):
     env.Append(LIBS = ["X11"])
 
@@ -65,11 +64,7 @@ if "gcc" in env["TOOLS"]:
     if env['extrawarn']:
         env.AppendUnique(CCFLAGS = Split("-W -Wall -Wno-sign-compare -Wno-parentheses"))
 
-    if env['cxx0x']:
-        env.AppendUnique(CXXFLAGS = "-std=c++0x")
-        env.Append(CPPDEFINES = "HAVE_CXX0X")
-    else:
-        env.AppendUnique(CXXFLAGS = "-std=c++98")
+    env.AppendUnique(CXXFLAGS = "-std=c++0x")
 
     if env['strict']:
         env.AppendUnique(CCFLAGS = Split("-Werror"))
