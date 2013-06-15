@@ -103,7 +103,6 @@
 		C010C79D160AFD4D006E7D90 /* joystick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C67F160AFD4C006E7D90 /* joystick.cpp */; };
 		C010C79E160AFD4D006E7D90 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C681160AFD4C006E7D90 /* json_parser.cpp */; };
 		C010C79F160AFD4D006E7D90 /* json_tokenizer.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C683160AFD4C006E7D90 /* json_tokenizer.cpp */; };
-		C010C7A0160AFD4D006E7D90 /* key.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C685160AFD4C006E7D90 /* key.cpp */; };
 		C010C7A1160AFD4D006E7D90 /* key_button.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C687160AFD4C006E7D90 /* key_button.cpp */; };
 		C010C7A2160AFD4D006E7D90 /* label.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C689160AFD4C006E7D90 /* label.cpp */; };
 		C010C7A3160AFD4D006E7D90 /* level.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C68B160AFD4C006E7D90 /* level.cpp */; };
@@ -206,6 +205,9 @@
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
 		C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B0F17533AA7004307B0 /* formula_interface.cpp */; };
 		C0917B13175480F7004307B0 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
+		C0917B1617670039004307B0 /* camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B1417670039004307B0 /* camera.cpp */; };
+		C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B17176700BC004307B0 /* simplex_noise.cpp */; };
+		C0917B1C176700D8004307B0 /* isotile.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B1A176700D8004307B0 /* isotile.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -459,8 +461,6 @@
 		C010C682160AFD4C006E7D90 /* json_parser.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json_parser.hpp; sourceTree = "<group>"; };
 		C010C683160AFD4C006E7D90 /* json_tokenizer.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = json_tokenizer.cpp; sourceTree = "<group>"; };
 		C010C684160AFD4C006E7D90 /* json_tokenizer.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = json_tokenizer.hpp; sourceTree = "<group>"; };
-		C010C685160AFD4C006E7D90 /* key.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = key.cpp; sourceTree = "<group>"; };
-		C010C686160AFD4C006E7D90 /* key.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = key.hpp; sourceTree = "<group>"; };
 		C010C687160AFD4C006E7D90 /* key_button.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = key_button.cpp; sourceTree = "<group>"; };
 		C010C688160AFD4C006E7D90 /* key_button.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = key_button.hpp; sourceTree = "<group>"; };
 		C010C689160AFD4C006E7D90 /* label.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = label.cpp; sourceTree = "<group>"; };
@@ -611,7 +611,6 @@
 		C010C72D160AFD4D006E7D90 /* variant_callable.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = variant_callable.hpp; sourceTree = "<group>"; };
 		C010C72E160AFD4D006E7D90 /* variant_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = variant_utils.cpp; sourceTree = "<group>"; };
 		C010C72F160AFD4D006E7D90 /* variant_utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = variant_utils.hpp; sourceTree = "<group>"; };
-		C010C730160AFD4D006E7D90 /* vecmath.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = vecmath.hpp; sourceTree = "<group>"; };
 		C010C731160AFD4D006E7D90 /* vector_text.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = vector_text.cpp; sourceTree = "<group>"; };
 		C010C732160AFD4D006E7D90 /* vector_text.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = vector_text.hpp; sourceTree = "<group>"; };
 		C010C733160AFD4D006E7D90 /* water.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = water.cpp; sourceTree = "<group>"; };
@@ -659,6 +658,12 @@
 		C0917B0F17533AA7004307B0 /* formula_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_interface.cpp; sourceTree = "<group>"; };
 		C0917B1017533AA7004307B0 /* formula_interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_interface.hpp; sourceTree = "<group>"; };
 		C0917B12175480F7004307B0 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../../master-config.cfg"; sourceTree = "<group>"; };
+		C0917B1417670039004307B0 /* camera.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = camera.cpp; sourceTree = "<group>"; };
+		C0917B1517670039004307B0 /* camera.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = camera.hpp; sourceTree = "<group>"; };
+		C0917B17176700BC004307B0 /* simplex_noise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise.cpp; sourceTree = "<group>"; };
+		C0917B18176700BD004307B0 /* simplex_noise.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = simplex_noise.hpp; sourceTree = "<group>"; };
+		C0917B1A176700D8004307B0 /* isotile.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = isotile.cpp; sourceTree = "<group>"; };
+		C0917B1B176700D8004307B0 /* isotile.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = isotile.hpp; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
@@ -821,6 +826,8 @@
 				C010C5D2160AFD4C006E7D90 /* border_widget.hpp */,
 				C010C5D3160AFD4C006E7D90 /* button.cpp */,
 				C010C5D4160AFD4C006E7D90 /* button.hpp */,
+				C0917B1417670039004307B0 /* camera.cpp */,
+				C0917B1517670039004307B0 /* camera.hpp */,
 				C010C5D5160AFD4C006E7D90 /* character_editor_dialog.cpp */,
 				C010C5D6160AFD4C006E7D90 /* character_editor_dialog.hpp */,
 				C010C5D7160AFD4C006E7D90 /* checkbox.cpp */,
@@ -998,14 +1005,14 @@
 				C0B1908816CD9437008FF14A /* ipc.hpp */,
 				C010C679160AFD4C006E7D90 /* iphone_controls.cpp */,
 				C010C67A160AFD4C006E7D90 /* iphone_controls.hpp */,
+				C0917B1A176700D8004307B0 /* isotile.cpp */,
+				C0917B1B176700D8004307B0 /* isotile.hpp */,
 				C010C67F160AFD4C006E7D90 /* joystick.cpp */,
 				C010C680160AFD4C006E7D90 /* joystick.hpp */,
 				C010C681160AFD4C006E7D90 /* json_parser.cpp */,
 				C010C682160AFD4C006E7D90 /* json_parser.hpp */,
 				C010C683160AFD4C006E7D90 /* json_tokenizer.cpp */,
 				C010C684160AFD4C006E7D90 /* json_tokenizer.hpp */,
-				C010C685160AFD4C006E7D90 /* key.cpp */,
-				C010C686160AFD4C006E7D90 /* key.hpp */,
 				C010C687160AFD4C006E7D90 /* key_button.cpp */,
 				C010C688160AFD4C006E7D90 /* key_button.hpp */,
 				C010C689160AFD4C006E7D90 /* label.cpp */,
@@ -1096,6 +1103,8 @@
 				C010C6E1160AFD4D006E7D90 /* settings_dialog.hpp */,
 				C010C6E2160AFD4D006E7D90 /* shaders.cpp */,
 				C010C6E3160AFD4D006E7D90 /* shaders.hpp */,
+				C0917B17176700BC004307B0 /* simplex_noise.cpp */,
+				C0917B18176700BD004307B0 /* simplex_noise.hpp */,
 				C010C6E6160AFD4D006E7D90 /* slider.cpp */,
 				C010C6E7160AFD4D006E7D90 /* slider.hpp */,
 				C010C6E8160AFD4D006E7D90 /* solid_map.cpp */,
@@ -1175,7 +1184,6 @@
 				C02ACCAB16FD5F05006274BC /* variant_type.hpp */,
 				C010C72E160AFD4D006E7D90 /* variant_utils.cpp */,
 				C010C72F160AFD4D006E7D90 /* variant_utils.hpp */,
-				C010C730160AFD4D006E7D90 /* vecmath.hpp */,
 				C010C731160AFD4D006E7D90 /* vector_text.cpp */,
 				C010C732160AFD4D006E7D90 /* vector_text.hpp */,
 				C010C733160AFD4D006E7D90 /* water.cpp */,
@@ -1368,7 +1376,6 @@
 				C010C79D160AFD4D006E7D90 /* joystick.cpp in Sources */,
 				C010C79F160AFD4D006E7D90 /* json_tokenizer.cpp in Sources */,
 				C010C79E160AFD4D006E7D90 /* json_parser.cpp in Sources */,
-				C010C7A0160AFD4D006E7D90 /* key.cpp in Sources */,
 				C010C7A1160AFD4D006E7D90 /* key_button.cpp in Sources */,
 				C010C7A2160AFD4D006E7D90 /* label.cpp in Sources */,
 				C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */,
@@ -1467,6 +1474,9 @@
 				C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */,
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
+				C0917B1617670039004307B0 /* camera.cpp in Sources */,
+				C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */,
+				C0917B1C176700D8004307B0 /* isotile.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -1494,7 +1504,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1509,7 +1520,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				ONLY_ACTIVE_ARCH = YES;
 				SDKROOT = "";
 			};
@@ -1520,7 +1531,8 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
 				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "gnu++0x";
+				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
+				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = YES;
 				GCC_C_LANGUAGE_STANDARD = gnu99;
@@ -1529,7 +1541,7 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNINITIALIZED_AUTOS = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
+				MACOSX_DEPLOYMENT_TARGET = 10.7;
 				SDKROOT = "";
 			};
 			name = Release;
@@ -1538,13 +1550,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
@@ -1559,6 +1569,7 @@
 					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
+					"./dependency-headers",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
@@ -1566,10 +1577,22 @@
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
 					"-DUSE_GLES2",
+					"-DUSE_ISOMAP",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-narrowing",
+					"-Wnon-virtual-dtor",
+					"-Werror",
+					"-Wignored-qualifiers",
+					"-Wformat",
+					"-Wswitch",
+					"-Wreturn-type",
+					"-fno-inline-functions",
+					"-fthreadsafe-statics",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WARNING_CFLAGS = (
@@ -1584,13 +1607,11 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
-				CLANG_CXX_LANGUAGE_STANDARD = "compiler-default";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 				);
-				GCC_C_LANGUAGE_STANDARD = "compiler-default";
 				GCC_OPTIMIZATION_LEVEL = 3;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = "";
@@ -1605,6 +1626,7 @@
 					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
+					"./dependency-headers",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
@@ -1612,10 +1634,22 @@
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
 				);
-				MACOSX_DEPLOYMENT_TARGET = 10.6;
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
 					"-DUSE_GLES2",
+					"-DUSE_ISOMAP",
+				);
+				OTHER_CPLUSPLUSFLAGS = (
+					"$(OTHER_CFLAGS)",
+					"-Wno-narrowing",
+					"-Wnon-virtual-dtor",
+					"-Werror",
+					"-Wignored-qualifiers",
+					"-Wformat",
+					"-Wswitch",
+					"-Wreturn-type",
+					"-fno-inline-functions",
+					"-fthreadsafe-statics",
 				);
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				WARNING_CFLAGS = (
