@@ -18,8 +18,8 @@ test
 *.odt#
 .*.swp
 dirs.txt
-core
-core.*
+/core
+/core.*
 *.exe
 *.d
 compiled-*
