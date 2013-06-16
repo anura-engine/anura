@@ -4384,6 +4384,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	default:
 		if(slot >= type_->slot_properties_base() && (size_t(slot - type_->slot_properties_base()) < type_->slot_properties().size())) {
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
+			ASSERT_LOG(!e.const_value, "Attempt to set const property: " << debug_description() << "." << e.id);
 			if(e.setter) {
 
 				if(e.set_type) {
@@ -4395,6 +4396,8 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 				execute_command(value);
 			} else if(e.storage_slot >= 0) {
 				get_property_data(e.storage_slot) = value;
+			} else {
+				ASSERT_LOG(false, "Attempt to set const property: " << debug_description() << "." << e.id);
 			}
 
 			if(!properties_requiring_dynamic_initialization_.empty()) {

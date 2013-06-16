@@ -1330,6 +1330,11 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				entry.default_value = value;
 				entry.storage_slot = storage_slot++;
 				entry.persistent = true;
+
+				if(entry.getter) {
+					entry.getter.reset();
+					entry.const_value.reset(new variant(value));
+				}
 			}
 
 			if(entry.getter) {
