@@ -131,23 +131,40 @@ wml_serializable_formula_callable_ptr wml_formula_callable_read_scope::get_seria
 	return registered_objects[addr];
 }
 
+namespace {
+int g_nformula_callable_read_scope = 0;
+}
+
 wml_formula_callable_read_scope::wml_formula_callable_read_scope()
 {
+	++g_nformula_callable_read_scope;
 }
 
 wml_formula_callable_read_scope::~wml_formula_callable_read_scope()
 {
 	std::set<variant*> v;
+	std::set<variant*> unfound_variants;
 	swap_variants_loading(v);
 	for(std::set<variant*>::iterator i = v.begin(); i != v.end(); ++i) {
 		variant& var = **i;
 		//fprintf(stderr, "LOAD SERIALIZED: 0x%x\n", (int)var.as_callable_loading());
-		var = variant(registered_objects[var.as_callable_loading()].get());
+		variant value = variant(registered_objects[var.as_callable_loading()].get());
+		if(value.is_null()) {
+			unfound_variants.insert(*i);
+		} else {
+			var = value;
+		}
 	}
 
-	variant::resolve_delayed();
+	if(unfound_variants.empty()) {
+		variant::resolve_delayed();
+	} else {
+		swap_variants_loading(unfound_variants);
+	}
 
-	registered_objects.clear();
+	if(--g_nformula_callable_read_scope == 0) {
+		registered_objects.clear();
+	}
 }
 
 bool wml_formula_callable_read_scope::try_load_object(intptr_t id, variant& v)
