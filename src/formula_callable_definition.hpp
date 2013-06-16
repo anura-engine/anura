@@ -17,6 +17,7 @@
 #ifndef FORMULA_CALLABLE_DEFINITION_HPP_INCLUDED
 #define FORMULA_CALLABLE_DEFINITION_HPP_INCLUDED
 
+#include <functional>
 #include <iostream>
 #include <string>
 #include <boost/function.hpp>

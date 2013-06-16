@@ -536,6 +536,27 @@ FUNCTION_TYPE_DEF
 	}
 END_FUNCTION_DEF(construct)
 
+class update_object_command : public game_logic::command_callable
+{
+	boost::intrusive_ptr<formula_object> target_, src_;
+public:
+	update_object_command(boost::intrusive_ptr<formula_object> target,
+	                      boost::intrusive_ptr<formula_object> src)
+	  : target_(target), src_(src)
+	{}
+	virtual void execute(game_logic::formula_callable& ob) const {
+		target_->update(*src_);
+	}
+};
+
+FUNCTION_DEF(update_object, 2, 2, "update_object(target_instance, src_instance)")
+
+	boost::intrusive_ptr<formula_object> target = args()[0]->evaluate(variables).convert_to<formula_object>();
+	boost::intrusive_ptr<formula_object> src = args()[1]->evaluate(variables).convert_to<formula_object>();
+	return variant(new update_object_command(target, src));
+
+END_FUNCTION_DEF(update_object)
+
 FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
 	formula::fail_if_static_context();
 	variant s = args()[0]->evaluate(variables);

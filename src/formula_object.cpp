@@ -196,8 +196,8 @@ variant get_class_node(const std::string& type)
 	return i->second;
 }
 
-enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
-static const std::string BaseFields[] = {"_data", "value", "self", "me", "_class", "lib"};
+enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_ORPHANED, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
+static const std::string BaseFields[] = {"_data", "value", "self", "me", "orphaned_by_update", "_class", "lib"};
 
 class formula_class_definition : public formula_callable_definition
 {
@@ -220,6 +220,9 @@ public:
 			case FIELD_SELF:
 			case FIELD_ME:
 			slots_.back().variant_type = variant_type::get_class(class_name);
+			break;
+			case FIELD_ORPHANED:
+			slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 			break;
 			case FIELD_CLASS:
 			slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
@@ -775,7 +778,46 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 	}
 }
 
-void formula_object::update_object(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen)
+void formula_object::update(formula_object& updated)
+{
+	std::map<int, formula_object*> src, dst;
+	visit_variants(variant(this), [&dst](variant v) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			dst[obj->id_] = obj;
+		}});
+	visit_variants(variant(&updated), [&src](variant v) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			src[obj->id_] = obj;
+		}});
+
+	std::map<formula_object*, formula_object*> mapping;
+
+	for(auto i = src.begin(); i != src.end(); ++i) {
+		auto j = dst.find(i->first);
+		if(j != dst.end()) {
+			mapping[i->second] = j->second;
+		}
+	}
+
+	for(auto i = src.begin(); i != src.end(); ++i) {
+		variant v(i->second);
+		map_object_into_different_tree(v, mapping);
+	}
+
+	for(auto i = mapping.begin(); i != mapping.end(); ++i) {
+		i->second = i->first;
+	}
+
+	for(auto i = dst.begin(); i != dst.end(); ++i) {
+		if(src.count(i->first) == 0) {
+			i->second->orphaned_ = true;
+		}
+	}
+}
+
+void formula_object::map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen)
 {
 	std::vector<formula_object*> seen_buf;
 	if(!seen) {
@@ -784,16 +826,20 @@ void formula_object::update_object(variant& v, const std::map<formula_object*, f
 	
 	if(v.try_convert<formula_object>()) {
 		formula_object* obj = v.try_convert<formula_object>();
+		auto itor = mapping.find(obj);
+		if(itor != mapping.end()) {
+			v = variant(itor->second);
+			return;
+		}
+
 		if(std::count(seen->begin(), seen->end(), obj)) {
 			return;
 		}
 
-		//update object here.
-
 		seen->push_back(obj);
 
 		foreach(variant& v, obj->variables_) {
-			update_object(v, mapping, seen);
+			map_object_into_different_tree(v, mapping, seen);
 		}
 
 		seen->pop_back();
@@ -804,17 +850,21 @@ void formula_object::update_object(variant& v, const std::map<formula_object*, f
 		std::vector<variant> result;
 		foreach(const variant& item, v.as_list()) {
 			result.push_back(item);
-			formula_object::update_object(result.back(), mapping, seen);
+			formula_object::map_object_into_different_tree(result.back(), mapping, seen);
 		}
+
+		v = variant(&result);
 	} else if(v.is_map()) {
 		std::map<variant, variant> result;
 		foreach(const variant_pair& item, v.as_map()) {
 			variant key = item.first;
 			variant value = item.second;
-			formula_object::update_object(key, mapping, seen);
-			formula_object::update_object(value, mapping, seen);
+			formula_object::map_object_into_different_tree(key, mapping, seen);
+			formula_object::map_object_into_different_tree(value, mapping, seen);
 			result[key] = value;
 		}
+
+		v = variant(&result);
 	}
 }
 
@@ -900,7 +950,8 @@ int formula_object_id = 1;
 }
 
 formula_object::formula_object(const std::string& type, variant args)
-  : id_(formula_object_id++), class_(get_class(type)), private_data_(-1)
+  : id_(formula_object_id++), orphaned_(false),
+    class_(get_class(type)), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
 	foreach(const property_entry& slot, class_->slots()) {
@@ -955,7 +1006,8 @@ void formula_object::call_constructors(variant args)
 }
 
 formula_object::formula_object(variant data)
-  : id_(data["id"].as_int()), class_(get_class(data["@class"].as_string())), private_data_(-1)
+  : id_(data["id"].as_int()), orphaned_(false),
+    class_(get_class(data["@class"].as_string())), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
 
@@ -1033,8 +1085,7 @@ variant formula_object::serialize_to_wml() const
 
 variant formula_object::get_value(const std::string& key) const
 {
-	/*TODO: MAKE DATA HIDING WORK
-	if(expose_private_data_) */ {
+	{
 		if(key == "_data") {
 			ASSERT_NE(private_data_, -1);
 			return variables_[private_data_];
@@ -1084,6 +1135,7 @@ variant formula_object::get_value_by_slot(int slot) const
 		case FIELD_VALUE: return tmp_value_;
 		case FIELD_SELF:
 		case FIELD_ME: return variant(this);
+		case FIELD_ORPHANED: return variant::from_bool(orphaned_);
 		case FIELD_CLASS: return class_->name_variant();
 		case FIELD_LIB: return variant(get_library_object().get());
 		default: break;

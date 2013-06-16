@@ -41,7 +41,9 @@ class formula_object : public game_logic::wml_serializable_formula_callable
 {
 public:
 	static void visit_variants(variant v, boost::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
-	static void update_object(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
+	static void map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
+
+	void update(formula_object& updated);
 
 	static variant deep_clone(variant v);
 	static variant deep_clone(variant v, std::map<formula_object*,formula_object*>& mapping);
@@ -78,6 +80,7 @@ private:
 	void get_inputs(std::vector<formula_input>* inputs) const;
 
 	int id_;
+	bool orphaned_;
 
 	//overrides of the class's read-only properties.
 	std::vector<formula_ptr> property_overrides_;
