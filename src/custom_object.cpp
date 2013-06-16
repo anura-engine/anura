@@ -3478,6 +3478,8 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 		if(p) {
 			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
+			const_custom_object_type_ptr old_type = type_;
+
 			get_all(base_type_->id()).erase(this);
 			base_type_ = type_ = p;
 			get_all(base_type_->id()).insert(this);
@@ -3490,6 +3492,30 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 
 			vars_->disallow_new_keys(type_->is_strict());
 			tmp_vars_->disallow_new_keys(type_->is_strict());
+
+			std::vector<variant> props = property_data_;
+			property_data_.clear();
+			
+			for(auto i = type_->properties().begin(); i != type_->properties().end(); ++i) {
+				if(i->second.storage_slot < 0) {
+					continue;
+				}
+
+				get_property_data(i->second.storage_slot) = i->second.default_value;
+			}
+
+			for(auto i = old_type->properties().begin(); i != old_type->properties().end(); ++i) {
+				if(i->second.storage_slot < 0 || i->second.storage_slot >= props.size() || props[i->second.storage_slot] == i->second.default_value) {
+					continue;
+				}
+
+				auto j = type_->properties().find(i->first);
+				if(j == type_->properties().end() || j->second.storage_slot < 0) {
+					continue;
+				}
+
+				get_property_data(j->second.storage_slot) = props[i->second.storage_slot];
+			}
 
 			//set the animation to the default animation for the new type.
 			set_frame(type_->default_frame().id());
