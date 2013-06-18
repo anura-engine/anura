@@ -1435,27 +1435,27 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF(directed_graph)
 
 FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
-	variant graph = args()[0]->evaluate(variables);
-	pathfinding::directed_graph_ptr dg = boost::intrusive_ptr<pathfinding::directed_graph>(graph.try_convert<pathfinding::directed_graph>());
-	ASSERT_LOG(dg, "Directed graph given is not of the correct type.");
-	pathfinding::edge_weights w;
-	boost::intrusive_ptr<map_formula_callable> callable(new map_formula_callable(&variables));
-	variant& a = callable->add_direct_access("a");
-	variant& b = callable->add_direct_access("b");
-	for(pathfinding::graph_edge_list::const_iterator edges = dg->get_edges()->begin(); 
-		edges != dg->get_edges()->end(); 
-		edges++) {
-		foreach(const variant e2, edges->second) {
-			a = edges->first;
-			b = e2;
-			w[pathfinding::graph_edge(edges->first, e2)] = args()[1]->evaluate(*callable).as_decimal();
-		}
-	}
-	return variant(new pathfinding::weighted_directed_graph(dg, &w));
+        variant graph = args()[0]->evaluate(variables);
+        pathfinding::directed_graph_ptr dg = boost::intrusive_ptr<pathfinding::directed_graph>(graph.try_convert<pathfinding::directed_graph>());
+        ASSERT_LOG(dg, "Directed graph given is not of the correct type.");
+        pathfinding::edge_weights w;
+ 
+        boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
+ 
+        for(auto edges = dg->get_edges()->begin();
+                edges != dg->get_edges()->end();
+                edges++) {
+                for(auto e2 : edges->second) {
+                        variant v = callable->eval(edges->first, e2);
+                        if(v.is_null() == false) {
+                                w[pathfinding::graph_edge(edges->first, e2)] = v.as_decimal();
+                        }
+                }
+        }
+        return variant(new pathfinding::weighted_directed_graph(dg, &w));
 FUNCTION_ARGS_DEF
-	ARG_TYPE("builtin directed_graph")
-	ARG_TYPE("any")
-	RETURN_TYPE("builtin weighted_directed_graph")
+        ARG_TYPE("builtin directed_graph")
+        RETURN_TYPE("builtin weighted_directed_graph")
 END_FUNCTION_DEF(weighted_graph)
 
 FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_node, dst_node, heuristic) -> A list of nodes which represents the 'best' path from src_node to dst_node.")

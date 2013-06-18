@@ -2211,13 +2211,17 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 		}
 
 		if(function_name != NULL &&
-		   (n == 1 && (*function_name == "sort" || *function_name == "fold") ||
+		   (n == 1 && (*function_name == "sort" || *function_name == "fold" ||
+		               *function_name == "weighted_graph") ||
 		    n == 2 &&  *function_name == "zip")) {
 			variant_type_ptr sequence_type = (*res)[0]->query_variant_type();
 			variant_type_ptr value_type = sequence_type->is_list_of();
 			if(!value_type && *function_name == "zip") {
 				value_type = sequence_type->is_map_of().second;
+			} else if(*function_name == "weighted_graph") {
+				value_type = variant_type::get_any();
 			}
+
 			callable_def = get_variant_comparator_definition(callable_def, value_type);
 		}
 
