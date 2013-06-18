@@ -27,11 +27,15 @@
 
 #include "decimal.hpp"
 #include "foreach.hpp"
+#include "formula_callable_definition.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
 #include "geometry.hpp"
-#include "level.hpp"
 #include "variant.hpp"
+
+// Need to forward declare this rather than including level.hpp
+class level;
+typedef boost::intrusive_ptr<level> level_ptr;
 
 namespace pathfinding {
 
@@ -110,6 +114,7 @@ template<typename N, typename T> T manhattan_distance(const N& p1, const N& p2);
 typedef std::map<variant, graph_node<variant, decimal>::graph_node_ptr > vertex_list;
 
 class directed_graph : public game_logic::formula_callable {
+	DECLARE_CALLABLE(directed_graph);
 	std::vector<variant> vertices_;
 	graph_edge_list edges_;
 public:
@@ -120,7 +125,6 @@ public:
 		vertices_.swap(*vertices);
 		edges_.swap(*edges);
 	}
-	variant get_value(const std::string& key) const;
 	const graph_edge_list* get_edges() const {return &edges_;}
 	std::vector<variant>& get_vertices() {return vertices_;}
 	std::vector<variant> get_edges_from_node(const variant node) const {
@@ -133,6 +137,7 @@ public:
 };
 
 class weighted_directed_graph : public game_logic::formula_callable {
+	DECLARE_CALLABLE(weighted_directed_graph);
 	edge_weights weights_;
 	directed_graph_ptr dg_;
 	vertex_list graph_node_list_;
@@ -145,7 +150,6 @@ public:
 			graph_node_list_[v] = boost::shared_ptr<graph_node<variant, decimal> >(new graph_node<variant, decimal>(v));
 		}
 	}
-	variant get_value(const std::string& key) const;
 	std::vector<variant> get_edges_from_node(const variant node) const {
 		return dg_->get_edges_from_node(node);
 	}

@@ -15,6 +15,7 @@
 #include "graphics.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "pathfinding.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
@@ -51,8 +52,12 @@ namespace isometric
 		variant write();
 
 		bool is_solid(int x, int y, int z) const;
+		bool is_xedge(int x) const;
+		bool is_yedge(int y) const;
+		bool is_zedge(int z) const;
 		std::string get_tile_type(int x, int y, int z) const;
 		static variant get_tile_info(const std::string& type);
+		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
 	protected:
 		const GLfloat* model() const { return glm::value_ptr(model_); }
 

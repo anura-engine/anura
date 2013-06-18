@@ -3985,13 +3985,13 @@ DEFINE_SET_FIELD
 	}
 
 #if defined(USE_ISOMAP)
-DEFINE_FIELD(isomap, "builtin isomap|map|null")
+DEFINE_FIELD(isomap, "builtin isomap|null")
 	if(obj.isomap_) {
 		return variant(obj.isomap_.get());
 	} else {
 		return variant();
 	}
-DEFINE_SET_FIELD
+DEFINE_SET_FIELD_TYPE("builtin isomap|map|null")
 	if(value.is_null()) {
 		obj.isomap_.reset(); 
 	} else {

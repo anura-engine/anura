@@ -36,7 +36,33 @@ template<> decimal manhattan_distance(const variant& p1, const variant& p2) {
 	return (x1 < 0 ? -x1 : x1) + (x2 < 0 ? -x2 : x2);
 }
 
-variant directed_graph::get_value(const std::string& key) const {
+BEGIN_DEFINE_CALLABLE_NOBASE(directed_graph)
+DEFINE_FIELD(vertices, "list")
+		std::vector<variant> v(obj.vertices_);
+		return variant(&v);
+DEFINE_FIELD(edges, "list")
+		std::vector<variant> edges;
+		std::pair<variant, std::vector<variant> > edge;
+		foreach(edge, obj.edges_) {
+			std::vector<variant> from_to;
+			foreach(const variant& e1, edge.second) {
+				from_to.push_back(edge.first);
+				from_to.push_back(e1);
+				edges.push_back(variant(&from_to));
+			}
+		}
+		return variant(&edges);
+DEFINE_FIELD(edge_map, "map")
+		std::map<variant, variant> edgemap;
+		std::pair<variant, std::vector<variant> > edge;
+		foreach(edge, obj.edges_) {
+			std::vector<variant> v(edge.second);
+			edgemap[edge.first] = variant(&v);
+		}
+		return variant(&edgemap);
+END_DEFINE_CALLABLE(directed_graph)
+
+/*variant directed_graph::get_value(const std::string& key) const {
 	if(key == "vertices") {
 		std::vector<variant> v(vertices_);
 		return variant(&v);
@@ -62,8 +88,27 @@ variant directed_graph::get_value(const std::string& key) const {
 		return variant(&edgemap);
 	}
 	return variant();
-}
+}*/
 
+BEGIN_DEFINE_CALLABLE_NOBASE(weighted_directed_graph)
+DEFINE_FIELD(weights, "map")
+		std::map<variant, variant> w;
+		std::pair<graph_edge, decimal> wit;
+		foreach(wit, obj.weights_) {
+			std::vector<variant> from_to;
+			from_to.push_back(wit.first.first);
+			from_to.push_back(wit.first.second);
+			w[variant(&from_to)] = variant(wit.second);
+		}
+		return variant(&w);
+DEFINE_FIELD(vertices, "list")
+	return obj.dg_->get_value("vertices");
+DEFINE_FIELD(edges, "map")
+	return obj.dg_->get_value("list");
+DEFINE_FIELD(edge_map, "map")
+	return obj.dg_->get_value("edge_map");
+END_DEFINE_CALLABLE(weighted_directed_graph)
+/*
 variant weighted_directed_graph::get_value(const std::string& key) const {
 	if(key == "weights") {
 		std::map<variant, variant> w;
@@ -83,7 +128,7 @@ variant weighted_directed_graph::get_value(const std::string& key) const {
 		return dg_->get_value(key);
 	}
 	return variant();
-}
+}*/
 
 variant a_star_search(weighted_directed_graph_ptr wg, 
 	const variant src_node, 

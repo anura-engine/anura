@@ -1428,6 +1428,10 @@ FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_ex
 	}
 	pathfinding::directed_graph* dg = new pathfinding::directed_graph(&vertex_list, &edges);
 	return variant(dg);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list")
+	ARG_TYPE("any")
+	RETURN_TYPE("builtin directed_graph")
 END_FUNCTION_DEF(directed_graph)
 
 FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
@@ -1448,6 +1452,10 @@ FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expres
 		}
 	}
 	return variant(new pathfinding::weighted_directed_graph(dg, &w));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin directed_graph")
+	ARG_TYPE("any")
+	RETURN_TYPE("builtin weighted_directed_graph")
 END_FUNCTION_DEF(weighted_graph)
 
 FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_node, dst_node, heuristic) -> A list of nodes which represents the 'best' path from src_node to dst_node.")
@@ -1459,15 +1467,26 @@ FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_no
 	expression_ptr heuristic = args()[3];
 	boost::intrusive_ptr<map_formula_callable> callable(new map_formula_callable(&variables));
 	return pathfinding::a_star_search(wg, src_node, dst_node, heuristic, callable);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin weighted_directed_graph")
+	ARG_TYPE("any")
+	ARG_TYPE("any")
+	ARG_TYPE("any")
+	RETURN_TYPE("list")
 END_FUNCTION_DEF(a_star_search)
 
-FUNCTION_DEF(path_cost_search, 3, 3, "cost_search(weighted_directed_graph, src_node, max_cost) -> A list of all possible points reachable from src_node within max_cost.")
+FUNCTION_DEF(path_cost_search, 3, 3, "path_cost_search(weighted_directed_graph, src_node, max_cost) -> A list of all possible points reachable from src_node within max_cost.")
 	variant graph = args()[0]->evaluate(variables);
 	pathfinding::weighted_directed_graph_ptr wg = graph.try_convert<pathfinding::weighted_directed_graph>();
 	ASSERT_LOG(wg, "Weighted graph given is not of the correct type.");
 	variant src_node = args()[1]->evaluate(variables);
 	decimal max_cost(args()[2]->evaluate(variables).as_decimal());
 	return pathfinding::path_cost_search(wg, src_node, max_cost);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin weighted_directed_graph")
+	ARG_TYPE("any")
+	ARG_TYPE("decimal|int")
+	RETURN_TYPE("list")
 END_FUNCTION_DEF(path_cost_search)
 
 FUNCTION_DEF(create_graph_from_level, 1, 3, "create_graph_from_level(level, (optional) tile_size_x, (optional) tile_size_y) -> directed graph : Creates a directed graph based on the current level.")
@@ -4210,6 +4229,18 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("[int,int,int]")
 	RETURN_TYPE("string|null")
 END_FUNCTION_DEF(get_voxel_type)
+
+FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin isomap, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
+	isometric::isomap* isomap = args()[0]->evaluate(variables).try_convert<isometric::isomap>();
+	bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
+	ASSERT_LOG(isomap != NULL, "Invalid argument to graph_from_isomap. Must be of type 'isomap'");
+	return variant(isomap->create_directed_graph(allow_diagonals).get());
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin isomap")
+	ARG_TYPE("bool")
+	RETURN_TYPE("builtin directed_graph")
+END_FUNCTION_DEF(graph_from_isomap)
+
 #endif
 
 FUNCTION_DEF(clamp, 3, 3, "clamp(numeric value, numeric min_val, numeric max_val) -> numeric: Clamps the given value inside the given bounds.")

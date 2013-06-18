@@ -8,6 +8,7 @@
 #include <boost/algorithm/string.hpp>
 #include <limits>
 #include <sstream>
+#include <utility>
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "base64.hpp"
@@ -20,6 +21,7 @@
 #include "profile_timer.hpp"
 #include "simplex_noise.hpp"
 #include "texture.hpp"
+#include "unit_test.hpp"
 #include "variant_utils.hpp"
 
 namespace isometric
@@ -237,9 +239,10 @@ namespace isometric
 					}
 				}
 			}
-			size_x_ = max_x - min_x;
-			size_y_ = max_y - min_y;
-			size_z_ = max_z - min_z;
+			size_x_ = max_x - min_x + 1;
+			size_y_ = max_y - min_y + 1;
+			size_z_ = max_z - min_z + 1;
+			std::cerr << "isomap: size_x( " << size_x_ << "), size_y(" << size_y_ << "), size_z(" << size_z_ << ")" << std::endl;
 		}
 
 		// Load shader.
@@ -713,10 +716,114 @@ namespace isometric
 		return variant(); // -- todo
 	}
 
+	bool isomap::is_xedge(int x) const
+	{
+		if(x >= 0 && x < size_x_) {
+			return false;
+		}
+		return true;
+	}
+
+	bool isomap::is_yedge(int y) const
+	{
+		if(y >= 0 && y < size_y_) {
+			return false;
+		}
+		return true;
+	}
+
+	bool isomap::is_zedge(int z) const
+	{
+		if(z >= 0 && z < size_z_) {
+			return false;
+		}
+		return true;
+	}
+
+	namespace
+	{
+		variant variant_list_from_xyz(int x, int y, int z)
+		{
+			std::vector<variant> v;
+			v.push_back(variant(x)); v.push_back(variant(y)); v.push_back(variant(z));
+			return variant(&v);
+		}
+	}
+
+	pathfinding::directed_graph_ptr isomap::create_directed_graph(bool allow_diagonals)
+	{
+		profile::manager pman("isomap::create_directed_graph");
+
+		std::vector<variant> vertex_list;
+		std::map<std::pair<int,int>, int> vlist;
+
+		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
+			int x = t->first.x;
+			int y = t->first.y;
+			int z = t->first.z;
+
+			if(y < size_y_ - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+					vlist[std::make_pair(x,z)] = y+1;
+				}
+			} else {
+				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+				vlist[std::make_pair(x,z)] = y+1;
+			}
+		}
+		pathfinding::graph_edge_list edges;
+		for(auto p : vlist) {
+			std::vector<variant> current_edges;
+			const int x = p.first.first;
+			const int z = p.first.second;
+			
+			auto it = vlist.find(std::make_pair(x+1,z));
+			if(it != vlist.end() && !is_xedge(x+1) && !is_solid(x+1,it->second,z)) {
+				current_edges.push_back(variant_list_from_xyz(x+1,it->second,z));
+			}
+			it = vlist.find(std::make_pair(x-1,z));
+			if(it != vlist.end() && !is_xedge(x-1) && !is_solid(x-1,it->second,z)) {
+				current_edges.push_back(variant_list_from_xyz(x-1,it->second,z));
+			}
+			it = vlist.find(std::make_pair(x,z+1));
+			if(it != vlist.end() && !is_zedge(z+1) && !is_solid(x,it->second,z+1)) {
+				current_edges.push_back(variant_list_from_xyz(x,it->second,z+1));
+			}
+			it = vlist.find(std::make_pair(x,z-1));
+			if(it != vlist.end() && !is_zedge(z-1) && !is_solid(x,it->second,z-1)) {
+				current_edges.push_back(variant_list_from_xyz(x,it->second,z-1));
+			}
+			if(allow_diagonals) {
+				it = vlist.find(std::make_pair(x+1,z+1));
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !is_solid(x+1,it->second,z+1)) {
+					current_edges.push_back(variant_list_from_xyz(x+1,it->second,z+1));
+				}
+				it = vlist.find(std::make_pair(x+1,z-1));
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !is_solid(x+1,it->second,z-1)) {
+					current_edges.push_back(variant_list_from_xyz(x+1,it->second,z-1));
+				}
+				it = vlist.find(std::make_pair(x-1,z+1));
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !is_solid(x-1,it->second,z+1)) {
+					current_edges.push_back(variant_list_from_xyz(x-1,it->second,z+1));
+				}
+				it = vlist.find(std::make_pair(x-1,z-1));
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !is_solid(x-1,it->second,z-1)) {
+					current_edges.push_back(variant_list_from_xyz(x-1,it->second,z-1));
+				}
+			}
+			edges[variant_list_from_xyz(p.first.first, p.second, p.first.second)] = current_edges;
+		}
+		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
+	}
+
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)
 	DEFINE_FIELD(dummy, "null") //you need to define at least one field right
 		return variant();       //now, or else shit goes sideways.
 	END_DEFINE_CALLABLE(isomap)
 }
+
+	
 
 #endif
