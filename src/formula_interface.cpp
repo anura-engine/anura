@@ -213,6 +213,10 @@ variant formula_interface::get_value(const std::string& key) const
 
 formula_interface_instance_factory* formula_interface::create_factory(variant_type_ptr type) const
 {
+	if(type->is_interface() == this) {
+		return NULL;
+	}
+
 	if(type->is_map_of().first) {
 		return get_dynamic_factory();
 	}

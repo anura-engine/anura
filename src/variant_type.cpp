@@ -192,7 +192,7 @@ public:
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_CALLABLE) {
-			if(type->is_builtin() || type->is_custom_object() || type->is_class()) {
+			if(type->is_builtin() || type->is_custom_object() || type->is_class() || type->is_interface()) {
 				return true;
 			}
 		}
@@ -495,6 +495,11 @@ public:
 	}
 
 	bool is_compatible(variant_type_ptr type) const {
+		return is_interface() == type->is_interface();
+		//TODO: is this the right thing to do? Interfaces aren't considered
+		//compatible types with anything since they can only be used in places
+		//where conversions explicitly occur.
+		/*
 		if(type->is_map_of().first) {
 			const std::map<variant, variant_type_ptr>* spec = type->is_specific_map();
 			if(!spec) {
@@ -525,7 +530,7 @@ public:
 			return true;
 		} catch(game_logic::formula_interface::interface_mismatch_error&) {
 			return false;
-		}
+		}*/
 	}
 
 	const game_logic::formula_callable_definition* get_definition() const {

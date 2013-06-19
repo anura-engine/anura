@@ -877,7 +877,8 @@ public:
 				if(interface) {
 					try {
 						interface_factory.reset(interface->create_factory(args[n]->query_variant_type()));
-					} catch(formula_interface::interface_mismatch_error&) {
+					} catch(formula_interface::interface_mismatch_error& e) {
+						ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debug_pinpoint_location());
 					}
 				}
 
@@ -1786,6 +1787,17 @@ public:
 	static_type_expression(variant_type_ptr type, expression_ptr expr)
 	: formula_expression("_static_type"), type_(type), expression_(expr)
 	{
+		const formula_interface* interface = type->is_interface();
+		if(interface) {
+			boost::intrusive_ptr<formula_interface_instance_factory> interface_factory;
+			try {
+				interface_factory.reset(interface->create_factory(expr->query_variant_type()));
+			} catch(formula_interface::interface_mismatch_error& e) {
+				ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debug_pinpoint_location());
+			}
+
+			interface_ = interface_factory;
+		}
 	}
 	
 private:
@@ -1797,7 +1809,11 @@ private:
 	expression_ptr expression_;
 	
 	variant execute(const formula_callable& variables) const {
-		return expression_->evaluate(variables);
+		if(interface_) {
+			return interface_->create(expression_->evaluate(variables));
+		} else {
+			return expression_->evaluate(variables);
+		}
 	}
 
 	std::vector<const_expression_ptr> get_children() const {
@@ -1807,12 +1823,18 @@ private:
 	}
 
 	expression_ptr optimize() const {
-		return expression_;
+		if(!interface_) {
+			return expression_;
+		} else {
+			return expression_ptr();
+		}
 	}
 
 	void static_error_analysis() const {
 		ASSERT_LOG(variant_types_compatible(type_, expression_->query_variant_type()), "Expression is not declared type. Of type " << expression_->query_variant_type()->to_string() << " when type " << type_->to_string() << " expected " << debug_pinpoint_location());
 	}
+
+	boost::intrusive_ptr<formula_interface_instance_factory> interface_;
 };
 
 class type_expression : public formula_expression {
