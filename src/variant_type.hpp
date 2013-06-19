@@ -44,6 +44,7 @@ typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
 class variant_type
 {
 public:
+	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
 	static variant_type_ptr get_type(variant::TYPE type);
@@ -70,6 +71,7 @@ public:
 	variant convert(const variant& v) const { if(match(v)) return v; return convert_impl(v); }
 
 	virtual bool is_numeric() const { return false; }
+	virtual bool is_none() const { return false; }
 	virtual bool is_any() const { return false; }
 	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
 	virtual variant_type_ptr is_list_of() const { return variant_type_ptr(); }

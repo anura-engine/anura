@@ -1108,7 +1108,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					type = parse_optional_formula_type(value);
 				}
 
-				set_type = variant_type::get_type(variant::VARIANT_TYPE_NULL);
+				set_type = variant_type::get_any();
 
 			} else if(value.is_map()) {
 				if(value.has_key("access")) {
@@ -1327,13 +1327,14 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				if(is_strict_) {
 					entry.set_type = entry.type = get_variant_type_from_value(value);
 				}
-				entry.default_value = value;
-				entry.storage_slot = storage_slot++;
-				entry.persistent = true;
 
-				if(entry.getter) {
+				if(entry.getter || util::c_isupper(entry.id[0]) || !is_strict_ && entry.id[0] != '_') {
 					entry.getter.reset();
 					entry.const_value.reset(new variant(value));
+				} else {
+					entry.storage_slot = storage_slot++;
+					entry.persistent = true;
+					entry.default_value = value;
 				}
 			}
 
