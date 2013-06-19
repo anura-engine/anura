@@ -204,6 +204,31 @@ private:
 	variant::TYPE type_;
 };
 
+class variant_type_none : public variant_type
+{
+public:
+	bool match(const variant& v) const { return false; }
+	bool is_equal(const variant_type& o) const {
+		const variant_type_none* other = dynamic_cast<const variant_type_none*>(&o);
+		return other != NULL;
+	}
+
+	std::string to_string() const {
+		return "none";
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		return false;
+	}
+
+	bool maybe_convertible_to(variant_type_ptr type) const {
+		return false;
+	}
+
+	bool is_none() const { return true; }
+private:
+};
+
 class variant_type_any : public variant_type
 {
 public:
@@ -1844,6 +1869,12 @@ variant_type_ptr parse_optional_formula_type(const variant& type)
 
 	const token* begin = &tokens[0];
 	return parse_optional_formula_type(type, begin, begin + tokens.size());
+}
+
+variant_type_ptr variant_type::get_none()
+{
+	static const variant_type_ptr result(new variant_type_none);
+	return result;
 }
 
 variant_type_ptr variant_type::get_any()
