@@ -19,6 +19,7 @@
 
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include "graphics.hpp"
 
@@ -413,6 +414,26 @@ void level_runner::video_resize_event(const SDL_Event &event)
 	lvl_->player()->get_entity().handle_event(WindowResizeEventID, callable.get());
 }
 
+#if defined(USE_ISOMAP)
+namespace {
+
+glm::vec3 screen_to_world(int x, int y)
+{
+	if(!level::current().camera()) {
+		return glm::vec3();
+	}
+	glm::vec4 view_port(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
+
+	GLfloat winz = 0.0f;
+	glReadPixels(x,preferences::actual_screen_height() - y,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&winz);
+	glm::vec3 screen(x, preferences::actual_screen_height() - y, winz);
+
+	return glm::unProject(screen, level::current().camera()->view_mat(), level::current().camera()->projection_mat(), view_port);
+}
+
+}
+#endif
+
 bool level_runner::handle_mouse_events(const SDL_Event &event)
 {
 	static const int MouseDownEventID = get_object_event_id("mouse_down");
@@ -487,11 +508,22 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				} else {
 					callable->add("mouse_button", variant(button_state));
 				}
+#if defined(USE_ISOMAP)
+				glm::vec3 v3;
+				v3 = screen_to_world(mx, my);
+				std::vector<variant> v3_list;
+				v3_list.push_back(variant(v3.x)); v3_list.push_back(variant(v3.y)); v3_list.push_back(variant(v3.z)); 
+				callable->add("world_point", variant(&v3_list));
+#endif
 				std::vector<variant> items;
 				// Grab characters around point, z-order sort them, so that when
 				// we process them we go from highest to lowest, allowing a higher
 				// object to swallow an event before the lower ones get it.
 				std::vector<entity_ptr> cs = lvl_->get_characters_at_point(x, y, last_draw_position().x/100, last_draw_position().y/100);
+#if defined(USE_ISOMAP)
+				std::vector<entity_ptr> wcs = lvl_->get_characters_at_world_point(v3);
+				cs.insert(cs.end(), wcs.begin(), wcs.end());
+#endif
 				std::sort(cs.begin(), cs.end(), zorder_compare);
 				std::vector<entity_ptr>::iterator it;
 				bool handled = false;
@@ -537,7 +569,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					items.push_back(variant(e.get()));
 				}
 				// Handling for "catch all" mouse events.
-				callable->add("handled", variant(handled));
+				callable->add("handled", variant::from_bool(handled));
 				variant obj_ary(&items);
 				callable->add("objects_under_mouse", obj_ary);
 				std::vector<entity_ptr> level_chars(level::current().get_chars());

@@ -3375,7 +3375,7 @@ std::vector<entity_ptr> level::get_characters_at_point(int x, int y, int screen_
 {
 	std::vector<entity_ptr> result;
 	foreach(entity_ptr c, chars_) {
-		if(object_classification_hidden(*c)) {
+		if(object_classification_hidden(*c) || c->truez()) {
 			continue;
 		}
 
@@ -4655,6 +4655,24 @@ const float* level::view() const
 {
 	ASSERT_LOG(camera_ != NULL, "level::view(): Accessing camera_ but is null");
 	return camera_->view();
+}
+
+std::vector<entity_ptr> level::get_characters_at_world_point(const glm::vec3& pt)
+{
+	const double tolerance = 0.25;
+	std::vector<entity_ptr> result;
+	foreach(entity_ptr c, chars_) {
+		if(object_classification_hidden(*c) || c->truez() == false) {
+			continue;
+		}
+
+		if(abs(pt.x - c->tx()) < tolerance 
+			&& abs(pt.y - c->ty()) < tolerance 
+			&& abs(pt.z - c->tz()) < tolerance) {
+			result.push_back(c);
+		}
+	}
+	return result;	
 }
 #endif
 

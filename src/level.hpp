@@ -156,6 +156,7 @@ public:
 	void set_mouselook(bool ml=true) { mouselook_enabled_ = ml; }
 	bool is_mouselook_inverted() const { return mouselook_inverted_; }
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
+	std::vector<entity_ptr> get_characters_at_world_point(const glm::vec3& pt);
 #endif
 
 

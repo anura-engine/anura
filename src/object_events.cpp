@@ -64,6 +64,18 @@ std::vector<std::string> create_object_event_names()
 	res.push_back("being_added");
 	res.push_back("being_removed");
 	res.push_back("window_resize");
+	res.push_back("mouse_down");
+	res.push_back("mouse_up");
+	res.push_back("mouse_move");
+	res.push_back("mouse_down*");
+	res.push_back("mouse_up*");
+	res.push_back("mouse_move*");
+	res.push_back("mouse_enter");
+	res.push_back("mouse_leave");
+	res.push_back("click");
+	res.push_back("drag");
+	res.push_back("drag_start");
+	res.push_back("drag_end");
 
 	ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 	return res;
@@ -119,6 +131,18 @@ variant_type_ptr get_object_event_arg_type(int id)
 	}
 	switch(id) {
 		EVENT_ARG(WINDOW_RESIZE, "{width: int, height: int}")
+		EVENT_ARG(MOUSE_DOWN, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_UP, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_MOVE, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_DOWN_STAR, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal], handled: bool, objects_under_mouse: [custom_obj]}")
+		EVENT_ARG(MOUSE_UP_STAR, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal], handled: bool, objects_under_mouse: [custom_obj]}")
+		EVENT_ARG(MOUSE_MOVE_STAR, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal], handled: bool, objects_under_mouse: [custom_obj]}")
+		EVENT_ARG(MOUSE_ENTER, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_LEAVE, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_CLICK, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_DRAG, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_DRAG_START, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_DRAG_END, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		default:
 			return variant_type_ptr();
 	}
