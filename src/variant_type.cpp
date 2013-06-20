@@ -42,9 +42,18 @@ variant_type::~variant_type()
 
 namespace {
 
-std::map<std::string, variant> load_named_variant_info()
+std::map<std::string, variant> get_builtin_variant_info()
 {
 	std::map<std::string, variant> result;
+	result["Numeric"] = variant("int|decimal");
+	result["Vec2"] = variant("[numeric,numeric]");
+	result["Vec3"] = variant("[numeric,numeric,numeric]");
+	return result;
+}
+
+std::map<std::string, variant> load_named_variant_info()
+{
+	std::map<std::string, variant> result = get_builtin_variant_info();
 
 	const std::string path = module::map_file("data/types.cfg");
 	if(sys::file_exists(path)) {
@@ -149,7 +158,7 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return variant::variant_type_to_string(type_);
 	}
 
@@ -213,7 +222,7 @@ public:
 		return other != NULL;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "none";
 	}
 
@@ -238,7 +247,7 @@ public:
 		return other != NULL;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "any";
 	}
 
@@ -283,7 +292,7 @@ public:
 		return other != NULL;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "commands";
 	}
 
@@ -336,7 +345,7 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "class " + type_;
 	}
 
@@ -384,7 +393,7 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		if(type_ == "") {
 			return "custom_obj";
 		}
@@ -442,7 +451,7 @@ public:
 		return type_ == other->type_;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return type_;
 	}
 
@@ -490,7 +499,7 @@ public:
 		return other && other->interface_ == interface_;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return interface_->to_string();
 	}
 
@@ -592,7 +601,7 @@ public:
 		return true;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		std::string result;
 		for(int n = 0; n != types_.size(); ++n) {
 			if(n != 0) {
@@ -749,7 +758,7 @@ public:
 		return value_type_->is_equal(*other->value_type_);
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "[" + value_type_->to_string() + "]";
 	}
 
@@ -820,7 +829,7 @@ public:
 		return true;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		std::ostringstream s;
 		s << "[";
 		foreach(variant_type_ptr t, value_) {
@@ -889,7 +898,7 @@ public:
 		return value_type_->is_equal(*other->value_type_) &&
 		       key_type_->is_equal(*other->key_type_);
 	}
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		return "{" + key_type_->to_string() + " -> " + value_type_->to_string() + "}";
 	}
 
@@ -999,7 +1008,7 @@ public:
 
 		return true;
 	}
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		std::ostringstream s;
 		s << "{";
 		std::map<variant, variant_type_ptr>::const_iterator i = type_map_.begin();
@@ -1125,7 +1134,7 @@ public:
 		return true;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		std::string result = "function(";
 		for(int n = 0; n != args_.size(); ++n) {
 			if(n != 0) {
@@ -1237,7 +1246,7 @@ public:
 		return true;
 	}
 
-	std::string to_string() const {
+	std::string to_string_impl() const {
 		std::string result = "overload(";
 		foreach(const variant_type_ptr& p, fn_) {
 			result += p->to_string() + ",";

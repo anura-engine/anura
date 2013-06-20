@@ -878,7 +878,7 @@ public:
 					try {
 						interface_factory.reset(interface->create_factory(args[n]->query_variant_type()));
 					} catch(formula_interface::interface_mismatch_error& e) {
-						ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debug_pinpoint_location());
+						error_msg_ = "Could not create interface: " + e.msg;
 					}
 				}
 
@@ -926,6 +926,10 @@ private:
 	}
 
 	void static_error_analysis() const {
+		if(error_msg_.empty() == false) {
+			ASSERT_LOG(false, error_msg_ << " " << debug_pinpoint_location());
+		}
+
 		variant_type_ptr fn_type = left_->query_variant_type();
 		std::vector<variant_type_ptr> arg_types;
 		int min_args = 0;
@@ -936,7 +940,7 @@ private:
 		if(is_function) {
 			for(int n = 0; n != args_.size() && n != arg_types.size(); ++n) {
 				variant_type_ptr t = args_[n]->query_variant_type();
-				if(!variant_types_compatible(arg_types[n], t)) {
+				if(!variant_types_compatible(arg_types[n], t) && (n >= interfaces_.size() || !interfaces_[n])) {
 					std::string msg = " DOES NOT MATCH ";
 					if(variant_types_compatible(arg_types[n], variant_type::get_null_excluded(t))) {
 						msg = " MIGHT BE NULL ";
@@ -962,6 +966,7 @@ private:
 	expression_ptr left_;
 	std::vector<expression_ptr> args_;
 	std::vector<boost::intrusive_ptr<formula_interface_instance_factory> > interfaces_;
+	std::string error_msg_;
 };
 
 class dot_expression : public formula_expression {

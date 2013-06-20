@@ -93,7 +93,7 @@ public:
 	void set_str(const std::string& s) const { str_ = s; }
 	const std::string& str() const { return str_; }
 
-	virtual std::string to_string() const = 0;
+	std::string to_string() const { return to_string_impl(); }
 
 	virtual bool is_equal(const variant_type& o) const = 0;
 
@@ -108,6 +108,8 @@ private:
 	virtual variant_type_ptr subtract(variant_type_ptr other) const { return variant_type_ptr(); }
 
 	virtual variant convert_impl(const variant& v) const { throw conversion_failure_exception(); }
+
+	virtual std::string to_string_impl() const = 0;
 
 	mutable std::string str_;
 };

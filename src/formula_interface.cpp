@@ -85,9 +85,9 @@ public:
 		RAISE_MISMATCH(def != NULL, "Trying to make an interface out of an invalid type");
 		foreach(const Entry& e, slots) {
 			const formula_callable_definition::entry* entry = def->get_entry_by_id(e.id);
-			RAISE_MISMATCH(entry != NULL, "Type does not match interface because it does not contain " << e.id);
-			RAISE_MISMATCH(entry->variant_type, "Type does not match interface because " << e.id << " does not have type information");
-			RAISE_MISMATCH(variant_types_compatible(e.type, entry->variant_type), "Type does not match interface because " << e.id << " is a " << entry->variant_type->to_string() << " when a " << e.type->to_string() << " is expected");
+			RAISE_MISMATCH(entry != NULL, "Type " << type->to_string() << " does not match interface because it does not contain " << e.id);
+			RAISE_MISMATCH(entry->variant_type, "Type " << type->to_string() << " does not match interface because " << e.id << " does not have type information");
+			RAISE_MISMATCH(variant_types_compatible(e.type, entry->variant_type), "Type " << type->to_string() << " does not match interface because " << e.id << " is a " << entry->variant_type->to_string() << " when a " << e.type->to_string() << " is expected");
 
 			const int nslot = def->get_slot(e.id);
 			mapping_.push_back(nslot);
