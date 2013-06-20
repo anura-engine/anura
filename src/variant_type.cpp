@@ -733,7 +733,9 @@ class variant_type_list : public variant_type
 {
 public:
 	explicit variant_type_list(const variant_type_ptr& value) : value_type_(value)
-	{}
+	{
+		assert(value);
+	}
 
 	bool match(const variant& v) const {
 		if(!v.is_list()) {
@@ -1949,6 +1951,9 @@ variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& el
 
 variant_type_ptr variant_type::get_list(variant_type_ptr element_type)
 {
+	if(!element_type) {
+		element_type = get_any();
+	}
 	return variant_type_ptr(new variant_type_list(element_type));
 }
 
@@ -1959,6 +1964,13 @@ variant_type_ptr variant_type::get_specific_list(const std::vector<variant_type_
 
 variant_type_ptr variant_type::get_map(variant_type_ptr key_type, variant_type_ptr value_type)
 {
+	if(!key_type) {
+		key_type = get_any();
+	}
+
+	if(!value_type) {
+		value_type = get_any();
+	}
 	return variant_type_ptr(new variant_type_map(key_type, value_type));
 }
 

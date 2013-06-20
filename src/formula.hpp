@@ -67,10 +67,11 @@ public:
 	}
 
 	struct strict_check_scope {
-		explicit strict_check_scope(bool is_strict=true);
+		explicit strict_check_scope(bool is_strict=true, bool warnings=false);
 		~strict_check_scope();
 
 		bool old_value;
+		bool old_warning_value;
 	};
 
 	static const std::set<formula*>& get_all();

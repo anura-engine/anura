@@ -45,6 +45,9 @@
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
+#define STRICT_ERROR(s) if(g_strict_formula_checking_warnings) { std::cerr << "Warning: " << s; } else { ASSERT_LOG(false, s); }
+#define STRICT_ASSERT(cond, s) if(!(cond)) { STRICT_ERROR(s); }
+
 namespace {
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::formula* last_executed_formula;
@@ -52,6 +55,7 @@ namespace {
 	bool _verbatim_string_expressions = false;
 
 	bool g_strict_formula_checking = false;
+	bool g_strict_formula_checking_warnings = false;
 
 	std::set<game_logic::formula*>& all_formulae() {
 		static std::set<game_logic::formula*>* instance = new std::set<game_logic::formula*>;
@@ -716,9 +720,9 @@ public:
 					known += k + " ";
 				}
 				if(callable_def_->type_name() != NULL) {
-					ASSERT_LOG(false, "Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
+					STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
 				} else {
-					ASSERT_LOG(false, "Unknown identifier '" << id_ << "' " << debug_pinpoint_location() << "\nIdentifiers that are valid in this scope: " << known << "\n");
+					STRICT_ERROR("Unknown identifier '" << id_ << "' " << debug_pinpoint_location() << "\nIdentifiers that are valid in this scope: " << known << "\n");
 				}
 			}
 		}
@@ -2416,7 +2420,16 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 	expression_ptr original = result;
 
 	if(g_strict_formula_checking) {
-		original->perform_static_error_analysis();
+		if(g_strict_formula_checking_warnings) {
+			assert_recover_scope scope;
+			try {
+				original->perform_static_error_analysis();
+			} catch(validation_failure_exception& e) {
+				std::cerr << "(assert treated as warning)\n";
+			}
+		} else {
+			original->perform_static_error_analysis();
+		}
 	}
 
 	if(reduce_to_static) {
@@ -2457,8 +2470,18 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 	
 	if(result) {
 		result->copy_debug_info_from(*original);
+
 		if(g_strict_formula_checking) {
-			result->perform_static_error_analysis();
+			if(g_strict_formula_checking_warnings) {
+				assert_recover_scope scope;
+				try {
+					original->perform_static_error_analysis();
+				} catch(validation_failure_exception& e) {
+					std::cerr << "(assert treated as warning)\n";
+				}
+			} else {
+				original->perform_static_error_analysis();
+			}
 		}
 	}
 
@@ -2567,7 +2590,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 	
 	if(formula_name.empty()) {
 		if(g_strict_formula_checking) {
-			ASSERT_LOG(!result_type || variant_types_compatible(result_type, fml->query_variant_type()), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->query_variant_type()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end));
+			STRICT_ASSERT(!result_type || variant_types_compatible(result_type, fml->query_variant_type()), "Formula function return type mis-match. Expects " << result_type->to_string() << " but expression evaluates to " << fml->query_variant_type()->to_string() << "\n" << pinpoint_location(formula_str, beg->begin, (i2-1)->end));
 		}
 
 		return expression_ptr(new lambda_function_expression(args, fml, callable_def ? callable_def->num_slots() : 0, default_args, variant_types, result_type ? result_type : fml->query_variant_type()));
@@ -3025,15 +3048,17 @@ void formula::fail_if_static_context()
 	}
 }
 
-formula::strict_check_scope::strict_check_scope(bool is_strict)
-  : old_value(g_strict_formula_checking)
+formula::strict_check_scope::strict_check_scope(bool is_strict, bool is_warnings)
+  : old_value(g_strict_formula_checking), old_warning_value(g_strict_formula_checking_warnings)
 {
 	g_strict_formula_checking = is_strict;
+	g_strict_formula_checking_warnings = is_strict;
 }
 
 formula::strict_check_scope::~strict_check_scope()
 {
 	g_strict_formula_checking = old_value;
+	g_strict_formula_checking_warnings = old_warning_value;
 }
 
 formula_ptr formula::create_optional_formula(const variant& val, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_definition)

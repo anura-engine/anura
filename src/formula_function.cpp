@@ -3595,6 +3595,7 @@ void function_expression::check_arg_type(int narg, const std::string& type_str) 
 	}
 
 	variant_type_ptr provided = args()[narg]->query_variant_type();
+	assert(provided);
 	ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << " " << debug_pinpoint_location())
 }
 
