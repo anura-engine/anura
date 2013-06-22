@@ -1239,6 +1239,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->finalize_properties();
+	callable_definition_->set_strict(is_strict_);
 
 	//END OF FIRST PARSE.
 	//We've now constructed our definition of the object, and we can

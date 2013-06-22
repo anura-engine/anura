@@ -196,8 +196,8 @@ variant get_class_node(const std::string& type)
 	return i->second;
 }
 
-enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_ORPHANED, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
-static const std::string BaseFields[] = {"_data", "value", "self", "me", "orphaned_by_update", "_class", "lib"};
+enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
+static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib"};
 
 class formula_class_definition : public formula_callable_definition
 {
@@ -221,8 +221,12 @@ public:
 			case FIELD_ME:
 			slots_.back().variant_type = variant_type::get_class(class_name);
 			break;
+			case FIELD_NEW_IN_UPDATE:
 			case FIELD_ORPHANED:
 			slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+			break;
+			case FIELD_PREVIOUS:
+			slots_.back().variant_type = variant_type::get_class(class_name);
 			break;
 			case FIELD_CLASS:
 			slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
@@ -751,10 +755,9 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 			return;
 		}
 
+		const_wml_serializable_formula_callable_ptr ptr(obj);
 		fn(node);
 
-		const_wml_serializable_formula_callable_ptr ptr(obj);
-		wml_formula_callable_serialization_scope::register_serialized_object(ptr);
 		seen->push_back(obj);
 
 		foreach(const variant& v, obj->variables_) {
@@ -780,16 +783,21 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 
 void formula_object::update(formula_object& updated)
 {
+	std::vector<boost::intrusive_ptr<formula_object> > objects;
 	std::map<int, formula_object*> src, dst;
-	visit_variants(variant(this), [&dst](variant v) {
+	visit_variants(variant(this), [&dst,&objects](variant v) {
 		formula_object* obj = v.try_convert<formula_object>();
 		if(obj) {
 			dst[obj->id_] = obj;
+			obj->previous_.reset();
+			obj->previous_.reset(new formula_object(*obj));
+			objects.push_back(obj);
 		}});
-	visit_variants(variant(&updated), [&src](variant v) {
+	visit_variants(variant(&updated), [&src,&objects](variant v) {
 		formula_object* obj = v.try_convert<formula_object>();
 		if(obj) {
 			src[obj->id_] = obj;
+			objects.push_back(obj);
 		}});
 
 	std::map<formula_object*, formula_object*> mapping;
@@ -807,13 +815,18 @@ void formula_object::update(formula_object& updated)
 	}
 
 	for(auto i = mapping.begin(); i != mapping.end(); ++i) {
-		i->second = i->first;
+		*i->second = *i->first;
 	}
 
 	for(auto i = dst.begin(); i != dst.end(); ++i) {
 		if(src.count(i->first) == 0) {
 			i->second->orphaned_ = true;
+			i->second->new_in_update_ = false;
 		}
+	}
+
+	for(auto i = src.begin(); i != src.end(); ++i) {
+		i->second->new_in_update_ = dst.count(i->first) == 0;
 	}
 }
 
@@ -829,7 +842,6 @@ void formula_object::map_object_into_different_tree(variant& v, const std::map<f
 		auto itor = mapping.find(obj);
 		if(itor != mapping.end()) {
 			v = variant(itor->second);
-			return;
 		}
 
 		if(std::count(seen->begin(), seen->end(), obj)) {
@@ -950,7 +962,7 @@ int formula_object_id = 1;
 }
 
 formula_object::formula_object(const std::string& type, variant args)
-  : id_(formula_object_id++), orphaned_(false),
+  : id_(formula_object_id++), new_in_update_(true), orphaned_(false),
     class_(get_class(type)), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
@@ -1006,7 +1018,7 @@ void formula_object::call_constructors(variant args)
 }
 
 formula_object::formula_object(variant data)
-  : id_(data["id"].as_int()), orphaned_(false),
+  : id_(data["id"].as_int()), new_in_update_(true), orphaned_(false),
     class_(get_class(data["@class"].as_string())), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
@@ -1135,7 +1147,9 @@ variant formula_object::get_value_by_slot(int slot) const
 		case FIELD_VALUE: return tmp_value_;
 		case FIELD_SELF:
 		case FIELD_ME: return variant(this);
+		case FIELD_NEW_IN_UPDATE: return variant::from_bool(new_in_update_);
 		case FIELD_ORPHANED: return variant::from_bool(orphaned_);
+		case FIELD_PREVIOUS: if(previous_) { return variant(previous_.get()); } else { return variant(this); }
 		case FIELD_CLASS: return class_->name_variant();
 		case FIELD_LIB: return variant(get_library_object().get());
 		default: break;

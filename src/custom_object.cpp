@@ -3132,7 +3132,7 @@ variant custom_object::get_value(const std::string& key) const
 		}
 	}
 
-	ASSERT_LOG(!type_->is_strict(), "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << debug_description() << ": " << key);
+	ASSERT_LOG(!type_->is_strict(), "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << debug_description() << ": " << key << " At " << get_full_call_stack());
 
 	return variant();
 }

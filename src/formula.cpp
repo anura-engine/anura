@@ -1682,7 +1682,9 @@ const_formula_callable_definition_ptr create_where_definition(expr_table_ptr tab
 
 	ASSERT_LOG(items.empty() == false, "EMPTY WHERE CLAUSE");
 
-	return create_formula_callable_definition(&items[0], &items[0] + items.size(), def, &types[0]);
+	formula_callable_definition_ptr result = create_formula_callable_definition(&items[0], &items[0] + items.size(), def, &types[0]);
+	result->set_strict(def && def->is_strict());
+	return result;
 }
 
 class where_variables: public formula_callable {

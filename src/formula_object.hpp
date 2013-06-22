@@ -80,7 +80,10 @@ private:
 	void get_inputs(std::vector<formula_input>* inputs) const;
 
 	int id_;
+	bool new_in_update_;
 	bool orphaned_;
+
+	boost::intrusive_ptr<formula_object> previous_;
 
 	//overrides of the class's read-only properties.
 	std::vector<formula_ptr> property_overrides_;

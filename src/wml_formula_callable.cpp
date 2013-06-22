@@ -84,6 +84,7 @@ void add_object_to_set(variant v, std::set<wml_serializable_formula_callable*>* 
 	wml_serializable_formula_callable* ptr = v.try_convert<wml_serializable_formula_callable>();
 	if(ptr) {
 		set->insert(ptr);
+		wml_formula_callable_serialization_scope::register_serialized_object(ptr);
 	}
 }
 }

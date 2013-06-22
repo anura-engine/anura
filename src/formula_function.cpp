@@ -555,6 +555,8 @@ FUNCTION_DEF(update_object, 2, 2, "update_object(target_instance, src_instance)"
 	boost::intrusive_ptr<formula_object> src = args()[1]->evaluate(variables).convert_to<formula_object>();
 	return variant(new update_object_command(target, src));
 
+FUNCTION_TYPE_DEF
+	return variant_type::get_commands();
 END_FUNCTION_DEF(update_object)
 
 FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
