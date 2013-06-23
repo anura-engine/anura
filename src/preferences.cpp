@@ -1233,6 +1233,35 @@ namespace preferences {
 		return internal_tbs_server_;
 	}
 
+	const std::set<std::string>& get_build_options()
+	{
+		static std::set<std::string> res;
+		if(res.empty()) {
+#if defined(USE_ISOMAP)
+			res.insert("isomap");
+#endif
+#if defined(USE_GLES2)
+			res.insert("shaders");
+#endif
+#if defined(USE_BOX2D)
+			res.insert("box2d");
+#endif
+#if defined(USE_BULLET)
+			res.insert("bullet");
+#endif
+#if SDL_VERSION_ATLEAST(2, 0, 0)
+			res.insert("sdl2");
+#endif
+#if defined(GL_ES_VERSION_2_0)
+			res.insert("gles2");
+#endif
+#if defined(IMPLEMENT_SAVE_PNG)
+			res.insert("save_png");
+#endif
+		}
+		return res;
+	}
+
 	void set_locale(const std::string& value) {
 		locale_ = value;
 	}

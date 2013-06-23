@@ -17,6 +17,7 @@
 #ifndef PREFERENCES_HPP_INCLUDED
 #define PREFERENCES_HPP_INCLUDED
 
+#include <set>
 #include <string>
 
 #include "graphics.hpp"
@@ -221,6 +222,7 @@ void set_bequ( bool value );
 	void set_cookie(const variant &v);
 
 	bool internal_tbs_server();
+	const std::set<std::string>& get_build_options();
 
 	class editor_screen_size_scope {
 		int width_, height_;

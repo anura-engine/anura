@@ -408,6 +408,12 @@ extern "C" int main(int argcount, char* argvec[])
         }
 	}
 
+	std::cerr << "Build Options:";
+	for(auto bo : preferences::get_build_options()) {
+		std::cerr << " " << bo;
+	}
+	std::cerr << std::endl;
+
 #if defined(UTILITY_IN_PROC)
 	if(create_utility_in_new_process) {
 		argv.push_back(utility_name);

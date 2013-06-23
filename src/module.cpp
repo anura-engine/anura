@@ -299,6 +299,31 @@ void load(const std::string& mod_file_name, bool initial)
 				}
 			}
 		}
+		if(v.has_key("build_requirements")) {
+			const variant& br = v["build_requirements"];
+			if(br.is_string()) {
+				auto it = preferences::get_build_options().find(br.as_string());
+				ASSERT_LOG(it != preferences::get_build_options().end(), 
+					"Unsatisfied build requirement: " << br.as_string());
+			} else if(br.is_list()) {
+				std::vector<std::string> failed_reqs;
+				for(int n = 0; n != br.num_elements(); ++n) {
+					auto it = preferences::get_build_options().find(br[n].as_string());
+					if(it == preferences::get_build_options().end()) {
+						failed_reqs.push_back(br[n].as_string());
+					}
+				}
+				if(failed_reqs.empty() == false) {
+					std::stringstream str;
+					for(auto fr : failed_reqs) {
+						str << " " << fr;
+					}
+					ASSERT_LOG(false, "There are unsatisfied build requirements:" << str.str());
+				}
+			} else {
+				ASSERT_LOG(false, "In module.cfg build_requirements must be string or list of strings: " << mod_file_name);
+			}
+		}
 	}
 	modules m = {name, pretty_name, abbrev,
 	             {make_base_module_path(name), make_user_module_path(name)}};

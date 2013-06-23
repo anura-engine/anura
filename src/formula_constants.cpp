@@ -93,6 +93,12 @@ variant get_constant(const std::string& id)
 		v.push_back(variant("sw"));
 		v.push_back(variant("nw"));
 		return variant(&v);
+	} else if(id == "BUILD_OPTIONS") {
+		std::vector<variant> v;
+		for(auto bo : preferences::get_build_options()) {
+			v.push_back(variant(bo));
+		}
+		return variant(&v);
 	}
 
 	for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {
