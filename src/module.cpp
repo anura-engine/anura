@@ -162,7 +162,7 @@ std::string make_module_id(const std::string& name) {
 		modname = name.substr(0, cpos);
 		nn = name.substr(cpos+1);
 	}
-	int spos = nn.rfind('/');
+	size_t spos = nn.rfind('/');
 	if(spos == std::string::npos) {
 		spos = nn.rfind('\\');
 	}

@@ -39,7 +39,7 @@ uint32_t interpolate_pixels (uint32_t sourcePixelOne, uint32_t sourcePixelTwo){
 	uint8_t* pixel_two_channel = reinterpret_cast<uint8_t*>(&sourcePixelTwo);
 	
 	for ( int color = 0; color < 4; ++color) { 
-		if(!color==3){
+		if(color != 3){
 			result_pixel_color_channel[color] = (pixel_one_channel[color] + pixel_two_channel[color]) / 2;
 		}else{
 			//special handling for alpha channel                 
@@ -65,7 +65,7 @@ uint32_t interpolate_pixels (uint32_t sourcePixelOne, uint32_t sourcePixelTwo, u
 	
 
 	for ( int color = 0; color < 4; ++color) { 
-		if(!color==3){
+		if(color != 3){
 			resultPixel.rgba[color] = (pixel_one.rgba[color] + pixel_two.rgba[color] + pixel_three.rgba[color] + pixel_four.rgba[color]) / 4;
 		}else{
 			//special handling for alpha channel
