@@ -314,12 +314,11 @@ void load(const std::string& mod_file_name, bool initial)
 					}
 				}
 				if(failed_reqs.empty() == false) {
-					std::cerr << "Missing build requirements:";
+					std::stringstream str;
 					for(auto fr : failed_reqs) {
-						std::cerr << " " << fr;
+						str << " " << fr;
 					}
-					std::cerr << std::endl;
-					ASSERT_LOG(false, "There are unsatisfied build requirements.");
+					ASSERT_LOG(false, "There are unsatisfied build requirements:" << str.str());
 				}
 			} else {
 				ASSERT_LOG(false, "In module.cfg build_requirements must be string or list of strings: " << mod_file_name);
