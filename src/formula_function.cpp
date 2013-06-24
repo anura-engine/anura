@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <boost/bind.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <boost/algorithm/string.hpp>
 #include <iomanip>
@@ -934,11 +935,19 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(decimal)
 
-FUNCTION_DEF(integer, 1, 1, "integer(value) -> int: converts the value to an integer")
-	return variant(args()[0]->evaluate(variables).as_int());
+FUNCTION_DEF(int, 1, 1, "int(value) -> int: converts the value to an integer")
+	variant v = args()[0]->evaluate(variables);
+	if(v.is_string()) {
+		try {
+			return variant(boost::lexical_cast<int>(v.as_string()));
+		} catch(...) {
+			ASSERT_LOG(false, "Could not parse string as integer: " << v.write_json());
+		}
+	}
+	return variant(v.as_int());
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
-END_FUNCTION_DEF(integer)
+END_FUNCTION_DEF(int)
 
 FUNCTION_DEF(sin, 1, 1, "sin(x): Standard sine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
@@ -2741,12 +2750,6 @@ END_FUNCTION_DEF(unencode)
 			}
 		}
 	};
-
-FUNCTION_DEF(int, 1, -1, "overload(fn...): makes an overload of functions")
-	return variant(args()[0]->evaluate(variables).as_int());
-FUNCTION_TYPE_DEF
-	return variant_type::get_type(variant::VARIANT_TYPE_INT);
-END_FUNCTION_DEF(int)
 
 	class str_function : public function_expression {
 	public:

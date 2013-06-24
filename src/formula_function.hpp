@@ -117,6 +117,7 @@ public:
 	const_formula_callable_definition_ptr query_modified_definition_based_on_result(bool result, const_formula_callable_definition_ptr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
 
 	std::vector<const_expression_ptr> query_children() const;
+	std::vector<const_expression_ptr> query_children_recursive() const;
 
 	void set_definition_used_by_expression(const_formula_callable_definition_ptr def) { definition_used_ = def; }
 	const_formula_callable_definition_ptr get_definition_used_by_expression() const { return definition_used_; }
