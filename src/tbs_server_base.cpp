@@ -160,7 +160,10 @@ namespace tbs
 				send_fn(get_server_info());
 				return;
 			} else {
-				send_fn(json::parse("{ \"type\": \"unknown_message\" }"));
+				std::map<variant,variant> m;
+				m[variant("type")] = variant("unknown_message");
+				m[variant("msg_type")] = variant(type);
+				send_fn(variant(&m));
 				return;
 			}
 		}

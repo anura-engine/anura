@@ -3054,7 +3054,7 @@ formula::strict_check_scope::strict_check_scope(bool is_strict, bool is_warnings
   : old_value(g_strict_formula_checking), old_warning_value(g_strict_formula_checking_warnings)
 {
 	g_strict_formula_checking = is_strict;
-	g_strict_formula_checking_warnings = is_strict;
+	g_strict_formula_checking_warnings = is_warnings;
 }
 
 formula::strict_check_scope::~strict_check_scope()
