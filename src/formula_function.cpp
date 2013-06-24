@@ -73,6 +73,23 @@ namespace {
 
 	const float radians_to_degrees = 57.29577951308232087;
 	const std::string EmptyStr;
+
+	using namespace game_logic;
+	std::string read_identifier_expression(const formula_expression& expr) {
+		variant literal;
+		expr.is_literal(literal);
+		if(literal.is_string()) {
+			return literal.as_string();
+		} else {
+			std::string result;
+			if(expr.is_identifier(&result)) {
+				return result;
+			}
+
+			ASSERT_LOG(false, "Expected identifier, found " << expr.str() << expr.debug_pinpoint_location());
+			return "";
+		}
+	}
 }
 
 namespace game_logic {
@@ -83,6 +100,19 @@ formula_expression::formula_expression(const char* name) : name_(name), begin_st
 std::vector<const_expression_ptr> formula_expression::query_children() const {
 	std::vector<const_expression_ptr> result = get_children();
 	result.erase(std::remove(result.begin(), result.end(), const_expression_ptr()), result.end());
+	return result;
+}
+
+std::vector<const_expression_ptr> formula_expression::query_children_recursive() const {
+	std::vector<const_expression_ptr> result;
+	result.push_back(const_expression_ptr(this));
+	for(const_expression_ptr child : query_children()) {
+		if(child.get() != this) {
+			std::vector<const_expression_ptr> items = child->query_children_recursive();
+			result.insert(result.end(), items.begin(), items.end());
+		}
+	}
+
 	return result;
 }
 
@@ -1887,7 +1917,7 @@ public:
 		: function_expression("filter", args, 2, 3)
 	{
 		if(args.size() == 3) {
-			args[1]->is_identifier(&identifier_);
+			identifier_ = read_identifier_expression(*args[1]);
 		}
 	}
 private:
@@ -1963,6 +1993,20 @@ private:
 			return variant_type::get_union(v);
 		}
 	}
+
+	void static_error_analysis() const {
+		bool found_valid_expr = false;
+		std::vector<const_expression_ptr> expressions = args().back()->query_children_recursive();
+		for(const_expression_ptr expr : expressions) {
+			const std::string& s = expr->str();
+			if(s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to filter() function does not contain 'value' or 'index' " << debug_pinpoint_location());
+	}
 };
 
 FUNCTION_DEF(unique, 1, 1, "unique(list): returns unique elements of list")
@@ -1997,7 +2041,7 @@ public:
 		: function_expression("find", args, 2, 3)
 	{
 		if(args.size() == 3) {
-			args[1]->is_identifier(&identifier_);
+			identifier_ = read_identifier_expression(*args[1]);
 		}
 	}
 
@@ -2052,6 +2096,20 @@ private:
 
 		return variant_type::get_any();
 	}
+
+	void static_error_analysis() const {
+		bool found_valid_expr = false;
+		std::vector<const_expression_ptr> expressions = args().back()->query_children_recursive();
+		for(const_expression_ptr expr : expressions) {
+			const std::string& s = expr->str();
+			if(s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find() function does not contain 'value' or 'index' " << debug_pinpoint_location());
+	}
 };
 
 class find_or_die_function : public function_expression {
@@ -2060,7 +2118,7 @@ public:
 		: function_expression("find_or_die", args, 2, 3)
 	{
 		if(args.size() == 3) {
-			args[1]->is_identifier(&identifier_);
+			identifier_ = read_identifier_expression(*args[1]);
 		}
 	}
 
@@ -2111,6 +2169,20 @@ private:
 		}
 
 		return variant_type::get_any();
+	}
+
+	void static_error_analysis() const {
+		bool found_valid_expr = false;
+		std::vector<const_expression_ptr> expressions = args().back()->query_children_recursive();
+		for(const_expression_ptr expr : expressions) {
+			const std::string& s = expr->str();
+			if(s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to find_or_die() function does not contain 'value' or 'index' " << debug_pinpoint_location());
 	}
 };
 
@@ -2242,7 +2314,7 @@ public:
 		: function_expression("map", args, 2, 3)
 	{
 		if(args.size() == 3) {
-			args[1]->is_identifier(&identifier_);
+			identifier_ = read_identifier_expression(*args[1]);
 		}
 	}
 private:
@@ -2310,6 +2382,20 @@ private:
 		}
 
 		return variant_type::get_list(args().back()->query_variant_type());
+	}
+
+	void static_error_analysis() const {
+		bool found_valid_expr = false;
+		std::vector<const_expression_ptr> expressions = args().back()->query_children_recursive();
+		for(const_expression_ptr expr : expressions) {
+			const std::string& s = expr->str();
+			if(s == "value" || s == "key" || s == "index" || s == identifier_) {
+				found_valid_expr = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found_valid_expr, "Last argument to map() function does not contain 'value', 'key', or 'index' " << identifier_ << debug_pinpoint_location());
 	}
 };
 
