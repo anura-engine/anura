@@ -22,36 +22,19 @@
 
 #include "SDL.h"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
 class data_blob : public game_logic::formula_callable
 {
 public:
-	data_blob(const std::string& key, const std::vector<char>& in_data) 
-		: data_(in_data), key_(key)
-	{
-		rw_ops_ = boost::shared_ptr<SDL_RWops>(SDL_RWFromMem(&data_[0], data_.size()), deleter());
-	}
-	
-	virtual ~data_blob()
-	{
-	}
-
-	variant get_value(const std::string& key) const 
-	{
-		return variant();
-	}
-
-	SDL_RWops* get_rw_ops()
-	{
-		return rw_ops_.get();
-	}
-
-	std::string operator()()
-	{
-		return key_;
-	}
+	data_blob(const std::string& key, const std::vector<char>& in_data);
+	virtual ~data_blob();
+	SDL_RWops* get_rw_ops();
+	std::string operator()();
+	std::string to_string() const;
 
 private:
+	DECLARE_CALLABLE(data_blob);
 	struct deleter
 	{
 		void operator()(SDL_RWops* p) 

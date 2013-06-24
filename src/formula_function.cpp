@@ -2621,6 +2621,9 @@ FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given 
 	} else {
 		return cd->get_value("decompress");
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string"); // |builtin compressed_data
+	RETURN_TYPE("builtin data_blob")
 END_FUNCTION_DEF(decompress)
 
 FUNCTION_DEF(unencode, 1, 1, "unencode(expr) -> data_blob: Tries to unencode the given base64 encoded data.")
@@ -2687,7 +2690,31 @@ END_FUNCTION_DEF(unencode)
 			return variant_type::get_list(args()[0]->query_variant_type());
 		}
 	};
-	
+
+	class split_any_of_function : public function_expression {
+	public:
+		explicit split_any_of_function(const args_list& args)
+		: function_expression("split_any_of", args, 2, 2)
+		{}
+	private:
+		variant execute(const formula_callable& variables) const {
+			std::vector<std::string> chopped;
+			const std::string thestring = args()[0]->evaluate(variables).as_string();
+			const std::string delimiters = args()[1]->evaluate(variables).as_string();
+			boost::split(chopped, thestring, boost::is_any_of(delimiters));
+		
+			std::vector<variant> res;
+			for(auto it : chopped) {
+				res.push_back(variant(it));
+			}
+			return variant(&res);
+		}
+
+		variant_type_ptr get_variant_type() const {
+			return variant_type::get_list(args()[0]->query_variant_type());
+		}
+	};
+
 	class slice_function : public function_expression {
 	public:
 		explicit slice_function(const args_list& args)
@@ -3912,6 +3939,7 @@ namespace {
 			FUNCTION(head);
 			FUNCTION(size);
 			FUNCTION(split);
+			FUNCTION(split_any_of);
 			FUNCTION(slice);
 			FUNCTION(str);
 			FUNCTION(strstr);
