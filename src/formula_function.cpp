@@ -2535,6 +2535,9 @@ FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given 
 	} else {
 		return cd->get_value("decompress");
 	}
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string"); // |builtin compressed_data
+	RETURN_TYPE("builtin data_blob")
 END_FUNCTION_DEF(decompress)
 
 FUNCTION_DEF(unencode, 1, 1, "unencode(expr) -> data_blob: Tries to unencode the given base64 encoded data.")
