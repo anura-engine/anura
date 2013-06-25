@@ -26,6 +26,7 @@
 #include "frame.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
+#include "obj_reader.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
 #include "rectangle_rotator.hpp"
@@ -49,13 +50,11 @@ unsigned int current_palette_mask = 0;
 
 frame::frame(variant node)
    : id_(node["id"].as_string()),
-     image_(node["image"].as_string()),
      variant_id_(id_),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
 	 end_event_id_(get_object_event_id("end_" + id_ + "_anim")),
 	 leave_event_id_(get_object_event_id("leave_" + id_ + "_anim")),
 	 process_event_id_(get_object_event_id("process_" + id_)),
-     texture_(node.has_key("fbo") ? node["fbo"].convert_to<texture_object>()->texture() : graphics::texture::get(image_, node["image_formula"].as_string_default())),
 	 solid_(solid_info::create(node)),
      collide_rect_(node.has_key("collide") ? rect(node["collide"]) :
 	               rect(node["collide_x"].as_int(),
@@ -97,8 +96,17 @@ frame::frame(variant node)
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
-	 num_vertices_(0)
+	 back_face_culling_(node["cull"].as_bool(false))
 {
+	if(node.has_key("obj") == false) {
+		image_ = node["image"].as_string();
+		if(node.has_key("fbo")) {
+			texture_ = node["fbo"].convert_to<texture_object>()->texture();
+		} else {
+			texture_ = graphics::texture::get(image_, node["image_formula"].as_string_default());
+		}
+	}
+
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
 	foreach(const std::string& f, hit_frames) {
 		hit_frames_.push_back(boost::lexical_cast<int>(f));
@@ -176,6 +184,7 @@ frame::frame(variant node)
 	}
 
 	if(node.has_key("frame_info")) {
+		ASSERT_LOG(node.has_key("obj"), "'frame_info' and 'obj' attributes don't play well together.");
 		std::vector<int> values = node["frame_info"].as_list_int();
 		int num_values = values.size();
 
@@ -253,69 +262,132 @@ frame::frame(variant node)
 		}
 	}
 
-	const int vbo_cnt = 2;
-	vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
-	glGenBuffers(vbo_cnt, &vbo_array_[0]);
+	if(node.has_key("obj")) {
+		if(node["obj"].is_string()) {
+			std::vector<obj::obj_data> odata;
+			obj::load_obj_file(node["obj"].as_string(), odata);
+			ASSERT_LOG(!odata.empty(), "No data read from .obj file: " << node["obj"].as_string());
 
-	if(node.has_key("vertices")) {
-		const variant& vertices = node["vertices"];
-		ASSERT_LOG(vertices.is_list(), "Attribute 'vertices' must be a list type.");
+			const size_t vbo_cnt = odata.size();
+			vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
+			glGenBuffers(vbo_cnt, &vbo_array_[0]);
 
-		num_vertices_ = vertices[0].num_elements();
-		for(int n = 0; n != vertices.num_elements(); ++n) {
-			ASSERT_LOG(vertices[n].is_list(), "Each element of the 'vertices' list must be a list.");
-			ASSERT_LOG(vertices[n].num_elements() == num_vertices_, "Each element in 'vertices' list must have same number of co-ordinates.");
-			for(int m = 0; m != vertices[n].num_elements(); ++m) {
-				vertices_.push_back(GLfloat(vertices[n][m].as_decimal().as_float()));
+			int bufcnt = 0;
+			for(auto o : odata) {
+				ASSERT_LOG(o.face_vertices.size() == o.face_normals.size(), "Number of vertices != number of normals: " << o.face_vertices.size()/3 << " != " << o.face_normals.size()/3);
+				ASSERT_LOG(o.face_vertices.size()/3 == o.face_uvs.size()/2, "Number of vertices != number of uv co-ords: " << o.face_vertices.size()/3 << " != " << o.face_uvs.size()/2);
+				draw_data_3d dd3d;
+				dd3d.num_vertices = 3;
+				dd3d.vertex_count = o.face_vertices.size()/3;
+				dd3d.vertex_offset = 0;
+				dd3d.texture_offset = o.face_vertices.size() * sizeof(GLfloat);
+				dd3d.normal_offset = (o.face_uvs.size() + o.face_vertices.size()) * sizeof(GLfloat);
+				dd3d.mtl = o.mtl;
+				dd3d.vbo_cnt = bufcnt;
+
+				if(dd3d.mtl.tex_ambient.empty() == false) {
+					dd3d.tex_a = graphics::texture::get(dd3d.mtl.tex_ambient);
+				}
+				if(dd3d.mtl.tex_diffuse.empty() == false) {
+					dd3d.tex_d = graphics::texture::get(dd3d.mtl.tex_diffuse);
+				}
+				if(dd3d.mtl.tex_specular.empty() == false) {
+					dd3d.tex_s = graphics::texture::get(dd3d.mtl.tex_specular);
+				}
+
+				glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[bufcnt]);
+				const size_t data_size = (o.face_vertices.size() + o.face_normals.size() + o.face_uvs.size()) * sizeof(GLfloat);
+				glBufferData(GL_ARRAY_BUFFER, data_size, NULL, GL_STATIC_DRAW);
+				glBufferSubData(GL_ARRAY_BUFFER, dd3d.vertex_offset, o.face_vertices.size() * sizeof(GLfloat), &o.face_vertices[0]);
+				glBufferSubData(GL_ARRAY_BUFFER, dd3d.texture_offset, o.face_uvs.size() * sizeof(GLfloat), &o.face_uvs[0]);
+				glBufferSubData(GL_ARRAY_BUFFER, dd3d.normal_offset, o.face_normals.size() * sizeof(GLfloat), &o.face_normals[0]);
+				glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+				dd3d_array_.push_back(dd3d);
+				++bufcnt;
 			}
+		} else {
+			ASSERT_LOG(node["obj"].is_list(), "Attribute 'obj' must either be a a string or list of strings.");
+			// XXX
+		}
+	} else {
+		draw_data_3d dd3d;
+		dd3d.normal_offset = 0;
+		dd3d.vertex_offset = 0;
+		std::vector<GLfloat> vertex_data;
+		const int vbo_cnt = 1;
+		vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
+		glGenBuffers(vbo_cnt, &vbo_array_[0]);
+
+		if(node.has_key("vertices")) {
+			const variant& vertices = node["vertices"];
+			ASSERT_LOG(vertices.is_list(), "Attribute 'vertices' must be a list type.");
+
+			dd3d.num_vertices = vertices[0].num_elements();
+			for(int n = 0; n != vertices.num_elements(); ++n) {
+				ASSERT_LOG(vertices[n].is_list(), "Each element of the 'vertices' list must be a list.");
+				ASSERT_LOG(vertices[n].num_elements() == dd3d.num_vertices, "Each element in 'vertices' list must have same number of co-ordinates.");
+				for(int m = 0; m != vertices[n].num_elements(); ++m) {
+					vertex_data.push_back(GLfloat(vertices[n][m].as_decimal().as_float()));
+				}
+			}
+
+		} else {
+			vertex_data.push_back(0);	vertex_data.push_back(0);	vertex_data.push_back(0);
+			vertex_data.push_back(1);	vertex_data.push_back(0);	vertex_data.push_back(0);
+			vertex_data.push_back(1);	vertex_data.push_back(1);	vertex_data.push_back(0);
+
+			vertex_data.push_back(1);	vertex_data.push_back(1);	vertex_data.push_back(0);
+			vertex_data.push_back(0);	vertex_data.push_back(1);	vertex_data.push_back(0);
+			vertex_data.push_back(0);	vertex_data.push_back(0);	vertex_data.push_back(0);
+			dd3d.num_vertices = 3;
 		}
 
-	} else {
-		vertices_.push_back(0);	vertices_.push_back(0);	vertices_.push_back(0);
-		vertices_.push_back(1);	vertices_.push_back(0);	vertices_.push_back(0);
-		vertices_.push_back(1);	vertices_.push_back(1);	vertices_.push_back(0);
-
-		vertices_.push_back(1);	vertices_.push_back(1);	vertices_.push_back(0);
-		vertices_.push_back(0);	vertices_.push_back(1);	vertices_.push_back(0);
-		vertices_.push_back(0);	vertices_.push_back(0);	vertices_.push_back(0);
-		num_vertices_ = 3;
-	}
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
-	glBufferData(GL_ARRAY_BUFFER, vertices_.size()*sizeof(GLfloat), &vertices_[0], GL_STATIC_DRAW);
-
-	if(node.has_key("texcoords")) {
-		const variant& tc = node["texcoords"];
-		ASSERT_LOG(tc.is_list(), "Attribute 'texcoords' must be a list type.");
-		for(int n = 0; n != tc.num_elements(); ++n) {
-			ASSERT_LOG(tc[n].is_list(), "Each element of the 'texcoords' list must be a list.");
-			for(int m = 0; m != tc[n].num_elements(); ++m) {
-				texcoords_.push_back(GLfloat(tc[n][m].as_decimal().as_float()));
+		std::vector<GLfloat> texcoords;
+		if(node.has_key("texcoords")) {
+			const variant& tc = node["texcoords"];
+			ASSERT_LOG(tc.is_list(), "Attribute 'texcoords' must be a list type.");
+			for(int n = 0; n != tc.num_elements(); ++n) {
+				ASSERT_LOG(tc[n].is_list(), "Each element of the 'texcoords' list must be a list.");
+				for(int m = 0; m != tc[n].num_elements(); ++m) {
+					texcoords.push_back(GLfloat(tc[n][m].as_decimal().as_float()));
+				}
 			}
-		}
-	} else {
+		} else {
 
-		for(int t = 0; t < nframes_; ++t) {
-			const frame_info* info = NULL;
-			GLfloat rect[4];
-			get_rect_in_texture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
-			rect[0] = texture_.translate_coord_x(rect[0]);
-			rect[1] = texture_.translate_coord_y(rect[1]);
-			rect[2] = texture_.translate_coord_x(rect[2]);
-			rect[3] = texture_.translate_coord_y(rect[3]);
+			for(int t = 0; t < nframes_; ++t) {
+				const frame_info* info = NULL;
+				GLfloat rect[4];
+				get_rect_in_texture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
+				rect[0] = texture_.translate_coord_x(rect[0]);
+				rect[1] = texture_.translate_coord_y(rect[1]);
+				rect[2] = texture_.translate_coord_x(rect[2]);
+				rect[3] = texture_.translate_coord_y(rect[3]);
 
-			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[3]);
-			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[3]);
-			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[1]);
+				texcoords.push_back(rect[2]); texcoords.push_back(rect[3]);
+				texcoords.push_back(rect[0]); texcoords.push_back(rect[3]);
+				texcoords.push_back(rect[0]); texcoords.push_back(rect[1]);
 	
-			texcoords_.push_back(rect[0]); texcoords_.push_back(rect[1]);
-			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[1]);
-			texcoords_.push_back(rect[2]); texcoords_.push_back(rect[3]);
+				texcoords.push_back(rect[0]); texcoords.push_back(rect[1]);
+				texcoords.push_back(rect[2]); texcoords.push_back(rect[1]);
+				texcoords.push_back(rect[2]); texcoords.push_back(rect[3]);
+			}
 		}
-	}
 
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
-	glBufferData(GL_ARRAY_BUFFER, texcoords_.size()*sizeof(GLfloat), &texcoords_[0], GL_STATIC_DRAW);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
+		const size_t data_size = (vertex_data.size() + texcoords.size()) * sizeof(GLfloat);
+		dd3d.vertex_count = vertex_data.size()/dd3d.num_vertices;
+		dd3d.vbo_cnt = 0;
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
+		glBufferData(GL_ARRAY_BUFFER, data_size, NULL, GL_STATIC_DRAW);
+		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_data.size()*sizeof(GLfloat), &vertex_data[0]);
+		dd3d.texture_offset = vertex_data.size()*sizeof(GLfloat);
+		dd3d.tex_a = texture_;
+
+		glBufferSubData(GL_ARRAY_BUFFER, dd3d.texture_offset, texcoords.size()*sizeof(GLfloat), &texcoords[0]);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+		dd3d_array_.push_back(dd3d);
+	}
 }
 
 frame::~frame()
@@ -653,35 +725,64 @@ void frame::draw3(int time, GLint va, GLint tc) const
 {
 	const int nframe = frame_number(time);
 
-	glActiveTexture(GL_TEXTURE0);
-	texture_.set_as_current_texture();
-
 	glEnable(GL_DEPTH_TEST);
+	if(back_face_culling_) {
+		glEnable(GL_CULL_FACE);
+	}
 	glEnableVertexAttribArray(va);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
-	glVertexAttribPointer(va, 
-		num_vertices_,      // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,					// stride
-		0					// array buffer offset
-	);
-	
 	glEnableVertexAttribArray(tc);
-	glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[1]);
-	glVertexAttribPointer(tc, 
-		2,                  // size
-		GL_FLOAT,           // type
-		GL_FALSE,           // normalized?
-		0,					// stride
-		reinterpret_cast<const GLfloat*>(sizeof(GLfloat)*nframe*12)	// array buffer offset
-	);
-	glDrawArrays(GL_TRIANGLES, 0, vertices_.size()/num_vertices_);
 
+	for(auto dd3d : dd3d_array_) {
+		size_t tex_unit = GL_TEXTURE0;
+		if(dd3d.tex_a.valid()) {
+			glActiveTexture(tex_unit);
+			dd3d.tex_a.set_as_current_texture();
+			++tex_unit;
+		}
+		if(dd3d.tex_d.valid()) {
+			glActiveTexture(tex_unit);
+			if(tex_unit == GL_TEXTURE0) {
+				dd3d.tex_d.set_as_current_texture();
+			} else {
+				glBindTexture(GL_TEXTURE_2D, dd3d.tex_d.get_id());
+			}
+			++tex_unit;
+		}
+		if(dd3d.tex_s.valid()) {
+			glActiveTexture(tex_unit);
+			if(tex_unit == GL_TEXTURE0) {
+				dd3d.tex_s.set_as_current_texture();
+			} else {
+				glBindTexture(GL_TEXTURE_2D, dd3d.tex_s.get_id());
+			}
+			++tex_unit;
+		}
+
+		glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[dd3d.vbo_cnt]);
+		glVertexAttribPointer(va, 
+			dd3d.num_vertices,  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,					// stride
+			0					// array buffer offset
+		);
+	
+		glVertexAttribPointer(tc, 
+			2,                  // size
+			GL_FLOAT,           // type
+			GL_FALSE,           // normalized?
+			0,					// stride
+			reinterpret_cast<const GLfloat*>(dd3d.texture_offset + sizeof(GLfloat)*nframe*12)	// array buffer offset
+		);
+		glDrawArrays(GL_TRIANGLES, 0, dd3d.vertex_count);
+	}
 	glDisableVertexAttribArray(va);
 	glDisableVertexAttribArray(tc);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 	glBindTexture(GL_TEXTURE_2D, 0);
+	if(back_face_culling_) {
+		glDisable(GL_CULL_FACE);
+	}
 	glDisable(GL_DEPTH_TEST);
 }
 #endif

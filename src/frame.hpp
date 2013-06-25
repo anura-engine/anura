@@ -24,6 +24,7 @@
 
 #include "formula.hpp"
 #include "geometry.hpp"
+#include "obj_reader.hpp"
 #include "solid_map_fwd.hpp"
 #include "raster.hpp"
 #include "variant.hpp"
@@ -205,9 +206,21 @@ private:
 
 	variant get_value(const std::string& key) const;
 
-	std::vector<GLfloat> vertices_;
-	std::vector<GLfloat> texcoords_;
-	int num_vertices_;
+	bool back_face_culling_;
+	struct draw_data_3d
+	{
+		size_t num_vertices;
+		size_t vertex_count;
+		size_t vertex_offset;
+		size_t texture_offset;
+		size_t normal_offset;
+		size_t vbo_cnt;
+		obj::mtl_data mtl;
+		graphics::texture tex_a;
+		graphics::texture tex_d;
+		graphics::texture tex_s;
+	};
+	std::vector<draw_data_3d> dd3d_array_;
 	graphics::vbo_array vbo_array_;
 };
 

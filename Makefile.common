@@ -122,6 +122,7 @@ objects = \
 	src/movement_script.o \
 	src/multi_tile_pattern.o \
 	src/multiplayer.o \
+	src/obj_reader.o \
 	src/object_events.o \
 	src/options_dialog.o \
 	src/particle_system.o \
