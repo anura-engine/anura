@@ -31,6 +31,26 @@
 #include "SDL_syswm.h"
 #endif
 
+namespace {
+boost::function<void()> g_edit_and_continue_fn;
+}
+
+void set_assert_edit_and_continue_fn(boost::function<void()> fn)
+{
+	g_edit_and_continue_fn = fn;
+}
+
+assert_edit_and_continue_fn_scope::assert_edit_and_continue_fn_scope(boost::function<void()> fn)
+  : fn_(g_edit_and_continue_fn)
+{
+	g_edit_and_continue_fn = fn;
+}
+
+assert_edit_and_continue_fn_scope::~assert_edit_and_continue_fn_scope()
+{
+	g_edit_and_continue_fn = fn_;
+}
+
 void report_assert_msg(const std::string& m)
 {
 	if(level::current_ptr()) {
@@ -45,7 +65,12 @@ void report_assert_msg(const std::string& m)
 #endif
 
 		if(preferences::edit_and_continue()) {
-			edit_and_continue_assert(m);
+			if(g_edit_and_continue_fn) {
+				edit_and_continue_assert(m, g_edit_and_continue_fn);
+				throw validation_failure_exception("edit and continue recover");
+			} else {
+				edit_and_continue_assert(m);
+			}
 		}
 
 		stats::record(variant(&obj), level::current_ptr()->id());

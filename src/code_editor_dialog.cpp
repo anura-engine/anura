@@ -59,8 +59,8 @@ void invalidate_class_definition(const std::string& class_name);
 std::set<level*>& get_all_levels_set();
 
 code_editor_dialog::code_editor_dialog(const rect& r)
-  : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), modified_(false),
-    file_contents_set_(true), suggestions_prefix_(-1),
+  : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), has_error_(false),
+    modified_(false), file_contents_set_(true), suggestions_prefix_(-1),
 	have_close_buttons_(false)
 {
 	init();
@@ -261,7 +261,10 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 		foreach(const std::string& obj_type, custom_object_type::get_all_ids()) {
 			const std::string* path = custom_object_type::get_object_path(obj_type + ".cfg");
 			if(path && *path == fname) {
-				f.anim.reset(new frame(custom_object_type::get(obj_type)->default_frame()));
+				try {
+					f.anim.reset(new frame(custom_object_type::get(obj_type)->default_frame()));
+				} catch(...) {
+				}
 				break;
 			}
 		}
@@ -419,11 +422,15 @@ void code_editor_dialog::process()
 			gles2::shader::get_and_clear_runtime_error();
 #endif
 
-
+			has_error_ = true;
 			file_contents_set_ = true;
 			if(op_fn_) {
 				json::parse(editor_->text());
 				json::set_file_contents(fname_, editor_->text());
+
+				if(strstr(fname_.c_str(), "/objects/")) {
+					custom_object_type::set_file_contents(fname_, editor_->text());
+				}
 
 				op_fn_();
 			} else if(strstr(fname_.c_str(), "/level/")) {
@@ -495,6 +502,8 @@ void code_editor_dialog::process()
 			if(optional_error_text_area_) {
 				optional_error_text_area_->set_text("No errors");
 			}
+
+			has_error_ = false;
 		} catch(validation_failure_exception& e) {
 			file_contents_set_ = false;
 			error_label_->set_text("Error");
@@ -898,7 +907,8 @@ void code_editor_dialog::on_move_cursor()
 				if(best_formula) {
 					const variant::debug_info& info = *result_variant.get_debug_info();
 					const int text_pos = editor_->row_col_to_text_pos(editor_->cursor_row(), editor_->cursor_col()) - editor_->row_col_to_text_pos(info.line-1, info.column-1);
-					visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursor_row()+1, editor_->cursor_col()+1, 20, 20, 500, 400, editor_.get()));
+					//TODO: make the visualize widget good enough to use.
+					//visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursor_row()+1, editor_->cursor_col()+1, 20, 20, 500, 400, editor_.get()));
 				}
 			} else {
 				std::cerr << "NOT IN STRING\n";
@@ -1044,7 +1054,7 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	}
 	d->show_modal();
 
-	if(d->cancelled()) {
+	if(d->cancelled() || d->has_error()) {
 		_exit(0);
 	}
 }
@@ -1055,7 +1065,7 @@ void try_fix_assert()
 }
 }
 
-void edit_and_continue_assert(const std::string& msg)
+void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn)
 {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
@@ -1097,11 +1107,14 @@ void edit_and_continue_assert(const std::string& msg)
 	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(graphics::screen_width()/2,0,graphics::screen_width()/2,console->y())));
 
 	d->set_close_buttons();
+	d->show();
 	d->init();
 
 	const variant::debug_info* debug_info = stack.back().expression->parent_formula().get_debug_info();
 	if(debug_info && debug_info->filename) {
-		boost::function<void()> fn(try_fix_assert);
+		if(!fn) {
+			fn = boost::function<void()>(try_fix_assert);
+		}
 		d->load_file(*debug_info->filename, true, &fn);
 		d->jump_to_error(msg);
 	}
@@ -1112,7 +1125,7 @@ void edit_and_continue_assert(const std::string& msg)
 	widgets.push_back(call_grid);
 
 	bool quit = false;
-	while(!quit) {
+	while(!quit && !d->closed()) {
 
 		SDL_Event event;
 		while(SDL_PollEvent(&event)) {
@@ -1130,11 +1143,18 @@ void edit_and_continue_assert(const std::string& msg)
 				}
 			}
 		}
+
+		d->process();
+
 		console->prepare_draw();
 		foreach(widget_ptr w, widgets) {
 			w->draw();
 		}
 		console->complete_draw();
+	}
+
+	if(quit || d->cancelled() || d->has_error()) {
+		_exit(0);
 	}
 #endif //SDL >=2
 }

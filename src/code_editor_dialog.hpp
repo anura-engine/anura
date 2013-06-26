@@ -55,6 +55,8 @@ public:
 
 	void set_close_buttons() { have_close_buttons_ = true; }
 
+	bool has_error() const { return has_error_; }
+
 private:
 	void init_files_grid();
 
@@ -73,6 +75,8 @@ private:
 	std::string fname_;
 
 	int invalidated_;
+
+	bool has_error_;
 
 	bool modified_;
 
@@ -142,7 +146,7 @@ typedef boost::intrusive_ptr<code_editor_dialog> code_editor_dialog_ptr;
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
 void edit_and_continue_fn(const std::string& fname, const std::string& error, boost::function<void()> fn);
 
-void edit_and_continue_assert(const std::string& msg);
+void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn=boost::function<void()>());
 
 #endif // !NO_EDITOR
 #endif

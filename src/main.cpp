@@ -934,6 +934,11 @@ extern "C" int main(int argcount, char* argvec[])
 	variant preloads;
 	loading_screen loader;
 	try {
+		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
+		gui_section::init(gui_node);
+		loader.draw_and_increment(_("Initializing GUI"));
+		framed_gui_element::init(gui_node);
+
 		sound::init_music(json::parse_from_file("data/music.cfg"));
 		graphical_font::init_for_locale(i18n::get_locale());
 		preloads = json::parse_from_file("data/preload.cfg");
@@ -946,12 +951,7 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.load(preloads);
 		loader.draw_and_increment(_("Initializing tiles"));
 		tile_map::init(json::parse_from_file("data/tiles.cfg"));
-		loader.draw_and_increment(_("Initializing GUI"));
 
-		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
-		gui_section::init(gui_node);
-		loader.draw_and_increment(_("Initializing GUI"));
-		framed_gui_element::init(gui_node);
 
 		game_logic::formula_object::load_all_classes();
 

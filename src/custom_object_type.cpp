@@ -20,6 +20,7 @@
 #include <boost/bind.hpp>
 
 #include "asserts.hpp"
+#include "code_editor_dialog.hpp"
 #include "collision_utils.hpp"
 #include "custom_object.hpp"
 #include "custom_object_callable.hpp"
@@ -479,11 +480,29 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 
 		ASSERT_LOG(node["id"].as_string() == module::get_id(id), "IN " << path_itor->second << " OBJECT ID DOES NOT MATCH FILENAME");
 		
-		//create the object
-		custom_object_type_ptr result(new custom_object_type(node["id"].as_string(), node, NULL, old_type));
-		object_prototype_paths[id] = proto_paths;
+		try {
+			boost::scoped_ptr<assert_recover_scope> recover_scope;
+			if(preferences::edit_and_continue()) {
+				recover_scope.reset(new assert_recover_scope);
+			}
 
-		return result;
+			//create the object
+			custom_object_type_ptr result(new custom_object_type(node["id"].as_string(), node, NULL, old_type));
+			object_prototype_paths[id] = proto_paths;
+
+			return result;
+		} catch(validation_failure_exception& e) {
+			static bool in_edit_and_continue = false;
+			if(in_edit_and_continue) {
+				throw e;
+			}
+
+			in_edit_and_continue = true;
+			edit_and_continue_fn(path_itor->second, e.msg, boost::bind(&custom_object_type::recreate, id, old_type));
+			in_edit_and_continue = false;
+			return recreate(id, old_type);
+		}
+
 	} catch(json::parse_error& e) {
 		ASSERT_LOG(false, "Error parsing WML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.error_message() << "'");
 	} catch(graphics::load_image_error&) {

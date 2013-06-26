@@ -1139,6 +1139,8 @@ namespace preferences {
 			} else {
 				force_difficulty_ = difficulty::from_string(arg_value);
 			}
+		} else if(s == "--edit-and-continue") {
+			set_edit_and_continue(true);
 		} else {
 			if(s.size() > 2 && s[0] == '-' && s[1] == '-' && std::find(s.begin(), s.end(), '=') != s.end()) {
 				std::string::const_iterator equal = std::find(s.begin(), s.end(), '=');

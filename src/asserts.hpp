@@ -17,6 +17,8 @@
 #ifndef ASSERTS_HPP_INCLUDED
 #define ASSERTS_HPP_INCLUDED
 
+#include <boost/function.hpp>
+
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
@@ -52,6 +54,13 @@ struct validation_failure_exception {
 bool throw_validation_failure_on_assert();
 
 void output_backtrace();
+
+class assert_edit_and_continue_fn_scope {
+	boost::function<void()> fn_;
+public:
+	assert_edit_and_continue_fn_scope(boost::function<void()> fn);
+	~assert_edit_and_continue_fn_scope();
+};
 
 //Scope to make us recover
 class assert_recover_scope {

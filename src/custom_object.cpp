@@ -4731,29 +4731,14 @@ void run_expression_for_edit_and_continue(boost::function<bool()> fn, bool* succ
 
 bool custom_object::handle_event(int event, const formula_callable* context)
 {
-	if(false && preferences::edit_and_continue()) {
-		const assert_recover_scope scope;
+	if(preferences::edit_and_continue()) {
 		try {
+			const_custom_object_type_ptr type_back = type_;
+			const_custom_object_type_ptr base_type_back = base_type_;
+			assert_edit_and_continue_fn_scope scope(boost::function<void()>(boost::bind(&custom_object::handle_event_internal, this, event, context, true)));
 			return handle_event_internal(event, context);
 		} catch(validation_failure_exception& e) {
-			const std::string* path = custom_object_type::get_object_path(type_->id() + ".cfg");
-			if(!path) {
-				std::cerr << "COULD NOT FIND FILE FOR " << type_->id() << "\n";
-				assert(false);
-				throw e;
-			}
-
-			bool success = false, result = false;
-			boost::function<bool()> ev(boost::bind(&custom_object::handle_event_internal, this, event, context, true));
-			boost::function<void()> fn(boost::bind(run_expression_for_edit_and_continue, ev, &success, &result));
-			edit_and_continue_fn(*path, e.msg, fn);
-			if(success == false) {
-				_exit(0);
-			}
-
-			return result;
-		} catch(...) {
-			assert(false);
+			return true;
 		}
 	} else {
 		return handle_event_internal(event, context);
