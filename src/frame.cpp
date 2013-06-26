@@ -732,7 +732,7 @@ void frame::draw3(int time, GLint va, GLint tc) const
 	glEnableVertexAttribArray(va);
 	glEnableVertexAttribArray(tc);
 
-	for(auto dd3d : dd3d_array_) {
+	for(auto& dd3d : dd3d_array_) {
 		size_t tex_unit = GL_TEXTURE0;
 		if(dd3d.tex_a.valid()) {
 			glActiveTexture(tex_unit);
@@ -779,7 +779,6 @@ void frame::draw3(int time, GLint va, GLint tc) const
 	glDisableVertexAttribArray(va);
 	glDisableVertexAttribArray(tc);
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	glBindTexture(GL_TEXTURE_2D, 0);
 	if(back_face_culling_) {
 		glDisable(GL_CULL_FACE);
 	}
