@@ -1145,11 +1145,13 @@ void custom_object::draw(int xx, int yy) const
 		if(upside_down()) {
 			flip = flip * glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f,0.0f,0.0f));
 		}
+		GLfloat scale = draw_scale_ ? GLfloat(draw_scale_->as_float()) : 1.0f;
 		glm::mat4 model = model_ * glm::translate(glm::mat4(1.0f), glm::vec3(tx(),ty(),tz()))
 			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_x_.as_float()), glm::vec3(1.0f,0.0f,0.0f)) 
 			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_y_.as_float()), glm::vec3(0.0f,1.0f,0.0f)) 
 			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_z_.as_float()), glm::vec3(0.0f,0.0f,1.0f)) 
-			* flip;
+			* flip
+			* glm::scale(glm::mat4(1.0f), glm::vec3(GLfloat(scale), GLfloat(scale), GLfloat(scale)));
 
 		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
 		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
