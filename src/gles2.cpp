@@ -559,7 +559,12 @@ namespace gles2 {
 		colors[3] = 1.0f;
 		glActiveTexture(GL_TEXTURE0);
 
-		std::string shader_file = module::map_file("data/shaders.cfg");
+		std::string shader_file = "data/shaders.cfg";
+		if(sys::file_exists(shader_file)) {
+			program::load_shaders(sys::read_file(shader_file));
+		}
+
+		shader_file = module::map_file("data/shaders.cfg");
 		if(sys::file_exists(shader_file)) {
 			program::load_shaders(sys::read_file(shader_file));
 		}

@@ -271,11 +271,17 @@ namespace isometric
 		}
 
 		// Load shader.
-		ASSERT_LOG(node.has_key("shader") && node["shader"].has_key("vertex") && node["shader"].has_key("fragment"),
-			"Must have 'shader' attribute with 'vertex' and 'fragment' child attributes.");
-		gles2::shader v1(GL_VERTEX_SHADER, "iso_vertex_shader", node["shader"]["vertex"].as_string());
-		gles2::shader f1(GL_FRAGMENT_SHADER, "iso_fragment_shader", node["shader"]["fragment"].as_string());
-		shader_.reset(new gles2::program(node["shader"]["name"].as_string(), v1, f1));
+		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
+		if(node["shader"].is_map()) {
+			ASSERT_LOG(node["shader"].has_key("vertex") && node["shader"].has_key("fragment"),
+				"Must have 'shader' attribute with 'vertex' and 'fragment' child attributes.");
+			gles2::shader v1(GL_VERTEX_SHADER, "iso_vertex_shader", node["shader"]["vertex"].as_string());
+			gles2::shader f1(GL_FRAGMENT_SHADER, "iso_fragment_shader", node["shader"]["fragment"].as_string());
+			shader_.reset(new gles2::program(node["shader"]["name"].as_string(), v1, f1));
+		} else {
+			ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be string or map");
+			shader_ = gles2::program::find_program(node["shader"].as_string());
+		}
 
 		if(tiles_.empty()) {
 			std::cerr << "ISOMAP: No tiles found, this is probably an error" << std::endl;
