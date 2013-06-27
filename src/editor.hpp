@@ -45,6 +45,9 @@ class segment_editor_dialog;
 class tileset_editor_dialog;
 class custom_object_dialog;
 class hex_tileset_editor_dialog;
+#if defined(USE_ISOMAP)
+class voxel_editor_dialog;
+#endif
 }
 
 class code_editor_dialog;
@@ -136,12 +139,30 @@ public:
 	int get_hex_tileset() const { return cur_hex_tileset_; }
 	void set_hex_tileset(int index);
 
+#if defined(USE_ISOMAP)
+	int get_voxel_tileset() const { return cur_voxel_tileset_; }
+	void set_voxel_tileset(int index);
+#endif
+
 	std::vector<enemy_type>& all_characters() const;
 
 	int get_object() const { return cur_object_; }
 	void set_object(int index);
 
-	enum EDIT_TOOL { TOOL_ADD_RECT, TOOL_SELECT_RECT, TOOL_MAGIC_WAND, TOOL_PENCIL, TOOL_PICKER, TOOL_ADD_OBJECT, TOOL_SELECT_OBJECT, TOOL_EDIT_SEGMENTS, TOOL_EDIT_HEXES, NUM_TOOLS };
+	enum EDIT_TOOL { 
+		TOOL_ADD_RECT, 
+		TOOL_SELECT_RECT, 
+		TOOL_MAGIC_WAND, 
+		TOOL_PENCIL, 
+		TOOL_PICKER, 
+		TOOL_ADD_OBJECT, 
+		TOOL_SELECT_OBJECT, 
+		TOOL_EDIT_SEGMENTS, 
+		TOOL_EDIT_HEXES, 
+#if defined(USE_ISOMAP)
+		TOOL_EDIT_VOXELS, 
+#endif
+		NUM_TOOLS };
 	EDIT_TOOL tool() const;
 	void change_tool(EDIT_TOOL tool);
 
@@ -305,6 +326,9 @@ private:
 	bool upside_down_;
 	int cur_tileset_;
 	int cur_hex_tileset_;
+#if defined(USE_ISOMAP)
+	int cur_voxel_tileset_;
+#endif
 
 	int cur_object_;
 
@@ -317,6 +341,9 @@ private:
 	boost::scoped_ptr<editor_dialogs::property_editor_dialog> property_dialog_;
 	boost::scoped_ptr<editor_dialogs::tileset_editor_dialog> tileset_dialog_;
 	boost::scoped_ptr<editor_dialogs::hex_tileset_editor_dialog> hex_tileset_dialog_;
+#if defined(USE_ISOMAP)
+	boost::scoped_ptr<editor_dialogs::voxel_editor_dialog> voxel_dialog_;
+#endif
 
 	boost::scoped_ptr<editor_dialogs::segment_editor_dialog> segment_dialog_;
 

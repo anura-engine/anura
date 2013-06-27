@@ -77,6 +77,7 @@
 #include "tooltip.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
+#include "voxel_editor_dialog.hpp"
 
 #include "IMG_savepng.h"
 
@@ -372,22 +373,43 @@ public:
 
 };
 
-namespace {
-const char* ModeStrings[] = {"Tiles", "Objects", "Properties",};
+namespace 
+{
+	const char* ModeStrings[] = {
+		"Tiles", 
+		"Objects", 
+		"Properties",
+	};
 
-const char* ToolStrings[] = {
-  "Add tiles by drawing rectangles",
-  "Select Tiles",
-  "Select connected regions of tiles",
-  "Add tiles by drawing pencil strokes",
-  "Pick tiles or objects",
-  "Add Objects",
-  "Select Objects",
-  "Edit Level Segments",
-  "Draw Hexagonal Tiles",
-};
+	const char* ToolStrings[] = {
+		"Add tiles by drawing rectangles",
+		"Select Tiles",
+		"Select connected regions of tiles",
+		"Add tiles by drawing pencil strokes",
+		"Pick tiles or objects",
+		"Add Objects",
+		"Select Objects",
+		"Edit Level Segments",
+		"Draw Hexagonal Tiles",
+#if defined(USE_ISOMAP)
+		"Edit Voxels",
+#endif
+	};
 
-const char* ToolIcons[] = {"editor_draw_rect", "editor_rect_select", "editor_wand", "editor_pencil", "editor_eyedropper", "editor_add_object", "editor_select_object", "editor_rect_select", "editor_draw_hexes"};
+	const char* ToolIcons[] = {
+		"editor_draw_rect", 
+		"editor_rect_select", 
+		"editor_wand", 
+		"editor_pencil", 
+		"editor_eyedropper", 
+		"editor_add_object", 
+		"editor_select_object", 
+		"editor_rect_select", 
+		"editor_draw_hexes", 
+#if defined(USE_ISOMAP)
+		"editor_edit_voxels",
+#endif
+	};
 }
 
 class editor_mode_dialog : public gui::dialog
@@ -750,7 +772,10 @@ editor::editor(const char* level_cfg)
     filename_(level_cfg), tool_(TOOL_ADD_RECT),
     done_(false), face_right_(true), upside_down_(false),
 	cur_tileset_(0), cur_object_(0), cur_hex_tileset_(0),
-    current_dialog_(NULL),
+    current_dialog_(NULL), 
+#if defined(USE_ISOMAP)
+	cur_voxel_tileset_(0),
+#endif
 	drawing_rect_(false), dragging_(false), level_changed_(0),
 	selected_segment_(-1), prev_mousex_(-1), prev_mousey_(-1),
 	xres_(0), yres_(0)
@@ -2759,6 +2784,18 @@ void editor::set_hex_tileset(int index)
 	}
 }
 
+#if defined(USE_ISOMAP)
+void editor::set_voxel_tileset(int index)
+{
+	cur_voxel_tileset_ = index;
+	if(cur_voxel_tileset_ < 0) {
+		cur_voxel_tileset_ = isometric::isomap::get_editor_tiles().size()-1;
+	} else if(cur_voxel_tileset_ >= isometric::isomap::get_editor_tiles().size()) {
+		cur_voxel_tileset_ = 0;
+	}
+}
+#endif
+
 void editor::set_object(int index)
 {
 	int max = all_characters().size();
@@ -2849,6 +2886,21 @@ void editor::change_tool(EDIT_TOOL tool)
 		}
 		break;
 	}
+#if defined(USE_ISOMAP)
+	case TOOL_EDIT_VOXELS: {
+		if(preferences::get_build_options().find("isomap") != preferences::get_build_options().end()) {
+			if(!voxel_dialog_) {
+				voxel_dialog_.reset(new editor_dialogs::voxel_editor_dialog(*this));
+			}
+			current_dialog_ = voxel_dialog_.get();
+			lvl_->editor_clear_selection();
+		} else {
+			tool_ = last_tool;
+			debug_console::add_message("Not built with 'isomap' support, i.e. -DUSE_ISOMAP");
+			return;
+		}
+	}
+#endif
 	default: {
 		break;
 	}

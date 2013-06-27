@@ -32,6 +32,15 @@ namespace isometric
 
 	typedef boost::unordered_map<position, std::string> tile_type;
 
+	struct tile_editor_info
+	{
+		std::string name;
+		std::string group;
+		std::string id;
+		graphics::texture tex;
+		rect area;
+	};
+
 	class isomap : public game_logic::formula_callable
 	{
 	public:
@@ -58,6 +67,8 @@ namespace isometric
 		std::string get_tile_type(int x, int y, int z) const;
 		static variant get_tile_info(const std::string& type);
 		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
+
+		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
 		const GLfloat* model() const { return glm::value_ptr(model_); }
 

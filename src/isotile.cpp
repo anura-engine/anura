@@ -45,6 +45,12 @@ namespace isometric
 			return res;
 		}
 
+		std::vector<tile_editor_info>& get_editor_tile_info()
+		{
+			static std::vector<tile_editor_info> res;
+			return res;
+		}
+
 		struct tile_info
 		{
 			std::string name;
@@ -118,6 +124,18 @@ namespace isometric
 						}
 					}
 					tile_data_[ti.abbreviation] = ti;
+
+					// Set up some data for the editor
+					tile_editor_info te;
+					te.tex = tex_;
+					te.name = ti.name;
+					te.id = ti.abbreviation;
+					te.group = block.has_key("group") ? block["group"].as_string() : "unspecified";
+					te.area = rect::from_coordinates(int(ti.area[0].xf() * tex_.width()), 
+						int(ti.area[0].yf() * tex_.height()),
+						int(ti.area[0].x2f() * tex_.width()),
+						int(ti.area[0].y2f() * tex_.height()));
+					get_editor_tile_info().push_back(te);
 				}
 			}
 
@@ -139,6 +157,11 @@ namespace isometric
 			const graphics::texture& get_tex()
 			{
 				return tex_;
+			}
+			void clear()
+			{
+				tile_data_.clear();
+				get_editor_tile_info().clear();
 			}
 		private:
 			graphics::texture tex_;
@@ -169,6 +192,7 @@ namespace isometric
 	isomap::isomap()
 	{
 		arrays_ = tile_array_buffer();
+		get_terrain_info().clear();
 		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
 	}
 
@@ -176,6 +200,7 @@ namespace isometric
 	{
 		arrays_ = tile_array_buffer();
 
+		get_terrain_info().clear();
 		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
 
 		if(node.has_key("random")) {
@@ -261,6 +286,11 @@ namespace isometric
 
 	isomap::~isomap()
 	{
+	}
+
+	const std::vector<tile_editor_info>& isomap::get_editor_tiles()
+	{
+		return get_editor_tile_info();
 	}
 
 	variant isomap::write()

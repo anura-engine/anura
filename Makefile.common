@@ -198,7 +198,9 @@ objects = \
 	src/utility_object_compiler.o \
 	src/utility_query.o \
 	src/utility_render_level.o \
-    src/vector_text.o 
+    src/vector_text.o \
+	src/voxel_editor_dialog.o
+	
 
 ifneq ($(USE_SDL2),yes)
 objects += src/wm.o \
