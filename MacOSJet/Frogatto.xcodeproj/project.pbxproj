@@ -203,6 +203,9 @@
 		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
 		C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */; };
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
+		C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAAD177C14200046CC87 /* obj_reader.cpp */; };
+		C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB0177C14470046CC87 /* data_blob.cpp */; };
+		C090AAB5177C14740046CC87 /* voxel_editor_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */; };
 		C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B0F17533AA7004307B0 /* formula_interface.cpp */; };
 		C0917B13175480F7004307B0 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C0917B1617670039004307B0 /* camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B1417670039004307B0 /* camera.cpp */; };
@@ -655,6 +658,12 @@
 		C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable_visitor.cpp; sourceTree = "<group>"; };
 		C08C43EC174C6BF300A46B15 /* formula_callable_visitor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_callable_visitor.hpp; sourceTree = "<group>"; };
 		C08C43EE174C6D8900A46B15 /* formula_callable.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable.cpp; sourceTree = "<group>"; };
+		C090AAAD177C14200046CC87 /* obj_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obj_reader.cpp; sourceTree = "<group>"; };
+		C090AAAE177C14200046CC87 /* obj_reader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obj_reader.hpp; sourceTree = "<group>"; };
+		C090AAB0177C14470046CC87 /* data_blob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = data_blob.cpp; sourceTree = "<group>"; };
+		C090AAB1177C14470046CC87 /* data_blob.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = data_blob.hpp; sourceTree = "<group>"; };
+		C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_editor_dialog.cpp; sourceTree = "<group>"; };
+		C090AAB4177C14740046CC87 /* voxel_editor_dialog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_editor_dialog.hpp; sourceTree = "<group>"; };
 		C0917B0F17533AA7004307B0 /* formula_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_interface.cpp; sourceTree = "<group>"; };
 		C0917B1017533AA7004307B0 /* formula_interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_interface.hpp; sourceTree = "<group>"; };
 		C0917B12175480F7004307B0 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../../master-config.cfg"; sourceTree = "<group>"; };
@@ -870,6 +879,8 @@
 				C010C5FD160AFD4C006E7D90 /* custom_object_type.hpp */,
 				C0D6EB7216DB25EA00B5ABCA /* custom_object_widget.cpp */,
 				C0D6EB7316DB25EA00B5ABCA /* custom_object_widget.hpp */,
+				C090AAB0177C14470046CC87 /* data_blob.cpp */,
+				C090AAB1177C14470046CC87 /* data_blob.hpp */,
 				C010C5FE160AFD4C006E7D90 /* debug_console.cpp */,
 				C010C5FF160AFD4C006E7D90 /* debug_console.hpp */,
 				C010C600160AFD4C006E7D90 /* decimal.cpp */,
@@ -1050,6 +1061,8 @@
 				C010C6AA160AFD4D006E7D90 /* multi_tile_pattern.hpp */,
 				C010C6AB160AFD4D006E7D90 /* multiplayer.cpp */,
 				C010C6AC160AFD4D006E7D90 /* multiplayer.hpp */,
+				C090AAAD177C14200046CC87 /* obj_reader.cpp */,
+				C090AAAE177C14200046CC87 /* obj_reader.hpp */,
 				C010C6AD160AFD4D006E7D90 /* object_events.cpp */,
 				C010C6AE160AFD4D006E7D90 /* object_events.hpp */,
 				C010C6B1160AFD4D006E7D90 /* options_dialog.cpp */,
@@ -1186,6 +1199,8 @@
 				C010C72F160AFD4D006E7D90 /* variant_utils.hpp */,
 				C010C731160AFD4D006E7D90 /* vector_text.cpp */,
 				C010C732160AFD4D006E7D90 /* vector_text.hpp */,
+				C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */,
+				C090AAB4177C14740046CC87 /* voxel_editor_dialog.hpp */,
 				C010C733160AFD4D006E7D90 /* water.cpp */,
 				C010C734160AFD4D006E7D90 /* water.hpp */,
 				C010C735160AFD4D006E7D90 /* water_particle_system.cpp */,
@@ -1477,6 +1492,9 @@
 				C0917B1617670039004307B0 /* camera.cpp in Sources */,
 				C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */,
 				C0917B1C176700D8004307B0 /* isotile.cpp in Sources */,
+				C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */,
+				C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */,
+				C090AAB5177C14740046CC87 /* voxel_editor_dialog.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
