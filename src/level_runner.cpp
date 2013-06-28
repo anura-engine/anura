@@ -729,6 +729,9 @@ void level_runner::start_editor()
 void level_runner::close_editor()
 {
 #ifndef NO_EDITOR
+	if(editor_->mouselook_mode()) {
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+	}
 	editor_ = NULL;
 	history_slider_.reset();
 	history_button_.reset();
@@ -1556,7 +1559,13 @@ bool level_runner::play_cycle()
 		}
 
 #if defined(USE_ISOMAP)
-		if(mouselook_state) {
+		bool editor_mouselook = false;
+#ifndef NO_EDITOR
+		if(editor_) {
+			editor_mouselook = editor_->mouselook_mode();
+		}
+#endif
+		if(mouselook_state || editor_mouselook) {
 			const camera_callable_ptr& cam = lvl_->camera();
 			if(cam) {
 				int rmx, rmy;

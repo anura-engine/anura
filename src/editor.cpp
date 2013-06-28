@@ -24,6 +24,8 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 
+#include <glm/gtc/matrix_transform.hpp>
+
 #include "asserts.hpp"
 #include "border_widget.hpp"
 #include "button.hpp"
@@ -778,7 +780,7 @@ editor::editor(const char* level_cfg)
 #endif
 	drawing_rect_(false), dragging_(false), level_changed_(0),
 	selected_segment_(-1), prev_mousex_(-1), prev_mousey_(-1),
-	xres_(0), yres_(0)
+	xres_(0), yres_(0), mouselook_mode_(false)
 {
 	fprintf(stderr, "BEGIN EDITOR::EDITOR\n");
 	const int begin = SDL_GetTicks();
@@ -1457,6 +1459,48 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 	if(key.keysym.sym == SDLK_h) {
 		preferences::toogle_debug_hitboxes();
 	}
+
+#if defined(USE_ISOMAP)
+	if(tool() == TOOL_EDIT_VOXELS) {
+		if(key.keysym.sym == SDLK_e) {
+			mouselook_mode_ = !mouselook_mode_;
+			SDL_SetRelativeMouseMode(mouselook_mode_ ? SDL_TRUE : SDL_FALSE);
+			SDL_GetRelativeMouseState(NULL, NULL);
+			if(mouselook_mode_) {
+				debug_console::add_message("Entering mouselook mode. Press 'e' to exit");
+			}
+		}
+
+		if(key.keysym.sym == SDLK_w) {
+			camera_callable_ptr camera = lvl_->camera();
+			if(camera) {
+				camera->set_position(camera->position() + camera->direction() * 20.0f * camera->speed());
+				camera->compute_view();
+			}
+		}
+		if(key.keysym.sym == SDLK_a) {
+			camera_callable_ptr camera = lvl_->camera();
+			if(camera) {
+				camera->set_position(camera->position() - camera->right() * 20.0f * camera->speed());
+				camera->compute_view();
+			}
+		}
+		if(key.keysym.sym == SDLK_s) {
+			camera_callable_ptr camera = lvl_->camera();
+			if(camera) {
+				camera->set_position(camera->position() - camera->direction() * 20.0f * camera->speed());
+				camera->compute_view();
+			}
+		}
+		if(key.keysym.sym == SDLK_d) {
+			camera_callable_ptr camera = lvl_->camera();
+			if(camera) {
+				camera->set_position(camera->position() + camera->right() * 20.0f * camera->speed());
+				camera->compute_view();
+			}
+		}
+	}
+#endif
 
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(key.keysym.sym == SDLK_KP_8) {
@@ -2944,6 +2988,11 @@ void quit_editor_result(gui::dialog* d, int* result_ptr, int result) {
 
 bool editor::confirm_quit(bool allow_cancel)
 {
+	if(mouselook_mode()) {
+		mouselook_mode_ = false;
+		SDL_SetRelativeMouseMode(SDL_FALSE);
+	}
+
 	if(!level_changed_) {
 		return true;
 	}
@@ -3520,6 +3569,10 @@ void editor::draw_gui() const
 
 	if(code_dialog_) {
 		code_dialog_->draw();
+	}
+
+	if(mouselook_mode()) {
+		// XXX: draw a cursor here.
 	}
 
 	gui::draw_tooltip();

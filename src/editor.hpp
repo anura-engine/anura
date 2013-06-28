@@ -248,6 +248,8 @@ public:
 
 	bool done() const { return done_; }
 
+	bool mouselook_mode() const { return mouselook_mode_; }
+
 private:
 	editor(const editor&);
 	void operator=(const editor&);
@@ -383,6 +385,8 @@ private:
 	int selected_segment_;
 
 	int prev_mousex_, prev_mousey_;
+
+	bool mouselook_mode_;
 };
 
 struct editor_resolution_manager : private preferences::editor_screen_size_scope
