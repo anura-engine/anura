@@ -21,8 +21,10 @@
 
 #include <iostream>
 
+#include "base64.hpp"
 #include "border_widget.hpp"
 #include "button.hpp"
+#include "compress.hpp"
 #include "editor.hpp"
 #include "foreach.hpp"
 #include "grid_widget.hpp"
@@ -31,6 +33,7 @@
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
 #include "raster.hpp"
+#include "text_editor_widget.hpp"
 #include "variant_utils.hpp"
 #include "voxel_editor_dialog.hpp"
 
@@ -52,7 +55,12 @@ void voxel_editor_dialog::global_tile_update()
 }
 
 voxel_editor_dialog::voxel_editor_dialog(editor& e)
-  : dialog(graphics::screen_width() - EDITOR_SIDEBAR_WIDTH, 160, EDITOR_SIDEBAR_WIDTH, 440), editor_(e), first_index_(-1)
+  : dialog(graphics::screen_width() - EDITOR_SIDEBAR_WIDTH, 160, EDITOR_SIDEBAR_WIDTH, 440), 
+  editor_(e), 
+  first_index_(-1),
+  map_width_(16),
+  map_depth_(16),
+  map_height_(4)
 {
 	all_tileset_editor_dialogs().insert(this);
 
@@ -81,15 +89,52 @@ void voxel_editor_dialog::init()
 		"Index of isometric tileset out of bounds must be between 0 and " 
 		<< isometric::isomap::get_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
 
+	std::stringstream str;
+
+	grid_ptr grid(new gui::grid(6));
+	grid->set_hpad(5);
+
+	grid->add_col(new label("W: "));
+	grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_width, this, 10)));
+	grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_width, this, 1)));
+	str << map_width_;
+	grid->add_col(new label(str.str()));
+	grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_width, this, 1)));
+	grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_width, this, 10)));
+
+	grid->add_col(new label("D: "));
+	grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_depth, this, 10)));
+	grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_depth, this, 1)));
+	str.str("");
+	str << map_depth_;
+	grid->add_col(new label(str.str()));
+	grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_depth, this, 1)));
+	grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_depth, this, 10)));
+
+	grid->add_col(new label("H: "));
+	grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_height, this, 10)));
+	grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_height, this, 1)));
+	str.str("");
+	str << map_height_;
+	grid->add_col(new label(str.str()));
+	grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_height, this, 1)));
+	grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_height, this, 10)));
+
+	add_widget(grid, 10, 10);
+	int next_height = grid->x() + grid->height() + 5;
+
 	button* random_landscape = new button(widget_ptr(new label("Random", graphics::color_white())), boost::bind(&voxel_editor_dialog::random_isomap, this));
-	add_widget(widget_ptr(random_landscape), 10, 10);
 	button* flat_landscape = new button(widget_ptr(new label("Flat", graphics::color_white())), boost::bind(&voxel_editor_dialog::flat_plane_isomap, this));
-	add_widget(widget_ptr(flat_landscape), 10, 25);
+	grid.reset(new gui::grid(2));
+	grid->set_hpad(10);
+	grid->add_col(random_landscape);
+	grid->add_col(flat_landscape);
+	add_widget(grid, 10, next_height);
 
-	button* category_button = new button(widget_ptr(new label(category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
-	add_widget(widget_ptr(category_button), 10, 40);
+	button* category_button = new button(widget_ptr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+	add_widget(category_button, 10, grid->y() + grid->height() + 5);
 
-	grid_ptr grid(new gui::grid(3));
+	grid.reset(new gui::grid(3));
 	int index = 0, first_index = -1;
 	first_index_ = -1;
 	
@@ -128,10 +173,68 @@ void voxel_editor_dialog::close_context_menu(int index)
 	context_menu_.reset();
 }
 
+void voxel_editor_dialog::increment_width(int n)
+{
+	map_width_ += n;
+	if(map_width_ > 1024) { 
+		map_width_ = 1024;
+	}
+	init();
+}
+
+void voxel_editor_dialog::decrement_width(int n)
+{
+	if(map_width_ - n < 2) { 
+		map_width_ = 1;
+	} else {
+		map_width_ -= n;
+	}
+	init();
+}
+
+void voxel_editor_dialog::increment_depth(int n)
+{
+	map_depth_ += n;
+	if(map_depth_ > 1024) { 
+		map_depth_ = 1024;
+	}
+	init();
+}
+
+void voxel_editor_dialog::decrement_depth(int n)
+{
+	if(map_depth_ - n < 2) { 
+		map_depth_ = 1;
+	} else {
+		map_depth_ -= n;
+	}
+	init();
+}
+
+void voxel_editor_dialog::increment_height(int n)
+{
+	map_height_ += n;
+	if(map_height_ > 1024) { 
+		map_height_ = 1024;
+	}
+	init();
+}
+
+void voxel_editor_dialog::decrement_height(int n)
+{
+	if(map_height_ - n < 2) { 
+		map_height_ = 1;
+	} else {
+		map_height_ -= n;
+	}
+	init();
+}
+
 void voxel_editor_dialog::show_category_menu()
 {
 	using namespace gui;
 	gui::grid* grid = new gui::grid(2);
+	grid->set_zorder(100);
 	grid->swallow_clicks();
 	grid->set_show_background(true);
 	grid->set_hpad(10);
@@ -215,21 +318,53 @@ bool voxel_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
 
 void voxel_editor_dialog::random_isomap()
 {
-	variant_builder res;
-	variant_builder iso;
-	// XXX configure this all through parameters.
-	iso.add("width", 16);
-	iso.add("height", 16);
-	iso.add("depth", 16);
-	//iso.add("seed", 111);
-	// iso.add("type", "grs");
-	res.add("random", iso.build());
+	int tileset = editor_.get_voxel_tileset();
+	if(tileset >= 0 && tileset < isometric::isomap::get_editor_tiles().size()) {		
+		std::string tile_id = isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].id;
 
-	level::current().isomap().reset(new isometric::isomap(res.build()));
+		variant_builder res;
+		variant_builder iso;
+		// XXX configure this all through parameters.
+		iso.add("width", map_width_);
+		iso.add("height", map_height_);
+		iso.add("depth", map_depth_);
+		iso.add("seed", int(time(NULL)));
+		iso.add("type", tile_id);
+		res.add("shader", "iso_shader");
+		res.add("random", iso.build());
+
+		level::current().isomap().reset(new isometric::isomap(res.build()));
+	}
 }
 
 void voxel_editor_dialog::flat_plane_isomap()
 {
+	int tileset = editor_.get_voxel_tileset();
+	if(tileset >= 0 && tileset < isometric::isomap::get_editor_tiles().size()) {		
+		std::string tile_id = isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].id;
+
+		variant_builder res;
+		const int xmax = map_width_;
+		const int zmax = map_depth_;
+		const int ymax = map_height_;
+
+		std::string voxels;
+		for(int x = 0; x != xmax; ++x) {
+			for(int z = 0; z != zmax; ++z) {
+				for(int y = 0; y != ymax; ++y) {
+					std::stringstream str;
+					str << x << "," << y << "," << z << "," << tile_id << " ";
+					voxels += str.str();
+				}
+			}
+		}
+
+		res.add("shader", "iso_shader");
+		std::vector<char> enc = base64::b64encode(zip::compress(std::vector<char>(voxels.begin(), voxels.end())));
+		res.add("voxels", std::string(enc.begin(), enc.end()));
+	
+		level::current().isomap().reset(new isometric::isomap(res.build()));
+	}
 }
 
 }

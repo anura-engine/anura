@@ -34,8 +34,7 @@ namespace noise
 
 	namespace simplex
 	{
-
-		static void init(uint32_t seed);
+		void init(uint32_t seed);
 
 		#define s_curve(t) ( t * t * (3. - 2. * t) )
 
@@ -48,7 +47,7 @@ namespace noise
 			r0 = t - (int)t;\
 			r1 = r0 - 1.;
 
-		double noise1(double arg, uint32_t seed)
+		double noise1(double arg)
 		{
 			int bx0, bx1;
 			float rx0, rx1, sx, t, u, v, vec[1];
@@ -56,7 +55,7 @@ namespace noise
 			vec[0] = arg;
 			if (start) {
 				start = false;
-				init(seed);
+				init(0);
 			}
 
 			setup(0, bx0,bx1, rx0,rx1);
@@ -69,15 +68,15 @@ namespace noise
 			return lerp(sx, u, v);
 		}
 
-		float noise2(float vec[2], uint32_t seed)
+		float noise2(float vec[2])
 		{
 			int bx0, bx1, by0, by1, b00, b10, b01, b11;
 			float rx0, rx1, ry0, ry1, *q, sx, sy, a, b, t, u, v;
 			register int i, j;
 
 			if (start) {
-				start = 0;
-				init(seed);
+				start = false;
+				init(0);
 			}
 
 			setup(0, bx0,bx1, rx0,rx1);
@@ -107,15 +106,15 @@ namespace noise
 			return lerp(sy, a, b);
 		}
 
-		float noise3(float vec[3], uint32_t seed)
+		float noise3(float vec[3])
 		{
 			int bx0, bx1, by0, by1, bz0, bz1, b00, b10, b01, b11;
 			float rx0, rx1, ry0, ry1, rz0, rz1, *q, sy, sz, a, b, c, d, t, u, v;
 			register int i, j;
 
 			if (start) {
-				start = 0;
-				init(seed);
+				start = false;
+				init(0);
 			}
 
 			setup(0, bx0,bx1, rx0,rx1);
@@ -178,7 +177,7 @@ namespace noise
 			v[2] = v[2] / s;
 		}
 
-		static void init(uint32_t seed)
+		void init(uint32_t seed)
 		{
 			int i, j, k;
 

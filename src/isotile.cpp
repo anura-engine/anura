@@ -210,6 +210,7 @@ namespace isometric
 			size_z_ = node["random"]["depth"].as_int(32);
 
 			uint32_t seed = node["random"]["seed"].as_int(0);
+			noise::simplex::init(seed);
 
 			std::vector<float> vec;
 			vec.resize(2);
@@ -217,7 +218,7 @@ namespace isometric
 				vec[0] = float(x)/float(size_x_);
 				for(int z = 0; z != size_z_; ++z) {
 					vec[1] = float(z)/float(size_z_);
-					int h = int(noise::simplex::noise2(&vec[0], seed) * size_y_);
+					int h = int(noise::simplex::noise2(&vec[0]) * size_y_);
 					h = std::max<int>(1, std::min<int>(size_y_-1, h));
 					for(int y = 0; y != h; ++y) {
 						if(node["random"].has_key("type")) {

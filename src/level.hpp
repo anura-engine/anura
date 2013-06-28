@@ -146,7 +146,7 @@ public:
 #endif
 
 #if defined(USE_ISOMAP)
-	isometric::isomap_ptr isomap() const { return isomap_; }
+	isometric::isomap_ptr& isomap() { return isomap_; }
 	const float* projection() const;
 	const float* view() const;
 	const glm::mat4& view_mat() const { return camera_->view_mat(); }
@@ -521,6 +521,8 @@ private:
 		std::vector<IndexType> opaque_indexes, translucent_indexes;
 
 		rect tile_positions;
+
+		//graphics::vbo_array vbo;
 	};
 
 	mutable std::map<int, layer_blit_info> blit_cache_;

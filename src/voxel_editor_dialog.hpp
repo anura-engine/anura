@@ -38,6 +38,13 @@ namespace editor_dialogs
 		void init();
 		void select_category(const std::string& category);
 		void set_tileset(int index);
+	protected:
+		void increment_width(int n);
+		void decrement_width(int n);
+		void increment_depth(int n);
+		void decrement_depth(int n);
+		void increment_height(int n);
+		void decrement_height(int n);
 	private:
 		voxel_editor_dialog(const voxel_editor_dialog&);
 
@@ -55,6 +62,10 @@ namespace editor_dialogs
 
 		//index of the first item in the current category
 		int first_index_;
+
+		size_t map_width_;
+		size_t map_depth_;
+		size_t map_height_;
 	};
 }
 
