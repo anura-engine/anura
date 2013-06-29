@@ -419,9 +419,7 @@ namespace isometric
 		std::cerr << "Built " << vertices_front_.size()/3 << " front vertices" << std::endl;
 		std::cerr << "Built " << vertices_back_.size()/3 << " back vertices" << std::endl;
 
-		mm_uniform_it_ = shader_->get_uniform_reference("model_matrix");
-		pm_uniform_it_ = shader_->get_uniform_reference("projection_matrix");
-		vm_uniform_it_ = shader_->get_uniform_reference("view_matrix");
+		mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
 		a_position_it_ = shader_->get_attribute_reference("a_position");
 		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
 		tex0_it_ = shader_->get_uniform_reference("u_tex0");
@@ -574,9 +572,8 @@ namespace isometric
 		get_terrain_info().get_tex().set_as_current_texture();
 		glUniform1i(tex0_it_->second.location, 0);
 
-		shader_->set_uniform(vm_uniform_it_, 1, level::current().view());
-		shader_->set_uniform(pm_uniform_it_, 1, level::current().projection());
-		shader_->set_uniform(mm_uniform_it_, 1, model());
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
+		shader_->set_uniform(mm_uniform_it_, 1, glm::value_ptr(mvp));
 
 		glEnableVertexAttribArray(a_position_it_->second.location);
 		glEnableVertexAttribArray(a_tex_coord_it_->second.location);
