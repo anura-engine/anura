@@ -14,6 +14,7 @@ camera_callable::camera_callable()
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 
 	compute_view();
+	compute_projection();
 }
 
 camera_callable::camera_callable(const variant& node)
