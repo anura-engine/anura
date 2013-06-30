@@ -17,6 +17,7 @@
  #include "graphics.hpp"
 
 #include "asserts.hpp"
+#include "camera.hpp"
 #include "foreach.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -170,6 +171,7 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
 				SDL_SetWindowSize(wnd, w, h);
 				SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+				SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 				return wnd;
 			} else {
 				fprintf(stderr, "ERROR: Failed to set window display mode. Destroying window and creating a new one.\n");
@@ -1139,5 +1141,23 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 	{
 		zoom_level = 1;
 	}
+
+#if defined(USE_ISOMAP)
+	// Convert from a screen position (assume +ve x to right, +ve y down) to world space.
+	// Assumes the depth buffer was enabled.
+	glm::vec3 screen_to_world(const camera_callable_ptr& camera, int x, int y, int wx, int wy)
+	{
+		if(camera == NULL) {
+			return glm::vec3();
+		}
+		glm::vec4 view_port(0, 0, wx, wy);
+
+		GLfloat depth;
+		glReadPixels(x, wy - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+		glm::vec3 screen(x, wy - y, depth);
+
+		return glm::unProject(screen, camera->view_mat(), camera->projection_mat(), view_port);
+	}
+#endif
 
 }
