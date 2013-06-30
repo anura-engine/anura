@@ -259,6 +259,7 @@ void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up
 	position_ = position;
 	target_ = target;
 	up_ = up;
+	direction_ = target_ - position_;
 	view_ = glm::lookAt(position_, target_, up_);
 }
 

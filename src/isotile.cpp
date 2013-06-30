@@ -334,6 +334,25 @@ namespace isometric
 		return it->second.empty() == false;
 	}
 
+	void isomap::rebuild()
+	{
+		vertices_left_.clear();
+		vertices_right_.clear();
+		vertices_top_.clear();
+		vertices_bottom_.clear();
+		vertices_front_.clear();
+		vertices_back_.clear();
+
+		tarray_left_.clear();
+		tarray_right_.clear();
+		tarray_top_.clear();
+		tarray_bottom_.clear();
+		tarray_front_.clear();
+		tarray_back_.clear();
+
+		build();
+	}
+
 	void isomap::build()
 	{
 		profile::manager pman("isomap::build");
@@ -851,11 +870,68 @@ namespace isometric
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
+	void isomap::set_tile(int x, int y, int z, const std::string& type)
+	{
+		tiles_[position(x,y,z)] = type;
+		rebuild();
+	}
+
+	void isomap::del_tile(int x, int y, int z)
+	{
+		auto it = tiles_.find(position(x,y,z));
+		ASSERT_LOG(it != tiles_.end(), "del_tile: no tile found at position(" << x << "," << y << "," << z << ") to delete");
+		tiles_.erase(it);
+		rebuild();
+	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)
 	DEFINE_FIELD(dummy, "null") //you need to define at least one field right
 		return variant();       //now, or else shit goes sideways.
 	END_DEFINE_CALLABLE(isomap)
+
+
+	namespace
+	{
+		float dti(float val) 
+		{
+			return abs(val - boost::math::round(val));
+		}
+	}
+
+	glm::ivec3 get_facing(const glm::vec3& coords) 
+	{
+		const glm::vec3& lookat = level::current().camera()->direction();
+		if(dti(coords.x) < dti(coords.y)) {
+			if(dti(coords.x) < dti(coords.z)) {
+				if(lookat.x > 0) {
+					return glm::ivec3(-1,0,0);
+				} else {
+					return glm::ivec3(1,0,0);
+				}
+			} else {
+				if(lookat.z > 0) {
+					return glm::ivec3(0,0,-1);
+				} else {
+					return glm::ivec3(0,0,1);
+				}
+			}
+		} else {
+			if(dti(coords.y) < dti(coords.z)) {
+				if(lookat.y > 0) {
+					return glm::ivec3(0,-1,0);
+				} else {
+					return glm::ivec3(0,1,0);
+				}
+			} else {
+				if(lookat.z > 0) {
+					return glm::ivec3(0,0,-1);
+				} else {
+					return glm::ivec3(0,0,1);
+				}
+			}
+		}
+	}
+
 }
 
 	

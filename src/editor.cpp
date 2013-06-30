@@ -23,8 +23,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
-
-#include <glm/gtc/matrix_transform.hpp>
+#include <boost/math/special_functions/round.hpp>
 
 #include "asserts.hpp"
 #include "border_widget.hpp"
@@ -106,6 +105,7 @@ PREF_INT_PERSISTENT(editor_grid, 1);
 void toggle_draw_grid() {
 	g_editor_grid = !g_editor_grid;
 }
+
 }
 
 class editor_menu_dialog : public gui::dialog
@@ -940,6 +940,19 @@ int editor_x_resolution = 0, editor_y_resolution = 0;
 
 }
 
+#if defined(USE_ISOMAP)
+namespace {
+
+// Holds the current mouse position converted to worldspace.
+glm::vec3 g_world_coords;
+// Holds the voxel position that the mouse is currently over, in model space.
+glm::ivec3 g_voxel_coord;
+// Holds the facing over which the mouse is currently over.
+glm::ivec3 g_facing;
+
+}
+#endif
+
 bool editor_resolution_manager::is_active()
 {
 	return editor_resolution_manager_count != 0;
@@ -954,7 +967,11 @@ editor_resolution_manager::editor_resolution_manager(int xres, int yres) :
 			editor_x_resolution = xres;
 			editor_y_resolution = yres;
 		} else {
-			editor_x_resolution = 1200; //preferences::actual_screen_width() + EDITOR_SIDEBAR_WIDTH + editor_dialogs::LAYERS_DIALOG_WIDTH;
+			if(original_width_ > 1200) {
+				editor_x_resolution = preferences::actual_screen_width() + EDITOR_SIDEBAR_WIDTH  + editor_dialogs::LAYERS_DIALOG_WIDTH;
+			} else {
+				editor_x_resolution = 1200; //preferences::actual_screen_width() + EDITOR_SIDEBAR_WIDTH + editor_dialogs::LAYERS_DIALOG_WIDTH;
+			}
 			editor_y_resolution = preferences::actual_screen_height() + EDITOR_MENUBAR_HEIGHT;
 		}
 	}
@@ -1344,6 +1361,36 @@ void editor::process()
 			}
 		}
 	}
+
+#if defined(USE_ISOMAP)
+	if(tool() == TOOL_EDIT_VOXELS) {
+			int x, y;
+		if(mouselook_mode()) {
+			//x = preferences::actual_screen_width() / 2;
+			//y = preferences::actual_screen_height() / 2;
+			x = editor_x_resolution / 2;
+			y = editor_y_resolution / 2;
+		} else {
+			SDL_GetMouseState(&x, &y);
+		}
+		
+		g_world_coords = graphics::screen_to_world(lvl_->camera(), x, y, editor_x_resolution, editor_y_resolution);
+		g_voxel_coord = glm::ivec3(
+			abs(g_world_coords[0]-boost::math::round(g_world_coords[0])) < 0.05f ? int(boost::math::round(g_world_coords[0])) : int(g_world_coords[0]),
+			abs(g_world_coords[1]-boost::math::round(g_world_coords[1])) < 0.05f ? int(boost::math::round(g_world_coords[1])) : int(g_world_coords[1]),
+			abs(g_world_coords[2]-boost::math::round(g_world_coords[2])) < 0.05f ? int(boost::math::round(g_world_coords[2])) : int(g_world_coords[2]));
+		g_facing = isometric::get_facing(g_world_coords);
+		if(g_facing.x > 0) {
+			--g_voxel_coord.x; 
+		}
+		if(g_facing.y > 0) {
+			--g_voxel_coord.y; 
+		}
+		if(g_facing.z > 0) {
+			--g_voxel_coord.z; 
+		}
+	}
+#endif
 
 	foreach(level_ptr lvl, levels_) {
 		lvl->complete_rebuild_tiles_in_background();
@@ -1941,6 +1988,22 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 
 	dragging_ = drawing_rect_ = false;
 
+#if defined(USE_ISOMAP)
+	if(tool() == TOOL_EDIT_VOXELS) {
+		if(event.button == SDL_BUTTON_LEFT) {
+			// remove voxel
+			ASSERT_LOG(cur_voxel_tileset_ < isometric::isomap::get_editor_tiles().size(), 
+				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::isomap::get_editor_tiles().size());
+			lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+		} else if(event.button == SDL_BUTTON_RIGHT) {
+			// add voxel
+			glm::ivec3 at_pos = g_voxel_coord + g_facing;
+			ASSERT_LOG(cur_voxel_tileset_ < isometric::isomap::get_editor_tiles().size(), 
+				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::isomap::get_editor_tiles().size());
+			lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::isomap::get_editor_tiles()[cur_voxel_tileset_].id);
+		}
+	} else 
+#endif
 	if(adding_points_.empty() == false) {
 		if(event.button == SDL_BUTTON_LEFT && property_dialog_ && property_dialog_->get_entity()) {
 			const int xpos = anchorx_;
@@ -3571,9 +3634,144 @@ void editor::draw_gui() const
 		code_dialog_->draw();
 	}
 
-	if(mouselook_mode()) {
-		// XXX: draw a cursor here.
+#if defined(USE_ISOMAP)
+	if(tool() == TOOL_EDIT_VOXELS) {
+		if(mouselook_mode()) {
+			// XXX: draw a cursor here.
+			const int cx = (preferences::actual_screen_width() - EDITOR_SIDEBAR_WIDTH) / 2;
+			const int cy = EDITOR_MENUBAR_HEIGHT + (preferences::actual_screen_height() - EDITOR_MENUBAR_HEIGHT) / 2;
+			graphics::draw_circle(cx, cy, 5);
+		}
+		std::string facing_str = "Unknown";		
+		if(g_facing.x < 0) {
+			facing_str = "left";
+		} else if(g_facing.x > 0) {
+			facing_str = "right";
+		}
+		if(g_facing.y < 0) {
+			facing_str = "bottom";
+		} else if(g_facing.y > 0) {
+			facing_str = "top";
+		}
+		if(g_facing.z < 0) {
+			facing_str = "back";
+		} else if(g_facing.z > 0) {
+			facing_str = "front";
+		}
+
+		graphics::blit_texture(font::render_text(
+			formatter() << "World Co-ords: " << g_world_coords[0] << "," << g_world_coords[1] << "," << g_world_coords[2]
+			<< " (" << g_voxel_coord.x << "," << g_voxel_coord.y << "," << g_voxel_coord.z << ") : " << facing_str, 
+			graphics::color_white(), 14), 300, 80);
+
+		gles2::manager gman(gles2::shader_program::get_global("iso_line"));
+		static GLint u_col = -1;
+		if(u_col == -1) {
+			u_col = gles2::active_shader()->shader()->get_uniform("u_color");
+		}
+
+		if(lvl_->isomap() != NULL) {
+			if(lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z).empty() == false) {
+				glm::mat4 model = glm::translate(glm::mat4(1.0f),
+					glm::vec3(float(g_voxel_coord.x)+0.5f, float(g_voxel_coord.y)+0.5f, float(g_voxel_coord.z)+0.5f));
+				glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
+				glLineWidth(1.0f);
+				glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+				glUniform4f(u_col, 0.0f, 0.0f, 0.0f, 1.0f);
+		
+				std::vector<GLfloat> lines;
+				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+
+				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); 
+				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+
+				lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+				lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+
+				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+
+				lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+				lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+
+				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &lines[0]);
+
+				glEnable(GL_DEPTH_TEST);
+				glDrawArrays(GL_LINES, 0, lines.size()/3);
+				glDisable(GL_DEPTH_TEST);
+
+				/*glm::mat3 mv_matrix(level::current().view_mat() * model);
+				glm::mat3 normal_matrix = glm::inverseTranspose(glm::mat3(mv_matrix));
+
+				static GLint u_col = -1;
+				if(u_col == -1) {
+					u_col = gles2::active_shader()->shader()->get_uniform("u_color");
+				}
+				static GLint u_kd = -1;
+				if(u_kd == -1) {
+					u_kd = gles2::active_shader()->shader()->get_uniform("Kd");
+				}
+				static GLint u_light_position = -1;
+				if(u_light_position == -1) {
+					u_light_position = gles2::active_shader()->shader()->get_uniform("LightPosition");
+				}
+				static GLint u_vertex_normal = -1;
+				if(u_vertex_normal == -1) {
+					u_vertex_normal = gles2::active_shader()->shader()->get_uniform("VertexNormal");
+				}
+				static GLint u_mv_matrix = -1;
+				if(u_mv_matrix == -1) {
+					u_mv_matrix = gles2::active_shader()->shader()->get_uniform("ModelViewMatrix");
+				}
+				static GLint u_normal_matrix = -1;
+				if(u_normal_matrix == -1) {
+					u_normal_matrix = gles2::active_shader()->shader()->get_uniform("NormalMatrix");
+				}
+				static GLint u_projection_matrix = -1;
+				if(u_projection_matrix == -1) {
+					u_projection_matrix = gles2::active_shader()->shader()->get_uniform("ProjectionMatrix");
+				}
+				
+				glUniform4f(u_col, 1.0f, 1.0f, 1.0f, 1.0f);
+				glUniform1f(u_kd, 100.0f);
+				glUniform4f(u_light_position, 16.0f, 16.0f, 16.0f, 1.0f);
+				glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+				glUniformMatrix4fv(u_mv_matrix, 1, GL_FALSE, glm::value_ptr(mv_matrix));
+				glUniformMatrix3fv(u_normal_matrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
+				glUniformMatrix4fv(u_projection_matrix, 1, GL_FALSE, level::current().camera()->projection());
+
+				glEnable(GL_DEPTH_TEST);
+
+				std::vector<GLfloat> cube_face;
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(-0.525f);
+				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &cube_face[0]);
+				glUniform3f(u_vertex_normal, -1.0f, 0.0f, 0.0f);
+				glDrawArrays(GL_TRIANGLES, 0, cube_face.size()/3);
+
+				cube_face.clear();
+				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
+				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
+				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
+				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &cube_face[0]);
+				glUniform3f(u_vertex_normal, 0.0f, 1.0f, 0.0f);
+				glDrawArrays(GL_TRIANGLES, 0, cube_face.size()/3);
+
+				glDisable(GL_DEPTH_TEST);*/
+			}
+		}
 	}
+#endif
 
 	gui::draw_tooltip();
 }

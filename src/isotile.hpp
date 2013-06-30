@@ -57,6 +57,7 @@ namespace isometric
 		explicit isomap(variant node);
 		virtual ~isomap();
 		void build();
+		void rebuild();
 		virtual void draw() const;
 		variant write();
 
@@ -67,6 +68,9 @@ namespace isometric
 		std::string get_tile_type(int x, int y, int z) const;
 		static variant get_tile_info(const std::string& type);
 		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
+
+		void set_tile(int x, int y, int z, const std::string& type);
+		void del_tile(int x, int y, int z);
 
 		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
@@ -112,9 +116,10 @@ namespace isometric
 		glm::mat4 model_;
 	};
 
-typedef boost::intrusive_ptr<isomap> isomap_ptr;
-typedef boost::intrusive_ptr<const isomap> const_isomap_ptr;
+	typedef boost::intrusive_ptr<isomap> isomap_ptr;
+	typedef boost::intrusive_ptr<const isomap> const_isomap_ptr;
 
+	glm::ivec3 get_facing(const glm::vec3& coords);
 }
 
 #endif // USE_ISOMAP
