@@ -313,6 +313,7 @@ texture::texture(unsigned int id, int width, int height)
 	id_->s = surface();
 
 	//TEMPORARY DEBUG CODE ONLY
+	/*
 	{
 	int nfbo = 0, ninit = 0;
 	for(std::set<texture::ID*>::iterator i = texture_id_registry().begin();
@@ -326,7 +327,7 @@ texture::texture(unsigned int id, int width, int height)
 	}
 
 	fprintf(stderr, "CREATE FBO TEXTURE: HAVE %d/%d FBO/TEXTURES\n", nfbo, ninit);
-	}
+	}*/
 }
 
 texture::~texture()

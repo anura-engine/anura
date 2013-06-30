@@ -1058,7 +1058,7 @@ void program::set_fixed_uniforms()
 void program::load_shaders(const std::string& shader_data)
 {
 	variant node = json::parse(shader_data);
-	//std::cerr << "load_shaders: " << node << std::endl;
+
 	ASSERT_LOG(node.is_map() && node.has_key("shaders") && node.has_key("programs"),
 		"shaders.cfg must be a map with \"shaders\" and \"programs\" attributes.");
 	for(size_t n = 0; n < node["programs"].num_elements(); ++n) {
