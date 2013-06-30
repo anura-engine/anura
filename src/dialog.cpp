@@ -250,6 +250,7 @@ void dialog::remove_widget(widget_ptr w)
 }
 
 void dialog::clear() { 
+	add_x_ = add_y_ = 0;
     foreach(widget_ptr w, widgets_) {
         deregister_listener(w);
     }
@@ -288,9 +289,7 @@ void dialog::show_modal()
     pump.register_listener(this);
 
 	while(opened_ && pump.process()) {
-		if(on_process_) {
-			on_process_();
-		}
+		process();
 		prepare_draw();
 		draw();
 		gui::draw_tooltip();

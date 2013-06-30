@@ -40,7 +40,7 @@ class text_editor_widget;
 class code_editor_dialog : public gui::dialog
 {
 public:
-	code_editor_dialog(const rect& r);
+	explicit code_editor_dialog(const rect& r);
 	void init();
 	void add_optional_error_text_area(const std::string& text);
 	bool jump_to_error(const std::string& text);
