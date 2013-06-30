@@ -57,6 +57,7 @@ namespace isometric
 			std::string abbreviation;
 			int faces;
 			rectf area[6];
+			bool transparent;
 		};
 
 		class terrain_info
@@ -122,6 +123,7 @@ namespace isometric
 							ti.faces |= isomap::BOTTOM;
 							ti.area[5] = rectf(block["bottom"]);
 						}
+						ti.transparent = block["transparent"].as_bool(false);
 					}
 					tile_data_[ti.abbreviation] = ti;
 
@@ -331,7 +333,12 @@ namespace isometric
 		if(it == tiles_.end()) {
 			return false;
 		}
-		return it->second.empty() == false;
+		if(it->second.empty() != false) {
+			return false;
+		}
+		auto ti = get_terrain_info().find(it->second);
+		ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second);
+		return !ti->second.transparent;
 	}
 
 	void isomap::rebuild()
