@@ -171,6 +171,7 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
 				SDL_SetWindowSize(wnd, w, h);
 				SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+				SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 				return wnd;
 			} else {
 				fprintf(stderr, "ERROR: Failed to set window display mode. Destroying window and creating a new one.\n");
