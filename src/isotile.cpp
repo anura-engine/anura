@@ -10,6 +10,12 @@
 #include <sstream>
 #include <utility>
 #include <glm/gtc/matrix_transform.hpp>
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
 
 #include "base64.hpp"
 #include "compress.hpp"
@@ -901,7 +907,7 @@ namespace isometric
 	{
 		float dti(float val) 
 		{
-			return abs(val - boost::math::round(val));
+			return abs(val - bmround(val));
 		}
 	}
 

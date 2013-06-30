@@ -23,7 +23,12 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
+#if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
 
 #include "asserts.hpp"
 #include "border_widget.hpp"
@@ -1376,9 +1381,9 @@ void editor::process()
 		
 		g_world_coords = graphics::screen_to_world(lvl_->camera(), x, y, editor_x_resolution, editor_y_resolution);
 		g_voxel_coord = glm::ivec3(
-			abs(g_world_coords[0]-boost::math::round(g_world_coords[0])) < 0.05f ? int(boost::math::round(g_world_coords[0])) : int(g_world_coords[0]),
-			abs(g_world_coords[1]-boost::math::round(g_world_coords[1])) < 0.05f ? int(boost::math::round(g_world_coords[1])) : int(g_world_coords[1]),
-			abs(g_world_coords[2]-boost::math::round(g_world_coords[2])) < 0.05f ? int(boost::math::round(g_world_coords[2])) : int(g_world_coords[2]));
+			abs(g_world_coords[0]-bmround(g_world_coords[0])) < 0.05f ? int(bmround(g_world_coords[0])) : int(g_world_coords[0]),
+			abs(g_world_coords[1]-bmround(g_world_coords[1])) < 0.05f ? int(bmround(g_world_coords[1])) : int(g_world_coords[1]),
+			abs(g_world_coords[2]-bmround(g_world_coords[2])) < 0.05f ? int(bmround(g_world_coords[2])) : int(g_world_coords[2]));
 		g_facing = isometric::get_facing(g_world_coords);
 		if(g_facing.x > 0) {
 			--g_voxel_coord.x; 
