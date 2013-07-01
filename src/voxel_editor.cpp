@@ -15,14 +15,17 @@
 
 #include "button.hpp"
 #include "camera.hpp"
+#include "color_picker.hpp"
 #include "color_utils.hpp"
 #include "dialog.hpp"
+#include "filesystem.hpp"
 #include "formatter.hpp"
 #include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
+#include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
 
@@ -67,6 +70,90 @@ struct Layer {
 	VoxelMap map;
 };
 
+struct LayerType {
+	std::string name;
+	std::map<std::string, Layer> variations;
+	std::string last_edited_variation;
+};
+
+struct Model {
+	std::vector<LayerType> layer_types;
+};
+
+LayerType read_layer_type(const variant& v) {
+	LayerType result;
+	result.last_edited_variation = v["last_edited_variation"].as_string_default();
+	variant layers_node = v["variations"];
+	if(layers_node.is_null()) {
+		Layer default_layer;
+		default_layer.name = "default";
+		result.variations["default"] = default_layer;
+		return result;
+	}
+
+	for(const std::pair<variant,variant>& p : layers_node.as_map()) {
+		Layer layer;
+		layer.name = p.first.as_string();
+		variant layer_node = p.second;
+		if(layer_node["voxels"].is_list()) {
+			foreach(variant v, layer_node["voxels"].as_list()) {
+				layer.map.insert(read_voxel(v));
+			}
+		}
+
+		result.variations[layer.name] = layer;
+	}
+
+	return result;
+}
+
+Model read_model(const variant& v) {
+	Model model;
+
+	for(const std::pair<variant,variant>& p : v["layers"].as_map()) {
+		LayerType layer_type = read_layer_type(p.second);
+		layer_type.name = p.first.as_string();
+		model.layer_types.push_back(layer_type);
+	}
+
+	return model;
+}
+
+variant write_model(const Model& model) {
+	std::map<variant,variant> layers_node;
+	for(const LayerType& layer_type : model.layer_types) {
+		std::map<variant,variant> layer_type_node;
+		layer_type_node[variant("name")] = variant(layer_type.name);
+		layer_type_node[variant("last_edited_variation")] = variant(layer_type.last_edited_variation);
+
+		std::map<variant,variant> variations_node;
+		for(const std::pair<std::string, Layer>& p : layer_type.variations) {
+			std::map<variant,variant> layer_node;
+			layer_node[variant("name")] = variant(p.first);
+			std::vector<variant> voxels;
+			for(const VoxelPair& vp : p.second.map) {
+				voxels.push_back(write_voxel(vp));
+			}
+			layer_node[variant("voxels")] = variant(&voxels);
+			variations_node[variant(p.first)] = variant(&layer_node);
+		}
+
+		layer_type_node[variant("variations")] = variant(&variations_node);
+		layers_node[variant(layer_type.name)] = variant(&layer_type_node);
+	}
+
+	std::map<variant,variant> result_node;
+	result_node[variant("layers")] = variant(&layers_node);
+	return variant(&result_node);
+}
+
+struct Command {
+	Command(std::function<void()> redo_fn, std::function<void()> undo_fn)
+	  : redo(redo_fn), undo(undo_fn)
+	{}
+	std::function<void()> redo, undo;
+};
+
 class voxel_editor : public gui::dialog
 {
 public:
@@ -83,10 +170,22 @@ public:
 	const VoxelPos* get_cursor() const { return cursor_.get(); }
 
 	VoxelPos get_selected_voxel(const VoxelPos& pos, int facing, bool reverse);
+
+	graphics::color current_color() const { return color_picker_->get_primary_color(); }
+	Layer& layer() { return layers_[current_layer_]; }
+
+	void execute_command(std::function<void()> redo, std::function<void()> undo);
+	void execute_command(const Command& cmd);
 private:
 	bool handle_event(const SDL_Event& event, bool claimed);
 
-	Layer& layer() { return layers_[current_layer_]; }
+	void on_color_changed(const graphics::color& color);
+
+	void on_save();
+	void undo();
+	void redo();
+
+
 	const Layer& layer() const { return layers_[current_layer_]; }
 
 	void build_voxels();
@@ -95,6 +194,7 @@ private:
 
 	int current_layer_;
 	std::vector<Layer> layers_;
+	Model model_;
 	VoxelMap voxels_;
 
 	boost::scoped_ptr<VoxelPos> cursor_;
@@ -102,6 +202,10 @@ private:
 	gui::label_ptr pos_label_;
 
 	std::string fname_;
+
+	boost::intrusive_ptr<gui::color_picker> color_picker_;
+
+	std::vector<Command> undo_, redo_;
 };
 
 voxel_editor* g_voxel_editor;
@@ -187,6 +291,27 @@ void iso_renderer::handle_draw() const
 
 void iso_renderer::handle_process()
 {
+	int num_keys = 0;
+	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
+	fprintf(stderr, "KEYS: %d/%d\n", (int)SDL_SCANCODE_Z, num_keys);
+	if(SDL_SCANCODE_Z < num_keys && keystate[SDL_SCANCODE_Z]) {
+		camera_distance_ -= 0.2;
+		if(camera_distance_ < 5.0) {
+			camera_distance_ = 5.0;
+		}
+
+		calculate_camera();
+	}
+
+	if(SDL_SCANCODE_X < num_keys && keystate[SDL_SCANCODE_X]) {
+		camera_distance_ += 0.2;
+		if(camera_distance_ > 100.0) {
+			camera_distance_ = 100.0;
+		}
+
+		calculate_camera();
+	}
+
 	render_fbo();
 }
 
@@ -570,16 +695,47 @@ VoxelPos perspective_renderer::get_mouse_pos(int mousex, int mousey) const
 void perspective_renderer::pencil_voxel()
 {
 	if(get_editor().get_cursor()) {
-		Voxel voxel = { graphics::color(SDL_GetModState()&KMOD_SHIFT ? "blue" : "green") };
-		get_editor().set_voxel(*get_editor().get_cursor(), voxel);
+		VoxelPos cursor = *get_editor().get_cursor();
+		Voxel voxel = { get_editor().current_color() };
+
+		Voxel old_voxel;
+		bool currently_has_voxel = false;
+
+		auto current_itor = get_editor().layer().map.find(cursor);
+		if(current_itor != get_editor().layer().map.end()) {
+			old_voxel = current_itor->second;
+			currently_has_voxel = true;
+		}
+
+		get_editor().execute_command(
+		  [cursor, voxel]() { get_editor().set_voxel(cursor, voxel); },
+		  [cursor, old_voxel, currently_has_voxel]() {
+			if(currently_has_voxel) {
+				get_editor().set_voxel(cursor, old_voxel);
+			} else {
+				get_editor().delete_voxel(cursor);
+			}
+		});
+
+		get_editor().set_voxel(cursor, voxel);
 	}
 }
 
 void perspective_renderer::delete_voxel()
 {
 	if(get_editor().get_cursor()) {
-		Voxel voxel = { graphics::color(SDL_GetModState()&KMOD_SHIFT ? "blue" : "green") };
-		get_editor().delete_voxel(*get_editor().get_cursor());
+		VoxelPos cursor = *get_editor().get_cursor();
+		auto current_itor = get_editor().layer().map.find(cursor);
+		if(current_itor == get_editor().layer().map.end()) {
+			return;
+		}
+
+		Voxel old_voxel = current_itor->second;
+
+		get_editor().execute_command(
+			[cursor]() { get_editor().delete_voxel(cursor); },
+			[cursor, old_voxel]() { get_editor().set_voxel(cursor, old_voxel); }
+		);
 	}
 }
 
@@ -966,14 +1122,23 @@ voxel_editor::voxel_editor(const rect& r, const std::string& fname)
 		layers_.push_back(Layer());
 	} else {
 		variant doc = json::parse_from_file(fname_);
-		variant layers_node = doc["layers"];
-		ASSERT_LOG(layers_node.is_map() && !layers_node.as_map().empty(), "Bad layers: " << doc.debug_location());
+		model_ = read_model(doc);
 
-		
+		for(const LayerType& layer_type : model_.layer_types) {
+			auto itor = layer_type.variations.find(layer_type.last_edited_variation);
+			if(itor == layer_type.variations.end()) {
+				itor = layer_type.variations.begin();
+			}
+
+			assert(itor != layer_type.variations.end());
+
+			layers_.push_back(itor->second);
+		}
 	}
 
 	g_voxel_editor = this;
 	init();
+	build_voxels();
 }
 
 voxel_editor::~voxel_editor()
@@ -1005,9 +1170,32 @@ void voxel_editor::init()
 	w.reset(new iso_renderer(rect(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height)));
 	add_widget(w, w->x(), w->y());
 
+	grid_ptr toolbar(new grid(3));
+
+	toolbar->add_col(widget_ptr(new button("Save", boost::bind(&voxel_editor::on_save, this))));
+	toolbar->add_col(widget_ptr(new button("Undo", boost::bind(&voxel_editor::undo, this))));
+	toolbar->add_col(widget_ptr(new button("Redo", boost::bind(&voxel_editor::redo, this))));
+	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
+
+	color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+	add_widget(color_picker_);
+
+	if(model_.layer_types.empty() == false) {
+		assert(model_.layer_types.size() == layers_.size());
+		grid_ptr layers_grid(new grid(1));
+
+		for(int n = 0; n != layers_.size(); ++n) {
+			layers_grid->add_col(widget_ptr(new label(model_.layer_types[n].name + ": " + layers_[n].name)));
+		}
+
+		add_widget(layers_grid);
+	}
+
 	pos_label_.reset(new label("", 12));
 	add_widget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
 	                       area_.y() + area_.h() - pos_label_->height() - 30 );
+
+
 }
 
 void voxel_editor::set_voxel(const VoxelPos& pos, const Voxel& voxel)
@@ -1079,6 +1267,60 @@ bool voxel_editor::handle_event(const SDL_Event& event, bool claimed)
 	return dialog::handle_event(event, claimed);
 }
 
+void voxel_editor::on_color_changed(const graphics::color& color)
+{
+}
+
+void voxel_editor::on_save()
+{
+	if(fname_.empty()) {
+		std::cerr << "NO FILENAME. CANNOT SAVE\n";
+		return;
+	}
+
+	assert(layers_.size() == model_.layer_types.size());
+
+	for(int n = 0; n != layers_.size(); ++n) {
+		model_.layer_types[n].variations[layers_[n].name] = layers_[n];
+		model_.layer_types[n].last_edited_variation = layers_[n].name;
+	}
+
+	variant doc = write_model(model_);
+	sys::write_file(fname_, doc.write_json());
+}
+
+void voxel_editor::undo()
+{
+	if(undo_.empty() == false) {
+		Command cmd = undo_.back();
+		undo_.pop_back();
+		cmd.undo();
+		redo_.push_back(cmd);
+	}
+}
+
+void voxel_editor::redo()
+{
+	if(redo_.empty() == false) {
+		Command cmd = redo_.back();
+		redo_.pop_back();
+		cmd.redo();
+		undo_.push_back(cmd);
+	}
+}
+
+void voxel_editor::execute_command(std::function<void()> redo, std::function<void()> undo)
+{
+	execute_command(Command(redo, undo));
+}
+
+void voxel_editor::execute_command(const Command& cmd)
+{
+	cmd.redo();
+	undo_.push_back(cmd);
+	redo_.clear();
+}
+
 void voxel_editor::build_voxels()
 {
 	voxels_.clear();
@@ -1099,7 +1341,7 @@ UTILITY(voxel_editor)
 
 	std::string fname;
 	if(arguments.empty() == false) {
-		fname = arguments.front();
+		fname = module::map_file(arguments.front());
 	}
 	
 	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
