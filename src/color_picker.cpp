@@ -54,7 +54,7 @@ namespace gui
 {
 	color_picker::color_picker(const rect& area, boost::function<void (const graphics::color&)>* onchange)
 		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
-		red_(255), green_(255), blue_(255), dragging_(false)
+		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
 	{
 		set_loc(area.x(), area.y());
 		set_dim(area.w(), area.h());
@@ -74,7 +74,8 @@ namespace gui
 
 	color_picker::color_picker(const variant& v, game_logic::formula_callable* e)
 		: widget(v, e), selected_palette_color_(-1), hue_(0), saturation_(0), 
-		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false)
+		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0),
+		main_color_selected_(1)
 	{
 		// create delegate for onchange
 		ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
@@ -268,8 +269,11 @@ namespace gui
 		const rect prect_border(prect.x()-2, prect.y()-2, prect.w()+4, prect.h()+4);
 		const rect srect_border(srect.x()-2, srect.y()-2, srect.w()+4, srect.h()+4);
 
-		graphics::draw_hollow_rect(prect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
-		graphics::draw_hollow_rect(srect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+		if(main_color_selected_) {
+			graphics::draw_hollow_rect(prect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+		} else {
+			graphics::draw_hollow_rect(srect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+		}
 		graphics::draw_rect(prect, primary_);
 		graphics::draw_rect(srect, secondary_);
 
@@ -282,6 +286,18 @@ namespace gui
 		graphics::draw_rect(selected_color_rect, graphics::color("black"));
 
 		g_->draw();
+		copy_to_palette_->draw();
+
+		int cnt = 0;
+		for(auto& color : palette_) {
+			const rect palette_rect(5 + 22*(cnt%8), palette_offset_y_ + (cnt/8)*22, 20, 20);
+			graphics::draw_rect(palette_rect, color);
+			++cnt;
+		}
+		if(selected_palette_color_ >= 0 && selected_palette_color_ < palette_.size()) {
+			const rect prect_border(5 + 22*(selected_palette_color_%8)-1, palette_offset_y_ + (selected_palette_color_/8)*22-1, 24, 24);
+			graphics::draw_hollow_rect(prect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+		}
 		glPopMatrix();
 	}
 
@@ -297,13 +313,17 @@ namespace gui
 
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
-			primary_ = graphics::color(red_, green_, blue_, alpha_);
+			if(main_color_selected_) {
+				primary_ = graphics::color(red_, green_, blue_, alpha_);
+			} else {
+				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+			}
 
-			set_text_from_color(primary_);
-			set_sliders_from_color(primary_);
+			set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+			set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 			if(onchange_) {
-				onchange_(primary_);
+				onchange_(main_color_selected_ ? primary_ : secondary_);
 			}
 		}
 	}
@@ -316,18 +336,50 @@ namespace gui
 		SDL_Event ev = event;
 		normalize_event(&ev);
 
-		claimed = g_->process_event(ev, claimed);
-		if(claimed) {
-			return claimed;
+		if(g_ && g_->process_event(ev, claimed)) {
+			return true;
+		}
+		if(copy_to_palette_ && copy_to_palette_->process_event(ev, claimed)) {
+			return true;
 		}
 
 		if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT) {
+			const SDL_MouseButtonEvent& button = ev.button;
 			dragging_ = true;
-			process_mouse_in_wheel(ev.motion.x, ev.motion.y);
+			process_mouse_in_wheel(button.x, button.y);
+
+			if(button.x >= 5 && button.x <= color_box_length_+5 && button.y >= 5 && button.y <= color_box_length_+5) {
+				main_color_selected_ = 1;
+			} else if(button.x >= 10+color_box_length_ && button.x <= 10+color_box_length_*2 && button.y >= 5 && button.y <= color_box_length_+5) {
+				main_color_selected_ = 0;
+			} else if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + palette_.size()/8*22) {
+				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
+				if(color_ndx < palette_.size()) {
+					selected_palette_color_ = color_ndx;
+					if(main_color_selected_) {
+						primary_ = palette_[selected_palette_color_];
+					} else {
+						secondary_ = palette_[selected_palette_color_];
+					}
+				}
+			}
 		} else if(ev.type == SDL_MOUSEBUTTONUP && ev.button.button == SDL_BUTTON_LEFT && dragging_) {
 			dragging_ = false;
 		} else if(ev.type == SDL_MOUSEMOTION && dragging_) {
 			process_mouse_in_wheel(ev.motion.x, ev.motion.y);
+		} else if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_RIGHT) {
+			const SDL_MouseButtonEvent& button = ev.button;
+			if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + palette_.size()/8*22) {
+				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
+				if(color_ndx < palette_.size()) {
+					selected_palette_color_ = color_ndx;
+					if(main_color_selected_) {
+						secondary_ = palette_[selected_palette_color_];
+					} else {
+						primary_ = palette_[selected_palette_color_];
+					}
+				}
+			}
 		}
 
 		return false;
@@ -365,9 +417,24 @@ namespace gui
 			g_->add_col(s_.back());
 			g_->add_col(t_.back());
 		}
+		palette_offset_y_ = g_->y() + g_->height() + 10;
 
-		set_sliders_from_color(primary_);
-		set_text_from_color(primary_);
+		copy_to_palette_.reset(new button(new label("Set", graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"), boost::bind(&color_picker::copy_to_palette_fn, this)));
+		copy_to_palette_->set_loc(5, palette_offset_y_);
+		copy_to_palette_->set_tooltip("Set palette color", 12, graphics::color("antique_white").as_sdl_color(), "Montaga-Regular");
+
+		palette_offset_y_ = copy_to_palette_->y() + copy_to_palette_->height() + 10;
+
+		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+	}
+
+	void color_picker::copy_to_palette_fn()
+	{
+		std::cerr << "copy_to_palette_fn()" << std::endl;
+		if(selected_palette_color_ >= 0 &&  size_t(selected_palette_color_) < palette_.size()) {
+			palette_[selected_palette_color_] = main_color_selected_ ? primary_ : secondary_;
+		}
 	}
 
 	void color_picker::slider_change(int n, double p)
@@ -381,7 +448,11 @@ namespace gui
 			}
 			hsv out = rgb_to_hsv(red_, green_, blue_);
 			hue_ = out.h; saturation_ = out.s; value_ = out.v;
-			primary_ = graphics::color(red_, green_, blue_, alpha_);
+			if(main_color_selected_) {
+				primary_ = graphics::color(red_, green_, blue_, alpha_);
+			} else {
+				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+			}
 		} else if(n >= 3 && n <= 5) {
 			switch(n) {
 			case 3:  hue_ = uint8_t(255.0 * p); break;
@@ -390,17 +461,25 @@ namespace gui
 			}
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
-			primary_ = graphics::color(red_, green_, blue_, alpha_);
+			if(main_color_selected_) {
+				primary_ = graphics::color(red_, green_, blue_, alpha_);
+			} else {
+				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+			}
 		} else {
 			// alpha
 			alpha_ = uint8_t(255.0 * p);
-			primary_ = graphics::color(red_, green_, blue_, alpha_);
+			if(main_color_selected_) {
+				primary_ = graphics::color(red_, green_, blue_, alpha_);
+			} else {
+				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+			}
 		}
-		set_text_from_color(primary_);
-		set_sliders_from_color(primary_);
+		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
-			onchange_(primary_);
+			onchange_(main_color_selected_ ? primary_ : secondary_);
 		}
 	}
 
@@ -448,12 +527,16 @@ namespace gui
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
 		}
-		primary_ = graphics::color(red_, green_, blue_, alpha_);
+		if(main_color_selected_) {
+			primary_ = graphics::color(red_, green_, blue_, alpha_);
+		} else {
+			secondary_ = graphics::color(red_, green_, blue_, alpha_);
+		}
 		//set_text_from_color(primary_, n);
-		set_sliders_from_color(primary_);
+		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
-			onchange_(primary_);
+			onchange_(main_color_selected_ ? primary_ : secondary_);
 		}
 	}
 
@@ -530,15 +613,6 @@ namespace gui
 		hue_ = out.h;
 		saturation_ = out.s;
 		value_ = out.v;
-	}
-
-	void color_picker::set_primary_from_hsv()
-	{
-		rgb out = hsv_to_rgb(hue_, saturation_, value_);
-		primary_ = graphics::color(out.r, out.g, out.b);
-		if(onchange_) {
-			onchange_(primary_);
-		}
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(color_picker)

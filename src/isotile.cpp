@@ -911,9 +911,10 @@ namespace isometric
 		}
 	}
 
-	glm::ivec3 get_facing(const glm::vec3& coords) 
+	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords) 
 	{
-		const glm::vec3& lookat = level::current().camera()->direction();
+		ASSERT_LOG(camera != NULL, "get_facing: camera == NULL");
+		const glm::vec3& lookat = camera->direction();
 		if(dti(coords.x) < dti(coords.y)) {
 			if(dti(coords.x) < dti(coords.z)) {
 				if(lookat.x > 0) {

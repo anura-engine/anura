@@ -19,6 +19,7 @@
 #include <vector>
 #include <boost/function.hpp>
 
+#include "button.hpp"
 #include "color_utils.hpp"
 #include "color_chart.hpp"
 #include "formula_callable_definition.hpp"
@@ -39,6 +40,8 @@ namespace gui
 
 		graphics::color get_primary_color() const { return primary_; }
 		graphics::color get_secondary_color() const { return secondary_; }
+		graphics::color get_selected_color() const { main_color_selected_ ? primary_ : secondary_; }
+		graphics::color get_unselected_color() const { main_color_selected_ ? secondary_ : primary_; }
 		bool get_palette_color(int n, graphics::color* color);
 		void set_palette_color(int n, const graphics::color& color);
 	protected:
@@ -50,6 +53,7 @@ namespace gui
 		graphics::color secondary_;
 		std::vector<graphics::color> palette_;
 
+		int main_color_selected_;
 		int selected_palette_color_;
 		uint8_t hue_;
 		uint8_t saturation_;
@@ -62,6 +66,8 @@ namespace gui
 		grid_ptr g_;
 		std::vector<slider_ptr> s_;
 		std::vector<text_editor_widget_ptr> t_;
+		button_ptr copy_to_palette_;
+		void copy_to_palette_fn();
 
 		void slider_change(int n, double p);
 		void text_change(int n);
@@ -71,7 +77,6 @@ namespace gui
 		void set_text_from_color(const graphics::color& c, int n=-1);
 
 		void set_hsv_from_color(const graphics::color&);
-		void set_primary_from_hsv();
 
 		void handle_process();
 		void handle_draw() const;
@@ -79,6 +84,7 @@ namespace gui
 
 		int color_box_length_;
 		int wheel_radius_;
+		int palette_offset_y_;
 
 		void process_mouse_in_wheel(int x, int y);
 		bool dragging_;

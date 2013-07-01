@@ -119,7 +119,7 @@ namespace isometric
 	typedef boost::intrusive_ptr<isomap> isomap_ptr;
 	typedef boost::intrusive_ptr<const isomap> const_isomap_ptr;
 
-	glm::ivec3 get_facing(const glm::vec3& coords);
+	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords);
 }
 
 #endif // USE_ISOMAP

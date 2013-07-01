@@ -1384,7 +1384,7 @@ void editor::process()
 			abs(g_world_coords[0]-bmround(g_world_coords[0])) < 0.05f ? int(bmround(g_world_coords[0])) : int(g_world_coords[0]),
 			abs(g_world_coords[1]-bmround(g_world_coords[1])) < 0.05f ? int(bmround(g_world_coords[1])) : int(g_world_coords[1]),
 			abs(g_world_coords[2]-bmround(g_world_coords[2])) < 0.05f ? int(bmround(g_world_coords[2])) : int(g_world_coords[2]));
-		g_facing = isometric::get_facing(g_world_coords);
+		g_facing = isometric::get_facing(level::current().camera(), g_world_coords);
 		if(g_facing.x > 0) {
 			--g_voxel_coord.x; 
 		}
