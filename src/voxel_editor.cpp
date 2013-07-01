@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include <algorithm>
+#include <deque>
 #include <numeric>
 #include <map>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "formatter.hpp"
 #include "gles2.hpp"
 #include "grid_widget.hpp"
+#include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
 #include "preferences.hpp"
@@ -38,6 +40,28 @@ struct Voxel {
 typedef std::map<VoxelPos, Voxel> VoxelMap;
 typedef std::pair<VoxelPos, Voxel> VoxelPair;
 
+variant write_voxel(const VoxelPair& p) {
+	std::map<variant,variant> m;
+	std::vector<variant> pos;
+	for(int n = 0; n != 3; ++n) {
+		pos.push_back(variant(p.first[n]));
+	}
+	m[variant("loc")] = variant(&pos);
+	m[variant("color")] = p.second.color.write();
+	return variant(&m);
+}
+
+VoxelPair read_voxel(const variant& v) {
+	const std::vector<int>& pos = v["loc"].as_list_int();
+	ASSERT_LOG(pos.size() == 3, "Bad location: " << v.write_json() << v.debug_location());
+
+	VoxelPair result;
+
+	std::copy(pos.begin(), pos.end(), &result.first[0]);
+	result.second.color = graphics::color(v["color"]);
+	return result;
+}
+
 struct Layer {
 	std::string name;
 	VoxelMap map;
@@ -46,13 +70,14 @@ struct Layer {
 class voxel_editor : public gui::dialog
 {
 public:
-	explicit voxel_editor(const rect& r);
+	voxel_editor(const rect& r, const std::string& fname);
 	~voxel_editor();
 	void init();
 
 	const VoxelMap& voxels() const { return voxels_; }
 
 	void set_voxel(const VoxelPos& pos, const Voxel& voxel);
+	void delete_voxel(const VoxelPos& pos);
 	bool set_cursor(const VoxelPos& pos);
 
 	const VoxelPos* get_cursor() const { return cursor_.get(); }
@@ -75,6 +100,8 @@ private:
 	boost::scoped_ptr<VoxelPos> cursor_;
 
 	gui::label_ptr pos_label_;
+
+	std::string fname_;
 };
 
 voxel_editor* g_voxel_editor;
@@ -90,7 +117,10 @@ class iso_renderer : public gui::widget
 {
 public:
 	explicit iso_renderer(const rect& area);
+	~iso_renderer();
 	void handle_draw() const;
+
+	const camera_callable& camera() const { return *camera_; }
 private:
 	void handle_process();
 	bool handle_event(const SDL_Event& event, bool claimed);
@@ -107,10 +137,17 @@ private:
 
 };
 
+iso_renderer* g_iso_renderer;
+iso_renderer& get_iso_renderer() {
+	assert(g_iso_renderer);
+	return *g_iso_renderer;
+}
+
 iso_renderer::iso_renderer(const rect& area)
   : camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0)
 {
+	g_iso_renderer = this;
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
 	vector_[0] = 1.0;
@@ -118,6 +155,13 @@ iso_renderer::iso_renderer(const rect& area)
 	vector_[2] = 1.0;
 
 	calculate_camera();
+}
+
+iso_renderer::~iso_renderer()
+{
+	if(g_iso_renderer == this) {
+		g_iso_renderer = NULL;
+	}
 }
 
 void iso_renderer::calculate_camera()
@@ -436,6 +480,7 @@ private:
 	bool handle_event(const SDL_Event& event, bool claimed);
 	bool calculate_cursor(int mousex, int mousey);
 	void pencil_voxel();
+	void delete_voxel();
 
 	bool is_flipped() const { return vector_[0] + vector_[1] + vector_[2] < 0; }
 	int vector_[3];
@@ -447,6 +492,7 @@ private:
 	int invert_y_;
 
 	bool drawing_on_;
+	std::set<VoxelPos> voxels_drawn_on_this_drag_;
 };
 
 perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
@@ -529,6 +575,14 @@ void perspective_renderer::pencil_voxel()
 	}
 }
 
+void perspective_renderer::delete_voxel()
+{
+	if(get_editor().get_cursor()) {
+		Voxel voxel = { graphics::color(SDL_GetModState()&KMOD_SHIFT ? "blue" : "green") };
+		get_editor().delete_voxel(*get_editor().get_cursor());
+	}
+}
+
 bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 {
 	if(mousex == INT_MIN) {
@@ -571,6 +625,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 	case SDL_MOUSEBUTTONUP: {
 		drawing_on_ = false;
+		voxels_drawn_on_this_drag_.clear();
 		break;
 	}
 
@@ -578,12 +633,24 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		const SDL_MouseButtonEvent& e = event.button;
 		if(e.x >= x() && e.y >= y() &&
 		   e.x <= x() + width() && e.y <= y() + height()) {
-			pencil_voxel();
+			if(e.button == SDL_BUTTON_LEFT) {
+				pencil_voxel();
+			} else if(e.button == SDL_BUTTON_RIGHT) {
+				std::cerr << "DELETE VOXEL\n";
+				delete_voxel();
+			}
+
 			calculate_cursor(last_select_x_, last_select_y_);
 
 			drawing_on_ = true;
+			voxels_drawn_on_this_drag_.clear();
+
+			if(get_editor().get_cursor()) {
+				voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
+			}
 		} else {
 			drawing_on_ = false;
+			voxels_drawn_on_this_drag_.clear();
 		}
 		break;
 	}
@@ -599,8 +666,17 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 			if(is_cursor_set) {
 				Uint8 button_state = SDL_GetMouseState(NULL, NULL);
 				if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT) && drawing_on_) {
-					pencil_voxel();
-					calculate_cursor(motion.x, motion.y);
+					if(voxels_drawn_on_this_drag_.count(normalize_pos(*get_editor().get_cursor())) == 0) {
+						pencil_voxel();
+						calculate_cursor(motion.x, motion.y);
+						voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
+					}
+				} else if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT) && drawing_on_) {
+					if(voxels_drawn_on_this_drag_.count(normalize_pos(*get_editor().get_cursor())) == 0) {
+						delete_voxel();
+						calculate_cursor(motion.x, motion.y);
+						voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
+					}
 				}
 			}
 
@@ -796,6 +872,33 @@ void perspective_renderer::handle_draw() const
 		}
 	}
 
+	{
+		glm::vec3 camera_vec = get_iso_renderer().camera().position();
+		GLfloat camera_pos[2];
+		GLfloat* camera_pos_ptr = camera_pos;
+		int dimensions[3] = {0, 2, 1};
+		for(int n = 0; n != 3; ++n) {
+			if(dimensions[n] != facing_) {
+				*camera_pos_ptr++ = camera_vec[dimensions[n]];
+			}
+		}
+
+		varray.push_back(x() + width()/2);
+		varray.push_back(y() + height()/2);
+		varray.push_back(x() + width()/2 + camera_pos[0]*voxel_width_);
+		varray.push_back(y() + height()/2 + camera_pos[1]*voxel_width_);
+
+		carray.push_back(1);
+		carray.push_back(0);
+		carray.push_back(1);
+		carray.push_back(0.5);
+		carray.push_back(1);
+		carray.push_back(0);
+		carray.push_back(1);
+		carray.push_back(0.5);
+	}
+
+
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray[0]);
 	gles2::active_shader()->shader()->color_array(4, GL_FLOAT, 0, 0, &carray[0]);
 	glDrawArrays(GL_LINES, 0, varray.size()/2);
@@ -855,10 +958,19 @@ void perspective_widget::flip()
 	init();
 }
 
-voxel_editor::voxel_editor(const rect& r)
-  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r), current_layer_(0)
+voxel_editor::voxel_editor(const rect& r, const std::string& fname)
+  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r), current_layer_(0),
+    fname_(fname)
 {
-	layers_.push_back(Layer());
+	if(fname_.empty()) {
+		layers_.push_back(Layer());
+	} else {
+		variant doc = json::parse_from_file(fname_);
+		variant layers_node = doc["layers"];
+		ASSERT_LOG(layers_node.is_map() && !layers_node.as_map().empty(), "Bad layers: " << doc.debug_location());
+
+		
+	}
 
 	g_voxel_editor = this;
 	init();
@@ -901,6 +1013,12 @@ void voxel_editor::init()
 void voxel_editor::set_voxel(const VoxelPos& pos, const Voxel& voxel)
 {
 	layer().map[pos] = voxel;
+	build_voxels();
+}
+
+void voxel_editor::delete_voxel(const VoxelPos& pos)
+{
+	layer().map.erase(pos);
 	build_voxels();
 }
 
@@ -975,7 +1093,16 @@ void voxel_editor::build_voxels()
 
 UTILITY(voxel_editor)
 {
-	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height())));
+	std::deque<std::string> arguments(args.begin(), args.end());
+
+	ASSERT_LOG(arguments.size() <= 1, "Unexpected arguments");
+
+	std::string fname;
+	if(arguments.empty() == false) {
+		fname = arguments.front();
+	}
+	
+	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->show_modal();
 }
 
