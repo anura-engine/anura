@@ -451,8 +451,10 @@ namespace isometric
 		std::cerr << "Built " << vertices_front_.size()/3 << " front vertices" << std::endl;
 		std::cerr << "Built " << vertices_back_.size()/3 << " back vertices" << std::endl;
 
-		mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
-		a_position_it_ = shader_->get_attribute_reference("a_position");
+		//mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
+		mm_uniform_it_ = shader_->get_uniform_reference("MVP");
+		//a_position_it_ = shader_->get_attribute_reference("a_position");
+		a_position_it_ = shader_->get_attribute_reference("vertexPosition_modelspace");
 		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
 		tex0_it_ = shader_->get_uniform_reference("u_tex0");
 
@@ -607,10 +609,34 @@ namespace isometric
 		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
 		shader_->set_uniform(mm_uniform_it_, 1, glm::value_ptr(mvp));
 
+		//////////////////////////////////////////////////////////////////////
+		// Lighting test section
+		static GLint V = -1;
+		if(V == -1) {
+			V = shader_->get_uniform("V");
+		}
+		glUniformMatrix4fv(V, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
+		static GLint M = -1;
+		if(M == -1) {
+			M = shader_->get_uniform("M");
+		}
+		glUniformMatrix4fv(M, 1, GL_FALSE, glm::value_ptr(model_));
+		static GLint LightPosition_worldspace = -1;
+		if(LightPosition_worldspace == -1) {
+			LightPosition_worldspace = shader_->get_uniform("LightPosition_worldspace");
+		}
+		glUniform3f(LightPosition_worldspace, 48.0f, 48.0f, 48.0f);
+		static GLint vertexNormal_modelspace = -1;
+		if(vertexNormal_modelspace == -1) {
+			vertexNormal_modelspace = shader_->get_uniform("vertexNormal_modelspace");
+		}
+		//////////////////////////////////////////////////////////////////////
+
 		glEnableVertexAttribArray(a_position_it_->second.location);
 		glEnableVertexAttribArray(a_tex_coord_it_->second.location);
 
 		if(debug_draw_faces & FRONT) {
+			glUniform3f(vertexNormal_modelspace, 0, 0, 1);
 			// front
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[4]);
 			glVertexAttribPointer(
@@ -637,6 +663,7 @@ namespace isometric
 
 		if(debug_draw_faces & BACK) {
 			// back
+			glUniform3f(vertexNormal_modelspace, 0, 0, -1);
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[5]);
 			glVertexAttribPointer(
 				a_position_it_->second.location, // The attribute we want to configure
@@ -662,6 +689,7 @@ namespace isometric
 
 		if(debug_draw_faces & LEFT) {
 			// left
+			glUniform3f(vertexNormal_modelspace, -1, 0, 0);
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[0]);
 			glVertexAttribPointer(
 				a_position_it_->second.location, // The attribute we want to configure
@@ -687,6 +715,7 @@ namespace isometric
 
 		if(debug_draw_faces & RIGHT) {
 			// right
+			glUniform3f(vertexNormal_modelspace, 1, 0, 0);
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[1]);
 			glVertexAttribPointer(
 				a_position_it_->second.location, // The attribute we want to configure
@@ -712,6 +741,7 @@ namespace isometric
 
 		if(debug_draw_faces & TOP) {
 			// top
+			glUniform3f(vertexNormal_modelspace, 0, 1, 0);
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[2]);
 			glVertexAttribPointer(
 				a_position_it_->second.location, // The attribute we want to configure
@@ -737,6 +767,7 @@ namespace isometric
 
 		if(debug_draw_faces & BOTTOM) {
 			// bottom
+			glUniform3f(vertexNormal_modelspace, 0, -1, 0);
 			glBindBuffer(GL_ARRAY_BUFFER, arrays_[3]);
 			glVertexAttribPointer(
 				a_position_it_->second.location, // The attribute we want to configure
