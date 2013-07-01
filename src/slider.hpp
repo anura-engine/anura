@@ -31,7 +31,7 @@ namespace gui {
 class slider : public widget
 {
 public:
-	explicit slider(int width, boost::function<void (double)> onchange, double position=0.0);
+	explicit slider(int width, boost::function<void (double)> onchange, double position=0.0, int scale=2);
 	explicit slider(const variant& v, game_logic::formula_callable* e);
 	double position() const {return position_;};
 	void set_position (double position) {position_ = position;};

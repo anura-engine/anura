@@ -26,6 +26,7 @@ objects = \
 	src/code_editor_dialog.o \
 	src/code_editor_widget.o \
 	src/color_chart.o \
+	src/color_picker.o \
 	src/compress.o \
 	src/current_generator.o \
 	src/custom_object_widget.o \

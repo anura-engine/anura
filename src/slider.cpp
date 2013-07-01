@@ -26,12 +26,12 @@
 
 namespace gui {
 	
-slider::slider(int width, boost::function<void (double)> onchange, double position)
+slider::slider(int width, boost::function<void (double)> onchange, double position, int scale)
 	: width_(width), onchange_(onchange), dragging_(false), position_(position),
-	slider_left_(new gui_section_widget("slider_side_left", -1, -1, 2)),
-	slider_right_(new gui_section_widget("slider_side_right", -1, -1, 2)),
-	slider_middle_(new gui_section_widget("slider_middle", -1, -1, 2)),
-	slider_button_(new gui_section_widget("slider_button", -1, -1, 2))
+	slider_left_(new gui_section_widget("slider_side_left", -1, -1, scale)),
+	slider_right_(new gui_section_widget("slider_side_right", -1, -1, scale)),
+	slider_middle_(new gui_section_widget("slider_middle", -1, -1, scale)),
+	slider_button_(new gui_section_widget("slider_button", -1, -1, scale))
 {
 	set_environment();
 	init();

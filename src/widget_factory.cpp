@@ -26,6 +26,7 @@
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "code_editor_widget.hpp"
+#include "color_picker.hpp"
 #include "checkbox.hpp"
 #include "custom_object_widget.hpp"
 #include "dialog.hpp"
@@ -110,6 +111,8 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new gui::custom_object_widget(v, e));
 	} else if(wtype == "bar") {
 		return widget_ptr(new gui::bar_widget(v, e));
+	} else if(wtype == "color_picker") {
+		return widget_ptr(new gui::color_picker(v, e));
 	} else if(wtype == "file_chooser") {
 		return widget_ptr(new gui::file_chooser_dialog(v, e));
 	//} else if(wtype == "scrollable") {
