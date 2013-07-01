@@ -356,10 +356,12 @@ namespace gui
 				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
-					if(main_color_selected_) {
-						primary_ = palette_[selected_palette_color_];
-					} else {
-						secondary_ = palette_[selected_palette_color_];
+					if(!(SDL_GetModState()&KMOD_CTRL)) {
+						if(main_color_selected_) {
+							primary_ = palette_[selected_palette_color_];
+						} else {
+							secondary_ = palette_[selected_palette_color_];
+						}
 					}
 				}
 			}
@@ -373,10 +375,12 @@ namespace gui
 				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
-					if(main_color_selected_) {
-						secondary_ = palette_[selected_palette_color_];
-					} else {
-						primary_ = palette_[selected_palette_color_];
+					if(!(SDL_GetModState()&KMOD_CTRL)) {
+						if(main_color_selected_) {
+							secondary_ = palette_[selected_palette_color_];
+						} else {
+							primary_ = palette_[selected_palette_color_];
+						}
 					}
 				}
 			}
