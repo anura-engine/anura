@@ -260,6 +260,9 @@ namespace gui
 
 	void color_picker::handle_draw() const
 	{
+		glPushMatrix();
+		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
+
 		const rect prect(5, 5, color_box_length_, color_box_length_);
 		const rect srect(10+color_box_length_, 5, color_box_length_, color_box_length_);
 		const rect prect_border(prect.x()-2, prect.y()-2, prect.w()+4, prect.h()+4);
@@ -279,6 +282,7 @@ namespace gui
 		graphics::draw_rect(selected_color_rect, graphics::color("black"));
 
 		g_->draw();
+		glPopMatrix();
 	}
 
 	void color_picker::process_mouse_in_wheel(int x, int y)
@@ -309,18 +313,21 @@ namespace gui
 		if(claimed) {
 			return claimed;
 		}
-		claimed = g_->process_event(event, claimed);
+		SDL_Event ev = event;
+		normalize_event(&ev);
+
+		claimed = g_->process_event(ev, claimed);
 		if(claimed) {
 			return claimed;
 		}
 
-		if(event.type == SDL_MOUSEBUTTONDOWN && event.button.button == SDL_BUTTON_LEFT) {
+		if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT) {
 			dragging_ = true;
-			process_mouse_in_wheel(event.motion.x, event.motion.y);
-		} else if(event.type == SDL_MOUSEBUTTONUP && event.button.button == SDL_BUTTON_LEFT && dragging_) {
+			process_mouse_in_wheel(ev.motion.x, ev.motion.y);
+		} else if(ev.type == SDL_MOUSEBUTTONUP && ev.button.button == SDL_BUTTON_LEFT && dragging_) {
 			dragging_ = false;
-		} else if(event.type == SDL_MOUSEMOTION && dragging_) {
-			process_mouse_in_wheel(event.motion.x, event.motion.y);
+		} else if(ev.type == SDL_MOUSEMOTION && dragging_) {
+			process_mouse_in_wheel(ev.motion.x, ev.motion.y);
 		}
 
 		return false;
