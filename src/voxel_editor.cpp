@@ -328,7 +328,7 @@ iso_renderer::iso_renderer(const rect& area)
 	tex_width_(0), tex_height_(0),
 	focused_(false)
 {
-	camera_->set_clip_planes(0.1f, 50.0f);
+	camera_->set_clip_planes(0.1f, 200.0f);
 	g_iso_renderer = this;
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
@@ -526,16 +526,14 @@ void iso_renderer::init()
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete id;});
-	glGenTextures(2, &fbo_texture_ids_[0]);
-	for(int n = 0; n != 1; ++n) {
-		glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[n]);
-		glTexImage2D(GL_TEXTURE_2D, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	}
+	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete id;});
+	glGenTextures(1, &fbo_texture_ids_[0]);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
 	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
@@ -545,9 +543,6 @@ void iso_renderer::init()
 	// attach the texture to FBO color attachment point
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
                           GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
-	// attach the texture to FBO depth attachment point
-	//EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_DEPTH_ATTACHMENT),
-     //                     GL_TEXTURE_2D, fbo_texture_ids_[1], 0);
 	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
 	glGenRenderbuffers(1, depth_id_.get());
 	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
@@ -587,7 +582,35 @@ void iso_renderer::render_fbo()
 
 	shader->set_uniform(mvp_uniform_itor, 1, glm::value_ptr(mvp));
 
-	std::vector<GLfloat> varray, carray;
+	////////////////////////////////////////////////////////////////////////////
+	// Lighting stuff.
+	static GLuint LightPosition_worldspace = -1;
+	if(LightPosition_worldspace == -1) {
+		LightPosition_worldspace = shader->get_uniform("LightPosition_worldspace");
+	}
+	glUniform3f(LightPosition_worldspace, 0.0f, 20.0f, 100.0f);
+	static GLuint LightPower = -1;
+	if(LightPower == -1) {
+		LightPower = shader->get_uniform("LightPower");
+	}
+	glUniform1f(LightPower, 7000.0f);
+	static GLuint m_matrix = -1;
+	if(m_matrix == -1) {
+		m_matrix = shader->get_uniform("m_matrix");
+	}
+	glUniformMatrix4fv(m_matrix, 1, GL_FALSE, glm::value_ptr(model_matrix));
+	static GLuint v_matrix = -1;
+	if(v_matrix == -1) {
+		v_matrix = shader->get_uniform("v_matrix");
+	}
+	glUniformMatrix4fv(v_matrix, 1, GL_FALSE, camera_->view());
+	static GLuint a_normal = -1;
+	if(a_normal == -1) {
+		a_normal = shader->get_attribute("a_normal");
+	}
+	////////////////////////////////////////////////////////////////////////////
+
+	std::vector<GLfloat> varray, carray, narray;
 
 	const GLfloat axes_vertex[] = {
 		0.0, 0.0, 0.0,
@@ -656,58 +679,110 @@ void iso_renderer::render_fbo()
 
 	varray.clear();
 	carray.clear();
+	narray.clear();
 
 	for(const VoxelPair& p : get_editor().voxels()) {
 		const VoxelPos& pos = p.first;
 
 		const GLfloat vertex[] = {
-			0, 0, 0,
+			0, 0, 0, // back face lower
 			1, 0, 0,
 			1, 1, 0,
 
-			0, 0, 0,
+			0, 0, 0, // back face upper
 			0, 1, 0,
 			1, 1, 0,
 
-			0, 0, 1,
+			0, 0, 1, // front face lower
 			1, 0, 1,
 			1, 1, 1,
 
-			0, 0, 1,
+			0, 0, 1, // front face upper
 			0, 1, 1,
 			1, 1, 1,
 
-			0, 0, 0,
+			0, 0, 0, // left face upper
 			0, 1, 0,
 			0, 1, 1,
 
-			0, 0, 0,
+			0, 0, 0, // left face lower
 			0, 0, 1,
 			0, 1, 1,
 
-			1, 0, 0,
+			1, 0, 0, // right face upper
 			1, 1, 0,
 			1, 1, 1,
 
-			1, 0, 0,
+			1, 0, 0, // right face lower
 			1, 0, 1,
 			1, 1, 1,
 
-			0, 0, 0,
+			0, 0, 0, // bottom face right
 			1, 0, 0,
 			1, 0, 1,
 
-			0, 0, 0,
+			0, 0, 0, // bottom face left
 			0, 0, 1,
 			1, 0, 1,
 
-			0, 1, 0,
+			0, 1, 0, // top face right
 			1, 1, 0,
 			1, 1, 1,
 
-			0, 1, 0,
+			0, 1, 0, // top face left
 			0, 1, 1,
 			1, 1, 1,
+		};
+
+		const GLfloat normal [] =
+		{
+			0, 0, -1,
+			0, 0, -1,
+			0, 0, -1,
+
+			0, 0, -1,
+			0, 0, -1,
+			0, 0, -1,
+
+			0, 0, 1,
+			0, 0, 1,
+			0, 0, 1,
+
+			0, 0, 1,
+			0, 0, 1,
+			0, 0, 1,
+
+			-1, 0, 0,
+			-1, 0, 0,
+			-1, 0, 0,
+
+			-1, 0, 0,
+			-1, 0, 0,
+			-1, 0, 0,
+
+			1, 0, 0,
+			1, 0, 0,
+			1, 0, 0,
+
+			1, 0, 0,
+			1, 0, 0,
+			1, 0, 0,
+
+			0, -1, 0,
+			0, -1, 0,
+			0, -1, 0,
+
+			0, -1, 0,
+			0, -1, 0,
+			0, -1, 0,
+
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0,
+
+			0, 1, 0,
+			0, 1, 0,
+			0, 1, 0,
 		};
 
 		graphics::color color = p.second.color;
@@ -723,31 +798,20 @@ void iso_renderer::render_fbo()
 
 		for(int n = 0; n != sizeof(vertex)/sizeof(*vertex); ++n) {
 			varray.push_back(pos[n%3]+vertex[n]);
+			narray.push_back(normal[n]);
 			if(n%3 == 0) {
-				//our shoddy way of doing shading right now
-				//until Kristina does it properly.
-				GLfloat mul = 1.0;
-				switch(face/6) {
-				case 0: mul = 1.0; break;
-				case 1: mul = 1.0; break;
-				case 2: mul = 0.8; break;
-				case 3: mul = 0.8; break;
-				case 4: mul = 0.6; break;
-				case 5: mul = 0.6; break;
-				}
-
-				carray.push_back(mul*color.r()/255.0);
-				carray.push_back(mul*color.g()/255.0);
-				carray.push_back(mul*color.b()/255.0);
-				carray.push_back(color.a()/255.0);
-				++face;
+				carray.push_back(color.r()/255.0f); 
+				carray.push_back(color.g()/255.0f); 
+				carray.push_back(color.b()/255.0f); 
+				carray.push_back(color.a()/255.0f);
 			}
 		}
 	}
 
 	if(!varray.empty()) {
-		gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, 0, 0, &varray[0]);
-		gles2::active_shader()->shader()->color_array(4, GL_FLOAT, 0, 0, &carray[0]);
+		shader->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		shader->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
+		shader->vertex_attrib_array(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
 		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
 	}
 
