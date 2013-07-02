@@ -1,5 +1,6 @@
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
+#include <boost/shared_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -226,6 +227,7 @@ public:
 
 	const camera_callable& camera() const { return *camera_; }
 private:
+	void init();
 	void handle_process();
 	bool handle_event(const SDL_Event& event, bool claimed);
 
@@ -235,10 +237,17 @@ private:
 
 	void calculate_camera();
 
-	graphics::texture fbo_;
+	boost::shared_ptr<GLuint> fbo_texture_id_;
+	glm::mat4 fbo_proj_;
 
 	boost::array<GLfloat, 3> vector_;
 
+	size_t tex_width_;
+	size_t tex_height_;
+	GLint video_framebuffer_id_;
+
+	iso_renderer();
+	iso_renderer(const iso_renderer&);
 };
 
 iso_renderer* g_iso_renderer;
@@ -249,7 +258,8 @@ iso_renderer& get_iso_renderer() {
 
 iso_renderer::iso_renderer(const rect& area)
   : camera_(new camera_callable),
-    camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0)
+    camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
+	tex_width_(0), tex_height_(0)
 {
 	g_iso_renderer = this;
 	set_loc(area.x(), area.y());
@@ -259,6 +269,8 @@ iso_renderer::iso_renderer(const rect& area)
 	vector_[2] = 1.0;
 
 	calculate_camera();
+
+	init();
 }
 
 iso_renderer::~iso_renderer()
@@ -283,10 +295,36 @@ void iso_renderer::calculate_camera()
 
 void iso_renderer::handle_draw() const
 {
-	gles2::manager gles2_manager(gles2::get_tex_shader());
+	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
-	//we get the fbo upside down, so flip it when blitting.
-	graphics::blit_texture(fbo_, x(), y(), width(), -height(), 0.0, 0.0, 0.0, 1.0, 1.0);
+	GLint cur_id = graphics::texture::get_current_texture();
+	glBindTexture(GL_TEXTURE_2D, *fbo_texture_id_);
+
+	const int w_odd = width() % 2;
+	const int h_odd = height() % 2;
+	const int w = width() / 2;
+	const int h = height() / 2;
+
+	glm::mat4 mvp = fbo_proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+w, y()+h, 0.0f));
+	glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+
+	GLfloat varray[] = {
+		-w, -h,
+		-w, h+h_odd,
+		w+w_odd, -h,
+		w+w_odd, h+h_odd
+	};
+	const GLfloat tcarray[] = {
+		0.0f, 1.0f,
+		0.0f, 0.0f,
+		1.0f, 1.0f,
+		1.0f, 0.0f,
+	};
+	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
+	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glBindTexture(GL_TEXTURE_2D, cur_id);
 }
 
 void iso_renderer::handle_process()
@@ -344,25 +382,34 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 	return widget::handle_event(event, claimed);
 }
 
+void iso_renderer::init()
+{
+	fbo_proj_ = glm::ortho(0.0f, float(preferences::actual_screen_width()), float(preferences::actual_screen_height()), 0.0f);
+
+	tex_width_ = graphics::texture::allows_npot() ? width() : graphics::texture::next_power_of_2(width());
+	tex_height_ = graphics::texture::allows_npot() ? height() : graphics::texture::next_power_of_2(height());
+
+	glGetIntegerv(EXT_MACRO(GL_FRAMEBUFFER_BINDING), &video_framebuffer_id_);
+
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+
+	fbo_texture_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
+	glGenTextures(1, fbo_texture_id_.get());
+}
+
 void iso_renderer::render_fbo()
 {
 	const rect area(0, 0, width(), height());
 
-	const int tex_width = graphics::texture::allows_npot() ? area.w() : graphics::texture::next_power_of_2(area.w());
-	const int tex_height = graphics::texture::allows_npot() ? area.h() : graphics::texture::next_power_of_2(area.h());
-	GLint video_framebuffer_id = 0;
-	glGetIntegerv(EXT_MACRO(GL_FRAMEBUFFER_BINDING), &video_framebuffer_id);
-
-	GLuint texture_id = 0, depth_id = 0;
-	glGenTextures(1, &texture_id);
-	glBindTexture(GL_TEXTURE_2D, texture_id);
+	GLuint depth_id = 0;
+	glBindTexture(GL_TEXTURE_2D, *fbo_texture_id_);
 
 	glGenRenderbuffers(1, &depth_id);
 	glBindRenderbuffer(GL_RENDERBUFFER, depth_id);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width, tex_height);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
 
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width, tex_height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -375,7 +422,7 @@ void iso_renderer::render_fbo()
 
 	// attach the texture to FBO color attachment point
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
-                          GL_TEXTURE_2D, texture_id, 0);
+                          GL_TEXTURE_2D, *fbo_texture_id_, 0);
 
 	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_id);
 	
@@ -387,8 +434,6 @@ void iso_renderer::render_fbo()
 
 	//set up the raster projection.
 	glViewport(0, 0, area.w(), area.h());
-	glEnable(GL_LIGHTING);
-	glShadeModel(GL_SMOOTH);
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -396,8 +441,6 @@ void iso_renderer::render_fbo()
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 
 	glEnable(GL_DEPTH_TEST);
-	glDepthFunc(GL_LEQUAL);
-	glDepthMask(GL_TRUE);
 
 	//start drawing here.
 	gles2::shader_program_ptr shader_program(gles2::shader_program::get_global("iso_color_line"));
@@ -576,11 +619,10 @@ void iso_renderer::render_fbo()
 		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
 	}
 
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id);
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
 
 	glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 
-	fbo_ = graphics::texture(texture_id, tex_width, tex_height);
 	glDisable(GL_DEPTH_TEST);
 
 	glBindRenderbuffer(GL_RENDERBUFFER, 0);
