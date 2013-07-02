@@ -1292,7 +1292,9 @@ void voxel_editor::init()
 		add_widget(layers_grid);
 	}
 
-	color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+	if(!color_picker_) {
+		color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+	}
 	add_widget(color_picker_);
 
 	pos_label_.reset(new label("", 12));
