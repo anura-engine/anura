@@ -40,8 +40,8 @@ namespace gui
 
 		graphics::color get_primary_color() const { return primary_; }
 		graphics::color get_secondary_color() const { return secondary_; }
-		graphics::color get_selected_color() const { main_color_selected_ ? primary_ : secondary_; }
-		graphics::color get_unselected_color() const { main_color_selected_ ? secondary_ : primary_; }
+		graphics::color get_selected_color() const { return main_color_selected_ ? primary_ : secondary_; }
+		graphics::color get_unselected_color() const { return main_color_selected_ ? secondary_ : primary_; }
 		bool get_palette_color(int n, graphics::color* color);
 		void set_palette_color(int n, const graphics::color& color);
 	protected:
