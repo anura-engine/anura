@@ -18,6 +18,7 @@
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "camera.hpp"
+#include "checkbox.hpp"
 #include "color_picker.hpp"
 #include "color_utils.hpp"
 #include "dialog.hpp"
@@ -160,12 +161,14 @@ struct Command {
 
 const char* ToolIcons[] = {
 	"editor_pencil",
+	"editor_add_object",
 	"editor_eyedropper",
 	NULL
 };
 
 enum VOXEL_TOOL {
 	TOOL_PENCIL,
+	TOOL_PENCIL_ABOVE,
 	TOOL_PICKER,
 	NUM_VOXEL_TOOLS,
 };
@@ -191,7 +194,17 @@ public:
 	gui::color_picker& get_color_picker() { return *color_picker_; }
 	Layer& layer() { return layers_[current_layer_]; }
 
-	VOXEL_TOOL tool() const { return tool_; }
+	VOXEL_TOOL tool() const {
+		const bool ctrl = (SDL_GetModState()&KMOD_CTRL) != 0;
+		const bool shift = (SDL_GetModState()&KMOD_SHIFT) != 0;
+		if(shift && tool_ == TOOL_PENCIL) {
+			return TOOL_PENCIL_ABOVE;
+		} else if(ctrl && (tool_ == TOOL_PENCIL || tool_ == TOOL_PENCIL_ABOVE)) {
+			return TOOL_PICKER;
+		}
+
+		return tool_;
+	}
 
 	void execute_command(std::function<void()> redo, std::function<void()> undo);
 	void execute_command(const Command& cmd);
@@ -202,10 +215,13 @@ private:
 
 	void select_tool(VOXEL_TOOL tool);
 
+	void set_symmetric(bool value);
+
 	void on_save();
 	void undo();
 	void redo();
 
+	void handle_process();
 
 	const Layer& layer() const { return layers_[current_layer_]; }
 
@@ -229,6 +245,10 @@ private:
 	std::vector<Command> undo_, redo_;
 
 	VOXEL_TOOL tool_;
+
+	std::vector<gui::border_widget*> tool_borders_;
+
+	bool symmetric_;
 };
 
 voxel_editor* g_voxel_editor;
@@ -269,6 +289,8 @@ private:
 	size_t tex_height_;
 	GLint video_framebuffer_id_;
 
+	bool focused_;
+
 	iso_renderer();
 	iso_renderer(const iso_renderer&);
 };
@@ -282,7 +304,8 @@ iso_renderer& get_iso_renderer() {
 iso_renderer::iso_renderer(const rect& area)
   : camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
-	tex_width_(0), tex_height_(0)
+	tex_width_(0), tex_height_(0),
+	focused_(false)
 {
 	g_iso_renderer = this;
 	set_loc(area.x(), area.y());
@@ -378,10 +401,34 @@ void iso_renderer::handle_process()
 bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
+	case SDL_MOUSEWHEEL: {
+		if(!focused_) {
+			break;
+		}
+
+		if(event.wheel.y > 0) {
+			camera_distance_ -= 5.0;
+			if(camera_distance_ < 5.0) {
+				camera_distance_ = 5.0;
+			}
+
+			calculate_camera();
+		} else {
+			camera_distance_ += 5.0;
+			if(camera_distance_ > 100.0) {
+				camera_distance_ = 100.0;
+			}
+
+			calculate_camera();
+		}
+		
+		break;
+	}
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
+			focused_ = true;
 			Uint8 button_state = SDL_GetMouseState(NULL, NULL);
 			if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
 				if(motion.xrel) {
@@ -396,6 +443,8 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 				calculate_camera();
 			}
+		} else {
+			focused_ = false;
 		}
 		break;
 	}
@@ -674,11 +723,13 @@ private:
 
 	bool drawing_on_;
 	std::set<VoxelPos> voxels_drawn_on_this_drag_;
+
+	bool focus_;
 };
 
 perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
   : voxel_width_(20), last_select_x_(INT_MIN), last_select_y_(INT_MIN),
-    invert_y_(1), drawing_on_(false)
+    invert_y_(1), drawing_on_(false), focus_(false)
 {
 	vector_[0] = xdir;
 	vector_[1] = ydir;
@@ -822,7 +873,7 @@ bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 	const VoxelPos pos = denormalize_pos(pos2d);
 
 	VoxelPos cursor = get_editor().get_selected_voxel(pos, facing_, vector_[facing_] < 0);
-	if(SDL_GetModState()&KMOD_CTRL && get_editor().voxels().count(cursor)) {
+	if(get_editor().tool() == TOOL_PENCIL_ABOVE && get_editor().voxels().count(cursor)) {
 		for(int n = 0; n != 3; ++n) {
 			cursor[n] += vector_[n];
 		}
@@ -841,6 +892,25 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		break;
 	}
 
+	case SDL_MOUSEWHEEL: {
+		int mx, my;
+		SDL_GetMouseState(&mx, &my);
+		if(!focus_ || get_editor().get_cursor() == NULL) {
+			break;
+		}
+
+		VoxelPos cursor = *get_editor().get_cursor();
+
+		if(event.wheel.y > 0) {
+			cursor[facing_] -= vector_[facing_];
+		} else {
+			cursor[facing_] += vector_[facing_];
+		}
+		get_editor().set_cursor(cursor);
+
+		break;
+	}
+
 	case SDL_MOUSEBUTTONUP: {
 		drawing_on_ = false;
 		voxels_drawn_on_this_drag_.clear();
@@ -852,7 +922,8 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		if(e.x >= x() && e.y >= y() &&
 		   e.x <= x() + width() && e.y <= y() + height()) {
 			switch(get_editor().tool()) {
-			case TOOL_PENCIL: {
+			case TOOL_PENCIL:
+			case TOOL_PENCIL_ABOVE: {
 				if(e.button == SDL_BUTTON_LEFT) {
 					pencil_voxel();
 				} else if(e.button == SDL_BUTTON_RIGHT) {
@@ -899,6 +970,8 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		const SDL_MouseMotionEvent& motion = event.motion;
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
+			focus_ = true;
+
 			const bool is_cursor_set = calculate_cursor(motion.x, motion.y);
 			last_select_x_ = motion.x;
 			last_select_y_ = motion.y;
@@ -931,6 +1004,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 			break;
 		} else {
 			last_select_x_ = last_select_y_ = INT_MIN;
+			focus_ = false;
 		}
 	}
 	}
@@ -1037,6 +1111,16 @@ void perspective_renderer::handle_draw() const
 		const int x2 = x1 + voxel_width_;
 		const int y2 = y1 - voxel_width_;
 
+		bool is_selected = get_editor().get_cursor() && normalize_pos(*get_editor().get_cursor()) == pos;
+
+		graphics::color color = p.second.color;
+		if(is_selected) {
+			const int delta = sin(SDL_GetTicks()*0.01)*64;
+			graphics::color_transform transform(delta, delta, delta, 0);
+			graphics::color_transform new_color = graphics::color_transform(color) + transform;
+			color = new_color.to_color();
+		}
+
 		int vertexes[] = { x1, y1,
 		                   x1, y1, x1, y2,
 		                   x2, y1, x2, y2,
@@ -1046,10 +1130,10 @@ void perspective_renderer::handle_draw() const
 		for(int n = 0; n != sizeof(vertexes)/sizeof(*vertexes); ++n) {
 			varray.push_back(vertexes[n]);
 			if(n%2 == 0) {
-				carray.push_back(p.second.color.r()/255.0);
-				carray.push_back(p.second.color.g()/255.0);
-				carray.push_back(p.second.color.b()/255.0);
-				carray.push_back(p.second.color.a()/255.0);
+				carray.push_back(color.r()/255.0);
+				carray.push_back(color.g()/255.0);
+				carray.push_back(color.b()/255.0);
+				carray.push_back(color.a()/255.0);
 			}
 		}
 	}
@@ -1208,7 +1292,7 @@ void perspective_widget::flip()
 
 voxel_editor::voxel_editor(const rect& r, const std::string& fname)
   : dialog(r.x(), r.y(), r.w(), r.h()), area_(r), current_layer_(0),
-    fname_(fname), tool_(TOOL_PENCIL)
+    fname_(fname), tool_(TOOL_PENCIL), symmetric_(false)
 {
 	if(fname_.empty()) {
 		layers_.push_back(Layer());
@@ -1269,17 +1353,23 @@ void voxel_editor::init()
 	toolbar->add_col(widget_ptr(new button("Redo", boost::bind(&voxel_editor::redo, this))));
 	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
 
-	grid_ptr tools_grid(new grid(2));
+	tool_borders_.clear();
+	grid_ptr tools_grid(new grid(3));
 
 	for(int n = 0; ToolIcons[n]; ++n) {
 		assert(n < NUM_VOXEL_TOOLS);
 		button_ptr tool_button(
 		  new button(widget_ptr(new gui_section_widget(ToolIcons[n], 26, 26)),
 		      boost::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
-		tools_grid->add_col(widget_ptr(new border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black())));
+		tool_borders_.push_back(new border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+		tools_grid->add_col(widget_ptr(tool_borders_.back()));
 	}
 
+	tools_grid->finish_row();
+
 	add_widget(tools_grid);
+
+	add_widget(widget_ptr(new checkbox("Symmetric", symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
 
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
@@ -1294,6 +1384,7 @@ void voxel_editor::init()
 
 	if(!color_picker_) {
 		color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+		color_picker_->set_primary_color(graphics::color(255, 0, 0));
 	}
 	add_widget(color_picker_);
 
@@ -1307,12 +1398,22 @@ void voxel_editor::init()
 void voxel_editor::set_voxel(const VoxelPos& pos, const Voxel& voxel)
 {
 	layer().map[pos] = voxel;
+	if(symmetric_) {
+		VoxelPos opposite_pos = pos;
+		opposite_pos[0] = -1*opposite_pos[0] - 1;
+		layer().map[opposite_pos] = voxel;
+	}
 	build_voxels();
 }
 
 void voxel_editor::delete_voxel(const VoxelPos& pos)
 {
 	layer().map.erase(pos);
+	if(symmetric_) {
+		VoxelPos opposite_pos = pos;
+		opposite_pos[0] = -1*opposite_pos[0] - 1;
+		layer().map.erase(opposite_pos);
+	}
 	build_voxels();
 }
 
@@ -1383,6 +1484,16 @@ void voxel_editor::select_tool(VOXEL_TOOL tool)
 	init();
 }
 
+void voxel_editor::set_symmetric(bool value)
+{
+	const bool old_value = symmetric_;
+	symmetric_ = value;
+	get_editor().execute_command(
+		[this, value]() { this->symmetric_ = value; },
+		[this, old_value]() { this->symmetric_ = old_value; }
+	);
+}
+
 void voxel_editor::on_save()
 {
 	if(fname_.empty()) {
@@ -1408,6 +1519,7 @@ void voxel_editor::undo()
 		undo_.pop_back();
 		cmd.undo();
 		redo_.push_back(cmd);
+		init();
 	}
 }
 
@@ -1418,7 +1530,18 @@ void voxel_editor::redo()
 		redo_.pop_back();
 		cmd.redo();
 		undo_.push_back(cmd);
+		init();
 	}
+}
+
+void voxel_editor::handle_process()
+{
+	VOXEL_TOOL current_tool = tool();
+	for(int n = 0; n != tool_borders_.size(); ++n) {
+		tool_borders_[n]->set_color(n == current_tool ? graphics::color_white() : graphics::color_black());
+	}
+
+	dialog::handle_process();
 }
 
 void voxel_editor::execute_command(std::function<void()> redo, std::function<void()> undo)

@@ -70,6 +70,7 @@ public:
 	void replace(const std::string& replace_with);
 
 	void set_on_change_handler(boost::function<void()> fn) { on_change_ = fn; }
+	void set_on_user_change_handler(boost::function<void()> fn) { on_user_change_ = fn; }
 	void set_on_move_cursor_handler(boost::function<void()> fn) { on_move_cursor_ = fn; }
 	void set_on_enter_handler(boost::function<void()> fn) { on_enter_ = fn; }
 	void set_on_begin_enter_handler(boost::function<bool()> fn) { on_begin_enter_ = fn; }
@@ -175,7 +176,7 @@ private:
 
 	void truncate_col_position();
 
-	boost::function<void()> on_change_, on_move_cursor_, on_enter_, on_tab_, on_escape_;
+	boost::function<void()> on_change_, on_user_change_, on_move_cursor_, on_enter_, on_tab_, on_escape_;
 	boost::function<void(bool)> on_change_focus_;
 	boost::function<bool()> on_begin_enter_;
 
@@ -196,6 +197,8 @@ private:
 	game_logic::formula_ptr ffl_on_begin_enter_;
 
 	bool begin_enter_return_;
+
+	int in_event_;
 
 	friend class dropdown_widget;
 };
