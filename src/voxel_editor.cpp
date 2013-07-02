@@ -397,7 +397,7 @@ void iso_renderer::init()
 	glDepthMask(GL_TRUE);
 
 	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete id;});
-	glGenTextures(1, &fbo_texture_ids_[0]);
+	glGenTextures(2, &fbo_texture_ids_[0]);
 	for(int n = 0; n != 2; ++n) {
 		glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[n]);
 		glTexImage2D(GL_TEXTURE_2D, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
