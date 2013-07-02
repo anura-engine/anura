@@ -24,12 +24,20 @@
 #include "formatter.hpp"
 #include "gles2.hpp"
 #include "grid_widget.hpp"
+#include "isotile.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
+
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
 
 #ifdef USE_GLES2
 
@@ -232,6 +240,8 @@ private:
 	void handle_process();
 	bool handle_event(const SDL_Event& event, bool claimed);
 
+	glm::ivec3 position_to_cube(int xp, int yp, glm::ivec3* facing);
+
 	void render_fbo();
 	boost::intrusive_ptr<camera_callable> camera_;
 	GLfloat camera_hangle_, camera_vangle_, camera_distance_;
@@ -241,6 +251,7 @@ private:
 	boost::shared_array<GLuint> fbo_texture_ids_;
 	glm::mat4 fbo_proj_;
 	boost::shared_ptr<GLuint> framebuffer_id_;
+	boost::shared_ptr<GLuint> depth_id_;
 
 	boost::array<GLfloat, 3> vector_;
 
@@ -263,6 +274,7 @@ iso_renderer::iso_renderer(const rect& area)
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	tex_width_(0), tex_height_(0)
 {
+	camera_->set_clip_planes(0.1f, 50.0f);
 	g_iso_renderer = this;
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
@@ -317,10 +329,10 @@ void iso_renderer::handle_draw() const
 		w+w_odd, h+h_odd
 	};
 	const GLfloat tcarray[] = {
-		0.0f, 1.0f,
+		0.0f, GLfloat(height())/tex_height_,
 		0.0f, 0.0f,
-		1.0f, 1.0f,
-		1.0f, 0.0f,
+		GLfloat(width())/tex_width_, GLfloat(height())/tex_height_,
+		GLfloat(width())/tex_width_, 0.0f,
 	};
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
@@ -333,7 +345,7 @@ void iso_renderer::handle_process()
 {
 	int num_keys = 0;
 	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
-	fprintf(stderr, "KEYS: %d/%d\n", (int)SDL_SCANCODE_Z, num_keys);
+	//fprintf(stderr, "KEYS: %d/%d\n", (int)SDL_SCANCODE_Z, num_keys);
 	if(SDL_SCANCODE_Z < num_keys && keystate[SDL_SCANCODE_Z]) {
 		camera_distance_ -= 0.2;
 		if(camera_distance_ < 5.0) {
@@ -355,6 +367,29 @@ void iso_renderer::handle_process()
 	render_fbo();
 }
 
+glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
+{
+	// Before calling screen_to_world we need to bind the fbo
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+	glm::vec3 world_coords = graphics::screen_to_world(camera_, xp, yp, width(), height());
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
+	glm::ivec3 voxel_coord = glm::ivec3(
+		abs(world_coords[0]-bmround(world_coords[0])) < 0.05f ? int(bmround(world_coords[0])) : int(world_coords[0]),
+		abs(world_coords[1]-bmround(world_coords[1])) < 0.05f ? int(bmround(world_coords[1])) : int(world_coords[1]),
+		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(world_coords[2]));
+	*facing = isometric::get_facing(camera_, world_coords);
+	if(facing->x > 0) {
+		--voxel_coord.x; 
+	}
+	if(facing->y > 0) {
+		--voxel_coord.y; 
+	}
+	if(facing->z > 0) {
+		--voxel_coord.z; 
+	}
+	return voxel_coord;
+}
+
 bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
@@ -362,19 +397,35 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 		const SDL_MouseMotionEvent& motion = event.motion;
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
-			Uint8 button_state = SDL_GetMouseState(NULL, NULL);
-			if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-				if(motion.xrel) {
-					camera_hangle_ += motion.xrel*0.02;
+			
+			glm::ivec3 facing;
+			glm::ivec3 voxel_coord = position_to_cube(motion.x-x(), motion.y-y(), &facing);
+
+			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			auto it = get_editor().voxels().find(pos);
+			if(it != get_editor().voxels().end()) {
+				if(SDL_GetModState()&KMOD_CTRL) {
+					glm::ivec3 new_coord = voxel_coord + facing;
+					pos[0] = new_coord.x;
+					pos[1] = new_coord.y;
+					pos[2] = new_coord.z;
 				}
+				get_editor().set_cursor(pos);
+			} else {
+				Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+				if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
+					if(motion.xrel) {
+						camera_hangle_ += motion.xrel*0.02;
+					}
 
-				if(motion.yrel) {
-					camera_vangle_ += motion.yrel*0.02;
+					if(motion.yrel) {
+						camera_vangle_ += motion.yrel*0.02;
+					}
+
+					std::cerr << "ANGLE: " << camera_hangle_ << ", " << camera_vangle_ << "\n";
+
+					calculate_camera();
 				}
-
-				std::cerr << "ANGLE: " << camera_hangle_ << ", " << camera_vangle_ << "\n";
-
-				calculate_camera();
 			}
 		}
 		break;
@@ -398,7 +449,7 @@ void iso_renderer::init()
 
 	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete id;});
 	glGenTextures(2, &fbo_texture_ids_[0]);
-	for(int n = 0; n != 2; ++n) {
+	for(int n = 0; n != 1; ++n) {
 		glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[n]);
 		glTexImage2D(GL_TEXTURE_2D, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -416,8 +467,13 @@ void iso_renderer::init()
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
                           GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
 	// attach the texture to FBO depth attachment point
-	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_DEPTH_ATTACHMENT),
-                          GL_TEXTURE_2D, fbo_texture_ids_[1], 0);
+	//EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_DEPTH_ATTACHMENT),
+     //                     GL_TEXTURE_2D, fbo_texture_ids_[1], 0);
+	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
+	glGenRenderbuffers(1, depth_id_.get());
+	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *depth_id_);
 
 	// check FBO status
 	GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
