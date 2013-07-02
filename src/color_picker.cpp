@@ -126,6 +126,24 @@ namespace gui
 	{
 	}
 
+	void color_picker::set_primary_color(graphics::color color)
+	{
+		primary_ = color;
+		color_updated();
+	}
+
+	void color_picker::set_secondary_color(graphics::color color)
+	{
+		secondary_ = color;
+		color_updated();
+	}
+
+	void color_picker::color_updated()
+	{
+		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+	}
+
 	bool color_picker::get_palette_color(int n, graphics::color* color)
 	{
 		ASSERT_LOG(size_t(n) < palette_.size(), "color_picker::get_palette_color selected color out of range: " << n << " >= " << palette_.size());
@@ -414,7 +432,7 @@ namespace gui
 			labels.push_back(new label(label_text[n], graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"));
 			s_.push_back(new slider(50, boost::bind(&color_picker::slider_change, this, n, _1), 0, 1));
 			t_.push_back(new text_editor_widget(40));
-			t_.back()->set_on_change_handler(boost::bind(&color_picker::text_change, this, n));
+			t_.back()->set_on_user_change_handler(boost::bind(&color_picker::text_change, this, n));
 			t_.back()->set_on_tab_handler(boost::bind(&color_picker::text_tab_pressed, this, n));
 
 			g_->add_col(labels.back());

@@ -55,6 +55,9 @@ public:
 	void reset_contents(const variant&);
 	void set_header_row(int row) { header_rows_.push_back(row); }
 
+	void set_draw_selection_highlight(bool val=true) { draw_selection_highlight_ = val; }
+	void set_default_selection(int value) { default_selection_ = value; }
+	int get_default_selection() const { return default_selection_; }
 	void allow_selection(bool val=true) { allow_selection_ = val; }
 	void must_select(bool val=true, int nrow=0) { must_select_ = val; selected_row_ = nrow; }
 	bool has_must_select() const { return must_select_; }

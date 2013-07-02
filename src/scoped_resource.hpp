@@ -19,8 +19,25 @@
 
 #include <cstdio> //for FILE
 
+#include <functional>
+
 namespace util
 {
+
+struct scope_manager {
+	scope_manager(std::function<void()> on_enter, std::function<void()> on_exit)
+	  : on_exit_(on_exit)
+	{
+		on_enter();
+	}
+
+	~scope_manager() {
+		on_exit_();
+	}
+
+	std::function<void()> on_exit_;
+};
+
 /**
 * A class template, scoped_resource, designed to
 * implement the Resource Acquisition Is Initialization (RAII) approach

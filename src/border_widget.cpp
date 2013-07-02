@@ -57,6 +57,11 @@ void border_widget::set_color(const graphics::color& col)
 	color_ = col;
 }
 
+void border_widget::set_color(const SDL_Color& col)
+{
+	set_color(graphics::color(col.r, col.g, col.b, col.a));
+}
+
 void border_widget::handle_process()
 {
 	widget::handle_process();

@@ -134,7 +134,8 @@ text_editor_widget::text_editor_widget(int width, int height)
 	begin_enter_return_(true),
 	last_click_at_(-1),
 	consecutive_clicks_(0),
-	text_color_(255, 255, 255, 255)
+	text_color_(255, 255, 255, 255),
+	in_event_(0)
 {
 	set_environment();
 	if(height == 0) {
@@ -160,7 +161,8 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	begin_enter_return_(true),
 	last_click_at_(-1),
 	consecutive_clicks_(0),
-	text_color_(255, 255, 255, 255)
+	text_color_(255, 255, 255, 255),
+	in_event_(0)
 {
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
 	int width = v.has_key("width") ? v["width"].as_int() : 0;
@@ -274,6 +276,12 @@ void text_editor_widget::highlight(Loc begin, Loc end)
 
 void text_editor_widget::set_text(const std::string& value, bool reset_cursor)
 {
+	const int current_in_event = in_event_;
+	util::scope_manager event_recorder(
+		[this]() { this->in_event_ = 0; },
+		[this, current_in_event]() { this->in_event_ = current_in_event; }
+	);
+
 	std::string txt = value;
 	txt.erase(std::remove(txt.begin(), txt.end(), '\r'), txt.end());
 	text_ = util::split(txt, '\n', 0 /*don't remove empties or strip spaces*/);
@@ -475,6 +483,11 @@ void text_editor_widget::handle_draw() const
 
 bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 {
+	util::scope_manager event_recorder(
+		[this]() { this->in_event_++; },
+		[this]() { this->in_event_--; }
+	);
+
 	if(!claimed) {
 		claimed = clipboard_handle_event(event);
 	}
@@ -1617,6 +1630,10 @@ void text_editor_widget::on_change()
 {
 	if(on_change_) {
 		on_change_();
+	}
+
+	if(on_user_change_ && in_event_) {
+		on_user_change_();
 	}
 
 	calculate_search_matches();

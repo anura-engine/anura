@@ -31,6 +31,7 @@ public:
 	border_widget(widget_ptr child, const SDL_Color& color, int border_size=2);
 	border_widget(const variant& v, game_logic::formula_callable* e);
 	void set_color(const graphics::color& col);
+	void set_color(const SDL_Color& col);
 	virtual widget_ptr get_widget_by_id(const std::string& id);
 	const_widget_ptr get_widget_by_id(const std::string& id) const;
 protected:
