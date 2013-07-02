@@ -42,7 +42,9 @@
 namespace {
 typedef boost::array<int, 3> VoxelPos;
 struct Voxel {
+	Voxel() : nlayer(-1) {}
 	graphics::color color;
+	int nlayer;
 };
 
 typedef std::map<VoxelPos, Voxel> VoxelMap;
@@ -173,6 +175,8 @@ enum VOXEL_TOOL {
 	NUM_VOXEL_TOOLS,
 };
 
+class iso_renderer;
+
 class voxel_editor : public gui::dialog
 {
 public:
@@ -192,7 +196,9 @@ public:
 
 	graphics::color current_color() const { return color_picker_->get_selected_color(); }
 	gui::color_picker& get_color_picker() { return *color_picker_; }
-	Layer& layer() { return layers_[current_layer_]; }
+	Layer& layer() { assert(current_layer_ >= 0 && current_layer_ < layers_.size()); return layers_[current_layer_]; }
+
+	int nhighlight_layer() const { return highlight_layer_; }
 
 	VOXEL_TOOL tool() const {
 		const bool ctrl = (SDL_GetModState()&KMOD_CTRL) != 0;
@@ -217,6 +223,9 @@ private:
 
 	void set_symmetric(bool value);
 
+	void mouseover_layer(int nlayer);
+	void select_layer(int nlayer, gui::grid* layer_grid);
+
 	void on_save();
 	void undo();
 	void redo();
@@ -229,7 +238,7 @@ private:
 
 	rect area_;
 
-	int current_layer_;
+	int current_layer_, highlight_layer_;
 	std::vector<Layer> layers_;
 	Model model_;
 	VoxelMap voxels_;
@@ -240,6 +249,7 @@ private:
 
 	std::string fname_;
 
+	boost::intrusive_ptr<iso_renderer> iso_renderer_;
 	boost::intrusive_ptr<gui::color_picker> color_picker_;
 
 	std::vector<Command> undo_, redo_;
@@ -645,7 +655,7 @@ void iso_renderer::render_fbo()
 		};
 
 		graphics::color color = p.second.color;
-		const bool is_selected = get_editor().get_cursor() && *get_editor().get_cursor() == pos;
+		const bool is_selected = get_editor().get_cursor() && *get_editor().get_cursor() == pos || get_editor().nhighlight_layer() >= 0 && p.second.nlayer == get_editor().nhighlight_layer();
 		if(is_selected) {
 			const int delta = sin(SDL_GetTicks()*0.01)*64;
 			graphics::color_transform transform(delta, delta, delta, 0);
@@ -820,7 +830,8 @@ void perspective_renderer::pencil_voxel()
 {
 	if(get_editor().get_cursor()) {
 		VoxelPos cursor = *get_editor().get_cursor();
-		Voxel voxel = { get_editor().current_color() };
+		Voxel voxel;
+		voxel.color = get_editor().current_color();
 
 		Voxel old_voxel;
 		bool currently_has_voxel = false;
@@ -1111,7 +1122,7 @@ void perspective_renderer::handle_draw() const
 		const int x2 = x1 + voxel_width_;
 		const int y2 = y1 - voxel_width_;
 
-		bool is_selected = get_editor().get_cursor() && normalize_pos(*get_editor().get_cursor()) == pos;
+		bool is_selected = get_editor().get_cursor() && normalize_pos(*get_editor().get_cursor()) == pos || get_editor().nhighlight_layer() >= 0 && get_editor().nhighlight_layer() == p.second.nlayer;
 
 		graphics::color color = p.second.color;
 		if(is_selected) {
@@ -1218,7 +1229,7 @@ void perspective_renderer::handle_draw() const
 		varray.push_back(x() + width()/2);
 		varray.push_back(y() + height()/2);
 		varray.push_back(x() + width()/2 + camera_pos[0]*voxel_width_);
-		varray.push_back(y() + height()/2 + camera_pos[1]*voxel_width_);
+		varray.push_back(y() + height()/2 + camera_pos[1]*voxel_width_*invert_y_);
 
 		carray.push_back(1);
 		carray.push_back(0);
@@ -1291,7 +1302,8 @@ void perspective_widget::flip()
 }
 
 voxel_editor::voxel_editor(const rect& r, const std::string& fname)
-  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r), current_layer_(0),
+  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r),
+    current_layer_(0), highlight_layer_(-1),
     fname_(fname), tool_(TOOL_PENCIL), symmetric_(false)
 {
 	if(fname_.empty()) {
@@ -1343,8 +1355,10 @@ void voxel_editor::init()
 	w.reset(new perspective_widget(rect(area_.x(), area_.y() + widget_height + between_padding, widget_width, widget_height), 0, 0, 1));
 	add_widget(w, w->x(), w->y());
 
-	w.reset(new iso_renderer(rect(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height)));
-	add_widget(w, w->x(), w->y());
+	if(!iso_renderer_) {
+		iso_renderer_.reset(new iso_renderer(rect(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height)));
+	}
+	add_widget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
 
 	grid_ptr toolbar(new grid(3));
 
@@ -1378,6 +1392,12 @@ void voxel_editor::init()
 		for(int n = 0; n != layers_.size(); ++n) {
 			layers_grid->add_col(widget_ptr(new label(model_.layer_types[n].name + ": " + layers_[n].name)));
 		}
+
+		layers_grid->allow_selection();
+		layers_grid->set_draw_selection_highlight();
+		layers_grid->set_default_selection(current_layer_);
+		layers_grid->register_mouseover_callback(boost::bind(&voxel_editor::mouseover_layer, this, _1));
+		layers_grid->register_selection_callback(boost::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
 
 		add_widget(layers_grid);
 	}
@@ -1494,6 +1514,27 @@ void voxel_editor::set_symmetric(bool value)
 	);
 }
 
+void voxel_editor::mouseover_layer(int nlayer)
+{
+	highlight_layer_ = nlayer;
+}
+
+void voxel_editor::select_layer(int nlayer, grid* layer_grid)
+{
+	std::cerr << "SELECT LAYER: " << nlayer << "\n";
+	if(nlayer != -1) {
+		assert(nlayer >= 0 && nlayer < layers_.size());
+		const int old_layer = current_layer_;
+
+		execute_command(
+			[this, nlayer]() { this->current_layer_ = nlayer; },
+			[this, old_layer]() { this->current_layer_ = old_layer; }
+		);
+	} else {
+		layer_grid->set_default_selection(current_layer_);
+	}
+}
+
 void voxel_editor::on_save()
 {
 	if(fname_.empty()) {
@@ -1559,10 +1600,14 @@ void voxel_editor::execute_command(const Command& cmd)
 void voxel_editor::build_voxels()
 {
 	voxels_.clear();
+	int nlayer = 0;
 	for(const Layer& layer : layers_) {
-		for(const VoxelPair& p : layer.map) {
+		for(VoxelPair p : layer.map) {
+			p.second.nlayer = nlayer;
 			voxels_.insert(p);
 		}
+
+		++nlayer;
 	}
 }
 
