@@ -171,7 +171,7 @@ public:
 
 	VoxelPos get_selected_voxel(const VoxelPos& pos, int facing, bool reverse);
 
-	graphics::color current_color() const { return color_picker_->get_primary_color(); }
+	graphics::color current_color() const { return color_picker_->get_selected_color(); }
 	Layer& layer() { return layers_[current_layer_]; }
 
 	void execute_command(std::function<void()> redo, std::function<void()> undo);
@@ -293,7 +293,6 @@ void iso_renderer::handle_process()
 {
 	int num_keys = 0;
 	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
-	fprintf(stderr, "KEYS: %d/%d\n", (int)SDL_SCANCODE_Z, num_keys);
 	if(SDL_SCANCODE_Z < num_keys && keystate[SDL_SCANCODE_Z]) {
 		camera_distance_ -= 0.2;
 		if(camera_distance_ < 5.0) {
@@ -1177,9 +1176,6 @@ void voxel_editor::init()
 	toolbar->add_col(widget_ptr(new button("Redo", boost::bind(&voxel_editor::redo, this))));
 	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
 
-	color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
-	add_widget(color_picker_);
-
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
 		grid_ptr layers_grid(new grid(1));
@@ -1190,6 +1186,9 @@ void voxel_editor::init()
 
 		add_widget(layers_grid);
 	}
+
+	color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+	add_widget(color_picker_);
 
 	pos_label_.reset(new label("", 12));
 	add_widget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
