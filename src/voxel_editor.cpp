@@ -1,6 +1,7 @@
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
+#include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
 #include <boost/scoped_ptr.hpp>
 
@@ -237,8 +238,9 @@ private:
 
 	void calculate_camera();
 
-	boost::shared_ptr<GLuint> fbo_texture_id_;
+	boost::shared_array<GLuint> fbo_texture_ids_;
 	glm::mat4 fbo_proj_;
+	boost::shared_ptr<GLuint> framebuffer_id_;
 
 	boost::array<GLfloat, 3> vector_;
 
@@ -298,7 +300,7 @@ void iso_renderer::handle_draw() const
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
 	GLint cur_id = graphics::texture::get_current_texture();
-	glBindTexture(GL_TEXTURE_2D, *fbo_texture_id_);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
 
 	const int w_odd = width() % 2;
 	const int h_odd = height() % 2;
@@ -394,46 +396,41 @@ void iso_renderer::init()
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	fbo_texture_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
-	glGenTextures(1, fbo_texture_id_.get());
-}
-
-void iso_renderer::render_fbo()
-{
-	const rect area(0, 0, width(), height());
-
-	GLuint depth_id = 0;
-	glBindTexture(GL_TEXTURE_2D, *fbo_texture_id_);
-
-	glGenRenderbuffers(1, &depth_id);
-	glBindRenderbuffer(GL_RENDERBUFFER, depth_id);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
-
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete id;});
+	glGenTextures(1, &fbo_texture_ids_[0]);
+	for(int n = 0; n != 2; ++n) {
+		glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[n]);
+		glTexImage2D(GL_TEXTURE_2D, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, n == 0 ? GL_RGBA : GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	}
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	GLuint framebuffer_id = 0;
-	EXT_CALL(glGenFramebuffers)(1, &framebuffer_id);
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), framebuffer_id);
+	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
+	EXT_CALL(glGenFramebuffers)(1, framebuffer_id_.get());
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
 
 	// attach the texture to FBO color attachment point
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
-                          GL_TEXTURE_2D, *fbo_texture_id_, 0);
-
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, depth_id);
-	
+                          GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
+	// attach the texture to FBO depth attachment point
+	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_DEPTH_ATTACHMENT),
+                          GL_TEXTURE_2D, fbo_texture_ids_[1], 0);
 
 	// check FBO status
 	GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
 	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNSUPPORTED));
 	ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
+}
+
+void iso_renderer::render_fbo()
+{
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
 
 	//set up the raster projection.
-	glViewport(0, 0, area.w(), area.h());
+	glViewport(0, 0, width(), height());
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -624,11 +621,6 @@ void iso_renderer::render_fbo()
 	glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 
 	glDisable(GL_DEPTH_TEST);
-
-	glBindRenderbuffer(GL_RENDERBUFFER, 0);
-	glDeleteRenderbuffers(1, &depth_id);
-
-	glDeleteFramebuffers(1, &framebuffer_id);
 }
 
 class perspective_renderer : public gui::widget
