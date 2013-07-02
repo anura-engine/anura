@@ -588,12 +588,12 @@ void iso_renderer::render_fbo()
 	if(LightPosition_worldspace == -1) {
 		LightPosition_worldspace = shader->get_uniform("LightPosition_worldspace");
 	}
-	glUniform3f(LightPosition_worldspace, 0.0f, 20.0f, 100.0f);
+	glUniform3f(LightPosition_worldspace, 0.0f, 20.0f, 150.0f);
 	static GLuint LightPower = -1;
 	if(LightPower == -1) {
 		LightPower = shader->get_uniform("LightPower");
 	}
-	glUniform1f(LightPower, 7000.0f);
+	glUniform1f(LightPower, 10000.0f);
 	static GLuint m_matrix = -1;
 	if(m_matrix == -1) {
 		m_matrix = shader->get_uniform("m_matrix");
