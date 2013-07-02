@@ -328,6 +328,7 @@ namespace gui
 		if(r <= wheel_radius_) {
 			hue_ = uint8_t(angle*255.0/(M_PI*2.0));
 			saturation_ = uint8_t(r/wheel_radius_ * 255.0);
+			value_ = 255;
 
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
@@ -554,7 +555,7 @@ namespace gui
 		} else {
 			secondary_ = graphics::color(red_, green_, blue_, alpha_);
 		}
-		//set_text_from_color(primary_, n);
+		set_text_from_color(primary_);
 		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
