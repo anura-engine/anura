@@ -503,9 +503,9 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 					calculate_camera();
 				}
+			}
 		} else {
 			focused_ = false;
-			}
 		}
 		break;
 	}
@@ -1339,9 +1339,9 @@ void perspective_widget::init()
 
 	description_label_.reset(new label(description, 12));
 	toolbar->add_col(description_label_);
-	toolbar->add_col(new button("Flip", boost::bind(&perspective_widget::flip, this)));
-	toolbar->add_col(new button("+", boost::bind(&perspective_renderer::zoom_in, renderer_.get())));
-	toolbar->add_col(new button("-", boost::bind(&perspective_renderer::zoom_out, renderer_.get())));
+	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_widget::flip, this)));
+	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_in, renderer_.get())));
+	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_out, renderer_.get())));
 	add_widget(toolbar);
 
 	add_widget(renderer_);
@@ -1418,9 +1418,9 @@ void voxel_editor::init()
 
 	grid_ptr toolbar(new grid(3));
 
-	toolbar->add_col(widget_ptr(new button("Save", boost::bind(&voxel_editor::on_save, this))));
-	toolbar->add_col(widget_ptr(new button("Undo", boost::bind(&voxel_editor::undo, this))));
-	toolbar->add_col(widget_ptr(new button("Redo", boost::bind(&voxel_editor::redo, this))));
+	toolbar->add_col(widget_ptr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::on_save, this))));
+	toolbar->add_col(widget_ptr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::undo, this))));
+	toolbar->add_col(widget_ptr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::redo, this))));
 	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
 
 	tool_borders_.clear();
@@ -1439,7 +1439,7 @@ void voxel_editor::init()
 
 	add_widget(tools_grid);
 
-	add_widget(widget_ptr(new checkbox("Symmetric", symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
+	add_widget(widget_ptr(new checkbox(new label("Symmetric", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
 
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
