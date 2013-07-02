@@ -126,6 +126,24 @@ namespace gui
 	{
 	}
 
+	void color_picker::set_primary_color(graphics::color color)
+	{
+		primary_ = color;
+		color_updated();
+	}
+
+	void color_picker::set_secondary_color(graphics::color color)
+	{
+		secondary_ = color;
+		color_updated();
+	}
+
+	void color_picker::color_updated()
+	{
+		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+	}
+
 	bool color_picker::get_palette_color(int n, graphics::color* color)
 	{
 		ASSERT_LOG(size_t(n) < palette_.size(), "color_picker::get_palette_color selected color out of range: " << n << " >= " << palette_.size());

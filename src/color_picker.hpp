@@ -38,6 +38,9 @@ namespace gui
 		virtual ~color_picker();
 		void set_change_handler(boost::function<void (const graphics::color&)> change_fun) { onchange_ = change_fun; }
 
+		void set_primary_color(graphics::color color);
+		void set_secondary_color(graphics::color color);
+
 		graphics::color get_primary_color() const { return primary_; }
 		graphics::color get_secondary_color() const { return secondary_; }
 		graphics::color get_selected_color() const { return main_color_selected_ ? primary_ : secondary_; }
@@ -48,6 +51,8 @@ namespace gui
 		void init();
 	private:
 		DECLARE_CALLABLE(color_picker);
+
+		void color_updated();
 
 		graphics::color primary_;
 		graphics::color secondary_;
