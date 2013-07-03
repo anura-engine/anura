@@ -30,7 +30,16 @@ namespace isometric
 	bool operator==(position const& p1, position const& p2);
 	std::size_t hash_value(position const& p);
 
-	typedef boost::unordered_map<position, std::string> tile_type;
+	struct tile_data
+	{
+		tile_data() {color.r = 0; color.g = 0; color.b = 0; color.a = 255;}
+		explicit tile_data(const std::string& s) : name(s) {}
+		explicit tile_data(const SDL_Color& c) {color.r = c.r; color.g = c.g; color.b = c.b; color.a = c.a;}
+		std::string name;
+		SDL_Color color;
+	};
+
+	typedef boost::unordered_map<position, tile_data> tile_type;
 
 	struct tile_editor_info
 	{
@@ -56,15 +65,17 @@ namespace isometric
 		isomap();
 		explicit isomap(variant node);
 		virtual ~isomap();
+		
+		void init();
 		void build();
 		void rebuild();
 		virtual void draw() const;
 		variant write();
 
 		bool is_solid(int x, int y, int z) const;
-		bool is_xedge(int x) const;
-		bool is_yedge(int y) const;
-		bool is_zedge(int z) const;
+		bool is_xedge(int x, int size_x) const;
+		bool is_yedge(int y, int size_y) const;
+		bool is_zedge(int z, int size_z) const;
 		std::string get_tile_type(int x, int y, int z) const;
 		static variant get_tile_info(const std::string& type);
 		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
@@ -75,43 +86,76 @@ namespace isometric
 		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
 		const GLfloat* model() const { return glm::value_ptr(model_); }
-
-		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
 	private:
 		DECLARE_CALLABLE(isomap);
 
-		tile_type tiles_;
-		int size_x_;
-		int size_y_;
-		int size_z_;
-		graphics::vbo_array arrays_;
+		enum {
+			FRONT_FACE,
+			RIGHT_FACE,
+			TOP_FACE,
+			BACK_FACE,
+			LEFT_FACE,
+			BOTTOM_FACE,
+			MAX_FACES,
+		};
 
-		std::vector<GLfloat> vertices_left_;
-		std::vector<GLfloat> vertices_right_;
-		std::vector<GLfloat> vertices_top_;
-		std::vector<GLfloat> vertices_bottom_;
-		std::vector<GLfloat> vertices_front_;
-		std::vector<GLfloat> vertices_back_;
+		struct shader_data
+		{
+			bool textured_;
+			graphics::vbo_array vbos_;
+			std::vector<std::vector<GLfloat> > varray_;
+			std::vector<std::vector<GLfloat> > tarray_;
+			std::vector<std::vector<uint8_t> > carray_;
+			std::vector<size_t> vattrib_offsets_;
+			std::vector<size_t> tcattrib_offsets_;
+			std::vector<size_t> num_vertices_;
 
-		std::vector<GLfloat> tarray_left_;
-		std::vector<GLfloat> tarray_right_;
-		std::vector<GLfloat> tarray_top_;
-		std::vector<GLfloat> tarray_bottom_;
-		std::vector<GLfloat> tarray_front_;
-		std::vector<GLfloat> tarray_back_;
+			int size_x_;
+			int size_y_;
+			int size_z_;
+			tile_type tiles_;
+		};
+
+		void build_colored(shader_data&);
+		void build_textured(shader_data&);
+
+		void draw_textured(const shader_data&) const;
+		void draw_colored(const shader_data&) const;
+
+		void add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray);
+		void add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray);
+		void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat size, std::vector<GLfloat>& varray);
+
+		void add_colored_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_colored_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_colored_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_colored_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_colored_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_colored_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+
+		void add_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+
+		std::vector<shader_data> shader_data_;
 
 		gles2::program_ptr shader_;
-		gles2::actives_map_iterator mm_uniform_it_;
-		gles2::actives_map_iterator pm_uniform_it_;
-		gles2::actives_map_iterator vm_uniform_it_;
-		gles2::actives_map_iterator a_position_it_;
-		gles2::actives_map_iterator a_tex_coord_it_;
-		gles2::actives_map_iterator tex0_it_;
+		GLuint u_mvp_matrix_;
+		GLuint u_tex0_;
+		GLuint a_texcoord_;
+
+		GLuint u_lightposition_;
+		GLuint u_lightpower_;
+		GLuint u_shininess_;
+		GLuint u_m_matrix_;
+		GLuint u_v_matrix_;
+		GLuint u_normal_;
+		GLuint a_position_;
+		GLuint a_color_;
+		std::vector<glm::vec3> normals_;
 
 		glm::mat4 model_;
 	};

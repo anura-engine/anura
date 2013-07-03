@@ -34,22 +34,10 @@ namespace isometric
 {
 	namespace 
 	{
-		const int num_array_buffers = 12;
-
 		const int debug_draw_faces = isomap::FRONT | isomap::RIGHT | isomap::TOP | isomap::BACK | isomap::LEFT | isomap::BOTTOM;
 		//const int debug_draw_faces = isomap::FRONT;
 
 		boost::random::mt19937 rng(std::time(0));
-
-		boost::shared_array<GLuint>& tile_array_buffer()
-		{
-			static graphics::vbo_array res;
-			if(res == NULL) {
-				res = graphics::vbo_array(new GLuint[num_array_buffers], graphics::vbo_deleter(num_array_buffers));
-				glGenBuffers(num_array_buffers, &res[0]);
-			}
-			return res;
-		}
 
 		std::vector<tile_editor_info>& get_editor_tile_info()
 		{
@@ -198,41 +186,60 @@ namespace isometric
 	}
 
 	isomap::isomap()
+		: u_tex0_(-1), u_lightposition_(-1), u_lightpower_(-1), u_mvp_matrix_(-1),
+		u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), u_normal_(-1)
 	{
-		arrays_ = tile_array_buffer();
-		get_terrain_info().clear();
-		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
+		// Call init *before* doing anything else
+		init();
 	}
 
 	isomap::isomap(variant node)
+		: u_tex0_(-1), u_lightposition_(-1), u_lightpower_(-1), u_mvp_matrix_(-1),
+		u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), u_normal_(-1)
 	{
-		arrays_ = tile_array_buffer();
-
-		get_terrain_info().clear();
-		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
+		// Call init *before* doing anything else
+		init();
 
 		if(node.has_key("random")) {
 			// Load in some random data.
-			size_x_ = node["random"]["width"].as_int(32);
-			size_y_ = node["random"]["height"].as_int(32);
-			size_z_ = node["random"]["depth"].as_int(32);
+			int size_x = node["random"]["width"].as_int(32);
+			int size_y = node["random"]["height"].as_int(32);
+			int size_z = node["random"]["depth"].as_int(32);
 
 			uint32_t seed = node["random"]["seed"].as_int(0);
 			noise::simplex::init(seed);
 
+			bool textured = node["random"].has_key("colored") && node["random"]["colored"].as_bool() == true ? false : true;
+			int ndx = textured ? 0 : 1;
+			shader_data_[ndx].size_x_ = size_x;
+			shader_data_[ndx].size_y_ = size_y;
+			shader_data_[ndx].size_z_ = size_z;
+			shader_data_[ndx].textured_ = textured;
+
+			boost::random::uniform_int_distribution<> dist(0,255);
+			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
+
 			std::vector<float> vec;
 			vec.resize(2);
-			for(int x = 0; x != size_x_; ++x) {
-				vec[0] = float(x)/float(size_x_);
-				for(int z = 0; z != size_z_; ++z) {
-					vec[1] = float(z)/float(size_z_);
-					int h = int(noise::simplex::noise2(&vec[0]) * size_y_);
-					h = std::max<int>(1, std::min<int>(size_y_-1, h));
+			for(int x = 0; x != size_x; ++x) {
+				vec[0] = float(x)/float(size_x);
+				for(int z = 0; z != size_z; ++z) {
+					vec[1] = float(z)/float(size_z);
+					int h = int(noise::simplex::noise2(&vec[0]) * size_y);
+					h = std::max<int>(1, std::min<int>(size_y-1, h));
 					for(int y = 0; y != h; ++y) {
 						if(node["random"].has_key("type")) {
-							tiles_[position(x,y,z)] = node["random"]["type"].as_string();
+							if(textured) {
+								shader_data_[0].tiles_[position(x,y,z)] = tile_data(node["random"]["type"].as_string());
+							} else {
+								shader_data_[1].tiles_[position(x,y,z)] = tile_data(graphics::color(node["random"]["type"]).as_sdl_color());
+							}
 						} else {
-							tiles_[position(x,y,z)] = get_terrain_info().random()->first;
+							if(textured) {
+								shader_data_[0].tiles_[position(x,y,z)] = tile_data(get_terrain_info().random()->first);
+							} else {
+								shader_data_[1].tiles_[position(x,y,z)] = tile_data(random_color.as_sdl_color());
+							}
 						}
 					}
 				}
@@ -267,16 +274,16 @@ namespace isometric
 						if(max_y < y) { max_y = y; }
 						if(min_z > z) { min_z = z; }
 						if(max_z < z) { max_z = z; }
-						tiles_[position(x,y,z)] = std::string(m[4].first, m[4].second);
+						shader_data_[0].tiles_[position(x,y,z)] = tile_data(std::string(m[4].first, m[4].second));
 					} else {
 						std::cerr << "ISOMAP: Rejected voxel description: " << s << std::endl;
 					}
 				}
 			}
-			size_x_ = max_x - min_x + 1;
-			size_y_ = max_y - min_y + 1;
-			size_z_ = max_z - min_z + 1;
-			std::cerr << "isomap: size_x( " << size_x_ << "), size_y(" << size_y_ << "), size_z(" << size_z_ << ")" << std::endl;
+			shader_data_[0].size_x_ = max_x - min_x + 1;
+			shader_data_[0].size_y_ = max_y - min_y + 1;
+			shader_data_[0].size_z_ = max_z - min_z + 1;
+			std::cerr << "isomap: size_x( " << shader_data_[0].size_x_ << "), size_y(" << shader_data_[0].size_y_ << "), size_z(" << shader_data_[0].size_z_ << ")" << std::endl;
 		}
 
 		// Load shader.
@@ -289,15 +296,76 @@ namespace isometric
 			shader_.reset(new gles2::program(node["shader"]["name"].as_string(), v1, f1));
 		} else {
 			ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be string or map");
-			shader_ = gles2::program::find_program(node["shader"].as_string());
+			//shader_ = gles2::program::find_program(node["shader"].as_string());
+			if(shader_ == NULL) {
+				shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
+			}
 		}
 
-		if(tiles_.empty()) {
-			std::cerr << "ISOMAP: No tiles found, this is probably an error" << std::endl;
-		} else {
-			build();
+		bool found_data = false;
+		for(auto sd : shader_data_) {
+			found_data |= sd.tiles_.empty() == false;
 		}
+		ASSERT_LOG(found_data != false, "ISOMAP: No tiles found");
+
+		u_mvp_matrix_ = shader_->get_uniform("mvp_matrix");
+		ASSERT_LOG(u_mvp_matrix_ != -1, "isomap::build_colored(): u_mvp_matrix_ == -1");
+		u_lightposition_ = shader_->get_uniform("LightPosition_worldspace");
+		ASSERT_LOG(u_lightposition_ != -1, "isomap::build_colored(): u_lightposition_ == -1");
+		u_lightpower_ = shader_->get_uniform("LightPower");
+		ASSERT_LOG(u_lightpower_ != -1, "isomap::build_colored(): u_lightpower_ == -1");
+		u_shininess_ = shader_->get_uniform("Shininess");
+		ASSERT_LOG(u_shininess_ != -1, "isomap::build_colored(): u_shininess_ == -1");
+		u_m_matrix_ = shader_->get_uniform("m_matrix");
+		ASSERT_LOG(u_m_matrix_ != -1, "isomap::build_colored(): u_m_matrix_ == -1");
+		u_v_matrix_ = shader_->get_uniform("v_matrix");
+		ASSERT_LOG(u_v_matrix_ != -1, "isomap::build_colored(): u_v_matrix_ == -1");
+		u_normal_ = shader_->get_uniform("u_normal");
+		ASSERT_LOG(u_normal_ != -1, "isomap::build_colored(): u_normal_ == -1");
+		a_position_ = shader_->get_attribute("a_position");
+		ASSERT_LOG(a_position_ != -1, "isomap::build_colored(): a_position_ == -1");
+
+		a_color_ = shader_->get_attribute("a_color");
+		a_texcoord_ = shader_->get_attribute("a_tex_coord");
+		u_tex0_ = shader_->get_uniform("u_tex0");
+		/*
+		//mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
+		u_mvp_matrix_ = shader_->get_uniform("MVP");
+		//a_position_it_ = shader_->get_attribute_reference("a_position");
+		a_position_it_ = shader_->get_attribute_reference("vertexPosition_modelspace");
+		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
+		u_tex0_ = shader_->get_uniform("u_tex0");
+
+		u_m_matrix_ = shader_->get_uniform("M");
+		u_v_matrix_ = shader_->get_uniform("V");
+		u_lightposition_ = shader_->get_uniform("LightPosition_worldspace");
+		u_normal_ = shader_->get_uniform("vertexNormal_modelspace");
+		*/
+
+		build();
 	}
+
+	void isomap::init()
+	{
+		shader_data_.resize(2);
+
+		for(int n = 0; n != 2; ++n) {
+			shader_data_[n].vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete id;});
+			glGenBuffers(2, &shader_data_[n].vbos_[0]);
+		}
+
+		get_terrain_info().clear();
+		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
+
+		normals_.clear();
+		normals_.push_back(glm::vec3(0,0,1));	// front
+		normals_.push_back(glm::vec3(1,0,0));	// right
+		normals_.push_back(glm::vec3(0,1,0));	// top
+		normals_.push_back(glm::vec3(0,0,-1));	// back
+		normals_.push_back(glm::vec3(-1,0,0));	// left
+		normals_.push_back(glm::vec3(0,-1,0));	// bottom
+	}
+
 
 	isomap::~isomap()
 	{
@@ -312,7 +380,7 @@ namespace isometric
 	{
 		variant_builder res;
 
-		std::string s;
+/*		std::string s;
 		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
 			int x = t->first.x;
 			int y = t->first.y;
@@ -329,268 +397,463 @@ namespace isometric
 		shader.add("vertex", shader_->vertex_shader().code());
 		shader.add("fragment", shader_->fragment_shader().code());
 		res.add("shader", shader.build());
-		
+	*/
 		return res.build();
 	}
 
 	bool isomap::is_solid(int x, int y, int z) const
 	{
-		auto it = tiles_.find(position(x, y, z));
-		if(it == tiles_.end()) {
-			return false;
+		/*profile::manager pman("isomap::is_solid");
+		for(auto sd : shader_data_) {
+			auto it = sd.tiles_.find(position(x,y,z));
+			if(it != sd.tiles_.end()) {
+				if(it->second.name.empty() == false) {
+					auto ti = get_terrain_info().find(it->second.name);
+					ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second.name);
+					return !ti->second.transparent;
+				} else {
+					return it->second.color.a == 255;
+				}
+			}
 		}
-		if(it->second.empty() != false) {
-			return false;
-		}
-		auto ti = get_terrain_info().find(it->second);
-		ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second);
-		return !ti->second.transparent;
+		return false;*/
+		return false;
 	}
 
 	void isomap::rebuild()
 	{
-		vertices_left_.clear();
-		vertices_right_.clear();
-		vertices_top_.clear();
-		vertices_bottom_.clear();
-		vertices_front_.clear();
-		vertices_back_.clear();
-
-		tarray_left_.clear();
-		tarray_right_.clear();
-		tarray_top_.clear();
-		tarray_bottom_.clear();
-		tarray_front_.clear();
-		tarray_back_.clear();
-
 		build();
 	}
 
 	void isomap::build()
 	{
-		profile::manager pman("isomap::build");
+		for(auto& sd : shader_data_) {
+			sd.varray_.clear();
+			sd.tarray_.clear();
+			sd.carray_.clear();
+			std::cerr << "cleared sd.vattrib_offsets_" << std::endl;
+			sd.vattrib_offsets_.clear();
+			sd.tcattrib_offsets_.clear();
+			sd.num_vertices_.clear();
 
-		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
-			int x = t->first.x;
-			int y = t->first.y;
-			int z = t->first.z;
+			sd.varray_.resize(6);
+			sd.carray_.resize(6);
+			sd.vattrib_offsets_.resize(6);
+			sd.tcattrib_offsets_.resize(6);
+			sd.num_vertices_.resize(6);
+
+			if(sd.tiles_.size() > 0) {
+				if(sd.textured_) {
+					build_textured(sd);
+				} else {
+					build_colored(sd);
+				}
+			}
+		}
+	}
+
+	void isomap::build_colored(shader_data& sd)
+	{
+		profile::manager pman("isomap::build_colored");
+
+		for(auto t : sd.tiles_) {
+			int x = t.first.x;
+			int y = t.first.y;
+			int z = t.first.z;
+
 			if(x > 0) {
 				if(is_solid(x-1, y, z) == false) {
-					add_face_left(x,y,z,1,t->second);
+					add_colored_face_left(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_left(x,y,z,1,t->second);
+				add_colored_face_left(sd,x,y,z,1,t.second.color);
 			}
-			if(x < size_x_ - 1) {
+			if(x < sd.size_x_ - 1) {
 				if(is_solid(x+1, y, z) == false) {
-					add_face_right(x,y,z,1,t->second);
+					add_colored_face_right(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_right(x,y,z,1,t->second);
+				add_colored_face_right(sd,x,y,z,1,t.second.color);
 			}
 			if(y > 0) {
 				if(is_solid(x, y-1, z) == false) {
-					add_face_bottom(x,y,z,1,t->second);
+					add_colored_face_bottom(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_bottom(x,y,z,1,t->second);
+				add_colored_face_bottom(sd,x,y,z,1,t.second.color);
 			}
-			if(y < size_y_ - 1) {
+			if(y < sd.size_y_ - 1) {
 				if(is_solid(x, y+1, z) == false) {
-					add_face_top(x,y,z,1,t->second);
+					add_colored_face_top(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_top(x,y,z,1,t->second);
+				add_colored_face_top(sd,x,y,z,1,t.second.color);
 			}
 			if(z > 0) {
 				if(is_solid(x, y, z-1) == false) {
-					add_face_back(x,y,z,1,t->second);
+					add_colored_face_back(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_back(x,y,z,1,t->second);
+				add_colored_face_back(sd,x,y,z,1,t.second.color);
 			}
-			if(z < size_z_ - 1) {
+			if(z < sd.size_z_ - 1) {
 				if(is_solid(x, y, z+1) == false) {
-					add_face_front(x,y,z,1,t->second);
+					add_colored_face_front(sd,x,y,z,1,t.second.color);
 				}
 			} else {
-				add_face_front(x,y,z,1,t->second);
+				add_colored_face_front(sd,x,y,z,1,t.second.color);
 			}
 		}
-		
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[0]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_left_.size()*sizeof(GLfloat), &vertices_left_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[1]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_right_.size()*sizeof(GLfloat), &vertices_right_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[2]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_top_.size()*sizeof(GLfloat), &vertices_top_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[3]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_bottom_.size()*sizeof(GLfloat), &vertices_bottom_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[4]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_front_.size()*sizeof(GLfloat), &vertices_front_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[5]);
-		glBufferData(GL_ARRAY_BUFFER, vertices_back_.size()*sizeof(GLfloat), &vertices_back_[0], GL_STATIC_DRAW);
 
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[6]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_left_.size()*sizeof(GLfloat), &tarray_left_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[7]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_right_.size()*sizeof(GLfloat), &tarray_right_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[8]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_top_.size()*sizeof(GLfloat), &tarray_top_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[9]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_bottom_.size()*sizeof(GLfloat), &tarray_bottom_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[10]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_front_.size()*sizeof(GLfloat), &tarray_front_[0], GL_STATIC_DRAW);
-		glBindBuffer(GL_ARRAY_BUFFER, arrays_[11]);
-		glBufferData(GL_ARRAY_BUFFER, tarray_back_.size()*sizeof(GLfloat), &tarray_back_[0], GL_STATIC_DRAW);
+		size_t total_size = 0;
+		int n = 0;
+		for(auto vec : sd.varray_) {
+			sd.vattrib_offsets_[n] = total_size;
+			total_size += vec.size() * sizeof(GLfloat);
+			sd.num_vertices_[n] = vec.size() / 3;
+			++n;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n=0; n != 6; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, sd.vattrib_offsets_[n], sd.varray_[n].size()*sizeof(GLfloat), &sd.varray_[n][0]);
+		}
 
-		std::cerr << "Built " << vertices_left_.size()/3 << " left vertices" << std::endl;
-		std::cerr << "Built " << vertices_right_.size()/3 << " right vertices" << std::endl;
-		std::cerr << "Built " << vertices_top_.size()/3 << " top vertices" << std::endl;
-		std::cerr << "Built " << vertices_bottom_.size()/3 << " bottom vertices" << std::endl;
-		std::cerr << "Built " << vertices_front_.size()/3 << " front vertices" << std::endl;
-		std::cerr << "Built " << vertices_back_.size()/3 << " back vertices" << std::endl;
+		total_size = 0;
+		n = 0;
+		for(auto vec : sd.carray_) {
+			sd.tcattrib_offsets_[n] = total_size;
+			total_size += vec.size() * sizeof(uint8_t);
+			++n;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n=0; n != 6; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, sd.tcattrib_offsets_[n], sd.carray_[n].size()*sizeof(uint8_t), &sd.carray_[n][0]);
+		}
+		std::cerr << "Built " << sd.varray_[FRONT_FACE].size()/3 << " front faces" << std::endl;
+		std::cerr << "Built " << sd.varray_[BACK_FACE].size()/3 << " back faces" << std::endl;
+		std::cerr << "Built " << sd.varray_[TOP_FACE].size()/3 << " top faces" << std::endl;
+		std::cerr << "Built " << sd.varray_[BOTTOM_FACE].size()/3 << " bottom faces" << std::endl;
+		std::cerr << "Built " << sd.varray_[LEFT_FACE].size()/3 << " left faces" << std::endl;
+		std::cerr << "Built " << sd.varray_[RIGHT_FACE].size()/3 << " right faces" << std::endl;
 
-		//mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
-		mm_uniform_it_ = shader_->get_uniform_reference("MVP");
-		//a_position_it_ = shader_->get_attribute_reference("a_position");
-		a_position_it_ = shader_->get_attribute_reference("vertexPosition_modelspace");
-		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
-		tex0_it_ = shader_->get_uniform_reference("u_tex0");
+		sd.varray_.clear();
+		sd.carray_.clear();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void isomap::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::build_textured(shader_data& sd)
 	{
-		vertices_left_.push_back(x); vertices_left_.push_back(y+s); vertices_left_.push_back(z+s);
-		vertices_left_.push_back(x); vertices_left_.push_back(y+s); vertices_left_.push_back(z);
-		vertices_left_.push_back(x); vertices_left_.push_back(y); vertices_left_.push_back(z+s);
+		profile::manager pman("isomap::build");
 
-		vertices_left_.push_back(x); vertices_left_.push_back(y); vertices_left_.push_back(z+s);
-		vertices_left_.push_back(x); vertices_left_.push_back(y+s); vertices_left_.push_back(z);
-		vertices_left_.push_back(x); vertices_left_.push_back(y); vertices_left_.push_back(z);
+		for(auto t : sd.tiles_) {
+			int x = t.first.x;
+			int y = t.first.y;
+			int z = t.first.z;
+			if(x > 0) {
+				if(is_solid(x-1, y, z) == false) {
+					add_face_left(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_left(sd,x,y,z,1,t.second.name);
+			}
+			if(x < sd.size_x_ - 1) {
+				if(is_solid(x+1, y, z) == false) {
+					add_face_right(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_right(sd,x,y,z,1,t.second.name);
+			}
+			if(y > 0) {
+				if(is_solid(x, y-1, z) == false) {
+					add_face_bottom(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_bottom(sd,x,y,z,1,t.second.name);
+			}
+			if(y < sd.size_y_ - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					add_face_top(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_top(sd,x,y,z,1,t.second.name);
+			}
+			if(z > 0) {
+				if(is_solid(x, y, z-1) == false) {
+					add_face_back(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_back(sd,x,y,z,1,t.second.name);
+			}
+			if(z < sd.size_z_ - 1) {
+				if(is_solid(x, y, z+1) == false) {
+					add_face_front(sd,x,y,z,1,t.second.name);
+				}
+			} else {
+				add_face_front(sd,x,y,z,1,t.second.name);
+			}
+		}
+		
+		size_t total_size = 0;
+		int n = 0;
+		for(auto vec : sd.varray_) {
+			sd.vattrib_offsets_[n] = total_size;
+			total_size += vec.size() * sizeof(GLfloat);
+			sd.num_vertices_[n] = vec.size() / 3;
+			++n;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n=0; n != 6; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, sd.vattrib_offsets_[n], sd.varray_[n].size()*sizeof(GLfloat), &sd.varray_[n][0]);
+		}
+
+		total_size = 0;
+		n = 0;
+		for(auto vec : sd.tarray_) {
+			sd.tcattrib_offsets_[n] = total_size;
+			total_size += vec.size() * sizeof(GLfloat);
+			++n;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n=0; n != 6; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, sd.tcattrib_offsets_[n], sd.tarray_[n].size()*sizeof(uint8_t), &sd.tarray_[n][0]);
+		}
+		sd.varray_.clear();
+		sd.tarray_.clear();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void isomap::add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray)
+	{
+		for(int n = 0; n != 6; ++n) {
+			carray.push_back(col.r);
+			carray.push_back(col.g);
+			carray.push_back(col.b);
+			carray.push_back(col.a);
+		}
+	}
+
+	void isomap::add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray)
+	{
+		switch(face) {
+		case FRONT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			break;
+		case RIGHT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case TOP_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+		
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			break;
+		case BACK_FACE:
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case LEFT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case BOTTOM_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			break;
+		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
+		}
+	}
+
+	void isomap::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat s, std::vector<GLfloat>& varray)
+	{
+		switch(face) {
+		case FRONT_FACE:
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
+
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			break;
+		case RIGHT_FACE:
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			break;
+		case TOP_FACE:
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
+
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			break;
+		case BACK_FACE:
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			break;
+		case LEFT_FACE:
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z);
+			break;
+		case BOTTOM_FACE:
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+
+			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z);
+			break;
+		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
+		}
+	}
+
+	void isomap::add_colored_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(LEFT_FACE, x, y, z, s, sd.varray_[LEFT_FACE]);
+		add_carray_data(col, sd.carray_[LEFT_FACE]);
+	}
+
+	void isomap::add_colored_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(RIGHT_FACE, x, y, z, s, sd.varray_[RIGHT_FACE]);
+		add_carray_data(col, sd.carray_[RIGHT_FACE]);
+	}
+
+	void isomap::add_colored_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(FRONT_FACE, x, y, z, s, sd.varray_[FRONT_FACE]);
+		add_carray_data(col, sd.carray_[FRONT_FACE]);
+	}
+
+	void isomap::add_colored_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(BACK_FACE, x, y, z, s, sd.varray_[BACK_FACE]);
+		add_carray_data(col, sd.carray_[BACK_FACE]);
+	}
+
+	void isomap::add_colored_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(TOP_FACE, x, y, z, s, sd.varray_[TOP_FACE]);
+		add_carray_data(col, sd.carray_[TOP_FACE]);
+	}
+
+	void isomap::add_colored_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(BOTTOM_FACE, x, y, z, s, sd.varray_[BOTTOM_FACE]);
+		add_carray_data(col, sd.carray_[BOTTOM_FACE]);
+	}
+
+	void isomap::add_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(LEFT_FACE, x, y, z, s, sd.varray_[LEFT_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_left: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & LEFT ? it->second.area[4] : it->second.area[0];
-		tarray_left_.push_back(area.x2f()); tarray_left_.push_back(area.yf()); 
-		tarray_left_.push_back(area.xf());  tarray_left_.push_back(area.yf()); 
-		tarray_left_.push_back(area.x2f());  tarray_left_.push_back(area.y2f()); 
-		
-		tarray_left_.push_back(area.x2f());  tarray_left_.push_back(area.y2f()); 
-		tarray_left_.push_back(area.xf()); tarray_left_.push_back(area.yf()); 
-		tarray_left_.push_back(area.xf()); tarray_left_.push_back(area.y2f()); 
+		add_tarray_data(LEFT_FACE, area, sd.tarray_[LEFT_FACE]);
 	}
 
-	void isomap::add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::add_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y+s); vertices_right_.push_back(z+s);
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y); vertices_right_.push_back(z+s);
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y+s); vertices_right_.push_back(z);
-
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y+s); vertices_right_.push_back(z);
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y); vertices_right_.push_back(z+s);
-		vertices_right_.push_back(x+s); vertices_right_.push_back(y); vertices_right_.push_back(z);
+		add_vertex_data(RIGHT_FACE, x, y, z, s, sd.varray_[RIGHT_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_right: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & RIGHT ? it->second.area[1] : it->second.area[0];
-		tarray_right_.push_back(area.x2f()); tarray_right_.push_back(area.yf()); 
-		tarray_right_.push_back(area.x2f());  tarray_right_.push_back(area.y2f()); 
-		tarray_right_.push_back(area.xf());  tarray_right_.push_back(area.yf()); 
-		
-		tarray_right_.push_back(area.xf());  tarray_right_.push_back(area.yf()); 
-		tarray_right_.push_back(area.x2f()); tarray_right_.push_back(area.y2f()); 
-		tarray_right_.push_back(area.xf()); tarray_right_.push_back(area.y2f()); 
+		add_tarray_data(RIGHT_FACE, area, sd.tarray_[RIGHT_FACE]);
 	}
 
-	void isomap::add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::add_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
-		vertices_front_.push_back(x); vertices_front_.push_back(y); vertices_front_.push_back(z+s);
-		vertices_front_.push_back(x+s); vertices_front_.push_back(y); vertices_front_.push_back(z+s);
-		vertices_front_.push_back(x+s); vertices_front_.push_back(y+s); vertices_front_.push_back(z+s);
-
-		vertices_front_.push_back(x+s); vertices_front_.push_back(y+s); vertices_front_.push_back(z+s);
-		vertices_front_.push_back(x); vertices_front_.push_back(y+s); vertices_front_.push_back(z+s);
-		vertices_front_.push_back(x); vertices_front_.push_back(y); vertices_front_.push_back(z+s);
+		add_vertex_data(FRONT_FACE, x, y, z, s, sd.varray_[FRONT_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_front: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.area[0];
-		tarray_front_.push_back(area.x2f());  tarray_front_.push_back(area.y2f()); 
-		tarray_front_.push_back(area.xf()); tarray_front_.push_back(area.y2f()); 
-		tarray_front_.push_back(area.xf()); tarray_front_.push_back(area.yf()); 
-
-		tarray_front_.push_back(area.xf());  tarray_front_.push_back(area.yf()); 
-		tarray_front_.push_back(area.x2f()); tarray_front_.push_back(area.yf()); 
-		tarray_front_.push_back(area.x2f());  tarray_front_.push_back(area.y2f()); 
+		add_tarray_data(FRONT_FACE, area, sd.tarray_[FRONT_FACE]);
 	}
 
-	void isomap::add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::add_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
-		vertices_back_.push_back(x+s); vertices_back_.push_back(y); vertices_back_.push_back(z);
-		vertices_back_.push_back(x); vertices_back_.push_back(y); vertices_back_.push_back(z);
-		vertices_back_.push_back(x); vertices_back_.push_back(y+s); vertices_back_.push_back(z);
-
-		vertices_back_.push_back(x); vertices_back_.push_back(y+s); vertices_back_.push_back(z);
-		vertices_back_.push_back(x+s); vertices_back_.push_back(y+s); vertices_back_.push_back(z);
-		vertices_back_.push_back(x+s); vertices_back_.push_back(y); vertices_back_.push_back(z);
+		add_vertex_data(BACK_FACE, x, y, z, s, sd.varray_[BACK_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_back: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & BACK ? it->second.area[3] : it->second.area[0];
-		tarray_back_.push_back(area.xf()); tarray_back_.push_back(area.y2f()); 
-		tarray_back_.push_back(area.x2f());  tarray_back_.push_back(area.y2f()); 
-		tarray_back_.push_back(area.x2f());  tarray_back_.push_back(area.yf()); 
-		
-		tarray_back_.push_back(area.x2f());  tarray_back_.push_back(area.yf()); 
-		tarray_back_.push_back(area.xf()); tarray_back_.push_back(area.yf()); 
-		tarray_back_.push_back(area.xf()); tarray_back_.push_back(area.y2f()); 
+		add_tarray_data(BACK_FACE, area, sd.tarray_[BACK_FACE]);
 	}
 
-	void isomap::add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::add_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
-		vertices_top_.push_back(x+s); vertices_top_.push_back(y+s); vertices_top_.push_back(z+s);
-		vertices_top_.push_back(x+s); vertices_top_.push_back(y+s); vertices_top_.push_back(z);
-		vertices_top_.push_back(x); vertices_top_.push_back(y+s); vertices_top_.push_back(z+s);
-
-		vertices_top_.push_back(x); vertices_top_.push_back(y+s); vertices_top_.push_back(z+s);
-		vertices_top_.push_back(x+s); vertices_top_.push_back(y+s); vertices_top_.push_back(z);
-		vertices_top_.push_back(x); vertices_top_.push_back(y+s); vertices_top_.push_back(z);
+		add_vertex_data(TOP_FACE, x, y, z, s, sd.varray_[TOP_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_top: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & TOP ? it->second.area[2] : it->second.area[0];
-		tarray_top_.push_back(area.x2f()); tarray_top_.push_back(area.y2f()); 
-		tarray_top_.push_back(area.x2f());  tarray_top_.push_back(area.yf()); 
-		tarray_top_.push_back(area.xf());  tarray_top_.push_back(area.y2f()); 
-		
-		tarray_top_.push_back(area.xf());  tarray_top_.push_back(area.y2f()); 
-		tarray_top_.push_back(area.x2f()); tarray_top_.push_back(area.yf()); 
-		tarray_top_.push_back(area.xf()); tarray_top_.push_back(area.yf()); 
+		add_tarray_data(TOP_FACE, area, sd.tarray_[TOP_FACE]);
 	}
 
-	void isomap::add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	void isomap::add_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
-		vertices_bottom_.push_back(x+s); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z+s);
-		vertices_bottom_.push_back(x); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z+s);
-		vertices_bottom_.push_back(x+s); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z);
-
-		vertices_bottom_.push_back(x+s); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z);
-		vertices_bottom_.push_back(x); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z+s);
-		vertices_bottom_.push_back(x); vertices_bottom_.push_back(y); vertices_bottom_.push_back(z);
+		add_vertex_data(BOTTOM_FACE, x, y, z, s, sd.varray_[BOTTOM_FACE]);
 
 		auto it = get_terrain_info().find(bid);
 		ASSERT_LOG(it != get_terrain_info().end(), "add_face_bottom: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & BOTTOM ? it->second.area[5] : it->second.area[0];
-		tarray_bottom_.push_back(area.x2f()); tarray_bottom_.push_back(area.y2f()); 
-		tarray_bottom_.push_back(area.xf());  tarray_bottom_.push_back(area.y2f()); 
-		tarray_bottom_.push_back(area.x2f());  tarray_bottom_.push_back(area.yf()); 
-		
-		tarray_bottom_.push_back(area.x2f());  tarray_bottom_.push_back(area.yf()); 
-		tarray_bottom_.push_back(area.xf()); tarray_bottom_.push_back(area.y2f()); 
-		tarray_bottom_.push_back(area.xf()); tarray_bottom_.push_back(area.yf()); 
+		add_tarray_data(BOTTOM_FACE, area, sd.tarray_[BOTTOM_FACE]);
 	}
 
 	void isomap::draw() const
@@ -601,211 +864,95 @@ namespace isometric
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
 
-		glUseProgram(shader_->get());
-		glActiveTexture(GL_TEXTURE0);
-		get_terrain_info().get_tex().set_as_current_texture();
-		glUniform1i(tex0_it_->second.location, 0);
-
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
-		shader_->set_uniform(mm_uniform_it_, 1, glm::value_ptr(mvp));
-
-		//////////////////////////////////////////////////////////////////////
-		// Lighting test section
-		static GLint V = -1;
-		if(V == -1) {
-			V = shader_->get_uniform("V");
+		for(auto sd : shader_data_) {
+			if(sd.tiles_.size() > 0) {
+				if(sd.textured_) {
+					draw_textured(sd);
+				} else {
+					draw_colored(sd);
+				}
+			}
 		}
-		glUniformMatrix4fv(V, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
-		static GLint M = -1;
-		if(M == -1) {
-			M = shader_->get_uniform("M");
-		}
-		glUniformMatrix4fv(M, 1, GL_FALSE, glm::value_ptr(model_));
-		static GLint LightPosition_worldspace = -1;
-		if(LightPosition_worldspace == -1) {
-			LightPosition_worldspace = shader_->get_uniform("LightPosition_worldspace");
-		}
-		glUniform3f(LightPosition_worldspace, 48.0f, 48.0f, 48.0f);
-		static GLint vertexNormal_modelspace = -1;
-		if(vertexNormal_modelspace == -1) {
-			vertexNormal_modelspace = shader_->get_uniform("vertexNormal_modelspace");
-		}
-		//////////////////////////////////////////////////////////////////////
-
-		glEnableVertexAttribArray(a_position_it_->second.location);
-		glEnableVertexAttribArray(a_tex_coord_it_->second.location);
-
-		if(debug_draw_faces & FRONT) {
-			glUniform3f(vertexNormal_modelspace, 0, 0, 1);
-			// front
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[4]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[10]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_front_.size()/3);
-		}
-
-		if(debug_draw_faces & BACK) {
-			// back
-			glUniform3f(vertexNormal_modelspace, 0, 0, -1);
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[5]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[11]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_back_.size()/3);
-		}
-
-		if(debug_draw_faces & LEFT) {
-			// left
-			glUniform3f(vertexNormal_modelspace, -1, 0, 0);
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[0]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[6]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_left_.size()/3);
-		}
-
-		if(debug_draw_faces & RIGHT) {
-			// right
-			glUniform3f(vertexNormal_modelspace, 1, 0, 0);
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[1]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[7]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_right_.size()/3);
-		}
-
-		if(debug_draw_faces & TOP) {
-			// top
-			glUniform3f(vertexNormal_modelspace, 0, 1, 0);
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[2]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[8]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_top_.size()/3);
-		}
-
-		if(debug_draw_faces & BOTTOM) {
-			// bottom
-			glUniform3f(vertexNormal_modelspace, 0, -1, 0);
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[3]);
-			glVertexAttribPointer(
-				a_position_it_->second.location, // The attribute we want to configure
-				3,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glBindBuffer(GL_ARRAY_BUFFER, arrays_[9]);
-			glVertexAttribPointer(
-				a_tex_coord_it_->second.location, // The attribute we want to configure
-				2,                  // size
-				GL_FLOAT,           // type
-				GL_FALSE,           // normalized?
-				0,					// stride
-				0					// array buffer offset
-			);
-
-			glDrawArrays(GL_TRIANGLES, 0, vertices_bottom_.size()/3);
-		}
-
-		glDisableVertexAttribArray(a_position_it_->second.location);
-		glDisableVertexAttribArray(a_tex_coord_it_->second.location);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 		glUseProgram(0);
 	}
 
+	void isomap::draw_colored(const shader_data& sd) const
+	{
+		ASSERT_LOG(sd.vattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
+		ASSERT_LOG(sd.tcattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
+		glUseProgram(shader_->get());
+
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
+		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
+
+		glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
+		glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_));
+		glUniform3f(u_lightposition_, sd.size_x_/2.0f, 200.0f, sd.size_z_/2.0f);
+		glUniform1f(u_lightpower_, 15000.0f);
+		glUniform1f(u_shininess_, 5.0f);
+
+		glEnableVertexAttribArray(a_position_);
+		glEnableVertexAttribArray(a_color_);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			if(debug_draw_faces & (1 << n)) {
+				glUniform3fv(u_normal_, 1, glm::value_ptr(normals_[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
+				glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.vattrib_offsets_[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
+				glVertexAttribPointer(a_color_, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, reinterpret_cast<const GLfloat*>(sd.tcattrib_offsets_[n]));
+				glDrawArrays(GL_TRIANGLES, 0, sd.num_vertices_[n]);
+			}
+		}
+		glDisableVertexAttribArray(a_position_);
+		glDisableVertexAttribArray(a_color_);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void isomap::draw_textured(const shader_data& sd) const
+	{
+		ASSERT_LOG(sd.vattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
+		ASSERT_LOG(sd.tcattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
+		glUseProgram(shader_->get());
+
+		glActiveTexture(GL_TEXTURE0);
+		get_terrain_info().get_tex().set_as_current_texture();
+		glUniform1i(u_tex0_, 0);
+
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
+		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
+
+		glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
+		glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_));
+		glUniform3f(u_lightposition_, sd.size_x_/2.0f, 200.0f, sd.size_z_/2.0f);
+		glUniform1f(u_lightpower_, 15000.0f);
+		glUniform1f(u_shininess_, 5.0f);
+
+		glEnableVertexAttribArray(a_position_);
+		glEnableVertexAttribArray(a_texcoord_);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			if(debug_draw_faces & (1 << n)) {
+				glUniform3fv(u_normal_, 1, glm::value_ptr(normals_[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
+				glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.vattrib_offsets_[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
+				glVertexAttribPointer(a_texcoord_, 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.tcattrib_offsets_[n]));
+				glDrawArrays(GL_TRIANGLES, 0, sd.num_vertices_[n]);
+			}
+		}
+		glDisableVertexAttribArray(a_position_);
+		glDisableVertexAttribArray(a_texcoord_);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
 	std::string isomap::get_tile_type(int x, int y, int z) const
 	{
-		auto it = tiles_.find(position(x, y, z));
-		if(it == tiles_.end()) {
+		auto it = shader_data_[0].tiles_.find(position(x, y, z));
+		if(it == shader_data_[0].tiles_.end()) {
 			return "";
 		}
-		return it->second;
+		return it->second.name;
 	}
 
 	variant isomap::get_tile_info(const std::string& type)
@@ -813,25 +960,25 @@ namespace isometric
 		return variant(); // -- todo
 	}
 
-	bool isomap::is_xedge(int x) const
+	bool isomap::is_xedge(int x, int size_x) const
 	{
-		if(x >= 0 && x < size_x_) {
+		if(x >= 0 && x < size_x) {
 			return false;
 		}
 		return true;
 	}
 
-	bool isomap::is_yedge(int y) const
+	bool isomap::is_yedge(int y, int size_y) const
 	{
-		if(y >= 0 && y < size_y_) {
+		if(y >= 0 && y < size_y) {
 			return false;
 		}
 		return true;
 	}
 
-	bool isomap::is_zedge(int z) const
+	bool isomap::is_zedge(int z, int size_z) const
 	{
-		if(z >= 0 && z < size_z_) {
+		if(z >= 0 && z < size_z) {
 			return false;
 		}
 		return true;
@@ -849,6 +996,7 @@ namespace isometric
 
 	pathfinding::directed_graph_ptr isomap::create_directed_graph(bool allow_diagonals)
 	{
+		/*
 		profile::manager pman("isomap::create_directed_graph");
 
 		std::vector<variant> vertex_list;
@@ -912,20 +1060,22 @@ namespace isometric
 			edges[variant_list_from_xyz(p.first.first, p.second, p.first.second)] = current_edges;
 		}
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
+		*/
+		return pathfinding::directed_graph_ptr();
 	}
 
 	void isomap::set_tile(int x, int y, int z, const std::string& type)
 	{
-		tiles_[position(x,y,z)] = type;
-		rebuild();
+		//tiles_[position(x,y,z)] = type;
+		//rebuild();
 	}
 
 	void isomap::del_tile(int x, int y, int z)
 	{
-		auto it = tiles_.find(position(x,y,z));
-		ASSERT_LOG(it != tiles_.end(), "del_tile: no tile found at position(" << x << "," << y << "," << z << ") to delete");
-		tiles_.erase(it);
-		rebuild();
+		//auto it = tiles_.find(position(x,y,z));
+		//ASSERT_LOG(it != tiles_.end(), "del_tile: no tile found at position(" << x << "," << y << "," << z << ") to delete");
+		//tiles_.erase(it);
+		//rebuild();
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)

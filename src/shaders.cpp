@@ -181,7 +181,10 @@ bool program::link()
 GLuint program::get_attribute(const std::string& attr) const
 {
 	std::map<std::string, actives>::const_iterator it = attribs_.find(attr);
-	ASSERT_LOG(it != attribs_.end(), "Attribute \"" << attr << "\" not found in list in " << name_);
+	if(it == attribs_.end()) {
+		return -1;
+	}
+	//ASSERT_LOG(it != attribs_.end(), "Attribute \"" << attr << "\" not found in list in " << name_);
 	return it->second.location;
 }
 
