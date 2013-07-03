@@ -53,19 +53,20 @@ std::string shader::get_and_clear_runtime_error()
 	return result;
 }
 
-shader::shader(GLenum type, const std::string& name, const std::string& code)
-	: type_(type), shader_(0), name_(name), code_(code)
+shader::shader(GLenum type, const std::string& name, const variant& code)
+	: type_(type), shader_(0), name_(name), code_(code.as_string())
 {
-	const bool compile_result = compile(code);
+	const bool compile_result = compile(code_);
 	std::string working_version_str;
+	std::string error_loc_str;
 
-	if(compile_result == false) {
+	if(compile_result == false && strstr(code_.c_str(), "#version") == NULL) {
 		//compiling the shader failed. Try to add #version n where
 		//n = 120,130,140 at the top of the shader and see if that makes
 		//it work so we can give a nice error message.
 		for(int n = 120; n <= 140; n += 10) {
 			std::ostringstream version_code;
-			version_code << "#version " << n << "\n" << code;
+			version_code << "#version " << n << "\n" << code_;
 			const bool result = compile(version_code.str());
 			if(result) {
 				std::ostringstream err_msg;
@@ -76,7 +77,11 @@ shader::shader(GLenum type, const std::string& name, const std::string& code)
 		}
 	}
 
-	ASSERT_LOG(compile_result, "Error compiling shader for " << name_ << working_version_str);
+	if(compile_result == false && code.get_debug_info()) {
+		error_loc_str = " at " + code.debug_location();
+	}
+
+	ASSERT_LOG(compile_result, "Error compiling shader for " << name_ << error_loc_str << working_version_str);
 }
 
 bool shader::compile(const std::string& code)
@@ -176,7 +181,7 @@ bool program::link()
 GLuint program::get_attribute(const std::string& attr) const
 {
 	std::map<std::string, actives>::const_iterator it = attribs_.find(attr);
-	ASSERT_LOG(it != attribs_.end(), "Attribute \"" << attr << "\" not found in list.");
+	ASSERT_LOG(it != attribs_.end(), "Attribute \"" << attr << "\" not found in list in " << name_);
 	return it->second.location;
 }
 
@@ -1085,20 +1090,20 @@ void program::load_shaders(const std::string& shader_data)
 		ASSERT_LOG(node["shaders"].has_key("fragment") 
 			&& node["shaders"]["fragment"].has_key(fs_name),
 			"No key \"" << vs_name << "\" found under \"fragment\" attribute.");
-		std::string vert_data = node["shaders"]["vertex"][vs_name].as_string();
-		std::string frag_data = node["shaders"]["fragment"][fs_name].as_string();
+		variant vert_data = node["shaders"]["vertex"][vs_name];
+		variant frag_data = node["shaders"]["fragment"][fs_name];
 
 		// Simple test to differntiate shaders as strings, compared to shaders in files.
 		// i.e. shaders as strings will have "void main" stanzas, it would be kind of
 		// pathological to create a file containing "void main" as part of the filename.
 		const boost::regex re("void\\s+main");
-		if(boost::regex_search(vert_data, re) == false) {
+		if(boost::regex_search(vert_data.as_string(), re) == false) {
 			// Try loading as file.
-			vert_data = sys::read_file(module::map_file("data/" + vert_data));
+			vert_data = variant(sys::read_file(module::map_file("data/" + vert_data.as_string())));
 		}
-		if(boost::regex_search(frag_data, re) == false) {
+		if(boost::regex_search(frag_data.as_string(), re) == false) {
 			// Try loading as file.
-			frag_data = sys::read_file(module::map_file("data/" + frag_data));
+			frag_data = variant(sys::read_file(module::map_file("data/" + frag_data.as_string())));
 		}
 
 		gles2::shader v_shader(GL_VERTEX_SHADER, vs_name, vert_data);
@@ -1278,11 +1283,9 @@ void shader_program::configure(const variant& node, entity* obj)
 		program_object_ = program::find_program(name_);
 	} else {
 		name_ = node["name"].as_string();
-		const std::string vert_code = node["vertex"].as_string();
-		const std::string frag_code = node["fragment"].as_string();
 
-		gles2::shader v_shader(GL_VERTEX_SHADER, name_ + "_vert", vert_code);
-		gles2::shader f_shader(GL_FRAGMENT_SHADER, name_ + "_frag", frag_code);
+		gles2::shader v_shader(GL_VERTEX_SHADER, name_ + "_vert", node["vertex"]);
+		gles2::shader f_shader(GL_FRAGMENT_SHADER, name_ + "_frag", node["fragment"]);
 		program_object_.reset(new program(name_, v_shader, f_shader));
 
 		if(node.has_key("attributes")) {

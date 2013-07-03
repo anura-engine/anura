@@ -277,6 +277,54 @@ voxel_editor& get_editor() {
 	return *g_voxel_editor;
 }
 
+void pencil_voxel()
+{
+	if(get_editor().get_cursor()) {
+		VoxelPos cursor = *get_editor().get_cursor();
+		Voxel voxel;
+		voxel.color = get_editor().current_color();
+
+		Voxel old_voxel;
+		bool currently_has_voxel = false;
+
+		auto current_itor = get_editor().layer().map.find(cursor);
+		if(current_itor != get_editor().layer().map.end()) {
+			old_voxel = current_itor->second;
+			currently_has_voxel = true;
+		}
+
+		get_editor().execute_command(
+		  [cursor, voxel]() { get_editor().set_voxel(cursor, voxel); },
+		  [cursor, old_voxel, currently_has_voxel]() {
+			if(currently_has_voxel) {
+				get_editor().set_voxel(cursor, old_voxel);
+			} else {
+				get_editor().delete_voxel(cursor);
+			}
+		});
+
+		get_editor().set_voxel(cursor, voxel);
+	}
+}
+
+void delete_voxel()
+{
+	if(get_editor().get_cursor()) {
+		VoxelPos cursor = *get_editor().get_cursor();
+		auto current_itor = get_editor().layer().map.find(cursor);
+		if(current_itor == get_editor().layer().map.end()) {
+			return;
+		}
+
+		Voxel old_voxel = current_itor->second;
+
+		get_editor().execute_command(
+			[cursor]() { get_editor().delete_voxel(cursor); },
+			[cursor, old_voxel]() { get_editor().set_voxel(cursor, old_voxel); }
+		);
+	}
+}
+
 using namespace gui;
 
 class iso_renderer : public gui::widget
@@ -324,6 +372,7 @@ private:
 	float specularity_coef_;
 
 	bool focused_;
+	bool dragging_view_;
 
 	iso_renderer();
 	iso_renderer(const iso_renderer&);
@@ -339,7 +388,7 @@ iso_renderer::iso_renderer(const rect& area)
   : camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	tex_width_(0), tex_height_(0),
-	focused_(false), light_power_(10000.0f), specularity_coef_(5.0f)
+	focused_(false), dragging_view_(false), light_power_(10000.0f), specularity_coef_(5.0f)
 {
 	camera_->set_clip_planes(0.1f, 200.0f);
 	g_iso_renderer = this;
@@ -505,8 +554,50 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 		
 		break;
 	}
+
+	case SDL_MOUSEBUTTONDOWN: {
+		const SDL_MouseButtonEvent& e = event.button;
+
+		dragging_view_ = false;
+		if(focused_) {
+			glm::ivec3 facing;
+			glm::ivec3 voxel_coord = position_to_cube(event.button.x-x(), event.button.y-y(), &facing);
+
+			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			auto it = get_editor().voxels().find(pos);
+			if(it != get_editor().voxels().end()) {
+				get_editor().set_cursor(pos);
+				if(e.button == SDL_BUTTON_LEFT) {
+					pencil_voxel();
+				} else if(e.button == SDL_BUTTON_RIGHT) {
+					delete_voxel();
+				}
+			} else {
+				dragging_view_ = true;
+			}
+		}
+		break;
+	}
+	case SDL_MOUSEBUTTONUP: {
+		dragging_view_ = false;
+		break;
+	}
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
+
+		Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			if(motion.xrel) {
+				camera_hangle_ += motion.xrel*0.02;
+			}
+
+			if(motion.yrel) {
+				camera_vangle_ += motion.yrel*0.02;
+			}
+			
+			calculate_camera();
+		}
+
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
 			focused_ = true;
@@ -524,21 +615,6 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 					pos[2] = new_coord.z;
 				}
 				get_editor().set_cursor(pos);
-			} else {
-				Uint8 button_state = SDL_GetMouseState(NULL, NULL);
-				if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT)) {
-					if(motion.xrel) {
-						camera_hangle_ += motion.xrel*0.02;
-					}
-
-					if(motion.yrel) {
-						camera_vangle_ += motion.yrel*0.02;
-					}
-
-					std::cerr << "ANGLE: " << camera_hangle_ << ", " << camera_vangle_ << "\n";
-
-					calculate_camera();
-				}
 			}
 		} else {
 			focused_ = false;
@@ -810,6 +886,8 @@ void iso_renderer::render_fbo()
 			0, 1, 0,
 		};
 
+		assert(sizeof(normal) == sizeof(vertex));
+
 		graphics::color color = p.second.color;
 		const bool is_selected = get_editor().get_cursor() && *get_editor().get_cursor() == pos || get_editor().nhighlight_layer() >= 0 && p.second.nlayer == get_editor().nhighlight_layer();
 		if(is_selected) {
@@ -834,6 +912,7 @@ void iso_renderer::render_fbo()
 	}
 
 	if(!varray.empty()) {
+		assert(varray.size() == narray.size());
 		shader->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		shader->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
 		shader->vertex_attrib_array(a_normal_, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
@@ -864,8 +943,6 @@ private:
 	VoxelPos get_mouse_pos(int mousex, int mousey) const;
 	bool handle_event(const SDL_Event& event, bool claimed);
 	bool calculate_cursor(int mousex, int mousey);
-	void pencil_voxel();
-	void delete_voxel();
 
 	bool is_flipped() const { return vector_[0] + vector_[1] + vector_[2] < 0; }
 	int vector_[3];
@@ -969,54 +1046,6 @@ VoxelPos perspective_renderer::get_mouse_pos(int mousex, int mousey) const
 	result[1] = yselect*invert_y_;
 	result[2] = 0;
 	return result;
-}
-
-void perspective_renderer::pencil_voxel()
-{
-	if(get_editor().get_cursor()) {
-		VoxelPos cursor = *get_editor().get_cursor();
-		Voxel voxel;
-		voxel.color = get_editor().current_color();
-
-		Voxel old_voxel;
-		bool currently_has_voxel = false;
-
-		auto current_itor = get_editor().layer().map.find(cursor);
-		if(current_itor != get_editor().layer().map.end()) {
-			old_voxel = current_itor->second;
-			currently_has_voxel = true;
-		}
-
-		get_editor().execute_command(
-		  [cursor, voxel]() { get_editor().set_voxel(cursor, voxel); },
-		  [cursor, old_voxel, currently_has_voxel]() {
-			if(currently_has_voxel) {
-				get_editor().set_voxel(cursor, old_voxel);
-			} else {
-				get_editor().delete_voxel(cursor);
-			}
-		});
-
-		get_editor().set_voxel(cursor, voxel);
-	}
-}
-
-void perspective_renderer::delete_voxel()
-{
-	if(get_editor().get_cursor()) {
-		VoxelPos cursor = *get_editor().get_cursor();
-		auto current_itor = get_editor().layer().map.find(cursor);
-		if(current_itor == get_editor().layer().map.end()) {
-			return;
-		}
-
-		Voxel old_voxel = current_itor->second;
-
-		get_editor().execute_command(
-			[cursor]() { get_editor().delete_voxel(cursor); },
-			[cursor, old_voxel]() { get_editor().set_voxel(cursor, old_voxel); }
-		);
-	}
 }
 
 bool perspective_renderer::calculate_cursor(int mousex, int mousey)

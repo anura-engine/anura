@@ -516,32 +516,32 @@ namespace gles2 {
 
 	void init_default_shader()
 	{
-		gles2::shader v1(GL_VERTEX_SHADER, "simple_vertex_shader", vs1);
-		gles2::shader f1(GL_FRAGMENT_SHADER, "simple_fragment_shader", fs1);
+		gles2::shader v1(GL_VERTEX_SHADER, "simple_vertex_shader", variant(vs1));
+		gles2::shader f1(GL_FRAGMENT_SHADER, "simple_fragment_shader", variant(fs1));
 		variant sai = json::parse(simple_attribute_info);
 		fixed_program::add_shader("simple_shader", v1, f1, sai["attributes"], sai["uniforms"]);
 		simple_shader_program.reset(new shader_program());
 		simple_shader_program->configure(json::parse(simple_shader_info)["shader"]);
 		simple_shader_program->init(0);
 
-		gles2::shader v1_col(GL_VERTEX_SHADER, "simple_col_vertex_shader", vs_col);
-		gles2::shader f1_col(GL_FRAGMENT_SHADER, "simple_col_fragment_shader", fs_col);
+		gles2::shader v1_col(GL_VERTEX_SHADER, "simple_col_vertex_shader", variant(vs_col));
+		gles2::shader f1_col(GL_FRAGMENT_SHADER, "simple_col_fragment_shader", variant(fs_col));
 		variant scs = json::parse(simple_col_attribute_info);
 		fixed_program::add_shader("simple_col_shader", v1_col, f1_col, scs["attributes"], scs["uniforms"]);
 		simple_col_shader_program.reset(new shader_program());
 		simple_col_shader_program->configure(json::parse(simple_col_shader_info)["shader"]);
 		simple_col_shader_program->init(0);
 
-		gles2::shader v_tex(GL_VERTEX_SHADER, "tex_vertex_shader", vs_tex);
-		gles2::shader f_tex(GL_FRAGMENT_SHADER, "tex_fragment_shader", fs_tex);
+		gles2::shader v_tex(GL_VERTEX_SHADER, "tex_vertex_shader", variant(vs_tex));
+		gles2::shader f_tex(GL_FRAGMENT_SHADER, "tex_fragment_shader", variant(fs_tex));
 		variant ts = json::parse(tex_attribute_info);
 		fixed_program::add_shader("tex_shader", v_tex, f_tex, ts["attributes"], ts["uniforms"]);
 		tex_shader_program.reset(new shader_program());
 		tex_shader_program->configure(json::parse(tex_shader_info)["shader"]);
 		tex_shader_program->init(0);
 
-		gles2::shader v_texcol(GL_VERTEX_SHADER, "texcol_vertex_shader", vs_texcol);
-		gles2::shader f_texcol(GL_FRAGMENT_SHADER, "texcol_fragment_shader", fs_texcol);
+		gles2::shader v_texcol(GL_VERTEX_SHADER, "texcol_vertex_shader", variant(vs_texcol));
+		gles2::shader f_texcol(GL_FRAGMENT_SHADER, "texcol_fragment_shader", variant(fs_texcol));
 		variant tcs = json::parse(texcol_attribute_info);
 		fixed_program::add_shader("texcol_shader", v_texcol, f_texcol, tcs["attributes"], tcs["uniforms"]);
 		texcol_shader_program.reset(new shader_program());

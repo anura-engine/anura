@@ -284,8 +284,8 @@ namespace isometric
 		if(node["shader"].is_map()) {
 			ASSERT_LOG(node["shader"].has_key("vertex") && node["shader"].has_key("fragment"),
 				"Must have 'shader' attribute with 'vertex' and 'fragment' child attributes.");
-			gles2::shader v1(GL_VERTEX_SHADER, "iso_vertex_shader", node["shader"]["vertex"].as_string());
-			gles2::shader f1(GL_FRAGMENT_SHADER, "iso_fragment_shader", node["shader"]["fragment"].as_string());
+			gles2::shader v1(GL_VERTEX_SHADER, "iso_vertex_shader", node["shader"]["vertex"]);
+			gles2::shader f1(GL_FRAGMENT_SHADER, "iso_fragment_shader", node["shader"]["fragment"]);
 			shader_.reset(new gles2::program(node["shader"]["name"].as_string(), v1, f1));
 		} else {
 			ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be string or map");

@@ -40,7 +40,7 @@ public:
 
 	shader() : type_(0), shader_(0)
 	{}
-	explicit shader(GLenum type, const std::string& name, const std::string& code);
+	explicit shader(GLenum type, const std::string& name, const variant& code);
 	GLuint get() const { return shader_; }
 	std::string name() const { return name_; }
 	std::string code() const { return code_; }
