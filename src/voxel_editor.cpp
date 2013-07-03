@@ -56,6 +56,10 @@ struct Voxel {
 	int nlayer;
 };
 
+struct VoxelArea {
+	VoxelPos top_left, bot_right;
+};
+
 typedef std::map<VoxelPos, Voxel> VoxelMap;
 typedef std::pair<VoxelPos, Voxel> VoxelPair;
 
@@ -174,6 +178,7 @@ const char* ToolIcons[] = {
 	"editor_pencil",
 	"editor_add_object",
 	"editor_eyedropper",
+	"editor_rect_select",
 	NULL
 };
 
@@ -181,6 +186,7 @@ enum VOXEL_TOOL {
 	TOOL_PENCIL,
 	TOOL_PENCIL_ABOVE,
 	TOOL_PICKER,
+	TOOL_SELECT,
 	NUM_VOXEL_TOOLS,
 };
 
@@ -200,12 +206,19 @@ public:
 	bool set_cursor(const VoxelPos& pos);
 
 	const VoxelPos* get_cursor() const { return cursor_.get(); }
+	const VoxelArea* get_selection() const { return selection_.get(); }
+
+	void set_selection(const VoxelArea& area) { selection_.reset(new VoxelArea(area)); }
+	void clear_selection() { selection_.reset(); }
 
 	VoxelPos get_selected_voxel(const VoxelPos& pos, int facing, bool reverse);
 
 	graphics::color current_color() const { return color_picker_->get_selected_color(); }
 	gui::color_picker& get_color_picker() { return *color_picker_; }
 	Layer& layer() { assert(current_layer_ >= 0 && current_layer_ < layers_.size()); return layers_[current_layer_]; }
+
+	const std::vector<VoxelPair>& get_clipboard() const { return clipboard_; }
+	void set_clipboard(const std::vector<VoxelPair>& value) { clipboard_ = value; }
 
 	int nhighlight_layer() const { return highlight_layer_; }
 
@@ -223,6 +236,9 @@ public:
 
 	void execute_command(std::function<void()> redo, std::function<void()> undo);
 	void execute_command(const Command& cmd);
+
+	void build_voxels();
+
 private:
 	bool handle_event(const SDL_Event& event, bool claimed);
 
@@ -243,8 +259,6 @@ private:
 
 	const Layer& layer() const { return layers_[current_layer_]; }
 
-	void build_voxels();
-
 	rect area_;
 
 	int current_layer_, highlight_layer_;
@@ -252,7 +266,11 @@ private:
 	Model model_;
 	VoxelMap voxels_;
 
+	std::vector<VoxelPair> clipboard_;
+
 	boost::scoped_ptr<VoxelPos> cursor_;
+
+	boost::scoped_ptr<VoxelArea> selection_;
 
 	gui::label_ptr pos_label_;
 
@@ -943,6 +961,7 @@ private:
 	VoxelPos get_mouse_pos(int mousex, int mousey) const;
 	bool handle_event(const SDL_Event& event, bool claimed);
 	bool calculate_cursor(int mousex, int mousey);
+	VoxelArea calculate_selection(int mousex1, int mousey1, int mousex2, int mousey2);
 
 	bool is_flipped() const { return vector_[0] + vector_[1] + vector_[2] < 0; }
 	int vector_[3];
@@ -953,7 +972,8 @@ private:
 
 	int invert_y_;
 
-	bool drawing_on_;
+	bool dragging_on_;
+	int anchor_drag_x_, anchor_drag_y_;
 	std::set<VoxelPos> voxels_drawn_on_this_drag_;
 
 	bool focus_;
@@ -961,7 +981,8 @@ private:
 
 perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
   : voxel_width_(20), last_select_x_(INT_MIN), last_select_y_(INT_MIN),
-    invert_y_(1), drawing_on_(false), focus_(false)
+    invert_y_(1), dragging_on_(false), anchor_drag_x_(0), anchor_drag_y_(0),
+	focus_(false)
 {
 	vector_[0] = xdir;
 	vector_[1] = ydir;
@@ -1068,12 +1089,130 @@ bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 
 }
 
+VoxelArea perspective_renderer::calculate_selection(int mousex1, int mousey1, int mousex2, int mousey2)
+{
+	VoxelPos top_left = get_mouse_pos(mousex1, mousey1);
+	VoxelPos bot_right = get_mouse_pos(mousex2, mousey2);
+	if(top_left[0] > bot_right[0]) {
+		std::swap(top_left[0], bot_right[0]);
+	}
+
+	if(top_left[1] > bot_right[1]) {
+		std::swap(top_left[1], bot_right[1]);
+	}
+
+	int min_value = INT_MIN, max_value = INT_MIN;
+
+	for(const VoxelPair& vp : get_editor().layer().map) {
+		const VoxelPos pos = normalize_pos(vp.first);
+		if(pos[0] >= top_left[0] && pos[1] >= top_left[1] &&
+		   pos[0] < bot_right[0] && pos[1] < bot_right[1]) {
+			int zpos = vp.first[facing_];
+			if(min_value == INT_MIN || zpos < min_value) {
+				min_value = zpos;
+			}
+
+			if(max_value == INT_MIN || zpos > max_value) {
+				max_value = zpos;
+			}
+		}
+	}
+
+	if(min_value != INT_MIN) {
+		top_left = denormalize_pos(top_left);
+		bot_right = denormalize_pos(bot_right);
+		top_left[facing_] = min_value;
+		bot_right[facing_] = max_value+1;
+		VoxelArea area = { top_left, bot_right };
+		return area;
+	} else {
+		VoxelArea result;
+		result.top_left[0] = result.top_left[1] = result.top_left[2] = result.bot_right[0] = result.bot_right[1] = result.bot_right[2] = INT_MIN;
+		return result;
+	}
+}
+
 bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
 	case SDL_KEYUP:
 	case SDL_KEYDOWN: {
+		const SDL_Keymod mod = SDL_GetModState();
+		const SDL_Keycode key = event.key.keysym.sym;
+
 		calculate_cursor(last_select_x_, last_select_y_);
+
+		if(focus_ && get_editor().tool() == TOOL_SELECT && get_editor().get_selection()) {
+			if(event.type == SDL_KEYDOWN && key == SDLK_x && (mod&KMOD_CTRL)) {
+				std::vector<VoxelPair> old_clipboard = get_editor().get_clipboard();
+				std::vector<VoxelPair> items;
+				VoxelArea selection = *get_editor().get_selection();
+				for(const VoxelPair& vp : get_editor().layer().map) {
+					bool in_area = true;
+					for(int n = 0; in_area && n != 3; ++n) {
+						in_area = vp.first[n] >= selection.top_left[n] && vp.first[n] < selection.bot_right[n];
+					}
+
+					if(in_area) {
+						items.push_back(vp);
+					}
+				}
+
+				get_editor().execute_command(
+					[=]() {
+						for(const VoxelPair& vp : items) {
+							get_editor().layer().map.erase(vp.first);
+						}
+
+						get_editor().build_voxels();
+						get_editor().clear_selection();
+						get_editor().set_clipboard(items);
+					},
+					[=]() {
+						for(const VoxelPair& vp : items) {
+							get_editor().layer().map[vp.first] = vp.second;
+						}
+
+						get_editor().build_voxels();
+						get_editor().set_selection(selection);
+						get_editor().set_clipboard(old_clipboard);
+					}
+				);
+			}
+		} else if(focus_ && event.type == SDL_KEYDOWN && key == SDLK_v && (mod&KMOD_CTRL) && get_editor().get_clipboard().empty() == false) {
+			std::cerr << "PASTE!\n";
+			std::vector<VoxelPair> clipboard = get_editor().get_clipboard();
+			std::vector<VoxelPair> old_values;
+
+			for(const VoxelPair& vp : clipboard) {
+				auto itor = get_editor().layer().map.find(vp.first);
+				if(itor != get_editor().layer().map.end()) {
+					old_values.push_back(*itor);
+				}
+			}
+
+			get_editor().execute_command(
+				[=]() {
+					for(const VoxelPair& vp : clipboard) {
+						get_editor().layer().map[vp.first] = vp.second;
+					}
+
+					get_editor().build_voxels();
+				},
+
+				[=]() {
+					for(const VoxelPair& vp : clipboard) {
+						get_editor().layer().map.erase(vp.first);
+					}
+
+					for(const VoxelPair& vp : old_values) {
+						get_editor().layer().map[vp.first] = vp.second;
+					}
+
+					get_editor().build_voxels();
+				}
+			);
+		}
 		break;
 	}
 
@@ -1097,8 +1236,23 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 	}
 
 	case SDL_MOUSEBUTTONUP: {
-		drawing_on_ = false;
+		const SDL_MouseButtonEvent& e = event.button;
+		if(get_editor().tool() == TOOL_SELECT && dragging_on_ &&
+		   e.x >= x() && e.y >= y() &&
+		   e.x <= x() + width() && e.y <= y() + height()) {
+			VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, e.x, e.y);
+			if(selection.top_left[0] == INT_MIN) {
+				get_editor().clear_selection();
+			} else {
+				get_editor().set_selection(selection);
+			}
+		} else if(get_editor().tool() == TOOL_SELECT && dragging_on_) {
+			get_editor().clear_selection();
+		}
+
+		dragging_on_ = false;
 		voxels_drawn_on_this_drag_.clear();
+
 		break;
 	}
 
@@ -1117,7 +1271,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 				calculate_cursor(last_select_x_, last_select_y_);
 
-				drawing_on_ = true;
+				dragging_on_ = true;
 				voxels_drawn_on_this_drag_.clear();
 
 				if(get_editor().get_cursor()) {
@@ -1141,11 +1295,17 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 				break;
 			}
+			case TOOL_SELECT: {
+				dragging_on_ = true;
+				anchor_drag_x_ = e.x;
+				anchor_drag_y_ = e.y;
+				break;
+			}
 			default:
 				break;
 			}
 		} else {
-			drawing_on_ = false;
+			dragging_on_ = false;
 			voxels_drawn_on_this_drag_.clear();
 		}
 		break;
@@ -1165,17 +1325,29 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 				Uint8 button_state = SDL_GetMouseState(NULL, NULL);
 				switch(get_editor().tool()) {
 				case TOOL_PENCIL: {
-					if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT) && drawing_on_) {
+					if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT) && dragging_on_) {
 						if(voxels_drawn_on_this_drag_.count(normalize_pos(*get_editor().get_cursor())) == 0) {
 							pencil_voxel();
 							calculate_cursor(motion.x, motion.y);
 							voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
 						}
-					} else if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT) && drawing_on_) {
+					} else if(button_state & SDL_BUTTON(SDL_BUTTON_RIGHT) && dragging_on_) {
 						if(voxels_drawn_on_this_drag_.count(normalize_pos(*get_editor().get_cursor())) == 0) {
 							delete_voxel();
 							calculate_cursor(motion.x, motion.y);
 							voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
+						}
+					}
+					break;
+				}
+
+				case TOOL_SELECT: {
+					if(dragging_on_) {
+						VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, motion.x, motion.y);
+						if(selection.top_left[0] == INT_MIN) {
+							get_editor().clear_selection();
+						} else {
+							get_editor().set_selection(selection);
 						}
 					}
 					break;
@@ -1386,6 +1558,44 @@ void perspective_renderer::handle_draw() const
 			carray.push_back(0);
 			carray.push_back(0);
 			carray.push_back(1);
+		}
+	}
+
+	if(get_editor().get_selection()) {
+		const VoxelPos tl = normalize_pos(get_editor().get_selection()->top_left);
+		const VoxelPos br = normalize_pos(get_editor().get_selection()->bot_right);
+
+		const int x1 = x() + width()/2 + tl[0]*voxel_width_;
+		const int y1 = y() + height()/2 + tl[1]*voxel_width_*invert_y_;
+
+		const int x2 = x() + width()/2 + br[0]*voxel_width_;
+		const int y2 = y() + height()/2 + br[1]*voxel_width_*invert_y_;
+
+		varray.push_back(x1);
+		varray.push_back(y1);
+		varray.push_back(x2);
+		varray.push_back(y1);
+
+		varray.push_back(x2);
+		varray.push_back(y1);
+		varray.push_back(x2);
+		varray.push_back(y2);
+
+		varray.push_back(x2);
+		varray.push_back(y2);
+		varray.push_back(x1);
+		varray.push_back(y2);
+
+		varray.push_back(x1);
+		varray.push_back(y2);
+		varray.push_back(x1);
+		varray.push_back(y1);
+
+		for(int n = 0; n != 8; ++n) {
+				carray.push_back(1);
+				carray.push_back(1);
+				carray.push_back(1);
+				carray.push_back(1);
 		}
 	}
 
