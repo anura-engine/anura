@@ -516,6 +516,29 @@ void iso_renderer::handle_process()
 	render_fbo();
 }
 
+namespace 
+{
+	std::string facing_name(const glm::ivec3& facing)
+	{
+		if(facing.x > 0) {
+			return "right";
+		} else if(facing.x < 0) {
+			return "left";
+		}
+		if(facing.y > 0) {
+			return "top";
+		} else if(facing.y < 0) {
+			return "bottom";
+		}
+		if(facing.z > 0) {
+			return "front";
+		} else if(facing.z < 0) {
+			return "back";
+		}
+		return "unknown";
+	}
+}
+
 glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 {
 	// Before calling screen_to_world we need to bind the fbo
@@ -523,9 +546,9 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 	glm::vec3 world_coords = graphics::screen_to_world(camera_, xp, yp, width(), height());
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
 	glm::ivec3 voxel_coord = glm::ivec3(
-		abs(world_coords[0]-bmround(world_coords[0])) < 0.05f ? int(bmround(world_coords[0])) : int(world_coords[0]),
-		abs(world_coords[1]-bmround(world_coords[1])) < 0.05f ? int(bmround(world_coords[1])) : int(world_coords[1]),
-		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(world_coords[2]));
+		abs(world_coords[0]-bmround(world_coords[0])) < 0.05f ? int(bmround(world_coords[0])) : int(floor(world_coords[0])),
+		abs(world_coords[1]-bmround(world_coords[1])) < 0.05f ? int(bmround(world_coords[1])) : int(floor(world_coords[1])),
+		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(floor(world_coords[2])));
 	*facing = isometric::get_facing(camera_, world_coords);
 	if(facing->x > 0) {
 		--voxel_coord.x; 
@@ -536,6 +559,10 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 	if(facing->z > 0) {
 		--voxel_coord.z; 
 	}
+	/*std::cerr << "xp,yp:"  << xp << "," << yp
+		<< " : wc:" << world_coords.x << "," << world_coords.y << "," << world_coords.z
+		<< " : vc:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z
+		<< " : face:" << facing_name(*facing) << std::endl;*/
 	return voxel_coord;
 }
 
@@ -582,9 +609,17 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 			glm::ivec3 voxel_coord = position_to_cube(event.button.x-x(), event.button.y-y(), &facing);
 
 			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			VoxelPos pencil_pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			if(SDL_GetModState()&KMOD_SHIFT) {
+				glm::ivec3 new_coord = voxel_coord + facing;
+				pencil_pos[0] = new_coord.x;
+				pencil_pos[1] = new_coord.y;
+				pencil_pos[2] = new_coord.z;
+			}
+
 			auto it = get_editor().voxels().find(pos);
 			if(it != get_editor().voxels().end()) {
-				get_editor().set_cursor(pos);
+				get_editor().set_cursor(pencil_pos);
 				if(e.button == SDL_BUTTON_LEFT) {
 					pencil_voxel();
 				} else if(e.button == SDL_BUTTON_RIGHT) {
@@ -626,7 +661,7 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
 			auto it = get_editor().voxels().find(pos);
 			if(it != get_editor().voxels().end()) {
-				if(SDL_GetModState()&KMOD_CTRL) {
+				if(SDL_GetModState()&KMOD_SHIFT) {
 					glm::ivec3 new_coord = voxel_coord + facing;
 					pos[0] = new_coord.x;
 					pos[1] = new_coord.y;
