@@ -33,6 +33,7 @@
 #include "level_runner.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "slider.hpp"
 #include "unit_test.hpp"
 
 #if defined(_MSC_VER)
@@ -306,9 +307,21 @@ private:
 
 	boost::array<GLfloat, 3> vector_;
 
+	GLuint u_lightposition_;
+	GLuint u_lightpower_;
+	GLuint u_shininess_;
+	GLuint u_m_matrix_;
+	GLuint u_v_matrix_;
+	GLuint a_normal_;
+
 	size_t tex_width_;
 	size_t tex_height_;
 	GLint video_framebuffer_id_;
+
+	slider_ptr light_power_slider_;
+	void light_power_slider_change(double p);
+	float light_power_;
+	float specularity_coef_;
 
 	bool focused_;
 
@@ -326,7 +339,7 @@ iso_renderer::iso_renderer(const rect& area)
   : camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	tex_width_(0), tex_height_(0),
-	focused_(false)
+	focused_(false), light_power_(10000.0f), specularity_coef_(5.0f)
 {
 	camera_->set_clip_planes(0.1f, 200.0f);
 	g_iso_renderer = this;
@@ -338,6 +351,10 @@ iso_renderer::iso_renderer(const rect& area)
 
 	calculate_camera();
 
+	light_power_slider_.reset(new slider(150, boost::bind(&iso_renderer::light_power_slider_change, this, _1), 1));
+	light_power_slider_->set_loc((width()-light_power_slider_->width())/2, height()-light_power_slider_->height());
+	light_power_slider_->set_position(light_power_/20000.0);
+
 	init();
 }
 
@@ -346,6 +363,11 @@ iso_renderer::~iso_renderer()
 	if(g_iso_renderer == this) {
 		g_iso_renderer = NULL;
 	}
+}
+
+void iso_renderer::light_power_slider_change(double p)
+{
+	light_power_ = float(p * 20000.0);
 }
 
 void iso_renderer::calculate_camera()
@@ -393,6 +415,13 @@ void iso_renderer::handle_draw() const
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glBindTexture(GL_TEXTURE_2D, cur_id);
+
+	glPushMatrix();
+	glTranslatef(x(), y(), 0.0f);
+	if(light_power_slider_) {
+			light_power_slider_->draw();
+	}
+	glPopMatrix();
 }
 
 void iso_renderer::handle_process()
@@ -445,6 +474,13 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 
 bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 {
+	if(light_power_slider_) {
+		SDL_Event ev(event);
+		normalize_event(&ev);
+		if(light_power_slider_->process_event(ev, claimed)) {
+			return claimed;
+		}
+	}
 	switch(event.type) {
 	case SDL_MOUSEWHEEL: {
 		if(!focused_) {
@@ -553,6 +589,16 @@ void iso_renderer::init()
 	GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
 	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNSUPPORTED));
 	ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
+
+
+	// Grab uniforms and normal attribute
+	gles2::program_ptr shader = gles2::shader_program::get_global("iso_color_line")->shader();
+	u_lightposition_ = shader->get_uniform("LightPosition_worldspace");
+	u_lightpower_ = shader->get_uniform("LightPower");
+	u_shininess_ = shader->get_uniform("Shininess");
+	u_m_matrix_ = shader->get_uniform("m_matrix");
+	u_v_matrix_ = shader->get_uniform("v_matrix");
+	a_normal_ = shader->get_attribute("a_normal");
 }
 
 void iso_renderer::render_fbo()
@@ -564,8 +610,6 @@ void iso_renderer::render_fbo()
 
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-	glColor4f(1.0, 1.0, 1.0, 1.0);
 
 	glEnable(GL_DEPTH_TEST);
 
@@ -584,30 +628,11 @@ void iso_renderer::render_fbo()
 
 	////////////////////////////////////////////////////////////////////////////
 	// Lighting stuff.
-	static GLuint LightPosition_worldspace = -1;
-	if(LightPosition_worldspace == -1) {
-		LightPosition_worldspace = shader->get_uniform("LightPosition_worldspace");
-	}
-	glUniform3f(LightPosition_worldspace, 0.0f, 20.0f, 150.0f);
-	static GLuint LightPower = -1;
-	if(LightPower == -1) {
-		LightPower = shader->get_uniform("LightPower");
-	}
-	glUniform1f(LightPower, 10000.0f);
-	static GLuint m_matrix = -1;
-	if(m_matrix == -1) {
-		m_matrix = shader->get_uniform("m_matrix");
-	}
-	glUniformMatrix4fv(m_matrix, 1, GL_FALSE, glm::value_ptr(model_matrix));
-	static GLuint v_matrix = -1;
-	if(v_matrix == -1) {
-		v_matrix = shader->get_uniform("v_matrix");
-	}
-	glUniformMatrix4fv(v_matrix, 1, GL_FALSE, camera_->view());
-	static GLuint a_normal = -1;
-	if(a_normal == -1) {
-		a_normal = shader->get_attribute("a_normal");
-	}
+	glUniform3f(u_lightposition_, 0.0f, 20.0f, 150.0f);
+	glUniform1f(u_lightpower_, light_power_);
+	glUniform1f(u_shininess_, specularity_coef_);
+	glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_matrix));
+	glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, camera_->view());
 	////////////////////////////////////////////////////////////////////////////
 
 	std::vector<GLfloat> varray, carray, narray;
@@ -811,7 +836,7 @@ void iso_renderer::render_fbo()
 	if(!varray.empty()) {
 		shader->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		shader->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
-		shader->vertex_attrib_array(a_normal, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
+		shader->vertex_attrib_array(a_normal_, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
 		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
 	}
 
