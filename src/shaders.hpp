@@ -104,6 +104,8 @@ public:
 	GLint mvp_matrix_uniform() const { return u_mvp_matrix_; }
 	GLint vertex_attribute() const { return vertex_location_; }
 	GLint texcoord_attribute() const { return texcoord_location_; }
+	GLuint get_fixed_attribute(const std::string& name) const;
+	GLuint get_fixed_uniform(const std::string& name) const;
 
 	virtual variant write();
 

@@ -960,6 +960,22 @@ void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei
 	}
 }
 
+GLuint program::get_fixed_attribute(const std::string& name) const
+{
+	if(stored_attributes_.has_key(name)) {
+		return get_attribute(stored_attributes_[name].as_string());
+	}
+	return get_attribute(name);
+}
+
+GLuint program::get_fixed_uniform(const std::string& name) const
+{
+	if(stored_uniforms_.has_key(name)) {
+		return get_uniform(stored_uniforms_[name].as_string());
+	}
+	return get_uniform(name);
+}
+
 void program::set_fixed_attributes(const variant& node)
 {
 	stored_attributes_ = node;
@@ -1065,7 +1081,12 @@ void program::set_fixed_uniforms()
 
 void program::load_shaders(const std::string& shader_data)
 {
-	variant node = json::parse(shader_data);
+	variant node;
+	try {
+		node = json::parse(shader_data);
+	} catch(json::parse_error& e) {
+		ASSERT_LOG(false, "Error parsing json shaders data " << e.error_message());
+	}
 
 	ASSERT_LOG(node.is_map() && node.has_key("shaders") && node.has_key("programs"),
 		"shaders.cfg must be a map with \"shaders\" and \"programs\" attributes.");
