@@ -20,6 +20,7 @@
 
 #include <boost/shared_ptr.hpp>
 
+#include "color_picker.hpp"
 #include "dialog.hpp"
 #include "isotile.hpp"
 #include "widget.hpp"
@@ -38,6 +39,9 @@ namespace editor_dialogs
 		void init();
 		void select_category(const std::string& category);
 		void set_tileset(int index);
+
+		bool textured_mode() const { return textured_mode_; }
+		graphics::color selected_color() const;
 	protected:
 		void increment_width(int n);
 		void decrement_width(int n);
@@ -59,6 +63,12 @@ namespace editor_dialogs
 
 		gui::widget_ptr context_menu_;
 		std::string category_;
+
+		bool textured_mode_;
+		gui::widget_ptr mode_swap_button_;
+		void swap_mode();
+
+		gui::color_picker_ptr color_picker_;		
 
 		//index of the first item in the current category
 		int first_index_;
