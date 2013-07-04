@@ -247,7 +247,7 @@ level::level(const std::string& level_cfg, variant node)
 
 #if defined(USE_ISOMAP)
 	if(node.has_key("isomap")) {
-		isomap_.reset(new isometric::isomap(node["isomap"]));
+		isomap_ = isometric::chunk_factory::create(node["isomap"]);
 	} else {
 		isomap_.reset();
 	}
@@ -3995,7 +3995,7 @@ DEFINE_SET_FIELD_TYPE("builtin isomap|map|null")
 	if(value.is_null()) {
 		obj.isomap_.reset(); 
 	} else {
-		obj.isomap_.reset(new isometric::isomap(value));
+		obj.isomap_ = isometric::chunk_factory::create(value);
 	}
 
 DEFINE_FIELD(camera, "builtin camera_callable")

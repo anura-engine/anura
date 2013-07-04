@@ -1997,15 +1997,15 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 	if(tool() == TOOL_EDIT_VOXELS) {
 		if(event.button == SDL_BUTTON_LEFT) {
 			// remove voxel
-			ASSERT_LOG(cur_voxel_tileset_ < isometric::isomap::get_editor_tiles().size(), 
-				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::isomap::get_editor_tiles().size());
+			ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
+				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
 			lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
 		} else if(event.button == SDL_BUTTON_RIGHT) {
 			// add voxel
 			glm::ivec3 at_pos = g_voxel_coord + g_facing;
-			ASSERT_LOG(cur_voxel_tileset_ < isometric::isomap::get_editor_tiles().size(), 
-				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::isomap::get_editor_tiles().size());
-			lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::isomap::get_editor_tiles()[cur_voxel_tileset_].id);
+			ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
+				"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
+			lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
 		}
 	} else 
 #endif
@@ -2901,8 +2901,8 @@ void editor::set_voxel_tileset(int index)
 {
 	cur_voxel_tileset_ = index;
 	if(cur_voxel_tileset_ < 0) {
-		cur_voxel_tileset_ = isometric::isomap::get_editor_tiles().size()-1;
-	} else if(cur_voxel_tileset_ >= isometric::isomap::get_editor_tiles().size()) {
+		cur_voxel_tileset_ = isometric::chunk::get_editor_tiles().size()-1;
+	} else if(cur_voxel_tileset_ >= isometric::chunk::get_editor_tiles().size()) {
 		cur_voxel_tileset_ = 0;
 	}
 }
@@ -3669,14 +3669,14 @@ void editor::draw_gui() const
 			<< " (" << g_voxel_coord.x << "," << g_voxel_coord.y << "," << g_voxel_coord.z << ") : " << facing_str, 
 			graphics::color_white(), 14), 300, 80);
 
-		gles2::manager gman(gles2::shader_program::get_global("iso_line"));
+		gles2::manager gman(gles2::shader_program::get_global("line_3d"));
 		static GLint u_col = -1;
 		if(u_col == -1) {
-			u_col = gles2::active_shader()->shader()->get_uniform("u_color");
+			u_col = gles2::active_shader()->shader()->get_fixed_uniform("color");
 		}
 
 		if(lvl_->isomap() != NULL) {
-			if(lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z).empty() == false) {
+			if(lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z).is_null() == false) {
 				glm::mat4 model = glm::translate(glm::mat4(1.0f),
 					glm::vec3(float(g_voxel_coord.x)+0.5f, float(g_voxel_coord.y)+0.5f, float(g_voxel_coord.z)+0.5f));
 				glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
@@ -3707,72 +3707,6 @@ void editor::draw_gui() const
 				glEnable(GL_DEPTH_TEST);
 				glDrawArrays(GL_LINES, 0, lines.size()/3);
 				glDisable(GL_DEPTH_TEST);
-
-				/*glm::mat3 mv_matrix(level::current().view_mat() * model);
-				glm::mat3 normal_matrix = glm::inverseTranspose(glm::mat3(mv_matrix));
-
-				static GLint u_col = -1;
-				if(u_col == -1) {
-					u_col = gles2::active_shader()->shader()->get_uniform("u_color");
-				}
-				static GLint u_kd = -1;
-				if(u_kd == -1) {
-					u_kd = gles2::active_shader()->shader()->get_uniform("Kd");
-				}
-				static GLint u_light_position = -1;
-				if(u_light_position == -1) {
-					u_light_position = gles2::active_shader()->shader()->get_uniform("LightPosition");
-				}
-				static GLint u_vertex_normal = -1;
-				if(u_vertex_normal == -1) {
-					u_vertex_normal = gles2::active_shader()->shader()->get_uniform("VertexNormal");
-				}
-				static GLint u_mv_matrix = -1;
-				if(u_mv_matrix == -1) {
-					u_mv_matrix = gles2::active_shader()->shader()->get_uniform("ModelViewMatrix");
-				}
-				static GLint u_normal_matrix = -1;
-				if(u_normal_matrix == -1) {
-					u_normal_matrix = gles2::active_shader()->shader()->get_uniform("NormalMatrix");
-				}
-				static GLint u_projection_matrix = -1;
-				if(u_projection_matrix == -1) {
-					u_projection_matrix = gles2::active_shader()->shader()->get_uniform("ProjectionMatrix");
-				}
-				
-				glUniform4f(u_col, 1.0f, 1.0f, 1.0f, 1.0f);
-				glUniform1f(u_kd, 100.0f);
-				glUniform4f(u_light_position, 16.0f, 16.0f, 16.0f, 1.0f);
-				glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
-				glUniformMatrix4fv(u_mv_matrix, 1, GL_FALSE, glm::value_ptr(mv_matrix));
-				glUniformMatrix3fv(u_normal_matrix, 1, GL_FALSE, glm::value_ptr(normal_matrix));
-				glUniformMatrix4fv(u_projection_matrix, 1, GL_FALSE, level::current().camera()->projection());
-
-				glEnable(GL_DEPTH_TEST);
-
-				std::vector<GLfloat> cube_face;
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(-0.525f); cube_face.push_back(-0.525f);
-				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &cube_face[0]);
-				glUniform3f(u_vertex_normal, -1.0f, 0.0f, 0.0f);
-				glDrawArrays(GL_TRIANGLES, 0, cube_face.size()/3);
-
-				cube_face.clear();
-				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(0.525f);
-				cube_face.push_back(0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
-				cube_face.push_back(-0.525f); cube_face.push_back(0.525f); cube_face.push_back(-0.525f);
-				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &cube_face[0]);
-				glUniform3f(u_vertex_normal, 0.0f, 1.0f, 0.0f);
-				glDrawArrays(GL_TRIANGLES, 0, cube_face.size()/3);
-
-				glDisable(GL_DEPTH_TEST);*/
 			}
 		}
 	}

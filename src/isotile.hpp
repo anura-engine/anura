@@ -30,27 +30,16 @@ namespace isometric
 	bool operator==(position const& p1, position const& p2);
 	std::size_t hash_value(position const& p);
 
-	struct tile_data
-	{
-		tile_data() {color.r = 0; color.g = 0; color.b = 0; color.a = 255;}
-		explicit tile_data(const std::string& s) : name(s) {}
-		explicit tile_data(const SDL_Color& c) {color.r = c.r; color.g = c.g; color.b = c.b; color.a = c.a;}
-		std::string name;
-		SDL_Color color;
-	};
-
-	typedef boost::unordered_map<position, tile_data> tile_type;
-
 	struct tile_editor_info
 	{
 		std::string name;
 		std::string group;
-		std::string id;
+		variant id;
 		graphics::texture tex;
 		rect area;
 	};
 
-	class isomap : public game_logic::formula_callable
+	class chunk : public game_logic::formula_callable
 	{
 	public:
 		enum {
@@ -62,33 +51,39 @@ namespace isometric
 			BOTTOM	= 32,
 		};
 
-		isomap();
-		explicit isomap(variant node);
-		virtual ~isomap();
+		chunk();
+		explicit chunk(const variant& node);
+		virtual ~chunk();
 		
 		void init();
 		void build();
-		void rebuild();
-		virtual void draw() const;
+		void draw() const;
 		variant write();
 
-		bool is_solid(int x, int y, int z) const;
-		bool is_xedge(int x, int size_x) const;
-		bool is_yedge(int y, int size_y) const;
-		bool is_zedge(int z, int size_z) const;
-		std::string get_tile_type(int x, int y, int z) const;
+		virtual bool is_solid(int x, int y, int z) const = 0;
+		bool is_xedge(int x) const;
+		bool is_yedge(int y) const;
+		bool is_zedge(int z) const;
+		virtual variant get_tile_type(int x, int y, int z) const = 0;
 		static variant get_tile_info(const std::string& type);
 		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
 
-		void set_tile(int x, int y, int z, const std::string& type);
+		void set_tile(int x, int y, int z, const variant& type);
 		void del_tile(int x, int y, int z);
+
+		bool textured() const { return textured_; }
+		int size_x() const { return size_x_; }
+		int size_y() const { return size_y_; }
+		int size_z() const { return size_z_; }
+		void set_size(int mx, int my, int mz);
+
+		float gamma() const { return gamma_; }
+		void set_gamma(float g);
+
+		bool lighting_enabled() const { return lighting_enabled_; }
 
 		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
-		const GLfloat* model() const { return glm::value_ptr(model_); }
-	private:
-		DECLARE_CALLABLE(isomap);
-
 		enum {
 			FRONT_FACE,
 			RIGHT_FACE,
@@ -99,54 +94,59 @@ namespace isometric
 			MAX_FACES,
 		};
 
-		struct shader_data
-		{
-			bool textured_;
-			graphics::vbo_array vbos_;
-			std::vector<std::vector<GLfloat> > varray_;
-			std::vector<std::vector<GLfloat> > tarray_;
-			std::vector<std::vector<uint8_t> > carray_;
-			std::vector<size_t> vattrib_offsets_;
-			std::vector<size_t> tcattrib_offsets_;
-			std::vector<size_t> num_vertices_;
+		virtual void handle_build() = 0;
+		virtual void handle_draw() const = 0;
+		virtual void handle_set_tile(int x, int y, int z, const variant& type) = 0;
+		virtual void handle_del_tile(int x, int y, int z) = 0;
+		virtual variant handle_write() = 0;
+		virtual std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist) = 0;
+		const GLfloat* model() const { return glm::value_ptr(model_); }
+		const glm::mat4& model_mat() const { return model_; }
 
-			int size_x_;
-			int size_y_;
-			int size_z_;
-			tile_type tiles_;
-		};
-
-		void build_colored(shader_data&);
-		void build_textured(shader_data&);
-
-		void draw_textured(const shader_data&) const;
-		void draw_colored(const shader_data&) const;
-
-		void add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray);
-		void add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray);
 		void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat size, std::vector<GLfloat>& varray);
+		std::vector<std::vector<GLfloat> >& get_vertex_data() { return varray_; }
+		void add_vertex_vbo_data();
+		void clear_vertex_data() { varray_.clear(); }
+		const graphics::vbo_array& vbo() const { return vbos_; }
+		const std::vector<size_t>& get_vertex_attribute_offsets() const { return vattrib_offsets_; }
+		const std::vector<size_t>& get_num_vertices() const { return num_vertices_; }
+		const std::vector<glm::vec3>& normals() const { return normals_; }
 
-		void add_colored_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_colored_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_colored_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_colored_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_colored_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_colored_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		GLuint mvp_uniform() const { return u_mvp_matrix_; }
+		GLuint light_position_uniform() const { return u_lightposition_; }
+		GLuint light_power_uniform() const { return u_lightpower_; }
+		GLuint shininess_uniform() const { return u_shininess_; }
+		GLuint m_matrix_uniform() const { return u_m_matrix_; }
+		GLuint v_matrix_uniform() const { return u_v_matrix_; }
+		GLuint normal_uniform() const { return u_normal_; }
+		GLuint position_uniform() const { return a_position_; }
+		GLuint gamma_uniform() const { return u_gamma_; }
+		
+		gles2::program_ptr shader() { return shader_; }
+	private:
+		DECLARE_CALLABLE(chunk);
 
-		void add_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
-		void add_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		// Is this a coloured or textured chunk
+		bool textured_;
+		// VBO's to draw the chunk.
+		graphics::vbo_array vbos_;
+		// Vertex array data for the chunk
+		std::vector<std::vector<GLfloat> > varray_;
+		// Vertex attribute offsets
+		std::vector<size_t> vattrib_offsets_;
+		// Number of vertices to be drawn.
+		std::vector<size_t> num_vertices_;
 
-		std::vector<shader_data> shader_data_;
+		bool lighting_enabled_;
+
+		int size_x_;
+		int size_y_;
+		int size_z_;
+
+		float gamma_;
 
 		gles2::program_ptr shader_;
 		GLuint u_mvp_matrix_;
-		GLuint u_tex0_;
-		GLuint a_texcoord_;
-
 		GLuint u_lightposition_;
 		GLuint u_lightpower_;
 		GLuint u_shininess_;
@@ -154,14 +154,84 @@ namespace isometric
 		GLuint u_v_matrix_;
 		GLuint u_normal_;
 		GLuint a_position_;
-		GLuint a_color_;
+		GLuint u_gamma_;
 		std::vector<glm::vec3> normals_;
 
 		glm::mat4 model_;
 	};
 
-	typedef boost::intrusive_ptr<isomap> isomap_ptr;
-	typedef boost::intrusive_ptr<const isomap> const_isomap_ptr;
+	class chunk_colored : public chunk
+	{
+	public:
+		chunk_colored();
+		explicit chunk_colored(const variant& node);
+		virtual ~chunk_colored();
+		bool is_solid(int x, int y, int z) const;
+		variant get_tile_type(int x, int y, int z) const;
+	protected:
+		void handle_build();
+		void handle_draw() const;
+		variant handle_write();
+		void handle_set_tile(int x, int y, int z, const variant& type);
+		void handle_del_tile(int x, int y, int z);
+		std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist);
+	private:
+		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+
+		void add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray);
+
+		std::vector<std::vector<uint8_t> > carray_;
+		std::vector<size_t> cattrib_offsets_;
+		boost::unordered_map<position, SDL_Color> tiles_;
+
+		GLuint a_color_;
+	};
+
+	class chunk_textured : public chunk
+	{
+	public:
+		chunk_textured();
+		explicit chunk_textured(const variant& node);
+		virtual ~chunk_textured();
+		bool is_solid(int x, int y, int z) const;
+		variant get_tile_type(int x, int y, int z) const;
+	protected:
+		void handle_build();
+		void handle_draw() const;
+		variant handle_write();
+		void handle_set_tile(int x, int y, int z, const variant& type);
+		void handle_del_tile(int x, int y, int z);
+		std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist);
+	private:
+		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
+
+		void add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray);
+
+		std::vector<std::vector<GLfloat> > tarray_;
+		std::vector<size_t> tattrib_offsets_;
+		boost::unordered_map<position, std::string> tiles_;
+
+		GLuint u_texture_;
+		GLuint a_texcoord_;
+	};
+
+	typedef boost::intrusive_ptr<chunk> chunk_ptr;
+	typedef boost::intrusive_ptr<const chunk> const_chunk_ptr;
+
+	namespace chunk_factory 
+	{
+		chunk_ptr create(const variant& v);
+	}
 
 	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords);
 }

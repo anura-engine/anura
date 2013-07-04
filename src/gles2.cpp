@@ -596,11 +596,11 @@ namespace gles2 {
 			active_shader_program = shader;
 		}
 		ASSERT_LOG(active_shader_program != NULL, "Active shader was NULL");
-		check_gl_errors();
+		//check_gl_errors();
 		active_shader_program->prepare_draw();
 
-		GLenum err = glGetError();
-		ASSERT_LOG(err == GL_NONE, "Error in shader code: " << shader->name() << " : 0x" << std::hex << err << ": " << gl_error_to_string(err));
+		//GLenum err = glGetError();
+		//ASSERT_LOG(err == GL_NONE, "Error in shader code: " << shader->name() << " : 0x" << std::hex << err << ": " << gl_error_to_string(err));
 	}
 
 	manager::~manager()

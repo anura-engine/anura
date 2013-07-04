@@ -34,10 +34,9 @@ namespace isometric
 {
 	namespace 
 	{
-		const int debug_draw_faces = isomap::FRONT | isomap::RIGHT | isomap::TOP | isomap::BACK | isomap::LEFT | isomap::BOTTOM;
-		//const int debug_draw_faces = isomap::FRONT;
+		const int debug_draw_faces = chunk::FRONT | chunk::RIGHT | chunk::TOP | chunk::BACK | chunk::LEFT | chunk::BOTTOM;
 
-		boost::random::mt19937 rng(std::time(0));
+		boost::random::mt19937 rng(uint32_t(std::time(0)));
 
 		std::vector<tile_editor_info>& get_editor_tile_info()
 		{
@@ -79,42 +78,42 @@ namespace isometric
 					if(block.has_key("area")) {
 						ASSERT_LOG(block["area"].is_list() && block["area"].num_elements() == 4,
 							"Block " << ti.name << " must have an 'area' attribute that is a list of four elements.");
-						ti.faces = isomap::FRONT;
+						ti.faces = chunk::FRONT;
 						ti.area[0] = rectf(block["area"]);
 					} else {
 						ASSERT_LOG(block.has_key("front") && block["front"].is_list() && block["front"].num_elements() == 4,
 							"Block " << ti.name << " must have an 'front' attribute that is a list of four elements.");
-						ti.faces |= isomap::FRONT;
+						ti.faces |= chunk::FRONT;
 						ti.area[0] = rectf(block["front"]);
 
 						if(block.has_key("right")) {
 							ASSERT_LOG(block["right"].is_list() && block["right"].num_elements() == 4,
 								"Block " << ti.name << " must have an 'right' attribute that is a list of four elements.");
-							ti.faces |= isomap::RIGHT;
+							ti.faces |= chunk::RIGHT;
 							ti.area[1] = rectf(block["right"]);
 						}
 						if(block.has_key("top")) {
 							ASSERT_LOG(block["top"].is_list() && block["top"].num_elements() == 4,
 								"Block " << ti.name << " must have an 'top' attribute that is a list of four elements.");
-							ti.faces |= isomap::TOP;
+							ti.faces |= chunk::TOP;
 							ti.area[2] = rectf(block["top"]);
 						}
 						if(block.has_key("back")) {
 							ASSERT_LOG(block["back"].is_list() && block["back"].num_elements() == 4,
 								"Block " << ti.name << " must have an 'back' attribute that is a list of four elements.");
-							ti.faces |= isomap::BACK;
+							ti.faces |= chunk::BACK;
 							ti.area[3] = rectf(block["back"]);
 						}
 						if(block.has_key("left")) {
 							ASSERT_LOG(block["left"].is_list() && block["left"].num_elements() == 4,
 								"Block " << ti.name << " must have an 'left' attribute that is a list of four elements.");
-							ti.faces |= isomap::LEFT;
+							ti.faces |= chunk::LEFT;
 							ti.area[4] = rectf(block["left"]);
 						}
 						if(block.has_key("bottom")) {
 							ASSERT_LOG(block["bottom"].is_list() && block["bottom"].num_elements() == 4,
 								"Block " << ti.name << " must have an 'bottom' attribute that is a list of four elements.");
-							ti.faces |= isomap::BOTTOM;
+							ti.faces |= chunk::BOTTOM;
 							ti.area[5] = rectf(block["bottom"]);
 						}
 						ti.transparent = block["transparent"].as_bool(false);
@@ -125,7 +124,7 @@ namespace isometric
 					tile_editor_info te;
 					te.tex = tex_;
 					te.name = ti.name;
-					te.id = ti.abbreviation;
+					te.id = variant(ti.abbreviation);
 					te.group = block.has_key("group") ? block["group"].as_string() : "unspecified";
 					te.area = rect::from_coordinates(int(ti.area[0].xf() * tex_.width()), 
 						int(ti.area[0].yf() * tex_.height()),
@@ -185,174 +184,65 @@ namespace isometric
 		return seed;
 	}
 
-	isomap::isomap()
-		: u_tex0_(-1), u_lightposition_(-1), u_lightpower_(-1), u_mvp_matrix_(-1),
-		u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), u_normal_(-1)
+	chunk::chunk()
+		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
+		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
+		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f)
 	{
 		// Call init *before* doing anything else
 		init();
 	}
 
-	isomap::isomap(variant node)
-		: u_tex0_(-1), u_lightposition_(-1), u_lightpower_(-1), u_mvp_matrix_(-1),
-		u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), u_normal_(-1)
+	chunk::chunk(const variant& node)
+		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
+		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
+		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f)
 	{
 		// Call init *before* doing anything else
 		init();
 
-		if(node.has_key("random")) {
-			// Load in some random data.
-			int size_x = node["random"]["width"].as_int(32);
-			int size_y = node["random"]["height"].as_int(32);
-			int size_z = node["random"]["depth"].as_int(32);
-
-			uint32_t seed = node["random"]["seed"].as_int(0);
-			noise::simplex::init(seed);
-
-			bool textured = node["random"].has_key("colored") && node["random"]["colored"].as_bool() == true ? false : true;
-			int ndx = textured ? 0 : 1;
-			shader_data_[ndx].size_x_ = size_x;
-			shader_data_[ndx].size_y_ = size_y;
-			shader_data_[ndx].size_z_ = size_z;
-			shader_data_[ndx].textured_ = textured;
-
-			boost::random::uniform_int_distribution<> dist(0,255);
-			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
-
-			std::vector<float> vec;
-			vec.resize(2);
-			for(int x = 0; x != size_x; ++x) {
-				vec[0] = float(x)/float(size_x);
-				for(int z = 0; z != size_z; ++z) {
-					vec[1] = float(z)/float(size_z);
-					int h = int(noise::simplex::noise2(&vec[0]) * size_y);
-					h = std::max<int>(1, std::min<int>(size_y-1, h));
-					for(int y = 0; y != h; ++y) {
-						if(node["random"].has_key("type")) {
-							if(textured) {
-								shader_data_[0].tiles_[position(x,y,z)] = tile_data(node["random"]["type"].as_string());
-							} else {
-								shader_data_[1].tiles_[position(x,y,z)] = tile_data(graphics::color(node["random"]["type"]).as_sdl_color());
-							}
-						} else {
-							if(textured) {
-								shader_data_[0].tiles_[position(x,y,z)] = tile_data(get_terrain_info().random()->first);
-							} else {
-								shader_data_[1].tiles_[position(x,y,z)] = tile_data(random_color.as_sdl_color());
-							}
-						}
-					}
-				}
-			}
-		} else {
-			ASSERT_LOG(node.has_key("voxels") && node["voxels"].is_string(), "'voxels' attribute must be a string.");
-			std::string decoded = base64::b64decode(node["voxels"].as_string());
-			std::string voxels;
-			if(!decoded.empty()) {
-				std::vector<char> decomp = zip::decompress(std::vector<char>(decoded.begin(), decoded.end()));
-				voxels = std::string(decomp.begin(), decomp.end());
-			} else {
-				voxels = node["voxels"].as_string();
-			}
-			int min_x, min_y, min_z;
-			int max_x, max_y, max_z;
-			min_x = min_y = min_z = std::numeric_limits<int>::max();
-			max_x = max_y = max_z = std::numeric_limits<int>::min();
-			std::vector<std::string> vlist;
-			boost::split(vlist, voxels, boost::is_any_of("\t\n \r;:"));
-			const boost::regex re("(-?\\d+),(-?\\d+),(-?\\d+),(\\w+)");
-			foreach(auto s, vlist) {
-				boost::match_results<std::string::const_iterator> m;
-				if(s.empty() == false) {
-					if(boost::regex_match(s, m, re)) {
-						const int x = boost::lexical_cast<int>(std::string(m[1].first, m[1].second));
-						const int y = boost::lexical_cast<int>(std::string(m[2].first, m[2].second));
-						const int z = boost::lexical_cast<int>(std::string(m[3].first, m[3].second));
-						if(min_x > x) { min_x = x; }
-						if(max_x < x) { max_x = x; }
-						if(min_y > y) { min_y = y; }
-						if(max_y < y) { max_y = y; }
-						if(min_z > z) { min_z = z; }
-						if(max_z < z) { max_z = z; }
-						shader_data_[0].tiles_[position(x,y,z)] = tile_data(std::string(m[4].first, m[4].second));
-					} else {
-						std::cerr << "ISOMAP: Rejected voxel description: " << s << std::endl;
-					}
-				}
-			}
-			shader_data_[0].size_x_ = max_x - min_x + 1;
-			shader_data_[0].size_y_ = max_y - min_y + 1;
-			shader_data_[0].size_z_ = max_z - min_z + 1;
-			std::cerr << "isomap: size_x( " << shader_data_[0].size_x_ << "), size_y(" << shader_data_[0].size_y_ << "), size_z(" << shader_data_[0].size_z_ << ")" << std::endl;
-		}
+		// using textured or colored data
+		bool textured = node.has_key("colored") && node["colored"].as_bool() == true ? false : true;
 
 		// Load shader.
 		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
-		if(node["shader"].is_map()) {
-			ASSERT_LOG(node["shader"].has_key("vertex") && node["shader"].has_key("fragment"),
-				"Must have 'shader' attribute with 'vertex' and 'fragment' child attributes.");
-			gles2::shader v1(GL_VERTEX_SHADER, "iso_vertex_shader", node["shader"]["vertex"]);
-			gles2::shader f1(GL_FRAGMENT_SHADER, "iso_fragment_shader", node["shader"]["fragment"]);
-			shader_.reset(new gles2::program(node["shader"]["name"].as_string(), v1, f1));
-		} else {
-			ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be string or map");
-			//shader_ = gles2::program::find_program(node["shader"].as_string());
-			if(shader_ == NULL) {
-				shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
-			}
+		ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be a string");
+		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
+
+		u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
+		a_position_ = shader_->get_fixed_attribute("vertex");
+		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
+
+		u_lightposition_ = shader_->get_fixed_uniform("light_position");
+		u_lightpower_ = shader_->get_fixed_uniform("light_power");
+		u_shininess_ = shader_->get_fixed_uniform("shininess");
+		u_m_matrix_ = shader_->get_fixed_uniform("m_matrix");
+		u_v_matrix_ = shader_->get_fixed_uniform("v_matrix");
+		u_normal_ = shader_->get_fixed_uniform("normal");
+		u_gamma_ = shader_->get_fixed_uniform("gamma");
+
+		lighting_enabled_ = u_lightposition_ != -1 
+			&& u_lightpower_ != -1
+			&& u_shininess_ != -1
+			&& u_m_matrix_ != -1
+			&& u_v_matrix_ != -1
+			&& u_normal_ != -1;
+		std::cerr << "chunk::chunk Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
+		if(!lighting_enabled_) {
+			std::cerr << "light_position: " << u_lightposition_ << std::endl;
+			std::cerr << "light_power: " << u_lightpower_ << std::endl;
+			std::cerr << "shininess: " << u_shininess_ << std::endl;
+			std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
+			std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
+			std::cerr << "normal: " << u_normal_ << std::endl;
 		}
-
-		bool found_data = false;
-		for(auto sd : shader_data_) {
-			found_data |= sd.tiles_.empty() == false;
-		}
-		ASSERT_LOG(found_data != false, "ISOMAP: No tiles found");
-
-		u_mvp_matrix_ = shader_->get_uniform("mvp_matrix");
-		ASSERT_LOG(u_mvp_matrix_ != -1, "isomap::build_colored(): u_mvp_matrix_ == -1");
-		u_lightposition_ = shader_->get_uniform("LightPosition_worldspace");
-		ASSERT_LOG(u_lightposition_ != -1, "isomap::build_colored(): u_lightposition_ == -1");
-		u_lightpower_ = shader_->get_uniform("LightPower");
-		ASSERT_LOG(u_lightpower_ != -1, "isomap::build_colored(): u_lightpower_ == -1");
-		u_shininess_ = shader_->get_uniform("Shininess");
-		ASSERT_LOG(u_shininess_ != -1, "isomap::build_colored(): u_shininess_ == -1");
-		u_m_matrix_ = shader_->get_uniform("m_matrix");
-		ASSERT_LOG(u_m_matrix_ != -1, "isomap::build_colored(): u_m_matrix_ == -1");
-		u_v_matrix_ = shader_->get_uniform("v_matrix");
-		ASSERT_LOG(u_v_matrix_ != -1, "isomap::build_colored(): u_v_matrix_ == -1");
-		u_normal_ = shader_->get_uniform("u_normal");
-		ASSERT_LOG(u_normal_ != -1, "isomap::build_colored(): u_normal_ == -1");
-		a_position_ = shader_->get_attribute("a_position");
-		ASSERT_LOG(a_position_ != -1, "isomap::build_colored(): a_position_ == -1");
-
-		a_color_ = shader_->get_attribute("a_color");
-		a_texcoord_ = shader_->get_attribute("a_tex_coord");
-		u_tex0_ = shader_->get_uniform("u_tex0");
-		/*
-		//mm_uniform_it_ = shader_->get_uniform_reference("mvp_matrix");
-		u_mvp_matrix_ = shader_->get_uniform("MVP");
-		//a_position_it_ = shader_->get_attribute_reference("a_position");
-		a_position_it_ = shader_->get_attribute_reference("vertexPosition_modelspace");
-		a_tex_coord_it_ = shader_->get_attribute_reference("a_tex_coord");
-		u_tex0_ = shader_->get_uniform("u_tex0");
-
-		u_m_matrix_ = shader_->get_uniform("M");
-		u_v_matrix_ = shader_->get_uniform("V");
-		u_lightposition_ = shader_->get_uniform("LightPosition_worldspace");
-		u_normal_ = shader_->get_uniform("vertexNormal_modelspace");
-		*/
-
-		build();
 	}
 
-	void isomap::init()
+	void chunk::init()
 	{
-		shader_data_.resize(2);
-
-		for(int n = 0; n != 2; ++n) {
-			shader_data_[n].vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete id;});
-			glGenBuffers(2, &shader_data_[n].vbos_[0]);
-		}
+		vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete id;});
+		glGenBuffers(2, &vbos_[0]);
 
 		get_terrain_info().clear();
 		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
@@ -366,340 +256,39 @@ namespace isometric
 		normals_.push_back(glm::vec3(0,-1,0));	// bottom
 	}
 
-
-	isomap::~isomap()
+	chunk::~chunk()
 	{
 	}
 
-	const std::vector<tile_editor_info>& isomap::get_editor_tiles()
+	const std::vector<tile_editor_info>& chunk::get_editor_tiles()
 	{
 		return get_editor_tile_info();
 	}
 
-	variant isomap::write()
+	variant chunk::write()
 	{
 		variant_builder res;
 
-/*		std::string s;
-		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
-			int x = t->first.x;
-			int y = t->first.y;
-			int z = t->first.z;
-			std::stringstream str;
-			str << x << "," << y << "," << z << "," << t->second << " ";
-			s += str.str();
-		}
-		std::vector<char> enc_and_comp(base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end()))));
-		res.add("voxels", std::string(enc_and_comp.begin(), enc_and_comp.end()));
-
-		variant_builder shader;
-		shader.add("name", shader_->name());
-		shader.add("vertex", shader_->vertex_shader().code());
-		shader.add("fragment", shader_->fragment_shader().code());
-		res.add("shader", shader.build());
-	*/
+		res.add("shader", shader_->name());
+		res.add("colored", textured() == false);
+		res.merge_object(handle_write());
 		return res.build();
 	}
 
-	bool isomap::is_solid(int x, int y, int z) const
+	void chunk::build()
 	{
-		/*profile::manager pman("isomap::is_solid");
-		for(auto sd : shader_data_) {
-			auto it = sd.tiles_.find(position(x,y,z));
-			if(it != sd.tiles_.end()) {
-				if(it->second.name.empty() == false) {
-					auto ti = get_terrain_info().find(it->second.name);
-					ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second.name);
-					return !ti->second.transparent;
-				} else {
-					return it->second.color.a == 255;
-				}
-			}
-		}
-		return false;*/
-		return false;
+		varray_.clear();
+		vattrib_offsets_.clear();
+		num_vertices_.clear();
+
+		varray_.resize(MAX_FACES);
+		vattrib_offsets_.resize(MAX_FACES);
+		num_vertices_.resize(MAX_FACES);
+
+		handle_build();
 	}
 
-	void isomap::rebuild()
-	{
-		build();
-	}
-
-	void isomap::build()
-	{
-		for(auto& sd : shader_data_) {
-			sd.varray_.clear();
-			sd.tarray_.clear();
-			sd.carray_.clear();
-			std::cerr << "cleared sd.vattrib_offsets_" << std::endl;
-			sd.vattrib_offsets_.clear();
-			sd.tcattrib_offsets_.clear();
-			sd.num_vertices_.clear();
-
-			sd.varray_.resize(6);
-			sd.carray_.resize(6);
-			sd.vattrib_offsets_.resize(6);
-			sd.tcattrib_offsets_.resize(6);
-			sd.num_vertices_.resize(6);
-
-			if(sd.tiles_.size() > 0) {
-				if(sd.textured_) {
-					build_textured(sd);
-				} else {
-					build_colored(sd);
-				}
-			}
-		}
-	}
-
-	void isomap::build_colored(shader_data& sd)
-	{
-		profile::manager pman("isomap::build_colored");
-
-		for(auto t : sd.tiles_) {
-			int x = t.first.x;
-			int y = t.first.y;
-			int z = t.first.z;
-
-			if(x > 0) {
-				if(is_solid(x-1, y, z) == false) {
-					add_colored_face_left(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_left(sd,x,y,z,1,t.second.color);
-			}
-			if(x < sd.size_x_ - 1) {
-				if(is_solid(x+1, y, z) == false) {
-					add_colored_face_right(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_right(sd,x,y,z,1,t.second.color);
-			}
-			if(y > 0) {
-				if(is_solid(x, y-1, z) == false) {
-					add_colored_face_bottom(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_bottom(sd,x,y,z,1,t.second.color);
-			}
-			if(y < sd.size_y_ - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					add_colored_face_top(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_top(sd,x,y,z,1,t.second.color);
-			}
-			if(z > 0) {
-				if(is_solid(x, y, z-1) == false) {
-					add_colored_face_back(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_back(sd,x,y,z,1,t.second.color);
-			}
-			if(z < sd.size_z_ - 1) {
-				if(is_solid(x, y, z+1) == false) {
-					add_colored_face_front(sd,x,y,z,1,t.second.color);
-				}
-			} else {
-				add_colored_face_front(sd,x,y,z,1,t.second.color);
-			}
-		}
-
-		size_t total_size = 0;
-		int n = 0;
-		for(auto vec : sd.varray_) {
-			sd.vattrib_offsets_[n] = total_size;
-			total_size += vec.size() * sizeof(GLfloat);
-			sd.num_vertices_[n] = vec.size() / 3;
-			++n;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
-		for(int n=0; n != 6; ++n) {
-			glBufferSubData(GL_ARRAY_BUFFER, sd.vattrib_offsets_[n], sd.varray_[n].size()*sizeof(GLfloat), &sd.varray_[n][0]);
-		}
-
-		total_size = 0;
-		n = 0;
-		for(auto vec : sd.carray_) {
-			sd.tcattrib_offsets_[n] = total_size;
-			total_size += vec.size() * sizeof(uint8_t);
-			++n;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
-		for(int n=0; n != 6; ++n) {
-			glBufferSubData(GL_ARRAY_BUFFER, sd.tcattrib_offsets_[n], sd.carray_[n].size()*sizeof(uint8_t), &sd.carray_[n][0]);
-		}
-		std::cerr << "Built " << sd.varray_[FRONT_FACE].size()/3 << " front faces" << std::endl;
-		std::cerr << "Built " << sd.varray_[BACK_FACE].size()/3 << " back faces" << std::endl;
-		std::cerr << "Built " << sd.varray_[TOP_FACE].size()/3 << " top faces" << std::endl;
-		std::cerr << "Built " << sd.varray_[BOTTOM_FACE].size()/3 << " bottom faces" << std::endl;
-		std::cerr << "Built " << sd.varray_[LEFT_FACE].size()/3 << " left faces" << std::endl;
-		std::cerr << "Built " << sd.varray_[RIGHT_FACE].size()/3 << " right faces" << std::endl;
-
-		sd.varray_.clear();
-		sd.carray_.clear();
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	void isomap::build_textured(shader_data& sd)
-	{
-		profile::manager pman("isomap::build");
-
-		for(auto t : sd.tiles_) {
-			int x = t.first.x;
-			int y = t.first.y;
-			int z = t.first.z;
-			if(x > 0) {
-				if(is_solid(x-1, y, z) == false) {
-					add_face_left(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_left(sd,x,y,z,1,t.second.name);
-			}
-			if(x < sd.size_x_ - 1) {
-				if(is_solid(x+1, y, z) == false) {
-					add_face_right(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_right(sd,x,y,z,1,t.second.name);
-			}
-			if(y > 0) {
-				if(is_solid(x, y-1, z) == false) {
-					add_face_bottom(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_bottom(sd,x,y,z,1,t.second.name);
-			}
-			if(y < sd.size_y_ - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					add_face_top(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_top(sd,x,y,z,1,t.second.name);
-			}
-			if(z > 0) {
-				if(is_solid(x, y, z-1) == false) {
-					add_face_back(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_back(sd,x,y,z,1,t.second.name);
-			}
-			if(z < sd.size_z_ - 1) {
-				if(is_solid(x, y, z+1) == false) {
-					add_face_front(sd,x,y,z,1,t.second.name);
-				}
-			} else {
-				add_face_front(sd,x,y,z,1,t.second.name);
-			}
-		}
-		
-		size_t total_size = 0;
-		int n = 0;
-		for(auto vec : sd.varray_) {
-			sd.vattrib_offsets_[n] = total_size;
-			total_size += vec.size() * sizeof(GLfloat);
-			sd.num_vertices_[n] = vec.size() / 3;
-			++n;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
-		for(int n=0; n != 6; ++n) {
-			glBufferSubData(GL_ARRAY_BUFFER, sd.vattrib_offsets_[n], sd.varray_[n].size()*sizeof(GLfloat), &sd.varray_[n][0]);
-		}
-
-		total_size = 0;
-		n = 0;
-		for(auto vec : sd.tarray_) {
-			sd.tcattrib_offsets_[n] = total_size;
-			total_size += vec.size() * sizeof(GLfloat);
-			++n;
-		}
-		glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
-		for(int n=0; n != 6; ++n) {
-			glBufferSubData(GL_ARRAY_BUFFER, sd.tcattrib_offsets_[n], sd.tarray_[n].size()*sizeof(uint8_t), &sd.tarray_[n][0]);
-		}
-		sd.varray_.clear();
-		sd.tarray_.clear();
-
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	void isomap::add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray)
-	{
-		for(int n = 0; n != 6; ++n) {
-			carray.push_back(col.r);
-			carray.push_back(col.g);
-			carray.push_back(col.b);
-			carray.push_back(col.a);
-		}
-	}
-
-	void isomap::add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray)
-	{
-		switch(face) {
-		case FRONT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			break;
-		case RIGHT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			break;
-		case TOP_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-		
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			break;
-		case BACK_FACE:
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			break;
-		case LEFT_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			break;
-		case BOTTOM_FACE:
-			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-		
-			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
-			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
-			break;
-		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
-		}
-	}
-
-	void isomap::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat s, std::vector<GLfloat>& varray)
+	void chunk::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat s, std::vector<GLfloat>& varray)
 	{
 		switch(face) {
 		case FRONT_FACE:
@@ -760,225 +349,60 @@ namespace isometric
 		}
 	}
 
-	void isomap::add_colored_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk::add_vertex_vbo_data()
 	{
-		add_vertex_data(LEFT_FACE, x, y, z, s, sd.varray_[LEFT_FACE]);
-		add_carray_data(col, sd.carray_[LEFT_FACE]);
+		size_t total_size = 0;
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			vattrib_offsets_[n] = total_size;
+			total_size += varray_[n].size() * sizeof(GLfloat);
+			num_vertices_[n] = varray_[n].size() / 3;
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, vattrib_offsets_[n], varray_[n].size()*sizeof(GLfloat), &varray_[n][0]);
+		}
 	}
 
-	void isomap::add_colored_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk::draw() const
 	{
-		add_vertex_data(RIGHT_FACE, x, y, z, s, sd.varray_[RIGHT_FACE]);
-		add_carray_data(col, sd.carray_[RIGHT_FACE]);
-	}
-
-	void isomap::add_colored_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
-	{
-		add_vertex_data(FRONT_FACE, x, y, z, s, sd.varray_[FRONT_FACE]);
-		add_carray_data(col, sd.carray_[FRONT_FACE]);
-	}
-
-	void isomap::add_colored_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
-	{
-		add_vertex_data(BACK_FACE, x, y, z, s, sd.varray_[BACK_FACE]);
-		add_carray_data(col, sd.carray_[BACK_FACE]);
-	}
-
-	void isomap::add_colored_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
-	{
-		add_vertex_data(TOP_FACE, x, y, z, s, sd.varray_[TOP_FACE]);
-		add_carray_data(col, sd.carray_[TOP_FACE]);
-	}
-
-	void isomap::add_colored_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
-	{
-		add_vertex_data(BOTTOM_FACE, x, y, z, s, sd.varray_[BOTTOM_FACE]);
-		add_carray_data(col, sd.carray_[BOTTOM_FACE]);
-	}
-
-	void isomap::add_face_left(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(LEFT_FACE, x, y, z, s, sd.varray_[LEFT_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_left: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.faces & LEFT ? it->second.area[4] : it->second.area[0];
-		add_tarray_data(LEFT_FACE, area, sd.tarray_[LEFT_FACE]);
-	}
-
-	void isomap::add_face_right(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(RIGHT_FACE, x, y, z, s, sd.varray_[RIGHT_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_right: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.faces & RIGHT ? it->second.area[1] : it->second.area[0];
-		add_tarray_data(RIGHT_FACE, area, sd.tarray_[RIGHT_FACE]);
-	}
-
-	void isomap::add_face_front(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(FRONT_FACE, x, y, z, s, sd.varray_[FRONT_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_front: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.area[0];
-		add_tarray_data(FRONT_FACE, area, sd.tarray_[FRONT_FACE]);
-	}
-
-	void isomap::add_face_back(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(BACK_FACE, x, y, z, s, sd.varray_[BACK_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_back: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.faces & BACK ? it->second.area[3] : it->second.area[0];
-		add_tarray_data(BACK_FACE, area, sd.tarray_[BACK_FACE]);
-	}
-
-	void isomap::add_face_top(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(TOP_FACE, x, y, z, s, sd.varray_[TOP_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_top: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.faces & TOP ? it->second.area[2] : it->second.area[0];
-		add_tarray_data(TOP_FACE, area, sd.tarray_[TOP_FACE]);
-	}
-
-	void isomap::add_face_bottom(shader_data& sd, GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
-	{
-		add_vertex_data(BOTTOM_FACE, x, y, z, s, sd.varray_[BOTTOM_FACE]);
-
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_bottom: Unable to find tile type in list: " << bid);
-		const rectf area = it->second.faces & BOTTOM ? it->second.area[5] : it->second.area[0];
-		add_tarray_data(BOTTOM_FACE, area, sd.tarray_[BOTTOM_FACE]);
-	}
-
-	void isomap::draw() const
-	{
+		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
 		// Cull triangles which normal is not towards the camera
 		glEnable(GL_CULL_FACE);
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
 
-		for(auto sd : shader_data_) {
-			if(sd.tiles_.size() > 0) {
-				if(sd.textured_) {
-					draw_textured(sd);
-				} else {
-					draw_colored(sd);
-				}
-			}
-		}
+		handle_draw();
+
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
-		glUseProgram(0);
 	}
 
-	void isomap::draw_colored(const shader_data& sd) const
-	{
-		ASSERT_LOG(sd.vattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
-		ASSERT_LOG(sd.tcattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
-		glUseProgram(shader_->get());
-
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
-		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-
-		glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
-		glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_));
-		glUniform3f(u_lightposition_, sd.size_x_/2.0f, 200.0f, sd.size_z_/2.0f);
-		glUniform1f(u_lightpower_, 15000.0f);
-		glUniform1f(u_shininess_, 5.0f);
-
-		glEnableVertexAttribArray(a_position_);
-		glEnableVertexAttribArray(a_color_);
-		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
-			if(debug_draw_faces & (1 << n)) {
-				glUniform3fv(u_normal_, 1, glm::value_ptr(normals_[n]));
-				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
-				glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.vattrib_offsets_[n]));
-				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
-				glVertexAttribPointer(a_color_, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, reinterpret_cast<const GLfloat*>(sd.tcattrib_offsets_[n]));
-				glDrawArrays(GL_TRIANGLES, 0, sd.num_vertices_[n]);
-			}
-		}
-		glDisableVertexAttribArray(a_position_);
-		glDisableVertexAttribArray(a_color_);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	void chunk::set_gamma(float g) 
+	{ 
+		gamma_ = std::max(0.001f, std::min(g, 100.0f)); 
 	}
 
-	void isomap::draw_textured(const shader_data& sd) const
+	bool chunk::is_xedge(int x) const
 	{
-		ASSERT_LOG(sd.vattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
-		ASSERT_LOG(sd.tcattrib_offsets_.size() != 0, "sd.vattrib_offsets_.size() == 0");
-		glUseProgram(shader_->get());
-
-		glActiveTexture(GL_TEXTURE0);
-		get_terrain_info().get_tex().set_as_current_texture();
-		glUniform1i(u_tex0_, 0);
-
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_;
-		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-
-		glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, glm::value_ptr(level::current().view_mat()));
-		glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_));
-		glUniform3f(u_lightposition_, sd.size_x_/2.0f, 200.0f, sd.size_z_/2.0f);
-		glUniform1f(u_lightpower_, 15000.0f);
-		glUniform1f(u_shininess_, 5.0f);
-
-		glEnableVertexAttribArray(a_position_);
-		glEnableVertexAttribArray(a_texcoord_);
-		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
-			if(debug_draw_faces & (1 << n)) {
-				glUniform3fv(u_normal_, 1, glm::value_ptr(normals_[n]));
-				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[0]);
-				glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.vattrib_offsets_[n]));
-				glBindBuffer(GL_ARRAY_BUFFER, sd.vbos_[1]);
-				glVertexAttribPointer(a_texcoord_, 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(sd.tcattrib_offsets_[n]));
-				glDrawArrays(GL_TRIANGLES, 0, sd.num_vertices_[n]);
-			}
-		}
-		glDisableVertexAttribArray(a_position_);
-		glDisableVertexAttribArray(a_texcoord_);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-	}
-
-	std::string isomap::get_tile_type(int x, int y, int z) const
-	{
-		auto it = shader_data_[0].tiles_.find(position(x, y, z));
-		if(it == shader_data_[0].tiles_.end()) {
-			return "";
-		}
-		return it->second.name;
-	}
-
-	variant isomap::get_tile_info(const std::string& type)
-	{
-		return variant(); // -- todo
-	}
-
-	bool isomap::is_xedge(int x, int size_x) const
-	{
-		if(x >= 0 && x < size_x) {
+		if(x >= 0 && x < size_x()) {
 			return false;
 		}
 		return true;
 	}
 
-	bool isomap::is_yedge(int y, int size_y) const
+	bool chunk::is_yedge(int y) const
 	{
-		if(y >= 0 && y < size_y) {
+		if(y >= 0 && y < size_y()) {
 			return false;
 		}
 		return true;
 	}
 
-	bool isomap::is_zedge(int z, int size_z) const
+	bool chunk::is_zedge(int z) const
 	{
-		if(z >= 0 && z < size_z) {
+		if(z >= 0 && z < size_z()) {
 			return false;
 		}
 		return true;
@@ -994,29 +418,13 @@ namespace isometric
 		}
 	}
 
-	pathfinding::directed_graph_ptr isomap::create_directed_graph(bool allow_diagonals)
+	pathfinding::directed_graph_ptr chunk::create_directed_graph(bool allow_diagonals)
 	{
-		/*
 		profile::manager pman("isomap::create_directed_graph");
 
-		std::vector<variant> vertex_list;
 		std::map<std::pair<int,int>, int> vlist;
-
-		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
-			int x = t->first.x;
-			int y = t->first.y;
-			int z = t->first.z;
-
-			if(y < size_y_ - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-					vlist[std::make_pair(x,z)] = y+1;
-				}
-			} else {
-				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-				vlist[std::make_pair(x,z)] = y+1;
-			}
-		}
+		std::vector<variant> vertex_list = create_dg_vertex_list(vlist);
+	
 		pathfinding::graph_edge_list edges;
 		for(auto p : vlist) {
 			std::vector<variant> current_edges;
@@ -1060,29 +468,790 @@ namespace isometric
 			edges[variant_list_from_xyz(p.first.first, p.second, p.first.second)] = current_edges;
 		}
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
-		*/
-		return pathfinding::directed_graph_ptr();
 	}
 
-	void isomap::set_tile(int x, int y, int z, const std::string& type)
+	variant chunk::get_tile_info(const std::string& type)
 	{
-		//tiles_[position(x,y,z)] = type;
-		//rebuild();
+		return variant(); // -- todo
 	}
 
-	void isomap::del_tile(int x, int y, int z)
+	void chunk::set_tile(int x, int y, int z, const variant& type)
 	{
-		//auto it = tiles_.find(position(x,y,z));
-		//ASSERT_LOG(it != tiles_.end(), "del_tile: no tile found at position(" << x << "," << y << "," << z << ") to delete");
-		//tiles_.erase(it);
-		//rebuild();
+		handle_set_tile(x,y,z,type);
+		build();
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(isomap)
-	DEFINE_FIELD(dummy, "null") //you need to define at least one field right
-		return variant();       //now, or else shit goes sideways.
-	END_DEFINE_CALLABLE(isomap)
+	void chunk::del_tile(int x, int y, int z)
+	{
+		handle_del_tile(x,y,z);
+		build();
+	}
 
+	void chunk::set_size(int mx, int my, int mz)
+	{
+		size_x_ = mx;
+		size_y_ = my;
+		size_z_ = mz;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(chunk)
+	DEFINE_FIELD(gamma, "decimal")
+		return variant(obj.gamma());
+	DEFINE_SET_FIELD
+		obj.set_gamma(float(value.as_decimal().as_float()));
+	END_DEFINE_CALLABLE(chunk)
+
+
+	///////////////////////////////////////////////////////////////
+	// Colored chunk functions
+	chunk_colored::chunk_colored() : chunk()
+	{
+	}
+
+	chunk_colored::~chunk_colored()
+	{
+	}
+
+	chunk_textured::chunk_textured() : chunk()
+	{
+	}
+
+	chunk_textured::~chunk_textured()
+	{
+	}
+
+	chunk_colored::chunk_colored(const variant& node) : chunk(node)
+	{
+		a_color_ = shader()->get_fixed_attribute("color");
+		ASSERT_LOG(a_color_ != -1, "chunk_colored: color == -1");	
+		
+		if(node.has_key("random")) {
+			// Load in some random data.
+			int size_x = node["random"]["width"].as_int(32);
+			int size_y = node["random"]["height"].as_int(32);
+			int size_z = node["random"]["depth"].as_int(32);
+			set_size(size_x, size_y, size_z);
+
+			uint32_t seed = node["random"]["seed"].as_int(0);
+			noise::simplex::init(seed);
+
+			boost::random::uniform_int_distribution<> dist(0,255);
+			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
+
+			std::vector<float> vec;
+			vec.resize(2);
+			for(int x = 0; x != size_x; ++x) {
+				vec[0] = float(x)/float(size_x);
+				for(int z = 0; z != size_z; ++z) {
+					vec[1] = float(z)/float(size_z);
+					int h = int(noise::simplex::noise2(&vec[0]) * size_y);
+					h = std::max<int>(1, std::min<int>(size_y-1, h));
+					for(int y = 0; y != h; ++y) {
+						if(node["random"].has_key("type")) {
+							tiles_[position(x,y,z)] = graphics::color(node["random"]["type"]).as_sdl_color();
+						} else {
+							tiles_[position(x,y,z)] = random_color.as_sdl_color();
+						}
+					}
+				}
+			}
+		} else {
+			ASSERT_LOG(node.has_key("voxels"), "'voxels' attribute must exist.");
+			ASSERT_LOG(node["voxels"].is_string() || node["voxels"].is_map(), "'voxels' must be a string or map.");
+
+			variant voxels;
+			if(node["voxels"].is_string()) {
+				std::string decoded = base64::b64decode(node["voxels"].as_string());
+				ASSERT_LOG(decoded.empty() == false, "Error decoding voxel data.")
+				std::vector<char> decomp = zip::decompress(std::vector<char>(decoded.begin(), decoded.end()));
+				try {
+					voxels = json::parse(std::string(decomp.begin(), decomp.end()));
+				} catch (json::parse_error& e) {
+					ASSERT_LOG(false, "Error parsing voxel data: " << e.error_message());
+				}
+			} else {
+				voxels = node["voxels"];
+			}
+			int min_x, min_y, min_z;
+			int max_x, max_y, max_z;
+			min_x = min_y = min_z = std::numeric_limits<int>::max();
+			max_x = max_y = max_z = std::numeric_limits<int>::min();
+
+			const variant& voxel_keys = voxels.get_keys();
+			for(int n = 0; n != voxel_keys.num_elements(); ++n) {
+				ASSERT_LOG(voxel_keys[n].is_list() && voxel_keys[n].num_elements() == 3, "keys for voxels must be 3 elment lists.");
+				const int x = voxel_keys[n][0].as_int();
+				const int y = voxel_keys[n][1].as_int();
+				const int z = voxel_keys[n][2].as_int();
+				if(min_x > x) { min_x = x; }
+				if(max_x < x) { max_x = x; }
+				if(min_y > y) { min_y = y; }
+				if(max_y < y) { max_y = y; }
+				if(min_z > z) { min_z = z; }
+				if(max_z < z) { max_z = z; }
+				tiles_[position(x,y,z)] = graphics::color(voxels[voxel_keys[n]]).as_sdl_color();
+			}
+			set_size(max_x - min_x + 1, max_y - min_y + 1, max_z - min_z + 1);
+		}
+
+		ASSERT_LOG(tiles_.empty() == false, "ISOMAP: No tiles found");
+
+		build();
+	}
+
+	chunk_textured::chunk_textured(const variant& node) : chunk(node)
+	{
+		a_texcoord_ = shader()->get_fixed_attribute("texcoord");
+		ASSERT_LOG(a_texcoord_ != -1, "chunk_colored: texcoord == -1");	
+		u_texture_ = shader()->get_fixed_uniform("texture");
+		ASSERT_LOG(u_texture_ != -1, "chunk_colored: texture == -1");	
+		
+		if(node.has_key("random")) {
+			// Load in some random data.
+			int size_x = node["random"]["width"].as_int(32);
+			int size_y = node["random"]["height"].as_int(32);
+			int size_z = node["random"]["depth"].as_int(32);
+			set_size(size_x, size_y, size_z);
+
+			uint32_t seed = node["random"]["seed"].as_int(0);
+			noise::simplex::init(seed);
+
+
+			boost::random::uniform_int_distribution<> dist(0,255);
+			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
+
+			std::vector<float> vec;
+			vec.resize(2);
+			for(int x = 0; x != size_x; ++x) {
+				vec[0] = float(x)/float(size_x);
+				for(int z = 0; z != size_z; ++z) {
+					vec[1] = float(z)/float(size_z);
+					int h = int(noise::simplex::noise2(&vec[0]) * size_y);
+					h = std::max<int>(1, std::min<int>(size_y-1, h));
+					for(int y = 0; y != h; ++y) {
+						if(node["random"].has_key("type")) {
+								tiles_[position(x,y,z)] = node["random"]["type"].as_string();
+						} else {
+								tiles_[position(x,y,z)] = get_terrain_info().random()->first;
+						}
+					}
+				}
+			}
+		} else {
+			ASSERT_LOG(node.has_key("voxels"), "'voxels' attribute must exist.");
+			ASSERT_LOG(node["voxels"].is_string() || node["voxels"].is_map(), "'voxels' must be a string or map.");
+
+			variant voxels;
+			if(node["voxels"].is_string()) {
+				std::string decoded = base64::b64decode(node["voxels"].as_string());
+				ASSERT_LOG(decoded.empty() == false, "Error decoding voxel data.")
+				std::vector<char> decomp = zip::decompress(std::vector<char>(decoded.begin(), decoded.end()));
+				try {
+					voxels = json::parse(std::string(decomp.begin(), decomp.end()));
+				} catch (json::parse_error& e) {
+					ASSERT_LOG(false, "Error parsing voxel data: " << e.error_message());
+				}
+			} else {
+				voxels = node["voxels"];
+			}
+			int min_x, min_y, min_z;
+			int max_x, max_y, max_z;
+			min_x = min_y = min_z = std::numeric_limits<int>::max();
+			max_x = max_y = max_z = std::numeric_limits<int>::min();
+
+			const variant& voxel_keys = voxels.get_keys();
+			for(int n = 0; n != voxel_keys.num_elements(); ++n) {
+				ASSERT_LOG(voxel_keys[n].is_list() && voxel_keys[n].num_elements() == 3, "keys for voxels must be 3 elment lists.");
+				const int x = voxel_keys[n][0].as_int();
+				const int y = voxel_keys[n][1].as_int();
+				const int z = voxel_keys[n][2].as_int();
+				if(min_x > x) { min_x = x; }
+				if(max_x < x) { max_x = x; }
+				if(min_y > y) { min_y = y; }
+				if(max_y < y) { max_y = y; }
+				if(min_z > z) { min_z = z; }
+				if(max_z < z) { max_z = z; }
+				tiles_[position(x,y,z)] = voxels[voxel_keys[n]].as_string();
+			}
+			set_size(max_x - min_x + 1, max_y - min_y + 1, max_z - min_z + 1);
+		}
+
+		ASSERT_LOG(tiles_.empty() == false, "ISOMAP: No tiles found");
+
+		build();
+	}
+	
+	void chunk_colored::handle_build()
+	{
+		profile::manager pman("chunk_colored::handle_build");
+
+		carray_.clear();
+		carray_.resize(MAX_FACES);
+		cattrib_offsets_.clear();
+		cattrib_offsets_.resize(MAX_FACES);
+
+		for(auto& t : tiles_) {
+			int x = t.first.x;
+			int y = t.first.y;
+			int z = t.first.z;
+			GLfloat xf = GLfloat(x);
+			GLfloat yf = GLfloat(y);
+			GLfloat zf = GLfloat(z);
+
+			if(x > 0) {
+				if(is_solid(x-1, y, z) == false) {
+					add_face_left(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_left(xf,yf,zf,1,t.second);
+			}
+			if(x < size_x() - 1) {
+				if(is_solid(x+1, y, z) == false) {
+					add_face_right(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_right(xf,yf,zf,1,t.second);
+			}
+			if(y > 0) {
+				if(is_solid(x, y-1, z) == false) {
+					add_face_bottom(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_bottom(xf,yf,zf,1,t.second);
+			}
+			if(y < size_y() - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					add_face_top(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_top(xf,yf,zf,1,t.second);
+			}
+			if(z > 0) {
+				if(is_solid(x, y, z-1) == false) {
+					add_face_back(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_back(xf,yf,zf,1,t.second);
+			}
+			if(z < size_z() - 1) {
+				if(is_solid(x, y, z+1) == false) {
+					add_face_front(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_front(xf,yf,zf,1,t.second);
+			}
+		}
+		
+		add_vertex_vbo_data();
+
+		size_t total_size = 0;
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			cattrib_offsets_[n] = total_size;
+			total_size += carray_[n].size() * sizeof(uint8_t);
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray_[n].size()*sizeof(uint8_t), &carray_[n][0]);
+		}
+		std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
+		std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
+		std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
+		std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
+		std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
+		std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
+
+		clear_vertex_data();
+		carray_.clear();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void chunk_textured::handle_build()
+	{
+		profile::manager pman("chunk_textured::handle_build");
+
+		tarray_.clear();
+		tarray_.resize(MAX_FACES);
+		tattrib_offsets_.clear();
+		tattrib_offsets_.resize(MAX_FACES);
+
+		for(auto& t : tiles_) {
+			int x = t.first.x;
+			int y = t.first.y;
+			int z = t.first.z;
+			GLfloat xf = GLfloat(x);
+			GLfloat yf = GLfloat(y);
+			GLfloat zf = GLfloat(z);
+
+			if(x > 0) {
+				if(is_solid(x-1, y, z) == false) {
+					add_face_left(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_left(xf,yf,zf,1,t.second);
+			}
+			if(x < size_x() - 1) {
+				if(is_solid(x+1, y, z) == false) {
+					add_face_right(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_right(xf,yf,zf,1,t.second);
+			}
+			if(y > 0) {
+				if(is_solid(x, y-1, z) == false) {
+					add_face_bottom(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_bottom(xf,yf,zf,1,t.second);
+			}
+			if(y < size_y() - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					add_face_top(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_top(xf,yf,zf,1,t.second);
+			}
+			if(z > 0) {
+				if(is_solid(x, y, z-1) == false) {
+					add_face_back(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_back(xf,yf,zf,1,t.second);
+			}
+			if(z < size_z() - 1) {
+				if(is_solid(x, y, z+1) == false) {
+					add_face_front(xf,yf,zf,1,t.second);
+				}
+			} else {
+				add_face_front(xf,yf,zf,1,t.second);
+			}
+		}
+		
+		add_vertex_vbo_data();
+
+		size_t total_size = 0;
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			tattrib_offsets_[n] = total_size;
+			total_size += tarray_[n].size() * sizeof(GLfloat);
+		}
+		glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
+		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			glBufferSubData(GL_ARRAY_BUFFER, tattrib_offsets_[n], tarray_[n].size()*sizeof(GLfloat), &tarray_[n][0]);
+		}
+		std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
+		std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
+		std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
+		std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
+		std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
+		std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
+
+		clear_vertex_data();
+		tarray_.clear();
+
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void chunk_colored::add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray)
+	{
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			carray.push_back(col.r);
+			carray.push_back(col.g);
+			carray.push_back(col.b);
+			carray.push_back(col.a);
+		}
+	}
+
+	void chunk_textured::add_tarray_data(int face, const rectf& area, std::vector<GLfloat>& tarray)
+	{
+		switch(face) {
+		case FRONT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			break;
+		case RIGHT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case TOP_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+		
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			break;
+		case BACK_FACE:
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case LEFT_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			break;
+		case BOTTOM_FACE:
+			tarray.push_back(area.x2f()); tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+		
+			tarray.push_back(area.x2f()); tarray.push_back(area.yf()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.y2f()); 
+			tarray.push_back(area.xf());  tarray.push_back(area.yf()); 
+			break;
+		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
+		}
+	}
+
+	void chunk_colored::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(LEFT_FACE, x, y, z, s, get_vertex_data()[LEFT_FACE]);
+		add_carray_data(col, carray_[LEFT_FACE]);
+	}
+
+	void chunk_colored::add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(RIGHT_FACE, x, y, z, s, get_vertex_data()[RIGHT_FACE]);
+		add_carray_data(col, carray_[RIGHT_FACE]);
+	}
+
+	void chunk_colored::add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(FRONT_FACE, x, y, z, s, get_vertex_data()[FRONT_FACE]);
+		add_carray_data(col, carray_[FRONT_FACE]);
+	}
+
+	void chunk_colored::add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(BACK_FACE, x, y, z, s, get_vertex_data()[BACK_FACE]);
+		add_carray_data(col, carray_[BACK_FACE]);
+	}
+
+	void chunk_colored::add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(TOP_FACE, x, y, z, s, get_vertex_data()[TOP_FACE]);
+		add_carray_data(col, carray_[TOP_FACE]);
+	}
+
+	void chunk_colored::add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	{
+		add_vertex_data(BOTTOM_FACE, x, y, z, s, get_vertex_data()[BOTTOM_FACE]);
+		add_carray_data(col, carray_[BOTTOM_FACE]);
+	}
+
+	void chunk_textured::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(LEFT_FACE, x, y, z, s, get_vertex_data()[LEFT_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_left: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.faces & LEFT ? it->second.area[4] : it->second.area[0];
+		add_tarray_data(LEFT_FACE, area, tarray_[LEFT_FACE]);
+	}
+
+	void chunk_textured::add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(RIGHT_FACE, x, y, z, s, get_vertex_data()[RIGHT_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_right: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.faces & RIGHT ? it->second.area[1] : it->second.area[0];
+		add_tarray_data(RIGHT_FACE, area, tarray_[RIGHT_FACE]);
+	}
+
+	void chunk_textured::add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(FRONT_FACE, x, y, z, s, get_vertex_data()[FRONT_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_front: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.area[0];
+		add_tarray_data(FRONT_FACE, area, tarray_[FRONT_FACE]);
+	}
+
+	void chunk_textured::add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(BACK_FACE, x, y, z, s, get_vertex_data()[BACK_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_back: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.faces & BACK ? it->second.area[3] : it->second.area[0];
+		add_tarray_data(BACK_FACE, area, tarray_[BACK_FACE]);
+	}
+
+	void chunk_textured::add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(TOP_FACE, x, y, z, s, get_vertex_data()[TOP_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_top: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.faces & TOP ? it->second.area[2] : it->second.area[0];
+		add_tarray_data(TOP_FACE, area, tarray_[TOP_FACE]);
+	}
+
+	void chunk_textured::add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
+	{
+		add_vertex_data(BOTTOM_FACE, x, y, z, s, get_vertex_data()[BOTTOM_FACE]);
+
+		auto it = get_terrain_info().find(bid);
+		ASSERT_LOG(it != get_terrain_info().end(), "add_face_bottom: Unable to find tile type in list: " << bid);
+		const rectf area = it->second.faces & BOTTOM ? it->second.area[5] : it->second.area[0];
+		add_tarray_data(BOTTOM_FACE, area, tarray_[BOTTOM_FACE]);
+	}
+
+	void chunk_colored::handle_draw() const
+	{
+		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
+		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
+
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_mat();
+		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+
+		if(lighting_enabled()) {
+			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
+			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, model());
+			glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
+			glUniform1f(light_power_uniform(), 15000.0f);
+			glUniform1f(shininess_uniform(), 5.0f);
+			glUniform1f(gamma_uniform(), gamma());
+		}
+
+		glEnableVertexAttribArray(position_uniform());
+		glEnableVertexAttribArray(a_color_);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			if(debug_draw_faces & (1 << n)) {
+				if(lighting_enabled()) {
+					glUniform3fv(normal_uniform(), 1, glm::value_ptr(normals()[n]));
+				}
+				glBindBuffer(GL_ARRAY_BUFFER, vbo()[0]);
+				glVertexAttribPointer(position_uniform(), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(get_vertex_attribute_offsets()[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
+				glVertexAttribPointer(a_color_, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, reinterpret_cast<const GLfloat*>(cattrib_offsets_[n]));
+				glDrawArrays(GL_TRIANGLES, 0, get_num_vertices()[n]);
+			}
+		}
+		glDisableVertexAttribArray(position_uniform());
+		glDisableVertexAttribArray(a_color_);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	void chunk_textured::handle_draw() const
+	{
+		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
+		ASSERT_LOG(tattrib_offsets_.size() != 0, "tattrib_offsets_.size() == 0");
+
+		glActiveTexture(GL_TEXTURE0);
+		get_terrain_info().get_tex().set_as_current_texture();
+		glUniform1i(u_texture_, 0);
+
+		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_mat();
+		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+
+		if(lighting_enabled()) {
+			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
+			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, model());
+			glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
+			glUniform1f(light_power_uniform(), 15000.0f);
+			glUniform1f(shininess_uniform(), 5.0f);
+			glUniform1f(gamma_uniform(), gamma());
+		}
+
+		glEnableVertexAttribArray(position_uniform());
+		glEnableVertexAttribArray(a_texcoord_);
+		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
+			if(debug_draw_faces & (1 << n)) {
+				if(lighting_enabled()) {
+					glUniform3fv(normal_uniform(), 1, glm::value_ptr(normals()[n]));
+				}
+				glBindBuffer(GL_ARRAY_BUFFER, vbo()[0]);
+				glVertexAttribPointer(position_uniform(), 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(get_vertex_attribute_offsets()[n]));
+				glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
+				glVertexAttribPointer(a_texcoord_, 2, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(tattrib_offsets_[n]));
+				glDrawArrays(GL_TRIANGLES, 0, get_num_vertices()[n]);
+			}
+		}
+		glDisableVertexAttribArray(position_uniform());
+		glDisableVertexAttribArray(a_texcoord_);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
+	}
+
+	variant chunk_textured::get_tile_type(int x, int y, int z) const
+	{
+		auto it = tiles_.find(position(x, y, z));
+		if(it == tiles_.end()) {
+			return variant();
+		}
+		return variant(it->second);
+	}
+
+	variant chunk_colored::get_tile_type(int x, int y, int z) const
+	{
+		auto it = tiles_.find(position(x, y, z));
+		if(it == tiles_.end()) {
+			return variant();
+		}
+		std::vector<variant> v;
+		v.push_back(variant(it->second.r));
+		v.push_back(variant(it->second.g));
+		v.push_back(variant(it->second.b));
+		v.push_back(variant(it->second.a));
+		return variant(&v);
+	}
+
+	std::vector<variant> chunk_colored::create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist)
+	{
+		std::vector<variant> vertex_list;
+		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
+			int x = t->first.x;
+			int y = t->first.y;
+			int z = t->first.z;
+
+			if(y < size_y() - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+					vlist[std::make_pair(x,z)] = y+1;
+				}
+			} else {
+				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+				vlist[std::make_pair(x,z)] = y+1;
+			}
+		}
+		return vertex_list;
+	}
+
+	std::vector<variant> chunk_textured::create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist)
+	{
+		std::vector<variant> vertex_list;
+		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
+			int x = t->first.x;
+			int y = t->first.y;
+			int z = t->first.z;
+
+			if(y < size_y() - 1) {
+				if(is_solid(x, y+1, z) == false) {
+					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+					vlist[std::make_pair(x,z)] = y+1;
+				}
+			} else {
+				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
+				vlist[std::make_pair(x,z)] = y+1;
+			}
+		}
+		return vertex_list;
+	}
+
+	void chunk_colored::handle_set_tile(int x, int y, int z, const variant& type)
+	{
+		tiles_[position(x,y,z)] = graphics::color(type).as_sdl_color();
+	}
+
+	void chunk_colored::handle_del_tile(int x, int y, int z)
+	{
+		auto it = tiles_.find(position(x,y,z));
+		if(it == tiles_.end()) {
+			std::cerr << "chunk_colored::handle_del_tile(): No tile at " << x << "," << y << "," << z << " to delete" << std::endl;
+		} else {
+			tiles_.erase(it);
+		}
+	}
+
+	void chunk_textured::handle_set_tile(int x, int y, int z, const variant& type)
+	{
+		tiles_[position(x,y,z)] = type.as_string();
+	}
+
+	void chunk_textured::handle_del_tile(int x, int y, int z)
+	{
+		auto it = tiles_.find(position(x,y,z));
+		if(it == tiles_.end()) {
+			std::cerr << "chunk_textured::handle_del_tile(): No tile at " << x << "," << y << "," << z << " to delete" << std::endl;
+		} else {
+			tiles_.erase(it);
+		}
+	}
+
+	bool chunk_textured::is_solid(int x, int y, int z) const
+	{
+		auto it = tiles_.find(position(x,y,z));
+		if(it != tiles_.end()) {
+			if(it->second.empty() == false) {
+				auto ti = get_terrain_info().find(it->second);
+				ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second);
+				return !ti->second.transparent;
+			}
+		}
+		return false;
+	}
+
+	bool chunk_colored::is_solid(int x, int y, int z) const
+	{
+		auto it = tiles_.find(position(x,y,z));
+		if(it != tiles_.end()) {
+			return it->second.a == 255;
+		}
+		return false;
+	}
+
+	variant chunk_colored::handle_write()
+	{
+		variant_builder res;
+		std::map<variant,variant> vox;
+		for(auto t : tiles_) {
+			std::vector<variant> v;
+			v.push_back(variant(t.first.x));
+			v.push_back(variant(t.first.y));
+			v.push_back(variant(t.first.z));
+			std::vector<variant> rgba;
+			rgba.push_back(variant(t.second.r));
+			rgba.push_back(variant(t.second.g));
+			rgba.push_back(variant(t.second.b));
+			rgba.push_back(variant(t.second.a));
+			vox[variant(&v)] = variant(&rgba);
+		}
+		std::string s = variant(&vox).write_json();
+		std::vector<char> enc_and_comp(base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end()))));
+		res.add("voxels", std::string(enc_and_comp.begin(), enc_and_comp.end()));
+		return res.build();
+	}
+	
+	variant chunk_textured::handle_write()
+	{
+		variant_builder res;
+		std::map<variant,variant> vox;
+		for(auto t : tiles_) {
+			std::vector<variant> v;
+			v.push_back(variant(t.first.x));
+			v.push_back(variant(t.first.y));
+			v.push_back(variant(t.first.z));
+			vox[variant(&v)] = variant(t.second);
+		}
+		std::string s = variant(&vox).write_json();
+		std::vector<char> enc_and_comp(base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end()))));
+		res.add("voxels", std::string(enc_and_comp.begin(), enc_and_comp.end()));
+		return res.build();
+	}
+	
 
 	namespace
 	{
@@ -1127,8 +1296,27 @@ namespace isometric
 		}
 	}
 
+	namespace chunk_factory 
+	{
+		chunk_ptr create(const variant& v)
+		{
+			if(v.is_callable()) {
+				chunk_ptr c = v.try_convert<chunk>();
+				ASSERT_LOG(c != NULL, "Error converting chunk from callable.");
+				return c;
+			}
+			ASSERT_LOG(v.has_key("type"), "No 'type' attribute found in definition.");
+			const std::string& type = v["type"].as_string();
+			if(type == "textured") {
+				return chunk_ptr(new chunk_textured(v));
+			} else if(type == "colored") {
+				return chunk_ptr(new chunk_colored(v));
+			} else {
+				ASSERT_LOG(true, "Unable to create a chunk of type " << type);
+			}
+			return chunk_ptr();
+		}
+	}
 }
-
-	
 
 #endif

@@ -66,8 +66,8 @@ voxel_editor_dialog::voxel_editor_dialog(editor& e)
 
 	set_clear_bg_amount(255);
 	
-	if(isometric::isomap::get_editor_tiles().empty() == false) {
-		category_ = isometric::isomap::get_editor_tiles().front().group;
+	if(isometric::chunk::get_editor_tiles().empty() == false) {
+		category_ = isometric::chunk::get_editor_tiles().front().group;
 	}
 
 	init();
@@ -85,9 +85,9 @@ void voxel_editor_dialog::init()
 	set_padding(20);
 
 	ASSERT_LOG(editor_.get_voxel_tileset() >= 0 
-		&& size_t(editor_.get_voxel_tileset()) < isometric::isomap::get_editor_tiles().size(),
+		&& size_t(editor_.get_voxel_tileset()) < isometric::chunk::get_editor_tiles().size(),
 		"Index of isometric tileset out of bounds must be between 0 and " 
-		<< isometric::isomap::get_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
+		<< isometric::chunk::get_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
 
 	std::stringstream str;
 
@@ -138,7 +138,7 @@ void voxel_editor_dialog::init()
 	int index = 0, first_index = -1;
 	first_index_ = -1;
 	
-	foreach(const isometric::tile_editor_info& t, isometric::isomap::get_editor_tiles()) {
+	foreach(const isometric::tile_editor_info& t, isometric::chunk::get_editor_tiles()) {
 		if(t.group == category_) {
 			if(first_index_ == -1) {
 				first_index_ = index;
@@ -146,7 +146,7 @@ void voxel_editor_dialog::init()
 			image_widget* preview = new image_widget(t.tex, 54, 54);
 			preview->set_area(t.area);
 			button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
-			tileset_button->set_tooltip(t.name + "(" + t.id + ")", 14);
+			tileset_button->set_tooltip(t.name + "(" + t.id.as_string() + ")", 14);
 			tileset_button->set_dim(58, 58);
 			grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 		}
@@ -242,7 +242,7 @@ void voxel_editor_dialog::show_category_menu()
 	grid->register_selection_callback(boost::bind(&voxel_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
-	foreach(const isometric::tile_editor_info& t, isometric::isomap::get_editor_tiles()) {
+	foreach(const isometric::tile_editor_info& t, isometric::chunk::get_editor_tiles()) {
 		if(categories.count(t.group)) {
 			continue;
 		}
@@ -296,14 +296,14 @@ bool voxel_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
 		case SDL_KEYDOWN:
 			if(event.key.keysym.sym == SDLK_COMMA) {
 				editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
-				while(isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+				while(isometric::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
 				}
 				set_tileset(editor_.get_voxel_tileset());
 				claimed = true;
 			} else if(event.key.keysym.sym == SDLK_PERIOD) {
 				editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
-				while(isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+				while(isometric::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
 				}
 				set_tileset(editor_.get_voxel_tileset());
@@ -319,51 +319,69 @@ bool voxel_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
 void voxel_editor_dialog::random_isomap()
 {
 	int tileset = editor_.get_voxel_tileset();
-	if(tileset >= 0 && tileset < isometric::isomap::get_editor_tiles().size()) {		
-		std::string tile_id = isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].id;
+	if(tileset >= 0 && tileset < isometric::chunk::get_editor_tiles().size()) {		
+		variant tile_id = isometric::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].id;
 
 		variant_builder res;
 		variant_builder iso;
-		// XXX configure this all through parameters.
 		iso.add("width", map_width_);
 		iso.add("height", map_height_);
 		iso.add("depth", map_depth_);
 		iso.add("seed", int(time(NULL)));
 		iso.add("type", tile_id);
-		res.add("shader", "iso_shader");
+
+		// XXX need to add for making colored tiles.
+		//if(colored) {
+		//	res.add("type", "textured");
+		//	res.add("shader", "lighted_color_shader");
+		//	} else {
+		res.add("type", "textured");
+		res.add("shader", "lighted_texture_shader");
+		//	}
 		res.add("random", iso.build());
 
-		level::current().isomap().reset(new isometric::isomap(res.build()));
+		level::current().isomap() = isometric::chunk_factory::create(res.build());
 	}
 }
 
 void voxel_editor_dialog::flat_plane_isomap()
 {
 	int tileset = editor_.get_voxel_tileset();
-	if(tileset >= 0 && tileset < isometric::isomap::get_editor_tiles().size()) {		
-		std::string tile_id = isometric::isomap::get_editor_tiles()[editor_.get_voxel_tileset()].id;
+	if(tileset >= 0 && tileset < isometric::chunk::get_editor_tiles().size()) {		
+		variant tile_id = isometric::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].id;
 
 		variant_builder res;
 		const int xmax = map_width_;
 		const int zmax = map_depth_;
 		const int ymax = map_height_;
 
-		std::string voxels;
+		std::map<variant,variant> voxels;
 		for(int x = 0; x != xmax; ++x) {
 			for(int z = 0; z != zmax; ++z) {
 				for(int y = 0; y != ymax; ++y) {
-					std::stringstream str;
-					str << x << "," << y << "," << z << "," << tile_id << " ";
-					voxels += str.str();
+					std::vector<variant> loc;
+					loc.push_back(variant(x));
+					loc.push_back(variant(y));
+					loc.push_back(variant(z));
+					voxels[variant(&loc)] = tile_id;
 				}
 			}
 		}
 
-		res.add("shader", "iso_shader");
-		std::vector<char> enc = base64::b64encode(zip::compress(std::vector<char>(voxels.begin(), voxels.end())));
+		// XXX need to add for making colored tiles.
+		//if(colored) {
+		//	res.add("type", "textured");
+		//	res.add("shader", "lighted_color_shader");
+		//	} else {
+		res.add("type", "textured");
+		res.add("shader", "lighted_texture_shader");
+		//	}
+
+		std::string s = variant(&voxels).write_json();
+		std::vector<char> enc = base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end())));
 		res.add("voxels", std::string(enc.begin(), enc.end()));
 	
-		level::current().isomap().reset(new isometric::isomap(res.build()));
+		level::current().isomap() = isometric::chunk_factory::create(res.build());
 	}
 }
 

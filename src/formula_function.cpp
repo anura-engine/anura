@@ -4343,15 +4343,14 @@ END_FUNCTION_DEF(is_solid_voxel)
 FUNCTION_DEF(get_voxel_type, 1, 1, "get_voxel_type([int, int, int]) -> string: Returns type of the voxel at a given location if it exists.")
 	variant xyz = args()[0]->evaluate(variables);
 	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
-	std::string stype = level::current().isomap()->get_tile_type(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int());
-	return stype.empty() ? variant() : variant(stype);
+	return level::current().isomap()->get_tile_type(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("[int,int,int]")
 	RETURN_TYPE("string|null")
 END_FUNCTION_DEF(get_voxel_type)
 
 FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin isomap, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
-	isometric::isomap* isomap = args()[0]->evaluate(variables).try_convert<isometric::isomap>();
+	isometric::chunk* isomap = args()[0]->evaluate(variables).try_convert<isometric::chunk>();
 	bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
 	ASSERT_LOG(isomap != NULL, "Invalid argument to graph_from_isomap. Must be of type 'isomap'");
 	return variant(isomap->create_directed_graph(allow_diagonals).get());
