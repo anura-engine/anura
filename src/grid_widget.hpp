@@ -45,6 +45,7 @@ public:
 	virtual void set_dim(int w, int h);
 	void add_row(const std::vector<widget_ptr>& widgets);
 
+	grid& add_col(const std::string& str);
 	grid& add_col(const widget_ptr& widget=widget_ptr());
 
 	grid& finish_row();
@@ -133,6 +134,9 @@ private:
 
 typedef boost::intrusive_ptr<grid> grid_ptr;
 typedef boost::intrusive_ptr<const grid> const_grid_ptr;
+
+int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget);
+int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_widgets);
 
 }
 
