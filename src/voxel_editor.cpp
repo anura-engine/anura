@@ -56,6 +56,14 @@ struct Voxel {
 	int nlayer;
 };
 
+bool operator==(const Voxel& a, const Voxel& b) {
+	return a.color.value() == b.color.value();
+}
+
+bool operator!=(const Voxel& a, const Voxel& b) {
+	return a.color.value() != b.color.value();
+}
+
 struct VoxelArea {
 	VoxelPos top_left, bot_right;
 };
@@ -63,26 +71,33 @@ struct VoxelArea {
 typedef std::map<VoxelPos, Voxel> VoxelMap;
 typedef std::pair<VoxelPos, Voxel> VoxelPair;
 
-variant write_voxel(const VoxelPair& p) {
+variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel) {
 	std::map<variant,variant> m;
 	std::vector<variant> pos;
-	for(int n = 0; n != 3; ++n) {
-		pos.push_back(variant(p.first[n]));
+	for(const VoxelPos& p : positions) {
+		for(int n = 0; n != 3; ++n) {
+			pos.push_back(variant(p[n]));
+		}
 	}
 	m[variant("loc")] = variant(&pos);
-	m[variant("color")] = p.second.color.write();
+	m[variant("color")] = voxel.color.write();
 	return variant(&m);
 }
 
-VoxelPair read_voxel(const variant& v) {
-	const std::vector<int>& pos = v["loc"].as_list_int();
-	ASSERT_LOG(pos.size() == 3, "Bad location: " << v.write_json() << v.debug_location());
+void read_voxels(const variant& v, VoxelMap* out) {
+	std::vector<int> pos = v["loc"].as_list_int();
+	ASSERT_LOG(pos.size()%3 == 0, "Bad location: " << v.write_json() << v.debug_location());
+	graphics::color color(v["color"]);
 
-	VoxelPair result;
+	while(pos.empty() == false) {
+		VoxelPair result;
 
-	std::copy(pos.begin(), pos.end(), &result.first[0]);
-	result.second.color = graphics::color(v["color"]);
-	return result;
+		std::copy(pos.end()-3, pos.end(), &result.first[0]);
+		result.second.color = color;
+		out->insert(result);
+
+		pos.resize(pos.size() - 3);
+	}
 }
 
 struct Layer {
@@ -117,7 +132,7 @@ LayerType read_layer_type(const variant& v) {
 		variant layer_node = p.second;
 		if(layer_node["voxels"].is_list()) {
 			foreach(variant v, layer_node["voxels"].as_list()) {
-				layer.map.insert(read_voxel(v));
+				read_voxels(v, &layer.map);
 			}
 		}
 
@@ -150,10 +165,30 @@ variant write_model(const Model& model) {
 		for(const std::pair<std::string, Layer>& p : layer_type.variations) {
 			std::map<variant,variant> layer_node;
 			layer_node[variant("name")] = variant(p.first);
-			std::vector<variant> voxels;
+
+			std::vector<std::pair<std::vector<VoxelPos>, Voxel> > grouped_voxels;
 			for(const VoxelPair& vp : p.second.map) {
-				voxels.push_back(write_voxel(vp));
+				bool found = false;
+				for(std::pair<std::vector<VoxelPos>, Voxel>& group : grouped_voxels) {
+					if(vp.second == group.second) {
+						found = true;
+						group.first.push_back(vp.first);
+						break;
+					}
+				}
+
+				if(!found) {
+					std::vector<VoxelPos> pos;
+					pos.push_back(vp.first);
+					grouped_voxels.push_back(std::pair<std::vector<VoxelPos>, Voxel>(pos, vp.second));
+				}
 			}
+
+			std::vector<variant> voxels;
+			for(const std::pair<std::vector<VoxelPos>, Voxel>& group : grouped_voxels) {
+				voxels.push_back(write_voxels(group.first, group.second));
+			}
+
 			layer_node[variant("voxels")] = variant(&voxels);
 			variations_node[variant(p.first)] = variant(&layer_node);
 		}
@@ -243,6 +278,8 @@ private:
 	bool handle_event(const SDL_Event& event, bool claimed);
 
 	void on_color_changed(const graphics::color& color);
+	void on_change_layer_button_clicked(int nlayer);
+
 
 	void select_tool(VOXEL_TOOL tool);
 
@@ -444,8 +481,6 @@ void iso_renderer::calculate_camera()
 
 	const GLfloat xdist = sin(camera_hangle_)*hdist;
 	const GLfloat zdist = cos(camera_hangle_)*hdist;
-
-	std::cerr << "LOOK AT: " << xdist << ", " << ydist << ", " << zdist << "\n";
 
 	camera_->look_at(glm::vec3(xdist, ydist, zdist), glm::vec3(0,0,0), glm::vec3(0.0, 1.0, 0.0));
 }
@@ -1755,6 +1790,8 @@ voxel_editor::~voxel_editor()
 	}
 }
 
+std::vector<boost::intrusive_ptr<perspective_widget> > g_perspectives;
+
 void voxel_editor::init()
 {
 	clear();
@@ -1763,16 +1800,28 @@ void voxel_editor::init()
 	const int between_padding = 10;
 	const int widget_width = (area_.w() - sidebar_padding - between_padding)/2;
 	const int widget_height = (area_.h() - between_padding)/2;
-	widget_ptr w;
 
-	w.reset(new perspective_widget(rect(area_.x(), area_.y(), widget_width, widget_height), 1, 0, 0));
-	add_widget(w, w->x(), w->y());
+	rect perspective_areas[] = {
+		rect(area_.x(), area_.y(), widget_width, widget_height),
+		rect(area_.x() + widget_width + between_padding, area_.y(), widget_width, widget_height),
+		rect(area_.x(), area_.y() + widget_height + between_padding, widget_width, widget_height),
+	};
 
-	w.reset(new perspective_widget(rect(area_.x() + widget_width + between_padding, area_.y(), widget_width, widget_height), 0, 1, 0));
-	add_widget(w, w->x(), w->y());
+	if(g_perspectives.empty()) {
+		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[0], 1, 0, 0)));
+		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[1], 0, 1, 0)));
+		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[2], 0, 0, 1)));
+	} else {
+		for(int n = 0; n != 3; ++n) {
+			g_perspectives[n]->set_loc(perspective_areas[n].x(), perspective_areas[n].y());
+			g_perspectives[n]->set_dim(perspective_areas[n].w(), perspective_areas[n].h());
+			g_perspectives[n]->init();
+		}
+	}
 
-	w.reset(new perspective_widget(rect(area_.x(), area_.y() + widget_height + between_padding, widget_width, widget_height), 0, 0, 1));
-	add_widget(w, w->x(), w->y());
+	for(int n = 0; n != 3; ++n) {
+		add_widget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
+	}
 
 	if(!iso_renderer_) {
 		iso_renderer_.reset(new iso_renderer(rect(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height)));
@@ -1806,10 +1855,11 @@ void voxel_editor::init()
 
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
-		grid_ptr layers_grid(new grid(1));
+		grid_ptr layers_grid(new grid(2));
 
 		for(int n = 0; n != layers_.size(); ++n) {
-			layers_grid->add_col(widget_ptr(new label(model_.layer_types[n].name + ": " + layers_[n].name)));
+			layers_grid->add_col(widget_ptr(new label(model_.layer_types[n].name)));
+			layers_grid->add_col(widget_ptr(new button(layers_[n].name, boost::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
 		}
 
 		layers_grid->allow_selection();
@@ -1915,6 +1965,74 @@ bool voxel_editor::handle_event(const SDL_Event& event, bool claimed)
 
 void voxel_editor::on_color_changed(const graphics::color& color)
 {
+}
+
+void voxel_editor::on_change_layer_button_clicked(int nlayer)
+{
+	if(nlayer < 0) {
+		return;
+	}
+
+	assert(nlayer < model_.layer_types.size());
+
+	LayerType& layer = model_.layer_types[nlayer];
+
+	std::vector<std::pair<std::string,Layer> > variations(layer.variations.begin(), layer.variations.end());
+
+	grid_ptr context_menu(new grid(2));
+	context_menu->set_hpad(10);
+
+	for(const std::pair<std::string,Layer>& p : variations) {
+		context_menu->add_col(p.first);
+		context_menu->add_col("");
+	}
+
+	boost::intrusive_ptr<text_editor_widget> editor(new text_editor_widget(100));
+	context_menu->add_col(editor);
+	context_menu->add_col("add");
+
+	int result = show_grid_as_context_menu(context_menu, widget_ptr(this));
+	if(result < 0) {
+		return;
+	}
+
+	if(result <= variations.size() && !editor->text().empty()) {
+		std::cerr << "layer: " << nlayer << "\n";
+		std::string name = editor->text();
+		std::cerr << "editor text name: " << name << "\n";
+		int index = 0;
+		for(index = 0; index < variations.size(); ++index) {
+			if(variations[index].first == name) {
+				break;
+			}
+		}
+
+		if(index == variations.size()) {
+			Layer new_layer;
+			if(result < variations.size()) {
+				new_layer = variations[result].second;
+			}
+
+			new_layer.name = name;
+
+			layer.variations[name] = new_layer;
+			layers_[nlayer] = layer.variations[name];
+			build_voxels();
+			init();
+			return;
+		}
+
+		result = index;
+	}
+
+	if(result < variations.size()) {
+		model_.layer_types[nlayer].variations[layers_[nlayer].name] = layers_[nlayer];
+		layers_[nlayer] = variations[result].second;
+		build_voxels();
+		init();
+	}
+
+	std::cerr << "RESULT: " << result << "\n";
 }
 
 void voxel_editor::select_tool(VOXEL_TOOL tool)

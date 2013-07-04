@@ -14,12 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <functional>
 #include <iostream>
 #include <boost/bind.hpp>
 
 #include "foreach.hpp"
 #include "formula_callable_visitor.hpp"
 #include "grid_widget.hpp"
+#include "label.hpp"
 #include "raster.hpp"
 #include "widget_factory.hpp"
 
@@ -228,6 +230,10 @@ void grid::add_row(const std::vector<widget_ptr>& widgets)
 	}
 
 	recalculate_dimensions();
+}
+
+grid& grid::add_col(const std::string& str) {
+	return add_col(widget_ptr(new label(str, graphics::color_white())));
 }
 
 grid& grid::add_col(const widget_ptr& widget) {
@@ -636,6 +642,73 @@ widget_ptr grid::get_widget_by_id(const std::string& id)
 std::vector<widget_ptr> grid::get_children() const
 {
 	return visible_cells_;
+}
+
+int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget)
+{
+	std::vector<widget_ptr> v;
+	v.push_back(draw_widget);
+	return show_grid_as_context_menu(grid, v);
+}
+
+int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_widgets)
+{
+	grid->set_show_background(true);
+	grid->allow_selection();
+	grid->swallow_clicks();
+	int result = -1;
+	bool quit = false;
+	grid->register_selection_callback(
+	  [&](int nitem) {
+		result = nitem;
+		quit = true;
+	  }
+	);
+
+	int mousex = 0, mousey = 0;
+	SDL_GetMouseState(&mousex, &mousey);
+
+	const int max_x = graphics::screen_width() - grid->width() - 6;
+	const int max_y = graphics::screen_height() - grid->height() - 6;
+
+	grid->set_loc(std::min<int>(max_x, mousex), std::min<int>(max_y, mousey));
+
+	while(!quit) {
+		SDL_Event event;
+		while(SDL_PollEvent(&event)) {
+			bool claimed = grid->process_event(event, false);
+
+			if(claimed) {
+				continue;
+			}
+
+			switch(event.type) {
+			case SDL_KEYDOWN:
+				if(event.key.keysym.sym != SDLK_ESCAPE) {
+					break;
+				}
+			case SDL_MOUSEBUTTONDOWN:
+			case SDL_QUIT:
+				quit = true;
+				break;
+			}
+		}
+
+		graphics::prepare_raster();
+		for(widget_ptr w : draw_widgets) {
+			w->draw();
+		}
+
+		grid->draw();
+
+		gui::draw_tooltip();
+
+		graphics::swap_buffers();
+
+		SDL_Delay(20);
+	}
+
+	return result;
 }
 
 BEGIN_DEFINE_CALLABLE(grid, widget)
