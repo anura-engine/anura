@@ -35,6 +35,7 @@
 #include "preferences.hpp"
 #include "slider.hpp"
 #include "unit_test.hpp"
+#include "voxel_model.hpp"
 
 #if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
@@ -48,159 +49,9 @@
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
 
+using namespace voxel;
+
 namespace {
-typedef boost::array<int, 3> VoxelPos;
-struct Voxel {
-	Voxel() : nlayer(-1) {}
-	graphics::color color;
-	int nlayer;
-};
-
-bool operator==(const Voxel& a, const Voxel& b) {
-	return a.color.value() == b.color.value();
-}
-
-bool operator!=(const Voxel& a, const Voxel& b) {
-	return a.color.value() != b.color.value();
-}
-
-struct VoxelArea {
-	VoxelPos top_left, bot_right;
-};
-
-typedef std::map<VoxelPos, Voxel> VoxelMap;
-typedef std::pair<VoxelPos, Voxel> VoxelPair;
-
-variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel) {
-	std::map<variant,variant> m;
-	std::vector<variant> pos;
-	for(const VoxelPos& p : positions) {
-		for(int n = 0; n != 3; ++n) {
-			pos.push_back(variant(p[n]));
-		}
-	}
-	m[variant("loc")] = variant(&pos);
-	m[variant("color")] = voxel.color.write();
-	return variant(&m);
-}
-
-void read_voxels(const variant& v, VoxelMap* out) {
-	std::vector<int> pos = v["loc"].as_list_int();
-	ASSERT_LOG(pos.size()%3 == 0, "Bad location: " << v.write_json() << v.debug_location());
-	graphics::color color(v["color"]);
-
-	while(pos.empty() == false) {
-		VoxelPair result;
-
-		std::copy(pos.end()-3, pos.end(), &result.first[0]);
-		result.second.color = color;
-		out->insert(result);
-
-		pos.resize(pos.size() - 3);
-	}
-}
-
-struct Layer {
-	std::string name;
-	VoxelMap map;
-};
-
-struct LayerType {
-	std::string name;
-	std::map<std::string, Layer> variations;
-	std::string last_edited_variation;
-};
-
-struct Model {
-	std::vector<LayerType> layer_types;
-};
-
-LayerType read_layer_type(const variant& v) {
-	LayerType result;
-	result.last_edited_variation = v["last_edited_variation"].as_string_default();
-	variant layers_node = v["variations"];
-	if(layers_node.is_null()) {
-		Layer default_layer;
-		default_layer.name = "default";
-		result.variations["default"] = default_layer;
-		return result;
-	}
-
-	for(const std::pair<variant,variant>& p : layers_node.as_map()) {
-		Layer layer;
-		layer.name = p.first.as_string();
-		variant layer_node = p.second;
-		if(layer_node["voxels"].is_list()) {
-			foreach(variant v, layer_node["voxels"].as_list()) {
-				read_voxels(v, &layer.map);
-			}
-		}
-
-		result.variations[layer.name] = layer;
-	}
-
-	return result;
-}
-
-Model read_model(const variant& v) {
-	Model model;
-
-	for(const std::pair<variant,variant>& p : v["layers"].as_map()) {
-		LayerType layer_type = read_layer_type(p.second);
-		layer_type.name = p.first.as_string();
-		model.layer_types.push_back(layer_type);
-	}
-
-	return model;
-}
-
-variant write_model(const Model& model) {
-	std::map<variant,variant> layers_node;
-	for(const LayerType& layer_type : model.layer_types) {
-		std::map<variant,variant> layer_type_node;
-		layer_type_node[variant("name")] = variant(layer_type.name);
-		layer_type_node[variant("last_edited_variation")] = variant(layer_type.last_edited_variation);
-
-		std::map<variant,variant> variations_node;
-		for(const std::pair<std::string, Layer>& p : layer_type.variations) {
-			std::map<variant,variant> layer_node;
-			layer_node[variant("name")] = variant(p.first);
-
-			std::vector<std::pair<std::vector<VoxelPos>, Voxel> > grouped_voxels;
-			for(const VoxelPair& vp : p.second.map) {
-				bool found = false;
-				for(std::pair<std::vector<VoxelPos>, Voxel>& group : grouped_voxels) {
-					if(vp.second == group.second) {
-						found = true;
-						group.first.push_back(vp.first);
-						break;
-					}
-				}
-
-				if(!found) {
-					std::vector<VoxelPos> pos;
-					pos.push_back(vp.first);
-					grouped_voxels.push_back(std::pair<std::vector<VoxelPos>, Voxel>(pos, vp.second));
-				}
-			}
-
-			std::vector<variant> voxels;
-			for(const std::pair<std::vector<VoxelPos>, Voxel>& group : grouped_voxels) {
-				voxels.push_back(write_voxels(group.first, group.second));
-			}
-
-			layer_node[variant("voxels")] = variant(&voxels);
-			variations_node[variant(p.first)] = variant(&layer_node);
-		}
-
-		layer_type_node[variant("variations")] = variant(&variations_node);
-		layers_node[variant(layer_type.name)] = variant(&layer_type_node);
-	}
-
-	std::map<variant,variant> result_node;
-	result_node[variant("layers")] = variant(&layers_node);
-	return variant(&result_node);
-}
 
 struct Command {
 	Command(std::function<void()> redo_fn, std::function<void()> undo_fn)
@@ -440,7 +291,8 @@ iso_renderer& get_iso_renderer() {
 }
 
 iso_renderer::iso_renderer(const rect& area)
-  : camera_(new camera_callable),
+  : video_framebuffer_id_(0),
+    camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	tex_width_(0), tex_height_(0),
 	focused_(false), dragging_view_(false), light_power_(10000.0f), specularity_coef_(5.0f)
@@ -870,6 +722,25 @@ void iso_renderer::render_fbo()
 	carray.clear();
 	narray.clear();
 
+	{
+		std::map<variant,variant> items;
+		items[variant("model")] = variant("./humanoid");
+		static boost::intrusive_ptr<voxel_model> vox_model;
+		if(!vox_model) {
+			vox_model.reset(new voxel_model(variant(&items)));
+			vox_model = vox_model->build_instance();
+			vox_model->set_animation("walk");
+		}
+//		vox_model->get_child("left_legs")->set_rotation("knee_left", "knee_right", SDL_GetTicks()/10.0);
+//		vox_model->get_child("right_legs")->set_rotation("knee_left", "knee_right", -(SDL_GetTicks()/10.0));
+
+		vox_model->process_animation();
+
+		vox_model->generate_geometry(&varray, &narray, &carray);
+		std::cerr << "GEOMETRY: " << narray.size() << "\n";
+	}
+	
+/*
 	for(const VoxelPair& p : get_editor().voxels()) {
 		const VoxelPos& pos = p.first;
 
@@ -989,6 +860,7 @@ void iso_renderer::render_fbo()
 
 		for(int n = 0; n != sizeof(vertex)/sizeof(*vertex); ++n) {
 			varray.push_back(pos[n%3]+vertex[n]);
+			std::cerr << "VERTEX " << n << ": " << varray.back() << "\n";
 			narray.push_back(normal[n]);
 			if(n%3 == 0) {
 				carray.push_back(color.r()/255.0f); 
@@ -997,7 +869,8 @@ void iso_renderer::render_fbo()
 				carray.push_back(color.a()/255.0f);
 			}
 		}
-	}
+	}*/
+	
 
 	if(!varray.empty()) {
 		assert(varray.size() == narray.size());

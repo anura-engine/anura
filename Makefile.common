@@ -187,7 +187,9 @@ objects = \
 	src/variant_callable.o \
 	src/variant_type.o \
 	src/variant_utils.o \
+	src/voxel_animation.o \
 	src/voxel_editor.o \
+	src/voxel_model.o \
 	src/water.o \
 	src/water_particle_system.o \
 	src/weather_particle_system.o \

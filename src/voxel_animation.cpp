@@ -1,0 +1,377 @@
+#ifdef USE_GLES2
+
+#include <boost/shared_array.hpp>
+
+#include <glm/gtc/matrix_transform.hpp>
+
+#include "camera.hpp"
+#include "dialog.hpp"
+#include "module.hpp"
+#include "preferences.hpp"
+#include "unit_test.hpp"
+#include "voxel_model.hpp"
+
+#define EXT_CALL(call) call
+#define EXT_MACRO(macro) macro
+
+namespace {
+using namespace voxel;
+using namespace gui;
+
+class animation_renderer : public gui::widget
+{
+public:
+	explicit animation_renderer(const rect& area);
+	void init();
+private:
+	void handle_draw() const;
+	void handle_process();
+	bool handle_event(const SDL_Event& event, bool claimed);
+
+	void calculate_camera();
+
+	void render_fbo();
+
+	boost::shared_array<GLuint> fbo_texture_ids_;
+	glm::mat4 fbo_proj_;
+	boost::shared_ptr<GLuint> framebuffer_id_;
+	boost::shared_ptr<GLuint> depth_id_;
+
+	GLuint u_lightposition_;
+	GLuint u_lightpower_;
+	GLuint u_shininess_;
+	GLuint u_m_matrix_;
+	GLuint u_v_matrix_;
+	GLuint a_normal_;
+
+	GLint video_framebuffer_id_;
+
+	boost::intrusive_ptr<camera_callable> camera_;
+	GLfloat camera_hangle_, camera_vangle_, camera_distance_;
+
+	bool focused_, dragging_view_;
+
+	int tex_width_, tex_height_;
+
+	GLfloat light_power_, specularity_coef_;
+
+};
+
+animation_renderer::animation_renderer(const rect& area)
+  : video_framebuffer_id_(0),
+    camera_(new camera_callable),
+    camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
+	focused_(false), dragging_view_(false),
+    tex_width_(0), tex_height_(0),
+	light_power_(10000.0f), specularity_coef_(5.0f)
+{
+	set_loc(area.x(), area.y());
+	set_dim(area.w(), area.h());
+
+	init();
+	calculate_camera();
+}
+
+void animation_renderer::init()
+{
+	fbo_proj_ = glm::ortho(0.0f, float(preferences::actual_screen_width()), float(preferences::actual_screen_height()), 0.0f);
+
+	tex_width_ = graphics::texture::allows_npot() ? width() : graphics::texture::next_power_of_2(width());
+	tex_height_ = graphics::texture::allows_npot() ? height() : graphics::texture::next_power_of_2(height());
+
+	glGetIntegerv(EXT_MACRO(GL_FRAMEBUFFER_BINDING), &video_framebuffer_id_);
+	fprintf(stderr, "Init: %dx%d %d\n", tex_width_, tex_height_, (int)video_framebuffer_id_);
+
+	glDepthFunc(GL_LEQUAL);
+	glDepthMask(GL_TRUE);
+
+	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete id;});
+	glGenTextures(1, &fbo_texture_ids_[0]);
+	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
+	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	glBindTexture(GL_TEXTURE_2D, 0);
+
+	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
+	EXT_CALL(glGenFramebuffers)(1, framebuffer_id_.get());
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+
+	// attach the texture to FBO color attachment point
+	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
+                          GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
+	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
+	glGenRenderbuffers(1, depth_id_.get());
+	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
+	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *depth_id_);
+	ASSERT_EQ(glGetError(), 0);
+
+	// check FBO status
+	GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
+	ASSERT_EQ(glGetError(), 0);
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNSUPPORTED));
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNDEFINED));
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT));
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT));
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER));
+	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER));
+	ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
+
+
+	// Grab uniforms and normal attribute
+	gles2::program_ptr shader = gles2::shader_program::get_global("iso_color_line")->shader();
+	u_lightposition_ = shader->get_uniform("LightPosition_worldspace");
+	u_lightpower_ = shader->get_uniform("LightPower");
+	u_shininess_ = shader->get_uniform("Shininess");
+	u_m_matrix_ = shader->get_uniform("m_matrix");
+	u_v_matrix_ = shader->get_uniform("v_matrix");
+	a_normal_ = shader->get_attribute("a_normal");
+}
+
+void animation_renderer::render_fbo()
+{
+	std::cerr << "render fbo\n";
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+
+	//set up the raster projection.
+	glViewport(0, 0, width(), height());
+
+	glClearColor(0.0, 0.0, 0.0, 0.0);
+	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+	glEnable(GL_DEPTH_TEST);
+
+	//start drawing here.
+	gles2::shader_program_ptr shader_program(gles2::shader_program::get_global("iso_color_line"));
+	gles2::program_ptr shader = shader_program->shader();
+	gles2::actives_map_iterator mvp_uniform_itor = shader->get_uniform_reference("mvp_matrix");
+
+	gles2::manager gles2_manager(shader_program);
+
+	glm::mat4 model_matrix(1.0f);
+
+	glm::mat4 mvp = camera_->projection_mat() * camera_->view_mat() * model_matrix;
+
+	shader->set_uniform(mvp_uniform_itor, 1, glm::value_ptr(mvp));
+
+	////////////////////////////////////////////////////////////////////////////
+	// Lighting stuff.
+	glUniform3f(u_lightposition_, 0.0f, 20.0f, 150.0f);
+	glUniform1f(u_lightpower_, light_power_);
+	glUniform1f(u_shininess_, specularity_coef_);
+	glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_matrix));
+	glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, camera_->view());
+	////////////////////////////////////////////////////////////////////////////
+
+	std::vector<GLfloat> varray, carray, narray;
+
+	const GLfloat axes_vertex[] = {
+		0.0, 0.0, 0.0,
+		0.0, 0.0, 10.0,
+		0.0, 0.0, 0.0,
+		0.0, 10.0, 0.0,
+		0.0, 0.0, 0.0,
+		10.0, 0.0, 0.0,
+	};
+
+	for(int n = 0; n != sizeof(axes_vertex)/sizeof(*axes_vertex); ++n) {
+		varray.push_back(axes_vertex[n]);
+		if(n%3 == 0) {
+			carray.push_back(1.0);
+			carray.push_back(1.0);
+			carray.push_back(1.0);
+			carray.push_back(1.0);
+		}
+	}
+
+	gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, 0, 0, &varray[0]);
+	gles2::active_shader()->shader()->color_array(4, GL_FLOAT, 0, 0, &carray[0]);
+	glDrawArrays(GL_LINES, 0, varray.size()/3);
+
+	varray.clear();
+	carray.clear();
+	narray.clear();
+
+	{
+		std::map<variant,variant> items;
+		items[variant("model")] = variant("./humanoid");
+		static boost::intrusive_ptr<voxel_model> vox_model;
+		if(!vox_model) {
+			vox_model.reset(new voxel_model(variant(&items)));
+			vox_model = vox_model->build_instance();
+			vox_model->set_animation("walk");
+		}
+//		vox_model->get_child("left_legs")->set_rotation("knee_left", "knee_right", SDL_GetTicks()/10.0);
+//		vox_model->get_child("right_legs")->set_rotation("knee_left", "knee_right", -(SDL_GetTicks()/10.0));
+
+		vox_model->process_animation();
+
+		vox_model->generate_geometry(&varray, &narray, &carray);
+		std::cerr << "GEOMETRY: " << narray.size() << "\n";
+	}
+
+	if(!varray.empty()) {
+		assert(varray.size() == narray.size());
+		shader->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		shader->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
+		shader->vertex_attrib_array(a_normal_, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
+		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
+	}
+
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
+
+	glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
+
+	glDisable(GL_DEPTH_TEST);
+}
+
+void animation_renderer::handle_draw() const
+{
+	std::cerr << "draw anim...\n";
+	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
+
+	GLint cur_id = graphics::texture::get_current_texture();
+	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
+
+	const int w_odd = width() % 2;
+	const int h_odd = height() % 2;
+	const int w = width() / 2;
+	const int h = height() / 2;
+
+	glm::mat4 mvp = fbo_proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+w, y()+h, 0.0f));
+	glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+
+	GLfloat varray[] = {
+		-w, -h,
+		-w, h+h_odd,
+		w+w_odd, -h,
+		w+w_odd, h+h_odd
+	};
+	const GLfloat tcarray[] = {
+		0.0f, GLfloat(height())/tex_height_,
+		0.0f, 0.0f,
+		GLfloat(width())/tex_width_, GLfloat(height())/tex_height_,
+		GLfloat(width())/tex_width_, 0.0f,
+	};
+	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
+	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
+	glBindTexture(GL_TEXTURE_2D, cur_id);
+
+	glPushMatrix();
+	glTranslatef(x(), y(), 0.0f);
+	glPopMatrix();
+}
+
+void animation_renderer::handle_process()
+{
+	render_fbo();
+}
+
+bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
+{
+	switch(event.type) {
+	case SDL_MOUSEBUTTONDOWN: {
+		dragging_view_ = focused_;
+		break;
+	}
+
+	case SDL_MOUSEMOTION: {
+		const SDL_MouseMotionEvent& motion = event.motion;
+
+		Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
+			if(motion.xrel) {
+				camera_hangle_ += motion.xrel*0.02;
+			}
+
+			if(motion.yrel) {
+				camera_vangle_ += motion.yrel*0.02;
+			}
+			
+			calculate_camera();
+		}
+
+		if(motion.x >= x() && motion.y >= y() &&
+		   motion.x <= x() + width() && motion.y <= y() + height()) {
+			focused_ = true;
+		} else {
+			focused_ = false;
+		}
+
+		break;
+	}
+
+	}
+
+	return widget::handle_event(event, claimed);
+}
+
+void animation_renderer::calculate_camera()
+{
+	const GLfloat hdist = sin(camera_vangle_)*camera_distance_;
+	const GLfloat ydist = cos(camera_vangle_)*camera_distance_;
+
+	const GLfloat xdist = sin(camera_hangle_)*hdist;
+	const GLfloat zdist = cos(camera_hangle_)*hdist;
+
+	camera_->look_at(glm::vec3(xdist, ydist, zdist), glm::vec3(0,0,0), glm::vec3(0.0, 1.0, 0.0));
+}
+
+class voxel_animation_editor : public gui::dialog
+{
+public:
+	voxel_animation_editor(const rect& r, const std::string& fname);
+	void init();
+private:
+	bool handle_event(const SDL_Event& event, bool claimed);
+
+	boost::intrusive_ptr<animation_renderer> renderer_;
+	rect area_;
+
+};
+
+voxel_animation_editor::voxel_animation_editor(const rect& r, const std::string& fname)
+  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r)
+{
+	init();
+}
+
+void voxel_animation_editor::init()
+{
+	clear();
+
+	if(!renderer_) {
+		renderer_.reset(new animation_renderer(rect(area_.x() + 10, area_.y() + 10, area_.w() - 200, area_.h() - 20)));
+	}
+
+	add_widget(renderer_, renderer_->x(), renderer_->y());
+}
+
+bool voxel_animation_editor::handle_event(const SDL_Event& event, bool claimed)
+{
+	return dialog::handle_event(event, claimed);
+}
+
+}
+
+UTILITY(voxel_animator)
+{
+	std::deque<std::string> arguments(args.begin(), args.end());
+
+	ASSERT_LOG(arguments.size() <= 1, "Unexpected arguments");
+
+	std::string fname;
+	if(arguments.empty() == false) {
+		fname = module::map_file(arguments.front());
+	}
+
+	boost::intrusive_ptr<voxel_animation_editor> editor(new voxel_animation_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
+	editor->show_modal();
+}
+
+#endif //USE_GLES2
