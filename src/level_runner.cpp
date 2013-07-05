@@ -901,7 +901,11 @@ bool level_runner::play_cycle()
 		if(g_levels_modified.count(level_path)) {
 			fprintf(stderr, "XX REPLAY ON MOD: %s\n", level_path.c_str());
 			g_levels_modified.erase(level_path);
-			replay_level_from_start();
+// THIS FEATURE DISABLED FOR NOW. TODO: FIX IT. It allows the level to be
+// replayed from the start when the level.cfg is modified, allowing
+// 'instant updates'. It would occur even if the game saved the level though
+// which is bad and makes saves slow.
+//			replay_level_from_start();
 		}
 	}
 #endif
