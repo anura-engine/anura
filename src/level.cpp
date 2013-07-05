@@ -246,6 +246,7 @@ level::level(const std::string& level_cfg, variant node)
 #endif
 
 #if defined(USE_ISOMAP)
+	ASSERT_LOG(!node.has_key("isomap") || !node.has_key("isoworld"), "Level can't have both 'isoworld' and 'isomap' attributes.");
 	if(node.has_key("isomap")) {
 		isomap_ = isometric::chunk_factory::create(node["isomap"]);
 	} else {
@@ -255,6 +256,12 @@ level::level(const std::string& level_cfg, variant node)
 		camera_.reset(new camera_callable(node["camera"]));
 	} else {
 		camera_.reset(new camera_callable());
+	}
+
+	if(node.has_key("isoworld")) {
+		iso_world_.reset(new isometric::world(node["isoworld"]));
+	} else {
+		iso_world_.reset();
 	}
 #endif
 
@@ -1546,6 +1553,8 @@ variant level::write() const
 #if defined(USE_ISOMAP)
 	if(isomap_) {
 		res.add("isomap", isomap_->write());
+	} else if(iso_world_) {
+		res.add("isoworld", iso_world_->write());
 	}
 	if(camera_) {
 		res.add("camera", camera_->write());
@@ -2044,6 +2053,11 @@ void level::draw(int x, int y, int w, int h) const
 		// XX hackity hack
 		gles2::shader_program_ptr active = gles2::active_shader();
 		isomap_->draw();
+		glUseProgram(active->shader()->get());
+	} else if(iso_world_) {
+		// XX hackity hack
+		gles2::shader_program_ptr active = gles2::active_shader();
+		iso_world_->draw();
 		glUseProgram(active->shader()->get());
 	}
 #endif
@@ -2551,6 +2565,12 @@ void level::process()
 	}
 
 	editor_dragging_objects_ = false;
+
+#if defined(USE_ISOMAP)
+	if(iso_world_) {
+		iso_world_->process();
+	}
+#endif
 }
 
 void level::process_draw()
@@ -3985,17 +4005,30 @@ DEFINE_SET_FIELD
 	}
 
 #if defined(USE_ISOMAP)
-DEFINE_FIELD(isomap, "builtin isomap|null")
+DEFINE_FIELD(isomap, "builtin chunk|null")
 	if(obj.isomap_) {
 		return variant(obj.isomap_.get());
 	} else {
 		return variant();
 	}
-DEFINE_SET_FIELD_TYPE("builtin isomap|map|null")
+DEFINE_SET_FIELD_TYPE("builtin chunk|map|null")
 	if(value.is_null()) {
 		obj.isomap_.reset(); 
 	} else {
 		obj.isomap_ = isometric::chunk_factory::create(value);
+	}
+
+DEFINE_FIELD(isoworld, "builtin world|null")
+	if(obj.iso_world_) {
+		return variant(obj.iso_world_.get());
+	} else {
+		return variant();
+	}
+DEFINE_SET_FIELD_TYPE("builtin isomap|map|null")
+	if(value.is_null()) {
+		obj.iso_world_.reset(); 
+	} else {
+		obj.iso_world_.reset(new isometric::world(value));
 	}
 
 DEFINE_FIELD(camera, "builtin camera_callable")

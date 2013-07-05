@@ -29,7 +29,7 @@
 #include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
-#include "isotile.hpp"
+#include "isochunk.hpp"
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
 #include "raster.hpp"

@@ -22,7 +22,7 @@
 
 #include "color_picker.hpp"
 #include "dialog.hpp"
-#include "isotile.hpp"
+#include "isochunk.hpp"
 #include "widget.hpp"
 
 class editor;

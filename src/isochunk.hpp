@@ -58,6 +58,7 @@ namespace isometric
 		void init();
 		void build();
 		void draw() const;
+		void do_draw() const;
 		variant write();
 
 		virtual bool is_solid(int x, int y, int z) const = 0;
@@ -81,6 +82,7 @@ namespace isometric
 		void set_gamma(float g);
 
 		bool lighting_enabled() const { return lighting_enabled_; }
+		bool skip_lighting() const { return skip_lighting_; }
 
 		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
@@ -100,8 +102,6 @@ namespace isometric
 		virtual void handle_del_tile(int x, int y, int z) = 0;
 		virtual variant handle_write() = 0;
 		virtual std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist) = 0;
-		const GLfloat* model() const { return glm::value_ptr(model_); }
-		const glm::mat4& model_mat() const { return model_; }
 
 		void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat size, std::vector<GLfloat>& varray);
 		std::vector<std::vector<GLfloat> >& get_vertex_data() { return varray_; }
@@ -123,6 +123,7 @@ namespace isometric
 		GLuint gamma_uniform() const { return u_gamma_; }
 		
 		gles2::program_ptr shader() { return shader_; }
+		const glm::vec3& worldspace_position() const {return worldspace_position_; }
 	private:
 		DECLARE_CALLABLE(chunk);
 
@@ -138,6 +139,7 @@ namespace isometric
 		std::vector<size_t> num_vertices_;
 
 		bool lighting_enabled_;
+		bool skip_lighting_;
 
 		int size_x_;
 		int size_y_;
@@ -145,6 +147,7 @@ namespace isometric
 
 		float gamma_;
 
+		void get_uniforms_and_attributes();
 		gles2::program_ptr shader_;
 		GLuint u_mvp_matrix_;
 		GLuint u_lightposition_;
@@ -157,7 +160,7 @@ namespace isometric
 		GLuint u_gamma_;
 		std::vector<glm::vec3> normals_;
 
-		glm::mat4 model_;
+		glm::vec3 worldspace_position_;
 	};
 
 	class chunk_colored : public chunk

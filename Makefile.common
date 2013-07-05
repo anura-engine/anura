@@ -101,7 +101,8 @@ objects = \
 	src/input.o \
 	src/ipc.o \
 	src/iphone_controls.o \
-	src/isotile.o \
+	src/isochunk.o \
+	src/isoworld.o \
 	src/joystick.o \
 	src/json_parser.o \
 	src/json_tokenizer.o \

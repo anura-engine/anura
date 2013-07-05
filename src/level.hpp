@@ -44,7 +44,7 @@
 #include "geometry.hpp"
 #include "gui_formula_functions.hpp"
 #include "hex_map.hpp"
-#include "isotile.hpp"
+#include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "movement_script.hpp"
@@ -157,6 +157,8 @@ public:
 	bool is_mouselook_inverted() const { return mouselook_inverted_; }
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 	std::vector<entity_ptr> get_characters_at_world_point(const glm::vec3& pt);
+
+	isometric::world_ptr& iso_world() { return iso_world_; }
 #endif
 
 
@@ -696,6 +698,7 @@ private:
 
 #if defined(USE_ISOMAP)
 	isometric::chunk_ptr isomap_;
+	isometric::world_ptr iso_world_;
 	camera_callable_ptr camera_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;

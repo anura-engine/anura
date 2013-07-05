@@ -27,7 +27,7 @@
 #include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
-#include "isotile.hpp"
+#include "isochunk.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
