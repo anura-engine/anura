@@ -20,7 +20,7 @@
 #include "base64.hpp"
 #include "compress.hpp"
 #include "foreach.hpp"
-#include "isotile.hpp"
+#include "isochunk.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "preferences.hpp"
@@ -187,7 +187,8 @@ namespace isometric
 	chunk::chunk()
 		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
 		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
-		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f)
+		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f),
+		skip_lighting_(false), worldspace_position_(0.0f)
 	{
 		// Call init *before* doing anything else
 		init();
@@ -196,7 +197,8 @@ namespace isometric
 	chunk::chunk(const variant& node)
 		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
 		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
-		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f)
+		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f),
+		skip_lighting_(node["skip_lighting_uniforms"].as_bool(false)), worldspace_position_(0.0f)
 	{
 		// Call init *before* doing anything else
 		init();
@@ -208,34 +210,14 @@ namespace isometric
 		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
 		ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be a string");
 		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
+		get_uniforms_and_attributes();
 
-		u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
-		a_position_ = shader_->get_fixed_attribute("vertex");
-		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
-
-		u_lightposition_ = shader_->get_fixed_uniform("light_position");
-		u_lightpower_ = shader_->get_fixed_uniform("light_power");
-		u_shininess_ = shader_->get_fixed_uniform("shininess");
-		u_m_matrix_ = shader_->get_fixed_uniform("m_matrix");
-		u_v_matrix_ = shader_->get_fixed_uniform("v_matrix");
-		u_normal_ = shader_->get_fixed_uniform("normal");
-		u_gamma_ = shader_->get_fixed_uniform("gamma");
-
-		lighting_enabled_ = u_lightposition_ != -1 
-			&& u_lightpower_ != -1
-			&& u_shininess_ != -1
-			&& u_m_matrix_ != -1
-			&& u_v_matrix_ != -1
-			&& u_normal_ != -1;
-		std::cerr << "chunk::chunk Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
-		if(!lighting_enabled_) {
-			std::cerr << "light_position: " << u_lightposition_ << std::endl;
-			std::cerr << "light_power: " << u_lightpower_ << std::endl;
-			std::cerr << "shininess: " << u_shininess_ << std::endl;
-			std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
-			std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
-			std::cerr << "normal: " << u_normal_ << std::endl;
+		if(node.has_key("worldspace_position")) {
+			const variant& wp = node["worldspace_position"];
+			ASSERT_LOG(wp.is_list() && wp.num_elements() == 3, "'worldspace_position' attribute must be a list of 3 integers");
+			worldspace_position_.x = float(wp[0].as_decimal().as_float());
+			worldspace_position_.y = float(wp[1].as_decimal().as_float());
+			worldspace_position_.z = float(wp[2].as_decimal().as_float());
 		}
 	}
 
@@ -258,6 +240,39 @@ namespace isometric
 
 	chunk::~chunk()
 	{
+	}
+
+	void chunk::get_uniforms_and_attributes()
+	{
+		u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
+		a_position_ = shader_->get_fixed_attribute("vertex");
+		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
+
+		u_lightposition_ = shader_->get_fixed_uniform("light_position");
+		u_lightpower_ = shader_->get_fixed_uniform("light_power");
+		u_shininess_ = shader_->get_fixed_uniform("shininess");
+		u_m_matrix_ = shader_->get_fixed_uniform("m_matrix");
+		u_v_matrix_ = shader_->get_fixed_uniform("v_matrix");
+		u_normal_ = shader_->get_fixed_uniform("normal");
+		u_gamma_ = shader_->get_fixed_uniform("gamma");
+
+		lighting_enabled_ = u_lightposition_ != -1 
+			&& u_lightpower_ != -1
+			&& u_shininess_ != -1
+			&& u_m_matrix_ != -1
+			&& u_v_matrix_ != -1
+			&& u_normal_ != -1;
+
+		std::cerr << "chunk::get_uniforms_and_attributes Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
+		if(!lighting_enabled_) {
+			std::cerr << "light_position: " << u_lightposition_ << std::endl;
+			std::cerr << "light_power: " << u_lightpower_ << std::endl;
+			std::cerr << "shininess: " << u_shininess_ << std::endl;
+			std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
+			std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
+			std::cerr << "normal: " << u_normal_ << std::endl;
+		}
 	}
 
 	const std::vector<tile_editor_info>& chunk::get_editor_tiles()
@@ -364,7 +379,7 @@ namespace isometric
 		}
 	}
 
-	void chunk::draw() const
+	void chunk::draw(const camera_callable_ptr& camera) const
 	{
 		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -373,10 +388,16 @@ namespace isometric
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
 
-		handle_draw();
+		handle_draw(camera);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
+	}
+
+	void chunk::do_draw(const camera_callable_ptr& camera) const
+	{
+		// Called by world, assumes everything is already setup.
+		handle_draw(camera);
 	}
 
 	void chunk::set_gamma(float g) 
@@ -532,6 +553,8 @@ namespace isometric
 			int size_z = node["random"]["depth"].as_int(32);
 			set_size(size_x, size_y, size_z);
 
+			int noise_height = node["noise_height"].as_int(size_y);
+
 			uint32_t seed = node["random"]["seed"].as_int(0);
 			noise::simplex::init(seed);
 
@@ -544,7 +567,7 @@ namespace isometric
 				vec[0] = float(x)/float(size_x);
 				for(int z = 0; z != size_z; ++z) {
 					vec[1] = float(z)/float(size_z);
-					int h = int(noise::simplex::noise2(&vec[0]) * size_y);
+					int h = int(noise::simplex::noise2(&vec[0]) * noise_height);
 					h = std::max<int>(1, std::min<int>(size_y-1, h));
 					for(int y = 0; y != h; ++y) {
 						if(node["random"].has_key("type")) {
@@ -1020,21 +1043,24 @@ namespace isometric
 		add_tarray_data(BOTTOM_FACE, area, tarray_[BOTTOM_FACE]);
 	}
 
-	void chunk_colored::handle_draw() const
+	void chunk_colored::handle_draw(const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
 
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_mat();
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting_enabled()) {
-			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
-			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, model());
-			glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
-			glUniform1f(light_power_uniform(), 15000.0f);
+			if(!skip_lighting()) {
+				glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
+				glUniform1f(light_power_uniform(), 15000.0f);
+				glUniform1f(gamma_uniform(), gamma());
+			}
 			glUniform1f(shininess_uniform(), 5.0f);
-			glUniform1f(gamma_uniform(), gamma());
+			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
+			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(model));
 		}
 
 		glEnableVertexAttribArray(position_uniform());
@@ -1056,7 +1082,7 @@ namespace isometric
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void chunk_textured::handle_draw() const
+	void chunk_textured::handle_draw(const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(tattrib_offsets_.size() != 0, "tattrib_offsets_.size() == 0");
@@ -1065,16 +1091,19 @@ namespace isometric
 		get_terrain_info().get_tex().set_as_current_texture();
 		glUniform1i(u_texture_, 0);
 
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model_mat();
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting_enabled()) {
-			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
-			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, model());
-			glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
-			glUniform1f(light_power_uniform(), 15000.0f);
+			if(!skip_lighting()) {
+				glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
+				glUniform1f(light_power_uniform(), 15000.0f);
+				glUniform1f(gamma_uniform(), gamma());
+			}
 			glUniform1f(shininess_uniform(), 5.0f);
-			glUniform1f(gamma_uniform(), gamma());
+			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
+			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(model));
 		}
 
 		glEnableVertexAttribArray(position_uniform());

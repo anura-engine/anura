@@ -99,4 +99,7 @@ namespace gui
 		game_logic::formula_ptr change_handler_;
 		game_logic::formula_callable_ptr handler_arg_;
 	};
+
+	typedef boost::intrusive_ptr<color_picker> color_picker_ptr;
+	typedef boost::intrusive_ptr<const color_picker> const_color_picker_ptr;
 }
