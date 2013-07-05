@@ -50,6 +50,28 @@ namespace isometric
 			float(lp[2].as_decimal().as_float()));
 	}
 
+	void world::set_tile(int x, int y, int z, const variant& type)
+	{
+		int fx = int(floor(x));
+		int fy = int(floor(y));
+		int fz = int(floor(z));
+		auto it = chunks_.find(position(fx, fy, fz));
+		if(it != chunks_.end()) {
+			it->second->set_tile(x-fx, y-fy, z-fz, type);
+		}
+	}
+	
+	void world::del_tile(int x, int y, int z)
+	{
+		int fx = int(floor(x));
+		int fy = int(floor(y));
+		int fz = int(floor(z));
+		auto it = chunks_.find(position(fx, fy, fz));
+		if(it != chunks_.end()) {
+			it->second->del_tile(x-fx, y-fy, z-fz);
+		}
+	}
+
 	void world::build()
 	{
 		// Generates initial chunks
@@ -84,7 +106,7 @@ namespace isometric
 		//get_active_chunks();
 	}
 
-	void world::draw() const
+	void world::draw(const camera_callable_ptr& camera) const
 	{
 		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -100,7 +122,7 @@ namespace isometric
 		}
 
 		for(auto chunks : active_chunks_) {
-			chunks->do_draw();
+			chunks->do_draw(camera);
 		}
 
 		glDisable(GL_DEPTH_TEST);

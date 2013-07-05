@@ -202,6 +202,7 @@ objects = \
 	src/utility_query.o \
 	src/utility_render_level.o \
     src/vector_text.o \
+	src/view3d_widget.o \
 	src/voxel_editor_dialog.o
 	
 

@@ -379,7 +379,7 @@ namespace isometric
 		}
 	}
 
-	void chunk::draw() const
+	void chunk::draw(const camera_callable_ptr& camera) const
 	{
 		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -388,16 +388,16 @@ namespace isometric
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
 
-		handle_draw();
+		handle_draw(camera);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 	}
 
-	void chunk::do_draw() const
+	void chunk::do_draw(const camera_callable_ptr& camera) const
 	{
 		// Called by world, assumes everything is already setup.
-		handle_draw();
+		handle_draw(camera);
 	}
 
 	void chunk::set_gamma(float g) 
@@ -1043,13 +1043,13 @@ namespace isometric
 		add_tarray_data(BOTTOM_FACE, area, tarray_[BOTTOM_FACE]);
 	}
 
-	void chunk_colored::handle_draw() const
+	void chunk_colored::handle_draw(const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting_enabled()) {
@@ -1082,7 +1082,7 @@ namespace isometric
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void chunk_textured::handle_draw() const
+	void chunk_textured::handle_draw(const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(tattrib_offsets_.size() != 0, "tattrib_offsets_.size() == 0");
@@ -1091,9 +1091,8 @@ namespace isometric
 		get_terrain_info().get_tex().set_as_current_texture();
 		glUniform1i(u_texture_, 0);
 
-		//glm::mat4 model = glm::translate(glm::translate(glm::mat4(1.0f), glm::vec3(-size_x()/2, -size_y()/2, -size_z()/2)), worldspace_position());
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting_enabled()) {

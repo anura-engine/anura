@@ -43,8 +43,11 @@ namespace isometric
 
 		bool lighting_enabled() const { return lighting_enabled_; }
 
+		void set_tile(int x, int y, int z, const variant& type);
+		void del_tile(int x, int y, int z);
+
 		void build();
-		void draw() const;
+		void draw(const camera_callable_ptr& camera) const;
 		variant write();
 		void process();
 	protected:

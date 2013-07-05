@@ -38,6 +38,9 @@ camera_callable::camera_callable(const variant& node)
 	if(node.has_key("mouse_speed")) {
 		mouse_speed_ = float(node["mouse_speed"].as_decimal().as_float());
 	}
+	if(node.has_key("aspect")) {
+		aspect_ = float(node["aspect"].as_decimal().as_float());
+	}
 
 	if(node.has_key("position")) {
 		ASSERT_LOG(node["position"].is_list() && node["position"].num_elements() == 3, 
@@ -191,6 +194,10 @@ DEFINE_FIELD(fov, "decimal")
 	return variant(obj.fov());
 DEFINE_SET_FIELD
 	obj.set_fov(value.as_decimal().as_float());
+DEFINE_FIELD(aspect, "decimal")
+	return variant(obj.aspect());
+DEFINE_SET_FIELD
+	obj.set_aspect(value.as_decimal().as_float());
 DEFINE_FIELD(clip_planes, "[decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.near_clip_));
@@ -274,6 +281,12 @@ void camera_callable::set_clip_planes(float z_near, float z_far)
 {
 	near_clip_ = z_near;
 	far_clip_ = z_far;
+	compute_projection();
+}
+
+void camera_callable::set_aspect(float aspect)
+{
+	aspect_ = aspect;
 	compute_projection();
 }
 

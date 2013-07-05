@@ -47,6 +47,7 @@
 #include "selector_widget.hpp"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
+#include "view3d_widget.hpp"
 
 namespace widget_factory {
 
@@ -115,6 +116,10 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new gui::color_picker(v, e));
 	} else if(wtype == "file_chooser") {
 		return widget_ptr(new gui::file_chooser_dialog(v, e));
+#if defined(USE_ISOMAP)
+	} else if(wtype == "view3d") {
+		return widget_ptr(new gui::view3d_widget(v, e));
+#endif
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else {

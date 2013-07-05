@@ -27,12 +27,14 @@ public:
 	void set_hangle(float ha) { horizontal_angle_ = ha; }
 	void set_vangle(float va) { vertical_angle_ = va; }
 	void set_fov(float fov);
+	void set_aspect(float aspect);
 	void set_clip_planes(float z_near, float z_far);
 	float mousespeed() const { return mouse_speed_; }
 	float speed() const { return speed_; }
 	float hangle() const { return horizontal_angle_; }
 	float vangle() const { return vertical_angle_; }
 	float fov() const { return fov_; }
+	float aspect() const { return aspect_; }
 	float near_clip() const { return near_clip_; }
 	float far_clip() const { return far_clip_; }
 	const glm::vec3& position() const { return position_; }
@@ -69,6 +71,8 @@ private:
 
 	float near_clip_;
 	float far_clip_;
+
+	float aspect_;
 
 	glm::mat4 projection_;
 	glm::mat4 view_;

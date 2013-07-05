@@ -57,8 +57,8 @@ namespace isometric
 		
 		void init();
 		void build();
-		void draw() const;
-		void do_draw() const;
+		void draw(const camera_callable_ptr& camera) const;
+		void do_draw(const camera_callable_ptr& camera) const;
 		variant write();
 
 		virtual bool is_solid(int x, int y, int z) const = 0;
@@ -97,7 +97,7 @@ namespace isometric
 		};
 
 		virtual void handle_build() = 0;
-		virtual void handle_draw() const = 0;
+		virtual void handle_draw(const camera_callable_ptr& camera) const = 0;
 		virtual void handle_set_tile(int x, int y, int z, const variant& type) = 0;
 		virtual void handle_del_tile(int x, int y, int z) = 0;
 		virtual variant handle_write() = 0;
@@ -173,7 +173,7 @@ namespace isometric
 		variant get_tile_type(int x, int y, int z) const;
 	protected:
 		void handle_build();
-		void handle_draw() const;
+		void handle_draw(const camera_callable_ptr& camera) const;
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);
@@ -205,7 +205,7 @@ namespace isometric
 		variant get_tile_type(int x, int y, int z) const;
 	protected:
 		void handle_build();
-		void handle_draw() const;
+		void handle_draw(const camera_callable_ptr& camera) const;
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);

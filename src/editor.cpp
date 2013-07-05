@@ -2001,7 +2001,11 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 				ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
 					"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
 			}
-			lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+			if(lvl_->isomap()) {
+				lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+			} else if(lvl_->iso_world()) {
+				lvl_->iso_world()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+			}
 		} else if(event.button == SDL_BUTTON_RIGHT) {
 			// add voxel
 			glm::ivec3 at_pos = g_voxel_coord + g_facing;
@@ -2009,9 +2013,17 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 				if(voxel_dialog_->textured_mode()) {
 					ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
 						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
-					lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+					if(lvl_->isomap()) {
+						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+					} else if(lvl_->iso_world()) {
+						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+					}
 				} else {
-					lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
+					if(lvl_->isomap()) {
+						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
+					} else if(lvl_->iso_world()) {
+						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
+					}
 				}
 			}
 		}
