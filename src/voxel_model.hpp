@@ -45,7 +45,7 @@ void read_voxels(const variant& v, VoxelMap* out);
 struct AnimationTransform {
 	std::string layer;
 	std::string pivot_src, pivot_dst;
-	game_logic::formula_ptr rotation_formula;
+	game_logic::formula_ptr rotation_formula, translation_formula;
 };
 
 struct Animation {
@@ -97,7 +97,11 @@ public:
 	void set_animation(const std::string& id);
 	void process_animation(GLfloat advance=0.02);
 
-	void set_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation);
+	const std::map<std::string, boost::shared_ptr<Animation> >& animations() const { return animations_; }
+
+	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation);
+	void accumulate_translation(const glm::vec3& translate);
+	void clear_transforms();
 
 	const std::string& name() const { return name_; }
 
@@ -116,6 +120,7 @@ private:
 		GLfloat amount;
 	};
 	std::vector<Rotation> rotation_;
+	glm::vec3 translation_;
 	std::vector<glm::vec3> vertexes_;
 
 	int add_vertex(const glm::vec3& vertex);

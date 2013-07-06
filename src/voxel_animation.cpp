@@ -1,11 +1,15 @@
 #ifdef USE_GLES2
 
+#include <boost/bind.hpp>
 #include <boost/shared_array.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "button.hpp"
 #include "camera.hpp"
 #include "dialog.hpp"
+#include "grid_widget.hpp"
+#include "label.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
@@ -21,8 +25,12 @@ using namespace gui;
 class animation_renderer : public gui::widget
 {
 public:
-	explicit animation_renderer(const rect& area);
+	animation_renderer(const rect& area, const std::string& fname);
 	void init();
+
+	void set_animation(const std::string& anim);
+
+	const voxel_model& model() const { return *vox_model_; }
 private:
 	void handle_draw() const;
 	void handle_process();
@@ -55,9 +63,11 @@ private:
 
 	GLfloat light_power_, specularity_coef_;
 
+	boost::intrusive_ptr<voxel_model> vox_model_;
+
 };
 
-animation_renderer::animation_renderer(const rect& area)
+animation_renderer::animation_renderer(const rect& area, const std::string& fname)
   : video_framebuffer_id_(0),
     camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
@@ -65,6 +75,12 @@ animation_renderer::animation_renderer(const rect& area)
     tex_width_(0), tex_height_(0),
 	light_power_(10000.0f), specularity_coef_(5.0f)
 {
+	std::map<variant,variant> items;
+	items[variant("model")] = variant(fname);
+	vox_model_.reset(new voxel_model(variant(&items)));
+	vox_model_ = vox_model_->build_instance();
+	vox_model_->set_animation("stand");
+
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
 
@@ -129,6 +145,11 @@ void animation_renderer::init()
 	u_m_matrix_ = shader->get_uniform("m_matrix");
 	u_v_matrix_ = shader->get_uniform("v_matrix");
 	a_normal_ = shader->get_attribute("a_normal");
+}
+
+void animation_renderer::set_animation(const std::string& anim)
+{
+	vox_model_->set_animation(anim);
 }
 
 void animation_renderer::render_fbo()
@@ -196,20 +217,8 @@ void animation_renderer::render_fbo()
 	narray.clear();
 
 	{
-		std::map<variant,variant> items;
-		items[variant("model")] = variant("./humanoid");
-		static boost::intrusive_ptr<voxel_model> vox_model;
-		if(!vox_model) {
-			vox_model.reset(new voxel_model(variant(&items)));
-			vox_model = vox_model->build_instance();
-			vox_model->set_animation("walk");
-		}
-//		vox_model->get_child("left_legs")->set_rotation("knee_left", "knee_right", SDL_GetTicks()/10.0);
-//		vox_model->get_child("right_legs")->set_rotation("knee_left", "knee_right", -(SDL_GetTicks()/10.0));
-
-		vox_model->process_animation();
-
-		vox_model->generate_geometry(&varray, &narray, &carray);
+		vox_model_->process_animation();
+		vox_model_->generate_geometry(&varray, &narray, &carray);
 		std::cerr << "GEOMETRY: " << narray.size() << "\n";
 	}
 
@@ -269,6 +278,26 @@ void animation_renderer::handle_draw() const
 
 void animation_renderer::handle_process()
 {
+	int num_keys = 0;
+	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
+	if(SDL_SCANCODE_Z < num_keys && keystate[SDL_SCANCODE_Z]) {
+		camera_distance_ -= 0.2;
+		if(camera_distance_ < 5.0) {
+			camera_distance_ = 5.0;
+		}
+
+		calculate_camera();
+	}
+
+	if(SDL_SCANCODE_X < num_keys && keystate[SDL_SCANCODE_X]) {
+		camera_distance_ += 0.2;
+		if(camera_distance_ > 100.0) {
+			camera_distance_ = 100.0;
+		}
+
+		calculate_camera();
+	}
+
 	render_fbo();
 }
 
@@ -332,11 +361,12 @@ private:
 
 	boost::intrusive_ptr<animation_renderer> renderer_;
 	rect area_;
+	std::string fname_;
 
 };
 
 voxel_animation_editor::voxel_animation_editor(const rect& r, const std::string& fname)
-  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r)
+  : dialog(r.x(), r.y(), r.w(), r.h()), area_(r), fname_(fname)
 {
 	init();
 }
@@ -346,10 +376,18 @@ void voxel_animation_editor::init()
 	clear();
 
 	if(!renderer_) {
-		renderer_.reset(new animation_renderer(rect(area_.x() + 10, area_.y() + 10, area_.w() - 200, area_.h() - 20)));
+		renderer_.reset(new animation_renderer(rect(area_.x() + 10, area_.y() + 10, area_.w() - 200, area_.h() - 20), fname_));
 	}
 
 	add_widget(renderer_, renderer_->x(), renderer_->y());
+
+	grid_ptr anim_grid(new grid(1));
+
+	for(auto p : renderer_->model().animations()) {
+		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
+	}
+
+	add_widget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
 }
 
 bool voxel_animation_editor::handle_event(const SDL_Event& event, bool claimed)

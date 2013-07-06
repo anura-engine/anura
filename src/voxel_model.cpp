@@ -169,11 +169,14 @@ Animation read_animation(const variant& v)
 	for(variant t : v["transforms"].as_list()) {
 		AnimationTransform transform;
 		transform.layer = t["layer"].as_string();
-		std::vector<std::string> pivots = t["pivots"].as_list_string();
-		ASSERT_LOG(pivots.size() == 2, "Must have two pivots in animation: " << t.to_debug_string());
-		transform.pivot_src = pivots[0];
-		transform.pivot_dst = pivots[1];
-		transform.rotation_formula = game_logic::formula::create_optional_formula(t["rotation"]);
+		if(t.has_key("pivots")) {
+			std::vector<std::string> pivots = t["pivots"].as_list_string();
+			ASSERT_LOG(pivots.size() == 2, "Must have two pivots in animation: " << t.to_debug_string());
+			transform.pivot_src = pivots[0];
+			transform.pivot_dst = pivots[1];
+			transform.rotation_formula = game_logic::formula::create_optional_formula(t["rotation"]);
+		}
+		transform.translation_formula = game_logic::formula::create_optional_formula(t["translation"]);
 		result.transforms.push_back(transform);
 	}
 
@@ -187,13 +190,17 @@ variant write_animation(const Animation& anim)
 		std::map<variant,variant> node;
 		node[variant("layer")] = variant(transform.layer);
 
-		std::vector<variant> pivot_vec;
-		pivot_vec.push_back(variant(transform.pivot_src));
-		pivot_vec.push_back(variant(transform.pivot_dst));
-
-		node[variant("pivots")] = variant(&pivot_vec);
 		if(transform.rotation_formula) {
+			std::vector<variant> pivot_vec;
+			pivot_vec.push_back(variant(transform.pivot_src));
+			pivot_vec.push_back(variant(transform.pivot_dst));
+
+			node[variant("pivots")] = variant(&pivot_vec);
 			node[variant("rotation")] = transform.rotation_formula->str_var();
+		}
+
+		if(transform.translation_formula) {
+			node[variant("translation")] = transform.translation_formula->str_var();
 		}
 
 		t.push_back(variant(&node));
@@ -208,7 +215,7 @@ voxel_model::voxel_model(const variant& node)
   : name_(node["model"].as_string()), anim_time_(0.0), old_anim_time_(0.0),
     invalidated_(false)
 {
-	Model base(read_model(json::parse_from_file(name_ + ".cfg")));
+	Model base(read_model(json::parse_from_file(name_)));
 
 	for(const LayerType& layer_type : base.layer_types) {
 		variant variation_name = node[layer_type.name];
@@ -356,27 +363,71 @@ void voxel_model::process_animation(GLfloat advance)
 
 	anim_time_ += advance;
 
+	const GLfloat TransitionTime = 1.0;
+	GLfloat ratio = 1.0;
+
 	if(old_anim_) {
-		old_anim_time_ += advance;
+		if(anim_time_ >= TransitionTime) {
+			old_anim_.reset();
+			old_anim_time_ = 0.0;
+		} else {
+			old_anim_time_ += advance;
+			ratio = anim_time_ / TransitionTime;
+		}
 	}
 
+	clear_transforms();
+
 	game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
-	callable->add("time", variant(decimal(anim_time_)));
-	rotation_.clear();
-	for(const voxel_model_ptr& child : children_) {
-		child->rotation_.clear();
+
+	if(old_anim_) {
+		callable->add("time", variant(decimal(old_anim_time_)));
+
+		for(const AnimationTransform& transform : old_anim_->transforms) {
+			if(transform.translation_formula) {
+				const variant result = transform.translation_formula->execute(*callable);
+				ASSERT_LOG(result.is_list() && result.num_elements() == 3, "Invalid result from translation formula: " << transform.translation_formula->str() << " expected a [decimal,decimal,decimal] but found " << result.write_json());
+
+				glm::vec3 translate;
+				translate[0] = result[0].as_decimal().as_float()*(1.0-ratio);
+				translate[1] = result[1].as_decimal().as_float()*(1.0-ratio);
+				translate[2] = result[2].as_decimal().as_float()*(1.0-ratio);
+				get_child(transform.layer)->accumulate_translation(translate);
+			}
+
+			if(!transform.rotation_formula) {
+				continue;
+			}
+
+			GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
+			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio));
+		}
 	}
+
+	callable->add("time", variant(decimal(anim_time_)));
+
 	for(const AnimationTransform& transform : anim_->transforms) {
+		if(transform.translation_formula) {
+			const variant result = transform.translation_formula->execute(*callable);
+			ASSERT_LOG(result.is_list() && result.num_elements() == 3, "Invalid result from translation formula: " << transform.translation_formula->str() << " expected a [decimal,decimal,decimal] but found " << result.write_json());
+
+			glm::vec3 translate;
+			translate[0] = result[0].as_decimal().as_float()*ratio;
+			translate[1] = result[1].as_decimal().as_float()*ratio;
+			translate[2] = result[2].as_decimal().as_float()*ratio;
+			get_child(transform.layer)->accumulate_translation(translate);
+		}
+
 		if(!transform.rotation_formula) {
 			continue;
 		}
 
 		GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
-		get_child(transform.layer)->set_rotation(transform.pivot_src, transform.pivot_dst, rotation);
+		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio);
 	}
 }
 
-void voxel_model::set_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation)
+void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation)
 {
 	invalidated_ = true;
 
@@ -408,13 +459,29 @@ void voxel_model::set_rotation(const std::string& pivot_a, const std::string& pi
 
 	for(Rotation& rotate : rotation_) {
 		if(rotate.src_pivot == pivot_a_index && rotate.dst_pivot == pivot_b_index) {
-			rotate.amount = rotation;
+			rotate.amount += rotation;
 			return;
 		}
 	}
 
 	Rotation new_rotation = { pivot_a_index, pivot_b_index, rotation };
 	rotation_.push_back(new_rotation);
+}
+
+void voxel_model::accumulate_translation(const glm::vec3& translate)
+{
+	translation_ += translate;
+	std::cerr << "TRANSLATION: " << translation_[1] << "\n";
+}
+
+void voxel_model::clear_transforms()
+{
+	rotation_.clear();
+	translation_[0] = translation_[1] = translation_[2] = 0.0;
+	invalidated_ = true;
+	for(auto child : children_) {
+		child->clear_transforms();
+	}
 }
 
 int voxel_model::add_vertex(const glm::vec3& vertex)
@@ -505,7 +572,11 @@ void voxel_model::calculate_transforms()
 	std::copy(prototype_->vertexes_.begin(), prototype_->vertexes_.end(), vertexes_.begin());
 
 	for(glm::vec3& vertex : vertexes_) {
+		vertex += translation_;
 		for(const Rotation& rotate : rotation_) {
+			// Here we rotate around a line. We do this by translating our
+			// vertex to be relative to the origin, then rotate, then
+			// translate it back.
 			vertex -= pivots_[rotate.src_pivot].second;
 			glm::vec3 axis = glm::normalize(pivots_[rotate.src_pivot].second - pivots_[rotate.dst_pivot].second);
 

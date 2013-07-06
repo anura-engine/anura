@@ -721,26 +721,7 @@ void iso_renderer::render_fbo()
 	varray.clear();
 	carray.clear();
 	narray.clear();
-
-	{
-		std::map<variant,variant> items;
-		items[variant("model")] = variant("./humanoid");
-		static boost::intrusive_ptr<voxel_model> vox_model;
-		if(!vox_model) {
-			vox_model.reset(new voxel_model(variant(&items)));
-			vox_model = vox_model->build_instance();
-			vox_model->set_animation("walk");
-		}
-//		vox_model->get_child("left_legs")->set_rotation("knee_left", "knee_right", SDL_GetTicks()/10.0);
-//		vox_model->get_child("right_legs")->set_rotation("knee_left", "knee_right", -(SDL_GetTicks()/10.0));
-
-		vox_model->process_animation();
-
-		vox_model->generate_geometry(&varray, &narray, &carray);
-		std::cerr << "GEOMETRY: " << narray.size() << "\n";
-	}
 	
-/*
 	for(const VoxelPair& p : get_editor().voxels()) {
 		const VoxelPos& pos = p.first;
 
@@ -860,7 +841,6 @@ void iso_renderer::render_fbo()
 
 		for(int n = 0; n != sizeof(vertex)/sizeof(*vertex); ++n) {
 			varray.push_back(pos[n%3]+vertex[n]);
-			std::cerr << "VERTEX " << n << ": " << varray.back() << "\n";
 			narray.push_back(normal[n]);
 			if(n%3 == 0) {
 				carray.push_back(color.r()/255.0f); 
@@ -869,8 +849,7 @@ void iso_renderer::render_fbo()
 				carray.push_back(color.a()/255.0f);
 			}
 		}
-	}*/
-	
+	}
 
 	if(!varray.empty()) {
 		assert(varray.size() == narray.size());
