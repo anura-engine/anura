@@ -2103,7 +2103,12 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			const std::string type = node["type"].as_string();
 			for(int n = 0; n != all_characters().size(); ++n) {
 				const enemy_type& c = all_characters()[n];
-				if(c.node["type"].as_string() == type) {
+				std::string enemy_type_str = c.node["type"].as_string();
+				auto colon_itor = std::find(enemy_type_str.begin(), enemy_type_str.end(), ':');
+				if(colon_itor != enemy_type_str.end()) {
+					enemy_type_str = std::string(colon_itor+1, enemy_type_str.end());
+				}
+				if(enemy_type_str == type) {
 					character_dialog_->select_category(c.category);
 					character_dialog_->set_character(n);
 					return;
