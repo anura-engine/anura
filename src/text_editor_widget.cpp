@@ -1088,7 +1088,7 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		}
 	}
 #if SDL_VERSION_ATLEAST(2, 0, 0)
-	default: return false;
+	default: return true;
 #else
 	default: {
 		const char c = event.keysym.unicode;
