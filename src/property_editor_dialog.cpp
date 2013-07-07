@@ -513,6 +513,7 @@ void property_editor_dialog::change_enum_property(const std::string& id)
 	using namespace gui;
 
 	gui::grid* grid = new gui::grid(1);
+	grid->set_zorder(100);
 	grid->set_show_background(true);
 	grid->allow_selection();
 
@@ -575,6 +576,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 	if(labels.empty() == false) {
 
 		gui::grid* grid = new gui::grid(1);
+		grid->set_zorder(100);
 		grid->set_show_background(true);
 		grid->allow_selection();
 		grid->register_selection_callback(boost::bind(&property_editor_dialog::set_enum_property, this, id, labels, _1));

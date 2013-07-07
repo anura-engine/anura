@@ -146,6 +146,7 @@ void character_editor_dialog::show_category_menu()
 {
 	using namespace gui;
 	gui::grid* grid = new gui::grid(2);
+	grid->set_zorder(100);
 	grid->set_max_height(height());
 	grid->set_show_background(true);
 	grid->set_hpad(10);
