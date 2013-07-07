@@ -164,8 +164,8 @@ namespace isometric
 		const graphics::frustum& frustum = level::current().camera()->frustum();
 		active_chunks_.clear();
 		for(auto chnk : chunks_) {
-			//if(frustum.cube_intersects(glm::vec3(chnk.first.x, chnk.first.y, chnk.first.z), float(chunk_size),float(chunk_size), float(chunk_size)) >= 0) {
-			if(frustum.point_inside(glm::vec3(chnk.first.x + 16.5f, chnk.first.y + 16.5f, chnk.first.z + 16.5f))) {
+			if(frustum.cube_inside(glm::vec3(chnk.first.x, chnk.first.y, chnk.first.z), float(chunk_size),float(chunk_size), float(chunk_size))) {
+			//if(frustum.point_inside(glm::vec3(chnk.first.x + 16.5f, chnk.first.y + 16.5f, chnk.first.z + 16.5f))) {
 				active_chunks_.push_back(chnk.second);
 			}
 		}
