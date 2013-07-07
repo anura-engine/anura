@@ -4024,7 +4024,7 @@ DEFINE_FIELD(isoworld, "builtin world|null")
 	} else {
 		return variant();
 	}
-DEFINE_SET_FIELD_TYPE("builtin isomap|map|null")
+DEFINE_SET_FIELD_TYPE("builtin world|map|null")
 	if(value.is_null()) {
 		obj.iso_world_.reset(); 
 	} else {
