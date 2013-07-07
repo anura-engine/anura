@@ -41,6 +41,8 @@
 #include "object_events.hpp"
 #include "variant.hpp"
 
+void init_call_stack(int min_size);
+
 namespace formula_profiler
 {
 
@@ -107,7 +109,7 @@ event_call_stack_type event_call_stack;
 namespace {
 bool handler_disabled = false;
 std::string output_fname;
-int main_thread;
+SDL_threadID main_thread;
 
 int empty_samples = 0;
 
@@ -137,14 +139,25 @@ void sigprof_handler(int sig)
 		return interval;
 	}
 #else
-	if(handler_disabled || main_thread != SDL_GetThreadID(NULL)) {
+	if(handler_disabled || main_thread != SDL_ThreadID()) {
 		return;
 	}
 #endif
 
 	if(current_expression_call_stack.empty() && current_expression_call_stack.capacity() >= get_expression_call_stack().size()) {
-		//Very important that this doesnot allocate memory.
-		current_expression_call_stack = get_expression_call_stack();
+		bool valid = true;
+		for(int n = 0; n != current_expression_call_stack.size(); ++n) {
+			if(current_expression_call_stack[n].expression == NULL) {
+				valid = false;
+				break;
+			}
+
+			intrusive_ptr_add_ref(current_expression_call_stack[n].expression);
+		}
+		//Very important that this does not allocate memory.
+		if(valid) {
+			current_expression_call_stack = get_expression_call_stack();
+		}
 	}
 
 	if(num_samples == max_samples) {
@@ -173,11 +186,13 @@ manager::manager(const char* output_file)
 		current_expression_call_stack.reserve(10000);
 		event_call_stack_samples.resize(max_samples);
 
-		main_thread = SDL_GetThreadID(NULL);
+		main_thread = SDL_ThreadID();
 
-		fprintf(stderr, "SETTING UP PROFILING...\n");
+		fprintf(stderr, "SETTING UP PROFILING: %s\n", output_file);
 		profiler_on = true;
 		output_fname = output_file;
+
+		init_call_stack(65536);
 
 #if defined(_WINDOWS) || TARGET_OS_IPHONE
 		// Crappy windows approximation.
@@ -204,6 +219,7 @@ manager::~manager()
 
 void end_profiling()
 {
+	fprintf(stderr, "END PROFILING: %d\n", (int)profiler_on);
 	if(profiler_on){
 #if defined(_WINDOWS) || TARGET_OS_IPHONE
 		SDL_RemoveTimer(sdl_profile_timer);
@@ -294,6 +310,7 @@ void end_profiling()
 
 		if(!output_fname.empty()) {
 			sys::write_file(output_fname, s.str());
+			std::cerr << "WROTE PROFILE TO " << output_fname << "\n";
 		} else {
 			std::cerr << "===\n=== PROFILE REPORT ===\n";
 			std::cerr << s.str();

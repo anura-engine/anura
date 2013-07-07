@@ -1,4 +1,5 @@
 #include "json_parser.hpp"
+#include "variant_utils.hpp"
 #include "voxel_model.hpp"
 
 #include <glm/gtx/rotate_vector.hpp>
@@ -74,6 +75,57 @@ LayerType read_layer_type(const variant& v) {
 	return result;
 }
 
+std::map<std::string, AttachmentPoint> read_attachment_points(const variant& v)
+{
+	std::map<std::string, AttachmentPoint> result;
+	for(auto p : v.as_map()) {
+		AttachmentPoint point;
+		point.name = p.first.as_string();
+		point.layer = p.second["layer"].as_string();
+		point.pivot = p.second["pivot"].as_string();
+
+		if(p.second["rotations"].is_list()) {
+			for(auto rotation_node : p.second["rotations"].as_list()) {
+				AttachmentPointRotation rotation;
+				rotation.direction = variant_to_vec3(rotation_node["direction"]);
+				rotation.amount = rotation_node["rotation"].as_decimal().as_float();
+				point.rotations.push_back(rotation);
+			}
+		}
+
+		result[point.name] = point;
+	}
+
+	return result;
+}
+
+variant write_attachment_points(const std::map<std::string, AttachmentPoint>& m)
+{
+	std::map<variant, variant> result;
+	for(auto p : m) {
+		std::map<variant, variant> node;
+		node[variant("layer")] = variant(p.second.layer);
+		node[variant("pivot")] = variant(p.second.pivot);
+
+		if(!p.second.rotations.empty()) {
+			std::vector<variant> rotations;
+
+			for(const AttachmentPointRotation& r : p.second.rotations) {
+				std::map<variant, variant> rotation_node;
+				rotation_node[variant("direction")] = vec3_to_variant(r.direction);
+				rotation_node[variant("rotation")] = variant(decimal(r.amount));
+				rotations.push_back(variant(&rotation_node));
+			}
+
+			node[variant("rotations")] = variant(&rotations);
+		}
+
+		result[variant(p.first)] = variant(&node);
+	}
+
+	return variant(&result);
+}
+
 Model read_model(const variant& v) {
 	Model model;
 
@@ -87,6 +139,10 @@ Model read_model(const variant& v) {
 		Animation anim = read_animation(p.second);
 		anim.name = p.first.as_string();
 		model.animations.push_back(anim);
+	}
+
+	if(v.has_key("attachment_points")) {
+		model.attachment_points = read_attachment_points(v["attachment_points"]);
 	}
 
 	return model;
@@ -160,14 +216,26 @@ variant write_model(const Model& model) {
 	std::map<variant,variant> result_node;
 	result_node[variant("layers")] = variant(&layers_node);
 	result_node[variant("animations")] = variant(&animations_node);
+
+	if(!model.attachment_points.empty()) {
+		result_node[variant("attachment_points")] = write_attachment_points(model.attachment_points);
+	}
+
 	return variant(&result_node);
 }
 
 Animation read_animation(const variant& v)
 {
 	Animation result;
+	if(v.has_key("duration")) {
+		result.duration = v["duration"].as_decimal().as_float();
+	} else {
+		result.duration = -1.0;
+	}
+
 	for(variant t : v["transforms"].as_list()) {
 		AnimationTransform transform;
+		transform.children_only = t["children_only"].as_bool(false);
 		transform.layer = t["layer"].as_string();
 		if(t.has_key("pivots")) {
 			std::vector<std::string> pivots = t["pivots"].as_list_string();
@@ -190,6 +258,10 @@ variant write_animation(const Animation& anim)
 		std::map<variant,variant> node;
 		node[variant("layer")] = variant(transform.layer);
 
+		if(transform.children_only) {
+			node[variant("children_only")] = variant::from_bool(true);
+		}
+
 		if(transform.rotation_formula) {
 			std::vector<variant> pivot_vec;
 			pivot_vec.push_back(variant(transform.pivot_src));
@@ -208,6 +280,10 @@ variant write_animation(const Animation& anim)
 
 	std::map<variant,variant> result;
 	result[variant("transforms")] = variant(&t);
+	if(anim.duration > 0.0) {
+		result[variant("duration")] = variant(decimal(anim.duration));
+	}
+
 	return variant(&result);
 }
 
@@ -216,6 +292,8 @@ voxel_model::voxel_model(const variant& node)
     invalidated_(false)
 {
 	Model base(read_model(json::parse_from_file(name_)));
+
+	attachment_points_ = base.attachment_points;
 
 	for(const LayerType& layer_type : base.layer_types) {
 		variant variation_name = node[layer_type.name];
@@ -334,6 +412,56 @@ voxel_model_ptr voxel_model::get_child(const std::string& id) const
 	return voxel_model_ptr();
 }
 
+void voxel_model::attach_child(voxel_model_ptr child, const std::string& src_attachment, const std::string& dst_attachment)
+{
+	auto src_attach_itor = child->attachment_points_.find(src_attachment);
+	auto dst_attach_itor = attachment_points_.find(dst_attachment);
+
+	ASSERT_LOG(src_attach_itor != child->attachment_points_.end(), "Could not find attachment point: " << src_attachment);
+	ASSERT_LOG(dst_attach_itor != attachment_points_.end(), "Could not find attachment point: " << dst_attachment);
+
+	const AttachmentPoint& src_attach = src_attach_itor->second;
+	const AttachmentPoint& dst_attach = dst_attach_itor->second;
+
+	voxel_model_ptr src_model = child->get_child(src_attach.layer);
+	voxel_model_ptr dst_model = get_child(dst_attach.layer);
+
+	ASSERT_LOG(src_model, "Could not find source model: " << src_attach.layer);
+	ASSERT_LOG(dst_model, "Could not find dest model: " << dst_attach.layer);
+
+	const std::pair<std::string, glm::vec3>* src_pivot = NULL;
+	const std::pair<std::string, glm::vec3>* dst_pivot = NULL;
+
+	for(const std::pair<std::string, glm::vec3>& p : src_model->pivots_) {
+		if(p.first == src_attach.pivot) {
+			src_pivot = &p;
+			break;
+		}
+	}
+
+	ASSERT_LOG(src_pivot, "Could not find source pivot: " << src_pivot);
+
+	for(const std::pair<std::string, glm::vec3>& p : dst_model->pivots_) {
+		if(p.first == dst_attach.pivot) {
+			dst_pivot = &p;
+			break;
+		}
+	}
+
+	ASSERT_LOG(dst_pivot, "Could not find source pivot: " << dst_pivot);
+
+	const glm::vec3 translate = dst_pivot->second - src_pivot->second;
+
+	child->clear_transforms();
+	child->translate_geometry(translate);
+
+	for(const AttachmentPointRotation& r : dst_attach_itor->second.rotations) {
+		child->rotate_geometry(dst_pivot->second, dst_pivot->second + r.direction, r.amount);
+	}
+
+	dst_model->children_.push_back(child->build_instance());
+}
+
 void voxel_model::set_animation(const std::string& anim_str)
 {
 	boost::shared_ptr<Animation> anim = animations_[anim_str];
@@ -361,9 +489,13 @@ void voxel_model::process_animation(GLfloat advance)
 		return;
 	}
 
+	if(anim_->duration > 0 && anim_time_ > anim_->duration) {
+		set_animation("stand");
+	}
+
 	anim_time_ += advance;
 
-	const GLfloat TransitionTime = 1.0;
+	const GLfloat TransitionTime = 0.5;
 	GLfloat ratio = 1.0;
 
 	if(old_anim_) {
@@ -372,6 +504,9 @@ void voxel_model::process_animation(GLfloat advance)
 			old_anim_time_ = 0.0;
 		} else {
 			old_anim_time_ += advance;
+			if(old_anim_->duration > 0 && old_anim_time_ > old_anim_->duration) {
+				old_anim_time_ = old_anim_->duration;
+			}
 			ratio = anim_time_ / TransitionTime;
 		}
 	}
@@ -400,7 +535,7 @@ void voxel_model::process_animation(GLfloat advance)
 			}
 
 			GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
-			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio));
+			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio), transform.children_only);
 		}
 	}
 
@@ -423,11 +558,11 @@ void voxel_model::process_animation(GLfloat advance)
 		}
 
 		GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
-		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio);
+		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, transform.children_only);
 	}
 }
 
-void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation)
+void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only)
 {
 	invalidated_ = true;
 
@@ -458,13 +593,13 @@ void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::str
 	}
 
 	for(Rotation& rotate : rotation_) {
-		if(rotate.src_pivot == pivot_a_index && rotate.dst_pivot == pivot_b_index) {
+		if(rotate.src_pivot == pivot_a_index && rotate.dst_pivot == pivot_b_index && rotate.children_only == children_only) {
 			rotate.amount += rotation;
 			return;
 		}
 	}
 
-	Rotation new_rotation = { pivot_a_index, pivot_b_index, rotation };
+	Rotation new_rotation = { pivot_a_index, pivot_b_index, rotation, children_only };
 	rotation_.push_back(new_rotation);
 }
 
@@ -557,32 +692,64 @@ void voxel_model::generate_geometry(std::vector<GLfloat>* vertexes, std::vector<
 
 void voxel_model::calculate_transforms()
 {
-	for(const voxel_model_ptr& child : children_) {
-		child->calculate_transforms();
-	}
-
-	if(invalidated_ == false) {
+	if(!invalidated_) {
 		return;
 	}
 
+	reset_geometry();
+	apply_transforms();
+}
+
+void voxel_model::apply_transforms()
+{
 	invalidated_ = false;
 
 	ASSERT_LOG(prototype_, "Must create an instance of a model and use it rather than using the model directly. Use build_instance().");
 
+	translate_geometry(translation_);
+	for(const Rotation& rotate : rotation_) {
+		rotate_geometry(pivots_[rotate.src_pivot].second, pivots_[rotate.dst_pivot].second, rotate.amount, rotate.children_only);
+	}
+
+	for(const voxel_model_ptr& child : children_) {
+		child->apply_transforms();
+	}
+}
+
+void voxel_model::reset_geometry()
+{
 	std::copy(prototype_->vertexes_.begin(), prototype_->vertexes_.end(), vertexes_.begin());
+	for(const voxel_model_ptr& child : children_) {
+		child->reset_geometry();
+	}
+}
+
+void voxel_model::translate_geometry(const glm::vec3& amount)
+{
+	for(const voxel_model_ptr& child : children_) {
+		child->translate_geometry(amount);
+	}
 
 	for(glm::vec3& vertex : vertexes_) {
-		vertex += translation_;
-		for(const Rotation& rotate : rotation_) {
-			// Here we rotate around a line. We do this by translating our
-			// vertex to be relative to the origin, then rotate, then
-			// translate it back.
-			vertex -= pivots_[rotate.src_pivot].second;
-			glm::vec3 axis = glm::normalize(pivots_[rotate.src_pivot].second - pivots_[rotate.dst_pivot].second);
+		vertex += amount;
+	}
+}
 
-			vertex = glm::rotate(vertex, rotate.amount, axis);
-			vertex += pivots_[rotate.src_pivot].second;
-		}
+void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only)
+{
+	for(const voxel_model_ptr& child : children_) {
+		child->rotate_geometry(p1, p2, amount);
+	}
+
+	if(children_only) {
+		return;
+	}
+
+	for(glm::vec3& vertex : vertexes_) {
+		vertex -= p1;
+		glm::vec3 axis = glm::normalize(p2 - p1);
+		vertex = glm::rotate(vertex, amount, axis);
+		vertex += p1;
 	}
 }
 

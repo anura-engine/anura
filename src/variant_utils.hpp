@@ -25,6 +25,11 @@
 #include "formula_callable.hpp"
 #include "variant.hpp"
 
+#include <glm/glm.hpp>
+
+glm::vec3 variant_to_vec3(const variant& v);
+variant vec3_to_variant(const glm::vec3& v);
+
 game_logic::formula_callable_ptr map_into_callable(variant v);
 
 //Function which will try to append list of variations. Behaviors:

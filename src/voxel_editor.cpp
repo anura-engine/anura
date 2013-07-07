@@ -1246,6 +1246,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 			if(is_cursor_set) {
 				Uint8 button_state = SDL_GetMouseState(NULL, NULL);
 				switch(get_editor().tool()) {
+				case TOOL_PENCIL_ABOVE:
 				case TOOL_PENCIL: {
 					if(button_state & SDL_BUTTON(SDL_BUTTON_LEFT) && dragging_on_) {
 						if(voxels_drawn_on_this_drag_.count(normalize_pos(*get_editor().get_cursor())) == 0) {

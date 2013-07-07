@@ -46,11 +46,13 @@ struct AnimationTransform {
 	std::string layer;
 	std::string pivot_src, pivot_dst;
 	game_logic::formula_ptr rotation_formula, translation_formula;
+	bool children_only;
 };
 
 struct Animation {
 	std::string name;
 	std::vector<AnimationTransform> transforms;
+	GLfloat duration;
 };
 
 Animation read_animation(const variant& v);
@@ -70,9 +72,23 @@ struct LayerType {
 	std::map<std::string, VoxelPos> pivots;
 };
 
+struct AttachmentPointRotation {
+	glm::vec3 direction;
+	GLfloat amount;
+};
+
+struct AttachmentPoint {
+	std::string name, layer, pivot;
+	std::vector<AttachmentPointRotation> rotations;
+};
+
+std::map<std::string, AttachmentPoint> read_attachment_points(const variant& v);
+variant write_attachment_points(const std::map<std::string, AttachmentPoint>& m);
+
 struct Model {
 	std::vector<LayerType> layer_types;
 	std::vector<Animation> animations;
+	std::map<std::string, AttachmentPoint> attachment_points;
 };
 
 LayerType read_layer_type(const variant& v);
@@ -93,13 +109,16 @@ public:
 	voxel_model_ptr build_instance() const;
 	voxel_model_ptr get_child(const std::string& id) const;
 
+	void attach_child(voxel_model_ptr child, const std::string& src_attachment, const std::string& dst_attachment);
+
+
 	void set_animation(boost::shared_ptr<Animation> anim);
 	void set_animation(const std::string& id);
 	void process_animation(GLfloat advance=0.02);
 
 	const std::map<std::string, boost::shared_ptr<Animation> >& animations() const { return animations_; }
 
-	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation);
+	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only=false);
 	void accumulate_translation(const glm::vec3& translate);
 	void clear_transforms();
 
@@ -110,6 +129,11 @@ private:
 	DECLARE_CALLABLE(voxel_model);
 
 	void calculate_transforms();
+	void apply_transforms();
+
+	void reset_geometry();
+	void translate_geometry(const glm::vec3& amount);
+	void rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only=false);
 
 	std::string name_;
 
@@ -118,6 +142,7 @@ private:
 	struct Rotation {
 		int src_pivot, dst_pivot;
 		GLfloat amount;
+		bool children_only;
 	};
 	std::vector<Rotation> rotation_;
 	glm::vec3 translation_;
@@ -139,6 +164,7 @@ private:
 	GLfloat anim_time_, old_anim_time_;
 
 	std::map<std::string, boost::shared_ptr<Animation> > animations_;
+	std::map<std::string, AttachmentPoint> attachment_points_;
 
 	bool invalidated_;
 };

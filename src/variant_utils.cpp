@@ -19,6 +19,25 @@
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
+glm::vec3 variant_to_vec3(const variant& v)
+{
+	ASSERT_LOG(v.is_list() && v.num_elements() == 3, "Expected vec3 variant but found " << v.write_json());
+	glm::vec3 result;
+	result[0] = v[0].as_decimal().as_float();
+	result[1] = v[1].as_decimal().as_float();
+	result[2] = v[2].as_decimal().as_float();
+	return result;
+}
+
+variant vec3_to_variant(const glm::vec3& v)
+{
+	std::vector<variant> result;
+	result.push_back(variant(decimal(v[0])));
+	result.push_back(variant(decimal(v[1])));
+	result.push_back(variant(decimal(v[2])));
+	return variant(&result);
+}
+
 game_logic::formula_callable_ptr map_into_callable(variant v)
 {
 	if(v.is_callable()) {

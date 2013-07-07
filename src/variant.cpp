@@ -69,6 +69,11 @@ variant last_query_map;
 variant UnfoundInMapNullVariant;
 }
 
+void init_call_stack(int min_size)
+{
+	call_stack.reserve(min_size);
+}
+
 void swap_variants_loading(std::set<variant*>& v)
 {
 	callable_variants_loading.swap(v);

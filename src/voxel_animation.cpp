@@ -81,6 +81,14 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
 	vox_model_ = vox_model_->build_instance();
 	vox_model_->set_animation("stand");
 
+	items[variant("model")] = variant("modules/ftactics/sword.cfg");
+
+	boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
+	weapon = weapon->build_instance();
+	weapon->set_animation("stand");
+
+	vox_model_->attach_child(weapon, "handle", "melee_weapon");
+
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
 
