@@ -4349,13 +4349,13 @@ FUNCTION_ARGS_DEF
 	RETURN_TYPE("string|null")
 END_FUNCTION_DEF(get_voxel_type)
 
-FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin isomap, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
+FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin chunk, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
 	isometric::chunk* isomap = args()[0]->evaluate(variables).try_convert<isometric::chunk>();
 	bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
 	ASSERT_LOG(isomap != NULL, "Invalid argument to graph_from_isomap. Must be of type 'isomap'");
 	return variant(isomap->create_directed_graph(allow_diagonals).get());
 FUNCTION_ARGS_DEF
-	ARG_TYPE("builtin isomap")
+	ARG_TYPE("builtin chunk")
 	ARG_TYPE("bool")
 	RETURN_TYPE("builtin directed_graph")
 END_FUNCTION_DEF(graph_from_isomap)
