@@ -654,6 +654,8 @@ void level::load_character(variant c)
 	solid_chars_.clear();
 }
 
+PREF_INT(respect_difficulty, 0);
+
 void level::finish_loading()
 {
 	std::vector<sub_level_data> sub_levels;
@@ -814,7 +816,7 @@ void level::finish_loading()
 
 	} //end serialization read scope. Now all objects should be fully resolved.
 
-	if(preferences::force_difficulty() != INT_MIN && !editor_) {
+	if((g_respect_difficulty || preferences::force_difficulty() != INT_MIN) && !editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
 			if(chars_[n].get() != NULL && !chars_[n]->appears_at_difficulty(difficulty)) {
