@@ -7,19 +7,20 @@
 
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f),
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
 	mode_(MODE_AUTO)
 {
 	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
-
+	aspect_ = float(preferences::actual_screen_width())/float(preferences::actual_screen_height());
+	
 	compute_view();
 	compute_projection();
 }
 
 camera_callable::camera_callable(const variant& node)
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
-	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(1000.0f),
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
 	mode_(MODE_AUTO)
 {
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
@@ -40,6 +41,8 @@ camera_callable::camera_callable(const variant& node)
 	}
 	if(node.has_key("aspect")) {
 		aspect_ = float(node["aspect"].as_decimal().as_float());
+	} else {
+		aspect_ = float(preferences::actual_screen_width())/float(preferences::actual_screen_height());
 	}
 
 	if(node.has_key("position")) {
@@ -119,6 +122,7 @@ void camera_callable::compute_view()
 	target_ = position_ + direction_;
 
 	view_ = glm::lookAt(position_, target_, up_);
+	frustum_.update_matrices(projection_, view_);
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(camera_callable)
@@ -135,6 +139,7 @@ DEFINE_SET_FIELD
 		float(value[2].as_decimal().as_float())));
 	if(obj.mode_ == MODE_MANUAL) {
 		obj.view_ = glm::lookAt(obj.position_, obj.target_, obj.up_);
+		obj.frustum_.update_matrices(obj.projection_, obj.view_);
 	} else {
 		obj.compute_view();
 	}
@@ -205,59 +210,8 @@ DEFINE_FIELD(clip_planes, "[decimal,decimal]")
 	return variant(&v);
 DEFINE_SET_FIELD
 	ASSERT_LOG(value.is_list() && value.num_elements() == 2, "clip_planes takes a tuple of two decimals");
-	obj.set_clip_planes(value[0].as_decimal().as_float(), value[0].as_decimal().as_float());
+	obj.set_clip_planes(value[0].as_decimal().as_float(), value[1].as_decimal().as_float());
 END_DEFINE_CALLABLE(camera_callable)
-
-/*variant camera_callable::get_value(const std::string& key) const
-{
-	if(key == "position") {
-		std::vector<variant> v;
-		v.push_back(variant(position().x));
-		v.push_back(variant(position().y));
-		v.push_back(variant(position().z));
-		return variant(&v);
-	} else if(key == "speed") {
-		return variant(speed());
-	} else if(key == "right") {
-		std::vector<variant> v;
-		glm::vec3 right = glm::vec3(
-			sin(hangle() - float(M_PI)/2.0f), 
-			0,
-			cos(hangle() - float(M_PI)/2.0f)
-		);
-		v.push_back(variant(right.x));
-		v.push_back(variant(right.y));
-		v.push_back(variant(right.z));
-		return variant(&v);
-	} else if(key == "direction") {
-		std::vector<variant> v;
-		glm::vec3 direction(
-			cos(vangle()) * sin(hangle()), 
-			sin(vangle()),
-			cos(vangle()) * cos(hangle())
-		);
-		v.push_back(variant(direction.x));
-		v.push_back(variant(direction.y));
-		v.push_back(variant(direction.z));
-		return variant(&v);
-	} else if(key == "horizontal_angle" || key == "hangle") {
-		return variant(hangle());
-	} else if(key == "vertical_angle" || key == "vangle") {
-		return variant(vangle());
-	}
-	return variant();
-}
-
-void camera_callable::set_value(const std::string& key, const variant& value)
-{
-	if(key == "position") {
-		ASSERT_LOG(value.is_list() && value.num_elements() == 3, "position must be a list of 3 elements");
-		set_position(glm::vec3(float(value[0].as_decimal().as_float()),
-			float(value[1].as_decimal().as_float()),
-			float(value[2].as_decimal().as_float())));
-		compute_view();
-	}
-}*/
 
 
 void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up)
@@ -268,6 +222,7 @@ void camera_callable::look_at(glm::vec3 position, glm::vec3 target, glm::vec3 up
 	up_ = up;
 	direction_ = target_ - position_;
 	view_ = glm::lookAt(position_, target_, up_);
+	frustum_.update_matrices(projection_, view_);
 }
 
 
@@ -292,7 +247,6 @@ void camera_callable::set_aspect(float aspect)
 
 void camera_callable::compute_projection()
 {
-	projection_ = glm::perspective(fov(), 
-		float(preferences::actual_screen_width())/float(preferences::actual_screen_height()), 
-		near_clip(), far_clip());
+	projection_ = glm::perspective(fov(), aspect_, near_clip(), far_clip());
+	frustum_.update_matrices(projection_, view_);
 }

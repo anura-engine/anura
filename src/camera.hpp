@@ -6,6 +6,7 @@
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "frustum.hpp"
 #include "variant.hpp"
 
 #if defined(USE_ISOMAP)
@@ -51,6 +52,8 @@ public:
 	const glm::mat4& view_mat() const { return view_; }
 	const glm::mat4& projection_mat() const { return projection_; }
 
+	const graphics::frustum& frustum() { return frustum_; }
+
 	variant write();
 protected:
 private:
@@ -73,6 +76,8 @@ private:
 	float far_clip_;
 
 	float aspect_;
+
+	graphics::frustum frustum_;
 
 	glm::mat4 projection_;
 	glm::mat4 view_;

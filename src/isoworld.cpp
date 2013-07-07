@@ -2,10 +2,13 @@
 #include "asserts.hpp"
 #include "isoworld.hpp"
 #include "level.hpp"
+#include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
 namespace isometric
 {
+	const int chunk_size = 32;
+
 	world::world(const variant& node)
 		: gamma_(1.0f), light_power_(15000.0f), light_position_(glm::vec3(100.f, 100.0f, 100.0f)),
 		view_distance_(node["view_distance"].as_int(5)), seed_(node["seed"].as_int(rand()))
@@ -72,6 +75,19 @@ namespace isometric
 		}
 	}
 
+	variant world::get_tile_type(int x, int y, int z) const
+	{
+		int fx = int(floor(x));
+		int fy = int(floor(y));
+		int fz = int(floor(z));
+		auto it = chunks_.find(position(fx, fy, fz));
+		if(it != chunks_.end()) {
+			return it->second->get_tile_type(x-fx, y-fy, z-fz);
+		}
+		return variant();
+	}
+
+
 	void world::build()
 	{
 		// Generates initial chunks
@@ -81,10 +97,10 @@ namespace isometric
 				std::map<variant,variant> m;
 				variant_builder rnd;
 				
-				rnd.add("width", 32);
-				rnd.add("height", 32);
-				rnd.add("depth", 32);
-				rnd.add("noise_height", rand() % 32);
+				rnd.add("width", chunk_size);
+				rnd.add("height", chunk_size);
+				rnd.add("depth", chunk_size);
+				rnd.add("noise_height", rand() % chunk_size);
 				rnd.add("type", graphics::color("lawn_green").write());
 				rnd.add("seed", seed_);
 
@@ -92,15 +108,15 @@ namespace isometric
 				m[variant("shader")] = variant(shader_->name());
 				m[variant("skip_lighting_uniforms")] = variant::from_bool(true);
 				std::vector<variant> v;
-				v.push_back(variant(x*32));
+				v.push_back(variant(x*chunk_size));
 				v.push_back(variant(0));
-				v.push_back(variant(z*32));
+				v.push_back(variant(z*chunk_size));
 				m[variant("worldspace_position")] = variant(&v);
 				m[variant("random")] = rnd.build();
 
 
-				chunks_[position(x,0,z)] = isometric::chunk_factory::create(variant(&m));
-				active_chunks_.push_back(chunks_[position(x,0,z)]);
+				chunks_[position(x*chunk_size,0,z*chunk_size)] = isometric::chunk_factory::create(variant(&m));
+				active_chunks_.push_back(chunks_[position(x*chunk_size,0,z*chunk_size)]);
 			}
 		}
 		//get_active_chunks();
@@ -127,6 +143,8 @@ namespace isometric
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
+
+		level::current().camera()->frustum().draw();
 	}
 
 	variant world::write()
@@ -138,19 +156,20 @@ namespace isometric
 
 	void world::process()
 	{
-		//get_active_chunks();
+		get_active_chunks();
 	}
 
 	void world::get_active_chunks()
 	{
-		const glm::vec3& pos = level::current().camera()->position();
+		const graphics::frustum& frustum = level::current().camera()->frustum();
 		active_chunks_.clear();
 		for(auto chnk : chunks_) {
-			glm::vec3 cpos(chnk.first.x, chnk.first.y, chnk.first.z);
-			if(glm::length(cpos - pos) < float(view_distance_)) {
+			//if(frustum.cube_intersects(glm::vec3(chnk.first.x, chnk.first.y, chnk.first.z), float(chunk_size),float(chunk_size), float(chunk_size)) >= 0) {
+			if(frustum.point_inside(glm::vec3(chnk.first.x + 16.5f, chnk.first.y + 16.5f, chnk.first.z + 16.5f))) {
 				active_chunks_.push_back(chnk.second);
 			}
 		}
+		std::cerr << "WORLD: " << active_chunks_.size() << "/" << chunks_.size() << " in viewing volume" << std::endl;
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)

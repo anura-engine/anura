@@ -45,6 +45,7 @@ namespace isometric
 
 		void set_tile(int x, int y, int z, const variant& type);
 		void del_tile(int x, int y, int z);
+		variant get_tile_type(int x, int y, int z) const;
 
 		void build();
 		void draw(const camera_callable_ptr& camera) const;

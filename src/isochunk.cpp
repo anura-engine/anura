@@ -10,6 +10,8 @@
 #include <sstream>
 #include <utility>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/noise.hpp>
+#include <glm/gtc/random.hpp>
 #if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
 #define bmround	boost::math::round
@@ -553,10 +555,11 @@ namespace isometric
 			int size_z = node["random"]["depth"].as_int(32);
 			set_size(size_x, size_y, size_z);
 
-			int noise_height = node["noise_height"].as_int(size_y);
+			int noise_height = node["noise_height"].as_int(size_y) + worldspace_position().y*size_y;
 
 			uint32_t seed = node["random"]["seed"].as_int(0);
-			noise::simplex::init(seed);
+			//noise::simplex::init(seed);
+			srand(seed);
 
 			boost::random::uniform_int_distribution<> dist(0,255);
 			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
@@ -564,11 +567,12 @@ namespace isometric
 			std::vector<float> vec;
 			vec.resize(2);
 			for(int x = 0; x != size_x; ++x) {
-				vec[0] = float(x)/float(size_x);
+				vec[0] = float(worldspace_position().x+x)/float(size_x);
 				for(int z = 0; z != size_z; ++z) {
-					vec[1] = float(z)/float(size_z);
-					int h = int(noise::simplex::noise2(&vec[0]) * noise_height);
-					h = std::max<int>(1, std::min<int>(size_y-1, h));
+					vec[1] = float(+worldspace_position().z+z)/float(size_z);
+					//int h = int(noise::simplex::noise2(&vec[0]) * float(noise_height)*1.5f);
+					int h = std::max<int>(1, int(glm::simplex(glm::vec4(vec[0], vec[1], 0.5f, float(seed)/std::numeric_limits<uint32_t>::max())) * float(noise_height/2.0)));
+					//h = std::max<int>(1, std::min<int>(size_y-1, h));
 					for(int y = 0; y != h; ++y) {
 						if(node["random"].has_key("type")) {
 							tiles_[position(x,y,z)] = graphics::color(node["random"]["type"]).as_sdl_color();

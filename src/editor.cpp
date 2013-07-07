@@ -3700,39 +3700,45 @@ void editor::draw_gui() const
 			u_col = gles2::active_shader()->shader()->get_fixed_uniform("color");
 		}
 
+		variant tile_type;
 		if(lvl_->isomap() != NULL) {
-			if(lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z).is_null() == false) {
-				glm::mat4 model = glm::translate(glm::mat4(1.0f),
-					glm::vec3(float(g_voxel_coord.x)+0.5f, float(g_voxel_coord.y)+0.5f, float(g_voxel_coord.z)+0.5f));
-				glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
-				glLineWidth(1.0f);
-				glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
-				glUniform4f(u_col, 0.0f, 0.0f, 0.0f, 1.0f);
+			tile_type = lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+		}
+		if(lvl_->iso_world() != NULL) {
+			tile_type = lvl_->iso_world()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
+		}
+
+		if(tile_type.is_null() == false) {
+			glm::mat4 model = glm::translate(glm::mat4(1.0f),
+				glm::vec3(float(g_voxel_coord.x)+0.5f, float(g_voxel_coord.y)+0.5f, float(g_voxel_coord.z)+0.5f));
+			glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
+			glLineWidth(1.0f);
+			glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
+			glUniform4f(u_col, 0.0f, 0.0f, 0.0f, 1.0f);
 		
-				std::vector<GLfloat> lines;
-				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
-				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
-				lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+			std::vector<GLfloat> lines;
+			lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+			lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+			lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
 
-				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
-				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); 
-				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+			lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+			lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); 
+			lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
 
-				lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
-				lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+			lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+			lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
 
-				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
-				lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+			lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); 
+			lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
 
-				lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
-				lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
+			lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); 
+			lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(0.525f); lines.push_back(0.525f); lines.push_back(-0.525f); lines.push_back(-0.525f); 
 
-				gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &lines[0]);
+			gles2::active_shader()->shader()->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &lines[0]);
 
-				glEnable(GL_DEPTH_TEST);
-				glDrawArrays(GL_LINES, 0, lines.size()/3);
-				glDisable(GL_DEPTH_TEST);
-			}
+			glEnable(GL_DEPTH_TEST);
+			glDrawArrays(GL_LINES, 0, lines.size()/3);
+			glDisable(GL_DEPTH_TEST);
 		}
 	}
 #endif

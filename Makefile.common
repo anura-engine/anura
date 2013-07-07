@@ -80,6 +80,7 @@ objects = \
 	src/formula_visualize_widget.o \
 	src/frame.o \
 	src/framed_gui_element.o \
+	src/frustum.o \
 	src/game_registry.o \
 	src/geometry.o \
 	src/gles2.o \
