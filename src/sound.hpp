@@ -63,6 +63,8 @@ void set_music_volume(float volume);
 //Ways to set the music volume from the game engine's perspective.
 void set_engine_music_volume(float volume);
 float get_engine_music_volume();
+
+void set_panning(float left, float right);
 	
 // function to play a sound effect over and over in a loop. Will return
 // a handle to the sound effect.

@@ -47,6 +47,8 @@ struct MusicInfo {
 
 std::map<std::string, MusicInfo> music_index;
 
+float g_stereo_left = 1.0, g_stereo_right = 1.0;
+
 float sfx_volume = 1.0;
 float user_music_volume = 1.0;
 float engine_music_volume = 1.0;
@@ -465,6 +467,9 @@ int play_internal(const std::string& file, int loops, const void* object, float 
 	}
 
 	int result = Mix_PlayChannel(-1, chunk, loops);
+	if(result >= 0) {
+		Mix_SetPanning(result, 255*g_stereo_left, 255*g_stereo_right);
+	}
 
 #else
 	sound& s = cache[file];
@@ -707,6 +712,12 @@ void set_engine_music_volume(float volume)
 float get_engine_music_volume()
 {
 	return engine_music_volume;
+}
+
+void set_panning(float left, float right)
+{
+	g_stereo_left = left;
+	g_stereo_right = right;
 }
 
 namespace {
