@@ -654,6 +654,8 @@ void level::load_character(variant c)
 	solid_chars_.clear();
 }
 
+PREF_INT(respect_difficulty, 0);
+
 void level::finish_loading()
 {
 	std::vector<sub_level_data> sub_levels;
@@ -814,7 +816,7 @@ void level::finish_loading()
 
 	} //end serialization read scope. Now all objects should be fully resolved.
 
-	if(preferences::force_difficulty() != INT_MIN && !editor_) {
+	if((g_respect_difficulty || preferences::force_difficulty() != INT_MIN) && !editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
 			if(chars_[n].get() != NULL && !chars_[n]->appears_at_difficulty(difficulty)) {
@@ -2066,6 +2068,8 @@ void level::draw(int x, int y, int w, int h) const
 #if defined(USE_GLES2)
 	gles2::manager manager(shader_);
 #endif
+
+	std::sort(active_chars_.begin(), active_chars_.end(), zorder_compare);
 
 	const std::vector<entity_ptr>* chars_ptr = &active_chars_;
 	std::vector<entity_ptr> editor_chars_buf;

@@ -56,6 +56,14 @@ LIBS := $(shell pkg-config --libs x11 gl ) -lSDLmain \
 	$(shell pkg-config --libs sdl glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
 endif
 
+# Enable Box2D if found.
+ifeq ($(shell { cpp -x c++ -include Box2D/Box2D.h /dev/null \
+	&& ld -lBox2D; } >/dev/null 2>/dev/null; \
+	echo $$?),0)
+  BASE_CXXFLAGS += -DUSE_BOX2D
+  LIBS += -lBox2D
+endif
+
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 include Makefile.common
