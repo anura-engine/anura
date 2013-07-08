@@ -684,10 +684,11 @@ END_FUNCTION_DEF(music_onetime)
 class sound_command : public entity_command_callable
 {
 public:
-	explicit sound_command(const std::string& name, const bool loops, float volume, float fade_in_time)
-	  : names_(util::split(name)), loops_(loops), volume_(volume), fade_in_time_(fade_in_time)
+	explicit sound_command(const std::string& name, const bool loops, float volume, float fade_in_time, float stereo_left, float stereo_right)
+	  : names_(util::split(name)), loops_(loops), volume_(volume), fade_in_time_(fade_in_time), stereo_left_(stereo_left), stereo_right_(stereo_right)
 	{}
 	virtual void execute(level& lvl, entity& ob) const {
+		sound::set_panning(stereo_left_, stereo_right_);
 		if(loops_){
 			if (names_.empty() == false){
 				int randomNum = rand()%names_.size();  //like a 1d-size die
@@ -705,41 +706,62 @@ public:
 				}
 			}
 		}
+
+		sound::set_panning(1.0, 1.0);
 	}
 private:
 	std::vector<std::string> names_;
 	bool loops_;
 	float volume_;
 	float fade_in_time_;
+	float stereo_left_, stereo_right_;
 };
 
-FUNCTION_DEF(sound, 1, 3, "sound(string id, decimal volume, decimal fade_in_time): plays the sound file given by 'id', reaching full volume after fade_in_time seconds.")
-	sound_command* cmd = (new sound_command(
+FUNCTION_DEF(sound, 1, 4, "sound(string id, decimal volume, decimal fade_in_time, [decimal,decimal] stereo): plays the sound file given by 'id', reaching full volume after fade_in_time seconds.")
+	float stereo_left = 1.0, stereo_right = 1.0;
+	if(args().size() > 3) {
+		variant stereo_var = args()[3]->evaluate(variables);
+		stereo_left = stereo_var[0].as_decimal().as_float();
+		stereo_right = stereo_var[1].as_decimal().as_float();
+	}
+
+	sound_command* cmd = new sound_command(
 									 args()[0]->evaluate(variables).as_string(),
 									 false,
 									 args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 1.0f,
-									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f));
+									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f,
+									 stereo_left, stereo_right);
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("decimal")
 	ARG_TYPE("decimal")
+	ARG_TYPE("[decimal,decimal]")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound)
 
-FUNCTION_DEF(sound_loop, 1, 3, "sound_loop(string id, decimal volume, decimal fade_in_time): plays the sound file given by 'id' in a loop, if fade_in_time is given it will reach full volume after this time.")
-	sound_command* cmd = (new sound_command(
+FUNCTION_DEF(sound_loop, 1, 4, "sound_loop(string id, decimal volume, decimal fade_in_time, [decimal,decimal] stereo): plays the sound file given by 'id' in a loop, if fade_in_time is given it will reach full volume after this time.")
+	float stereo_left = 1.0, stereo_right = 1.0;
+	if(args().size() > 3) {
+		variant stereo_var = args()[3]->evaluate(variables);
+		stereo_left = stereo_var[0].as_decimal().as_float();
+		stereo_right = stereo_var[1].as_decimal().as_float();
+	}
+
+	sound_command* cmd = new sound_command(
 									 args()[0]->evaluate(variables).as_string(),
 									 true,
 									 args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 1.0f,
-									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f));
+									 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f,
+									 stereo_left, stereo_right);
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("decimal")
 	ARG_TYPE("decimal")
+	ARG_TYPE("[decimal, decimal]")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound_loop)
 
