@@ -2069,6 +2069,8 @@ void level::draw(int x, int y, int w, int h) const
 	gles2::manager manager(shader_);
 #endif
 
+	std::sort(active_chars_.begin(), active_chars_.end(), zorder_compare);
+
 	const std::vector<entity_ptr>* chars_ptr = &active_chars_;
 	std::vector<entity_ptr> editor_chars_buf;
 
