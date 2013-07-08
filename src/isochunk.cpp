@@ -1022,7 +1022,7 @@ namespace voxel
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting) {
-			lighting->set_modelview_matrix(camera->view_mat(), model);
+			lighting->set_modelview_matrix(model, camera->view_mat());
 		}
 
 		glEnableVertexAttribArray(position_uniform());
@@ -1058,7 +1058,7 @@ namespace voxel
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		if(lighting) {
-			lighting->set_modelview_matrix(camera->view_mat(), model);
+			lighting->set_modelview_matrix(model, camera->view_mat());
 		}
 
 		glEnableVertexAttribArray(position_uniform());
