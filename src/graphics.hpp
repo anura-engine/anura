@@ -19,6 +19,9 @@
 
 #include "SDL.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
 #include "SDL_opengles.h"
 #endif

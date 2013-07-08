@@ -73,7 +73,7 @@ namespace voxel
 	{
 	}
 
-	void voxel_object::draw(camera_callable_ptr camera) const
+	void voxel_object::draw(graphics::lighting_ptr lighting, camera_callable_ptr camera) const
 	{
 		if(model_) {
 			//profile::manager pman("voxel_object::draw");
@@ -98,6 +98,10 @@ namespace voxel
 				u_mvp = glGetUniformLocation(active_program, "mvp_matrix");
 			}
 			glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+
+			if(lighting) {
+				lighting->set_modelview_matrix(model_mat, camera->view_mat());
+			}
 
 			if(!varray.empty()) {
 				//glUseProgram(shader_->get());

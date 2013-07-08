@@ -28,6 +28,7 @@
 #include "formula_callable_definition.hpp"
 #include "graphics.hpp"
 #include "level.hpp"
+#include "lighting.hpp"
 #include "variant.hpp"
 #include "voxel_model.hpp"
 #include "widget_factory.hpp"
@@ -41,7 +42,7 @@ namespace voxel
 		explicit voxel_object(const variant& node);
 		virtual ~voxel_object();
 
-		void draw(camera_callable_ptr camera) const;
+		void draw(const graphics::lighting_ptr lighting, camera_callable_ptr camera) const;
 		void process(level& lvl);
 		bool handle_sdl_event(const SDL_Event& event, bool claimed);
 

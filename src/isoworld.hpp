@@ -18,6 +18,7 @@
 #include "geometry.hpp"
 #include "graphics.hpp"
 #include "isochunk.hpp"
+#include "lighting.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
@@ -36,18 +37,6 @@ namespace voxel
 		
 		gles2::program_ptr shader() { return shader_; }
 
-		float gamma() const { return gamma_; }
-		void set_gamma(float g);
-
-		float light_power() const { return light_power_; }
-		void set_light_power(float lp);
-
-		const glm::vec3& light_position() const { return light_position_; }
-		void set_light_position(const glm::vec3& lp);
-		void set_light_position(const variant& lp);
-
-		bool lighting_enabled() const { return lighting_enabled_; }
-
 		void set_tile(int x, int y, int z, const variant& type);
 		void del_tile(int x, int y, int z);
 		variant get_tile_type(int x, int y, int z) const;
@@ -63,15 +52,8 @@ namespace voxel
 	private:
 		DECLARE_CALLABLE(world);
 		gles2::program_ptr shader_;
-		GLuint u_lightposition_;
-		GLuint u_lightpower_;
-		GLuint u_gamma_;
 
-		glm::vec3 light_position_;
-		float light_power_;
-		float gamma_;
-
-		bool lighting_enabled_;
+		graphics::lighting_ptr lighting_;
 
 		int view_distance_;
 

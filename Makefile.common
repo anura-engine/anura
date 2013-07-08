@@ -116,6 +116,7 @@ objects = \
 	src/level_runner.o \
 	src/level_solid_map.o \
 	src/light.o \
+	src/lighting.o \
 	src/load_level_nothread.o \
 	src/main.o \
 	src/md5.o \

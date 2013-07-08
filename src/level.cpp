@@ -2054,7 +2054,7 @@ void level::draw(int x, int y, int w, int h) const
 	if(isomap_) {
 		// XX hackity hack
 		gles2::shader_program_ptr active = gles2::active_shader();
-		isomap_->draw(camera_);
+		isomap_->draw(graphics::lighting_ptr(), camera_);
 		glUseProgram(active->shader()->get());
 	} else if(iso_world_) {
 		// XX hackity hack
