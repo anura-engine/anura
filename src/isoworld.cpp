@@ -4,10 +4,12 @@
 #include "level.hpp"
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
+#include "voxel_object.hpp"
 
-namespace isometric
+namespace voxel
 {
 	const int chunk_size = 32;
+	const int initial_chunks = 16;
 
 	world::world(const variant& node)
 		: gamma_(1.0f), light_power_(15000.0f), light_position_(glm::vec3(100.f, 100.0f, 100.0f)),
@@ -21,7 +23,13 @@ namespace isometric
 		u_gamma_ = shader_->get_fixed_uniform("gamma");
 
 		lighting_enabled_ = u_lightposition_ != -1 && u_lightpower_ != -1 && u_gamma_ != -1;
-		std::cerr << "isometric::world: Lighting is " << (lighting_enabled_ ? "enabled" : "disable") << std::endl;
+		std::cerr << "voxel::world: Lighting is " << (lighting_enabled_ ? "enabled" : "disable") << std::endl;
+
+		if(node.has_key("objects")) {
+			for(int n = 0; n != node["objects"].num_elements(); ++n) {
+				add_object(voxel_object_factory::create(node["objects"][n]));
+			}
+		}
 
 		build();
 	}
@@ -87,36 +95,50 @@ namespace isometric
 		return variant();
 	}
 
+	void world::add_object(voxel_object_ptr obj)
+	{
+		objects_.insert(obj);
+	}
+
+	void world::remove_object(voxel_object_ptr obj)
+	{
+		auto it = objects_.find(obj);
+		ASSERT_LOG(it != objects_.end(), "Unable to remove object '" << obj->type() << "' from level");
+		objects_.erase(it);
+	}
 
 	void world::build()
 	{
+		profile::manager pman("Built voxel::world in");
 		// Generates initial chunks
-		for(int x = 0; x != 10; ++x) {
-			for(int z = 0; z != 10; ++z) {
-				std::cerr << "Generating chunk: " << x << ",0," << z << std::endl;
-				std::map<variant,variant> m;
-				variant_builder rnd;
+		for(int x = 0; x != initial_chunks; ++x) {
+			for(int y = 0; y < 3; y++) {
+				for(int z = 0; z != initial_chunks; ++z) {
+					//std::cerr << "Generating chunk: " << x << ",0," << z << std::endl;
+					std::map<variant,variant> m;
+					variant_builder rnd;
 				
-				rnd.add("width", chunk_size);
-				rnd.add("height", chunk_size);
-				rnd.add("depth", chunk_size);
-				rnd.add("noise_height", rand() % chunk_size);
-				rnd.add("type", graphics::color("lawn_green").write());
-				rnd.add("seed", seed_);
+					rnd.add("width", chunk_size);
+					rnd.add("height", chunk_size);
+					rnd.add("depth", chunk_size);
+					rnd.add("noise_height", rand() % chunk_size);
+					rnd.add("type", graphics::color("medium_sea_green").write());
+					rnd.add("seed", seed_);
 
-				m[variant("type")] = variant("colored");
-				m[variant("shader")] = variant(shader_->name());
-				m[variant("skip_lighting_uniforms")] = variant::from_bool(true);
-				std::vector<variant> v;
-				v.push_back(variant(x*chunk_size));
-				v.push_back(variant(0));
-				v.push_back(variant(z*chunk_size));
-				m[variant("worldspace_position")] = variant(&v);
-				m[variant("random")] = rnd.build();
+					m[variant("type")] = variant("colored");
+					m[variant("shader")] = variant(shader_->name());
+					m[variant("skip_lighting_uniforms")] = variant::from_bool(true);
+					std::vector<variant> v;
+					v.push_back(variant(x*chunk_size));
+					v.push_back(variant(0));
+					v.push_back(variant(z*chunk_size));
+					m[variant("worldspace_position")] = variant(&v);
+					m[variant("random")] = rnd.build();
 
 
-				chunks_[position(x*chunk_size,0,z*chunk_size)] = isometric::chunk_factory::create(variant(&m));
-				active_chunks_.push_back(chunks_[position(x*chunk_size,0,z*chunk_size)]);
+					chunks_[position(x*chunk_size,0,z*chunk_size)] = voxel::chunk_factory::create(variant(&m));
+					active_chunks_.push_back(chunks_[position(x*chunk_size,0,z*chunk_size)]);
+				}
 			}
 		}
 		//get_active_chunks();
@@ -141,8 +163,13 @@ namespace isometric
 			chunks->do_draw(camera);
 		}
 
-		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
+
+		for(auto obj : objects_) {
+			obj->draw(camera);
+		}
+
+		glDisable(GL_DEPTH_TEST);
 
 		level::current().camera()->frustum().draw();
 	}
@@ -161,6 +188,7 @@ namespace isometric
 
 	void world::get_active_chunks()
 	{
+		//profile::manager pman("get_active_chunks");
 		const graphics::frustum& frustum = level::current().camera()->frustum();
 		active_chunks_.clear();
 		for(auto chnk : chunks_) {
@@ -169,7 +197,7 @@ namespace isometric
 				active_chunks_.push_back(chnk.second);
 			}
 		}
-		std::cerr << "WORLD: " << active_chunks_.size() << "/" << chunks_.size() << " in viewing volume" << std::endl;
+		//std::cerr << "WORLD: " << active_chunks_.size() << "/" << chunks_.size() << " in viewing volume" << std::endl;
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)
@@ -193,5 +221,11 @@ namespace isometric
 		return variant(&v);
 	DEFINE_SET_FIELD
 		obj.set_light_position(value);
+	DEFINE_FIELD(objects, "[builtin voxel_object]")
+		std::vector<variant> v;
+		for(auto o : obj.objects_) {
+			v.push_back(variant(o.get()));
+		}
+		return variant(&v);
 	END_DEFINE_CALLABLE(world)
 }

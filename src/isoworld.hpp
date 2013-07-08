@@ -9,6 +9,7 @@
 #include <boost/unordered_map.hpp>
 
 #include <vector>
+#include <set>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -21,8 +22,12 @@
 #include "shaders.hpp"
 #include "variant.hpp"
 
-namespace isometric
+namespace voxel
 {
+	class voxel_object;
+	typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
+	typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
+
 	class world : public game_logic::formula_callable
 	{
 	public:
@@ -51,6 +56,9 @@ namespace isometric
 		void draw(const camera_callable_ptr& camera) const;
 		variant write();
 		void process();
+
+		void add_object(voxel::voxel_object_ptr obj);
+		void remove_object(voxel::voxel_object_ptr obj);
 	protected:
 	private:
 		DECLARE_CALLABLE(world);
@@ -71,6 +79,8 @@ namespace isometric
 
 		std::vector<chunk_ptr> active_chunks_;
 		boost::unordered_map<position, chunk_ptr> chunks_;
+
+		std::set<voxel_object_ptr> objects_;
 		
 		void get_active_chunks();
 

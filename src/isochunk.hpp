@@ -20,7 +20,7 @@
 #include "shaders.hpp"
 #include "variant.hpp"
 
-namespace isometric
+namespace voxel
 {
 	struct position
 	{

@@ -54,6 +54,7 @@
 #include "level.hpp"
 #include "json_parser.hpp"
 #include "variant_utils.hpp"
+#include "voxel_object.hpp"
 
 #include "graphics.hpp"
 #include "module.hpp"
@@ -4350,7 +4351,7 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF(get_voxel_type)
 
 FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin chunk, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
-	isometric::chunk* isomap = args()[0]->evaluate(variables).try_convert<isometric::chunk>();
+	voxel::chunk* isomap = args()[0]->evaluate(variables).try_convert<voxel::chunk>();
 	bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
 	ASSERT_LOG(isomap != NULL, "Invalid argument to graph_from_isomap. Must be of type 'isomap'");
 	return variant(isomap->create_directed_graph(allow_diagonals).get());

@@ -32,7 +32,7 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-namespace isometric
+namespace voxel
 {
 	namespace 
 	{
@@ -266,15 +266,15 @@ namespace isometric
 			&& u_v_matrix_ != -1
 			&& u_normal_ != -1;
 
-		std::cerr << "chunk::get_uniforms_and_attributes Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
-		if(!lighting_enabled_) {
-			std::cerr << "light_position: " << u_lightposition_ << std::endl;
-			std::cerr << "light_power: " << u_lightpower_ << std::endl;
-			std::cerr << "shininess: " << u_shininess_ << std::endl;
-			std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
-			std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
-			std::cerr << "normal: " << u_normal_ << std::endl;
-		}
+		//std::cerr << "chunk::get_uniforms_and_attributes Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
+		//if(!lighting_enabled_) {
+		//	std::cerr << "light_position: " << u_lightposition_ << std::endl;
+		//	std::cerr << "light_power: " << u_lightpower_ << std::endl;
+		//	std::cerr << "shininess: " << u_shininess_ << std::endl;
+		//	std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
+		//	std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
+		//	std::cerr << "normal: " << u_normal_ << std::endl;
+		//}
 	}
 
 	const std::vector<tile_editor_info>& chunk::get_editor_tiles()
@@ -710,7 +710,7 @@ namespace isometric
 	
 	void chunk_colored::handle_build()
 	{
-		profile::manager pman("chunk_colored::handle_build");
+		//profile::manager pman("chunk_colored::handle_build");
 
 		carray_.clear();
 		carray_.resize(MAX_FACES);
@@ -781,12 +781,12 @@ namespace isometric
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray_[n].size()*sizeof(uint8_t), &carray_[n][0]);
 		}
-		std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
-		std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
-		std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
-		std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
-		std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
-		std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
+		//std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
+		//std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
+		//std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
+		//std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
+		//std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
+		//std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
 
 		clear_vertex_data();
 		carray_.clear();
@@ -796,7 +796,7 @@ namespace isometric
 
 	void chunk_textured::handle_build()
 	{
-		profile::manager pman("chunk_textured::handle_build");
+		//profile::manager pman("chunk_textured::handle_build");
 
 		tarray_.clear();
 		tarray_.resize(MAX_FACES);
@@ -867,12 +867,12 @@ namespace isometric
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, tattrib_offsets_[n], tarray_[n].size()*sizeof(GLfloat), &tarray_[n][0]);
 		}
-		std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
-		std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
-		std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
-		std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
-		std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
-		std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
+		//std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
+		//std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
+		//std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
+		//std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
+		//std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
+		//std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
 
 		clear_vertex_data();
 		tarray_.clear();
