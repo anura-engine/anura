@@ -892,7 +892,7 @@ private:
 	int anchor_drag_x_, anchor_drag_y_;
 	struct VoxelPosLess
 	{
-		bool operator()(VoxelPos const& p1, VoxelPos const& p2) {
+		bool operator()(const VoxelPos& p1, const VoxelPos& p2) const {
 			return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
 		}
 	};
