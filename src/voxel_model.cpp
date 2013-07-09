@@ -1,11 +1,54 @@
-#include "json_parser.hpp"
-#include "variant_utils.hpp"
-#include "voxel_model.hpp"
+/*
+	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#ifdef USE_GLES2
+
+#include <boost/shared_ptr.hpp>
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "json_parser.hpp"
+#include "variant_utils.hpp"
+#include "voxel_model.hpp"
+
+
 namespace voxel {
+
+namespace
+{
+	std::vector<glm::vec3>& normal_vectors()
+	{
+		static std::vector<glm::vec3> res;
+		if(res.empty()) {
+			res.push_back(glm::vec3(-1.0f, 0.0f, 0.0f));
+			res.push_back(glm::vec3( 1.0f, 0.0f, 0.0f));
+			res.push_back(glm::vec3( 0.0f, 1.0f, 0.0f));
+			res.push_back(glm::vec3( 0.0f,-1.0f, 0.0f));
+			res.push_back(glm::vec3( 0.0f, 0.0f,-1.0f));
+			res.push_back(glm::vec3( 0.0f, 0.0f, 1.0f));
+		}
+		return res;
+	}
+}
+
+bool operator==(VoxelPos const& p1, VoxelPos const& p2)
+{
+	return p1.x == p1.x && p1.y == p2.y && p1.z == p2.z;
+}
 
 variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel) {
 	std::map<variant,variant> m;
@@ -162,9 +205,9 @@ variant write_model(const Model& model) {
 			std::map<variant,variant> pivots;
 			for(const std::pair<std::string,VoxelPos>& p : layer_type.pivots) {
 				std::vector<variant> value;
-				for(int n : p.second) {
-					value.push_back(variant(n));
-				}
+				value.push_back(variant(p.second.x));
+				value.push_back(variant(p.second.y));
+				value.push_back(variant(p.second.z));
 
 				pivots[variant(p.first)] = variant(&value);
 			}
@@ -289,7 +332,7 @@ variant write_animation(const Animation& anim)
 
 voxel_model::voxel_model(const variant& node)
   : name_(node["model"].as_string()), anim_time_(0.0), old_anim_time_(0.0),
-    invalidated_(false)
+    invalidated_(false), model_(1.0f), proto_model_(1.0f)
 {
 	Model base(read_model(json::parse_from_file(name_)));
 
@@ -332,72 +375,120 @@ voxel_model::voxel_model(const variant& node)
 }
 
 voxel_model::voxel_model(const Layer& layer, const LayerType& layer_type)
-  : name_(layer_type.name), invalidated_(false)
+  : name_(layer_type.name), invalidated_(false), model_(1.0f), proto_model_(1.0f)
 {
 	for(const std::pair<std::string, VoxelPos>& pivot : layer_type.pivots) {
-		glm::vec3 point;
-		point[0] = pivot.second[0] + 0.5;
-		point[1] = pivot.second[1] + 0.5;
-		point[2] = pivot.second[2] + 0.5;
+		glm::vec3 point = glm::vec3(pivot.second) + glm::vec3(0.5f);
 
 		pivots_.push_back(std::pair<std::string, glm::vec3>(pivot.first, point));
 	}
-	
-	std::map<glm::vec3, int> points;
+
+	vbo_id_.reset(new GLuint, [](GLuint* id){glDeleteBuffers(1, id); delete id;});
+	glGenBuffers(1, vbo_id_.get());
+
+	std::vector<GLfloat> varray[6];
+	std::vector<GLubyte> carray[6];
+
 	for(auto p : layer.map) {
-		glm::vec3 point;
-		std::copy(p.first.begin(), p.first.end(), &point[0]);
-		std::vector<int> indexes;
-		indexes.push_back(add_vertex(point));
-		point[0] += 1.0;
-		indexes.push_back(add_vertex(point));
-		point[1] += 1.0;
-		indexes.push_back(add_vertex(point));
-		point[2] += 1.0;
-		indexes.push_back(add_vertex(point));
-
-		point[1] -= 1.0;
-		indexes.push_back(add_vertex(point));
-		point[0] -= 1.0;
-		indexes.push_back(add_vertex(point));
-		point[1] += 1.0;
-		indexes.push_back(add_vertex(point));
-		point[2] -= 1.0;
-		indexes.push_back(add_vertex(point));
-
-#define ADD_FACE(i1, i2, i3, i4, v1, v2, v3) { \
-		VoxelPos adjacent_pos = p.first; \
-		adjacent_pos[0] += v1; adjacent_pos[1] += v2; adjacent_pos[2] += v3; \
-		if(true || layer.map.count(adjacent_pos) == 0) { \
-			Face face; \
-			face.geometry[0] = indexes[i1]; \
-			face.geometry[1] = indexes[i2]; \
-			face.geometry[2] = indexes[i3]; \
-			face.geometry[3] = indexes[i4]; \
-			face.color = p.second.color; \
-			faces_.push_back(face); \
-		} \
+		for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+			glm::ivec3 pos = glm::ivec3(normal_vectors()[n]) + p.first;
+			if(layer.map.find(pos) == layer.map.end()) {
+				add_face(n, p, varray[n], carray[n]);
+			}
+		}
 	}
 
-		ADD_FACE(0, 1, 7, 2, 0, 0, -1);
-		ADD_FACE(1, 4, 2, 3, 1, 0, 0);
-		ADD_FACE(5, 4, 6, 3, 0, 0, 1);
-		ADD_FACE(5, 0, 6, 7, -1, 0, 0);
-		ADD_FACE(0, 1, 5, 4, 0, -1, 0);
-		ADD_FACE(6, 3, 7, 2, 0, 1, 0);
-
-#undef ADD_FACE
+	size_t total_size = 0;
+	for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+		vattrib_offsets_[n] = total_size;
+		total_size += varray[n].size() * sizeof(GLfloat);
+		num_vertices_[n] = varray[n].size() / 3;
+	}
+	for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+		cattrib_offsets_[n] = total_size;
+		total_size += carray[n].size() * sizeof(uint8_t);
+	}
+	glBindBuffer(GL_ARRAY_BUFFER, *vbo_id_);
+	glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+	for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+		glBufferSubData(GL_ARRAY_BUFFER, vattrib_offsets_[n], varray[n].size()*sizeof(GLfloat), &varray[n][0]);
+	}
+	for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+		glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray[n].size()*sizeof(uint8_t), &carray[n][0]);
 	}
 }
 
-voxel_model_ptr voxel_model::build_instance() const
+void voxel_model::add_face(int face, const VoxelPair& p, std::vector<GLfloat>& varray, std::vector<GLubyte>& carray)
 {
-	voxel_model_ptr result(new voxel_model(*this));
-	for(voxel_model_ptr& child : result->children_) {
-		child = child->build_instance();
+	add_vertex_data(face, GLfloat(p.first.x), GLfloat(p.first.y), GLfloat(p.first.z), varray);
+	// colors are all the same per vertex.
+	for(int n = 0; n != 6; ++n) {
+		carray.push_back(p.second.color.r());
+		carray.push_back(p.second.color.g());
+		carray.push_back(p.second.color.b());
+		carray.push_back(p.second.color.a());
 	}
-	result->prototype_.reset(this);
-	return result;
+}
+
+void voxel_model::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat>& varray)
+{
+	switch(face) {
+	case FACE_FRONT:
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z+1);
+
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+		break;
+	case FACE_RIGHT:
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z);
+
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z);
+		break;
+	case FACE_TOP:
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z+1);
+
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z);
+		break;
+	case FACE_BACK:
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z);
+
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x+1); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z);
+		break;
+	case FACE_LEFT:
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y+1); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z);
+		break;
+	case FACE_BOTTOM:
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z);
+
+		varray.push_back(x+1); varray.push_back(y); varray.push_back(z);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z+1);
+		varray.push_back(x); varray.push_back(y); varray.push_back(z);
+		break;
+	default: ASSERT_LOG(false, "voxel_model::add_vertex_data unexpected facing value: " << face);
+	}
 }
 
 voxel_model_ptr voxel_model::get_child(const std::string& id) const
@@ -453,13 +544,14 @@ void voxel_model::attach_child(voxel_model_ptr child, const std::string& src_att
 	const glm::vec3 translate = dst_pivot->second - src_pivot->second;
 
 	child->clear_transforms();
-	child->translate_geometry(translate);
 
+	child->translate_geometry(translate);
 	for(const AttachmentPointRotation& r : dst_attach_itor->second.rotations) {
 		child->rotate_geometry(dst_pivot->second, dst_pivot->second + r.direction, r.amount);
 	}
 
-	dst_model->children_.push_back(child->build_instance());
+	child->proto_model_ = child->model_;
+	dst_model->children_.push_back(child);
 }
 
 void voxel_model::set_animation(const std::string& anim_str)
@@ -495,16 +587,16 @@ void voxel_model::process_animation(GLfloat advance)
 
 	anim_time_ += advance;
 
-	const GLfloat TransitionTime = 0.5;
-	GLfloat ratio = 1.0;
+	const GLfloat TransitionTime = 0.5f;
+	GLfloat ratio = 1.0f;
 
 	if(old_anim_) {
 		if(anim_time_ >= TransitionTime) {
 			old_anim_.reset();
-			old_anim_time_ = 0.0;
+			old_anim_time_ = 0.0f;
 		} else {
 			old_anim_time_ += advance;
-			if(old_anim_->duration > 0 && old_anim_time_ > old_anim_->duration) {
+			if(old_anim_->duration > 0.0f && old_anim_time_ > old_anim_->duration) {
 				old_anim_time_ = old_anim_->duration;
 			}
 			ratio = anim_time_ / TransitionTime;
@@ -521,12 +613,7 @@ void voxel_model::process_animation(GLfloat advance)
 		for(const AnimationTransform& transform : old_anim_->transforms) {
 			if(transform.translation_formula) {
 				const variant result = transform.translation_formula->execute(*callable);
-				ASSERT_LOG(result.is_list() && result.num_elements() == 3, "Invalid result from translation formula: " << transform.translation_formula->str() << " expected a [decimal,decimal,decimal] but found " << result.write_json());
-
-				glm::vec3 translate;
-				translate[0] = result[0].as_decimal().as_float()*(1.0-ratio);
-				translate[1] = result[1].as_decimal().as_float()*(1.0-ratio);
-				translate[2] = result[2].as_decimal().as_float()*(1.0-ratio);
+				glm::vec3 translate = variant_to_vec3(result)*(1.0f - ratio);
 				get_child(transform.layer)->accumulate_translation(translate);
 			}
 
@@ -544,12 +631,7 @@ void voxel_model::process_animation(GLfloat advance)
 	for(const AnimationTransform& transform : anim_->transforms) {
 		if(transform.translation_formula) {
 			const variant result = transform.translation_formula->execute(*callable);
-			ASSERT_LOG(result.is_list() && result.num_elements() == 3, "Invalid result from translation formula: " << transform.translation_formula->str() << " expected a [decimal,decimal,decimal] but found " << result.write_json());
-
-			glm::vec3 translate;
-			translate[0] = result[0].as_decimal().as_float()*ratio;
-			translate[1] = result[1].as_decimal().as_float()*ratio;
-			translate[2] = result[2].as_decimal().as_float()*ratio;
+			glm::vec3 translate = variant_to_vec3(result) * ratio;
 			get_child(transform.layer)->accumulate_translation(translate);
 		}
 
@@ -557,9 +639,11 @@ void voxel_model::process_animation(GLfloat advance)
 			continue;
 		}
 
-		GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
+		GLfloat rotation = GLfloat(transform.rotation_formula->execute(*callable).as_decimal().as_float());
 		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, transform.children_only);
 	}
+
+	calculate_transforms();
 }
 
 void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only)
@@ -611,82 +695,63 @@ void voxel_model::accumulate_translation(const glm::vec3& translate)
 
 void voxel_model::clear_transforms()
 {
+	model_ = proto_model_;
 	rotation_.clear();
-	translation_[0] = translation_[1] = translation_[2] = 0.0;
+	translation_ = glm::vec3(0.0f);
 	invalidated_ = true;
 	for(auto child : children_) {
 		child->clear_transforms();
 	}
 }
 
-int voxel_model::add_vertex(const glm::vec3& vertex)
+void voxel_model::draw(graphics::lighting_ptr lighting, camera_callable_ptr camera, const glm::mat4& model) const
 {
-	auto itor = std::find(vertexes_.begin(), vertexes_.end(), vertex);
-	if(itor != vertexes_.end()) {
-		return itor - vertexes_.begin();
-	}
-
-	int result = vertexes_.size();
-	vertexes_.push_back(vertex);
-	return result;
-}
-
-void voxel_model::generate_geometry(std::vector<GLfloat>* vertexes, std::vector<GLfloat>* normals, std::vector<GLfloat>* colors)
-{
-	calculate_transforms();
-	for(const Face& face : faces_) {
-		const glm::vec3& p1 = vertexes_[face.geometry[0]];
-		const glm::vec3& p2 = vertexes_[face.geometry[1]];
-		const glm::vec3& p3 = vertexes_[face.geometry[2]];
-		const glm::vec3& p4 = vertexes_[face.geometry[3]];
-
-		vertexes->push_back(p1[0]);
-		vertexes->push_back(p1[1]);
-		vertexes->push_back(p1[2]);
-
-		vertexes->push_back(p2[0]);
-		vertexes->push_back(p2[1]);
-		vertexes->push_back(p2[2]);
-
-		vertexes->push_back(p3[0]);
-		vertexes->push_back(p3[1]);
-		vertexes->push_back(p3[2]);
-
-		vertexes->push_back(p2[0]);
-		vertexes->push_back(p2[1]);
-		vertexes->push_back(p2[2]);
-
-		vertexes->push_back(p3[0]);
-		vertexes->push_back(p3[1]);
-		vertexes->push_back(p3[2]);
-
-		vertexes->push_back(p4[0]);
-		vertexes->push_back(p4[1]);
-		vertexes->push_back(p4[2]);
-
-		const glm::vec3 normal = glm::normalize(glm::cross(p1 - p2, p3 - p1));
-
-		for(int i = 0; i != 6; ++i) {
-			normals->push_back(normal[0]);
-			normals->push_back(normal[1]);
-			normals->push_back(normal[2]);
-		}
-
-		const GLfloat r = face.color.r()/255.0;
-		const GLfloat g = face.color.g()/255.0;
-		const GLfloat b = face.color.b()/255.0;
-		const GLfloat a = face.color.a()/255.0;
-
-		for(int i = 0; i != 6; ++i) {
-			colors->push_back(r);
-			colors->push_back(g);
-			colors->push_back(b);
-			colors->push_back(a);
-		}
-	}
-
 	for(auto child : children_) {
-		child->generate_geometry(vertexes, normals, colors);
+		child->draw(lighting, camera, model);
+	}
+	if(vbo_id_) {
+		GLint cur_program;
+		glGetIntegerv(GL_CURRENT_PROGRAM, &cur_program);
+
+		static GLuint u_mvp = -1;
+		if(u_mvp == -1) {
+			u_mvp = glGetUniformLocation(cur_program, "mvp_matrix");
+		}
+		static GLuint u_normal = -1;
+		if(u_normal == -1) {
+			u_normal = glGetUniformLocation(cur_program, "u_normal");
+		}
+		static GLuint a_position = -1;
+		if(a_position == -1) {
+			a_position = glGetAttribLocation(cur_program, "a_position");
+		}
+		static GLuint a_color = -1;
+		if(a_color == -1) {
+			a_color = glGetAttribLocation(cur_program, "a_color");
+		}
+
+		glm::mat4 mdl = model_ * model;
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * mdl;
+		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
+
+		if(lighting) {
+			lighting->set_modelview_matrix(mdl, camera->view_mat());
+		}
+
+		glEnableVertexAttribArray(a_position);
+		glEnableVertexAttribArray(a_color);
+		for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
+			if(u_normal != -1) {
+				glUniform3fv(u_normal, 1, glm::value_ptr(normal_vectors()[n]));
+			}
+			glBindBuffer(GL_ARRAY_BUFFER, *vbo_id_);
+			glVertexAttribPointer(a_position, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(vattrib_offsets_[n]));
+			glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, reinterpret_cast<const GLfloat*>(cattrib_offsets_[n]));
+			glDrawArrays(GL_TRIANGLES, 0, num_vertices_[n]);
+		}
+		glDisableVertexAttribArray(a_position);
+		glDisableVertexAttribArray(a_color);
+		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
 
@@ -696,15 +761,12 @@ void voxel_model::calculate_transforms()
 		return;
 	}
 
-	reset_geometry();
 	apply_transforms();
 }
 
 void voxel_model::apply_transforms()
 {
 	invalidated_ = false;
-
-	ASSERT_LOG(prototype_, "Must create an instance of a model and use it rather than using the model directly. Use build_instance().");
 
 	translate_geometry(translation_);
 	for(const Rotation& rotate : rotation_) {
@@ -716,13 +778,6 @@ void voxel_model::apply_transforms()
 	}
 }
 
-void voxel_model::reset_geometry()
-{
-	std::copy(prototype_->vertexes_.begin(), prototype_->vertexes_.end(), vertexes_.begin());
-	for(const voxel_model_ptr& child : children_) {
-		child->reset_geometry();
-	}
-}
 
 void voxel_model::translate_geometry(const glm::vec3& amount)
 {
@@ -730,9 +785,7 @@ void voxel_model::translate_geometry(const glm::vec3& amount)
 		child->translate_geometry(amount);
 	}
 
-	for(glm::vec3& vertex : vertexes_) {
-		vertex += amount;
-	}
+	model_ = glm::translate(model_, amount);
 }
 
 void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only)
@@ -745,12 +798,10 @@ void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfl
 		return;
 	}
 
-	for(glm::vec3& vertex : vertexes_) {
-		vertex -= p1;
-		glm::vec3 axis = glm::normalize(p2 - p1);
-		vertex = glm::rotate(vertex, amount, axis);
-		vertex += p1;
-	}
+	model_ = glm::translate(model_, -p1);
+	glm::vec3 axis = glm::normalize(p2 - p1);
+	model_ = glm::rotate(model_, amount, axis);
+	model_ = glm::translate(model_, p1);
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(voxel_model)
@@ -759,3 +810,5 @@ DEFINE_FIELD(rotation, "null")
 END_DEFINE_CALLABLE(voxel_model)
 
 }
+
+#endif

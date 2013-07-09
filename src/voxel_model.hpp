@@ -1,23 +1,42 @@
-#ifndef VOXEL_MODEL_HPP_INCLUDED
-#define VOXEL_MODEL_HPP_INCLUDED
+/*
+	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+#pragma once
+#ifdef USE_GLES2
 
 #include <map>
 #include <vector>
 
+#include "camera.hpp"
 #include "color_utils.hpp"
+#include "lighting.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula.hpp"
 #include "variant.hpp"
 
 #include <boost/array.hpp>
+#include <boost/unordered_map.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <glm/glm.hpp>
 
 namespace voxel {
 
-typedef boost::array<int, 3> VoxelPos;
+typedef glm::ivec3 VoxelPos;
 struct Voxel {
 	Voxel() : nlayer(-1) {}
 	graphics::color color;
@@ -36,7 +55,19 @@ struct VoxelArea {
 	VoxelPos top_left, bot_right;
 };
 
-typedef std::map<VoxelPos, Voxel> VoxelMap;
+bool operator==(VoxelPos const& p1, VoxelPos const& p2);
+struct VoxelPosHash
+{
+    std::size_t operator()(VoxelPos const& p) const
+    {
+		std::size_t seed = 0;
+		boost::hash_combine(seed, p.x);
+		boost::hash_combine(seed, p.y);
+		boost::hash_combine(seed, p.z);
+		return seed;
+    }
+}; 
+typedef boost::unordered_map<VoxelPos, Voxel, VoxelPosHash> VoxelMap;
 typedef std::pair<VoxelPos, Voxel> VoxelPair;
 
 variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel);
@@ -106,12 +137,15 @@ public:
 	explicit voxel_model(const variant& node);
 	voxel_model(const Layer& layer, const LayerType& layer_type);
 
-	voxel_model_ptr build_instance() const;
+	void build_instance();
 	voxel_model_ptr get_child(const std::string& id) const;
+
+	void add_face(int face, const VoxelPair& p, std::vector<GLfloat>& varray, std::vector<GLubyte>& carray);
+	void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat>& varray);
 
 	void attach_child(voxel_model_ptr child, const std::string& src_attachment, const std::string& dst_attachment);
 
-
+	std::string current_animation() const { return anim_ ? anim_->name : ""; }
 	void set_animation(boost::shared_ptr<Animation> anim);
 	void set_animation(const std::string& id);
 	void process_animation(GLfloat advance=0.02);
@@ -122,16 +156,25 @@ public:
 	void accumulate_translation(const glm::vec3& translate);
 	void clear_transforms();
 
-	const std::string& name() const { return name_; }
+	void draw(graphics::lighting_ptr lighting, camera_callable_ptr camera, const glm::mat4& model) const;
 
-	void generate_geometry(std::vector<GLfloat>* vertexes, std::vector<GLfloat>* normals, std::vector<GLfloat>* colors);
+	const std::string& name() const { return name_; }
 private:
 	DECLARE_CALLABLE(voxel_model);
+
+	enum {
+		FACE_LEFT,
+		FACE_RIGHT,
+		FACE_TOP,
+		FACE_BOTTOM,
+		FACE_BACK,
+		FACE_FRONT,
+		MAX_FACES,
+	};
 
 	void calculate_transforms();
 	void apply_transforms();
 
-	void reset_geometry();
 	void translate_geometry(const glm::vec3& amount);
 	void rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only=false);
 
@@ -148,16 +191,6 @@ private:
 	glm::vec3 translation_;
 	std::vector<glm::vec3> vertexes_;
 
-	int add_vertex(const glm::vec3& vertex);
-
-	struct Face {
-		boost::array<int, 4> geometry;
-		graphics::color color;
-	};
-
-	std::vector<Face> faces_;
-
-	const_voxel_model_ptr prototype_;
 	std::vector<voxel_model_ptr> children_;
 
 	boost::shared_ptr<Animation> anim_, old_anim_;
@@ -167,6 +200,15 @@ private:
 	std::map<std::string, AttachmentPoint> attachment_points_;
 
 	bool invalidated_;
+
+	typedef boost::shared_ptr<GLuint> vbo_ptr;
+	vbo_ptr vbo_id_;
+	size_t vattrib_offsets_[6];
+	size_t cattrib_offsets_[6];
+	size_t num_vertices_[6];
+
+	glm::mat4 proto_model_;
+	glm::mat4 model_;
 };
 
 }

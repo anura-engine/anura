@@ -24,7 +24,7 @@
 namespace voxel
 {
 	voxel_object::voxel_object(const std::string& type, float x, float y, float z)
-		: type_(type), translation_(x,y,z), rotation_(0.0f,0.0f,0.0f), scale_(1.0f,1.0f,1.0f),
+		: type_(type), translation_(x,y,z), rotation_(0.0f), scale_(1.0f),
 		cycle_(0), paused_(false)
 	{
 		a_normal_ = shader_->get_fixed_attribute("normal");
@@ -32,16 +32,20 @@ namespace voxel
 	}
 
 	voxel_object::voxel_object(const variant& node)
-		: translation_(0.0f), rotation_(0.0f), scale_(1.0f,1.0f,1.0f),
+		: translation_(0.0f), rotation_(0.0f), scale_(1.0f),
 		cycle_(0), paused_(false), type_(node["type"].as_string())
 	{
 		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
 		ASSERT_LOG(node.has_key("model"), "Must have 'model' attribute");
-		std::map<variant,variant> m;
-		m[variant("model")] = variant(node["model"].as_string());
-		model_.reset(new voxel_model(variant(&m)));
-		model_ = model_->build_instance();
-		model_->set_animation("stand");
+ 		model_.reset(new voxel_model(node));
+		model_->set_animation("walk");
+
+		std::map<variant,variant> items;
+		items[variant("model")] = variant("data/voxel_objects/sword.cfg");
+		boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
+		weapon->set_animation("stand");
+
+		model_->attach_child(weapon, "handle", "melee_weapon");
 
 		if(node.has_key("translation")) {
 			translation_ = variant_to_vec3(node["translation"]);
@@ -75,42 +79,14 @@ namespace voxel
 
 	void voxel_object::draw(graphics::lighting_ptr lighting, camera_callable_ptr camera) const
 	{
+		//profile::manager pman("voxel_object::draw");
 		if(model_) {
-			//profile::manager pman("voxel_object::draw");
-			std::vector<GLfloat> varray;
-			std::vector<GLfloat> carray;
-			std::vector<GLfloat> narray;
-			
-			model_->process_animation();
-			model_->generate_geometry(&varray, &narray, &carray);
-
-			glm::mat4 model_mat = glm::scale(glm::mat4(1.0f), scale_);
+			//glm::mat4 model_mat = glm::scale(glm::mat4(1.0f), scale_);
 			//model_mat = glm::rotate(model_mat, rotation_.x, glm::vec3(1,0,0));
 			//model_mat = glm::rotate(model_mat, rotation_.y, glm::vec3(0,1,0));
 			//model_mat = glm::rotate(model_mat, rotation_.z, glm::vec3(0,0,1));
-			model_mat = glm::translate(model_mat, translation_);
-			glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model_mat;
-			//glUniformMatrix4fv(mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-			GLuint u_mvp = -1;
-			if(u_mvp == -1) {
-				GLint active_program;
-				glGetIntegerv(GL_CURRENT_PROGRAM, &active_program);
-				u_mvp = glGetUniformLocation(active_program, "mvp_matrix");
-			}
-			glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
-
-			if(lighting) {
-				lighting->set_modelview_matrix(model_mat, camera->view_mat());
-			}
-
-			if(!varray.empty()) {
-				//glUseProgram(shader_->get());
-				assert(varray.size() == narray.size());
-				shader_->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
-				shader_->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
-				//shader_->vertex_attrib_array(a_normal_, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
-				glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
-			}
+			//model_mat = glm::translate(model_mat, translation_);
+			model_->draw(lighting, camera, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,10.0f,0.0f)));
 		}
 
 		for(auto w : widgets_) {
@@ -121,6 +97,10 @@ namespace voxel
 	{
 		if(paused_) {
 			return;
+		}
+
+		if(model_) {
+			model_->process_animation();
 		}
 
 		for(auto w : widgets_) {
@@ -179,6 +159,12 @@ namespace voxel
 		return variant::from_bool(obj.paused());
 	DEFINE_SET_FIELD
 		obj.set_paused(value.as_bool());
+	DEFINE_FIELD(animation, "string")
+		return variant(obj.model_ ? obj.model_->current_animation() : "");
+	DEFINE_SET_FIELD
+		if(obj.model_) {
+			obj.model_->set_animation(value.as_string());
+		}
 	END_DEFINE_CALLABLE(voxel_object)
 }
 
