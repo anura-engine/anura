@@ -82,11 +82,11 @@ namespace voxel
 		//profile::manager pman("voxel_object::draw");
 		if(model_) {
 			glm::mat4 model_mat = 
-				  glm::rotate(glm::mat4(1.0f), rotation_.y, glm::vec3(0,1,0)) 
-				* glm::rotate(glm::mat4(1.0f), rotation_.z, glm::vec3(0,0,1))
-				* glm::rotate(glm::mat4(1.0f), rotation_.x, glm::vec3(1,0,0))
+				  glm::translate(glm::mat4(1.0f), translation_)
 				* glm::scale(glm::mat4(1.0f), scale_)
-				* glm::translate(glm::mat4(1.0f), translation_);
+				* glm::rotate(glm::mat4(1.0f), rotation_.x, glm::vec3(1,0,0))
+				* glm::rotate(glm::mat4(1.0f), rotation_.z, glm::vec3(0,0,1))
+				* glm::rotate(glm::mat4(1.0f), rotation_.y, glm::vec3(0,1,0));
 			model_->draw(lighting, camera, model_mat);
 		}
 
