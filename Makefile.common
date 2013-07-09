@@ -116,6 +116,7 @@ objects = \
 	src/level_runner.o \
 	src/level_solid_map.o \
 	src/light.o \
+	src/lighting.o \
 	src/load_level_nothread.o \
 	src/main.o \
 	src/md5.o \
@@ -192,6 +193,8 @@ objects = \
 	src/voxel_animation.o \
 	src/voxel_editor.o \
 	src/voxel_model.o \
+	src/voxel_object.o \
+	src/voxel_object_functions.o \
 	src/water.o \
 	src/water_particle_system.o \
 	src/weather_particle_system.o \

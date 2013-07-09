@@ -248,7 +248,7 @@ level::level(const std::string& level_cfg, variant node)
 #if defined(USE_ISOMAP)
 	ASSERT_LOG(!node.has_key("isomap") || !node.has_key("isoworld"), "Level can't have both 'isoworld' and 'isomap' attributes.");
 	if(node.has_key("isomap")) {
-		isomap_ = isometric::chunk_factory::create(node["isomap"]);
+		isomap_ = voxel::chunk_factory::create(node["isomap"]);
 	} else {
 		isomap_.reset();
 	}
@@ -259,7 +259,7 @@ level::level(const std::string& level_cfg, variant node)
 	}
 
 	if(node.has_key("isoworld")) {
-		iso_world_.reset(new isometric::world(node["isoworld"]));
+		iso_world_.reset(new voxel::world(node["isoworld"]));
 	} else {
 		iso_world_.reset();
 	}
@@ -2054,7 +2054,7 @@ void level::draw(int x, int y, int w, int h) const
 	if(isomap_) {
 		// XX hackity hack
 		gles2::shader_program_ptr active = gles2::active_shader();
-		isomap_->draw(camera_);
+		isomap_->draw(graphics::lighting_ptr(), camera_);
 		glUseProgram(active->shader()->get());
 	} else if(iso_world_) {
 		// XX hackity hack
@@ -4019,7 +4019,7 @@ DEFINE_SET_FIELD_TYPE("builtin chunk|map|null")
 	if(value.is_null()) {
 		obj.isomap_.reset(); 
 	} else {
-		obj.isomap_ = isometric::chunk_factory::create(value);
+		obj.isomap_ = voxel::chunk_factory::create(value);
 	}
 
 DEFINE_FIELD(isoworld, "builtin world|null")
@@ -4032,7 +4032,7 @@ DEFINE_SET_FIELD_TYPE("builtin world|map|null")
 	if(value.is_null()) {
 		obj.iso_world_.reset(); 
 	} else {
-		obj.iso_world_.reset(new isometric::world(value));
+		obj.iso_world_.reset(new voxel::world(value));
 	}
 
 DEFINE_FIELD(camera, "builtin camera_callable")

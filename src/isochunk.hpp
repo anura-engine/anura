@@ -15,12 +15,13 @@
 #include "graphics.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "lighting.hpp"
 #include "pathfinding.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
 
-namespace isometric
+namespace voxel
 {
 	struct position
 	{
@@ -57,8 +58,8 @@ namespace isometric
 		
 		void init();
 		void build();
-		void draw(const camera_callable_ptr& camera) const;
-		void do_draw(const camera_callable_ptr& camera) const;
+		void draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
+		void do_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
 		variant write();
 
 		virtual bool is_solid(int x, int y, int z) const = 0;
@@ -78,11 +79,7 @@ namespace isometric
 		int size_z() const { return size_z_; }
 		void set_size(int mx, int my, int mz);
 
-		float gamma() const { return gamma_; }
-		void set_gamma(float g);
-
-		bool lighting_enabled() const { return lighting_enabled_; }
-		bool skip_lighting() const { return skip_lighting_; }
+		gles2::program_ptr shader() { return shader_; }
 
 		static const std::vector<tile_editor_info>& get_editor_tiles();
 	protected:
@@ -97,7 +94,7 @@ namespace isometric
 		};
 
 		virtual void handle_build() = 0;
-		virtual void handle_draw(const camera_callable_ptr& camera) const = 0;
+		virtual void handle_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const = 0;
 		virtual void handle_set_tile(int x, int y, int z, const variant& type) = 0;
 		virtual void handle_del_tile(int x, int y, int z) = 0;
 		virtual variant handle_write() = 0;
@@ -113,16 +110,9 @@ namespace isometric
 		const std::vector<glm::vec3>& normals() const { return normals_; }
 
 		GLuint mvp_uniform() const { return u_mvp_matrix_; }
-		GLuint light_position_uniform() const { return u_lightposition_; }
-		GLuint light_power_uniform() const { return u_lightpower_; }
-		GLuint shininess_uniform() const { return u_shininess_; }
-		GLuint m_matrix_uniform() const { return u_m_matrix_; }
-		GLuint v_matrix_uniform() const { return u_v_matrix_; }
 		GLuint normal_uniform() const { return u_normal_; }
 		GLuint position_uniform() const { return a_position_; }
-		GLuint gamma_uniform() const { return u_gamma_; }
 		
-		gles2::program_ptr shader() { return shader_; }
 		const glm::vec3& worldspace_position() const {return worldspace_position_; }
 	private:
 		DECLARE_CALLABLE(chunk);
@@ -138,26 +128,15 @@ namespace isometric
 		// Number of vertices to be drawn.
 		std::vector<size_t> num_vertices_;
 
-		bool lighting_enabled_;
-		bool skip_lighting_;
-
 		int size_x_;
 		int size_y_;
 		int size_z_;
 
-		float gamma_;
-
 		void get_uniforms_and_attributes();
 		gles2::program_ptr shader_;
 		GLuint u_mvp_matrix_;
-		GLuint u_lightposition_;
-		GLuint u_lightpower_;
-		GLuint u_shininess_;
-		GLuint u_m_matrix_;
-		GLuint u_v_matrix_;
 		GLuint u_normal_;
 		GLuint a_position_;
-		GLuint u_gamma_;
 		std::vector<glm::vec3> normals_;
 
 		glm::vec3 worldspace_position_;
@@ -173,7 +152,7 @@ namespace isometric
 		variant get_tile_type(int x, int y, int z) const;
 	protected:
 		void handle_build();
-		void handle_draw(const camera_callable_ptr& camera) const;
+		void handle_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);
@@ -205,7 +184,7 @@ namespace isometric
 		variant get_tile_type(int x, int y, int z) const;
 	protected:
 		void handle_build();
-		void handle_draw(const camera_callable_ptr& camera) const;
+		void handle_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);

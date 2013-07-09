@@ -1384,7 +1384,7 @@ void editor::process()
 			abs(g_world_coords[0]-bmround(g_world_coords[0])) < 0.05f ? int(bmround(g_world_coords[0])) : int(floor(g_world_coords[0])),
 			abs(g_world_coords[1]-bmround(g_world_coords[1])) < 0.05f ? int(bmround(g_world_coords[1])) : int(floor(g_world_coords[1])),
 			abs(g_world_coords[2]-bmround(g_world_coords[2])) < 0.05f ? int(bmround(g_world_coords[2])) : int(floor(g_world_coords[2])));
-		g_facing = isometric::get_facing(level::current().camera(), g_world_coords);
+		g_facing = voxel::get_facing(level::current().camera(), g_world_coords);
 		if(g_facing.x > 0) {
 			--g_voxel_coord.x; 
 		}
@@ -1998,8 +1998,8 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		if(event.button == SDL_BUTTON_LEFT) {
 			// remove voxel
 			if(voxel_dialog_ && voxel_dialog_->textured_mode()) {
-				ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
-					"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
+				ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_editor_tiles().size(), 
+					"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_editor_tiles().size());
 			}
 			if(lvl_->isomap()) {
 				lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
@@ -2011,12 +2011,12 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			glm::ivec3 at_pos = g_voxel_coord + g_facing;
 			if(voxel_dialog_) {
 				if(voxel_dialog_->textured_mode()) {
-					ASSERT_LOG(cur_voxel_tileset_ < isometric::chunk::get_editor_tiles().size(), 
-						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << isometric::chunk::get_editor_tiles().size());
+					ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_editor_tiles().size(), 
+						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_editor_tiles().size());
 					if(lvl_->isomap()) {
-						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
 					} else if(lvl_->iso_world()) {
-						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, isometric::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
 					}
 				} else {
 					if(lvl_->isomap()) {
@@ -2926,8 +2926,8 @@ void editor::set_voxel_tileset(int index)
 {
 	cur_voxel_tileset_ = index;
 	if(cur_voxel_tileset_ < 0) {
-		cur_voxel_tileset_ = isometric::chunk::get_editor_tiles().size()-1;
-	} else if(cur_voxel_tileset_ >= isometric::chunk::get_editor_tiles().size()) {
+		cur_voxel_tileset_ = voxel::chunk::get_editor_tiles().size()-1;
+	} else if(cur_voxel_tileset_ >= voxel::chunk::get_editor_tiles().size()) {
 		cur_voxel_tileset_ = 0;
 	}
 }

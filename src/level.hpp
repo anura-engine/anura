@@ -146,7 +146,7 @@ public:
 #endif
 
 #if defined(USE_ISOMAP)
-	isometric::chunk_ptr& isomap() { return isomap_; }
+	voxel::chunk_ptr& isomap() { return isomap_; }
 	const float* projection() const;
 	const float* view() const;
 	const glm::mat4& view_mat() const { return camera_->view_mat(); }
@@ -158,7 +158,7 @@ public:
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 	std::vector<entity_ptr> get_characters_at_world_point(const glm::vec3& pt);
 
-	isometric::world_ptr& iso_world() { return iso_world_; }
+	voxel::world_ptr& iso_world() { return iso_world_; }
 #endif
 
 
@@ -697,8 +697,8 @@ private:
 #endif
 
 #if defined(USE_ISOMAP)
-	isometric::chunk_ptr isomap_;
-	isometric::world_ptr iso_world_;
+	voxel::chunk_ptr isomap_;
+	voxel::world_ptr iso_world_;
 	camera_callable_ptr camera_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;

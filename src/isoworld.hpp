@@ -9,6 +9,7 @@
 #include <boost/unordered_map.hpp>
 
 #include <vector>
+#include <set>
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
@@ -17,12 +18,17 @@
 #include "geometry.hpp"
 #include "graphics.hpp"
 #include "isochunk.hpp"
+#include "lighting.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
 
-namespace isometric
+namespace voxel
 {
+	class voxel_object;
+	typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
+	typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
+
 	class world : public game_logic::formula_callable
 	{
 	public:
@@ -30,18 +36,6 @@ namespace isometric
 		virtual ~world();
 		
 		gles2::program_ptr shader() { return shader_; }
-
-		float gamma() const { return gamma_; }
-		void set_gamma(float g);
-
-		float light_power() const { return light_power_; }
-		void set_light_power(float lp);
-
-		const glm::vec3& light_position() const { return light_position_; }
-		void set_light_position(const glm::vec3& lp);
-		void set_light_position(const variant& lp);
-
-		bool lighting_enabled() const { return lighting_enabled_; }
 
 		void set_tile(int x, int y, int z, const variant& type);
 		void del_tile(int x, int y, int z);
@@ -51,19 +45,15 @@ namespace isometric
 		void draw(const camera_callable_ptr& camera) const;
 		variant write();
 		void process();
+
+		void add_object(voxel::voxel_object_ptr obj);
+		void remove_object(voxel::voxel_object_ptr obj);
 	protected:
 	private:
 		DECLARE_CALLABLE(world);
 		gles2::program_ptr shader_;
-		GLuint u_lightposition_;
-		GLuint u_lightpower_;
-		GLuint u_gamma_;
 
-		glm::vec3 light_position_;
-		float light_power_;
-		float gamma_;
-
-		bool lighting_enabled_;
+		graphics::lighting_ptr lighting_;
 
 		int view_distance_;
 
@@ -71,6 +61,8 @@ namespace isometric
 
 		std::vector<chunk_ptr> active_chunks_;
 		boost::unordered_map<position, chunk_ptr> chunks_;
+
+		std::set<voxel_object_ptr> objects_;
 		
 		void get_active_chunks();
 

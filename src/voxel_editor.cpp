@@ -436,7 +436,7 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 		abs(world_coords[0]-bmround(world_coords[0])) < 0.05f ? int(bmround(world_coords[0])) : int(floor(world_coords[0])),
 		abs(world_coords[1]-bmround(world_coords[1])) < 0.05f ? int(bmround(world_coords[1])) : int(floor(world_coords[1])),
 		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(floor(world_coords[2])));
-	*facing = isometric::get_facing(camera_, world_coords);
+	*facing = voxel::get_facing(camera_, world_coords);
 	if(facing->x > 0) {
 		--voxel_coord.x; 
 	}

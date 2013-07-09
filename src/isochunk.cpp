@@ -32,7 +32,7 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-namespace isometric
+namespace voxel
 {
 	namespace 
 	{
@@ -187,20 +187,16 @@ namespace isometric
 	}
 
 	chunk::chunk()
-		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
-		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
-		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f),
-		skip_lighting_(false), worldspace_position_(0.0f)
+		: u_mvp_matrix_(-1), u_normal_(-1), a_position_(-1), textured_(true), 
+		worldspace_position_(0.0f)
 	{
 		// Call init *before* doing anything else
 		init();
 	}
 
 	chunk::chunk(const variant& node)
-		: u_mvp_matrix_(-1), u_lightposition_(-1), lighting_enabled_(false),
-		u_lightpower_(-1), u_shininess_(-1), u_m_matrix_(-1), u_v_matrix_(-1), 
-		u_normal_(-1), a_position_(-1), u_gamma_(-1), textured_(true), gamma_(1.0f),
-		skip_lighting_(node["skip_lighting_uniforms"].as_bool(false)), worldspace_position_(0.0f)
+		: u_mvp_matrix_(-1), u_normal_(-1), a_position_(-1), textured_(true), 
+		worldspace_position_(0.0f)
 	{
 		// Call init *before* doing anything else
 		init();
@@ -250,31 +246,7 @@ namespace isometric
 		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
 		a_position_ = shader_->get_fixed_attribute("vertex");
 		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
-
-		u_lightposition_ = shader_->get_fixed_uniform("light_position");
-		u_lightpower_ = shader_->get_fixed_uniform("light_power");
-		u_shininess_ = shader_->get_fixed_uniform("shininess");
-		u_m_matrix_ = shader_->get_fixed_uniform("m_matrix");
-		u_v_matrix_ = shader_->get_fixed_uniform("v_matrix");
 		u_normal_ = shader_->get_fixed_uniform("normal");
-		u_gamma_ = shader_->get_fixed_uniform("gamma");
-
-		lighting_enabled_ = u_lightposition_ != -1 
-			&& u_lightpower_ != -1
-			&& u_shininess_ != -1
-			&& u_m_matrix_ != -1
-			&& u_v_matrix_ != -1
-			&& u_normal_ != -1;
-
-		std::cerr << "chunk::get_uniforms_and_attributes Lighting is " << (lighting_enabled_ ? "enabled" : "disabled") << std::endl;
-		if(!lighting_enabled_) {
-			std::cerr << "light_position: " << u_lightposition_ << std::endl;
-			std::cerr << "light_power: " << u_lightpower_ << std::endl;
-			std::cerr << "shininess: " << u_shininess_ << std::endl;
-			std::cerr << "m_matrix: " << u_m_matrix_ << std::endl;
-			std::cerr << "v_matrix: " << u_v_matrix_ << std::endl;
-			std::cerr << "normal: " << u_normal_ << std::endl;
-		}
 	}
 
 	const std::vector<tile_editor_info>& chunk::get_editor_tiles()
@@ -381,7 +353,7 @@ namespace isometric
 		}
 	}
 
-	void chunk::draw(const camera_callable_ptr& camera) const
+	void chunk::draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
 		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
@@ -390,21 +362,16 @@ namespace isometric
 		// Enable depth test
 		glEnable(GL_DEPTH_TEST);
 
-		handle_draw(camera);
+		handle_draw(lighting, camera);
 
 		glDisable(GL_DEPTH_TEST);
 		glDisable(GL_CULL_FACE);
 	}
 
-	void chunk::do_draw(const camera_callable_ptr& camera) const
+	void chunk::do_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
 		// Called by world, assumes everything is already setup.
-		handle_draw(camera);
-	}
-
-	void chunk::set_gamma(float g) 
-	{ 
-		gamma_ = std::max(0.001f, std::min(g, 100.0f)); 
+		handle_draw(lighting, camera);
 	}
 
 	bool chunk::is_xedge(int x) const
@@ -518,10 +485,8 @@ namespace isometric
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(chunk)
-	DEFINE_FIELD(gamma, "decimal")
-		return variant(obj.gamma());
-	DEFINE_SET_FIELD
-		obj.set_gamma(float(value.as_decimal().as_float()));
+	DEFINE_FIELD(size, "[decimal,decimal,decimal]")
+		return vec3_to_variant(glm::vec3(obj.size_x_, obj.size_y_, obj.size_z_));
 	END_DEFINE_CALLABLE(chunk)
 
 
@@ -710,7 +675,7 @@ namespace isometric
 	
 	void chunk_colored::handle_build()
 	{
-		profile::manager pman("chunk_colored::handle_build");
+		//profile::manager pman("chunk_colored::handle_build");
 
 		carray_.clear();
 		carray_.resize(MAX_FACES);
@@ -781,12 +746,12 @@ namespace isometric
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray_[n].size()*sizeof(uint8_t), &carray_[n][0]);
 		}
-		std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
-		std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
-		std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
-		std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
-		std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
-		std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
+		//std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
+		//std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
+		//std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
+		//std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
+		//std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
+		//std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
 
 		clear_vertex_data();
 		carray_.clear();
@@ -796,7 +761,7 @@ namespace isometric
 
 	void chunk_textured::handle_build()
 	{
-		profile::manager pman("chunk_textured::handle_build");
+		//profile::manager pman("chunk_textured::handle_build");
 
 		tarray_.clear();
 		tarray_.resize(MAX_FACES);
@@ -867,12 +832,12 @@ namespace isometric
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, tattrib_offsets_[n], tarray_[n].size()*sizeof(GLfloat), &tarray_[n][0]);
 		}
-		std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
-		std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
-		std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
-		std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
-		std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
-		std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
+		//std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
+		//std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
+		//std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
+		//std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
+		//std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
+		//std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
 
 		clear_vertex_data();
 		tarray_.clear();
@@ -1047,7 +1012,7 @@ namespace isometric
 		add_tarray_data(BOTTOM_FACE, area, tarray_[BOTTOM_FACE]);
 	}
 
-	void chunk_colored::handle_draw(const camera_callable_ptr& camera) const
+	void chunk_colored::handle_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
@@ -1056,22 +1021,15 @@ namespace isometric
 		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
-		if(lighting_enabled()) {
-			if(!skip_lighting()) {
-				glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
-				glUniform1f(light_power_uniform(), 15000.0f);
-				glUniform1f(gamma_uniform(), gamma());
-			}
-			glUniform1f(shininess_uniform(), 5.0f);
-			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
-			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(model));
+		if(lighting) {
+			lighting->set_modelview_matrix(model, camera->view_mat());
 		}
 
 		glEnableVertexAttribArray(position_uniform());
 		glEnableVertexAttribArray(a_color_);
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			if(debug_draw_faces & (1 << n)) {
-				if(lighting_enabled()) {
+				if(normal_uniform() != -1) {
 					glUniform3fv(normal_uniform(), 1, glm::value_ptr(normals()[n]));
 				}
 				glBindBuffer(GL_ARRAY_BUFFER, vbo()[0]);
@@ -1086,7 +1044,7 @@ namespace isometric
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void chunk_textured::handle_draw(const camera_callable_ptr& camera) const
+	void chunk_textured::handle_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(tattrib_offsets_.size() != 0, "tattrib_offsets_.size() == 0");
@@ -1099,22 +1057,15 @@ namespace isometric
 		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
-		if(lighting_enabled()) {
-			if(!skip_lighting()) {
-				glUniform3f(light_position_uniform(), size_x()/2.0f, 200.0f, size_z()/2.0f);
-				glUniform1f(light_power_uniform(), 15000.0f);
-				glUniform1f(gamma_uniform(), gamma());
-			}
-			glUniform1f(shininess_uniform(), 5.0f);
-			glUniformMatrix4fv(v_matrix_uniform(), 1, GL_FALSE, level::current().view());
-			glUniformMatrix4fv(m_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(model));
+		if(lighting) {
+			lighting->set_modelview_matrix(model, camera->view_mat());
 		}
 
 		glEnableVertexAttribArray(position_uniform());
 		glEnableVertexAttribArray(a_texcoord_);
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			if(debug_draw_faces & (1 << n)) {
-				if(lighting_enabled()) {
+				if(normal_uniform() != -1) {
 					glUniform3fv(normal_uniform(), 1, glm::value_ptr(normals()[n]));
 				}
 				glBindBuffer(GL_ARRAY_BUFFER, vbo()[0]);

@@ -119,7 +119,7 @@ namespace gui
 
 		//start drawing here.
 		if(level::current().isomap()) {
-			level::current().isomap()->draw(camera_);
+			level::current().isomap()->draw(graphics::lighting_ptr(), camera_);
 		} else if(level::current().iso_world()) {
 			level::current().iso_world()->draw(camera_);
 		}
