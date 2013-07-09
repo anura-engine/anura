@@ -360,8 +360,9 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 				break;
 			}
 
-			case Token::TYPE_STRING:
-			case Token::TYPE_IDENTIFIER: {
+			case Token::TYPE_IDENTIFIER:
+				CHECK_PARSE(stack.back().type == VAL_OBJ, "Unexpected identifier: " + std::string(t.begin, t.end), t.begin - doc.c_str());
+			case Token::TYPE_STRING: {
 				std::string s(t.begin, t.end);
 				variant::debug_info str_debug_info = debug_info;
 				str_debug_info.end_line = str_debug_info.line;
