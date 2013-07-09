@@ -1,4 +1,6 @@
 #!/usr/bin/perl
+#example usage:  perl ./make-tileset.pl foo 00 tiles/generic.png --solid >> foo.cfg
+
 
 use strict;
 
@@ -30,10 +32,12 @@ my $noslopes = 0;
 
 while(my $arg = shift @ARGV) {
 	if($arg eq '--solid') {
-		$solid = "solid:" . (shift @ARGV);
+		$solid = "solid: true,";
+	} elsif($arg eq '--no-solid') {
+		$solid = "solid: false,";
 	} elsif($arg eq '--friend') {
 		$friend = shift @ARGV;
-	} elsif($arg eq '--noslopes') {
+	} elsif($arg eq '--noslopes' or $arg eq '--no-slopes') {
 		$noslopes = 1;
 	} else {
 		die "Unrecognized argument: $arg";
@@ -89,7 +93,7 @@ printf qq~
 #overhang
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -103,7 +107,7 @@ printf qq~
 #overhang - reversed
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -117,7 +121,7 @@ printf qq~
 #sloped
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -125,13 +129,13 @@ pattern:"
    ,$tilename,$friend,
 $friend,$friend,$friend"
 },
-~, &coord($base, 0, $noslopes ? 0 : 7), (($solid eq 'solid=yes' and not $noslopes) ? 'solid=diagonal' : $solid);
+~, &coord($base, 0, $noslopes ? 0 : 7), (($solid eq 'solid: true' and not $noslopes) ? q'solid: "diagonal"' : $solid);
 
 printf qq~
 #sloped - tile immediately beneath
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -148,7 +152,7 @@ printf qq~
 #sloped - reversed
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -156,13 +160,13 @@ $friend?,    ,   ,
 $friend,$tilename,   ,
 $friend,$friend,$friend"
 },
-~, &coord($base, 0, $noslopes ? 2 : 8), (($solid eq 'solid=yes' and not $noslopes) ? 'solid=reverse_diagonal' : $solid);
+~, &coord($base, 0, $noslopes ? 2 : 8), (($solid eq q'solid: true' and not $noslopes) ? q'solid: "reverse_diagonal"' : $solid);
 
 printf qq~
 #sloped - reversed - tile immediately beneath
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -206,7 +210,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
@@ -219,7 +223,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
@@ -231,7 +235,7 @@ printf qq~
 #cliff edge
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -245,7 +249,7 @@ printf qq~
 #cliff edge - reverse
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -259,7 +263,7 @@ printf qq~
 #cliff edge -- version with a corner underneath/opposite
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -273,7 +277,7 @@ printf qq~
 #cliff edge (reversed) -- version with a corner underneath/opposite
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -288,7 +292,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend ,
@@ -300,9 +304,9 @@ printf qq~
 #corner at two angles
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -314,9 +318,9 @@ printf qq~
 #corner at two angles (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -329,7 +333,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -342,7 +346,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$tilename,$friend,
 $friend,$tilename,$friend,
@@ -354,9 +358,9 @@ printf qq~
 #corners both on the same side
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -368,9 +372,9 @@ printf qq~
 #corners both on the same side (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -382,9 +386,9 @@ printf qq~
 #inner top corner piece
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
@@ -396,9 +400,9 @@ printf qq~
 #inner top corner piece (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
@@ -410,9 +414,9 @@ printf qq~
 #inner bottom corner piece
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -424,9 +428,9 @@ printf qq~
 #inner bottom corner piece (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -438,9 +442,9 @@ printf qq~
 #corner at three sides
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -452,9 +456,9 @@ printf qq~
 #corner at three sides (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -466,9 +470,9 @@ printf qq~
 #corner at three sides
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -480,9 +484,9 @@ printf qq~
 #corner at three sides (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -494,9 +498,9 @@ printf qq~
 #roof at a corner
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -508,9 +512,9 @@ printf qq~
 #roof at a corner (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -523,7 +527,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend, .*,
 $friend,$tilename,$friend,
@@ -535,9 +539,9 @@ printf qq~
 #bottom corner
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend?,$friend,$friend,
     ,$tilename,$friend,
@@ -549,9 +553,9 @@ printf qq~
 #bottom corner (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,$friend?,
 $friend,$tilename,   ,
@@ -563,9 +567,9 @@ printf qq~
 #bottom corner with corner on opposite side
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend?,$friend,   ,
     ,$tilename,$friend,
@@ -577,9 +581,9 @@ printf qq~
 #bottom corner with corner on opposite side (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,$friend?,
 $friend,$tilename,   ,
@@ -592,7 +596,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend?,$friend,$friend?,
 $friend,$tilename,$friend,
@@ -605,9 +609,9 @@ printf qq~
 #in one direction
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 $friend,$friend,.* ,
 $friend,$tilename,   ,
@@ -620,9 +624,9 @@ printf qq~
 #in one direction (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend,$friend,
    ,$tilename,$friend,
@@ -635,9 +639,9 @@ printf qq~
 #in one direction
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
@@ -650,9 +654,9 @@ printf qq~
 #in one direction (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend,  ,
    ,$tilename,$friend,
@@ -665,9 +669,9 @@ printf qq~
 #out into a ledge in one direction
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
@@ -680,9 +684,9 @@ printf qq~
 #out into a ledge in one direction (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend,   ,
    ,$tilename,$friend,
@@ -694,9 +698,9 @@ printf qq~
 #cliff face
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend,.* ,
    ,$tilename,$friend,
@@ -708,9 +712,9 @@ printf qq~
 #cliff face (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
-$solid,
+$solid
 pattern:"
 .* ,$friend,.* ,
 $friend,$tilename,   ,
@@ -722,7 +726,7 @@ printf qq~
 #ground - with a corner on one side beneath
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
@@ -736,7 +740,7 @@ printf qq~
 #ground - with a corner on one side beneath (reversed)
 {
 image:"$image",
-reverse:no,
+reverse:false,
 tiles:%s,
 %s
 pattern:"
