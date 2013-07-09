@@ -175,8 +175,12 @@ private:
 	void calculate_transforms();
 	void apply_transforms();
 
+	void reset_geometry();
+	void generate_geometry();
 	void translate_geometry(const glm::vec3& amount);
 	void rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only=false);
+
+	void set_prototype();
 
 	std::string name_;
 

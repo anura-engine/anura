@@ -20,6 +20,8 @@
 
 #include <glm/gtx/rotate_vector.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtx/quaternion.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 #include "json_parser.hpp"
 #include "variant_utils.hpp"
@@ -416,6 +418,7 @@ voxel_model::voxel_model(const Layer& layer, const LayerType& layer_type)
 	for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
 		glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray[n].size()*sizeof(uint8_t), &carray[n][0]);
 	}
+	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
 void voxel_model::add_face(int face, const VoxelPair& p, std::vector<GLfloat>& varray, std::vector<GLubyte>& carray)
@@ -503,6 +506,21 @@ voxel_model_ptr voxel_model::get_child(const std::string& id) const
 	return voxel_model_ptr();
 }
 
+namespace
+{
+	void print_mat4(const std::string& s, const glm::mat4& m)
+	{
+		std::cerr << s;
+		for(int i = 0; i != 4; i++) {
+			std::cerr << std::endl;
+			for(int j = 0; j != 4; j++) {
+				std::cerr << m[i][j] << " ";
+			}
+		}
+		std::cerr << std::endl;
+	}
+}
+
 void voxel_model::attach_child(voxel_model_ptr child, const std::string& src_attachment, const std::string& dst_attachment)
 {
 	auto src_attach_itor = child->attachment_points_.find(src_attachment);
@@ -541,17 +559,23 @@ void voxel_model::attach_child(voxel_model_ptr child, const std::string& src_att
 
 	ASSERT_LOG(dst_pivot, "Could not find source pivot: " << dst_pivot);
 
-	const glm::vec3 translate = dst_pivot->second - src_pivot->second;
-
 	child->clear_transforms();
 
-	child->translate_geometry(translate);
+	child->translate_geometry(dst_pivot->second - src_pivot->second);
 	for(const AttachmentPointRotation& r : dst_attach_itor->second.rotations) {
 		child->rotate_geometry(dst_pivot->second, dst_pivot->second + r.direction, r.amount);
 	}
-
-	child->proto_model_ = child->model_;
+	
+	child->set_prototype();
 	dst_model->children_.push_back(child);
+}
+
+void voxel_model::set_prototype()
+{
+	proto_model_ = model_;
+	for(auto child : children_) {
+		child->set_prototype();
+	}
 }
 
 void voxel_model::set_animation(const std::string& anim_str)
@@ -643,7 +667,7 @@ void voxel_model::process_animation(GLfloat advance)
 		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, transform.children_only);
 	}
 
-	calculate_transforms();
+	generate_geometry();
 }
 
 void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only)
@@ -690,12 +714,19 @@ void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::str
 void voxel_model::accumulate_translation(const glm::vec3& translate)
 {
 	translation_ += translate;
-	std::cerr << "TRANSLATION: " << translation_[1] << "\n";
+	//std::cerr << "TRANSLATION: " << translation_[1] << "\n";
+}
+
+void voxel_model::generate_geometry()
+{
+	calculate_transforms();
+	for(auto child : children_) {
+		child->calculate_transforms();
+	}
 }
 
 void voxel_model::clear_transforms()
 {
-	model_ = proto_model_;
 	rotation_.clear();
 	translation_ = glm::vec3(0.0f);
 	invalidated_ = true;
@@ -730,7 +761,7 @@ void voxel_model::draw(graphics::lighting_ptr lighting, camera_callable_ptr came
 			a_color = glGetAttribLocation(cur_program, "a_color");
 		}
 
-		glm::mat4 mdl = model_ * model;
+		glm::mat4 mdl = model * model_;
 		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * mdl;
 		glUniformMatrix4fv(u_mvp, 1, GL_FALSE, glm::value_ptr(mvp));
 
@@ -738,19 +769,19 @@ void voxel_model::draw(graphics::lighting_ptr lighting, camera_callable_ptr came
 			lighting->set_modelview_matrix(mdl, camera->view_mat());
 		}
 
+		glBindBuffer(GL_ARRAY_BUFFER, *vbo_id_);
 		glEnableVertexAttribArray(a_position);
 		glEnableVertexAttribArray(a_color);
 		for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
 			if(u_normal != -1) {
 				glUniform3fv(u_normal, 1, glm::value_ptr(normal_vectors()[n]));
 			}
-			glBindBuffer(GL_ARRAY_BUFFER, *vbo_id_);
 			glVertexAttribPointer(a_position, 3, GL_FLOAT, GL_FALSE, 0, reinterpret_cast<const GLfloat*>(vattrib_offsets_[n]));
 			glVertexAttribPointer(a_color, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, reinterpret_cast<const GLfloat*>(cattrib_offsets_[n]));
 			glDrawArrays(GL_TRIANGLES, 0, num_vertices_[n]);
 		}
-		glDisableVertexAttribArray(a_position);
 		glDisableVertexAttribArray(a_color);
+		glDisableVertexAttribArray(a_position);
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 }
@@ -760,8 +791,16 @@ void voxel_model::calculate_transforms()
 	if(!invalidated_) {
 		return;
 	}
-
+	reset_geometry();
 	apply_transforms();
+}
+
+void voxel_model::reset_geometry()
+{
+	model_ = proto_model_;
+	for(const voxel_model_ptr& child : children_) {
+		child->reset_geometry();
+	}
 }
 
 void voxel_model::apply_transforms()
@@ -798,10 +837,11 @@ void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfl
 		return;
 	}
 
-	model_ = glm::translate(model_, -p1);
 	glm::vec3 axis = glm::normalize(p2 - p1);
-	model_ = glm::rotate(model_, amount, axis);
-	model_ = glm::translate(model_, p1);
+	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), -p1);
+	glm::mat4 r1 = glm::rotate(glm::mat4(1.0f), amount, axis);
+	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), p1);
+	model_ = t2 * r1 * t1 * model_;
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(voxel_model)

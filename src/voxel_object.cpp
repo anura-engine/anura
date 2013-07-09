@@ -38,7 +38,7 @@ namespace voxel
 		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
 		ASSERT_LOG(node.has_key("model"), "Must have 'model' attribute");
  		model_.reset(new voxel_model(node));
-		model_->set_animation("walk");
+		model_->set_animation("stand");
 
 		std::map<variant,variant> items;
 		items[variant("model")] = variant("data/voxel_objects/sword.cfg");
@@ -81,12 +81,13 @@ namespace voxel
 	{
 		//profile::manager pman("voxel_object::draw");
 		if(model_) {
-			//glm::mat4 model_mat = glm::scale(glm::mat4(1.0f), scale_);
-			//model_mat = glm::rotate(model_mat, rotation_.x, glm::vec3(1,0,0));
-			//model_mat = glm::rotate(model_mat, rotation_.y, glm::vec3(0,1,0));
-			//model_mat = glm::rotate(model_mat, rotation_.z, glm::vec3(0,0,1));
-			//model_mat = glm::translate(model_mat, translation_);
-			model_->draw(lighting, camera, glm::translate(glm::mat4(1.0f), glm::vec3(0.0f,10.0f,0.0f)));
+			glm::mat4 model_mat = 
+				  glm::rotate(glm::mat4(1.0f), rotation_.y, glm::vec3(0,1,0)) 
+				* glm::rotate(glm::mat4(1.0f), rotation_.z, glm::vec3(0,0,1))
+				* glm::rotate(glm::mat4(1.0f), rotation_.x, glm::vec3(1,0,0))
+				* glm::scale(glm::mat4(1.0f), scale_)
+				* glm::translate(glm::mat4(1.0f), translation_);
+			model_->draw(lighting, camera, model_mat);
 		}
 
 		for(auto w : widgets_) {
