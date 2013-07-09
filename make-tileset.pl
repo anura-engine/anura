@@ -30,10 +30,12 @@ my $noslopes = 0;
 
 while(my $arg = shift @ARGV) {
 	if($arg eq '--solid') {
-		$solid = "solid:" . (shift @ARGV);
+		$solid = "solid: true,";
+	} elsif($arg eq '--no-solid') {
+		$solid = "solid: false,";
 	} elsif($arg eq '--friend') {
 		$friend = shift @ARGV;
-	} elsif($arg eq '--noslopes') {
+	} elsif($arg eq '--noslopes' or $arg eq '--no-slopes') {
 		$noslopes = 1;
 	} else {
 		die "Unrecognized argument: $arg";
