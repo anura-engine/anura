@@ -9,7 +9,7 @@
 namespace voxel
 {
 	const int chunk_size = 32;
-	const int initial_chunks = 16;
+	const int initial_chunks = 2;
 
 	world::world(const variant& node)
 		: view_distance_(node["view_distance"].as_int(5)), seed_(node["seed"].as_int(rand()))
@@ -130,12 +130,11 @@ namespace voxel
 			chunks->do_draw(lighting_, camera);
 		}
 
-		glDisable(GL_CULL_FACE);
-
 		for(auto obj : objects_) {
 			obj->draw(lighting_, camera);
 		}
 
+		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
 		level::current().camera()->frustum().draw();
@@ -151,6 +150,9 @@ namespace voxel
 	void world::process()
 	{
 		get_active_chunks();
+		for(auto obj : objects_) {
+			obj->process(level::current());
+		}
 	}
 
 	void world::get_active_chunks()

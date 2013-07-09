@@ -495,13 +495,10 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 			glm::ivec3 facing;
 			glm::ivec3 voxel_coord = position_to_cube(event.button.x-x(), event.button.y-y(), &facing);
 
-			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
-			VoxelPos pencil_pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			VoxelPos pos(voxel_coord.x, voxel_coord.y, voxel_coord.z);
+			VoxelPos pencil_pos(voxel_coord.x, voxel_coord.y, voxel_coord.z);
 			if(SDL_GetModState()&KMOD_SHIFT) {
-				glm::ivec3 new_coord = voxel_coord + facing;
-				pencil_pos[0] = new_coord.x;
-				pencil_pos[1] = new_coord.y;
-				pencil_pos[2] = new_coord.z;
+				pencil_pos = voxel_coord + facing;
 			}
 
 			auto it = get_editor().voxels().find(pos);
@@ -545,14 +542,11 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 			glm::ivec3 facing;
 			glm::ivec3 voxel_coord = position_to_cube(motion.x-x(), motion.y-y(), &facing);
 
-			VoxelPos pos = {voxel_coord.x, voxel_coord.y, voxel_coord.z};
+			VoxelPos pos(voxel_coord.x, voxel_coord.y, voxel_coord.z);
 			auto it = get_editor().voxels().find(pos);
 			if(it != get_editor().voxels().end()) {
 				if(SDL_GetModState()&KMOD_SHIFT) {
-					glm::ivec3 new_coord = voxel_coord + facing;
-					pos[0] = new_coord.x;
-					pos[1] = new_coord.y;
-					pos[2] = new_coord.z;
+					pos = voxel_coord + facing;
 				}
 				get_editor().set_cursor(pos);
 			}
@@ -896,7 +890,13 @@ private:
 
 	bool dragging_on_;
 	int anchor_drag_x_, anchor_drag_y_;
-	std::set<VoxelPos> voxels_drawn_on_this_drag_;
+	struct VoxelPosLess
+	{
+		bool operator()(VoxelPos const& p1, VoxelPos const& p2) {
+			return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
+		}
+	};
+	std::set<VoxelPos, VoxelPosLess> voxels_drawn_on_this_drag_;
 
 	bool focus_;
 };

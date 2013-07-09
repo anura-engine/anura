@@ -1,3 +1,20 @@
+/*
+	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 2 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+*/
+
 #ifdef USE_GLES2
 
 #include <boost/bind.hpp>
@@ -10,6 +27,7 @@
 #include "dialog.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
+#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
@@ -45,12 +63,9 @@ private:
 	boost::shared_ptr<GLuint> framebuffer_id_;
 	boost::shared_ptr<GLuint> depth_id_;
 
-	GLuint u_lightposition_;
-	GLuint u_lightpower_;
-	GLuint u_shininess_;
-	GLuint u_m_matrix_;
-	GLuint u_v_matrix_;
-	GLuint a_normal_;
+	graphics::lighting_ptr lighting_;
+
+	gles2::program_ptr shader_;
 
 	GLint video_framebuffer_id_;
 
@@ -61,8 +76,6 @@ private:
 
 	int tex_width_, tex_height_;
 
-	GLfloat light_power_, specularity_coef_;
-
 	boost::intrusive_ptr<voxel_model> vox_model_;
 
 };
@@ -72,22 +85,24 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
     camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	focused_(false), dragging_view_(false),
-    tex_width_(0), tex_height_(0),
-	light_power_(10000.0f), specularity_coef_(5.0f)
+    tex_width_(0), tex_height_(0)
 {
 	std::map<variant,variant> items;
 	items[variant("model")] = variant(fname);
 	vox_model_.reset(new voxel_model(variant(&items)));
-	vox_model_ = vox_model_->build_instance();
 	vox_model_->set_animation("stand");
 
 	items[variant("model")] = variant("modules/ftactics/sword.cfg");
 
 	boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
-	weapon = weapon->build_instance();
 	weapon->set_animation("stand");
 
 	vox_model_->attach_child(weapon, "handle", "melee_weapon");
+
+	shader_ = gles2::shader_program::get_global("lighted_color_shader")->shader();
+	lighting_.reset(new graphics::lighting(shader_));
+	lighting_->set_light_position(glm::vec3(0.0f, 0.0f, 50.0f));
+	lighting_->set_light_power(2000.0f);
 
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());
@@ -143,16 +158,6 @@ void animation_renderer::init()
 	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER));
 	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER));
 	ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
-
-
-	// Grab uniforms and normal attribute
-	gles2::program_ptr shader = gles2::shader_program::get_global("iso_color_line")->shader();
-	u_lightposition_ = shader->get_uniform("LightPosition_worldspace");
-	u_lightpower_ = shader->get_uniform("LightPower");
-	u_shininess_ = shader->get_uniform("Shininess");
-	u_m_matrix_ = shader->get_uniform("m_matrix");
-	u_v_matrix_ = shader->get_uniform("v_matrix");
-	a_normal_ = shader->get_attribute("a_normal");
 }
 
 void animation_renderer::set_animation(const std::string& anim)
@@ -174,7 +179,7 @@ void animation_renderer::render_fbo()
 	glEnable(GL_DEPTH_TEST);
 
 	//start drawing here.
-	gles2::shader_program_ptr shader_program(gles2::shader_program::get_global("iso_color_line"));
+	gles2::shader_program_ptr shader_program(gles2::shader_program::get_global("lighted_color_shader"));
 	gles2::program_ptr shader = shader_program->shader();
 	gles2::actives_map_iterator mvp_uniform_itor = shader->get_uniform_reference("mvp_matrix");
 
@@ -186,14 +191,9 @@ void animation_renderer::render_fbo()
 
 	shader->set_uniform(mvp_uniform_itor, 1, glm::value_ptr(mvp));
 
-	////////////////////////////////////////////////////////////////////////////
-	// Lighting stuff.
-	glUniform3f(u_lightposition_, 0.0f, 20.0f, 150.0f);
-	glUniform1f(u_lightpower_, light_power_);
-	glUniform1f(u_shininess_, specularity_coef_);
-	glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(model_matrix));
-	glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, camera_->view());
-	////////////////////////////////////////////////////////////////////////////
+	if(lighting_) {
+		lighting_->set_modelview_matrix(model_matrix, camera_->view_mat());
+	}
 
 	std::vector<GLfloat> varray, carray, narray;
 
@@ -220,23 +220,8 @@ void animation_renderer::render_fbo()
 	gles2::active_shader()->shader()->color_array(4, GL_FLOAT, 0, 0, &carray[0]);
 	glDrawArrays(GL_LINES, 0, varray.size()/3);
 
-	varray.clear();
-	carray.clear();
-	narray.clear();
-
-	{
-		vox_model_->process_animation();
-		vox_model_->generate_geometry(&varray, &narray, &carray);
-		std::cerr << "GEOMETRY: " << narray.size() << "\n";
-	}
-
-	if(!varray.empty()) {
-		assert(varray.size() == narray.size());
-		shader->vertex_array(3, GL_FLOAT, GL_FALSE, 0, &varray[0]);
-		shader->color_array(4, GL_FLOAT, GL_FALSE, 0, &carray[0]);
-		shader->vertex_attrib_array(a_normal_, 3, GL_FLOAT, GL_FALSE, 0, &narray[0]);
-		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
-	}
+	vox_model_->process_animation();
+	vox_model_->draw(lighting_, camera_, model_matrix);
 
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
 
