@@ -204,6 +204,9 @@
 		C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */; };
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
 		C08DF5AA178A5511006E061D /* frustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5A8178A5510006E061D /* frustum.cpp */; };
+		C08DF5AE178BC1AA006E061D /* lighting.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5AC178BC1AA006E061D /* lighting.cpp */; };
+		C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5AF178BC1C9006E061D /* voxel_object_functions.cpp */; };
+		C08DF5B4178BC1CA006E061D /* voxel_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5B1178BC1C9006E061D /* voxel_object.cpp */; };
 		C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAAD177C14200046CC87 /* obj_reader.cpp */; };
 		C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB0177C14470046CC87 /* data_blob.cpp */; };
 		C090AAB5177C14740046CC87 /* voxel_editor_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */; };
@@ -667,6 +670,12 @@
 		C08DF5A8178A5510006E061D /* frustum.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = frustum.cpp; sourceTree = "<group>"; };
 		C08DF5A9178A5511006E061D /* frustum.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = frustum.hpp; sourceTree = "<group>"; };
 		C08DF5AB178A554E006E061D /* octree.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = octree.hpp; sourceTree = "<group>"; };
+		C08DF5AC178BC1AA006E061D /* lighting.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lighting.cpp; sourceTree = "<group>"; };
+		C08DF5AD178BC1AA006E061D /* lighting.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lighting.hpp; sourceTree = "<group>"; };
+		C08DF5AF178BC1C9006E061D /* voxel_object_functions.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_object_functions.cpp; sourceTree = "<group>"; };
+		C08DF5B0178BC1C9006E061D /* voxel_object_functions.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_object_functions.hpp; sourceTree = "<group>"; };
+		C08DF5B1178BC1C9006E061D /* voxel_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_object.cpp; sourceTree = "<group>"; };
+		C08DF5B2178BC1CA006E061D /* voxel_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_object.hpp; sourceTree = "<group>"; };
 		C090AAAD177C14200046CC87 /* obj_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obj_reader.cpp; sourceTree = "<group>"; };
 		C090AAAE177C14200046CC87 /* obj_reader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obj_reader.hpp; sourceTree = "<group>"; };
 		C090AAB0177C14470046CC87 /* data_blob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = data_blob.cpp; sourceTree = "<group>"; };
@@ -1064,6 +1073,8 @@
 				C010C694160AFD4C006E7D90 /* level_solid_map.hpp */,
 				C010C696160AFD4C006E7D90 /* light.cpp */,
 				C010C697160AFD4C006E7D90 /* light.hpp */,
+				C08DF5AC178BC1AA006E061D /* lighting.cpp */,
+				C08DF5AD178BC1AA006E061D /* lighting.hpp */,
 				C010C698160AFD4C006E7D90 /* load_level.cpp */,
 				C010C699160AFD4C006E7D90 /* load_level.hpp */,
 				C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */,
@@ -1231,6 +1242,10 @@
 				C090AAB4177C14740046CC87 /* voxel_editor_dialog.hpp */,
 				C090E8F11787967200E6FC5A /* voxel_model.cpp */,
 				C090E8F21787967200E6FC5A /* voxel_model.hpp */,
+				C08DF5AF178BC1C9006E061D /* voxel_object_functions.cpp */,
+				C08DF5B0178BC1C9006E061D /* voxel_object_functions.hpp */,
+				C08DF5B1178BC1C9006E061D /* voxel_object.cpp */,
+				C08DF5B2178BC1CA006E061D /* voxel_object.hpp */,
 				C010C733160AFD4D006E7D90 /* water.cpp */,
 				C010C734160AFD4D006E7D90 /* water.hpp */,
 				C010C735160AFD4D006E7D90 /* water_particle_system.cpp */,
@@ -1531,6 +1546,9 @@
 				C090E8F31787967200E6FC5A /* voxel_animation.cpp in Sources */,
 				C090E8F41787967200E6FC5A /* voxel_model.cpp in Sources */,
 				C08DF5AA178A5511006E061D /* frustum.cpp in Sources */,
+				C08DF5AE178BC1AA006E061D /* lighting.cpp in Sources */,
+				C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */,
+				C08DF5B4178BC1CA006E061D /* voxel_object.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

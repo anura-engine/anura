@@ -125,7 +125,7 @@ pattern:"
    ,$tilename,$friend,
 $friend,$friend,$friend"
 },
-~, &coord($base, 0, $noslopes ? 0 : 7), (($solid eq 'solid=yes' and not $noslopes) ? 'solid=diagonal' : $solid);
+~, &coord($base, 0, $noslopes ? 0 : 7), (($solid eq 'solid: true' and not $noslopes) ? q'solid: "diagonal"' : $solid);
 
 printf qq~
 #sloped - tile immediately beneath
@@ -156,7 +156,7 @@ $friend?,    ,   ,
 $friend,$tilename,   ,
 $friend,$friend,$friend"
 },
-~, &coord($base, 0, $noslopes ? 2 : 8), (($solid eq 'solid=yes' and not $noslopes) ? 'solid=reverse_diagonal' : $solid);
+~, &coord($base, 0, $noslopes ? 2 : 8), (($solid eq q'solid: true' and not $noslopes) ? q'solid: "reverse_diagonal"' : $solid);
 
 printf qq~
 #sloped - reversed - tile immediately beneath
