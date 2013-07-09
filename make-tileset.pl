@@ -49,10 +49,10 @@ print "tile_pattern: [\n";
 printf qq~
 {
 #horizontal tile
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.*  ,
 $friend,$tilename,$friend,
 .* ,   ,.* "
@@ -62,10 +62,10 @@ $friend,$tilename,$friend,
 printf qq~
 #horizontal tile with one tile below but not on either side
 {
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.*  ,
 $friend,$tilename,$friend,
    ,$friend,   "
@@ -75,10 +75,10 @@ $friend,$tilename,$friend,
 printf qq~
 #horizontal tile with one tile above but not on either side
 {
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
    ,$friend,    ,
 $friend,$tilename,$friend,
 .* ,   , .*"
@@ -88,11 +88,11 @@ $friend,$tilename,$friend,
 printf qq~
 #overhang
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.*  ,
    ,$tilename,$friend,
 .* ,   ,.* "
@@ -102,11 +102,11 @@ pattern="
 printf qq~
 #overhang - reversed
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.*  ,
 $friend,$tilename,   ,
 .* ,   ,.* "
@@ -116,11 +116,11 @@ $friend,$tilename,   ,
 printf qq~
 #sloped
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
    ,    ,$friend?,
    ,$tilename,$friend,
 $friend,$friend,$friend"
@@ -130,11 +130,11 @@ $friend,$friend,$friend"
 printf qq~
 #sloped - tile immediately beneath
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .*,   ,    ,$friend?,.*,
 .*,   ,$friend,$friend,.*,
 .*,$friend,$tilename,$friend,.*,
@@ -147,11 +147,11 @@ pattern="
 printf qq~
 #sloped - reversed
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 $friend?,    ,   ,
 $friend,$tilename,   ,
 $friend,$friend,$friend"
@@ -161,11 +161,11 @@ $friend,$friend,$friend"
 printf qq~
 #sloped - reversed - tile immediately beneath
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .*,$friend?,   ,    ,.*,
 .*,$friend,$friend,   ,.*,
 .*,$friend,$tilename,$friend,.*,
@@ -178,10 +178,10 @@ pattern="
 printf qq~
 #single tile by itself
 {
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
  .*,   , .*,
    ,$tilename,   ,
  .*,   , .*"
@@ -191,10 +191,10 @@ pattern="
 printf qq~
 #top of thin platform
 {
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
  .*,   , .*,
    ,$tilename,   ,
  .*,$friend, .*"
@@ -204,10 +204,10 @@ pattern="
 printf qq~
 #part of thin platform
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
  .*,$friend, .*"
@@ -217,10 +217,10 @@ pattern="
 printf qq~
 #bottom of thin platform
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
  .*,   , .*"
@@ -230,11 +230,11 @@ pattern="
 printf qq~
 #cliff edge
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
   .*,   ,$friend?,
     ,$tilename,$friend ,
 $friend?,$friend,$friend "
@@ -244,11 +244,11 @@ $friend?,$friend,$friend "
 printf qq~
 #cliff edge - reverse
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 $friend?,   ,.* ,
 $friend,$tilename,   ,
 $friend,$friend,$friend?"
@@ -258,11 +258,11 @@ $friend,$friend,$friend?"
 printf qq~
 #cliff edge -- version with a corner underneath/opposite
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
   .*,   ,$friend?,
     ,$tilename,$friend ,
 $friend?,$friend,    "
@@ -272,11 +272,11 @@ $friend?,$friend,    "
 printf qq~
 #cliff edge (reversed) -- version with a corner underneath/opposite
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 $friend?,   ,.*,
 $friend,$tilename,   ,
     ,$friend,$friend?"
@@ -286,10 +286,10 @@ $friend,$tilename,   ,
 printf qq~
 #middle of a cross
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend ,
    ,$friend,   "
@@ -299,11 +299,11 @@ $friend,$tilename,$friend ,
 printf qq~
 #corner at two angles
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
    ,$friend,$friend"
@@ -313,11 +313,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corner at two angles (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
 $friend,$friend,   "
@@ -327,10 +327,10 @@ $friend,$friend,   "
 printf qq~
 #corners on the top
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
 $friend,$friend,$friend"
@@ -340,10 +340,10 @@ $friend,$friend,$friend"
 printf qq~
 #corners on the bottom
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$tilename,$friend,
 $friend,$tilename,$friend,
    ,$friend,   "
@@ -353,11 +353,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corners both on the same side
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
    ,$friend,$friend"
@@ -367,11 +367,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corners both on the same side (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
 $friend,$friend,   "
@@ -381,11 +381,11 @@ $friend,$friend,   "
 printf qq~
 #inner top corner piece
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
    ,$friend,$friend"
@@ -395,11 +395,11 @@ $friend,$tilename,$friend,
 printf qq~
 #inner top corner piece (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
 $friend,$friend,   "
@@ -409,11 +409,11 @@ $friend,$friend,   "
 printf qq~
 #inner bottom corner piece
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
 $friend,$friend,$friend"
@@ -423,11 +423,11 @@ $friend,$friend,$friend"
 printf qq~
 #inner bottom corner piece (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
 $friend,$friend,$friend"
@@ -437,11 +437,11 @@ $friend,$friend,$friend"
 printf qq~
 #corner at three sides
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
    ,$friend,   "
@@ -451,11 +451,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corner at three sides (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
    ,$friend,   "
@@ -465,11 +465,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corner at three sides
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
    ,$friend,$friend"
@@ -479,11 +479,11 @@ $friend,$tilename,$friend,
 printf qq~
 #corner at three sides (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
 $friend,$friend,   "
@@ -493,11 +493,11 @@ $friend,$friend,   "
 printf qq~
 #roof at a corner
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
  .*,   , .*"
@@ -507,11 +507,11 @@ $friend,$tilename,$friend,
 printf qq~
 #roof at a corner (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
  .*,   , .*"
@@ -521,10 +521,10 @@ $friend,$tilename,$friend,
 printf qq~
 #roof
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend, .*,
 $friend,$tilename,$friend,
  .*,   , .*"
@@ -534,11 +534,11 @@ $friend,$tilename,$friend,
 printf qq~
 #bottom corner
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend?,$friend,$friend,
     ,$tilename,$friend,
 .*  ,   , .*"
@@ -548,11 +548,11 @@ $friend?,$friend,$friend,
 printf qq~
 #bottom corner (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,$friend?,
 $friend,$tilename,   ,
 .*  ,   , .*"
@@ -562,11 +562,11 @@ $friend,$tilename,   ,
 printf qq~
 #bottom corner with corner on opposite side
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend?,$friend,   ,
     ,$tilename,$friend,
 .*  ,   , .*"
@@ -576,11 +576,11 @@ $friend?,$friend,   ,
 printf qq~
 #bottom corner with corner on opposite side (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,$friend?,
 $friend,$tilename,   ,
 .*  ,   , .*"
@@ -590,10 +590,10 @@ $friend,$tilename,   ,
 printf qq~
 #solid
 {
-image:$image,
+image:"$image",
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend?,$friend,$friend?,
 $friend,$tilename,$friend,
 $friend?,$friend,$friend?"
@@ -604,11 +604,11 @@ printf qq~
 #cliff face coming up from a one-tile thick cliff and expanding out
 #in one direction
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 $friend,$friend,.* ,
 $friend,$tilename,   ,
    ,$friend,.* "
@@ -619,11 +619,11 @@ printf qq~
 #cliff face coming up from a one-tile thick cliff and expanding out
 #in one direction (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend,$friend,
    ,$tilename,$friend,
 .* ,$friend,   "
@@ -634,11 +634,11 @@ printf qq~
 #cliff face coming down from a one-tile thick cliff and expanding out
 #in one direction
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
 $friend,$friend,.* "
@@ -649,11 +649,11 @@ printf qq~
 #cliff face coming down from a one-tile thick cliff and expanding out
 #in one direction (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend,  ,
    ,$tilename,$friend,
 .* ,$friend,$friend"
@@ -664,11 +664,11 @@ printf qq~
 #cliff face coming both up and down from a one-tile thick cliff and expanding
 #out into a ledge in one direction
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
    ,$friend,.* "
@@ -679,11 +679,11 @@ printf qq~
 #cliff face coming both up and down from a one-tile thick cliff and expanding
 #out into a ledge in one direction (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend,   ,
    ,$tilename,$friend,
 .* ,$friend,   "
@@ -693,11 +693,11 @@ pattern="
 printf qq~
 #cliff face
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend,.* ,
    ,$tilename,$friend,
 .* ,$friend,.* "
@@ -707,11 +707,11 @@ pattern="
 printf qq~
 #cliff face (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 $solid
-pattern="
+pattern:"
 .* ,$friend,.* ,
 $friend,$tilename,   ,
 .* ,$friend,.* "
@@ -721,11 +721,11 @@ $friend,$tilename,   ,
 printf qq~
 #ground - with a corner on one side beneath
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.* ,
 $friend,$tilename,$friend,
    ,$friend,$friend"
@@ -735,11 +735,11 @@ $friend,$tilename,$friend,
 printf qq~
 #ground - with a corner on one side beneath (reversed)
 {
-image:$image,
+image:"$image",
 reverse=no
 tiles:%s,
 %s
-pattern="
+pattern:"
 .* ,   ,.* ,
 $friend,$tilename,$friend,
 $friend,$friend,   "
@@ -749,10 +749,10 @@ $friend,$friend,   "
 printf qq~
 #ground
 {
-image:$image,
+image:"$image",
 tiles:%s,
 %s
-pattern="
+pattern:"
 $friend?,    ,$friend?,
 $friend ,$tilename ,$friend ,
 $friend?,$friend?,$friend?"
