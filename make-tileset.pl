@@ -30,7 +30,7 @@ my $noslopes = 0;
 
 while(my $arg = shift @ARGV) {
 	if($arg eq '--solid') {
-		$solid = "solid=" . (shift @ARGV);
+		$solid = "solid:" . (shift @ARGV);
 	} elsif($arg eq '--friend') {
 		$friend = shift @ARGV;
 	} elsif($arg eq '--noslopes') {
@@ -206,7 +206,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
@@ -219,7 +219,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
  .*,$friend, .*,
    ,$tilename,   ,
@@ -288,7 +288,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend ,
@@ -302,7 +302,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -316,7 +316,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -329,7 +329,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -342,7 +342,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$tilename,$friend,
 $friend,$tilename,$friend,
@@ -356,7 +356,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -370,7 +370,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -384,7 +384,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
@@ -398,7 +398,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,$friend,
 $friend,$tilename,$friend,
@@ -412,7 +412,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -426,7 +426,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -440,7 +440,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -454,7 +454,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -468,7 +468,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -482,7 +482,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,   ,
 $friend,$tilename,$friend,
@@ -496,7 +496,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend,
 $friend,$tilename,$friend,
@@ -510,7 +510,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,   ,
 $friend,$tilename,$friend,
@@ -523,7 +523,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend, .*,
 $friend,$tilename,$friend,
@@ -537,7 +537,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend?,$friend,$friend,
     ,$tilename,$friend,
@@ -551,7 +551,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,$friend?,
 $friend,$tilename,   ,
@@ -565,7 +565,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend?,$friend,   ,
     ,$tilename,$friend,
@@ -579,7 +579,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,$friend?,
 $friend,$tilename,   ,
@@ -592,7 +592,7 @@ printf qq~
 {
 image:"$image",
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend?,$friend,$friend?,
 $friend,$tilename,$friend,
@@ -607,7 +607,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 $friend,$friend,.* ,
 $friend,$tilename,   ,
@@ -622,7 +622,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend,$friend,
    ,$tilename,$friend,
@@ -637,7 +637,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
@@ -652,7 +652,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend,  ,
    ,$tilename,$friend,
@@ -667,7 +667,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
    ,$friend,.* ,
 $friend,$tilename,   ,
@@ -682,7 +682,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend,   ,
    ,$tilename,$friend,
@@ -696,7 +696,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend,.* ,
    ,$tilename,$friend,
@@ -710,7 +710,7 @@ printf qq~
 image:"$image",
 reverse:no,
 tiles:%s,
-$solid
+$solid,
 pattern:"
 .* ,$friend,.* ,
 $friend,$tilename,   ,
