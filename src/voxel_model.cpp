@@ -837,11 +837,10 @@ void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfl
 		return;
 	}
 
-	glm::vec3 axis = glm::normalize(p2 - p1);
-	glm::mat4 t1 = glm::translate(glm::mat4(1.0f), -p1);
-	glm::mat4 r1 = glm::rotate(glm::mat4(1.0f), amount, axis);
-	glm::mat4 t2 = glm::translate(glm::mat4(1.0f), p1);
-	model_ = t2 * r1 * t1 * model_;
+	model_ = glm::translate(glm::mat4(1.0f), p1) 
+		* glm::rotate(glm::mat4(1.0f), amount, glm::normalize(p2 - p1)) 
+		* glm::translate(glm::mat4(1.0f), -p1) 
+		* model_;
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(voxel_model)
