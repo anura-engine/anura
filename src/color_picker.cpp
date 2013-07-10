@@ -381,6 +381,8 @@ namespace gui
 						} else {
 							secondary_ = palette_[selected_palette_color_];
 						}
+						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+						set_text_from_color(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
@@ -400,6 +402,8 @@ namespace gui
 						} else {
 							primary_ = palette_[selected_palette_color_];
 						}
+						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+						set_text_from_color(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
@@ -582,32 +586,32 @@ namespace gui
 		std::stringstream str;
 		if(n != 0) {
 			str << int(c.r());
-			t_[0]->set_text(str.str(), true);
+			t_[0]->set_text(str.str(), false);
 		}
 		if(n != 1) {
 			str.str(std::string()); str << int(c.g());
-			t_[1]->set_text(str.str(), true);
+			t_[1]->set_text(str.str(), false);
 		}
 		if(n != 2) {
 			str.str(std::string()); str << int(c.b());
-			t_[2]->set_text(str.str(), true);
+			t_[2]->set_text(str.str(), false);
 		}
 		hsv out = rgb_to_hsv(c.r(), c.g(), c.b());
 		if(n != 3) {
 			str.str(std::string()); str << int(out.h);
-			t_[3]->set_text(str.str(), true);
+			t_[3]->set_text(str.str(), false);
 		}
 		if(n != 4) {
 			str.str(std::string()); str << int(out.s);
-			t_[4]->set_text(str.str(), true);
+			t_[4]->set_text(str.str(), false);
 		}
 		if(n != 5) {
 			str.str(std::string()); str << int(out.v);
-			t_[5]->set_text(str.str(), true);
+			t_[5]->set_text(str.str(), false);
 		}
 		if(n != 6) {
 			str.str(std::string()); str << int(alpha_);
-			t_[6]->set_text(str.str(), true);
+			t_[6]->set_text(str.str(), false);
 		}
 	}
 
