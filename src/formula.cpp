@@ -828,14 +828,19 @@ private:
 
 class lambda_function_expression : public formula_expression {
 public:
-	lambda_function_expression(const std::vector<std::string>& args, const_formula_ptr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) : args_(args), fml_(fml), base_slot_(base_slot), default_args_(default_args), variant_types_(variant_types), return_type_(return_type)
+	lambda_function_expression(const std::vector<std::string>& args, const_formula_ptr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo)
 	{
-		if(!return_type_) {
-			return_type_ = variant_type::get_any();
+		type_info_->arg_names = args;
+		type_info_->default_args = default_args;
+		type_info_->variant_types = variant_types;
+		type_info_->return_type = return_type;
+
+		if(!type_info_->return_type) {
+			type_info_->return_type = variant_type::get_any();
 		}
 
-		variant_types_.resize(args_.size());
-		foreach(variant_type_ptr& t, variant_types_) {
+		type_info_->variant_types.resize(args.size());
+		for(variant_type_ptr& t : type_info_->variant_types) {
 			if(!t) {
 				t = variant_type::get_any();
 			}
@@ -844,12 +849,12 @@ public:
 	
 private:
 	variant execute(const formula_callable& variables) const {
-		variant v(fml_, args_, variables, base_slot_, default_args_, variant_types_, return_type_);
+		variant v(fml_, variables, base_slot_, type_info_);
 		return v;
 	}
 
 	variant_type_ptr get_variant_type() const {
-		return variant_type::get_function_type(variant_types_, return_type_, variant_types_.size() - default_args_.size());
+		return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, type_info_->variant_types.size() - type_info_->default_args.size());
 	}
 
 	std::vector<const_expression_ptr> get_children() const {
@@ -857,13 +862,12 @@ private:
 		result.push_back(fml_->expr());
 		return result;
 	}
-	
-	std::vector<std::string> args_;
+
 	game_logic::const_formula_ptr fml_;
 	int base_slot_;
-	std::vector<variant> default_args_;
-	std::vector<variant_type_ptr> variant_types_;
-	variant_type_ptr return_type_;
+
+	VariantFunctionTypeInfoPtr type_info_;
+	
 };
 
 class function_call_expression : public formula_expression {

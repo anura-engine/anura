@@ -1333,7 +1333,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 			}
 		}
 
-		if(all_string_keys) {
+		if(all_string_keys && !value.as_map().empty()) {
 			std::map<variant, variant_type_ptr> type_map;
 			foreach(const variant::map_pair& p, value.as_map()) {
 				type_map[p.first] = get_variant_type_from_value(p.second);

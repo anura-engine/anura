@@ -1,4 +1,4 @@
-#Note: Do not invoke this script directly, rather, use ". bash_autocomplete_setup.sh".
+#Note: Do not invoke this script directly, rather, use ". bash_autocomplete_setup.sh". Then you may tab-complete after ./game.
 _frogatto() 
 {
     local cur prev opts utils module_names level_names
@@ -15,7 +15,7 @@ _frogatto()
         
      *)
         #opts will get --module= and --utility= filled in later.
-        opts="--config-path= --fullscreen --height --host --no-joystick --joystick --level --no-music --music --native --relay --no-resizable --resizable --scale --no-send-stats --send-stats --server= --user= --pass= --no-sound --sound --widescreen --width --windowed --wvga --no-debug --debug --fps --no-fps --set-fps= --potonly --textures16 --textures32 --benchmarks --benchmarks= --no-compiled --compiled --edit --show-hitboxes --show-controls --simipad --simiphone --no-autopause --tests --no-tests --textures16 --tbs-server"
+        opts="--benchmarks --benchmarks= --compiled --config-path= --debug --edit --edit-and-continue --fps --fullscreen --height --host --joystick --level --music --native --no-autopause --no-compiled --no-debug --no-fps --no-joystick --no-music --no-resizable --no-send-stats --no-sound --no-tests --pass= --potonly --relay --resizable --scale --send-stats --server= --set-fps= --show-controls --show-hitboxes --simipad --simiphone --sound --tbs-server --tests --textures16 --textures16 --textures32 --user= --widescreen --width --windowed --wvga"
         utils="codeedit compile_levels compile_objects correct_solidity document_ffl_functions generate_scaling_code hole_punch_test install_module list_modules module_server object_definition publish_module publish_module_stats query render_level sign_game_data stats_server tbs_server test_all_objects textedit"
         
         #Appends the module=… commands. Since I don't know how to look for the module= command (it doesn't show up in "prev") we'll just generate every single possible combination.
