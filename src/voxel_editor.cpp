@@ -892,8 +892,9 @@ private:
 	int anchor_drag_x_, anchor_drag_y_;
 	struct VoxelPosLess
 	{
-		bool operator()(VoxelPos const& p1, VoxelPos const& p2) {
-			return p1.x < p2.x && p1.y < p2.y && p1.z < p2.z;
+		bool operator()(VoxelPos const& p1, VoxelPos const& p2) const {
+			return p1.x < p2.x || p1.x == p2.x && p1.y < p2.y ||
+			       p1.x == p2.x && p1.y == p2.y && p1.z < p2.z;
 		}
 	};
 	std::set<VoxelPos, VoxelPosLess> voxels_drawn_on_this_drag_;
@@ -1237,6 +1238,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		const SDL_MouseMotionEvent& motion = event.motion;
 		if(motion.x >= x() && motion.y >= y() &&
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
+		std::cerr << "MOTION: " << motion.x << ", " << motion.y << "\n";
 			focus_ = true;
 
 			const bool is_cursor_set = calculate_cursor(motion.x, motion.y);
@@ -2012,6 +2014,22 @@ UTILITY(voxel_editor)
 	std::string fname;
 	if(arguments.empty() == false) {
 		fname = module::map_file(arguments.front());
+	}
+
+	if(!fname.empty() && !sys::file_exists(fname)) {
+		Model model;
+		model.feet_position[0] = model.feet_position[1] = model.feet_position[2] = 0;
+		model.scale = decimal::from_int(1);
+		for(int n = 1; n <= 3; ++n) {
+			LayerType layer;
+			layer.name = formatter() << "layer" << n;
+			layer.last_edited_variation = "default";
+			layer.symmetric = false;
+			layer.variations["default"].name = "default";
+			model.layer_types.push_back(layer);
+		}
+
+		sys::write_file(fname, write_model(model).write_json());
 	}
 	
 	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));

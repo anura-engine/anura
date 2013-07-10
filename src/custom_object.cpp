@@ -716,7 +716,7 @@ variant custom_object::write() const
 	}
 
 	if(always_active_) {
-		res.add("always_active", "yes");
+		res.add("always_active", true);
 	}
 
 	if(activation_border_ != type_->activation_border()) {
@@ -786,7 +786,7 @@ variant custom_object::write() const
 		res.add("current_frame", frame_name_);
 	}
 
-	res.add("custom", "yes");
+	res.add("custom", true);
 	res.add("type", type_->id());
 	res.add("x", x());
 	res.add("y", y());

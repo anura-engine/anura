@@ -22,6 +22,7 @@
 
 #include "camera.hpp"
 #include "color_utils.hpp"
+#include "decimal.hpp"
 #include "lighting.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
@@ -120,6 +121,8 @@ struct Model {
 	std::vector<LayerType> layer_types;
 	std::vector<Animation> animations;
 	std::map<std::string, AttachmentPoint> attachment_points;
+	VoxelPos feet_position;
+	decimal scale;
 };
 
 LayerType read_layer_type(const variant& v);

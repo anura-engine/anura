@@ -47,7 +47,7 @@ namespace
 
 bool operator==(VoxelPos const& p1, VoxelPos const& p2)
 {
-	return p1.x == p1.x && p1.y == p2.y && p1.z == p2.z;
+	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
 }
 
 variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel) {
@@ -61,6 +61,24 @@ variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel)
 	m[variant("loc")] = variant(&pos);
 	m[variant("color")] = voxel.color.write();
 	return variant(&m);
+}
+
+VoxelPos read_voxel_pos(const variant& v) {
+	std::vector<int> res = v.as_list_int();
+	ASSERT_LOG(res.size() == 3, "Illegal voxel pos: " << v.write_json() << " " << v.debug_location());
+	VoxelPos result;
+	result[0] = res[0];
+	result[1] = res[1];
+	result[2] = res[2];
+	return result;
+}
+
+variant write_voxel_pos(const VoxelPos& pos) {
+	std::vector<variant> result;
+	result.push_back(variant(pos[0]));
+	result.push_back(variant(pos[1]));
+	result.push_back(variant(pos[2]));
+	return variant(&result);
 }
 
 void read_voxels(const variant& v, VoxelMap* out) {
@@ -172,6 +190,18 @@ variant write_attachment_points(const std::map<std::string, AttachmentPoint>& m)
 Model read_model(const variant& v) {
 	Model model;
 
+	if(v.has_key("feet")) {
+		model.feet_position = read_voxel_pos(v["feet"]);
+	} else {
+		model.feet_position[0] = model.feet_position[1] = model.feet_position[2] = 0;
+	}
+
+	if(v.has_key("scale")) {
+		model.scale = v["scale"].as_decimal();
+	} else {
+		model.scale = decimal::from_int(1);
+	}
+
 	for(const std::pair<variant,variant>& p : v["layers"].as_map()) {
 		LayerType layer_type = read_layer_type(p.second);
 		layer_type.name = p.first.as_string();
@@ -257,6 +287,8 @@ variant write_model(const Model& model) {
 	}
 
 	std::map<variant,variant> result_node;
+	result_node[variant("feet")] = write_voxel_pos(model.feet_position);
+	result_node[variant("scale")] = variant(model.scale);
 	result_node[variant("layers")] = variant(&layers_node);
 	result_node[variant("animations")] = variant(&animations_node);
 
