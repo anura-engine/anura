@@ -17,6 +17,8 @@
 #ifndef VARIANT_HPP_INCLUDED
 #define VARIANT_HPP_INCLUDED
 
+#include <functional>
+
 #include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 #include <string>
@@ -31,6 +33,7 @@
 
 #include "decimal.hpp"
 #include "formula_fwd.hpp"
+#include "reference_counted_object.hpp"
 
 namespace game_logic {
 class formula_callable;
@@ -81,6 +84,15 @@ struct type_error {
 
 static const int64_t VARIANT_DECIMAL_PRECISION = DECIMAL_PRECISION;
 
+struct VariantFunctionTypeInfo : public reference_counted_object {
+	std::vector<std::string> arg_names;
+	std::vector<variant> default_args;
+	std::vector<variant_type_ptr> variant_types;
+	variant_type_ptr return_type;
+};
+
+typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
+
 class variant {
 public:
 	enum DECIMAL_VARIANT_TYPE { DECIMAL_VARIANT };
@@ -106,7 +118,9 @@ public:
 	static variant create_translated_string(const std::string& str);
 	static variant create_translated_string(const std::string& str, const std::string& translation);
 	explicit variant(std::map<variant,variant>* map);
-	variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
+	variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
+	variant(std::function<variant(const game_logic::formula_callable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
+	//variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
 
 	static variant create_variant_under_construction(intptr_t id);
 

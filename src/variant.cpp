@@ -226,23 +226,21 @@ private:
 };
 
 struct variant_fn {
+	variant::debug_info info;
+
 	variant_fn() : refcount(0)
 	{}
 
-	std::vector<std::string> arg_names;
+	VariantFunctionTypeInfoPtr type;
 
+	std::function<variant(const game_logic::formula_callable&)> builtin_fn;
 	game_logic::const_formula_ptr fn;
-
 	game_logic::const_formula_callable_ptr callable;
-
-	std::vector<variant> default_args;
 
 	std::vector<variant> bound_args;
 
 	int base_slot;
 	int refcount;
-	std::vector<variant_type_ptr> variant_types;
-	variant_type_ptr return_type;
 };
 
 struct variant_multi_fn {
@@ -540,18 +538,50 @@ variant::variant(std::map<variant,variant>* map)
 	increment_refcount();
 }
 
+variant::variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info)
+  : type_(VARIANT_TYPE_FUNCTION)
+{
+	fn_ = new variant_fn;
+	fn_->fn = formula;
+	fn_->callable = &callable;
+	fn_->base_slot = base_slot;
+	fn_->type = type_info;
+
+	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
+
+	increment_refcount();
+
+	if(formula->str_var().get_debug_info()) {
+		set_debug_info(*formula->str_var().get_debug_info());
+	}
+}
+
+variant::variant(std::function<variant(const game_logic::formula_callable&)> builtin_fn, const VariantFunctionTypeInfoPtr& type_info)
+  : type_(VARIANT_TYPE_FUNCTION)
+{
+	fn_ = new variant_fn;
+	fn_->builtin_fn = builtin_fn;
+	fn_->base_slot = 0;
+	fn_->type = type_info;
+
+	ASSERT_EQ(fn_->type->variant_types.size(), fn_->type->arg_names.size());
+
+	increment_refcount();
+}
+
+/*
 variant::variant(game_logic::const_formula_ptr fml, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type)
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
-	fn_->arg_names = args;
+	fn_->type->arg_names = args;
 	fn_->base_slot = base_slot;
 	fn_->fn = fml;
 	fn_->callable = &callable;
-	fn_->default_args = default_args;
+	fn_->type->default_args = default_args;
 	fn_->variant_types = variant_types;
 
-	ASSERT_EQ(fn_->variant_types.size(), fn_->arg_names.size());
+	ASSERT_EQ(fn_->variant_types.size(), fn_->type->arg_names.size());
 
 	fn_->return_type = return_type;
 	increment_refcount();
@@ -560,6 +590,7 @@ variant::variant(game_logic::const_formula_ptr fml, const std::vector<std::strin
 		set_debug_info(*fml->str_var().get_debug_info());
 	}
 }
+*/
 
 const variant& variant::operator=(const variant& v)
 {
@@ -752,8 +783,8 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 
 	const std::vector<variant>& args = args_buf.empty() ? passed_args : args_buf;
 
-	const int max_args = fn_->arg_names.size();
-	const int min_args = max_args - fn_->default_args.size();
+	const int max_args = fn_->type->arg_names.size();
+	const int min_args = max_args - fn_->type->default_args.size();
 
 	if(args.size() > max_args || (args.size() < min_args && !allow_partial)) {
 		if(message) {
@@ -763,10 +794,10 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 	}
 
 	for(int n = 0; n != args.size(); ++n) {
-		if(n < fn_->variant_types.size() && fn_->variant_types[n]) {
-			if(fn_->variant_types[n]->match(args[n]) == false) {
+		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
+			if(fn_->type->variant_types[n]->match(args[n]) == false) {
 				if(message) {
-					*message = formatter() << "Argument " << (n+1) << " does not match. Expects " << fn_->variant_types[n]->to_string() << " but found " << args[n].write_json();
+					*message = formatter() << "Argument " << (n+1) << " does not match. Expects " << fn_->type->variant_types[n]->to_string() << " but found " << args[n].write_json();
 				}
 				return false;
 			}
@@ -806,13 +837,13 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	callable->set_base_slot(fn_->base_slot);
 
-	const int max_args = fn_->arg_names.size();
-	const int min_args = max_args - fn_->default_args.size();
+	const int max_args = fn_->type->arg_names.size();
+	const int min_args = max_args - fn_->type->default_args.size();
 
 	if(args->size() < min_args || args->size() > max_args) {
 		std::ostringstream str;
-		for(std::vector<std::string>::const_iterator a = fn_->arg_names.begin(); a != fn_->arg_names.end(); ++a) {
-			if(a != fn_->arg_names.begin()) {
+		for(std::vector<std::string>::const_iterator a = fn_->type->arg_names.begin(); a != fn_->type->arg_names.end(); ++a) {
+			if(a != fn_->type->arg_names.begin()) {
 				str << ", ";
 			}
 
@@ -822,11 +853,11 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	}
 
 	for(size_t n = 0; n != args->size(); ++n) {
-		if(n < fn_->variant_types.size() && fn_->variant_types[n]) {
-	//		if((*args)[n].is_map() && fn_->variant_types[n]->is_class(NULL))
-			if(fn_->variant_types[n]->match((*args)[n]) == false) {
+		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
+	//		if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(NULL))
+			if(fn_->type->variant_types[n]->match((*args)[n]) == false) {
 				std::string class_name;
-				if((*args)[n].is_map() && fn_->variant_types[n]->is_class(&class_name)) {
+				if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(&class_name)) {
 					//auto-construct an object from a map in a function argument
 					game_logic::formula::fail_if_static_context();
 
@@ -837,9 +868,9 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 					args_buf[n] = variant(obj.get());
 
-				} else if(const game_logic::formula_interface* interface = fn_->variant_types[n]->is_interface()) {
+				} else if(const game_logic::formula_interface* interface = fn_->type->variant_types[n]->is_interface()) {
 					if((*args)[n].is_map() == false && (*args)[n].is_callable() == false) {
-						generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED INTERFACE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
+						generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED INTERFACE " << fn_->type->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
 					}
 
 					variant obj = interface->get_dynamic_factory()->create((*args)[n]);
@@ -851,7 +882,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 				} else {
 					variant_type_ptr arg_type = get_variant_type_from_value((*args)[n]);
-					generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << fn_->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json() << " of type " << arg_type->to_string()).str());
+					generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED TYPE " << fn_->type->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json() << " of type " << arg_type->to_string()).str());
 				}
 			}
 		}
@@ -860,16 +891,19 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	}
 
 	for(size_t n = args->size(); n < max_args; ++n) {
-		callable->add(fn_->default_args[n - min_args]);
+		callable->add(fn_->type->default_args[n - min_args]);
 	}
 
-	const variant result = fn_->fn->execute(*callable);
-	if(fn_->return_type && !fn_->return_type->match(result)) {
-		call_stack_manager scope(fn_->fn->expr().get(), callable.get());
-		generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->return_type->to_string() << " but found " << result.write_json() << " (type: " << get_variant_type_from_value(result)->to_string() << ") FOR " << fn_->fn->str());
+	if(fn_->fn) {
+		const variant result = fn_->fn->execute(*callable);
+		if(fn_->type->return_type && !fn_->type->return_type->match(result)) {
+			call_stack_manager scope(fn_->fn->expr().get(), callable.get());
+			generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->type->return_type->to_string() << " but found " << result.write_json() << " (type: " << get_variant_type_from_value(result)->to_string() << ") FOR " << fn_->fn->str());
+		}
+		return result;
+	} else {
+		return fn_->builtin_fn(*callable);
 	}
-
-	return result;
 }
 
 variant variant::get_member(const std::string& str) const
@@ -1121,27 +1155,27 @@ void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const gam
 int variant::min_function_arguments() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);
-	return std::max<int>(0, fn_->arg_names.size() - static_cast<int>(fn_->default_args.size()) - static_cast<int>(fn_->bound_args.size()));
+	return std::max<int>(0, fn_->type->arg_names.size() - static_cast<int>(fn_->type->default_args.size()) - static_cast<int>(fn_->bound_args.size()));
 }
 
 int variant::max_function_arguments() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);
-	return fn_->arg_names.size() - fn_->bound_args.size();
+	return fn_->type->arg_names.size() - fn_->bound_args.size();
 }
 
 variant_type_ptr variant::function_return_type() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);
-	return fn_->return_type;
+	return fn_->type->return_type;
 }
 
 std::vector<variant_type_ptr> variant::function_arg_types() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);
-	std::vector<variant_type_ptr> result = fn_->variant_types;
+	std::vector<variant_type_ptr> result = fn_->type->variant_types;
 	if(fn_->bound_args.empty() == false) {
-		ASSERT_LOG(fn_->bound_args.size() <= fn_->variant_types.size(), "INVALID FUNCTION BINDING: " << fn_->bound_args.size() << "/" << fn_->variant_types.size());
+		ASSERT_LOG(fn_->bound_args.size() <= fn_->type->variant_types.size(), "INVALID FUNCTION BINDING: " << fn_->bound_args.size() << "/" << fn_->type->variant_types.size());
 		result.erase(result.begin(), result.begin() + fn_->bound_args.size());
 	}
 
@@ -1660,7 +1694,9 @@ void variant::serialize_to_string(std::string& str) const
 		break;
 	}
 	case VARIANT_TYPE_FUNCTION:
-		fprintf(stderr, "ATTEMPT TO SERIALIZE FUNCTION: %s\n", fn_->fn->str().c_str());
+		if(fn_->fn) {
+			fprintf(stderr, "ATTEMPT TO SERIALIZE FUNCTION: %s\n", fn_->fn->str().c_str());
+		}
 		assert(false);
 	default:
 		assert(false);
@@ -1892,7 +1928,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::formula_calla
 		sprintf(buf, "(%p)", fn_);
 		s << buf << "(";
 		bool first = true;
-		for(std::vector<std::string>::const_iterator i = fn_->arg_names.begin(); i != fn_->arg_names.end(); ++i) {
+		for(std::vector<std::string>::const_iterator i = fn_->type->arg_names.begin(); i != fn_->type->arg_names.end(); ++i) {
 			if (first)
 				first = false;
 			else
@@ -2068,6 +2104,8 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 
 void variant::write_function(std::ostream& s) const
 {
+	assert(fn_->fn);
+
 	//Serialize the closure along with the object, if we can.
 	const bool serialize_closure = fn_->callable && dynamic_cast<const game_logic::wml_serializable_formula_callable*>(fn_->callable.get());
 	if(serialize_closure) {
@@ -2075,17 +2113,17 @@ void variant::write_function(std::ostream& s) const
 	}
 	
 	s << "def(";
-	const int default_base = fn_->arg_names.size() - fn_->default_args.size();
-	for(std::vector<std::string>::const_iterator p = fn_->arg_names.begin(); p != fn_->arg_names.end(); ++p) {
-		if(p != fn_->arg_names.begin()) {
+	const int default_base = fn_->type->arg_names.size() - fn_->type->default_args.size();
+	for(std::vector<std::string>::const_iterator p = fn_->type->arg_names.begin(); p != fn_->type->arg_names.end(); ++p) {
+		if(p != fn_->type->arg_names.begin()) {
 			s << ",";
 		}
 
 		s << *p;
 		
-		const int index = p - fn_->arg_names.begin();
+		const int index = p - fn_->type->arg_names.begin();
 		if(index >= default_base) {
-			variant v = fn_->default_args[index - default_base];
+			variant v = fn_->type->default_args[index - default_base];
 			std::string str;
 			v.serialize_to_string(str);
 			s << "=" << str;

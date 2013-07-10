@@ -3740,6 +3740,10 @@ void level::set_background_by_id(const std::string& id)
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(level)
+//TODO: LEFT HERE AS AN EXAMPLE OF A FUNCTION DEFINITION. REMOVE SOON!
+BEGIN_DEFINE_FN(myadd, "(int,int) ->int")
+	return FN_ARG(0) + FN_ARG(1);
+END_DEFINE_FN
 DEFINE_FIELD(cycle, "int")
 	return variant(obj.cycle_);
 DEFINE_SET_FIELD

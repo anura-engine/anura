@@ -158,6 +158,32 @@ void classname::init_callable_type(std::vector<callable_property_entry>& fields,
 	entry.get = [](const game_logic::formula_callable& obj_instance) ->variant { \
 		const this_type& obj = *dynamic_cast<const this_type*>(&obj_instance);
 
+#define BEGIN_DEFINE_FN(fieldname, type_str) }; } { \
+	int field_index = fields.size(); \
+	if(properties.count(#fieldname)) { \
+		field_index = properties[#fieldname]; \
+	} else { \
+		fields.resize(fields.size()+1); \
+		properties[#fieldname] = field_index; \
+	} \
+	callable_property_entry& entry = fields[field_index]; \
+	entry.id = #fieldname; \
+	entry.type = parse_variant_type(variant("function" type_str)); \
+	entry.get = [](const game_logic::formula_callable& obj_instance) ->variant { \
+		static VariantFunctionTypeInfoPtr type_info; \
+		if(!type_info) { \
+			type_info.reset(new VariantFunctionTypeInfo); \
+			variant_type_ptr type = parse_variant_type(variant("function" type_str)); \
+			type->is_function(&type_info->variant_types, &type_info->return_type, NULL, NULL); \
+			type_info->arg_names.resize(type_info->variant_types.size()); \
+		} \
+		const this_type& obj = *dynamic_cast<const this_type*>(&obj_instance); \
+		return variant([&obj](const game_logic::formula_callable& args) ->variant {
+
+#define FN_ARG(n) args.query_value_by_slot(n)
+
+#define END_DEFINE_FN }, type_info);
+
 #define DEFINE_SET_FIELD_TYPE(type) }; \
 	entry.set_type = parse_variant_type(variant(type)); \
 	entry.set = [](game_logic::formula_callable& obj_instance, const variant& value) ->void { \
