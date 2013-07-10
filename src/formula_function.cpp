@@ -54,7 +54,6 @@
 #include "level.hpp"
 #include "json_parser.hpp"
 #include "variant_utils.hpp"
-#include "voxel_object.hpp"
 
 #include "graphics.hpp"
 #include "module.hpp"

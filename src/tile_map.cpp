@@ -80,7 +80,7 @@ int parse_zorder(const variant& v, variant default_val)
 	}
 
 	const std::string& str = v.as_string();
-	ASSERT_LOG(str_to_zorder().count(str), "Invalid zorder id: " << v.as_string());
+	ASSERT_LOG(str_to_zorder().count(str), "Invalid zorder id: " << v.as_string() << ": " << v.debug_location());
 	return str_to_zorder().find(str)->second;
 }
 

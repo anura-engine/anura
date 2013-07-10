@@ -9,7 +9,7 @@
 namespace voxel
 {
 	const int chunk_size = 32;
-	const int initial_chunks = 2;
+	const int initial_chunks = 16;
 
 	world::world(const variant& node)
 		: view_distance_(node["view_distance"].as_int(5)), seed_(node["seed"].as_int(rand()))

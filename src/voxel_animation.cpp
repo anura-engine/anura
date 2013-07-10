@@ -167,7 +167,7 @@ void animation_renderer::set_animation(const std::string& anim)
 
 void animation_renderer::render_fbo()
 {
-	std::cerr << "render fbo\n";
+	//std::cerr << "render fbo\n";
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
 
 	//set up the raster projection.
@@ -232,7 +232,7 @@ void animation_renderer::render_fbo()
 
 void animation_renderer::handle_draw() const
 {
-	std::cerr << "draw anim...\n";
+	//std::cerr << "draw anim...\n";
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
 	GLint cur_id = graphics::texture::get_current_texture();
