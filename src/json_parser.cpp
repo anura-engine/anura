@@ -16,6 +16,8 @@
 */
 #include <algorithm>
 
+#include "asserts.hpp"
+#include "code_editor_dialog.hpp"
 #include "checksum.hpp"
 #include "filesystem.hpp"
 #include "foreach.hpp"
@@ -28,6 +30,7 @@
 #include "json_tokenizer.hpp"
 #include "md5.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "preprocessor.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
@@ -554,7 +557,25 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 			throw parse_error(formatter() << "Could not find file " << fname);
 		}
 
-		variant result = parse_internal(data, fname, options, NULL, NULL);
+		variant result;
+		
+		try {
+			result = parse_internal(data, fname, options, NULL, NULL);
+		} catch(parse_error& e) {
+			if(!preferences::edit_and_continue()) {
+				throw e;
+			}
+
+			static bool in_edit_and_continue = false;
+			if(in_edit_and_continue) {
+				throw e;
+			}
+
+			in_edit_and_continue = true;
+			edit_and_continue_fn(module::map_file(fname), formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, boost::bind(parse_from_file, fname, options));
+			in_edit_and_continue = false;
+			return parse_from_file(fname, options);
+		}
 
 		for(std::map<CacheKey, variant>::iterator i = cache.begin(); i != cache.end(); ) {
 			if(i->second.refcount() == 1) {
