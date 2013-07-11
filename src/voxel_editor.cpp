@@ -238,11 +238,14 @@ class iso_renderer : public gui::widget
 public:
 	explicit iso_renderer(const rect& area);
 	~iso_renderer();
+	void init();
 	void handle_draw() const;
+
+	bool maximized() const { return maximized_; }
 
 	const camera_callable& camera() const { return *camera_; }
 private:
-	void init();
+	void maximize();
 	void handle_process();
 	bool handle_event(const SDL_Event& event, bool claimed);
 
@@ -280,6 +283,9 @@ private:
 	bool focused_;
 	bool dragging_view_;
 
+	button_ptr maximize_button_;
+	bool maximized_;
+
 	iso_renderer();
 	iso_renderer(const iso_renderer&);
 };
@@ -295,7 +301,7 @@ iso_renderer::iso_renderer(const rect& area)
     camera_(new camera_callable),
     camera_hangle_(0.12), camera_vangle_(1.25), camera_distance_(20.0),
 	tex_width_(0), tex_height_(0),
-	focused_(false), dragging_view_(false), light_power_(10000.0f), specularity_coef_(5.0f)
+	focused_(false), dragging_view_(false), light_power_(10000.0f), specularity_coef_(5.0f), maximized_(false)
 {
 	camera_->set_clip_planes(0.1f, 200.0f);
 	g_iso_renderer = this;
@@ -308,7 +314,6 @@ iso_renderer::iso_renderer(const rect& area)
 	calculate_camera();
 
 	light_power_slider_.reset(new slider(150, boost::bind(&iso_renderer::light_power_slider_change, this, _1), 1));
-	light_power_slider_->set_loc((width()-light_power_slider_->width())/2, height()-light_power_slider_->height());
 	light_power_slider_->set_position(light_power_/20000.0);
 
 	init();
@@ -376,10 +381,15 @@ void iso_renderer::handle_draw() const
 			light_power_slider_->draw();
 	}
 	glPopMatrix();
+
+	maximize_button_->draw();
 }
 
 void iso_renderer::handle_process()
 {
+	maximize_button_->set_loc(x() + 5, y() + 5);
+	maximize_button_->process();
+
 	int num_keys = 0;
 	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
 	if(SDL_SCANCODE_Z < num_keys && keystate[SDL_SCANCODE_Z]) {
@@ -455,6 +465,11 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 
 bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 {
+	claimed = maximize_button_->process_event(event, claimed);
+	if(claimed) {
+		return widget::handle_event(event, claimed);
+	}
+
 	if(light_power_slider_) {
 		SDL_Event ev(event);
 		normalize_event(&ev);
@@ -560,8 +575,17 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 	return widget::handle_event(event, claimed);
 }
 
+void iso_renderer::maximize()
+{
+	maximized_ = !maximized_;
+	get_editor().init();
+}
+
 void iso_renderer::init()
 {
+	light_power_slider_->set_loc((width()-light_power_slider_->width())/2, height()-light_power_slider_->height());
+	maximize_button_.reset(new button("Max.", boost::bind(&iso_renderer::maximize, this)));
+
 	fbo_proj_ = glm::ortho(0.0f, float(preferences::actual_screen_width()), float(preferences::actual_screen_height()), 0.0f);
 
 	tex_width_ = graphics::texture::allows_npot() ? width() : graphics::texture::next_power_of_2(width());
@@ -1674,12 +1698,26 @@ void voxel_editor::init()
 		}
 	}
 
-	for(int n = 0; n != 3; ++n) {
-		add_widget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
+	const bool iso_maximized = iso_renderer_ && iso_renderer_->maximized();
+
+	if(!iso_maximized) {
+		for(int n = 0; n != 3; ++n) {
+			add_widget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
+		}
+	}
+
+	rect iso_renderer_area(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height);
+
+	if(iso_maximized) {
+		iso_renderer_area = rect(area_.x() + 5, area_.y() + 5, area_.w() - sidebar_padding - 10, area_.h() - 10);
 	}
 
 	if(!iso_renderer_) {
-		iso_renderer_.reset(new iso_renderer(rect(area_.x() + widget_width + between_padding, area_.y() + widget_height + between_padding, widget_width, widget_height)));
+		iso_renderer_.reset(new iso_renderer(iso_renderer_area));
+	} else {
+		iso_renderer_->set_loc(iso_renderer_area.x(), iso_renderer_area.y());
+		iso_renderer_->set_dim(iso_renderer_area.w(), iso_renderer_area.h());
+		iso_renderer_->init();
 	}
 	add_widget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
 
