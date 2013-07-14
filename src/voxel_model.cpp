@@ -52,6 +52,26 @@ bool operator==(VoxelPos const& p1, VoxelPos const& p2)
 	return p1.x == p2.x && p1.y == p2.y && p1.z == p2.z;
 }
 
+bool operator<(VoxelPos const& p1, VoxelPos const& p2)
+{
+	return std::lexicographical_compare(&p1[0], &p1[0]+3, &p2[0], &p2[0]+3);
+}
+
+bool VoxelPosLess::operator()(const VoxelPos& p1, const VoxelPos& p2) const
+{
+	return p1 < p2;
+}
+
+bool VoxelArea::voxel_in_area(const VoxelPos& pos) const
+{
+	bool result = true;
+	for(int n = 0; n != 3 && result; ++n) {
+		result = pos[n] >= top_left[n] && pos[n] < bot_right[n];
+	}
+
+	return result;
+}
+
 variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel) {
 	std::map<variant,variant> m;
 	std::vector<variant> pos;

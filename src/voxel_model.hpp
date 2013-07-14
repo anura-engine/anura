@@ -54,9 +54,16 @@ inline bool operator!=(const Voxel& a, const Voxel& b) {
 
 struct VoxelArea {
 	VoxelPos top_left, bot_right;
+	bool voxel_in_area(const VoxelPos& pos) const;
 };
 
 bool operator==(VoxelPos const& p1, VoxelPos const& p2);
+bool operator<(VoxelPos const& p1, VoxelPos const& p2);
+
+struct VoxelPosLess
+{
+	bool operator()(const VoxelPos& a, const VoxelPos& b) const;
+};
 struct VoxelPosHash
 {
     std::size_t operator()(VoxelPos const& p) const
@@ -68,7 +75,7 @@ struct VoxelPosHash
 		return seed;
     }
 }; 
-typedef boost::unordered_map<VoxelPos, Voxel, VoxelPosHash> VoxelMap;
+typedef std::map<VoxelPos, Voxel, VoxelPosLess> VoxelMap;
 typedef std::pair<VoxelPos, Voxel> VoxelPair;
 
 variant write_voxels(const std::vector<VoxelPos>& positions, const Voxel& voxel);
