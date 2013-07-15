@@ -197,17 +197,24 @@ std::string serialize_doc_with_objects(variant v)
 	return v.write_json();
 }
 
-variant deserialize_doc_with_objects(const std::string& msg)
+namespace {
+
+variant deserialize_doc_with_objects_internal(const std::string& msg, bool fname)
 {
 	variant v;
 	{
 		const game_logic::wml_formula_callable_read_scope read_scope;
-		try {
-			v = json::parse(msg);
-		} catch(json::parse_error& e) {
-			ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.error_message());
-		}
 
+		if(fname) {
+			v = json::parse_from_file(msg);
+		} else {
+			try {
+				v = json::parse(msg);
+			} catch(json::parse_error& e) {
+				ASSERT_LOG(false, "ERROR PROCESSING FSON: --BEGIN--" << msg << "--END-- ERROR: " << e.error_message());
+			}
+		}
+	
 		if(v.is_map() && v.has_key(variant("serialized_objects"))) {
 			foreach(variant obj_node, v["serialized_objects"]["character"].as_list()) {
 				game_logic::wml_serializable_formula_callable_ptr obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
@@ -227,6 +234,18 @@ variant deserialize_doc_with_objects(const std::string& msg)
 	}
 
 	return v;
+}
+
+}
+
+variant deserialize_doc_with_objects(const std::string& msg)
+{
+	return deserialize_doc_with_objects_internal(msg, false);
+}
+
+variant deserialize_file_with_objects(const std::string& fname)
+{
+	return deserialize_doc_with_objects_internal(fname, true);
 }
 
 }

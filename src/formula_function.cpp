@@ -3425,10 +3425,10 @@ void debug_side_effect(variant v)
 }
 
 FUNCTION_DEF(debug_fn, 2, 2, "debug_fn(msg, expr): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
-	variant res = args()[1]->evaluate(variables);
 	if(preferences::debug()) {
 		debug_side_effect(args()[0]->evaluate(variables));
 	}
+	variant res = args()[1]->evaluate(variables);
 
 	return res;
 FUNCTION_TYPE_DEF
@@ -3663,17 +3663,7 @@ FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [string] flags):
 	}
 
 	try {
-		const std::string contents = sys::read_file(docname);
-		if(contents.empty()) {
-			if(allow_failure) {
-				return variant();
-			}
-
-			ASSERT_LOG(false, "Could not load document: " << docname);
-		}
-
-		const variant v = game_logic::deserialize_doc_with_objects(contents);
-		return v;
+		return game_logic::deserialize_file_with_objects(docname);
 	} catch(json::parse_error& e) {
 		if(allow_failure) {
 			return variant();
