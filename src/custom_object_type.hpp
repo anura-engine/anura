@@ -88,7 +88,7 @@ public:
 							 game_logic::function_symbol_table* symbols=0,
 							 const event_handler_map* base_handlers=NULL) const;
 
-	explicit custom_object_type(const std::string& id, variant node, const custom_object_type* base_type=NULL, const custom_object_type* old_type=NULL);
+	custom_object_type(const std::string& id, variant node, const custom_object_type* base_type=NULL, const custom_object_type* old_type=NULL);
 	~custom_object_type();
 
 	const_custom_object_type_ptr get_sub_object(const std::string& id) const;

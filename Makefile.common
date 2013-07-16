@@ -195,6 +195,7 @@ objects = \
 	src/voxel_model.o \
 	src/voxel_object.o \
 	src/voxel_object_functions.o \
+	src/voxel_object_type.o \
 	src/water.o \
 	src/water_particle_system.o \
 	src/weather_particle_system.o \

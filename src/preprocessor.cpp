@@ -110,7 +110,10 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 		const std::string fname(i, input.end());
 
 		//Search for a colon, which indicates an expression after the filename.
-		std::string::const_iterator colon = std::find(fname.begin(), fname.end(), ':');
+		//The colon must come after finding a period to disambiguate from
+		//module syntax.
+		std::string::const_iterator period = std::find(fname.begin(), fname.end(), '.');
+		std::string::const_iterator colon = std::find(period, fname.end(), ':');
 		if(colon != fname.end() && std::count(fname.begin(), colon, ' ') == 0) {
 			const std::string file(fname.begin(), colon);
 			variant doc = json::parse_from_file(file);

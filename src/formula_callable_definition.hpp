@@ -90,6 +90,7 @@ private:
 formula_callable_definition_ptr modify_formula_callable_definition(const_formula_callable_definition_ptr base_def, int slot, variant_type_ptr new_type, const formula_callable_definition* new_def=NULL);
 
 formula_callable_definition_ptr create_formula_callable_definition(const std::string* beg, const std::string* end, const_formula_callable_definition_ptr base=NULL, variant_type_ptr* begin_types=NULL);
+formula_callable_definition_ptr create_formula_callable_definition(const formula_callable_definition::entry* begin, const formula_callable_definition::entry* end, const_formula_callable_definition_ptr base=NULL);
 
 formula_callable_definition_ptr create_map_formula_callable_definition(variant_type_ptr value_type);
 

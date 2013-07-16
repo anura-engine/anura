@@ -119,6 +119,10 @@ public:
 		}
 	}
 
+	void add(const entry& e) {
+		entries_.push_back(e);
+	}
+
 	void set_base(const_formula_callable_definition_ptr base) { base_ = base; }
 
 	void set_default(const entry& e) {
@@ -211,6 +215,18 @@ formula_callable_definition_ptr create_formula_callable_definition(const std::st
 		} else {
 			def->add(*i1);
 		}
+		++i1;
+	}
+
+	return formula_callable_definition_ptr(def);
+}
+
+formula_callable_definition_ptr create_formula_callable_definition(const formula_callable_definition::entry* i1, const formula_callable_definition::entry* i2, const_formula_callable_definition_ptr base)
+{
+	simple_definition* def = new simple_definition;
+	def->set_base(base);
+	while(i1 != i2) {
+		def->add(*i1);
 		++i1;
 	}
 

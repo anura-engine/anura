@@ -83,9 +83,20 @@ std::string get_module_version() {
 	}
 }
 
-std::string map_file(const std::string& fname)
+std::string map_file(const std::string& passed_fname)
 {
+	std::string fname = passed_fname;
+	std::string module_id;
+	if(std::find(fname.begin(), fname.end(), ':') != fname.end()) {
+		module_id = get_module_id(fname);
+		fname = get_id(fname);
+	}
+
 	foreach(const modules& p, loaded_paths()) {
+		if(module_id.empty() == false && module_id != p.name_) {
+			continue;
+		}
+
 		foreach(const std::string& base_path, p.base_path_) {
 			const std::string path = sys::find_file(base_path + fname);
 			if(sys::file_exists(path)) {
