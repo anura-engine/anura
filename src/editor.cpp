@@ -1206,6 +1206,9 @@ void editor::process()
 		drawing_rect_ = false;
 	}
 
+	const int last_mousex = prev_mousex_;
+	const int last_mousey = prev_mousey_;
+
 	//make middle-clicking drag the screen around.
 	if(prev_mousex_ != -1 && prev_mousey_ != -1 && (buttons&SDL_BUTTON_MIDDLE)) {
 		const int diff_x = mousex - prev_mousex_;
@@ -1340,16 +1343,10 @@ void editor::process()
 	if(tool() == TOOL_PENCIL && dragging_ && buttons) {
 		const int xpos = xpos_ + mousex*zoom_;
 		const int ypos = ypos_ + mousey*zoom_;
-		point p(xpos, ypos);
-		if(std::find(g_current_draw_tiles.begin(), g_current_draw_tiles.end(), p) == g_current_draw_tiles.end()) {
-			g_current_draw_tiles.push_back(p);
+		const int last_xpos = xpos_ + last_mousex*zoom_;
+		const int last_ypos = ypos_ + last_mousey*zoom_;
 
-			if(buttons&SDL_BUTTON_LEFT) {
-				add_tile_rect(p.x, p.y, p.x, p.y);
-			} else {
-				remove_tile_rect(p.x, p.y, p.x, p.y);
-			}
-		}
+		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON_LEFT);
 	}
 
 	if(tool() == TOOL_EDIT_HEXES && dragging_ && buttons) {
@@ -1401,6 +1398,30 @@ void editor::process()
 		lvl->complete_rebuild_tiles_in_background();
 	}
 }
+
+void editor::pencil_motion(int prev_x, int prev_y, int x, int y, bool left_button)
+{
+	if(abs(prev_y - y) > 2 || abs(prev_x - x) > 2) {
+		const int mid_x = (prev_x + x)/2;
+		const int mid_y = (prev_y + y)/2;
+
+		pencil_motion(prev_x, prev_y, mid_x, mid_y, left_button);
+		pencil_motion(mid_x, mid_y, x, y, left_button);
+	}
+
+	point p(x, y);
+	point tile_pos(round_tile_size(x), round_tile_size(y));
+	if(std::find(g_current_draw_tiles.begin(), g_current_draw_tiles.end(), tile_pos) == g_current_draw_tiles.end()) {
+		g_current_draw_tiles.push_back(tile_pos);
+
+		if(left_button) {
+			add_tile_rect(p.x, p.y, p.x, p.y);
+		} else {
+			remove_tile_rect(p.x, p.y, p.x, p.y);
+		}
+	}
+}
+
 
 void editor::set_pos(int x, int y)
 {
@@ -2163,7 +2184,8 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			remove_tile_rect(p.x, p.y, p.x, p.y);
 		}
 		g_current_draw_tiles.clear();
-		g_current_draw_tiles.push_back(p);
+		point tile_pos(round_tile_size(p.x), round_tile_size(p.y));
+		g_current_draw_tiles.push_back(tile_pos);
 	} else if(tool() == TOOL_EDIT_HEXES) {
 		drawing_rect_ = false;
 		dragging_ = true;
@@ -2659,6 +2681,11 @@ void editor::add_tile_rect(int zorder, const std::string& tile_id, int x1, int y
 	foreach(level_ptr lvl, levels_) {
 		std::vector<std::string> old_rect;
 		lvl->get_tile_rect(zorder, x1, y1, x2, y2, old_rect);
+
+		if(std::count(old_rect.begin(), old_rect.end(), tile_id) == old_rect.size()) {
+			//not modifying anything, so skip.
+			continue;
+		}
 
 		redo.push_back(boost::bind(&level::add_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, tile_id));
 		undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
@@ -3438,6 +3465,43 @@ void editor::draw_gui() const
 	}
 
 	glPopMatrix();
+
+	if(dragging_ && g_current_draw_tiles.empty() == false) {
+		varray.clear();
+
+		for(point p : g_current_draw_tiles) {
+			const int x = 1 + p.x - xpos_;
+			const int y = 1 + p.y - ypos_;
+			const int dim = TileSize - 2;
+			varray.push_back(x);
+			varray.push_back(y);
+			varray.push_back(x+dim);
+			varray.push_back(y);
+
+			varray.push_back(x+dim);
+			varray.push_back(y);
+			varray.push_back(x+dim);
+			varray.push_back(y+dim);
+
+			varray.push_back(x+dim);
+			varray.push_back(y+dim);
+			varray.push_back(x);
+			varray.push_back(y+dim);
+
+			varray.push_back(x);
+			varray.push_back(y+dim);
+			varray.push_back(x);
+			varray.push_back(y);
+		}
+
+		glColor4ub(255, 255, 255, 128);
+
+#if defined(USE_GLES2)
+		gles2::manager gles2_manager(gles2::get_simple_shader());
+		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
+		glDrawArrays(GL_LINES, 0, varray.size()/2);
+#endif
+	}
 
 	//draw the difficulties of segments.
 	if(lvl_->segment_width() > 0 || lvl_->segment_height() > 0) {

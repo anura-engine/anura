@@ -2986,12 +2986,12 @@ void level::add_tile(const level_tile& t)
 	prepare_tiles_for_drawing();
 }
 
-void level::add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& str)
+bool level::add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& str)
 {
-	add_tile_rect_vector(zorder, x1, y1, x2, y2, std::vector<std::string>(1, str));
+	return add_tile_rect_vector(zorder, x1, y1, x2, y2, std::vector<std::string>(1, str));
 }
 
-void level::add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
+bool level::add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
 {
 	if(x1 > x2) {
 		std::swap(x1, x2);
@@ -3000,7 +3000,7 @@ void level::add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, con
 	if(y1 > y2) {
 		std::swap(y1, y2);
 	}
-	add_tile_rect_vector_internal(zorder, x1, y1, x2, y2, tiles);
+	return add_tile_rect_vector_internal(zorder, x1, y1, x2, y2, tiles);
 }
 
 void level::add_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile)
@@ -3203,7 +3203,7 @@ void level::get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::v
 	}
 }
 
-void level::clear_tile_rect(int x1, int y1, int x2, int y2)
+bool level::clear_tile_rect(int x1, int y1, int x2, int y2)
 {
 	if(x1 > x2) {
 		std::swap(x1, x2);
@@ -3224,6 +3224,8 @@ void level::clear_tile_rect(int x1, int y1, int x2, int y2)
 			changed = true;
 		}
 	}
+	
+	return changed;
 }
 
 void level::clear_hex_tile_rect(int x1, int y1, int x2, int y2)
@@ -3300,10 +3302,13 @@ struct tile_on_point {
 	}
 };
 
-void level::remove_tiles_at(int x, int y)
+bool level::remove_tiles_at(int x, int y)
 {
+	const int nitems = tiles_.size();
 	tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), tile_on_point(x,y)), tiles_.end());
+	const bool result = nitems != tiles_.size();
 	prepare_tiles_for_drawing();
+	return result;
 }
 
 std::vector<point> level::get_solid_contiguous_region(int xpos, int ypos) const

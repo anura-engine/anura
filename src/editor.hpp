@@ -302,6 +302,8 @@ private:
 
 	void generate_remove_commands(entity_ptr e, std::vector<boost::function<void()> >& undo, std::vector<boost::function<void()> >& redo);
 
+	void pencil_motion(int prev_x, int prev_y, int x, int y, bool left_button);
+
 	level_ptr lvl_;
 
 	std::vector<level_ptr> levels_;
