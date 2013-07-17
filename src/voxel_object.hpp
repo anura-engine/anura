@@ -35,81 +35,81 @@
 
 namespace voxel
 {
-	class voxel_object : public game_logic::formula_callable
-	{
-	public:
-		voxel_object(const std::string& type, float x, float y, float z);
-		explicit voxel_object(const variant& node);
-		virtual ~voxel_object();
+class voxel_object : public game_logic::formula_callable
+{
+public:
+	voxel_object(const std::string& type, float x, float y, float z);
+	explicit voxel_object(const variant& node);
+	virtual ~voxel_object();
 
-		void draw(const graphics::lighting_ptr lighting, camera_callable_ptr camera) const;
-		void process(level& lvl);
-		bool handle_sdl_event(const SDL_Event& event, bool claimed);
+	void draw(const graphics::lighting_ptr lighting, camera_callable_ptr camera) const;
+	void process(level& lvl);
+	bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
-		const gles2::program_ptr& shader() const { return shader_; }
+	const gles2::program_ptr& shader() const { return shader_; }
 
-		const glm::vec3& translation() const { return translation_; } 
-		const glm::vec3& rotation() const { return rotation_; } 
-		const glm::vec3& scale() const { return scale_; } 
+	const glm::vec3& translation() const { return translation_; } 
+	const glm::vec3& rotation() const { return rotation_; } 
+	const glm::vec3& scale() const { return scale_; } 
 
-		float x() const { return translation_.x; }
-		float y() const { return translation_.y; }
-		float z() const { return translation_.z; }
+	float x() const { return translation_.x; }
+	float y() const { return translation_.y; }
+	float z() const { return translation_.z; }
 
-		float rotatation_x() const { return rotation_.x; }
-		float rotatation_y() const { return rotation_.y; }
-		float rotatation_z() const { return rotation_.z; }
+	float rotation_x() const { return rotation_.x; }
+	float rotation_y() const { return rotation_.y; }
+	float rotation_z() const { return rotation_.z; }
 
-		float scale_x() const { return scale_.x; }
-		float scale_y() const { return scale_.y; }
-		float scale_z() const { return scale_.z; }
+	float scale_x() const { return scale_.x; }
+	float scale_y() const { return scale_.y; }
+	float scale_z() const { return scale_.z; }
 
-		voxel_model_ptr& model() { return model_; }
-		const voxel_model_ptr& model_const() { return model_; }
+	voxel_model_ptr& model() { return model_; }
+	const voxel_model_ptr& model_const() { return model_; }
 
-		void add_widget(const gui::widget_ptr& w);
-		void add_widgets(std::vector<gui::widget_ptr>* widgets);
-		void clear_widgets();
-		void remove_widget(gui::widget_ptr w);
-		gui::widget_ptr get_widget_by_id(const std::string& id);
-		gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
-		std::vector<variant> get_variant_widget_list() const;
+	void add_widget(const gui::widget_ptr& w);
+	void add_widgets(std::vector<gui::widget_ptr>* widgets);
+	void clear_widgets();
+	void remove_widget(gui::widget_ptr w);
+	gui::widget_ptr get_widget_by_id(const std::string& id);
+	gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
+	std::vector<variant> get_variant_widget_list() const;
 
-		bool paused() const { return paused_; }
-		void set_paused(bool p=true);
+	bool paused() const { return paused_; }
+	void set_paused(bool p=true);
 
-		size_t cycle() const { return cycle_; }
+	size_t cycle() const { return cycle_; }
 
-		std::string type() const { return type_; }
-	protected:
-	private:
-		DECLARE_CALLABLE(voxel_object);
+	std::string type() const { return type_; }
+protected:
+private:
+	DECLARE_CALLABLE(voxel_object);
 
-		std::string type_;
+	std::string type_;
 
-		bool paused_;
+	bool paused_;
 
-		size_t cycle_;
+	size_t cycle_;
 
-		glm::vec3 translation_;
-		glm::vec3 rotation_;
-		glm::vec3 scale_;
+	glm::vec3 translation_;
+	glm::vec3 rotation_;
+	glm::vec3 scale_;
 
-		voxel_model_ptr model_;
+	voxel_model_ptr model_;
 
-		gles2::program_ptr shader_;
+	gles2::program_ptr shader_;
 
-		typedef std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list;
-		widget_list widgets_;	
+	typedef std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list;
+	widget_list widgets_;	
 
-		GLuint a_normal_;
-		GLuint mvp_matrix_;
+	GLuint a_normal_;
+	GLuint mvp_matrix_;
 
-		voxel_object();
-	};
+	voxel_object();
+};
 
-	typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
-	typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
+typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
+typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
 }
 
 namespace voxel_object_factory

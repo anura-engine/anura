@@ -877,6 +877,9 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	true_z_(node["truez"].as_bool(false)), tx_(node["tx"].as_decimal().as_float()), 
 	ty_(node["ty"].as_decimal().as_float()), tz_(node["tz"].as_decimal().as_float())
 {
+	if(editor_force_standing_) {
+		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
+	}
 	boost::scoped_ptr<strict_mode_scope> strict_scope;
 	if(is_strict_) {
 		strict_scope.reset(new strict_mode_scope);
