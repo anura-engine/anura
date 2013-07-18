@@ -26,8 +26,11 @@
 #include "checkbox.hpp"
 #include "color_picker.hpp"
 #include "dropdown_widget.hpp"
+#include "font.hpp"
+#include "formatter.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
+#include "preferences.hpp"
 #include "widget_settings_dialog.hpp"
 
 namespace gui
@@ -59,9 +62,11 @@ namespace gui
 		set_clear_bg_amount(255);
 	
 		grid_ptr g = grid_ptr(new grid(2));
+		g->set_max_height(height()-50);
 		g->add_col(new label("ID:", text_size_, font_name_));
-		text_editor_widget* id_edit = new text_editor_widget(150, 30);
-		id_edit->set_on_user_change_handler([&](){widget_->set_id(id_edit->text());});
+		text_editor_widget_ptr id_edit = new text_editor_widget(150, 30);
+		id_edit->set_text(widget_->id());
+		id_edit->set_on_user_change_handler([=](){widget_->set_id(id_edit->text());});
 		g->add_col(id_edit);
 
 		g->add_col(new label("", text_size(), font()))
@@ -99,7 +104,7 @@ namespace gui
 				widget_->set_frame_set("");
 			}
 		});
-		frame_set->set_zorder(10);
+		frame_set->set_zorder(20);
 		g->add_col(new label("Frame Set:", text_size(), font()));
 		g->add_col(frame_set);
 
@@ -115,6 +120,89 @@ namespace gui
 		g->add_col(new label("pad height:", text_size(), font()))
 			.add_col(new slider(120, [&](double f){widget_->set_padding(widget_->get_pad_width(), int(f*100.0));}, 
 			widget_->get_pad_height()/100.0, 1));
+
+		text_editor_widget_ptr tooltip_edit = new text_editor_widget(150, 30);
+		tooltip_edit->set_text(widget_->tooltip_text());
+		tooltip_edit->set_on_user_change_handler([=](){widget_->set_tooltip_text(tooltip_edit->text());});
+		g->add_col(new label("Tooltip:", text_size_, font_name_))
+			.add_col(tooltip_edit);
+		g->add_col(new label("Tooltip Height:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_tooltip_fontsize(int(f*72.0+6.0));}, 
+			(widget_->tooltip_fontsize()-6.0)/72.0, 1));
+		
+		std::vector<std::string> fonts = font::get_available_fonts();
+		fonts.insert(fonts.begin(), "");
+		dropdown_widget_ptr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
+		font_list->set_font_size(14);
+		font_list->set_dropdown_height(height());
+		auto fit = std::find(fonts.begin(), fonts.end(), widget_->tooltip_font());
+		font_list->set_selection(fit == fonts.end() ? 0 : fit-fonts.begin());
+		font_list->set_on_select_handler([&](int n, const std::string& s){widget_->set_tooltip_font(s);});
+		font_list->set_zorder(19);
+		g->add_col(new label("Tooltip Font:", text_size(), font()))
+			.add_col(font_list);
+		g->add_col(new label("Tooltip Color:", text_size(), font()))
+			.add_col(new button(new label("Choose...", text_size_, font_name_), [&](){
+				int mx, my;
+				SDL_GetMouseState(&mx, &my);
+				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
+				my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
+				//mx -= x();
+				my -= y();
+				color_picker* cp = new color_picker(rect(0, 0, 200, 600), [&](const graphics::color& color){widget_->set_tooltip_color(color);});
+				cp->set_primary_color(graphics::color(widget_->tooltip_color()));
+
+				grid_ptr gg = new grid(1);
+				gg->allow_selection();
+				gg->swallow_clicks();
+				gg->set_show_background(true);
+				gg->allow_draw_highlight(false);
+				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){remove_widget(gg); init();}});
+				gg->set_zorder(100);
+				gg->add_col(cp);
+				add_widget(gg, x()-mx-200, my);
+		}));
+
+		g->add_col(new label("Tooltip Delay:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_tooltip_delay(int(f*5000.0));}, 
+			widget_->get_tooltip_delay()/5000.0, 1));
+
+		g->add_col(new label("", text_size(), font()))
+			.add_col(new checkbox(widget_ptr(new label("Claim Mouse Events", text_size_, font_name_)), 
+			claim_mouse_events(), 
+			[&](bool checked){widget_->set_claim_mouse_events(checked);}, 
+			BUTTON_SIZE_NORMAL_RESOLUTION));
+
+		g->add_col(new label("", text_size(), font()))
+			.add_col(new checkbox(widget_ptr(new label("Draw with Object shader", text_size_, font_name_)), 
+			draw_with_object_shader(), 
+			[&](bool checked){widget_->set_draw_with_object_shader(checked);}, 
+			BUTTON_SIZE_NORMAL_RESOLUTION));
+
+		g->add_col(new label("Width:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_dim(int(f*width()), widget_->height());}, 
+			widget_->width()/double(width()), 1));
+		g->add_col(new label("Height:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_dim(widget_->width(), int(f*height()));}, 
+			widget_->height()/double(height()), 1));
+
+		g->add_col(new label("X:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_loc(int(f*width()), widget_->y());}, 
+			widget_->x()/double(width()), 1));
+		g->add_col(new label("Y:", text_size(), font()))
+			.add_col(new slider(120, [&](double f){widget_->set_loc(widget_->x(), int(f*height()));}, 
+			widget_->y()/double(height()), 1));
+
+		grid* zg = new grid(3);
+		text_editor_widget_ptr z_edit = new text_editor_widget(60, 30);
+		z_edit->set_text(formatter() << widget_->zorder());
+		z_edit->set_on_user_change_handler([=](){widget_->set_zorder(atoi(z_edit->text().c_str()));});
+		zg->add_col(new button(new label("+", text_size(), font()), [=](){widget_->set_zorder(widget_->zorder()+1); z_edit->set_text(formatter() << widget_->zorder());}))
+			.add_col(z_edit)
+			.add_col(new button(new label("-", text_size(), font()), [=](){widget_->set_zorder(widget_->zorder()-1); z_edit->set_text(formatter() << widget_->zorder());}));
+		g->add_col(new label("Z-order:", text_size(), font()))
+			.add_col(zg);
+
 		/*
 		*** disabled_opacity : int
 		*** id: string 
@@ -125,18 +213,18 @@ namespace gui
 		*** frame_size: int
 		*** frame_pad_width: int
 		*** frame_pad_height: int
-		tooltip_delay: int
-		tooltip_color: colorwheel
-		tooltip_font: string/font_selector
-		tooltip_text: string
-		tooltip_size: int
-		claim_mouse_events: bool
-		draw_with_object_shader: bool
-		x: int
-		y: int
-		width: int
-		height: int
-		zorder: int
+		*** tooltip_delay: int
+		*** tooltip_color: colorwheel
+		*** tooltip_font: string/font_selector
+		*** tooltip_text: string
+		*** tooltip_size: int
+		*** claim_mouse_events: bool
+		*** draw_with_object_shader: bool
+		*** x: int
+		*** y: int
+		*** width: int
+		*** height: int
+		*** zorder: int
 		align_h: left|right|center
 		align_v: left|right|center
 		on_process: function

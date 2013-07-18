@@ -139,7 +139,7 @@ private:
 	widget_editor& editor_;
 	gui::widget_ptr placement_;
 	WIDGET_TOOL selected_;
-	std::set<gui::widget_ptr> widget_list_;
+	std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list_;
 	SDL_Color text_color_;
 	size_t info_bar_height_;
 	gui::widget_ptr highlighted_widget_;
@@ -287,12 +287,20 @@ void widget_window::handle_draw() const
 void widget_window::handle_process()
 {
 	++cycle_;
+
+	for(auto w : widget_list_) {
+		w->process();
+	}
 }
 
 bool widget_window::handle_event(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		return true;
+	}
+
+	for(auto w : widget_list_) {
+		w->process_event(event, false);
 	}
 
 	switch(event.type) {

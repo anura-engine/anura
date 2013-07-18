@@ -75,6 +75,14 @@ public:
 	int width() const;
 	int height() const;
 	void set_tooltip(const std::string& str, int fontsize=18, const SDL_Color& color=graphics::color_yellow(), const std::string& font="");
+	void set_tooltip_text(const std::string& str);
+	void set_tooltip_fontsize(int fontsize);
+	void set_tooltip_color(const graphics::color& color);
+	void set_tooltip_font(const std::string& font);
+	std::string tooltip_text() const { return tooltip_text_; }
+	int tooltip_fontsize() const { return tooltip_fontsize_; }
+	std::string tooltip_font() const { return tooltip_font_; }
+	SDL_Color tooltip_color() const { return tooltip_color_; }
 	bool visible() { return visible_; }
 	void set_visible(bool visible) { visible_ = visible; }
 	void set_id(const std::string& new_id) { id_ = new_id; }
@@ -116,6 +124,11 @@ public:
 	int get_pad_height() const { return pad_h_; }
 	void set_padding(int pw, int ph) { pad_w_ = pw; pad_h_ = ph; }
 
+	HORIZONTAL_ALIGN halign() const { return align_h_; }
+	VERTICAL_ALIGN valign() const { return align_v_; }
+	void set_halign(HORIZONTAL_ALIGN h) { align_h_ = h; }
+	void set_valign(VERTICAL_ALIGN v) { align_v_ = v; }
+
 	virtual std::vector<widget_ptr> get_children() const { return std::vector<widget_ptr>(); }
 
 	void process();
@@ -148,6 +161,7 @@ DECLARE_CALLABLE(widget);
 	int true_y_;
 	boost::shared_ptr<gui::tooltip_item> tooltip_;
 	bool tooltip_displayed_;
+	std::string tooltip_text_;
 	int tooltip_fontsize_;
 	SDL_Color tooltip_color_;
 	std::string tooltip_font_;

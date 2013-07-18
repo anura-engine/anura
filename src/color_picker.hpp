@@ -33,8 +33,9 @@ namespace gui
 	class color_picker : public widget
 	{
 	public:
-		color_picker(const rect& area, boost::function<void (const graphics::color&)>* onchange = 0);
-		color_picker(const variant& v, game_logic::formula_callable* e);
+		color_picker(const rect& area);
+		explicit color_picker(const rect& area, boost::function<void (const graphics::color&)> change_fun);
+		explicit color_picker(const variant& v, game_logic::formula_callable* e);
 		virtual ~color_picker();
 		void set_change_handler(boost::function<void (const graphics::color&)> change_fun) { onchange_ = change_fun; }
 

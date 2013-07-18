@@ -52,15 +52,30 @@ namespace
 
 namespace gui
 {
-	color_picker::color_picker(const rect& area, boost::function<void (const graphics::color&)>* onchange)
+	color_picker::color_picker(const rect& area)
 		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
 	{
 		set_loc(area.x(), area.y());
 		set_dim(area.w(), area.h());
-		if(onchange != NULL) {
-			onchange_ = *onchange;
+
+		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
+			palette_.push_back(graphics::color(default_palette[n]));
 		}
+
+		primary_ = graphics::color("black");
+		secondary_ = graphics::color("white");
+
+		init();
+	}
+
+	color_picker::color_picker(const rect& area, boost::function<void (const graphics::color&)> change_fun)
+		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
+		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
+		onchange_(change_fun)
+	{
+		set_loc(area.x(), area.y());
+		set_dim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
 			palette_.push_back(graphics::color(default_palette[n]));
