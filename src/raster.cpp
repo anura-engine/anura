@@ -971,6 +971,33 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 #endif
 	}
 
+	void draw_hollow_rect(const rect& r, const graphics::color& color)
+	{
+		GLfloat varray[] = {
+			r.x(), r.y(),
+			r.x() + r.w(), r.y(),
+			r.x() + r.w(), r.y() + r.h(),
+			r.x(), r.y() + r.h()
+		};
+#if defined(USE_GLES2)
+		glColor4ub(color.r(), color.g(), color.b(), color.a());
+		gles2::manager gles2_manager(gles2::get_simple_shader());
+		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
+		glDrawArrays(GL_LINE_LOOP, 0, sizeof(varray)/sizeof(GLfloat)/2);
+		glColor4f(1.0, 1.0, 1.0, 1.0);
+#else
+		glDisable(GL_TEXTURE_2D);
+		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
+		glColor4ub(color.r(), color.g(), color.b(), color.a());
+		glVertexPointer(2, GL_FLOAT, 0, varray);
+		glDrawArrays(GL_LINE_LOOP, 0, sizeof(varray)/sizeof(GLfloat)/2);
+		glColor4ub(255, 255, 255, 255);
+		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
+		glEnable(GL_TEXTURE_2D);
+#endif
+	}
+
+
 	void draw_circle(int x, int y, int radius)
 	{
 		static std::vector<GLfloat> varray;

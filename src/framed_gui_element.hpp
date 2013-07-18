@@ -37,6 +37,7 @@ public:
 
 	int corner_height() const { return corner_height_; }
 	
+	static std::vector<std::string> get_elements();
 private:
 	void blit_subsection(rect subsection, int x, int y, int w, int h) const;
 	

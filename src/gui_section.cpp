@@ -28,6 +28,15 @@ typedef std::map<std::string, const_gui_section_ptr> cache_map;
 cache_map cache;
 }
 
+std::vector<std::string> gui_section::get_sections()
+{
+	std::vector<std::string> v;
+	for(auto it : cache) {
+		v.push_back(it.first);
+	}
+	return v;
+}
+
 void gui_section::init(variant node)
 {
 	foreach(const variant& section_node, node["section"].as_list()) {

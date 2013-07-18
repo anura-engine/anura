@@ -200,7 +200,9 @@ objects = \
 	src/water_particle_system.o \
 	src/weather_particle_system.o \
 	src/widget.o \
+	src/widget_editor.o \
 	src/widget_factory.o \
+	src/widget_settings_dialog.o \
 	src/wml_formula_callable.o \
 	src/unit_test.o \
 	src/formula_test.o \

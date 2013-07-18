@@ -19,13 +19,17 @@
 #include "asserts.hpp"
 #include "button.hpp"
 #include "custom_object_functions.hpp"
+#include "dropdown_widget.hpp"
 #include "formula.hpp"
 #include "formula_callable_visitor.hpp"
+#include "grid_widget.hpp"
 #include "iphone_controls.hpp"
 #include "label.hpp"
 #include "raster.hpp"
+#include "slider.hpp"
 #include "surface_cache.hpp"
 #include "framed_gui_element.hpp"
+#include "widget_settings_dialog.hpp"
 #include "widget_factory.hpp"
 
 namespace gui {
@@ -216,6 +220,69 @@ variant button::get_value(const std::string& key) const
 void button::visit_values(game_logic::formula_callable_visitor& visitor)
 {
 	visitor.visit(&handler_arg_);
+}
+
+void button::set_hpadding(int hpad)
+{
+	hpadding_ = hpad;
+	setup();
+}
+
+void button::set_vpadding(int vpad)
+{
+	vpadding_ = vpad;
+	setup();
+}
+
+
+widget_settings_dialog* button::settings_dialog(int x, int y, int w, int h)
+{
+	widget_settings_dialog* d = widget::settings_dialog(x,y,w,h);
+
+	grid_ptr g(new grid(2));
+	g->add_col(new label("H Pad:", d->text_size(), d->font()));
+	g->add_col(new slider(120, [&](double f){set_dim(0,0); this->set_hpadding(int(f*100.0));}, hpadding_/100.0, 1));
+	g->add_col(new label("V Pad:", d->text_size(), d->font()));
+	g->add_col(new slider(120, [&](double f){set_dim(0,0); this->set_vpadding(int(f*100.0));}, vpadding_/100.0, 1));
+
+	std::vector<std::string> v;
+	v.push_back("normal");
+	v.push_back("double");
+	dropdown_widget_ptr resolution(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+	resolution->set_font_size(14);
+	resolution->set_dropdown_height(h);
+	resolution->set_selection(button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? 0 : 1);
+	resolution->set_on_select_handler([&](int n, const std::string& s){
+		this->button_resolution_ = s == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
+		this->setup();
+	});
+	resolution->set_zorder(11);
+	g->add_col(new label("Resolution:", d->text_size(), d->font()));
+	g->add_col(resolution);
+
+	v.clear();
+	v.push_back("default");
+	v.push_back("normal");
+	dropdown_widget_ptr style(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+	style->set_font_size(14);
+	style->set_dropdown_height(h);
+	style->set_selection(button_style_ == BUTTON_STYLE_DEFAULT ? 0 : 1);
+	style->set_on_select_handler([&](int n, const std::string& s){
+		this->button_style_ = s == "normal" ? BUTTON_STYLE_NORMAL : BUTTON_STYLE_DEFAULT;
+		this->setup();
+	});
+	style->set_zorder(10);
+	g->add_col(new label("Style:", d->text_size(), d->font()));
+	g->add_col(style);
+
+	// label: widget
+	// on_click: function
+	// *** resolution: string/dropdown (normal/double)
+	// *** style: string/dropdown (default/formal)
+	// *** hpad: int
+	// *** vpad: int
+	d->add_widget(g);
+	return d;
 }
 
 }

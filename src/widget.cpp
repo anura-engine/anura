@@ -23,6 +23,7 @@
 #include "tooltip.hpp"
 #include "i18n.hpp"
 #include "widget.hpp"
+#include "widget_settings_dialog.hpp"
 #include "iphone_controls.hpp"
 
 #include <iostream>
@@ -342,6 +343,18 @@ widget_ptr widget::get_widget_by_id(const std::string& id)
 	return widget_ptr();
 }
 
+
+widget_settings_dialog* widget::settings_dialog(int x, int y, int w, int h)
+{
+	return new widget_settings_dialog(x,y,w,h,this);
+}
+
+dialog_ptr widget::get_settings_dialog(int x, int y, int w, int h)
+{
+
+	return settings_dialog(x,y,w,h);
+}
+
 BEGIN_DEFINE_CALLABLE_NOBASE(widget)
 
 DEFINE_FIELD(draw_area, "[int]")
@@ -466,6 +479,16 @@ bool widget::in_widget(int xloc, int yloc) const
 	if(yloc > 32767) {yloc -= 65536;}
 	return xloc > x() && xloc < x() + width() &&
 			yloc > y() && yloc < y() + height();
+}
+
+void widget::set_frame_set(const std::string& frame) 
+{ 
+	if(!frame.empty()) {
+		frame_set_ = framed_gui_element::get(frame); 
+	} else {
+		frame_set_.reset();
+	}
+	frame_set_name_ = frame; 
 }
 
 bool widget_sort_zorder::operator()(const widget_ptr lhs, const widget_ptr rhs) const

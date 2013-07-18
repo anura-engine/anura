@@ -28,6 +28,16 @@ namespace {
 	cache_map cache;
 }
 
+std::vector<std::string> framed_gui_element::get_elements()
+{
+	std::vector<std::string> v;
+	for(auto it : cache) {
+		v.push_back(it.first);
+	}
+	return v;
+}
+
+
 void framed_gui_element::init(variant node)
 {
 	foreach(variant obj, node["framed_gui_element"].as_list()) {

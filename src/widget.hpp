@@ -54,6 +54,10 @@ struct color_save_context
 	GLfloat current_color[4];
 };
 
+class widget_settings_dialog;
+class dialog;
+typedef boost::intrusive_ptr<dialog> dialog_ptr;
+
 class widget : public virtual input::listener
 {
 public:
@@ -73,11 +77,15 @@ public:
 	void set_tooltip(const std::string& str, int fontsize=18, const SDL_Color& color=graphics::color_yellow(), const std::string& font="");
 	bool visible() { return visible_; }
 	void set_visible(bool visible) { visible_ = visible; }
+	void set_id(const std::string& new_id) { id_ = new_id; }
 	std::string id() const { return id_; }
 	bool disabled() const { return disabled_; }
 	void enable(bool val=true) { disabled_ = val; }
 	bool claim_mouse_events() const { return claim_mouse_events_; }
 	void set_claim_mouse_events(bool claim=true) { claim_mouse_events_ = claim; }
+
+	int disabled_opacity() const { return disabled_opacity_; }
+	void set_disabled_opacity(int n) { disabled_opacity_ = std::min(255, std::max(n, 0)); }
 
 	bool draw_with_object_shader() const { return draw_with_object_shader_; }
 	void set_draw_with_object_shader(bool dwos=true) { draw_with_object_shader_ = dwos; }
@@ -97,7 +105,9 @@ public:
 	int zorder() const { return zorder_; }
 
 	int get_frame_resolution() const { return resolution_; }
-	void set_frame_set(const std::string& frame) { frame_set_ = framed_gui_element::get(frame); frame_set_name_ = frame; }
+	void set_frame_resolution(int r) { resolution_ = r; }
+	void set_frame_set(const std::string& frame);
+	std::string frame_set_name() const { return frame_set_name_; }
 
 	int get_alpha() const { return display_alpha_; }
 	void set_alpha(int a=256) { display_alpha_ = a; }
@@ -113,6 +123,8 @@ public:
 	void perform_visit_values(game_logic::formula_callable_visitor& visitor) {
 		visit_values(visitor);
 	}
+
+	dialog_ptr get_settings_dialog(int x, int y, int w, int h);
 protected:
 	widget();
 	explicit widget(const variant& v, game_logic::formula_callable* e);
@@ -125,6 +137,7 @@ protected:
 	virtual void handle_process();
 	virtual void recalc_loc();
 	virtual bool in_widget(int xloc, int yloc) const;
+	virtual widget_settings_dialog* settings_dialog(int x, int y, int w, int h);
 private:
 DECLARE_CALLABLE(widget);
 	virtual void visit_values(game_logic::formula_callable_visitor& visitor) {}

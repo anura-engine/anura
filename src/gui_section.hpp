@@ -41,6 +41,8 @@ public:
 	void blit(int x, int y, int w, int h) const;
 	int width() const { return area_.w()*2; }
 	int height() const { return area_.h()*2; }
+
+	static std::vector<std::string> get_sections();
 private:
 	graphics::texture texture_;
 	rect area_;
