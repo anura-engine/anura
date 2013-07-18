@@ -18,6 +18,7 @@
 #include <map>
 
 #include <boost/tuple/tuple.hpp>
+#include <boost/filesystem.hpp>
 
 #include "asserts.hpp"
 #include "color_utils.hpp"
@@ -248,6 +249,24 @@ int char_height(int size, const std::string& fn)
 void reload_font_paths()
 {
 	get_font_list().clear();
+}
+
+
+std::vector<std::string> get_available_fonts()
+{
+	using namespace boost::filesystem;
+	auto& res = get_font_list();
+	if(res.empty()) {
+		module::get_unique_filenames_under_dir("data/fonts/", &res);
+	}
+	std::vector<std::string> v;
+	for(auto it : res) {
+		path p(it.second);
+		if(p.extension() == ".ttf") {
+			v.push_back(p.stem().generic_string());
+		}
+	}
+	return v;
 }
 
 }

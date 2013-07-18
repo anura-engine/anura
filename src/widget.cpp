@@ -36,8 +36,10 @@ widget::widget()
 	tooltip_displayed_(false), visible_(true), zorder_(0), environ_(0),
 	tooltip_display_delay_(0), tooltip_ticks_(INT_MAX), resolution_(0),
 	display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
-	draw_with_object_shader_(true)
-	{}
+	draw_with_object_shader_(true), tooltip_fontsize_(18)
+	{
+		tooltip_color_.r = tooltip_color_.g = tooltip_color_.b = tooltip_color_.a = 255;
+	}
 
 widget::widget(const variant& v, game_logic::formula_callable* e) 
 	: environ_(e), w_(0), h_(0), x_(0), y_(0), zorder_(0), 
@@ -46,7 +48,7 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	tooltip_display_delay_(v["tooltip_delay"].as_int(500)), tooltip_ticks_(INT_MAX),
 	resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 	pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
-	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true))
+	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18)
 {
 	set_alpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 	if(v.has_key("width")) {
@@ -90,6 +92,7 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 		on_process_ = boost::bind(&widget::process_delegate, this);
 		ffl_on_process_ = get_environment()->create_formula(v["on_process"]);
 	}
+	tooltip_color_.r = tooltip_color_.g = tooltip_color_.b = tooltip_color_.a = 255;
 	if(v.has_key("tooltip")) {
 		if(v["tooltip"].is_string()) {
 			SDL_Color color = v.has_key("tooltip_color") ? graphics::color(v["tooltip_color"]).as_sdl_color() : graphics::color_yellow();
@@ -234,8 +237,15 @@ void widget::normalize_event(SDL_Event* event, bool translate_coords)
 
 void widget::set_tooltip(const std::string& str, int fontsize, const SDL_Color& color, const std::string& font)
 {
+	tooltip_text_ = str;
+	tooltip_fontsize_ = fontsize;
+	tooltip_color_ = color;
+	tooltip_font_ = font;
 	if(tooltip_displayed_ && tooltip_ != NULL) {
-		if(tooltip_->text == str) {
+		if(tooltip_->text == str 
+			&& tooltip_fontsize_ == fontsize 
+			&& tooltip_color_.r == color.r && tooltip_color_.g == color.g && tooltip_color_.b == color.b && tooltip_color_.a == color.a 
+			&& tooltip_font_ == font) {
 			return;
 		}
 		gui::remove_tooltip(tooltip_);
@@ -490,6 +500,27 @@ void widget::set_frame_set(const std::string& frame)
 	}
 	frame_set_name_ = frame; 
 }
+
+void widget::set_tooltip_text(const std::string& str)
+{
+	set_tooltip(str, tooltip_fontsize_, tooltip_color_, tooltip_font_);
+}
+
+void widget::set_tooltip_fontsize(int fontsize)
+{
+	set_tooltip(tooltip_text_, fontsize, tooltip_color_, tooltip_font_);
+}
+
+void widget::set_tooltip_color(const graphics::color& color)
+{
+	set_tooltip(tooltip_text_, tooltip_fontsize_, color.as_sdl_color(), tooltip_font_);
+}
+
+void widget::set_tooltip_font(const std::string& font)
+{
+	set_tooltip(tooltip_text_, tooltip_fontsize_, tooltip_color_, font);
+}
+
 
 bool widget_sort_zorder::operator()(const widget_ptr lhs, const widget_ptr rhs) const
 {

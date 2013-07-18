@@ -18,6 +18,7 @@
 #define FONT_HPP_INCLUDED
 
 #include <string>
+#include <vector>
 
 #include "graphics.hpp"
 #include "texture.hpp"
@@ -43,6 +44,8 @@ int char_width(int size, const std::string& fn="");
 int char_height(int size, const std::string& fn="");
 
 void reload_font_paths();
+std::vector<std::string> get_available_fonts();
+
 
 }
 
