@@ -220,6 +220,9 @@
 		C0917B13175480F7004307B0 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C0917B1617670039004307B0 /* camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B1417670039004307B0 /* camera.cpp */; };
 		C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B17176700BC004307B0 /* simplex_noise.cpp */; };
+		C09185191797BE9B00F415C0 /* widget_editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C09185161797BE9B00F415C0 /* widget_editor.cpp */; };
+		C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C09185171797BE9B00F415C0 /* widget_settings_dialog.cpp */; };
+		C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C091851B1797BEB600F415C0 /* voxel_object_type.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -700,6 +703,11 @@
 		C0917B1517670039004307B0 /* camera.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = camera.hpp; sourceTree = "<group>"; };
 		C0917B17176700BC004307B0 /* simplex_noise.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = simplex_noise.cpp; sourceTree = "<group>"; };
 		C0917B18176700BD004307B0 /* simplex_noise.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = simplex_noise.hpp; sourceTree = "<group>"; };
+		C09185161797BE9B00F415C0 /* widget_editor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = widget_editor.cpp; sourceTree = "<group>"; };
+		C09185171797BE9B00F415C0 /* widget_settings_dialog.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = widget_settings_dialog.cpp; sourceTree = "<group>"; };
+		C09185181797BE9B00F415C0 /* widget_settings_dialog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget_settings_dialog.hpp; sourceTree = "<group>"; };
+		C091851B1797BEB600F415C0 /* voxel_object_type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_object_type.cpp; sourceTree = "<group>"; };
+		C091851C1797BEB600F415C0 /* voxel_object_type.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_object_type.hpp; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
@@ -1244,6 +1252,8 @@
 				C090E8F21787967200E6FC5A /* voxel_model.hpp */,
 				C08DF5AF178BC1C9006E061D /* voxel_object_functions.cpp */,
 				C08DF5B0178BC1C9006E061D /* voxel_object_functions.hpp */,
+				C091851B1797BEB600F415C0 /* voxel_object_type.cpp */,
+				C091851C1797BEB600F415C0 /* voxel_object_type.hpp */,
 				C08DF5B1178BC1C9006E061D /* voxel_object.cpp */,
 				C08DF5B2178BC1CA006E061D /* voxel_object.hpp */,
 				C010C733160AFD4D006E7D90 /* water.cpp */,
@@ -1254,8 +1264,11 @@
 				C010C738160AFD4D006E7D90 /* weather_particle_system.hpp */,
 				C010C739160AFD4D006E7D90 /* widget.cpp */,
 				C010C73A160AFD4D006E7D90 /* widget.hpp */,
+				C09185161797BE9B00F415C0 /* widget_editor.cpp */,
 				C010C73B160AFD4D006E7D90 /* widget_factory.cpp */,
 				C010C73C160AFD4D006E7D90 /* widget_factory.hpp */,
+				C09185171797BE9B00F415C0 /* widget_settings_dialog.cpp */,
+				C09185181797BE9B00F415C0 /* widget_settings_dialog.hpp */,
 				C010C73F160AFD4D006E7D90 /* wml_formula_callable.cpp */,
 				C010C740160AFD4D006E7D90 /* wml_formula_callable.hpp */,
 			);
@@ -1549,6 +1562,9 @@
 				C08DF5AE178BC1AA006E061D /* lighting.cpp in Sources */,
 				C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */,
 				C08DF5B4178BC1CA006E061D /* voxel_object.cpp in Sources */,
+				C09185191797BE9B00F415C0 /* widget_editor.cpp in Sources */,
+				C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */,
+				C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
