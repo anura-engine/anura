@@ -147,7 +147,6 @@ namespace gui
 				SDL_GetMouseState(&mx, &my);
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
 				my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
-				//mx -= x();
 				my -= y();
 				color_picker* cp = new color_picker(rect(0, 0, 200, 600), [&](const graphics::color& color){widget_->set_tooltip_color(color);});
 				cp->set_primary_color(graphics::color(widget_->tooltip_color()));
@@ -160,7 +159,7 @@ namespace gui
 				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){remove_widget(gg); init();}});
 				gg->set_zorder(100);
 				gg->add_col(cp);
-				add_widget(gg, x()-mx-200, my);
+				add_widget(gg, x()-mx-100, my);
 		}));
 
 		g->add_col(new label("Tooltip Delay:", text_size(), font()))
@@ -203,30 +202,20 @@ namespace gui
 		g->add_col(new label("Z-order:", text_size(), font()))
 			.add_col(zg);
 
+		grid* ahg = new grid(3);
+		ahg->add_col(new button(new label("Left", text_size(), font()), [&](){widget_->set_halign(HALIGN_LEFT);}))
+			.add_col(new button(new label("Center", text_size(), font()), [&](){widget_->set_halign(HALIGN_CENTER);}))
+			.add_col(new button(new label("Right", text_size(), font()), [&](){widget_->set_halign(HALIGN_RIGHT);}));
+		g->add_col(new label("Horiz Align:", text_size(), font()))
+			.add_col(ahg);
+
+		grid* avg = new grid(3);
+		avg->add_col(new button(new label("Top", text_size(), font()), [&](){widget_->set_valign(VALIGN_TOP);}))
+			.add_col(new button(new label("Center", text_size(), font()), [&](){widget_->set_valign(VALIGN_CENTER);}))
+			.add_col(new button(new label("Bottom", text_size(), font()), [&](){widget_->set_valign(VALIGN_BOTTOM);}));
+		g->add_col(new label("Vert Align:", text_size(), font()))
+			.add_col(avg);
 		/*
-		*** disabled_opacity : int
-		*** id: string 
-		*** enabled: bool
-		*** visible: bool
-		*** alpha: int
-		*** frame_set: string
-		*** frame_size: int
-		*** frame_pad_width: int
-		*** frame_pad_height: int
-		*** tooltip_delay: int
-		*** tooltip_color: colorwheel
-		*** tooltip_font: string/font_selector
-		*** tooltip_text: string
-		*** tooltip_size: int
-		*** claim_mouse_events: bool
-		*** draw_with_object_shader: bool
-		*** x: int
-		*** y: int
-		*** width: int
-		*** height: int
-		*** zorder: int
-		align_h: left|right|center
-		align_v: left|right|center
 		on_process: function
 		children: widget_list
 		*/

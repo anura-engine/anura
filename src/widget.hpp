@@ -25,6 +25,7 @@
 #include "input.hpp"
 #include "tooltip.hpp"
 #include "framed_gui_element.hpp"
+#include "variant_utils.hpp"
 
 namespace game_logic {
 class formula_callable_visitor;
@@ -126,8 +127,8 @@ public:
 
 	HORIZONTAL_ALIGN halign() const { return align_h_; }
 	VERTICAL_ALIGN valign() const { return align_v_; }
-	void set_halign(HORIZONTAL_ALIGN h) { align_h_ = h; }
-	void set_valign(VERTICAL_ALIGN v) { align_v_ = v; }
+	void set_halign(HORIZONTAL_ALIGN h) { align_h_ = h; recalc_loc(); }
+	void set_valign(VERTICAL_ALIGN v) { align_v_ = v; recalc_loc(); }
 
 	virtual std::vector<widget_ptr> get_children() const { return std::vector<widget_ptr>(); }
 
@@ -138,6 +139,7 @@ public:
 	}
 
 	dialog_ptr get_settings_dialog(int x, int y, int w, int h);
+	variant write();
 protected:
 	widget();
 	explicit widget(const variant& v, game_logic::formula_callable* e);
@@ -150,6 +152,7 @@ protected:
 	virtual void handle_process();
 	virtual void recalc_loc();
 	virtual bool in_widget(int xloc, int yloc) const;
+	virtual variant handle_write();
 	virtual widget_settings_dialog* settings_dialog(int x, int y, int w, int h);
 private:
 DECLARE_CALLABLE(widget);

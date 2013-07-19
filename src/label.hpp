@@ -73,6 +73,8 @@ protected:
 	void set_texture(graphics::texture t);
 
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual variant handle_write();
+	virtual widget_settings_dialog* settings_dialog(int x, int y, int w, int h);
 
 protected:
 	DECLARE_CALLABLE(label);

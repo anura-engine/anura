@@ -45,7 +45,7 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	: environ_(e), w_(0), h_(0), x_(0), y_(0), zorder_(0), 
 	true_x_(0), true_y_(0), disabled_(false), disabled_opacity_(v["disabled_opacity"].as_int(127)),
 	tooltip_displayed_(false), id_(v["id"].as_string_default()), align_h_(HALIGN_LEFT), align_v_(VALIGN_TOP),
-	tooltip_display_delay_(v["tooltip_delay"].as_int(500)), tooltip_ticks_(INT_MAX),
+	tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(INT_MAX),
 	resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 	pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
 	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18)
@@ -521,6 +521,82 @@ void widget::set_tooltip_font(const std::string& font)
 	set_tooltip(tooltip_text_, tooltip_fontsize_, tooltip_color_, font);
 }
 
+variant widget::write()
+{
+	variant v = widget::handle_write();
+	merge_variant_over(&v, handle_write());	
+	return v;
+}
+
+variant widget::handle_write()
+{
+	variant_builder res;
+	res.add("rect", x());
+	res.add("rect", y());
+	res.add("rect", width());
+	res.add("rect", height());
+	if(zorder() != 0) {
+		res.add("zorder", zorder());
+	}
+	if(ffl_on_process_) {
+		res.add("on_process", ffl_on_process_->str());
+	}
+	if(tooltip_text().empty() == false 
+		|| tooltip_color().r != 255
+		|| tooltip_color().g != 255
+		|| tooltip_color().b != 255
+		|| tooltip_color().a != 255
+		|| tooltip_font().empty() == false
+		|| tooltip_fontsize() != 18) {
+		variant_builder tt;
+		tt.add("color", graphics::color(tooltip_color()).write());
+		tt.add("text", tooltip_text());
+		tt.add("font", tooltip_font());
+		tt.add("size", tooltip_fontsize());
+		res.add("tooltip", tt.build());
+	}
+	if(!visible_) {
+		res.add("visible", false);
+	}
+	if(halign() != HALIGN_LEFT) {
+		res.add("align_h", halign() == HALIGN_RIGHT ? "right" : "center");
+	}
+	if(valign() != VALIGN_TOP) {
+		res.add("align_v", valign() == VALIGN_BOTTOM ? "bottom" : "center");
+	}
+	if(disabled()) {
+		res.add("enabled", false);
+	}
+	if(!frame_set_name().empty()) {
+		res.add("frame", frame_set_name());
+	}
+	if(get_pad_width() != 0 || get_pad_height() != 0) {
+		res.add("frame_padding", get_pad_width());
+		res.add("frame_padding", get_pad_height());
+	}
+	if(get_tooltip_delay() != 0) {
+		res.add("tooltip_delay", get_tooltip_delay());
+	}
+	if(disabled_opacity() != 127) {
+		res.add("disabled_opacity", disabled_opacity());
+	}
+	if(id().empty() == false) {
+		res.add("id", id());
+	}
+	if(get_frame_resolution() != 0) {
+		res.add("frame_size", get_frame_resolution());
+	}
+	if(draw_with_object_shader_ == false) {
+		res.add("draw_with_object_shader", false);
+	}
+	if(claim_mouse_events_ == false) {
+		res.add("claim_mouse_events", false);
+	}
+	if(get_alpha() != 256) {
+		res.add("alpha", get_alpha());
+	}
+	return res.build();
+}
 
 bool widget_sort_zorder::operator()(const widget_ptr lhs, const widget_ptr rhs) const
 {

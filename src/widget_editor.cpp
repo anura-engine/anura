@@ -95,9 +95,13 @@ gui::widget_ptr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 	case TOOL_LABEL:
 		p.reset(new gui::label("label text", 14, default_font_name));
 		break;
-	case TOOL_GRID:
-		p.reset(new gui::grid(1));
+	case TOOL_GRID: {
+		gui::grid* gg = new gui::grid(1);
+		gg->set_dim(100,100);
+		gg->set_show_background(true);
+		p.reset(gg);
 		break;
+	}
 	case TOOL_DIALOG: {
 		gui::dialog* d = new gui::dialog(x, y, 100, 100);
 		d->set_background_frame("empty_window");
@@ -135,6 +139,8 @@ public:
 	widget_window(const rect& area, widget_editor& editor);
 	virtual ~widget_window();
 	void init();
+
+	void save(const std::string& fname);
 private:
 	widget_editor& editor_;
 	gui::widget_ptr placement_;
@@ -194,6 +200,13 @@ private:
 		}
 		add_widget(ww_, 0, 0);
 
+		gui::button_ptr save_button = new gui::button(new gui::label("Save", graphics::color("antique_white").as_sdl_color(), 16, default_font_name),
+			[&](){ww_->save(fname_);});
+		if(fname_.empty()) {
+			save_button->enable(false);
+		}
+		add_widget(save_button, area_.x2() - sidebar_width, area_.y() + 4);
+
 		tool_borders_.clear();
 		gui::grid_ptr tools_grid(new gui::grid(5));
 		for(size_t n = WIDGET_TOOL_FIRST; n != NUM_WIDGET_TOOLS; ++n) {
@@ -205,7 +218,7 @@ private:
 		}
 		tools_grid->finish_row();
 
-		add_widget(tools_grid, area_.x2() - sidebar_width, area_.y() + 4);
+		add_widget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
 
 		// need a checkbox for relative/absolute mode
 
@@ -243,6 +256,15 @@ widget_window::~widget_window()
 
 void widget_window::init()
 {
+}
+
+void widget_window::save(const std::string& fname)
+{
+	variant_builder res;
+	for(auto widget : widget_list_) {
+		res.add("widgets", widget->write());
+	}
+	sys::write_file(fname, res.build().write_json());
 }
 
 void widget_window::handle_draw() const
@@ -383,8 +405,8 @@ UTILITY(widget_editor)
 	gui_section::init(gui_node);
 	framed_gui_element::init(gui_node);
 
-	if(!fname.empty() && !sys::file_exists(fname)) {
-		// create new file
+	if(!fname.empty() && sys::file_exists(fname)) {
+		// load file
 	}
 	
 	boost::intrusive_ptr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));

@@ -16,12 +16,24 @@
 */
 #include <iostream>
 
+#include "button.hpp"
+#include "color_picker.hpp"
+#include "dropdown_widget.hpp"
 #include "font.hpp"
-#include "label.hpp"
-#include "raster.hpp"
+#include "grid_widget.hpp"
 #include "i18n.hpp"
+#include "label.hpp"
+#include "preferences.hpp"
+#include "raster.hpp"
+#include "slider.hpp"
+#include "text_editor_widget.hpp"
+#include "widget_settings_dialog.hpp"
 
 namespace gui {
+
+namespace {
+	const int default_font_size = 14;
+}
 
 label::label(const std::string& text, int size, const std::string& font)
 	: text_(i18n::tr(text)), border_size_(0), size_(size), down_(false),
@@ -62,7 +74,7 @@ label::label(const variant& v, game_logic::formula_callable* e)
 		}
 	}
 
-	size_ = v.has_key("size") ? v["size"].as_int() : 14;
+	size_ = v.has_key("size") ? v["size"].as_int() : default_font_size;
 	if(v.has_key("on_click")) {
 		ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
 		ffl_click_handler_ = get_environment()->create_formula(v["on_click"]);
@@ -228,6 +240,87 @@ bool label::handle_event(const SDL_Event& event, bool claimed)
 	}
 	return claimed;
 }
+
+variant label::handle_write()
+{
+	variant_builder res;
+	res.add("type", "label");
+	res.add("text", text());
+	if(color_.r != 255 || color_.g != 255 || color_.b != 255 || color_.a != 255) {
+		res.add("color", graphics::color(color_).write());
+	}
+	if(size() != default_font_size) {
+		res.add("size", size());
+	}
+	if(font().empty() == false) {
+		res.add("font", font());
+	}
+	if(border_color_) {
+		res.add("border_color", graphics::color(*border_color_).write());
+		if(border_size_ != 2) {
+			res.add("border_size", border_size_);
+		}
+	}
+	if(highlight_on_mouseover_) {
+		res.add("highlight_on_mouseover", true);
+	}
+	if(claim_mouse_events()) {
+		res.add("claim_mouse_events", true);
+	}
+	return res.build();
+}
+
+widget_settings_dialog* label::settings_dialog(int x, int y, int w, int h)
+{
+	widget_settings_dialog* d = widget::settings_dialog(x,y,w,h);
+
+	grid_ptr g(new grid(2));
+
+	text_editor_widget_ptr text_edit = new text_editor_widget(150, 30);
+	text_edit->set_text(text());
+	text_edit->set_on_user_change_handler([=](){set_text(text_edit->text());});
+	g->add_col(new label("Text:", d->text_size(), d->font()))
+		.add_col(text_edit);
+
+	g->add_col(new label("Size:", d->text_size(), d->font())).
+		add_col(new slider(120, [&](double f){set_font_size(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
+
+	std::vector<std::string> fonts = font::get_available_fonts();
+	fonts.insert(fonts.begin(), "");
+	dropdown_widget_ptr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
+	font_list->set_font_size(14);
+	font_list->set_dropdown_height(height());
+	auto fit = std::find(fonts.begin(), fonts.end(), font());
+	font_list->set_selection(fit == fonts.end() ? 0 : fit-fonts.begin());
+	font_list->set_on_select_handler([&](int n, const std::string& s){set_font(s);});
+	font_list->set_zorder(19);
+	g->add_col(new label("Font:", d->text_size(), d->font()))
+		.add_col(font_list);
+	g->add_col(new label("Color:", d->text_size(), d->font()))
+		.add_col(new button(new label("Choose...", d->text_size(), d->font()), [&](){
+			int mx, my;
+			SDL_GetMouseState(&mx, &my);
+			mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
+			my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
+			my -= d->y();
+			color_picker* cp = new color_picker(rect(0, 0, 200, 600), [&](const graphics::color& color){set_color(color.as_sdl_color());});
+			cp->set_primary_color(graphics::color(color_));
+
+			grid_ptr gg = new grid(1);
+			gg->allow_selection();
+			gg->swallow_clicks();
+			gg->set_show_background(true);
+			gg->allow_draw_highlight(false);
+			gg->register_selection_callback([=](int n){if(n != 0){d->remove_widget(gg); d->init();}});
+			gg->set_zorder(100);
+			gg->add_col(cp);
+			d->add_widget(gg, d->x()-mx-100, my);
+	}));
+
+	d->add_widget(g);
+	return d;
+}
+
 
 BEGIN_DEFINE_CALLABLE(label, widget)
 	DEFINE_FIELD(text, "string")

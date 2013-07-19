@@ -34,10 +34,15 @@
 
 namespace gui {
 
+namespace {
+	const int default_hpadding = 10;
+	const int default_vpadding = 4;
+}
+
 button::button(const std::string& str, boost::function<void()> onclick)
   : label_(new label(str, graphics::color_white())),
     onclick_(onclick), button_resolution_(BUTTON_SIZE_NORMAL_RESOLUTION),
-	button_style_(BUTTON_STYLE_NORMAL), hpadding_(10), vpadding_(4),
+	button_style_(BUTTON_STYLE_NORMAL), hpadding_(default_hpadding), vpadding_(default_vpadding),
 	down_(false)
 {
 	set_environment();
@@ -46,7 +51,7 @@ button::button(const std::string& str, boost::function<void()> onclick)
 
 button::button(widget_ptr label, boost::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION button_resolution)
   : label_(label), onclick_(onclick), button_resolution_(button_resolution), button_style_(button_style),
-	down_(false), hpadding_(10), vpadding_(4)
+	down_(false), hpadding_(default_hpadding), vpadding_(default_vpadding)
 	
 {
 	set_environment();
@@ -78,8 +83,8 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 	onclick_ = boost::bind(&button::click, this);
 	button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 	button_style_ = v["style"].as_string_default("default") == "default" ? BUTTON_STYLE_DEFAULT : BUTTON_STYLE_NORMAL;
-	hpadding_ = v["hpad"].as_int(10);
-	vpadding_ = v["vpad"].as_int(4);
+	hpadding_ = v["hpad"].as_int(default_hpadding);
+	vpadding_ = v["vpad"].as_int(default_vpadding);
 	if(v.has_key("padding")) {
 		ASSERT_LOG(v["padding"].num_elements() == 2, "Incorrect number of padding elements specifed." << v["padding"].num_elements());
 		hpadding_ = v["padding"][0].as_int();
@@ -283,6 +288,25 @@ widget_settings_dialog* button::settings_dialog(int x, int y, int w, int h)
 	// *** vpad: int
 	d->add_widget(g);
 	return d;
+}
+
+variant button::handle_write()
+{
+	variant_builder res;
+	res.add("type", "button");
+	if(hpadding_ != default_hpadding && vpadding_ != default_vpadding) {
+		res.add("padding", hpadding_);
+		res.add("padding", vpadding_);
+	}
+	res.add("resolution", button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? "normal" : "double");
+	res.add("style", button_style_ == BUTTON_STYLE_DEFAULT ? "default" : "normal");
+	if(click_handler_) {
+		res.add("on_click", click_handler_->str());
+	} else {
+		res.add("on_click", "def()");
+	}
+	res.add("label", label_->write());
+	return res.build();
 }
 
 }
