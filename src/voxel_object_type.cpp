@@ -86,11 +86,23 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		data_entry.private_counter = 1;
 		property_type_entries.push_back(data_entry);
 
+		property_entry data_prop;
+		data_prop.id = "data";
+		data_prop.storage_slot = 0;
+		data_prop.persistent = false;
+		slot_properties_.push_back(data_prop);
+
 		game_logic::formula_callable_definition::entry value_entry("value");
 		value_entry.write_type = variant_type::get_any();
 		value_entry.set_variant_type(variant_type::get_any());
 		value_entry.private_counter = 1;
 		property_type_entries.push_back(value_entry);
+
+		property_entry value_prop;
+		value_prop.id = "value";
+		value_prop.storage_slot = 1;
+		value_prop.persistent = false;
+		slot_properties_.push_back(value_prop);
 
 		num_storage_slots_ += 2;
 

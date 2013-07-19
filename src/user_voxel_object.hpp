@@ -43,6 +43,7 @@ private:
 
 	const_voxel_object_type_ptr type_;
 	std::vector<variant> data_;
+	int data_target_;
 };
 
 }
