@@ -43,7 +43,7 @@ public:
 	virtual ~voxel_object();
 
 	void draw(const graphics::lighting_ptr lighting, camera_callable_ptr camera) const;
-	void process(level& lvl);
+	virtual void process(level& lvl);
 	bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
 	const gles2::program_ptr& shader() const { return shader_; }

@@ -52,8 +52,11 @@ const std::string get_module_name();
 const std::string get_module_pretty_name();
 std::string get_module_version();
 std::string map_file(const std::string& fname);
+
+enum MODULE_PREFIX_BEHAVIOR { MODULE_PREFIX, MODULE_NO_PREFIX };
 void get_unique_filenames_under_dir(const std::string& dir,
-                                    std::map<std::string, std::string>* file_map);
+                                    std::map<std::string, std::string>* file_map,
+									MODULE_PREFIX_BEHAVIOR prefix=MODULE_PREFIX);
 
 void get_files_in_dir(const std::string& dir,
                       std::vector<std::string>* files,

@@ -207,6 +207,7 @@ objects = \
 	src/unit_test.o \
 	src/formula_test.o \
 	src/loading_screen.o \
+	src/user_voxel_object.o \
 	src/utility_object_compiler.o \
 	src/utility_query.o \
 	src/utility_render_level.o \

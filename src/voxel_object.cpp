@@ -17,7 +17,9 @@
 #ifdef USE_GLES2
 
 #include "json_parser.hpp"
+#include "object_events.hpp"
 #include "profile_timer.hpp"
+#include "user_voxel_object.hpp"
 #include "variant_utils.hpp"
 #include "voxel_object.hpp"
 
@@ -41,7 +43,7 @@ namespace voxel
 		model_->set_animation("stand");
 
 		std::map<variant,variant> items;
-		items[variant("model")] = variant("data/voxel_objects/sword.cfg");
+		items[variant("model")] = variant("data/voxel_models/sword.cfg");
 		boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
 		weapon->set_animation("stand");
 
@@ -181,7 +183,7 @@ namespace voxel_object_factory
 		}
 		ASSERT_LOG(node.has_key("type"), "No 'type' attribute found in definition.");
 		const std::string& type = node["type"].as_string();
-		return voxel_object_ptr(new voxel_object(node));
+		return voxel_object_ptr(new user_voxel_object(node));
 	}
 }
 

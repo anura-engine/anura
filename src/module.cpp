@@ -122,12 +122,13 @@ std::map<std::string, std::string>::const_iterator find(const std::map<std::stri
 }
 
 void get_unique_filenames_under_dir(const std::string& dir,
-                                    std::map<std::string, std::string>* file_map)
+                                    std::map<std::string, std::string>* file_map,
+									MODULE_PREFIX_BEHAVIOR prefix)
 {
 	foreach(const modules& p, loaded_paths()) {
 		foreach(const std::string& base_path, p.base_path_) {
 			const std::string path = base_path + dir;
-			sys::get_unique_filenames_under_dir(path, file_map, p.abbreviation_ + ":");
+			sys::get_unique_filenames_under_dir(path, file_map, prefix == MODULE_PREFIX ? p.abbreviation_ + ":" : "");
 		}
 	}
 }

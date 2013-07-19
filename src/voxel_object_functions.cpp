@@ -19,6 +19,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_function_registry.hpp"
 #include "isoworld.hpp"
+#include "user_voxel_object.hpp"
 #include "voxel_object.hpp"
 #include "voxel_object_functions.hpp"
 
@@ -77,7 +78,7 @@ FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal 
 
 	variant arg4 = EVAL_ARG(4);
 
-	voxel::voxel_object_ptr obj(new voxel::voxel_object(type, x, y, z));
+	voxel::voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
 
 	variant commands;
 	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
