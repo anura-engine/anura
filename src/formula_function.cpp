@@ -54,6 +54,7 @@
 #include "level.hpp"
 #include "json_parser.hpp"
 #include "variant_utils.hpp"
+#include "voxel_model.hpp"
 
 #include "graphics.hpp"
 #include "module.hpp"
@@ -4534,6 +4535,13 @@ FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> o
 FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(get_modified_object)
+
+FUNCTION_DEF(voxel_model, 1, 1, "voxel_model(str): create and return new voxel model")
+	std::map<variant,variant> m;
+	m[variant("model")] = args()[0]->evaluate(variables);
+	return variant(new voxel::voxel_model(variant(&m)));
+RETURN_TYPE("builtin voxel_model")
+END_FUNCTION_DEF(voxel_model)
 
 }
 

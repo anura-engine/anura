@@ -42,13 +42,6 @@ namespace voxel
  		model_.reset(new voxel_model(node));
 		model_->set_animation("stand");
 
-		std::map<variant,variant> items;
-		items[variant("model")] = variant("data/voxel_models/sword.cfg");
-		boost::intrusive_ptr<voxel_model> weapon(new voxel_model(variant(&items)));
-		weapon->set_animation("stand");
-
-		model_->attach_child(weapon, "handle", "melee_weapon");
-
 		if(node.has_key("translation")) {
 			translation_ = variant_to_vec3(node["translation"]);
 		}
@@ -124,7 +117,19 @@ namespace voxel
 		paused_ = p;
 	}
 
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(voxel_object)
+	BEGIN_DEFINE_FN(attach_model, "(voxel_model,string,string) ->commands")
+		variant model_var = FN_ARG(0);
+		variant child_point = FN_ARG(1);
+		variant parent_point = FN_ARG(2);
+
+		boost::intrusive_ptr<voxel_model> model(model_var.convert_to<voxel_model>());
+
+		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
+		return variant(new game_logic::fn_command_callable(fn));
+	END_DEFINE_FN
+		
 	DEFINE_FIELD(world, "builtin world")
 		return variant(level::current().iso_world().get());
 	DEFINE_FIELD(widgets, "[builtin widget]")

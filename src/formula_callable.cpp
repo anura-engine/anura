@@ -12,4 +12,12 @@ void map_formula_callable::visit_values(formula_callable_visitor& visitor)
 	}
 }
 
+fn_command_callable::fn_command_callable(std::function<void()> fn) : fn_(fn)
+{}
+
+void fn_command_callable::execute(formula_callable& context) const
+{
+	fn_();
+}
+
 }

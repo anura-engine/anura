@@ -17,6 +17,7 @@
 #ifndef FORMULA_CALLABLE_HPP_INCLUDED
 #define FORMULA_CALLABLE_HPP_INCLUDED
 
+#include <functional>
 #include <iostream>
 #include <map>
 #include <string>
@@ -250,6 +251,14 @@ private:
 	//intrusive_ptr<formula_expression>
 	const formula_expression* expr_;
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
+};
+
+class fn_command_callable : public command_callable {
+public:
+	explicit fn_command_callable(std::function<void()> fn);
+private:
+	virtual void execute(formula_callable& context) const;
+	std::function<void()> fn_;
 };
 
 }
