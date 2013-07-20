@@ -109,6 +109,8 @@ namespace voxel
 		for(auto w : widgets_) {
 			w->process();
 		}
+
+		++cycle_;
 	}
 
 	bool voxel_object::handle_sdl_event(const SDL_Event& event, bool claimed)
@@ -168,6 +170,8 @@ namespace voxel
 		if(obj.model_) {
 			obj.model_->set_animation(value.as_string());
 		}
+	DEFINE_FIELD(cycle, "int")
+		return variant(obj.cycle_);
 	END_DEFINE_CALLABLE(voxel_object)
 }
 
