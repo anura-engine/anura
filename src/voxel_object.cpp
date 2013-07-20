@@ -125,6 +125,8 @@ namespace voxel
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(voxel_object)
+	DEFINE_FIELD(world, "builtin world")
+		return variant(level::current().iso_world().get());
 	DEFINE_FIELD(widgets, "[builtin widget]")
 		std::vector<variant> v;
 		for(auto w : obj.widgets_) {
