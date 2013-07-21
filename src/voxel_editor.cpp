@@ -65,6 +65,7 @@ const char* ToolIcons[] = {
 	"editor_add_object",
 	"editor_eyedropper",
 	"editor_rect_select",
+	"editor_flood",
 	NULL
 };
 
@@ -73,6 +74,7 @@ enum VOXEL_TOOL {
 	TOOL_PENCIL_ABOVE,
 	TOOL_PICKER,
 	TOOL_SELECT,
+	TOOL_FLOOD,
 	NUM_VOXEL_TOOLS,
 };
 
@@ -183,6 +185,67 @@ voxel_editor& get_editor() {
 	return *g_voxel_editor;
 }
 
+void expand_flood(std::set<VoxelPos, VoxelPosLess>& flood, const Voxel& vox, const VoxelMap& map)
+{
+	bool found = false;
+	std::set<VoxelPos, VoxelPosLess> flood_copy = flood;
+	for(const VoxelPos& pos : flood_copy) {
+		VoxelPos adj[6];
+		get_voxel_pos_adjacent(pos, adj);
+		for(const VoxelPos& adj_pos : adj) {
+			if(flood.count(adj_pos) == 0) {
+				auto itor = map.find(adj_pos);
+				if(itor != map.end() && itor->second.color == vox.color) {
+					flood.insert(adj_pos);
+					found = true;
+				}
+			}
+		}
+	}
+	
+	if(found) {
+		expand_flood(flood, vox, map);
+	}
+}
+
+void flood_voxel()
+{
+	if(get_editor().get_cursor()) {
+		VoxelPos cursor = *get_editor().get_cursor();
+		const Layer& layer = get_editor().layer();
+		if(layer.map.count(cursor) == 0) {
+			return;
+		}
+
+		Voxel vox = layer.map.find(cursor)->second;
+
+		std::set<VoxelPos, VoxelPosLess> flood;
+		flood.insert(cursor);
+		expand_flood(flood, vox, layer.map);
+		fprintf(stderr, "FLOOD: %d\n", (int)flood.size());
+
+		VoxelMap old_values;
+		for(const VoxelPos& pos : flood) {
+			old_values.insert(*layer.map.find(pos));
+		}
+
+		vox.color = get_editor().current_color();
+
+		get_editor().execute_command(
+			[=]() {
+				for(const VoxelPos& pos : flood) {
+					get_editor().set_voxel(pos, vox);
+				}
+			},
+			[=]() {
+				for(auto p : old_values) {
+					get_editor().set_voxel(p.first, p.second);
+				}
+			}
+		);
+	}
+}
+
 void pencil_voxel()
 {
 	if(get_editor().get_cursor()) {
@@ -208,8 +271,6 @@ void pencil_voxel()
 				get_editor().delete_voxel(cursor);
 			}
 		});
-
-		get_editor().set_voxel(cursor, voxel);
 	}
 }
 
@@ -1272,6 +1333,11 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 				if(get_editor().get_cursor()) {
 					voxels_drawn_on_this_drag_.insert(normalize_pos(*get_editor().get_cursor()));
 				}
+				break;
+			}
+
+			case TOOL_FLOOD: {
+				flood_voxel();
 				break;
 			}
 

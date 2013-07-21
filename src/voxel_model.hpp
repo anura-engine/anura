@@ -38,6 +38,7 @@
 namespace voxel {
 
 typedef glm::ivec3 VoxelPos;
+void get_voxel_pos_adjacent(const VoxelPos& pos, VoxelPos* adj);
 struct Voxel {
 	Voxel() : nlayer(-1) {}
 	graphics::color color;

@@ -49,6 +49,14 @@ std::vector<std::string> parse_variant_list_or_csv_string(variant v);
 
 void merge_variant_over(variant* aptr, variant b);
 
+//Function which does a 'smart merge' of variants. This is usually simply
+//an 'overwrite', but if dst and src are both lists, then it will
+//append the lists. If dst and src are both maps, then it will merge
+//the maps, calling a smart merge on values with the same key.
+//
+//If dst and src contain 'incompatible' types this function will assert.
+void smart_merge_variants(variant* dst, const variant& src);
+
 void visit_variants(variant v, boost::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);

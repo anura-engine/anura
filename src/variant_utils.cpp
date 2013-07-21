@@ -112,6 +112,26 @@ void merge_variant_over(variant* aptr, variant b)
 	}
 }
 
+void smart_merge_variants(variant* dst_ptr, const variant& src)
+{
+	variant& dst = *dst_ptr;
+
+	if(dst.is_map() && src.is_map()) {
+		for(auto p : src.as_map()) {
+			if(dst.as_map().count(p.first) == 0) {
+				dst.add_attr(p.first, p.second);
+			} else {
+				smart_merge_variants(dst.get_attr_mutable(p.first), p.second);
+			}
+		}
+	} else if(dst.is_list() && src.is_list()) {
+		dst = dst + src;
+	} else {
+		ASSERT_LOG(src.type() == dst.type() || src.is_null() || dst.is_null(), "Incompatible types in merge: " << dst.write_json() << " and " << src.write_json() << " Destination from: " << dst.debug_location() << " Source from: " << src.debug_location());
+		dst = src;
+	}
+}
+
 void visit_variants(variant v, boost::function<void (variant)> fn)
 {
 	fn(v);

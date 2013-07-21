@@ -30,6 +30,20 @@
 
 namespace voxel {
 
+void get_voxel_pos_adjacent(const VoxelPos& pos, VoxelPos* adj)
+{
+	for(int n = 0; n != 6; ++n) {
+		adj[n] = pos;
+	}
+
+	adj[0].x++;
+	adj[1].x--;
+	adj[2].y++;
+	adj[3].y--;
+	adj[4].z++;
+	adj[5].z--;
+}
+
 namespace
 {
 	std::vector<glm::vec3>& normal_vectors()

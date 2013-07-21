@@ -96,7 +96,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 		return variant(std::string(input.begin()+1, input.end()));
 	}
 
-	if(input == "@base" || input == "@derive" || input == "@call" || input == "@flatten" || input == "@class") {
+	if(input == "@base" || input == "@derive" || input == "@merge" || input == "@call" || input == "@flatten" || input == "@class") {
 		return variant(input);
 	}
 

@@ -129,7 +129,7 @@ json_macro::json_macro(const std::string& code, std::map<std::string, json_macro
 
 enum VAL_TYPE { VAL_NONE, VAL_OBJ, VAL_ARRAY };
 struct JsonObject {
-	JsonObject(variant::debug_info debug_info, bool preprocess) : type(VAL_NONE), is_base(false), is_call(false), is_deriving(false), require_comma(false), require_colon(false), flatten(false), info(debug_info), begin_macro(NULL), use_preprocessor(preprocess) {}
+	JsonObject(variant::debug_info debug_info, bool preprocess) : type(VAL_NONE), is_base(false), is_call(false), is_deriving(false), is_merging(false), require_comma(false), require_colon(false), flatten(false), info(debug_info), begin_macro(NULL), use_preprocessor(preprocess) {}
 	std::map<variant, variant> obj;
 	std::vector<variant> array;
 	std::set<variant> obj_already_seen;
@@ -140,6 +140,7 @@ struct JsonObject {
 	bool is_base;
 	bool is_call;
 	bool is_deriving;
+	bool is_merging;
 
 	bool require_comma;
 	bool require_colon;
@@ -175,7 +176,11 @@ struct JsonObject {
 				setup_base(v);
 				is_deriving = false;
 			} else {
-				obj[name] = v;
+				if(is_merging && obj.count(name)) {
+					smart_merge_variants(&obj[name], v);
+				} else {
+					obj[name] = v;
+				}
 			}
 		} else {
 			if(flatten && v.is_list()) {
@@ -425,6 +430,11 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 						stack.back().is_deriving = true;
 					}
 
+					if(stack.back().type == VAL_OBJ && s == "@merge") {
+						stack.back().is_deriving = true;
+						stack.back().is_merging = true;
+					}
+
 				} else {
 					v = variant(s);
 				}
@@ -636,11 +646,27 @@ UNIT_TEST(json_flatten)
 
 UNIT_TEST(json_derive)
 {
-	std::string doc = "{\"@derive\": {x: 4, y:3}, y: 2, a: 7}";
+	std::string doc = "{\"@derive\": {x: 4, y:3, m: {a: 5, y:2}}, y: 2, a: 7, m: {a: 2}}";
 	variant v = parse(doc);
 	CHECK_EQ(v["x"], variant(4));
 	CHECK_EQ(v["y"], variant(2));
 	CHECK_EQ(v["a"], variant(7));
+	CHECK_EQ(v["m"].is_map(), true);
+	CHECK_EQ(v["m"].num_elements(), 1);
+	CHECK_EQ(v["m"]["a"], variant(2));
+}
+
+UNIT_TEST(json_merge)
+{
+	std::string doc = "{\"@merge\": {x: 4, y:3, m: {a: 5, y:2}}, y: 2, a: 7, m: {a: 2}}";
+	variant v = parse(doc);
+	CHECK_EQ(v["x"], variant(4));
+	CHECK_EQ(v["y"], variant(2));
+	CHECK_EQ(v["a"], variant(7));
+	CHECK_EQ(v["m"].is_map(), true);
+	CHECK_EQ(v["m"].num_elements(), 2);
+	CHECK_EQ(v["m"]["a"], variant(2));
+	CHECK_EQ(v["m"]["y"], variant(2));
 }
 
 UNIT_TEST(json_macro)
