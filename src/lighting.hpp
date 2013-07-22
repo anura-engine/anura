@@ -20,6 +20,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include "color_utils.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "graphics.hpp"
@@ -27,6 +28,45 @@
 
 namespace graphics
 {
+	class sunlight : public game_logic::formula_callable
+	{
+	public:
+		explicit sunlight(gles2::program_ptr shader, const variant& node);
+		virtual ~sunlight();
+		void set_all_uniforms() const;
+
+		float ambient_intensity() const { return abmient_intensity_; }
+		void set_ambient_intensity(float f);
+
+		const graphics::color& color() const { return color_; }
+		void set_color(const graphics::color& color);
+
+		const glm::vec3& direction() const { return direction_; }
+		void set_direction(const glm::vec3& d);
+
+		variant write();
+	private:
+		DECLARE_CALLABLE(sunlight);
+
+		void configure_uniforms();
+
+		gles2::program_ptr shader_;
+
+		GLuint u_color_;
+		GLuint u_ambient_intensity_;
+		GLuint u_direction_;
+
+		graphics::color color_;
+		glm::vec3 direction_;
+		float abmient_intensity_;
+
+		bool enabled_;
+		
+		sunlight();
+		sunlight(const sunlight&);
+	};
+	typedef boost::intrusive_ptr<sunlight> sunlight_ptr;
+
 	class lighting : public game_logic::formula_callable
 	{
 	public:
@@ -92,6 +132,8 @@ namespace graphics
 		GLuint u_m_matrix_;
 		GLuint u_v_matrix_;
 		GLuint u_n_matrix_;
+
+		sunlight_ptr sunlight_;
 
 		float light_power_;
 		glm::vec3 light_position_;

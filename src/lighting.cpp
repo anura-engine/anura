@@ -68,6 +68,10 @@ namespace graphics
 			light_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
 		}
 
+		if(node.has_key("sunlight")) {
+			sunlight_.reset(new sunlight(shader, node["sunlight"]));
+		}
+
 		configure_uniforms();
 		set_all_uniforms();
 	}
@@ -107,6 +111,9 @@ namespace graphics
 		if(light_color_.r != 1.0f && light_color_.g != 1.0f && light_color_.b != 1.0f) {
 			res.add("light_color", vec3_to_variant(light_color_));
 		}
+		if(sunlight_) {
+			res.add("sunlight", sunlight_->write());
+		}
 		return res.build();
 	}
 
@@ -121,6 +128,10 @@ namespace graphics
 			glUniform3fv(u_ambient_color_, 1, glm::value_ptr(ambient_color_));
 			glUniform3fv(u_specular_color_, 1, glm::value_ptr(specular_color_));
 			glUniform3fv(u_light_color_, 1, glm::value_ptr(light_color_));
+
+		}
+		if(sunlight_) {
+			sunlight_->set_all_uniforms();
 		}
 	}
 
@@ -255,7 +266,127 @@ namespace graphics
 		return vec3_to_variant(obj.light_color());
 	DEFINE_SET_FIELD
 		obj.set_light_color(variant_to_vec3(value));
+	DEFINE_FIELD(sunlight, "builtin sunlight|null")
+		return variant(obj.sunlight_.get());
+	DEFINE_SET_FIELD_TYPE("map|builtin sunlight|null")
+		if(value.is_null()) {
+			obj.sunlight_.reset();
+		} else if(value.is_callable()) {
+			obj.sunlight_ = value.try_convert<sunlight>();
+		} else {
+			obj.sunlight_.reset(new sunlight(obj.shader_, value));
+		}
 	END_DEFINE_CALLABLE(lighting)
+
+
+	sunlight::sunlight(gles2::program_ptr shader, const variant& node)
+		: shader_(shader), enabled_(false)
+	{
+		if(node.has_key("color")) {
+			set_color(graphics::color(node["color"]));
+		} else {
+			set_color(graphics::color("white"));
+		}
+
+		if(node.has_key("direction")) {
+			set_direction(variant_to_vec3(node["direction"]));
+		} else {
+			set_direction(glm::vec3(0,-1,0));
+		}
+
+		if(node.has_key("intensity")) {
+			set_ambient_intensity(float(node["intensity"].as_decimal().as_float()));
+		} else {
+			set_ambient_intensity(1.0f);
+		}
+		configure_uniforms();
+	}
+
+	sunlight::~sunlight()
+	{
+	}
+
+	void sunlight::set_all_uniforms() const
+	{
+		if(enabled_) { 
+			manager m(shader_);
+			glUniform1f(u_ambient_intensity_, abmient_intensity_);
+			glUniform4fv(u_color_, 1, glm::value_ptr(glm::vec4(color_.r(), color_.g(), color_.b(), color_.a())));
+			glUniform3fv(u_direction_, 1, glm::value_ptr(direction_));
+		}
+	}
+
+	void sunlight::set_ambient_intensity(float f)
+	{
+		abmient_intensity_ = f;
+		if(enabled_) {
+			manager m(shader_);
+			glUniform1f(u_ambient_intensity_, abmient_intensity_);
+		}
+	}
+
+	void sunlight::set_color(const graphics::color& color)
+	{
+		color_ = color;
+		if(enabled_) {
+			manager m(shader_);
+			glUniform4fv(u_color_, 1, glm::value_ptr(glm::vec4(color_.r(), color_.g(), color_.b(), color_.a())));
+		}
+	}
+
+	void sunlight::set_direction(const glm::vec3& d)
+	{
+		direction_ = d;
+		if(enabled_) {
+			manager m(shader_);
+			glUniform3fv(u_direction_, 1, glm::value_ptr(direction_));
+		}
+	}
+	
+	void sunlight::configure_uniforms()
+	{
+		u_color_ = shader_->get_fixed_uniform("sunlight.vColor");
+		u_ambient_intensity_ = shader_->get_fixed_uniform("sunlight.fAmbientIntensity");
+		u_direction_ = shader_->get_fixed_uniform("sunlight.vDirection");
+
+		if(u_color_ != -1 && u_ambient_intensity_ != -1 && u_direction_ != -1) {
+			enabled_ = true;
+		} else {
+			std::cerr << "Sunlight disabled" << std::endl;
+		}
+	}
+
+	variant sunlight::write()
+	{
+		variant_builder res;
+		if(!(color_ == graphics::color(255,255,255))) {
+			res.add("color", color_.write());
+		}
+		if(direction().x != 0.0f && direction().y != 1.0f && direction().z != 0.0f) {
+			res.add("direction", vec3_to_variant(direction()));
+		}
+		if(ambient_intensity() != 1.0f) {
+			res.add("intensity", ambient_intensity());
+		}
+		return res.build();
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(sunlight)
+	DEFINE_FIELD(color, "[decimal|int,decimal|int,decimal|int,decimal|int]")
+		return obj.color().write();
+	DEFINE_SET_FIELD
+		obj.set_color(graphics::color(value));
+	
+	DEFINE_FIELD(direction, "[decimal|int,decimal|int,decimal|int]")
+		return vec3_to_variant(obj.direction());
+	DEFINE_SET_FIELD
+		obj.set_direction(variant_to_vec3(value));
+
+	DEFINE_FIELD(intensity, "decimal|int")
+		return variant(obj.ambient_intensity());
+	DEFINE_SET_FIELD
+		obj.set_ambient_intensity(float(value.as_decimal().as_float()));
+	END_DEFINE_CALLABLE(sunlight)
 }
 
 #endif
