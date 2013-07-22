@@ -24,6 +24,7 @@
 
 #include "asserts.hpp"
 #include "formula_callable_definition_fwd.hpp"
+#include "formula_callable_utils.hpp"
 #include "reference_counted_object.hpp"
 #include "variant_type.hpp"
 
@@ -173,15 +174,18 @@ void classname::init_callable_type(std::vector<callable_property_entry>& fields,
 	entry.get = [](const game_logic::formula_callable& obj_instance) ->variant { \
 		static VariantFunctionTypeInfoPtr type_info; \
 		if(!type_info) { \
+			int min_args = 0; \
 			type_info.reset(new VariantFunctionTypeInfo); \
 			variant_type_ptr type = parse_variant_type(variant("function" type_str)); \
-			type->is_function(&type_info->variant_types, &type_info->return_type, NULL, NULL); \
+			type->is_function(&type_info->variant_types, &type_info->return_type, &min_args, NULL); \
+			type_info->num_unneeded_args = type_info->variant_types.size() - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \
 		const this_type& obj = *dynamic_cast<const this_type*>(&obj_instance); \
 		return variant([&obj](const game_logic::formula_callable& args) ->variant {
 
 #define FN_ARG(n) args.query_value_by_slot(n)
+#define NUM_FN_ARGS reinterpret_cast<const game_logic::slot_formula_callable*>(&args)->num_args()
 
 #define END_DEFINE_FN }, type_info);
 

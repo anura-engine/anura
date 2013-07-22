@@ -784,7 +784,7 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 	const std::vector<variant>& args = args_buf.empty() ? passed_args : args_buf;
 
 	const int max_args = fn_->type->arg_names.size();
-	const int min_args = max_args - fn_->type->default_args.size();
+	const int min_args = max_args - fn_->type->num_default_args();
 
 	if(args.size() > max_args || (args.size() < min_args && !allow_partial)) {
 		if(message) {
@@ -838,7 +838,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	callable->set_base_slot(fn_->base_slot);
 
 	const int max_args = fn_->type->arg_names.size();
-	const int min_args = max_args - fn_->type->default_args.size();
+	const int min_args = max_args - fn_->type->num_default_args();
 
 	if(args->size() < min_args || args->size() > max_args) {
 		std::ostringstream str;
@@ -890,7 +890,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		callable->add((*args)[n]);
 	}
 
-	for(size_t n = args->size(); n < max_args; ++n) {
+	for(size_t n = args->size(); n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
 		callable->add(fn_->type->default_args[n - min_args]);
 	}
 
@@ -1155,7 +1155,7 @@ void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const gam
 int variant::min_function_arguments() const
 {
 	must_be(VARIANT_TYPE_FUNCTION);
-	return std::max<int>(0, fn_->type->arg_names.size() - static_cast<int>(fn_->type->default_args.size()) - static_cast<int>(fn_->bound_args.size()));
+	return std::max<int>(0, fn_->type->arg_names.size() - fn_->type->num_default_args() - static_cast<int>(fn_->bound_args.size()));
 }
 
 int variant::max_function_arguments() const

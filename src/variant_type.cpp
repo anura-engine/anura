@@ -1539,7 +1539,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					++i1;
 					if(i1 != i2) {
 						if(min_args == -1) {
-							min_args = arg_types.size();
+							min_args = arg_types.size()-1;
 						}
 						++i1;
 					}
