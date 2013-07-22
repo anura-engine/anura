@@ -3,6 +3,7 @@
 
 #include "camera.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
 camera_callable::camera_callable()

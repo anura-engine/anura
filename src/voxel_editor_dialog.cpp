@@ -68,12 +68,12 @@ namespace editor_dialogs
 
 		set_clear_bg_amount(255);
 	
-		if(voxel::chunk::get_editor_tiles().empty() == false) {
-			category_ = voxel::chunk::get_editor_tiles().front().group;
+		if(voxel::chunk::get_textured_editor_tiles().empty() == false) {
+			category_ = voxel::chunk::get_textured_editor_tiles().front().group;
 		}
 
-		if(level::current().isomap()) {
-			textured_mode_ = level::current().isomap()->textured();
+		if(level::current().iso_world()) {
+			textured_mode_ = false;
 		}
 
 		// The color picker contains state, resetting it all the time loses that state.
@@ -96,9 +96,9 @@ namespace editor_dialogs
 		set_padding(20);
 
 		ASSERT_LOG(editor_.get_voxel_tileset() >= 0 
-			&& size_t(editor_.get_voxel_tileset()) < voxel::chunk::get_editor_tiles().size(),
+			&& size_t(editor_.get_voxel_tileset()) < voxel::chunk::get_textured_editor_tiles().size(),
 			"Index of isometric tileset out of bounds must be between 0 and " 
-			<< voxel::chunk::get_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
+			<< voxel::chunk::get_textured_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
 
 		std::stringstream str;
 
@@ -152,7 +152,7 @@ namespace editor_dialogs
 			int index = 0, first_index = -1;
 			first_index_ = -1;
 	
-			foreach(const voxel::tile_editor_info& t, voxel::chunk::get_editor_tiles()) {
+			foreach(const voxel::textured_tile_editor_info& t, voxel::chunk::get_textured_editor_tiles()) {
 				if(t.group == category_) {
 					if(first_index_ == -1) {
 						first_index_ = index;
@@ -170,6 +170,30 @@ namespace editor_dialogs
 			grid->finish_row();
 			add_widget(grid);
 		} else {
+			/*button* category_button = new button(widget_ptr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+			add_widget(category_button, 10, grid->y() + grid->height() + 5);
+
+			grid.reset(new gui::grid(3));
+			int index = 0, first_index = -1;
+			first_index_ = -1;
+	
+			foreach(const voxel::colored_tile_editor_info& t, voxel::chunk::get_colored_editor_tiles()) {
+				if(t.group == category_) {
+					if(first_index_ == -1) {
+						first_index_ = index;
+					}
+					image_widget* preview = new image_widget(t.tex, 54, 54);
+					preview->set_area(t.area);
+					button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
+					tileset_button->set_tooltip(t.name + "(" + t.id.as_string() + ")", 14);
+					tileset_button->set_dim(58, 58);
+					grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+				}
+				++index;
+			}
+
+			grid->finish_row();
+			add_widget(grid);*/
 			add_widget(color_picker_);
 		}
 	}
@@ -177,7 +201,6 @@ namespace editor_dialogs
 	void voxel_editor_dialog::swap_mode()
 	{
 		textured_mode_ = !textured_mode_;
-		level::current().isomap().reset();
 		init();
 	}
 
@@ -266,7 +289,7 @@ namespace editor_dialogs
 		grid->register_selection_callback(boost::bind(&voxel_editor_dialog::close_context_menu, this, _1));
 
 		std::set<std::string> categories;
-		foreach(const voxel::tile_editor_info& t, voxel::chunk::get_editor_tiles()) {
+		foreach(const voxel::textured_tile_editor_info& t, voxel::chunk::get_textured_editor_tiles()) {
 			if(categories.count(t.group)) {
 				continue;
 			}
@@ -320,14 +343,14 @@ namespace editor_dialogs
 			case SDL_KEYDOWN:
 				if(event.key.keysym.sym == SDLK_COMMA) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
-					while(voxel::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+					while(voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
 						editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
 					}
 					set_tileset(editor_.get_voxel_tileset());
 					claimed = true;
 				} else if(event.key.keysym.sym == SDLK_PERIOD) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
-					while(voxel::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+					while(voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
 						editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
 					}
 					set_tileset(editor_.get_voxel_tileset());
@@ -346,10 +369,10 @@ namespace editor_dialogs
 
 		int tileset = editor_.get_voxel_tileset();
 		if(textured_mode_) {
-			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_editor_tiles().size()) {
+			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_textured_editor_tiles().size()) {
 				return;
 			}
-			tile_to_add = voxel::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].id;
+			tile_to_add = voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].id;
 		} else {
 			tile_to_add = color_picker_->get_selected_color().write();
 		}
@@ -371,7 +394,7 @@ namespace editor_dialogs
 		}
 		res.add("random", iso.build());
 
-		level::current().isomap() = voxel::chunk_factory::create(res.build());
+		//level::current().isomap() = voxel::chunk_factory::create(res.build());
 	}
 
 	void voxel_editor_dialog::flat_plane_isomap()
@@ -380,10 +403,10 @@ namespace editor_dialogs
 
 		int tileset = editor_.get_voxel_tileset();
 		if(textured_mode_) {
-			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_editor_tiles().size()) {
+			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_textured_editor_tiles().size()) {
 				return;
 			}
-			tile_to_add = voxel::chunk::get_editor_tiles()[editor_.get_voxel_tileset()].id;
+			tile_to_add = voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].id;
 		} else {
 			tile_to_add = color_picker_->get_selected_color().write();
 		}
@@ -418,7 +441,7 @@ namespace editor_dialogs
 		std::vector<char> enc = base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end())));
 		res.add("voxels", std::string(enc.begin(), enc.end()));
 	
-		level::current().isomap() = voxel::chunk_factory::create(res.build());
+		//level::current().isomap() = voxel::chunk_factory::create(res.build());
 	}
 
 	graphics::color voxel_editor_dialog::selected_color() const

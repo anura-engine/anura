@@ -25,6 +25,10 @@ namespace graphics
 {
 	namespace 
 	{
+		const double default_light_power = 1000.0;
+		const double default_shininess = 5.0;
+		const double default_gamma = 1.0;
+
 		struct manager
 		{
 			manager(gles2::program_ptr shader) 
@@ -42,9 +46,9 @@ namespace graphics
 
 	lighting::lighting(gles2::program_ptr shader, const variant& node)
 		: shader_(shader),
-		light_power_(float(node["light_power"].as_decimal(decimal(1000.0)).as_float())),
-		shininess_(float(node["shininess"].as_decimal(decimal(5.0)).as_float())),
-		gamma_(float(node["gamma"].as_decimal(decimal(1.0)).as_float()))
+		light_power_(float(node["light_power"].as_decimal(decimal(default_light_power)).as_float())),
+		shininess_(float(node["shininess"].as_decimal(decimal(default_shininess)).as_float())),
+		gamma_(float(node["gamma"].as_decimal(decimal(default_gamma)).as_float()))
 
 	{
 		light_position_ = variant_to_vec3(node["light_position"]);
@@ -79,6 +83,31 @@ namespace graphics
 
 	lighting::~lighting()
 	{
+	}
+
+	variant lighting::write()
+	{
+		variant_builder res;
+		if(light_power_ != default_light_power) {
+			res.add("light_power", light_power_);
+		}
+		if(shininess_ != default_shininess) {
+			res.add("shininess", shininess_);
+		}
+		if(gamma_ != default_gamma) {
+			res.add("gamma", gamma_);
+		}
+		res.add("light_position", vec3_to_variant(light_position_));
+		if(ambient_color_.r != 0.1f && ambient_color_.g != 0.1f && ambient_color_.b != 0.1f) {
+			res.add("ambient_color", vec3_to_variant(ambient_color_));
+		}
+		if(specular_color_.r != 0.1f && specular_color_.g != 0.1f && specular_color_.b != 0.1f) {
+			res.add("specular_color", vec3_to_variant(specular_color_));
+		}
+		if(light_color_.r != 1.0f && light_color_.g != 1.0f && light_color_.b != 1.0f) {
+			res.add("light_color", vec3_to_variant(light_color_));
+		}
+		return res.build();
 	}
 
 	void lighting::set_all_uniforms() const

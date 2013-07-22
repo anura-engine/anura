@@ -60,6 +60,8 @@ namespace graphics
 		void set_light_color(const glm::vec3& lc);
 
 		void set_modelview_matrix(const glm::mat4& mm, const glm::mat4& vm);
+
+		variant write();
 	protected:
 		GLuint light_position_uniform() const { return u_lightposition_; }
 		GLuint light_power_uniform() const { return u_lightpower_; }

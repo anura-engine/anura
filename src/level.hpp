@@ -146,7 +146,6 @@ public:
 #endif
 
 #if defined(USE_ISOMAP)
-	voxel::chunk_ptr& isomap() { return isomap_; }
 	const float* projection() const;
 	const float* view() const;
 	const glm::mat4& view_mat() const { return camera_->view_mat(); }
@@ -697,7 +696,6 @@ private:
 #endif
 
 #if defined(USE_ISOMAP)
-	voxel::chunk_ptr isomap_;
 	voxel::world_ptr iso_world_;
 	camera_callable_ptr camera_;
 	bool mouselook_enabled_;

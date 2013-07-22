@@ -31,7 +31,7 @@ namespace voxel
 	bool operator==(position const& p1, position const& p2);
 	std::size_t hash_value(position const& p);
 
-	struct tile_editor_info
+	struct textured_tile_editor_info
 	{
 		std::string name;
 		std::string group;
@@ -39,6 +39,17 @@ namespace voxel
 		graphics::texture tex;
 		rect area;
 	};
+
+	struct colored_tile_editor_info
+	{
+		std::string name;
+		std::string group;
+		variant id;
+		graphics::color color;
+	};
+
+	class logical_world;
+	typedef boost::intrusive_ptr<logical_world> logical_world_ptr;
 
 	class chunk : public game_logic::formula_callable
 	{
@@ -53,22 +64,17 @@ namespace voxel
 		};
 
 		chunk();
-		explicit chunk(const variant& node);
+		explicit chunk(gles2::program_ptr shader, logical_world_ptr logic, const variant& node);
 		virtual ~chunk();
 		
 		void init();
 		void build();
 		void draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
-		void do_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const;
 		variant write();
 
 		virtual bool is_solid(int x, int y, int z) const = 0;
-		bool is_xedge(int x) const;
-		bool is_yedge(int y) const;
-		bool is_zedge(int z) const;
 		virtual variant get_tile_type(int x, int y, int z) const = 0;
 		static variant get_tile_info(const std::string& type);
-		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false);
 
 		void set_tile(int x, int y, int z, const variant& type);
 		void del_tile(int x, int y, int z);
@@ -79,9 +85,12 @@ namespace voxel
 		int size_z() const { return size_z_; }
 		void set_size(int mx, int my, int mz);
 
-		gles2::program_ptr shader() { return shader_; }
+		size_t scale_x() const { return scale_x_; }
+		size_t scale_y() const { return scale_y_; }
+		size_t scale_z() const { return scale_z_; }
 
-		static const std::vector<tile_editor_info>& get_editor_tiles();
+		static const std::vector<textured_tile_editor_info>& get_textured_editor_tiles();
+		static const std::vector<colored_tile_editor_info>& get_colored_editor_tiles();
 	protected:
 		enum {
 			FRONT_FACE,
@@ -98,7 +107,6 @@ namespace voxel
 		virtual void handle_set_tile(int x, int y, int z, const variant& type) = 0;
 		virtual void handle_del_tile(int x, int y, int z) = 0;
 		virtual variant handle_write() = 0;
-		virtual std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist) = 0;
 
 		void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat size, std::vector<GLfloat>& varray);
 		std::vector<std::vector<GLfloat> >& get_vertex_data() { return varray_; }
@@ -132,8 +140,11 @@ namespace voxel
 		int size_y_;
 		int size_z_;
 
-		void get_uniforms_and_attributes();
-		gles2::program_ptr shader_;
+		size_t scale_x_;
+		size_t scale_y_;
+		size_t scale_z_;
+
+		void get_uniforms_and_attributes(gles2::program_ptr shader);
 		GLuint u_mvp_matrix_;
 		GLuint u_normal_;
 		GLuint a_position_;
@@ -146,7 +157,7 @@ namespace voxel
 	{
 	public:
 		chunk_colored();
-		explicit chunk_colored(const variant& node);
+		explicit chunk_colored(gles2::program_ptr shader, logical_world_ptr logic, const variant& node);
 		virtual ~chunk_colored();
 		bool is_solid(int x, int y, int z) const;
 		variant get_tile_type(int x, int y, int z) const;
@@ -156,20 +167,19 @@ namespace voxel
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);
-		std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist);
 	private:
-		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
-		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const SDL_Color& col);
+		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
+		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
+		void add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
+		void add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
+		void add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
+		void add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const variant& col);
 
-		void add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray);
+		void add_carray_data(int face, const graphics::color& color, std::vector<uint8_t>& carray);
 
 		std::vector<std::vector<uint8_t> > carray_;
 		std::vector<size_t> cattrib_offsets_;
-		boost::unordered_map<position, SDL_Color> tiles_;
+		boost::unordered_map<position, variant> tiles_;
 
 		GLuint a_color_;
 	};
@@ -178,7 +188,7 @@ namespace voxel
 	{
 	public:
 		chunk_textured();
-		explicit chunk_textured(const variant& node);
+		explicit chunk_textured(gles2::program_ptr shader, logical_world_ptr logic, const variant& node);
 		virtual ~chunk_textured();
 		bool is_solid(int x, int y, int z) const;
 		variant get_tile_type(int x, int y, int z) const;
@@ -188,7 +198,6 @@ namespace voxel
 		variant handle_write();
 		void handle_set_tile(int x, int y, int z, const variant& type);
 		void handle_del_tile(int x, int y, int z);
-		std::vector<variant> create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist);
 	private:
 		void add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
 		void add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat size, const std::string& bid);
@@ -212,7 +221,7 @@ namespace voxel
 
 	namespace chunk_factory 
 	{
-		chunk_ptr create(const variant& v);
+		chunk_ptr create(gles2::program_ptr shader, logical_world_ptr logic, const variant& v);
 	}
 
 	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords);

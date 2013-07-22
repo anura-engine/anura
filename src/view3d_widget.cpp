@@ -118,9 +118,7 @@ namespace gui
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		//start drawing here.
-		if(level::current().isomap()) {
-			level::current().isomap()->draw(graphics::lighting_ptr(), camera_);
-		} else if(level::current().iso_world()) {
+		if(level::current().iso_world()) {
 			level::current().iso_world()->draw(camera_);
 		}
 

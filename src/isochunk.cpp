@@ -23,6 +23,7 @@
 #include "compress.hpp"
 #include "foreach.hpp"
 #include "isochunk.hpp"
+#include "isoworld.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "preferences.hpp"
@@ -40,36 +41,131 @@ namespace voxel
 
 		boost::random::mt19937 rng(uint32_t(std::time(0)));
 
-		std::vector<tile_editor_info>& get_editor_tile_info()
+		std::vector<textured_tile_editor_info>& get_textured_editor_tile_info()
 		{
-			static std::vector<tile_editor_info> res;
+			static std::vector<textured_tile_editor_info> res;
+			return res;
+		}
+		std::vector<colored_tile_editor_info>& get_colored_editor_tile_info()
+		{
+			static std::vector<colored_tile_editor_info> res;
 			return res;
 		}
 
-		struct tile_info
+		struct textured_tile_info
 		{
 			std::string name;
 			std::string abbreviation;
-			int faces;
+			size_t faces;
 			rectf area[6];
 			bool transparent;
 		};
 
-		class terrain_info
+		struct colored_tile_info
+		{
+			std::string name;
+			std::string abbreviation;
+			graphics::color color[6];
+			size_t faces;
+		};
+
+		class colored_terrain_info
 		{
 		public:
-			terrain_info() {}
-			virtual ~terrain_info() {}
+			colored_terrain_info() {}
+			virtual ~colored_terrain_info() {}
+			void load(const variant& node)
+			{
+				ASSERT_LOG(node.has_key("colored_blocks") && node["colored_blocks"].is_list(),
+					"terrain info must have 'colored_blocks' attribute that is a list.");
+				for(int i = 0; i != node["colored_blocks"].num_elements(); ++i) {
+					const variant& block = node["colored_blocks"][i];
+					colored_tile_info ti;
+					ti.faces = 0;
+					ASSERT_LOG(block.has_key("name") && block["name"].is_string(), 
+						"Each block in list must have a 'name' attribute of type string.");
+					ti.name = block["name"].as_string();
+					ASSERT_LOG(block.has_key("id") && block["id"].is_string(),
+						"Each block in list must have an 'id' attribute of type string. Block name: " << ti.name);
+					ti.abbreviation = block["id"].as_string();
+					if(block.has_key("color")) {
+						ti.faces = chunk::FRONT;
+						ti.color[0] = graphics::color(block["color"]);
+					} else {
+						ti.faces |= chunk::FRONT;
+						ti.color[0] = graphics::color(block["front"]);
+
+						if(block.has_key("right")) {
+							ti.faces |= chunk::RIGHT;
+							ti.color[1] = graphics::color(block["right"]);
+						}
+						if(block.has_key("top")) {
+							ti.faces |= chunk::TOP;
+							ti.color[2] = graphics::color(block["top"]);
+						}
+						if(block.has_key("back")) {
+							ti.faces |= chunk::BACK;
+							ti.color[3] = graphics::color(block["back"]);
+						}
+						if(block.has_key("left")) {
+							ti.faces |= chunk::LEFT;
+							ti.color[4] = graphics::color(block["left"]);
+						}
+						if(block.has_key("bottom")) {
+							ti.faces |= chunk::BOTTOM;
+							ti.color[5] = graphics::color(block["bottom"]);
+						}
+					}
+					tile_data_[ti.abbreviation] = ti;
+
+					// Set up some data for the editor
+					colored_tile_editor_info te;
+					te.name = ti.name;
+					te.id = variant(ti.abbreviation);
+					te.group = block.has_key("group") ? block["group"].as_string() : "unspecified";
+					te.color = ti.color[0];
+					get_colored_editor_tile_info().push_back(te);
+				}
+			}
+			std::map<std::string, colored_tile_info>::const_iterator find(const std::string& s)
+			{
+				return tile_data_.find(s);
+			}
+			std::map<std::string, colored_tile_info>::const_iterator end()
+			{
+				return tile_data_.end();
+			}
+			std::map<std::string, colored_tile_info>::const_iterator random()
+			{
+				boost::random::uniform_int_distribution<> dist(0, tile_data_.size()-1);
+				auto it = tile_data_.begin();
+				std::advance(it, dist(rng));
+				return it;
+			}
+			void clear()
+			{
+				tile_data_.clear();
+				get_colored_editor_tile_info().clear();
+			}
+		private:
+			std::map<std::string, colored_tile_info> tile_data_;
+		};
+		
+		class textured_terrain_info
+		{
+		public:
+			textured_terrain_info() {}
+			virtual ~textured_terrain_info() {}
 			void load(const variant& node)
 			{
 				ASSERT_LOG(node.has_key("image") && node["image"].is_string(), 
 					"terrain info must have 'image' attribute that is a string.");
 				tex_ = graphics::texture::get(node["image"].as_string());
-				ASSERT_LOG(node.has_key("blocks") && node["blocks"].is_list(),
-					"terrain info must have 'blocks' attribute that is a list.");
-				for(int i = 0; i != node["blocks"].num_elements(); ++i) {
-					const variant& block = node["blocks"][i];
-					tile_info ti;
+				ASSERT_LOG(node.has_key("textured_blocks") && node["textured_blocks"].is_list(),
+					"terrain info must have 'textured_blocks' attribute that is a list.");
+				for(int i = 0; i != node["textured_blocks"].num_elements(); ++i) {
+					const variant& block = node["textured_blocks"][i];
+					textured_tile_info ti;
 					ti.faces = 0;
 					ASSERT_LOG(block.has_key("name") && block["name"].is_string(), 
 						"Each block in list must have a 'name' attribute of type string.");
@@ -123,7 +219,7 @@ namespace voxel
 					tile_data_[ti.abbreviation] = ti;
 
 					// Set up some data for the editor
-					tile_editor_info te;
+					textured_tile_editor_info te;
 					te.tex = tex_;
 					te.name = ti.name;
 					te.id = variant(ti.abbreviation);
@@ -132,19 +228,19 @@ namespace voxel
 						int(ti.area[0].yf() * tex_.height()),
 						int(ti.area[0].x2f() * tex_.width()),
 						int(ti.area[0].y2f() * tex_.height()));
-					get_editor_tile_info().push_back(te);
+					get_textured_editor_tile_info().push_back(te);
 				}
 			}
 
-			std::map<std::string, tile_info>::const_iterator find(const std::string& s)
+			std::map<std::string, textured_tile_info>::const_iterator find(const std::string& s)
 			{
 				return tile_data_.find(s);
 			}
-			std::map<std::string, tile_info>::const_iterator end()
+			std::map<std::string, textured_tile_info>::const_iterator end()
 			{
 				return tile_data_.end();
 			}
-			std::map<std::string, tile_info>::const_iterator random()
+			std::map<std::string, textured_tile_info>::const_iterator random()
 			{
 				boost::random::uniform_int_distribution<> dist(0, tile_data_.size()-1);
 				auto it = tile_data_.begin();
@@ -158,16 +254,21 @@ namespace voxel
 			void clear()
 			{
 				tile_data_.clear();
-				get_editor_tile_info().clear();
+				get_textured_editor_tile_info().clear();
 			}
 		private:
 			graphics::texture tex_;
-			std::map<std::string, tile_info> tile_data_;
+			std::map<std::string, textured_tile_info> tile_data_;
 		};
 		
-		terrain_info& get_terrain_info()
+		textured_terrain_info& get_textured_terrain_info()
 		{
-			static terrain_info res;
+			static textured_terrain_info res;
+			return res;
+		}
+		colored_terrain_info& get_colored_terrain_info()
+		{
+			static colored_terrain_info res;
 			return res;
 		}
 	}
@@ -194,28 +295,25 @@ namespace voxel
 		init();
 	}
 
-	chunk::chunk(const variant& node)
+	chunk::chunk(gles2::program_ptr shader, logical_world_ptr logic, const variant& node)
 		: u_mvp_matrix_(-1), u_normal_(-1), a_position_(-1), textured_(true), 
-		worldspace_position_(0.0f)
+		worldspace_position_(0.0f), scale_x_(logic->scale_x()), scale_y_(logic->scale_y()), 
+		scale_z_(logic->scale_z())
 	{
 		// Call init *before* doing anything else
 		init();
 
 		// using textured or colored data
-		bool textured = node.has_key("colored") && node["colored"].as_bool() == true ? false : true;
+		textured_ = node.has_key("colored") && node["colored"].as_bool() == true ? false : true;
 
-		// Load shader.
-		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
-		ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be a string");
-		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
-		get_uniforms_and_attributes();
+		get_uniforms_and_attributes(shader);
 
 		if(node.has_key("worldspace_position")) {
 			const variant& wp = node["worldspace_position"];
 			ASSERT_LOG(wp.is_list() && wp.num_elements() == 3, "'worldspace_position' attribute must be a list of 3 integers");
-			worldspace_position_.x = float(wp[0].as_decimal().as_float());
-			worldspace_position_.y = float(wp[1].as_decimal().as_float());
-			worldspace_position_.z = float(wp[2].as_decimal().as_float());
+			worldspace_position_.x = float(wp[0].as_decimal().as_float()) * logic->scale_x();
+			worldspace_position_.y = float(wp[1].as_decimal().as_float()) * logic->scale_y();
+			worldspace_position_.z = float(wp[2].as_decimal().as_float()) * logic->scale_z();
 		}
 	}
 
@@ -224,8 +322,10 @@ namespace voxel
 		vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete id;});
 		glGenBuffers(2, &vbos_[0]);
 
-		get_terrain_info().clear();
-		get_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
+		get_textured_terrain_info().clear();
+		get_textured_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
+		get_colored_terrain_info().clear();
+		get_colored_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
 
 		normals_.clear();
 		normals_.push_back(glm::vec3(0,0,1));	// front
@@ -240,25 +340,28 @@ namespace voxel
 	{
 	}
 
-	void chunk::get_uniforms_and_attributes()
+	void chunk::get_uniforms_and_attributes(gles2::program_ptr shader)
 	{
-		u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+		u_mvp_matrix_ = shader->get_fixed_uniform("mvp_matrix");
 		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
-		a_position_ = shader_->get_fixed_attribute("vertex");
+		a_position_ = shader->get_fixed_attribute("vertex");
 		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
-		u_normal_ = shader_->get_fixed_uniform("normal");
+		u_normal_ = shader->get_fixed_uniform("normal");
 	}
 
-	const std::vector<tile_editor_info>& chunk::get_editor_tiles()
+	const std::vector<textured_tile_editor_info>& chunk::get_textured_editor_tiles()
 	{
-		return get_editor_tile_info();
+		return get_textured_editor_tile_info();
+	}
+	const std::vector<colored_tile_editor_info>& chunk::get_colored_editor_tiles()
+	{
+		return get_colored_editor_tile_info();
 	}
 
 	variant chunk::write()
 	{
 		variant_builder res;
 
-		res.add("shader", shader_->name());
 		res.add("colored", textured() == false);
 		res.merge_object(handle_write());
 		return res.build();
@@ -281,57 +384,57 @@ namespace voxel
 	{
 		switch(face) {
 		case FRONT_FACE:
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
 
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
 			break;
 		case RIGHT_FACE:
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z);
 
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z);
 			break;
 		case TOP_FACE:
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
 
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z);
 			break;
 		case BACK_FACE:
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z);
 			varray.push_back(x); varray.push_back(y); varray.push_back(z);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z);
 
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x+s); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z);
 			break;
 		case LEFT_FACE:
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z+s);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z+scale_z());
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
 
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x); varray.push_back(y+s); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x); varray.push_back(y+scale_y()); varray.push_back(z);
 			varray.push_back(x); varray.push_back(y); varray.push_back(z);
 			break;
 		case BOTTOM_FACE:
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z);
 
-			varray.push_back(x+s); varray.push_back(y); varray.push_back(z);
-			varray.push_back(x); varray.push_back(y); varray.push_back(z+s);
+			varray.push_back(x+scale_x()); varray.push_back(y); varray.push_back(z);
+			varray.push_back(x); varray.push_back(y); varray.push_back(z+scale_z());
 			varray.push_back(x); varray.push_back(y); varray.push_back(z);
 			break;
 		default: ASSERT_LOG(false, "isomap::add_vertex_data unexpected facing value: " << face);
@@ -355,109 +458,7 @@ namespace voxel
 
 	void chunk::draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
-		glUseProgram(shader_->get());
-		glClear(GL_DEPTH_BUFFER_BIT);
-		// Cull triangles which normal is not towards the camera
-		glEnable(GL_CULL_FACE);
-		// Enable depth test
-		glEnable(GL_DEPTH_TEST);
-
 		handle_draw(lighting, camera);
-
-		glDisable(GL_DEPTH_TEST);
-		glDisable(GL_CULL_FACE);
-	}
-
-	void chunk::do_draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
-	{
-		// Called by world, assumes everything is already setup.
-		handle_draw(lighting, camera);
-	}
-
-	bool chunk::is_xedge(int x) const
-	{
-		if(x >= 0 && x < size_x()) {
-			return false;
-		}
-		return true;
-	}
-
-	bool chunk::is_yedge(int y) const
-	{
-		if(y >= 0 && y < size_y()) {
-			return false;
-		}
-		return true;
-	}
-
-	bool chunk::is_zedge(int z) const
-	{
-		if(z >= 0 && z < size_z()) {
-			return false;
-		}
-		return true;
-	}
-
-	namespace
-	{
-		variant variant_list_from_xyz(int x, int y, int z)
-		{
-			std::vector<variant> v;
-			v.push_back(variant(x)); v.push_back(variant(y)); v.push_back(variant(z));
-			return variant(&v);
-		}
-	}
-
-	pathfinding::directed_graph_ptr chunk::create_directed_graph(bool allow_diagonals)
-	{
-		profile::manager pman("isomap::create_directed_graph");
-
-		std::map<std::pair<int,int>, int> vlist;
-		std::vector<variant> vertex_list = create_dg_vertex_list(vlist);
-	
-		pathfinding::graph_edge_list edges;
-		for(auto p : vlist) {
-			std::vector<variant> current_edges;
-			const int x = p.first.first;
-			const int z = p.first.second;
-			
-			auto it = vlist.find(std::make_pair(x+1,z));
-			if(it != vlist.end() && !is_xedge(x+1) && !is_solid(x+1,it->second,z)) {
-				current_edges.push_back(variant_list_from_xyz(x+1,it->second,z));
-			}
-			it = vlist.find(std::make_pair(x-1,z));
-			if(it != vlist.end() && !is_xedge(x-1) && !is_solid(x-1,it->second,z)) {
-				current_edges.push_back(variant_list_from_xyz(x-1,it->second,z));
-			}
-			it = vlist.find(std::make_pair(x,z+1));
-			if(it != vlist.end() && !is_zedge(z+1) && !is_solid(x,it->second,z+1)) {
-				current_edges.push_back(variant_list_from_xyz(x,it->second,z+1));
-			}
-			it = vlist.find(std::make_pair(x,z-1));
-			if(it != vlist.end() && !is_zedge(z-1) && !is_solid(x,it->second,z-1)) {
-				current_edges.push_back(variant_list_from_xyz(x,it->second,z-1));
-			}
-			if(allow_diagonals) {
-				it = vlist.find(std::make_pair(x+1,z+1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !is_solid(x+1,it->second,z+1)) {
-					current_edges.push_back(variant_list_from_xyz(x+1,it->second,z+1));
-				}
-				it = vlist.find(std::make_pair(x+1,z-1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !is_solid(x+1,it->second,z-1)) {
-					current_edges.push_back(variant_list_from_xyz(x+1,it->second,z-1));
-				}
-				it = vlist.find(std::make_pair(x-1,z+1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !is_solid(x-1,it->second,z+1)) {
-					current_edges.push_back(variant_list_from_xyz(x-1,it->second,z+1));
-				}
-				it = vlist.find(std::make_pair(x-1,z-1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !is_solid(x-1,it->second,z-1)) {
-					current_edges.push_back(variant_list_from_xyz(x-1,it->second,z-1));
-				}
-			}
-			edges[variant_list_from_xyz(p.first.first, p.second, p.first.second)] = current_edges;
-		}
-		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
 	variant chunk::get_tile_info(const std::string& type)
@@ -508,9 +509,9 @@ namespace voxel
 	{
 	}
 
-	chunk_colored::chunk_colored(const variant& node) : chunk(node)
+	chunk_colored::chunk_colored(gles2::program_ptr shader, logical_world_ptr logic, const variant& node) : chunk(shader, logic, node)
 	{
-		a_color_ = shader()->get_fixed_attribute("color");
+		a_color_ = shader->get_fixed_attribute("color");
 		ASSERT_LOG(a_color_ != -1, "chunk_colored: color == -1");	
 		
 		if(node.has_key("random")) {
@@ -520,50 +521,55 @@ namespace voxel
 			int size_z = node["random"]["depth"].as_int(32);
 			set_size(size_x, size_y, size_z);
 
-			int noise_height = node["noise_height"].as_int(size_y) + worldspace_position().y*size_y;
+			int noise_height = node["noise_height"].as_int(size_y);
 
 			uint32_t seed = node["random"]["seed"].as_int(0);
-			//noise::simplex::init(seed);
-			srand(seed);
+			noise::simplex::init(seed);
+			//srand(seed);
 
 			boost::random::uniform_int_distribution<> dist(0,255);
-			graphics::color random_color(dist(rng), dist(rng), dist(rng), 255);
+			graphics::color color;
+			if(node["random"].has_key("type")) {
+				color = graphics::color(node["random"]["type"]);
+			} else {
+				color = graphics::color(dist(rng), dist(rng), dist(rng), 255);
+			}
 
-			std::vector<float> vec;
-			vec.resize(2);
+			float x_smooth = node["random"]["x_smoothness"].as_decimal(decimal(128.0)).as_float();
+			float z_smooth = node["random"]["z_smoothness"].as_decimal(decimal(128.0)).as_float();
+
+			//profile::manager pmain("loop");
+			float vec[2];
+			std::vector<std::vector<int> > heightmap;
+			heightmap.resize(size_x);
 			for(int x = 0; x != size_x; ++x) {
-				vec[0] = float(worldspace_position().x+x)/float(size_x);
+				heightmap[x].resize(size_z);
+				vec[0] = float(worldspace_position().x+x)/x_smooth;
 				for(int z = 0; z != size_z; ++z) {
-					vec[1] = float(+worldspace_position().z+z)/float(size_z);
-					//int h = int(noise::simplex::noise2(&vec[0]) * float(noise_height)*1.5f);
-					int h = std::max<int>(1, int(glm::simplex(glm::vec4(vec[0], vec[1], 0.5f, float(seed)/std::numeric_limits<uint32_t>::max())) * float(noise_height/2.0)));
-					//h = std::max<int>(1, std::min<int>(size_y-1, h));
-					for(int y = 0; y != h; ++y) {
-						if(node["random"].has_key("type")) {
-							tiles_[position(x,y,z)] = graphics::color(node["random"]["type"]).as_sdl_color();
-						} else {
-							tiles_[position(x,y,z)] = random_color.as_sdl_color();
-						}
+					vec[1] = float(+worldspace_position().z+z)/z_smooth;
+					heightmap[x][z] = int(glm::simplex(glm::vec2(vec[0], vec[1])) * noise_height/2.0f) + 64;
+				}
+			}
+
+			for(int x = 0; x != size_x; ++x) {
+				for(int z = 0; z != size_z; ++z) {
+					if(heightmap[x][z] < int(worldspace_position().y)) {
+						continue;
+					}
+					int h = heightmap[x][z] - int(worldspace_position().y);
+					if(heightmap[x][z] >= int(worldspace_position().y) + size_y) {
+						h = size_y;
+					} 
+					for(int y = 0; y < h; ++y) {
+						tiles_[position(x,y,z)] = color.write();
 					}
 				}
 			}
 		} else {
 			ASSERT_LOG(node.has_key("voxels"), "'voxels' attribute must exist.");
-			ASSERT_LOG(node["voxels"].is_string() || node["voxels"].is_map(), "'voxels' must be a string or map.");
+			ASSERT_LOG(node["voxels"].is_map(), "'voxels' must be a map.");
 
-			variant voxels;
-			if(node["voxels"].is_string()) {
-				std::string decoded = base64::b64decode(node["voxels"].as_string());
-				ASSERT_LOG(decoded.empty() == false, "Error decoding voxel data.")
-				std::vector<char> decomp = zip::decompress(std::vector<char>(decoded.begin(), decoded.end()));
-				try {
-					voxels = json::parse(std::string(decomp.begin(), decomp.end()));
-				} catch (json::parse_error& e) {
-					ASSERT_LOG(false, "Error parsing voxel data: " << e.error_message());
-				}
-			} else {
-				voxels = node["voxels"];
-			}
+			const variant& voxels = node["voxels"];
 			int min_x, min_y, min_z;
 			int max_x, max_y, max_z;
 			min_x = min_y = min_z = std::numeric_limits<int>::max();
@@ -581,21 +587,33 @@ namespace voxel
 				if(max_y < y) { max_y = y; }
 				if(min_z > z) { min_z = z; }
 				if(max_z < z) { max_z = z; }
-				tiles_[position(x,y,z)] = graphics::color(voxels[voxel_keys[n]]).as_sdl_color();
+
+				tiles_[position(x,y,z)] = voxels[voxel_keys[n]];
+				/*for(int i = 0; i != scale_x(); ++i) {
+					for(int j = 0; j != scale_y(); ++j) {
+						for(int k = 0; k != scale_z(); ++k) {
+							tiles_[position(x+i,y+j,z+k)] = voxels[voxel_keys[n]];
+							if(min_x > x+i) { min_x = x+i; }
+							if(max_x < x+i) { max_x = x+i; }
+							if(min_y > y+j) { min_y = y+j; }
+							if(max_y < y+j) { max_y = y+j; }
+							if(min_z > z+k) { min_z = z+k; }
+							if(max_z < z+k) { max_z = z+k; }
+						}
+					}
+				}*/
 			}
 			set_size(max_x - min_x + 1, max_y - min_y + 1, max_z - min_z + 1);
 		}
 
-		ASSERT_LOG(tiles_.empty() == false, "ISOMAP: No tiles found");
-
 		build();
 	}
 
-	chunk_textured::chunk_textured(const variant& node) : chunk(node)
+	chunk_textured::chunk_textured(gles2::program_ptr shader, logical_world_ptr logic, const variant& node) : chunk(shader, logic, node)
 	{
-		a_texcoord_ = shader()->get_fixed_attribute("texcoord");
+		a_texcoord_ = shader->get_fixed_attribute("texcoord");
 		ASSERT_LOG(a_texcoord_ != -1, "chunk_colored: texcoord == -1");	
-		u_texture_ = shader()->get_fixed_uniform("texture");
+		u_texture_ = shader->get_fixed_uniform("texture");
 		ASSERT_LOG(u_texture_ != -1, "chunk_colored: texture == -1");	
 		
 		if(node.has_key("random")) {
@@ -624,7 +642,7 @@ namespace voxel
 						if(node["random"].has_key("type")) {
 								tiles_[position(x,y,z)] = node["random"]["type"].as_string();
 						} else {
-								tiles_[position(x,y,z)] = get_terrain_info().random()->first;
+								tiles_[position(x,y,z)] = get_textured_terrain_info().random()->first;
 						}
 					}
 				}
@@ -686,51 +704,56 @@ namespace voxel
 			int x = t.first.x;
 			int y = t.first.y;
 			int z = t.first.z;
-			GLfloat xf = GLfloat(x);
-			GLfloat yf = GLfloat(y);
-			GLfloat zf = GLfloat(z);
+			GLfloat xf = GLfloat(x * scale_x());
+			GLfloat zf = GLfloat(z * scale_z());
+			GLfloat sx = GLfloat(scale_x());
+			GLfloat sy = GLfloat(scale_y());
+			GLfloat sz = GLfloat(scale_z());
 
-			if(x > 0) {
-				if(is_solid(x-1, y, z) == false) {
-					add_face_left(xf,yf,zf,1,t.second);
+			for(int h = 0; h <= y; ++h) {
+				GLfloat yf = GLfloat(h * scale_y());
+				if(x > 0) {
+					if(is_solid(x-1, h, z) == false) {
+						add_face_left(xf,yf,zf,sx,t.second);
+					}
+				} else {
+					add_face_left(xf,yf,zf,sx,t.second);
 				}
-			} else {
-				add_face_left(xf,yf,zf,1,t.second);
-			}
-			if(x < size_x() - 1) {
-				if(is_solid(x+1, y, z) == false) {
-					add_face_right(xf,yf,zf,1,t.second);
+				if(x < size_x() - 1) {
+					if(is_solid(x+1, h, z) == false) {
+						add_face_right(xf,yf,zf,sx,t.second);
+					}
+				} else {
+					add_face_right(xf,yf,zf,sx,t.second);
 				}
-			} else {
-				add_face_right(xf,yf,zf,1,t.second);
-			}
-			if(y > 0) {
-				if(is_solid(x, y-1, z) == false) {
-					add_face_bottom(xf,yf,zf,1,t.second);
+				if(y > 0) {
+					if(is_solid(x, h-1, z) == false) {
+						add_face_bottom(xf,yf,zf,sy,t.second);
+					}
+				} else {
+					add_face_bottom(xf,yf,zf,sy,t.second);
 				}
-			} else {
-				add_face_bottom(xf,yf,zf,1,t.second);
-			}
-			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					add_face_top(xf,yf,zf,1,t.second);
+				if(y < size_y() - 1) {
+					if(is_solid(x, h+1, z) == false) {
+						add_face_top(xf,yf,zf,sy,t.second);
+					}
+				} else {
+					add_face_top(xf,yf,zf,sy,t.second);
 				}
-			} else {
-				add_face_top(xf,yf,zf,1,t.second);
-			}
-			if(z > 0) {
-				if(is_solid(x, y, z-1) == false) {
-					add_face_back(xf,yf,zf,1,t.second);
+				if(z > 0) {
+					if(is_solid(x, h, z-1) == false) {
+						add_face_back(xf,yf,zf,sz,t.second);
+					}
+				} else {
+					add_face_back(xf,yf,zf,sz,t.second);
 				}
-			} else {
-				add_face_back(xf,yf,zf,1,t.second);
-			}
-			if(z < size_z() - 1) {
-				if(is_solid(x, y, z+1) == false) {
-					add_face_front(xf,yf,zf,1,t.second);
+				if(z < size_z() - 1) {
+					if(is_solid(x, h, z+1) == false) {
+						add_face_front(xf,yf,zf,sz,t.second);
+					}
+				} else {
+					add_face_front(xf,yf,zf,sz,t.second);
 				}
-			} else {
-				add_face_front(xf,yf,zf,1,t.second);
 			}
 		}
 		
@@ -746,13 +769,6 @@ namespace voxel
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray_[n].size()*sizeof(uint8_t), &carray_[n][0]);
 		}
-		//std::cerr << "Built " << carray_[FRONT_FACE].size()/4 << " front faces" << std::endl;
-		//std::cerr << "Built " << carray_[BACK_FACE].size()/4 << " back faces" << std::endl;
-		//std::cerr << "Built " << carray_[TOP_FACE].size()/4 << " top faces" << std::endl;
-		//std::cerr << "Built " << carray_[BOTTOM_FACE].size()/4 << " bottom faces" << std::endl;
-		//std::cerr << "Built " << carray_[LEFT_FACE].size()/4 << " left faces" << std::endl;
-		//std::cerr << "Built " << carray_[RIGHT_FACE].size()/4 << " right faces" << std::endl;
-
 		clear_vertex_data();
 		carray_.clear();
 
@@ -832,26 +848,19 @@ namespace voxel
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, tattrib_offsets_[n], tarray_[n].size()*sizeof(GLfloat), &tarray_[n][0]);
 		}
-		//std::cerr << "Built " << tarray_[FRONT_FACE].size()/2 << " front faces" << std::endl;
-		//std::cerr << "Built " << tarray_[BACK_FACE].size()/2 << " back faces" << std::endl;
-		//std::cerr << "Built " << tarray_[TOP_FACE].size()/2 << " top faces" << std::endl;
-		//std::cerr << "Built " << tarray_[BOTTOM_FACE].size()/2 << " bottom faces" << std::endl;
-		//std::cerr << "Built " << tarray_[LEFT_FACE].size()/2 << " left faces" << std::endl;
-		//std::cerr << "Built " << tarray_[RIGHT_FACE].size()/2 << " right faces" << std::endl;
-
 		clear_vertex_data();
 		tarray_.clear();
 
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void chunk_colored::add_carray_data(const SDL_Color& col, std::vector<uint8_t>& carray)
+	void chunk_colored::add_carray_data(int face, const graphics::color& color, std::vector<uint8_t>& carray)
 	{
-		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
-			carray.push_back(col.r);
-			carray.push_back(col.g);
-			carray.push_back(col.b);
-			carray.push_back(col.a);
+		for(int n = 0; n != 6; ++n) {
+			carray.push_back(color.r());
+			carray.push_back(color.g());
+			carray.push_back(color.b());
+			carray.push_back(color.a());
 		}
 	}
 
@@ -916,48 +925,96 @@ namespace voxel
 		}
 	}
 
-	void chunk_colored::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(LEFT_FACE, x, y, z, s, get_vertex_data()[LEFT_FACE]);
-		add_carray_data(col, carray_[LEFT_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.faces & LEFT ? it->second.color[4] : it->second.color[0];
+				add_carray_data(LEFT_FACE, color, carray_[LEFT_FACE]);
+				return;
+			}
+		}
+		add_carray_data(LEFT_FACE, graphics::color(col), carray_[LEFT_FACE]);
 	}
 
-	void chunk_colored::add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_right(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(RIGHT_FACE, x, y, z, s, get_vertex_data()[RIGHT_FACE]);
-		add_carray_data(col, carray_[RIGHT_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.faces & RIGHT ? it->second.color[1] : it->second.color[0];
+				add_carray_data(RIGHT_FACE, color, carray_[RIGHT_FACE]);
+				return;
+			}
+		}
+		add_carray_data(RIGHT_FACE, graphics::color(col), carray_[RIGHT_FACE]);
 	}
 
-	void chunk_colored::add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_front(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(FRONT_FACE, x, y, z, s, get_vertex_data()[FRONT_FACE]);
-		add_carray_data(col, carray_[FRONT_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.color[0];
+				add_carray_data(FRONT_FACE, color, carray_[FRONT_FACE]);
+				return;
+			}
+		}
+		add_carray_data(FRONT_FACE, graphics::color(col), carray_[FRONT_FACE]);
 	}
 
-	void chunk_colored::add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_back(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(BACK_FACE, x, y, z, s, get_vertex_data()[BACK_FACE]);
-		add_carray_data(col, carray_[BACK_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.faces & BACK ? it->second.color[3] : it->second.color[0];
+				add_carray_data(BACK_FACE, color, carray_[BACK_FACE]);
+				return;
+			}
+		}
+		add_carray_data(BACK_FACE, graphics::color(col), carray_[BACK_FACE]);
 	}
 
-	void chunk_colored::add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_top(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(TOP_FACE, x, y, z, s, get_vertex_data()[TOP_FACE]);
-		add_carray_data(col, carray_[TOP_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.faces & TOP ? it->second.color[2] : it->second.color[0];
+				add_carray_data(TOP_FACE, color, carray_[TOP_FACE]);
+				return;
+			}
+		}
+		add_carray_data(TOP_FACE, graphics::color(col), carray_[TOP_FACE]);
 	}
 
-	void chunk_colored::add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const SDL_Color& col)
+	void chunk_colored::add_face_bottom(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const variant& col)
 	{
 		add_vertex_data(BOTTOM_FACE, x, y, z, s, get_vertex_data()[BOTTOM_FACE]);
-		add_carray_data(col, carray_[BOTTOM_FACE]);
+		if(col.is_string()) {
+			auto it = get_colored_terrain_info().find(col.as_string());
+			if(it != get_colored_terrain_info().end()) {
+				const graphics::color color = it->second.faces & BOTTOM ? it->second.color[5] : it->second.color[0];
+				add_carray_data(BOTTOM_FACE, color, carray_[BOTTOM_FACE]);
+				return;
+			}
+		}
+		add_carray_data(BOTTOM_FACE, graphics::color(col), carray_[BOTTOM_FACE]);
 	}
 
 	void chunk_textured::add_face_left(GLfloat x, GLfloat y, GLfloat z, GLfloat s, const std::string& bid)
 	{
 		add_vertex_data(LEFT_FACE, x, y, z, s, get_vertex_data()[LEFT_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_left: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_left: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & LEFT ? it->second.area[4] : it->second.area[0];
 		add_tarray_data(LEFT_FACE, area, tarray_[LEFT_FACE]);
 	}
@@ -966,8 +1023,8 @@ namespace voxel
 	{
 		add_vertex_data(RIGHT_FACE, x, y, z, s, get_vertex_data()[RIGHT_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_right: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_right: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & RIGHT ? it->second.area[1] : it->second.area[0];
 		add_tarray_data(RIGHT_FACE, area, tarray_[RIGHT_FACE]);
 	}
@@ -976,8 +1033,8 @@ namespace voxel
 	{
 		add_vertex_data(FRONT_FACE, x, y, z, s, get_vertex_data()[FRONT_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_front: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_front: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.area[0];
 		add_tarray_data(FRONT_FACE, area, tarray_[FRONT_FACE]);
 	}
@@ -986,8 +1043,8 @@ namespace voxel
 	{
 		add_vertex_data(BACK_FACE, x, y, z, s, get_vertex_data()[BACK_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_back: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_back: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & BACK ? it->second.area[3] : it->second.area[0];
 		add_tarray_data(BACK_FACE, area, tarray_[BACK_FACE]);
 	}
@@ -996,8 +1053,8 @@ namespace voxel
 	{
 		add_vertex_data(TOP_FACE, x, y, z, s, get_vertex_data()[TOP_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_top: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_top: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & TOP ? it->second.area[2] : it->second.area[0];
 		add_tarray_data(TOP_FACE, area, tarray_[TOP_FACE]);
 	}
@@ -1006,8 +1063,8 @@ namespace voxel
 	{
 		add_vertex_data(BOTTOM_FACE, x, y, z, s, get_vertex_data()[BOTTOM_FACE]);
 
-		auto it = get_terrain_info().find(bid);
-		ASSERT_LOG(it != get_terrain_info().end(), "add_face_bottom: Unable to find tile type in list: " << bid);
+		auto it = get_textured_terrain_info().find(bid);
+		ASSERT_LOG(it != get_textured_terrain_info().end(), "add_face_bottom: Unable to find tile type in list: " << bid);
 		const rectf area = it->second.faces & BOTTOM ? it->second.area[5] : it->second.area[0];
 		add_tarray_data(BOTTOM_FACE, area, tarray_[BOTTOM_FACE]);
 	}
@@ -1017,7 +1074,8 @@ namespace voxel
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
+		glm::mat4 model = /*glm::scale(glm::mat4(1.0f), glm::vec3(1.0f/float(scale_x()), 1.0f/float(scale_y()), 1.0f/float(scale_z())))
+			* */glm::translate(glm::mat4(1.0f), worldspace_position());
 		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
@@ -1050,7 +1108,7 @@ namespace voxel
 		ASSERT_LOG(tattrib_offsets_.size() != 0, "tattrib_offsets_.size() == 0");
 
 		glActiveTexture(GL_TEXTURE0);
-		get_terrain_info().get_tex().set_as_current_texture();
+		get_textured_terrain_info().get_tex().set_as_current_texture();
 		glUniform1i(u_texture_, 0);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), worldspace_position());
@@ -1095,59 +1153,12 @@ namespace voxel
 		if(it == tiles_.end()) {
 			return variant();
 		}
-		std::vector<variant> v;
-		v.push_back(variant(it->second.r));
-		v.push_back(variant(it->second.g));
-		v.push_back(variant(it->second.b));
-		v.push_back(variant(it->second.a));
-		return variant(&v);
-	}
-
-	std::vector<variant> chunk_colored::create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist)
-	{
-		std::vector<variant> vertex_list;
-		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
-			int x = t->first.x;
-			int y = t->first.y;
-			int z = t->first.z;
-
-			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-					vlist[std::make_pair(x,z)] = y+1;
-				}
-			} else {
-				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-				vlist[std::make_pair(x,z)] = y+1;
-			}
-		}
-		return vertex_list;
-	}
-
-	std::vector<variant> chunk_textured::create_dg_vertex_list(std::map<std::pair<int,int>, int>& vlist)
-	{
-		std::vector<variant> vertex_list;
-		for(auto t = tiles_.begin(); t != tiles_.end(); ++t) {
-			int x = t->first.x;
-			int y = t->first.y;
-			int z = t->first.z;
-
-			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
-					vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-					vlist[std::make_pair(x,z)] = y+1;
-				}
-			} else {
-				vertex_list.push_back(variant_list_from_xyz(x,y+1,z));
-				vlist[std::make_pair(x,z)] = y+1;
-			}
-		}
-		return vertex_list;
+		return it->second;
 	}
 
 	void chunk_colored::handle_set_tile(int x, int y, int z, const variant& type)
 	{
-		tiles_[position(x,y,z)] = graphics::color(type).as_sdl_color();
+		tiles_[position(x,y,z)] = type;
 	}
 
 	void chunk_colored::handle_del_tile(int x, int y, int z)
@@ -1180,8 +1191,8 @@ namespace voxel
 		auto it = tiles_.find(position(x,y,z));
 		if(it != tiles_.end()) {
 			if(it->second.empty() == false) {
-				auto ti = get_terrain_info().find(it->second);
-				ASSERT_LOG(ti != get_terrain_info().end(), "is_solid: Terrain not found: " << it->second);
+				auto ti = get_textured_terrain_info().find(it->second);
+				ASSERT_LOG(ti != get_textured_terrain_info().end(), "is_solid: Terrain not found: " << it->second);
 				return !ti->second.transparent;
 			}
 		}
@@ -1192,7 +1203,13 @@ namespace voxel
 	{
 		auto it = tiles_.find(position(x,y,z));
 		if(it != tiles_.end()) {
-			return it->second.a == 255;
+			if(it->second.is_string()) {
+				auto ti = get_colored_terrain_info().find(it->second.as_string());
+				if(ti != get_colored_terrain_info().end()) {
+					return ti->second.color[0].a() == 255;
+				}
+			}
+			return graphics::color(it->second).a() == 255;
 		}
 		return false;
 	}
@@ -1206,12 +1223,7 @@ namespace voxel
 			v.push_back(variant(t.first.x));
 			v.push_back(variant(t.first.y));
 			v.push_back(variant(t.first.z));
-			std::vector<variant> rgba;
-			rgba.push_back(variant(t.second.r));
-			rgba.push_back(variant(t.second.g));
-			rgba.push_back(variant(t.second.b));
-			rgba.push_back(variant(t.second.a));
-			vox[variant(&v)] = variant(&rgba);
+			vox[variant(&v)] = t.second;
 		}
 		std::string s = variant(&vox).write_json();
 		std::vector<char> enc_and_comp(base64::b64encode(zip::compress(std::vector<char>(s.begin(), s.end()))));
@@ -1282,7 +1294,7 @@ namespace voxel
 
 	namespace chunk_factory 
 	{
-		chunk_ptr create(const variant& v)
+		chunk_ptr create(gles2::program_ptr shader, logical_world_ptr logic, const variant& v)
 		{
 			if(v.is_callable()) {
 				chunk_ptr c = v.try_convert<chunk>();
@@ -1292,9 +1304,9 @@ namespace voxel
 			ASSERT_LOG(v.has_key("type"), "No 'type' attribute found in definition.");
 			const std::string& type = v["type"].as_string();
 			if(type == "textured") {
-				return chunk_ptr(new chunk_textured(v));
+				return chunk_ptr(new chunk_textured(shader, logic, v));
 			} else if(type == "colored") {
-				return chunk_ptr(new chunk_colored(v));
+				return chunk_ptr(new chunk_colored(shader, logic, v));
 			} else {
 				ASSERT_LOG(true, "Unable to create a chunk of type " << type);
 			}

@@ -2019,12 +2019,10 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		if(event.button == SDL_BUTTON_LEFT) {
 			// remove voxel
 			if(voxel_dialog_ && voxel_dialog_->textured_mode()) {
-				ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_editor_tiles().size(), 
-					"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_editor_tiles().size());
+				ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_textured_editor_tiles().size(), 
+					"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_textured_editor_tiles().size());
 			}
-			if(lvl_->isomap()) {
-				lvl_->isomap()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
-			} else if(lvl_->iso_world()) {
+			if(lvl_->iso_world()) {
 				lvl_->iso_world()->del_tile(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
 			}
 		} else if(event.button == SDL_BUTTON_RIGHT) {
@@ -2032,17 +2030,13 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			glm::ivec3 at_pos = g_voxel_coord + g_facing;
 			if(voxel_dialog_) {
 				if(voxel_dialog_->textured_mode()) {
-					ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_editor_tiles().size(), 
-						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_editor_tiles().size());
-					if(lvl_->isomap()) {
-						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
-					} else if(lvl_->iso_world()) {
-						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::get_editor_tiles()[cur_voxel_tileset_].id);
+					ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::get_textured_editor_tiles().size(), 
+						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::get_textured_editor_tiles().size());
+					if(lvl_->iso_world()) {
+						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::get_textured_editor_tiles()[cur_voxel_tileset_].id);
 					}
 				} else {
-					if(lvl_->isomap()) {
-						lvl_->isomap()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
-					} else if(lvl_->iso_world()) {
+					if(lvl_->iso_world()) {
 						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
 					}
 				}
@@ -2953,8 +2947,8 @@ void editor::set_voxel_tileset(int index)
 {
 	cur_voxel_tileset_ = index;
 	if(cur_voxel_tileset_ < 0) {
-		cur_voxel_tileset_ = voxel::chunk::get_editor_tiles().size()-1;
-	} else if(cur_voxel_tileset_ >= voxel::chunk::get_editor_tiles().size()) {
+		cur_voxel_tileset_ = voxel::chunk::get_textured_editor_tiles().size()-1;
+	} else if(cur_voxel_tileset_ >= voxel::chunk::get_textured_editor_tiles().size()) {
 		cur_voxel_tileset_ = 0;
 	}
 }
@@ -3765,9 +3759,6 @@ void editor::draw_gui() const
 		}
 
 		variant tile_type;
-		if(lvl_->isomap() != NULL) {
-			tile_type = lvl_->isomap()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
-		}
 		if(lvl_->iso_world() != NULL) {
 			tile_type = lvl_->iso_world()->get_tile_type(g_voxel_coord.x, g_voxel_coord.y, g_voxel_coord.z);
 		}

@@ -4322,34 +4322,15 @@ FUNCTION_ARGS_DEF
 	RETURN_TYPE("commands")
 END_FUNCTION_DEF(lookat)
 
-FUNCTION_DEF(is_solid_voxel, 1, 1, "is_solid_voxel([int, int, int]) -> bool: Returns true if the voxel at a given location exists and is solid.")
-	variant xyz = args()[0]->evaluate(variables);
-	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
-	return variant::from_bool(level::current().isomap()->is_solid(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int()));
+FUNCTION_DEF(create_voxel_world, 1, 1, "create_voxel_world(node) -> logical_world: Takes a map describing an isoworld and generates a logical view of it.")
+	variant v = args()[0]->evaluate(variables);
+	voxel::logical_world_ptr w = voxel::logical_world_ptr(v.try_convert<voxel::logical_world>());
+	ASSERT_LOG(w != NULL, "Couldn't convert to voxel::logical_world");
+	return variant(w.get());
 FUNCTION_ARGS_DEF
-	ARG_TYPE("[int,int,int]")
-	RETURN_TYPE("bool")
-END_FUNCTION_DEF(is_solid_voxel)
-
-FUNCTION_DEF(get_voxel_type, 1, 1, "get_voxel_type([int, int, int]) -> string: Returns type of the voxel at a given location if it exists.")
-	variant xyz = args()[0]->evaluate(variables);
-	ASSERT_LOG(xyz.is_list() && xyz.num_elements() == 3, "Argument to is_solid_voxel must be a list of 3 elements.");
-	return level::current().isomap()->get_tile_type(xyz[0].as_int(), xyz[1].as_int(), xyz[2].as_int());
-FUNCTION_ARGS_DEF
-	ARG_TYPE("[int,int,int]")
-	RETURN_TYPE("string|null")
-END_FUNCTION_DEF(get_voxel_type)
-
-FUNCTION_DEF(graph_from_isomap, 1, 2, "graph_from_isomap(builtin chunk, (opt) bool allow_diagonals) -> builtin directed_graph: Returns a directed graph suitable for using in a pathfinding function")
-	voxel::chunk* isomap = args()[0]->evaluate(variables).try_convert<voxel::chunk>();
-	bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
-	ASSERT_LOG(isomap != NULL, "Invalid argument to graph_from_isomap. Must be of type 'isomap'");
-	return variant(isomap->create_directed_graph(allow_diagonals).get());
-FUNCTION_ARGS_DEF
-	ARG_TYPE("builtin chunk")
-	ARG_TYPE("bool")
-	RETURN_TYPE("builtin directed_graph")
-END_FUNCTION_DEF(graph_from_isomap)
+	ARG_TYPE("map")
+	RETURN_TYPE("builtin logical_world")
+END_FUNCTION_DEF(create_voxel_world)
 
 #endif
 

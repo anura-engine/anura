@@ -34,7 +34,7 @@ namespace editor_dialogs
 	public:
 		static void global_tile_update();
 		explicit voxel_editor_dialog(editor& e);
-		~voxel_editor_dialog();
+		virtual ~voxel_editor_dialog();
 	
 		void init();
 		void select_category(const std::string& category);

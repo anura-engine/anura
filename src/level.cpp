@@ -246,12 +246,6 @@ level::level(const std::string& level_cfg, variant node)
 #endif
 
 #if defined(USE_ISOMAP)
-	ASSERT_LOG(!node.has_key("isomap") || !node.has_key("isoworld"), "Level can't have both 'isoworld' and 'isomap' attributes.");
-	if(node.has_key("isomap")) {
-		isomap_ = voxel::chunk_factory::create(node["isomap"]);
-	} else {
-		isomap_.reset();
-	}
 	if(node.has_key("camera")) {
 		camera_.reset(new camera_callable(node["camera"]));
 	} else {
@@ -1553,9 +1547,7 @@ variant level::write() const
 #endif
 
 #if defined(USE_ISOMAP)
-	if(isomap_) {
-		res.add("isomap", isomap_->write());
-	} else if(iso_world_) {
+	if(iso_world_) {
 		res.add("isoworld", iso_world_->write());
 	}
 	if(camera_) {
@@ -2051,12 +2043,7 @@ void level::draw(int x, int y, int w, int h) const
 	h += highest_tile_;
 	
 #if defined(USE_ISOMAP)
-	if(isomap_) {
-		// XX hackity hack
-		gles2::shader_program_ptr active = gles2::active_shader();
-		isomap_->draw(graphics::lighting_ptr(), camera_);
-		glUseProgram(active->shader()->get());
-	} else if(iso_world_) {
+	if(iso_world_) {
 		// XX hackity hack
 		gles2::shader_program_ptr active = gles2::active_shader();
 		iso_world_->draw(camera_);
@@ -4018,19 +4005,6 @@ DEFINE_SET_FIELD
 	}
 
 #if defined(USE_ISOMAP)
-DEFINE_FIELD(isomap, "builtin chunk|null")
-	if(obj.isomap_) {
-		return variant(obj.isomap_.get());
-	} else {
-		return variant();
-	}
-DEFINE_SET_FIELD_TYPE("builtin chunk|map|null")
-	if(value.is_null()) {
-		obj.isomap_.reset(); 
-	} else {
-		obj.isomap_ = voxel::chunk_factory::create(value);
-	}
-
 DEFINE_FIELD(isoworld, "builtin world|null")
 	if(obj.iso_world_) {
 		return variant(obj.iso_world_.get());
