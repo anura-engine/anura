@@ -76,6 +76,8 @@ public:
 
 	void set_base_slot(int base) { base_slot_ = base; }
 
+	int num_args() const { return values_.size(); }
+
 private:
 	const std::vector<std::string>* value_names_;
 	std::vector<variant> values_;

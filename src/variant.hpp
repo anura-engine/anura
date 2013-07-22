@@ -85,10 +85,15 @@ struct type_error {
 static const int64_t VARIANT_DECIMAL_PRECISION = DECIMAL_PRECISION;
 
 struct VariantFunctionTypeInfo : public reference_counted_object {
+	VariantFunctionTypeInfo() : num_unneeded_args(0) {}
 	std::vector<std::string> arg_names;
 	std::vector<variant> default_args;
 	std::vector<variant_type_ptr> variant_types;
 	variant_type_ptr return_type;
+
+	int num_unneeded_args;
+
+	int num_default_args() const { return default_args.size() + num_unneeded_args; }
 };
 
 typedef boost::intrusive_ptr<VariantFunctionTypeInfo> VariantFunctionTypeInfoPtr;
