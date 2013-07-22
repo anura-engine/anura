@@ -162,8 +162,7 @@ public:
 
 	const std::map<std::string, boost::shared_ptr<Animation> >& animations() const { return animations_; }
 
-	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only=false);
-	void accumulate_translation(const glm::vec3& translate);
+	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, glm::vec3 translation, bool children_only=false);
 	void clear_transforms();
 
 	void draw(graphics::lighting_ptr lighting, camera_callable_ptr camera, const glm::mat4& model) const;
@@ -187,7 +186,7 @@ private:
 
 	void reset_geometry();
 	void generate_geometry();
-	void translate_geometry(const glm::vec3& amount);
+	void translate_geometry(const glm::vec3& amount, bool children_only=false);
 	void rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only=false);
 
 	void set_prototype();
@@ -197,12 +196,12 @@ private:
 	std::vector<std::pair<std::string, glm::vec3> > pivots_;
 
 	struct Rotation {
+		glm::vec3 translation_;
 		int src_pivot, dst_pivot;
 		GLfloat amount;
 		bool children_only;
 	};
 	std::vector<Rotation> rotation_;
-	glm::vec3 translation_;
 	std::vector<glm::vec3> vertexes_;
 
 	std::vector<voxel_model_ptr> children_;

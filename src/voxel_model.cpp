@@ -701,86 +701,71 @@ void voxel_model::process_animation(GLfloat advance)
 		callable->add("time", variant(decimal(old_anim_time_)));
 
 		for(const AnimationTransform& transform : old_anim_->transforms) {
+			glm::vec3 translate;
 			if(transform.translation_formula) {
 				const variant result = transform.translation_formula->execute(*callable);
-				glm::vec3 translate = variant_to_vec3(result)*(1.0f - ratio);
-				get_child(transform.layer)->accumulate_translation(translate);
+				translate = variant_to_vec3(result)*(1.0f - ratio);
 			}
 
-			if(!transform.rotation_formula) {
-				continue;
+			GLfloat rotation = 0.0;
+			if(transform.rotation_formula) {
+				rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
 			}
 
-			GLfloat rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
-			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio), transform.children_only);
+			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio), translate, transform.children_only);
 		}
 	}
 
 	callable->add("time", variant(decimal(anim_time_)));
 
 	for(const AnimationTransform& transform : anim_->transforms) {
+		glm::vec3 translate;
 		if(transform.translation_formula) {
 			const variant result = transform.translation_formula->execute(*callable);
-			glm::vec3 translate = variant_to_vec3(result) * ratio;
-			get_child(transform.layer)->accumulate_translation(translate);
+			translate = variant_to_vec3(result) * ratio;
 		}
 
-		if(!transform.rotation_formula) {
-			continue;
+		GLfloat rotation = 0.0;
+		if(transform.rotation_formula) {
+			rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
 		}
 
-		GLfloat rotation = GLfloat(transform.rotation_formula->execute(*callable).as_decimal().as_float());
-		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, transform.children_only);
+		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, translate, transform.children_only);
 	}
 
 	generate_geometry();
 }
 
-void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, bool children_only)
+void voxel_model::accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, glm::vec3 translation, bool children_only)
 {
 	invalidated_ = true;
 
 	int pivot_a_index = -1, pivot_b_index = -1;
-	int index = 0;
-	for(const std::pair<std::string, glm::vec3>& p : pivots_) {
-		if(p.first == pivot_a) {
-			pivot_a_index = index;
-			break;
+
+	if(pivot_a.empty() == false) {
+		int index = 0;
+		for(const std::pair<std::string, glm::vec3>& p : pivots_) {
+			if(p.first == pivot_a) {
+				pivot_a_index = index;
+				break;
+			}
+			++index;
 		}
-		++index;
-	}
 
-	index = 0;
-	for(const std::pair<std::string, glm::vec3>& p : pivots_) {
-		if(p.first == pivot_b) {
-			pivot_b_index = index;
-			break;
+		index = 0;
+		for(const std::pair<std::string, glm::vec3>& p : pivots_) {
+			if(p.first == pivot_b) {
+				pivot_b_index = index;
+				break;
+			}
+			++index;
 		}
-		++index;
+
+		ASSERT_LOG(pivot_a_index != -1 && pivot_b_index != -1, "Illegal pivot specification: " << pivot_a << " - " << pivot_b);
 	}
 
-	ASSERT_LOG(pivot_a_index != -1 && pivot_b_index != -1, "Illegal pivot specification: " << pivot_a << " - " << pivot_b);
-
-	if(pivot_a_index > pivot_b_index) {
-		std::swap(pivot_a_index, pivot_b_index);
-		rotation = -rotation;
-	}
-
-	for(Rotation& rotate : rotation_) {
-		if(rotate.src_pivot == pivot_a_index && rotate.dst_pivot == pivot_b_index && rotate.children_only == children_only) {
-			rotate.amount += rotation;
-			return;
-		}
-	}
-
-	Rotation new_rotation = { pivot_a_index, pivot_b_index, rotation, children_only };
+	Rotation new_rotation = { translation, pivot_a_index, pivot_b_index, rotation, children_only };
 	rotation_.push_back(new_rotation);
-}
-
-void voxel_model::accumulate_translation(const glm::vec3& translate)
-{
-	translation_ += translate;
-	//std::cerr << "TRANSLATION: " << translation_[1] << "\n";
 }
 
 void voxel_model::generate_geometry()
@@ -794,7 +779,6 @@ void voxel_model::generate_geometry()
 void voxel_model::clear_transforms()
 {
 	rotation_.clear();
-	translation_ = glm::vec3(0.0f);
 	invalidated_ = true;
 	for(auto child : children_) {
 		child->clear_transforms();
@@ -873,9 +857,11 @@ void voxel_model::apply_transforms()
 {
 	invalidated_ = false;
 
-	translate_geometry(translation_);
 	for(const Rotation& rotate : rotation_) {
-		rotate_geometry(pivots_[rotate.src_pivot].second, pivots_[rotate.dst_pivot].second, rotate.amount, rotate.children_only);
+		translate_geometry(rotate.translation_, rotate.children_only);
+		if(rotate.src_pivot != -1) {
+			rotate_geometry(pivots_[rotate.src_pivot].second, pivots_[rotate.dst_pivot].second, rotate.amount, rotate.children_only);
+		}
 	}
 
 	for(const voxel_model_ptr& child : children_) {
@@ -883,14 +869,16 @@ void voxel_model::apply_transforms()
 	}
 }
 
-
-void voxel_model::translate_geometry(const glm::vec3& amount)
+void voxel_model::translate_geometry(const glm::vec3& amount, bool children_only)
 {
 	for(const voxel_model_ptr& child : children_) {
 		child->translate_geometry(amount);
 	}
 
-	model_ = glm::translate(model_, amount);
+	if(!children_only) {
+		//model_ = glm::translate(model_, amount);
+		model_ = glm::translate(glm::mat4(), amount) * model_;
+	}
 }
 
 void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfloat amount, bool children_only)
