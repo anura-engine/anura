@@ -18,9 +18,10 @@ typedef boost::shared_ptr<const voxel_object_type> const_voxel_object_type_ptr;
 class voxel_object_type
 {
 public:
-	enum ENTRY_TYPE { ENTRY_DATA, ENTRY_VALUE, NUM_ENTRY_TYPE };
+	enum ENTRY_TYPE { ENTRY_ME, ENTRY_DATA, ENTRY_VALUE, NUM_ENTRY_TYPE };
 	static game_logic::const_formula_callable_definition_ptr get_definition(const std::string& id);
 	static const_voxel_object_type_ptr get(const std::string& id);
+	static bool is_derived_from(const std::string& base, const std::string& derived);
 
 	voxel_object_type(const std::string& id, variant node);
 

@@ -31,6 +31,10 @@
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_type.hpp"
+#include "voxel_object.hpp"
+#include "voxel_object_type.hpp"
+
+using namespace voxel;
 
 variant_type::variant_type()
 {
@@ -201,7 +205,7 @@ public:
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_CALLABLE) {
-			if(type->is_builtin() || type->is_custom_object() || type->is_class() || type->is_interface()) {
+			if(type->is_builtin() || type->is_custom_object() || type->is_voxel_object() || type->is_class() || type->is_interface()) {
 				return true;
 			}
 		}
@@ -422,6 +426,65 @@ public:
 	}
 
 	const std::string* is_custom_object() const { return &type_; }
+private:
+	std::string type_;
+};
+
+class variant_type_voxel_object : public variant_type
+{
+public:
+	explicit variant_type_voxel_object(const std::string& type) : type_(type)
+	{
+		assert(type.empty() == false);
+	}
+
+	bool match(const variant& v) const {
+		const voxel_object* obj = v.try_convert<voxel_object>();
+		if(!obj) {
+			return false;
+		}
+
+		return type_ == "" || obj->is_a(type_);
+	}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_voxel_object* other = dynamic_cast<const variant_type_voxel_object*>(&o);
+		if(!other) {
+			return false;
+		}
+
+		return type_ == other->type_;
+	}
+
+	std::string to_string_impl() const {
+		if(type_ == "") {
+			return "voxel_object";
+		}
+
+		return "vox " + type_;
+	}
+
+	bool is_compatible(variant_type_ptr type) const {
+		const variant_type_voxel_object* other = dynamic_cast<const variant_type_voxel_object*>(type.get());
+		if(other == NULL) {
+			return false;
+		}
+
+		return type_ == "" || voxel_object_type::is_derived_from(type_, other->type_);
+	}
+
+	const game_logic::formula_callable_definition* get_definition() const {
+		if(type_ == "") {
+			return variant_type::get_builtin("voxel_object")->get_definition();
+		}
+
+		fprintf(stderr, "LOOKUP CUSTOM OBJ DEF: %s\n", type_.c_str());
+		const game_logic::formula_callable_definition* def = voxel_object_type::get_definition(type_).get();
+		ASSERT_LOG(def, "Could not find custom object: " << type_);
+		return def;
+	}
+
+	const std::string* is_voxel_object() const { return &type_; }
 private:
 	std::string type_;
 };
@@ -1315,6 +1378,9 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 	} else if(value.try_convert<custom_object>()) {
 		const custom_object* obj = value.try_convert<custom_object>();
 		return variant_type::get_custom_object(obj->query_value("type").as_string());
+	} else if(value.try_convert<voxel_object>()) {
+		const voxel_object* obj = value.try_convert<voxel_object>();
+		return variant_type::get_voxel_object(obj->type());
 	} else if(value.is_list()) {
 		std::vector<variant_type_ptr> types;
 		foreach(const variant& item, value.as_list()) {
@@ -1576,8 +1642,12 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("custom_obj") || i1->equals("object_type"))) {
 			++i1;
 			v.push_back(variant_type_ptr(new variant_type_custom_object("")));
-		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("class") || i1->equals("obj"))) {
+		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("voxel_obj"))) {
+			++i1;
+			v.push_back(variant_type::get_builtin("voxel_object"));
+		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("class") || i1->equals("obj") || i1->equals("vox"))) {
 			const bool is_class = i1->equals("class");
+			const bool is_vox = i1->equals("vox");
 			++i1;
 			ASSERT_COND(i1 != i2, "EXPECTED TYPE NAME BUT FOUND EMPTY EXPRESSION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 			std::string class_name(i1->begin, i1->end);
@@ -1590,6 +1660,8 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			if(is_class) {
 				v.push_back(variant_type_ptr(new variant_type_class(class_name)));
+			} else if(is_vox) {
+				v.push_back(variant_type_ptr(new variant_type_voxel_object(class_name)));
 			} else {
 				v.push_back(variant_type_ptr(new variant_type_custom_object(class_name)));
 			}
@@ -1993,6 +2065,14 @@ variant_type_ptr variant_type::get_class(const std::string& class_name)
 variant_type_ptr variant_type::get_custom_object(const std::string& name)
 {
 	return variant_type_ptr(new variant_type_custom_object(name));
+}
+
+variant_type_ptr variant_type::get_voxel_object(const std::string& name)
+{
+	if(name == "") {
+		return variant_type::get_builtin("voxel_object");
+	}
+	return variant_type_ptr(new variant_type_voxel_object(name));
 }
 
 variant_type_ptr variant_type::get_builtin(const std::string& name)

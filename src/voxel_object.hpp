@@ -42,6 +42,9 @@ public:
 	explicit voxel_object(const variant& node);
 	virtual ~voxel_object();
 
+	const std::string& type() const { return type_; }
+	bool is_a(const std::string& type) const { return type_ == type; }
+
 	void draw(const graphics::lighting_ptr lighting, camera_callable_ptr camera) const;
 	virtual void process(level& lvl);
 	bool handle_sdl_event(const SDL_Event& event, bool claimed);
@@ -79,8 +82,6 @@ public:
 	void set_paused(bool p=true);
 
 	size_t cycle() const { return cycle_; }
-
-	std::string type() const { return type_; }
 protected:
 private:
 	DECLARE_CALLABLE(voxel_object);

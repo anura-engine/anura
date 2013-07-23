@@ -55,6 +55,7 @@ public:
 	static variant_type_ptr get_specific_map(const std::map<variant, variant_type_ptr>& type_map);
 	static variant_type_ptr get_class(const std::string& class_name);
 	static variant_type_ptr get_custom_object(const std::string& name="");
+	static variant_type_ptr get_voxel_object(const std::string& name="");
 	static variant_type_ptr get_builtin(const std::string& id);
 	static variant_type_ptr get_function_type(const std::vector<variant_type_ptr>& arg_types, variant_type_ptr return_type, int min_args);
 	static variant_type_ptr get_function_overload_type(variant_type_ptr overloaded_fn, const std::vector<variant_type_ptr>& fn);
@@ -82,6 +83,7 @@ public:
 	virtual bool is_class(std::string* class_name=NULL) const { return false; }
 	virtual const std::string* is_builtin() const { return NULL; }
 	virtual const std::string* is_custom_object() const { return NULL; }
+	virtual const std::string* is_voxel_object() const { return NULL; }
 
 	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
 	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }

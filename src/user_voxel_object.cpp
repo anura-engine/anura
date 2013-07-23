@@ -65,6 +65,10 @@ variant user_voxel_object::get_value_by_slot(int slot) const
 	}
 
 	slot -= NumBaseSlots;
+	if(slot == voxel_object_type::ENTRY_ME) {
+		return variant(this);
+	}
+
 	assert(slot < type_->slot_properties().size());
 	const voxel_object_type::property_entry& entry = type_->slot_properties()[slot];
 	if(entry.getter) {
@@ -141,7 +145,7 @@ void user_voxel_object::set_value(const std::string& key, const variant& value)
 		return;
 	}
 
-	ASSERT_LOG(false, "Unknown property " << type_->id() << "." << key);
+	voxel_object::set_value(key, value);
 }
 
 }

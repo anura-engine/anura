@@ -65,6 +65,11 @@ const_voxel_object_type_ptr voxel_object_type::get(const std::string& id)
 	return result;
 }
 
+bool voxel_object_type::is_derived_from(const std::string& base, const std::string& derived)
+{
+	return base == derived;
+}
+
 voxel_object_type::voxel_object_type(const std::string& id, variant node)
   : id_(id), num_base_slots_(0), num_storage_slots_(0)
 {
@@ -79,6 +84,17 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		num_base_slots_ = base_definition->num_slots();
 
 		std::vector<game_logic::formula_callable_definition::entry> property_type_entries;
+
+		game_logic::formula_callable_definition::entry me_entry("me");
+		me_entry.write_type = variant_type::get_none();
+		me_entry.variant_type = variant_type::get_voxel_object(id);
+		me_entry.private_counter = 0;
+		property_type_entries.push_back(me_entry);
+
+		property_entry me_prop;
+		me_prop.id = "me";
+		me_prop.persistent = false;
+		slot_properties_.push_back(me_prop);
 
 		game_logic::formula_callable_definition::entry data_entry("data");
 		data_entry.write_type = variant_type::get_any();
@@ -189,6 +205,8 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		callable_definition_->set_strict(true);
 
 		defs_cache[id_] = callable_definition_;
+		callable_definition_->get_entry_by_id("me")->type_definition = callable_definition_;
+
 
 		for(auto p : properties_node.as_map()) {
 			bool dynamic_initialization = false;

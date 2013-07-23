@@ -4009,12 +4009,9 @@ DEFINE_SET_FIELD
 	}
 
 #if defined(USE_ISOMAP)
-DEFINE_FIELD(isoworld, "builtin world|null")
-	if(obj.iso_world_) {
-		return variant(obj.iso_world_.get());
-	} else {
-		return variant();
-	}
+DEFINE_FIELD(isoworld, "builtin world")
+	ASSERT_LOG(obj.iso_world_, "No world present in level");
+	return variant(obj.iso_world_.get());
 DEFINE_SET_FIELD_TYPE("builtin world|map|null")
 	if(value.is_null()) {
 		obj.iso_world_.reset(); 
