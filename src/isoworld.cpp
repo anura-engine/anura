@@ -61,12 +61,8 @@ namespace voxel
 
 	glm::ivec3 logical_world::worldspace_to_logical(const glm::vec3& wsp) const
 	{
-		glm::vec3 sp = wsp;
-		glm::ivec3 voxel_coord = glm::ivec3(
-			abs(sp[0]-bmround(sp[0])) < 0.05f ? int(bmround(sp[0])) : int(floor(sp[0])),
-			abs(sp[1]-bmround(sp[1])) < 0.05f ? int(bmround(sp[1])) : int(floor(sp[1])),
-			abs(sp[2]-bmround(sp[2])) < 0.05f ? int(bmround(sp[2])) : int(floor(sp[2])));
-		glm::ivec3 facing = level::current().camera()->get_facing(sp);
+		glm::ivec3 voxel_coord(int(floor(wsp[0])), int(floor(wsp[1])), int(floor(wsp[2])));
+		glm::ivec3 facing = level::current().camera()->get_facing(wsp);
 		if(facing.x > 0) {
 			voxel_coord.x -= scale_x_; 
 		}
