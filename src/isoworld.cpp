@@ -426,6 +426,15 @@ namespace voxel
 		v.push_back(variant(iv.x)); v.push_back(variant(iv.y)); v.push_back(variant(iv.z));
 		return variant(&v);
 	END_DEFINE_FN
+
+	DEFINE_FIELD(x_scale, "int")
+		return variant(obj.scale_x());
+
+	DEFINE_FIELD(y_scale, "int")
+		return variant(obj.scale_y());
+
+	DEFINE_FIELD(z_scale, "int")
+		return variant(obj.scale_z());
 	END_DEFINE_CALLABLE(logical_world)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)

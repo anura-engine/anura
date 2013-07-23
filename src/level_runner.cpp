@@ -532,7 +532,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 #if defined(USE_ISOMAP)
 				glm::vec3 v3 = lvl_->camera()->screen_to_world(mx, my, preferences::actual_screen_width(), preferences::actual_screen_height());
 				callable->add("world_point", vec3_to_variant(v3));
-				glm::ivec3 iv3 = lvl_->camera()->get_facing(v3) + glm::ivec3(v3);
+				glm::ivec3 iv3 = lvl_->camera()->get_facing(v3) + glm::ivec3(int(floor(v3.x)), int(floor(v3.y)), int(floor(v3.z)));
 				callable->add("voxel_point", ivec3_to_variant(iv3));
 
 				std::vector<voxel::user_voxel_object_ptr> voxel_objs;
