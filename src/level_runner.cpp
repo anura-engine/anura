@@ -416,23 +416,6 @@ void level_runner::video_resize_event(const SDL_Event &event)
 }
 
 #if defined(USE_ISOMAP)
-namespace {
-
-glm::vec3 screen_to_world(int x, int y)
-{
-	if(!level::current().camera()) {
-		return glm::vec3();
-	}
-	glm::vec4 view_port(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
-
-	GLfloat winz = 0.0f;
-	glReadPixels(x,preferences::actual_screen_height() - y,1,1,GL_DEPTH_COMPONENT,GL_FLOAT,&winz);
-	glm::vec3 screen(x, preferences::actual_screen_height() - y, winz);
-
-	return glm::unProject(screen, level::current().camera()->view_mat(), level::current().camera()->projection_mat(), view_port);
-}
-
-}
 
 void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 	const std::vector<voxel::user_voxel_object_ptr>& voxel_objs, 
@@ -547,8 +530,10 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					callable->add("mouse_button", variant(button_state));
 				}
 #if defined(USE_ISOMAP)
-				glm::vec3 v3 = screen_to_world(mx, my);
+				glm::vec3 v3 = lvl_->camera()->screen_to_world(mx, my, preferences::actual_screen_width(), preferences::actual_screen_height());
 				callable->add("world_point", vec3_to_variant(v3));
+				glm::ivec3 iv3 = lvl_->camera()->get_facing(v3) + glm::ivec3(v3);
+				callable->add("voxel_point", ivec3_to_variant(iv3));
 
 				std::vector<voxel::user_voxel_object_ptr> voxel_objs;
 				if(lvl_->iso_world()) {

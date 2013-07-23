@@ -12,12 +12,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/noise.hpp>
 #include <glm/gtc/random.hpp>
-#if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
-#else
-#define bmround	round
-#endif
 
 #include "base64.hpp"
 #include "compress.hpp"
@@ -33,8 +27,7 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-namespace voxel
-{
+namespace voxel{
 	namespace 
 	{
 		const int debug_draw_faces = chunk::FRONT | chunk::RIGHT | chunk::TOP | chunk::BACK | chunk::LEFT | chunk::BOTTOM;
@@ -1248,50 +1241,6 @@ namespace voxel
 		return res.build();
 	}
 	
-
-	namespace
-	{
-		float dti(float val) 
-		{
-			return abs(val - bmround(val));
-		}
-	}
-
-	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords) 
-	{
-		ASSERT_LOG(camera != NULL, "get_facing: camera == NULL");
-		const glm::vec3& lookat = camera->direction();
-		if(dti(coords.x) < dti(coords.y)) {
-			if(dti(coords.x) < dti(coords.z)) {
-				if(lookat.x > 0) {
-					return glm::ivec3(-1,0,0);
-				} else {
-					return glm::ivec3(1,0,0);
-				}
-			} else {
-				if(lookat.z > 0) {
-					return glm::ivec3(0,0,-1);
-				} else {
-					return glm::ivec3(0,0,1);
-				}
-			}
-		} else {
-			if(dti(coords.y) < dti(coords.z)) {
-				if(lookat.y > 0) {
-					return glm::ivec3(0,-1,0);
-				} else {
-					return glm::ivec3(0,1,0);
-				}
-			} else {
-				if(lookat.z > 0) {
-					return glm::ivec3(0,0,-1);
-				} else {
-					return glm::ivec3(0,0,1);
-				}
-			}
-		}
-	}
-
 	namespace chunk_factory 
 	{
 		chunk_ptr create(gles2::program_ptr shader, logical_world_ptr logic, const variant& v)

@@ -223,8 +223,6 @@ namespace voxel
 	{
 		chunk_ptr create(gles2::program_ptr shader, logical_world_ptr logic, const variant& v);
 	}
-
-	glm::ivec3 get_facing(const camera_callable_ptr& camera, const glm::vec3& coords);
 }
 
 #endif // USE_ISOMAP

@@ -1,5 +1,11 @@
 #include <algorithm>
 #include <glm/gtc/matrix_transform.hpp>
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
 
 #include "camera.hpp"
 #include "preferences.hpp"
@@ -127,6 +133,18 @@ void camera_callable::compute_view()
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(camera_callable)
+BEGIN_DEFINE_FN(screen_to_world, "(int,int,int=0,int=0) -> [decimal,decimal,decimal]")
+	int wx = preferences::actual_screen_width();
+	int wy = preferences::actual_screen_height();
+	if(NUM_FN_ARGS > 2) {
+		wx = FN_ARG(2).as_int();
+		if(NUM_FN_ARGS > 3) {
+			wy = FN_ARG(3).as_int();
+		}
+	}
+	return vec3_to_variant(obj.screen_to_world(FN_ARG(0).as_int(), FN_ARG(1).as_int(),wx,wy));
+END_DEFINE_FN
+
 DEFINE_FIELD(position, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.position().x));
@@ -144,66 +162,79 @@ DEFINE_SET_FIELD
 	} else {
 		obj.compute_view();
 	}
+
 DEFINE_FIELD(speed, "decimal")
 	return variant(obj.speed());
 DEFINE_SET_FIELD
 	obj.set_speed(value.as_decimal().as_float());
+
 DEFINE_FIELD(right, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.right().x));
 	v.push_back(variant(obj.right().y));
 	v.push_back(variant(obj.right().z));
 	return variant(&v);
+
 DEFINE_FIELD(direction, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.direction().x));
 	v.push_back(variant(obj.direction().y));
 	v.push_back(variant(obj.direction().z));
 	return variant(&v);
+
 DEFINE_FIELD(horizontal_angle, "decimal")
 	return variant(obj.hangle());
 DEFINE_SET_FIELD
 	obj.set_hangle(value.as_decimal().as_float());
 	obj.compute_view();
+
 DEFINE_FIELD(hangle, "decimal")
 	return variant(obj.hangle());
 DEFINE_SET_FIELD
 	obj.set_hangle(value.as_decimal().as_float());
 	obj.compute_view();
+
 DEFINE_FIELD(vertical_angle, "decimal")
 	return variant(obj.vangle());
 DEFINE_SET_FIELD
 	obj.set_vangle(value.as_decimal().as_float());
 	obj.compute_view();
+
 DEFINE_FIELD(vangle, "decimal")
 	return variant(obj.vangle());
 DEFINE_SET_FIELD
 	obj.set_vangle(value.as_decimal().as_float());
 	obj.compute_view();
+
 DEFINE_FIELD(mouse_speed, "decimal")
 	return variant(obj.mousespeed());
 DEFINE_SET_FIELD
 	obj.set_mousespeed(value.as_decimal().as_float());
+
 DEFINE_FIELD(target, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.target_.x));
 	v.push_back(variant(obj.target_.y));
 	v.push_back(variant(obj.target_.z));
 	return variant(&v);
+
 DEFINE_FIELD(up, "[decimal,decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.up_.x));
 	v.push_back(variant(obj.up_.y));
 	v.push_back(variant(obj.up_.z));
 	return variant(&v);
+
 DEFINE_FIELD(fov, "decimal")
 	return variant(obj.fov());
 DEFINE_SET_FIELD
 	obj.set_fov(value.as_decimal().as_float());
+
 DEFINE_FIELD(aspect, "decimal")
 	return variant(obj.aspect());
 DEFINE_SET_FIELD
 	obj.set_aspect(value.as_decimal().as_float());
+
 DEFINE_FIELD(clip_planes, "[decimal,decimal]")
 	std::vector<variant> v;
 	v.push_back(variant(obj.near_clip_));
@@ -212,6 +243,7 @@ DEFINE_FIELD(clip_planes, "[decimal,decimal]")
 DEFINE_SET_FIELD
 	ASSERT_LOG(value.is_list() && value.num_elements() == 2, "clip_planes takes a tuple of two decimals");
 	obj.set_clip_planes(value[0].as_decimal().as_float(), value[1].as_decimal().as_float());
+
 END_DEFINE_CALLABLE(camera_callable)
 
 
@@ -250,4 +282,60 @@ void camera_callable::compute_projection()
 {
 	projection_ = glm::perspective(fov(), aspect_, near_clip(), far_clip());
 	frustum_.update_matrices(projection_, view_);
+}
+
+// Convert from a screen position (assume +ve x to right, +ve y down) to world space.
+// Assumes the depth buffer was enabled.
+glm::vec3 camera_callable::screen_to_world(int x, int y, int wx, int wy) const
+{
+	glm::vec4 view_port(0, 0, wx, wy);
+
+	GLfloat depth;
+	glReadPixels(x, wy - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
+	glm::vec3 screen(x, wy - y, depth);
+
+	return glm::unProject(screen, view_, projection_, view_port);
+}
+
+
+namespace
+{
+	float dti(float val) 
+	{
+		return abs(val - bmround(val));
+	}
+}
+
+glm::ivec3 camera_callable::get_facing(const glm::vec3& coords) const
+{
+	if(dti(coords.x) < dti(coords.y)) {
+		if(dti(coords.x) < dti(coords.z)) {
+			if(direction_.x > 0) {
+				return glm::ivec3(-1,0,0);
+			} else {
+				return glm::ivec3(1,0,0);
+			}
+		} else {
+			if(direction_.z > 0) {
+				return glm::ivec3(0,0,-1);
+			} else {
+				return glm::ivec3(0,0,1);
+			}
+		}
+	} else {
+		if(dti(coords.y) < dti(coords.z)) {
+			if(direction_.y > 0) {
+				return glm::ivec3(0,-1,0);
+			} else {
+				return glm::ivec3(0,1,0);
+			}
+		} else {
+			if(direction_.z > 0) {
+				return glm::ivec3(0,0,-1);
+			} else {
+				return glm::ivec3(0,0,1);
+			}
+		}
+	}
+
 }

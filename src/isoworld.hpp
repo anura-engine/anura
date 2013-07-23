@@ -49,6 +49,8 @@ namespace voxel
 		size_t scale_x() const { return scale_x_; }
 		size_t scale_y() const { return scale_y_; }
 		size_t scale_z() const { return scale_z_; }
+
+		glm::ivec3 worldspace_to_logical(const glm::vec3& wsp) const;
 	private:
 		DECLARE_CALLABLE(logical_world);
 

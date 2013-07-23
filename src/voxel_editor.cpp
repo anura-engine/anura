@@ -501,13 +501,13 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 {
 	// Before calling screen_to_world we need to bind the fbo
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
-	glm::vec3 world_coords = graphics::screen_to_world(camera_, xp, yp, width(), height());
+	glm::vec3 world_coords = camera_->screen_to_world(xp, yp, width(), height());
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
 	glm::ivec3 voxel_coord = glm::ivec3(
 		abs(world_coords[0]-bmround(world_coords[0])) < 0.05f ? int(bmround(world_coords[0])) : int(floor(world_coords[0])),
 		abs(world_coords[1]-bmround(world_coords[1])) < 0.05f ? int(bmround(world_coords[1])) : int(floor(world_coords[1])),
 		abs(world_coords[2]-bmround(world_coords[2])) < 0.05f ? int(bmround(world_coords[2])) : int(floor(world_coords[2])));
-	*facing = voxel::get_facing(camera_, world_coords);
+	*facing = camera_->get_facing(world_coords);
 	if(facing->x > 0) {
 		--voxel_coord.x; 
 	}

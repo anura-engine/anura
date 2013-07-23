@@ -54,6 +54,9 @@ public:
 
 	const graphics::frustum& frustum() { return frustum_; }
 
+	glm::vec3 screen_to_world(int x, int y, int wx, int wy) const;
+	glm::ivec3 get_facing(const glm::vec3& coords) const;
+
 	variant write();
 protected:
 private:

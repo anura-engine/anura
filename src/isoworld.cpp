@@ -1,3 +1,10 @@
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
+
 #include <vector>
 #include "asserts.hpp"
 #include "isoworld.hpp"
@@ -50,6 +57,26 @@ namespace voxel
 
 	logical_world::~logical_world()
 	{
+	}
+
+	glm::ivec3 logical_world::worldspace_to_logical(const glm::vec3& wsp) const
+	{
+		glm::vec3 sp = wsp;
+		glm::ivec3 voxel_coord = glm::ivec3(
+			abs(sp[0]-bmround(sp[0])) < 0.05f ? int(bmround(sp[0])) : int(floor(sp[0])),
+			abs(sp[1]-bmround(sp[1])) < 0.05f ? int(bmround(sp[1])) : int(floor(sp[1])),
+			abs(sp[2]-bmround(sp[2])) < 0.05f ? int(bmround(sp[2])) : int(floor(sp[2])));
+		glm::ivec3 facing = level::current().camera()->get_facing(sp);
+		if(facing.x > 0) {
+			voxel_coord.x -= scale_x_; 
+		}
+		if(facing.y > 0) {
+			voxel_coord.y -= scale_y_; 
+		}
+		if(facing.z > 0) {
+			voxel_coord.z -= scale_z_; 
+		}
+		return voxel_coord / glm::ivec3(scale_x_, scale_y_, scale_z_);
 	}
 
 
@@ -396,6 +423,13 @@ namespace voxel
 		bool allow_diagonals = NUM_FN_ARGS ? FN_ARG(0).as_bool() : false;
 		return variant(obj.create_directed_graph(allow_diagonals).get());
 	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(point_convert, "([decimal,decimal,decimal]) -> [int,int,int]")
+		glm::ivec3 iv = obj.worldspace_to_logical(variant_to_vec3(FN_ARG(0)));
+		std::vector<variant> v;
+		v.push_back(variant(iv.x)); v.push_back(variant(iv.y)); v.push_back(variant(iv.z));
+		return variant(&v);
+	END_DEFINE_FN
 	END_DEFINE_CALLABLE(logical_world)
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)
@@ -409,6 +443,9 @@ namespace voxel
 		for(auto o : obj.objects_) {
 			v.push_back(variant(o.get()));
 		}
-		return variant(&v);
+		return variant(&v);	
+
+	DEFINE_FIELD(logical, "builtin logical_world")
+		return variant(obj.logic_.get());
 	END_DEFINE_CALLABLE(world)
 }

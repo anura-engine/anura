@@ -38,6 +38,22 @@ variant vec3_to_variant(const glm::vec3& v)
 	return variant(&result);
 }
 
+glm::ivec3 variant_to_ivec3(const variant& v)
+{
+	ASSERT_LOG(v.is_list() && v.num_elements() == 3, "Expected ivec3 variant but found " << v.write_json());
+	return glm::ivec3(v[0].as_int(), v[1].as_int(), v[2].as_int());
+}
+
+variant ivec3_to_variant(const glm::ivec3& v)
+{
+	std::vector<variant> result;
+	result.push_back(variant(v.x));
+	result.push_back(variant(v.y));
+	result.push_back(variant(v.z));
+	return variant(&result);
+}
+
+
 game_logic::formula_callable_ptr map_into_callable(variant v)
 {
 	if(v.is_callable()) {

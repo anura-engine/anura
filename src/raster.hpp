@@ -210,10 +210,6 @@ struct clip_scope {
 	boost::scoped_ptr<stencil_scope> stencil_;
 };
 
-#if defined(USE_ISOMAP)
-glm::vec3 screen_to_world(const camera_callable_ptr& camera, int x, int y, int wx, int wy);
-#endif
-
 }
 
 #endif
