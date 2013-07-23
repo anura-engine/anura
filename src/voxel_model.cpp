@@ -402,6 +402,8 @@ voxel_model::voxel_model(const variant& node)
   : name_(node["model"].as_string()), anim_time_(0.0), old_anim_time_(0.0),
     invalidated_(false), model_(1.0f), proto_model_(1.0f)
 {
+	aabb_[0] = glm::vec3(std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
+	aabb_[1] = glm::vec3(std::numeric_limits<float>::min(),std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
 	Model base(read_model(json::parse_from_file(name_)));
 
 	attachment_points_ = base.attachment_points;
@@ -440,11 +442,23 @@ voxel_model::voxel_model(const variant& node)
 	for(const Animation& anim : base.animations) {
 		animations_[anim.name].reset(new Animation(anim));
 	}
+
+	for(auto child : children_) {
+		if(child->aabb_[0].x < aabb_[0].x) { aabb_[0].x = child->aabb_[0].x; }
+		if(child->aabb_[0].y < aabb_[0].y) { aabb_[0].y = child->aabb_[0].y; }
+		if(child->aabb_[0].z < aabb_[0].z) { aabb_[0].z = child->aabb_[0].z; }
+		if(child->aabb_[1].x > aabb_[1].x) { aabb_[1].x = child->aabb_[1].x; }
+		if(child->aabb_[1].y > aabb_[1].y) { aabb_[1].y = child->aabb_[1].y; }
+		if(child->aabb_[1].z > aabb_[1].z) { aabb_[1].z = child->aabb_[1].z; }
+	}
 }
 
 voxel_model::voxel_model(const Layer& layer, const LayerType& layer_type)
   : name_(layer_type.name), invalidated_(false), model_(1.0f), proto_model_(1.0f)
 {
+	aabb_[0] = glm::vec3(std::numeric_limits<float>::max(),std::numeric_limits<float>::max(),std::numeric_limits<float>::max());
+	aabb_[1] = glm::vec3(std::numeric_limits<float>::min(),std::numeric_limits<float>::min(),std::numeric_limits<float>::min());
+
 	for(const std::pair<std::string, VoxelPos>& pivot : layer_type.pivots) {
 		glm::vec3 point = glm::vec3(pivot.second) + glm::vec3(0.5f);
 
@@ -487,8 +501,22 @@ voxel_model::voxel_model(const Layer& layer, const LayerType& layer_type)
 	glBindBuffer(GL_ARRAY_BUFFER, 0);
 }
 
+void voxel_model::get_bounding_box(glm::vec3& b1, glm::vec3& b2)
+{
+	b1 = aabb_[0];
+	b2 = aabb_[1];
+}
+
 void voxel_model::add_face(int face, const VoxelPair& p, std::vector<GLfloat>& varray, std::vector<GLubyte>& carray)
 {
+	// update bounding box.
+	if(p.first.x < aabb_[0].x) { aabb_[0].x = p.first.x; }
+	if(p.first.y < aabb_[0].y) { aabb_[0].y = p.first.y; }
+	if(p.first.z < aabb_[0].z) { aabb_[0].z = p.first.z; }
+	if(p.first.x+1 > aabb_[1].x) { aabb_[1].x = p.first.x+1; }
+	if(p.first.y+1 > aabb_[1].y) { aabb_[1].y = p.first.y+1; }
+	if(p.first.z+1 > aabb_[1].z) { aabb_[1].z = p.first.z+1; }
+
 	add_vertex_data(face, GLfloat(p.first.x), GLfloat(p.first.y), GLfloat(p.first.z), varray);
 	// colors are all the same per vertex.
 	for(int n = 0; n != 6; ++n) {

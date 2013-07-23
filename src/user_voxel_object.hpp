@@ -30,8 +30,8 @@ class user_voxel_object : public voxel_object
 public:
 	explicit user_voxel_object(const variant& node);
 	user_voxel_object(const std::string& type, float x, float y, float z);
-	void handle_event(int nevent);
-	void handle_event(const std::string& event);
+	void handle_event(int nevent, const formula_callable* context=NULL);
+	void handle_event(const std::string& event, const formula_callable* context=NULL);
 
 	virtual void process(level& lvl);
 private:
@@ -45,5 +45,7 @@ private:
 	std::vector<variant> data_;
 	int data_target_;
 };
+
+typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
 
 }

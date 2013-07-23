@@ -3,6 +3,7 @@
 #include "isoworld.hpp"
 #include "level.hpp"
 #include "profile_timer.hpp"
+#include "user_voxel_object.hpp"
 #include "variant_utils.hpp"
 #include "voxel_object.hpp"
 
@@ -66,7 +67,7 @@ namespace voxel
 
 		if(node.has_key("objects")) {
 			for(int n = 0; n != node["objects"].num_elements(); ++n) {
-				add_object(voxel_object_factory::create(node["objects"][n]));
+				add_object(new user_voxel_object(node["objects"][n]));
 			}
 		}
 
@@ -116,16 +117,25 @@ namespace voxel
 		return variant();
 	}
 
-	void world::add_object(voxel_object_ptr obj)
+	void world::add_object(user_voxel_object_ptr obj)
 	{
 		objects_.insert(obj);
 	}
 
-	void world::remove_object(voxel_object_ptr obj)
+	void world::remove_object(user_voxel_object_ptr obj)
 	{
 		auto it = objects_.find(obj);
 		ASSERT_LOG(it != objects_.end(), "Unable to remove object '" << obj->type() << "' from level");
 		objects_.erase(it);
+	}
+
+	void world::get_objects_at_point(const glm::vec3& pt, std::vector<user_voxel_object_ptr>& obj_list)
+	{
+		for(auto obj : objects_) {
+			if(obj->pt_in_object(pt)) {
+				obj_list.push_back(obj);
+			}
+		}
 	}
 
 	void world::build_fixed(const variant& node)
@@ -382,9 +392,8 @@ namespace voxel
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(logical_world)
-	BEGIN_DEFINE_FN(create_directed_graph, "() ->builtin directed_graph")
-		//bool allow_diagonals = args().size() > 1 ? args()[1]->evaluate(variables).as_bool() : false;
-		bool allow_diagonals = false;
+	BEGIN_DEFINE_FN(create_directed_graph, "(bool=false) ->builtin directed_graph")
+		bool allow_diagonals = NUM_FN_ARGS ? FN_ARG(0).as_bool() : false;
 		return variant(obj.create_directed_graph(allow_diagonals).get());
 	END_DEFINE_FN
 	END_DEFINE_CALLABLE(logical_world)
@@ -395,7 +404,7 @@ namespace voxel
 	DEFINE_SET_FIELD_TYPE("map")
 		obj.lighting_.reset(new graphics::lighting(obj.shader_, value));
 
-	DEFINE_FIELD(objects, "[builtin voxel_object]")
+	DEFINE_FIELD(objects, "[builtin user_voxel_object]")
 		std::vector<variant> v;
 		for(auto o : obj.objects_) {
 			v.push_back(variant(o.get()));

@@ -25,9 +25,8 @@
 
 namespace voxel
 {
-	class voxel_object;
-	typedef boost::intrusive_ptr<voxel_object> voxel_object_ptr;
-	typedef boost::intrusive_ptr<const voxel_object> const_voxel_object_ptr;
+	class user_voxel_object;
+	typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
 
 	class logical_world : public game_logic::formula_callable
 	{
@@ -88,8 +87,11 @@ namespace voxel
 		variant write();
 		void process();
 
-		void add_object(voxel::voxel_object_ptr obj);
-		void remove_object(voxel::voxel_object_ptr obj);
+		void add_object(user_voxel_object_ptr obj);
+		void remove_object(user_voxel_object_ptr obj);
+
+		void get_objects_at_point(const glm::vec3& pt, std::vector<user_voxel_object_ptr>& obj);
+		std::set<user_voxel_object_ptr>& get_objects() { return objects_; }
 	protected:
 	private:
 		DECLARE_CALLABLE(world);
@@ -104,7 +106,7 @@ namespace voxel
 		std::vector<chunk_ptr> active_chunks_;
 		boost::unordered_map<position, chunk_ptr> chunks_;
 
-		std::set<voxel_object_ptr> objects_;
+		std::set<user_voxel_object_ptr> objects_;
 
 		logical_world_ptr logic_;
 		

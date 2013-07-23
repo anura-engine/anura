@@ -53,7 +53,7 @@ const std::string FunctionModule = "voxel_object";
 class spawn_voxel_command : public voxel_object_command_callable
 {
 public:
-	spawn_voxel_command(voxel::voxel_object_ptr obj, variant instantiation_commands)
+	spawn_voxel_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
 	  : obj_(obj), instantiation_commands_(instantiation_commands)
 	{}
 	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const {
@@ -63,7 +63,7 @@ public:
 		obj_->execute_command(instantiation_commands_);
 	}
 private:
-	voxel::voxel_object_ptr obj_;
+	voxel::user_voxel_object_ptr obj_;
 	variant instantiation_commands_;
 };
 
@@ -78,7 +78,7 @@ FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal 
 
 	variant arg4 = EVAL_ARG(4);
 
-	voxel::voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
+	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
 
 	variant commands;
 	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));

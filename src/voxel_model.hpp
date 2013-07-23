@@ -168,6 +168,8 @@ public:
 	void draw(graphics::lighting_ptr lighting, camera_callable_ptr camera, const glm::mat4& model) const;
 
 	const std::string& name() const { return name_; }
+
+	void get_bounding_box(glm::vec3& b1, glm::vec3& b2);
 private:
 	DECLARE_CALLABLE(voxel_model);
 
@@ -219,6 +221,8 @@ private:
 	size_t vattrib_offsets_[6];
 	size_t cattrib_offsets_[6];
 	size_t num_vertices_[6];
+
+	glm::vec3 aabb_[2];
 
 	glm::mat4 proto_model_;
 	glm::mat4 model_;

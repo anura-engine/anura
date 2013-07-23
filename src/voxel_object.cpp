@@ -76,17 +76,34 @@ namespace voxel
 	{
 		//profile::manager pman("voxel_object::draw");
 		if(model_) {
-			glm::mat4 model_mat = 
+			model_matrix_ = 
 				  glm::translate(glm::mat4(1.0f), translation_)
 				* glm::scale(glm::mat4(1.0f), scale_)
 				* glm::rotate(glm::mat4(1.0f), rotation_.x, glm::vec3(1,0,0))
 				* glm::rotate(glm::mat4(1.0f), rotation_.z, glm::vec3(0,0,1))
 				* glm::rotate(glm::mat4(1.0f), rotation_.y, glm::vec3(0,1,0));
-			model_->draw(lighting, camera, model_mat);
+			model_->draw(lighting, camera, model_matrix_);
 		}
 
 		for(auto w : widgets_) {
 		}
+	}
+
+	bool voxel_object::pt_in_object(const glm::vec3& pt)
+	{
+		if(model_) {
+			glm::vec3 b1;
+			glm::vec3 b2;
+			model_->get_bounding_box(b1, b2);
+			glm::vec4 bb1 = model_matrix_ * glm::vec4(b1,1.0f);
+			glm::vec4 bb2 = model_matrix_ * glm::vec4(b2,1.0f);
+			//std::cerr << "pt_in_object: " << pt.x << "," << pt.y << "," << pt.z << " : " << b1.x << "," << b1.y << "," << b1.z << ":" << b2.x << "," << b2.y << "," << b2.z << " : " << std::endl;
+			//std::cerr << "pt_in_object: " << bb1.x << "," << bb1.y << "," << bb1.z << ":" << bb2.x << "," << bb2.y << "," << bb2.z << std::endl;
+			if(pt.x >= bb1.x && pt.x <= bb2.x && pt.y >= bb1.y && pt.y <= bb2.y && pt.z >= bb1.z && pt.z <= bb2.z) {
+				return true;
+			}
+		} 
+		return false;
 	}
 
 	void voxel_object::process(level& lvl)
@@ -115,6 +132,12 @@ namespace voxel
 	void voxel_object::set_paused(bool p)
 	{
 		paused_ = p;
+	}
+
+	// XXX hack
+	void voxel_object::set_event_arg(variant v)
+	{
+		event_arg_ = v;
 	}
 
 
@@ -179,6 +202,10 @@ namespace voxel
 		}
 	DEFINE_FIELD(cycle, "int")
 		return variant(obj.cycle_);
+	DEFINE_FIELD(event_arg, "any")
+		return obj.event_arg_;
+	DEFINE_FIELD(type, "string")
+		return variant(obj.type_);
 	END_DEFINE_CALLABLE(voxel_object)
 }
 

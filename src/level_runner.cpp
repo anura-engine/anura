@@ -63,6 +63,7 @@
 #include "stats.hpp"
 #include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
+#include "user_voxel_object.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
 #include "IMG_savepng.h"
@@ -432,7 +433,44 @@ glm::vec3 screen_to_world(int x, int y)
 }
 
 }
+
+void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
+	const std::vector<voxel::user_voxel_object_ptr>& voxel_objs, 
+	game_logic::map_formula_callable_ptr callable, 
+	const int basic_evt, 
+	const int catch_all_event)
+{
+	static const int MouseEnterID = get_object_event_id("mouse_enter");
+	static const int MouseLeaveID = get_object_event_id("mouse_leave");
+
+	std::set<voxel::user_voxel_object_ptr> mouse_in;
+
+	for(auto obj : voxel_objs) {
+		if(event.type == SDL_MOUSEBUTTONDOWN) {
+		} else if(event.type == SDL_MOUSEMOTION) {
+			if(obj->is_mouseover_object() == false) {
+				obj->set_mouseover_object();
+				obj->handle_event(MouseEnterID, callable.get());
+			}
+			mouse_in.insert(obj);
+		}
+		obj->handle_event(basic_evt, callable.get());
+	}
+
+	for(auto obj : lvl_->iso_world()->get_objects()) {
+		obj->handle_event(catch_all_event, callable.get());
+
+		if(event.type == SDL_MOUSEMOTION) {
+			if(mouse_in.find(obj) == mouse_in.end() && obj->is_mouseover_object()) {
+				obj->set_mouseover_object(false);
+				obj->handle_event(MouseLeaveID, callable.get());
+			}
+		}
+	}
+}
+
 #endif
+
 
 bool level_runner::handle_mouse_events(const SDL_Event &event)
 {
@@ -509,11 +547,14 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					callable->add("mouse_button", variant(button_state));
 				}
 #if defined(USE_ISOMAP)
-				glm::vec3 v3;
-				v3 = screen_to_world(mx, my);
-				std::vector<variant> v3_list;
-				v3_list.push_back(variant(v3.x)); v3_list.push_back(variant(v3.y)); v3_list.push_back(variant(v3.z)); 
-				callable->add("world_point", variant(&v3_list));
+				glm::vec3 v3 = screen_to_world(mx, my);
+				callable->add("world_point", vec3_to_variant(v3));
+
+				std::vector<voxel::user_voxel_object_ptr> voxel_objs;
+				if(lvl_->iso_world()) {
+					lvl_->iso_world()->get_objects_at_point(v3, voxel_objs);
+				}
+				handle_mouse_over_voxel_objects(event, voxel_objs, callable, basic_evt, catch_all_event);
 #endif
 				std::vector<variant> items;
 				// Grab characters around point, z-order sort them, so that when

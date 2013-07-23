@@ -25,8 +25,9 @@ void user_voxel_object::process(level& lvl)
 	handle_event(OBJECT_EVENT_PROCESS);
 }
 
-void user_voxel_object::handle_event(int nevent)
+void user_voxel_object::handle_event(int nevent, const formula_callable* context)
 {
+	set_event_arg(variant(context));
 	const game_logic::formula* handler = type_->event_handler(nevent);
 	if(handler) {
 		variant result = handler->execute(*this);
@@ -34,9 +35,9 @@ void user_voxel_object::handle_event(int nevent)
 	}
 }
 
-void user_voxel_object::handle_event(const std::string& event)
+void user_voxel_object::handle_event(const std::string& event, const formula_callable* context)
 {
-	handle_event(get_object_event_id(event));
+	handle_event(get_object_event_id(event), context);
 }
 
 namespace {

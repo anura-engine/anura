@@ -82,6 +82,13 @@ public:
 	void set_paused(bool p=true);
 
 	size_t cycle() const { return cycle_; }
+
+	bool pt_in_object(const glm::vec3& pt);
+
+	void set_event_arg(variant v);
+
+	bool is_mouseover_object() const { return is_mouseover_; }
+	void set_mouseover_object(bool mo=true) { is_mouseover_ = mo; }
 protected:
 private:
 	DECLARE_CALLABLE(voxel_object);
@@ -105,6 +112,14 @@ private:
 
 	GLuint a_normal_;
 	GLuint mvp_matrix_;
+
+
+	mutable glm::mat4 model_matrix_;
+	
+	bool is_mouseover_;
+
+	// XXX hack
+	variant event_arg_;
 
 	voxel_object();
 };
