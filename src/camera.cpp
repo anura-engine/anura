@@ -176,7 +176,7 @@ DEFINE_SET_FIELD
 	obj.set_vangle(value.as_decimal().as_float());
 	obj.compute_view();
 DEFINE_FIELD(vangle, "decimal")
-	return variant(obj.hangle());
+	return variant(obj.vangle());
 DEFINE_SET_FIELD
 	obj.set_vangle(value.as_decimal().as_float());
 	obj.compute_view();
