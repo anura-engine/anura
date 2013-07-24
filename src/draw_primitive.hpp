@@ -19,7 +19,10 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include "camera.hpp"
+#include "lighting.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace graphics
 {
@@ -33,9 +36,12 @@ public:
 
 
 	void draw() const;
+	void draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 private:
+	DECLARE_CALLABLE(draw_primitive);
 
 	virtual void handle_draw() const = 0;
+	virtual void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
 
 	GLenum src_factor_, dst_factor_;
 };

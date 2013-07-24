@@ -239,6 +239,10 @@ namespace voxel
 			obj->draw(lighting_, camera);
 		}
 
+		for(auto prim : draw_primitives_) {
+			prim->draw(lighting_, camera);
+		}
+
 		glDisable(GL_CULL_FACE);
 		glDisable(GL_DEPTH_TEST);
 
@@ -442,7 +446,9 @@ namespace voxel
 		return variant(obj.scale_z());
 	END_DEFINE_CALLABLE(logical_world)
 
+	//////////////////////////////////////////////////
 	// Start definitions for voxel::world
+	//////////////////////////////////////////////////
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)
 	DEFINE_FIELD(lighting, "builtin lighting")
 		return variant(obj.lighting_.get());
@@ -458,5 +464,22 @@ namespace voxel
 
 	DEFINE_FIELD(logical, "builtin logical_world")
 		return variant(obj.logic_.get());
+
+	DEFINE_FIELD(draw_primitive, "[builtin draw_primitive]")
+		std::vector<variant> v;
+		for(auto prim : obj.draw_primitives_) {
+			v.push_back(variant(prim.get()));
+		}
+		return variant(&v);
+	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
+		for(int n = 0; n != value.num_elements(); ++n) {
+			if(value[n].is_callable()) {
+				graphics::draw_primitive_ptr dp = value.try_convert<graphics::draw_primitive>();
+				ASSERT_LOG(dp != NULL, "Unable to convert from callable to graphics::draw_primitive");
+				obj.draw_primitives_.push_back(dp);
+			} else {
+				obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
+			}
+		}
 	END_DEFINE_CALLABLE(world)
 }

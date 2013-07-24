@@ -13,6 +13,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "draw_primitive.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "geometry.hpp"
@@ -109,6 +110,8 @@ namespace voxel
 		boost::unordered_map<position, chunk_ptr> chunks_;
 
 		std::set<user_voxel_object_ptr> objects_;
+
+		std::vector<graphics::draw_primitive_ptr> draw_primitives_;
 
 		logical_world_ptr logic_;
 		

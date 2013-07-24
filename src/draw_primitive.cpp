@@ -28,6 +28,7 @@
 #include "foreach.hpp"
 #include "geometry.hpp"
 #include "gles2.hpp"
+#include "level.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "texture.hpp"
@@ -40,6 +41,21 @@ using namespace gles2;
 namespace
 {
 
+struct shader_save_context
+{
+	shader_save_context()
+	{
+		glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
+	}
+
+	~shader_save_context()
+	{
+		glUseProgram(current_program);
+	}
+
+	GLint current_program;
+};
+
 typedef boost::array<GLfloat, 2> FPoint;
 
 class circle_primitive : public draw_primitive
@@ -51,6 +67,7 @@ private:
 	void init();
 
 	void handle_draw() const;
+	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
@@ -104,6 +121,10 @@ void circle_primitive::init()
 
 }
 
+void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+{
+}
+
 void circle_primitive::handle_draw() const
 {
 #if defined(USE_GLES2)
@@ -137,6 +158,7 @@ public:
 private:
 
 	void handle_draw() const;
+	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
@@ -287,6 +309,10 @@ void arrow_primitive::calculate_draw_arrays() const
 	}
 }
 
+void arrow_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+{
+}
+
 void arrow_primitive::handle_draw() const
 {
 	if(points_.size() < 3) {
@@ -395,15 +421,175 @@ void arrow_primitive::curve(const FPoint& p0, const FPoint& p1, const FPoint& p2
 	}
 }
 
+class wireframe_box_primitive : public draw_primitive
+{
+public:
+	explicit wireframe_box_primitive(const variant& v);
+
+private:
+	DECLARE_CALLABLE(wireframe_box_primitive);
+
+	void init();
+
+	void handle_draw() const;
+	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+
+	glm::vec3 b1_;
+	glm::vec3 b2_;
+
+	graphics::color color_;
+
+	program_ptr shader_;
+
+	std::vector<GLfloat> varray_;
+	
+	GLuint u_mvp_matrix_;
+	GLuint a_position_;
+	GLuint u_color_;
+
+	glm::vec3 translation_;
+	glm::vec3 rotation_;
+	glm::vec3 scale_;
+};
+
+wireframe_box_primitive::wireframe_box_primitive(const variant& v)
+	: draw_primitive(v), scale_(glm::vec3(1.0f))
+{
+	if(v.has_key("points")) {
+		ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
+		b1_ = variant_to_vec3(v["points"][0]);
+		b2_ = variant_to_vec3(v["points"][1]);
+	} else {
+		ASSERT_LOG(v.has_key("point1") && v.has_key("point2"), "Must specify 'points' or 'point1' and 'point2' attributes.");
+		b1_ = variant_to_vec3(v["point1"]);
+		b2_ = variant_to_vec3(v["point2"]);
+	}
+	if(v.has_key("color")) {
+		color_ = color(v["color"]);
+	} else {
+		color_ = color(200, 0, 0, 255);
+	}
+	if(v.has_key("translation")) {
+		translation_ = variant_to_vec3(v["translation"]);
+	}
+	if(v.has_key("scale")) {
+		scale_ = variant_to_vec3(v["scale"]);
+	}
+
+	if(v.has_key("shader")) {
+		shader_ = shader_program::get_global(v["shader"].as_string())->shader();
+	} else {
+		shader_ = shader_program::get_global("line_3d")->shader();
+	}
+	u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+	u_color_ = shader_->get_fixed_uniform("color");
+	a_position_ = shader_->get_fixed_attribute("vertex");
+	ASSERT_LOG(u_mvp_matrix_ != -1, "Error getting mvp_matrix uniform");
+	ASSERT_LOG(u_color_ != -1, "Error getting color uniform");
+	ASSERT_LOG(a_position_ != -1, "Error getting vertex attribute");
+
+	init();
+}
+
+void wireframe_box_primitive::init()
+{
+	if(b1_.x > b2_.x) {
+		std::swap(b1_.x, b2_.x);
+	}
+	if(b1_.y > b2_.y) {
+		std::swap(b1_.y, b2_.y);
+	}
+	if(b1_.z > b2_.z) {
+		std::swap(b1_.z, b2_.z);
+	}
+
+	varray_.clear();
+	varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
+	varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
+	varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+
+	varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
+	varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); 
+	varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+
+	varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
+	varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+
+	varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
+	varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
+
+	varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+	varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
+}
+
+void wireframe_box_primitive::handle_draw() const
+{
+}
+
+void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+{
+	shader_save_context save;
+	glUseProgram(shader_->get());
+
+	glm::mat4 model = glm::scale(glm::mat4(), scale_) 
+		* glm::translate(glm::mat4(), translation_);
+	glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
+	glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
+
+	glUniform4fv(u_color_, 1, glm::value_ptr(glm::vec4(color_.r(), color_.g(), color_.b(), color_.a())));
+
+	glEnableVertexAttribArray(a_position_);
+	glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
+	glDrawArrays(GL_LINES, 0, varray_.size()/3);
+	glDisableVertexAttribArray(a_position_);
+}
+
+BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, draw_primitive)
+	DEFINE_FIELD(color, "[int,int,int,int]")
+		return obj.color_.write();
+	DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
+		obj.color_ = graphics::color(value);
+	DEFINE_FIELD(points, "[[decimal,decimal,decimal],[decimal,decimal,decimal]]")
+		std::vector<variant> v;
+		v.push_back(vec3_to_variant(obj.b1_));
+		v.push_back(vec3_to_variant(obj.b2_));
+		return variant(&v);
+	DEFINE_SET_FIELD
+		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "'points' must be a list of two elements.");
+		obj.b1_ = variant_to_vec3(value[0]);
+		obj.b2_ = variant_to_vec3(value[1]);
+		obj.init();
+	DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.b1_);
+	DEFINE_SET_FIELD
+		obj.b1_ = variant_to_vec3(value);
+		obj.init();
+	DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.b2_);
+	DEFINE_SET_FIELD
+		obj.b2_ = variant_to_vec3(value);
+		obj.init();
+	DEFINE_FIELD(translation, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.translation_);
+	DEFINE_SET_FIELD
+		obj.translation_ = variant_to_vec3(value);
+	DEFINE_FIELD(scale, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.scale_);
+	DEFINE_SET_FIELD
+		obj.scale_ = variant_to_vec3(value);
+END_DEFINE_CALLABLE(wireframe_box_primitive)
+
 }
 
 draw_primitive_ptr draw_primitive::create(const variant& v)
 {
 	const std::string type = v["type"].as_string();
 	if(type == "arrow") {
-		return draw_primitive_ptr(new arrow_primitive(v));
+		return new arrow_primitive(v);
 	} else if(type == "circle") {
-		return draw_primitive_ptr(new circle_primitive(v));
+		return new circle_primitive(v);
+	} else if(type == "box_wireframe") {
+		return new wireframe_box_primitive(v);
 	}
 
 	ASSERT_LOG(false, "UNKNOWN DRAW PRIMITIVE TYPE: " << v["type"].as_string());
@@ -434,5 +620,34 @@ void draw_primitive::draw() const
 		handle_draw();
 	}
 }
+
+void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+{
+	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
+		glBlendFunc(src_factor_, dst_factor_);
+		handle_draw(lighting, camera);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+	} else {
+		handle_draw(lighting, camera);
+	}
+}
+
+BEGIN_DEFINE_CALLABLE_NOBASE(draw_primitive)
+	DEFINE_FIELD(blend, "string")
+		if(obj.src_factor_ == GL_ONE && obj.dst_factor_ == GL_ZERO) {
+			return variant("overwrite");
+		}
+		return variant("normal");
+	DEFINE_SET_FIELD
+		if(value.as_string() == "overwrite") {
+			obj.src_factor_ = GL_ONE;
+			obj.dst_factor_ = GL_ZERO;
+		} else if(value.as_string() == "normal") {
+			obj.src_factor_ = GL_SRC_ALPHA;
+			obj.dst_factor_ = GL_ONE_MINUS_SRC_ALPHA;
+		} else {
+			ASSERT_LOG(false, "Unrecognized blend mode: " << value.as_string());
+		}
+END_DEFINE_CALLABLE(draw_primitive)
 
 }

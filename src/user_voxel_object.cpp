@@ -22,7 +22,14 @@ void user_voxel_object::process(level& lvl)
 {
 	voxel_object::process(lvl);
 
+	static bool created = false;
+	if(!created) {
+		created = true;
+		handle_event(OBJECT_EVENT_CREATE);
+	}
+
 	handle_event(OBJECT_EVENT_PROCESS);
+
 }
 
 void user_voxel_object::handle_event(int nevent, const formula_callable* context)
