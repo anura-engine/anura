@@ -15,7 +15,8 @@
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
 	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
-	mode_(MODE_AUTO)
+	mode_(MODE_AUTO), type_(PERSPECTIVE_CAMERA), ortho_left_(0), ortho_bottom_(0),
+	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width())
 {
 	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
@@ -28,7 +29,8 @@ camera_callable::camera_callable()
 camera_callable::camera_callable(const variant& node)
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
 	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
-	mode_(MODE_AUTO)
+	mode_(MODE_AUTO), type_(PERSPECTIVE_CAMERA), ortho_left_(0), ortho_bottom_(0),
+	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width())
 {
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 	if(node.has_key("fov")) {
@@ -58,6 +60,19 @@ camera_callable::camera_callable(const variant& node)
 		position_ = glm::vec3(float(node["position"][0].as_decimal().as_float()),
 			float(node["position"][1].as_decimal().as_float()),
 			float(node["position"][2].as_decimal().as_float()));
+	}
+
+	if(node.has_key("type")) {
+		if(node["type"].as_string() == "orthogonal") {
+			type_ = ORTHOGONAL_CAMERA;
+		}
+	}
+	if(node.has_key("ortho_window")) {
+		ASSERT_LOG(node["ortho_window"].is_list() && node["ortho_window"].num_elements() == 4, "Attribute 'ortho_window' must be a 4 element list. left,right,top,bottom");
+		ortho_left_ = node["ortho_window"][0].as_int();
+		ortho_right_ = node["ortho_window"][1].as_int();
+		ortho_top_ = node["ortho_window"][2].as_int();
+		ortho_bottom_ = node["ortho_window"][3].as_int();
 	}
 
 	// If lookat key is specified it overrides the normal compute.
@@ -130,6 +145,24 @@ void camera_callable::compute_view()
 
 	view_ = glm::lookAt(position_, target_, up_);
 	frustum_.update_matrices(projection_, view_);
+}
+
+void camera_callable::set_type(CAMERA_TYPE type)
+{
+	type_ = type;
+	compute_projection();
+}
+
+void camera_callable::set_ortho_window(int left, int right, int top, int bottom)
+{
+	ortho_left_ = left;
+	ortho_right_ = right;
+	ortho_top_ = top;
+	ortho_bottom_ = bottom;
+	
+	if(type_ == ORTHOGONAL_CAMERA) {
+		compute_projection();
+	}
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(camera_callable)
@@ -244,6 +277,29 @@ DEFINE_SET_FIELD
 	ASSERT_LOG(value.is_list() && value.num_elements() == 2, "clip_planes takes a tuple of two decimals");
 	obj.set_clip_planes(value[0].as_decimal().as_float(), value[1].as_decimal().as_float());
 
+DEFINE_FIELD(type, "string")
+	if(obj.type() == ORTHOGONAL_CAMERA) {
+		return variant("orthogonal");
+	} 
+	return variant("perspective");
+DEFINE_SET_FIELD
+	if(value.as_string() == "orthogonal") {
+		obj.set_type(ORTHOGONAL_CAMERA);
+	} else {
+		obj.set_type(PERSPECTIVE_CAMERA);
+	}
+	
+DEFINE_FIELD(ortho_window, "[int,int,int,int]")
+	std::vector<variant> v;
+	v.push_back(variant(obj.ortho_left()));
+	v.push_back(variant(obj.ortho_right()));
+	v.push_back(variant(obj.ortho_top()));
+	v.push_back(variant(obj.ortho_bottom()));
+	return variant(&v);
+DEFINE_SET_FIELD
+	ASSERT_LOG(value.is_list() && value.num_elements() == 4, "Attribute 'ortho_window' must be a 4 element list. left,right,top,bottom");
+	obj.set_ortho_window(value[0].as_int(), value[1].as_int(), value[2].as_int(), obj.ortho_bottom_ = value[3].as_int());
+
 END_DEFINE_CALLABLE(camera_callable)
 
 
@@ -280,7 +336,11 @@ void camera_callable::set_aspect(float aspect)
 
 void camera_callable::compute_projection()
 {
-	projection_ = glm::perspective(fov(), aspect_, near_clip(), far_clip());
+	if(type_ == ORTHOGONAL_CAMERA) {
+		projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), near_clip(), far_clip());
+	} else {
+		projection_ = glm::perspective(fov(), aspect_, near_clip(), far_clip());
+	}
 	frustum_.update_matrices(projection_, view_);
 }
 

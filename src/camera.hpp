@@ -14,6 +14,7 @@
 class camera_callable : public game_logic::formula_callable
 {
 public:
+	enum CAMERA_TYPE { PERSPECTIVE_CAMERA, ORTHOGONAL_CAMERA };
 	camera_callable();
 	explicit camera_callable(const variant& node);
 	virtual ~camera_callable();
@@ -30,6 +31,8 @@ public:
 	void set_fov(float fov);
 	void set_aspect(float aspect);
 	void set_clip_planes(float z_near, float z_far);
+	void set_type(CAMERA_TYPE type);
+	void set_ortho_window(int left, int right, int top, int bottom);
 	float mousespeed() const { return mouse_speed_; }
 	float speed() const { return speed_; }
 	float hangle() const { return horizontal_angle_; }
@@ -38,6 +41,11 @@ public:
 	float aspect() const { return aspect_; }
 	float near_clip() const { return near_clip_; }
 	float far_clip() const { return far_clip_; }
+	CAMERA_TYPE type() const { return type_; }
+	int ortho_left() const { return ortho_left_; }
+	int ortho_right() const { return ortho_right_; }
+	int ortho_top() const { return ortho_top_; }
+	int ortho_bottom() const { return ortho_bottom_; }
 	const glm::vec3& position() const { return position_; }
 	const glm::vec3& right() const { return right_; }
 	const glm::vec3& direction() const { return direction_; }
@@ -81,6 +89,12 @@ private:
 	float aspect_;
 
 	graphics::frustum frustum_;
+
+	CAMERA_TYPE type_;
+	int ortho_left_;
+	int ortho_right_;
+	int ortho_top_;
+	int ortho_bottom_;
 
 	glm::mat4 projection_;
 	glm::mat4 view_;
