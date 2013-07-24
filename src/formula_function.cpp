@@ -1477,9 +1477,9 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF(directed_graph)
 
 FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
-        variant graph = args()[0]->evaluate(variables);
+        variant graph = args()[0]->evaluate(variables);		
         pathfinding::directed_graph_ptr dg = boost::intrusive_ptr<pathfinding::directed_graph>(graph.try_convert<pathfinding::directed_graph>());
-        ASSERT_LOG(dg, "Directed graph given is not of the correct type.");
+        ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
         pathfinding::edge_weights w;
  
         boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));

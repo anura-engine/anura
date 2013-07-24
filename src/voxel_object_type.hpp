@@ -47,6 +47,8 @@ public:
 	const std::vector<int>& properties_with_init() const { return properties_with_init_; }
 	const std::vector<int>& properties_requiring_initialization() const { return properties_requiring_initialization_; }
 	const game_logic::formula* event_handler(int event_id) const;
+	
+	const std::string& last_initialization_property() const { return last_initialization_property_; }
 
 private:
 	game_logic::function_symbol_table* function_symbols() const;

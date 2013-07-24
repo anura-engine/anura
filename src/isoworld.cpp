@@ -433,6 +433,21 @@ namespace voxel
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
+	class create_world_callable : public game_logic::formula_callable 
+	{
+		variant world_;
+		variant get_value(const std::string& key) const {
+			return variant();
+		}
+		virtual void execute(game_logic::formula_callable& ob) const {
+			level::current().iso_world().reset(new world(world_));
+		}
+	public:
+		explicit create_world_callable(const variant& world) 
+			: world_(world)
+		{}
+	};
+
 	// Start definitions for voxel::logical_world
 	BEGIN_DEFINE_CALLABLE_NOBASE(logical_world)
 	BEGIN_DEFINE_FN(create_directed_graph, "(bool=false) ->builtin directed_graph")
@@ -445,6 +460,10 @@ namespace voxel
 		std::vector<variant> v;
 		v.push_back(variant(iv.x)); v.push_back(variant(iv.y)); v.push_back(variant(iv.z));
 		return variant(&v);
+	END_DEFINE_FN
+
+	BEGIN_DEFINE_FN(create_world, "() -> commands")
+		return variant(new create_world_callable(obj.chunks_));
 	END_DEFINE_FN
 
 	DEFINE_FIELD(x_scale, "int")

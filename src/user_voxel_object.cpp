@@ -136,23 +136,25 @@ void user_voxel_object::set_value_by_slot(int slot, const variant& value)
 
 variant user_voxel_object::get_value(const std::string& key) const
 {
-	auto itor = type_->properties().find(key);
-	if(itor != type_->properties().end()) {
-		return get_value_by_slot(type_->num_base_slots() + itor->second.storage_slot);
+	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
+		if(type_->slot_properties()[slot].id == key) {
+			return get_value_by_slot(type_->num_base_slots() + slot);
+		}
 	}
-
+ 
 	ASSERT_LOG(false, "Unknown property " << type_->id() << "." << key);
 	return variant();
 }
-
+ 
 void user_voxel_object::set_value(const std::string& key, const variant& value)
 {
-	auto itor = type_->properties().find(key);
-	if(itor != type_->properties().end()) {
-		set_value_by_slot(type_->num_base_slots() + itor->second.storage_slot, value);
-		return;
+	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
+		if(type_->slot_properties()[slot].id == key) {
+			set_value_by_slot(type_->num_base_slots() + slot, value);
+			return;
+		}
 	}
-
+ 
 	voxel_object::set_value(key, value);
 }
 

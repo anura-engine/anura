@@ -74,6 +74,7 @@
 #include "variant_utils.hpp"
 #include "widget_factory.hpp"
 #include "graphical_font.hpp"
+#include "user_voxel_object.hpp"
 
 void entity_command_callable::set_expression(const game_logic::formula_expression* expr)
 {
@@ -3270,6 +3271,139 @@ RETURN_TYPE("any")
 END_FUNCTION_DEF(eval)
 
 #endif // NO_MODULES
+
+class spawn_voxel_object_command : public entity_command_callable
+{
+public:
+	spawn_voxel_object_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
+	  : obj_(obj), instantiation_commands_(instantiation_commands)
+	{}
+	virtual void execute(level& lvl, entity& ob) const {
+
+		ASSERT_LOG(lvl.iso_world() != NULL, "No 'isoworld' to insert voxel_object into.");
+		lvl.iso_world()->add_object(obj_);
+
+		obj_->execute_command(instantiation_commands_);
+
+		/*
+		obj_->set_level(lvl);
+		obj_->set_spawned_by(ob.label());
+
+		if(!place_entity_in_level_with_large_displacement(lvl, *obj_)) {
+			return;
+		}
+
+		lvl.add_character(obj_);
+
+		//send an event to the parent to let them know they've spawned a child,
+		//and let them record the child's details.
+		game_logic::map_formula_callable* spawn_callable(new game_logic::map_formula_callable);
+		variant holder(spawn_callable);
+		spawn_callable->add("spawner", variant(&ob));
+		spawn_callable->add("child", variant(obj_.get()));
+		ob.handle_event("child_spawned", spawn_callable);
+		obj_->handle_event("spawned", spawn_callable);
+
+		obj_->execute_command(instantiation_commands_);
+
+		if(entity_collides(lvl, *obj_, MOVE_NONE)) {
+			lvl.remove_character(obj_);
+		} else {
+			obj_->check_initialized();
+		}
+
+		obj_->create_object();
+		*/
+	}
+private:
+	voxel::user_voxel_object_ptr obj_;
+	variant instantiation_commands_;
+};
+
+FUNCTION_DEF(spawn_voxel_object, 4, 6, "spawn_voxel(string type_id, decimal x, decimal y, decimal z, (optional) properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+
+	formula::fail_if_static_context();
+
+	const std::string type = EVAL_ARG(0).as_string();
+	const float x = float(EVAL_ARG(1).as_decimal().as_float());
+	const float y = float(EVAL_ARG(2).as_decimal().as_float());
+	const float z = float(EVAL_ARG(3).as_decimal().as_float());
+
+	variant arg4 = EVAL_ARG(4);
+
+	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
+
+	if(arg4.is_map()) {
+		voxel::const_voxel_object_type_ptr type_ptr = voxel::voxel_object_type::get(type);
+
+		variant last_key;
+
+		variant properties = arg4;
+		variant keys = properties.get_keys();
+		for(int n = 0; n != keys.num_elements(); ++n) {
+			//std::cerr << "KEY: " << keys[n].as_string() << std::endl;
+
+			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+				last_key = keys[n];
+				continue;
+			}
+			variant value = properties[keys[n]];
+			obj->mutate_value(keys[n].as_string(), value);
+			//std::cerr << "MUTATE: " << keys[n].as_string() << " : " << value.to_debug_string() << std::endl;
+		}
+
+		if(last_key.is_string()) {
+			variant value = properties[last_key];
+			obj->mutate_value(last_key.as_string(), value);
+			//std::cerr << "MUTATE2: " << last_key.as_string() << " : " << value.to_debug_string() << std::endl;
+		}
+	}
+
+	variant commands;
+	spawn_voxel_object_command* cmd = (new spawn_voxel_object_command(obj, commands));
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
+	ARG_TYPE("string")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+	ARG_TYPE("decimal")
+	ARG_TYPE("map")
+	ARG_TYPE("commands")
+
+	/*variant v;
+	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
+		game_logic::const_formula_callable_definition_ptr type_def = voxel::voxel_object_type::get_definition(v.as_string());
+		XXX const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
+
+		if(args().size() > 3) {
+			variant_type_ptr map_type = args()[3]->query_variant_type();
+			assert(map_type);
+
+			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
+			if(props) {
+				foreach(int slot, type->slots_requiring_initialization()) {
+					const std::string& prop_id = type->get_entry(slot)->id;
+					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
+				}
+
+				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
+					const int slot = type->get_slot(itor->first.as_string());
+					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
+
+					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+				}
+			}
+		}
+
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+	}*/
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(spawn_voxel_object)
+
 
 class custom_object_function_symbol_table : public function_symbol_table
 {
