@@ -68,6 +68,7 @@ namespace voxel
 			abs(wsp[1]-bmround(wsp[1])) < 0.05f ? int(bmround(wsp[1])) : int(floor(wsp[1])),
 			abs(wsp[2]-bmround(wsp[2])) < 0.05f ? int(bmround(wsp[2])) : int(floor(wsp[2])));
 		glm::ivec3 facing = level::current().camera()->get_facing(wsp);
+		//std::cerr << "WSP:" << wsp.x << "," << wsp.y << "," << wsp.z << " : VC:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << " FACING:" << facing.x << "," << facing.y << "," << facing.z;
 		if(facing.x > 0) {
 			--voxel_coord.x; 
 		}
@@ -78,6 +79,7 @@ namespace voxel
 			--voxel_coord.z; 
 		}
 		voxel_coord /= glm::ivec3(scale_x_, scale_y_, scale_z_);
+		//std::cerr << " : SCALED:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << std::endl;
 		return voxel_coord;
 	}
 
@@ -462,6 +464,16 @@ namespace voxel
 		return variant(&v);
 	END_DEFINE_FN
 
+	BEGIN_DEFINE_FN(get_height_at_point, "(int,int) -> int|null")
+		int xx = FN_ARG(0).as_int();
+		int yy = FN_ARG(1).as_int();
+		auto it = obj.heightmap_.find(std::make_pair(xx,yy));
+		if(it == obj.heightmap_.end()) {
+			return variant();
+		}
+		return variant(it->second);
+	END_DEFINE_FN
+
 	BEGIN_DEFINE_FN(create_world, "() -> commands")
 		return variant(new create_world_callable(obj.chunks_));
 	END_DEFINE_FN
@@ -525,13 +537,7 @@ namespace voxel
 		return variant(&v);
 	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
 		for(int n = 0; n != value.num_elements(); ++n) {
-			if(value[n].is_callable()) {
-				graphics::draw_primitive_ptr dp = value.try_convert<graphics::draw_primitive>();
-				ASSERT_LOG(dp != NULL, "Unable to convert from callable to graphics::draw_primitive");
-				obj.draw_primitives_.push_back(dp);
-			} else {
-				obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
-			}
+			obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
 		}
 	END_DEFINE_CALLABLE(world)
 }

@@ -7,13 +7,13 @@ namespace voxel
 {
 
 user_voxel_object::user_voxel_object(const variant& node)
-  : voxel_object(node), type_(voxel_object_type::get(node["type"].as_string())), data_target_(-1)
+  : voxel_object(node), type_(voxel_object_type::get(node["type"].as_string())), data_target_(-1), created_(false)
 {
 	data_.resize(type_->num_storage_slots());
 }
 
 user_voxel_object::user_voxel_object(const std::string& type, float x, float y, float z)
-  : voxel_object(type, x, y, z), type_(voxel_object_type::get(type)), data_target_(-1)
+  : voxel_object(type, x, y, z), type_(voxel_object_type::get(type)), data_target_(-1), created_(false)
 {
 	data_.resize(type_->num_storage_slots());
 }
@@ -22,9 +22,8 @@ void user_voxel_object::process(level& lvl)
 {
 	voxel_object::process(lvl);
 
-	static bool created = false;
-	if(!created) {
-		created = true;
+	if(!created_) {
+		created_ = true;
 		handle_event(OBJECT_EVENT_CREATE);
 	}
 

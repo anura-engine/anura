@@ -531,8 +531,10 @@ void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const ca
 	shader_save_context save;
 	glUseProgram(shader_->get());
 
-	glm::mat4 model = glm::scale(glm::mat4(), scale_) 
-		* glm::translate(glm::mat4(), translation_);
+	glm::mat4 model = glm::translate(glm::mat4(), translation_) 
+		* glm::translate(glm::mat4(), glm::vec3((b2_.x - b1_.x)/2.0f,(b2_.y - b1_.y)/2.0f,(b2_.z - b1_.z)/2.0f))
+		* glm::scale(glm::mat4(), scale_)
+		* glm::translate(glm::mat4(), glm::vec3((b1_.x - b2_.x)/2.0f,(b1_.y - b2_.y)/2.0f,(b1_.z - b2_.z)/2.0f));
 	glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 	glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
 
@@ -583,6 +585,11 @@ END_DEFINE_CALLABLE(wireframe_box_primitive)
 
 draw_primitive_ptr draw_primitive::create(const variant& v)
 {
+	if(v.is_callable()) {
+		draw_primitive_ptr dp = v.try_convert<draw_primitive>();
+		ASSERT_LOG(dp != NULL, "Couldn't convert callable type to draw_primitive");
+		return dp;
+	}
 	const std::string type = v["type"].as_string();
 	if(type == "arrow") {
 		return new arrow_primitive(v);

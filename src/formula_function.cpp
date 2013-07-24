@@ -33,6 +33,7 @@
 #include "data_blob.hpp"
 #include "dialog.hpp"
 #include "debug_console.hpp"
+#include "draw_primitive.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
@@ -4522,6 +4523,14 @@ FUNCTION_DEF(voxel_model, 1, 1, "voxel_model(str): create and return new voxel m
 	return variant(new voxel::voxel_model(variant(&m)));
 RETURN_TYPE("builtin voxel_model")
 END_FUNCTION_DEF(voxel_model)
+
+FUNCTION_DEF(draw_primitive, 1, 1, "draw_primitive(map): create and return a draw_primitive")
+	variant v = args()[0]->evaluate(variables);
+	return variant(graphics::draw_primitive::create(v).get());
+FUNCTION_ARGS_DEF
+ARG_TYPE("map")
+RETURN_TYPE("builtin draw_primitive")
+END_FUNCTION_DEF(draw_primitive)
 
 }
 

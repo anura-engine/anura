@@ -44,6 +44,8 @@ private:
 	const_voxel_object_type_ptr type_;
 	std::vector<variant> data_;
 	int data_target_;
+
+	bool created_;
 };
 
 typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
