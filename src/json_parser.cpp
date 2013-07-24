@@ -35,6 +35,7 @@
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
+#include "wml_formula_callable.hpp"
 
 namespace game_logic {
 void remove_formula_function_cached_doc(const std::string& name);
@@ -327,8 +328,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 				} else if(begin_macro) {
 					(*macros)[name.as_string()].reset(new json_macro(std::string(begin_macro, t.end), *macros));
 					use_preprocessor = true;
-				} else if(use_preprocessor && v.is_map() && v.has_key("@class")) {
-					v = variant(new game_logic::formula_object(v));
+				} else if(use_preprocessor && v.is_map() && game_logic::wml_serializable_formula_callable::deserialize_obj(v, &v)) {
 					stack.back().add(name, v);
 				} else {
 					stack.back().add(name, v);

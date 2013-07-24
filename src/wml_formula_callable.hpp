@@ -17,7 +17,12 @@
 #ifndef WML_FORMULA_CALLABLE_HPP_INCLUDED
 #define WML_FORMULA_CALLABLE_HPP_INCLUDED
 
+#include <map>
+#include <string>
+
 #include <stdint.h>
+
+#include <functional>
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -27,9 +32,16 @@
 namespace game_logic
 {
 
+#define REGISTER_SERIALIZABLE_CALLABLE(classname, idname) \
+	static const int classname##_registration_var_unique__ = game_logic::wml_serializable_formula_callable::register_serializable_type(idname, [](variant v) ->variant { return variant(new classname(v)); });
+
 class wml_serializable_formula_callable : public formula_callable
 {
 public:
+	static int register_serializable_type(const char* name, std::function<variant(variant)> ctor);
+	static const std::map<std::string, std::function<variant(variant)> >& registered_types();
+	static bool deserialize_obj(const variant& var, variant* target);
+
 	explicit wml_serializable_formula_callable(bool has_self=true) : formula_callable(has_self) {}
 
 	virtual ~wml_serializable_formula_callable() {}

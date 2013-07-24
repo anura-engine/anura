@@ -27,6 +27,7 @@
 #include "module.hpp"
 #include "string_utils.hpp"
 #include "variant_callable.hpp"
+#include "wml_formula_callable.hpp"
 
 std::string preprocess(const std::string& input){
 	
@@ -96,7 +97,11 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 		return variant(std::string(input.begin()+1, input.end()));
 	}
 
-	if(input == "@base" || input == "@derive" || input == "@merge" || input == "@call" || input == "@flatten" || input == "@class") {
+	if(input == "@base" || input == "@derive" || input == "@merge" || input == "@call" || input == "@flatten") {
+		return variant(input);
+	}
+
+	if(game_logic::wml_serializable_formula_callable::registered_types().count(input)) {
 		return variant(input);
 	}
 

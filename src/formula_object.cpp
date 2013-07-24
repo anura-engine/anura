@@ -1095,6 +1095,8 @@ variant formula_object::serialize_to_wml() const
 	return variant(&result);
 }
 
+REGISTER_SERIALIZABLE_CALLABLE(formula_object, "@class");
+
 variant formula_object::get_value(const std::string& key) const
 {
 	{

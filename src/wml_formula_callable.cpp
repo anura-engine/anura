@@ -43,6 +43,36 @@ struct scope_info {
 
 std::stack<scope_info, std::vector<scope_info> > scopes;
 
+std::map<std::string, std::function<variant(variant)> >& type_registry() {
+	static std::map<std::string, std::function<variant(variant)> > instance;
+	return instance;
+}
+
+}
+
+int wml_serializable_formula_callable::register_serializable_type(const char* name, std::function<variant(variant)> ctor)
+{
+	
+	std::string key(name);
+	type_registry()[key] = ctor;
+	return type_registry().size();
+}
+
+bool wml_serializable_formula_callable::deserialize_obj(const variant& var, variant* target)
+{
+	for(const std::pair<std::string, std::function<variant(variant)> >& p : type_registry()) {
+		if(var.has_key(p.first)) {
+			*target = p.second(var);
+			return true;
+		}
+	}
+
+	return false;
+}
+
+const std::map<std::string, std::function<variant(variant)> >& wml_serializable_formula_callable::registered_types()
+{
+	return type_registry();
 }
 
 void wml_formula_callable_serialization_scope::register_serialized_object(const_wml_serializable_formula_callable_ptr ptr)
