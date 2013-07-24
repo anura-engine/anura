@@ -32,8 +32,18 @@
 namespace game_logic
 {
 
-#define REGISTER_SERIALIZABLE_CALLABLE(classname, idname) \
-	static const int classname##_registration_var_unique__ = game_logic::wml_serializable_formula_callable::register_serializable_type(idname, [](variant v) ->variant { return variant(new classname(v)); });
+// To make a formula_callable that is serializable, follow these steps:
+// - Derive from wml_serializable_formula_callable instead of formula_callable
+// - Implement a constructor which takes a variant as its only argument and
+//   deserializes the object.
+// - Implement the serialize_to_wml() method which should return a variant
+//   which is a map. Choose a unique string key beginning with @ that is
+//   used for instances of this class and return it as part of the map.
+//   For instance if your class is a foo_callable you might want to make the
+//   string "@foo".
+// - In your cpp file add REGISTER_SERIALIZABLE_CALLABLE(foo_callable, "@foo").
+//   This will do the magic to ensure that the FSON post-processor will
+//   deserialize your object when an instance is found.
 
 class wml_serializable_formula_callable : public formula_callable
 {
@@ -57,6 +67,9 @@ private:
 	virtual variant serialize_to_wml() const = 0;
 	std::string addr_;
 };
+
+#define REGISTER_SERIALIZABLE_CALLABLE(classname, idname) \
+	static const int classname##_registration_var_unique__ = game_logic::wml_serializable_formula_callable::register_serializable_type(idname, [](variant v) ->variant { return variant(new classname(v)); });
 
 typedef boost::intrusive_ptr<wml_serializable_formula_callable> wml_serializable_formula_callable_ptr;
 typedef boost::intrusive_ptr<const wml_serializable_formula_callable> const_wml_serializable_formula_callable_ptr;
