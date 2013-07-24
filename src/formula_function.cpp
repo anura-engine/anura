@@ -4325,9 +4325,7 @@ END_FUNCTION_DEF(lookat)
 
 FUNCTION_DEF(create_voxel_world, 1, 1, "create_voxel_world(node) -> logical_world: Takes a map describing an isoworld and generates a logical view of it.")
 	variant v = args()[0]->evaluate(variables);
-	voxel::logical_world_ptr w = voxel::logical_world_ptr(v.try_convert<voxel::logical_world>());
-	ASSERT_LOG(w != NULL, "Couldn't convert to voxel::logical_world");
-	return variant(w.get());
+	return variant(new voxel::logical_world(v));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("map")
 	RETURN_TYPE("builtin logical_world")

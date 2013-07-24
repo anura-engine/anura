@@ -61,18 +61,22 @@ namespace voxel
 
 	glm::ivec3 logical_world::worldspace_to_logical(const glm::vec3& wsp) const
 	{
-		glm::ivec3 voxel_coord(int(floor(wsp[0])), int(floor(wsp[1])), int(floor(wsp[2])));
+		glm::ivec3 voxel_coord = glm::ivec3(
+			abs(wsp[0]-bmround(wsp[0])) < 0.05f ? int(bmround(wsp[0])) : int(floor(wsp[0])),
+			abs(wsp[1]-bmround(wsp[1])) < 0.05f ? int(bmround(wsp[1])) : int(floor(wsp[1])),
+			abs(wsp[2]-bmround(wsp[2])) < 0.05f ? int(bmround(wsp[2])) : int(floor(wsp[2])));
 		glm::ivec3 facing = level::current().camera()->get_facing(wsp);
 		if(facing.x > 0) {
-			voxel_coord.x -= scale_x_; 
+			--voxel_coord.x; 
 		}
 		if(facing.y > 0) {
-			voxel_coord.y -= scale_y_; 
+			--voxel_coord.y; 
 		}
 		if(facing.z > 0) {
-			voxel_coord.z -= scale_z_; 
+			--voxel_coord.z; 
 		}
-		return voxel_coord / glm::ivec3(scale_x_, scale_y_, scale_z_);
+		voxel_coord /= glm::ivec3(scale_x_, scale_y_, scale_z_);
+		return voxel_coord;
 	}
 
 
@@ -414,6 +418,7 @@ namespace voxel
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
 
+	// Start definitions for voxel::logical_world
 	BEGIN_DEFINE_CALLABLE_NOBASE(logical_world)
 	BEGIN_DEFINE_FN(create_directed_graph, "(bool=false) ->builtin directed_graph")
 		bool allow_diagonals = NUM_FN_ARGS ? FN_ARG(0).as_bool() : false;
@@ -437,6 +442,7 @@ namespace voxel
 		return variant(obj.scale_z());
 	END_DEFINE_CALLABLE(logical_world)
 
+	// Start definitions for voxel::world
 	BEGIN_DEFINE_CALLABLE_NOBASE(world)
 	DEFINE_FIELD(lighting, "builtin lighting")
 		return variant(obj.lighting_.get());

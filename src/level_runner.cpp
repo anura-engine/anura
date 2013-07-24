@@ -426,6 +426,10 @@ void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 	static const int MouseEnterID = get_object_event_id("mouse_enter");
 	static const int MouseLeaveID = get_object_event_id("mouse_leave");
 
+	if(!lvl_->iso_world()) {
+		return;
+	}
+
 	std::set<voxel::user_voxel_object_ptr> mouse_in;
 
 	for(auto obj : voxel_objs) {
