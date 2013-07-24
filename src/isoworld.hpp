@@ -23,13 +23,14 @@
 #include "raster.hpp"
 #include "shaders.hpp"
 #include "variant.hpp"
+#include "wml_formula_callable.hpp"
 
 namespace voxel
 {
 	class user_voxel_object;
 	typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
 
-	class logical_world : public game_logic::formula_callable
+	class logical_world : public game_logic::wml_serializable_formula_callable
 	{
 	public:
 		explicit logical_world(const variant& node);
@@ -55,11 +56,15 @@ namespace voxel
 	private:
 		DECLARE_CALLABLE(logical_world);
 
+		variant serialize_to_wml() const;
+
 		boost::unordered_map<std::pair<int,int>, int> heightmap_;
 		// Only valid for fixed size worlds
 		int size_x_;
 		int size_y_;
 		int size_z_;
+
+		variant chunks_;
 
 		// Voxels per game logic sqaure
 		size_t scale_x_;

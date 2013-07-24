@@ -22,7 +22,9 @@ namespace voxel
 	const int default_view_distance = 5;
 
 	logical_world::logical_world(const variant& node)
-		:size_x_(0), size_y_(0), size_z_(0), scale_x_(node["scale_x"].as_int(1)), scale_y_(node["scale_y"].as_int(1)), scale_z_(node["scale_z"].as_int(1))
+		:size_x_(0), size_y_(0), size_z_(0), 
+		scale_x_(node["scale_x"].as_int(1)), scale_y_(node["scale_y"].as_int(1)), scale_z_(node["scale_z"].as_int(1)),
+		chunks_(node)
 	{
 		ASSERT_LOG(node.has_key("chunks"), "To create a logic world must have 'chunks' attribute");
 
@@ -305,6 +307,15 @@ namespace voxel
 		}
 	}
 
+	REGISTER_SERIALIZABLE_CALLABLE(logical_world, "@logical_world");
+
+	variant logical_world::serialize_to_wml() const
+	{
+		variant v(chunks_);
+		v.add_attr(variant("@logical_world"), variant("logical_world"));
+		return v;
+	}
+
 	namespace
 	{
 		variant variant_list_from_position(int x, int y, int z)
@@ -444,6 +455,18 @@ namespace voxel
 
 	DEFINE_FIELD(z_scale, "int")
 		return variant(obj.scale_z());
+
+	DEFINE_FIELD(size, "[int,int,int]")
+		return vec3_to_variant(glm::vec3(obj.size_x(), obj.size_y(), obj.size_z()));
+
+	DEFINE_FIELD(size_x, "int")
+		return variant(obj.size_x());
+
+	DEFINE_FIELD(size_y, "int")
+		return variant(obj.size_y());
+
+	DEFINE_FIELD(size_z, "int")
+		return variant(obj.size_z());
 	END_DEFINE_CALLABLE(logical_world)
 
 	//////////////////////////////////////////////////
@@ -461,7 +484,17 @@ namespace voxel
 			v.push_back(variant(o.get()));
 		}
 		return variant(&v);	
-
+	DEFINE_SET_FIELD_TYPE("[builtin user_voxel_object|map]")
+		obj.objects_.clear();
+		for(int n = 0; n != value.num_elements(); ++n) {
+			if(value[n].is_callable()) {
+				user_voxel_object_ptr o = value.try_convert<user_voxel_object>();
+				ASSERT_LOG(o != NULL, "Couldn't convert value to user_voxel_object.");
+				obj.objects_.insert(o.get());
+			} else {				
+				obj.objects_.insert(new user_voxel_object(value[n]));
+			}
+		}
 	DEFINE_FIELD(logical, "builtin logical_world")
 		return variant(obj.logic_.get());
 
