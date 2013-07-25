@@ -138,7 +138,7 @@ void user_voxel_object::set_value_by_slot(int slot, const variant& value)
 		return;
 	} else if(entry.storage_slot >= 0) {
 		assert(entry.storage_slot < data_.size());
-		data_[slot] = value;
+		data_[entry.storage_slot] = value;
 		return;
 	} else {
 		ASSERT_LOG(false, "Illegal property set " << type_->id() << "." << entry.id);
