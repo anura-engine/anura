@@ -333,7 +333,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 
 game_logic::function_symbol_table* voxel_object_type::function_symbols() const
 {
-	return NULL;
+	return &get_voxel_object_functions_symbol_table();
 }
 
 const game_logic::formula* voxel_object_type::event_handler(int event_id) const
