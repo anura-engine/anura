@@ -282,16 +282,6 @@ void editor_module_properties_dialog::create_new_module() {
 			sys::write_file(mod_path + "data/gui/null.cfg", "{\n}");
 			sys::write_file(mod_path + "data/preload.cfg", "{\npreload: [\n],\n}");
 			sys::write_file(mod_path + "data/gui/default.cfg", "{\n}");
-			sys::write_file(mod_path + "data/gui.cfg", 
-				"{\nsection:["
-				"\n\t\"@flatten\","
-				"\n\t\"@include data/editor-tools.cfg\","
-				"\n\t\"@include data/gui-elements.cfg\""
-				"\n],"
-				"framed_gui_element: ["
-				"\n\t\"@flatten\","
-				"\n\t\"@include data/framed-gui-elements.cfg\""
-				"\n]\n}");
 			sys::write_file(mod_path + "data/objects/simple_playable.cfg", 
 				"{\n"
 				"\tid: \"simple_playable\",\n"
