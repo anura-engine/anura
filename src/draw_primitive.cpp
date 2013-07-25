@@ -583,6 +583,195 @@ END_DEFINE_CALLABLE(wireframe_box_primitive)
 
 }
 
+class box_primitive : public draw_primitive
+{
+public:
+	explicit box_primitive(const variant& v)
+		: draw_primitive(v), scale_(glm::vec3(1.0f))
+	{
+		if(v.has_key("points")) {
+			ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
+			b1_ = variant_to_vec3(v["points"][0]);
+			b2_ = variant_to_vec3(v["points"][1]);
+		} else {
+			ASSERT_LOG(v.has_key("point1") && v.has_key("point2"), "Must specify 'points' or 'point1' and 'point2' attributes.");
+			b1_ = variant_to_vec3(v["point1"]);
+			b2_ = variant_to_vec3(v["point2"]);
+		}
+		if(v.has_key("color")) {
+			color_ = color(v["color"]);
+		} else {
+			color_ = color(200, 0, 0, 255);
+		}
+		if(v.has_key("translation")) {
+			translation_ = variant_to_vec3(v["translation"]);
+		}
+		if(v.has_key("scale")) {
+			scale_ = variant_to_vec3(v["scale"]);
+		}
+
+		if(v.has_key("shader")) {
+			shader_ = shader_program::get_global(v["shader"].as_string())->shader();
+		} else {
+			shader_ = shader_program::get_global("line_3d")->shader();
+		}
+		u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+		u_color_ = shader_->get_fixed_uniform("color");
+		a_position_ = shader_->get_fixed_attribute("vertex");
+		ASSERT_LOG(u_mvp_matrix_ != -1, "Error getting mvp_matrix uniform");
+		ASSERT_LOG(u_color_ != -1, "Error getting color uniform");
+		ASSERT_LOG(a_position_ != -1, "Error getting vertex attribute");
+
+		init();
+	}
+	virtual ~box_primitive()
+	{}
+
+private:
+	DECLARE_CALLABLE(box_primitive);
+
+	void init()
+	{
+		if(b1_.x > b2_.x) {
+			std::swap(b1_.x, b2_.x);
+		}
+		if(b1_.y > b2_.y) {
+			std::swap(b1_.y, b2_.y);
+		}
+		if(b1_.z > b2_.z) {
+			std::swap(b1_.z, b2_.z);
+		}
+
+		varray_.clear();
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+
+		varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+	}
+
+	void handle_draw() const
+	{}
+
+	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+	{
+		shader_save_context save;
+		glUseProgram(shader_->get());
+
+		glm::mat4 model = glm::translate(glm::mat4(), translation_) 
+			* glm::translate(glm::mat4(), glm::vec3((b2_.x - b1_.x)/2.0f,(b2_.y - b1_.y)/2.0f,(b2_.z - b1_.z)/2.0f))
+			* glm::scale(glm::mat4(), scale_)
+			* glm::translate(glm::mat4(), glm::vec3((b1_.x - b2_.x)/2.0f,(b1_.y - b2_.y)/2.0f,(b1_.z - b2_.z)/2.0f));
+		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
+		glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
+
+		glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
+
+		glEnableVertexAttribArray(a_position_);
+		glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
+		glDrawArrays(GL_TRIANGLES, 0, varray_.size()/3);
+		glDisableVertexAttribArray(a_position_);
+	}
+
+	glm::vec3 b1_;
+	glm::vec3 b2_;
+
+	graphics::color color_;
+
+	program_ptr shader_;
+
+	std::vector<GLfloat> varray_;
+	
+	GLuint u_mvp_matrix_;
+	GLuint a_position_;
+	GLuint u_color_;
+
+	glm::vec3 translation_;
+	glm::vec3 rotation_;
+	glm::vec3 scale_;
+
+	box_primitive();
+	box_primitive(const box_primitive&);
+};
+
+BEGIN_DEFINE_CALLABLE(box_primitive, draw_primitive)
+	DEFINE_FIELD(color, "[int,int,int,int]")
+		return obj.color_.write();
+	DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
+		obj.color_ = graphics::color(value);
+	DEFINE_FIELD(points, "[[decimal,decimal,decimal],[decimal,decimal,decimal]]")
+		std::vector<variant> v;
+		v.push_back(vec3_to_variant(obj.b1_));
+		v.push_back(vec3_to_variant(obj.b2_));
+		return variant(&v);
+	DEFINE_SET_FIELD
+		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "'points' must be a list of two elements.");
+		obj.b1_ = variant_to_vec3(value[0]);
+		obj.b2_ = variant_to_vec3(value[1]);
+		obj.init();
+	DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.b1_);
+	DEFINE_SET_FIELD
+		obj.b1_ = variant_to_vec3(value);
+		obj.init();
+	DEFINE_FIELD(point1, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.b2_);
+	DEFINE_SET_FIELD
+		obj.b2_ = variant_to_vec3(value);
+		obj.init();
+	DEFINE_FIELD(translation, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.translation_);
+	DEFINE_SET_FIELD
+		obj.translation_ = variant_to_vec3(value);
+	DEFINE_FIELD(scale, "[decimal,decimal,decimal]")
+		return vec3_to_variant(obj.scale_);
+	DEFINE_SET_FIELD
+		obj.scale_ = variant_to_vec3(value);
+END_DEFINE_CALLABLE(box_primitive)
+
+
 draw_primitive_ptr draw_primitive::create(const variant& v)
 {
 	if(v.is_callable()) {
@@ -595,6 +784,8 @@ draw_primitive_ptr draw_primitive::create(const variant& v)
 		return new arrow_primitive(v);
 	} else if(type == "circle") {
 		return new circle_primitive(v);
+	} else if(type == "box") {
+		return new box_primitive(v);
 	} else if(type == "box_wireframe") {
 		return new wireframe_box_primitive(v);
 	}
