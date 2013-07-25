@@ -538,7 +538,7 @@ void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const ca
 	glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 	glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
 
-	glUniform4fv(u_color_, 1, glm::value_ptr(glm::vec4(color_.r(), color_.g(), color_.b(), color_.a())));
+	glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
 
 	glEnableVertexAttribArray(a_position_);
 	glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
