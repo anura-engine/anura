@@ -478,6 +478,9 @@ namespace voxel
 		return variant(new create_world_callable(obj.chunks_));
 	END_DEFINE_FN
 
+	DEFINE_FIELD(scale, "[int,int,int]")
+		return ivec3_to_variant(glm::ivec3(obj.scale_x(), obj.scale_y(), obj.scale_z()));
+
 	DEFINE_FIELD(x_scale, "int")
 		return variant(obj.scale_x());
 
@@ -536,6 +539,7 @@ namespace voxel
 		}
 		return variant(&v);
 	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
+		obj.draw_primitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
 		}
