@@ -25,6 +25,7 @@
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
 #include "reference_counted_object.hpp"
+#include "user_voxel_object.hpp"
 #include "variant.hpp"
 
 namespace voxel 
@@ -41,14 +42,14 @@ class voxel_object_command_callable : public game_logic::formula_callable
 {
 public:
 	voxel_object_command_callable() : expr_(NULL) {}
-	void run_command(voxel::world& world, voxel::voxel_object& obj) const;
+	void run_command(voxel::world& world, voxel::user_voxel_object& obj) const;
 
 	void set_expression(const game_logic::formula_expression* expr);
 
 	bool is_command() const { return true; }
 
 private:
-	virtual void execute(voxel::world& world, voxel::voxel_object& ob) const = 0;
+	virtual void execute(voxel::world& world, voxel::user_voxel_object& ob) const = 0;
 	variant get_value(const std::string& key) const { return variant(); }
 	void get_inputs(std::vector<game_logic::formula_input>* inputs) const {}
 

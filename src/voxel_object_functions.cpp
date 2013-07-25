@@ -19,6 +19,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_function_registry.hpp"
 #include "isoworld.hpp"
+#include "object_events.hpp"
 #include "user_voxel_object.hpp"
 #include "voxel_object.hpp"
 #include "voxel_object_functions.hpp"
@@ -30,7 +31,7 @@ void voxel_object_command_callable::set_expression(const game_logic::formula_exp
 }
 
 
-void voxel_object_command_callable::run_command(voxel::world& lvl, voxel::voxel_object& obj) const
+void voxel_object_command_callable::run_command(voxel::world& lvl, voxel::user_voxel_object& obj) const
 {
 	if(expr_) {
 		try {
@@ -56,7 +57,7 @@ public:
 	schedule_command(int cycles, variant cmd) : cycles_(cycles), cmd_(cmd)
 	{}
 
-	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const 
+	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const 
 	{
 		ob.add_scheduled_command(cycles_, cmd_);
 	}
@@ -74,6 +75,92 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("commands")
 	RETURN_TYPE("commands")
 END_FUNCTION_DEF(schedule)
+
+static int event_depth = 0;
+struct event_depth_scope 
+{
+	event_depth_scope() 
+	{ 
+		++event_depth;
+	}
+	~event_depth_scope() 
+	{ 
+		--event_depth;
+	}
+};
+
+class fire_event_command : public voxel_object_command_callable 
+{
+	const voxel::user_voxel_object_ptr target_;
+	const std::string event_;
+	const const_formula_callable_ptr callable_;
+public:
+	fire_event_command(voxel::user_voxel_object_ptr target, const std::string& event, const_formula_callable_ptr callable)
+	  : target_(target), event_(event), callable_(callable)
+	{}
+
+	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const
+	{
+		ASSERT_LOG(event_depth < 1000, "INFINITE (or too deep?) RECURSION FOR EVENT " << event_);
+		event_depth_scope scope;
+		voxel::user_voxel_object* e = target_ ? target_.get() : &ob;
+		e->handle_event(event_, callable_.get());
+	}
+};
+
+FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
+	voxel::user_voxel_object_ptr target;
+	std::string event;
+	const_formula_callable_ptr callable;
+	variant arg_value;
+
+	if(args().size() == 3) {
+		variant v1 = args()[0]->evaluate(variables);
+		if(v1.is_null()) {
+			return variant();
+		}
+
+		target = v1.convert_to<voxel::user_voxel_object>();
+		event = args()[1]->evaluate(variables).as_string();
+
+		arg_value = args()[2]->evaluate(variables);
+	} else if(args().size() == 2) {
+		variant v1 = args()[0]->evaluate(variables);
+		if(v1.is_null()) {
+			return variant();
+		}
+
+		variant v2 = args()[1]->evaluate(variables);
+		if(v1.is_string()) {
+			event = v1.as_string();
+			arg_value = v2;
+		} else {
+			target = v1.convert_to<voxel::user_voxel_object>();
+			event = v2.as_string();
+		}
+	} else {
+		event = args()[0]->evaluate(variables).as_string();
+	}
+
+	variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id(event));
+	if(arg_type) {
+		ASSERT_LOG(arg_type->match(arg_value), "Calling fire_event, arg type does not match. Expected " << arg_type->to_string() << " found " << arg_value.write_json() << " which is a " << get_variant_type_from_value(arg_value)->to_string());
+	}
+
+	if(arg_value.is_null() == false) {
+		callable = map_into_callable(arg_value);
+	}
+
+	fire_event_command* cmd = (new fire_event_command(target, event, callable));
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object|string")
+	ARG_TYPE("any")
+	ARG_TYPE("any")
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(fire_event)
+
 
 /*class spawn_voxel_command : public voxel_object_command_callable
 {
