@@ -389,10 +389,10 @@ namespace voxel
 		}
 	
 		pathfinding::graph_edge_list edges;
-		for(auto p : heightmap_) {
-			const int x = p.first.first;
-			const int y = p.second;
-			const int z = p.first.second;
+		for(auto p : vertex_list) {
+			const int x = p[0].as_int();
+			const int y = p[1].as_int();
+			const int z = p[2].as_int();
 
 			std::vector<variant> current_edges;
 			
@@ -430,7 +430,7 @@ namespace voxel
 					current_edges.push_back(variant_list_from_position(x-1,it->second,z-1));
 				}
 			}
-			edges[variant_list_from_position(p.first.first, p.second, p.first.second)] = current_edges;
+			edges[variant_list_from_position(x, y, z)] = current_edges;
 		}
 		return pathfinding::directed_graph_ptr(new pathfinding::directed_graph(&vertex_list, &edges));
 	}
