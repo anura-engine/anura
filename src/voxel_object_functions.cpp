@@ -50,7 +50,32 @@ namespace {
 
 const std::string FunctionModule = "voxel_object";
 
-class spawn_voxel_command : public voxel_object_command_callable
+class schedule_command : public voxel_object_command_callable 
+{
+public:
+	schedule_command(int cycles, variant cmd) : cycles_(cycles), cmd_(cmd)
+	{}
+
+	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const 
+	{
+		ob.add_scheduled_command(cycles_, cmd_);
+	}
+private:
+	int cycles_;
+	variant cmd_;
+};
+
+FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the level for the commands to be run.")
+	schedule_command* cmd = new schedule_command(EVAL_ARG(0).as_int(),EVAL_ARG(1));
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("commands")
+	RETURN_TYPE("commands")
+END_FUNCTION_DEF(schedule)
+
+/*class spawn_voxel_command : public voxel_object_command_callable
 {
 public:
 	spawn_voxel_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
@@ -124,7 +149,33 @@ FUNCTION_ARGS_DEF
 	}
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_voxel)
+*/
 
+
+class voxel_object_function_symbol_table : public function_symbol_table
+{
+public:
+	expression_ptr create_function(const std::string& fn,
+		const std::vector<expression_ptr>& args,
+		const_formula_callable_definition_ptr callable_def) const
+	{
+		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
+		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);
+		if(i != creators.end()) {
+			return expression_ptr(i->second->create(args));
+		}
+
+		return function_symbol_table::create_function(fn, args, callable_def);
+	}
+
+};
+
+}
+
+function_symbol_table& get_voxel_object_functions_symbol_table()
+{
+	static voxel_object_function_symbol_table table;
+	return table;
 }
 
 #endif // USE_GLES2

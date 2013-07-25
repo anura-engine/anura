@@ -24,6 +24,7 @@
 #include "variant_utils.hpp"
 #include "voxel_object.hpp"
 #include "voxel_object_type.hpp"
+#include "voxel_object_functions.hpp"
 
 namespace voxel
 {
@@ -153,6 +154,11 @@ namespace voxel
 			return;
 		}
 
+		std::vector<variant> scheduled_commands = pop_scheduled_commands();
+		foreach(const variant& cmd, scheduled_commands) {
+			execute_command(cmd);
+		}
+
 		if(model_) {
 			model_->process_animation();
 		}
@@ -181,6 +187,27 @@ namespace voxel
 		event_arg_ = v;
 	}
 
+	void voxel_object::add_scheduled_command(int cycle, variant cmd)
+	{
+		scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
+	}
+
+	std::vector<variant> voxel_object::pop_scheduled_commands()
+	{
+		std::vector<variant> result;
+		std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();
+		while(i != scheduled_commands_.end()) {
+			if(--(i->first) <= 0) {
+				result.push_back(i->second);
+				i = scheduled_commands_.erase(i);
+			} else {
+				++i;
+			}
+		}
+
+		return result;
+	}
+
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(voxel_object)
 	BEGIN_DEFINE_FN(attach_model, "(voxel_model,string,string) ->commands")
@@ -193,7 +220,7 @@ namespace voxel
 		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
 		return variant(new game_logic::fn_command_callable(fn));
 	END_DEFINE_FN
-		
+
 	DEFINE_FIELD(world, "builtin world")
 		return variant(level::current().iso_world().get());
 	DEFINE_FIELD(widgets, "[builtin widget]")

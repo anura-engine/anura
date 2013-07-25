@@ -8,6 +8,7 @@
 #include "scoped_resource.hpp"
 #include "string_utils.hpp"
 #include "voxel_object_type.hpp"
+#include "voxel_object_functions.hpp"
 
 using namespace game_logic;
 
@@ -316,7 +317,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		  [&]() { for(int n = 0; n != callable_definition_->num_slots(); ++n) { callable_definition_->get_entry(n)->private_counter++; } }
 		);
 
-		game_logic::function_symbol_table* symbols = NULL;
+		game_logic::function_symbol_table* symbols = &get_voxel_object_functions_symbol_table();
 
 		for(const variant_pair& p : handlers_node.as_map()) {
 			const std::string& key = p.first.as_string();

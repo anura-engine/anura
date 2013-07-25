@@ -89,6 +89,10 @@ public:
 
 	bool is_mouseover_object() const { return is_mouseover_; }
 	void set_mouseover_object(bool mo=true) { is_mouseover_ = mo; }
+
+	void add_scheduled_command(int cycle, variant cmd);
+	std::vector<variant> pop_scheduled_commands();
+
 protected:
 private:
 	DECLARE_CALLABLE(voxel_object);
@@ -117,6 +121,9 @@ private:
 	mutable glm::mat4 model_matrix_;
 	
 	bool is_mouseover_;
+
+	typedef std::pair<int, variant> ScheduledCommand;
+	std::vector<ScheduledCommand> scheduled_commands_;
 
 	// XXX hack
 	variant event_arg_;
