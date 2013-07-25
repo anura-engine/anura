@@ -1028,8 +1028,8 @@ const std::map<variant,variant>& variant::as_map() const
 	if(is_map()) {
 		return map_->elements;
 	} else {
-		static std::map<variant,variant> EmptyMap;
-		return EmptyMap;
+		static const std::map<variant,variant>* EmptyMap = new std::map<variant,variant>;
+		return *EmptyMap;
 	}
 }
 

@@ -56,33 +56,33 @@ namespace voxel
 		}
 	}
 
-	voxel_object::voxel_object(const std::string& type, float x, float y, float z)
-		: type_(type), translation_(x,y,z), rotation_(0.0f), scale_(1.0f),
-		cycle_(0), paused_(false)
-	{
-		shader_ = gles2::shader_program::get_global("lighted_color_shader")->shader();
-		a_normal_ = shader_->get_fixed_attribute("normal");
-		mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-
-		// XXX: THIS IS A HACK TO STOP IT CRASHING
-		std::map<variant,variant> m;
-		m[variant("model")] = variant(model_path_get_or_die("humanoid"));
- 		model_.reset(new voxel_model(variant(&m)));
-		model_->set_animation("stand");
-
-		const_voxel_object_type_ptr type_ptr = voxel_object_type::get(type_);
-	}
-
 	voxel_object::voxel_object(const variant& node)
+		// The initializer list should NOT read from 'node'. It should only
+		// set up default values. Read from node in the body.
 		: translation_(0.0f), rotation_(0.0f), scale_(1.0f),
-		cycle_(0), paused_(false), type_(node["type"].as_string())
+		cycle_(0), paused_(false), is_mouseover_(false)
 	{
-		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
-		ASSERT_LOG(node.has_key("model"), "Must have 'model' attribute");
-		std::map<variant,variant> m;
-		m[variant("model")] = variant(model_path_get_or_die(node["model"].as_string()));
- 		model_.reset(new voxel_model(variant(&m)));
-		model_->set_animation("stand");
+		if(node.has_key("type")) {
+			const std::string type = node["type"].as_string();
+
+			const voxel_object* prototype = voxel_object_type::get(type)->prototype();
+			if(prototype) {
+				*this = *prototype;
+			}
+
+			type_ = type;
+		}
+
+		if(!shader_ || node.has_key("shader")) {
+			shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
+		}
+		
+		if(!model_ || node.has_key("model")) {
+			std::map<variant,variant> m;
+			m[variant("model")] = variant(model_path_get_or_die(node["model"].as_string()));
+ 			model_.reset(new voxel_model(variant(&m)));
+			model_->set_animation("stand");
+		}
 
 		if(node.has_key("translation")) {
 			translation_ = variant_to_vec3(node["translation"]);

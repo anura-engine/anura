@@ -74,6 +74,8 @@ bool voxel_object_type::is_derived_from(const std::string& base, const std::stri
 voxel_object_type::voxel_object_type(const std::string& id, variant node)
   : id_(id), num_base_slots_(0), num_storage_slots_(0)
 {
+	prototype_.reset(new voxel_object(node));
+
 	const formula::strict_check_scope strict_checking(true);
 
 	variant properties_node = node["properties"];
@@ -120,6 +122,10 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		value_prop.storage_slot = 1;
 		value_prop.persistent = false;
 		slot_properties_.push_back(value_prop);
+
+		for(int n = 0; n != slot_properties_.size(); ++n) {
+			slot_properties_[n].slot = n;
+		}
 
 		num_storage_slots_ += 2;
 
@@ -217,6 +223,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 
 			const std::string& k = key.as_string();
 			property_entry& entry = properties_[k];
+			entry.slot = slot_properties_.size();
 			entry.id = k;
 			if(value.is_string()) {
 				entry.getter = game_logic::formula::create_optional_formula(value, function_symbols(), callable_definition_);

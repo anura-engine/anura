@@ -30,6 +30,11 @@
 
 namespace tbs
 {
+	struct internal_server_manager {
+		explicit internal_server_manager(bool use_internal_server);
+		~internal_server_manager();
+	};
+
 	class internal_server : public server_base
 	{
 	public:
@@ -43,7 +48,6 @@ namespace tbs
 			game_logic::map_formula_callable_ptr callable, 
 			boost::function<void(const std::string&)> handler);		
 		static void process();
-		static void init();
 		static boost::asio::io_service& get_io_service() { return io_service_; }
 
 		static int requests_in_flight(int session_id);
