@@ -34,6 +34,8 @@ public:
 	void handle_event(const std::string& event, const formula_callable* context=NULL);
 
 	virtual void process(level& lvl);
+
+	virtual bool execute_command(const variant& b);
 private:
 	variant get_value_by_slot(int slot) const;
 	void set_value_by_slot(int slot, const variant& value);

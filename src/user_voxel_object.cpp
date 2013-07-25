@@ -2,6 +2,7 @@
 
 #include "object_events.hpp"
 #include "user_voxel_object.hpp"
+#include "voxel_object_functions.hpp"
 
 namespace voxel
 {
@@ -29,6 +30,17 @@ void user_voxel_object::process(level& lvl)
 
 	handle_event(OBJECT_EVENT_PROCESS);
 
+}
+
+bool user_voxel_object::execute_command(const variant& b)
+{
+	const voxel_object_command_callable* cmd = b.try_convert<voxel_object_command_callable>();
+	if(cmd) {
+		cmd->run_command(*level::current().iso_world().get(), *this);
+		return true;
+	}
+
+	return formula_callable::execute_command(b);
 }
 
 void user_voxel_object::handle_event(int nevent, const formula_callable* context)
