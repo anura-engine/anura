@@ -3320,55 +3320,23 @@ private:
 	variant instantiation_commands_;
 };
 
-FUNCTION_DEF(spawn_voxel_object, 4, 6, "spawn_voxel(string type_id, decimal x, decimal y, decimal z, (optional) properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+FUNCTION_DEF(spawn_voxel_object, 1, 2, "spawn_voxel(properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
 	formula::fail_if_static_context();
 
-	const std::string type = EVAL_ARG(0).as_string();
-	const float x = float(EVAL_ARG(1).as_decimal().as_float());
-	const float y = float(EVAL_ARG(2).as_decimal().as_float());
-	const float z = float(EVAL_ARG(3).as_decimal().as_float());
+	variant doc = EVAL_ARG(0);
 
-	variant arg4 = EVAL_ARG(4);
-
-	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
-
-	if(arg4.is_map()) {
-		voxel::const_voxel_object_type_ptr type_ptr = voxel::voxel_object_type::get(type);
-
-		variant last_key;
-
-		variant properties = arg4;
-		variant keys = properties.get_keys();
-		for(int n = 0; n != keys.num_elements(); ++n) {
-			//std::cerr << "KEY: " << keys[n].as_string() << std::endl;
-
-			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
-				last_key = keys[n];
-				continue;
-			}
-			variant value = properties[keys[n]];
-			obj->mutate_value(keys[n].as_string(), value);
-			//std::cerr << "MUTATE: " << keys[n].as_string() << " : " << value.to_debug_string() << std::endl;
-		}
-
-		if(last_key.is_string()) {
-			variant value = properties[last_key];
-			obj->mutate_value(last_key.as_string(), value);
-			//std::cerr << "MUTATE2: " << last_key.as_string() << " : " << value.to_debug_string() << std::endl;
-		}
-	}
+	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(doc));
 
 	variant commands;
+	if(args().size() > 1) {
+		commands = EVAL_ARG(1);
+	}
 	spawn_voxel_object_command* cmd = (new spawn_voxel_object_command(obj, commands));
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
-	ARG_TYPE("string")
-	ARG_TYPE("decimal")
-	ARG_TYPE("decimal")
-	ARG_TYPE("decimal")
 	ARG_TYPE("map")
 	ARG_TYPE("commands")
 

@@ -11,12 +11,30 @@ user_voxel_object::user_voxel_object(const variant& node)
   : voxel_object(node), type_(voxel_object_type::get(node["type"].as_string())), data_target_(-1), created_(false)
 {
 	data_.resize(type_->num_storage_slots());
-}
+	std::vector<int> require_init;
+	for(const voxel_object_type::property_entry& entry : type_->slot_properties()) {
+		if(entry.storage_slot != -1) {
+			if(entry.init) {
+				data_[entry.storage_slot] = entry.init->execute(*this);
+			} else {
+				data_[entry.storage_slot] = entry.default_value;
+			}
+		}
 
-user_voxel_object::user_voxel_object(const std::string& type, float x, float y, float z)
-  : voxel_object(type, x, y, z), type_(voxel_object_type::get(type)), data_target_(-1), created_(false)
-{
-	data_.resize(type_->num_storage_slots());
+		if(entry.requires_initialization) {
+			require_init.push_back(entry.slot);
+		}
+	}
+
+	for(const variant::map_pair& p : node.as_map()) {
+		auto itor = type_->properties().find(p.first.as_string());
+		if(itor != type_->properties().end()) {
+			set_value_by_slot(type_->num_base_slots() + itor->second.slot, p.second);
+			require_init.erase(std::remove(require_init.begin(), require_init.end(), itor->second.slot), require_init.end());
+		}
+	}
+
+	ASSERT_LOG(require_init.empty(), "Object " << type_->id() << " did not have field " << type_->slot_properties()[require_init.front()].id << " initialized");
 }
 
 void user_voxel_object::process(level& lvl)

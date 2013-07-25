@@ -73,9 +73,16 @@ namespace tbs
 		server_ptr->handle_process();
 	}
 
-	void internal_server::init()
+	internal_server_manager::internal_server_manager(bool use_internal_server)
 	{
-		server_ptr = internal_server_ptr(new internal_server);
+		if(use_internal_server) {
+			server_ptr = internal_server_ptr(new internal_server);
+		}
+	}
+
+	internal_server_manager::~internal_server_manager()
+	{
+		server_ptr.reset();
 	}
 
 	int internal_server::requests_in_flight(int session_id)

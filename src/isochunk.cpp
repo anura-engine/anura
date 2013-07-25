@@ -312,7 +312,7 @@ namespace voxel{
 
 	void chunk::init()
 	{
-		vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete id;});
+		vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete [] id;});
 		glGenBuffers(2, &vbos_[0]);
 
 		get_textured_terrain_info().clear();

@@ -590,9 +590,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::cerr << "\n";
 
-	if(preferences::internal_tbs_server()) {
-		tbs::internal_server::init();
-	}
+	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
 	if(utility_program.empty() == false 
 		&& test::utility_needs_video(utility_program) == false) {
@@ -1084,6 +1082,10 @@ extern "C" int main(int argcount, char* argvec[])
 #ifdef _MSC_VER
 	ExitProcess(0);
 #endif
+
+	std::set<variant*> loading;
+	swap_variants_loading(loading);
+	std::cerr << "LOADING: " << loading.size() << "\n";
 
 	return 0;
 }

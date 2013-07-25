@@ -2,10 +2,12 @@
 
 #include <string>
 
+#include <boost/intrusive_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
+#include "voxel_object.hpp"
 
 namespace voxel
 {
@@ -14,6 +16,8 @@ class voxel_object_type;
 
 typedef boost::shared_ptr<voxel_object_type> voxel_object_type_ptr;
 typedef boost::shared_ptr<const voxel_object_type> const_voxel_object_type_ptr;
+
+class voxel_object;
 
 class voxel_object_type
 {
@@ -31,12 +35,13 @@ public:
 	int num_storage_slots() const { return num_storage_slots_; }
 
 	struct property_entry {
-		property_entry() : storage_slot(-1), persistent(true), requires_initialization(false) {}
+		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
 		boost::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
+		int slot;
 		int storage_slot;
 		bool persistent;
 		bool requires_initialization;
@@ -49,6 +54,8 @@ public:
 	const game_logic::formula* event_handler(int event_id) const;
 	
 	const std::string& last_initialization_property() const { return last_initialization_property_; }
+
+	const voxel_object* prototype() const { return prototype_.get(); }
 
 private:
 	game_logic::function_symbol_table* function_symbols() const;
@@ -66,6 +73,8 @@ private:
 	std::string last_initialization_property_;
 
 	std::vector<game_logic::const_formula_ptr> event_handlers_;
+
+	boost::intrusive_ptr<voxel_object> prototype_;
 };
 
 }
