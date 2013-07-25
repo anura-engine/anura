@@ -124,7 +124,7 @@ void animation_renderer::init()
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete id;});
+	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete[] id;});
 	glGenTextures(1, &fbo_texture_ids_[0]);
 	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
