@@ -75,6 +75,15 @@ const std::map<std::string, std::function<variant(variant)> >& wml_serializable_
 	return type_registry();
 }
 
+variant wml_serializable_formula_callable::write_to_wml() const
+{
+	variant result = serialize_to_wml();
+	char addr_buf[256];
+	sprintf(addr_buf, "%p", this);
+	result.add_attr(variant("_addr"), variant(addr_buf));
+	return result;
+}
+
 void wml_formula_callable_serialization_scope::register_serialized_object(const_wml_serializable_formula_callable_ptr ptr)
 {
 	ASSERT_LOG(scopes.empty() == false, "register_serialized_object() called when there is no wml_formula_callable_serialization_scope");

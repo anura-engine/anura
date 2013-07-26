@@ -1085,7 +1085,10 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::set<variant*> loading;
 	swap_variants_loading(loading);
-	std::cerr << "LOADING: " << loading.size() << "\n";
+	if(loading.empty() == false) {
+		fprintf(stderr, "Illegal object: %p\n", (void*)(*loading.begin())->as_callable_loading());
+		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
+	}
 
 	return 0;
 }

@@ -1088,10 +1088,6 @@ variant formula_object::serialize_to_wml() const
 		result[variant("property_overrides")] = variant(&properties);
 	}
 
-	char addr_buf[256];
-	sprintf(addr_buf, "%p", this);
-	result[variant("_addr")] = variant(addr_buf);
-
 	return variant(&result);
 }
 
