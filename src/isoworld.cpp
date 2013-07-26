@@ -529,13 +529,13 @@ namespace voxel
 	DEFINE_SET_FIELD_TYPE("map")
 		obj.skybox_.reset(new graphics::skybox(value));
 
-	DEFINE_FIELD(objects, "[builtin user_voxel_object]")
+	DEFINE_FIELD(objects, "[builtin voxel_object]")
 		std::vector<variant> v;
 		for(auto o : obj.objects_) {
 			v.push_back(variant(o.get()));
 		}
 		return variant(&v);	
-	DEFINE_SET_FIELD_TYPE("[builtin user_voxel_object|map]")
+	DEFINE_SET_FIELD_TYPE("[builtin voxel_object|map]")
 		obj.objects_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
