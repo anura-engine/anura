@@ -36,6 +36,19 @@ namespace graphics
 namespace 
 {
 	bool g_flip_draws = false;
+
+	PREF_INT(msaa, 0);
+
+	size_t next_pow2(size_t v) 
+	{
+		--v;
+		v |= v >> 1;
+		v |= v >> 2;
+		v |= v >> 4;
+		v |= v >> 8;
+		v |= v >> 16;
+		return ++v;
+	}
 }
 
 flip_draw_scope::flip_draw_scope() : old_value(g_flip_draws)
@@ -196,8 +209,18 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	SDL_GL_SetAttribute(SDL_GL_BLUE_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
-	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 4);
+	if(g_msaa > 0) {
+		if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
+			std::cerr << "MSAA(" << g_msaa << ") requested but mutlisample buffer couldn't be allocated." << std::endl;
+		} else {
+			size_t msaa = next_pow2(g_msaa);
+			std::cerr << "Requesting MSAA of " << msaa;
+			if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa) != 0) {
+				std::cerr << " -- Failure, disabled.";
+			}
+			std::cerr << std::endl;
+		}
+	}
 #endif
 	if(global_renderer) {
 		SDL_DestroyRenderer(global_renderer);
@@ -234,6 +257,11 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	int depth;
 	glGetIntegerv(GL_DEPTH_BITS, &depth);
 	std::cerr << "Depth(from GL) buffer size: " << depth << std::endl;
+
+	int msaa = 0;
+	if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &msaa) == 0) {
+		std::cerr << "Actual MSAA: " << msaa << std::endl; 
+	}
 #endif
 	return wnd;
 }
