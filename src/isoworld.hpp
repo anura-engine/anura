@@ -22,6 +22,7 @@
 #include "lighting.hpp"
 #include "raster.hpp"
 #include "shaders.hpp"
+#include "skybox.hpp"
 #include "variant.hpp"
 #include "wml_formula_callable.hpp"
 
@@ -106,6 +107,8 @@ namespace voxel
 		gles2::program_ptr shader_;
 
 		graphics::lighting_ptr lighting_;
+
+		graphics::skybox_ptr skybox_;
 
 		int view_distance_;
 

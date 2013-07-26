@@ -41,21 +41,6 @@ using namespace gles2;
 namespace
 {
 
-struct shader_save_context
-{
-	shader_save_context()
-	{
-		glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
-	}
-
-	~shader_save_context()
-	{
-		glUseProgram(current_program);
-	}
-
-	GLint current_program;
-};
-
 typedef boost::array<GLfloat, 2> FPoint;
 
 class circle_primitive : public draw_primitive

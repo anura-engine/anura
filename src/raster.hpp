@@ -56,6 +56,22 @@ struct vbo_deleter
 	int n_;
 };
 
+struct shader_save_context
+{
+	shader_save_context()
+	{
+		glGetIntegerv(GL_CURRENT_PROGRAM, &current_program);
+	}
+
+	~shader_save_context()
+	{
+		glUseProgram(current_program);
+	}
+
+	GLint current_program;
+};
+
+
 typedef boost::shared_array<GLuint> vbo_array;
 
 class stencil_scope

@@ -102,6 +102,10 @@ namespace voxel
 			}
 		}
 
+		if(node.has_key("skybox")) {
+			skybox_.reset(new graphics::skybox(node["skybox"]));
+		}
+
 		if(node.has_key("chunks")) {
 			logic_.reset(new logical_world(node));
 			build_fixed(node["chunks"]);
@@ -230,6 +234,12 @@ namespace voxel
 		//profile::manager pman("world::draw");
 		glUseProgram(shader_->get());
 		glClear(GL_DEPTH_BUFFER_BIT);
+
+		// skybox should be drawn last
+		if(skybox_) {
+			skybox_->draw(lighting_, camera);
+		}
+
 		// Cull triangles which normal is not towards the camera
 		glEnable(GL_CULL_FACE);
 		// Enable depth test
@@ -511,6 +521,11 @@ namespace voxel
 		return variant(obj.lighting_.get());
 	DEFINE_SET_FIELD_TYPE("map")
 		obj.lighting_.reset(new graphics::lighting(obj.shader_, value));
+
+	DEFINE_FIELD(lighting, "builtin skybox")
+		return variant(obj.skybox_.get());
+	DEFINE_SET_FIELD_TYPE("map")
+		obj.skybox_.reset(new graphics::skybox(value));
 
 	DEFINE_FIELD(objects, "[builtin user_voxel_object]")
 		std::vector<variant> v;
