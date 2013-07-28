@@ -36,11 +36,13 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
+PREF_INT(tile_size, 16);
+#define BaseTileSize g_tile_size
+
 namespace {
 typedef std::map<std::string,const_level_object_ptr> tiles_map;
 tiles_map tiles_cache;
 
-const int BaseTileSize = 16;
 }
 
 bool level_tile::is_solid(int xpos, int ypos) const

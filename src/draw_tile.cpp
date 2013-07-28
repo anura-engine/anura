@@ -22,9 +22,8 @@
 #include <algorithm>
 #include <iostream>
 
-namespace {
-	const int BaseTileSize = 16;
-}
+extern int g_tile_size;
+#define BaseTileSize g_tile_size
 
 void queue_draw_tile(graphics::blit_queue& q, const level_tile& t)
 {
