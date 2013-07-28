@@ -33,6 +33,7 @@ modules/weregild
 modules/other
 modules/wip_levels
 modules/cube_trains
+modules/open_pixel_platformer
 
 MacOS/include
 MacOS/lib
@@ -49,6 +50,8 @@ vs2012/anura/anura.opensdf
 vs2012/anura/Win32
 vs2012/anura/Debug
 vs2012/anura/Release
+
+src/Box2D
 
 log.txt
 
