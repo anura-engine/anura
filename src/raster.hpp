@@ -226,6 +226,8 @@ struct clip_scope {
 	boost::scoped_ptr<stencil_scope> stencil_;
 };
 
+int get_configured_msaa();
+
 }
 
 #endif

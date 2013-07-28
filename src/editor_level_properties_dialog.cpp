@@ -165,6 +165,7 @@ void editor_level_properties_dialog::change_background()
 	std::sort(backgrounds.begin(), backgrounds.end());
 
 	gui::grid* grid = new gui::grid(1);
+	grid->set_zorder(100);
 	grid->set_hpad(40);
 	grid->set_show_background(true);
 	grid->allow_selection();

@@ -318,10 +318,10 @@ private:
 
 	void calculate_camera();
 
-	boost::shared_array<GLuint> fbo_texture_ids_;
 	glm::mat4 fbo_proj_;
-	boost::shared_ptr<GLuint> framebuffer_id_;
-	boost::shared_ptr<GLuint> depth_id_;
+	boost::shared_array<GLuint> framebuffer_id_;
+	boost::shared_array<GLuint> render_buffer_id_;
+	boost::shared_array<GLuint> final_texture_id_;
 
 	boost::array<GLfloat, 3> vector_;
 
@@ -408,7 +408,7 @@ void iso_renderer::handle_draw() const
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
 	GLint cur_id = graphics::texture::get_current_texture();
-	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
+	glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
 
 	const int w_odd = width() % 2;
 	const int h_odd = height() % 2;
@@ -500,7 +500,7 @@ namespace
 glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 {
 	// Before calling screen_to_world we need to bind the fbo
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), framebuffer_id_[0]);
 	glm::vec3 world_coords = camera_->screen_to_world(xp, yp, width(), height());
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
 	glm::ivec3 voxel_coord = glm::ivec3(
@@ -657,34 +657,81 @@ void iso_renderer::init()
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	fbo_texture_ids_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete[] id;});
-	glGenTextures(1, &fbo_texture_ids_[0]);
-	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-	glBindTexture(GL_TEXTURE_2D, 0);
+	if(graphics::get_configured_msaa() != 0) {
+		render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(2, id); delete[] id;});
+		glGenRenderbuffers(2, &render_buffer_id_[0]);
+		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_RGBA, tex_width_, tex_height_);
 
-	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
-	EXT_CALL(glGenFramebuffers)(1, framebuffer_id_.get());
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[1]);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
-	// attach the texture to FBO color attachment point
-	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
-                          GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
-	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
-	glGenRenderbuffers(1, depth_id_.get());
-	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
-	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
-	glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, *depth_id_);
+		// check FBO status
+		GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
+		ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNSUPPORTED));
+		ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
 
-	// check FBO status
-	GLenum status = EXT_CALL(glCheckFramebufferStatus)(EXT_MACRO(GL_FRAMEBUFFER));
-	ASSERT_NE(status, EXT_MACRO(GL_FRAMEBUFFER_UNSUPPORTED));
-	ASSERT_EQ(status, EXT_MACRO(GL_FRAMEBUFFER_COMPLETE));
+		// Create Other FBO
+		final_texture_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete[] id;});
+		glGenTextures(2, &final_texture_id_[0]);
+		glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+	
+		glBindTexture(GL_TEXTURE_2D, final_texture_id_[1] );
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+		glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
+		glBindTexture(GL_TEXTURE_2D, 0);
 
+		framebuffer_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteFramebuffers(2, id); delete[] id;});
+		glGenFramebuffers(2, &framebuffer_id_[0]);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[1]);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, render_buffer_id_[0]);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[1]);
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		ASSERT_NE(status, GL_FRAMEBUFFER_UNSUPPORTED);
+		ASSERT_EQ(status, GL_FRAMEBUFFER_COMPLETE);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, final_texture_id_[0], 0);
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, final_texture_id_[1], 0);
+		status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+		ASSERT_NE(status, GL_FRAMEBUFFER_UNSUPPORTED);
+		ASSERT_EQ(status, GL_FRAMEBUFFER_COMPLETE);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+	} else {
+		// XXX
+		render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete[] id;});
+		glGenRenderbuffers(1, &render_buffer_id_[0]);
+		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
+		glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+
+		final_texture_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete[] id;});
+		glGenTextures(1, &final_texture_id_[0]);
+		glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		framebuffer_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteFramebuffers(1, id); delete[] id;});
+		glGenFramebuffers(1, &framebuffer_id_[0]);
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
+		// attach the texture to FBO color attachment point
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, final_texture_id_[0], 0);
+		glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[0]);
+	}
 
 	// Grab uniforms and normal attribute
 	gles2::program_ptr shader = gles2::shader_program::get_global("iso_color_line")->shader();
@@ -698,7 +745,11 @@ void iso_renderer::init()
 
 void iso_renderer::render_fbo()
 {
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
+	if(graphics::get_configured_msaa() != 0) {
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[1]);
+	} else {
+		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
+	}
 
 	//set up the raster projection.
 	glViewport(0, 0, width(), height());
@@ -938,11 +989,21 @@ void iso_renderer::render_fbo()
 		glDrawArrays(GL_TRIANGLES, 0, varray.size()/3);
 	}
 
-	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id_);
+	glBindFramebuffer(GL_FRAMEBUFFER, video_framebuffer_id_);
 
 	glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 
 	glDisable(GL_DEPTH_TEST);
+
+	if(graphics::get_configured_msaa() != 0) {
+		// blit from multisample FBO to final FBO
+		glBindFramebuffer(GL_FRAMEBUFFER, 0 );
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id_[1]);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_id_[0]);
+		glBlitFramebuffer(0, 0, tex_width_, tex_height_, 0, 0, tex_width_, tex_height_, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
+		glBindFramebuffer(GL_READ_FRAMEBUFFER, 0);
+		glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
+	}
 }
 
 class perspective_renderer : public gui::widget
