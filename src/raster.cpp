@@ -39,7 +39,7 @@ namespace
 
 	PREF_INT(msaa, 0);
 
-	size_t next_pow2(size_t v) 
+	uint32_t next_pow2(uint32_t v) 
 	{
 		--v;
 		v |= v >> 1;
@@ -49,6 +49,13 @@ namespace
 		v |= v >> 16;
 		return ++v;
 	}
+
+	int g_msaa_set = 0;
+}
+
+int get_configured_msaa()
+{
+	return g_msaa_set;
 }
 
 flip_draw_scope::flip_draw_scope() : old_value(g_flip_draws)
@@ -258,9 +265,8 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	glGetIntegerv(GL_DEPTH_BITS, &depth);
 	std::cerr << "Depth(from GL) buffer size: " << depth << std::endl;
 
-	int msaa = 0;
-	if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &msaa) == 0) {
-		std::cerr << "Actual MSAA: " << msaa << std::endl; 
+	if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &g_msaa_set) == 0) {
+		std::cerr << "Actual MSAA: " << g_msaa_set << std::endl; 
 	}
 #endif
 	return wnd;
