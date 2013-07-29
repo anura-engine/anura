@@ -296,10 +296,10 @@ level::level(const std::string& level_cfg, variant node)
 	}
 
 	segment_width_ = node["segment_width"].as_int();
-	ASSERT_LOG(segment_width_%TileSize == 0, "segment_width in " << id_ << " is not divisible by 32");
+	ASSERT_LOG(segment_width_%TileSize == 0, "segment_width in " << id_ << " is not divisible by " << TileSize << " (" << segment_width_%TileSize << " wide)");
 
 	segment_height_ = node["segment_height"].as_int();
-	ASSERT_LOG(segment_height_%TileSize == 0, "segment_height in " << id_ << " is not divisible by 32");
+	ASSERT_LOG(segment_height_%TileSize == 0, "segment_height in " << id_ << " is not divisible by " << TileSize  << " (" << segment_height_%TileSize << " tall)");
 
 	music_ = node["music"].as_string_default();
 	replay_data_ = node["replay_data"].as_string_default();
