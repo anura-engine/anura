@@ -752,7 +752,7 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(abs)
 
 FUNCTION_DEF(sign, 1, 1, "sign(value) -> value: evaluates to 1 if positive, -1 if negative, and 0 if 0")
-	const int n = args()[0]->evaluate(variables).as_int();
+	const decimal n = args()[0]->evaluate(variables).as_decimal();
 	if(n > 0) {
 		return variant(1);
 	} else if(n < 0) {
