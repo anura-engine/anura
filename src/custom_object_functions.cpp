@@ -1058,6 +1058,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 		variant properties = arg3;
 		variant keys = properties.get_keys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
+			ASSERT_LOG(keys[n].is_string(), "Non-string key in spawn map: " << keys[n].write_json());
 			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
 				last_key = keys[n];
 				continue;

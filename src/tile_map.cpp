@@ -27,6 +27,7 @@
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
 #include "json_parser.hpp"
+#include "level_solid_map.hpp"
 #include "multi_tile_pattern.hpp"
 #include "point_map.hpp"
 #include "random.hpp"
@@ -125,8 +126,6 @@ bool match_regex(boost::array<char, 4> str, const boost::regex* re) {
 	m[re] = match;
 	return match;
 }
-
-static const int TileSize = 32;
 
 struct is_whitespace {
 	bool operator()(char c) const { return util::c_isspace(c); }
