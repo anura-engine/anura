@@ -19,6 +19,7 @@
 
 #include "foreach.hpp"
 #include "level_solid_map.hpp"
+#include "preferences.hpp"
 
 namespace {
 void merge_surface_info(surface_info& a, const surface_info& b)

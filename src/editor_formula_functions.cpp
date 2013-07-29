@@ -27,6 +27,7 @@
 #include "formula_callable.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
+#include "level_solid_map.hpp"
 #include "variant_utils.hpp"
 
 namespace editor_script {
@@ -34,8 +35,6 @@ namespace editor_script {
 using namespace game_logic;
 
 namespace {
-
-const int TileSize = 32;
 
 class editor_command : public formula_callable {
 public:

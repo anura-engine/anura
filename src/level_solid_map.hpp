@@ -17,14 +17,20 @@
 #ifndef LEVEL_SOLID_MAP_HPP_INCLUDED
 #define LEVEL_SOLID_MAP_HPP_INCLUDED
 
-#include <bitset>
+#include <boost/dynamic_bitset.hpp>
 #include <map>
 #include <vector>
 
-static const int TileSize = 32;
+#ifndef MAX_TILE_SIZE
+#define MAX_TILE_SIZE 64
+#endif
+
+extern int g_tile_size;
+
+#define TileSize (g_tile_size*2)
 
 typedef std::pair<int,int> tile_pos;
-typedef std::bitset<TileSize*TileSize> tile_bitmap;
+typedef boost::dynamic_bitset<> tile_bitmap;
 
 struct surface_info {
 	surface_info() : friction(0), traction(0), damage(-1), info(0)
@@ -35,7 +41,7 @@ struct surface_info {
 };
 
 struct tile_solid_info {
-	tile_solid_info() : all_solid(false)
+	tile_solid_info() : bitmap(TileSize*TileSize), all_solid(false)
 	{}
 	tile_bitmap bitmap;
 	surface_info info;

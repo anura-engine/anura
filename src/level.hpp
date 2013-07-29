@@ -18,7 +18,7 @@
 #ifndef LEVEL_HPP_INCLUDED
 #define LEVEL_HPP_INCLUDED
 
-#include <bitset>
+#include <boost/dynamic_bitset.hpp>
 #include <deque>
 #include <map>
 #include <queue>
@@ -432,7 +432,6 @@ private:
 	void add_solid(int x, int y, int friction, int traction, int damage, const std::string& info);
 	void add_standable(int x, int y, int friction, int traction, int damage, const std::string& info);
 	typedef std::pair<int,int> tile_pos;
-	typedef std::bitset<TileSize*TileSize> tile_bitmap;
 
 	std::string id_;
 	std::string music_;

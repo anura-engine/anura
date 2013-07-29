@@ -296,10 +296,10 @@ level::level(const std::string& level_cfg, variant node)
 	}
 
 	segment_width_ = node["segment_width"].as_int();
-	ASSERT_LOG(segment_width_%32 == 0, "segment_width in " << id_ << " is not divisible by 32");
+	ASSERT_LOG(segment_width_%TileSize == 0, "segment_width in " << id_ << " is not divisible by 32");
 
 	segment_height_ = node["segment_height"].as_int();
-	ASSERT_LOG(segment_height_%32 == 0, "segment_height in " << id_ << " is not divisible by 32");
+	ASSERT_LOG(segment_height_%TileSize == 0, "segment_height in " << id_ << " is not divisible by 32");
 
 	music_ = node["music"].as_string_default();
 	replay_data_ = node["replay_data"].as_string_default();
@@ -1680,9 +1680,9 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	layer_blit_info& blit_info = layer_itor->second;
 
-	const rect tile_positions(x/32 - (x < 0 ? 1 : 0), y/32 - (y < 0 ? 1 : 0),
-	                          (x + w)/32 - (x + w < 0 ? 1 : 0),
-							  (y + h)/32 - (y + h < 0 ? 1 : 0));
+	const rect tile_positions(x/TileSize - (x < 0 ? 1 : 0), y/TileSize - (y < 0 ? 1 : 0),
+	                          (x + w)/TileSize - (x + w < 0 ? 1 : 0),
+							  (y + h)/TileSize - (y + h < 0 ? 1 : 0));
 
 	std::vector<layer_blit_info::IndexType>& opaque_indexes = blit_info.opaque_indexes;
 	std::vector<layer_blit_info::IndexType>& translucent_indexes = blit_info.translucent_indexes;
@@ -2751,12 +2751,12 @@ bool level::is_solid(const level_solid_map& map, const entity& e, const std::vec
 			y = y%TileSize;
 			if(x < 0) {
 				pos.first--;
-				x += 32;
+				x += TileSize;
 			}
 
 			if(y < 0) {
 				pos.second--;
-				y += 32;
+				y += TileSize;
 			}
 
 			info = map.find(pos);
@@ -2795,12 +2795,12 @@ bool level::is_solid(const level_solid_map& map, int x, int y, const surface_inf
 	y = y%TileSize;
 	if(x < 0) {
 		pos.first--;
-		x += 32;
+		x += TileSize;
 	}
 
 	if(y < 0) {
 		pos.second--;
-		y += 32;
+		y += TileSize;
 	}
 
 	const tile_solid_info* info = map.find(pos);
@@ -2919,12 +2919,12 @@ bool level::may_be_solid_in_rect(const rect& r) const
 	y = y%TileSize;
 	if(x < 0) {
 		pos.first--;
-		x += 32;
+		x += TileSize;
 	}
 
 	if(y < 0) {
 		pos.second--;
-		y += 32;
+		y += TileSize;
 	}
 
 	const int x2 = (x + r.w())/TileSize + ((x + r.w())%TileSize ? 1 : 0);
@@ -3025,7 +3025,7 @@ int round_tile_size(int n)
 	if(n >= 0) {
 		return n - n%TileSize;
 	} else {
-		n = -n + 32;
+		n = -n + TileSize;
 		return -(n - n%TileSize);
 	}
 }
@@ -3057,8 +3057,8 @@ bool level::add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, in
 	bool changed = false;
 
 	int index = 0;
-	for(int x = x1; x < x2; x += 32) {
-		for(int y = y1; y < y2; y += 32) {
+	for(int x = x1; x < x2; x += TileSize) {
+		for(int y = y1; y < y2; y += TileSize) {
 			changed = m.set_tile(x, y, tiles[index]) || changed;
 			if(index+1 < tiles.size()) {
 				++index;
@@ -3092,9 +3092,9 @@ bool level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2
 
 	bool changed = false;
 	int index = 0;
-	const int TileSize = 72;
-	for(int x = x1; x <= x2; x += TileSize) {
-		for(int y = y1; y <= y2; y += TileSize) {
+	const int HexTileSize = 72;
+	for(int x = x1; x <= x2; x += HexTileSize) {
+		for(int y = y1; y <= y2; y += HexTileSize) {
 			changed = m->set_tile(x, y, tiles[index]) || changed;
 			if(index+1 < tiles.size()) {
 				++index;
@@ -3127,8 +3127,8 @@ void level::get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vecto
 	}
 	const tile_map& m = map_iterator->second;
 
-	for(int x = x1; x < x2; x += 32) {
-		for(int y = y1; y < y2; y += 32) {
+	for(int x = x1; x < x2; x += TileSize) {
+		for(int y = y1; y < y2; y += TileSize) {
 			tiles.push_back(m.get_tile_from_pixel_pos(x, y));
 		}
 	}
@@ -3492,12 +3492,12 @@ void level::set_solid(level_solid_map& map, int x, int y, int friction, int trac
 	y = y%TileSize;
 	if(x < 0) {
 		pos.first--;
-		x += 32;
+		x += TileSize;
 	}
 
 	if(y < 0) {
 		pos.second--;
-		y += 32;
+		y += TileSize;
 	}
 	const int index = y*TileSize + x;
 	tile_solid_info& info = map.insert_or_find(pos);
