@@ -226,6 +226,8 @@ private:
 
 	glm::mat4 proto_model_;
 	glm::mat4 model_;
+
+	glm::vec3 feet_;
 };
 
 }

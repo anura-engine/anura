@@ -274,6 +274,8 @@ namespace voxel
 		return obj.event_arg_;
 	DEFINE_FIELD(type, "string")
 		return variant(obj.type_);
+	DEFINE_FIELD(model, "builtin voxel_model")
+		return variant(obj.model_.get());
 	END_DEFINE_CALLABLE(voxel_object)
 }
 

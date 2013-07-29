@@ -408,6 +408,8 @@ voxel_model::voxel_model(const variant& node)
 
 	attachment_points_ = base.attachment_points;
 
+	feet_ = base.feet_position;
+
 	for(const LayerType& layer_type : base.layer_types) {
 		variant variation_name = node[layer_type.name];
 		if(variation_name.is_null()) {
@@ -926,6 +928,8 @@ void voxel_model::rotate_geometry(const glm::vec3& p1, const glm::vec3& p2, GLfl
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(voxel_model)
+DEFINE_FIELD(feet_position, "[decimal,decimal,decimal]")
+	return vec3_to_variant(obj.feet_);
 DEFINE_FIELD(rotation, "null")
 	return variant();
 END_DEFINE_CALLABLE(voxel_model)
