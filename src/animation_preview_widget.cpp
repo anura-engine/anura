@@ -16,6 +16,7 @@
 */
 #ifndef NO_EDITOR
 #include <boost/bind.hpp>
+#include <deque>
 
 #include "animation_preview_widget.hpp"
 #include "button.hpp"

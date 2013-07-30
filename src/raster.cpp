@@ -29,6 +29,7 @@
 #include <boost/shared_array.hpp>
 #include <iostream>
 #include <cmath>
+#include <stack>
 
 namespace graphics
 {
@@ -81,10 +82,12 @@ void reset_opengl_state()
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 #if defined(USE_GLES2)
+    glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glClearColor(0.0,0.0,0.0,0.0);
 	gles2::init_default_shader();
+#else
+	glColor4ub(255,255,255,255);
 #endif
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);

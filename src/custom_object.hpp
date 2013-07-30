@@ -496,7 +496,9 @@ private:
 
 	mutable screen_position adjusted_draw_position_;
 
+#if defined(USE_GLES2)
 	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
+#endif
 
 	bool paused_;
 

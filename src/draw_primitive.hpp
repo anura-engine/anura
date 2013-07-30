@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef DRAW_PRIMITIVES_HPP_INCLUDED
-#define DRAW_PRIMITIVES_HPP_INCLUDED
+#pragma once
+#if defined(USE_GLES2)
 
 #include <boost/intrusive_ptr.hpp>
 

@@ -3946,8 +3946,8 @@ DEFINE_FIELD(editor_selection, "[custom_obj]")
 
 	return variant(&result);
 
-DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
 #if defined(USE_GLES2)
+DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
 	std::vector<variant> v;
 	foreach(const FrameBufferShaderEntry& e, obj.fb_shaders_) {
 		std::map<variant,variant> m;
@@ -3961,11 +3961,9 @@ DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
 
 	obj.fb_shaders_variant_ = variant(&v);
 	return obj.fb_shaders_variant_;
-#endif
 
 DEFINE_SET_FIELD
 
-#if defined(USE_GLES2)
 	obj.fb_shaders_variant_ = variant();
 	obj.fb_shaders_.clear();
 	foreach(const variant& v, value.as_list()) {

@@ -17,6 +17,8 @@
 
 #pragma once
 
+#if defined(USE_ISOMAP)
+
 #include <vector>
 
 #include "variant.hpp"
@@ -52,3 +54,5 @@ private:
 typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
 
 }
+
+#endif

@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#if defined(USE_GLES2)
+
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "asserts.hpp"
@@ -626,3 +628,5 @@ namespace gles2 {
 		glUseProgram(active_shader_program->shader()->get());
 	}
 }
+
+#endif

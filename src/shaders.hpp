@@ -15,8 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef SHADERS_HPP_INCLUDED
-#define SHADERS_HPP_INCLUDED
+#if defined(USE_GLES2)
 
 #include <map>
 #include <vector>

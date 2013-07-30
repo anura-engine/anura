@@ -1,4 +1,5 @@
 #pragma once
+#if defined(USE_ISOMAP)
 
 #include <string>
 
@@ -78,3 +79,4 @@ private:
 };
 
 }
+#endif

@@ -1087,8 +1087,8 @@ void custom_object::draw(int xx, int yy) const
 		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
 	}
 
-	const gles2::shader_program_ptr active = gles2::active_shader();
 #if defined(USE_GLES2)
+	const gles2::shader_program_ptr active = gles2::active_shader();
 #ifndef NO_EDITOR
 	try {
 #endif
@@ -1200,9 +1200,11 @@ void custom_object::draw(int xx, int yy) const
 		attached->draw(xx, yy);
 	}
 
+#if defined(USE_GLES2)
 	foreach(const graphics::draw_primitive_ptr& p, draw_primitives_) {
 		p->draw();
 	}
+#endif
 
 	draw_debug_rects();
 
@@ -3011,12 +3013,16 @@ variant custom_object::get_value_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
+#if defined(USE_GLES2)
 		std::vector<variant> v;
 		foreach(boost::intrusive_ptr<graphics::draw_primitive> p, draw_primitives_) {
 			v.push_back(variant(p.get()));
 		}
 
 		return variant(&v);
+#else
+		return variant();
+#endif
 	}
 
 	case CUSTOM_OBJECT_CTRL_UP:
@@ -4370,6 +4376,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
+#if defined(USE_GLES2)
 		draw_primitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
@@ -4381,6 +4388,9 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			}
 		}
 		break;
+#else
+		break;
+#endif
 	}
 
 	default:

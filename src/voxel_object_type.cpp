@@ -1,3 +1,4 @@
+#if defined(USE_ISOMAP)
 #include <map>
 
 #include "formula.hpp"
@@ -353,3 +354,4 @@ const game_logic::formula* voxel_object_type::event_handler(int event_id) const
 }
 
 }
+#endif

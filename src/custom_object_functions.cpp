@@ -3273,6 +3273,7 @@ END_FUNCTION_DEF(eval)
 
 #endif // NO_MODULES
 
+#if defined(USE_ISOMAP)
 class spawn_voxel_object_command : public entity_command_callable
 {
 public:
@@ -3372,7 +3373,7 @@ FUNCTION_ARGS_DEF
 	}*/
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_voxel_object)
-
+#endif
 
 class custom_object_function_symbol_table : public function_symbol_table
 {

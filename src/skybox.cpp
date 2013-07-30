@@ -20,6 +20,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+#if defined(USE_ISOMAP)
 
 #include <vector>
 
@@ -148,3 +149,5 @@ namespace graphics
 	END_DEFINE_CALLABLE(skybox)
 
 }
+
+#endif
