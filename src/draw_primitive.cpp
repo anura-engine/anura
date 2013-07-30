@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #include <assert.h>
 #include <math.h>
 

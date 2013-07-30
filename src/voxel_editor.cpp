@@ -44,7 +44,7 @@
 #define bmround	round
 #endif
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
@@ -2363,4 +2363,4 @@ UTILITY(voxel_editor)
 	editor->show_modal();
 }
 
-#endif //USE_GLES2
+#endif //USE_SHADERS

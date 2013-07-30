@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 
 #include <map>
 #include <vector>

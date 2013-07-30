@@ -17,7 +17,7 @@
 
 #pragma once
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 
 #include <vector>
 #include <boost/function.hpp>

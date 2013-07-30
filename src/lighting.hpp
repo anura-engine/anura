@@ -16,7 +16,7 @@
 */
 
 #pragma once
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 
 #include <boost/intrusive_ptr.hpp>
 

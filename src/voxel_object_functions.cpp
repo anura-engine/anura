@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #include "formula_callable_definition.hpp"
 #include "formula_function_registry.hpp"
 #include "isoworld.hpp"
@@ -265,4 +265,4 @@ function_symbol_table& get_voxel_object_functions_symbol_table()
 	return table;
 }
 
-#endif // USE_GLES2
+#endif // USE_SHADERS

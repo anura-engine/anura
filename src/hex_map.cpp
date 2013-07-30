@@ -67,7 +67,7 @@ hex_map::hex_map(variant node)
 	}
 	height_ = tiles_.size();
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	if(node.has_key("shader")) {
 		shader_.reset(new gles2::shader_program(node["shader"]));
 	} else {
@@ -78,7 +78,7 @@ hex_map::hex_map(variant node)
 
 void hex_map::draw() const
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #ifndef NO_EDITOR
 	try {
 #endif
@@ -89,7 +89,7 @@ void hex_map::draw() const
 				col->draw();
 			}
 		}
-#if defined(USE_GLES2) && !defined(NO_EDITOR)
+#if defined(USE_SHADERS) && !defined(NO_EDITOR)
 	} catch(validation_failure_exception& e) {
 		gles2::shader::set_runtime_error("HEX MAP SHADER ERROR: " + e.msg);
 	}
@@ -127,7 +127,7 @@ variant hex_map::write() const
 
 	res.add("tiles", make_tile_string());
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(shader_) {
 		res.add("shader", shader_->write());
 	}

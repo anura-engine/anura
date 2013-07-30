@@ -532,7 +532,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		GLshort varray1[8] = {0,0,  GLshort(pixels),0,  GLshort(pixels),GLshort(preferences::actual_screen_height()),   0, GLshort(preferences::actual_screen_height())};
 		GLshort varray2[8] = {GLshort(preferences::actual_screen_width() - pixels),0,  GLshort(preferences::actual_screen_width()),0,  GLshort(preferences::actual_screen_width()), GLshort(preferences::actual_screen_height()),  GLshort(preferences::actual_screen_width() - pixels), GLshort(preferences::actual_screen_height())};
 		glColor4ub(0, 0, 0, 255);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 

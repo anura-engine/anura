@@ -105,7 +105,7 @@
 #define DEFAULT_MODULE	"frogatto"
 
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #include "wm.hpp"
 window_manager wm;
 #endif
@@ -665,7 +665,7 @@ extern "C" int main(int argcount, char* argvec[])
 		orig_level_cfg = level_cfg;
 	}
 
-#if !SDL_VERSION_ATLEAST(2, 0, 0) && defined(USE_GLES2)
+#if !SDL_VERSION_ATLEAST(2, 0, 0) && defined(USE_SHADERS)
 	wm.create_window(preferences::actual_screen_width(),
 		preferences::actual_screen_height(),
 		0,
@@ -836,7 +836,7 @@ extern "C" int main(int argcount, char* argvec[])
 	ASSERT_EQ(glew_status, GLEW_OK);
 #endif
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(glCreateShader == NULL) {
 		const GLubyte* glstrings;
 		if(glGetString != NULL && (glstrings = glGetString(GL_VERSION)) != NULL) {
@@ -895,7 +895,7 @@ extern "C" int main(int argcount, char* argvec[])
 	glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
 	std::cerr << "Stencil bits: " << stencil_bits << std::endl;
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #if !defined(GL_ES_VERSION_2_0)
 	GLfloat min_pt_sz;
 	glGetFloatv(GL_POINT_SIZE_MIN, &min_pt_sz);
@@ -909,7 +909,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_BLEND);
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glEnable(GL_TEXTURE_2D);
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -969,7 +969,7 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 #endif
 
-#if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_GLES2)
+#if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_SHADERS)
 	GLint swapInterval = 1;
 	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &swapInterval);
 #endif
@@ -987,7 +987,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	formula_profiler::manager profiler(profile_output);
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	texture_frame_buffer::init(preferences::actual_screen_width(), preferences::actual_screen_height());
 #else
 	texture_frame_buffer::init();
@@ -1070,7 +1070,7 @@ extern "C" int main(int argcount, char* argvec[])
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	// Be nice and destroy the GL context and the window.
 	graphics::set_video_mode(0, 0, CLEANUP_WINDOW_CONTEXT);
-#elif defined(USE_GLES2)
+#elif defined(USE_SHADERS)
 	wm.destroy_window();
 #endif
 	SDL_Quit();

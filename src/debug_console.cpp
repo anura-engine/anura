@@ -196,7 +196,7 @@ void draw_graph()
 
 		const GLfloat mean_ypos = std::accumulate(y_samples.begin(), y_samples.end(), 0.0)/y_samples.size();
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		{
 			gles2::manager gles2_manager(gles2::get_simple_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &points[0]);

@@ -22,7 +22,7 @@
 #include "texture_frame_buffer.hpp"
 
 #if defined(__ANDROID__)
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #include <GLES2/gl2ext.h>
 #else
 #include <GLES/glext.h>
@@ -38,7 +38,7 @@
 #endif
 
 //define macros that make it easy to make the OpenGL calls in this file.
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
 #elif defined(TARGET_OS_HARMATTAN) || TARGET_OS_IPHONE || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)

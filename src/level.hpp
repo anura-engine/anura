@@ -141,7 +141,7 @@ public:
 	void get_all_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	void clear_hex_tile_rect(int x1, int y1, int x2, int y2);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::shader_program_ptr shader() const { return shader_; }
 #endif
 
@@ -404,7 +404,7 @@ public:
 
 	bool allow_touch_controls() const { return allow_touch_controls_; }
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	void shaders_updated();
 #endif
 
@@ -589,7 +589,7 @@ private:
 
 	std::map<int, hex::hex_map_ptr> hex_maps_;
 	//current shader we're using to draw with.
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	gles2::shader_program_ptr shader_;
 
 	struct FrameBufferShaderEntry {

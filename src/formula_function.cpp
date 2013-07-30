@@ -4526,7 +4526,7 @@ RETURN_TYPE("builtin voxel_model")
 END_FUNCTION_DEF(voxel_model)
 #endif
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 FUNCTION_DEF(draw_primitive, 1, 1, "draw_primitive(map): create and return a draw_primitive")
 	variant v = args()[0]->evaluate(variables);
 	return variant(graphics::draw_primitive::create(v).get());

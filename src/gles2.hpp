@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 
 #include <stack>
 #include <glm/glm.hpp>

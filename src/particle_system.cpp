@@ -587,7 +587,7 @@ void simple_particle_system::draw(const rect& area, const entity& e) const
 		}
 	}
 	
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(info_.delta_a_) {
 		gles2::manager gles2_manager(gles2::get_texcol_shader());
 		gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray.front());
@@ -814,7 +814,7 @@ public:
 
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		// Not dealing with GL_POINT_SMOOTH right now -- this would probably be better as a frgament shader.
 		glPointSize(info_.dot_size);
 		gles2::manager gles2_manager(gles2::get_simple_col_shader());

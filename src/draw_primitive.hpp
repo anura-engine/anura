@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -36,14 +36,14 @@ public:
 
 
 	void draw() const;
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	void draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
 private:
 	DECLARE_CALLABLE(draw_primitive);
 
 	virtual void handle_draw() const = 0;
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	virtual void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
 #endif
 	GLenum src_factor_, dst_factor_;

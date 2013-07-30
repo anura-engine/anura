@@ -269,7 +269,7 @@ public:
 		varray.push_back(GLfloat(y1_.as_float()));
 		varray.push_back(GLfloat(x2_.as_float()));
 		varray.push_back(GLfloat(y2_.as_float()));
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glLineWidth(GLfloat(width_.as_float()));
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0,  &varray.front());

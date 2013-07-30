@@ -387,7 +387,7 @@ custom_object::custom_object(variant node)
 
 	set_mouseover_delay(node["mouseover_delay"].as_int(0));
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(type_->shader()) {
 		shader_.reset(new gles2::shader_program(*type_->shader()));
 	}
@@ -477,7 +477,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	get_all().insert(this);
 	get_all(base_type_->id()).insert(this);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(type_->shader()) {
 		shader_.reset(new gles2::shader_program(*type_->shader()));
 	}
@@ -602,7 +602,7 @@ custom_object::custom_object(const custom_object& o) :
 	get_all().insert(this);
 	get_all(base_type_->id()).insert(this);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(o.shader_) {
 		shader_.reset(new gles2::shader_program(*o.shader_));
 	}
@@ -674,7 +674,7 @@ void custom_object::finish_loading(level* lvl)
 		}
 		parent_loading_ = variant();
 	}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(shader_) { shader_->init(this); }
 	for(size_t n = 0; n < effects_.size(); ++n) {
 		effects_[n]->init(this);
@@ -858,7 +858,7 @@ variant custom_object::write() const
 		res.add("max_hitpoints", type_->hitpoints() + max_hitpoints_);
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(shader_) { res.add("shader", shader_->write()); }
 	for(size_t n = 0; n < effects_.size(); ++n) {
 		res.add("effects", effects_[n]->write());
@@ -1087,7 +1087,7 @@ void custom_object::draw(int xx, int yy) const
 		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	const gles2::shader_program_ptr active = gles2::active_shader();
 #ifndef NO_EDITOR
 	try {
@@ -1200,7 +1200,7 @@ void custom_object::draw(int xx, int yy) const
 		attached->draw(xx, yy);
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	foreach(const graphics::draw_primitive_ptr& p, draw_primitives_) {
 		p->draw();
 	}
@@ -1242,7 +1242,7 @@ void custom_object::draw(int xx, int yy) const
 	
 	clip_scope.reset();
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	for(size_t n = 0; n < effects_.size(); ++n) {
 		if(effects_[n]->zorder() >= 0 && effects_[n]->enabled()) {
 			gles2::manager gles2_manager(effects_[n]);
@@ -1288,7 +1288,7 @@ void custom_object::draw(int xx, int yy) const
 		}
 
 		if(!v.empty()) {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
 			glPointSize(2.0f);
 			gles2::manager gles2_manager(gles2::get_simple_shader());
@@ -1311,7 +1311,7 @@ void custom_object::draw(int xx, int yy) const
 		}
 	}
 
-#if defined(USE_GLES2) && !defined(NO_EDITOR)
+#if defined(USE_SHADERS) && !defined(NO_EDITOR)
 	//catch errors that result from bad shaders etc while in the editor.
 	} catch(validation_failure_exception& e) {
 		gles2::shader::set_runtime_error("HEX MAP SHADER ERROR: " + e.msg);
@@ -2831,7 +2831,7 @@ variant custom_object::get_value_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_EFFECTS: {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		std::vector<variant> v;
 		for(size_t n = 0; n < effects_.size(); ++n) {
 			v.push_back(variant(effects_[n].get()));
@@ -2843,7 +2843,7 @@ variant custom_object::get_value_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_SHADER: {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		return variant(shader_.get());
 #endif
 		return variant();
@@ -3013,7 +3013,7 @@ variant custom_object::get_value_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		std::vector<variant> v;
 		foreach(boost::intrusive_ptr<graphics::draw_primitive> p, draw_primitives_) {
 			v.push_back(variant(p.get()));
@@ -3281,7 +3281,7 @@ void custom_object::set_value(const std::string& key, const variant& value)
 				tags_->add(value[n].as_string(), variant(1));
 			}
 		}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	} else if(key == "shader") {
 		using namespace gles2;
 		if(value.is_map()) {
@@ -3930,7 +3930,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 
 		break;
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	case CUSTOM_OBJECT_SHADER: {
 		using namespace gles2;
 		if(value.is_map()) {
@@ -4376,7 +4376,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		draw_primitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
@@ -5492,7 +5492,7 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 		add_particle_system(i->first, i->second->type());
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	shader_.reset(new_type->shader() ? new gles2::shader_program(*new_type->shader()) : NULL);
 	effects_.clear();
 	for(size_t n = 0; n < new_type->effects().size(); ++n) {
@@ -5599,7 +5599,7 @@ void custom_object::add_to_level()
 		body_->set_active();
 	}
 #endif
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(shader_) {
 		shader_->init(this);
 	}

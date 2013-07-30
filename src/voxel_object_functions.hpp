@@ -16,7 +16,7 @@
 */
 #pragma once
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 
 #include <boost/intrusive_ptr.hpp>
 #include <string>
@@ -59,4 +59,4 @@ private:
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 };
 
-#endif // USE_GLES2
+#endif // USE_SHADERS

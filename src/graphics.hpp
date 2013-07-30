@@ -39,7 +39,7 @@
 #include "SDL_mixer.h"
 #endif
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 
 #if (defined(WIN32) || defined(__linux__) || defined(__APPLE__)) && !defined(__ANDROID__)
 #include <GL/glew.h>

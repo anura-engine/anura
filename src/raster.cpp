@@ -74,7 +74,7 @@ void reset_opengl_state()
 	glShadeModel(GL_SMOOTH);
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glEnableClientState(GL_VERTEX_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
     glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
@@ -82,7 +82,7 @@ void reset_opengl_state()
 
 	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
     glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 	glClearColor(0.0,0.0,0.0,0.0);
 	gles2::init_default_shader();
@@ -208,7 +208,7 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	wnd_flags = flags;
 	
 	graphics::texture::unbuild_all();
-#if defined(USE_GLES2) 
+#if defined(USE_SHADERS) 
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 2);
 	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
 	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
@@ -258,7 +258,7 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		graphics::texture::rebuild_all();
 		texture_frame_buffer::rebuild();
 	}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	int depth_size, stencil_size;
 	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth_size);
 	SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil_size);
@@ -348,7 +348,7 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 		glLoadIdentity();
 		
 		glDisable(GL_DEPTH_TEST);
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glDisable(GL_LIGHTING);
 		glDisable(GL_LIGHT0);
 #endif
@@ -404,7 +404,7 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 			texture::get_coord_x(1.0), texture::get_coord_y(0.0),
 			texture::get_coord_x(1.0), texture::get_coord_y(1.0)
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
@@ -485,7 +485,7 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 				texture::get_coord_x(x2), texture::get_coord_y(y1),
 				texture::get_coord_x(x2), texture::get_coord_y(y2)
 			};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			gles2::active_shader()->prepare_draw();
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
 			gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
@@ -568,7 +568,7 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 						distort.distort_point(&points[n*2], &points[n*2 + 1]);
 					}
 					
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 					gles2::active_shader()->prepare_draw();
 					gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, points);
 					gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, uv);
@@ -793,7 +793,7 @@ void flush_blit_texture_3d()
 		return;
 	}
 	blit_current_texture->set_as_current_texture();
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->shader()->vertex_array(3, GL_SHORT, 0, 0, &blit_vqueue.front());
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0,  &blit_tcqueue.front());
 #else
@@ -815,7 +815,7 @@ void flush_blit_texture()
 	}
 
 	blit_current_texture->set_as_current_texture();
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 	gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &blit_vqueue.front());
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0,  &blit_tcqueue.front());
@@ -845,7 +845,7 @@ void blit_queue::do_blit() const
 
 	texture::set_current_texture(texture_);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 	gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vertex_.front());
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0,  &uv_.front());
@@ -864,7 +864,7 @@ void blit_queue::do_blit_range(short begin, short end) const
 
 	texture::set_current_texture(texture_);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 	gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vertex_[begin]);
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0,  &uv_[begin]);
@@ -937,7 +937,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x, r.y+r.h,
 			r.x+r.w, r.y+r.h
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4ub(color.r,color.g,color.b,alpha);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
@@ -964,7 +964,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x(), r.y()+r.h(),
 			r.x()+r.w(), r.y()+r.h()
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4ub(color.r(),color.g(),color.b(),color.a());
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
@@ -993,7 +993,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x + r.w, r.y + r.h,
 			r.x, r.y + r.h
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4ub(color.r, color.g, color.b, alpha);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
@@ -1019,7 +1019,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x() + r.w(), r.y() + r.h(),
 			r.x(), r.y() + r.h()
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4ub(color.r(), color.g(), color.b(), color.a());
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
@@ -1055,7 +1055,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		varray.push_back(varray[2]);
 		varray.push_back(varray[3]);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
@@ -1136,7 +1136,7 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 			r.x, r.y+r.h,
 			r.x+r.w, r.y+r.h
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);

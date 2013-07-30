@@ -295,7 +295,7 @@ void iphone_controls::draw()
 		  underwater_circle_x, underwater_circle_y,
 		  underwater_circle_x + x*underwater_circle_rad, underwater_circle_y + y*underwater_circle_rad
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4ub(255, 0, 0, 255);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);

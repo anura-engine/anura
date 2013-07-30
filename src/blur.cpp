@@ -59,7 +59,7 @@ void blur_info::next_frame(int start_x, int start_y, int end_x, int end_y,
 void blur_info::draw() const
 {
 	GLfloat color[4];
-#if defined(USE_GLES2) && defined(GL_ES_VERSION_2_0)
+#if defined(USE_SHADERS) && defined(GL_ES_VERSION_2_0)
 	glGetFloatv_1(GL_CURRENT_COLOR, color);
 #else
 	glGetFloatv(GL_CURRENT_COLOR, color);

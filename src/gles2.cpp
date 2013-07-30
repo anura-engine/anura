@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 
 #include <glm/gtc/matrix_transform.hpp>
 
