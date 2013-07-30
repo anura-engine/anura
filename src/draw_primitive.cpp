@@ -52,8 +52,9 @@ private:
 	void init();
 
 	void handle_draw() const;
+#if defined(USE_GLES2)
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-
+#endif
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
 
@@ -106,9 +107,11 @@ void circle_primitive::init()
 
 }
 
+#if defined(USE_GLES2)
 void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
+#endif
 
 void circle_primitive::handle_draw() const
 {
@@ -143,7 +146,9 @@ public:
 private:
 
 	void handle_draw() const;
+#if defined(USE_GLES2)
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#enidf
 
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
@@ -417,7 +422,9 @@ private:
 	void init();
 
 	void handle_draw() const;
+#if defined(USE_GLES2)
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
 
 	glm::vec3 b1_;
 	glm::vec3 b2_;
@@ -511,6 +518,7 @@ void wireframe_box_primitive::handle_draw() const
 {
 }
 
+#if defined(USE_GLES2)
 void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 	shader_save_context save;
@@ -530,6 +538,7 @@ void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const ca
 	glDrawArrays(GL_LINES, 0, varray_.size()/3);
 	glDisableVertexAttribArray(a_position_);
 }
+#endif
 
 BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, draw_primitive)
 	DEFINE_FIELD(color, "[int,int,int,int]")
@@ -680,6 +689,7 @@ private:
 	void handle_draw() const
 	{}
 
+#if defined(USE_GLES2)
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 	{
 		shader_save_context save;
@@ -699,6 +709,7 @@ private:
 		glDrawArrays(GL_TRIANGLES, 0, varray_.size()/3);
 		glDisableVertexAttribArray(a_position_);
 	}
+#endif
 
 	glm::vec3 b1_;
 	glm::vec3 b2_;
