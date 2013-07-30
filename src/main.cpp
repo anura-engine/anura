@@ -19,6 +19,7 @@
 #include <algorithm>
 #include <cmath>
 #include <iostream>
+#include <memory>
 #include <cstdio>
 #if !defined(_MSC_VER)
 #include <sys/wait.h>
@@ -343,6 +344,10 @@ extern "C" int main(int argcount, char* argvec[])
 		std::cerr << "Current working directory: " << res << std::endl;
 	}
 #endif 
+
+#if defined(_MSC_VER)
+	std::shared_ptr<FILE> f_stderr = std::shared_ptr<FILE>(freopen ("stderr.txt", "wt", stderr), [](FILE* f){fclose(f); delete f;});
+#endif
 
 #if defined(__APPLE__) && TARGET_OS_MAC
     chdir([[[NSBundle mainBundle] resourcePath] fileSystemRepresentation]);
