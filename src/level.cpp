@@ -237,7 +237,7 @@ level::level(const std::string& level_cfg, variant node)
 		id_ = node["id"].as_string();
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(node.has_key("shader")) {
 		shader_.reset(new gles2::shader_program(node["shader"]));
 	} else {
@@ -1540,7 +1540,7 @@ variant level::write() const
 
 	res.add("vars", vars_);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(shader_) {
 		res.add("shader", shader_->write());
 	}
@@ -1734,12 +1734,12 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 		graphics::texture::set_current_texture(blit_info.texture_id);
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 #endif
 
 	if(!opaque_indexes.empty()) {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #else
@@ -1751,7 +1751,7 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 	glEnable(GL_BLEND);
 
 	if(!translucent_indexes.empty()) {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #else
@@ -1785,7 +1785,7 @@ void level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 	if(solid.first != solid.second) {
 		const rect viewport(x, y, w, h);
 
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glDisable(GL_TEXTURE_2D);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -1805,7 +1805,7 @@ void level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 			  GLshort(area.x()), GLshort(area.y() + area.h()),
 			  GLshort(area.x() + area.w()), GLshort(area.y() + area.h()),
 			};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			gles2::manager gles2_manager(gles2::get_simple_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
 #else
@@ -1815,7 +1815,7 @@ void level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 
 			++solid.first;
 		}
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 #endif
@@ -2013,7 +2013,7 @@ extern std::vector<rect> background_rects_drawn;
 void level::draw_later(int x, int y, int w, int h) const
 {
 	// Delayed drawing for some elements.
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager manager(shader_);
 #endif
 	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
@@ -2052,7 +2052,7 @@ void level::draw(int x, int y, int w, int h) const
 #endif
 
 	{
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager manager(shader_);
 #endif
 
@@ -2108,7 +2108,7 @@ void level::draw(int x, int y, int w, int h) const
 	graphics::stencil_scope stencil_settings(true, 0x02, GL_ALWAYS, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_REPLACE);
 	glClear(GL_STENCIL_BUFFER_BIT);
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	frame_buffer_enter_zorder(-100000);
 	const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
 	const int end_alpha_test = get_named_zorder("shadows");
@@ -2117,7 +2117,7 @@ void level::draw(int x, int y, int w, int h) const
 	std::set<int>::const_iterator layer = layers_.begin();
 
 	for(; layer != layers_.end(); ++layer) {
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 		frame_buffer_enter_zorder(*layer);
 		const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
 		gles2::set_alpha_test(alpha_test);
@@ -2143,7 +2143,7 @@ void level::draw(int x, int y, int w, int h) const
 
 	int last_zorder = -1000000;
 	while(entity_itor != chars.end()) {
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 		if((*entity_itor)->zorder() != last_zorder) {
 			last_zorder = (*entity_itor)->zorder();
 			frame_buffer_enter_zorder(last_zorder);
@@ -2157,7 +2157,7 @@ void level::draw(int x, int y, int w, int h) const
 		++entity_itor;
 	}
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	gles2::set_alpha_test(false);
 	frame_buffer_enter_zorder(1000000);
 #endif
@@ -2219,7 +2219,7 @@ void level::draw(int x, int y, int w, int h) const
 	}
 
 	{
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager manager(shader_);
 #endif
 	calculate_lighting(start_x, start_y, start_w, start_h);
@@ -2231,7 +2231,7 @@ void level::draw(int x, int y, int w, int h) const
 	}
 }
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 void level::frame_buffer_enter_zorder(int zorder) const
 {
 	std::vector<gles2::shader_program_ptr> shaders;
@@ -2382,7 +2382,7 @@ void level::calculate_lighting(int x, int y, int w, int h) const
 	const GLfloat tcarray[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
 	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
 	GLfloat varray[] = { 0, h, 0, 0, w, h, w, 0 };
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, 
@@ -2423,7 +2423,7 @@ void level::draw_debug_solid(int x, int y, int w, int h) const
 				graphics::draw_rect(rect(xpixel, ypixel, TileSize, TileSize), info->info.damage ? graphics::color(255, 0, 0, 196) : graphics::color(255, 255, 255, 196));
 			} else {
 				std::vector<GLshort> v;
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 				glDisable(GL_TEXTURE_2D);
 				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -2443,7 +2443,7 @@ void level::draw_debug_solid(int x, int y, int w, int h) const
 						glColor4ub(255, 255, 255, 196);
 					}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 					glPointSize(1.0f);
 					gles2::manager gles2_manager(gles2::get_simple_shader());
 					gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &v[0]);
@@ -2453,7 +2453,7 @@ void level::draw_debug_solid(int x, int y, int w, int h) const
 #endif
 					glDrawArrays(GL_POINTS, 0, v.size()/2);
 				}
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 				glEnable(GL_TEXTURE_2D);
 #endif
@@ -2479,7 +2479,7 @@ void level::draw_background(int x, int y, int rotation) const
 	}
 
 	if(background_) {
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 		active_fb_shaders_.clear();
 		frame_buffer_enter_zorder(-1000000);
 #endif
@@ -3925,7 +3925,7 @@ DEFINE_FIELD(hexmaps, "{int -> object}")
 	return variant(&m);
 
 DEFINE_FIELD(shader, "null|object")
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	return variant(obj.shader_.get());
 #else
 	return variant();
@@ -3946,8 +3946,8 @@ DEFINE_FIELD(editor_selection, "[custom_obj]")
 
 	return variant(&result);
 
+#if defined(USE_SHADERS)
 DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
-#if defined(USE_GLES2)
 	std::vector<variant> v;
 	foreach(const FrameBufferShaderEntry& e, obj.fb_shaders_) {
 		std::map<variant,variant> m;
@@ -3961,11 +3961,9 @@ DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
 
 	obj.fb_shaders_variant_ = variant(&v);
 	return obj.fb_shaders_variant_;
-#endif
 
 DEFINE_SET_FIELD
 
-#if defined(USE_GLES2)
 	obj.fb_shaders_variant_ = variant();
 	obj.fb_shaders_.clear();
 	foreach(const variant& v, value.as_list()) {
@@ -4731,7 +4729,7 @@ void level::launch_new_module(const std::string& module_id, game_logic::const_fo
 	reload_level_paths();
 	custom_object_type::reload_file_paths();
 	font::reload_font_paths();
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::init_default_shader();
 #endif
 

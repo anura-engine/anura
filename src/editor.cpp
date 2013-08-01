@@ -188,7 +188,7 @@ private:
 			"Restart Level (including player)", "ctrl+alt+r", boost::bind(&editor::reset_playing_level, &editor_, false),
 			"Pause Game", "ctrl+p", boost::bind(&editor::toggle_pause, &editor_),
 			"Code", "", boost::bind(&editor::toggle_code, &editor_),
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			"Shaders", "", boost::bind(&editor::edit_shaders, &editor_),
 #endif
 			"Level Code", "", boost::bind(&editor::edit_level_code, &editor_),
@@ -3408,7 +3408,7 @@ void editor::draw_gui() const
 	   property_dialog_->get_entity()->editor_info() &&
 	   std::count(lvl_->get_chars().begin(), lvl_->get_chars().end(),
 	              property_dialog_->get_entity())) {
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glDisable(GL_TEXTURE_2D);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -3478,7 +3478,7 @@ void editor::draw_gui() const
 			}
 
 			if(!varray.empty()) {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 				gles2::manager gles2_manager(gles2::get_simple_shader());
 				gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 #else
@@ -3487,7 +3487,7 @@ void editor::draw_gui() const
 				glDrawArrays(GL_LINES, 0, varray.size()/2);
 			}
 		}
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glEnable(GL_TEXTURE_2D);
 #endif
@@ -3529,7 +3529,7 @@ void editor::draw_gui() const
 
 		glColor4ub(255, 255, 255, 128);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 		glDrawArrays(GL_LINES, 0, varray.size()/2);
@@ -3557,7 +3557,7 @@ void editor::draw_gui() const
 
 	//draw grid
 	if(g_editor_grid){
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	   glDisable(GL_TEXTURE_2D);
 	   glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -3574,7 +3574,7 @@ void editor::draw_gui() const
 		}
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	{
 	gles2::manager gles2_manager(gles2::get_simple_shader());
 	if(g_editor_grid) {
@@ -3670,7 +3670,7 @@ void editor::draw_gui() const
 			}
 		}
 		
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		{
 			gles2::manager gles2_manager(gles2::get_simple_col_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -3720,7 +3720,7 @@ void editor::draw_gui() const
 		}
 	}
 	
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnable(GL_TEXTURE_2D);
 #else
@@ -3852,7 +3852,7 @@ void editor::draw_selection(int xoffset, int yoffset) const
 	const uint16_t stipple_mask = (stipple_bits&0xFFFF) | ((stipple_bits&0xFFFF0000) >> 16);
 	
 	glColor4ub(255, 255, 255, 255);
-#if !defined(SDL_VIDEO_OPENGL_ES) && (!defined(USE_GLES2) || !defined(GL_ES_VERSION_2_0))
+#if !defined(SDL_VIDEO_OPENGL_ES) && (!defined(USE_SHADERS) || !defined(GL_ES_VERSION_2_0))
 	glEnable(GL_LINE_STIPPLE);
 	glLineStipple(1, stipple_mask);
 #endif
@@ -3883,14 +3883,14 @@ void editor::draw_selection(int xoffset, int yoffset) const
 			varray.push_back(xpos + size); varray.push_back(ypos + size);
 		}
 	}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager gles2_manager(gles2::get_simple_shader());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 #else
 	glVertexPointer(2, GL_FLOAT, 0, &varray.front());
 #endif
 	glDrawArrays(GL_LINES, 0, varray.size()/2);
-#if !defined(SDL_VIDEO_OPENGL_ES) && (!defined(USE_GLES2) || !defined(GL_ES_VERSION_2_0))
+#if !defined(SDL_VIDEO_OPENGL_ES) && (!defined(USE_SHADERS) || !defined(GL_ES_VERSION_2_0))
 	glDisable(GL_LINE_STIPPLE);
 	glLineStipple(1, 0xFFFF);
 #endif
@@ -4077,7 +4077,7 @@ void editor::create_new_object()
 
 void editor::edit_shaders()
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	const std::string path = module::map_file("data/shaders.cfg");
 	if(sys::file_exists(path) == false) {
 		sys::write_file(path, "{\n\t\"shaders\": {\n\t},\n\t\"programs\": [\n\t],\n}");

@@ -1488,7 +1488,7 @@ namespace box2d
 			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
 			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(color.r, color.g, color.b, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -1515,7 +1515,7 @@ namespace box2d
 			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
 			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glEnable(GL_BLEND);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
@@ -1560,7 +1560,7 @@ namespace box2d
 			varray.push_back(GLfloat(v.x * this_world->scale()));
 			varray.push_back(GLfloat(v.y * this_world->scale()));
 		}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(color.r, color.g, color.b, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -1592,7 +1592,7 @@ namespace box2d
 			varray.push_back(GLfloat(v.x * this_world->scale()));
 			varray.push_back(GLfloat(v.y * this_world->scale()));
 		}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glEnable(GL_BLEND);
 		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
@@ -1649,7 +1649,7 @@ namespace box2d
 		varray.push_back(GLfloat(p1.y * this_world->scale()));
 		varray.push_back(GLfloat(p2.x * this_world->scale()));
 		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(color.r, color.g, color.b, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -1680,7 +1680,7 @@ namespace box2d
 		varray.push_back(GLfloat(p1.y * this_world->scale()));
 		varray.push_back(GLfloat(p2.x * this_world->scale()));
 		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(1.0f, 0.0f, 0.0f, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -1726,7 +1726,7 @@ namespace box2d
 		varray.push_back(GLfloat(p.x));
 		varray.push_back(GLfloat(p.y));
 		glPointSize(size);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(color.r, color.g, color.b, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
@@ -1762,7 +1762,7 @@ namespace box2d
 		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
 		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
 		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		glColor4f(color.r, color.g, color.b, 1.0);
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());

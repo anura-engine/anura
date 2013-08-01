@@ -418,7 +418,7 @@ void code_editor_dialog::process()
 		try {
 			custom_object::reset_current_debug_error();
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			gles2::shader::get_and_clear_runtime_error();
 #endif
 
@@ -470,7 +470,7 @@ void code_editor_dialog::process()
 					throw;
 				}
 				std::cerr << "INIT TILE MAP OK\n";
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
 				std::cerr << "CODE_EDIT_DIALOG FILE: " << fname_ << std::endl;
 				gles2::program::load_shaders(editor_->text());
@@ -534,7 +534,7 @@ void code_editor_dialog::process()
 		error_label_->set_tooltip(*custom_object::current_debug_error());
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	const std::string shader_error = gles2::shader::get_and_clear_runtime_error();
 	if(shader_error != "") {
 		error_label_->set_text("Runtime Shader Error");
@@ -1168,7 +1168,7 @@ COMMAND_LINE_UTILITY(codeedit)
 #else
 	SDL_SetVideoMode(600, 600, 0, SDL_OPENGL|SDL_RESIZABLE);
 #endif
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	glViewport(0, 0, 600, 600);
 	glEnable(GL_BLEND);
 	glEnable(GL_TEXTURE_2D);

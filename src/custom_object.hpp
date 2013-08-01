@@ -427,7 +427,7 @@ private:
 	//at the end of every cycle.
 	int fall_through_platforms_;
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	//current shader we're using to draw with.
 	gles2::shader_program_ptr shader_;
 	// List of shader effects to run.
@@ -496,7 +496,9 @@ private:
 
 	mutable screen_position adjusted_draw_position_;
 
+#if defined(USE_SHADERS)
 	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
+#endif
 
 	bool paused_;
 

@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#if defined(USE_SHADERS)
 #include <boost/regex.hpp>
 
 #include "array_callable.hpp"
@@ -491,7 +492,7 @@ END_DEFINE_CALLABLE(program)
 /*
 variant program::get_value(const std::string& key) const
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(key == "uniforms") {
 		return variant(new uniforms_callable(*this));
 	} else if(key == "current_texture") {
@@ -558,7 +559,7 @@ namespace {
 		variant execute(const game_logic::formula_callable& variables) const {
 			game_logic::formula::fail_if_static_context();
 			std::vector<variant> v;
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			for(size_t n = 0; n < 16; n++) {
 				v.push_back(variant((glm::value_ptr(get_mvp_matrix()))[n]));
 			}
@@ -1199,7 +1200,7 @@ void program::set_deferred_uniforms()
 
 void program::set_known_uniforms()
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(u_discard_ >= 0) {
 		int value = gles2::get_alpha_test() ? 1 : 0;
 		glUniform1i(u_discard_, value);
@@ -1221,7 +1222,7 @@ void program::set_known_uniforms()
 
 void program::set_sprite_area(const GLfloat* fl)
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(u_sprite_area_ != -1) {
 		glUniform4fv(u_sprite_area_, 1, fl);
 	}
@@ -1230,7 +1231,7 @@ void program::set_sprite_area(const GLfloat* fl)
 
 void program::set_draw_area(const GLfloat* fl)
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(u_draw_area_ != -1) {
 		glUniform4fv(u_draw_area_, 1, fl);
 	}
@@ -1239,7 +1240,7 @@ void program::set_draw_area(const GLfloat* fl)
 
 void program::set_cycle(int cycle)
 {
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(u_cycle_ != -1) {
 		glUniform1f(u_cycle_, static_cast<GLfloat>(cycle));
 	}
@@ -1644,3 +1645,5 @@ GLenum get_blend_mode(variant v)
 	ASSERT_LOG(false, "Expected blend mode to be a string or integer");
 	return GL_ZERO;
 }
+
+#endif

@@ -403,7 +403,7 @@ void grid::on_set_yscroll(int old_value, int value)
 void grid::handle_draw() const
 {
 	GLfloat current_color[4];
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	memcpy(current_color, gles2::get_color(), sizeof(current_color));
 #else
 	glGetFloatv(GL_CURRENT_COLOR, current_color);

@@ -34,7 +34,9 @@
 #include "voxel_object.hpp"
 #include "voxel_object_type.hpp"
 
+#if defined(USE_ISOMAP)
 using namespace voxel;
+#endif
 
 variant_type::variant_type()
 {
@@ -430,6 +432,7 @@ private:
 	std::string type_;
 };
 
+#if defined(USE_ISOMAP)
 class variant_type_voxel_object : public variant_type
 {
 public:
@@ -488,6 +491,7 @@ public:
 private:
 	std::string type_;
 };
+#endif
 
 class variant_type_builtin : public variant_type
 {
@@ -1378,9 +1382,11 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 	} else if(value.try_convert<custom_object>()) {
 		const custom_object* obj = value.try_convert<custom_object>();
 		return variant_type::get_custom_object(obj->query_value("type").as_string());
+#if defined(USE_ISOMAP)
 	} else if(value.try_convert<voxel_object>()) {
 		const voxel_object* obj = value.try_convert<voxel_object>();
 		return variant_type::get_voxel_object(obj->type());
+#endif
 	} else if(value.is_list()) {
 		std::vector<variant_type_ptr> types;
 		foreach(const variant& item, value.as_list()) {
@@ -1660,8 +1666,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			if(is_class) {
 				v.push_back(variant_type_ptr(new variant_type_class(class_name)));
+#if defined(USE_ISOMAP)
 			} else if(is_vox) {
 				v.push_back(variant_type_ptr(new variant_type_voxel_object(class_name)));
+#endif
 			} else {
 				v.push_back(variant_type_ptr(new variant_type_custom_object(class_name)));
 			}
@@ -2067,6 +2075,7 @@ variant_type_ptr variant_type::get_custom_object(const std::string& name)
 	return variant_type_ptr(new variant_type_custom_object(name));
 }
 
+#if defined(USE_ISOMAP)
 variant_type_ptr variant_type::get_voxel_object(const std::string& name)
 {
 	if(name == "") {
@@ -2074,6 +2083,7 @@ variant_type_ptr variant_type::get_voxel_object(const std::string& name)
 	}
 	return variant_type_ptr(new variant_type_voxel_object(name));
 }
+#endif
 
 variant_type_ptr variant_type::get_builtin(const std::string& name)
 {

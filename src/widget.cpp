@@ -298,7 +298,7 @@ void widget::draw() const
 
 		GLint src = 0;
 		GLint dst = 0;
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 			glGetIntegerv(GL_BLEND_SRC, &src);
 			glGetIntegerv(GL_BLEND_DST, &dst);
 #endif
@@ -315,7 +315,7 @@ void widget::draw() const
 				height() + get_pad_height()*2 + 2*frame_set_->corner_height(), resolution_ != 0);
 		}
 		handle_draw();
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 		glBlendFunc(src, dst);
 #endif
 	}

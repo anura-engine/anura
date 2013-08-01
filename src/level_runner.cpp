@@ -260,7 +260,7 @@ void iris_scene(const level& lvl, screen_position& screen_pos, float amount) {
 		}
 
 		glColor4ub(0, 0, 0, 255);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::manager gles2_manager(gles2::get_simple_shader());
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, varray.size()/2);

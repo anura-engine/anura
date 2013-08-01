@@ -272,7 +272,7 @@ namespace gui
 
 			glPushMatrix();
 			glTranslatef(GLfloat(x), GLfloat(y), 0);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			gles2::manager gles2_manager(gles2::get_simple_col_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray.front());

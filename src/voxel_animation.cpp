@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 
 #include <boost/bind.hpp>
 #include <boost/shared_array.hpp>
@@ -405,4 +405,4 @@ UTILITY(voxel_animator)
 	editor->show_modal();
 }
 
-#endif //USE_GLES2
+#endif //USE_SHADERS
