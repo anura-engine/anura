@@ -118,12 +118,39 @@ void toggle_draw_grid() {
 
 class editor_menu_dialog : public gui::dialog
 {
+public:
 	struct menu_item {
 		std::string description;
 		std::string hotkey;
 		boost::function<void()> action;
 	};
 
+	void show_menu(const std::vector<menu_item>& items) {
+		using namespace gui;
+		gui::grid* grid = new gui::grid(2);
+		grid->set_hpad(40);
+		grid->set_show_background(true);
+		grid->allow_selection();
+		grid->swallow_clicks();
+		grid->swallow_all_events();
+		grid->register_selection_callback(boost::bind(&editor_menu_dialog::execute_menu_item, this, items, _1));
+		foreach(const menu_item& item, items) {
+			grid->add_col(widget_ptr(new label(item.description, graphics::color_white()))).
+			      add_col(widget_ptr(new label(item.hotkey, graphics::color_white())));
+		}
+
+		int mousex, mousey;
+		SDL_GetMouseState(&mousex, &mousey);
+
+		mousex -= x();
+		mousey -= y();
+
+		remove_widget(context_menu_);
+		context_menu_.reset(grid);
+		add_widget(context_menu_, mousex, mousey);
+	}
+
+private:
 	void execute_menu_item(const std::vector<menu_item>& items, int n) {
 		if(n >= 0 && n < items.size()) {
 			items[n].action();
@@ -232,30 +259,6 @@ class editor_menu_dialog : public gui::dialog
 			res.push_back(item);
 		}
 		show_menu(res);
-	}
-
-	void show_menu(const std::vector<menu_item>& items) {
-		using namespace gui;
-		gui::grid* grid = new gui::grid(2);
-		grid->set_hpad(40);
-		grid->set_show_background(true);
-		grid->allow_selection();
-		grid->swallow_clicks();
-		grid->register_selection_callback(boost::bind(&editor_menu_dialog::execute_menu_item, this, items, _1));
-		foreach(const menu_item& item, items) {
-			grid->add_col(widget_ptr(new label(item.description, graphics::color_white()))).
-			      add_col(widget_ptr(new label(item.hotkey, graphics::color_white())));
-		}
-
-		int mousex, mousey;
-		SDL_GetMouseState(&mousex, &mousey);
-
-		mousex -= x();
-		mousey -= y();
-
-		remove_widget(context_menu_);
-		context_menu_.reset(grid);
-		add_widget(context_menu_, mousex, mousey);
 	}
 
 	editor& editor_;
@@ -787,7 +790,8 @@ editor::editor(const char* level_cfg)
 	cur_voxel_tileset_(0),
 #endif
 	drawing_rect_(false), dragging_(false), level_changed_(0),
-	selected_segment_(-1), prev_mousex_(-1), prev_mousey_(-1),
+	selected_segment_(-1),
+	mouse_buttons_down_(0), prev_mousex_(-1), prev_mousey_(-1),
 	xres_(0), yres_(0), mouselook_mode_(false)
 {
 	fprintf(stderr, "BEGIN EDITOR::EDITOR\n");
@@ -1099,17 +1103,21 @@ bool editor::handle_event(const SDL_Event& event, bool swallowed)
 		handle_key_press(event.key);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
+		//if the code dialog started with focus, we ignore mouse
+		//presses so that the first click just unfocuses it.
 		if(!dialog_started_with_focus) {
-			//if the code dialog started with focus, we ignore mouse
-			//presses so that the first click just unfocuses it.
+			mouse_buttons_down_ = mouse_buttons_down_|SDL_BUTTON(event.button.button);
+
 			handle_mouse_button_down(event.button);
 		}
 		break;
 
 	case SDL_MOUSEBUTTONUP:
-		if(!dialog_started_with_focus) {
-			//if the code dialog started with focus, we ignore mouse
-			//presses so that the first click just unfocuses it.
+		//if the code dialog started with focus, we ignore mouse
+		//presses so that the first click just unfocuses it.
+		//Also don't handle up events unless we handled the down event.
+		if(!dialog_started_with_focus && (mouse_buttons_down_&SDL_BUTTON(event.button.button))) {
+			mouse_buttons_down_ = mouse_buttons_down_&(~SDL_BUTTON(event.button.button));
 			handle_mouse_button_up(event.button);
 		}
 		break;
@@ -1203,7 +1211,7 @@ void editor::process()
 	process_ghost_objects();
 
 	int mousex, mousey;
-	const unsigned int buttons = get_mouse_state(mousex, mousey);
+	const unsigned int buttons = get_mouse_state(mousex, mousey)&mouse_buttons_down_;
 
 	if(buttons == 0) {
 		drawing_rect_ = false;
@@ -1349,7 +1357,7 @@ void editor::process()
 		const int last_xpos = xpos_ + last_mousex*zoom_;
 		const int last_ypos = ypos_ + last_mousey*zoom_;
 
-		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON_LEFT);
+		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON(SDL_BUTTON_LEFT));
 	}
 
 	if(tool() == TOOL_EDIT_HEXES && dragging_ && buttons) {
@@ -1359,7 +1367,7 @@ void editor::process()
 		if(std::find(g_current_draw_hex_tiles.begin(), g_current_draw_hex_tiles.end(), p) == g_current_draw_hex_tiles.end()) {
 			g_current_draw_hex_tiles.push_back(p);
 
-			if(buttons&SDL_BUTTON_LEFT) {
+			if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 				add_hex_tile_rect(p.x, p.y, p.x, p.y);
 			} else {
 				remove_hex_tile_rect(p.x, p.y, p.x, p.y);
@@ -1973,7 +1981,7 @@ void editor::handle_drawing_rect(int mousex, int mousey)
 			tmp_undo_->undo_command();
 		}
 
-		if(buttons == SDL_BUTTON_LEFT) {
+		if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			add_tile_rect(anchorx_, anchory_, xpos, ypos);
 		} else {
 			remove_tile_rect(anchorx_, anchory_, xpos, ypos);
@@ -2089,7 +2097,7 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			if(selected_segment_ == -1) {
 				selected_segment_ = segment;
 				segment_dialog_->set_segment(segment);
-			} else if(buttons&SDL_BUTTON_RIGHT) {
+			} else if(buttons&SDL_BUTTON(SDL_BUTTON_RIGHT)) {
 				if(segment != selected_segment_ && selected_segment_ >= 0) {
 					variant next = lvl_->get_var(formatter() << "segments_after_" << selected_segment_);
 					std::vector<variant> v;
@@ -2175,7 +2183,7 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		drawing_rect_ = false;
 		dragging_ = true;
 		point p(anchorx_, anchory_);
-		if(buttons&SDL_BUTTON_LEFT) {
+		if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			add_tile_rect(p.x, p.y, p.x, p.y);
 		} else {
 			remove_tile_rect(p.x, p.y, p.x, p.y);
@@ -2187,7 +2195,7 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		drawing_rect_ = false;
 		dragging_ = true;
 		point p(anchorx_, anchory_);
-		if(buttons&SDL_BUTTON_LEFT) {
+		if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			add_hex_tile_rect(p.x, p.y, p.x, p.y);
 		} else {
 			remove_hex_tile_rect(p.x, p.y, p.x, p.y);
@@ -2230,7 +2238,10 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		set_code_file();
 	}
 
-	if(lvl_->editor_highlight()) {
+	if(lvl_->editor_highlight() && event.button == SDL_BUTTON_RIGHT) {
+		//pass. This is either the start of a right click drag, or will show
+		//a context menu on mouse up.
+	} else if(lvl_->editor_highlight()) {
 		entity_ptr obj_selecting = lvl_->editor_highlight();
 		if(std::count(lvl_->editor_selection().begin(),
 		              lvl_->editor_selection().end(), lvl_->editor_highlight()) == 0) {
@@ -2534,6 +2545,31 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 	} else {
 		//some kind of object editing
 		if(event.button == SDL_BUTTON_RIGHT) {
+			fprintf(stderr, "RIGHT: %d, %d -- %d, %d\n", anchorx_, xpos, anchory_, ypos);
+			if(abs(anchorx_ - xpos) < 16 && abs(anchory_ - ypos) < 16) {
+				std::vector<entity_ptr> chars = lvl_->get_characters_at_point(anchorx_, anchory_, xpos_, ypos_);
+				std::vector<editor_menu_dialog::menu_item> items;
+				for(entity_ptr e : chars) {
+					editor_menu_dialog::menu_item item;
+					item.description = e->debug_description();
+					item.action = [=]() {
+						lvl_->editor_clear_selection();
+						lvl_->editor_select_object(e);
+						property_dialog_->set_entity_group(lvl_->editor_selection());
+						if(this->tool() == TOOL_ADD_OBJECT) {
+							this->change_tool(TOOL_SELECT_OBJECT);
+						}
+
+						this->current_dialog_ = property_dialog_.get();
+					};
+
+					items.push_back(item);
+				}
+
+				editor_menu_dialog_->show_menu(items);
+				return;
+			}
+			
 			std::vector<boost::function<void()> > undo, redo;
 			const rect rect_selected(rect::from_coordinates(anchorx_, anchory_, xpos, ypos));
 			std::vector<entity_ptr> chars = lvl_->get_characters_in_rect(rect_selected, xpos_, ypos_);

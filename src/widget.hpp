@@ -138,6 +138,8 @@ public:
 		visit_values(visitor);
 	}
 
+	void swallow_all_events() { swallow_all_events_ = true; }
+
 	dialog_ptr get_settings_dialog(int x, int y, int w, int h);
 	variant write();
 protected:
@@ -192,6 +194,8 @@ DECLARE_CALLABLE(widget);
 	std::string frame_set_name_;
 	const_framed_gui_element_ptr frame_set_;
 	int resolution_;
+
+	bool swallow_all_events_;
 };
 
 // Functor to sort widgets by z-ordering.

@@ -36,7 +36,8 @@ widget::widget()
 	tooltip_displayed_(false), visible_(true), zorder_(0), environ_(0),
 	tooltip_display_delay_(0), tooltip_ticks_(INT_MAX), resolution_(0),
 	display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
-	draw_with_object_shader_(true), tooltip_fontsize_(18)
+	draw_with_object_shader_(true), tooltip_fontsize_(18),
+	swallow_all_events_(false)
 	{
 		tooltip_color_.r = tooltip_color_.g = tooltip_color_.b = tooltip_color_.a = 255;
 	}
@@ -48,7 +49,8 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(INT_MAX),
 	resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 	pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
-	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18)
+	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18),
+	swallow_all_events_(false)
 {
 	set_alpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 	if(v.has_key("width")) {
@@ -284,7 +286,9 @@ bool widget::process_event(const SDL_Event& event, bool claimed)
 		tooltip_ticks_ = INT_MAX;
 	}
 
-	return handle_event(event, claimed);
+	const bool must_swallow = swallow_all_events_ && event.type != SDL_QUIT;
+
+	return handle_event(event, claimed) || must_swallow;
 }
 
 void widget::draw() const
