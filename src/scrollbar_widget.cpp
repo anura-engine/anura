@@ -40,7 +40,7 @@ scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
 	handle_top_(new gui_section_widget(VerticalHandleTop)),
 	background_(new gui_section_widget(VerticalBackground)),
 	
-	window_pos_(0), window_size_(0), range_(0), step_(0),
+	window_pos_(0), window_size_(0), range_(0), step_(0), arrow_step_(0),
 	dragging_handle_(false),
 	drag_start_(0), drag_anchor_y_(0)
 {
@@ -48,7 +48,8 @@ scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
 }
 
 scrollbar_widget::scrollbar_widget(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e),	window_pos_(0), window_size_(0), range_(0), step_(0),
+	: widget(v,e),	window_pos_(0), window_size_(0), range_(0),
+	step_(0), arrow_step_(0),
 	dragging_handle_(false), drag_start_(0), drag_anchor_y_(0)
 {
 	handler_ = boost::bind(&scrollbar_widget::handler_delegate, this, _1);
@@ -164,9 +165,9 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 
 		const int start_pos = window_pos_;
 		if(event.wheel.y > 0) {
-			window_pos_ -= 3 * step_;
+			window_pos_ -= arrow_step_;
 		} else {
-			window_pos_ += 3 * step_;
+			window_pos_ += arrow_step_;
 		}
 
 		clip_window_position();
@@ -192,9 +193,9 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
 		if( e.button == SDL_BUTTON_WHEELUP || e.button == SDL_BUTTON_WHEELDOWN ) {
 			if(e.button == SDL_BUTTON_WHEELUP) {
-				window_pos_ -= 3 * step_;
+				window_pos_ -= arrow_step_;
 			} else if(e.button == SDL_BUTTON_WHEELDOWN) {
-				window_pos_ += 3 * step_;
+				window_pos_ += arrow_step_;
 			}
 
 			clip_window_position();
@@ -209,16 +210,24 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 
 		if(e.y < up_arrow_->y() + up_arrow_->height()) {
 			//on up arrow
-			window_pos_ -= step_;
+			window_pos_ -= arrow_step_;
+			while(window_pos_%arrow_step_) {
+				//snap to a multiple of the step size.
+				++window_pos_;
+			}
 		} else if(e.y > down_arrow_->y()) {
 			//on down arrow
-			window_pos_ += step_;
+			window_pos_ += arrow_step_;
+			while(window_pos_%arrow_step_) {
+				//snap to a multiple of the step size.
+				--window_pos_;
+			}
 		} else if(e.y < handle_->y()) {
 			//page up
-			window_pos_ -= window_size_ - step_;
+			window_pos_ -= window_size_ - arrow_step_;
 		} else if(e.y > handle_->y() + handle_->height()) {
 			//page down
-			window_pos_ += window_size_ - step_;
+			window_pos_ += window_size_ - arrow_step_;
 		} else {
 			//on handle
 			dragging_handle_ = true;

@@ -19,6 +19,7 @@
 
 #include <string>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "formula.hpp"
 #include "graphics.hpp"
@@ -75,6 +76,10 @@ public:
 	int y() const;
 	int width() const;
 	int height() const;
+	const rect* clip_area() const;
+	void set_clip_area(const rect& area);
+	void set_clip_area_to_dim();
+	void clear_clip_area();
 	void set_tooltip(const std::string& str, int fontsize=18, const SDL_Color& color=graphics::color_yellow(), const std::string& font="");
 	void set_tooltip_text(const std::string& str);
 	void set_tooltip_fontsize(int fontsize);
@@ -196,6 +201,8 @@ DECLARE_CALLABLE(widget);
 	int resolution_;
 
 	bool swallow_all_events_;
+
+	boost::shared_ptr<rect> clip_area_;
 };
 
 // Functor to sort widgets by z-ordering.

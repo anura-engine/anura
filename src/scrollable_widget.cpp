@@ -20,13 +20,13 @@
 
 namespace gui {
 
-scrollable_widget::scrollable_widget() : yscroll_(0), virtual_height_(0), step_(0)
+scrollable_widget::scrollable_widget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0)
 {
 	set_environment();
 }
 
 scrollable_widget::scrollable_widget(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0)
+	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0)
 {
 	if(v.has_key("yscroll")) {
 		yscroll_ = v["yscroll"].as_int();
@@ -35,7 +35,7 @@ scrollable_widget::scrollable_widget(const variant& v, game_logic::formula_calla
 		virtual_height_ = v["virtual_height"].as_int();
 	}
 	if(v.has_key("step")) {
-		step_ = v["step"].as_int();
+		arrow_step_ = step_ = v["step"].as_int();
 	}
 }
 
@@ -69,6 +69,11 @@ void scrollable_widget::set_scroll_step(int step)
 	step_ = step;
 }
 
+void scrollable_widget::set_arrow_scroll_step(int step)
+{
+	arrow_step_ = step;
+}
+
 void scrollable_widget::update_scrollbar()
 {
 	if(height() < virtual_height_) {
@@ -76,6 +81,9 @@ void scrollable_widget::update_scrollbar()
 			scrollbar_.reset(new scrollbar_widget(boost::bind(&scrollable_widget::set_yscroll, this, _1)));
 		}
 		scrollbar_->set_step(step_);
+		if(step_ != arrow_step_) {
+			scrollbar_->set_arrow_step(arrow_step_);
+		}
 		scrollbar_->set_range(virtual_height_, height());
 		scrollbar_->set_window_pos(yscroll_);
 		scrollbar_->set_loc(x() + width(), y());

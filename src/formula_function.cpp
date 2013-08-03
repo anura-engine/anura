@@ -3181,7 +3181,6 @@ public:
 			} else {
 				args[0]->is_identifier(&key_);
 			}
-			fprintf(stderr, "ZZZ: set: %s\n", args[0]->str().c_str());
 
 			if(!key_.empty() && callable_def) {
 				me_slot_ = callable_def->get_slot("me");

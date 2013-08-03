@@ -338,13 +338,14 @@ void grid::recalculate_dimensions()
 
 	int desired_height = row_height_*nrows();
 	set_virtual_height(desired_height);
-	set_scroll_step(row_height_);
+	set_scroll_step(1);
+	set_arrow_scroll_step(row_height_);
 
 	if(max_height_ > 0 && desired_height > max_height_) {
 		desired_height = max_height_;
-		while(desired_height%row_height_) {
-			--desired_height;
-		}
+	//	while(desired_height%row_height_) {
+	//		--desired_height;
+	//	}
 	}
 
 	if(set_h_ != 0 || set_w_ != 0) {
@@ -373,7 +374,7 @@ void grid::recalculate_dimensions()
 				}
 
 				widget->set_loc(x+align,y+row_height_/2 - widget->height()/2 - yscroll());
-				if(widget->y() >= 0 && widget->y() < height()) {
+				if(widget->y() + widget->height() > 0 && widget->y() < height()) {
 					visible_cells_.push_back(widget);
 				}
 				std::sort(visible_cells_.begin(), visible_cells_.end(), widget_sort_zorder());
@@ -409,8 +410,16 @@ void grid::handle_draw() const
 	glGetFloatv(GL_CURRENT_COLOR, current_color);
 #endif
 
+	{
+	const int xpos = x() & ~1;
+	const int ypos = y() & ~1;
+
+	const SDL_Rect grid_rect = {xpos, ypos, width(), height()};
+	const graphics::clip_scope clip_scope(grid_rect);
+
 	glPushMatrix();
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
+
 	if(show_background_) {
 		const SDL_Color bg = {50,50,50};
 		SDL_Rect rect = {0,0,width(),height()};
@@ -439,6 +448,7 @@ void grid::handle_draw() const
 		}
 	}
 	glPopMatrix();
+	} //end of scope so clip_scope goes away.
 
 	scrollable_widget::handle_draw();
 }

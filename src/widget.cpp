@@ -314,7 +314,13 @@ void widget::draw() const
 				width() + get_pad_width()*2 + 2*frame_set_->corner_height(), 
 				height() + get_pad_height()*2 + 2*frame_set_->corner_height(), resolution_ != 0);
 		}
-		handle_draw();
+
+		if(clip_area_) {
+			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
+			handle_draw();
+		} else {
+			handle_draw();
+		}
 #if !defined(USE_SHADERS)
 		glBlendFunc(src, dst);
 #endif
@@ -339,6 +345,26 @@ int widget::width() const
 int widget::height() const
 {
 	return h_;
+}
+
+const rect* widget::clip_area() const
+{
+	return clip_area_.get();
+}
+
+void widget::set_clip_area(const rect& area)
+{
+	clip_area_.reset(new rect(area));
+}
+
+void widget::set_clip_area_to_dim()
+{
+	set_clip_area(rect(x(), y(), width(), height()));
+}
+
+void widget::clear_clip_area()
+{
+	clip_area_.reset();
 }
 
 const_widget_ptr widget::get_widget_by_id(const std::string& id) const

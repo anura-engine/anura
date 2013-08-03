@@ -130,6 +130,13 @@ std::string& label::current_text() {
 	return text_;
 }
 
+const std::string& label::current_text() const {
+	if(fixed_width_) {
+		return formatted_;
+	}
+	return text_;
+}
+
 void label::set_fixed_width(bool fixed_width)
 {
 	fixed_width_ = fixed_width;

@@ -1123,7 +1123,17 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		}
 	}
 
+	clip_scope* current_clip_scope = NULL;
+
 	clip_scope::clip_scope(const SDL_Rect& r)
+	  : parent_(current_clip_scope), area_(r)
+	{
+		glGetFloatv(GL_MODELVIEW_MATRIX, matrix_);
+		apply(r);
+		current_clip_scope = this;
+	};
+	
+	void clip_scope::apply(const SDL_Rect& r)
 	{
 		{
 		stencil_scope stencil_settings(true, 0x01, GL_NEVER, 0x01, 0xff, GL_REPLACE, GL_KEEP, GL_KEEP);
@@ -1156,8 +1166,22 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
 	}
+
+	void clip_scope::reapply()
+	{
+		glPushMatrix();
+		glLoadMatrixf(matrix_);
+		apply(area_);
+		glPopMatrix();
+	}
 	
 	clip_scope::~clip_scope() {
+		stencil_.reset();
+		if(parent_) {
+			parent_->reapply();
+		}
+
+		current_clip_scope = parent_;
 	}
 	
 	namespace {
