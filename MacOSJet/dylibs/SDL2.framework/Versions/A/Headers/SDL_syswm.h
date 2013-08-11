@@ -82,7 +82,6 @@ struct SDL_SysWMinfo;
 #include <Cocoa/Cocoa.h>
 #else
 typedef struct _NSWindow NSWindow;
-typedef struct _NSView NSView;
 #endif
 #endif
 
@@ -188,7 +187,6 @@ struct SDL_SysWMinfo
         struct
         {
             NSWindow *window;           /* The Cocoa window */
-            NSView *view;               /* The Cocoa view */
         } cocoa;
 #endif
 #if defined(SDL_VIDEO_DRIVER_UIKIT)
@@ -221,7 +219,7 @@ typedef struct SDL_SysWMinfo SDL_SysWMinfo;
  *  \code
  *  SDL_SysWMinfo info;
  *  SDL_VERSION(&info.version);
- *  if ( SDL_GetWindowWMInfo(&info) ) { ... }
+ *  if ( SDL_GetWindowWMInfo(window, &info) ) { ... }
  *  \endcode
  */
 extern DECLSPEC SDL_bool SDLCALL SDL_GetWindowWMInfo(SDL_Window * window,
