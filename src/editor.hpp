@@ -386,6 +386,9 @@ private:
 	int level_changed_;
 	int selected_segment_;
 
+	//track mouse buttons that went down that we handled the event for,
+	//and thus will handle the corresponding up event.
+	unsigned int mouse_buttons_down_;
 	int prev_mousex_, prev_mousey_;
 
 	bool mouselook_mode_;

@@ -79,7 +79,7 @@ private:
 	// raw pointer to the map that owns this.
 	const hex_map* owner_map_;
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	// shader to draw tile with
 	gles2::shader_program_ptr shader_;
 #endif

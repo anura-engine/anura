@@ -229,7 +229,7 @@ END_DEFINE_CALLABLE(bar_widget)
 			}
 			glLineWidth(GLfloat(tick_width_) * scale_);
 			glColor4ub(color.r, color.g, color.b, 255);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			gles2::manager gles2_manager(gles2::get_simple_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
 			glDrawArrays(GL_LINES, 0, varray.size()/2);

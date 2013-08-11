@@ -69,6 +69,7 @@ protected:
 	label(const label&);
 	void operator=(const label&);
 	std::string& current_text();
+	const std::string& current_text() const;
 	virtual void recalculate_texture();
 	void set_texture(graphics::texture t);
 

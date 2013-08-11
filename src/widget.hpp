@@ -19,6 +19,7 @@
 
 #include <string>
 #include <boost/function.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "formula.hpp"
 #include "graphics.hpp"
@@ -42,7 +43,7 @@ struct color_save_context
 {
 	color_save_context()
 	{
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		memcpy(current_color, gles2::get_color(), sizeof(current_color));
 #else
 		glGetFloatv(GL_CURRENT_COLOR, current_color);
@@ -75,6 +76,10 @@ public:
 	int y() const;
 	int width() const;
 	int height() const;
+	const rect* clip_area() const;
+	void set_clip_area(const rect& area);
+	void set_clip_area_to_dim();
+	void clear_clip_area();
 	void set_tooltip(const std::string& str, int fontsize=18, const SDL_Color& color=graphics::color_yellow(), const std::string& font="");
 	void set_tooltip_text(const std::string& str);
 	void set_tooltip_fontsize(int fontsize);
@@ -138,6 +143,8 @@ public:
 		visit_values(visitor);
 	}
 
+	void swallow_all_events() { swallow_all_events_ = true; }
+
 	dialog_ptr get_settings_dialog(int x, int y, int w, int h);
 	variant write();
 protected:
@@ -192,6 +199,10 @@ DECLARE_CALLABLE(widget);
 	std::string frame_set_name_;
 	const_framed_gui_element_ptr frame_set_;
 	int resolution_;
+
+	bool swallow_all_events_;
+
+	boost::shared_ptr<rect> clip_area_;
 };
 
 // Functor to sort widgets by z-ordering.

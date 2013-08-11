@@ -23,7 +23,7 @@ opts.AddVariables(
     PathVariable('build_dir', 'Build all intermediate files(objects, test programs, etc) under this dir', "build", PathVariable.PathAccept),
     BoolVariable('ccache', "Use ccache", False),
     BoolVariable('extrawarn', "Use wesnoth-level warnings", False),
-    BoolVariable('gles2', "Use GLES2", False),
+    BoolVariable('shaders', "Use shaders", False),
     BoolVariable('strict', 'Set to strict compilation', False),
     ('cxxtool', 'Set c++ compiler command if not using standard compiler.'),
     ('jobs', 'Set the number of parallel compilations', "1", lambda key, value, env: int(value), int),
@@ -74,8 +74,8 @@ if "gcc" in env["TOOLS"]:
 
 env['exclude'] = []
 
-if env['gles2']:
-    env.Append(CXXFLAGS= ["-DUSE_GLES2"])
+if env['shaders']:
+    env.Append(CXXFLAGS= ["-DUSE_SHADERS"])
 else:
     pass
     #env['exclude'] += [ "gles2.cpp", "shaders.cpp" ]

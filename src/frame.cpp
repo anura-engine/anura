@@ -894,7 +894,7 @@ void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, co
 	}
 
 	ASSERT_LOG(vqueue.size() > 4, "ILLEGAL CUSTOM BLIT: " << vqueue.size());
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	{
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
@@ -961,7 +961,7 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 		uv += 2;
 	}
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	{
 		GLfloat draw_area[] = {GLfloat(x), GLfloat(y), GLfloat(x+w), GLfloat(y+h)};
 		if(face_right) {

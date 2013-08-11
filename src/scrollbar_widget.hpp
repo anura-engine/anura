@@ -36,6 +36,7 @@ public:
 	void set_dim(int w, int h);
 	void set_window_pos(int pos) { window_pos_ = pos; }
 	void set_step(int step) { step_ = step; }
+	void set_arrow_step(int step) { arrow_step_ = step; }
 	int window_pos() const { return window_pos_; }
 protected:
 	virtual void set_value(const std::string& key, const variant& v);
@@ -51,7 +52,7 @@ private:
 
 	boost::function<void(int)> handler_;
 	widget_ptr up_arrow_, down_arrow_, handle_, handle_bot_, handle_top_, background_;
-	int window_pos_, window_size_, range_, step_;
+	int window_pos_, window_size_, range_, step_, arrow_step_;
 
 	bool dragging_handle_;
 	int drag_start_;

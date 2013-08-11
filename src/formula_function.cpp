@@ -3181,7 +3181,6 @@ public:
 			} else {
 				args[0]->is_identifier(&key_);
 			}
-			fprintf(stderr, "ZZZ: set: %s\n", args[0]->str().c_str());
 
 			if(!key_.empty() && callable_def) {
 				me_slot_ = callable_def->get_slot("me");
@@ -4517,13 +4516,16 @@ FUNCTION_TYPE_DEF
 	return args()[0]->query_variant_type();
 END_FUNCTION_DEF(get_modified_object)
 
+#if defined(USE_ISOMAP)
 FUNCTION_DEF(voxel_model, 1, 1, "voxel_model(str): create and return new voxel model")
 	std::map<variant,variant> m;
 	m[variant("model")] = args()[0]->evaluate(variables);
 	return variant(new voxel::voxel_model(variant(&m)));
 RETURN_TYPE("builtin voxel_model")
 END_FUNCTION_DEF(voxel_model)
+#endif
 
+#if defined(USE_SHADERS)
 FUNCTION_DEF(draw_primitive, 1, 1, "draw_primitive(map): create and return a draw_primitive")
 	variant v = args()[0]->evaluate(variables);
 	return variant(graphics::draw_primitive::create(v).get());
@@ -4531,6 +4533,7 @@ FUNCTION_ARGS_DEF
 ARG_TYPE("map")
 RETURN_TYPE("builtin draw_primitive")
 END_FUNCTION_DEF(draw_primitive)
+#endif
 
 }
 

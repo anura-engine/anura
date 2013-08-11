@@ -1242,7 +1242,7 @@ namespace preferences {
 #if defined(USE_ISOMAP)
 			res.insert("isomap");
 #endif
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 			res.insert("shaders");
 #endif
 #if defined(USE_BOX2D)

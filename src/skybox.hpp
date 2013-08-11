@@ -22,6 +22,7 @@
 */
 
 #pragma once
+#if defined(USE_ISOMAP)
 
 #include <boost/shared_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -64,3 +65,5 @@ namespace graphics
 
 	typedef boost::intrusive_ptr<skybox> skybox_ptr;
 }
+
+#endif

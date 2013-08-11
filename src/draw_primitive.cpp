@@ -15,6 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
+#if defined(USE_SHADERS)
 #include <assert.h>
 #include <math.h>
 
@@ -53,7 +54,6 @@ private:
 
 	void handle_draw() const;
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
 
@@ -112,7 +112,6 @@ void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_ca
 
 void circle_primitive::handle_draw() const
 {
-#if defined(USE_GLES2)
 	
 	color_.set_as_current_color();
 
@@ -123,7 +122,6 @@ void circle_primitive::handle_draw() const
 
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 	
-#endif
 }
 
 variant circle_primitive::get_value(const std::string& key) const
@@ -306,19 +304,6 @@ void arrow_primitive::handle_draw() const
 
 	calculate_draw_arrays();
 
-#if !defined(USE_GLES2)
-	glEnableClientState(GL_COLOR_ARRAY);
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-	glVertexPointer(2, GL_FLOAT, 0, &varray_[0]);
-	glColorPointer(4, GL_UNSIGNED_BYTE, 0, &carray_[0]);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
-
-	glDisableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
-#else
 	gles2::manager gles2_manager(texture_.valid() ? gles2::get_texcol_shader() : gles2::get_simple_col_shader());
 
 	if(texture_.valid()) {
@@ -331,7 +316,6 @@ void arrow_primitive::handle_draw() const
 	gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray_[0]);
 
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
-#endif
 }
 
 variant arrow_primitive::get_value(const std::string& key) const
@@ -834,3 +818,4 @@ BEGIN_DEFINE_CALLABLE_NOBASE(draw_primitive)
 END_DEFINE_CALLABLE(draw_primitive)
 
 }
+#endif

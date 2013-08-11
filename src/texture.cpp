@@ -1045,7 +1045,7 @@ void texture::ID::unbuild_id()
 
 	ASSERT_LOG(glIsTexture(id), "Not a valid texture: " << id);
 	glBindTexture(GL_TEXTURE_2D, id);
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 #if defined(GL_ES_VERSION_2_0)
 	// XXX: this doesn't work quite as expected.  But since most pure GLES2 devices don't need editor mode
 	// it isn't a high priority.

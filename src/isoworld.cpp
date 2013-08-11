@@ -1,3 +1,5 @@
+#if defined(USE_ISOMAP)
+
 #if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
 #define bmround	boost::math::round
@@ -562,3 +564,5 @@ namespace voxel
 		}
 	END_DEFINE_CALLABLE(world)
 }
+
+#endif

@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef DRAW_PRIMITIVES_HPP_INCLUDED
-#define DRAW_PRIMITIVES_HPP_INCLUDED
+#pragma once
+#if defined(USE_SHADERS)
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -36,13 +36,16 @@ public:
 
 
 	void draw() const;
+#if defined(USE_SHADERS)
 	void draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
 private:
 	DECLARE_CALLABLE(draw_primitive);
 
 	virtual void handle_draw() const = 0;
+#if defined(USE_SHADERS)
 	virtual void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
-
+#endif
 	GLenum src_factor_, dst_factor_;
 };
 

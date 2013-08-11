@@ -15,8 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef GLES2_HPP_INCLUDED
-#define GLES2_HPP_INCLUDED
+#if defined(USE_SHADERS)
 
 #include <stack>
 #include <glm/glm.hpp>
@@ -136,4 +135,4 @@ namespace gles2 {
 	GLfloat* get_color();
 }
 
-#endif // GLES2_HPP_INCLUDED
+#endif

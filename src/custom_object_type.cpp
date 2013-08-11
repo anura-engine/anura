@@ -1415,7 +1415,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	game_logic::register_formula_callable_definition("object_type", callable_definition_);
 
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	if(node.has_key("shader")) {
 		shader_.reset(new gles2::shader_program(node["shader"]));
 	}
@@ -1452,6 +1452,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	}
 	init_event_handlers(node, event_handlers_, function_symbols(), base_type ? &base_type->event_handlers_ : NULL);
 
+#if defined(USE_SHADERS)
 	if(node.has_key("blend_mode_source") || node.has_key("blend_mode_dest")) {
 		blend_mode_.reset(new graphics::blend_mode);
 		blend_mode_->sfactor = GL_ONE;
@@ -1460,6 +1461,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		blend_mode_->sfactor = get_blend_mode(node["blend_mode_source"]);
 		blend_mode_->dfactor = get_blend_mode(node["blend_mode_dest"]);
 	}
+#endif
 	std::cerr << "DONE CREATE OBJ: " << id << "\n";
 }
 

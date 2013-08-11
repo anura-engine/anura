@@ -184,7 +184,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 	}
 #elif defined(GL_OES_blend_subtract)
 	glBlendEquationOES(GL_FUNC_REVERSE_SUBTRACT_OES);
-#elif defined(USE_GLES2)
+#elif defined(USE_SHADERS)
 	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
 #else
 	if(GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
@@ -197,7 +197,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 	}
 #endif
 
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glDisable(GL_TEXTURE_2D);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -217,7 +217,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 #else
 	glColor4ub(water_color[0], water_color[1], water_color[2], water_color[3]);
 #endif	
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager gles2_manager(gles2::get_simple_shader());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, vertices);
 #else
@@ -231,7 +231,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 	}
 #elif defined(GL_OES_blend_subtract)
 	glBlendEquationOES(GL_FUNC_ADD_OES);
-#elif defined(USE_GLES2)
+#elif defined(USE_SHADERS)
 	glBlendEquation(GL_FUNC_ADD);
 #else
 	if (GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
@@ -244,7 +244,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 
 	typedef std::pair<int, int> Segment;
 
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glEnableClientState(GL_COLOR_ARRAY);
 #endif
 
@@ -264,7 +264,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 			255, 255, 255, 255,
 			255, 255, 255, 0,
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		{
 			gles2::manager gles2_manager(gles2::get_simple_col_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
@@ -291,7 +291,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 			0, 230, 200, 128,
 			0, 230, 200, 0,
 		};
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		{
 			gles2::manager gles2_manager(gles2::get_simple_col_shader());
 			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray2);
@@ -305,7 +305,7 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 #endif
 	}
 
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glDisableClientState(GL_COLOR_ARRAY);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnable(GL_TEXTURE_2D);

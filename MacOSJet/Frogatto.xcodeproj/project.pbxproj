@@ -1679,7 +1679,7 @@
 				);
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
-					"-DUSE_GLES2",
+					"-DUSE_SHADERS",
 					"-DUSE_ISOMAP",
 				);
 				OTHER_CPLUSPLUSFLAGS = (

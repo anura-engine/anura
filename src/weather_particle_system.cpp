@@ -65,7 +65,7 @@ void weather_particle_system::process(const entity& e)
 
 void weather_particle_system::draw(const rect& area, const entity& e) const
 {
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	glDisable(GL_TEXTURE_2D);
 	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
 #endif
@@ -95,14 +95,14 @@ void weather_particle_system::draw(const rect& area, const entity& e) const
 			my_y += info_.repeat_period;
 		} while (my_y < area.y()+area.h());
 	}
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 	gles2::manager gles2_manager(gles2::get_simple_shader());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &vertices.front());
 #else
 	glVertexPointer(2, GL_FLOAT, 0, &vertices.front());
 #endif
 	glDrawArrays(GL_LINES, 0, vertices.size()/2);
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 	//glDisable(GL_SMOOTH);
 	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 	glEnable(GL_TEXTURE_2D);

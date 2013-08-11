@@ -266,7 +266,7 @@ variant hex_object::get_value(const std::string& key) const
 		v.push_back(variant(x_));
 		v.push_back(variant(y_));
 		return variant(&v);
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	} else if(key == "shader") {
 		return variant(shader_.get());
 #endif
@@ -295,7 +295,7 @@ void hex_object::set_value(const std::string& key, const variant& value)
 					<< " : " << x_ << "," << y_ << std::endl;
 			}
 		}
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	} else if(key == "shader") {
 		ASSERT_LOG(value.is_map() && value.has_key("program"), 
 			"shader must be specified by map having a \"program\" attribute");
@@ -351,7 +351,7 @@ void hex_object::draw() const
 		return;
 	}
 
-#ifdef USE_GLES2
+#ifdef USE_SHADERS
 	gles2::manager gles2_manager(shader_);
 #endif
 

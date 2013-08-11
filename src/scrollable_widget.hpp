@@ -40,6 +40,7 @@ protected:
 	~scrollable_widget();
 	void set_virtual_height(int height);
 	void set_scroll_step(int step);
+	void set_arrow_scroll_step(int step);
 	void update_scrollbar();
 
 	int yscroll() const { return yscroll_; }
@@ -53,6 +54,7 @@ private:
 	int yscroll_;
 	int virtual_height_;
 	int step_;
+	int arrow_step_;
 
 	scrollbar_widget_ptr scrollbar_;
 };

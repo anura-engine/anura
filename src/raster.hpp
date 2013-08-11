@@ -223,6 +223,12 @@ struct clip_scope {
 
 	~clip_scope();
 
+	void apply(const SDL_Rect& r);
+	void reapply();
+
+	clip_scope* parent_;
+	SDL_Rect area_;
+	GLfloat matrix_[16];
 	boost::scoped_ptr<stencil_scope> stencil_;
 };
 

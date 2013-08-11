@@ -1,8 +1,8 @@
 #pragma once
 
 #if defined(USE_ISOMAP)
-#if !defined(USE_GLES2)
-#error in order to build with Iso tiles you need to be building with shaders (USE_GLES2)
+#if !defined(USE_SHADERS)
+#error in order to build with Iso tiles you need to be building with shaders (USE_SHADERS)
 #endif
 
 #include <boost/intrusive_ptr.hpp>

@@ -255,7 +255,7 @@ rect graphical_font::do_draw(int x, int y, const std::string& text, bool draw_te
 
 	if(draw_text && !font_varray.empty()) {
 		texture_.set_as_current_texture();
-#if defined(USE_GLES2)
+#if defined(USE_SHADERS)
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &font_varray.front());
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, &font_tcarray.front());

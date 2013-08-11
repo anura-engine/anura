@@ -36,7 +36,8 @@ widget::widget()
 	tooltip_displayed_(false), visible_(true), zorder_(0), environ_(0),
 	tooltip_display_delay_(0), tooltip_ticks_(INT_MAX), resolution_(0),
 	display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
-	draw_with_object_shader_(true), tooltip_fontsize_(18)
+	draw_with_object_shader_(true), tooltip_fontsize_(18),
+	swallow_all_events_(false)
 	{
 		tooltip_color_.r = tooltip_color_.g = tooltip_color_.b = tooltip_color_.a = 255;
 	}
@@ -48,7 +49,8 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(INT_MAX),
 	resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 	pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
-	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18)
+	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18),
+	swallow_all_events_(false)
 {
 	set_alpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 	if(v.has_key("width")) {
@@ -284,7 +286,9 @@ bool widget::process_event(const SDL_Event& event, bool claimed)
 		tooltip_ticks_ = INT_MAX;
 	}
 
-	return handle_event(event, claimed);
+	const bool must_swallow = swallow_all_events_ && event.type != SDL_QUIT;
+
+	return handle_event(event, claimed) || must_swallow;
 }
 
 void widget::draw() const
@@ -294,7 +298,7 @@ void widget::draw() const
 
 		GLint src = 0;
 		GLint dst = 0;
-#if !defined(USE_GLES2)
+#if !defined(USE_SHADERS)
 			glGetIntegerv(GL_BLEND_SRC, &src);
 			glGetIntegerv(GL_BLEND_DST, &dst);
 #endif
@@ -310,8 +314,14 @@ void widget::draw() const
 				width() + get_pad_width()*2 + 2*frame_set_->corner_height(), 
 				height() + get_pad_height()*2 + 2*frame_set_->corner_height(), resolution_ != 0);
 		}
-		handle_draw();
-#if !defined(USE_GLES2)
+
+		if(clip_area_) {
+			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
+			handle_draw();
+		} else {
+			handle_draw();
+		}
+#if !defined(USE_SHADERS)
 		glBlendFunc(src, dst);
 #endif
 	}
@@ -335,6 +345,26 @@ int widget::width() const
 int widget::height() const
 {
 	return h_;
+}
+
+const rect* widget::clip_area() const
+{
+	return clip_area_.get();
+}
+
+void widget::set_clip_area(const rect& area)
+{
+	clip_area_.reset(new rect(area));
+}
+
+void widget::set_clip_area_to_dim()
+{
+	set_clip_area(rect(x(), y(), width(), height()));
+}
+
+void widget::clear_clip_area()
+{
+	clip_area_.reset();
 }
 
 const_widget_ptr widget::get_widget_by_id(const std::string& id) const

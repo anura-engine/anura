@@ -99,11 +99,13 @@ private:
 	point last_stats_point_;
 	std::string last_stats_point_level_;
 	bool handle_mouse_events(const SDL_Event &event);
+#if defined(USE_ISOMAP)
 	void handle_mouse_over_voxel_objects(const SDL_Event &event,
 		const std::vector<voxel::user_voxel_object_ptr>& voxel_objs, 
 		game_logic::map_formula_callable_ptr callable, 
 		const int basic_evt, 
 		const int catch_all_event);
+#endif
 	void show_pause_title();
 
 	editor* editor_;

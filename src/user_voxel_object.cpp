@@ -1,3 +1,5 @@
+#if defined(USE_ISOMAP)
+
 #include <assert.h>
 
 #include "object_events.hpp"
@@ -188,3 +190,5 @@ void user_voxel_object::set_value(const std::string& key, const variant& value)
 }
 
 }
+
+#endif
