@@ -74,11 +74,7 @@ if "gcc" in env["TOOLS"]:
 
 env['exclude'] = []
 
-if env['shaders']:
-    env.Append(CXXFLAGS= ["-DUSE_SHADERS"])
-else:
-    pass
-    #env['exclude'] += [ "gles2.cpp", "shaders.cpp" ]
+env.Append(CXXFLAGS= ["-DUSE_SHADERS"])
 if env.get('cxxtool',""):
     env['CXX'] = env['cxxtool']
     if 'HOME' in os.environ:
