@@ -517,6 +517,10 @@ bool widget::in_widget(int xloc, int yloc) const
 {
 	if(xloc > 32767) {xloc -= 65536;}
 	if(yloc > 32767) {yloc -= 65536;}
+	if(clip_area_ && !point_in_rect(point(xloc, yloc), *clip_area_)) {
+		return false;
+	}
+
 	return xloc > x() && xloc < x() + width() &&
 			yloc > y() && yloc < y() + height();
 }

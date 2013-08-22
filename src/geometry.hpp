@@ -124,7 +124,7 @@ public:
 	int mid_y() const { return (y() + y2())/2; }
 
 	std::string to_string() const;
-	SDL_Rect sdl_rect() const { SDL_Rect r = {x(), y(), w(), h()}; return r; }
+	SDL_Rect sdl_rect() const { SDL_Rect r = {static_cast<Sint16>(x()), static_cast<Sint16>(y()), static_cast<Uint16>(w()), static_cast<Uint16>(h())}; return r; }
 
 	bool empty() const { return w() == 0 || h() == 0; }
 private:

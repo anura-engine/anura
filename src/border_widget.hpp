@@ -34,6 +34,7 @@ public:
 	void set_color(const SDL_Color& col);
 	virtual widget_ptr get_widget_by_id(const std::string& id);
 	const_widget_ptr get_widget_by_id(const std::string& id) const;
+	std::vector<widget_ptr> get_children() const;
 protected:
 	virtual void handle_draw() const;
 	virtual void handle_process();

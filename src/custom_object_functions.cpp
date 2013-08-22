@@ -33,6 +33,7 @@
 #include "custom_object.hpp"
 #include "debug_console.hpp"
 #include "draw_scene.hpp"
+#include "editor.hpp"
 #include "entity.hpp"
 #include "fbo_scene.hpp"
 #include "filesystem.hpp"
@@ -2444,6 +2445,38 @@ private:
 	std::string level_, label_, transition_;
 	entity_ptr new_playable_;
 };
+
+FUNCTION_DEF(push_level_stack, 2, 2, "push_level_stack(string dest_level, object playable)")
+	std::string dst = args()[0]->evaluate(variables).as_string();
+	const custom_object* obj = args()[1]->evaluate(variables).convert_to<custom_object>();
+
+	return variant(new fn_command_callable([=]() {
+		boost::intrusive_ptr<level> old_level(&level::current());
+		std::string dst_str = dst;
+		boost::intrusive_ptr<level> pause_level(load_level(dst));
+		std::string return_id = level::current().id();
+		level_runner runner(pause_level, dst_str, return_id);
+		const bool result = runner.play_level();
+
+		old_level->set_as_current_level();
+
+		if(result) {
+			level_runner::get_current()->force_return(true);
+		}
+	}));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("custom_obj")
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(push_level_stack)
+
+FUNCTION_DEF(pop_level_stack, 0, 0, "pop_level_stack()")
+	return variant(new fn_command_callable([=]() {
+		level_runner::get_current()->force_return();
+	}));
+FUNCTION_ARGS_DEF
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(pop_level_stack)
 
 FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_level, (optional)string dest_label, (optional)string transition, (optional)playable): teleports the player to a new level. The level is given by dest_level, with null() for the current level. If dest_label is given then the player will be teleported to the object in the destination level with that label. If transition is given, it names a type of transition (such as 'flip' or 'fade') which indicates the kind of visual effect to use for the transition. If a playable is specified it is placed in the level instead of the current one.  If no_move_to_standing is set to true, rather than auto-positioning the player on the ground under/above the target, the player will appear at precisely the position of the destination object - e.g. this is useful if they need to fall out of a pipe or hole coming out of the ceiling.")
 	std::string label, transition;

@@ -376,6 +376,7 @@ void grid::recalculate_dimensions()
 				widget->set_loc(x+align,y+row_height_/2 - widget->height()/2 - yscroll());
 				if(widget->y() + widget->height() > 0 && widget->y() < height()) {
 					visible_cells_.push_back(widget);
+					widget->set_clip_area(rect(0, 0, width(), height()));
 				}
 				std::sort(visible_cells_.begin(), visible_cells_.end(), widget_sort_zorder());
 			}
@@ -651,7 +652,7 @@ widget_ptr grid::get_widget_by_id(const std::string& id)
 
 std::vector<widget_ptr> grid::get_children() const
 {
-	return visible_cells_;
+	return std::vector<widget_ptr>(); //visible_cells_;
 }
 
 int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget)

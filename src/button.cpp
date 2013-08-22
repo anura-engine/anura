@@ -171,6 +171,12 @@ bool button::handle_event(const SDL_Event& event, bool claimed)
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 		const SDL_MouseButtonEvent& e = event.button;
 		if(in_widget(e.x,e.y)) {
+		std::cerr << "ZZZ: Widget: " << e.x << ", " << e.y << ": ";
+		if(clip_area()) {
+			std::cerr << *clip_area() << "\n";
+		} else {
+			std::cerr << "(null)\n";
+		}
 			current_button_image_set_ = depressed_button_image_set_;
 			down_ = true;
 			claimed = claim_mouse_events();

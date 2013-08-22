@@ -102,4 +102,11 @@ widget_ptr border_widget::get_widget_by_id(const std::string& id)
 	return widget::get_widget_by_id(id);
 }
 
+std::vector<widget_ptr> border_widget::get_children() const
+{
+	std::vector<widget_ptr> result;
+	result.push_back(child_);
+	return result;
+}
+
 }

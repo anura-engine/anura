@@ -58,6 +58,8 @@ public:
 	bool play_level();
 	bool play_cycle();
 
+	void force_return(bool quit=false) { force_return_ = true; quit_ = quit; }
+
 	void toggle_pause();
 	void toggle_history_trails();
 
@@ -77,6 +79,7 @@ private:
 	std::string& original_level_cfg_;
 
 	bool quit_;
+	bool force_return_;
 	time_t current_second_;
 
 	int current_fps_, next_fps_, current_cycles_, next_cycles_, current_delay_, next_delay_,

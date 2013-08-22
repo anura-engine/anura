@@ -703,6 +703,7 @@ level_runner::level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_
 #endif
 {
 	quit_ = false;
+	force_return_ = false;
 
 	current_second_ = time(NULL);
 	current_fps_ = 0;
@@ -802,7 +803,7 @@ bool level_runner::play_level()
 	}
 #endif
 
-	while(!done && !quit_) {
+	while(!done && !quit_ && !force_return_) {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 		const Uint8 *key = SDL_GetKeyboardState(NULL);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
