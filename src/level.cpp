@@ -4049,6 +4049,10 @@ DEFINE_SET_FIELD
 	obj.set_mouselook_inverted(value.as_bool());
 #endif
 
+DEFINE_FIELD(suspended_level, "builtin level")
+	ASSERT_LOG(obj.suspended_level_, "Query of suspended_level when there is no suspended level");
+	return variant(obj.suspended_level_.get());
+
 END_DEFINE_CALLABLE(level)
 
 int level::camera_rotation() const

@@ -408,6 +408,9 @@ public:
 	void shaders_updated();
 #endif
 
+	boost::intrusive_ptr<level> suspended_level() const { return suspended_level_; }
+	void set_suspended_level(const boost::intrusive_ptr<level>& lvl) { suspended_level_ = lvl; }
+
 private:
 	DECLARE_CALLABLE(level);
 
@@ -703,6 +706,8 @@ private:
 
 	// Hack to disable the touchscreen controls for the current level -- replace for 1.4
 	bool allow_touch_controls_;
+
+	boost::intrusive_ptr<level> suspended_level_;
 };
 
 bool entity_in_current_level(const entity* e);

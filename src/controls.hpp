@@ -56,11 +56,15 @@ public:
 	~local_controls_lock();
 };
 
+enum { CLEAR_LOCKS = 1 };
+
 class control_backup_scope_impl;
 class control_backup_scope {
 public:
-	control_backup_scope();
+	explicit control_backup_scope(int flags=0);
 	~control_backup_scope();
+
+	void clear_locks();
 
 	void restore_state();
 	void cancel();

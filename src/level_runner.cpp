@@ -790,19 +790,6 @@ bool level_runner::play_level()
 		start_editor();	
 	}
 
-#ifndef NO_EDITOR
-	if(!lvl_->player()) {
-		controls::control_backup_scope ctrl_backup;
-		paused = true;
-		show_pause_title();
-		editor_ = editor::get_editor(lvl_->id().c_str());
-		editor_resolution_manager_.reset(new editor_resolution_manager(editor_->xres(), editor_->yres()));
-		editor_->set_playing_level(lvl_);
-		editor_->setup_for_editing();
-		lvl_->set_editor();
-	}
-#endif
-
 	while(!done && !quit_ && !force_return_) {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 		const Uint8 *key = SDL_GetKeyboardState(NULL);

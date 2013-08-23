@@ -119,16 +119,25 @@ static CKey key;
 return key;
 }
 #endif
+
+std::stack<unsigned char> local_control_locks;
 }
 
 struct control_backup_scope_impl {
 	std::vector<unsigned char> controls[MAX_PLAYERS];
 	int32_t highest_confirmed[MAX_PLAYERS];
 	int starting_cycles;
+	std::stack<unsigned char> lock_stack;
 };
 
-control_backup_scope::control_backup_scope() : impl_(new control_backup_scope_impl)
+control_backup_scope::control_backup_scope(int flags) : impl_(new control_backup_scope_impl)
 {
+	impl_->lock_stack = local_control_locks;
+
+	if(flags & CLEAR_LOCKS) {
+		while(!local_control_locks.empty()) { local_control_locks.pop(); }
+	}
+
 	impl_->starting_cycles = starting_cycles;
 	for(int n = 0; n != MAX_PLAYERS; ++n) {
 		impl_->controls[n] = controls[n];
@@ -149,6 +158,8 @@ void control_backup_scope::restore_state()
 			controls[n] = impl_->controls[n];
 			highest_confirmed[n] = impl_->highest_confirmed[n];
 		}
+
+		local_control_locks = impl_->lock_stack;
 	}
 }
 
@@ -191,9 +202,6 @@ void new_level(int level_starting_cycles, int level_nplayers, int level_local_pl
 	}
 }
 
-namespace {
-std::stack<unsigned char> local_control_locks;
-}
 
 local_controls_lock::local_controls_lock(unsigned char state)
 {
