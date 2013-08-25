@@ -563,14 +563,28 @@ struct Peer {
 };
 }
 
-UTILITY(hole_punch_test) {
+COMMAND_LINE_UTILITY(hole_punch_test) {
 	boost::asio::io_service io_service;
 	udp::resolver udp_resolver(io_service);
 
-	const char* server_hostname = "wesnoth.org";
-	const char* server_port = "17001";
+	std::string server_hostname = "wesnoth.org";
+	std::string server_port = "17001";
 
-	udp::resolver::query udp_query(udp::v4(), server_hostname, server_port);
+	size_t narg = 0;
+
+	if(narg < args.size()) {
+		server_hostname = args[narg];
+		++narg;
+	}
+
+	if(narg < args.size()) {
+		server_port = args[narg];
+		++narg;
+	}
+
+	ASSERT_LOG(narg == args.size(), "wrong number of args");
+
+	udp::resolver::query udp_query(udp::v4(), server_hostname.c_str(), server_port.c_str());
 	udp::endpoint udp_endpoint;
 	udp_endpoint = *udp_resolver.resolve(udp_query);
 
