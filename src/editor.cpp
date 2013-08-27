@@ -340,6 +340,10 @@ public:
 		
 		std::string name = entry->text();
 		if(name.empty() == false) {
+			if(name.size() < 4 || std::equal(name.end()-4, name.end(), ".cfg") == false) {
+				name += ".cfg";
+			}
+
 			variant empty_lvl = json::parse_from_file("data/level/empty.cfg");
 			std::string id = module::make_module_id(name);
 			empty_lvl.add_attr(variant("id"), variant(module::get_id(id)));

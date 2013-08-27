@@ -552,6 +552,7 @@ void write_control_packet(std::vector<char>& v)
 	memcpy(&v[v.size()-4], &ncycles_to_write_net, 4);
 
 	v.insert(v.end(), controls[local_player].end() - ncycles_to_write, controls[local_player].end());
+	fprintf(stderr, "WRITE CONTROL PACKET: %d\n", (int)v.size());
 }
 
 int first_invalid_cycle()
