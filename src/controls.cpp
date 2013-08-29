@@ -49,19 +49,37 @@ uint32_t htonl(uint32_t nl)
 #include "multiplayer.hpp"
 #include "preferences.hpp"
 #include "iphone_controls.hpp"
+#include "variant.hpp"
 #if !SDL_VERSION_ATLEAST(2, 0, 0)
 #include "key.hpp"
 #endif
 
 namespace controls {
 namespace {
+
+variant g_user_ctrl_output;
+
 int npackets_received;
 int ngood_packets;
 int last_packet_size_;
 
 const int MAX_PLAYERS = 8;
 
-std::vector<unsigned char> controls[MAX_PLAYERS];
+struct ControlFrame {
+	ControlFrame() : keys(0)
+	{}
+	bool operator==(const ControlFrame& o) const {
+		return keys == o.keys && user == o.user;
+	}
+	bool operator!=(const ControlFrame& o) const {
+		return !(*this == o);
+	}
+
+	unsigned char keys;
+	std::string user;
+};
+
+std::vector<ControlFrame> controls[MAX_PLAYERS];
 
 //for each player, the highest confirmed cycle we have
 int32_t highest_confirmed[MAX_PLAYERS];
@@ -120,14 +138,14 @@ return key;
 }
 #endif
 
-std::stack<unsigned char> local_control_locks;
+std::stack<ControlFrame> local_control_locks;
 }
 
 struct control_backup_scope_impl {
-	std::vector<unsigned char> controls[MAX_PLAYERS];
+	std::vector<ControlFrame> controls[MAX_PLAYERS];
 	int32_t highest_confirmed[MAX_PLAYERS];
 	int starting_cycles;
-	std::stack<unsigned char> lock_stack;
+	std::stack<ControlFrame> lock_stack;
 };
 
 control_backup_scope::control_backup_scope(int flags) : impl_(new control_backup_scope_impl)
@@ -189,7 +207,7 @@ void new_level(int level_starting_cycles, int level_nplayers, int level_local_pl
 	starting_cycles = level_starting_cycles;
 	nplayers = level_nplayers;
 	local_player = level_local_player;
-	foreach(std::vector<unsigned char>& v, controls) {
+	foreach(std::vector<ControlFrame>& v, controls) {
 		v.clear();
 	}
 
@@ -205,7 +223,9 @@ void new_level(int level_starting_cycles, int level_nplayers, int level_local_pl
 
 local_controls_lock::local_controls_lock(unsigned char state)
 {
-	local_control_locks.push(state);
+	ControlFrame ctrl;
+	ctrl.keys = state;
+	local_control_locks.push(ctrl);
 }
 
 local_controls_lock::~local_controls_lock()
@@ -271,7 +291,7 @@ void read_local_controls()
 		iphone_controls::read_controls();
 	}
 
-	unsigned char state = 0;
+	ControlFrame state;
 	if(local_control_locks.empty()) {
 #if !defined(__ANDROID__)
 		bool ignore_keypresses = false;
@@ -295,7 +315,7 @@ void read_local_controls()
 			if(keyboard()[sdlk[n]] && !ignore_keypresses) {
 #endif
 				if(!key_ignore[n]) {
-					state |= (1 << n);
+					state.keys |= (1 << n);
 				}
 			} else {
 				key_ignore[n] = false;
@@ -304,28 +324,34 @@ void read_local_controls()
 #endif
 
 		if(preferences::no_iphone_controls() == false && level::current().allow_touch_controls() == true) {
-			if(iphone_controls::up()) { state |= (1 << CONTROL_UP);}
-			if(iphone_controls::down()) { state |= (1 << CONTROL_DOWN);}
-			if(iphone_controls::left()) { state |= (1 << CONTROL_LEFT);}
-			if(iphone_controls::right()) { state |= (1 << CONTROL_RIGHT);}
-			if(iphone_controls::attack()) { state |= (1 << CONTROL_ATTACK);}
-			if(iphone_controls::jump()) { state |= (1 << CONTROL_JUMP);}
-			if(iphone_controls::tongue()) { state |= (1 << CONTROL_TONGUE);}
+			if(iphone_controls::up()) { state.keys |= (1 << CONTROL_UP);}
+			if(iphone_controls::down()) { state.keys |= (1 << CONTROL_DOWN);}
+			if(iphone_controls::left()) { state.keys |= (1 << CONTROL_LEFT);}
+			if(iphone_controls::right()) { state.keys |= (1 << CONTROL_RIGHT);}
+			if(iphone_controls::attack()) { state.keys |= (1 << CONTROL_ATTACK);}
+			if(iphone_controls::jump()) { state.keys |= (1 << CONTROL_JUMP);}
+			if(iphone_controls::tongue()) { state.keys |= (1 << CONTROL_TONGUE);}
 		}
 
 #if !defined(__ANDROID__)
-		if(joystick::up()) { state |= (1 << CONTROL_UP);}
-		if(joystick::down()) { state |= (1 << CONTROL_DOWN);}
-		if(joystick::left()) { state |= (1 << CONTROL_LEFT);}
-		if(joystick::right()) { state |= (1 << CONTROL_RIGHT);}
-		if(joystick::button(0)) { state |= (1 << CONTROL_ATTACK);}
-		if(joystick::button(1)) { state |= (1 << CONTROL_JUMP);}
-		if(joystick::button(2)) { state |= (1 << CONTROL_TONGUE);}
+		if(joystick::up()) { state.keys |= (1 << CONTROL_UP);}
+		if(joystick::down()) { state.keys |= (1 << CONTROL_DOWN);}
+		if(joystick::left()) { state.keys |= (1 << CONTROL_LEFT);}
+		if(joystick::right()) { state.keys |= (1 << CONTROL_RIGHT);}
+		if(joystick::button(0)) { state.keys |= (1 << CONTROL_ATTACK);}
+		if(joystick::button(1)) { state.keys |= (1 << CONTROL_JUMP);}
+		if(joystick::button(2)) { state.keys |= (1 << CONTROL_TONGUE);}
 #endif
+
+		if(g_user_ctrl_output.is_null() == false) {
+			state.user = g_user_ctrl_output.write_json();
+		}
 	} else {
 		//we have the controls locked into a specific state.
 		state = local_control_locks.top();
 	}
+
+	g_user_ctrl_output = variant();
 
 	controls[local_player].push_back(state);
 	highest_confirmed[local_player]++;
@@ -336,7 +362,7 @@ void read_local_controls()
 	for(int n = 0; n != nplayers; ++n) {
 		while(n != local_player && controls[n].size() < controls[local_player].size()) {
 			if(controls[n].empty()) {
-				controls[n].push_back(0);
+				controls[n].push_back(ControlFrame());
 			} else {
 				controls[n].push_back(controls[n].back());
 			}
@@ -354,7 +380,7 @@ void unread_local_controls()
 	highest_confirmed[local_player]--;
 }
 
-void get_control_status(int cycle, int player, bool* output)
+void get_control_status(int cycle, int player, bool* output, const std::string** user)
 {
 	--cycle;
 	cycle -= starting_cycles;
@@ -388,10 +414,14 @@ void get_control_status(int cycle, int player, bool* output)
 
 	ASSERT_INDEX_INTO_VECTOR(cycle, controls[player]);
 
-	unsigned char state = controls[player][cycle];
+	unsigned char state = controls[player][cycle].keys;
 
 	for(int n = 0; n != NUM_CONTROLS; ++n) {
 		output[n] = (state&(1 << n)) ? true : false;
+	}
+
+	if(user) {
+		*user = &controls[player][cycle].user;
 	}
 }
 
@@ -461,8 +491,8 @@ void read_control_packet(const char* buf, size_t len)
 	ncycles = ntohl(ncycles);
 	buf += 4;
 
-	if(end_buf - buf != ncycles) {
-		fprintf(stderr, "ERROR: BAD NUMBER OF CYCLES: %d vs %d\n", (int)ncycles, (int)(end_buf - buf));
+	if(*(end_buf-1) != 0) {
+		fprintf(stderr, "bad packet, no null terminator\n");
 		return;
 	}
 
@@ -472,15 +502,40 @@ void read_control_packet(const char* buf, size_t len)
 	if(start_cycle < highest_confirmed[slot]) {
 		int diff = highest_confirmed[slot] - start_cycle;
 		ncycles -= diff;
-		buf += diff;
+
+		for(int n = 0; n != diff && buf != end_buf; ++n) {
+			++buf;
+			if(buf == end_buf) {
+				fprintf(stderr, "bad packet, incorrect null termination\n");
+				return;
+			}
+			buf += strlen(buf)+1;
+		}
+
 		start_cycle = highest_confirmed[slot];
 	}
 
 	for(int cycle = start_cycle; cycle <= current_cycle; ++cycle) {
+		if(buf == end_buf) {
+			fprintf(stderr, "bad packet, incorrect number of null terminators\n");
+			return;
+		}
+		ControlFrame state;
+		state.keys = *buf;
+
+		++buf;
+		if(buf == end_buf) {
+			fprintf(stderr, "bad packet, incorrect number of null terminators\n");
+			return;
+		}
+
+		state.user = buf;
+		buf += state.user.size()+1;
+
 		if(cycle < controls[slot].size()) {
-			if(controls[slot][cycle] != *buf) {
+			if(controls[slot][cycle] != state) {
 				fprintf(stderr, "RECEIVED CORRECTION\n");
-				controls[slot][cycle] = *buf;
+				controls[slot][cycle] = state;
 				if(first_invalid_cycle_var == -1 || first_invalid_cycle_var > cycle) {
 					//mark us as invalid back to this point, so game logic
 					//will be recalculated from here.
@@ -490,11 +545,9 @@ void read_control_packet(const char* buf, size_t len)
 		} else {
 			fprintf(stderr, "RECEIVED FUTURE PACKET!\n");
 			while(controls[slot].size() <= cycle) {
-				controls[slot].push_back(*buf);
+				controls[slot].push_back(state);
 			}
 		}
-
-		++buf;
 	}
 
 	//extend the current control out to the end, to keep the assumption that
@@ -551,8 +604,24 @@ void write_control_packet(std::vector<char>& v)
 	v.resize(v.size() + 4);
 	memcpy(&v[v.size()-4], &ncycles_to_write_net, 4);
 
-	v.insert(v.end(), controls[local_player].end() - ncycles_to_write, controls[local_player].end());
+	for(int n = 0; n != ncycles_to_write; ++n) {
+		const int index = (controls[local_player].size() - ncycles_to_write) + n;
+		v.push_back(controls[local_player][index].keys);
+		const char* user = controls[local_player][index].user.c_str();
+		v.insert(v.end(), user, user + controls[local_player][index].user.size()+1);
+	}
+
 	fprintf(stderr, "WRITE CONTROL PACKET: %d\n", (int)v.size());
+}
+
+const variant& user_ctrl_output()
+{
+	return g_user_ctrl_output;
+}
+
+void set_user_ctrl_output(const variant& v)
+{
+	g_user_ctrl_output = v;
 }
 
 int first_invalid_cycle()
@@ -605,7 +674,7 @@ void debug_dump_controls()
 	for(int n = 0; n < nplayers; ++n) {
 		fprintf(stderr, " %d:", n);
 		for(int m = 0; m < controls[n].size() && m < highest_confirmed[n]; ++m) {
-			char c = controls[n][m];
+			char c = controls[n][m].keys;
 			fprintf(stderr, "%02x", (int)c);
 		}
 	}
@@ -616,7 +685,7 @@ void debug_dump_controls()
 		for(int m = 0; m < controls[n].size() && m < highest_confirmed[n]; ++m) {
 			fprintf(stderr, "CTRL PLAYER %d CYCLE %d: ", n, m);
 			for(int j = 0; j != NUM_CONTROLS; ++j) {
-				fprintf(stderr, (1 << j)&controls[n][m] ? "1" : "0");
+				fprintf(stderr, (1 << j)&controls[n][m].keys ? "1" : "0");
 			}
 			fprintf(stderr, "\n");
 		}

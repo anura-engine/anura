@@ -248,6 +248,8 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "tx", "decimal" },
 	{ "ty", "decimal" },
 	{ "tz", "decimal" },
+
+	{ "ctrl_user_output", "any" },
 	
 	{ "ctrl_up", "bool" },
 	{ "ctrl_down", "bool" },
@@ -257,6 +259,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "ctrl_attack", "bool" },
 	{ "ctrl_jump", "bool" },
 	{ "ctrl_tongue", "bool" },
+	{ "ctrl_user", "any" },
 
 	//player-specific
 	{ "difficulty", "int" },

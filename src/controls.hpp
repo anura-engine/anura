@@ -30,6 +30,8 @@ typedef SDL_Keycode key_type;
 typedef SDLKey key_type;
 #endif
 
+class variant;
+
 namespace controls {
 
 enum CONTROL_ITEM {
@@ -78,11 +80,14 @@ void read_local_controls();
 void unread_local_controls();
 void ignore_current_keypresses();
 
-void get_control_status(int cycle, int player, bool* output);
+void get_control_status(int cycle, int player, bool* output, const std::string** user=NULL);
 void set_delay(int delay);
 
 void read_control_packet(const char* buf, size_t len);
 void write_control_packet(std::vector<char>& v);
+
+const variant& user_ctrl_output();
+void set_user_ctrl_output(const variant& v);
 
 int first_invalid_cycle();
 void mark_valid();
