@@ -4187,7 +4187,6 @@ bool level::can_interact(const rect& body) const
 
 void level::replay_from_cycle(int ncycle)
 {
-		/*
 	const int cycles_ago = cycle_ - ncycle;
 	if(cycles_ago <= 0) {
 		return;
@@ -4204,7 +4203,6 @@ void level::replay_from_cycle(int ncycle)
 		backup();
 		do_processing();
 	}
-	*/
 }
 
 void level::backup()

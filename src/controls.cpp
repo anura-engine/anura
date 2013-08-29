@@ -390,28 +390,6 @@ void get_control_status(int cycle, int player, bool* output, const std::string**
 		return;
 	}
 
-	if(player != local_player) {
-		const int breathing_room = highest_confirmed[player] - cycle;
-
-		if(cycle > highest_confirmed[player]) {
-			std::cerr << "DELAYING AND WAITING\n";
-			const int max_delay = 1000;
-			const int end_time = SDL_GetTicks() + max_delay;
-
-			const pause_scope pause;
-#if !defined(__native_client__)
-			while(cycle > highest_confirmed[player] && SDL_GetTicks() < end_time) {
-				multiplayer::receive();
-			}
-#endif
-		}
-
-		if(cycle > highest_confirmed[player]) {
-			std::cerr << "ERROR: REMOTE HOST TIMED OUT. GAME ABORTED.\n";
-			throw multiplayer::error();
-		}
-	}
-
 	ASSERT_INDEX_INTO_VECTOR(cycle, controls[player]);
 
 	unsigned char state = controls[player][cycle].keys;
