@@ -594,6 +594,7 @@ custom_object::custom_object(const custom_object& o) :
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_),
 	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
+	widgets_(o.widgets_),
 	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
 	vars_->disallow_new_keys(type_->is_strict());
