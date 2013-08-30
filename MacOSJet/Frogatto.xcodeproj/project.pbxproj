@@ -216,6 +216,7 @@
 		C090E8EF1787964600E6FC5A /* view3d_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090E8ED1787964600E6FC5A /* view3d_widget.cpp */; };
 		C090E8F31787967200E6FC5A /* voxel_animation.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090E8F01787967200E6FC5A /* voxel_animation.cpp */; };
 		C090E8F41787967200E6FC5A /* voxel_model.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090E8F11787967200E6FC5A /* voxel_model.cpp */; };
+		C091410517C9A67D0019BAB3 /* multiplayer_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C091410417C9A67D0019BAB3 /* multiplayer_server.cpp */; };
 		C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B0F17533AA7004307B0 /* formula_interface.cpp */; };
 		C0917B13175480F7004307B0 /* master-config.cfg in Resources */ = {isa = PBXBuildFile; fileRef = C0917B12175480F7004307B0 /* master-config.cfg */; };
 		C0917B1617670039004307B0 /* camera.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0917B1417670039004307B0 /* camera.cpp */; };
@@ -698,6 +699,7 @@
 		C090E8F01787967200E6FC5A /* voxel_animation.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_animation.cpp; sourceTree = "<group>"; };
 		C090E8F11787967200E6FC5A /* voxel_model.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_model.cpp; sourceTree = "<group>"; };
 		C090E8F21787967200E6FC5A /* voxel_model.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_model.hpp; sourceTree = "<group>"; };
+		C091410417C9A67D0019BAB3 /* multiplayer_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = multiplayer_server.cpp; sourceTree = "<group>"; };
 		C0917B0F17533AA7004307B0 /* formula_interface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_interface.cpp; sourceTree = "<group>"; };
 		C0917B1017533AA7004307B0 /* formula_interface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_interface.hpp; sourceTree = "<group>"; };
 		C0917B12175480F7004307B0 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../../master-config.cfg"; sourceTree = "<group>"; };
@@ -1110,6 +1112,7 @@
 				C010C6AA160AFD4D006E7D90 /* multi_tile_pattern.hpp */,
 				C010C6AB160AFD4D006E7D90 /* multiplayer.cpp */,
 				C010C6AC160AFD4D006E7D90 /* multiplayer.hpp */,
+				C091410417C9A67D0019BAB3 /* multiplayer_server.cpp */,
 				C090AAAD177C14200046CC87 /* obj_reader.cpp */,
 				C090AAAE177C14200046CC87 /* obj_reader.hpp */,
 				C010C6AD160AFD4D006E7D90 /* object_events.cpp */,
@@ -1577,6 +1580,7 @@
 				C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */,
 				C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */,
 				C093F3AE17A4711300D433AA /* skybox.cpp in Sources */,
+				C091410517C9A67D0019BAB3 /* multiplayer_server.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
