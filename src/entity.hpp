@@ -236,6 +236,7 @@ public:
 	virtual int hitpoints() const { return 1; }
 	virtual int max_hitpoints() const { return 1; }
 
+	void set_control_status_user(const variant& v) { controls_user_ = v; }
 	void set_control_status(const std::string& key, bool value);
 	void set_control_status(controls::CONTROL_ITEM ctrl, bool value) { controls_[ctrl] = value; }
 	void clear_control_status() { for(int n = 0; n != controls::NUM_CONTROLS; ++n) { controls_[n] = false; } }
@@ -317,6 +318,7 @@ protected:
 	void calculate_solid_rect();
 
 	bool control_status(controls::CONTROL_ITEM ctrl) const { return controls_[ctrl]; }
+	variant control_status_user() const { return controls_user_; }
 	void read_controls(int cycle);
 
 	void set_current_generator(current_generator* generator);
@@ -370,6 +372,7 @@ private:
 	std::vector<ScheduledCommand> scheduled_commands_;
 
 	bool controls_[controls::NUM_CONTROLS];	
+	variant controls_user_;
 
 	//attached objects are objects which are also drawn with this object.
 	//attached objects should generally NOT be present in the level, and are

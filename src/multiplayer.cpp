@@ -30,6 +30,9 @@
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include <deque>
+#include <functional>
+
 #include "asserts.hpp"
 #include "controls.hpp"
 #include "formatter.hpp"
@@ -513,11 +516,21 @@ void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
 	rng::set_seed(0);
 }
 
+namespace {
+	struct QueuedMessages {
+		std::vector<std::function<void()> > send_fn;
+	};
+
+	PREF_INT(udp_send_delay_frames, 0);
+}
+
 void send_and_receive()
 {
 	if(!udp_socket || controls::num_players() == 1) {
 		return;
 	}
+
+	static std::deque<QueuedMessages> message_queue;
 
 	//send our ID followed by the send packet.
 	std::vector<char> send_buf(5);
@@ -525,12 +538,31 @@ void send_and_receive()
 	memcpy(&send_buf[1], &id, 4);
 	controls::write_control_packet(send_buf);
 
+	if(message_queue.empty() == false) {
+		QueuedMessages& msg = message_queue.front();
+		for(const std::function<void()>& fn : msg.send_fn) {
+			fn();
+		}
+
+		message_queue.pop_front();
+	}
+
 	for(int n = 0; n != udp_endpoint_peers.size(); ++n) {
 		if(n == player_slot) {
 			continue;
 		}
 
-		udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
+		if(g_udp_send_delay_frames == 0) {
+			udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
+		} else {
+			while(g_udp_send_delay_frames >= message_queue.size()) {
+				message_queue.push_back(QueuedMessages());
+			}
+
+			message_queue[g_udp_send_delay_frames].send_fn.push_back([=]() {
+				udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
+			});
+		}
 	}
 
 	receive();

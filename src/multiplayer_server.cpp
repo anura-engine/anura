@@ -5,6 +5,11 @@
 #include <boost/bind.hpp>
 #include <boost/regex.hpp>
 #include <boost/shared_ptr.hpp>
+// boost::thread < 1.51 conflicts with C++11-capable compilers
+#if BOOST_VERSION < 105100
+    #include <ctime>
+    #undef TIME_UTC
+#endif
 #include <boost/thread.hpp>
 
 #include <iostream>
@@ -12,7 +17,7 @@
 #include <vector>
 
 #include <iostream>
-#include <inttypes.h>
+#include <cstdint>
 
 #include "asserts.hpp"
 #include "foreach.hpp"
@@ -189,7 +194,7 @@ private:
 				sockets_info_[socket_it->second].udp_endpoint = endpoint;
 
 				GameInfoPtr& game = sockets_info_[socket_it->second].game;
-				if(udp_buf_[0] == 'Z' && game.get() != NULL && !game->started && game->players.size() >= game->nplayers) {
+				if(udp_buf_[0] == 'Z' && game.get() != NULL && !game->started && game->players.size() >= size_t(game->nplayers)) {
 					bool have_sockets = true;
 					foreach(const socket_ptr& sock, game->players) {
 						const SocketInfo& info = sockets_info_[sock];

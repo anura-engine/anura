@@ -594,6 +594,7 @@ custom_object::custom_object(const custom_object& o) :
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(o.use_absolute_screen_coordinates_),
 	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
+	widgets_(o.widgets_),
 	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
 	vars_->disallow_new_keys(type_->is_strict());
@@ -3012,6 +3013,10 @@ variant custom_object::get_value_by_slot(int slot) const
 		return variant(tz());
 	}
 
+	case CUSTOM_OBJECT_CTRL_USER_OUTPUT: {
+		return controls::user_ctrl_output();
+	}
+
 	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
 #if defined(USE_SHADERS)
 		std::vector<variant> v;
@@ -3033,6 +3038,9 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_CTRL_JUMP:
 	case CUSTOM_OBJECT_CTRL_TONGUE:
 		return variant::from_bool(control_status(static_cast<controls::CONTROL_ITEM>(slot - CUSTOM_OBJECT_CTRL_UP)));
+	
+	case CUSTOM_OBJECT_CTRL_USER:
+		return control_status_user();
 
 	case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
 	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
@@ -4247,6 +4255,11 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	}
 	case CUSTOM_OBJECT_TZ: {
 		set_tz(value.as_decimal().as_float());
+		break;
+	}
+
+	case CUSTOM_OBJECT_CTRL_USER_OUTPUT: {
+		controls::set_user_ctrl_output(value);
 		break;
 	}
 

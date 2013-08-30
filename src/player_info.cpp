@@ -19,6 +19,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "joystick.hpp"
+#include "json_parser.hpp"
 #include "player_info.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
@@ -66,7 +67,8 @@ variant player_info::write() const
 void player_info::read_controls(int cycle)
 {
 	bool status[controls::NUM_CONTROLS];
-	controls::get_control_status(cycle, slot_, status);
+	const std::string* user = NULL;
+	controls::get_control_status(cycle, slot_, status, &user);
 
 	if(status[controls::CONTROL_LEFT] && status[controls::CONTROL_RIGHT]) {
 		//if both left and right are held, treat it as if neither are.
@@ -76,4 +78,11 @@ void player_info::read_controls(int cycle)
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
 		entity_->set_control_status(static_cast<controls::CONTROL_ITEM>(n), status[n]);
 	}
+
+	variant user_value;
+	if(user && !user->empty()) {
+		user_value = json::parse(*user, json::JSON_NO_PREPROCESSOR);
+	}
+
+	entity_->set_control_status_user(user_value);
 }

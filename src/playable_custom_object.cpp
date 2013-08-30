@@ -189,6 +189,10 @@ variant playable_custom_object::get_value(const std::string& key) const
 		}
 	}
 
+	if(key == "ctrl_user") {
+		return control_status_user();
+	}
+
 	if(key == "player") {
 		return variant::from_bool(true);
 	} else if(key == "vertical_look") {
