@@ -69,7 +69,7 @@ const CharArea& get_char_area(int font_size, char c)
 	    i != char_to_area.end(); ++i) {
 		str.push_back(i->first);
 	
-		CharArea area = {col*char_width, row*char_height, (col+1)*char_width, (row+1)*char_height};
+		CharArea area = {(GLfloat)col*char_width, (GLfloat)row*char_height, (GLfloat)(col+1)*char_width, (GLfloat)(row+1)*char_height};
 
 		char_to_area[i->first] = area;
 

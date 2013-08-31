@@ -419,10 +419,10 @@ void iso_renderer::handle_draw() const
 	glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 	GLfloat varray[] = {
-		-w, -h,
-		-w, h+h_odd,
-		w+w_odd, -h,
-		w+w_odd, h+h_odd
+		(GLfloat)-w, (GLfloat)-h,
+		(GLfloat)-w, (GLfloat)h+h_odd,
+		(GLfloat)w+w_odd, (GLfloat)-h,
+		(GLfloat)w+w_odd, (GLfloat)h+h_odd
 	};
 	const GLfloat tcarray[] = {
 		0.0f, GLfloat(height())/tex_height_,
@@ -805,32 +805,32 @@ void iso_renderer::render_fbo()
 	if(get_editor().get_cursor()) {
 		const VoxelPos& cursor = *get_editor().get_cursor();
 		const GLfloat cursor_vertex[] = {
-			cursor[0], cursor[1], cursor[2],
-			cursor[0]+1.0, cursor[1], cursor[2],
-			cursor[0]+1.0, cursor[1], cursor[2],
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2],
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2],
-			cursor[0], cursor[1]+1.0, cursor[2],
-			cursor[0], cursor[1]+1.0, cursor[2],
-			cursor[0], cursor[1], cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2],
 
-			cursor[0], cursor[1], cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1], cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1], cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2]+1.0,
-			cursor[0], cursor[1]+1.0, cursor[2]+1.0,
-			cursor[0], cursor[1]+1.0, cursor[2]+1.0,
-			cursor[0], cursor[1], cursor[2]+1.0,
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
 
-			cursor[0], cursor[1], cursor[2],
-			cursor[0], cursor[1], cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1], cursor[2],
-			cursor[0]+1.0, cursor[1], cursor[2]+1.0,
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2],
-			cursor[0]+1.0, cursor[1]+1.0, cursor[2]+1.0,
-			cursor[0], cursor[1]+1.0, cursor[2],
-			cursor[0], cursor[1]+1.0, cursor[2]+1.0,
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1], (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0]+1.0f, (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2],
+			(GLfloat)cursor[0], (GLfloat)cursor[1]+1.0f, (GLfloat)cursor[2]+1.0f,
 		};
 
 		for(int n = 0; n != sizeof(cursor_vertex)/sizeof(*cursor_vertex); ++n) {

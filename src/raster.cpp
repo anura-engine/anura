@@ -393,10 +393,10 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 		tex.set_as_current_texture();
 		
 		GLfloat varray[] = {
-			-w, -h,
-			-w, h+h_odd,
-			w+w_odd, -h,
-			w+w_odd, h+h_odd
+			(GLfloat)-w, (GLfloat)-h,
+			(GLfloat)-w, (GLfloat)h+h_odd,
+			(GLfloat)w+w_odd, (GLfloat)-h,
+			(GLfloat)w+w_odd, (GLfloat)h+h_odd
 		};
 		GLfloat tcarray[] = {
 			texture::get_coord_x(0.0), texture::get_coord_y(0.0),
@@ -474,10 +474,10 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 			glTranslatef(x+abs(w),y+abs(h),0.0);
 			glRotatef(rotate,0.0,0.0,1.0);
 			GLfloat varray[] = {
-				-w, -h,
-				-w, h+h_odd,
-				w+w_odd, -h,
-				w+w_odd, h+h_odd
+				(GLfloat)-w, (GLfloat)-h,
+				(GLfloat)-w, (GLfloat)h+h_odd,
+				(GLfloat)w+w_odd, (GLfloat)-h,
+				(GLfloat)w+w_odd, (GLfloat)h+h_odd
 			};
 			GLfloat tcarray[] = {
 				texture::get_coord_x(x1), texture::get_coord_y(y1),
@@ -561,7 +561,7 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 					const GLfloat v1 = (y1*(y+h - ybegin) + y2*(ybegin - y))/h;
 					const GLfloat v2 = (y1*(y+h - yend) + y2*(yend - y))/h;
 					
-					GLfloat points[8] = { xbegin, ybegin, xend, ybegin, xbegin, yend, xend, yend };
+					GLfloat points[8] = { (GLfloat)xbegin, (GLfloat)ybegin, (GLfloat)xend, (GLfloat)ybegin, (GLfloat)xbegin, (GLfloat)yend, (GLfloat)xend, (GLfloat)yend };
 					GLfloat uv[8] = { u1, v1, u2, v1, u1, v2, u2, v2 };
 					
 					for(int n = 0; n != 4; ++n) {
@@ -932,10 +932,10 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 				   unsigned char alpha)
 	{
 		GLfloat varray[] = {
-			r.x, r.y,
-			r.x+r.w, r.y,
-			r.x, r.y+r.h,
-			r.x+r.w, r.y+r.h
+			(GLfloat)r.x, (GLfloat)r.y,
+			(GLfloat)r.x+r.w, (GLfloat)r.y,
+			(GLfloat)r.x, (GLfloat)r.y+r.h,
+			(GLfloat)r.x+r.w, (GLfloat)r.y+r.h
 		};
 #if defined(USE_SHADERS)
 		glColor4ub(color.r,color.g,color.b,alpha);
@@ -959,10 +959,10 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 	void draw_rect(const rect& r, const graphics::color& color)
 	{
 		GLfloat varray[] = {
-			r.x(), r.y(),
-			r.x()+r.w(), r.y(),
-			r.x(), r.y()+r.h(),
-			r.x()+r.w(), r.y()+r.h()
+			(GLfloat)r.x(), (GLfloat)r.y(),
+			(GLfloat)r.x()+r.w(), (GLfloat)r.y(),
+			(GLfloat)r.x(), (GLfloat)r.y()+r.h(),
+			(GLfloat)r.x()+r.w(), (GLfloat)r.y()+r.h()
 		};
 #if defined(USE_SHADERS)
 		glColor4ub(color.r(),color.g(),color.b(),color.a());
@@ -988,10 +988,10 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 						  unsigned char alpha)
 	{
 		GLfloat varray[] = {
-			r.x, r.y,
-			r.x + r.w, r.y,
-			r.x + r.w, r.y + r.h,
-			r.x, r.y + r.h
+			(GLfloat)r.x, (GLfloat)r.y,
+			(GLfloat)r.x + r.w, (GLfloat)r.y,
+			(GLfloat)r.x + r.w, (GLfloat)r.y + r.h,
+			(GLfloat)r.x, (GLfloat)r.y + r.h
 		};
 #if defined(USE_SHADERS)
 		glColor4ub(color.r, color.g, color.b, alpha);
@@ -1014,10 +1014,10 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 	void draw_hollow_rect(const rect& r, const graphics::color& color)
 	{
 		GLfloat varray[] = {
-			r.x(), r.y(),
-			r.x() + r.w(), r.y(),
-			r.x() + r.w(), r.y() + r.h(),
-			r.x(), r.y() + r.h()
+			(GLfloat)r.x(), (GLfloat)r.y(),
+			(GLfloat)r.x() + r.w(), (GLfloat)r.y(),
+			(GLfloat)r.x() + r.w(), (GLfloat)r.y() + r.h(),
+			(GLfloat)r.x(), (GLfloat)r.y() + r.h()
 		};
 #if defined(USE_SHADERS)
 		glColor4ub(color.r(), color.g(), color.b(), color.a());
@@ -1141,10 +1141,10 @@ bool blit_queue::merge(const blit_queue& q, short begin, short end)
 		glClear(GL_STENCIL_BUFFER_BIT);
 		
 		GLfloat varray[] = {
-			r.x, r.y,
-			r.x+r.w, r.y,
-			r.x, r.y+r.h,
-			r.x+r.w, r.y+r.h
+			(GLfloat)r.x, (GLfloat)r.y,
+			(GLfloat)r.x+r.w, (GLfloat)r.y,
+			(GLfloat)r.x, (GLfloat)r.y+r.h,
+			(GLfloat)r.x+r.w, (GLfloat)r.y+r.h
 		};
 #if defined(USE_SHADERS)
 		glColor4f(1.0f,1.0f,1.0f,1.0f);
