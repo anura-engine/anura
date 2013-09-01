@@ -2309,8 +2309,8 @@ void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shade
 	glPushMatrix();
 	glLoadIdentity();
 
-	const int w = preferences::actual_screen_width();
-	const int h = preferences::actual_screen_height();
+	const GLfloat w = GLfloat(preferences::actual_screen_width());
+	const GLfloat h = GLfloat(preferences::actual_screen_height());
 
 	const GLfloat tcarray[] = { 0, 1, 0, 0, 1, 1, 1, 0 };
 	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
@@ -2367,7 +2367,7 @@ void level::calculate_lighting(int x, int y, int w, int h) const
 
 		glClearColor(dark_color_.r()/255.0, dark_color_.g()/255.0, dark_color_.b()/255.0, dark_color_.a()/255.0);
 		glClear(GL_COLOR_BUFFER_BIT);
-		const unsigned char color[] = { dark_color_.r(), dark_color_.g(), dark_color_.b(), dark_color_.a() };
+		const unsigned char color[] = { (unsigned char)dark_color_.r(), (unsigned char)dark_color_.g(), (unsigned char)dark_color_.b(), (unsigned char)dark_color_.a() };
 		foreach(const light* lt, lights) {
 			lt->draw(screen_area, color);
 		}
@@ -2381,7 +2381,7 @@ void level::calculate_lighting(int x, int y, int w, int h) const
 
 	const GLfloat tcarray[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
 	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
-	GLfloat varray[] = { 0, h, 0, 0, w, h, w, 0 };
+	GLfloat varray[] = { 0, (GLfloat)h, 0, 0, (GLfloat)w, (GLfloat)h, (GLfloat)w, 0 };
 #if defined(USE_SHADERS)
 	gles2::active_shader()->prepare_draw();
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);

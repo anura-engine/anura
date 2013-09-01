@@ -13,7 +13,7 @@ endif
 # -std=c++11
 BASE_CXXFLAGS += -g -Werror -std=gnu++0x -I/usr/local/include -DUSE_SQLITE
 BASE_CCFLAGS += -g -Werror -DSQLITE_THREADSAFE=1
-BASE_LDFLAGS += -L/usr/local/lib -lboost_regex -lboost_system -lboost_chrono -lboost_thread -ljson_spirit -lpthread -ldl -fthreadsafe-statics
+BASE_LDFLAGS += -L/usr/local/lib -lboost_regex -lboost_system -lboost_chrono -lboost_thread -ljson_spirit -lpthread -ldl -fthreadsafe-statics -lmysqlcppconn
 
 objects = \
 	client.o \
@@ -26,7 +26,8 @@ objects = \
 	request_handler.o \
 	request_parser.o \
 	server.o \
-	shared_data.o
+	shared_data.o \
+	sqlite3.o
 
 lobby: $(objects)
 	@echo "Linking: lobby ..."

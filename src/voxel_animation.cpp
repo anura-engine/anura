@@ -247,10 +247,10 @@ void animation_renderer::handle_draw() const
 	glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 	GLfloat varray[] = {
-		-w, -h,
-		-w, h+h_odd,
-		w+w_odd, -h,
-		w+w_odd, h+h_odd
+		(GLfloat)-w, (GLfloat)-h,
+		(GLfloat)-w, (GLfloat)h+h_odd,
+		(GLfloat)w+w_odd, (GLfloat)-h,
+		(GLfloat)w+w_odd, (GLfloat)h+h_odd
 	};
 	const GLfloat tcarray[] = {
 		0.0f, GLfloat(height())/tex_height_,
