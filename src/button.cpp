@@ -220,13 +220,10 @@ std::vector<widget_ptr> button::get_children() const
 	return result;
 }
 
-variant button::get_value(const std::string& key) const
-{
-	if(key == "label") {
-		return variant(label_.get());
-	}
-	return widget::get_value(key);
-}
+BEGIN_DEFINE_CALLABLE(button, widget)
+	DEFINE_FIELD(label, "builtin widget")
+		return variant(obj.label_.get());
+END_DEFINE_CALLABLE(button)
 
 void button::visit_values(game_logic::formula_callable_visitor& visitor)
 {
