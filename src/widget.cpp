@@ -678,7 +678,10 @@ variant widget::handle_write()
 
 bool widget_sort_zorder::operator()(const widget_ptr lhs, const widget_ptr rhs) const
 {
-	return lhs->zorder() < rhs->zorder() || lhs->zorder() == rhs->zorder() && lhs.get() < rhs.get();
+	return lhs->zorder() < rhs->zorder() 
+		|| lhs->zorder() == rhs->zorder() && lhs->y() < rhs->y() 
+		|| lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() < rhs->x() 
+		|| lhs->zorder() == rhs->zorder() && lhs->y() == rhs->y() && lhs->x() == rhs->x() && lhs.get() < rhs.get();
 }
 
 }
