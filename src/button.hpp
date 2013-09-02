@@ -45,12 +45,13 @@ public:
 
 	std::vector<widget_ptr> get_children() const;
 protected:
-	virtual variant get_value(const std::string& key) const;
 	void set_label(widget_ptr label);
 	virtual void handle_process();
 	virtual variant handle_write();
 	BUTTON_RESOLUTION button_resolution() const { return button_resolution_; }
 	virtual widget_settings_dialog* settings_dialog(int x, int y, int w, int h);
+
+	DECLARE_CALLABLE(button);
 private:
 	virtual void visit_values(game_logic::formula_callable_visitor& visitor);
 
