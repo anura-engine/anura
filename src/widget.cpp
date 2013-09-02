@@ -146,7 +146,17 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	if(v.has_key("frame_pad_height")) {
 		set_padding(get_pad_width(), v["frame_pad_height"].as_int());
 	}
+	if(v.has_key("clip_area")) {
+		set_clip_area(rect(v["clip_area"]));
+	}
+
 	recalc_loc();
+
+	if(v.has_key("clip_to_dimensions")) {
+		if(v["clip_to_dimensions"].as_bool()) {
+			set_clip_area_to_dim();
+		}
+	}
 }
 
 widget::~widget()
@@ -511,6 +521,29 @@ DEFINE_FIELD(disabled_opacity, "int")
 DEFINE_SET_FIELD
 	obj.disabled_opacity_ = value.as_int();
 
+DEFINE_FIELD(clip_area, "[int]|null")
+	if(obj.clip_area_) {
+		return obj.clip_area_->write();
+	} else {
+		return variant();
+	}
+DEFINE_SET_FIELD_TYPE("[int]")
+	obj.set_clip_area(rect(value));
+
+DEFINE_FIELD(clip_to_dimensions, "bool")
+	if(obj.clip_area() && obj.clip_area()->x() == obj.x() && obj.clip_area()->y() == obj.y() 
+		&& obj.clip_area()->w() == obj.width() && obj.clip_area()->h() == obj.height()) {
+		return variant::from_bool(true);
+	} else {
+		return variant::from_bool(false);
+	}
+DEFINE_SET_FIELD
+	if(value.as_bool()) { 
+		obj.set_clip_area_to_dim();
+	} else if(obj.clip_area()->x() == obj.x() && obj.clip_area()->y() == obj.y() 
+		&& obj.clip_area()->w() == obj.width() && obj.clip_area()->h() == obj.height()) {
+		obj.clear_clip_area();
+	}
 END_DEFINE_CALLABLE(widget)
 
 bool widget::in_widget(int xloc, int yloc) const
@@ -628,6 +661,17 @@ variant widget::handle_write()
 	}
 	if(get_alpha() != 256) {
 		res.add("alpha", get_alpha());
+	}
+	if(clip_area() != NULL) {
+		if(clip_area()->x() == x() && clip_area()->y() == y() 
+			&& clip_area()->w() == width() && clip_area()->h() == height()) {
+			res.add("clip_to_dimensions", true);
+		} else {
+			res.add("clip_area", clip_area()->x());
+			res.add("clip_area", clip_area()->y());
+			res.add("clip_area", clip_area()->w());
+			res.add("clip_area", clip_area()->h());
+		}
 	}
 	return res.build();
 }
