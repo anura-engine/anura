@@ -224,6 +224,7 @@
 		C09185191797BE9B00F415C0 /* widget_editor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C09185161797BE9B00F415C0 /* widget_editor.cpp */; };
 		C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C09185171797BE9B00F415C0 /* widget_settings_dialog.cpp */; };
 		C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C091851B1797BEB600F415C0 /* voxel_object_type.cpp */; };
+		C092656017D48CF50035C0CB /* layout_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C092655E17D48CF50035C0CB /* layout_widget.cpp */; };
 		C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3A917A470F600D433AA /* user_voxel_object.cpp */; };
 		C093F3AE17A4711300D433AA /* skybox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3AC17A4711300D433AA /* skybox.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
@@ -712,6 +713,8 @@
 		C09185181797BE9B00F415C0 /* widget_settings_dialog.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = widget_settings_dialog.hpp; sourceTree = "<group>"; };
 		C091851B1797BEB600F415C0 /* voxel_object_type.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = voxel_object_type.cpp; sourceTree = "<group>"; };
 		C091851C1797BEB600F415C0 /* voxel_object_type.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = voxel_object_type.hpp; sourceTree = "<group>"; };
+		C092655E17D48CF50035C0CB /* layout_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = layout_widget.cpp; sourceTree = "<group>"; };
+		C092655F17D48CF50035C0CB /* layout_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = layout_widget.hpp; sourceTree = "<group>"; };
 		C093F3A917A470F600D433AA /* user_voxel_object.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = user_voxel_object.cpp; sourceTree = "<group>"; };
 		C093F3AA17A470F600D433AA /* user_voxel_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = user_voxel_object.hpp; sourceTree = "<group>"; };
 		C093F3AC17A4711300D433AA /* skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = skybox.cpp; sourceTree = "<group>"; };
@@ -1077,6 +1080,8 @@
 				C010C688160AFD4C006E7D90 /* key_button.hpp */,
 				C010C689160AFD4C006E7D90 /* label.cpp */,
 				C010C68A160AFD4C006E7D90 /* label.hpp */,
+				C092655E17D48CF50035C0CB /* layout_widget.cpp */,
+				C092655F17D48CF50035C0CB /* layout_widget.hpp */,
 				C010C68B160AFD4C006E7D90 /* level.cpp */,
 				C010C68C160AFD4C006E7D90 /* level.hpp */,
 				C010C68D160AFD4C006E7D90 /* level_logic.cpp */,
@@ -1581,6 +1586,7 @@
 				C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */,
 				C093F3AE17A4711300D433AA /* skybox.cpp in Sources */,
 				C091410517C9A67D0019BAB3 /* multiplayer_server.cpp in Sources */,
+				C092656017D48CF50035C0CB /* layout_widget.cpp in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

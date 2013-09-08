@@ -110,6 +110,7 @@ objects = \
 	src/key_button.o \
 	src/label.o \
 	src/language_dialog.o \
+	src/layout_widget.o \
 	src/level.o \
 	src/level_logic.o \
 	src/level_object.o \

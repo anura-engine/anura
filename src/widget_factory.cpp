@@ -38,6 +38,7 @@
 #include "gui_section.hpp"
 #include "key_button.hpp"
 #include "label.hpp"
+#include "layout_widget.hpp"
 #include "poly_line_widget.hpp"
 #include "preview_tileset_widget.hpp"
 #include "progress_bar.hpp"
@@ -114,6 +115,8 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new gui::bar_widget(v, e));
 	} else if(wtype == "color_picker") {
 		return widget_ptr(new gui::color_picker(v, e));
+	} else if(wtype == "layout") {
+		return widget_ptr(new gui::layout_widget(v, e));
 	} else if(wtype == "file_chooser") {
 		return widget_ptr(new gui::file_chooser_dialog(v, e));
 #if defined(USE_ISOMAP)
