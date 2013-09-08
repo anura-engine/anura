@@ -35,7 +35,8 @@ struct screen_position {
 	screen_position() : init(false), x(0), y(0), x_pos(0), y_pos(0),
 	                    focus_x(0), focus_y(0),
 	                    flip_rotate(0), coins(-1),
-						shake_x_offset(0),shake_y_offset(0),shake_x_vel(0),shake_y_vel(0), zoom(1), x_border(0), y_border(0)
+						shake_x_offset(0),shake_y_offset(0),shake_x_vel(0),shake_y_vel(0), zoom(1), x_border(0), y_border(0),
+						target_xpos(0), target_ypos(0)
 	{}
 	bool init;
 	int x, y;
@@ -51,6 +52,9 @@ struct screen_position {
 
 	//x,y as it would be if it weren't for level boundaries.
 	int x_pos, y_pos;
+
+	//target position the camera wants to be at.
+	int target_xpos, target_ypos;
 };
 
 //Measures the current draw position in centi-pixels.

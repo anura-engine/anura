@@ -3896,6 +3896,16 @@ DEFINE_SET_FIELD
 	last_draw_position().x = value[0].as_int();
 	last_draw_position().y = value[1].as_int();
 
+DEFINE_FIELD(camera_target, "[int,int]")
+	std::vector<variant> pos;
+	pos.reserve(2);
+
+	pos.push_back(variant(last_draw_position().x));
+	pos.push_back(variant(last_draw_position().y));
+
+	return variant(&pos);
+	
+
 DEFINE_FIELD(debug_properties, "[string]")
 	return vector_to_variant(obj.debug_properties_);
 DEFINE_SET_FIELD

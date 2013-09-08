@@ -261,6 +261,9 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		const int target_xpos = 100*(x - screen_width/2);
 		const int target_ypos = 100*(y - screen_height/2);
 
+		pos.target_xpos = target_xpos;
+		pos.target_ypos = target_ypos;
+
 		if(pos.init == false) {
 			pos.x_pos = target_xpos;
 			pos.y_pos = target_ypos;
