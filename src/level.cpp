@@ -3900,8 +3900,8 @@ DEFINE_FIELD(camera_target, "[int,int]")
 	std::vector<variant> pos;
 	pos.reserve(2);
 
-	pos.push_back(variant(last_draw_position().x));
-	pos.push_back(variant(last_draw_position().y));
+	pos.push_back(variant(last_draw_position().target_xpos));
+	pos.push_back(variant(last_draw_position().target_ypos));
 
 	return variant(&pos);
 	
