@@ -159,6 +159,11 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 		} else {
 			pos.zoom += ZoomSpeed;
 		}
+        
+        //if we've set the zoom inside the very first cycle of a level (i.e. using on_start_level), then we're doing some kind of cutscene which has the camera start zoomed out.  We want the camera to immediately start in this state, not "progress to this state gradually from the normal zoom". 
+        if(lvl.cycle() == 1){
+            pos.zoom = target_zoom;
+        }
 
 		// If the camera is automatically moved along by the level (e.g. a 
 		// hurtling through the sky level) do that here.
