@@ -44,7 +44,7 @@
 #define bmround	round
 #endif
 
-#ifdef USE_SHADERS
+#if defined(USE_SHADERS) && defined(USE_ISOMAP)
 
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro

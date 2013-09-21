@@ -387,6 +387,9 @@ void get_control_status(int cycle, int player, bool* output, const std::string**
 
 	cycle -= delay;
 	if(cycle < 0) {
+		for(int n = 0; n != NUM_CONTROLS; ++n) {
+			output[n] = false;
+		}
 		return;
 	}
 

@@ -36,14 +36,14 @@ public:
 
 
 	void draw() const;
-#if defined(USE_SHADERS)
+#if defined(USE_ISOMAP)
 	void draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
 private:
 	DECLARE_CALLABLE(draw_primitive);
 
 	virtual void handle_draw() const = 0;
-#if defined(USE_SHADERS)
+#if defined(USE_ISOMAP)
 	virtual void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
 #endif
 	GLenum src_factor_, dst_factor_;

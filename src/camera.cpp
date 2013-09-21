@@ -12,6 +12,8 @@
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
+#ifdef USE_ISOMAP
+
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
 	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
@@ -399,3 +401,5 @@ glm::ivec3 camera_callable::get_facing(const glm::vec3& coords) const
 	}
 
 }
+
+#endif //USE_ISOMAP

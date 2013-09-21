@@ -53,7 +53,9 @@ private:
 	void init();
 
 	void handle_draw() const;
+#ifdef USE_ISOMAP
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
 
@@ -106,9 +108,11 @@ void circle_primitive::init()
 
 }
 
+#ifdef USE_ISOMAP
 void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
+#endif
 
 void circle_primitive::handle_draw() const
 {
@@ -141,7 +145,9 @@ public:
 private:
 
 	void handle_draw() const;
+#ifdef USE_ISOMAP
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
 
 	variant get_value(const std::string& key) const;
 	void set_value(const std::string& key, const variant& value);
@@ -292,9 +298,11 @@ void arrow_primitive::calculate_draw_arrays() const
 	}
 }
 
+#ifdef USE_ISOMAP
 void arrow_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
+#endif
 
 void arrow_primitive::handle_draw() const
 {
@@ -401,7 +409,9 @@ private:
 	void init();
 
 	void handle_draw() const;
+#ifdef USE_ISOMAP
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
 
 	glm::vec3 b1_;
 	glm::vec3 b2_;
@@ -495,6 +505,7 @@ void wireframe_box_primitive::handle_draw() const
 {
 }
 
+#ifdef USE_ISOMAP
 void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 	shader_save_context save;
@@ -514,6 +525,7 @@ void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const ca
 	glDrawArrays(GL_LINES, 0, varray_.size()/3);
 	glDisableVertexAttribArray(a_position_);
 }
+#endif
 
 BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, draw_primitive)
 	DEFINE_FIELD(color, "[int,int,int,int]")
@@ -664,6 +676,7 @@ private:
 	void handle_draw() const
 	{}
 
+#ifdef USE_ISOMAP
 	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 	{
 		shader_save_context save;
@@ -683,6 +696,7 @@ private:
 		glDrawArrays(GL_TRIANGLES, 0, varray_.size()/3);
 		glDisableVertexAttribArray(a_position_);
 	}
+#endif
 
 	glm::vec3 b1_;
 	glm::vec3 b2_;
@@ -788,6 +802,7 @@ void draw_primitive::draw() const
 	}
 }
 
+#ifdef USE_ISOMAP
 void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
@@ -798,6 +813,7 @@ void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_pt
 		handle_draw(lighting, camera);
 	}
 }
+#endif
 
 BEGIN_DEFINE_CALLABLE_NOBASE(draw_primitive)
 	DEFINE_FIELD(blend, "string")

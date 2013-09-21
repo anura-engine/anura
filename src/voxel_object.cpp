@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifdef USE_SHADERS
+#if defined(USE_SHADERS) && defined(USE_ISOMAP)
 
 #include "json_parser.hpp"
 #include "module.hpp"

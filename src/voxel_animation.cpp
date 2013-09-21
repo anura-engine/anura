@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#ifdef USE_SHADERS
+#if defined(USE_SHADERS) && defined(USE_ISOMAP)
 
 #include <boost/bind.hpp>
 #include <boost/shared_array.hpp>

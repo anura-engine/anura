@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifdef USE_SHADERS
+#if defined(USE_SHADERS) && defined(USE_ISOMAP)
 
 #include <map>
 #include <vector>
