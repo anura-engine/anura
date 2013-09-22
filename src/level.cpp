@@ -2566,7 +2566,8 @@ void level::process()
 
 void level::process_draw()
 {
-	foreach(const entity_ptr& e, active_chars_) {
+	std::vector<entity_ptr> chars = active_chars_;
+	foreach(const entity_ptr& e, chars) {
 		e->handle_event(OBJECT_EVENT_DRAW);
 	}
 }
