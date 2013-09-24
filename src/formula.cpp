@@ -870,6 +870,20 @@ private:
 	
 };
 
+namespace {
+PREF_INT(max_ffl_recursion, 1000);
+int function_recursion_depth = 0;
+struct InfiniteRecursionProtector {
+	explicit InfiniteRecursionProtector(const expression_ptr& expr) {
+		++function_recursion_depth;
+		ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str());
+	}
+	~InfiniteRecursionProtector() {
+		--function_recursion_depth;
+	}
+};
+}
+
 class function_call_expression : public formula_expression {
 public:
 	function_call_expression(expression_ptr left, const std::vector<expression_ptr>& args)
@@ -896,6 +910,7 @@ public:
 	}
 private:
 	variant execute(const formula_callable& variables) const {
+		const InfiniteRecursionProtector recurse_scope(left_);
 		const variant left = left_->evaluate(variables);
 		std::vector<variant> args;
 		args.reserve(args_.size());
