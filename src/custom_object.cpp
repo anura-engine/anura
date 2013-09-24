@@ -5434,7 +5434,6 @@ int custom_object::platform_slope_at(int xpos) const
 	const int pos = (xpos - area.x())*1024;
 	const int dx = (area.w()*1024)/(platform_offsets_.size()-1);
 	const size_t segment = pos/dx;
-	ASSERT_GE(segment, 0);
 	ASSERT_LT(segment, platform_offsets_.size()-1);
 
 	const int dy = (platform_offsets_[segment+1] - platform_offsets_[segment])*1024;
