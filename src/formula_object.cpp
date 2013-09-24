@@ -611,6 +611,7 @@ void formula_class::run_unit_tests()
 	boost::intrusive_ptr<game_logic::map_formula_callable> callable(new game_logic::map_formula_callable);
 	std::map<variant,variant> attr;
 	callable->add("vars", variant(&attr));
+	callable->add("lib", variant(game_logic::get_library_object().get()));
 
 	for(int n = 0; n != unit_test.num_elements(); ++n) {
 		variant test = unit_test[n];
