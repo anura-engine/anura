@@ -68,11 +68,11 @@ namespace sys
 		FILE_NAME_MODE mode)
 	{
 		path p(dir);
-		if(!is_directory(p)) {
+		if(!is_directory(p) && !is_other(p)) {
 			return;
 		}
 		for(directory_iterator it = directory_iterator(p); it != directory_iterator(); ++it) {
-			if(is_directory(it->path())) {
+			if(is_directory(it->path()) || is_other(it->path())) {
 				if(dirs != NULL && mode == ENTIRE_FILE_PATH) {
 					dirs->push_back(it->path().filename().generic_string());
 				}
