@@ -25,5 +25,6 @@ const std::string& get_locale();
 void use_system_locale();
 void set_locale(const std::string& l);
 void load_translations();
+bool is_locale_cjk();
 }
 

@@ -21,6 +21,7 @@
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
+#include "i18n.hpp"
 #include "filesystem.hpp"
 #include "foreach.hpp"
 #include "formula_constants.hpp"
@@ -281,6 +282,8 @@ void load(const std::string& mod_file_name, bool initial)
 	std::string abbrev = name;
 	std::string fname = make_base_module_path(name) + "module.cfg";
 	variant v = json::parse_from_file(fname);
+	std::string def_font = "FreeSans";
+	std::string def_font_cjk = "unifont";
 
 	const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 	if(sys::file_exists(constants_path)) {
@@ -311,6 +314,22 @@ void load(const std::string& mod_file_name, bool initial)
 				}
 			}
 		}
+		if(v.has_key("font")) {
+			if(v["font"].is_string()) {
+				def_font_cjk = def_font = v["font"].as_string();
+			} else if(v["font"].is_list()) {
+				if(v["font"].num_elements() == 1) {
+					def_font_cjk = def_font = v["font"][0].as_string();
+				} else if(v["font"].num_elements() == 2) {
+					def_font = v["font"][0].as_string();
+					def_font_cjk = v["font"][1].as_string();
+				} else {
+					ASSERT_LOG(false, "font tag must be either a list of one or two strings: " << v["font"].num_elements());
+				}
+			} else {
+				ASSERT_LOG(false, "font tag must be either string or list of strings");
+			}
+		}
 		if(v.has_key("build_requirements")) {
 			const variant& br = v["build_requirements"];
 			if(br.is_string()) {
@@ -338,8 +357,14 @@ void load(const std::string& mod_file_name, bool initial)
 		}
 	}
 	modules m = {name, pretty_name, abbrev,
-	             {make_base_module_path(name), make_user_module_path(name)}};
+	             {make_base_module_path(name), make_user_module_path(name)},
+				def_font, def_font_cjk};
 	loaded_paths().insert(loaded_paths().begin(), m);
+}
+
+std::string get_default_font()
+{
+	return i18n::is_locale_cjk() ? loaded_paths().front().default_font_cjk : loaded_paths().front().default_font;
 }
 
 void reload(const std::string& name) {

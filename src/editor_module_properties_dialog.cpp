@@ -275,7 +275,7 @@ void editor_module_properties_dialog::create_new_module() {
 			// data/preload.cfg			-- { preload: [], }
 			// data/tiles.cfg			-- {}
 			// data/gui/null.cfg		-- {}
-			sys::write_file(mod_path + "data/fonts.cfg", "{font:[\"@flatten\",\"@include data/dialog_font.cfg\",\"@include data/label_font.cfg\"]}");
+			sys::write_file(mod_path + "data/fonts.cfg", "{font:[\"@flatten\",\"@include data/fonts-bitmap/dialog_font.cfg\",\"@include data/fonts-bitmap/label_font.cfg\"]}");
 			sys::write_file(mod_path + "data/functions.cfg", "[\n]");
 			sys::write_file(mod_path + "data/music.cfg", "{\n}");
 			sys::write_file(mod_path + "data/tiles.cfg", "{\n}");
