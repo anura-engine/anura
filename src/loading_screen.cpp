@@ -17,6 +17,7 @@
 #include <string>
 #include <iostream>
 
+#include "font.hpp"
 #include "foreach.hpp"
 #include "surface_cache.hpp"
 #include "loading_screen.hpp"
@@ -25,6 +26,7 @@
 #include "graphical_font.hpp"
 #include "geometry.hpp"
 #include "i18n.hpp"
+#include "module.hpp"
 #include "texture.hpp"
 #include "variant.hpp"
 
@@ -95,11 +97,20 @@ void loading_screen::draw_internal (const std::string& message)
 	rect bar(screen_w/2 - bar_width/2, screen_h/2 - bar_height/2, bar_width*amount_done, bar_height);
 	graphics::draw_rect(bar, graphics::color(255, 255, 255, 255));
 	
-	const_graphical_font_ptr font = graphical_font::get("door_label");
-	//explicitly translate loading messages
-	if(font) {
-		rect text_size = font->dimensions(i18n::tr(message));
-		font->draw(screen_w/2 - text_size.w()/2, screen_h/2 + bar_height/2 + 5, i18n::tr(message));
+	std::string font = module::get_default_font();
+	if(font == "bitmap") {
+		const_graphical_font_ptr font = graphical_font::get("door_label");
+		// explicitly translate loading messages
+		if(font) {
+			rect text_size = font->dimensions(i18n::tr(message));
+			font->draw(screen_w/2 - text_size.w()/2, screen_h/2 + bar_height/2 + 5, i18n::tr(message));
+		}
+	} else {
+		// todo: we need to load this information (x,y offsets, colors, sizes from a customisation file)
+		SDL_Color color = {255,255,255,255};
+		int size = 18;
+		graphics::texture tex = font::render_text_uncached(i18n::tr(message), color, size, font);
+		graphics::blit_texture(tex, screen_w/2 - tex.width()/2, screen_h/2 - tex.height()/2 + bar_height + 10);
 	}
 }
 

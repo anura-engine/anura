@@ -40,6 +40,9 @@ struct modules {
 	//preferences area and is mutable.
 	std::string base_path_[NUM_PATH_TYPES];
 
+	std::string default_font;
+	std::string default_font_cjk;
+
 	std::vector<int> version_;
 	std::vector<std::string> included_modules_;
 };
@@ -52,6 +55,8 @@ const std::string get_module_name();
 const std::string get_module_pretty_name();
 std::string get_module_version();
 std::string map_file(const std::string& fname);
+
+std::string get_default_font();
 
 enum MODULE_PREFIX_BEHAVIOR { MODULE_PREFIX, MODULE_NO_PREFIX };
 void get_unique_filenames_under_dir(const std::string& dir,

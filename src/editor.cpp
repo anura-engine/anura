@@ -4277,15 +4277,17 @@ void editor::set_code_file()
 
 		entity_ptr obj = levels_.front()->get_entity_by_label(selected->label());
 
-		variant v = obj->write();
-		const std::string pseudo_fname = "@instance:" + obj->label();
-		json::set_file_contents(pseudo_fname, v.write_json());
-		if(path) {
-			code_dialog_->load_file(*path);
-		}
+		if(obj) {
+			variant v = obj->write();
+			const std::string pseudo_fname = "@instance:" + obj->label();
+			json::set_file_contents(pseudo_fname, v.write_json());
+			if(path) {
+				code_dialog_->load_file(*path);
+			}
 
-		boost::function<void()> fn(boost::bind(&editor::object_instance_modified_in_editor, this, obj->label()));
-		code_dialog_->load_file(pseudo_fname, true, &fn);
+			boost::function<void()> fn(boost::bind(&editor::object_instance_modified_in_editor, this, obj->label()));
+			code_dialog_->load_file(pseudo_fname, true, &fn);
+		}
 		
 	} else if(path && code_dialog_) {
 		code_dialog_->load_file(*path);

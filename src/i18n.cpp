@@ -84,6 +84,17 @@ const std::string& get_locale() {
 	return locale;
 }
 
+// Feels like a hack
+bool is_locale_cjk() {
+	if(locale.empty()) {
+		return false;
+	}
+	ASSERT_LOG(locale.size() >= 2, "Length of local string too short: " << locale);
+	return (locale[0] == 'z'  && locale[1] == 'h') 
+		|| (locale[0] == 'j'  && locale[1] == 'a')
+		|| (locale[0] == 'k'  && locale[1] == 'o');
+}
+
 void load_translations() {
 	hashmap.clear();
 	//strip the charset part of the country and language code,
