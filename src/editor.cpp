@@ -4272,19 +4272,26 @@ void editor::set_code_file()
 	}
 
 	const std::string* path = custom_object_type::get_object_path(type + ".cfg");
+
+	entity_ptr obj_instance;
 	if(code_dialog_ && lvl_->editor_selection().empty() == false && tool() == TOOL_SELECT_OBJECT && levels_.size() == 2 && lvl_ == levels_.back()) {
+		// See if we can find an instance of the object in the canonical
+		// version of the level. If we can we allow object instance editing,
+		// otherwise we'll just allow editing of the type.
 		entity_ptr selected = lvl_->editor_selection().back();
 
-		entity_ptr obj = levels_.front()->get_entity_by_label(selected->label());
+		obj_instance = levels_.front()->get_entity_by_label(selected->label());
+	}
 
-		variant v = obj->write();
-		const std::string pseudo_fname = "@instance:" + obj->label();
+	if(obj_instance) {
+		variant v = obj_instance->write();
+		const std::string pseudo_fname = "@instance:" + obj_instance->label();
 		json::set_file_contents(pseudo_fname, v.write_json());
 		if(path) {
 			code_dialog_->load_file(*path);
 		}
 
-		boost::function<void()> fn(boost::bind(&editor::object_instance_modified_in_editor, this, obj->label()));
+		boost::function<void()> fn(boost::bind(&editor::object_instance_modified_in_editor, this, obj_instance->label()));
 		code_dialog_->load_file(pseudo_fname, true, &fn);
 		
 	} else if(path && code_dialog_) {
