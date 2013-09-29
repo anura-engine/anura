@@ -521,7 +521,7 @@ namespace {
 		std::vector<std::function<void()> > send_fn;
 	};
 
-	PREF_INT(udp_send_delay_frames, 0);
+	PREF_INT(fakelag, 0);
 }
 
 void send_and_receive()
@@ -552,14 +552,16 @@ void send_and_receive()
 			continue;
 		}
 
-		if(g_udp_send_delay_frames == 0) {
+		const int lagframes = g_fakelag/20;
+
+		if(lagframes == 0) {
 			udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
 		} else {
-			while(g_udp_send_delay_frames >= message_queue.size()) {
+			while(lagframes >= message_queue.size()) {
 				message_queue.push_back(QueuedMessages());
 			}
 
-			message_queue[g_udp_send_delay_frames].send_fn.push_back([=]() {
+			message_queue[lagframes].send_fn.push_back([=]() {
 				udp_socket->send_to(boost::asio::buffer(send_buf), *udp_endpoint_peers[n]);
 			});
 		}

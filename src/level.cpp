@@ -4332,6 +4332,10 @@ void level::restore_from_backup(backup_snapshot& snapshot)
 			chars_by_label_[e->label()] = e;
 		}
 	}
+
+	for(const entity_ptr& ch : snapshot.chars) {
+		ch->handle_event(OBJECT_EVENT_LOAD);
+	}
 }
 
 std::vector<entity_ptr> level::trace_past(entity_ptr e, int ncycle)

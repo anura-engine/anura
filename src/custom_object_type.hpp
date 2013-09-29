@@ -246,6 +246,7 @@ public:
 
 	bool editor_force_standing() const { return editor_force_standing_; }
 	bool hidden_in_game() const { return hidden_in_game_; }
+	bool stateless() const { return stateless_; }
 
 #if defined(USE_SHADERS)
 	const gles2::shader_program_ptr& shader() const { return shader_; }
@@ -377,6 +378,10 @@ private:
 
 	//object should be hidden in the game but will show in the editor.
 	bool hidden_in_game_;
+
+	//object is stateless, meaning that a backup of the object to restore
+	//later will not deep copy the object, just have another reference to it.
+	bool stateless_;
 
 	std::vector<int> platform_offsets_;
 

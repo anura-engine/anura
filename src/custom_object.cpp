@@ -596,7 +596,9 @@ custom_object::custom_object(const custom_object& o) :
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
 	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
-	widgets_(o.widgets_),
+	//do NOT copy widgets since they do not support deep copying
+	//and re-seating references is difficult.
+	//widgets_(o.widgets_),
 	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
 	vars_->disallow_new_keys(type_->is_strict());
@@ -4714,6 +4716,10 @@ entity_ptr custom_object::clone() const
 
 entity_ptr custom_object::backup() const
 {
+	if(type_->stateless()) {
+		return entity_ptr(const_cast<custom_object*>(this));
+	}
+
 	entity_ptr res(new custom_object(*this));
 	return res;
 }
