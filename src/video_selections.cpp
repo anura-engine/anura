@@ -116,15 +116,17 @@ void show_video_selection_dialog()
 
 	dropdown_widget* mode_list = new dropdown_widget(display_strings, 200, 20);
 	mode_list->set_selection(index);
+	mode_list->set_zorder(10);
 	mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
 		std::cerr << "XXX selected: " << s << std::cerr;
 		selected_mode = selection;
 	});
-	d.add_widget(widget_ptr(mode_list));
+	d.add_widget(widget_ptr(mode_list), dialog::MOVE_RIGHT);
 	
 	widget_ptr fullscreen_cb = new checkbox(new graphical_font_label(_("Fullscreen"), "door_label", 2), preferences::fullscreen(), [&b_fullscreen](bool checked){ 
 		b_fullscreen = checked; 
 	}, BUTTON_SIZE_DOUBLE_RESOLUTION);
+	d.set_padding(20);
 	d.add_widget(fullscreen_cb);
 
 	widget_ptr b_okay = new button(new graphical_font_label(_("OK"), "door_label", 2), [&d](){ 

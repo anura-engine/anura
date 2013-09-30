@@ -215,7 +215,19 @@ void dropdown_widget::handle_draw() const
 bool dropdown_widget::handle_event(const SDL_Event& event, bool claimed)
 {
 	SDL_Event ev = event;
-	normalize_event(&ev);
+	switch(ev.type) {
+		case SDL_MOUSEMOTION: {
+			ev.motion.x -= x() & ~1;
+			ev.motion.y -= y() & ~1;
+			break;
+		}
+		case SDL_MOUSEBUTTONDOWN:
+		case SDL_MOUSEBUTTONUP: {
+			ev.button.x -= x() & ~1;
+			ev.button.y -= y() & ~1;
+			break;
+		}
+	}
 
 	if(claimed) {
 		return claimed;
