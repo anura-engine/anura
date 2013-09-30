@@ -100,7 +100,6 @@ objects = \
     src/http_server.o \
 	src/i18n.o \
 	src/image_widget.o \
-	src/input.o \
 	src/ipc.o \
 	src/iphone_controls.o \
 	src/isochunk.o \

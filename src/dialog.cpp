@@ -17,6 +17,7 @@
 #include "graphics.hpp"
 
 #include <boost/bind.hpp>
+#include <boost/range/adaptor/reversed.hpp>
 #include <iostream>
 
 #include "dialog.hpp"
@@ -224,9 +225,7 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
                            dialog::MOVE_DIRECTION dir)
 {
 	w->set_loc(x,y);
-	widgets_.push_back(w);
-	std::stable_sort(widgets_.begin(), widgets_.end(), widget_sort_zorder());
-    register_listener(w);
+	widgets_.insert(w);
 	switch(dir) {
 	case MOVE_DOWN:
 		add_x_ = x;
@@ -243,17 +242,15 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
 
 void dialog::remove_widget(widget_ptr w)
 {
-    deregister_listener(w);
-	widgets_.erase(std::remove(widgets_.begin(),widgets_.end(),w),
-	               widgets_.end());
+	auto it = std::find(widgets_.begin(), widgets_.end(), w);
+	if(it != widgets_.end()) {
+		widgets_.erase(it);
+	}
 	recalculate_dimensions();
 }
 
 void dialog::clear() { 
 	add_x_ = add_y_ = 0;
-    foreach(widget_ptr w, widgets_) {
-        deregister_listener(w);
-    }
     widgets_.clear(); 
 	recalculate_dimensions();
 }
@@ -265,30 +262,72 @@ void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
 	int w = w_old->width();
 	int h = w_old->height();
 
-	std::replace(widgets_.begin(), widgets_.end(), w_old, w_new);
-	std::stable_sort(widgets_.begin(), widgets_.end(), widget_sort_zorder());
+	auto it = std::find(widgets_.begin(), widgets_.end(), w_old);
+	if(it != widgets_.end()) {
+		widgets_.erase(it);
+	}
+	widgets_.insert(w_new);
 
 	w_new->set_loc(x,y);
 	w_new->set_dim(w,h);
 
-    register_listener(w_new);
-    deregister_listener(w_old);
 	recalculate_dimensions();
 }
 
-void dialog::show() {
+void dialog::show() 
+{
 	opened_ = true;
 	set_visible(true);
 }
 
+bool dialog::pump_events()
+{
+    SDL_Event event;
+	bool running = true;
+    while(running && SDL_PollEvent(&event)) {  
+        bool claimed = false;
+            
+        switch(event.type) {
+        case SDL_QUIT:
+            running = false;
+            claimed = true;
+            SDL_PushEvent(&event);
+            break;
+#if defined(__ANDROID__) && !SDL_VERSION_ATLEAST(2, 0, 0)
+        case SDL_VIDEORESIZE: 
+            // Allow restore from app going to the background on android, while a modal dialog is up.
+            video_resize( event ); 
+            break;
+#endif
+
+#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || (defined(__ANDROID__) && SDL_VERSION_ATLEAST(2, 0, 0))
+			case SDL_WINDOWEVENT:
+			if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
+			{
+				SDL_Event e;
+				while (SDL_WaitEvent(&e))
+				{
+					if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESTORED)
+						break;
+				}
+			}
+			break;
+#endif
+        default:
+            break;
+        }
+        claimed = process_event(event, claimed);
+    }
+
+    return running;
+}
+
 void dialog::show_modal()
 {
-    input::pump pump;
 	opened_ = true;
 	cancelled_ = false;
-    pump.register_listener(this);
 
-	while(opened_ && pump.process()) {
+	while(opened_ && pump_events()) {
 		process();
 		prepare_draw();
 		draw();
@@ -320,7 +359,9 @@ void dialog::complete_draw()
 
 std::vector<widget_ptr> dialog::get_children() const
 {
-	return widgets_;
+	std::vector<widget_ptr> widget_list;
+	std::copy(widgets_.begin(), widgets_.end(), std::back_inserter(widget_list));
+	return widget_list;
 }
 
 void dialog::handle_draw_children() const {
@@ -382,7 +423,13 @@ bool dialog::process_event(const SDL_Event& ev, bool claimed) {
 bool dialog::handle_event_children(const SDL_Event &event, bool claimed) {
 	SDL_Event ev = event;
 	normalize_event(&ev, false);
-    return input::listener_container::process_event(ev, claimed);
+	// We copy the list here to cover the case that event processing causes
+	// a widget to get removed and thus the iterator to be invalidated.
+	sorted_widget_list wlist = widgets_;
+	for(auto w : boost::adaptors::reverse(wlist)) {
+		claimed |= w->process_event(ev, claimed);
+	}
+    return claimed;
 }
 
 void dialog::close() 
@@ -430,7 +477,7 @@ bool dialog::handle_event(const SDL_Event& ev, bool claimed)
 
 bool dialog::has_focus() const
 {
-	foreach(widget_ptr w, widgets_) {
+	for(auto w : widgets_) {
 		if(w->has_focus()) {
 			return true;
 		}
@@ -441,7 +488,7 @@ bool dialog::has_focus() const
 
 widget_ptr dialog::get_widget_by_id(const std::string& id)
 {
-	foreach(widget_ptr w, widgets_) {
+	for(auto w : widgets_) {
 		if(w) {
 			widget_ptr wx = w->get_widget_by_id(id);
 			if(wx) {
@@ -454,7 +501,7 @@ widget_ptr dialog::get_widget_by_id(const std::string& id)
 
 const_widget_ptr dialog::get_widget_by_id(const std::string& id) const
 {
-	foreach(widget_ptr w, widgets_) {
+	for(auto w : widgets_) {
 		if(w) {
 			widget_ptr wx = w->get_widget_by_id(id);
 			if(wx) {

@@ -121,7 +121,7 @@ void show_video_selection_dialog()
 		std::cerr << "XXX selected: " << s << std::cerr;
 		selected_mode = selection;
 	});
-	d.add_widget(widget_ptr(mode_list), dialog::MOVE_RIGHT);
+	d.add_widget(widget_ptr(mode_list));
 	
 	widget_ptr fullscreen_cb = new checkbox(new graphical_font_label(_("Fullscreen"), "door_label", 2), preferences::fullscreen(), [&b_fullscreen](bool checked){ 
 		b_fullscreen = checked; 

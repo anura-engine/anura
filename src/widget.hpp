@@ -23,7 +23,6 @@
 
 #include "formula.hpp"
 #include "graphics.hpp"
-#include "input.hpp"
 #include "tooltip.hpp"
 #include "framed_gui_element.hpp"
 #include "variant_utils.hpp"
@@ -60,7 +59,7 @@ class widget_settings_dialog;
 class dialog;
 typedef boost::intrusive_ptr<dialog> dialog_ptr;
 
-class widget : public virtual input::listener
+class widget : public game_logic::formula_callable
 {
 public:
 	enum HORIZONTAL_ALIGN {HALIGN_LEFT, HALIGN_CENTER, HALIGN_RIGHT};
@@ -211,6 +210,8 @@ class widget_sort_zorder
 public:
     bool operator()(const widget_ptr lhs, const widget_ptr rhs) const;
 };
+
+typedef std::set<widget_ptr, widget_sort_zorder> sorted_widget_list;
 
 }
 

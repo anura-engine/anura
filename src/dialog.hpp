@@ -28,11 +28,9 @@ namespace gui {
 std::string get_dialog_file(const std::string& fname);
 void reset_dialog_paths();
 
-class dialog : public widget, public input::listener_container
+class dialog : public widget
 {
 public:
-	typedef std::vector<widget_ptr>::const_iterator child_iterator;
-
 	explicit dialog(int x, int y, int w, int h);
 	explicit dialog(const variant& v, game_logic::formula_callable* e);
 	virtual ~dialog();
@@ -56,8 +54,6 @@ public:
 	void set_cursor(int x, int y) { add_x_ = x; add_y_ = y; }
 	int cursor_x() const { return add_x_; }
 	int cursor_y() const { return add_y_; }
-	child_iterator begin_children() const { return widgets_.begin(); }
-	child_iterator end_children() const { return widgets_.end(); }
     bool process_event(const SDL_Event& e, bool claimed);
 	
 	void set_on_quit(boost::function<void ()> onquit) { on_quit_ = onquit; }
@@ -86,11 +82,14 @@ protected:
 	void set_clear_bg_amount(int amount) { clear_bg_ = amount; }
 	int clear_bg() const { return clear_bg_; };
 
+	bool pump_events();
+
 	virtual void handle_process();
 	void recalculate_dimensions();
 private:
-DECLARE_CALLABLE(dialog);
-	std::vector<widget_ptr> widgets_;
+	DECLARE_CALLABLE(dialog);
+	
+	sorted_widget_list widgets_;
 	bool opened_;
 	bool cancelled_;
 	int clear_bg_;
