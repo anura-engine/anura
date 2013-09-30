@@ -31,6 +31,7 @@
 #include "preferences.hpp"
 #include "sound.hpp"
 #include "language_dialog.hpp"
+#include "video_selections.hpp"
 #include "widget_factory.hpp"
 
 namespace {
@@ -50,13 +51,14 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 {
 	PAUSE_GAME_RESULT result = PAUSE_GAME_QUIT;
 	
-	int button_width = 232;
-	int button_height = 50;
-	int padding = 16;
-	int slider_width = 200;
+	int button_width = 220;//232;
+	int button_height = 45;//50;
+	int padding = 12;//16;
+	int slider_width = 175;//200;
 	bool show_exit = true;
 	bool show_controls = true;
 	bool show_button_swap = false;
+	bool show_video_mode_select = true;
 	bool show_of = false;
 	gui::BUTTON_RESOLUTION button_resolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
 	bool upscale_dialog_frame = true;
@@ -77,6 +79,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	widget_ptr resume_label;
 	widget_ptr controls_label;
 	widget_ptr language_label;
+	widget_ptr video_select_label;
 	widget_ptr return_label;
 	widget_ptr exit_label;
 	widget_ptr button_swap_label;
@@ -150,6 +153,11 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	} else {
 		language_label = widget_ptr(new graphical_font_label(_("Language..."), "door_label", 2));
 	}
+	if(v.is_null() == false && v.has_key("video_select_label")) {
+		video_select_label = widget_factory::create(v["video_select_label"], NULL);
+	} else {
+		video_select_label = widget_ptr(new graphical_font_label(_("Video Options..."), "door_label", 2));
+	}
 	if(v.is_null() == false && v.has_key("return_label")) {
 		return_label = widget_factory::create(v["return_label"], NULL);
 	} else {
@@ -176,6 +184,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	ASSERT_LOG(resume_label != NULL, "Couldn't create resume label widget.");
 	ASSERT_LOG(controls_label != NULL, "Couldn't create controls label widget.");
 	ASSERT_LOG(language_label != NULL, "Couldn't create language label widget.");
+	ASSERT_LOG(video_select_label != NULL, "Couldn't create video select label widget.");
 	ASSERT_LOG(return_label != NULL, "Couldn't create return label widget.");
 	ASSERT_LOG(exit_label != NULL, "Couldn't create exit label widget.");
 	ASSERT_LOG(button_swap_label != NULL, "Couldn't create button swap label widget.");
@@ -183,7 +192,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	widget_ptr s1(new slider(slider_width, boost::bind(sound::set_music_volume, _1), sound::get_music_volume()));
 	widget_ptr s2(new slider(slider_width, boost::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
 
-	const int num_buttons = 3 + show_exit + show_controls + show_button_swap + show_of;
+	const int num_buttons = 3 + show_exit + show_controls + show_button_swap + show_of + show_video_mode_select;
 	int window_w, window_h;
 	if(preferences::virtual_screen_height() >= 600) {
 		window_w = button_width + padding*4;
@@ -205,6 +214,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	widget_ptr b3(new button(return_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, button_resolution));
 	widget_ptr b4(new button(exit_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, button_resolution));
 	widget_ptr b5(new checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), button_resolution));
+	widget_ptr b_video(new button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, button_resolution));
 	
 	b1->set_dim(button_width, button_height);
 	b2->set_dim(button_width, button_height);
@@ -212,6 +222,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	b4->set_dim(button_width, button_height);
 	b5->set_dim(button_width, button_height);
 	language_button->set_dim(button_width, button_height);
+	b_video->set_dim(button_width, button_height);
 	
 	d.set_padding(padding-12);
 	d.add_widget(t1, padding*2, padding*2);
@@ -224,16 +235,18 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		d.set_padding(padding+12);
 		d.add_widget(s2);
 		d.set_padding(padding);
-		if (show_button_swap) d.add_widget(b5);
+		if(show_button_swap) { d.add_widget(b5); }
 		d.add_widget(b1);
-		if (show_controls) d.add_widget(b2);
+		if(show_controls) { d.add_widget(b2); }
+		if(show_video_mode_select) { d.add_widget(b_video); }
 		d.add_widget(language_button);
 		d.add_widget(b3);
-		if (show_exit) d.add_widget(b4);
+		if(show_exit) { d.add_widget(b4); }
 	} else {
 		d.set_padding(padding);
 		d.add_widget(b1);
-		if (show_controls) d.add_widget(b2);
+		if(show_controls) { d.add_widget(b2); }
+		if(show_video_mode_select) { d.add_widget(b_video); }
 		d.set_padding(padding-12);
 		d.add_widget(t2, padding*3 + button_width, padding*2);
 		d.set_padding(padding+12);
@@ -241,7 +254,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		d.set_padding(padding);
 		d.add_widget(language_button);
 		d.add_widget(b3);
-		if (show_exit) d.add_widget(b4);
+		if(show_exit) { d.add_widget(b4); }
 	}
 
 	d.set_on_quit(boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));

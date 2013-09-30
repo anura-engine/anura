@@ -110,6 +110,8 @@ namespace preferences {
 	int actual_screen_width();
 	int actual_screen_height();
 
+	void set_actual_screen_dimensions_persistent(int width, int height);
+
 	class screen_dimension_override_scope {
 		int old_width, old_height, vold_width, vold_height;
 	public:

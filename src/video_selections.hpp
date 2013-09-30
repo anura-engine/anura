@@ -17,5 +17,5 @@
 
 #pragma once
 
-void show_language_dialog();
+void show_video_selection_dialog();
 

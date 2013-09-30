@@ -120,12 +120,12 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_GLES2;USE_ISOMAP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -352,7 +352,6 @@
     <ClInclude Include="..\..\..\anura\src\variant.hpp" />
     <ClInclude Include="..\..\..\anura\src\variant_callable.hpp" />
     <ClInclude Include="..\..\..\anura\src\variant_utils.hpp" />
-    <ClInclude Include="..\..\..\anura\src\vecmath.hpp" />
     <ClInclude Include="..\..\..\anura\src\vector_text.hpp" />
     <ClInclude Include="..\..\..\anura\src\water.hpp" />
     <ClInclude Include="..\..\..\anura\src\water_particle_system.hpp" />
@@ -363,15 +362,32 @@
     <ClInclude Include="..\..\src\bar_widget.hpp" />
     <ClInclude Include="..\..\src\base64.hpp" />
     <ClInclude Include="..\..\src\camera.hpp" />
+    <ClInclude Include="..\..\src\color_picker.hpp" />
     <ClInclude Include="..\..\src\data_blob.hpp" />
     <ClInclude Include="..\..\src\fbo_scene.hpp" />
     <ClInclude Include="..\..\src\formula_callable_visitor.hpp" />
     <ClInclude Include="..\..\src\formula_interface.hpp" />
     <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
-    <ClInclude Include="..\..\src\isotile.hpp" />
+    <ClInclude Include="..\..\src\frustum.hpp" />
+    <ClInclude Include="..\..\src\isochunk.hpp" />
+    <ClInclude Include="..\..\src\isoworld.hpp" />
+    <ClInclude Include="..\..\src\layout_widget.hpp" />
+    <ClInclude Include="..\..\src\lighting.hpp" />
+    <ClInclude Include="..\..\src\obj_reader.hpp" />
+    <ClInclude Include="..\..\src\octree.hpp" />
     <ClInclude Include="..\..\src\profile_timer.hpp" />
     <ClInclude Include="..\..\src\simplex_noise.hpp" />
+    <ClInclude Include="..\..\src\skybox.hpp" />
+    <ClInclude Include="..\..\src\user_voxel_object.hpp" />
     <ClInclude Include="..\..\src\variant_type.hpp" />
+    <ClInclude Include="..\..\src\video_selections.hpp" />
+    <ClInclude Include="..\..\src\view3d_widget.hpp" />
+    <ClInclude Include="..\..\src\voxel_editor_dialog.hpp" />
+    <ClInclude Include="..\..\src\voxel_model.hpp" />
+    <ClInclude Include="..\..\src\voxel_object.hpp" />
+    <ClInclude Include="..\..\src\voxel_object_functions.hpp" />
+    <ClInclude Include="..\..\src\voxel_object_type.hpp" />
+    <ClInclude Include="..\..\src\widget_settings_dialog.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\anura\src\achievements.cpp" />
@@ -559,26 +575,51 @@
     <ClCompile Include="..\..\..\anura\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
     <ClCompile Include="..\..\src\camera.cpp" />
+    <ClCompile Include="..\..\src\color_picker.cpp" />
+    <ClCompile Include="..\..\src\data_blob.cpp" />
     <ClCompile Include="..\..\src\fbo_scene.cpp" />
     <ClCompile Include="..\..\src\formula_callable.cpp" />
     <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
     <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
-    <ClCompile Include="..\..\src\isotile.cpp" />
+    <ClCompile Include="..\..\src\frustum.cpp" />
+    <ClCompile Include="..\..\src\isochunk.cpp" />
+    <ClCompile Include="..\..\src\isoworld.cpp" />
+    <ClCompile Include="..\..\src\layout_widget.cpp" />
+    <ClCompile Include="..\..\src\lighting.cpp" />
+    <ClCompile Include="..\..\src\multiplayer_server.cpp" />
+    <ClCompile Include="..\..\src\obj_reader.cpp" />
     <ClCompile Include="..\..\src\simplex_noise.cpp" />
+    <ClCompile Include="..\..\src\skybox.cpp" />
+    <ClCompile Include="..\..\src\user_voxel_object.cpp" />
     <ClCompile Include="..\..\src\variant_type.cpp" />
+    <ClCompile Include="..\..\src\video_selections.cpp" />
+    <ClCompile Include="..\..\src\view3d_widget.cpp" />
+    <ClCompile Include="..\..\src\voxel_animation.cpp" />
+    <ClCompile Include="..\..\src\voxel_editor.cpp" />
+    <ClCompile Include="..\..\src\voxel_editor_dialog.cpp" />
+    <ClCompile Include="..\..\src\voxel_model.cpp" />
+    <ClCompile Include="..\..\src\voxel_object.cpp" />
+    <ClCompile Include="..\..\src\voxel_object_functions.cpp" />
+    <ClCompile Include="..\..\src\voxel_object_type.cpp" />
+    <ClCompile Include="..\..\src\widget_editor.cpp" />
+    <ClCompile Include="..\..\src\widget_settings_dialog.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\anura\src\anura-resouces.rc" />
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
+    <Library Include="..\..\..\bullet\lib\BulletCollision_vs2010.lib" />
+    <Library Include="..\..\..\bullet\lib\BulletDynamics_vs2010.lib" />
+    <Library Include="..\..\..\bullet\lib\BulletSoftBody_vs2010.lib" />
+    <Library Include="..\..\..\bullet\lib\LinearMath_vs2010.lib" />
     <Library Include="..\..\..\glew-1.9.0\lib\glew32s.lib" />
-    <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDLmain.lib" />
-    <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL.lib" />
+    <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
+    <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="..\..\..\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="..\..\..\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
-    <Library Include="..\..\..\SDL_ttf\VisualC\Release\SDL2_ttf.lib" />
+    <Library Include="..\..\..\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -254,6 +254,7 @@ namespace preferences {
 		bool no_iphone_controls_ = false;
 		bool allow_autopause_ = false;
 		bool auto_size_window_ = false;
+		bool screen_dimensions_are_persistent = false;
 		
 		std::string level_path_ = "data/level/";
 		bool level_path_set_ = false;
@@ -680,6 +681,7 @@ namespace preferences {
 		if(screen_editor_mode) {
 			virtual_screen_width_ = actual_screen_width_;
 		}
+		screen_dimensions_are_persistent = false;
 		recalculate_draw_mask();
 	}
 	
@@ -689,8 +691,21 @@ namespace preferences {
 		if(screen_editor_mode) {
 			virtual_screen_height_ = actual_screen_height_;
 		}
+		screen_dimensions_are_persistent = false;
 	}
 	
+	void set_actual_screen_dimensions_persistent(int width, int height)
+	{
+		actual_screen_width_ = width;
+		actual_screen_height_ = height;
+		screen_dimensions_are_persistent = true;
+		if(screen_editor_mode) {
+			virtual_screen_width_ = actual_screen_width_;
+			virtual_screen_height_ = actual_screen_height_;
+		}
+		recalculate_draw_mask();
+	}
+
 	bool load_compiled()
 	{
 		return load_compiled_;
@@ -901,6 +916,19 @@ namespace preferences {
 		username_ = node["username"].as_string_default("");
 		password_ = node["passhash"].as_string_default("");
 		cookie_ = node.has_key("cookie") ? node["cookie"] : variant();
+
+		if(node.has_key("width") && node.has_key("height")) {
+			int w = node["width"].as_int();
+			int h = node["height"].as_int();
+			if(w > 0 && h > 0 && w < 4096 && h < 4096) {
+				set_actual_screen_width(w);
+				set_actual_screen_height(h);
+				screen_dimensions_are_persistent = true;
+				if(node.has_key("fullscreen")) {
+					set_fullscreen(node["fullscreen"].as_bool());
+				}
+			}
+		}
 		
 #if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		controls::set_keycode(controls::CONTROL_UP, static_cast<key_type>(node["key_up"].as_int(SDLK_UP)));
@@ -955,6 +983,12 @@ namespace preferences {
 		node.add("username", variant(get_username()));
 		node.add("passhash", variant(get_password()));
 		node.add("cookie", get_cookie());
+
+		if(screen_dimensions_are_persistent) {
+			node.add("width", actual_screen_width());
+			node.add("height", actual_screen_height());
+			node.add("fullscreen", variant::from_bool(fullscreen()));
+		}
 
 #if SDL_VERSION_ATLEAST(2,0,0)
 		node.add("sdl_version", SDL_COMPILEDVERSION);

@@ -808,7 +808,7 @@ extern "C" int main(int argcount, char* argvec[])
 		preferences::set_actual_screen_height(mode.h);
 		preferences::set_virtual_screen_width(mode.w);
 		preferences::set_virtual_screen_height(mode.h);
-	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL)) {
+	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0))) {
 #else
 	if(SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_OPENGL|(preferences::resizable() ? SDL_RESIZABLE : 0)|(preferences::fullscreen() ? SDL_FULLSCREEN : 0)) == NULL) {
 #endif

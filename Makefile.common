@@ -75,6 +75,7 @@ objects = \
 	src/formula_interface.o \
 	src/formula_object.o \
 	src/formula_profiler.o \
+	src/formula_test.o \
 	src/formula_tokenizer.o \
 	src/formula_variable_storage.o \
 	src/formula_visualize_widget.o \
@@ -119,6 +120,7 @@ objects = \
 	src/light.o \
 	src/lighting.o \
 	src/load_level_nothread.o \
+	src/loading_screen.o \
 	src/main.o \
 	src/md5.o \
 	src/message_dialog.o \
@@ -188,13 +190,22 @@ objects = \
 	src/tooltip.o \
 	src/translate.o \
 	src/tree_view_widget.o \
+	src/unit_test.o \
+	src/user_voxel_object.o \
+	src/utility_object_compiler.o \
+	src/utility_query.o \
+	src/utility_render_level.o \
 	src/utils.o \
+	src/view3d_widget.o \
 	src/variant.o \
 	src/variant_callable.o \
 	src/variant_type.o \
 	src/variant_utils.o \
+    src/vector_text.o \
+	src/video_selections.o \
 	src/voxel_animation.o \
 	src/voxel_editor.o \
+	src/voxel_editor_dialog.o \
 	src/voxel_model.o \
 	src/voxel_object.o \
 	src/voxel_object_functions.o \
@@ -206,17 +217,7 @@ objects = \
 	src/widget_editor.o \
 	src/widget_factory.o \
 	src/widget_settings_dialog.o \
-	src/wml_formula_callable.o \
-	src/unit_test.o \
-	src/formula_test.o \
-	src/loading_screen.o \
-	src/user_voxel_object.o \
-	src/utility_object_compiler.o \
-	src/utility_query.o \
-	src/utility_render_level.o \
-    src/vector_text.o \
-	src/view3d_widget.o \
-	src/voxel_editor_dialog.o
+	src/wml_formula_callable.o
 	
 
 ifneq ($(USE_SDL2),yes)
