@@ -659,6 +659,11 @@ namespace preferences {
 		virtual_screen_width_ = width;
 		recalculate_draw_mask();
 	}
+
+	void tweak_virtual_screen(int awidth, int aheight) 
+	{
+		virtual_screen_width_ = (virtual_screen_height_ * awidth)/aheight;
+	}
 	
 	void set_virtual_screen_height (int height)
 	{
@@ -698,6 +703,7 @@ namespace preferences {
 	{
 		actual_screen_width_ = width;
 		actual_screen_height_ = height;
+		tweak_virtual_screen(width, height);
 		screen_dimensions_are_persistent = true;
 		if(screen_editor_mode) {
 			virtual_screen_width_ = actual_screen_width_;
@@ -923,6 +929,7 @@ namespace preferences {
 			if(w > 0 && h > 0 && w < 4096 && h < 4096) {
 				set_actual_screen_width(w);
 				set_actual_screen_height(h);
+				tweak_virtual_screen(w, h);
 				screen_dimensions_are_persistent = true;
 				if(node.has_key("fullscreen")) {
 					set_fullscreen(node["fullscreen"].as_bool());
