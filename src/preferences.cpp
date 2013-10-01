@@ -682,6 +682,7 @@ namespace preferences {
 	
 	void set_actual_screen_width(int width)
 	{
+		assert(width);
 		actual_screen_width_ = width;
 		if(screen_editor_mode) {
 			virtual_screen_width_ = actual_screen_width_;
@@ -692,6 +693,7 @@ namespace preferences {
 	
 	void set_actual_screen_height(int height)
 	{
+		assert(height);
 		actual_screen_height_ = height;
 		if(screen_editor_mode) {
 			virtual_screen_height_ = actual_screen_height_;
@@ -701,6 +703,8 @@ namespace preferences {
 	
 	void set_actual_screen_dimensions_persistent(int width, int height)
 	{
+		assert(width);
+		assert(height);
 		actual_screen_width_ = width;
 		actual_screen_height_ = height;
 		tweak_virtual_screen(width, height);

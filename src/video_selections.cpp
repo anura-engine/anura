@@ -143,7 +143,9 @@ void show_video_selection_dialog()
 	d.show_modal();
 	if(d.cancelled() == false) {
 		// set selected video mode here
-		preferences::set_actual_screen_dimensions_persistent(mode_data[selected_mode].first, mode_data[selected_mode].second);
+		if(selected_mode >= 0 && selected_mode < mode_data.size()) {
+			preferences::set_actual_screen_dimensions_persistent(mode_data[selected_mode].first, mode_data[selected_mode].second);
+		}
 		preferences::set_fullscreen(b_fullscreen);
 
 		graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0);
