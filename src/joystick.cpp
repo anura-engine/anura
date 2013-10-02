@@ -17,6 +17,8 @@
 #include "graphics.hpp"
 
 #include <iostream>
+#include <map>
+#include <memory>
 #include <vector>
 
 #include "foreach.hpp"
@@ -34,43 +36,102 @@
 namespace joystick {
 
 namespace {
-std::vector<SDL_Joystick*> joysticks;
+std::vector<std::shared_ptr<SDL_Joystick>> joysticks;
+#if SDL_VERSION_ATLEAST(2,0,0)
+std::map<int,std::shared_ptr<SDL_GameController>> game_controllers;
+#endif
 
 const int threshold = 32700;
 }
 
 manager::manager() {
+
+	if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
+		std::cerr << "ERROR: Unable to initialise game controller subsystem" << std::endl;
+	}
+	if(SDL_InitSubSystem(SDL_INIT_HAPTIC) != 0) {
+		std::cerr << "ERROR: Unable to initialise haptic subsystem" << std::endl;
+	}
 #if defined(__ANDROID__)
     // We're just going to open 1 joystick on android platform.
 	int n = 0; {
 #else
 	for(int n = 0; n != SDL_NumJoysticks(); ++n) {
 #endif
-		SDL_Joystick* j = SDL_JoystickOpen(n);
-		if(j) {
-			if (SDL_JoystickNumButtons(j) == 0) {
-				// We're probably dealing with an accellerometer here.
-				SDL_JoystickClose(j);
-
-				std::cerr << "discarding joystick " << n << " for being an accellerometer\n";
+#if SDL_VERSION_ATLEAST(2,0,0)
+	    if(SDL_IsGameController(n)) {
+			SDL_GameController *controller = SDL_GameControllerOpen(n);
+			if(controller) {
+				game_controllers[n] = std::shared_ptr<SDL_GameController>(controller, [](SDL_GameController* p){SDL_GameControllerClose(p);});
 			} else {
-				joysticks.push_back(j);
+				std::cerr << "WARNING: Couldn't open game controller: " << SDL_GetError() << std::endl;
 			}
-		}
-	}
+		} else {
+#endif
+			SDL_Joystick* j = SDL_JoystickOpen(n);
+			if(j) {
+				if (SDL_JoystickNumButtons(j) == 0) {
+					// We're probably dealing with an accellerometer here.
+					SDL_JoystickClose(j);
 
-	std::cerr << "initialized " << joysticks.size() << " joysticks\n";
+					std::cerr << "INFO: discarding joystick " << n << " for being an accellerometer\n";
+				} else {
+					joysticks.push_back(std::shared_ptr<SDL_Joystick>(j, [](SDL_Joystick* js){SDL_JoystickClose(js);}));
+				}
+			}
+#if SDL_VERSION_ATLEAST(2,0,0)
+		}
+#endif
+	}
+	if(joysticks.size() > 0) {
+		std::cerr << "INFO: Initialized " << joysticks.size() << " joysticks" << std::endl;
+	}
+#if SDL_VERSION_ATLEAST(2,0,0)
+	if(game_controllers.size() > 0) {
+		std::cerr << "INFO: Initialized " << game_controllers.size() << " game controllers" << std::endl;
+	}
+#endif
 }
 
 manager::~manager() {
-	foreach(SDL_Joystick* j, joysticks) {
-		SDL_JoystickClose(j);
-	}
 	joysticks.clear();
+	game_controllers.clear();
 
 #if defined(TARGET_BLACKBERRY)
 	bps_shutdown();
 #endif
+}
+
+bool pump_events(const SDL_Event& ev, bool claimed) {
+	if(claimed) {
+		return claimed;
+	}
+	switch(ev.type) {
+		case SDL_CONTROLLERDEVICEADDED: {
+			auto it = game_controllers.find(ev.cdevice.which);
+			if(it != game_controllers.end()) {
+				std::cerr << "INFO: replacing game controller at index " << ev.cdevice.which << std::endl;
+				game_controllers.erase(it);
+			}
+			SDL_GameController *controller = SDL_GameControllerOpen(ev.cdevice.which);
+			if(controller) {
+				game_controllers[ev.cdevice.which] = std::shared_ptr<SDL_GameController>(controller, [](SDL_GameController* p){SDL_GameControllerClose(p);});
+			} else {
+				std::cerr << "WARNING: Couldn't open game controller: " << SDL_GetError() << std::endl;
+			}
+			return true;
+		}
+		case SDL_CONTROLLERDEVICEREMOVED: {
+			auto it = game_controllers.find(ev.cdevice.which);
+			if(it != game_controllers.end()) {
+				game_controllers.erase(it);
+			} else {
+				std::cerr << "WARNING: Controller removed message, no matching controller in list" << std::endl;
+			}
+			return true;
+		}
+	}
+	return false;
 }
 
 void update() {
@@ -84,15 +145,27 @@ bool up() {
 		return false;
 	}
 
-	foreach(SDL_Joystick* j, joysticks) {
-		Sint16  y = SDL_JoystickGetAxis(j, 1);
+#if SDL_VERSION_ATLEAST(2,0,0)
+	for(auto gc : game_controllers) {
+		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTY) < -4096*2) {
+			return true;
+		}
+		Uint8 state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_DPAD_UP);
+		if(state != 0) {
+			return true;
+		}
+	}
+#endif
+
+	for(auto j : joysticks) {
+		Sint16  y = SDL_JoystickGetAxis(j.get(), 1);
 		if (y < -4096*2) {
 			return true;
 		}
 
-		const int nhats = SDL_JoystickNumHats(j);
+		const int nhats = SDL_JoystickNumHats(j.get());
 		for(int n = 0; n != nhats; ++n) {
-			const Uint8 state = SDL_JoystickGetHat(j, n);
+			const Uint8 state = SDL_JoystickGetHat(j.get(), n);
 			switch(state) {
 			case SDL_HAT_UP:
 			case SDL_HAT_RIGHTUP:
@@ -111,15 +184,27 @@ bool down() {
 		return false;
 	}
 
-	foreach(SDL_Joystick* j, joysticks) {
-		Sint16  y = SDL_JoystickGetAxis(j, 1);
+#if SDL_VERSION_ATLEAST(2,0,0)
+	for(auto gc : game_controllers) {
+		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTY) > 4096*2) {
+			return true;
+		}
+		Uint8 state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_DPAD_DOWN);
+		if(state != 0) {
+			return true;
+		}
+	}
+#endif
+
+	for(auto j : joysticks) {
+		Sint16  y = SDL_JoystickGetAxis(j.get(), 1);
 		if (y > 4096*2) {
 			return true;
 		}
 
-		const int nhats = SDL_JoystickNumHats(j);
+		const int nhats = SDL_JoystickNumHats(j.get());
 		for(int n = 0; n != nhats; ++n) {
-			const Uint8 state = SDL_JoystickGetHat(j, n);
+			const Uint8 state = SDL_JoystickGetHat(j.get(), n);
 			switch(state) {
 			case SDL_HAT_DOWN:
 			case SDL_HAT_RIGHTDOWN:
@@ -138,15 +223,27 @@ bool left() {
 		return false;
 	}
 
-	foreach(SDL_Joystick* j, joysticks) {
-		Sint16  x = SDL_JoystickGetAxis(j, 0);
+#if SDL_VERSION_ATLEAST(2,0,0)
+	for(auto gc : game_controllers) {
+		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTX) < -4096*2) {
+			return true;
+		}
+		Uint8 state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_DPAD_LEFT);
+		if(state != 0) {
+			return true;
+		}
+	}
+#endif
+
+	for(auto j : joysticks) {
+		Sint16  x = SDL_JoystickGetAxis(j.get(), 0);
 		if (x < -4096*2) {
 			return true;
 		}
 
-		const int nhats = SDL_JoystickNumHats(j);
+		const int nhats = SDL_JoystickNumHats(j.get());
 		for(int n = 0; n != nhats; ++n) {
-			const Uint8 state = SDL_JoystickGetHat(j, n);
+			const Uint8 state = SDL_JoystickGetHat(j.get(), n);
 			switch(state) {
 			case SDL_HAT_LEFT:
 			case SDL_HAT_LEFTDOWN:
@@ -165,15 +262,27 @@ bool right() {
 		return false;
 	}
 
-	foreach(SDL_Joystick* j, joysticks) {
-		Sint16  x = SDL_JoystickGetAxis(j, 0);
+#if SDL_VERSION_ATLEAST(2,0,0)
+	for(auto gc : game_controllers) {
+		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTX) > 4096*2) {
+			return true;
+		}
+		Uint8 state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_DPAD_RIGHT);
+		if(state != 0) {
+			return true;
+		}
+	}
+#endif
+
+	for(auto j : joysticks) {
+		Sint16  x = SDL_JoystickGetAxis(j.get(), 0);
 		if (x > 4096*2) {
 			return true;
 		}
 
-		const int nhats = SDL_JoystickNumHats(j);
+		const int nhats = SDL_JoystickNumHats(j.get());
 		for(int n = 0; n != nhats; ++n) {
-			const Uint8 state = SDL_JoystickGetHat(j, n);
+			const Uint8 state = SDL_JoystickGetHat(j.get(), n);
 			switch(state) {
 			case SDL_HAT_RIGHT:
 			case SDL_HAT_RIGHTDOWN:
@@ -191,12 +300,36 @@ bool button(int n) {
 		return false;
 	}
 
+#if SDL_VERSION_ATLEAST(2,0,0)
+	for(auto gc : game_controllers) {
+		Uint8 state = 0;
+		switch(n) {
+			case 0: { // change attacks
+				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_Y);
+				break;
+			}
+			case 1: { // jump
+				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_A);
+				break;
+			}
+			case 2: { // tongue attack
+				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_B);
+				break;
+			}
+			default: continue;
+		}
+		if(state != 0) {
+			return true;
+		}
+	}
+#endif
+
     int cnt = 0;
-	foreach(SDL_Joystick* j, joysticks) {
-		if(n >= SDL_JoystickNumButtons(j)) {
+	for(auto j : joysticks) {
+		if(n >= SDL_JoystickNumButtons(j.get())) {
 			continue;
 		}
-		if(SDL_JoystickGetButton(j, n)) {
+		if(SDL_JoystickGetButton(j.get(), n)) {
 			return true;
 		}
 	}
@@ -227,9 +360,9 @@ int iphone_tilt() {
 std::vector<int> get_info() {
 	std::vector<int> res;
 	res.push_back(joysticks.size());
-	foreach(SDL_Joystick* j, joysticks) {
-		res.push_back(SDL_JoystickGetAxis(j, 0));
-		res.push_back(SDL_JoystickGetAxis(j, 1));
+	for(auto j : joysticks) {
+		res.push_back(SDL_JoystickGetAxis(j.get(), 0));
+		res.push_back(SDL_JoystickGetAxis(j.get(), 1));
 	}
 	
 	return res;
