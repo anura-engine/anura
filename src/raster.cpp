@@ -252,12 +252,14 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		h = mode.h;
 	}
 
-	if(wnd) {
+	if(wnd && !(flags&CLEANUP_WINDOW_CONTEXT)) {
 		SDL_DisplayMode mode;
 		if(SDL_GetWindowDisplayMode(wnd, &mode) == 0) {
 			mode.w = w;
 			mode.h = h;
 			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
+				ASSERT_LOG(w > 0, "FATAL: Parameter 'w' is invalid: " << w);
+				ASSERT_LOG(h > 0, "FATAL: Parameter 'h' is invalid: " << h);
 				SDL_SetWindowSize(wnd, w, h);
 
 				if(grab_fullscreen) {
