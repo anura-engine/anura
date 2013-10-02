@@ -29,6 +29,7 @@
 #include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
+#include "input.hpp"
 #include "isochunk.hpp"
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
@@ -304,7 +305,7 @@ namespace editor_dialogs
 		}
 
 		int mousex, mousey;
-		SDL_GetMouseState(&mousex, &mousey);
+		input::sdl_get_mouse_state(&mousex, &mousey);
 		if(mousex + grid->width() > graphics::screen_width()) {
 			mousex = graphics::screen_width() - grid->width();
 		}

@@ -22,6 +22,7 @@
 #include "button.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
+#include "input.hpp"
 #include "pathfinding.hpp"
 #include "raster.hpp"
 #include "solid_map.hpp"
@@ -351,7 +352,7 @@ void animation_preview_widget::process()
 void animation_preview_widget::handle_draw() const
 {
 	int mousex, mousey;
-	int mouse_buttons = SDL_GetMouseState(&mousex, &mousey);
+	int mouse_buttons = input::sdl_get_mouse_state(&mousex, &mousey);
 	graphics::draw_rect(rect(x(),y(),width(),height()), graphics::color(0,0,0,196));
 	rect image_area(x(), y(), (width()*3)/4, height() - 30);
 	const graphics::texture image_texture(graphics::texture::get(obj_["image"].as_string(), graphics::texture::NO_STRIP_SPRITESHEET_ANNOTATIONS));
@@ -488,7 +489,7 @@ void animation_preview_widget::handle_draw() const
 		}
 
 		if(anchor_x_ != -1 && !dragging_sides_bitmap_ &&
-		   SDL_GetMouseState(&mousex, &mousey) &&
+		   input::sdl_get_mouse_state(&mousex, &mousey) &&
 		   point_in_rect(point(mousex, mousey), dst_rect_)) {
 			const point p1 = mouse_point_to_image_loc(point(mousex, mousey));
 			const point p2 = mouse_point_to_image_loc(point(anchor_x_, anchor_y_));

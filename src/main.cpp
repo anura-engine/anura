@@ -56,6 +56,7 @@
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
 #include "i18n.hpp"
+#include "input.hpp"
 #include "ipc.hpp"
 #include "iphone_device_info.h"
 #include "joystick.hpp"
@@ -978,7 +979,7 @@ extern "C" int main(int argcount, char* argvec[])
 	//look to see if we got any quit events while loading.
 	{
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
+	while(input::sdl_poll_event(&event)) {
 		if(event.type == SDL_QUIT) {
 			return 0;
 		}

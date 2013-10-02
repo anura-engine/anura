@@ -17,6 +17,7 @@
 #include <boost/bind.hpp>
 
 #include "image_widget.hpp"
+#include "input.hpp"
 #include "scrollbar_widget.hpp"
 #include "widget_factory.hpp"
 
@@ -157,7 +158,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(event.type == SDL_MOUSEWHEEL) {
 		int mx, my;
-		SDL_GetMouseState(&mx, &my);
+		input::sdl_get_mouse_state(&mx, &my);
 		if(mx < x() || mx > x() + width() 
 			|| my < y() || my > y() + height()) {
 			return claimed;
@@ -250,7 +251,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		const SDL_MouseMotionEvent& e = event.motion;
 
 		int mousex, mousey;
-		if(!SDL_GetMouseState(&mousex, &mousey)) {
+		if(!input::sdl_get_mouse_state(&mousex, &mousey)) {
 			dragging_handle_ = false;
 		}
 

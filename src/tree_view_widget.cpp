@@ -29,6 +29,7 @@
 #include "font.hpp"
 #include "foreach.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "poly_line_widget.hpp"
 #include "raster.hpp"
@@ -363,7 +364,7 @@ bool tree_view_widget::handle_event(const SDL_Event& event, bool claimed)
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 		} else if(event.type == SDL_MOUSEWHEEL) {
 			int mx, my;
-			SDL_GetMouseState(&mx, &my);
+			input::sdl_get_mouse_state(&mx, &my);
 			point p(mx, my);
 			if(point_in_rect(p, r)) {
 				if(event.wheel.y < 0 ) {
@@ -598,7 +599,7 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 			}
 			g->register_selection_callback(boost::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
 			int mousex, mousey;
-			SDL_GetMouseState(&mousex, &mousey);
+			input::sdl_get_mouse_state(&mousex, &mousey);
 			mousex -= x();
 			mousey -= y();
 			context_menu_.reset(g);
@@ -654,7 +655,7 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		grid->add_col(editor);
 		grid->register_selection_callback(boost::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
 		int mousex, mousey;
-		SDL_GetMouseState(&mousex, &mousey);
+		input::sdl_get_mouse_state(&mousex, &mousey);
 		mousex -= x();
 		mousey -= y();
 		edit_menu_.reset(grid);
@@ -789,7 +790,7 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	grid->register_selection_callback(boost::bind(&tree_editor_widget::execute_edit_select, this, _1));
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex -= x();
 	mousey -= y();
 	edit_menu_.reset(grid);

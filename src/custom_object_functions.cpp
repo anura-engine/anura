@@ -43,6 +43,7 @@
 #include "formula_profiler.hpp"
 #include "haptic.hpp"
 #include "i18n.hpp"
+#include "input.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "level_runner.hpp"
@@ -389,7 +390,7 @@ int show_simple_option_dialog(level& lvl, const std::string& text, const std::ve
 	bool done = false;
 	while(!done) {
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
+		while(input::sdl_poll_event(&event)) {
 			if(d->key_press(event)) {
 				done = true;
 			}
@@ -2085,7 +2086,7 @@ private:
 					}
 
 					SDL_Event event;
-					while(SDL_PollEvent(&event)) {
+					while(input::sdl_poll_event(&event)) {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
 						// the user event gets handled the same as pressing escape
 						if (menu_button_.handle_event(event))

@@ -1128,7 +1128,7 @@ void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn
 	while(!quit && !d->closed()) {
 
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
+		while(input::sdl_poll_event(&event)) {
 			switch(event.type) {
 				case SDL_QUIT: {
 					quit = true;

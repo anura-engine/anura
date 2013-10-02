@@ -30,6 +30,7 @@
 #include "formula_visualize_widget.hpp"
 #include "geometry.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 
 namespace gui {

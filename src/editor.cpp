@@ -140,7 +140,7 @@ public:
 		}
 
 		int mousex, mousey;
-		SDL_GetMouseState(&mousex, &mousey);
+		input::sdl_get_mouse_state(&mousex, &mousey);
 
 		mousex -= x();
 		mousey -= y();
@@ -487,7 +487,6 @@ public:
 			if(n == editor::TOOL_EDIT_SEGMENTS && editor_.get_level().segment_width() == 0 && editor_.get_level().segment_height() == 0) {
 				continue;
 			}
-			std::cerr << "editor add tool: " << n << std::endl;
 			button_ptr tool_button(
 			  new button(widget_ptr(new gui_section_widget(ToolIcons[n], 26, 26)),
 			             boost::bind(&editor_mode_dialog::select_tool, this, n)));
@@ -943,7 +942,7 @@ void editor::remove_ghost_objects()
 
 namespace {
 unsigned int get_mouse_state(int& mousex, int& mousey) {
-	unsigned int res = SDL_GetMouseState(&mousex, &mousey);
+	unsigned int res = input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex = (mousex*graphics::screen_width())/preferences::virtual_screen_width();
 	mousey = (mousey*graphics::screen_height())/preferences::virtual_screen_height();
 
@@ -978,6 +977,14 @@ editor_resolution_manager::editor_resolution_manager(int xres, int yres) :
 	   original_width_(preferences::actual_screen_width()),
 	   original_height_(preferences::actual_screen_height()) {
 	std::cerr << "EDITOR RESOLUTION MANAGER: " << xres << ", " << yres << "\n";
+
+	if(preferences::fullscreen()) {
+		SDL_DisplayMode mode;
+		SDL_GetDesktopDisplayMode(0, &mode);
+		xres = mode.w;
+		yres = mode.h;
+	}
+
 	if(!editor_x_resolution) {
 		if(xres != 0 && yres != 0) {
 			editor_x_resolution = xres;
@@ -1388,7 +1395,7 @@ void editor::process()
 			x = editor_x_resolution / 2;
 			y = editor_y_resolution / 2;
 		} else {
-			SDL_GetMouseState(&x, &y);
+			input::sdl_get_mouse_state(&x, &y);
 		}
 		
 		g_world_coords = lvl_->camera()->screen_to_world(x, y, editor_x_resolution, editor_y_resolution);

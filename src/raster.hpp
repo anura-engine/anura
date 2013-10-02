@@ -113,6 +113,13 @@ std::vector<GLfloat>& global_vertex_array();
 std::vector<GLfloat>& global_texcoords_array();
 std::vector<GLbyte>& global_vertex_color_array();
 
+void setup_fbo_rendering(int width, int height);
+
+//function to map a mouse position in native window co-ordinates.
+//this will modify the mouse position if we're using an fbo to
+//present a fake framebuffer.
+void map_mouse_position(int* x, int* y);
+
 void prepare_raster();
 void blit_texture(const texture& tex, int x=0, int y=0, GLfloat rotate=0.0);
 

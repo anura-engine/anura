@@ -29,6 +29,7 @@
 #include "font.hpp"
 #include "formatter.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "preferences.hpp"
 #include "widget_settings_dialog.hpp"
@@ -144,7 +145,7 @@ namespace gui
 		g->add_col(new label("Tooltip Color:", text_size(), font()))
 			.add_col(new button(new label("Choose...", text_size_, font_name_), [&](){
 				int mx, my;
-				SDL_GetMouseState(&mx, &my);
+				input::sdl_get_mouse_state(&mx, &my);
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
 				my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
 				my -= y();

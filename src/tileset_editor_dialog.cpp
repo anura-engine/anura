@@ -25,6 +25,7 @@
 #include "editor.hpp"
 #include "foreach.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
 #include "raster.hpp"
@@ -141,7 +142,7 @@ void tileset_editor_dialog::show_category_menu()
 	}
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	if(mousex + grid->width() > graphics::screen_width()) {
 		mousex = graphics::screen_width() - grid->width();
 	}

@@ -17,6 +17,7 @@
 #include "graphics.hpp"
 
 #include "font.hpp"
+#include "input.hpp"
 #include "raster.hpp"
 #include "tooltip.hpp"
 
@@ -52,7 +53,7 @@ void draw_tooltip()
 	}
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex,&mousey);
+	input::sdl_get_mouse_state(&mousex,&mousey);
 
 	const int pad = 10;
 	const int width = text().width() + pad*2;

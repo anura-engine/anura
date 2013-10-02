@@ -27,6 +27,7 @@
 #include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
+#include "input.hpp"
 #include "isochunk.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
@@ -598,7 +599,7 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
 
-		Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+		Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
 		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			if(motion.xrel) {
 				camera_hangle_ += motion.xrel*0.02;
@@ -1333,7 +1334,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 	case SDL_MOUSEWHEEL: {
 		int mx, my;
-		SDL_GetMouseState(&mx, &my);
+		input::sdl_get_mouse_state(&mx, &my);
 		if(!focus_ || get_editor().get_cursor() == NULL) {
 			break;
 		}
@@ -1444,7 +1445,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
 			focus_ = true;
 
-			Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+			Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
 
 			if(!button_state) {
 				selection_border_ = touching_selection_border(motion.x, motion.y);

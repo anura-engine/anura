@@ -23,6 +23,7 @@
 #include "dialog.hpp"
 #include "font.hpp"
 #include "foreach.hpp"
+#include "input.hpp"
 #include "module.hpp"
 #include "raster.hpp"
 #include "surface_cache.hpp"
@@ -284,7 +285,7 @@ bool dialog::pump_events()
 {
     SDL_Event event;
 	bool running = true;
-    while(running && SDL_PollEvent(&event)) {  
+    while(running && input::sdl_poll_event(&event)) {  
         bool claimed = false;
             
         switch(event.type) {

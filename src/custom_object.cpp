@@ -2140,7 +2140,7 @@ void custom_object::process(level& lvl)
 		if(is_mouse_over_entity() == false) {
 			game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
 			int mx, my;
-			SDL_GetMouseState(&mx, &my);
+			input::sdl_get_mouse_state(&mx, &my);
 			callable->add("mouse_x", variant(mx));
 			callable->add("mouse_y", variant(my));
 			handle_event("mouse_enter", callable.get());

@@ -22,6 +22,7 @@
 #include "geometry.hpp"
 #include "image_widget.hpp"
 #include "drag_widget.hpp"
+#include "input.hpp"
 #include "raster.hpp"
 
 enum {
@@ -233,7 +234,7 @@ rect drag_widget::get_dragger_rect() const
 bool drag_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p;
-	int button_state = SDL_GetMouseState(&p.x, &p.y);
+	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
 	if(point_in_rect(p, get_border_rect()) || point_in_rect(p, get_dragger_rect())) {
 		if(dragging_handle_ == 0) {
 			dragging_handle_ = event.button;
@@ -250,7 +251,7 @@ bool drag_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claim
 bool drag_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	int mousex, mousey;
-	int button_state = SDL_GetMouseState(&mousex, &mousey);
+	int button_state = input::sdl_get_mouse_state(&mousex, &mousey);
 	if(dragging_handle_ == event.button) {
 		dragging_handle_ = 0;
 		if(drag_end_) {
@@ -264,7 +265,7 @@ bool drag_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed
 bool drag_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed)
 {
 	point p;
-	int button_state = SDL_GetMouseState(&p.x, &p.y);
+	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
 	if(dragging_handle_) {
 		int dx = start_pos_.x - p.x;
 		int dy = start_pos_.y - p.y;

@@ -320,7 +320,6 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 					stack.back().base = v;
 				} else if(is_call) {
 					std::string call_macro = v["@call"].as_string();
-					std::cerr << "CALLING " << call_macro << "...\n";
 					std::map<std::string, json_macro_ptr>::const_iterator itor = macros->find(call_macro);
 					CHECK_PARSE(itor != macros->end(), "Could not find macro", t.begin - doc.c_str());
 
@@ -589,14 +588,11 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 
 		for(std::map<CacheKey, variant>::iterator i = cache.begin(); i != cache.end(); ) {
 			if(i->second.refcount() == 1) {
-				std::cerr << "JSON CACHE: REMOVE ITEM\n";
 				cache.erase(i++);
 			} else {
 				++i;
 			}
 		}
-
-		std::cerr << "JSON CACHE: HAS " << cache.size() << " ITEMS\n";
 
 		cache[key] = result;
 		return result;

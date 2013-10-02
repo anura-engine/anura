@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
- #include "graphics.hpp"
+#include "graphics.hpp"
 
 #include "asserts.hpp"
 #include "camera.hpp"
@@ -25,6 +25,9 @@
 #include "raster_distortion.hpp"
 #include "rectangle_rotator.hpp"
 #include "texture_frame_buffer.hpp"
+
+#include "SDL.h"
+#include "SDL_syswm.h"
 
 #include <boost/shared_array.hpp>
 #include <iostream>
@@ -99,6 +102,12 @@ void reset_opengl_state()
 namespace {
 	SDL_Window* global_main_window = NULL;
 	SDL_Renderer* global_renderer = NULL;
+
+	GLuint fbo_framebuffer;
+	GLuint fbo_texture;
+	boost::scoped_ptr<graphics::texture> fbo_texture_obj;
+	GLuint real_framebuffer;
+	int fbo_framebuffer_width, fbo_framebuffer_height;
 }
 
 SDL_Window* get_window()
@@ -108,10 +117,49 @@ SDL_Window* get_window()
 }
 #endif
 
+namespace {
+	int g_letterbox_horz, g_letterbox_vert;
+}
+
 void swap_buffers()
 {
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	ASSERT_LOG(global_main_window != NULL, "swap_buffers called on NULL window");
+
+	g_letterbox_horz = g_letterbox_vert = 0;
+	if(fbo_framebuffer) {
+		glBindFramebuffer(GL_FRAMEBUFFER, real_framebuffer);
+
+		glClearColor(0.0, 0.0, 0.0, 0.0);
+		glClear(GL_COLOR_BUFFER_BIT);
+
+		int width = 0, height = 0;
+		SDL_GetWindowSize(global_main_window, &width, &height);
+
+		if((fbo_framebuffer_width*1000)/fbo_framebuffer_height < (width*1000)/height) {
+			//actual screen wider than the framebuffer, letterboxing
+			//on the sides.
+			const int normalized_width = (fbo_framebuffer_width*height)/fbo_framebuffer_height;
+
+			g_letterbox_horz = width - normalized_width;
+		} else if((fbo_framebuffer_width*1000)/fbo_framebuffer_height > (width*1000)/height) {
+			//actual screen narrow than the framebuffer, letterboxing
+			//on the top/bottom.
+			const int normalized_height = (fbo_framebuffer_height*width)/fbo_framebuffer_width;
+			g_letterbox_vert = height - normalized_height;
+		}
+
+
+		preferences::screen_dimension_override_scope dim_scope(width, height, width, height);
+		prepare_raster();
+
+		fbo_texture_obj->set_as_current_texture();
+
+		graphics::blit_texture(*fbo_texture_obj, g_letterbox_horz/2, g_letterbox_vert/2, width - g_letterbox_horz, height - g_letterbox_vert, 0.0, 0.0, 1.0, 1.0, 0.0);
+
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo_framebuffer);
+	}
+
 	SDL_GL_SwapWindow(global_main_window );
 #else
 	SDL_GL_SwapBuffers();
@@ -180,11 +228,29 @@ SDL_DisplayMode set_video_mode_auto_select()
 	return best_mode;
 }
 
+namespace {
+PREF_INT(grab_fullscreen, 0);
+}
+
 SDL_Window* set_video_mode(int w, int h, int flags)
 {
 	static SDL_Window* wnd = NULL;
 	static SDL_GLContext ctx = NULL;
 	static int wnd_flags = 0;
+
+	setup_fbo_rendering(0, 0);
+
+	bool grab_fullscreen = false;
+	int grab_fullscreen_w = w, grab_fullscreen_h = h;
+
+	if((flags&SDL_WINDOW_FULLSCREEN) && !g_grab_fullscreen) {
+		grab_fullscreen = true;
+		const int display_index = 0; //SDL_GetWindowDisplayIndex(graphics::get_window());
+		SDL_DisplayMode mode;
+		SDL_GetDesktopDisplayMode(display_index, &mode);
+		w = mode.w;
+		h = mode.h;
+	}
 
 	if(wnd) {
 		SDL_DisplayMode mode;
@@ -193,8 +259,17 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 			mode.h = h;
 			if(SDL_SetWindowDisplayMode(wnd, &mode) == 0) {
 				SDL_SetWindowSize(wnd, w, h);
-				SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
-				SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+
+				if(grab_fullscreen) {
+					SDL_SetWindowFullscreen(wnd, SDL_WINDOW_FULLSCREEN_DESKTOP);
+				} else {
+					SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+					SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
+				}
+				if(grab_fullscreen) {
+					setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
+				}
+
 				return wnd;
 			} else {
 				fprintf(stderr, "ERROR: Failed to set window display mode. Destroying window and creating a new one.\n");
@@ -271,6 +346,10 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &g_msaa_set) == 0) {
 		std::cerr << "Actual MSAA: " << g_msaa_set << std::endl; 
 	}
+
+	if(grab_fullscreen) {
+		setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
+	}
 #endif
 	return wnd;
 }
@@ -313,6 +392,87 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 	|| defined(GL_VERSION_ES_CM_1_1) || defined(GL_VERSION_ES_CL_1_1)
 #define glOrtho glOrthof
 #endif
+
+	void setup_fbo_rendering(int width, int height)
+	{
+		if(width == fbo_framebuffer_width && height == fbo_framebuffer_height) {
+			return;
+		}
+
+		if(fbo_texture) {
+			glDeleteFramebuffers(1, &fbo_framebuffer);
+			glDeleteTextures(1, &fbo_texture);
+
+			fbo_framebuffer = 0;
+			fbo_texture = 0;
+			fbo_texture_obj.reset();
+
+			fbo_framebuffer_width = fbo_framebuffer_height = 0;
+
+			glBindFramebuffer(GL_FRAMEBUFFER, real_framebuffer);
+
+			int window_width = 0, window_height = 0;
+			SDL_GetWindowSize(global_main_window, &window_width, &window_height);
+			preferences::set_actual_screen_width(window_width);
+			preferences::set_actual_screen_height(window_height);
+		}
+
+		if(width == 0 || height == 0) {
+			return;
+		}
+
+		glGetIntegerv(GL_FRAMEBUFFER_BINDING, (GLint*)&real_framebuffer);
+
+		glGenTextures(1, &fbo_texture);
+		glBindTexture(GL_TEXTURE_2D, fbo_texture);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, 0);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		fbo_texture_obj.reset(new graphics::texture(fbo_texture, width, height));
+		fbo_framebuffer_width = width;
+		fbo_framebuffer_height = height;
+
+		glGenFramebuffers(1, &fbo_framebuffer);
+		glBindFramebuffer(GL_FRAMEBUFFER, fbo_framebuffer);
+
+		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
+		                       GL_TEXTURE_2D, fbo_texture, 0);
+
+		preferences::set_actual_screen_width(fbo_framebuffer_width);
+		preferences::set_actual_screen_height(fbo_framebuffer_height);
+	}
+
+	void map_mouse_position(int* x, int* y)
+	{
+		if(!fbo_texture) {
+			return;
+		}
+
+		if(x) {
+			*x -= g_letterbox_horz/2;
+		}
+
+		if(y) {
+			*y -= g_letterbox_vert/2;
+		}
+
+		int width = 0, height = 0;
+		SDL_GetWindowSize(global_main_window, &width, &height);
+
+		if(x) {
+			*x *= fbo_framebuffer_width;
+			*x /= width - g_letterbox_horz;
+		}
+
+		if(y) {
+			*y *= fbo_framebuffer_height;
+			*y /= height - g_letterbox_vert;
+		}
+	}
 	
 	void prepare_raster()
 	{

@@ -838,7 +838,6 @@ public:
 	bool is_compatible(variant_type_ptr type) const {
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
-			fprintf(stderr, "TEST COMPAT: %s <- %s: %d\n", value_type_->to_string().c_str(), value_type->to_string().c_str(), (int)variant_types_compatible(value_type_, value_type));
 			return variant_types_compatible(value_type_, value_type);
 		}
 

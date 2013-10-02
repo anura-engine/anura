@@ -31,6 +31,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "raster.hpp"
 #include "stats.hpp"
@@ -176,7 +177,7 @@ void editor_level_properties_dialog::change_background()
 	}
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 
 	mousex -= x();
 	mousey -= y();

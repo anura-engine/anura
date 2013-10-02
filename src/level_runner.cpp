@@ -47,6 +47,7 @@
 #ifdef TARGET_BLACKBERRY
 #include "userevents.h"
 #endif
+#include "input.hpp"
 #include "joystick.hpp"
 #include "json_parser.hpp"
 #include "level_runner.hpp"
@@ -298,7 +299,7 @@ void show_end_game()
 	bool done = false;
 	while(!done) {
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
+		while(input::sdl_poll_event(&event)) {
 			switch(event.type) {
 			case SDL_QUIT:
 			case SDL_KEYDOWN:
@@ -521,7 +522,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				? MouseDownEventAllID 
 				: event_type == SDL_MOUSEMOTION
 					? MouseMoveEventAllID : MouseUpEventAllID;
-			Uint8 button_state = SDL_GetMouseState(0,0);
+			Uint8 button_state = input::sdl_get_mouse_state(0,0);
 			if(!lvl_->gui_event(event)) {
 				x = (mx*graphics::screen_width())/preferences::virtual_screen_width() + last_draw_position().x/100;
 				y = (my*graphics::screen_height())/preferences::virtual_screen_height() + last_draw_position().y/100;
@@ -1196,8 +1197,7 @@ bool level_runner::play_cycle()
 #endif
 	if(message_dialog::get() == NULL) {
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
-			
+		while(input::sdl_poll_event(&event)) {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
 			should_pause = settings_dialog.handle_event(event);
 #endif
@@ -1475,7 +1475,7 @@ bool level_runner::play_cycle()
 			case SDL_MOUSEBUTTONDOWN:
 				if(console_.get()) {
 					int mousex, mousey;
-					SDL_GetMouseState(&mousex, &mousey);
+					input::sdl_get_mouse_state(&mousex, &mousey);
 					entity_ptr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
 					if(selected) {
 						lvl_->set_editor_highlight(selected);
@@ -1783,7 +1783,7 @@ void level_runner::reverse_cycle()
 	controls::unread_local_controls();
 
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
+	while(input::sdl_poll_event(&event)) {
 	}
 
 	const bool should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());

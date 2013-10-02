@@ -33,6 +33,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "load_level.hpp"
@@ -184,7 +185,7 @@ void editor_module_properties_dialog::change_module_includes()
 	grid->register_selection_callback(boost::bind(&editor_module_properties_dialog::execute_change_module_includes, this, choices, _1));
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 
 	mousex -= x();
 	mousey -= y();

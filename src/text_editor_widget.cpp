@@ -27,6 +27,7 @@
 #include "clipboard.hpp"
 #include "font.hpp"
 #include "foreach.hpp"
+#include "input.hpp"
 #include "raster.hpp"
 #include "string_utils.hpp"
 #include "text_editor_widget.hpp"
@@ -520,7 +521,7 @@ bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 bool text_editor_widget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 {
 	int mx, my;
-	SDL_GetMouseState(&mx, &my);
+	input::sdl_get_mouse_state(&mx, &my);
 	if(mx >= x() && mx < x() + width() && my >= y() && my < y() + height()) {
 		if(event.y > 0) {
 			if(cursor_.row > 2) {
@@ -724,7 +725,7 @@ bool text_editor_widget::handle_mouse_button_up(const SDL_MouseButtonEvent& even
 bool text_editor_widget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 {
 	int mousex, mousey;
-	if(is_dragging_ && has_focus_ && SDL_GetMouseState(&mousex, &mousey)) {
+	if(is_dragging_ && has_focus_ && input::sdl_get_mouse_state(&mousex, &mousey)) {
 		std::pair<int, int> pos = mouse_position_to_row_col(event.x, event.y);
 		if(pos.first != -1) {
 			cursor_.row = pos.first;
