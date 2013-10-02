@@ -541,10 +541,8 @@ FUNCTION_TYPE_DEF
 	variant literal;
 	args()[0]->is_literal(literal);
 	if(literal.is_string()) {
-		std::cerr << "SINGLETON RETURNING CLASS: " << literal.as_string() << "\n";
 		return variant_type::get_class(literal.as_string());
 	} else {
-		std::cerr << "SINGLETON RETURNING ANY: " << literal.write_json() << "\n";
 		return variant_type::get_any();
 	}
 END_FUNCTION_DEF(singleton)
@@ -1714,7 +1712,6 @@ FUNCTION_DEF(flatten, 1, 1, "flatten(list): Returns a list with a depth of 1 con
 	flatten_items(input, &output);
 	return variant(&output);
 FUNCTION_TYPE_DEF
-	std::cerr << "FLATTEN: " << args()[0]->query_variant_type()->to_string() << "  ---> " << variant_type::get_list(flatten_type(args()[0]->query_variant_type()))->to_string() << "\n";
 	return variant_type::get_list(flatten_type(args()[0]->query_variant_type()));
 END_FUNCTION_DEF(flatten)
 

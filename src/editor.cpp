@@ -487,7 +487,6 @@ public:
 			if(n == editor::TOOL_EDIT_SEGMENTS && editor_.get_level().segment_width() == 0 && editor_.get_level().segment_height() == 0) {
 				continue;
 			}
-			std::cerr << "editor add tool: " << n << std::endl;
 			button_ptr tool_button(
 			  new button(widget_ptr(new gui_section_widget(ToolIcons[n], 26, 26)),
 			             boost::bind(&editor_mode_dialog::select_tool, this, n)));

@@ -234,7 +234,6 @@ PREF_INT(grab_fullscreen, 0);
 
 SDL_Window* set_video_mode(int w, int h, int flags)
 {
-	fprintf(stderr, "ZZZ: set_video_mode(%d, %d, %d)\n", w, h, flags);
 	static SDL_Window* wnd = NULL;
 	static SDL_GLContext ctx = NULL;
 	static int wnd_flags = 0;
@@ -268,7 +267,6 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 					SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 				}
 				if(grab_fullscreen) {
-					fprintf(stderr, "ZZZ: setup fake fullscreen: %d,%d -> %d,%d\n", grab_fullscreen_w, grab_fullscreen_h, w, h);
 					setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
 				}
 
@@ -350,7 +348,6 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 	}
 
 	if(grab_fullscreen) {
-		fprintf(stderr, "ZZZ: setup fake fullscreen: %d,%d -> %d,%d\n", grab_fullscreen_w, grab_fullscreen_h, w, h);
 		setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
 	}
 #endif
