@@ -49,11 +49,11 @@ namespace
 
 	wh_data::const_iterator enumerate_video_modes(wh_data& display_modes)
 	{
-		SDL_DisplayMode mode;
+		//SDL_DisplayMode mode;
 		const int display_index = SDL_GetWindowDisplayIndex(graphics::get_window());
 		wh_data::const_iterator mode_index;
-		SDL_GetDesktopDisplayMode(display_index, &mode);
-		std::cerr << "Current display mode: " << mode.w << "," << mode.h << " : " << mode.format << std::endl;
+		//SDL_GetCurrentDisplayMode(display_index, &mode);
+		//std::cerr << "Current display mode: " << mode.w << "," << mode.h << " : " << mode.format << std::endl;
 		const int nmodes = SDL_GetNumDisplayModes(display_index);
 		for(int n = 0; n != nmodes; ++n) {
 			SDL_DisplayMode new_mode;
@@ -67,7 +67,7 @@ namespace
 				std::cerr << "Adding display mode: " << new_mode.w << "," << new_mode.h << " : " << new_mode.format << std::endl;
 				auto wh = std::make_pair(new_mode.w, new_mode.h);
 				auto it = display_modes.insert(wh);
-				if(new_mode.w == mode.w && new_mode.h == mode.h) {
+				if(new_mode.w == preferences::actual_screen_width() && new_mode.h == preferences::actual_screen_height()) {
 					mode_index = it.first;
 				}
 			}
@@ -143,7 +143,9 @@ void show_video_selection_dialog()
 	d.show_modal();
 	if(d.cancelled() == false) {
 		// set selected video mode here
-		preferences::set_actual_screen_dimensions_persistent(mode_data[selected_mode].first, mode_data[selected_mode].second);
+		if(selected_mode >= 0 && selected_mode < mode_data.size()) {
+			preferences::set_actual_screen_dimensions_persistent(mode_data[selected_mode].first, mode_data[selected_mode].second);
+		}
 		preferences::set_fullscreen(b_fullscreen);
 
 		graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0);

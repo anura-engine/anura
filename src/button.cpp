@@ -159,6 +159,7 @@ bool button::handle_event(const SDL_Event& event, bool claimed)
     if(claimed) {
 		current_button_image_set_ = normal_button_image_set_;
 		down_ = false;
+		return claimed;
     }
 
 	if(event.type == SDL_MOUSEMOTION) {
@@ -171,7 +172,6 @@ bool button::handle_event(const SDL_Event& event, bool claimed)
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 		const SDL_MouseButtonEvent& e = event.button;
 		if(in_widget(e.x,e.y)) {
-		std::cerr << "ZZZ: Widget: " << e.x << ", " << e.y << ": ";
 		if(clip_area()) {
 			std::cerr << *clip_area() << "\n";
 		} else {
