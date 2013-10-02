@@ -1198,7 +1198,6 @@ bool level_runner::play_cycle()
 	if(message_dialog::get() == NULL) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
-			//std::cerr << "Got event (level_runner 672): " << (int) event.type << ".\n";
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
 			should_pause = settings_dialog.handle_event(event);
 #endif
@@ -1249,6 +1248,9 @@ bool level_runner::play_cycle()
 			}
 
 #endif
+
+			swallowed = joystick::pump_events(event, swallowed);
+
 			{
 				// pre-translate the mouse positions.
 				SDL_Event ev(event);

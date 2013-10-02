@@ -27,6 +27,7 @@ struct manager {
 };
 
 void update();
+bool pump_events(const SDL_Event&,bool);
 
 bool up();
 bool down();
