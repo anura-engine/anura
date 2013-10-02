@@ -39,6 +39,7 @@
 #include "foreach.hpp"
 #include "frame.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "json_parser.hpp"
 #include "graphics.hpp"
 #include "label.hpp"
@@ -526,7 +527,7 @@ void custom_object_dialog::change_prototype()
 	}
 
 	int mousex, mousey, my;
-	SDL_GetMouseState(&mousex, &my);
+	input::sdl_get_mouse_state(&mousex, &my);
 	mousex -= this->x();
 	mousey = my - this->y();
 

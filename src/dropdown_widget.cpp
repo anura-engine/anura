@@ -24,6 +24,7 @@
 #include "foreach.hpp"
 #include "geometry.hpp"
 #include "graphics.hpp"
+#include "input.hpp"
 #include "raster.hpp"
 
 namespace gui {
@@ -258,7 +259,7 @@ bool dropdown_widget::handle_event(const SDL_Event& event, bool claimed)
 bool dropdown_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p(event.x, event.y);
-	//int button_state = SDL_GetMouseState(&p.x, &p.y);
+	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
 	if(point_in_rect(p, rect(x(), y(), width()+height(), height()))) {
 		claimed = claim_mouse_events();
 		if(dropdown_menu_) {
@@ -279,7 +280,7 @@ void dropdown_widget::set_dropdown_height(int h)
 bool dropdown_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p(event.x, event.y);
-	//int button_state = SDL_GetMouseState(&p.x, &p.y);
+	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
 	if(point_in_rect(p, rect(x(), y(), width()+height(), height()))) {
 		claimed = claim_mouse_events();
 	}
@@ -289,7 +290,7 @@ bool dropdown_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool cla
 bool dropdown_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed)
 {
 	point p;
-	int button_state = SDL_GetMouseState(&p.x, &p.y);
+	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
 	return claimed;
 }
 

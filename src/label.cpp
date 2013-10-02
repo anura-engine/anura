@@ -22,6 +22,7 @@
 #include "font.hpp"
 #include "grid_widget.hpp"
 #include "i18n.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
@@ -306,7 +307,7 @@ widget_settings_dialog* label::settings_dialog(int x, int y, int w, int h)
 	g->add_col(new label("Color:", d->text_size(), d->font()))
 		.add_col(new button(new label("Choose...", d->text_size(), d->font()), [&](){
 			int mx, my;
-			SDL_GetMouseState(&mx, &my);
+			input::sdl_get_mouse_state(&mx, &my);
 			mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
 			my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
 			my -= d->y();

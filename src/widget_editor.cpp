@@ -36,6 +36,7 @@
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "image_widget.hpp"
+#include "input.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "module.hpp"
@@ -293,14 +294,14 @@ void widget_window::handle_draw() const
 
 	if(placement_) {
 		int mx, my;
-		SDL_GetMouseState(&mx, &my);
+		input::sdl_get_mouse_state(&mx, &my);
 		placement_->set_loc(mx, my);
 		placement_->draw();
 	}
 
 	std::stringstream str;
 	int mx, my;
-	SDL_GetMouseState(&mx, &my);
+	input::sdl_get_mouse_state(&mx, &my);
 	str << "X: " << std::setw(4) << mx << ", Y: " << std::setw(4) << my;
 	graphics::blit_texture(font::render_text_uncached(str.str(), text_color_, 14, default_font_name), 0, height() - info_bar_height_);
 	glPopMatrix();
@@ -343,7 +344,7 @@ bool widget_window::handle_event(const SDL_Event& event, bool claimed)
 
 		case SDL_MOUSEMOTION: {
 			const SDL_MouseMotionEvent& motion = event.motion;
-			//Uint8 button_state = SDL_GetMouseState(NULL, NULL);
+			//Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
 			if(motion.x >= x() && motion.x < x()+width() && motion.y >= y() && motion.y < y()+height()-info_bar_height_ && editor_.tool() < NUM_WIDGET_TOOLS) {
 				if((selected_ != editor_.tool() || placement_ == NULL) && editor_.is_tool_widget()) {
 					placement_.reset(new gui::gui_section_widget(ToolIcons[editor_.tool()], 26, 26));

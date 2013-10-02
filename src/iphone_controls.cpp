@@ -146,7 +146,7 @@ void iphone_controls::read_controls()
 	for(int i = 0; i < nmice; i++) {
 		int x, y;
 		SDL_SelectMouse(i);
-		Uint8 button_state = SDL_GetMouseState(&x, &y);
+		Uint8 button_state = input::sdl_get_mouse_state(&x, &y);
 		translate_mouse_coords(&x, &y);
 		if(all_mice.size() == i) {
 			all_mice.push_back(Mouse());

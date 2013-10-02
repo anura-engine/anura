@@ -31,6 +31,7 @@
 #include "formatter.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "load_level.hpp"
 #include "object_events.hpp"
@@ -523,7 +524,7 @@ void property_editor_dialog::change_enum_property(const std::string& id)
 	}
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex -= x();
 	mousey -= y();
 
@@ -585,7 +586,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 		}
 
 		int mousex, mousey;
-		SDL_GetMouseState(&mousex, &mousey);
+		input::sdl_get_mouse_state(&mousex, &mousey);
 		mousex -= x();
 		mousey -= y();
 

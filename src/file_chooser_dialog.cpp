@@ -37,6 +37,7 @@
 #include "foreach.hpp"
 #include "graphics.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -337,7 +338,7 @@ void file_chooser_dialog::add_dir_button()
 	grid->register_selection_callback(boost::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
 
 	int mousex, mousey;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 
 	mousex -= x();
 	mousey -= y();

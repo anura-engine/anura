@@ -21,6 +21,7 @@
 #include "foreach.hpp"
 #include "formula_callable_visitor.hpp"
 #include "grid_widget.hpp"
+#include "input.hpp"
 #include "label.hpp"
 #include "raster.hpp"
 #include "widget_factory.hpp"
@@ -470,7 +471,7 @@ bool grid::handle_event(const SDL_Event& event, bool claimed)
 #if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(!claimed && event.type == SDL_MOUSEWHEEL) {
 		int mx, my;
-		SDL_GetMouseState(&mx, &my);
+		input::sdl_get_mouse_state(&mx, &my);
 		point p(mx, my);
 		rect r(x(), y(), width(), height());
 		if(point_in_rect(p, r)) {
@@ -677,7 +678,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 	);
 
 	int mousex = 0, mousey = 0;
-	SDL_GetMouseState(&mousex, &mousey);
+	input::sdl_get_mouse_state(&mousex, &mousey);
 
 	const int max_x = graphics::screen_width() - grid->width() - 6;
 	const int max_y = graphics::screen_height() - grid->height() - 6;
@@ -686,7 +687,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 
 	while(!quit) {
 		SDL_Event event;
-		while(SDL_PollEvent(&event)) {
+		while(input::sdl_poll_event(&event)) {
 			bool claimed = grid->process_event(event, false);
 
 			if(claimed) {

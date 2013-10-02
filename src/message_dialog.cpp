@@ -19,6 +19,7 @@
 
 #include "font.hpp"
 #include "foreach.hpp"
+#include "input.hpp"
 #include "message_dialog.hpp"
 #include "raster.hpp"
 #include "string_utils.hpp"
@@ -190,7 +191,7 @@ void message_dialog::draw() const
 void message_dialog::process()
 {
 	SDL_Event event;
-	while(SDL_PollEvent(&event)) {
+	while(input::sdl_poll_event(&event)) {
 		switch(event.type) {
 			case SDL_KEYDOWN:
 				if(options_.empty() == false) {

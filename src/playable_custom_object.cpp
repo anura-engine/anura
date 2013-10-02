@@ -19,6 +19,7 @@
 #include "difficulty.hpp"
 #include "formatter.hpp"
 #include "preferences.hpp"
+#include "input.hpp"
 #include "iphone_controls.hpp"
 #include "joystick.hpp"
 #include "level.hpp"
@@ -274,7 +275,7 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 #endif
 			std::vector<variant> info;
 			int x, y;
-			Uint8 button_state = SDL_GetMouseState(&x, &y);
+			Uint8 button_state = input::sdl_get_mouse_state(&x, &y);
 			translate_mouse_coords(&x, &y);
 
 			info.push_back(variant(x));
