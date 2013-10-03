@@ -155,7 +155,10 @@ void swap_buffers()
 
 		fbo_texture_obj->set_as_current_texture();
 
+		glDisable(GL_BLEND);
+
 		graphics::blit_texture(*fbo_texture_obj, g_letterbox_horz/2, g_letterbox_vert/2, width - g_letterbox_horz, height - g_letterbox_vert, 0.0, 0.0, 1.0, 1.0, 0.0);
+		glEnable(GL_BLEND);
 
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_framebuffer);
 	}
