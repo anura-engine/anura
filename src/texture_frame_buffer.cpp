@@ -154,6 +154,11 @@ void init(int buffer_width, int buffer_height)
 	init_internal(buffer_width, buffer_height);
 }
 
+void set_framebuffer_id(int framebuffer)
+{
+	video_framebuffer_id = framebuffer;
+}
+
 void switch_texture()
 {
 	std::swap(texture_id, texture_id_back);

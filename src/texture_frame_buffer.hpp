@@ -21,6 +21,8 @@ namespace texture_frame_buffer {
 
 bool unsupported();
 void init(int width=128, int height=128);
+void set_framebuffer_id(int framebuffer);
+
 void switch_texture();
 
 void set_as_current_texture();

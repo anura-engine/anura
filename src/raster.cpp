@@ -413,6 +413,8 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 
 			fbo_framebuffer_width = fbo_framebuffer_height = 0;
 
+			texture_frame_buffer::set_framebuffer_id(real_framebuffer);
+
 			glBindFramebuffer(GL_FRAMEBUFFER, real_framebuffer);
 		}
 
@@ -437,6 +439,8 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 
 		glGenFramebuffers(1, &fbo_framebuffer);
 		glBindFramebuffer(GL_FRAMEBUFFER, fbo_framebuffer);
+
+		texture_frame_buffer::set_framebuffer_id(fbo_framebuffer);
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 		                       GL_TEXTURE_2D, fbo_texture, 0);
