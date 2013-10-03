@@ -148,6 +148,6 @@ void show_video_selection_dialog()
 		}
 		preferences::set_fullscreen(b_fullscreen);
 
-		graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0);
+		graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height());
 	}
 }

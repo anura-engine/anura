@@ -840,7 +840,6 @@ void load_level_thread(const std::string& lvl, level** res) {
 std::set<std::string> g_levels_modified;
 
 void level_file_modified(std::string lvl_path) {
-	fprintf(stderr, "XX LVL MODIFIED: %s\n", lvl_path.c_str());
 	g_levels_modified.insert(lvl_path);
 }
 }
@@ -913,12 +912,10 @@ bool level_runner::play_cycle()
 		if(monitoring_level_files.count(level_path) == 0) {
 			monitoring_level_files.insert(level_path);
 
-			fprintf(stderr, "XX NOTIFY ON MOD: %s\n", level_path.c_str());
 			sys::notify_on_file_modification(level_path, boost::bind(level_file_modified, level_path));
 		}
 
 		if(g_levels_modified.count(level_path)) {
-			fprintf(stderr, "XX REPLAY ON MOD: %s\n", level_path.c_str());
 			g_levels_modified.erase(level_path);
 // THIS FEATURE DISABLED FOR NOW. TODO: FIX IT. It allows the level to be
 // replayed from the start when the level.cfg is modified, allowing
@@ -1354,8 +1351,10 @@ bool level_runner::play_cycle()
 						}
 					}
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-					video_resize(event); 
-					video_resize_event(event);
+					if(!preferences::fullscreen()) {
+						video_resize(event); 
+						video_resize_event(event);
+					}
 				}
 			break;
 #endif // SDL_VERSION_ATLEAST

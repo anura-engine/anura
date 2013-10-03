@@ -262,12 +262,11 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 
 				if(grab_fullscreen) {
 					SDL_SetWindowFullscreen(wnd, SDL_WINDOW_FULLSCREEN_DESKTOP);
+					setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
 				} else {
 					SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
+					SDL_SetWindowSize(wnd, w, h);
 					SDL_SetWindowPosition(wnd, SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-				}
-				if(grab_fullscreen) {
-					setup_fbo_rendering(grab_fullscreen_w, grab_fullscreen_h);
 				}
 
 				return wnd;
@@ -410,11 +409,6 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 			fbo_framebuffer_width = fbo_framebuffer_height = 0;
 
 			glBindFramebuffer(GL_FRAMEBUFFER, real_framebuffer);
-
-			int window_width = 0, window_height = 0;
-			SDL_GetWindowSize(global_main_window, &window_width, &window_height);
-			preferences::set_actual_screen_width(window_width);
-			preferences::set_actual_screen_height(window_height);
 		}
 
 		if(width == 0 || height == 0) {
@@ -441,6 +435,8 @@ SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags)
 
 		glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0,
 		                       GL_TEXTURE_2D, fbo_texture, 0);
+		int mywidth, myheight;
+		SDL_GetWindowSize(global_main_window, &mywidth, &myheight);
 
 		preferences::set_actual_screen_width(fbo_framebuffer_width);
 		preferences::set_actual_screen_height(fbo_framebuffer_height);
