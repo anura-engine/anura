@@ -205,7 +205,7 @@ graphics::color_transform default_dark_color() {
 level::level(const std::string& level_cfg, variant node)
 	: id_(level_cfg),
 	  x_resolution_(0), y_resolution_(0),
-	  set_screen_resolution_on_entry_(true),
+	  set_screen_resolution_on_entry_(false),
 	  highlight_layer_(INT_MIN),
 	  num_compiled_tiles_(0),
 	  entered_portal_active_(false), save_point_x_(-1), save_point_y_(-1),
@@ -308,7 +308,7 @@ level::level(const std::string& level_cfg, variant node)
 	time_freeze_ = 0;
 	x_resolution_ = node["x_resolution"].as_int();
 	y_resolution_ = node["y_resolution"].as_int();
-	set_screen_resolution_on_entry_ = node["set_screen_resolution_on_entry"].as_bool(true);
+	set_screen_resolution_on_entry_ = node["set_screen_resolution_on_entry"].as_bool(false);
 	in_dialog_ = false;
 	title_ = node["title"].as_string_default();
 	if(node.has_key("dimensions")) {
@@ -1195,9 +1195,7 @@ variant level::write() const
 		res.add("y_resolution", y_resolution_);
 	}
 
-	if(!set_screen_resolution_on_entry_) {
-		res.add("set_screen_resolution_on_entry", set_screen_resolution_on_entry_);
-	}
+	res.add("set_screen_resolution_on_entry", set_screen_resolution_on_entry_);
 
 	if(!gui_algo_str_.empty() && !(gui_algo_str_.front() == "default" && gui_algo_str_.size() == 1)) {
 		foreach(std::string gui_str, gui_algo_str_) {
