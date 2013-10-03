@@ -155,7 +155,6 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		return claimed;
 	}
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(event.type == SDL_MOUSEWHEEL) {
 		int mx, my;
 		input::sdl_get_mouse_state(&mx, &my);
@@ -179,7 +178,6 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		}
 		return claimed;
 	} else
-#endif
 	if(event.type == SDL_MOUSEBUTTONDOWN) {
 		const SDL_MouseButtonEvent& e = event.button;
 		if(e.x < x() || e.x > x() + width() ||
@@ -190,24 +188,6 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		const int start_pos = window_pos_;
 
 		claimed = claim_mouse_events();
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-		if( e.button == SDL_BUTTON_WHEELUP || e.button == SDL_BUTTON_WHEELDOWN ) {
-			if(e.button == SDL_BUTTON_WHEELUP) {
-				window_pos_ -= arrow_step_;
-			} else if(e.button == SDL_BUTTON_WHEELDOWN) {
-				window_pos_ += arrow_step_;
-			}
-
-			clip_window_position();
-
-			if(window_pos_ != start_pos) {
-				set_dim(width(), height());
-				handler_(window_pos_);
-			}
-			return claimed;
-		}
-#endif
 
 		if(e.y < up_arrow_->y() + up_arrow_->height()) {
 			//on up arrow

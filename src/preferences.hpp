@@ -136,6 +136,7 @@ namespace preferences {
 
 	//whether to show the fps display at the top
 	bool show_fps();
+	void set_show_fps(bool show);
 
 	bool use_joystick();
 

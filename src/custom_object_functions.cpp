@@ -205,7 +205,6 @@ FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): rende
 
 	graphics::texture t = render_fbo(r, obj);
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(args().size() > 2 && args()[2]->evaluate(variables).as_bool()) {
 		using namespace graphics;
 		surface src = t.get_surface();
@@ -219,7 +218,6 @@ FUNCTION_DEF(texture, 2, 3, "texture(objects, rect, bool half_size=false): rende
 		SDL_SoftStretch(src.get(), &src_rect, dst.get(), &dst_rect);
 		t = texture::get_no_cache(dst);
 	}
-#endif
 
 	return variant(new texture_object(t));
 

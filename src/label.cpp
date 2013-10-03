@@ -178,11 +178,7 @@ void label::handle_draw() const
 {
 	if(draw_highlight_) {
 		SDL_Rect rect = {x(), y(), width(), height()};
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		graphics::draw_rect(rect, highlight_color_, highlight_color_.a);
-#else
-		graphics::draw_rect(rect, highlight_color_, highlight_color_.unused);
-#endif
 	}
 
 	if(border_texture_.valid()) {
@@ -209,13 +205,7 @@ bool label::handle_event(const SDL_Event& event, bool claimed)
 	if(!on_click_ && !highlight_on_mouseover_) {
 		return claimed;
 	}
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-	if((event.type == SDL_MOUSEWHEEL) 
-#else
-	if((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
-		&& (event.button.button == SDL_BUTTON_WHEELUP || event.button.button == SDL_BUTTON_WHEELDOWN)
-#endif
-		&& in_label(event.button.x, event.button.y)) {
+	if((event.type == SDL_MOUSEWHEEL) && in_label(event.button.x, event.button.y)) {
 		// skip processing if mousewheel event
 		return claimed;
 	}

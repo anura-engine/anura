@@ -42,11 +42,7 @@
 namespace graphics
 {
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 SDL_threadID graphics_thread_id;
-#else
-int graphics_thread_id;
-#endif
 surface scale_surface(surface input);
 
 namespace {
@@ -218,11 +214,7 @@ texture::manager::manager() {
 
 	graphics_initialized = true;
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	graphics_thread_id = SDL_ThreadID();
-#else
-	graphics_thread_id = SDL_GetThreadID(NULL);
-#endif
 }
 
 texture::manager::~manager() {
@@ -402,11 +394,7 @@ void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int option
 
 surface texture::build_surface_from_key(const key& k, unsigned int surf_width, unsigned int surf_height)
 {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	surface s(SDL_CreateRGBSurface(0,surf_width,surf_height,32,SURFACE_MASK));
-#else
-	surface s(SDL_CreateRGBSurface(SDL_SWSURFACE,surf_width,surf_height,32,SURFACE_MASK));
-#endif
 	if(k.size() == 1 && k.front()->format->Rmask == 0xFF && k.front()->format->Gmask == 0xFF00 && k.front()->format->Bmask == 0xFF0000 && k.front()->format->Amask == 0) {
 		add_alpha_channel_to_surface((uint8_t*)s->pixels, (uint8_t*)k.front()->pixels, s->w, k.front()->w, k.front()->h, k.front()->pitch);
 	} else if(k.size() == 1 && k.front()->format->Rmask == 0xFF00 && k.front()->format->Gmask == 0xFF0000 && k.front()->format->Bmask == 0xFF000000 && k.front()->format->Amask == 0xFF) {
@@ -414,19 +402,11 @@ surface texture::build_surface_from_key(const key& k, unsigned int surf_width, u
 		s = k.front();
 	} else {
 		for(key::const_iterator i = k.begin(); i != k.end(); ++i) {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 			if(i == k.begin()) {
 				SDL_SetSurfaceBlendMode(i->get(), SDL_BLENDMODE_NONE);
 			} else {
 				SDL_SetSurfaceBlendMode(i->get(), SDL_BLENDMODE_BLEND);
 			}
-#else
-			if(i == k.begin()) {
-				SDL_SetAlpha(i->get(), 0, SDL_ALPHA_OPAQUE);
-			} else {
-				SDL_SetAlpha(i->get(), SDL_SRCALPHA, SDL_ALPHA_OPAQUE);
-			}
-#endif
 			SDL_BlitSurface(i->get(),NULL,s.get(),NULL);
 		}
 	}
@@ -509,11 +489,7 @@ unsigned int texture::get_id() const
 			id_->s = scale_surface(id_->s);
 		}
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		if(graphics_thread_id != SDL_ThreadID()) {
-#else
-		if(graphics_thread_id != SDL_GetThreadID(NULL)) {
-#endif
 			threading::lock lck(id_to_build_mutex);
 			id_to_build_.push_back(id_);
 		} else {
@@ -526,11 +502,7 @@ unsigned int texture::get_id() const
 
 void texture::build_textures_from_worker_threads()
 {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	ASSERT_LOG(graphics_thread_id == SDL_ThreadID(), "CALLED build_textures_from_worker_threads from thread other than the main one");
-#else
-	ASSERT_LOG(graphics_thread_id == SDL_GetThreadID(NULL), "CALLED build_textures_from_worker_threads from thread other than the main one");
-#endif
 	threading::lock lck(id_to_build_mutex);
 	foreach(boost::shared_ptr<ID> id, id_to_build_) {
 		id->build_id();
@@ -1037,11 +1009,7 @@ void texture::ID::unbuild_id()
 		return;
 	}
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	s = surface(SDL_CreateRGBSurface(0,width,height,32,SURFACE_MASK));
-#else
-	s = surface(SDL_CreateRGBSurface(SDL_SWSURFACE,width,height,32,SURFACE_MASK));
-#endif
 
 	ASSERT_LOG(glIsTexture(id), "Not a valid texture: " << id);
 	glBindTexture(GL_TEXTURE_2D, id);

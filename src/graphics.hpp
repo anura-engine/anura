@@ -28,12 +28,6 @@
 
 #include "SDL_thread.h"
 
-#if defined(__ANDROID__)
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-#include "SDL_screenkeyboard.h"
-#endif
-#endif
-
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
 #include "SDL_ttf.h"
 #include "SDL_mixer.h"
@@ -49,14 +43,6 @@
 #endif
 
 #include "gles2.hpp"
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-#include "wm.hpp"
-#if defined(GL_ES_VERSION_2_0)
-extern window_manager wm;
-#undef SDL_GL_SwapBuffers
-#define SDL_GL_SwapBuffers()	do{wm.swap();}while(0)
-#endif
-#endif
 
 #else
 

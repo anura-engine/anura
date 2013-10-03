@@ -140,7 +140,6 @@ void level::set_as_current_level()
 	current_level = this;
 	frame::set_color_palette(palettes_used_);
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(false && preferences::auto_size_window()) {
 		static bool auto_sized = false;
 		if(!auto_sized) {
@@ -153,7 +152,6 @@ void level::set_as_current_level()
 		preferences::set_virtual_screen_width(mode.w);
 		preferences::set_virtual_screen_height(mode.h);
 	}
-#endif
 
 #if !TARGET_OS_IPHONE && !TARGET_BLACKBERRY
 #ifndef NO_EDITOR
@@ -970,11 +968,7 @@ void level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
 
 	static threading::mutex* sync = new threading::mutex;
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", boost::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
-#else
-	info.rebuild_tile_thread = new threading::thread(boost::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
-#endif
 }
 
 void level::freeze_rebuild_tiles_in_background()

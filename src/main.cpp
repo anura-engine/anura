@@ -84,7 +84,7 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-#if defined(__APPLE__) && SDL_VERSION_ATLEAST(2, 0, 0)
+#if defined(__APPLE__)
     #include "TargetConditionals.h"
     #if TARGET_OS_MAC
     #define decimal decimal_carbon
@@ -104,13 +104,6 @@
 #endif
 
 #define DEFAULT_MODULE	"frogatto"
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-#if defined(USE_SHADERS)
-#include "wm.hpp"
-window_manager wm;
-#endif
-#endif
 
 namespace {
 
@@ -657,7 +650,6 @@ extern "C" int main(int argcount, char* argvec[])
 	if(sys::file_exists(preferences::auto_save_file_path()) && sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
 		level_cfg = "autosave.cfg";
 		sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "0");
-
 	}
 #endif
 
@@ -665,13 +657,6 @@ extern "C" int main(int argcount, char* argvec[])
 		level_cfg = override_level_cfg;
 		orig_level_cfg = level_cfg;
 	}
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0) && defined(USE_SHADERS)
-	wm.create_window(preferences::actual_screen_width(),
-		preferences::actual_screen_height(),
-		0,
-		(preferences::resizable() ? SDL_RESIZABLE : 0) | (preferences::fullscreen() ? SDL_FULLSCREEN : 0));
-#else
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 	int width, height;
@@ -739,7 +724,6 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 	preferences::init_oes();
 #elif defined(__ANDROID__)
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	int num_video_displays = SDL_GetNumVideoDisplays();
 	SDL_Rect r;
 	if(num_video_displays < 0) {
@@ -758,27 +742,8 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 		preferences::set_control_scheme(r.h >= 1024 ? "ipad_2d" : "android_med");
     }
-#else
-    SDL_Rect** r = SDL_ListModes(NULL, SDL_FULLSCREEN|SDL_OPENGL);
-    if( r != (SDL_Rect**)0 && r != (SDL_Rect**)-1 ) {
-        preferences::set_actual_screen_width(r[0]->w);
-        preferences::set_actual_screen_height(r[0]->h);
-		if(r[0]->w < 640) {
-        	preferences::set_virtual_screen_width(r[0]->w*2);
-        	preferences::set_virtual_screen_height(r[0]->h*2);
-		} else {
-			preferences::set_virtual_screen_width(r[0]->w);
-			preferences::set_virtual_screen_height(r[0]->h);
-		}
-		preferences::set_control_scheme(r[0]->h >= 1024 ? "ipad_2d" : "android_med");
-    }
-#endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height())) {
-#else
-    if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_FULLSCREEN|SDL_OPENGL) == NULL) {
-#endif
 		std::cerr << "could not set video mode\n";
 		return -1;
     }
@@ -802,7 +767,6 @@ extern "C" int main(int argcount, char* argvec[])
 		return -1;
     }
 #else
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(preferences::auto_size_window()) {
 		const SDL_DisplayMode mode = graphics::set_video_mode_auto_select();
 		preferences::set_actual_screen_width(mode.w);
@@ -810,31 +774,15 @@ extern "C" int main(int argcount, char* argvec[])
 		preferences::set_virtual_screen_width(mode.w);
 		preferences::set_virtual_screen_height(mode.h);
 	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0))) {
-#else
-	if(SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_OPENGL|(preferences::resizable() ? SDL_RESIZABLE : 0)|(preferences::fullscreen() ? SDL_FULLSCREEN : 0)) == NULL) {
-#endif
 		std::cerr << "could not set video mode\n";
 		return -1;
 	}
-#ifndef __APPLE__
 	graphics::surface wm_icon = graphics::surface_cache::get("window-icon.png");
 	if(!wm_icon.null()) {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		SDL_SetWindowIcon(graphics::get_window(), wm_icon.get());
-#else
-		SDL_WM_SetIcon(wm_icon, NULL);
-#endif
 	}
-#endif // __APPLE__
 #endif
 #endif
-#endif
-
-#endif
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0) && defined(__GLEW_H__)
-	GLenum glew_status = glewInit();
-	ASSERT_EQ(glew_status, GLEW_OK);
 #endif
 
 #if defined(USE_SHADERS)
@@ -850,8 +798,6 @@ extern "C" int main(int argcount, char* argvec[])
 	// Has to happen after the call to glewInit().
 	gles2::init_default_shader();
 #endif
-
-//	srand(time(NULL));
 
 	const stats::manager stats_manager;
 #ifndef NO_EDITOR
@@ -1068,12 +1014,8 @@ extern "C" int main(int argcount, char* argvec[])
     EGL_Destroy();
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	// Be nice and destroy the GL context and the window.
 	graphics::set_video_mode(0, 0, CLEANUP_WINDOW_CONTEXT);
-#elif defined(USE_SHADERS)
-	wm.destroy_window();
-#endif
 	SDL_Quit();
 	
 	preferences::save_preferences();

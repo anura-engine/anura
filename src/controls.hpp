@@ -24,11 +24,7 @@
 
 #include "graphics.hpp"
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 typedef SDL_Keycode key_type;
-#else
-typedef SDLKey key_type;
-#endif
 
 class variant;
 

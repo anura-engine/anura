@@ -181,13 +181,7 @@ END_DEFINE_CALLABLE(custom_object_widget)
 
 	bool custom_object_widget::handle_event(const SDL_Event& event, bool claimed)
 	{
-#if SDL_VERSION_ATLEAST(2, 0, 0)
-		if((event.type == SDL_MOUSEWHEEL) 
-#else
-		if((event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP) 
-			&& (event.button.button == SDL_BUTTON_WHEELUP || event.button.button == SDL_BUTTON_WHEELDOWN)
-#endif
-			&& in_widget(event.button.x, event.button.y)) {
+		if((event.type == SDL_MOUSEWHEEL) && in_widget(event.button.x, event.button.y)) {
 			// skip processing if mousewheel event
 			if(entity_) {
 				custom_object* obj = static_cast<custom_object*>(entity_.get());

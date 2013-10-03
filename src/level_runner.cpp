@@ -357,13 +357,8 @@ bool is_skipping_game() {
 
 void video_resize(const SDL_Event &event) 
 {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	int width = event.window.data1;
     int height = event.window.data2;
-#else
-    int width = event.resize.w;
-    int height = event.resize.h;
-#endif
 
 	if(preferences::proportional_resize() == false) {
 		const int aspect = (preferences::actual_screen_width()*1000)/preferences::actual_screen_height();
@@ -396,23 +391,14 @@ void video_resize(const SDL_Event &event)
 	}
 	preferences::set_actual_screen_width(width);
 	preferences::set_actual_screen_height(height);
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-    graphics::set_video_mode(width, height);
-#endif
 }
 
 void level_runner::video_resize_event(const SDL_Event &event)
 {
 	static const int WindowResizeEventID = get_object_event_id("window_resize");
 	game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	callable->add("width", variant(event.window.data1));
 	callable->add("height", variant(event.window.data2));
-#else
-	callable->add("width", variant(event.resize.w));
-	callable->add("height", variant(event.resize.h));
-#endif
 	lvl_->player()->get_entity().handle_event(WindowResizeEventID, callable.get());
 }
 
@@ -488,18 +474,6 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 
 	switch(event.type)
 	{
-#if defined(__ANDROID__) && !SDL_VERSION_ATLEAST(2, 0, 0)
-		case SDL_JOYBUTTONDOWN:
-		case SDL_JOYBUTTONUP:
-		case SDL_JOYBALLMOTION:
-			int x, mx = event.type == SDL_JOYBALLMOTION ? event.jball.xrel : event.jbutton.x;
-			int y, my = event.type == SDL_JOYBALLMOTION ? event.jball.yrel : event.jbutton.y;
-			int i = event.type == SDL_JOYBALLMOTION ? event.jball.ball : event.jbutton.button;
-			int event_button_button = event.jbutton.button;
-			int event_type = event.type == SDL_JOYBALLMOTION 
-				? SDL_MOUSEMOTION
-				: event.type == SDL_JOYBUTTONDOWN ? SDL_MOUSEBUTTONDOWN : SDL_MOUSEBUTTONUP;
-#else
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 		case SDL_MOUSEMOTION:
@@ -507,7 +481,6 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
 			int event_type = event.type;
 			int event_button_button = event.button.button;
-#endif
             
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
             translate_mouse_coords(&x,&y);
@@ -792,12 +765,8 @@ bool level_runner::play_level()
 	}
 
 	while(!done && !quit_ && !force_return_) {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		const Uint8 *key = SDL_GetKeyboardState(NULL);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
-#else
-		if(key[SDLK_t] && preferences::record_history()
-#endif
 #ifndef NO_EDITOR
 			&& (!editor_ || !editor_->has_keyboard_focus())
 			&& (!console_ || !console_->has_keyboard_focus())
@@ -1189,9 +1158,7 @@ bool level_runner::play_cycle()
 	joystick::update();
 	bool should_pause = false;
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	SDL_StartTextInput();
-#endif
 	if(message_dialog::get() == NULL) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
@@ -1269,10 +1236,7 @@ bool level_runner::play_cycle()
 				quit_ = true;
 				break;
 			}
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-			case SDL_VIDEORESIZE: video_resize(event); video_resize_event(event); continue;
-#endif
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || (defined(__ANDROID__) && SDL_VERSION_ATLEAST(2, 0, 0))
+#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE || defined(__ANDROID__)
 			// make sure nothing happens while the app is supposed to be "inactive"
 			case SDL_WINDOWEVENT:
 				if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
@@ -1319,24 +1283,7 @@ bool level_runner::play_cycle()
 					should_pause = true;
 				}
 			break;
-#elif defined(__ANDROID__) && !SDL_VERSION_ATLEAST(2, 0, 0)
-			// make sure nothing happens while the app is supposed to be "inactive"
-			case SDL_ACTIVEEVENT:
-				if (event.active.state & SDL_APPACTIVE && !event.active.gain)
-				{
-					write_autosave();
-					preferences::save_preferences();
-					
-					SDL_Event e;
-					while (SDL_WaitEvent(&e))
-					{
-						if (e.type == SDL_ACTIVEEVENT && e.active.state & SDL_APPINPUTFOCUS && e.active.gain == 1)
-							break;
-					}
-				}
-			break;
 #else
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 			case SDL_WINDOWEVENT:
 				if((event.window.event == SDL_WINDOWEVENT_FOCUS_GAINED 
 					|| event.window.event == SDL_WINDOWEVENT_FOCUS_LOST)
@@ -1357,17 +1304,10 @@ bool level_runner::play_cycle()
 					}
 				}
 			break;
-#endif // SDL_VERSION_ATLEAST
 #endif
 			case SDL_KEYDOWN: {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 				const SDL_Keymod mod = SDL_GetModState();
 				const SDL_Keycode key = event.key.keysym.sym;
-#else
-				const SDLMod mod = SDL_GetModState();
-				const SDLKey key = event.key.keysym.sym;
-#endif
-				//std::cerr << "Key #" << (int) key << ".\n";
 				if(key == SDLK_ESCAPE) {
 					if(editor_) {
 #ifndef NO_EDITOR
@@ -1446,6 +1386,8 @@ bool level_runner::play_cycle()
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
 					preferences::set_fullscreen(!preferences::fullscreen());
 					graphics::set_video_mode(graphics::screen_width(), graphics::screen_height());
+				} else if(key == SDLK_F3) {
+					preferences::set_show_fps(!preferences::show_fps());
 				}
 				break;
 			}
@@ -1609,17 +1551,13 @@ bool level_runner::play_cycle()
 
 		if(should_draw) {
 #ifndef NO_EDITOR
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 			const Uint8 *key = SDL_GetKeyboardState(NULL);
-			if(editor_ && key[SDL_SCANCODE_L] && !editor_->has_keyboard_focus() && (!console_ || !console_->has_keyboard_focus())) {
-#else
-			if(editor_ && key[SDLK_l] && !editor_->has_keyboard_focus() && (!console_ || !console_->has_keyboard_focus())) {
+			if(editor_ && key[SDL_SCANCODE_L] 
+				&& !editor_->has_keyboard_focus() 
+				&& (!console_ || !console_->has_keyboard_focus())) {
 #endif
-
 				editor_->toggle_active_level();
-
 				render_scene(editor_->get_level(), last_draw_position());
-
 				editor_->toggle_active_level();
 				lvl_->set_as_current_level();
 			} else {
@@ -1631,7 +1569,6 @@ bool level_runner::play_cycle()
 						lvl_->add_draw_character(e);
 					}
 				}
-#endif
 				render_scene(*lvl_, last_draw_position());
 #ifndef NO_EDITOR
 				int index = 0;

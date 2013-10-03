@@ -100,20 +100,14 @@ struct flip_draw_scope
 
 bool set_video_mode(int w, int h);
 void reset_opengl_state();
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 SDL_DisplayMode set_video_mode_auto_select();
 SDL_Window* set_video_mode(int w, int h, int flags);
 SDL_Window* get_window();
-#else
-SDL_Surface* set_video_mode(int w, int h, int bitsperpixel, int flags);
-#endif
 void swap_buffers();
 
 std::vector<GLfloat>& global_vertex_array();
 std::vector<GLfloat>& global_texcoords_array();
 std::vector<GLbyte>& global_vertex_color_array();
-
-void setup_fbo_rendering(int width, int height);
 
 //function to map a mouse position in native window co-ordinates.
 //this will modify the mouse position if we're using an fbo to

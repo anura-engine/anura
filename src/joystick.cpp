@@ -37,14 +37,12 @@
 
 namespace haptic {
 namespace {
-#if SDL_VERSION_ATLEAST(2,0,0)
 std::map<int,std::shared_ptr<SDL_Haptic>> haptic_devices;
 typedef std::map<SDL_Haptic*,std::map<std::string,int>> haptic_effect_table;
 haptic_effect_table& get_effects() {
 	static haptic_effect_table res;
 	return res;
 }
-#endif
 }
 }
 
@@ -52,9 +50,7 @@ namespace joystick {
 
 namespace {
 std::vector<std::shared_ptr<SDL_Joystick>> joysticks;
-#if SDL_VERSION_ATLEAST(2,0,0)
 std::map<int,std::shared_ptr<SDL_GameController>> game_controllers;
-#endif
 
 const int threshold = 32700;
 }
@@ -73,7 +69,6 @@ manager::manager() {
 #else
 	for(int n = 0; n != SDL_NumJoysticks(); ++n) {
 #endif
-#if SDL_VERSION_ATLEAST(2,0,0)
 	    if(SDL_IsGameController(n)) {
 			SDL_GameController *controller = SDL_GameControllerOpen(n);
 			if(controller) {
@@ -82,7 +77,6 @@ manager::manager() {
 				std::cerr << "WARNING: Couldn't open game controller: " << SDL_GetError() << std::endl;
 			}
 		} else {
-#endif
 			SDL_Joystick* j = SDL_JoystickOpen(n);
 			if(j) {
 				if (SDL_JoystickNumButtons(j) == 0) {
@@ -94,7 +88,6 @@ manager::manager() {
 					joysticks.push_back(std::shared_ptr<SDL_Joystick>(j, [](SDL_Joystick* js){SDL_JoystickClose(js);}));
 				}
 			}
-#if SDL_VERSION_ATLEAST(2,0,0)
 		}
 
 		SDL_Haptic *haptic = SDL_HapticOpen(n);
@@ -110,7 +103,6 @@ manager::manager() {
 				haptic::haptic_devices.erase(n);
 			}
 		}
-#endif
 	}
 	if(joysticks.size() > 0) {
 		std::cerr << "INFO: Initialized " << joysticks.size() << " joysticks" << std::endl;
@@ -176,7 +168,6 @@ bool up() {
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	for(auto gc : game_controllers) {
 		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTY) < -4096*2) {
 			return true;
@@ -186,7 +177,6 @@ bool up() {
 			return true;
 		}
 	}
-#endif
 
 	for(auto j : joysticks) {
 		Sint16  y = SDL_JoystickGetAxis(j.get(), 1);
@@ -254,7 +244,6 @@ bool left() {
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	for(auto gc : game_controllers) {
 		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTX) < -4096*2) {
 			return true;
@@ -264,7 +253,6 @@ bool left() {
 			return true;
 		}
 	}
-#endif
 
 	for(auto j : joysticks) {
 		Sint16  x = SDL_JoystickGetAxis(j.get(), 0);
@@ -293,7 +281,6 @@ bool right() {
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	for(auto gc : game_controllers) {
 		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTX) > 4096*2) {
 			return true;
@@ -303,7 +290,6 @@ bool right() {
 			return true;
 		}
 	}
-#endif
 
 	for(auto j : joysticks) {
 		Sint16  x = SDL_JoystickGetAxis(j.get(), 0);
@@ -331,7 +317,6 @@ bool button(int n) {
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	for(auto gc : game_controllers) {
 		Uint8 state = 0;
 		switch(n) {
@@ -353,7 +338,6 @@ bool button(int n) {
 			return true;
 		}
 	}
-#endif
 
     int cnt = 0;
 	for(auto j : joysticks) {
@@ -381,11 +365,7 @@ int iphone_tilt() {
 	}
 #endif
 
-//#if TARGET_OS_IPHONE
-//	return SDL_JoystickGetAxis(joysticks.front(), 1);
-//#else
 	return 0;
-//#endif
 }
 
 std::vector<int> get_info() {
@@ -537,8 +517,8 @@ namespace haptic {
 		} else if(type == "sine" || type == "sqaure" || type == "triangle" || type == "sawtooth_up" || type == "sawtooth_down") {
 			if(type == "sine") {
 				effect.type = SDL_HAPTIC_SINE;
-			} else if(type == "sqaure") {
-				effect.type = SDL_HAPTIC_SQUARE;
+			//} else if(type == "sqaure") {
+			//	effect.type = SDL_HAPTIC_SQUARE;
 			} else if(type == "triangle") {
 				effect.type = SDL_HAPTIC_TRIANGLE;
 			} else if(type == "sawtooth_up") {

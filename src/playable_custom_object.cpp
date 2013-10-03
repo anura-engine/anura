@@ -231,7 +231,6 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 
 #if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
 		for(int count = 0; count < ary_length; ++count) {
 			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
@@ -244,19 +243,6 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 				}
 			}
 		}
-#else
-		const Uint8* key_state = SDL_GetKeyState(&ary_length);
-		for(int count = 0; count < ary_length; ++count) {
-			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
-				if(count < 128 && util::c_isprint(count)) {
-					std::string str(1,count);
-					result.push_back(variant(str));
-				} else {
-					result.push_back(variant(count));
-				}
-			}
-		}
-#endif
 #endif
 		return variant(&result);
 	}

@@ -40,8 +40,6 @@ class TTF_Font;
 #endif
 
 namespace {
-const char* FontFile = "UbuntuMono-R";
-
 typedef std::map<std::pair<std::string, int>, TTF_Font*> font_map;
 font_map font_table;
 
@@ -67,7 +65,7 @@ const std::string& get_font_path(const std::string& name)
 TTF_Font* get_font(int size, const std::string& font_name="")
 {
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
-	std::string fontn = get_font_path((font_name.empty() ? FontFile : font_name) + ".ttf");
+	std::string fontn = get_font_path((font_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font()  : font_name) + ".ttf");
 	TTF_Font* font = NULL;
 	font_map::const_iterator it = font_table.find(std::pair<std::string,int>(fontn,size));
 	if(it == font_table.end()) {
@@ -175,19 +173,11 @@ graphics::texture render_text_uncached(const std::string& text,
 		}
 
 		const SDL_PixelFormat* f = parts.front()->format;
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		s = graphics::surface(SDL_CreateRGBSurface(0, width, height, f->BitsPerPixel, f->Rmask, f->Gmask, f->Bmask, f->Amask));
-#else
-		s = graphics::surface(SDL_CreateRGBSurface(SDL_SWSURFACE, width, height, f->BitsPerPixel, f->Rmask, f->Gmask, f->Bmask, f->Amask));
-#endif
 		int ypos = 0;
 		foreach(graphics::surface part, parts) {
 			SDL_Rect rect = {0, ypos, part->w, part->h};
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 			SDL_SetSurfaceBlendMode(part.get(), SDL_BLENDMODE_NONE);
-#else
-			SDL_SetAlpha(part.get(), 0, SDL_ALPHA_OPAQUE);
-#endif
 			SDL_BlitSurface(part.get(), NULL, s.get(), &rect);
 			ypos += part->h;
 		}

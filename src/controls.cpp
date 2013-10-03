@@ -50,9 +50,6 @@ uint32_t htonl(uint32_t nl)
 #include "preferences.hpp"
 #include "iphone_controls.hpp"
 #include "variant.hpp"
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-#include "key.hpp"
-#endif
 
 namespace controls {
 namespace {
@@ -130,13 +127,6 @@ int32_t our_highest_confirmed() {
 
 	return res;
 }
-
-#if !SDL_VERSION_ATLEAST(2, 0, 0)
-CKey& keyboard() {
-static CKey key;
-return key;
-}
-#endif
 
 std::stack<ControlFrame> local_control_locks;
 }
@@ -245,15 +235,9 @@ bool key_ignore[NUM_CONTROLS];
 
 void ignore_current_keypresses()
 {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	const Uint8 *state = SDL_GetKeyboardState(NULL);
-#endif
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		key_ignore[n] = state[SDL_GetScancodeFromKey(sdlk[n])];
-#else
-		key_ignore[n] = keyboard()[sdlk[n]];
-#endif
 	}
 }
 
@@ -295,25 +279,16 @@ void read_local_controls()
 	if(local_control_locks.empty()) {
 #if !defined(__ANDROID__)
 		bool ignore_keypresses = false;
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 		const Uint8 *key_state = SDL_GetKeyboardState(NULL);
 		foreach(const key_type& k, control_keys) {
 			if(key_state[SDL_GetScancodeFromKey(k)]) {
-#else
-		foreach(const SDLKey& k, control_keys) {
-			if(keyboard()[k]) {
-#endif
 				ignore_keypresses = true;
 				break;
 			}
 		}
 
 		for(int n = 0; n < NUM_CONTROLS; ++n) {
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 			if(key_state[SDL_GetScancodeFromKey(sdlk[n])] && !ignore_keypresses) {
-#else
-			if(keyboard()[sdlk[n]] && !ignore_keypresses) {
-#endif
 				if(!key_ignore[n]) {
 					state.keys |= (1 << n);
 				}

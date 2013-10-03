@@ -36,25 +36,20 @@ endif
 SDL2_CONFIG?=sdl2-config
 USE_SDL2?=$(shell which $(SDL2_CONFIG) 2>&1 > /dev/null && echo yes)
 
+ifeq ($(USE_SDL2),yes)
+$(error SDL2 not found, SDL-1.2 is no longer supported)
+endif
+
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS.
 BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dtor -Werror -Wignored-qualifiers -Wformat -Wswitch -Wreturn-type -DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP -Wno-narrowing 
 # -Wno-error=narrowing 
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-ifeq ($(USE_SDL2),yes)
 INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image libpng zlib)
-else
-INC := -Isrc $(shell pkg-config --cflags x11 sdl glew SDL_image libpng zlib)
-endif
 
 # Linker library options.
-ifeq ($(USE_SDL2),yes)
 LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
-else
-LIBS := $(shell pkg-config --libs x11 gl ) -lSDLmain \
-	$(shell pkg-config --libs sdl glew SDL_image libpng zlib) -lSDL_ttf -lSDL_mixer
-endif
 
 # Enable Box2D if found.
 ifeq ($(shell { cpp -x c++ -include Box2D/Box2D.h /dev/null \
