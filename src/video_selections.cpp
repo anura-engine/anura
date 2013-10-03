@@ -17,7 +17,6 @@
 
 #include <set>
 #include <sstream>
-#include <boost/range/adaptor/reversed.hpp>
 
 #include "dialog.hpp"
 #include "checkbox.hpp"
@@ -45,15 +44,12 @@ namespace
 	};
 
 
-	typedef std::set<std::pair<int,int>, cmp> wh_data;
+	typedef std::vector<std::pair<int,int>> wh_data;
 
-	wh_data::const_iterator enumerate_video_modes(wh_data& display_modes)
+	int enumerate_video_modes(wh_data& display_modes)
 	{
-		//SDL_DisplayMode mode;
 		const int display_index = SDL_GetWindowDisplayIndex(graphics::get_window());
-		wh_data::const_iterator mode_index;
-		//SDL_GetCurrentDisplayMode(display_index, &mode);
-		//std::cerr << "Current display mode: " << mode.w << "," << mode.h << " : " << mode.format << std::endl;
+		int mode_index = -1;
 		const int nmodes = SDL_GetNumDisplayModes(display_index);
 		for(int n = 0; n != nmodes; ++n) {
 			SDL_DisplayMode new_mode;
@@ -64,27 +60,29 @@ namespace
 			}
 			// filter modes based on pixel format here
 			if(SDL_BITSPERPIXEL(new_mode.format) == 24) {
-				std::cerr << "Adding display mode: " << new_mode.w << "," << new_mode.h << " : " << new_mode.format << std::endl;
-				auto wh = std::make_pair(new_mode.w, new_mode.h);
-				auto it = display_modes.insert(wh);
-				if(new_mode.w == preferences::actual_screen_width() && new_mode.h == preferences::actual_screen_height()) {
-					mode_index = it.first;
-				}
+				std::cerr << "Adding display mode: " << new_mode.w << "," << new_mode.h << std::endl;
+				display_modes.push_back(std::make_pair(new_mode.w, new_mode.h));
 			}
+		}
+		std::sort(display_modes.begin(), display_modes.end(), cmp());
+		display_modes.erase(std::unique(display_modes.begin(), display_modes.end()), display_modes.end());
+		std::reverse(display_modes.begin(), display_modes.end());
+		int n = 0;
+		for(auto dm : display_modes) {
+			if(dm.first == preferences::actual_screen_width() && dm.second == preferences::actual_screen_height()) {
+				mode_index = n;
+			}
+			++n;
 		}
 		return mode_index;
 	}
 
-	void map_modes_to_strings(const wh_data& display_modes, 
-		std::vector<std::string>& display_strings,
-		std::vector<std::pair<int,int> >& mode_data)
+	void map_modes_to_strings(const wh_data& display_modes, std::vector<std::string>& display_strings)
 	{
-		for(auto dm : boost::adaptors::reverse(display_modes)) {
+		for(auto dm : display_modes) {
 			std::stringstream ss;
 			ss << dm.first << " x " << dm.second;			
-			//std::cerr << "XXX: " << ss.str() << std::endl;
 			display_strings.push_back(ss.str());
-			mode_data.push_back(std::make_pair(dm.first, dm.second));
 		}
 	}
 }
@@ -107,15 +105,15 @@ void show_video_selection_dialog()
 
 	d.add_widget(widget_ptr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
 	wh_data display_modes;
-	auto current_mode_index = enumerate_video_modes(display_modes);
+	int current_mode_index = enumerate_video_modes(display_modes);
+	if(current_mode_index < 0 || current_mode_index >= display_modes.size()) {
+		current_mode_index = 0;
+	}
 	std::vector<std::string> display_strings;
-	std::vector<std::pair<int,int> > mode_data;
-	map_modes_to_strings(display_modes, display_strings, mode_data);
-	auto it = std::find(mode_data.begin(), mode_data.end(), std::make_pair(current_mode_index->first,current_mode_index->second));
-	auto index = it != mode_data.end() ? it - mode_data.begin() : -1;
+	map_modes_to_strings(display_modes, display_strings);
 
 	dropdown_widget* mode_list = new dropdown_widget(display_strings, 200, 20);
-	mode_list->set_selection(index);
+	mode_list->set_selection(current_mode_index);
 	mode_list->set_zorder(10);
 	mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
 		selected_mode = selection;
@@ -142,8 +140,8 @@ void show_video_selection_dialog()
 	d.show_modal();
 	if(d.cancelled() == false) {
 		// set selected video mode here
-		if(selected_mode >= 0 && selected_mode < mode_data.size()) {
-			preferences::set_actual_screen_dimensions_persistent(mode_data[selected_mode].first, mode_data[selected_mode].second);
+		if(selected_mode >= 0 && selected_mode < display_modes.size()) {
+			preferences::set_actual_screen_dimensions_persistent(display_modes[selected_mode].first, display_modes[selected_mode].second);
 		}
 		preferences::set_fullscreen(b_fullscreen);
 
