@@ -41,6 +41,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_profiler.hpp"
+#include "haptic.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
 #include "json_parser.hpp"
@@ -841,6 +842,83 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(preload_sound)
+
+FUNCTION_DEF(create_haptic_effect, 2, 2, "create_haptic_effect(string id, map): Creates a haptic effect that can be played later.")
+	const std::string s = args()[0]->evaluate(variables).as_string();
+	variant v = args()[1]->evaluate(variables);
+	return variant(new haptic::HapticEffectCallable(s,v));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("map")
+	RETURN_TYPE("HapticEffectCallable")
+END_FUNCTION_DEF(create_haptic_effect)
+
+class play_haptic_effect_command : public entity_command_callable
+{
+public:
+	explicit play_haptic_effect_command(const std::string& name, int iterations)
+	  : name_(name), iterations_(iterations)
+	{}
+	virtual void execute(level& lvl, entity& ob) const {
+		haptic::play(name_, iterations_);
+	}
+private:
+	std::string name_;
+	int iterations_;
+};
+
+FUNCTION_DEF(play_haptic_effect, 1, 2, "play_haptic_effect(string id, (options) iterations): Plays the given haptic effect. Will default to 'rumble' if it couldn't be created.")
+	int iterations = args().size() > 1 ? args()[1]->evaluate(variables).as_int() : 1;
+	play_haptic_effect_command* cmd = new play_haptic_effect_command(
+		args()[0]->evaluate(variables).as_string(),
+		iterations);
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	RETURN_TYPE("commands")
+END_FUNCTION_DEF(play_haptic_effect)
+
+class stop_haptic_effect_command : public entity_command_callable
+{
+public:
+	explicit stop_haptic_effect_command(const std::string& name)
+	  : name_(name)
+	{}
+	virtual void execute(level& lvl, entity& ob) const {
+		haptic::stop(name_);
+	}
+private:
+	std::string name_;
+};
+
+FUNCTION_DEF(stop_haptic_effect_command, 1, 1, "stop_haptic_effect_command(string id): Stops the given haptic effect.")
+	stop_haptic_effect_command* cmd = new stop_haptic_effect_command(args()[0]->evaluate(variables).as_string());
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	RETURN_TYPE("commands")
+END_FUNCTION_DEF(stop_haptic_effect_command)
+
+class stop_all_haptic_effect_command : public entity_command_callable
+{
+public:
+	stop_all_haptic_effect_command()
+	{}
+	virtual void execute(level& lvl, entity& ob) const {
+		haptic::stop_all();
+	}
+};
+
+FUNCTION_DEF(stop_all_haptic_effect_command, 0, 0, "stop_all_haptic_effect_command(string id): Stops the given haptic effect.")
+	stop_all_haptic_effect_command* cmd = new stop_all_haptic_effect_command();
+	cmd->set_expression(this);
+	return variant(cmd);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	RETURN_TYPE("commands")
+END_FUNCTION_DEF(stop_all_haptic_effect_command)
 
 class screen_flash_command : public entity_command_callable
 {

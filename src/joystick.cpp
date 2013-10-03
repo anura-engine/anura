@@ -21,7 +21,9 @@
 #include <memory>
 #include <vector>
 
+#include "asserts.hpp"
 #include "foreach.hpp"
+#include "haptic.hpp"
 #include "joystick.hpp"
 #include "preferences.hpp"
 
@@ -32,6 +34,19 @@
 #endif
 
 #include "asserts.hpp"
+
+namespace haptic {
+namespace {
+#if SDL_VERSION_ATLEAST(2,0,0)
+std::map<int,std::shared_ptr<SDL_Haptic>> haptic_devices;
+typedef std::map<SDL_Haptic*,std::map<std::string,int>> haptic_effect_table;
+haptic_effect_table& get_effects() {
+	static haptic_effect_table res;
+	return res;
+}
+#endif
+}
+}
 
 namespace joystick {
 
@@ -81,6 +96,20 @@ manager::manager() {
 			}
 #if SDL_VERSION_ATLEAST(2,0,0)
 		}
+
+		SDL_Haptic *haptic = SDL_HapticOpen(n);
+		if(haptic) {
+			haptic::haptic_devices[n] = std::shared_ptr<SDL_Haptic>(haptic, [](SDL_Haptic* h){SDL_HapticClose(h);});
+			if(SDL_HapticRumbleInit(haptic) != 0) {
+				std::cerr << "Failed to initialise a simple rumble effect" << std::endl;
+				haptic::haptic_devices.erase(n);
+			}
+			// buzz the device when we start.
+			if(SDL_HapticRumblePlay(haptic, 0.5, 1000) != 0) {
+				std::cerr << "Failed to play a simple rumble effect" << std::endl;
+				haptic::haptic_devices.erase(n);
+			}
+		}
 #endif
 	}
 	if(joysticks.size() > 0) {
@@ -96,6 +125,8 @@ manager::manager() {
 manager::~manager() {
 	joysticks.clear();
 	game_controllers.clear();
+	haptic::get_effects().clear();
+	haptic::haptic_devices.clear();
 
 #if defined(TARGET_BLACKBERRY)
 	bps_shutdown();
@@ -369,3 +400,222 @@ std::vector<int> get_info() {
 }
 
 }
+
+namespace haptic {
+	void play(const std::string& id, int iters)
+	{
+		for(auto hd : haptic_devices) {
+			auto it = get_effects().find(hd.second.get());
+			if(it != get_effects().end()) {
+				auto idit = it->second.find(id);
+				if(idit == it->second.end()) {
+					SDL_HapticRumblePlay(hd.second.get(), 1.0, 750);
+				} else {
+					SDL_HapticRunEffect(hd.second.get(), idit->second, iters);
+				}
+			} else {
+				SDL_HapticRumblePlay(hd.second.get(), 1.0, 750);
+			}
+		}
+	}
+
+	void stop(const std::string& id)
+	{
+		for(auto hd : haptic_devices) {
+			auto it = get_effects().find(hd.second.get());
+			auto idit = it->second.find(id);
+			if(idit == it->second.end()) {
+				SDL_HapticStopEffect(hd.second.get(), idit->second);
+			}
+		}
+	}
+
+	void stop_all()
+	{
+		for(auto hd : haptic_devices) {
+			SDL_HapticStopAll(hd.second.get());
+		}
+	}
+
+	HapticEffectCallable::HapticEffectCallable(const std::string& name, const variant& effect)
+	{
+		load(name, effect);
+	}
+
+	HapticEffectCallable::~HapticEffectCallable()
+	{
+	}
+
+	namespace {
+		void get_list3u(Uint16* li, const variant& v) {
+			ASSERT_LOG(v.is_list(), "FATAL: Must be list type");
+			for(size_t n = 0; n != 3 && n != v.num_elements(); ++n) {
+				li[n] = Uint16(v[n].as_int());
+			}
+		}
+		void get_list3s(Sint16* li, const variant& v) {
+			ASSERT_LOG(v.is_list(), "FATAL: Must be list type");
+			for(size_t n = 0; n != 3 && n != v.num_elements(); ++n) {
+				li[n] = Sint16(v[n].as_int());
+			}
+		}
+	}
+
+	void HapticEffectCallable::load(const std::string& name, const variant& eff) {
+		SDL_HapticEffect effect;
+		SDL_memset(&effect, 0, sizeof(effect));
+
+		// convert from our variant map to an SDL_HapticEffect structure.
+		ASSERT_LOG(eff.has_key("type"), "FATAL: haptic effects must have 'type' key.");
+		ASSERT_LOG(eff["type"].is_string(), "FATAL: 'type' key must be a string.");
+		std::string type = eff["type"].as_string();
+
+		Uint32 length = eff["length"].as_int();
+		Uint16 delay = Uint16(eff["delay"].as_int());
+
+		Uint16 button = 0;
+		if(eff.has_key("button")) {
+			button = Uint16(eff["button"].as_int());
+		}
+		Uint16 interval = 0;
+		if(eff.has_key("interval")) {
+			interval = Uint16(eff["interval"].as_int());
+		}
+
+		Uint16 attack_length = 0;
+		if(eff.has_key("attack_length")) {
+			attack_length = Uint16(eff["attack_length"].as_int());
+		}
+		Uint16 attack_level = 0;
+		if(eff.has_key("attack_level")) {
+			attack_level = Uint16(eff["attack_level"].as_int());
+		}
+		Uint16 fade_length = 0;
+		if(eff.has_key("fade_length")) {
+			fade_length = Uint16(eff["fade_length"].as_int());
+		}
+		Uint16 fade_level = 0;
+		if(eff.has_key("fade_level")) {
+			fade_level = Uint16(eff["fade_level"].as_int());
+		}
+
+		SDL_HapticDirection direction;
+		if(eff.has_key("direction")) {
+			const std::string& dir = eff["direction"].as_string();
+			if(dir == "polar") {
+				direction.type = SDL_HAPTIC_POLAR;
+				direction.dir[0] =  eff["direction_rotation0"].as_int();
+			} else if(dir == "cartesian") {
+				direction.type = SDL_HAPTIC_CARTESIAN;
+				direction.dir[0] =  eff["direction_x"].as_int();
+				direction.dir[1] =  eff["direction_y"].as_int();
+				if(eff.has_key("direction_z")) {
+					direction.dir[2] =  eff["direction_z"].as_int();
+				}
+			} else if(dir == "sepherical") {
+				direction.type = SDL_HAPTIC_SPHERICAL;
+				direction.dir[0] =  eff["direction_rotation0"].as_int();
+				if(eff.has_key("direction_rotation1")) {
+					direction.dir[1] =  eff["direction_rotation1"].as_int();
+				}
+			} else {
+				ASSERT_LOG(false, "FATAL: Unknown direction value '" << dir << "'");
+			}
+		}
+
+		if(type == "constant") {
+			effect.type = SDL_HAPTIC_CONSTANT;
+			effect.constant.length = eff["level"].as_int();
+			effect.constant.attack_length = attack_length;
+			effect.constant.attack_level = attack_level;
+			effect.constant.fade_length = fade_length;
+			effect.constant.fade_level = fade_level;
+			effect.constant.button = button;
+			effect.constant.interval = interval;
+			effect.constant.length = length;
+			effect.constant.delay = delay;
+		} else if(type == "sine" || type == "sqaure" || type == "triangle" || type == "sawtooth_up" || type == "sawtooth_down") {
+			if(type == "sine") {
+				effect.type = SDL_HAPTIC_SINE;
+			} else if(type == "sqaure") {
+				effect.type = SDL_HAPTIC_SQUARE;
+			} else if(type == "triangle") {
+				effect.type = SDL_HAPTIC_TRIANGLE;
+			} else if(type == "sawtooth_up") {
+				effect.type = SDL_HAPTIC_SAWTOOTHUP;
+			} else if(type == "sawtooth_down") {
+				effect.type = SDL_HAPTIC_SAWTOOTHDOWN;
+			}
+			effect.periodic.period = eff["period"].as_int();
+			effect.periodic.magnitude = eff["magnitude"].as_int();
+			if(eff.has_key("offset")) {
+				effect.periodic.offset = eff["offset"].as_int();
+			}
+			if(eff.has_key("phase")) {
+				effect.periodic.phase = eff["phase"].as_int();
+			}
+			effect.periodic.attack_length = attack_length;
+			effect.periodic.attack_level = attack_level;
+			effect.periodic.fade_length = fade_length;
+			effect.periodic.fade_level = fade_level;
+			effect.periodic.button = button;
+			effect.periodic.interval = interval;
+			effect.periodic.length = length;
+			effect.periodic.delay = delay;
+		} else if(type == "spring" || type == "damper" || type == "inertia" || type == "friction") {
+			if(type == "spring") {
+				effect.type = SDL_HAPTIC_SPRING;
+			} else if(type == "damper") {
+				effect.type = SDL_HAPTIC_DAMPER;
+			} else if(type == "inertia") {
+				effect.type = SDL_HAPTIC_INERTIA;
+			} else if(type == "friction") {
+				effect.type = SDL_HAPTIC_FRICTION;
+			}
+			effect.condition.button = button;
+			effect.condition.interval = interval;
+			effect.condition.length = length;
+			effect.condition.delay = delay;
+			get_list3u(effect.condition.right_sat, eff["right_saturation"]);
+			get_list3u(effect.condition.left_sat, eff["left_saturation"]);
+			get_list3s(effect.condition.right_coeff, eff["right_coefficient"]);
+			get_list3s(effect.condition.left_coeff, eff["left_coefficient"]);
+			get_list3u(effect.condition.deadband, eff["deadband"]);
+			get_list3s(effect.condition.center, eff["center"]);
+		} else if(type == "ramp") {
+			effect.type = SDL_HAPTIC_RAMP;
+			effect.ramp.start = eff["start"].as_int();
+			effect.ramp.start = eff["end"].as_int();
+			effect.ramp.attack_length = attack_length;
+			effect.ramp.attack_level = attack_level;
+			effect.ramp.fade_length = fade_length;
+			effect.ramp.fade_level = fade_level;
+			effect.ramp.button = button;
+			effect.ramp.interval = interval;
+		} else if(type == "custom") {
+			effect.type = SDL_HAPTIC_CUSTOM;
+		}
+		
+		for(auto hd : haptic_devices) {
+			int id = SDL_HapticNewEffect(hd.second.get(), &effect);
+			if(id >= 0) {
+				auto it = get_effects().find(hd.second.get());
+				if(it != get_effects().end()) {
+					it->second[name] = id;
+				} else {
+					std::map<std::string,int> m;
+					m[name] = id;
+					get_effects()[hd.second.get()] = m;
+				}
+			} else {
+				std::cerr << "WARNING: error creating haptic effect(" << name << "): " << SDL_GetError() << std::endl;
+			}
+		}
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(HapticEffectCallable)
+		DEFINE_FIELD(dummy, "int")
+		return variant(0);
+	END_DEFINE_CALLABLE(HapticEffectCallable)
+}
+

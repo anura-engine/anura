@@ -118,7 +118,6 @@ void show_video_selection_dialog()
 	mode_list->set_selection(index);
 	mode_list->set_zorder(10);
 	mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
-		std::cerr << "XXX selected: " << s << std::cerr;
 		selected_mode = selection;
 	});
 	d.add_widget(widget_ptr(mode_list));
