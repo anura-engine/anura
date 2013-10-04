@@ -248,7 +248,7 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 
 				if(grab_fullscreen) {
 					SDL_SetWindowFullscreen(wnd, SDL_WINDOW_FULLSCREEN_DESKTOP);
-					framebuffer_fbo.reset(new fbo(rect(0,0,grab_fullscreen_w,grab_fullscreen_h), gles2::shader_program::get_global("texture2d")));
+					framebuffer_fbo.reset(new fbo(rect(0,0,grab_fullscreen_w,grab_fullscreen_h), gles2::get_tex_shader()));
 				} else {
 					SDL_SetWindowFullscreen(wnd, flags&SDL_WINDOW_FULLSCREEN);
 					SDL_SetWindowSize(wnd, w, h);
@@ -319,45 +319,49 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		texture_frame_buffer::rebuild();
 	}
 
-	if(SDL_GL_MakeCurrent(wnd, ctx) != 0) {
+	if(SDL_GL_MakeCurrent(wnd, ctx) != 0 && !(flags&CLEANUP_WINDOW_CONTEXT)) {
 		std::cerr << "WARNING: Unable to make open GL context current: " << SDL_GetError() << std::endl;
 	}
 
 #if defined(USE_SHADERS)
-	int depth_size, stencil_size;
-	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth_size);
-	SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil_size);
-	std::cerr << "Depth buffer size: " << depth_size << std::endl;
-	std::cerr << "Stenicl buffer size: " << stencil_size << std::endl;
-	int depth;
-	glGetIntegerv(GL_DEPTH_BITS, &depth);
-	std::cerr << "Depth(from GL) buffer size: " << depth << std::endl;
+	if(!(flags&CLEANUP_WINDOW_CONTEXT)) {
+		int depth_size, stencil_size;
+		SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth_size);
+		SDL_GL_GetAttribute(SDL_GL_STENCIL_SIZE, &stencil_size);
+		std::cerr << "Depth buffer size: " << depth_size << std::endl;
+		std::cerr << "Stenicl buffer size: " << stencil_size << std::endl;
+		int depth;
+		glGetIntegerv(GL_DEPTH_BITS, &depth);
+		std::cerr << "Depth(from GL) buffer size: " << depth << std::endl;
 
-	if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &g_msaa_set) == 0) {
-		std::cerr << "Actual MSAA: " << g_msaa_set << std::endl; 
-	}
+		if(g_msaa > 0 && SDL_GL_GetAttribute(SDL_GL_MULTISAMPLESAMPLES, &g_msaa_set) == 0) {
+			std::cerr << "Actual MSAA: " << g_msaa_set << std::endl; 
+		}
 
-	if(grab_fullscreen) {
-		framebuffer_fbo.reset(new fbo(rect(0,0,grab_fullscreen_w,grab_fullscreen_h), gles2::shader_program::get_global("texture2d")));
-	} else {
-		framebuffer_fbo.reset(new fbo(rect(0,0,w,h), gles2::shader_program::get_global("texture2d")));
+		if(grab_fullscreen) {
+			framebuffer_fbo.reset(new fbo(rect(0,0,grab_fullscreen_w,grab_fullscreen_h), gles2::get_tex_shader()));
+		} else {
+			framebuffer_fbo.reset(new fbo(rect(0,0,w,h), gles2::get_tex_shader()));
+		}
 	}
 #endif
 
-	if(g_vsync >= -1 && g_vsync <= 1) {
-		if(SDL_GL_SetSwapInterval(g_vsync) != 0) {
-			if(g_vsync == -1) {
-				if(SDL_GL_SetSwapInterval(1) != 0) {
-					std::cerr << "WARNING: Unable to set swap interval of 'late sync' or 'sync' " << SDL_GetError() << std::endl;
+	if(!(flags&CLEANUP_WINDOW_CONTEXT)) {
+		if(g_vsync >= -1 && g_vsync <= 1) {
+			if(SDL_GL_SetSwapInterval(g_vsync) != 0) {
+				if(g_vsync == -1) {
+					if(SDL_GL_SetSwapInterval(1) != 0) {
+						std::cerr << "WARNING: Unable to set swap interval of 'late sync' or 'sync' " << SDL_GetError() << std::endl;
+					}
+				} else {
+					std::cerr << "WARNING: Unable to set swap interval of: " << g_vsync << " " << SDL_GetError() << std::endl;
 				}
-			} else {
-				std::cerr << "WARNING: Unable to set swap interval of: " << g_vsync << " " << SDL_GetError() << std::endl;
 			}
+		} else {
+			std::cerr << "Resetting unknown 'vsync' value of " << g_vsync << " to 0" << std::endl;
+			g_vsync = 0;
+			SDL_GL_SetSwapInterval(0);
 		}
-	} else {
-		std::cerr << "Resetting unknown 'vsync' value of " << g_vsync << " to 0" << std::endl;
-		g_vsync = 0;
-		SDL_GL_SetSwapInterval(0);
 	}
 
 	return wnd;
