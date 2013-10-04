@@ -318,6 +318,11 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		graphics::texture::rebuild_all();
 		texture_frame_buffer::rebuild();
 	}
+
+	if(SDL_GL_MakeCurrent(wnd, ctx) != 0) {
+		std::cerr << "WARNING: Unable to make open GL context current: " << SDL_GetError() << std::endl;
+	}
+
 #if defined(USE_SHADERS)
 	int depth_size, stencil_size;
 	SDL_GL_GetAttribute(SDL_GL_DEPTH_SIZE, &depth_size);
@@ -343,10 +348,10 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		if(SDL_GL_SetSwapInterval(g_vsync) != 0) {
 			if(g_vsync == -1) {
 				if(SDL_GL_SetSwapInterval(1) != 0) {
-					std::cerr << "WARNING: Unable to set swap interval of 'late sync' or 'sync'" << std::endl;
+					std::cerr << "WARNING: Unable to set swap interval of 'late sync' or 'sync' " << SDL_GetError() << std::endl;
 				}
 			} else {
-				std::cerr << "WARNING: Unable to set swap interval of: " << g_vsync << std::endl;
+				std::cerr << "WARNING: Unable to set swap interval of: " << g_vsync << " " << SDL_GetError() << std::endl;
 			}
 		}
 	} else {
