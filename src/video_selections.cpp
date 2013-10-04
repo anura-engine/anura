@@ -34,6 +34,8 @@
 
 using namespace gui;
 
+PREF_INT_PERSISTENT(vsync, 0);
+
 namespace 
 {
 	struct cmp
@@ -112,7 +114,8 @@ void show_video_selection_dialog()
 	std::vector<std::string> display_strings;
 	map_modes_to_strings(display_modes, display_strings);
 
-	dropdown_widget* mode_list = new dropdown_widget(display_strings, 200, 20);
+	// Video mode list.
+	dropdown_widget* mode_list = new dropdown_widget(display_strings, 220, 20);
 	mode_list->set_selection(current_mode_index);
 	mode_list->set_zorder(10);
 	mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
@@ -120,11 +123,29 @@ void show_video_selection_dialog()
 	});
 	d.add_widget(widget_ptr(mode_list));
 	
+	// fullscreen checkbox
 	widget_ptr fullscreen_cb = new checkbox(new graphical_font_label(_("Fullscreen"), "door_label", 2), preferences::fullscreen(), [&b_fullscreen](bool checked){ 
 		b_fullscreen = checked; 
 	}, BUTTON_SIZE_DOUBLE_RESOLUTION);
 	d.set_padding(20);
 	d.add_widget(fullscreen_cb);
+
+	// Vertical sync options
+	std::vector<std::string> vsync_options;
+	vsync_options.push_back("No synchronisation");
+	vsync_options.push_back("Synchronised to retrace");
+	vsync_options.push_back("Late synchronisation");
+	dropdown_widget* synch_list = new dropdown_widget(vsync_options, 220, 20);
+	synch_list->set_selection(g_vsync);
+	synch_list->set_zorder(10);
+	synch_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
+		switch(selection) {
+			case 0:	g_vsync = 0; break;
+			case 1:	g_vsync = 1; break;
+			case 2:	g_vsync = -1; break;
+		}
+	});
+	d.add_widget(widget_ptr(synch_list));
 
 	widget_ptr b_okay = new button(new graphical_font_label(_("OK"), "door_label", 2), [&d](){ 
 		d.close();

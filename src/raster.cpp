@@ -35,6 +35,9 @@
 #include <cmath>
 #include <stack>
 
+// Defined in video_selections.cpp
+extern int g_vsync;
+
 namespace graphics
 {
 
@@ -126,7 +129,7 @@ void swap_buffers()
 		framebuffer_fbo->draw_end();
 		framebuffer_fbo->render_to_screen();
 
-		/*int width = 0, height = 0;
+		int width = 0, height = 0;
 		SDL_GetWindowSize(global_main_window, &width, &height);
 
 		if((framebuffer_fbo->width()*1000)/framebuffer_fbo->height() < (width*1000)/height) {
@@ -143,8 +146,7 @@ void swap_buffers()
 		}
 
 		preferences::screen_dimension_override_scope dim_scope(width, height, width, height);
-		prepare_raster();
-		*/
+		prepare_raster();		
 	}
 
 	SDL_GL_SwapWindow(global_main_window );
@@ -155,6 +157,7 @@ void swap_buffers()
 
 	if(framebuffer_fbo) {
 		framebuffer_fbo->draw_begin();
+		glEnable(GL_BLEND);
 	}
 }
 
@@ -335,6 +338,23 @@ SDL_Window* set_video_mode(int w, int h, int flags)
 		framebuffer_fbo.reset(new fbo(rect(0,0,w,h), gles2::shader_program::get_global("texture2d")));
 	}
 #endif
+
+	if(g_vsync >= -1 && g_vsync <= 1) {
+		if(SDL_GL_SetSwapInterval(g_vsync) != 0) {
+			if(g_vsync == -1) {
+				if(SDL_GL_SetSwapInterval(1) != 0) {
+					std::cerr << "WARNING: Unable to set swap interval of 'late sync' or 'sync'" << std::endl;
+				}
+			} else {
+				std::cerr << "WARNING: Unable to set swap interval of: " << g_vsync << std::endl;
+			}
+		}
+	} else {
+		std::cerr << "Resetting unknown 'vsync' value of " << g_vsync << " to 0" << std::endl;
+		g_vsync = 0;
+		SDL_GL_SetSwapInterval(0);
+	}
+
 	return wnd;
 }
 
