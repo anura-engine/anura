@@ -36,7 +36,7 @@ endif
 SDL2_CONFIG?=sdl2-config
 USE_SDL2?=$(shell which $(SDL2_CONFIG) 2>&1 > /dev/null && echo yes)
 
-ifeq ($(USE_SDL2),yes)
+ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
