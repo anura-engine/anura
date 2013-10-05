@@ -732,7 +732,6 @@
 		C0B87BB9166603C300D66B15 /* icon.iconset */ = {isa = PBXFileReference; lastKnownFileType = folder.iconset; path = icon.iconset; sourceTree = "<group>"; };
 		C0B87BD21667256F00D66B15 /* formula_object.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = formula_object.cpp; sourceTree = "<group>"; };
 		C0B87BD31667256F00D66B15 /* formula_object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = formula_object.hpp; sourceTree = "<group>"; };
-		C0C2918D1665DFFC00DB88A6 /* signature.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = signature.cfg; path = ../../signature.cfg; sourceTree = "<group>"; };
 		C0C291901665F21600DB88A6 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_internal_client.cpp; sourceTree = "<group>"; };
 		C0D6EB6716DB25C000B5ABCA /* tbs_internal_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_internal_client.hpp; sourceTree = "<group>"; };
@@ -827,7 +826,6 @@
 				C0917B12175480F7004307B0 /* master-config.cfg */,
 				C00E2A9C1687D11000DEB111 /* icon.icns */,
 				C0B87BB9166603C300D66B15 /* icon.iconset */,
-				C0C2918D1665DFFC00DB88A6 /* signature.cfg */,
 				C010C596160AFB8F006E7D90 /* InfoPlist.strings */,
 				C010C599160AFB8F006E7D90 /* Frogatto-Prefix.pch */,
 				C010C59B160AFB8F006E7D90 /* Info.plist */,
