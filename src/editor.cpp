@@ -1001,15 +1001,9 @@ editor_resolution_manager::editor_resolution_manager(int xres, int yres) :
 
 	if(++editor_resolution_manager_count == 1) {
 		std::cerr << "EDITOR RESOLUTION: " << editor_x_resolution << "," << editor_y_resolution << "\n";
-		SDL_Window* result = graphics::set_video_mode(editor_x_resolution,editor_y_resolution,SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0));
-
-		if(result) {
-			preferences::set_actual_screen_width(editor_x_resolution);
-			preferences::set_actual_screen_height(editor_y_resolution);
-		} else {
-			editor_x_resolution = preferences::actual_screen_width();
-			editor_y_resolution = preferences::actual_screen_height();
-		}
+		preferences::set_actual_screen_width(editor_x_resolution);
+		preferences::set_actual_screen_height(editor_y_resolution);
+		get_main_window()->set_window_size(editor_x_resolution, editor_y_resolution);//SDL_WINDOW_RESIZABLE
 	}
 }
 
@@ -1017,7 +1011,7 @@ editor_resolution_manager::~editor_resolution_manager() {
 	if(--editor_resolution_manager_count == 0) {
 		preferences::set_actual_screen_width(original_width_);
 		preferences::set_actual_screen_height(original_height_);
-		graphics::set_video_mode(original_width_,original_height_,SDL_WINDOW_OPENGL|SDL_WINDOW_SHOWN|SDL_WINDOW_RESIZABLE|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0));
+		get_main_window()->set_window_size(original_width_, original_height_);
 	}
 }
 
@@ -3236,7 +3230,7 @@ void editor::zoom_out()
 
 void editor::draw() const
 {
-	graphics::prepare_raster();
+	get_main_window()->prepare_raster();
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -3251,7 +3245,7 @@ void editor::draw() const
 
 	debug_console::draw();
 
-	graphics::swap_buffers();
+	get_main_window()->swap();
 }
 
 void editor::draw_gui() const
@@ -3945,7 +3939,6 @@ void editor::create_new_module()
 		prop_dialog.on_exit();
 		close();
 		g_last_edited_level() = prop_dialog.on_exit();
-		SDL_SetWindowTitle(graphics::get_window(), module::get_module_pretty_name().c_str());
 	}
 }
 
@@ -3955,7 +3948,7 @@ void editor::edit_module_properties()
 	prop_dialog.show_modal();
 	if(prop_dialog.cancelled() == false) {
 		prop_dialog.on_exit();
-		SDL_SetWindowTitle(graphics::get_window(), module::get_module_pretty_name().c_str());
+		get_main_window()->set_window_title(module::get_module_pretty_name().c_str());
 	}
 }
 

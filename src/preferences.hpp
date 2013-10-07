@@ -36,6 +36,12 @@ std::string GetAppDataPath();
 #endif
 
 namespace preferences {
+	enum FullscreenMode {
+		FULLSCREEN_NONE,
+		FULLSCREEN_WINDOWED,
+		FULLSCREEN,
+	};
+
 	game_logic::formula_callable* get_settings_obj();
 
 	int register_string_setting(const std::string& id, bool persistent, std::string* value);
@@ -87,8 +93,8 @@ namespace preferences {
 	bool show_iphone_controls(); //iphone control hit rects
 	bool use_pretty_scaling();
 	void set_use_pretty_scaling(bool value);
-	bool fullscreen();
-	void set_fullscreen(bool value);
+	FullscreenMode fullscreen();
+	void set_fullscreen(FullscreenMode value);
 	bool no_fullscreen_ever();
 
 	bool resizable();

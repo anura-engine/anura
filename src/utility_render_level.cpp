@@ -78,7 +78,7 @@ UTILITY(render_level)
 		for(int y = lvl->boundaries().y(); y < lvl->boundaries().y2(); y += seg_height) {
 			for(int x = lvl->boundaries().x(); x < lvl->boundaries().x2(); x += seg_width) {
 				texture_frame_buffer::render_scope scope;
-				graphics::prepare_raster();
+				get_main_window()->prepare_raster();
 				glClearColor(0.0, 0.0, 0.0, 0.0);
 				glClear(GL_COLOR_BUFFER_BIT);
 				glPushMatrix();
@@ -87,7 +87,7 @@ UTILITY(render_level)
 				lvl->draw(x, y, seg_width, seg_height);
 				glPopMatrix();
 
-				graphics::swap_buffers();
+				get_main_window()->swap();
 
 				graphics::surface s(SDL_CreateRGBSurface(0, seg_width, seg_height, 24, SURFACE_MASK_RGB));
 				glReadPixels(0, 0, seg_width, seg_height, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);

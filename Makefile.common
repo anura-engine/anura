@@ -218,11 +218,5 @@ objects = \
 	src/widget_editor.o \
 	src/widget_factory.o \
 	src/widget_settings_dialog.o \
+	src/wm.o \
 	src/wml_formula_callable.o
-	
-
-ifneq ($(USE_SDL2),yes)
-objects += src/wm.o \
-	src/key.o
-endif
-

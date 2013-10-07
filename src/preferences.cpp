@@ -242,7 +242,7 @@ namespace preferences {
 		bool edit_and_continue_ = false;
 		bool show_iphone_controls_ = false;
 		bool use_pretty_scaling_ = false;
-		bool fullscreen_ = false;
+		FullscreenMode fullscreen_ = FULLSCREEN_NONE;
 		bool fullscreen_disabled_ = false;
 		bool resizable_ = false;
 		bool proportional_resize_ = false;
@@ -594,7 +594,7 @@ namespace preferences {
 		use_pretty_scaling_ = value;
 	}
 	
-	bool fullscreen() {
+	FullscreenMode fullscreen() {
 		return fullscreen_;
 	}
 
@@ -603,7 +603,7 @@ namespace preferences {
 		return fullscreen_disabled_;
 	}
 	
-	void set_fullscreen(bool value) {
+	void set_fullscreen(FullscreenMode value) {
 		fullscreen_ = value;
 	}
 	
@@ -941,7 +941,11 @@ namespace preferences {
 				tweak_virtual_screen(w, h);
 				screen_dimensions_are_persistent = true;
 				if(node.has_key("fullscreen")) {
-					set_fullscreen(node["fullscreen"].as_bool());
+					if(node["fullscreen"].is_bool()) {
+						set_fullscreen(node["fullscreen"].as_bool() ? FULLSCREEN_NONE : FULLSCREEN_WINDOWED);
+					} else {
+						set_fullscreen(FullscreenMode(node["fullscreen"].as_int()));
+					}
 				}
 			}
 		}
@@ -989,11 +993,11 @@ namespace preferences {
 		node.add("username", variant(get_username()));
 		node.add("passhash", variant(get_password()));
 		node.add("cookie", get_cookie());
-
+			
 		if(screen_dimensions_are_persistent) {
 			node.add("width", actual_screen_width());
 			node.add("height", actual_screen_height());
-			node.add("fullscreen", variant::from_bool(fullscreen()));
+			node.add("fullscreen", fullscreen());
 		}
 
 		node.add("sdl_version", SDL_COMPILEDVERSION);
@@ -1057,9 +1061,9 @@ namespace preferences {
 		} else if(s == "--disable-fullscreen") {
 			fullscreen_disabled_ = true;
 		} else if(s == "--fullscreen") {
-			fullscreen_ = true;
+			fullscreen_ = FULLSCREEN_WINDOWED;
 		} else if(s == "--windowed") {
-			fullscreen_ = false;
+			fullscreen_ = FULLSCREEN_NONE;
 		} else if(s == "--proportional-resize") {
 			resizable_ = true;
 			proportional_resize_ = true;

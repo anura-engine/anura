@@ -333,7 +333,7 @@ void dialog::show_modal()
 
 void dialog::prepare_draw()
 {
-	graphics::prepare_raster();
+	get_main_window()->prepare_raster();
 	if(clear_bg()) {
 		glClearColor(0.0,0.0,0.0,0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -342,7 +342,7 @@ void dialog::prepare_draw()
 
 void dialog::complete_draw()
 {
-	graphics::swap_buffers();
+	get_main_window()->swap();
 
 	const int end_draw = last_draw_ + 20;
 	const int delay_time = std::max<int>(1, end_draw - SDL_GetTicks());

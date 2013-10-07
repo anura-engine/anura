@@ -83,6 +83,7 @@
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
+#include "wm.hpp"
 
 #if defined(__APPLE__)
     #include "TargetConditionals.h"
@@ -107,11 +108,13 @@
 
 namespace {
 
-bool show_title_screen(std::string& level_cfg)
-{
-	//currently the titlescreen is disabled.
-	return false;
-}
+	graphics::window_manager_ptr main_window;
+
+	bool show_title_screen(std::string& level_cfg)
+	{
+		//currently the titlescreen is disabled.
+		return false;
+	}
 
 void print_help(const std::string& argv0)
 {
@@ -188,6 +191,11 @@ void print_help(const std::string& argv0)
 	;
 }
 
+}
+
+graphics::window_manager_ptr get_main_window()
+{
+	return main_window;
 }
 
 #if defined(UTILITY_IN_PROC)
@@ -624,26 +632,16 @@ extern "C" int main(int argcount, char* argvec[])
 		return 0;
 	}
 
-#if !defined(__native_client__)
-	Uint32 sdl_init_flags = SDL_INIT_VIDEO | SDL_INIT_JOYSTICK;
-#if defined(_WINDOWS) || TARGET_OS_IPHONE
-	sdl_init_flags |= SDL_INIT_TIMER;
-#endif
-	if(SDL_Init(sdl_init_flags) < 0) {
-		std::cerr << "could not init SDL\n";
-		return -1;
-	}
-	LOG( "After SDL_Init" );
-#endif
+	// Create the main window.
+	// Initalise SDL and Open GL.
+	main_window = graphics::window_manager_ptr(new graphics::window_manager());
+	main_window->create_window(preferences::actual_screen_width(), preferences::actual_screen_height());
 
 #ifdef TARGET_OS_HARMATTAN
 	g_type_init();
 #endif
 	i18n::init ();
 	LOG( "After i18n::init()" );
-
-	SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, 24);
-	SDL_GL_SetAttribute(SDL_GL_STENCIL_SIZE, 8);
 
 #if TARGET_OS_IPHONE || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
 	//on the iPhone and PlayBook, try to restore the auto-save if it exists
@@ -658,147 +656,6 @@ extern "C" int main(int argcount, char* argvec[])
 		orig_level_cfg = level_cfg;
 	}
 
-#if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-	int width, height;
-	iphone_screen_res(&width, &height);
-	preferences::set_actual_screen_width(width);
-	preferences::set_actual_screen_height(height);
-	int multiplier = 2;
-	if (width > 320)
-	{
-		//preferences::set_use_pretty_scaling(true);
-		multiplier = 1;
-	}
-	preferences::set_virtual_screen_width(height*multiplier);
-	preferences::set_virtual_screen_height(width*multiplier);
-	preferences::set_control_scheme(height % 1024 ? "iphone_2d" : "ipad_2d");
-	
-	SDL_WindowID windowID = SDL_CreateWindow (NULL, 0, 0, preferences::actual_screen_width(), preferences::actual_screen_height(),
-		SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN |
-		SDL_WINDOW_BORDERLESS);
-	if (windowID == 0) { 
-		std::cerr << "Could not create window: " << SDL_GetError() << "\n"; 
-		return -1;
-	}
-	
-	//	if (SDL_GL_CreateContext(windowID) == 0) {
-	//		std::cerr << "Could not create GL context: " << SDL_GetError() << "\n";
-	//		return -1;
-	//	}
-	if (SDL_CreateRenderer(windowID, -1, 0) != 0) {
-		std::cerr << "Could not create renderer\n";
-		return -1;
-	}
-	
-#else
-#ifdef TARGET_OS_HARMATTAN
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 1);
-	if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_OPENGLES | SDL_FULLSCREEN) == NULL) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-	}
-
-	preferences::init_oes();
-	SDL_ShowCursor(0);
-#else
-
-#if defined(TARGET_PANDORA)
-	if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),16,SDL_FULLSCREEN) == NULL) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-	}
-    EGL_Init();
-    preferences::init_oes();
-#elif defined(TARGET_TEGRA)
-	//if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,preferences::resizable() ? SDL_RESIZABLE : 0|preferences::fullscreen() ? SDL_FULLSCREEN : 0) == NULL) {
-	if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_FULLSCREEN) == NULL) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-	}
-    EGL_Init();
-    preferences::init_oes();
-#elif defined(TARGET_BLACKBERRY)
-	if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,SDL_OPENGL|SDL_FULLSCREEN) == NULL) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-	}
-	preferences::init_oes();
-#elif defined(__ANDROID__)
-	int num_video_displays = SDL_GetNumVideoDisplays();
-	SDL_Rect r;
-	if(num_video_displays < 0) {
-		std::cerr << "no video displays available" << std::endl;
-		return -1;
-	}
-	if(SDL_GetDisplayBounds(0, &r) < 0) {
-        preferences::set_actual_screen_width(r.w);
-        preferences::set_actual_screen_height(r.h);
-		if(r.w < 640) {
-        	preferences::set_virtual_screen_width(r.w*2);
-        	preferences::set_virtual_screen_height(r.h*2);
-		} else {
-			preferences::set_virtual_screen_width(r.w);
-			preferences::set_virtual_screen_height(r.h);
-		}
-		preferences::set_control_scheme(r.h >= 1024 ? "ipad_2d" : "android_med");
-    }
-
-	if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height())) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-    }
-#elif defined(__native_client__)
-    SDL_Rect** r = SDL_ListModes(NULL, SDL_OPENGL);
-	std::cerr << "Video modes";
-	if(r == (SDL_Rect**)0) {
-		std::cerr << "No modes available";
-		return -1;
-	}
-	if(r == (SDL_Rect**)-1) {
-		std::cerr << "All modes available";
-	} else {
-		for(int i = 0; r[i]; ++i) {
-			std::cerr << r[i]->w << r[i]->h << std::endl;
-		}
-	}
-
-    if (SDL_SetVideoMode(preferences::actual_screen_width(),preferences::actual_screen_height(),0,0) == NULL) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-    }
-#else
-	if(preferences::auto_size_window()) {
-		const SDL_DisplayMode mode = graphics::set_video_mode_auto_select();
-		preferences::set_actual_screen_width(mode.w);
-		preferences::set_actual_screen_height(mode.h);
-		preferences::set_virtual_screen_width(mode.w);
-		preferences::set_virtual_screen_height(mode.h);
-	} else if(!graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height(), SDL_WINDOW_RESIZABLE|SDL_WINDOW_OPENGL|(preferences::fullscreen() ? SDL_WINDOW_FULLSCREEN : 0))) {
-		std::cerr << "could not set video mode\n";
-		return -1;
-	}
-	graphics::surface wm_icon = graphics::surface_cache::get("window-icon.png");
-	if(!wm_icon.null()) {
-		SDL_SetWindowIcon(graphics::get_window(), wm_icon.get());
-	}
-#endif
-#endif
-#endif
-
-#if defined(USE_SHADERS)
-	if(glCreateShader == NULL) {
-		const GLubyte* glstrings;
-		if(glGetString != NULL && (glstrings = glGetString(GL_VERSION)) != NULL) {
-			std::cerr << "OpenGL version: " << reinterpret_cast<const char *>(glstrings) << std::endl;
-		}
-		std::cerr << "glCreateShader is NULL. Check that your current video card drivers support "
-			<< "an OpenGL version >= 2. Exiting." << std::endl;
-		return 0;
-	}
-	// Has to happen after the call to glewInit().
-	gles2::init_default_shader();
-#endif
-
 	const stats::manager stats_manager;
 #ifndef NO_EDITOR
 	const external_text_editor::manager editor_manager;
@@ -807,64 +664,6 @@ extern "C" int main(int argcount, char* argvec[])
 #if defined(USE_BOX2D)
 	box2d::manager b2d_manager;
 #endif
-
-	std::cerr << std::endl;
-	const GLubyte* glstrings;
-	if((glstrings = glGetString(GL_VENDOR)) != NULL) {
-		std::cerr << "OpenGL vendor: " << reinterpret_cast<const char *>(glstrings) << std::endl;
-	} else {
-		GLenum err = glGetError();
-		std::cerr << "Error in vendor string: " << std::hex << err << std::endl;
-	}
-	if((glstrings = glGetString(GL_VERSION)) != NULL) {
-		std::cerr << "OpenGL version: " << reinterpret_cast<const char *>(glstrings) << std::endl;
-	} else {
-		GLenum err = glGetError();
-		std::cerr << "Error in version string: " << std::hex << err << std::endl;
-	}
-	if((glstrings = glGetString(GL_EXTENSIONS)) != NULL) {
-		std::cerr << "OpenGL extensions: " << reinterpret_cast<const char *>(glstrings) << std::endl;
-	} else {
-		GLenum err = glGetError();
-		std::cerr << "Error in extensions string: " << std::hex << err << std::endl;
-	}
-#ifdef GL_SHADING_LANGUAGE_VERSION
-	if((glstrings = glGetString(GL_SHADING_LANGUAGE_VERSION)) != NULL) {
-		std::cerr << "GLSL Version: " << reinterpret_cast<const char *>(glstrings) << std::endl;
-	} else {
-		GLenum err = glGetError();
-		std::cerr << "Error in GLSL string: " << std::hex << err << std::endl;
-	}
-#endif
-	std::cerr << std::endl;
-
-	GLint stencil_bits = 0;
-	glGetIntegerv(GL_STENCIL_BITS, &stencil_bits);
-	std::cerr << "Stencil bits: " << stencil_bits << std::endl;
-
-#if defined(USE_SHADERS)
-#if !defined(GL_ES_VERSION_2_0)
-	GLfloat min_pt_sz;
-	glGetFloatv(GL_POINT_SIZE_MIN, &min_pt_sz);
-	GLfloat max_pt_sz;
-	glGetFloatv(GL_POINT_SIZE_MAX, &max_pt_sz);
-	std::cerr << "Point size range: " << min_pt_sz << " < size < " << max_pt_sz << std::endl;
-	glEnable(GL_POINT_SPRITE);
-	glEnable(GL_VERTEX_PROGRAM_POINT_SIZE);
-#endif
-#endif
-
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_BLEND);
-#if !defined(USE_SHADERS)
-	glEnable(GL_TEXTURE_2D);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
-
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	std::cerr << "JOYSTICKS: " << SDL_NumJoysticks() << "\n";
 
 	const load_level_manager load_manager;
 
@@ -1014,21 +813,12 @@ extern "C" int main(int argcount, char* argvec[])
     EGL_Destroy();
 #endif
 
-	// Be nice and destroy the GL context and the window.
-	graphics::set_video_mode(0, 0, CLEANUP_WINDOW_CONTEXT);
-	SDL_Quit();
-	
 	preferences::save_preferences();
-	std::cerr << SDL_GetError() << "\n";
 
 #if !defined(_MSC_VER) && defined(UTILITY_IN_PROC)
 	if(create_utility_in_new_process) {
 		terminate_utility_process();
 	}
-#endif
-
-#ifdef _MSC_VER
-	ExitProcess(0);
 #endif
 
 	std::set<variant*> loading;
@@ -1037,6 +827,10 @@ extern "C" int main(int argcount, char* argvec[])
 		fprintf(stderr, "Illegal object: %p\n", (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
+
+//#ifdef _MSC_VER
+//	ExitProcess(0);
+//#endif
 
 	return 0;
 }

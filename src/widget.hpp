@@ -146,6 +146,9 @@ public:
 
 	dialog_ptr get_settings_dialog(int x, int y, int w, int h);
 	variant write();
+
+	void set_tab_stop(int ts) { tab_stop_ = ts; }
+	int get_tab_stop() const { return tab_stop_; }
 protected:
 	widget();
 	explicit widget(const variant& v, game_logic::formula_callable* e);
@@ -191,9 +194,9 @@ DECLARE_CALLABLE(widget);
 	int pad_w_;
 	bool claim_mouse_events_;
 	bool draw_with_object_shader_;
-
 	HORIZONTAL_ALIGN align_h_;
 	VERTICAL_ALIGN   align_v_;
+	int tab_stop_;
 
 	std::string frame_set_name_;
 	const_framed_gui_element_ptr frame_set_;

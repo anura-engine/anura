@@ -51,12 +51,13 @@ namespace joystick {
 namespace {
 std::vector<std::shared_ptr<SDL_Joystick>> joysticks;
 std::map<int,std::shared_ptr<SDL_GameController>> game_controllers;
-
-const int threshold = 32700;
 }
 
 manager::manager() {
 
+	if(SDL_InitSubSystem(SDL_INIT_JOYSTICK) != 0) {
+		std::cerr << "ERROR: Unable to initialise joystick subsystem" << std::endl;
+	}
 	if(SDL_InitSubSystem(SDL_INIT_GAMECONTROLLER) != 0) {
 		std::cerr << "ERROR: Unable to initialise game controller subsystem" << std::endl;
 	}
@@ -104,14 +105,10 @@ manager::manager() {
 			}
 		}
 	}
-	if(joysticks.size() > 0) {
-		std::cerr << "INFO: Initialized " << joysticks.size() << " joysticks" << std::endl;
-	}
-#if SDL_VERSION_ATLEAST(2,0,0)
-	if(game_controllers.size() > 0) {
-		std::cerr << "INFO: Initialized " << game_controllers.size() << " game controllers" << std::endl;
-	}
-#endif
+
+	std::cerr << "INFO: Initialized " << joysticks.size() << " joysticks" << std::endl;
+	std::cerr << "INFO: Initialized " << game_controllers.size() << " game controllers" << std::endl;
+	std::cerr << "INFO: Initialized " << haptic::haptic_devices.size() << " haptic devices" << std::endl;
 }
 
 manager::~manager() {
@@ -119,6 +116,8 @@ manager::~manager() {
 	game_controllers.clear();
 	haptic::get_effects().clear();
 	haptic::haptic_devices.clear();
+
+	SDL_QuitSubSystem(SDL_INIT_HAPTIC | SDL_INIT_GAMECONTROLLER | SDL_INIT_JOYSTICK);
 
 #if defined(TARGET_BLACKBERRY)
 	bps_shutdown();

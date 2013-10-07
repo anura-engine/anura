@@ -365,7 +365,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 #endif
 	const int screen_width = graphics::screen_width() - (lvl.in_editor() ? sidebar_width : 0);
 
-	graphics::prepare_raster();
+	get_main_window()->prepare_raster();
 	glPushMatrix();
 
 	const int camera_rotation = lvl.camera_rotation();
@@ -378,7 +378,6 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		glClearColor(0.0, 0.0, 0.0, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT);
 
-		const SDL_Surface* fb = SDL_GetWindowSurface(graphics::get_window());
 		const double angle = sin(0.5*3.141592653589*GLfloat(pos.flip_rotate)/1000.0);
 		const int pixels = (preferences::actual_screen_width()/2)*angle;
 		
@@ -519,7 +518,6 @@ void render_scene(const level& lvl, const screen_position& pos) {
 	}
 	
 	if(pos.flip_rotate) {
-		const SDL_Surface* fb = SDL_GetWindowSurface(graphics::get_window());
 		const double angle = sin(0.5*3.141592653589*GLfloat(pos.flip_rotate)/1000.0);
 		//const int pixels = (fb->w/2)*angle;
 		const int pixels = (preferences::actual_screen_width()/2)*angle;

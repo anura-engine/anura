@@ -50,7 +50,7 @@ namespace
 
 	int enumerate_video_modes(wh_data& display_modes)
 	{
-		const int display_index = SDL_GetWindowDisplayIndex(graphics::get_window());
+		const int display_index = SDL_GetWindowDisplayIndex(get_main_window()->sdl_window());
 		int mode_index = -1;
 		const int nmodes = SDL_GetNumDisplayModes(display_index);
 		for(int n = 0; n != nmodes; ++n) {
@@ -102,7 +102,6 @@ void show_video_selection_dialog()
 	const int button_height = 40;
 	const int padding = 20;
 
-	bool b_fullscreen = preferences::fullscreen();
 	int selected_mode = -1;
 
 	d.add_widget(widget_ptr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
@@ -122,13 +121,24 @@ void show_video_selection_dialog()
 		selected_mode = selection;
 	});
 	d.add_widget(widget_ptr(mode_list));
-	
-	// fullscreen checkbox
-	widget_ptr fullscreen_cb = new checkbox(new graphical_font_label(_("Fullscreen"), "door_label", 2), preferences::fullscreen(), [&b_fullscreen](bool checked){ 
-		b_fullscreen = checked; 
-	}, BUTTON_SIZE_DOUBLE_RESOLUTION);
-	d.set_padding(20);
-	d.add_widget(fullscreen_cb);
+
+	// Fullscreen selection
+	preferences::FullscreenMode fs_mode = preferences::fullscreen();
+	std::vector<std::string> fs_options;
+	fs_options.push_back("Windowed mode");
+	fs_options.push_back("Fullscreen Windowed");
+	fs_options.push_back("Fullscreen");
+	dropdown_widget* fs_list = new dropdown_widget(fs_options, 220, 20);
+	fs_list->set_selection(int(preferences::fullscreen()));
+	fs_list->set_zorder(9);
+	fs_list->set_on_select_handler([&fs_mode](int selection,const std::string& s){ 
+		switch(selection) {
+			case 0:	fs_mode = preferences::FULLSCREEN_NONE; break;
+			case 1:	fs_mode = preferences::FULLSCREEN_WINDOWED; break;
+			case 2:	fs_mode = preferences::FULLSCREEN; break;
+		}
+	});
+	d.add_widget(widget_ptr(fs_list));
 
 	// Vertical sync options
 	std::vector<std::string> vsync_options;
@@ -137,7 +147,7 @@ void show_video_selection_dialog()
 	vsync_options.push_back("Late synchronisation");
 	dropdown_widget* synch_list = new dropdown_widget(vsync_options, 220, 20);
 	synch_list->set_selection(g_vsync);
-	synch_list->set_zorder(10);
+	synch_list->set_zorder(8);
 	synch_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
 		switch(selection) {
 			case 0:	g_vsync = 0; break;
@@ -164,8 +174,8 @@ void show_video_selection_dialog()
 		if(selected_mode >= 0 && selected_mode < display_modes.size()) {
 			preferences::set_actual_screen_dimensions_persistent(display_modes[selected_mode].first, display_modes[selected_mode].second);
 		}
-		preferences::set_fullscreen(b_fullscreen);
+		preferences::set_fullscreen(fs_mode);
 
-		graphics::set_video_mode(preferences::actual_screen_width(), preferences::actual_screen_height());
+		get_main_window()->set_window_size(preferences::actual_screen_width(), preferences::actual_screen_height());
 	}
 }

@@ -98,23 +98,10 @@ struct flip_draw_scope
 	bool old_value;
 };
 
-bool set_video_mode(int w, int h);
-void reset_opengl_state();
-SDL_DisplayMode set_video_mode_auto_select();
-SDL_Window* set_video_mode(int w, int h, int flags);
-SDL_Window* get_window();
-void swap_buffers();
-
 std::vector<GLfloat>& global_vertex_array();
 std::vector<GLfloat>& global_texcoords_array();
 std::vector<GLbyte>& global_vertex_color_array();
 
-//function to map a mouse position in native window co-ordinates.
-//this will modify the mouse position if we're using an fbo to
-//present a fake framebuffer.
-void map_mouse_position(int* x, int* y);
-
-void prepare_raster();
 void blit_texture(const texture& tex, int x=0, int y=0, GLfloat rotate=0.0);
 
 //Function to blit a texture to the screen. Parameters:

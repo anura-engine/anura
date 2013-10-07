@@ -142,9 +142,9 @@ typedef boost::function<void(const level&, screen_position&, float)> TransitionF
 void prepare_transition_scene(level& lvl, screen_position& screen_pos)
 {
 	draw_scene(lvl, screen_pos);
-	graphics::swap_buffers();
+	get_main_window()->swap();
 	draw_scene(lvl, screen_pos);
-	graphics::swap_buffers();
+	get_main_window()->swap();
 }
 
 void transition_scene(level& lvl, screen_position& screen_pos, bool transition_out, TransitionFn draw_fn) {
@@ -159,7 +159,7 @@ void transition_scene(level& lvl, screen_position& screen_pos, bool transition_o
 
 		draw_fn(lvl, screen_pos, transition_out ? (n/20.0) : (1 - n/20.0));
 
-		graphics::swap_buffers();
+		get_main_window()->swap();
 
 		const int target_end_time = start_time + (n+1)*preferences::frame_time_millis();
 		const int current_time = SDL_GetTicks();
@@ -292,7 +292,7 @@ void show_end_game()
 		graphics::draw_rect(rect, graphics::color_black());
 		graphics::blit_texture(t, xpos, ypos, t.width()*percent, t.height(), 0.0,
 						       0.0, 0.0, percent, 1.0);
-		graphics::swap_buffers();
+		get_main_window()->swap();
 		SDL_Delay(40);
 	}
 
@@ -357,40 +357,42 @@ bool is_skipping_game() {
 
 void video_resize(const SDL_Event &event) 
 {
-	int width = event.window.data1;
-    int height = event.window.data2;
+	if(preferences::fullscreen() == preferences::FULLSCREEN_NONE) {
+		int width = event.window.data1;
+		int height = event.window.data2;
 
-	if(preferences::proportional_resize() == false) {
-		const int aspect = (preferences::actual_screen_width()*1000)/preferences::actual_screen_height();
+		if(preferences::proportional_resize() == false) {
+			const int aspect = (preferences::actual_screen_width()*1000)/preferences::actual_screen_height();
 
-		if(preferences::actual_screen_width()*preferences::actual_screen_height() < width*height) {
-			//making the window larger
-			if((height*aspect)/1000 > width) {
-				width = (height*aspect)/1000;
-			} else if((height*aspect)/1000 < width) {
+			if(preferences::actual_screen_width()*preferences::actual_screen_height() < width*height) {
+				//making the window larger
+				if((height*aspect)/1000 > width) {
+					width = (height*aspect)/1000;
+				} else if((height*aspect)/1000 < width) {
+					height = (width*1000)/aspect;
+				}
+			} else {
+				//making the window smaller
+				if((height*aspect)/1000 > width) {
+					height = (width*1000)/aspect;
+				} else if((height*aspect)/1000 < width) {
+					width = (height*aspect)/1000;
+				}
+			}
+
+			//make sure we don't have some ugly fractional aspect ratio
+			while((width*1000)/height != aspect) {
+				++width;
 				height = (width*1000)/aspect;
 			}
+
 		} else {
-			//making the window smaller
-			if((height*aspect)/1000 > width) {
-				height = (width*1000)/aspect;
-			} else if((height*aspect)/1000 < width) {
-				width = (height*aspect)/1000;
-			}
+			preferences::set_virtual_screen_width(width);
+			preferences::set_virtual_screen_height(height);
 		}
-
-		//make sure we don't have some ugly fractional aspect ratio
-		while((width*1000)/height != aspect) {
-			++width;
-			height = (width*1000)/aspect;
-		}
-
-	} else {
-		preferences::set_virtual_screen_width(width);
-		preferences::set_virtual_screen_height(height);
+		preferences::set_actual_screen_width(width);
+		preferences::set_actual_screen_height(height);
 	}
-	preferences::set_actual_screen_width(width);
-	preferences::set_actual_screen_height(height);
 }
 
 void level_runner::video_resize_event(const SDL_Event &event)
@@ -1298,10 +1300,8 @@ bool level_runner::play_cycle()
 						}
 					}
 				} else if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
-					if(!preferences::fullscreen()) {
-						video_resize(event); 
-						video_resize_event(event);
-					}
+					video_resize(event); 
+					video_resize_event(event);
 				}
 			break;
 #endif
@@ -1384,8 +1384,10 @@ bool level_runner::play_cycle()
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
 					graphics::texture::clear_textures();
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
-					preferences::set_fullscreen(!preferences::fullscreen());
-					graphics::set_video_mode(graphics::screen_width(), graphics::screen_height());
+					preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
+						? preferences::FULLSCREEN_WINDOWED 
+						: preferences::FULLSCREEN_NONE);
+					get_main_window()->set_window_size(preferences::actual_screen_width(), preferences::actual_screen_height());
 				} else if(key == SDLK_F3) {
 					preferences::set_show_fps(!preferences::show_fps());
 				}
@@ -1623,7 +1625,7 @@ bool level_runner::play_cycle()
 
 		const int start_flip = SDL_GetTicks();
 		if(!is_skipping_game()) {
-			graphics::swap_buffers();
+			get_main_window()->swap();
 		}
 
 		const int flip_time = SDL_GetTicks() - start_flip;
@@ -1724,7 +1726,7 @@ void level_runner::reverse_cycle()
 
 	const bool should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());
 	render_scene(*lvl_, last_draw_position());
-	graphics::swap_buffers();
+	get_main_window()->swap();
 
 	const int wait_time = begin_time + 20 - SDL_GetTicks();
 	if(wait_time > 0) {

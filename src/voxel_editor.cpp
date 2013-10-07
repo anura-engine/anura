@@ -658,14 +658,14 @@ void iso_renderer::init()
 	glDepthFunc(GL_LEQUAL);
 	glDepthMask(GL_TRUE);
 
-	if(graphics::get_configured_msaa() != 0) {
+	if(get_main_window()->get_configured_msaa() != 0) {
 		render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(2, id); delete[] id;});
 		glGenRenderbuffers(2, &render_buffer_id_[0]);
 		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_RGBA, tex_width_, tex_height_);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, get_main_window()->get_configured_msaa(), GL_RGBA, tex_width_, tex_height_);
 
 		glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[1]);
-		glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+		glRenderbufferStorageMultisample(GL_RENDERBUFFER, get_main_window()->get_configured_msaa(), GL_DEPTH_COMPONENT, tex_width_, tex_height_);
 		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 		// check FBO status
@@ -746,7 +746,7 @@ void iso_renderer::init()
 
 void iso_renderer::render_fbo()
 {
-	if(graphics::get_configured_msaa() != 0) {
+	if(get_main_window()->get_configured_msaa() != 0) {
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[1]);
 	} else {
 		glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
@@ -996,7 +996,7 @@ void iso_renderer::render_fbo()
 
 	glDisable(GL_DEPTH_TEST);
 
-	if(graphics::get_configured_msaa() != 0) {
+	if(get_main_window()->get_configured_msaa() != 0) {
 		// blit from multisample FBO to final FBO
 		glBindFramebuffer(GL_FRAMEBUFFER, 0 );
 		glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id_[1]);

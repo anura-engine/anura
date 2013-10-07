@@ -15,40 +15,91 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
-#ifndef WM_HPP_INCLUDED
-#define WM_HPP_INCLUDED
 
-#if defined(USE_GLES2)
+#include <memory>
 
-class window_manager
+namespace graphics
 {
-private:
-	struct SDL_Surface* SDLWindow_;
-#if defined(GL_ES_VERSION_2_0)
-	EGLDisplay eglDisplay_;
-	EGLConfig  eglConfig_;
-	EGLContext eglContext_;
-	EGLSurface eglSurface_;
-	EGLNativeWindowType eglWindow_;
-	EGLNativeDisplayType eglNativeDisplay_;
-#endif
-	int width_;
-	int height_;
+	class fbo;
 
-public:
-	window_manager() 
-		: 
-#if defined(GL_ES_VERSION_2_0)
-		eglDisplay_(0), eglConfig_(0), eglContext_(0), 
-		eglSurface_(0),eglWindow_(0), eglNativeDisplay_(0),
-#endif
-		width_(0), height_(0), SDLWindow_(NULL)
-	{}
-	void create_window(int width, int height, int bpp, unsigned int flags);
-	void destroy_window();
-	void swap();
-};
+	class init_error : public std::exception
+	{
+	public:
+		init_error() : exception(), msg_(SDL_GetError())
+		{}
+		init_error(const std::string& msg) : exception(), msg_(msg)
+		{}
+		virtual ~init_error() throw()
+		{}
+		virtual const char* what() const throw() { return msg_.c_str(); }
+	private:
+		std::string msg_;
+	};
 
-#endif
+	class SDL
+	{
+	public:
+		SDL(Uint32 flags = SDL_INIT_VIDEO)
+		{
+			if (SDL_Init(flags) < 0) {
+				std::stringstream ss;
+				ss << "Unable to initialize SDL: " << SDL_GetError() << std::endl;
+				throw init_error(ss.str());
+			}
+		}
 
-#endif
+		virtual ~SDL()
+		{
+			SDL_Quit();
+		}
+	};
+
+	class window_manager
+	{
+	public:
+		window_manager();
+		virtual ~window_manager();
+		
+		void create_window(int width, int height);
+		void destroy_window();
+		
+		bool set_window_size(int width, int height);
+		bool auto_window_size(int& width, int& height);
+
+		void set_window_title(const std::string& title);
+
+		SDL_Window* sdl_window() { return sdl_window_.get(); }
+		
+		void init_gl_context();
+		void init_shaders();
+		void print_gl_info();
+
+		int get_configured_msaa() const { return msaa_set_; }
+
+		void map_mouse_position(int* x, int* y);
+
+		void prepare_raster();
+
+		void swap();
+	private:
+		std::shared_ptr<SDL_Window> sdl_window_;
+		SDL_GLContext gl_context_;
+		SDL_Renderer* sdl_renderer_;
+
+		std::shared_ptr<fbo> screen_fbo_;
+
+		int width_;
+		int height_;
+
+		int msaa_set_;
+
+		int letterbox_horz_;
+		int letterbox_vert_;
+
+		std::shared_ptr<SDL> sdl_;
+		
+		window_manager(const window_manager&);
+	};
+
+	typedef std::shared_ptr<graphics::window_manager> window_manager_ptr;
+}

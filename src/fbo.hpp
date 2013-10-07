@@ -26,8 +26,8 @@
 #include <boost/shared_array.hpp>
 
 #include "asserts.hpp"
-#include "geometry.hpp"
 #include "graphics.hpp"
+#include "shaders.hpp"
 
 namespace graphics
 {
@@ -37,15 +37,21 @@ namespace graphics
 	class fbo
 	{
 	public:
-		explicit fbo(const rect& area);
-		explicit fbo(const rect& area, const gles2::shader_program_ptr& shader);
+		explicit fbo(int x, int y, int width, int height, int awidth, int aheight);
+		explicit fbo(int x, int y, int width, int height, int awidth, int aheight, const gles2::shader_program_ptr& shader);
 		virtual ~fbo();
 
-		size_t width() const { return area_.w(); }
-		size_t height() const { return area_.h(); }
+		size_t width() const { return width_; }
+		size_t height() const { return height_; }
 
-		size_t x() const { return area_.x(); }
-		size_t y() const { return area_.y(); }
+		size_t awidth() const { return awidth_; }
+		size_t aheight() const { return aheight_; }
+
+		size_t x() const { return x_; }
+		size_t y() const { return y_; }
+
+		int letterbox_width() const { return letterbox_width_; }
+		int letterbox_height() const { return letterbox_height_; }
 
 		void enable_depth_test(bool dt = true) { depth_test_enable_ = dt; }
 		bool is_depth_test_enabled() const { return depth_test_enable_; }
@@ -73,10 +79,21 @@ namespace graphics
 			render_manager(const render_manager&);
 		};
 	private:
+		void calculate_letterbox();
+
 		glm::mat4 proj_;
 		size_t tex_width_;
 		size_t tex_height_;
-		rect area_;
+		int x_;
+		int y_;
+		int width_;
+		int height_;
+		
+		int awidth_;
+		int aheight_;
+
+		int letterbox_width_;
+		int letterbox_height_;
 
 		GLint video_framebuffer_id_;
 

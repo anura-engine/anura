@@ -64,7 +64,7 @@ void loading_screen::draw (const std::string& message)
 {
 	//std::cerr << "*** Drawing loading screen with message: " << message << "\n";
 	
-	graphics::prepare_raster();
+	get_main_window()->prepare_raster();
 	glClearColor(0.0, 0.0, 0.0, 0.0);
 	glClear(GL_COLOR_BUFFER_BIT);
 
@@ -75,7 +75,7 @@ void loading_screen::draw (const std::string& message)
 		draw_internal(message);
 	}
 	
-	graphics::swap_buffers();
+	get_main_window()->swap();
 	//SDL_Delay(500); //make it possible to see on fast computers; for debugging
 }
 

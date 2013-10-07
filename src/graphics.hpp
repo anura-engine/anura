@@ -83,6 +83,8 @@
 
 #endif
 
-#define CLEANUP_WINDOW_CONTEXT 0x40000000
+#include "wm.hpp"
+
+graphics::window_manager_ptr get_main_window();
 
 #endif // GRAPHICS_HPP_INCLUDED

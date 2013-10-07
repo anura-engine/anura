@@ -76,7 +76,11 @@ namespace {
 
 PREF_INT(debug_shadows, 0);
 
-boost::intrusive_ptr<level> current_level;
+
+boost::intrusive_ptr<level>& get_current_level() {
+	static boost::intrusive_ptr<level> current_level;
+	return current_level;
+}
 
 std::map<std::string, level::summary> load_level_summaries() {
 	std::map<std::string, level::summary> result;
@@ -99,7 +103,7 @@ bool level_tile_not_in_rect(const rect& r, const level_tile& t) {
 
 void level::clear_current_level()
 {
-	current_level.reset();
+	get_current_level().reset();
 }
 
 level::summary level::get_summary(const std::string& id)
@@ -115,16 +119,16 @@ level::summary level::get_summary(const std::string& id)
 
 level& level::current()
 {
-	ASSERT_LOG(current_level, "Tried to query current level when there is none");
-	return *current_level;
+	ASSERT_LOG(get_current_level(), "Tried to query current level when there is none");
+	return *get_current_level();
 }
 
 level* level::current_ptr()
 {
-	return current_level.get();
+	return get_current_level().get();
 }
 
-current_level_scope::current_level_scope(level* lvl) : old_(current_level)
+current_level_scope::current_level_scope(level* lvl) : old_(get_current_level())
 {
 	lvl->set_as_current_level();
 }
@@ -137,7 +141,7 @@ current_level_scope::~current_level_scope() {
 
 void level::set_as_current_level()
 {
-	current_level = this;
+	get_current_level() = this;
 	frame::set_color_palette(palettes_used_);
 
 	if(false && preferences::auto_size_window()) {
@@ -146,11 +150,9 @@ void level::set_as_current_level()
 			auto_sized = true;
 		}
 
-		const SDL_DisplayMode mode = graphics::set_video_mode_auto_select();
-		preferences::set_actual_screen_width(mode.w);
-		preferences::set_actual_screen_height(mode.h);
-		preferences::set_virtual_screen_width(mode.w);
-		preferences::set_virtual_screen_height(mode.h);
+		int w,h;
+		get_main_window()->auto_window_size(w,h);
+		get_main_window()->set_window_size(w,h);
 	}
 
 #if !TARGET_OS_IPHONE && !TARGET_BLACKBERRY
@@ -172,13 +174,7 @@ void level::set_as_current_level()
 		if(x_resolution_ != preferences::actual_screen_width() || y_resolution_ != preferences::actual_screen_height()) {
 
 			std::cerr << "RESETTING VIDEO MODE: " << x_resolution_ << ", " << y_resolution_ << "\n";
-			const bool result = graphics::set_video_mode(x_resolution_, y_resolution_);
-			if(result) {
-				preferences::set_actual_screen_width(x_resolution_);
-				preferences::set_actual_screen_height(y_resolution_);
-				preferences::set_virtual_screen_width(x_resolution_);
-				preferences::set_virtual_screen_height(y_resolution_);
-			}
+			get_main_window()->set_window_size(x_resolution_, y_resolution_);
 		}
 	}
 	

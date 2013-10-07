@@ -27,7 +27,7 @@
 
 int truncate_to_char(int value) { return std::min(std::max(value, 0), 255); }
 
-void write_autosave ()
+void write_autosave()
 {
 	variant node = level::current().write();
 	if(sound::current_music().empty() == false) {
@@ -38,10 +38,12 @@ void write_autosave ()
 	sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "1");
 }
 
-void toggle_fullscreen ()
+void toggle_fullscreen()
 {
-	preferences::set_fullscreen(!preferences::fullscreen());
-	graphics::set_video_mode(graphics::screen_width(), graphics::screen_height());
+	preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
+		? preferences::FULLSCREEN_WINDOWED 
+		: preferences::FULLSCREEN_NONE);
+	get_main_window()->set_window_size(graphics::screen_width(), graphics::screen_height());
 }
 
 std::string get_http_datetime() 

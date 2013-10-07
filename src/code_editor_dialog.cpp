@@ -1074,12 +1074,9 @@ void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn
 		return;
 	}
 
-	const SDL_DisplayMode mode = graphics::set_video_mode_auto_select();
-	preferences::set_actual_screen_width(mode.w);
-	preferences::set_actual_screen_height(mode.h);
-	preferences::set_virtual_screen_width(mode.w);
-	preferences::set_virtual_screen_height(mode.h);
-
+	int w, h;
+	get_main_window()->auto_window_size(w,h);
+	get_main_window()->set_window_size(w,h);
 
 	using namespace gui;
 

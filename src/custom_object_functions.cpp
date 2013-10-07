@@ -399,7 +399,7 @@ int show_simple_option_dialog(level& lvl, const std::string& text, const std::ve
 		}
 
 		draw_scene(lvl, last_draw_position(), &lvl.player()->get_entity());
-		graphics::swap_buffers();
+		get_main_window()->swap();
 		SDL_Delay(20);
 	}
 
@@ -1770,7 +1770,7 @@ public:
 		screen_position pos = last_draw_position();
 		for(int n = 0; n != 50; ++n) {
 			draw_scene(lvl, pos, focus_.get());
-			graphics::swap_buffers();
+			get_main_window()->swap();
 			SDL_Delay(20);
 		}
 	}
@@ -2168,7 +2168,7 @@ private:
 		menu_button_.draw(in_speech_dialog());
 #endif
 
-		graphics::swap_buffers();
+		get_main_window()->swap();
 		SDL_Delay(20);
 	}
 

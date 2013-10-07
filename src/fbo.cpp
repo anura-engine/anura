@@ -30,27 +30,35 @@
 
 namespace graphics
 {
-	fbo::fbo(const rect& area) : area_(area), depth_test_enable_(false)
+	fbo::fbo(int x, int y, int width, int height, int actual_width, int actual_height)
+		: x_(x), y_(y), width_(width), height_(height), depth_test_enable_(false),
+		awidth_(actual_width), aheight_(actual_height), letterbox_width_(0), letterbox_height_(0)
 	{
 		init();
 	}
 
-	fbo::fbo(const rect& area, const gles2::shader_program_ptr& shader)
-		: area_(area), depth_test_enable_(false), final_shader_(shader)
+	fbo::fbo(int x, int y, int width, int height, int actual_width, int actual_height, const gles2::shader_program_ptr& shader)
+		: x_(x), y_(y), width_(width), height_(height), 
+		depth_test_enable_(false), final_shader_(shader),
+		awidth_(actual_width), aheight_(actual_height),
+		letterbox_width_(0), letterbox_height_(0)
 	{
+		calculate_letterbox();
 		init();
 	}
 
 	fbo::~fbo()
 	{
+		glBindFramebuffer(GL_FRAMEBUFFER, video_framebuffer_id_);
 	}
 
 	void fbo::init()
 	{
-		proj_ = glm::ortho(0.0f, float(preferences::actual_screen_width()), float(preferences::actual_screen_height()), 0.0f);
+		GLfloat zoom = preferences::fullscreen() == preferences::FULLSCREEN_NONE ? 1.0f : 2.0f;
+		proj_ = glm::ortho(0.0f, GLfloat(screen_width())*zoom, GLfloat(screen_height())*zoom, 0.0f);
 
-		tex_width_ = texture::allows_npot() ? width() : texture::next_power_of_2(width());
-		tex_height_ = texture::allows_npot() ? height() : texture::next_power_of_2(height());
+		tex_width_ = texture::allows_npot() ? awidth() : texture::next_power_of_2(awidth());
+		tex_height_ = texture::allows_npot() ? aheight() : texture::next_power_of_2(aheight());
 
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &video_framebuffer_id_);
 
@@ -59,14 +67,14 @@ namespace graphics
 			glDepthMask(GL_TRUE);
 		}
 
-		if(graphics::get_configured_msaa() != 0) {
+		if(get_main_window()->get_configured_msaa() != 0) {
 			render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(2, id); delete[] id;});
 			glGenRenderbuffers(2, &render_buffer_id_[0]);
 			glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_RGBA, tex_width_, tex_height_);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, get_main_window()->get_configured_msaa(), GL_RGBA, tex_width_, tex_height_);
 
 			glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[1]);
-			glRenderbufferStorageMultisample(GL_RENDERBUFFER, graphics::get_configured_msaa(), GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+			glRenderbufferStorageMultisample(GL_RENDERBUFFER, get_main_window()->get_configured_msaa(), GL_DEPTH_COMPONENT, tex_width_, tex_height_);
 			glBindRenderbuffer(GL_RENDERBUFFER, 0);
 
 			// check FBO status
@@ -133,18 +141,20 @@ namespace graphics
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, final_texture_id_[0], 0);
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[0]);
 		}
+
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
 	void fbo::draw_begin()
 	{
-		if(graphics::get_configured_msaa() != 0) {
+		if(get_main_window()->get_configured_msaa() != 0) {
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[1]);
 		} else {
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
 		}
 
 		//set up the raster projection.
-		glViewport(0, 0, width(), height());
+		glViewport(0, 0, awidth(), aheight());
 
 		glClearColor(0.0, 0.0, 0.0, 0.0);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -159,15 +169,15 @@ namespace graphics
 	void fbo::draw_end()
 	{
 		// end drawing
-		glBindFramebuffer(GL_FRAMEBUFFER, video_framebuffer_id_);
+		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
+		glViewport(x(), y(), width(), height());
 
 		if(depth_test_enable_) {
 			glDisable(GL_DEPTH_TEST);
 		}
 
-		if(graphics::get_configured_msaa() != 0) {
+		if(get_main_window()->get_configured_msaa() != 0) {
 			// blit from multisample FBO to final FBO
 			glBindFramebuffer(GL_FRAMEBUFFER, 0 );
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id_[1]);
@@ -183,37 +193,58 @@ namespace graphics
 		render_to_screen(final_shader_);
 	}
 
+	void fbo::calculate_letterbox()
+	{
+		double aspect_actual = double(awidth())/aheight();
+		double aspect_screen = double(width())/height();
+		if(abs(aspect_actual - aspect_screen) < 1e-4) {
+			// Aspect ratio's a "close" together so probably the same, 
+			// treat them as the same.
+			letterbox_width_ = letterbox_height_ = 0;
+		} else if(aspect_actual < aspect_screen) {
+			letterbox_height_ = int((width() - (height() / aspect_actual))*2.0);
+		} else {
+			// Actual aspect ratio is bigger than screen i.e. 4:3 > 1.25 (e.g. 1280x1024)
+			letterbox_width_ = int((height() - (width() / aspect_actual))*2.0);
+		}
+		std::cerr << "INFO: letterbox width=" << letterbox_width_ << ", letterbox height=" << letterbox_height_ << std::endl;
+	}
+
 	void fbo::render_to_screen(const gles2::shader_program_ptr& shader)
 	{
-		gles2::manager gles2_manager(shader == NULL ? final_shader_ : shader);
+		shader_save_context ssc;
+		glUseProgram(shader == NULL ? final_shader_->shader()->get() : shader->shader()->get());
+		
+		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		glDisable(GL_BLEND);
 
 		GLint cur_id = graphics::texture::get_current_texture();
 		glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
 
-		const int w_odd = width() % 2;
-		const int h_odd = height() % 2;
-		const int w = width() / 2;
-		const int h = height() / 2;
+		const GLfloat w = GLfloat(width());
+		const GLfloat h = GLfloat(height());
 
-		glm::mat4 mvp = proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+w, y()+h, 0.0f));
+		glm::mat4 mvp = proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+letterbox_width(), y()+letterbox_height(), 0.0f));
 		glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		GLfloat varray[] = {
-			(GLfloat)-w, (GLfloat)-h,
-			(GLfloat)-w, (GLfloat)h+h_odd,
-			(GLfloat)w+w_odd, (GLfloat)-h,
-			(GLfloat)w+w_odd, (GLfloat)h+h_odd
+			0, 0,
+			0, h,
+			w, 0,
+			w, h,
 		};
 		const GLfloat tcarray[] = {
-			0.0f, GLfloat(height())/tex_height_,
+			0.0f, GLfloat(aheight())/tex_height_,
 			0.0f, 0.0f,
-			GLfloat(width())/tex_width_, GLfloat(height())/tex_height_,
-			GLfloat(width())/tex_width_, 0.0f,
+			GLfloat(awidth())/tex_width_, GLfloat(aheight())/tex_height_,
+			GLfloat(awidth())/tex_width_, 0.0f,
 		};
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		glBindTexture(GL_TEXTURE_2D, cur_id);
+
+		glEnable(GL_BLEND);
 	}
 }

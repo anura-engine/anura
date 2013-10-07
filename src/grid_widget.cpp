@@ -682,7 +682,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 			}
 		}
 
-		graphics::prepare_raster();
+		get_main_window()->prepare_raster();
 		for(widget_ptr w : draw_widgets) {
 			w->draw();
 		}
@@ -691,7 +691,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 
 		gui::draw_tooltip();
 
-		graphics::swap_buffers();
+		get_main_window()->swap();
 
 		SDL_Delay(20);
 	}
