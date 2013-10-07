@@ -170,6 +170,7 @@ std::vector<GLfloat> font_tcarray;
 
 rect graphical_font::do_draw(int x, int y, const std::string& text, bool draw_text, int size) const
 {
+	gles2::manager shader_manager(gles2::get_texcol_shader());
 	if(text.empty()) {
 		return rect(x, y, 0, 0);
 	}
