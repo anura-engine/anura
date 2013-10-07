@@ -392,6 +392,7 @@ namespace graphics
 		glDisable(GL_LIGHT0);
 #endif
 		glColor4f(1.0, 1.0, 1.0, 1.0);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	}
 
 	bool window_manager::set_window_size(int width, int height)
