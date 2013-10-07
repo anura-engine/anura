@@ -170,7 +170,6 @@ std::vector<GLfloat> font_tcarray;
 
 rect graphical_font::do_draw(int x, int y, const std::string& text, bool draw_text, int size) const
 {
-	gles2::manager shader_manager(gles2::get_texcol_shader());
 	if(text.empty()) {
 		return rect(x, y, 0, 0);
 	}
@@ -255,19 +254,16 @@ rect graphical_font::do_draw(int x, int y, const std::string& text, bool draw_te
 	}
 
 	if(draw_text && !font_varray.empty()) {
-		texture_.set_as_current_texture();
 #if defined(USE_SHADERS)
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &font_varray.front());
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, 0, 0, &font_tcarray.front());
-		
 #else
 		glVertexPointer(2, GL_FLOAT, 0, &font_varray.front());
 		glTexCoordPointer(2, GL_FLOAT, 0, &font_tcarray.front());
 #endif
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, font_varray.size()/2);
 	}
-
 	return rect(x, y, x2 - x, y2 - y);
 }
 

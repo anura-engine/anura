@@ -459,6 +459,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 	debug_console::draw_graph();
 
 	if (!pause_stack) lvl.draw_status();
+	gles2::active_shader()->prepare_draw();
 
 	if(scene_title_duration_ > 0) {
 		--scene_title_duration_;
