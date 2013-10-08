@@ -21,6 +21,7 @@
 #include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 
+#include "asserts.hpp"
 #include "foreach.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -39,6 +40,8 @@
 namespace sound {
 
 namespace {
+
+	PREF_INT(assert_on_missing_sound, 0);
 
 struct MusicInfo {
 	MusicInfo() : volume(1.0) {}
@@ -459,6 +462,7 @@ int play_internal(const std::string& file, int loops, const void* object, float 
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 	Mix_Chunk* chunk = cache[file];
 	if(chunk == NULL) {
+		ASSERT_LOG(!g_assert_on_missing_sound, "FATAL: Sound file: " << file << " missing");
 		return -1;
 	}
 
@@ -754,6 +758,7 @@ void play_music(const std::string& file)
 
 	std::map<std::string, std::string>::const_iterator itor = module::find(get_music_paths(), song_file);
 	if(itor == get_music_paths().end()) {
+		ASSERT_LOG(!g_assert_on_missing_sound, "FATAL: Music file: " << song_file << " missing");
 		std::cerr << "FILE NOT FOUND: " << song_file << std::endl;
 		return;
 	}
