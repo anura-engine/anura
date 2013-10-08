@@ -251,6 +251,7 @@ namespace graphics
 		init_shaders();
 
 		screen_fbo_.reset(new fbo(0, 0, width, height, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
+		prepare_raster();
 #endif
 
 		if(g_vsync >= -1 && g_vsync <= 1) {

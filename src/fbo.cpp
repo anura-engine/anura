@@ -27,6 +27,7 @@
 #include "preferences.hpp"
 #include "raster.hpp"
 #include "texture.hpp"
+#include "texture_frame_buffer.hpp"
 
 namespace graphics
 {
@@ -137,27 +138,32 @@ namespace graphics
 			framebuffer_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteFramebuffers(1, id); delete[] id;});
 			glGenFramebuffers(1, &framebuffer_id_[0]);
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
+			std::cerr << "XXX: Framebuffer ID: " << framebuffer_id_[0] << std::endl;
 			// attach the texture to FBO color attachment point
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, final_texture_id_[0], 0);
 			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[0]);
 		}
 
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
+
+		draw_begin();
 	}
 
 	void fbo::draw_begin()
 	{
 		if(get_main_window()->get_configured_msaa() != 0) {
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[1]);
+			texture_frame_buffer::set_framebuffer_id(framebuffer_id_[1]);
 		} else {
 			glBindFramebuffer(GL_FRAMEBUFFER, framebuffer_id_[0]);
+			texture_frame_buffer::set_framebuffer_id(framebuffer_id_[0]);
 		}
 
 		//set up the raster projection.
 		glViewport(0, 0, awidth(), aheight());
 
-		glClearColor(0.0, 0.0, 0.0, 0.0);
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+		//glClearColor(0.0, 0.0, 0.0, 0.0);
+		//glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
 		if(depth_test_enable_) {
 			glEnable(GL_DEPTH_TEST);
@@ -179,7 +185,6 @@ namespace graphics
 
 		if(get_main_window()->get_configured_msaa() != 0) {
 			// blit from multisample FBO to final FBO
-			glBindFramebuffer(GL_FRAMEBUFFER, 0 );
 			glBindFramebuffer(GL_READ_FRAMEBUFFER, framebuffer_id_[1]);
 			glBindFramebuffer(GL_DRAW_FRAMEBUFFER, framebuffer_id_[0]);
 			glBlitFramebuffer(0, 0, tex_width_, tex_height_, 0, 0, tex_width_, tex_height_, GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT, GL_NEAREST);
@@ -202,10 +207,10 @@ namespace graphics
 			// treat them as the same.
 			letterbox_width_ = letterbox_height_ = 0;
 		} else if(aspect_actual < aspect_screen) {
-			letterbox_height_ = int((width() - (height() / aspect_actual))*2.0);
+			letterbox_width_ = int((height() - (width() / aspect_actual))*2.0);
 		} else {
 			// Actual aspect ratio is bigger than screen i.e. 4:3 > 1.25 (e.g. 1280x1024)
-			letterbox_width_ = int((height() - (width() / aspect_actual))*2.0);
+			letterbox_height_ = int((width() - (height() / aspect_actual))*2.0);
 		}
 		std::cerr << "INFO: letterbox width=" << letterbox_width_ << ", letterbox height=" << letterbox_height_ << std::endl;
 	}
