@@ -1059,6 +1059,7 @@ END_FUNCTION_DEF(atanh)
 
 FUNCTION_DEF(sqrt, 1, 1, "sqrt(x): Returns the square root of x.")
 	const double value = args()[0]->evaluate(variables).as_decimal().as_float();
+	ASSERT_LOG(value >= 0, "We don't support the square root of negative numbers: " << value);
 	return variant(decimal(sqrt(value)));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
