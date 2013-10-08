@@ -517,6 +517,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 		
 	}
+	gles2::active_shader()->prepare_draw();
 	
 	if(pos.flip_rotate) {
 		const double angle = sin(0.5*3.141592653589*GLfloat(pos.flip_rotate)/1000.0);

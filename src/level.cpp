@@ -2305,10 +2305,10 @@ void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shade
 	GLfloat varray[] = { 0, 0, 0, h, w, 0, w, h };
 
 	GLfloat sprite_area[] = {0, 0, 1, 1};
-	GLfloat draw_area[] = {0, 0, w, h};
+	GLfloat draw_area[] = {0.0f, 0.0f, w, h};
 
 	gles2::manager manager(shader);
-	gles2::active_shader()->shader()->set_sprite_area(sprite_area);
+	//gles2::active_shader()->shader()->set_sprite_area(sprite_area);
 	gles2::active_shader()->shader()->set_draw_area(draw_area);
 	gles2::active_shader()->shader()->set_cycle(cycle());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
@@ -2318,11 +2318,6 @@ void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shade
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 	glPopMatrix();
-
-//	if(!render_to_screen) {
-//		texture_frame_buffer::switch_texture();
-//		texture_frame_buffer::set_render_to_texture();
-//	}
 }
 
 void level::shaders_updated()
@@ -4920,3 +4915,4 @@ UTILITY(load_and_save_all_levels)
 		sys::write_file(path, lvl->write().write_json(true));
 	}
 }
+

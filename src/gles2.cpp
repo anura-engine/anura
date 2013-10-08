@@ -217,11 +217,11 @@ namespace {
 	const std::string vs1 = 
 		"uniform mat4 mvp_matrix;\n"
 		"uniform float u_point_size;\n"
-		"attribute vec4 a_position;\n"
+		"attribute vec2 a_position;\n"
 		"void main()\n"
 		"{\n"
 		"	gl_PointSize = u_point_size;\n"
-		"	gl_Position = mvp_matrix * a_position;\n"
+		"	gl_Position = mvp_matrix * vec4(a_position,0.0,1.0);\n"
 		"}\n";
     const std::string simple_shader_info = 
 		"{\"shader\": {\n"
@@ -248,14 +248,14 @@ namespace {
 	const std::string vs_col = 
 		"uniform mat4 mvp_matrix;\n"
 		"uniform float u_point_size;\n"
-		"attribute vec4 a_position;\n"
+		"attribute vec2 a_position;\n"
 		"attribute vec4 a_color;\n"
 		"varying vec4 v_color;\n"
 		"void main()\n"
 		"{\n"
 		"	v_color = a_color;\n"
 		"	gl_PointSize = u_point_size;\n"
-		"	gl_Position = mvp_matrix * a_position;\n"
+		"	gl_Position = mvp_matrix * vec4(a_position,0.0,1.0);\n"
 		"}\n";
     const std::string simple_col_shader_info = 
 		"{\"shader\": {\n"
@@ -285,13 +285,13 @@ namespace {
 		"}\n";
 	const std::string vs_tex = 
 		"uniform mat4 mvp_matrix;\n"
-		"attribute vec4 a_position;\n"
+		"attribute vec2 a_position;\n"
 		"attribute vec2 a_texcoord;\n"
 		"varying vec2 v_texcoord;\n"
 		"void main()\n"
 		"{\n"
 		"	v_texcoord = a_texcoord;\n"
-		"	gl_Position = mvp_matrix * a_position;\n"
+		"	gl_Position = mvp_matrix * vec4(a_position,0.0,1.0);\n"
 		"}\n";
 	const std::string tex_shader_info = 
 		"{\"shader\": {\n"
@@ -322,7 +322,7 @@ namespace {
 		"}\n";
 	const std::string vs_texcol = 
 		"uniform mat4 mvp_matrix;\n"
-		"attribute vec4 a_position;\n"
+		"attribute vec2 a_position;\n"
 		"attribute vec4 a_color;\n"
 		"attribute vec2 a_texcoord;\n"
 		"varying vec2 v_texcoord;\n"
@@ -331,7 +331,7 @@ namespace {
 		"{\n"
 		"	v_color = a_color;\n"
 		"	v_texcoord = a_texcoord;\n"
-		"	gl_Position = mvp_matrix * a_position;\n"
+		"	gl_Position = mvp_matrix * vec4(a_position,0.0,1.0);\n"
 		"}\n";
 	const std::string texcol_shader_info = 
 		"{\"shader\": {\n"
