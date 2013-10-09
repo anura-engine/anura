@@ -13,6 +13,7 @@
 		C00160CF16A2A8A7001DAEB9 /* http_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C66E160AFD4C006E7D90 /* http_server.cpp */; };
 		C00160D116AF2E00001DAEB9 /* load_level_nothread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */; };
 		C008A2C31804E8980061363A /* wm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C008A2C11804E8980061363A /* wm.cpp */; };
+		C008A2CE1804EFFE0061363A /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C008A2CC1804EFFE0061363A /* input.cpp */; };
 		C010C572160AFAD9006E7D90 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C571160AFAD9006E7D90 /* Cocoa.framework */; };
 		C010C5B8160AFC8B006E7D90 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B6160AFC7C006E7D90 /* libz.dylib */; };
 		C010C5BB160AFD09006E7D90 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B9160AFCFF006E7D90 /* OpenGL.framework */; };
@@ -282,6 +283,8 @@
 		C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = load_level_nothread.cpp; sourceTree = "<group>"; };
 		C008A2C11804E8980061363A /* wm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wm.cpp; sourceTree = "<group>"; };
 		C008A2C21804E8980061363A /* wm.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wm.hpp; sourceTree = "<group>"; };
+		C008A2CC1804EFFE0061363A /* input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = input.cpp; sourceTree = "<group>"; };
+		C008A2CD1804EFFE0061363A /* input.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = input.hpp; sourceTree = "<group>"; };
 		C00E2A9C1687D11000DEB111 /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
 		C010C56D160AFAD9006E7D90 /* Frogatto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Frogatto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C010C571160AFAD9006E7D90 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -856,6 +859,8 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C008A2CC1804EFFE0061363A /* input.cpp */,
+				C008A2CD1804EFFE0061363A /* input.hpp */,
 				C008A2C11804E8980061363A /* wm.cpp */,
 				C008A2C21804E8980061363A /* wm.hpp */,
 				C01DF41617FFBFCE0056839B /* fbo.cpp */,
@@ -1398,6 +1403,7 @@
 				C010C746160AFD4D006E7D90 /* asserts.cpp in Sources */,
 				C010C747160AFD4D006E7D90 /* background.cpp in Sources */,
 				C010C748160AFD4D006E7D90 /* background_task_pool.cpp in Sources */,
+				C008A2CE1804EFFE0061363A /* input.cpp in Sources */,
 				C010C749160AFD4D006E7D90 /* base64.cpp in Sources */,
 				C010C74A160AFD4D006E7D90 /* blur.cpp in Sources */,
 				C010C74B160AFD4D006E7D90 /* border_widget.cpp in Sources */,
