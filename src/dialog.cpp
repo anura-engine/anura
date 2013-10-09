@@ -364,6 +364,7 @@ void dialog::show_modal()
 	opened_ = true;
 	cancelled_ = false;
 
+	// We do an initial lockout on the controller start button to stop the dialog being instantly closed.
 	int joystick_lockout = 25;
 
 	while(opened_ && pump_events()) {
@@ -548,6 +549,14 @@ bool dialog::handle_event(const SDL_Event& ev, bool claimed)
 			if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
 				|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
 				do_select_event();
+			}
+			if(ev.key.keysym.sym == SDLK_TAB) {
+				if(ev.key.keysym.mod & KMOD_SHIFT) {
+					do_up_event();
+				} else {
+					do_down_event();
+				}
+				claimed = true;
 			}
 			switch(ev.key.keysym.sym) {
 				case SDLK_RETURN:
