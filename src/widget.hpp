@@ -111,7 +111,10 @@ public:
 
 	virtual void handle_draw() const = 0;
 
-	virtual bool has_focus() const { return false; }
+	virtual bool has_focus() const { return has_focus_; }
+	virtual void set_focus(bool f=true) { has_focus_ = f; }
+	virtual void do_execute() {}
+
 	game_logic::formula_callable* get_environment() const { return environ_; }
 
 	void set_zorder(int z) { zorder_ = z; }
@@ -148,7 +151,7 @@ public:
 	variant write();
 
 	void set_tab_stop(int ts) { tab_stop_ = ts; }
-	int get_tab_stop() const { return tab_stop_; }
+	int tab_stop() const { return tab_stop_; }
 protected:
 	widget();
 	explicit widget(const variant& v, game_logic::formula_callable* e);
@@ -197,6 +200,7 @@ DECLARE_CALLABLE(widget);
 	HORIZONTAL_ALIGN align_h_;
 	VERTICAL_ALIGN   align_v_;
 	int tab_stop_;
+	bool has_focus_;
 
 	std::string frame_set_name_;
 	const_framed_gui_element_ptr frame_set_;
@@ -211,10 +215,19 @@ DECLARE_CALLABLE(widget);
 class widget_sort_zorder
 {
 public:
-    bool operator()(const widget_ptr lhs, const widget_ptr rhs) const;
+    bool operator()(const widget_ptr& lhs, const widget_ptr& rhs) const;
 };
 
 typedef std::set<widget_ptr, widget_sort_zorder> sorted_widget_list;
+
+// Functor to sort widget by tab ordering
+class widget_sort_tab_order
+{
+public:
+    bool operator()(const int lhs, const int rhs) const;
+};
+
+typedef std::multimap<int, widget_ptr, widget_sort_tab_order> tab_sorted_widget_list;
 
 }
 

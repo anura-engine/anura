@@ -88,8 +88,17 @@ protected:
 	void recalculate_dimensions();
 private:
 	DECLARE_CALLABLE(dialog);
+
+	void do_up_event();
+	void do_down_event();
+	void do_select_event();
 	
 	sorted_widget_list widgets_;
+	tab_sorted_widget_list tab_widgets_;
+	int control_lockout_;
+
+	tab_sorted_widget_list::iterator current_tab_focus_;
+
 	bool opened_;
 	bool cancelled_;
 	int clear_bg_;

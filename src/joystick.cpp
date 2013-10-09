@@ -331,6 +331,14 @@ bool button(int n) {
 				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_B);
 				break;
 			}
+			case 3: { // unassigned inventory?
+				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_Y);
+				break;
+			}
+			case 4: { // 
+				state = SDL_GameControllerGetButton(gc.second.get(), SDL_CONTROLLER_BUTTON_START);
+				break;
+			}
 			default: continue;
 		}
 		if(state != 0) {

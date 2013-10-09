@@ -122,6 +122,19 @@ void button::setup()
 	set_label(label_);
 }
 
+void button::set_focus(bool f)
+{
+	widget::set_focus();
+	current_button_image_set_ = f ? (down_ ? depressed_button_image_set_ : focus_button_image_set_) : normal_button_image_set_;
+}
+
+void button::do_execute()
+{ 
+	if(onclick_) { 
+		onclick_();
+	} 
+}
+
 void button::set_label(widget_ptr label)
 {
 	label_ = label;

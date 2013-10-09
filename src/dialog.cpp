@@ -24,6 +24,7 @@
 #include "font.hpp"
 #include "foreach.hpp"
 #include "input.hpp"
+#include "joystick.hpp"
 #include "module.hpp"
 #include "raster.hpp"
 #include "surface_cache.hpp"
@@ -69,7 +70,8 @@ std::string get_dialog_file(const std::string& fname)
 
 dialog::dialog(int x, int y, int w, int h)
   : opened_(false), cancelled_(false), clear_bg_(196), padding_(10),
-    add_x_(0), add_y_(0), bg_alpha_(1.0), last_draw_(-1), upscale_frame_(true)
+    add_x_(0), add_y_(0), bg_alpha_(1.0), last_draw_(-1), upscale_frame_(true),
+	current_tab_focus_(tab_widgets_.end()), control_lockout_(0)
 {
 	set_environment();
 	set_loc(x,y);
@@ -81,7 +83,8 @@ dialog::dialog(const variant& v, game_logic::formula_callable* e)
 	: widget(v,e),
 	opened_(false), cancelled_(false), 
 	add_x_(0), add_y_(0), last_draw_(-1),
-	upscale_frame_(v["upscale_frame"].as_bool(true))
+	upscale_frame_(v["upscale_frame"].as_bool(true)),
+	current_tab_focus_(tab_widgets_.end()), control_lockout_(0)
 {
 	forced_dimensions_ = rect(x(), y(), width(), height());
 	padding_ = v["padding"].as_int(10);
@@ -214,6 +217,23 @@ void dialog::handle_process()
     foreach(widget_ptr w, widgets_) {
 		w->process();
 	}
+
+	if(joystick::up() && !control_lockout_) {
+		control_lockout_ = 10;
+		do_up_event();
+	}
+	if(joystick::down() && !control_lockout_) {
+		control_lockout_ = 10;
+		do_down_event();
+	}
+	if((joystick::button(0) || joystick::button(1) || joystick::button(2)) && !control_lockout_) {
+		control_lockout_ = 10;
+		do_select_event();
+	}
+
+	if(control_lockout_) {
+		--control_lockout_;
+	}
 }
 
 dialog& dialog::add_widget(widget_ptr w, dialog::MOVE_DIRECTION dir)
@@ -227,6 +247,7 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
 {
 	w->set_loc(x,y);
 	widgets_.insert(w);
+	tab_widgets_.insert(tab_sorted_widget_list::value_type(w->tab_stop(), w));
 	switch(dir) {
 	case MOVE_DOWN:
 		add_x_ = x;
@@ -247,12 +268,20 @@ void dialog::remove_widget(widget_ptr w)
 	if(it != widgets_.end()) {
 		widgets_.erase(it);
 	}
+	auto tw_it = tab_widgets_.find(w->tab_stop());
+	if(tw_it != tab_widgets_.end()) {
+		if(current_tab_focus_ == tw_it) {
+			++current_tab_focus_;
+		}
+		tab_widgets_.erase(tw_it);
+	}
 	recalculate_dimensions();
 }
 
 void dialog::clear() { 
 	add_x_ = add_y_ = 0;
     widgets_.clear(); 
+	tab_widgets_.clear();
 	recalculate_dimensions();
 }
 
@@ -268,6 +297,15 @@ void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
 		widgets_.erase(it);
 	}
 	widgets_.insert(w_new);
+
+	auto tw_it = tab_widgets_.find(w_old->tab_stop());
+	if(tw_it != tab_widgets_.end()) {
+		if(current_tab_focus_ == tw_it) {
+			++current_tab_focus_;
+		}
+		tab_widgets_.erase(tw_it);
+	}
+	tab_widgets_.insert(tab_sorted_widget_list::value_type(w_new->tab_stop(), w_new));
 
 	w_new->set_loc(x,y);
 	w_new->set_dim(w,h);
@@ -323,11 +361,16 @@ void dialog::show_modal()
 	cancelled_ = false;
 
 	while(opened_ && pump_events()) {
+		Uint32 t = SDL_GetTicks();
 		process();
 		prepare_draw();
 		draw();
 		gui::draw_tooltip();
 		complete_draw();
+		t = t - SDL_GetTicks();
+		if(t < 20) {
+			SDL_Delay(20 - t);
+		}
 	}
 }
 
@@ -435,6 +478,53 @@ void dialog::close()
 	}
 }
 
+void dialog::do_up_event()
+{
+	if(tab_widgets_.size()) {
+		if(current_tab_focus_ == tab_widgets_.end()) {
+			current_tab_focus_ = tab_widgets_.begin();
+			++current_tab_focus_;
+		} else {
+			current_tab_focus_->second->set_focus(false);
+			--current_tab_focus_;
+			if(current_tab_focus_ == tab_widgets_.begin()) {
+				current_tab_focus_ = tab_widgets_.end();
+				--current_tab_focus_;
+			}
+		}
+		if(current_tab_focus_ != tab_widgets_.end()) {
+			current_tab_focus_->second->set_focus(true);
+		}
+	}
+}
+
+void dialog::do_down_event()
+{
+	if(tab_widgets_.size()) {
+		if(current_tab_focus_ == tab_widgets_.end()) {
+			current_tab_focus_ = tab_widgets_.begin();
+			++current_tab_focus_;
+		} else {
+			current_tab_focus_->second->set_focus(false);
+			++current_tab_focus_;
+			if(current_tab_focus_ == tab_widgets_.end()) {
+				current_tab_focus_ = tab_widgets_.begin();
+				++current_tab_focus_;
+			}
+		}
+		if(current_tab_focus_ != tab_widgets_.end()) {
+			current_tab_focus_->second->set_focus(true);
+		}
+	}
+}
+
+void dialog::do_select_event()
+{
+	// Process key as an execute here.
+	if(current_tab_focus_ != tab_widgets_.end()) {
+		current_tab_focus_->second->do_execute();
+	}
+}
 
 bool dialog::handle_event(const SDL_Event& ev, bool claimed)
 {
@@ -442,15 +532,32 @@ bool dialog::handle_event(const SDL_Event& ev, bool claimed)
     claimed |= handle_event_children(ev, claimed);
 
     if(!claimed && opened_) {
-        if(ev.type == SDL_KEYDOWN &&
-           ev.key.keysym.sym == SDLK_RETURN) {
-            close();
-			cancelled_ = false;
-            claimed = true;
-        } else if(ev.type == SDL_KEYDOWN && ev.key.keysym.sym == SDLK_ESCAPE) {
-			close();
-			cancelled_ = true;
-			claimed = true;
+		if(ev.type == SDL_KEYDOWN) {
+			if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+				|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
+				do_select_event();
+			}
+			switch(ev.key.keysym.sym) {
+				case SDLK_RETURN:
+					close();
+					cancelled_ = false;
+					claimed = true;
+					break; 
+				case SDLK_ESCAPE:
+					close();
+					cancelled_ = true;
+					claimed = true;
+					break;
+				case SDLK_DOWN:
+					do_down_event();
+					claimed = true;
+					break;
+				case SDLK_UP:
+					do_up_event();
+					claimed = true;
+					break;				
+				default: break;
+			}
 		}
     }
 

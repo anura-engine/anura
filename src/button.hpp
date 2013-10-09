@@ -43,6 +43,10 @@ public:
 	void set_hpadding(int hpad);
 	void set_vpadding(int vpad);
 
+	virtual void set_focus(bool f=true);
+
+	virtual void do_execute();
+
 	std::vector<widget_ptr> get_children() const;
 protected:
 	void set_label(widget_ptr label);
