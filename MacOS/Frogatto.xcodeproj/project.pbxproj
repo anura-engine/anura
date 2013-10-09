@@ -12,6 +12,8 @@
 		C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160CB16A2991D001DAEB9 /* tbs_web_server.cpp */; };
 		C00160CF16A2A8A7001DAEB9 /* http_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C66E160AFD4C006E7D90 /* http_server.cpp */; };
 		C00160D116AF2E00001DAEB9 /* load_level_nothread.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */; };
+		C008A2C31804E8980061363A /* wm.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C008A2C11804E8980061363A /* wm.cpp */; };
+		C008A2CE1804EFFE0061363A /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C008A2CC1804EFFE0061363A /* input.cpp */; };
 		C010C572160AFAD9006E7D90 /* Cocoa.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C571160AFAD9006E7D90 /* Cocoa.framework */; };
 		C010C5B8160AFC8B006E7D90 /* libz.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B6160AFC7C006E7D90 /* libz.dylib */; };
 		C010C5BB160AFD09006E7D90 /* OpenGL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C010C5B9160AFCFF006E7D90 /* OpenGL.framework */; };
@@ -95,7 +97,6 @@
 		C010C796160AFD4D006E7D90 /* i18n.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C670160AFD4C006E7D90 /* i18n.cpp */; };
 		C010C797160AFD4D006E7D90 /* image_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C672160AFD4C006E7D90 /* image_widget.cpp */; };
 		C010C798160AFD4D006E7D90 /* IMG_savepng.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C675160AFD4C006E7D90 /* IMG_savepng.cpp */; };
-		C010C799160AFD4D006E7D90 /* input.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C677160AFD4C006E7D90 /* input.cpp */; };
 		C010C79A160AFD4D006E7D90 /* iphone_controls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C679160AFD4C006E7D90 /* iphone_controls.cpp */; };
 		C010C79D160AFD4D006E7D90 /* joystick.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C67F160AFD4C006E7D90 /* joystick.cpp */; };
 		C010C79E160AFD4D006E7D90 /* json_parser.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C681160AFD4C006E7D90 /* json_parser.cpp */; };
@@ -280,6 +281,10 @@
 		C00160CB16A2991D001DAEB9 /* tbs_web_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_web_server.cpp; sourceTree = "<group>"; };
 		C00160CC16A2991D001DAEB9 /* tbs_web_server.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_web_server.hpp; sourceTree = "<group>"; };
 		C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = load_level_nothread.cpp; sourceTree = "<group>"; };
+		C008A2C11804E8980061363A /* wm.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = wm.cpp; sourceTree = "<group>"; };
+		C008A2C21804E8980061363A /* wm.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = wm.hpp; sourceTree = "<group>"; };
+		C008A2CC1804EFFE0061363A /* input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = input.cpp; sourceTree = "<group>"; };
+		C008A2CD1804EFFE0061363A /* input.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = input.hpp; sourceTree = "<group>"; };
 		C00E2A9C1687D11000DEB111 /* icon.icns */ = {isa = PBXFileReference; lastKnownFileType = image.icns; path = icon.icns; sourceTree = "<group>"; };
 		C010C56D160AFAD9006E7D90 /* Frogatto.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = Frogatto.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		C010C571160AFAD9006E7D90 /* Cocoa.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Cocoa.framework; path = System/Library/Frameworks/Cocoa.framework; sourceTree = SDKROOT; };
@@ -472,8 +477,6 @@
 		C010C674160AFD4C006E7D90 /* image_widget_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = image_widget_fwd.hpp; sourceTree = "<group>"; };
 		C010C675160AFD4C006E7D90 /* IMG_savepng.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = IMG_savepng.cpp; sourceTree = "<group>"; };
 		C010C676160AFD4C006E7D90 /* IMG_savepng.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = IMG_savepng.h; sourceTree = "<group>"; };
-		C010C677160AFD4C006E7D90 /* input.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = input.cpp; sourceTree = "<group>"; };
-		C010C678160AFD4C006E7D90 /* input.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = input.hpp; sourceTree = "<group>"; };
 		C010C679160AFD4C006E7D90 /* iphone_controls.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = iphone_controls.cpp; sourceTree = "<group>"; };
 		C010C67A160AFD4C006E7D90 /* iphone_controls.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = iphone_controls.hpp; sourceTree = "<group>"; };
 		C010C67F160AFD4C006E7D90 /* joystick.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = joystick.cpp; sourceTree = "<group>"; };
@@ -856,6 +859,10 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C008A2CC1804EFFE0061363A /* input.cpp */,
+				C008A2CD1804EFFE0061363A /* input.hpp */,
+				C008A2C11804E8980061363A /* wm.cpp */,
+				C008A2C21804E8980061363A /* wm.hpp */,
 				C01DF41617FFBFCE0056839B /* fbo.cpp */,
 				C01DF41717FFBFCE0056839B /* fbo.hpp */,
 				C02751BC17FD417C00173646 /* haptic.hpp */,
@@ -1070,8 +1077,6 @@
 				C010C674160AFD4C006E7D90 /* image_widget_fwd.hpp */,
 				C010C675160AFD4C006E7D90 /* IMG_savepng.cpp */,
 				C010C676160AFD4C006E7D90 /* IMG_savepng.h */,
-				C010C677160AFD4C006E7D90 /* input.cpp */,
-				C010C678160AFD4C006E7D90 /* input.hpp */,
 				C0B1908716CD9437008FF14A /* ipc.cpp */,
 				C0B1908816CD9437008FF14A /* ipc.hpp */,
 				C010C679160AFD4C006E7D90 /* iphone_controls.cpp */,
@@ -1398,11 +1403,13 @@
 				C010C746160AFD4D006E7D90 /* asserts.cpp in Sources */,
 				C010C747160AFD4D006E7D90 /* background.cpp in Sources */,
 				C010C748160AFD4D006E7D90 /* background_task_pool.cpp in Sources */,
+				C008A2CE1804EFFE0061363A /* input.cpp in Sources */,
 				C010C749160AFD4D006E7D90 /* base64.cpp in Sources */,
 				C010C74A160AFD4D006E7D90 /* blur.cpp in Sources */,
 				C010C74B160AFD4D006E7D90 /* border_widget.cpp in Sources */,
 				C010C74C160AFD4D006E7D90 /* button.cpp in Sources */,
 				C010C74D160AFD4D006E7D90 /* character_editor_dialog.cpp in Sources */,
+				C008A2C31804E8980061363A /* wm.cpp in Sources */,
 				C010C74E160AFD4D006E7D90 /* checkbox.cpp in Sources */,
 				C010C74F160AFD4D006E7D90 /* checksum.cpp in Sources */,
 				C010C750160AFD4D006E7D90 /* clipboard.cpp in Sources */,
@@ -1473,7 +1480,6 @@
 				C010C797160AFD4D006E7D90 /* image_widget.cpp in Sources */,
 				C01DF41817FFBFCE0056839B /* fbo.cpp in Sources */,
 				C010C798160AFD4D006E7D90 /* IMG_savepng.cpp in Sources */,
-				C010C799160AFD4D006E7D90 /* input.cpp in Sources */,
 				C010C79A160AFD4D006E7D90 /* iphone_controls.cpp in Sources */,
 				C010C79D160AFD4D006E7D90 /* joystick.cpp in Sources */,
 				C010C79F160AFD4D006E7D90 /* json_tokenizer.cpp in Sources */,
