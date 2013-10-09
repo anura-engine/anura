@@ -18,10 +18,12 @@
 #include <iostream>
 #include <boost/bind.hpp>
 
+#include "controls.hpp"
 #include "foreach.hpp"
 #include "formula_callable_visitor.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
+#include "joystick.hpp"
 #include "label.hpp"
 #include "raster.hpp"
 #include "widget_factory.hpp"
@@ -536,15 +538,28 @@ bool grid::handle_event(const SDL_Event& event, bool claimed)
 	if(!claimed && must_select_) {
 		if(event.type == SDL_KEYDOWN) {
 			if(event.key.keysym.sym == SDLK_UP) {
+				set_yscroll(yscroll() - row_height_ < 0 ? 0 : yscroll() - row_height_);
 				if(selected_row_-- == 0) {
 					selected_row_ = nrows()-1;
+					set_yscroll(std::min(virtual_height(),row_height_*nrows()) - height());
 				}
-				claimed = claim_mouse_events();
+				claimed = true;
 			} else if(event.key.keysym.sym == SDLK_DOWN) {
+				int y1 = yscroll() + row_height_;
+				set_yscroll(std::min(virtual_height(),row_height_*nrows()) - y1 < height() 
+					? std::min(virtual_height(),row_height_*nrows()) - height()
+					: y1);
 				if(++selected_row_ == nrows()) {
+					set_yscroll(0);
 					selected_row_ = 0;
 				}
-				claimed = claim_mouse_events();
+				claimed = true;
+			} else if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+				|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
+				if(on_select_) {
+					on_select_(selected_row_);
+				}
+				claimed = true;
 			}
 		}
 	}
