@@ -192,6 +192,10 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	widget_ptr s1(new slider(slider_width, boost::bind(sound::set_music_volume, _1), sound::get_music_volume()));
 	widget_ptr s2(new slider(slider_width, boost::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
 
+	// Prevents them from being selectable as tab items when using a controller, keys.
+	t1->set_tab_stop(-1);
+	t2->set_tab_stop(-1);
+
 	const int num_buttons = 3 + show_exit + show_controls + show_button_swap + show_of + show_video_mode_select;
 	int window_w, window_h;
 	if(preferences::virtual_screen_height() >= 600) {

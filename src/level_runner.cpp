@@ -1160,9 +1160,15 @@ bool level_runner::play_cycle()
 	joystick::update();
 	bool should_pause = false;
 
-	if(joystick::button(4)) {
-		should_pause = true;
+	static int joystick_pause_lockout = 0;
+	if(joystick_pause_lockout) {
+		--joystick_pause_lockout;
 	}
+	if(joystick::button(4) && !joystick_pause_lockout) {
+		should_pause = true;
+		joystick_pause_lockout = 10;
+	}
+
 
 	SDL_StartTextInput();
 	if(message_dialog::get() == NULL) {

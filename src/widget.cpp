@@ -37,7 +37,7 @@ widget::widget()
 	tooltip_display_delay_(0), tooltip_ticks_(INT_MAX), resolution_(0),
 	display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
 	draw_with_object_shader_(true), tooltip_fontsize_(18),
-	swallow_all_events_(false), tab_stop_(-1)
+	swallow_all_events_(false), tab_stop_(0), has_focus_(false)
 	{
 		tooltip_color_.r = tooltip_color_.g = tooltip_color_.b = tooltip_color_.a = 255;
 	}
@@ -50,7 +50,7 @@ widget::widget(const variant& v, game_logic::formula_callable* e)
 	resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 	pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
 	draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_fontsize_(18),
-	swallow_all_events_(false), tab_stop_(v["tab_stop"].as_int(-1))
+	swallow_all_events_(false), tab_stop_(v["tab_stop"].as_int(0)), has_focus_(false)
 {
 	set_alpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 	if(v.has_key("width")) {

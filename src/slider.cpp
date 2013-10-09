@@ -16,9 +16,11 @@
 */
 #include <boost/bind.hpp>
 
+#include "color_chart.hpp"
 #include "slider.hpp"
 #include "image_widget.hpp"
 #include "iphone_controls.hpp"
+#include "joystick.hpp"
 #include "raster.hpp"
 #include "surface_cache.hpp"
 #include "gui_section.hpp"
@@ -94,6 +96,9 @@ bool slider::in_slider(int xloc, int yloc) const
 void slider::handle_draw() const
 {
 	init();
+	if(has_focus()) {
+		graphics::draw_hollow_rect(rect(x()-1, y()-1, width()+2, height()+2), graphics::color(128,128,128,128));
+	}
 	//int slider_y = y() + height()/2 - slider_middle_->height()/2;
 	//slider_left_->blit(x(), slider_y);
 	//slider_middle_->blit(x()+slider_left_->width(), slider_y, width_, slider_middle_->height());
@@ -131,6 +136,39 @@ void slider::dragend_delegate(double position)
 	}
 }
 
+void slider::handle_process()
+{
+	widget::handle_process();
+
+	if(has_focus()) {
+		static int control_lockout = 0;
+		if(joystick::left() && !control_lockout) {
+			control_lockout = 5;
+			if(position() <= 1.0/25.0) {
+				set_position(0.0);
+			} else {
+				set_position(position() - 1.0/25.0);
+			}
+			if(onchange_) {
+				onchange_(position());
+			}
+		}
+		if(joystick::right() && !control_lockout) {
+			control_lockout = 5;
+			if(position() >= 1.0-1.0/25.0) {
+				set_position(1.0);
+			} else {
+				set_position(position() + 1.0/25.0);
+			}
+			if(onchange_) {
+				onchange_(position());
+			}
+		}
+		if(control_lockout) {
+			--control_lockout;
+		}
+	}
+}
 
 bool slider::handle_event(const SDL_Event& event, bool claimed)
 {
@@ -175,6 +213,31 @@ bool slider::handle_event(const SDL_Event& event, bool claimed)
 			ondragend_(pos);
 		}
 	}
+
+	if(event.type == SDL_KEYDOWN && has_focus()) {
+		if(event.key.keysym.sym == SDLK_LEFT) {
+			if(position() <= 1.0/20.0) {
+				set_position(0.0);
+			} else {
+				set_position(position() - 1.0/20.0);
+			}
+			if(onchange_) {
+				onchange_(position());
+			}
+			claimed = true;
+		} else if(event.key.keysym.sym == SDLK_RIGHT) {
+			if(position() >= 1.0-1.0/20.0) {
+				set_position(1.0);
+			} else {
+				set_position(position() + 1.0/20.0);
+			}
+			if(onchange_) {
+				onchange_(position());
+			}
+			claimed = true;
+		}
+	}
+
 	return claimed;
 }
 

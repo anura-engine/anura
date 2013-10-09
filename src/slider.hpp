@@ -47,6 +47,7 @@ private:
 	bool in_button(int x, int y) const;
 	void handle_draw() const;
 	bool handle_event(const SDL_Event& event, bool claimed);
+	void handle_process();
 		
 	int width_;
 	boost::function<void (double)> onchange_;

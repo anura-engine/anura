@@ -247,7 +247,9 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
 {
 	w->set_loc(x,y);
 	widgets_.insert(w);
-	tab_widgets_.insert(tab_sorted_widget_list::value_type(w->tab_stop(), w));
+	if(w->tab_stop() >= 0) {
+		tab_widgets_.insert(tab_sorted_widget_list::value_type(w->tab_stop(), w));
+	}
 	switch(dir) {
 	case MOVE_DOWN:
 		add_x_ = x;
@@ -305,7 +307,9 @@ void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
 		}
 		tab_widgets_.erase(tw_it);
 	}
-	tab_widgets_.insert(tab_sorted_widget_list::value_type(w_new->tab_stop(), w_new));
+	if(w_new->tab_stop() >= 0) {
+		tab_widgets_.insert(tab_sorted_widget_list::value_type(w_new->tab_stop(), w_new));
+	}
 
 	w_new->set_loc(x,y);
 	w_new->set_dim(w,h);
@@ -360,6 +364,8 @@ void dialog::show_modal()
 	opened_ = true;
 	cancelled_ = false;
 
+	int joystick_lockout = 25;
+
 	while(opened_ && pump_events()) {
 		Uint32 t = SDL_GetTicks();
 		process();
@@ -367,6 +373,15 @@ void dialog::show_modal()
 		draw();
 		gui::draw_tooltip();
 		complete_draw();
+
+		if(joystick_lockout) {
+			--joystick_lockout;
+		}
+		if(joystick::button(4) && !joystick_lockout) {
+			cancelled_ = true;
+			opened_ = false;
+		}
+
 		t = t - SDL_GetTicks();
 		if(t < 20) {
 			SDL_Delay(20 - t);
@@ -482,15 +497,13 @@ void dialog::do_up_event()
 {
 	if(tab_widgets_.size()) {
 		if(current_tab_focus_ == tab_widgets_.end()) {
-			current_tab_focus_ = tab_widgets_.begin();
-			++current_tab_focus_;
-		} else {
-			current_tab_focus_->second->set_focus(false);
 			--current_tab_focus_;
+		} else {			
+			current_tab_focus_->second->set_focus(false);
 			if(current_tab_focus_ == tab_widgets_.begin()) {
 				current_tab_focus_ = tab_widgets_.end();
-				--current_tab_focus_;
-			}
+			} 
+			--current_tab_focus_;
 		}
 		if(current_tab_focus_ != tab_widgets_.end()) {
 			current_tab_focus_->second->set_focus(true);
@@ -503,15 +516,14 @@ void dialog::do_down_event()
 	if(tab_widgets_.size()) {
 		if(current_tab_focus_ == tab_widgets_.end()) {
 			current_tab_focus_ = tab_widgets_.begin();
-			++current_tab_focus_;
 		} else {
 			current_tab_focus_->second->set_focus(false);
 			++current_tab_focus_;
 			if(current_tab_focus_ == tab_widgets_.end()) {
 				current_tab_focus_ = tab_widgets_.begin();
-				++current_tab_focus_;
 			}
 		}
+
 		if(current_tab_focus_ != tab_widgets_.end()) {
 			current_tab_focus_->second->set_focus(true);
 		}
