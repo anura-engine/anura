@@ -19,7 +19,9 @@
 #include <vector>
 
 #include "asserts.hpp"
+#include "controls.hpp"
 #include "image_widget.hpp"
+#include "joystick.hpp"
 #include "dropdown_widget.hpp"
 #include "foreach.hpp"
 #include "geometry.hpp"
@@ -116,6 +118,7 @@ void dropdown_widget::init()
 	dropdown_menu_->set_col_width(0, width());
 	dropdown_menu_->set_max_height(dropdown_height_);
 	dropdown_menu_->set_dim(width(), dropdown_height_);
+	dropdown_menu_->must_select();
 	foreach(const std::string& s, list_) {
 		dropdown_menu_->add_col(widget_ptr(new label(s, graphics::color_white())));
 	}
@@ -191,11 +194,11 @@ void dropdown_widget::handle_draw() const
 	if(type_ == DROPDOWN_LIST) {
 		graphics::draw_hollow_rect(
 			rect(x()-1, y()-1, width()+2, height()+2).sdl_rect(), 
-			graphics::color_grey());
+			has_focus() ? graphics::color_white() : graphics::color_grey());
 	}
 	graphics::draw_hollow_rect(
 		rect(x()+width()-height(), y()-1, height()+1, height()+2).sdl_rect(), 
-		graphics::color_grey());
+		has_focus() ? graphics::color_white() : graphics::color_grey());
 
 	glPushMatrix();
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -211,6 +214,19 @@ void dropdown_widget::handle_draw() const
 		dropdown_menu_->handle_draw();
 	}
 	glPopMatrix();
+}
+
+void dropdown_widget::handle_process()
+{
+	/*if(has_focus() && dropdown_menu_) {
+		if(joystick::button(0) || joystick::button(1) || joystick::button(2)) {
+
+		}
+
+		if(dropdown_menu_->visible()) {
+		} else {
+		}
+	}*/
 }
 
 bool dropdown_widget::handle_event(const SDL_Event& event, bool claimed)
@@ -243,6 +259,15 @@ bool dropdown_widget::handle_event(const SDL_Event& event, bool claimed)
 	if(dropdown_menu_ && dropdown_menu_->visible()) {
 		if(dropdown_menu_->handle_event(ev, claimed)) {
 			return true;
+		}
+	}
+
+	if(has_focus() && dropdown_menu_) {
+		if(event.type == SDL_KEYDOWN 
+			&& (ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
+			|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP))) {
+			claimed = true;
+			dropdown_menu_->set_visible(!dropdown_menu_->visible());
 		}
 	}
 

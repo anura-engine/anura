@@ -54,6 +54,7 @@ public:
 protected:
 	virtual void handle_draw() const;
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handle_process();
 
 	virtual void set_value(const std::string& key, const variant& v);
 	virtual variant get_value(const std::string& key) const;
