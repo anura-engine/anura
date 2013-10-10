@@ -209,7 +209,7 @@ namespace graphics
 		double aspect_screen = double(width())/height();
 		std::cerr << "INFO: aspect_actual: " << aspect_actual << ", aspect_screen: " << aspect_screen << std::endl;
 
-		if(abs(aspect_actual - aspect_screen) < 1e-6) {
+		if(std::abs(aspect_actual - aspect_screen) < 1e-6) {
 			letterbox_width_ = letterbox_height_ = 0;
 		} else if(aspect_screen > aspect_actual) {
 			// place vertical borders
