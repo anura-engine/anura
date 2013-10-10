@@ -107,20 +107,24 @@ void show_video_selection_dialog()
 	d.add_widget(widget_ptr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
 	wh_data display_modes;
 	int current_mode_index = enumerate_video_modes(display_modes);
-	if(current_mode_index < 0 || current_mode_index >= display_modes.size()) {
-		current_mode_index = 0;
-	}
-	std::vector<std::string> display_strings;
-	map_modes_to_strings(display_modes, display_strings);
+	if(!display_modes.empty()) {
+		if(current_mode_index < 0 || current_mode_index >= display_modes.size()) {
+			current_mode_index = 0;
+		}
+		std::vector<std::string> display_strings;
+		map_modes_to_strings(display_modes, display_strings);
 
-	// Video mode list.
-	dropdown_widget* mode_list = new dropdown_widget(display_strings, 220, 20);
-	mode_list->set_selection(current_mode_index);
-	mode_list->set_zorder(10);
-	mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
-		selected_mode = selection;
-	});
-	d.add_widget(widget_ptr(mode_list));
+		// Video mode list.
+		dropdown_widget* mode_list = new dropdown_widget(display_strings, 220, 20);
+		mode_list->set_selection(current_mode_index);
+		mode_list->set_zorder(10);
+		mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
+			selected_mode = selection;
+		});
+		d.add_widget(widget_ptr(mode_list));
+	} else {
+		d.add_widget(widget_ptr(new graphical_font_label(_("Unable to enumerate video modes"), "door_label", 2)), padding, padding);
+	}
 
 	// Fullscreen selection
 	preferences::FullscreenMode fs_mode = preferences::fullscreen();
