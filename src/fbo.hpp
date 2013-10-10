@@ -37,8 +37,8 @@ namespace graphics
 	class fbo
 	{
 	public:
-		explicit fbo(int x, int y, int width, int height, int awidth, int aheight);
-		explicit fbo(int x, int y, int width, int height, int awidth, int aheight, const gles2::shader_program_ptr& shader);
+		explicit fbo(int x, int y, int width, int height, int screen_width, int screen_height);
+		explicit fbo(int x, int y, int width, int height, int screen_width, int screen_height, const gles2::shader_program_ptr& shader);
 		virtual ~fbo();
 
 		size_t width() const { return width_; }

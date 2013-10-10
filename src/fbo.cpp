@@ -31,20 +31,19 @@
 
 namespace graphics
 {
-	fbo::fbo(int x, int y, int width, int height, int actual_width, int actual_height)
+	fbo::fbo(int x, int y, int width, int height, int screen_width, int screen_height)
 		: x_(x), y_(y), width_(width), height_(height), depth_test_enable_(false),
-		awidth_(actual_width), aheight_(actual_height), letterbox_width_(0), letterbox_height_(0)
+		awidth_(screen_width), aheight_(screen_height), letterbox_width_(0), letterbox_height_(0)
 	{
 		init();
 	}
 
-	fbo::fbo(int x, int y, int width, int height, int actual_width, int actual_height, const gles2::shader_program_ptr& shader)
+	fbo::fbo(int x, int y, int width, int height, int screen_width, int screen_height, const gles2::shader_program_ptr& shader)
 		: x_(x), y_(y), width_(width), height_(height), 
 		depth_test_enable_(false), final_shader_(shader),
-		awidth_(actual_width), aheight_(actual_height),
+		awidth_(screen_width), aheight_(screen_height),
 		letterbox_width_(0), letterbox_height_(0)
 	{
-		calculate_letterbox();
 		init();
 	}
 
@@ -55,11 +54,17 @@ namespace graphics
 
 	void fbo::init()
 	{
-		GLfloat zoom = preferences::fullscreen() == preferences::FULLSCREEN_NONE ? 1.0f : 2.0f;
-		proj_ = glm::ortho(0.0f, GLfloat(screen_width())*zoom, GLfloat(screen_height())*zoom, 0.0f);
+		calculate_letterbox();
+		proj_ = glm::ortho(GLfloat(x()), 
+			GLfloat(width()+letterbox_width()), 
+			GLfloat(height()+letterbox_height()), 
+			GLfloat(y()));
 
-		tex_width_ = texture::allows_npot() ? awidth() : texture::next_power_of_2(awidth());
-		tex_height_ = texture::allows_npot() ? aheight() : texture::next_power_of_2(aheight());
+		// Removed the power-of-2 test here as this is initialized before the texture manager
+		// is. So we resort to the safest choice.
+		tex_width_ = texture::next_power_of_2(awidth());
+		tex_height_ = texture::next_power_of_2(aheight());
+		std::cerr << "INFO: fbo texture size " << tex_width_ << "," << tex_height_ << std::endl;
 
 		glGetIntegerv(GL_FRAMEBUFFER_BINDING, &video_framebuffer_id_);
 
@@ -202,16 +207,20 @@ namespace graphics
 	{
 		double aspect_actual = double(awidth())/aheight();
 		double aspect_screen = double(width())/height();
-		if(abs(aspect_actual - aspect_screen) < 1e-4) {
-			// Aspect ratio's a "close" together so probably the same, 
-			// treat them as the same.
+		std::cerr << "INFO: aspect_actual: " << aspect_actual << ", aspect_screen: " << aspect_screen << std::endl;
+
+		if(abs(aspect_actual - aspect_screen) < 1e-6) {
 			letterbox_width_ = letterbox_height_ = 0;
-		} else if(aspect_actual < aspect_screen) {
-			letterbox_width_ = int((height() - (width() / aspect_actual))*2.0);
+		} else if(aspect_screen > aspect_actual) {
+			// place vertical borders
+			letterbox_width_ = int(double(width()) - double(awidth())*height()/aheight()) & ~1;
+			ASSERT_LOG(letterbox_width_ >= 0, "FATAL: Letterbox width < 0: " << letterbox_width_);
 		} else {
-			// Actual aspect ratio is bigger than screen i.e. 4:3 > 1.25 (e.g. 1280x1024)
-			letterbox_height_ = int((width() - (height() / aspect_actual))*2.0);
+			// place horizontal borders
+			letterbox_height_ = int(double(height()) - double(aheight())*width()/awidth()) & ~1;
+			ASSERT_LOG(letterbox_height_ >= 0, "FATAL: Letterbox height < 0: " << letterbox_height_);
 		}
+
 		std::cerr << "INFO: letterbox width=" << letterbox_width_ << ", letterbox height=" << letterbox_height_ << std::endl;
 	}
 
@@ -220,16 +229,18 @@ namespace graphics
 		shader_save_context ssc;
 		glUseProgram(shader == NULL ? final_shader_->shader()->get() : shader->shader()->get());
 		
+		glClearColor(255.0f, 0.0f, 0.0f, 255.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_BLEND);
 
 		GLint cur_id = graphics::texture::get_current_texture();
 		glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
 
+		// Size of the display.
 		const GLfloat w = GLfloat(width());
 		const GLfloat h = GLfloat(height());
 
-		glm::mat4 mvp = proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+letterbox_width(), y()+letterbox_height(), 0.0f));
+		glm::mat4 mvp = proj_ * glm::translate(glm::mat4(1.0f), glm::vec3(x()+letterbox_width()/2, y()+letterbox_height()/2, 0.0f));
 		glUniformMatrix4fv(gles2::active_shader()->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
 		GLfloat varray[] = {

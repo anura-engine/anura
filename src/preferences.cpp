@@ -687,7 +687,6 @@ namespace preferences {
 		if(screen_editor_mode) {
 			virtual_screen_width_ = actual_screen_width_;
 		}
-		screen_dimensions_are_persistent = false;
 		recalculate_draw_mask();
 	}
 	
@@ -698,7 +697,6 @@ namespace preferences {
 		if(screen_editor_mode) {
 			virtual_screen_height_ = actual_screen_height_;
 		}
-		screen_dimensions_are_persistent = false;
 	}
 	
 	void set_actual_screen_dimensions_persistent(int width, int height)
@@ -938,7 +936,6 @@ namespace preferences {
 			if(w > 0 && h > 0 && w < 4096 && h < 4096) {
 				set_actual_screen_width(w);
 				set_actual_screen_height(h);
-				tweak_virtual_screen(w, h);
 				screen_dimensions_are_persistent = true;
 				if(node.has_key("fullscreen")) {
 					if(node["fullscreen"].is_bool()) {

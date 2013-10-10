@@ -28,6 +28,10 @@
 // Defined in video_selections.cpp
 extern int g_vsync;
 
+namespace preferences {
+	void tweak_virtual_screen(int awidth, int aheight);
+}
+
 namespace graphics
 {
 	namespace
@@ -196,12 +200,31 @@ namespace graphics
 			SDL_SetWindowIcon(sdl_window_.get(), wm_icon.get());
 		}
 
-		preferences::set_actual_screen_width(width_);
-		preferences::set_actual_screen_height(height_);
-		if(preferences::auto_size_window()) {
-			preferences::set_virtual_screen_width(width_);
-			preferences::set_virtual_screen_height(height_);
+		if(preferences::fullscreen() == preferences::FULLSCREEN_WINDOWED
+			|| preferences::fullscreen() == preferences::FULLSCREEN) {
+			SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
+
+			preferences::set_actual_screen_width(width);
+			preferences::set_actual_screen_height(height);
+			//preferences::set_virtual_screen_width(800);
+			//preferences::set_virtual_screen_height(600);
 		}
+		std::cerr << "INFO: real window size: " << width << "," << height << std::endl;
+		std::cerr << "INFO: actual screen size: " << width_ << "," << height_ << std::endl;
+
+		if(preferences::fullscreen() == preferences::FULLSCREEN_NONE) {
+			preferences::set_actual_screen_width(width_);
+			preferences::set_actual_screen_height(height_);
+			if(preferences::auto_size_window()) {
+				preferences::set_virtual_screen_width(width_);
+				preferences::set_virtual_screen_height(height_);
+			} else {
+				preferences::set_virtual_screen_width(width);
+				preferences::set_virtual_screen_height(height);
+				//preferences::tweak_virtual_screen(width_, height_);
+			}
+		}
+		std::cerr << "INFO: virtual screen size: " << preferences::virtual_screen_width() << "," << preferences::virtual_screen_height() << std::endl;
 
 		// Initialise glew library if headers have been included.
 #if defined(__GLEW_H__)
@@ -248,7 +271,7 @@ namespace graphics
 
 		init_shaders();
 
-		screen_fbo_.reset(new fbo(0, 0, width, height, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
+		screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 		prepare_raster();
 #endif
 
@@ -396,22 +419,23 @@ namespace graphics
 
 	bool window_manager::set_window_size(int width, int height)
 	{
-		int w = width;
-		int h = height;
-
+		width_	= width;
+		height_ = height;
 		switch(preferences::fullscreen()) {
 			case preferences::FULLSCREEN_NONE: {
 				if(SDL_SetWindowFullscreen(sdl_window_.get(), 0) != 0) {
 					std::cerr << "WARNING: Unable to set windowed mode at " << width << " x " << height << std::endl;
 					return false;
 				}
-				SDL_SetWindowSize(sdl_window_.get(), w, h);
+				SDL_SetWindowSize(sdl_window_.get(), width, height);
 				SDL_SetWindowPosition(sdl_window_.get(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
-				//preferences::set_actual_screen_width(w);
-				//preferences::set_actual_screen_height(h);
 
-				std::cerr << "set_window_size: SDL_GetWindowSize = " << w << "," << h << " (" << width << "," << height << ")" << std::endl;
-				screen_fbo_.reset(new fbo(0, 0, w, h, width, height, gles2::get_tex_shader()));
+				std::cerr << "set_window_size: SDL_GetWindowSize = " << width << "," << height << " (" << width << "," << height << ")" << std::endl;
+				preferences::set_actual_screen_width(width);
+				preferences::set_actual_screen_height(height);
+				preferences::set_virtual_screen_width(width);
+				preferences::set_virtual_screen_height(height);
+				screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 				break;
 			}
 			case preferences::FULLSCREEN_WINDOWED: {
@@ -422,18 +446,23 @@ namespace graphics
 				SDL_SetWindowSize(sdl_window_.get(), SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED);
 				SDL_SetWindowPosition(sdl_window_.get(), 0, 0);
 
+				int w, h;
 				SDL_GetWindowSize(sdl_window_.get(), &w, &h);
 				std::cerr << "set_window_size: SDL_GetWindowSize = " << w << "," << h << " (" << width << "," << height << ")" << std::endl;
-				screen_fbo_.reset(new fbo(0, 0, w, h, width, height, gles2::get_tex_shader()));
+				preferences::set_actual_screen_width(width);
+				preferences::set_actual_screen_height(height);
+				preferences::set_virtual_screen_width(width);
+				preferences::set_virtual_screen_height(height);
+				screen_fbo_.reset(new fbo(0, 0, w, h, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 				break;
 			}
 			case preferences::FULLSCREEN: {
-				SDL_SetWindowSize(sdl_window_.get(), w, h);
+				SDL_SetWindowSize(sdl_window_.get(), width, height);
 				if(SDL_SetWindowFullscreen(sdl_window_.get(), SDL_WINDOW_FULLSCREEN) != 0) {
 					std::cerr << "WARNING: Unable to set fullscreen mode at " << width << " x " << height << std::endl;
 					return false;
 				}
-				screen_fbo_.reset(new fbo(0, 0, w, h, w, h, gles2::get_tex_shader()));
+				screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 				break;
 			}
 

@@ -69,6 +69,7 @@ namespace graphics
 		void set_window_title(const std::string& title);
 
 		SDL_Window* sdl_window() { return sdl_window_.get(); }
+		SDL_Renderer* renderer() { return sdl_renderer_; }
 		
 		void init_gl_context();
 		void init_shaders();
