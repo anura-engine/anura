@@ -347,8 +347,9 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 #endif 
 
-#if defined(_MSC_VER)
-	std::shared_ptr<FILE> f_stderr = std::shared_ptr<FILE>(freopen ("stderr.txt", "wt", stderr), [](FILE* f){fclose(f); delete f;});
+#ifdef _MSC_VER
+	freopen("CON", "w", stderr);
+	freopen("CON", "w", stdout);
 #endif
 
 #if defined(__APPLE__) && TARGET_OS_MAC

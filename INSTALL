@@ -1,24 +1,29 @@
 Prerequisites:
 
-You'll need to have these libraries with equivalent development versions to build Frogatto:
+You'll need to have these libraries with equivalent development versions to 
+build the Anura engine:
 
- boost_iostreams >= 1.35.0
- boost_regex >= 1.35.0
- boost_asio >= 1.35.0
- boost_system >= 1.35.0
- libsdl >= 1.2.7
- libsdl-image >= 1.2 (with png support)
- libsdl-mixer >= 1.2 (with Vorbis support)
- libsdl-ttf >= 2.0.8
+ boost_iostreams >= 1.50.0
+ boost_filesystem >= 1.50.0
+ boost_regex >= 1.50.0
+ boost_asio >= 1.50.0
+ boost_system >= 1.50.0
+ libsdl >= 2.0.0
+ libsdl-image >= 2.0.0 (with png support)
+ libsdl-mixer >= 2.0.0 (with Vorbis support)
+ libsdl-ttf >= 2.0.12
+ glm
  gl
- glu
  glew
- ccache
  libz
-
+ 
 Building:
 
-To build, type 'make'. The Makefile will probably work. :) If it doesn't you may have to tweak it for your platform. The executable 'game' will be created which you can run.
+It is recommended to install the program 'ccache' as this can considerably
+speed up build times for subsequent builds. This is however not required.
+To build, type 'make'. The Makefile will probably work. :) If it doesn't you 
+may have to tweak it for your platform. The executable 'anura' will be 
+created which you can run.
 
 To access the level editor, press CTRL-E during the game.
 
