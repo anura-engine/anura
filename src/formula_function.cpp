@@ -1068,9 +1068,9 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(sqrt)
 
 FUNCTION_DEF(hypot, 2, 2, "hypot(x,y): Compute the hypotenuse of a triangle without the normal loss of precision incurred by using the pythagoream theorem.")
-	const float x = args()[0]->evaluate(variables).as_decimal().as_float();
-	const float y = args()[1]->evaluate(variables).as_decimal().as_float();
-	return variant(static_cast<decimal>(hypotf(x,y)));
+	const double x = args()[0]->evaluate(variables).as_decimal().as_float();
+	const double y = args()[1]->evaluate(variables).as_decimal().as_float();
+	return variant(hypot(x,y));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
 	ARG_TYPE("int|decimal");
