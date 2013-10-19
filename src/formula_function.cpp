@@ -1067,6 +1067,17 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(sqrt)
 
+FUNCTION_DEF(hypot, 2, 2, "hypot(x,y): Compute the hypotenuse of a triangle without the normal loss of precision incurred by using the pythagoream theorem.")
+	const double x = args()[0]->evaluate(variables).as_decimal().as_float();
+	const double y = args()[1]->evaluate(variables).as_decimal().as_float();
+	return variant(hypot(x,y));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+	ARG_TYPE("int|decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+END_FUNCTION_DEF(hypot)
+    
 FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from 0°, made by the line described by the two points (x1, y1) and (x2, y2).")
 	const float a = args()[0]->evaluate(variables).as_int();
 	const float b = args()[1]->evaluate(variables).as_int();
