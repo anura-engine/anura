@@ -53,6 +53,8 @@ public:
 		return NULL;
 	}
 
+	const editor* get_editor() const { return editor_; }
+
 	bool is_paused() const { return paused; }
 
 	bool play_level();

@@ -541,7 +541,7 @@ const editor_variable_info* variable_info_selected(const_entity_ptr e, int xpos,
 		return NULL;
 	}
 
-	foreach(const editor_variable_info& var, e->editor_info()->vars()) {
+	foreach(const editor_variable_info& var, e->editor_info()->vars_and_properties()) {
 		const variant value = e->query_value(var.variable_name());
 		switch(var.type()) {
 			case editor_variable_info::XPOSITION: {
@@ -1999,8 +1999,7 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 
 			entity_ptr c = property_dialog_->get_entity();
 
-			game_logic::formula_callable* obj_vars = c->query_value("vars").mutable_callable();
-			variant current_value = obj_vars->query_value(adding_points_);
+			variant current_value = c->query_value(adding_points_);
 			std::vector<variant> new_value;
 			if(current_value.is_list()) {
 				new_value = current_value.as_list();
@@ -2233,10 +2232,16 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		entity_ptr c(entity::build(node.build()));
 
 		//any vars that require formula initialization are calculated here.
-		std::map<std::string, variant> vars;
+		std::map<std::string, variant> vars, props;
 		foreach(const editor_variable_info& info, c->editor_info()->vars()) {
 			if(info.formula()) {
 				vars[info.variable_name()] = info.formula()->execute(*c);
+			}
+		}
+
+		foreach(const editor_variable_info& info, c->editor_info()->properties()) {
+			if(info.formula()) {
+				props[info.variable_name()] = info.formula()->execute(*c);
 			}
 		}
 		
@@ -2251,6 +2256,11 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 		    i != vars.end(); ++i) {
 			game_logic::formula_callable* obj_vars = c->query_value("vars").mutable_callable();
 			obj_vars->mutate_value(i->first, i->second);
+		}
+
+		for(std::map<std::string, variant>::const_iterator i = props.begin();
+		    i != props.end(); ++i) {
+			c->mutate_value(i->first, i->second);
 		}
 
 		if(!place_entity_in_level(*lvl_, *c)) {
@@ -2513,7 +2523,7 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 			if(property_dialog_ && property_dialog_.get() == current_dialog_ && property_dialog_->get_entity() && property_dialog_->get_entity()->editor_info()) {
 				//As well as removing objects, we will remove any vertices
 				//that we see.
-				foreach(const editor_variable_info& var, property_dialog_->get_entity()->editor_info()->vars()) {
+				foreach(const editor_variable_info& var, property_dialog_->get_entity()->editor_info()->vars_and_properties()) {
 					const std::string& name = var.variable_name();
 					const editor_variable_info::VARIABLE_TYPE type = var.type();
 					if(type != editor_variable_info::TYPE_POINTS) {
@@ -3343,7 +3353,7 @@ void editor::draw_gui() const
 
 		int selected_index = -1;
 		const editor_variable_info* selected_var = variable_info_selected(property_dialog_->get_entity(), xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, zoom_, &selected_index);
-		foreach(const editor_variable_info& var, property_dialog_->get_entity()->editor_info()->vars()) {
+		foreach(const editor_variable_info& var, property_dialog_->get_entity()->editor_info()->vars_and_properties()) {
 			const std::string& name = var.variable_name();
 			const editor_variable_info::VARIABLE_TYPE type = var.type();
 			const int color_index = nseen_variables[type]++;
@@ -4064,8 +4074,7 @@ void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, var
 		if(!obj) {
 			continue;
 		}
-		const game_logic::formula_callable* obj_vars = obj->query_value("vars").as_callable();
-		variant current_value = obj_vars->query_value(attr);
+		variant current_value = obj->query_value(attr);
 
 		redo.push_back(boost::bind(&editor::mutate_object_value, this, lvl, obj, attr, new_value));
 		undo.push_back(boost::bind(&editor::mutate_object_value, this, lvl, obj, attr, current_value));

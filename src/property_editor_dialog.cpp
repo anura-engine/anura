@@ -178,7 +178,7 @@ void property_editor_dialog::init()
 
 		}
 
-		foreach(const editor_variable_info& info, get_entity()->editor_info()->vars()) {
+		foreach(const editor_variable_info& info, get_entity()->editor_info()->vars_and_properties()) {
 
 			if(info.type() == editor_variable_info::XPOSITION ||
 			   info.type() == editor_variable_info::YPOSITION) {
@@ -187,7 +187,7 @@ void property_editor_dialog::init()
 				continue;
 			}
 
-			variant val = vars->query_value(info.variable_name());
+			variant val = info.is_property() ? get_static_entity()->query_value(info.variable_name()) : vars->query_value(info.variable_name());
 			std::string current_val_str;
 			if(info.type() == editor_variable_info::TYPE_POINTS) {
 				if(!val.is_list()) {
@@ -414,7 +414,7 @@ void property_editor_dialog::change_max_difficulty(int amount)
 
 void property_editor_dialog::toggle_property(const std::string& id)
 {
-	mutate_value(id, variant(!get_static_entity()->query_value(id).as_bool()));
+	mutate_value(id, variant::from_bool(!get_static_entity()->query_value(id).as_bool()));
 	init();
 }
 
@@ -458,7 +458,7 @@ void property_editor_dialog::change_text_property(const std::string& id, const g
 
 void property_editor_dialog::change_numeric_property(const std::string& id, boost::shared_ptr<std::pair<gui::text_editor_widget_ptr, gui::slider_ptr> >  w)
 {
-	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -485,7 +485,7 @@ void property_editor_dialog::change_numeric_property(const std::string& id, boos
 
 void property_editor_dialog::change_numeric_property_slider(const std::string& id, boost::shared_ptr<std::pair<gui::text_editor_widget_ptr, gui::slider_ptr> >  w, double value)
 {
-	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -506,7 +506,7 @@ void property_editor_dialog::change_numeric_property_slider(const std::string& i
 
 void property_editor_dialog::change_enum_property(const std::string& id)
 {
-	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -551,7 +551,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 {
 	const controls::control_backup_scope ctrl_scope;
 
-	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->editor_info() ? get_static_entity()->editor_info()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}

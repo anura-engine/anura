@@ -16,6 +16,10 @@
 */
 #include <stdio.h>
 
+#include <execinfo.h> //for backtrace. May not be available on some platforms.
+                      //If not available implement output_backtrace() some
+					  //other way.
+
 #ifndef NO_EDITOR
 #include "editor.hpp"
 #endif
@@ -126,6 +130,13 @@ assert_recover_scope::~assert_recover_scope()
 void output_backtrace()
 {
 	std::cerr << get_call_stack() << "\n";
+
+	std::cerr << "---\n";
+	const int nframes = 256;
+	void* trace_buffer[nframes];
+	const int nsymbols = backtrace(trace_buffer, nframes);
+	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
+	std::cerr << "---\n";
 }
 
 bool throw_fatal_error_on_assert()

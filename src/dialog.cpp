@@ -266,6 +266,10 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
 
 void dialog::remove_widget(widget_ptr w)
 {
+	if(!w) {
+		return;
+	}
+
 	auto it = std::find(widgets_.begin(), widgets_.end(), w);
 	if(it != widgets_.end()) {
 		widgets_.erase(it);

@@ -4616,7 +4616,7 @@ bool level::relocate_object(entity_ptr e, int new_x, int new_y)
 	//update any x/y co-ordinates to be the same relative to the object's
 	//new position.
 	if(e->editor_info()) {
-		foreach(const editor_variable_info& var, e->editor_info()->vars()) {
+		foreach(const editor_variable_info& var, e->editor_info()->vars_and_properties()) {
 			const variant value = e->query_value(var.variable_name());
 			switch(var.type()) {
 			case editor_variable_info::XPOSITION:

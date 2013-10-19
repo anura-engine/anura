@@ -29,7 +29,9 @@ const decimal DefaultMaxValue(decimal::from_int(100));
 }
 
 editor_variable_info::editor_variable_info(variant node)
-  : name_(node["name"].as_string()), type_(TYPE_INTEGER), info_(node["info"].as_string_default()),
+  : name_(node["name"].as_string()),
+    is_property_(false),
+    type_(TYPE_INTEGER), info_(node["info"].as_string_default()),
     help_(node["help"].as_string_default()),
     formula_(game_logic::formula::create_optional_formula(node["value"])),
 	numeric_decimal_(false),
@@ -120,6 +122,11 @@ variant editor_variable_info::write() const
 	return node.build();
 }
 
+void editor_variable_info::set_name(const std::string& name)
+{
+	name_ = name;
+}
+
 editor_entity_info::editor_entity_info(variant node)
   : category_(node["category"].as_string()),
     classification_(node["classification"].as_string_default()),
@@ -130,6 +137,8 @@ editor_entity_info::editor_entity_info(variant node)
 		//std::cerr << "CREATE VAR INFO...\n";	
 		vars_.push_back(editor_variable_info(var_node));
 	}
+
+	vars_and_properties_ = vars_;
 }
 
 variant editor_entity_info::write() const
@@ -154,5 +163,34 @@ const editor_variable_info* editor_entity_info::get_var_info(const std::string& 
 
 	return NULL;
 }
+
+const editor_variable_info* editor_entity_info::get_property_info(const std::string& var_name) const
+{
+	foreach(const editor_variable_info& v, properties_) {
+		if(v.variable_name() == var_name) {
+			return &v;
+		}
+	}
+
+	return NULL;
+}
+
+const editor_variable_info* editor_entity_info::get_var_or_property_info(const std::string& var_name) const
+{
+	const editor_variable_info* result = get_var_info(var_name);
+	if(result == NULL) {
+		result = get_property_info(var_name);
+	}
+
+	return result;
+}
+
+void editor_entity_info::add_property(const editor_variable_info& prop)
+{
+	properties_.push_back(prop);
+	vars_and_properties_ = vars_;
+	vars_and_properties_.insert(vars_and_properties_.end(), properties_.begin(), properties_.end());
+}
+
 #endif // !NO_EDITOR
 

@@ -34,6 +34,10 @@ public:
 
 	variant write() const;
 
+	void set_name(const std::string& name);
+	void set_is_property() { is_property_ = true; }
+	bool is_property() const { return is_property_; }
+
 	const std::string& variable_name() const { return name_; }
 	VARIABLE_TYPE type() const { return type_; }
 	const std::vector<std::string>& enum_values() const { return enum_values_; }
@@ -48,6 +52,7 @@ public:
 
 private:
 	std::string name_;
+	bool is_property_;
 	VARIABLE_TYPE type_;
 	std::vector<std::string> enum_values_;
 	std::string info_;
@@ -67,12 +72,17 @@ public:
 	const std::string& category() const { return category_; }
 	const std::string& classification() const { return classification_; }
 	const std::vector<editor_variable_info>& vars() const { return vars_; }
+	const std::vector<editor_variable_info>& properties() const { return properties_; }
+	const std::vector<editor_variable_info>& vars_and_properties() const { return vars_and_properties_; }
 	const editor_variable_info* get_var_info(const std::string& var_name) const;
+	const editor_variable_info* get_property_info(const std::string& var_name) const;
+	const editor_variable_info* get_var_or_property_info(const std::string& var_name) const;
+	void add_property(const editor_variable_info& prop);
 	const std::string& help() const { return help_; }
 	const std::vector<std::string>& editable_events() const { return editable_events_; }
 private:
 	std::string category_, classification_;
-	std::vector<editor_variable_info> vars_;
+	std::vector<editor_variable_info> vars_, properties_, vars_and_properties_;
 	std::vector<std::string> editable_events_;
 	std::string help_;
 };

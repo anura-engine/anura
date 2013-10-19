@@ -28,6 +28,10 @@
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
+#ifndef NO_EDITOR
+#include "editor.hpp"
+#endif
+
 playable_custom_object::playable_custom_object(const custom_object& obj)
   : custom_object(obj), player_info_(*this), difficulty_(0), vertical_look_(0),
     underwater_ctrl_x_(0), underwater_ctrl_y_(0), underwater_controls_(false),
@@ -232,6 +236,18 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 #if !TARGET_OS_IPHONE && !TARGET_IPHONE_SIMULATOR
 		int ary_length;
 		const Uint8* key_state = SDL_GetKeyboardState(&ary_length);
+
+#ifndef NO_EDITOR
+		if(level_runner::get_current()) {
+			const editor* e = level_runner::get_current()->get_editor();
+			if(e && e->has_keyboard_focus()) {
+				//the editor has the focus, so we tell the game there
+				//are no keys pressed.
+				ary_length = 0;
+			}
+		}
+#endif
+
 		for(int count = 0; count < ary_length; ++count) {
 			if(key_state[count]) {				//Returns only keys that are down so the list that ffl has to deal with is small.
 				SDL_Keycode k = SDL_GetKeyFromScancode(SDL_Scancode(count));

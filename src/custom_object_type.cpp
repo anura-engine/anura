@@ -897,9 +897,12 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	custom_object_callable::instance();
 
+	editor_entity_info* editor_info = NULL;
+
 #ifndef NO_EDITOR
 	if(node.has_key("editor_info")) {
-		editor_info_.reset(new editor_entity_info(node["editor_info"]));
+		editor_info = new editor_entity_info(node["editor_info"]);
+		editor_info_.reset(editor_info);
 	}
 #endif // !NO_EDITOR
 
@@ -1348,6 +1351,19 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				}
 
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
+
+				if(value.has_key("editor_info")) {
+					const game_logic::formula::strict_check_scope strict_checking(false);
+					variant editor_info_var = value["editor_info"];
+					static const variant name_key("name");
+					editor_info_var = editor_info_var.add_attr(name_key, variant(k));
+					editor_variable_info info(editor_info_var);
+					info.set_is_property();
+
+					ASSERT_LOG(editor_info, "Object type " << id_ << " must have editor_info section since some of its properties have editor_info sections");
+
+					editor_info->add_property(info);
+				}
 
 			} else {
 				if(is_strict_) {

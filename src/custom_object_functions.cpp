@@ -2603,7 +2603,7 @@ FUNCTION_DEF(teleport, 1, 5, "teleport(string dest_level, (optional)string dest_
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
-	ARG_TYPE("string")
+	ARG_TYPE("string|null")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(teleport)
 
