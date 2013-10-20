@@ -46,6 +46,11 @@ namespace preferences {
 
 	int register_string_setting(const std::string& id, bool persistent, std::string* value);
 	int register_int_setting(const std::string& id, bool persistent, int* value);
+	int register_bool_setting(const std::string& id, bool persistent, bool* value);
+
+#define PREF_BOOL(id, default_value) \
+	bool g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_bool_setting(#id, false, &g_##id)
 
 #define PREF_INT(id, default_value) \
 	int g_##id = default_value; \
@@ -54,6 +59,10 @@ namespace preferences {
 #define PREF_STRING(id, default_value) \
 	std::string g_##id = default_value; \
 	int g_##id##_dummy = preferences::register_string_setting(#id, false, &g_##id)
+
+#define PREF_BOOL_PERSISTENT(id, default_value) \
+	bool g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_bool_setting(#id, true, &g_##id)
 
 #define PREF_INT_PERSISTENT(id, default_value) \
 	int g_##id = default_value; \

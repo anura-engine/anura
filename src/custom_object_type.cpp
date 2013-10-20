@@ -53,7 +53,7 @@ std::map<std::string, std::string>& prototype_file_paths() {
 
 namespace {
 
-PREF_INT(strict_mode_warnings, 0);
+PREF_BOOL(strict_mode_warnings, false);
 
 std::map<std::string, std::string>& object_file_paths() {
 	static std::map<std::string, std::string> paths;
@@ -764,7 +764,7 @@ void custom_object_type::init_event_handlers(variant node,
 											 const event_handler_map* base_handlers) const
 {
 	const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
-	const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings != 0, g_strict_mode_warnings != 0);
+	const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 
 	if(symbols == NULL) {
 		symbols = &get_custom_object_functions_symbol_table();
@@ -1301,7 +1301,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 		const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
 		foreach(variant key, properties_node.get_keys().as_list()) {
-			const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings != 0, g_strict_mode_warnings != 0);
+			const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 			const std::string& k = key.as_string();
 			bool dynamic_initialization = false;
 			variant value = properties_node[key];
