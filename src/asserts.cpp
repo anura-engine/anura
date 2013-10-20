@@ -16,9 +16,13 @@
 */
 #include <stdio.h>
 
+#ifdef _MSC_VER
+#include "StackWalker.h"
+#else
 #include <execinfo.h> //for backtrace. May not be available on some platforms.
                       //If not available implement output_backtrace() some
 					  //other way.
+#endif
 
 #ifndef NO_EDITOR
 #include "editor.hpp"
@@ -127,15 +131,34 @@ assert_recover_scope::~assert_recover_scope()
 	throw_validation_failure--;
 }
 
+#ifdef _MSC_VER
+class StderrStackWalker : public StackWalker
+{
+public:
+	StderrStackWalker() : StackWalker() {}
+protected:
+	virtual void OnOutput(LPCSTR szText)
+	{
+		fprintf(stderr, "%s", szText);
+		StackWalker::OnOutput(szText);
+	}
+};
+#endif
+
 void output_backtrace()
 {
 	std::cerr << get_call_stack() << "\n";
 
 	std::cerr << "---\n";
+#ifdef _MSC_VER
+	StderrStackWalker sw; 
+	sw.ShowCallstack();
+#else
 	const int nframes = 256;
 	void* trace_buffer[nframes];
 	const int nsymbols = backtrace(trace_buffer, nframes);
 	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
+#endif
 	std::cerr << "---\n";
 }
 
