@@ -4605,15 +4605,44 @@ BENCHMARK(map_function) {
 	}
 }
 
-namespace game_logic {
-
-const_formula_callable_definition_ptr get_map_callable_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name)
+namespace game_logic 
 {
-	return const_formula_callable_definition_ptr(new map_callable_definition(base_def, key_type, value_type, value_name));
+	const_formula_callable_definition_ptr get_map_callable_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name)
+	{
+		return const_formula_callable_definition_ptr(new map_callable_definition(base_def, key_type, value_type, value_name));
+	}
+
+	const_formula_callable_definition_ptr get_variant_comparator_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr type)
+	{
+		return const_formula_callable_definition_ptr(new variant_comparator_definition(base_def, type));
+	}
+
+	class formula_function_symbol_table : public function_symbol_table
+	{
+	public:
+		virtual expression_ptr create_function(
+								   const std::string& fn,
+								   const std::vector<expression_ptr>& args,
+								   const_formula_callable_definition_ptr callable_def) const;
+	};
+
+	expression_ptr formula_function_symbol_table::create_function(
+							   const std::string& fn,
+							   const std::vector<expression_ptr>& args,
+							   const_formula_callable_definition_ptr callable_def) const
+	{
+		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
+		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);
+		if(i != creators.end()) {
+			return expression_ptr(i->second->create(args));
+		}
+
+		return function_symbol_table::create_function(fn, args, callable_def);
+	}
 }
 
-const_formula_callable_definition_ptr get_variant_comparator_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr type)
+function_symbol_table& get_formula_functions_symbol_table()
 {
-	return const_formula_callable_definition_ptr(new variant_comparator_definition(base_def, type));
-}
+	static formula_function_symbol_table table;
+	return table;
 }

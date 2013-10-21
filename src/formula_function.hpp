@@ -18,6 +18,7 @@
 #define FORMULA_FUNCTION_HPP_INCLUDED
 
 #include <boost/intrusive_ptr.hpp>
+#include <boost/noncopyable.hpp>
 #include <boost/scoped_ptr.hpp>
 #include <boost/shared_ptr.hpp>
 
@@ -222,7 +223,8 @@ public:
 	const std::vector<variant_type_ptr>& variant_types() const { return variant_types_; }
 };	
 
-class function_symbol_table {
+class function_symbol_table : private boost::noncopyable 
+{
 	std::map<std::string, formula_function> custom_formulas_;
 	const function_symbol_table* backup_;
 public:
@@ -291,5 +293,7 @@ const_formula_callable_definition_ptr get_map_callable_definition(const_formula_
 const_formula_callable_definition_ptr get_variant_comparator_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr type);
 
 }
+
+game_logic::function_symbol_table& get_formula_functions_symbol_table();
 
 #endif

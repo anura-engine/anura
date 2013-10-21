@@ -3491,7 +3491,7 @@ END_FUNCTION_DEF(spawn_voxel_object)
 class custom_object_function_symbol_table : public function_symbol_table
 {
 public:
-	expression_ptr create_function(
+	virtual expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
 							   const_formula_callable_definition_ptr callable_def) const;
