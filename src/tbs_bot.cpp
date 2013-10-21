@@ -26,7 +26,7 @@
 namespace tbs
 {
 
-PREF_INT(tbs_bot_delay_ms, 100);
+PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
 
 bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   : service_(service), timer_(service), host_(host), port_(port), script_(v["script"].as_list()),

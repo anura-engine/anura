@@ -521,7 +521,7 @@ namespace {
 		std::vector<std::function<void()> > send_fn;
 	};
 
-	PREF_INT(fakelag, 0);
+	PREF_INT(fakelag, 0, "Number of milliseconds of artificial lag to introduce to multiplayer");
 }
 
 void send_and_receive()

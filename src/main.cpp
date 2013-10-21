@@ -187,8 +187,8 @@ void print_help(const std::string& argv0)
 "      --no-tests               skips the execution of unit tests on startup\n"
 "      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
 "                                 such as compile_levels or compile_objects,\n" <<
-"                                 with the specified arguments\n"
-	;
+"                                 with the specified arguments\n" <<
+   preferences::get_registered_helpstring();
 }
 
 }

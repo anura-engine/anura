@@ -366,8 +366,8 @@ namespace tbs
 		}
 	}
 
-	PREF_INT(tbs_server_delay_ms, 100);
-	PREF_INT(tbs_server_heartbeat_freq, 10);
+	PREF_INT(tbs_server_delay_ms, 100, "");
+	PREF_INT(tbs_server_heartbeat_freq, 10, "");
 
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{

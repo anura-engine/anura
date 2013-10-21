@@ -909,7 +909,7 @@ void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, co
 	glPopMatrix();
 }
 
-PREF_INT(debug_custom_draw, 0);
+PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
 void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
 {

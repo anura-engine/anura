@@ -41,7 +41,7 @@ namespace sound {
 
 namespace {
 
-	PREF_INT(assert_on_missing_sound, 0);
+	PREF_BOOL(assert_on_missing_sound, false, "If true, missing sounds will be treated as a fatal error");
 
 struct MusicInfo {
 	MusicInfo() : volume(1.0) {}

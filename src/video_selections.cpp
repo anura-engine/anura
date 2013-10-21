@@ -34,7 +34,7 @@
 
 using namespace gui;
 
-PREF_INT_PERSISTENT(vsync, 0);
+PREF_INT_PERSISTENT(vsync, 0, "Vertical synchronization setting. 0 = none. 1 = snc, -1 = late synchronizaiton.");
 
 namespace 
 {

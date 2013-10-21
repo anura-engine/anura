@@ -456,7 +456,7 @@ variant game::get_value(const std::string& key) const
 	}
 }
 
-PREF_INT(tbs_game_exit_on_winner, 0);
+PREF_BOOL(tbs_game_exit_on_winner, false, "If true, tbs games will immediately exit when there is a winner.");
 
 void game::set_value(const std::string& key, const variant& value)
 {

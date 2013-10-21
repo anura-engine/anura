@@ -74,7 +74,7 @@ std::set<level*>& get_all_levels_set() {
 
 namespace {
 
-PREF_INT(debug_shadows, 0);
+PREF_BOOL(debug_shadows, false, "Show debug visualization of shadow drawing");
 
 
 boost::intrusive_ptr<level>& get_current_level() {
@@ -642,7 +642,7 @@ void level::load_character(variant c)
 	solid_chars_.clear();
 }
 
-PREF_INT(respect_difficulty, 0);
+PREF_BOOL(respect_difficulty, false, "");
 
 void level::finish_loading()
 {

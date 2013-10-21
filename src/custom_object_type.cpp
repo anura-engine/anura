@@ -53,7 +53,7 @@ std::map<std::string, std::string>& prototype_file_paths() {
 
 namespace {
 
-PREF_BOOL(strict_mode_warnings, false);
+PREF_BOOL(strict_mode_warnings, false, "If turned on, all objects will be run in strict mode, with errors non-fatal");
 
 std::map<std::string, std::string>& object_file_paths() {
 	static std::map<std::string, std::string> paths;
