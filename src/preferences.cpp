@@ -128,13 +128,15 @@ WindowsPrefs winPrefs;
 namespace preferences {
 	namespace {
 	struct RegisteredSetting {
-		RegisteredSetting() : persistent(false), int_value(NULL), string_value(NULL)
+		RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), string_value(NULL), helpstring(NULL)
 		{}
 		variant write() const {
 			if(int_value) {
 				return variant(*int_value);
 			} else if(string_value) {
 				return variant(*string_value);
+			} else if(bool_value) {
+				return variant::from_bool(*bool_value);
 			} else {
 				return variant();
 			}
@@ -145,11 +147,15 @@ namespace preferences {
 				*int_value = value.as_int();
 			} else if(string_value && value.is_string()) {
 				*string_value = value.as_string();
+			} else if(bool_value && (value.is_bool() || value.is_int())) {
+				*bool_value = value.as_bool();
 			}
 		}
 		bool persistent;
 		int* int_value;
+		bool* bool_value;
 		std::string* string_value;
+		const char* helpstring;
 	};
 
 	std::map<std::string, RegisteredSetting>& g_registered_settings() {
@@ -162,6 +168,15 @@ namespace preferences {
 	public:
 	private:
 		variant get_value(const std::string& key) const {
+			if(key == "dir") {
+				std::vector<variant> result;
+				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+					result.push_back(variant(itor->first));
+				}
+
+				return variant(&result);
+			}
+
 			std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
 			if(itor == g_registered_settings().end()) {
 				return variant();
@@ -171,6 +186,8 @@ namespace preferences {
 				return variant(*itor->second.int_value);
 			} else if(itor->second.string_value) {
 				return variant(*itor->second.string_value);
+			} else if(itor->second.bool_value) {
+				return variant::from_bool(*itor->second.bool_value);
 			} else {
 				return variant();
 			}
@@ -203,22 +220,66 @@ namespace preferences {
 		return obj.get();
 	}
 
-	int register_string_setting(const std::string& id, bool persistent, std::string* value)
+	int register_string_setting(const std::string& id, bool persistent, std::string* value, const char* helpstring)
 	{
 		ASSERT_LOG(g_registered_settings().count(id) == 0, "Multiple definition of registered setting: " << id);
 		RegisteredSetting& setting = g_registered_settings()[id];
 		setting.string_value = value;
 		setting.persistent = persistent;
+		setting.helpstring = helpstring;
 		return g_registered_settings().size();
 	}
 
-	int register_int_setting(const std::string& id, bool persistent, int* value)
+	int register_int_setting(const std::string& id, bool persistent, int* value, const char* helpstring)
 	{
 		ASSERT_LOG(g_registered_settings().count(id) == 0, "Multiple definition of registered setting: " << id);
 		RegisteredSetting& setting = g_registered_settings()[id];
 		setting.int_value = value;
 		setting.persistent = persistent;
+		setting.helpstring = helpstring;
 		return g_registered_settings().size();
+	}
+
+	int register_bool_setting(const std::string& id, bool persistent, bool* value, const char* helpstring)
+	{
+		ASSERT_LOG(g_registered_settings().count(id) == 0, "Multiple definition of registered setting: " << id);
+		RegisteredSetting& setting = g_registered_settings()[id];
+		setting.bool_value = value;
+		setting.persistent = persistent;
+		setting.helpstring = helpstring;
+		return g_registered_settings().size();
+	}
+
+	std::string get_registered_helpstring()
+	{
+		std::string return_value;
+		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
+			std::ostringstream s;
+			s << "        --";
+			if(i->second.bool_value) {
+				s << "[no-]";
+			}
+
+			s << i->first;
+			if(i->second.int_value) {
+				s << "=" << *i->second.int_value;
+			} else if(i->second.string_value) {
+				s << "=" << *i->second.string_value;
+			} else if(i->second.bool_value) {
+				s << " (default: " << (*i->second.bool_value ? "true" : "false") << ")";
+			}
+
+			std::string result = s.str();
+			while(result.size() < 32) {
+				result += " ";
+			}
+
+			result += i->second.helpstring;
+			result += "\n";
+			return_value += result;
+		}
+
+		return return_value;
 	}
 
 	const std::string& version() {
@@ -1191,10 +1252,36 @@ namespace preferences {
 						*setting.string_value = std::string(equal+1, s.end());
 					} else if(setting.int_value) {
 						*setting.int_value = atoi(std::string(equal+1, s.end()).c_str());
+					} else if(setting.bool_value) {
+						std::string value(equal+1, s.end());
+						if(value == "yes" || value == "true") {
+							*setting.bool_value = true;
+						} else if(value == "no" || value == "false") {
+							*setting.bool_value = false;
+						} else {
+							ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
+						}
 					} else {
-						ASSERT_LOG(false, "Eerror making sense of preference type " << base_name);
+						ASSERT_LOG(false, "Error making sense of preference type " << base_name);
 					}
 
+					return true;
+				}
+			} else if(s.size() > 2 && s[0] == '-' && s[1] == '-') {
+				std::string::const_iterator begin = s.begin() + 2;
+				bool value = true;
+				if(s.size() > 5 && std::equal(begin, begin+3, "no-")) {
+					value = false;
+					begin += 3;
+				}
+
+				std::string base_name(begin, s.end());
+				std::replace(base_name.begin(), base_name.end(), '-', '_');
+				if(g_registered_settings().count(base_name)) {
+					RegisteredSetting& setting = g_registered_settings()[base_name];
+					ASSERT_LOG(setting.bool_value, "Must provide value for option: " << base_name);
+
+					*setting.bool_value = value;
 					return true;
 				}
 			}

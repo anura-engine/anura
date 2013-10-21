@@ -36,7 +36,7 @@ namespace graphics
 {
 	namespace
 	{
-		PREF_INT(msaa, 0);
+		PREF_INT(msaa, 0, "Amount of multi-sampled AA to use in rendering");
 
 		uint32_t next_pow2(uint32_t v) 
 		{

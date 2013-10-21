@@ -36,7 +36,7 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-PREF_INT(tile_size, 16);
+PREF_INT(tile_size, 16, "Size of game tile edges");
 #define BaseTileSize g_tile_size
 
 namespace {

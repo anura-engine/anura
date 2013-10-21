@@ -44,24 +44,35 @@ namespace preferences {
 
 	game_logic::formula_callable* get_settings_obj();
 
-	int register_string_setting(const std::string& id, bool persistent, std::string* value);
-	int register_int_setting(const std::string& id, bool persistent, int* value);
+	int register_string_setting(const std::string& id, bool persistent, std::string* value, const char* helpstring);
+	int register_int_setting(const std::string& id, bool persistent, int* value, const char* helpstring);
+	int register_bool_setting(const std::string& id, bool persistent, bool* value, const char* helpstring);
 
-#define PREF_INT(id, default_value) \
+	std::string get_registered_helpstring();
+
+#define PREF_BOOL(id, default_value, helpstring) \
+	bool g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_bool_setting(#id, false, &g_##id, helpstring)
+
+#define PREF_INT(id, default_value, helpstring) \
 	int g_##id = default_value; \
-	int g_##id##_dummy = preferences::register_int_setting(#id, false, &g_##id)
+	int g_##id##_dummy = preferences::register_int_setting(#id, false, &g_##id, helpstring)
 
-#define PREF_STRING(id, default_value) \
+#define PREF_STRING(id, default_value, helpstring) \
 	std::string g_##id = default_value; \
-	int g_##id##_dummy = preferences::register_string_setting(#id, false, &g_##id)
+	int g_##id##_dummy = preferences::register_string_setting(#id, false, &g_##id, helpstring)
 
-#define PREF_INT_PERSISTENT(id, default_value) \
+#define PREF_BOOL_PERSISTENT(id, default_value, helpstring) \
+	bool g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_bool_setting(#id, true, &g_##id, helpstring)
+
+#define PREF_INT_PERSISTENT(id, default_value, helpstring) \
 	int g_##id = default_value; \
-	int g_##id##_dummy = preferences::register_int_setting(#id, true, &g_##id)
+	int g_##id##_dummy = preferences::register_int_setting(#id, true, &g_##id, helpstring)
 
-#define PREF_STRING_PERSISTENT(id, default_value) \
+#define PREF_STRING_PERSISTENT(id, default_value, helpstring) \
 	std::string g_##id = default_value; \
-	int g_##id##_dummy = preferences::register_string_setting(#id, true, &g_##id)
+	int g_##id##_dummy = preferences::register_string_setting(#id, true, &g_##id, helpstring)
 
 	const std::string& version();
 	const variant& version_decimal();

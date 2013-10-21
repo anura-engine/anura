@@ -871,7 +871,7 @@ private:
 };
 
 namespace {
-PREF_INT(max_ffl_recursion, 1000);
+PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
 int function_recursion_depth = 0;
 struct InfiniteRecursionProtector {
 	explicit InfiniteRecursionProtector(const expression_ptr& expr) {

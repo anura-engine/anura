@@ -108,7 +108,7 @@ void toggle_draw_stats() {
 	g_draw_stats = !g_draw_stats;
 }
 
-PREF_INT_PERSISTENT(editor_grid, 1);
+PREF_BOOL_PERSISTENT(editor_grid, true, "Turns the editor grid on/off");
 
 void toggle_draw_grid() {
 	g_editor_grid = !g_editor_grid;
