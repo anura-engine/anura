@@ -31,8 +31,23 @@ namespace lua
 		return get_global_lua_instance();
 	}
 
-	bool lua_context::dostring(const char* str)
+	bool lua_context::dostring(const char* str, game_logic::formula_callable* callable)
 	{
+		if(callable) {
+			using namespace game_logic;
+			lua_getglobal(context_ptr(), "Anura");			// (-0,+1,e)
+
+			formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
+			*a = callable;
+			intrusive_ptr_add_ref(*a);
+
+			luaL_getmetatable(context_ptr(), "Callable");	// (-0,+1,e)
+			lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
+
+			lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
+			lua_pop(context_ptr(),1);						// (-n(1),+0,-)
+		}
+
 		if (luaL_loadbuffer(context_ptr(), str, std::strlen(str), str) || lua_pcall(context_ptr(), 0, 0, 0))
 		{
 			const char* a = lua_tostring(context_ptr(), -1);
@@ -43,17 +58,10 @@ namespace lua
 		return false;
 	}
 
-	bool lua_context::dofile(const char* str)
+	bool lua_context::dofile(const char* str, game_logic::formula_callable* callable)
 	{
 		std::string file_contents = sys::read_file(module::map_file(str));
-		if (luaL_loadbuffer(context_ptr(), file_contents.c_str(), file_contents.size(), file_contents.c_str()) || lua_pcall(context_ptr(), 0, 0, 0))
-		{
-			const char* a = lua_tostring(context_ptr(), -1);
-			std::cout << a << "\n";
-			lua_pop(context_ptr(), 1);
-			return true;
-		}
-		return false;
+		return dostring(file_contents.c_str(), callable);
 	}
 
 	namespace
@@ -409,6 +417,10 @@ namespace lua
 			"end\n"
 		);*/
 
+		/*dostring("local me = Anura.me\n"
+			"print(me.speed)",
+			level::current().camera().get()
+		);*/
 	}
 
 	lua_context::~lua_context()
