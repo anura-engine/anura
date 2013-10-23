@@ -20,4 +20,12 @@ void fn_command_callable::execute(formula_callable& context) const
 	fn_();
 }
 
+fn_command_callable_arg::fn_command_callable_arg(std::function<void(formula_callable*)> fn) : fn_(fn)
+{}
+
+void fn_command_callable_arg::execute(formula_callable& context) const
+{
+	fn_(&context);
+}
+
 }

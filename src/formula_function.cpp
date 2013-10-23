@@ -45,6 +45,7 @@
 #include "formula_object.hpp"
 #include "geometry.hpp"
 #include "hex_map.hpp"
+#include "lua_iface.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_callable.hpp"
@@ -602,6 +603,21 @@ FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(strin
 
 	return variant::create_delayed(f, callable);
 END_FUNCTION_DEF(delay_until_end_of_loading)
+
+FUNCTION_DEF(eval_lua, 1, 1, "eval_lua(str)")
+	formula::fail_if_static_context();
+	const std::string s = args()[0]->evaluate(variables).as_string();
+
+	return variant(new fn_command_callable_arg([=](formula_callable* callable) {
+		lua::lua_context context;
+		context.dostring(s.c_str(), callable);
+	}));
+	
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+FUNCTION_TYPE_DEF
+	return variant_type::get_commands();
+END_FUNCTION_DEF(eval_lua)
 
 FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")
 	const_formula_callable_ptr callable(&variables);

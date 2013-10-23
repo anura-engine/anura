@@ -261,6 +261,14 @@ private:
 	std::function<void()> fn_;
 };
 
+class fn_command_callable_arg : public command_callable {
+public:
+	explicit fn_command_callable_arg(std::function<void(formula_callable*)> fn);
+private:
+	virtual void execute(formula_callable& context) const;
+	std::function<void(formula_callable*)> fn_;
+};
+
 }
 
 #endif
