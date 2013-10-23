@@ -3462,6 +3462,17 @@ FUNCTION_TYPE_DEF
 	return args()[1]->query_variant_type();
 END_FUNCTION_DEF(debug_fn)
 
+FUNCTION_DEF(dump, 1, 1, "dump(expr): evaluates, prints to stderr, and returns expr.")
+	if(preferences::debug()) {
+		debug_side_effect(args()[0]->evaluate(variables));
+	}
+	variant res = args()[0]->evaluate(variables);
+
+	return res;
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type();
+END_FUNCTION_DEF(dump)
+
 bool consecutive_periods(char a, char b) {
 	return a == '.' && b == '.';
 }
