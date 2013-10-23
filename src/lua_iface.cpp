@@ -20,6 +20,11 @@
 
 namespace lua
 {
+	namespace 
+	{
+		const char* const callable_function_str = "ffl.callable_.fn";
+	}
+
 	lua_context& get_global_lua_instance()
 	{
 		static lua_context res;
@@ -215,7 +220,7 @@ namespace lua
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(lua_newuserdata(L, sizeof(ffl_function_userdata))); //(-0,+1,e)
 			fn->name = new char[strlen(name)+1];			
 			strcpy(fn->name, name);
-			luaL_getmetatable(L, "FFL_Callable_Function");		// (-0,+1,e)
+			luaL_getmetatable(L, callable_function_str);		// (-0,+1,e)
 			lua_setmetatable(L, -2);					// (-1,+0,e)
 			return 1;
 		}
@@ -264,7 +269,7 @@ namespace lua
 				return call_function(L);
 			}
 
-			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,"FFL_Callable_Function")); // (-0,+0,-)
+			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,callable_function_str)); // (-0,+0,-)
 			std::vector<expression_ptr> args;
 			int nargs = lua_gettop(L);
 			for(int n = 3; n <= nargs; ++n) {
@@ -300,7 +305,7 @@ namespace lua
 
 		static int gc_callable_function(lua_State* L)
 		{
-			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,"FFL_Callable_Function")); // (-0,+0,-)
+			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,callable_function_str)); // (-0,+0,-)
 			delete[] fn->name;
 			fn->name = NULL;
 			return 0;
@@ -309,11 +314,13 @@ namespace lua
 		const luaL_Reg gFFLFunctions[] = {
 			{"__call", call_function},
 			{"__gc", gc_function},
+			{NULL, NULL},
 		};
 
 		const luaL_Reg gFFLCallableFunctions[] = {
 			{"__call", call_callable_function},
 			{"__gc", gc_callable_function},
+			{NULL, NULL},
 		};
 
 		const luaL_Reg gCallableFunctions[] = {
@@ -391,7 +398,7 @@ namespace lua
 		luaL_newmetatable(context_ptr(), "Callable");
 		luaL_setfuncs(context_ptr(), gCallableFunctions, 0);
 
-		luaL_newmetatable(context_ptr(), "FFL_Callable_Function");
+		luaL_newmetatable(context_ptr(), callable_function_str);
 		luaL_setfuncs(context_ptr(), gFFLCallableFunctions, 0);
 
 		push_anura_table(context_ptr());
@@ -428,5 +435,9 @@ namespace lua
 	}
 }
 
+UNIT_TEST(lua_test)
+{
+	lua::lua_context ctx;
+}
 
 #endif
