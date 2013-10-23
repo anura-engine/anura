@@ -22,7 +22,11 @@ namespace lua
 {
 	namespace 
 	{
-		const char* const callable_function_str = "ffl.callable_.fn";
+		const char* const anura_str = "Anura";
+		const char* const anura_meta_str = "anura.meta";
+		const char* const callable_function_str = "anura.callable.function";
+		const char* const function_str = "anura.function";
+		const char* const callable_str = "anura.callable";
 	}
 
 	lua_context& get_global_lua_instance()
@@ -40,13 +44,13 @@ namespace lua
 	{
 		if(callable) {
 			using namespace game_logic;
-			lua_getglobal(context_ptr(), "Anura");			// (-0,+1,e)
+			lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
 
 			formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
 			*a = callable;
 			intrusive_ptr_add_ref(*a);
 
-			luaL_getmetatable(context_ptr(), "Callable");	// (-0,+1,e)
+			luaL_getmetatable(context_ptr(), callable_str);	// (-0,+1,e)
 			lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
 
 			lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
@@ -116,7 +120,7 @@ namespace lua
 					*a = const_cast<formula_callable*>(value.as_callable());
 					intrusive_ptr_add_ref(*a);
 
-					luaL_getmetatable(L, "Callable");	// (-0,+1,e)
+					luaL_getmetatable(L, callable_str);	// (-0,+1,e)
 					lua_setmetatable(L, -2);			// (-1,+0,e)
 					return 1;
 				}
@@ -170,7 +174,7 @@ namespace lua
 		static int call_function(lua_State* L)
 		{
 			using namespace game_logic;
-			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,"FFL_Function")); // (-0,+0,-)
+			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,function_str)); // (-0,+0,-)
 			auto& symbols = get_formula_functions_symbol_table();
 			std::vector<expression_ptr> args;
 			int nargs = lua_gettop(L);
@@ -193,7 +197,7 @@ namespace lua
 
 		static int gc_function(lua_State* L)
 		{
-			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,"FFL_Function")); // (-0,+0,-)
+			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,function_str)); // (-0,+0,-)
 			delete[] fn->name;
 			fn->name = NULL;
 			return 0;
@@ -211,7 +215,7 @@ namespace lua
 		static int get_callable_index(lua_State* L)
 		{
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, "Callable"));	// (-0,+0,-)
+			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = callable->query_value(name);
 			if(!value.is_null()) {
@@ -229,7 +233,7 @@ namespace lua
 		{
 			// stack -- table, key, value
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, "Callable"));	// (-0,+0,-)
+			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = lua_value_to_variant(L, 3);
 			callable->mutate_value(name, value);
@@ -240,7 +244,7 @@ namespace lua
 		{
 			using namespace game_logic;
 			std::string res;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, "Callable"));	// (-0,+0,-)
+			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			std::vector<formula_input> inputs = callable->inputs();
 			for(auto inp : inputs) {
 				std::stringstream ss;
@@ -265,7 +269,7 @@ namespace lua
 		{
 			using namespace game_logic;
 
-			if(luaL_testudata(L, 1, "FFL_Function")) {
+			if(luaL_testudata(L, 1, function_str)) {
 				return call_function(L);
 			}
 
@@ -275,7 +279,7 @@ namespace lua
 			for(int n = 3; n <= nargs; ++n) {
 				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
 			}
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 2, "Callable"));	// (-0,+0,-)
+			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
 
 			auto& symbols = get_formula_functions_symbol_table();
 			auto value = symbols.create_function(fn->name, args, NULL);
@@ -339,7 +343,7 @@ namespace lua
 			*a = &lvl;
 			intrusive_ptr_add_ref(&lvl);
 
-			luaL_getmetatable(L, "Callable");		// (-0,+1,e)
+			luaL_getmetatable(L, callable_str);		// (-0,+1,e)
 			lua_setmetatable(L, -2);			// (-1,+0,e)
 			return 1;
 		}
@@ -351,7 +355,7 @@ namespace lua
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(lua_newuserdata(L, sizeof(ffl_function_userdata))); //(-0,+1,e)
 			fn->name = new char[strlen(name)+1];			
 			strcpy(fn->name, name);
-			luaL_getmetatable(L, "FFL_Function");		// (-0,+1,e)
+			luaL_getmetatable(L, function_str);		// (-0,+1,e)
 			lua_setmetatable(L, -2);					// (-1,+0,e)
 			return 1;
 		}
@@ -363,18 +367,18 @@ namespace lua
 
 		static void push_anura_table(lua_State* L) 
 		{
-			lua_getglobal(L, "Anura");					// (-0,+1,e)
+			lua_getglobal(L, anura_str);					// (-0,+1,e)
 			if (lua_isnil(L, -1)) {						// (-0,+0,e)
 				lua_pop(L, 1);							// (-n(1),+0,e)
 				lua_newtable(L);						// (-0,+1,e)
 
-				luaL_newmetatable(L, "AnuraMeta");		// (-0,+1,e)
+				luaL_newmetatable(L, anura_meta_str);		// (-0,+1,e)
 				lua_pushcfunction(L, anura_table_index);// (-0,+1,e)
 				lua_setfield(L, -2, "__index");			// (-1,+0,e)
 				lua_setmetatable(L, -2);				// (-1,+0,e)
 			}
 			luaL_setfuncs(L, anura_functions, 0);		// (-nup(0),+0,e)
-			lua_setglobal(L, "Anura");					// (-1,+0,e)
+			lua_setglobal(L, anura_str);					// (-1,+0,e)
 		}
 	}
 
@@ -392,10 +396,10 @@ namespace lua
 		luaopen_debug(context_ptr());
 		luaL_openlibs(context_ptr());
 
-		luaL_newmetatable(context_ptr(), "FFL_Function");
+		luaL_newmetatable(context_ptr(), function_str);
 		luaL_setfuncs(context_ptr(), gFFLFunctions, 0);	
 
-		luaL_newmetatable(context_ptr(), "Callable");
+		luaL_newmetatable(context_ptr(), callable_str);
 		luaL_setfuncs(context_ptr(), gCallableFunctions, 0);
 
 		luaL_newmetatable(context_ptr(), callable_function_str);

@@ -604,6 +604,7 @@ FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(strin
 	return variant::create_delayed(f, callable);
 END_FUNCTION_DEF(delay_until_end_of_loading)
 
+#if defined(USE_LUA)
 FUNCTION_DEF(eval_lua, 1, 1, "eval_lua(str)")
 	formula::fail_if_static_context();
 	const std::string s = args()[0]->evaluate(variables).as_string();
@@ -618,6 +619,7 @@ FUNCTION_ARGS_DEF
 FUNCTION_TYPE_DEF
 	return variant_type::get_commands();
 END_FUNCTION_DEF(eval_lua)
+#endif
 
 FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")
 	const_formula_callable_ptr callable(&variables);
