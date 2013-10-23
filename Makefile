@@ -40,6 +40,8 @@ ifneq ($(USE_SDL2),yes)
 $(error SDL2 not found, SDL-1.2 is no longer supported)
 endif
 
+USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
+
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS.
 BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dtor -Werror -Wignored-qualifiers -Wformat -Wswitch -Wreturn-type -DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP -Wno-narrowing 
 # -Wno-error=narrowing 
@@ -51,6 +53,12 @@ INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image libpng zlib)
 LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
 
+ifeq ($(USE_LUA),yes)
+	BASE_CXXFLAGS += -DUSE_LUA
+	INC += $(shell pkg-config --cflags lua5.2)
+	LIBS += $(shell pkg-config --libs lua5.2)
+endif
+	
 # Enable Box2D if found.
 ifeq ($(shell { cpp -x c++ -include Box2D/Box2D.h /dev/null \
 	&& ld -lBox2D; } >/dev/null 2>/dev/null; \
@@ -73,25 +81,25 @@ src/%.o : src/%.cpp
 		sed -e 's/^ *//' -e 's/$$/:/' >> src/$*.d
 	@rm -f $*.d.tmp
 
-game: $(objects)
-	@echo "Linking : game"
+anura: $(objects)
+	@echo "Linking : anura"
 	@$(CCACHE) $(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) \
-		$(objects) -o game \
+		$(objects) -o anura \
 		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
 
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
 
 clean:
-	rm -f src/*.o src/*.d *.o *.d game
+	rm -f src/*.o src/*.d *.o *.d anura
 
-unittests: game
-	./game --tests
+unittests: anura
+	./anura --tests
 	
 tarball: unittests
-	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) game data/ images/
+	@tar --transform='s,^,anura/,g' -cjf $(TARBALL) anura data/ images/
 	
 assets:
-	./game --utility=compile_levels
-	./game --utility=compile_objects
+	./anura --utility=compile_levels
+	./anura --utility=compile_objects

@@ -122,6 +122,7 @@ objects = \
 	src/lighting.o \
 	src/load_level_nothread.o \
 	src/loading_screen.o \
+	src/lua_iface.o \
 	src/main.o \
 	src/md5.o \
 	src/message_dialog.o \

@@ -1384,6 +1384,9 @@ namespace preferences {
 #if defined(IMPLEMENT_SAVE_PNG)
 			res.insert("save_png");
 #endif
+#if defined(USE_LUA)
+			res.insert("lua");
+#endif
 		}
 		return res;
 	}
