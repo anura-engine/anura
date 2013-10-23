@@ -614,18 +614,29 @@ END_FUNCTION_DEF(delay_until_end_of_loading)
 #if defined(USE_LUA)
 FUNCTION_DEF(eval_lua, 1, 1, "eval_lua(str)")
 	formula::fail_if_static_context();
-	const std::string s = args()[0]->evaluate(variables).as_string();
+	variant value = args()[0]->evaluate(variables);
 
 	return variant(new fn_command_callable_arg([=](formula_callable* callable) {
 		lua::lua_context context;
-		context.dostring(s.c_str(), callable);
+		context.execute(value, callable);
 	}));
-	
+
 FUNCTION_ARGS_DEF
-	ARG_TYPE("string");
+	ARG_TYPE("string|builtin lua_compiled");
 FUNCTION_TYPE_DEF
 	return variant_type::get_commands();
 END_FUNCTION_DEF(eval_lua)
+
+FUNCTION_DEF(compile_lua, 1, 1, "compile_lua(str)")
+	formula::fail_if_static_context();
+	const std::string s = args()[0]->evaluate(variables).as_string();
+
+	lua::lua_context ctx;
+	return variant(ctx.compile("", s).get());
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	RETURN_TYPE("builtin lua_compiled");
+END_FUNCTION_DEF(compile_lua)
 #endif
 
 FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")

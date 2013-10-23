@@ -63,37 +63,42 @@ namespace lua
 		return get_global_lua_instance();
 	}
 
-	bool lua_context::dostring(const char* str, game_logic::formula_callable* callable)
+	void lua_context::set_self_callable(game_logic::formula_callable& callable)
+	{
+		using namespace game_logic;
+		lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
+
+		formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
+		*a = &callable;
+		intrusive_ptr_add_ref(*a);
+
+		luaL_getmetatable(context_ptr(), callable_str);	// (-0,+1,e)
+		lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
+
+		lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
+		lua_pop(context_ptr(),1);						// (-n(1),+0,-)
+	}
+
+	bool lua_context::dostring(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
 	{
 		if(callable) {
-			using namespace game_logic;
-			lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
-
-			formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
-			*a = callable;
-			intrusive_ptr_add_ref(*a);
-
-			luaL_getmetatable(context_ptr(), callable_str);	// (-0,+1,e)
-			lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
-
-			lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
-			lua_pop(context_ptr(),1);						// (-n(1),+0,-)
+			set_self_callable(*callable);
 		}
 
-		if (luaL_loadbuffer(context_ptr(), str, std::strlen(str), str) || lua_pcall(context_ptr(), 0, 0, 0))
+		if (luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str()) || lua_pcall(context_ptr(), 0, 0, 0))
 		{
 			const char* a = lua_tostring(context_ptr(), -1);
-			std::cout << a << "\n";
+			std::cerr << a << "\n";
 			lua_pop(context_ptr(), 1);
 			return true;
 		}
 		return false;
 	}
 
-	bool lua_context::dofile(const char* str, game_logic::formula_callable* callable)
+	bool lua_context::dofile(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
 	{
 		std::string file_contents = sys::read_file(module::map_file(str));
-		return dostring(file_contents.c_str(), callable);
+		return dostring(name, file_contents, callable);
 	}
 
 	namespace
@@ -405,7 +410,38 @@ namespace lua
 		}
 	}
 
+	bool lua_context::execute(const variant& value, game_logic::formula_callable* callable)
+	{
+		bool res = false;
+		if(callable) {
+			set_self_callable(*callable);
+		}
+		if(value.is_string()) {
+			res = dostring("", value.as_string());
+		} else {
+			lua_compiled_ptr compiled = value.try_convert<lua_compiled>();
+			ASSERT_LOG(compiled != NULL, "FATAL: object given couldn't be converted to type 'lua_compiled'");
+			res = compiled->run(context_ptr());
+		}
+		return res;
+	}
+
 	lua_context::lua_context()
+	{
+		init();
+	}
+
+	lua_context::lua_context(game_logic::formula_callable& callable)
+	{
+		init();
+		set_self_callable(callable);
+	}
+
+	lua_context::~lua_context()
+	{
+	}
+
+	void lua_context::init()
 	{
 		// initialize Lua
 		state_.reset(luaL_newstate(), [](lua_State* L) { lua_close(L); });
@@ -457,9 +493,92 @@ namespace lua
 		);*/
 	}
 
-	lua_context::~lua_context()
+	namespace 
+	{
+		int chunk_writer(lua_State *L, const void* p, size_t sz, void* ud)
+		{
+			lua_compiled* chunks = reinterpret_cast<lua_compiled*>(ud);
+			chunks->add_chunk(p, sz);
+			return 0;
+		}
+
+		const char* chunk_reader(lua_State* L, void* ud, size_t* sz)
+		{
+			lua_compiled* chunks = reinterpret_cast<lua_compiled*>(ud);
+			auto& it = chunks->current(); chunks->next();
+			if(sz) {
+				*sz = it.size();
+			}
+			return &it[0];
+		}
+	}
+
+	lua_compiled_ptr lua_context::compile(const std::string& name, const std::string& str)
+	{
+		lua_compiled* chunk = new lua_compiled();
+		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
+		chunk->add_chunk(0, 0);
+		return lua_compiled_ptr(chunk);
+	}
+
+
+	lua_compiled::lua_compiled()
 	{
 	}
+
+	lua_compiled::~lua_compiled()
+	{
+	}
+
+	void lua_compiled::reset_chunks()
+	{
+		chunks_.clear();
+		chunks_it_ = chunks_.begin();
+	}
+
+	void lua_compiled::add_chunk(const void* p, size_t sz)
+	{
+		const char* pp = static_cast<const char*>(p);
+		chunks_.push_back(std::vector<char>(pp,pp+sz));
+	}
+
+	const std::vector<char>& lua_compiled::current() const
+	{
+		return *chunks_it_;
+	}
+
+	void lua_compiled::next()
+	{
+		++chunks_it_;
+	}
+
+	bool lua_compiled::run(lua_State* L) const
+	{
+		chunks_it_ = chunks_.begin();
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<lua_compiled*>(this)), NULL, NULL) || lua_pcall(L, 0, 0, 0)) {
+			const char* a = lua_tostring(L, -1);
+			std::cerr << a << "\n";
+			lua_pop(L, 1);
+			return true;
+		}
+		return false;
+	}
+
+	BEGIN_DEFINE_CALLABLE_NOBASE(lua_compiled)
+	BEGIN_DEFINE_FN(execute, "(object) ->any")
+		lua::lua_context ctx;
+		game_logic::formula_callable* callable = const_cast<game_logic::formula_callable*>(FN_ARG(0).as_callable());
+		ctx.set_self_callable(*callable);
+		obj.run(ctx.context_ptr());
+		//return lua_value_to_variant(ctx.context_ptr());
+		return variant();
+	END_DEFINE_FN
+	DEFINE_FIELD(dummy, "int")
+		return variant(0);
+	END_DEFINE_CALLABLE(lua_compiled)
+
 }
 
 UNIT_TEST(lua_test)
