@@ -35,6 +35,7 @@
 #include "custom_object_functions.hpp"
 #include "filesystem.hpp"
 #include "formula_function_registry.hpp"
+#include "formula_object.hpp"
 #include "lua_iface.hpp"
 #include "level.hpp"
 #include "module.hpp"
@@ -50,6 +51,7 @@ namespace lua
 		const char* const callable_function_str = "anura.callable.function";
 		const char* const function_str = "anura.function";
 		const char* const callable_str = "anura.callable";
+		const char* const lib_functions_str = "anura.lib";
 	}
 
 	lua_context& get_global_lua_instance()
@@ -66,15 +68,19 @@ namespace lua
 	void lua_context::set_self_callable(game_logic::formula_callable& callable)
 	{
 		using namespace game_logic;
+		// Gets the global "Anura" table
 		lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
 
+		// Create a new holder for a fomula callable for the given callable
 		formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
 		*a = &callable;
 		intrusive_ptr_add_ref(*a);
 
+		// Set metatable for the callable
 		luaL_getmetatable(context_ptr(), callable_str);	// (-0,+1,e)
 		lua_setmetatable(context_ptr(), -2);			// (-1,+0,e)
 
+		// Set the me Anura["me"] = callable
 		lua_setfield(context_ptr(), -2, "me");			// (-1,+0,e)
 		lua_pop(context_ptr(),1);						// (-n(1),+0,-)
 	}
@@ -103,6 +109,11 @@ namespace lua
 
 	namespace
 	{
+		struct ffl_variant_lib_userdata
+		{
+			variant value;
+		};
+
 		static int variant_to_lua_value(lua_State* L, const variant& value)
 		{
 			switch(value.type()) {
@@ -114,7 +125,7 @@ namespace lua
 					break;
 				case variant::VARIANT_TYPE_INT:
 					lua_pushinteger(L, value.as_int());
-					break;
+ 					break;
 				case variant::VARIANT_TYPE_DECIMAL:
 					lua_pushnumber(L, value.as_decimal().as_float());
 					break;
@@ -152,8 +163,17 @@ namespace lua
 					lua_setmetatable(L, -2);			// (-1,+0,e)
 					return 1;
 				}
+				case variant::VARIANT_TYPE_FUNCTION: {
+					using namespace game_logic;
+					//(-0,+1,e)
+					ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(lua_newuserdata(L, sizeof(ffl_variant_lib_userdata)));
+					ud->value = value;
+
+					luaL_getmetatable(L, lib_functions_str);	// (-0,+1,e)
+					lua_setmetatable(L, -2);					// (-1,+0,e)
+					return 1;
+				}
 				case variant::VARIANT_TYPE_CALLABLE_LOADING:
-				case variant::VARIANT_TYPE_FUNCTION:
 				case variant::VARIANT_TYPE_MULTI_FUNCTION:
 				case variant::VARIANT_TYPE_DELAYED:
 				case variant::VARIANT_TYPE_INVALID:
@@ -343,9 +363,53 @@ namespace lua
 			return 0;
 		}
 
+		static int call_variant_function(lua_State* L)
+		{
+			using namespace game_logic;
+			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(luaL_checkudata(L,1,lib_functions_str)); // (-0,+0,-)
+			std::vector<variant> args;
+			int nargs = lua_gettop(L);
+			for(int n = 2; n <= nargs; ++n) {
+				args.push_back(lua_value_to_variant(L, n));
+			}
+			return variant_to_lua_value(L, (ud->value)(args));
+		}
+
+		static int gc_variant_function(lua_State* L)
+		{
+			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(luaL_checkudata(L,1,lib_functions_str)); // (-0,+0,-)
+			ud->value = variant();
+			return 0;
+		}
+
+		static int index_variant_function(lua_State* L)
+		{
+			// stack -- table, key
+			// (-0,+0,-)
+			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(luaL_checkudata(L,1,lib_functions_str));
+			// (-0,+0,e)
+			const char *name = lua_tostring(L, 2);
+			// (-1,+0,-)
+			lua_pop(L,1);
+			
+			if(ud->value.is_callable()) {
+				ud->value = ud->value.as_callable()->query_value(name);
+			} else {
+				return variant_to_lua_value(L, ud->value);
+			}
+			return 1;
+		}
+
 		const luaL_Reg gFFLFunctions[] = {
 			{"__call", call_function},
 			{"__gc", gc_function},
+			{NULL, NULL},
+		};
+
+		const luaL_Reg gLibMetaFunctions[] = {
+			{"__call", call_variant_function},
+			{"__gc", gc_variant_function},
+			{"__index", index_variant_function},
 			{NULL, NULL},
 		};
 
@@ -375,8 +439,19 @@ namespace lua
 			lua_setmetatable(L, -2);			// (-1,+0,e)
 			return 1;
 		}
+		
+		static int get_lib(lua_State* L)
+		{
+			//(-0,+1,e)
+			ffl_variant_lib_userdata* ud = static_cast<ffl_variant_lib_userdata*>(lua_newuserdata(L, sizeof(ffl_variant_lib_userdata)));
+			ud->value = variant(game_logic::get_library_object().get());
+			
+			luaL_getmetatable(L, lib_functions_str);	// (-0,+1,e)
+			lua_setmetatable(L, -2);					// (-1,+0,e)
+			return 1;
+		}
 
-		int anura_table_index(lua_State* L) 
+		static int anura_table_index(lua_State* L) 
 		{
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 
@@ -390,6 +465,7 @@ namespace lua
 		
 		static const struct luaL_Reg anura_functions [] = {
 			{"level", get_level},
+			{"lib", get_lib},
 			{NULL, NULL},
 		};
 
@@ -464,6 +540,9 @@ namespace lua
 		luaL_newmetatable(context_ptr(), callable_function_str);
 		luaL_setfuncs(context_ptr(), gFFLCallableFunctions, 0);
 
+		luaL_newmetatable(context_ptr(), lib_functions_str);
+		luaL_setfuncs(context_ptr(), gLibMetaFunctions, 0);
+
 		push_anura_table(context_ptr());
 
 		/*dostring(
@@ -504,7 +583,7 @@ namespace lua
 
 		const char* chunk_reader(lua_State* L, void* ud, size_t* sz)
 		{
-			lua_compiled* chunks = reinterpret_cast<lua_compiled*>(ud);
+			compiled_chunk* chunks = reinterpret_cast<compiled_chunk*>(ud);
 			auto& it = chunks->current(); chunks->next();
 			if(sz) {
 				*sz = it.size();
@@ -532,32 +611,10 @@ namespace lua
 	{
 	}
 
-	void lua_compiled::reset_chunks()
-	{
-		chunks_.clear();
-		chunks_it_ = chunks_.begin();
-	}
-
-	void lua_compiled::add_chunk(const void* p, size_t sz)
-	{
-		const char* pp = static_cast<const char*>(p);
-		chunks_.push_back(std::vector<char>(pp,pp+sz));
-	}
-
-	const std::vector<char>& lua_compiled::current() const
-	{
-		return *chunks_it_;
-	}
-
-	void lua_compiled::next()
-	{
-		++chunks_it_;
-	}
-
-	bool lua_compiled::run(lua_State* L) const
+	bool compiled_chunk::run(lua_State* L) const 
 	{
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<lua_compiled*>(this)), NULL, NULL) || lua_pcall(L, 0, 0, 0)) {
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<compiled_chunk*>(this)), NULL, NULL) || lua_pcall(L, 0, 0, 0)) {
 			const char* a = lua_tostring(L, -1);
 			std::cerr << a << "\n";
 			lua_pop(L, 1);

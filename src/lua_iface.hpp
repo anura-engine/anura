@@ -33,24 +33,33 @@
 
 namespace lua
 {
-	class lua_compiled : public game_logic::formula_callable
+	class compiled_chunk
+	{
+	public:
+		compiled_chunk() {}
+		virtual ~compiled_chunk() {}
+
+		void reset_chunks() { chunks_.clear(); chunks_it_ = chunks_.begin(); }
+		void add_chunk(const void* p, size_t sz) {
+			const char* pp = static_cast<const char*>(p);
+			chunks_.push_back(std::vector<char>(pp,pp+sz));
+		}
+		bool run(lua_State* L) const;
+		const std::vector<char>& current() const { return *chunks_it_; }
+		void next() { ++chunks_it_; }
+	private:
+		typedef std::vector<std::vector<char>> chunk_list_type;
+		chunk_list_type chunks_;
+		mutable chunk_list_type::const_iterator chunks_it_;
+	};
+
+	class lua_compiled : public game_logic::formula_callable, public compiled_chunk
 	{
 	public:
 		lua_compiled();
 		virtual ~lua_compiled();
-
-		void reset_chunks();
-		void add_chunk(const void* p, size_t sz);
-		bool run(lua_State* L) const;
-
-		const std::vector<char>& current() const;
-		void next();
 	private:
 		DECLARE_CALLABLE(lua_compiled);
-
-		typedef std::vector<std::vector<char>> chunk_list_type;
-		chunk_list_type chunks_;
-		mutable chunk_list_type::const_iterator chunks_it_;
 	};
 	typedef boost::intrusive_ptr<lua_compiled> lua_compiled_ptr;
 
