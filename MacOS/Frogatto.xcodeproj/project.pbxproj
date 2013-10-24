@@ -211,6 +211,7 @@
 		C08E628517B5EC500097B642 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */; };
 		C08E628617B5EC500097B642 /* SDL2_ttf.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */; };
 		C08E628717B5EC500097B642 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627F17B5EC3B0097B642 /* SDL2.framework */; };
+		C08F30571818E80B005BDCDB /* lua_iface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08F30551818E80B005BDCDB /* lua_iface.cpp */; };
 		C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAAD177C14200046CC87 /* obj_reader.cpp */; };
 		C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB0177C14470046CC87 /* data_blob.cpp */; };
 		C090AAB5177C14740046CC87 /* voxel_editor_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */; };
@@ -693,6 +694,8 @@
 		C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_mixer.framework; sourceTree = "<group>"; };
 		C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2_ttf.framework; sourceTree = "<group>"; };
 		C08E627F17B5EC3B0097B642 /* SDL2.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = SDL2.framework; sourceTree = "<group>"; };
+		C08F30551818E80B005BDCDB /* lua_iface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = lua_iface.cpp; sourceTree = "<group>"; };
+		C08F30561818E80B005BDCDB /* lua_iface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = lua_iface.hpp; sourceTree = "<group>"; };
 		C090AAAD177C14200046CC87 /* obj_reader.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = obj_reader.cpp; sourceTree = "<group>"; };
 		C090AAAE177C14200046CC87 /* obj_reader.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = obj_reader.hpp; sourceTree = "<group>"; };
 		C090AAB0177C14470046CC87 /* data_blob.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = data_blob.cpp; sourceTree = "<group>"; };
@@ -1116,6 +1119,8 @@
 				C00160D016AF2E00001DAEB9 /* load_level_nothread.cpp */,
 				C010C69B160AFD4C006E7D90 /* loading_screen.cpp */,
 				C010C69C160AFD4C006E7D90 /* loading_screen.hpp */,
+				C08F30551818E80B005BDCDB /* lua_iface.cpp */,
+				C08F30561818E80B005BDCDB /* lua_iface.hpp */,
 				C010C69D160AFD4C006E7D90 /* main.cpp */,
 				C010C69E160AFD4C006E7D90 /* map_utils.hpp */,
 				C010C69F160AFD4C006E7D90 /* md5.cpp */,
@@ -1424,6 +1429,7 @@
 				C010C749160AFD4D006E7D90 /* base64.cpp in Sources */,
 				C010C74A160AFD4D006E7D90 /* blur.cpp in Sources */,
 				C010C74B160AFD4D006E7D90 /* border_widget.cpp in Sources */,
+				C08F30571818E80B005BDCDB /* lua_iface.cpp in Sources */,
 				C010C74C160AFD4D006E7D90 /* button.cpp in Sources */,
 				C010C74D160AFD4D006E7D90 /* character_editor_dialog.cpp in Sources */,
 				C008A2C31804E8980061363A /* wm.cpp in Sources */,
