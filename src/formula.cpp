@@ -232,6 +232,7 @@ namespace game_logic
 	
 namespace {
 
+#if defined(USE_LUA)
 class lua_expression : public formula_expression {
 public:
 	explicit lua_expression(const variant& lua_code) : code_(lua_code)
@@ -251,6 +252,7 @@ private:
 	}
 	variant code_;
 };
+#endif
 		
 class function_list_expression : public formula_expression {
 public:
@@ -3229,7 +3231,9 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 
 formula::formula(const variant& code, FORMULA_LANGUAGE lang)
 {
+#if defined(USE_LUA)
 	expr_.reset(new lua_expression(code));
+#endif
 	str_ = code;
 }
 

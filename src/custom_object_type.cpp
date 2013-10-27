@@ -792,6 +792,7 @@ void custom_object_type::init_event_handlers(variant node,
 		}
 	}
 
+#if defined(USE_LUA)
 	variant lua_node = node["lua_handlers"];
 	if(lua_node.is_map()) {
 		foreach(const variant_pair& value, lua_node.as_map()) {
@@ -806,6 +807,7 @@ void custom_object_type::init_event_handlers(variant node,
 			handlers[event_id].reset(new game_logic::formula(value.second, game_logic::formula::LANGUAGE_LUA));
 		}
 	}
+#endif
 }
 
 namespace {
