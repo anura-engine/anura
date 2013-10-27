@@ -791,6 +791,21 @@ void custom_object_type::init_event_handlers(variant node,
 			}
 		}
 	}
+
+	variant lua_node = node["lua_handlers"];
+	if(lua_node.is_map()) {
+		foreach(const variant_pair& value, lua_node.as_map()) {
+			const std::string& event = value.first.as_string();
+			const int event_id = get_object_event_id(event);
+			if(handlers.size() <= event_id) {
+				handlers.resize(event_id+1);
+			}
+
+			ASSERT_LOG(handlers[event_id].get() == NULL, "Defining lua handler for " << event << " when it already has a handler.");
+
+			handlers[event_id].reset(new game_logic::formula(value.second, game_logic::formula::LANGUAGE_LUA));
+		}
+	}
 }
 
 namespace {

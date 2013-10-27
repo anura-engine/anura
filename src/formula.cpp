@@ -37,6 +37,7 @@
 #include "formula_object.hpp"
 #include "formula_tokenizer.hpp"
 #include "i18n.hpp"
+#include "lua_iface.hpp"
 #include "map_utils.hpp"
 #include "preferences.hpp"
 #include "random.hpp"
@@ -230,6 +231,26 @@ namespace game_logic
 	}
 	
 namespace {
+
+class lua_expression : public formula_expression {
+public:
+	explicit lua_expression(const variant& lua_code) : code_(lua_code)
+	{
+	}
+
+	variant execute(const formula_callable& /*variables*/) const {
+		return variant(new fn_command_callable_arg([=](formula_callable* callable) {
+			lua::lua_context context;
+			context.execute(this->code_, callable);
+		}));
+	}
+
+private:
+	variant_type_ptr get_variant_type() const {
+		return variant_type::get_commands();
+	}
+	variant code_;
+};
 		
 class function_list_expression : public formula_expression {
 public:
@@ -3082,13 +3103,17 @@ formula::strict_check_scope::~strict_check_scope()
 	g_strict_formula_checking_warnings = old_warning_value;
 }
 
-formula_ptr formula::create_optional_formula(const variant& val, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_definition)
+formula_ptr formula::create_optional_formula(const variant& val, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_definition, FORMULA_LANGUAGE lang)
 {
 	if(val.is_null() || val.is_string() && val.as_string().empty()) {
 		return formula_ptr();
 	}
 	
-	return formula_ptr(new formula(val, symbols, callable_definition));
+	if(lang == LANGUAGE_FFL) {
+		return formula_ptr(new formula(val, symbols, callable_definition));
+	} else {
+		return formula_ptr(new formula(val, LANGUAGE_LUA));
+	}
 }
 
 formula::formula(const variant& val, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_definition) : str_(val), def_(callable_definition)
@@ -3200,6 +3225,12 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 #ifndef NO_EDITOR
 	all_formulae().insert(this);
 #endif
+}
+
+formula::formula(const variant& code, FORMULA_LANGUAGE lang)
+{
+	expr_.reset(new lua_expression(code));
+	str_ = code;
 }
 
 const_formula_callable_ptr formula::wrap_callable_with_global_where(const formula_callable& callable) const
