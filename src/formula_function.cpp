@@ -3471,18 +3471,6 @@ void debug_side_effect(variant v)
 }
 }
 
-//DEPRECATED IN FAVOR OF DUMP
-FUNCTION_DEF(debug_fn, 1, 2, "debug_fn(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
-	if(preferences::debug()) {
-		debug_side_effect(args().front()->evaluate(variables));
-	}
-	variant res = args().back()->evaluate(variables);
-
-	return res;
-FUNCTION_TYPE_DEF
-	return args().back()->query_variant_type();
-END_FUNCTION_DEF(debug_fn)
-
 FUNCTION_DEF(dump, 1, 2, "dump(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
 	if(preferences::debug()) {
 		debug_side_effect(args().front()->evaluate(variables));
