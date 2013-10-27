@@ -460,3 +460,679 @@ UTILITY(compile_objects)
 		}
 	}
 }
+
+namespace {
+
+struct SpritesheetCell {
+	int begin_col, end_col;
+};
+
+struct SpritesheetRow {
+	int begin_row, end_row;
+
+	std::vector<SpritesheetCell> cells;
+};
+
+struct SpritesheetAnimation {
+	std::vector<rect> frames;
+	variant node;
+	rect target_area;
+
+	int cell_width() const {
+		int result = 0;
+		for(const rect& r : frames) {
+			result = std::max<int>(r.w(), result);
+		}
+
+		return result;
+	}
+
+	int cell_height() const {
+		int result = 0;
+		for(const rect& r : frames) {
+			result = std::max<int>(r.h(), result);
+		}
+
+		return result;
+	}
+
+	int height() const {
+		return cell_height() + 4;
+	}
+
+	int width() const {
+		return (cell_width()+3)*frames.size() + 4;
+	}
+};
+
+bool is_row_blank(graphics::surface surf, const unsigned char* pixels)
+{
+	for(int x = 0; x < surf->w; ++x) {
+		if(pixels[3] > 64) {
+			return false;
+		}
+		pixels += 4;
+	}
+
+	return true;
+}
+
+bool is_col_blank(graphics::surface surf, const SpritesheetRow& row, int col)
+{
+	if(col >= surf->w) {
+		return true;
+	}
+
+	const unsigned char* pixels = (const unsigned char*)surf->pixels;
+	pixels += row.begin_row*surf->w*4 + col*4;
+
+	for(int y = row.begin_row; y < row.end_row; ++y) {
+		if(pixels[3] > 64) {
+			return false;
+		}
+
+		pixels += surf->w*4;
+	}
+
+	return true;
+}
+
+std::vector<SpritesheetRow> get_cells(graphics::surface surf)
+{
+	std::vector<SpritesheetRow> rows;
+
+	const unsigned char* pixels = (const unsigned char*)surf->pixels;
+
+	int start_row = -1;
+	for(int row = 0; row <= surf->h; ++row) {
+		const bool blank = row == surf->h || is_row_blank(surf, pixels);
+		if(blank) {
+			if(start_row != -1) {
+				SpritesheetRow new_row;
+				new_row.begin_row = start_row;
+				new_row.end_row = row;
+				rows.push_back(new_row);
+
+				start_row = -1;
+			}
+		} else {
+			if(start_row == -1) {
+				start_row = row;
+			}
+		}
+
+		pixels += surf->w*4;
+	}
+
+	for(SpritesheetRow& sprite_row : rows) {
+		int start_col = -1;
+		for(int col = 0; col <= surf->w; ++col) {
+			const bool blank = is_col_blank(surf, sprite_row, col);
+			if(blank) {
+				if(start_col != -1) {
+					SpritesheetCell new_cell = { start_col, col };
+					sprite_row.cells.push_back(new_cell);
+
+					start_col = -1;
+				}
+			} else {
+				if(start_col == -1) {
+					start_col = col;
+				}
+			}
+		}
+
+		std::cerr << "ROW: " << sprite_row.begin_row << ", " << sprite_row.end_row << " -> " << sprite_row.cells.size() << "\n";
+	}
+
+	return rows;
+}
+
+void write_pixel_surface(graphics::surface surf, int x, int y, int r, int g, int b, int a)
+{
+	if(x < 0 || y < 0 || x >= surf->w || y >= surf->h) {
+		return;
+	}
+
+	unsigned char* pixels = (unsigned char*)surf->pixels;
+	pixels += y * surf->w * 4 + x * 4;
+	*pixels++ = r;
+	*pixels++ = g;
+	*pixels++ = b;
+	*pixels++ = a;
+}
+
+void write_spritesheet_frame(graphics::surface src, const rect& src_area, graphics::surface dst, int target_x, int target_y)
+{
+	const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+
+	std::vector<unsigned char*> border_pixels;
+
+	for(int xpos = target_x; xpos < target_x + src_area.w() + 2; ++xpos) {
+		unsigned char* p = (unsigned char*)dst->pixels + (target_y*dst->w + xpos)*4;
+		border_pixels.push_back(p);
+		p += (src_area.h()+1)*dst->w*4;
+		border_pixels.push_back(p);
+	}
+
+	for(int ypos = target_y; ypos < target_y + src_area.h() + 2; ++ypos) {
+		unsigned char* p = (unsigned char*)dst->pixels + (ypos*dst->w + target_x)*4;
+		border_pixels.push_back(p);
+		p += (src_area.w()+1)*4;
+		border_pixels.push_back(p);
+	}
+
+	for(unsigned char* p : border_pixels) {
+		memcpy(p, alpha_colors+3, 3);
+		p[3] = 255;
+	}
+}
+
+bool rect_in_surf_empty(graphics::surface surf, rect area)
+{
+	const unsigned char* p = (const unsigned char*)surf->pixels;
+	p += (area.y()*surf->w + area.x())*4;
+
+	for(int y = 0; y < area.h(); ++y) {
+		for(int x = 0; x < area.w(); ++x) {
+			if(p[x*4 + 3]) {
+				return false;
+			}
+		}
+
+		p += surf->w*4;
+	}
+
+	return true;
+}
+
+int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
+{
+	if(areaa.h() > areab.h()) {
+		std::swap(areaa, areab);
+	}
+
+	bool can_slice = true;
+	while(areaa.h() < areab.h() && can_slice) {
+		can_slice = false;
+		if(rect_in_surf_empty(surf, rect(areab.x(), areab.y(), areab.w(), 1))) {
+			std::cerr << "SLICE: " << areab << " -> ";
+			areab = rect(areab.x(), areab.y()+1, areab.w(), areab.h()-1);
+			std::cerr << areab << "\n";
+			can_slice = true;
+		}
+
+		if(areaa.h() < areab.h() && rect_in_surf_empty(surf, rect(areab.x(), areab.y()+areab.h()-1, areab.w(), 1))) {
+			std::cerr << "SLICE: " << areab << " -> ";
+			areab = rect(areab.x(), areab.y(), areab.w(), areab.h()-1);
+			std::cerr << areab << "\n";
+			can_slice = true;
+		}
+
+		if(areaa.h() == areab.h()) {
+			std::cerr << "SLICED DOWN: " << areab << "\n";
+		}
+	}
+
+	if(areaa.h() < areab.h() && areab.h() - areaa.h() <= 4) {
+		const int diff = areab.h() - areaa.h();
+		areab = rect(areab.x(), areab.y() + diff/2, areab.w(), areab.h() - diff);
+	}
+
+	if(areaa.w() != areab.w() && areaa.h() == areab.h()) {
+		rect a = areaa;
+		rect b = areab;
+		if(a.w() > b.w()) {
+			std::swap(a,b);
+		}
+
+		int best_score = INT_MAX;
+
+		for(int xoffset = 0; xoffset < b.w() - a.w(); ++xoffset) {
+			rect r(b.x() + xoffset, b.y(), a.w(), b.h());
+			const int score = goodness_of_fit(surf, r, a);
+			if(score < best_score) {
+				best_score = score;
+			}
+		}
+
+		return best_score;
+	}
+
+	if(areaa.w() != areab.w() || areaa.h() != areab.h()) {
+		return INT_MAX;
+	}
+
+	int errors = 0;
+	for(int y = 0; y < areaa.h(); ++y) {
+		const int ya = areaa.y() + y;
+		const int yb = areab.y() + y;
+		for(int x = 0; x < areaa.w(); ++x) {
+			const int xa = areaa.x() + x;
+			const int xb = areab.x() + x;
+			const unsigned char* pa = (const unsigned char*)surf->pixels + (ya*surf->w + xa)*4;
+			const unsigned char* pb = (const unsigned char*)surf->pixels + (yb*surf->w + xb)*4;
+			if((pa[3] > 32) != (pb[3] > 32)) {
+				++errors;
+			}
+		}
+	}
+
+	return errors;
+}
+
+int score_offset_fit(graphics::surface surf, const rect& big_area, const rect& lit_area, int offsetx, int offsety)
+{
+	int score = 0;
+	for(int y = 0; y < big_area.h(); ++y) {
+		for(int x = 0; x < big_area.w(); ++x) {
+			const unsigned char* big_p = (const unsigned char*)surf->pixels + ((big_area.y() + y)*surf->w + (big_area.x() + x))*4;
+
+			const int xadj = x - offsetx;
+			const int yadj = y - offsety;
+
+			if(xadj < 0 || yadj < 0 || xadj >= lit_area.w() || yadj >= lit_area.h()) {
+				if(big_p[3] >= 32) {
+					++score;
+				}
+				continue;
+			}
+
+			const unsigned char* lit_p = (const unsigned char*)surf->pixels + ((lit_area.y() + yadj)*surf->w + (lit_area.x() + xadj))*4;
+			if((big_p[3] >= 32) != (lit_p[3] >= 32)) {
+				++score;
+			}
+		}
+	}
+
+	return score;
+}
+
+void get_best_offset(graphics::surface surf, const rect& big_area, const rect& lit_area, int* xoff, int* yoff)
+{
+	std::cerr << "CALC BEST OFFSET...\n";
+	*xoff = *yoff = 0;
+	int best_score = -1;
+	for(int y = 0; y <= (big_area.h() - lit_area.h()); ++y) {
+		for(int x = 0; x <= (big_area.w() - lit_area.w()); ++x) {
+			const int score = score_offset_fit(surf, big_area, lit_area, x, y);
+			std::cerr << "OFFSET " << x << ", " << y << " SCORES " << score << "\n";
+			if(best_score == -1 || score < best_score) {
+				*xoff = x;
+				*yoff = y;
+				best_score = score;
+			}
+		}
+	}
+
+	std::cerr << "BEST OFFSET: " << *xoff << ", " << *yoff << "\n";
+}
+
+int find_distance_to_pixel(graphics::surface surf, const rect& area, int xoffset, int yoffset)
+{
+	const int SearchDistance = 4;
+	int best_distance = SearchDistance+1;
+	for(int y = -SearchDistance; y <= SearchDistance; ++y) {
+		for(int x = -SearchDistance; x <= SearchDistance; ++x) {
+			const int distance = abs(x) + abs(y);
+			if(distance >= best_distance) {
+				continue;
+			}
+
+			int xpos = xoffset + x;
+			int ypos = yoffset + y;
+
+			if(xpos >= 0 && ypos >= 0 && xpos < area.w() && ypos < area.h()) {
+				const unsigned char* p = (const unsigned char*)surf->pixels + ((area.y() + ypos)*surf->w + (area.x() + xpos))*4;
+				if(p[3] >= 32) {
+					best_distance = distance;
+				}
+			}
+		}
+	}
+
+	return best_distance;
+}
+
+int score_spritesheet_area(graphics::surface surf, const rect& area_a, int xoff_a, int yoff_a, const rect& area_b, int xoff_b, int yoff_b, const rect& big_area)
+{
+	unsigned char default_color[4] = {0,0,0,0};
+	int score = 0;
+	for(int y = 0; y < big_area.h(); ++y) {
+		for(int x = 0; x < big_area.w(); ++x) {
+			const int xadj_a = x - xoff_a;
+			const int yadj_a = y - yoff_a;
+
+			const int xadj_b = x - xoff_b;
+			const int yadj_b = y - yoff_b;
+
+			const unsigned char* pa = default_color;
+			const unsigned char* pb = default_color;
+
+			if(xadj_a >= 0 && xadj_a < area_a.w() && yadj_a >= 0 && yadj_a < area_a.h()) {
+				pa = (const unsigned char*)surf->pixels + ((area_a.y() + yadj_a)*surf->w + (area_a.x() + xadj_a))*4;
+			}
+
+			if(xadj_a >= 0 && xadj_a < area_a.w() && yadj_a >= 0 && yadj_a < area_a.h()) {
+				pb = (const unsigned char*)surf->pixels + ((area_b.y() + yadj_b)*surf->w + (area_b.x() + xadj_b))*4;
+			}
+
+			if((pa[3] >= 32) != (pb[3] >= 32)) {
+				if(pa[3] >= 32) {
+					score += find_distance_to_pixel(surf, area_b, xadj_b, yadj_b);
+				} else {
+					score += find_distance_to_pixel(surf, area_a, xadj_a, yadj_a);
+				}
+
+			}
+		}
+	}
+
+	return score;
+}
+
+void flip_surface_area(graphics::surface surf, const rect& area)
+{
+	for(int y = area.y(); y < area.y() + area.h(); ++y) {
+		unsigned int* pixels = (unsigned int*)surf->pixels + y*surf->w + area.x();
+		std::reverse(pixels, pixels + area.w());
+	}
+}
+
+void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimation& anim, graphics::surface dst, bool reorder)
+{
+	int target_x = anim.target_area.x()+1;
+	int target_y = anim.target_area.y()+1;
+
+	const int cell_width = anim.cell_width();
+	const int cell_height = anim.cell_height();
+
+	rect biggest_rect = anim.frames.front();
+
+	for(const rect& f : anim.frames) {
+		std::cerr << "RECT SIZE: " << f.w() << "," << f.h() << "\n";
+		if(f.w()*f.h() > biggest_rect.w()*biggest_rect.h()) {
+			biggest_rect = f;
+		}
+	}
+
+	std::vector<int> xoffsets, yoffsets, new_xoffsets, new_yoffsets;
+	for(const rect& f : anim.frames) {
+		xoffsets.push_back(0);
+		yoffsets.push_back(0);
+		get_best_offset(src, biggest_rect, f, &xoffsets.back(), &yoffsets.back());
+	}
+
+	std::vector<rect> frames = anim.frames;
+	if(reorder) {
+		frames.clear();
+		frames.push_back(anim.frames.front());
+		new_xoffsets.push_back(xoffsets[0]);
+		new_yoffsets.push_back(yoffsets[0]);
+		while(frames.size() < anim.frames.size()) {
+			int best_frame = -1;
+			int best_score = INT_MAX;
+			for(int n = 0; n < anim.frames.size(); ++n) {
+				if(std::count(frames.begin(), frames.end(), anim.frames[n])) {
+					continue;
+				}
+
+				const int score = score_spritesheet_area(src, frames.back(), new_xoffsets.back(), new_yoffsets.back(), anim.frames[n], xoffsets[n], yoffsets[n], biggest_rect);
+				std::cerr << "SCORE: " << anim.frames[n] << " vs " << frames.back() << ": " << n << " -> " << score << "\n";
+				if(score < best_score || best_frame == -1) {
+					best_score = score;
+					best_frame = n;
+				}
+			}
+
+			std::cerr << "BEST : " << best_frame << ": " << best_score << "\n";
+
+			frames.push_back(anim.frames[best_frame]);
+			new_xoffsets.push_back(xoffsets[best_frame]);
+			new_yoffsets.push_back(yoffsets[best_frame]);
+		}
+	}
+
+	for(const rect& f : frames) {
+		int xoff = 0, yoff = 0;
+		get_best_offset(src, biggest_rect, f, &xoff, &yoff);
+
+		write_spritesheet_frame(src, f, dst, target_x, target_y);
+
+		SDL_Rect src_rect = { f.x(), f.y(), f.w(), f.h() };
+		SDL_Rect dst_rect = { target_x+1 + xoff, target_y+1 + yoff, f.w(), f.h() };
+
+		SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
+		SDL_BlitSurface(src.get(), &src_rect, dst.get(), &dst_rect);
+
+		flip_surface_area(dst, rect(target_x, target_y, cell_width, cell_height));
+
+		target_x += cell_width + 3;
+	}
+}
+
+}
+
+COMMAND_LINE_UTILITY(bake_spritesheet)
+{
+	std::deque<std::string> argv(args.begin(), args.end());
+	while(argv.empty() == false) {
+		std::string arg = argv.front();
+		argv.pop_front();
+		std::string cfg_fname = module::map_file(arg);
+		variant node;
+		try {
+			node = json::parse(sys::read_file(cfg_fname));
+		} catch(json::parse_error& e) {
+			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.error_message());
+		}
+
+		variant baking_info = node["animation_baking"];
+		ASSERT_LOG(baking_info.is_map(), "baking info not found");
+
+		graphics::surface surf = graphics::surface_cache::get(baking_info["source_image"].as_string());
+		ASSERT_LOG(surf.get(), "No surface found");
+
+		std::cerr << "SURFACE SIZE: " << surf->w << "x" << surf->h << "\n";
+
+		std::cerr << "DEST SURFACE: " << module::map_file("images/" + baking_info["dest_image"].as_string()) << "\n";
+
+		ASSERT_LOG(surf->format->BytesPerPixel == 4, "Incorrect bpp: " << surf->format->BytesPerPixel);
+
+		std::vector<SpritesheetRow> rows = get_cells(surf);
+		unsigned char* pixels = (unsigned char*)surf->pixels;
+		for(const SpritesheetRow& row : rows) {
+			for(const SpritesheetCell& cell : row.cells) {
+				const int x1 = cell.begin_col - 1;
+				const int x2 = cell.end_col;
+				const int y1 = row.begin_row - 1;
+				const int y2 = row.end_row;
+
+				for(int x = x1; x <= x2; ++x) {
+					write_pixel_surface(surf, x, y1, 255, 255, 255, 255);
+					write_pixel_surface(surf, x, y2, 255, 255, 255, 255);
+				}
+
+				for(int y = y1; y <= y2; ++y) {
+					write_pixel_surface(surf, x1, y, 255, 255, 255, 255);
+					write_pixel_surface(surf, x2, y, 255, 255, 255, 255);
+				}
+			}
+		}
+/*
+		typedef std::map<int, std::vector<std::pair<int,int> > > ScoresMap;
+
+		std::map<std::pair<int,int>, ScoresMap> all_scores;
+
+		for(int y = 0; y < rows.size(); ++y) {
+			const SpritesheetRow& row = rows[y];
+			for(int x = 0; x < row.cells.size(); ++x) {
+				const SpritesheetCell& cell = row.cells[x];
+				ScoresMap scores;
+
+				for(int yy = 0; yy < rows.size(); ++yy) {
+					const SpritesheetRow& r = rows[yy];
+					for(int xx = 0; xx < row.cells.size(); ++xx) {
+						const SpritesheetCell& c = row.cells[xx];
+						if(xx == x && yy == y) {
+							continue;
+						}
+
+						const rect areaa(cell.begin_col, row.begin_row, cell.end_col - cell.begin_col, row.end_row - row.begin_row);
+						const rect areab(c.begin_col, r.begin_row, c.end_col - c.begin_col, r.end_row - r.begin_row);
+						const int score = goodness_of_fit(surf, areaa, areab);
+						std::cerr << "SCORE: [" << y << "," << x << "] -> [" << yy << "," << xx << "]: " << score << "\n";
+						scores[score].resize(scores[score].size()+1);
+						scores[score].back().first = yy;
+						scores[score].back().second = xx;
+					}
+				}
+
+
+				auto itor = scores.begin();
+				std::vector<std::pair<int, int> > v = itor->second;
+				if(v.size() <= 1) {
+					++itor;
+					v.push_back(itor->second.front());
+				}
+
+				std::cerr << "BEST SCORES FOR [" << y << "," << x << "] " << (cell.end_col - cell.begin_col) << "x" << (row.end_row - row.begin_row) << ": [" << v[0].first << "," << v[0].second << "], [" << v[1].first << "," << v[1].second << "]\n";
+
+				all_scores[std::pair<int,int>(y, x)] = scores;
+			}
+		}
+
+		for(int y = 0; y < rows.size(); ++y) {
+			const SpritesheetRow& row = rows[y];
+			for(int x = 0; x < row.cells.size(); ++x) {
+				const SpritesheetCell& cell = row.cells[x];
+
+				std::set<std::pair<int,int> > seen;
+				seen.insert(std::pair<int,int>(y,x));
+
+				std::vector<std::pair<int,int> > sequence;
+				sequence.push_back(std::pair<int,int>(y,x));
+
+				for(;;) {
+					std::pair<int,int> value(-1,-1);
+					bool found = false;
+					const ScoresMap& scores = all_scores[sequence.back()];
+					for(auto i = scores.begin(); i != scores.end() && !found; ++i) {
+						for(auto j = i->second.begin(); j != i->second.end(); ++j) {
+							if(!seen.count(*j)) {
+								if(i->first < 1000) {
+									value = *j;
+								}
+								found = true;
+								break;
+							}
+						}
+
+						if(found) {
+							break;
+						}
+					}
+
+					if(value.first == -1) {
+						break;
+					}
+
+					seen.insert(value);
+					sequence.push_back(value);
+				}
+
+				std::cerr << "RECOMMENDED SEQUENCE: ";
+				for(auto p : sequence) {
+					std::cerr << "[" << p.first << "," << p.second << "], ";
+				}
+
+				std::cerr << "\n";
+			}
+		}
+*/
+		const int TargetTextureSize = 4096;
+		std::vector<rect> available_space;
+		available_space.push_back(rect(0, 0, TargetTextureSize, TargetTextureSize));
+
+		std::vector<SpritesheetAnimation> animations;
+		for(const variant& anim : baking_info["animations"].as_list()) {
+			SpritesheetAnimation new_anim;
+			new_anim.node = anim;
+			std::vector<variant> frames = anim["frames"].as_list();
+			for(const variant& fr : frames) {
+				std::vector<int> loc = fr.as_list_int();
+				assert(loc.size() == 2);
+				ASSERT_LOG(loc[0] < rows.size(), "Invalid animation cell: " << loc[0] << "/" << rows.size());
+				ASSERT_LOG(loc[1] < rows[loc[0]].cells.size(), "Invalid animation cell: " << loc[1] << "/" << rows[loc[0]].cells.size());
+
+				const SpritesheetRow& r = rows[loc[0]];
+				const SpritesheetCell& c = r.cells[loc[1]];
+
+				const rect area(c.begin_col, r.begin_row, c.end_col - c.begin_col, r.end_row - r.begin_row);
+				new_anim.frames.push_back(area);
+			}
+
+			int best = -1;
+			int best_score = -1;
+			for(int n = 0; n != available_space.size(); ++n) {
+				const rect& area = available_space[n];
+				if(new_anim.width() <= area.w() && new_anim.height() <= area.h()) {
+					int score = area.w()*area.h();
+					fprintf(stderr, "MATCH: %dx%d %d\n", area.w(), area.h(), score);
+					if(best == -1 || score < best_score) {
+						best = n;
+						best_score = score;
+					}
+					break;
+				}
+			}
+
+			ASSERT_LOG(best != -1, "Could not find fit for animation " << new_anim.width() << "x" << new_anim.height() << ": " << animations.size());
+
+			new_anim.target_area = rect(available_space[best].x(), available_space[best].y(), new_anim.width(), new_anim.height());
+
+			const rect right_area(new_anim.target_area.x2(), new_anim.target_area.y(), available_space[best].w() - new_anim.target_area.w(), new_anim.target_area.h());
+			const rect bottom_area(new_anim.target_area.x(), new_anim.target_area.y2(), available_space[best].w(), available_space[best].h() - new_anim.target_area.h());
+
+			available_space.push_back(right_area);
+			available_space.push_back(bottom_area);
+			fprintf(stderr, "DIVIDE: %dx%d %dx%d\n", right_area.w(), right_area.h(), bottom_area.w(), bottom_area.h());
+
+			available_space.erase(available_space.begin() + best);
+
+			animations.push_back(new_anim);
+
+			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.target_area.x(), new_anim.target_area.y(), new_anim.target_area.w(), new_anim.target_area.h());
+		}
+
+		graphics::surface target_surf(SDL_CreateRGBSurface(0,TargetTextureSize,TargetTextureSize,32,SURFACE_MASK));
+		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+		unsigned char* target_pixels = (unsigned char*)target_surf->pixels;
+		for(int n = 0; n < target_surf->w*target_surf->h; ++n) {
+			memcpy(target_pixels, alpha_colors, 3);
+			target_pixels[3] = 255;
+			target_pixels += 4;
+		}
+
+		std::vector<variant> anim_nodes;
+
+		for(const SpritesheetAnimation& anim : animations) {
+			write_spritesheet_animation(surf, anim, target_surf, anim.node[variant("auto_adjust")].as_bool(false));
+
+			std::map<variant, variant> node = anim.node.as_map();
+			node.erase(variant("frames"));
+			rect area(anim.target_area.x()+2, anim.target_area.y()+2, anim.cell_width(), anim.cell_height());
+			node[variant("rect")] = area.write();
+			node[variant("image")] = baking_info["dest_image"];
+			node[variant("frames")] = variant(static_cast<int>(anim.frames.size()));
+			node[variant("pad")] = variant(3);
+			anim_nodes.push_back(variant(&node));
+		}
+
+		node.add_attr(variant("animation"), variant(&anim_nodes));
+
+		IMG_SavePNG((module::get_module_path() + "/images/" + baking_info["dest_image"].as_string()).c_str(), target_surf.get(), -1);
+
+		sys::write_file(cfg_fname, node.write_json());
+	}
+}

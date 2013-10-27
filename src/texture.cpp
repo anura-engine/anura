@@ -349,8 +349,6 @@ void add_alpha_channel_to_surface(uint8_t* dst_ptr, const uint8_t* src_ptr, size
 	}
 }
 
-namespace {
-
 const unsigned char* get_alpha_pixel_colors()
 {
 	std::vector<surface> k;
@@ -368,8 +366,6 @@ const unsigned char* get_alpha_pixel_colors()
 	pixel += 4;
 	memcpy(color+3, pixel, 3);
 	return color;
-}
-
 }
 
 void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options)

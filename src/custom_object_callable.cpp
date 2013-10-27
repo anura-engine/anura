@@ -267,7 +267,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "underwater_controls", "bool" },
 	{ "ctrl_mod_key", "int" },
 	{ "ctrl_keys", "[string]" },
-	{ "ctrl_mice", "[int|string]" },
+	{ "ctrl_mice", "[[int|string]]" },
 	{ "ctrl_tilt", "int" },
 	{ "ctrl_x", "int" },
 	{ "ctrl_y", "int" },

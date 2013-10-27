@@ -942,16 +942,24 @@ namespace preferences {
 			path = preferences_path_;
 		}
 		expand_path(path);
-		if(!sys::file_exists(path + "preferences.cfg")) {
-			return;
-		}
-		
+
 		variant node;
 		
-		try {
-			node = json::parse_from_file(path + "preferences.cfg");
-		} catch(json::parse_error&) {
-			return;
+		if(!sys::file_exists(path + "preferences.cfg")) {
+			if(module::get_default_preferences().is_map()) {
+				sys::write_file(path + "preferences.cfg", module::get_default_preferences().write_json());
+				node = module::get_default_preferences();
+			} else {
+				return;
+			}
+		}
+		
+		if(node.is_null()) {
+			try {
+				node = json::parse_from_file(path + "preferences.cfg");
+			} catch(json::parse_error&) {
+				return;
+			}
 		}
 
 		for(std::map<std::string, RegisteredSetting>::iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
@@ -1017,6 +1025,15 @@ namespace preferences {
 		controls::set_keycode(controls::CONTROL_JUMP, static_cast<key_type>(node["key_jump"].as_int(SDLK_a)));
 		controls::set_keycode(controls::CONTROL_TONGUE, static_cast<key_type>(node["key_tongue"].as_int(SDLK_s)));
 
+		int ctrl_item = 0;
+		for(const char** control_name = controls::control_names(); *control_name && ctrl_item != controls::NUM_CONTROLS; ++control_name, ++ctrl_item) {
+			std::string key = "mouse_";
+			key += *control_name;
+			if(node.has_key(key)) {
+				controls::set_mouse_to_keycode(static_cast<controls::CONTROL_ITEM>(ctrl_item), node[key].as_int());
+			}
+		}
+
 		if(node.has_key("sdl_version") == false || node["sdl_version"].as_int() < SDL_VERSIONNUM(2, 0, 0)) {
 			// SDL version isn't found or isn't high enough, so we remap the keys to defaults
 			controls::set_keycode(controls::CONTROL_UP, SDLK_UP);
@@ -1047,6 +1064,14 @@ namespace preferences {
 		node.add("key_jump", controls::get_keycode(controls::CONTROL_JUMP));
 		node.add("key_tongue", controls::get_keycode(controls::CONTROL_TONGUE));
 		node.add("show_iphone_controls", variant::from_bool(show_iphone_controls_));
+
+		for(int n = 1; n <= 3; ++n) {
+			controls::CONTROL_ITEM ctrl = controls::get_mouse_keycode(n);
+			if(ctrl != controls::NUM_CONTROLS) {
+				node.add(std::string("mouse_") + controls::control_names()[ctrl], variant(n));
+			}
+		}
+
 		node.add("locale", locale_);
 		node.add("username", variant(get_username()));
 		node.add("passhash", variant(get_password()));

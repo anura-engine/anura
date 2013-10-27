@@ -29,6 +29,8 @@
 namespace graphics
 {
 
+const unsigned char* get_alpha_pixel_colors();
+
 class texture
 {
 public:

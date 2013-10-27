@@ -45,6 +45,8 @@ struct modules {
 
 	std::vector<int> version_;
 	std::vector<std::string> included_modules_;
+
+	variant default_preferences;
 };
 
 typedef std::map<std::string, std::string> module_file_map;
@@ -57,6 +59,8 @@ std::string get_module_version();
 std::string map_file(const std::string& fname);
 
 std::string get_default_font();
+
+variant get_default_preferences();
 
 enum MODULE_PREFIX_BEHAVIOR { MODULE_PREFIX, MODULE_NO_PREFIX };
 void get_unique_filenames_under_dir(const std::string& dir,

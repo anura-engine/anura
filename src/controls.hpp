@@ -41,6 +41,11 @@ enum CONTROL_ITEM {
 	NUM_CONTROLS,
 };
 
+const char** control_names();
+
+void set_mouse_to_keycode(CONTROL_ITEM item, int mouse_button);
+CONTROL_ITEM get_mouse_keycode(int mouse_button);
+
 void set_keycode(CONTROL_ITEM item, key_type key);
 key_type get_keycode(CONTROL_ITEM item);
 

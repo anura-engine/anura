@@ -52,6 +52,13 @@ uint32_t htonl(uint32_t nl)
 #include "variant.hpp"
 
 namespace controls {
+
+const char** control_names()
+{
+	static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", NULL };
+	return names;
+}
+
 namespace {
 
 variant g_user_ctrl_output;
@@ -107,6 +114,12 @@ key_type sdlk[NUM_CONTROLS] = {
 	SDLK_a,
 	SDLK_s
 #endif
+};
+
+CONTROL_ITEM g_mouse_controls[3] = {
+	NUM_CONTROLS,
+	NUM_CONTROLS,
+	NUM_CONTROLS,
 };
 
 //If any of these keys are held, we ignore other keyboard input.
@@ -284,6 +297,15 @@ void read_local_controls()
 			if(key_state[SDL_GetScancodeFromKey(k)]) {
 				ignore_keypresses = true;
 				break;
+			}
+		}
+
+		Uint32 mouse_buttons = SDL_GetMouseState(NULL, NULL);
+		for(int n = 0; n < 3; ++n) {
+			if(g_mouse_controls[n] != NUM_CONTROLS && (mouse_buttons&SDL_BUTTON(n+1))) {
+				if(!key_ignore[g_mouse_controls[n]]) {
+					state.keys |= (1 << g_mouse_controls[n]);
+				}
 			}
 		}
 
@@ -648,7 +670,25 @@ void debug_dump_controls()
 	}
 }
 
-void set_keycode(CONTROL_ITEM item, key_type key) 
+void set_mouse_to_keycode(CONTROL_ITEM item, int mouse_button)
+{
+	--mouse_button;
+	if(mouse_button >= 0 && mouse_button < 3) {
+		g_mouse_controls[mouse_button] = item;
+	}
+}
+
+CONTROL_ITEM get_mouse_keycode(int mouse_button)
+{
+	--mouse_button;
+	if(mouse_button >= 0 && mouse_button < 3) {
+		return g_mouse_controls[mouse_button];
+	}
+
+	return NUM_CONTROLS;
+}
+
+void set_keycode(CONTROL_ITEM item, key_type key)
 {
 	if (item < NUM_CONTROLS) {
 		sdlk[item] = key;

@@ -359,12 +359,22 @@ void load(const std::string& mod_file_name, bool initial)
 	modules m = {name, pretty_name, abbrev,
 	             {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk};
+	m.default_preferences = v["default_preferences"];
 	loaded_paths().insert(loaded_paths().begin(), m);
 }
 
 std::string get_default_font()
 {
 	return i18n::is_locale_cjk() ? loaded_paths().front().default_font_cjk : loaded_paths().front().default_font;
+}
+
+variant get_default_preferences()
+{
+	if(loaded_paths().empty()) {
+		return variant();
+	} else {
+		return loaded_paths().front().default_preferences;
+	}
 }
 
 void reload(const std::string& name) {
