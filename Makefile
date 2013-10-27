@@ -33,6 +33,13 @@ ifeq ($(OPTIMIZE),yes)
 BASE_CXXFLAGS += -O2
 endif
 
+ifeq ($(CXX), g++)
+GCC_GTEQ_490 := $(shell expr `$(CXX) -dumpversion | sed -e 's/\.\([0-9][0-9]\)/\1/g' -e 's/\.\([0-9]\)/0\1/g' -e 's/^[0-9]\{3,4\}$$/&00/'` \>= 40900)
+ifeq "$(GCC_GTEQ_490)" "1"
+BASE_CXXFLAGS += -fdiagnostics-color=auto -fsanitize=undefined
+endif
+endif
+
 SDL2_CONFIG?=sdl2-config
 USE_SDL2?=$(shell which $(SDL2_CONFIG) 2>&1 > /dev/null && echo yes)
 
