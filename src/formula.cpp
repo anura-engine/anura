@@ -252,6 +252,22 @@ private:
 	}
 	variant code_;
 };
+
+class lua_fn_expression : public formula_expression {
+public:
+	explicit lua_fn_expression(lua::lua_function_reference* fn_ref) : fn_ref_(fn_ref)
+	{
+	}
+	variant execute(const formula_callable& variables) const 
+	{
+		return fn_ref_->call();
+	}
+private:
+	variant_type_ptr get_variant_type() const {
+		return variant_type::get_any();
+	}
+	lua::lua_function_reference_ptr fn_ref_;
+};
 #endif
 		
 class function_list_expression : public formula_expression {
@@ -3127,6 +3143,15 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 		symbols = &symbol_table;
 	}
 
+	if(str_.is_callable()) {
+#if defined(USE_LUA)
+		lua::lua_function_reference* fn_ref = val.try_convert<lua::lua_function_reference>();
+		ASSERT_LOG(fn_ref != NULL, "FATAL: Couldn't convert function reference to the correct type.");
+		expr_.reset(new lua_fn_expression(fn_ref));
+#endif
+		return;
+	}
+
 	if(str_.is_int() || str_.is_bool() || str_.is_decimal()) {
 		//Allow ints, bools, and decimals to be interpreted as formulae.
 		str_ = variant(str_.string_cast());
@@ -3229,12 +3254,13 @@ formula::formula(const variant& val, function_symbol_table* symbols, const_formu
 #endif
 }
 
-formula::formula(const variant& code, FORMULA_LANGUAGE lang)
+formula::formula(const variant& lua_fn, FORMULA_LANGUAGE lang)
 {
 #if defined(USE_LUA)
-	expr_.reset(new lua_expression(code));
+	lua::lua_function_reference* fn_ref = lua_fn.try_convert<lua::lua_function_reference>();
+	ASSERT_LOG(fn_ref != NULL, "FATAL: Couldn't convert function reference to the correct type.");
+	expr_.reset(new lua_fn_expression(fn_ref));
 #endif
-	str_ = code;
 }
 
 const_formula_callable_ptr formula::wrap_callable_with_global_where(const formula_callable& callable) const

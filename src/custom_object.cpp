@@ -402,6 +402,12 @@ custom_object::custom_object(variant node)
 	}
 #endif
 
+#if defined(USE_LUA)
+	if(!type_->get_lua_source().empty()) {
+		lua_ptr_.reset(new lua::lua_context());
+	}
+#endif
+
 	if(node.has_key("truez")) {
 		set_truez(node["truez"].as_bool());
 	} else if(type_ != NULL) {
@@ -511,6 +517,12 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	set_frame_no_adjustments(frame_name_);
 
 	next_animation_formula_ = type_->next_animation_formula();
+
+#if defined(USE_LUA)
+	if(!type_->get_lua_source().empty()) {
+		lua_ptr_.reset(new lua::lua_context());
+	}
+#endif
 
 	set_mouseover_delay(type_->get_mouseover_delay());
 	if(type_->mouse_over_area().w() != 0) {
@@ -629,6 +641,12 @@ custom_object::custom_object(const custom_object& o) :
 	set_tx(o.tx());
 	set_ty(o.ty());
 	set_tz(o.tz());
+
+#if defined(USE_LUA)
+	if(!type_->get_lua_source().empty()) {
+		lua_ptr_.reset(new lua::lua_context());
+	}
+#endif
 }
 
 custom_object::~custom_object()
@@ -688,6 +706,13 @@ void custom_object::finish_loading(level* lvl)
 #ifdef USE_BOX2D
 	if(body_) {
 		body_->finish_loading(this);
+	}
+#endif
+#if defined(USE_LUA)
+	if(lua_ptr_) {
+		lua_ptr_->set_self_callable(*this);
+		lua_chunk_.reset(lua_ptr_->compile_chunk(type_->id(), type_->get_lua_source()));
+		lua_chunk_->run(lua_ptr_->context_ptr());
 	}
 #endif
 }

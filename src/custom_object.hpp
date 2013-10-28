@@ -17,6 +17,7 @@
 #ifndef CUSTOM_OBJECT_HPP_INCLUDED
 #define CUSTOM_OBJECT_HPP_INCLUDED
 
+#include <memory>
 #include <set>
 
 #include <boost/scoped_ptr.hpp>
@@ -507,6 +508,12 @@ private:
 	mutable GLint vertex_location_;
 	mutable GLint texcoord_location_;
 	std::vector<int> properties_requiring_dynamic_initialization_;
+
+	// for lua integration
+#if defined(USE_LUA)
+	std::unique_ptr<lua::lua_context> lua_ptr_;
+	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
+#endif
 };
 
 #endif

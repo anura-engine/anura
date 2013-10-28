@@ -80,7 +80,7 @@ public:
 
 	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
 	explicit formula(const variant& val, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL);
-	formula(const variant& val, FORMULA_LANGUAGE lang);
+	formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 	~formula();
 	variant execute(const formula_callable& variables) const;
 	variant execute() const;

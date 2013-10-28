@@ -63,6 +63,24 @@ namespace lua
 	};
 	typedef boost::intrusive_ptr<lua_compiled> lua_compiled_ptr;
 
+	class lua_function_reference : public game_logic::formula_callable
+	{
+	public:
+		lua_function_reference(lua_State* L, int ref);
+		virtual ~lua_function_reference();
+
+		virtual variant get_value(const std::string& key) const;
+		virtual variant call();
+	private:
+		lua_State* L_; 
+		int ref_;
+
+		lua_function_reference();
+		lua_function_reference(const lua_function_reference&);
+	};
+
+	typedef boost::intrusive_ptr<lua_function_reference> lua_function_reference_ptr;
+
 	class lua_context
 	{
 	public:
@@ -83,10 +101,14 @@ namespace lua
 		bool dofile(const std::string&name, const std::string& str, game_logic::formula_callable* callable=NULL);
 
 		lua_compiled_ptr compile(const std::string& name, const std::string& str);
+
+		compiled_chunk* compile_chunk(const std::string& name, const std::string& str);
 	private:
 		void init();
 
 		std::shared_ptr<lua_State> state_;
+
+		lua_context(const lua_context&);
 	};
 }
 

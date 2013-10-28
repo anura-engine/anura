@@ -29,6 +29,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_function.hpp"
 #include "frame.hpp"
+#include "lua_iface.hpp"
 #include "particle_system.hpp"
 #include "raster.hpp"
 #include "solid_map_fwd.hpp"
@@ -266,6 +267,9 @@ public:
 	double ty() const { return ty_; }
 	double tz() const { return tz_; }
 
+	const std::string& get_lua_source() const { return lua_source_; }
+	void set_lua_source(const std::string& ls) { lua_source_ = ls; }
+
 private:
 	void init_sub_objects(variant node, const custom_object_type* old_type);
 
@@ -405,6 +409,9 @@ private:
 
 	bool true_z_;
 	double tx_, ty_, tz_;
+
+	// For lua integration
+	std::string lua_source_;
 };
 
 #endif

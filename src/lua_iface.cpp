@@ -208,8 +208,13 @@ namespace lua
 					}
 					break;
 				}
+				case LUA_TFUNCTION: {
+					 int ref = luaL_ref(L, LUA_REGISTRYINDEX);
+					 return variant(new lua_function_reference(L, ref));
+					break;
+				}
 				case LUA_TTABLE:
-				case LUA_TFUNCTION:
+					break;
 				case LUA_TUSERDATA:
 				case LUA_TTHREAD:
 				case LUA_TLIGHTUSERDATA:
@@ -576,7 +581,7 @@ namespace lua
 	{
 		int chunk_writer(lua_State *L, const void* p, size_t sz, void* ud)
 		{
-			lua_compiled* chunks = reinterpret_cast<lua_compiled*>(ud);
+			compiled_chunk* chunks = reinterpret_cast<compiled_chunk*>(ud);
 			chunks->add_chunk(p, sz);
 			return 0;
 		}
@@ -600,6 +605,16 @@ namespace lua
 		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
 		chunk->add_chunk(0, 0);
 		return lua_compiled_ptr(chunk);
+	}
+
+	compiled_chunk* lua_context::compile_chunk(const std::string& name, const std::string& str)
+	{
+		compiled_chunk* chunk = new compiled_chunk();
+		luaL_loadbuffer(context_ptr(), str.c_str(), str.size(), name.c_str());		// (-0,+1,-)
+		lua_dump(context_ptr(), chunk_writer, reinterpret_cast<void*>(chunk));		// (-0,+0,-)
+		lua_pop(context_ptr(), 1);													// (-n(1),+0,-)
+		chunk->add_chunk(0, 0);
+		return chunk;
 	}
 
 
@@ -636,6 +651,46 @@ namespace lua
 		return variant(0);
 	END_DEFINE_CALLABLE(lua_compiled)
 
+
+	lua_function_reference::lua_function_reference(lua_State* L, int ref)
+		: ref_(ref), L_(L)
+	{
+	}
+
+	lua_function_reference::~lua_function_reference()
+	{
+		luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
+	}
+
+	variant lua_function_reference::get_value(const std::string& key) const
+	{
+		return variant();
+	}
+
+	variant lua_function_reference::call()
+	{
+		lua_rawgeti(L_, LUA_REGISTRYINDEX, ref_);
+		// XXX: decide how arguments will get passed in and push them onto the lua stack here.
+		int nargs = 0;
+		if(lua_pcall(L_, nargs, LUA_MULTRET, 0) != LUA_OK) {				// (-(nargs + 1), +(nresults|1),-)
+			const char* a = lua_tostring(L_, -1);
+			std::cerr << a << "\n";
+			lua_pop(L_, 1);
+			return variant();
+		}
+		int nresults = lua_gettop(L_);
+		// Return multiple results as a list.
+		if(nresults > 1) {
+			std::vector<variant> v;
+			for(int n = 1; n < nresults; ++n) {
+				v.push_back(lua_value_to_variant(L_, n));
+			}
+			return variant(&v);
+		} else if(nresults == 1) {
+			return variant(lua_value_to_variant(L_, 1));
+		}
+		return variant();
+	}
 }
 
 UNIT_TEST(lua_test)
