@@ -2218,10 +2218,12 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 	}
 
 	if(tool() == TOOL_ADD_OBJECT && event.button == SDL_BUTTON_LEFT && !lvl_->editor_highlight()) {
+		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->current_frame().width()/2;
+		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->current_frame().height()/2;
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
-		node.set("x", (ctrl_pressed ? anchorx_ : round_tile_size(anchorx_)));
-		node.set("y", (ctrl_pressed ? anchory_ : round_tile_size(anchory_)));
+		node.set("x", (ctrl_pressed ? xpos : round_tile_size(xpos)));
+		node.set("y", (ctrl_pressed ? ypos : round_tile_size(ypos)));
 		node.set("face_right", face_right_);
 		node.set("upside_down", upside_down_);
 
@@ -3290,14 +3292,16 @@ void editor::draw_gui() const
 	}
 
 	if(tool() == TOOL_ADD_OBJECT && !lvl_->editor_highlight()) {
-		int x = round_tile_size(xpos_ + mousex*zoom_);
-		int y = round_tile_size(ypos_ + mousey*zoom_);
+		entity& e = *all_characters()[cur_object_].preview_object();
+		const int xpos = xpos_ - e.current_frame().width()/2;
+		const int ypos = ypos_ - e.current_frame().height()/2;
+		int x = round_tile_size(xpos + mousex*zoom_);
+		int y = round_tile_size(ypos + mousey*zoom_);
 		if(ctrl_pressed) {
-			x = xpos_ + mousex*zoom_;
-			y = ypos_ + mousey*zoom_;
+			x = xpos + mousex*zoom_;
+			y = ypos + mousey*zoom_;
 		}
 
-		entity& e = *all_characters()[cur_object_].preview_object();
 		e.set_pos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
 			glColor4f(1.0, 1.0, 1.0, 0.5);
