@@ -50,11 +50,11 @@ endif
 USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
 
 # Initial compiler options, used before CXXFLAGS and CPPFLAGS.
-BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dtor -Werror -Wignored-qualifiers -Wformat -Wswitch -Wreturn-type -DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP -Wno-narrowing 
+BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-statics -Wnon-virtual-dtor -Werror -Wignored-qualifiers -Wformat -Wswitch -Wreturn-type -DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP -Wno-narrowing -Wno-literal-suffix
 # -Wno-error=narrowing 
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image libpng zlib)
+INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib)
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
