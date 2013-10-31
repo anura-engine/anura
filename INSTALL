@@ -28,3 +28,17 @@ created which you can run.
 To access the level editor, press CTRL-E during the game.
 
 Have fun!
+
+
+Building on Ubuntu 13.10
+------------------------
+
+The following are some specific instructions for setting up the prequisites for anura on Ubuntu 13.10
+
+sudo apt-get install build-essential ccache git libglm-dev libboost1.53-all-dev libsdl2-dev libsdl2-image-dev libsdl2-mixer-dev libfreetype6-dev mercurial autoconf libglew-dev libpng12-dev liblua5.2-dev
+hg clone http://hg.libsdl.org/SDL_ttf
+cd SDL_ttf
+hg update "release-2.0.12"
+./autogen.sh
+mkdir build && cd build
+../configure && make && sudo make install
