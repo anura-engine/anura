@@ -511,6 +511,7 @@ private:
 
 	// for lua integration
 #if defined(USE_LUA)
+	void init_lua();
 	std::unique_ptr<lua::lua_context> lua_ptr_;
 	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
 #endif
