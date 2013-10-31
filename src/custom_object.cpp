@@ -708,14 +708,23 @@ void custom_object::finish_loading(level* lvl)
 		body_->finish_loading(this);
 	}
 #endif
+
 #if defined(USE_LUA)
+	init_lua();
+#endif
+}
+
+
+#if defined(USE_LUA)
+void custom_object::init_lua()
+{
 	if(lua_ptr_) {
 		lua_ptr_->set_self_callable(*this);
 		lua_chunk_.reset(lua_ptr_->compile_chunk(type_->id(), type_->get_lua_source()));
 		lua_chunk_->run(lua_ptr_->context_ptr());
 	}
-#endif
 }
+#endif
 
 bool custom_object::serializable() const
 {
@@ -5544,6 +5553,13 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 		effects_.push_back(new gles2::shader_program(*new_type->effects()[n]));
 		effects_.back()->init(this);
 	}
+#endif
+
+#if defined(USE_LUA)
+	if(!type_->get_lua_source().empty()) {
+	//	lua_ptr_.reset(new lua::lua_context());
+	}
+	init_lua();
 #endif
 }
 

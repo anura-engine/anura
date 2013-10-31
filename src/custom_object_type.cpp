@@ -733,6 +733,7 @@ void custom_object_type::reload_object(const std::string& type)
 
 	const int start = SDL_GetTicks();
 	foreach(custom_object* obj, custom_object::get_all(old_obj->id())) {
+		assert(obj);
 		obj->update_type(old_obj, new_obj);
 	}
 
