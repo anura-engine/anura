@@ -278,26 +278,31 @@ public:
 
 		using namespace gui;
 		gui::grid* grid = new gui::grid(6);
-		grid->add_col(widget_ptr(
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("File", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_file_menu, this))));
-		grid->add_col(widget_ptr(
+		             boost::bind(&editor_menu_dialog::show_file_menu, this))),
+					 MOVE_RIGHT);
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("Edit", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_edit_menu, this))));
-		grid->add_col(widget_ptr(
+		             boost::bind(&editor_menu_dialog::show_edit_menu, this))),
+					 MOVE_RIGHT);
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("View", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_view_menu, this))));
-		grid->add_col(widget_ptr(
+		             boost::bind(&editor_menu_dialog::show_view_menu, this))),
+					 MOVE_RIGHT);
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("Window", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_window_menu, this))));
-		grid->add_col(widget_ptr(
+		             boost::bind(&editor_menu_dialog::show_window_menu, this))),
+					 MOVE_RIGHT);
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("Statistics", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_stats_menu, this))));
-		add_widget(widget_ptr(grid));
+		             boost::bind(&editor_menu_dialog::show_stats_menu, this))),
+					 MOVE_RIGHT);
 
-		grid->add_col(widget_ptr(
+		add_widget(widget_ptr(
 		  new button(widget_ptr(new label("Scripts", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_scripts_menu, this))));
+		             boost::bind(&editor_menu_dialog::show_scripts_menu, this))),
+					 MOVE_RIGHT);
 		add_widget(widget_ptr(grid));
 
 		code_button_text_ = "";
