@@ -303,6 +303,8 @@ bool widget::process_event(const SDL_Event& event, bool claimed)
 
 void widget::draw() const
 {
+	handle_draw();
+	return;
 	if(visible_) {
 		color_save_context color_saver;
 
