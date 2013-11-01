@@ -421,14 +421,15 @@ void grid::handle_draw() const
 	const SDL_Rect grid_rect = {xpos, ypos, width(), height()};
 //	const graphics::clip_scope clip_scope(grid_rect);
 
-	glPushMatrix();
-	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
-
+//	glPushMatrix();
+//	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
+/*
 	if(show_background_) {
 		const SDL_Color bg = {50,50,50};
 		SDL_Rect rect = {0,0,width(),height()};
 		graphics::draw_rect(rect,bg);
 	}
+	*/
 
 	if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < nrows()) {
 		if(std::find(header_rows_.begin(), header_rows_.end(), default_selection_) == header_rows_.end()) {
@@ -446,12 +447,13 @@ void grid::handle_draw() const
 		}
 	}
 	glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
+	glColor4f(1.0, 1.0, 1.0, 1.0);
 	foreach(const widget_ptr& widget, visible_cells_) {
 		if(widget) {
 			widget->draw();
 		}
 	}
-	glPopMatrix();
+//	glPopMatrix();
 	} //end of scope so clip_scope goes away.
 
 	scrollable_widget::handle_draw();
