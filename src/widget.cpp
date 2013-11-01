@@ -326,7 +326,7 @@ void widget::draw() const
 		}
 
 		if(clip_area_) {
-//			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
+			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
 			handle_draw();
 		} else {
 			handle_draw();
