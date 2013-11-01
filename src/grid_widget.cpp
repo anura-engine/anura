@@ -419,7 +419,7 @@ void grid::handle_draw() const
 	const int ypos = y() & ~1;
 
 	const SDL_Rect grid_rect = {xpos, ypos, width(), height()};
-	const graphics::clip_scope clip_scope(grid_rect);
+//	const graphics::clip_scope clip_scope(grid_rect);
 
 	glPushMatrix();
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
