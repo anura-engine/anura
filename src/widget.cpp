@@ -303,8 +303,6 @@ bool widget::process_event(const SDL_Event& event, bool claimed)
 
 void widget::draw() const
 {
-	handle_draw();
-	return;
 	if(visible_) {
 		color_save_context color_saver;
 
@@ -328,7 +326,7 @@ void widget::draw() const
 		}
 
 		if(clip_area_) {
-			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
+//			const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
 			handle_draw();
 		} else {
 			handle_draw();
