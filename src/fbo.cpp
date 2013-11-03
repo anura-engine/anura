@@ -125,10 +125,14 @@ namespace graphics
 
 			glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		} else {
-			render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete[] id;});
-			glGenRenderbuffers(1, &render_buffer_id_[0]);
+			const int render_buffer_count = 1;
+			glGetError();
+			render_buffer_id_ = boost::shared_array<GLuint>(new GLuint[render_buffer_count], [render_buffer_count](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(render_buffer_count, id); delete[] id;});
+			glGenRenderbuffers(render_buffer_count, &render_buffer_id_[0]);
 			glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
-			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
+			glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH24_STENCIL8, tex_width_, tex_height_);
+			GLenum status = glGetError();
+			ASSERT_EQ(status, GL_NO_ERROR);
 
 			final_texture_id_ = boost::shared_array<GLuint>(new GLuint[1], [](GLuint* id){glDeleteTextures(1,id); delete[] id;});
 			glGenTextures(1, &final_texture_id_[0]);
@@ -146,9 +150,14 @@ namespace graphics
 			std::cerr << "XXX: Framebuffer ID: " << framebuffer_id_[0] << std::endl;
 			// attach the texture to FBO color attachment point
 			glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, final_texture_id_[0], 0);
-			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[0]);
+			glBindRenderbuffer(GL_RENDERBUFFER, render_buffer_id_[0]);
+			glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_STENCIL_ATTACHMENT, GL_RENDERBUFFER, render_buffer_id_[0]);
+			status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+			ASSERT_NE(status, GL_FRAMEBUFFER_UNSUPPORTED);
+			ASSERT_EQ(status, GL_FRAMEBUFFER_COMPLETE);
 		}
 
+		glBindRenderbuffer(GL_RENDERBUFFER, 0);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
 		draw_begin();
