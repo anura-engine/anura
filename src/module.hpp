@@ -69,8 +69,7 @@ void get_unique_filenames_under_dir(const std::string& dir,
 
 void get_files_in_dir(const std::string& dir,
                       std::vector<std::string>* files,
-                      std::vector<std::string>* dirs=NULL,
-                      sys::FILE_NAME_MODE mode=sys::FILE_NAME_ONLY);
+                      std::vector<std::string>* dirs=NULL);
 
 std::string get_id(const std::string& id);
 std::string get_module_id(const std::string& id);

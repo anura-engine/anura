@@ -136,13 +136,12 @@ void get_unique_filenames_under_dir(const std::string& dir,
 
 void get_files_in_dir(const std::string& dir,
                       std::vector<std::string>* files,
-                      std::vector<std::string>* dirs,
-                      sys::FILE_NAME_MODE mode)
+                      std::vector<std::string>* dirs)
 {
 	foreach(const modules& p, loaded_paths()) {
 		foreach(const std::string& base_path, p.base_path_) {
 			const std::string path = base_path + dir;
-			sys::get_files_in_dir(path, files, dirs, mode);
+			sys::get_files_in_dir(path, files, dirs);
 		}
 	}
 }
@@ -388,7 +387,9 @@ void get_module_list(std::vector<std::string>& dirs) {
 	// Grab the files/directories under ./module/ for later use.
 	std::vector<std::string> files;
 	foreach(const std::string& path, module_dirs()) {
+		std::cerr << "ZZZ: get files in dir: " << path << "...\n";
 		sys::get_files_in_dir(path + "/", &files, &dirs);
+		std::cerr << "ZZZ: " << dirs.size() << "\n";
 	}
 }
 
