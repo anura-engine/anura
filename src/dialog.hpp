@@ -73,6 +73,9 @@ public:
 
 	std::vector<widget_ptr> get_children() const;
 
+	//add standardized okay/cancel buttons in the bottom right corner.
+	void add_ok_and_cancel_buttons();
+
 protected:
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 	virtual bool handle_event_children(const SDL_Event& event, bool claimed);

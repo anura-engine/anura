@@ -20,6 +20,7 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <iostream>
 
+#include "button.hpp"
 #include "dialog.hpp"
 #include "font.hpp"
 #include "foreach.hpp"
@@ -420,6 +421,15 @@ std::vector<widget_ptr> dialog::get_children() const
 	std::vector<widget_ptr> widget_list;
 	std::copy(widgets_.begin(), widgets_.end(), std::back_inserter(widget_list));
 	return widget_list;
+}
+
+void dialog::add_ok_and_cancel_buttons()
+{
+	widget_ptr ok(new button("Ok", boost::bind(&dialog::close, this)));
+	widget_ptr cancel(new button("Cancel", boost::bind(&dialog::cancel, this)));
+	ok->set_dim(cancel->width(), ok->height());
+	add_widget(ok, width() - 160, height() - 40);
+	add_widget(cancel, width() - 80, height() - 40);
 }
 
 void dialog::handle_draw_children() const {

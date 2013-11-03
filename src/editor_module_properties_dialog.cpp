@@ -137,9 +137,7 @@ void editor_module_properties_dialog::init()
 	}
 	add_widget(g);
 
-	add_widget(widget_ptr(new button("Ok", boost::bind(&dialog::close, this))), width() - 120, height() - 40);
-	add_widget(widget_ptr(new button("Cancel", boost::bind(&dialog::cancel, this))), width() - 80, height() - 40);
-
+	add_ok_and_cancel_buttons();
 }
 
 void editor_module_properties_dialog::change_id(const gui::text_editor_widget_ptr editor)
