@@ -171,10 +171,13 @@ static const graphics::color TokenColors[] = {
 					colors_[opening_brackets[n].front().first][opening_brackets[n].front().second] = graphics::color(255, 0, 0);
 				}
 
-				if(i == end) {
+				while(i != end) {
 					colors_.back().push_back(graphics::color(196, 196, 196));
-					i = end + 1;
+					++i;
 				}
+
+				colors_.back().push_back(graphics::color(196, 196, 196));
+				i = end + 1;
 			}
 
 

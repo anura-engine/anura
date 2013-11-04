@@ -27,7 +27,6 @@
 #include "clipboard.hpp"
 #include "font.hpp"
 #include "foreach.hpp"
-#include "input.hpp"
 #include "raster.hpp"
 #include "string_utils.hpp"
 #include "text_editor_widget.hpp"
@@ -50,6 +49,11 @@ struct CharArea {
 
 std::map<int, std::map<char, CharArea> > all_char_to_area;
 
+std::string monofont()
+{
+	return font::get_default_monospace_font();
+}
+
 const CharArea& get_char_area(int font_size, char c)
 {
 	std::map<char, CharArea>& char_to_area = all_char_to_area[font_size];
@@ -60,8 +64,8 @@ const CharArea& get_char_area(int font_size, char c)
 
 	const CharArea& result = char_to_area[c];
 
-	const int char_width = font::char_width(font_size);
-	const int char_height = font::char_height(font_size);
+	const int char_width = font::char_width(font_size, monofont());
+	const int char_height = font::char_height(font_size, monofont());
 
 	std::string str;
 	int row = 0, col = 0;
@@ -83,7 +87,7 @@ const CharArea& get_char_area(int font_size, char c)
 	}
 
 	char_texture_ptr& char_texture = char_textures[font_size];
-	char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size)));
+	char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size, monofont())));
 
 	for(std::map<char, CharArea>::iterator i = char_to_area.begin();
 	    i != char_to_area.end(); ++i) {
@@ -123,8 +127,8 @@ void init_char_area(size_t font_size)
 text_editor_widget::text_editor_widget(int width, int height)
   : last_op_type_(NULL),
     font_size_(14),
-    char_width_(font::char_width(font_size_)),
-    char_height_(font::char_height(font_size_)),
+    char_width_(font::char_width(font_size_, monofont())),
+    char_height_(font::char_height(font_size_, monofont())),
 	select_(0,0), cursor_(0,0),
 	nrows_((height - BorderSize*2)/char_height_),
 	ncols_((width - 20 - BorderSize*2)/char_width_),
@@ -206,8 +210,8 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 		ffl_on_change_focus_ = get_environment()->create_formula(v["on_change_focus"]);
 	}
 
-	char_width_= font::char_width(font_size_);
-    char_height_ = font::char_height(font_size_);
+	char_width_= font::char_width(font_size_, monofont());
+    char_height_ = font::char_height(font_size_, monofont());
 	nrows_ = (height - BorderSize*2)/char_height_;
 	ncols_ = (width - 20 - BorderSize*2)/char_width_;
 
@@ -317,8 +321,8 @@ void text_editor_widget::set_font_size(int font_size)
 
 	font_size_ = font_size;
 
-    char_width_ = font::char_width(font_size_);
-    char_height_ = font::char_height(font_size_);
+    char_width_ = font::char_width(font_size_, monofont());
+    char_height_ = font::char_height(font_size_, monofont());
 	nrows_ = (height() - BorderSize*2)/char_height_;
 	ncols_ = (width() - BorderSize*2)/char_width_;
 
@@ -504,21 +508,24 @@ bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 		return handle_mouse_button_up(event.button) || claimed;
 	case SDL_MOUSEMOTION:
 		return handle_mouse_motion(event.motion) || claimed;
+#if SDL_VERSION_ATLEAST(2, 0, 0)
 	case SDL_MOUSEWHEEL:
 		return handle_mouse_wheel(event.wheel) || claimed;
 	case SDL_TEXTINPUT:
 		return handle_text_input(event.text) || claimed;
 	case SDL_TEXTEDITING:
 		return handle_text_editing(event.edit) || claimed;
+#endif
 	}
 
 	return false;
 }
 
+#if SDL_VERSION_ATLEAST(2, 0, 0)
 bool text_editor_widget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 {
 	int mx, my;
-	input::sdl_get_mouse_state(&mx, &my);
+	SDL_GetMouseState(&mx, &my);
 	if(mx >= x() && mx < x() + width() && my >= y() && my < y() + height()) {
 		if(event.y > 0) {
 			if(cursor_.row > 2) {
@@ -546,6 +553,7 @@ bool text_editor_widget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 	}
 	return false;
 }
+#endif
 
 void text_editor_widget::set_focus(bool value)
 {
@@ -553,6 +561,13 @@ void text_editor_widget::set_focus(bool value)
 		on_change_focus_(value);
 	}
 	has_focus_ = value;
+
+#if !SDL_VERSION_ATLEAST(2, 0, 0)
+	if(value) {
+		SDL_EnableUNICODE(1);
+		SDL_EnableKeyRepeat(SDL_DEFAULT_REPEAT_DELAY, SDL_DEFAULT_REPEAT_INTERVAL);
+	}
+#endif
 
 	if(nrows_ == 1 && value) {
 		cursor_ = Loc(0, text_.front().size());
@@ -628,6 +643,31 @@ bool text_editor_widget::handle_mouse_button_down(const SDL_MouseButtonEvent& ev
 {
 	record_op();
 	if(event.x >= x() && event.x < x() + width() && event.y >= y() && event.y < y() + height()) {
+#if !SDL_VERSION_ATLEAST(2, 0, 0)
+		if(event.button == SDL_BUTTON_WHEELUP) {
+			if(cursor_.row > 2) {
+				cursor_.row -= 3;
+				scroll_pos_ -= 3;
+				if( scroll_pos_ < 0 ){ 
+					scroll_pos_ = 0; 
+				}
+				cursor_.col = find_equivalent_col(cursor_.col, cursor_.row+3, cursor_.row);
+				on_move_cursor();
+			}
+			return true;
+		} else if(event.button == SDL_BUTTON_WHEELDOWN) {
+			if(text_.size() > 2 && cursor_.row < text_.size()-3) {
+				cursor_.row += 3;
+				scroll_pos_ += 3;
+				if( scroll_pos_ > text_.size() ){ 
+					scroll_pos_ = text_.size(); 
+				}
+				cursor_.col = find_equivalent_col(cursor_.col, cursor_.row-3, cursor_.row);
+				on_move_cursor();
+			}
+			return claim_mouse_events();
+		}
+#endif
 		set_focus(true);
 		std::pair<int, int> pos = mouse_position_to_row_col(event.x, event.y);
 		if(pos.first != -1) {
@@ -689,7 +729,7 @@ bool text_editor_widget::handle_mouse_button_up(const SDL_MouseButtonEvent& even
 bool text_editor_widget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 {
 	int mousex, mousey;
-	if(is_dragging_ && has_focus_ && input::sdl_get_mouse_state(&mousex, &mousey)) {
+	if(is_dragging_ && has_focus_ && SDL_GetMouseState(&mousex, &mousey)) {
 		std::pair<int, int> pos = mouse_position_to_row_col(event.x, event.y);
 		if(pos.first != -1) {
 			cursor_.row = pos.first;
@@ -1052,12 +1092,36 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 			break;
 		}
 	}
+#if SDL_VERSION_ATLEAST(2, 0, 0)
 	default: return true;
+#else
+	default: {
+		const char c = event.keysym.unicode;
+		std::cerr << "CHAR: " << c << ", " << event.keysym.unicode << std::endl;
+		if(util::c_isprint(c) || c == '\t') {
+			if(record_op("chars")) {
+				save_undo_state();
+			}
+			delete_selection();
+			if(cursor_.col > text_[cursor_.row].size()) {
+				cursor_.col = text_[cursor_.row].size();
+			}
+			text_[cursor_.row].insert(text_[cursor_.row].begin() + cursor_.col, c);
+			++cursor_.col;
+			select_ = cursor_;
+			refresh_scrollbar();
+			on_change();
+			return true;
+		}
+		return false;
+	}
+#endif
 	}
 
 	return true;
 }
 
+#if SDL_VERSION_ATLEAST(2, 0, 0)
 bool text_editor_widget::handle_text_input(const SDL_TextInputEvent& event)
 {
 	if(!has_focus_) {
@@ -1088,6 +1152,7 @@ bool text_editor_widget::handle_text_editing(const SDL_TextEditingEvent& event)
 	}
 	return false;
 }
+#endif
 
 void text_editor_widget::handle_paste(std::string txt)
 {
