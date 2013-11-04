@@ -172,7 +172,13 @@ static const graphics::color TokenColors[] = {
 				}
 
 				while(i != end) {
-					colors_.back().push_back(graphics::color(196, 196, 196));
+					//we might have bailed out of formula parsing early due to an error. Just treat
+					//remaining text until the closing quotes as plain.
+					if(*i == '\n') {
+						colors_.resize(colors_.size()+1);
+					} else {
+						colors_.back().push_back(graphics::color(196, 196, 196));
+					}
 					++i;
 				}
 
