@@ -291,7 +291,6 @@ token get_token(iterator& i1, iterator i2) {
 
 token_error::token_error(const std::string& m) : msg(m)
 {
-	std::cerr << "Tokenizer error: " << m << "\n";
 }
 
 token_matcher::token_matcher()

@@ -910,8 +910,6 @@ void code_editor_dialog::on_move_cursor()
 					//TODO: make the visualize widget good enough to use.
 					//visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursor_row()+1, editor_->cursor_col()+1, 20, 20, 500, 400, editor_.get()));
 				}
-			} else {
-				std::cerr << "NOT IN STRING\n";
 			}
 
 		} catch(...) {

@@ -66,7 +66,6 @@ TTF_Font* get_font(int size, const std::string& font_name="")
 {
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
 	std::string fontn = get_font_path((font_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font()  : font_name) + ".ttf");
-	std::cerr << "ZZZ: FONT MAP: " << font_name << " -> " << fontn << "\n";
 	TTF_Font* font = NULL;
 	font_map::const_iterator it = font_table.find(std::pair<std::string,int>(fontn,size));
 	if(it == font_table.end()) {
