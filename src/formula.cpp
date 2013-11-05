@@ -2518,6 +2518,8 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 			static_formula_callable_active = false;
 		} catch(non_static_expression_exception& e) {
 			//the expression isn't static. Not an error.
+		} catch(fatal_assert_failure_exception& e) {
+			ASSERT_LOG(false, "Error parsing formula: " << e.msg << "\n" << original->debug_pinpoint_location());
 		}
 	}
 

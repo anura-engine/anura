@@ -1052,10 +1052,8 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 	case SDLK_TAB: {
 		if(on_tab_) {
 			on_tab_();
-		}
-
-		if(nrows_ == 1) {
-			break;
+		} else if(nrows_ == 1) {
+			return false;
 		}
 	}
 	default: return true;

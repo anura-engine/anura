@@ -2306,7 +2306,7 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 
 	variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id(event));
 	if(arg_type) {
-		ASSERT_LOG(arg_type->match(arg_value), "Calling fire_event, arg type does not match. Expected " << arg_type->to_string() << " found " << arg_value.write_json() << " which is a " << get_variant_type_from_value(arg_value)->to_string());
+		ASSERT_LOG(arg_type->match(arg_value), "Calling fire_event('" << event << "'), arg type does not match. Expected " << arg_type->to_string() << " found " << arg_value.write_json() << " which is a " << get_variant_type_from_value(arg_value)->to_string());
 	}
 
 	if(arg_value.is_null() == false) {

@@ -644,7 +644,7 @@ widget_ptr grid::get_widget_by_id(const std::string& id)
 
 std::vector<widget_ptr> grid::get_children() const
 {
-	return std::vector<widget_ptr>(); //visible_cells_;
+	return cells_;
 }
 
 int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget)
