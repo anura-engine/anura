@@ -1160,9 +1160,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 			}
 			prototype_derived_from = properties_node.as_string();
 
-			//this indicates the end of a prototype, add the definition of
-			//this prototype.
-			ASSERT_LOG(properties_to_infer.empty(), "Object prototype " << properties_node.as_string() << " has property '" << *properties_to_infer.begin() << "' which does not specify a type. Prototypes must provide types for all properties");
 			if(object_type_definitions().count(properties_node.as_string())) {
 				continue;
 			}
@@ -1174,6 +1171,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		foreach(variant key, properties_node.get_keys().as_list()) {
 			const std::string& k = key.as_string();
 			ASSERT_LOG(k.empty() == false, "property is empty");
+			ASSERT_LOG(properties_to_infer.count(k) == 0, "Object " << id_ << " overrides property " << k << " which is defined with no type definition in a prototype. If you want to override a property in a prototype that property must have a type definition in the prototype");
 			bool is_private = is_strict_ && k[0] == '_';
 			ASSERT_LOG(custom_object_callable::instance().get_slot(k) == -1, "Custom object property " << id_ << "." << k << " has the same name as a builtin");
 
