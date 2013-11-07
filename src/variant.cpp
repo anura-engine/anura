@@ -995,6 +995,12 @@ std::vector<std::string> variant::as_list_string_optional() const
 	if(is_null()) {
 		return std::vector<std::string>();
 	}
+	
+	if(is_string()) {
+		std::vector<std::string> res;
+		res.push_back(as_string());
+		return res;
+	}
 
 	return as_list_string();
 }

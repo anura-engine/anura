@@ -343,12 +343,63 @@ bool custom_object_type::is_derived_from(const std::string& base, const std::str
 	return is_derived_from(base, itor->second);
 }
 
+namespace {
+variant g_player_type_str;
+}
+
+void custom_object_type::set_player_variant_type(variant type_str)
+{
+	g_player_type_str = type_str;
+}
+
 formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
 {
 	std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
 	} else {
+		if(object_file_paths().empty()) {
+			load_file_paths();
+		}
+
+		std::map<std::string, std::string>::const_iterator proto_path = module::find(::prototype_file_paths(), id + ".cfg");
+		if(proto_path != prototype_file_paths().end()) {
+			std::cerr << "SEARCHING FOR PROTOTYPE IMPL FOR " << id << "\n";
+			//This is a prototype path. We have to search for an object that
+			//derives from it so it gets loaded.
+
+			for(auto p : prototype_file_paths()) {
+				if(p.second.size() <= 4 || std::equal(p.second.end()-4, p.second.end(), ".cfg") == false) {
+					continue;
+				}
+
+				variant doc = json::parse_from_file(p.second);
+				auto prototypes = doc["prototype"].as_list_string_optional();
+				if(std::count(prototypes.begin(), prototypes.end(), id)) {
+					get_definition(doc["id"].as_string());
+					std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
+					ASSERT_LOG(itor != object_type_definitions().end(), "Could not find object prototype " << id);
+					return itor->second;
+				}
+			}
+
+			for(auto p : object_file_paths()) {
+				if(p.second.size() <= 4 || std::equal(p.second.end()-4, p.second.end(), ".cfg") == false) {
+					continue;
+				}
+				variant doc = json::parse_from_file(p.second);
+				auto prototypes = doc["prototype"].as_list_string_optional();
+				if(std::count(prototypes.begin(), prototypes.end(), id)) {
+					get_definition(doc["id"].as_string());
+					std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
+					ASSERT_LOG(itor != object_type_definitions().end(), "Could not find object prototype " << id);
+					return itor->second;
+				}
+			}
+
+			ASSERT_LOG(false, "Could not find any object derived from prototype " << id);
+		}
+
 		std::cerr << "GET DEFINITION: " << id << "\n";
 		const_custom_object_type_ptr obj = get(id);
 		ASSERT_LOG(obj.get(), "No such object " << id << " when looking for definition");
@@ -504,7 +555,7 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 		}
 
 	} catch(json::parse_error& e) {
-		ASSERT_LOG(false, "Error parsing WML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.error_message() << "'");
+		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.error_message() << "'");
 	} catch(graphics::load_image_error&) {
 		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image");
 	}
@@ -879,6 +930,14 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	true_z_(node["truez"].as_bool(false)), tx_(node["tx"].as_decimal().as_float()), 
 	ty_(node["ty"].as_decimal().as_float()), tz_(node["tz"].as_decimal().as_float())
 {
+	if(g_player_type_str.is_null() == false) {
+		//if a playable object type has been set, register what the type of
+		//the player is before we construct our object.
+		variant type = g_player_type_str;
+		g_player_type_str = variant();
+		level::set_player_variant_type(type);
+	}
+
 	if(editor_force_standing_) {
 		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
 	}

@@ -82,6 +82,8 @@ public:
 
 	static int tile_rebuild_state_id();
 
+	static void set_player_variant_type(variant type);
+
 	explicit level(const std::string& level_cfg, variant node=variant());
 	~level();
 

@@ -21,6 +21,7 @@
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
+#include "custom_object_type.hpp"
 #include "i18n.hpp"
 #include "filesystem.hpp"
 #include "foreach.hpp"
@@ -283,6 +284,7 @@ void load(const std::string& mod_file_name, bool initial)
 	variant v = json::parse_from_file(fname);
 	std::string def_font = "FreeSans";
 	std::string def_font_cjk = "unifont";
+	variant player_type;
 
 	const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 	if(sys::file_exists(constants_path)) {
@@ -354,12 +356,20 @@ void load(const std::string& mod_file_name, bool initial)
 				ASSERT_LOG(false, "In module.cfg build_requirements must be string or list of strings: " << mod_file_name);
 			}
 		}
+
+		if(v.has_key("player_type")) {
+			player_type = v["player_type"];
+		}
 	}
 	modules m = {name, pretty_name, abbrev,
 	             {make_base_module_path(name), make_user_module_path(name)},
 				def_font, def_font_cjk};
 	m.default_preferences = v["default_preferences"];
 	loaded_paths().insert(loaded_paths().begin(), m);
+
+	if(initial) {
+		custom_object_type::set_player_variant_type(player_type);
+	}
 }
 
 std::string get_default_font()
