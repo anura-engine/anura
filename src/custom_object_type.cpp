@@ -358,47 +358,6 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
 	} else {
-		if(object_file_paths().empty()) {
-			load_file_paths();
-		}
-
-		std::map<std::string, std::string>::const_iterator proto_path = module::find(::prototype_file_paths(), id + ".cfg");
-		if(proto_path != prototype_file_paths().end()) {
-			std::cerr << "SEARCHING FOR PROTOTYPE IMPL FOR " << id << "\n";
-			//This is a prototype path. We have to search for an object that
-			//derives from it so it gets loaded.
-
-			for(auto p : prototype_file_paths()) {
-				if(p.second.size() <= 4 || std::equal(p.second.end()-4, p.second.end(), ".cfg") == false) {
-					continue;
-				}
-
-				variant doc = json::parse_from_file(p.second);
-				auto prototypes = doc["prototype"].as_list_string_optional();
-				if(std::count(prototypes.begin(), prototypes.end(), id)) {
-					get_definition(doc["id"].as_string());
-					std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
-					ASSERT_LOG(itor != object_type_definitions().end(), "Could not find object prototype " << id);
-					return itor->second;
-				}
-			}
-
-			for(auto p : object_file_paths()) {
-				if(p.second.size() <= 4 || std::equal(p.second.end()-4, p.second.end(), ".cfg") == false) {
-					continue;
-				}
-				variant doc = json::parse_from_file(p.second);
-				auto prototypes = doc["prototype"].as_list_string_optional();
-				if(std::count(prototypes.begin(), prototypes.end(), id)) {
-					get_definition(doc["id"].as_string());
-					std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
-					ASSERT_LOG(itor != object_type_definitions().end(), "Could not find object prototype " << id);
-					return itor->second;
-				}
-			}
-
-			ASSERT_LOG(false, "Could not find any object derived from prototype " << id);
-		}
 
 		std::cerr << "GET DEFINITION: " << id << "\n";
 		const_custom_object_type_ptr obj = get(id);
