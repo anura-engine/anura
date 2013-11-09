@@ -2460,6 +2460,10 @@ namespace {
 		}
 		
 		variant get_value(const std::string& key) const {
+			if(key == "lib") {
+				return variant(get_library_object().get());
+			}
+
 			throw non_static_expression_exception();
 		}
 
@@ -2900,7 +2904,7 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 																	  std::string(i1->begin,i1->end)));
 			} else if(i1->type == TOKEN_IDENTIFIER) {
 				if(can_optimize) {
-					*can_optimize = false;
+				//	*can_optimize = false;
 				}
 
 				std::string symbol(i1->begin, i1->end);

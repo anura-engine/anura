@@ -490,6 +490,8 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(checkpoint_game)
 
 FUNCTION_DEF(get_save_document, 1, 1, "get_save_document(int slot): gets the FFL document for the save in the given slot")
+	formula::fail_if_static_context();
+
 	const int slot = args()[0]->evaluate(variables).as_int();
 	std::string fname = "save.cfg";
 	if(slot != 0) {

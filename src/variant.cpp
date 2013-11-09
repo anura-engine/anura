@@ -1160,24 +1160,78 @@ void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const gam
 
 int variant::min_function_arguments() const
 {
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		int result = -1;
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			const int value = multi_fn_->functions[n].min_function_arguments();
+			if(value < result || result == -1) {
+				result = value;
+			}
+		}
+
+		return result;
+	}
+	
 	must_be(VARIANT_TYPE_FUNCTION);
 	return std::max<int>(0, fn_->type->arg_names.size() - fn_->type->num_default_args() - static_cast<int>(fn_->bound_args.size()));
 }
 
 int variant::max_function_arguments() const
 {
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		int result = -1;
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			const int value = multi_fn_->functions[n].max_function_arguments();
+			if(value > result || result == -1) {
+				result = value;
+			}
+		}
+
+		return result;
+	}
+
 	must_be(VARIANT_TYPE_FUNCTION);
 	return fn_->type->arg_names.size() - fn_->bound_args.size();
 }
 
 variant_type_ptr variant::function_return_type() const
 {
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		std::vector<variant_type_ptr> result;
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			result.push_back(multi_fn_->functions[n].function_return_type());
+		}
+
+		return variant_type::get_union(result);
+	}
+	
 	must_be(VARIANT_TYPE_FUNCTION);
 	return fn_->type->return_type;
 }
 
 std::vector<variant_type_ptr> variant::function_arg_types() const
 {
+	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
+		std::vector<std::vector<variant_type_ptr> > result;
+		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
+			std::vector<variant_type_ptr> types = multi_fn_->functions[n].function_arg_types();
+			for(int m = 0; m != types.size(); ++m) {
+				if(result.size() <= m) {
+					result.resize(m+1);
+				}
+
+				result[m].push_back(types[m]);
+			}
+		}
+
+		std::vector<variant_type_ptr> res;
+		for(auto item : result) {
+			res.push_back(variant_type::get_union(item));
+		}
+
+		return res;
+	}
+
 	must_be(VARIANT_TYPE_FUNCTION);
 	std::vector<variant_type_ptr> result = fn_->type->variant_types;
 	if(fn_->bound_args.empty() == false) {

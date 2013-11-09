@@ -1461,6 +1461,8 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		return variant_type::get_commands();
 	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->query_id())) {
 		return variant_type::get_builtin(value.as_callable()->query_id());
+	} else if(value.is_function()) {
+		return variant_type::get_function_type(value.function_arg_types(), value.function_return_type(), value.min_function_arguments());
 	} else {
 		return variant_type::get_type(value.type());
 	}
