@@ -243,6 +243,26 @@ struct variant_fn {
 	int refcount;
 };
 
+struct variant_generic_fn {
+	variant::debug_info info;
+
+	variant_generic_fn() : refcount(0)
+	{}
+
+	VariantFunctionTypeInfoPtr type;
+
+	variant fn;
+	std::vector<std::string> generic_types;
+	game_logic::const_formula_callable_ptr callable;
+
+	std::vector<variant> bound_args;
+
+	std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory;
+
+	int base_slot;
+	int refcount;
+};
+
 struct variant_multi_fn {
 	variant_multi_fn() : refcount(0)
 	{}
@@ -298,6 +318,9 @@ break;
 case VARIANT_TYPE_FUNCTION:
 ++fn_->refcount;
 break;
+case VARIANT_TYPE_GENERIC_FUNCTION:
+++generic_fn_->refcount;
+break;
 case VARIANT_TYPE_MULTI_FUNCTION:
 ++multi_fn_->refcount;
 break;
@@ -343,6 +366,11 @@ break;
 case VARIANT_TYPE_FUNCTION:
 if(--fn_->refcount == 0) {
 	delete fn_;
+}
+break;
+case VARIANT_TYPE_GENERIC_FUNCTION:
+if(--generic_fn_->refcount == 0) {
+	delete generic_fn_;
 }
 break;
 case VARIANT_TYPE_MULTI_FUNCTION:
@@ -536,6 +564,24 @@ variant::variant(std::map<variant,variant>* map)
 	map_ = new variant_map;
 	map_->elements.swap(*map);
 	increment_refcount();
+}
+
+variant::variant(const variant& formula_var, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& generic_types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory)
+	: type_(VARIANT_TYPE_GENERIC_FUNCTION)
+{
+	generic_fn_ = new variant_generic_fn;
+	generic_fn_->fn = formula_var;
+	generic_fn_->callable = &callable;
+	generic_fn_->base_slot = base_slot;
+	generic_fn_->type = type_info;
+	generic_fn_->generic_types = generic_types;
+	generic_fn_->factory = factory;
+
+	increment_refcount();
+
+	if(formula_var.get_debug_info()) {
+		set_debug_info(*formula_var.get_debug_info());
+	}
 }
 
 variant::variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info)
@@ -906,6 +952,40 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	}
 }
 
+variant variant::instantiate_generic_function(const std::vector<variant_type_ptr>& args) const
+{
+	must_be(VARIANT_TYPE_GENERIC_FUNCTION);
+
+	ASSERT_LOG(args.size() == generic_fn_->generic_types.size(), "Expected " << generic_fn_->generic_types.size() << " generic arguments but found " << args.size());
+
+	std::map<std::string, variant_type_ptr> mapping;
+	for(int n = 0; n != args.size(); ++n) {
+		mapping[generic_fn_->generic_types[n]] = args[n];
+	}
+
+	VariantFunctionTypeInfoPtr info(new VariantFunctionTypeInfo(*generic_fn_->type));
+	for(variant_type_ptr& type : info->variant_types) {
+		if(!type) {
+			continue;
+		}
+		variant_type_ptr result = type->map_generic_types(mapping);
+		if(result) {
+			type = result;
+		}
+	}
+
+	if(info->return_type) {
+		variant_type_ptr new_return_type = info->return_type->map_generic_types(mapping);
+		if(new_return_type) {
+			info->return_type = new_return_type;
+		}
+	}
+
+	game_logic::const_formula_ptr fml = generic_fn_->factory(args);
+	variant result(fml, *generic_fn_->callable, generic_fn_->base_slot, info);
+	return result;
+}
+
 variant variant::get_member(const std::string& str) const
 {
 	if(is_callable()) {
@@ -1170,6 +1250,8 @@ int variant::min_function_arguments() const
 		}
 
 		return result;
+	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
+		return std::max<int>(0, generic_fn_->type->arg_names.size() - generic_fn_->type->num_default_args() - static_cast<int>(generic_fn_->bound_args.size()));
 	}
 	
 	must_be(VARIANT_TYPE_FUNCTION);
@@ -1188,6 +1270,8 @@ int variant::max_function_arguments() const
 		}
 
 		return result;
+	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
+		return generic_fn_->type->arg_names.size() - generic_fn_->bound_args.size();
 	}
 
 	must_be(VARIANT_TYPE_FUNCTION);
@@ -1203,6 +1287,8 @@ variant_type_ptr variant::function_return_type() const
 		}
 
 		return variant_type::get_union(result);
+	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
+		return generic_fn_->type->return_type;
 	}
 	
 	must_be(VARIANT_TYPE_FUNCTION);
@@ -1230,6 +1316,9 @@ std::vector<variant_type_ptr> variant::function_arg_types() const
 		}
 
 		return res;
+	} else if(type_ == VARIANT_TYPE_GENERIC_FUNCTION) {
+		std::vector<variant_type_ptr> result = generic_fn_->type->variant_types;
+		return result;
 	}
 
 	must_be(VARIANT_TYPE_FUNCTION);
@@ -1240,6 +1329,12 @@ std::vector<variant_type_ptr> variant::function_arg_types() const
 	}
 
 	return result;
+}
+
+std::vector<std::string> variant::generic_function_type_args() const
+{
+	must_be(VARIANT_TYPE_GENERIC_FUNCTION);
+	return generic_fn_->generic_types;
 }
 
 std::string variant::as_string_default(const char* default_value) const
@@ -1520,6 +1615,9 @@ bool variant::operator==(const variant& v) const
 	case VARIANT_TYPE_FUNCTION: {
 		return fn_ == v.fn_;
 	}
+	case VARIANT_TYPE_GENERIC_FUNCTION: {
+		return generic_fn_ == v.generic_fn_;
+	}
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		return multi_fn_ == v.multi_fn_;
 	}
@@ -1593,6 +1691,9 @@ bool variant::operator<=(const variant& v) const
 	}
 	case VARIANT_TYPE_FUNCTION: {
 		return fn_ <= v.fn_;
+	}
+	case VARIANT_TYPE_GENERIC_FUNCTION: {
+		return generic_fn_ <= v.generic_fn_;
 	}
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		return multi_fn_ <= v.multi_fn_;
@@ -2003,6 +2104,22 @@ std::string variant::to_debug_string(std::vector<const game_logic::formula_calla
 		s << ")";
 		break;
 	}
+	case VARIANT_TYPE_GENERIC_FUNCTION: {
+		char buf[64];
+		sprintf(buf, "(%p)", generic_fn_);
+		s << "<>";
+		s << buf << "(";
+		bool first = true;
+		for(std::vector<std::string>::const_iterator i = generic_fn_->type->arg_names.begin(); i != generic_fn_->type->arg_names.end(); ++i) {
+			if (first)
+				first = false;
+			else
+				s << ", ";
+			s << *i;
+		}
+		s << ")";
+		break;
+	}
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		s << "overload(";
 		foreach(const variant& v, multi_fn_->functions) {
@@ -2146,6 +2263,11 @@ void variant::write_json(std::ostream& s, write_flags flags) const
 		s << "\"@eval ";
 		write_function(s);
 		s << "\"";
+		return;
+	}
+	case VARIANT_TYPE_GENERIC_FUNCTION: {
+		//TODO: implement serialization of generic functions
+		s << "generic_function_serialization_not_implemented";
 		return;
 	}
 

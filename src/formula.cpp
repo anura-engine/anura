@@ -865,6 +865,83 @@ private:
 	expression_ptr function_;
 };
 
+class instantiate_generic_expression : public formula_expression {
+	expression_ptr left_;
+	std::vector<variant_type_ptr> types_;
+public:
+	instantiate_generic_expression(variant formula_str, expression_ptr left, const formula_tokenizer::token* i1, const formula_tokenizer::token* i2)
+	  : left_(left)
+	{
+		while(i1 != i2) {
+			variant_type_ptr type = parse_variant_type(formula_str, i1, i2);
+			types_.push_back(type);
+			ASSERT_LOG(i1 == i2 || i1->type == formula_tokenizer::TOKEN_COMMA, "Unexpected token while parsing generic parameters\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+			if(i1->type == formula_tokenizer::TOKEN_COMMA) {
+				++i1;
+			}
+		}
+	}
+
+private:
+	variant execute(const formula_callable& variables) const {
+		const variant left = left_->evaluate(variables);
+		return left.instantiate_generic_function(types_);
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		result.push_back(left_);
+		return result;
+	}
+};
+
+class generic_lambda_function_expression : public formula_expression {
+public:
+	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, boost::shared_ptr<recursive_function_symbol_table> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
+	{
+		type_info_->arg_names = args;
+		type_info_->default_args = default_args;
+		type_info_->variant_types = variant_types;
+		type_info_->return_type = return_type;
+
+		if(!type_info_->return_type) {
+			type_info_->return_type = variant_type::get_any();
+		}
+
+		type_info_->variant_types.resize(args.size());
+		for(variant_type_ptr& t : type_info_->variant_types) {
+			if(!t) {
+				t = variant_type::get_any();
+			}
+		}
+	}
+	
+private:
+	variant execute(const formula_callable& variables) const {
+		variant v(fml_, variables, base_slot_, type_info_, generic_types_, factory_);
+		return v;
+	}
+
+	variant_type_ptr get_variant_type() const {
+		return variant_type::get_function_type(type_info_->variant_types, type_info_->return_type, type_info_->variant_types.size() - type_info_->default_args.size());
+	}
+
+	std::vector<const_expression_ptr> get_children() const {
+		std::vector<const_expression_ptr> result;
+		return result;
+	}
+
+	variant fml_;
+	int base_slot_;
+
+	VariantFunctionTypeInfoPtr type_info_;
+
+	boost::shared_ptr<recursive_function_symbol_table> symbol_table_;
+	std::vector<std::string> generic_types_;
+	std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory_;
+};
+
+
 class lambda_function_expression : public formula_expression {
 public:
 	lambda_function_expression(const std::vector<std::string>& args, const_formula_ptr fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo)
@@ -928,7 +1005,49 @@ public:
 	function_call_expression(expression_ptr left, const std::vector<expression_ptr>& args)
 	: formula_expression("_fn"), left_(left), args_(args)
 	{
-		variant_type_ptr fn_type = left->query_variant_type();
+		variant left_var;
+		if(left_->can_reduce_to_variant(left_var)) {
+			if(left_var.is_generic_function()) {
+				std::map<std::string, variant_type_ptr> types;
+				std::vector<variant_type_ptr> arg_types = left_var.function_arg_types();
+				for(int n = 0; n != arg_types.size() && n != args_.size(); ++n) {
+					std::string id;
+					if(arg_types[n]->is_generic(&id) == false) {
+						continue;
+					}
+
+					variant_type_ptr type = args_[n]->query_variant_type();
+					variant_type_ptr current = types[id];
+					if(current) {
+						if(type->is_equal(*current) || variant_types_compatible(type, current)) {
+							//type = type
+						} else if(variant_types_compatible(current, type)) {
+							type = current;
+						} else {
+							std::vector<variant_type_ptr> v;
+							v.push_back(type);
+							v.push_back(current);
+							type = variant_type::get_union(v);
+						}
+					}
+
+					types[id] = type;
+				}
+
+				std::vector<variant_type_ptr> args;
+				std::vector<std::string> generic_args = left_var.generic_function_type_args();
+				for(const std::string& id : generic_args) {
+					variant_type_ptr type = types[id];
+					ASSERT_LOG(type, "Cannot find type in generic function for type " << id);
+					args.push_back(type);
+				}
+
+				variant fn = left_var.instantiate_generic_function(args);
+				left_.reset(new variant_expression(fn));
+			}
+		}
+
+		variant_type_ptr fn_type = left_->query_variant_type();
 		std::vector<variant_type_ptr> arg_types;
 		if(fn_type->is_function(&arg_types, NULL, NULL)) {
 			for(int n = 0; n < arg_types.size() && n < args.size(); ++n) {
@@ -2132,6 +2251,7 @@ int operator_precedence(const token& t)
 		precedence_map["%"]     = ++n;
 		precedence_map["^"]     = ++n;
 		precedence_map["d"]     = ++n;
+		precedence_map["<<"]     = ++n;
 
 		//these operators are equal precedence, and left
 		//associative. Thus, x.y[4].z = ((x.y)[4]).z
@@ -2581,6 +2701,35 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 	if(i1->type == TOKEN_IDENTIFIER) {
 		formula_name = std::string(i1->begin, i1->end);
 		++i1;
+
+		ASSERT_LOG(i1 != i2, "Unexpected end of input\n" << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
+	}
+
+	generic_variant_type_scope generic_scope;
+
+	std::vector<std::string> generic_types;
+
+	if(i1->type == TOKEN_LDUBANGLE) {
+		++i1;
+		while(i1 != i2 && i1->type != TOKEN_RDUBANGLE) {
+			ASSERT_LOG(i1->type != TOKEN_IDENTIFIER, "Generic type names must be Capitalized\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+			ASSERT_LOG(i1->type == TOKEN_CONST_IDENTIFIER, "Unexpected token when looking for generic type name\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+			std::string id(i1->begin, i1->end);
+			ASSERT_LOG(std::count(generic_types.begin(), generic_types.end(), id) == 0, "Repeated type name " << id << "\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+
+			generic_types.push_back(id);
+			generic_scope.register_type(id);
+
+			++i1;
+			if(i1 != i2 && i1->type == TOKEN_COMMA) {
+				++i1;
+			}
+		}
+
+		ASSERT_LOG(i1 != i2 && i1 + 1 != i2, "Unexpected end of input\n" << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
+		ASSERT_LOG(i1->type == TOKEN_RDUBANGLE, "Unexpected token while looking for > to end generic function\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+
+		++i1;
 	}
 	
 	std::vector<std::string> args, types;
@@ -2612,7 +2761,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		function_var.set_debug_info(info);
 	}
 	
-	recursive_function_symbol_table recursive_symbols(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types);
+	boost::shared_ptr<recursive_function_symbol_table> recursive_symbols(new recursive_function_symbol_table(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
 
 	//create a definition of the callable representing
 	//function arguments.
@@ -2651,8 +2800,35 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		}
 	}
 
-	const_formula_ptr fml(new formula(function_var, &recursive_symbols, args_definition_ptr));
-	recursive_symbols.resolve_recursive_calls(fml);
+	if(generic_types.empty() == false) {
+		ASSERT_LOG(formula_name.empty(), "non-lambda generic functions not currently supported\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+		ASSERT_LOG(result_type, "Generic functions must specify a result type" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
+		ASSERT_LOG(args_definition, "Must have args definition in generic functions\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+		std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory =
+		[=](const std::vector<variant_type_ptr>& types) {
+			ASSERT_LOG(types.size() == generic_types.size(), "Incorrect number of arguments to generic function. Found " << types.size() << " expected " << generic_types.size());
+
+			std::map<std::string, variant_type_ptr> mapping;
+			for(int n = 0; n != types.size(); ++n) {
+				mapping[generic_types[n]] = types[n];
+			}
+
+			for(int n = 0; n != variant_types.size(); ++n) {
+				const variant_type_ptr def = variant_types[n]->map_generic_types(mapping);
+				if(def) {
+					args_definition->get_entry_by_id(args[n])->set_variant_type(def);
+				}
+			}
+
+			const_formula_ptr fml(new formula(function_var, recursive_symbols.get(), args_definition_ptr));
+			return fml;
+		};
+
+		return expression_ptr(new generic_lambda_function_expression(args, function_var, callable_def ? callable_def->num_slots() : 0, default_args, variant_types, result_type, recursive_symbols, generic_types, factory));
+	}
+
+	const_formula_ptr fml(new formula(function_var, recursive_symbols.get(), args_definition_ptr));
+	recursive_symbols->resolve_recursive_calls(fml);
 	
 	if(formula_name.empty()) {
 		if(g_strict_formula_checking) {
@@ -2673,7 +2849,8 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 	ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
 	
 	if(symbols && i1->type == TOKEN_KEYWORD && std::string(i1->begin, i1->end) == "def" &&
-	   ((i1+1)->type == TOKEN_IDENTIFIER || (i1+1)->type == TOKEN_LPARENS)) {
+	   ((i1+1)->type == TOKEN_IDENTIFIER || (i1+1)->type == TOKEN_LPARENS ||
+	    (i1+1)->type == TOKEN_LDUBANGLE)) {
 
 		expression_ptr lambda = parse_function_def(formula_str, i1, i2, symbols, callable_def);
 		if(lambda) {
@@ -2712,7 +2889,7 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 			if(parens == 0 && i+1 != i2) {
 				fn_call = NULL;
 			}
-		} else if(parens == 0 && (i->type == TOKEN_OPERATOR || i->type == TOKEN_LEFT_POINTER)) {
+		} else if(parens == 0 && (i->type == TOKEN_OPERATOR || i->type == TOKEN_LEFT_POINTER || i->type == TOKEN_LDUBANGLE && (i2-1)->type == TOKEN_RDUBANGLE)) {
 			if(op == NULL || operator_precedence(*op) >= operator_precedence(*i)) {
 				if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 					//The not operator is always unary and can only
@@ -2725,7 +2902,7 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 		}
 	}
 	
-	if(op != NULL && op->type == TOKEN_LSQUARE) {
+	if(op != NULL && (op->type == TOKEN_LSQUARE)) {
 		//the square bracket operator is handled below, just set the op
 		//to NULL and it'll be handled.
 		op = NULL;
@@ -2994,6 +3171,14 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 		return expression_ptr(new unary_operator_expression(
 															std::string(op->begin,op->end),
 															parse_expression(formula_str, op+1,i2,symbols, callable_def, can_optimize)));
+	}
+
+	if(op->type == TOKEN_LDUBANGLE) {
+		ASSERT_LOG((i2-1)->type == TOKEN_RDUBANGLE, "Could not find matching closing >>\n" << pinpoint_location(formula_str, op->begin, op->end));
+		ASSERT_LOG(i1 != op, "Could not find expression to apply << >> to\n" << pinpoint_location(formula_str, op->begin, op->end));
+
+		expression_ptr left = parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize);
+		return expression_ptr(new instantiate_generic_expression(formula_str, left, op+1, i2-1));
 	}
 	
 	int consume_backwards = 0;

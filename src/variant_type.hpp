@@ -64,6 +64,8 @@ public:
 	static variant_type_ptr get_null_excluded(variant_type_ptr input);
 	static variant_type_ptr get_with_exclusion(variant_type_ptr input, variant_type_ptr subtract);
 
+	static variant_type_ptr get_generic_type(const std::string& id);
+
 	variant_type();
 	virtual ~variant_type();
 	virtual bool match(const variant& v) const = 0;
@@ -86,6 +88,7 @@ public:
 	virtual const std::string* is_voxel_object() const { return NULL; }
 
 	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
+	virtual bool is_generic(std::string* id=NULL) const { return false; }
 	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
 
 	virtual const game_logic::formula_callable_definition* get_definition() const { return NULL; }
@@ -102,6 +105,8 @@ public:
 	virtual bool is_compatible(variant_type_ptr type) const { return false; }
 
 	virtual bool maybe_convertible_to(variant_type_ptr type) const { return false; }
+	virtual variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const { return variant_type_ptr(); }
+
 
 	static bool may_be_null(variant_type_ptr type);
 
@@ -141,6 +146,16 @@ parse_optional_formula_type(const variant& original_str,
                             const formula_tokenizer::token*& i1,
                             const formula_tokenizer::token* i2);
 variant_type_ptr parse_optional_formula_type(const variant& v);
+
+class generic_variant_type_scope
+{
+	std::vector<std::string> entries_;
+public:
+	~generic_variant_type_scope();
+
+	void register_type(const std::string& id);
+	void clear();
+};
 
 
 #endif

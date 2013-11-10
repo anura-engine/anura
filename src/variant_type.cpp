@@ -48,6 +48,8 @@ variant_type::~variant_type()
 
 namespace {
 
+std::set<std::string> g_generic_variant_names;
+
 std::map<std::string, variant> get_builtin_variant_info()
 {
 	std::map<std::string, variant> result;
@@ -421,7 +423,6 @@ public:
 			return &custom_object_callable::instance();
 		}
 
-		fprintf(stderr, "LOOKUP CUSTOM OBJ DEF: %s\n", type_.c_str());
 		const game_logic::formula_callable_definition* def = custom_object_type::get_definition(type_).get();
 		ASSERT_LOG(def, "Could not find custom object: " << type_);
 		return def;
@@ -481,7 +482,6 @@ public:
 			return variant_type::get_builtin("voxel_object")->get_definition();
 		}
 
-		fprintf(stderr, "LOOKUP CUSTOM OBJ DEF: %s\n", type_.c_str());
 		const game_logic::formula_callable_definition* def = voxel_object_type::get_definition(type_).get();
 		ASSERT_LOG(def, "Could not find custom object: " << type_);
 		return def;
@@ -1367,6 +1367,45 @@ private:
 	std::vector<variant_type_ptr> fn_;
 };
 
+class variant_type_generic : public variant_type
+{
+public:
+	explicit variant_type_generic(const std::string& id) : id_(id)
+	{}
+
+	bool is_equal(const variant_type& o) const {
+		const variant_type_generic* gen = dynamic_cast<const variant_type_generic*>(&o);
+		return gen && gen->id_ == id_;
+	}
+
+	variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const {
+		auto itor = mapping.find(id_);
+		if(itor != mapping.end()) {
+			return itor->second;
+		}
+
+		return variant_type_ptr();
+	}
+
+	bool match(const variant& v) const {
+		return false;
+	}
+
+	bool is_generic(std::string* id) const {
+		if(id) {
+			*id = id_;
+		}
+
+		return true;
+	}
+private:
+	std::string to_string_impl() const {
+		return id_;
+	}
+
+	std::string id_;
+};
+
 }
 
 bool variant_type::may_be_null(variant_type_ptr type)
@@ -1560,7 +1599,10 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
+		if(i1->type == TOKEN_CONST_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
+			v.push_back(variant_type::get_generic_type(std::string(i1->begin, i1->end)));
+			++i1;
+		} else if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
 			v.push_back(get_named_variant_type(std::string(i1->begin, i1->end)));
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("interface") && i1+1 != i2 && (i1+1)->equals("{")) {
@@ -2124,6 +2166,30 @@ variant_type_ptr variant_type::get_with_exclusion(variant_type_ptr input, varian
 	} else {
 		return input;
 	}
+}
+
+variant_type_ptr variant_type::get_generic_type(const std::string& id)
+{
+	return variant_type_ptr(new variant_type_generic(id));
+}
+
+generic_variant_type_scope::~generic_variant_type_scope()
+{
+	clear();
+}
+
+void generic_variant_type_scope::register_type(const std::string& id)
+{
+	g_generic_variant_names.insert(id);
+	entries_.push_back(id);
+}
+
+void generic_variant_type_scope::clear()
+{
+	for(auto id : entries_) {
+		g_generic_variant_names.erase(id);
+	}
+	entries_.clear();
 }
 
 UNIT_TEST(variant_type) {
