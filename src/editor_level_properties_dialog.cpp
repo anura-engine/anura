@@ -85,7 +85,7 @@ void set_segmented_level_height(editor_level_properties_dialog* d, editor* e, bo
 }
 
 editor_level_properties_dialog::editor_level_properties_dialog(editor& e)
-  : dialog(0, 0, graphics::screen_width(), graphics::screen_height()), editor_(e)
+  : dialog(preferences::virtual_screen_width()/2 - 300, preferences::virtual_screen_height()/2 - 220, 600, 440), editor_(e)
 {
 	set_clear_bg_amount(255);
 	init();
@@ -93,6 +93,12 @@ editor_level_properties_dialog::editor_level_properties_dialog(editor& e)
 
 void editor_level_properties_dialog::init()
 {
+	set_clear_bg_amount(255);
+	set_background_frame("empty_window");
+	set_draw_background_fn([]() {
+		draw_scene(level::current(), last_draw_position());
+	});
+
 	using namespace gui;
 	clear();
 
@@ -144,6 +150,8 @@ void editor_level_properties_dialog::init()
 	if(editor_.get_level().segment_width() != 0) {
 		remove_widget(vt_checkbox);
 	}
+
+	add_ok_and_cancel_buttons();
 }
 
 void editor_level_properties_dialog::change_title(const gui::text_editor_widget_ptr editor)

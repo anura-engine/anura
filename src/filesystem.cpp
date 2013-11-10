@@ -64,8 +64,7 @@ namespace sys
 
 	void get_files_in_dir(const std::string& dir,
 		std::vector<std::string>* files,
-		std::vector<std::string>* dirs,
-		FILE_NAME_MODE mode)
+		std::vector<std::string>* dirs)
 	{
 		path p(dir);
 		if(!is_directory(p) && !is_other(p)) {
@@ -73,7 +72,7 @@ namespace sys
 		}
 		for(directory_iterator it = directory_iterator(p); it != directory_iterator(); ++it) {
 			if(is_directory(it->path()) || is_other(it->path())) {
-				if(dirs != NULL && mode == ENTIRE_FILE_PATH) {
+				if(dirs != NULL) {
 					dirs->push_back(it->path().filename().generic_string());
 				}
 			} else {

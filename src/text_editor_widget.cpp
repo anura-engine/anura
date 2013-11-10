@@ -50,6 +50,11 @@ struct CharArea {
 
 std::map<int, std::map<char, CharArea> > all_char_to_area;
 
+std::string monofont()
+{
+	return font::get_default_monospace_font();
+}
+
 const CharArea& get_char_area(int font_size, char c)
 {
 	std::map<char, CharArea>& char_to_area = all_char_to_area[font_size];
@@ -60,8 +65,8 @@ const CharArea& get_char_area(int font_size, char c)
 
 	const CharArea& result = char_to_area[c];
 
-	const int char_width = font::char_width(font_size);
-	const int char_height = font::char_height(font_size);
+	const int char_width = font::char_width(font_size, monofont());
+	const int char_height = font::char_height(font_size, monofont());
 
 	std::string str;
 	int row = 0, col = 0;
@@ -83,7 +88,7 @@ const CharArea& get_char_area(int font_size, char c)
 	}
 
 	char_texture_ptr& char_texture = char_textures[font_size];
-	char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size)));
+	char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size, monofont())));
 
 	for(std::map<char, CharArea>::iterator i = char_to_area.begin();
 	    i != char_to_area.end(); ++i) {
@@ -123,8 +128,8 @@ void init_char_area(size_t font_size)
 text_editor_widget::text_editor_widget(int width, int height)
   : last_op_type_(NULL),
     font_size_(14),
-    char_width_(font::char_width(font_size_)),
-    char_height_(font::char_height(font_size_)),
+    char_width_(font::char_width(font_size_, monofont())),
+    char_height_(font::char_height(font_size_, monofont())),
 	select_(0,0), cursor_(0,0),
 	nrows_((height - BorderSize*2)/char_height_),
 	ncols_((width - 20 - BorderSize*2)/char_width_),
@@ -206,8 +211,8 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 		ffl_on_change_focus_ = get_environment()->create_formula(v["on_change_focus"]);
 	}
 
-	char_width_= font::char_width(font_size_);
-    char_height_ = font::char_height(font_size_);
+	char_width_= font::char_width(font_size_, monofont());
+    char_height_ = font::char_height(font_size_, monofont());
 	nrows_ = (height - BorderSize*2)/char_height_;
 	ncols_ = (width - 20 - BorderSize*2)/char_width_;
 
@@ -317,8 +322,8 @@ void text_editor_widget::set_font_size(int font_size)
 
 	font_size_ = font_size;
 
-    char_width_ = font::char_width(font_size_);
-    char_height_ = font::char_height(font_size_);
+    char_width_ = font::char_width(font_size_, monofont());
+    char_height_ = font::char_height(font_size_, monofont());
 	nrows_ = (height() - BorderSize*2)/char_height_;
 	ncols_ = (width() - BorderSize*2)/char_width_;
 
@@ -628,6 +633,7 @@ bool text_editor_widget::handle_mouse_button_down(const SDL_MouseButtonEvent& ev
 {
 	record_op();
 	if(event.x >= x() && event.x < x() + width() && event.y >= y() && event.y < y() + height()) {
+
 		set_focus(true);
 		std::pair<int, int> pos = mouse_position_to_row_col(event.x, event.y);
 		if(pos.first != -1) {
@@ -1046,10 +1052,8 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 	case SDLK_TAB: {
 		if(on_tab_) {
 			on_tab_();
-		}
-
-		if(nrows_ == 1) {
-			break;
+		} else if(nrows_ == 1) {
+			return false;
 		}
 	}
 	default: return true;

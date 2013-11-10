@@ -194,6 +194,8 @@ namespace {
 graphics::color_transform default_dark_color() {
 	return graphics::color_transform(0, 0, 0, 0);
 }
+
+variant_type_ptr g_player_type;
 }
 
 level::level(const std::string& level_cfg, variant node)
@@ -621,6 +623,7 @@ void level::load_character(variant c)
 			last_touched_player_ = player_ = chars_.back();
 		}
 #endif
+		ASSERT_LOG(!g_player_type || g_player_type->match(variant(chars_.back().get())), "Player object being added to level does not match required player type. " << chars_.back()->debug_description() << " is not a " << g_player_type->to_string());
 
 		players_.push_back(chars_.back());
 		players_.back()->get_player_info()->set_player_slot(players_.size() - 1);
@@ -992,11 +995,31 @@ bool level_tile_from_layer(const level_tile& t, int zorder) {
 }
 
 int g_tile_rebuild_state_id;
+
 }
 
 int level::tile_rebuild_state_id()
 {
 	return g_tile_rebuild_state_id;
+}
+
+void level::set_player_variant_type(variant type_str)
+{
+	if(type_str.is_null()) {
+		type_str = variant("custom_obj");
+	}
+
+	using namespace game_logic;
+
+	g_player_type = parse_variant_type(type_str);
+
+	const_formula_callable_definition_ptr def = game_logic::get_formula_callable_definition("level");
+	assert(def.get());
+
+	formula_callable_definition* mutable_def = const_cast<formula_callable_definition*>(def.get());
+	formula_callable_definition::entry* entry = mutable_def->get_entry_by_id("player");
+	assert(entry);
+	entry->set_variant_type(g_player_type);
 }
 
 void level::complete_rebuild_tiles_in_background()
@@ -3516,6 +3539,7 @@ void level::add_multi_player(entity_ptr p)
 {
 	last_touched_player_ = p;
 	p->get_player_info()->set_player_slot(players_.size());
+	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->debug_description() << " is not a " << g_player_type->to_string());
 	players_.push_back(p);
 	chars_.push_back(p);
 	if(p->label().empty() == false) {
@@ -3528,6 +3552,7 @@ void level::add_player(entity_ptr p)
 {
 	chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	last_touched_player_ = player_ = p;
+	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->debug_description() << " is not a " << g_player_type->to_string());
 	if(players_.empty()) {
 		player_->get_player_info()->set_player_slot(players_.size());
 		players_.push_back(player_);

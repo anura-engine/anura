@@ -293,7 +293,6 @@ public:
 		grid->add_col(widget_ptr(
 		  new button(widget_ptr(new label("Statistics", graphics::color_white())),
 		             boost::bind(&editor_menu_dialog::show_stats_menu, this))));
-		add_widget(widget_ptr(grid));
 
 		grid->add_col(widget_ptr(
 		  new button(widget_ptr(new label("Scripts", graphics::color_white())),

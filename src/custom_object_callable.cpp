@@ -232,7 +232,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "uv_segments", "[int]" },
 	
 	{ "draw_primitives", "[object]/[object|map]|map" },
-	{ "event_handlers", "any" },
+	{ "event_handlers", "object" },
 	
 	{ "use_absolute_screen_coordinates", "bool" },
 	

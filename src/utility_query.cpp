@@ -363,7 +363,7 @@ void process_file(const std::string& fname, std::map<std::string,std::string>& f
 void process_dir(const std::string& dir, std::map<std::string, std::string>& file_mappings, std::vector<std::string>& error_files)
 {
 	std::vector<std::string> subdirs, files;
-	module::get_files_in_dir(dir, &files, &subdirs, sys::ENTIRE_FILE_PATH);
+	module::get_files_in_dir(dir, &files, &subdirs);
 	foreach(const std::string& d, subdirs) {
 		process_dir(d, file_mappings, error_files);
 	}

@@ -74,6 +74,7 @@ struct variant_list;
 struct variant_string;
 struct variant_map;
 struct variant_fn;
+struct variant_generic_fn;
 struct variant_multi_fn;
 struct variant_delayed;
 
@@ -123,6 +124,7 @@ public:
 	static variant create_translated_string(const std::string& str);
 	static variant create_translated_string(const std::string& str, const std::string& translation);
 	explicit variant(std::map<variant,variant>* map);
+	variant(const variant& formula_var, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory);
 	variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
 	variant(std::function<variant(const game_logic::formula_callable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
 	//variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
@@ -156,6 +158,9 @@ public:
 	bool function_call_valid(const std::vector<variant>& args, std::string* message=NULL, bool allow_partial=false) const;
 	variant operator()(const std::vector<variant>& args) const;
 
+	variant instantiate_generic_function(const std::vector<variant_type_ptr>& args) const;
+	std::vector<std::string> generic_function_type_args() const;
+
 	variant get_member(const std::string& str) const;
 
 	//unsafe function which is called on an integer variant and returns
@@ -171,6 +176,7 @@ public:
 	bool is_decimal() const { return type_ == VARIANT_TYPE_DECIMAL; }
 	bool is_map() const { return type_ == VARIANT_TYPE_MAP; }
 	bool is_function() const { return type_ == VARIANT_TYPE_FUNCTION || type_ == VARIANT_TYPE_MULTI_FUNCTION; }
+	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	decimal as_decimal(decimal default_value=decimal()) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_INT) { return decimal::from_raw_value(int64_t(int_value_)*VARIANT_DECIMAL_PRECISION); } must_be(VARIANT_TYPE_DECIMAL); return decimal::from_raw_value(decimal_value_); }
 	bool as_bool(bool default_value) const;
@@ -225,6 +231,7 @@ public:
 
 	variant_type_ptr function_return_type() const;
 	std::vector<variant_type_ptr> function_arg_types() const;
+
 
 	std::string as_string_default(const char* default_value=NULL) const;
 	const std::string& as_string() const;
@@ -293,7 +300,7 @@ public:
 	void write_json(std::ostream& s, write_flags flags=FSON_MODE) const;
 	void write_json_pretty(std::ostream& s, std::string indent, write_flags flags=FSON_MODE) const;
 
-	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_INVALID };
+	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_INVALID };
 	TYPE type() const { return type_; }
 
 	void write_function(std::ostream& s) const;
@@ -348,6 +355,7 @@ private:
 		variant_string* string_;
 		variant_map* map_;
 		variant_fn* fn_;
+		variant_generic_fn* generic_fn_;
 		variant_multi_fn* multi_fn_;
 		variant_delayed* delayed_;
 		debug_info* debug_info_;

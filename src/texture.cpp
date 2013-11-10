@@ -786,7 +786,7 @@ void texture::clear_modified_files_from_cache()
 
 surface texture::get_surface()
 {
-	if(!id_ || !id_->init()) {
+	if(!id_ || !id_->init() && !id_->s.get()) {
 		return surface();
 	}
 

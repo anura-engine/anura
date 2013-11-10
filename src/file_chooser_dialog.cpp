@@ -157,7 +157,7 @@ void file_chooser_dialog::init()
 
 	file_list files;
 	dir_list dirs;
-	sys::get_files_in_dir(current_path_, &files, &dirs, sys::ENTIRE_FILE_PATH);
+	sys::get_files_in_dir(current_path_, &files, &dirs);
 
 	std::string l = "Choose File ";
 	if(dir_only_) {

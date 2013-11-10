@@ -45,6 +45,7 @@ int char_height(int size, const std::string& fn="");
 
 void reload_font_paths();
 std::vector<std::string> get_available_fonts();
+std::string get_default_monospace_font();
 
 
 }

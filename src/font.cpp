@@ -259,4 +259,9 @@ std::vector<std::string> get_available_fonts()
 	return v;
 }
 
+std::string get_default_monospace_font()
+{
+	return "FreeMono";
+}
+
 }

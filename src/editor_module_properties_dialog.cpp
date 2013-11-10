@@ -25,6 +25,7 @@
 #include "background.hpp"
 #include "button.hpp"
 #include "checkbox.hpp"
+#include "draw_scene.hpp"
 #include "editor.hpp"
 #include "editor_dialogs.hpp"
 #include "editor_module_properties_dialog.hpp"
@@ -67,25 +68,29 @@ namespace
 }
 
 editor_module_properties_dialog::editor_module_properties_dialog(editor& e)
-  : dialog(0, 0, graphics::screen_width(), graphics::screen_height()), editor_(e), new_mod_(true)
+  : dialog(preferences::virtual_screen_width()/2 - 300, preferences::virtual_screen_height()/2 - 220, 600, 440), editor_(e), new_mod_(true)
 {
-	set_clear_bg_amount(255);
 	init();
 }
 
 editor_module_properties_dialog::editor_module_properties_dialog(editor& e, const std::string& modname)
-	: dialog(0, 0, graphics::screen_width(), graphics::screen_height()), editor_(e), new_mod_(false)
+	: dialog(preferences::virtual_screen_width()/2 - 300, preferences::virtual_screen_height()/2 - 220, 600, 440), editor_(e), new_mod_(false)
 {
 	if(!modname.empty()) {
 		module::load_module_from_file(modname, &mod_);
 		std::cerr << "MOD: " << modname << ":" << mod_.name_ << std::endl;
 	}
-	set_clear_bg_amount(255);
 	init();
 }
 
 void editor_module_properties_dialog::init()
 {
+	set_clear_bg_amount(255);
+	set_background_frame("empty_window");
+	set_draw_background_fn([]() {
+		draw_scene(level::current(), last_draw_position());
+	});
+
 	dirs_.clear();
 	module::get_module_list(dirs_);
 
@@ -95,6 +100,7 @@ void editor_module_properties_dialog::init()
 	add_widget(widget_ptr(new label("Module Properties", graphics::color_white(), 48)), 10, 10);
 
 	grid_ptr g(new grid(2));
+	g->set_max_height(320);
 	if(new_mod_) {
 		text_editor_widget_ptr change_id_entry(new text_editor_widget(200, 30));
 		change_id_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_id, this, change_id_entry));
@@ -102,11 +108,9 @@ void editor_module_properties_dialog::init()
 
 		g->add_col(widget_ptr(new label("Identifier:  ", graphics::color_white(), 36)))
 			.add_col(widget_ptr(change_id_entry));
-		add_widget(g);
 	} else {
 		g->add_col(widget_ptr(new label("Identifier: ", graphics::color_white(), 36)))
 			.add_col(widget_ptr(new label(mod_.name_, graphics::color_white(), 36)));
-		add_widget(g);
 	}
 
 	text_editor_widget_ptr change_name_entry(new text_editor_widget(200, 30));
@@ -114,31 +118,26 @@ void editor_module_properties_dialog::init()
 	change_name_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_name, this, change_name_entry));
 	change_name_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
 
-	g.reset(new grid(2));
 	g->add_col(widget_ptr(new label("Name:", graphics::color_white(), 36)))
 	  .add_col(widget_ptr(change_name_entry));
-	add_widget(g);
 
 	text_editor_widget_ptr change_abbrev_entry(new text_editor_widget(200, 30));
 	change_abbrev_entry->set_text(mod_.abbreviation_);
 	change_abbrev_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_prefix, this, change_abbrev_entry));
 	change_abbrev_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
 
-	g.reset(new grid(2));
 	g->add_col(widget_ptr(new label("Prefix:", graphics::color_white(), 36)))
 	  .add_col(widget_ptr(change_abbrev_entry));
-	add_widget(g);
 
-	g.reset(new grid(2));
 	g->add_col(widget_ptr(new label("Modules  ", graphics::color_white(), 36)))
 		.add_col(widget_ptr(new button(widget_ptr(new label("Add", graphics::color_white())), boost::bind(&editor_module_properties_dialog::change_module_includes, this))));
-	add_widget(g);
 	foreach(const std::string& s, mod_.included_modules_) {
-		g.reset(new grid(2));
 		g->add_col(widget_ptr(new label(s, graphics::color_white(), 36)))
 			.add_col(widget_ptr(new button(widget_ptr(new label("Remove", graphics::color_white())), boost::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
-		add_widget(g);
 	}
+	add_widget(g);
+
+	add_ok_and_cancel_buttons();
 }
 
 void editor_module_properties_dialog::change_id(const gui::text_editor_widget_ptr editor)

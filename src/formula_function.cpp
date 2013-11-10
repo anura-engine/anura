@@ -2440,19 +2440,6 @@ private:
 		return variant_type::get_list(args().back()->query_variant_type());
 	}
 
-	void static_error_analysis() const {
-		bool found_valid_expr = false;
-		std::vector<const_expression_ptr> expressions = args().back()->query_children_recursive();
-		for(const_expression_ptr expr : expressions) {
-			const std::string& s = expr->str();
-			if(s == "value" || s == "key" || s == "index" || s == identifier_) {
-				found_valid_expr = true;
-				break;
-			}
-		}
-
-		ASSERT_LOG(found_valid_expr, "Last argument to map() function does not contain 'value', 'key', or 'index' " << identifier_ << debug_pinpoint_location());
-	}
 };
 
 FUNCTION_DEF(sum, 1, 2, "sum(list[, counter]): Adds all elements of the list together. If counter is supplied, all elements of the list are added to the counter instead of to 0.")

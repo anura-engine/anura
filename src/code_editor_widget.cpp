@@ -171,10 +171,19 @@ static const graphics::color TokenColors[] = {
 					colors_[opening_brackets[n].front().first][opening_brackets[n].front().second] = graphics::color(255, 0, 0);
 				}
 
-				if(i == end) {
-					colors_.back().push_back(graphics::color(196, 196, 196));
-					i = end + 1;
+				while(i != end) {
+					//we might have bailed out of formula parsing early due to an error. Just treat
+					//remaining text until the closing quotes as plain.
+					if(*i == '\n') {
+						colors_.resize(colors_.size()+1);
+					} else {
+						colors_.back().push_back(graphics::color(196, 196, 196));
+					}
+					++i;
 				}
+
+				colors_.back().push_back(graphics::color(196, 196, 196));
+				i = end + 1;
 			}
 
 

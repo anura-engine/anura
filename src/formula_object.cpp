@@ -1416,11 +1416,13 @@ public:
 private:
 	variant get_value(const std::string& key) const {
 		formula_callable_definition_ptr def = get_library_definition();
-		return query_value_by_slot(def->get_slot(key));
+		const int slot = def->get_slot(key);
+		ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
+		return query_value_by_slot(slot);
 	}
 
 	variant get_value_by_slot(int slot) const {
-		ASSERT_LOG(slot >= 0 && slot < items_.size(), "ILLEGAL LOOK UP IN LIBRARY");
+		ASSERT_LOG(slot >= 0 && slot < items_.size(), "ILLEGAL LOOK UP IN LIBRARY: " << slot << "/" << items_.size());
 		if(items_[slot].is_null()) {
 			formula_callable_definition_ptr def = get_library_definition();
 			const formula_callable_definition::entry* entry = def->get_entry(slot);

@@ -165,6 +165,13 @@ token get_token(iterator& i1, iterator i2) {
 		}
 
 	case '>':
+		if(i1+1 != i2 && *(i1+1) == *i1) {
+			t.type = *i1 == '<' ? TOKEN_LDUBANGLE : TOKEN_RDUBANGLE;
+			i1 += 2;
+			t.end = i1;
+			return t;
+		}
+
 	case '!':
 		t.type = TOKEN_OPERATOR;
 		++i1;
@@ -291,7 +298,6 @@ token get_token(iterator& i1, iterator i2) {
 
 token_error::token_error(const std::string& m) : msg(m)
 {
-	std::cerr << "Tokenizer error: " << m << "\n";
 }
 
 token_matcher::token_matcher()

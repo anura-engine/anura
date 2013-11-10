@@ -54,6 +54,8 @@ typedef boost::shared_ptr<const modifier> const_modifier_ptr;
 class custom_object_type
 {
 public:
+	static void set_player_variant_type(variant type_str);
+
 	static game_logic::formula_callable_definition_ptr get_definition(const std::string& id);
 	static bool is_derived_from(const std::string& base, const std::string& derived);
 	static variant merge_prototype(variant node, std::vector<std::string>* proto_paths=NULL);
