@@ -128,7 +128,7 @@ WindowsPrefs winPrefs;
 namespace preferences {
 	namespace {
 	struct RegisteredSetting {
-		RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), string_value(NULL), helpstring(NULL)
+		RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), double_value(NULL), string_value(NULL), helpstring(NULL)
 		{}
 		variant write() const {
 			if(int_value) {
@@ -137,6 +137,8 @@ namespace preferences {
 				return variant(*string_value);
 			} else if(bool_value) {
 				return variant::from_bool(*bool_value);
+			} else if(double_value) {
+				return variant(*double_value);
 			} else {
 				return variant();
 			}
@@ -149,11 +151,14 @@ namespace preferences {
 				*string_value = value.as_string();
 			} else if(bool_value && (value.is_bool() || value.is_int())) {
 				*bool_value = value.as_bool();
+			} else if(double_value && (value.is_decimal() || value.is_int())) {
+				*double_value = value.as_decimal().as_float();
 			}
 		}
 		bool persistent;
 		int* int_value;
 		bool* bool_value;
+		double* double_value;
 		std::string* string_value;
 		const char* helpstring;
 	};
@@ -188,6 +193,8 @@ namespace preferences {
 				return variant(*itor->second.string_value);
 			} else if(itor->second.bool_value) {
 				return variant::from_bool(*itor->second.bool_value);
+			} else if(itor->second.double_value) {
+				return variant(*itor->second.double_value);
 			} else {
 				return variant();
 			}
@@ -203,6 +210,8 @@ namespace preferences {
 				*itor->second.int_value = value.as_int();
 			} else if(itor->second.string_value) {
 				*itor->second.string_value = value.as_string();
+			} else if(itor->second.double_value) {
+				*itor->second.double_value = value.as_decimal().as_float();
 			}
 		}
 
@@ -250,6 +259,16 @@ namespace preferences {
 		return g_registered_settings().size();
 	}
 
+	int register_float_setting(const std::string& id, bool persistent, double* value, const char* helpstring)
+	{
+		ASSERT_LOG(g_registered_settings().count(id) == 0, "Multiple definition of registered setting: " << id);
+		RegisteredSetting& setting = g_registered_settings()[id];
+		setting.double_value = value;
+		setting.persistent = persistent;
+		setting.helpstring = helpstring;
+		return g_registered_settings().size();
+	}
+
 	std::string get_registered_helpstring()
 	{
 		std::string return_value;
@@ -267,6 +286,8 @@ namespace preferences {
 				s << "=" << *i->second.string_value;
 			} else if(i->second.bool_value) {
 				s << " (default: " << (*i->second.bool_value ? "true" : "false") << ")";
+			} else if(i->second.double_value) {
+				s << "=" << *i->second.double_value;
 			}
 
 			std::string result = s.str();
@@ -1277,6 +1298,8 @@ namespace preferences {
 						*setting.string_value = std::string(equal+1, s.end());
 					} else if(setting.int_value) {
 						*setting.int_value = atoi(std::string(equal+1, s.end()).c_str());
+					} else if(setting.double_value) {
+						*setting.double_value = boost::lexical_cast<double>(std::string(equal+1, s.end()));
 					} else if(setting.bool_value) {
 						std::string value(equal+1, s.end());
 						if(value == "yes" || value == "true") {
