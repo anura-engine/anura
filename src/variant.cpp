@@ -259,6 +259,8 @@ struct variant_generic_fn {
 
 	std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory;
 
+	mutable std::map<std::vector<std::string>, variant> cache;
+
 	int base_slot;
 	int refcount;
 };
@@ -958,6 +960,17 @@ variant variant::instantiate_generic_function(const std::vector<variant_type_ptr
 
 	ASSERT_LOG(args.size() == generic_fn_->generic_types.size(), "Expected " << generic_fn_->generic_types.size() << " generic arguments but found " << args.size());
 
+	std::vector<std::string> key;
+	key.resize(args.size());
+	for(int n = 0; n != args.size(); ++n) {
+		key[n] = args[n]->to_string();
+	}
+
+	auto itor = generic_fn_->cache.find(key);
+	if(itor != generic_fn_->cache.end()) {
+		return itor->second;
+	}
+
 	std::map<std::string, variant_type_ptr> mapping;
 	for(int n = 0; n != args.size(); ++n) {
 		mapping[generic_fn_->generic_types[n]] = args[n];
@@ -983,6 +996,7 @@ variant variant::instantiate_generic_function(const std::vector<variant_type_ptr
 
 	game_logic::const_formula_ptr fml = generic_fn_->factory(args);
 	variant result(fml, *generic_fn_->callable, generic_fn_->base_slot, info);
+	generic_fn_->cache[key] = result;
 	return result;
 }
 
