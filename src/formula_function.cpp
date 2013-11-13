@@ -985,6 +985,13 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_INT);
 END_FUNCTION_DEF(int)
 
+FUNCTION_DEF(bool, 1, 1, "bool(value) -> bool: converts the value to a boolean")
+	variant v = args()[0]->evaluate(variables);
+	return variant::from_bool(v.as_bool());
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_INT);
+END_FUNCTION_DEF(bool)
+
 FUNCTION_DEF(sin, 1, 1, "sin(x): Standard sine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(sin(angle/radians_to_degrees)));
