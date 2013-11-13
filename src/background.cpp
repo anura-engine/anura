@@ -140,7 +140,9 @@ background::background(variant node, int palette) : palette_(palette)
 		bg.image = layer_node["image"].as_string();
 		bg.image_formula = layer_node["image_formula"].as_string_default();
 		bg.xscale = layer_node["xscale"].as_int(100);
-		bg.yscale = layer_node["yscale"].as_int(100);
+		bg.yscale_top = bg.yscale_bot = layer_node["yscale"].as_int(100);
+		bg.yscale_top = layer_node["yscale_top"].as_int(bg.yscale_top);
+		bg.yscale_bot = layer_node["yscale_bot"].as_int(bg.yscale_bot);
 		bg.xspeed = layer_node["xspeed"].as_int(0);
 		bg.xpad = layer_node["xpad"].as_int(0);
 		bg.xoffset = layer_node["xoffset"].as_int(0);
@@ -212,7 +214,12 @@ variant background::write() const
 		variant_builder layer_node;
 		layer_node.add("image", bg.image);
 		layer_node.add("xscale", formatter() << bg.xscale);
-		layer_node.add("yscale", formatter() << bg.yscale);
+		if(bg.yscale_top == bg.yscale_bot) {
+			layer_node.add("yscale", formatter() << bg.yscale_top);
+		} else {
+			layer_node.add("yscale_top", formatter() << bg.yscale_top);
+			layer_node.add("yscale_bot", formatter() << bg.yscale_bot);
+		}
 		layer_node.add("xspeed", formatter() << bg.xspeed);
 		layer_node.add("xpad", formatter() << bg.xpad);
 		layer_node.add("xoffset", formatter() << bg.xoffset);
@@ -386,8 +393,9 @@ void background::set_offset(const point& offset)
 void background::draw_layer(int x, int y, const rect& area, int rotation, const background::layer& bg, int cycle) const
 {	
 	const double ScaleImage = 2.0;
-	GLshort y1 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale)/100;
-	GLshort y2 = y1 + (bg.y2 - bg.y1)*ScaleImage;
+	GLshort y1 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100;
+	GLshort y2 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 +
+	                 (bg.y2 - bg.y1)*ScaleImage;
 
 	if(!bg.tile_downwards && y2 <= y) {
 		return;

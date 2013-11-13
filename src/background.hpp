@@ -63,7 +63,7 @@ private:
 		std::string image;
 		std::string image_formula;
 		mutable graphics::texture texture;
-		int xscale, yscale;		//scales are how quickly the background scrolls compared to normal ground movement when the player
+		int xscale, yscale_top, yscale_bot;		//scales are how quickly the background scrolls compared to normal ground movement when the player
 								//walks around.  They give us the illusion of 'depth'. 100 is normal ground, less=distant, more=closer
 		
 		int xspeed;				//speed is how fast (in millipixels/cycle) the bg moves on its own.  It's for drifting clounds/rivers.

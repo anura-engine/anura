@@ -38,11 +38,13 @@
 #include "texture.hpp"
 #include "variant_utils.hpp"
 
+PREF_FLOAT(global_frame_scale, 2.0, "Sets the global frame scales for all frames in all animations");
+
 namespace {
 
-std::set<frame*>& palette_frames() {
-	static std::set<frame*>* instance = new std::set<frame*>;
-	return *instance;
+	std::set<frame*>& palette_frames() {
+		static std::set<frame*>* instance = new std::set<frame*>;
+		return *instance;
 }
 
 unsigned int current_palette_mask = 0;
@@ -86,7 +88,7 @@ frame::frame(variant node)
 	 frame_time_(node["duration"].as_int(-1)),
 	 reverse_frame_(node["reverse"].as_bool()),
 	 play_backwards_(node["play_backwards"].as_bool()),
-	 scale_(node["scale"].as_decimal(decimal(2.0)).as_float()),
+	 scale_(node["scale"].as_decimal(decimal(g_global_frame_scale)).as_float()),
 	 pad_(node["pad"].as_int()),
 	 rotate_(node["rotate"].as_int()),
 	 blur_(node["blur"].as_int()),

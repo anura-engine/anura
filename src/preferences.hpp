@@ -47,12 +47,17 @@ namespace preferences {
 	int register_string_setting(const std::string& id, bool persistent, std::string* value, const char* helpstring);
 	int register_int_setting(const std::string& id, bool persistent, int* value, const char* helpstring);
 	int register_bool_setting(const std::string& id, bool persistent, bool* value, const char* helpstring);
+	int register_float_setting(const std::string& id, bool persistent, double* value, const char* helpstring);
 
 	std::string get_registered_helpstring();
 
 #define PREF_BOOL(id, default_value, helpstring) \
 	bool g_##id = default_value; \
 	int g_##id##_dummy = preferences::register_bool_setting(#id, false, &g_##id, helpstring)
+
+#define PREF_FLOAT(id, default_value, helpstring) \
+	double g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_float_setting(#id, false, &g_##id, helpstring)
 
 #define PREF_INT(id, default_value, helpstring) \
 	int g_##id = default_value; \
@@ -65,6 +70,10 @@ namespace preferences {
 #define PREF_BOOL_PERSISTENT(id, default_value, helpstring) \
 	bool g_##id = default_value; \
 	int g_##id##_dummy = preferences::register_bool_setting(#id, true, &g_##id, helpstring)
+
+#define PREF_FLOAT_PERSISTENT(id, default_value, helpstring) \
+	double g_##id = default_value; \
+	int g_##id##_dummy = preferences::register_float_setting(#id, true, &g_##id, helpstring)
 
 #define PREF_INT_PERSISTENT(id, default_value, helpstring) \
 	int g_##id = default_value; \
