@@ -33,7 +33,7 @@ namespace geom
 	{
 	public:
 		polygon(int id) : id_(id), height_(0) {}
-		~polygon() {}
+		virtual ~polygon() {}
 		
 		void add_point(double x, double y) {
 			pts_.push_back(fpoint(x,y));
