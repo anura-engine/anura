@@ -231,6 +231,8 @@
 		C092656017D48CF50035C0CB /* layout_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C092655E17D48CF50035C0CB /* layout_widget.cpp */; };
 		C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3A917A470F600D433AA /* user_voxel_object.cpp */; };
 		C093F3AE17A4711300D433AA /* skybox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3AC17A4711300D433AA /* skybox.cpp */; };
+		C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */; };
+		C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD7515183494F100FAFA3D /* poly_map.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -732,6 +734,10 @@
 		C093F3AA17A470F600D433AA /* user_voxel_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = user_voxel_object.hpp; sourceTree = "<group>"; };
 		C093F3AC17A4711300D433AA /* skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = skybox.cpp; sourceTree = "<group>"; };
 		C093F3AD17A4711300D433AA /* skybox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = skybox.hpp; sourceTree = "<group>"; };
+		C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VoronoiDiagramGenerator.cpp; sourceTree = "<group>"; };
+		C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoronoiDiagramGenerator.h; sourceTree = "<group>"; };
+		C0AD7515183494F100FAFA3D /* poly_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = poly_map.cpp; sourceTree = "<group>"; };
+		C0AD7516183494F100FAFA3D /* poly_map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = poly_map.hpp; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
@@ -1157,6 +1163,8 @@
 				C010C6BC160AFD4D006E7D90 /* player_info.hpp */,
 				C010C6BD160AFD4D006E7D90 /* point_map.hpp */,
 				C010C6BE160AFD4D006E7D90 /* poly_line_widget.hpp */,
+				C0AD7515183494F100FAFA3D /* poly_map.cpp */,
+				C0AD7516183494F100FAFA3D /* poly_map.hpp */,
 				C010C6BF160AFD4D006E7D90 /* preferences.cpp */,
 				C010C6C0160AFD4D006E7D90 /* preferences.hpp */,
 				C010C6C1160AFD4D006E7D90 /* preprocessor.cpp */,
@@ -1281,6 +1289,8 @@
 				C010C732160AFD4D006E7D90 /* vector_text.hpp */,
 				C090E8ED1787964600E6FC5A /* view3d_widget.cpp */,
 				C090E8EE1787964600E6FC5A /* view3d_widget.hpp */,
+				C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */,
+				C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */,
 				C090E8F01787967200E6FC5A /* voxel_animation.cpp */,
 				C090AAB3177C14740046CC87 /* voxel_editor_dialog.cpp */,
 				C090AAB4177C14740046CC87 /* voxel_editor_dialog.hpp */,
@@ -1564,6 +1574,7 @@
 				C00160CD16A2991D001DAEB9 /* tbs_server.cpp in Sources */,
 				C00160CE16A2991D001DAEB9 /* tbs_web_server.cpp in Sources */,
 				C010C7E4160AFD4E006E7D90 /* text_editor_widget.cpp in Sources */,
+				C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */,
 				C010C7E5160AFD4E006E7D90 /* texture.cpp in Sources */,
 				C010C7E6160AFD4E006E7D90 /* texture_frame_buffer.cpp in Sources */,
 				C010C7E7160AFD4E006E7D90 /* thread.cpp in Sources */,
@@ -1603,6 +1614,7 @@
 				C02751BB17FD417100173646 /* video_selections.cpp in Sources */,
 				C06495251713620E00D8F372 /* gles2.cpp in Sources */,
 				C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */,
+				C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */,
 				C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */,
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
