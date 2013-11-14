@@ -5,7 +5,7 @@
 #include "formula_callable_definition.hpp"
 #include "widget.hpp"
 
-namespace geom
+namespace geometry
 {
 	template<class T>
 	struct point

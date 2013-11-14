@@ -125,7 +125,7 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new gui::view3d_widget(v, e));
 #endif
 	} else if(wtype == "poly_map") {
-		return widget_ptr(new geom::poly_map(v, e));
+		return widget_ptr(new geometry::poly_map(v, e));
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else {

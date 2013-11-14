@@ -6,7 +6,7 @@
 #include "simplex_noise.hpp"
 #include "VoronoiDiagramGenerator.h"
 
-namespace geom
+namespace geometry
 {
 	namespace
 	{
@@ -215,7 +215,7 @@ namespace geom
 		}
 
 		// Calculate voronoi polygons, running multiple Lloyd relaxation cycles.
-		geom::voronoi::wrapper v(pts_, relaxations_, 0, 0, width(), height());
+		geometry::voronoi::wrapper v(pts_, relaxations_, 0, 0, width(), height());
 
 		hsv base_color = rgb_to_hsv(112, 144, 95);
 
