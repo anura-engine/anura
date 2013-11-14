@@ -279,6 +279,10 @@ public:
 		result = v_;
 		return true;
 	}
+
+	void set_type_override(variant_type_ptr type) {
+		type_override_ = type;
+	}
 private:
 	variant execute(const formula_callable& /*variables*/) const {
 		return v_;
@@ -287,6 +291,7 @@ private:
 	virtual variant_type_ptr get_variant_type() const;
 	
 	variant v_;
+	variant_type_ptr type_override_;
 };
 
 const_formula_callable_definition_ptr get_map_callable_definition(const_formula_callable_definition_ptr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name);

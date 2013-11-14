@@ -1599,7 +1599,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_CONST_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
+		if(i1->type == TOKEN_CONST_IDENTIFIER || i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
 			v.push_back(variant_type::get_generic_type(std::string(i1->begin, i1->end)));
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {

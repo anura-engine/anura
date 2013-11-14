@@ -132,6 +132,10 @@ namespace game_logic
 	}
 
 	variant_type_ptr variant_expression::get_variant_type() const {
+		if(type_override_) {
+			return type_override_;
+		}
+
 		return get_variant_type_from_value(v_);
 	}
 
@@ -762,6 +766,11 @@ public:
 					STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
 				} else {
 					STRICT_ERROR("Unknown identifier '" << id_ << "' " << debug_pinpoint_location() << "\nIdentifiers that are valid in this scope: " << known << "\n");
+				}
+			} else if(callable_def_) {
+				std::string type_name = "unk";
+				if(callable_def_->type_name()) {
+					type_name = *callable_def_->type_name();
 				}
 			}
 		}
@@ -2616,6 +2625,13 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 		}
 	}
 
+	if(result) {
+		expression_ptr optimized = result->optimize();
+		if(optimized) {
+			result = optimized;
+		}
+	}
+
 	if(reduce_to_static) {
 		//we want to try to evaluate this expression, and see if it is static.
 		//it is static if it never reads its input, if it doesn't call the rng,
@@ -2633,7 +2649,12 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 
 			if(rng_seed == rng::get_seed() && static_callable->refcount() == 1) {
 				//this expression is static. Reduce it to its result.
-				result = expression_ptr(new variant_expression(res));
+				variant_expression* expr = new variant_expression(res);
+				if(result) {
+					expr->set_type_override(result->query_variant_type());
+				}
+
+				result.reset(expr);
 			}
 
 			//it's possible if there is a latent reference to it the
@@ -2644,13 +2665,6 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 			//the expression isn't static. Not an error.
 		} catch(fatal_assert_failure_exception& e) {
 			ASSERT_LOG(false, "Error parsing formula: " << e.msg << "\n" << original->debug_pinpoint_location());
-		}
-	}
-
-	if(result) {
-		expression_ptr optimized = result->optimize();
-		if(optimized) {
-			result = optimized;
 		}
 	}
 	

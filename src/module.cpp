@@ -397,9 +397,7 @@ void get_module_list(std::vector<std::string>& dirs) {
 	// Grab the files/directories under ./module/ for later use.
 	std::vector<std::string> files;
 	foreach(const std::string& path, module_dirs()) {
-		std::cerr << "ZZZ: get files in dir: " << path << "...\n";
 		sys::get_files_in_dir(path + "/", &files, &dirs);
-		std::cerr << "ZZZ: " << dirs.size() << "\n";
 	}
 }
 

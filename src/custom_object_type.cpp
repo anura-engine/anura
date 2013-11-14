@@ -1307,6 +1307,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	init_object_definition(node, id_, callable_definition_, slot_properties_base_, is_strict_);
 
+	const types_cfg_scope types_scope(node["types"]);
+
 	//END OF FIRST PARSE.
 	//We've now constructed our definition of the object, and we can
 	//safely query other object type definitions
