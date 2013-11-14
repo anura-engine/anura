@@ -360,7 +360,6 @@ namespace graphics
 #if defined(USE_SHADERS)
 		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
 		glClearColor(0.0,0.0,0.0,0.0);
-		gles2::init_default_shader();
 #else
 		glColor4ub(255,255,255,255);
 #endif

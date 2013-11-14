@@ -40,6 +40,7 @@
 #include "label.hpp"
 #include "layout_widget.hpp"
 #include "poly_line_widget.hpp"
+#include "poly_map.hpp"
 #include "preview_tileset_widget.hpp"
 #include "progress_bar.hpp"
 #include "rich_text_label.hpp"
@@ -123,6 +124,8 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 	} else if(wtype == "view3d") {
 		return widget_ptr(new gui::view3d_widget(v, e));
 #endif
+	} else if(wtype == "poly_map") {
+		return widget_ptr(new geometry::poly_map(v, e));
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else {

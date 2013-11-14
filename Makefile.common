@@ -140,6 +140,7 @@ objects = \
 	src/pause_game_dialog.o \
 	src/playable_custom_object.o \
 	src/player_info.o \
+	src/poly_map.o \
 	src/preferences.o \
 	src/preprocessor.o \
 	src/preview_tileset_widget.o \
@@ -205,6 +206,7 @@ objects = \
 	src/variant_utils.o \
     src/vector_text.o \
 	src/video_selections.o \
+	src/VoronoiDiagramGenerator.o \
 	src/voxel_animation.o \
 	src/voxel_editor.o \
 	src/voxel_editor_dialog.o \
