@@ -14,7 +14,7 @@ namespace geom
 		explicit point(T xx, T yy) : x(xx), y(yy) {}
 		T x, y;
 
-		bool operator==(const point<T>& o) {
+		bool operator==(const point<T>& o) const {
 			return o.x == x && o.y == y;
 		}
 	};
