@@ -66,7 +66,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "_data", "any" },
 	{ "arg", "object" },
 	{ "consts", "any" },
-	{ "type", "any" },
+	{ "type", "string" },
 	{ "active", "any" },
 	{ "lib", "library" },
 
