@@ -1,0 +1,83 @@
+﻿Build started 11/14/2013 8:17:54 PM.
+     1>Project "C:\Projects\anura\vs2012\lua\lua.vcxproj" on node 3 (Rebuild target(s)).
+     1>_PrepareForClean:
+         Deleting file "Release\lua.lastbuildstate".
+       InitializeBuildStatus:
+         Creating "Release\lua.unsuccessfulbuild" because "AlwaysCreate" was specified.
+       ClCompile:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\CL.exe /c /I..\..\..\lua\src /Zi /nologo /W3 /WX- /O2 /Oi /Oy- /GL /D WIN32 /D NDEBUG /D _LIB /D _CRT_SECURE_NO_WARNINGS /D _UNICODE /D UNICODE /Gm- /EHsc /MD /GS /Gy /fp:precise /Zc:wchar_t /Zc:forScope /Fo"Release\\" /Fd"Release\vc110.pdb" /Gd /TC /analyze- /errorReport:prompt ..\..\..\lua\src\lapi.c ..\..\..\lua\src\lauxlib.c ..\..\..\lua\src\lbaselib.c ..\..\..\lua\src\lbitlib.c ..\..\..\lua\src\lcode.c ..\..\..\lua\src\lcorolib.c ..\..\..\lua\src\lctype.c ..\..\..\lua\src\ldblib.c ..\..\..\lua\src\ldebug.c ..\..\..\lua\src\ldo.c ..\..\..\lua\src\ldump.c ..\..\..\lua\src\lfunc.c ..\..\..\lua\src\lgc.c ..\..\..\lua\src\linit.c ..\..\..\lua\src\liolib.c ..\..\..\lua\src\llex.c ..\..\..\lua\src\lmathlib.c ..\..\..\lua\src\lmem.c ..\..\..\lua\src\loadlib.c ..\..\..\lua\src\lobject.c ..\..\..\lua\src\lopcodes.c ..\..\..\lua\src\loslib.c ..\..\..\lua\src\lparser.c ..\..\..\lua\src\lstate.c ..\..\..\lua\src\lstring.c ..\..\..\lua\src\lstrlib.c ..\..\..\lua\src\ltable.c ..\..\..\lua\src\ltablib.c ..\..\..\lua\src\ltm.c ..\..\..\lua\src\lundump.c ..\..\..\lua\src\lvm.c ..\..\..\lua\src\lzio.c
+         lapi.c
+         lauxlib.c
+         lbaselib.c
+         lbitlib.c
+         lcode.c
+         lcorolib.c
+         lctype.c
+         ldblib.c
+         ldebug.c
+         ldo.c
+         ldump.c
+         lfunc.c
+         lgc.c
+         linit.c
+         liolib.c
+         llex.c
+         lmathlib.c
+         lmem.c
+         loadlib.c
+         lobject.c
+         Compiling...
+         lopcodes.c
+         loslib.c
+         lparser.c
+         lstate.c
+         lstring.c
+         lstrlib.c
+         ltable.c
+         ltablib.c
+         ltm.c
+         lundump.c
+         lvm.c
+         lzio.c
+       Lib:
+         C:\Program Files (x86)\Microsoft Visual Studio 11.0\VC\bin\Lib.exe /OUT:"C:\Projects\anura\vs2012\anura\Release\lua.lib" /NOLOGO /LTCG Release\lapi.obj
+         Release\lauxlib.obj
+         Release\lbaselib.obj
+         Release\lbitlib.obj
+         Release\lcode.obj
+         Release\lcorolib.obj
+         Release\lctype.obj
+         Release\ldblib.obj
+         Release\ldebug.obj
+         Release\ldo.obj
+         Release\ldump.obj
+         Release\lfunc.obj
+         Release\lgc.obj
+         Release\linit.obj
+         Release\liolib.obj
+         Release\llex.obj
+         Release\lmathlib.obj
+         Release\lmem.obj
+         Release\loadlib.obj
+         Release\lobject.obj
+         Release\lopcodes.obj
+         Release\loslib.obj
+         Release\lparser.obj
+         Release\lstate.obj
+         Release\lstring.obj
+         Release\lstrlib.obj
+         Release\ltable.obj
+         Release\ltablib.obj
+         Release\ltm.obj
+         Release\lundump.obj
+         Release\lvm.obj
+         Release\lzio.obj
+         lua.vcxproj -> C:\Projects\anura\vs2012\anura\Release\lua.lib
+       FinalizeBuildStatus:
+         Deleting file "Release\lua.unsuccessfulbuild".
+         Touching "Release\lua.lastbuildstate".
+     1>Done Building Project "C:\Projects\anura\vs2012\lua\lua.vcxproj" (Rebuild target(s)).
+
+Build succeeded.
+
+Time Elapsed 00:00:07.16

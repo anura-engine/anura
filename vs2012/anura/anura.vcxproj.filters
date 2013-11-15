@@ -309,9 +309,6 @@
     <ClInclude Include="..\..\..\anura\src\IMG_savepng.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\..\anura\src\input.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\..\anura\src\ipc.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -705,6 +702,30 @@
     <ClInclude Include="..\..\src\video_selections.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\haptic.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\input.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\fbo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\wm.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\lua_iface.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\StackWalker.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\poly_map.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\VoronoiDiagramGenerator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\..\anura\src\achievements.cpp">
@@ -963,9 +984,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\anura\src\IMG_savepng.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\..\anura\src\input.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\..\anura\src\ipc.cpp">
@@ -1349,6 +1367,30 @@
     <ClCompile Include="..\..\src\video_selections.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\input.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\fbo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\wm.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\lua_iface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\StackWalker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\normal_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\poly_map.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\VoronoiDiagramGenerator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\..\anura\src\anura-resouces.rc">
@@ -1362,10 +1404,7 @@
     <Library Include="..\..\..\glew-1.9.0\lib\glew32s.lib" />
     <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
-    <Library Include="..\..\..\bullet\lib\LinearMath_vs2010.lib" />
-    <Library Include="..\..\..\bullet\lib\BulletCollision_vs2010.lib" />
-    <Library Include="..\..\..\bullet\lib\BulletDynamics_vs2010.lib" />
-    <Library Include="..\..\..\bullet\lib\BulletSoftBody_vs2010.lib" />
     <Library Include="..\..\..\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
+    <Library Include="Release\lua.lib" />
   </ItemGroup>
 </Project>
