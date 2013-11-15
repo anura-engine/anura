@@ -344,6 +344,7 @@ std::map<std::string, formula_callable_definition_ptr>& object_type_definitions(
 
 bool custom_object_type::is_derived_from(const std::string& base, const std::string& derived)
 {
+	fprintf(stderr, "IS DERIVED FROM: %s, %s\n", base.c_str(), derived.c_str());
 	if(derived == base) {
 		return true;
 	}
@@ -447,7 +448,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 					if(!type->match(default_value)) {
 						ASSERT_LOG(default_value.is_null(), "Default value for " << id_ << "." << k << " is " << default_value.write_json() << " of type " << get_variant_type_from_value(default_value)->to_string() << " does not match type " << type->to_string());
 
-						if(value["variable"].as_bool(true) && !value["dynamic_initialization"].as_bool(false)) {
+						if(value["variable"].as_bool(true) && !value["dynamic_initialization"].as_bool(false) && !value["init"].is_string()) {
 							requires_initialization = true;
 						}
 					}
@@ -1306,6 +1307,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	//because if we do we could end with infinite recursion.
 
 	init_object_definition(node, id_, callable_definition_, slot_properties_base_, is_strict_);
+
+	const types_cfg_scope types_scope(node["types"]);
 
 	//END OF FIRST PARSE.
 	//We've now constructed our definition of the object, and we can

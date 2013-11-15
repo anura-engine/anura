@@ -1599,7 +1599,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_CONST_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
+		if(i1->type == TOKEN_CONST_IDENTIFIER || i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
 			v.push_back(variant_type::get_generic_type(std::string(i1->begin, i1->end)));
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
@@ -1765,6 +1765,15 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 					ASSERT_COND(i1->equals(","), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 					++i1;
+				}
+
+				if(types.size() == 1 && types.begin()->first.is_string()) {
+					std::string type = types.begin()->first.as_string();
+					//this seems suspicious, specific maps are rarely one
+					//element. Check for built-in types and fail on them.
+					for(int n = 0; n < variant::VARIANT_TYPE_INVALID; ++n) {
+						ASSERT_COND(type != variant::variant_type_to_string(variant::TYPE(n)), "Error parsing map type. Surely you meant '->' rather than ':' in " << original_str.as_string() << "\n" << original_str.debug_location());
+					}
 				}
 
 				v.push_back(variant_type::get_specific_map(types));

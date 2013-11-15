@@ -1111,7 +1111,7 @@ private:
 	variant instantiation_commands_;
 };
 
-FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
 	formula::fail_if_static_context();
 
@@ -1250,16 +1250,22 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_player)
 
-FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object only creates the object and returns it. It may be stored for later use.")
+FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the level. object only creates the object and returns it. It may be stored for later use.")
 
 	formula::fail_if_static_context();
 	const std::string type = args()[0]->evaluate(variables).as_string();
 	boost::intrusive_ptr<custom_object> obj;
+
+	variant properties;
 	
 	if(args().size() > 1) {
 		const int x = args()[1]->evaluate(variables).as_int();
 		const int y = args()[2]->evaluate(variables).as_int();
-		const bool face_right = args()[3]->evaluate(variables).as_int() > 0;
+		properties = args()[3]->evaluate(variables);
+		bool face_right = true;
+		if(!properties.is_map()) {
+			face_right = properties.as_int() > 0;
+		}
 		obj.reset(new custom_object(type, x, y, face_right));
 	} else {
 		const int x = 0;
@@ -1273,9 +1279,12 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	obj->construct();
 
 	if(args().size() > 4) {
+		properties = args()[4]->evaluate(variables);
+	}
+
+	if(properties.is_map()) {
 		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
 		variant last_key;
-		variant properties = args()[4]->evaluate(variables);
 		variant keys = properties.get_keys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
@@ -1297,7 +1306,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("int|map")
 	ARG_TYPE("map")
 
 	variant v;
