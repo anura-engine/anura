@@ -1767,6 +1767,15 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					++i1;
 				}
 
+				if(types.size() == 1 && types.begin()->first.is_string()) {
+					std::string type = types.begin()->first.as_string();
+					//this seems suspicious, specific maps are rarely one
+					//element. Check for built-in types and fail on them.
+					for(int n = 0; n < variant::VARIANT_TYPE_INVALID; ++n) {
+						ASSERT_COND(type != variant::variant_type_to_string(variant::TYPE(n)), "Error parsing map type. Surely you meant '->' rather than ':' in " << original_str.as_string() << "\n" << original_str.debug_location());
+					}
+				}
+
 				v.push_back(variant_type::get_specific_map(types));
 			} else {
 
