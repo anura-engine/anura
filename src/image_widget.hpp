@@ -36,6 +36,9 @@ public:
 
 	void init(int w, int h);
 
+	const rect& area() const { return area_; }
+	const graphics::texture& tex() const { return texture_; }
+
 	void set_rotation(GLfloat rotate) { rotate_ = rotate; }
 	void set_area(const rect& area) { area_ = area; }
 
