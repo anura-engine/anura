@@ -1093,8 +1093,8 @@ public:
 		variant holder(spawn_callable);
 		spawn_callable->add("spawner", variant(&ob));
 		spawn_callable->add("child", variant(obj_.get()));
-		ob.handle_event("child_spawned", spawn_callable);
-		obj_->handle_event("spawned", spawn_callable);
+		ob.handle_event(OBJECT_EVENT_CHILD_SPAWNED, spawn_callable);
+		obj_->handle_event(OBJECT_EVENT_SPAWNED, spawn_callable);
 
 		obj_->execute_command(instantiation_commands_);
 
