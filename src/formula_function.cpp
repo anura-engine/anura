@@ -952,7 +952,7 @@ FUNCTION_DEF(values, 1, 1, "values(map) -> list: gives the values for a map")
 FUNCTION_ARGS_DEF
 	ARG_TYPE("map");
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type()->is_map_of().second;
+	return variant_type::get_list(args()[0]->query_variant_type()->is_map_of().second);
 END_FUNCTION_DEF(values)
 
 FUNCTION_DEF(wave, 1, 1, "wave(int) -> int: a wave with a period of 1000 and height of 1000")
