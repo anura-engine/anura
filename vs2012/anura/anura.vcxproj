@@ -136,7 +136,7 @@
       <StackReserveSize>10000000</StackReserveSize>
       <IgnoreSpecificDefaultLibraries>libcmt</IgnoreSpecificDefaultLibraries>
       <AdditionalLibraryDirectories>..\..\..\glew-1.9.0\build\vc10\shared\release;..\..\..\SDL_ttf\VisualC\Release;..\..\..\SDL_mixer\VisualC\Release;..\..\..\SDL_image\VisualC\Win32\Release;..\..\..\SDL\VisualC\SDL\Win32\Release;..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release;..\..\..\zlib;..\..\..\lpng160;..\..\..\boost\stage32-release-static\lib</AdditionalLibraryDirectories>
-      <AdditionalDependencies>opengl32.lib;glu32.lib;libpng.lib;zlib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>opengl32.lib;glu32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -625,11 +625,13 @@
   <ItemGroup>
     <Library Include="..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
     <Library Include="..\..\..\glew-1.9.0\lib\glew32s.lib" />
+    <Library Include="..\..\..\lpng160\libpng.lib" />
     <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
     <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="..\..\..\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="..\..\..\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="..\..\..\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
+    <Library Include="..\..\..\zlib\zlib.lib" />
     <Library Include="Release\lua.lib" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
