@@ -1398,15 +1398,15 @@
     </ResourceCompile>
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
-    <Library Include="..\..\..\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
-    <Library Include="..\..\..\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
-    <Library Include="..\..\..\glew-1.9.0\lib\glew32s.lib" />
-    <Library Include="..\..\..\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
-    <Library Include="..\..\..\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
-    <Library Include="..\..\..\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
     <Library Include="Release\lua.lib" />
-    <Library Include="..\..\..\lpng160\libpng.lib" />
-    <Library Include="..\..\..\zlib\zlib.lib" />
+    <Library Include="c:\projects\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
+    <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
+    <Library Include="c:\projects\lpng160\libpng.lib" />
+    <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
+    <Library Include="c:\projects\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
+    <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
+    <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
+    <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
+    <Library Include="c:\projects\zlib\zlib.lib" />
   </ItemGroup>
 </Project>
