@@ -2141,14 +2141,25 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
+		std::string value_str = "value";
+		if(args().size() > 2) {
+			variant literal;
+			args()[1]->is_literal(literal);
+			if(literal.is_string()) {
+				value_str = literal.as_string();
+			} else if(args()[1]->is_identifier(&value_str) == false) {
+				ASSERT_LOG(false, "find function requires a literal as its second argument");
+			}
+		}
+
+		const_formula_callable_definition_ptr def = args().back()->get_definition_used_by_expression();
 		if(def) {
-			const_formula_callable_definition_ptr modified = args()[1]->query_modified_definition_based_on_result(true, def);
+			const_formula_callable_definition_ptr modified = args().back()->query_modified_definition_based_on_result(true, def);
 			if(modified) {
 				def = modified;
 			}
 
-			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
+			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id(value_str);
 			if(value_entry != NULL && value_entry->variant_type) {
 				std::vector<variant_type_ptr> types;
 				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
