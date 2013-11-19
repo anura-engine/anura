@@ -149,7 +149,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		default: {
 			const std::string& str = get_object_event_str(id);
 			if(strstr(str.c_str(), "collide_object")) {
-				return parse_variant_type(variant("{collide_with: custom_obj, area: string, collide_with_area: string, collision_index: int, all_collisions: [object]}"));
+				return parse_variant_type(variant("{collide_with: custom_obj, area: string, collide_with_area: string, collision_index: int, all_collisions: [{collide_with: custom_obj, area: string, collide_with_area: string, collision_index: int}]}"));
 			}
 
 			return variant_type_ptr();
