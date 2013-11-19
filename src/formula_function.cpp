@@ -849,7 +849,16 @@ FUNCTION_DEF(median, 1, -1, "median(args...) -> value: evaluates to the median o
 		return (items[items.size()/2-1] + items[items.size()/2])/variant(2);
 	}
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type()->is_list_of();
+	if(args().size() == 1) {
+		return args()[0]->query_variant_type()->is_list_of();
+	} else {
+		std::vector<variant_type_ptr> types;
+		for(int n = 0; n != args().size(); ++n) {
+			types.push_back(args()[n]->query_variant_type());
+		}
+        
+		return variant_type::get_union(types);
+	}
 END_FUNCTION_DEF(median)
 
 FUNCTION_DEF(min, 1, -1, "min(args...) -> value: evaluates to the minimum of the given arguments. If given a single argument list, will evaluate to the minimum of the member items.")
