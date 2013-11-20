@@ -130,9 +130,9 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "upside_down", "int" },
 	{ "up", "int" },
 	{ "down", "int" },
-	{ "velocity_x", "int" },
-	{ "velocity_y", "int" },
-	{ "velocity_xy", "int" }, 
+	{ "velocity_x", "int/int|decimal" },
+	{ "velocity_y", "int/int|decimal" },
+	{ "velocity_xy", "[int]" }, 
 
 	{ "velocity_magnitude", "decimal" },
 	{ "velocity_angle", "decimal" },
