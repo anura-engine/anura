@@ -1304,8 +1304,8 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	return variant(obj.get());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
-	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("int|decimal")
+	ARG_TYPE("int|decimal")
 	ARG_TYPE("int|map")
 	ARG_TYPE("map")
 
