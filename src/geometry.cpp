@@ -292,34 +292,33 @@ std::ostream& operator<<(std::ostream& s, const rect& r)
 	return s;
 }
 
-class rect_callable : public game_logic::formula_callable
+class rect_obj : public game_logic::formula_callable
 {
+	DECLARE_CALLABLE(rect_obj);
 	rect rect_;
-	variant get_value(const std::string& key) const {
-		if(key == "x") {
-			return variant(rect_.x());
-		} else if(key == "y") {
-			return variant(rect_.y());
-		} else if(key == "x2") {
-			return variant(rect_.x2());
-		} else if(key == "y2") {
-			return variant(rect_.y2());
-		} else if(key == "w") {
-			return variant(rect_.w());
-		} else if(key == "h") {
-			return variant(rect_.h());
-		} else {
-			return variant();
-		}
-	}
 public:
-	explicit rect_callable(const rect& r) : rect_(r)
+	explicit rect_obj(const rect& r) : rect_(r)
 	{}
 };
 
+BEGIN_DEFINE_CALLABLE_NOBASE(rect_obj)
+DEFINE_FIELD(x, "int")
+	return variant(obj.rect_.x());
+DEFINE_FIELD(y, "int")
+	return variant(obj.rect_.y());
+DEFINE_FIELD(x2, "int")
+	return variant(obj.rect_.x2());
+DEFINE_FIELD(y2, "int")
+	return variant(obj.rect_.y2());
+DEFINE_FIELD(w, "int")
+	return variant(obj.rect_.w());
+DEFINE_FIELD(h, "int")
+	return variant(obj.rect_.h());
+END_DEFINE_CALLABLE(rect_obj)
+
 game_logic::formula_callable* rect::callable() const
 {
-	return new rect_callable(*this);
+	return new rect_obj(*this);
 }
 
 rectf rectf::from_coordinates(GLfloat x1, GLfloat y1, GLfloat x2, GLfloat y2)

@@ -111,7 +111,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "midpoint_y", "int" },
 	{ "midpoint_xy", "int" }, 
 
-	{ "solid_rect", "object" },
+	{ "solid_rect", "rect_obj" },
 	{ "solid_mid_x", "int" },
 	{ "solid_mid_y", "int" },
 	{ "solid_mid_xy", "[int]" }, 
@@ -130,9 +130,9 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "upside_down", "int" },
 	{ "up", "int" },
 	{ "down", "int" },
-	{ "velocity_x", "int" },
-	{ "velocity_y", "int" },
-	{ "velocity_xy", "int" }, 
+	{ "velocity_x", "int/int|decimal" },
+	{ "velocity_y", "int/int|decimal" },
+	{ "velocity_xy", "[int]" }, 
 
 	{ "velocity_magnitude", "decimal" },
 	{ "velocity_angle", "decimal" },
@@ -181,7 +181,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	
 	{ "driver", "null|custom_obj" },
 	{ "is_human", "bool" },
-	{ "invincible", "bool" },
+	{ "invincible", "int" },
 	
 	{ "sound_volume", "int" },
 	{ "destroyed", "bool" },
