@@ -101,9 +101,9 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
 	vox_model_->attach_child(weapon, "handle", "melee_weapon");
 
 	shader_ = gles2::shader_program::get_global("lighted_color_shader")->shader();
-	lighting_.reset(new graphics::lighting(shader_));
-	lighting_->set_light_position(glm::vec3(0.0f, 0.0f, 50.0f));
-	lighting_->set_light_power(2000.0f);
+	//lighting_.reset(new graphics::lighting(shader_));
+	//lighting_->set_light_position(0, glm::vec3(0.0f, 0.0f, 50.0f));
+	//lighting_->set_light_power(0, 2000.0f);
 
 	set_loc(area.x(), area.y());
 	set_dim(area.w(), area.h());

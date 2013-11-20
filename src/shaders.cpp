@@ -392,6 +392,13 @@ void program::set_uniform(const actives_map_iterator& it, const variant& value)
 
 actives_map_iterator program::get_uniform_reference(const std::string& key)
 {
+	if(stored_uniforms_.has_key(key)) {
+		actives_map_iterator it = uniforms_.find(stored_uniforms_[key].as_string());
+		if(it != uniforms_.end()) {
+			return it;
+		}
+	}
+
 	actives_map_iterator it = uniforms_.find(key);
 	ASSERT_LOG(it != uniforms_.end(), "COULD NOT FIND UNIFORM: " << key);
 	return it;
