@@ -436,7 +436,7 @@ namespace graphics
 		}
 	}
 
-	int lighting::enable_light_source(int n, bool en)
+	void lighting::enable_light_source(int n, bool en)
 	{
 		ASSERT_LOG(n < lights_enabled_.size(), "FATAL: LIGHTING: The reported number of elements for 'enabled' uniform is less than requested. " << n << " >= " << lights_enabled_.size());
 		lights_enabled_[n] = en;

@@ -112,7 +112,7 @@ namespace graphics
 
 		void set_modelview_matrix(const glm::mat4& mm, const glm::mat4& vm);
 		
-		int enable_light_source(int n, bool en);
+		void enable_light_source(int n, bool en);
 
 		variant write();
 	protected:
