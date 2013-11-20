@@ -1174,8 +1174,8 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 FUNCTION_ARGS_DEF
 	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
 	ARG_TYPE("string")
-	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("int|decimal")
+	ARG_TYPE("int|decimal")
 	ARG_TYPE("int|map")
 	ARG_TYPE("commands")
 
