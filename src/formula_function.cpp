@@ -849,7 +849,16 @@ FUNCTION_DEF(median, 1, -1, "median(args...) -> value: evaluates to the median o
 		return (items[items.size()/2-1] + items[items.size()/2])/variant(2);
 	}
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type()->is_list_of();
+	if(args().size() == 1) {
+		return args()[0]->query_variant_type()->is_list_of();
+	} else {
+		std::vector<variant_type_ptr> types;
+		for(int n = 0; n != args().size(); ++n) {
+			types.push_back(args()[n]->query_variant_type());
+		}
+        
+		return variant_type::get_union(types);
+	}
 END_FUNCTION_DEF(median)
 
 FUNCTION_DEF(min, 1, -1, "min(args...) -> value: evaluates to the minimum of the given arguments. If given a single argument list, will evaluate to the minimum of the member items.")
@@ -952,7 +961,7 @@ FUNCTION_DEF(values, 1, 1, "values(map) -> list: gives the values for a map")
 FUNCTION_ARGS_DEF
 	ARG_TYPE("map");
 FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type()->is_map_of().second;
+	return variant_type::get_list(args()[0]->query_variant_type()->is_map_of().second);
 END_FUNCTION_DEF(values)
 
 FUNCTION_DEF(wave, 1, 1, "wave(int) -> int: a wave with a period of 1000 and height of 1000")
@@ -989,7 +998,7 @@ FUNCTION_DEF(bool, 1, 1, "bool(value) -> bool: converts the value to a boolean")
 	variant v = args()[0]->evaluate(variables);
 	return variant::from_bool(v.as_bool());
 FUNCTION_TYPE_DEF
-	return variant_type::get_type(variant::VARIANT_TYPE_INT);
+	return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 END_FUNCTION_DEF(bool)
 
 FUNCTION_DEF(sin, 1, 1, "sin(x): Standard sine function.")
@@ -2141,14 +2150,25 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		const_formula_callable_definition_ptr def = args()[1]->get_definition_used_by_expression();
+		std::string value_str = "value";
+		if(args().size() > 2) {
+			variant literal;
+			args()[1]->is_literal(literal);
+			if(literal.is_string()) {
+				value_str = literal.as_string();
+			} else if(args()[1]->is_identifier(&value_str) == false) {
+				ASSERT_LOG(false, "find function requires a literal as its second argument");
+			}
+		}
+
+		const_formula_callable_definition_ptr def = args().back()->get_definition_used_by_expression();
 		if(def) {
-			const_formula_callable_definition_ptr modified = args()[1]->query_modified_definition_based_on_result(true, def);
+			const_formula_callable_definition_ptr modified = args().back()->query_modified_definition_based_on_result(true, def);
 			if(modified) {
 				def = modified;
 			}
 
-			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id("value");
+			const game_logic::formula_callable_definition::entry* value_entry = def->get_entry_by_id(value_str);
 			if(value_entry != NULL && value_entry->variant_type) {
 				std::vector<variant_type_ptr> types;
 				types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));

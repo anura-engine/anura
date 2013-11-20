@@ -3038,6 +3038,13 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_MOUSEOVER_AREA: {
 		return mouse_over_area().write();
 	}
+	case CUSTOM_OBJECT_PARTICLE_SYSTEMS: {
+		std::map<variant, variant> v;
+		for(std::map<std::string, particle_system_ptr>::const_iterator i = particle_systems_.begin(); i != particle_systems_.end(); ++i) {
+			v[variant(i->first)] = variant(i->second.get());
+		}
+		return variant(&v);
+	}
 	case CUSTOM_OBJECT_TRUEZ: {
 		return variant::from_bool(truez());
 	}

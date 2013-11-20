@@ -1133,7 +1133,7 @@ public:
 			}
 		}
 
-		return false;
+		return true;
 	}
 
 	const std::map<variant, variant_type_ptr>* is_specific_map() const { return &type_map_; }
@@ -2218,6 +2218,8 @@ UNIT_TEST(variant_type) {
 
 	TYPES_COMPAT("[int]", "[int,int]");
 	TYPES_COMPAT("[int,int|decimal]", "[int,decimal]");
+
+	TYPES_COMPAT("[{keys: [string], sound: commands}]", "[{keys: [string,], sound: commands}, {keys: [string,], sound: commands}]");
 
 	TYPES_INCOMPAT("int", "int|bool");
 	TYPES_INCOMPAT("int", "decimal");

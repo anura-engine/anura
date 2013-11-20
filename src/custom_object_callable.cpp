@@ -196,11 +196,11 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "call_stack", "[string]" },
 	{ "lights", "[object]" },
 	
-	{ "solid_dimensions_in", "[int]" },
-	{ "solid_dimensions_not_in", "[int]" },
+	{ "solid_dimensions_in", "[string]" },
+	{ "solid_dimensions_not_in", "[string]" },
 	
-	{ "collide_dimensions_in", "[int]" },
-	{ "collide_dimensions_not_in", "[int]" },
+	{ "collide_dimensions_in", "[string]" },
+	{ "collide_dimensions_not_in", "[string]" },
 	
 	{ "brightness", "int" },
 	{ "current_generator", "object" },
@@ -243,6 +243,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "paused", "bool" },
 	{ "mouseover_delay", "int" },
 	{ "mouseover_area", "[int]" },
+	{ "particle_systems", "{string -> object}" },
 
 	{ "truez", "bool" },
 	{ "tx", "decimal" },

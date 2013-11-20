@@ -143,10 +143,13 @@ variant_type_ptr get_object_event_arg_type(int id)
 		EVENT_ARG(MOUSE_DRAG, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_DRAG_START, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_DRAG_END, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(SPAWNED, "{spawner: custom_obj, child_spawned: custom_obj}")
+		EVENT_ARG(CHILD_SPAWNED, "{spawner: custom_obj, child_spawned: custom_obj}")
+		EVENT_ARG(ADD_OBJECT_FAIL, "{collide_with: custom_obj|null, object: custom_obj|null}")
 		default: {
 			const std::string& str = get_object_event_str(id);
 			if(strstr(str.c_str(), "collide_object")) {
-				return parse_variant_type(variant("{collide_with: custom_obj, collide_with_area: string}"));
+				return parse_variant_type(variant("{collide_with: custom_obj, area: string, collide_with_area: string, collision_index: int, all_collisions: [{collide_with: custom_obj, area: string, collide_with_area: string, collision_index: int}]}"));
 			}
 
 			return variant_type_ptr();
