@@ -25,61 +25,103 @@ namespace graphics
 {
 	namespace 
 	{
-		const double default_light_power = 1000.0;
-		const double default_shininess = 5.0;
+		const double default_light_power = 1.0;
+		const double default_shininess = 1.0;
 		const double default_gamma = 1.0;
-
-		struct manager
-		{
-			manager(gles2::program_ptr shader) 
-			{
-				glGetIntegerv(GL_CURRENT_PROGRAM, &old_program);
-				glUseProgram(shader->get());
-			}
-			~manager()
-			{
-				glUseProgram(old_program);
-			}
-			GLint old_program;
-		};
+		const float default_ambient_intensity = 0.6f;
+		const glm::vec3 default_light_position(0.0f, 0.0f, 0.7f);
+		const glm::vec3 default_light_color(1.0f, 1.0f, 1.0f);
+		const glm::vec3 default_ambient_color(1.0f, 1.0f, 1.0f);
+		const glm::vec3 default_specular_color(0.1f, 0.1f, 0.1f);
 	}
 
-	lighting::lighting(gles2::program_ptr shader, const variant& node)
-		: shader_(shader),
-		light_power_(float(node["light_power"].as_decimal(decimal(default_light_power)).as_float())),
-		shininess_(float(node["shininess"].as_decimal(decimal(default_shininess)).as_float())),
-		gamma_(float(node["gamma"].as_decimal(decimal(default_gamma)).as_float()))
-
+	struct manager
 	{
-		light_position_ = variant_to_vec3(node["light_position"]);
-		if(node.has_key("ambient_color")) {
-			ambient_color_ = variant_to_vec3(node["ambient_color"]);
-		} else {
-			ambient_color_ = glm::vec3(0.1f, 0.1f, 0.1f);
+		manager(gles2::program_ptr shader) 
+		{
+			glGetIntegerv(GL_CURRENT_PROGRAM, &old_program);
+			glUseProgram(shader->get());
 		}
-		if(node.has_key("specular_color")) {
-			specular_color_ = variant_to_vec3(node["specular_color"]);
-		} else {
-			specular_color_ = glm::vec3(0.1f, 0.1f, 0.1f);
+		~manager()
+		{
+			glUseProgram(old_program);
 		}
-		if(node.has_key("light_color")) {
-			light_color_ = variant_to_vec3(node["light_color"]);
-		} else {
-			light_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
+		GLint old_program;
+	};
+
+	lighting::lighting(gles2::program_ptr shader, const variant& node)
+		: shader_(shader), configure_uniforms_on_set_(node["configure_uniforms_on_set"].as_bool(false))
+	{
+		configure_uniforms();
+
+		if(node.has_key("lights")) {
+			for(int n = 0; n != node["lights"].num_elements(); ++n) {
+				ASSERT_LOG(node["lights"][n].is_map(), "Inner elements of lighting must be maps.");
+				const variant& element = node["lights"][n];
+
+				//ASSERT_LOG(n < light_position_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_position' uniform is less than requested. " << n << " >= " << light_position_.size());
+				if(n < light_position_.size()) {
+					light_position_[n] = variant_to_vec3(element["light_position"]);
+				}
+				if(element.has_key("light_color")) {
+					//ASSERT_LOG(n < light_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_color' uniform is less than requested. " << n << " >= " << light_color_.size());
+					if(n < light_color_.size()) {
+						light_color_[n] = variant_to_vec3(element["light_color"]);
+					}
+				}
+				if(element.has_key("light_power")) {
+					//ASSERT_LOG(n < light_power_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_power' uniform is less than requested. " << n << " >= " << light_power_.size());
+					if(n < light_power_.size()) {
+						light_power_[n] = element["light_power"].as_decimal().as_float();
+					}
+				}
+
+				if(element.has_key("ambient_color")) {
+					//ASSERT_LOG(n < ambient_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_color' uniform is less than requested. " << n << " >= " << ambient_color_.size());
+					if(n < ambient_color_.size()) {
+						ambient_color_[n] = variant_to_vec3(element["ambient_color"]);
+					}
+				}
+				if(element.has_key("ambient_intensity")) {
+					//ASSERT_LOG(n < ambient_intensity_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_intensity' uniform is less than requested. " << n << " >= " << ambient_intensity_.size());
+					if(n < ambient_intensity_.size()) {
+						ambient_intensity_[n] = float(element["ambient_intensity"].as_decimal().as_float());
+					}
+				}
+
+				if(element.has_key("specular_color")) {
+					//ASSERT_LOG(n < specular_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'specular_color' uniform is less than requested. " << n << " >= " << specular_color_.size());
+					specular_color_[n] = variant_to_vec3(element["specular_color"]);
+				}
+				if(element.has_key("shininess")) {
+					//ASSERT_LOG(n < shininess_.size(), "FATAL: LIGHTING: The reported number of elements for 'shininess' uniform is less than requested. " << n << " >= " << shininess_.size());
+					if(n < shininess_.size()) {
+						shininess_[n] = float(element["shininess"].as_decimal().as_float());
+					}
+				}
+
+				if(element.has_key("enabled")) {
+					//ASSERT_LOG(n < lights_enabled_.size(), "FATAL: LIGHTING: The reported number of elements for 'enabled' uniform is less than requested. " << n << " >= " << lights_enabled_.size());
+					if(n < lights_enabled_.size()) {
+						lights_enabled_[n] = float(element["enabled"].as_bool());
+					}
+				} else {
+					if(n < lights_enabled_.size()) {
+						lights_enabled_[n] = true;
+					}
+				}
+			}
 		}
 
 		if(node.has_key("sunlight")) {
 			sunlight_.reset(new sunlight(shader, node["sunlight"]));
 		}
 
-		configure_uniforms();
 		set_all_uniforms();
 	}
 
 	lighting::lighting(gles2::program_ptr shader)
-		: shader_(shader), light_power_(1000.0f), shininess_(5.0f), gamma_(1.0f),
-		light_position_(0.0f, 20.0f, 0.0f), ambient_color_(0.2f, 0.2f, 0.2f),
-		specular_color_(0.1f, 0.1f, 0.1f), light_color_(1.0f, 1.0f, 1.0f)
+		: shader_(shader), configure_uniforms_on_set_(false)
 	{
 		configure_uniforms();
 		set_all_uniforms();
@@ -91,7 +133,7 @@ namespace graphics
 
 	variant lighting::write()
 	{
-		variant_builder res;
+		/*variant_builder res;
 		if(light_power_ != default_light_power) {
 			res.add("light_power", light_power_);
 		}
@@ -114,22 +156,42 @@ namespace graphics
 		if(sunlight_) {
 			res.add("sunlight", sunlight_->write());
 		}
-		return res.build();
+		return res.build();*/
+		return variant();
 	}
 
 	void lighting::set_all_uniforms() const
 	{
-		if(enabled_) { 
-			manager m(shader_);
-			glUniform1f(u_lightpower_, light_power_);
-			glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_));
-			glUniform1f(u_shininess_, shininess_);
-			glUniform1f(u_gamma_, gamma_);
-			glUniform3fv(u_ambient_color_, 1, glm::value_ptr(ambient_color_));
-			glUniform3fv(u_specular_color_, 1, glm::value_ptr(specular_color_));
-			glUniform3fv(u_light_color_, 1, glm::value_ptr(light_color_));
+		manager m(shader_);
 
+		if(u_lightpower_ != -1) {			
+			glUniform1fv(u_lightpower_, light_power_.size(), &light_power_[0]);
 		}
+		if(u_lightposition_ != -1) {
+			glUniform3fv(u_lightposition_, light_position_.size(), reinterpret_cast<const GLfloat*>(&light_position_[0]));
+		}
+		if(u_shininess_ != -1) {
+			glUniform1fv(u_shininess_, shininess_.size(), &shininess_[0]);
+		}
+		if(u_gamma_ != -1) {
+			glUniform1fv(u_gamma_, gamma_.size(), &gamma_[0]);
+		}
+		if(u_ambient_intensity_ != -1) {
+			glUniform1fv(u_ambient_intensity_, ambient_intensity_.size(), &ambient_intensity_[0]);
+		}
+		if(u_ambient_color_ != -1) {
+			glUniform3fv(u_ambient_color_, ambient_color_.size(), reinterpret_cast<const GLfloat*>(&ambient_color_[0]));
+		}
+		if(u_specular_color_ != -1) {
+			glUniform3fv(u_specular_color_, specular_color_.size(), reinterpret_cast<const GLfloat*>(&specular_color_[0]));
+		}
+		if(u_light_color_ != -1) {
+			glUniform3fv(u_light_color_, light_color_.size(), reinterpret_cast<const GLfloat*>(&light_color_[0]));
+		}
+		if(u_enabled_ != -1) {
+			glUniform1iv(u_enabled_, lights_enabled_.size(), &lights_enabled_[0]);
+		}
+
 		if(sunlight_) {
 			sunlight_->set_all_uniforms();
 		}
@@ -138,114 +200,285 @@ namespace graphics
 	void lighting::configure_uniforms()
 	{
 		u_lightposition_ = shader_->get_fixed_uniform("light_position");
+		if(u_lightposition_ != -1) {
+			auto it = shader_->get_uniform_reference("light_position");
+			light_position_.resize(it->second.num_elements, default_light_position);
+		}
+
 		u_lightpower_ = shader_->get_fixed_uniform("light_power");
+		if(u_lightpower_ != -1) {
+			auto it = shader_->get_uniform_reference("light_power");
+			light_power_.resize(it->second.num_elements, default_light_power);
+		}
+
 		u_shininess_ = shader_->get_fixed_uniform("shininess");
+		if(u_shininess_ != -1) {
+			auto it = shader_->get_uniform_reference("shininess");
+			shininess_.resize(it->second.num_elements, default_shininess);
+		}
+
 		u_gamma_ = shader_->get_fixed_uniform("gamma");
+		if(u_gamma_ != -1) {
+			auto it = shader_->get_uniform_reference("gamma");
+			gamma_.resize(it->second.num_elements, default_gamma);
+		}
+
 		u_ambient_color_ = shader_->get_fixed_uniform("ambient_color");
+		if(u_ambient_color_ != -1) {
+			auto it = shader_->get_uniform_reference("ambient_color");
+			ambient_color_.resize(it->second.num_elements, default_ambient_color);
+		}
+
+		u_ambient_intensity_ = shader_->get_fixed_uniform("ambient_intensity");
+		if(u_ambient_intensity_ != -1) {
+			auto it = shader_->get_uniform_reference("ambient_intensity");
+			ambient_intensity_.resize(it->second.num_elements, default_ambient_intensity);
+		}
+
 		u_specular_color_ = shader_->get_fixed_uniform("specular_color");
+		if(u_specular_color_ != -1) {
+			auto it = shader_->get_uniform_reference("specular_color");
+			specular_color_.resize(it->second.num_elements, default_specular_color);
+		}
+
 		u_light_color_ = shader_->get_fixed_uniform("light_color");
+		if(u_light_color_ != -1) {
+			auto it = shader_->get_uniform_reference("light_color");
+			light_color_.resize(it->second.num_elements, default_light_color);
+		}
+
+		u_enabled_ = shader_->get_fixed_uniform("enabled");
+		if(u_enabled_ != -1) {
+			auto it = shader_->get_uniform_reference("enabled");
+			lights_enabled_.resize(it->second.num_elements, false);
+		}
+
 		u_m_matrix_ = shader_->get_fixed_uniform("m_matrix");
 		u_v_matrix_ = shader_->get_fixed_uniform("v_matrix");
 		u_n_matrix_ = shader_->get_fixed_uniform("normal_matrix");
-		
-		enabled_ = u_lightposition_ != -1
-			&& u_lightpower_ != -1
-			&& u_shininess_ != -1
-			&& u_gamma_ != -1
-			&& u_ambient_color_ != -1
-			&& u_specular_color_ != -1
-			&& u_light_color_ != -1
-			&& u_m_matrix_ != -1
-			&& u_v_matrix_ != -1
-			&& u_n_matrix_ != -1;
-		if(!enabled_) {
-			std::cerr << "Lighting Disabled" << std::endl;
+	}
+
+	void lighting::set_light_power(int n, float lp)
+	{
+		ASSERT_LOG(n < light_power_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_power' uniform is less than requested. " << n << " >= " << light_power_.size());
+		light_power_[n] = lp;
+		if(configure_uniforms_on_set_ && u_lightpower_ != -1) {
+			manager m(shader_);
+			glUniform1f(u_lightpower_, light_power_[n]);
 		}
 	}
 
-	void lighting::set_light_power(float lp)
+	void lighting::set_light_power(const std::vector<float>& lp)
 	{
-		if(enabled_) {
+		ASSERT_LOG(lp.size() == light_power_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_power' uniform is less than requested. " << lp.size() << " != " << light_power_.size());
+		light_power_ = lp;
+		if(configure_uniforms_on_set_ && u_lightpower_ != -1) {
 			manager m(shader_);
-			light_power_ = lp;
-			glUniform1f(u_lightpower_, light_power_);
+			glUniform1fv(u_lightpower_, light_power_.size(), &light_power_[0]);
 		}
 	}
 
-	void lighting::set_light_position(const glm::vec3& lp)
+	void lighting::set_light_position(int n, const glm::vec3& lp)
 	{
-		if(enabled_) {
+		ASSERT_LOG(n < light_position_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_position' uniform is less than requested. " << n << " >= " << light_position_.size());
+		light_position_[n] = lp;
+		if(configure_uniforms_on_set_ && u_lightposition_ != -1) {
 			manager m(shader_);
-			light_position_ = lp;
-			glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_));
+			glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_[n]));
 		}
 	}
 
-	void lighting::set_shininess(float shiny)
+	void lighting::set_light_position(const std::vector<glm::vec3>& lp)
 	{
-		if(enabled_) {
+		ASSERT_LOG(lp.size() == light_position_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_position' uniform is less than requested. " << lp.size() << " != " << light_position_.size());
+		light_position_ = lp;
+		if(configure_uniforms_on_set_ && u_lightposition_ != -1) {
 			manager m(shader_);
-			shininess_ = shiny;
-			glUniform1f(u_shininess_, shininess_);
+			glUniform1fv(u_lightposition_, light_position_.size(), reinterpret_cast<const GLfloat*>(&light_position_[0]));
 		}
 	}
 
-	void lighting::set_gamma(float g)
+	void lighting::set_shininess(int n, float shiny)
 	{
-		if(enabled_) {
+		ASSERT_LOG(n < shininess_.size(), "FATAL: LIGHTING: The reported number of elements for 'shininess' uniform is less than requested. " << n << " >= " << shininess_.size());
+		shininess_[n] = shiny;
+		if(configure_uniforms_on_set_ && u_shininess_ != -1) {
 			manager m(shader_);
-			gamma_ = g;
-			glUniform1f(u_gamma_, gamma_);
+			glUniform1f(u_shininess_, shininess_[n]);
 		}
 	}
 
-	void lighting::set_ambient_color(const glm::vec3& ac)
+	void lighting::set_shininess(const std::vector<float>& shiny)
 	{
-		if(enabled_) {
+		ASSERT_LOG(shiny.size() == shininess_.size(), "FATAL: LIGHTING: The reported number of elements for 'shininess' uniform is less than requested. " << shiny.size() << " != " << shininess_.size());
+		shininess_ = shiny;
+		if(configure_uniforms_on_set_ && u_shininess_ != -1) {
 			manager m(shader_);
-			ambient_color_ = ac;
-			glUniform3fv(u_ambient_color_, 1, glm::value_ptr(ambient_color_));
+			glUniform1fv(u_shininess_, shininess_.size(), &shininess_[0]);
 		}
 	}
 
-	void lighting::set_specular_color(const glm::vec3& sc)
+	void lighting::set_gamma(int n, float g)
 	{
-		if(enabled_) {
+		ASSERT_LOG(n < gamma_.size(), "FATAL: LIGHTING: The reported number of elements for 'gamma' uniform is less than requested. " << n << " >= " << gamma_.size());
+		gamma_[n] = g;
+		if(configure_uniforms_on_set_ && u_gamma_ != -1) {
 			manager m(shader_);
-			specular_color_ = sc;
-			glUniform3fv(u_specular_color_, 1, glm::value_ptr(specular_color_));
+			glUniform1f(u_gamma_, gamma_[n]);
 		}
 	}
 
-	void lighting::set_light_color(const glm::vec3& lc)
+	void lighting::set_gamma(const std::vector<float>& g)
 	{
-		if(enabled_) {
+		ASSERT_LOG(gamma_.size() == g.size(), "FATAL: LIGHTING: The reported number of elements for 'shininess' uniform is less than requested. " << g.size() << " != " << gamma_.size());
+		gamma_ = g;
+		if(configure_uniforms_on_set_ && u_gamma_ != -1) {
 			manager m(shader_);
-			light_color_ = lc;
-			glUniform3fv(u_light_color_, 1, glm::value_ptr(light_color_));
+			glUniform1fv(u_gamma_, gamma_.size(), &gamma_[0]);
+		}
+	}
+
+	void lighting::set_ambient_color(int n, const glm::vec3& ac)
+	{
+		ASSERT_LOG(n < ambient_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_color' uniform is less than requested. " << n << " >= " << ambient_color_.size());
+		ambient_color_[n] = ac;
+		if(configure_uniforms_on_set_ && u_ambient_color_ != -1) {
+			manager m(shader_);
+			glUniform3fv(u_ambient_color_, 1, glm::value_ptr(ambient_color_[n]));
+		}
+	}
+
+	void lighting::set_ambient_color(const std::vector<glm::vec3>& ac)
+	{
+		ASSERT_LOG(ac.size() == ambient_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_color' uniform is less than requested. " << ac.size() << " != " << ambient_color_.size());
+		ambient_color_ = ac;
+		if(configure_uniforms_on_set_ && u_ambient_color_ != -1) {
+			manager m(shader_);
+			glUniform1fv(u_ambient_color_, ambient_color_.size(), reinterpret_cast<const GLfloat*>(&ambient_color_[0]));
+		}
+	}
+
+	void lighting::set_ambient_intensity(int n, float ai)
+	{
+		ASSERT_LOG(n < ambient_intensity_.size(), "FATAL: LIGHTING: The reported number of elements for 'gamma' uniform is less than requested. " << n << " >= " << ambient_intensity_.size());
+		ambient_intensity_[n] = ai;
+		if(configure_uniforms_on_set_ && u_ambient_intensity_ != -1) {
+			manager m(shader_);
+			glUniform1f(u_ambient_intensity_, ambient_intensity_[n]);
+		}
+	}
+
+	void lighting::set_ambient_intensity(const std::vector<float>& ai)
+	{
+		ASSERT_LOG(ambient_intensity_.size() == ai.size(), "FATAL: LIGHTING: The reported number of elements for 'shininess' uniform is less than requested. " << ai.size() << " != " << ambient_intensity_.size());
+		ambient_intensity_ = ai;
+		if(configure_uniforms_on_set_ && u_ambient_intensity_ != -1) {
+			manager m(shader_);
+			glUniform1fv(u_ambient_intensity_, ambient_intensity_.size(), &ambient_intensity_[0]);
+		}
+	}
+
+	void lighting::set_specular_color(int n, const glm::vec3& sc)
+	{
+		ASSERT_LOG(n < specular_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_color' uniform is less than requested. " << n << " >= " << specular_color_.size());
+		specular_color_[n] = sc;
+		if(configure_uniforms_on_set_ && u_specular_color_ != -1) {
+			manager m(shader_);
+			glUniform3fv(u_specular_color_, 1, glm::value_ptr(specular_color_[n]));
+		}
+	}
+
+	void lighting::set_specular_color(const std::vector<glm::vec3>& sc)
+	{
+		ASSERT_LOG(sc.size() == specular_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'specular_color' uniform is less than requested. " << sc.size() << " != " << specular_color_.size());
+		ambient_color_ = sc;
+		if(configure_uniforms_on_set_ && u_specular_color_ != -1) {
+			manager m(shader_);
+			glUniform1fv(u_specular_color_, specular_color_.size(), reinterpret_cast<const GLfloat*>(&specular_color_[0]));
+		}
+	}
+
+	void lighting::set_light_color(int n, const glm::vec3& lc)
+	{
+		ASSERT_LOG(n < light_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'ambient_color' uniform is less than requested. " << n << " >= " << light_color_.size());
+		light_color_[n] = lc;
+		if(configure_uniforms_on_set_ && u_light_color_ != -1) {
+			manager m(shader_);
+			glUniform3fv(u_light_color_, 1, glm::value_ptr(light_color_[n]));
+		}
+	}
+
+	void lighting::set_light_color(const std::vector<glm::vec3>& lc)
+	{
+		ASSERT_LOG(lc.size() == light_color_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_color' uniform is less than requested. " << lc.size() << " != " << light_color_.size());
+		light_color_ = lc;
+		if(configure_uniforms_on_set_ && u_light_color_ != -1) {
+			manager m(shader_);
+			glUniform1fv(u_light_color_, light_color_.size(), reinterpret_cast<const GLfloat*>(&light_color_[0]));
 		}
 	}
 
 	void lighting::set_modelview_matrix(const glm::mat4& mm, const glm::mat4& vm)
 	{
-		if(enabled_) {
-			manager m(shader_);
-			glm::mat4 nm = glm::inverseTranspose(vm * mm);
+		if(u_m_matrix_ == -1 && u_v_matrix_ == -1 && u_n_matrix_ == -1) {
+			return;
+		}
+		manager m(shader_);
+		if(u_m_matrix_ != -1) {
 			glUniformMatrix4fv(u_m_matrix_, 1, GL_FALSE, glm::value_ptr(mm));
+		}
+		if(u_v_matrix_ != -1) {
 			glUniformMatrix4fv(u_v_matrix_, 1, GL_FALSE, glm::value_ptr(vm));
+		}
+		if(u_n_matrix_ != -1) {
+			glm::mat4 nm = glm::inverseTranspose(vm * mm);
 			glUniformMatrix4fv(u_n_matrix_, 1, GL_FALSE, glm::value_ptr(nm));
 		}
 	}
 
+	int lighting::enable_light_source(int n, bool en)
+	{
+		ASSERT_LOG(n < lights_enabled_.size(), "FATAL: LIGHTING: The reported number of elements for 'enabled' uniform is less than requested. " << n << " >= " << lights_enabled_.size());
+		lights_enabled_[n] = en;
+		if(configure_uniforms_on_set_ && u_enabled_ != -1) {
+			manager m(shader_);
+			glUniform1i(u_enabled_, lights_enabled_[n]);
+		}
+	}
+
+	/*class lighting_value_callable : public game_logic::formula_callable {
+		variant get_value(const std::string& key) const {
+			return variant();
+		}
+		void set_value(const std::string& key, const variant& value) {
+		}
+	public:
+		explicit lighting_value_callable() : obj_(const_cast<custom_object*>(&obj))
+		{}
+	};*/
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(lighting)
-	DEFINE_FIELD(shininess, "decimal")
-		return variant(obj.shininess());
+	DEFINE_FIELD(shininess, "[decimal]")
+		std::vector<variant> v;
+		for(auto& s : obj.shininess()) {
+			v.push_back(variant(s));
+		}
+		return variant(&v);
 	DEFINE_SET_FIELD
-		obj.set_shininess(float(value.as_decimal().as_float()));
-	DEFINE_FIELD(gamma, "decimal")
+		std::vector<float> v;
+		for(size_t n = 0; n != value.num_elements(); ++n) {
+			v.push_back(float(value[n].as_decimal().as_float()));
+		}
+		obj.set_shininess(v);
+
+/*	DEFINE_FIELD(gamma, "decimal")
 		return variant(obj.gamma());
 	DEFINE_SET_FIELD
 		obj.set_gamma(float(value.as_decimal().as_float()));
+	DEFINE_FIELD(ambient_intensity, "decimal")
+		return variant(obj.ambient_intensity());
+	DEFINE_SET_FIELD
+		obj.set_ambient_intensity(float(value.as_decimal().as_float()));
 	DEFINE_FIELD(light_power, "decimal")
 		return variant(obj.light_power());
 	DEFINE_SET_FIELD
@@ -265,7 +498,7 @@ namespace graphics
 	DEFINE_FIELD(light_color, "[decimal,decimal,decimal]")
 		return vec3_to_variant(obj.light_color());
 	DEFINE_SET_FIELD
-		obj.set_light_color(variant_to_vec3(value));
+		obj.set_light_color(variant_to_vec3(value));*/
 	DEFINE_FIELD(sunlight, "builtin sunlight|null")
 		return variant(obj.sunlight_.get());
 	DEFINE_SET_FIELD_TYPE("map|builtin sunlight|null")

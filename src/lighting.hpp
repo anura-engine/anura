@@ -78,28 +78,41 @@ namespace graphics
 
 		gles2::program_ptr shader() { return shader_; }
 
-		float light_power() const { return light_power_; }
-		void set_light_power(float lp);
+		const std::vector<float>& light_power() const { return light_power_; }
+		void set_light_power(int n, float lp);
+		void set_light_power(const std::vector<float>& lp);
 
-		glm::vec3 light_position() const { return light_position_; }
-		void set_light_position(const glm::vec3& lp);
+		const std::vector<glm::vec3>& light_position() const { return light_position_; }
+		void set_light_position(int n, const glm::vec3& lp);
+		void set_light_position(const std::vector<glm::vec3>& lp);
 
-		float shininess() const { return shininess_; }
-		void set_shininess(float shiny);
+		const std::vector<glm::vec3>& light_color() const { return light_color_; }
+		void set_light_color(int n, const glm::vec3& lc);
+		void set_light_color(const std::vector<glm::vec3>& lc);
 
-		float gamma() const { return gamma_; }
-		void set_gamma(float g);
+		const std::vector<float>& gamma() const { return gamma_; }
+		void set_gamma(int n, float g);
+		void set_gamma(const std::vector<float>& g);
 
-		glm::vec3 ambient_color() const { return ambient_color_; }
-		void set_ambient_color(const glm::vec3& ac);
+		const std::vector<glm::vec3>& ambient_color() const { return ambient_color_; }
+		void set_ambient_color(int n, const glm::vec3& ac);
+		void set_ambient_color(const std::vector<glm::vec3>& ac);
 
-		glm::vec3 specular_color() const { return specular_color_; }
-		void set_specular_color(const glm::vec3& sc);
+		const std::vector<float>& ambient_intensity() const { return ambient_intensity_; }
+		void set_ambient_intensity(int n, float shiny);
+		void set_ambient_intensity(const std::vector<float>& shiny);
 
-		glm::vec3 light_color() const { return light_color_; }
-		void set_light_color(const glm::vec3& lc);
+		const std::vector<glm::vec3>& specular_color() const { return specular_color_; }
+		void set_specular_color(int n, const glm::vec3& sc);
+		void set_specular_color(const std::vector<glm::vec3>& sc);
+
+		const std::vector<float>& shininess() const { return shininess_; }
+		void set_shininess(int n, float shiny);
+		void set_shininess(const std::vector<float>& shiny);
 
 		void set_modelview_matrix(const glm::mat4& mm, const glm::mat4& vm);
+		
+		int enable_light_source(int n, bool en);
 
 		variant write();
 	protected:
@@ -108,45 +121,59 @@ namespace graphics
 		GLuint shininess_uniform() const { return u_shininess_; }
 		GLuint gamma_uniform() const { return u_gamma_; }
 		GLuint ambient_color_uniform() const { return u_ambient_color_; }
+		GLuint ambient_intensity_uniform() const { return u_ambient_color_; }
 		GLuint specular_color_uniform() const { return u_specular_color_; }
 		GLuint light_color_uniform() const { return u_light_color_; }
 		GLuint m_matrix_uniform() const { return u_m_matrix_; }
 		GLuint v_matrix_uniform() const { return u_v_matrix_; }
 		GLuint n_matrix_uniform() const { return u_n_matrix_; }
+		GLuint enabled_uniform() const { return u_enabled_; }
 	private:
 		DECLARE_CALLABLE(lighting);
 
 		void configure_uniforms();
 
-		bool enabled_;
-
 		gles2::program_ptr shader_;
+		
 		GLuint u_lightposition_;
 		GLuint u_lightpower_;
-		GLuint u_shininess_;
-		GLuint u_gamma_;
-		GLuint u_ambient_color_;
-		GLuint u_specular_color_;
 		GLuint u_light_color_;
+
+		GLuint u_gamma_;
+
+		GLuint u_ambient_color_;
+		GLuint u_ambient_intensity_;
+
+		GLuint u_specular_color_;
+		GLuint u_shininess_;
 
 		GLuint u_m_matrix_;
 		GLuint u_v_matrix_;
 		GLuint u_n_matrix_;
 
+		GLuint u_enabled_;
+
 		sunlight_ptr sunlight_;
 
-		float light_power_;
-		glm::vec3 light_position_;
-		float shininess_;
-		float gamma_;
-		glm::vec3 ambient_color_;
-		glm::vec3 specular_color_;
-		glm::vec3 light_color_;
+		std::vector<int> lights_enabled_;
+
+		std::vector<float> light_power_;
+		std::vector<glm::vec3> light_position_;
+		std::vector<glm::vec3> light_color_;
+
+		std::vector<float> gamma_;
+
+		std::vector<glm::vec3> ambient_color_;
+		std::vector<float> ambient_intensity_;
+
+		std::vector<glm::vec3> specular_color_;
+		std::vector<float> shininess_;
+
+		bool configure_uniforms_on_set_;
 
 		lighting();
 		lighting(const lighting&);
 	};
-
 	typedef boost::intrusive_ptr<lighting> lighting_ptr;
 	typedef boost::intrusive_ptr<const lighting> const_lighting_ptr;
 }
