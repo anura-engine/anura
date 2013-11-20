@@ -181,7 +181,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	
 	{ "driver", "null|custom_obj" },
 	{ "is_human", "bool" },
-	{ "invincible", "bool" },
+	{ "invincible", "int" },
 	
 	{ "sound_volume", "int" },
 	{ "destroyed", "bool" },
