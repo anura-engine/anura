@@ -31,6 +31,7 @@
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
+#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "slider.hpp"
@@ -525,22 +526,21 @@ namespace
 	{
 	public:
 		explicit image_widget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
-			: image_widget(tex, w, h), tex_normal_(tex_normal), ambient_intensity_(0.6f) {
+			: image_widget(tex, w, h), tex_normal_(tex_normal) {
 			shader_ = gles2::shader_program::get_global("texture_2d_lighted")->shader();
-			u_lightposition_ = shader_->get_fixed_uniform("light_position");
-			u_ambient_color_ = shader_->get_fixed_uniform("ambient_color");
-			u_ambient_intensity_ = shader_->get_fixed_uniform("ambient_intensity");
-			u_light_color_ = shader_->get_fixed_uniform("light_color");
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-			u_resolution_ = shader_->get_fixed_uniform("resolution");
 
 			u_tex_map_ = shader_->get_fixed_uniform("tex_map");
 			u_normal_map_ = shader_->get_fixed_uniform("normal_map");
 
-			light_position_ = glm::vec3(0.5f, 0.5f, 0.07f);
-			ambient_color_ = glm::vec3(1.0f, 1.0f, 1.0f);
-			light_color_ = glm::vec3(1.0f, 0.8f, 0.8f);
-			resolution_ = glm::vec2(float(width()), float(height()));
+			u_resolution_ = shader_->get_fixed_uniform("resolution");
+
+			lighting_.reset(new graphics::lighting(shader_));
+			lighting_->set_light_position(0, glm::vec3(0.5f, 0.5f, 0.07f));
+			lighting_->set_ambient_color(0, glm::vec3(1.0f, 1.0f, 1.0f));
+			lighting_->set_light_color(0, glm::vec3(1.0f, 0.8f, 0.8f));			
+			lighting_->set_ambient_intensity(0, 0.2f);
+			lighting_->enable_light_source(0, true);
 
 			set_uniforms();
 
@@ -550,20 +550,19 @@ namespace
 		}
 		void set_uniforms() const {
 			manager m(shader_);
-			glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_));
-			glUniform3fv(u_ambient_color_, 1, glm::value_ptr(ambient_color_));
-			glUniform3fv(u_light_color_, 1, glm::value_ptr(light_color_));
-			glUniform2fv(u_resolution_, 1, glm::value_ptr(resolution_));
-			glUniform1f(u_ambient_intensity_, ambient_intensity_);
-
 			glUniform1i(u_tex_map_, 0);
 			glUniform1i(u_normal_map_, 1);
+			glUniform2f(u_resolution_, GLfloat(width()), GLfloat(height()));
 		}
 	protected:
 		virtual void handle_draw() const {
 			manager m(shader_);
 
 			GLint cur_id = graphics::texture::get_current_texture();
+
+			if(lighting_) {
+				lighting_->set_all_uniforms();
+			}
 
 			glActiveTexture(GL_TEXTURE1);
 			glBindTexture(GL_TEXTURE_2D, tex_normal_.get_id());
@@ -617,9 +616,8 @@ namespace
 		virtual bool handle_event(const SDL_Event& event, bool claimed) { 
 			if(event.type == SDL_MOUSEMOTION) {
 				const SDL_MouseMotionEvent& e = event.motion;
-				if(in_widget(e.x, e.y)) {
-					light_position_ = glm::vec3(float(e.x-x()), float(e.y-y()), 0.07f);
-					set_uniforms();
+				if(in_widget(e.x, e.y) && lighting_) {
+					lighting_->set_light_position(0, glm::vec3(float(e.x-x()), float(e.y-y()), 0.07f));
 					claimed = true;
 				}
 			}
@@ -630,21 +628,14 @@ namespace
 		//GLfloat varray_[8];
 		gles2::program_ptr shader_;
 		
-		GLuint u_lightposition_;
-		GLuint u_ambient_color_;
-		GLuint u_ambient_intensity_;
-		GLuint u_light_color_;
-		GLuint u_mvp_matrix_;
 		GLuint u_resolution_;
+
+		GLuint u_mvp_matrix_;
 
 		GLuint u_tex_map_;
 		GLuint u_normal_map_;
 
-		glm::vec3 light_position_;
-		glm::vec3 ambient_color_;
-		glm::vec3 light_color_;
-		glm::vec2 resolution_;
-		GLfloat ambient_intensity_;
+		graphics::lighting_ptr lighting_;
 	};
 
 	typedef boost::intrusive_ptr<image_widget_lighted> image_widget_lighted_ptr;

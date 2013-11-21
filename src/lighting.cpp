@@ -282,9 +282,13 @@ namespace graphics
 	{
 		ASSERT_LOG(n < light_position_.size(), "FATAL: LIGHTING: The reported number of elements for 'light_position' uniform is less than requested. " << n << " >= " << light_position_.size());
 		light_position_[n] = lp;
-		if(configure_uniforms_on_set_ && u_lightposition_ != -1) {
-			manager m(shader_);
-			glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_[n]));
+		if(u_lightposition_ != -1) {
+			if(configure_uniforms_on_set_) {
+				manager m(shader_);
+				glUniform3fv(u_lightposition_, 1, glm::value_ptr(light_position_[n]));
+			}
+		} else {
+			std::cerr << "WARNING: LIGHTING: set_light_position(" << n << ", [" << lp.x << "," << lp.y << "," << lp.z << "]) but no light position uniform" << std::endl;
 		}
 	}
 
