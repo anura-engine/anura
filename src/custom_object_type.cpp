@@ -415,7 +415,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 					type = parse_optional_formula_type(value);
 				}
 
-				set_type = variant_type::get_any();
+				set_type = variant_type::get_none();
 
 			} else if(value.is_map()) {
 				if(value.has_key("access")) {
@@ -439,6 +439,8 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 
 				if(value.has_key("set_type")) {
 					set_type = parse_variant_type(value["set_type"]);
+				} else {
+					set_type = type;
 				}
 
 
@@ -455,6 +457,12 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 			} else {
 				if(is_strict_) {
 					type = get_variant_type_from_value(value);
+
+					if(k[0] != '_') {
+						set_type = variant_type::get_none();
+					} else {
+						set_type = type;
+					}
 				}
 			}
 
@@ -473,6 +481,16 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 			}
 
 			property_override_type[k] = type;
+
+			if(is_strict_) {
+				int current_slot = callable_definition_->get_slot(k);
+				if(current_slot != -1) {
+					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(current_slot);
+					ASSERT_LOG(!entry->variant_type || variant_types_compatible(entry->variant_type, type), "Type mis-match for object property " << id_ << "." << k << " has a different type than the definition in the prototype: " << type->to_string() << " prototype defines as " << entry->variant_type->to_string());
+					ASSERT_LOG(!set_type || set_type->is_none() == entry->get_write_type()->is_none(), "Object property " << id_ << "." << k << " is immutable in the " << (set_type->is_none() ? "object" : "prototype") << " but not in the " << (set_type->is_none() ? "prototype" : "object"));
+					ASSERT_LOG(!set_type || set_type->is_none() && entry->get_write_type()->is_none() || variant_types_compatible(entry->get_write_type(), set_type), "Type mis-match for object property " << id_ << "." << k << " has a different mutable type than the definition in the prototype. The property can be mutated with a " << set_type->to_string() << " while prototype allows mutation as " << entry->get_write_type()->to_string());
+				}
+			}
 
 			callable_definition_->add_property(k, type, set_type, requires_initialization, is_private);
 		}
@@ -1398,7 +1416,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					entry.set_type = entry.type = get_variant_type_from_value(value);
 				}
 
-				if(entry.getter || util::c_isupper(entry.id[0]) || !is_strict_ && entry.id[0] != '_') {
+				if(entry.getter || entry.id[0] != '_') {
 					entry.getter.reset();
 					entry.const_value.reset(new variant(value));
 				} else {
