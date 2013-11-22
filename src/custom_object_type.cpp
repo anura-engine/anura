@@ -345,7 +345,6 @@ std::map<std::string, formula_callable_definition_ptr>& object_type_definitions(
 
 bool custom_object_type::is_derived_from(const std::string& base, const std::string& derived)
 {
-	fprintf(stderr, "IS DERIVED FROM: %s, %s\n", base.c_str(), derived.c_str());
 	if(derived == base) {
 		return true;
 	}
@@ -379,7 +378,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 		if(properties_node.is_string()) {
 			if(prototype_derived_from != "") {
 				object_type_inheritance()[properties_node.as_string()] = prototype_derived_from;
-				std::cerr << "INHERITANCE: " << properties_node.as_string() << " FROM " << prototype_derived_from << "\n";
 			}
 			prototype_derived_from = properties_node.as_string();
 
@@ -476,10 +474,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 
 			property_override_type[k] = type;
 
-			if(requires_initialization) {
-				std::cerr << "REQUIRES_INIT: " << id_ << "." << k << "\n";
-			}
-
 			callable_definition_->add_property(k, type, set_type, requires_initialization, is_private);
 		}
 	}
@@ -509,7 +503,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 				for(int n = 0; n != callable_definition_->num_slots(); ++n) {
 					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(n);
 					if(entry->access_count) {
-						std::cerr << "PROPERTY " << k << " DEPENDS ON " << entry->id << "\n";
 						if(properties_to_infer.count(entry->id)) {
 							inferred = false;
 						}
@@ -520,7 +513,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 					formula_callable_definition::entry* entry = callable_definition_->get_entry_by_id(k);
 					assert(entry);
 					entry->variant_type = f->query_variant_type();
-					std::cerr << "INFER TYPE " << k << ": " << f->query_variant_type()->to_string() << "\n";
 					properties_to_infer.erase(k);
 				}
 			}
@@ -537,7 +529,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 
 	if(prototype_derived_from != "") {
 		object_type_inheritance()[id_] = prototype_derived_from;
-				std::cerr << "INHERITANCE: " << id_ << " FROM " << prototype_derived_from << "\n";
 	}
 
 	for(auto p : proto_definitions) {
@@ -579,7 +570,6 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			return itor->second;
 		}
 
-		std::cerr << "GET DEFINITION: " << id << "\n";
 		const_custom_object_type_ptr obj = get(id);
 		ASSERT_LOG(obj.get(), "No such object " << id << " when looking for definition");
 		itor = object_type_definitions().find(id);
@@ -695,7 +685,6 @@ std::map<std::string, std::vector<std::string> > object_prototype_paths;
 custom_object_type_ptr custom_object_type::recreate(const std::string& id,
                                              const custom_object_type* old_type)
 {
-	std::cerr << "CREATE OBJ: "<< id << "\n";
 	if(object_file_paths().empty()) {
 		load_file_paths();
 	}
@@ -931,7 +920,6 @@ void custom_object_type::set_file_contents(const std::string& file_path, const s
 		const std::vector<std::string>& proto_paths = object_prototype_paths[i->first];
 		const std::string* path = get_object_path(i->first + ".cfg");
 		if(path && *path == file_path || std::count(proto_paths.begin(), proto_paths.end(), file_path)) {
-			std::cerr << "RELOAD OBJECT: " << i->first << " -> " << *path << "\n";
 			reload_object(i->first);
 		}
 	}
@@ -954,7 +942,6 @@ void custom_object_type::reload_object(const std::string& type)
 	{
 		const assert_recover_scope scope;
 		new_obj = recreate(type, old_obj.get());
-		std::cerr << "RELOADED OBJECT IN " << (SDL_GetTicks() - begin) << "ms\n";
 	}
 
 	if(!new_obj) {
@@ -1119,7 +1106,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	const custom_object_type_init_scope init_scope(id);
 	const bool is_recursive_call = std::count(custom_object_type_stack.begin(), custom_object_type_stack.end(), id) > 0;
 
-	std::cerr << "CREATE OBJ: " << id << "\n";
 	callable_definition_.reset(new custom_object_callable);
 	callable_definition_->set_type_name("obj " + id);
 
@@ -1298,8 +1284,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 			tags_[tag] = variant(1);
 		}
 	}
-
-	std::cerr << "REGISTER CALLABLE " << id_ << "\n";
 
 	//START OF FIRST PARSE OF PROPERTIES.
 	//Here we get the types of properties and parse them into
@@ -1529,7 +1513,6 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		blend_mode_->dfactor = get_blend_mode(node["blend_mode_dest"]);
 	}
 #endif
-	std::cerr << "DONE CREATE OBJ: " << id << "\n";
 }
 
 custom_object_type::~custom_object_type()
