@@ -578,7 +578,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 
 		auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
 		if(proto_path != prototype_file_paths().end()) {
-			variant node = json::parse_from_file(proto_path->second);
+			variant node = merge_prototype(json::parse_from_file(proto_path->second));
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + id);
 			int slot = -1;
