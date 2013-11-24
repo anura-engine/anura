@@ -75,7 +75,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "frame_in_animation", "int" },
 	{ "level", "any" },
 
-	{ "animation", "string|map" },
+	{ "animation", "string" },
 	{ "available_animations", "[string]" },
 
 	{ "hitpoints", "int" },
