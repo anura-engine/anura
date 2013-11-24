@@ -146,6 +146,9 @@ variant_type_ptr get_object_event_arg_type(int id)
 		EVENT_ARG(SPAWNED, "{spawner: custom_obj, child: custom_obj}")
 		EVENT_ARG(CHILD_SPAWNED, "{spawner: custom_obj, child: custom_obj}")
 		EVENT_ARG(ADD_OBJECT_FAIL, "{collide_with: custom_obj|null, object: custom_obj|null}")
+		EVENT_ARG(COLLIDE_HEAD, "{area: string|null, collide_with: custom_obj|null, collide_with_area: string|null}")
+		EVENT_ARG(COLLIDE_FEET, "{area: string|null, collide_with: custom_obj|null, collide_with_area: string|null}")
+		EVENT_ARG(COLLIDE_SIDE, "{area: string|null, collide_with: custom_obj|null, collide_with_area: string|null}")
 		default: {
 			const std::string& str = get_object_event_str(id);
 			if(strstr(str.c_str(), "collide_object")) {
