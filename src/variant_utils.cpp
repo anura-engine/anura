@@ -53,6 +53,26 @@ variant ivec3_to_variant(const glm::ivec3& v)
 	return variant(&result);
 }
 
+glm::quat variant_to_quat(const variant& v)
+{
+	ASSERT_LOG(v.is_list() && v.num_elements() == 4, "Expected vec4 variant but found " << v.write_json());
+	glm::quat result;
+	result.w = v[0].as_decimal().as_float();
+	result.x = v[1].as_decimal().as_float();
+	result.y = v[2].as_decimal().as_float();
+	result.z = v[3].as_decimal().as_float();
+	return result;
+}
+
+variant quat_to_variant(const glm::quat& v)
+{
+	std::vector<variant> result;
+	result.push_back(variant(decimal(v.w)));
+	result.push_back(variant(decimal(v.x)));
+	result.push_back(variant(decimal(v.y)));
+	result.push_back(variant(decimal(v.z)));
+	return variant(&result);
+}
 
 game_logic::formula_callable_ptr map_into_callable(variant v)
 {

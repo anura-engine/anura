@@ -147,6 +147,10 @@ objects = \
 	src/preview_tileset_widget.o \
     src/progress_bar.o \
 	src/property_editor_dialog.o \
+	src/psystem2.o \
+	src/psystem2_affectors.o \
+	src/psystem2_emitters.o \
+	src/psystem2_parameters.o \
 	src/random.o \
 	src/raster.o \
 	src/raster_distortion.o \

@@ -126,14 +126,14 @@ namespace {
 }
 
 program::program() 
-	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), color_attr_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 }
 
 
 program::program(const std::string& name, const shader& vs, const shader& fs)
-	: object_(0), vertex_location_(-1), texcoord_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
+	: object_(0), vertex_location_(-1), texcoord_location_(-1), color_attr_location_(-1), u_tex_map_(-1), u_mvp_matrix_(-1), u_sprite_area_(-1), u_draw_area_(-1), u_cycle_(-1), u_color_(-1), u_point_size_(-1)
 {
 	environ_ = this;
 	init(name, vs, fs);
@@ -956,7 +956,13 @@ void program::texture_array(GLint size, GLenum type, GLboolean normalized, GLsiz
 
 void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei stride, const GLvoid* ptr)
 {
-	if(stored_attributes_.has_key("color")) {
+	if(color_attr_location_ == -1) {
+		ASSERT_LOG(color_attribute_.empty() == false, "No attribute mapping found for 'color', program: " << name());
+		color_attr_location_ = get_attribute(color_attribute_);
+	}
+
+	vertex_attrib_array(color_attr_location_, size, type, normalized, stride, ptr);
+	/*if(stored_attributes_.has_key("color")) {
 		const variant& v = stored_attributes_["color"];
 		if(v.is_string()) {
 			vertex_attrib_array(get_attribute(v.as_string()), size, type, normalized, stride, ptr);
@@ -965,7 +971,7 @@ void program::color_array(GLint size, GLenum type, GLboolean normalized, GLsizei
 		}
 	} else {
 		ASSERT_LOG(false, "No attribute mapping found for: 'color', program: " << name());
-	}
+	}*/
 }
 
 GLuint program::get_fixed_attribute(const std::string& name) const
@@ -990,12 +996,14 @@ void program::set_fixed_attributes(const variant& node)
 
 	vertex_attribute_ = node["vertex"].as_string_default();
 	texcoord_attribute_ = node["texcoord"].as_string_default();
+	color_attribute_ = node["color"].as_string_default();
 }
 
 void program::set_fixed_attributes()
 {
 	vertex_attribute_ = "a_anura_vertex";
 	texcoord_attribute_ = "a_anura_texcoord";
+	color_attribute_ = "a_anura_color";
 }
 
 void program::set_fixed_uniforms(const variant& node)

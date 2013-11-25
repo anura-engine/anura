@@ -158,8 +158,9 @@ private:
 	//"vertex" and "texcoord" values within stored_attributes_
 	std::string vertex_attribute_;
 	std::string texcoord_attribute_;
+	std::string color_attribute_;
 
-	GLint vertex_location_, texcoord_location_;
+	GLint vertex_location_, texcoord_location_, color_attr_location_;
 
 	std::vector<std::map<std::string, actives>::iterator> uniforms_to_update_;
 

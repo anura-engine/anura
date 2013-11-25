@@ -44,6 +44,7 @@ project.xcworkspace
 Device-Debug
 Device-Release
 vs2012/lobby/Debug
+vs2012/lobby/Release
 vs2012/lobby/ipch
 vs2012/lobby/lobby.sdf
 vs2012/anura/anura.sdf
@@ -51,6 +52,7 @@ vs2012/anura/anura.opensdf
 vs2012/anura/Win32
 vs2012/anura/Debug
 vs2012/anura/Release
+vs2012/lua
 
 src/Box2D
 

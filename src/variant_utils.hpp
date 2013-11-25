@@ -26,12 +26,16 @@
 #include "variant.hpp"
 
 #include <glm/glm.hpp>
+#include <glm/gtc/quaternion.hpp>
 
 glm::vec3 variant_to_vec3(const variant& v);
 variant vec3_to_variant(const glm::vec3& v);
 
 glm::ivec3 variant_to_ivec3(const variant& v);
 variant ivec3_to_variant(const glm::ivec3& v);
+
+glm::quat variant_to_quat(const variant& v);
+variant quat_to_variant(const glm::quat& v);
 
 game_logic::formula_callable_ptr map_into_callable(variant v);
 
