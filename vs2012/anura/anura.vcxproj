@@ -295,6 +295,11 @@
     <ClInclude Include="..\..\src\preview_tileset_widget.hpp" />
     <ClInclude Include="..\..\src\progress_bar.hpp" />
     <ClInclude Include="..\..\src\property_editor_dialog.hpp" />
+    <ClInclude Include="..\..\src\psystem2.hpp" />
+    <ClInclude Include="..\..\src\psystem2_affectors.hpp" />
+    <ClInclude Include="..\..\src\psystem2_emitters.hpp" />
+    <ClInclude Include="..\..\src\psystem2_fwd.hpp" />
+    <ClInclude Include="..\..\src\psystem2_parameters.hpp" />
     <ClInclude Include="..\..\src\random.hpp" />
     <ClInclude Include="..\..\src\raster.hpp" />
     <ClInclude Include="..\..\src\raster_distortion.hpp" />
@@ -315,6 +320,7 @@
     <ClInclude Include="..\..\src\solid_map_fwd.hpp" />
     <ClInclude Include="..\..\src\sound.hpp" />
     <ClInclude Include="..\..\src\speech_dialog.hpp" />
+    <ClInclude Include="..\..\src\spline.hpp" />
     <ClInclude Include="..\..\src\stats.hpp" />
     <ClInclude Include="..\..\src\stats_server.hpp" />
     <ClInclude Include="..\..\src\stats_web_server.hpp" />
@@ -519,6 +525,10 @@
     <ClCompile Include="..\..\src\preview_tileset_widget.cpp" />
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
+    <ClCompile Include="..\..\src\psystem2.cpp" />
+    <ClCompile Include="..\..\src\psystem2_affectors.cpp" />
+    <ClCompile Include="..\..\src\psystem2_emitters.cpp" />
+    <ClCompile Include="..\..\src\psystem2_parameters.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
     <ClCompile Include="..\..\src\raster.cpp" />
     <ClCompile Include="..\..\src\raster_distortion.cpp" />
