@@ -567,6 +567,8 @@ class user_collision_callable : public game_logic::formula_callable {
 	const std::string* area_b_;
 	int index_;
 	variant all_collisions_;
+
+	DECLARE_CALLABLE(user_collision_callable);
 public:
 	user_collision_callable(entity_ptr a, entity_ptr b, const std::string& area_a, const std::string& area_b, int index) : a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
 	}
@@ -574,23 +576,20 @@ public:
 	void set_all_collisions(variant v) {
 		all_collisions_ = v;
 	}
-
-	variant get_value(const std::string& key) const {
-		if(key == "collide_with") {
-			return variant(b_.get());
-		} else if(key == "area") {
-			return variant(*area_a_);
-		} else if(key == "collide_with_area") {
-			return variant(*area_b_);
-		} else if(key == "collision_index") {
-			return variant(index_);
-		} else if(key == "all_collisions") {
-			return all_collisions_;
-		} else {
-			return variant();
-		}
-	}
 };
+
+BEGIN_DEFINE_CALLABLE_NOBASE(user_collision_callable)
+DEFINE_FIELD(collide_with, "custom_obj")
+	return variant(obj.b_.get());
+DEFINE_FIELD(area, "string")
+	return variant(*obj.area_a_);
+DEFINE_FIELD(collide_with_area, "string")
+	return variant(*obj.area_b_);
+DEFINE_FIELD(collision_index, "int")
+	return variant(obj.index_);
+DEFINE_FIELD(all_collisions, "[builtin user_collision_callable]")
+	return obj.all_collisions_;
+END_DEFINE_CALLABLE(user_collision_callable)
 
 int get_collision_event_id(const std::string& area)
 {
@@ -670,6 +669,11 @@ void detect_user_collisions(level& lvl)
 			p->set_all_collisions(all_callables_variant);
 			key.first->handle_event_delay(CollideObjectID, p.get());
 			key.first->handle_event_delay(get_collision_event_id(*i->first.second), p.get());
+		}
+
+		foreach(const boost::intrusive_ptr<user_collision_callable>& p, v) {
+			//make sure we don't retain circular references.
+			p->set_all_collisions(variant());
 		}
 	}
 

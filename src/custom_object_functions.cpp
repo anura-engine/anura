@@ -2338,9 +2338,16 @@ FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) a
 	const std::string proto = args()[0]->evaluate(variables).as_string();
 	const std::string event_type = args()[1]->evaluate(variables).as_string();
 	const std::string event_name = proto + "_PROTO_" + event_type;
-	const_formula_callable_ptr callable(&variables);
+	const_formula_callable_ptr callable;
 	if(args().size() >= 3) {
 		callable.reset(args()[2]->evaluate(variables).as_callable());
+	} else {
+		variant arg = variables.query_value("arg");
+		if(arg.is_callable()) {
+			callable.reset(arg.as_callable());
+		} else {
+			callable.reset(&variables);
+		}
 	}
 	ASSERT_LOG(event_depth < 100, "Infinite (or too deep?) recursion in proto_event(" << proto << ", " << event_type << ")");
 	fire_event_command* cmd = (new fire_event_command(entity_ptr(), event_name, callable));

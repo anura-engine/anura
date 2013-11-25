@@ -2458,8 +2458,6 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 				types[0] = variant_type::get_custom_object();
 			}
 
-			std::cerr << "SPAWN TYPE: " << types[0]->to_string() << "\n";
-
 			callable_def = game_logic::create_formula_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 		}
 
