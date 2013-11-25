@@ -300,7 +300,7 @@ namespace graphics
 			ASSERT_LOG(emission_rate_ != NULL, "FATAL: PSYSTEM2: emission_rate_ is NULL");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
-			emission_fraction_ = modf(emission_fraction_ + emission_rate_->get_value(t)*t, &cnt);
+			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->get_value(t)*t, &cnt);
 			//std::cerr << "XXX: Emitting " << cnt << " particles" << std::endl;
 			return cnt;
 		}

@@ -86,7 +86,7 @@ namespace graphics
 
 		float get_random_float(float min, float max)
 		{
-			std::uniform_real<float> gen(min, max);
+			std::uniform_real_distribution<float> gen(min, max);
 			return gen(get_rng_engine());
 		}
 
