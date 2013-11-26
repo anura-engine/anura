@@ -1,67 +1,104 @@
+/*
+	This work by Ryan Muller released under the Creative Commons CC0 License
+	http://creativecommons.org/publicdomain/zero/1.0/
+*/
+/**
+	Spline interpolation of a parametric function.
+ 
+	INPUT: std::vector<double> x
+	A list of double values that represent sampled
+	points. The array index of each point will be
+	taken as the parameter t by which x will be
+	represented as a function.
+ 
+	OUTPUT: std::vector<cv::Vec4d> P
+	A list of cv::Vec4d representing polynomials. To
+	interpret segment [i]:
+	x(t) = P0*a + P1*b + P2*(a^3-a)/6 + P3*(b^3-b)/6
+	where a = t-i
+	b = i-t+1
+*/
+/*
+	Modified by Kristina Simpson in order to better fit with how we do things,
+	also added the interpolate function.
+*/
+
 #pragma once
 
 #include <vector>
 
-typedef std::pair<float,float> control_point;
-typedef std::vector<control_point> control_point_vector;
-class spline
+namespace geometry 
 {
-	public:
-		spline(const control_point_vector& cps, float yp0, float ypn_1)
-		{
-			std::vector<float> u;
-			u.resize(cps.size());
-			second_derivatives_.resize(cps.size());
-			if(yp0 > 0.99e30) {
-				second_derivatives_[0] = 0.0f;
-				u[0] = 0.0f;
-			} else {
-                second_derivatives_[0] = -0.5f;
-                u[0]=(3.0/(cps[1].first-cps[0].first))*((cps[1].second-cps[0].second)/(cps[1].first-cps[0].first)-ypn_1);
-			}
-			for(size_t i = 1; i < cps.size(); ++i) {
-				float sig = (cps[i].first-cps[i-1].first)/(cps[i+1].first-cps[i-1].first);
-				float p = sig*second_derivatives_[i-1]+2.0f;
-				second_derivatives_[i] = (sig-1.0f)/p;
-				u[i] = (cps[i+1].second-cps[i].second)/(cps[i+1].first-cps[i].first) - (cps[i].second-cps[i-1].second)/(cps[i].first-cps[i-1].first);
-				u[i] = (6.0*u[i]/(cps[i+1].first-cps[i-1].first)-sig*u[i-1])/p;
-			}
-			float qn = 0.0f;
-			float un = 0.0f;
-			if (ypn_1 <= 0.99e30) {
-				qn = 0.5f;
-				un = (3.0/(cps.back().first - cps[cps.size()-2].first)) * (ypn_1-(cps.back().second - cps[cps.size()-2].second)/(cps.back().first-cps[cps.size()-2].first));
-			}
-			second_derivatives_[cps.size()-2] = (un - qn * u[cps.size()-2]) / (qn * second_derivatives_[cps.size()-2] + 1.0f);
-			for(size_t k=cps.size()-2; k >= 0; --k) {
-				second_derivatives_[k] = second_derivatives_[k] * second_derivatives_[k+1] + u[k];
-			}
-		}
-		float interpolate(float x)
-		{
-			size_t klo = 0;
-			size_t khi = second_derivatives_.size()-1;
-			size_t k;
-			float h, b, a;
+	typedef std::pair<double,double> control_point;
+	typedef std::vector<control_point> control_point_vector;
 
-			while(khi - klo > 1) {
-				k = (khi + klo) >> 1;
-				if(control_points_[k].first > x) {
-					khi = k;
-				} else {
-					klo = k;
+	struct vec4
+	{
+		double a, b, c, d;;
+	};
+
+	class spline
+	{
+		public:
+			spline(const control_point_vector& cps) : control_points_(cps) {
+				// spline size
+				size_t n = cps.size();
+ 
+				// loop counter
+				size_t i;
+ 
+				// working variables
+				double p;
+				std::vector<double> u;
+ 
+				u.resize(n);
+				z_prime_prime_.resize(n);
+ 
+				// set the second derivative to 0 at the ends
+				z_prime_prime_[0] = u[0] = 0;
+				z_prime_prime_[n-1] = 0;
+ 
+				// decomposition loop
+				for(i = 1; i < n-1; i++) {
+					double sig = (cps[i].first-cps[i-1].first)/(cps[i+1].first-cps[i-1].first);
+					p = sig * z_prime_prime_[i-1] + 2.0;
+					z_prime_prime_[i] = (sig-1.0)/p;
+					u[i] = (cps[i+1].second-cps[i].second)/(cps[i+1].first-cps[i].first) - (cps[i].second-cps[i-1].second)/(cps[i].first-cps[i-1].first);
+					u[i] = (6.0*u[i]/(cps[i+1].first-cps[i-1].first)-sig*u[i-1])/p;
+				}
+ 
+				// back-substitution loop
+				for(i = n - 1; i > 0; i--) {
+					z_prime_prime_[i] = z_prime_prime_[i] * z_prime_prime_[i+1] + u[i];
 				}
 			}
-			h = control_points_[khi].first - control_points_[klo].first;
-			ASSERT_LOG(h != 0.0f, "FATAL: bad value in call to spline::interpolate.")
-			a = (control_points_[khi].first - x)/h;
-			b = (x - control_points_[klo].first)/h;
-			return a*control_points_[klo].second + b*control_points_[khi].second + ((a*a*a-a)*second_derivatives_[klo] + (b*b*b-b)*second_derivatives_[khi])*(h*h)/6.0;
-		}
-	private:
-		control_point_vector control_points_;
-		std::vector<float> second_derivatives_;
+			float interpolate(float x)
+			{
+				size_t lo = 0;
+				size_t hi = z_prime_prime_.size()-1;
+				size_t k;
+				float h, b, a;
+
+				while(hi - lo > 1) {
+						k = (hi + lo) >> 1;
+						if(control_points_[k].first > x) {
+								hi = k;
+						} else {
+								lo = k;
+						}
+				}
+				h = control_points_[hi].first - control_points_[lo].first;
+				ASSERT_LOG(h != 0.0, "FATAL: SPLINE: bad value in call to spline::interpolate.")
+				a = (control_points_[hi].first - x)/h;
+				b = (x - control_points_[lo].first)/h;
+				return a*control_points_[lo].second + b*control_points_[hi].second + ((a*a*a-a)*z_prime_prime_[lo] + (b*b*b-b)*z_prime_prime_[hi])*(h*h)/6.0;
+			}
+		private:
+			control_point_vector control_points_;
+			// array of second derivatives
+			std::vector<double> z_prime_prime_;
 		
-		spline();
-		spline(const spline&);
-};
+			spline();
+			spline(const spline&);
+	};
+}

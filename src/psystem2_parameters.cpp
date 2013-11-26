@@ -88,10 +88,9 @@ namespace graphics
 			virtual float get_value(float t);
 		private:
 			InterpolationType curve_type_;
-			typedef std::pair<float, float> control_point;
-			std::vector<control_point> control_points_;
+			geometry::control_point_vector control_points_;
 
-			std::vector<control_point>::iterator find_closest_point(float t);
+			geometry::control_point_vector::iterator find_closest_point(float t);
 			curved_parameter(const curved_parameter&);
 		};
 
@@ -211,8 +210,8 @@ namespace graphics
 				ASSERT_LOG(node["control_point"][n].is_list() 
 					&& node["control_point"][n].num_elements() == 2,
 					"FATAL: PSYSTEM2: Control points should be list of two elements.");
-				auto p = std::make_pair(float(node["control_point"][n][0].as_decimal().as_float()), 
-					float(node["control_point"][n][1].as_decimal().as_float()));
+				auto p = std::make_pair(node["control_point"][n][0].as_decimal().as_float(), 
+					node["control_point"][n][1].as_decimal().as_float());
 				control_points_.push_back(p);
 			}
 		}
@@ -221,7 +220,7 @@ namespace graphics
 		{
 		}
 
-		std::vector<curved_parameter::control_point>::iterator curved_parameter::find_closest_point(float t)
+		geometry::control_point_vector::iterator curved_parameter::find_closest_point(float t)
 		{
 			// find nearest control point to t
 			auto it = control_points_.begin();
@@ -249,8 +248,8 @@ namespace graphics
 					return it->second + (it2->second - it->second) * (t - it->first) / (it2->first - it->first);
 				}
 			} else if(curve_type_ == INTERPOLATE_SPLINE) {
-				// XXX http://en.wikipedia.org/wiki/Spline_interpolation
-				spline spl(control_points_, 1e31, 1e31);
+				// http://en.wikipedia.org/wiki/Spline_interpolation
+				geometry::spline spl(control_points_);
 				return spl.interpolate(t);
 			}
 			return 0;
