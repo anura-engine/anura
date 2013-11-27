@@ -54,7 +54,7 @@ BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-stat
 # -Wno-error=narrowing 
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
-INC := -Isrc $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib)
+INC := -Isrc -Iinclude $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib)
 
 # Linker library options.
 LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
