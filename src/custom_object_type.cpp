@@ -354,6 +354,8 @@ bool custom_object_type::is_derived_from(const std::string& base, const std::str
 		return false;
 	}
 
+	assert(itor->second != derived);
+
 	return is_derived_from(base, itor->second);
 }
 
@@ -377,6 +379,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 	foreach(variant properties_node, node["properties"].as_list()) {
 		if(properties_node.is_string()) {
 			if(prototype_derived_from != "") {
+				assert(properties_node.as_string() != prototype_derived_from);
 				object_type_inheritance()[properties_node.as_string()] = prototype_derived_from;
 			}
 			prototype_derived_from = properties_node.as_string();
@@ -546,6 +549,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 	}
 
 	if(prototype_derived_from != "") {
+		ASSERT_LOG(id_ != prototype_derived_from, "Object " << id_ << " derives from itself");
 		object_type_inheritance()[id_] = prototype_derived_from;
 	}
 
@@ -578,6 +582,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 
 		auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
 		if(proto_path != prototype_file_paths().end()) {
+			ASSERT_LOG(get_object_path(id) == NULL, "Object " << id << " has a prototype with the same name. Objects and prototypes must have different names");
 			variant node = merge_prototype(json::parse_from_file(proto_path->second));
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + id);
@@ -710,6 +715,9 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 	//find the file for the object we are loading.
 	std::map<std::string, std::string>::const_iterator path_itor = module::find(object_file_paths(), id + ".cfg");
 	ASSERT_LOG(path_itor != object_file_paths().end(), "Could not find file for object '" << id << "'");
+
+	auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
+	ASSERT_LOG(proto_path == prototype_file_paths().end(), "Object " << id << " has a prototype with the same name. Objects and prototypes must have distinct names");
 
 	try {
 		std::vector<std::string> proto_paths;
