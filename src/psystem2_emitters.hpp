@@ -27,8 +27,12 @@
 
 namespace graphics
 {
+	class BoxOutline;
+	typedef std::unique_ptr<BoxOutline> BoxOutlinePtr; 
+
 	namespace particles
 	{
+
 		class emitter : public emit_object
 		{
 		public:
@@ -48,6 +52,7 @@ namespace graphics
 		protected:
 			virtual void internal_create(particle& p, float t) = 0;
 			virtual void handle_process(float t);
+			virtual void handle_draw() const;
 			virtual bool duration_expired() { return can_be_deleted_; }
 
 			enum EMITS_TYPE {
@@ -90,6 +95,8 @@ namespace graphics
 
 			float generate_angle() const;
 			glm::vec3 get_initial_direction(const glm::vec3& up) const;
+
+			BoxOutlinePtr debug_draw_outline_;
 
 			// working items
 			// Any "left over" fractional count of emitted particles

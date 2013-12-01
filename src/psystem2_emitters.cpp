@@ -28,14 +28,14 @@
 #include "psystem2_emitters.hpp"
 #include "psystem2_parameters.hpp"
 
-
 namespace graphics
 {
 	namespace 
 	{
-		void add_box_data_to_vbo(std::shared_ptr<GLuint> vbo_id)
+		GLsizei add_box_data_to_vbo(std::shared_ptr<GLuint> vbo_id)
 		{
-			std::vector<GLfloat> lines(72);
+			std::vector<GLfloat> lines;
+			lines.reserve(72);
 			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
 			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
 			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
@@ -55,19 +55,22 @@ namespace graphics
 			glBindBuffer(GL_ARRAY_BUFFER, *vbo_id);
 			glBufferData(GL_ARRAY_BUFFER, lines.size()*sizeof(GLfloat), &lines[0], GL_STATIC_DRAW);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			return lines.size()/3;
 		}
 
-		std::shared_ptr<GLuint> get_box_outline_vbo()
+		std::shared_ptr<GLuint> get_box_outline_vbo(GLsizei& num_vertices)
 		{
 			static std::shared_ptr<GLuint> res;
+			static GLsizei num_verts = 0;
 			if(res == NULL) {
 				// XXX This is probably broken since the context will be deleted before this destructor fires.
 				res.reset(new GLuint, [](GLuint* id){glDeleteBuffers(1, id); delete id;});
 				glGenBuffers(1, res.get());
-				add_box_data_to_vbo(res);
+				num_verts = add_box_data_to_vbo(res);
 				GLenum ok = glGetError();
 				ASSERT_EQ(ok, GL_NO_ERROR);
 			}
+			num_vertices = num_verts;
 			return res;
 		}
 	}
@@ -75,7 +78,7 @@ namespace graphics
 	class BoxOutline
 	{
 	public:
-		BoxOutline() : color_(0.25f, 1.0f, 0.25f, 1.0f) {
+		BoxOutline() : color_(0.25f, 1.0f, 0.25f, 1.0f), num_vertices_(0) {
 			shader_ = gles2::shader_program::get_global("line_3d")->shader();
 			ASSERT_LOG(shader_ != NULL, "FATAL: PSYSTEM2: test_draw_shader_ is null");
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
@@ -86,15 +89,16 @@ namespace graphics
 			ASSERT_LOG(a_position_ != -1, "FATAL: PSYSTEM2: Attribute 'vertex' unknown");
 
 			// blah blah, allocate vbo then put data in that
-			box_vbo_ = get_box_outline_vbo();
+			box_vbo_ = get_box_outline_vbo(num_vertices_);
 		}
 		~BoxOutline() {}
+		const glm::vec4& get_color() const { return color_; }
 		void set_color(const glm::vec4& c) {
 			color_ = c;
 		}
 		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
 			shader::manager m(shader_);
-			glm::mat4 model = glm::scale(glm::mat4(1.0f), scale) * glm::toMat4(rotation) * glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
 			glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
 			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
 			glUniform4fv(u_color_, 1, glm::value_ptr(color_));
@@ -102,12 +106,13 @@ namespace graphics
 			glEnableVertexAttribArray(a_position_);
 			glBindBuffer(GL_ARRAY_BUFFER, *box_vbo_);
 			glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, 0);
-			glDrawArrays(GL_LINES, 0, 24);
+			glDrawArrays(GL_LINES, 0, num_vertices_);
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 			glDisableVertexAttribArray(a_position_);
 #endif
 		}
 	private:
+		GLsizei num_vertices_;
 		std::shared_ptr<GLuint> vbo_id_;
 		gles2::program_ptr shader_;
 		std::shared_ptr<GLuint> box_vbo_;
@@ -245,11 +250,7 @@ namespace graphics
 			virtual emitter* clone() {
 				return new point_emitter(*this);
 			}
-			virtual void handle_draw() const {
-				//debug_draw_emitter_.draw(current.position, current.orientation, glm::vec3(0.75f,0.75f,0.75f));
-			}
 		private:
-			BoxOutline debug_draw_emitter_;
 			point_emitter();
 		};
 
@@ -390,6 +391,12 @@ namespace graphics
 				}
 				emits_name_ = node["emits_name"].as_string();
 			}
+			if(node.has_key("debug_draw") && node["debug_draw"].as_bool()) {
+				debug_draw_outline_.reset(new BoxOutline());
+				if(node.has_key("debug_draw_color")) {
+					debug_draw_outline_->set_color(variant_to_vec4(node["debug_draw_color"]));
+				}
+			}
 			// Set a default duration for the emitter.
 			ASSERT_LOG(duration_ != NULL, "FATAL: PSYSTEM2: duration_ is null");
 			duration_remaining_ = duration_->get_value(0);
@@ -425,6 +432,10 @@ namespace graphics
 			}
 			if(e.color_range_) {
 				color_range_.reset(new color_range(color_range_->first, color_range_->second));
+			}
+			if(e.debug_draw_outline_) {
+				debug_draw_outline_.reset(new BoxOutline());
+				debug_draw_outline_->set_color(e.debug_draw_outline_->get_color());
 			}
 			duration_remaining_ = duration_->get_value(0);
 		}
@@ -630,6 +641,13 @@ namespace graphics
 					get_random_float(color_range_->first.a,color_range_->second.a));
 			}
 			return current.color;
+		}
+
+		void emitter::handle_draw() const
+		{
+			if(debug_draw_outline_) {
+				debug_draw_outline_->draw(current.position, current.orientation, glm::vec3(0.25f,0.25f,0.25f));
+			}
 		}
 
 		emitter* emitter::factory(particle_system_container* parent, const variant& node)

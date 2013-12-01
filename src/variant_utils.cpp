@@ -74,6 +74,27 @@ variant quat_to_variant(const glm::quat& v)
 	return variant(&result);
 }
 
+glm::vec4 variant_to_vec4(const variant& v)
+{
+	ASSERT_LOG(v.is_list() && v.num_elements() == 4, "Expected vec4 variant but found " << v.write_json());
+	glm::vec4 result;
+	result[0] = v[0].as_decimal().as_float();
+	result[1] = v[1].as_decimal().as_float();
+	result[2] = v[2].as_decimal().as_float();
+	result[3] = v[2].as_decimal().as_float();
+	return result;
+}
+
+variant vec4_to_variant(const glm::vec4& v)
+{
+	std::vector<variant> result;
+	result.push_back(variant(decimal(v.x)));
+	result.push_back(variant(decimal(v.y)));
+	result.push_back(variant(decimal(v.z)));
+	result.push_back(variant(decimal(v.w)));
+	return variant(&result);
+}
+
 game_logic::formula_callable_ptr map_into_callable(variant v)
 {
 	if(v.is_callable()) {

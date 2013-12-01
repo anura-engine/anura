@@ -37,6 +37,9 @@ variant ivec3_to_variant(const glm::ivec3& v);
 glm::quat variant_to_quat(const variant& v);
 variant quat_to_variant(const glm::quat& v);
 
+glm::vec4 variant_to_vec4(const variant& v);
+variant vec4_to_variant(const glm::vec4& v);
+
 game_logic::formula_callable_ptr map_into_callable(variant v);
 
 //Function which will try to append list of variations. Behaviors:

@@ -403,11 +403,11 @@ namespace graphics
 			for(auto e : active_emitters_) {
 				e->process(t);
 			}
-			for(auto a : active_affectors_) {
-				a->process(t);
-			}
 			for(auto e : instanced_emitters_) {
 				e->process(t);
+			}
+			for(auto a : active_affectors_) {
+				a->process(t);
 			}
 			for(auto a : instanced_affectors_) {
 				a->process(t);
@@ -469,11 +469,11 @@ namespace graphics
 			glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat();
 			glUniformMatrix4fv(mvp_uniform, 1, GL_FALSE, glm::value_ptr(mvp));
 
-			for(auto e : instanced_emitters_) {
+			for(auto e :  active_emitters_) {
 				e->draw();
 			}
-			for(auto a : instanced_affectors_) {
-				a->draw();
+			for(auto e : instanced_emitters_) {
+				e->draw();
 			}
 
 #if defined(USE_SHADERS)
