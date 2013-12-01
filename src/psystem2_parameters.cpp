@@ -25,7 +25,9 @@
 #include "spline.hpp"
 #include "psystem2_parameters.hpp"
 
+#ifndef M_PI
 #define M_PI       3.14159265358979323846
+#endif
 
 namespace graphics
 {
@@ -165,7 +167,7 @@ namespace graphics
 				frequency_ = node["oscillate_frequency"].as_decimal().as_float();
 			} 
 			if(node.has_key("oscillate_phase")) {
-				phase_ = node["oscillate_phase"].as_decimal().as_float()/* * M_PI / 180.0f*/;
+				phase_ = node["oscillate_phase"].as_decimal().as_float();
 			} 
 			if(node.has_key("oscillate_base")) {
 				base_ = node["oscillate_base"].as_decimal().as_float();

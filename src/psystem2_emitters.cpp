@@ -22,13 +22,101 @@
 */
 
 #include "asserts.hpp"
+#include "level.hpp"
 #include "psystem2.hpp"
+#include "psystem2_affectors.hpp"
 #include "psystem2_emitters.hpp"
 #include "psystem2_parameters.hpp"
 
 
 namespace graphics
 {
+	namespace 
+	{
+		void add_box_data_to_vbo(std::shared_ptr<GLuint> vbo_id)
+		{
+			std::vector<GLfloat> lines(72);
+			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
+			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
+			lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
+
+			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
+			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); 
+			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
+
+			lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
+			lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
+
+			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); 
+			lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
+
+			lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); 
+			lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(0.5f); lines.push_back(0.5f); lines.push_back(-0.5f); lines.push_back(-0.5f); 
+			glBindBuffer(GL_ARRAY_BUFFER, *vbo_id);
+			glBufferData(GL_ARRAY_BUFFER, lines.size()*sizeof(GLfloat), &lines[0], GL_STATIC_DRAW);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+		}
+
+		std::shared_ptr<GLuint> get_box_outline_vbo()
+		{
+			static std::shared_ptr<GLuint> res;
+			if(res == NULL) {
+				// XXX This is probably broken since the context will be deleted before this destructor fires.
+				res.reset(new GLuint, [](GLuint* id){glDeleteBuffers(1, id); delete id;});
+				glGenBuffers(1, res.get());
+				add_box_data_to_vbo(res);
+				GLenum ok = glGetError();
+				ASSERT_EQ(ok, GL_NO_ERROR);
+			}
+			return res;
+		}
+	}
+
+	class BoxOutline
+	{
+	public:
+		BoxOutline() : color_(0.25f, 1.0f, 0.25f, 1.0f) {
+			shader_ = gles2::shader_program::get_global("line_3d")->shader();
+			ASSERT_LOG(shader_ != NULL, "FATAL: PSYSTEM2: test_draw_shader_ is null");
+			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
+			ASSERT_LOG(u_mvp_matrix_ != -1, "FATAL: PSYSTEM2: Uniform 'mvp_matrix' unknown");
+			u_color_ = shader_->get_fixed_uniform("color");
+			ASSERT_LOG(u_color_ != -1, "FATAL: PSYSTEM2: Uniform 'color' unknown");
+			a_position_ = shader_->get_fixed_attribute("vertex");
+			ASSERT_LOG(a_position_ != -1, "FATAL: PSYSTEM2: Attribute 'vertex' unknown");
+
+			// blah blah, allocate vbo then put data in that
+			box_vbo_ = get_box_outline_vbo();
+		}
+		~BoxOutline() {}
+		void set_color(const glm::vec4& c) {
+			color_ = c;
+		}
+		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
+			shader::manager m(shader_);
+			glm::mat4 model = glm::scale(glm::mat4(1.0f), scale) * glm::toMat4(rotation) * glm::translate(glm::mat4(1.0f), translation);
+			glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
+			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
+			glUniform4fv(u_color_, 1, glm::value_ptr(color_));
+#if defined(USE_SHADERS)
+			glEnableVertexAttribArray(a_position_);
+			glBindBuffer(GL_ARRAY_BUFFER, *box_vbo_);
+			glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, 0);
+			glDrawArrays(GL_LINES, 0, 24);
+			glBindBuffer(GL_ARRAY_BUFFER, 0);
+			glDisableVertexAttribArray(a_position_);
+#endif
+		}
+	private:
+		std::shared_ptr<GLuint> vbo_id_;
+		gles2::program_ptr shader_;
+		std::shared_ptr<GLuint> box_vbo_;
+		GLuint u_mvp_matrix_;
+		GLuint u_color_;
+		GLuint a_position_;
+		glm::vec4 color_;
+	};
+
 	namespace particles
 	{
 		namespace
@@ -48,10 +136,28 @@ namespace graphics
 		class circle_emitter : public emitter
 		{
 		public:
-			circle_emitter(const variant& node, technique* tech);
-			virtual ~circle_emitter();
+			circle_emitter(particle_system_container* parent, const variant& node) 			
+				: emitter(parent, node), 
+				circle_radius_(node["circle_radius"].as_decimal(decimal(0)).as_float()), 
+				circle_step_(node["circle_step"].as_decimal(decimal(0.1)).as_float()), 
+				circle_angle_(node["circle_angle"].as_decimal(decimal(0)).as_float()), 
+				circle_random_(node["emit_random"].as_bool(true)) {
+			}
+			virtual ~circle_emitter() {}
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t);
+			void internal_create(particle& p, float t) {
+				float angle = 0.0f;
+				if(circle_random_) {
+					angle = get_random_float(0.0f, 2.0f * M_PI);
+				} else {
+					angle = t * circle_step_;
+				}
+				p.initial.position.x += circle_radius_ * sin(angle + circle_angle_);
+				p.initial.position.z += circle_radius_ * cos(angle + circle_angle_);
+			}
+			virtual emitter* clone() {
+				return new circle_emitter(*this);
+			}
 		private:
 			float circle_radius_;
 			float circle_step_;
@@ -59,30 +165,65 @@ namespace graphics
 			bool circle_random_;
 
 			circle_emitter();
-			circle_emitter(const circle_emitter&);
 		};
 
 		class box_emitter : public emitter
 		{
 		public:
-			box_emitter(const variant& node, technique* tech);
-			virtual ~box_emitter();
+			box_emitter(particle_system_container* parent, const variant& node) 
+				: emitter(parent, node), box_dimensions_(100.0f) {
+				if(node.has_key("box_width")) {
+					box_dimensions_.x = node["box_width"].as_decimal().as_float();
+				}
+				if(node.has_key("box_height")) {
+					box_dimensions_.y = node["box_height"].as_decimal().as_float();
+				}
+				if(node.has_key("box_depth")) {
+					box_dimensions_.z = node["box_depth"].as_decimal().as_float();
+				}
+			}
+			virtual ~box_emitter() {}
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t);
+			void internal_create(particle& p, float t) {
+				p.initial.position.x += get_random_float(0.0f, box_dimensions_.x) - box_dimensions_.x/2;
+				p.initial.position.y += get_random_float(0.0f, box_dimensions_.y) - box_dimensions_.y/2;
+				p.initial.position.z += get_random_float(0.0f, box_dimensions_.z) - box_dimensions_.z/2;
+			}
+			virtual emitter* clone() {
+				return new box_emitter(*this);
+			}
 		private:
 			glm::vec3 box_dimensions_;
-
 			box_emitter();
-			box_emitter(const box_emitter&);
 		};
 
 		class line_emitter : public emitter
 		{
 		public:
-			line_emitter(const variant& node, technique* tech);
-			virtual ~line_emitter();
+			line_emitter(particle_system_container* parent, const variant& node) 
+				: emitter(parent, node), line_end_(0.0f), 
+				line_deviation_(0.0f),
+				min_increment_(0.0f), 
+				max_increment_(0.0f) {
+				if(node.has_key("max_deviation")) {
+					line_deviation_ = node["max_deviation"].as_decimal().as_float();
+				}
+				if(node.has_key("min_increment")) {
+					min_increment_ = node["min_increment"].as_decimal().as_float();
+				}
+				if(node.has_key("max_increment")) {
+					max_increment_ = node["max_increment"].as_decimal().as_float();
+				}
+				// XXX line_end_ ?
+			}
+			virtual ~line_emitter() {}
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t);
+			void internal_create(particle& p, float t) {
+				// XXX todo
+			}
+			virtual emitter* clone() {
+				return new line_emitter(*this);
+			}
 		private:
 			glm::vec3 line_end_;
 			float line_deviation_;
@@ -90,42 +231,64 @@ namespace graphics
 			float max_increment_;
 
 			line_emitter();
-			line_emitter(const line_emitter&);
 		};
 
 		class point_emitter : public emitter
 		{
 		public:
-			point_emitter(const variant& node, technique* tech);
-			virtual ~point_emitter();
+			point_emitter(particle_system_container* parent, const variant& node) : emitter(parent, node) {}
+			virtual ~point_emitter() {}
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t);
+			void internal_create(particle& p, float t) {
+				// intentionally does nothing.
+			}
+			virtual emitter* clone() {
+				return new point_emitter(*this);
+			}
+			virtual void handle_draw() const {
+				//debug_draw_emitter_.draw(current.position, current.orientation, glm::vec3(0.75f,0.75f,0.75f));
+			}
 		private:
+			BoxOutline debug_draw_emitter_;
 			point_emitter();
-			point_emitter(const point_emitter&);
 		};
 
 		class sphere_surface_emitter : public emitter
 		{
 		public:
-			sphere_surface_emitter(const variant& node, technique* tech);
-			virtual ~sphere_surface_emitter();
+			sphere_surface_emitter(particle_system_container* parent, const variant& node) 
+				: emitter(parent, node), 
+				radius_(node["radius"].as_decimal(decimal(1.0)).as_float()) {
+			}
+			virtual ~sphere_surface_emitter() {}
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t);
+			void internal_create(particle& p, float t) {
+				float theta = get_random_float(0, 2.0f*M_PI);
+				float phi = acos(get_random_float(-1.0f, 1.0f));
+				p.initial.position.x += radius_ * sin(phi) * cos(theta);
+				p.initial.position.y += radius_ * sin(phi) * sin(theta);
+				p.initial.position.z += radius_ * cos(phi);
+			}
+			virtual emitter* clone() {
+				return new sphere_surface_emitter(*this);
+			}
 		private:
 			float radius_;
 			sphere_surface_emitter();
-			sphere_surface_emitter(const point_emitter&);
 		};
 
 
-		emitter::emitter(const variant& node, technique* tech)
-			: emission_fraction_(0.0f), technique_(tech)
+		emitter::emitter(particle_system_container* parent, const variant& node)
+			: emit_object(parent, node), 
+			emission_fraction_(0.0f),
+			force_emission_(node["force_emission"].as_bool(false)),
+			force_emission_processed_(false), 
+			can_be_deleted_(false),
+			emits_type_(EMITS_VISUAL)
 		{
-			ASSERT_LOG(technique_ != NULL, "technique_ is null");
-			init_physics_parameters(initial_);
-			init_physics_parameters(current_);
-			initial_.time_to_live = current_.time_to_live = 3;
+			init_physics_parameters(initial);
+			init_physics_parameters(current);
+			initial.time_to_live = current.time_to_live = 3;
 
 			if(node.has_key("emission_rate")) {
 				emission_rate_ = parameter::factory(node["emission_rate"]);
@@ -163,13 +326,13 @@ namespace graphics
 				repeat_delay_.reset(new fixed_parameter(0.0f));
 			}
 			if(node.has_key("direction")) {
-				initial_.direction = current_.direction = variant_to_vec3(node["direction"]);
+				initial.direction = current.direction = variant_to_vec3(node["direction"]);
 			}
 			if(node.has_key("position")) {
-				initial_.position = current_.position = variant_to_vec3(node["position"]);
+				initial.position = current.position = variant_to_vec3(node["position"]);
 			}
 			if(node.has_key("orientation")) {
-				initial_.orientation = current_.orientation = variant_to_quat(node["orientation"]);
+				initial.orientation = current.orientation = variant_to_quat(node["orientation"]);
 			}
 			if(node.has_key("orientation_start") && node.has_key("orientation_end")) {
 				orientation_range_.reset(new std::pair<glm::quat, glm::quat>(variant_to_quat(node["orientation_start"]), variant_to_quat(node["orientation_end"])));
@@ -177,10 +340,10 @@ namespace graphics
 			if(node.has_key("color")) {
 				ASSERT_LOG(node["color"].is_list() && node["color"].num_elements() == 4,
 					"FATAL: PSYSTEM2: 'color' should be a list of 4 elements.");
-				initial_.color.r = current_.color.r = node["color"][0].as_int();
-				initial_.color.g = current_.color.g = node["color"][1].as_int();
-				initial_.color.b = current_.color.b = node["color"][2].as_int();
-				initial_.color.a = current_.color.a = node["color"][3].as_int();
+				initial.color.r = current.color.r = uint8_t(node["color"][0].as_decimal().as_float()*255.0);
+				initial.color.g = current.color.g = uint8_t(node["color"][1].as_decimal().as_float()*255.0);
+				initial.color.b = current.color.b = uint8_t(node["color"][2].as_decimal().as_float()*255.0);
+				initial.color.a = current.color.a = uint8_t(node["color"][3].as_decimal().as_float()*255.0);
 			}
 			if(node.has_key("start_colour_range") && node.has_key("end_colour_range")) {
 				glm::detail::tvec4<unsigned char> start;
@@ -208,8 +371,24 @@ namespace graphics
 			if(node.has_key("particle_depth")) {
 				particle_depth_ = parameter::factory(node["particle_depth"]);
 			}
-			if(node.has_key("name")) {
-				name_ = node["name"].as_string();
+			if(node.has_key("emits_type")) {
+				ASSERT_LOG(node.has_key("emits_name"), 
+					"FATAL: PSYSTEM2: Emitters that specify the 'emits_type' attribute must give have and 'emits_type' attribute");
+				const std::string& etype = node["emits_type"].as_string();
+				if(etype == "emitter_particle") {
+					emits_type_ = EMITS_EMITTER;
+				} else if(etype == "visual_particle") {
+					emits_type_ = EMITS_VISUAL;
+				} else if(etype == "technique_particle") {
+					emits_type_ = EMITS_TECHNIQUE;
+				} else if(etype == "affector_particle") {
+					emits_type_ = EMITS_AFFECTOR;
+				} else if(etype == "system_particle") {
+					emits_type_ = EMITS_SYSTEM;
+				} else {
+					ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised 'emit_type' attribute value: " << etype);
+				}
+				emits_name_ = node["emits_name"].as_string();
 			}
 			// Set a default duration for the emitter.
 			ASSERT_LOG(duration_ != NULL, "FATAL: PSYSTEM2: duration_ is null");
@@ -220,17 +399,109 @@ namespace graphics
 		{
 		}
 
-		void emitter::process(std::vector<particle>& particles, float t, std::vector<particle>::iterator& start, std::vector<particle>::iterator& end)
+		emitter::emitter(const emitter& e)
+			: emit_object(e),
+			technique_(NULL),
+			emission_rate_(e.emission_rate_),
+			time_to_live_(e.time_to_live_),
+			velocity_(e.velocity_),
+			angle_(e.angle_),
+			mass_(e.mass_),
+			duration_(e.duration_),
+			repeat_delay_(e.repeat_delay_),
+			particle_width_(e.particle_width_),
+			particle_height_(e.particle_height_),
+			particle_depth_(e.particle_depth_),
+			force_emission_(e.force_emission_),
+			force_emission_processed_(false),
+			can_be_deleted_(false),
+			emits_type_(e.emits_type_),
+			emits_name_(e.emits_name_),
+			emission_fraction_(0),
+			duration_remaining_(0)
 		{
-			// Create the new particles here, calling init_particle on them.
-			// pass handle_process the start, end iterators to the newly created particles.
-			// after handle_process complete set things like the time_to_live to initial_time_to_live.
+			if(e.orientation_range_) {
+				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
+			}
+			if(e.color_range_) {
+				color_range_.reset(new color_range(color_range_->first, color_range_->second));
+			}
+			duration_remaining_ = duration_->get_value(0);
+		}
+
+		void emitter::handle_process(float t) 
+		{
+			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique is null");
+			std::vector<particle>& particles = technique_->active_particles();
 
 			float duration = duration_->get_value(t);
 			if(duration == 0.0f || duration_remaining_ >= 0.0f) {
-				create_particles(particles, &start, &end, t);
-				handle_process(start, end, t);
-				set_particle_starting_values(start, end);
+				if(emits_type_ == EMITS_VISUAL) {
+					std::vector<particle>::iterator start;
+					std::vector<particle>::iterator end;
+					create_particles(particles, start, end, t);
+					for(auto it = start; it != end; ++it) {
+						internal_create(*it, t);
+					}
+					set_particle_starting_values(start, end);
+				} else {
+					if(emits_type_ == EMITS_EMITTER) {
+						size_t cnt = calculate_particles_to_emit(t, technique_->emitter_quota(), technique_->active_emitters().size());
+						//std::cerr << "XXX: Emitting " << cnt << " emitters" << std::endl;
+						for(int n = 0; n != cnt; ++n) {
+							emitter_ptr e = parent_container()->clone_emitter(emits_name_);
+							e->emitted_by = this;
+							{
+								e->initial.velocity = velocity_->get_value(t);
+								e->initial.time_to_live = time_to_live_->get_value(t);
+								//e->initial.color = get_color();
+								if(orientation_range_) {
+									e->initial.orientation = glm::lerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
+								} else {
+									e->initial.orientation = current.orientation;
+
+								}
+								e->initial.direction = glm::rotate(e->initial.orientation, get_initial_direction(glm::vec3(0,1,0)));
+							}
+							//init_particle(*e, t);
+							internal_create(*e, t);
+							memcpy(&e->current, &e->initial, sizeof(e->current));
+							technique_->add_emitter(e);
+						}
+					} else if(emits_type_ == EMITS_AFFECTOR) {
+						size_t cnt = calculate_particles_to_emit(t, technique_->affector_quota(), technique_->active_affectors().size());
+						for(int n = 0; n != cnt; ++n) {
+							affector_ptr a = parent_container()->clone_affector(emits_name_);
+							a->emitted_by = this;
+							init_particle(*a, t);
+							internal_create(*a, t);
+							memcpy(&a->current, &a->initial, sizeof(a->current));
+							technique_->add_affector(a);
+						}
+					} else if(emits_type_ == EMITS_TECHNIQUE) {
+						size_t cnt = calculate_particles_to_emit(t, technique_->technique_quota(), technique_->get_particle_system()->active_techniques().size());
+						for(int n = 0; n != cnt; ++n) {
+							technique_ptr tq = parent_container()->clone_technique(emits_name_);
+							tq->emitted_by = this;
+							init_particle(*tq, t);
+							internal_create(*tq, t);
+							memcpy(&tq->current, &tq->initial, sizeof(tq->current));
+							technique_->get_particle_system()->add_technique(tq);
+						}
+					} else if(emits_type_ == EMITS_SYSTEM) {
+						size_t cnt = calculate_particles_to_emit(t, technique_->system_quota(), parent_container()->active_particle_systems().size());
+						for(int n = 0; n != cnt; ++n) {
+							particle_system_ptr ps = parent_container()->clone_particle_system(emits_name_);
+							ps->emitted_by = this;
+							init_particle(*ps, t);
+							internal_create(*ps, t);
+							memcpy(&ps->current, &ps->initial, sizeof(ps->current));
+							parent_container()->add_particle_system(ps.get());
+						}
+					} else {
+						ASSERT_LOG(false, "FATAL: PSYSTEM2: unknown emits_type: " << emits_type_);
+					}
+				}
 
 				duration_remaining_ -= t;
 				if(duration_remaining_ < 0.0f) {
@@ -246,31 +517,50 @@ namespace graphics
 			}
 		}
 
-		void emitter::create_particles(std::vector<particle>& particles, std::vector<particle>::iterator* start, std::vector<particle>::iterator* end, float t)
+		size_t emitter::calculate_particles_to_emit(float t, size_t quota, size_t current_size)
 		{
-			ASSERT_LOG(technique_ != NULL, "technique_ is null");
-			int cnt = get_emitted_particle_count_per_cycle(t);
-			if(particles.size() + cnt > technique_->quota()) {
-				cnt = technique_->quota() - particles.size();
+			size_t cnt = 0;
+			if(force_emission_) {
+				if(!force_emission_processed_) {
+					// Single shot of all particles at once.
+					cnt = emission_rate_->get_value(technique_->get_particle_system()->elapsed_time());
+					force_emission_processed_ = true;
+				}
+			} else {
+				cnt = get_emitted_particle_count_per_cycle(t);
+			}
+			if(current_size + cnt > quota) {
+				cnt = quota - current_size;
 				if(cnt < 0) { 
 					cnt = 0; 
 				}
 			}
+			return cnt;
+		}
+
+		void emitter::create_particles(std::vector<particle>& particles, 
+			std::vector<particle>::iterator& start, 
+			std::vector<particle>::iterator& end, 
+			float t)
+		{
+			ASSERT_LOG(technique_ != NULL, "technique_ is null");
+			size_t cnt = calculate_particles_to_emit(t, technique_->quota(), particles.size());
+
 			// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
 			// the particle list. We could hit some pathological case where we allocate particles past
 			// the quota (since it isn't enforced yet). This saves us from start from being invalidated
 			// if push_back were to cause a reallocation.
 			particles.reserve(particles.size() + cnt);
-			*start = particles.end();
+			start = particles.end();
 			for(int n = 0; n != cnt; ++n) {
 				particle p;
 				init_particle(p, t);
 				particles.push_back(p);
 			}
-			*end = particles.end();
+			end = particles.end();
 		}
 
-		void emitter::set_particle_starting_values(const std::vector<particle>::iterator start, const std::vector<particle>::iterator end)
+		void emitter::set_particle_starting_values(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end)
 		{
 			for(auto p = start; p != end; ++p) {
 				memcpy(&p->current, &p->initial, sizeof(p->current));
@@ -281,7 +571,7 @@ namespace graphics
 		{
 			init_physics_parameters(p.initial);
 			init_physics_parameters(p.current);
-			p.initial.position = current_.position;
+			p.initial.position = current.position;
 			p.initial.color = get_color();
 			p.initial.time_to_live = time_to_live_->get_value(t);
 			p.initial.velocity = velocity_->get_value(t);
@@ -290,9 +580,10 @@ namespace graphics
 			if(orientation_range_) {
 				p.initial.orientation = glm::lerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
 			} else {
-				p.initial.orientation = current_.orientation;
+				p.initial.orientation = current.orientation;
 			}
 			p.initial.direction = glm::rotate(p.initial.orientation, get_initial_direction(glm::vec3(0,1,0)));
+			p.emitted_by = this;
 		}
 
 		int emitter::get_emitted_particle_count_per_cycle(float t)
@@ -301,7 +592,6 @@ namespace graphics
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
 			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->get_value(t)*t, &cnt);
-			//std::cerr << "XXX: Emitting " << cnt << " particles" << std::endl;
 			return cnt;
 		}
 
@@ -322,13 +612,12 @@ namespace graphics
 			if(angle != 0) {
 				glm::vec3 perp_up = perpendicular(up);
 
-				glm::quat q = glm::angleAxis(get_random_float(0.0f,360.0f), current_.direction);
+				glm::quat q = glm::angleAxis(get_random_float(0.0f,360.0f), current.direction);
 				perp_up = glm::rotate(q, perp_up);
 				q = glm::angleAxis(angle, perp_up);
-				auto w = glm::rotate(q, current_.direction);
-				return w;
+				return glm::rotate(q, glm::vec3(0.0f,1.0f,0.0f));//current.direction);
 			}
-			return current_.direction;
+			return current.direction;
 		}
 
 		glm::detail::tvec4<unsigned char> emitter::get_color() const
@@ -340,140 +629,26 @@ namespace graphics
 					get_random_float(color_range_->first.b,color_range_->second.b),
 					get_random_float(color_range_->first.a,color_range_->second.a));
 			}
-			return current_.color;
+			return current.color;
 		}
 
-		emitter_ptr emitter::factory(const variant& node, technique* tech)
+		emitter* emitter::factory(particle_system_container* parent, const variant& node)
 		{
 			ASSERT_LOG(node.has_key("type"), "FATAL: PSYSTEM2: emitter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "circle") {
-				return emitter_ptr(new circle_emitter(node, tech));
+				return new circle_emitter(parent, node);
 			} else if(ntype == "box") {
-				return emitter_ptr(new box_emitter(node, tech));
+				return new box_emitter(parent, node);
 			} else if(ntype == "line") {
-				return emitter_ptr(new line_emitter(node, tech));
+				return new line_emitter(parent, node);
 			} else if(ntype == "point") {
-				return emitter_ptr(new point_emitter(node, tech));
+				return new point_emitter(parent, node);
 			} else if(ntype == "sphere_surface") {
-				return emitter_ptr(new sphere_surface_emitter(node, tech));
-			} else {
-				ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised emitter type: " << ntype);
+				return new sphere_surface_emitter(parent, node);
 			}
-			return emitter_ptr();
-		}
-
-		circle_emitter::circle_emitter(const variant& node, technique* tech)
-			: emitter(node, tech), 
-			circle_radius_(node["circle_radius"].as_decimal(decimal(0)).as_float()), 
-			circle_step_(node["circle_step"].as_decimal(decimal(0.1)).as_float()), 
-			circle_angle_(node["circle_angle"].as_decimal(decimal(0)).as_float()), 
-			circle_random_(node["emit_random"].as_bool(true))
-		{
-		}
-
-		circle_emitter::~circle_emitter()
-		{
-		}
-
-		void circle_emitter::handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t)
-		{
-			for(auto p = start; p != end; ++p) {
-				float angle = 0.0f;
-				if(circle_random_) {
-					angle = get_random_float(0.0f, 2.0f * M_PI);
-				} else {
-					angle = t * circle_step_;
-				}
-				p->initial.position.x += circle_radius_ * sin(angle + circle_angle_);
-				p->initial.position.z += circle_radius_ * cos(angle + circle_angle_);
-			}
-		}
-
-		box_emitter::box_emitter(const variant& node, technique* tech)
-			: emitter(node, tech), box_dimensions_(100.0f)
-		{
-			if(node.has_key("box_width")) {
-				box_dimensions_.x = node["box_width"].as_decimal().as_float();
-			}
-			if(node.has_key("box_height")) {
-				box_dimensions_.y = node["box_height"].as_decimal().as_float();
-			}
-			if(node.has_key("box_depth")) {
-				box_dimensions_.z = node["box_depth"].as_decimal().as_float();
-			}
-		}
-
-		box_emitter::~box_emitter()
-		{
-		}
-
-		void box_emitter::handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t)
-		{
-			for(auto p = start; p != end; ++p) {
-				p->initial.position.x += get_random_float(0.0f, box_dimensions_.x) - box_dimensions_.x/2;
-				p->initial.position.y += get_random_float(0.0f, box_dimensions_.y) - box_dimensions_.y/2;
-				p->initial.position.z += get_random_float(0.0f, box_dimensions_.z) - box_dimensions_.z/2;
-			}
-		}
-
-		line_emitter::line_emitter(const variant& node, technique* tech)
-			: emitter(node, tech), line_end_(0.0f), line_deviation_(0.0f),
-			min_increment_(0.0f), max_increment_(0.0f)
-		{
-			if(node.has_key("max_deviation")) {
-				line_deviation_ = node["max_deviation"].as_decimal().as_float();
-			}
-			if(node.has_key("min_increment")) {
-				min_increment_ = node["min_increment"].as_decimal().as_float();
-			}
-			if(node.has_key("max_increment")) {
-				max_increment_ = node["max_increment"].as_decimal().as_float();
-			}
-			// XXX line_end_ ?
-		}
-
-		line_emitter::~line_emitter()
-		{
-		}
-
-		void line_emitter::handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t)
-		{
-			// XXX
-		}
-
-		point_emitter::point_emitter(const variant& node, technique* tech)
-			: emitter(node, tech)
-		{
-		}
-
-		point_emitter::~point_emitter()
-		{
-		}
-
-		void point_emitter::handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t)
-		{
-			// nothing need be done
-		}
-
-		sphere_surface_emitter::sphere_surface_emitter(const variant& node, technique* tech)
-			: emitter(node, tech), radius_(node["radius"].as_decimal(decimal(1.0)).as_float())
-		{
-		}
-
-		sphere_surface_emitter::~sphere_surface_emitter()
-		{
-		}
-
-		void sphere_surface_emitter::handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t)
-		{
-			for(auto p = start; p != end; ++p) {
-				float theta = get_random_float(0, 2.0f*M_PI);
-				float phi = acos(get_random_float(-1.0f, 1.0f));
-				p->initial.position.x += radius_ * sin(phi) * cos(theta);
-				p->initial.position.y += radius_ * sin(phi) * sin(theta);
-				p->initial.position.z += radius_ * cos(phi);
-			}
+			ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised emitter type: " << ntype);
+			return NULL;
 		}
 	}
 }

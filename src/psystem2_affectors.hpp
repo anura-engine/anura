@@ -29,32 +29,39 @@ namespace graphics
 {
 	namespace particles
 	{
-		class affector
+		class affector : public emit_object
 		{
 		public:
-			explicit affector(const variant& node, technique* tech);
+			explicit affector(particle_system_container* parent, const variant& node);
 			virtual ~affector();
+			virtual affector* clone() = 0;
 
 			bool enabled() const { return enabled_; }
 			void enable(bool en) { enabled_ = en; }
+			technique* get_technique() { return technique_; }
+			void set_parent_technique(technique* tq) {
+				technique_ = tq;
+			}
 
-			static affector_ptr factory(const variant& node, technique* tech);
-			void apply(std::vector<particle>& particles, std::vector<emitter_ptr>& emitters, float t);
+			static affector* factory(particle_system_container* parent, const variant& node);
 		protected:
+			//virtual void handle_apply(std::vector<particle>& particles, float t) = 0;
+			//virtual void handle_apply(std::vector<emit_object_ptr>& objs, float t) = 0;
+			virtual void handle_process(float t);
+			virtual void internal_apply(particle& p, float t) = 0;
+
 			float mass() const { return mass_; }
 			const glm::vec3& position() const { return position_; }
-			virtual void handle_apply(std::vector<particle>& particles, float t) = 0;
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) = 0;
+			const glm::vec3& scale() const { return scale_; }
 			bool is_emitter_excluded(const std::string& name);
-			technique* get_technique() { return technique_; }
 		private:
 			bool enabled_;
 			float mass_;
 			glm::vec3 position_;
 			std::vector<std::string> excluded_emitters_;
+			glm::vec3 scale_;
 			technique* technique_;
 			affector();
-			affector(const affector&);
 		};
 	}
 }

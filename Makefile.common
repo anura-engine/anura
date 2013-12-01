@@ -150,6 +150,7 @@ objects = \
 	src/psystem2.o \
 	src/psystem2_affectors.o \
 	src/psystem2_emitters.o \
+	src/psystem2_observers.o \
 	src/psystem2_parameters.o \
 	src/random.o \
 	src/raster.o \

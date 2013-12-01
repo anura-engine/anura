@@ -34,11 +34,12 @@ namespace graphics
 		class time_color_affector : public affector
 		{
 		public:
-			explicit time_color_affector(const variant& node, technique* tech);
-			virtual ~time_color_affector();
+			explicit time_color_affector(particle_system_container* parent, const variant& node);
+			virtual ~time_color_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void internal_apply(particle& p, float t);
+			virtual affector* clone() {
+				return new time_color_affector(*this);
 			}
 		private:
 			enum ColourOperation {
@@ -52,22 +53,21 @@ namespace graphics
 			std::vector<tc_pair>::iterator find_nearest_color(float dt);
 
 			time_color_affector();
-			time_color_affector(const time_color_affector&);
 		};
 
 		class jet_affector : public affector
 		{
 		public:
-			explicit jet_affector(const variant& node, technique* tech);
-			virtual ~jet_affector();
+			explicit jet_affector(particle_system_container* parent, const variant& node);
+			virtual ~jet_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void internal_apply(particle& p, float t);
+			virtual affector* clone() {
+				return new jet_affector(*this);
 			}
 		private:
 			parameter_ptr acceleration_;
 			jet_affector();
-			jet_affector(const jet_affector&);
 		};
 		// affectors to add: box_collider (width,height,depth, inner or outer collide, friction)
 		// flock_centering.
@@ -78,7 +78,6 @@ namespace graphics
 		// linear_force
 		// path_follower
 		// plane_collider
-		// randomiser (bool random_direction_, float time_step_ glm::vec3 max_deviation_)
 		// scale_velocity (parameter_ptr scale; bool since_system_start, bool stop_at_flip)
 		// sine_force
 		// sphere_collider
@@ -89,11 +88,12 @@ namespace graphics
 		class scale_affector : public affector
 		{
 		public:
-			explicit scale_affector(const variant& node, technique* tech);
-			virtual ~scale_affector();
+			explicit scale_affector(particle_system_container* parent, const variant& node);
+			virtual ~scale_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void internal_apply(particle& p, float t);
+			virtual affector* clone() {
+				return new scale_affector(*this);
 			}
 		private:
 			parameter_ptr scale_x_;
@@ -103,95 +103,265 @@ namespace graphics
 			bool since_system_start_;
 			float calculate_scale(parameter_ptr s, const particle& p);
 			scale_affector();
-			scale_affector(const scale_affector&);
 		};
 
 		class vortex_affector : public affector
 		{
 		public:
-			explicit vortex_affector(const variant& node, technique* tech);
-			virtual ~vortex_affector();
+			explicit vortex_affector(particle_system_container* parent, const variant& node);
+			virtual ~vortex_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void internal_apply(particle& p, float t);
+			virtual affector* clone() {
+				return new vortex_affector(*this);
 			}
 		private:
 			glm::quat rotation_axis_;
 			parameter_ptr rotation_speed_;
 			vortex_affector();
-			vortex_affector(const vortex_affector&);
 		};
 
 		class gravity_affector : public affector
 		{
 		public:
-			explicit gravity_affector(const variant& node, technique* tech);
-			virtual ~gravity_affector();
+			explicit gravity_affector(particle_system_container* parent, const variant& node);
+			virtual ~gravity_affector()  {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void internal_apply(particle& p, float t);
+			virtual affector* clone() {
+				return new gravity_affector(*this);
 			}
 		private:
 			float gravity_;
 			gravity_affector();
-			gravity_affector(const gravity_affector&);
 		};
 
 		class particle_follower_affector : public affector
 		{
 		public:
-			explicit particle_follower_affector(const variant& node, technique* tech);
-			virtual ~particle_follower_affector();
+			explicit particle_follower_affector(particle_system_container* parent, const variant& node)
+				: affector(parent, node),
+				min_distance_(node["min_distance"].as_decimal(decimal(1.0)).as_float()),
+				max_distance_(node["max_distance"].as_decimal(decimal(std::numeric_limits<float>::max())).as_float()) {
+			}
+			virtual ~particle_follower_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t);
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				// keeps particles following wihin [min_distance, max_distance]
+				if(particles.size() < 1) {
+					return;
+				}
+				prev_particle_ = particles.begin();
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual void internal_apply(particle& p, float t) {
+				auto distance = glm::length(p.current.position - prev_particle_->current.position);
+				if(distance > min_distance_ && distance < max_distance_) {
+					p.current.position = prev_particle_->current.position + (min_distance_/distance)*(p.current.position-prev_particle_->current.position);
+				}
+			}
+			virtual affector* clone() {
+				return new particle_follower_affector(*this);
 			}
 		private:
 			float min_distance_;
 			float max_distance_;
+			std::vector<particle>::iterator prev_particle_;
 			particle_follower_affector();
-			particle_follower_affector(const particle_follower_affector&);
 		};
 
 		class align_affector : public affector
 		{
 		public:
-			explicit align_affector(const variant& node, technique* tech) 
-				: affector(node, tech), resize_(node["resize"].as_bool(false)) {
+			explicit align_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), resize_(node["resize"].as_bool(false)) {
 			}
-			virtual ~align_affector() {
-			}
+			virtual ~align_affector() {}
 		protected:
-			virtual void handle_apply(std::vector<particle>& particles, float t) {
-				auto prev_p = particles.begin();
-				for(auto p = particles.begin()+1; p != particles.end(); ++p) {
-					glm::vec3 distance = prev_p->current.position - p->current.position;
-					if(resize_) {
-						p->current.dimensions.y = glm::length(distance);
-					}
+			virtual void internal_apply(particle& p, float t) {
+				glm::vec3 distance = prev_particle_->current.position - p.current.position;
+				if(resize_) {
+					p.current.dimensions.y = glm::length(distance);
+				}
+				if(std::abs(glm::length(distance)) > 1e-12) {
 					distance = glm::normalize(distance);
-					p->current.orientation.x = distance.x;
-					p->current.orientation.y = distance.y;
-					p->current.orientation.z = distance.z;
-					prev_p = p;
+				}
+				p.current.orientation.x = distance.x;
+				p.current.orientation.y = distance.y;
+				p.current.orientation.z = distance.z;
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
 				}
 			}
-			virtual void handle_apply(std::vector<emitter_ptr>& emitters, float t) {
-				// we don't apply this affector to emitters.
+			virtual affector* clone() {
+				return new align_affector(*this);
 			}
 		private:
 			bool resize_;			
+			std::vector<particle>::iterator prev_particle_;
 			align_affector();
-			align_affector(const align_affector&);
 		};
 
-
-		affector::affector(const variant& node, technique* tech)
-			: enabled_(node["enabled"].as_bool(true)), 
-			mass_(float(node["mass_affector"].as_decimal(decimal(1.0)).as_float())),
-			position_(0.0f), technique_(tech)
+		class randomiser_affector : public affector
 		{
-			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique_ is null");
+		public:
+			explicit randomiser_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), max_deviation_(0.0f), 
+				time_step_(float(node["time_step"].as_decimal(decimal(0.0f)).as_float())), 
+				random_direction_(node["use_direction"].as_bool(true)) {
+				if(node.has_key("max_deviation_x")) {
+					max_deviation_.x = float(node["max_deviation_x"].as_decimal().as_float());
+				}
+				if(node.has_key("max_deviation_y")) {
+					max_deviation_.y = float(node["max_deviation_y"].as_decimal().as_float());
+				}
+				if(node.has_key("max_deviation_z")) {
+					max_deviation_.z = float(node["max_deviation_z"].as_decimal().as_float());
+				}
+				last_update_time_[0] = last_update_time_[1] = 0.0f;
+			}
+			virtual ~randomiser_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				if(random_direction_) {
+					// change direction per update
+					p.current.direction += glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
+						get_random_float(-max_deviation_.y, max_deviation_.y),
+						get_random_float(-max_deviation_.z, max_deviation_.z));
+				} else {
+					// change position per update.
+					p.current.position += scale() * glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
+						get_random_float(-max_deviation_.y, max_deviation_.y),
+						get_random_float(-max_deviation_.z, max_deviation_.z));
+				}
+			}
+			void handle_apply(std::vector<particle>& particles, float t) {
+				last_update_time_[0] += t;
+				if(last_update_time_[0] > time_step_) {
+					last_update_time_[0] -= time_step_;
+					for(auto& p : particles) {
+						internal_apply(p, t);
+					}
+				}
+			}
+			void handle_apply(std::vector<emitter_ptr>& objs, float t) {
+				last_update_time_[1] += t;
+				if(last_update_time_[1] > time_step_) {
+					last_update_time_[1] -= time_step_;
+					for(auto e : objs) {
+						internal_apply(*e, t);
+					}
+				}
+			}
+			virtual void handle_process(float t) {
+				handle_apply(get_technique()->active_particles(), t);
+				handle_apply(get_technique()->active_emitters(), t);
+			}
+			virtual affector* clone() {
+				return new randomiser_affector(*this);
+			}
+		private:
+			// randomiser (bool random_direction_, float time_step_ glm::vec3 max_deviation_)
+			bool random_direction_;
+			float time_step_;
+			glm::vec3 max_deviation_;
+			float last_update_time_[2];
+			randomiser_affector();
+		};
+
+		class sine_force_affector : public affector
+		{
+		public:
+			explicit sine_force_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node),
+				min_frequency_(1.0f),
+				max_frequency_(1.0f),
+				angle_(361.0f),
+				frequency_(1.0f),
+				force_vector_(0.0f),
+				scale_vector_(0.0f),
+				fa_(FA_ADD)
+			{
+				if(node.has_key("max_frequency")) {
+					max_frequency_ = float(node["max_frequency"].as_decimal().as_float());
+					frequency_ = max_frequency_;
+				}
+				if(node.has_key("min_frequency")) {
+					min_frequency_ = float(node["min_frequency"].as_decimal().as_float());					
+					if(min_frequency_ > max_frequency_) {
+						frequency_ = min_frequency_;
+					}
+				}
+				if(node.has_key("force_vector")) {
+					force_vector_ = variant_to_vec3(node["force_vector"]);
+				}
+				if(node.has_key("force_application")) {
+					const std::string& fa = node["force_application"].as_string();
+					if(fa == "average") {
+						fa_ = FA_AVERAGE;
+					} else if(fa == "add") {
+						fa_ = FA_ADD;
+					} else {
+						ASSERT_LOG(false, "FATAL: PSYSTEM2: 'force_application' attribute should have value average or add");
+					}
+				}
+			}
+			virtual ~sine_force_affector() {}
+		protected:
+			virtual void handle_process(float t) {
+				angle_ += frequency_ * t;
+				float sine_value = sin(angle_ * M_PI / 180.0f);
+				scale_vector_ = force_vector_ * t * sine_value;
+				if(angle_ > 360.0f) {
+					angle_ = 0.0f;
+					if(min_frequency_ != max_frequency_) {
+						frequency_ = get_random_float(min_frequency_, max_frequency_);
+					}
+				}
+				affector::handle_process(t);
+			}
+			virtual void internal_apply(particle& p, float t) {
+				if(fa_ == FA_ADD) {
+					p.current.direction += scale_vector_;
+				} else {
+					p.current.direction = (p.current.direction + force_vector_)/2.0f;
+				}
+			}
+			virtual affector* clone() {
+				return new sine_force_affector(*this);
+			}
+		private:
+			enum ForceApplication {
+				FA_ADD,
+				FA_AVERAGE,
+			};
+			glm::vec3 force_vector_;
+			glm::vec3 scale_vector_;
+			float min_frequency_;
+			float max_frequency_;
+			float angle_;
+			float frequency_;
+			ForceApplication fa_;
+			sine_force_affector();
+		};
+
+		affector::affector(particle_system_container* parent, const variant& node)
+			: emit_object(parent, node), enabled_(node["enabled"].as_bool(true)), 
+			mass_(float(node["mass_affector"].as_decimal(decimal(1.0)).as_float())),
+			position_(0.0f), scale_(1.0f)
+		{
 			if(node.has_key("position")) {
 				position_ = variant_to_vec3(node["position"]);
 			}
@@ -203,16 +373,25 @@ namespace graphics
 				}
 			}
 		}
-
+		
 		affector::~affector()
 		{
 		}
 
-		void affector::apply(std::vector<particle>& particles, std::vector<emitter_ptr>& emitters, float t)
+		void affector::handle_process(float t) 
 		{
-			if(enabled_) {
-				handle_apply(particles, t);
-				handle_apply(emitters, t);
+			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique_ is null");
+			for(auto& e : technique_->active_emitters()) {
+				ASSERT_LOG(e->emitted_by != NULL, "FATAL: PSYSTEM2: e->emitted_by is null");
+				if(!is_emitter_excluded(e->emitted_by->name())) {
+					internal_apply(*e,t);
+				}
+			}
+			for(auto& p : technique_->active_particles()) {
+				ASSERT_LOG(p.emitted_by != NULL, "FATAL: PSYSTEM2: p.emitted_by is null");
+				if(!is_emitter_excluded(p.emitted_by->name())) {
+					internal_apply(p,t);
+				}
 			}
 		}
 
@@ -221,32 +400,36 @@ namespace graphics
 			return std::find(excluded_emitters_.begin(), excluded_emitters_.end(), name) != excluded_emitters_.end();
 		}
 
-		affector_ptr affector::factory(const variant& node, technique* tech)
+		affector* affector::factory(particle_system_container* parent, const variant& node)
 		{
 			ASSERT_LOG(node.has_key("type"), "FATAL: PSYSTEM2: affector must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "color" || ntype == "colour") {
-				return affector_ptr(new time_color_affector(node, tech));
+				return new time_color_affector(parent, node);
 			} else if(ntype == "jet") {
-				return affector_ptr(new jet_affector(node, tech));
+				return new jet_affector(parent, node);
 			} else if(ntype == "vortex") {
-				return affector_ptr(new vortex_affector(node, tech));
+				return new vortex_affector(parent, node);
 			} else if(ntype == "gravity") {
-				return affector_ptr(new gravity_affector(node, tech));
+				return new gravity_affector(parent, node);
 			} else if(ntype == "scale") {
-				return affector_ptr(new scale_affector(node, tech));
+				return new scale_affector(parent, node);
 			} else if(ntype == "particle_follower") {
-				return affector_ptr(new particle_follower_affector(node, tech));
+				return new particle_follower_affector(parent, node);
 			} else if(ntype == "align") {
-				return affector_ptr(new align_affector(node, tech));
+				return new align_affector(parent, node);
+			} else if(ntype == "randomiser" || ntype == "randomizer") {
+				return new randomiser_affector(parent, node);
+			} else if(ntype == "sine_force") {
+				return new sine_force_affector(parent, node);
 			} else {
 				ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
-			return affector_ptr();
+			return NULL;
 		}
 
-		time_color_affector::time_color_affector(const variant& node, technique* tech)
-			: affector(node, tech), operation_(time_color_affector::COLOR_OP_SET)
+		time_color_affector::time_color_affector(particle_system_container* parent, const variant& node)
+			: affector(parent, node), operation_(time_color_affector::COLOR_OP_SET)
 		{
 			if(node.has_key("colour_operation")) {
 				const std::string& op = node["colour_operation"].as_string();
@@ -306,33 +489,27 @@ namespace graphics
 			}
 		}
 
-		time_color_affector::~time_color_affector()
+		void time_color_affector::internal_apply(particle& p, float t)
 		{
-		}
-
-		void time_color_affector::handle_apply(std::vector<particle>& particles, float t)
-		{
-			for(auto& p : particles) {
-				glm::vec4 c;
-				float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
-				auto it1 = find_nearest_color(ttl_percentage);
-				auto it2 = it1 + 1;
-				if(it2 != tc_data_.end()) {
-					c = it1->second + ((it2->second - it1->second) * ((ttl_percentage - it1->first)/(it2->first - it1->first)));
-				} else {
-					c = it1->second;
-				}
-				if(operation_ == COLOR_OP_SET) {
-					p.current.color = color_vector(color_vector::value_type(c.r*255.0f), 
-						color_vector::value_type(c.g*255.0f), 
-						color_vector::value_type(c.b*255.0f), 
-						color_vector::value_type(c.a*255.0f));
-				} else {
-					p.current.color = color_vector(color_vector::value_type(c.r*p.initial.color.r), 
-						color_vector::value_type(c.g*p.initial.color.g), 
-						color_vector::value_type(c.b*p.initial.color.b), 
-						color_vector::value_type(c.a*p.initial.color.a));
-				}
+			glm::vec4 c;
+			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
+			auto it1 = find_nearest_color(ttl_percentage);
+			auto it2 = it1 + 1;
+			if(it2 != tc_data_.end()) {
+				c = it1->second + ((it2->second - it1->second) * ((ttl_percentage - it1->first)/(it2->first - it1->first)));
+			} else {
+				c = it1->second;
+			}
+			if(operation_ == COLOR_OP_SET) {
+				p.current.color = color_vector(color_vector::value_type(c.r*255.0f), 
+					color_vector::value_type(c.g*255.0f), 
+					color_vector::value_type(c.b*255.0f), 
+					color_vector::value_type(c.a*255.0f));
+			} else {
+				p.current.color = color_vector(color_vector::value_type(c.r*p.initial.color.r), 
+					color_vector::value_type(c.g*p.initial.color.g), 
+					color_vector::value_type(c.b*p.initial.color.b), 
+					color_vector::value_type(c.a*p.initial.color.a));
 			}
 		}
 
@@ -352,8 +529,8 @@ namespace graphics
 			return --it;
 		}
 
-		jet_affector::jet_affector(const variant& node, technique* tech)
-			: affector(node, tech)
+		jet_affector::jet_affector(particle_system_container* parent, const variant& node)
+			: affector(parent, node)
 		{
 			if(node.has_key("acceleration")) {
 				acceleration_ = parameter::factory(node["acceleration"]);
@@ -362,24 +539,18 @@ namespace graphics
 			}
 		}
 
-		jet_affector::~jet_affector()
+		void jet_affector::internal_apply(particle& p, float t)
 		{
-		}
-
-		void jet_affector::handle_apply(std::vector<particle>& particles, float t)
-		{
-			for(auto& p : particles) {
-				float scale = t * acceleration_->get_value(1.0f - p.current.time_to_live/p.initial.time_to_live);
-				if(p.current.direction.x == 0 && p.current.direction.y == 0 && p.current.direction.z == 0) {
-					p.current.direction += p.initial.direction * scale;
-				} else {
-					p.current.direction += p.initial.direction * scale;
-				}
+			float scale = t * acceleration_->get_value(1.0f - p.current.time_to_live/p.initial.time_to_live);
+			if(p.current.direction.x == 0 && p.current.direction.y == 0 && p.current.direction.z == 0) {
+				p.current.direction += p.initial.direction * scale;
+			} else {
+				p.current.direction += p.initial.direction * scale;
 			}
 		}
 
-		vortex_affector::vortex_affector(const variant& node, technique* tech)
-			: affector(node, tech), rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
+		vortex_affector::vortex_affector(particle_system_container* parent, const variant& node)
+			: affector(parent, node), rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
 		{
 			if(node.has_key("rotation_speed")) {
 				rotation_speed_ = parameter::factory(node["rotation_speed"]);
@@ -391,42 +562,30 @@ namespace graphics
 			}
 		}
 
-		vortex_affector::~vortex_affector()
+		void vortex_affector::internal_apply(particle& p, float t)
+		{
+			glm::vec3 local = p.current.position - position();
+			p.current.position = position() + glm::rotate(rotation_axis_, local);
+			p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
+		}
+
+		gravity_affector::gravity_affector(particle_system_container* parent, const variant& node)
+			: affector(parent, node), gravity_(float(node["gravity"].as_decimal(decimal(1.0)).as_float()))
 		{
 		}
 
-		void vortex_affector::handle_apply(std::vector<particle>& particles, float t)
+		void gravity_affector::internal_apply(particle& p, float t)
 		{
-			for(auto& p : particles) {
-				glm::vec3 local = p.current.position - position();
-				p.current.position = position() + glm::rotate(rotation_axis_, local);
-				p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
+			glm::vec3 d = position() - p.current.position;
+			float len_sqr = d.x*d.x + d.y*d.y + d.z*d.z;
+			if(len_sqr > 0) {
+				float force = (gravity_ * p.current.mass * mass()) / len_sqr;
+				p.current.direction += (force * t) * d;
 			}
 		}
 
-		gravity_affector::gravity_affector(const variant& node, technique* tech)
-			: affector(node, tech), gravity_(float(node["gravity"].as_decimal(decimal(1.0)).as_float()))
-		{
-		}
-
-		gravity_affector::~gravity_affector()
-		{
-		}
-
-		void gravity_affector::handle_apply(std::vector<particle>& particles, float t)
-		{
-			for(auto& p : particles) {
-				glm::vec3 d = position() - p.current.position;
-				float len_sqr = d.x*d.x + d.y*d.y + d.z*d.z;
-				if(len_sqr > 0) {
-					float force = (gravity_ * p.current.mass * mass()) / len_sqr;
-					p.current.direction += (force * t) * d;
-				}
-			}
-		}
-
-		scale_affector::scale_affector(const variant& node, technique* tech)
-			: affector(node, tech), since_system_start_(node["since_system_start"].as_bool(false))
+		scale_affector::scale_affector(particle_system_container* parent, const variant& node)
+			: affector(parent, node), since_system_start_(node["since_system_start"].as_bool(false))
 		{
 			if(node.has_key("scale_x")) {
 				scale_x_ = parameter::factory(node["scale_x"]);
@@ -442,10 +601,6 @@ namespace graphics
 			}
 		}
 
-		scale_affector::~scale_affector()
-		{
-		}
-
 		float scale_affector::calculate_scale(parameter_ptr s, const particle& p)
 		{
 			float scale;
@@ -457,75 +612,45 @@ namespace graphics
 			return scale;
 		}
 
-		void scale_affector::handle_apply(std::vector<particle>& particles, float t)
+		void scale_affector::internal_apply(particle& p, float t)
 		{
-			for(auto& p : particles) {
-				if(scale_xyz_) {
-					float calc_scale = calculate_scale(scale_xyz_, p);
+			if(scale_xyz_) {
+				float calc_scale = calculate_scale(scale_xyz_, p);
+				float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
+				if(value > 0) {
+					p.current.dimensions.x = value;
+				}
+				value = p.current.dimensions.y + calc_scale /** affector_scale.y*/;
+				if(value > 0) {
+					p.current.dimensions.y = value;
+				}
+				value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
+				if(value > 0) {
+					p.current.dimensions.z = value;
+				}
+			} else {
+				if(scale_x_) {
+					float calc_scale = calculate_scale(scale_x_, p);
 					float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
 					if(value > 0) {
 						p.current.dimensions.x = value;
 					}
-					value = p.current.dimensions.y + calc_scale /** affector_scale.y*/;
+				}
+				if(scale_y_) {
+					float calc_scale = calculate_scale(scale_y_, p);
+					float value = p.current.dimensions.x + calc_scale /** affector_scale.y*/;
 					if(value > 0) {
 						p.current.dimensions.y = value;
 					}
-					value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
+				}
+				if(scale_z_) {
+					float calc_scale = calculate_scale(scale_z_, p);
+					float value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
 					if(value > 0) {
 						p.current.dimensions.z = value;
 					}
-				} else {
-					if(scale_x_) {
-						float calc_scale = calculate_scale(scale_x_, p);
-						float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
-						if(value > 0) {
-							p.current.dimensions.x = value;
-						}
-					}
-					if(scale_y_) {
-						float calc_scale = calculate_scale(scale_y_, p);
-						float value = p.current.dimensions.x + calc_scale /** affector_scale.y*/;
-						if(value > 0) {
-							p.current.dimensions.y = value;
-						}
-					}
-					if(scale_z_) {
-						float calc_scale = calculate_scale(scale_z_, p);
-						float value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
-						if(value > 0) {
-							p.current.dimensions.z = value;
-						}
-					}
 				}
 			}
 		}
-
-		particle_follower_affector::particle_follower_affector(const variant& node, technique* tech)
-			: affector(node, tech),
-			min_distance_(node["min_distance"].as_decimal(decimal(1.0)).as_float()),
-			max_distance_(node["max_distance"].as_decimal(decimal(std::numeric_limits<float>::max())).as_float())
-		{
-		}
-
-		particle_follower_affector::~particle_follower_affector()
-		{
-		}
-
-		void particle_follower_affector::handle_apply(std::vector<particle>& particles, float t)
-		{
-			// keeps particles following wihin [min_distance, max_distance]
-			if(particles.size() < 2) {
-				return;
-			}
-			auto prev_p = particles.begin();
-			for(auto p = particles.begin()+1; p != particles.end(); ++p) {
-				auto distance = glm::length(p->current.position - prev_p->current.position);
-				if(distance > min_distance_ && distance < max_distance_) {
-					p->current.position = prev_p->current.position + (min_distance_/distance)*(p->current.position-prev_p->current.position);
-				}
-				prev_p = p;
-			}
-		}
-
 	}
 }

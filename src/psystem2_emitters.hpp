@@ -29,35 +29,36 @@ namespace graphics
 {
 	namespace particles
 	{
-		class emitter
+		class emitter : public emit_object
 		{
 		public:
-			emitter(const variant& node, technique* tech);
+			explicit emitter(particle_system_container* parent, const variant& node);
 			virtual ~emitter();
-
-			void process(std::vector<particle>& particles, float t, std::vector<particle>::iterator& start, std::vector<particle>::iterator& end);
+			emitter(const emitter&);
 
 			int get_emitted_particle_count_per_cycle(float t);
 			glm::detail::tvec4<unsigned char> get_color() const;
-			const std::string& name() const { return name_; }
+			technique* get_technique() { return technique_; }
+			void set_parent_technique(technique* tq) {
+				technique_ = tq;
+			}
 
-			static emitter_ptr factory(const variant& node, technique* tech);
+			virtual emitter* clone() = 0;
+			static emitter* factory(particle_system_container* parent, const variant& node);
 		protected:
-			virtual void handle_process(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end, float t) = 0;
-			//parameter_ptr time_to_live() const { return time_to_live_; }
-			//parameter_ptr velocity() const { return velocity_; }
-			//const glm::vec3& direction() const { return current_.direction; }
-			//const glm::vec3& position() const { return current_.position; }
-			//parameter_ptr mass() const { return mass_; }
-			//parameter_ptr duration() const { return duration_; }
-			//parameter_ptr repeat_delay() const { return repeat_delay_; }
-			//const glm::detail::tvec4<unsigned char>& color() const { return color_; }
+			virtual void internal_create(particle& p, float t) = 0;
+			virtual void handle_process(float t);
+			virtual bool duration_expired() { return can_be_deleted_; }
+
+			enum EMITS_TYPE {
+				EMITS_VISUAL,
+				EMITS_EMITTER,
+				EMITS_AFFECTOR,
+				EMITS_TECHNIQUE,
+				EMITS_SYSTEM,
+			};
 		private:
 			technique* technique_;
-
-			// these are parameters in effect of the emitter
-			physics_parameters current_;
-			physics_parameters initial_;
 
 			// These are generation parameters.
 			parameter_ptr emission_rate_;
@@ -75,11 +76,17 @@ namespace graphics
 			parameter_ptr particle_width_;
 			parameter_ptr particle_height_;
 			parameter_ptr particle_depth_;
-			std::string name_;
+			bool force_emission_;
+			bool force_emission_processed_;
+			bool can_be_deleted_;
+
+			EMITS_TYPE emits_type_;
+			std::string emits_name_;
 
 			void init_particle(particle& p, float t);
-			void set_particle_starting_values(const std::vector<particle>::iterator start, const std::vector<particle>::iterator end);
-			void create_particles(std::vector<particle>& particles, std::vector<particle>::iterator* start, std::vector<particle>::iterator* end, float t);
+			void set_particle_starting_values(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end);
+			void create_particles(std::vector<particle>& particles, std::vector<particle>::iterator& start, std::vector<particle>::iterator& end, float t);
+			size_t calculate_particles_to_emit(float t, size_t quota, size_t current_size);
 
 			float generate_angle() const;
 			glm::vec3 get_initial_direction(const glm::vec3& up) const;
@@ -93,7 +100,6 @@ namespace graphics
 			float repeat_delay_remaining_;
 
 			emitter();
-			emitter(const emitter&);
 		};
 	}
 }

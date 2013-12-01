@@ -299,6 +299,7 @@
     <ClInclude Include="..\..\src\psystem2_affectors.hpp" />
     <ClInclude Include="..\..\src\psystem2_emitters.hpp" />
     <ClInclude Include="..\..\src\psystem2_fwd.hpp" />
+    <ClInclude Include="..\..\src\psystem2_observers.hpp" />
     <ClInclude Include="..\..\src\psystem2_parameters.hpp" />
     <ClInclude Include="..\..\src\random.hpp" />
     <ClInclude Include="..\..\src\raster.hpp" />
@@ -528,6 +529,7 @@
     <ClCompile Include="..\..\src\psystem2.cpp" />
     <ClCompile Include="..\..\src\psystem2_affectors.cpp" />
     <ClCompile Include="..\..\src\psystem2_emitters.cpp" />
+    <ClCompile Include="..\..\src\psystem2_observers.cpp" />
     <ClCompile Include="..\..\src\psystem2_parameters.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
     <ClCompile Include="..\..\src\raster.cpp" />

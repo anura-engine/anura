@@ -128,7 +128,7 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 	} else if(wtype == "poly_map") {
 		return widget_ptr(new geometry::poly_map(v, e));
 	} else if(wtype == "particle_system") {
-		return widget_ptr(new graphics::particles::particle_system(v, e));
+		return widget_ptr(new graphics::particles::particle_system_widget(v, e));
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else {
