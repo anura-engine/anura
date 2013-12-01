@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#pragma once
+#include "psystem2_observers.hpp"
 
 namespace graphics
 {
