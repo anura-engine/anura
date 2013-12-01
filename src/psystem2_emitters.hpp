@@ -41,7 +41,7 @@ namespace graphics
 			emitter(const emitter&);
 
 			int get_emitted_particle_count_per_cycle(float t);
-			glm::detail::tvec4<unsigned char> get_color() const;
+			color_vector get_color() const;
 			technique* get_technique() { return technique_; }
 			void set_parent_technique(technique* tq) {
 				technique_ = tq;
@@ -78,6 +78,7 @@ namespace graphics
 			std::unique_ptr<std::pair<glm::quat, glm::quat>> orientation_range_;
 			typedef std::pair<color_vector,color_vector> color_range;
 			std::shared_ptr<color_range> color_range_;
+			glm::vec4 color_;
 			parameter_ptr particle_width_;
 			parameter_ptr particle_height_;
 			parameter_ptr particle_depth_;
@@ -94,7 +95,7 @@ namespace graphics
 			size_t calculate_particles_to_emit(float t, size_t quota, size_t current_size);
 
 			float generate_angle() const;
-			glm::vec3 get_initial_direction(const glm::vec3& up) const;
+			glm::vec3 get_initial_direction() const;
 
 			BoxOutlinePtr debug_draw_outline_;
 

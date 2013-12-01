@@ -290,5 +290,12 @@ namespace graphics
 			particle_system_widget();
 			particle_system_widget(const particle_system_widget&);
 		};
+
+		std::ostream& operator<<(std::ostream& os, const glm::vec3& v);
+		std::ostream& operator<<(std::ostream& os, const glm::vec4& v);
+		std::ostream& operator<<(std::ostream& os, const glm::quat& v);
+
+		glm::vec3 perpendicular(const glm::vec3& v) ;
+		glm::vec3 create_deviating_vector(float angle, const glm::vec3& v, const glm::vec3& up = glm::vec3(0.0f));
 	}
 }

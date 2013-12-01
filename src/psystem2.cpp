@@ -115,6 +115,34 @@ namespace graphics
 			return os;
 		}
 
+		// Compute any vector out of the infinite set perpendicular to v.
+		glm::vec3 perpendicular(const glm::vec3& v) 
+		{
+			glm::vec3 perp = glm::cross(v, glm::vec3(1.0f,0.0f,0.0f));
+			float len_sqr = perp.x*perp.x + perp.y*perp.y + perp.z*perp.z;
+			if(len_sqr < 1e-12) {
+				perp = glm::cross(v, glm::vec3(0.0f,1.0f,0.0f));
+			}
+			float len = glm::length(perp);
+			if(len > 1e-14f) {
+				return perp / len;
+			}
+			return perp;
+		}
+
+		glm::vec3 create_deviating_vector(float angle, const glm::vec3& v, const glm::vec3& up)
+		{
+			glm::vec3 up_up = up;
+			if(up == glm::vec3(0.0f)) {
+				up_up = perpendicular(v);
+			}
+			glm::quat q = glm::angleAxis(get_random_float(0.0f,360.0f), v);
+			up_up = q * up_up;
+
+			q = glm::angleAxis(angle, up_up);
+			return q * v;
+		}
+
 		particle_system_widget::particle_system_widget(const variant& node, game_logic::formula_callable* environment)
 			: widget(node, environment), particle_systems_(node)
 		{
