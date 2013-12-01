@@ -25,7 +25,9 @@
 #include "spline.hpp"
 #include "psystem2_parameters.hpp"
 
+#ifndef __APPLE__  //this is already defined in the OSX SDK under usr/include/math.h
 #define M_PI       3.14159265358979323846
+#endif
 
 namespace graphics
 {
