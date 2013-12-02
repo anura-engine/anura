@@ -23,6 +23,7 @@
 
 #include <vector>
 
+#include "graphics.hpp"
 #include "asserts.hpp"
 #include "color_utils.hpp"
 #include "draw_primitive.hpp"

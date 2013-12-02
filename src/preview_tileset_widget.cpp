@@ -16,6 +16,7 @@
 */
 #include <iostream>
 
+#include "graphics.hpp"
 #include "foreach.hpp"
 #include "preview_tileset_widget.hpp"
 #include "tile_map.hpp"

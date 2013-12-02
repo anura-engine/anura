@@ -25,6 +25,8 @@
 #include "texture_frame_buffer.hpp"
 #include "wm.hpp"
 
+#include "level.hpp"
+
 // Defined in video_selections.cpp
 extern int g_vsync;
 
@@ -70,7 +72,7 @@ namespace graphics
 						continue;
 					}
 
-					const float MinReduction = 0.9;
+					const float MinReduction = 0.9f;
 
 					if(candidate_mode.w < mode.w && candidate_mode.h < mode.w 
 						&& candidate_mode.w < mode.w*MinReduction 
@@ -272,8 +274,8 @@ namespace graphics
 		init_shaders();
 
 		screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
-		prepare_raster();
 #endif
+		prepare_raster();
 
 		if(g_vsync >= -1 && g_vsync <= 1) {
 			if(SDL_GL_SetSwapInterval(g_vsync) != 0) {
@@ -346,23 +348,21 @@ namespace graphics
 
 	void window_manager::init_gl_context()
 	{
+#if defined(USE_SHADERS)
+		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
+		glClearColor(0.0f,0.0f,0.0f,1.0f);
+#else
 		glShadeModel(GL_SMOOTH);
-		glEnable(GL_BLEND);
 		glEnable(GL_TEXTURE_2D);
-#if !defined(USE_SHADERS)
 		glEnableClientState(GL_VERTEX_ARRAY);
 		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
 		glTexEnvf(GL_TEXTURE_ENV, GL_TEXTURE_ENV_MODE, GL_MODULATE);
-#endif
-
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-#if defined(USE_SHADERS)
-		glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-		glClearColor(0.0,0.0,0.0,0.0);
-#else
 		glColor4ub(255,255,255,255);
 #endif
+
+		glEnable(GL_BLEND);
+		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
 		glDepthFunc(GL_LEQUAL);
 		glDepthMask(GL_TRUE);
 		glDepthRange(0.0f, 1.0f);
@@ -380,33 +380,28 @@ namespace graphics
 
 	void window_manager::prepare_raster()
 	{
-		glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 		// XXX todo: burn this project/modelview matrix stuff in fire
 		glMatrixMode(GL_PROJECTION);
 		glLoadIdentity();
 
 		if(preferences::screen_rotated()) {
-			float top = screen_width();
-			float bot = 0.0f;
-			glm::mat4 ortho = glm::ortho(0.0f, float(screen_height()), top, bot);
-			glLoadMatrixf(glm::value_ptr(ortho));
+			camera_.reset(new camera_callable(camera_callable::ORTHOGONAL_CAMERA, 0, screen_height(), 0, screen_width()));
+			glLoadMatrixf(camera_->projection());
 		} else {
-			float top = screen_height();
-			float bot = 0.0f;
-			glm::mat4 ortho = glm::ortho(0.0f, float(screen_width()), top, bot);
-			glLoadMatrixf(glm::value_ptr(ortho));
-		}
-		
-		if(preferences::screen_rotated()) {
-			// Rotate 90 degrees ccw, then move real_h pixels down
-			// This has to be in opposite order since A(); B(); means A(B(x))
-			glTranslatef(screen_height(), 0.0f, 0.0f);
-			glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
+			camera_.reset(new camera_callable(camera_callable::ORTHOGONAL_CAMERA, 0, screen_width(), 0, screen_height()));
+			glLoadMatrixf(camera_->projection());
 		}
 		
 		glMatrixMode(GL_MODELVIEW);
 		glLoadIdentity();
-		
+
+		if(preferences::screen_rotated()) {
+			// Rotate 90 degrees ccw, then move real_h pixels down
+			// This has to be in opposite order since A(); B(); means A(B(x))
+			glTranslatef(float(screen_height()), 0.0f, 0.0f);
+			glRotatef(90.0f, 0.0f, 0.0f, 1.0f);
+		}
+			
 		glDisable(GL_DEPTH_TEST);
 #if !defined(USE_SHADERS)
 		glDisable(GL_LIGHTING);
@@ -490,7 +485,6 @@ namespace graphics
 
 		if(screen_fbo_) {
 			screen_fbo_->draw_begin();
-			prepare_raster();
 		}
 	}
 

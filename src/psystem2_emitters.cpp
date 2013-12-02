@@ -99,7 +99,9 @@ namespace graphics
 		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
 			shader::manager m(shader_);
 			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
-			glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
+			//glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
+			glm::mat4 mvp = get_main_window()->camera()->projection_mat() * get_main_window()->camera()->view_mat() * model;
+			
 			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
 			glUniform4fv(u_color_, 1, glm::value_ptr(color_));
 #if defined(USE_SHADERS)
@@ -514,9 +516,10 @@ namespace graphics
 				cnt = get_emitted_particle_count_per_cycle(t);
 			}
 			if(current_size + cnt > quota) {
-				cnt = quota - current_size;
-				if(cnt < 0) { 
-					cnt = 0; 
+				if(current_size >= quota) {
+					cnt = 0;
+				} else {
+					cnt = quota - current_size;
 				}
 			}
 			return cnt;
@@ -536,7 +539,7 @@ namespace graphics
 			// if push_back were to cause a reallocation.
 			particles.reserve(particles.size() + cnt);
 			start = particles.end();
-			for(int n = 0; n != cnt; ++n) {
+			for(size_t n = 0; n != cnt; ++n) {
 				particle p;
 				init_particle(p, t);
 				particles.push_back(p);

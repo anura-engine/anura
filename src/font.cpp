@@ -20,6 +20,7 @@
 #include <boost/tuple/tuple.hpp>
 #include <boost/filesystem.hpp>
 
+#include "graphics.hpp"
 #include "asserts.hpp"
 #include "color_utils.hpp"
 #include "font.hpp"

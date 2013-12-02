@@ -23,6 +23,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/quaternion.hpp>
 
+#include "graphics.hpp"
 #include "json_parser.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"

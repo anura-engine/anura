@@ -12,13 +12,12 @@
 #include "profile_timer.hpp"
 #include "variant_utils.hpp"
 
-#ifdef USE_ISOMAP
-
 camera_callable::camera_callable()
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
 	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
 	mode_(MODE_AUTO), type_(PERSPECTIVE_CAMERA), ortho_left_(0), ortho_bottom_(0),
-	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width())
+	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width()),
+	clip_planes_set_(false)
 {
 	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
@@ -32,7 +31,8 @@ camera_callable::camera_callable(const variant& node)
 	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
 	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
 	mode_(MODE_AUTO), type_(PERSPECTIVE_CAMERA), ortho_left_(0), ortho_bottom_(0),
-	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width())
+	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width()),
+	clip_planes_set_(false)
 {
 	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 	if(node.has_key("fov")) {
@@ -98,6 +98,35 @@ camera_callable::camera_callable(const variant& node)
 	}
 	compute_projection();
 }
+
+camera_callable::camera_callable(CAMERA_TYPE type, int left, int right, int top, int bottom)
+	: fov_(45.0f), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(0.1f), far_clip_(300.0f),
+	mode_(MODE_AUTO), type_(type), ortho_left_(left), ortho_bottom_(bottom),
+	ortho_top_(top), ortho_right_(right), clip_planes_set_(false), 
+	view_(1.0f)
+{
+	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
+	aspect_ = float(right - left)/float(top - bottom);
+	
+	compute_projection();
+}
+
+camera_callable::camera_callable(CAMERA_TYPE type, float fov, float aspect, float near_clip, float far_clip)
+	: fov_(fov), horizontal_angle_(float(M_PI)), vertical_angle_(0.0f),
+	speed_(0.1f), mouse_speed_(0.005f), near_clip_(near_clip), far_clip_(far_clip),
+	aspect_(aspect), mode_(MODE_AUTO), type_(type), ortho_left_(0), ortho_bottom_(0),
+	ortho_top_(preferences::actual_screen_height()), ortho_right_(preferences::actual_screen_width()),
+	clip_planes_set_(true)
+{
+	up_ = glm::vec3(0.0f, 1.0f, 0.0f);
+	position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
+
+	compute_view();
+	compute_projection();
+}
+
 
 camera_callable::~camera_callable()
 {
@@ -327,6 +356,7 @@ void camera_callable::set_clip_planes(float z_near, float z_far)
 {
 	near_clip_ = z_near;
 	far_clip_ = z_far;
+	clip_planes_set_ = true;
 	compute_projection();
 }
 
@@ -339,7 +369,11 @@ void camera_callable::set_aspect(float aspect)
 void camera_callable::compute_projection()
 {
 	if(type_ == ORTHOGONAL_CAMERA) {
-		projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), near_clip(), far_clip());
+		if(clip_planes_set_) {
+			projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), near_clip(), far_clip());
+		} else {
+			projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_));
+		}
 	} else {
 		projection_ = glm::perspective(fov(), aspect_, near_clip(), far_clip());
 	}
@@ -401,5 +435,3 @@ glm::ivec3 camera_callable::get_facing(const glm::vec3& coords) const
 	}
 
 }
-
-#endif //USE_ISOMAP
