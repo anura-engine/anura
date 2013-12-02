@@ -365,12 +365,12 @@ void process_dir(const std::string& dir, std::map<std::string, std::string>& fil
 	std::vector<std::string> subdirs, files;
 	module::get_files_in_dir(dir, &files, &subdirs);
 	foreach(const std::string& d, subdirs) {
-		process_dir(d, file_mappings, error_files);
+		process_dir(dir + "/" + d, file_mappings, error_files);
 	}
 
 	foreach(const std::string& fname, files) {
 		try {
-			process_file(fname, file_mappings);
+			process_file(dir + "/" + fname, file_mappings);
 		} catch(json::parse_error& e) {
 			std::cerr << "FAILED TO PARSE " << fname << "\n";
 		} catch(type_error& e) {
