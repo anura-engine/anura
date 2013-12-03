@@ -31,6 +31,8 @@ public:
 	formula_variable_storage();
 	explicit formula_variable_storage(const std::map<std::string, variant>& m);
 
+	void set_object_name(const std::string& name);
+
 	bool equal_to(const std::map<std::string, variant>& m) const;
 
 	void read(variant node);
@@ -52,6 +54,8 @@ private:
 	void set_value_by_slot(int slot, const variant& value);
 
 	void get_inputs(std::vector<formula_input>* inputs) const;
+
+	std::string debug_object_name_;
 	
 	std::vector<variant> values_;
 	std::map<std::string, int> strings_to_values_;

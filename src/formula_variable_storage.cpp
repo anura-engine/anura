@@ -32,6 +32,11 @@ formula_variable_storage::formula_variable_storage(const std::map<std::string, v
 	}
 }
 
+void formula_variable_storage::set_object_name(const std::string& name)
+{
+	debug_object_name_ = name;
+}
+
 bool formula_variable_storage::equal_to(const std::map<std::string, variant>& m) const
 {
 	if(m.size() != strings_to_values_.size()) {
@@ -80,7 +85,7 @@ void formula_variable_storage::add(const std::string& key, const variant& value)
 	if(i != strings_to_values_.end()) {
 		values_[i->second] = value;
 	} else {
-		ASSERT_LOG(!disallow_new_keys_, "UNKNOWN KEY SET IN VAR STORAGE: " << key);
+		ASSERT_LOG(!disallow_new_keys_, "UNKNOWN KEY SET IN VAR STORAGE: " << key << " in object '" << debug_object_name_ << "'");
 		strings_to_values_[key] = values_.size();
 		values_.push_back(value);
 	}

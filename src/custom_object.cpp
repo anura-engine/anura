@@ -166,6 +166,9 @@ custom_object::custom_object(variant node)
 	vertex_location_(-1), texcoord_location_(-1),
 	paused_(false), model_(glm::mat4(1.0f))
 {
+	vars_->set_object_name(debug_description());
+	tmp_vars_->set_object_name(debug_description());
+
 	properties_requiring_dynamic_initialization_ = type_->properties_requiring_dynamic_initialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->properties_requiring_initialization().begin(), type_->properties_requiring_initialization().end());
 
@@ -469,6 +472,9 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	vertex_location_(-1), texcoord_location_(-1),
 	paused_(false), model_(glm::mat4(1.0f))
 {
+	vars_->set_object_name(debug_description());
+	tmp_vars_->set_object_name(debug_description());
+
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
 
@@ -613,6 +619,9 @@ custom_object::custom_object(const custom_object& o) :
 	//widgets_(o.widgets_),
 	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
+	vars_->set_object_name(debug_description());
+	tmp_vars_->set_object_name(debug_description());
+
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
 
@@ -3481,6 +3490,8 @@ void custom_object::set_value(const std::string& key, const variant& value)
 			has_feet_ = type_->has_feet();
 			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmp_variables())),
+			vars_->set_object_name(debug_description());
+			tmp_vars_->set_object_name(debug_description());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
@@ -3547,6 +3558,8 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			has_feet_ = type_->has_feet();
 			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmp_variables())),
+			vars_->set_object_name(debug_description());
+			tmp_vars_->set_object_name(debug_description());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
@@ -5076,8 +5089,6 @@ bool custom_object::can_interact_with() const
 
 std::string custom_object::debug_description() const
 {
-	char buf[128];
-	sprintf(buf, "%p", this);
 	return type_->id();
 }
 
@@ -5519,6 +5530,7 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 	game_logic::formula_variable_storage_ptr old_vars = vars_;
 
 	vars_.reset(new game_logic::formula_variable_storage(type_->variables()));
+	vars_->set_object_name(debug_description());
 	foreach(const std::string& key, old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
@@ -5532,6 +5544,7 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 	old_vars = tmp_vars_;
 
 	tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmp_variables()));
+	tmp_vars_->set_object_name(debug_description());
 	foreach(const std::string& key, old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
