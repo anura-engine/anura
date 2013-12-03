@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include "graphics.hpp"
 #include "asserts.hpp"
 #include "draw_tile.hpp"
 #include "level_object.hpp"
@@ -46,7 +47,7 @@ int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect
 	//UV co-ordinates. This is to prevent floating point rounding errors
 	//from causing us to draw slightly outside the tile. This is pretty
 	//nasty stuff though, and I'm not sure of a better way to do it. :(
-	const GLfloat TileEpsilon = 0.1;
+	const GLfloat TileEpsilon = 0.1f;
 	GLfloat x1 = t.translate_coord_x(GLfloat(xpos + TileEpsilon)/GLfloat(t.width()));
 	GLfloat x2 = t.translate_coord_x(GLfloat(xpos+area.w() - TileEpsilon)/GLfloat(t.width()));
 	const GLfloat y1 = t.translate_coord_y(GLfloat(ypos + TileEpsilon)/GLfloat(t.height()));
@@ -104,7 +105,7 @@ void queue_draw_from_tilesheet(graphics::blit_queue& q, const graphics::texture&
 	//UV co-ordinates. This is to prevent floating point rounding errors
 	//from causing us to draw slightly outside the tile. This is pretty
 	//nasty stuff though, and I'm not sure of a better way to do it. :(
-	const GLfloat TileEpsilon = 0.01;
+	const GLfloat TileEpsilon = 0.01f;
 	GLfloat x1 = t.translate_coord_x(GLfloat(xpos)/GLfloat(t.width()));
 	GLfloat x2 = t.translate_coord_x(GLfloat(xpos+area.w() - TileEpsilon)/GLfloat(t.width()));
 	const GLfloat y1 = t.translate_coord_y(GLfloat(ypos)/GLfloat(t.height()));

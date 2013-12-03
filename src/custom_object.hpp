@@ -27,6 +27,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+#include "graphics.hpp"
 #include "blur.hpp"
 #include "color_utils.hpp"
 #include "custom_object_type.hpp"

@@ -16,11 +16,17 @@
 */
 #pragma once
 
+#include <boost/intrusive_ptr.hpp>
 #include <memory>
+
+class camera_callable;
+typedef boost::intrusive_ptr<camera_callable> camera_callable_ptr;
 
 namespace graphics
 {
 	class fbo;
+	class lighting;
+	typedef boost::intrusive_ptr<lighting> lighting_ptr;
 
 	class init_error : public std::exception
 	{
@@ -81,11 +87,20 @@ namespace graphics
 
 		void prepare_raster();
 
+		camera_callable_ptr camera() { return camera_; }
+		lighting_ptr lighting() { return lighting_; }
+
+		camera_callable_ptr camera() const { return camera_; }
+		lighting_ptr lighting() const { return lighting_; }
+
 		void swap();
 	private:
 		std::shared_ptr<SDL_Window> sdl_window_;
 		SDL_GLContext gl_context_;
 		SDL_Renderer* sdl_renderer_;
+
+		camera_callable_ptr camera_;
+		lighting_ptr lighting_;
 
 		std::shared_ptr<fbo> screen_fbo_;
 

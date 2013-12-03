@@ -20,6 +20,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include "camera.hpp"
 #include "color_utils.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
@@ -38,8 +39,8 @@ namespace graphics
 		float ambient_intensity() const { return abmient_intensity_; }
 		void set_ambient_intensity(float f);
 
-		const graphics::color& color() const { return color_; }
-		void set_color(const graphics::color& color);
+		const color& get_color() const { return color_; }
+		void set_color(const color& color);
 
 		const glm::vec3& direction() const { return direction_; }
 		void set_direction(const glm::vec3& d);
@@ -56,7 +57,7 @@ namespace graphics
 		GLuint u_ambient_intensity_;
 		GLuint u_direction_;
 
-		graphics::color color_;
+		color color_;
 		glm::vec3 direction_;
 		float abmient_intensity_;
 

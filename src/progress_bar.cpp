@@ -16,6 +16,7 @@
 */
 #include <algorithm>
 
+#include "graphics.hpp"
 #include "progress_bar.hpp"
 #include "raster.hpp"
 

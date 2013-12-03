@@ -84,6 +84,7 @@
 #endif
 
 #include "wm.hpp"
+#include "lighting.hpp"
 
 graphics::window_manager_ptr get_main_window();
 

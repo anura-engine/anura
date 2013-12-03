@@ -288,7 +288,7 @@ namespace graphics
 				: affector(parent, node),
 				min_frequency_(1.0f),
 				max_frequency_(1.0f),
-				angle_(361.0f),
+				angle_(0.0f),
 				frequency_(1.0f),
 				force_vector_(0.0f),
 				scale_vector_(0.0f),
@@ -321,11 +321,12 @@ namespace graphics
 			virtual ~sine_force_affector() {}
 		protected:
 			virtual void handle_process(float t) {
-				angle_ += frequency_ * t;
-				float sine_value = sin(angle_ * M_PI / 180.0f);
+				angle_ += /*2.0f * M_PI **/ frequency_ * t;
+				float sine_value = sin(angle_);
 				scale_vector_ = force_vector_ * t * sine_value;
-				if(angle_ > 360.0f) {
-					angle_ = 0.0f;
+				//std::cerr << "XXX: angle: " << angle_ << " scale_vec: " << scale_vector_ << std::endl;
+				if(angle_ > M_PI*2.0f) {
+					angle_ -= M_PI*2.0f;
 					if(min_frequency_ != max_frequency_) {
 						frequency_ = get_random_float(min_frequency_, max_frequency_);
 					}
@@ -565,8 +566,10 @@ namespace graphics
 		void vortex_affector::internal_apply(particle& p, float t)
 		{
 			glm::vec3 local = p.current.position - position();
-			p.current.position = position() + glm::rotate(rotation_axis_, local);
-			p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
+			//p.current.position = position() + glm::rotate(rotation_axis_, local);
+			p.current.position = position() + rotation_axis_ * local;
+			//p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
+			p.current.direction = rotation_axis_ * p.current.direction;
 		}
 
 		gravity_affector::gravity_affector(particle_system_container* parent, const variant& node)

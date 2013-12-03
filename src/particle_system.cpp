@@ -20,6 +20,7 @@
 #include <math.h>
 #include <algorithm>
 
+#include "graphics.hpp"
 #include "asserts.hpp"
 #include "color_utils.hpp"
 #include "entity.hpp"

@@ -610,7 +610,7 @@ namespace graphics
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(sunlight)
 	DEFINE_FIELD(color, "[decimal|int,decimal|int,decimal|int,decimal|int]")
-		return obj.color().write();
+		return obj.get_color().write();
 	DEFINE_SET_FIELD
 		obj.set_color(graphics::color(value));
 	

@@ -99,7 +99,9 @@ namespace graphics
 		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
 			shader::manager m(shader_);
 			glm::mat4 model = glm::translate(glm::mat4(1.0f), translation) * glm::toMat4(rotation) * glm::scale(glm::mat4(1.0f), scale);
-			glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
+			//glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat() * model;
+			glm::mat4 mvp = get_main_window()->camera()->projection_mat() * get_main_window()->camera()->view_mat() * model;
+			
 			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
 			glUniform4fv(u_color_, 1, glm::value_ptr(color_));
 #if defined(USE_SHADERS)
@@ -124,20 +126,6 @@ namespace graphics
 
 	namespace particles
 	{
-		namespace
-		{
-			// Compute any vector out of the infinite set perpendicular to v.
-			glm::vec3 perpendicular(const glm::vec3& v) 
-			{
-				glm::vec3 perp = glm::cross(v, glm::vec3(1.0f,0.0f,0.0f));
-				float len_sqr = perp.x*perp.x + perp.y*perp.y + perp.z*perp.z;
-				if(len_sqr < 1e-12) {
-					perp = glm::cross(v, glm::vec3(0.0f,1.0f,0.0f));
-				}
-				return glm::normalize(perp);
-			}
-		}
-
 		class circle_emitter : public emitter
 		{
 		public:
@@ -285,7 +273,8 @@ namespace graphics
 			force_emission_(node["force_emission"].as_bool(false)),
 			force_emission_processed_(false), 
 			can_be_deleted_(false),
-			emits_type_(EMITS_VISUAL)
+			emits_type_(EMITS_VISUAL),
+			color_(1.0f,1.0f,1.0f,1.0f)
 		{
 			init_physics_parameters(initial);
 			init_physics_parameters(current);
@@ -339,12 +328,9 @@ namespace graphics
 				orientation_range_.reset(new std::pair<glm::quat, glm::quat>(variant_to_quat(node["orientation_start"]), variant_to_quat(node["orientation_end"])));
 			}
 			if(node.has_key("color")) {
-				ASSERT_LOG(node["color"].is_list() && node["color"].num_elements() == 4,
-					"FATAL: PSYSTEM2: 'color' should be a list of 4 elements.");
-				initial.color.r = current.color.r = uint8_t(node["color"][0].as_decimal().as_float()*255.0);
-				initial.color.g = current.color.g = uint8_t(node["color"][1].as_decimal().as_float()*255.0);
-				initial.color.b = current.color.b = uint8_t(node["color"][2].as_decimal().as_float()*255.0);
-				initial.color.a = current.color.a = uint8_t(node["color"][3].as_decimal().as_float()*255.0);
+				color_ = variant_to_vec4(node["color"]);
+			} else if(node.has_key("colour")) {
+				color_ = variant_to_vec4(node["colour"]);
 			}
 			if(node.has_key("start_colour_range") && node.has_key("end_colour_range")) {
 				glm::detail::tvec4<unsigned char> start;
@@ -425,7 +411,8 @@ namespace graphics
 			emits_type_(e.emits_type_),
 			emits_name_(e.emits_name_),
 			emission_fraction_(0),
-			duration_remaining_(0)
+			duration_remaining_(0),
+			color_(e.color_)
 		{
 			if(e.orientation_range_) {
 				orientation_range_.reset(new std::pair<glm::quat,glm::quat>(e.orientation_range_->first, e.orientation_range_->second));
@@ -462,19 +449,7 @@ namespace graphics
 						for(int n = 0; n != cnt; ++n) {
 							emitter_ptr e = parent_container()->clone_emitter(emits_name_);
 							e->emitted_by = this;
-							{
-								e->initial.velocity = velocity_->get_value(t);
-								e->initial.time_to_live = time_to_live_->get_value(t);
-								//e->initial.color = get_color();
-								if(orientation_range_) {
-									e->initial.orientation = glm::lerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
-								} else {
-									e->initial.orientation = current.orientation;
-
-								}
-								e->initial.direction = glm::rotate(e->initial.orientation, get_initial_direction(glm::vec3(0,1,0)));
-							}
-							//init_particle(*e, t);
+							init_particle(*e, t);
 							internal_create(*e, t);
 							memcpy(&e->current, &e->initial, sizeof(e->current));
 							technique_->add_emitter(e);
@@ -541,9 +516,10 @@ namespace graphics
 				cnt = get_emitted_particle_count_per_cycle(t);
 			}
 			if(current_size + cnt > quota) {
-				cnt = quota - current_size;
-				if(cnt < 0) { 
-					cnt = 0; 
+				if(current_size >= quota) {
+					cnt = 0;
+				} else {
+					cnt = quota - current_size;
 				}
 			}
 			return cnt;
@@ -563,7 +539,7 @@ namespace graphics
 			// if push_back were to cause a reallocation.
 			particles.reserve(particles.size() + cnt);
 			start = particles.end();
-			for(int n = 0; n != cnt; ++n) {
+			for(size_t n = 0; n != cnt; ++n) {
 				particle p;
 				init_particle(p, t);
 				particles.push_back(p);
@@ -584,16 +560,16 @@ namespace graphics
 			init_physics_parameters(p.current);
 			p.initial.position = current.position;
 			p.initial.color = get_color();
-			p.initial.time_to_live = time_to_live_->get_value(t);
-			p.initial.velocity = velocity_->get_value(t);
-			p.initial.mass = mass_->get_value(t);
+			p.initial.time_to_live = time_to_live_->get_value(technique_->get_particle_system()->elapsed_time());
+			p.initial.velocity = velocity_->get_value(technique_->get_particle_system()->elapsed_time());
+			p.initial.mass = mass_->get_value(technique_->get_particle_system()->elapsed_time());
 			p.initial.dimensions = technique_->default_dimensions();
 			if(orientation_range_) {
-				p.initial.orientation = glm::lerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
+				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
 			} else {
 				p.initial.orientation = current.orientation;
 			}
-			p.initial.direction = glm::rotate(p.initial.orientation, get_initial_direction(glm::vec3(0,1,0)));
+			p.initial.direction = get_initial_direction();
 			p.emitted_by = this;
 		}
 
@@ -608,30 +584,26 @@ namespace graphics
 
 		float emitter::generate_angle() const
 		{
-			// fixme
-			float angle = angle_->get_value(0);
+			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique_ is null");
+			ASSERT_LOG(technique_->get_particle_system() != NULL, "FATAL: PSYSTEM2: technique_->get_parent_system() is null");
+			float angle = angle_->get_value(technique_->get_particle_system()->elapsed_time());
 			if(angle_->type() == parameter::PARAMETER_FIXED) {
 				return get_random_float() * angle;
 			}
 			return angle;
 		}
 
-		glm::vec3 emitter::get_initial_direction(const glm::vec3& up) const
+		glm::vec3 emitter::get_initial_direction() const
 		{
 			float angle = generate_angle();
 			//std::cerr << "angle:" << angle;
 			if(angle != 0) {
-				glm::vec3 perp_up = perpendicular(up);
-
-				glm::quat q = glm::angleAxis(get_random_float(0.0f,360.0f), current.direction);
-				perp_up = glm::rotate(q, perp_up);
-				q = glm::angleAxis(angle, perp_up);
-				return glm::rotate(q, glm::vec3(0.0f,1.0f,0.0f));//current.direction);
+				return create_deviating_vector(angle, current.direction);
 			}
 			return current.direction;
 		}
 
-		glm::detail::tvec4<unsigned char> emitter::get_color() const
+		color_vector emitter::get_color() const
 		{
 			if(color_range_) {
 				return glm::detail::tvec4<unsigned char>(
@@ -640,7 +612,12 @@ namespace graphics
 					get_random_float(color_range_->first.b,color_range_->second.b),
 					get_random_float(color_range_->first.a,color_range_->second.a));
 			}
-			return current.color;
+			color_vector c;
+			c.r = uint8_t(color_.r * 255.0f);
+			c.g = uint8_t(color_.g * 255.0f);
+			c.b = uint8_t(color_.b * 255.0f);
+			c.a = uint8_t(color_.a * 255.0f);
+			return c;
 		}
 
 		void emitter::handle_draw() const

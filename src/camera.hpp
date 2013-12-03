@@ -9,13 +9,13 @@
 #include "frustum.hpp"
 #include "variant.hpp"
 
-#if defined(USE_ISOMAP)
-
 class camera_callable : public game_logic::formula_callable
 {
 public:
 	enum CAMERA_TYPE { PERSPECTIVE_CAMERA, ORTHOGONAL_CAMERA };
 	camera_callable();
+	explicit camera_callable(CAMERA_TYPE type, int left, int right, int top, int bottom);
+	explicit camera_callable(CAMERA_TYPE type, float fov, float aspect, float near_clip, float far_clip);
 	explicit camera_callable(const variant& node);
 	virtual ~camera_callable();
 	//virtual variant get_value(const std::string&) const;
@@ -85,6 +85,7 @@ private:
 
 	float near_clip_;
 	float far_clip_;
+	bool clip_planes_set_;
 
 	float aspect_;
 
@@ -98,9 +99,9 @@ private:
 
 	glm::mat4 projection_;
 	glm::mat4 view_;
+
+	camera_callable(const camera_callable&);
 };
 
 typedef boost::intrusive_ptr<camera_callable> camera_callable_ptr;
 typedef boost::intrusive_ptr<const camera_callable> const_camera_callable_ptr;
-
-#endif
