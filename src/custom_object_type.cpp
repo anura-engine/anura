@@ -615,7 +615,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + p.first);
 			int slot = -1;
-			init_object_definition(p.second, p.second["id"].as_string(), callable_definition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode));
+			init_object_definition(p.second, p.first, callable_definition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode));
 		}
 
 		itor = object_type_definitions().find(id);
