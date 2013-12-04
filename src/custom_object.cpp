@@ -260,23 +260,6 @@ custom_object::custom_object(variant node)
 
 	vars_->read(node["vars"]);
 
-	const variant property_data_node = node["property_data"];
-	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
-		if(i->second.storage_slot < 0) {
-			continue;
-		}
-
-		if(property_data_node.is_map()) {
-			const variant key(i->first);
-			if(property_data_node.has_key(key)) {
-				get_property_data(i->second.storage_slot) = property_data_node[key];
-				continue;
-			}
-		}
-
-		get_property_data(i->second.storage_slot) = i->second.default_value;
-	}
-
 	unsigned int solid_dim = type_->solid_dimensions();
 	unsigned int weak_solid_dim = type_->weak_solid_dimensions();
 	unsigned int collide_dim = type_->collide_dimensions();
@@ -430,6 +413,27 @@ custom_object::custom_object(variant node)
 		set_tz(node["tz"].as_decimal().as_float());
 	} else if(type_ != NULL) {
 		set_tz(type_->tz());
+	}
+
+	const variant property_data_node = node["property_data"];
+	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
+		if(i->second.storage_slot < 0) {
+			continue;
+		}
+
+		if(property_data_node.is_map()) {
+			const variant key(i->first);
+			if(property_data_node.has_key(key)) {
+				get_property_data(i->second.storage_slot) = property_data_node[key];
+				continue;
+			}
+		}
+
+		if(i->second.init) {
+			get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
+		} else {
+			get_property_data(i->second.storage_slot) = i->second.default_value;
+		}
 	}
 
 	//fprintf(stderr, "object address= %p, ", this);
