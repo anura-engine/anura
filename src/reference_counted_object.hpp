@@ -33,6 +33,7 @@ public:
 
 	void add_ref() const { ++count_; }
 	void dec_ref() const { if(--count_ == 0) { delete this; } }
+	void dec_ref_norelease() const { --count_; }
 
 	int refcount() const { return count_; }
 
@@ -40,6 +41,19 @@ protected:
 	void turn_reference_counting_off() { count_ = 1000000; }
 private:
 	mutable int count_;
+};
+
+struct reference_counted_object_pin_norelease
+{
+	reference_counted_object* obj_;
+	reference_counted_object_pin_norelease(reference_counted_object* obj) : obj_(obj)
+	{
+		obj_->add_ref();
+	}
+	~reference_counted_object_pin_norelease()
+	{
+		obj_->dec_ref_norelease();
+	}
 };
 
 inline void intrusive_ptr_add_ref(const reference_counted_object* obj) {

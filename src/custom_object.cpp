@@ -430,6 +430,7 @@ custom_object::custom_object(variant node)
 		}
 
 		if(i->second.init) {
+			reference_counted_object_pin_norelease pin(this);
 			get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
 		} else {
 			get_property_data(i->second.storage_slot) = i->second.default_value;

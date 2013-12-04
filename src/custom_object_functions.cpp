@@ -1259,9 +1259,12 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	variant properties;
 	
 	if(args().size() > 1) {
+		ASSERT_LOG(args().size() >= 3, "Wrong number of arguments to object() function");
 		const int x = args()[1]->evaluate(variables).as_int();
 		const int y = args()[2]->evaluate(variables).as_int();
-		properties = args()[3]->evaluate(variables);
+		if(args().size() >= 4) {
+			properties = args()[3]->evaluate(variables);
+		}
 		bool face_right = true;
 		if(!properties.is_map()) {
 			face_right = properties.as_int() > 0;
