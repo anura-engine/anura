@@ -519,7 +519,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 					callable_definition_->get_entry(n)->access_count = 0;
 				}
 
-				game_logic::formula_ptr f = game_logic::formula::create_optional_formula(value, NULL, callable_definition_);
+				game_logic::formula_ptr f = game_logic::formula::create_optional_formula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
 				bool inferred = true;
 				for(int n = 0; n != callable_definition_->num_slots(); ++n) {
 					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(n);
@@ -593,8 +593,31 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			return itor->second;
 		}
 
-		const_custom_object_type_ptr obj = get(id);
-		ASSERT_LOG(obj.get(), "No such object " << id << " when looking for definition");
+		std::string::const_iterator dot_itor = std::find(id.begin(), id.end(), '.');
+		std::string obj_id(id.begin(), dot_itor);
+
+		const std::string* path = get_object_path(obj_id + ".cfg");
+		ASSERT_LOG(path != NULL, "No definition for object " << id);
+
+		std::map<std::string, variant> nodes;
+
+		variant node = merge_prototype(json::parse_from_file(*path));
+		nodes[obj_id] = node;
+		if(node["object_type"].is_list()) {
+			for(variant sub_node : node["object_type"].as_list()) {
+				const std::string sub_id = obj_id + "." + sub_node["id"].as_string();
+				ASSERT_LOG(nodes.count(sub_id) == 0, "Duplicate object: " << sub_id);
+				nodes[sub_id] = merge_prototype(sub_node);
+			}
+		}
+
+		for(auto p : nodes) {
+			custom_object_callable_ptr callable_definition(new custom_object_callable);
+			callable_definition->set_type_name("obj " + p.first);
+			int slot = -1;
+			init_object_definition(p.second, p.second["id"].as_string(), callable_definition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode));
+		}
+
 		itor = object_type_definitions().find(id);
 		ASSERT_LOG(itor != object_type_definitions().end(), "No definition for object " << id);
 		return itor->second;
