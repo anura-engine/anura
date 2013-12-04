@@ -499,6 +499,12 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 		}
 	}
 
+	for(auto p : proto_definitions) {
+		object_type_definitions()[p.first] = p.second;
+	}
+
+	object_type_definitions()[id_] = callable_definition_;
+
 	while(is_strict_ && !properties_to_infer.empty()) {
 		const int num_items = properties_to_infer.size();
 		foreach(variant properties_node, node["properties"].as_list()) {
@@ -553,11 +559,6 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 		object_type_inheritance()[id_] = prototype_derived_from;
 	}
 
-	for(auto p : proto_definitions) {
-		object_type_definitions()[p.first] = p.second;
-	}
-
-	object_type_definitions()[id_] = callable_definition_;
 	callable_definition_->finalize_properties();
 	callable_definition_->set_strict(is_strict_);
 }
@@ -612,6 +613,10 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 		}
 
 		for(auto p : nodes) {
+			if(object_type_definitions().count(p.first)) {
+				continue;
+			}
+
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + p.first);
 			int slot = -1;
