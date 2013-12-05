@@ -11,7 +11,7 @@ objectlines = [line for line in contents.replace("\\\n","").split("\n") if "obje
 for line in objectlines:
     (target, rest) = line.split("objects =")
     if len(target) == 0:
-        target = "game"
+        target = "anura"
     else:
         target = target.rstrip("_")
     sources_map[target] = [x.replace("src/", "", 1) for x in [o for o in [object.strip().replace(".o", ".cpp") for object in rest.strip().split()] if o not in env["exclude"]]]
