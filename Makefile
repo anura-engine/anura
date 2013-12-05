@@ -57,7 +57,7 @@ BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions -fthreadsafe-stat
 INC := -Isrc -Iinclude $(shell pkg-config --cflags x11 sdl2 glew SDL2_image SDL2_ttf libpng zlib)
 
 # Linker library options.
-LIBS := $(shell pkg-config --libs x11 gl ) -lSDL2main \
+LIBS := $(shell pkg-config --libs x11 gl ) \
 	$(shell pkg-config --libs sdl2 glew SDL2_image libpng zlib) -lSDL2_ttf -lSDL2_mixer
 
 ifeq ($(USE_LUA),yes)
