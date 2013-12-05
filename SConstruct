@@ -9,6 +9,7 @@ try:
 except OSError:
     print "SDL2 not found, SDL-1.2 is no longer supported"
     sys.exit(1)
+use_lua = subprocess.Popen(["pkg-config", "--exists", "lua5.2"], stdout=subprocess.PIPE, stderr=subprocess.PIPE).wait() == 0
 
 # Warn user of current set of build options.
 if os.path.exists('.scons-option-cache'):
@@ -31,6 +32,9 @@ opts.AddVariables(
 
 env = Environment(options = opts, CPPPATH = [".","../../include"])
 
+if use_lua:
+    env.Append(CXXFLAGS=["-DUSE_LUA"])
+    env.ParseConfig("pkg-config --libs --cflags lua5.2")
 env.ParseConfig("sdl2-config --libs --cflags")
 env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
 env.Append(LIBS = ["GL", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
