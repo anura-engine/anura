@@ -6,9 +6,9 @@ import sys
 
 try:
     subprocess.Popen("sdl2-config", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    use_sdl2 = True
 except OSError:
-    use_sdl2 = False
+    print "SDL2 not found, SDL-1.2 is no longer supported"
+    sys.exit(1)
 
 # Warn user of current set of build options.
 if os.path.exists('.scons-option-cache'):
@@ -31,12 +31,8 @@ opts.AddVariables(
 
 env = Environment(options = opts, CPPPATH = ".")
 
-if use_sdl2:
-    env.ParseConfig("sdl2-config --libs --cflags")
-    env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
-else:
-    env.ParseConfig("sdl-config --libs --cflags")
-    env.Append(LIBS = ["SDL_mixer", "SDL_image", "SDL_ttf"])
+env.ParseConfig("sdl2-config --libs --cflags")
+env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
 env.Append(LIBS = ["GL", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
 env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP"], LINKFLAGS = ["-pthread"])
 if sys.platform.startswith('linux'):
@@ -106,5 +102,5 @@ if env['ccache']:
 if env['jobs'] > 1:
     SetOption("num_jobs", env['jobs'])
 
-Export(["env", "use_sdl2"])
+Export(["env"])
 env.SConscript(dirs=["src"], variant_dir = build_dir, duplicate = False)
