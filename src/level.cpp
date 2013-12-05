@@ -609,10 +609,6 @@ void level::read_compiled_tiles(variant node, std::vector<level_tile>::iterator&
 void level::load_character(variant c)
 {
 	chars_.push_back(entity::build(c));
-	custom_object* co = dynamic_cast<custom_object*>(chars_.back().get());
-	if(co) {
-		co->validate_properties();
-	}
 	layers_.insert(chars_.back()->zorder());
 	if(!chars_.back()->is_human()) {
 		chars_.back()->set_id(chars_.size());
@@ -649,6 +645,8 @@ PREF_BOOL(respect_difficulty, false, "");
 
 void level::finish_loading()
 {
+	current_level_scope level_scope(this);
+
 	std::vector<sub_level_data> sub_levels;
 	if((segment_width_ > 0 || segment_height_ > 0) && !editor_ && !preferences::compiling_tiles) {
 
@@ -721,10 +719,6 @@ void level::finish_loading()
 			if(obj_node.is_map()) {
 				addr_str = obj_node["_addr"].as_string();
 				entity_ptr e(entity::build(obj_node));
-				custom_object* co = dynamic_cast<custom_object*>(e.get());
-				if(co) {
-					co->validate_properties();
-				}
 				objects_not_in_level.push_back(e);
 				obj = e;
 			} else {
@@ -839,7 +833,14 @@ void level::finish_loading()
 			e->finish_loading(this);
 		}
 	}
-	
+
+	const std::vector<entity_ptr> chars = chars_;
+	foreach(const entity_ptr& e, chars) {
+		const bool res = e->create_object();
+		if(!res) {
+			e->validate_properties();
+		}
+	}
 }
 
 void level::set_multiplayer_slot(int slot)

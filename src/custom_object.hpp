@@ -82,7 +82,7 @@ public:
 	virtual void draw_group() const;
 	virtual void process(level& lvl);
 	virtual void construct();
-	virtual void create_object();
+	virtual bool create_object();
 	void set_level(level& lvl) { }
 
 	void check_initialized();
