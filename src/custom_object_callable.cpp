@@ -208,7 +208,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "draw_area", "any" },
 	{ "scale", "decimal" },
 	
-	{ "activation_area", "null|[int]" },
+	{ "activation_area", "null|[int|decimal]" },
 	{ "clip_area", "null|[int]" },
 
 	{ "always_active", "bool" },

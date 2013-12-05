@@ -235,6 +235,7 @@
 		C0A29485184B1303002B757E /* psystem2_emitters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A2947D184B1303002B757E /* psystem2_emitters.cpp */; };
 		C0A29486184B1303002B757E /* psystem2_parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29480184B1303002B757E /* psystem2_parameters.cpp */; };
 		C0A29487184B1303002B757E /* psystem2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29482184B1303002B757E /* psystem2.cpp */; };
+		C0A2948A184C0871002B757E /* psystem2_observers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29488184C0871002B757E /* psystem2_observers.cpp */; };
 		C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */; };
 		C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD7515183494F100FAFA3D /* poly_map.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
@@ -748,6 +749,8 @@
 		C0A29481184B1303002B757E /* psystem2_parameters.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2_parameters.hpp; sourceTree = "<group>"; };
 		C0A29482184B1303002B757E /* psystem2.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = psystem2.cpp; sourceTree = "<group>"; };
 		C0A29483184B1303002B757E /* psystem2.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2.hpp; sourceTree = "<group>"; };
+		C0A29488184C0871002B757E /* psystem2_observers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = psystem2_observers.cpp; sourceTree = "<group>"; };
+		C0A29489184C0871002B757E /* psystem2_observers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2_observers.hpp; sourceTree = "<group>"; };
 		C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VoronoiDiagramGenerator.cpp; sourceTree = "<group>"; };
 		C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoronoiDiagramGenerator.h; sourceTree = "<group>"; };
 		C0AD7515183494F100FAFA3D /* poly_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = poly_map.cpp; sourceTree = "<group>"; };
@@ -1194,6 +1197,8 @@
 				C0A2947D184B1303002B757E /* psystem2_emitters.cpp */,
 				C0A2947E184B1303002B757E /* psystem2_emitters.hpp */,
 				C0A2947F184B1303002B757E /* psystem2_fwd.hpp */,
+				C0A29488184C0871002B757E /* psystem2_observers.cpp */,
+				C0A29489184C0871002B757E /* psystem2_observers.hpp */,
 				C0A29480184B1303002B757E /* psystem2_parameters.cpp */,
 				C0A29481184B1303002B757E /* psystem2_parameters.hpp */,
 				C0A29482184B1303002B757E /* psystem2.cpp */,
@@ -1533,6 +1538,7 @@
 				C010C790160AFD4D006E7D90 /* hex_map.cpp in Sources */,
 				C010C791160AFD4D006E7D90 /* hex_object.cpp in Sources */,
 				C010C792160AFD4D006E7D90 /* hex_tile.cpp in Sources */,
+				C0A2948A184C0871002B757E /* psystem2_observers.cpp in Sources */,
 				C010C793160AFD4D006E7D90 /* hex_tileset_editor_dialog.cpp in Sources */,
 				C010C794160AFD4D006E7D90 /* http_client.cpp in Sources */,
 				C010C796160AFD4D006E7D90 /* i18n.cpp in Sources */,
