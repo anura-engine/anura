@@ -33,9 +33,6 @@ namespace hex {
 
 namespace hex {
 
-typedef std::vector<hex_object_ptr> hex_tile_row;
-typedef std::vector<hex_tile_row> hex_tile_map;
-
 class hex_map : public game_logic::formula_callable
 {
 public:
@@ -74,9 +71,8 @@ protected:
 	virtual variant get_value(const std::string&) const;
 	virtual void set_value(const std::string& key, const variant& value);
 
-	std::string make_tile_string() const;
 private:
-	hex_tile_map tiles_;
+	std::vector<hex_object_ptr> tiles_;
 	size_t width_;
 	size_t height_;
 	int x_;

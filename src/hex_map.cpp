@@ -36,36 +36,18 @@ static const int HexTileSize = 72;
 hex_map::hex_map(variant node)
 	: zorder_(node["zorder"].as_int(-1000)), 
 	x_(node["x"].as_int(0)), 
-	y_(node["y"].as_int(0)), width_(0), height_(0)
+	y_(node["y"].as_int(0)),
+	width_(node["width"].as_int()), height_(0)
 {
-	std::vector<std::string> result;
-	std::string tile_str = node["tiles"].as_string();
-	boost::algorithm::erase_all(tile_str, "\t");
-	boost::algorithm::erase_all(tile_str, "\v");
-	boost::algorithm::erase_all(tile_str, " ");
-	boost::algorithm::erase_all(tile_str, "\r");
-	boost::algorithm::split(result, tile_str, std::bind2nd(std::equal_to<char>(), '\n'));
-	int x = x_;
-	int y = y_;
-	foreach(const std::string& row, result) {
-		if(row.empty()) {
-			y++;
-			x = x_;
-			continue;
-		}
-		std::vector<std::string> row_res;
-		boost::algorithm::split(row_res, row, std::bind2nd(std::equal_to<char>(), ','));
-		std::vector<hex_object_ptr> new_row;
-		foreach(const std::string& col, row_res) {
-			new_row.push_back(hex_object_ptr(new hex_object(col, x, y, this)));
-			x++;
-		}
-		y++;
-		x = x_;
-		tiles_.push_back(new_row);
-		width_ = std::max<size_t>(width_, tiles_.back().size());		
+	int index = 0;
+	for(auto tile_str : node["tiles"].as_list_string()) {
+		const int x = index%width_;
+		const int y = index/width_;
+		tiles_.push_back(hex_object_ptr(new hex_object(tile_str, x, y, this)));
+		++index;
 	}
-	height_ = tiles_.size();
+
+	height_ = tiles_.size()/width_;
 
 #ifdef USE_SHADERS
 	if(node.has_key("shader")) {
@@ -84,10 +66,8 @@ void hex_map::draw() const
 #endif
 		gles2::manager manager(shader_);
 #endif
-		foreach(const hex_tile_row& row, tiles_) {
-			foreach(const hex_object_ptr& col, row) {
-				col->draw();
-			}
+		for(auto tile_ptr : tiles_) {
+			tile_ptr->draw();
 		}
 #if defined(USE_SHADERS) && !defined(NO_EDITOR)
 	} catch(validation_failure_exception& e) {
@@ -99,23 +79,10 @@ void hex_map::draw() const
 void hex_map::build()
 {
 	foreach(const std::string& rule, hex_object::get_rules()) {
-		foreach(hex_tile_row& row, tiles_) {
-			foreach(hex_object_ptr& col, row) {
-				col->apply_rules(rule);
-			}
+		for(auto tile_ptr : tiles_) {
+			tile_ptr->apply_rules(rule);
 		}
 	}
-}
-
-std::string hex_map::make_tile_string() const
-{
-	std::ostringstream tiles;
-	foreach(const hex_tile_row& row, tiles_) {
-		for(hex_tile_row::const_iterator i = row.begin(); i != row.end(); ++i) {
-			tiles << (*i)->type() << ((i+1) == row.end() ? "\n" : ",");
-		}
-	}
-	return tiles.str();
 }
 
 variant hex_map::write() const
@@ -125,7 +92,12 @@ variant hex_map::write() const
 	res.add("y", y_);
 	res.add("zorder", zorder_);
 
-	res.add("tiles", make_tile_string());
+	std::vector<variant> v;
+	for(auto tile : tiles_) {
+		v.push_back(variant(tile->type()));
+	}
+
+	res.add("tiles", variant(&v));
 
 #if defined(USE_SHADERS)
 	if(shader_) {
@@ -160,13 +132,13 @@ hex_object_ptr hex_map::get_hex_tile(direction d, int x, int y) const
 	} else {
 		ASSERT_LOG(false, "Unrecognised direction: " << d);
 	}
-	if(x < 0 || y < 0 || size_t(y) >= tiles_.size()) {
+	if(x < 0 || y < 0 || y >= height_ || x >= width_) {
 		return hex_object_ptr();
 	}
-	if(size_t(x) >= tiles_[y].size()) {
-		return hex_object_ptr();
-	}
-	return tiles_[y][x];
+
+	const int index = y*width_ + x;
+	assert(index >= 0 && index < tiles_.size());
+	return tiles_[index];
 }
 
 variant hex_map::get_value(const std::string& key) const
@@ -180,29 +152,8 @@ variant hex_map::get_value(const std::string& key) const
 		v.push_back(variant(width()));
 		v.push_back(variant(height()));
 		return variant(&v);
-	} else if(key == "map") {
-		std::vector<variant> list;
-		foreach(const hex_tile_row& row, tiles_) {
-			std::vector<variant> rrow;
-			for(hex_tile_row::const_iterator i = row.begin(); i != row.end(); ++i) {
-				rrow.push_back(variant((*i).get()));
-			}
-			list.push_back(variant(&rrow));
-		}
-		return variant(&list);
-	} else if(key == "mapstring") {
-		return variant(make_tile_string());
-	} else if(key == "maplist") {
-		std::vector<variant> list;
-		foreach(const hex_tile_row& row, tiles_) {
-			std::vector<variant> rrow;
-			for(hex_tile_row::const_iterator i = row.begin(); i != row.end(); ++i) {
-				rrow.push_back(variant((*i)->type()));
-			}
-			list.push_back(variant(&rrow));
-		}
-		return variant(&list);
 	}
+
 	return variant();
 }
 
@@ -269,61 +220,26 @@ hex_object_ptr hex_map::get_tile_at(int x, int y) const
 {
 	x -= x_;
 	y -= y_;
-	if(x < 0 || y < 0 || size_t(y) >= tiles_.size()) {
+	if(x < 0 || y < 0 || y >= height_ || x >= width_) {
 		return hex_object_ptr();
 	}
-	if(size_t(x) >= tiles_[y].size()) {
-		return hex_object_ptr();
-	}
-	return tiles_[y][x];
+
+	const int index = y*width_ + x;
+	assert(index >= 0 && index < tiles_.size());
+	return tiles_[index];
 }
 
 bool hex_map::set_tile(int xx, int yy, const std::string& tile)
 {
-	point p = get_tile_pos_from_pixel_pos(xx, yy);
-
-	// New tile position is outside current bounds, so enlarge.
-	if(p.y < y()) {
-		int needed_rows = y() - p.y;
-		y_ = p.y;
-		std::vector<hex_object_ptr> r;
-		tiles_.insert(tiles_.begin(), r);
-	}
-	if(p.x < x()) {
-		size_t needed_cols = x() - p.x;
-		int n = x_;
-		x_ = p.x;
-		for(size_t j = 0; j < tiles_.size(); ++j) {
-			for(size_t i = 0; i < needed_cols; ++i) {
-				tiles_[j].insert(tiles_[j].begin(), new hex_object("Xv", n + x(), j + y(), this));
-				--n;
-			}
-		}
+	if(xx < 0 || yy < 0 || xx >= width_ || yy >= height_) {
+		return false;
 	}
 
-	const int tx = p.x - x();
-	const int ty = p.y - y();
-	bool changed = false;
+	const int index = yy*width_ + xx;
+	assert(index >= 0 && index < tiles_.size());
 
-	int needed_rows = int(size_t(ty)+1 - tiles_.size());
-	changed |= (needed_rows > 0 );
-	while(needed_rows-- > 0) {
-		std::vector<hex_object_ptr> r;
-		tiles_.push_back(r);
-	}
-	int needed_cols = int(size_t(tx)+1 - tiles_[ty].size());
-	changed |= (needed_cols > 0 );
-	int n = tx;
-	while(needed_cols-- > 0) {
-		// Add Void 
-		tiles_[ty].push_back(hex_object_ptr(new hex_object("Xv", n + x(), ty + y(), this)));
-		++n;
-	}
-	if(tiles_[ty][tx] == NULL || tiles_[ty][tx]->type() != tile) {
-		tiles_[ty][tx].reset(new hex_object(tile, tx + x(), ty + y(), this));
-		changed = true;
-	}
-	return changed;
+	tiles_[index].reset(new hex_object(tile, xx, yy, this));
+	return true;
 }
 
 point hex_map::loc_in_dir(int x, int y, direction d)

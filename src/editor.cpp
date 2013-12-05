@@ -2789,7 +2789,7 @@ void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
 
 	// fudge
 	const int zorder = -1000;
-	std::vector<hex::hex_tile_ptr>& t = hex::hex_object::get_editor_tiles();
+	std::vector<hex::tile_type_ptr>& t = hex::hex_object::get_editor_tiles();
 
 	std::vector<boost::function<void()> > undo, redo;
 
