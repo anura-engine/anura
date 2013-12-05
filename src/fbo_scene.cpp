@@ -120,7 +120,7 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 	pos.y = area.y()*100;
 	{
 		preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
-		graphics::flip_draw_scope flip_draws;
+	//	graphics::flip_draw_scope flip_draws;
 		lvl->process();
 		lvl->process_draw();
 		foreach(const entity_ptr& e, objects) {

@@ -34,6 +34,7 @@
 
 namespace hex {
 
+/*
 	class hex_tile;
 
 	class basic_hex_tile : public game_logic::formula_callable
@@ -133,6 +134,60 @@ namespace hex {
 
 	typedef boost::intrusive_ptr<hex_tile> hex_tile_ptr;
 	typedef boost::intrusive_ptr<const hex_tile> const_hex_tile_ptr;
+	*/
+
+class tile_sheet
+{
+public:
+	explicit tile_sheet(variant node);
+	const graphics::texture& get_texture() const { return texture_; }
+	rect get_area(int index) const;
+private:
+	graphics::texture texture_;
+	rect area_;
+	int nrows_, ncols_, pad_;
+};
+
+typedef boost::shared_ptr<const tile_sheet> tile_sheet_ptr;
+
+class tile_type;
+typedef boost::intrusive_ptr<const tile_type> tile_type_ptr;
+
+
+class tile_type : public game_logic::formula_callable
+{
+public:
+	tile_type(const std::string& id, variant node);
+		
+	struct editor_info
+	{
+		std::string name;
+		std::string type;
+		mutable graphics::texture texture;
+		std::string group;
+		rect image_rect;
+		void draw(int tx, int ty) const;
+	};
+
+	const std::string& id() const { return id_; }
+
+	const editor_info& get_editor_info() const { return editor_info_; } 
+
+	const std::vector<int>& sheet_indexes() const { return sheet_indexes_; }
+
+	void draw(int x, int y) const;
+
+	variant write() const;
+private:
+	DECLARE_CALLABLE(tile_type);
+	std::string id_;
+	tile_sheet_ptr sheet_;
+	decimal height_;
+
+	std::vector<int> sheet_indexes_;
+
+	editor_info editor_info_;
+};
 
 }
 

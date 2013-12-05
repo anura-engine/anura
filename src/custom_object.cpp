@@ -1407,13 +1407,16 @@ void custom_object::construct()
 	handle_event(OBJECT_EVENT_CONSTRUCT);
 }
 
-void custom_object::create_object()
+bool custom_object::create_object()
 {
 	if(!created_) {
 		created_ = true;
 		handle_event(OBJECT_EVENT_CREATE);
 		validate_properties();
+		return true;
 	}
+
+	return false;
 }
 
 void custom_object::check_initialized()

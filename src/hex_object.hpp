@@ -49,7 +49,7 @@ public:
 	void build();
 	void apply_rules(const std::string& rule);
 
-	std::string type() const { return type_; }
+	const std::string& type() const { return type_; }
 	virtual bool execute_command(const variant& var);
 
 	hex_object_ptr get_tile_in_dir(enum direction d) const;
@@ -58,22 +58,21 @@ public:
 	int x() const { return x_; }
 	int y() const { return y_; }
 
-	hex_tile_ptr tile() const { return tile_->owner(); }
+	tile_type_ptr tile() const { return tile_; }
 
 	static std::vector<std::string> get_rules();
-	static std::vector<hex_tile_ptr> get_hex_tiles();
-	static std::vector<hex_tile_ptr>& get_editor_tiles();
+	static std::vector<tile_type_ptr> get_hex_tiles();
+	static std::vector<tile_type_ptr>& get_editor_tiles();
 
-	static hex_tile_ptr get_hex_tile(const std::string& type);
+	static tile_type_ptr get_hex_tile(const std::string& type);
 private:
 
 	// map coordinates.
 	int x_;
 	int y_;
-	// Pointer to the tile in this square.
-	const_basic_hex_tile_ptr tile_;
-	// Transitions. mapping z-order to transition.
-	std::vector<const_basic_hex_tile_ptr> transitions_;
+
+	tile_type_ptr tile_;
+
 	// String representing the base type of this tile.
 	std::string type_;
 	// raw pointer to the map that owns this.
@@ -84,10 +83,9 @@ private:
 	gles2::shader_program_ptr shader_;
 #endif
 
-	// Private default constructor and copy constructor to stop them
-	// from being used.
-	hex_object() {}
-	hex_object(hex_object&) {}
+	//forbidden operations
+	hex_object(hex_object&);
+	void operator=(const hex_object&);
 };
 
 }

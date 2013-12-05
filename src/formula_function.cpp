@@ -379,6 +379,7 @@ FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL c
 	return variant(new ffl_cache(max_entries));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int");
+	RETURN_TYPE("object");
 END_FUNCTION_DEF(create_cache)
 
 FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
@@ -395,7 +396,9 @@ FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 	const variant value = args()[2]->evaluate(variables);
 	cache->store(key, value);
 	return value;
-	
+
+FUNCTION_TYPE_DEF
+	return args()[2]->query_variant_type();
 END_FUNCTION_DEF(query_cache)
 
 	class if_function : public function_expression {
@@ -4202,8 +4205,8 @@ END_FUNCTION_DEF(hex_get_tile)
 
 FUNCTION_DEF(hex_get_random_tile, 1, 2, "hex_get_random_tile(regex, (opt)count) -> hex_tile object(s): Generates either a single random tile or an array of count random tiles, picked from the given regular expression")
 	const boost::regex re(args()[0]->evaluate(variables).as_string());
-	std::vector<hex::hex_tile_ptr>& tile_list = hex::hex_object::get_editor_tiles();
-	std::vector<hex::hex_tile_ptr> matches;
+	std::vector<hex::tile_type_ptr>& tile_list = hex::hex_object::get_editor_tiles();
+	std::vector<hex::tile_type_ptr> matches;
 	for(size_t i = 0; i < tile_list.size(); ++i) {
 		if(boost::regex_match(tile_list[i]->get_editor_info().type, re)) {
 			matches.push_back(tile_list[i]);

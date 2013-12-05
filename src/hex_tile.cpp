@@ -24,7 +24,7 @@
 #include "variant_utils.hpp"
 
 namespace hex {
-
+/*
 basic_hex_tile::basic_hex_tile(const variant node, hex_tile* owner)
 	: cycle_(0), chance_(node["chance"].as_int(100)), owner_(owner), zorder_(node["zorder"].as_int(-500)),
 	offset_x_(0), offset_y_(0)
@@ -113,6 +113,7 @@ std::string basic_hex_tile::type() const
 hex_tile::hex_tile(const std::string& type, variant node)
 	: type_(type), name_(node["name"].as_string())
 {
+
 	if(node.has_key("editor_info")) {
 		ASSERT_LOG(node["editor_info"].is_map(), "Must have editor info map, none found in: " << type_);
 		editor_info_.name = node["editor_info"]["name"].as_string();
@@ -317,8 +318,9 @@ basic_hex_tile_ptr hex_tile::get_single_tile()
 	variations_.front()->get_texture();
 	return variations_.front();
 }
+*/
 
-void hex_tile::editor_info::draw(int x, int y) const
+void tile_type::editor_info::draw(int x, int y) const
 {
 	point p(hex_map::get_pixel_pos_from_tile_pos(x,y));
 	graphics::blit_texture(texture, p.x, p.y, image_rect.w(), image_rect.h(), 0.0f, 
@@ -327,5 +329,70 @@ void hex_tile::editor_info::draw(int x, int y) const
 		GLfloat(image_rect.x2())/GLfloat(texture.width()),
 		GLfloat(image_rect.y2())/GLfloat(texture.height()));
 }
+
+tile_sheet::tile_sheet(variant node)
+    : texture_(graphics::texture::get(node["image"].as_string())),
+	  area_(rect(2, 2, 72, 72)), ncols_(36), pad_(4)
+{
+}
+
+rect tile_sheet::get_area(int index) const
+{
+	const int row = index/ncols_;
+	const int col = index%ncols_;
+
+	const int x = area_.x() + (area_.w()+pad_)*col;
+	const int y = area_.y() + (area_.h()+pad_)*row;
+	rect result(x, y, area_.w(), area_.h());
+
+	return result;
+}
+
+tile_type::tile_type(const std::string& id, variant node)
+  : id_(id), sheet_(new tile_sheet(node)),
+    height_(node["height"].as_decimal())
+{
+	for(const std::string& index_str : node["sheet_pos"].as_list_string()) {
+		const int index = strtol(index_str.c_str(), NULL, 36);
+		sheet_indexes_.push_back(index);
+	}
+
+	ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << id);
+
+	if(node.has_key("editor_info")) {
+		ASSERT_LOG(node["editor_info"].is_map(), "Must have editor info map, none found in: " << id_);
+		editor_info_.texture = sheet_->get_texture();
+		editor_info_.name = node["editor_info"]["name"].as_string();
+		editor_info_.group = node["editor_info"]["group"].as_string();
+		editor_info_.type = node["editor_info"]["type"].as_string();
+		editor_info_.image_rect = sheet_->get_area(0);
+	}
+}
+
+variant tile_type::write() const
+{
+	std::map<variant,variant> m;
+	m[variant("id")] = variant(id_);
+	m[variant("height")] = variant(height_);
+	return variant(&m);
+}
+
+void tile_type::draw(int x, int y) const
+{
+	point p(hex_map::get_pixel_pos_from_tile_pos(x, y));
+	rect area = sheet_->get_area(sheet_indexes_[0]);
+	
+	graphics::blit_texture(sheet_->get_texture(),
+	    p.x, p.y, area.w(), area.h(), 0.0f, 
+		GLfloat(area.x())/GLfloat(sheet_->get_texture().width()),
+		GLfloat(area.y())/GLfloat(sheet_->get_texture().height()),
+		GLfloat(area.x2())/GLfloat(sheet_->get_texture().width()),
+		GLfloat(area.y2())/GLfloat(sheet_->get_texture().height()));
+}
+
+BEGIN_DEFINE_CALLABLE_NOBASE(tile_type)
+DEFINE_FIELD(type, "string")
+	return variant(obj.id_);
+END_DEFINE_CALLABLE(tile_type)
 
 }

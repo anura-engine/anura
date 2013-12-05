@@ -75,7 +75,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "frame_in_animation", "int" },
 	{ "level", "any" },
 
-	{ "animation", "string" },
+	{ "animation", "string/string|map" },
 	{ "available_animations", "[string]" },
 
 	{ "hitpoints", "int" },
@@ -87,8 +87,8 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "xy", "[int]" },
 	{ "z", "int" },
 
-	{ "relative_x", "int" },
-	{ "relative_y", "int" },
+	{ "relative_x", "int/int|decimal" },
+	{ "relative_y", "int/int|decimal" },
 	{ "spawned_by", "null|custom_obj" },
 	{ "spawned_children", "[custom_obj]" },
 
@@ -208,7 +208,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "draw_area", "any" },
 	{ "scale", "decimal" },
 	
-	{ "activation_area", "null|[int]" },
+	{ "activation_area", "null|[int|decimal]" },
 	{ "clip_area", "null|[int]" },
 
 	{ "always_active", "bool" },

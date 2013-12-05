@@ -291,7 +291,7 @@ public:
 
 	virtual game_logic::const_formula_callable_definition_ptr get_definition() const = 0;
 
-	virtual void create_object() = 0;
+	virtual bool create_object() = 0;
 
 	virtual bool use_absolute_screen_coordinates() const = 0;
 

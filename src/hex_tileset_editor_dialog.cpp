@@ -87,7 +87,7 @@ void hex_tileset_editor_dialog::init()
 	int index = 0, first_index = -1;
 	first_index_ = -1;
 	
-	foreach(const hex::hex_tile_ptr& t, hex::hex_object::get_editor_tiles()) {
+	foreach(const hex::tile_type_ptr& t, hex::hex_object::get_editor_tiles()) {
 		if(t->get_editor_info().group == category_) {
 			if(first_index_ == -1) {
 				first_index_ = index;
@@ -95,7 +95,7 @@ void hex_tileset_editor_dialog::init()
 			image_widget* preview = new image_widget(t->get_editor_info().texture, 54, 54);
 			preview->set_area(t->get_editor_info().image_rect);
 			button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
-			tileset_button->set_tooltip(t->name() + "/" + t->get_editor_info().name, 14);
+			tileset_button->set_tooltip(t->id() + "/" + t->get_editor_info().name, 14);
 			tileset_button->set_dim(58, 58);
 			grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_hex_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 		}
@@ -133,7 +133,7 @@ void hex_tileset_editor_dialog::show_category_menu()
 	grid->register_selection_callback(boost::bind(&hex_tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
-	foreach(const hex::hex_tile_ptr& t, hex::hex_object::get_hex_tiles()) {
+	foreach(const hex::tile_type_ptr& t, hex::hex_object::get_hex_tiles()) {
 		if(categories.count(t->get_editor_info().group)) {
 			continue;
 		}
