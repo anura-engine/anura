@@ -1563,11 +1563,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 	}
 #endif
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(key.keysym.sym == SDLK_KP_8) {
-#else
-	if(key.keysym.sym == SDLK_KP8) {
-#endif
 		begin_command_group();
 		foreach(const entity_ptr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 0, -2);
@@ -1575,11 +1571,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 		end_command_group();
 	}
 
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(key.keysym.sym == SDLK_KP_5) {
-#else
-	if(key.keysym.sym == SDLK_KP5) {
-#endif
 		begin_command_group();
 		foreach(const entity_ptr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 0, 2);
@@ -1587,11 +1579,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 		end_command_group();
 	}
 	
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(key.keysym.sym == SDLK_KP_4) {
-#else
-	if(key.keysym.sym == SDLK_KP4) {
-#endif
 		begin_command_group();
 		foreach(const entity_ptr& e, lvl_->editor_selection()){
 			execute_shift_object(e, -2, 0);
@@ -1599,11 +1587,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 		end_command_group();
 	}
 	
-#if SDL_VERSION_ATLEAST(2, 0, 0)
 	if(key.keysym.sym == SDLK_KP_6) {
-#else
-	if(key.keysym.sym == SDLK_KP6) {
-#endif
 		begin_command_group();
 		foreach(const entity_ptr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 2, 0);

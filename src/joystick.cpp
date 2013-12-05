@@ -204,7 +204,6 @@ bool down() {
 		return false;
 	}
 
-#if SDL_VERSION_ATLEAST(2,0,0)
 	for(auto gc : game_controllers) {
 		if (SDL_GameControllerGetAxis(gc.second.get(), SDL_CONTROLLER_AXIS_LEFTY) > 4096*2) {
 			return true;
@@ -214,7 +213,6 @@ bool down() {
 			return true;
 		}
 	}
-#endif
 
 	for(auto j : joysticks) {
 		Sint16  y = SDL_JoystickGetAxis(j.get(), 1);

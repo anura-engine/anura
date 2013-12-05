@@ -1055,13 +1055,6 @@ namespace preferences {
 			}
 		}
 
-		if(node.has_key("sdl_version") == false || node["sdl_version"].as_int() < SDL_VERSIONNUM(2, 0, 0)) {
-			// SDL version isn't found or isn't high enough, so we remap the keys to defaults
-			controls::set_keycode(controls::CONTROL_UP, SDLK_UP);
-			controls::set_keycode(controls::CONTROL_DOWN, SDLK_DOWN);
-			controls::set_keycode(controls::CONTROL_LEFT, SDLK_LEFT);
-			controls::set_keycode(controls::CONTROL_RIGHT, SDLK_RIGHT);
-		}
         preferences::set_32bpp_textures_if_kb_memory_at_least( 512000 );
 #endif
 	}
