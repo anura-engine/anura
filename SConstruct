@@ -29,7 +29,7 @@ opts.AddVariables(
     ('jobs', 'Set the number of parallel compilations', "1", lambda key, value, env: int(value), int),
     )
 
-env = Environment(options = opts, CPPPATH = ".")
+env = Environment(options = opts, CPPPATH = [".","../../include"])
 
 env.ParseConfig("sdl2-config --libs --cflags")
 env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
