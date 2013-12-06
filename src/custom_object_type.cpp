@@ -604,7 +604,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 
 		variant node = merge_prototype(json::parse_from_file(*path));
 		nodes[obj_id] = node;
-		if(node["object_type"].is_list()) {
+		if(node["object_type"].is_list() || node["object_type"].is_map()) {
 			for(variant sub_node : node["object_type"].as_list()) {
 				const std::string sub_id = obj_id + "." + sub_node["id"].as_string();
 				ASSERT_LOG(nodes.count(sub_id) == 0, "Duplicate object: " << sub_id);
