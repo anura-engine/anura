@@ -143,7 +143,9 @@ class modified_definition : public formula_callable_definition
 {
 public:
 	modified_definition(const_formula_callable_definition_ptr base, int modified_slot, const entry& modification) : base_(base), slot_(modified_slot), mod_(modification)
-	{}
+	{
+		set_supports_slot_lookups(base_->supports_slot_lookups());
+	}
 
 	int get_slot(const std::string& key) const {
 		return base_->get_slot(key);

@@ -442,7 +442,7 @@ private:
 
 	bool always_active_;
 
-	std::stack<const formula_callable*> backup_callable_stack_;
+	mutable std::stack<const formula_callable*> backup_callable_stack_;
 
 
 	int last_cycle_active_;

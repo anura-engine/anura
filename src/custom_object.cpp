@@ -3163,6 +3163,23 @@ void custom_object::set_player_value_by_slot(int slot, const variant& value)
 	ASSERT_LOG(false, "Set of value for player objects on non-player object. Key: " << custom_object_callable::instance().get_entry(slot)->id);
 }
 
+namespace {
+
+using game_logic::formula_callable;
+
+class backup_callable_stack_scope {
+	std::stack<const formula_callable*>* stack_;
+public:
+	backup_callable_stack_scope(std::stack<const formula_callable*>* s, const formula_callable* item) : stack_(s) {
+		stack_->push(item);
+	}
+
+	~backup_callable_stack_scope() {
+		stack_->pop();
+	}
+};
+}
+
 variant custom_object::get_value(const std::string& key) const
 {
 	const int slot = type_->callable_definition()->get_slot(key);
@@ -3206,7 +3223,9 @@ variant custom_object::get_value(const std::string& key) const
 
 	if(backup_callable_stack_.empty() == false && backup_callable_stack_.top()) {
 		if(backup_callable_stack_.top() != this) {
-			return backup_callable_stack_.top()->query_value(key);
+			const formula_callable* callable = backup_callable_stack_.top();
+			backup_callable_stack_scope callable_scope(&backup_callable_stack_, NULL);
+			return callable->query_value(key);
 		}
 	}
 
@@ -4789,23 +4808,6 @@ entity_ptr custom_object::backup() const
 bool custom_object::handle_event(const std::string& event, const formula_callable* context)
 {
 	return handle_event(get_object_event_id(event), context);
-}
-
-namespace {
-
-using game_logic::formula_callable;
-
-class backup_callable_stack_scope {
-	std::stack<const formula_callable*>* stack_;
-public:
-	backup_callable_stack_scope(std::stack<const formula_callable*>* s, const formula_callable* item) : stack_(s) {
-		stack_->push(item);
-	}
-
-	~backup_callable_stack_scope() {
-		stack_->pop();
-	}
-};
 }
 
 bool custom_object::handle_event_delay(int event, const formula_callable* context)
