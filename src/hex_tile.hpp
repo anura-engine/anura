@@ -177,6 +177,12 @@ public:
 
 	void draw(int x, int y) const;
 
+	//The lowest bit of adjmap indicates if this tile type occurs to the north
+	//of the target tile, the next lowest for the north-east and so forth.
+	void draw_adjacent(int x, int y, unsigned char adjmap) const;
+
+	decimal height() const { return height_; }
+
 	variant write() const;
 private:
 	DECLARE_CALLABLE(tile_type);
@@ -185,6 +191,17 @@ private:
 	decimal height_;
 
 	std::vector<int> sheet_indexes_;
+
+	struct AdjacencyPattern {
+		AdjacencyPattern() : init(false), depth(0)
+		{}
+		bool init;
+		int depth;
+		std::vector<int> sheet_indexes;
+	};
+
+	mutable AdjacencyPattern adjacency_patterns_[64];
+	void calculate_adjacency_pattern(unsigned char adjmap) const;
 
 	editor_info editor_info_;
 };

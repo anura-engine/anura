@@ -73,6 +73,16 @@ private:
 
 	tile_type_ptr tile_;
 
+	struct NeighborType {
+		NeighborType() : dirmap(0) {}
+		tile_type_ptr type;
+		unsigned char dirmap;
+	};
+
+	mutable std::vector<NeighborType> neighbors_;
+	mutable bool neighbors_init_;
+	void init_neighbors() const;
+
 	// String representing the base type of this tile.
 	std::string type_;
 	// raw pointer to the map that owns this.

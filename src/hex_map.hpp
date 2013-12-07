@@ -22,7 +22,7 @@
 #include <vector>
 
 namespace hex {
-	enum direction {NORTH, SOUTH, NORTH_WEST, NORTH_EAST, SOUTH_WEST, SOUTH_EAST};
+	enum direction {NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST};
 }
 
 #include "graphics.hpp"
