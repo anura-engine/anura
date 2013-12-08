@@ -207,7 +207,7 @@ hex_engine& generate_hex_engine()
 }
 
 hex_object::hex_object(const std::string& type, int x, int y, const hex_map* owner) 
-	: owner_map_(owner), x_(x), y_(y), type_(type)
+	: neighbors_init_(false), owner_map_(owner), x_(x), y_(y), type_(type)
 {
 	generate_hex_engine();
 	tile_ = get_tile_type_map()[type_];
@@ -333,11 +333,44 @@ void hex_object::draw() const
 		return;
 	}
 
+	init_neighbors();
+
 #ifdef USE_SHADERS
 	gles2::manager gles2_manager(shader_);
 #endif
 
 	tile_->draw(x_, y_);
+
+	for(const NeighborType& neighbor : neighbors_) {
+		neighbor.type->draw_adjacent(x_, y_, neighbor.dirmap);
+	}
+}
+
+void hex_object::init_neighbors() const
+{
+	if(neighbors_init_) {
+		return;
+	}
+
+	neighbors_init_ = true;
+
+	for(int n = 0; n < 6; ++n) {
+		hex_object_ptr obj = get_tile_in_dir(static_cast<direction>(n));
+		if(obj && obj->tile() && obj->tile()->height() > tile()->height()) {
+			NeighborType* neighbor = NULL;
+			for(NeighborType& candidate : neighbors_) {
+				neighbor = &candidate;
+			}
+
+			if(!neighbor) {
+				neighbors_.push_back(NeighborType());
+				neighbor = &neighbors_.back();
+				neighbor->type = obj->tile();
+			}
+
+			neighbor->dirmap = neighbor->dirmap | (1 << n);
+		}
+	}
 }
 
 std::vector<tile_type_ptr> hex_object::get_hex_tiles()

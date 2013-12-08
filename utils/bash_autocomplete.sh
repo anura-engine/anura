@@ -1,5 +1,5 @@
 #Note: Do not invoke this script directly, rather, use ". bash_autocomplete_setup.sh". Then you may tab-complete after ./game.
-_frogatto() 
+_anura() 
 {
     local cur prev opts utils module_names level_names
     COMPREPLY=()
@@ -35,8 +35,8 @@ _frogatto()
         ;;
     esac
 }
-launches="game frogatto"
+launches="anura"
 for i in $launches
 do
-    complete -F _frogatto ${i}
+    complete -F _anura ${i}
 done

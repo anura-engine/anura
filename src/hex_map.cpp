@@ -111,6 +111,7 @@ hex_object_ptr hex_map::get_hex_tile(direction d, int x, int y) const
 {
 	int ox = x;
 	int oy = y;
+	assert(x_ == 0 && y_ == 0);
 	x -= x_;
 	y -= y_;
 	if(d == NORTH) {
