@@ -17,6 +17,6 @@ else
 fi
 
 . ${relative_file}
-sudo rm -f /etc/bash_completion.d/frogatto
-sudo ln ${relative_file} /etc/bash_completion.d/frogatto
-echo -e "\e[00;32mSuccess:\e[00m Tab completion for 'game' and 'frogatto' installed."
+sudo rm -f /etc/bash_completion.d/anura
+sudo ln ${relative_file} /etc/bash_completion.d/anura
+echo -e "\e[00;32mSuccess:\e[00m Tab completion for 'anura' installed."
