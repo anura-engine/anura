@@ -3810,16 +3810,14 @@ DEFINE_SET_FIELD
 		}
 	}
 
-DEFINE_FIELD(gui, "[object]|null")
+DEFINE_FIELD(gui, "[object]")
+	std::vector<variant> v;
 	if(!obj.gui_algorithm_.empty()) {
-		std::vector<variant> v;
 		foreach(gui_algorithm_ptr g, obj.gui_algorithm_) {
 			v.push_back(variant(g->get_object()));
 		}
-		return variant(&v);
-	} else {
-		return variant();
 	}
+	return variant(&v);
 
 DEFINE_FIELD(id, "string")
 	return variant(obj.id_);
