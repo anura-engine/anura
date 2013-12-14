@@ -208,7 +208,7 @@ void preload_level(const std::string& lvl)
 	}
 }
 
-level* load_level(const std::string& lvl)
+boost::intrusive_ptr<level> load_level(const std::string& lvl)
 {
 	std::cerr << "START LOAD LEVEL\n";
 	level_map::iterator itor;
@@ -216,7 +216,7 @@ level* load_level(const std::string& lvl)
 		threading::lock lck(levels_loading_mutex());
 		itor = levels_loading.find(lvl);
 		if(itor == levels_loading.end()) {
-			level* res = new level(lvl);
+			boost::intrusive_ptr<level> res(new level(lvl));
 			res->finish_loading();
 			fprintf(stderr, "LOADED LEVEL: %p\n", res);
 			return res;
@@ -225,9 +225,10 @@ level* load_level(const std::string& lvl)
 
 	itor->second.first->join();
 	delete itor->second.first;
-	level* res = itor->second.second;
-	if(res == NULL) {
-		res = new level(lvl);
+	boost::intrusive_ptr<level> res;
+	res.reset(itor->second.second);
+	if(res.get() == NULL) {
+		res.reset(new level(lvl));
 	}
 	res->finish_loading();
 	levels_loading.erase(itor);

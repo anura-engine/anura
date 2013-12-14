@@ -645,6 +645,7 @@ PREF_BOOL(respect_difficulty, false, "");
 
 void level::finish_loading()
 {
+	assert(refcount() > 0);
 	current_level_scope level_scope(this);
 
 	std::vector<sub_level_data> sub_levels;

@@ -800,13 +800,6 @@ bool level_runner::play_level()
 }
 
 namespace {
-void load_level_thread(const std::string& lvl, level** res) {
-	try {
-		*res = load_level(lvl);
-	} catch(const graphics::texture::worker_thread_error&) {
-		std::cerr << "LOAD LEVEL FAILED: MUST DO IN MAIN THREAD\n";
-	}
-}
 
 std::set<std::string> g_levels_modified;
 
@@ -973,7 +966,7 @@ bool level_runner::play_cycle()
 		preload_level(save->get_player_info()->current_level());
 		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
 		sound::stop_looped_sounds(NULL);
-		level* new_level = load_level(save->get_player_info()->current_level());
+		boost::intrusive_ptr<level> new_level = load_level(save->get_player_info()->current_level());
 
 		if(!new_level->music().empty()) {
 			sound::play_music(new_level->music());
@@ -985,7 +978,7 @@ bool level_runner::play_cycle()
 		save->save_game();
 		save->handle_event(OBJECT_EVENT_LOAD_CHECKPOINT);
 		place_entity_in_level(*new_level, *save);
-		lvl_.reset(new_level);
+		lvl_ = new_level;
 		last_draw_position() = screen_position();
 
 		//trigger a garbage collection of objects now.
@@ -1194,7 +1187,7 @@ bool level_runner::play_cycle()
 
 				if(editor::last_edited_level() != lvl_->id() && editor_->confirm_quit()) {
 
-					level* new_level = load_level(editor::last_edited_level());
+					boost::intrusive_ptr<level> new_level = load_level(editor::last_edited_level());
 					if(editor_) {
 						new_level->set_editor();
 					}
@@ -1206,7 +1199,7 @@ bool level_runner::play_cycle()
 					}
 
 					set_scene_title(new_level->title());
-					lvl_.reset(new_level);
+					lvl_ = new_level;
 
 					lvl_->editor_clear_selection();
 					editor_ = editor::get_editor(lvl_->id().c_str());
@@ -1866,7 +1859,7 @@ void level_runner::update_history_trails()
 void level_runner::replay_level_from_start()
 {
 	boost::scoped_ptr<controls::control_backup_scope> backup_ctrl_ptr(new controls::control_backup_scope);
-	level* new_level = load_level(lvl_->id());
+	boost::intrusive_ptr<level> new_level = load_level(lvl_->id());
 	if(editor_) {
 		new_level->set_editor();
 	}
@@ -1877,7 +1870,7 @@ void level_runner::replay_level_from_start()
 		sound::play_music(new_level->music());
 	}
 
-	lvl_.reset(new_level);
+	lvl_ = new_level;
 
 	lvl_->editor_clear_selection();
 	editor_ = editor::get_editor(lvl_->id().c_str());

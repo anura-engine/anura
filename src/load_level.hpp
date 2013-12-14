@@ -20,6 +20,8 @@
 #include <string>
 #include <vector>
 
+#include <boost/intrusive_ptr.hpp>
+
 #include "variant.hpp"
 
 class level;
@@ -39,7 +41,7 @@ variant load_level_wml(const std::string& lvl);
 variant load_level_wml_nowait(const std::string& lvl);
 
 void preload_level(const std::string& lvl);
-level* load_level(const std::string& lvl);
+boost::intrusive_ptr<level> load_level(const std::string& lvl);
 
 std::vector<std::string> get_known_levels();
 
