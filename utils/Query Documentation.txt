@@ -25,11 +25,27 @@ Frogatto’s built-in language has a wealth of tools for accessing and modifying
 
 
 #The following scripts were used in our conversion from the old-style vars storage, to property-data storage; in doing this conversion, we needed to copy all of the individual items in one data container (vars, which is of type “map”) to another (property_data, which is also a “map”).  However, we didn’t merely copy them unaltered; we also needed to specifically rename certain ones, and remove others.  These scripts accomplish this; they manage the removal by simply only copying the ones which are explicitly specified.
+
 --utility=query modules/frogatto/data/level 'if(doc.character is list, [ [set(c.property_data, {}),map(c.vars, switch(key, "zone_x1", add(c.property_data, {"_x_bound": value}), "zone_x2", add(c.property_data, {"_x2_bound": value}), "zone_y1", add(c.property_data, {"_y_bound": value}), "zone_y2", add(c.property_data, {"_y2_bound": value}))),set(c.vars, {})] | c <- doc.character, c.type in ["stalactite", "falling_breakable_block"]])'
 
 --utility=query modules/frogatto/data/level 'if(doc.character is list, [ [set(c.property_data, {}),map(c.vars, switch(key, "rope_height", add(c.property_data, {"rope_height": value}), "move_x1", add(c.property_data, {"_move_x1": value}), "move_x2", add(c.property_data, {"_move_x2": value}), "move_y1", add(c.property_data, {"_move_y1": value}), "move_y2", add(c.property_data, {"_move_y2": value}), "speed", add(c.property_data, {"top_speed": value}), "stopped", add(c.property_data, {"stopped": value}), "progress", add(c.property_data, {"progress": value}), "is_zipline", add(c.property_data, {"is_zipline": bool(value)}) )),set(c.vars, {})] | c <- doc.character, c.type in ["platform_swaying"]])'
 
 --utility=query modules/frogatto/data/level 'if(doc.character is list, [ [set(c.property_data, {}),map(c.vars, switch(key, "dive_height", add(c.property_data, {"_dive_height": value}), "desired_height", add(c.property_data, {"_desired_height": value}), "x_bound", add(c.property_data, {"_x_bound": value}), "x2_bound", add(c.property_data, {"_x2_bound": value}), "magnitude", add(c.property_data, {"_magnitude": value}))),set(c.vars, {})] | c <- doc.character, c.type in ["bat_black", "bat_red", "finch", "ant_flying_black", "ant_flying_glow", "ant_flying_gold", "ant_flying_platform_red", "ant_flying_red", "ant_flying_wallcling", "hornbug_red", "jellybug_green", "moth_big", "moth_black", "moth_brown", "moth_small", "wartfly", "mushroom_grabber", "mushroom_jellyfish"]])'
 
-
 --utility=query modules/frogatto/data/level 'if(doc.character is list, [ [set(c.property_data, {}),map(c.vars, switch(key, "desired_height", add(c.property_data, {"_desired_height": value}), "x_bound", add(c.property_data, {"_x_bound": value}), "x2_bound", add(c.property_data, {"_x2_bound": value}))),set(c.vars, {})] | c <- doc.character, c.type in ["worm_jumping"]])'
+
+--utility=query modules/frogatto/data/level '
+if(doc.character is list, [
+    [   if(not c.property_data, set(c.property_data, {})),
+        map(filter(c.vars, old_name_to_new[key]),
+            add(c.property_data, {
+                (old_name_to_new[key].name): if(old_name_to_new[key].process, 
+                                                old_name_to_new[key].process(value), 
+                                                value)} ) ),
+        set(c.vars, {}),
+    ] | c <- doc.character, c.type in object_types
+]) where old_name_to_new = {
+    "event", {name: "event"},
+    "is_locked", {name: "is_locked", process: def(x) bool(x)},
+}, object_types = ["gate"]
+'
