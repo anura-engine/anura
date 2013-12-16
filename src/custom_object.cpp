@@ -1483,11 +1483,19 @@ void custom_object::process(level& lvl)
 			move_centipixels(move_x*100, move_y*100);
 
 			if(parent_facing != parent_prev_facing_) {
+                //first, reverse the parent's pivot point across the parent's midpoint.  We don't *actually* reverse the pivot point, we just swap our position as though it had been reversed.
 				const point pos_before_turn = parent_->pivot(parent_pivot_);
 	
-				const int relative_x = pos.x - pos_before_turn.x;
-	
+				const int relative_x = (pos.x - pos_before_turn.x);
 				move_centipixels(relative_x*100, 0);
+                
+                if(this->midpoint().x != parent_->pivot(parent_pivot_).x){
+                    //if we're offset from the pivot, rather than directly on it, also flip ourselves across the pivot
+                    //Besides accounting for cases where we do have a pivot point we're moving relative to, but we aren't directly centered on it, this also accounts for the most common use-case of relative positioning, where there is no pivot point, and we're just doing relative positioning compared to a virtual pivot point at the parent's midpoint.
+                    const int relative_mid_x = -2*(this->midpoint().x - parent_->pivot(parent_pivot_).x);
+                    
+                    move_centipixels(relative_mid_x*100, 0);
+                }
 			}
 		}
 
