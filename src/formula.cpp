@@ -760,7 +760,7 @@ public:
 				std::sort(known_v.begin(), known_v.end());
 				std::string known;
 				foreach(const std::string& k, known_v) {
-					known += k + " ";
+					known += k + " \n";
 				}
 				if(callable_def_->type_name() != NULL) {
 					STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->type_name() << " " << debug_pinpoint_location() << "\nKnown symbols: " << known << "\n");
