@@ -41,7 +41,7 @@
 #include "wml_formula_callable.hpp"
 
 namespace {
-static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "delayed"};
+static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed"};
 }
 
 std::string variant::variant_type_to_string(variant::TYPE type) {

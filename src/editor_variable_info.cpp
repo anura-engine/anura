@@ -50,7 +50,7 @@ editor_variable_info::editor_variable_info(variant node)
 		type_ = TYPE_LEVEL;
 	} else if(type == "label") {
 		type_ = TYPE_LABEL;
-	} else if(type == "text") {
+	} else if(type == "text" || type == "string") {
 		type_ = TYPE_TEXT;
 	} else if(type == "boolean") {
 		type_ = TYPE_BOOLEAN;
