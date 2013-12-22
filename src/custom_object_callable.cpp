@@ -212,7 +212,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "clip_area", "null|[int]" },
 
 	{ "always_active", "bool" },
-	{ "activation_border", "int" },
+	{ "activation_border", "int/int|decimal" },
 	{ "fall_through_platforms", "any" },
 	{ "has_feet", "bool" },
 	
