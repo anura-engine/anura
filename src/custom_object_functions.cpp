@@ -1499,32 +1499,6 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(facing)
 
-class set_var_command : public custom_object_command_callable
-{
-public:
-	explicit set_var_command(const std::string& attr, variant val)
-	  : attr_(attr), val_(val)
-	{}
-	virtual void execute(level& lvl, custom_object& ob) const {
-		ob.vars()->mutate_value(attr_, val_);
-	}
-private:
-	std::string attr_;
-	variant val_;
-};
-
-FUNCTION_DEF(set_var, 2, 2, "set_var(string varname, variant value): sets the variable named varname within the current object. Note that you should generally use set(vars.blah, x) rather than set_var('blah', x). The only exception is if you want to create the command and save it for later execution on an object you don't yet have access to -- most useful with the spawn() function.")
-	set_var_command* cmd = (new set_var_command(
-	    args()[0]->evaluate(variables).as_string(),
-		args()[1]->evaluate(variables)));
-	cmd->set_expression(this);
-	return variant(cmd);
-FUNCTION_ARGS_DEF
-	ARG_TYPE("string")
-	ARG_TYPE("any")
-RETURN_TYPE("commands")
-END_FUNCTION_DEF(set_var)
-
 FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
 	std::vector<variant> v;
 	foreach(custom_object* obj, custom_object::get_all()) {
