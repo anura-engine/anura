@@ -834,7 +834,8 @@ void level::finish_loading()
 			e->finish_loading(this);
 		}
 	}
-
+/*  Removed firing create_object() for now since create relies on things
+    that might not be around yet.
 	const std::vector<entity_ptr> chars = chars_;
 	foreach(const entity_ptr& e, chars) {
 		const bool res = e->create_object();
@@ -842,6 +843,7 @@ void level::finish_loading()
 			e->validate_properties();
 		}
 	}
+	*/
 }
 
 void level::set_multiplayer_slot(int slot)
