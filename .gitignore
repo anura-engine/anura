@@ -27,14 +27,12 @@ compiled-*
 tiles-compiled-*
 
 compiled/
-modules/[Cc]itadel
-modules/frogatto
-modules/elisa
-modules/weregild
-modules/other
-modules/wip_levels
-modules/cube_trains
-modules/open_pixel_platformer
+modules/
+!modules/hex
+!modules/iso
+!modules/lib_2d
+!modules/phydemo
+!modules/projection_test
 
 MacOS/include
 MacOS/lib
