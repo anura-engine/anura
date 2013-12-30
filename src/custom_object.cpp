@@ -131,10 +131,10 @@ custom_object::custom_object(variant node)
 	base_type_(type_),
     frame_(&type_->default_frame()),
 	frame_name_(node.has_key("current_frame") ? node["current_frame"].as_string() : "normal"),
-	time_in_frame_(node["time_in_frame"].as_int()),
+	time_in_frame_(node["time_in_frame"].as_int(0)),
 	time_in_frame_delta_(node["time_in_frame_delta"].as_int(1)),
-	velocity_x_(node["velocity_x"].as_int()),
-	velocity_y_(node["velocity_y"].as_int()),
+	velocity_x_(node["velocity_x"].as_int(0)),
+	velocity_y_(node["velocity_y"].as_int(0)),
 	accel_x_(node["accel_x"].as_int()),
 	accel_y_(node["accel_y"].as_int()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
@@ -843,8 +843,13 @@ variant custom_object::write() const
 	res.add("type", type_->id());
 	res.add("x", x());
 	res.add("y", y());
-	res.add("velocity_x", velocity_x_);
-	res.add("velocity_y", velocity_y_);
+
+    if(velocity_x_ != 0) {
+        res.add("velocity_x", velocity_x_);
+    }
+    if(velocity_y_ != 0) {
+        res.add("velocity_y", velocity_y_);
+    }
 	
 	if(platform_motion_x()) {
 		res.add("platform_motion_x", platform_motion_x());
@@ -939,13 +944,18 @@ variant custom_object::write() const
 		res.add("zsub_order", zsub_order_);
 	}
 	
-	res.add("face_right", face_right());
+    if(face_right() != 1){
+        res.add("face_right", face_right());
+    }
+        
 	if(upside_down()) {
 		res.add("upside_down", true);
 	}
 
-	res.add("time_in_frame", time_in_frame_);
-
+    if(time_in_frame_ != 0) {
+        res.add("time_in_frame", time_in_frame_);
+    }
+        
 	if(time_in_frame_delta_ != 1) {
 		res.add("time_in_frame_delta", time_in_frame_delta_);
 	}

@@ -32,7 +32,7 @@ entity::entity(variant node)
     y_(node["y"].as_int()*100),
 	prev_feet_x_(INT_MIN), prev_feet_y_(INT_MIN),
 	last_move_x_(0), last_move_y_(0),
-	face_right_(node["face_right"].as_bool()),
+	face_right_(node["face_right"].as_bool(true)),
 	upside_down_(node["upside_down"].as_bool(false)),
 	group_(node["group"].as_int(-1)),
     id_(-1), respawn_(node["respawn"].as_bool(true)),
