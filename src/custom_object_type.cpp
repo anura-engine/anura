@@ -1435,6 +1435,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
 				if(value.has_key("editor_info")) {
+					entry.has_editor_info = true;
 					const game_logic::formula::strict_check_scope strict_checking(false);
 					variant editor_info_var = value["editor_info"];
 					static const variant name_key("name");

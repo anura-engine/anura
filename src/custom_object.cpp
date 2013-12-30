@@ -980,7 +980,7 @@ variant custom_object::write() const
 			continue;
 		}
 
-		if(!created_ && i->second.init && level::current_ptr() && level::current().in_editor()) {
+		if(!created_ && i->second.init && level::current_ptr() && level::current().in_editor() && !i->second.has_editor_info) {
 			//In the editor try not to write out properties with an
 			//initializer, so they'll get inited when the level is
 			//actually started.
