@@ -49,6 +49,8 @@ public:
 	void build();
 	void apply_rules(const std::string& rule);
 
+	void neighbors_changed();
+
 	const std::string& type() const { return type_; }
 	virtual bool execute_command(const variant& var);
 

@@ -387,7 +387,7 @@ tile_type::tile_type(const std::string& id, variant node)
 		editor_info_.texture = sheet_->get_texture();
 		editor_info_.name = node["editor_info"]["name"].as_string();
 		editor_info_.group = node["editor_info"]["group"].as_string();
-		editor_info_.type = node["editor_info"]["type"].as_string();
+		editor_info_.type = id;
 		editor_info_.image_rect = sheet_->get_area(0);
 	}
 }

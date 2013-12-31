@@ -3106,7 +3106,8 @@ bool level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2
 	const int HexTileSize = 72;
 	for(int x = x1; x <= x2; x += HexTileSize) {
 		for(int y = y1; y <= y2; y += HexTileSize) {
-			changed = m->set_tile(x, y, tiles[index]) || changed;
+			const point p = hex::hex_map::get_tile_pos_from_pixel_pos(x, y);
+			changed = m->set_tile(p.x, p.y, tiles[index]) || changed;
 			if(index+1 < tiles.size()) {
 				++index;
 			}

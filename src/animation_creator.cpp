@@ -633,9 +633,11 @@ bool animation_creator_dialog::show_attribute(variant v)
 	if(s == "frames" || s == "frames_per_row" || s == "duration" || s == "pad") {
 		return true;
 	}
+
 	return false;
 }
 
 }
 
 #endif // NO_EDITOR
+

@@ -209,7 +209,7 @@ hex_engine& generate_hex_engine()
 hex_object::hex_object(const std::string& type, int x, int y, const hex_map* owner) 
 	: neighbors_init_(false), owner_map_(owner), x_(x), y_(y), type_(type)
 {
-	generate_hex_engine();
+	generate_hex_engine(); // make sure hex engine is initialized.
 	tile_ = get_tile_type_map()[type_];
 	ASSERT_LOG(tile_, "Could not find tile: " << type_);
 }
@@ -324,6 +324,11 @@ void hex_object::apply_rules(const std::string& rule)
 	a = variant(this);
 	variant value = it->second->execute(*callable.get());
 	execute_command(value);
+}
+
+void hex_object::neighbors_changed()
+{
+	neighbors_init_ = false;
 }
 
 void hex_object::draw() const

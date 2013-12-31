@@ -240,6 +240,9 @@ bool hex_map::set_tile(int xx, int yy, const std::string& tile)
 	assert(index >= 0 && index < tiles_.size());
 
 	tiles_[index].reset(new hex_object(tile, xx, yy, this));
+	for(auto t : tiles_) {
+		t->neighbors_changed();
+	}
 	return true;
 }
 
