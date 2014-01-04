@@ -2904,7 +2904,7 @@ private:
 	int align_;
 };
 
-FUNCTION_DEF(text, 1, 4, "text(string text, (optional)string font='default', (optional)int size=2, (optional)bool centered=false): adds text for the current object")
+FUNCTION_DEF(text, 1, 4, "text(string text, (optional)string font='default', (optional)int size=2, (optional)bool|string centered=false): adds text for the current object")
 	const std::string text = args()[0]->evaluate(variables).as_string();
 	const std::string font = args().size() > 1 ? args()[1]->evaluate(variables).as_string() : "default";
 	const int size = args().size() > 2 ? args()[2]->evaluate(variables).as_int() : 2;
@@ -2934,7 +2934,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("string")
 	ARG_TYPE("int")
-	ARG_TYPE("bool")
+	ARG_TYPE("bool|string")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(text)
 
