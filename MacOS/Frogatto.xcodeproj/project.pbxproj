@@ -236,6 +236,7 @@
 		C0A29486184B1303002B757E /* psystem2_parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29480184B1303002B757E /* psystem2_parameters.cpp */; };
 		C0A29487184B1303002B757E /* psystem2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29482184B1303002B757E /* psystem2.cpp */; };
 		C0A2948A184C0871002B757E /* psystem2_observers.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29488184C0871002B757E /* psystem2_observers.cpp */; };
+		C0A362471873BB65002571F3 /* music in Resources */ = {isa = PBXBuildFile; fileRef = C0A362461873BB65002571F3 /* music */; };
 		C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */; };
 		C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD7515183494F100FAFA3D /* poly_map.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
@@ -751,6 +752,7 @@
 		C0A29483184B1303002B757E /* psystem2.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2.hpp; sourceTree = "<group>"; };
 		C0A29488184C0871002B757E /* psystem2_observers.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = psystem2_observers.cpp; sourceTree = "<group>"; };
 		C0A29489184C0871002B757E /* psystem2_observers.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2_observers.hpp; sourceTree = "<group>"; };
+		C0A362461873BB65002571F3 /* music */ = {isa = PBXFileReference; lastKnownFileType = folder; name = music; path = ../music; sourceTree = "<group>"; };
 		C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = VoronoiDiagramGenerator.cpp; sourceTree = "<group>"; };
 		C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoronoiDiagramGenerator.h; sourceTree = "<group>"; };
 		C0AD7515183494F100FAFA3D /* poly_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = poly_map.cpp; sourceTree = "<group>"; };
@@ -809,6 +811,7 @@
 			isa = PBXGroup;
 			children = (
 				C0B397F71636666C00D010E0 /* Frogatto.entitlements */,
+				C0A362461873BB65002571F3 /* music */,
 				C010C7FD160AFD82006E7D90 /* data */,
 				C010C7FE160AFD82006E7D90 /* images */,
 				C0812FCC17EED7C400ADDA70 /* modules */,
@@ -1427,6 +1430,7 @@
 				C02751C117FD4A0600173646 /* InfoPlist.strings in Resources */,
 				C02751C017FD49F900173646 /* data in Resources */,
 				C02751BF17FD49F500173646 /* images in Resources */,
+				C0A362471873BB65002571F3 /* music in Resources */,
 				C02751BE17FD49EE00173646 /* modules in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
