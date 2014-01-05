@@ -213,8 +213,8 @@ graphics::texture render_text(const std::string& text,
 
 int char_width(int size, const std::string& fn)
 {
-	static std::map<int, int> size_cache;
-	int& width = size_cache[size];
+	static std::map<std::string, std::map<int, int> > size_cache;
+	int& width = size_cache[fn][size];
 	if(width) {
 		return width;
 	}
@@ -226,8 +226,8 @@ int char_width(int size, const std::string& fn)
 
 int char_height(int size, const std::string& fn)
 {
-	static std::map<int, int> size_cache;
-	int& height = size_cache[size];
+	static std::map<std::string, std::map<int, int> > size_cache;
+	int& height = size_cache[fn][size];
 	if(height) {
 		return height;
 	}
