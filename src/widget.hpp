@@ -109,8 +109,6 @@ public:
 	virtual widget_ptr get_widget_by_id(const std::string& id);
 	virtual const_widget_ptr get_widget_by_id(const std::string& id) const;
 
-	virtual void handle_draw() const = 0;
-
 	virtual bool has_focus() const { return has_focus_; }
 	virtual void set_focus(bool f=true) { has_focus_ = f; }
 	virtual void do_execute() {}
@@ -166,6 +164,9 @@ protected:
 	virtual bool in_widget(int xloc, int yloc) const;
 	virtual variant handle_write();
 	virtual widget_settings_dialog* settings_dialog(int x, int y, int w, int h);
+
+	virtual void handle_draw() const = 0;
+
 private:
 DECLARE_CALLABLE(widget);
 	virtual void visit_values(game_logic::formula_callable_visitor& visitor) {}

@@ -152,14 +152,14 @@ namespace gui
 		glPushMatrix();
 		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
 		if(left_arrow_) {
-			left_arrow_->handle_draw();
+			left_arrow_->draw();
 		}
 		if(right_arrow_) {
-			right_arrow_->handle_draw();
+			right_arrow_->draw();
 		}
 		if(current_selection_ < list_.size()) {
 			if(list_[current_selection_].second) {
-				list_[current_selection_].second->handle_draw();
+				list_[current_selection_].second->draw();
 			}
 		}
 		glPopMatrix();

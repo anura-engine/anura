@@ -104,10 +104,10 @@ void slider::handle_draw() const
 	//slider_middle_->blit(x()+slider_left_->width(), slider_y, width_, slider_middle_->height());
 	//slider_right_->blit(x()+slider_left_->width()+width_, slider_y);
 	//slider_button_->blit(x()+slider_left_->width()+position_*width_-slider_button_->width()/2, y());
-	slider_left_->handle_draw();
-	slider_middle_->handle_draw();
-	slider_right_->handle_draw();
-	slider_button_->handle_draw();
+	slider_left_->draw();
+	slider_middle_->draw();
+	slider_right_->draw();
+	slider_button_->draw();
 }
 
 void slider::change_delegate(double position)

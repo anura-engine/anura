@@ -208,10 +208,10 @@ void dropdown_widget::handle_draw() const
 		editor_->handle_draw();
 	}
 	if(dropdown_image_) {
-		dropdown_image_->handle_draw();
+		dropdown_image_->draw();
 	}
 	if(dropdown_menu_ && dropdown_menu_->visible()) {
-		dropdown_menu_->handle_draw();
+		dropdown_menu_->draw();
 	}
 	glPopMatrix();
 }
