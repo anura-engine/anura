@@ -234,7 +234,9 @@ END_DEFINE_CALLABLE(button)
 
 void button::visit_values(game_logic::formula_callable_visitor& visitor)
 {
-	visitor.visit(&handler_arg_);
+	if(handler_arg_) {
+		visitor.visit(&handler_arg_);
+	}
 }
 
 void button::set_hpadding(int hpad)

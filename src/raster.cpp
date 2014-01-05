@@ -40,21 +40,6 @@ extern int g_vsync;
 
 namespace graphics
 {
-	namespace 
-	{
-		bool g_flip_draws = false;
-	}
-
-	flip_draw_scope::flip_draw_scope() : old_value(g_flip_draws)
-	{
-		g_flip_draws = true;
-	}
-
-	flip_draw_scope::~flip_draw_scope()
-	{
-		g_flip_draws = old_value;
-	}
-
 	/* unavoidable global variable to store global clip
 	 rectangle changes */
 	std::vector<boost::shared_array<GLint> > clip_rectangles;

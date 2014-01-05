@@ -120,7 +120,6 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 	pos.y = area.y()*100;
 	{
 		preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
-	//	graphics::flip_draw_scope flip_draws;
 		lvl->process();
 		lvl->process_draw();
 		foreach(const entity_ptr& e, objects) {
@@ -132,5 +131,24 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), video_framebuffer_id);
 	glViewport(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height());
 
-	return graphics::texture(texture_id, tex_width, tex_height);
+	graphics::texture result(texture_id, tex_width, tex_height);
+	graphics::surface surf = result.get_surface();
+	assert(surf.get());
+
+	//The surface is upside down, so flip it before returning it.
+	unsigned char* data = reinterpret_cast<unsigned char*>(surf->pixels);
+	const int nbytesperpixel = surf->format->BytesPerPixel;
+	const int nbytesperrow = nbytesperpixel*surf->w;
+	std::vector<unsigned char> tmp_row(nbytesperrow);
+	unsigned char* tmp = &tmp_row[0];
+	for(int n = 0; n < surf->h/2; ++n) {
+		unsigned char* a = data + nbytesperrow*n;
+		unsigned char* b = data + nbytesperrow*(surf->h-n-1);
+
+		memcpy(tmp, a, nbytesperrow);
+		memcpy(a, b, nbytesperrow);
+		memcpy(b, tmp, nbytesperrow);
+	}
+
+	return graphics::texture::get_no_cache(surf);
 }

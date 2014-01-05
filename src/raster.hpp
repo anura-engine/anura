@@ -90,14 +90,6 @@ struct blend_mode
 	GLenum sfactor, dfactor;
 };
 
-struct flip_draw_scope
-{
-	flip_draw_scope();
-	~flip_draw_scope();
-
-	bool old_value;
-};
-
 std::vector<GLfloat>& global_vertex_array();
 std::vector<GLfloat>& global_texcoords_array();
 std::vector<GLbyte>& global_vertex_color_array();
