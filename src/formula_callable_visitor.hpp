@@ -61,6 +61,10 @@ class formula_callable_visitor
 public:
 	template<typename T>
 	void visit(boost::intrusive_ptr<T>* ref) {
+		if(ref->get() == NULL) {
+			return;
+		}
+
 		ptr_.push_back(formula_callable_suspended_ptr(new formula_callable_suspended_impl<T>(ref)));
 
 		visit(**ref);
