@@ -113,7 +113,7 @@ namespace gui
 			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
-			variant value = click_handler_->execute(*callable);
+			variant value = mouse_enter_handler_->execute(*callable);
 			get_environment()->execute_command(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_enter() called without environment!" << std::endl;
@@ -127,7 +127,7 @@ namespace gui
 			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
-			variant value = click_handler_->execute(*callable);
+			variant value = mouse_leave_handler_->execute(*callable);
 			get_environment()->execute_command(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_leave() called without environment!" << std::endl;

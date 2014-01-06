@@ -1224,7 +1224,8 @@ bool level_runner::play_cycle()
 				// pre-translate the mouse positions.
 				SDL_Event ev(event);
 				translate_mouse_event(&ev);
-				foreach(const entity_ptr& e, lvl_->get_active_chars()) {
+				const std::vector<entity_ptr> active_chars = lvl_->get_active_chars();
+				foreach(const entity_ptr& e, active_chars) {
 					custom_object* custom_obj = dynamic_cast<custom_object*>(e.get());
 					swallowed = custom_obj->handle_sdl_event(ev, swallowed);
 				}
