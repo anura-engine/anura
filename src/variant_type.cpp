@@ -571,7 +571,38 @@ public:
 	}
 
 	bool is_compatible(variant_type_ptr type) const {
-		return is_interface() == type->is_interface();
+		const game_logic::formula_interface* interface_a = is_interface();
+		const game_logic::formula_interface* interface_b = type->is_interface();
+		if(interface_a == interface_b) {
+			return true;
+		}
+
+		if(interface_a && interface_b) {
+			//Right now compatibility between two interfaces requires an
+			//exact, complete match.
+			const auto& a = interface_a->get_types();
+			const auto& b = interface_b->get_types();
+			auto i_a = a.begin();
+			auto i_b = b.begin();
+			while(i_a != a.end() && i_b != b.end()) {
+				if(i_a->first != i_b->first) {
+					return false;
+				}
+
+				if(!variant_types_compatible(i_a->second, i_b->second)) {
+					return false;
+				}
+
+				++i_a;
+				++i_b;
+			}
+
+			if(i_a == a.end() && i_b == b.end()) {
+				return true;
+			}
+		}
+
+		return false;
 		//TODO: is this the right thing to do? Interfaces aren't considered
 		//compatible types with anything since they can only be used in places
 		//where conversions explicitly occur.
