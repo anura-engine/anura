@@ -258,9 +258,9 @@ widget_settings_dialog* button::settings_dialog(int x, int y, int w, int h)
 
 	grid_ptr g(new grid(2));
 	g->add_col(new label("H Pad:", d->text_size(), d->font()));
-	g->add_col(new slider(120, [&](double f){set_dim(0,0); this->set_hpadding(int(f*100.0));}, hpadding_/100.0, 1));
+	g->add_col(new slider(120, [&](double f){this->set_dim(0,0); this->set_hpadding(int(f*100.0));}, hpadding_/100.0, 1));
 	g->add_col(new label("V Pad:", d->text_size(), d->font()));
-	g->add_col(new slider(120, [&](double f){set_dim(0,0); this->set_vpadding(int(f*100.0));}, vpadding_/100.0, 1));
+	g->add_col(new slider(120, [&](double f){this->set_dim(0,0); this->set_vpadding(int(f*100.0));}, vpadding_/100.0, 1));
 
 	std::vector<std::string> v;
 	v.push_back("normal");
