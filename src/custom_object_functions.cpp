@@ -3180,7 +3180,7 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(cosmic_shift)
 
-FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, int rotation, int[8] rect) -> int[8]: rotates rect and returns the result")
+FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, decimal rotation, int[8] rect) -> int[8]: rotates rect and returns the result")
 
 	int center_x = args()[0]->evaluate(variables).as_int();
 	int center_y = args()[1]->evaluate(variables).as_int();
@@ -3211,7 +3211,7 @@ FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, int rot
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("int")
-	ARG_TYPE("int")
+	ARG_TYPE("decimal")
 	ARG_TYPE("[int]")
 RETURN_TYPE("[int]")
 

@@ -117,7 +117,11 @@ dynamic_interface_instance::dynamic_interface_instance(const variant& obj, boost
 
 variant dynamic_interface_instance::get_value(const std::string& key) const
 {
-	ASSERT_LOG(false, "Illegal dynamic query in interface: " << key);
+	if(obj_.is_callable()) {
+		return obj_.as_callable()->query_value(key);
+	} else {
+		return obj_[key];
+	}
 }
 
 variant dynamic_interface_instance::get_value_by_slot(int slot) const
@@ -132,7 +136,7 @@ variant dynamic_interface_instance::get_value_by_slot(int slot) const
 
 void dynamic_interface_instance::set_value(const std::string& key, const variant& value)
 {
-	ASSERT_LOG(false, "Illegal dynamic query in interface: " << key);
+	obj_.add_attr_mutation(variant(key), value);
 }
 
 void dynamic_interface_instance::set_value_by_slot(int slot, const variant& value)
@@ -152,7 +156,7 @@ static_interface_instance::static_interface_instance(const variant& obj, boost::
 
 variant static_interface_instance::get_value(const std::string& key) const
 {
-	ASSERT_LOG(false, "Illegal dynamic query in interface: " << key);
+	return obj_->query_value(key);
 }
 
 variant static_interface_instance::get_value_by_slot(int slot) const
@@ -162,7 +166,7 @@ variant static_interface_instance::get_value_by_slot(int slot) const
 
 void static_interface_instance::set_value(const std::string& key, const variant& value)
 {
-	ASSERT_LOG(false, "Illegal dynamic query in interface: " << key);
+	obj_->mutate_value(key, value);
 }
 
 void static_interface_instance::set_value_by_slot(int slot, const variant& value)
