@@ -210,7 +210,7 @@ namespace voxel
 
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(voxel_object)
-	BEGIN_DEFINE_FN(attach_model, "(voxel_model,string,string) ->commands")
+	BEGIN_DEFINE_FN(attach_model, "(builtin voxel_model,string,string) ->commands")
 		variant model_var = FN_ARG(0);
 		variant child_point = FN_ARG(1);
 		variant parent_point = FN_ARG(2);
