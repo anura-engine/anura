@@ -70,7 +70,76 @@ namespace tbs
 		const std::string& type = msg["type"].as_string();
 
 		if(session_id == -1) {
-			if(type == "create_game") {
+			if(type == "matchmake") {
+				static int session_id_gen = 80000000;
+				const int session_id = session_id_gen++;
+
+				client_info& cli_info = clients_[session_id];
+				cli_info.user = msg["user"].as_string();
+				cli_info.nplayer = matchmaking_sessions_.size();
+				cli_info.last_contact = nheartbeat_;
+				cli_info.session_id = session_id;
+
+				matchmaking_sessions_.push_back(session_id);
+
+				//const char* msg = "{ \"type\": \"matchmaking_queued\", \"session_id\": ";
+
+				send_fn(json::parse(formatter() << "{ \"type\": \"matchmaking_queued\", \"session_id\": " << session_id << " }"));
+/*
+				for(int& session : matchmaking_sessions_) {
+					auto cl = clients_.find(session);
+					if(cl == clients_.end() || cl->second.last_contact < nheartbeat_ - 40) {
+						fprintf(stderr, "ERASE CLIENT FOR INACTIVITY: %d vs %d\n", cl->second.last_contact, nheartbeat_);
+						clients_.erase(cl);
+						session = -1;
+					}
+				}
+
+				matchmaking_sessions_.erase(std::remove(matchmaking_sessions_.begin(), matchmaking_sessions_.end(), -1), matchmaking_sessions_.end());
+*/
+				if(matchmaking_sessions_.size() == 2) {
+					std::map<variant,variant> empty_map;
+					variant info(&empty_map);
+					info.add_attr_mutation(variant("game_type"), variant("citadel"));
+
+					std::vector<variant> players;
+
+					std::vector<client_info*> clients;
+
+					for(int session : matchmaking_sessions_) {
+						auto cl = clients_.find(session);
+						assert(cl != clients_.end());
+
+						clients.push_back(&cl->second);
+
+						variant pl(&empty_map);
+
+						pl.add_attr_mutation(variant("user"), variant(cl->second.user));
+						pl.add_attr_mutation(variant("session_id"), variant(session));
+						players.push_back(pl);
+					}
+
+					info.add_attr_mutation(variant("users"), variant(&players));
+
+					game_info_ptr g(new game_info(info));
+					assert(g->game_state);
+
+					for(auto cl : clients) {
+						cl->game = g;
+						g->clients.push_back(cl->session_id);
+						g->game_state->add_player(cl->user);
+
+						queue_msg(cl->session_id, formatter() << "{ \"type\": \"match_made\", \"game_id\": " << g->game_state->game_id() << " }");
+					}
+
+					games_.push_back(g);
+
+					status_change();
+				}
+
+				return;
+
+			} else if(type == "create_game") {
 				game_info_ptr g(new game_info(msg));
 				if(!g->game_state) {
 					std::cerr << "COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << "\n";
@@ -336,6 +405,10 @@ namespace tbs
 
 		cli_info.last_contact = nheartbeat_;
 
+//		if(std::count(matchmaking_sessions_.begin(), matchmaking_sessions_.end(), cli_info.session_id) && type == "request_updates") {
+
+//		}
+
 		if(cli_info.game) {
 			if(type == "quit") {
 				quit_games(cli_info.session_id);
@@ -398,7 +471,7 @@ namespace tbs
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
-			if(i->second.game->nlast_touch > nheartbeat_ + 300) {
+			if(i->second.game && i->second.game->nlast_touch > nheartbeat_ + 300) {
 				clients_.erase(i++);
 			} else {
 				++i;
@@ -427,30 +500,32 @@ namespace tbs
 		variant_builder doc;
 		doc.add("type", "heartbeat");
 
-		std::vector<variant> items;
+		if(cli_info.game) {
+			std::vector<variant> items;
 
-		foreach(int client_session, cli_info.game->clients) {
-			const client_info& info = clients_[client_session];
-			variant_builder value;
+			foreach(int client_session, cli_info.game->clients) {
+				const client_info& info = clients_[client_session];
+				variant_builder value;
+	
+				value.add("nick", info.user);
+				value.add("ingame", info.game == cli_info.game);
+				value.add("lag", nheartbeat_ - info.last_contact);
+	
+				items.push_back(value.build());
+			}
 
-			value.add("nick", info.user);
-			value.add("ingame", info.game == cli_info.game);
-			value.add("lag", nheartbeat_ - info.last_contact);
+			foreach(const std::string& ai, cli_info.game->game_state->get_ai_players()) {
+				variant_builder value;
 
-			items.push_back(value.build());
+				value.add("nick", ai);
+				value.add("ingame", true);
+				value.add("lag", 0);
+
+				items.push_back(value.build());
+			}
+
+			doc.set("players", variant(&items));
 		}
-
-		foreach(const std::string& ai, cli_info.game->game_state->get_ai_players()) {
-			variant_builder value;
-
-			value.add("nick", ai);
-			value.add("ingame", true);
-			value.add("lag", 0);
-
-			items.push_back(value.build());
-		}
-
-		doc.set("players", variant(&items));
 		return doc.build();
 	}
 }
