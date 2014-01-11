@@ -85,10 +85,10 @@ namespace tbs
 				//const char* msg = "{ \"type\": \"matchmaking_queued\", \"session_id\": ";
 
 				send_fn(json::parse(formatter() << "{ \"type\": \"matchmaking_queued\", \"session_id\": " << session_id << " }"));
-/*
+
 				for(int& session : matchmaking_sessions_) {
 					auto cl = clients_.find(session);
-					if(cl == clients_.end() || cl->second.last_contact < nheartbeat_ - 40) {
+					if(cl == clients_.end() || cl->second.last_contact < nheartbeat_ - 200) {
 						fprintf(stderr, "ERASE CLIENT FOR INACTIVITY: %d vs %d\n", cl->second.last_contact, nheartbeat_);
 						clients_.erase(cl);
 						session = -1;
@@ -96,7 +96,10 @@ namespace tbs
 				}
 
 				matchmaking_sessions_.erase(std::remove(matchmaking_sessions_.begin(), matchmaking_sessions_.end(), -1), matchmaking_sessions_.end());
-*/
+
+				fprintf(stderr, "CLIENT JOINED MATCHMAKING QUEUE: %d\n", static_cast<int>(matchmaking_sessions_.size()));
+				assert(matchmaking_sessions_.size() <= 2);
+
 				if(matchmaking_sessions_.size() == 2) {
 					std::map<variant,variant> empty_map;
 					variant info(&empty_map);
