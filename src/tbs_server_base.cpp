@@ -121,6 +121,7 @@ namespace tbs
 						pl.add_attr_mutation(variant("session_id"), variant(session));
 						players.push_back(pl);
 					}
+					matchmaking_sessions_.clear();
 
 					info.add_attr_mutation(variant("users"), variant(&players));
 
