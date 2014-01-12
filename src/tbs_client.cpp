@@ -20,6 +20,7 @@
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "json_parser.hpp"
+#include "preferences.hpp"
 #include "tbs_client.hpp"
 #include "tbs_game.hpp"
 #include "wml_formula_callable.hpp"
@@ -30,11 +31,14 @@
 
 namespace tbs {
 
+PREF_BOOL(tbs_client_prediction, true, "Use client-side prediction for tbs games");
+
 client::client(const std::string& host, const std::string& port,
                int session, boost::asio::io_service* service)
-  : http_client(host, port, session, service), use_local_cache_(true),
+  : http_client(host, port, session, service), use_local_cache_(g_tbs_client_prediction),
     local_game_cache_(NULL), local_nplayer_(-1)
-{}
+{
+}
 
 void client::send_request(variant request, game_logic::map_formula_callable_ptr callable, boost::function<void(std::string)> handler)
 {
