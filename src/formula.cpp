@@ -2051,7 +2051,7 @@ private:
 	
 	variant execute(const formula_callable& variables) const {
 		const variant result = expression_->evaluate(variables);
-		ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " AT " << debug_pinpoint_location());
+		ASSERT_LOG(type_->match(result), "TYPE MIS-MATCH: EXPECTED " << type_->to_string() << " BUT FOUND " << result.write_json() << " OF TYPE '" << get_variant_type_from_value(result)->to_string() << "' AT " << debug_pinpoint_location());
 		return result;
 	}
 
