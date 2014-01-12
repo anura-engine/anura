@@ -1001,7 +1001,7 @@ int function_recursion_depth = 0;
 struct InfiniteRecursionProtector {
 	explicit InfiniteRecursionProtector(const expression_ptr& expr) {
 		++function_recursion_depth;
-		ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str());
+		ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str() << "\n\ncall Stack: " << get_call_stack());
 	}
 	~InfiniteRecursionProtector() {
 		--function_recursion_depth;
