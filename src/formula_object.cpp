@@ -15,6 +15,9 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <boost/bind.hpp>
+#include <boost/date_time/posix_time/posix_time.hpp>
+#include <boost/random/mersenne_twister.hpp>
+#include <boost/uuid/uuid_generators.hpp>
 #include <map>
 #include <string>
 #include <stdio.h>
@@ -29,6 +32,7 @@
 #include "module.hpp"
 #include "preferences.hpp"
 #include "string_utils.hpp"
+#include "unit_test.hpp"
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
@@ -785,7 +789,7 @@ void formula_object::visit_variants(variant node, boost::function<void (variant)
 void formula_object::update(formula_object& updated)
 {
 	std::vector<boost::intrusive_ptr<formula_object> > objects;
-	std::map<int, formula_object*> src, dst;
+	std::map<boost::uuids::uuid, formula_object*> src, dst;
 	visit_variants(variant(this), [&dst,&objects](variant v) {
 		formula_object* obj = v.try_convert<formula_object>();
 		if(obj) {
@@ -959,11 +963,63 @@ boost::intrusive_ptr<formula_object> formula_object::create(const std::string& t
 }
 
 namespace {
-int formula_object_id = 1;
+
+boost::mt19937* twister_rng() {
+	static boost::mt19937 ran;
+	ran.seed(boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds());
+	return &ran;
+}
+
+boost::uuids::uuid generate_uuid() {
+	static boost::uuids::basic_random_generator<boost::mt19937> gen(twister_rng());
+	return gen();
+}
+
+variant write_uuid(const boost::uuids::uuid& id) {
+	char result[32];
+	char* ptr = result;
+	for(auto num : id) {
+		sprintf(ptr, "%02x", static_cast<int>(num));
+		ptr += 2;
+	}
+	return variant(std::string(result, result+32));
+}
+
+boost::uuids::uuid read_uuid(const variant& v) {
+	if(v.is_int()) {
+		//backwards compatibility
+		return generate_uuid();
+	}
+
+	boost::uuids::uuid result;
+
+	const std::string& nums = v.as_string();
+	const char* ptr = nums.c_str();
+	ASSERT_LOG(nums.size() == 32, "Trying to deserialize bad UUID: " << v.write_json());
+	for(auto itor = result.begin(); itor != result.end(); ++itor) {
+		char buf[3];
+		buf[0] = *ptr++;
+		buf[1] = *ptr++;
+		buf[2] = 0;
+
+		*itor = strtol(buf, NULL, 16);
+	}
+
+	return result;
+}
+
+UNIT_TEST(serialize_uuid) {
+	for(int i = 0; i != 8; ++i) {
+		boost::uuids::uuid id = generate_uuid();
+		const bool succeeded = id == read_uuid(write_uuid(id));
+		CHECK_EQ(succeeded, true);
+	}
+}
+
 }
 
 formula_object::formula_object(const std::string& type, variant args)
-  : id_(formula_object_id++), new_in_update_(true), orphaned_(false),
+  : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
     class_(get_class(type)), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
@@ -1019,7 +1075,7 @@ void formula_object::call_constructors(variant args)
 }
 
 formula_object::formula_object(variant data)
-  : id_(data["id"].as_int()), new_in_update_(true), orphaned_(false),
+  : id_(read_uuid(data["id"])), new_in_update_(true), orphaned_(false),
     class_(get_class(data["@class"].as_string())), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
@@ -1064,7 +1120,7 @@ variant formula_object::serialize_to_wml() const
 {
 	std::map<variant, variant> result;
 	result[variant("@class")] = variant(class_->name());
-	result[variant("id")] = variant(id_);
+	result[variant("id")] = write_uuid(id_);
 
 	std::map<variant,variant> state;
 	foreach(const property_entry& slot, class_->slots()) {

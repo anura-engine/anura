@@ -22,6 +22,7 @@
 #include <vector>
 
 #include <boost/function.hpp>
+#include <boost/uuid/uuid.hpp>
 
 #include "formula.hpp"
 #include "formula_callable_definition.hpp"
@@ -79,7 +80,8 @@ private:
 
 	void get_inputs(std::vector<formula_input>* inputs) const;
 
-	int id_;
+	boost::uuids::uuid id_;
+
 	bool new_in_update_;
 	bool orphaned_;
 
