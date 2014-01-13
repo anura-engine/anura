@@ -31,7 +31,7 @@
 
 namespace tbs {
 
-PREF_BOOL(tbs_client_prediction, true, "Use client-side prediction for tbs games");
+PREF_BOOL(tbs_client_prediction, false, "Use client-side prediction for tbs games");
 
 client::client(const std::string& host, const std::string& port,
                int session, boost::asio::io_service* service)
