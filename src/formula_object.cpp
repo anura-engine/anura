@@ -976,7 +976,7 @@ boost::uuids::uuid generate_uuid() {
 }
 
 variant write_uuid(const boost::uuids::uuid& id) {
-	char result[32];
+	char result[33];
 	char* ptr = result;
 	for(auto num : id) {
 		sprintf(ptr, "%02x", static_cast<int>(num));
