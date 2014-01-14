@@ -2609,6 +2609,8 @@ class event_handlers_callable : public formula_callable {
 public:
 	explicit event_handlers_callable(const custom_object& obj) : obj_(const_cast<custom_object*>(&obj))
 	{}
+
+	const custom_object& obj() const { return *obj_; }
 };
 
 // FFL widget interface.
@@ -4458,6 +4460,14 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 				custom_draw_xy_.push_back(v.as_decimal().as_float());
 			}
 		}
+
+		break;
+	}
+
+	case CUSTOM_OBJECT_EVENT_HANDLERS: {
+		const event_handlers_callable* callable = value.try_convert<const event_handlers_callable>();
+		ASSERT_LOG(callable, "Tried to set event_handlers to an illegal value: " << value.write_json());
+		event_handlers_ = callable->obj().event_handlers_;
 
 		break;
 	}
