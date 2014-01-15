@@ -29,6 +29,7 @@ tiles-compiled-*
 compiled/
 modules/
 !modules/hex
+!modules/icons
 !modules/iso
 !modules/lib_2d
 !modules/phydemo
