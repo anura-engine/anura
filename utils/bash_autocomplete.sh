@@ -35,7 +35,7 @@ _anura()
         ;;
     esac
 }
-launches="anura"
+launches="anura anura~"
 for i in $launches
 do
     complete -F _anura ${i}
