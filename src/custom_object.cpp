@@ -1658,7 +1658,14 @@ void custom_object::process(level& lvl)
 	}
 
 	if(stand_info.damage) {
-		handle_event(OBJECT_EVENT_SURFACE_DAMAGE);
+		game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+		callable->add("surface_damage", variant(stand_info.damage));
+		variant v(callable);
+		handle_event(OBJECT_EVENT_COLLIDE_DAMAGE, callable);
+
+		//DEPRECATED -- can we remove surface_damage and just have
+		//collide_damage?
+		handle_event(OBJECT_EVENT_SURFACE_DAMAGE, callable);
 	}
 
 	if(cycle_ != 1) {
