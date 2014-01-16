@@ -206,8 +206,8 @@ bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
 		(GLfloat)waterline_rect.x, (GLfloat)waterline_rect.y, //shallow water colored
 		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)waterline_rect.y,
 		
-		(GLfloat)waterline_rect.x, (GLfloat)waterline_rect.y + 100, //deep water colored
-		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)waterline_rect.y + 100,
+		(GLfloat)waterline_rect.x, (GLfloat)waterline_rect.y + std::min(100, underwater_rect.h), //deep water colored
+		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)waterline_rect.y + std::min(100, underwater_rect.h),
 		(GLfloat)waterline_rect.x, (GLfloat)underwater_rect.y + underwater_rect.h,
 		(GLfloat)waterline_rect.x + waterline_rect.w, (GLfloat)underwater_rect.y + underwater_rect.h
 	};
