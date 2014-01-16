@@ -65,8 +65,9 @@ ifeq ($(USE_LUA),yes)
 	INC += $(shell pkg-config --cflags lua5.2)
 	LIBS += $(shell pkg-config --libs lua5.2)
 endif
-	
+
 # Enable Box2D if found.
+# Requires Box2D to be version 2.2.1, which is newer than the default Ubuntu one atm. You can soft-link the old to the new, though. Files in /usr/include: Box2D.h + Box2D folder. In /usr/lib, libBox2D.a. Make backups, might be important. :)
 ifeq ($(shell { cpp -x c++ -include Box2D/Box2D.h /dev/null \
 	&& ld -lBox2D; } >/dev/null 2>/dev/null; \
 	echo $$?),0)
