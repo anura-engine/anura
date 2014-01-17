@@ -192,14 +192,14 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		if(e.y < up_arrow_->y() + up_arrow_->height()) {
 			//on up arrow
 			window_pos_ -= arrow_step_;
-			while(window_pos_%arrow_step_) {
+			while(arrow_step_ && window_pos_%arrow_step_) {
 				//snap to a multiple of the step size.
 				++window_pos_;
 			}
 		} else if(e.y > down_arrow_->y()) {
 			//on down arrow
 			window_pos_ += arrow_step_;
-			while(window_pos_%arrow_step_) {
+			while(arrow_step_ && window_pos_%arrow_step_) {
 				//snap to a multiple of the step size.
 				--window_pos_;
 			}

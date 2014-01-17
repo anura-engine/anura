@@ -81,9 +81,9 @@ void scrollable_widget::update_scrollbar()
 			scrollbar_.reset(new scrollbar_widget(boost::bind(&scrollable_widget::set_yscroll, this, _1)));
 		}
 		scrollbar_->set_step(step_);
-		if(step_ != arrow_step_) {
+//		if(step_ != arrow_step_) {
 			scrollbar_->set_arrow_step(arrow_step_);
-		}
+//		}
 		scrollbar_->set_range(virtual_height_, height());
 		scrollbar_->set_window_pos(yscroll_);
 		scrollbar_->set_loc(x() + width(), y());

@@ -1373,6 +1373,7 @@ void text_editor_widget::refresh_scrollbar()
 
 	set_virtual_height(text_.size()*char_height_ + height() - char_height_);
 	set_scroll_step(char_height_);
+	set_arrow_scroll_step(char_height_);
 
 	set_yscroll(scroll_pos_*char_height_);
 
