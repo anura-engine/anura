@@ -416,26 +416,27 @@ custom_object::custom_object(variant node)
 	}
 
 	const variant property_data_node = node["property_data"];
-	for(std::map<std::string, custom_object_type::property_entry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
-		if(i->second.storage_slot < 0) {
+	for(int i = 0; i != type_->slot_properties().size(); ++i) {
+		const custom_object_type::property_entry& e = type_->slot_properties()[i];
+		if(e.storage_slot < 0) {
 			continue;
 		}
 
-		properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i->second.storage_slot), properties_requiring_dynamic_initialization_.end());
+		properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());
 
 		if(property_data_node.is_map()) {
-			const variant key(i->first);
+			const variant key(e.id);
 			if(property_data_node.has_key(key)) {
-				get_property_data(i->second.storage_slot) = property_data_node[key];
+				get_property_data(e.storage_slot) = property_data_node[key];
 				continue;
 			}
 		}
 
-		if(i->second.init) {
+		if(e.init) {
 			reference_counted_object_pin_norelease pin(this);
-			get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
+			get_property_data(e.storage_slot) = e.init->execute(*this);
 		} else {
-			get_property_data(i->second.storage_slot) = i->second.default_value;
+			get_property_data(e.storage_slot) = e.default_value;
 		}
 	}
 
@@ -679,7 +680,7 @@ void custom_object::validate_properties()
 	//providing lots of debug info.
 	for(int n = 0; n != type_->slot_properties().size(); ++n) {
 		const custom_object_type::property_entry& e = type_->slot_properties()[n];
-		if(e.storage_slot >= 0 && e.type && std::count(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot) == 0) {
+		if(e.storage_slot >= 0 && e.type && std::count(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), n) == 0) {
 			assert(e.storage_slot < property_data_.size());
 			variant result = property_data_[e.storage_slot];
 			ASSERT_LOG(e.type->match(result), "Object " << debug_description() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string());
@@ -3160,7 +3161,7 @@ variant custom_object::get_value_by_slot(int slot) const
 		if(slot >= type_->slot_properties_base() && (size_t(slot - type_->slot_properties_base()) < type_->slot_properties().size())) {
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
 			if(e.getter) {
-				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot) != properties_requiring_dynamic_initialization_.end()) {
+				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), slot - type_->slot_properties_base()) != properties_requiring_dynamic_initialization_.end()) {
 					ASSERT_LOG(false, "Read of uninitialized property " << debug_description() << "." << e.id);
 				}
 				active_property_scope scope(*this, e.storage_slot);
@@ -4556,7 +4557,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			}
 
 			if(!properties_requiring_dynamic_initialization_.empty()) {
-				std::vector<int>::iterator itor = std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot);
+				std::vector<int>::iterator itor = std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), slot - type_->slot_properties_base());
 				if(itor != properties_requiring_dynamic_initialization_.end()) {
 					properties_requiring_dynamic_initialization_.erase(itor);
 				}
