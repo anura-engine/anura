@@ -421,6 +421,8 @@ custom_object::custom_object(variant node)
 			continue;
 		}
 
+		properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i->second.storage_slot), properties_requiring_dynamic_initialization_.end());
+
 		if(property_data_node.is_map()) {
 			const variant key(i->first);
 			if(property_data_node.has_key(key)) {
@@ -677,7 +679,7 @@ void custom_object::validate_properties()
 	//providing lots of debug info.
 	for(int n = 0; n != type_->slot_properties().size(); ++n) {
 		const custom_object_type::property_entry& e = type_->slot_properties()[n];
-		if(e.storage_slot >= 0 && e.type) {
+		if(e.storage_slot >= 0 && e.type && std::count(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), e.storage_slot) == 0) {
 			assert(e.storage_slot < property_data_.size());
 			variant result = property_data_[e.storage_slot];
 			ASSERT_LOG(e.type->match(result), "Object " << debug_description() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string());
@@ -1427,9 +1429,10 @@ void custom_object::construct()
 bool custom_object::create_object()
 {
 	if(!created_) {
+		validate_properties();
 		created_ = true;
 		handle_event(OBJECT_EVENT_CREATE);
-		validate_properties();
+		ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << debug_description() << "." << type_->slot_properties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized at end of on_create.");
 		return true;
 	}
 

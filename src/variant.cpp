@@ -864,7 +864,26 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 			}
 		}
 
-		generate_error("Function overload has no matches to arguments");
+		int narg = 1;
+		std::ostringstream msg;
+		for(variant arg : passed_args) {
+			msg << "Argument " << narg << ": " << arg.write_json() << " Type: " << get_variant_type_from_value(arg)->to_string() << "\n";
+			++narg;
+		}
+
+		msg << "\nPossible functions:\n";
+
+		foreach(const variant& v, multi_fn_->functions) {
+			msg << "  args: ";
+			for(variant_type_ptr type : v.fn_->type->variant_types) {
+				msg << type->to_string() << ", ";
+			}
+
+			msg << "\n";
+		}
+
+
+		generate_error(formatter() << "Function overload has no matches to arguments: \n" << msg.str());
 		return variant();
 	}
 
