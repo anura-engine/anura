@@ -105,6 +105,18 @@ struct custom_object_text {
 
 namespace {
 std::string current_error_msg;
+
+std::vector<variant> deep_copy_property_data(const std::vector<variant>& property_data)
+{
+	std::vector<variant> result;
+	result.reserve(property_data.size());
+	for(const variant& v : property_data) {
+		result.push_back(deep_copy_variant(v));
+	}
+
+	return result;
+}
+
 }
 
 const std::string* custom_object::current_debug_error()
@@ -166,6 +178,7 @@ custom_object::custom_object(variant node)
 	vertex_location_(-1), texcoord_location_(-1),
 	paused_(false), model_(glm::mat4(1.0f))
 {
+
 	vars_->set_object_name(debug_description());
 	tmp_vars_->set_object_name(debug_description());
 
@@ -436,7 +449,7 @@ custom_object::custom_object(variant node)
 			reference_counted_object_pin_norelease pin(this);
 			get_property_data(e.storage_slot) = e.init->execute(*this);
 		} else {
-			get_property_data(e.storage_slot) = e.default_value;
+			get_property_data(e.storage_slot) = deep_copy_variant(e.default_value);
 		}
 	}
 
@@ -491,7 +504,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 			continue;
 		}
 
-		get_property_data(i->second.storage_slot) = i->second.default_value;
+		get_property_data(i->second.storage_slot) = deep_copy_variant(i->second.default_value);
 	}
 
 	get_all().insert(this);
@@ -581,7 +594,7 @@ custom_object::custom_object(const custom_object& o) :
 	tmp_vars_(new game_logic::formula_variable_storage(*o.tmp_vars_)),
 	tags_(new game_logic::map_formula_callable(*o.tags_)),
 
-	property_data_(o.property_data_),
+	property_data_(deep_copy_property_data(o.property_data_)),
 
 	active_property_(-1),
 	last_hit_by_(o.last_hit_by_),
@@ -3640,7 +3653,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 					continue;
 				}
 
-				get_property_data(i->second.storage_slot) = i->second.default_value;
+				get_property_data(i->second.storage_slot) = deep_copy_variant(i->second.default_value);
 			}
 
 			for(auto i = old_type->properties().begin(); i != old_type->properties().end(); ++i) {
@@ -5211,6 +5224,10 @@ void custom_object::map_entities(const std::map<entity_ptr, entity_ptr>& m)
 	foreach(variant& v, tmp_vars_->values()) {
 		map_variant_entities(v, m);
 	}
+
+	foreach(variant& v, property_data_) {
+		map_variant_entities(v, m);
+	}
 }
 
 void custom_object::cleanup_references()
@@ -5223,6 +5240,10 @@ void custom_object::cleanup_references()
 	}
 
 	foreach(variant& v, tmp_vars_->values()) {
+		v = variant();
+	}
+
+	foreach(variant& v, property_data_) {
 		v = variant();
 	}
 }
