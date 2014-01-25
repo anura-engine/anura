@@ -37,7 +37,6 @@
 		C010C754160AFD4D006E7D90 /* collision_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5E2160AFD4C006E7D90 /* collision_utils.cpp */; };
 		C010C755160AFD4D006E7D90 /* color_chart.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5E4160AFD4C006E7D90 /* color_chart.cpp */; };
 		C010C756160AFD4D006E7D90 /* color_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5E6160AFD4C006E7D90 /* color_utils.cpp */; };
-		C010C757160AFD4D006E7D90 /* colorshift_hash_table.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5E8160AFD4C006E7D90 /* colorshift_hash_table.cpp */; };
 		C010C758160AFD4D006E7D90 /* compress.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5EB160AFD4C006E7D90 /* compress.cpp */; };
 		C010C759160AFD4D006E7D90 /* controls.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5EE160AFD4C006E7D90 /* controls.cpp */; };
 		C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C010C5F0160AFD4C006E7D90 /* controls_dialog.cpp */; };
@@ -350,8 +349,6 @@
 		C010C5E5160AFD4C006E7D90 /* color_chart.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color_chart.hpp; sourceTree = "<group>"; };
 		C010C5E6160AFD4C006E7D90 /* color_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = color_utils.cpp; sourceTree = "<group>"; };
 		C010C5E7160AFD4C006E7D90 /* color_utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = color_utils.hpp; sourceTree = "<group>"; };
-		C010C5E8160AFD4C006E7D90 /* colorshift_hash_table.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = colorshift_hash_table.cpp; sourceTree = "<group>"; };
-		C010C5E9160AFD4C006E7D90 /* colorshift_hash_table.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = colorshift_hash_table.hpp; sourceTree = "<group>"; };
 		C010C5EA160AFD4C006E7D90 /* compat.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = compat.hpp; sourceTree = "<group>"; };
 		C010C5EB160AFD4C006E7D90 /* compress.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = compress.cpp; sourceTree = "<group>"; };
 		C010C5EC160AFD4C006E7D90 /* compress.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = compress.hpp; sourceTree = "<group>"; };
@@ -949,8 +946,6 @@
 				C090E8E5178795EC00E6FC5A /* color_picker.hpp */,
 				C010C5E6160AFD4C006E7D90 /* color_utils.cpp */,
 				C010C5E7160AFD4C006E7D90 /* color_utils.hpp */,
-				C010C5E8160AFD4C006E7D90 /* colorshift_hash_table.cpp */,
-				C010C5E9160AFD4C006E7D90 /* colorshift_hash_table.hpp */,
 				C010C5EA160AFD4C006E7D90 /* compat.hpp */,
 				C010C5EB160AFD4C006E7D90 /* compress.cpp */,
 				C010C5EC160AFD4C006E7D90 /* compress.hpp */,
@@ -1485,7 +1480,6 @@
 				C010C754160AFD4D006E7D90 /* collision_utils.cpp in Sources */,
 				C010C755160AFD4D006E7D90 /* color_chart.cpp in Sources */,
 				C010C756160AFD4D006E7D90 /* color_utils.cpp in Sources */,
-				C010C757160AFD4D006E7D90 /* colorshift_hash_table.cpp in Sources */,
 				C010C758160AFD4D006E7D90 /* compress.cpp in Sources */,
 				C010C759160AFD4D006E7D90 /* controls.cpp in Sources */,
 				C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */,
