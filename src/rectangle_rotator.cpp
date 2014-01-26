@@ -17,6 +17,7 @@
 #include "graphics.hpp"
 #include "rectangle_rotator.hpp"
 #include <math.h>
+#include <cmath>
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -97,8 +98,8 @@ point rotate_point_around_origin(int x1, int y1, float alpha){
 	R * (sin(theta)) = x2
 	this collapses the above to:  */
 
-	beta.x = x1 * cos(alpha) - y1 * sin(alpha);
-	beta.y = y1 * cos(alpha) + x1 * sin(alpha);
+	beta.x = std::round(x1 * cos(alpha)) - std::round(y1 * sin(alpha));
+	beta.y = std::round(y1 * cos(alpha)) + std::round(x1 * sin(alpha));
 
 	return beta;
 }
