@@ -325,7 +325,15 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	module::reload(mod);
 	if(mod_info["arguments"].is_list()) {
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
-		argv->insert(argv->end(), arguments.begin(), arguments.end());
+		int insertion_point = argv->size();
+		for(int i = 0; i != argv->size(); ++i) {
+			const char* utility_arg = "--utility=";
+			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
+				insertion_point = i;
+				break;
+			}
+		}
+		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
 	}	
 	return 0;
 }
@@ -336,6 +344,15 @@ extern "C" int game_main(int argcount, char* argvec[])
 extern "C" int main(int argcount, char* argvec[])
 #endif
 {
+	{
+		std::vector<std::string> args;
+		for(int i = 0; i != argcount; ++i) {
+			args.push_back(argvec[i]);
+		}
+
+		preferences::set_argv(args);
+	}
+
 #if defined(__native_client__)
 	std::cerr << "Running game_main" << std::endl;
 

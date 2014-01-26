@@ -36,9 +36,20 @@
 
 namespace tbs {
 
-server::game_info::game_info(const variant& value) : nlast_touch(-1)
+namespace {
+bool g_exit_server = false;
+}
+
+server::game_info::game_info(const variant& value) : nlast_touch(-1), quit_server_on_exit(false)
 {
 	game_state = game::create(value);
+}
+
+server::game_info::~game_info()
+{
+	if(quit_server_on_exit) {
+		g_exit_server = true;
+	}
 }
 
 server::client_info::client_info() : nplayer(0), last_contact(0)
@@ -185,6 +196,10 @@ void server::disconnect(socket_ptr socket)
 
 void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
 {
+	if(g_exit_server) {
+		throw tbs::exit_exception();
+	}
+
 	std::vector<std::pair<socket_ptr, std::string> > messages;
 
 	for(std::map<socket_ptr, std::string>::iterator i = waiting_connections_.begin(); i != waiting_connections_.end(); ++i) {

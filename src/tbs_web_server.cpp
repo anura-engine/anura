@@ -34,6 +34,7 @@
 #include "unit_test.hpp"
 #include "utils.hpp"
 #include "variant.hpp"
+#include "variant_utils.hpp"
 
 namespace tbs {
 
@@ -192,6 +193,7 @@ void on_code_modified()
 COMMAND_LINE_UTILITY(tbs_server) {
 	int port = 23456;
 	std::vector<std::string> bot_id;
+	variant config;
 	if(args.size() > 0) {
 		std::vector<std::string>::const_iterator it = args.begin();
 		while(it != args.end()) {
@@ -206,6 +208,11 @@ COMMAND_LINE_UTILITY(tbs_server) {
 				++it;
 				if(it != args.end()) {
 					bot_id.push_back(*it++);
+				}
+			} else if(*it == "--config") {
+				++it;
+				if(it != args.end()) {
+					config = json::parse(sys::read_file(*it++));
 				}
 			} else {
 				++it;
@@ -236,6 +243,41 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 	tbs::server s(io_service);
 	tbs::web_server ws(s, io_service, port);
+
+	if(!config.is_null()) {
+		tbs::server_base::game_info_ptr result = s.create_game(config["game"]);
+		ASSERT_LOG(result, "Passed in config game is invalid");
+		result->quit_server_on_exit = true;
+
+		http_client client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int());
+
+		variant_builder msg;
+		msg.add("type", "server_created_game");
+		msg.add("game", config["game"]);
+		msg.add("game_id", result->game_state->game_id());
+		msg.add("port", port);
+
+		bool complete = false;
+
+		fprintf(stderr, "Sending confirmation request to: %s %d\n", config["matchmaking_host"].as_string().c_str(), config["matchmaking_port"].as_int());
+
+		client.send_request("POST /server", msg.build().write_json(),
+		  [&complete](std::string response) {
+			complete = true;
+		  },
+		  [&complete](std::string msg) {
+			complete = true;
+			ASSERT_LOG(false, "Could not connect to server: " << msg);
+		  },
+		  [](int a, int b, bool c) {
+		  });
+		
+		while(!complete) {
+			client.process();
+		}
+
+		fprintf(stderr, "Started server, reported game availability\n");
+	}
 
 	std::vector<boost::intrusive_ptr<tbs::bot> > bots;
 	for(;;) {
@@ -279,6 +321,8 @@ COMMAND_LINE_UTILITY(tbs_server) {
 #endif
 		} catch(code_modified_exception&) {
 			s.clear_games();
+		} catch(tbs::exit_exception&) {
+			break;
 		}
 	}
 }
