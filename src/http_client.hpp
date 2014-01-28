@@ -71,7 +71,7 @@ private:
 	void handle_resolve(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, connection_ptr conn);
 	void handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor);
 	void write_connection_data(connection_ptr conn);
-	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes);
+	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf_ptr);
 	void handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes);
 
 	void async_connect(connection_ptr conn);

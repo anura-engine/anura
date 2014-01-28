@@ -99,6 +99,7 @@ void web_server::handle_receive(socket_ptr socket, buffer_ptr buf,
 void web_server::handle_incoming_data(socket_ptr socket, const char* i1, const char* i2, receive_buf_ptr recv_buf)
 {
 	recv_buf->msg += std::string(i1, i2);
+	fprintf(stderr, "HANDLE INCOMING: %d / %d\n", (int)recv_buf->msg.size(), (int)recv_buf->wanted);
 
 	if(recv_buf->wanted > 0 && recv_buf->msg.size() < recv_buf->wanted) {
 		start_receive(socket, recv_buf);
@@ -183,6 +184,7 @@ void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
 
 		environment env = parse_env(msg);
 		const int content_length = atoi(env["content-length"].c_str());
+		fprintf(stderr, "PARSE content-length: %d\n", content_length);
 
 		const char* payload = NULL;
 		const char* payload1 = strstr(msg.c_str(), "\n\n");
@@ -199,6 +201,7 @@ void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
 
 		const int payload_len = payload ? (msg.c_str() + msg.size() - payload) : 0;
 
+		fprintf(stderr, "PAYLOAD LEN: %d < %d\n", payload_len, content_length);
 		if(!payload || payload_len < content_length) {
 			if(payload_len) {
 				recv_buf->wanted = msg.size() + (content_length - payload_len);
@@ -210,9 +213,12 @@ void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
 		variant doc;
 
 		try {
-			doc = parse_message(std::string(payload));
+			doc = parse_message(std::string(payload, payload + payload_len));
+		} catch(json::parse_error& e) {
+			std::cerr << "ERROR PARSING JSON: " << e.error_message() << "\n";
+			sys::write_file("./error_payload2.txt", std::string(payload));
 		} catch(...) {
-			std::cerr << "ERROR PARSING JSON\n";
+			std::cerr << "UNKNOWN ERROR PARSING JSON\n";
 		}
 
 		if(!doc.is_null()) {
