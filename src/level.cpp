@@ -3971,7 +3971,7 @@ DEFINE_FIELD(editor_selection, "[custom_obj]")
 	return variant(&result);
 
 #if defined(USE_SHADERS)
-DEFINE_FIELD(frame_buffer_shaders, "[{string -> any}]")
+DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader: object|null, shader_info: map|string}]")
 	std::vector<variant> v;
 	foreach(const FrameBufferShaderEntry& e, obj.fb_shaders_) {
 		std::map<variant,variant> m;

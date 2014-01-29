@@ -137,6 +137,12 @@ namespace sys
 		file << data;
 	}
 
+	bool dir_exists(const std::string& fname)
+	{
+		path p(fname);
+		return exists(p) && is_directory(p);
+	}
+
 	bool file_exists(const std::string& fname)
 	{
 		path p(fname);

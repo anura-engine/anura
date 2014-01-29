@@ -303,6 +303,18 @@ namespace preferences {
 		return return_value;
 	}
 
+	namespace {
+		std::vector<std::string> g_program_argv;
+	}
+
+	const std::vector<std::string>& argv() {
+		return g_program_argv;
+	}
+
+	void set_argv(const std::vector<std::string>& args) {
+		g_program_argv = args;
+	}
+
 	const std::string& version() {
 		static const std::string Version = "1.4";
 		return Version;

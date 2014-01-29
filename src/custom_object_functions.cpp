@@ -2338,7 +2338,7 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(proto_event)
 
-FUNCTION_DEF(get_object, 2, 2, "get_object(level, string label) -> object: returns the object that is present in the given level that has the given label")
+FUNCTION_DEF(get_object, 2, 2, "get_object(level, string label) -> custom_obj|null: returns the object that is present in the given level that has the given label")
 
 	level* lvl = args()[0]->evaluate(variables).try_convert<level>();
 	if(lvl) {
@@ -2349,8 +2349,25 @@ FUNCTION_DEF(get_object, 2, 2, "get_object(level, string label) -> object: retur
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("string")
-RETURN_TYPE("object")
+RETURN_TYPE("custom_obj|null")
 END_FUNCTION_DEF(get_object)
+
+FUNCTION_DEF(get_object_or_die, 2, 2, "get_object_or_die(level, string label) -> custom_obj: returns the object that is present in the given level that has the given label")
+
+	level* lvl = args()[0]->evaluate(variables).try_convert<level>();
+	ASSERT_LOG(lvl, "Invalid level argument to get_object_or_die");
+	const std::string& label = args()[1]->evaluate(variables).as_string();
+	variant result(lvl->get_entity_by_label(label).get());
+
+	ASSERT_LOG(result.is_null() == false, "Object " << label << " not found in level");
+
+	return result;
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("builtin level")
+	ARG_TYPE("string")
+RETURN_TYPE("custom_obj")
+END_FUNCTION_DEF(get_object_or_die)
 
 //a command which moves an object in a given direction enough to resolve
 //any solid conflicts.

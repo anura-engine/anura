@@ -151,13 +151,13 @@ void http_client::write_connection_data(connection_ptr conn)
 	const int bytes_to_send = conn->request.size() - conn->nbytes_sent;
 	const int nbytes = std::min<int>(bytes_to_send, 1024*64);
 
-	const std::string msg(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes);
-	boost::asio::async_write(conn->socket, boost::asio::buffer(msg),
-	      boost::bind(&http_client::handle_send, this, conn, _1, _2));
+	const boost::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
+	boost::asio::async_write(conn->socket, boost::asio::buffer(*msg),
+	      boost::bind(&http_client::handle_send, this, conn, _1, _2, msg));
 
 }
 
-void http_client::handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes)
+void http_client::handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf_ptr)
 {
 
 	if(e) {
@@ -247,7 +247,8 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		}
 		ASSERT_LOG(end_headers, "COULD NOT FIND END OF HEADERS IN MESSAGE: " << conn->response);
 		--in_flight_;
-		conn->handler(std::string(end_headers+header_term_len));
+		const char* payload = end_headers + header_term_len;
+		conn->handler(std::string(payload, conn->response.c_str() + conn->response.size()));
 	} else {
 		if(conn->expected_len != -1 && conn->progress_handler) {
 			conn->progress_handler(conn->response.size(), conn->expected_len, true);

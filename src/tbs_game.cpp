@@ -70,6 +70,7 @@ struct game_type {
 };
 
 std::map<std::string, game_type> generate_game_types() {
+	std::cerr << "GENERATE GAME TYPES\n";
 
 	std::map<std::string, game_type> result;
 
@@ -84,6 +85,7 @@ std::map<std::string, game_type> generate_game_types() {
 			std::cerr << "LOADED TBS GAME TYPE: " << type << "\n";
 		}
 	}
+	std::cerr << "DONE GENERATE GAME TYPES\n";
 
 	return result;
 }

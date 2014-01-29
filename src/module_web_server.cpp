@@ -36,6 +36,7 @@
 #include "utils.hpp"
 #include "unit_test.hpp"
 #include "variant.hpp"
+#include "variant_utils.hpp"
 
 using boost::asio::ip::tcp;
 
@@ -165,6 +166,21 @@ void module_web_server::handle_get(socket_ptr socket, const std::string& url, co
 		response[variant("status")] = variant("error");
 		if(url == "/download_module" && args.count("module_id")) {
 			const std::string module_id = args.find("module_id")->second;
+
+			if(args.count("current_version")) {
+				const std::string current_version = args.find("current_version")->second;
+				std::vector<int> version;
+				version.resize(8);
+				int version_size = 9;
+				util::split_into_ints(current_version.c_str(), &version[0], &version_size);
+				version.resize(version_size);
+
+				variant version_var = vector_to_variant(version);
+				if(data_[module_id]["version"] <= version_var) {
+					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
+				}
+			}
+
 			const std::string module_path = data_path_ + module_id + ".cfg";
 			if(sys::file_exists(module_path)) {
 				std::string response = "{\nstatus: \"ok\",\nmodule: ";

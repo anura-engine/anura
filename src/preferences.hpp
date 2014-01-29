@@ -83,6 +83,9 @@ namespace preferences {
 	std::string g_##id = default_value; \
 	int g_##id##_dummy = preferences::register_string_setting(#id, true, &g_##id, helpstring)
 
+	const std::vector<std::string>& argv();
+	void set_argv(const std::vector<std::string>& args);
+
 	const std::string& version();
 	const variant& version_decimal();
 	int get_unique_user_id();

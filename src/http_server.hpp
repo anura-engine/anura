@@ -40,7 +40,7 @@ protected:
 	void start_accept();
 	void handle_accept(socket_ptr socket, const boost::system::error_code& error);
 
-	void send_msg(socket_ptr socket, const std::string& type, const std::string& msg, const std::string& header_parms);
+	void send_msg(socket_ptr socket, const std::string& mime_type, const std::string& msg, const std::string& header_parms);
 	void send_404(socket_ptr socket);
 
 	void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, boost::shared_ptr<std::string> buf);

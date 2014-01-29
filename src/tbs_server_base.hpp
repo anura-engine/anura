@@ -30,6 +30,8 @@ namespace tbs
 {
 	typedef boost::function<void(variant)> send_function;
 
+	struct exit_exception {};
+
 	class server_base
 	{
 	public:
@@ -38,16 +40,23 @@ namespace tbs
 		
 		void clear_games();
 		static variant get_server_info();
-	protected:
+
 		struct game_info 
 		{
-			game_info(const variant& value);
+			explicit game_info(const variant& value);
+			~game_info();
+
 			game_ptr game_state;
 			std::vector<int> clients;
 			int nlast_touch;
+			bool quit_server_on_exit;
 		};
 
 		typedef boost::shared_ptr<game_info> game_info_ptr;
+
+		game_info_ptr create_game(variant msg);
+	protected:
+
 		struct client_info 
 		{
 			client_info();

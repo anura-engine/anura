@@ -61,6 +61,48 @@ namespace tbs
 		clients_.clear();
 	}
 
+	server_base::game_info_ptr server_base::create_game(variant msg)
+	{
+		game_info_ptr g(new game_info(msg));
+		if(!g->game_state) {
+			std::cerr << "COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << ": " << msg.write_json() << "\n";
+			return game_info_ptr();
+		}
+
+		std::vector<variant> users = msg["users"].as_list();
+		for(int i = 0; i != users.size(); ++i) {
+			const std::string user = users[i]["user"].as_string();
+			const int session_id = users[i]["session_id"].as_int();
+
+			if(clients_.count(session_id) && session_id != -1) {
+				std::cerr << "ERROR: REUSED SESSION ID WHEN CREATING GAME: " << session_id << "\n";
+				return game_info_ptr();
+			}
+
+			client_info& cli_info = clients_[session_id];
+			cli_info.user = user;
+			cli_info.game = g;
+			cli_info.nplayer = i;
+			cli_info.last_contact = nheartbeat_;
+			cli_info.session_id = session_id;
+
+			if(users[i]["bot"].as_bool(false) == false) {
+				g->game_state->add_player(user);
+			} else {
+				g->game_state->add_ai_player(user, users[i]);
+			}
+
+			g->clients.push_back(session_id);
+		}
+
+		const game_context context(g->game_state.get());
+		g->game_state->setup_game();
+
+		games_.push_back(g);
+
+		return g;
+	}
+
 	void server_base::handle_message(send_function send_fn, 
 		boost::function<void(client_info&)> close_fn, 
 		boost::function<socket_info&(void)> socket_info_fn,
@@ -144,47 +186,18 @@ namespace tbs
 				return;
 
 			} else if(type == "create_game") {
-				game_info_ptr g(new game_info(msg));
-				if(!g->game_state) {
-					std::cerr << "COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << "\n";
+
+				game_info_ptr g(create_game(msg));
+
+				if(!g) {
 					send_fn(json::parse("{ \"type\": \"create_game_failed\" }"));
 					return;
 				}
 
-				std::vector<variant> users = msg["users"].as_list();
-				for(int i = 0; i != users.size(); ++i) {
-					const std::string user = users[i]["user"].as_string();
-					const int session_id = users[i]["session_id"].as_int();
-
-					if(clients_.count(session_id) && session_id != -1) {
-						std::cerr << "ERROR: REUSED SESSION ID WHEN CREATING GAME: " << session_id << "\n";
-						send_fn(json::parse("{ \"type\": \"create_game_failed\" }"));
-						return;
-					}
-
-					client_info& cli_info = clients_[session_id];
-					cli_info.user = user;
-					cli_info.game = g;
-					cli_info.nplayer = i;
-					cli_info.last_contact = nheartbeat_;
-					cli_info.session_id = session_id;
-
-					if(users[i]["bot"].as_bool(false) == false) {
-						g->game_state->add_player(user);
-					} else {
-						g->game_state->add_ai_player(user, users[i]);
-					}
-
-					g->clients.push_back(session_id);
-				}
-
-				const game_context context(g->game_state.get());
-				g->game_state->setup_game();
-
-				games_.push_back(g);
 				send_fn(json::parse(formatter() << "{ \"type\": \"game_created\", \"game_id\": " << g->game_state->game_id() << " }"));
 			
 				status_change();
+
 				return;
 			} else if(type == "observe_game") {
 				const int id = msg["game_id"].as_int();
@@ -465,8 +478,11 @@ namespace tbs
 			return;
 		}
 
+		fprintf(stderr, "GAMES: %d\n", (int)games_.size());
+
 		foreach(game_info_ptr& g, games_) {
-			if(g->nlast_touch > nheartbeat_ + 300) {
+			fprintf(stderr, "LAST TOUCH: %d\n", nheartbeat_ - g->nlast_touch);
+			if(nheartbeat_ - g->nlast_touch > 300) {
 				g = game_info_ptr();
 			}
 		}
@@ -475,7 +491,7 @@ namespace tbs
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
-			if(i->second.game && i->second.game->nlast_touch > nheartbeat_ + 300) {
+			if(i->second.game && nheartbeat_ - i->second.game->nlast_touch > 600) {
 				clients_.erase(i++);
 			} else {
 				++i;

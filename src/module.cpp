@@ -33,8 +33,10 @@
 #include "md5.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "uri.hpp"
+#include "variant_utils.hpp"
 
 namespace module {
 
@@ -261,9 +263,9 @@ const std::string make_base_module_path(const std::string& name) {
 		}
 	}
 
-	ASSERT_LOG(false, "could not find base module path for module: " << name);
-
-	return "";
+	std::string path = module_dirs().back() + "/" + name + "/";
+	sys::get_dir(path);
+	return path;
 }
 
 const std::string make_user_module_path(const std::string& name) {
@@ -450,12 +452,20 @@ void write_file(const std::string& mod_path, const std::string& data)
 }
 
 namespace {
-void get_files_in_module(const std::string& dir, std::vector<std::string>& res)
+void get_files_in_module(const std::string& dir, std::vector<std::string>& res, const std::vector<std::string>& exclude_paths)
 {
+	if(std::count(exclude_paths.begin(), exclude_paths.end(), dir)) {
+		return;
+	}
+
+	if(dir.size() >= 4 && std::equal(dir.end()-4, dir.end(), ".git")) {
+		return;
+	}
+
 	std::vector<std::string> files, dirs;
 	sys::get_files_in_dir(dir, &files, &dirs);
 	foreach(const std::string& d, dirs) {
-		get_files_in_module(dir + "/" + d, res);
+		get_files_in_module(dir + "/" + d, res, exclude_paths);
 	}
 
 	foreach(const std::string& fname, files) {
@@ -480,13 +490,27 @@ bool is_valid_module_id(const std::string& id)
 }
 
 #if !defined(NO_TCP) || !defined(NO_MODULES)
-variant build_package(const std::string& id)
+variant build_package(const std::string& id, bool increment_version)
 {
-	std::vector<char> data;
 	std::vector<std::string> files;
 	const std::string path = "modules/" + id;
-	ASSERT_LOG(sys::file_exists(path), "COULD NOT FIND PATH: " << path);
-	get_files_in_module(path, files);
+	ASSERT_LOG(sys::dir_exists(path), "COULD NOT FIND PATH: " << path);
+
+	variant config = json::parse(sys::read_file(path + "/module.cfg"));
+	if(increment_version) {
+		std::vector<int> version = config["version"].as_list_int();
+		ASSERT_LOG(version.empty() == false, "Illegal version");
+		version.back()++;
+		config.add_attr(variant("version"), vector_to_variant(version));
+		sys::write_file(path + "/module.cfg", config.write_json());
+	}
+
+	std::vector<std::string> exclude_paths;
+	if(config.has_key("exclude_paths")) {
+		exclude_paths = config["exclude_paths"].as_list_string();
+	}
+
+	get_files_in_module(path, files, exclude_paths);
 	std::map<variant, variant> file_attr;
 	foreach(const std::string& file, files) {
 		std::cerr << "processing " << file << "...\n";
@@ -495,11 +519,15 @@ variant build_package(const std::string& id)
 
 		const std::string contents = sys::read_file(file);
 
-		attr[variant("begin")] = variant(data.size());
-		attr[variant("size")] = variant(contents.size());
 		attr[variant("md5")] = variant(md5::sum(contents));
+		attr[variant("size")] = variant(contents.size());
 
-		data.insert(data.end(), contents.begin(), contents.end());
+		std::vector<char> data(contents.begin(), contents.end());
+
+		data = base64::b64encode(zip::compress(data));
+
+		const std::string data_str(data.begin(), data.end());
+		attr[variant("data")] = variant(data_str);
 
 		file_attr[variant(fname)] = variant(&attr);
 	}
@@ -508,16 +536,10 @@ variant build_package(const std::string& id)
 	variant module_cfg = json::parse(sys::read_file(module_cfg_file));
 	ASSERT_LOG(module_cfg["version"].is_list(), "IN " << module_cfg_file << " THERE MUST BE A VERSION NUMBER GIVEN AS A LIST OF INTEGERS");
 
+	fprintf(stderr, "Verifying compression...\n");
+
 	//this verifies that compression/decompression works but is slow.
-	ASSERT_LOG(zip::decompress_known_size(base64::b64decode(base64::b64encode(zip::compress(data))), data.size()) == data, "COMPRESS/DECOMPRESS BROKEN");
-
-	std::cerr << "compressing data: " << data.size() << "...\n";
-	const int uncompressed_size = data.size();
-	data = zip::compress(data);
-	std::cerr << "COMPRESSED " << uncompressed_size << " TO " << data.size() << "\n";
-	data = base64::b64encode(data);
-
-	const std::string data_str(data.begin(), data.end());
+//	ASSERT_LOG(zip::decompress_known_size(base64::b64decode(base64::b64encode(zip::compress(data))), data.size()) == data, "COMPRESS/DECOMPRESS BROKEN");
 
 	std::map<variant, variant> data_attr;
 	data_attr[variant("id")] = variant(id);
@@ -527,8 +549,6 @@ variant build_package(const std::string& id)
 	data_attr[variant("description")] = module_cfg["description"];
 	data_attr[variant("dependencies")] = module_cfg["dependencies"];
 	data_attr[variant("manifest")] = variant(&file_attr);
-	data_attr[variant("data")] = variant(data_str);
-	data_attr[variant("data_size")] = variant(uncompressed_size);
 
 	if(module_cfg.has_key("icon")) {
 		const std::string icon_path = path + "/images/" + module_cfg["icon"].as_string();
@@ -584,6 +604,7 @@ COMMAND_LINE_UTILITY(publish_module)
 	std::string module_id;
 	std::string server = "theargentlark.com";
 	std::string port = "23455";
+	bool increment_version = false;
 
 	std::deque<std::string> arguments(args.begin(), args.end());
 	while(!arguments.empty()) {
@@ -597,6 +618,8 @@ COMMAND_LINE_UTILITY(publish_module)
 			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 			port = arguments.front();
 			arguments.pop_front();
+		} else if(arg == "--increment-version") {
+			increment_version = true;
 		} else {
 			ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
 			module_id = arg;
@@ -606,7 +629,7 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	ASSERT_LOG(module_id.empty() == false, "MUST SPECIFY MODULE ID");
 
-	const variant package = build_package(module_id);
+	const variant package = build_package(module_id, increment_version);
 	std::map<variant,variant> attr;
 	attr[variant("type")] = variant("upload_module");
 	attr[variant("module")] = package;
@@ -615,10 +638,11 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	bool done = false;
 
+	sys::write_file("./upload.txt", msg);
 	std::string* response = NULL;
 
 	http_client client(server, port);
-	client.send_request("POST /module_upload", msg, 
+	client.send_request("POST /upload_module", msg, 
 	                    boost::bind(finish_upload, _1, &done, response),
 	                    boost::bind(error_upload, _1, &done),
 	                    boost::bind(upload_progress, _1, _2, _3));
@@ -842,6 +866,7 @@ COMMAND_LINE_UTILITY(install_module)
 	std::string module_id;
 	std::string server = "theargentlark.com";
 	std::string port = "23455";
+	bool force = false;
 
 	std::deque<std::string> arguments(args.begin(), args.end());
 	while(!arguments.empty()) {
@@ -855,6 +880,8 @@ COMMAND_LINE_UTILITY(install_module)
 			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 			port = arguments.front();
 			arguments.pop_front();
+		} else if(arg == "--force") {
+			force = true;
 		} else if(arg.empty() == false && arg[0] != '-') {
 			module_id = arg;
 		} else {
@@ -862,12 +889,24 @@ COMMAND_LINE_UTILITY(install_module)
 		}
 	}
 
+	std::string version_str;
+	std::string current_path = make_base_module_path("citadel");
+	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
+		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
+		std::vector<int> version_vec = config["version"].as_list_int();
+		if(!version_vec.empty()) {
+			version_str = "&current_version=" + util::join_ints(&version_vec[0], version_vec.size());
+		}
+	}
+
+	std::cerr << "Requesting module '" << module_id << "'\n";
+
 	bool done = false;
 
 	std::string response;
 
 	http_client client(server, port);
-	client.send_request("GET /download_module?module_id=" + module_id, "", 
+	client.send_request("GET /download_module?module_id=" + module_id + version_str, "", 
 	                    boost::bind(finish_upload, _1, &done, &response),
 	                    boost::bind(error_upload, _1, &done),
 	                    boost::bind(upload_progress, _1, _2, _3));
@@ -876,20 +915,23 @@ COMMAND_LINE_UTILITY(install_module)
 		client.process();
 	}
 
-	variant doc = json::parse(response, json::JSON_NO_PREPROCESSOR);
+	variant doc;
+	
+	try {
+		doc = json::parse(response, json::JSON_NO_PREPROCESSOR);
+	} catch(json::parse_error& e) {
+		sys::write_file("./download.txt", response);
+		ASSERT_LOG(false, "Failed to parse: " << e.error_message());
+	}
+
+	if(doc["status"].as_string() == "no_newer_module") {
+		fprintf(stderr, "You already have the newest version of this module. Use --force to force download.\n");
+		return;
+	}
+
 	ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
 
 	variant module_data = doc["module"];
-
-	std::vector<char> data_buf;
-	{
-		const std::string data_str = module_data["data"].as_string();
-		data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
-	}
-	const int data_size = module_data["data_size"].as_int();
-	std::cerr << "DATA: " << module_data["data"].as_string().size() << " " << data_size << "\n";
-
-	std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
 
 	variant manifest = module_data["manifest"];
 	foreach(variant path, manifest.get_keys().as_list()) {
@@ -900,12 +942,20 @@ COMMAND_LINE_UTILITY(install_module)
 	foreach(variant path, manifest.get_keys().as_list()) {
 		variant info = manifest[path];
 		const std::string path_str = preferences::dlc_path() + "/" + module_id + "/" + path.as_string();
-		const int begin = info["begin"].as_int();
-		const int end = begin + info["size"].as_int();
-		ASSERT_LOG(begin >= 0 && end >= 0 && begin <= data.size() && end <= data.size(), "INVALID PATH INDEXES FOR " << path_str << ": " << begin << "," << end << " / " << data.size());
+		std::vector<char> data_buf;
+		{
+			const std::string data_str = info["data"].as_string();
+			data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
+		}
+		const int data_size = info["size"].as_int();
+
+		std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
 
 		std::cerr << "CREATING FILE AT " << path_str << "\n";
-		sys::write_file(path_str, std::string(data.begin() + begin, data.begin() + end));
+
+		std::string contents(data.begin(), data.end());
+		ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
+		sys::write_file(path_str, contents);
 	}
 }
 
