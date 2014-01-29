@@ -39,6 +39,7 @@
 #include "key_button.hpp"
 #include "label.hpp"
 #include "layout_widget.hpp"
+#include "play_vpx.hpp"
 #include "psystem2.hpp"
 #include "poly_line_widget.hpp"
 #include "poly_map.hpp"
@@ -129,6 +130,10 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new geometry::poly_map(v, e));
 	} else if(wtype == "particle_system") {
 		return widget_ptr(new graphics::particles::particle_system_widget(v, e));
+#if defined(USE_LIBVPX)
+	} else if(wtype == "movie") {
+		return widget_ptr(new movie::vpx(v, e));
+#endif
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else {
