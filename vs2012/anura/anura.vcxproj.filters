@@ -747,6 +747,9 @@
     <ClInclude Include="..\..\src\psystem2_observers.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\play_vpx.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1427,6 +1430,9 @@
     <ClCompile Include="..\..\src\psystem2_observers.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\play_vpx.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">
@@ -1444,5 +1450,6 @@
     <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
     <Library Include="c:\projects\zlib\zlib.lib" />
+    <Library Include="vpxmt.lib" />
   </ItemGroup>
 </Project>

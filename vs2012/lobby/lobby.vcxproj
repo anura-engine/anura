@@ -1,0 +1,122 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\..\src\lobby\asserts.hpp" />
+    <ClInclude Include="..\..\src\lobby\client.hpp" />
+    <ClInclude Include="..\..\src\lobby\connection.hpp" />
+    <ClInclude Include="..\..\src\lobby\connection_fwd.hpp" />
+    <ClInclude Include="..\..\src\lobby\foreach.hpp" />
+    <ClInclude Include="..\..\src\lobby\formatter.hpp" />
+    <ClInclude Include="..\..\src\lobby\game_server_worker.hpp" />
+    <ClInclude Include="..\..\src\lobby\header.hpp" />
+    <ClInclude Include="..\..\src\lobby\mime_types.hpp" />
+    <ClInclude Include="..\..\src\lobby\name.hpp" />
+    <ClInclude Include="..\..\src\lobby\queue.hpp" />
+    <ClInclude Include="..\..\src\lobby\reply.hpp" />
+    <ClInclude Include="..\..\src\lobby\request.hpp" />
+    <ClInclude Include="..\..\src\lobby\request_handler.hpp" />
+    <ClInclude Include="..\..\src\lobby\request_parser.hpp" />
+    <ClInclude Include="..\..\src\lobby\server.hpp" />
+    <ClInclude Include="..\..\src\lobby\shared_data.hpp" />
+    <ClInclude Include="..\..\src\lobby\sqlite3.h" />
+    <ClInclude Include="..\..\src\lobby\sqlite3ext.h" />
+    <ClInclude Include="..\..\src\lobby\sqlite_wrapper.hpp" />
+    <ClInclude Include="..\..\src\lobby\targetver.h" />
+    <ClInclude Include="..\..\src\lobby\uri.hpp" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\..\src\lobby\client.cpp" />
+    <ClCompile Include="..\..\src\lobby\connection.cpp" />
+    <ClCompile Include="..\..\src\lobby\game_server_worker.cpp" />
+    <ClCompile Include="..\..\src\lobby\lobby.cpp" />
+    <ClCompile Include="..\..\src\lobby\mime_types.cpp" />
+    <ClCompile Include="..\..\src\lobby\name.cpp" />
+    <ClCompile Include="..\..\src\lobby\reply.cpp" />
+    <ClCompile Include="..\..\src\lobby\request_handler.cpp" />
+    <ClCompile Include="..\..\src\lobby\request_parser.cpp" />
+    <ClCompile Include="..\..\src\lobby\server.cpp" />
+    <ClCompile Include="..\..\src\lobby\shared_data.cpp" />
+    <ClCompile Include="..\..\src\lobby\sqlite3.c" />
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{4ACA046F-398E-4D57-AC9B-00BD1E537918}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>lobby</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v110</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <PrecompiledHeader>
+      </PrecompiledHeader>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <PreprocessorDefinitions>WIN32;NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Projects\json-spirit\json_spirit;C:\Projects\boost;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+    </ClCompile>
+    <Link>
+      <SubSystem>Console</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <AdditionalLibraryDirectories>C:\Projects\json-spirit\Release;C:\Projects\boost\stage32-release-static\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>json_spirit_lib.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

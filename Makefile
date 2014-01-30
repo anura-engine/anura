@@ -75,6 +75,14 @@ ifeq ($(shell { cpp -x c++ -include Box2D/Box2D.h /dev/null \
   LIBS += -lBox2D
 endif
 
+# libvpx check
+USE_LIBVPX?=$(shell pkg-config --exists vpx && echo yes)
+ifeq ($(USE_LIBVPX),yes)
+	BASE_CXXFLAGS += -DUSE_LIBVPX
+	INC += $(shell pkg-config --cflags vpx)
+	LIBS += $(shell pkg-config --libs vpx)
+endif
+
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 include Makefile.common

@@ -23,6 +23,13 @@
 #endif
 #include "unit_test.hpp"
 
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	std::round
+#endif
+
 void rotate_rect(GLshort center_x, GLshort center_y, float rotation, GLshort* rect_vertexes){
 
 	point p;
@@ -98,8 +105,8 @@ point rotate_point_around_origin(int x1, int y1, float alpha){
 	R * (sin(theta)) = x2
 	this collapses the above to:  */
 
-	beta.x = std::round(x1 * cos(alpha)) - std::round(y1 * sin(alpha));
-	beta.y = std::round(y1 * cos(alpha)) + std::round(x1 * sin(alpha));
+	beta.x = bmround(x1 * cos(alpha)) - bmround(y1 * sin(alpha));
+	beta.y = bmround(y1 * cos(alpha)) + bmround(x1 * sin(alpha));
 
 	return beta;
 }
