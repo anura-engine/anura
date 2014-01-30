@@ -69,7 +69,67 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 	std::map<variant,variant> response;
 	try {
 		const std::string msg_type = doc["type"].as_string();
-		if(msg_type == "upload_module") {
+		if(msg_type == "download_module") {
+			const std::string module_id = doc["module_id"].as_string();
+
+			if(doc.has_key("current_version")) {
+				variant current_version = doc["current_version"];
+				if(data_[module_id]["version"] <= current_version) {
+					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
+				}
+			}
+
+			const std::string module_path = data_path_ + module_id + ".cfg";
+			if(sys::file_exists(module_path)) {
+				std::string response = "{\nstatus: \"ok\",\nmodule: ";
+				{
+					std::string contents = sys::read_file(module_path);
+					fprintf(stderr, "MANIFEST: %d\n", (int)doc.has_key("manifest"));
+					if(doc.has_key("manifest")) {
+						variant their_manifest = doc["manifest"];
+						variant module = json::parse(contents);
+						variant our_manifest = module["manifest"];
+
+						std::vector<variant> matches;
+
+						for(auto p : our_manifest.as_map()) {
+							if(!their_manifest.has_key(p.first)) {
+								fprintf(stderr, "their manifest does not have key: %s\n", p.first.write_json().c_str());
+								continue;
+							}
+
+							if(p.second["md5"] != their_manifest[p.first]["md5"]) {
+								fprintf(stderr, "their manifest mismatch key: %s\n", p.first.write_json().c_str());
+								continue;
+							}
+
+							matches.push_back(p.first);
+						}
+
+						for(variant match : matches) {
+							our_manifest.remove_attr_mutation(match);
+						}
+
+						contents = module.write_json();
+					}
+
+					response += contents;
+				}
+
+				response += "\n}";
+				send_msg(socket, "text/json", response, "");
+
+				variant summary = data_[module_id];
+				if(summary.is_map()) {
+					summary.add_attr_mutation(variant("num_downloads"), variant(summary["num_downloads"].as_int() + 1));
+				}
+				return;
+
+			} else {
+				response[variant("message")] = variant("No such module");
+			}
+
+		} else if(msg_type == "upload_module") {
 			variant module_node = doc["module"];
 			const std::string module_id = module_node["id"].as_string();
 			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
@@ -164,44 +224,7 @@ void module_web_server::handle_get(socket_ptr socket, const std::string& url, co
 	try {
 		std::cerr << "URL: (" << url << ")\n";
 		response[variant("status")] = variant("error");
-		if(url == "/download_module" && args.count("module_id")) {
-			const std::string module_id = args.find("module_id")->second;
-
-			if(args.count("current_version")) {
-				const std::string current_version = args.find("current_version")->second;
-				std::vector<int> version;
-				version.resize(8);
-				int version_size = 9;
-				util::split_into_ints(current_version.c_str(), &version[0], &version_size);
-				version.resize(version_size);
-
-				variant version_var = vector_to_variant(version);
-				if(data_[module_id]["version"] <= version_var) {
-					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
-				}
-			}
-
-			const std::string module_path = data_path_ + module_id + ".cfg";
-			if(sys::file_exists(module_path)) {
-				std::string response = "{\nstatus: \"ok\",\nmodule: ";
-				{
-					const std::string contents = sys::read_file(module_path);
-					response += contents;
-				}
-
-				response += "\n}";
-				send_msg(socket, "text/json", response, "");
-
-				variant summary = data_[module_id];
-				if(summary.is_map()) {
-					summary.add_attr_mutation(variant("num_downloads"), variant(summary["num_downloads"].as_int() + 1));
-				}
-				return;
-
-			} else {
-				response[variant("message")] = variant("No such module");
-			}
-		} else if(url == "/get_summary") {
+		 if(url == "/get_summary") {
 			response[variant("status")] = variant("ok");
 			response[variant("summary")] = data_;
 		} else {

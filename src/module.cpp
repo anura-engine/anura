@@ -525,6 +525,8 @@ variant build_package(const std::string& id, bool increment_version)
 		exclude_paths = config["exclude_paths"].as_list_string();
 	}
 
+	std::map<variant, variant> manifest_file;
+
 	get_files_in_module(path, files, exclude_paths);
 	std::map<variant, variant> file_attr;
 	foreach(const std::string& file, files) {
@@ -537,14 +539,39 @@ variant build_package(const std::string& id, bool increment_version)
 		attr[variant("md5")] = variant(md5::sum(contents));
 		attr[variant("size")] = variant(contents.size());
 
+		auto attr_copy = attr;
+
+		manifest_file[variant(fname)] = variant(&attr_copy);
+
 		std::vector<char> data(contents.begin(), contents.end());
 
 		data = base64::b64encode(zip::compress(data));
 
 		const std::string data_str(data.begin(), data.end());
+
+
 		attr[variant("data")] = variant(data_str);
 
 		file_attr[variant(fname)] = variant(&attr);
+	}
+
+	//now save the manifest file.
+	{
+		std::map<variant, variant> attr;
+		const std::string contents = variant(&manifest_file).write_json();
+
+		attr[variant("md5")] = variant(md5::sum(contents));
+		attr[variant("size")] = variant(contents.size());
+
+		std::vector<char> data(contents.begin(), contents.end());
+
+		data = base64::b64encode(zip::compress(data));
+
+		const std::string data_str(data.begin(), data.end());
+
+		attr[variant("data")] = variant(data_str);
+
+		file_attr[variant("manifest.cfg")] = variant(&attr);
 	}
 
 	const std::string module_cfg_file = path + "/module.cfg";
@@ -904,14 +931,19 @@ COMMAND_LINE_UTILITY(install_module)
 		}
 	}
 
+	variant_builder request;
+	request.add("type", "download_module");
+	request.add("module_id", module_id);
+
 	std::string version_str;
 	std::string current_path = make_base_module_path(module_id);
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
-		std::vector<int> version_vec = config["version"].as_list_int();
-		if(!version_vec.empty()) {
-			version_str = "&current_version=" + util::join_ints(&version_vec[0], version_vec.size());
-		}
+		request.add("current_version", config["version"]);
+	}
+
+	if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
+		request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
 	}
 
 	std::cerr << "Requesting module '" << module_id << "'\n";
@@ -921,7 +953,7 @@ COMMAND_LINE_UTILITY(install_module)
 	std::string response;
 
 	http_client client(server, port);
-	client.send_request("GET /download_module?module_id=" + module_id + version_str, "", 
+	client.send_request("POST /download_module?module_id=" + module_id + version_str, request.build().write_json(), 
 	                    boost::bind(finish_upload, _1, &done, &response),
 	                    boost::bind(error_upload, _1, &done),
 	                    boost::bind(upload_progress, _1, _2, _3));
