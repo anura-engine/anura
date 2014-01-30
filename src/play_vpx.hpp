@@ -33,8 +33,8 @@
 #include <string>
 #include "SDL.h"
 
-#include "vpx_decoder.h"
-#include "vp8dx.h"
+#include "vpx/vpx_decoder.h"
+#include "vpx/vp8dx.h"
 #include "widget.hpp"
 
 namespace movie
