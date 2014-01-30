@@ -50,10 +50,12 @@ std::vector<module::modules>& loaded_paths() {
 	return result;
 }
 
-std::vector<std::string> module_dirs() {
-	std::vector<std::string> result;
-	result.push_back("modules");
-	result.push_back(preferences::dlc_path());
+const std::vector<std::string>& module_dirs() {
+	static std::vector<std::string> result;
+	if(result.empty()) {
+		result.push_back("modules");
+		result.push_back(preferences::dlc_path());
+	}
 	return result;
 }
 
@@ -256,11 +258,24 @@ const std::string& get_module_path(const std::string& abbrev, BASE_PATH_TYPE typ
 }
 
 const std::string make_base_module_path(const std::string& name) {
-	foreach(const std::string& path, module_dirs()) {
+	std::string result;
+	variant best_version;
+	for(int i = 0; i != module_dirs().size(); ++i) {
+		const std::string& path = module_dirs()[i];
 		std::string full_path = path + "/" + name + "/";
 		if(sys::file_exists(full_path + "module.cfg")) {
-			return full_path;
+			variant config = json::parse(sys::read_file(full_path + "module.cfg"));
+			variant version = config["version"];
+			if(best_version.is_null() || version > best_version) {
+				best_version = version;
+				result = full_path;
+			}
+
 		}
+	}
+
+	if(result.empty() == false) {
+		return result;
 	}
 
 	std::string path = module_dirs().back() + "/" + name + "/";
@@ -890,7 +905,7 @@ COMMAND_LINE_UTILITY(install_module)
 	}
 
 	std::string version_str;
-	std::string current_path = make_base_module_path("citadel");
+	std::string current_path = make_base_module_path(module_id);
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 		std::vector<int> version_vec = config["version"].as_list_int();
