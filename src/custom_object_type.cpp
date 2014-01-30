@@ -55,6 +55,7 @@ namespace {
 
 PREF_BOOL(strict_mode_warnings, false, "If turned on, all objects will be run in strict mode, with errors non-fatal");
 PREF_BOOL(suppress_strict_mode, false, "If turned on, turns off strict mode checking on all objects");
+PREF_BOOL(force_strict_mode, false, "If turned on, turns on strict mode checking on all objects");
 
 bool custom_object_strict_mode = false;
 class strict_mode_scope {
@@ -588,7 +589,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + id);
 			int slot = -1;
-			init_object_definition(node, node["id"].as_string(), callable_definition, slot, !g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode));
+			init_object_definition(node, node["id"].as_string(), callable_definition, slot, !g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode);
 			std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 			ASSERT_LOG(itor != object_type_definitions().end(), "Could not load object prototype definition " << id);
 			return itor->second;
@@ -620,7 +621,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			custom_object_callable_ptr callable_definition(new custom_object_callable);
 			callable_definition->set_type_name("obj " + p.first);
 			int slot = -1;
-			init_object_definition(p.second, p.first, callable_definition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode));
+			init_object_definition(p.second, p.first, callable_definition, slot, !g_suppress_strict_mode && p.second["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode);
 		}
 
 		itor = object_type_definitions().find(id);
@@ -1134,7 +1135,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	slot_properties_base_(-1), 
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(false)),
 	mouseover_delay_(node["mouseover_delay"].as_int(0)),
-	is_strict_(!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode)),
+	is_strict_(!g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode),
 	is_shadow_(node["is_shadow"].as_bool(false)),
 	true_z_(node["truez"].as_bool(false)), tx_(node["tx"].as_decimal().as_float()), 
 	ty_(node["ty"].as_decimal().as_float()), tz_(node["tz"].as_decimal().as_float())
