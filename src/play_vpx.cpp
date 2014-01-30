@@ -39,6 +39,20 @@ namespace movie
 		size_t mem_get_le32(const std::vector<uint8_t>& mem) {
 			return (size_t(mem[3]) << 24)|(size_t(mem[2]) << 16)|(size_t(mem[1]) << 8)|size_t(mem[0]);
 		}
+
+		struct manager
+		{
+			manager(const gles2::program_ptr& shader) 
+			{
+				glGetIntegerv(GL_CURRENT_PROGRAM, &old_program);
+				glUseProgram(shader->get());
+			}
+			~manager()
+			{
+				glUseProgram(old_program);
+			}
+			GLint old_program;
+		};
 	}
 
 	vpx::vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress)
@@ -77,6 +91,10 @@ namespace movie
 		u_tex_[1] = shader_->shader()->get_fixed_uniform("tex1");
 		u_tex_[2] = shader_->shader()->get_fixed_uniform("tex2");
 
+		u_color_ = shader_->shader()->get_fixed_uniform("color");
+		a_vertex_ = shader_->shader()->get_fixed_attribute("vertex");
+		a_texcoord_ = shader_->shader()->get_fixed_attribute("texcoord");
+
 		file_.open(file_name_, std::ios::in | std::ios::binary);
 		ASSERT_LOG(file_.is_open(), "Unable to open file: " << file_name_);
 		file_hdr_.resize(IVF_FILE_HDR_SZ);
@@ -102,28 +120,25 @@ namespace movie
 		ASSERT_LOG(img_ != NULL, "img_ is null");
 
 		texture_id_ = boost::shared_array<GLuint>(new GLuint[3], [](GLuint* ids){glDeleteTextures(3,ids); delete[] ids;});
-		//
 		glGenTextures(3, &texture_id_[0]);
 
-		std::cerr << "XXX: " << img_->d_w << std::endl;
-		std::cerr << "XXX: " << img_->d_h << std::endl;
-		texture_width_ = graphics::texture::next_power_of_2(img_->d_w);
-		texture_height_ = graphics::texture::next_power_of_2(img_->d_h);
-		std::cerr << "XXX: " << texture_width_ << std::endl;
-		std::cerr << "XXX: " << texture_height_ << std::endl;
+		if(graphics::texture::allows_npot()) {
+			texture_width_ = img_->d_w;
+			texture_height_ = img_->d_h;
+		} else {
+			texture_width_ = graphics::texture::next_power_of_2(img_->d_w);
+			texture_height_ = graphics::texture::next_power_of_2(img_->d_h);
+		}
 
 		for(size_t i = 0; i != 3; ++i) {
 			glBindTexture(GL_TEXTURE_2D, texture_id_[i]);
-			std::cerr << "YYY: stride " << i << " : " << img_->stride[i] << std::endl;
 			glPixelStorei(GL_UNPACK_ROW_LENGTH, img_->stride[i]);
-			//glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 			unsigned width = i==0?texture_width_:texture_width_/2;
 			unsigned height = i==0?texture_height_:texture_height_/2;
-			std::cerr << "YYY: " << i << " : " << width << ", " << height << std::endl;
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 		}
 		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_current_texture());
@@ -137,15 +152,22 @@ namespace movie
 
 	void vpx::decode_frame()
 	{
-		file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
-		frame_size_ = mem_get_le32(frame_hdr_);
-		++frame_cnt_;
+		if(file_.eof()) {
+			// when file_ has been read call vpx_codec_decode with data as NULL and sz as 0
+			vpx_codec_decode(&codec_, NULL, 0, NULL, 0);
+			playing_ = false;
+			/// test loop_ here.
+		} else {
+			file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
+			frame_size_ = mem_get_le32(frame_hdr_);
+			++frame_cnt_;
 
-		frame_.resize(frame_size_);
-		file_.read(reinterpret_cast<char*>(&frame_[0]), frame_size_);
+			frame_.resize(frame_size_);
+			file_.read(reinterpret_cast<char*>(&frame_[0]), frame_size_);
 
-		auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, NULL, 0);
-		ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_) << " : " << vpx_codec_error_detail(&codec_));
+			auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, NULL, 0);
+			ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_) << " : " << vpx_codec_error_detail(&codec_));
+		}
 	}
 
 	void vpx::handle_process()
@@ -154,12 +176,18 @@ namespace movie
 			return;
 		}
 
-		if(img_ == NULL) {
-			decode_frame();
-			iter_ = NULL;
-		}
+		bool done = false;
+		while(playing_ && !done) {
+			if(img_ == NULL) {
+				decode_frame();
+				iter_ = NULL;
+			}
 
-		img_ = vpx_codec_get_frame(&codec_, &iter_);
+			img_ = vpx_codec_get_frame(&codec_, &iter_);
+			if(img_ != NULL) {
+				done = true;
+			}
+		}
 
 		if(!texture_id_) {
 			gen_textures();
@@ -199,14 +227,16 @@ namespace movie
 			return;
 		}
 
-		glColor4f(1.0f,1.0f,1.0f,1.0f);
-		gles2::manager gles2_manager(shader_);
+		manager m(shader_->shader());
+
+		glUniform4f(u_color_, 1.0f, 1.0f, 1.0f, 1.0f);
+
+		glDisable(GL_BLEND);
 
 		for(int i = 2; i >= 0; --i) {
 			glActiveTexture(GL_TEXTURE0 + i);
 			glBindTexture(GL_TEXTURE_2D, texture_id_[i]);
-			//std::cerr << "w: " << img_->d_w << ", h: " << img_->d_h << ", fmt: " << img_->fmt << std::endl;
-			void* pixels = img_->planes[i];// + img_->d_h * img_->stride[i];
+			void* pixels = img_->planes[i];
 			glPixelStorei(GL_UNPACK_ROW_LENGTH, img_->stride[i]);
 			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, i>0?img_->d_w/2:img_->d_w, i>0?img_->d_h/2:img_->d_h, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels);
 			glUniform1i(u_tex_[i], i);
@@ -218,43 +248,47 @@ namespace movie
 		const int h = height() / 2;
 
 		glPushMatrix();
-		//glTranslatef((x()+w)&preferences::xypos_draw_mask, (y()+h)&preferences::xypos_draw_mask, 0.0f);
-		//glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(gles2::get_mvp_matrix()));
-
-		glLoadIdentity();
+		glTranslatef((x()+w)&preferences::xypos_draw_mask, (y()+h)&preferences::xypos_draw_mask, 0.0f);
 		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(gles2::get_mvp_matrix()));
 
-		const GLfloat varray[] = {
-			//(GLfloat)-w, (GLfloat)-h,
-			//(GLfloat)-w, (GLfloat)h+h_odd,
-			//(GLfloat)w+w_odd, (GLfloat)-h,
-			//(GLfloat)w+w_odd, (GLfloat)h+h_odd
-			0.0f, 0.0f,
-			0.0f, 600.0f,
-			800.0f, 0.0f,
-			800.0f, 600.0f,
+		const GLfloat varray[8] = {
+			(GLfloat)-w, (GLfloat)-h,
+			(GLfloat)-w, (GLfloat)h+h_odd,
+			(GLfloat)w+w_odd, (GLfloat)-h,
+			(GLfloat)w+w_odd, (GLfloat)h+h_odd
 		};
 
-		GLfloat tcx, tcy, tcx2, tcy2;
-		tcx = 0.0f;
-		tcy = 0.0f;
-		tcx2 = GLfloat(img_->d_w)/texture_width_;
-		tcy2 = GLfloat(img_->d_h)/texture_height_;
+		const GLfloat tcx = 0.0f;
+		const GLfloat tcy = 0.0f;
+		const GLfloat tcx2 = GLfloat(img_->d_w)/texture_width_;
+		const GLfloat tcy2 = GLfloat(img_->d_h)/texture_height_;
 
-		const GLfloat tcarray[] = {
+		const GLfloat tcarray[8] = {
 			tcx, tcy,
 			tcx, tcy2,
 			tcx2, tcy,
 			tcx2, tcy2,
 		};
-		shader_->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
-		shader_->shader()->texture_array(2, GL_FLOAT, 0, 0, tcarray);
+		glEnableVertexAttribArray(a_vertex_);
+		glEnableVertexAttribArray(a_texcoord_);
+		glVertexAttribPointer(a_vertex_, 2, GL_FLOAT, 0, 0, varray);
+		glVertexAttribPointer(a_texcoord_, 2, GL_FLOAT, 0, 0, tcarray);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDisableVertexAttribArray(a_vertex_);
+		glDisableVertexAttribArray(a_texcoord_);
 
 		glPopMatrix();
 
+		glActiveTexture(GL_TEXTURE2);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glActiveTexture(GL_TEXTURE1);
+		glBindTexture(GL_TEXTURE_2D, 0);
+
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_current_texture());
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+
+		glEnable(GL_BLEND);
 	}
 }
 

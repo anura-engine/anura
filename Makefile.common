@@ -142,6 +142,7 @@ objects = \
 	src/playable_custom_object.o \
 	src/player_info.o \
 	src/poly_map.o \
+    src/play_vpx.o \
 	src/preferences.o \
 	src/preprocessor.o \
 	src/preview_tileset_widget.o \

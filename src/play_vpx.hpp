@@ -74,6 +74,9 @@ namespace movie
 
 		boost::shared_array<GLuint> texture_id_;
 		GLint u_tex_[3];
+		GLint u_color_;
+		GLint a_vertex_;
+		GLint a_texcoord_;
 
 		size_t texture_width_;
 		size_t texture_height_;
