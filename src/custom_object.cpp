@@ -3308,20 +3308,9 @@ void custom_object::set_value(const std::string& key, const variant& value)
 	}
 
 	std::map<std::string, custom_object_type::property_entry>::const_iterator property_itor = type_->properties().find(key);
-	if(property_itor != type_->properties().end() && property_itor->second.setter) {
-		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
-		callable->add("value", value);
-
-		active_property_scope scope(*this, property_itor->second.storage_slot, &value);
-		variant value = property_itor->second.setter->execute(*callable);
-		execute_command(value);
-		return;
-	} else if(property_itor != type_->properties().end() && property_itor->second.storage_slot >= 0) {
-		get_property_data(property_itor->second.storage_slot) = value;
-		return;
+	if(property_itor != type_->properties().end()) {
+		set_value_by_slot(type_->slot_properties_base() + property_itor->second.slot, value);
 	}
-
-	ASSERT_LOG(property_itor == type_->properties().end(), "Illegal write to non-writable property " << property_itor->first << " in " << debug_description());
 
 	if(key == "animation") {
 		set_frame(value.as_string());

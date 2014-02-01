@@ -1472,15 +1472,15 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 				}
 			}
 
-			int nslot = slot_properties_.size();
+			entry.slot = slot_properties_.size();
 			if(property_to_slot.count(k)) {
-				nslot = property_to_slot[k];
+				entry.slot = property_to_slot[k];
 			} else {
-				property_to_slot[k] = nslot;
+				property_to_slot[k] = entry.slot;
 			}
 
 			if(entry.init) {
-				properties_with_init_.push_back(nslot);
+				properties_with_init_.push_back(entry.slot);
 			}
 
 			entry.requires_initialization = entry.storage_slot >= 0 && entry.type && !entry.type->match(entry.default_value) && !dynamic_initialization && !entry.init;
@@ -1489,18 +1489,18 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					ASSERT_LOG(last_initialization_property_ == "", "Object " << id_ << " has multiple properties which require initialization and which have custom setters. This isn't allowed because we wouldn't know which property to initialize first. Properties: " << last_initialization_property_ << ", " << entry.id);
 					last_initialization_property_ = entry.id;
 				}
-				properties_requiring_initialization_.push_back(nslot);
+				properties_requiring_initialization_.push_back(entry.slot);
 			}
 
 			if(dynamic_initialization) {
-				properties_requiring_dynamic_initialization_.push_back(nslot);
+				properties_requiring_dynamic_initialization_.push_back(entry.slot);
 			}
 
-			if(nslot == slot_properties_.size()) {
+			if(entry.slot == slot_properties_.size()) {
 				slot_properties_.push_back(entry);
 			} else {
-				assert(nslot >= 0 && nslot < slot_properties_.size());
-				slot_properties_[nslot] = entry;
+				assert(entry.slot >= 0 && entry.slot < slot_properties_.size());
+				slot_properties_[entry.slot] = entry;
 			}
 		}
 	}

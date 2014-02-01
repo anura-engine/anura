@@ -1286,6 +1286,7 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	}
 
 	if(properties.is_map()) {
+		std::cerr << "INIT MAP: " << obj->debug_description() << "\n";
 		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
 		variant last_key;
 		variant keys = properties.get_keys();
@@ -1295,13 +1296,16 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 				continue;
 			}
 			variant value = properties[keys[n]];
+			std::cerr << "MUTATING: " << keys[n].as_string() << "\n";
 			obj->mutate_value(keys[n].as_string(), value);
 		}
 
 		if(last_key.is_string()) {
 			variant value = properties[last_key];
+			std::cerr << "MUTATING: " << last_key.as_string() << "\n";
 			obj->mutate_value(last_key.as_string(), value);
 		}
+		std::cerr << "DONE INIT MAP: " << obj->debug_description() << "\n";
 	}
 
 	return variant(obj.get());

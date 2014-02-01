@@ -195,13 +195,13 @@ public:
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
+		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
 		boost::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
-		int storage_slot;
+		int slot, storage_slot;
 		bool persistent;
 		bool requires_initialization;
 		bool has_editor_info;
