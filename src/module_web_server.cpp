@@ -42,7 +42,7 @@ using boost::asio::ip::tcp;
 
 module_web_server::module_web_server(const std::string& data_path, boost::asio::io_service& io_service, int port)
 	: http::web_server(io_service, port), timer_(io_service), 
-	nheartbeat_(0), data_path_(data_path)
+	nheartbeat_(0), data_path_(data_path), next_lock_id_(1)
 {
 	if(data_path_.empty() || data_path_[data_path_.size()-1] != '/') {
 		data_path_ += "/";
@@ -129,10 +129,35 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 				response[variant("message")] = variant("No such module");
 			}
 
+		} else if(msg_type == "prepare_upload_module") {
+			const std::string module_id = doc["module_id"].as_string();
+			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
+
+			const std::string module_path = data_path_ + module_id + ".cfg";
+			if(sys::file_exists(module_path)) {
+				std::string contents = sys::read_file(module_path);
+				variant module = json::parse(contents);
+				variant manifest = module["manifest"];
+				for(auto p : manifest.as_map()) {
+					p.second.remove_attr_mutation(variant("data"));
+				}
+
+				response[variant("manifest")] = manifest;
+			}
+
+			module_lock_ids_[module_id] = next_lock_id_;
+			response[variant("status")] = variant("ok");
+			response[variant("lock_id")] = variant(next_lock_id_);
+
+			++next_lock_id_;
+
 		} else if(msg_type == "upload_module") {
 			variant module_node = doc["module"];
 			const std::string module_id = module_node["id"].as_string();
 			ASSERT_LOG(std::count_if(module_id.begin(), module_id.end(), isalnum) + std::count(module_id.begin(), module_id.end(), '_') == module_id.size(), "ILLEGAL MODULE ID");
+
+			variant lock_id = doc["lock_id"];
+			ASSERT_LOG(lock_id == variant(module_lock_ids_[module_id]), "Invalid lock on module: " << lock_id.write_json() << " vs " << module_lock_ids_[module_id]);
 
 			std::vector<variant> prev_versions;
 
@@ -147,6 +172,19 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 			}
 
 			const std::string module_path = data_path_ + module_id + ".cfg";
+
+			if(sys::file_exists(module_path)) {
+				variant current_module = json::parse(sys::read_file(module_path));
+				variant new_manifest = module_node["manifest"];
+				variant old_manifest = current_module["manifest"];
+				for(auto p : old_manifest.as_map()) {
+					if(!new_manifest.has_key(p.first)) {
+						new_manifest.add_attr_mutation(p.first, p.second);
+					}
+				}
+			}
+
+
 			const std::string module_path_tmp = module_path + ".tmp";
 			const std::string contents = module_node.write_json();
 			

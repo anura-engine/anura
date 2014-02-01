@@ -44,6 +44,9 @@ private:
 	void write_data();
 	variant data_;
 	std::string data_path_;
+
+	std::map<std::string, int> module_lock_ids_;
+	int next_lock_id_;
 };
 
 #endif
