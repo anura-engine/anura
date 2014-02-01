@@ -110,6 +110,17 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 							our_manifest.remove_attr_mutation(match);
 						}
 
+						std::vector<variant> deletions;
+						for(auto p : their_manifest.as_map()) {
+							if(!our_manifest.has_key(p.first)) {
+								deletions.push_back(p.first);
+							}
+						}
+
+						if(!deletions.empty()) {
+							module.add_attr_mutation(variant("delete"), variant(&deletions));
+						}
+
 						contents = module.write_json();
 					}
 
@@ -174,11 +185,16 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 			const std::string module_path = data_path_ + module_id + ".cfg";
 
 			if(sys::file_exists(module_path)) {
+				std::vector<variant> deletions;
+				if(doc.has_key("delete")) {
+					deletions = doc["delete"].as_list();
+				}
+
 				variant current_module = json::parse(sys::read_file(module_path));
 				variant new_manifest = module_node["manifest"];
 				variant old_manifest = current_module["manifest"];
 				for(auto p : old_manifest.as_map()) {
-					if(!new_manifest.has_key(p.first)) {
+					if(!new_manifest.has_key(p.first) && !std::count(deletions.begin(), deletions.end(), p.first)) {
 						new_manifest.add_attr_mutation(p.first, p.second);
 					}
 				}

@@ -677,8 +677,6 @@ COMMAND_LINE_UTILITY(publish_module)
 	attr[variant("type")] = variant("prepare_upload_module");
 	attr[variant("module_id")] = variant(module_id);
 
-	variant lock_id;
-	
 	{
 		const std::string msg = variant(&attr).write_json();
 		std::string response;
@@ -701,7 +699,9 @@ COMMAND_LINE_UTILITY(publish_module)
 			ASSERT_LOG(false, "Error in acquiring lock to upload: " << response);
 		}
 
-		lock_id = response_doc["lock_id"];
+		attr[variant("lock_id")] = response_doc["lock_id"];
+
+		std::vector<variant> deletions;
 
 		if(response_doc.has_key("manifest")) {
 			variant their_manifest = response_doc["manifest"];
@@ -716,13 +716,22 @@ COMMAND_LINE_UTILITY(publish_module)
 			for(auto key : keys_to_delete) {
 				our_manifest.remove_attr_mutation(key);
 			}
+			
+			for(auto p : their_manifest.as_map()) {
+				if(our_manifest.has_key(p.first) == false) {
+					deletions.push_back(p.first);
+				}
+			}
+		}
+
+		if(!deletions.empty()) {
+			attr[variant("delete")] = variant(&deletions);
 		}
 	}
 
 
 	attr[variant("type")] = variant("upload_module");
 	attr[variant("module")] = package;
-	attr[variant("lock_id")] = lock_id;
 
 	const std::string msg = variant(&attr).write_json();
 
@@ -1026,6 +1035,13 @@ COMMAND_LINE_UTILITY(install_module)
 	ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
 
 	variant module_data = doc["module"];
+
+	if(module_data.has_key("delete")) {
+		for(variant path : module_data["delete"].as_list()) {
+			const std::string path_str = preferences::dlc_path() + "/" + module_id + "/" + path.as_string();
+			sys::remove_file(path_str);
+		}
+	}
 
 	variant manifest = module_data["manifest"];
 	foreach(variant path, manifest.get_keys().as_list()) {
