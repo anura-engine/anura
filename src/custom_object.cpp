@@ -493,6 +493,9 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	vertex_location_(-1), texcoord_location_(-1),
 	paused_(false), model_(glm::mat4(1.0f))
 {
+	properties_requiring_dynamic_initialization_ = type_->properties_requiring_dynamic_initialization();
+	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->properties_requiring_initialization().begin(), type_->properties_requiring_initialization().end());
+
 	vars_->set_object_name(debug_description());
 	tmp_vars_->set_object_name(debug_description());
 
