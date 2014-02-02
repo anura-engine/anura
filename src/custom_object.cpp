@@ -3186,7 +3186,7 @@ variant custom_object::get_value_by_slot(int slot) const
 			const custom_object_type::property_entry& e = type_->slot_properties()[slot - type_->slot_properties_base()];
 			if(e.getter) {
 				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), slot - type_->slot_properties_base()) != properties_requiring_dynamic_initialization_.end()) {
-					ASSERT_LOG(false, "Read of uninitialized property " << debug_description() << "." << e.id);
+					ASSERT_LOG(false, "Read of uninitialized property " << debug_description() << "." << e.id << " " << get_full_call_stack());
 				}
 				active_property_scope scope(*this, e.storage_slot);
 				return e.getter->execute(*this);
@@ -3622,6 +3622,16 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Illegal access of 'data' in object when not in writable property");
 		get_property_data(active_property_) = value;
+
+		//see if this initializes a property that requires dynamic
+		//initialization and if so mark is as now initialized.
+		for(auto itor = properties_requiring_dynamic_initialization_.begin(); itor != properties_requiring_dynamic_initialization_.end(); ++itor) {
+			if(type_->slot_properties()[*itor].storage_slot == active_property_) {
+				properties_requiring_dynamic_initialization_.erase(itor);
+				break;
+			}
+		}
+		
 		break;
 	}
 	case CUSTOM_OBJECT_TYPE: {
