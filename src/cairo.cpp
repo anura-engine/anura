@@ -1,3 +1,4 @@
+#include "asserts.hpp"
 #include "cairo.hpp"
 
 namespace graphics
@@ -34,6 +35,23 @@ graphics::texture cairo_context::write() const
 	std::vector<surface> s;
 	s.push_back(get_surface());
 	return graphics::texture(s);
+}
+
+void cairo_context::render_svg(const std::string& fname)
+{
+	GError *error = NULL;
+
+	RsvgHandle *handle = rsvg_handle_new_from_file (fname.c_str(), &error);
+	ASSERT_LOG(error == NULL, "SVG rendering error: " << error->message);
+	rsvg_handle_render_cairo(handle, cairo_);
+
+	cairo_status_t status = cairo_status(cairo_);
+	ASSERT_LOG(status == 0, "SVG rendering error: " << cairo_status_to_string(status));
+}
+
+void cairo_context::write_png(const std::string& fname) 
+{
+	cairo_surface_write_to_png(surface_, fname.c_str());
 }
 
 }

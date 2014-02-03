@@ -1,7 +1,10 @@
 #ifndef CAIRO_HPP_INCLUDED
 #define CAIRO_HPP_INCLUDED
 
+#include <string>
 #include <cairo/cairo.h>
+#include <librsvg/rsvg.h>
+#include <librsvg/rsvg-cairo.h>
 
 #include "surface.hpp"
 #include "texture.hpp"
@@ -23,6 +26,9 @@ public:
 	cairo_t* get();
 	surface get_surface() const;
 	graphics::texture write() const;
+	
+	void render_svg(const std::string& fname);
+	void write_png(const std::string& fname);
 private:
 	cairo_context(const cairo_context&);
 	void operator=(const cairo_context&);
