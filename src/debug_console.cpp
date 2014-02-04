@@ -35,6 +35,7 @@
 #include "debug_console.hpp"
 #include "decimal.hpp"
 #include "foreach.hpp"
+#include "json_parser.hpp"
 #include "level.hpp"
 #include "load_level.hpp"
 #include "player_info.hpp"
@@ -290,10 +291,25 @@ void draw()
 	}
 }
 
+namespace {
+std::string console_history_path()
+{
+	return std::string(preferences::user_data_path()) + "/console-history.cfg";
+}
+}
+
 console_dialog::console_dialog(level& lvl, game_logic::formula_callable& obj)
    : dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
      history_pos_(0)
 {
+	if(sys::file_exists(console_history_path())) {
+		try {
+			history_ = json::parse(sys::read_file(console_history_path())).as_list_string();
+			history_pos_ = history_.size();
+		} catch(...) {
+		}
+	}
+
 	init();
 
 	consoles_.insert(this);
@@ -352,6 +368,7 @@ bool console_dialog::on_begin_enter()
 	if(!ffl.empty()) {
 		history_.push_back(ffl);
 		history_pos_ = history_.size();
+		sys::write_file(console_history_path(), vector_to_variant(history_).write_json());
 
 		assert_recover_scope recover_from_assert;
 		try {
