@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><path d="m0,0h512v512h-512z"/>
+<g transform="matrix(14.99999 0 0 14.99999 -7003.9961 -3949.4306)">
+<use width="744.094" height="1052.362" transform="translate(504 260.36218)"/>
+<g fill="#fff">
+<path d="m472,294.3622c0-1 1-2 2-2h10 10c1,0 2,1 2,2v2h-24z"/>
+<path d="m476,282.362h16v8h-16z"/>
+<path d="m476,268.362h16v4h-16z"/>
+<path d="m476,274.362h16v6h-16z"/>
+<path d="m476,264.362h16v2h-16z"/>
+</g>
+</g>
+</svg>
