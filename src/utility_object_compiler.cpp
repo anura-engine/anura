@@ -1136,3 +1136,21 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 		sys::write_file(cfg_fname, node.write_json());
 	}
 }
+
+//this is a template utility that can be modified to provide a nice utility
+//for manipulating images.
+COMMAND_LINE_UTILITY(manipulate_image_template)
+{
+	using namespace graphics;
+	for(auto img : args) {
+		surface s = surface_cache::get(img);
+		uint8_t* p = (uint8_t*)s->pixels;
+		for(int i = 0; i != s->w*s->h; ++i) {
+			p[3] = p[0];
+			p[0] = p[1] = p[2] = 255;
+			p += 4;
+		}
+
+		IMG_SavePNG((module::get_module_path() + "/images/" + img).c_str(), s.get(), -1);
+	}
+}

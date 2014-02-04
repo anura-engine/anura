@@ -4,8 +4,8 @@
 #include <string>
 #include <cairo/cairo.h>
 #include <librsvg/rsvg.h>
-#include <librsvg/rsvg-cairo.h>
 
+#include "formula_callable.hpp"
 #include "surface.hpp"
 #include "texture.hpp"
 
@@ -23,7 +23,7 @@ public:
 	cairo_context(int w, int h);
 	~cairo_context();
 
-	cairo_t* get();
+	cairo_t* get() const;
 	surface get_surface() const;
 	graphics::texture write() const;
 	
@@ -36,6 +36,22 @@ private:
 	cairo_surface_t* surface_;
 	cairo_t* cairo_;
 	int width_, height_;
+};
+
+struct cairo_matrix_saver
+{
+	cairo_matrix_saver(cairo_context& ctx);
+	~cairo_matrix_saver();
+
+	cairo_context& ctx_;
+};
+
+class cairo_callable : public game_logic::formula_callable
+{
+public:
+	cairo_callable();
+private:
+	DECLARE_CALLABLE(cairo_callable);
 };
 
 }
