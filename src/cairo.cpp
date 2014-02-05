@@ -3,6 +3,8 @@
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
 #include "cairo.hpp"
+#include "filesystem.hpp"
+#include "module.hpp"
 
 namespace graphics
 {
@@ -59,7 +61,10 @@ void cairo_context::render_svg(const std::string& fname)
 
 	auto itor = cache.find(fname);
 	if(itor == cache.end()) {
-		handle = rsvg_handle_new_from_file(fname.c_str(), &error);
+		std::string real_fname = module::map_file(fname);
+		ASSERT_LOG(sys::file_exists(real_fname), "Could not find svg file: " << fname);
+
+		handle = rsvg_handle_new_from_file(real_fname.c_str(), &error);
 		ASSERT_LOG(error == NULL, "SVG rendering error: " << error->message);
 	} else {
 		handle = itor->second;

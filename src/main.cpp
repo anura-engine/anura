@@ -107,6 +107,7 @@
 #define DEFAULT_MODULE	"frogatto"
 
 namespace {
+	PREF_INT(auto_update_module, 0, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 
 	graphics::window_manager_ptr main_window;
 
@@ -596,11 +597,6 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 	}
 
-	checksum::manager checksum_manager;
-#ifndef NO_EDITOR
-	sys::filesystem_manager fs_manager;
-#endif // NO_EDITOR
-
 	preferences::expand_data_paths();
 
 	background_task_pool::manager bg_task_pool_manager;
@@ -614,6 +610,33 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	std::cerr << "\n";
+
+	if(g_auto_update_module) {
+		boost::intrusive_ptr<module::client> cl(new module::client);
+		cl->install_module(module::get_module_name());
+		int nbytes_transferred = 0;
+		int start_time = SDL_GetTicks();
+		bool timeout = false;
+		fprintf(stderr, "Requesting update to module from server...\n");
+		while(cl->process()) {
+			const int transferred = cl->nbytes_transferred();
+			if(transferred != nbytes_transferred) {
+				fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+				start_time = SDL_GetTicks();
+			}
+
+			if(SDL_GetTicks() - start_time > g_auto_update_module) {
+				fprintf(stderr, "Timed out updating module. Canceling\n");
+			}
+
+			SDL_Delay(20);
+		}
+	}
+
+	checksum::manager checksum_manager;
+#ifndef NO_EDITOR
+	sys::filesystem_manager fs_manager;
+#endif // NO_EDITOR
 
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
 
