@@ -367,6 +367,9 @@ bool console_dialog::on_begin_enter()
 	text_editor_->set_cursor(text_editor_->get_data().size()-1, Prompt.size());
 	if(!ffl.empty()) {
 		history_.push_back(ffl);
+		if(history_.size() > 128) {
+			history_.erase(history_.begin(), history_.begin() + history_.size()-96);
+		}
 		history_pos_ = history_.size();
 		sys::write_file(console_history_path(), vector_to_variant(history_).write_json());
 
