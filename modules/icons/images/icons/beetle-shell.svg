@@ -1,5 +1,5 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
-<path d="m0,0h512v512h-512z"/>
+
 <g transform="matrix(18.68858,0,0,18.68858,2603.71043,-5415.12295)">
 <path d="m-125.8621,290.7841v11.4125" fill="none" stroke="#000"/>
 <path d="m-126.5969,309.3719v-17.856c-9.5362,1.9991-15.2927,17.856 0,17.856z" fill-rule="evenodd" stroke="#fff"/>
