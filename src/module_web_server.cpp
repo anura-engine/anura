@@ -76,6 +76,7 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 				variant current_version = doc["current_version"];
 				if(data_[module_id]["version"] <= current_version) {
 					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
+					return;
 				}
 			}
 
