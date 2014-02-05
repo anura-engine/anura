@@ -914,6 +914,7 @@ void client::on_response(std::string response)
 			if(module_data.has_key("delete")) {
 				for(variant path : module_data["delete"].as_list()) {
 					const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+					fprintf(stderr, "DELETING FILE: %s\n", path_str.c_str());
 					sys::remove_file(path_str);
 				}
 			}
