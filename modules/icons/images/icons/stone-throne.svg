@@ -1,21 +1,21 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-1590.42489,-31324.8029)">
-<path d="m92.0715,1679.0569 6.7053-2.3089 6.8083,2.3089v22.8806h-13.5136z" fill="#fff" stroke="#000"/>
+<path d="m 92.0715 1679.06 6.7053 -2.3089 6.8083 2.3089 v 22.8806 h -13.5136 z" fill="#fff" stroke="#000"/>
 <g transform="matrix(1.35894,0,0,.80814,-35.52248,318.57073)">
-<path d="m92.8187,1681.2643h1.9749v18.1163h-1.9749z" fill="#fff" stroke="#000" stroke-width=".9542"/>
-<path d="m102.9347,1681.2643h1.9749v18.1163h-1.9749z" fill="#fff" stroke="#000" stroke-width=".9542"/>
+<path d="m 92.8187 1681.26 h 1.9749 v 18.1163 h -1.9749 z" fill="#fff" stroke="#000" stroke-width=".9542"/>
+<path d="m 102.935 1681.26 h 1.9749 v 18.1163 h -1.9749 z" fill="#fff" stroke="#000" stroke-width=".9542"/>
 </g>
 <g transform="matrix(1.35894,0,0,1.35894,-35.41553,-607.47117)">
-<path d="m102.8497,1692.7694h2.6541v7.4143h-2.6541z" fill="#fff" stroke="#000" stroke-width=".7359"/>
-<path d="m92.0671,1692.7694h2.6541v7.4143h-2.6541z" fill="#fff" stroke="#000" stroke-width=".7359"/>
+<path d="m 102.85 1692.77 h 2.6541 v 7.4143 h -2.6541 z" fill="#fff" stroke="#000" stroke-width=".7359"/>
+<path d="m 92.0671 1692.77 h 2.6541 v 7.4143 h -2.6541 z" fill="#fff" stroke="#000" stroke-width=".7359"/>
 </g>
-<path d="m93.8362,1692.9686h9.9841" fill="none" stroke="#000"/>
+<path d="m 93.8362 1692.97 h 9.9841" fill="none" stroke="#000"/>
 <g transform="matrix(1.35894,0,0,1.35894,-35.50572,-607.47117)">
-<path d="m102.2304,1691.4374h4.0254v2.086h-4.0254z" fill="#fff" stroke="#000" stroke-width=".7359"/>
-<path d="m91.4479,1691.4374h4.0254v2.086h-4.0254z" fill="#fff" stroke="#000" stroke-width=".7359"/>
+<path d="m 102.23 1691.44 h 4.0254 v 2.086 h -4.0254 z" fill="#fff" stroke="#000" stroke-width=".7359"/>
+<path d="m 91.4479 1691.44 h 4.0254 v 2.086 h -4.0254 z" fill="#fff" stroke="#000" stroke-width=".7359"/>
 </g>
-<path d="m93.3022,1695.7393h11.0522" fill="none" stroke="#000"/>
-<path d="m96,1679.3125 .6562,3.5313h4.2812l.625-3.4063-1.5312,1.6875-1.1875-1.7812-1.1875,1.7812-1.6562-1.8125z"/>
+<path d="m 93.3022 1695.74 h 11.0522" fill="none" stroke="#000"/>
+<path d="m 96 1679.31 0.6562 3.5313 h 4.2812 l 0.625 -3.4063 -1.5312 1.6875 -1.1875 -1.7812 -1.1875 1.7812 -1.6562 -1.8125 z"/>
 </g>
 </svg>

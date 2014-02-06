@@ -1,17 +1,17 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(14.47879,14.47879,-14.47879,14.47879,-4527.75184,-6162.49329)">
-<path d="m386.8758,46.9906c-5.244,0-9.5,4.256-9.5,9.5s4.256,9.5 9.5,9.5 9.5-4.256 9.5-9.5-4.256-9.5-9.5-9.5z" fill="#fff"/>
+<path d="m 386.876 46.9906 c -5.244 0 -9.5 4.256 -9.5 9.5 s 4.256 9.5 9.5 9.5 9.5 -4.256 9.5 -9.5 -4.256 -9.5 -9.5 -9.5 z" fill="#fff"/>
 <g stroke="#fff" stroke-width=".9127" transform="matrix(.92246,0,0,.92246,143.69901,72.80973)">
-<path d="m276.2578-17.7587-25.2791,5e-06" fill="none" stroke="#fff" stroke-width=".9894"/>
-<path d="m274.5644-11.4389-21.8923-12.6395" fill="none" stroke="#fff" stroke-width=".9894"/>
-<path d="m269.938-6.8125-12.6396-21.8923" fill="none" stroke="#fff" stroke-width=".9894"/>
-<path d="m257.2985-6.8125 12.6395-21.8923" fill="none" stroke="#fff" stroke-width=".9894"/>
-<path d="m252.6721-11.4389 21.8923-12.6395" fill="none" stroke="#fff" stroke-width=".9894"/>
+<path d="m 276.258 -17.7587 -25.2791 5e-06" fill="none" stroke="#fff" stroke-width=".9894"/>
+<path d="m 274.564 -11.4389 -21.8923 -12.6395" fill="none" stroke="#fff" stroke-width=".9894"/>
+<path d="m 269.938 -6.8125 -12.6396 -21.8923" fill="none" stroke="#fff" stroke-width=".9894"/>
+<path d="m 257.298 -6.8125 12.6395 -21.8923" fill="none" stroke="#fff" stroke-width=".9894"/>
+<path d="m 252.672 -11.4389 21.8923 -12.6395" fill="none" stroke="#fff" stroke-width=".9894"/>
 </g>
-<path d="m269.75-17.2004c0,3.4173-2.7702,6.1875-6.1875,6.1875s-6.1875-2.7702-6.1875-6.1875 2.7702-6.1875 6.1875-6.1875 6.1875,2.7702 6.1875,6.1875z" transform="matrix(1.09091,0,0,1.09091,99.34912,75.25043)"/>
-<path d="m753.5416-707.5632h12.6032v12.6032h-12.6032z" stroke="#fff" stroke-width="1.2772" transform="matrix(.26478,.96431,-.26478,.96431,0,0)"/>
-<path d="m386.9031,44.9368-3.3125,11.5938h3.3125v-11.5938z" fill="#fff" fill-rule="evenodd"/>
-<path d="m386.9031,68.1243 3.3125-11.5938h-3.3125v11.5938z" fill="#fff" fill-rule="evenodd"/>
+<path d="m 269.75 -17.2004 c 0 3.4173 -2.7702 6.1875 -6.1875 6.1875 s -6.1875 -2.7702 -6.1875 -6.1875 2.7702 -6.1875 6.1875 -6.1875 6.1875 2.7702 6.1875 6.1875 z" transform="matrix(1.09091,0,0,1.09091,99.34912,75.25043)"/>
+<path d="m 753.542 -707.563 h 12.6032 v 12.6032 h -12.6032 z" stroke="#fff" stroke-width="1.2772" transform="matrix(.26478,.96431,-.26478,.96431,0,0)"/>
+<path d="m 386.903 44.9368 -3.3125 11.5938 h 3.3125 v -11.5938 z" fill="#fff" fill-rule="evenodd"/>
+<path d="m 386.903 68.1243 3.3125 -11.5938 h -3.3125 v 11.5938 z" fill="#fff" fill-rule="evenodd"/>
 </g>
 </svg>

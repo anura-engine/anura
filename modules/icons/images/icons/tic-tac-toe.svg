@@ -1,17 +1,17 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
-<path d="m169.5,45.4691v421.0309" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m45.5,342.316h420.9159" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m339.5,45.4691v421.0309" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m45.5,172.316h419.0612" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m126.4468,90.6324a34.3526,32.5253 0 1,1 -68.7052,0 34.3526,32.5253 0 1,1 68.7052,0z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,-22.57447,-23.16275)"/>
-<path d="m126.4468,90.6324a34.3526,32.5253 0 1,1 -68.7052,0 34.3526,32.5253 0 1,1 68.7052,0z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,147.42553,-23.16275)"/>
-<path d="m126.4468,90.6324a34.3526,32.5253 0 1,1 -68.7052,0 34.3526,32.5253 0 1,1 68.7052,0z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,147.42553,321.03497)"/>
-<path d="m226.897,226.897 58.206,58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m227.6575,284.3425 56.685-56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m394.9582,54.7827 58.206,58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m395.7187,112.2282 56.685-56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m56.897,398.9804 58.206,58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m57.6575,456.4259 56.685-56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
-<path d="m126.4468,90.6324a34.3526,32.5253 0 1,1 -68.7052,0 34.3526,32.5253 0 1,1 68.7052,0z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,315.48671,148.95155)"/>
+<path d="m 169.5 45.4691 v 421.031" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 45.5 342.316 h 420.916" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 339.5 45.4691 v 421.031" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 45.5 172.316 h 419.061" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 126.447 90.6324 a 34.3526 32.5253 0 1 1 -68.7052 0 34.3526 32.5253 0 1 1 68.7052 0 z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,-22.57447,-23.16275)"/>
+<path d="m 126.447 90.6324 a 34.3526 32.5253 0 1 1 -68.7052 0 34.3526 32.5253 0 1 1 68.7052 0 z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,147.42553,-23.16275)"/>
+<path d="m 126.447 90.6324 a 34.3526 32.5253 0 1 1 -68.7052 0 34.3526 32.5253 0 1 1 68.7052 0 z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,147.42553,321.03497)"/>
+<path d="m 226.897 226.897 58.206 58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 227.657 284.342 56.685 -56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 394.958 54.7827 58.206 58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 395.719 112.228 56.685 -56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 56.897 398.98 58.206 58.206" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 57.6575 456.426 56.685 -56.685" fill="none" stroke="#fff" stroke-linecap="round" stroke-width="19"/>
+<path d="m 126.447 90.6324 a 34.3526 32.5253 0 1 1 -68.7052 0 34.3526 32.5253 0 1 1 68.7052 0 z" fill="none" stroke="#fff" stroke-linecap="round" stroke-linejoin="round" stroke-width="16.1012" transform="matrix(1.17895,0,0,1.18113,315.48671,148.95155)"/>
 </svg>

@@ -1,32 +1,32 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-8398.60274,-12276.54063)">
-<path d="m475.8878,657.8145-9.1875,2.5312-16.4688,16.4687 1e-05,6.625 6.5-1e-05 16.5313-16.5312 2.625-9.0938z" fill="#fff"/>
-<path d="m469.6317,662.0845c-.9322-.0388-2.1153.4507-3.298,1.6333l-16.0929,16.0929v3.9889h3.2037l16.5012-16.4698c2.623-2.623 1.7367-5.16-.3141-5.2453z"/>
+<path d="m 475.888 657.814 -9.1875 2.5312 -16.4688 16.4687 1e-05 6.625 6.5 -1e-05 16.5313 -16.5312 2.625 -9.0938 z" fill="#fff"/>
+<path d="m 469.632 662.085 c -0.9322 -0.0388 -2.1153 0.4507 -3.298 1.6333 l -16.0929 16.0929 v 3.9889 h 3.2037 l 16.5012 -16.4698 c 2.623 -2.623 1.7367 -5.16 -0.3141 -5.2453 z"/>
 <g transform="matrix(.66221,-.66221,.66221,.66221,-301.22647,529.13816)">
 <g transform="translate(-367.9385,-2.7747)">
-<path d="m839.2295,685.3016-1.5805,1.3446-1.5278-1.3396" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m837.6311,686.5958v1.7268" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 839.23 685.302 -1.5805 1.3446 -1.5278 -1.3396" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 837.631 686.596 v 1.7268" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
 <g transform="translate(-367.7081,-2.7747)">
-<path d="m841.756,685.0734-.9991,1.5805 .9953,1.5278" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m840.8103,686.6923h1.9682" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 841.756 685.073 -0.9991 1.5805 0.9953 1.5278" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 840.81 686.692 h 1.9682" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
 <g transform="translate(-367.0939,-2.7747)">
-<path d="m843.8924,685.2942 2.5925,2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m846.4849,685.2942-2.5925,2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 843.892 685.294 2.5925 2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 846.485 685.294 -2.5925 2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
 <g transform="translate(-367.2858,-2.7747)">
-<path d="m826.1782,685.0734 .9991,1.5805-.9953,1.5278" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m828.8514,686.6923h-1.6226" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m819.8837,686.6923h-1.6226" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 826.178 685.073 0.9991 1.5805 -0.9953 1.5278" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 828.851 686.692 h -1.6226" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 819.884 686.692 h -1.6226" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
 <g transform="translate(-367.0555,-2.7747)">
-<path d="m824.1133,685.2942-2.5925,2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
-<path d="m821.5208,685.2942 1.378,1.425" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 824.113 685.294 -2.5925 2.6809" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 821.521 685.294 1.378 1.425" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
-<path d="m463.3869,682.3122 1.5806,2.3554 1.5278-2.3465" fill="none" stroke="#fff" stroke-width="1.0678"/>
+<path d="m 463.387 682.312 1.5806 2.3554 1.5278 -2.3465" fill="none" stroke="#fff" stroke-width="1.0678"/>
 </g>
-<path d="m449.9154,675.0024v8.7787h8.3181" fill="none" stroke="#000"/>
+<path d="m 449.915 675.002 v 8.7787 h 8.3181" fill="none" stroke="#000"/>
 </g>
 </svg>

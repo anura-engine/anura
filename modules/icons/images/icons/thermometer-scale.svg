@@ -1,15 +1,15 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-13162.89427,-19765.47834)">
-<path d="m713.4916,1060.4652h8.5665v21.4044h-8.5665z" stroke="#fff"/>
-<path d="m710.9387,1058.172h13.6725v4.0516h-13.6725z" fill="#fff" stroke="#000"/>
-<path d="m713.3811,1080.8335h8.7877v3.559h-8.7877z" fill="#fff" stroke="#000"/>
-<path d="m710.9387,1077.4792h13.6725v4.0516h-13.6725z" fill="#fff" stroke="#000"/>
-<path d="m715.9784,1066.4672h4.5484" fill="none" stroke="#fff"/>
-<path d="m718.5221,1068.6448h1.9153" fill="none" stroke="#fff"/>
-<path d="m718.5221,1064.1729h1.9153" fill="none" stroke="#fff"/>
-<path d="m715.9784,1073.1944h4.5484" fill="none" stroke="#fff"/>
-<path d="m718.5221,1075.372h1.9153" fill="none" stroke="#fff"/>
-<path d="m718.5221,1070.9001h1.9153" fill="none" stroke="#fff"/>
+<path d="m 713.492 1060.47 h 8.5665 v 21.4044 h -8.5665 z" stroke="#fff"/>
+<path d="m 710.939 1058.17 h 13.6725 v 4.0516 h -13.6725 z" fill="#fff" stroke="#000"/>
+<path d="m 713.381 1080.83 h 8.7877 v 3.559 h -8.7877 z" fill="#fff" stroke="#000"/>
+<path d="m 710.939 1077.48 h 13.6725 v 4.0516 h -13.6725 z" fill="#fff" stroke="#000"/>
+<path d="m 715.978 1066.47 h 4.5484" fill="none" stroke="#fff"/>
+<path d="m 718.522 1068.64 h 1.9153" fill="none" stroke="#fff"/>
+<path d="m 718.522 1064.17 h 1.9153" fill="none" stroke="#fff"/>
+<path d="m 715.978 1073.19 h 4.5484" fill="none" stroke="#fff"/>
+<path d="m 718.522 1075.37 h 1.9153" fill="none" stroke="#fff"/>
+<path d="m 718.522 1070.9 h 1.9153" fill="none" stroke="#fff"/>
 </g>
 </svg>

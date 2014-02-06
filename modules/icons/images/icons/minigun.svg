@@ -1,13 +1,13 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-6356.39203,-27220.26349)">
-<path d="m365.0281,1467.121v4.3405" fill="none" stroke="#fff"/>
-<path d="m362.7691,1467.121v4.3405" fill="none" stroke="#fff"/>
-<path d="m355.5318,1468.0819h11.0358v2.4188h-11.0358z" fill="#fff"/>
-<path d="m343.1957,1466.4113h12.4229v5.8366h-12.4229z" fill="#fff" stroke="#000"/>
-<path d="m343.0384,1475.1466c0,5.2032 7.7519,8.4401 7.9443-3.7968" fill="none" stroke="#fff"/>
-<path d="m344.2451,1475.1466c0,5.0742 7.3724,8.2785 7.9163-2.9153" fill="none" stroke="#000"/>
-<path d="m345.4345,1475.1466c0,5.2032 7.7519,8.4401 7.9443-3.7968" fill="none" stroke="#fff"/>
-<path d="m340.6214,1469.4542h7.6702v5.488h-7.6702z" fill="#fff" stroke="#000"/>
+<path d="m 365.028 1467.12 v 4.3405" fill="none" stroke="#fff"/>
+<path d="m 362.769 1467.12 v 4.3405" fill="none" stroke="#fff"/>
+<path d="m 355.532 1468.08 h 11.0358 v 2.4188 h -11.0358 z" fill="#fff"/>
+<path d="m 343.196 1466.41 h 12.4229 v 5.8366 h -12.4229 z" fill="#fff" stroke="#000"/>
+<path d="m 343.038 1475.15 c 0 5.2032 7.7519 8.4401 7.9443 -3.7968" fill="none" stroke="#fff"/>
+<path d="m 344.245 1475.15 c 0 5.0742 7.3724 8.2785 7.9163 -2.9153" fill="none" stroke="#000"/>
+<path d="m 345.435 1475.15 c 0 5.2032 7.7519 8.4401 7.9443 -3.7968" fill="none" stroke="#fff"/>
+<path d="m 340.621 1469.45 h 7.6702 v 5.488 h -7.6702 z" fill="#fff" stroke="#000"/>
 </g>
 </svg>

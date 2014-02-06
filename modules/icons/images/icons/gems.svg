@@ -1,27 +1,27 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-9080.33461,-29260.02481)">
-<path d="m414.4311,1725.1128h3.3287v3.3754h-3.3287z" stroke="#fff" stroke-width="1.0219" transform="matrix(.93555,-.35319,.06869,.99764,0,0)"/>
+<path d="m 414.431 1725.11 h 3.3287 v 3.3754 h -3.3287 z" stroke="#fff" stroke-width="1.0219" transform="matrix(.93555,-.35319,.06869,.99764,0,0)"/>
 <g transform="matrix(-1.01209,-.27119,-.27119,1.01209,1392.3042,96.57587)">
-<path d="m-799.3624,1437.777h8.5964v8.5964h-8.5964z" stroke="#fff" stroke-width=".9544" transform="matrix(.70711,-.70711,.70711,.70711,0,0)"/>
-<path d="m451.766,1581.7629c3.8444,1.3954 7.6887,1.3093 11.5331,0" fill="none" stroke="#fff" stroke-width=".9544"/>
-<path d="m458.9742,1582.5638-1.6018-6.3538" fill="none" stroke="#fff" stroke-width=".9544"/>
-<path d="m456.119,1582.7775 1.5203,5.2325" fill="none" stroke="#fff" stroke-width=".9544"/>
+<path d="m -799.362 1437.78 h 8.5964 v 8.5964 h -8.5964 z" stroke="#fff" stroke-width=".9544" transform="matrix(.70711,-.70711,.70711,.70711,0,0)"/>
+<path d="m 451.766 1581.76 c 3.8444 1.3954 7.6887 1.3093 11.5331 0" fill="none" stroke="#fff" stroke-width=".9544"/>
+<path d="m 458.974 1582.56 -1.6018 -6.3538" fill="none" stroke="#fff" stroke-width=".9544"/>
+<path d="m 456.119 1582.78 1.5203 5.2325" fill="none" stroke="#fff" stroke-width=".9544"/>
 </g>
 <g transform="matrix(.96462,-.82863,.82863,.96462,-523.92055,663.98841)">
-<path d="m757.7763,508.4866h6.4672v6.4783h-6.4672z" stroke="#fff" stroke-width=".8237" transform="matrix(.5422,.84025,-.54285,.83983,0,0)"/>
-<path d="m138.3393,1069.2002-3.5126,1.08-3.5106-1.0734" fill="none" stroke="#fff" stroke-width=".7864"/>
+<path d="m 757.776 508.487 h 6.4672 v 6.4783 h -6.4672 z" stroke="#fff" stroke-width=".8237" transform="matrix(.5422,.84025,-.54285,.83983,0,0)"/>
+<path d="m 138.339 1069.2 -3.5126 1.08 -3.5106 -1.0734" fill="none" stroke="#fff" stroke-width=".7864"/>
 </g>
 <g transform="matrix(1.30735,-.3503,.3503,1.30735,-695.78572,-298.3185)">
-<path d="m494.357,1570.0259-4.189,3.0821 5.9021,5.4179 5.8726-5.4179-4.189-3.0821z" stroke="#fff" stroke-width=".7388"/>
-<path d="m490.53,1573.1665 11.017.047" fill="none" stroke="#fff" stroke-width=".7388"/>
-<path d="m494.6947,1570.0697-.9611,3.0968 2.1892,4.6453" fill="none" stroke="#fff" stroke-width=".7388"/>
-<path d="m497.4178,1570.0697 .8009,3.0968-2.1613,5.1195" fill="none" stroke="#fff" stroke-width=".7388"/>
+<path d="m 494.357 1570.03 -4.189 3.0821 5.9021 5.4179 5.8726 -5.4179 -4.189 -3.0821 z" stroke="#fff" stroke-width=".7388"/>
+<path d="m 490.53 1573.17 11.017 0.047" fill="none" stroke="#fff" stroke-width=".7388"/>
+<path d="m 494.695 1570.07 -0.9611 3.0968 2.1892 4.6453" fill="none" stroke="#fff" stroke-width=".7388"/>
+<path d="m 497.418 1570.07 0.8009 3.0968 -2.1613 5.1195" fill="none" stroke="#fff" stroke-width=".7388"/>
 </g>
-<path d="m495.2539,1587.2591 5.0592,2.6806" fill="none" stroke="#000"/>
-<path d="m495.4198,1585.8329 3.0015-3.7943" fill="none" stroke="#000"/>
-<path d="m503.3713,1567.5508 4.3796,8.0041-3.1384,1.8119" fill="none" stroke="#000"/>
-<path d="m-990.9686,1061.9855h3.7816v3.8347h-3.7816z" stroke="#fff" stroke-width="1.0219" transform="matrix(-.82383,-.56684,-.30547,.9522,0,0)"/>
-<path d="m487.9245,1574.3074 3.6699-1.2436" fill="none" stroke="#fff"/>
+<path d="m 495.254 1587.26 5.0592 2.6806" fill="none" stroke="#000"/>
+<path d="m 495.42 1585.83 3.0015 -3.7943" fill="none" stroke="#000"/>
+<path d="m 503.371 1567.55 4.3796 8.0041 -3.1384 1.8119" fill="none" stroke="#000"/>
+<path d="m -990.969 1061.99 h 3.7816 v 3.8347 h -3.7816 z" stroke="#fff" stroke-width="1.0219" transform="matrix(-.82383,-.56684,-.30547,.9522,0,0)"/>
+<path d="m 487.925 1574.31 3.6699 -1.2436" fill="none" stroke="#fff"/>
 </g>
 </svg>

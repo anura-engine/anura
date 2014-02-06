@@ -1,12 +1,12 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-6356.75377,-28581.49376)">
-<path d="m353.9804,1535.0438v16.6311" fill="none" stroke="#fff"/>
-<path d="m353.8817,1538.9908h5.2298" fill="none" stroke="#fff"/>
-<path d="m358.8155,1535.9811h7.006v5.7232h-7.006z" stroke="#fff"/>
-<path d="m353.8817,1547.9703h5.2298" fill="none" stroke="#fff"/>
-<path d="m358.8155,1544.9607h7.006v5.7232h-7.006z" stroke="#fff"/>
-<path d="m353.783,1543.2339h-5.2298" fill="none" stroke="#fff"/>
-<path d="m-348.8492,1540.2241h7.006v5.7232h-7.006z" stroke="#fff" transform="scale(-1,1)"/>
+<path d="m 353.98 1535.04 v 16.6311" fill="none" stroke="#fff"/>
+<path d="m 353.882 1538.99 h 5.2298" fill="none" stroke="#fff"/>
+<path d="m 358.815 1535.98 h 7.006 v 5.7232 h -7.006 z" stroke="#fff"/>
+<path d="m 353.882 1547.97 h 5.2298" fill="none" stroke="#fff"/>
+<path d="m 358.815 1544.96 h 7.006 v 5.7232 h -7.006 z" stroke="#fff"/>
+<path d="m 353.783 1543.23 h -5.2298" fill="none" stroke="#fff"/>
+<path d="m -348.849 1540.22 h 7.006 v 5.7232 h -7.006 z" stroke="#fff" transform="scale(-1,1)"/>
 </g>
 </svg>

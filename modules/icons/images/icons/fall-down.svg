@@ -2,8 +2,8 @@
 <g transform="matrix(15 0 0 15 -524 -6649.4327)">
 <use width="744.094" height="1052.362" transform="translate(72 440.36216)"/>
 <g fill="#fff">
-<path d="m20,1024.3622a4,4 0 1,1 -8,0 4,4 0 1,1 8,0z" transform="translate(36 -576.00002)"/>
-<path d="m50,456.3622c0-2 0-2 2-2 2,0 2,0 2,2v14h2 2l-6,6-6-6h2 2z"/>
+<path d="m 20 1024.36 a 4 4 0 1 1 -8 0 4 4 0 1 1 8 0 z" transform="translate(36 -576.00002)"/>
+<path d="m 50 456.362 c 0 -2 0 -2 2 -2 2 0 2 0 2 2 v 14 h 2 2 l -6 6 -6 -6 h 2 2 z"/>
 </g>
 </g>
 </svg>

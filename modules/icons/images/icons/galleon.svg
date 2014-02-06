@@ -1,14 +1,14 @@
 <svg viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
 
 <g transform="matrix(18.68858,0,0,18.68858,-236.01678,-42865.8981)">
-<path d="m13.1189,2310.3751h7.8085l.3276,1.7474h9.0098l1.1467-1.3651h5.952c-2.1595,2.5564-4.1479,5.1699-4.5868,8.2999h-15.7263c-2.4562-2.1236-3.7176-5.4263-3.9316-8.6822z" fill="#fff" stroke="#000"/>
-<path d="m34.1327,2312.6064 4.672-3.3206" fill="none" stroke="#fff"/>
-<path d="m25.0091,2314.0667v-19.274" fill="none" stroke="#fff"/>
-<path d="m17.2552,2314.1344v-16.2478" fill="none" stroke="#fff"/>
-<path d="m31.7801,2314.1765v-13.3955" fill="none" stroke="#fff"/>
-<path d="m21.6782,2299.4622 6.6618-2.4026" fill="none" stroke="#fff"/>
-<path d="m20.0263,2306.3939 9.9657-3.8698" fill="none" stroke="#fff"/>
-<path d="m28.7769,2306.1622 6.6618-2.4026" fill="none" stroke="#fff"/>
-<path d="m14.1427,2304.1859 6.6618-2.4026" fill="none" stroke="#fff"/>
+<path d="m 13.1189 2310.38 h 7.8085 l 0.3276 1.7474 h 9.0098 l 1.1467 -1.3651 h 5.952 c -2.1595 2.5564 -4.1479 5.1699 -4.5868 8.2999 h -15.7263 c -2.4562 -2.1236 -3.7176 -5.4263 -3.9316 -8.6822 z" fill="#fff" stroke="#000"/>
+<path d="m 34.1327 2312.61 4.672 -3.3206" fill="none" stroke="#fff"/>
+<path d="m 25.0091 2314.07 v -19.274" fill="none" stroke="#fff"/>
+<path d="m 17.2552 2314.13 v -16.2478" fill="none" stroke="#fff"/>
+<path d="m 31.7801 2314.18 v -13.3955" fill="none" stroke="#fff"/>
+<path d="m 21.6782 2299.46 6.6618 -2.4026" fill="none" stroke="#fff"/>
+<path d="m 20.0263 2306.39 9.9657 -3.8698" fill="none" stroke="#fff"/>
+<path d="m 28.7769 2306.16 6.6618 -2.4026" fill="none" stroke="#fff"/>
+<path d="m 14.1427 2304.19 6.6618 -2.4026" fill="none" stroke="#fff"/>
 </g>
 </svg>

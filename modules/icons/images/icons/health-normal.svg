@@ -3,7 +3,7 @@
 <use width="744.094" height="1052.362" transform="translate(144 252)"/>
 </g>
 <g fill="#fff" transform="matrix(3.75 0 0 3.75 -1783.99783 -2730.35541)">
-<path d="m740.362-568h112a8,8 0 0,1 8,8v32a8,8 0 0,1 -8,8h-112a8,8 0 0,1 -8-8v-32a8,8 0 0,1 8-8" transform="rotate(90)"/>
-<path d="m-600-820.362h112a8,8 0 0,1 8,8v32a8,8 0 0,1 -8,8h-112a8,8 0 0,1 -8-8v-32a8,8 0 0,1 8-8" transform="scale(-1)"/>
+<path d="m 740.362 -568 h 112 a 8 8 0 0 1 8 8 v 32 a 8 8 0 0 1 -8 8 h -112 a 8 8 0 0 1 -8 -8 v -32 a 8 8 0 0 1 8 -8" transform="rotate(90)"/>
+<path d="m -600 -820.362 h 112 a 8 8 0 0 1 8 8 v 32 a 8 8 0 0 1 -8 8 h -112 a 8 8 0 0 1 -8 -8 v -32 a 8 8 0 0 1 8 -8" transform="scale(-1)"/>
 </g>
 </svg>
