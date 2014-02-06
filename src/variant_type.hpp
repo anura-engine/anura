@@ -41,6 +41,8 @@ class variant_type;
 typedef boost::shared_ptr<const variant_type> variant_type_ptr;
 typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
 
+typedef std::pair<variant,variant> variant_range;
+
 class variant_type
 {
 public:
@@ -86,6 +88,8 @@ public:
 	virtual const std::string* is_builtin() const { return NULL; }
 	virtual const std::string* is_custom_object() const { return NULL; }
 	virtual const std::string* is_voxel_object() const { return NULL; }
+
+	virtual const std::vector<variant_range>* is_enumerable() const { return NULL; }
 
 	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
 	virtual bool is_generic(std::string* id=NULL) const { return false; }

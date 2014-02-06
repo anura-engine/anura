@@ -3685,7 +3685,7 @@ FUNCTION_TYPE_DEF
 	return parse_variant_type(variant("string|null"));
 END_FUNCTION_DEF(write_document)
 
-FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [string] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
+FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
 
 	if(args().size() != 1) {
 		formula::fail_if_static_context();

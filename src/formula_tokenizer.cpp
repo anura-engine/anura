@@ -98,6 +98,13 @@ token get_token(iterator& i1, iterator i2) {
 		}
 	}
 
+	if(*i1 == '.' && i1+1 != i2 && *(i1+1) == '.') {
+		i1 += 2;
+		t.end = i1;
+		t.type = TOKEN_ELLIPSIS;
+		return t;
+	}
+
 	t.type = single_char_tokens[*i1];
 	if(t.type != TOKEN_INVALID) {
 		t.end = ++i1;
@@ -245,7 +252,7 @@ token get_token(iterator& i1, iterator i2) {
 			++i1;
 		}
 
-		if(i1 != i2 && *i1 == '.') {
+		if(i1 != i2 && *i1 == '.' && (i1+1 == i2 || *(i1+1) != '.')) {
 			t.type = TOKEN_DECIMAL;
 
 			++i1;

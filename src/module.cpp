@@ -701,11 +701,22 @@ COMMAND_LINE_UTILITY(publish_module)
 
 		attr[variant("lock_id")] = response_doc["lock_id"];
 
-		std::vector<variant> deletions;
 
 		if(response_doc.has_key("manifest")) {
 			variant their_manifest = response_doc["manifest"];
 			variant our_manifest = package["manifest"];
+
+			std::vector<variant> deletions_from_server;
+			for(auto p : their_manifest.as_map()) {
+				if(our_manifest.has_key(p.first) == false) {
+					deletions_from_server.push_back(p.first);
+				}
+			}
+
+			if(!deletions_from_server.empty()) {
+				attr[variant("delete")] = variant(&deletions_from_server);
+			}
+
 			std::vector<variant> keys_to_delete;
 			for(auto p : our_manifest.as_map()) {
 				if(their_manifest.has_key(p.first) && their_manifest[p.first]["md5"] == p.second["md5"]) {
@@ -716,17 +727,9 @@ COMMAND_LINE_UTILITY(publish_module)
 			for(auto key : keys_to_delete) {
 				our_manifest.remove_attr_mutation(key);
 			}
-			
-			for(auto p : their_manifest.as_map()) {
-				if(our_manifest.has_key(p.first) == false) {
-					deletions.push_back(p.first);
-				}
-			}
+
 		}
 
-		if(!deletions.empty()) {
-			attr[variant("delete")] = variant(&deletions);
-		}
 	}
 
 
@@ -734,6 +737,8 @@ COMMAND_LINE_UTILITY(publish_module)
 	attr[variant("module")] = package;
 
 	const std::string msg = variant(&attr).write_json();
+
+	sys::write_file("./upload.txt", msg);
 
 	bool done = false;
 
