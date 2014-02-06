@@ -1,10 +1,14 @@
 #include <map>
 
+#include <string.h>
+
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
 #include "cairo.hpp"
 #include "filesystem.hpp"
 #include "module.hpp"
+#include "string_utils.hpp"
+#include "unit_test.hpp"
 
 namespace graphics
 {
@@ -160,5 +164,70 @@ BEGIN_DEFINE_FN(render, "(int, int, [builtin cairo_op]) ->object")
 END_DEFINE_FN
 
 END_DEFINE_CALLABLE(cairo_callable)
+
+namespace {
+std::string fix_svg_path(const std::string& path)
+{
+	std::vector<std::string> tokens;
+	const char* i1 = path.c_str();
+	const char* i2 = i1 + path.size();
+	while(i1 != i2) {
+		if(util::c_isalpha(*i1)) {
+			tokens.push_back(std::string(i1, i1+1));
+			++i1;
+		} else if(util::c_isspace(*i1) || *i1 == ',') {
+			++i1;
+		} else {
+			char* end = NULL;
+			double d = strtod(i1, &end);
+			ASSERT_LOG(end != i1, "Could not parse svg path: " << i1);
+
+			std::ostringstream s;
+			s << d;
+			tokens.push_back(s.str());
+
+			//tokens.push_back(std::string(i1, static_cast<const char*>(end)));
+			i1 = end;
+		}
+	}
+
+	std::string out;
+	for(const std::string& tok : tokens) {
+		if(!out.empty()) {
+			out += " ";
+		}
+
+		out += tok;
+	}
+
+	return out;
+}
+}
+
+COMMAND_LINE_UTILITY(fix_svg)
+{
+	for(auto fname : args) {
+		std::string contents = sys::read_file(fname);
+		std::string output;
+
+		const char* begin = contents.c_str();
+		const char* ptr = strstr(begin, "<path d=\"");
+		while(ptr != NULL) {
+			ptr += 9;
+			output += std::string(begin, ptr);
+
+			const char* end = strstr(ptr, "\"");
+			ASSERT_LOG(end != NULL, "Unexpected end of file: " << ptr);
+
+			output += fix_svg_path(std::string(ptr, end));
+
+			begin = end;
+			ptr = strstr(begin, "<path d=\"");
+		}
+
+		output += std::string(begin, contents.c_str() + contents.size());
+		sys::write_file(fname, output);
+	}
+}
 
 }
