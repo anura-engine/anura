@@ -1766,6 +1766,24 @@ private:
 				return variant_type::get_list(variant_type::get_union(v));
 			}
 
+			const std::map<variant, variant_type_ptr>* left_specific = left_type->is_specific_map();
+			const std::map<variant, variant_type_ptr>* right_specific = right_type->is_specific_map();
+			if(left_specific && right_specific) {
+				std::map<variant, variant_type_ptr> m = *left_specific;
+				for(auto p : *right_specific) {
+					if(m.count(p.first)) {
+						std::vector<variant_type_ptr> v;
+						v.push_back(m[p.first]);
+						v.push_back(p.second);
+						m[p.first] = variant_type::get_union(v);
+					} else {
+						m[p.first] = p.second;
+					}
+				}
+
+				return variant_type::get_specific_map(m);
+			}
+
 			std::pair<variant_type_ptr,variant_type_ptr> left_map = left_type->is_map_of();
 			std::pair<variant_type_ptr,variant_type_ptr> right_map = right_type->is_map_of();
 			if(left_map.first && right_map.first) {
@@ -2270,7 +2288,7 @@ int operator_precedence(const token& t)
 		precedence_map["."]     = n;
 	}
 	
-	assert(precedence_map.count(std::string(t.begin,t.end)));
+	ASSERT_LOG(precedence_map.count(std::string(t.begin,t.end)), "Unknown precedence for '" << std::string(t.begin,t.end) << "'");
 	return precedence_map[std::string(t.begin,t.end)];
 }
 
