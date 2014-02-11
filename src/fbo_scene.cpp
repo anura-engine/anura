@@ -61,12 +61,10 @@
 texture_object::texture_object(const graphics::texture& texture)
   : texture_(texture)
 {
-	std::cerr << "CREATE TEXTURE_OBJECT\n";
 }
 
 texture_object::~texture_object()
 {
-	std::cerr << "DESTROY TEXTURE_OBJECT\n";
 }
 
 variant texture_object::get_value(const std::string& key) const

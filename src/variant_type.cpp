@@ -1865,6 +1865,8 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 			ASSERT_COND(i1 != i2,  "Unexpected end of enum: " << game_logic::pinpoint_location(original_str, (i1-1)->end));
 
+			++i1;
+
 			return variant_type_ptr(new variant_type_enum(ranges));
 
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
@@ -2056,7 +2058,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				v.push_back(variant_type::get_specific_list(types));
 				++i1;
 			} else {
-				ASSERT_COND(i1 == end, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
+				ASSERT_COND(i1 == end, "ERROR PARSING ARRAY TYPE: " << std::string(i1->begin, i1->end) << " " << original_str.debug_location());
 				v.push_back(variant_type_ptr(new variant_type_list(value_type)));
 				++i1;
 			}

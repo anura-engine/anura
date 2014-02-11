@@ -29,6 +29,8 @@ public:
 	
 	void render_svg(const std::string& fname);
 	void write_png(const std::string& fname);
+
+	void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
 private:
 	cairo_context(const cairo_context&);
 	void operator=(const cairo_context&);
@@ -36,6 +38,8 @@ private:
 	cairo_surface_t* surface_;
 	cairo_t* cairo_;
 	int width_, height_;
+
+	cairo_pattern_t* temp_pattern_;
 };
 
 struct cairo_matrix_saver

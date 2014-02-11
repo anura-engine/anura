@@ -61,6 +61,7 @@ namespace {
 #ifndef NO_EDITOR
 	//	threading::lock lk(texture_registry_mutex());
 		texture_registry().insert(t);
+		fprintf(stderr, "TEXTURES: %d\n", (int)texture_registry().size());
 #endif
 	}
 
