@@ -382,6 +382,17 @@ FUNCTION_ARGS_DEF
 	RETURN_TYPE("object");
 END_FUNCTION_DEF(create_cache)
 
+FUNCTION_DEF(global_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
+	int max_entries = 4096;
+	if(args().size() >= 1) {
+		max_entries = args()[0]->evaluate(variables).as_int();
+	}
+	return variant(new ffl_cache(max_entries));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int");
+	RETURN_TYPE("object");
+END_FUNCTION_DEF(global_cache)
+
 FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 	const variant key = args()[1]->evaluate(variables);
 
@@ -3471,27 +3482,17 @@ END_FUNCTION_DEF(debug)
 namespace {
 void debug_side_effect(variant v)
 {
-	if(v.is_list()) {
-		foreach(variant item, v.as_list()) {
-			debug_side_effect(item);
-		}
-	} else if(v.is_callable() && v.try_convert<game_logic::command_callable>()) {
-		map_formula_callable_ptr obj(new map_formula_callable);
-		v.try_convert<game_logic::command_callable>()->run_command(*obj);
-	} else {
-		std::string s = v.to_debug_string();
+
+	std::string s = v.to_debug_string();
 #ifndef NO_EDITOR
-		debug_console::add_message(s);
+	debug_console::add_message(s);
 #endif
-		std::cerr << "CONSOLE: " << s << "\n";
-	}
+	std::cerr << "CONSOLE: " << s << "\n";
 }
 }
 
 FUNCTION_DEF(dump, 1, 2, "dump(msg[, expr]): evaluates and returns expr. Will print 'msg' to stderr if it's printable, or execute it if it's an executable command.")
-	if(preferences::debug()) {
-		debug_side_effect(args().front()->evaluate(variables));
-	}
+	debug_side_effect(args().front()->evaluate(variables));
 	variant res = args().back()->evaluate(variables);
 
 	return res;
