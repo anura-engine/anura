@@ -119,6 +119,11 @@ graphics::texture cairo_context::write() const
 
 void cairo_context::render_svg(const std::string& fname)
 {
+		{
+	cairo_status_t status = cairo_status(cairo_);
+	ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
+		}
+
 	GError *error = NULL;
 
 	static std::map<std::string, RsvgHandle*> cache;
@@ -236,7 +241,10 @@ BEGIN_CAIRO_FN(draw_svg, "(string)")
 END_CAIRO_FN
 
 BEGIN_DEFINE_FN(render, "(int, int, [builtin cairo_op]) ->object")
-	cairo_context context(FN_ARG(0).as_int(), FN_ARG(1).as_int());
+	const int w = FN_ARG(0).as_int();
+	const int h = FN_ARG(1).as_int();
+	ASSERT_LOG(w > 0 && h > 0, "Invalid canvas render: " << w << "x" << h);
+	cairo_context context(w, h);
 
 	std::vector<variant> ops = FN_ARG(2).as_list();
 	for(variant op : ops) {

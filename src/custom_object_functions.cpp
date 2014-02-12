@@ -235,7 +235,8 @@ END_FUNCTION_DEF(texture)
 
 #ifdef USE_SVG
 FUNCTION_DEF(canvas, 0, 0, "canvas() -> canvas object")
-	return variant(new graphics::cairo_callable());
+	static variant result(new graphics::cairo_callable());
+	return result;
 
 FUNCTION_ARGS_DEF
 	RETURN_TYPE("builtin cairo_callable")
