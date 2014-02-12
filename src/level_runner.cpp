@@ -530,7 +530,11 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				std::vector<entity_ptr> wcs = lvl_->get_characters_at_world_point(v3);
 				cs.insert(cs.end(), wcs.begin(), wcs.end());
 #endif
+				//zorder_compare sorts lowest-to-highest, so we do that
+				//then reverse.
 				std::sort(cs.begin(), cs.end(), zorder_compare);
+				std::reverse(cs.begin(), cs.end());
+
 				std::vector<entity_ptr>::iterator it;
 				bool handled = false;
 				bool click_handled = false;
