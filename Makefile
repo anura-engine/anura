@@ -90,6 +90,12 @@ ifeq ($(USE_LIBVPX),yes)
 	LIBS += $(shell pkg-config --libs vpx)
 endif
 
+ifeq ($(USE_SVG),yes)
+	BASE_CXXFLAGS += -DUSE_SVG
+	INC += $(shell pkg-config --cflags librsvg-2.0 cairo)
+	LIBS += $(shell pkg-config --libs librsvg-2.0 cairo freetype2)
+endif
+
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 include Makefile.common

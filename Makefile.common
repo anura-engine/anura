@@ -231,3 +231,8 @@ objects = \
 	src/widget_settings_dialog.o \
 	src/wm.o \
 	src/wml_formula_callable.o
+
+ifeq ($(USE_SVG),yes)
+	objects += src/cairo.o
+endif
+
