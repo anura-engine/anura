@@ -87,7 +87,12 @@ public:
 		int pid_status = 0;
 		const pid_t pid = waitpid(-1, &pid_status, WNOHANG);
 		if(pid < 0) {
-			fprintf(stderr, "ERROR: waitpid() returns error: %d\n", errno);
+			if(errno != ECHILD) {
+				switch(errno) {
+				case EINVAL: fprintf(stderr, "waitpid() had invalid arguments\n"); break;
+				default: fprintf(stderr, "waitpid() returns unknown error: %d\n", errno); break;
+				}
+			}
 		} else if(pid > 0) {
 			auto itor = servers_.find(pid);
 			if(itor == servers_.end()) {
