@@ -583,6 +583,10 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				variant obj_ary(&items);
 				callable->add("objects_under_mouse", obj_ary);
 				std::vector<entity_ptr> level_chars(level::current().get_chars());
+				//make events happen with highest zorder objects first.
+				std::sort(level_chars.begin(), level_chars.end(), zorder_compare);
+				std::reverse(level_chars.begin(), level_chars.end());
+
 				bool drag_handled = false;
 				foreach(entity_ptr object, level_chars) {
 					if(object) {
@@ -625,6 +629,10 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				if(event_type == SDL_MOUSEMOTION) {
 					// handling for mouse_leave
 					level_chars = level::current().get_chars();
+
+					//make events happen with highest zorder objects first.
+					std::sort(level_chars.begin(), level_chars.end(), zorder_compare);
+					std::reverse(level_chars.begin(), level_chars.end());
 					foreach(const entity_ptr& e, level_chars) {
 						if(e) {
 							// n.b. mouse_over_area is relative to the object.
