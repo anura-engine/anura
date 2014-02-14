@@ -1243,6 +1243,10 @@ END_FUNCTION_DEF(regex_match)
 
 namespace {
 class variant_comparator : public formula_callable {
+	//forbid these so they can't be passed by value.
+	variant_comparator(const variant_comparator&);
+	void operator=(const variant_comparator&);
+
 	expression_ptr expr_;
 	const formula_callable* fallback_;
 	mutable variant a_, b_;
@@ -1685,7 +1689,7 @@ FUNCTION_DEF(sort, 1, 2, "sort(list, criteria): Returns a nicely-ordered list. I
 		std::sort(vars.begin(), vars.end());
 	} else {
 		boost::intrusive_ptr<variant_comparator> comparator(new variant_comparator(args()[1], variables));
-		std::sort(vars.begin(), vars.end(), *comparator);
+		std::sort(vars.begin(), vars.end(), [=](const variant& a, const variant& b) { return (*comparator)(a,b); });
 	}
 
 	return variant(&vars);
