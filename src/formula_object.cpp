@@ -597,6 +597,7 @@ bool formula_class::is_a(const std::string& name) const
 void formula_class::run_unit_tests()
 {
 	const formula::strict_check_scope strict_checking(false);
+	const formula::non_static_context non_static_context;
 
 	if(unit_test_.is_null()) {
 		return;

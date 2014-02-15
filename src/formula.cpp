@@ -2650,12 +2650,6 @@ struct static_context {
 	~static_context() { --in_static_context; }
 };
 
-struct non_static_context {
-	int old_value_;
-	non_static_context() { old_value_ = in_static_context; in_static_context = 0; }
-	~non_static_context() { in_static_context = 0; }
-};
-		
 expression_ptr optimize_expression(expression_ptr result, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_def, bool reduce_to_static)
 {
 	expression_ptr original = result;
@@ -3682,10 +3676,11 @@ int formula::raw_guard_matches(const formula_callable& variables) const
 	return -1;
 }
 
+formula::non_static_context::non_static_context() { old_value_ = in_static_context; in_static_context = 0; }
+formula::non_static_context::~non_static_context() { in_static_context = 0; }
+
 variant formula::execute(const formula_callable& variables) const
 {
-	const non_static_context context;
-
 	//We want to track the 'last executed' formula in last_executed_formula,
 	//so we can use it for debugging purposes if there's a problem.
 	//If one formula calls another, we want to restore the old value after

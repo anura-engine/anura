@@ -103,7 +103,7 @@ std::string get_call_stack()
 			current_frame = p->parent_formula();
 			const variant::debug_info* info = current_frame.get_debug_info();
 			if(!info) {
-				res += "(UNKNOWN LOCATION)\n";
+				res += "(UNKNOWN LOCATION) (" + current_frame.write_json() + "\n";
 			} else {
 				res += p->debug_pinpoint_location() + "\n";
 			}

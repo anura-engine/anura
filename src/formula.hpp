@@ -52,6 +52,15 @@ typedef boost::intrusive_ptr<where_variables_info> where_variables_info_ptr;
 
 class formula {
 public:
+
+	//use one of these guys if you want to evaluate a formula but lower
+	//down in the stack, formulas might be being parsed.
+	struct non_static_context {
+		int old_value_;
+		non_static_context();
+		~non_static_context();
+	};
+
 	//a function which makes the current executing formula fail if
 	//it's attempting to evaluate in a static context.
 	static void fail_if_static_context();

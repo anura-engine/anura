@@ -1422,6 +1422,15 @@ public:
 
 	const std::vector<variant_range>* is_enumerable() const { return &values_; }
 
+	variant_type_ptr base_type_no_enum() const {
+		std::vector<variant_type_ptr> result;
+		for(const auto& r : values_) {
+			result.push_back(get_variant_type_from_value(r.first));
+		}
+
+		return get_union(result);
+	}
+
 	bool match(const variant& v) const {
 		for(const auto& r : values_) {
 			if(v >= r.first && v <= r.second) {
@@ -2272,12 +2281,43 @@ variant_type_ptr variant_type::get_type(variant::TYPE type)
 	return variant_type_ptr(new variant_type_simple(type));
 }
 
-variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements)
+variant_type_ptr variant_type::get_enum(const std::vector<variant>& elements)
 {
-	foreach(variant_type_ptr el, elements) {
-		if(!el || el->is_any()) {
-			return variant_type::get_any();
-		}
+	std::vector<variant_range> ranges;
+	for(const variant& v : elements) {
+		ranges.push_back(variant_range(v,v));
+	}
+
+	return variant_type_ptr(new variant_type_enum(ranges));
+}
+
+variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements_input)
+{
+	//Any type that is compatible with another type in the union is
+	//redundant, so remove it here.
+	std::vector<variant_type_ptr> elements = elements_input;
+	{
+		int nitem_to_delete = -1;
+		do {
+			nitem_to_delete = -1;
+
+			for(int i = 0; i != elements.size() && nitem_to_delete == -1; ++i) {
+				for(int j = 0; j != elements.size(); ++j) {
+					if(j == i) {
+						continue;
+					}
+
+					if(variant_types_compatible(elements[j], elements[i])) {
+						nitem_to_delete = i;
+						break;
+					}
+				}
+			}
+
+			if(nitem_to_delete != -1) {
+				elements.erase(elements.begin() + nitem_to_delete);
+			}
+		} while(nitem_to_delete != -1);
 	}
 
 	foreach(variant_type_ptr el, elements) {

@@ -50,6 +50,7 @@ public:
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
 	static variant_type_ptr get_type(variant::TYPE type);
+	static variant_type_ptr get_enum(const std::vector<variant>& items);
 	static variant_type_ptr get_union(const std::vector<variant_type_ptr>& items);
 	static variant_type_ptr get_list(variant_type_ptr element_type);
 	static variant_type_ptr get_specific_list(const std::vector<variant_type_ptr>& types);
@@ -71,6 +72,9 @@ public:
 	variant_type();
 	virtual ~variant_type();
 	virtual bool match(const variant& v) const = 0;
+
+	//decay from enum.
+	virtual variant_type_ptr base_type_no_enum() const { return variant_type_ptr(this); }
 
 	struct conversion_failure_exception {};
 	variant convert(const variant& v) const { if(match(v)) return v; return convert_impl(v); }
