@@ -1430,21 +1430,29 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("[list]");
 END_FUNCTION_DEF(unzip)
 
-FUNCTION_DEF(zip, 3, 3, "zip(list1, list2, expr) -> list")
+FUNCTION_DEF(zip, 2, 3, "zip(list1, list2, expr=null) -> list")
 	const variant item1 = args()[0]->evaluate(variables);
 	const variant item2 = args()[1]->evaluate(variables);
 
 	ASSERT_LOG(item1.type() == item2.type(), "zip function arguments must both be the same type.");
 	ASSERT_LOG(item1.is_list() || item1.is_map(), "zip function arguments must be either lists or maps");
 
-	boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[2], variables));
+	boost::intrusive_ptr<variant_comparator> callable;
+	
+	if(args().size() > 2) {
+		callable.reset(new variant_comparator(args()[2], variables));
+	}
 	const int size = std::min(item1.num_elements(), item2.num_elements());
 
 	if(item1.is_list()) {
 		std::vector<variant> result;
 		// is list
 		for(int n = 0; n < size; ++n) {
-			result.push_back(callable->eval(item1[n], item2[n]));
+			if(callable) {
+				result.push_back(callable->eval(item1[n], item2[n]));
+			} else {
+				result.push_back(item1[n] + item2[n]);
+			}
 		}
 		return variant(&result);
 	} else {
@@ -1452,7 +1460,11 @@ FUNCTION_DEF(zip, 3, 3, "zip(list1, list2, expr) -> list")
 		variant keys = item2.get_keys();
 		for(int n = 0; n != keys.num_elements(); n++) {
 			if(retMap[keys[n]].is_null() == false) {
-				retMap[keys[n]] = callable->eval(retMap[keys[n]], item2[keys[n]]);
+				if(callable) {
+					retMap[keys[n]] = callable->eval(retMap[keys[n]], item2[keys[n]]);
+				} else {
+					retMap[keys[n]] = retMap[keys[n]] + item2[keys[n]];
+				}
 			} else {
 				retMap[keys[n]] = item2[keys[n]];
 			}
@@ -1466,6 +1478,13 @@ FUNCTION_ARGS_DEF
 FUNCTION_TYPE_DEF
 	variant_type_ptr type_a = args()[0]->query_variant_type();
 	variant_type_ptr type_b = args()[1]->query_variant_type();
+
+	if(args().size() <= 2) {
+		std::vector<variant_type_ptr> v;
+		v.push_back(type_a);
+		v.push_back(type_b);
+		return variant_type::get_union(v);
+	}
 
 	if(type_a->is_specific_list() && type_b->is_specific_list()) {
 		std::vector<variant_type_ptr> types;
