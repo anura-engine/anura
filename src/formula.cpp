@@ -998,12 +998,37 @@ private:
 namespace {
 PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
 int function_recursion_depth = 0;
+
+#ifdef DEBUG_FULL_EXPRESSION_STACKS
+std::vector<expression_ptr> g_expr_stack;
+#endif // DEBUG_FULL_EXPRESSION_STACKS
+
+std::string get_expression_stack() {
+	std::ostringstream s;
+#ifdef DEBUG_FULL_EXPRESSION_STACKS
+	s << "NUMBER OF FRAMES: " << g_expr_stack.size() << "\n";
+	for(expression_ptr e : g_expr_stack) {
+		s << "  " << e->str() << " " << e->debug_pinpoint_location() << "\n";
+	}
+
+	s << "OUTPUT FRAMES: " << g_expr_stack.size() << "\n";
+#endif // DEBUG_FULL_EXPRESSION_STACKS
+	return s.str();
+}
+
 struct InfiniteRecursionProtector {
 	explicit InfiniteRecursionProtector(const expression_ptr& expr) {
+#ifdef DEBUG_FULL_EXPRESSION_STACKS
+		g_expr_stack.push_back(expr);
+#endif
 		++function_recursion_depth;
-		ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str() << "\n\ncall Stack: " << get_call_stack());
+		
+		ASSERT_LOG(function_recursion_depth < g_max_ffl_recursion, "Recursion too deep. Exceeded limit of " << g_max_ffl_recursion << ". Use --max_ffl_recursion to increase this limit, though the most likely cause of this is infinite recursion. Function: " << expr->str() << "\n\ncall Stack: " << get_call_stack() << "\n\n" << get_expression_stack());
 	}
 	~InfiniteRecursionProtector() {
+#ifdef DEBUG_FULL_EXPRESSION_STACKS
+		g_expr_stack.pop_back();
+#endif
 		--function_recursion_depth;
 	}
 };
@@ -2624,6 +2649,12 @@ struct static_context {
 	static_context() { ++in_static_context; }
 	~static_context() { --in_static_context; }
 };
+
+struct non_static_context {
+	int old_value_;
+	non_static_context() { old_value_ = in_static_context; in_static_context = 0; }
+	~non_static_context() { in_static_context = 0; }
+};
 		
 expression_ptr optimize_expression(expression_ptr result, function_symbol_table* symbols, const_formula_callable_definition_ptr callable_def, bool reduce_to_static)
 {
@@ -3653,6 +3684,8 @@ int formula::raw_guard_matches(const formula_callable& variables) const
 
 variant formula::execute(const formula_callable& variables) const
 {
+	const non_static_context context;
+
 	//We want to track the 'last executed' formula in last_executed_formula,
 	//so we can use it for debugging purposes if there's a problem.
 	//If one formula calls another, we want to restore the old value after
@@ -3811,7 +3844,7 @@ UNIT_TEST(formula_typeof) {
 	TYPEOF_TEST("static_typeof(def(int n) n+5.0)", "function(int) -> decimal");
 	TYPEOF_TEST("static_typeof(def([int] mylist) map(mylist, value+5.0))", "function([int]) -> [decimal]");
 	TYPEOF_TEST("static_typeof(choose([1,2,3]))", "int");
-	TYPEOF_TEST("static_typeof(choose([1,2,'abc',4.5]))", "int|string|decimal");
+	TYPEOF_TEST("static_typeof(choose([1,2,'abc',4.5]))", "string|decimal"); //int is compatible with decimal so gets subsumed by it.
 	TYPEOF_TEST("static_typeof(if(1d6 = 5, 5))", "int|null");
 	TYPEOF_TEST("static_typeof(if(1d6 = 2, 5, 8))", "int");
 	TYPEOF_TEST("static_typeof(if(1d6 = 2, 'abc', 2))", "string|int");
