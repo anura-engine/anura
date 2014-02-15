@@ -1050,10 +1050,13 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		break;
 	}
 	case SDLK_TAB: {
+		fprintf(stderr, "ZZZ: TAB\n");
 		if(on_tab_) {
 			on_tab_();
 		} else if(nrows_ == 1) {
 			return false;
+		} else {
+			handle_text_input_internal("\t");
 		}
 	}
 	default: return true;
@@ -1063,6 +1066,11 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 }
 
 bool text_editor_widget::handle_text_input(const SDL_TextInputEvent& event)
+{
+	return handle_text_input_internal(event.text);
+}
+
+bool text_editor_widget::handle_text_input_internal(const char* text)
 {
 	if(!has_focus_) {
 		return false;
@@ -1075,7 +1083,7 @@ bool text_editor_widget::handle_text_input(const SDL_TextInputEvent& event)
 	if(cursor_.col > text_[cursor_.row].size()) {
 		cursor_.col = text_[cursor_.row].size();
 	}
-	for(const char* c = &event.text[0]; *c != 0; ++c) {
+	for(const char* c = text; *c != 0; ++c) {
 		text_[cursor_.row].insert(text_[cursor_.row].begin() + cursor_.col, *c);
 		++cursor_.col;
 	}

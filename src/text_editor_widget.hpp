@@ -124,6 +124,7 @@ private:
 	bool handle_key_press(const SDL_KeyboardEvent& key);
 	bool handle_mouse_wheel(const SDL_MouseWheelEvent& event);
 	bool handle_text_input(const SDL_TextInputEvent& event);
+	bool handle_text_input_internal(const char* text);
 	bool handle_text_editing(const SDL_TextEditingEvent& event);
 
 	void handle_paste(std::string txt);
