@@ -5,6 +5,7 @@ test
 .DS_Store
 *.o
 *.a
+a.out
 *~
 *.kate-swp
 *.sublime-workspace
