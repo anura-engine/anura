@@ -999,6 +999,7 @@ namespace {
 PREF_INT(max_ffl_recursion, 1000, "Maximum depth of FFL recursion");
 int function_recursion_depth = 0;
 
+#define DEBUG_FULL_EXPRESSION_STACKS
 #ifdef DEBUG_FULL_EXPRESSION_STACKS
 std::vector<expression_ptr> g_expr_stack;
 #endif // DEBUG_FULL_EXPRESSION_STACKS
@@ -3677,7 +3678,7 @@ int formula::raw_guard_matches(const formula_callable& variables) const
 }
 
 formula::non_static_context::non_static_context() { old_value_ = in_static_context; in_static_context = 0; }
-formula::non_static_context::~non_static_context() { in_static_context = 0; }
+formula::non_static_context::~non_static_context() { in_static_context = old_value_; }
 
 variant formula::execute(const formula_callable& variables) const
 {
