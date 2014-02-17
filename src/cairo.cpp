@@ -270,6 +270,10 @@ BEGIN_CAIRO_FN(clip, "()")
 	cairo_clip(context.get());
 END_CAIRO_FN
 
+BEGIN_CAIRO_FN(reset_clip, "()")
+	cairo_reset_clip(context.get());
+END_CAIRO_FN
+
 BEGIN_CAIRO_FN(rectangle, "(decimal, decimal, decimal, decimal)")
 	cairo_rectangle(context.get(),
 	                args[0].as_decimal().as_float(),
@@ -296,6 +300,16 @@ BEGIN_CAIRO_FN(arc_negative, "(decimal, decimal, decimal, decimal, decimal)")
 	                args[4].as_decimal().as_float());
 END_CAIRO_FN
 
+BEGIN_CAIRO_FN(curve_to, "(decimal, decimal, decimal, decimal, decimal, decimal)")
+	cairo_curve_to(context.get(),
+	                args[0].as_decimal().as_float(),
+	                args[1].as_decimal().as_float(),
+	                args[2].as_decimal().as_float(),
+	                args[3].as_decimal().as_float(),
+	                args[4].as_decimal().as_float(),
+	                args[5].as_decimal().as_float());
+END_CAIRO_FN
+
 BEGIN_CAIRO_FN(line_to, "(decimal, decimal)")
 	cairo_line_to(context.get(),
 	              args[0].as_decimal().as_float(),
@@ -313,7 +327,7 @@ BEGIN_CAIRO_FN(set_source_rgba, "(decimal, decimal, decimal, decimal=1.0)")
 	                args[0].as_decimal().as_float(),
 	                args[1].as_decimal().as_float(),
 	                args[2].as_decimal().as_float(),
-	                args[3].as_decimal().as_float());
+	                args.size() > 3 ? args[3].as_decimal().as_float() : 1.0);
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(set_line_width, "(decimal)")
