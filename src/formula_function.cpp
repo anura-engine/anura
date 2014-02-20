@@ -53,6 +53,7 @@
 #include "geometry.hpp"
 #include "hex_map.hpp"
 #include "lua_iface.hpp"
+#include "rectangle_rotator.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_callable.hpp"
@@ -4622,6 +4623,43 @@ END_FUNCTION_DEF(draw_primitive)
 #endif
 
 }
+
+FUNCTION_DEF(rotate_rect, 4, 4, "rotate_rect(int center_x, int center_y, decimal rotation, int[8] rect) -> int[8]: rotates rect and returns the result")
+
+	int center_x = args()[0]->evaluate(variables).as_int();
+	int center_y = args()[1]->evaluate(variables).as_int();
+	float rotate = args()[2]->evaluate(variables).as_decimal().as_float();
+
+	variant v = args()[3]->evaluate(variables);
+
+	ASSERT_LE(v.num_elements(), 8);
+	
+	GLshort r[8];
+	for(int n = 0; n != v.num_elements(); ++n) {
+		r[n] = v[n].as_int();
+	}
+
+	for(int n = v.num_elements(); n < 8; ++n) {
+		r[n] = 0;
+	}
+
+	rotate_rect(center_x, center_y, rotate, r);
+
+	std::vector<variant> res;
+	res.reserve(8);
+	for(int n = 0; n != v.num_elements(); ++n) {
+		res.push_back(variant(r[n]));
+	}
+
+	return variant(&res);
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("decimal")
+	ARG_TYPE("[int]")
+RETURN_TYPE("[int]")
+
+END_FUNCTION_DEF(rotate_rect)
 
 
 UNIT_TEST(modulo_operation) {
