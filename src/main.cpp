@@ -328,13 +328,22 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 		const std::vector<std::string>& arguments = mod_info["arguments"].as_list_string();
 		int insertion_point = argv->size();
 		for(int i = 0; i != argv->size(); ++i) {
-			const char* utility_arg = "--utility=";
+			const char* utility_arg = "--module=";
 			if(std::equal(utility_arg, utility_arg+strlen(utility_arg), (*argv)[i].c_str())) {
-				insertion_point = i;
+				insertion_point = i+1;
 				break;
 			}
 		}
+
 		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
+
+		std::cerr << "ARGS: ";
+		for(int i = 0; i != argv->size(); ++i) {
+			std::cerr << (*argv)[i] << " ";
+		}
+
+		std::cerr << "\n";
+
 	}	
 	return 0;
 }
