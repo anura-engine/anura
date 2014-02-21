@@ -1203,6 +1203,35 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_list(variant_type::get_type(variant::VARIANT_TYPE_DECIMAL));
 END_FUNCTION_DEF(orbit)
 
+
+FUNCTION_DEF(floor, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+	const float a = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<int>(floor(a)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_INT);
+END_FUNCTION_DEF(floor)
+
+FUNCTION_DEF(round, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+	const float a = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<int>(round(a)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_INT);
+END_FUNCTION_DEF(round)
+
+FUNCTION_DEF(ceil, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
+	const float a = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<int>(ceil(a)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_INT);
+END_FUNCTION_DEF(ceil)
+
+
 FUNCTION_DEF(regex_replace, 3, 3, "regex_replace(string, string, string) -> string: Unknown.")
 	const std::string str = args()[0]->evaluate(variables).as_string();
 	const boost::regex re(args()[1]->evaluate(variables).as_string());
