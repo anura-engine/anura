@@ -3896,7 +3896,7 @@ DEFINE_FIELD(segment_height, "int")
 DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
-DEFINE_FIELD(camera_position, "[int]")
+DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
