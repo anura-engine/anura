@@ -2957,7 +2957,7 @@ void level::set_solid_area(const rect& r, bool solid)
 	std::string empty_info;
 	for(int y = r.y(); y < r.y2(); ++y) {
 		for(int x = r.x(); x < r.x2(); ++x) {
-			set_solid(solid_, x, y, 0, 0, 0, empty_info, solid);
+			set_solid(solid_, x, y, 100, 100, 0, empty_info, solid);
 		}
 	}
 }
