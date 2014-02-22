@@ -3055,7 +3055,7 @@ END_FUNCTION_DEF(swallow_mouse_event)
 
 FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
 	boost::intrusive_ptr<custom_object> target = args()[0]->evaluate(variables).convert_to<custom_object>();
-	const std::string& type = target->query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
+	const std::string type = target->query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
 	game_logic::formula_callable_definition_ptr def = custom_object_type::get_definition(type);
 	ASSERT_LOG(def.get() != NULL, "Could not get definitoin for object: " << type);
 
