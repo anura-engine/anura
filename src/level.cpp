@@ -2957,7 +2957,7 @@ void level::set_solid_area(const rect& r, bool solid)
 	std::string empty_info;
 	for(int y = r.y(); y < r.y2(); ++y) {
 		for(int x = r.x(); x < r.x2(); ++x) {
-			set_solid(solid_, x, y, 0, 0, 0, empty_info, solid);
+			set_solid(solid_, x, y, 100, 100, 0, empty_info, solid);
 		}
 	}
 }
@@ -3896,7 +3896,7 @@ DEFINE_FIELD(segment_height, "int")
 DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
-DEFINE_FIELD(camera_position, "[int]")
+DEFINE_FIELD(camera_position, "[int, int, int, int]")
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
