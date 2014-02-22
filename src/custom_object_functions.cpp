@@ -3053,6 +3053,69 @@ FUNCTION_DEF(swallow_mouse_event, 0, 0, "swallow_mouse_event(): when used in an 
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(swallow_mouse_event)
 
+FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
+	boost::intrusive_ptr<custom_object> target = args()[0]->evaluate(variables).convert_to<custom_object>();
+	const std::string& type = target->query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
+	game_logic::formula_callable_definition_ptr def = custom_object_type::get_definition(type);
+	ASSERT_LOG(def.get() != NULL, "Could not get definitoin for object: " << type);
+
+	std::vector<int> slots;
+	std::vector<decimal> begin_values, end_values;
+
+	variant attr_var = args()[1]->evaluate(variables);
+	const auto& attr = attr_var.as_map();
+	const variant options = args()[2]->evaluate(variables);
+
+	for(const auto& p : attr) {
+		slots.push_back(def->get_slot(p.first.as_string()));
+		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
+		end_values.push_back(p.second.as_decimal());
+		begin_values.push_back(target->query_value_by_slot(slots.back()).as_decimal());
+	}
+
+	const int ncycles = options["duration"].as_int(10);
+
+	std::function<double(double)> easing_fn;
+	const std::string& easing = options["easing"].as_string_default("swing");
+	if(easing == "linear") {
+		easing_fn = [](double x) { return x; };
+	} else if(easing == "swing") {
+		easing_fn = [](double x) { return 0.5*(1 - cos(x*3.14)); };
+	} else {
+		ASSERT_LOG(false, "Unknown easing: " << easing);
+	}
+
+	std::vector<variant> values;
+	values.reserve(slots.size()*ncycles);
+
+	for(int cycle = 0; cycle != ncycles; ++cycle) {
+		GLfloat ratio = 1.0;
+		if(ncycles > 1) {
+			ratio = GLfloat(cycle)/GLfloat(ncycles-1);
+			ratio = easing_fn(ratio);
+		}
+		for(int n = 0; n != slots.size(); ++n) {
+			decimal value = decimal(end_values[n].as_float()*ratio + begin_values[n].as_float()*(1.0-ratio));
+			values.push_back(variant(value));
+		}
+	}
+
+	boost::shared_ptr<std::vector<int> > slots_ptr(new std::vector<int>);
+	slots_ptr->swap(slots);
+	boost::shared_ptr<std::vector<variant> > values_ptr(new std::vector<variant>);
+	values_ptr->swap(values);
+
+	std::function<void()> fn = [=]() { target->set_animated_schedule(values_ptr.get(), slots_ptr.get()); };
+
+	return variant(new fn_command_callable(fn));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("custom_obj")
+	ARG_TYPE("map")
+	ARG_TYPE("map")
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(animate)
+
 class set_widgets_command : public entity_command_callable {
 	const entity_ptr target_;
 	const std::vector<variant> widgets_;
