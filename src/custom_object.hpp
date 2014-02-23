@@ -259,7 +259,28 @@ public:
 
 	const GLfloat* model() const { return glm::value_ptr(model_); }
 
-	void set_animated_schedule(std::vector<variant>* values, std::vector<int>* slots);
+	struct AnimatedMovement {
+		std::string name;
+
+		//animation_values is a multiple of animation_slots size.
+		//animation_slots represents the values being set for each frame
+		//in the animation. animation_values contains all the data for
+		//all the frames.
+		std::vector<int> animation_slots;
+		std::vector<variant> animation_values;
+
+		int pos;
+
+		variant on_process, on_complete;
+
+		AnimatedMovement() : pos(0)
+		{}
+
+		int animation_frames() const { return animation_values.size()/animation_slots.size(); }
+	};
+
+	void set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement);
+	void cancel_animated_schedule(const std::string& name);
 
 protected:
 	//components of per-cycle process() that can be done even on
@@ -462,22 +483,6 @@ private:
 	};
 
 	boost::scoped_ptr<PositionSchedule> position_schedule_;
-
-	struct AnimatedMovement {
-		//animation_values is a multiple of animation_slots size.
-		//animation_slots represents the values being set for each frame
-		//in the animation. animation_values contains all the data for
-		//all the frames.
-		std::vector<int> animation_slots;
-		std::vector<variant> animation_values;
-
-		int pos;
-
-		AnimatedMovement() : pos(0)
-		{}
-
-		int animation_frames() const { return animation_values.size()/animation_slots.size(); }
-	};
 
 	std::vector<boost::shared_ptr<AnimatedMovement> > animated_movement_;
 

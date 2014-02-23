@@ -3822,7 +3822,16 @@ void function_expression::check_arg_type(int narg, const std::string& type_str) 
 
 	variant_type_ptr provided = args()[narg]->query_variant_type();
 	assert(provided);
-	ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << " " << debug_pinpoint_location())
+
+	if(!variant_types_compatible(type, provided)) {
+		std::ostringstream reason;
+		variant_types_compatible(type, provided, &reason);
+		std::string msg = reason.str();
+		if(msg.empty() == false) {
+			msg = " (" + msg + ")";
+		}
+		ASSERT_LOG(variant_types_compatible(type, provided), "Function call argument " << (narg+1) << " does not match. Function expects " << type_str << " provided " << provided->to_string() << msg << " " << debug_pinpoint_location())
+	}
 }
 
 formula_function_expression::formula_function_expression(const std::string& name, const args_list& args, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types)

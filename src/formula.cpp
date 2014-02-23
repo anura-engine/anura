@@ -1152,7 +1152,7 @@ private:
 		const bool is_function = fn_type->is_function(&arg_types, NULL, &min_args);
 
 		ASSERT_LOG(!fn_type->is_type(variant::VARIANT_TYPE_FUNCTION), "Function call on expression which is a generic function. Need more type information." << debug_pinpoint_location());
-		ASSERT_LOG(is_function, "Function call on expression which isn't guaranteed to be a function: " << fn_type->to_string() << debug_pinpoint_location());
+		ASSERT_LOG(is_function, "Function call on expression which isn't guaranteed to be a function: " << fn_type->to_string() << " " << debug_pinpoint_location());
 
 		if(is_function) {
 			for(int n = 0; n != args_.size() && n != arg_types.size(); ++n) {

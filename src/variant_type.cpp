@@ -186,7 +186,7 @@ public:
 		}
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_simple* simple_type = dynamic_cast<const variant_type_simple*>(type.get());
 		if(simple_type && simple_type->type_ == type_) {
 			return true;
@@ -244,7 +244,7 @@ public:
 		return "none";
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		return false;
 	}
 
@@ -269,7 +269,7 @@ public:
 		return "any";
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		return true;
 	}
 
@@ -314,7 +314,7 @@ public:
 		return "commands";
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		if(type->is_type(variant::VARIANT_TYPE_NULL)) {
 			return true;
 		}
@@ -367,7 +367,7 @@ public:
 		return "class " + type_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_class* class_type = dynamic_cast<const variant_type_class*>(type.get());
 		if(class_type) {
 			return game_logic::is_class_derived_from(class_type->type_, type_);
@@ -419,7 +419,7 @@ public:
 		return "obj " + type_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(type.get());
 		if(other == NULL) {
 			return false;
@@ -478,7 +478,7 @@ public:
 		return "vox " + type_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_voxel_object* other = dynamic_cast<const variant_type_voxel_object*>(type.get());
 		if(other == NULL) {
 			return false;
@@ -532,7 +532,7 @@ public:
 		return type_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		if(is_equal(*type)) {
 			return true;
 		}
@@ -580,7 +580,7 @@ public:
 		return interface_->to_string();
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const game_logic::formula_interface* interface_a = is_interface();
 		const game_logic::formula_interface* interface_b = type->is_interface();
 		if(interface_a == interface_b) {
@@ -876,7 +876,7 @@ public:
 		return value_type_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		variant_type_ptr value_type = type->is_list_of();
 		if(value_type) {
 			return variant_types_compatible(value_type_, value_type);
@@ -952,7 +952,7 @@ public:
 		return list_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		if(is_equal(*type)) {
 			return true;
 		}
@@ -1015,7 +1015,7 @@ public:
 		return std::pair<variant_type_ptr, variant_type_ptr>(key_type_, value_type_);
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		std::pair<variant_type_ptr,variant_type_ptr> p = type->is_map_of();
 		if(p.first && p.second) {
 			return variant_types_compatible(key_type_, p.first) &&
@@ -1144,7 +1144,7 @@ public:
 		return std::pair<variant_type_ptr, variant_type_ptr>(key_type_, value_type_);
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		if(type->is_equal(*this)) {
 			return true;
 		}
@@ -1159,10 +1159,16 @@ public:
 			      other->type_map_.find(i->first);
 			if(other_itor == other->type_map_.end()) {
 				if(must_have_keys_.count(i->first)) {
+					if(why) {
+						*why << "Required key not present: " << i->first.write_json();
+					}
 					return false;
 				}
 			} else {
 				if(!variant_types_compatible(i->second, other_itor->second)) {
+					if(why) {
+						*why << "Key " << i->first.write_json() << " expected " << i->second->to_string() << " but given " << other_itor->second->to_string();
+					}
 					return false;
 				}
 			}
@@ -1170,6 +1176,9 @@ public:
 
 		for(std::map<variant, variant_type_ptr>::const_iterator i = other->type_map_.begin(); i != other->type_map_.end(); ++i) {
 			if(type_map_.count(i->first) == 0) {
+				if(why) {
+					*why << "Found unexpected key " << i->first.write_json();
+				}
 				return false;
 			}
 		}
@@ -1280,7 +1289,7 @@ public:
 		return true;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		std::vector<variant_type_ptr> args;
 		variant_type_ptr return_type;
 		int min_args = 0;
@@ -1365,7 +1374,7 @@ public:
 		return result;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		return overloaded_->is_compatible(type);
 	}
 
@@ -1474,7 +1483,7 @@ public:
 		return values_ == other->values_;
 	}
 
-	bool is_compatible(variant_type_ptr type) const {
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_enum* other = dynamic_cast<const variant_type_enum*>(type.get());
 		if(!other) {
 			return false;
@@ -1695,7 +1704,7 @@ std::string variant_type_is_class_or_null(variant_type_ptr type)
 	return class_name;
 }
 
-bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from)
+bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why)
 {
 	if(from->is_union()) {
 		foreach(variant_type_ptr from_type, *from->is_union()) {
@@ -1727,7 +1736,7 @@ bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from)
 		return false;
 	}
 
-	return to->is_compatible(from);
+	return to->is_compatible(from, why);
 }
 
 bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from)
@@ -1926,7 +1935,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				min_args = arg_types.size();
 			}
 
-			return variant_type::get_function_type(arg_types, return_type, min_args);
+			v.push_back(variant_type::get_function_type(arg_types, return_type, min_args));
 		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("custom_obj") || i1->equals("object_type"))) {
 			++i1;
 			v.push_back(variant_type_ptr(new variant_type_custom_object("")));
@@ -2497,6 +2506,8 @@ UNIT_TEST(variant_type) {
 	TYPES_COMPAT("int|null", "enum {-2, 0, 5, 17, null}");
 	TYPES_COMPAT("enum { 2, 3, 4 }", "enum { 2, 3 }");
 	TYPES_COMPAT("enum { 2..8 }", "enum { 2, 3, 4..6 }");
+
+	TYPES_COMPAT("int|function(int)->int", "int");
 
 	TYPES_INCOMPAT("int", "int|bool");
 	TYPES_INCOMPAT("int", "decimal");

@@ -110,7 +110,7 @@ public:
 
 	virtual bool is_equal(const variant_type& o) const = 0;
 
-	virtual bool is_compatible(variant_type_ptr type) const { return false; }
+	virtual bool is_compatible(variant_type_ptr type, std::ostringstream* why=NULL) const { return false; }
 
 	virtual bool maybe_convertible_to(variant_type_ptr type) const { return false; }
 	virtual variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const { return variant_type_ptr(); }
@@ -134,7 +134,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value);
 
 std::string variant_type_is_class_or_null(variant_type_ptr type);
 
-bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from);
+bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why=NULL);
 bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from);
 
 variant_type_ptr parse_variant_type(const variant& original_str,

@@ -154,10 +154,11 @@ void output_backtrace()
 	StderrStackWalker sw; 
 	sw.ShowCallstack();
 #else
-	const int nframes = 256;
-	void* trace_buffer[nframes];
-	const int nsymbols = backtrace(trace_buffer, nframes);
-	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
+// disable C++ stack traces for now.
+//	const int nframes = 256;
+//	void* trace_buffer[nframes];
+//	const int nsymbols = backtrace(trace_buffer, nframes);
+//	backtrace_symbols_fd(trace_buffer, nsymbols, 2);
 #endif
 	std::cerr << "---\n";
 }

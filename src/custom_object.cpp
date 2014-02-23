@@ -1637,6 +1637,10 @@ void custom_object::process(level& lvl)
 
 	for(auto& move : animated_movement_) {
 		if(move->pos >= move->animation_frames()) {
+			if(move->on_complete.is_null() == false) {
+				execute_command(move->on_complete);
+			}
+
 			move.reset();
 		} else {
 			ASSERT_LOG(move->animation_values.size()%move->animation_slots.size() == 0, "Bad animation sizes");
@@ -1644,6 +1648,10 @@ void custom_object::process(level& lvl)
 
 			for(int n = 0; n != move->animation_slots.size(); ++n) {
 				mutate_value_by_slot(move->animation_slots[n], v[n]);
+			}
+
+			if(move->on_process.is_null() == false) {
+				execute_command(move->on_process);
 			}
 
 			move->pos++;
@@ -2636,11 +2644,25 @@ void custom_object::being_added()
 	handle_event(OBJECT_EVENT_BEING_ADDED);
 }
 
-void custom_object::set_animated_schedule(std::vector<variant>* values, std::vector<int>* slots)
+void custom_object::set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement)
 {
-	animated_movement_.push_back(boost::shared_ptr<AnimatedMovement>(new AnimatedMovement));
-	animated_movement_.back()->animation_values.swap(*values);
-	animated_movement_.back()->animation_slots.swap(*slots);
+	animated_movement_.push_back(movement);
+}
+
+void custom_object::cancel_animated_schedule(const std::string& name)
+{
+	if(name.empty()) {
+		animated_movement_.clear();
+		return;
+	}
+
+	for(auto& p : animated_movement_) {
+		if(name == p->name) {
+			p.reset();
+		}
+	}
+
+	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
 }
 
 namespace {
