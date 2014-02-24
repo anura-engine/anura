@@ -25,6 +25,7 @@
 
 #include "background_task_pool.hpp"
 #include "base64.hpp"
+#include "clipboard.hpp"
 #include "collision_utils.hpp"
 #include "controls.hpp"
 #include "custom_object.hpp"
@@ -120,7 +121,8 @@ void done_upload_screenshot(boost::shared_ptr<upload_screenshot_info> info)
 		if(info->error == false) {
 			fprintf(stderr, "DONE UPLOAD SCREENSHOT (%s)\n", info->result.c_str());
 			variant v = json::parse(info->result, json::JSON_NO_PREPROCESSOR);
-			debug_console::add_message(formatter() << "Uploaded screenshot to " << v["url"].as_string());;
+			debug_console::add_message(formatter() << "Uploaded screenshot to " << v["url"].as_string() << " (set url in clipboard)");;
+			copy_to_clipboard(v["url"].as_string(), true);
 		}
 	} catch(...) {
 		info->error = true;

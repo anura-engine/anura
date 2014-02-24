@@ -1050,7 +1050,6 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		break;
 	}
 	case SDLK_TAB: {
-		fprintf(stderr, "ZZZ: TAB\n");
 		if(on_tab_) {
 			on_tab_();
 		} else if(nrows_ == 1) {
