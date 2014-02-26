@@ -974,8 +974,8 @@ FUNCTION_DEF(screen_flash, 2, 3, "screen_flash(list int[4] color, (optional) lis
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("[int]")
-	ARG_TYPE("[int]")
-	ARG_TYPE("int")
+	ARG_TYPE("[int]|int")
+	ARG_TYPE("int|null")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(screen_flash)
 
