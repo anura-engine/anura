@@ -103,12 +103,14 @@ validation_failure_exception::validation_failure_exception(const std::string& m)
   : msg(m)
 {
 	std::cerr << "ASSERT FAIL: " << m << "\n";
+	output_backtrace();
 }
 
 fatal_assert_failure_exception::fatal_assert_failure_exception(const std::string& m)
   : msg(m)
 {
 	std::cerr << "ASSERT FAIL: " << m << "\n";
+	output_backtrace();
 }
 
 namespace {
