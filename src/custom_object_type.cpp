@@ -871,6 +871,8 @@ std::map<std::string,custom_object_type::EditorSummary> custom_object_type::get_
 				summary[variant("animation")] = node["animation"][0];
 			} else if(node["animation"].is_map()) {
 				summary[variant("animation")] = node["animation"];
+			} else {
+				summary[variant("animation")] = json::parse_from_file("data/default-animation.cfg");
 			}
 
 			if(node["editor_info"].is_map()) {
@@ -1226,7 +1228,12 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		mouse_over_area_ = rect(node["mouseover_area"]);
 	}
 
-	foreach(variant anim, node["animation"].as_list()) {
+	variant anim_list = node["animation"];
+	if(anim_list.is_null()) {
+		anim_list = json::parse_from_file("data/default-animation.cfg");
+	}
+
+	foreach(variant anim, anim_list.as_list()) {
 		boost::intrusive_ptr<frame> f;
 		try {
 			f.reset(new frame(anim));
