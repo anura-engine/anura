@@ -516,6 +516,11 @@ void game::handle_message(int nplayer, const variant& msg)
 			}
 		}
 		return;
+	} else if(type == "chat_message") {
+		variant m = msg;
+		m.add_attr(variant("nick"), variant(players_[nplayer].name));
+		queue_message(m);
+		return;
 	}
 
 	game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
