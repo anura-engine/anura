@@ -23,6 +23,7 @@
 #include "color_utils.hpp"
 #include "draw_tile.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "raster.hpp"
 #include "texture.hpp"
 #include "variant.hpp"
@@ -146,7 +147,7 @@ public:
 	level_object_ptr record_zorder(int zorder) const;
 
 private:
-	variant get_value(const std::string& key) const;
+	DECLARE_CALLABLE(level_object);
 
 	std::string id_;
 	std::string image_;

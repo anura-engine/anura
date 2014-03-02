@@ -906,22 +906,20 @@ void level_object::get_palettes_used(std::vector<int>& v) const
 	}
 }
 
-variant level_object::get_value(const std::string& key) const
-{
-	if(key == "id") {
-		return variant(id_);
-	} else if(key == "info") {
-		return variant(info_);
-	} else if(key == "damage") {
-		return variant(damage_);
-	} else if(key == "friction") {
-		return variant(friction_);
-	} else if(key == "traction") {
-		return variant(traction_);
-	} else {
-		return variant();
-	}
-}
+BEGIN_DEFINE_CALLABLE_NOBASE(level_object)
+DEFINE_FIELD(id, "string")
+	return variant(obj.id_);
+DEFINE_FIELD(info, "string")
+	return variant(obj.info_);
+DEFINE_FIELD(damage, "int")
+	return variant(obj.damage_);
+DEFINE_FIELD(friction, "int")
+	return variant(obj.friction_);
+DEFINE_FIELD(traction, "int")
+	return variant(obj.traction_);
+END_DEFINE_CALLABLE(level_object)
+
+
 
 UNIT_TEST(level_object_base64)
 {
