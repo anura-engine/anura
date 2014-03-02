@@ -125,7 +125,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
