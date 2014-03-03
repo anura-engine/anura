@@ -89,6 +89,9 @@ bool is_locale_cjk() {
 	if(locale.empty()) {
 		return false;
 	}
+    if(locale.size() == 1 && (locale == "C" || locale == "c")) {
+        return false;
+    }
 	ASSERT_LOG(locale.size() >= 2, "Length of local string too short: " << locale);
 	return (locale[0] == 'z'  && locale[1] == 'h') 
 		|| (locale[0] == 'j'  && locale[1] == 'a')

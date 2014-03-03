@@ -150,7 +150,7 @@ custom_object::custom_object(variant node)
 	accel_x_(node["accel_x"].as_int()),
 	accel_y_(node["accel_y"].as_int()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
-	rotate_x_(), rotate_y_(), rotate_z_(), zorder_(node["zorder"].as_int(type_->zorder())),
+	rotate_x_(), rotate_y_(), rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
 	zsub_order_(node["zsub_order"].as_int(type_->zsub_order())),
 	hitpoints_(node["hitpoints"].as_int(type_->hitpoints())),
 	max_hitpoints_(node["max_hitpoints"].as_int(type_->hitpoints()) - type_->hitpoints()),
@@ -870,6 +870,10 @@ variant custom_object::write() const
 	res.add("type", type_->id());
 	res.add("x", x());
 	res.add("y", y());
+
+	if(rotate_z_ != decimal()) {
+		res.add("rotate", rotate_z_);
+	}
 
     if(velocity_x_ != 0) {
         res.add("velocity_x", velocity_x_);
