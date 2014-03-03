@@ -3907,8 +3907,8 @@ DEFINE_FIELD(camera_position, "[int, int, int, int]")
 DEFINE_SET_FIELD
 
 	ASSERT_EQ(value.num_elements(), 2);
-	last_draw_position().x = value[0].as_int();
-	last_draw_position().y = value[1].as_int();
+	last_draw_position().x_pos = last_draw_position().x = value[0].as_int();
+	last_draw_position().y_pos = last_draw_position().y = value[1].as_int();
 
 DEFINE_FIELD(camera_target, "[int,int]")
 	std::vector<variant> pos;
