@@ -191,7 +191,9 @@ public:
 						users.push_back(user.build());
 					}
 
-					game.add("users", variant(&users));
+					variant users_info(&users);
+
+					game.add("users", users_info);
 
 					variant_builder server_config;
 					server_config.add("game", game.build());
@@ -251,6 +253,7 @@ public:
 						ProcessInfo& info = servers_[pid];
 						info.port = new_port;
 						info.sessions = match_sessions;
+						info.users = users_info;
 					}
 
 
@@ -306,6 +309,8 @@ public:
 				}
 
 				send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
+			} else if(request_type == "query_status") {
+				send_msg(socket, "text/json", build_status().write_json(), "");
 			} else {
 				fprintf(stderr, "UNKNOWN REQUEST TYPE: '%s'\n", request_type.c_str());
 				disconnect(socket);
@@ -322,46 +327,53 @@ public:
 		fprintf(stderr, "HANDLE GET: %s\n", url.c_str());
 
 		if(url == "/tbs_monitor") {
-			variant_builder doc;
-
-			doc.add("uptime", time_ms_/1000);
-			doc.add("port", port_);
-			doc.add("terminated_servers", terminated_servers_);
-
-			std::vector<variant> servers;
-			for(auto p : servers_) {
-				variant_builder server;
-				server.add("pid", p.first);
-				server.add("port", p.second.port);
-				server.add("sessions", vector_to_variant(p.second.sessions));
-
-				servers.push_back(server.build());
-			}
-
-			doc.add("servers", variant(&servers));
-
-			std::map<variant,variant> sessions;
-			for(auto p : sessions_) {
-				variant_builder s;
-				s.add("user", p.second.user_id);
-				s.add("last_connection", (time_ms_ - p.second.last_contact)/1000);
-				s.add("game_port", p.second.game_port);
-				s.add("active_connection", p.second.current_socket ? true : false);
-
-				if(p.second.game_pending) {
-					s.add("game_pending", true);
-				}
-
-				sessions[variant(formatter() << p.first)] = s.build();
-			}
-
-			doc.add("sessions", variant(&sessions));
-
-			send_msg(socket, "text/json", doc.build().write_json(), "");
+			send_msg(socket, "text/json", build_status().write_json(), "");
 		}
 	}
 
 private:
+	variant build_status() const {
+
+		variant_builder doc;
+
+		doc.add("type", "server_status");
+		doc.add("uptime", time_ms_/1000);
+		doc.add("port", port_);
+		doc.add("terminated_servers", terminated_servers_);
+
+		std::vector<variant> servers;
+		for(auto p : servers_) {
+			variant_builder server;
+			server.add("pid", p.first);
+			server.add("port", p.second.port);
+			server.add("sessions", vector_to_variant(p.second.sessions));
+			server.add("users", p.second.users);
+
+			servers.push_back(server.build());
+		}
+
+		doc.add("servers", variant(&servers));
+
+		std::map<variant,variant> sessions;
+		for(auto p : sessions_) {
+			variant_builder s;
+			s.add("user", p.second.user_id);
+			s.add("last_connection", (time_ms_ - p.second.last_contact)/1000);
+			s.add("game_port", p.second.game_port);
+			s.add("active_connection", p.second.current_socket ? true : false);
+
+			if(p.second.game_pending) {
+				s.add("game_pending", true);
+			}
+
+			sessions[variant(formatter() << p.first)] = s.build();
+		}
+
+		doc.add("sessions", variant(&sessions));
+
+		return doc.build();
+	}
+
 	boost::asio::io_service& io_service_;
 	int port_;
 	boost::asio::deadline_timer timer_;
@@ -389,6 +401,7 @@ private:
 	struct ProcessInfo {
 		int port;
 		std::vector<int> sessions;
+		variant users;
 	};
 
 	std::deque<int> available_ports_;
