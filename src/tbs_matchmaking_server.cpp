@@ -140,6 +140,7 @@ public:
 	void handle_post(socket_ptr socket, variant doc, const http::environment& env)
 	{
 		try {
+			static int session_id_gen = 8000000;
 			fprintf(stderr, "HANDLE POST: %s\n", doc.write_json().c_str());
 
 			assert_recover_scope recover_scope;
@@ -149,7 +150,6 @@ public:
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
 			} else if(request_type == "matchmake") {
-				static int session_id_gen = 8000000;
 				const int session_id = session_id_gen++;
 
 				std::map<variant,variant> response;
@@ -310,7 +310,12 @@ public:
 
 				send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
 			} else if(request_type == "query_status") {
-				send_msg(socket, "text/json", build_status().write_json(), "");
+				variant response = build_status();
+				if(doc.has_key("session_id") == false) {
+					const int session_id = session_id_gen++;
+					response.add_attr(variant("session_id"), variant(session_id));
+				}
+				send_msg(socket, "text/json", response.write_json(), "");
 			} else {
 				fprintf(stderr, "UNKNOWN REQUEST TYPE: '%s'\n", request_type.c_str());
 				disconnect(socket);

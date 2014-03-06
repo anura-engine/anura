@@ -1371,7 +1371,7 @@ void text_editor_widget::refresh_scrollbar()
 		}
 	}
 
-	if(total_rows <= nrows_) {
+	if(total_rows <= nrows_ || nrows_ == 1) {
 		//no scrollbar needed.
 		set_virtual_height(height());
 		update_scrollbar();
