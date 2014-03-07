@@ -483,10 +483,7 @@ namespace tbs
 			return;
 		}
 
-		fprintf(stderr, "GAMES: %d\n", (int)games_.size());
-
 		foreach(game_info_ptr& g, games_) {
-			fprintf(stderr, "LAST TOUCH: %d\n", nheartbeat_ - g->nlast_touch);
 			if(nheartbeat_ - g->nlast_touch > 300) {
 				g = game_info_ptr();
 			}
