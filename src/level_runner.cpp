@@ -73,6 +73,8 @@
 #include "texture.hpp"
 
 namespace {
+PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
+
 level_runner* current_level_runner = NULL;
 
 class current_level_runner_scope {
@@ -869,6 +871,10 @@ bool level_runner::play_cycle()
 	if(editor_ || console_ || pumped_file_mods) {
 		sys::pump_file_modifications();
 		pumped_file_mods = true;
+	}
+
+	if(!editor_ && g_reload_modified_objects) {
+		custom_object_type::reload_modified_code();
 	}
 
 	if(editor_) {
