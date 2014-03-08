@@ -65,6 +65,8 @@ namespace graphics
 	public:
 		window_manager();
 		virtual ~window_manager();
+
+		void notify_new_window_size();
 		
 		void create_window(int width, int height);
 		void destroy_window();

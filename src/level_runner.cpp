@@ -396,6 +396,8 @@ void video_resize(const SDL_Event &event)
 		}
 		preferences::set_actual_screen_width(width);
 		preferences::set_actual_screen_height(height);
+
+		get_main_window()->notify_new_window_size();
 	}
 }
 
