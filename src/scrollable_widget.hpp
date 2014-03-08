@@ -56,6 +56,8 @@ private:
 	int step_;
 	int arrow_step_;
 
+	bool auto_scroll_bottom_;
+
 	scrollbar_widget_ptr scrollbar_;
 };
 

@@ -18,6 +18,7 @@
 
 #include "foreach.hpp"
 #include "label.hpp"
+#include "raster.hpp"
 #include "rich_text_label.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
@@ -104,8 +105,8 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 					label_widget->set_text(candidate);
 					label_widget->set_loc(xpos, ypos);
 
-					if(label_widget->height()*0.75 > line_height) {
-						line_height = label_widget->height()*0.75;
+					if(label_widget->height() > line_height) {
+						line_height = label_widget->height();
 					}
 
 					xpos += label_widget->width();
@@ -166,7 +167,12 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 		}
 	}
 
-	set_dim(width(), ypos + line_height);
+	set_dim(width(), height()),
+	
+	//ypos + line_height);
+	set_virtual_height(ypos + line_height);
+	set_arrow_scroll_step(16);
+	update_scrollbar();
 
 	set_claim_mouse_events(v["claim_mouse_events"].as_bool(false));
 }
@@ -183,6 +189,8 @@ std::vector<widget_ptr> rich_text_label::get_children() const
 
 void rich_text_label::handle_process()
 {
+	scrollable_widget::handle_process();
+
 	foreach(const std::vector<widget_ptr>& v, children_) {
 		foreach(const widget_ptr& widget, v) {
 			widget->process();
@@ -192,13 +200,27 @@ void rich_text_label::handle_process()
 
 void rich_text_label::handle_draw() const
 {
+	scrollable_widget::handle_draw();
+
+	const SDL_Rect rect = {x(),y(),width(),height()};
+	const graphics::clip_scope clipping_scope(rect);
+
 	glPushMatrix();
-	glTranslatef(x() & ~1, y() & ~1, 0.0);
+	glTranslatef(x() & ~1, (y() & ~1) - yscroll(), 0.0);
+
+	{
 
 	foreach(const std::vector<widget_ptr>& v, children_) {
 		foreach(const widget_ptr& widget, v) {
+			if(widget->y() > yscroll() + height() ||
+			   widget->y() + widget->height() < yscroll()) {
+				continue;
+			}
+
 			widget->draw();
 		}
+	}
+
 	}
 
 	glPopMatrix();
@@ -221,12 +243,12 @@ bool rich_text_label::handle_event(const SDL_Event& event, bool claimed)
 
 variant rich_text_label::get_value(const std::string& key) const
 {
-	return widget::get_value(key);
+	return scrollable_widget::get_value(key);
 }
 
 void rich_text_label::set_value(const std::string& key, const variant& v)
 {
-	widget::set_value(key, v);
+	scrollable_widget::set_value(key, v);
 }
 
 }

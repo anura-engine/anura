@@ -20,13 +20,14 @@
 
 namespace gui {
 
-scrollable_widget::scrollable_widget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0)
+scrollable_widget::scrollable_widget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0), auto_scroll_bottom_(false)
 {
 	set_environment();
 }
 
 scrollable_widget::scrollable_widget(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0)
+	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0),
+	  auto_scroll_bottom_(v["auto_scroll_bottom"].as_bool())
 {
 	if(v.has_key("yscroll")) {
 		yscroll_ = v["yscroll"].as_int();
@@ -61,6 +62,9 @@ void scrollable_widget::on_set_yscroll(int old_yscroll, int new_yscroll)
 void scrollable_widget::set_virtual_height(int height)
 {
 	virtual_height_ = height;
+	if(auto_scroll_bottom_) {
+		set_yscroll(height - this->height());
+	}
 	update_scrollbar();
 }
 
