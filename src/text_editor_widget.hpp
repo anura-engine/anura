@@ -160,6 +160,9 @@ private:
 	int nrows_, ncols_;
 	int scroll_pos_;
 
+	//scroll pos for when we have a single row widget.
+	int xscroll_pos_;
+
 	int begin_highlight_line_, end_highlight_line_;
 	
 	bool has_focus_;

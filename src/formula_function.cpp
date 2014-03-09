@@ -3562,6 +3562,8 @@ std::map<std::string, variant>& get_doc_cache() {
 	return cache;
 }
 
+PREF_BOOL(write_backed_maps, false, "Write to backed maps such as used in Citadel's evolutionary system");
+
 class backed_map : public game_logic::formula_callable {
 public:
 	static void flush_all() {
@@ -3635,6 +3637,10 @@ private:
 
 	void write_file()
 	{
+		if(!g_write_backed_maps) {
+			return;
+		}
+
 		std::map<variant, variant> v;
 		std::map<variant, variant> stats;
 		for(std::map<std::string,NodeInfo>::const_iterator i = map_.begin();

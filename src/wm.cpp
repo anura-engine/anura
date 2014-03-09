@@ -39,8 +39,10 @@ namespace graphics
 	namespace
 	{
 		PREF_INT(msaa, 0, "Amount of multi-sampled AA to use in rendering");
+		PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
+		PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
 
-		uint32_t next_pow2(uint32_t v) 
+		uint32_t next_pow2(uint32_t v)
 		{
 			--v;
 			v |= v >> 1;
@@ -88,9 +90,9 @@ namespace graphics
 				}
 			}
 
-			if(best_mode.w < 1024 || best_mode.h < 768) {
-				best_mode.w = 1024;
-				best_mode.h = 768;
+			if(best_mode.w < g_min_window_width || best_mode.h < g_min_window_height) {
+				best_mode.w = g_min_window_width;
+				best_mode.h = g_min_window_height;
 			}
 
 			return best_mode;
@@ -118,6 +120,12 @@ namespace graphics
 
 	window_manager::~window_manager()
 	{
+	}
+
+	void window_manager::notify_new_window_size()
+	{
+		SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
+		screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 	}
 
 	void window_manager::create_window(int width, int height)

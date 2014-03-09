@@ -199,41 +199,6 @@ namespace tbs
 				status_change();
 
 				return;
-			} else if(type == "observe_game") {
-				const int id = msg["game_id"].as_int();
-				const std::string user = msg["user"].as_string();
-				const int session_id = msg["session_id"].as_int();
-
-				game_info_ptr g;
-				foreach(const game_info_ptr& gm, games_) {
-					if(gm->game_state->game_id() == id) {
-						g = gm;
-						break;
-					}
-				}
-
-				if(!g) {
-					send_fn(json::parse("{ \"type\": \"unknown_game\" }"));
-					return;
-				}
-
-				if(clients_.count(session_id)) {
-					send_fn(json::parse("{ \"type\": \"reuse_session_id\" }"));
-					return;
-				}
-
-				client_info& cli_info = clients_[session_id];
-				cli_info.user = user;
-				cli_info.game = g;
-				cli_info.nplayer = -1;
-				cli_info.last_contact = nheartbeat_;
-				cli_info.session_id = session_id;
-
-				g->clients.push_back(session_id);
-
-				send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
-
-				return;
 			} else if(type == "get_status") {
 				const int last_status = msg["last_seen"].as_int();
 				if(last_status == status_id_) {
@@ -252,6 +217,46 @@ namespace tbs
 				send_fn(variant(&m));
 				return;
 			}
+		}
+
+		if(type == "observe_game") {
+			fprintf(stderr, "ZZZ: RECEIVE observe_game\n");
+			const int id = msg["game_id"].as_int(-1);
+			const std::string user = msg["user"].as_string();
+
+			game_info_ptr g;
+			foreach(const game_info_ptr& gm, games_) {
+				if(id == -1 || gm->game_state->game_id() == id) {
+					g = gm;
+					break;
+				}
+			}
+
+			if(!g) {
+				fprintf(stderr, "ZZZ: SEND unknown_game\n");
+				send_fn(json::parse("{ \"type\": \"unknown_game\" }"));
+				return;
+			}
+
+			if(clients_.count(session_id)) {
+				fprintf(stderr, "ZZZ: SEND reuse_ssoin_id\n");
+				send_fn(json::parse("{ \"type\": \"reuse_session_id\" }"));
+				return;
+			}
+
+			client_info& cli_info = clients_[session_id];
+			cli_info.user = user;
+			cli_info.game = g;
+			cli_info.nplayer = -1;
+			cli_info.last_contact = nheartbeat_;
+			cli_info.session_id = session_id;
+
+			g->clients.push_back(session_id);
+
+			send_fn(json::parse(formatter() << "{ \"type\": \"observing_game\" }"));
+			fprintf(stderr, "ZZZ: RESPONDED TO observe_game\n");
+
+			return;
 		}
 
 		std::map<int, client_info>::iterator client_itor = clients_.find(session_id);
@@ -478,10 +483,7 @@ namespace tbs
 			return;
 		}
 
-		fprintf(stderr, "GAMES: %d\n", (int)games_.size());
-
 		foreach(game_info_ptr& g, games_) {
-			fprintf(stderr, "LAST TOUCH: %d\n", nheartbeat_ - g->nlast_touch);
 			if(nheartbeat_ - g->nlast_touch > 300) {
 				g = game_info_ptr();
 			}

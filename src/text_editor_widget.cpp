@@ -133,7 +133,7 @@ text_editor_widget::text_editor_widget(int width, int height)
 	select_(0,0), cursor_(0,0),
 	nrows_((height - BorderSize*2)/char_height_),
 	ncols_((width - 20 - BorderSize*2)/char_width_),
-	scroll_pos_(0),
+	scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(false), 
 	is_dragging_(false),
@@ -147,7 +147,7 @@ text_editor_widget::text_editor_widget(int width, int height)
 	if(height == 0) {
 		height = char_height_ + BorderSize*2;
 		nrows_ = 1;
-		ncols_ = width/char_width_;
+		ncols_ = (width - BorderSize*2)/char_width_;
 		widget::set_dim(width, height);
 	} else {
 		widget::set_dim(width - 20, height);
@@ -160,7 +160,7 @@ text_editor_widget::text_editor_widget(int width, int height)
 
 text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_callable* e)
 	: scrollable_widget(v,e), last_op_type_(NULL), font_size_(14), 
-	select_(0,0), cursor_(0,0), scroll_pos_(0),
+	select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(false), 
 	is_dragging_(false),
@@ -219,7 +219,6 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	if(height == 0) {
 		height = char_height_ + BorderSize*2;
 		nrows_ = 1;
-		ncols_ = width/char_width_;
 		widget::set_dim(width - 20, height);
 	} else {
 		widget::set_dim(width - 20, height);
@@ -297,7 +296,7 @@ void text_editor_widget::set_text(const std::string& value, bool reset_cursor)
 
 	if(reset_cursor) {
 		select_ = cursor_ = Loc(0,0);
-		scroll_pos_ = 0;
+		xscroll_pos_ = scroll_pos_ = 0;
 	} else {
 		if(select_.row >= text_.size()) {
 			select_.row = text_.size() - 1;
@@ -386,7 +385,7 @@ void text_editor_widget::handle_draw() const
 
 		int c = 0;
 		std::vector<std::pair<Loc, Loc> >::const_iterator search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(), std::pair<Loc,Loc>(Loc(n,0),Loc(n,0)));
-		for(int m = 0; m < text_[n].size(); ++m, ++c) {
+		for(int m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
 			if(c >= ncols_) {
 				++r;
 				c -= ncols_;
@@ -1087,6 +1086,10 @@ bool text_editor_widget::handle_text_input_internal(const char* text)
 		++cursor_.col;
 	}
 	select_ = cursor_;
+	if(nrows_ == 1) {
+		on_move_cursor();
+	}
+
 	refresh_scrollbar();
 	on_change();
 	return true;
@@ -1211,7 +1214,7 @@ std::pair<int, int> text_editor_widget::mouse_position_to_row_col(int xpos, int 
 	for(int n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
 		int c = 0;
 		bool matches_row = ypos >= yloc + r*char_height_ && ypos < yloc + (r+1)*char_height_;
-		for(size_t m = 0; m < text_[n].size(); ++m, ++c) {
+		for(size_t m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
 			if(c >= ncols_) {
 				if(matches_row) {
 					break;
@@ -1322,6 +1325,14 @@ void text_editor_widget::on_move_cursor(bool auto_shift)
 		}
 	}
 
+	if(nrows_ == 1) {
+		if(cursor_.col < xscroll_pos_) {
+			xscroll_pos_ = std::max<int>(0, cursor_.col - 4);
+		} else if(cursor_.col >= xscroll_pos_ + ncols_) {
+			xscroll_pos_ = cursor_.col + 4 - ncols_;
+		}
+	}
+
 	if(start_pos != scroll_pos_) {
 		refresh_scrollbar();
 	}
@@ -1371,7 +1382,7 @@ void text_editor_widget::refresh_scrollbar()
 		}
 	}
 
-	if(total_rows <= nrows_) {
+	if(total_rows <= nrows_ || nrows_ == 1) {
 		//no scrollbar needed.
 		set_virtual_height(height());
 		update_scrollbar();
