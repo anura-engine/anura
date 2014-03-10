@@ -520,7 +520,17 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	} else if(type == "chat_message") {
 		variant m = msg;
-		m.add_attr(variant("nick"), variant(players_[nplayer].name));
+		if(nplayer >= 0) {
+			m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
+		} else {
+			std::string nick = "observer";
+			if(m.has_key(variant("nick"))) {
+				nick = m["nick"].as_string();
+				nick += " (obs)";
+			}
+
+			m.add_attr_mutation(variant("nick"), variant(nick));
+		}
 		queue_message(m);
 		return;
 	}
