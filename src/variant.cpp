@@ -1060,7 +1060,7 @@ bool variant::as_bool() const
 	case VARIANT_TYPE_CALLABLE:
 		return callable_ != NULL;
 	case VARIANT_TYPE_LIST:
-		return !list_->size() == 0;
+		return list_->size() != 0;
 	case VARIANT_TYPE_MAP:
 		return !map_->elements.empty();
 	case VARIANT_TYPE_STRING:
