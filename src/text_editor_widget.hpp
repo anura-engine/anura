@@ -202,6 +202,8 @@ private:
 
 	int in_event_;
 
+	bool password_entry_;
+
 	friend class dropdown_widget;
 };
 

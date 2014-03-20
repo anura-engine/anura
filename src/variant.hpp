@@ -41,8 +41,8 @@ class formula_expression;
 }
 
 class variant_type;
-typedef boost::shared_ptr<const variant_type> variant_type_ptr;
-typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
+typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
+typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
 
 struct CallStackEntry {
 	const game_logic::formula_expression* expression;
@@ -86,7 +86,7 @@ struct type_error {
 static const int64_t VARIANT_DECIMAL_PRECISION = DECIMAL_PRECISION;
 
 struct VariantFunctionTypeInfo : public reference_counted_object {
-	VariantFunctionTypeInfo() : num_unneeded_args(0) {}
+	VariantFunctionTypeInfo();
 	std::vector<std::string> arg_names;
 	std::vector<variant> default_args;
 	std::vector<variant_type_ptr> variant_types;

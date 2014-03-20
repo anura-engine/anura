@@ -167,7 +167,10 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 		}
 	}
 
-	set_dim(width(), height()),
+	if(!v.has_key("height")) {
+		//if height isn't given, auto set it.
+		set_dim(width(), ypos + line_height);
+	}
 	
 	//ypos + line_height);
 	set_virtual_height(ypos + line_height);

@@ -53,6 +53,7 @@
 #include "geometry.hpp"
 #include "hex_map.hpp"
 #include "lua_iface.hpp"
+#include "md5.hpp"
 #include "rectangle_rotator.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
@@ -412,6 +413,13 @@ FUNCTION_DEF(query_cache, 3, 3, "query_cache(ffl_cache, key, expr): ")
 FUNCTION_TYPE_DEF
 	return args()[2]->query_variant_type();
 END_FUNCTION_DEF(query_cache)
+
+FUNCTION_DEF(md5, 1, 1, "md5(string) ->string")
+	return variant(md5::sum(args()[0]->evaluate(variables).as_string()));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	RETURN_TYPE("string");
+END_FUNCTION_DEF(md5)
 
 	class if_function : public function_expression {
 	public:
@@ -935,7 +943,11 @@ FUNCTION_DEF(max, 1, -1, "max(args...) -> value: evaluates to the maximum of the
 	return res;
 FUNCTION_TYPE_DEF
 	if(args().size() == 1) {
-		return args()[0]->query_variant_type()->is_list_of();
+		std::vector<variant_type_ptr> items;
+		variant_type_ptr result = args()[0]->query_variant_type()->is_list_of();
+		items.push_back(result);
+		items.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
+		return variant_type::get_union(items);
 	} else {
 		std::vector<variant_type_ptr> types;
 		for(int n = 0; n != args().size(); ++n) {
@@ -3741,8 +3753,10 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	docname = preferences::user_data_path() + docname;
 	sys::write_file(docname, game_logic::serialize_doc_with_objects(doc));
 	return variant();
-FUNCTION_TYPE_DEF
-	return parse_variant_type(variant("string|null"));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string");
+	ARG_TYPE("any");
+	RETURN_TYPE("commands")
 END_FUNCTION_DEF(write_document)
 
 FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
@@ -4521,7 +4535,7 @@ END_FUNCTION_DEF(typeof)
 FUNCTION_DEF(static_typeof, 1, 1, "static_typeof(expression) -> string: yields the statically known type of the given expression")
 	variant_type_ptr type = args()[0]->query_variant_type();
 	ASSERT_LOG(type.get() != NULL, "NULL VALUE RETURNED FROM TYPE QUERY");
-	return variant(type->to_string());
+	return variant(type->base_type_no_enum()->to_string());
 END_FUNCTION_DEF(static_typeof)
 
 class gc_command : public game_logic::command_callable

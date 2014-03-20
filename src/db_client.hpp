@@ -32,14 +32,16 @@ public:
 	// ongoing operations.
 	virtual void process(int timeout_us=0) = 0;
 
+	enum PUT_OPERATION { PUT_SET, PUT_ADD, PUT_REPLACE };
+
 	// Function to put the given document into the database with the
 	// associated key. Will call on_done when it completes or on_error if it
 	// encountered an error along the way.
-	virtual void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error) = 0;
+	virtual void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op=PUT_SET) = 0;
 
 	// Function to get the given document from the database. Will call on_done
 	// with the document on completion (null if no document is found).
-	virtual void get(const std::string& key, std::function<void(variant)> on_done) = 0;
+	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0) = 0;
 };
 
 #endif

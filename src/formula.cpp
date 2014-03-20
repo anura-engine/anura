@@ -1751,8 +1751,8 @@ private:
 			return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
 		case OP_AND:
 		case OP_OR: {
-			variant_type_ptr left_type = left_->query_variant_type();
-			variant_type_ptr right_type = left_->query_variant_type();
+			variant_type_ptr left_type = left_->query_variant_type()->base_type_no_enum();
+			variant_type_ptr right_type = left_->query_variant_type()->base_type_no_enum();
 			if(left_type->is_equal(*right_type)) {
 				return left_type;
 			}
@@ -1764,8 +1764,8 @@ private:
 		}
 
 		case OP_ADD: {
-			variant_type_ptr left_type = left_->query_variant_type();
-			variant_type_ptr right_type = right_->query_variant_type();
+			variant_type_ptr left_type = left_->query_variant_type()->base_type_no_enum();
+			variant_type_ptr right_type = right_->query_variant_type()->base_type_no_enum();
 			if(left_type->is_equal(*right_type)) {
 				return left_type;
 			}
@@ -1826,8 +1826,8 @@ private:
 		}
 
 		case OP_MUL: {
-			variant_type_ptr left_type = left_->query_variant_type();
-			variant_type_ptr right_type = right_->query_variant_type();
+			variant_type_ptr left_type = left_->query_variant_type()->base_type_no_enum();
+			variant_type_ptr right_type = right_->query_variant_type()->base_type_no_enum();
 			if(left_type->is_type(variant::VARIANT_TYPE_INT) && right_type->is_type(variant::VARIANT_TYPE_INT)) {
 				return variant_type::get_type(variant::VARIANT_TYPE_INT);
 			}
@@ -1849,8 +1849,8 @@ private:
 		case OP_POW:
 		case OP_DIV:
 		case OP_SUB: {
-			variant_type_ptr left_type = left_->query_variant_type();
-			variant_type_ptr right_type = right_->query_variant_type();
+			variant_type_ptr left_type = left_->query_variant_type()->base_type_no_enum();
+			variant_type_ptr right_type = right_->query_variant_type()->base_type_no_enum();
 			if(left_type->is_type(variant::VARIANT_TYPE_INT) && right_type->is_type(variant::VARIANT_TYPE_INT)) {
 				return variant_type::get_type(variant::VARIANT_TYPE_INT);
 			}

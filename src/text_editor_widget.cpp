@@ -141,7 +141,8 @@ text_editor_widget::text_editor_widget(int width, int height)
 	last_click_at_(-1),
 	consecutive_clicks_(0),
 	text_color_(255, 255, 255, 255),
-	in_event_(0)
+	in_event_(0),
+	password_entry_(false)
 {
 	set_environment();
 	if(height == 0) {
@@ -162,13 +163,14 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	: scrollable_widget(v,e), last_op_type_(NULL), font_size_(14), 
 	select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
-	has_focus_(false), 
+	has_focus_(v["focus"].as_bool(false)), 
 	is_dragging_(false),
 	begin_enter_return_(true),
 	last_click_at_(-1),
 	consecutive_clicks_(0),
 	text_color_(255, 255, 255, 255),
-	in_event_(0)
+	in_event_(0),
+	password_entry_(v["password"].as_bool(false))
 {
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
 	int width = v.has_key("width") ? v["width"].as_int() : 0;
@@ -394,7 +396,8 @@ void text_editor_widget::handle_draw() const
 				}
 			}
 
-			const int char_size = text_[n][m] == '\t' ? 4 : 1;
+			const char ch = password_entry_ ? '*' : text_[n][m];
+			const int char_size = ch == '\t' ? 4 : 1;
 			Loc pos(n, m);
 
 			Loc begin_select = select_;
@@ -426,8 +429,8 @@ void text_editor_widget::handle_draw() const
 				}
 			}
 
-			if(!util::c_isspace(text_[n][m]) && util::c_isprint(text_[n][m])) {
-				const CharArea& area = get_char_area(font_size_, text_[n][m]);
+			if(!util::c_isspace(ch) && util::c_isprint(ch)) {
+				const CharArea& area = get_char_area(font_size_, ch);
 
 				const int x1 = xpos + c*char_width_;
 				const int y1 = ypos + r*char_height_;
@@ -450,7 +453,7 @@ void text_editor_widget::handle_draw() const
 				rects.push_back(rect_draw);
 			}
 
-			if(text_[n][m] == '\t') {
+			if(ch == '\t') {
 				c += TabAdjust;
 			}
 		}
@@ -1617,6 +1620,8 @@ BEGIN_DEFINE_CALLABLE(text_editor_widget, widget)
 		obj.text_color_ = graphics::color(value);
 	DEFINE_FIELD(has_focus, "bool")
 		return variant::from_bool(obj.has_focus_);
+	DEFINE_SET_FIELD
+		obj.has_focus_ = value.as_bool();
 END_DEFINE_CALLABLE(text_editor_widget)
 
 void text_editor_widget::change_delegate()

@@ -23,6 +23,7 @@
 #include <map>
 
 #include "formula_tokenizer.hpp"
+#include "reference_counted_object.hpp"
 #include "variant.hpp"
 
 namespace game_logic
@@ -38,19 +39,21 @@ struct types_cfg_scope
 };
 
 class variant_type;
-typedef boost::shared_ptr<const variant_type> variant_type_ptr;
-typedef boost::shared_ptr<const variant_type> const_variant_type_ptr;
+typedef boost::intrusive_ptr<const variant_type> variant_type_ptr;
+typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
 
 typedef std::pair<variant,variant> variant_range;
 
-class variant_type
+class variant_type : public reference_counted_object
 {
 public:
 	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
 	static variant_type_ptr get_type(variant::TYPE type);
+	static variant_type_ptr get_singleton_enum(variant item);
 	static variant_type_ptr get_enum(const std::vector<variant>& items);
+	static variant_type_ptr get_enum(const std::vector<variant_range>& items);
 	static variant_type_ptr get_union(const std::vector<variant_type_ptr>& items);
 	static variant_type_ptr get_list(variant_type_ptr element_type);
 	static variant_type_ptr get_specific_list(const std::vector<variant_type_ptr>& types);

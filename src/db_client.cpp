@@ -85,11 +85,24 @@ public:
 
 	~couchbase_db_client() {}
 
-	void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error) {
+	void put(const std::string& key, variant doc, std::function<void()> on_done, std::function<void()> on_error, PUT_OPERATION op) {
 		std::string doc_str = doc.write_json();
 		lcb_store_cmd_t cmd;
 		memset(&cmd, 0, sizeof(cmd));
-		cmd.v.v0.operation = LCB_SET;
+
+		switch(op) {
+			case PUT_ADD:
+				cmd.v.v0.operation = LCB_ADD;
+				break;
+			case PUT_REPLACE:
+				cmd.v.v0.operation = LCB_REPLACE;
+				break;
+			case PUT_SET:
+			default:
+				cmd.v.v0.operation = LCB_SET;
+				break;
+		}
+
 		cmd.v.v0.key = key.c_str();
 		cmd.v.v0.nkey = key.size();
 		cmd.v.v0.bytes = doc_str.c_str();
@@ -106,12 +119,17 @@ public:
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(NULL, err));
 	}
 
-	void get(const std::string& key, std::function<void(variant)> on_done)
+	void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds)
 	{
 		lcb_get_cmd_t cmd;
 		memset(&cmd, 0, sizeof(cmd));
 		cmd.v.v0.key = key.c_str();
 		cmd.v.v0.nkey = key.size();
+
+		if(lock_seconds) {
+			cmd.v.v0.lock = 1;
+			cmd.v.v0.exptime = lock_seconds;
+		}
 
 		const lcb_get_cmd_t* commands[1];
 		commands[0] = &cmd;
@@ -126,7 +144,9 @@ public:
 	void process(int timeout_us)
 	{
 		if(timeout_us > 0) {
-			lcb_timer_t timer = lcb_timer_create(instance_, NULL, timeout_us, 0, timer_callback, NULL);
+			lcb_error_t error = LCB_SUCCESS;
+			lcb_timer_t timer = lcb_timer_create(instance_, NULL, timeout_us, 0, timer_callback, &error);
+			ASSERT_LOG(error == LCB_SUCCESS, "Failed to create lcb timer");
 		}
 		lcb_wait(instance_);
 	}
@@ -139,6 +159,13 @@ void store_callback(lcb_t instance, const void *cookie,
                     lcb_error_t err,
                     const lcb_store_resp_t *item)
 {
+	if(cookie && (err == LCB_KEY_EEXISTS || err == LCB_KEY_ENOENT)) {
+		const PutInfo* info = reinterpret_cast<const PutInfo*>(cookie);
+		if(info->on_error) {
+			info->on_error();
+		}
+	}
+
 	ASSERT_LOG(err == LCB_SUCCESS, "Error in store callback: " << lcb_strerror(NULL, err));
 	
 	if(cookie) {
@@ -152,10 +179,14 @@ void store_callback(lcb_t instance, const void *cookie,
 void get_callback(lcb_t instance, const void *cookie, lcb_error_t err,
                   const lcb_get_resp_t *item)
 {
-	ASSERT_LOG(err == LCB_SUCCESS, "Error in get callback: " << lcb_strerror(NULL, err));
+	fprintf(stderr, "ZZZ: DB get_callback()\n");
+	ASSERT_LOG(err == LCB_SUCCESS || err == LCB_KEY_ENOENT, "Error in get callback: " << lcb_strerror(NULL, err));
 	if(cookie) {
-		std::string doc(reinterpret_cast<const char*>(item->v.v0.bytes),reinterpret_cast<const char*>( item->v.v0.bytes) + item->v.v0.nbytes);
-		variant v = json::parse(doc);
+		variant v;
+		if(err == LCB_SUCCESS) {
+			std::string doc(reinterpret_cast<const char*>(item->v.v0.bytes),reinterpret_cast<const char*>( item->v.v0.bytes) + item->v.v0.nbytes);
+			v = json::parse(doc);
+		}
 		const GetInfo* info = reinterpret_cast<const GetInfo*>(cookie);
 		if(info->on_done) {
 			info->on_done(v);

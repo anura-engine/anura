@@ -112,8 +112,6 @@ namespace tbs
 
 		// send_fn's waiting on status info.
 		std::vector<send_function> status_fns_;
-
-		std::vector<int> matchmaking_sessions_;
 	};
 }
 
