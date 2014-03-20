@@ -158,6 +158,9 @@ type_error::type_error(const std::string& str) : message(str) {
 	std::cerr << output_formula_error_info();
 }
 
+VariantFunctionTypeInfo::VariantFunctionTypeInfo() : num_unneeded_args(0)
+{}
+
 struct variant_list {
 
 	variant_list() : begin(elements.begin()), end(elements.end()),
@@ -1060,7 +1063,7 @@ bool variant::as_bool() const
 	case VARIANT_TYPE_CALLABLE:
 		return callable_ != NULL;
 	case VARIANT_TYPE_LIST:
-		return !list_->size() == 0;
+		return list_->size() != 0;
 	case VARIANT_TYPE_MAP:
 		return !map_->elements.empty();
 	case VARIANT_TYPE_STRING:
@@ -1671,7 +1674,8 @@ bool variant::operator!=(const variant& v) const
 bool variant::operator<=(const variant& v) const
 {
 	if(type_ != v.type_) {
-		if(type_ == VARIANT_TYPE_DECIMAL || v.type_ == VARIANT_TYPE_DECIMAL) {
+		if(type_ == VARIANT_TYPE_DECIMAL && v.is_numeric() ||
+		   v.type_ == VARIANT_TYPE_DECIMAL && is_numeric()) {
 			return as_decimal() <= v.as_decimal();
 		}
 

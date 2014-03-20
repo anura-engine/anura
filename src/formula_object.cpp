@@ -33,6 +33,7 @@
 #include "preferences.hpp"
 #include "string_utils.hpp"
 #include "unit_test.hpp"
+#include "uuid.hpp"
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
@@ -200,8 +201,8 @@ variant get_class_node(const std::string& type)
 	return i->second;
 }
 
-enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, NUM_BASE_FIELDS };
-static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib"};
+enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
+static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib", "_uuid"};
 
 class formula_class_definition : public formula_callable_definition
 {
@@ -239,6 +240,9 @@ public:
 			slots_.back().type_definition = get_library_definition().get();
 			slots_.back().variant_type = variant_type::get_builtin("library");
 			assert(slots_.back().variant_type);
+			break;
+			case FIELD_UUID:
+			slots_.back().variant_type = variant_type::get_type(variant::VARIANT_TYPE_STRING);
 			break;
 			}
 		}
@@ -963,62 +967,6 @@ boost::intrusive_ptr<formula_object> formula_object::create(const std::string& t
 	return res;
 }
 
-namespace {
-
-boost::mt19937* twister_rng() {
-	static boost::mt19937 ran;
-	ran.seed(boost::posix_time::microsec_clock::local_time().time_of_day().total_milliseconds());
-	return &ran;
-}
-
-boost::uuids::uuid generate_uuid() {
-	static boost::uuids::basic_random_generator<boost::mt19937> gen(twister_rng());
-	return gen();
-}
-
-variant write_uuid(const boost::uuids::uuid& id) {
-	char result[33];
-	char* ptr = result;
-	for(auto num : id) {
-		sprintf(ptr, "%02x", static_cast<int>(num));
-		ptr += 2;
-	}
-	return variant(std::string(result, result+32));
-}
-
-boost::uuids::uuid read_uuid(const variant& v) {
-	if(v.is_int()) {
-		//backwards compatibility
-		return generate_uuid();
-	}
-
-	boost::uuids::uuid result;
-
-	const std::string& nums = v.as_string();
-	const char* ptr = nums.c_str();
-	ASSERT_LOG(nums.size() == 32, "Trying to deserialize bad UUID: " << v.write_json());
-	for(auto itor = result.begin(); itor != result.end(); ++itor) {
-		char buf[3];
-		buf[0] = *ptr++;
-		buf[1] = *ptr++;
-		buf[2] = 0;
-
-		*itor = strtol(buf, NULL, 16);
-	}
-
-	return result;
-}
-
-UNIT_TEST(serialize_uuid) {
-	for(int i = 0; i != 8; ++i) {
-		boost::uuids::uuid id = generate_uuid();
-		const bool succeeded = id == read_uuid(write_uuid(id));
-		CHECK_EQ(succeeded, true);
-	}
-}
-
-}
-
 formula_object::formula_object(const std::string& type, variant args)
   : id_(generate_uuid()), new_in_update_(true), orphaned_(false),
     class_(get_class(type)), private_data_(-1)
@@ -1076,7 +1024,7 @@ void formula_object::call_constructors(variant args)
 }
 
 formula_object::formula_object(variant data)
-  : id_(read_uuid(data["id"])), new_in_update_(true), orphaned_(false),
+  : id_(data["id"].is_string() ? read_uuid(data["id"].as_string()) : generate_uuid()), new_in_update_(true), orphaned_(false),
     class_(get_class(data["@class"].as_string())), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
@@ -1121,7 +1069,7 @@ variant formula_object::serialize_to_wml() const
 {
 	std::map<variant, variant> result;
 	result[variant("@class")] = variant(class_->name());
-	result[variant("id")] = write_uuid(id_);
+	result[variant("id")] = variant(write_uuid(id_));
 
 	std::map<variant,variant> state;
 	foreach(const property_entry& slot, class_->slots()) {
@@ -1208,6 +1156,7 @@ variant formula_object::get_value_by_slot(int slot) const
 		case FIELD_PREVIOUS: if(previous_) { return variant(previous_.get()); } else { return variant(this); }
 		case FIELD_CLASS: return class_->name_variant();
 		case FIELD_LIB: return variant(get_library_object().get());
+		case FIELD_UUID: return variant(write_uuid(id_));
 		default: break;
 	}
 

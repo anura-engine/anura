@@ -62,7 +62,7 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 {
 	variant label_var = v["label"];
 	label_ = label_var.is_map() ? widget_factory::create(label_var, e) : new label(label_var.as_string_default("Button"), graphics::color_white());
-	ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an on_click handler");
+	ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an on_click handler: " << v.write_json() << " " << v.debug_location());
 	// create delegate for onclick
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
 

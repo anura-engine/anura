@@ -31,6 +31,7 @@ objects = \
 	src/current_generator.o \
 	src/custom_object_widget.o \
 	src/data_blob.o \
+	src/db_client.o \
 	src/decimal.o \
 	src/difficulty.o \
 	src/drag_widget.o \
@@ -207,6 +208,7 @@ objects = \
 	src/utility_query.o \
 	src/utility_render_level.o \
 	src/utils.o \
+	src/uuid.o \
 	src/view3d_widget.o \
 	src/variant.o \
 	src/variant_callable.o \

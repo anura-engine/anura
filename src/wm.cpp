@@ -157,6 +157,8 @@ namespace graphics
 			SDL_GL_SetAttribute(SDL_GL_ALPHA_SIZE, 8);
 		}
 
+		fprintf(stderr, "ZZZ: set msaa: %d\n", g_msaa);
+
 		if(g_msaa > 0) {
 			if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
 				std::cerr << "MSAA(" << g_msaa << ") requested but mutlisample buffer couldn't be allocated." << std::endl;

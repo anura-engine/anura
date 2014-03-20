@@ -389,11 +389,21 @@ custom_object::custom_object(variant node)
 	set_mouseover_delay(node["mouseover_delay"].as_int(0));
 
 #if defined(USE_SHADERS)
-	if(type_->shader()) {
+	if(node.has_key("shader")) {
+		shader_.reset(new gles2::shader_program(node["shader"]));
+	} else if(type_->shader()) {
 		shader_.reset(new gles2::shader_program(*type_->shader()));
 	}
-	for(size_t n = 0; n < type_->effects().size(); ++n) {
-		effects_.push_back(new gles2::shader_program(*type_->effects()[n]));
+
+	if(node.has_key("effects")) {
+		variant effects = node["effects"];
+		for(int n = 0; n != effects.num_elements(); ++n) {
+			effects_.push_back(new gles2::shader_program(effects[n]));
+		}
+	} else {
+		for(size_t n = 0; n < type_->effects().size(); ++n) {
+			effects_.push_back(new gles2::shader_program(*type_->effects()[n]));
+		}
 	}
 #endif
 
@@ -948,9 +958,25 @@ variant custom_object::write() const
 	}
 
 #if defined(USE_SHADERS)
-	if(shader_) { res.add("shader", shader_->write()); }
-	for(size_t n = 0; n < effects_.size(); ++n) {
-		res.add("effects", effects_[n]->write());
+	if(shader_ &&
+	   (!type_->shader() || type_->shader()->name() == shader_->name())) {
+		res.add("shader", shader_->write());
+	}
+
+	bool write_effects = effects_.size() != type_->effects().size();
+	if(!write_effects) {
+		for(size_t n = 0; n < effects_.size(); ++n) {
+			if(effects_[n]->name() != type_->effects()[n]->name()) {
+				write_effects = true;
+				break;
+			}
+		}
+	}
+
+	if(write_effects) {
+		for(size_t n = 0; n < effects_.size(); ++n) {
+			res.add("effects", effects_[n]->write());
+		}
 	}
 #endif
 

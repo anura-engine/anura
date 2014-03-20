@@ -19,6 +19,7 @@
 #ifdef __linux__
 
 #include <algorithm>
+#include <ctype.h>
 #include <deque>
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/bind.hpp>
@@ -29,6 +30,7 @@
 #include <unistd.h>
 
 #include "asserts.hpp"
+#include "db_client.hpp"
 #include "filesystem.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
@@ -44,12 +46,14 @@
 #include "tbs_web_server.hpp"
 #include "unit_test.hpp"
 #include "utils.hpp"
+#include "uuid.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
 using namespace tbs;
 
 namespace {
+static int g_session_id_gen = 8000000;
 
 const variant& get_server_info_file()
 {
@@ -65,14 +69,45 @@ const variant& get_server_info_file()
 	return server_info;
 }
 
+std::string normalize_username(std::string username)
+{
+	util::strip(username);
+	for(char& c : username) {
+		c = tolower(c);
+	}
+
+	return username;
+}
+
+bool username_valid(const std::string& username)
+{
+	if(username.empty()) {
+		return false;
+	}
+
+	for(char c : username) {
+		if(!isalnum(c) && c != '_' && c != ' ' && c != '^') {
+			return false;
+		}
+	}
+
+	return true;
+}
+
 class matchmaking_server : public http::web_server
 {
 public:
 	matchmaking_server(boost::asio::io_service& io_service, int port)
 	  : http::web_server(io_service, port),
-	    io_service_(io_service), port_(port), timer_(io_service),
+	    io_service_(io_service), port_(port),
+		timer_(io_service), db_timer_(io_service),
 		time_ms_(0), terminated_servers_(0)
 	{
+		db_client_ = db_client::create();
+
+		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
+		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+
 		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
 
@@ -84,6 +119,14 @@ public:
 	~matchmaking_server()
 	{
 		timer_.cancel();
+	}
+
+	void db_process(const boost::system::error_code& error)
+	{
+		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
+		db_timer_.async_wait(boost::bind(&matchmaking_server::db_process, this, boost::asio::placeholders::error));
+
+		db_client_->process(1000);
 	}
 
 	void heartbeat(const boost::system::error_code& error)
@@ -113,10 +156,16 @@ public:
 
 		time_ms_ += 1000;
 
+		variant_builder heartbeat_message;
+		heartbeat_message.add("type", "heartbeat");
+		heartbeat_message.add("users", sessions_.size());
+		heartbeat_message.add("games", servers_.size());
+		std::string heartbeat_msg = heartbeat_message.build().write_json();
+
 		for(auto& p : sessions_) {
 			if(p.second.current_socket && time_ms_ - p.second.last_contact >= 5000) {
 
-				send_msg(p.second.current_socket, "text/json", "{ \"type\": \"heartbeat\" }", "");
+				send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
 				p.second.last_contact = time_ms_;
 				p.second.current_socket = socket_ptr();
 			} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
@@ -139,18 +188,180 @@ public:
 
 	void handle_post(socket_ptr socket, variant doc, const http::environment& env)
 	{
+		int request_session_id = -1;
+		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
+		if(i != env.end()) {
+			const char* cookie_start = strstr(i->second.c_str(), " session=");
+			if(cookie_start != NULL) {
+				++cookie_start;
+			} else {
+				cookie_start = strstr(i->second.c_str(), "session=");
+				if(cookie_start != i->second.c_str()) {
+					cookie_start = NULL;
+				}
+			}
+	
+			if(cookie_start) {
+				request_session_id = atoi(cookie_start+8);
+			}
+		}
+
 		try {
-			static int session_id_gen = 8000000;
 			fprintf(stderr, "HANDLE POST: %s\n", doc.write_json().c_str());
 
 			assert_recover_scope recover_scope;
 			std::string request_type = doc["type"].as_string();
 
-			if(request_type == "get_server_info") {
+			if(request_type == "register") {
+				std::string user = normalize_username(doc["user"].as_string());
+				if(!username_valid(user)) {
+					variant_builder response;
+					response.add("type", "registration_fail");
+					response.add("reason", "invalid_username");
+					response.add("message", "Not a valid username");
+					send_response(socket, response.build());
+				}
+
+				std::string user_full = doc["user"].as_string();
+
+				std::string passwd = doc["passwd"].as_string();
+				const bool remember = doc["remember"].as_bool(false);
+				db_client_->get("user:" + user, [=](variant user_info) {
+					fprintf(stderr, "ZZZ: DB GET: %s\n", user_info.write_json().c_str());
+					if(user_info.is_null() == false) {
+						variant_builder response;
+						response.add("type", "registration_fail");
+						response.add("reason", "username_taken");
+						response.add("message", "That username is already taken.");
+						send_response(socket, response.build());
+						return;
+					}
+
+					variant_builder new_user_info;
+					new_user_info.add("user", user_full);
+					new_user_info.add("passwd", passwd);
+
+					//put the new user in the database. Note that we use
+					//PUT_REPLACE so that if there is a race for two users
+					//to register the same name only one will succeed.
+					db_client_->put("user:" + user, new_user_info.build(),
+					[=]() {
+						const int session_id = g_session_id_gen++;
+						SessionInfo& info = sessions_[session_id];
+						info.session_id = session_id;
+						info.user_id = user;
+						info.last_contact = this->time_ms_;
+
+						variant_builder response;
+						response.add("type", "registration_success");
+						response.add("session_id", variant(session_id));
+
+						if(remember) {
+							std::string cookie = write_uuid(generate_uuid());
+							response.add("cookie", cookie);
+	
+							variant_builder cookie_info;
+							cookie_info.add("user", user);
+							db_client_->put("cookie:" + cookie, cookie_info.build(),
+							                [](){}, [](){});
+						}
+
+						send_response(socket, response.build());
+					},
+					[=]() {
+						variant_builder response;
+						response.add("type", "registration_fail");
+						response.add("reason", "db_error");
+						response.add("message", "There was an error with registering. Please try again.");
+						send_response(socket, response.build());
+					}, db_client::PUT_ADD);
+				});
+
+				
+
+			} else if(request_type == "login") {
+				std::string user = doc["user"].as_string();
+				std::string passwd = doc["passwd"].as_string();
+				const bool remember = doc["remember"].as_bool(false);
+				db_client_->get("user:" + user, [=](variant user_info) {
+					variant_builder response;
+					if(doc.is_null()) {
+						response.add("type", "login_fail");
+						response.add("reason", "user_not_found");
+						response.add("message", "That user doesn't exist");
+
+						send_response(socket, response.build());
+						return;
+					}
+
+					std::string db_passwd = user_info["passwd"].as_string();
+					if(passwd != db_passwd) {
+						response.add("type", "login_fail");
+						response.add("reason", "passwd_incorrect");
+						response.add("message", "Incorrect password");
+
+						send_response(socket, response.build());
+						return;
+
+					}
+
+					const int session_id = g_session_id_gen++;
+					SessionInfo& info = sessions_[session_id];
+					info.session_id = session_id;
+					info.user_id = user;
+					info.last_contact = this->time_ms_;
+
+					response.add("type", "login_success");
+					response.add("session_id", variant(session_id));
+
+					if(remember) {
+						std::string cookie = write_uuid(generate_uuid());
+						response.add("cookie", cookie);
+
+						variant_builder cookie_info;
+						cookie_info.add("user", user);
+						db_client_->put("cookie:" + cookie, cookie_info.build(),
+						                [](){}, [](){});
+					}
+
+					send_response(socket, response.build());
+				});
+
+			} else if(request_type == "auto_login") {
+				std::string cookie = doc["cookie"].as_string();
+				db_client_->get("cookie:" + cookie, [=](variant user_info) {
+					variant_builder response;
+					if(user_info.is_null()) {
+						response.add("type", "auto_login_fail");
+						send_response(socket, response.build());
+						return;
+					}
+
+					const int session_id = g_session_id_gen++;
+					SessionInfo& info = sessions_[session_id];
+					info.session_id = session_id;
+					info.user_id = user_info["user"].as_string();
+					info.last_contact = this->time_ms_;
+
+					response.add("type", "login_success");
+					response.add("session_id", variant(session_id));
+					response.add("cookie", variant(cookie));
+					send_response(socket, response.build());
+				});
+			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
 			} else if(request_type == "matchmake") {
-				const int session_id = session_id_gen++;
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					variant_builder response;
+					response.add("type", "matchmaking_fail");
+					response.add("reason", "bad_session");
+					response.add("message", "Invalid session ID");
+					send_response(socket, response.build());
+					return;
+				}
 
 				std::map<variant,variant> response;
 				response[variant("type")] = variant("matchmaking_queued");
@@ -159,12 +370,12 @@ public:
 
 				SessionInfo& info = sessions_[session_id];
 				info.session_id = session_id;
-				info.user_id = doc["user"].as_string();
 				info.last_contact = time_ms_;
+				info.queued_for_game = true;
 				
 				std::vector<int> match_sessions;
 				for(auto p : sessions_) {
-					if(p.second.game_details == "" && !session_timed_out(p.second.last_contact) && !p.second.game_pending) {
+					if(p.second.queued_for_game && p.second.game_details == "" && !session_timed_out(p.second.last_contact) && !p.second.game_pending) {
 						match_sessions.push_back(p.first);
 						if(match_sessions.size() == 2) {
 							break;
@@ -184,6 +395,7 @@ public:
 					for(int i : match_sessions) {
 						SessionInfo& session_info = sessions_[i];
 						session_info.game_pending = time_ms_;
+						session_info.queued_for_game = false;
 
 						variant_builder user;
 						user.add("user", session_info.user_id);
@@ -263,7 +475,7 @@ public:
 
 			} else if(request_type == "request_updates") {
 
-				int session_id = doc["session_id"].as_int();
+				int session_id = doc["session_id"].as_int(request_session_id);
 
 				auto itor = sessions_.find(session_id);
 				if(itor == sessions_.end()) {
@@ -312,7 +524,7 @@ public:
 			} else if(request_type == "query_status") {
 				variant response = build_status();
 				if(doc.has_key("session_id") == false) {
-					const int session_id = session_id_gen++;
+					const int session_id = g_session_id_gen++;
 					response.add_attr(variant("session_id"), variant(session_id));
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
@@ -379,12 +591,20 @@ private:
 		return doc.build();
 	}
 
+	void send_response(socket_ptr sock, variant msg) {
+		send_msg(sock, "text/json", msg.write_json(), "");
+	}
+
 	boost::asio::io_service& io_service_;
 	int port_;
 	boost::asio::deadline_timer timer_;
+	boost::asio::deadline_timer db_timer_;
+
+
+	db_client_ptr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0) {}
+		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -392,6 +612,7 @@ private:
 		int game_pending;
 		int game_port;
 		socket_ptr current_socket;
+		bool queued_for_game;
 	};
 
 	std::map<int, SessionInfo> sessions_;

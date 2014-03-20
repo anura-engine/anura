@@ -272,6 +272,16 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(set_clipboard_text)
 
 #if !defined(__native_client__)
+FUNCTION_DEF(tbs_internal_client, 0, 1, "tbs_internal_client(session=-1): creates a client object to the local in-memory tbs server")
+
+	const int session = args().size() >= 1 ? args()[0]->evaluate(variables).as_int() : -1;
+	return variant(new tbs::internal_client(session));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int")
+RETURN_TYPE("object")
+END_FUNCTION_DEF(tbs_internal_client)
+
 FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a client object to the tbs server")
 	const std::string host = args()[0]->evaluate(variables).as_string();
 	variant port_var = args()[1]->evaluate(variables);
@@ -282,11 +292,11 @@ FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a cl
 		port = formatter() << port_var.as_int();
 	}
 	const int session = args().size() >= 3 ? args()[2]->evaluate(variables).as_int() : -1;
-
+/*
 	if(host == "localhost" && preferences::internal_tbs_server()) {
 		return variant(new tbs::internal_client(session));
 	}
-
+*/
 	return variant(new tbs::client(host, port, session));
 
 FUNCTION_ARGS_DEF

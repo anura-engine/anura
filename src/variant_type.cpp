@@ -193,13 +193,7 @@ public:
 		}
 
 		if(type->is_enumerable()) {
-			for(const auto& a : *type->is_enumerable()) {
-				if(a.first.type() != type_) {
-					return false;
-				}
-			}
-
-			return true;
+			return is_compatible(type->base_type_no_enum(), why);
 		}
 
 		if(type_ == variant::VARIANT_TYPE_DECIMAL) {
@@ -802,6 +796,23 @@ public:
 		}
 
 		return std::pair<variant_type_ptr,variant_type_ptr>(get_union(key_types), get_union(value_types));
+	}
+
+	variant_type_ptr base_type_no_enum() const {
+		std::vector<variant_type_ptr> result;
+		bool is_different = false;
+		for(const variant_type_ptr& t : types_) {
+			result.push_back(t->base_type_no_enum());
+			if(result.back() != t) {
+				is_different = true;
+			}
+		}
+
+		if(is_different == false) {
+			return variant_type_ptr(this);
+		}
+
+		return get_union(result);
 	}
 private:
 	variant_type_ptr null_excluded() const {
@@ -1717,13 +1728,8 @@ bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::o
 	}
 
 	if(to->is_union()) {
-		if(from->is_enumerable()) {
-			for(const auto& r : *from->is_enumerable()) {
-				if(variant_types_compatible(to, variant_type::get_type(r.first.type())) == false) {
-					return false;
-				}
-			}
-
+		//handle a case like string|int matching with enum { 5, 'a' }.
+		if(from->is_enumerable() && variant_types_compatible(to, from->base_type_no_enum())) {
 			return true;
 		}
 
@@ -1885,7 +1891,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			++i1;
 
-			return variant_type_ptr(new variant_type_enum(ranges));
+			v.push_back(variant_type_ptr(new variant_type_enum(ranges)));
 
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
 			i1 += 2;
@@ -2011,7 +2017,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 						break;
 					}
 
-					ASSERT_COND(i1->equals(","), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+					ASSERT_COND(i1->equals(","), "ERROR PARSING MAP TYPE: " << original_str.debug_location() << " expected ',' but found " << std::string(i1->begin, i2->end));
 					++i1;
 				}
 
@@ -2290,6 +2296,13 @@ variant_type_ptr variant_type::get_type(variant::TYPE type)
 	return variant_type_ptr(new variant_type_simple(type));
 }
 
+variant_type_ptr variant_type::get_singleton_enum(variant item)
+{
+	std::vector<variant> items;
+	items.push_back(item);
+	return get_enum(items);
+}
+
 variant_type_ptr variant_type::get_enum(const std::vector<variant>& elements)
 {
 	std::vector<variant_range> ranges;
@@ -2298,6 +2311,11 @@ variant_type_ptr variant_type::get_enum(const std::vector<variant>& elements)
 	}
 
 	return variant_type_ptr(new variant_type_enum(ranges));
+}
+
+variant_type_ptr variant_type::get_enum(const std::vector<variant_range>& elements)
+{
+	return variant_type_ptr(new variant_type_enum(elements));
 }
 
 variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& elements_input)
@@ -2327,6 +2345,29 @@ variant_type_ptr variant_type::get_union(const std::vector<variant_type_ptr>& el
 				elements.erase(elements.begin() + nitem_to_delete);
 			}
 		} while(nitem_to_delete != -1);
+	}
+
+	int num_enums = 0;
+	for(const variant_type_ptr& type : elements_input) {
+		if(type->is_enumerable()) {
+			++num_enums;
+		}
+	}
+
+	if(num_enums > 1) {
+		std::vector<variant_range> e;
+		std::vector<variant_type_ptr> out;
+		for(const variant_type_ptr& type : elements_input) {
+			auto items = type->is_enumerable();
+			if(items) {
+				e.insert(e.end(), items->begin(), items->end());
+			} else {
+				out.push_back(type);
+			}
+		}
+
+		out.push_back(get_enum(e));
+		return get_union(out);
 	}
 
 	foreach(variant_type_ptr el, elements) {

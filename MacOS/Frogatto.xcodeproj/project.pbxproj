@@ -1798,6 +1798,9 @@
 				WARNING_CFLAGS = (
 					"-Wno-parentheses-equality",
 					"-Wno-logical-op-parentheses",
+					"-Wno-deprecated-register",
+					"-Wno-redeclared-class-member",
+					"-Wno-constexpr-not-const",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -1860,6 +1863,9 @@
 				WARNING_CFLAGS = (
 					"-Wno-parentheses-equality",
 					"-Wno-logical-op-parentheses",
+					"-Wno-deprecated-register",
+					"-Wno-redeclared-class-member",
+					"-Wno-constexpr-not-const",
 				);
 				WRAPPER_EXTENSION = app;
 			};

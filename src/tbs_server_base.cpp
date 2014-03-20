@@ -112,80 +112,7 @@ namespace tbs
 		const std::string& type = msg["type"].as_string();
 
 		if(session_id == -1) {
-			if(type == "matchmake") {
-				static int session_id_gen = 80000000;
-				const int session_id = session_id_gen++;
-
-				client_info& cli_info = clients_[session_id];
-				cli_info.user = msg["user"].as_string();
-				cli_info.nplayer = matchmaking_sessions_.size();
-				cli_info.last_contact = nheartbeat_;
-				cli_info.session_id = session_id;
-
-				matchmaking_sessions_.push_back(session_id);
-
-				//const char* msg = "{ \"type\": \"matchmaking_queued\", \"session_id\": ";
-
-				send_fn(json::parse(formatter() << "{ \"type\": \"matchmaking_queued\", \"session_id\": " << session_id << " }"));
-
-				for(int& session : matchmaking_sessions_) {
-					auto cl = clients_.find(session);
-					if(cl == clients_.end() || cl->second.last_contact < nheartbeat_ - 200) {
-						fprintf(stderr, "ERASE CLIENT FOR INACTIVITY: %d vs %d\n", cl->second.last_contact, nheartbeat_);
-						clients_.erase(cl);
-						session = -1;
-					}
-				}
-
-				matchmaking_sessions_.erase(std::remove(matchmaking_sessions_.begin(), matchmaking_sessions_.end(), -1), matchmaking_sessions_.end());
-
-				fprintf(stderr, "CLIENT JOINED MATCHMAKING QUEUE: %d\n", static_cast<int>(matchmaking_sessions_.size()));
-				assert(matchmaking_sessions_.size() <= 2);
-
-				if(matchmaking_sessions_.size() == 2) {
-					std::map<variant,variant> empty_map;
-					variant info(&empty_map);
-					info.add_attr_mutation(variant("game_type"), variant("citadel"));
-
-					std::vector<variant> players;
-
-					std::vector<client_info*> clients;
-
-					for(int session : matchmaking_sessions_) {
-						auto cl = clients_.find(session);
-						assert(cl != clients_.end());
-
-						clients.push_back(&cl->second);
-
-						variant pl(&empty_map);
-
-						pl.add_attr_mutation(variant("user"), variant(cl->second.user));
-						pl.add_attr_mutation(variant("session_id"), variant(session));
-						players.push_back(pl);
-					}
-					matchmaking_sessions_.clear();
-
-					info.add_attr_mutation(variant("users"), variant(&players));
-
-					game_info_ptr g(new game_info(info));
-					assert(g->game_state);
-
-					for(auto cl : clients) {
-						cl->game = g;
-						g->clients.push_back(cl->session_id);
-						g->game_state->add_player(cl->user);
-
-						queue_msg(cl->session_id, formatter() << "{ \"type\": \"match_made\", \"game_id\": " << g->game_state->game_id() << " }");
-					}
-
-					games_.push_back(g);
-
-					status_change();
-				}
-
-				return;
-
-			} else if(type == "create_game") {
+			if(type == "create_game") {
 
 				game_info_ptr g(create_game(msg));
 
@@ -426,10 +353,6 @@ namespace tbs
 		const std::string& type = msg["type"].as_string();
 
 		cli_info.last_contact = nheartbeat_;
-
-//		if(std::count(matchmaking_sessions_.begin(), matchmaking_sessions_.end(), cli_info.session_id) && type == "request_updates") {
-
-//		}
 
 		if(cli_info.game) {
 			if(type == "quit") {

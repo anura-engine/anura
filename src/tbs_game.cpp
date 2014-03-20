@@ -269,7 +269,7 @@ variant game::write(int nplayer) const
 void game::start_game()
 {
 	if(started_) {
-		send_notify("The game has been restarted.");
+		send_notify("The game has started.");
 	}
 
 	state_ = STATE_PLAYING;
@@ -508,6 +508,7 @@ void game::handle_message(int nplayer, const variant& msg)
 	rng::set_seed(rng_seed_);
 	const std::string type = msg["type"].as_string();
 	if(type == "start_game") {
+		std::cerr << "ZZZ: GOT start_game()\n";
 		start_game();
 		return;
 	} else if(type == "request_updates") {
@@ -520,7 +521,17 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	} else if(type == "chat_message") {
 		variant m = msg;
-		m.add_attr(variant("nick"), variant(players_[nplayer].name));
+		if(nplayer >= 0) {
+			m.add_attr_mutation(variant("nick"), variant(players_[nplayer].name));
+		} else {
+			std::string nick = "observer";
+			if(m.has_key(variant("nick"))) {
+				nick = m["nick"].as_string();
+				nick += " (obs)";
+			}
+
+			m.add_attr_mutation(variant("nick"), variant(nick));
+		}
 		queue_message(m);
 		return;
 	}
