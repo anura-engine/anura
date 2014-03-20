@@ -89,7 +89,7 @@ surface get_no_cache(data_blob_ptr blob)
 {
 	ASSERT_LOG(blob != NULL, "Invalid data_blob in surface::get_no_cache");
 	surface surf = surface(IMG_Load_RW(blob->get_rw_ops(), 0));
-	if(surf.get() == false || surf->w == 0) {
+	if(surf.get() == NULL || surf->w == 0) {
 		std::cerr << "failed to load image '" << (*blob)() << "': " << IMG_GetError() << "\n";
 		throw load_image_error();
 	}
@@ -131,7 +131,7 @@ surface get_no_cache(const std::string& key, std::string* full_filename)
 	}
 #endif // ANDROID
 	//std::cerr << "loading image '" << fname << "'\n";
-	if(surf.get() == false || surf->w == 0) {
+	if(surf.get() == NULL || surf->w == 0) {
 		if(key != "") {
 			std::cerr << "failed to load image '" << key << "':" << IMG_GetError() << "\n";
 		}
