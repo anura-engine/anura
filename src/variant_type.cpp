@@ -798,7 +798,7 @@ public:
 		return std::pair<variant_type_ptr,variant_type_ptr>(get_union(key_types), get_union(value_types));
 	}
 
-	variant_type_ptr base_type_no_enum() const override {
+	variant_type_ptr base_type_no_enum() const {
 		std::vector<variant_type_ptr> result;
 		bool is_different = false;
 		for(const variant_type_ptr& t : types_) {
