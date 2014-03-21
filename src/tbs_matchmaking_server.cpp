@@ -313,6 +313,7 @@ public:
 
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
+					response.add("username", variant(info.user_id));
 
 					if(remember) {
 						std::string cookie = write_uuid(generate_uuid());
@@ -346,6 +347,7 @@ public:
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
 					response.add("cookie", variant(cookie));
+					response.add("username", variant(info.user_id));
 					send_response(socket, response.build());
 				});
 			} else if(request_type == "get_server_info") {

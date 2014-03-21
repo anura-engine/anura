@@ -110,7 +110,7 @@ void client::error_handler(const std::string& err)
 		try {
 			v = json::parse(err, json::JSON_NO_PREPROCESSOR);
 		} catch(const json::parse_error&) {
-			std::cerr << "Uanble to parse message \"" << err << "\" assuming it is a string." << std::endl;
+			std::cerr << "Unable to parse message \"" << err << "\" assuming it is a string." << std::endl;
 		}
 		callable_->add("error", v.is_null() ? variant(err) : v);
 		handler_("connection_error");

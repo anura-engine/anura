@@ -43,6 +43,79 @@ using namespace gles2;
 namespace
 {
 
+class rect_primitive : public draw_primitive
+{
+public:
+	explicit rect_primitive(const variant& v);
+private:
+	void init();
+
+	void handle_draw() const;
+#ifdef USE_ISOMAP
+	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+#endif
+
+	variant get_value(const std::string& key) const;
+	void set_value(const std::string& key, const variant& value);
+
+	rect area_;
+	graphics::color color_;
+	shader_program_ptr shader_;
+	mutable std::vector<GLfloat> varray_;
+};
+
+rect_primitive::rect_primitive(const variant& v)
+	: draw_primitive(v), area_(v["area"]), color_(v["color"]), 
+     shader_(gles2::get_simple_shader())
+{
+	if(v.has_key("shader")) {
+		shader_.reset(new shader_program(v["shader"].as_string()));
+	}
+
+	init();
+}
+
+void rect_primitive::init()
+{
+	varray_.clear();
+	varray_.push_back(area_.x());
+	varray_.push_back(area_.y());
+	varray_.push_back(area_.x2());
+	varray_.push_back(area_.y());
+	varray_.push_back(area_.x());
+	varray_.push_back(area_.y2());
+	varray_.push_back(area_.x2());
+	varray_.push_back(area_.y2());
+}
+
+void rect_primitive::handle_draw() const
+{
+	color_.set_as_current_color();
+
+	gles2::manager gles2_manager(shader_);
+	gles2::active_shader()->prepare_draw();
+	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
+	glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
+
+	glColor4f(1.0, 1.0, 1.0, 1.0);
+}
+
+#ifdef USE_ISOMAP
+void rect_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+{
+}
+#endif
+
+variant rect_primitive::get_value(const std::string& key) const
+{
+	return draw_primitive::get_value(key);
+}
+
+void rect_primitive::set_value(const std::string& key, const variant& value)
+{
+	draw_primitive::set_value(key, value);
+}
+
 typedef boost::array<GLfloat, 2> FPoint;
 
 class circle_primitive : public draw_primitive
@@ -768,6 +841,8 @@ draw_primitive_ptr draw_primitive::create(const variant& v)
 		return new arrow_primitive(v);
 	} else if(type == "circle") {
 		return new circle_primitive(v);
+	} else if(type == "rect") {
+		return new rect_primitive(v);
 	} else if(type == "box") {
 		return new box_primitive(v);
 	} else if(type == "box_wireframe") {
