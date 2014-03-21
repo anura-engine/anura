@@ -1440,6 +1440,10 @@ namespace preferences {
 #if defined(USE_LUA)
 			res.insert("lua");
 #endif
+#if defined(USE_SVG)
+			res.insert("svg");
+#endif
+
 		}
 		return res;
 	}
