@@ -285,7 +285,7 @@ public:
 				const bool remember = doc["remember"].as_bool(false);
 				db_client_->get("user:" + user, [=](variant user_info) {
 					variant_builder response;
-					if(doc.is_null()) {
+					if(user_info.is_null()) {
 						response.add("type", "login_fail");
 						response.add("reason", "user_not_found");
 						response.add("message", "That user doesn't exist");
