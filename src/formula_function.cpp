@@ -30,6 +30,12 @@
 #include <iomanip>
 #include <stack>
 #include <math.h>
+#if defined(_MSC_VER)
+#include <boost/math/special_functions/round.hpp>
+#define bmround	boost::math::round
+#else
+#define bmround	round
+#endif
 
 #include "array_callable.hpp"
 #include "asserts.hpp"
@@ -1162,7 +1168,7 @@ FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from
 	const float b = args()[1]->evaluate(variables).as_int();
 	const float c = args()[2]->evaluate(variables).as_int();
 	const float d = args()[3]->evaluate(variables).as_int();
-	return variant(static_cast<int>(round((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
+	return variant(static_cast<int>(bmround((atan2(a-c, b-d)*radians_to_degrees+90)*VARIANT_DECIMAL_PRECISION)*-1), variant::DECIMAL_VARIANT);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
 	ARG_TYPE("int|decimal");
@@ -1226,8 +1232,8 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(floor)
 
 FUNCTION_DEF(round, 1, 1, "Returns the smaller near integer. 3.9 -> 3, 3.3 -> 3, 3 -> 3")
-	const float a = args()[0]->evaluate(variables).as_decimal().as_float();
-	return variant(static_cast<int>(round(a)));
+	const double a = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<int>(bmround(a)));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("decimal");
 FUNCTION_TYPE_DEF
