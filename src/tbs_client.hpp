@@ -43,6 +43,7 @@ public:
 		boost::function<void(std::string)> handler);
 
 	virtual void process();
+	void set_id(const std::string& id);
 
 	void set_use_local_cache(bool value) { use_local_cache_ = value; }
 private:
@@ -52,6 +53,8 @@ private:
 	void recv_handler(const std::string& msg);
 	void error_handler(const std::string& err);
 	variant get_value(const std::string& key) const;
+
+	std::string connection_id_;
 
 	bool use_local_cache_;
 	tbs::game* local_game_cache_;

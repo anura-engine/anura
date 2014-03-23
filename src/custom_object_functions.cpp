@@ -291,18 +291,32 @@ FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a cl
 	} else {
 		port = formatter() << port_var.as_int();
 	}
-	const int session = args().size() >= 3 ? args()[2]->evaluate(variables).as_int() : -1;
+
+	std::string id;
+
+	int session = -1;
+	if(args().size() >= 3) {
+		variant options = args()[2]->evaluate(variables);
+		if(options.is_int()) {
+			session = options.as_int();
+		} else {
+			session = options["session"].as_int(-1);
+			id = options["id"].as_string_default("");
+		}
+	}
 /*
 	if(host == "localhost" && preferences::internal_tbs_server()) {
 		return variant(new tbs::internal_client(session));
 	}
 */
-	return variant(new tbs::client(host, port, session));
+	tbs::client* result = new tbs::client(host, port, session);
+	result->set_id(id);
+	return variant(result);
 
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 	ARG_TYPE("string|int")
-	ARG_TYPE("int")
+	ARG_TYPE("int|{session: int|null, id: string|null}")
 RETURN_TYPE("object")
 END_FUNCTION_DEF(tbs_client)
 

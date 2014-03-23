@@ -94,7 +94,7 @@ void client::recv_handler(const std::string& msg)
 		callable_->add("message", v);
 
 //		try {
-			handler_("message_received");
+			handler_(connection_id_ + "message_received");
 //		} catch(...) {
 //			std::cerr << "ERROR PROCESSING TBS MESSAGE\n";
 //			throw;
@@ -113,7 +113,7 @@ void client::error_handler(const std::string& err)
 			std::cerr << "Unable to parse message \"" << err << "\" assuming it is a string." << std::endl;
 		}
 		callable_->add("error", v.is_null() ? variant(err) : v);
-		handler_("connection_error");
+		handler_(connection_id_ + "connection_error");
 	}
 }
 
@@ -132,6 +132,14 @@ void client::process()
 	}
 
 	http_client::process();
+}
+
+void client::set_id(const std::string& id)
+{
+	connection_id_ = id;
+	if(id != "") {
+		connection_id_ += "_";
+	}
 }
 
 }
