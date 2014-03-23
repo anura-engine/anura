@@ -359,6 +359,7 @@
     <ClInclude Include="..\..\src\userevents.h" />
     <ClInclude Include="..\..\src\utility_query.hpp" />
     <ClInclude Include="..\..\src\utils.hpp" />
+    <ClInclude Include="..\..\src\uuid.hpp" />
     <ClInclude Include="..\..\src\variant.hpp" />
     <ClInclude Include="..\..\src\variant_callable.hpp" />
     <ClInclude Include="..\..\src\variant_utils.hpp" />
@@ -589,6 +590,7 @@
     <ClCompile Include="..\..\src\utility_query.cpp" />
     <ClCompile Include="..\..\src\utility_render_level.cpp" />
     <ClCompile Include="..\..\src\utils.cpp" />
+    <ClCompile Include="..\..\src\uuid.cpp" />
     <ClCompile Include="..\..\src\variant.cpp" />
     <ClCompile Include="..\..\src\variant_callable.cpp" />
     <ClCompile Include="..\..\src\variant_utils.cpp" />
