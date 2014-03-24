@@ -125,7 +125,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -333,8 +333,6 @@
     <ClInclude Include="..\..\src\surface_formula.hpp" />
     <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_scaling_generated.hpp" />
-    <ClInclude Include="..\..\src\svg_parse.hpp" />
-    <ClInclude Include="..\..\src\svg_path_parse.hpp" />
     <ClInclude Include="..\..\src\sys.hpp" />
     <ClInclude Include="..\..\src\tbs_ai_player.hpp" />
     <ClInclude Include="..\..\src\tbs_bot.hpp" />
@@ -563,8 +561,6 @@
     <ClCompile Include="..\..\src\surface_formula.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_scaling.cpp" />
-    <ClCompile Include="..\..\src\svg_parse.cpp" />
-    <ClCompile Include="..\..\src\svg_path_parse.cpp" />
     <ClCompile Include="..\..\src\sys.cpp" />
     <ClCompile Include="..\..\src\tbs_ai_player.cpp" />
     <ClCompile Include="..\..\src\tbs_bot.cpp" />
