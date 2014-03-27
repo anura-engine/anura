@@ -116,7 +116,7 @@ private:
 	std::vector<boost::function<void()> > row_callbacks_;
 	callback_type on_mouseover_;
 	callback_type on_select_;
-	int hpad_;
+	int hpad_, vpad_;
 	bool show_background_;
 
 	int max_height_;

@@ -3141,6 +3141,10 @@ FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
 		movement->on_process = options["on_process"];
 		movement->on_complete = options["on_complete"];
 
+		if(options["replace_existing"].as_bool(false)) {
+			target->cancel_animated_schedule(movement->name);
+		}
+
 		target->set_animated_schedule(movement);
 	};
 
