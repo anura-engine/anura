@@ -120,12 +120,12 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -169,6 +169,7 @@
     <ClInclude Include="..\..\src\blur.hpp" />
     <ClInclude Include="..\..\src\border_widget.hpp" />
     <ClInclude Include="..\..\src\button.hpp" />
+    <ClInclude Include="..\..\src\cairo.hpp" />
     <ClInclude Include="..\..\src\character_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\checkbox.hpp" />
     <ClInclude Include="..\..\src\checksum.hpp" />
@@ -356,6 +357,7 @@
     <ClInclude Include="..\..\src\userevents.h" />
     <ClInclude Include="..\..\src\utility_query.hpp" />
     <ClInclude Include="..\..\src\utils.hpp" />
+    <ClInclude Include="..\..\src\uuid.hpp" />
     <ClInclude Include="..\..\src\variant.hpp" />
     <ClInclude Include="..\..\src\variant_callable.hpp" />
     <ClInclude Include="..\..\src\variant_utils.hpp" />
@@ -417,6 +419,7 @@
     <ClCompile Include="..\..\src\blur.cpp" />
     <ClCompile Include="..\..\src\border_widget.cpp" />
     <ClCompile Include="..\..\src\button.cpp" />
+    <ClCompile Include="..\..\src\cairo.cpp" />
     <ClCompile Include="..\..\src\character_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\checkbox.cpp" />
     <ClCompile Include="..\..\src\checksum.cpp" />
@@ -583,6 +586,7 @@
     <ClCompile Include="..\..\src\utility_query.cpp" />
     <ClCompile Include="..\..\src\utility_render_level.cpp" />
     <ClCompile Include="..\..\src\utils.cpp" />
+    <ClCompile Include="..\..\src\uuid.cpp" />
     <ClCompile Include="..\..\src\variant.cpp" />
     <ClCompile Include="..\..\src\variant_callable.cpp" />
     <ClCompile Include="..\..\src\variant_utils.cpp" />
@@ -637,6 +641,10 @@
     <ResourceCompile Include="..\..\src\anura-resouces.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Library Include="..\..\..\gtk\lib\cairo.lib" />
+    <Library Include="..\..\..\gtk\lib\gobject-2.0.lib" />
+    <Library Include="..\..\..\gtk\lib\librsvg-2-2.lib" />
+    <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
     <Library Include="c:\projects\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
     <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
     <Library Include="c:\projects\lpng160\libpng.lib" />

@@ -750,6 +750,12 @@
     <ClInclude Include="..\..\src\play_vpx.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\cairo.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\uuid.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1433,6 +1439,12 @@
     <ClCompile Include="..\..\src\play_vpx.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\cairo.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\uuid.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">
@@ -1451,5 +1463,9 @@
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
     <Library Include="c:\projects\zlib\zlib.lib" />
     <Library Include="vpxmt.lib" />
+    <Library Include="..\..\..\gtk\lib\librsvg-2-2.lib" />
+    <Library Include="..\..\..\gtk\lib\cairo.lib" />
+    <Library Include="..\..\..\gtk\lib\gobject-2.0.lib" />
+    <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
   </ItemGroup>
 </Project>
