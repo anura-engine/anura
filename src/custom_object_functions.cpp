@@ -2502,7 +2502,10 @@ public:
 				callable->add("object", variant(e_.get()));
 				ob.handle_event(OBJECT_EVENT_ADD_OBJECT_FAIL, callable);
 			}
+			return;
 		}
+
+		e_->create_object();
 	}
 };
 
@@ -2510,9 +2513,6 @@ FUNCTION_DEF(add_object, 1, 1, "add_object(object): inserts the given object int
 
 	entity_ptr e(args()[0]->evaluate(variables).try_convert<entity>());
 	custom_object* obj = dynamic_cast<custom_object*>(e.get());
-	if(obj) {
-		obj->check_initialized();
-	}
 
 	if(e) {
 		add_object_command* cmd = (new add_object_command(e));
