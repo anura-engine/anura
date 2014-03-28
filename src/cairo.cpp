@@ -61,7 +61,9 @@ cairo_surface_t* get_cairo_image(const std::string& image)
 }
 
 bool initialize_gtype() {
+#if !GLIB_CHECK_VERSION(2,36,0)
 	g_type_init();
+#endif
 	return true;
 }
 }
