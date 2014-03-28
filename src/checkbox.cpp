@@ -66,7 +66,7 @@ checkbox::checkbox(const variant& v, game_logic::formula_callable* e)
 	}
 	checked_ = v["checked"].as_bool(false);
 	variant label_var = v["label"];
-	label_ = (label_var.is_map() || label_var.is_callable()) ? "" : label_var.as_string_default("Button");
+	label_ = (label_var.is_map() || label_var.is_callable()) ? "" : label_var.as_string_default("Checkbox");
 	label_widget_ = (label_var.is_map() || label_var.is_callable())
 		? widget_factory::create(label_var, e) 
 		: widget_ptr(new graphical_font_label(label_, "door_label", 2));
@@ -79,6 +79,10 @@ checkbox::checkbox(const variant& v, game_logic::formula_callable* e)
 		checked_, 
 		button_resolution(),
 		hpadding_));
+
+	if(v.has_key("width") || v.has_key("height")) {
+		set_dim(v["width"].as_int(width()), v["height"].as_int(height()));
+	}
 }
 
 void checkbox::on_click()

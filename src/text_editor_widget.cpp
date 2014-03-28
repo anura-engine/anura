@@ -142,7 +142,9 @@ text_editor_widget::text_editor_widget(int width, int height)
 	consecutive_clicks_(0),
 	text_color_(255, 255, 255, 255),
 	in_event_(0),
-	password_entry_(false)
+	password_entry_(false),
+	no_border_(false),
+	clear_on_focus_(false)
 {
 	set_environment();
 	if(height == 0) {
@@ -170,9 +172,16 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	consecutive_clicks_(0),
 	text_color_(255, 255, 255, 255),
 	in_event_(0),
-	password_entry_(v["password"].as_bool(false))
+	password_entry_(v["password"].as_bool(false)),
+	no_border_(v["no_border"].as_bool(false)),
+	clear_on_focus_(v["clear_on_focus"].as_bool(false))
 {
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+
+	if(v.has_key("bg_color")) {
+		bg_color_.reset(new graphics::color(v["bg_color"]));
+	}
+
 	int width = v.has_key("width") ? v["width"].as_int() : 0;
 	int height = v.has_key("height") ? v["height"].as_int() : 0;
 	if(v.has_key("font_size")) { 
@@ -396,7 +405,7 @@ void text_editor_widget::handle_draw() const
 				}
 			}
 
-			const char ch = password_entry_ ? '*' : text_[n][m];
+			const char ch = password_entry_ && !clear_on_focus_ ? '*' : text_[n][m];
 			const int char_size = ch == '\t' ? 4 : 1;
 			Loc pos(n, m);
 
@@ -448,7 +457,8 @@ void text_editor_widget::handle_draw() const
 			}
 
 			if(cursor_.row == n && cursor_.col == m &&
-			   (SDL_GetTicks()%500 < 350 || !has_focus_)) {
+			   (SDL_GetTicks()%500 < 350 || !has_focus_) &&
+			   !clear_on_focus_) {
 				RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), graphics::color(255,255,255,255) };
 				rects.push_back(rect_draw);
 			}
@@ -465,6 +475,12 @@ void text_editor_widget::handle_draw() const
 	}
 
 	const int begin_draw = SDL_GetTicks();
+
+	if(bg_color_.get() != NULL) {
+		SDL_Rect area = {x(), y(), width(), height()};
+		graphics::draw_rect(area, bg_color_->as_sdl_color());
+
+	}
 
 	foreach(const RectDraw& r, rects) {
 		graphics::draw_rect(r.area, r.col);
@@ -484,7 +500,10 @@ void text_editor_widget::handle_draw() const
 	}
 
 	SDL_Rect border = {x()+1, y()+1, width()-2, height()-2};
-	graphics::draw_hollow_rect(border, border_color);
+
+	if(no_border_ == false) {
+		graphics::draw_hollow_rect(border, border_color);
+	}
 
 	scrollable_widget::handle_draw();
 }
@@ -560,6 +579,11 @@ void text_editor_widget::set_focus(bool value)
 		on_change_focus_(value);
 	}
 	has_focus_ = value;
+
+	if(clear_on_focus_) {
+		set_text("");
+		clear_on_focus_ = false;
+	}
 
 	if(nrows_ == 1 && value) {
 		cursor_ = Loc(0, text_.front().size());
@@ -1622,6 +1646,10 @@ BEGIN_DEFINE_CALLABLE(text_editor_widget, widget)
 		return variant::from_bool(obj.has_focus_);
 	DEFINE_SET_FIELD
 		obj.has_focus_ = value.as_bool();
+		if(obj.clear_on_focus_ && obj.has_focus_) {
+			obj.set_text("");
+			obj.clear_on_focus_ = false;
+		}
 END_DEFINE_CALLABLE(text_editor_widget)
 
 void text_editor_widget::change_delegate()

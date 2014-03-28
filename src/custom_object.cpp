@@ -1665,7 +1665,23 @@ void custom_object::process(level& lvl)
 		execute_command(cmd);
 	}
 
-	for(auto& move : animated_movement_) {
+
+	for(int i = 0; i != animated_movement_.size(); ++i) {
+		auto& move = animated_movement_[i];
+		if(move->name.empty() == false) {
+			bool already_done = false;
+			for(int j = 0; j != i; ++j) {
+				if(animated_movement_[j] && animated_movement_[j]->name == move->name) {
+					already_done = true;
+					break;
+				}
+			}
+
+			if(already_done) {
+				continue;
+			}
+		}
+
 		if(move->pos >= move->animation_frames()) {
 			if(move->on_complete.is_null() == false) {
 				execute_command(move->on_complete);

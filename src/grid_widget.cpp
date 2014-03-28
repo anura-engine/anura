@@ -34,7 +34,7 @@ grid::grid(int ncols)
   : ncols_(ncols), col_widths_(ncols, 0),
     col_aligns_(ncols, grid::ALIGN_LEFT), row_height_(0),
 	selected_row_(-1), allow_selection_(false), must_select_(false),
-    swallow_clicks_(false), hpad_(0), show_background_(false),
+    swallow_clicks_(false), hpad_(0), vpad_(0), show_background_(false),
 	max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
 	default_selection_(-1), draw_selection_highlight_(false)
 {
@@ -45,7 +45,7 @@ grid::grid(int ncols)
 grid::grid(const variant& v, game_logic::formula_callable* e)
 	: scrollable_widget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
 	allow_selection_(false), must_select_(false),
-    swallow_clicks_(false), hpad_(0), show_background_(false),
+    swallow_clicks_(false), hpad_(0), vpad_(0), show_background_(false),
 	max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
 	default_selection_(v["default_select"].as_int(-1)), 
 	draw_selection_highlight_(v["draw_selection_highlighted"].as_bool(false))
@@ -171,6 +171,9 @@ grid::grid(const variant& v, game_logic::formula_callable* e)
 	if(v.has_key("horizontal_padding")) {
 		set_hpad(v["horizontal_padding"].as_int());
 	}
+	if(v.has_key("vertical_padding")) {
+		vpad_ = v["vertical_padding"].as_int();
+	}
 	if(v.has_key("show_background")) {
 		show_background_ = v["show_background"].as_bool();
 	}
@@ -225,8 +228,8 @@ void grid::add_row(const std::vector<widget_ptr>& widgets)
 			col_widths_[index] = widget->width()+hpad_;
 		}
 
-		if(widget && widget->height() > row_height_) {
-			row_height_ = widget->height();
+		if(widget && widget->height() + vpad_*2 > row_height_) {
+			row_height_ = widget->height() + vpad_*2;
 		}
 
 		++index;
@@ -445,7 +448,7 @@ void grid::handle_draw() const
 			graphics::draw_rect(rect,col,128);
 		}
 	}
-	glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
+	//glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
 	foreach(const widget_ptr& widget, visible_cells_) {
 		if(widget) {
 			widget->draw();

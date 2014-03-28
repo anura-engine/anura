@@ -255,6 +255,7 @@ public:
 						variant_builder response;
 						response.add("type", "registration_success");
 						response.add("session_id", variant(session_id));
+						response.add("username", variant(user));
 
 						if(remember) {
 							std::string cookie = write_uuid(generate_uuid());

@@ -203,6 +203,10 @@ private:
 	int in_event_;
 
 	bool password_entry_;
+	bool no_border_;
+	bool clear_on_focus_;
+
+	boost::shared_ptr<graphics::color> bg_color_;
 
 	friend class dropdown_widget;
 };

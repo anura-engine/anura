@@ -42,6 +42,9 @@
 namespace graphics
 {
 
+	PREF_BOOL(bilinear_textures, false, "Enables bi-linear filtering for *all* textures, \
+										including mip-map generation.");
+
 SDL_threadID graphics_thread_id;
 surface scale_surface(surface input);
 
@@ -904,8 +907,11 @@ unsigned int map_color_to_16bpp(unsigned int color)
 void texture::ID::build_id()
 {
 	glBindTexture(GL_TEXTURE_2D,id);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, g_bilinear_textures ? GL_LINEAR_MIPMAP_NEAREST : GL_NEAREST);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, g_bilinear_textures ? GL_LINEAR : GL_NEAREST);
+	if(g_bilinear_textures) {
+		glGenerateMipmap(GL_TEXTURE_2D);
+	}
 
 	if(preferences::use_16bpp_textures()) {
 		std::vector<GLushort> buf(s->w*s->h);

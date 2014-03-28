@@ -61,7 +61,9 @@ button::button(widget_ptr label, boost::function<void ()> onclick, BUTTON_STYLE 
 button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e), down_(false)
 {
 	variant label_var = v["label"];
-	label_ = label_var.is_map() ? widget_factory::create(label_var, e) : new label(label_var.as_string_default("Button"), graphics::color_white());
+	if(!label_var.is_callable()) {
+		label_ = label_var.is_map() ? widget_factory::create(label_var, e) : new label(label_var.as_string_default("Button"), graphics::color_white());
+	}
 	ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an on_click handler: " << v.write_json() << " " << v.debug_location());
 	// create delegate for onclick
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
@@ -90,6 +92,31 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 		hpadding_ = v["padding"][0].as_int();
 		vpadding_ = v["padding"][1].as_int();
 	}
+
+	if(v.has_key("color_scheme")) {
+		variant m = v["color_scheme"];
+
+		if(m.has_key("normal")) {
+			normal_color_.reset(new graphics::color(m["normal"]));
+		}
+		if(m.has_key("depressed")) {
+			depressed_color_.reset(new graphics::color(m["depressed"]));
+		}
+		if(m.has_key("focus")) {
+			focus_color_.reset(new graphics::color(m["focus"]));
+		}
+
+		if(m.has_key("text_normal")) {
+			text_normal_color_.reset(new graphics::color(m["text_normal"]));
+		}
+		if(m.has_key("text_depressed")) {
+			text_depressed_color_.reset(new graphics::color(m["text_depressed"]));
+		}
+		if(m.has_key("text_focus")) {
+			text_focus_color_.reset(new graphics::color(m["text_focus"]));
+		}
+	}
+
 	setup();
 }
 
@@ -146,8 +173,23 @@ void button::set_label(widget_ptr label)
 void button::handle_draw() const
 {
 	label_->set_loc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
+
+	const boost::scoped_ptr<graphics::color>& col = current_button_image_set_ == normal_button_image_set_ ? normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
+
+	if(col.get() != NULL) {
+		col->set_as_current_color();
+	}
+
 	current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0);
+	graphics::color(255, 255, 255, 255).set_as_current_color();
+
+	const boost::scoped_ptr<graphics::color>& text_col = current_button_image_set_ == normal_button_image_set_ ? text_normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
+
+	if(text_col.get() != NULL) {
+		text_col->set_as_current_color();
+	}
 	label_->draw();
+	graphics::color(255, 255, 255, 255).set_as_current_color();
 }
 
 void button::handle_process()

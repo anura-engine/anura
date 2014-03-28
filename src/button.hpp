@@ -18,11 +18,11 @@
 #define BUTTON_HPP_INCLUDED
 
 #include <boost/function.hpp>
+#include <boost/scoped_ptr.hpp>
 
 #include "texture.hpp"
 #include "widget.hpp"
 #include "framed_gui_element.hpp"
-
 
 namespace gui {
 
@@ -76,6 +76,9 @@ private:
 	game_logic::formula_callable_ptr handler_arg_;
 	
 	const_framed_gui_element_ptr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
+
+	boost::scoped_ptr<graphics::color> normal_color_, depressed_color_, focus_color_;
+	boost::scoped_ptr<graphics::color> text_normal_color_, text_depressed_color_, text_focus_color_;
 };
 
 typedef boost::intrusive_ptr<button> button_ptr;
