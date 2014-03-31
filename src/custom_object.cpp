@@ -959,7 +959,7 @@ variant custom_object::write() const
 
 #if defined(USE_SHADERS)
 	if(shader_ &&
-	   (!type_->shader() || type_->shader()->name() == shader_->name())) {
+	   (!type_->shader() || type_->shader()->name() != shader_->name())) {
 		res.add("shader", shader_->write());
 	}
 
