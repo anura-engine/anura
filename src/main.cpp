@@ -107,7 +107,9 @@
 #define DEFAULT_MODULE	"frogatto"
 
 namespace {
-	PREF_INT(auto_update_module, 0, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
+	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
+	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
+	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
 	graphics::window_manager_ptr main_window;
 
@@ -620,25 +622,63 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::cerr << "\n";
 
-	if(g_auto_update_module) {
-		boost::intrusive_ptr<module::client> cl(new module::client);
-		cl->install_module(module::get_module_name());
-		int nbytes_transferred = 0;
+	if(g_auto_update_module || g_auto_update_anura != "") {
+		boost::intrusive_ptr<module::client> cl, anura_cl;
+		
+		if(g_auto_update_module) {
+			cl.reset(new module::client);
+			cl->install_module(module::get_module_name());
+		}
+
+		if(g_auto_update_anura != "") {
+			anura_cl.reset(new module::client);
+			anura_cl->set_install_image(true);
+			anura_cl->install_module(g_auto_update_anura);
+		}
+
+		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = SDL_GetTicks();
 		bool timeout = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
-		while(cl->process()) {
-			const int transferred = cl->nbytes_transferred();
-			if(transferred != nbytes_transferred) {
-				fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
-				start_time = SDL_GetTicks();
+		while(cl || anura_cl) {
+			if(cl) {
+				const int transferred = cl->nbytes_transferred();
+				if(transferred != nbytes_transferred) {
+					fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+					start_time = SDL_GetTicks();
+					nbytes_transferred = transferred;
+				}
 			}
 
-			if(SDL_GetTicks() - start_time > g_auto_update_module) {
+			if(anura_cl) {
+				const int transferred = anura_cl->nbytes_transferred();
+				if(transferred != nbytes_anura_transferred) {
+					fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
+					start_time = SDL_GetTicks();
+					nbytes_anura_transferred = transferred;
+				}
+			}
+
+			if(SDL_GetTicks() - start_time > g_auto_update_timeout) {
 				fprintf(stderr, "Timed out updating module. Canceling\n");
+				break;
 			}
 
 			SDL_Delay(20);
+
+			if(cl && !cl->process()) {
+				cl.reset();
+			}
+
+			if(anura_cl && !anura_cl->process()) {
+				anura_cl.reset();
+			}
+		}
+
+		if(anura_cl->nfiles_written()) {
+			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
+			execv(argvec[0], argvec);
+			fprintf(stderr, "Could not exec()\n");
 		}
 	}
 

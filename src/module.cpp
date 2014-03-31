@@ -505,13 +505,21 @@ bool is_valid_module_id(const std::string& id)
 }
 
 #if !defined(NO_TCP) || !defined(NO_MODULES)
-variant build_package(const std::string& id, bool increment_version)
+variant build_package(const std::string& id, bool increment_version, std::string path)
 {
 	std::vector<std::string> files;
-	const std::string path = "modules/" + id;
+	if(path == "") {
+		path = "modules/" + id;
+	}
+
 	ASSERT_LOG(sys::dir_exists(path), "COULD NOT FIND PATH: " << path);
 
-	variant config = json::parse(sys::read_file(path + "/module.cfg"));
+	variant config;
+	
+	if(sys::file_exists(path + "/module.cfg")) {
+		config = json::parse(sys::read_file(path + "/module.cfg"));
+	}
+
 	if(increment_version) {
 		std::vector<int> version = config["version"].as_list_int();
 		ASSERT_LOG(version.empty() == false, "Illegal version");
@@ -643,6 +651,7 @@ void upload_progress(int sent, int total, bool uploaded)
 
 COMMAND_LINE_UTILITY(publish_module)
 {
+	std::string path_override;
 	std::string module_id;
 	std::string server = "theargentlark.com";
 	std::string port = "23455";
@@ -662,6 +671,10 @@ COMMAND_LINE_UTILITY(publish_module)
 			arguments.pop_front();
 		} else if(arg == "--increment-version") {
 			increment_version = true;
+		} else if(arg == "--path-override") {
+			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+			path_override = arguments.front();
+			arguments.pop_front();
 		} else {
 			ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
 			module_id = arg;
@@ -671,7 +684,7 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	ASSERT_LOG(module_id.empty() == false, "MUST SPECIFY MODULE ID");
 
-	const variant package = build_package(module_id, increment_version);
+	const variant package = build_package(module_id, increment_version, path_override);
 	std::map<variant,variant> attr;
 
 	attr[variant("type")] = variant("prepare_upload_module");
@@ -778,13 +791,16 @@ bool is_module_path_valid(const std::string& str)
 client::client() : operation_(client::OPERATION_NONE),
                    client_(new http_client("theargentlark.com", "23455")),
 				   nbytes_transferred_(0),
-				   nbytes_total_(0)
+				   nbytes_total_(0),
+				   nfiles_written_(0),
+				   install_image_(false)
 {
 }
 
 client::client(const std::string& host, const std::string& port)
   : operation_(client::OPERATION_NONE), client_(new http_client(host, port)),
-    nbytes_transferred_(0), nbytes_total_(0)
+    nbytes_transferred_(0), nbytes_total_(0),
+	nfiles_written_(0), install_image_(false)
 {
 }
 
@@ -799,7 +815,7 @@ void client::install_module(const std::string& module_id, bool force)
 	request.add("module_id", module_id);
 
 	std::string version_str;
-	std::string current_path = make_base_module_path(module_id);
+	std::string current_path = install_image_ ? "." : make_base_module_path(module_id);
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 		request.add("current_version", config["version"]);
@@ -932,7 +948,14 @@ void client::on_response(std::string response)
 
 			foreach(variant path, manifest.get_keys().as_list()) {
 				variant info = manifest[path];
-				const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+				const std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+
+				if(install_image_ && sys::file_exists(path_str)) {
+					//try removing the file, and failing that, move it.
+					sys::remove_file(path_str);
+					sys::move_file(path_str, path_str + ".tmp");
+				}
+
 				std::vector<char> data_buf;
 				{
 					const std::string data_str = info["data"].as_string();
@@ -947,6 +970,8 @@ void client::on_response(std::string response)
 				std::string contents(data.begin(), data.end());
 				ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
 				sys::write_file(path_str, contents);
+
+				++nfiles_written_;
 			}
 
 		} else if(operation_ == OPERATION_GET_STATUS) {

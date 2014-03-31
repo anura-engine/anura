@@ -618,6 +618,24 @@ BEGIN_DEFINE_FN(image_dim, "(string) ->[int,int]")
 	return variant(&result);
 END_DEFINE_FN
 
+BEGIN_DEFINE_FN(text_extents, "(string, int, string) -> { width: decimal, height: decimal }")
+	static cairo_context& context = *new cairo_context(8,8);
+	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
+	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+	cairo_set_font_face(context.get(), cairo_face);
+
+	cairo_set_font_size(context.get(), FN_ARG(1).as_decimal().as_float());
+
+	cairo_text_extents_t extents;
+	cairo_text_extents(context.get(), FN_ARG(2).as_string().c_str(), &extents);
+
+	std::map<variant,variant> result;
+	result[variant("width")] = variant(extents.width);
+	result[variant("height")] = variant(extents.height);
+	return variant(&result);
+
+END_DEFINE_FN
+
 //a string representing an emdash in utf-8.
 DEFINE_FIELD(emdash, "string")
 	const char em[] = { 0xE2, 0x80, 0x94, 0x00 };

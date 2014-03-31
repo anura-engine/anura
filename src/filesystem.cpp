@@ -175,7 +175,7 @@ namespace sys
 
 	void move_file(const std::string& from, const std::string& to)
 	{
-		rename(path(from), path(to));
+		return rename(path(from), path(to));
 	}
 
 	void remove_file(const std::string& fname)

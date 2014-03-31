@@ -105,6 +105,9 @@ public:
 
 	int nbytes_transferred() const { return nbytes_transferred_; }
 	int nbytes_total() const { return nbytes_total_; }
+	int nfiles_written() const { return nfiles_written_; }
+
+	void set_install_image(bool value) { install_image_ = value; }
 private:
 	enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 	OPERATION_TYPE operation_;
@@ -116,6 +119,10 @@ private:
 	variant module_info_;
 
 	int nbytes_transferred_, nbytes_total_;
+
+	int nfiles_written_;
+
+	bool install_image_;
 
 	void on_response(std::string response);
 	void on_error(std::string response);
