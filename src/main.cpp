@@ -675,7 +675,7 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 		}
 
-		if(anura_cl->nfiles_written()) {
+		if(anura_cl && anura_cl->nfiles_written()) {
 			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
 			execv(argvec[0], argvec);
 			fprintf(stderr, "Could not exec()\n");
