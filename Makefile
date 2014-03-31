@@ -53,7 +53,7 @@ USE_LUA?=$(shell pkg-config --exists lua5.2 && echo yes)
 BASE_CXXFLAGS += -std=c++0x -g -rdynamic -fno-inline-functions \
 	-fthreadsafe-statics -Wnon-virtual-dtor -Werror \
 	-Wignored-qualifiers -Wformat -Wswitch -Wreturn-type \
-	-DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP \
+	-DUSE_SHADERS -DUTILITY_IN_PROC -DUSE_ISOMAP  -DUSE_BOX2D \
 	-Wno-narrowing -Wno-literal-suffix
 
 # Compiler include options, used after CXXFLAGS and CPPFLAGS.
@@ -108,6 +108,10 @@ TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
 include Makefile.common
 
+src/Box2D/%.o : src/Box2D/%.cpp
+        @echo "Building:" $<
+        @$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
+
 src/%.o : src/%.cpp
 	@echo "Building:" $<
 	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
@@ -118,13 +122,17 @@ src/%.o : src/%.cpp
 		sed -e 's/^ *//' -e 's/$$/:/' >> src/$*.d
 	@rm -f $*.d.tmp
 
-anura: $(objects)
+anura: $(objects) libbox2d.a
 	@echo "Linking : anura"
 	@$(CCACHE) $(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) \
 		$(objects) -o anura \
-		$(LIBS) -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics
+		$(LIBS) -L. -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics -lbox2d
 
+libbox2d.a: $(box2d_objects)
+        @echo "Creating Box2D library" 
+        @$(AR) -rcs $@ $(box2d_objects)
+        
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
 
