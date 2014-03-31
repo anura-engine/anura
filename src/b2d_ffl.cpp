@@ -633,46 +633,90 @@ namespace box2d
 		} else if(key == "linear_impulse") {
 			b2Vec2 impluse;
 			b2Vec2 point;
+			bool wake = true;
 			ASSERT_LOG(value.is_list(), "linear_impulse must be a list type.");
-			if(value.num_elements() == 4) {
+			if(value.num_elements() == 4 || value.num_elements() == 5) {
 				impluse.Set(float32(value[0].as_decimal().as_float()), float32(value[1].as_decimal().as_float()));
 				point.Set(float32(value[2].as_decimal().as_float()), float32(value[3].as_decimal().as_float()));
-			} else if(value.num_elements() == 2) {
+				if(value.num_elements() == 5) {
+					wake = value[4].as_bool();
+				}
+			} else if(value.num_elements() == 2 || value.num_elements() == 3) {
 				ASSERT_LOG(value[0].is_list() && value[1].is_list(), 
-					"Syntax for linear impulse is [[impx,impy],[pointx,pointy]] or [impx,impy,pointx,pointy]");
+					"Syntax for linear impulse is [[impx,impy],[pointx,pointy],(optional) bool] or [impx,impy,pointx,pointy,(optional) bool]");
 				impluse.Set(float32(value[0][0].as_decimal().as_float()), float32(value[0][1].as_decimal().as_float()));
 				point.Set(float32(value[1][0].as_decimal().as_float()), float32(value[1][1].as_decimal().as_float()));
+				if(value.num_elements() == 3) {
+					wake = value[2].as_bool();
+				}
 			} else {
 				ASSERT_LOG(false, 
-					"Syntax for linear impulse is [[impx,impy],[pointx,pointy]] or [impx,impy,pointx,pointy]");
+					"Syntax for linear impulse is [[impx,impy],[pointx,pointy],(optional) bool] or [impx,impy,pointx,pointy,(optional) bool]");
 			}
-			body_->ApplyLinearImpulse(impluse, point);
+			body_->ApplyLinearImpulse(impluse, point, wake);
 		} else if(key == "angular_impulse") {
-			body_->ApplyAngularImpulse(float32(value.as_decimal().as_float()));
+			if(value.is_numeric()) {
+				body_->ApplyAngularImpulse(float32(value.as_decimal().as_float()), true);
+			} else if(value.is_map()) {
+				ASSERT_LOG(value.has_key("value"), "'angular_impulse' map must have a value key.");
+				bool wake = value["wake"].as_bool(true);
+				body_->ApplyAngularImpulse(float32(value["value"].as_decimal().as_float()), wake);
+			} else if(value.is_list()) {
+				ASSERT_LOG(value.num_elements() > 0, "'angular_impulse' format for list is [numeric value, bool wake]");
+				bool wake = true;
+				if(value.num_elements() > 1) {
+					wake = value[1].as_bool();
+				}
+				body_->ApplyAngularImpulse(float32(value[0].as_decimal().as_float()), wake);
+			}
 		} else if(key == "torque") {
-			body_->ApplyTorque(float32(value.as_decimal().as_float()));
+			if(value.is_numeric()) {
+				body_->ApplyTorque(float32(value.as_decimal().as_float()), true);
+			} else if(value.is_map()) {
+				ASSERT_LOG(value.has_key("value"), "'torque' map must have a value key.");
+				bool wake = value["wake"].as_bool(true);
+				body_->ApplyTorque(float32(value["value"].as_decimal().as_float()), wake);
+			} else if(value.is_list()) {
+				ASSERT_LOG(value.num_elements() > 0, "'torque' format for list is [numeric value, bool wake]");
+				bool wake = true;
+				if(value.num_elements() > 1) {
+					wake = value[1].as_bool();
+				}
+				body_->ApplyTorque(float32(value[0].as_decimal().as_float()), wake);
+			}
 		} else if(key == "force") {
 			b2Vec2 f, p;
+			bool wake = true;
 			ASSERT_LOG(value.is_list(), "force must be a list type.");
-			if(value.num_elements() == 4) {
+			if(value.num_elements() == 4 || value.num_elements() == 5) {
 				f.Set(float32(value[0].as_decimal().as_float()), float32(value[1].as_decimal().as_float()));
 				p.Set(float32(value[2].as_decimal().as_float()), float32(value[3].as_decimal().as_float()));
-			} else if(value.num_elements() == 2) {
+				if(value.num_elements() == 5) {
+					wake = value[4].as_bool();
+				}
+			} else if(value.num_elements() == 2 || value.num_elements() == 3) {
 				ASSERT_LOG(value[0].is_list() && value[1].is_list(), 
-					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy]] or [forcex,forcey,pointx,pointy]");
+					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy],(optional) bool] or [forcex,forcey,pointx,pointy,(optional) bool]");
 				f.Set(float32(value[0][0].as_decimal().as_float()), float32(value[0][1].as_decimal().as_float()));
 				p.Set(float32(value[1][0].as_decimal().as_float()), float32(value[1][1].as_decimal().as_float()));
+				if(value.num_elements() == 3) {
+					wake = value[2].as_bool();
+				}
 			} else {
 				ASSERT_LOG(false, 
-					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy]] or [forcex,forcey,pointx,pointy]");
+					"Syntax for force impulse is [[forcex,forcey],[pointx,pointy],(optional) bool] or [forcex,forcey,pointx,pointy,(optional) bool]");
 			}
-			body_->ApplyForce(f, p);		
+			body_->ApplyForce(f, p, wake);		
 		} else if(key == "force_to_center" || key == "force_to_centre") {
 			b2Vec2 f;
-			ASSERT_LOG(value.is_list() && value.num_elements() == 2,
-				"force to apply is a list of two elements representing the force vector in Newtons");
+			ASSERT_LOG(value.is_list() && value.num_elements() >= 2,
+				"force to apply is a list of two (or three) elements representing the force vector in Newtons and optional wake state.");
 			f.Set(float32(value[0].as_decimal().as_float()), float32(value[1].as_decimal().as_float()));
-			body_->ApplyForceToCenter(f);
+			bool wake = true;
+			if(value.num_elements() > 2) {
+				wake = value[2].as_bool();
+			}
+			body_->ApplyForceToCenter(f, wake);
 		}
 	}
 
@@ -738,7 +782,7 @@ namespace box2d
 			b2PolygonShape* poly = (b2PolygonShape*)shape;
 			res.add("type", "polygon");
 			std::vector<variant> vertices;
-			for(int n = 0; n < poly->m_vertexCount; ++n) {
+			for(int n = 0; n < poly->GetVertexCount(); ++n) {
 				std::vector<variant> vertex;
 				vertex.push_back(variant(poly->m_vertices[n].x));
 				vertex.push_back(variant(poly->m_vertices[n].y));

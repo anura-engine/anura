@@ -125,7 +125,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\glm-0.9.4.3;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1\Box2D;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\glm-0.9.4.3;c:\projects\zlib;c:\projects\lpng1512;c:\projects\Box2D_v2.2.1;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\lpng1512;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;..\..\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\anura\include;c:\projects\zlib;c:\projects\lpng1512;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
@@ -418,6 +418,52 @@
     <ClCompile Include="..\..\src\base64.cpp" />
     <ClCompile Include="..\..\src\blur.cpp" />
     <ClCompile Include="..\..\src\border_widget.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2BroadPhase.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2CollideCircle.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2CollideEdge.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2CollidePolygon.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2Collision.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2Distance.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2DynamicTree.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\b2TimeOfImpact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\Shapes\b2ChainShape.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\Shapes\b2CircleShape.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\Shapes\b2EdgeShape.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Collision\Shapes\b2PolygonShape.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2BlockAllocator.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2Draw.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2Math.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2Settings.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2StackAllocator.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Common\b2Timer.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2Body.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2ContactManager.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2Fixture.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2Island.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2World.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\b2WorldCallbacks.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2ChainAndCircleContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2ChainAndPolygonContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2CircleContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2Contact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2ContactSolver.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2EdgeAndCircleContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2EdgeAndPolygonContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2PolygonAndCircleContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Contacts\b2PolygonContact.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2DistanceJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2FrictionJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2GearJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2Joint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2MotorJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2MouseJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2PrismaticJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2PulleyJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2RevoluteJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2RopeJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2WeldJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Dynamics\Joints\b2WheelJoint.cpp" />
+    <ClCompile Include="..\..\src\Box2D\Rope\b2Rope.cpp" />
     <ClCompile Include="..\..\src\button.cpp" />
     <ClCompile Include="..\..\src\cairo.cpp" />
     <ClCompile Include="..\..\src\character_editor_dialog.cpp" />
@@ -645,7 +691,6 @@
     <Library Include="..\..\..\gtk\lib\gobject-2.0.lib" />
     <Library Include="..\..\..\gtk\lib\librsvg-2-2.lib" />
     <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
-    <Library Include="c:\projects\Box2D_v2.2.1\Build\vs2010\bin\Release\Box2D.lib" />
     <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
     <Library Include="c:\projects\lpng160\libpng.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
