@@ -109,8 +109,8 @@ TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 include Makefile.common
 
 src/Box2D/%.o : src/Box2D/%.cpp
-        @echo "Building:" $<
-        @$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
+	@echo "Building:" $<
+	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
 
 src/%.o : src/%.cpp
 	@echo "Building:" $<
@@ -130,8 +130,8 @@ anura: $(objects) libbox2d.a
 		$(LIBS) -L. -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics -lbox2d
 
 libbox2d.a: $(box2d_objects)
-        @echo "Creating Box2D library" 
-        @$(AR) -rcs $@ $(box2d_objects)
+	@echo "Creating Box2D library" 
+	@$(AR) -rcs $@ $(box2d_objects)
         
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
