@@ -54,8 +54,6 @@ vs2012/anura/Debug
 vs2012/anura/Release
 vs2012/lua
 
-src/Box2D
-
 log.txt
 
 qt
