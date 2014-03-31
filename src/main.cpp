@@ -639,6 +639,7 @@ extern "C" int main(int argcount, char* argvec[])
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = SDL_GetTicks();
 		bool timeout = false;
+		bool require_restart = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
 		while(cl || anura_cl) {
 			if(cl) {
@@ -671,11 +672,12 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 
 			if(anura_cl && !anura_cl->process()) {
+				require_restart = anura_cl->nfiles_written() != 0;
 				anura_cl.reset();
 			}
 		}
 
-		if(anura_cl && anura_cl->nfiles_written()) {
+		if(require_restart) {
 			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
 			execv(argvec[0], argvec);
 			fprintf(stderr, "Could not exec()\n");

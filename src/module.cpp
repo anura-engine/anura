@@ -914,6 +914,8 @@ void client::on_response(std::string response)
 
 			operation_ = OPERATION_NONE;
 
+			sys::write_file("response.txt", response);
+
 			variant doc;
 	
 			try {
@@ -946,14 +948,25 @@ void client::on_response(std::string response)
 				ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
 			}
 
+			fprintf(stderr, "Install files: %d\n", (int)manifest.get_keys().as_list().size());
+
 			foreach(variant path, manifest.get_keys().as_list()) {
 				variant info = manifest[path];
 				const std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
 				if(install_image_ && sys::file_exists(path_str)) {
 					//try removing the file, and failing that, move it.
-					sys::remove_file(path_str);
-					sys::move_file(path_str, path_str + ".tmp");
+					try {
+						sys::remove_file(path_str);
+					} catch(...) {
+						fprintf(stderr, "Failed to remove %s\n", path_str.c_str());
+
+						try {
+							sys::move_file(path_str, path_str + ".tmp");
+						} catch(...) {
+							fprintf(stderr, "Failed to move: %s\n", path_str.c_str());
+						}
+					}
 				}
 
 				std::vector<char> data_buf;
