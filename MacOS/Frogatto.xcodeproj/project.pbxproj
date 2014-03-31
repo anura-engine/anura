@@ -238,6 +238,9 @@
 		C0A362471873BB65002571F3 /* music in Resources */ = {isa = PBXBuildFile; fileRef = C0A362461873BB65002571F3 /* music */; };
 		C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD75121834707D00FAFA3D /* VoronoiDiagramGenerator.cpp */; };
 		C0AD7517183494F100FAFA3D /* poly_map.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AD7515183494F100FAFA3D /* poly_map.cpp */; };
+		C0AECE0418E5411C00CD3161 /* tbs_matchmaking_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0318E5411C00CD3161 /* tbs_matchmaking_server.cpp */; };
+		C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0518E541A200CD3161 /* db_client.cpp */; };
+		C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0818E541BD00CD3161 /* uuid.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
@@ -754,6 +757,11 @@
 		C0AD75131834707D00FAFA3D /* VoronoiDiagramGenerator.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = VoronoiDiagramGenerator.h; sourceTree = "<group>"; };
 		C0AD7515183494F100FAFA3D /* poly_map.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = poly_map.cpp; sourceTree = "<group>"; };
 		C0AD7516183494F100FAFA3D /* poly_map.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = poly_map.hpp; sourceTree = "<group>"; };
+		C0AECE0318E5411C00CD3161 /* tbs_matchmaking_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_matchmaking_server.cpp; sourceTree = "<group>"; };
+		C0AECE0518E541A200CD3161 /* db_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = db_client.cpp; sourceTree = "<group>"; };
+		C0AECE0618E541A200CD3161 /* db_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = db_client.hpp; sourceTree = "<group>"; };
+		C0AECE0818E541BD00CD3161 /* uuid.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = uuid.cpp; sourceTree = "<group>"; };
+		C0AECE0918E541BD00CD3161 /* uuid.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = uuid.hpp; sourceTree = "<group>"; };
 		C0B1908716CD9437008FF14A /* ipc.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ipc.cpp; sourceTree = "<group>"; };
 		C0B1908816CD9437008FF14A /* ipc.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ipc.hpp; sourceTree = "<group>"; };
 		C0B397F71636666C00D010E0 /* Frogatto.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.xml; path = Frogatto.entitlements; sourceTree = "<group>"; };
@@ -970,6 +978,8 @@
 				C0D6EB7316DB25EA00B5ABCA /* custom_object_widget.hpp */,
 				C090AAB0177C14470046CC87 /* data_blob.cpp */,
 				C090AAB1177C14470046CC87 /* data_blob.hpp */,
+				C0AECE0518E541A200CD3161 /* db_client.cpp */,
+				C0AECE0618E541A200CD3161 /* db_client.hpp */,
 				C010C5FE160AFD4C006E7D90 /* debug_console.cpp */,
 				C010C5FF160AFD4C006E7D90 /* debug_console.hpp */,
 				C010C600160AFD4C006E7D90 /* decimal.cpp */,
@@ -1272,6 +1282,7 @@
 				C0D6EB6716DB25C000B5ABCA /* tbs_internal_client.hpp */,
 				C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */,
 				C0D6EB6916DB25C000B5ABCA /* tbs_internal_server.hpp */,
+				C0AECE0318E5411C00CD3161 /* tbs_matchmaking_server.cpp */,
 				C0D6EB6A16DB25C000B5ABCA /* tbs_server_base.cpp */,
 				C0D6EB6B16DB25C000B5ABCA /* tbs_server_base.hpp */,
 				C00160CB16A2991D001DAEB9 /* tbs_web_server.cpp */,
@@ -1304,6 +1315,8 @@
 				C010C727160AFD4D006E7D90 /* utility_render_level.cpp */,
 				C010C728160AFD4D006E7D90 /* utils.cpp */,
 				C010C729160AFD4D006E7D90 /* utils.hpp */,
+				C0AECE0818E541BD00CD3161 /* uuid.cpp */,
+				C0AECE0918E541BD00CD3161 /* uuid.hpp */,
 				C010C72A160AFD4D006E7D90 /* variant.cpp */,
 				C010C72B160AFD4D006E7D90 /* variant.hpp */,
 				C010C72C160AFD4D006E7D90 /* variant_callable.cpp */,
@@ -1455,6 +1468,7 @@
 			files = (
 				C00160CF16A2A8A7001DAEB9 /* http_server.cpp in Sources */,
 				C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */,
+				C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */,
 				C010C741160AFD4D006E7D90 /* achievements.cpp in Sources */,
 				C010C742160AFD4D006E7D90 /* animation_creator.cpp in Sources */,
 				C0D6EB7416DB285D00B5ABCA /* custom_object_widget.cpp in Sources */,
@@ -1483,6 +1497,7 @@
 				C010C758160AFD4D006E7D90 /* compress.cpp in Sources */,
 				C010C759160AFD4D006E7D90 /* controls.cpp in Sources */,
 				C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */,
+				C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */,
 				C010C75B160AFD4D006E7D90 /* current_generator.cpp in Sources */,
 				C010C75C160AFD4D006E7D90 /* custom_object.cpp in Sources */,
 				C010C75D160AFD4D006E7D90 /* custom_object_callable.cpp in Sources */,
@@ -1538,6 +1553,7 @@
 				C010C792160AFD4D006E7D90 /* hex_tile.cpp in Sources */,
 				C0A2948A184C0871002B757E /* psystem2_observers.cpp in Sources */,
 				C010C793160AFD4D006E7D90 /* hex_tileset_editor_dialog.cpp in Sources */,
+				C0AECE0418E5411C00CD3161 /* tbs_matchmaking_server.cpp in Sources */,
 				C010C794160AFD4D006E7D90 /* http_client.cpp in Sources */,
 				C010C796160AFD4D006E7D90 /* i18n.cpp in Sources */,
 				C010C797160AFD4D006E7D90 /* image_widget.cpp in Sources */,
