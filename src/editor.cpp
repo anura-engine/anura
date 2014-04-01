@@ -34,6 +34,7 @@
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "character_editor_dialog.hpp"
+#include "checkbox.hpp"
 #include "code_editor_dialog.hpp"
 #include "collision_utils.hpp"
 #include "color_utils.hpp"
@@ -328,12 +329,34 @@ public:
 
 	void new_level() {
 		using namespace gui;
-		dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
+		dialog d(100, 100, graphics::screen_width()-200, graphics::screen_height()-200);
+		d.set_background_frame("empty_window");
+		d.set_draw_background_fn(gui::dialog::draw_last_scene);
+		d.set_cursor(20, 20);
 		d.add_widget(widget_ptr(new label("New Level", graphics::color_white(), 48)));
 		text_editor_widget* entry = new text_editor_widget(200);
 		entry->set_on_enter_handler(boost::bind(&dialog::close, &d));
+		entry->set_focus(true);
 		d.add_widget(widget_ptr(new label("Filename:", graphics::color_white())))
 		 .add_widget(widget_ptr(entry));
+
+		checkbox* clone_level_check = new checkbox("Clone current level", false, [](bool value) {});
+		d.add_widget(widget_ptr(clone_level_check));
+
+		grid_ptr ok_cancel_grid(new gui::grid(2));
+		ok_cancel_grid->set_hpad(12);
+		ok_cancel_grid->add_col(widget_ptr(
+		  new button(widget_ptr(new label("Ok", graphics::color_white())),
+		             [&d]() { d.close(); })));
+
+		ok_cancel_grid->add_col(widget_ptr(
+		  new button(widget_ptr(new label("Cancel", graphics::color_white())),
+		             [&d]() { d.cancel(); })));
+
+		ok_cancel_grid->finish_row();
+
+		d.add_widget(ok_cancel_grid);
+
 		d.show_modal();
 		
 		std::string name = entry->text();
@@ -342,7 +365,14 @@ public:
 				name += ".cfg";
 			}
 
-			variant empty_lvl = json::parse_from_file("data/level/empty.cfg");
+			variant empty_lvl;
+			
+			if(clone_level_check->checked()) {
+				empty_lvl = level::current().write();
+			} else {
+				empty_lvl = json::parse_from_file("data/level/empty.cfg");
+			}
+
 			std::string id = module::make_module_id(name);
 			empty_lvl.add_attr(variant("id"), variant(module::get_id(id)));
 			if(preferences::is_level_path_set()) {

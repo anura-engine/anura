@@ -869,6 +869,11 @@ bool level_runner::play_cycle()
 		controls_lock.reset(new controls::local_controls_lock);
 	}
 
+	if(editor_ && lvl_->player() == NULL && !paused) {
+		//force the game to paused in the editor with no player.
+		paused = true;
+	}
+
 	static bool pumped_file_mods = false;
 	if(editor_ || console_ || pumped_file_mods) {
 		sys::pump_file_modifications();

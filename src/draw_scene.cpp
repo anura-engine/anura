@@ -147,7 +147,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 	const int screen_width = graphics::screen_width() - (lvl.in_editor() ? sidebar_width : 0);
 	const int screen_height = graphics::screen_height() - (lvl.in_editor() ? codebar_height : 0);
 
-	ASSERT_LOG(focus, "No player found in level. Must have a player object. (An object with is_human: true marked");
+	ASSERT_LOG(focus || lvl.in_editor(), "No player found in level. Must have a player object. (An object with is_human: true marked");
 
 	if(focus) {
 
