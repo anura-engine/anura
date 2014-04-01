@@ -636,14 +636,26 @@ extern "C" int main(int argcount, char* argvec[])
 			anura_cl->install_module(g_auto_update_anura);
 		}
 
+		SDL_Window* update_window = NULL;
+
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = SDL_GetTicks();
+		int original_start_time = SDL_GetTicks();
 		bool timeout = false;
 		bool require_restart = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
 		while(cl || anura_cl) {
+			if(update_window == NULL && SDL_GetTicks() - original_start_time > 2000) {
+				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
+			}
+
+			int nbytes_obtained = 0;
+			int nbytes_needed = 0;
+
 			if(cl) {
 				const int transferred = cl->nbytes_transferred();
+				nbytes_obtained += transferred;
+				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
 					fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
 					start_time = SDL_GetTicks();
@@ -653,6 +665,8 @@ extern "C" int main(int argcount, char* argvec[])
 
 			if(anura_cl) {
 				const int transferred = anura_cl->nbytes_transferred();
+				nbytes_obtained += transferred;
+				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
 					fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
 					start_time = SDL_GetTicks();
@@ -665,6 +679,23 @@ extern "C" int main(int argcount, char* argvec[])
 				break;
 			}
 
+			if(update_window) {
+				SDL_Surface* fb= SDL_GetWindowSurface(update_window);
+				SDL_Rect area = {300, 290, 200, 20};
+				SDL_FillRect(fb, &area, 0xFFFFFFFF);
+
+				SDL_Rect inner_area = {303, 292, 194, 16};
+				SDL_FillRect(fb, &inner_area, 0xFF000000);
+
+				if(nbytes_needed != 0) {
+					const float ratio = float(nbytes_obtained)/float(nbytes_needed);
+					SDL_Rect area = {303, 292, int(194.0*ratio), 16};
+					SDL_FillRect(fb, &area, 0xFFFFFFFF);
+				}
+
+				SDL_UpdateWindowSurface(update_window);
+			}
+
 			SDL_Delay(20);
 
 			if(cl && !cl->process()) {
@@ -675,6 +706,10 @@ extern "C" int main(int argcount, char* argvec[])
 				require_restart = anura_cl->nfiles_written() != 0;
 				anura_cl.reset();
 			}
+		}
+
+		if(update_window) {
+			SDL_DestroyWindow(update_window);
 		}
 
 		if(require_restart) {

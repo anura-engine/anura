@@ -819,10 +819,10 @@ void client::install_module(const std::string& module_id, bool force)
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 		request.add("current_version", config["version"]);
-	}
 
-	if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
-		request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
+		if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
+			request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
+		}
 	}
 
 	std::cerr << "Requesting module '" << module_id << "'\n";
