@@ -1724,7 +1724,7 @@ private:
 		case OP_DIV:
 		case OP_SUB: {
 			ASSERT_LOG(left_type->is_numeric() && right_type->is_numeric(),
-			           "Illegal types to - operator: " << left_type->to_string() << " - " << right_type->to_string() << " At " << debug_pinpoint_location());
+			           "Illegal types to " << op_ << " operator: " << left_type->to_string() << " " << op_ << " " << right_type->to_string() << " " << debug_pinpoint_location());
 			return;
 
 		}
