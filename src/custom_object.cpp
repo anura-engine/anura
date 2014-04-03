@@ -3418,6 +3418,9 @@ void custom_object::set_value(const std::string& key, const variant& value)
 	} else if(key == "time_in_animation") {
 		ASSERT_GE(value.as_int(), 0);
 		time_in_frame_ = value.as_int()%frame_->duration();
+	} else if(key == "frame_in_animation") {
+		ASSERT_GE(value.as_int(), 0);
+		time_in_frame_ = value.as_int()%frame_->duration();
 	} else if(key == "time_in_animation_delta") {
 		time_in_frame_delta_ = value.as_int();
 	} else if(key == "x") {
