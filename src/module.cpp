@@ -306,7 +306,7 @@ void load(const std::string& mod_file_name, bool initial)
 	const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
 	if(sys::file_exists(constants_path)) {
 		const std::string contents = sys::read_file(constants_path);
-		variant v = json::parse(contents);
+		variant v = json::parse(contents, json::JSON_NO_PREPROCESSOR);
 		new game_logic::constants_loader(v);
 	}
 
@@ -627,7 +627,7 @@ void finish_upload(std::string response, bool* flag, std::string* result)
 	if(result) {
 		*result = response;
 	} else {
-		std::cerr << "UPLOAD COMPLETE " << response << "\n";
+		std::cout << "UPLOAD COMPLETE " << response << "\n";
 	}
 	*flag = true;
 }

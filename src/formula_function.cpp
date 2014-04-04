@@ -87,6 +87,8 @@
 
 #include "compat.hpp"
 
+extern variant g_auto_update_info;
+
 namespace {
 	const std::string FunctionModule = "core";
 
@@ -4685,6 +4687,12 @@ ARG_TYPE("map")
 RETURN_TYPE("builtin draw_primitive")
 END_FUNCTION_DEF(draw_primitive)
 #endif
+
+FUNCTION_DEF(auto_update_status, 0, 0, "auto_update_info(): get info on auto update status")
+	return g_auto_update_info;
+FUNCTION_ARGS_DEF
+RETURN_TYPE("map")
+END_FUNCTION_DEF(auto_update_status)
 
 }
 

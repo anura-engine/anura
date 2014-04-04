@@ -106,6 +106,8 @@
 
 #define DEFAULT_MODULE	"frogatto"
 
+variant g_auto_update_info;
+
 namespace {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
@@ -622,18 +624,22 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::cerr << "\n";
 
+	variant_builder update_info;
 	if(g_auto_update_module || g_auto_update_anura != "") {
+
 		boost::intrusive_ptr<module::client> cl, anura_cl;
 		
 		if(g_auto_update_module) {
 			cl.reset(new module::client);
 			cl->install_module(module::get_module_name());
+			update_info.add("attempt_module", true);
 		}
 
 		if(g_auto_update_anura != "") {
 			anura_cl.reset(new module::client);
 			anura_cl->set_install_image(true);
 			anura_cl->install_module(g_auto_update_anura);
+			update_info.add("attempt_anura", true);
 		}
 
 		SDL_Window* update_window = NULL;
@@ -700,11 +706,13 @@ extern "C" int main(int argcount, char* argvec[])
 
 			if(cl && !cl->process()) {
 				cl.reset();
+				update_info.add("complete_module", true);
 			}
 
 			if(anura_cl && !anura_cl->process()) {
 				require_restart = anura_cl->nfiles_written() != 0;
 				anura_cl.reset();
+				update_info.add("complete_anura", true);
 			}
 		}
 
@@ -718,6 +726,8 @@ extern "C" int main(int argcount, char* argvec[])
 			fprintf(stderr, "Could not exec()\n");
 		}
 	}
+
+	g_auto_update_info = update_info.build();
 
 	checksum::manager checksum_manager;
 #ifndef NO_EDITOR

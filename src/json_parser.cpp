@@ -66,11 +66,13 @@ std::string get_file_contents(const std::string& path)
 parse_error::parse_error(const std::string& msg)
   : message(msg), line(-1), col(-1)
 {
+	std::cerr << error_message() << "\n";
 }
 
 parse_error::parse_error(const std::string& msg, const std::string& filename, int line, int col)
   : message(msg), fname(filename), line(line), col(col)
 {
+	std::cerr << error_message() << "\n";
 }
 
 std::string parse_error::error_message() const
