@@ -146,17 +146,23 @@ void sigprof_handler(int sig)
 
 	if(current_expression_call_stack.empty() && current_expression_call_stack.capacity() >= get_expression_call_stack().size()) {
 		bool valid = true;
-		for(int n = 0; n != current_expression_call_stack.size(); ++n) {
-			if(current_expression_call_stack[n].expression == NULL) {
-				valid = false;
-				break;
-			}
 
-			intrusive_ptr_add_ref(current_expression_call_stack[n].expression);
-		}
 		//Very important that this does not allocate memory.
 		if(valid) {
 			current_expression_call_stack = get_expression_call_stack();
+
+			for(int n = 0; n != current_expression_call_stack.size(); ++n) {
+				if(current_expression_call_stack[n].expression == NULL) {
+					valid = false;
+					break;
+				}
+
+				intrusive_ptr_add_ref(current_expression_call_stack[n].expression);
+			}
+
+			if(!valid) {
+				current_expression_call_stack.clear();
+			}
 		}
 	}
 
