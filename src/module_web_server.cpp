@@ -171,16 +171,11 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 			variant lock_id = doc["lock_id"];
 			ASSERT_LOG(lock_id == variant(module_lock_ids_[module_id]), "Invalid lock on module: " << lock_id.write_json() << " vs " << module_lock_ids_[module_id]);
 
-			std::vector<variant> prev_versions;
-
 			variant current_data = data_[variant(module_id)];
 			if(current_data.is_null() == false) {
 				const variant new_version = module_node[variant("version")];
 				const variant old_version = current_data[variant("version")];
 				ASSERT_LOG(new_version > old_version, "VERSION " << new_version.write_json() << " IS NOT NEWER THAN EXISTING VERSION " << old_version.write_json());
-				prev_versions = current_data[variant("previous_versions")].as_list();
-				current_data.remove_attr_mutation(variant("previous_versions"));
-				prev_versions.push_back(current_data);
 			}
 
 			const std::string module_path = data_path_ + module_id + ".cfg";
@@ -213,7 +208,6 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 
 			{
 				std::map<variant, variant> summary;
-				summary[variant("previous_versions")] = variant(&prev_versions);
 				summary[variant("version")] = module_node[variant("version")];
 				summary[variant("name")] = module_node[variant("name")];
 				summary[variant("description")] = module_node[variant("description")];
@@ -238,6 +232,72 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 				data_.add_attr_mutation(variant(module_id), variant(&summary));
 				write_data();
 			}
+
+		} else if(msg_type == "replicate_module") {
+			const std::string src_id = doc["src_id"].as_string();
+			const std::string dst_id = doc["dst_id"].as_string();
+
+			const std::string src_path = data_path_ + src_id + ".cfg";
+			const std::string dst_path = data_path_ + dst_id + ".cfg";
+
+			variant src_info = data_["summary"][src_id];
+			ASSERT_LOG(src_info.is_map(), "Could not find source module " << src_id);
+			ASSERT_LOG(sys::file_exists(src_path), "Source module " << src_id << " does not exist");
+
+			std::vector<int> version_num = src_info["version"].as_list_int();
+
+			variant dst_info = data_["summary"][dst_id];
+			if(dst_info.is_map()) {
+				std::vector<int> dst_version_num = dst_info["version"].as_list_int();
+				ASSERT_LOG(!dst_version_num.empty(), "Illegal module version in " << dst_id);
+
+				if(version_num <= dst_version_num) {
+					version_num = dst_version_num;
+					version_num[version_num.size()-1]++;
+				}
+			}
+
+			std::string src_contents = sys::read_file(src_path);
+			variant module_node = json::parse(src_contents);
+			module_node.add_attr_mutation(variant("version"), vector_to_variant(version_num));
+
+
+			const std::string module_path_tmp = dst_path + ".tmp";
+			const std::string contents = module_node.write_json();
+			
+			sys::write_file(module_path_tmp, contents);
+			const int rename_result = rename(module_path_tmp.c_str(), dst_path.c_str());
+			ASSERT_LOG(rename_result == 0, "FAILED TO RENAME FILE: " << errno);
+
+			response[variant("status")] = variant("ok");
+
+			{
+				std::map<variant, variant> summary;
+				summary[variant("version")] = module_node[variant("version")];
+				summary[variant("name")] = module_node[variant("name")];
+				summary[variant("description")] = module_node[variant("description")];
+				summary[variant("author")] = module_node[variant("author")];
+				summary[variant("dependencies")] = module_node[variant("dependencies")];
+				summary[variant("num_downloads")] = variant(0);
+				summary[variant("num_ratings")] = variant(0);
+				summary[variant("sum_ratings")] = variant(0);
+
+				std::vector<variant> reviews_list;
+				summary[variant("reviews")] = variant(&reviews_list);
+
+				if(module_node.has_key("icon")) {
+					std::string icon_str = base64::b64decode(module_node["icon"].as_string());
+
+					const std::string hash = md5::sum(icon_str);
+					sys::write_file(data_path_ + "/.glob/" + hash, icon_str);
+
+					summary[variant("icon")] = variant(hash);
+				}
+
+				data_.add_attr_mutation(variant(dst_id), variant(&summary));
+				write_data();
+			}
+
 
 		} else if(msg_type == "query_globs") {
 			response[variant("status")] = variant("ok");
@@ -282,6 +342,21 @@ void module_web_server::handle_get(socket_ptr socket, const std::string& url, co
 		 if(url == "/get_summary") {
 			response[variant("status")] = variant("ok");
 			response[variant("summary")] = data_;
+		} else if(url == "/package") {
+			ASSERT_LOG(args.count("id"), "Must specify module id");
+			const std::string id = args.find("id")->second;
+			const std::string module_path = data_path_ + id + ".cfg";
+			ASSERT_LOG(sys::file_exists(module_path), "No such module");
+
+			std::string contents = sys::read_file(module_path);
+			variant module = json::parse(contents);
+			variant manifest = module["manifest"];
+			for(auto p : manifest.as_map()) {
+				p.second.remove_attr_mutation(variant("data"));
+			}
+
+			response[variant("manifest")] = manifest;
+			response[variant("status")] = variant("ok");
 		} else {
 			response[variant("message")] = variant("Unknown path");
 		}
