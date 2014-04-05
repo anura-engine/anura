@@ -1665,27 +1665,17 @@ void custom_object::process(level& lvl)
 		execute_command(cmd);
 	}
 
+	std::vector<std::pair<variant,variant> > follow_ons;
 
 	for(int i = 0; i != animated_movement_.size(); ++i) {
 		auto& move = animated_movement_[i];
-		if(move->name.empty() == false) {
-			bool already_done = false;
-			for(int j = 0; j != i; ++j) {
-				if(animated_movement_[j] && animated_movement_[j]->name == move->name) {
-					already_done = true;
-					break;
-				}
-			}
-
-			if(already_done) {
-				continue;
-			}
-		}
 
 		if(move->pos >= move->animation_frames()) {
 			if(move->on_complete.is_null() == false) {
 				execute_command(move->on_complete);
 			}
+
+			follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
 
 			move.reset();
 		} else {
@@ -1705,6 +1695,10 @@ void custom_object::process(level& lvl)
 	}
 
 	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
+
+	for(const auto& p : follow_ons) {
+		add_animated_movement(p.first, p.second);
+	}
 
 	if(position_schedule_.get() != NULL) {
 		const int pos = (cycle_ - position_schedule_->base_cycle)/position_schedule_->speed;
@@ -2693,6 +2687,79 @@ void custom_object::being_added()
 void custom_object::set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement)
 {
 	animated_movement_.push_back(movement);
+}
+
+void custom_object::add_animated_movement(variant attr_var, variant options)
+{
+	const std::string& name = options["name"].as_string_default("");
+	if(options["replace_existing"].as_bool(false)) {
+		cancel_animated_schedule(name);
+	} else if(name != "") {
+		for(auto move : animated_movement_) {
+			if(move->name == name) {
+				move->follow_on.push_back(std::make_pair(attr_var, options));
+				return;
+			}
+		}
+	}
+
+	const std::string type = query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
+	game_logic::formula_callable_definition_ptr def = custom_object_type::get_definition(type);
+	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
+
+	std::vector<int> slots;
+	std::vector<decimal> begin_values, end_values;
+
+	const auto& attr = attr_var.as_map();
+
+	for(const auto& p : attr) {
+		slots.push_back(def->get_slot(p.first.as_string()));
+		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
+		end_values.push_back(p.second.as_decimal());
+		begin_values.push_back(query_value_by_slot(slots.back()).as_decimal());
+	}
+
+	const int ncycles = options["duration"].as_int(10);
+
+	std::function<double(double)> easing_fn;
+	variant easing_var = options["easing"];
+	if(easing_var.is_function()) {
+		easing_fn = [=](double x) { std::vector<variant> args; args.push_back(variant(decimal(x))); return easing_var(args).as_decimal().as_float(); };
+	} else {
+		const std::string& easing = easing_var.as_string_default("swing");
+		if(easing == "linear") {
+			easing_fn = [](double x) { return x; };
+		} else if(easing == "swing") {
+			easing_fn = [](double x) { return 0.5*(1 - cos(x*3.14)); };
+		} else {
+			ASSERT_LOG(false, "Unknown easing: " << easing);
+		}
+	}
+
+	std::vector<variant> values;
+	values.reserve(slots.size()*ncycles);
+
+	for(int cycle = 0; cycle != ncycles; ++cycle) {
+		GLfloat ratio = 1.0;
+		if(cycle < ncycles-1) {
+			ratio = GLfloat(cycle)/GLfloat(ncycles-1);
+			ratio = easing_fn(ratio);
+		}
+		for(int n = 0; n != slots.size(); ++n) {
+			decimal value = decimal(end_values[n].as_float()*ratio + begin_values[n].as_float()*(1.0-ratio));
+			values.push_back(variant(value));
+		}
+	}
+
+	boost::shared_ptr<custom_object::AnimatedMovement> movement(new custom_object::AnimatedMovement);
+	movement->name = name;
+	movement->animation_values.swap(values);
+	movement->animation_slots.swap(slots);
+
+	movement->on_process = options["on_process"];
+	movement->on_complete = options["on_complete"];
+
+	set_animated_schedule(movement);
 }
 
 void custom_object::cancel_animated_schedule(const std::string& name)

@@ -273,12 +273,15 @@ public:
 
 		variant on_process, on_complete;
 
+		std::vector<std::pair<variant,variant> > follow_on;
+
 		AnimatedMovement() : pos(0)
 		{}
 
 		int animation_frames() const { return animation_values.size()/animation_slots.size(); }
 	};
 
+	void add_animated_movement(variant attr, variant options);
 	void set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement);
 	void cancel_animated_schedule(const std::string& name);
 
