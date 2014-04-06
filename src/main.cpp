@@ -702,6 +702,15 @@ extern "C" int main(int argcount, char* argvec[])
 				SDL_UpdateWindowSurface(update_window);
 			}
 
+			SDL_Event event;
+			while(SDL_PollEvent(&event)) {
+				if(event.type == SDL_QUIT) {
+					cl.reset();
+					anura_cl.reset();
+					break;
+				}
+			}
+
 			SDL_Delay(20);
 
 			if(cl && !cl->process()) {
