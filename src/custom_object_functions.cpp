@@ -3093,7 +3093,7 @@ FUNCTION_DEF(animate, 3, 3, "animate(object, attributes, options)")
 FUNCTION_ARGS_DEF
 	ARG_TYPE("custom_obj")
 	ARG_TYPE("map")
-	ARG_TYPE("{on_process: null|commands, on_complete: null|commands, name: null|string, easing: null|string|function(decimal)->decimal, duration: null|int}")
+	ARG_TYPE("{on_process: null|commands, on_complete: null|commands, name: null|string, easing: null|string|function(decimal)->decimal, duration: null|int, replace_existing: bool|null}")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(animate)
 

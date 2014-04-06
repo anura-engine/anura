@@ -860,7 +860,7 @@ variant custom_object::write() const
 		res.add("variations", util::join(current_variation_));
 	}
 
-	if(draw_color_) {
+	if(draw_color_ && (!draw_color_->fits_in_color() || draw_color_->to_color().value() != 0xFFFFFFFF)) {
 		res.add("draw_color", draw_color_->write());
 	}
 

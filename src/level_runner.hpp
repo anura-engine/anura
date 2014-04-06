@@ -104,6 +104,10 @@ private:
 		const int basic_evt, 
 		const int catch_all_event);
 #endif
+
+	//mouse event handling state
+	bool mouse_clicking_;
+
 	void show_pause_title();
 
 	editor* editor_;

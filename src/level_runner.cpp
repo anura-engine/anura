@@ -581,7 +581,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						handled |= e->handle_event(basic_evt, callable.get());
 					}
 
-					if(event_type == SDL_MOUSEBUTTONUP && !click_handled && e->is_being_dragged() == false) {
+					if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->is_being_dragged() == false) {
 						e->handle_event(MouseClickID, callable.get());
 						if((*it)->mouse_event_swallowed()) {
 							click_handled = true;
@@ -678,6 +678,8 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					}
 				}
 			}
+
+			mouse_clicking_ = event.type == SDL_MOUSEBUTTONDOWN;
 			break;
 	}
 	return false;
@@ -729,6 +731,7 @@ level_runner::level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_
 	done = false;
 	start_time_ = SDL_GetTicks();
 	pause_time_ = -global_pause_time;
+	mouse_clicking_ = false;
 }
 
 void level_runner::start_editor()
