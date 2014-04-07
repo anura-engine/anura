@@ -627,6 +627,18 @@ extern "C" int main(int argcount, char* argvec[])
 	variant_builder update_info;
 	if(g_auto_update_module || g_auto_update_anura != "") {
 
+		//remove any .tmp files that may have been left from previous runs.
+		std::vector<std::string> tmp_files;
+		sys::get_files_in_dir(".", &tmp_files, NULL);
+		for(auto f : tmp_files) {
+			if(f.size() > 4 && std::equal(f.end()-4,f.end(),".tmp")) {
+				try {
+					sys::remove_file(f);
+				} catch(...) {
+				}
+			}
+		}
+
 		boost::intrusive_ptr<module::client> cl, anura_cl;
 		
 		if(g_auto_update_module) {

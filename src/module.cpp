@@ -914,8 +914,6 @@ void client::on_response(std::string response)
 
 			operation_ = OPERATION_NONE;
 
-			sys::write_file("response.txt", response);
-
 			variant doc;
 	
 			try {
