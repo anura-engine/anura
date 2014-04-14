@@ -238,7 +238,7 @@ namespace graphics
 		shader_save_context ssc;
 		glUseProgram(shader == NULL ? final_shader_->shader()->get() : shader->shader()->get());
 		
-		glClearColor(255.0f, 0.0f, 0.0f, 255.0f);
+		glClearColor(0.0f, 0.0f, 0.0f, 255.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		glDisable(GL_BLEND);
 
