@@ -126,6 +126,7 @@ namespace graphics
 	{
 		SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
 		screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
+		texture_frame_buffer::rebuild();
 	}
 
 	void window_manager::create_window(int width, int height)
