@@ -25,6 +25,7 @@
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 
 namespace {
 	typedef std::stack<glm::mat4> projection_mat_stack;
@@ -516,6 +517,20 @@ namespace gles2 {
 #endif
 	}
 
+	PREF_BOOL(reload_modified_shaders, false, "Causes shaders to be automatically reloaded");
+	namespace {
+	void reload_shader_file(std::string fname)
+	{
+		try {
+			assert_recover_scope recover_scope;
+			program::load_shaders(sys::read_file(fname));
+			fprintf(stderr, "Reloaded shader file: %s\n", fname.c_str());
+		} catch(validation_failure_exception& e) {
+			fprintf(stderr, "Failed to reload shader: %s\n", e.msg.c_str());
+		}
+	}
+	}
+
 	void init_default_shader()
 	{
 		gles2::shader v1(GL_VERTEX_SHADER, "simple_vertex_shader", variant(vs1));
@@ -564,11 +579,17 @@ namespace gles2 {
 		std::string shader_file = "data/shaders.cfg";
 		if(sys::file_exists(shader_file)) {
 			program::load_shaders(sys::read_file(shader_file));
+			if(g_reload_modified_shaders) {
+				sys::notify_on_file_modification(shader_file, std::bind(reload_shader_file, shader_file));
+			}
 		}
 
 		shader_file = module::map_file("data/shaders.cfg");
 		if(sys::file_exists(shader_file)) {
 			program::load_shaders(sys::read_file(shader_file));
+			if(g_reload_modified_shaders) {
+				sys::notify_on_file_modification(shader_file, std::bind(reload_shader_file, shader_file));
+			}
 		}
 		active_shader_program = tex_shader_program;
 	}

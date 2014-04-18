@@ -82,6 +82,8 @@ void glColor4ub_1(GLubyte red, GLubyte green, GLubyte blue, GLubyte alpha);
 #endif
 
 namespace gles2 {
+	extern bool g_reload_modified_shaders;
+
 	class fixed_program : public program
 	{
 	public:

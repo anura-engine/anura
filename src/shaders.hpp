@@ -244,7 +244,7 @@ protected:
 private:
 	DECLARE_CALLABLE(shader_program)
 
-	void operator=(const shader_program&);
+	//void operator=(const shader_program&);
 
 	std::string name_;
 	program_ptr program_object_;

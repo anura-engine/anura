@@ -720,6 +720,7 @@ namespace {
 	private:
 		variant execute(const game_logic::formula_callable& variables) const 
 		{
+			game_logic::formula::fail_if_static_context();
 			const std::string filename = module::map_file(args()[0]->evaluate(variables).as_string());
 			const graphics::texture tex = graphics::texture::get(filename);
 			return variant(new texture_callable(tex));
@@ -1161,7 +1162,13 @@ void program::load_shaders(const std::string& shader_data)
 		foreach(variant prog, node["instances"].as_list()) {
 			boost::intrusive_ptr<shader_program> sp(new shader_program);
 			sp->configure(prog);
-			g_global_shaders[sp->name()] = sp;
+
+			boost::intrusive_ptr<shader_program>& existing = g_global_shaders[sp->name()];
+			if(existing.get() != NULL) {
+				*existing = *sp;
+			} else {
+				g_global_shaders[sp->name()] = sp;
+			}
 		}
 	}
 }

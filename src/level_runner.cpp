@@ -41,6 +41,7 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "formula_callable.hpp"
+#include "gles2.hpp"
 #include "http_client.hpp"
 #if defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__) || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #include "iphone_controls.hpp"
@@ -878,7 +879,7 @@ bool level_runner::play_cycle()
 	}
 
 	static bool pumped_file_mods = false;
-	if(editor_ || console_ || pumped_file_mods) {
+	if(editor_ || console_ || gles2::g_reload_modified_shaders || pumped_file_mods) {
 		sys::pump_file_modifications();
 		pumped_file_mods = true;
 	}
