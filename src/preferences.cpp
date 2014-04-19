@@ -27,6 +27,7 @@
 #include "asserts.hpp"
 #include "controls.hpp"
 #include "difficulty.hpp"
+#include "editor.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
@@ -669,7 +670,7 @@ namespace preferences {
 	}
 
 	bool edit_and_continue() {
-		return edit_and_continue_;
+		return edit_and_continue_ && !editor_resolution_manager::is_active();
 	}
 
 	void set_edit_and_continue(bool value) {

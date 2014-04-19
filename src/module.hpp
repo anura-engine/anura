@@ -96,6 +96,20 @@ class client : public game_logic::formula_callable
 public:
 	client();
 	client(const std::string& host, const std::string& port);
+
+	//function which downloads a module and has it ready to install but
+	//doesn't install it yet.
+	void prepare_install_module(const std::string& module_name, bool force=false);
+
+	//completes installation of a module after previously calling
+	//prepare_install_module(). pre-condition: module_prepared() returns true
+	void complete_install_module();
+
+	//returns true iff we called prepare_install_module() previously and now
+	//the module is fully downloaded and ready to install.
+	bool module_prepared() const;
+
+	//begins download and installation of a given module.
 	void install_module(const std::string& module_name, bool force=false);
 	void rate_module(const std::string& module_id, int rating, const std::string& review);
 	void get_status();
@@ -109,7 +123,7 @@ public:
 
 	void set_install_image(bool value) { install_image_ = value; }
 private:
-	enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
+	enum OPERATION_TYPE { OPERATION_NONE, OPERATION_INSTALL, OPERATION_PREPARE_INSTALL, OPERATION_GET_STATUS, OPERATION_GET_ICONS, OPERATION_RATE };
 	OPERATION_TYPE operation_;
 	std::string module_id_;
 	std::string error_;
@@ -124,9 +138,15 @@ private:
 
 	bool install_image_;
 
+	//a response that is ready for installation. Only used when operation_ is
+	//OPERATION_PREPARE_INSTALL
+	std::string pending_response_;
+
 	void on_response(std::string response);
 	void on_error(std::string response);
 	void on_progress(int sent, int total, bool uploaded);
+
+	void perform_install(const std::string& response);
 };
 
 }

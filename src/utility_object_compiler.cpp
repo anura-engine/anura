@@ -1137,6 +1137,95 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 	}
 }
 
+COMMAND_LINE_UTILITY(build_spritesheet_from_images)
+{
+	using namespace graphics;
+
+	std::vector<std::vector<surface> > surfaces;
+	surfaces.resize(surfaces.size()+1);
+
+	int row_width = 3;
+	int sheet_height = 3;
+
+	std::vector<int> cell_widths;
+	std::vector<int> row_heights;
+	cell_widths.push_back(0);
+	row_heights.push_back(0);
+
+	using namespace graphics;
+	for(auto img : args) {
+		if(img == "--newrow") {
+			surfaces.resize(surfaces.size()+1);
+			cell_widths.push_back(0);
+			row_heights.push_back(0);
+			row_width = 3;
+			sheet_height += 3;
+			continue;
+		}
+
+		surface s = surface_cache::get(img);
+		ASSERT_LOG(s.get(), "No image: " << img);
+		surfaces.back().push_back(s);
+
+		row_width += s->w + 3;
+
+		if(s->w > cell_widths.back()) {
+			cell_widths.back() = s->w;
+		}
+
+		if(s->h > row_heights.back()) {
+			sheet_height += s->h - row_heights.back();
+			row_heights.back() = s->h;
+		}
+	}
+
+	int sheet_width = 0;
+	for(int nrow = 0; nrow != surfaces.size(); ++nrow) {
+		const int row_width = 3 + (3+cell_widths[nrow])*surfaces[nrow].size();
+		if(row_width > sheet_width) {
+			sheet_width = row_width;
+		}
+	}
+
+	surface sheet = surface(SDL_CreateRGBSurface(0,sheet_width,sheet_height,32,SURFACE_MASK));
+
+	int ypos = 2;
+
+	int row_index = 0;
+	for(auto row : surfaces) {
+		int xpos = 2;
+		int max_height = 0;
+		for(auto src : row) {
+			SDL_Rect blit_src = {0, 0, src->w, src->h};
+			SDL_Rect blit_dst = {xpos, ypos, src->w, src->h};
+
+			SDL_Rect rect_top = {xpos-1, ypos-1, src->w+2, 1};
+			SDL_Rect rect_bot = {xpos-1, ypos + src->h, src->w+2, 1};
+			SDL_Rect rect_left = {xpos-1, ypos, 1, src->h};
+			SDL_Rect rect_right = {xpos + src->w, ypos, 1, src->h};
+
+			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
+			SDL_BlitSurface(src.get(), &blit_src, sheet.get(), &blit_dst);
+			if(blit_src.h > max_height) {
+				max_height = blit_src.h;
+			}
+
+			Uint32 transparent = SDL_MapRGB(sheet->format, 0xf9, 0x30, 0x3d);
+			SDL_FillRect(sheet.get(), &rect_top, transparent);
+			SDL_FillRect(sheet.get(), &rect_bot, transparent);
+			SDL_FillRect(sheet.get(), &rect_left, transparent);
+			SDL_FillRect(sheet.get(), &rect_right, transparent);
+
+			xpos += cell_widths[row_index] + 3;
+		}
+
+		ypos += max_height + 3;
+		++row_index;
+	}
+
+	IMG_SavePNG("sheet.png", sheet.get(), -1);
+}
+
 //this is a template utility that can be modified to provide a nice utility
 //for manipulating images.
 COMMAND_LINE_UTILITY(manipulate_image_template)
@@ -1154,3 +1243,4 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 		IMG_SavePNG((module::get_module_path() + "/images/" + img).c_str(), s.get(), -1);
 	}
 }
+

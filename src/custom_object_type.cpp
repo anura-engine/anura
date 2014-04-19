@@ -767,7 +767,7 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 			return result;
 		} catch(validation_failure_exception& e) {
 			static bool in_edit_and_continue = false;
-			if(in_edit_and_continue) {
+			if(in_edit_and_continue || preferences::edit_and_continue() == false) {
 				throw e;
 			}
 

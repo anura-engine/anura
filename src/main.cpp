@@ -692,8 +692,9 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			if(SDL_GetTicks() - start_time > g_auto_update_timeout) {
-				fprintf(stderr, "Timed out updating module. Canceling\n");
+			const int time_taken = SDL_GetTicks() - start_time;
+			if(time_taken > g_auto_update_timeout) {
+				fprintf(stderr, "Timed out updating module. Canceling. %dms vs %dms\n", time_taken, g_auto_update_timeout);
 				break;
 			}
 
@@ -726,14 +727,24 @@ extern "C" int main(int argcount, char* argvec[])
 			SDL_Delay(20);
 
 			if(cl && !cl->process()) {
+				if(cl->error().empty() == false) {
+					fprintf(stderr, "Error while updating module: %s\n", cl->error().c_str());
+					update_info.add("module_error", variant(cl->error()));
+				} else {
+					update_info.add("complete_module", true);
+				}
 				cl.reset();
-				update_info.add("complete_module", true);
 			}
 
 			if(anura_cl && !anura_cl->process()) {
-				require_restart = anura_cl->nfiles_written() != 0;
+				if(anura_cl->error().empty() == false) {
+					fprintf(stderr, "Error while updating anura: %s\n", anura_cl->error().c_str());
+					update_info.add("anura_error", variant(anura_cl->error()));
+				} else {
+					update_info.add("complete_anura", true);
+					require_restart = anura_cl->nfiles_written() != 0;
+				}
 				anura_cl.reset();
-				update_info.add("complete_anura", true);
 			}
 		}
 

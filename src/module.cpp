@@ -804,6 +804,25 @@ client::client(const std::string& host, const std::string& port)
 {
 }
 
+void client::prepare_install_module(const std::string& module_id, bool force)
+{
+	install_module(module_id, force);
+	operation_ = OPERATION_PREPARE_INSTALL;
+}
+
+void client::complete_install_module()
+{
+	ASSERT_LOG(module_prepared(), "Called complete_install_module() when module_prepared() not true");
+	operation_ = OPERATION_NONE;
+	perform_install(pending_response_);
+	pending_response_ = "";
+}
+
+bool client::module_prepared() const
+{
+	return operation_ == OPERATION_PREPARE_INSTALL && pending_response_.empty() == false;
+}
+
 void client::install_module(const std::string& module_id, bool force)
 {
 	data_.clear();
@@ -865,7 +884,7 @@ void client::get_status()
 
 bool client::process()
 {
-	if(operation_ == OPERATION_NONE) {
+	if(operation_ == OPERATION_NONE || (operation_ == OPERATION_PREPARE_INSTALL && module_prepared())) {
 		return false;
 	}
 
@@ -914,76 +933,10 @@ void client::on_response(std::string response)
 
 			operation_ = OPERATION_NONE;
 
-			variant doc;
-	
-			try {
-				doc = json::parse(response, json::JSON_NO_PREPROCESSOR);
-			} catch(json::parse_error& e) {
-				sys::write_file("./download.txt", response);
-				ASSERT_LOG(false, "Failed to parse: " << e.error_message());
-			}
+			perform_install(response);
 
-			if(doc["status"].as_string() == "no_newer_module") {
-				fprintf(stderr, "You already have the newest version of this module. Use --force to force download.\n");
-				return;
-			}
-
-			ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
-
-			variant module_data = doc["module"];
-
-			if(module_data.has_key("delete")) {
-				for(variant path : module_data["delete"].as_list()) {
-					const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
-					fprintf(stderr, "DELETING FILE: %s\n", path_str.c_str());
-					sys::remove_file(path_str);
-				}
-			}
-
-			variant manifest = module_data["manifest"];
-			foreach(variant path, manifest.get_keys().as_list()) {
-				const std::string path_str = path.as_string();
-				ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
-			}
-
-			fprintf(stderr, "Install files: %d\n", (int)manifest.get_keys().as_list().size());
-
-			foreach(variant path, manifest.get_keys().as_list()) {
-				variant info = manifest[path];
-				const std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
-
-				if(install_image_ && sys::file_exists(path_str)) {
-					//try removing the file, and failing that, move it.
-					try {
-						sys::remove_file(path_str);
-					} catch(...) {
-						fprintf(stderr, "Failed to remove %s\n", path_str.c_str());
-
-						try {
-							sys::move_file(path_str, path_str + ".tmp");
-						} catch(...) {
-							fprintf(stderr, "Failed to move: %s\n", path_str.c_str());
-						}
-					}
-				}
-
-				std::vector<char> data_buf;
-				{
-					const std::string data_str = info["data"].as_string();
-					data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
-				}
-				const int data_size = info["size"].as_int();
-
-				std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
-
-				std::cerr << "CREATING FILE AT " << path_str << "\n";
-
-				std::string contents(data.begin(), data.end());
-				ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
-				sys::write_file(path_str, contents);
-
-				++nfiles_written_;
-			}
+		} else if(operation_ == OPERATION_PREPARE_INSTALL) {
+			pending_response_ = response;
 
 		} else if(operation_ == OPERATION_GET_STATUS) {
 			module_info_ = doc[variant("summary")];
@@ -1036,6 +989,80 @@ void client::on_response(std::string response)
 	operation_ = OPERATION_NONE;
 }
 
+void client::perform_install(const std::string& response)
+{
+	variant doc;
+
+	try {
+		doc = json::parse(response, json::JSON_NO_PREPROCESSOR);
+	} catch(json::parse_error& e) {
+		sys::write_file("./download.txt", response);
+		ASSERT_LOG(false, "Failed to parse: " << e.error_message());
+	}
+
+	if(doc["status"].as_string() == "no_newer_module") {
+		fprintf(stderr, "You already have the newest version of this module. Use --force to force download.\n");
+		return;
+	}
+
+	ASSERT_LOG(doc["status"].as_string() == "ok", "COULD NOT DOWNLOAD MODULE: " << doc["message"]);
+
+	variant module_data = doc["module"];
+
+	if(module_data.has_key("delete")) {
+		for(variant path : module_data["delete"].as_list()) {
+			const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+			fprintf(stderr, "DELETING FILE: %s\n", path_str.c_str());
+			sys::remove_file(path_str);
+		}
+	}
+
+	variant manifest = module_data["manifest"];
+	foreach(variant path, manifest.get_keys().as_list()) {
+		const std::string path_str = path.as_string();
+		ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
+	}
+
+	fprintf(stderr, "Install files: %d\n", (int)manifest.get_keys().as_list().size());
+
+	foreach(variant path, manifest.get_keys().as_list()) {
+		variant info = manifest[path];
+		const std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+
+		if(install_image_ && sys::file_exists(path_str)) {
+			//try removing the file, and failing that, move it.
+			try {
+				sys::remove_file(path_str);
+			} catch(...) {
+				fprintf(stderr, "Failed to remove %s\n", path_str.c_str());
+
+				try {
+					sys::move_file(path_str, path_str + ".tmp");
+				} catch(...) {
+					fprintf(stderr, "Failed to move: %s\n", path_str.c_str());
+				}
+			}
+		}
+
+		std::vector<char> data_buf;
+		{
+			const std::string data_str = info["data"].as_string();
+			data_buf.insert(data_buf.begin(), data_str.begin(), data_str.end());
+		}
+		const int data_size = info["size"].as_int();
+
+		std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
+
+		std::cerr << "CREATING FILE AT " << path_str << "\n";
+
+		std::string contents(data.begin(), data.end());
+		ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
+		sys::write_file(path_str, contents);
+
+		++nfiles_written_;
+	}
+}
+
 void client::on_error(std::string response)
 {
 	error_ = response;
@@ -1085,8 +1112,13 @@ COMMAND_LINE_UTILITY(install_module)
 	boost::intrusive_ptr<client> cl(new client(server, port));
 
 	cl->install_module(module_id, force);
+	int nbytes_transferred = 0;
 
 	while(cl->process()) {
+		if(nbytes_transferred != cl->nbytes_transferred()) {
+			nbytes_transferred = cl->nbytes_transferred();
+			fprintf(stderr, "TRANSFER: %d/%d kbytes\n", nbytes_transferred/1024, cl->nbytes_total()/1024);
+		}
 	}
 
 	ASSERT_LOG(cl->error().empty(), "Could not download module: " << cl->error());
