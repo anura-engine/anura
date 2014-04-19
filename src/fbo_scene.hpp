@@ -31,7 +31,8 @@ public:
 	~texture_object();
 	const graphics::texture& texture() const { return texture_; }
 private:
-	variant get_value(const std::string& key) const;
+
+	DECLARE_CALLABLE(texture_object);
 
 	graphics::texture texture_;
 };

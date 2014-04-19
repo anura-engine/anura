@@ -730,6 +730,7 @@ void custom_object::init_properties()
 			continue;
 		}
 
+		reference_counted_object_pin_norelease pin(this);
 		get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
 	}
 }

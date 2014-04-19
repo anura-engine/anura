@@ -456,4 +456,34 @@ namespace sys
 			f();
 		}
 	}
+
+	bool consecutive_periods(char a, char b) {
+		return a == '.' && b == '.';
+	}
+
+	bool is_safe_write_path(const std::string& path, std::string* error)
+	{
+		if(path.empty()) {
+			if(error) {
+				*error = "DOCUMENT NAME IS EMPTY";
+			}
+
+			return false;
+		}
+		if(sys::is_path_absolute(path)) {
+			if(error) {
+				*error = "DOCUMENT NAME IS ABSOLUTE PATH";
+			}
+			return false;
+		}
+		if(std::adjacent_find(path.begin(), path.end(), consecutive_periods) != path.end()) {
+			if(error) {
+				*error = "ILLEGAL RELATIVE FILE PATH";
+			}
+
+			return false;
+		}
+
+		return true;
+	}
 }

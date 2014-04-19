@@ -19,6 +19,7 @@
 #include "controls.hpp"
 #include "draw_scene.hpp"
 #include "fbo_scene.hpp"
+#include "filesystem.hpp"
 #include "foreach.hpp"
 #include "graphics.hpp"
 #include "level.hpp"
@@ -67,10 +68,34 @@ texture_object::~texture_object()
 {
 }
 
-variant texture_object::get_value(const std::string& key) const
-{
-	return variant();
-}
+BEGIN_DEFINE_CALLABLE_NOBASE(texture_object)
+DEFINE_FIELD(id, "int")
+	return variant(obj.texture().get_id());
+BEGIN_DEFINE_FN(save, "(string) ->commands")
+	using namespace game_logic;
+	using namespace graphics;
+	formula::fail_if_static_context();
+
+	std::string fname = FN_ARG(0).as_string();
+
+	std::string path_error;
+	if(!sys::is_safe_write_path(fname, &path_error)) {
+		ASSERT_LOG(false, "Illegal filename to save to: " << fname << " -- " << path_error);
+	}
+
+	boost::intrusive_ptr<const texture_object> ptr(&obj);
+
+	return variant(new fn_command_callable([=]() {
+		graphics::texture t = ptr->texture();
+		surface s = t.get_surface();
+		ASSERT_LOG(s.get(), "Could not get surface from texture");
+		IMG_SavePNG(fname.c_str(), s.get());
+		fprintf(stderr, "Saved image to %s\n", fname.c_str());
+	}));
+
+END_DEFINE_FN
+END_DEFINE_CALLABLE(texture_object)
+
 
 graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> objects)
 {

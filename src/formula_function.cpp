@@ -3746,6 +3746,11 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	std::string docname = args()[0]->evaluate(variables).as_string();
 	variant doc = args()[1]->evaluate(variables);
 
+	std::string path_error;
+	if(!sys::is_safe_write_path(docname, &path_error)) {
+		return variant("ERROR in write_document(" + docname + "): " + path_error);
+	}
+
 	if(docname.empty()) {
 		return variant("DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
 	}

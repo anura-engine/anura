@@ -20,6 +20,7 @@
 #include "array_callable.hpp"
 #include "asserts.hpp"
 #include "custom_object.hpp"
+#include "fbo_scene.hpp"
 #include "foreach.hpp"
 #include "formula.hpp"
 #include "formula_profiler.hpp"
@@ -298,7 +299,18 @@ void program::set_uniform(const actives_map_iterator& it, const variant& value)
 	const actives& u = it->second;
 	switch(u.type) {
 	case GL_FLOAT: {
-		glUniform1f(u.location, GLfloat(value.as_decimal().as_float()));
+		if(u.num_elements == 1) {
+			glUniform1f(u.location, GLfloat(value.as_decimal().as_float()));
+		} else {
+			ASSERT_LOG(u.num_elements == value.num_elements(), "Incorrect number of elements for uniform array: " << u.num_elements << " vs " << value.num_elements());
+			std::vector<GLfloat> v(u.num_elements);
+			for(size_t n = 0; n < value.num_elements(); ++n) {
+				v[n] = GLfloat(value[n].as_decimal().as_float());
+			}
+
+			glUniform1fv(u.location, u.num_elements, &v[0]);
+		}
+
 		break;
 	}
 	case GL_FLOAT_VEC2: {
@@ -695,22 +707,6 @@ namespace {
 		}
 	};
 
-	class texture_callable : public game_logic::formula_callable
-	{
-	public:
-		explicit texture_callable(const graphics::texture& tex): tex_(tex)
-		{}
-		variant get_value(const std::string& key) const
-		{
-			if(key == "id") {
-				return variant(tex_.get_id());
-			}
-			return variant();
-		}
-	private:
-		graphics::texture tex_;
-	};
-
 	class load_texture_function : public game_logic::function_expression 
 	{
 	public:
@@ -723,7 +719,7 @@ namespace {
 			game_logic::formula::fail_if_static_context();
 			const std::string filename = module::map_file(args()[0]->evaluate(variables).as_string());
 			const graphics::texture tex = graphics::texture::get(filename);
-			return variant(new texture_callable(tex));
+			return variant(new texture_object(tex));
 		}
 	};
 

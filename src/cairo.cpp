@@ -242,7 +242,7 @@ BEGIN_CAIRO_FN(draw_svg, "(string)")
 	context.render_svg(args[0].as_string());
 END_CAIRO_FN
 
-BEGIN_DEFINE_FN(render, "(int, int, [builtin cairo_op]) ->object")
+BEGIN_DEFINE_FN(render, "(int, int, [builtin cairo_op]) ->builtin texture_object")
 	const int w = FN_ARG(0).as_int();
 	const int h = FN_ARG(1).as_int();
 	ASSERT_LOG(w > 0 && h > 0, "Invalid canvas render: " << w << "x" << h);

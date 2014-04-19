@@ -181,8 +181,9 @@ void classname::init_callable_type(std::vector<callable_property_entry>& fields,
 			type_info->num_unneeded_args = type_info->variant_types.size() - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \
-		const this_type& obj = *dynamic_cast<const this_type*>(&obj_instance); \
-		return variant([&obj](const game_logic::formula_callable& args) ->variant {
+		boost::intrusive_ptr<const formula_callable> ref(&obj_instance); \
+		return variant([=](const game_logic::formula_callable& args) ->variant { \
+			const this_type& obj = *dynamic_cast<const this_type*>(ref.get());
 
 #define FN_ARG(n) args.query_value_by_slot(n)
 #define NUM_FN_ARGS reinterpret_cast<const game_logic::slot_formula_callable*>(&args)->num_args()
