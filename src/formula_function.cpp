@@ -3767,7 +3767,6 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 
 		std::string real_docname = preferences::user_data_path() + docname;
 		sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc));
-		return variant();
 	}));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string");
