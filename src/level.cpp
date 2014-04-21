@@ -2497,9 +2497,9 @@ void level::draw_background(int x, int y, int rotation) const
 		opaque_areas.clear();
 		int screen_width = graphics::screen_width();
 		int screen_height = graphics::screen_height();
-		if(zoom_level_ < 1.0) {
-			screen_width /= zoom_level_.as_float();
-			screen_height /= zoom_level_.as_float();
+		if(last_draw_position().zoom < 1.0) {
+			screen_width /= last_draw_position().zoom;
+			screen_height /= last_draw_position().zoom;
 		}
 
 		rect screen_area(x, y, screen_width, screen_height);
