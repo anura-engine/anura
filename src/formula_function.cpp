@@ -3746,26 +3746,29 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 	std::string docname = args()[0]->evaluate(variables).as_string();
 	variant doc = args()[1]->evaluate(variables);
 
+
 	std::string path_error;
 	if(!sys::is_safe_write_path(docname, &path_error)) {
-		return variant("ERROR in write_document(" + docname + "): " + path_error);
+		ASSERT_LOG(false, "ERROR in write_document(" + docname + "): " + path_error);
 	}
 
 	if(docname.empty()) {
-		return variant("DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
+		ASSERT_LOG(false, "DOCUMENT NAME GIVEN TO write_document() IS EMPTY");
 	}
 	if(sys::is_path_absolute(docname)) {
-		return variant(formatter() << "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
+		ASSERT_LOG(false, "DOCUMENT NAME IS ABSOLUTE PATH " << docname);
 	}
 	if(std::adjacent_find(docname.begin(), docname.end(), consecutive_periods) != docname.end()) {
-		return variant(formatter() << "RELATIVE PATH OUTSIDE ALLOWED " << docname);
+		ASSERT_LOG(false, "RELATIVE PATH OUTSIDE ALLOWED " << docname);
 	}
 
-	get_doc_cache()[docname] = doc;
+	return variant(new fn_command_callable_arg([=](formula_callable* callable) {
+		get_doc_cache()[docname] = doc;
 
-	docname = preferences::user_data_path() + docname;
-	sys::write_file(docname, game_logic::serialize_doc_with_objects(doc));
-	return variant();
+		std::string real_docname = preferences::user_data_path() + docname;
+		sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc));
+		return variant();
+	}));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string");
 	ARG_TYPE("any");
