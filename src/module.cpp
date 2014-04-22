@@ -808,7 +808,9 @@ bool is_module_path_valid(const std::string& str)
 		}
 	}
 
-	return str.empty() == false && isalnum(str[0]) && std::count_if(str.begin(), str.end(), valid_path_chars) == str.size();
+	static const char* AllowedChars = "(){}[]";
+
+	return str.empty() == false && (isalnum(str[0]) || strchr(AllowedChars, str[0])) && std::count_if(str.begin(), str.end(), valid_path_chars) == str.size();
 }
 }
 
