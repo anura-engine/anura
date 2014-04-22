@@ -76,6 +76,8 @@ std::vector<To> vector_lexical_cast(const std::vector<From>& v) {
 	return result;
 }
 
+bool wildcard_pattern_match(const std::string& pattern, const std::string& str);
+
 }
 
 #endif

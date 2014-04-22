@@ -1150,6 +1150,8 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		level::set_player_variant_type(type);
 	}
 
+	frame::build_patterns(node);
+
 	if(editor_force_standing_) {
 		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
 	}

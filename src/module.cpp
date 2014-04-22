@@ -151,6 +151,30 @@ void get_files_in_dir(const std::string& dir,
 	}
 }
 
+void get_files_matching_wildcard(const std::string& pattern,
+                                 std::string* dir_out,
+                                 std::vector<std::string>* files)
+{
+	ASSERT_LOG(pattern.empty() == false, "Empty pattern in wildcard search");
+	std::string::const_iterator i = pattern.end()-1;
+	while(i != pattern.begin() && *i != '/') {
+		--i;
+	}
+
+	if(*i == '/') {
+		++i;
+	}
+
+	const std::string dir(pattern.begin(), i);
+	const std::string pattern_str(i, pattern.end());
+	module::get_files_in_dir(dir, files);
+	files->erase(std::remove_if(files->begin(), files->end(), [&pattern_str](const std::string& fname) { return util::wildcard_pattern_match(pattern_str, fname) == false; }), files->end());
+
+	if(dir_out) {
+		*dir_out = dir;
+	}
+}
+
 std::string get_id(const std::string& id) {
 	size_t cpos = id.find(':');
 	if(cpos != std::string::npos) {

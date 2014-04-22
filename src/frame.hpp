@@ -49,6 +49,8 @@ public:
 		bool no_alpha_check;
 	};
 
+	static void build_patterns(variant obj_variant);
+
 	static void set_color_palette(unsigned int palettes);
 
 	explicit frame(variant node);

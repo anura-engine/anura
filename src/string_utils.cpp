@@ -265,6 +265,64 @@ std::string strip_string_prefix(const std::string& target, const std::string& pr
 	return target.substr(prefix.length());
 }
 
+bool wildcard_pattern_match(std::string::const_iterator p1, std::string::const_iterator p2, std::string::const_iterator i1, std::string::const_iterator i2)
+{
+	if(i1 == i2) {
+		while(p1 != p2) {
+			if(*p1 != '*') {
+				return false;
+			}
+			++p1;
+		}
+
+		return true;
+	}
+
+	if(p1 == p2) {
+		return false;
+	}
+
+	if(*p1 == '*') {
+		++p1;
+		if(p1 == p2) {
+			return true;
+		}
+
+		while(i1 != i2) {
+			if(wildcard_pattern_match(p1, p2, i1, i2)) {
+				return true;
+			}
+
+			++i1;
+		}
+
+		return false;
+	}
+
+	if(*p1 != *i1) {
+		return false;
+	}
+
+	return wildcard_pattern_match(p1+1, p2, i1+1, i2);
+}
+
+bool wildcard_pattern_match(const std::string& pattern, const std::string& str)
+{
+	return wildcard_pattern_match(pattern.begin(), pattern.end(), str.begin(), str.end());
+}
+
+}
+
+UNIT_TEST(test_wildcard_matches)
+{
+	CHECK_EQ(util::wildcard_pattern_match("abc", "abc"), true);
+	CHECK_EQ(util::wildcard_pattern_match("abc", "abcd"), false);
+	CHECK_EQ(util::wildcard_pattern_match("abc*", "abcd"), true);
+	CHECK_EQ(util::wildcard_pattern_match("*", "abcwj;def"), true);
+	CHECK_EQ(util::wildcard_pattern_match("**", "abcwj;def"), true);
+	CHECK_EQ(util::wildcard_pattern_match("*x", "abcwj;def"), false);
+	CHECK_EQ(util::wildcard_pattern_match("abc*def", "abcwj;def"), true);
+	CHECK_EQ(util::wildcard_pattern_match("abc*def", "abcwj;eef"), false);
 }
 
 UNIT_TEST(test_split_into_ints)

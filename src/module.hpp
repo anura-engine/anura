@@ -71,6 +71,10 @@ void get_files_in_dir(const std::string& dir,
                       std::vector<std::string>* files,
                       std::vector<std::string>* dirs=NULL);
 
+void get_files_matching_wildcard(const std::string& pattern,
+                                 std::string* dir_out,
+                                 std::vector<std::string>* files);
+
 std::string get_id(const std::string& id);
 std::string get_module_id(const std::string& id);
 std::string make_module_id(const std::string& name);

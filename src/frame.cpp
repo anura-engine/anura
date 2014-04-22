@@ -14,6 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <assert.h>
+
 #include <algorithm>
 #include <iostream>
 
@@ -25,6 +27,7 @@
 #include "foreach.hpp"
 #include "frame.hpp"
 #include "level.hpp"
+#include "module.hpp"
 #include "object_events.hpp"
 #include "obj_reader.hpp"
 #include "preferences.hpp"
@@ -33,6 +36,7 @@
 #include "solid_map.hpp"
 #include "sound.hpp"
 #include "string_utils.hpp"
+#include "surface_cache.hpp"
 #include "surface_formula.hpp"
 #include "surface_palette.hpp"
 #include "texture.hpp"
@@ -48,6 +52,91 @@ namespace {
 }
 
 unsigned int current_palette_mask = 0;
+}
+
+void frame::build_patterns(variant obj_variant)
+{
+	using namespace graphics;
+
+	if(!obj_variant["animation"].is_list()) {
+		return;
+	}
+
+	static const std::string ImagesPath = "./images/";
+
+	std::vector<variant> items = obj_variant["animation"].as_list();
+	for(variant item : items) {
+		variant pattern = item["image_pattern"];
+		if(!pattern.is_string()) {
+			continue;
+		}
+
+		const std::string path = ImagesPath + pattern.as_string();
+
+		std::string dir;
+		std::vector<std::string> files;
+		module::get_files_matching_wildcard(path, &dir, &files);
+
+		assert(dir.size() > ImagesPath.size() && std::equal(ImagesPath.begin(), ImagesPath.end(), dir.c_str()));
+
+		dir.erase(dir.begin(), dir.begin() + ImagesPath.size());
+
+		ASSERT_LOG(files.empty() == false, pattern.debug_location() << ": Could not find any images matching path: " << pattern.as_string());
+
+		std::sort(files.begin(), files.end());
+
+		std::vector<surface> surfaces;
+		for(const std::string& fname : files) {
+			surfaces.push_back(surface_cache::get_no_cache(dir + "/" + fname));
+
+			ASSERT_LOG(surfaces.back()->w == surfaces.front()->w &&
+			           surfaces.back()->h == surfaces.front()->h,
+					   pattern.debug_location() << ": All images in image pattern must be the same size: " << fname);
+			ASSERT_LOG(surfaces.back()->w <= 2048 && surfaces.back()->h <= 2048, "Image too large: " << fname);
+		}
+
+		int frames_per_row = files.size();
+		int total_width = surfaces.front()->w*surfaces.size();
+		int total_height = surfaces.front()->h;
+		while(total_width > 2048) {
+			frames_per_row = frames_per_row/2 + frames_per_row%2;
+			total_width /= 2;
+			total_height *= 2;
+		}
+
+		ASSERT_LOG(total_height <= 2048, pattern.debug_location() << ": Animation too large: cannot fit in 2048x2048: " << pattern.as_string());
+
+		const int texture_width = texture::next_power_of_2(total_width);
+		const int texture_height = texture::next_power_of_2(total_height);
+
+		surface sheet(SDL_CreateRGBSurface(0, texture_width, texture_height, 32, SURFACE_MASK));
+
+		for(int n = 0; n != surfaces.size(); ++n) {
+			surface src = surfaces[n];
+			SDL_Rect blit_src = {0, 0, surfaces.front()->w, surfaces.front()->h};
+			const int xframe = n%frames_per_row;
+			const int yframe = n/frames_per_row;
+			SDL_Rect blit_dst = {xframe*surfaces.front()->w, yframe*surfaces.front()->h, blit_src.w, blit_src.h};
+			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
+			SDL_BlitSurface(src.get(), &blit_src, sheet.get(), &blit_dst);
+		}
+
+		graphics::texture tex = graphics::texture::get_no_cache(sheet);
+		boost::intrusive_ptr<texture_object> tex_obj(new texture_object(tex));
+
+		std::vector<variant> area;
+		area.push_back(variant(0));
+		area.push_back(variant(0));
+		area.push_back(variant(surfaces.front()->w-1));
+		area.push_back(variant(surfaces.front()->h-1));
+
+		item.add_attr_mutation(variant("fbo"), variant(tex_obj.get()));
+		item.add_attr_mutation(variant("image"), variant("fbo"));
+		item.add_attr_mutation(variant("rect"), variant(&area));
+		item.add_attr_mutation(variant("frames_per_row"), variant(frames_per_row));
+		item.add_attr_mutation(variant("frames"), variant(surfaces.size()));
+		item.add_attr_mutation(variant("pad"), variant(0));
+	}
 }
 
 frame::frame(variant node)
