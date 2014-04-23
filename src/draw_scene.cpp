@@ -390,14 +390,22 @@ void render_scene(const level& lvl, const screen_position& pos) {
 	int xscroll = (pos.x/100)&preferences::xypos_draw_mask;
 	int yscroll = (pos.y/100)&preferences::xypos_draw_mask;
 
+	int bg_xscroll = xscroll;
+	int bg_yscroll = yscroll;
+
 //	if(pos.zoom > 1.0) {
 		glScalef(pos.zoom, pos.zoom, 0);
 		xscroll += (screen_width/2)*(-1.0/pos.zoom + 1.0);
 		yscroll += (graphics::screen_height()/2)*(-1.0/pos.zoom + 1.0);
 //	}
 
+	if(pos.zoom < 1.0) {
+		bg_xscroll = xscroll;
+		bg_yscroll = yscroll;
+	}
+
 	glTranslatef(-xscroll, -yscroll, 0);
-	lvl.draw_background(xscroll, yscroll, camera_rotation);
+	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;
 	int draw_height = graphics::screen_height();
