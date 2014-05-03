@@ -597,7 +597,22 @@ BEGIN_CAIRO_FN(text_path_in_bounds, "(string, decimal, [string])")
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(text_path, "(string)")
-	cairo_text_path(context.get(), args[0].as_string().c_str());
+	std::string text = args[0].as_string();
+	std::vector<std::string> lines = util::split(text, '\n');
+	for(int n = 0; n != lines.size(); ++n) {
+		cairo_text_path(context.get(), lines[n].c_str());
+		if(n+1 != lines.size()) {
+			cairo_text_extents_t extents;
+			cairo_text_extents(context.get(), lines[n].c_str(), &extents);
+
+			double xpos = 0.0, ypos = 0.0;
+			cairo_get_current_point(context.get(), &xpos, &ypos);
+
+			xpos -= extents.width;
+			ypos += extents.height;
+			cairo_move_to(context.get(), xpos, ypos);
+		}
+	}
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(paint_image, "(string)")
@@ -620,18 +635,30 @@ END_DEFINE_FN
 
 BEGIN_DEFINE_FN(text_extents, "(string, int, string) -> { width: decimal, height: decimal }")
 	static cairo_context& context = *new cairo_context(8,8);
+
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 	cairo_set_font_face(context.get(), cairo_face);
 
 	cairo_set_font_size(context.get(), FN_ARG(1).as_decimal().as_float());
 
-	cairo_text_extents_t extents;
-	cairo_text_extents(context.get(), FN_ARG(2).as_string().c_str(), &extents);
+	std::string text = FN_ARG(2).as_string();
+	std::vector<std::string> lines = util::split(text, '\n');
+
+	double width = 0.0, height = 0.0;
+
+	for(const std::string& line : lines) {
+		cairo_text_extents_t extents;
+		cairo_text_extents(context.get(), line.c_str(), &extents);
+		height += extents.height;
+		if(extents.width > width) {
+			width = extents.width;
+		}
+	}
 
 	std::map<variant,variant> result;
-	result[variant("width")] = variant(extents.width);
-	result[variant("height")] = variant(extents.height);
+	result[variant("width")] = variant(width);
+	result[variant("height")] = variant(height);
 	return variant(&result);
 
 END_DEFINE_FN

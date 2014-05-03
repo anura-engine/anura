@@ -673,10 +673,71 @@ void upload_progress(int sent, int total, bool uploaded)
 
 }
 
+COMMAND_LINE_UTILITY(replicate_module)
+{
+	std::string server = "theargentlark.com";
+	std::string port = "23455";
+
+	std::string src_module, dst_module;
+
+	std::deque<std::string> arguments(args.begin(), args.end());
+	while(!arguments.empty()) {
+		const std::string arg = arguments.front();
+		arguments.pop_front();
+		if(arg == "--server") {
+			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+			server = arguments.front();
+			arguments.pop_front();
+		} else if(arg == "-p" || arg == "--port") {
+			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+			port = arguments.front();
+			arguments.pop_front();
+		} else {
+			ASSERT_LOG(dst_module.empty(), "UNRECOGNIZED ARGUMENT: " << arg);
+
+			if(src_module.empty()) {
+				src_module = arg;
+			} else {
+				dst_module = arg;
+			}
+		}
+	}
+
+	ASSERT_LOG(dst_module.empty() == false, "Must specify source and dest modules");
+
+	std::map<variant,variant> attr;
+
+	attr[variant("type")] = variant("replicate_module");
+	attr[variant("src_id")] = variant(src_module);
+	attr[variant("dst_id")] = variant(dst_module);
+
+	const std::string msg = variant(&attr).write_json();
+
+	bool done = false, error = false;
+	std::string response;
+
+	http_client client(server, port);
+	client.send_request("POST /replicate_module", msg, 
+	                    boost::bind(finish_upload, _1, &done, &response),
+	                    boost::bind(error_upload, _1, &error),
+	                    boost::bind(upload_progress, _1, _2, _3));
+
+	while(!done) {
+		client.process();
+		ASSERT_LOG(!error, "Error in upload");
+	}
+
+	variant response_doc(json::parse(response));
+	if(response_doc["status"].as_string() != "ok") {
+		ASSERT_LOG(false, "Error in replicating module: " << response);
+	}
+}
+
 COMMAND_LINE_UTILITY(publish_module)
 {
 	std::string path_override;
 	std::string module_id;
+	std::string module_id_override;
 	std::string server = "theargentlark.com";
 	std::string port = "23455";
 	bool increment_version = false;
@@ -699,6 +760,10 @@ COMMAND_LINE_UTILITY(publish_module)
 			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
 			path_override = arguments.front();
 			arguments.pop_front();
+		} else if(arg == "--module-id-override") {
+			ASSERT_LOG(arguments.empty() == false, "NEED ARGUMENT AFTER " << arg);
+			module_id_override = arguments.front();
+			arguments.pop_front();
 		} else {
 			ASSERT_LOG(module_id.empty(), "UNRECOGNIZED ARGUMENT: " << module_id);
 			module_id = arg;
@@ -713,6 +778,10 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	attr[variant("type")] = variant("prepare_upload_module");
 	attr[variant("module_id")] = variant(module_id);
+
+	if(module_id_override != "") {
+		attr[variant("module_id")] = variant(module_id_override);
+	}
 
 	{
 		const std::string msg = variant(&attr).write_json();
