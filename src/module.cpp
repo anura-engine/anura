@@ -773,7 +773,7 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	ASSERT_LOG(module_id.empty() == false, "MUST SPECIFY MODULE ID");
 
-	const variant package = build_package(module_id, increment_version, path_override);
+	variant package = build_package(module_id, increment_version, path_override);
 	std::map<variant,variant> attr;
 
 	attr[variant("type")] = variant("prepare_upload_module");
@@ -781,6 +781,7 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	if(module_id_override != "") {
 		attr[variant("module_id")] = variant(module_id_override);
+		package.add_attr_mutation(variant("id"), variant(module_id_override));
 	}
 
 	{

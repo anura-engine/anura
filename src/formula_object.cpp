@@ -1215,7 +1215,7 @@ void formula_object::set_value_by_slot(int slot, const variant& value)
 
 	if(entry.set_type) {
 		if(!entry.set_type->match(value)) {
-			ASSERT_LOG(false, "ILLEGAL WRITE PROPERTY ACCESS: SETTING VARIABLE " << entry.name << " IN CLASS " << class_->name() << " TO INVALID TYPE " << variant::variant_type_to_string(value.type()) << ": " << value.write_json());
+			ASSERT_LOG(false, "ILLEGAL WRITE PROPERTY ACCESS: SETTING VARIABLE " << entry.name << " OF TYPE " << entry.set_type->to_string() << " IN CLASS " << class_->name() << " TO INVALID TYPE " << variant::variant_type_to_string(value.type()) << ": " << value.write_json());
 		}
 	}
 

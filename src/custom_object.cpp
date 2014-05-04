@@ -5067,7 +5067,15 @@ bool custom_object::handle_event(int event, const formula_callable* context)
 			return true;
 		}
 	} else {
-		return handle_event_internal(event, context);
+		try {
+			return handle_event_internal(event, context);
+		} catch(validation_failure_exception& e) {
+			if(level::current().in_editor()) {
+				return true;
+			}
+
+			throw e;
+		}
 	}
 }
 
