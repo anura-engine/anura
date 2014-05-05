@@ -720,6 +720,16 @@ void set_panning(float left, float right)
 	g_stereo_right = right;
 }
 
+void update_panning(const void* obj, const std::string& id, float left, float right)
+{
+	for(int n = 0; n != channels_to_sounds_playing.size(); ++n) {
+		const sound_playing& s = channels_to_sounds_playing[n];
+		if(s.object == obj && s.file == id) {
+			Mix_SetPanning(n, 255*left, 255*right);
+		}
+	}
+}
+
 namespace {
 std::map<std::string,std::string>& get_music_paths() {
 	static std::map<std::string,std::string> res;

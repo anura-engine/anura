@@ -722,7 +722,7 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(music_onetime)
-	
+
 class sound_command : public entity_command_callable
 {
 public:
@@ -806,6 +806,35 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("[decimal, decimal]")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(sound_loop)
+
+class sound_pan_command : public entity_command_callable
+{
+public:
+	explicit sound_pan_command(const std::string& name, float left, float right)
+	  : name_(name), left_(left), right_(right)
+	{}
+	virtual void execute(level& lvl, entity& ob) const {
+		sound::update_panning(&ob, name_, left_, right_);
+	}
+private:
+	std::string name_;
+	float left_, right_;
+};
+
+FUNCTION_DEF(sound_pan, 2, 2, "sound_pan(string id, [decimal,decimal] stereo): pans the sound being played with the given id by the specified stereo amount.")
+	const std::string id = args()[0]->evaluate(variables).as_string();
+
+	variant stereo_var = args()[1]->evaluate(variables);
+	float stereo_left = stereo_var[0].as_decimal().as_float();
+	float stereo_right = stereo_var[1].as_decimal().as_float();
+
+	return variant(new sound_pan_command(id, stereo_left, stereo_right));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("string")
+	ARG_TYPE("[decimal, decimal]")
+RETURN_TYPE("commands")
+END_FUNCTION_DEF(sound_pan)
 
 
 class sound_volume_command : public entity_command_callable {

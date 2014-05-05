@@ -65,6 +65,7 @@ void set_engine_music_volume(float volume);
 float get_engine_music_volume();
 
 void set_panning(float left, float right);
+void update_panning(const void* obj, const std::string& id, float left, float right);
 	
 // function to play a sound effect over and over in a loop. Will return
 // a handle to the sound effect.
