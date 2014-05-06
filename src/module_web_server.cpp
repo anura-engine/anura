@@ -240,13 +240,13 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 			const std::string src_path = data_path_ + src_id + ".cfg";
 			const std::string dst_path = data_path_ + dst_id + ".cfg";
 
-			variant src_info = data_["summary"][src_id];
+			variant src_info = data_[src_id];
 			ASSERT_LOG(src_info.is_map(), "Could not find source module " << src_id);
 			ASSERT_LOG(sys::file_exists(src_path), "Source module " << src_id << " does not exist");
 
 			std::vector<int> version_num = src_info["version"].as_list_int();
 
-			variant dst_info = data_["summary"][dst_id];
+			variant dst_info = data_[dst_id];
 			if(dst_info.is_map()) {
 				std::vector<int> dst_version_num = dst_info["version"].as_list_int();
 				ASSERT_LOG(!dst_version_num.empty(), "Illegal module version in " << dst_id);
