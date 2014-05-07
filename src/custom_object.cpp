@@ -172,6 +172,7 @@ custom_object::custom_object(variant node)
 	last_cycle_active_(0),
 	parent_pivot_(node["pivot"].as_string_default()),
 	parent_prev_x_(INT_MIN), parent_prev_y_(INT_MIN), parent_prev_facing_(true),
+    relative_x_(node["relative_x"].as_int(0)), relative_y_(node["relative_y"].as_int(0)),
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->use_absolute_screen_coordinates())),
@@ -504,6 +505,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	activation_border_(type_->activation_border()),
 	last_cycle_active_(0),
 	parent_prev_x_(INT_MIN), parent_prev_y_(INT_MIN), parent_prev_facing_(true),
+    relative_x_(0), relative_y_(0),
 	swallow_mouse_event_(false),
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
@@ -649,6 +651,8 @@ custom_object::custom_object(const custom_object& o) :
 	parent_prev_x_(o.parent_prev_x_),
 	parent_prev_y_(o.parent_prev_y_),
 	parent_prev_facing_(o.parent_prev_facing_),
+    relative_x_(o.relative_x_),
+    relative_y_(o.relative_y_),
 	min_difficulty_(o.min_difficulty_),
 	max_difficulty_(o.max_difficulty_),
 	custom_draw_(o.custom_draw_),
@@ -1122,6 +1126,9 @@ variant custom_object::write() const
 		std::string str;
 		variant(parent_.get()).serialize_to_string(str);
 		res.add("parent", str);
+        
+        res.add("relative_x", relative_x_);
+        res.add("relative_y", relative_y_);
 	}
 
 	if(parent_pivot_.empty() == false) {
@@ -1551,29 +1558,12 @@ void custom_object::process(level& lvl)
 	if(parent_.get() != NULL) {
 		const point pos = parent_position();
 		const bool parent_facing = parent_->face_right();
+        const int parent_facing_sign = parent_->face_right() ? 1 : -1;
 
 		if(parent_prev_x_ != INT_MIN) {
-			const int move_x = pos.x - parent_prev_x_;
-			const int move_y = pos.y - parent_prev_y_;
-
-			move_centipixels(move_x*100, move_y*100);
-
-			if(parent_facing != parent_prev_facing_) {
-                //first, reverse the parent's pivot point across the parent's midpoint.  We don't *actually* reverse the pivot point, we just swap our position as though it had been reversed.
-				const point pos_before_turn = parent_->pivot(parent_pivot_);
-	
-				const int relative_x = (pos.x - pos_before_turn.x);
-				move_centipixels(relative_x*100, 0);
-                
-                if(this->midpoint().x != parent_->pivot(parent_pivot_).x){
-                    //if we're offset from the pivot, rather than directly on it, also flip ourselves across the pivot
-                    //Besides accounting for cases where we do have a pivot point we're moving relative to, but we aren't directly centered on it, this also accounts for the most common use-case of relative positioning, where there is no pivot point, and we're just doing relative positioning compared to a virtual pivot point at the parent's midpoint.
-                    const int relative_mid_x = -2*(this->midpoint().x - parent_->pivot(parent_pivot_).x);
-                    
-                    move_centipixels(relative_mid_x*100, 0);
-                }
-			}
-		}
+            set_mid_x(pos.x + (relative_x_ * parent_facing_sign));
+            set_mid_y(pos.y + relative_y_);
+   		}
 
 		parent_prev_x_ = pos.x;
 		parent_prev_y_ = pos.y;
@@ -2932,8 +2922,8 @@ variant custom_object::get_value_by_slot(int slot) const
 	case CUSTOM_OBJECT_Z:
 	case CUSTOM_OBJECT_ZORDER:            return variant(zorder_);
 	case CUSTOM_OBJECT_ZSUB_ORDER:        return variant(zsub_order_);
-	case CUSTOM_OBJECT_RELATIVE_X:        return variant(x() - parent_position().x);
-	case CUSTOM_OBJECT_RELATIVE_Y:        return variant(y() - parent_position().y);
+    case CUSTOM_OBJECT_RELATIVE_X:        return variant(relative_x_);
+	case CUSTOM_OBJECT_RELATIVE_Y:        return variant(relative_y_);
 	case CUSTOM_OBJECT_SPAWNED_BY:        if(spawned_by().empty()) return variant(); else return variant(level::current().get_entity_by_label(spawned_by()).get());
 	case CUSTOM_OBJECT_SPAWNED_CHILDREN: {
 		std::vector<variant> children;
@@ -3515,13 +3505,9 @@ void custom_object::set_value(const std::string& key, const variant& value)
 	} else if(key == "zsub_order") {
 		zsub_order_ = value.as_int();
 	} else if(key == "midpoint_x" || key == "mid_x") {
-		const int current_x = x() + current_frame().width()/2;
-		const int xdiff = current_x - x();
-		set_pos(value.as_int() - xdiff, y());
+        set_mid_x(value.as_int());
 	} else if(key == "midpoint_y" || key == "mid_y") {
-		const int current_y = y() + current_frame().height()/2;
-		const int ydiff = current_y - y();
-		set_pos(x(), value.as_int() - ydiff);
+        set_mid_y(value.as_int());
 	} else if(key == "facing") {
 		set_face_right(value.as_int() > 0);
 	} else if(key == "upside_down") {
@@ -3940,14 +3926,12 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 		break;
 	
 	case CUSTOM_OBJECT_RELATIVE_X: {
-		const point p = parent_position();
-		set_value_by_slot(CUSTOM_OBJECT_X, variant(p.x + value.as_int()));
+        relative_x_ = value.as_int();
 		break;
 	}
 
 	case CUSTOM_OBJECT_RELATIVE_Y: {
-		const point p = parent_position();
-		set_value_by_slot(CUSTOM_OBJECT_Y, variant(p.y + value.as_int()));
+		relative_y_ = value.as_int();
 		break;
 	}
 
@@ -5679,9 +5663,16 @@ void custom_object::set_parent(entity_ptr e, const std::string& pivot_point)
 	parent_pivot_ = pivot_point;
 
 	const point pos = parent_position();
+
+	if(parent_.get() != NULL) {
+        const int parent_facing_sign = parent_->face_right() ? 1 : -1;
+        relative_x_ = parent_facing_sign * (x() - pos.x);
+        relative_y_ = (y() - pos.y);
+    }
+        
 	parent_prev_x_ = pos.x;
 	parent_prev_y_ = pos.y;
-
+    
 	if(parent_.get() != NULL) {
 		parent_prev_facing_ = parent_->face_right();
 	}

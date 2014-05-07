@@ -381,6 +381,17 @@ private:
 	decimal rotate_y_;
 	decimal rotate_z_;
 
+    void set_mid_x(int new_mid_x) {
+        const int current_x = x() + current_frame().width()/2;
+		const int xdiff = current_x - x();
+		set_pos(new_mid_x - xdiff, y());
+    }
+    void set_mid_y(int new_mid_y) {
+		const int current_y = y() + current_frame().height()/2;
+		const int ydiff = current_y - y();
+		set_pos(x(), new_mid_y - ydiff);
+    }
+    
 	boost::scoped_ptr<std::pair<int, int> > parallax_scale_millis_;
 
 	int zorder_;
@@ -503,6 +514,7 @@ private:
 	std::string parent_pivot_;
 	int parent_prev_x_, parent_prev_y_;
 	bool parent_prev_facing_;
+    int relative_x_, relative_y_;
 
 	int min_difficulty_, max_difficulty_;
 
