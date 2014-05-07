@@ -163,12 +163,19 @@ std::map<intptr_t, wml_serializable_formula_callable_ptr> registered_objects;
 void wml_formula_callable_read_scope::register_serialized_object(intptr_t addr, wml_serializable_formula_callable_ptr ptr)
 {
 	//fprintf(stderr, "REGISTER SERIALIZED: 0x%x\n", (int)addr);
-	registered_objects[addr] = ptr;
+	if(ptr.get() != NULL) {
+		registered_objects[addr] = ptr;
+	}
 }
 
 wml_serializable_formula_callable_ptr wml_formula_callable_read_scope::get_serialized_object(intptr_t addr)
 {
-	return registered_objects[addr];
+	auto itor = registered_objects.find(addr);
+	if(itor != registered_objects.end()) {
+		return itor->second;
+	} else {
+		return wml_serializable_formula_callable_ptr();
+	}
 }
 
 namespace {
@@ -188,11 +195,11 @@ wml_formula_callable_read_scope::~wml_formula_callable_read_scope()
 	for(std::set<variant*>::iterator i = v.begin(); i != v.end(); ++i) {
 		variant& var = **i;
 		//fprintf(stderr, "LOAD SERIALIZED: 0x%x\n", (int)var.as_callable_loading());
-		variant value = variant(registered_objects[var.as_callable_loading()].get());
-		if(value.is_null()) {
+		auto itor = registered_objects.find(var.as_callable_loading());
+		if(itor == registered_objects.end()) {
 			unfound_variants.insert(*i);
 		} else {
-			var = value;
+			var = variant(itor->second.get());
 		}
 	}
 
