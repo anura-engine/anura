@@ -84,6 +84,7 @@ void push_call_stack(const game_logic::formula_expression* frame, const game_log
 	call_stack.resize(call_stack.size()+1);
 	call_stack.back().expression = frame;
 	call_stack.back().callable = callable;
+	ASSERT_LOG(call_stack.size() < 4096, "FFL Recursion too deep (Exceeds 4096 frames)");
 }
 
 void pop_call_stack()
