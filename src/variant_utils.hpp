@@ -71,6 +71,11 @@ void visit_variants(variant v, boost::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);
 
+//function which interpolates two variants. ratio is between 0 and 1.
+//a and b must be of the same type and must be decimals, ints,
+//or lists or maps of interpolatable values.
+variant interpolate_variants(variant a, variant b, float ratio);
+
 template<typename Seq>
 variant vector_to_variant(const Seq& seq) {
 	std::vector<variant> v;

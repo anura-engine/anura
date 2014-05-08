@@ -225,6 +225,47 @@ variant deep_copy_variant(variant v)
 	}
 }
 
+variant interpolate_variants(variant a, variant b, float ratiof)
+{
+	if(a.is_numeric() && b.is_numeric()) {
+		decimal ratio(ratiof);
+		decimal inv_ratio = decimal::from_int(1) - ratio;
+
+		return variant(a.as_decimal()*inv_ratio + b.as_decimal()*ratio);
+	}
+
+	if(a.is_list() && b.is_list()) {
+		ASSERT_LOG(a.num_elements() == b.num_elements(), "Trying to interpolate invalid lists: " << a.write_json() << " vs " << b.write_json());
+		std::vector<variant> v;
+		v.resize(a.num_elements());
+		for(int n = 0; n != a.num_elements(); ++n) {
+			v[n] = interpolate_variants(a[n], b[n], ratiof);
+		}
+
+		return variant(&v);
+	}
+
+	if(a.is_map() && b.is_map()) {
+		const std::map<variant,variant>& am = a.as_map();
+		const std::map<variant,variant>& bm = b.as_map();
+
+		std::map<variant,variant> res;
+
+		auto ia = am.begin();
+		auto ib = bm.begin();
+		while(ia != am.end() && ib != bm.end()) {
+			ASSERT_LOG(ia->first == ib->first, "Trying to interpolate invalid maps: " << a.write_json() << " vs " << b.write_json());
+			res[ia->first] = interpolate_variants(ia->second, ib->second, ratiof);
+			++ia;
+			++ib;
+		}
+
+		ASSERT_LOG(ia == am.end() & ib == bm.end(), "Trying to interpolate invalid maps: " << a.write_json() << " vs " << b.write_json());
+		return variant(&res);
+	}
+	ASSERT_LOG(false, "Trying to interpolate invalid variant values: " << a.write_json() << " vs " << b.write_json());
+}
+
 variant_builder& variant_builder::add_value(const std::string& name, const variant& val)
 {
 	attr_[variant(name)].push_back(val);

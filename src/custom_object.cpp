@@ -2699,15 +2699,15 @@ void custom_object::add_animated_movement(variant attr_var, variant options)
 	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
 
 	std::vector<int> slots;
-	std::vector<decimal> begin_values, end_values;
+	std::vector<variant> begin_values, end_values;
 
 	const auto& attr = attr_var.as_map();
 
 	for(const auto& p : attr) {
 		slots.push_back(def->get_slot(p.first.as_string()));
 		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
-		end_values.push_back(p.second.as_decimal());
-		begin_values.push_back(query_value_by_slot(slots.back()).as_decimal());
+		end_values.push_back(p.second);
+		begin_values.push_back(query_value_by_slot(slots.back()));
 	}
 
 	const int ncycles = options["duration"].as_int(10);
@@ -2737,8 +2737,7 @@ void custom_object::add_animated_movement(variant attr_var, variant options)
 			ratio = easing_fn(ratio);
 		}
 		for(int n = 0; n != slots.size(); ++n) {
-			decimal value = decimal(end_values[n].as_float()*ratio + begin_values[n].as_float()*(1.0-ratio));
-			values.push_back(variant(value));
+			values.push_back(interpolate_variants(begin_values[n], end_values[n], ratio));
 		}
 	}
 

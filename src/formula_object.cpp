@@ -1062,7 +1062,9 @@ formula_object::~formula_object()
 
 boost::intrusive_ptr<formula_object> formula_object::clone() const
 {
-	return boost::intrusive_ptr<formula_object>(new formula_object(*this));
+	boost::intrusive_ptr<formula_object> result(new formula_object(*this));
+	result->id_ = generate_uuid();
+	return result;
 }
 
 variant formula_object::serialize_to_wml() const
