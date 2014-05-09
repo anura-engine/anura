@@ -5805,7 +5805,9 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 	vars_->disallow_new_keys(type_->is_strict());
 	tmp_vars_->disallow_new_keys(type_->is_strict());
 
-	frame_.reset(&type_->get_frame(frame_name_));
+	if(type_->has_frame(frame_name_)) {
+		frame_.reset(&type_->get_frame(frame_name_));
+	}
 
 	std::map<std::string, particle_system_ptr> systems;
 	systems.swap(particle_systems_);
@@ -5815,6 +5817,10 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 
 #if defined(USE_SHADERS)
 	shader_.reset(new_type->shader() ? new gles2::shader_program(*new_type->shader()) : NULL);
+	if(shader_) {
+		shader_->init(this);
+	}
+
 	effects_.clear();
 	for(size_t n = 0; n < new_type->effects().size(); ++n) {
 		effects_.push_back(new gles2::shader_program(*new_type->effects()[n]));
@@ -5828,6 +5834,8 @@ void custom_object::update_type(const_custom_object_type_ptr old_type,
 	}
 	init_lua();
 #endif
+
+	handle_event("type_updated");
 }
 
 std::vector<variant> custom_object::get_variant_widget_list() const

@@ -1652,6 +1652,11 @@ const frame& custom_object_type::get_frame(const std::string& key) const
 	}
 }
 
+bool custom_object_type::has_frame(const std::string& key) const
+{
+	return frames_.count(key) != 0;
+}
+
 game_logic::const_formula_ptr custom_object_type::get_event_handler(int event) const
 {
 	if(event >= event_handlers_.size()) {

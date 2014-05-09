@@ -105,6 +105,7 @@ public:
 
 	const frame& default_frame() const;
 	const frame& get_frame(const std::string& key) const;
+	bool has_frame(const std::string& key) const;
 
 	const game_logic::const_formula_ptr& next_animation_formula() const { return next_animation_formula_; }
 
