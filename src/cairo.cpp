@@ -200,6 +200,19 @@ private:
 	std::vector<variant> args_;
 };
 
+namespace {
+struct MarkupEntry {
+	const char* tag;
+	char values[4];
+};
+
+MarkupEntry MarkupMap[] = {
+	{ "ldquo", {0xE2, 0x80, 0x9C, 0x00} },
+	{ "rdquo", {0xE2, 0x80, 0x9D, 0x00} },
+	{ "emdash", { 0xE2, 0x80, 0x94, 0x00 } },
+};
+}
+
 BEGIN_DEFINE_CALLABLE_NOBASE(cairo_op)
 END_DEFINE_CALLABLE(cairo_op)
 
@@ -633,7 +646,7 @@ BEGIN_DEFINE_FN(image_dim, "(string) ->[int,int]")
 	return variant(&result);
 END_DEFINE_FN
 
-BEGIN_DEFINE_FN(text_extents, "(string, int, string) -> { width: decimal, height: decimal }")
+BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal }")
 	static cairo_context& context = *new cairo_context(8,8);
 
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
@@ -661,6 +674,40 @@ BEGIN_DEFINE_FN(text_extents, "(string, int, string) -> { width: decimal, height
 	result[variant("height")] = variant(height);
 	return variant(&result);
 
+END_DEFINE_FN
+
+BEGIN_DEFINE_FN(parse_special_chars, "(string) -> string")
+	std::string s = FN_ARG(0).as_string();
+
+	std::string result;
+	auto start = s.begin();
+	auto itor = std::find(s.begin(), s.end(), '&');
+	while(itor != s.end()) {
+		result += std::string(start, itor);
+
+		auto semi = std::find(itor, s.end(), ';');
+		if(semi == s.end()) {
+			break;
+		}
+
+		bool found = false;
+		std::string tag(itor+1, semi);
+		for(const MarkupEntry& e : MarkupMap) {
+			if(tag == e.tag) {
+				result += e.values;
+				found = true;
+				break;
+			}
+		}
+
+		ASSERT_LOG(found, "Could not find markup: '" << tag << "'");
+
+		start = semi + 1;
+		itor = std::find(semi, s.end(), '&');
+	}
+
+	result += std::string(itor, s.end());
+	return variant(result);
 END_DEFINE_FN
 
 //a string representing an emdash in utf-8.

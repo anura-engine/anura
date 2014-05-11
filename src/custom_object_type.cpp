@@ -1231,7 +1231,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	}
 
 	variant anim_list = node["animation"];
-	if(anim_list.is_null()) {
+	if(anim_list.is_null() || anim_list.num_elements() == 0) {
 		anim_list = json::parse_from_file("data/default-animation.cfg");
 	}
 
