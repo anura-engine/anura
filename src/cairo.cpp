@@ -557,7 +557,7 @@ BEGIN_CAIRO_FN(text_path_in_bounds, "(string, decimal, [string])")
 	std::string text = args[0].as_string();
 	float size = args[1].as_decimal().as_float();
 
-	bool right = false, center = false;
+	bool right = false, center = false, top = false;
 	bool shrink = true;
 
 	if(args.size() > 2) {
@@ -568,6 +568,8 @@ BEGIN_CAIRO_FN(text_path_in_bounds, "(string, decimal, [string])")
 				right = true;
 			} else if(flag == "center") {
 				center = true;
+			} else if(flag == "top") {
+				top = true;
 			} else if(flag == "shrink") {
 				shrink = true;
 			} else if(flag == "truncate") {
@@ -602,6 +604,10 @@ BEGIN_CAIRO_FN(text_path_in_bounds, "(string, decimal, [string])")
 		cairo_translate(context.get(), size - extents.width, 0.0);
 	} else if(center) {
 		cairo_translate(context.get(), (size - extents.width)/2.0, 0.0);
+	}
+
+	if(top) {
+		cairo_translate(context.get(), 0.0, extents.height);
 	}
 
 	cairo_text_path(context.get(), text.c_str());
