@@ -380,6 +380,18 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_function_overload_type(variant_type::get_function_type(arg_union, return_union, min_args), function_types);
 END_FUNCTION_DEF(overload)
 
+FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
+	
+	formula_callable* addr = args()[0]->evaluate(variables).convert_to<formula_callable>();
+	char buf[128];
+	sprintf(buf, "%p", addr);
+	return variant(std::string(buf));
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object");
+	RETURN_TYPE("string");
+END_FUNCTION_DEF(addr)
+
 FUNCTION_DEF(create_cache, 0, 1, "create_cache(max_entries=4096): makes an FFL cache object")
 	formula::fail_if_static_context();
 	int max_entries = 4096;
