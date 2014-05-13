@@ -14,6 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
 #include <map>
 #include <vector>
 
@@ -22,6 +23,7 @@
 #include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
+#include "unit_test.hpp"
 
 namespace game_logic
 {
@@ -317,4 +319,36 @@ void init_callable_definitions()
 	callable_init_routines().clear();
 }
 
+}
+
+COMMAND_LINE_UTILITY(document_builtins)
+{
+	using namespace game_logic;
+	
+	for(auto i = registry.begin(); i != registry.end(); ++i) {
+		auto item = i->second;
+		std::cout << i->first << " ::";
+		auto derived_from = g_builtin_bases().find(i->first);
+		if(derived_from != g_builtin_bases().end()) {
+			std::cout << " " << derived_from->second;
+		}
+
+		std::cout << "\n";
+
+		for(int n = 0; n != item->num_slots(); ++n) {
+			auto entry = item->get_entry(n);
+			std::cout << "  - " << entry->id << ": " << entry->variant_type->to_string();
+			if(entry->get_write_type() != entry->variant_type) {
+				std::string write_type = entry->get_write_type()->to_string();
+				if(write_type == "null") {
+					std::cout << " (read-only)";
+				} else {
+					std::cout << " (write: " << write_type << ")";
+				}
+			}
+			std::cout << "\n";
+		}
+	}
+
+	std::cout << "\n";
 }

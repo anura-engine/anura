@@ -51,6 +51,7 @@
 #include "selector_widget.hpp"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
+#include "tree_view_widget.hpp"
 #include "view3d_widget.hpp"
 
 namespace widget_factory {
@@ -136,6 +137,8 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 #endif
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
+	} else if(wtype == "tree") {
+		return widget_ptr(new gui::tree_view_widget(v, e));
 	} else {
 		ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
 		return widget_ptr();
