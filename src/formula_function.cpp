@@ -2673,6 +2673,16 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_union(types);
 END_FUNCTION_DEF(back)
 
+FUNCTION_DEF(back_or_die, 1, 1, "back_or_die(list): gives the last element of a list, or die for an empty list")
+	const variant items = args()[0]->evaluate(variables);
+	ASSERT_LOG(items.num_elements() >= 1, "back_or_die() called on empty list");
+	return items[items.num_elements()-1];
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type()->is_list_of();
+END_FUNCTION_DEF(back_or_die)
+
 FUNCTION_DEF(get_all_files_under_dir, 1, 1, "get_all_files_under_dir(path): Returns a list of all the files in and under the given directory")
 	std::vector<variant> v;
 	std::map<std::string, std::string> file_paths;

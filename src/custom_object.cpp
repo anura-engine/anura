@@ -1658,34 +1658,43 @@ void custom_object::process(level& lvl)
 
 	std::vector<std::pair<variant,variant> > follow_ons;
 
-	for(int i = 0; i != animated_movement_.size(); ++i) {
-		auto& move = animated_movement_[i];
+	if(!animated_movement_.empty()) {
+		std::vector<boost::shared_ptr<AnimatedMovement> > movement = animated_movement_, removal;
+		for(int i = 0; i != movement.size(); ++i) {
+			auto& move = movement[i];
 
-		if(move->pos >= move->animation_frames()) {
-			if(move->on_complete.is_null() == false) {
-				execute_command(move->on_complete);
+			if(move->pos >= move->animation_frames()) {
+				if(move->on_complete.is_null() == false) {
+					execute_command(move->on_complete);
+				}
+
+				follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
+
+				removal.push_back(move);
+			} else {
+				ASSERT_LOG(move->animation_values.size()%move->animation_slots.size() == 0, "Bad animation sizes");
+				variant* v = &move->animation_values[0] + move->pos*move->animation_slots.size();
+	
+				for(int n = 0; n != move->animation_slots.size(); ++n) {
+					mutate_value_by_slot(move->animation_slots[n], v[n]);
+				}
+
+				if(move->on_process.is_null() == false) {
+					execute_command(move->on_process);
+				}
+	
+				move->pos++;
 			}
-
-			follow_ons.insert(follow_ons.end(), move->follow_on.begin(), move->follow_on.end());
-
-			move.reset();
-		} else {
-			ASSERT_LOG(move->animation_values.size()%move->animation_slots.size() == 0, "Bad animation sizes");
-			variant* v = &move->animation_values[0] + move->pos*move->animation_slots.size();
-
-			for(int n = 0; n != move->animation_slots.size(); ++n) {
-				mutate_value_by_slot(move->animation_slots[n], v[n]);
-			}
-
-			if(move->on_process.is_null() == false) {
-				execute_command(move->on_process);
-			}
-
-			move->pos++;
 		}
-	}
 
-	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
+		for(auto& move : animated_movement_) {
+			if(std::count(removal.begin(), removal.end(), move)) {
+				move.reset();
+			}
+		}
+
+		animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
+	}
 
 	for(const auto& p : follow_ons) {
 		add_animated_movement(p.first, p.second);
@@ -2677,6 +2686,7 @@ void custom_object::being_added()
 
 void custom_object::set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement)
 {
+	assert(movement.get() != NULL);
 	animated_movement_.push_back(movement);
 }
 
