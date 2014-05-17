@@ -241,6 +241,10 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 		text_.push_back("");
 	}
 
+	if(v["select_all"].as_bool(false)) {
+		cursor_ = Loc(text_.size()-1, text_.back().size());
+	}
+
 	init_clipboard();
 }
 

@@ -2704,9 +2704,13 @@ private:
 };
 
 FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the level for the commands to be run.")
-	schedule_command* cmd = (new schedule_command(
-	    args()[0]->evaluate(variables).as_int(),
-	    args()[1]->evaluate(variables)));
+	const int ncycles = args()[0]->evaluate(variables).as_int();
+	variant commands = args()[1]->evaluate(variables);
+	if(ncycles <= 0) {
+		return commands;
+	}
+
+	schedule_command* cmd = (new schedule_command(ncycles, commands));
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF

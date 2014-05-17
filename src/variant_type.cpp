@@ -1282,7 +1282,7 @@ public:
 			return false;
 		}
 
-		if(v.function_return_type()->is_equal(*return_) == false) {
+		if(variant_types_compatible(return_, v.function_return_type()) == false) {
 			return false;
 		}
 

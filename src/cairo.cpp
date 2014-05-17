@@ -75,6 +75,13 @@ cairo_context::cairo_context(int w, int h)
 
 	surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 	cairo_ = cairo_create(surface_);
+
+	cairo_font_options_t* options = cairo_font_options_create();
+	cairo_get_font_options(cairo_, options);
+	cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_NONE);
+	cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_OFF);
+	cairo_set_font_options(cairo_, options);
+	cairo_font_options_destroy(options);
 }
 
 cairo_context::~cairo_context()
@@ -425,10 +432,14 @@ BEGIN_CAIRO_FN(show_text, "(string)")
 	cairo_show_text(context.get(), args[0].as_string().c_str());
 END_CAIRO_FN
 
-BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {svg_scale: decimal, svg_width: decimal})")
+BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {scaling: decimal|null, svg_scale: decimal, svg_width: decimal})")
 	std::string all_text = args[0].as_string();
 	float svg_width = args[3]["svg_width"].as_decimal().as_float();
 	float svg_scale = args[3]["svg_scale"].as_decimal().as_float();
+	float scaling = 1.0;
+	if(args[3]["scaling"].is_decimal()) {
+		scaling = args[3]["scaling"].as_decimal().as_float();
+	}
 
 	float line_height = 0;
 
@@ -524,6 +535,10 @@ BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {svg_scale:
 		}
 	}
 
+	cairo_save(context.get()),
+
+	cairo_scale(context.get(), scaling, scaling);
+
 	float ypos = 0;
 	for(const auto& line : lines) {
 		cairo_save(context.get());
@@ -550,6 +565,8 @@ BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {svg_scale:
 		cairo_restore(context.get());
 		ypos += line_height*1.1;
 	}
+
+	cairo_restore(context.get());
 
 END_CAIRO_FN
 
@@ -634,9 +651,17 @@ BEGIN_CAIRO_FN(text_path, "(string)")
 	}
 END_CAIRO_FN
 
-BEGIN_CAIRO_FN(paint_image, "(string)")
+BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null)")
 	cairo_surface_t* surface = get_cairo_image(args[0].as_string());
-	cairo_set_source_surface(context.get(), surface, 0, 0);
+	double translate_x = 0, translate_y = 0;
+	if(args.size() > 1) {
+		variant pos = args[1];
+		if(pos.is_list()) {
+			translate_x = pos[0].as_decimal().as_float();
+			translate_y = pos[1].as_decimal().as_float();
+		}
+	}
+	cairo_set_source_surface(context.get(), surface, translate_x, translate_y);
 	cairo_paint(context.get());
 
 	cairo_status_t status = cairo_status(context.get());

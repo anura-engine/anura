@@ -982,6 +982,20 @@ END_FUNCTION_DEF(max)
 		CHECK(game_logic::formula(variant("max(1,1.4)")).execute() == game_logic::formula(variant("1.4")).execute(), "test failed");
 	}
 
+FUNCTION_DEF(mix, 3, 3, "mix(x, y, ratio): equal to x*(1-ratio) + y*ratio")
+	decimal ratio = args()[2]->evaluate(variables).as_decimal();
+	return variant(args()[0]->evaluate(variables).as_decimal() * (decimal::from_int(1) - ratio) + args()[1]->evaluate(variables).as_decimal() * ratio);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("decimal");
+	ARG_TYPE("decimal");
+	ARG_TYPE("decimal");
+
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+	
+END_FUNCTION_DEF(mix)
+
 FUNCTION_DEF(keys, 1, 1, "keys(map) -> list: gives the keys for a map")
 	const variant map = args()[0]->evaluate(variables);
 	if(map.is_callable()) {
@@ -2656,6 +2670,16 @@ FUNCTION_TYPE_DEF
 	types.push_back(args()[0]->query_variant_type()->is_list_of());
 	return variant_type::get_union(types);
 END_FUNCTION_DEF(head)
+
+FUNCTION_DEF(head_or_die, 1, 1, "head_or_die(list): gives the first element of a list, or die for an empty list")
+	const variant items = args()[0]->evaluate(variables);
+	ASSERT_LOG(items.num_elements() >= 1, "head_or_die() called on empty list");
+	return items[0];
+FUNCTION_ARGS_DEF
+	ARG_TYPE("list");
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type()->is_list_of();
+END_FUNCTION_DEF(head_or_die)
 
 FUNCTION_DEF(back, 1, 1, "back(list): gives the last element of a list, or null for an empty list")
 	const variant items = args()[0]->evaluate(variables);
