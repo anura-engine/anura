@@ -1119,6 +1119,8 @@ void client::perform_install(const std::string& response)
 		ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
 	}
 
+	variant full_manifest;
+
 	fprintf(stderr, "Install files: %d\n", (int)manifest.get_keys().as_list().size());
 
 	foreach(variant path, manifest.get_keys().as_list()) {
@@ -1155,7 +1157,44 @@ void client::perform_install(const std::string& response)
 		ASSERT_LOG(variant(md5::sum(contents)) == info["md5"], "md5 sum for " << path.as_string() << " does not match");
 		sys::write_file(path_str, contents);
 
+		if(path.as_string() == "manifest.cfg") {
+			full_manifest = json::parse(contents);
+		}
+
 		++nfiles_written_;
+	}
+
+	//if we downloaded a full manifest of all files, make sure that
+	//locally all the files we already had are copied appropriately.
+	if(full_manifest.is_null() == false && install_image_ == false) {
+		foreach(variant path, full_manifest.get_keys().as_list()) {
+			if(manifest.has_key(path)) {
+				//we just downloaded this file.
+				continue;
+			}
+
+			const std::string path_str = preferences::dlc_path() + "/" + module_id_ + "/" + path.as_string();
+			if(sys::file_exists(path_str)) {
+				continue;
+			}
+			
+			bool found = false;
+			for(auto dir : module_dirs()) {
+				std::string src_path = dir + "/" + module_id_ + "/" + path.as_string();
+				if(sys::file_exists(src_path)) {
+					std::string contents = sys::read_file(src_path);
+					if(md5::sum(contents) != full_manifest[path]["md5"].as_string()) {
+						ASSERT_LOG(false, "Trying to source file from existing repo but md5 does not match the manifest: " << src_path << " -> " << path.as_string());
+					}
+
+					fprintf(stderr, "copy file from existing source: %s -> %s\n", src_path.c_str(), path_str.c_str());
+					sys::write_file(path_str, contents);
+					found = true;
+				}
+			}
+
+			ASSERT_LOG(found, "Could not find file locally even though it's in the manifest: " << path.as_string());
+		}
 	}
 }
 
