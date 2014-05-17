@@ -109,6 +109,7 @@
 variant g_auto_update_info;
 
 namespace {
+	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
@@ -643,14 +644,14 @@ extern "C" int main(int argcount, char* argvec[])
 		
 		if(g_auto_update_module) {
 			cl.reset(new module::client);
-			cl->install_module(module::get_module_name());
+			cl->install_module(module::get_module_name(), g_force_auto_update);
 			update_info.add("attempt_module", true);
 		}
 
 		if(g_auto_update_anura != "") {
 			anura_cl.reset(new module::client);
 			anura_cl->set_install_image(true);
-			anura_cl->install_module(g_auto_update_anura);
+			anura_cl->install_module(g_auto_update_anura, g_force_auto_update);
 			update_info.add("attempt_anura", true);
 		}
 
