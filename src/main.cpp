@@ -754,8 +754,16 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 
 		if(require_restart) {
+			std::vector<char*> args;
+			for(char** a = argvec; *a; ++a) {
+				std::string arg(*a);
+				if(arg != "--force-auto-update" && arg != "--force_auto_update") {
+					args.push_back(*a);
+				}
+			}
+			args.push_back(NULL);
 			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
-			execv(argvec[0], argvec);
+			execv(args[0], &args[0]);
 			fprintf(stderr, "Could not exec()\n");
 		}
 	}
