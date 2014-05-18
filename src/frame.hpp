@@ -191,6 +191,7 @@ private:
 	void build_alpha_from_frame_info();
 	void build_alpha();
 	std::vector<bool> alpha_;
+	bool force_no_alpha_;
 
 	bool no_remove_alpha_borders_;
 

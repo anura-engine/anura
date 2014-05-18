@@ -323,6 +323,58 @@ public:
 private:
 };
 
+class variant_type_cairo_commands : public variant_type
+{
+public:
+	bool match(const variant& v) const {
+		if(v.is_null()) {
+			return true;
+		}
+
+		if(v.is_callable()) {
+			return v.as_callable()->is_cairo_op();
+		}
+
+		if(v.is_list()) {
+			for(int n = 0; n != v.num_elements(); ++n) {
+				if(!match(v[n])) {
+					return false;
+				}
+			}
+
+			return true;
+		}
+
+		return false;
+	}
+	bool is_equal(const variant_type& o) const {
+		const variant_type_cairo_commands* other = dynamic_cast<const variant_type_cairo_commands*>(&o);
+		return other != NULL;
+	}
+
+	std::string to_string_impl() const {
+		return "cairo_commands";
+	}
+
+	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
+		if(type->is_type(variant::VARIANT_TYPE_NULL)) {
+			return true;
+		}
+
+		if(type->to_string() == "cairo_op") {
+			return true;
+		}
+
+		variant_type_ptr list_type = type->is_list_of();
+		if(list_type) {
+			return variant_types_compatible(get_cairo_commands(), list_type);
+		}
+
+		return is_equal(*type);
+	}
+private:
+};
+
 class variant_type_class : public variant_type
 {
 public:
@@ -1978,6 +2030,9 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("commands")) {
 			v.push_back(variant_type_ptr(new variant_type_commands));
 			++i1;
+		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("cairo_commands")) {
+			v.push_back(variant_type_ptr(new variant_type_cairo_commands));
+			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("builtin") && i1+1 != i2) {
 			++i1;
 
@@ -2288,6 +2343,12 @@ variant_type_ptr variant_type::get_any()
 variant_type_ptr variant_type::get_commands()
 {
 	static const variant_type_ptr result(new variant_type_commands);
+	return result;
+}
+
+variant_type_ptr variant_type::get_cairo_commands()
+{
+	static const variant_type_ptr result(new variant_type_cairo_commands);
 	return result;
 }
 

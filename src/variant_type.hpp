@@ -50,6 +50,7 @@ public:
 	static variant_type_ptr get_none();
 	static variant_type_ptr get_any();
 	static variant_type_ptr get_commands();
+	static variant_type_ptr get_cairo_commands();
 	static variant_type_ptr get_type(variant::TYPE type);
 	static variant_type_ptr get_singleton_enum(variant item);
 	static variant_type_ptr get_enum(const std::vector<variant>& items);

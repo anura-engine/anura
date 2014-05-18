@@ -184,6 +184,7 @@ frame::frame(variant node)
 	 rotate_on_slope_(node["rotate_on_slope"].as_bool()),
 	 damage_(node["damage"].as_int()),
 	 sounds_(util::split(node["sound"].as_string_default())),
+	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1), 
@@ -562,6 +563,13 @@ void frame::build_alpha_from_frame_info()
 			dst_index += img_rect_.w()*nframes_;
 		}
 	}
+
+	if(force_no_alpha_) {
+		const int nsize = alpha_.size();
+		alpha_.clear();
+		alpha_.resize(nsize, false);
+		return;
+	}
 }
 
 void frame::build_alpha()
@@ -674,6 +682,13 @@ void frame::build_alpha()
 		f.area = rect(xbase + left, ybase + top, right - left, bot - top);
 		ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, img_rect_.w());
 		ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, img_rect_.h());
+	}
+
+	if(force_no_alpha_) {
+		const int nsize = alpha_.size();
+		alpha_.clear();
+		alpha_.resize(nsize, false);
+		return;
 	}
 }
 

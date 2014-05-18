@@ -100,6 +100,7 @@ public:
 
 	//is some kind of command to the engine.
 	virtual bool is_command() const { return false; }
+	virtual bool is_cairo_op() const { return false; }
 
 	void perform_visit_values(formula_callable_visitor& visitor) {
 		visit_values(visitor);

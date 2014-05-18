@@ -200,6 +200,8 @@ public:
 	void execute(cairo_context& context) {
 		fn_(context, args_);
 	}
+
+	bool is_cairo_op() const { return true; }
 private:
 	DECLARE_CALLABLE(cairo_op);
 	
@@ -218,6 +220,24 @@ MarkupEntry MarkupMap[] = {
 	{ "rdquo", {0xE2, 0x80, 0x9D, 0x00} },
 	{ "emdash", { 0xE2, 0x80, 0x94, 0x00 } },
 };
+
+void execute_cairo_ops(cairo_context& context, variant v)
+{
+	if(v.is_null()) {
+		return;
+	}
+
+	if(v.is_list()) {
+		for(int n = 0; n != v.num_elements(); ++n) {
+			execute_cairo_ops(context, v[n]);
+		}
+
+		return;
+	}
+
+	v.convert_to<cairo_op>()->execute(context);
+}
+
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(cairo_op)
@@ -262,16 +282,14 @@ BEGIN_CAIRO_FN(draw_svg, "(string)")
 	context.render_svg(args[0].as_string());
 END_CAIRO_FN
 
-BEGIN_DEFINE_FN(render, "(int, int, [builtin cairo_op]) ->builtin texture_object")
+BEGIN_DEFINE_FN(render, "(int, int, cairo_commands) ->builtin texture_object")
 	const int w = FN_ARG(0).as_int();
 	const int h = FN_ARG(1).as_int();
 	ASSERT_LOG(w > 0 && h > 0, "Invalid canvas render: " << w << "x" << h);
 	cairo_context context(w, h);
 
-	std::vector<variant> ops = FN_ARG(2).as_list();
-	for(variant op : ops) {
-		op.convert_to<cairo_op>()->execute(context);
-	}
+	variant ops = FN_ARG(2);
+	execute_cairo_ops(context, ops);
 
 	return variant(new texture_object(context.write()));
 END_DEFINE_FN

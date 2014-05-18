@@ -1218,6 +1218,12 @@ void custom_object::draw(int xx, int yy) const
 		adjusted_draw_position_.y = yy;
 	}
 
+	foreach(const entity_ptr& attached, attached_objects()) {
+		if(attached->zorder() < zorder()) {
+			attached->draw(xx, yy);
+		}
+	}
+
 	if(type_->blend_mode()) {
 		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
 	}
@@ -1327,13 +1333,15 @@ void custom_object::draw(int xx, int yy) const
 		glColor4ub(255, 255, 255, 255);
 	}
 
+	foreach(const entity_ptr& attached, attached_objects()) {
+		if(attached->zorder() >= zorder()) {
+			attached->draw(xx, yy);
+		}
+	}
+
 //	if(draw_color_int_ != DefaultColor) {
 //		glColor4ub(255, 255, 255, 255);
 //	}
-
-	foreach(const entity_ptr& attached, attached_objects()) {
-		attached->draw(xx, yy);
-	}
 
 #if defined(USE_SHADERS)
 	foreach(const graphics::draw_primitive_ptr& p, draw_primitives_) {
@@ -4345,6 +4353,10 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			if(e) {
 				v.push_back(entity_ptr(e));
 			}
+
+			//this will initialize shaders and such, which is
+			//desired for attached objects
+			e->add_to_level();
 		}
 
 		set_attached_objects(v);
