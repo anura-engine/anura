@@ -1125,7 +1125,7 @@ void client::perform_install(const std::string& response)
 
 	foreach(variant path, manifest.get_keys().as_list()) {
 		variant info = manifest[path];
-		const std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+		std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
 		if(install_image_ && sys::file_exists(path_str)) {
 			//try removing the file, and failing that, move it.
@@ -1138,6 +1138,23 @@ void client::perform_install(const std::string& response)
 					sys::move_file(path_str, path_str + ".tmp");
 				} catch(...) {
 					fprintf(stderr, "Failed to move: %s\n", path_str.c_str());
+					if(path.as_string() == "anura.exe") {
+						//For the windows executable if we fail to move it we try
+						//an alternative name.
+						for(int i = 0; i != 10; ++i) {
+							std::ostringstream s;
+							s << "anura" << i << ".exe";
+							const std::string candidate_path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
+							try {
+								if(sys::file_exists(candidate_path_str)) {
+									sys::remove_file(candidate_path_str);
+								}
+								path_str = candidate_path_str;
+								break;
+							} catch(...) {
+							}
+						}
+					}
 				}
 			}
 		}

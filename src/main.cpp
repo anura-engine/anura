@@ -66,6 +66,7 @@
 #include "level_runner.hpp"
 #include "load_level.hpp"
 #include "loading_screen.hpp"
+#include "md5.hpp"
 #include "message_dialog.hpp"
 #include "module.hpp"
 #include "multiplayer.hpp"
@@ -113,6 +114,24 @@ namespace {
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
+
+#if defined(_WINDOWS)
+	const std::string anura_exe_name = "anura.exe";
+#else
+	const std::string anura_exe_name = "";
+#endif
+
+	std::vector<std::string> alternative_anura_exe_names() {
+		std::vector<std::string> result;
+#if defined(_WINDOWS)
+		for(int i = 0; i != 10; ++i) {
+			std::ostringstream s;
+			s << "anura" << i << ".exe";
+			result.push_back(s.str());
+		}
+#endif
+		return result;
+	}
 
 	graphics::window_manager_ptr main_window;
 
@@ -612,6 +631,52 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	preferences::expand_data_paths();
+
+	if(g_auto_update_anura != "" && anura_exe_name != "" && sys::file_exists("manifest.cfg")) {
+		std::string exe_name = argvec[0];
+		if(exe_name.size() >= anura_exe_name.size() && std::equal(exe_name.end()-anura_exe_name.size(), exe_name.end(), anura_exe_name.begin())) {
+			variant manifest = json::parse(sys::read_file("manifest.cfg"));
+			if(manifest.is_map()) {
+				variant anura_entry = manifest[anura_exe_name];
+				if(anura_entry.is_map()) {
+					std::string expected_md5 = anura_entry["md5"].as_string();
+					std::string match;
+					if(expected_md5 != md5::sum(sys::read_file(exe_name))) {
+						for(auto fname : alternative_anura_exe_names()) {
+							if(sys::file_exists(fname) && md5::sum(sys::read_file(fname)) == expected_md5) {
+								match = fname;
+								break;
+							}
+						}
+
+
+						ASSERT_LOG(match != "", "anura.exe does not match md5 in manifest and no alternative anura.exe found");
+
+						try {
+							sys::move_file(exe_name, "anura.exe.tmp");
+							sys::move_file(match, exe_name);
+							match = exe_name;
+						} catch(...) {
+						}
+
+
+						std::vector<char*> args;
+						for(char** a = argvec; *a; ++a) {
+							args.push_back(*a);
+						}
+						args.push_back(NULL);
+				
+						exe_name.resize(exe_name.size() - anura_exe_name.size());
+						exe_name += match;
+						args[0] = const_cast<char*>(exe_name.c_str());
+						fprintf(stderr, "ZZZ: CALLING EXEC...\n");
+						execv(args[0], &args[0]);
+						fprintf(stderr, "Could not exec()\n");
+					}
+				}
+			}
+		}
+	}
 
 	background_task_pool::manager bg_task_pool_manager;
 	LOG( "After expand_data_paths()" );
