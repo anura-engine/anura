@@ -1979,6 +1979,10 @@ void level::draw_status() const
 
 namespace {
 void draw_entity(const entity& obj, int x, int y, bool editor) {
+	if(obj.use_absolute_screen_coordinates()) {
+		return;
+	}
+
 	const std::pair<int,int>* scroll_speed = obj.parallax_scale_millis();
 
 	if(scroll_speed) {
@@ -2034,6 +2038,20 @@ void level::draw_later(int x, int y, int w, int h) const
 	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
 	while(entity_itor != active_chars_.end()) {
 		draw_entity_later(**entity_itor, x, y, editor_);
+		++entity_itor;
+	}
+}
+
+void level::draw_absolutely_positioned_objects() const
+{
+#if defined(USE_SHADERS)
+	gles2::manager manager(shader_);
+#endif
+	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
+	while(entity_itor != active_chars_.end()) {
+		if((*entity_itor)->use_absolute_screen_coordinates()) {
+			(*entity_itor)->draw(0, 0);
+		}
 		++entity_itor;
 	}
 }

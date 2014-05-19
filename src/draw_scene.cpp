@@ -430,6 +430,8 @@ void render_scene(const level& lvl, const screen_position& pos) {
 	lvl.draw_later(xscroll, yscroll, draw_width, draw_height);
 	glPopMatrix();
 
+	lvl.draw_absolutely_positioned_objects();
+
 	for(std::vector<screen_flash>::iterator i = flashes().begin();
 	    i != flashes().end(); ) {
 		const graphics::color& tint = i->color.to_color();
