@@ -269,14 +269,12 @@ void editor_module_properties_dialog::create_new_module() {
 		// Module specifed as standalone, write out a few extra useful files.
 		if(mod_.included_modules_.empty()) {
 			// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
-			// data/functions.cfg		-- {}
 			// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],framed_gui_element: ["@flatten","@include data/framed-gui-elements.cfg"]}
 			// data/music.cfg			-- {}
 			// data/preload.cfg			-- { preload: [], }
 			// data/tiles.cfg			-- {}
 			// data/gui/null.cfg		-- {}
 			sys::write_file(mod_path + "data/fonts.cfg", "{font:[\"@flatten\",\"@include data/fonts-bitmap/dialog_font.cfg\",\"@include data/fonts-bitmap/label_font.cfg\"]}");
-			sys::write_file(mod_path + "data/functions.cfg", "[\n]");
 			sys::write_file(mod_path + "data/music.cfg", "{\n}");
 			sys::write_file(mod_path + "data/tiles.cfg", "{\n}");
 			sys::write_file(mod_path + "data/gui/null.cfg", "{\n}");

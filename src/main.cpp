@@ -938,7 +938,6 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.set_number_of_items(preload_items+7); // 7 is the number of items that will be loaded below
 		custom_object::init();
 		loader.draw_and_increment(_("Initializing custom object functions"));
-		init_custom_object_functions(json::parse_from_file("data/functions.cfg"));
 		loader.draw_and_increment(_("Initializing textures"));
 		loader.load(preloads);
 		loader.draw_and_increment(_("Initializing tiles"));

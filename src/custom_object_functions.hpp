@@ -34,7 +34,6 @@ bool in_speech_dialog ();
 
 using game_logic::function_symbol_table;
 function_symbol_table& get_custom_object_functions_symbol_table();
-void init_custom_object_functions(variant node);
 
 class entity_command_callable : public game_logic::formula_callable {
 public:
