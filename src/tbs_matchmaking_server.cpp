@@ -101,10 +101,9 @@ public:
 	  : http::web_server(io_service, port),
 	    io_service_(io_service), port_(port),
 		timer_(io_service), db_timer_(io_service),
-		time_ms_(0), terminated_servers_(0)
+		time_ms_(0), terminated_servers_(0),
+		controller_(game_logic::formula_object::create("matchmaking_server"))
 	{
-		std::map<variant,variant> controller_args;
-		controller_.reset(new game_logic::formula_object(variant(&controller_args)));
 
 		create_account_fn_ = controller_->query_value("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
