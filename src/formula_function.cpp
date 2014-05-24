@@ -70,6 +70,7 @@
 #include "random.hpp"
 #include "level.hpp"
 #include "json_parser.hpp"
+#include "uuid.hpp"
 #include "variant_utils.hpp"
 #include "voxel_model.hpp"
 
@@ -1613,6 +1614,13 @@ FUNCTION_DEF(short_array, 1, 2, "short_array(list) -> callable: Converts a list 
 FUNCTION_ARGS_DEF
 	ARG_TYPE("[int]");
 END_FUNCTION_DEF(short_array)
+
+FUNCTION_DEF(generate_uuid, 0, 0, "generate_uuid() -> string: generates a unique string")
+	game_logic::formula::fail_if_static_context();
+	return variant(write_uuid(generate_uuid()));
+FUNCTION_ARGS_DEF
+	RETURN_TYPE("string directed_graph")
+END_FUNCTION_DEF(generate_uuid)
 
 /* XXX Krista to be reworked
 FUNCTION_DEF(update_controls, 1, 1, "update_controls(map) : Updates the controls based on a list of id:string, pressed:bool pairs")

@@ -103,6 +103,12 @@ public:
 		timer_(io_service), db_timer_(io_service),
 		time_ms_(0), terminated_servers_(0)
 	{
+		std::map<variant,variant> controller_args;
+		controller_.reset(new game_logic::formula_object(variant(&controller_args)));
+
+		create_account_fn_ = controller_->query_value("create_account");
+		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
+
 		db_client_ = db_client::create();
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
@@ -222,6 +228,10 @@ public:
 					send_response(socket, response.build());
 				}
 
+				std::vector<variant> args;
+				args.push_back(doc);
+				variant account_info = create_account_fn_(args);
+
 				std::string user_full = doc["user"].as_string();
 
 				std::string passwd = doc["passwd"].as_string();
@@ -240,6 +250,7 @@ public:
 					variant_builder new_user_info;
 					new_user_info.add("user", user_full);
 					new_user_info.add("passwd", passwd);
+					new_user_info.add("info", account_info);
 
 					//put the new user in the database. Note that we use
 					//PUT_REPLACE so that if there is a race for two users
@@ -315,6 +326,7 @@ public:
 					response.add("type", "login_success");
 					response.add("session_id", variant(session_id));
 					response.add("username", variant(info.user_id));
+					response.add("info", user_info["info"]);
 
 					if(remember) {
 						std::string cookie = write_uuid(generate_uuid());
@@ -332,24 +344,30 @@ public:
 			} else if(request_type == "auto_login") {
 				std::string cookie = doc["cookie"].as_string();
 				db_client_->get("cookie:" + cookie, [=](variant user_info) {
-					variant_builder response;
-					if(user_info.is_null()) {
-						response.add("type", "auto_login_fail");
+
+					std::string username = user_info["user"].as_string();
+
+					db_client_->get("user:" + username, [=](variant user_info) {
+						variant_builder response;
+						if(user_info.is_null()) {
+							response.add("type", "auto_login_fail");
+							send_response(socket, response.build());
+							return;
+						}
+
+						const int session_id = g_session_id_gen++;
+						SessionInfo& info = sessions_[session_id];
+						info.session_id = session_id;
+						info.user_id = username;
+						info.last_contact = this->time_ms_;
+	
+						response.add("type", "login_success");
+						response.add("session_id", variant(session_id));
+						response.add("cookie", variant(cookie));
+						response.add("username", variant(info.user_id));
+						response.add("info", user_info["info"]);
 						send_response(socket, response.build());
-						return;
-					}
-
-					const int session_id = g_session_id_gen++;
-					SessionInfo& info = sessions_[session_id];
-					info.session_id = session_id;
-					info.user_id = user_info["user"].as_string();
-					info.last_contact = this->time_ms_;
-
-					response.add("type", "login_success");
-					response.add("session_id", variant(session_id));
-					response.add("cookie", variant(cookie));
-					response.add("username", variant(info.user_id));
-					send_response(socket, response.build());
+					});
 				});
 			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
@@ -638,6 +656,9 @@ private:
 
 	//stats
 	int terminated_servers_;
+
+	boost::intrusive_ptr<game_logic::formula_object> controller_;
+	variant create_account_fn_;
 };
 
 }
