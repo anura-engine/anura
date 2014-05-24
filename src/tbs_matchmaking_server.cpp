@@ -345,6 +345,13 @@ public:
 				std::string cookie = doc["cookie"].as_string();
 				db_client_->get("cookie:" + cookie, [=](variant user_info) {
 
+					if(user_info.is_null()) {
+						variant_builder response;
+						response.add("type", "auto_login_fail");
+						send_response(socket, response.build());
+						return;
+					}
+
 					std::string username = user_info["user"].as_string();
 
 					db_client_->get("user:" + username, [=](variant user_info) {
