@@ -22,6 +22,7 @@
 #include <deque>
 #include <set>
 
+#include "db_client.hpp"
 #include "tbs_ai_player.hpp"
 #include "tbs_bot.hpp"
 #include "formula_callable.hpp"
@@ -146,6 +147,8 @@ private:
 
 	void handle_event(const std::string& name, game_logic::formula_callable* variables=NULL);
 	void execute_command(variant cmd);
+
+	mutable db_client_ptr db_client_;
 };
 
 class game_context {

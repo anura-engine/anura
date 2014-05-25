@@ -1,5 +1,33 @@
 #include "db_client.hpp"
 
+BEGIN_DEFINE_CALLABLE_NOBASE(db_client)
+BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
+#ifndef USE_DB_CLIENT
+	return variant();
+#else
+	std::string key = FN_ARG(0).as_string();
+	variant fn = FN_ARG(1);
+	db_client* cli = const_cast<db_client*>(&obj);
+	variant v(new game_logic::fn_command_callable([=]() {
+	  cli->get(key, [=](variant doc) {
+		if(doc.is_null()) {
+			return;
+		}
+
+		std::vector<variant> args;
+		args.push_back(doc);
+		variant new_doc = fn(args);
+
+		cli->put(key, new_doc, [](){}, [](){});
+		});
+	}
+	));
+
+	return v;
+#endif
+END_DEFINE_FN
+END_DEFINE_CALLABLE(db_client)
+
 db_client::error::error(const std::string& message) : msg(message)
 {}
 

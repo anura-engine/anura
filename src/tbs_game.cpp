@@ -432,6 +432,10 @@ void game::set_message(const std::string& msg)
 
 void game::process()
 {
+	if(db_client_) {
+		db_client_->process(100);
+	}
+
 	if(started_) {
 		static const std::string ProcessStr = "process";
 		handle_event(ProcessStr);
@@ -453,6 +457,12 @@ variant game::get_value(const std::string& key) const
 		}
 
 		return variant(&v);
+	} else if(key == "db_client") {
+		if(db_client_.get() == NULL) {
+			db_client_ = db_client::create();
+		}
+
+		return variant(db_client_.get());
 	} else if(backup_callable_) {
 		return backup_callable_->query_value(key);
 	} else {

@@ -4,16 +4,18 @@
 #include <string>
 #include <functional>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/intrusive_ptr.hpp>
 
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
 class db_client;
-typedef boost::shared_ptr<db_client> db_client_ptr;
+typedef boost::intrusive_ptr<db_client> db_client_ptr;
 
 // Class representing a client to the Anura backend database. Designed to be
 // used by server processes. Use USE_DB_CLIENT to compile this functionality in.
-class db_client
+class db_client : public game_logic::formula_callable
 {
 public:
 	struct error {
@@ -42,6 +44,9 @@ public:
 	// Function to get the given document from the database. Will call on_done
 	// with the document on completion (null if no document is found).
 	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0) = 0;
+
+private:
+	DECLARE_CALLABLE(db_client);
 };
 
 #endif
