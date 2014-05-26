@@ -94,7 +94,7 @@ bool username_valid(const std::string& username)
 	return true;
 }
 
-class matchmaking_server : public http::web_server
+class matchmaking_server : public game_logic::formula_callable, public http::web_server
 {
 public:
 	matchmaking_server(boost::asio::io_service& io_service, int port)
@@ -107,6 +107,9 @@ public:
 
 		create_account_fn_ = controller_->query_value("create_account");
 		ASSERT_LOG(create_account_fn_.is_function(), "Could not find create_account in matchmaking_server class");
+
+		handle_request_fn_ = controller_->query_value("handle_request");
+		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
 		db_client_ = db_client::create();
 
@@ -557,8 +560,14 @@ public:
 				}
 				send_msg(socket, "text/json", response.write_json(), "");
 			} else {
-				fprintf(stderr, "UNKNOWN REQUEST TYPE: '%s'\n", request_type.c_str());
-				disconnect(socket);
+				std::vector<variant> args;
+				args.push_back(variant(this));
+				args.push_back(doc);
+				variant cmd = handle_request_fn_(args);
+				execute_command(cmd);
+
+				send_msg(socket, "text/json", current_response_.write_json(), "");
+				current_response_ = variant();
 			}
 
 		} catch(validation_failure_exception& error) {
@@ -666,7 +675,41 @@ private:
 
 	boost::intrusive_ptr<game_logic::formula_object> controller_;
 	variant create_account_fn_;
+	variant handle_request_fn_;
+
+	variant current_response_;
+
+	DECLARE_CALLABLE(matchmaking_server);
+
+	void execute_command(variant cmd);
 };
+
+BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
+DEFINE_FIELD(response, "any")
+	return obj.current_response_;
+DEFINE_SET_FIELD
+	obj.current_response_ = value;
+DEFINE_FIELD(db_client, "builtin db_client")
+	return variant(obj.db_client_.get());
+END_DEFINE_CALLABLE(matchmaking_server)
+
+void matchmaking_server::execute_command(variant cmd)
+{
+	if(cmd.is_list()) {
+		for(variant v : cmd.as_list()) {
+			execute_command(v);
+		}
+
+		return;
+	} else if(cmd.is_null()) {
+		return;
+	} else {
+		const game_logic::command_callable* command = cmd.try_convert<game_logic::command_callable>();
+		ASSERT_LOG(command, "Unrecognize command: " << cmd.write_json());
+
+		command->run_command(*this);
+	}
+}
 
 }
 
@@ -688,7 +731,7 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 	}
 
 	boost::asio::io_service io_service;
-	matchmaking_server server(io_service, port);
+	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
 	io_service.run();
 }
 
