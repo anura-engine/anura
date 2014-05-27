@@ -243,6 +243,10 @@
 		C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0818E541BD00CD3161 /* uuid.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
+		C0CB6CF81933E1B6004A6450 /* libcairo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CF61933DE66004A6450 /* libcairo.dylib */; };
+		C0CB6CFA1933E62C004A6450 /* cairo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0CB6CF91933E62C004A6450 /* cairo.cpp */; };
+		C0CB6CFD1933E970004A6450 /* libfreetype.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CFC1933E970004A6450 /* libfreetype.dylib */; };
+		C0CB6CFF1933E9A1004A6450 /* librsvg-2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
 		C0D6EB6D16DB25C000B5ABCA /* tbs_internal_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */; };
 		C0D6EB6E16DB25C000B5ABCA /* tbs_server_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6A16DB25C000B5ABCA /* tbs_server_base.cpp */; };
@@ -769,6 +773,11 @@
 		C0B87BD21667256F00D66B15 /* formula_object.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = formula_object.cpp; sourceTree = "<group>"; };
 		C0B87BD31667256F00D66B15 /* formula_object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = formula_object.hpp; sourceTree = "<group>"; };
 		C0C291901665F21600DB88A6 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		C0CB6CF61933DE66004A6450 /* libcairo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcairo.dylib; path = ../../../../../usr/local/Cellar/cairo/1.12.16_1/lib/libcairo.dylib; sourceTree = "<group>"; };
+		C0CB6CF91933E62C004A6450 /* cairo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cairo.cpp; sourceTree = "<group>"; };
+		C0CB6CFB1933E631004A6450 /* cairo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cairo.hpp; sourceTree = "<group>"; };
+		C0CB6CFC1933E970004A6450 /* libfreetype.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.dylib; path = ../../../../../usr/local/Cellar/freetype/2.5.3_1/lib/libfreetype.dylib; sourceTree = "<group>"; };
+		C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "librsvg-2.dylib"; path = "../../../../../usr/local/Cellar/librsvg/2.36.3/lib/librsvg-2.dylib"; sourceTree = "<group>"; };
 		C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_internal_client.cpp; sourceTree = "<group>"; };
 		C0D6EB6716DB25C000B5ABCA /* tbs_internal_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_internal_client.hpp; sourceTree = "<group>"; };
 		C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_internal_server.cpp; sourceTree = "<group>"; };
@@ -806,6 +815,9 @@
 				C08E628117B5EC3B0097B642 /* SDL2_mixer.framework in Frameworks */,
 				C08E628217B5EC3B0097B642 /* SDL2_ttf.framework in Frameworks */,
 				C08E628317B5EC3B0097B642 /* SDL2.framework in Frameworks */,
+				C0CB6CF81933E1B6004A6450 /* libcairo.dylib in Frameworks */,
+				C0CB6CFD1933E970004A6450 /* libfreetype.dylib in Frameworks */,
+				C0CB6CFF1933E9A1004A6450 /* librsvg-2.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -839,6 +851,9 @@
 		C010C570160AFAD9006E7D90 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */,
+				C0CB6CFC1933E970004A6450 /* libfreetype.dylib */,
+				C0CB6CF61933DE66004A6450 /* libcairo.dylib */,
 				C010C5A5160AFC60006E7D90 /* External Frameworks */,
 				C010C573160AFAD9006E7D90 /* Apple Frameworks */,
 			);
@@ -893,6 +908,8 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C0CB6CF91933E62C004A6450 /* cairo.cpp */,
+				C0CB6CFB1933E631004A6450 /* cairo.hpp */,
 				C008A2CC1804EFFE0061363A /* input.cpp */,
 				C008A2CD1804EFFE0061363A /* input.hpp */,
 				C008A2C11804E8980061363A /* wm.cpp */,
@@ -1475,6 +1492,7 @@
 				C010C743160AFD4D006E7D90 /* animation_preview_widget.cpp in Sources */,
 				C010C744160AFD4D006E7D90 /* animation_widget.cpp in Sources */,
 				C010C746160AFD4D006E7D90 /* asserts.cpp in Sources */,
+				C0CB6CFA1933E62C004A6450 /* cairo.cpp in Sources */,
 				C010C747160AFD4D006E7D90 /* background.cpp in Sources */,
 				C010C748160AFD4D006E7D90 /* background_task_pool.cpp in Sources */,
 				C008A2CE1804EFFE0061363A /* input.cpp in Sources */,
@@ -1760,7 +1778,7 @@
 		C010C58C160AFADA006E7D90 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1782,17 +1800,27 @@
 					"./libpng-1.5.5/",
 					"./dependency-headers",
 					../include,
+					"/usr/local/Cellar/librsvg/2.36.3/include/**",
+					"/usr/local/Cellar/cairo/1.12.16_1/include/**",
+					"/usr/local/Cellar/glib/2.40.0/**",
+					"/usr/local/Cellar/gdk-pixbuf/2.30.7/include/**",
+					"/usr/local/Cellar/freetype/2.5.3_1/include/**",
+					"/usr/local/Cellar/fontconfig/2.11.1/include/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
+					"\"/usr/local/Cellar/cairo/1.12.16_1/lib\"",
+					"\"/usr/local/Cellar/freetype/2.5.3_1/lib\"",
+					"\"/usr/local/Cellar/librsvg/2.36.3/lib\"",
 				);
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
 					"-DUSE_SHADERS",
 					"-DUSE_ISOMAP",
+					"-DUSE_SVG",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
@@ -1825,7 +1853,7 @@
 		C010C58D160AFADA006E7D90 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_32_BIT)";
+				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1847,17 +1875,27 @@
 					"./libpng-1.5.5/",
 					"./dependency-headers",
 					../include,
+					"/usr/local/Cellar/librsvg/2.36.3/include/**",
+					"/usr/local/Cellar/cairo/1.12.16_1/include/**",
+					"/usr/local/Cellar/glib/2.40.0/**",
+					"/usr/local/Cellar/gdk-pixbuf/2.30.7/include/**",
+					"/usr/local/Cellar/freetype/2.5.3_1/include/**",
+					"/usr/local/Cellar/fontconfig/2.11.1/include/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
+					"\"/usr/local/Cellar/cairo/1.12.16_1/lib\"",
+					"\"/usr/local/Cellar/freetype/2.5.3_1/lib\"",
+					"\"/usr/local/Cellar/librsvg/2.36.3/lib\"",
 				);
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
 					"-DUSE_GLES2",
 					"-DUSE_ISOMAP",
+					"-DUSE_SVG",
 				);
 				OTHER_CPLUSPLUSFLAGS = (
 					"$(OTHER_CFLAGS)",
