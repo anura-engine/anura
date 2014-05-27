@@ -108,6 +108,8 @@ private:
 	//mouse event handling state
 	bool mouse_clicking_;
 
+	int mouse_drag_count_;
+
 	void show_pause_title();
 
 	editor* editor_;

@@ -16,7 +16,6 @@
 */
 
 //This file is designed to only work on Linux.
-#ifdef __linux__
 
 #include <algorithm>
 #include <ctype.h>
@@ -49,6 +48,8 @@
 #include "uuid.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
+
+#ifdef __linux__
 
 using namespace tbs;
 
@@ -734,5 +735,21 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
 	io_service.run();
 }
+
+#else
+
+class matchmaking_server : public game_logic::formula_callable, public http::web_server
+{
+	DECLARE_CALLABLE(matchmaking_server);
+};
+
+
+BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
+DEFINE_FIELD(response, "any")
+	return variant();
+DEFINE_SET_FIELD
+DEFINE_FIELD(db_client, "builtin db_client")
+	return variant();
+END_DEFINE_CALLABLE(matchmaking_server)
 
 #endif // __linux__

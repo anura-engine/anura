@@ -75,6 +75,7 @@
 
 namespace {
 PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
+PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
 
 level_runner* current_level_runner = NULL;
 
@@ -481,10 +482,14 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 		return false;
 	}
 
+	const int DragThresholdMilliPx = g_mouse_drag_threshold;
+
 	switch(event.type)
 	{
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
+		mouse_drag_count_ = 0;
+
 		case SDL_MOUSEMOTION:
 		    int x, mx = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 			int y, my = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
@@ -615,6 +620,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 								}
 							}
 						} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
+							mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
 							// drag check.
 							if(object->is_being_dragged()) {
 								if(object->get_mouse_buttons() & button_state) {
@@ -626,7 +632,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 								if(object->mouse_event_swallowed()) {
 									drag_handled = true;
 								}
-							} else if(object->get_mouse_buttons() & button_state) {
+							} else if(object->get_mouse_buttons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
 								// start drag.
 								object->handle_event(MouseDragStartID, callable.get());
 								object->set_being_dragged();
@@ -678,6 +684,10 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						}
 					}
 				}
+			}
+
+			if(event.type == SDL_MOUSEMOTION && mouse_drag_count_ <= DragThresholdMilliPx) {
+				break;
 			}
 
 			mouse_clicking_ = event.type == SDL_MOUSEBUTTONDOWN;
@@ -733,6 +743,7 @@ level_runner::level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_
 	start_time_ = SDL_GetTicks();
 	pause_time_ = -global_pause_time;
 	mouse_clicking_ = false;
+	mouse_drag_count_ = 0;
 }
 
 void level_runner::start_editor()
