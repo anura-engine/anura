@@ -26,6 +26,26 @@ BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
 	return v;
 #endif
 END_DEFINE_FN
+BEGIN_DEFINE_FN(get, "(string) ->any")
+#ifndef USE_DB_CLIENT
+	return variant();
+#else
+	std::string key = FN_ARG(0).as_string();
+	db_client* cli = const_cast<db_client*>(&obj);
+
+	variant result;
+	bool done = false;
+
+	cli->get(key, [&done,&result](variant res) { result = res; done = true; });
+	while(!done) {
+		cli->process();
+	}
+
+	return result;
+		
+#endif
+	
+END_DEFINE_FN
 END_DEFINE_CALLABLE(db_client)
 
 db_client::error::error(const std::string& message) : msg(message)
