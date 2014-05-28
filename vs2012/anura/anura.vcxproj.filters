@@ -759,6 +759,9 @@
     <ClInclude Include="..\..\src\uuid.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\db_client.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1585,6 +1588,9 @@
     </ClCompile>
     <ClCompile Include="..\..\src\Box2D\Rope\b2Rope.cpp">
       <Filter>Source Files\Box2D</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\db_client.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
