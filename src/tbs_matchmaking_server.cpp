@@ -758,6 +758,7 @@ COMMAND_LINE_UTILITY(db_script) {
 	db_client_ptr db = db_client::create();
 	callable->add("db", variant(db.get()));
 	callable->add("args", variant(&arg));
+	callable->add("lib", variant(game_logic::get_library_object().get()));
 
 	variant commands = f.execute(*callable);
 
