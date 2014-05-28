@@ -947,8 +947,11 @@ void formula_object::load_all_classes()
 	module::get_files_in_dir("data/classes/", &files, NULL);
 	foreach(std::string f, files) {
 		if(f.size() > 4 && std::equal(f.end()-4,f.end(),".cfg")) {
-			f.resize(f.size()-4);
-			get_class(f);
+			variant node = json::parse_from_file("data/classes/" + f);
+			if(node["server_only"].as_bool(false) == false) {
+				f.resize(f.size()-4);
+				get_class(f);
+			}
 		}
 	}
 }
@@ -1389,7 +1392,10 @@ formula_callable_definition_ptr get_library_definition()
 			if(fname.size() > 4 && std::equal(fname.end() - 4, fname.end(), ".cfg")) {
 				const std::string class_name(fname.begin(), fname.end()-4);
 				if(std::count(classes.begin(), classes.end(), class_name) == 0) {
-					classes.push_back(class_name);
+					variant node = json::parse_from_file("data/classes/" + fname);
+					if(node["server_only"].as_bool(false) == false) {
+						classes.push_back(class_name);
+					}
 				}
 			}
 		}
