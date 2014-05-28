@@ -1672,6 +1672,21 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(plot_y)
 
+FUNCTION_DEF(point_solid, 4, 4, "point_solid(level, object, int x, int y) -> boolean: returns true iff the given point is solid for the given object")
+	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	entity* obj = args()[1]->evaluate(variables).convert_to<entity>();
+	const int x = args()[2]->evaluate(variables).as_int();
+	const int y = args()[3]->evaluate(variables).as_int();
+
+	return variant(point_standable(*lvl, *obj, x, y, NULL, SOLID_ONLY));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("buildin level")
+	ARG_TYPE("custom_obj")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
+END_FUNCTION_DEF(point_solid)
+
 FUNCTION_DEF(object_can_stand, 4, 4, "object_can_stand(level, object, int x, int y) -> boolean: returns true iff the given point is standable")
 	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
 	entity* obj = args()[1]->evaluate(variables).convert_to<entity>();
