@@ -83,7 +83,7 @@ struct GetInfo {
 class couchbase_db_client : public db_client
 {
 public:
-	couchbase_db_client() {
+	couchbase_db_client() : outstanding_requests_(0) {
 		struct lcb_create_st create_options;
 		create_options.v.v0.host = g_couchbase_host.c_str();
 
@@ -139,9 +139,12 @@ public:
 		const lcb_store_cmd_t* commands[1];
 		commands[0] = &cmd;
 
+		++outstanding_requests_;
+		int* poutstanding = &outstanding_requests_;
+
 		PutInfo* cookie = new PutInfo;
-		cookie->on_done = on_done;
-		cookie->on_error = on_error;
+		cookie->on_done = [=]() { --*poutstanding; on_done(); };
+		cookie->on_error = [=]() { --*poutstanding; on_error(); };
 
 		lcb_error_t err = lcb_store(instance_, cookie, 1, commands);
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(NULL, err));
@@ -159,17 +162,20 @@ public:
 			cmd.v.v0.exptime = lock_seconds;
 		}
 
+		++outstanding_requests_;
+		int* poutstanding = &outstanding_requests_;
+
 		const lcb_get_cmd_t* commands[1];
 		commands[0] = &cmd;
 
 		GetInfo* cookie = new GetInfo;
-		cookie->on_done = on_done;
+		cookie->on_done = [=](variant v) { --*poutstanding; on_done(v); };
 
 		lcb_error_t err = lcb_get(instance_, cookie, 1, commands);
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in get: " << lcb_strerror(NULL, err));
 	}
 
-	void process(int timeout_us)
+	bool process(int timeout_us)
 	{
 		if(timeout_us > 0) {
 			lcb_error_t error = LCB_SUCCESS;
@@ -177,9 +183,13 @@ public:
 			ASSERT_LOG(error == LCB_SUCCESS, "Failed to create lcb timer");
 		}
 		lcb_wait(instance_);
+
+		return outstanding_requests_ != 0;
 	}
 private:
 	lcb_t instance_;
+
+	int outstanding_requests_;
 };
 
 void store_callback(lcb_t instance, const void *cookie,

@@ -32,7 +32,9 @@ public:
 	// If timeout_us is non-zero, it will cause a timeout if completion isn't
 	// achieved by this time. You must call process() to make progress on
 	// ongoing operations.
-	virtual void process(int timeout_us=0) = 0;
+	//
+	// Returns true iff there are still outstanding operations.
+	virtual bool process(int timeout_us=0) = 0;
 
 	enum PUT_OPERATION { PUT_SET, PUT_ADD, PUT_REPLACE };
 

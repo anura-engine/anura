@@ -33,6 +33,7 @@
 #include "filesystem.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
+#include "formula.hpp"
 #include "formula_object.hpp"
 #include "http_server.hpp"
 #include "ipc.hpp"
@@ -137,6 +138,8 @@ public:
 
 		db_client_->process(1000);
 	}
+
+	void execute_command(variant cmd);
 
 	void heartbeat(const boost::system::error_code& error)
 	{
@@ -681,8 +684,6 @@ private:
 	variant current_response_;
 
 	DECLARE_CALLABLE(matchmaking_server);
-
-	void execute_command(variant cmd);
 };
 
 BEGIN_DEFINE_CALLABLE_NOBASE(matchmaking_server)
@@ -734,6 +735,39 @@ COMMAND_LINE_UTILITY(tbs_matchmaking_server) {
 	boost::asio::io_service io_service;
 	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, port));
 	io_service.run();
+}
+
+COMMAND_LINE_UTILITY(db_script) {
+	std::deque<std::string> arguments(args.begin(), args.end());
+
+	ASSERT_LOG(arguments.size() >= 1, "Must provide name of script to run and any arguments");
+
+	using namespace game_logic;
+
+	std::string script = sys::read_file(arguments.front());
+	arguments.pop_front();
+	std::vector<variant> arg;
+	for(auto s : arguments) {
+		arg.push_back(variant(s));
+	}
+
+	formula f = formula(variant(script));
+
+	map_formula_callable_ptr callable(new map_formula_callable);
+
+	db_client_ptr db = db_client::create();
+	callable->add("db", variant(db.get()));
+	callable->add("args", variant(&arg));
+
+	variant commands = f.execute(*callable);
+
+	boost::asio::io_service io_service;
+	boost::intrusive_ptr<matchmaking_server> server(new matchmaking_server(io_service, 29543));
+
+	server->execute_command(commands);
+
+	while(db->process()) {
+	}
 }
 
 #else
