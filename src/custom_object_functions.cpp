@@ -1680,7 +1680,7 @@ FUNCTION_DEF(point_solid, 4, 4, "point_solid(level, object, int x, int y) -> boo
 
 	return variant(point_standable(*lvl, *obj, x, y, NULL, SOLID_ONLY));
 FUNCTION_ARGS_DEF
-	ARG_TYPE("buildin level")
+	ARG_TYPE("builtin level")
 	ARG_TYPE("custom_obj")
 	ARG_TYPE("int")
 	ARG_TYPE("int")
