@@ -1803,9 +1803,9 @@
 					"/usr/local/Cellar/librsvg/2.36.3/include/**",
 					"/usr/local/Cellar/cairo/**",
 					"/usr/local/Cellar/glib/2.40.0/**",
-					"/usr/local/Cellar/gdk-pixbuf/2.30.7/include/**",
-					"/usr/local/Cellar/freetype/2.5.3_1/include/**",
-					"/usr/local/Cellar/fontconfig/2.11.1/include/**",
+					"/usr/local/Cellar/gdk-pixbuf/**",
+					"/usr/local/Cellar/freetype/**",
+					"/usr/local/Cellar/fontconfig/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
@@ -1878,9 +1878,9 @@
 					"/usr/local/Cellar/librsvg/2.36.3/include/**",
 					"/usr/local/Cellar/cairo/**",
 					"/usr/local/Cellar/glib/2.40.0/**",
-					"/usr/local/Cellar/gdk-pixbuf/2.30.7/include/**",
-					"/usr/local/Cellar/freetype/2.5.3_1/include/**",
-					"/usr/local/Cellar/fontconfig/2.11.1/include/**",
+					"/usr/local/Cellar/gdk-pixbuf/**",
+					"/usr/local/Cellar/freetype/**",
+					"/usr/local/Cellar/fontconfig/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
