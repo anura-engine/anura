@@ -397,8 +397,6 @@ BEGIN_CAIRO_FN(set_linear_pattern, "(decimal, decimal, decimal, decimal, [{offse
 			alpha = a.as_decimal().as_float();
 		}
 
-		std::cerr << "ZZZ: SET ALPHA: " << alpha << "\n";
-
 		cairo_pattern_add_color_stop_rgba(pattern,
 		  v["offset"].as_decimal().as_float(),
 		  v["red"].as_decimal().as_float(),

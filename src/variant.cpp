@@ -218,13 +218,14 @@ struct variant_map {
 	variant::debug_info info;
 	boost::intrusive_ptr<const game_logic::formula_expression> expression;
 
-	variant_map() : refcount(0)
+	variant_map() : refcount(0), modcount(0)
 	{}
-	variant_map(const variant_map& o) : expression(o.expression), elements(o.elements), refcount(1)
+	variant_map(const variant_map& o) : expression(o.expression), elements(o.elements), refcount(1), modcount(0)
 	{}
 
 	std::map<variant,variant> elements;
 	int refcount;
+	int modcount;
 private:
 	void operator=(const variant_map&);
 };
@@ -1156,6 +1157,37 @@ const std::map<variant,variant>& variant::as_map() const
 	}
 }
 
+bool variant::is_unmodified_single_reference() const
+{
+	if(is_map()) {
+		if(map_->refcount > 1 || map_->modcount > 0) {
+			return false;
+		}
+
+		for(const auto& p : map_->elements) {
+			if(!p.first.is_unmodified_single_reference()) {
+				return false;
+			}
+
+			if(!p.second.is_unmodified_single_reference()) {
+				return false;
+			}
+		}
+
+	} else if(is_list()) {
+		if(list_->refcount > 1) {
+			return false;
+		}
+		for(auto i = list_->begin; i != list_->end; ++i) {
+			if(!i->is_unmodified_single_reference()) {
+				return false;
+			}
+		}
+	}
+
+	return true;
+}
+
 variant variant::add_attr(variant key, variant value)
 {
 	last_query_map = variant();
@@ -1198,6 +1230,7 @@ void variant::add_attr_mutation(variant key, variant value)
 {
 	if(is_map()) {
 		map_->elements[key] = value;
+		map_->modcount++;
 	}
 }
 
@@ -1205,6 +1238,7 @@ void variant::remove_attr_mutation(variant key)
 {
 	if(is_map()) {
 		map_->elements.erase(key);
+		map_->modcount++;
 	}
 }
 
@@ -1213,6 +1247,7 @@ variant* variant::get_attr_mutable(variant key)
 	if(is_map()) {
 		std::map<variant,variant>::iterator i = map_->elements.find(key);
 		if(i != map_->elements.end()) {
+			map_->modcount++;
 			return &i->second;
 		}
 	}

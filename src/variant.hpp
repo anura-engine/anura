@@ -200,6 +200,10 @@ public:
 	const std::string* filename() const { return 0; }
 	int line_number() const { return -1; }
 
+	//function which will return true if the value is unmodified
+	//and doesn't have external references.
+	bool is_unmodified_single_reference() const;
+
 	//modifies the map to add an attribute. Note that if the map is referenced
 	//by other variants, it will make a copy of it first.
 	variant add_attr(variant key, variant value);

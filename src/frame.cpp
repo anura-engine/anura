@@ -763,6 +763,8 @@ void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfl
 	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
 	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
+	gles2::active_shader()->shader()->set_sprite_area(rect);
+
 	if(rotate == 0) {
 		//if there is no rotation, then we can make a much simpler call
 		graphics::queue_blit_texture(texture_, x, y, w, h, rect[0], rect[1], rect[2], rect[3]);
@@ -790,6 +792,8 @@ void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfl
 	const int height_delta = img_rect_.h()*scale_*scale - img_rect_.h()*scale_;
 	x -= width_delta/2;
 	y -= height_delta/2;
+
+	gles2::active_shader()->shader()->set_sprite_area(rect);
 
 	if(rotate == 0) {
 		//if there is no rotation, then we can make a much simpler call

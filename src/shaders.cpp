@@ -1016,7 +1016,7 @@ void program::set_fixed_uniforms(const variant& node)
 
 	if(node.has_key("sprite_area")) {
 		u_sprite_area_ = GLint(get_uniform(node["sprite_area"].as_string()));
-		ASSERT_LOG(u_mvp_matrix_ != -1, "sprite_area uniform given but nothing in corresponding shader.");
+		ASSERT_LOG(u_sprite_area_ != -1, "sprite_area uniform given but nothing in corresponding shader.");
 	} else {
 		u_sprite_area_ = -1;
 	}

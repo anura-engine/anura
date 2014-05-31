@@ -837,6 +837,37 @@ public:
 		return get_union(types);
 	}
 
+	const std::map<variant, variant_type_ptr>* is_specific_map() const {
+		if(specific_map_.get() != NULL) {
+			return specific_map_.get();
+		}
+
+		for(const auto& t : types_) {
+			if(t->is_specific_map()) {
+				return NULL;
+			}
+		}
+
+		specific_map_.reset(new std::map<variant, variant_type_ptr>);
+		for(const auto& t : types_) {
+			auto m = t->is_specific_map();
+			for(const auto& p : *m) {
+				auto itor = specific_map_->find(p.first);
+				if(itor != specific_map_->end()) {
+					std::vector<variant_type_ptr> u;
+					u.push_back(itor->second);
+					u.push_back(p.second);
+					itor->second = get_union(u);
+				} else {
+					specific_map_->insert(p);
+				}
+			}
+		}
+
+		return specific_map_.get();
+	}
+	
+
 	std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const {
 		std::vector<variant_type_ptr> key_types, value_types;
 		foreach(const variant_type_ptr& type, types_) {
@@ -898,6 +929,8 @@ private:
 	}
 
 	std::vector<variant_type_ptr> types_;
+
+	mutable boost::shared_ptr<std::map<variant, variant_type_ptr> > specific_map_;
 };
 
 class variant_type_list : public variant_type
