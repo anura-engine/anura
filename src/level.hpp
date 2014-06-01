@@ -414,6 +414,10 @@ public:
 	boost::intrusive_ptr<level> suspended_level() const { return suspended_level_; }
 	void set_suspended_level(const boost::intrusive_ptr<level>& lvl) { suspended_level_ = lvl; }
 
+	void set_show_builtin_settings_dialog(bool value) { show_builtin_settings_ = value; }
+
+	bool show_builtin_settings_dialog() const { return show_builtin_settings_; }
+
 private:
 	DECLARE_CALLABLE(level);
 
@@ -698,6 +702,10 @@ private:
 
 	// Hack to disable the touchscreen controls for the current level -- replace for 1.4
 	bool allow_touch_controls_;
+
+	//determines if we should be using the builtin/Anura settings dialog
+	//or if the level will show its own settings.
+	bool show_builtin_settings_;
 
 	boost::intrusive_ptr<level> suspended_level_;
 };

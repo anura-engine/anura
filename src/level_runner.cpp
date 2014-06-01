@@ -1495,9 +1495,18 @@ bool level_runner::play_cycle()
 				break;
 			}
 		}
+
+		if(should_pause) {
+			lvl_->set_show_builtin_settings_dialog(true);
+			for(const auto& c : lvl_->get_active_chars()) {
+				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
+			}
+		}
 		
-		if (should_pause)
+		if(lvl_->show_builtin_settings_dialog())
 		{
+			lvl_->set_show_builtin_settings_dialog(false);
+
 #if defined(USE_ISOMAP)
 			if(mouselook_state) {
 				SDL_SetRelativeMouseMode(SDL_FALSE);

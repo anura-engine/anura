@@ -214,7 +214,8 @@ level::level(const std::string& level_cfg, variant node)
 #if defined(USE_ISOMAP)
 	  mouselook_enabled_(false), mouselook_inverted_(false),
 #endif
-	  allow_touch_controls_(true)
+	  allow_touch_controls_(true),
+	  show_builtin_settings_(false)
 {
 #ifndef NO_EDITOR
 	get_all_levels_set().insert(this);
@@ -4086,6 +4087,11 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(suspended_level, "builtin level")
 	ASSERT_LOG(obj.suspended_level_, "Query of suspended_level when there is no suspended level");
 	return variant(obj.suspended_level_.get());
+
+DEFINE_FIELD(show_builtin_settings_dialog, "bool")
+	return variant::from_bool(obj.show_builtin_settings_);
+DEFINE_SET_FIELD
+	obj.show_builtin_settings_ = value.as_bool();
 
 END_DEFINE_CALLABLE(level)
 
