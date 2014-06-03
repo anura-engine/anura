@@ -120,13 +120,14 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;_USE_MATH_DEFINES;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>c:/projects/gtk/include/gdk-pixbuf-2.0;c:/projects/gtk/include/librsvg-2.0;c:/projects/SDL/include;c:/projects/gtk/include/glib-2.0;c:/projects/gtk/include/pixman-1;c:/projects/gtk/include;c:/projects/gtk/include/freetype2;c:/projects/gtk/include/libpng15;c:/projects/gtk/lib/glib-2.0/include;c:/projects/gtk/include/cairo;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\lpng1512;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\lpng160;c:\projects\anura\include;..\..\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\lpng1512;c:\projects\glew-1.9.0\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\lpng160;c:\projects\libvpx;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <UndefinePreprocessorDefinitions>_USE_MATH_DEFINES</UndefinePreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\cairo\external\x86\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\cairo\external\x86\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <UndefinePreprocessorDefinitions>
+      </UndefinePreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -334,6 +335,24 @@
     <ClInclude Include="..\..\src\surface_formula.hpp" />
     <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_scaling_generated.hpp" />
+    <ClInclude Include="..\..\src\svg\color.hpp" />
+    <ClInclude Include="..\..\src\svg\geometry.hpp" />
+    <ClInclude Include="..\..\src\svg\logger.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_attribs.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_container.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_element.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_fwd.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_gradient.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_length.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_paint.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_parse.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_path_parse.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_render.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_shapes.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_style.hpp" />
+    <ClInclude Include="..\..\src\svg\svg_transform.hpp" />
+    <ClInclude Include="..\..\src\svg\uri.hpp" />
+    <ClInclude Include="..\..\src\svg\utils.hpp" />
     <ClInclude Include="..\..\src\sys.hpp" />
     <ClInclude Include="..\..\src\tbs_ai_player.hpp" />
     <ClInclude Include="..\..\src\tbs_bot.hpp" />
@@ -609,6 +628,19 @@
     <ClCompile Include="..\..\src\surface_formula.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_scaling.cpp" />
+    <ClCompile Include="..\..\src\svg\color.cpp" />
+    <ClCompile Include="..\..\src\svg\logger.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_container.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_element.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_gradient.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_paint.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_parse.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_path_parse.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_shapes.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_style.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_transform.cpp" />
+    <ClCompile Include="..\..\src\svg\svg_utils.cpp" />
     <ClCompile Include="..\..\src\sys.cpp" />
     <ClCompile Include="..\..\src\tbs_ai_player.cpp" />
     <ClCompile Include="..\..\src\tbs_bot.cpp" />
@@ -690,9 +722,6 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="..\..\..\gtk\lib\cairo.lib" />
-    <Library Include="..\..\..\gtk\lib\gobject-2.0.lib" />
-    <Library Include="..\..\..\gtk\lib\libpng.lib" />
-    <Library Include="..\..\..\gtk\lib\librsvg-2-2.lib" />
     <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
     <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />

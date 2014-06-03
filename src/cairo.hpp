@@ -3,7 +3,6 @@
 
 #include <string>
 #include <cairo/cairo.h>
-#include <librsvg/rsvg.h>
 
 #include "formula_callable.hpp"
 #include "surface.hpp"

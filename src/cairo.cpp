@@ -2,10 +2,12 @@
 
 #include <string.h>
 
-#include <cairo-ft.h>
+#include <cairo/cairo-ft.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
+
+#include "svg/svg_parse.hpp"
 
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
@@ -60,19 +62,11 @@ cairo_surface_t* get_cairo_image(const std::string& image)
 	return result;
 }
 
-bool initialize_gtype() {
-#if !GLIB_CHECK_VERSION(2,36,0)
-	g_type_init();
-#endif
-	return true;
-}
 }
 
 cairo_context::cairo_context(int w, int h)
   : width_(w), height_(h), temp_pattern_(NULL)
 {
-	static const bool init = initialize_gtype();
-
 	surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 	cairo_ = cairo_create(surface_);
 
@@ -136,31 +130,27 @@ graphics::texture cairo_context::write() const
 
 void cairo_context::render_svg(const std::string& fname)
 {
-		{
-	cairo_status_t status = cairo_status(cairo_);
-	ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
-		}
+	{
+		cairo_status_t status = cairo_status(cairo_);
+		ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));
+	}
 
-	GError *error = NULL;
-
-	static std::map<std::string, RsvgHandle*> cache;
-
-	RsvgHandle* handle = NULL;
+	std::shared_ptr<KRE::SVG::parse> handle;
+	static std::map<std::string, std::shared_ptr<KRE::SVG::parse>> cache;
 
 	auto itor = cache.find(fname);
 	if(itor == cache.end()) {
 		std::string real_fname = module::map_file(fname);
 		ASSERT_LOG(sys::file_exists(real_fname), "Could not find svg file: " << fname);
 
-		handle = rsvg_handle_new_from_file(real_fname.c_str(), &error);
-		ASSERT_LOG(error == NULL, "SVG rendering error: " << error->message);
-
+		handle = std::shared_ptr<KRE::SVG::parse>(new KRE::SVG::parse(fname));		
 		cache[fname] = handle;
 	} else {
 		handle = itor->second;
 	}
 
-	rsvg_handle_render_cairo(handle, cairo_);
+	KRE::SVG::render_context ctx(cairo_, width_, height_);
+	handle->render(ctx);
 
 	cairo_status_t status = cairo_status(cairo_);
 	ASSERT_LOG(status == 0, "SVG rendering error rendering " << fname << ": " << cairo_status_to_string(status));

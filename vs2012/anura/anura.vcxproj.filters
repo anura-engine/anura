@@ -16,6 +16,12 @@
     <Filter Include="Source Files\Box2D">
       <UniqueIdentifier>{9397cd9e-e50a-40c2-8f89-1d9442569b77}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Source Files\svg">
+      <UniqueIdentifier>{e481d3e3-77cf-4cbf-a9e6-87d9e7e3e1e6}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\svg">
+      <UniqueIdentifier>{62ff1fbe-ccf7-425c-9513-533e412fb737}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\bar_widget.hpp">
@@ -761,6 +767,60 @@
     </ClInclude>
     <ClInclude Include="..\..\src\db_client.hpp">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\color.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\geometry.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\logger.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_attribs.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_container.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_element.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_fwd.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_gradient.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_length.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_paint.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_parse.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_path_parse.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_render.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_shapes.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_style.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\svg_transform.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\uri.hpp">
+      <Filter>Header Files\svg</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\svg\utils.hpp">
+      <Filter>Header Files\svg</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -1592,6 +1652,45 @@
     <ClCompile Include="..\..\src\db_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\svg\color.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\logger.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_attribs.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_container.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_element.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_gradient.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_paint.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_parse.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_path_parse.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_shapes.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_style.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_transform.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\svg\svg_utils.cpp">
+      <Filter>Source Files\svg</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">
@@ -1608,10 +1707,7 @@
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
     <Library Include="c:\projects\zlib\zlib.lib" />
     <Library Include="vpxmt.lib" />
-    <Library Include="..\..\..\gtk\lib\librsvg-2-2.lib" />
     <Library Include="..\..\..\gtk\lib\cairo.lib" />
-    <Library Include="..\..\..\gtk\lib\gobject-2.0.lib" />
     <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
-    <Library Include="..\..\..\gtk\lib\libpng.lib" />
   </ItemGroup>
 </Project>
