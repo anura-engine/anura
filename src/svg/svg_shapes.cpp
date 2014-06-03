@@ -426,6 +426,11 @@ namespace KRE
 
 		void text::render_text(render_context& ctx) const
 		{
+            auto fc = ctx.fill_color_top();
+            if(fc) {
+				fc->apply(parent(), ctx);
+			}
+ 
 			double letter_spacing = ctx.letter_spacing_top();
 			if(letter_spacing > 0) {
 				for(auto c : text_) {
@@ -436,6 +441,8 @@ namespace KRE
 			} else {
 				cairo_show_text(ctx.cairo(), text_.c_str());
 			}
+			cairo_status_t status = cairo_status(ctx.cairo());
+			ASSERT_LOG(status == 0, "SVG error rendering text: " << cairo_status_to_string(status));
 		}
 
 		void text::handle_render(render_context& ctx) const 

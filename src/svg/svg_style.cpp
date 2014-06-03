@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <boost/algorithm/string.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
@@ -184,6 +185,16 @@ namespace KRE
 					}
 				}
 
+				auto font_family = attributes->get_child_optional("font-family");
+				if(font_family) {
+					boost::char_separator<char> seperators("\n\t\r ,");
+					boost::tokenizer<boost::char_separator<char>> tok(font_family->data(), seperators);
+					for(auto& t : tok) {
+						family_.push_back(t);
+						boost::replace_all(family_.back(), "'", "");
+					}
+				}
+
 				auto font_size_adjust = attributes->get_child_optional("font-size-adjust");
 				if(font_size_adjust) {
 					const std::string& fsa = font_size_adjust->data();
@@ -230,6 +241,8 @@ namespace KRE
 				}
 				
 				cairo_select_font_face(ctx.cairo(), family.c_str(), slant, weight);
+				cairo_status_t status = cairo_status(ctx.cairo());
+				ASSERT_LOG(status == 0, "SVG error selecting font face " << family << ": " << cairo_status_to_string(status));
 				ctx.fa().push_font_face(family, slant, weight);
 			}
 			double size = 0;
