@@ -107,7 +107,7 @@ namespace KRE
 			// XXX also need to process preserveAspectRatio value.
 			cairo_save(ctx.cairo());
 			if(view_box_.w() != 0 && view_box_.h() != 0) {
-				cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
+				//cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
 			}
 			for(auto trf : transforms_) {
 				trf->apply(ctx);
