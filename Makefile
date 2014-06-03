@@ -100,8 +100,8 @@ endif
 
 ifeq ($(USE_SVG),yes)
 	BASE_CXXFLAGS += -DUSE_SVG
-	INC += $(shell pkg-config --cflags librsvg-2.0 cairo)
-	LIBS += $(shell pkg-config --libs librsvg-2.0 cairo freetype2)
+	INC += $(shell pkg-config --cflags cairo)
+	LIBS += $(shell pkg-config --libs cairo freetype2)
 endif
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
@@ -109,6 +109,10 @@ TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 include Makefile.common
 
 src/Box2D/%.o : src/Box2D/%.cpp
+	@echo "Building:" $<
+	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
+
+src/svg/%.o : src/svg/%.cpp
 	@echo "Building:" $<
 	@$(CCACHE) $(CXX) $(BASE_CXXFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) -DIMPLEMENT_SAVE_PNG -c -o $@ $<
 
@@ -122,17 +126,21 @@ src/%.o : src/%.cpp
 		sed -e 's/^ *//' -e 's/$$/:/' >> src/$*.d
 	@rm -f $*.d.tmp
 
-anura: $(objects) libbox2d.a
+anura: $(objects) libbox2d.a libkresvg.a
 	@echo "Linking : anura"
 	@$(CCACHE) $(CXX) \
 		$(BASE_CXXFLAGS) $(LDFLAGS) $(CXXFLAGS) $(CPPFLAGS) $(INC) \
 		$(objects) -o anura \
-		$(LIBS) -L. -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics -lbox2d
+		$(LIBS) -L. -lboost_regex -lboost_system -lboost_filesystem -lpthread -fthreadsafe-statics -lbox2d -lkresvg
 
 libbox2d.a: $(box2d_objects)
 	@echo "Creating Box2D library" 
 	@$(AR) -rcs $@ $(box2d_objects)
         
+libkresvg.a: $(svg_objects)
+	@echo "Creating KRE::SVG library" 
+	@$(AR) -rcs $@ $(svg_objects)
+
 # pull in dependency info for *existing* .o files
 -include $(objects:.o=.d)
 

@@ -155,7 +155,30 @@ namespace movie
 		if(file_.eof()) {
 			// when file_ has been read call vpx_codec_decode with data as NULL and sz as 0
 			vpx_codec_decode(&codec_, NULL, 0, NULL, 0);
-			playing_ = false;
+			if(loop_) {
+				file_.clear();
+				file_.seekg(0, std::ios::beg);
+				file_.read(&file_hdr_[0], IVF_FILE_HDR_SZ);
+				ASSERT_LOG(file_hdr_[0] == 'D' && file_hdr_[1] == 'K' && file_hdr_[2] == 'I' && file_hdr_[3] == 'F', 
+					"Unknown file header found: " << std::string(&file_hdr_[0], &file_hdr_[4]));
+				frame_hdr_.resize(IVF_FRAME_HDR_SZ);
+
+				iter_ = NULL;
+				img_ = NULL;
+			
+				file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
+				frame_size_ = mem_get_le32(frame_hdr_);
+				++frame_cnt_;
+
+				frame_.resize(frame_size_);
+				file_.read(reinterpret_cast<char*>(&frame_[0]), frame_size_);
+
+				auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, NULL, 0);
+				ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_) << " : " << vpx_codec_error_detail(&codec_));
+
+			} else {
+				playing_ = false;
+			}
 			/// test loop_ here.
 		} else {
 			file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
