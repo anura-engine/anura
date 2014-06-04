@@ -285,3 +285,18 @@ box2d_objects = \
 	src/Box2D/Collision/b2Collision.o \
 	src/Box2D/Collision/b2CollideCircle.o \
 	src/Box2D/Collision/b2BroadPhase.o
+
+svg_objects = \
+	src/svg/color.o \
+	src/svg/logger.o \
+	src/svg/svg_attribs.o \
+	src/svg/svg_container.o \
+	src/svg/svg_element.o \
+	src/svg/svg_gradient.o \
+	src/svg/svg_paint.o \
+	src/svg/svg_parse.o \
+	src/svg/svg_path_parse.o \
+	src/svg/svg_shapes.o \
+	src/svg/svg_style.o \
+	src/svg/svg_transform.o \
+	src/svg/svg_utils.o
