@@ -2107,6 +2107,11 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 					ASSERT_COND(i1->equals(","), "ERROR PARSING MAP TYPE: " << original_str.debug_location() << " expected ',' but found " << std::string(i1->begin, i2->end));
 					++i1;
+
+					if(i1 == end) {
+						++i1;
+						break;
+					}
 				}
 
 				if(types.size() == 1 && types.begin()->first.is_string()) {

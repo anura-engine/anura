@@ -84,10 +84,17 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	widget_ptr exit_label;
 	widget_ptr button_swap_label;
 
+	boost::shared_ptr<button::SetColorSchemeScope> color_scheme_scope;
+
 	variant v;
 	try {
 		v = json::parse_from_file("data/pause-menu.cfg");
 		ASSERT_LOG(v.is_map(), "\"data/pause-menu.cfg\" found but isn't a map.");
+		variant button_color_scheme = v["button_color_scheme"];
+		if(!button_color_scheme.is_null()) {
+			color_scheme_scope.reset(new button::SetColorSchemeScope(button_color_scheme));
+		}
+
 		show_exit = v["show_exit"].as_bool(true);
 		show_controls = v["show_controls"].as_bool(true);
 		show_button_swap = v["show_button_swap"].as_bool(false);
@@ -211,14 +218,15 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	d.set_upscale_frame(upscale_dialog_frame);
 
 	d.set_draw_background_fn(do_draw_scene);
-	
-	widget_ptr b1(new button(resume_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, button_resolution));
-	widget_ptr b2(new button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, button_resolution));
-	widget_ptr language_button(new button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, button_resolution));
-	widget_ptr b3(new button(return_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, button_resolution));
-	widget_ptr b4(new button(exit_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, button_resolution));
-	widget_ptr b5(new checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), button_resolution));
-	widget_ptr b_video(new button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, button_resolution));
+
+	button_ptr b1(new button(resume_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, button_resolution));
+	button_ptr b2(new button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, button_resolution));
+	button_ptr language_button(new button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, button_resolution));
+	button_ptr b3(new button(return_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, button_resolution));
+	button_ptr b4(new button(exit_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, button_resolution));
+	button_ptr b5(new checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), button_resolution));
+	button_ptr b_video(new button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, button_resolution));
+
 	
 	b1->set_dim(button_width, button_height);
 	b2->set_dim(button_width, button_height);

@@ -121,6 +121,8 @@ struct property_entry {
 
 			if(node["initialize"].is_string()) {
 				initializer = game_logic::formula::create_optional_formula(node["initialize"], NULL);
+			} else if(node["init"].is_string()) {
+				initializer = game_logic::formula::create_optional_formula(node["init"], NULL);
 			}
 
 			variant valid_types = node["type"];

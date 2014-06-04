@@ -37,6 +37,20 @@ namespace gui {
 namespace {
 	const int default_hpadding = 10;
 	const int default_vpadding = 4;
+
+	variant g_color_scheme;
+}
+
+button::SetColorSchemeScope::SetColorSchemeScope(variant v) : backup(g_color_scheme)
+{
+	g_color_scheme = v;
+	fprintf(stderr, "ZZZ: SET COLOR SCHEME: %s\n", g_color_scheme.write_json().c_str());
+}
+
+button::SetColorSchemeScope::~SetColorSchemeScope()
+{
+	g_color_scheme = backup;
+	fprintf(stderr, "ZZZ: DONE SET COLOR SCHEME: %s\n", g_color_scheme.write_json().c_str());
 }
 
 button::button(const std::string& str, boost::function<void()> onclick)
@@ -46,6 +60,12 @@ button::button(const std::string& str, boost::function<void()> onclick)
 	down_(false)
 {
 	set_environment();
+
+	if(g_color_scheme.is_null() == false) {
+		set_color_scheme(g_color_scheme);
+		return;
+	}
+
 	setup();
 }
 
@@ -55,6 +75,11 @@ button::button(widget_ptr label, boost::function<void ()> onclick, BUTTON_STYLE 
 	
 {
 	set_environment();
+	if(g_color_scheme.is_null() == false) {
+		set_color_scheme(g_color_scheme);
+		return;
+	}
+
 	setup();
 }
 
@@ -96,25 +121,40 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 	if(v.has_key("color_scheme")) {
 		variant m = v["color_scheme"];
 
-		if(m.has_key("normal")) {
-			normal_color_.reset(new graphics::color(m["normal"]));
-		}
-		if(m.has_key("depressed")) {
-			depressed_color_.reset(new graphics::color(m["depressed"]));
-		}
-		if(m.has_key("focus")) {
-			focus_color_.reset(new graphics::color(m["focus"]));
-		}
+		set_color_scheme(m);
+		return;
+	} else if(g_color_scheme.is_null() == false) {
+		set_color_scheme(g_color_scheme);
+		return;
+	}
 
-		if(m.has_key("text_normal")) {
-			text_normal_color_.reset(new graphics::color(m["text_normal"]));
-		}
-		if(m.has_key("text_depressed")) {
-			text_depressed_color_.reset(new graphics::color(m["text_depressed"]));
-		}
-		if(m.has_key("text_focus")) {
-			text_focus_color_.reset(new graphics::color(m["text_focus"]));
-		}
+	setup();
+}
+
+void button::set_color_scheme(const variant& m)
+{
+	if(m.is_null()) {
+		return;
+	}
+
+	if(m.has_key("normal")) {
+		normal_color_.reset(new graphics::color(m["normal"]));
+	}
+	if(m.has_key("depressed")) {
+		depressed_color_.reset(new graphics::color(m["depressed"]));
+	}
+	if(m.has_key("focus")) {
+		focus_color_.reset(new graphics::color(m["focus"]));
+	}
+
+	if(m.has_key("text_normal")) {
+		text_normal_color_.reset(new graphics::color(m["text_normal"]));
+	}
+	if(m.has_key("text_depressed")) {
+		text_depressed_color_.reset(new graphics::color(m["text_depressed"]));
+	}
+	if(m.has_key("text_focus")) {
+		text_focus_color_.reset(new graphics::color(m["text_focus"]));
 	}
 
 	setup();
