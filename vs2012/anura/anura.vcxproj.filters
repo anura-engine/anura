@@ -1699,15 +1699,16 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="Release\lua.lib" />
-    <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
-    <Library Include="c:\projects\zlib\zlib.lib" />
     <Library Include="vpxmt.lib" />
-    <Library Include="..\..\..\gtk\lib\cairo.lib" />
-    <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
+    <Library Include="..\..\external\lib\libpng16.lib" />
+    <Library Include="..\..\external\lib\cairo.lib" />
+    <Library Include="..\..\external\lib\freetype253.lib" />
+    <Library Include="..\..\..\glew\lib\glew32s.lib" />
+    <Library Include="..\..\..\zlib\zlib.lib" />
   </ItemGroup>
 </Project>

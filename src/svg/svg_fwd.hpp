@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <cairo/cairo.h>
+#include <cairo.h>
 #include <memory>
 #include <vector>
 

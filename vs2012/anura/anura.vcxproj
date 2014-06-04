@@ -125,7 +125,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\..\cairo\external\x86\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\cairo\external\x86\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\external\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\anura\external\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -721,15 +721,16 @@
     <ResourceCompile Include="..\..\src\anura-resouces.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\gtk\lib\cairo.lib" />
-    <Library Include="..\..\..\SDL_ttf\VisualC\external\lib\x86\libfreetype-6.lib" />
-    <Library Include="c:\projects\glew-1.9.0\lib\glew32s.lib" />
+    <Library Include="..\..\..\glew\lib\glew32s.lib" />
+    <Library Include="..\..\..\zlib\zlib.lib" />
+    <Library Include="..\..\external\lib\cairo.lib" />
+    <Library Include="..\..\external\lib\freetype253.lib" />
+    <Library Include="..\..\external\lib\libpng16.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
     <Library Include="c:\projects\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
-    <Library Include="c:\projects\zlib\zlib.lib" />
     <Library Include="Release\lua.lib" />
     <Library Include="vpxmt.lib" />
   </ItemGroup>

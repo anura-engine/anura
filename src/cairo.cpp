@@ -2,7 +2,7 @@
 
 #include <string.h>
 
-#include <cairo/cairo-ft.h>
+#include <cairo-ft.h>
 
 #include <ft2build.h>
 #include FT_FREETYPE_H
