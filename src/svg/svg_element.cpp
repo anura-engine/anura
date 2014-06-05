@@ -106,16 +106,16 @@ namespace KRE
 			// overriding -- well map them to ctx.width()/ctx.height()
 			// XXX also need to process preserveAspectRatio value.
 			cairo_save(ctx.cairo());
-			if(view_box_.w() != 0 && view_box_.h() != 0) {
-				//cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
-			}
+			// disabled this as cairo scales stuff correctly. Still need to alter at some
+			// point in the future.
+			//if(view_box_.w() != 0 && view_box_.h() != 0) {
+			//	cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
+			//}
 			for(auto trf : transforms_) {
 				trf->apply(ctx);
 			}
 			attribute_manager pp1(pp(), ctx);
 			attribute_manager ca1(ca(), ctx);
-			attribute_manager ta1(ta(), ctx);
-			attribute_manager fa1(fa(), ctx);
 			handle_render(ctx);
 			cairo_restore(ctx.cairo());
 		}

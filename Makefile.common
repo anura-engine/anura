@@ -42,6 +42,7 @@ objects = \
 	src/editor_stats_dialog.o \
 	src/editor_variable_info.o \
 	src/external_text_editor.o \
+	src/ft_iface.o \
 	src/clipboard.o \
 	src/collision_utils.o \
 	src/color_utils.o \

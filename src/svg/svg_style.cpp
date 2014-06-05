@@ -25,6 +25,8 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/tokenizer.hpp>
 
+#include <cairo-ft.h>
+
 #include "logger.hpp"
 #include "svg_element.hpp"
 #include "svg_style.hpp"
@@ -220,30 +222,14 @@ namespace KRE
 
 		void font_attribs::apply(render_context& ctx) const
 		{
-			// XXX we really should move to cairo_ft_font_face_create_for_ft_face(...)
-			if(family_.size() > 0 
-				|| (style_ != FontStyle::INHERIT && style_ != FontStyle::UNSET) 
-				|| (weight_ != FontWeight::UNSET && weight_ != FontWeight::INHERIT)) {
-				std::string family;
-				cairo_font_slant_t slant; 
-				cairo_font_weight_t weight;
-				ctx.fa().top_font_face(&family, &slant, &weight);
+			if(family_.size() > 0 && !family_[0].empty()) {
+				//FT_Face ff = ctx.fa().top_font_face();
 
-				// XXX This code is broken since we aren't processing BOLDER/LIGHTER etc but then cairo only supports
-				// bold and normal in the toy api. Fix this when we move to freetype.
-				slant = style_ == FontStyle::OBLIQUE
-					? CAIRO_FONT_SLANT_OBLIQUE 
-					: style_ == FontStyle::ITALIC ? CAIRO_FONT_SLANT_ITALIC : CAIRO_FONT_SLANT_NORMAL;
+				FT_Face face = FT::get_font_face(family_[0]);
+				auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
+				cairo_set_font_face(ctx.cairo(), ff);
 
-				weight = weight_ >= FontWeight::WEIGHT_400 ? CAIRO_FONT_WEIGHT_BOLD : CAIRO_FONT_WEIGHT_NORMAL;
-				if(family_.size() > 0) {
-					family = family_[0];
-				}
-				
-				cairo_select_font_face(ctx.cairo(), family.c_str(), slant, weight);
-				cairo_status_t status = cairo_status(ctx.cairo());
-				ASSERT_LOG(status == 0, "SVG error selecting font face " << family << ": " << cairo_status_to_string(status));
-				ctx.fa().push_font_face(family, slant, weight);
+				ctx.fa().push_font_face(face);
 			}
 			double size = 0;
 			switch(size_)
@@ -278,9 +264,7 @@ namespace KRE
 			if(size_ != FontSize::UNSET && size_ != FontSize::INHERIT) {
 				ctx.fa().pop_font_size();
 			}
-			if(family_.size() > 0 
-				|| (style_ != FontStyle::INHERIT && style_ != FontStyle::UNSET) 
-				|| (weight_ != FontWeight::UNSET && weight_ != FontWeight::INHERIT)) {
+			if(family_.size() > 0 && !family_[0].empty()) {
 				ctx.fa().pop_font_face();
 			}
 		}

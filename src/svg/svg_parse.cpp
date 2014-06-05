@@ -89,7 +89,6 @@ namespace KRE
 			ctx.stroke_color_push(paint_ptr(new paint()));
 			ctx.opacity_push(1.0);
 			ctx.letter_spacing_push(0);
-			ctx.fa().push_font_face("sans-serif", CAIRO_FONT_SLANT_NORMAL, CAIRO_FONT_WEIGHT_NORMAL);
 			ctx.fa().push_font_size(12);
 
 			for(auto p : svg_data_) {
