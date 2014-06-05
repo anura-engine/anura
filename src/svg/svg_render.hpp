@@ -27,6 +27,7 @@
 #include <stack>
 
 #include "../asserts.hpp"
+#include "../ft_iface.hpp"
 #include "color.hpp"
 
 namespace KRE
@@ -39,12 +40,6 @@ namespace KRE
 		// Basically the concrete values that are set and stacked.
 		class font_attribs_set 
 		{
-		private:
-			struct font_face {
-				std::string name;
-				cairo_font_slant_t slant;	// FontStyle
-				cairo_font_weight_t weight;	// FontWeight
-			};
 		public:
 			font_attribs_set() {}
 			~font_attribs_set() {}
@@ -53,23 +48,12 @@ namespace KRE
 			void pop_font_size() { size_.pop(); }
 			double top_font_size() { return size_.top(); }
 
-			void push_font_face(const std::string& name, cairo_font_slant_t slant, cairo_font_weight_t weight) {
-				font_face ff;
-				ff.name = name;
-				ff.slant = slant;
-				ff.weight = weight;
-				face_.push(ff);
-			}
+			void push_font_face(FT_Face face) { face_.push(face); }
 			void pop_font_face() { face_.pop(); }
-			void top_font_face(std::string* name, cairo_font_slant_t* slant, cairo_font_weight_t* weight) {
-				ASSERT_LOG(name != NULL && slant != NULL && weight != NULL, "top_font_face: error in parameters. is null.");
-				*name = face_.top().name;
-				*slant = face_.top().slant;
-				*weight = face_.top().weight;
-			}
+			FT_Face top_font_face() { return face_.top(); }
 		private:
 			std::stack<double> size_;
-			std::stack<font_face> face_;
+			std::stack<FT_Face> face_;
 		};
 
 		class render_context

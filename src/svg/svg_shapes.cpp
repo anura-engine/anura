@@ -24,7 +24,7 @@
 #include <boost/tokenizer.hpp>
 #include <boost/lexical_cast.hpp>
 #include <set>
-#include <cmath>
+#include <cstdint>
 
 #include "svg_shapes.hpp"
 #include "svg_element.hpp"
@@ -426,23 +426,34 @@ namespace KRE
 
 		void text::render_text(render_context& ctx) const
 		{
-            auto fc = ctx.fill_color_top();
-            if(fc) {
-				fc->apply(parent(), ctx);
+			attribute_manager ta1(ta(), ctx);
+			attribute_manager fa1(fa(), ctx);
+
+			// XXX if x/y/dx/dy lists of data are provided we should use it here.
+			// XXX apply list of rotations as well.
+
+			std::vector<cairo_glyph_t> glyphs;
+			FT_Face face = ctx.fa().top_font_face();
+			auto glyph_indicies = FT::get_glyphs_from_string(face, text_);
+			double x(0), y(0);
+			const double letter_spacing = ctx.letter_spacing_top();
+			for(auto g : glyph_indicies) {
+				cairo_glyph_t cg;
+				cg.index = g;
+				cg.x = x;
+				cg.y = y;
+				glyphs.push_back(cg);
+
+				cairo_text_extents_t extent;
+				cairo_glyph_extents(ctx.cairo(), &cg, 1, &extent);
+				x += extent.x_advance;
+				if(letter_spacing > 0) {
+					x += letter_spacing;
+				} 
+				y += extent.y_advance;
 			}
- 
-			double letter_spacing = ctx.letter_spacing_top();
-			if(letter_spacing > 0) {
-				for(auto c : text_) {
-					const char s[2] = {c,0};
-					cairo_show_text(ctx.cairo(), s);
-					cairo_rel_move_to(ctx.cairo(), letter_spacing, 0);
-				}
-			} else {
-				cairo_show_text(ctx.cairo(), text_.c_str());
-			}
-			cairo_status_t status = cairo_status(ctx.cairo());
-			ASSERT_LOG(status == 0, "SVG error rendering text: " << cairo_status_to_string(status));
+			cairo_glyph_path(ctx.cairo(), &glyphs[0], glyphs.size());
+			stroke_and_fill(ctx);
 		}
 
 		void text::handle_render(render_context& ctx) const 

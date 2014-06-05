@@ -27,6 +27,7 @@
 #include <string>
 #include <vector>
 
+#include "../ft_iface.hpp"
 #include "svg_fwd.hpp"
 #include "svg_length.hpp"
 #include "svg_paint.hpp"
