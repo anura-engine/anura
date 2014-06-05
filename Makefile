@@ -98,11 +98,10 @@ ifeq ($(USE_LIBVPX),yes)
 	LIBS += $(shell pkg-config --libs vpx)
 endif
 
-ifeq ($(USE_SVG),yes)
-	BASE_CXXFLAGS += -DUSE_SVG
-	INC += $(shell pkg-config --cflags cairo)
-	LIBS += $(shell pkg-config --libs cairo freetype2)
-endif
+# flags for SVG/cairo.
+BASE_CXXFLAGS += -DUSE_SVG
+INC += $(shell pkg-config --cflags cairo)
+LIBS += $(shell pkg-config --libs cairo freetype2)
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2
 
