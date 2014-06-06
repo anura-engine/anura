@@ -28,7 +28,7 @@
 #include "color_utils.hpp"
 #include "draw_primitive.hpp"
 #include "foreach.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "gles2.hpp"
 #include "level.hpp"
 #include "raster.hpp"

@@ -24,7 +24,7 @@
 
 #include "button.hpp"
 #include "debug_console.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "level.hpp"
 #include "pause_game_dialog.hpp"
 #include "slider.hpp"

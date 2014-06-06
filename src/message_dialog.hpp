@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "texture.hpp"
 
 class message_dialog

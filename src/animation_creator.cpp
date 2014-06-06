@@ -25,14 +25,11 @@
 #include "file_chooser_dialog.hpp"
 #include "foreach.hpp"
 #include "frame.hpp"
-#include "graphics.hpp"
 #include "level.hpp"
 #include "message_dialog.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "slider.hpp"
-#include "surface_cache.hpp"
  
 namespace gui {
 

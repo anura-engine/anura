@@ -19,7 +19,7 @@
 #include <vector>
 
 #include "asserts.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "image_widget.hpp"
 #include "drag_widget.hpp"
 #include "input.hpp"

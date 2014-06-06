@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 
 //A point_map is a data structure which can map (x,y) points as keys to
 //values.

@@ -3,8 +3,6 @@ anura
 server
 test
 .DS_Store
-*.o
-*.a
 a.out
 *~
 *.kate-swp
@@ -22,8 +20,6 @@ a.out
 dirs.txt
 /core
 /core.*
-*.exe
-*.d
 compiled-*
 tiles-compiled-*
 
@@ -41,18 +37,43 @@ MacOS/lib
 xcuserdata
 project.xcworkspace
 
-Device-Debug
-Device-Release
-vs2012/lobby/Debug
-vs2012/lobby/Release
-vs2012/lobby/ipch
-vs2012/lobby/lobby.sdf
-vs2012/anura/anura.sdf
-vs2012/anura/anura.opensdf
-vs2012/anura/Win32
-vs2012/anura/Debug
-vs2012/anura/Release
-vs2012/lua
+# Compiled Object files
+*.slo
+*.lo
+*.o
+*.obj
+
+# Compiled Dynamic libraries
+*.so
+*.dylib
+*.dll
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
+
+# compiler dependency tracking
+*.d
+
+# Executables
+*.exe
+*.out
+*.app
+
+# msvc files we definitely do not want
+*.sdf
+*.tlog
+*.pdb
+*.log
+*.idb
+*.ilk
+*.lastbuildstate
+*.suo
+*.user
+*.unsuccessfulbuild
+*.opensdf
 
 log.txt
 

@@ -18,7 +18,7 @@
 #define LIGHT_HPP_INCLUDED
 
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 #include <boost/intrusive_ptr.hpp>

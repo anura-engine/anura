@@ -21,15 +21,15 @@
 #include <boost/intrusive_ptr.hpp>
 #include <vector>
 
+#include "kre/Geometry.hpp"
+#include "kre/Material.hpp"
+
 #include "formula_callable.hpp"
-#include "geometry.hpp"
-#include "graphics.hpp"
-#include "texture.hpp"
 #include "variant.hpp"
 
 namespace gui {
 
-typedef std::pair<graphics::texture, point> offset_texture;
+typedef std::pair<KRE::MaterialPtr, point> offset_texture;
 
 class vector_text : public game_logic::formula_callable
 {

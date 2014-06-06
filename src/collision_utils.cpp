@@ -17,7 +17,7 @@
 #include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "foreach.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
 

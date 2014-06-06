@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "external_text_editor.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "preferences.hpp"

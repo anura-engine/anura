@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;UTILITY_IN_PROC;_USE_MATH_DEFINES;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;GLEW_STATIC;USE_SHADERS;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
@@ -178,6 +178,7 @@
     <ClInclude Include="..\..\src\code_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\code_editor_widget.hpp" />
     <ClInclude Include="..\..\src\collision_utils.hpp" />
+    <ClInclude Include="..\..\src\Color.hpp" />
     <ClInclude Include="..\..\src\color_chart.hpp" />
     <ClInclude Include="..\..\src\color_utils.hpp" />
     <ClInclude Include="..\..\src\compat.hpp" />
@@ -268,6 +269,59 @@
     <ClInclude Include="..\..\src\json_parser.hpp" />
     <ClInclude Include="..\..\src\json_tokenizer.hpp" />
     <ClInclude Include="..\..\src\key_button.hpp" />
+    <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
+    <ClInclude Include="..\..\src\kre\AttributeSetOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Blittable.hpp" />
+    <ClInclude Include="..\..\src\kre\CameraObject.hpp" />
+    <ClInclude Include="..\..\src\kre\Canvas.hpp" />
+    <ClInclude Include="..\..\src\kre\CanvasOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
+    <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
+    <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGLFixed.hpp" />
+    <ClInclude Include="..\..\src\kre\DisplayDeviceSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\FboOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Frustum.hpp" />
+    <ClInclude Include="..\..\src\kre\Geometry.hpp" />
+    <ClInclude Include="..\..\src\kre\LightObject.hpp" />
+    <ClInclude Include="..\..\src\kre\logger.hpp" />
+    <ClInclude Include="..\..\src\kre\Material.hpp" />
+    <ClInclude Include="..\..\src\kre\MaterialOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemAffectors.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemEmitters.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp" />
+    <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\Renderable.hpp" />
+    <ClInclude Include="..\..\src\kre\RenderFwd.hpp" />
+    <ClInclude Include="..\..\src\kre\RenderManager.hpp" />
+    <ClInclude Include="..\..\src\kre\RenderQueue.hpp" />
+    <ClInclude Include="..\..\src\kre\RenderTarget.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneFwd.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneGraph.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneNode.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneObject.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
+    <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\spline.hpp" />
+    <ClInclude Include="..\..\src\kre\Surface.hpp" />
+    <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\Texture.hpp" />
+    <ClInclude Include="..\..\src\kre\TextureOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\TextureSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\UniformBuffer.hpp" />
+    <ClInclude Include="..\..\src\kre\UniformBufferOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Util.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraph.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraphCairo.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraphFwd.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraphOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraphOpenGLFixed.hpp" />
+    <ClInclude Include="..\..\src\kre\VGraphPatterns.hpp" />
+    <ClInclude Include="..\..\src\kre\WindowManager.hpp" />
+    <ClInclude Include="..\..\src\kre\WindowManagerFwd.hpp" />
     <ClInclude Include="..\..\src\label.hpp" />
     <ClInclude Include="..\..\src\language_dialog.hpp" />
     <ClInclude Include="..\..\src\level.hpp" />
@@ -320,7 +374,6 @@
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\selector_widget.hpp" />
     <ClInclude Include="..\..\src\settings_dialog.hpp" />
-    <ClInclude Include="..\..\src\shaders.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
     <ClInclude Include="..\..\src\solid_map.hpp" />
     <ClInclude Include="..\..\src\solid_map_fwd.hpp" />
@@ -331,8 +384,6 @@
     <ClInclude Include="..\..\src\stats_server.hpp" />
     <ClInclude Include="..\..\src\stats_web_server.hpp" />
     <ClInclude Include="..\..\src\string_utils.hpp" />
-    <ClInclude Include="..\..\src\surface.hpp" />
-    <ClInclude Include="..\..\src\surface_cache.hpp" />
     <ClInclude Include="..\..\src\surface_formula.hpp" />
     <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_scaling_generated.hpp" />
@@ -365,8 +416,6 @@
     <ClInclude Include="..\..\src\tbs_server.hpp" />
     <ClInclude Include="..\..\src\tbs_server_base.hpp" />
     <ClInclude Include="..\..\src\tbs_web_server.hpp" />
-    <ClInclude Include="..\..\src\texture.hpp" />
-    <ClInclude Include="..\..\src\texture_frame_buffer.hpp" />
     <ClInclude Include="..\..\src\text_editor_widget.hpp" />
     <ClInclude Include="..\..\src\thread.hpp" />
     <ClInclude Include="..\..\src\tileset_editor_dialog.hpp" />
@@ -425,7 +474,6 @@
     <ClInclude Include="..\..\src\voxel_object_functions.hpp" />
     <ClInclude Include="..\..\src\voxel_object_type.hpp" />
     <ClInclude Include="..\..\src\widget_settings_dialog.hpp" />
-    <ClInclude Include="..\..\src\wm.hpp" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\achievements.cpp" />
@@ -494,6 +542,7 @@
     <ClCompile Include="..\..\src\code_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\code_editor_widget.cpp" />
     <ClCompile Include="..\..\src\collision_utils.cpp" />
+    <ClCompile Include="..\..\src\Color.cpp" />
     <ClCompile Include="..\..\src\color_chart.cpp" />
     <ClCompile Include="..\..\src\color_utils.cpp" />
     <ClCompile Include="..\..\src\compress.cpp" />
@@ -569,6 +618,50 @@
     <ClCompile Include="..\..\src\json_parser.cpp" />
     <ClCompile Include="..\..\src\json_tokenizer.cpp" />
     <ClCompile Include="..\..\src\key_button.cpp" />
+    <ClCompile Include="..\..\src\kre\AttributeSet.cpp" />
+    <ClCompile Include="..\..\src\kre\AttributeSetOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Blittable.cpp" />
+    <ClCompile Include="..\..\src\kre\CameraObject.cpp" />
+    <ClCompile Include="..\..\src\kre\Canvas.cpp" />
+    <ClCompile Include="..\..\src\kre\CanvasOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
+    <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />
+    <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\FboOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\filesystem.cpp" />
+    <ClCompile Include="..\..\src\kre\Frustum.cpp" />
+    <ClCompile Include="..\..\src\kre\LightObject.cpp" />
+    <ClCompile Include="..\..\src\kre\logger.cpp" />
+    <ClCompile Include="..\..\src\kre\main.cpp" />
+    <ClCompile Include="..\..\src\kre\Material.cpp" />
+    <ClCompile Include="..\..\src\kre\MaterialOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemAffectors.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemObservers.cpp" />
+    <ClCompile Include="..\..\src\kre\ParticleSystemParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\Renderable.cpp" />
+    <ClCompile Include="..\..\src\kre\RenderManager.cpp" />
+    <ClCompile Include="..\..\src\kre\RenderQueue.cpp" />
+    <ClCompile Include="..\..\src\kre\RenderTarget.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneGraph.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneNode.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
+    <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\ShadersOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Surface.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\Texture.cpp" />
+    <ClCompile Include="..\..\src\kre\TextureOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\TextureSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\UniformBuffer.cpp" />
+    <ClCompile Include="..\..\src\kre\UniformBufferOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\VGraph.cpp" />
+    <ClCompile Include="..\..\src\kre\VGraphCairo.cpp" />
+    <ClCompile Include="..\..\src\kre\VGraphOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\VGraphOpenGLFixed.cpp" />
+    <ClCompile Include="..\..\src\kre\WindowManager.cpp" />
     <ClCompile Include="..\..\src\label.cpp" />
     <ClCompile Include="..\..\src\language_dialog.cpp" />
     <ClCompile Include="..\..\src\level.cpp" />
@@ -600,11 +693,6 @@
     <ClCompile Include="..\..\src\preview_tileset_widget.cpp" />
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
-    <ClCompile Include="..\..\src\psystem2.cpp" />
-    <ClCompile Include="..\..\src\psystem2_affectors.cpp" />
-    <ClCompile Include="..\..\src\psystem2_emitters.cpp" />
-    <ClCompile Include="..\..\src\psystem2_observers.cpp" />
-    <ClCompile Include="..\..\src\psystem2_parameters.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
     <ClCompile Include="..\..\src\raster.cpp" />
     <ClCompile Include="..\..\src\raster_distortion.cpp" />
@@ -615,7 +703,6 @@
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\selector_widget.cpp" />
     <ClCompile Include="..\..\src\settings_dialog.cpp" />
-    <ClCompile Include="..\..\src\shaders.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
     <ClCompile Include="..\..\src\solid_map.cpp" />
     <ClCompile Include="..\..\src\sound.cpp" />
@@ -625,9 +712,6 @@
     <ClCompile Include="..\..\src\stats_server_main.cpp" />
     <ClCompile Include="..\..\src\stats_web_server.cpp" />
     <ClCompile Include="..\..\src\string_utils.cpp" />
-    <ClCompile Include="..\..\src\surface.cpp" />
-    <ClCompile Include="..\..\src\surface_cache.cpp" />
-    <ClCompile Include="..\..\src\surface_formula.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_scaling.cpp" />
     <ClCompile Include="..\..\src\svg\color.cpp" />
@@ -654,8 +738,6 @@
     <ClCompile Include="..\..\src\tbs_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server_base.cpp" />
     <ClCompile Include="..\..\src\tbs_web_server.cpp" />
-    <ClCompile Include="..\..\src\texture.cpp" />
-    <ClCompile Include="..\..\src\texture_frame_buffer.cpp" />
     <ClCompile Include="..\..\src\text_editor_widget.cpp" />
     <ClCompile Include="..\..\src\thread.cpp" />
     <ClCompile Include="..\..\src\tileset_editor_dialog.cpp" />
@@ -717,13 +799,12 @@
     <ClCompile Include="..\..\src\voxel_object_type.cpp" />
     <ClCompile Include="..\..\src\widget_editor.cpp" />
     <ClCompile Include="..\..\src\widget_settings_dialog.cpp" />
-    <ClCompile Include="..\..\src\wm.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc" />
   </ItemGroup>
   <ItemGroup>
-    <Library Include="..\..\..\glew\lib\glew32s.lib" />
+    <Library Include="..\..\..\glew\lib\glew32.lib" />
     <Library Include="..\..\..\zlib\zlib.lib" />
     <Library Include="..\..\external\lib\cairo.lib" />
     <Library Include="..\..\external\lib\freetype253.lib" />

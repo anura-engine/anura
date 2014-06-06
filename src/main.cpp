@@ -14,8 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "graphics.hpp"
-
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -84,7 +82,9 @@
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
-#include "wm.hpp"
+
+#include "kre/SDLWrapper.hpp"
+#include "kre/WindowManager.hpp"
 
 #if defined(__APPLE__)
     #include "TargetConditionals.h"
@@ -109,13 +109,14 @@
 
 variant g_auto_update_info;
 
-namespace {
+namespace 
+{
 	PREF_BOOL(force_auto_update, false, "Will do a forced sync of auto-updates");
 	PREF_BOOL(auto_update_module, false, "Auto updates the module from the module server on startup (number of milliseconds to spend attempting to update the module)");
 	PREF_STRING(auto_update_anura, "", "Auto update Anura's binaries from the module server using the given name as the module ID (e.g. anura-windows might be the id for the windows binary)");
 	PREF_INT(auto_update_timeout, 5000, "Timeout to use on auto updates (given in milliseconds)");
 
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 	const std::string anura_exe_name = "anura.exe";
 #else
 	const std::string anura_exe_name = "";
@@ -123,7 +124,7 @@ namespace {
 
 	std::vector<std::string> alternative_anura_exe_names() {
 		std::vector<std::string> result;
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 		for(int i = 0; i != 10; ++i) {
 			std::ostringstream s;
 			s << "anura" << i << ".exe";
@@ -133,207 +134,89 @@ namespace {
 		return result;
 	}
 
-	graphics::window_manager_ptr main_window;
-
 	bool show_title_screen(std::string& level_cfg)
 	{
 		//currently the titlescreen is disabled.
 		return false;
 	}
 
-void print_help(const std::string& argv0)
-{
-	std::cout << "Usage: " << argv0 << " [OPTIONS]\n" <<
-"\n" <<
-"User options:\n" <<
-//"      --bigscreen              FIXME\n" <<
-"      --config-path=PATH       sets the path to the user config dir\n" <<
-"      --fullscreen             starts in fullscreen mode\n" <<
-"      --height[=]NUM           sets the game window height to which contents\n" <<
-"                                 are scaled\n" <<
-"      --host                   set the game server host address\n" <<
-"      --[no-]joystick          enables/disables joystick support\n" <<
-"      --level[=]LEVEL_FILE     starts the game using the specified level file,\n" <<
-"                                 relative to the level path\n" <<
-"      --level-path=PATH        sets the path to the game level files\n" <<
-"      --[no-]music             enables/disables game music\n" <<
-"      --native                 one pixel in-game equals one pixel on monitor\n" <<
-"      --relay                  use the server as a relay in multiplayer rather\n" <<
-"                                 than trying to initiate direct connections\n" <<
-"      --[no-]resizable         allows/disallows to resize the game window\n" <<
-"      ----module-args=ARGS     map of arguments passed to the module\n" <<
-"      --scale                  enables an experimental pixel art interpolation\n" <<
-"                                 algorithm for scaling the game graphics (some\n" <<
-"                                 issues with this still have to be solved)\n" <<
-"      --[no-]send-stats        enables/disables sending game statistics over\n"
-"                                 the network\n" <<
-"      --server=URL             sets the server to use for the TBS client based\n"
-"                                 on the given url\n" <<
-"      --user=USERNAME          sets the username to use as part of the TBS\n"
-"                                 server and module system\n" <<
-"      --pass=PASSWORD          sets the password to use as part of the TBS\n"
-"                                 server and module system\n" <<
-"      --[no-]sound             enables/disables sound and music support\n" <<
-"      --widescreen             sets widescreen mode, increasing the game view\n" <<
-"                                 area for wide screen displays\n" <<
-"      --width[=]NUM            sets the game window width to which contents are\n" <<
-"                                 scaled\n" <<
-"      --windowed               starts in windowed mode\n" <<
-"      --wvga                   sets the display size to 800x480\n" <<
-"\n" <<
-"Diagnostic options:\n" <<
-"      --[no-]debug             enables/disables debug mode\n" <<
-"      --[no-]fps               enables/disables framerate display\n" <<
-"      --set-fps=FPS            sets the framerate to FPS\n" <<
-"      --potonly                use power of two-sized textures only\n" <<
-"      --textures16             use 16 bpp textures only (default on iPhone)\n" <<
-"      --textures32             use 32 bpp textures (default on PC/Mac)\n" <<
-"\n" <<
-"Developer options:\n" <<
-"      --benchmarks             runs all the engine's benchmarks (intended to\n" <<
-"                                 measure the speed of certain low-level\n" <<
-"                                 functions), only useful if you're actually\n" <<
-"                                 hacking on the engine to optimize the speed\n" <<
-"                                 of these\n" <<
-"      --benchmarks=NAME        runs a single named benchmark code\n" <<
-"      --[no-]compiled          enable or disable precompiled game data\n" <<
-"      --edit                   starts the game in edit mode.\n" <<
-//"      --profile                FIXME\n" <<
-//"      --profile=FILE           FIXME\n" <<
-"      --show-hitboxes          turns on the display of object hitboxes\n" <<
-"      --show-controls          turns on the display of iPhone control hitboxes\n" <<
-"      --simipad                changes various options to emulate an iPad\n" <<
-"                                 environment\n" <<
-"      --simiphone              changes various options to emulate an iPhone\n" <<
-"                                 environment\n" <<
-"      --no-autopause           Stops the game from pausing automatically\n" <<
-"                                 when it loses focus\n" <<
-"      --tests                  runs the game's unit tests and exits\n" <<
-"      --no-tests               skips the execution of unit tests on startup\n"
-"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
-"                                 such as compile_levels or compile_objects,\n" <<
-"                                 with the specified arguments\n" <<
-   preferences::get_registered_helpstring();
-}
-
-}
-
-graphics::window_manager_ptr get_main_window()
-{
-	return main_window;
-}
-
-#if defined(UTILITY_IN_PROC)
-boost::shared_ptr<char> child_args;
-
-#if defined(_MSC_VER)
-const std::string shared_sem_name = "Local\anura_local_process_semaphore";
-HANDLE child_process;
-HANDLE child_thread;
-HANDLE child_stderr;
-HANDLE child_stdout;
-#else
-const std::string shared_sem_name = "/anura_local_process_semaphore";
-pid_t child_pid;
-#endif
-
-bool create_utility_process(const std::string& app, const std::vector<std::string>& argv)
-{
-#if defined(_MSC_VER)
-	char app_np[MAX_PATH];
-	// Grab the full path name
-	DWORD chararacters_copied = GetModuleFileNameA(NULL, app_np,  MAX_PATH);
-	ASSERT_LOG(chararacters_copied > 0, "Failed to get module name: " << GetLastError());
-	std::string app_name_and_path(app_np, chararacters_copied);
-
-	// windows version
-	std::string command_line_params;
-	command_line_params += app_name_and_path + " ";
-	for(size_t n = 0; n != argv.size(); ++n) {
-		command_line_params += argv[n] + " ";
+	void print_help(const std::string& argv0)
+	{
+		std::cout << "Usage: " << argv0 << " [OPTIONS]\n" <<
+			"\n" <<
+			"User options:\n" <<
+			//"      --bigscreen              FIXME\n" <<
+			"      --config-path=PATH       sets the path to the user config dir\n" <<
+			"      --fullscreen             starts in fullscreen mode\n" <<
+			"      --height[=]NUM           sets the game window height to which contents\n" <<
+			"                                 are scaled\n" <<
+			"      --host                   set the game server host address\n" <<
+			"      --[no-]joystick          enables/disables joystick support\n" <<
+			"      --level[=]LEVEL_FILE     starts the game using the specified level file,\n" <<
+			"                                 relative to the level path\n" <<
+			"      --level-path=PATH        sets the path to the game level files\n" <<
+			"      --[no-]music             enables/disables game music\n" <<
+			"      --native                 one pixel in-game equals one pixel on monitor\n" <<
+			"      --relay                  use the server as a relay in multiplayer rather\n" <<
+			"                                 than trying to initiate direct connections\n" <<
+			"      --[no-]resizable         allows/disallows to resize the game window\n" <<
+			"      ----module-args=ARGS     map of arguments passed to the module\n" <<
+			"      --scale                  enables an experimental pixel art interpolation\n" <<
+			"                                 algorithm for scaling the game graphics (some\n" <<
+			"                                 issues with this still have to be solved)\n" <<
+			"      --[no-]send-stats        enables/disables sending game statistics over\n"
+			"                                 the network\n" <<
+			"      --server=URL             sets the server to use for the TBS client based\n"
+			"                                 on the given url\n" <<
+			"      --user=USERNAME          sets the username to use as part of the TBS\n"
+			"                                 server and module system\n" <<
+			"      --pass=PASSWORD          sets the password to use as part of the TBS\n"
+			"                                 server and module system\n" <<
+			"      --[no-]sound             enables/disables sound and music support\n" <<
+			"      --widescreen             sets widescreen mode, increasing the game view\n" <<
+			"                                 area for wide screen displays\n" <<
+			"      --width[=]NUM            sets the game window width to which contents are\n" <<
+			"                                 scaled\n" <<
+			"      --windowed               starts in windowed mode\n" <<
+			"      --wvga                   sets the display size to 800x480\n" <<
+			"\n" <<
+			"Diagnostic options:\n" <<
+			"      --[no-]debug             enables/disables debug mode\n" <<
+			"      --[no-]fps               enables/disables framerate display\n" <<
+			"      --set-fps=FPS            sets the framerate to FPS\n" <<
+			"      --potonly                use power of two-sized textures only\n" <<
+			"      --textures16             use 16 bpp textures only (default on iPhone)\n" <<
+			"      --textures32             use 32 bpp textures (default on PC/Mac)\n" <<
+			"\n" <<
+			"Developer options:\n" <<
+			"      --benchmarks             runs all the engine's benchmarks (intended to\n" <<
+			"                                 measure the speed of certain low-level\n" <<
+			"                                 functions), only useful if you're actually\n" <<
+			"                                 hacking on the engine to optimize the speed\n" <<
+			"                                 of these\n" <<
+			"      --benchmarks=NAME        runs a single named benchmark code\n" <<
+			"      --[no-]compiled          enable or disable precompiled game data\n" <<
+			"      --edit                   starts the game in edit mode.\n" <<
+			//"      --profile                FIXME\n" <<
+			//"      --profile=FILE           FIXME\n" <<
+			"      --show-hitboxes          turns on the display of object hitboxes\n" <<
+			"      --show-controls          turns on the display of iPhone control hitboxes\n" <<
+			"      --simipad                changes various options to emulate an iPad\n" <<
+			"                                 environment\n" <<
+			"      --simiphone              changes various options to emulate an iPhone\n" <<
+			"                                 environment\n" <<
+			"      --no-autopause           Stops the game from pausing automatically\n" <<
+			"                                 when it loses focus\n" <<
+			"      --tests                  runs the game's unit tests and exits\n" <<
+			"      --no-tests               skips the execution of unit tests on startup\n"
+			"      --utility=NAME           runs the specified UTILITY( NAME ) code block,\n" <<
+			"                                 such as compile_levels or compile_objects,\n" <<
+			"                                 with the specified arguments\n" <<
+		   preferences::get_registered_helpstring();
 	}
-	child_args = boost::shared_ptr<char>(new char[command_line_params.size()+1]);
-	memset(child_args.get(), 0, command_line_params.size()+1);
-	memcpy(child_args.get(), &command_line_params[0], command_line_params.size());
 
-	STARTUPINFOA siStartupInfo; 
-	PROCESS_INFORMATION piProcessInfo;
-	SECURITY_ATTRIBUTES saFileSecurityAttributes;
-	memset(&siStartupInfo, 0, sizeof(siStartupInfo));
-	memset(&piProcessInfo, 0, sizeof(piProcessInfo));
-	siStartupInfo.cb = sizeof(siStartupInfo);
-	saFileSecurityAttributes.nLength = sizeof(saFileSecurityAttributes);
-	saFileSecurityAttributes.lpSecurityDescriptor = NULL;
-	saFileSecurityAttributes.bInheritHandle = true;
-	child_stderr = siStartupInfo.hStdError = CreateFileA("stderr_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdError != INVALID_HANDLE_VALUE, 
-		"Unable to open stderr_server.txt for child process.");
-	child_stdout = siStartupInfo.hStdOutput = CreateFileA("stdout_server.txt", GENERIC_WRITE, FILE_SHARE_READ|FILE_SHARE_WRITE, &saFileSecurityAttributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-	ASSERT_LOG(siStartupInfo.hStdOutput != INVALID_HANDLE_VALUE, 
-		"Unable to open stdout_server.txt for child process.");
-	siStartupInfo.hStdInput = GetStdHandle(STD_INPUT_HANDLE);
-	siStartupInfo.dwFlags = STARTF_USESTDHANDLES;
-	std::cerr << "CREATE CHILD PROCESS: " << app_name_and_path << std::endl;
-	ASSERT_LOG(CreateProcessA(app_name_and_path.c_str(), child_args.get(), NULL, NULL, true, CREATE_DEFAULT_ERROR_MODE, 0, 0, &siStartupInfo, &piProcessInfo),
-		"Unable to create child process for utility: " << GetLastError());
-	child_process = piProcessInfo.hProcess;
-	child_thread = piProcessInfo.hThread;
-#else
-	// everyone else version using fork()
-	//...
-	child_pid = fork();
-	if(child_pid == 0) {
-		FILE* fout = std::freopen("stdout_server.txt","w", stdout);
-		FILE* ferr = std::freopen("stderr_server.txt","w", stderr);
-		std::cerr.sync_with_stdio(true);
-	}
-	ASSERT_LOG(child_pid >= 0, "Unable to fork process: " << errno);
-#endif
-	// Create a semaphore to signal termination.
-	ASSERT_LOG(ipc::semaphore::create(shared_sem_name, 0), 
-		"Unable to create shared semaphore");
-#if defined(_MSC_VER)
-	return false;
-#else
-	return child_pid == 0;
-#endif
 }
 
-void terminate_utility_process()
-{
-	ipc::semaphore::post();
-#if defined(_MSC_VER)
-	WaitForSingleObject(child_process, INFINITE);
-	CloseHandle(child_process);
-	CloseHandle(child_thread);
-	CloseHandle(child_stderr);
-	CloseHandle(child_stdout);
-#else
-	// .. close child or whatever.
-	int status;
-	if(waitpid(child_pid, &status, 0) != child_pid) {
-		std::cerr << "Error waiting for child process to finish: " << errno << std::endl;
-	}
-#endif
-}
-#endif
-
-
-#if defined(__ANDROID__)
-#include <jni.h>
-#include <android/asset_manager_jni.h>
-AAssetManager* static_assetManager = 0;
-extern "C" void app_set_asset_manager(AAssetManager* assetMan)
-{
-	static_assetManager = assetMan;	
-}
-namespace sys {
-AAssetManager* GetJavaAssetManager()
-{
-	return static_assetManager;
-}
-}
-#endif
 
 #if defined(__native_client__)
 void register_file_and_data(const char* filename, const char* mode, char* buffer, int size)
@@ -412,7 +295,7 @@ extern "C" int main(int argcount, char* argvec[])
 	std::cerr.sync_with_stdio(true);
 	#endif
 
-	std::cerr << "Frogatto engine version " << preferences::version() << "\n";
+	std::cerr << "Anura engine version " << preferences::version() << "\n";
 	LOG( "After print engine version" );
 
 	#if defined(TARGET_BLACKBERRY)
@@ -429,18 +312,10 @@ extern "C" int main(int argcount, char* argvec[])
 	std::string utility_program;
 	std::vector<std::string> util_args;
 	std::string server = "wesnoth.org";
-#if defined(UTILITY_IN_PROC)
-	bool create_utility_in_new_process = false;
-	std::string utility_name;
-#endif
 	bool is_child_utility = false;
 
 	const char* profile_output = NULL;
 	std::string profile_output_buf;
-
-#if defined(__ANDROID__)
-	//monstartup("libapplication.so");
-#endif
 
 	std::string orig_level_cfg = level_cfg;
 	std::string override_level_cfg = "";
@@ -449,17 +324,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::vector<std::string> argv;
 	for(int n = 1; n < argcount; ++n) {
-#if defined(UTILITY_IN_PROC)
-		std::string sarg(argvec[n]);
-		if(sarg.compare(0, 15, "--utility-proc=") == 0) {
-			create_utility_in_new_process = true;
-			utility_name = "--utility-child=" + sarg.substr(15);
-		} else {
-			argv.push_back(argvec[n]);
-		}
-#else
 		argv.push_back(argvec[n]);
-#endif
         
         if(argv.size() >= 2 && argv[argv.size()-2] == "-NSDocumentRevisionsDebugMode" && argv.back() == "YES") {
             //XCode passes these arguments by default when debugging -- make sure they are ignored.
@@ -472,24 +337,6 @@ extern "C" int main(int argcount, char* argvec[])
 		std::cerr << " " << bo;
 	}
 	std::cerr << std::endl;
-
-#if defined(UTILITY_IN_PROC)
-	if(create_utility_in_new_process) {
-		argv.push_back(utility_name);
-#if defined(_MSC_VER)
-		// app name is ignored for windows, we get windows to tell us.
-		is_child_utility = create_utility_process("", argv);
-#else 
-		is_child_utility = create_utility_process(argvec[0], argv);
-#endif
-		if(!is_child_utility) {
-			argv.pop_back();
-		}
-#if defined(_MSC_VER)
-		atexit(terminate_utility_process);
-#endif
-	}
-#endif
 
 	if(sys::file_exists("./master-config.cfg")) {
 		std::cerr << "LOADING CONFIGURATION FROM master-config.cfg" << std::endl;
@@ -670,7 +517,7 @@ extern "C" int main(int argcount, char* argvec[])
 						exe_name += match;
 						args[0] = const_cast<char*>(exe_name.c_str());
 						fprintf(stderr, "ZZZ: CALLING EXEC...\n");
-						execv(args[0], &args[0]);
+						_execv(args[0], &args[0]);
 						fprintf(stderr, "Could not exec()\n");
 					}
 				}
@@ -828,7 +675,7 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 			args.push_back(NULL);
 			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
-			execv(args[0], &args[0]);
+			_execv(args[0], &args[0]);
 			fprintf(stderr, "Could not exec()\n");
 		}
 	}
@@ -844,13 +691,6 @@ extern "C" int main(int argcount, char* argvec[])
 
 	if(utility_program.empty() == false 
 		&& test::utility_needs_video(utility_program) == false) {
-#if defined(UTILITY_IN_PROC)
-		if(is_child_utility) {
-			ASSERT_LOG(ipc::semaphore::create(shared_sem_name, 1) != false, 
-				"Unable to create shared semaphore: " << errno);
-			std::cerr.sync_with_stdio(true);
-		}
-#endif
 		test::run_utility(utility_program, util_args);
 		return 0;
 	}
@@ -877,12 +717,14 @@ extern "C" int main(int argcount, char* argvec[])
 
 	// Create the main window.
 	// Initalise SDL and Open GL.
-	main_window = graphics::window_manager_ptr(new graphics::window_manager());
-	main_window->create_window(preferences::actual_screen_width(), preferences::actual_screen_height());
+	using namespace KRE;
 
-#ifdef TARGET_OS_HARMATTAN
-	g_type_init();
-#endif
+	SDL::SDL_ptr manager(new SDL::SDL());
+
+	WindowManagerPtr main_wnd = WindowManager::factory("SDL", "opengl");
+	main_wnd->enableVsync(false);
+	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
+
 	i18n::init ();
 	LOG( "After i18n::init()" );
 
@@ -1056,12 +898,6 @@ extern "C" int main(int argcount, char* argvec[])
 #endif
 
 	preferences::save_preferences();
-
-#if !defined(_MSC_VER) && defined(UTILITY_IN_PROC)
-	if(create_utility_in_new_process) {
-		terminate_utility_process();
-	}
-#endif
 
 	std::set<variant*> loading;
 	swap_variants_loading(loading);

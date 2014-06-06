@@ -26,7 +26,7 @@
 
 #include "foreach.hpp"
 #include "formula.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "json_parser.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"

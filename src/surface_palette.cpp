@@ -18,7 +18,6 @@
 #include <vector>
 
 #include "asserts.hpp"
-#include "surface_cache.hpp"
 #include "surface_palette.hpp"
 
 namespace graphics

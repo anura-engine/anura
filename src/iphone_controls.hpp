@@ -19,8 +19,6 @@
 
 #include "graphics.hpp"
 
-class rect;
-
 void translate_mouse_coords (int *x, int *y);
 
 class iphone_controls

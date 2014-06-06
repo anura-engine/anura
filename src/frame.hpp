@@ -22,11 +22,12 @@
 #include <string>
 #include <vector>
 
+#include "kre/Geometry.hpp"
+#include "kre/Material.hpp"
+
 #include "formula.hpp"
-#include "geometry.hpp"
 #include "obj_reader.hpp"
 #include "solid_map_fwd.hpp"
-#include "raster.hpp"
 #include "variant.hpp"
 #include <glm/glm.hpp>
 
@@ -72,45 +73,45 @@ public:
 	const std::vector<bool>& get_alpha_buf() const { return alpha_; }
 
 	void draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right=true, bool upside_down=false, int time=0) const;
-	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
-	void draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const;
-	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
-	void draw3(int time, GLint va, GLint tc) const;
+	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
+	void draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
+	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
+	void draw3(int time, int va, int tc) const;
 
 	struct CustomPoint {
 		CustomPoint() : pos(0) {}
-		GLfloat pos;
+		float pos;
 		point offset;
 	};
 
 	void draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const;
 
-	void draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const;
+	void draw_custom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const;
 	void set_image_as_solid();
 	const_solid_info_ptr solid() const { return solid_; }
-	int collide_x() const { return collide_rect_.x()*scale_; }
-	int collide_y() const { return collide_rect_.y()*scale_; }
-	int collide_w() const { return collide_rect_.w()*scale_; }
-	int collide_h() const { return collide_rect_.h()*scale_; }
-	int hit_x() const { return hit_rect_.x()*scale_; }
-	int hit_y() const { return hit_rect_.y()*scale_; }
-	int hit_w() const { return hit_rect_.w()*scale_; }
-	int hit_h() const { return hit_rect_.h()*scale_; }
-	int platform_x() const { return platform_rect_.x()*scale_; }
-	int platform_y() const { return platform_rect_.y()*scale_; }
-	int platform_w() const { return platform_rect_.w()*scale_; }
+	int collide_x() const { return static_cast<int>(collide_rect_.x()*scale_); }
+	int collide_y() const { return static_cast<int>(collide_rect_.y()*scale_); }
+	int collide_w() const { return static_cast<int>(collide_rect_.w()*scale_); }
+	int collide_h() const { return static_cast<int>(collide_rect_.h()*scale_); }
+	int hit_x() const { return static_cast<int>(hit_rect_.x()*scale_); }
+	int hit_y() const { return static_cast<int>(hit_rect_.y()*scale_); }
+	int hit_w() const { return static_cast<int>(hit_rect_.w()*scale_); }
+	int hit_h() const { return static_cast<int>(hit_rect_.h()*scale_); }
+	int platform_x() const { return static_cast<int>(platform_rect_.x()*scale_); }
+	int platform_y() const { return static_cast<int>(platform_rect_.y()*scale_); }
+	int platform_w() const { return static_cast<int>(platform_rect_.w()*scale_); }
 	bool has_platform() const { return platform_rect_.w() > 0; }
-	int feet_x() const { return feet_x_*scale_; }
-	int feet_y() const { return feet_y_*scale_; }
+	int feet_x() const { return static_cast<int>(feet_x_*scale_); }
+	int feet_y() const { return static_cast<int>(feet_y_*scale_); }
 	int accel_x() const { return accel_x_; }
 	int accel_y() const { return accel_y_; }
 	int velocity_x() const { return velocity_x_; }
 	int velocity_y() const { return velocity_y_; }
-	int width() const { return img_rect_.w()*scale_; }
-	int height() const { return img_rect_.h()*scale_; }
+	int width() const { return static_cast<int>(img_rect_.w()*scale_); }
+	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;
 	bool hit(int time_in_frame) const;
-	const graphics::texture& img() const { return texture_; }
+	const KRE::MaterialPtr& img() const { return texture_; }
 	const rect& area() const { return img_rect_; }
 	int num_frames() const { return nframes_; }
 	int num_frames_per_row() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }
@@ -136,7 +137,7 @@ public:
 		rect area;
 
 		mutable bool draw_rect_init;
-		mutable GLfloat draw_rect[4];
+		mutable float draw_rect[4];
 	};
 
 	const std::vector<frame_info>& frame_layout() const { return frames_; }
@@ -145,8 +146,8 @@ public:
 	int frame_number(int time_in_frame) const;
 private:
 
-	void get_rect_in_texture(int time, GLfloat* output_rect, const frame_info*& info) const;
-	void get_rect_in_frame_number(int nframe, GLfloat* output_rect, const frame_info*& info) const;
+	void get_rect_in_texture(int time, float* output_rect, const frame_info*& info) const;
+	void get_rect_in_frame_number(int nframe, float* output_rect, const frame_info*& info) const;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -155,7 +156,7 @@ private:
 
 	//ID's used to signal events that occur on this animation.
 	int enter_event_id_, end_event_id_, leave_event_id_, process_event_id_;
-	graphics::texture texture_;
+	KRE::MaterialPtr texture_;
 	const_solid_info_ptr solid_;
 	rect collide_rect_;
 	rect hit_rect_;
@@ -210,21 +211,6 @@ private:
 	variant get_value(const std::string& key) const;
 
 	bool back_face_culling_;
-	struct draw_data_3d
-	{
-		size_t num_vertices;
-		size_t vertex_count;
-		size_t vertex_offset;
-		size_t texture_offset;
-		size_t normal_offset;
-		size_t vbo_cnt;
-		obj::mtl_data mtl;
-		graphics::texture tex_a;
-		graphics::texture tex_d;
-		graphics::texture tex_s;
-	};
-	std::vector<draw_data_3d> dd3d_array_;
-	graphics::vbo_array vbo_array_;
 };
 
 #endif

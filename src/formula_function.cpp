@@ -56,7 +56,7 @@
 #include "formula_function.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "hex_map.hpp"
 #include "lua_iface.hpp"
 #include "md5.hpp"

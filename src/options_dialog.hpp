@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "texture.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "dialog.hpp"
 
 

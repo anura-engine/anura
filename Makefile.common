@@ -301,3 +301,49 @@ svg_objects = \
 	src/svg/svg_style.o \
 	src/svg/svg_transform.o \
 	src/svg/svg_utils.o
+
+render_objects = \
+	src/kre/AttributeSet.o \
+    src/kre/Blittable.o \
+	src/kre/CameraObject.o \
+	src/kre/Canvas.o \
+	src/kre/Color.o \
+	src/kre/DisplayDevice.o \
+	src/kre/filesystem.o \
+	src/kre/Frustum.o \
+	src/kre/LightObject.o \
+	src/kre/Material.o \
+	src/kre/ParticleSystemAffectors.o \
+	src/kre/ParticleSystem.o \
+	src/kre/ParticleSystemEmitters.o \
+	src/kre/ParticleSystemObservers.o \
+	src/kre/ParticleSystemParameters.o \
+	src/kre/Renderable.o \
+	src/kre/RenderManager.o \
+	src/kre/RenderQueue.o \
+	src/kre/RenderTarget.o \
+	src/kre/SceneGraph.o \
+	src/kre/SceneNode.o \
+	src/kre/SceneObject.o \
+	src/kre/SceneParameters.o \
+	src/kre/Surface.o \
+	src/kre/Texture.o \
+	src/kre/variant.o \
+	src/kre/VGraphCairo.o \
+	src/kre/VGraph.o \
+	src/kre/WindowManager.o
+	src/kre/DisplayDeviceSDL.o \
+	src/kre/SurfaceSDL.o \
+	src/kre/TextureSDL.o
+	src/kre/AttributeSetOGL.o \
+	src/kre/CanvasOGL.o \
+	src/kre/DisplayDeviceOpenGL.o \
+	src/kre/FboOpenGL.o \
+	src/kre/MaterialOpenGL.o \
+	src/kre/ShadersOpenGL.o \
+	src/kre/TextureOpenGL.o \
+	src/kre/VGraphOpenGL.o \
+	src/kre/UniformBufferOGL.o
+	src/kre/DisplayDeviceOpenGLFixed.o \
+	src/kre/VGraphOpenGLFixed.o
+

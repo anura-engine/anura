@@ -23,7 +23,7 @@
 #include "color_utils.hpp"
 #include "foreach.hpp"
 #include "graphics.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "random.hpp"
 #include "raster.hpp"
 #include "widget.hpp"

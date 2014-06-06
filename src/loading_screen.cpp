@@ -24,7 +24,7 @@
 #include "custom_object_type.hpp"
 #include "raster.hpp"
 #include "graphical_font.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "i18n.hpp"
 #include "module.hpp"
 #include "texture.hpp"

@@ -20,8 +20,7 @@
 #include <string>
 #include <vector>
 
-#include "graphics.hpp"
-#include "texture.hpp"
+#include "kre/Material.hpp"
 
 namespace font {
 
@@ -35,9 +34,9 @@ struct manager {
 struct error {
 };
 
-graphics::texture render_text(const std::string& text,
+KRE::MaterialPtr render_text(const std::string& text,
                               const SDL_Color& color, int size, const std::string& font_name="");
-graphics::texture render_text_uncached(const std::string& text,
+KRE::MaterialPtr render_text_uncached(const std::string& text,
                                        const SDL_Color& color, int size, const std::string& font_name="");
 
 int char_width(int size, const std::string& fn="");

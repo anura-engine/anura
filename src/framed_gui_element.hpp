@@ -18,7 +18,7 @@
 #define FRAMED_GUI_ELEMENT_HPP_INCLUDED
 
 #include <boost/shared_ptr.hpp>
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "texture.hpp"
 #include "variant.hpp"
 

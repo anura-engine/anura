@@ -19,7 +19,7 @@
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "framed_gui_element.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "raster.hpp"
 #include "variant_utils.hpp"
 

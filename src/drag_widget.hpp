@@ -22,7 +22,7 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "widget.hpp"
 
 namespace gui

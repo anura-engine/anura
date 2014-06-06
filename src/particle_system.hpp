@@ -21,7 +21,7 @@
 #include <boost/shared_ptr.hpp>
 
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 class entity;

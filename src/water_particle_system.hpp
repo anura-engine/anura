@@ -23,7 +23,7 @@
 
 #include "color_utils.hpp"
 #include "foreach.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "entity.hpp"
 #include "particle_system.hpp"
 #include "variant.hpp"

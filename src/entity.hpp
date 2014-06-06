@@ -28,7 +28,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "light.hpp"
 #include "solid_map_fwd.hpp"
 #include "wml_formula_callable.hpp"

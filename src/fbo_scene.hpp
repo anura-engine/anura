@@ -21,7 +21,7 @@
 
 #include "entity.hpp"
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "texture.hpp"
 
 class texture_object : public game_logic::formula_callable

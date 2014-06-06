@@ -22,7 +22,7 @@
 
 #include "asserts.hpp"
 #include "color_picker.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
 #include "raster.hpp"

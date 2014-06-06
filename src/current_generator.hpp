@@ -20,7 +20,7 @@
 #include <boost/intrusive_ptr.hpp>
 
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 typedef boost::intrusive_ptr<class current_generator> current_generator_ptr;

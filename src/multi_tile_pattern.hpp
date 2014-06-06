@@ -24,7 +24,7 @@
 #include <string>
 #include <vector>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "level_object.hpp"
 #include "variant.hpp"
 

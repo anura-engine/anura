@@ -21,7 +21,7 @@
 
 #include <vector>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 

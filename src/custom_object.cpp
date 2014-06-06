@@ -42,7 +42,7 @@
 #include "formula_callable_visitor.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "graphical_font.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"

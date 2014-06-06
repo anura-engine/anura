@@ -28,7 +28,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "frame.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "string_utils.hpp"

@@ -21,7 +21,7 @@
 
 #include "entity_fwd.hpp"
 #include "formula_fwd.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "raster_distortion.hpp"
 #include "variant.hpp"
 

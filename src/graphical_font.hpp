@@ -23,7 +23,7 @@
 #include <string>
 #include <vector>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "texture.hpp"
 #include "variant.hpp"
 

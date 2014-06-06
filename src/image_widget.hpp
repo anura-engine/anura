@@ -19,7 +19,7 @@
 
 #include <string>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "gui_section.hpp"
 #include "image_widget_fwd.hpp"
 #include "texture.hpp"

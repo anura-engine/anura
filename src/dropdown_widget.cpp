@@ -24,7 +24,7 @@
 #include "joystick.hpp"
 #include "dropdown_widget.hpp"
 #include "foreach.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "graphics.hpp"
 #include "input.hpp"
 #include "raster.hpp"

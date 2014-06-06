@@ -174,11 +174,14 @@ public:
 	bool is_numeric() const { return is_int() || is_decimal(); }
 	bool is_int() const { return type_ == VARIANT_TYPE_INT; }
 	bool is_decimal() const { return type_ == VARIANT_TYPE_DECIMAL; }
+	bool is_float() const { return is_numeric(); }
 	bool is_map() const { return type_ == VARIANT_TYPE_MAP; }
 	bool is_function() const { return type_ == VARIANT_TYPE_FUNCTION || type_ == VARIANT_TYPE_MULTI_FUNCTION; }
 	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	decimal as_decimal(decimal default_value=decimal()) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_INT) { return decimal::from_raw_value(int64_t(int_value_)*VARIANT_DECIMAL_PRECISION); } must_be(VARIANT_TYPE_DECIMAL); return decimal::from_raw_value(decimal_value_); }
+	float as_float() const { return float(as_decimal().as_float()); }
+	double as_double() const { return as_decimal().as_float(); }
 	bool as_bool(bool default_value) const;
 	bool as_bool() const;
 

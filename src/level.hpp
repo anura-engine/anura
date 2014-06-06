@@ -41,7 +41,7 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "gui_formula_functions.hpp"
 #include "hex_map.hpp"
 #include "isoworld.hpp"

@@ -24,7 +24,7 @@
 #include <string>
 
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "level_object.hpp"
 #include "point_map.hpp"
 #include "variant.hpp"

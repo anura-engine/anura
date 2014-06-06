@@ -28,7 +28,6 @@ class color_transform;
 }
 
 class entity;
-class rect;
 class level;
 
 struct screen_position {

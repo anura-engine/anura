@@ -16,7 +16,7 @@
 #include "draw_primitive.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "graphics.hpp"
 #include "isochunk.hpp"
 #include "lighting.hpp"
