@@ -105,11 +105,10 @@ namespace KRE
 		};
 		typedef std::shared_ptr<path_command> path_commandPtr;
 
-		class parsing_exception : public std::exception
+		class parsing_exception
 		{
 		public:
 			parsing_exception(const std::string& ss) : s_(ss) {}
-			virtual ~parsing_exception() throw() override {}
             virtual const char* what() const _GLIBCXX_USE_NOEXCEPT override{
 				return s_.c_str();
 			}
