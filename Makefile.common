@@ -43,6 +43,7 @@ objects = \
 	src/editor_variable_info.o \
 	src/external_text_editor.o \
 	src/ft_iface.o \
+	src/cairo.o \
 	src/clipboard.o \
 	src/collision_utils.o \
 	src/color_utils.o \
@@ -234,10 +235,6 @@ objects = \
 	src/widget_settings_dialog.o \
 	src/wm.o \
 	src/wml_formula_callable.o
-
-ifeq ($(USE_SVG),yes)
-	objects += src/cairo.o
-endif
 
 box2d_objects = \
 	src/Box2D/Dynamics/b2ContactManager.o \
