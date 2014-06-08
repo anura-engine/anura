@@ -109,7 +109,7 @@ namespace KRE
 		{
 		public:
 			parsing_exception(const std::string& ss) : s_(ss) {}
-			virtual ~parsing_exception() override {}
+			virtual ~parsing_exception() throw() override {}
             virtual const char* what() const _GLIBCXX_USE_NOEXCEPT override{
 				return s_.c_str();
 			}
