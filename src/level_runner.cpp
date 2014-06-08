@@ -1498,7 +1498,8 @@ bool level_runner::play_cycle()
 
 		if(should_pause) {
 			lvl_->set_show_builtin_settings_dialog(true);
-			for(const auto& c : lvl_->get_active_chars()) {
+			std::vector<entity_ptr> active_chars = lvl_->get_active_chars();
+			for(const auto& c : active_chars) {
 				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
 			}
 		}

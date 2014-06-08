@@ -26,6 +26,7 @@ void set_framebuffer_id(int framebuffer);
 void switch_texture();
 
 void set_as_current_texture();
+int current_texture_id();
 int width();
 int height();
 void rebuild();

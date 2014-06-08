@@ -200,6 +200,11 @@ void set_as_current_texture()
 	graphics::texture::set_current_texture(texture_id);
 }
 
+int current_texture_id()
+{
+	return texture_id;
+}
+
 void rebuild()
 {
 	if(!supported) {
