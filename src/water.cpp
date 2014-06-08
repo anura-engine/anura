@@ -153,7 +153,7 @@ bool water::draw(int x, int y, int w, int h) const
 void water::add_wave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length)
 {
 	foreach(area& a, areas_) {
-		if(point_in_rect(p, a.rect_)) {
+		if(pointInRect(p, a.rect_)) {
 			std::pair<int, int> bounds(a.rect_.x(), a.rect_.x2());
 			for(int n = 0; n != a.surface_segments_.size(); ++n) {
 				if(p.x >= a.surface_segments_[n].first && p.x <= a.surface_segments_[n].second) {
@@ -370,7 +370,7 @@ bool water::is_underwater(const rect& r, rect* result_water_area, variant* e) co
 	//underwater.
 	const point p((r.x() + r.x2())/2, r.y2() - 20);
 	foreach(const area& a, areas_) {
-		if(point_in_rect(p, a.rect_)) {
+		if(pointInRect(p, a.rect_)) {
 			if(result_water_area) {
 				*result_water_area = a.rect_;
 			}

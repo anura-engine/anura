@@ -35,7 +35,7 @@ namespace gui
 	public:
 		color_picker(const rect& area);
 		explicit color_picker(const rect& area, boost::function<void (const graphics::color&)> change_fun);
-		explicit color_picker(const variant& v, game_logic::formula_callable* e);
+		explicit color_picker(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~color_picker();
 		void set_change_handler(boost::function<void (const graphics::color&)> change_fun) { onchange_ = change_fun; }
 
@@ -71,8 +71,8 @@ namespace gui
 
 		grid_ptr g_;
 		std::vector<slider_ptr> s_;
-		std::vector<text_editor_widget_ptr> t_;
-		button_ptr copy_to_palette_;
+		std::vector<TextEditorWidgetPtr> t_;
+		ButtonPtr copy_to_palette_;
 		void copy_to_palette_fn();
 
 		void slider_change(int n, double p);
@@ -80,13 +80,13 @@ namespace gui
 		void text_tab_pressed(int n);
 
 		void set_sliders_from_color(const graphics::color& c);
-		void set_text_from_color(const graphics::color& c, int n=-1);
+		void setText_from_color(const graphics::color& c, int n=-1);
 
 		void set_hsv_from_color(const graphics::color&);
 
-		void handle_process();
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
+		void handleProcess();
+		void handleDraw() const;
+		bool handleEvent(const SDL_Event& event, bool claimed);
 
 		int color_box_length_;
 		int wheel_radius_;
@@ -98,7 +98,7 @@ namespace gui
 		void change();
 		boost::function<void (const graphics::color&)> onchange_;
 		game_logic::formula_ptr change_handler_;
-		game_logic::formula_callable_ptr handler_arg_;
+		game_logic::FormulaCallablePtr handler_arg_;
 	};
 
 	typedef boost::intrusive_ptr<color_picker> color_picker_ptr;

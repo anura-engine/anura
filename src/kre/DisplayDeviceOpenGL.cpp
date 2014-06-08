@@ -260,7 +260,7 @@ namespace KRE
 		}
 
 		if(shader->GetColorUniform() != shader->UniformsIteratorEnd() && r->IsColorSet()) {
-			shader->SetUniformValue(shader->GetColorUniform(), r->GetColor().AsFloatVector());
+			shader->SetUniformValue(shader->GetColorUniform(), r->GetColor().asFloatVector());
 		}
 
 		if(shader->GetTexMapUniform() != shader->UniformsIteratorEnd()) {

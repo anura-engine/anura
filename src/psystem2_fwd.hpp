@@ -36,7 +36,7 @@ namespace graphics
 	namespace particles
 	{
 		class particle_system_widget;
-		typedef boost::intrusive_ptr<particle_system_widget> particle_system_widget_ptr;
+		typedef boost::intrusive_ptr<particle_system_widget> particle_system_WidgetPtr;
 
 		class emit_object;
 		typedef std::shared_ptr<emit_object> emit_object_ptr;

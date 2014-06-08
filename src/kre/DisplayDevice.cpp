@@ -24,8 +24,8 @@
 #include <map>
 
 #include "../asserts.hpp"
+#include "../logger.hpp"
 #include "DisplayDevice.hpp"
-#include "logger.hpp"
 
 namespace KRE
 {

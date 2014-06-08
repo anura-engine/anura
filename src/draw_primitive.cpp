@@ -50,13 +50,13 @@ public:
 private:
 	void init();
 
-	void handle_draw() const;
+	void handleDraw() const;
 #ifdef USE_ISOMAP
-	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	rect area_;
 	graphics::color color_;
@@ -88,7 +88,7 @@ void rect_primitive::init()
 	varray_.push_back(area_.y2());
 }
 
-void rect_primitive::handle_draw() const
+void rect_primitive::handleDraw() const
 {
 	color_.set_as_current_color();
 
@@ -101,19 +101,19 @@ void rect_primitive::handle_draw() const
 }
 
 #ifdef USE_ISOMAP
-void rect_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+void rect_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
 #endif
 
-variant rect_primitive::get_value(const std::string& key) const
+variant rect_primitive::getValue(const std::string& key) const
 {
-	return draw_primitive::get_value(key);
+	return draw_primitive::getValue(key);
 }
 
-void rect_primitive::set_value(const std::string& key, const variant& value)
+void rect_primitive::setValue(const std::string& key, const variant& value)
 {
-	draw_primitive::set_value(key, value);
+	draw_primitive::setValue(key, value);
 }
 
 typedef boost::array<GLfloat, 2> FPoint;
@@ -126,12 +126,12 @@ public:
 private:
 	void init();
 
-	void handle_draw() const;
+	void handleDraw() const;
 #ifdef USE_ISOMAP
-	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	FPoint center_;
 	float radius_;
@@ -183,12 +183,12 @@ void circle_primitive::init()
 }
 
 #ifdef USE_ISOMAP
-void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+void circle_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
 #endif
 
-void circle_primitive::handle_draw() const
+void circle_primitive::handleDraw() const
 {
 	
 	color_.set_as_current_color();
@@ -202,12 +202,12 @@ void circle_primitive::handle_draw() const
 	
 }
 
-variant circle_primitive::get_value(const std::string& key) const
+variant circle_primitive::getValue(const std::string& key) const
 {
 	return variant();
 }
 
-void circle_primitive::set_value(const std::string& key, const variant& value)
+void circle_primitive::setValue(const std::string& key, const variant& value)
 {
 }
 
@@ -218,13 +218,13 @@ public:
 
 private:
 
-	void handle_draw() const;
+	void handleDraw() const;
 #ifdef USE_ISOMAP
-	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	void set_points(const variant& points);
 
@@ -373,12 +373,12 @@ void arrow_primitive::calculate_draw_arrays() const
 }
 
 #ifdef USE_ISOMAP
-void arrow_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+void arrow_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 }
 #endif
 
-void arrow_primitive::handle_draw() const
+void arrow_primitive::handleDraw() const
 {
 	if(points_.size() < 3) {
 		return;
@@ -390,7 +390,7 @@ void arrow_primitive::handle_draw() const
 
 	if(texture_.valid()) {
 		glActiveTexture(GL_TEXTURE0);
-		texture_.set_as_current_texture();
+		texture_.set_as_currentTexture();
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &uvarray_[0]);
 	}
 
@@ -400,7 +400,7 @@ void arrow_primitive::handle_draw() const
 	glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
 }
 
-variant arrow_primitive::get_value(const std::string& key) const
+variant arrow_primitive::getValue(const std::string& key) const
 {
 	if(key == "points") {
 		std::vector<variant> result;
@@ -417,7 +417,7 @@ variant arrow_primitive::get_value(const std::string& key) const
 	return variant();
 }
 
-void arrow_primitive::set_value(const std::string& key, const variant& value)
+void arrow_primitive::setValue(const std::string& key, const variant& value)
 {
 	if(key == "points") {
 		set_points(value);
@@ -482,9 +482,9 @@ private:
 
 	void init();
 
-	void handle_draw() const;
+	void handleDraw() const;
 #ifdef USE_ISOMAP
-	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
+	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
 
 	glm::vec3 b1_;
@@ -575,12 +575,12 @@ void wireframe_box_primitive::init()
 	varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
 }
 
-void wireframe_box_primitive::handle_draw() const
+void wireframe_box_primitive::handleDraw() const
 {
 }
 
 #ifdef USE_ISOMAP
-void wireframe_box_primitive::handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+void wireframe_box_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 	shader_save_context save;
 	glUseProgram(shader_->get());
@@ -747,11 +747,11 @@ private:
 		varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
 	}
 
-	void handle_draw() const
+	void handleDraw() const
 	{}
 
 #ifdef USE_ISOMAP
-	void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 	{
 		shader_save_context save;
 		glUseProgram(shader_->get());
@@ -871,10 +871,10 @@ void draw_primitive::draw() const
 {
 	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
 		glBlendFunc(src_factor_, dst_factor_);
-		handle_draw();
+		handleDraw();
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	} else {
-		handle_draw();
+		handleDraw();
 	}
 }
 
@@ -883,10 +883,10 @@ void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_pt
 {
 	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
 		glBlendFunc(src_factor_, dst_factor_);
-		handle_draw(lighting, camera);
+		handleDraw(lighting, camera);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 	} else {
-		handle_draw(lighting, camera);
+		handleDraw(lighting, camera);
 	}
 }
 #endif

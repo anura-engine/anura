@@ -37,7 +37,7 @@ current_generator_ptr current_generator::create(variant node)
 current_generator::~current_generator() {
 }
 
-variant current_generator::get_value(const std::string& key) const
+variant current_generator::getValue(const std::string& key) const
 {
 	return variant();
 }
@@ -96,7 +96,7 @@ rect_current_generator::rect_current_generator(variant node)
 void rect_current_generator::generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y)
 {
 	const int strength = strength_;
-	if(point_in_rect(point(target_x, target_y), rect_)) {
+	if(pointInRect(point(target_x, target_y), rect_)) {
 		if(xvelocity_ > 0 && *velocity_x < xvelocity_) {
 			int amount = (xvelocity_ - std::max(0, *velocity_x))*strength/(target_mass*1000);
 			const int distance = rect_.x2() - target_x;

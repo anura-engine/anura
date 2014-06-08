@@ -74,7 +74,7 @@ cairo_context::cairo_context(int w, int h)
 	cairo_get_font_options(cairo_, options);
 	cairo_font_options_set_hint_style(options, CAIRO_HINT_STYLE_NONE);
 	cairo_font_options_set_hint_metrics(options, CAIRO_HINT_METRICS_OFF);
-	cairo_set_font_options(cairo_, options);
+	cairo_setFont_options(cairo_, options);
 	cairo_font_options_destroy(options);
 }
 
@@ -189,7 +189,7 @@ namespace
 {
 
 typedef std::function<void(cairo_context&, const std::vector<variant>&)> CairoOp;
-class cairo_op : public game_logic::formula_callable
+class cairo_op : public game_logic::FormulaCallable
 {
 public:
 	cairo_op(CairoOp fn, const std::vector<variant>& args) : fn_(fn), args_(args)
@@ -434,14 +434,14 @@ BEGIN_CAIRO_FN(set_radial_pattern, "(decimal, decimal, decimal, decimal, decimal
 	context.set_pattern(pattern);
 END_CAIRO_FN
 
-BEGIN_CAIRO_FN(set_font, "(string)")
+BEGIN_CAIRO_FN(setFont, "(string)")
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + args[0].as_string()));
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_set_font_face(context.get(), cairo_face);
+	cairo_setFont_face(context.get(), cairo_face);
 END_CAIRO_FN
 
-BEGIN_CAIRO_FN(set_font_size, "(decimal)")
-	cairo_set_font_size(context.get(), args[0].as_decimal().as_float());
+BEGIN_CAIRO_FN(setFontSize, "(decimal)")
+	cairo_setFontSize(context.get(), args[0].as_decimal().as_float());
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(show_text, "(string)")
@@ -755,9 +755,9 @@ BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, he
 
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_set_font_face(context.get(), cairo_face);
+	cairo_setFont_face(context.get(), cairo_face);
 
-	cairo_set_font_size(context.get(), FN_ARG(1).as_decimal().as_float());
+	cairo_setFontSize(context.get(), FN_ARG(1).as_decimal().as_float());
 
 	std::string text = FN_ARG(2).as_string();
 	std::vector<std::string> lines = util::split(text, '\n');

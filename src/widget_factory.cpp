@@ -46,7 +46,7 @@
 #include "preview_tileset_widget.hpp"
 #include "progress_bar.hpp"
 #include "rich_text_label.hpp"
-#include "scrollable_widget.hpp"
+#include "scrollable_widget"
 #include "scrollbar_widget.hpp"
 #include "selector_widget.hpp"
 #include "slider.hpp"
@@ -56,92 +56,92 @@
 
 namespace widget_factory {
 
-using gui::widget_ptr;
+using gui::WidgetPtr;
 
-widget_ptr create(const variant& v, game_logic::formula_callable* e)
+WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 {
 	if(v.is_callable()) {
-		widget_ptr w = v.try_convert<gui::widget>();
+		WidgetPtr w = v.try_convert<gui::widget>();
 		ASSERT_LOG(w != NULL, "Error converting widget from callable.");
 		return w;
 	}
 	ASSERT_LOG(v.is_map(), "TYPE ERROR: widget must be specified by a map, found: " << v.to_debug_string());
 	std::string wtype = v["type"].as_string();
 	if(wtype == "animation_widget") {
-		return widget_ptr(new gui::animation_widget(v,e));
+		return WidgetPtr(new gui::animation_widget(v,e));
 #ifndef NO_EDITOR
 	} else if(wtype == "animation_preview") {
-		return widget_ptr(new gui::animation_preview_widget(v,e));
+		return WidgetPtr(new gui::animation_preview_widget(v,e));
 #endif
 	} else if(wtype == "border_widget") {
-		return widget_ptr(new gui::border_widget(v,e));
+		return WidgetPtr(new gui::border_widget(v,e));
 	} else if(wtype == "button") {
-		return widget_ptr(new gui::button(v,e));
+		return WidgetPtr(new gui::button(v,e));
 	} else if(wtype == "checkbox") {
-		return widget_ptr(new gui::checkbox(v,e));
+		return WidgetPtr(new gui::checkbox(v,e));
 	} else if(wtype == "dialog") {
-		return widget_ptr(new gui::dialog(v,e));
+		return WidgetPtr(new gui::dialog(v,e));
 #ifndef NO_EDITOR
 	} else if(wtype == "drag_widget") {
-		return widget_ptr(new gui::drag_widget(v,e));
+		return WidgetPtr(new gui::drag_widget(v,e));
 #endif
 	} else if(wtype == "graphical_font_label") {
-		return widget_ptr(new gui::graphical_font_label(v,e));
+		return WidgetPtr(new gui::graphical_font_label(v,e));
 	} else if(wtype == "grid") {
-		return widget_ptr(new gui::grid(v,e));
+		return WidgetPtr(new gui::grid(v,e));
 	} else if(wtype == "image") {
-		return widget_ptr(new gui::image_widget(v,e));
+		return WidgetPtr(new gui::image_widget(v,e));
 	} else if(wtype == "section") {
-		return widget_ptr(new gui::gui_section_widget(v,e));
+		return WidgetPtr(new gui::gui_section_widget(v,e));
 	} else if(wtype == "key_button") {
-		return widget_ptr(new gui::key_button(v,e));
+		return WidgetPtr(new gui::key_button(v,e));
 	} else if(wtype == "label") {
-		return widget_ptr(new gui::label(v,e));
+		return WidgetPtr(new gui::label(v,e));
 	} else if(wtype == "poly_line_widget") {
-		return widget_ptr(new gui::poly_line_widget(v,e));
+		return WidgetPtr(new gui::poly_line_widget(v,e));
 	} else if(wtype == "rich_text_label") {
-		return widget_ptr(new gui::rich_text_label(v,e));
+		return WidgetPtr(new gui::rich_text_label(v,e));
 	} else if(wtype == "tileset_preview") {
-		return widget_ptr(new gui::preview_tileset_widget(v,e));
+		return WidgetPtr(new gui::preview_tileset_widget(v,e));
 	} else if(wtype == "scrollbar") {
-		return widget_ptr(new gui::scrollbar_widget(v,e));
+		return WidgetPtr(new gui::scrollbar_widget(v,e));
 	} else if(wtype == "slider") {
-		return widget_ptr(new gui::slider(v,e));
+		return WidgetPtr(new gui::slider(v,e));
 	} else if(wtype == "text_editor") {
-		return widget_ptr(new gui::text_editor_widget(v,e));
+		return WidgetPtr(new gui::TextEditorWidget(v,e));
 	} else if(wtype == "progress") {
-		return widget_ptr(new gui::progress_bar(v, e));
+		return WidgetPtr(new gui::progress_bar(v, e));
 	} else if(wtype == "selector") {
-		return widget_ptr(new gui::selector_widget(v, e));
+		return WidgetPtr(new gui::selector_widget(v, e));
 	} else if(wtype == "object") {
-		return widget_ptr(new gui::custom_object_widget(v, e));
+		return WidgetPtr(new gui::custom_object_widget(v, e));
 	} else if(wtype == "bar") {
-		return widget_ptr(new gui::bar_widget(v, e));
+		return WidgetPtr(new gui::bar_widget(v, e));
 	} else if(wtype == "color_picker") {
-		return widget_ptr(new gui::color_picker(v, e));
+		return WidgetPtr(new gui::color_picker(v, e));
 	} else if(wtype == "layout") {
-		return widget_ptr(new gui::layout_widget(v, e));
+		return WidgetPtr(new gui::layout_widget(v, e));
 	} else if(wtype == "file_chooser") {
-		return widget_ptr(new gui::file_chooser_dialog(v, e));
+		return WidgetPtr(new gui::file_chooser_dialog(v, e));
 #if defined(USE_ISOMAP)
 	} else if(wtype == "view3d") {
-		return widget_ptr(new gui::view3d_widget(v, e));
+		return WidgetPtr(new gui::view3d_widget(v, e));
 #endif
 	} else if(wtype == "poly_map") {
-		return widget_ptr(new geometry::poly_map(v, e));
+		return WidgetPtr(new geometry::poly_map(v, e));
 	} else if(wtype == "particle_system") {
-		return widget_ptr(new graphics::particles::particle_system_widget(v, e));
+		return WidgetPtr(new graphics::particles::particle_system_widget(v, e));
 #if defined(USE_LIBVPX)
 	} else if(wtype == "movie") {
-		return widget_ptr(new movie::vpx(v, e));
+		return WidgetPtr(new movie::vpx(v, e));
 #endif
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else if(wtype == "tree") {
-		return widget_ptr(new gui::tree_view_widget(v, e));
+		return WidgetPtr(new gui::tree_view_widget(v, e));
 	} else {
 		ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
-		return widget_ptr();
+		return WidgetPtr();
 	}
 }
 

@@ -35,20 +35,20 @@ slider::slider(int width, boost::function<void (double)> onchange, double positi
 	slider_middle_(new gui_section_widget("slider_middle", -1, -1, scale)),
 	slider_button_(new gui_section_widget("slider_button", -1, -1, scale))
 {
-	set_environment();
+	setEnvironment();
 	init();
-	set_dim(width_+slider_left_->width()*2, slider_button_->height());
+	setDim(width_+slider_left_->width()*2, slider_button_->height());
 }
 
-slider::slider(const variant& v, game_logic::formula_callable* e)
+slider::slider(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e), dragging_(false)
 {
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	onchange_ = boost::bind(&slider::change_delegate, this, _1);
-	ffl_handler_ = get_environment()->create_formula(v["on_change"]);
+	ffl_handler_ = getEnvironment()->createFormula(v["on_change"]);
 	if(v.has_key("on_drag_end")) {
 		ondragend_ = boost::bind(&slider::dragend_delegate, this, _1);
-		ffl_end_handler_ = get_environment()->create_formula(v["on_drag_end"]);
+		ffl_end_handler_ = getEnvironment()->createFormula(v["on_drag_end"]);
 	}
 
 	position_ = v.has_key("position") ? v["position"].as_decimal().as_float() : 0.0;
@@ -67,17 +67,17 @@ slider::slider(const variant& v, game_logic::formula_callable* e)
 		: new gui_section_widget("slider_button", -1, -1, 2);
 
 	init();
-	set_dim(width_+slider_left_->width()*2, slider_button_->height());
+	setDim(width_+slider_left_->width()*2, slider_button_->height());
 }
 	
 void slider::init() const
 {
 	int slider_y = y() + height()/2 - slider_middle_->height()/2;
-	slider_left_->set_loc(x(), slider_y);
-	slider_middle_->set_loc(x()+slider_left_->width(), slider_y);
-	slider_middle_->set_dim(width_, slider_middle_->height());
-	slider_right_->set_loc(x()+slider_left_->width()+width_, slider_y);
-	slider_button_->set_loc(x()+slider_left_->width()+position_*width_-slider_button_->width()/2, y());
+	slider_left_->setLoc(x(), slider_y);
+	slider_middle_->setLoc(x()+slider_left_->width(), slider_y);
+	slider_middle_->setDim(width_, slider_middle_->height());
+	slider_right_->setLoc(x()+slider_left_->width()+width_, slider_y);
+	slider_button_->setLoc(x()+slider_left_->width()+position_*width_-slider_button_->width()/2, y());
 }
 
 bool slider::in_button(int xloc, int yloc) const
@@ -93,10 +93,10 @@ bool slider::in_slider(int xloc, int yloc) const
 	yloc > y() && yloc < y() + height();
 }
 	
-void slider::handle_draw() const
+void slider::handleDraw() const
 {
 	init();
-	if(has_focus()) {
+	if(hasFocus()) {
 		graphics::draw_hollow_rect(rect(x()-1, y()-1, width()+2, height()+2), graphics::color(128,128,128,128));
 	}
 	//int slider_y = y() + height()/2 - slider_middle_->height()/2;
@@ -113,11 +113,11 @@ void slider::handle_draw() const
 void slider::change_delegate(double position)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable(new game_logic::map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable(getEnvironment()));
 		callable->add("position", variant(position));
-		variant value = ffl_handler_->execute(*get_environment());
-		get_environment()->execute_command(value);
+		variant value = ffl_handler_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "slider::change_delegate() called without environment!" << std::endl;
 	}
@@ -126,21 +126,21 @@ void slider::change_delegate(double position)
 void slider::dragend_delegate(double position)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable(new game_logic::map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable(getEnvironment()));
 		callable->add("position", variant(position));
-		variant value = ffl_end_handler_->execute(*get_environment());
-		get_environment()->execute_command(value);
+		variant value = ffl_end_handler_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "slider::dragend_delegate() called without environment!" << std::endl;
 	}
 }
 
-void slider::handle_process()
+void slider::handleProcess()
 {
-	widget::handle_process();
+	widget::handleProcess();
 
-	if(has_focus()) {
+	if(hasFocus()) {
 		static int control_lockout = 0;
 		if(joystick::left() && !control_lockout) {
 			control_lockout = 5;
@@ -170,7 +170,7 @@ void slider::handle_process()
 	}
 }
 
-bool slider::handle_event(const SDL_Event& event, bool claimed)
+bool slider::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		dragging_ = false;
@@ -191,16 +191,16 @@ bool slider::handle_event(const SDL_Event& event, bool claimed)
 			onchange_(pos);
 		}
 
-		return claim_mouse_events();
+		return claimMouseEvents();
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 		const SDL_MouseButtonEvent& e = event.button;
 		if(in_button(e.x,e.y)) {
 			dragging_ = true;
-			return claim_mouse_events();
+			return claimMouseEvents();
 		}
 	} else if(event.type == SDL_MOUSEBUTTONUP && dragging_) {
 		dragging_ = false;
-		claimed = claim_mouse_events();
+		claimed = claimMouseEvents();
 		if(ondragend_) {
 			const SDL_MouseButtonEvent& e = event.button;
 			int mouse_x = e.x;
@@ -214,7 +214,7 @@ bool slider::handle_event(const SDL_Event& event, bool claimed)
 		}
 	}
 
-	if(event.type == SDL_KEYDOWN && has_focus()) {
+	if(event.type == SDL_KEYDOWN && hasFocus()) {
 		if(event.key.keysym.sym == SDLK_LEFT) {
 			if(position() <= 1.0/20.0) {
 				set_position(0.0);
@@ -241,20 +241,20 @@ bool slider::handle_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-void slider::set_value(const std::string& key, const variant& v)
+void slider::setValue(const std::string& key, const variant& v)
 {
 	if(key == "position") {
 		position_  = v.as_decimal().as_float();
 	}
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant slider::get_value(const std::string& key) const
+variant slider::getValue(const std::string& key) const
 {
 	if(key == "position") {
 		return variant(position_);
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 	
 }

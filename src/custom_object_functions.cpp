@@ -75,7 +75,7 @@
 #include "thread.hpp"
 #include "unit_test.hpp"
 #include "preferences.hpp"
-#include "settings_dialog.hpp"
+#include "settingsDialog.hpp"
 #include "module.hpp"
 #include "variant_utils.hpp"
 #include "widget_factory.hpp"
@@ -130,7 +130,7 @@ const std::string FunctionModule = "custom_object";
 
 FUNCTION_DEF(set_language, 1, 1, "set_language(str): set the language using a new locale code")
 	std::string locale = args()[0]->evaluate(variables).as_string();
-	preferences::set_locale(locale);
+	preferences::setLocale(locale);
 	i18n::init();
 	graphical_font::init_for_locale(i18n::get_locale());
 	return variant(0);
@@ -146,7 +146,7 @@ END_FUNCTION_DEF(time)
 */
 FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
 	formula::fail_if_static_context();
-	game_logic::map_formula_callable* time_(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallable* time_(new game_logic::map_FormulaCallable);
 	
 		time_t t1;
 		time(&t1);
@@ -256,7 +256,7 @@ public:
 	explicit set_clipboard_text_command(const std::string& str) : str_(str)
 	{}
 
-	virtual void execute(game_logic::formula_callable& ob) const {
+	virtual void execute(game_logic::FormulaCallable& ob) const {
 		copy_to_clipboard(str_, false);
 	}
 };
@@ -310,7 +310,7 @@ FUNCTION_DEF(tbs_client, 2, 3, "tbs_client(host, port, session=-1): creates a cl
 	}
 */
 	tbs::client* result = new tbs::client(host, port, session);
-	result->set_id(id);
+	result->setId(id);
 	return variant(result);
 
 FUNCTION_ARGS_DEF
@@ -321,9 +321,9 @@ RETURN_TYPE("object")
 END_FUNCTION_DEF(tbs_client)
 
 
-void tbs_send_event(entity_ptr e, game_logic::map_formula_callable_ptr callable, const std::string& ev)
+void tbs_send_event(entity_ptr e, game_logic::map_FormulaCallablePtr callable, const std::string& ev)
 {
-	e->handle_event(ev, callable.get());
+	e->handleEvent(ev, callable.get());
 }
 
 class tbs_send_command : public entity_command_callable
@@ -334,7 +334,7 @@ public:
 	{}
 
 	virtual void execute(level& lvl, entity& ob) const {
-		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+		game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
 		tbs::client* tbs_client = client_.try_convert<tbs::client>();
 		if(tbs_client == NULL) {
 			tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
@@ -418,7 +418,7 @@ int show_simple_option_dialog(level& lvl, const std::string& text, const std::ve
 	std::vector<std::string> txt;
 	txt.push_back(text);
 	boost::shared_ptr<speech_dialog> d(new speech_dialog);
-	d->set_text(txt);
+	d->setText(txt);
 	d->set_options(options);
 
 	lvl.add_speech_dialog(d);
@@ -1122,7 +1122,7 @@ public:
 	{}
 
 	virtual void execute(level& lvl, entity& ob) const {
-		e_->execute_command(cmd_);
+		e_->executeCommand(cmd_);
 	}
 };
 
@@ -1156,14 +1156,14 @@ public:
 
 		//send an event to the parent to let them know they've spawned a child,
 		//and let them record the child's details.
-		game_logic::map_formula_callable* spawn_callable(new game_logic::map_formula_callable);
+		game_logic::map_FormulaCallable* spawn_callable(new game_logic::map_FormulaCallable);
 		variant holder(spawn_callable);
 		spawn_callable->add("spawner", variant(&ob));
 		spawn_callable->add("child", variant(obj_.get()));
-		ob.handle_event(OBJECT_EVENT_CHILD_SPAWNED, spawn_callable);
-		obj_->handle_event(OBJECT_EVENT_SPAWNED, spawn_callable);
+		ob.handleEvent(OBJECT_EVENT_CHILD_SPAWNED, spawn_callable);
+		obj_->handleEvent(OBJECT_EVENT_SPAWNED, spawn_callable);
 
-		obj_->execute_command(instantiation_commands_);
+		obj_->executeCommand(instantiation_commands_);
 
 		if(entity_collides(lvl, *obj_, MOVE_NONE)) {
 			lvl.remove_character(obj_);
@@ -1227,7 +1227,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 		//Note that we insert the 'child' argument here, into the slot
 		//formula callable. This relies on code in formula.cpp to look for
 		//spawn() and give a callable definition with the child.
-		boost::intrusive_ptr<slot_formula_callable> callable = new slot_formula_callable;
+		boost::intrusive_ptr<slot_FormulaCallable> callable = new slot_FormulaCallable;
 		callable->set_fallback(&variables);
 		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
 
@@ -1248,7 +1248,7 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
 		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
@@ -1267,7 +1267,7 @@ FUNCTION_ARGS_DEF
 					const int slot = type->get_slot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
 					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
@@ -1296,7 +1296,7 @@ FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, i
 		//Note that we insert the 'child' argument here, into the slot
 		//formula callable. This relies on code in formula.cpp to look for
 		//spawn() and give a callable definition with the child.
-		boost::intrusive_ptr<slot_formula_callable> callable = new slot_formula_callable;
+		boost::intrusive_ptr<slot_FormulaCallable> callable = new slot_FormulaCallable;
 		callable->set_fallback(&variables);
 		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
 
@@ -1381,7 +1381,7 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
 		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
@@ -1400,7 +1400,7 @@ FUNCTION_ARGS_DEF
 					const int slot = type->get_slot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
 					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
@@ -1469,7 +1469,7 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
 		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
@@ -1488,7 +1488,7 @@ FUNCTION_ARGS_DEF
 					const int slot = type->get_slot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
 					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
@@ -1585,7 +1585,7 @@ public:
 	  : id_(id), value_(value)
 	{}
 
-	virtual void execute(game_logic::formula_callable& ob) const {
+	virtual void execute(game_logic::FormulaCallable& ob) const {
 	debug_console::add_graph_sample(id_, value_);
 	}
 };
@@ -1602,7 +1602,7 @@ public:
 	explicit add_debug_rect_command(const rect& r) : r_(r)
 	{}
 
-	virtual void execute(game_logic::formula_callable& ob) const {
+	virtual void execute(game_logic::FormulaCallable& ob) const {
 		add_debug_rect(r_);
 	}
 };
@@ -1941,7 +1941,7 @@ public:
 			d->set_speaker(entity_ptr(&ob));
 		}
 
-		d->set_text(text_);
+		d->setText(text_);
 		d->set_expiration(duration_);
 		lvl.add_speech_dialog(d);
 	}
@@ -2060,7 +2060,7 @@ public:
 
 		if(!g_in_speech_dialog) {
 			foreach(const entity_ptr& e, lvl.get_chars()) {
-				e->handle_event(OBJECT_EVENT_BEGIN_DIALOG);
+				e->handleEvent(OBJECT_EVENT_BEGIN_DIALOG);
 			}
 		}
 
@@ -2070,13 +2070,13 @@ public:
 		//make it so the player's controls become locked for the duration of the dialog.
 		controls::local_controls_lock controller_lock;
 
-		execute_commands(lvl, ob, args_);
+		executeCommands(lvl, ob, args_);
 	}
 
 private:
-	static settings_dialog menu_button_;
+	static settingsDialog menu_button_;
 	
-	void execute_commands(level& lvl, custom_object& ob, const std::vector<variant>& commands) const {
+	void executeCommands(level& lvl, custom_object& ob, const std::vector<variant>& commands) const {
 		menu_button_.reset();
 		in_speech_dialog_tracker dialog_tracker;
 
@@ -2115,7 +2115,7 @@ private:
 						cmd.push_back(var[n]);
 					}
 
-					execute_commands(lvl, ob, cmd);
+					executeCommands(lvl, ob, cmd);
 					continue;
 				}
 
@@ -2142,7 +2142,7 @@ private:
 					}
 				}
 
-				d->set_text(message);
+				d->setText(message);
 				d->set_options(options);
 
 				bool done = false;
@@ -2157,7 +2157,7 @@ private:
 					while(input::sdl_poll_event(&event)) {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
 						// the user event gets handled the same as pressing escape
-						if (menu_button_.handle_event(event))
+						if (menu_button_.handleEvent(event))
 						{
 							event.type = SDL_USEREVENT;
 						}
@@ -2223,7 +2223,7 @@ private:
 					const int index = d->option_selected();
 					if(index >= 0 && index < option_commands.size()) {
 						dialog_tracker.cancel();
-						ob.execute_command(option_commands[index]);
+						ob.executeCommand(option_commands[index]);
 					}
 				}
 
@@ -2247,7 +2247,7 @@ private:
 	bool paused_;
 };
 
-settings_dialog speech_dialog_command::menu_button_ = settings_dialog();
+settingsDialog speech_dialog_command::menu_button_ = settingsDialog();
 
 FUNCTION_DEF(speech_dialog, 1, -1, "speech_dialog(...): schedules a sequence of speech dialogs to be shown modally. Arguments may include a list of strings, which contain text. An integer which sets the duration of the dialog. An object which sets the speaker. A string by itself indicates an option that should be shown for the player to select from. A string should be followed by a list of commands that will be executed should the player choose that option.")
 	std::vector<variant> v;
@@ -2326,9 +2326,9 @@ struct event_depth_scope {
 class fire_event_command : public entity_command_callable {
 	const entity_ptr target_;
 	const std::string event_;
-	const const_formula_callable_ptr callable_;
+	const const_FormulaCallablePtr callable_;
 public:
-	fire_event_command(entity_ptr target, const std::string& event, const_formula_callable_ptr callable)
+	fire_event_command(entity_ptr target, const std::string& event, const_FormulaCallablePtr callable)
 	  : target_(target), event_(event), callable_(callable)
 	{}
 
@@ -2336,14 +2336,14 @@ public:
 		ASSERT_LOG(event_depth < 1000, "INFINITE (or too deep?) RECURSION FOR EVENT " << event_);
 		event_depth_scope scope;
 		entity* e = target_ ? target_.get() : &ob;
-		e->handle_event(event_, callable_.get());
+		e->handleEvent(event_, callable_.get());
 	}
 };
 
 FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
 	entity_ptr target;
 	std::string event;
-	const_formula_callable_ptr callable;
+	const_FormulaCallablePtr callable;
 	variant arg_value;
 
 	if(args().size() == 3) {
@@ -2397,7 +2397,7 @@ FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) a
 	const std::string proto = args()[0]->evaluate(variables).as_string();
 	const std::string event_type = args()[1]->evaluate(variables).as_string();
 	const std::string event_name = proto + "_PROTO_" + event_type;
-	const_formula_callable_ptr callable;
+	const_FormulaCallablePtr callable;
 	if(args().size() >= 3) {
 		callable.reset(args()[2]->evaluate(variables).as_callable());
 	} else {
@@ -2532,15 +2532,15 @@ public:
 		} else {
 			collision_info collide_info;
 			entity_collides(level::current(), *e_, MOVE_NONE, &collide_info);
-			game_logic::map_formula_callable* callable(new game_logic::map_formula_callable(this));
+			game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
 
-			game_logic::formula_callable_ptr callable_ptr(callable);
-			e_->handle_event(OBJECT_EVENT_ADD_OBJECT_FAIL, callable);
+			game_logic::FormulaCallablePtr callable_ptr(callable);
+			e_->handleEvent(OBJECT_EVENT_ADD_OBJECT_FAIL, callable);
 
 			if(!e_->destroyed()) {
 				callable->add("object", variant(e_.get()));
-				ob.handle_event(OBJECT_EVENT_ADD_OBJECT_FAIL, callable);
+				ob.handleEvent(OBJECT_EVENT_ADD_OBJECT_FAIL, callable);
 			}
 			return;
 		}
@@ -2999,7 +2999,7 @@ public:
 	}
 
 	virtual void execute(level& lvl, custom_object& ob) const {
-		ob.set_text(text_, font_, size_, align_);
+		ob.setText(text_, font_, size_, align_);
 	}
 private:
 	std::string text_, font_;
@@ -3144,22 +3144,22 @@ END_FUNCTION_DEF(animate)
 class set_widgets_command : public entity_command_callable {
 	const entity_ptr target_;
 	const std::vector<variant> widgets_;
-	//const formula_callable_ptr callable_;
+	//const FormulaCallablePtr callable_;
 public:
-	set_widgets_command(entity_ptr target, const std::vector<variant> widgets/*, const formula_callable_ptr callable*/)
+	set_widgets_command(entity_ptr target, const std::vector<variant> widgets/*, const FormulaCallablePtr callable*/)
 	  : target_(target), widgets_(widgets)//, callable_(callable)
 	{}
 
 	virtual void execute(level& lvl, entity& ob) const {
 		entity* e = target_ ? target_.get() : &ob;
 		custom_object* custom_obj = dynamic_cast<custom_object*>(e);
-		std::vector<gui::widget_ptr> w;
+		std::vector<gui::WidgetPtr> w;
 		foreach(const variant& v, widgets_) {
 			if(v.is_null()) {
 				continue;
 			}
 
-			gui::dialog_ptr dialog = boost::intrusive_ptr<gui::dialog>(v.try_convert<gui::dialog>());
+			gui::DialogPtr dialog = boost::intrusive_ptr<gui::dialog>(v.try_convert<gui::dialog>());
 			if(dialog) {
 				w.push_back(dialog);
 			} else {
@@ -3184,7 +3184,7 @@ FUNCTION_DEF(set_widgets, 1, -1, "set_widgets((optional) obj, widget, ...): Adds
 			widgetsv.push_back(items);
 		}
 	}
-	//const_formula_callable_ptr callable = map_into_callable(args()[2]->evaluate(variables));
+	//const_FormulaCallablePtr callable = map_into_callable(args()[2]->evaluate(variables));
 	set_widgets_command* cmd = (new set_widgets_command(target, widgetsv));
 	cmd->set_expression(this);
 	return variant(cmd);
@@ -3218,7 +3218,7 @@ END_FUNCTION_DEF(clear_widgets)
 FUNCTION_DEF(get_widget, 2, 2, "get_widget(object obj, string id): returns the widget with the matching id for given object")
 	boost::intrusive_ptr<custom_object> target = args()[0]->evaluate(variables).try_convert<custom_object>();
 	std::string id = args()[1]->evaluate(variables).as_string();
-	return variant(target->get_widget_by_id(id).get());
+	return variant(target->getWidgetById(id).get());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
 	ARG_TYPE("string")
@@ -3227,8 +3227,8 @@ END_FUNCTION_DEF(get_widget)
 
 FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined by w and returns it for later use")
 	formula::fail_if_static_context();
-	game_logic::formula_callable_ptr callable = map_into_callable(args()[0]->evaluate(variables));
-	gui::widget_ptr w = widget_factory::create(args()[1]->evaluate(variables), callable.get());
+	game_logic::FormulaCallablePtr callable = map_into_callable(args()[0]->evaluate(variables));
+	gui::WidgetPtr w = widget_factory::create(args()[1]->evaluate(variables), callable.get());
 	return variant(w.get());
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object")
@@ -3419,9 +3419,9 @@ END_FUNCTION_DEF(module_rate)
 
 class module_launch_command : public entity_command_callable {
 	std::string id_;
-	const_formula_callable_ptr callable_;
+	const_FormulaCallablePtr callable_;
 public:
-	explicit module_launch_command(const std::string& id, const_formula_callable_ptr callable) 
+	explicit module_launch_command(const std::string& id, const_FormulaCallablePtr callable) 
 		: id_(id), callable_(callable)
 	{}
 
@@ -3432,7 +3432,7 @@ public:
 
 FUNCTION_DEF(module_launch, 1, 2, "module_launch(string module_id, (optional) callable): launch the game using the given module.")
 	const std::string module_id = args()[0]->evaluate(variables).as_string();
-	const_formula_callable_ptr callable;
+	const_FormulaCallablePtr callable;
 	if(args().size() > 1) {
 		callable = map_into_callable(args()[1]->evaluate(variables));
 	}
@@ -3471,7 +3471,7 @@ END_FUNCTION_DEF(eval)
 class spawn_voxel_object_command : public entity_command_callable
 {
 public:
-	spawn_voxel_object_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
+	spawn_voxel_object_command(voxel::UserVoxelObjectPtr obj, variant instantiation_commands)
 	  : obj_(obj), instantiation_commands_(instantiation_commands)
 	{}
 	virtual void execute(level& lvl, entity& ob) const {
@@ -3479,7 +3479,7 @@ public:
 		ASSERT_LOG(lvl.iso_world() != NULL, "No 'isoworld' to insert voxel_object into.");
 		lvl.iso_world()->add_object(obj_);
 
-		obj_->execute_command(instantiation_commands_);
+		obj_->executeCommand(instantiation_commands_);
 
 		/*
 		obj_->set_level(lvl);
@@ -3493,14 +3493,14 @@ public:
 
 		//send an event to the parent to let them know they've spawned a child,
 		//and let them record the child's details.
-		game_logic::map_formula_callable* spawn_callable(new game_logic::map_formula_callable);
+		game_logic::map_FormulaCallable* spawn_callable(new game_logic::map_FormulaCallable);
 		variant holder(spawn_callable);
 		spawn_callable->add("spawner", variant(&ob));
 		spawn_callable->add("child", variant(obj_.get()));
-		ob.handle_event("child_spawned", spawn_callable);
-		obj_->handle_event("spawned", spawn_callable);
+		ob.handleEvent("child_spawned", spawn_callable);
+		obj_->handleEvent("spawned", spawn_callable);
 
-		obj_->execute_command(instantiation_commands_);
+		obj_->executeCommand(instantiation_commands_);
 
 		if(entity_collides(lvl, *obj_, MOVE_NONE)) {
 			lvl.remove_character(obj_);
@@ -3512,7 +3512,7 @@ public:
 		*/
 	}
 private:
-	voxel::user_voxel_object_ptr obj_;
+	voxel::UserVoxelObjectPtr obj_;
 	variant instantiation_commands_;
 };
 
@@ -3522,7 +3522,7 @@ FUNCTION_DEF(spawn_voxel_object, 1, 2, "spawn_voxel(properties, (optional) list 
 
 	variant doc = EVAL_ARG(0);
 
-	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(doc));
+	voxel::UserVoxelObjectPtr obj(new voxel::user_voxel_object(doc));
 
 	variant commands;
 	if(args().size() > 1) {
@@ -3538,7 +3538,7 @@ FUNCTION_ARGS_DEF
 
 	/*variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::const_formula_callable_definition_ptr type_def = voxel::voxel_object_type::get_definition(v.as_string());
+		game_logic::const_FormulaCallable_definition_ptr type_def = voxel::voxel_object_type::get_definition(v.as_string());
 		XXX const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
@@ -3557,7 +3557,7 @@ FUNCTION_ARGS_DEF
 					const int slot = type->get_slot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
 					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
@@ -3575,13 +3575,13 @@ public:
 	virtual expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
-							   const_formula_callable_definition_ptr callable_def) const;
+							   const_FormulaCallable_definition_ptr callable_def) const;
 };
 
 expression_ptr custom_object_function_symbol_table::create_function(
                            const std::string& fn,
                            const std::vector<expression_ptr>& args,
-						   const_formula_callable_definition_ptr callable_def) const
+						   const_FormulaCallable_definition_ptr callable_def) const
 {
 	const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 	std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);

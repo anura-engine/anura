@@ -41,7 +41,7 @@ namespace {
 struct tile_pattern_cache;
 }
 
-class tile_map : public game_logic::formula_callable {
+class tile_map : public game_logic::FormulaCallable {
 public:
 	static void init(variant node);
 	static void load_all();
@@ -59,7 +59,7 @@ public:
 	int zorder() const { return zorder_; }
 	int x_speed() const { return x_speed_; }
 	int y_speed() const { return y_speed_; }
-	void set_zorder(int z) { zorder_ = z; }
+	void setZOrder(int z) { zorder_ = z; }
 	void set_speed(int x_speed, int y_speed) { x_speed_ = x_speed; y_speed_ = y_speed; }
 	const char* get_tile_from_pixel_pos(int xpos, int ypos) const;
 	const char* get_tile(int y, int x) const;
@@ -84,7 +84,7 @@ private:
 
 	int variation(int x, int y) const;
 	const tile_pattern* get_matching_pattern(int x, int y, tile_pattern_cache& cache, bool* face_right) const;
-	variant get_value(const std::string& key) const { return variant(); }
+	variant getValue(const std::string& key) const { return variant(); }
 	int xpos_, ypos_;
 	int x_speed_, y_speed_;
 	int zorder_;

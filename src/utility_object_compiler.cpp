@@ -120,7 +120,7 @@ rect use_output_area(const output_area& input, int width, int height, std::vecto
 }
 
 namespace graphics {
-void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
+void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
 }
 
 namespace {
@@ -220,9 +220,9 @@ UTILITY(compile_objects)
 		obj_node = custom_object_type::merge_prototype(obj_node);
 		obj_node.remove_attr(variant("prototype"));
 
-		if(obj_node["editor_info"].is_map() && obj_node["editor_info"]["var"].is_list()) {
+		if(obj_node["EditorInfo"].is_map() && obj_node["EditorInfo"]["var"].is_list()) {
 			std::vector<std::string> names;
-			foreach(variant entry, obj_node["editor_info"]["var"].as_list()) {
+			foreach(variant entry, obj_node["EditorInfo"]["var"].as_list()) {
 				names.push_back(entry["name"].as_string());
 			}
 
@@ -269,7 +269,7 @@ UTILITY(compile_objects)
 	foreach(variant node, animation_containing_nodes) {
 		foreach(const variant_pair& p, node.as_map()) {
 			std::string attr_name = p.first.as_string();
-			if(attr_name != "animation" && attr_name != "framed_gui_element" && attr_name != "section") {
+			if(attr_name != "animation" && attr_name != "FramedGuiElement" && attr_name != "section") {
 				continue;
 			}
 
@@ -385,7 +385,7 @@ UTILITY(compile_objects)
 		std::ostringstream fname;
 		fname << "images/compiled-" << n << ".png";
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(surfaces[n].get());
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(surfaces[n].get());
 
 		IMG_SavePNG((module::get_module_path() + fname.str()).c_str(), surfaces[n].get(), -1);
 	}
@@ -476,7 +476,7 @@ struct SpritesheetRow {
 struct SpritesheetAnimation {
 	std::vector<rect> frames;
 	variant node;
-	rect target_area;
+	rect targetArea;
 
 	int cell_width() const {
 		int result = 0;
@@ -604,7 +604,7 @@ void write_pixel_surface(graphics::surface surf, int x, int y, int r, int g, int
 
 void write_spritesheet_frame(graphics::surface src, const rect& src_area, graphics::surface dst, int target_x, int target_y)
 {
-	const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+	const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
 
 	std::vector<unsigned char*> border_pixels;
 
@@ -841,8 +841,8 @@ void flip_surface_area(graphics::surface surf, const rect& area)
 
 void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimation& anim, graphics::surface dst, bool reorder)
 {
-	int target_x = anim.target_area.x()+1;
-	int target_y = anim.target_area.y()+1;
+	int target_x = anim.targetArea.x()+1;
+	int target_y = anim.targetArea.y()+1;
 
 	const int cell_width = anim.cell_width();
 	const int cell_height = anim.cell_height();
@@ -1089,10 +1089,10 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			ASSERT_LOG(best != -1, "Could not find fit for animation " << new_anim.width() << "x" << new_anim.height() << ": " << animations.size());
 
-			new_anim.target_area = rect(available_space[best].x(), available_space[best].y(), new_anim.width(), new_anim.height());
+			new_anim.targetArea = rect(available_space[best].x(), available_space[best].y(), new_anim.width(), new_anim.height());
 
-			const rect right_area(new_anim.target_area.x2(), new_anim.target_area.y(), available_space[best].w() - new_anim.target_area.w(), new_anim.target_area.h());
-			const rect bottom_area(new_anim.target_area.x(), new_anim.target_area.y2(), available_space[best].w(), available_space[best].h() - new_anim.target_area.h());
+			const rect right_area(new_anim.targetArea.x2(), new_anim.targetArea.y(), available_space[best].w() - new_anim.targetArea.w(), new_anim.targetArea.h());
+			const rect bottom_area(new_anim.targetArea.x(), new_anim.targetArea.y2(), available_space[best].w(), available_space[best].h() - new_anim.targetArea.h());
 
 			available_space.push_back(right_area);
 			available_space.push_back(bottom_area);
@@ -1102,11 +1102,11 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			animations.push_back(new_anim);
 
-			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.target_area.x(), new_anim.target_area.y(), new_anim.target_area.w(), new_anim.target_area.h());
+			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.targetArea.x(), new_anim.targetArea.y(), new_anim.targetArea.w(), new_anim.targetArea.h());
 		}
 
 		graphics::surface target_surf(SDL_CreateRGBSurface(0,TargetTextureSize,TargetTextureSize,32,SURFACE_MASK));
-		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+		const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
 		unsigned char* target_pixels = (unsigned char*)target_surf->pixels;
 		for(int n = 0; n < target_surf->w*target_surf->h; ++n) {
 			memcpy(target_pixels, alpha_colors, 3);
@@ -1121,7 +1121,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			std::map<variant, variant> node = anim.node.as_map();
 			node.erase(variant("frames"));
-			rect area(anim.target_area.x()+2, anim.target_area.y()+2, anim.cell_width(), anim.cell_height());
+			rect area(anim.targetArea.x()+2, anim.targetArea.y()+2, anim.cell_width(), anim.cell_height());
 			node[variant("rect")] = area.write();
 			node[variant("image")] = baking_info["dest_image"];
 			node[variant("frames")] = variant(static_cast<int>(anim.frames.size()));

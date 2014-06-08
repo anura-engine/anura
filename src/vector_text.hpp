@@ -29,9 +29,9 @@
 
 namespace gui {
 
-typedef std::pair<KRE::MaterialPtr, point> offset_texture;
+typedef std::pair<KRE::MaterialPtr, point> offsetTexture;
 
-class vector_text : public game_logic::formula_callable
+class vector_text : public game_logic::FormulaCallable
 {
 public:
 	enum TEXT_ALIGNMENT{ ALIGN_LEFT = -1, ALIGN_CENTER, ALIGN_RIGHT };
@@ -44,31 +44,31 @@ public:
 	rect draw_area() const { return draw_area_; }
 
 	bool visible() { return visible_; }
-	void set_visible(bool visible) { visible_ = visible; }
+	void setVisible(bool visible) { visible_ = visible; }
 
 	int size() const { return size_; }
 
-	void set_text(const std::string& txt);
-	void set_font(const std::string& fnt);
+	void setText(const std::string& txt);
+	void setFont(const std::string& fnt);
 	void set_size(int size);
-	void set_color(const variant& node);
+	void setColor(const variant& node);
 	void set_align(const std::string& align);
 	void set_align(TEXT_ALIGNMENT align);
 
-	void draw() const { if(visible_) { handle_draw(); } }
+	void draw() const { if(visible_) { handleDraw(); } }
 protected:
 	virtual ~vector_text()
 	{}
-	virtual void handle_draw() const;
+	virtual void handleDraw() const;
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 private:
-	void recalculate_texture();
+	void recalculateTexture();
 
 	bool visible_;
 	int size_;
-	std::vector<offset_texture> textures_;
+	std::vector<offsetTexture> textures_;
 	std::string text_;
 	std::string font_;
 	SDL_Color color_;

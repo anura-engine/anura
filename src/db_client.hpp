@@ -15,7 +15,7 @@ typedef boost::intrusive_ptr<db_client> db_client_ptr;
 
 // Class representing a client to the Anura backend database. Designed to be
 // used by server processes. Use USE_DB_CLIENT to compile this functionality in.
-class db_client : public game_logic::formula_callable
+class db_client : public game_logic::FormulaCallable
 {
 public:
 	struct error {

@@ -32,19 +32,35 @@ namespace KRE
 	{
 	}
 
-	void Canvas::SetDimensions(unsigned w, unsigned h)
+	void Canvas::setDimensions(unsigned w, unsigned h)
 	{
 		width_ = w;
 		height_ = h;
-		HandleDimensionsChanged();
+		handleDimensionsChanged();
 	}
 
 	Canvas::~Canvas()
 	{
 	}
 
-	CanvasPtr Canvas::GetInstance()
+	CanvasPtr Canvas::getInstance()
 	{
 		return DisplayDevice::GetCurrent()->GetCanvas();
+	}
+
+	void Canvas::drawVectorContext(const Vector::ContextPtr& context)
+	{
+		// XXX This almost feels like a little hack.
+		// XXX Probably want to call a context->Draw() function or something similar.
+		// XXX maybe. It's kind of tricky and I feel the abstraction isn't quite right yet.
+		// Since we may have a more efficient path using opengl to draw stuff, rather than blitting a cairo texture.
+		// Maybe renderable should have an overridable draw function that can be called?
+		// then in DisplayDevice::Render() we check it and run it.
+		DisplayDevice::GetCurrent()->Render(context);
+	}
+
+	void Canvas::blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color) const
+	{
+		blitTexture(tex, rect(0,0,0,0), rotation, dst, color);
 	}
 }

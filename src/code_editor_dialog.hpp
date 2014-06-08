@@ -35,7 +35,7 @@
 
 namespace gui {
 class code_editor_widget;
-class text_editor_widget;
+class TextEditorWidget;
 }
 
 class code_editor_dialog : public gui::dialog
@@ -61,8 +61,8 @@ public:
 private:
 	void init_files_grid();
 
-	bool handle_event(const SDL_Event& event, bool claimed);
-	void handle_draw_children() const;
+	bool handleEvent(const SDL_Event& event, bool claimed);
+	void handleDraw_children() const;
 
 	void change_font_size(int amount);
 
@@ -83,17 +83,17 @@ private:
 
 	bool file_contents_set_;
 
-	gui::code_editor_widget_ptr editor_;
-	gui::text_editor_widget_ptr search_;
-	gui::text_editor_widget_ptr replace_;
+	gui::code_editor_WidgetPtr editor_;
+	gui::TextEditorWidgetPtr search_;
+	gui::TextEditorWidgetPtr replace_;
 
-	gui::text_editor_widget_ptr optional_error_text_area_;
+	gui::TextEditorWidgetPtr optional_error_text_area_;
 
-	gui::label_ptr replace_label_, status_label_, error_label_;
+	gui::LabelPtr replace_label_, status_label_, error_label_;
 
 	gui::grid_ptr files_grid_;
 
-	gui::widget_ptr save_button_;
+	gui::WidgetPtr save_button_;
 
 	void on_tab();
 
@@ -111,13 +111,13 @@ private:
 	//recover from errors.
 	assert_recover_scope assert_recovery_;
 
-	gui::animation_preview_widget_ptr animation_preview_;
-	gui::formula_visualize_widget_ptr visualize_widget_;
+	gui::animation_preview_WidgetPtr animation_preview_;
+	gui::formula_visualize_WidgetPtr visualize_widget_;
 
 	struct KnownFile {
 		std::string fname;
 		boost::intrusive_ptr<frame> anim;
-		gui::code_editor_widget_ptr editor;
+		gui::code_editor_WidgetPtr editor;
 		boost::function<void()> op_fn;
 	};
 
@@ -134,7 +134,7 @@ private:
 	};
 
 	std::vector<Suggestion> suggestions_;
-	gui::widget_ptr suggestions_grid_;
+	gui::WidgetPtr suggestions_grid_;
 	int suggestions_prefix_;
 
 	bool have_close_buttons_;
@@ -142,7 +142,7 @@ private:
 	boost::function<void()> op_fn_;
 };
 
-typedef boost::intrusive_ptr<code_editor_dialog> code_editor_dialog_ptr;
+typedef boost::intrusive_ptr<code_editor_dialog> code_editor_DialogPtr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
 void edit_and_continue_fn(const std::string& fname, const std::string& error, boost::function<void()> fn);

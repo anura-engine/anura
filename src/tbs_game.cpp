@@ -163,9 +163,9 @@ boost::intrusive_ptr<game> game::create(const variant& v)
 	}
 
 	boost::intrusive_ptr<game> result(new game(type_itor->second));
-	game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
 	vars->add("msg", v);
-	result->handle_event("create", vars.get());
+	result->handleEvent("create", vars.get());
 	return result;
 }
 
@@ -211,7 +211,7 @@ game::~game()
 
 variant game::write(int nplayer) const
 {
-	game_logic::wml_formula_callable_serialization_scope serialization_scope;
+	game_logic::wmlFormulaCallableSerializationScope serialization_scope;
 
 	variant_builder result;
 	result.add("id", game_id_);
@@ -241,10 +241,10 @@ variant game::write(int nplayer) const
 
 	if(type_.handlers.count("transform")) {
 		variant msg = deep_copy_variant(doc_);
-		game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
+		game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
 		vars->add("message", msg);
 		vars->add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
-		const_cast<game*>(this)->handle_event("transform", vars.get());
+		const_cast<game*>(this)->handleEvent("transform", vars.get());
 
 		result.add("state", msg);
 	} else {
@@ -262,7 +262,7 @@ variant game::write(int nplayer) const
 	result.add("log", variant(log_str));
 
 	variant res = result.build();
-	res.add_attr(variant("serialized_objects"), serialization_scope.write_objects(res));
+	res.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(res));
 	return res;
 }
 
@@ -274,7 +274,7 @@ void game::start_game()
 
 	state_ = STATE_PLAYING;
 	started_ = true;
-	handle_event("start");
+	handleEvent("start");
 
 	send_game_state();
 
@@ -341,7 +341,7 @@ void game::add_ai_player(const std::string& name, const variant& info)
 	players_.back().side = players_.size() - 1;
 	players_.back().is_human = false;
 
-	handle_event("add_bot", map_into_callable(info).get());
+	handleEvent("add_bot", map_into_callable(info).get());
 
 //	boost::intrusive_ptr<bot> new_bot(new bot(*web_server::service(), "localhost", formatter() << web_server::port(), info));
 //	bots_.push_back(new_bot);
@@ -438,11 +438,11 @@ void game::process()
 
 	if(started_) {
 		static const std::string ProcessStr = "process";
-		handle_event(ProcessStr);
+		handleEvent(ProcessStr);
 	}
 }
 
-variant game::get_value(const std::string& key) const
+variant game::getValue(const std::string& key) const
 {
 	if(key == "game") {
 		return variant(this);
@@ -472,15 +472,15 @@ variant game::get_value(const std::string& key) const
 
 PREF_BOOL(tbs_game_exit_on_winner, false, "If true, tbs games will immediately exit when there is a winner.");
 
-void game::set_value(const std::string& key, const variant& value)
+void game::setValue(const std::string& key, const variant& value)
 {
 	if(key == "doc") {
 		doc_ = value;
 	} else if(key == "event") {
 		if(value.is_string()) {
-			handle_event(value.as_string());
+			handleEvent(value.as_string());
 		} else if(value.is_map()) {
-			handle_event(value["event"].as_string(), map_into_callable(value["arg"]).get());
+			handleEvent(value["event"].as_string(), map_into_callable(value["arg"]).get());
 		}
 	} else if(key == "log_message") {
 		if(!value.is_null()) {
@@ -546,11 +546,11 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	}
 
-	game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
 	vars->add("message", msg);
 	vars->add("player", variant(nplayer));
 	rng::set_seed(rng_seed_);
-	handle_event("message", vars.get());
+	handleEvent("message", vars.get());
 	rng_seed_ = rng::get_seed();
 	send_game_state();
 }
@@ -561,9 +561,9 @@ void game::setup_game()
 
 namespace {
 struct backup_callable_scope {
-	game_logic::formula_callable** ptr_;
-	game_logic::formula_callable* backup_;
-	backup_callable_scope(game_logic::formula_callable** ptr, game_logic::formula_callable* var) : ptr_(ptr), backup_(*ptr) {
+	game_logic::FormulaCallable** ptr_;
+	game_logic::FormulaCallable* backup_;
+	backup_callable_scope(game_logic::FormulaCallable** ptr, game_logic::FormulaCallable* var) : ptr_(ptr), backup_(*ptr) {
 		if(var) {
 			*ptr_ = var;
 		} else {
@@ -579,7 +579,7 @@ struct backup_callable_scope {
 };
 }
 
-void game::handle_event(const std::string& name, game_logic::formula_callable* variables)
+void game::handleEvent(const std::string& name, game_logic::FormulaCallable* variables)
 {
 	const backup_callable_scope backup_scope(&backup_callable_, variables);
 
@@ -589,14 +589,14 @@ void game::handle_event(const std::string& name, game_logic::formula_callable* v
 	}
 
 	variant v = itor->second->execute(*this);
-	execute_command(v);
+	executeCommand(v);
 }
 
-void game::execute_command(variant cmd)
+void game::executeCommand(variant cmd)
 {
 	if(cmd.is_list()) {
 		for(int n = 0; n != cmd.num_elements(); ++n) {
-			execute_command(cmd[n]);
+			executeCommand(cmd[n]);
 		}
 	} else if(cmd.is_callable()) {
 		const game_logic::command_callable* command = cmd.try_convert<game_logic::command_callable>();
@@ -606,10 +606,10 @@ void game::execute_command(variant cmd)
 	} else if(cmd.is_map()) {
 		if(cmd.has_key("execute")) {
 			game_logic::formula f(cmd["execute"]);
-			game_logic::formula_callable_ptr callable(map_into_callable(cmd["arg"]));
+			game_logic::FormulaCallablePtr callable(map_into_callable(cmd["arg"]));
 			ASSERT_LOG(callable.get(), "NO ARG SPECIFIED IN EXECUTE AT " << cmd.debug_location());
 			variant v = f.execute(*callable);
-			execute_command(v);
+			executeCommand(v);
 		}
 	}
 }
@@ -645,7 +645,7 @@ COMMAND_LINE_UTILITY(tbs_bot_game) {
 
 	variant start_game_request = json::parse("{type: 'start_game'}");
 
-	boost::intrusive_ptr<map_formula_callable> callable(new map_formula_callable);
+	boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable);
 	boost::intrusive_ptr<internal_client> client(new internal_client);
 	client->send_request(create_game_request, -1, callable, create_game_return);
 	while(!g_create_bot_game) {

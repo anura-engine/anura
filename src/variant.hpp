@@ -36,7 +36,7 @@
 #include "reference_counted_object.hpp"
 
 namespace game_logic {
-class formula_callable;
+class FormulaCallable;
 class formula_expression;
 }
 
@@ -46,11 +46,11 @@ typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
 
 struct CallStackEntry {
 	const game_logic::formula_expression* expression;
-	const game_logic::formula_callable* callable;
+	const game_logic::FormulaCallable* callable;
 	bool operator<(const CallStackEntry& o) const { return expression < o.expression || expression == o.expression && callable < o.callable; }
 };
 
-void push_call_stack(const game_logic::formula_expression* frame, const game_logic::formula_callable* callable);
+void push_call_stack(const game_logic::formula_expression* frame, const game_logic::FormulaCallable* callable);
 void pop_call_stack();
 std::string get_call_stack();
 std::string get_full_call_stack();
@@ -58,7 +58,7 @@ std::string get_full_call_stack();
 const std::vector<CallStackEntry>& get_expression_call_stack();
 
 struct call_stack_manager {
-	explicit call_stack_manager(const game_logic::formula_expression* str, const game_logic::formula_callable* callable) {
+	explicit call_stack_manager(const game_logic::formula_expression* str, const game_logic::FormulaCallable* callable) {
 		push_call_stack(str, callable);
 	}
 
@@ -105,7 +105,7 @@ public:
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
 
-	static variant create_delayed(game_logic::const_formula_ptr f, boost::intrusive_ptr<const game_logic::formula_callable> callable);
+	static variant create_delayed(game_logic::const_formula_ptr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
 	static void resolve_delayed();
 
 	static variant create_function_overload(const std::vector<variant>& fn);
@@ -117,17 +117,17 @@ public:
 	explicit variant(decimal d) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(d.value()) {}
 	explicit variant(double f) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(decimal(f).value()) {}
 	variant(int64_t n, DECIMAL_VARIANT_TYPE) : type_(VARIANT_TYPE_DECIMAL), decimal_value_(n) {}
-	explicit variant(const game_logic::formula_callable* callable);
+	explicit variant(const game_logic::FormulaCallable* callable);
 	explicit variant(std::vector<variant>* array);
 	explicit variant(const char* str);
 	explicit variant(const std::string& str);
 	static variant create_translated_string(const std::string& str);
 	static variant create_translated_string(const std::string& str, const std::string& translation);
 	explicit variant(std::map<variant,variant>* map);
-	variant(const variant& formula_var, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory);
-	variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
-	variant(std::function<variant(const game_logic::formula_callable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
-	//variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
+	variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory);
+	variant(const game_logic::const_formula_ptr& formula, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
+	variant(std::function<variant(const game_logic::FormulaCallable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
+	//variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
 
 	static variant create_variant_under_construction(intptr_t id);
 
@@ -226,10 +226,10 @@ public:
 	const void* get_addr() const { return list_; }
 
 	//binds a closure to a lambda function.
-	variant bind_closure(const game_logic::formula_callable* callable);
+	variant bind_closure(const game_logic::FormulaCallable* callable);
 	variant bind_args(const std::vector<variant>& args);
 
-	void get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::formula_callable>*>& result);
+	void get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::FormulaCallable>*>& result);
 
 	//precondition: is_function(). Gives the min/max arguments the function
 	//accepts.
@@ -244,9 +244,9 @@ public:
 	const std::string& as_string() const;
 
 	bool is_callable() const { return type_ == VARIANT_TYPE_CALLABLE; }
-	const game_logic::formula_callable* as_callable() const {
+	const game_logic::FormulaCallable* as_callable() const {
 		must_be(VARIANT_TYPE_CALLABLE); return callable_; }
-	game_logic::formula_callable* mutable_callable() const {
+	game_logic::FormulaCallable* mutable_callable() const {
 		must_be(VARIANT_TYPE_CALLABLE); return mutable_callable_; }
 
 	intptr_t as_callable_loading() const { return callable_loading_; }
@@ -286,7 +286,7 @@ public:
 	bool operator>=(const variant&) const;
 
 	variant get_keys() const;
-	variant get_values() const;
+	variant getValues() const;
 
 	void serialize_to_string(std::string& str) const;
 	void serialize_from_string(const std::string& str);
@@ -296,7 +296,7 @@ public:
 
 	std::string string_cast() const;
 
-	std::string to_debug_string(std::vector<const game_logic::formula_callable*>* seen=NULL) const;
+	std::string to_debug_string(std::vector<const game_logic::FormulaCallable*>* seen=NULL) const;
 
 	enum write_flags
 	{
@@ -355,8 +355,8 @@ private:
 		bool bool_value_;
 		int int_value_;
 		int64_t decimal_value_;
-		const game_logic::formula_callable* callable_;
-		game_logic::formula_callable* mutable_callable_;
+		const game_logic::FormulaCallable* callable_;
+		game_logic::FormulaCallable* mutable_callable_;
 		intptr_t callable_loading_;
 		variant_list* list_;
 		variant_string* string_;

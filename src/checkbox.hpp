@@ -26,17 +26,17 @@ namespace gui {
 class checkbox : public button
 {
 public:
-	checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION button_resolution=BUTTON_SIZE_NORMAL_RESOLUTION);
-	checkbox(widget_ptr label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION button_resolution=BUTTON_SIZE_NORMAL_RESOLUTION);
-	checkbox(const variant& v, game_logic::formula_callable* e);
+	checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, buttonResolution buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+	checkbox(WidgetPtr label, bool checked, boost::function<void(bool)> onclick, buttonResolution buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+	checkbox(const variant& v, game_logic::FormulaCallable* e);
 	bool checked() const { return checked_; }
 protected:
-	virtual variant get_value(const std::string& key) const;
+	virtual variant getValue(const std::string& key) const;
 private:
 	void on_click();
 
 	std::string label_;
-	widget_ptr label_widget_;
+	WidgetPtr label_widget_;
 	boost::function<void(bool)> onclick_;
 	bool checked_;
 	game_logic::formula_ptr click_handler_;

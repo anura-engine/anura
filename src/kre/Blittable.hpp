@@ -53,7 +53,7 @@ namespace KRE
 		void SetDrawRect(const Geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
-		virtual void PreRender() override;
+		virtual void preRender() override;
 
 		Centre GetCentre() const { return centre_; }
 		void SetCentre(Centre c);

@@ -265,7 +265,7 @@ void http_client::process()
 	io_service_.reset();
 }
 
-variant http_client::get_value(const std::string& key) const
+variant http_client::getValue(const std::string& key) const
 {
 	if(key == "in_flight") {
 		return variant(in_flight_);

@@ -145,7 +145,7 @@ frame::frame(variant node)
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
 	 end_event_id_(get_object_event_id("end_" + id_ + "_anim")),
 	 leave_event_id_(get_object_event_id("leave_" + id_ + "_anim")),
-	 process_event_id_(get_object_event_id("process_" + id_)),
+	 processEvent_id_(get_object_event_id("process_" + id_)),
 	 solid_(solid_info::create(node)),
      collide_rect_(node.has_key("collide") ? rect(node["collide"]) :
 	               rect(node["collide_x"].as_int(),
@@ -516,7 +516,7 @@ void frame::set_palettes(unsigned int palettes)
 	current_palette_ = npalette;
 }
 
-void frame::set_color_palette(unsigned int palettes)
+void frame::setColor_palette(unsigned int palettes)
 {
 	current_palette_mask = palettes;
 	for(std::set<frame*>::iterator i = palette_frames().begin(); i != palette_frames().end(); ++i) {
@@ -556,7 +556,7 @@ void frame::build_alpha_from_frame_info()
 			ASSERT_LT(area.x(), texture_.width());
 			ASSERT_LE(area.x() + area.w(), texture_.width());
 			ASSERT_LT(area.y() + y, texture_.height());
-			std::vector<bool>::const_iterator src = texture_.get_alpha_row(area.x(), area.y() + y);
+			std::vector<bool>::const_iterator src = texture_.getAlpha_row(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
 			
@@ -599,7 +599,7 @@ void frame::build_alpha()
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = texture_.get_alpha_row(xbase, ybase + y);
+			std::vector<bool>::const_iterator src = texture_.getAlpha_row(xbase, ybase + y);
 			std::copy(src, src + img_rect_.w(), dst);
 		}
 
@@ -614,7 +614,7 @@ void frame::build_alpha()
 		
 		int top;
 		for(top = 0; top != img_rect_.h(); ++top) {
-			const std::vector<bool>::const_iterator a = texture_.get_alpha_row(xbase, ybase + top);
+			const std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase, ybase + top);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -622,7 +622,7 @@ void frame::build_alpha()
 
 		int bot;
 		for(bot = img_rect_.h(); bot > 0; --bot) {
-			const std::vector<bool>::const_iterator a = texture_.get_alpha_row(xbase, ybase + bot-1);
+			const std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase, ybase + bot-1);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -630,7 +630,7 @@ void frame::build_alpha()
 
 		int left;
 		for(left = 0; left < img_rect_.w(); ++left) {
-			std::vector<bool>::const_iterator a = texture_.get_alpha_row(xbase + left, ybase);
+			std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase + left, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -649,7 +649,7 @@ void frame::build_alpha()
 
 		int right;
 		for(right = img_rect_.w(); right > 0; --right) {
-			std::vector<bool>::const_iterator a = texture_.get_alpha_row(xbase + right-1, ybase);
+			std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase + right-1, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -694,7 +694,7 @@ void frame::build_alpha()
 
 bool frame::is_alpha(int x, int y, int time, bool face_right) const
 {
-	std::vector<bool>::const_iterator itor = get_alpha_itor(x, y, time, face_right);
+	std::vector<bool>::const_iterator itor = getAlpha_itor(x, y, time, face_right);
 	if(itor == alpha_.end()) {
 		return true;
 	} else {
@@ -702,7 +702,7 @@ bool frame::is_alpha(int x, int y, int time, bool face_right) const
 	}
 }
 
-std::vector<bool>::const_iterator frame::get_alpha_itor(int x, int y, int time, bool face_right) const
+std::vector<bool>::const_iterator frame::getAlpha_itor(int x, int y, int time, bool face_right) const
 {
 	if(alpha_.empty()) {
 		return alpha_.end();
@@ -743,7 +743,7 @@ void frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool 
 	rect[2] = texture_.translate_coord_x(rect[2]);
 	rect[3] = texture_.translate_coord_y(rect[3]);
 
-	blit.set_texture(texture_.get_id());
+	blit.setTexture(texture_.get_id());
 
 
 	blit.add(x, y, rect[0], rect[1]);
@@ -846,13 +846,13 @@ void frame::draw3(int time, GLint va, GLint tc) const
 		size_t tex_unit = GL_TEXTURE0;
 		if(dd3d.tex_a.valid()) {
 			glActiveTexture(tex_unit);
-			dd3d.tex_a.set_as_current_texture();
+			dd3d.tex_a.set_as_currentTexture();
 			++tex_unit;
 		}
 		if(dd3d.tex_d.valid()) {
 			glActiveTexture(tex_unit);
 			if(tex_unit == GL_TEXTURE0) {
-				dd3d.tex_d.set_as_current_texture();
+				dd3d.tex_d.set_as_currentTexture();
 			} else {
 				glBindTexture(GL_TEXTURE_2D, dd3d.tex_d.get_id());
 			}
@@ -861,7 +861,7 @@ void frame::draw3(int time, GLint va, GLint tc) const
 		if(dd3d.tex_s.valid()) {
 			glActiveTexture(tex_unit);
 			if(tex_unit == GL_TEXTURE0) {
-				dd3d.tex_s.set_as_current_texture();
+				dd3d.tex_s.set_as_currentTexture();
 			} else {
 				glBindTexture(GL_TEXTURE_2D, dd3d.tex_s.get_id());
 			}
@@ -898,7 +898,7 @@ void frame::draw3(int time, GLint va, GLint tc) const
 
 void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
-	texture_.set_as_current_texture();
+	texture_.set_as_currentTexture();
 
 	const frame_info* info = NULL;
 	GLfloat rect[4];
@@ -1023,7 +1023,7 @@ PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing"
 
 void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
 {
-	texture_.set_as_current_texture();
+	texture_.set_as_currentTexture();
 
 	const frame_info* info = NULL;
 	GLfloat rect[4];
@@ -1088,7 +1088,7 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 
 	if(g_debug_custom_draw) {
 		static graphics::texture tex = graphics::texture::get("white2x2.png");
-		tex.set_as_current_texture();
+		tex.set_as_currentTexture();
 
 		glColor4f(1.0,1.0,1.0,1.0);
 		gles2::active_shader()->prepare_draw();
@@ -1228,7 +1228,7 @@ point frame::pivot(const std::string& name, int time_in_frame) const
 	return point(feet_x(),feet_y()); //default is to pivot around feet.
 }
 
-variant frame::get_value(const std::string& key) const
+variant frame::getValue(const std::string& key) const
 {
 	return variant();
 }

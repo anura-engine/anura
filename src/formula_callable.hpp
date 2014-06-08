@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FORMULA_CALLABLE_HPP_INCLUDED
-#define FORMULA_CALLABLE_HPP_INCLUDED
+
+#pragma once
 
 #include <functional>
 #include <iostream>
@@ -37,12 +43,12 @@ struct formula_input {
 	{}
 };
 
-class formula_callable_visitor;
+class FormulaCallableVisitor;
 
 //interface for objects that can have formulae run on them
-class formula_callable : public reference_counted_object {
+class FormulaCallable : public reference_counted_object {
 public:
-	explicit formula_callable(bool has_self=false) : has_self_(has_self)
+	explicit FormulaCallable(bool has_self=false) : has_self_(has_self)
 	{}
 
 	std::string query_id() const { return get_object_id(); }
@@ -51,19 +57,19 @@ public:
 		if(has_self_ && key == "self") {
 			return variant(this);
 		}
-		return get_value(key);
+		return getValue(key);
 	}
 
 	variant query_value_by_slot(int slot) const {
-		return get_value_by_slot(slot);
+		return getValue_by_slot(slot);
 	}
 
 	void mutate_value(const std::string& key, const variant& value) {
-		set_value(key, value);
+		setValue(key, value);
 	}
 
 	void mutate_value_by_slot(int slot, const variant& value) {
-		set_value_by_slot(slot, value);
+		setValue_by_slot(slot, value);
 	}
 
 	std::vector<formula_input> inputs() const {
@@ -72,11 +78,11 @@ public:
 		return res;
 	}
 
-	bool equals(const formula_callable* other) const {
+	bool equals(const FormulaCallable* other) const {
 		return do_compare(other) == 0;
 	}
 
-	bool less(const formula_callable* other) const {
+	bool less(const FormulaCallable* other) const {
 		return do_compare(other) < 0;
 	}
 
@@ -95,54 +101,54 @@ public:
 	// commands).  If you're making some new that object that provides a custom symbol
 	// table or supports different types of command_callable you should override these 
 	// two functions to provide widget support.
-	virtual bool execute_command(const variant &v);
-	virtual formula_ptr create_formula(const variant& v);
+	virtual bool executeCommand(const variant &v);
+	virtual formula_ptr createFormula(const variant& v);
 
 	//is some kind of command to the engine.
 	virtual bool is_command() const { return false; }
 	virtual bool is_cairo_op() const { return false; }
 
-	void perform_visit_values(formula_callable_visitor& visitor) {
-		visit_values(visitor);
+	void performVisitValues(FormulaCallableVisitor& visitor) {
+		visitValues(visitor);
 	}
 
 protected:
-	virtual ~formula_callable() {}
+	virtual ~FormulaCallable() {}
 
-	virtual void set_value(const std::string& key, const variant& value);
-	virtual void set_value_by_slot(int slot, const variant& value);
-	virtual int do_compare(const formula_callable* callable) const {
+	virtual void setValue(const std::string& key, const variant& value);
+	virtual void setValue_by_slot(int slot, const variant& value);
+	virtual int do_compare(const FormulaCallable* callable) const {
 		return this < callable ? -1 : (this == callable ? 0 : 1);
 	}
 
 	virtual void serialize_to_string(std::string& str) const;
 
-	virtual void visit_values(formula_callable_visitor& visitor) {}
+	virtual void visitValues(FormulaCallableVisitor& visitor) {}
 private:
-	virtual variant get_value(const std::string& key) const = 0;
-	virtual variant get_value_by_slot(int slot) const;
+	virtual variant getValue(const std::string& key) const = 0;
+	virtual variant getValue_by_slot(int slot) const;
 
-	virtual std::string get_object_id() const { return "formula_callable"; }
+	virtual std::string get_object_id() const { return "FormulaCallable"; }
 
 	bool has_self_;
 };
 
-class formula_callable_no_ref_count : public formula_callable {
+class FormulaCallable_no_ref_count : public FormulaCallable {
 public:
-	formula_callable_no_ref_count() {
+	FormulaCallable_no_ref_count() {
 		turn_reference_counting_off();
 	}
-	virtual ~formula_callable_no_ref_count() {}
+	virtual ~FormulaCallable_no_ref_count() {}
 };
 
-class formula_callable_with_backup : public formula_callable {
-	const formula_callable& main_;
-	const formula_callable& backup_;
-	variant get_value_by_slot(int slot) const {
+class FormulaCallable_with_backup : public FormulaCallable {
+	const FormulaCallable& main_;
+	const FormulaCallable& backup_;
+	variant getValue_by_slot(int slot) const {
 		return backup_.query_value_by_slot(slot);
 	}
 
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		variant var = main_.query_value(key);
 		if(var.is_null()) {
 			return backup_.query_value(key);
@@ -156,14 +162,14 @@ class formula_callable_with_backup : public formula_callable {
 		backup_.get_inputs(inputs);
 	}
 public:
-	formula_callable_with_backup(const formula_callable& main, const formula_callable& backup) : formula_callable(false), main_(main), backup_(backup)
+	FormulaCallable_with_backup(const FormulaCallable& main, const FormulaCallable& backup) : FormulaCallable(false), main_(main), backup_(backup)
 	{}
 };
 
-class formula_variant_callable_with_backup : public formula_callable {
+class formula_variant_callable_with_backup : public FormulaCallable {
 	variant var_;
-	const formula_callable& backup_;
-	variant get_value(const std::string& key) const {
+	const FormulaCallable& backup_;
+	variant getValue(const std::string& key) const {
 		variant var = var_.get_member(key);
 		if(var.is_null()) {
 			return backup_.query_value(key);
@@ -172,7 +178,7 @@ class formula_variant_callable_with_backup : public formula_callable {
 		return var;
 	}
 
-	variant get_value_by_slot(int slot) const {
+	variant getValue_by_slot(int slot) const {
 		return backup_.query_value_by_slot(slot);
 	}
 
@@ -181,18 +187,18 @@ class formula_variant_callable_with_backup : public formula_callable {
 	}
 
 public:
-	formula_variant_callable_with_backup(const variant& var, const formula_callable& backup) : formula_callable(false), var_(var), backup_(backup)
+	formula_variant_callable_with_backup(const variant& var, const FormulaCallable& backup) : FormulaCallable(false), var_(var), backup_(backup)
 	{}
 };
 
-class map_formula_callable : public formula_callable {
+class map_FormulaCallable : public FormulaCallable {
 public:
-	explicit map_formula_callable(variant node);
-	explicit map_formula_callable(const formula_callable* fallback=NULL);
-	explicit map_formula_callable(const std::map<std::string, variant>& m);
+	explicit map_FormulaCallable(variant node);
+	explicit map_FormulaCallable(const FormulaCallable* fallback=NULL);
+	explicit map_FormulaCallable(const std::map<std::string, variant>& m);
 	variant write() const;
-	map_formula_callable& add(const std::string& key, const variant& value);
-	void set_fallback(const formula_callable* fallback) { fallback_ = fallback; }
+	map_FormulaCallable& add(const std::string& key, const variant& value);
+	void set_fallback(const FormulaCallable* fallback) { fallback_ = fallback; }
 
 	//adds an entry and gets direct access to the variant. Use with caution
 	//and for cases where calling add() repeatedy isn't efficient enough.
@@ -212,40 +218,40 @@ public:
 	variant& ref(const std::string& key) { return values_[key]; }
 
 private:
-	//map_formula_callable(const map_formula_callable&);
+	//map_FormulaCallable(const map_FormulaCallable&);
 
-	variant get_value_by_slot(int slot) const {
+	variant getValue_by_slot(int slot) const {
 		return fallback_->query_value_by_slot(slot);
 	}
 
-	virtual void visit_values(formula_callable_visitor& visitor);
+	virtual void visitValues(FormulaCallableVisitor& visitor);
 
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 	void get_inputs(std::vector<formula_input>* inputs) const;
-	void set_value(const std::string& key, const variant& value);
+	void setValue(const std::string& key, const variant& value);
 	std::map<std::string,variant> values_;
-	const formula_callable* fallback_;
+	const FormulaCallable* fallback_;
 };
 
-typedef boost::intrusive_ptr<formula_callable> formula_callable_ptr;
-typedef boost::intrusive_ptr<const formula_callable> const_formula_callable_ptr;
+typedef boost::intrusive_ptr<FormulaCallable> FormulaCallablePtr;
+typedef boost::intrusive_ptr<const FormulaCallable> const_FormulaCallablePtr;
 
-typedef boost::intrusive_ptr<map_formula_callable> map_formula_callable_ptr;
-typedef boost::intrusive_ptr<const map_formula_callable> const_map_formula_callable_ptr;
+typedef boost::intrusive_ptr<map_FormulaCallable> map_FormulaCallablePtr;
+typedef boost::intrusive_ptr<const map_FormulaCallable> const_map_FormulaCallablePtr;
 
 class formula_expression;
 
-class command_callable : public formula_callable {
+class command_callable : public FormulaCallable {
 public:
 	command_callable();
-	void run_command(formula_callable& context) const;
+	void run_command(FormulaCallable& context) const;
 
 	void set_expression(const formula_expression* expr);
 
 	bool is_command() const { return true; }
 private:
-	virtual void execute(formula_callable& context) const = 0;
-	variant get_value(const std::string& key) const { return variant(); }
+	virtual void execute(FormulaCallable& context) const = 0;
+	variant getValue(const std::string& key) const { return variant(); }
 	void get_inputs(std::vector<game_logic::formula_input>* inputs) const {}
 
 	//these two members are a more compiler-friendly version of a
@@ -258,18 +264,16 @@ class fn_command_callable : public command_callable {
 public:
 	explicit fn_command_callable(std::function<void()> fn);
 private:
-	virtual void execute(formula_callable& context) const;
+	virtual void execute(FormulaCallable& context) const;
 	std::function<void()> fn_;
 };
 
 class fn_command_callable_arg : public command_callable {
 public:
-	explicit fn_command_callable_arg(std::function<void(formula_callable*)> fn);
+	explicit fn_command_callable_arg(std::function<void(FormulaCallable*)> fn);
 private:
-	virtual void execute(formula_callable& context) const;
-	std::function<void(formula_callable*)> fn_;
+	virtual void execute(FormulaCallable& context) const;
+	std::function<void(FormulaCallable*)> fn_;
 };
 
 }
-
-#endif

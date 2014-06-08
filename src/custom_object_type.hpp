@@ -56,7 +56,7 @@ class custom_object_type
 public:
 	static void set_player_variant_type(variant type_str);
 
-	static game_logic::formula_callable_definition_ptr get_definition(const std::string& id);
+	static game_logic::FormulaCallable_definition_ptr get_definition(const std::string& id);
 	static bool is_derived_from(const std::string& base, const std::string& derived);
 	static variant merge_prototype(variant node, std::vector<std::string>* proto_paths=NULL);
 	static const std::string* get_object_path(const std::string& id);
@@ -192,11 +192,11 @@ public:
 
 	const std::map<std::string, variant>& variables() const { return variables_; }
 	const std::map<std::string, variant>& tmp_variables() const { return tmp_variables_; }
-	game_logic::const_map_formula_callable_ptr consts() const { return consts_; }
+	game_logic::const_map_FormulaCallablePtr consts() const { return consts_; }
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
+		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_EditorInfo(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
 		boost::shared_ptr<variant> const_value;
@@ -205,7 +205,7 @@ public:
 		int slot, storage_slot;
 		bool persistent;
 		bool requires_initialization;
-		bool has_editor_info;
+		bool has_EditorInfo;
 	};
 
 	const std::map<std::string, property_entry>& properties() const { return properties_; }
@@ -241,7 +241,7 @@ public:
 	void load_variations() const;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr editor_info() const { return editor_info_; }
+	const_editor_entity_info_ptr EditorInfo() const { return EditorInfo_; }
 #endif // !NO_EDITOR
 
 	variant node() const { return node_; }
@@ -346,7 +346,7 @@ private:
 	bool adjust_feet_on_animation_change_;
 
 	std::map<std::string, variant> variables_, tmp_variables_;
-	game_logic::map_formula_callable_ptr consts_;
+	game_logic::map_FormulaCallablePtr consts_;
 	std::map<std::string, variant> tags_;
 
 	std::map<std::string, property_entry> properties_;
@@ -377,7 +377,7 @@ private:
 	mutable std::map<std::vector<std::string>, const_custom_object_type_ptr> variations_cache_;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr editor_info_;
+	const_editor_entity_info_ptr EditorInfo_;
 #endif // !NO_EDITOR
 
 	std::map<std::string, const_custom_object_type_ptr> sub_objects_;

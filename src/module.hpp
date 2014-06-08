@@ -92,10 +92,10 @@ variant build_package(const std::string& id);
 
 bool uninstall_downloaded_module(const std::string& id);
 
-void set_module_args(game_logic::const_formula_callable_ptr callable);
-game_logic::const_formula_callable_ptr get_module_args();
+void set_module_args(game_logic::const_FormulaCallablePtr callable);
+game_logic::const_FormulaCallablePtr get_module_args();
 
-class client : public game_logic::formula_callable
+class client : public game_logic::FormulaCallable
 {
 public:
 	client();
@@ -119,7 +119,7 @@ public:
 	void get_status();
 	bool process();
 	const std::string& error() const { return error_; }
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 
 	int nbytes_transferred() const { return nbytes_transferred_; }
 	int nbytes_total() const { return nbytes_total_; }

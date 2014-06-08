@@ -51,7 +51,7 @@ void bot::process(const boost::system::error_code& error)
 		return;
 	}
 	if(on_create_) {
-		execute_command(on_create_->execute(*this));
+		executeCommand(on_create_->execute(*this));
 		on_create_.reset();
 	}
 
@@ -69,7 +69,7 @@ void bot::process(const boost::system::error_code& error)
 		}
 
 		ASSERT_LOG(send.is_map(), "NO REQUEST TO SEND: " << send.write_json() << " IN " << script.write_json());
-		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
+		game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable(this));
 		if(preferences::internal_tbs_server()) {
 			internal_client_.reset(new internal_client(session_id));
 			internal_client_->send_request(send, session_id, callable, boost::bind(&bot::handle_response, this, _1, callable));
@@ -84,17 +84,17 @@ void bot::process(const boost::system::error_code& error)
 	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
 }
 
-void bot::handle_response(const std::string& type, game_logic::formula_callable_ptr callable)
+void bot::handle_response(const std::string& type, game_logic::FormulaCallablePtr callable)
 {
 	if(on_create_) {
-		execute_command(on_create_->execute(*this));
+		executeCommand(on_create_->execute(*this));
 		on_create_.reset();
 	}
 
 	if(on_message_) {
 		message_type_ = type;
 		message_callable_ = callable;
-		execute_command(on_message_->execute(*this));
+		executeCommand(on_message_->execute(*this));
 	}
 
 	ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->query_value("message").write_json());
@@ -132,7 +132,7 @@ void bot::handle_response(const std::string& type, game_logic::formula_callable_
 	tbs::web_server::set_debug_state(generate_report());
 }
 
-variant bot::get_value(const std::string& key) const
+variant bot::getValue(const std::string& key) const
 {
 	if(key == "script") {
 		std::vector<variant> s = script_;
@@ -149,7 +149,7 @@ variant bot::get_value(const std::string& key) const
 	return variant();
 }
 
-void bot::set_value(const std::string& key, const variant& value)
+void bot::setValue(const std::string& key, const variant& value)
 {
 	if(key == "script") {
 		script_ = value.as_list();

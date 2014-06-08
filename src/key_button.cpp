@@ -77,31 +77,31 @@ key_type get_key_sym(const std::string& s)
 	return SDL_GetKeyFromName(s.c_str());
 }
 
-key_button::key_button(key_type key, BUTTON_RESOLUTION button_resolution)
-  : label_(widget_ptr(new graphical_font_label(get_key_name(key), "door_label", 2))),
-	key_(key), button_resolution_(button_resolution),
-	normal_button_image_set_(framed_gui_element::get("regular_button")),
-	depressed_button_image_set_(framed_gui_element::get("regular_button_pressed")),
-	focus_button_image_set_(framed_gui_element::get("regular_button_focus")),
+key_button::key_button(key_type key, buttonResolution buttonResolution)
+  : label_(WidgetPtr(new graphical_font_label(get_key_name(key), "door_label", 2))),
+	key_(key), button_resolution_(buttonResolution),
+	normal_button_image_set_(FramedGuiElement::get("regular_button")),
+	depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
+	focus_button_image_set_(FramedGuiElement::get("regular_button_focus")),
 	current_button_image_set_(normal_button_image_set_), grab_keys_(false)
 	
 {
-	set_environment();
-	set_dim(label_->width()+hpadding*2,label_->height()+vpadding*2);
+	setEnvironment();
+	setDim(label_->width()+hpadding*2,label_->height()+vpadding*2);
 }
 
-key_button::key_button(const variant& v, game_logic::formula_callable* e) 
-	: widget(v,e), 	normal_button_image_set_(framed_gui_element::get("regular_button")),
-	depressed_button_image_set_(framed_gui_element::get("regular_button_pressed")),
-	focus_button_image_set_(framed_gui_element::get("regular_button_focus")),
+key_button::key_button(const variant& v, game_logic::FormulaCallable* e) 
+	: widget(v,e), 	normal_button_image_set_(FramedGuiElement::get("regular_button")),
+	depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
+	focus_button_image_set_(FramedGuiElement::get("regular_button_focus")),
 	current_button_image_set_(normal_button_image_set_), grab_keys_(false)
 {
 	std::string key = v["key"].as_string();
 	key_ = get_key_sym(key);
-	label_ = v.has_key("label") ? widget_factory::create(v["label"], e) : widget_ptr(new graphical_font_label(key, "door_label", 2));
+	label_ = v.has_key("label") ? widget_factory::create(v["label"], e) : WidgetPtr(new graphical_font_label(key, "door_label", 2));
 	button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 
-	set_dim(label_->width()+hpadding*2,label_->height()+vpadding*2);
+	setDim(label_->width()+hpadding*2,label_->height()+vpadding*2);
 }
 
 bool key_button::in_button(int xloc, int yloc) const
@@ -111,14 +111,14 @@ bool key_button::in_button(int xloc, int yloc) const
 	       yloc > y() && yloc < y() + height();
 }
 
-void key_button::handle_draw() const
+void key_button::handleDraw() const
 {
-	label_->set_loc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
+	label_->setLoc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
 	current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_);
 	label_->draw();
 }
 
-bool key_button::handle_event(const SDL_Event& event, bool claimed)
+bool key_button::handleEvent(const SDL_Event& event, bool claimed)
 {
     if(claimed) {
 		current_button_image_set_ = normal_button_image_set_;
@@ -144,13 +144,13 @@ bool key_button::handle_event(const SDL_Event& event, bool claimed)
 			if(in_button(e.x,e.y)) {
 				current_button_image_set_ = focus_button_image_set_;
 				grab_keys_ = true;
-				dynamic_cast<graphical_font_label*>(label_.get())->set_text("...");
-				claimed = claim_mouse_events();
+				dynamic_cast<graphical_font_label*>(label_.get())->setText("...");
+				claimed = claimMouseEvents();
 			} else {
 				current_button_image_set_ = normal_button_image_set_;
 			}
 		} else if (grab_keys_) {
-			dynamic_cast<graphical_font_label*>(label_.get())->set_text(get_key_name(key_));
+			dynamic_cast<graphical_font_label*>(label_.get())->setText(get_key_name(key_));
 			current_button_image_set_ = normal_button_image_set_;
 			grab_keys_ = false;
 		}
@@ -159,7 +159,7 @@ bool key_button::handle_event(const SDL_Event& event, bool claimed)
 	if(event.type == SDL_KEYDOWN && grab_keys_) {
 		key_ = event.key.keysym.sym;
 		if(key_ != SDLK_RETURN && key_ != SDLK_ESCAPE) {
-			dynamic_cast<graphical_font_label*>(label_.get())->set_text(get_key_name(key_));
+			dynamic_cast<graphical_font_label*>(label_.get())->setText(get_key_name(key_));
 			claimed = true;
 			current_button_image_set_ = normal_button_image_set_;
 			grab_keys_ = false;
@@ -173,17 +173,17 @@ key_type key_button::get_key() {
 	return key_;
 }
 
-void key_button::set_value(const std::string& key, const variant& v)
+void key_button::setValue(const std::string& key, const variant& v)
 {
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant key_button::get_value(const std::string& key) const
+variant key_button::getValue(const std::string& key) const
 {
 	if(key == "key") {
 		return variant(key_);
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

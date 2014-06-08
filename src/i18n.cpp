@@ -147,7 +147,7 @@ void load_translations() {
 	}
 }
 
-void set_locale(const std::string& l) {
+void setLocale(const std::string& l) {
 	locale = l;
 	i18n::load_translations();
 }
@@ -215,7 +215,7 @@ void use_system_locale() {
 		if(locale == "system" || locale == "") {
 			i18n::use_system_locale();
 		} else {
-			i18n::set_locale(locale);
+			i18n::setLocale(locale);
 		}
 	}
 

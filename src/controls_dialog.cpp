@@ -28,7 +28,7 @@
 #include "preferences.hpp"
 
 namespace {
-gui::key_button_ptr key_buttons[controls::NUM_CONTROLS];
+gui::key_ButtonPtr key_buttons[controls::NUM_CONTROLS];
 
 void end_dialog(gui::dialog* d)
 {
@@ -60,23 +60,23 @@ void show_controls_dialog()
 
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
 		const CONTROL_ITEM item = static_cast<CONTROL_ITEM>(n);
-		key_buttons[item] = key_button_ptr(new key_button(get_keycode(item), BUTTON_SIZE_DOUBLE_RESOLUTION));
-		key_buttons[item]->set_dim(70, 60);
+		key_buttons[item] = key_ButtonPtr(new key_button(get_keycode(item), BUTTON_SIZE_DOUBLE_RESOLUTION));
+		key_buttons[item]->setDim(70, 60);
 	}
 
-	widget_ptr t1(new graphical_font_label(_("Directions"), "door_label", 2));
-	widget_ptr b1(key_buttons[CONTROL_UP]);
-	widget_ptr b2(key_buttons[CONTROL_DOWN]);
-	widget_ptr b3(key_buttons[CONTROL_LEFT]);
-	widget_ptr b4(key_buttons[CONTROL_RIGHT]);
-	widget_ptr t2(new graphical_font_label(_("Jump"), "door_label", 2));
-	widget_ptr b5(key_buttons[CONTROL_JUMP]);
-	widget_ptr t3(new graphical_font_label(_("Tongue"), "door_label", 2));
-	widget_ptr b6(key_buttons[CONTROL_TONGUE]);
-	widget_ptr t4(new graphical_font_label(_("Attack"), "door_label", 2));
-	widget_ptr b7(key_buttons[CONTROL_ATTACK]);
-	widget_ptr b8(new button(widget_ptr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
-	b8->set_dim(230, 60);
+	WidgetPtr t1(new graphical_font_label(_("Directions"), "door_label", 2));
+	WidgetPtr b1(key_buttons[CONTROL_UP]);
+	WidgetPtr b2(key_buttons[CONTROL_DOWN]);
+	WidgetPtr b3(key_buttons[CONTROL_LEFT]);
+	WidgetPtr b4(key_buttons[CONTROL_RIGHT]);
+	WidgetPtr t2(new graphical_font_label(_("Jump"), "door_label", 2));
+	WidgetPtr b5(key_buttons[CONTROL_JUMP]);
+	WidgetPtr t3(new graphical_font_label(_("Tongue"), "door_label", 2));
+	WidgetPtr b6(key_buttons[CONTROL_TONGUE]);
+	WidgetPtr t4(new graphical_font_label(_("Attack"), "door_label", 2));
+	WidgetPtr b7(key_buttons[CONTROL_ATTACK]);
+	WidgetPtr b8(new button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
+	b8->setDim(230, 60);
 
 	int start_y = (d.height() - 4*b1->height() - 2*t1->height() - 7*d.padding())/2;
 	d.add_widget(t1, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);

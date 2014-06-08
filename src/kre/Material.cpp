@@ -56,33 +56,41 @@ namespace KRE
 
 	void Material::Init(const variant& node)
 	{
-		name_ = node["name"].as_string();
 		blend_.Set(BlendMode::BlendModeConstants::BM_SRC_ALPHA, BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+
+		if(node.is_string()) {
+			name_ = node.as_string();
+			tex_.emplace_back(DisplayDevice::CreateTexture(name_));
+		} else if(node.is_map()) {
+			name_ = node["name"].as_string();
 		
-		// XXX: technically a material could have multiple technique's and passes -- ignoring for now.
-		ASSERT_LOG(node.has_key("technique"), "PSYSTEM2: 'material' must have 'technique' attribute.");
-		ASSERT_LOG(node["technique"].has_key("pass"), "PSYSTEM2: 'material' must have 'pass' attribute.");
-		const variant& pass = node["technique"]["pass"];
-		use_lighting_ = pass["lighting"].as_bool(false);
-		use_fog_ = pass["fog_override"].as_bool(false);
-		do_depth_write_ = pass["depth_write"].as_bool(true);
-		do_depth_check_ = pass["depth_check"].as_bool(true);
-		if(pass.has_key("scene_blend")) {
-			blend_.Set(pass["scene_blend"]);
-		}
-		if(pass.has_key("texture_unit")) {
-			if(pass["texture_unit"].is_map()) {
-				tex_.emplace_back(CreateTexture(pass["texture_unit"]));
-			} else if(pass["texture_unit"].is_list()) {
-				for(size_t n = 0; n != pass["texture_unit"].num_elements(); ++n) {
-					tex_.emplace_back(CreateTexture(pass["texture_unit"][n]));
-				}
-			} else {
-				ASSERT_LOG(false, "'texture_unit' attribute must be map or list ");
+			// XXX: technically a material could have multiple technique's and passes -- ignoring for now.
+			ASSERT_LOG(node.has_key("technique"), "PSYSTEM2: 'material' must have 'technique' attribute.");
+			ASSERT_LOG(node["technique"].has_key("pass"), "PSYSTEM2: 'material' must have 'pass' attribute.");
+			const variant& pass = node["technique"]["pass"];
+			use_lighting_ = pass["lighting"].as_bool(false);
+			use_fog_ = pass["fog_override"].as_bool(false);
+			do_depth_write_ = pass["depth_write"].as_bool(true);
+			do_depth_check_ = pass["depth_check"].as_bool(true);
+			if(pass.has_key("scene_blend")) {
+				blend_.Set(pass["scene_blend"]);
 			}
-		}
-		if(pass.has_key("rect")) {
-			draw_rect_ = rectf(pass["rect"]);
+			if(pass.has_key("texture_unit")) {
+				if(pass["texture_unit"].is_map()) {
+					tex_.emplace_back(CreateTexture(pass["texture_unit"]));
+				} else if(pass["texture_unit"].is_list()) {
+					for(size_t n = 0; n != pass["texture_unit"].num_elements(); ++n) {
+						tex_.emplace_back(CreateTexture(pass["texture_unit"][n]));
+					}
+				} else {
+					ASSERT_LOG(false, "'texture_unit' attribute must be map or list ");
+				}
+			}
+			if(pass.has_key("rect")) {
+				draw_rect_ = rectf(pass["rect"]);
+			}
+		} else {
+			ASSERT_LOG(false, "Materials(Textures) must be either a single string filename or a map.");
 		}
 	}
 

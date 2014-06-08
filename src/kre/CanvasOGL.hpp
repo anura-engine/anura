@@ -33,12 +33,18 @@ namespace KRE
 		CanvasOGL();
 		virtual ~CanvasOGL();
 
-		void BlitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color) override;
-		void BlitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) override;
+		void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const override;
+		void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color) const override;
+		void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const override;
 
-		static CanvasPtr GetInstance();
+		void drawRect(const rect& r, const ColorPtr& fill_color, const ColorPtr& stroke_color=nullptr, float rotate=0) const override;
+		void drawLine(const point& p1, const point& p2, const Color& color) const override;
+		void drawCircle(const point& centre, double radius, const Color& color) const override;
+
+		static CanvasPtr getInstance();
 	private:
-		void HandleDimensionsChanged() override;
+		DISALLOW_COPY_AND_ASSIGN(CanvasOGL);
+		void handleDimensionsChanged() override;
 		glm::mat4 mvp_;
 	};
 }

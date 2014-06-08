@@ -41,7 +41,7 @@ public:
 	virtual particle_system_ptr create(const entity& e) const = 0;
 };
 
-class particle_system : public game_logic::formula_callable
+class particle_system : public game_logic::FormulaCallable
 {
 public:
 	virtual ~particle_system();

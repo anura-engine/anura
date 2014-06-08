@@ -27,7 +27,7 @@
 #include <vector>
 
 #include "../asserts.hpp"
-#include "variant.hpp"
+#include "../variant.hpp"
 #include "SDL.h"
 
 namespace Geometry

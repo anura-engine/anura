@@ -564,7 +564,7 @@ namespace KRE
 			std::vector<svg_length> stroke_dash_array_value_;
 			// default 0
 			DashOffsetAttrib stroke_dash_offset_;
-			svg_length stroke_dash_offset_value_;
+			svg_length stroke_dash_offsetValue_;
 			// default black
 			paint_ptr fill_;
 			// defualt even-odd

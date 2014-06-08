@@ -43,8 +43,8 @@
 #include "variant_callable.hpp"
 #include "variant_utils.hpp"
 
-using game_logic::formula_callable_definition;
-using game_logic::formula_callable_definition_ptr;
+using game_logic::FormulaCallable_definition;
+using game_logic::FormulaCallable_definition_ptr;
 
 std::map<std::string, std::string>& prototype_file_paths() {
 	static std::map<std::string, std::string> paths;
@@ -223,14 +223,14 @@ variant merge_into_prototype(variant prototype_node, variant node)
 	result[variant("consts")] = prototype_node["consts"] + node["consts"];
 	result[variant("variations")] = prototype_node["variations"] + node["variations"];
 
-	const variant editor_info_a = prototype_node["editor_info"];
-	const variant editor_info_b = node["editor_info"];
-	result[variant("editor_info")] = editor_info_a + editor_info_b;
-	if(editor_info_a.is_map() && editor_info_b.is_map() &&
-	   editor_info_a["var"].is_list() && editor_info_b["var"].is_list()) {
+	const variant EditorInfo_a = prototype_node["EditorInfo"];
+	const variant EditorInfo_b = node["EditorInfo"];
+	result[variant("EditorInfo")] = EditorInfo_a + EditorInfo_b;
+	if(EditorInfo_a.is_map() && EditorInfo_b.is_map() &&
+	   EditorInfo_a["var"].is_list() && EditorInfo_b["var"].is_list()) {
 		std::map<variant, variant> vars_map;
-		std::vector<variant> items = editor_info_a["var"].as_list();
-		std::vector<variant> items2 = editor_info_b["var"].as_list();
+		std::vector<variant> items = EditorInfo_a["var"].as_list();
+		std::vector<variant> items2 = EditorInfo_b["var"].as_list();
 		items.insert(items.end(), items2.begin(), items2.end());
 		foreach(const variant& v, items) {
 			variant name = v["name"];
@@ -262,7 +262,7 @@ variant merge_into_prototype(variant prototype_node, variant node)
 		}
 
 		variant vars = variant(&v);
-		result[variant("editor_info")].add_attr(variant("var"), vars);
+		result[variant("EditorInfo")].add_attr(variant("var"), vars);
 	}
 
 	variant proto_properties = prototype_node["properties"];
@@ -336,9 +336,9 @@ std::map<std::string, std::string>& object_type_inheritance()
 	return instance;
 }
 
-std::map<std::string, formula_callable_definition_ptr>& object_type_definitions()
+std::map<std::string, FormulaCallable_definition_ptr>& object_type_definitions()
 {
-	static std::map<std::string, formula_callable_definition_ptr>* instance = new std::map<std::string, formula_callable_definition_ptr>;
+	static std::map<std::string, FormulaCallable_definition_ptr>* instance = new std::map<std::string, FormulaCallable_definition_ptr>;
 	return *instance;
 }
 
@@ -489,7 +489,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 			if(is_strict_) {
 				int current_slot = callable_definition_->get_slot(k);
 				if(current_slot != -1) {
-					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(current_slot);
+					const game_logic::FormulaCallable_definition::entry* entry = callable_definition_->get_entry(current_slot);
 					ASSERT_LOG(!entry->variant_type || variant_types_compatible(entry->variant_type, type), "Type mis-match for object property " << id_ << "." << k << " has a different type than the definition in the prototype: " << type->to_string() << " prototype defines as " << entry->variant_type->to_string());
 					ASSERT_LOG(!set_type || set_type->is_none() == entry->get_write_type()->is_none(), "Object property " << id_ << "." << k << " is immutable in the " << (set_type->is_none() ? "object" : "prototype") << " but not in the " << (set_type->is_none() ? "prototype" : "object"));
 					ASSERT_LOG(!set_type || set_type->is_none() && entry->get_write_type()->is_none() || variant_types_compatible(entry->get_write_type(), set_type), "Type mis-match for object property " << id_ << "." << k << " has a different mutable type than the definition in the prototype. The property can be mutated with a " << set_type->to_string() << " while prototype allows mutation as " << entry->get_write_type()->to_string());
@@ -529,7 +529,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 				game_logic::formula_ptr f = game_logic::formula::create_optional_formula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
 				bool inferred = true;
 				for(int n = 0; n != callable_definition_->num_slots(); ++n) {
-					const game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(n);
+					const game_logic::FormulaCallable_definition::entry* entry = callable_definition_->get_entry(n);
 					if(entry->access_count) {
 						if(properties_to_infer.count(entry->id)) {
 							inferred = false;
@@ -538,7 +538,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 				}
 
 				if(inferred) {
-					formula_callable_definition::entry* entry = callable_definition_->get_entry_by_id(k);
+					FormulaCallable_definition::entry* entry = callable_definition_->get_entry_by_id(k);
 					assert(entry);
 					entry->variant_type = f->query_variant_type();
 					properties_to_infer.erase(k);
@@ -572,9 +572,9 @@ void custom_object_type::set_player_variant_type(variant type_str)
 	g_player_type_str = type_str;
 }
 
-formula_callable_definition_ptr custom_object_type::get_definition(const std::string& id)
+FormulaCallable_definition_ptr custom_object_type::get_definition(const std::string& id)
 {
-	std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
+	std::map<std::string, FormulaCallable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 	if(itor != object_type_definitions().end()) {
 		return itor->second;
 	} else {
@@ -590,7 +590,7 @@ formula_callable_definition_ptr custom_object_type::get_definition(const std::st
 			callable_definition->set_type_name("obj " + id);
 			int slot = -1;
 			init_object_definition(node, node["id"].as_string(), callable_definition, slot, !g_suppress_strict_mode && node["is_strict"].as_bool(custom_object_strict_mode) || g_force_strict_mode);
-			std::map<std::string, formula_callable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
+			std::map<std::string, FormulaCallable_definition_ptr>::const_iterator itor = object_type_definitions().find(id);
 			ASSERT_LOG(itor != object_type_definitions().end(), "Could not load object prototype definition " << id);
 			return itor->second;
 		}
@@ -875,10 +875,10 @@ std::map<std::string,custom_object_type::EditorSummary> custom_object_type::get_
 				summary[variant("animation")] = json::parse_from_file("data/default-animation.cfg");
 			}
 
-			if(node["editor_info"].is_map()) {
-				summary[variant("category")] = node["editor_info"]["category"];
-				if(node["editor_info"]["help"].is_string()) {
-					summary[variant("help")] = node["editor_info"]["help"];
+			if(node["EditorInfo"].is_map()) {
+				summary[variant("category")] = node["EditorInfo"]["category"];
+				if(node["EditorInfo"]["help"].is_string()) {
+					summary[variant("help")] = node["EditorInfo"]["help"];
 				}
 			}
 
@@ -1170,12 +1170,12 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	custom_object_callable::instance();
 
-	editor_entity_info* editor_info = NULL;
+	editor_entity_info* EditorInfo = NULL;
 
 #ifndef NO_EDITOR
-	if(node.has_key("editor_info")) {
-		editor_info = new editor_entity_info(node["editor_info"]);
-		editor_info_.reset(editor_info);
+	if(node.has_key("EditorInfo")) {
+		EditorInfo = new editor_entity_info(node["EditorInfo"]);
+		EditorInfo_.reset(EditorInfo);
 	}
 #endif // !NO_EDITOR
 
@@ -1307,9 +1307,9 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 
 		if(!var_str. empty()) {
-			game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(CUSTOM_OBJECT_VARS);
+			game_logic::FormulaCallable_definition::entry* entry = callable_definition_->get_entry(CUSTOM_OBJECT_VARS);
 			ASSERT_LOG(entry != NULL, "CANNOT FIND VARS ENTRY IN OBJECT");
-			game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&var_str[0], &var_str[0] + var_str.size());
+			game_logic::FormulaCallable_definition_ptr def = game_logic::executeCommand_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->set_strict(is_strict_);
 			entry->type_definition = def;
 		}
@@ -1324,9 +1324,9 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 
 		if(!var_str.empty()) {
-			game_logic::formula_callable_definition::entry* entry = callable_definition_->get_entry(CUSTOM_OBJECT_TMP);
+			game_logic::FormulaCallable_definition::entry* entry = callable_definition_->get_entry(CUSTOM_OBJECT_TMP);
 			ASSERT_LOG(entry != NULL, "CANNOT FIND TMP ENTRY IN OBJECT");
-			game_logic::formula_callable_definition_ptr def = game_logic::create_formula_callable_definition(&var_str[0], &var_str[0] + var_str.size());
+			game_logic::FormulaCallable_definition_ptr def = game_logic::executeCommand_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->set_strict(is_strict_);
 			entry->type_definition = def;
 		}
@@ -1334,7 +1334,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	//std::cerr << "TMP_VARIABLES: '" << id_ << "' -> " << tmp_variables_.size() << "\n";
 
-	consts_.reset(new game_logic::map_formula_callable);
+	consts_.reset(new game_logic::map_FormulaCallable);
 	variant consts = node["consts"];
 	if(consts.is_null() == false) {
 		foreach(variant key, consts.get_keys().as_list()) {
@@ -1411,20 +1411,20 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					entry.set_type = parse_variant_type(value["set_type"]);
 				}
 
-				game_logic::const_formula_callable_definition_ptr property_def = callable_definition_;
+				game_logic::const_FormulaCallable_definition_ptr property_def = callable_definition_;
 				if(entry.type) {
-					property_def = modify_formula_callable_definition(property_def, CUSTOM_OBJECT_DATA, entry.type);
+					property_def = modify_FormulaCallable_definition(property_def, CUSTOM_OBJECT_DATA, entry.type);
 				}
 
-				game_logic::const_formula_callable_definition_ptr setter_def = property_def;
+				game_logic::const_FormulaCallable_definition_ptr setter_def = property_def;
 				if(entry.set_type) {
-					setter_def = modify_formula_callable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
+					setter_def = modify_FormulaCallable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
 				}
 
 				entry.getter = game_logic::formula::create_optional_formula(value["get"], function_symbols(), property_def);
 				entry.setter = game_logic::formula::create_optional_formula(value["set"], function_symbols(), setter_def);
 				if(value["init"].is_null() == false) {
-					entry.init = game_logic::formula::create_optional_formula(value["init"], function_symbols(), game_logic::const_formula_callable_definition_ptr(&custom_object_callable::instance()));
+					entry.init = game_logic::formula::create_optional_formula(value["init"], function_symbols(), game_logic::const_FormulaCallable_definition_ptr(&custom_object_callable::instance()));
 					assert(entry.init);
 					if(is_strict_) {
 						assert(entry.type);
@@ -1444,18 +1444,18 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 				ASSERT_LOG(!entry.init || entry.storage_slot != -1, "Property " << id_ << "." << k << " cannot have initializer since it's not a variable");
 
-				if(value.has_key("editor_info")) {
-					entry.has_editor_info = true;
+				if(value.has_key("EditorInfo")) {
+					entry.has_EditorInfo = true;
 					const game_logic::formula::strict_check_scope strict_checking(false);
-					variant editor_info_var = value["editor_info"];
+					variant EditorInfo_var = value["EditorInfo"];
 					static const variant name_key("name");
-					editor_info_var = editor_info_var.add_attr(name_key, variant(k));
-					editor_variable_info info(editor_info_var);
+					EditorInfo_var = EditorInfo_var.add_attr(name_key, variant(k));
+					editor_variable_info info(EditorInfo_var);
 					info.set_is_property();
 
-					ASSERT_LOG(editor_info, "Object type " << id_ << " must have editor_info section since some of its properties have editor_info sections");
+					ASSERT_LOG(EditorInfo, "Object type " << id_ << " must have EditorInfo section since some of its properties have EditorInfo sections");
 
-					editor_info->add_property(info);
+					EditorInfo->add_property(info);
 				}
 
 			} else {
@@ -1523,7 +1523,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		node_ = node;
 	}
 
-	game_logic::register_formula_callable_definition("object_type", callable_definition_);
+	game_logic::register_FormulaCallable_definition("object_type", callable_definition_);
 
 #if defined(USE_SHADERS)
 	if(node.has_key("shader")) {
@@ -1683,7 +1683,7 @@ game_logic::function_symbol_table* custom_object_type::function_symbols() const
 }
 
 namespace {
-void execute_variation_command(variant cmd, game_logic::formula_callable& obj)
+void execute_variation_command(variant cmd, game_logic::FormulaCallable& obj)
 {
 	if(cmd.is_list()) {
 		foreach(variant c, cmd.as_list()) {
@@ -1703,7 +1703,7 @@ const_custom_object_type_ptr custom_object_type::get_variation(const std::vector
 	if(!result) {
 		variant node = node_;
 
-		boost::intrusive_ptr<game_logic::map_formula_callable> callable(new game_logic::map_formula_callable);
+		boost::intrusive_ptr<game_logic::map_FormulaCallable> callable(new game_logic::map_FormulaCallable);
 		callable->add("doc", variant(variant_callable::create(&node)));
 
 		foreach(const std::string& v, variations) {

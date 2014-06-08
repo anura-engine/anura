@@ -69,8 +69,8 @@ namespace editor_dialogs
 
 		set_clear_bg_amount(255);
 	
-		if(voxel::chunk::get_textured_editor_tiles().empty() == false) {
-			category_ = voxel::chunk::get_textured_editor_tiles().front().group;
+		if(voxel::chunk::getTexturedEditorTiles().empty() == false) {
+			category_ = voxel::chunk::getTexturedEditorTiles().front().group;
 		}
 
 		if(level::current().iso_world()) {
@@ -94,12 +94,12 @@ namespace editor_dialogs
 	{
 		clear();
 		using namespace gui;
-		set_padding(20);
+		setPadding(20);
 
 		ASSERT_LOG(editor_.get_voxel_tileset() >= 0 
-			&& size_t(editor_.get_voxel_tileset()) < voxel::chunk::get_textured_editor_tiles().size(),
+			&& size_t(editor_.get_voxel_tileset()) < voxel::chunk::getTexturedEditorTiles().size(),
 			"Index of isometric tileset out of bounds must be between 0 and " 
-			<< voxel::chunk::get_textured_editor_tiles().size() << ", found " << editor_.get_voxel_tileset());
+			<< voxel::chunk::getTexturedEditorTiles().size() << ", found " << editor_.get_voxel_tileset());
 
 		std::stringstream str;
 
@@ -135,9 +135,9 @@ namespace editor_dialogs
 		add_widget(grid, 10, 10);
 		int next_height = grid->x() + grid->height() + 5;
 
-		button* random_landscape = new button(widget_ptr(new label("Random", graphics::color_white())), boost::bind(&voxel_editor_dialog::random_isomap, this));
-		button* flat_landscape = new button(widget_ptr(new label("Flat", graphics::color_white())), boost::bind(&voxel_editor_dialog::flat_plane_isomap, this));
-		mode_swap_button_.reset(new button(widget_ptr(new label(textured_mode_ ? "Textured" : "Colored", graphics::color_white())), boost::bind(&voxel_editor_dialog::swap_mode, this)));
+		button* random_landscape = new button(WidgetPtr(new label("Random", graphics::color_white())), boost::bind(&voxel_editor_dialog::random_isomap, this));
+		button* flat_landscape = new button(WidgetPtr(new label("Flat", graphics::color_white())), boost::bind(&voxel_editor_dialog::flat_plane_isomap, this));
+		mode_swap_button_.reset(new button(WidgetPtr(new label(textured_mode_ ? "Textured" : "Colored", graphics::color_white())), boost::bind(&voxel_editor_dialog::swap_mode, this)));
 		grid.reset(new gui::grid(2));
 		grid->set_hpad(10);
 		grid->add_col(random_landscape);
@@ -146,24 +146,24 @@ namespace editor_dialogs
 		add_widget(grid, 10, next_height);
 
 		if(textured_mode_) {
-			button* category_button = new button(widget_ptr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+			button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
 			add_widget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
 			int index = 0, first_index = -1;
 			first_index_ = -1;
 	
-			foreach(const voxel::textured_tile_editor_info& t, voxel::chunk::get_textured_editor_tiles()) {
+			foreach(const voxel::TexturedTileEditorInfo& t, voxel::chunk::getTexturedEditorTiles()) {
 				if(t.group == category_) {
 					if(first_index_ == -1) {
 						first_index_ = index;
 					}
 					image_widget* preview = new image_widget(t.tex, 54, 54);
 					preview->set_area(t.area);
-					button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
-					tileset_button->set_tooltip(t.name + "(" + t.id.as_string() + ")", 14);
-					tileset_button->set_dim(58, 58);
-					grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
+					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
+					tileset_button->setDim(58, 58);
+					grid->add_col(gui::WidgetPtr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 				}
 				++index;
 			}
@@ -171,24 +171,24 @@ namespace editor_dialogs
 			grid->finish_row();
 			add_widget(grid);
 		} else {
-			/*button* category_button = new button(widget_ptr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
 			add_widget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
 			int index = 0, first_index = -1;
 			first_index_ = -1;
 	
-			foreach(const voxel::colored_tile_editor_info& t, voxel::chunk::get_colored_editor_tiles()) {
+			foreach(const voxel::ColoredTileEditorInfo& t, voxel::chunk::getColoredEditorTiles()) {
 				if(t.group == category_) {
 					if(first_index_ == -1) {
 						first_index_ = index;
 					}
 					image_widget* preview = new image_widget(t.tex, 54, 54);
 					preview->set_area(t.area);
-					button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
-					tileset_button->set_tooltip(t.name + "(" + t.id.as_string() + ")", 14);
-					tileset_button->set_dim(58, 58);
-					grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
+					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
+					tileset_button->setDim(58, 58);
+					grid->add_col(gui::WidgetPtr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 				}
 				++index;
 			}
@@ -282,7 +282,7 @@ namespace editor_dialogs
 	{
 		using namespace gui;
 		gui::grid* grid = new gui::grid(2);
-		grid->set_zorder(100);
+		grid->setZOrder(100);
 		grid->swallow_clicks();
 		grid->set_show_background(true);
 		grid->set_hpad(10);
@@ -290,7 +290,7 @@ namespace editor_dialogs
 		grid->register_selection_callback(boost::bind(&voxel_editor_dialog::close_context_menu, this, _1));
 
 		std::set<std::string> categories;
-		foreach(const voxel::textured_tile_editor_info& t, voxel::chunk::get_textured_editor_tiles()) {
+		foreach(const voxel::TexturedTileEditorInfo& t, voxel::chunk::getTexturedEditorTiles()) {
 			if(categories.count(t.group)) {
 				continue;
 			}
@@ -299,8 +299,8 @@ namespace editor_dialogs
 
 			image_widget* preview = new image_widget(t.tex, 54, 54);
 			preview->set_area(t.area);
-			grid->add_col(widget_ptr(preview))
-				 .add_col(widget_ptr(new label(t.group, graphics::color_white())));
+			grid->add_col(WidgetPtr(preview))
+				 .add_col(WidgetPtr(new label(t.group, graphics::color_white())));
 			grid->register_row_selection_callback(boost::bind(&voxel_editor_dialog::select_category, this, t.group));
 		}
 
@@ -330,28 +330,28 @@ namespace editor_dialogs
 		}
 	}
 
-	bool voxel_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
+	bool voxel_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(!claimed) {
 			if(context_menu_) {
-				gui::widget_ptr ptr = context_menu_;
+				gui::WidgetPtr ptr = context_menu_;
 				SDL_Event ev = event;
-				normalize_event(&ev);
-				return ptr->process_event(ev, claimed);
+				normalizeEvent(&ev);
+				return ptr->processEvent(ev, claimed);
 			}
 
 			switch(event.type) {
 			case SDL_KEYDOWN:
 				if(event.key.keysym.sym == SDLK_COMMA) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
-					while(voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+					while(voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].group != category_) {
 						editor_.set_voxel_tileset(editor_.get_voxel_tileset()-1);
 					}
 					set_tileset(editor_.get_voxel_tileset());
 					claimed = true;
 				} else if(event.key.keysym.sym == SDLK_PERIOD) {
 					editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
-					while(voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].group != category_) {
+					while(voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].group != category_) {
 						editor_.set_voxel_tileset(editor_.get_voxel_tileset()+1);
 					}
 					set_tileset(editor_.get_voxel_tileset());
@@ -361,7 +361,7 @@ namespace editor_dialogs
 			}
 		}
 
-		return dialog::handle_event(event, claimed);
+		return dialog::handleEvent(event, claimed);
 	}
 
 	void voxel_editor_dialog::random_isomap()
@@ -370,10 +370,10 @@ namespace editor_dialogs
 
 		int tileset = editor_.get_voxel_tileset();
 		if(textured_mode_) {
-			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_textured_editor_tiles().size()) {
+			if(tileset < 0 || size_t(tileset) >= voxel::chunk::getTexturedEditorTiles().size()) {
 				return;
 			}
-			tile_to_add = voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].id;
+			tile_to_add = voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].id;
 		} else {
 			tile_to_add = color_picker_->get_selected_color().write();
 		}
@@ -404,10 +404,10 @@ namespace editor_dialogs
 
 		int tileset = editor_.get_voxel_tileset();
 		if(textured_mode_) {
-			if(tileset < 0 || size_t(tileset) >= voxel::chunk::get_textured_editor_tiles().size()) {
+			if(tileset < 0 || size_t(tileset) >= voxel::chunk::getTexturedEditorTiles().size()) {
 				return;
 			}
-			tile_to_add = voxel::chunk::get_textured_editor_tiles()[editor_.get_voxel_tileset()].id;
+			tile_to_add = voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].id;
 		} else {
 			tile_to_add = color_picker_->get_selected_color().write();
 		}

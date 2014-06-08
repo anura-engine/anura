@@ -58,14 +58,14 @@ namespace editor_dialogs
 		void random_isomap();
 		void flat_plane_isomap();
 
-		bool handle_event(const SDL_Event& event, bool claimed);
+		bool handleEvent(const SDL_Event& event, bool claimed);
 		editor& editor_;
 
-		gui::widget_ptr context_menu_;
+		gui::WidgetPtr context_menu_;
 		std::string category_;
 
 		bool textured_mode_;
-		gui::widget_ptr mode_swap_button_;
+		gui::WidgetPtr mode_swap_button_;
 		void swap_mode();
 
 		gui::color_picker_ptr color_picker_;		

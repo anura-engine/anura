@@ -42,7 +42,7 @@ public:
 	void set_speaker_and_flip_side(const_entity_ptr e);
 	void set_speaker(const_entity_ptr e, bool left_side=false);
 	void set_side(bool left_side);
-	void set_text(const std::vector<std::string>& text);
+	void setText(const std::vector<std::string>& text);
 	void set_options(const std::vector<std::string>& options);
 	void set_expiration(int time) { expiration_ = time; }
 

@@ -99,8 +99,8 @@ private:
 	bool handle_mouse_events(const SDL_Event &event);
 #if defined(USE_ISOMAP)
 	void handle_mouse_over_voxel_objects(const SDL_Event &event,
-		const std::vector<voxel::user_voxel_object_ptr>& voxel_objs, 
-		game_logic::map_formula_callable_ptr callable, 
+		const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
+		game_logic::map_FormulaCallablePtr callable, 
 		const int basic_evt, 
 		const int catch_all_event);
 #endif
@@ -116,7 +116,7 @@ private:
 #ifndef NO_EDITOR
 	boost::scoped_ptr<editor_resolution_manager> editor_resolution_manager_;
 	gui::slider_ptr history_slider_;
-	gui::button_ptr history_button_;
+	gui::ButtonPtr history_button_;
 	std::vector<entity_ptr> history_trails_;
 	std::string history_trails_label_;
 	int history_trails_state_id_;

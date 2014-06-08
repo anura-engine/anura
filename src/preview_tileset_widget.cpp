@@ -26,12 +26,12 @@ namespace gui {
 preview_tileset_widget::preview_tileset_widget(const tile_map& tiles)
   : width_(0), height_(0)
 {
-	set_environment();
+	setEnvironment();
 	tiles.build_tiles(&tiles_);
 	init();
 }
 
-preview_tileset_widget::preview_tileset_widget(const variant& v, game_logic::formula_callable* e)
+preview_tileset_widget::preview_tileset_widget(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e)
 {
 	tile_map(v["tile_map"]).build_tiles(&tiles_);
@@ -48,10 +48,10 @@ void preview_tileset_widget::init()
 		height_ = std::max(height_, h);
 	}
 
-	set_dim(width_, height_);
+	setDim(width_, height_);
 }
 
-void preview_tileset_widget::handle_draw() const
+void preview_tileset_widget::handleDraw() const
 {
 	if(width_ == 0 || height_ == 0) {
 		return;
@@ -69,18 +69,18 @@ void preview_tileset_widget::handle_draw() const
 	glPopMatrix();
 }
 
-void preview_tileset_widget::set_value(const std::string& key, const variant& v)
+void preview_tileset_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "tile_map") {
 		tile_map(v).build_tiles(&tiles_);
 		init();
 	}
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant preview_tileset_widget::get_value(const std::string& key) const
+variant preview_tileset_widget::getValue(const std::string& key) const
 {
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

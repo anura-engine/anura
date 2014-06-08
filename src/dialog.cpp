@@ -74,13 +74,13 @@ dialog::dialog(int x, int y, int w, int h)
     add_x_(0), add_y_(0), bg_alpha_(1.0), last_draw_(-1), upscale_frame_(true),
 	current_tab_focus_(tab_widgets_.end()), control_lockout_(0)
 {
-	set_environment();
-	set_loc(x,y);
-	set_dim(w,h);
+	setEnvironment();
+	setLoc(x,y);
+	setDim(w,h);
 	forced_dimensions_ = rect(x, y, w, h);
 }
 
-dialog::dialog(const variant& v, game_logic::formula_callable* e)
+dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e),
 	opened_(false), cancelled_(false), 
 	add_x_(0), add_y_(0), last_draw_(-1),
@@ -90,7 +90,7 @@ dialog::dialog(const variant& v, game_logic::formula_callable* e)
 	forced_dimensions_ = rect(x(), y(), width(), height());
 	padding_ = v["padding"].as_int(10);
 	if(v.has_key("background_frame")) {
-		background_framed_gui_element_ = v["background_frame"].as_string();
+		background_FramedGuiElement_ = v["background_frame"].as_string();
 	}
 	if(v.has_key("background_draw")) {
 		std::string scene = v["background_draw"].as_string();
@@ -107,41 +107,41 @@ dialog::dialog(const variant& v, game_logic::formula_callable* e)
 	}
 	if(v.has_key("on_quit")) {
 		on_quit_ = boost::bind(&dialog::quit_delegate, this);
-		ASSERT_LOG(get_environment() != NULL, "environment not set");
+		ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 		const variant on_quit_value = v["on_quit"];
 		if(on_quit_value.is_function()) {
 			ASSERT_LOG(on_quit_value.min_function_arguments() == 0, "on_quit_value dialog function should take 0 arguments: " << v.debug_location());
 			static const variant fml("fn()");
 			ffl_on_quit_.reset(new game_logic::formula(fml));
 
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 			callable->add("fn", on_quit_value);
 
 			quit_arg_.reset(callable);
 		} else {
-			ffl_on_quit_ = get_environment()->create_formula(v["on_quit"]);
+			ffl_on_quit_ = getEnvironment()->createFormula(v["on_quit"]);
 		}
 	}
 	if(v.has_key("on_close")) {
 		on_close_ = boost::bind(&dialog::close_delegate, this, _1);
-		ASSERT_LOG(get_environment() != NULL, "environment not set");
+		ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 		const variant on_close_value = v["on_close"];
 		if(on_close_value.is_function()) {
 			ASSERT_LOG(on_close_value.min_function_arguments() <= 1 && on_close_value.max_function_arguments() >= 1, "on_close dialog function should take 1 argument: " << v.debug_location());
 			static const variant fml("fn(selection)");
 			ffl_on_close_.reset(new game_logic::formula(fml));
 
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 			callable->add("fn", on_close_value);
 
 			close_arg_.reset(callable);
 		} else {
-			ffl_on_close_ = get_environment()->create_formula(v["on_close"]);
+			ffl_on_close_ = getEnvironment()->createFormula(v["on_close"]);
 		}
 	}
 	std::vector<variant> children = v["children"].as_list();
 	foreach(const variant& child, children) {
-		widget_ptr w = widget_factory::create(child, e);
+		WidgetPtr w = widget_factory::create(child, e);
 		if(w->x() != 0 || w->y() != 0) {
 		//if(child.has_key("add_xy")) {
 		//	std::vector<int> addxy = child["add_xy"].as_list_int();
@@ -162,15 +162,15 @@ void dialog::recalculate_dimensions()
 	if(forced_dimensions_.empty()) {
 		int new_w = 0;
 		int new_h = 0;
-	    foreach(widget_ptr w, widgets_) {
+	    foreach(WidgetPtr w, widgets_) {
 			if((w->x() + w->width()) > new_w) {
-				new_w = w->x() + w->width() + padding_ + get_pad_width();
+				new_w = w->x() + w->width() + padding_ + getPadWidth();
 			}
 			if((w->y() + w->height()) > new_h) {
-				new_h = w->y() + w->height() + padding_ + get_pad_height();
+				new_h = w->y() + w->height() + padding_ + getPadHeight();
 			}
 		}
-		set_dim(new_w, new_h);
+		setDim(new_w, new_h);
 	}
 }
 
@@ -184,10 +184,10 @@ void dialog::quit_delegate()
 	if(quit_arg_) {
 		using namespace game_logic;
 		variant value = ffl_on_quit_->execute(*quit_arg_);
-		get_environment()->execute_command(value);
-	} else if(get_environment()) {
-		variant value = ffl_on_quit_->execute(*get_environment());
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
+	} else if(getEnvironment()) {
+		variant value = ffl_on_quit_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "dialog::quit_delegate() called without environment!" << std::endl;
 	}
@@ -198,24 +198,24 @@ void dialog::close_delegate(bool cancelled)
 	using namespace game_logic;
 	if(close_arg_) {
 		using namespace game_logic;
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(close_arg_.get()));
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(close_arg_.get()));
 		callable->add("cancelled", variant::from_bool(cancelled));
 		variant value = ffl_on_close_->execute(*callable);
-		get_environment()->execute_command(value);
-	} else if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+		getEnvironment()->createFormula(value);
+	} else if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("cancelled", variant::from_bool(cancelled));
 		variant value = ffl_on_close_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "dialog::close_delegate() called without environment!" << std::endl;
 	}
 }
 
-void dialog::handle_process()
+void dialog::handleProcess()
 {
-	widget::handle_process();
-    foreach(widget_ptr w, widgets_) {
+	widget::handleProcess();
+    foreach(WidgetPtr w, widgets_) {
 		w->process();
 	}
 
@@ -237,19 +237,19 @@ void dialog::handle_process()
 	}
 }
 
-dialog& dialog::add_widget(widget_ptr w, dialog::MOVE_DIRECTION dir)
+dialog& dialog::add_widget(WidgetPtr w, dialog::MOVE_DIRECTION dir)
 {
 	add_widget(w, add_x_, add_y_, dir);
 	return *this;
 }
 
-dialog& dialog::add_widget(widget_ptr w, int x, int y,
+dialog& dialog::add_widget(WidgetPtr w, int x, int y,
                            dialog::MOVE_DIRECTION dir)
 {
-	w->set_loc(x,y);
+	w->setLoc(x,y);
 	widgets_.insert(w);
-	if(w->tab_stop() >= 0) {
-		tab_widgets_.insert(tab_sorted_widget_list::value_type(w->tab_stop(), w));
+	if(w->tabStop() >= 0) {
+		tab_widgets_.insert(tab_SortedWidgetList::value_type(w->tabStop(), w));
 	}
 	switch(dir) {
 	case MOVE_DOWN:
@@ -265,7 +265,7 @@ dialog& dialog::add_widget(widget_ptr w, int x, int y,
 	return *this;
 }
 
-void dialog::remove_widget(widget_ptr w)
+void dialog::remove_widget(WidgetPtr w)
 {
 	if(!w) {
 		return;
@@ -275,7 +275,7 @@ void dialog::remove_widget(widget_ptr w)
 	if(it != widgets_.end()) {
 		widgets_.erase(it);
 	}
-	auto tw_it = tab_widgets_.find(w->tab_stop());
+	auto tw_it = tab_widgets_.find(w->tabStop());
 	if(tw_it != tab_widgets_.end()) {
 		if(current_tab_focus_ == tw_it) {
 			++current_tab_focus_;
@@ -292,7 +292,7 @@ void dialog::clear() {
 	recalculate_dimensions();
 }
 
-void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
+void dialog::replace_widget(WidgetPtr w_old, WidgetPtr w_new)
 {
 	int x = w_old->x();
 	int y = w_old->y();
@@ -305,19 +305,19 @@ void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
 	}
 	widgets_.insert(w_new);
 
-	auto tw_it = tab_widgets_.find(w_old->tab_stop());
+	auto tw_it = tab_widgets_.find(w_old->tabStop());
 	if(tw_it != tab_widgets_.end()) {
 		if(current_tab_focus_ == tw_it) {
 			++current_tab_focus_;
 		}
 		tab_widgets_.erase(tw_it);
 	}
-	if(w_new->tab_stop() >= 0) {
-		tab_widgets_.insert(tab_sorted_widget_list::value_type(w_new->tab_stop(), w_new));
+	if(w_new->tabStop() >= 0) {
+		tab_widgets_.insert(tab_SortedWidgetList::value_type(w_new->tabStop(), w_new));
 	}
 
-	w_new->set_loc(x,y);
-	w_new->set_dim(w,h);
+	w_new->setLoc(x,y);
+	w_new->setDim(w,h);
 
 	recalculate_dimensions();
 }
@@ -325,7 +325,7 @@ void dialog::replace_widget(widget_ptr w_old, widget_ptr w_new)
 void dialog::show() 
 {
 	opened_ = true;
-	set_visible(true);
+	setVisible(true);
 }
 
 bool dialog::pump_events()
@@ -358,7 +358,7 @@ bool dialog::pump_events()
         default:
             break;
         }
-        claimed = process_event(event, claimed);
+        claimed = processEvent(event, claimed);
     }
 
     return running;
@@ -416,32 +416,32 @@ void dialog::complete_draw()
 	last_draw_ = SDL_GetTicks();
 }
 
-std::vector<widget_ptr> dialog::get_children() const
+std::vector<WidgetPtr> dialog::getChildren() const
 {
-	std::vector<widget_ptr> widget_list;
+	std::vector<WidgetPtr> widget_list;
 	std::copy(widgets_.begin(), widgets_.end(), std::back_inserter(widget_list));
 	return widget_list;
 }
 
 void dialog::add_ok_and_cancel_buttons()
 {
-	widget_ptr ok(new button("Ok", boost::bind(&dialog::close, this)));
-	widget_ptr cancel(new button("Cancel", boost::bind(&dialog::cancel, this)));
-	ok->set_dim(cancel->width(), ok->height());
+	WidgetPtr ok(new button("Ok", boost::bind(&dialog::close, this)));
+	WidgetPtr cancel(new button("Cancel", boost::bind(&dialog::cancel, this)));
+	ok->setDim(cancel->width(), ok->height());
 	add_widget(ok, width() - 160, height() - 40);
 	add_widget(cancel, width() - 80, height() - 40);
 }
 
-void dialog::handle_draw_children() const {
+void dialog::handleDraw_children() const {
 	glPushMatrix();
 	glTranslatef(GLfloat(x()),GLfloat(y()),0.0);
-	foreach(const widget_ptr& w, widgets_) {
+	foreach(const WidgetPtr& w, widgets_) {
 		w->draw();
 	}
 	glPopMatrix();
 }
 
-void dialog::handle_draw() const
+void dialog::handleDraw() const
 {
 	GLfloat current_color[4];
 #if defined(USE_SHADERS)
@@ -470,32 +470,32 @@ void dialog::handle_draw() const
 		draw_background_fn_();
 	}
 
-	if(background_framed_gui_element_.empty() == false) {
+	if(background_FramedGuiElement_.empty() == false) {
 		SDL_Rect rect = {x(),y(),width(),height()};
 		SDL_Color col = {0,0,0,0};
-		graphics::draw_rect(rect, col, get_alpha() >= 255 ? 204 : get_alpha());
-		const_framed_gui_element_ptr window(framed_gui_element::get(background_framed_gui_element_));
+		graphics::draw_rect(rect, col, getAlpha() >= 255 ? 204 : getAlpha());
+		ConstFramedGuiElementPtr window(FramedGuiElement::get(background_FramedGuiElement_));
 		window->blit(x(),y(),width(),height(), upscale_frame_);
 	}
 
 	glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
-	handle_draw_children();
+	handleDraw_children();
 }
 
-bool dialog::process_event(const SDL_Event& ev, bool claimed) {
+bool dialog::processEvent(const SDL_Event& ev, bool claimed) {
 	if (ev.type == SDL_QUIT && on_quit_)
 		on_quit_();
-    return widget::process_event(ev, claimed);
+    return widget::processEvent(ev, claimed);
 }
 
-bool dialog::handle_event_children(const SDL_Event &event, bool claimed) {
+bool dialog::handleEvent_children(const SDL_Event &event, bool claimed) {
 	SDL_Event ev = event;
-	normalize_event(&ev, false);
+	normalizeEvent(&ev, false);
 	// We copy the list here to cover the case that event processing causes
 	// a widget to get removed and thus the iterator to be invalidated.
-	sorted_widget_list wlist = widgets_;
+	SortedWidgetList wlist = widgets_;
 	for(auto w : boost::adaptors::reverse(wlist)) {
-		claimed |= w->process_event(ev, claimed);
+		claimed |= w->processEvent(ev, claimed);
 	}
     return claimed;
 }
@@ -514,14 +514,14 @@ void dialog::do_up_event()
 		if(current_tab_focus_ == tab_widgets_.end()) {
 			--current_tab_focus_;
 		} else {			
-			current_tab_focus_->second->set_focus(false);
+			current_tab_focus_->second->setFocus(false);
 			if(current_tab_focus_ == tab_widgets_.begin()) {
 				current_tab_focus_ = tab_widgets_.end();
 			} 
 			--current_tab_focus_;
 		}
 		if(current_tab_focus_ != tab_widgets_.end()) {
-			current_tab_focus_->second->set_focus(true);
+			current_tab_focus_->second->setFocus(true);
 		}
 	}
 }
@@ -532,7 +532,7 @@ void dialog::do_down_event()
 		if(current_tab_focus_ == tab_widgets_.end()) {
 			current_tab_focus_ = tab_widgets_.begin();
 		} else {
-			current_tab_focus_->second->set_focus(false);
+			current_tab_focus_->second->setFocus(false);
 			++current_tab_focus_;
 			if(current_tab_focus_ == tab_widgets_.end()) {
 				current_tab_focus_ = tab_widgets_.begin();
@@ -540,7 +540,7 @@ void dialog::do_down_event()
 		}
 
 		if(current_tab_focus_ != tab_widgets_.end()) {
-			current_tab_focus_->second->set_focus(true);
+			current_tab_focus_->second->setFocus(true);
 		}
 	}
 }
@@ -549,14 +549,14 @@ void dialog::do_select_event()
 {
 	// Process key as an execute here.
 	if(current_tab_focus_ != tab_widgets_.end()) {
-		current_tab_focus_->second->do_execute();
+		current_tab_focus_->second->doExecute();
 	}
 }
 
-bool dialog::handle_event(const SDL_Event& ev, bool claimed)
+bool dialog::handleEvent(const SDL_Event& ev, bool claimed)
 {
 
-    claimed |= handle_event_children(ev, claimed);
+    claimed |= handleEvent_children(ev, claimed);
 
     if(!claimed && opened_) {
 		if(ev.type == SDL_KEYDOWN) {
@@ -602,7 +602,7 @@ bool dialog::handle_event(const SDL_Event& ev, bool claimed)
 		//then we claim it because nobody else should get it.
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP: {
-			if(claim_mouse_events() && in_widget(ev.button.x, ev.button.y)) {
+			if(claimMouseEvents() && inWidget(ev.button.x, ev.button.y)) {
 				claimed = true;
 			}
 			break;
@@ -612,10 +612,10 @@ bool dialog::handle_event(const SDL_Event& ev, bool claimed)
 	return claimed;
 }
 
-bool dialog::has_focus() const
+bool dialog::hasFocus() const
 {
 	for(auto w : widgets_) {
-		if(w->has_focus()) {
+		if(w->hasFocus()) {
 			return true;
 		}
 	}
@@ -623,37 +623,37 @@ bool dialog::has_focus() const
 	return false;
 }
 
-widget_ptr dialog::get_widget_by_id(const std::string& id)
+WidgetPtr dialog::getWidgetById(const std::string& id)
 {
 	for(auto w : widgets_) {
 		if(w) {
-			widget_ptr wx = w->get_widget_by_id(id);
+			WidgetPtr wx = w->getWidgetById(id);
 			if(wx) {
 				return wx;
 			}
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-const_widget_ptr dialog::get_widget_by_id(const std::string& id) const
+ConstWidgetPtr dialog::getWidgetById(const std::string& id) const
 {
 	for(auto w : widgets_) {
 		if(w) {
-			widget_ptr wx = w->get_widget_by_id(id);
+			WidgetPtr wx = w->getWidgetById(id);
 			if(wx) {
 				return wx;
 			}
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
 BEGIN_DEFINE_CALLABLE(dialog, widget)
 	DEFINE_FIELD(child, "builtin widget")
 		return variant();
 	DEFINE_SET_FIELD
-		widget_ptr w = widget_factory::create(value, obj.get_environment());
+		WidgetPtr w = widget_factory::create(value, obj.getEnvironment());
 		obj.add_widget(w, w->x(), w->y());
 	DEFINE_FIELD(background_alpha, "decimal")
 		return variant(obj.bg_alpha_);

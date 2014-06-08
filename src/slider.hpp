@@ -32,22 +32,22 @@ class slider : public widget
 {
 public:
 	explicit slider(int width, boost::function<void (double)> onchange, double position=0.0, int scale=2);
-	explicit slider(const variant& v, game_logic::formula_callable* e);
+	explicit slider(const variant& v, game_logic::FormulaCallable* e);
 	double position() const {return position_;};
 	void set_position (double position) {position_ = position;};
 	void set_drag_end(boost::function<void (double)> ondragend) { ondragend_ = ondragend; }
 		
 protected:
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 	void init() const;
 
 private:
 	bool in_slider(int x, int y) const;
 	bool in_button(int x, int y) const;
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
-	void handle_process();
+	void handleDraw() const;
+	bool handleEvent(const SDL_Event& event, bool claimed);
+	void handleProcess();
 		
 	int width_;
 	boost::function<void (double)> onchange_;
@@ -55,7 +55,7 @@ private:
 	bool dragging_;
 	double position_;
 		
-	widget_ptr slider_left_, slider_right_, slider_middle_, slider_button_;
+	WidgetPtr slider_left_, slider_right_, slider_middle_, slider_button_;
 
 	game_logic::formula_ptr ffl_handler_;
 	void change_delegate(double);

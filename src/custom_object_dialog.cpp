@@ -70,7 +70,7 @@ public:
 	variant get_items() const { return item_grid_->get_tree(); }
 	void allow_functions(bool val=true) { allow_functions_ = val; }
 protected:
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual bool handleEvent(const SDL_Event& event, bool claimed);
 
 	void init();
 	void on_save();
@@ -83,12 +83,12 @@ private:
 	std::string display_name_;
 	variant items_;
 	bool allow_functions_;
-	widget_ptr context_menu_;
+	WidgetPtr context_menu_;
 
-	tree_editor_widget_ptr item_grid_;
-	code_editor_widget_ptr string_entry_;
-	button_ptr save_text_button_;
-	button_ptr discard_text_button_;
+	tree_editor_WidgetPtr item_grid_;
+	code_editor_WidgetPtr string_entry_;
+	ButtonPtr save_text_button_;
+	ButtonPtr discard_text_button_;
 	grid_ptr text_button_grid;
 	boost::function<void(const variant&)> save_fn_;
 	int row_count_;
@@ -132,7 +132,7 @@ void load_default_attributes(std::vector<std::string>& d)
 {
 	//d.push_back("id");
 	//d.push_back("animation");
-	//d.push_back("editor_info");
+	//d.push_back("EditorInfo");
 	d.push_back("prototype");
 	d.push_back("hitpoints");
 	d.push_back("mass");
@@ -202,7 +202,7 @@ void custom_object_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(widget_ptr(new label("Object Properties", graphics::color_white(), 20)), border_offset, border_offset);
+	add_widget(WidgetPtr(new label("Object Properties", graphics::color_white(), 20)), border_offset, border_offset);
 
 	grid_ptr container(new grid(1));
 	container->set_col_width(0, width() - border_offset);
@@ -214,41 +214,41 @@ void custom_object_dialog::init()
 	std::sort(template_choices.begin(), template_choices.end());
 	template_choices.insert(template_choices.begin(), "Blank");
 
-	dropdown_widget_ptr template_dropdown(new dropdown_widget(template_choices, 200, 30, dropdown_widget::DROPDOWN_LIST));
+	dropdown_WidgetPtr template_dropdown(new dropdown_widget(template_choices, 200, 30, dropdown_widget::DROPDOWN_LIST));
 	template_dropdown->set_dropdown_height(100);
 	template_dropdown->set_on_select_handler(boost::bind(&custom_object_dialog::change_template, this, _1, _2));
 	template_dropdown->set_selection(selected_template_);
 
 	grid_ptr g(new grid(4));
 	g->set_hpad(20);
-	g->set_zorder(1);
-	g->add_col(widget_ptr(new label("Template  ", graphics::color_white(), 14)))
+	g->setZOrder(1);
+	g->add_col(WidgetPtr(new label("Template  ", graphics::color_white(), 14)))
 		.add_col(template_dropdown);
-	text_editor_widget_ptr change_entry(new text_editor_widget(200, 28));
-	change_entry->set_font_size(14);
+	TextEditorWidgetPtr change_entry(new TextEditorWidget(200, 28));
+	change_entry->setFontSize(14);
 	if(object_template_.has_key("id")) {
-		change_entry->set_text(object_template_["id"].as_string());
+		change_entry->setText(object_template_["id"].as_string());
 	}
 	change_entry->set_on_change_handler(boost::bind(&custom_object_dialog::change_text_attribute, this, change_entry, "id"));
 	change_entry->set_on_enter_handler(boost::bind(&custom_object_dialog::init, this));
 	change_entry->set_on_tab_handler(boost::bind(&custom_object_dialog::init, this));
 	change_entry->set_on_esc_handler(boost::bind(&custom_object_dialog::init, this));
 	change_entry->set_on_change_focus_handler(boost::bind(&custom_object_dialog::id_change_focus, this, _1));
-	g->add_col(widget_ptr(new label("id: ", graphics::color_white(), 14)))
-		.add_col(widget_ptr(change_entry));
+	g->add_col(WidgetPtr(new label("id: ", graphics::color_white(), 14)))
+		.add_col(WidgetPtr(change_entry));
 	container->add_col(g);
 
 	g.reset(new grid(4));
-	g->add_col(widget_ptr(new button(new label("Animations", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_animations, this))));
-	g->add_col(widget_ptr(new button(new label("Variables", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Variables Editor", "vars", false))));
-	g->add_col(widget_ptr(new button(new label("Properties", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Properties Editor", "properties", true))));
-	g->add_col(widget_ptr(new button(new label("Editor Info", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Editor Info", "editor_info", false))));
+	g->add_col(WidgetPtr(new button(new label("Animations", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_animations, this))));
+	g->add_col(WidgetPtr(new button(new label("Variables", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Variables Editor", "vars", false))));
+	g->add_col(WidgetPtr(new button(new label("Properties", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Properties Editor", "properties", true))));
+	g->add_col(WidgetPtr(new button(new label("Editor Info", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_items, this, "Editor Info", "EditorInfo", false))));
 	container->add_col(g);
 
 	if(template_file_.first.empty()) {
 		foreach(const std::string& attr, get_default_attribute_list()) {
-			std::vector<widget_ptr> widget_list = get_widget_for_attribute(attr);
-			foreach(const widget_ptr& w, widget_list) {
+			std::vector<WidgetPtr> widget_list = get_widget_for_attribute(attr);
+			foreach(const WidgetPtr& w, widget_list) {
 				if(w) {
 					container->add_col(w);
 				}
@@ -257,8 +257,8 @@ void custom_object_dialog::init()
 	} else {
 		std::vector<variant> keys = object_template_.get_keys().as_list();
 		foreach(const variant& v, keys) {
-			std::vector<widget_ptr> widget_list = get_widget_for_attribute(v.as_string());
-			foreach(const widget_ptr& w, widget_list) {
+			std::vector<WidgetPtr> widget_list = get_widget_for_attribute(v.as_string());
+			foreach(const WidgetPtr& w, widget_list) {
 				if(w) {
 					container->add_col(w);
 				}
@@ -271,7 +271,7 @@ void custom_object_dialog::init()
 	try {
 		object_ = custom_object_type_ptr(new custom_object_type(object_template_["id"].as_string(), object_template_, NULL, NULL));
 
-		animation_widget_ptr preview(new animation_widget(128, 128, object_template_));
+		animation_WidgetPtr preview(new animation_widget(128, 128, object_template_));
 		add_widget(preview, width() - border_offset - 128, border_offset + 200);
 	} catch(validation_failure_exception& e) {
 		error_text_ = e.msg;
@@ -287,20 +287,20 @@ void custom_object_dialog::init()
 	if(err_text.length() > max_chars && max_chars > 3) {
 		err_text = err_text.substr(0, max_chars-3) + "...";
 	}
-	label_ptr error_text(new label(err_text, graphics::color_red(), 14));
+	LabelPtr error_text(new label(err_text, graphics::color_red(), 14));
 	add_widget(error_text, border_offset, height() - g->height() - border_offset - error_text->height() - 5);
 
 	g.reset(new grid(3));
 	g->set_hpad(20);
-	g->add_col(button_ptr(new button(new label("Create", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_create, this))));
-	g->add_col(button_ptr(new button(new label("Set Path...", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_set_path, this))));
+	g->add_col(ButtonPtr(new button(new label("Create", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_create, this))));
+	g->add_col(ButtonPtr(new button(new label("Set Path...", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_set_path, this))));
 	std::string path = current_object_save_path_;
 	if(object_template_.has_key("id")) {
 		path += object_template_["id"].as_string() + ".cfg";
 	} else {
 		path += "<no id>.cfg";
 	}
-	g->add_col(label_ptr(new label(path, graphics::color_green())));
+	g->add_col(LabelPtr(new label(path, graphics::color_green())));
 	add_widget(g, border_offset, height() - g->height() - border_offset);
 
 	container->set_max_height(height() - g->height() - border_offset - error_text->height() - 10);
@@ -334,33 +334,33 @@ void custom_object_dialog::id_change_focus(bool focus)
 	}
 }
 
-std::vector<gui::widget_ptr> custom_object_dialog::get_widget_for_attribute(const std::string& attr)
+std::vector<gui::WidgetPtr> custom_object_dialog::get_widget_for_attribute(const std::string& attr)
 {
 	using namespace gui;
 	if(attr == "id") {
 		//grid_ptr g(new grid(2));
-		//text_editor_widget_ptr change_entry(new text_editor_widget(200, 28));
-		//change_entry->set_font_size(14);
+		//TextEditorWidgetPtr change_entry(new TextEditorWidget(200, 28));
+		//change_entry->setFontSize(14);
 		//if(object_template_.has_key(attr)) {
-		//	change_entry->set_text(object_template_[attr].as_string());
+		//	change_entry->setText(object_template_[attr].as_string());
 		//}
 		//change_entry->set_on_change_handler(boost::bind(&custom_object_dialog::change_text_attribute, this, change_entry, attr));
 		//change_entry->set_on_enter_handler(do_nothing);
-		//g->add_col(widget_ptr(new label(attr + ": ", graphics::color_white(), 14))).add_col(widget_ptr(change_entry));
+		//g->add_col(WidgetPtr(new label(attr + ": ", graphics::color_white(), 14))).add_col(WidgetPtr(change_entry));
 		//return g;
 	} else if(attr == "hitpoints" || attr == "mass" || attr == "friction" 
 		|| attr == "traction" || attr == "traction_in_air") {
 		grid_ptr g(new grid(3));
 		int value = 0;
-		text_editor_widget_ptr change_entry(new text_editor_widget(100, 28));
-		change_entry->set_font_size(14);
+		TextEditorWidgetPtr change_entry(new TextEditorWidget(100, 28));
+		change_entry->setFontSize(14);
 		if(object_template_.has_key(attr)) {
 			std::stringstream ss;
 			value = object_template_[attr].as_int();
 			ss << object_template_[attr].as_int();
-			change_entry->set_text(ss.str());
+			change_entry->setText(ss.str());
 		} else {
-			change_entry->set_text("0");
+			change_entry->setText("0");
 		}
 		slider_offset_[attr] = object_template_.has_key(attr) ? object_template_[attr].as_int() : 0;
 
@@ -371,28 +371,28 @@ std::vector<gui::widget_ptr> custom_object_dialog::get_widget_for_attribute(cons
 		slide->set_drag_end(boost::bind(&custom_object_dialog::slider_drag_end, this, change_entry, attr, slide, _1));
 		change_entry->set_on_change_handler(boost::bind(&custom_object_dialog::change_int_attribute_text, this, change_entry, attr, slide));
 		change_entry->set_on_enter_handler(do_nothing);
-		label_ptr attr_label(new label(attr + ": ", graphics::color_white(), 14));
-		attr_label->set_dim(200, attr_label->height());
-		change_entry->set_dim(100, change_entry->height());
-		slide->set_dim(200, slide->height());
-		g->add_col(attr_label).add_col(widget_ptr(change_entry)).add_col(slide);
+		LabelPtr attr_label(new label(attr + ": ", graphics::color_white(), 14));
+		attr_label->setDim(200, attr_label->height());
+		change_entry->setDim(100, change_entry->height());
+		slide->setDim(200, slide->height());
+		g->add_col(attr_label).add_col(WidgetPtr(change_entry)).add_col(slide);
 
 		g->set_col_width(0, 200);
 		g->set_col_width(1, 100);
 		g->set_col_width(2, 200);
 
-		return std::vector<gui::widget_ptr>(1, g);
+		return std::vector<gui::WidgetPtr>(1, g);
 	} else if(attr == "animation") {
-		//button_ptr bb(new button(new label("Edit Animations", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_animations, this)));
+		//ButtonPtr bb(new button(new label("Edit Animations", graphics::color_white(), 20), boost::bind(&custom_object_dialog::on_edit_animations, this)));
 		//return bb;
 	} else if(attr == "vars") {
 		//grid_ptr g(new grid(1));
-		//g->add_col(widget_ptr(new label(attr + ": ", graphics::color_white(), 14)));
-		//return std::vector<gui::widget_ptr>(1, g);
-	} else if(attr == "editor_info") {
+		//g->add_col(WidgetPtr(new label(attr + ": ", graphics::color_white(), 14)));
+		//return std::vector<gui::WidgetPtr>(1, g);
+	} else if(attr == "EditorInfo") {
 		//grid_ptr g(new grid(1));
-		//g->add_col(widget_ptr(new label(attr + ": ", graphics::color_white(), 14)));
-		//return std::vector<gui::widget_ptr>(1, g);
+		//g->add_col(WidgetPtr(new label(attr + ": ", graphics::color_white(), 14)));
+		//return std::vector<gui::WidgetPtr>(1, g);
 	} else if(attr == "prototype") {
 		//int count = 0;
 		// To make this nicer. Create the buttons before adding them to the grid.
@@ -401,29 +401,29 @@ std::vector<gui::widget_ptr> custom_object_dialog::get_widget_for_attribute(cons
 		// grid, if we are about to add a button that would go over the maximum
 		// width then we do a .finish_row() (if needed) and start continue
 		// adding the column to the next row (with .add_col()).
-		std::vector<button_ptr> buttons;
+		std::vector<ButtonPtr> buttons;
 		int min_size_button = INT_MAX;
 		if(object_template_.has_key("prototype")) {
 			foreach(const std::string& s, object_template_["prototype"].as_list_string()) {
-				buttons.push_back(new button(widget_ptr(new label(s, graphics::color_white())), 
+				buttons.push_back(new button(WidgetPtr(new label(s, graphics::color_white())), 
 					boost::bind(&custom_object_dialog::remove_prototype, this, s)));
 				if(min_size_button > buttons.back()->width()) {
 					min_size_button = buttons.back()->width();
 				}
 			}
 		}
-		std::vector<gui::widget_ptr> rows;
+		std::vector<gui::WidgetPtr> rows;
 		// conservative
 		int column_estimate = (width() - 100) / min_size_button + 2;
 		grid_ptr g(new grid(column_estimate));
-		label_ptr attr_label  = new label(attr + ": ", graphics::color_white(), 14);
-		button_ptr add_button = new button(widget_ptr(new label("Add...", graphics::color_white())), 
+		LabelPtr attr_label  = new label(attr + ": ", graphics::color_white(), 14);
+		ButtonPtr add_button = new button(WidgetPtr(new label("Add...", graphics::color_white())), 
 			boost::bind(&custom_object_dialog::change_prototype, this));
 		g->add_col(attr_label).add_col(add_button);
 
 		int current_row_size = attr_label->width() + add_button->width();
 		int buttons_on_current_row = 2;
-		foreach(const button_ptr& b, buttons) {
+		foreach(const ButtonPtr& b, buttons) {
 			if(b->width() + current_row_size >= width()-100 ) {
 				if(buttons_on_current_row < column_estimate) {
 					g->finish_row();
@@ -447,10 +447,10 @@ std::vector<gui::widget_ptr> custom_object_dialog::get_widget_for_attribute(cons
 		return rows;
 	}
 	std::cerr << "Unhandled attribute " << attr << std::endl;
-	return std::vector<gui::widget_ptr>();
+	return std::vector<gui::WidgetPtr>();
 }
 
-void custom_object_dialog::slider_drag_end(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide, double d)
+void custom_object_dialog::slider_drag_end(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::slider_ptr slide, double d)
 {
 	int i = slider_transform(d) + slider_offset_[s];
 	slider_offset_[s] = i;
@@ -458,22 +458,22 @@ void custom_object_dialog::slider_drag_end(const gui::text_editor_widget_ptr edi
 	dragging_slider_ = false;
 }
 
-void custom_object_dialog::change_int_attribute_slider(const gui::text_editor_widget_ptr editor, const std::string& s, double d)
+void custom_object_dialog::change_int_attribute_slider(const gui::TextEditorWidgetPtr editor, const std::string& s, double d)
 {	
 	dragging_slider_ = true;
 	std::ostringstream ss;
 	int i = slider_transform(d) + slider_offset_[s];
 	ss << i;
-	editor->set_text(ss.str(), false);
+	editor->setText(ss.str(), false);
 	object_template_.add_attr(variant(s), variant(i));
 }
 
-void custom_object_dialog::change_text_attribute(const gui::text_editor_widget_ptr editor, const std::string& s)
+void custom_object_dialog::change_text_attribute(const gui::TextEditorWidgetPtr editor, const std::string& s)
 {
 	object_template_.add_attr(variant(s), variant(editor->text()));
 }
 
-void custom_object_dialog::change_int_attribute_text(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide)
+void custom_object_dialog::change_int_attribute_text(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::slider_ptr slide)
 {
 	if(!dragging_slider_) {
 		int i;
@@ -538,7 +538,7 @@ void custom_object_dialog::change_prototype()
 	grid->allow_selection();
 	grid->swallow_clicks();
 	foreach(const std::string& s, choices) {
-		grid->add_col(widget_ptr(new label(s, graphics::color_white())));
+		grid->add_col(WidgetPtr(new label(s, graphics::color_white())));
 	}
 	grid->register_selection_callback(boost::bind(&custom_object_dialog::execute_change_prototype, this, choices, _1));
 
@@ -652,14 +652,14 @@ void item_edit_dialog::init()
 	const int border_offset = 35;
 	const int hpad = 20;
 	int current_height = border_offset;
-	label_ptr title(new label(display_name_.empty() ? "Edit" : display_name_, graphics::color_white(), 20));
+	LabelPtr title(new label(display_name_.empty() ? "Edit" : display_name_, graphics::color_white(), 20));
 	add_widget(title, border_offset, current_height);
 	current_height += title->height() + hpad;
 
 	grid_ptr g(new grid(2));
 	g->set_hpad(100);
-	button_ptr mod_button(new button(new label("Save&Close", graphics::color_white(), 16), boost::bind(&item_edit_dialog::on_save, this)));
-	button_ptr del_button(new button(new label("Cancel", graphics::color_white(), 16), boost::bind(&item_edit_dialog::cancel, this)));
+	ButtonPtr mod_button(new button(new label("Save&Close", graphics::color_white(), 16), boost::bind(&item_edit_dialog::on_save, this)));
+	ButtonPtr del_button(new button(new label("Cancel", graphics::color_white(), 16), boost::bind(&item_edit_dialog::cancel, this)));
 	g->add_col(mod_button).add_col(del_button);
 	add_widget(g, (width() - g->width())/2, current_height);
 	current_height += g->height() + hpad;
@@ -670,7 +670,7 @@ void item_edit_dialog::init()
 	save_text_button_.reset(new button(new label("Save Text", graphics::color_white(), 14), boost::bind(&item_edit_dialog::string_entry_save, this)));
 	discard_text_button_.reset(new button(new label("Discard Text", graphics::color_white(), 14), boost::bind(&item_edit_dialog::string_entry_discard, this)));
 	text_button_grid->add_col(save_text_button_).add_col(discard_text_button_);
-	text_button_grid->set_visible(false);
+	text_button_grid->setVisible(false);
 
 	const int string_entry_height = height() - current_height - border_offset - text_button_grid->height() - 5;
 	const int string_entry_width = 2*width()/3 - 2*border_offset;
@@ -678,9 +678,9 @@ void item_edit_dialog::init()
 	add_widget(text_button_grid, width()/3 + border_offset + (string_entry_width - text_button_grid->width())/2, string_entry_height + current_height + 5);
 
 	string_entry_.reset(new code_editor_widget(string_entry_width, string_entry_height));
-	string_entry_->set_font_size(12);
+	string_entry_->setFontSize(12);
 	string_entry_->set_on_esc_handler(boost::bind(&item_edit_dialog::string_entry_discard, this));
-	string_entry_->set_loc(width()/3 + border_offset, current_height);
+	string_entry_->setLoc(width()/3 + border_offset, current_height);
 	if(allow_functions_) {
 		string_entry_->set_formula();
 	}
@@ -696,10 +696,10 @@ void item_edit_dialog::init()
 
 void item_edit_dialog::editor_select(variant* v, boost::function<void(const variant&)> save_fn)
 {
-	text_button_grid->set_visible(true);
+	text_button_grid->setVisible(true);
 	saved_text_ = v->as_string();
-	string_entry_->set_text(saved_text_);
-	string_entry_->set_focus(true);
+	string_entry_->setText(saved_text_);
+	string_entry_->setFocus(true);
 	save_fn_ = save_fn;
 }
 
@@ -710,12 +710,12 @@ void item_edit_dialog::on_save()
 
 bool item_edit_dialog::has_keyboard_focus()
 {
-	return string_entry_->has_focus();
+	return string_entry_->hasFocus();
 }
 
-bool item_edit_dialog::handle_event(const SDL_Event& event, bool claimed)
+bool item_edit_dialog::handleEvent(const SDL_Event& event, bool claimed)
 {
-	if(dialog::handle_event(event, claimed)) {
+	if(dialog::handleEvent(event, claimed)) {
 		return true;
 	}
 
@@ -733,7 +733,7 @@ bool item_edit_dialog::handle_event(const SDL_Event& event, bool claimed)
 void item_edit_dialog::string_entry_save()
 {
 	if(save_fn_) {
-		text_button_grid->set_visible(false);
+		text_button_grid->setVisible(false);
 		save_fn_(variant(string_entry_->text()));
 	}
 }
@@ -741,7 +741,7 @@ void item_edit_dialog::string_entry_save()
 void item_edit_dialog::string_entry_discard()
 {
 	if(save_fn_) {
-		text_button_grid->set_visible(false);
+		text_button_grid->setVisible(false);
 		save_fn_(variant(saved_text_));
 	}
 }

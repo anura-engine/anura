@@ -29,7 +29,7 @@ namespace gui
 	class custom_object_widget : public widget
 	{
 	public:
-		custom_object_widget(const variant& v, game_logic::formula_callable* e);
+		custom_object_widget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~custom_object_widget();
 		void set_entity(entity_ptr e);
 		entity_ptr get_entity();
@@ -37,9 +37,9 @@ namespace gui
 		void init(const variant& v);
 	protected:
 
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
-		virtual void handle_process();
+		void handleDraw() const;
+		bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual void handleProcess();
 	private:
 		DECLARE_CALLABLE(custom_object_widget);
 
@@ -56,14 +56,14 @@ namespace gui
 
 		game_logic::formula_ptr commands_handler_;
 
-		widget_ptr overlay_;
+		WidgetPtr overlay_;
 
 		entity_ptr entity_;
-		bool handle_process_on_entity_;
+		bool handleProcess_on_entity_;
 	};
 
-	typedef boost::intrusive_ptr<custom_object_widget> custom_object_widget_ptr;
-	typedef boost::intrusive_ptr<const custom_object_widget> const_custom_object_widget_ptr;
+	typedef boost::intrusive_ptr<custom_object_widget> custom_object_WidgetPtr;
+	typedef boost::intrusive_ptr<const custom_object_widget> const_custom_object_WidgetPtr;
 }
 
 #endif

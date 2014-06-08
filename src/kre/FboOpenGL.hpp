@@ -41,7 +41,7 @@ namespace KRE
 			unsigned multi_samples=0);
 		explicit FboOpenGL(const variant& node);
 		virtual ~FboOpenGL();
-		virtual void PreRender() override;
+		virtual void preRender() override;
 	private:
 		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd) override;
 		void HandleCreate() override;

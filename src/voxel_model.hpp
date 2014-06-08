@@ -142,7 +142,7 @@ class voxel_model;
 typedef boost::intrusive_ptr<voxel_model> voxel_model_ptr;
 typedef boost::intrusive_ptr<const voxel_model> const_voxel_model_ptr;
 
-class voxel_model : public game_logic::formula_callable
+class voxel_model : public game_logic::FormulaCallable
 {
 public:
 	explicit voxel_model(const variant& node);

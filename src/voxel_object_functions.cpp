@@ -91,11 +91,11 @@ struct event_depth_scope
 
 class fire_event_command : public voxel_object_command_callable 
 {
-	const voxel::user_voxel_object_ptr target_;
+	const voxel::UserVoxelObjectPtr target_;
 	const std::string event_;
-	const const_formula_callable_ptr callable_;
+	const const_FormulaCallablePtr callable_;
 public:
-	fire_event_command(voxel::user_voxel_object_ptr target, const std::string& event, const_formula_callable_ptr callable)
+	fire_event_command(voxel::UserVoxelObjectPtr target, const std::string& event, const_FormulaCallablePtr callable)
 	  : target_(target), event_(event), callable_(callable)
 	{}
 
@@ -104,14 +104,14 @@ public:
 		ASSERT_LOG(event_depth < 1000, "INFINITE (or too deep?) RECURSION FOR EVENT " << event_);
 		event_depth_scope scope;
 		voxel::user_voxel_object* e = target_ ? target_.get() : &ob;
-		e->handle_event(event_, callable_.get());
+		e->handleEvent(event_, callable_.get());
 	}
 };
 
 FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
-	voxel::user_voxel_object_ptr target;
+	voxel::UserVoxelObjectPtr target;
 	std::string event;
-	const_formula_callable_ptr callable;
+	const_FormulaCallablePtr callable;
 	variant arg_value;
 
 	if(args().size() == 3) {
@@ -165,17 +165,17 @@ END_FUNCTION_DEF(fire_event)
 /*class spawn_voxel_command : public voxel_object_command_callable
 {
 public:
-	spawn_voxel_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
+	spawn_voxel_command(voxel::UserVoxelObjectPtr obj, variant instantiation_commands)
 	  : obj_(obj), instantiation_commands_(instantiation_commands)
 	{}
 	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const {
 
 		lvl.add_object(obj_);
 
-		obj_->execute_command(instantiation_commands_);
+		obj_->executeCommand(instantiation_commands_);
 	}
 private:
-	voxel::user_voxel_object_ptr obj_;
+	voxel::UserVoxelObjectPtr obj_;
 	variant instantiation_commands_;
 };
 
@@ -190,7 +190,7 @@ FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal 
 
 	variant arg4 = EVAL_ARG(4);
 
-	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
+	voxel::UserVoxelObjectPtr obj(new voxel::user_voxel_object(type, x, y, z));
 
 	variant commands;
 	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
@@ -207,7 +207,7 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
+		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
 		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
@@ -226,7 +226,7 @@ FUNCTION_ARGS_DEF
 					const int slot = type->get_slot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
+					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
 					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
@@ -244,7 +244,7 @@ class voxel_object_function_symbol_table : public function_symbol_table
 public:
 	expression_ptr create_function(const std::string& fn,
 		const std::vector<expression_ptr>& args,
-		const_formula_callable_definition_ptr callable_def) const
+		const_FormulaCallable_definition_ptr callable_def) const
 	{
 		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);

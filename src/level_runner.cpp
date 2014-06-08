@@ -61,7 +61,7 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
-#include "settings_dialog.hpp"
+#include "settingsDialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "surface_cache.hpp"
@@ -406,17 +406,17 @@ void video_resize(const SDL_Event &event)
 void level_runner::video_resize_event(const SDL_Event &event)
 {
 	static const int WindowResizeEventID = get_object_event_id("window_resize");
-	game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
 	callable->add("width", variant(event.window.data1));
 	callable->add("height", variant(event.window.data2));
-	lvl_->player()->get_entity().handle_event(WindowResizeEventID, callable.get());
+	lvl_->player()->get_entity().handleEvent(WindowResizeEventID, callable.get());
 }
 
 #if defined(USE_ISOMAP)
 
 void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
-	const std::vector<voxel::user_voxel_object_ptr>& voxel_objs, 
-	game_logic::map_formula_callable_ptr callable, 
+	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
+	game_logic::map_FormulaCallablePtr callable, 
 	const int basic_evt, 
 	const int catch_all_event)
 {
@@ -427,27 +427,27 @@ void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 		return;
 	}
 
-	std::set<voxel::user_voxel_object_ptr> mouse_in;
+	std::set<voxel::UserVoxelObjectPtr> mouse_in;
 
 	for(auto obj : voxel_objs) {
 		if(event.type == SDL_MOUSEBUTTONDOWN) {
 		} else if(event.type == SDL_MOUSEMOTION) {
 			if(obj->is_mouseover_object() == false) {
 				obj->set_mouseover_object();
-				obj->handle_event(MouseEnterID, callable.get());
+				obj->handleEvent(MouseEnterID, callable.get());
 			}
 			mouse_in.insert(obj);
 		}
-		obj->handle_event(basic_evt, callable.get());
+		obj->handleEvent(basic_evt, callable.get());
 	}
 
 	for(auto obj : lvl_->iso_world()->get_objects()) {
-		obj->handle_event(catch_all_event, callable.get());
+		obj->handleEvent(catch_all_event, callable.get());
 
 		if(event.type == SDL_MOUSEMOTION) {
 			if(mouse_in.find(obj) == mouse_in.end() && obj->is_mouseover_object()) {
 				obj->set_mouseover_object(false);
-				obj->handle_event(MouseLeaveID, callable.get());
+				obj->handleEvent(MouseLeaveID, callable.get());
 			}
 		}
 	}
@@ -513,7 +513,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 			if(!lvl_->gui_event(event)) {
 				x = (mx*graphics::screen_width())/preferences::virtual_screen_width() + last_draw_position().x/100;
 				y = (my*graphics::screen_height())/preferences::virtual_screen_height() + last_draw_position().y/100;
-				game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
 				callable->add("mouse_x", variant(x));
 				callable->add("mouse_y", variant(y));
 				if(event_type != SDL_MOUSEMOTION) {
@@ -527,7 +527,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				glm::ivec3 iv3 = lvl_->camera()->get_facing(v3) + glm::ivec3(int(floor(v3.x)), int(floor(v3.y)), int(floor(v3.z)));
 				callable->add("voxel_point", ivec3_to_variant(iv3));
 
-				std::vector<voxel::user_voxel_object_ptr> voxel_objs;
+				std::vector<voxel::UserVoxelObjectPtr> voxel_objs;
 				if(lvl_->iso_world()) {
 					lvl_->iso_world()->get_objects_at_point(v3, voxel_objs);
 				}
@@ -561,7 +561,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						if(e->use_absolute_screen_coordinates()) {
 							p = point(mx,my);
 						}
-						if(point_in_rect(p, m_area) == false) {
+						if(pointInRect(p, m_area) == false) {
 							continue;
 						}
 					}
@@ -572,7 +572,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						// handling for mouse_enter
 						if(e->is_mouse_over_entity() == false) {
 							if((e->get_mouseover_delay() == 0 || unsigned(lvl_->cycle()) > e->get_mouseover_trigger_cycle())) {
-								e->handle_event(MouseEnterID, callable.get());
+								e->handleEvent(MouseEnterID, callable.get());
 								e->set_mouse_over_entity();
 							} else if(e->get_mouseover_trigger_cycle() == INT_MAX) {
 								e->set_mouseover_trigger_cycle(e->get_mouseover_delay() + lvl_->cycle());
@@ -584,11 +584,11 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					if(e->is_mouse_over_entity() || basic_evt != MouseMoveEventID) {
 						//only give mouse move events if we've actually
 						//recordered a mouse_enter event.
-						handled |= e->handle_event(basic_evt, callable.get());
+						handled |= e->handleEvent(basic_evt, callable.get());
 					}
 
 					if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->is_being_dragged() == false) {
-						e->handle_event(MouseClickID, callable.get());
+						e->handleEvent(MouseClickID, callable.get());
 						if((*it)->mouse_event_swallowed()) {
 							click_handled = true;
 						}
@@ -607,13 +607,13 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				bool drag_handled = false;
 				foreach(entity_ptr object, level_chars) {
 					if(object) {
-						object->handle_event(catch_all_event, callable.get());
+						object->handleEvent(catch_all_event, callable.get());
 
 						// drag handling
 						if(event_type == SDL_MOUSEBUTTONUP && !drag_handled) {
 							object->set_mouse_buttons(object->get_mouse_buttons() & ~SDL_BUTTON(event_button_button));
 							if(object->get_mouse_buttons() == 0 && object->is_being_dragged()) {
-								object->handle_event(MouseDragEndID, callable.get());
+								object->handleEvent(MouseDragEndID, callable.get());
 								object->set_being_dragged(false);
 								if(object->mouse_event_swallowed()) {
 									drag_handled = true;
@@ -624,9 +624,9 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 							// drag check.
 							if(object->is_being_dragged()) {
 								if(object->get_mouse_buttons() & button_state) {
-									object->handle_event(MouseDragID, callable.get());
+									object->handleEvent(MouseDragID, callable.get());
 								} else {
-									object->handle_event(MouseDragEndID, callable.get());
+									object->handleEvent(MouseDragEndID, callable.get());
 									object->set_being_dragged(false);
 								}
 								if(object->mouse_event_swallowed()) {
@@ -634,7 +634,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 								}
 							} else if(object->get_mouse_buttons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
 								// start drag.
-								object->handle_event(MouseDragStartID, callable.get());
+								object->handleEvent(MouseDragStartID, callable.get());
 								object->set_being_dragged();
 								if(object->mouse_event_swallowed()) {
 									drag_handled = true;
@@ -672,12 +672,12 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						if(mouse_in.find(e) == mouse_in.end()) {
 							if(has_m_area == false) {
 								if(e->is_mouse_over_entity()) {
-									e->handle_event(MouseLeaveID, callable.get());
+									e->handleEvent(MouseLeaveID, callable.get());
 									e->set_mouse_over_entity(false);
 								}
 							} else {
-								if(point_in_rect(p, m_area) == false && e->is_mouse_over_entity()) {
-									e->handle_event(MouseLeaveID, callable.get());
+								if(pointInRect(p, m_area) == false && e->is_mouse_over_entity()) {
+									e->handleEvent(MouseLeaveID, callable.get());
 									e->set_mouse_over_entity(false);
 								}
 							}								
@@ -850,7 +850,7 @@ void level_file_modified(std::string lvl_path) {
 
 bool level_runner::play_cycle()
 {
-	static settings_dialog settings_dialog;
+	static settingsDialog settingsDialog;
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
@@ -997,7 +997,7 @@ bool level_runner::play_cycle()
 		die_at = -1;
 
 		foreach(entity_ptr e, lvl_->get_chars()) {
-			e->handle_event(OBJECT_EVENT_PLAYER_DEATH);
+			e->handleEvent(OBJECT_EVENT_PLAYER_DEATH);
 		}
 
 		//record stats of the player's death
@@ -1025,7 +1025,7 @@ bool level_runner::play_cycle()
 		new_level->add_player(save);
 		new_level->set_as_current_level();
 		save->save_game();
-		save->handle_event(OBJECT_EVENT_LOAD_CHECKPOINT);
+		save->handleEvent(OBJECT_EVENT_LOAD_CHECKPOINT);
 		place_entity_in_level(*new_level, *save);
 		lvl_ = new_level;
 		last_draw_position() = screen_position();
@@ -1063,9 +1063,9 @@ bool level_runner::play_cycle()
 
 			player_info* player = lvl_->player();
 			if(portal->new_playable) {
-				game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable());
+				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
-				player->get_entity().handle_event("player_change_on_teleport", callable.get());
+				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
 				lvl_->add_player(portal->new_playable);
 				player = lvl_->player();
 			}
@@ -1146,9 +1146,9 @@ bool level_runner::play_cycle()
 
 			player_info* player = lvl_->player();
 			if(portal->new_playable) {
-				game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable());
+				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
-				player->get_entity().handle_event("player_change_on_teleport", callable.get());
+				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
 			}
 
 			if(player && portal->saved_game == false) {
@@ -1160,7 +1160,7 @@ bool level_runner::play_cycle()
 				if(!player->get_entity().no_move_to_standing() && !portal->no_move_to_standing){
 					player->get_entity().move_to_standing(*new_level);
 				}
-				player->get_entity().handle_event("enter_level");
+				player->get_entity().handleEvent("enter_level");
 			} else {
 				player = new_level->player();
 			}
@@ -1217,21 +1217,21 @@ bool level_runner::play_cycle()
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
-			should_pause = settings_dialog.handle_event(event);
+			should_pause = settingsDialog.handleEvent(event);
 #endif
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {
-				swallowed = console_->process_event(event, swallowed);
+				swallowed = console_->processEvent(event, swallowed);
 			}
 
 			if(history_slider_ && paused) {
-				swallowed = history_slider_->process_event(event, swallowed) || swallowed;
-				swallowed = history_button_->process_event(event, false) || swallowed;
+				swallowed = history_slider_->processEvent(event, swallowed) || swallowed;
+				swallowed = history_button_->processEvent(event, false) || swallowed;
 			}
 
 			if(editor_) {
-				swallowed = editor_->handle_event(event, swallowed) || swallowed;
+				swallowed = editor_->handleEvent(event, swallowed) || swallowed;
 				lvl_->set_as_current_level();
 
 				if(editor::last_edited_level() != lvl_->id() && editor_->confirm_quit()) {
@@ -1450,14 +1450,14 @@ bool level_runner::play_cycle()
             case SDL_JOYBUTTONUP:
             case SDL_JOYBUTTONDOWN:
             case SDL_JOYBALLMOTION:
-                iphone_controls::handle_event(event);
+                iphone_controls::handleEvent(event);
 				handle_mouse_events(event);
                 break;
 #elif defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY)
 			case SDL_MOUSEMOTION:
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				iphone_controls::handle_event(event);
+				iphone_controls::handleEvent(event);
 				handle_mouse_events(event);
 				break;
 #elif TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
@@ -1475,7 +1475,7 @@ bool level_runner::play_cycle()
 					entity_ptr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
 					if(selected) {
 						lvl_->set_editor_highlight(selected);
-						console_->set_focus(selected);
+						console_->setFocus(selected);
 					}
 				} else {
 					handle_mouse_events(event);
@@ -1497,22 +1497,22 @@ bool level_runner::play_cycle()
 		}
 
 		if(should_pause) {
-			lvl_->set_show_builtin_settings_dialog(true);
+			lvl_->set_show_builtin_settingsDialog(true);
 			for(const auto& c : lvl_->get_active_chars()) {
-				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
+				c->handleEvent(OBJECT_EVENT_SETTINGS_MENU);
 			}
 		}
 		
-		if(lvl_->show_builtin_settings_dialog())
+		if(lvl_->show_builtin_settingsDialog())
 		{
-			lvl_->set_show_builtin_settings_dialog(false);
+			lvl_->set_show_builtin_settingsDialog(false);
 
 #if defined(USE_ISOMAP)
 			if(mouselook_state) {
 				SDL_SetRelativeMouseMode(SDL_FALSE);
 			}
 #endif
-			settings_dialog.reset();
+			settingsDialog.reset();
 			const PAUSE_GAME_RESULT result = show_pause_game_dialog();
 
 			handle_pause_game_result(result);
@@ -1673,7 +1673,7 @@ bool level_runner::play_cycle()
 
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
 		if( ! is_achievement_displayed() ){
-			settings_dialog.draw(in_speech_dialog());
+			settingsDialog.draw(in_speech_dialog());
 		}
 #endif
 		
@@ -1841,10 +1841,10 @@ void level_runner::init_history_slider()
 {
 	if(paused && editor_) {
 		history_slider_.reset(new gui::slider(110, boost::bind(&level_runner::on_history_change, this, _1)));
-		history_slider_->set_loc(370, 4);
+		history_slider_->setLoc(370, 4);
 		history_slider_->set_position(1.0);
 		history_button_.reset(new gui::button("Trails", boost::bind(&level_runner::toggle_history_trails, this)));
-		history_button_->set_loc(history_slider_->x() + history_slider_->width(), history_slider_->y());
+		history_button_->setLoc(history_slider_->x() + history_slider_->width(), history_slider_->y());
 	} else {
 		history_slider_.reset();
 		history_button_.reset();

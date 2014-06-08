@@ -27,7 +27,7 @@
 namespace graphics
 {
 
-class draw_primitive : public game_logic::formula_callable
+class draw_primitive : public game_logic::FormulaCallable
 {
 public:
 	static boost::intrusive_ptr<draw_primitive> create(const variant& v);
@@ -42,9 +42,9 @@ public:
 private:
 	DECLARE_CALLABLE(draw_primitive);
 
-	virtual void handle_draw() const = 0;
+	virtual void handleDraw() const = 0;
 #if defined(USE_ISOMAP)
-	virtual void handle_draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
+	virtual void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const = 0;
 #endif
 	GLenum src_factor_, dst_factor_;
 };

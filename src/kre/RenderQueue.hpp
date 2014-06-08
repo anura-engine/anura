@@ -39,12 +39,12 @@ namespace KRE
 
 		const std::string& name() const { return name_; }
 
-		void Enqueue(uint64_t order, RenderablePtr p);	
-		void Dequeue(uint64_t order);
+		void enQueue(uint64_t order, RenderablePtr p);	
+		void deQueue(uint64_t order);
 
-		void PreRender();
-		void Render(const WindowManagerPtr& wm) const;
-		void PostRender();
+		void preRender();
+		void render(const WindowManagerPtr& wm) const;
+		void postRender();
 	private:
 		std::map<uint64_t, RenderablePtr> renderables_;
 		std::string name_;

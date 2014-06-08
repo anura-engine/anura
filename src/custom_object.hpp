@@ -1,21 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CUSTOM_OBJECT_HPP_INCLUDED
-#define CUSTOM_OBJECT_HPP_INCLUDED
+#pragma once
 
 #include <memory>
 #include <set>
@@ -24,10 +29,7 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/cstdint.hpp>
 #include <stack>
-#include <glm/glm.hpp>
-#include <glm/gtc/type_ptr.hpp>
 
-#include "graphics.hpp"
 #include "blur.hpp"
 #include "color_utils.hpp"
 #include "custom_object_type.hpp"
@@ -41,7 +43,6 @@
 #include "formula_variable_storage.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
-#include "raster_distortion.hpp"
 #include "variant.hpp"
 #include "vector_text.hpp"
 #include "widget.hpp"
@@ -137,7 +138,7 @@ public:
 	void set_frame_no_adjustments(const frame& new_frame);
 	void die();
 	void die_with_no_event();
-	virtual bool is_active(const rect& screen_area) const;
+	virtual bool isActive(const rect& screen_area) const;
 	bool dies_on_inactive() const;
 	bool always_active() const;
 	bool move_to_standing(level& lvl, int max_displace=10000);
@@ -147,8 +148,8 @@ public:
 
 	int time_in_frame() const { return time_in_frame_; }
 
-	formula_callable* vars() { return vars_.get(); }
-	const formula_callable* vars() const { return vars_.get(); }
+	FormulaCallable* vars() { return vars_.get(); }
+	const FormulaCallable* vars() const { return vars_.get(); }
 
 	int cycle() const { return cycle_; }
 
@@ -177,7 +178,7 @@ public:
 	void add_particle_system(const std::string& key, const std::string& type);
 	void remove_particle_system(const std::string& key);
 
-	void set_text(const std::string& text, const std::string& font, int size, int align);
+	void setText(const std::string& text, const std::string& font, int size, int align);
 	void add_vector_text(const gui::vector_text_ptr& txtp) {
 		vector_text_.push_back(txtp);
 	}
@@ -201,12 +202,12 @@ public:
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr editor_info() const;
+	virtual const_editor_entity_info_ptr EditorInfo() const;
 #endif // !NO_EDITOR
 
-	virtual bool handle_event(const std::string& event, const formula_callable* context=NULL);
-	virtual bool handle_event(int event, const formula_callable* context=NULL);
-	virtual bool handle_event_delay(int event, const formula_callable* context=NULL);
+	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);
+	virtual bool handleEvent(int event, const FormulaCallable* context=NULL);
+	virtual bool handleEvent_delay(int event, const FormulaCallable* context=NULL);
 
 	virtual void resolve_delayed_events();
 
@@ -216,9 +217,9 @@ public:
 	void set_sound_volume(const int volume);
 	void set_zsub_order(const int zsub_order) {zsub_order_ = zsub_order;}
 	
-	bool execute_command(const variant& var);
+	bool executeCommand(const variant& var);
 
-	virtual game_logic::formula_ptr create_formula(const variant& v);
+	virtual game_logic::formula_ptr createFormula(const variant& v);
 
 	bool allow_level_collisions() const;
 
@@ -242,22 +243,20 @@ public:
 
 	bool mouse_event_swallowed() const {return swallow_mouse_event_;}
 	void reset_mouse_event() {swallow_mouse_event_ = false;}
-	void add_widget(const gui::widget_ptr& w);
-	void add_widgets(std::vector<gui::widget_ptr>* widgets);
+	void add_widget(const gui::WidgetPtr& w);
+	void add_widgets(std::vector<gui::WidgetPtr>* widgets);
 	void clear_widgets();
-	void remove_widget(gui::widget_ptr w);
-	gui::widget_ptr get_widget_by_id(const std::string& id);
-	gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
+	void remove_widget(gui::WidgetPtr w);
+	gui::WidgetPtr getWidgetById(const std::string& id);
+	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
 	std::vector<variant> get_variant_widget_list() const;
-	bool get_clip_area(rect* clip_area) {
-		if(clip_area_ && clip_area) {
-			*clip_area = *clip_area_.get();
+	bool get_clipArea(rect* clipArea) {
+		if(clip_area_ && clipArea) {
+			*clipArea = *clip_area_.get();
 			return true;
 		}
 		return false;
 	}
-
-	const GLfloat* model() const { return glm::value_ptr(model_); }
 
 	struct AnimatedMovement {
 		std::string name;
@@ -291,10 +290,10 @@ protected:
 	void static_process(level& lvl);
 
 	virtual void control(const level& lvl);
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValue(const std::string& key) const;
+	variant getValue_by_slot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValue_by_slot(int slot, const variant& value);
 
 	virtual variant get_player_value_by_slot(int slot) const;
 	virtual void set_player_value_by_slot(int slot, const variant& value);
@@ -318,7 +317,7 @@ protected:
 
 	virtual bool editor_force_standing() const;
 
-	virtual game_logic::const_formula_callable_definition_ptr get_definition() const;
+	virtual game_logic::const_FormulaCallable_definition_ptr get_definition() const;
 
 	entity_ptr standing_on() const { return standing_on_; }
 	virtual void add_to_level();
@@ -344,7 +343,7 @@ private:
 		entity* target;
 		variant* from_variant;
 		entity_ptr* from_ptr;
-		boost::shared_ptr<game_logic::formula_callable_visitor> visitor;
+		boost::shared_ptr<game_logic::FormulaCallableVisitor> visitor;
 	};
 
 	void extract_gc_object_references(std::vector<gc_object_reference>& v);
@@ -411,7 +410,7 @@ private:
 	game_logic::const_formula_ptr next_animation_formula_;
 
 	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
-	game_logic::map_formula_callable_ptr tags_;
+	game_logic::map_FormulaCallablePtr tags_;
 
 	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
 	variant get_property_data(int slot) const { if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
@@ -442,8 +441,6 @@ private:
 
 	int standing_on_prev_x_, standing_on_prev_y_;
 
-	graphics::const_raster_distortion_ptr distortion_;
-
 	void make_draw_color();
 	const graphics::color_transform& draw_color() const;
 	boost::shared_ptr<graphics::color_transform> draw_color_;
@@ -469,21 +466,13 @@ private:
 	//at the end of every cycle.
 	int fall_through_platforms_;
 
-#ifdef USE_SHADERS
-	//current shader we're using to draw with.
-	gles2::shader_program_ptr shader_;
-	// List of shader effects to run.
-	std::vector<gles2::shader_program_ptr> effects_;
-#endif
-
 #ifdef USE_BOX2D
 	box2d::body_ptr body_;
 #endif
 
 	bool always_active_;
 
-	mutable std::stack<const formula_callable*> backup_callable_stack_;
-
+	mutable std::stack<const FormulaCallable*> backup_callable_stack_;
 
 	int last_cycle_active_;
 
@@ -520,8 +509,8 @@ private:
 
 	boost::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
 
-	std::vector<GLfloat> custom_draw_xy_;
-	std::vector<GLfloat> custom_draw_uv_;
+	std::vector<float> custom_draw_xy_;
+	std::vector<float> custom_draw_uv_;
 
 	void set_platform_area(const rect& area);
 
@@ -529,12 +518,12 @@ private:
 
 	bool swallow_mouse_event_;
 
-	bool handle_event_internal(int event, const formula_callable* context, bool execute_commands_now=true);
+	bool handleEvent_internal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;
 
 	int currently_handling_die_event_;
 
-	typedef std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list;
+	typedef std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list;
 	widget_list widgets_;
 
 	rect previous_water_bounds_;
@@ -547,10 +536,6 @@ private:
 
 	bool paused_;
 
-	glm::mat4 model_;
-	// XXX these are hacks.
-	mutable GLint vertex_location_;
-	mutable GLint texcoord_location_;
 	std::vector<int> properties_requiring_dynamic_initialization_;
 
 	// for lua integration
@@ -560,5 +545,3 @@ private:
 	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
 #endif
 };
-
-#endif

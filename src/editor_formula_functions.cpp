@@ -36,12 +36,12 @@ using namespace game_logic;
 
 namespace {
 
-class editor_command : public formula_callable {
+class editor_command : public FormulaCallable {
 public:
 	virtual ~editor_command() {}
 	virtual void execute(editor& e) = 0;
 private:
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		return variant();
 	}
 };
@@ -68,7 +68,7 @@ public:
 	  : function_expression("add_object", args, 4, 4)
 	{}
 private:
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 		return variant(new add_object_command(
 		        args()[0]->evaluate(variables).as_string(),
 		        args()[1]->evaluate(variables).as_int(),
@@ -96,7 +96,7 @@ public:
 	  : function_expression("remove_tiles", args, 3, 5)
 	{}
 private:
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 		const std::string tile_id = args()[0]->evaluate(variables).as_string();
 		const int x1 = args()[1]->evaluate(variables).as_int();
 		const int y1 = args()[2]->evaluate(variables).as_int();
@@ -125,7 +125,7 @@ public:
 	  : function_expression("add_tiles", args, 3, 5)
 	{}
 private:
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 		const std::string tile_id = args()[0]->evaluate(variables).as_string();
 		const int x1 = args()[1]->evaluate(variables).as_int();
 		const int y1 = args()[2]->evaluate(variables).as_int();
@@ -153,7 +153,7 @@ public:
 	  : function_expression("debug", args, 1, -1) {
 	}
 private:
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 		std::string str;
 		for(int n = 0; n != args().size(); ++n) {
 			if(n) str += " ";
@@ -177,7 +177,7 @@ public:
 	expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
-							   const_formula_callable_definition_ptr callable_def) const
+							   const_FormulaCallable_definition_ptr callable_def) const
 	{
 		if(fn == "remove_tiles") {
 			return expression_ptr(new remove_tiles_function(args));
@@ -193,10 +193,10 @@ public:
 	}
 };
 
-void execute_command(variant cmd, editor& e) {
+void executeCommand(variant cmd, editor& e) {
 	if(cmd.is_list()) {
 		for(int n = 0; n != cmd.num_elements(); ++n) {
-			execute_command(cmd[n], e);
+			executeCommand(cmd[n], e);
 		}
 	} else if(cmd.is_callable()) {
 		editor_command* command = cmd.try_convert<editor_command>();
@@ -206,14 +206,14 @@ void execute_command(variant cmd, editor& e) {
 	}
 }
 
-class tile_callable : public formula_callable {
+class tile_callable : public FormulaCallable {
 public:
 	tile_callable(editor& e, int x, int y)
 	  : editor_(e), x_(x), y_(y)
 	{}
 
 private:
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		if(key == "x") {
 			return variant(x_);
 		} else if(key == "y") {
@@ -251,12 +251,12 @@ private:
 	int x_, y_;
 };
 
-class editor_command_callable : public formula_callable {
+class editor_command_callable : public FormulaCallable {
 public:
 	explicit editor_command_callable(editor& e) : editor_(e)
 	{}
 private:
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		if(key == "cells") {
 			std::vector<variant> result;
 
@@ -326,13 +326,13 @@ void execute(const std::string& id, editor& e)
 		return;
 	}
 
-	formula_callable_ptr callable(new editor_command_callable(e));
+	FormulaCallablePtr callable(new editor_command_callable(e));
 	const variant cmd = itor->second->execute(*callable);
 
 	//execute the command, making sure the editor allows the user to undo the
 	//entire script in one go.
 	e.begin_command_group();
-	execute_command(cmd, e);
+	executeCommand(cmd, e);
 	e.end_command_group();
 }
 

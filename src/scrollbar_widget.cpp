@@ -45,17 +45,17 @@ scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
 	dragging_handle_(false),
 	drag_start_(0), drag_anchor_y_(0)
 {
-	set_environment();
+	setEnvironment();
 }
 
-scrollbar_widget::scrollbar_widget(const variant& v, game_logic::formula_callable* e)
+scrollbar_widget::scrollbar_widget(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e),	window_pos_(0), window_size_(0), range_(0),
 	step_(0), arrow_step_(0),
 	dragging_handle_(false), drag_start_(0), drag_anchor_y_(0)
 {
 	handler_ = boost::bind(&scrollbar_widget::handler_delegate, this, _1);
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
-	ffl_handler_ = get_environment()->create_formula(v["on_scroll"]);
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
+	ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
 	
     up_arrow_ = v.has_key("up_arrow") ? widget_factory::create(v["up_arrow"], e) : new gui_section_widget(UpArrow);
     down_arrow_ = v.has_key("down_arrow") ? widget_factory::create(v["down_arrow"], e) : new gui_section_widget(DownArrow);
@@ -73,11 +73,11 @@ scrollbar_widget::scrollbar_widget(const variant& v, game_logic::formula_callabl
 void scrollbar_widget::handler_delegate(int yscroll)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable(new map_FormulaCallable(getEnvironment()));
 		callable->add("yscroll", variant(yscroll));
 		variant value = ffl_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "scrollbar_widget::handler_delegate() called without environment!" << std::endl;
 	}
@@ -92,32 +92,32 @@ void scrollbar_widget::set_range(int total_height, int window_height)
 	}
 }
 
-void scrollbar_widget::set_loc(int x, int y)
+void scrollbar_widget::setLoc(int x, int y)
 {
-	widget::set_loc(x, y);
-	set_dim(width(), height());
+	widget::setLoc(x, y);
+	setDim(width(), height());
 }
 
-void scrollbar_widget::set_dim(int w, int h)
+void scrollbar_widget::setDim(int w, int h)
 {
 	w = up_arrow_->width();
-	up_arrow_->set_loc(x(), y());
-	down_arrow_->set_loc(x(), y() + h - down_arrow_->height());
-	background_->set_loc(x(), y() + up_arrow_->height());
+	up_arrow_->setLoc(x(), y());
+	down_arrow_->setLoc(x(), y() + h - down_arrow_->height());
+	background_->setLoc(x(), y() + up_arrow_->height());
 
 	const int bar_height = h - (down_arrow_->height() + up_arrow_->height());
-	background_->set_dim(background_->width(), bar_height);
+	background_->setDim(background_->width(), bar_height);
 
 	if(range_) {
-		handle_->set_loc(x(), y() + up_arrow_->height() + (window_pos_*bar_height)/range_);
-		handle_->set_dim(handle_->width(), std::max<int>(6, (window_size_*bar_height)/range_));
-		handle_top_->set_loc(x(), y()+ up_arrow_->height() + (window_pos_*bar_height)/range_);
-		handle_bot_->set_loc(x(), y()+ down_arrow_->height() + (window_pos_*bar_height)/range_ + (window_size_*bar_height)/range_ - handle_bot_->height() +1);
+		handle_->setLoc(x(), y() + up_arrow_->height() + (window_pos_*bar_height)/range_);
+		handle_->setDim(handle_->width(), std::max<int>(6, (window_size_*bar_height)/range_));
+		handle_top_->setLoc(x(), y()+ up_arrow_->height() + (window_pos_*bar_height)/range_);
+		handle_bot_->setLoc(x(), y()+ down_arrow_->height() + (window_pos_*bar_height)/range_ + (window_size_*bar_height)/range_ - handle_bot_->height() +1);
 	}
 
 	//TODO:  handle range < heightOfEndcaps
 	
-	widget::set_dim(w, h);
+	widget::setDim(w, h);
 }
 
 void scrollbar_widget::down_button_pressed()
@@ -128,7 +128,7 @@ void scrollbar_widget::up_button_pressed()
 {
 }
 
-void scrollbar_widget::handle_draw() const
+void scrollbar_widget::handleDraw() const
 {
 	up_arrow_->draw();
 	down_arrow_->draw();
@@ -149,7 +149,7 @@ void scrollbar_widget::clip_window_position()
 	}
 }
 
-bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
+bool scrollbar_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		return claimed;
@@ -173,7 +173,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		clip_window_position();
 
 		if(window_pos_ != start_pos) {
-			set_dim(width(), height());
+			setDim(width(), height());
 			handler_(window_pos_);
 		}
 		return claimed;
@@ -187,7 +187,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 
 		const int start_pos = window_pos_;
 
-		claimed = claim_mouse_events();
+		claimed = claimMouseEvents();
 
 		if(e.y < up_arrow_->y() + up_arrow_->height()) {
 			//on up arrow
@@ -221,7 +221,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 		clip_window_position();
 
 		if(window_pos_ != start_pos) {
-			set_dim(width(), height());
+			setDim(width(), height());
 			handler_(window_pos_);
 		}
 
@@ -246,7 +246,7 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 
 			clip_window_position();
 
-			set_dim(width(), height());
+			setDim(width(), height());
 			handler_(window_pos_);
 		}
 	}
@@ -255,22 +255,22 @@ bool scrollbar_widget::handle_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-void scrollbar_widget::set_value(const std::string& key, const variant& v)
+void scrollbar_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "on_scroll") {
-		ffl_handler_ = get_environment()->create_formula(v["on_scroll"]);
+		ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
 	} else if(key == "up_arrow") {
-		up_arrow_ = widget_factory::create(v, get_environment());
+		up_arrow_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "down_arrow") {
-		down_arrow_ = widget_factory::create(v, get_environment());
+		down_arrow_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "handle") {
-		handle_ = widget_factory::create(v, get_environment());
+		handle_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "handle_bottom") {
-		handle_bot_ = widget_factory::create(v, get_environment());
+		handle_bot_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "handle_top") {
-		handle_top_ = widget_factory::create(v, get_environment());
+		handle_top_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "background") {
-		background_ = widget_factory::create(v, get_environment());
+		background_ = widget_factory::create(v, getEnvironment());
 	} else if(key == "range") {
 		std::vector<int> range = v.as_list_int();
 		ASSERT_EQ(range.size(), 2);
@@ -280,10 +280,10 @@ void scrollbar_widget::set_value(const std::string& key, const variant& v)
 		clip_window_position();
 	}
 	
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant scrollbar_widget::get_value(const std::string& key) const
+variant scrollbar_widget::getValue(const std::string& key) const
 {
 	if(key == "range") {
 		std::vector<variant> vv;
@@ -293,7 +293,7 @@ variant scrollbar_widget::get_value(const std::string& key) const
 	} else if(key == "position") {
 		return variant(window_pos_);
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

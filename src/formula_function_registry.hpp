@@ -51,7 +51,7 @@ public: \
 	explicit name##_function(const args_list& args) \
 	  : function_expression(#name, args, min_args, max_args) {} \
 private: \
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 
 #define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new specific_function_creator<name##_function>());
 

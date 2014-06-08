@@ -25,7 +25,7 @@
 
 typedef boost::intrusive_ptr<class current_generator> current_generator_ptr;
 
-class current_generator : public game_logic::formula_callable
+class current_generator : public game_logic::FormulaCallable
 {
 public:
 	static current_generator_ptr create(variant node);
@@ -35,7 +35,7 @@ public:
 	virtual void generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) = 0;
 	virtual variant write() const = 0;
 private:
-	virtual variant get_value(const std::string& key) const;
+	virtual variant getValue(const std::string& key) const;
 };
 
 class radial_current_generator : public current_generator

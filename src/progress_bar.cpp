@@ -27,25 +27,25 @@ progress_bar::progress_bar(int progress, int minv, int maxv, const std::string& 
 	upscale_(false), color_(128,128,128,255), hpad_(10), vpad_(10)
 {
 	if(gui_set.empty() == false) {
-		frame_image_set_ = framed_gui_element::get(gui_set);
+		frame_image_set_ = FramedGuiElement::get(gui_set);
 	}
 }
 
-progress_bar::progress_bar(const variant& v, game_logic::formula_callable* e)
+progress_bar::progress_bar(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e), completion_called_(false),
 	progress_(v["progress"].as_int(0)), 
 	min_(v["min"].as_int(0)), max_(v["max"].as_int(100)),
 	hpad_(10), vpad_(10)
 {
 	if(v.has_key("on_completion")) {
-		ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
-		completion_handler_ = get_environment()->create_formula(v["on_completion"]);
+		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
+		completion_handler_ = getEnvironment()->createFormula(v["on_completion"]);
 		oncompletion_ = boost::bind(&progress_bar::complete, this);
 	}
 
 	std::string frame_set = v["frame_set"].as_string_default("");
 	if(frame_set != "none" && frame_set.empty() == false) {
-		frame_image_set_ = framed_gui_element::get(frame_set);
+		frame_image_set_ = FramedGuiElement::get(frame_set);
 	} 
 	upscale_ = v["resolution"].as_string_default("normal") == "normal" ? false : true;
 	if(v.has_key("color")) {
@@ -64,15 +64,15 @@ progress_bar::progress_bar(const variant& v, game_logic::formula_callable* e)
 
 void progress_bar::complete()
 {
-	if(get_environment()) {
-		variant value = completion_handler_->execute(*get_environment());
-		get_environment()->execute_command(value);
+	if(getEnvironment()) {
+		variant value = completion_handler_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "progress_bar::complete() called without environment!" << std::endl;
 	}
 }
 
-void progress_bar::set_progress(int value)
+void progress_bar::setProgress(int value)
 {
 	progress_ = std::min(max_, value);
 	progress_ = std::max(min_, progress_);
@@ -108,7 +108,7 @@ void progress_bar::reset()
 }
 
 
-variant progress_bar::get_value(const std::string& key) const
+variant progress_bar::getValue(const std::string& key) const
 {
 	if(key == "progress") {
 		return variant(progress_);
@@ -120,10 +120,10 @@ variant progress_bar::get_value(const std::string& key) const
 	return variant();
 }
 
-void progress_bar::set_value(const std::string& key, const variant& value)
+void progress_bar::setValue(const std::string& key, const variant& value)
 {
 	if(key == "progress") {
-		set_progress(value.as_int());
+		setProgress(value.as_int());
 	} else if(key == "min") {
 		min_ = value.as_int();
 	} else if(key == "max") {
@@ -146,10 +146,10 @@ void progress_bar::set_value(const std::string& key, const variant& value)
 		hpad_ = value[0].as_int();
 		vpad_ = value[1].as_int();
 	}
-	widget::set_value(key, value);
+	widget::setValue(key, value);
 }
 
-void progress_bar::handle_draw() const
+void progress_bar::handleDraw() const
 {
 	if(frame_image_set_) {
 		frame_image_set_->blit(x(),y(),width(),height(), upscale_);

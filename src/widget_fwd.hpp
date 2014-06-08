@@ -20,33 +20,19 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+
 #pragma once
 
-#include <string>
-#include "SDL.h"		// For SDL_Event
+#include <boost/intrusive_ptr.hpp>
 
-void init_clipboard();
+namespace gui
+{
+	class Widget;
+	typedef boost::intrusive_ptr<Widget> WidgetPtr;
+	typedef boost::intrusive_ptr<const Widget> ConstWidgetPtr;
 
-/**
- * Copies text to the clipboard.
- *
- * @param text         The text to copy.
- * @param mouse        Is the selection done by the mouse? On UNIX systems there
- *                     are multiple clipboards and the mouse selection uses a
- *                     different clipboard. Ignored on other systems.
- */
-void copy_to_clipboard(const std::string& text, const bool mouse);
-
-/**
- * Copies text from the clipboard.
- *
- * @param mouse        Is the pasting done by the mouse?
- *
- * @returns            String on clipbaord.
- */
-std::string copy_from_clipboard(const bool mouse);
-
-bool clipboard_handleEvent(const SDL_Event& ev);
-
-//if the clipboard has X-style copy paste using the mouse only.
-bool clipboard_has_mouse_area();
+	class WidgetSettingsDialog;
+	
+	class Dialog;
+	typedef boost::intrusive_ptr<Dialog> DialogPtr;
+}

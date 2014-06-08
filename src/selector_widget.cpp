@@ -31,9 +31,9 @@ namespace gui
 	selector_widget::selector_widget(const std::vector<std::string>& list)
 		: current_selection_(0)
 	{
-		set_environment();
+		setEnvironment();
 		foreach(const std::string& s, list) {
-			list_.push_back(selector_pair(s, widget_ptr(new label(s))));
+			list_.push_back(selector_pair(s, WidgetPtr(new label(s))));
 		}
 		init();
 	}
@@ -41,11 +41,11 @@ namespace gui
 	selector_widget::selector_widget(const selector_list& list)
 		: current_selection_(0), list_(list)
 	{
-		set_environment();
+		setEnvironment();
 		init();
 	}
 
-	selector_widget::selector_widget(const variant& v, game_logic::formula_callable* e)
+	selector_widget::selector_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v, e), current_selection_(v["selection"].as_int(0))
 	{
 		if(v.has_key("list") || v.has_key("children")) {
@@ -54,7 +54,7 @@ namespace gui
 			foreach(const variant& child, l.as_list()) {
 				if(child.is_list()) {
 					ASSERT_LOG(child.num_elements() == 2, "items in the sub-list must have two elements.");
-					widget_ptr w;
+					WidgetPtr w;
 					if(child[1].is_map()) {
 						w = widget_factory::create(child[1], e);
 					} else {
@@ -64,9 +64,9 @@ namespace gui
 					list_.push_back(selector_pair(child[0].as_string(), w));
 				} else if(child.is_string()) {
 					const std::string& s = child.as_string();
-					list_.push_back(selector_pair(s, widget_ptr(new label(s))));
+					list_.push_back(selector_pair(s, WidgetPtr(new label(s))));
 				} else {
-					widget_ptr w;
+					WidgetPtr w;
 					std::string s;
 					if(child.is_map()) {
 						w = widget_factory::create(child, e);
@@ -84,11 +84,11 @@ namespace gui
 		}
 
 		if(v.has_key("on_change")) {
-			change_handler_ = get_environment()->create_formula(v["on_change"]);
+			change_handler_ = getEnvironment()->createFormula(v["on_change"]);
 			on_change_ = boost::bind(&selector_widget::change_delegate, this, _1);
 		}
 		if(v.has_key("on_select")) {
-			select_handler_ = get_environment()->create_formula(v["on_select"]);
+			select_handler_ = getEnvironment()->createFormula(v["on_select"]);
 			on_select_ = boost::bind(&selector_widget::select_delegate, this, _1);
 		}
 		init();
@@ -116,8 +116,8 @@ namespace gui
 
 	void selector_widget::init()
 	{
-		left_arrow_ = widget_ptr(new gui_section_widget(selector_left_arrow));
-		right_arrow_ = widget_ptr(new gui_section_widget(selector_right_arrow));
+		left_arrow_ = WidgetPtr(new gui_section_widget(selector_left_arrow));
+		right_arrow_ = WidgetPtr(new gui_section_widget(selector_right_arrow));
 
 		int width = 16;
 		int height = 16;
@@ -136,18 +136,18 @@ namespace gui
 			}
 			++n;
 		}
-		left_arrow_->set_loc(0, (abs(height-left_arrow_->height()))/2);
-		//left_arrow_->set_dim(left_arrow_->width(), height);
-		right_arrow_->set_loc(left_arrow_->width()+10+width, (abs(height-right_arrow_->height()))/2);
-		//right_arrow_->set_dim(right_arrow_->width(), height);
-		set_dim(width + left_arrow_->width() + right_arrow_->width() + 10, height);
+		left_arrow_->setLoc(0, (abs(height-left_arrow_->height()))/2);
+		//left_arrow_->setDim(left_arrow_->width(), height);
+		right_arrow_->setLoc(left_arrow_->width()+10+width, (abs(height-right_arrow_->height()))/2);
+		//right_arrow_->setDim(right_arrow_->width(), height);
+		setDim(width + left_arrow_->width() + right_arrow_->width() + 10, height);
 		for(int n = 0; n != list_.size(); ++n) {
-			widget_ptr& w = list_[n].second;
-			w->set_loc((width - w->width())/2 + left_arrow_->width()+5, abs(height - w->height())/2);
+			WidgetPtr& w = list_[n].second;
+			w->setLoc((width - w->width())/2 + left_arrow_->width()+5, abs(height - w->height())/2);
 		}
 	}
 
-	void selector_widget::handle_draw() const
+	void selector_widget::handleDraw() const
 	{
 		glPushMatrix();
 		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -165,10 +165,10 @@ namespace gui
 		glPopMatrix();
 	}
 
-	bool selector_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool selector_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		SDL_Event ev = event;
-		normalize_event(&ev);
+		normalizeEvent(&ev);
 
 		if(claimed) {
 			return claimed;
@@ -200,15 +200,15 @@ namespace gui
 		return claimed;
 	}
 
-	void selector_widget::set_value(const std::string& key, const variant& v)
+	void selector_widget::setValue(const std::string& key, const variant& v)
 	{
 		if(key == "selection") {
 			set_selection(v.as_string());
 		}
-		widget::set_value(key, v);
+		widget::setValue(key, v);
 	}
 
-	variant selector_widget::get_value(const std::string& key) const
+	variant selector_widget::getValue(const std::string& key) const
 	{
 		if(key == "selection") {
 			return variant(list_[current_selection_].first);
@@ -219,7 +219,7 @@ namespace gui
 			}
 			return variant(&v);
 		}
-		return widget::get_value(key);
+		return widget::getValue(key);
 	}
 
 	bool selector_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
@@ -230,22 +230,22 @@ namespace gui
 	bool selector_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
 	{
 		point p(event.x, event.y);
-		if(point_in_rect(p, rect(left_arrow_->x(), 
+		if(pointInRect(p, rect(left_arrow_->x(), 
 			left_arrow_->y(), 
 			left_arrow_->width(), 
 			left_arrow_->height()))) {
 			select_left();
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 		}
-		if(point_in_rect(p, rect(right_arrow_->x(), 
+		if(pointInRect(p, rect(right_arrow_->x(), 
 			right_arrow_->y(), 
 			right_arrow_->width(), 
 			right_arrow_->height()))) {
 			select_right();
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 		}
-		widget_ptr& cur = list_[current_selection_].second;
-		if(point_in_rect(p, rect(cur->x(), cur->y(), cur->width(), cur->height())) && on_select_) {
+		WidgetPtr& cur = list_[current_selection_].second;
+		if(pointInRect(p, rect(cur->x(), cur->y(), cur->width(), cur->height())) && on_select_) {
 			on_select_(list_[current_selection_].first);
 		}
 		return claimed;
@@ -258,13 +258,13 @@ namespace gui
 
 	void selector_widget::change_delegate(const std::string& s)
 	{
-		if(get_environment()) {
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		if(getEnvironment()) {
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "selector_widget::change_delegate() called without environment!" << std::endl;
 		}
@@ -272,13 +272,13 @@ namespace gui
 
 	void selector_widget::select_delegate(const std::string& s)
 	{
-		if(get_environment()) {
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		if(getEnvironment()) {
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "selector_widget::select_delegate() called without environment!" << std::endl;
 		}

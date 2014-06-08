@@ -47,7 +47,7 @@ namespace tbs
 
 	void internal_server::send_request(const variant& request, 
 		int session_id,
-		game_logic::map_formula_callable_ptr callable, 
+		game_logic::map_FormulaCallablePtr callable, 
 		boost::function<void(const std::string&)> handler)
 	{
 		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
@@ -58,7 +58,7 @@ namespace tbs
 	void internal_server::send_msg(const variant& resp, 
 		int session_id,
 		boost::function<void(const std::string&)> handler, 
-		game_logic::map_formula_callable_ptr callable)
+		game_logic::map_FormulaCallablePtr callable)
 	{
 		if(handler) {
 			callable->add("message", resp);
@@ -70,7 +70,7 @@ namespace tbs
 	void internal_server::process()
 	{
 		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
-		server_ptr->handle_process();
+		server_ptr->handleProcess();
 	}
 
 	internal_server_manager::internal_server_manager(bool use_internal_server)
@@ -148,7 +148,7 @@ namespace tbs
 		}
 	}
 
-	void internal_server::handle_process()
+	void internal_server::handleProcess()
 	{
 		send_function send_fn;
 		variant request;

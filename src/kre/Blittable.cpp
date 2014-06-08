@@ -80,7 +80,7 @@ namespace KRE
 		return def;
 	}
 
-	void Blittable::PreRender()
+	void Blittable::preRender()
 	{
 		float offs_x = 0.0f;
 		float offs_y = 0.0f;

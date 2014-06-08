@@ -631,7 +631,7 @@ namespace KRE
 			cpath->Execute(context_);
 		}
 
-		void CairoContext::PreRender() 
+		void CairoContext::preRender() 
 		{
 			std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
 			tex_->Update(0, 0, width(), height(), stride, cairo_image_surface_get_data(surface_));

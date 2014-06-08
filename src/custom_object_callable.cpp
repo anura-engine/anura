@@ -209,7 +209,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "scale", "decimal" },
 	
 	{ "activation_area", "null|[int|decimal]" },
-	{ "clip_area", "null|[int]" },
+	{ "clipArea", "null|[int]" },
 
 	{ "always_active", "bool" },
 	{ "activation_border", "int/int|decimal" },
@@ -336,7 +336,7 @@ int custom_object_callable::get_slot(const std::string& key) const
 	}
 }
 
-game_logic::formula_callable_definition::entry* custom_object_callable::get_entry(int slot)
+game_logic::FormulaCallable_definition::entry* custom_object_callable::get_entry(int slot)
 {
 	if(slot < 0 || slot >= entries_.size()) {
 		return NULL;
@@ -345,7 +345,7 @@ game_logic::formula_callable_definition::entry* custom_object_callable::get_entr
 	return &entries_[slot];
 }
 
-const game_logic::formula_callable_definition::entry* custom_object_callable::get_entry(int slot) const
+const game_logic::FormulaCallable_definition::entry* custom_object_callable::get_entry(int slot) const
 {
 	if(slot < 0 || slot >= entries_.size()) {
 		return NULL;

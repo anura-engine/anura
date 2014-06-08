@@ -24,23 +24,23 @@
 
 namespace gui {
 
-border_widget::border_widget(widget_ptr child, graphics::color col, int border_size)
+border_widget::border_widget(WidgetPtr child, graphics::color col, int border_size)
   : child_(child), color_(col), border_size_(border_size)
 {
-	set_environment();
-	set_dim(child->width() + border_size*2, child->height() + border_size*2);
-	child_->set_loc(border_size, border_size);
+	setEnvironment();
+	setDim(child->width() + border_size*2, child->height() + border_size*2);
+	child_->setLoc(border_size, border_size);
 }
 
-border_widget::border_widget(widget_ptr child, const SDL_Color& color, int border_size)
+border_widget::border_widget(WidgetPtr child, const SDL_Color& color, int border_size)
 	: child_(child), color_(color.r, color.g, color.b, color.a), border_size_(border_size)
 {
-	set_environment();
-	set_dim(child->width() + border_size*2, child->height() + border_size*2);
-	child_->set_loc(border_size, border_size);
+	setEnvironment();
+	setDim(child->width() + border_size*2, child->height() + border_size*2);
+	child_->setLoc(border_size, border_size);
 }
 
-border_widget::border_widget(const variant& v, game_logic::formula_callable* e) : widget(v,e)
+border_widget::border_widget(const variant& v, game_logic::FormulaCallable* e) : widget(v,e)
 {
 	ASSERT_LOG(v.is_map(), "TYPE ERROR: parameter to border widget must be a map");
 	color_ = v.has_key("color") ? graphics::color(0,0,0,255) : graphics::color(v["color"]);
@@ -48,23 +48,23 @@ border_widget::border_widget(const variant& v, game_logic::formula_callable* e) 
 	child_ = widget_factory::create(v["child"], e);
 }
 
-void border_widget::set_color(const graphics::color& col)
+void border_widget::setColor(const graphics::color& col)
 {
 	color_ = col;
 }
 
-void border_widget::set_color(const SDL_Color& col)
+void border_widget::setColor(const SDL_Color& col)
 {
-	set_color(graphics::color(col.r, col.g, col.b, col.a));
+	setColor(graphics::color(col.r, col.g, col.b, col.a));
 }
 
-void border_widget::handle_process()
+void border_widget::handleProcess()
 {
-	widget::handle_process();
+	widget::handleProcess();
 	child_->process();
 }
 
-void border_widget::handle_draw() const
+void border_widget::handleDraw() const
 {
 	glPushMatrix();
 	graphics::draw_rect(rect(x(),y(),width(),height()), color_);
@@ -73,34 +73,34 @@ void border_widget::handle_draw() const
 	glPopMatrix();
 }
 
-bool border_widget::handle_event(const SDL_Event& event, bool claimed)
+bool border_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	SDL_Event ev = event;
-	normalize_event(&ev);
-	return child_->process_event(ev, claimed);
+	normalizeEvent(&ev);
+	return child_->processEvent(ev, claimed);
 }
 
-const_widget_ptr border_widget::get_widget_by_id(const std::string& id) const
+ConstWidgetPtr border_widget::getWidgetById(const std::string& id) const
 {
-	widget_ptr wx = child_->get_widget_by_id(id);
+	WidgetPtr wx = child_->getWidgetById(id);
 	if(wx) {
 		return wx;
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-widget_ptr border_widget::get_widget_by_id(const std::string& id)
+WidgetPtr border_widget::getWidgetById(const std::string& id)
 {
-	widget_ptr wx = child_->get_widget_by_id(id);
+	WidgetPtr wx = child_->getWidgetById(id);
 	if(wx) {
 		return wx;
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-std::vector<widget_ptr> border_widget::get_children() const
+std::vector<WidgetPtr> border_widget::getChildren() const
 {
-	std::vector<widget_ptr> result;
+	std::vector<WidgetPtr> result;
 	result.push_back(child_);
 	return result;
 }

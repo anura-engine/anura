@@ -24,7 +24,7 @@ class voxel_object_type
 {
 public:
 	enum ENTRY_TYPE { ENTRY_ME, ENTRY_DATA, ENTRY_VALUE, NUM_ENTRY_TYPE };
-	static game_logic::const_formula_callable_definition_ptr get_definition(const std::string& id);
+	static game_logic::const_FormulaCallable_definition_ptr get_definition(const std::string& id);
 	static const_voxel_object_type_ptr get(const std::string& id);
 	static bool is_derived_from(const std::string& base, const std::string& derived);
 
@@ -69,7 +69,7 @@ private:
 	std::vector<property_entry> slot_properties_;
 	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_;
 
-	game_logic::formula_callable_definition_ptr callable_definition_;
+	game_logic::FormulaCallable_definition_ptr callable_definition_;
 
 	std::string last_initialization_property_;
 

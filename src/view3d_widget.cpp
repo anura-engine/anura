@@ -28,13 +28,13 @@ namespace gui
 	view3d_widget::view3d_widget(int x, int y, int width, int height)
 		: tex_width_(0), tex_height_(0), camera_distance_(-150.0f)
 	{
-		set_loc(x, y);
-		set_dim(width, height);
+		setLoc(x, y);
+		setDim(width, height);
 
 		init();
 	}
 
-	view3d_widget::view3d_widget(const variant& v, game_logic::formula_callable* e)
+	view3d_widget::view3d_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v,e), tex_width_(0), tex_height_(0), camera_distance_(float(v["camera_distance"].as_decimal(decimal(-150.0)).as_float()))
 	{
 		
@@ -57,10 +57,10 @@ namespace gui
 		}
 		if(v.is_list()) {
 			for(int n = 0; n != v.num_elements(); ++n) {
-				children_.push_back(widget_factory::create(v[n],get_environment()));
+				children_.push_back(widget_factory::create(v[n],getEnvironment()));
 			}
 		} else {
-			children_.push_back(widget_factory::create(v,get_environment()));
+			children_.push_back(widget_factory::create(v,getEnvironment()));
 		}
 	}
 
@@ -130,7 +130,7 @@ namespace gui
 	{
 		gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
-		GLint cur_id = graphics::texture::get_current_texture();
+		GLint cur_id = graphics::texture::get_currentTexture();
 		glBindTexture(GL_TEXTURE_2D, *texture_);
 
 		const int w_odd = width() % 2;
@@ -160,7 +160,7 @@ namespace gui
 		glBindTexture(GL_TEXTURE_2D, cur_id);
 	}
 
-	void view3d_widget::handle_draw() const
+	void view3d_widget::handleDraw() const
 	{
 		// render to fbo
 		render_fbo();
@@ -173,10 +173,10 @@ namespace gui
 		}
 	}
 
-	bool view3d_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool view3d_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 	    for(auto child : children_) {
-			claimed = child->process_event(event, claimed);
+			claimed = child->processEvent(event, claimed);
 			if(claimed) {
 				return true;
 			}
@@ -184,7 +184,7 @@ namespace gui
 		return false;
 	}
 
-	void view3d_widget::handle_process()
+	void view3d_widget::handleProcess()
 	{
 		glm::vec3 cam_pos = level::current().camera()->position() + level::current().camera()->direction() * camera_distance_;
 		camera_->look_at(cam_pos, level::current().camera()->position(), glm::vec3(0,1,0));

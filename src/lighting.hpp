@@ -29,7 +29,7 @@
 
 namespace graphics
 {
-	class sunlight : public game_logic::formula_callable
+	class sunlight : public game_logic::FormulaCallable
 	{
 	public:
 		explicit sunlight(gles2::program_ptr shader, const variant& node);
@@ -40,7 +40,7 @@ namespace graphics
 		void set_ambient_intensity(float f);
 
 		const color& get_color() const { return color_; }
-		void set_color(const color& color);
+		void setColor(const color& color);
 
 		const glm::vec3& direction() const { return direction_; }
 		void set_direction(const glm::vec3& d);
@@ -68,7 +68,7 @@ namespace graphics
 	};
 	typedef boost::intrusive_ptr<sunlight> sunlight_ptr;
 
-	class lighting : public game_logic::formula_callable
+	class lighting : public game_logic::FormulaCallable
 	{
 	public:
 		explicit lighting(gles2::program_ptr shader);

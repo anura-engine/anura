@@ -181,24 +181,24 @@ void animation_creator_dialog::init()
 	// Add copy desintation box
 	grid_ptr g(new grid(2));
 	g->set_hpad(20);
-	g->add_col(button_ptr(new button(new label("Set Destination", 14), boost::bind(&animation_creator_dialog::set_destination, this))))
-		.add_col(label_ptr(new label(copy_path_, graphics::color_green(), 14)));
-	g->add_col(widget_ptr(new label("", graphics::color_yellow(), 12)))
-		.add_col(widget_ptr(new label("Images will be copied to the destination directory", graphics::color_yellow(), 12)));
+	g->add_col(ButtonPtr(new button(new label("Set Destination", 14), boost::bind(&animation_creator_dialog::set_destination, this))))
+		.add_col(LabelPtr(new label(copy_path_, graphics::color_green(), 14)));
+	g->add_col(WidgetPtr(new label("", graphics::color_yellow(), 12)))
+		.add_col(WidgetPtr(new label("Images will be copied to the destination directory", graphics::color_yellow(), 12)));
 	add_widget(g, border_offset, current_height);
 	current_height += g->height() + hpad;
 
 	// Add current list of animations
 	g.reset(new grid(3));
-	g->set_dim(width()/2, height()/5);
+	g->setDim(width()/2, height()/5);
 	g->set_max_height(height()/5);
 	g->set_show_background(true);
 	g->set_hpad(10);
 	g->set_header_row(0);
 	g->allow_selection(true);
-	g->add_col(label_ptr(new label("Identifier", 14)))
-		.add_col(label_ptr(new label("Image Path", 14)))
-		.add_col(label_ptr(new label("Area in Image", 14)));
+	g->add_col(LabelPtr(new label("Identifier", 14)))
+		.add_col(LabelPtr(new label("Image Path", 14)))
+		.add_col(LabelPtr(new label("Area in Image", 14)));
 	foreach(const variant& v, anims_) {
 		std::stringstream ss;
 		rect r;
@@ -211,9 +211,9 @@ void animation_creator_dialog::init()
 	                v["h"].as_int());
 		}
 		ss << r;
-		g->add_col(label_ptr(new label(v.has_key("id") ? v["id"].as_string() : "<missing>", 12)))
-			.add_col(label_ptr(new label(v.has_key("image") ? v["image"].as_string() : "", 12)))
-			.add_col(label_ptr(new label(ss.str(), 12)));
+		g->add_col(LabelPtr(new label(v.has_key("id") ? v["id"].as_string() : "<missing>", 12)))
+			.add_col(LabelPtr(new label(v.has_key("image") ? v["image"].as_string() : "", 12)))
+			.add_col(LabelPtr(new label(ss.str(), 12)));
 	}
 	g->register_selection_callback(boost::bind(&animation_creator_dialog::select_animation, this, _1));
 	add_widget(g, border_offset, current_height);
@@ -221,35 +221,35 @@ void animation_creator_dialog::init()
 
 	g.reset(new grid(3));
 	g->set_max_height(int(height()/2 - 50));
-	g->set_zorder(1);
+	g->setZOrder(1);
 
-	dropdown_widget_ptr id_entry(new dropdown_widget(common_animation_list(), 150, 28, dropdown_widget::DROPDOWN_COMBOBOX));
-	id_entry->set_font_size(14);
-	id_entry->set_text(current_.has_key("id") ? current_["id"].as_string() : "normal");
+	dropdown_WidgetPtr id_entry(new dropdown_widget(common_animation_list(), 150, 28, dropdown_widget::DROPDOWN_COMBOBOX));
+	id_entry->setFontSize(14);
+	id_entry->setText(current_.has_key("id") ? current_["id"].as_string() : "normal");
 	id_entry->set_dropdown_height(height() - current_height - border_offset);
 	id_entry->set_on_change_handler(boost::bind(&animation_creator_dialog::on_id_change, this, id_entry, _1));
 	id_entry->set_on_select_handler(boost::bind(&animation_creator_dialog::on_id_set, this, id_entry, _1, _2));
-	g->add_col(widget_ptr(new label("Identifier: ", graphics::color_white(), 14)))
-		.add_col(widget_ptr(id_entry))
+	g->add_col(WidgetPtr(new label("Identifier: ", graphics::color_white(), 14)))
+		.add_col(WidgetPtr(id_entry))
 		.finish_row();
 
-	g->add_col(button_ptr(new button(new label("Choose Image File", 14), boost::bind(&animation_creator_dialog::set_image_file, this))))
-		.add_col(widget_ptr(new label(rel_path_, graphics::color_green(), 14)))
+	g->add_col(ButtonPtr(new button(new label("Choose Image File", 14), boost::bind(&animation_creator_dialog::set_image_file, this))))
+		.add_col(WidgetPtr(new label(rel_path_, graphics::color_green(), 14)))
 		.finish_row();
 
 	std::pair<variant, variant> p;
 	foreach(p, current_.as_map()) {
 		if(p.second.is_int() && show_attribute(p.first)) {
-			text_editor_widget_ptr entry(new text_editor_widget(100, 28));
+			TextEditorWidgetPtr entry(new TextEditorWidget(100, 28));
 			std::stringstream ss;
 			ss << p.second.as_int();
-			entry->set_text(ss.str());
+			entry->setText(ss.str());
 			slider_ptr slide(new slider(200, boost::bind((&animation_creator_dialog::change_slide), this, p.first.as_string(), entry, _1), 0.5));
 			slide->set_drag_end(boost::bind(&animation_creator_dialog::end_slide, this, p.first.as_string(), slide, entry, _1));
 			entry->set_on_change_handler(boost::bind(&animation_creator_dialog::change_text, this, p.first.as_string(), entry, slide));
 			entry->set_on_enter_handler(boost::bind(&animation_creator_dialog::execute_change_text, this, p.first.as_string(), entry, slide));
 			entry->set_on_tab_handler(boost::bind(&animation_creator_dialog::execute_change_text, this, p.first.as_string(), entry, slide));
-			g->add_col(widget_ptr(new label(p.first.as_string(), graphics::color_white(), 12)))
+			g->add_col(WidgetPtr(new label(p.first.as_string(), graphics::color_white(), 12)))
 				.add_col(entry)
 				.add_col(slide);
 		}
@@ -260,10 +260,10 @@ void animation_creator_dialog::init()
 	// Add/Delete animation buttons
 	g.reset(new grid(4));
 	g->set_hpad(50);
-	g->add_col(button_ptr(new button(new label("New", 14), boost::bind(&animation_creator_dialog::anim_new, this))))
-		.add_col(button_ptr(new button(new label("Save", 14), boost::bind(&animation_creator_dialog::anim_save, this, (dialog*)NULL))))
-		.add_col(button_ptr(new button(new label("Delete", 14), boost::bind(&animation_creator_dialog::anim_del, this))))
-		.add_col(button_ptr(new button(new label("Finish", 14), boost::bind(&animation_creator_dialog::finish, this))));
+	g->add_col(ButtonPtr(new button(new label("New", 14), boost::bind(&animation_creator_dialog::anim_new, this))))
+		.add_col(ButtonPtr(new button(new label("Save", 14), boost::bind(&animation_creator_dialog::anim_save, this, (dialog*)NULL))))
+		.add_col(ButtonPtr(new button(new label("Delete", 14), boost::bind(&animation_creator_dialog::anim_del, this))))
+		.add_col(ButtonPtr(new button(new label("Finish", 14), boost::bind(&animation_creator_dialog::finish, this))));
 	add_widget(g, border_offset, height() - border_offset - g->height());
 	current_height = height() - border_offset - g->height();
 
@@ -283,8 +283,8 @@ void animation_creator_dialog::process()
 				animation_preview_->set_pad_handler(boost::bind(&animation_creator_dialog::set_integer_attr, this, "pad", _1));
 				animation_preview_->set_num_frames_handler(boost::bind(&animation_creator_dialog::set_integer_attr, this, "frames", _1));
 				animation_preview_->set_frames_per_row_handler(boost::bind(&animation_creator_dialog::set_integer_attr, this, "frames_per_row", _1));
-				animation_preview_->set_loc(width() - int(width()*0.42) - border_offset, border_offset);
-				animation_preview_->set_dim(int(width()*0.42), height()-border_offset*2);
+				animation_preview_->setLoc(width() - int(width()*0.42) - border_offset, border_offset);
+				animation_preview_->setDim(int(width()*0.42), height()-border_offset*2);
 				animation_preview_->init();
 			} else {
 				animation_preview_->set_object(current_);
@@ -311,9 +311,9 @@ void animation_creator_dialog::process()
 	}
 }
 
-void animation_creator_dialog::handle_draw() const
+void animation_creator_dialog::handleDraw() const
 {
-	dialog::handle_draw();
+	dialog::handleDraw();
 
 	if(animation_preview_) {
 		animation_preview_->draw();
@@ -321,15 +321,15 @@ void animation_creator_dialog::handle_draw() const
 
 }
 
-bool animation_creator_dialog::handle_event(const SDL_Event& event, bool claimed)
+bool animation_creator_dialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(animation_preview_) {
-		claimed = animation_preview_->process_event(event, claimed) || claimed;
+		claimed = animation_preview_->processEvent(event, claimed) || claimed;
 		if(claimed) {
 			return claimed;
 		}
 	}
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 void animation_creator_dialog::set_animation_rect(rect r)
@@ -374,7 +374,7 @@ void animation_creator_dialog::set_integer_attr(const char* attr, int value)
 	init();
 }
 
-void animation_creator_dialog::on_id_change(dropdown_widget_ptr editor, const std::string& s)
+void animation_creator_dialog::on_id_change(dropdown_WidgetPtr editor, const std::string& s)
 {
 	if(current_.is_null() == false) {
 		current_.add_attr(variant("id"), variant(s));
@@ -382,7 +382,7 @@ void animation_creator_dialog::on_id_change(dropdown_widget_ptr editor, const st
 	}
 }
 
-void animation_creator_dialog::on_id_set(dropdown_widget_ptr editor, int selection, const std::string& s)
+void animation_creator_dialog::on_id_set(dropdown_WidgetPtr editor, int selection, const std::string& s)
 {
 	if(current_.is_null() == false) {
 		current_.add_attr(variant("id"), variant(s));
@@ -419,7 +419,7 @@ void animation_creator_dialog::set_image_file()
 	init();
 }
 
-void animation_creator_dialog::change_text(const std::string& s, text_editor_widget_ptr editor, slider_ptr slide)
+void animation_creator_dialog::change_text(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slide)
 {
 	if(!dragging_slider_) {
 		int i;
@@ -432,7 +432,7 @@ void animation_creator_dialog::change_text(const std::string& s, text_editor_wid
 	}
 }
 
-void animation_creator_dialog::execute_change_text(const std::string& s, text_editor_widget_ptr editor, slider_ptr slider)
+void animation_creator_dialog::execute_change_text(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider)
 {
 	if(!dragging_slider_) {
 		int i;
@@ -442,13 +442,13 @@ void animation_creator_dialog::execute_change_text(const std::string& s, text_ed
 	}
 }
 
-void animation_creator_dialog::change_slide(const std::string& s, text_editor_widget_ptr editor, double d)
+void animation_creator_dialog::change_slide(const std::string& s, TextEditorWidgetPtr editor, double d)
 {
 	dragging_slider_ = true;
 	std::ostringstream ss;
 	int i = slider_transform(d) + slider_offset_[s];
 	ss << i;
-	editor->set_text(ss.str());
+	editor->setText(ss.str());
 
 	if(current_.is_null() == false) {
 		current_.add_attr(variant(s), variant(i));
@@ -459,7 +459,7 @@ void animation_creator_dialog::change_slide(const std::string& s, text_editor_wi
 	//slider_offset_[s] = soffs;
 }
 
-void animation_creator_dialog::end_slide(const std::string& s, slider_ptr slide, text_editor_widget_ptr editor, double d)
+void animation_creator_dialog::end_slide(const std::string& s, slider_ptr slide, TextEditorWidgetPtr editor, double d)
 {
 	int i = slider_transform(d) + slider_offset_[s];
 	set_integer_attr(s.c_str(), i);
@@ -559,14 +559,14 @@ void animation_creator_dialog::check_anim_changed()
 		// Create message box with Save/Cancel options.
 		dialog d((width()-400)/2, (height()-300)/2, 400, 300);
 		d.set_background_frame("empty_window");
-		d.set_padding(20);
+		d.setPadding(20);
 		
-		label_ptr title = new label("Animation has changed.", graphics::color_white(), 24);
+		LabelPtr title = new label("Animation has changed.", graphics::color_white(), 24);
 		d.add_widget(title, (d.width()-title->width())/2, 50);
 		grid_ptr g = new grid(2);
 		g->set_header_row(40);
-		g->add_col(widget_ptr(new button("Save", boost::bind(&animation_creator_dialog::anim_save, this, &d))))
-			.add_col(widget_ptr(new button("Discard", boost::bind(&dialog::cancel, &d))));
+		g->add_col(WidgetPtr(new button("Save", boost::bind(&animation_creator_dialog::anim_save, this, &d))))
+			.add_col(WidgetPtr(new button("Discard", boost::bind(&dialog::cancel, &d))));
 		d.add_widget(g, (d.width()-g->width())/2, 30+70+title->height());
 		d.show_modal();
 		changed_ = false;

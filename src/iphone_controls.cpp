@@ -135,7 +135,7 @@ void iphone_controls::read_controls()
 
 #if defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
 	// there is no SDL_Get_NumMice and SDL_SelectMouse support on
-	// Harmattan, so all_mice has been updated via calls to handle_event
+	// Harmattan, so all_mice has been updated via calls to handleEvent
 	const int nmice = all_mice.size();
 #else
 	const int nmice = SDL_GetNumMice();
@@ -171,7 +171,7 @@ void iphone_controls::read_controls()
 }
 
 #if defined(__ANDROID__) 
-void iphone_controls::handle_event (const SDL_Event& event)
+void iphone_controls::handleEvent (const SDL_Event& event)
 {
 	int x = event.type == SDL_JOYBALLMOTION ? event.jball.xrel : event.jbutton.x;
 	int y = event.type == SDL_JOYBALLMOTION ? event.jball.yrel : event.jbutton.y;
@@ -195,7 +195,7 @@ void iphone_controls::handle_event (const SDL_Event& event)
 }
 #elif defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY)
 
-void iphone_controls::handle_event (const SDL_Event& event)
+void iphone_controls::handleEvent (const SDL_Event& event)
 {
 	int x = event.type == SDL_MOUSEMOTION ? event.motion.x : event.button.x;
 	int y = event.type == SDL_MOUSEMOTION ? event.motion.y : event.button.y;
@@ -313,7 +313,7 @@ bool iphone_controls::hittest_button(const rect& area)
 	//static graphics::texture tex(graphics::texture::get("gui/iphone_controls.png"));
 	foreach(const Mouse& mouse, active_mice) {
 		const point mouse_pos(mouse.x, mouse.y);
-		if(point_in_rect(mouse_pos, area)) {
+		if(pointInRect(mouse_pos, area)) {
 			return true;
 		}
 	}

@@ -32,16 +32,16 @@ class animation_widget : public widget
 {
 public:
 	animation_widget(int w, int h, const variant& node);
-	animation_widget(const variant& v, game_logic::formula_callable* e);
+	animation_widget(const variant& v, game_logic::FormulaCallable* e);
 
 	void set_sequence_play_count(int count) { max_sequence_plays_ = count; }
 protected:
-	virtual void handle_draw() const;
+	virtual void handleDraw() const;
 private:
 	void init();
 
 	std::vector<variant> nodes_;
-	mutable label_ptr label_;
+	mutable LabelPtr label_;
 	mutable boost::scoped_ptr<frame> frame_;
 	mutable int cycle_;
 	mutable int play_sequence_count_;
@@ -50,8 +50,8 @@ private:
 	mutable std::vector<variant>::const_iterator current_anim_;
 };
 
-typedef boost::intrusive_ptr<animation_widget> animation_widget_ptr;
-typedef boost::intrusive_ptr<const animation_widget> const_animation_widget_ptr;
+typedef boost::intrusive_ptr<animation_widget> animation_WidgetPtr;
+typedef boost::intrusive_ptr<const animation_widget> const_animation_WidgetPtr;
 
 }
 

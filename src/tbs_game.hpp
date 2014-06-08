@@ -32,7 +32,7 @@ namespace tbs {
 
 struct game_type;
 
-class game : public game_logic::formula_callable
+class game : public game_logic::FormulaCallable
 {
 public:
 
@@ -110,8 +110,8 @@ protected:
 
 private:
 
-	virtual variant get_value(const std::string& key) const;
-	virtual void set_value(const std::string& key, const variant& value);
+	virtual variant getValue(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& value);
 
 	virtual ai_player* create_ai() const { return NULL; }
 
@@ -141,12 +141,12 @@ private:
 
 	variant doc_;
 
-	game_logic::formula_callable* backup_callable_;
+	game_logic::FormulaCallable* backup_callable_;
 
 	std::vector<boost::intrusive_ptr<tbs::bot> > bots_;
 
-	void handle_event(const std::string& name, game_logic::formula_callable* variables=NULL);
-	void execute_command(variant cmd);
+	void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=NULL);
+	void executeCommand(variant cmd);
 
 	mutable db_client_ptr db_client_;
 };

@@ -175,7 +175,7 @@ rect graphical_font::do_draw(int x, int y, const std::string& text, bool draw_te
 	}
 
 	if(draw_text) {
-		texture_.set_as_current_texture();
+		texture_.set_as_currentTexture();
 	}
 
 	font_varray.clear();

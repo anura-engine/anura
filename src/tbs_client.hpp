@@ -39,26 +39,26 @@ public:
 	client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
 
 	void send_request(variant request, 
-		game_logic::map_formula_callable_ptr callable, 
+		game_logic::map_FormulaCallablePtr callable, 
 		boost::function<void(std::string)> handler);
 
 	virtual void process();
-	void set_id(const std::string& id);
+	void setId(const std::string& id);
 
 	void set_use_local_cache(bool value) { use_local_cache_ = value; }
 private:
 	boost::function<void(std::string)> handler_;
-	game_logic::map_formula_callable_ptr callable_;
+	game_logic::map_FormulaCallablePtr callable_;
 
 	void recv_handler(const std::string& msg);
 	void error_handler(const std::string& err);
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 
 	std::string connection_id_;
 
 	bool use_local_cache_;
 	tbs::game* local_game_cache_;
-	boost::intrusive_ptr<game_logic::formula_callable> local_game_cache_holder_;
+	boost::intrusive_ptr<game_logic::FormulaCallable> local_game_cache_holder_;
 	int local_nplayer_;
 
 	std::vector<std::string> local_responses_;

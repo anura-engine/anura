@@ -97,18 +97,18 @@ namespace graphics
 			virtual ~emit_object() {}
 			const std::string& name() const { return name_; }
 			void process(float t) {
-				handle_process(t);
+				handleProcess(t);
 			}
 			void draw() const {
-				handle_draw();
+				handleDraw();
 			}
 			particle_system_container* parent_container() { 
 				ASSERT_LOG(parent_container_ != NULL, "FATAL: PSYSTEM2: parent container is NULL");
 				return parent_container_; 
 			}
 		protected:
-			virtual void handle_process(float t) = 0;
-			virtual void handle_draw() const {}
+			virtual void handleProcess(float t) = 0;
+			virtual void handleDraw() const {}
 			virtual bool duration_expired() { return false; }
 		private:
 			std::string name_;
@@ -164,8 +164,8 @@ namespace graphics
 			void add_emitter(emitter_ptr e);
 			void add_affector(affector_ptr a);
 		protected:
-			virtual void handle_process(float t);
-			virtual void handle_draw() const;
+			virtual void handleProcess(float t);
+			virtual void handleDraw() const;
 		private:
 			float default_particle_width_;
 			float default_particle_height_;
@@ -217,8 +217,8 @@ namespace graphics
 			void add_technique(technique_ptr tq);
 			std::vector<technique_ptr>& active_techniques() { return active_techniques_; }
 		protected:
-			virtual void handle_draw() const;
-			virtual void handle_process(float t);
+			virtual void handleDraw() const;
+			virtual void handleProcess(float t);
 		private:
 			void update(float t);
 
@@ -237,7 +237,7 @@ namespace graphics
 			particle_system();
 		};
 
-		class particle_system_container : public game_logic::formula_callable
+		class particle_system_container : public game_logic::FormulaCallable
 		{
 		public:
 			explicit particle_system_container(const variant& node);
@@ -279,11 +279,11 @@ namespace graphics
 		class particle_system_widget : public gui::widget
 		{
 		public:
-			particle_system_widget(const variant& node, game_logic::formula_callable* environment);
+			particle_system_widget(const variant& node, game_logic::FormulaCallable* environment);
 			virtual ~particle_system_widget();
 		protected:
-			virtual void handle_draw() const;
-			virtual void handle_process();
+			virtual void handleDraw() const;
+			virtual void handleProcess();
 		private:
 			DECLARE_CALLABLE(particle_system_widget);
 			particle_system_container particle_systems_;

@@ -30,7 +30,7 @@
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
-#include "formula_callable_utils.hpp"
+#include "FormulaCallable_utils.hpp"
 #include "formula_interface.hpp"
 #include "formula_object.hpp"
 
@@ -79,7 +79,7 @@ void swap_variants_loading(std::set<variant*>& v)
 	callable_variants_loading.swap(v);
 }
 
-void push_call_stack(const game_logic::formula_expression* frame, const game_logic::formula_callable* callable)
+void push_call_stack(const game_logic::formula_expression* frame, const game_logic::FormulaCallable* callable)
 {
 	call_stack.resize(call_stack.size()+1);
 	call_stack.back().expression = frame;
@@ -238,9 +238,9 @@ struct variant_fn {
 
 	VariantFunctionTypeInfoPtr type;
 
-	std::function<variant(const game_logic::formula_callable&)> builtin_fn;
+	std::function<variant(const game_logic::FormulaCallable&)> builtin_fn;
 	game_logic::const_formula_ptr fn;
-	game_logic::const_formula_callable_ptr callable;
+	game_logic::const_FormulaCallablePtr callable;
 
 	std::vector<variant> bound_args;
 
@@ -258,7 +258,7 @@ struct variant_generic_fn {
 
 	variant fn;
 	std::vector<std::string> generic_types;
-	game_logic::const_formula_callable_ptr callable;
+	game_logic::const_FormulaCallablePtr callable;
 
 	std::vector<variant> bound_args;
 
@@ -296,7 +296,7 @@ if(!has_result) {
 }
 
 game_logic::const_formula_ptr fn;
-game_logic::const_formula_callable_ptr callable;
+game_logic::const_FormulaCallablePtr callable;
 
 bool has_result;
 variant result;
@@ -469,7 +469,7 @@ std::string variant::debug_location() const
 	}
 }
 
-variant variant::create_delayed(game_logic::const_formula_ptr f, game_logic::const_formula_callable_ptr callable)
+variant variant::create_delayed(game_logic::const_formula_ptr f, game_logic::const_FormulaCallablePtr callable)
 {
 	variant v;
 	v.type_ = VARIANT_TYPE_DELAYED;
@@ -504,7 +504,7 @@ variant variant::create_function_overload(const std::vector<variant>& fn)
 	return result;
 }
 
-variant::variant(const game_logic::formula_callable* callable)
+variant::variant(const game_logic::FormulaCallable* callable)
 	: type_(VARIANT_TYPE_CALLABLE), callable_(callable)
 {
 	if(callable == NULL) {
@@ -573,7 +573,7 @@ variant::variant(std::map<variant,variant>* map)
 	increment_refcount();
 }
 
-variant::variant(const variant& formula_var, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& generic_types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory)
+variant::variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& generic_types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory)
 	: type_(VARIANT_TYPE_GENERIC_FUNCTION)
 {
 	generic_fn_ = new variant_generic_fn;
@@ -591,7 +591,7 @@ variant::variant(const variant& formula_var, const game_logic::formula_callable&
 	}
 }
 
-variant::variant(const game_logic::const_formula_ptr& formula, const game_logic::formula_callable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info)
+variant::variant(const game_logic::const_formula_ptr& formula, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info)
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
@@ -609,7 +609,7 @@ variant::variant(const game_logic::const_formula_ptr& formula, const game_logic:
 	}
 }
 
-variant::variant(std::function<variant(const game_logic::formula_callable&)> builtin_fn, const VariantFunctionTypeInfoPtr& type_info)
+variant::variant(std::function<variant(const game_logic::FormulaCallable&)> builtin_fn, const VariantFunctionTypeInfoPtr& type_info)
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
@@ -623,7 +623,7 @@ variant::variant(std::function<variant(const game_logic::formula_callable&)> bui
 }
 
 /*
-variant::variant(game_logic::const_formula_ptr fml, const std::vector<std::string>& args, const game_logic::formula_callable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type)
+variant::variant(game_logic::const_formula_ptr fml, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type)
   : type_(VARIANT_TYPE_FUNCTION)
 {
 	fn_ = new variant_fn;
@@ -745,7 +745,7 @@ variant variant::get_keys() const
 	return variant(&tmp);
 }
 
-variant variant::get_values() const
+variant variant::getValues() const
 {
 	must_be(VARIANT_TYPE_MAP);
 	assert(map_);
@@ -902,7 +902,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	const std::vector<variant>* args = args_buf.empty() ? &passed_args : &args_buf;
 
-	boost::intrusive_ptr<game_logic::slot_formula_callable> callable = new game_logic::slot_formula_callable;
+	boost::intrusive_ptr<game_logic::slot_FormulaCallable> callable = new game_logic::slot_FormulaCallable;
 	if(fn_->callable) {
 		callable->set_fallback(fn_->callable);
 	}
@@ -1266,7 +1266,7 @@ variant* variant::get_index_mutable(int index)
 	return NULL;
 }
 
-variant variant::bind_closure(const game_logic::formula_callable* callable)
+variant variant::bind_closure(const game_logic::FormulaCallable* callable)
 {
 	must_be(VARIANT_TYPE_FUNCTION);
 
@@ -1294,7 +1294,7 @@ variant variant::bind_args(const std::vector<variant>& args)
 	return result;
 }
 
-void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::formula_callable>*>& result)
+void variant::get_mutable_closure_ref(std::vector<boost::intrusive_ptr<const game_logic::FormulaCallable>*>& result)
 {
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
 		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
@@ -1871,7 +1871,7 @@ void variant::serialize_to_string(std::string& str) const
 		break;
 	}
 	case VARIANT_TYPE_CALLABLE: {
-		const game_logic::wml_serializable_formula_callable* obj = try_convert<game_logic::wml_serializable_formula_callable>();
+		const game_logic::WmlSerializableFormulaCallable* obj = try_convert<game_logic::WmlSerializableFormulaCallable>();
 		if(obj) {
 			//we have an object that is to be serialized into WML. However,
 			//it might be present in the level or a reference to it held
@@ -1954,7 +1954,7 @@ void variant::serialize_from_string(const std::string& str)
 variant variant::create_variant_under_construction(intptr_t id)
 {
 	variant v;
-	if(game_logic::wml_formula_callable_read_scope::try_load_object(id, v)) {
+	if(game_logic::wmlFormulaCallableReadScope::try_load_object(id, v)) {
 		return v;
 	}
 
@@ -2081,9 +2081,9 @@ std::string variant::string_cast() const
 	}
 }
 
-std::string variant::to_debug_string(std::vector<const game_logic::formula_callable*>* seen) const
+std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallable*>* seen) const
 {
-	std::vector<const game_logic::formula_callable*> seen_stack;
+	std::vector<const game_logic::FormulaCallable*> seen_stack;
 	if(!seen) {
 		seen = &seen_stack;
 	}
@@ -2129,7 +2129,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::formula_calla
 			seen->push_back(callable_);
 
 			const variant_type_ptr type = get_variant_type_from_value(*this);
-			const game_logic::formula_callable_definition* def = type->get_definition();
+			const game_logic::FormulaCallable_definition* def = type->get_definition();
 			if(def) {
 				bool first = true;
 				for(int slot = 0; slot < def->num_slots(); ++slot) {
@@ -2367,7 +2367,7 @@ void variant::write_function(std::ostream& s) const
 	assert(fn_->fn);
 
 	//Serialize the closure along with the object, if we can.
-	const bool serialize_closure = fn_->callable && dynamic_cast<const game_logic::wml_serializable_formula_callable*>(fn_->callable.get());
+	const bool serialize_closure = fn_->callable && dynamic_cast<const game_logic::WmlSerializableFormulaCallable*>(fn_->callable.get());
 	if(serialize_closure) {
 		s << "delay_until_end_of_loading(q(bind_closure(";
 	}

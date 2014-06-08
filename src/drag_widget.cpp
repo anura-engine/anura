@@ -99,26 +99,26 @@ drag_widget::drag_widget(const int x, const int y, const int w, const int h,
 	
 	old_cursor_(NULL), dragging_handle_(0)
 {
-	set_environment();
+	setEnvironment();
 	init();
 }
 
-drag_widget::drag_widget(const variant& v, game_logic::formula_callable* e) 
+drag_widget::drag_widget(const variant& v, game_logic::FormulaCallable* e) 
 	: widget(v,e), old_cursor_(NULL), dragging_handle_(0)
 {
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	dir_ = v["direction"].as_string_default("horizontal") == "horizontal" ? DRAG_HORIZONTAL : DRAG_VERTICAL;
 	if(v.has_key("on_drag_start")) {
 		drag_start_ = boost::bind(&drag_widget::drag_start, this, _1, _2);
-		drag_start_handler_ = get_environment()->create_formula(v["on_drag_start"]);
+		drag_start_handler_ = getEnvironment()->createFormula(v["on_drag_start"]);
 	}
 	if(v.has_key("on_drag_end")) {
 		drag_end_ = boost::bind(&drag_widget::drag_end, this, _1, _2);
-		drag_end_handler_ = get_environment()->create_formula(v["on_drag_end"]);
+		drag_end_handler_ = getEnvironment()->createFormula(v["on_drag_end"]);
 	}
 	if(v.has_key("on_drag")) {
 		drag_move_ = boost::bind(&drag_widget::drag, this, _1, _2);
-		drag_handler_ = get_environment()->create_formula(v["on_drag"]);
+		drag_handler_ = getEnvironment()->createFormula(v["on_drag"]);
 	}
 	std::vector<int> r = v["rect"].as_list_int();
 	ASSERT_EQ(r.size(), 4);
@@ -135,19 +135,19 @@ void drag_widget::init()
 	if(dir_ == DRAG_HORIZONTAL) {
 		curs = SDL_CreateCursor(const_cast<Uint8*>(horiz_cursor_data), const_cast<Uint8*>(horiz_cursor_mask), 
 			CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
-		dragger_ = widget_ptr(new gui_section_widget(DraggerImageHoriz));
+		dragger_ = WidgetPtr(new gui_section_widget(DraggerImageHoriz));
 	} else if(dir_ == DRAG_VERTICAL) {
 		curs = SDL_CreateCursor(const_cast<Uint8*>(vert_cursor_data), const_cast<Uint8*>(vert_cursor_mask), 
 			CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
 		drag_cursor_ = cursor_ptr(curs, SDL_FreeCursor);
 
-		dragger_ = widget_ptr(new gui_section_widget(DraggerImageVert));
+		dragger_ = WidgetPtr(new gui_section_widget(DraggerImageVert));
 	} else {
 		ASSERT_LOG(false, "Drag direction not given as horizontal or vertical " << dir_);
 	}
 	drag_cursor_ = cursor_ptr(curs, SDL_FreeCursor);
 
-	dragger_->set_loc(0, h_/2 - dragger_->height()/2);
+	dragger_->setLoc(0, h_/2 - dragger_->height()/2);
 	//std::cerr << "DRAGGER LOC: " << dragger_dims_ << std::endl;
 	//std::cerr << "LEFT EDGE BORDER: " << border_ << std::endl;
 }
@@ -155,12 +155,12 @@ void drag_widget::init()
 void drag_widget::drag(int dx, int dy)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("drag_dx", variant(dx));
 		callable->add("drag_dy", variant(dy));
 		variant value = drag_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "drag_widget::drag() called without environment!" << std::endl;
 	}
@@ -169,12 +169,12 @@ void drag_widget::drag(int dx, int dy)
 void drag_widget::drag_start(int x, int y)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("drag_x", variant(x));
 		callable->add("drag_y", variant(y));
 		variant value = drag_start_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "drag_widget::drag_start() called without environment!" << std::endl;
 	}
@@ -183,25 +183,25 @@ void drag_widget::drag_start(int x, int y)
 void drag_widget::drag_end(int x, int y)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("drag_x", variant(x));
 		callable->add("drag_y", variant(y));
 		variant value = drag_end_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "drag_widget::drag_end() called without environment!" << std::endl;
 	}
 }
 
-void drag_widget::handle_draw() const
+void drag_widget::handleDraw() const
 {
 	if(dragger_) {
 		dragger_->draw();
 	}
 }
 
-bool drag_widget::handle_event(const SDL_Event& event, bool claimed)
+bool drag_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		return claimed;
@@ -235,14 +235,14 @@ bool drag_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claim
 {
 	point p;
 	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-	if(point_in_rect(p, get_border_rect()) || point_in_rect(p, get_dragger_rect())) {
+	if(pointInRect(p, get_border_rect()) || pointInRect(p, get_dragger_rect())) {
 		if(dragging_handle_ == 0) {
 			dragging_handle_ = event.button;
 			start_pos_ = p;
 			if(drag_start_) {
 				drag_start_(p.x, p.y);
 			}
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 		}
 	}
 	return claimed;
@@ -257,7 +257,7 @@ bool drag_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed
 		if(drag_end_) {
 			drag_end_(mousex, mousey);
 		}
-		claimed = claim_mouse_events();
+		claimed = claimMouseEvents();
 	}
 	return claimed;
 }
@@ -283,7 +283,7 @@ bool drag_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool cla
 			}
 		}
 	} else {
-		if(point_in_rect(p, get_dragger_rect()) || point_in_rect(p, get_border_rect())) {
+		if(pointInRect(p, get_dragger_rect()) || pointInRect(p, get_border_rect())) {
 			if(old_cursor_ == NULL) {
 				old_cursor_ = SDL_GetCursor();
 				SDL_SetCursor(drag_cursor_.get());

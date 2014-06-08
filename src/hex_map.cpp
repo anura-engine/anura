@@ -21,8 +21,8 @@
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "formula.hpp"
-#include "hex_map.hpp"
-#include "hex_object.hpp"
+#include "HexMap.hpp"
+#include "HexObject.hpp"
 #include "hex_tile.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -33,7 +33,7 @@ namespace hex {
 
 static const int HexTileSize = 72;
 
-hex_map::hex_map(variant node)
+HexMap::HexMap(variant node)
 	: zorder_(node["zorder"].as_int(-1000)), 
 	x_(node["x"].as_int(0)), 
 	y_(node["y"].as_int(0)),
@@ -43,7 +43,7 @@ hex_map::hex_map(variant node)
 	for(auto tile_str : node["tiles"].as_list_string()) {
 		const int x = index%width_;
 		const int y = index/width_;
-		tiles_.push_back(hex_object_ptr(new hex_object(tile_str, x, y, this)));
+		tiles_.push_back(HexObjectPtr(new HexObject(tile_str, x, y, this)));
 		++index;
 	}
 
@@ -58,7 +58,7 @@ hex_map::hex_map(variant node)
 #endif
 }
 
-void hex_map::draw() const
+void HexMap::draw() const
 {
 #if defined(USE_SHADERS)
 #ifndef NO_EDITOR
@@ -76,16 +76,16 @@ void hex_map::draw() const
 #endif
 }
 
-void hex_map::build()
+void HexMap::build()
 {
-	foreach(const std::string& rule, hex_object::get_rules()) {
+	foreach(const std::string& rule, HexObject::get_rules()) {
 		for(auto tile_ptr : tiles_) {
-			tile_ptr->apply_rules(rule);
+			tile_ptr->applyRules(rule);
 		}
 	}
 }
 
-variant hex_map::write() const
+variant HexMap::write() const
 {
 	variant_builder res;
 	res.add("x", x_);
@@ -107,7 +107,7 @@ variant hex_map::write() const
 	return res.build();
 }
 
-hex_object_ptr hex_map::get_hex_tile(direction d, int x, int y) const
+HexObjectPtr HexMap::get_hex_tile(direction d, int x, int y) const
 {
 	int ox = x;
 	int oy = y;
@@ -134,7 +134,7 @@ hex_object_ptr hex_map::get_hex_tile(direction d, int x, int y) const
 		ASSERT_LOG(false, "Unrecognised direction: " << d);
 	}
 	if(x < 0 || y < 0 || y >= height_ || x >= width_) {
-		return hex_object_ptr();
+		return HexObjectPtr();
 	}
 
 	const int index = y*width_ + x;
@@ -142,7 +142,7 @@ hex_object_ptr hex_map::get_hex_tile(direction d, int x, int y) const
 	return tiles_[index];
 }
 
-variant hex_map::get_value(const std::string& key) const
+variant HexMap::getValue(const std::string& key) const
 {
 	if(key == "x_size") {
 		return variant(width());
@@ -158,11 +158,11 @@ variant hex_map::get_value(const std::string& key) const
 	return variant();
 }
 
-void hex_map::set_value(const std::string& key, const variant& value)
+void HexMap::setValue(const std::string& key, const variant& value)
 {
 }
 
-point hex_map::get_tile_pos_from_pixel_pos(int mx, int my)
+point HexMap::get_tile_pos_from_pixel_pos(int mx, int my)
 {
 	const int tesselation_x_size = (3*HexTileSize)/2;
 	const int tesselation_y_size = HexTileSize;
@@ -202,13 +202,13 @@ point hex_map::get_tile_pos_from_pixel_pos(int mx, int my)
 	return point(x_base + x_modifier, y_base + y_modifier);
 }
 
-hex_object_ptr hex_map::get_tile_from_pixel_pos(int mx, int my) const
+HexObjectPtr HexMap::get_tile_from_pixel_pos(int mx, int my) const
 {
 	point p = get_tile_pos_from_pixel_pos(mx, my);
 	return get_tile_at(p.x, p.y);
 }
 
-point hex_map::get_pixel_pos_from_tile_pos(int x, int y)
+point HexMap::get_pixel_pos_from_tile_pos(int x, int y)
 {
 	const int HexTileSizeHalf = HexTileSize/2;
 	const int HexTileSizeThreeQuarters = (HexTileSize*3)/4;
@@ -217,12 +217,12 @@ point hex_map::get_pixel_pos_from_tile_pos(int x, int y)
 	return point(tx, ty);
 }
 
-hex_object_ptr hex_map::get_tile_at(int x, int y) const
+HexObjectPtr HexMap::get_tile_at(int x, int y) const
 {
 	x -= x_;
 	y -= y_;
 	if(x < 0 || y < 0 || y >= height_ || x >= width_) {
-		return hex_object_ptr();
+		return HexObjectPtr();
 	}
 
 	const int index = y*width_ + x;
@@ -230,7 +230,7 @@ hex_object_ptr hex_map::get_tile_at(int x, int y) const
 	return tiles_[index];
 }
 
-bool hex_map::set_tile(int xx, int yy, const std::string& tile)
+bool HexMap::set_tile(int xx, int yy, const std::string& tile)
 {
 	if(xx < 0 || yy < 0 || xx >= width_ || yy >= height_) {
 		return false;
@@ -239,14 +239,14 @@ bool hex_map::set_tile(int xx, int yy, const std::string& tile)
 	const int index = yy*width_ + xx;
 	assert(index >= 0 && index < tiles_.size());
 
-	tiles_[index].reset(new hex_object(tile, xx, yy, this));
+	tiles_[index].reset(new HexObject(tile, xx, yy, this));
 	for(auto t : tiles_) {
-		t->neighbors_changed();
+		t->neighborsChanged();
 	}
 	return true;
 }
 
-point hex_map::loc_in_dir(int x, int y, direction d)
+point HexMap::locInDir(int x, int y, direction d)
 {
 	int ox = x;
 	int oy = y;
@@ -272,31 +272,31 @@ point hex_map::loc_in_dir(int x, int y, direction d)
 	return point(x, y);
 }
 
-point hex_map::loc_in_dir(int x, int y, const std::string& s)
+point HexMap::locInDir(int x, int y, const std::string& s)
 {
 	if(s == "north" || s == "n") {
-		return loc_in_dir(x, y, NORTH);
+		return locInDir(x, y, NORTH);
 	} else if(s == "south" || s == "s") {
-		return loc_in_dir(x, y, SOUTH);
+		return locInDir(x, y, SOUTH);
 	} else if(s == "north_west" || s == "nw" || s == "northwest") {
-		return loc_in_dir(x, y, NORTH_WEST);
+		return locInDir(x, y, NORTH_WEST);
 	} else if(s == "north_east" || s == "ne" || s == "northeast") {
-		return loc_in_dir(x, y, NORTH_EAST);
+		return locInDir(x, y, NORTH_EAST);
 	} else if(s == "south_west" || s == "sw" || s == "southwest") {
-		return loc_in_dir(x, y, SOUTH_WEST);
+		return locInDir(x, y, SOUTH_WEST);
 	} else if(s == "south_east" || s == "se" || s == "southeast") {
-		return loc_in_dir(x, y, SOUTH_EAST);
+		return locInDir(x, y, SOUTH_EAST);
 	}
 	ASSERT_LOG(false, "Unreognised direction " << s);
 	return point();
 }
 
-game_logic::formula_ptr hex_map::create_formula(const variant& v)
+game_logic::formula_ptr HexMap::executeCommand(const variant& v)
 {
 	return game_logic::formula_ptr(new game_logic::formula(v));
 }
 
-bool hex_map::execute_command(const variant& var)
+bool HexMap::executeCommand(const variant& var)
 {
 	bool result = true;
 	if(var.is_null()) {
@@ -307,7 +307,7 @@ bool hex_map::execute_command(const variant& var)
 		const int num_elements = var.num_elements();
 		for(int n = 0; n != num_elements; ++n) {
 			if(var[n].is_null() == false) {
-				result = execute_command(var[n]) && result;
+				result = executeCommand(var[n]) && result;
 			}
 		}
 	} else {

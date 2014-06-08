@@ -35,7 +35,7 @@ namespace graphics {
 class blit_queue;
 }
 
-class frame : public game_logic::formula_callable
+class frame : public game_logic::FormulaCallable
 {
 public:
 	//exception thrown when there's a loading error.
@@ -52,7 +52,7 @@ public:
 
 	static void build_patterns(variant obj_variant);
 
-	static void set_color_palette(unsigned int palettes);
+	static void setColor_palette(unsigned int palettes);
 
 	explicit frame(variant node);
 	~frame();
@@ -69,8 +69,8 @@ public:
 	bool is_alpha(int x, int y, int time, bool face_right) const;
 
 	//Low level interface to alpha information.
-	std::vector<bool>::const_iterator get_alpha_itor(int x, int y, int time, bool face_right) const;
-	const std::vector<bool>& get_alpha_buf() const { return alpha_; }
+	std::vector<bool>::const_iterator getAlpha_itor(int x, int y, int time, bool face_right) const;
+	const std::vector<bool>& getAlpha_buf() const { return alpha_; }
 
 	void draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right=true, bool upside_down=false, int time=0) const;
 	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
@@ -128,7 +128,7 @@ public:
 	int enter_event_id() const { return enter_event_id_; }
 	int end_event_id() const { return end_event_id_; }
 	int leave_event_id() const { return leave_event_id_; }
-	int process_event_id() const { return process_event_id_; }
+	int processEvent_id() const { return processEvent_id_; }
 
 	struct frame_info {
 		frame_info() : x_adjust(0), y_adjust(0), x2_adjust(0), y2_adjust(0), draw_rect_init(false)
@@ -155,7 +155,7 @@ private:
 	variant variant_id_;
 
 	//ID's used to signal events that occur on this animation.
-	int enter_event_id_, end_event_id_, leave_event_id_, process_event_id_;
+	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;
 	KRE::MaterialPtr texture_;
 	const_solid_info_ptr solid_;
 	rect collide_rect_;
@@ -208,7 +208,7 @@ private:
 
 	void set_palettes(unsigned int palettes);
 
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 
 	bool back_face_culling_;
 };

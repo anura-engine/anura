@@ -146,7 +146,7 @@ namespace KRE
 			}
 			virtual ~particle_follower_affector() {}
 		protected:
-			virtual void handle_process(float t) {
+			virtual void handleProcess(float t) {
 				std::vector<particle>& particles = get_technique()->active_particles();
 				// keeps particles following wihin [min_distance, max_distance]
 				if(particles.size() < 1) {
@@ -194,7 +194,7 @@ namespace KRE
 				p.current.orientation.y = distance.y;
 				p.current.orientation.z = distance.z;
 			}
-			virtual void handle_process(float t) {
+			virtual void handleProcess(float t) {
 				std::vector<particle>& particles = get_technique()->active_particles();
 				if(particles.size() < 1) {
 					return;
@@ -265,7 +265,7 @@ namespace KRE
 					}
 				}
 			}
-			virtual void handle_process(float t) {
+			virtual void handleProcess(float t) {
 				handle_apply(get_technique()->active_particles(), t);
 				handle_apply(get_technique()->active_emitters(), t);
 			}
@@ -320,7 +320,7 @@ namespace KRE
 			}
 			virtual ~sine_force_affector() {}
 		protected:
-			virtual void handle_process(float t) {
+			virtual void handleProcess(float t) {
 				angle_ += /*2.0f * M_PI **/ frequency_ * t;
 				float sine_value = sin(angle_);
 				scale_vector_ = force_vector_ * t * sine_value;
@@ -331,7 +331,7 @@ namespace KRE
 						frequency_ = get_random_float(min_frequency_, max_frequency_);
 					}
 				}
-				affector::handle_process(t);
+				affector::handleProcess(t);
 			}
 			virtual void internal_apply(particle& p, float t) {
 				if(fa_ == FA_ADD) {
@@ -379,7 +379,7 @@ namespace KRE
 		{
 		}
 
-		void affector::handle_process(float t) 
+		void affector::handleProcess(float t) 
 		{
 			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
 			for(auto& e : technique_->active_emitters()) {
@@ -542,7 +542,7 @@ namespace KRE
 
 		void jet_affector::internal_apply(particle& p, float t)
 		{
-			float scale = t * acceleration_->get_value(1.0f - p.current.time_to_live/p.initial.time_to_live);
+			float scale = t * acceleration_->getValue(1.0f - p.current.time_to_live/p.initial.time_to_live);
 			if(p.current.direction.x == 0 && p.current.direction.y == 0 && p.current.direction.z == 0) {
 				p.current.direction += p.initial.direction * scale;
 			} else {
@@ -608,9 +608,9 @@ namespace KRE
 		{
 			float scale;
 			if(since_system_start_) {
-				scale = s->get_value(get_technique()->get_particle_system()->elapsed_time());
+				scale = s->getValue(get_technique()->get_particle_system()->elapsed_time());
 			} else {
-				scale = s->get_value(1.0f - p.current.time_to_live / p.initial.time_to_live);
+				scale = s->getValue(1.0f - p.current.time_to_live / p.initial.time_to_live);
 			}
 			return scale;
 		}

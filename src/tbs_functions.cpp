@@ -29,13 +29,13 @@ public:
 	expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
-							   const_formula_callable_definition_ptr callable_def) const;
+							   const_FormulaCallable_definition_ptr callable_def) const;
 };
 
 expression_ptr tbs_function_symbol_table::create_function(
                            const std::string& fn,
                            const std::vector<expression_ptr>& args,
-						   const_formula_callable_definition_ptr callable_def) const
+						   const_FormulaCallable_definition_ptr callable_def) const
 {
 	const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 	std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);

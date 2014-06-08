@@ -125,7 +125,7 @@ void init_char_area(size_t font_size)
 
 }
 
-text_editor_widget::text_editor_widget(int width, int height)
+TextEditorWidget::TextEditorWidget(int width, int height)
   : last_op_type_(NULL),
     font_size_(14),
     char_width_(font::char_width(font_size_, monofont())),
@@ -146,14 +146,14 @@ text_editor_widget::text_editor_widget(int width, int height)
 	no_border_(false),
 	clear_on_focus_(false)
 {
-	set_environment();
+	setEnvironment();
 	if(height == 0) {
 		height = char_height_ + BorderSize*2;
 		nrows_ = 1;
 		ncols_ = (width - BorderSize*2)/char_width_;
-		widget::set_dim(width, height);
+		widget::setDim(width, height);
 	} else {
-		widget::set_dim(width - 20, height);
+		widget::setDim(width - 20, height);
 	}
 
 	text_.push_back("");
@@ -161,8 +161,8 @@ text_editor_widget::text_editor_widget(int width, int height)
 	init_clipboard();
 }
 
-text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_callable* e)
-	: scrollable_widget(v,e), last_op_type_(NULL), font_size_(14), 
+TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable* e)
+	: ScrollableWidget(v,e), last_op_type_(NULL), font_size_(14), 
 	select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(v["focus"].as_bool(false)), 
@@ -176,7 +176,7 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	no_border_(v["no_border"].as_bool(false)),
 	clear_on_focus_(v["clear_on_focus"].as_bool(false))
 {
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
 	if(v.has_key("bg_color")) {
 		bg_color_.reset(new graphics::color(v["bg_color"]));
@@ -194,32 +194,32 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	}
 
 	if(v.has_key("on_change")) {
-		on_change_ = boost::bind(&text_editor_widget::change_delegate, this);
-		ffl_on_change_ = get_environment()->create_formula(v["on_change"]);
+		on_change_ = boost::bind(&TextEditorWidget::change_delegate, this);
+		ffl_on_change_ = getEnvironment()->createFormula(v["on_change"]);
 	}
 	if(v.has_key("on_move_cursor")) {
-		on_move_cursor_ = boost::bind(&text_editor_widget::move_cursor_delegate, this);
-		ffl_on_move_cursor_ = get_environment()->create_formula(v["on_move_cursor"]);
+		on_move_cursor_ = boost::bind(&TextEditorWidget::move_cursor_delegate, this);
+		ffl_on_move_cursor_ = getEnvironment()->createFormula(v["on_move_cursor"]);
 	}
 	if(v.has_key("on_enter")) {
-		on_enter_ = boost::bind(&text_editor_widget::enter_delegate, this);
-		ffl_on_enter_ = get_environment()->create_formula(v["on_enter"]);
+		on_enter_ = boost::bind(&TextEditorWidget::enter_delegate, this);
+		ffl_on_enter_ = getEnvironment()->createFormula(v["on_enter"]);
 	}
 	if(v.has_key("on_tab")) {
-		on_tab_ = boost::bind(&text_editor_widget::tab_delegate, this);
-		ffl_on_tab_ = get_environment()->create_formula(v["on_tab"]);
+		on_tab_ = boost::bind(&TextEditorWidget::tab_delegate, this);
+		ffl_on_tab_ = getEnvironment()->createFormula(v["on_tab"]);
 	}
 	if(v.has_key("on_escape")) {
-		on_escape_ = boost::bind(&text_editor_widget::escape_delegate, this);
-		ffl_on_escape_ = get_environment()->create_formula(v["on_escape"]);
+		on_escape_ = boost::bind(&TextEditorWidget::escape_delegate, this);
+		ffl_on_escape_ = getEnvironment()->createFormula(v["on_escape"]);
 	}
 	if(v.has_key("on_begin_enter")) {
-		on_begin_enter_ = boost::bind(&text_editor_widget::begin_enter_delegate, this);
-		ffl_on_begin_enter_ = get_environment()->create_formula(v["on_begin_enter"]);
+		on_begin_enter_ = boost::bind(&TextEditorWidget::begin_enter_delegate, this);
+		ffl_on_begin_enter_ = getEnvironment()->createFormula(v["on_begin_enter"]);
 	}
 	if(v.has_key("on_change_focus")) {
-		on_change_focus_ = boost::bind(&text_editor_widget::change_focus_delgate, this, _1);
-		ffl_on_change_focus_ = get_environment()->create_formula(v["on_change_focus"]);
+		on_change_focus_ = boost::bind(&TextEditorWidget::change_focus_delgate, this, _1);
+		ffl_on_change_focus_ = getEnvironment()->createFormula(v["on_change_focus"]);
 	}
 
 	char_width_= font::char_width(font_size_, monofont());
@@ -230,13 +230,13 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	if(height == 0) {
 		height = char_height_ + BorderSize*2;
 		nrows_ = 1;
-		widget::set_dim(width - 20, height);
+		widget::setDim(width - 20, height);
 	} else {
-		widget::set_dim(width - 20, height);
+		widget::setDim(width - 20, height);
 	}
 
 	if(v.has_key("text") && v["text"].is_string()) {
-		set_text(v["text"].as_string());
+		setText(v["text"].as_string());
 	} else {
 		text_.push_back("");
 	}
@@ -248,11 +248,11 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	init_clipboard();
 }
 
-text_editor_widget::~text_editor_widget()
+TextEditorWidget::~TextEditorWidget()
 {
 }
 
-std::string text_editor_widget::text() const
+std::string TextEditorWidget::text() const
 {
 	std::string result;
 	foreach(const std::string& line, text_) {
@@ -264,7 +264,7 @@ std::string text_editor_widget::text() const
 	return result;
 }
 
-void text_editor_widget::set_row_contents(int row, const std::string& value)
+void TextEditorWidget::set_row_contents(int row, const std::string& value)
 {
 	ASSERT_LOG(row >= 0 && size_t(row) < text_.size(), "ILLEGAL ROW SET: " << row << " / " << text_.size());
 	text_[row] = value;
@@ -272,7 +272,7 @@ void text_editor_widget::set_row_contents(int row, const std::string& value)
 	on_change();
 }
 
-void text_editor_widget::highlight(Loc begin, Loc end)
+void TextEditorWidget::highlight(Loc begin, Loc end)
 {
 	search_matches_.clear();
 
@@ -294,7 +294,7 @@ void text_editor_widget::highlight(Loc begin, Loc end)
 	}
 }
 
-void text_editor_widget::set_text(const std::string& value, bool reset_cursor)
+void TextEditorWidget::setText(const std::string& value, bool reset_cursor)
 {
 	const int current_in_event = in_event_;
 	util::scope_manager event_recorder(
@@ -326,7 +326,7 @@ void text_editor_widget::set_text(const std::string& value, bool reset_cursor)
 	on_change();
 }
 
-void text_editor_widget::set_font_size(int font_size)
+void TextEditorWidget::setFontSize(int font_size)
 {
 	if(font_size < 6) {
 		font_size = 6;
@@ -344,14 +344,14 @@ void text_editor_widget::set_font_size(int font_size)
 	refresh_scrollbar();
 }
 
-void text_editor_widget::change_font_size(int amount)
+void TextEditorWidget::change_font_size(int amount)
 {
-	set_font_size(font_size_ + amount);
+	setFontSize(font_size_ + amount);
 }
 
-void text_editor_widget::set_dim(int w, int h)
+void TextEditorWidget::setDim(int w, int h)
 {
-	widget::set_dim(w - 20, h);
+	widget::setDim(w - 20, h);
 
 	nrows_ = (height() - BorderSize*2)/char_height_;
 	ncols_ = (width() - BorderSize*2)/char_width_;
@@ -379,7 +379,7 @@ struct RectDraw {
 };
 }
 
-void text_editor_widget::handle_draw() const
+void TextEditorWidget::handleDraw() const
 {
 	init_char_area(font_size_);
 
@@ -492,7 +492,7 @@ void text_editor_widget::handle_draw() const
 
 	for(std::map<uint32_t, graphics::blit_queue>::iterator i = chars.begin(); i != chars.end(); ++i) {
 		graphics::color(i->first).set_as_current_color();
-		i->second.set_texture(char_textures[font_size_]->get_id());
+		i->second.setTexture(char_textures[font_size_]->get_id());
 		i->second.do_blit();
 	}
 
@@ -509,10 +509,10 @@ void text_editor_widget::handle_draw() const
 		graphics::draw_hollow_rect(border, border_color);
 	}
 
-	scrollable_widget::handle_draw();
+	ScrollableWidget::handleDraw();
 }
 
-bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
+bool TextEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	util::scope_manager event_recorder(
 		[this]() { this->in_event_++; },
@@ -520,10 +520,10 @@ bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 	);
 
 	if(!claimed) {
-		claimed = clipboard_handle_event(event);
+		claimed = clipboard_handleEvent(event);
 	}
 
-	claimed = scrollable_widget::handle_event(event, claimed) || claimed;
+	claimed = ScrollableWidget::handleEvent(event, claimed) || claimed;
 
 	switch(event.type) {
 	case SDL_KEYDOWN:
@@ -545,7 +545,7 @@ bool text_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 	return false;
 }
 
-bool text_editor_widget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
+bool TextEditorWidget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 {
 	int mx, my;
 	input::sdl_get_mouse_state(&mx, &my);
@@ -577,7 +577,7 @@ bool text_editor_widget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 	return false;
 }
 
-void text_editor_widget::set_focus(bool value)
+void TextEditorWidget::setFocus(bool value)
 {
 	if(has_focus_ != value && on_change_focus_) {
 		on_change_focus_(value);
@@ -585,7 +585,7 @@ void text_editor_widget::set_focus(bool value)
 	has_focus_ = value;
 
 	if(clear_on_focus_) {
-		set_text("");
+		setText("");
 		clear_on_focus_ = false;
 	}
 
@@ -596,7 +596,7 @@ void text_editor_widget::set_focus(bool value)
 	}
 }
 
-void text_editor_widget::set_cursor(int row, int col, bool move_selection)
+void TextEditorWidget::set_cursor(int row, int col, bool move_selection)
 {
 	if(row < 0) {
 		row = 0;
@@ -623,7 +623,7 @@ void text_editor_widget::set_cursor(int row, int col, bool move_selection)
 	on_move_cursor();
 }
 
-int text_editor_widget::row_col_to_text_pos(int row, int col) const
+int TextEditorWidget::row_col_to_text_pos(int row, int col) const
 {
 	if(col > text_[row].size()) {
 		col = text_[row].size();
@@ -637,7 +637,7 @@ int text_editor_widget::row_col_to_text_pos(int row, int col) const
 	return result + col;
 }
 
-std::pair<int,int> text_editor_widget::text_pos_to_row_col(int pos) const
+std::pair<int,int> TextEditorWidget::text_pos_to_row_col(int pos) const
 {
 	int nrow = 0;
 	while(pos > text_[nrow].size()+1) {
@@ -648,23 +648,23 @@ std::pair<int,int> text_editor_widget::text_pos_to_row_col(int pos) const
 	return std::pair<int,int>(nrow, pos);
 }
 
-void text_editor_widget::set_highlight_lines(int begin, int end)
+void TextEditorWidget::set_highlight_lines(int begin, int end)
 {
 	begin_highlight_line_ = begin;
 	end_highlight_line_ = end;
 }
 
-void text_editor_widget::clear_highlight_lines()
+void TextEditorWidget::clear_highlight_lines()
 {
 	set_highlight_lines(-1, -1);
 }
 
-bool text_editor_widget::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
+bool TextEditorWidget::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 {
 	record_op();
 	if(event.x >= x() && event.x < x() + width() && event.y >= y() && event.y < y() + height()) {
 
-		set_focus(true);
+		setFocus(true);
 		std::pair<int, int> pos = mouse_position_to_row_col(event.x, event.y);
 		if(pos.first != -1) {
 			cursor_.row = pos.first;
@@ -701,7 +701,7 @@ bool text_editor_widget::handle_mouse_button_down(const SDL_MouseButtonEvent& ev
 		last_click_at_ = SDL_GetTicks();
 
 		is_dragging_ = true;
-		return claim_mouse_events();
+		return claimMouseEvents();
 	}
 
 	if(has_focus_ != false && on_change_focus_) {
@@ -714,7 +714,7 @@ bool text_editor_widget::handle_mouse_button_down(const SDL_MouseButtonEvent& ev
 	return false;
 }
 
-bool text_editor_widget::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
+bool TextEditorWidget::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 {
 	record_op();
 	is_dragging_ = false;
@@ -722,7 +722,7 @@ bool text_editor_widget::handle_mouse_button_up(const SDL_MouseButtonEvent& even
 	return false;
 }
 
-bool text_editor_widget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
+bool TextEditorWidget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 {
 	int mousex, mousey;
 	if(is_dragging_ && has_focus_ && input::sdl_get_mouse_state(&mousex, &mousey)) {
@@ -755,7 +755,7 @@ bool text_editor_widget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 	return false;
 }
 
-bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
+bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 {
 	if(!has_focus_) {
 		return false;
@@ -1094,12 +1094,12 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 	return true;
 }
 
-bool text_editor_widget::handle_text_input(const SDL_TextInputEvent& event)
+bool TextEditorWidget::handle_text_input(const SDL_TextInputEvent& event)
 {
 	return handle_text_input_internal(event.text);
 }
 
-bool text_editor_widget::handle_text_input_internal(const char* text)
+bool TextEditorWidget::handle_text_input_internal(const char* text)
 {
 	if(!has_focus_) {
 		return false;
@@ -1126,7 +1126,7 @@ bool text_editor_widget::handle_text_input_internal(const char* text)
 	return true;
 }
 
-bool text_editor_widget::handle_text_editing(const SDL_TextEditingEvent& event)
+bool TextEditorWidget::handle_text_editing(const SDL_TextEditingEvent& event)
 {
 	if(!has_focus_) {
 		return false;
@@ -1134,7 +1134,7 @@ bool text_editor_widget::handle_text_editing(const SDL_TextEditingEvent& event)
 	return false;
 }
 
-void text_editor_widget::handle_paste(std::string txt)
+void TextEditorWidget::handle_paste(std::string txt)
 {
 	record_op();
 	save_undo_state();
@@ -1160,7 +1160,7 @@ void text_editor_widget::handle_paste(std::string txt)
 	on_change();
 }
 
-void text_editor_widget::handle_copy(bool mouse_based)
+void TextEditorWidget::handle_copy(bool mouse_based)
 {
 	std::cerr << "HANDLE COPY...\n";
 	if(mouse_based && !clipboard_has_mouse_area()) {
@@ -1200,7 +1200,7 @@ void text_editor_widget::handle_copy(bool mouse_based)
 	copy_to_clipboard(str, mouse_based);
 }
 
-void text_editor_widget::delete_selection()
+void TextEditorWidget::delete_selection()
 {
 	if(cursor_.col == select_.col && cursor_.row == select_.row) {
 		return;
@@ -1231,12 +1231,12 @@ void text_editor_widget::delete_selection()
 	select_ = cursor_;
 }
 
-graphics::color text_editor_widget::get_character_color(int row, int col) const
+graphics::color TextEditorWidget::get_character_color(int row, int col) const
 {
 	return text_color_;
 }
 
-std::pair<int, int> text_editor_widget::mouse_position_to_row_col(int xpos, int ypos) const
+std::pair<int, int> TextEditorWidget::mouse_position_to_row_col(int xpos, int ypos) const
 {
 	const int xloc = x() + BorderSize;
 	const int yloc = y() + BorderSize;
@@ -1278,7 +1278,7 @@ std::pair<int, int> text_editor_widget::mouse_position_to_row_col(int xpos, int 
 	return std::pair<int, int>(-1,-1);
 }
 
-std::pair<int, int> text_editor_widget::char_position_on_screen(int row, int col) const
+std::pair<int, int> TextEditorWidget::char_position_on_screen(int row, int col) const
 {
 	if(row < scroll_pos_) {
 		return std::pair<int, int>(-1, -1);
@@ -1315,7 +1315,7 @@ std::pair<int, int> text_editor_widget::char_position_on_screen(int row, int col
 	return std::pair<int, int>(-1,-1);
 }
 
-void text_editor_widget::on_page_up()
+void TextEditorWidget::on_page_up()
 {
 	int leap = nrows_ - 1;
 	while(scroll_pos_ > 0 && leap > 0) {
@@ -1330,7 +1330,7 @@ void text_editor_widget::on_page_up()
 	refresh_scrollbar();
 }
 
-void text_editor_widget::on_page_down()
+void TextEditorWidget::on_page_down()
 {
 	int leap = nrows_ - 1;
 	while(scroll_pos_ < int(text_.size())-2 && leap > 0) {
@@ -1345,7 +1345,7 @@ void text_editor_widget::on_page_down()
 	refresh_scrollbar();
 }
 
-void text_editor_widget::on_move_cursor(bool auto_shift)
+void TextEditorWidget::on_move_cursor(bool auto_shift)
 {
 	const int start_pos = scroll_pos_;
 	if(cursor_.row < scroll_pos_) {
@@ -1372,7 +1372,7 @@ void text_editor_widget::on_move_cursor(bool auto_shift)
 		select_ = cursor_;
 	}
 
-	scrollable_widget::set_yscroll(scroll_pos_*char_height_);
+	ScrollableWidget::set_yscroll(scroll_pos_*char_height_);
 
 	if(select_ != cursor_) {
 		//a mouse-based copy for X-style copy/paste
@@ -1384,7 +1384,7 @@ void text_editor_widget::on_move_cursor(bool auto_shift)
 	}
 }
 
-int text_editor_widget::find_equivalent_col(int old_col, int old_row, int new_row) const
+int TextEditorWidget::find_equivalent_col(int old_col, int old_row, int new_row) const
 {
 	int actual_pos = old_col + std::count(text_[old_row].begin(), text_[old_row].end(), '\t')*TabAdjust;
 	for(int n = 0; n < actual_pos; ++n) {
@@ -1396,12 +1396,12 @@ int text_editor_widget::find_equivalent_col(int old_col, int old_row, int new_ro
 	return actual_pos;
 }
 
-void text_editor_widget::on_set_yscroll(int old_pos, int new_pos)
+void TextEditorWidget::on_set_yscroll(int old_pos, int new_pos)
 {
 	scroll_pos_ = new_pos/char_height_;
 }
 
-void text_editor_widget::refresh_scrollbar()
+void TextEditorWidget::refresh_scrollbar()
 {
 	int total_rows = 0;
 	//See if it can all fit without a scrollbar.
@@ -1429,7 +1429,7 @@ void text_editor_widget::refresh_scrollbar()
 	update_scrollbar();
 }
 
-void text_editor_widget::select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
+void TextEditorWidget::select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
 {
 	if(util::c_isdigit(row[begin_col]) || row[begin_col] == '.' && begin_col+1 < row.size() && util::c_isdigit(row[begin_col+1])) {
 		while(begin_col >= 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
@@ -1458,25 +1458,25 @@ void text_editor_widget::select_token(const std::string& row, int& begin_row, in
 	}
 }
 
-text_editor_widget_ptr text_editor_widget::clone() const
+TextEditorWidgetPtr TextEditorWidget::clone() const
 {
-	text_editor_widget_ptr result = new text_editor_widget(*this);
+	TextEditorWidgetPtr result = new TextEditorWidget(*this);
 	result->last_op_type_ = NULL;
 	return result;
 }
 
-void text_editor_widget::restore(const text_editor_widget* state)
+void TextEditorWidget::restore(const TextEditorWidget* state)
 {
 	*this = *state;
 }
 
-void text_editor_widget::save_undo_state()
+void TextEditorWidget::save_undo_state()
 {
 	redo_.clear();
-	undo_.push_back(text_editor_widget_ptr(clone()));
+	undo_.push_back(TextEditorWidgetPtr(clone()));
 }
 
-bool text_editor_widget::record_op(const char* type)
+bool TextEditorWidget::record_op(const char* type)
 {
 	if(type == NULL || type != last_op_type_) {
 		last_op_type_ = type;
@@ -1486,20 +1486,20 @@ bool text_editor_widget::record_op(const char* type)
 	}
 }
 
-void text_editor_widget::undo()
+void TextEditorWidget::undo()
 {
 	if(undo_.empty()) {
 		return;
 	}
 
-	std::vector<text_editor_widget_ptr> redo_state = redo_;
+	std::vector<TextEditorWidgetPtr> redo_state = redo_;
 	save_undo_state();
 	redo_state.push_back(undo_.back());
 	undo_.pop_back();
 
 	//Save the state before restoring it so it doesn't get cleaned up
 	//while we're in the middle of the restore call.
-	text_editor_widget_ptr state = undo_.back();
+	TextEditorWidgetPtr state = undo_.back();
 	restore(state.get());
 
 	redo_ = redo_state;
@@ -1507,18 +1507,18 @@ void text_editor_widget::undo()
 	on_change();
 }
 
-void text_editor_widget::redo()
+void TextEditorWidget::redo()
 {
 	if(redo_.empty()) {
 		return;
 	}
 
-	std::vector<text_editor_widget_ptr> redo_state = redo_;
+	std::vector<TextEditorWidgetPtr> redo_state = redo_;
 	redo_state.pop_back();
 
 	//Save the state before restoring it so it doesn't get cleaned up
 	//while we're in the middle of the restore call.
-	text_editor_widget_ptr state = redo_.back();
+	TextEditorWidgetPtr state = redo_.back();
 	restore(state.get());
 
 	redo_ = redo_state;
@@ -1526,7 +1526,7 @@ void text_editor_widget::redo()
 	on_change();
 }
 
-void text_editor_widget::truncate_col_position()
+void TextEditorWidget::truncate_col_position()
 {
 	if(cursor_.col > text_[cursor_.row].size()) {
 		cursor_.col = text_[cursor_.row].size();
@@ -1537,7 +1537,7 @@ void text_editor_widget::truncate_col_position()
 	}
 }
 
-void text_editor_widget::set_search(const std::string& term)
+void TextEditorWidget::set_search(const std::string& term)
 {
 	search_ = term;
 	calculate_search_matches();
@@ -1557,7 +1557,7 @@ void text_editor_widget::set_search(const std::string& term)
 	on_move_cursor();
 }
 
-void text_editor_widget::next_search_match()
+void TextEditorWidget::next_search_match()
 {
 	if(search_matches_.empty()) {
 		return;
@@ -1568,7 +1568,7 @@ void text_editor_widget::next_search_match()
 	set_search(search_);
 }
 
-void text_editor_widget::calculate_search_matches()
+void TextEditorWidget::calculate_search_matches()
 {
 	search_matches_.clear();
 	if(search_.empty()) {
@@ -1598,7 +1598,7 @@ void text_editor_widget::calculate_search_matches()
 	}
 }
 
-void text_editor_widget::replace(const std::string& replace_with)
+void TextEditorWidget::replace(const std::string& replace_with)
 {
 	record_op();
 	save_undo_state();
@@ -1620,7 +1620,7 @@ void text_editor_widget::replace(const std::string& replace_with)
 	on_change();
 }
 	
-void text_editor_widget::on_change()
+void TextEditorWidget::on_change()
 {
 	if(on_change_) {
 		on_change_();
@@ -1633,11 +1633,11 @@ void text_editor_widget::on_change()
 	calculate_search_matches();
 }
 
-BEGIN_DEFINE_CALLABLE(text_editor_widget, widget)
+BEGIN_DEFINE_CALLABLE(TextEditorWidget, widget)
 	DEFINE_FIELD(text, "string")
 		return variant(obj.text());
 	DEFINE_SET_FIELD
-		obj.set_text(value.as_string());
+		obj.setText(value.as_string());
 	DEFINE_FIELD(begin_enter, "bool")
 		return variant::from_bool(obj.begin_enter_return_);
 	DEFINE_SET_FIELD
@@ -1646,101 +1646,101 @@ BEGIN_DEFINE_CALLABLE(text_editor_widget, widget)
 		return variant("");
 	DEFINE_SET_FIELD
 		obj.text_color_ = graphics::color(value);
-	DEFINE_FIELD(has_focus, "bool")
+	DEFINE_FIELD(hasFocus, "bool")
 		return variant::from_bool(obj.has_focus_);
 	DEFINE_SET_FIELD
 		obj.has_focus_ = value.as_bool();
 		if(obj.clear_on_focus_ && obj.has_focus_) {
-			obj.set_text("");
+			obj.setText("");
 			obj.clear_on_focus_ = false;
 		}
-END_DEFINE_CALLABLE(text_editor_widget)
+END_DEFINE_CALLABLE(TextEditorWidget)
 
-void text_editor_widget::change_delegate()
+void TextEditorWidget::change_delegate()
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("text", variant(text()));
 		variant value = ffl_on_change_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::change_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::change_delegate() called without environment!" << std::endl;
 	}
 }
 
-void text_editor_widget::move_cursor_delegate()
+void TextEditorWidget::move_cursor_delegate()
 {
-	if(get_environment()) {
-		variant value = ffl_on_move_cursor_->execute(*get_environment());
-		get_environment()->execute_command(value);
+	if(getEnvironment()) {
+		variant value = ffl_on_move_cursor_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::move_cursor_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::move_cursor_delegate() called without environment!" << std::endl;
 	}
 }
 
-void text_editor_widget::enter_delegate()
+void TextEditorWidget::enter_delegate()
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("text", variant(text()));
 		variant value = ffl_on_enter_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::enter_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::enter_delegate() called without environment!" << std::endl;
 	}
 }
 
-void text_editor_widget::escape_delegate()
+void TextEditorWidget::escape_delegate()
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("text", variant(text()));
 		variant value = ffl_on_escape_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::escape_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::escape_delegate() called without environment!" << std::endl;
 	}
 }
 
-void text_editor_widget::tab_delegate()
+void TextEditorWidget::tab_delegate()
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("text", variant(text()));
 		variant value = ffl_on_tab_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::tab_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::tab_delegate() called without environment!" << std::endl;
 	}
 }
 
-bool text_editor_widget::begin_enter_delegate()
+bool TextEditorWidget::begin_enter_delegate()
 {
-	if(get_environment()) {
-		variant value = ffl_on_begin_enter_->execute(*get_environment());
-		get_environment()->execute_command(value);
+	if(getEnvironment()) {
+		variant value = ffl_on_begin_enter_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::begin_enter_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::begin_enter_delegate() called without environment!" << std::endl;
 	}
 	// XXX Need some way of doing the return value here.
 	return begin_enter_return_;
 }
 
-void text_editor_widget::change_focus_delgate(bool new_focus_value)
+void TextEditorWidget::change_focus_delgate(bool new_focus_value)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("focus", variant::from_bool(new_focus_value));
 		callable->add("text", variant(text()));
 		variant value = ffl_on_change_focus_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "text_editor_widget::tab_delegate() called without environment!" << std::endl;
+		std::cerr << "TextEditorWidget::tab_delegate() called without environment!" << std::endl;
 	}
 }
 
@@ -1751,7 +1751,7 @@ void text_editor_widget::change_focus_delgate(bool new_focus_value)
 #include "filesystem.hpp"
 
 namespace {
-void on_change_search(const gui::text_editor_widget_ptr search_entry, gui::text_editor_widget_ptr editor)
+void on_change_search(const gui::TextEditorWidgetPtr search_entry, gui::TextEditorWidgetPtr editor)
 {
 	editor->set_search(search_entry->text());
 }
@@ -1772,17 +1772,17 @@ UTILITY(textedit)
 		return;
 	}
 
-	text_editor_widget_ptr entry = new text_editor_widget(120);
+	TextEditorWidgetPtr entry = new TextEditorWidget(120);
 
-	text_editor_widget_ptr editor = new code_editor_widget(600, 400);
-	editor->set_text(contents);
+	TextEditorWidgetPtr editor = new code_editor_widget(600, 400);
+	editor->setText(contents);
 
 	entry->set_on_change_handler(boost::bind(on_change_search, entry, editor));
-	entry->set_on_enter_handler(boost::bind(&text_editor_widget::next_search_match, editor));
+	entry->set_on_enter_handler(boost::bind(&TextEditorWidget::next_search_match, editor));
 
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(widget_ptr(entry), 10, 10);
-	d.add_widget(widget_ptr(editor), 10, 30);
+	d.add_widget(WidgetPtr(entry), 10, 10);
+	d.add_widget(WidgetPtr(editor), 10, 30);
 	d.show_modal();
 }
 

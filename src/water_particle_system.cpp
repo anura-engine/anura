@@ -150,7 +150,7 @@ void water_particle_system::draw(const rect& screen_area, const entity& e) const
 }
 
 
-void water_particle_system::set_value(const std::string& key, const variant& value)
+void water_particle_system::setValue(const std::string& key, const variant& value)
 {
 	if(key == "area") {
 		if(value.is_string()) {

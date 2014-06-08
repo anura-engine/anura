@@ -38,7 +38,7 @@ class file_chooser_dialog : public dialog
 {
 public:
 	file_chooser_dialog(int x, int y, int w, int h, const filter_list& filters=filter_list(), bool dir_only=false, const std::string& default_path=".");
-	file_chooser_dialog(variant value, game_logic::formula_callable* e);
+	file_chooser_dialog(variant value, game_logic::FormulaCallable* e);
 	std::string get_file_name() const { return file_name_; }
 	std::string get_path();
 	void set_saveas_dialog() { file_open_dialog_ = false; }
@@ -52,14 +52,14 @@ protected:
 	void up_button();
 	void home_button();
 	void add_dir_button();
-	void text_enter(const text_editor_widget_ptr editor);
+	void text_enter(const TextEditorWidgetPtr editor);
 	void execute_change_directory(const dir_list& d, int index);
 	void execute_select_file(const file_list& f, int index);
-	void execute_dir_name_enter(const text_editor_widget_ptr editor);
+	void execute_dir_name_enter(const TextEditorWidgetPtr editor);
 	void execute_dir_name_select(int row);
 	void change_filter(int selection, const std::string& s);
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 private:
 	std::string abs_default_path_;
 	std::string current_path_;
@@ -68,9 +68,9 @@ private:
 	filter_list filters_;
 	int filter_selection_;
 	bool file_open_dialog_;
-	text_editor_widget_ptr editor_;
-	widget_ptr context_menu_;
-	dropdown_widget_ptr filter_widget_;
+	TextEditorWidgetPtr editor_;
+	WidgetPtr context_menu_;
+	dropdown_WidgetPtr filter_widget_;
 	bool dir_only_;
 	bool use_relative_paths_;
 };

@@ -25,7 +25,7 @@ namespace gui
 	class bar_widget : public widget
 	{
 	public:
-		bar_widget(const variant& v, game_logic::formula_callable* e);
+		bar_widget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~bar_widget();
 		void init();
 
@@ -33,9 +33,9 @@ namespace gui
 	private:
 	DECLARE_CALLABLE(bar_widget);
 	protected:
-		virtual void handle_draw() const;
-		virtual void handle_process();
-		virtual bool handle_event(const SDL_Event& event, bool claimed);
+		virtual void handleDraw() const;
+		virtual void handleProcess();
+		virtual bool handleEvent(const SDL_Event& event, bool claimed);
 		void draw_ticks(GLfloat x_offset, int segments, const SDL_Color& color) const;
 
 		struct bar_section

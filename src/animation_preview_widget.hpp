@@ -34,7 +34,7 @@ public:
 	static bool is_animation(variant obj);
 
 	explicit animation_preview_widget(variant obj);
-	explicit animation_preview_widget(const variant& v, game_logic::formula_callable* e);
+	explicit animation_preview_widget(const variant& v, game_logic::FormulaCallable* e);
 	void init();
 	void set_object(variant obj);
 
@@ -47,12 +47,12 @@ public:
 	void set_solid_handler(boost::function<void(int,int)>);
 
 protected:
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 
 private:
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleDraw() const;
+	bool handleEvent(const SDL_Event& event, bool claimed);
 
 	void zoom_in();
 	void zoom_out();
@@ -65,7 +65,7 @@ private:
 	boost::scoped_ptr<frame> frame_;
 	mutable int cycle_;
 
-	std::vector<widget_ptr> widgets_;
+	std::vector<WidgetPtr> widgets_;
 	mutable gui::label* zoom_label_;
 	gui::label* pos_label_;
 
@@ -108,7 +108,7 @@ private:
 	game_logic::formula_ptr ffl_solid_handler_;
 };
 
-typedef boost::intrusive_ptr<gui::animation_preview_widget> animation_preview_widget_ptr;
+typedef boost::intrusive_ptr<gui::animation_preview_widget> animation_preview_WidgetPtr;
 
 }
 

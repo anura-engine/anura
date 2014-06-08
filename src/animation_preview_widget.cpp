@@ -265,32 +265,32 @@ bool animation_preview_widget::is_animation(variant obj)
 	return !obj.is_null() && obj["image"].is_string() && !obj["image"].as_string().empty();
 }
 
-animation_preview_widget::animation_preview_widget(const variant& v, game_logic::formula_callable* e) 
+animation_preview_widget::animation_preview_widget(const variant& v, game_logic::FormulaCallable* e) 
 	: widget(v,e), cycle_(0), zoom_label_(NULL), pos_label_(NULL), scale_(0), 
 	anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), 
 	moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
 {
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
 	if(v.has_key("on_rect_change")) {
 		rect_handler_ = boost::bind(&animation_preview_widget::rect_handler_delegate, this, _1);
-		ffl_rect_handler_ = get_environment()->create_formula(v["on_rect_change"]);
+		ffl_rect_handler_ = getEnvironment()->createFormula(v["on_rect_change"]);
 	}
 	if(v.has_key("on_pad_change")) {
 		pad_handler_ = boost::bind(&animation_preview_widget::pad_handler_delegate, this, _1);
-		ffl_pad_handler_ = get_environment()->create_formula(v["on_pad_change"]);
+		ffl_pad_handler_ = getEnvironment()->createFormula(v["on_pad_change"]);
 	}
 	if(v.has_key("on_frames_change")) {
 		num_frames_handler_ = boost::bind(&animation_preview_widget::num_frames_handler_delegate, this, _1);
-		ffl_num_frames_handler_ = get_environment()->create_formula(v["on_frames_change"]);
+		ffl_num_frames_handler_ = getEnvironment()->createFormula(v["on_frames_change"]);
 	}
 	if(v.has_key("on_frames_per_row_change")) {
 		frames_per_row_handler_ = boost::bind(&animation_preview_widget::frames_per_row_handler_delegate, this, _1);
-		ffl_frames_per_row_handler_ = get_environment()->create_formula(v["on_frames_per_row_change"]);
+		ffl_frames_per_row_handler_ = getEnvironment()->createFormula(v["on_frames_per_row_change"]);
 	}
 	if(v.has_key("on_solid_change")) {
 		solid_handler_ = boost::bind(&animation_preview_widget::solid_handler_delegate, this, _1, _2);
-		ffl_solid_handler_ = get_environment()->create_formula(v["on_solid_change"]);
+		ffl_solid_handler_ = getEnvironment()->createFormula(v["on_solid_change"]);
 	}
 	
 	try {
@@ -304,7 +304,7 @@ animation_preview_widget::animation_preview_widget(const variant& v, game_logic:
 
 animation_preview_widget::animation_preview_widget(variant obj) : cycle_(0), zoom_label_(NULL), pos_label_(NULL), scale_(0), anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
 {
-	set_environment();
+	setEnvironment();
 	set_object(obj);
 }
 
@@ -313,23 +313,23 @@ void animation_preview_widget::init()
 	widgets_.clear();
 
 	button* b = new button("+", boost::bind(&animation_preview_widget::zoom_in, this));
-	b->set_loc(x() + 10, y() + height() - b->height() - 5);
-	widgets_.push_back(widget_ptr(b));
+	b->setLoc(x() + 10, y() + height() - b->height() - 5);
+	widgets_.push_back(WidgetPtr(b));
 	b = new button("-", boost::bind(&animation_preview_widget::zoom_out, this));
-	b->set_loc(x() + 40, y() + height() - b->height() - 5);
-	widgets_.push_back(widget_ptr(b));
+	b->setLoc(x() + 40, y() + height() - b->height() - 5);
+	widgets_.push_back(WidgetPtr(b));
 
 	zoom_label_ = new label("Zoom: 100%");
-	zoom_label_->set_loc(b->x() + b->width() + 10, b->y());
-	widgets_.push_back(widget_ptr(zoom_label_));
+	zoom_label_->setLoc(b->x() + b->width() + 10, b->y());
+	widgets_.push_back(WidgetPtr(zoom_label_));
 
 	pos_label_ = new label("");
-	pos_label_->set_loc(zoom_label_->x() + zoom_label_->width() + 8, zoom_label_->y());
-	widgets_.push_back(widget_ptr(pos_label_));
+	pos_label_->setLoc(zoom_label_->x() + zoom_label_->width() + 8, zoom_label_->y());
+	widgets_.push_back(WidgetPtr(pos_label_));
 
 	b = new button("Reset", boost::bind(&animation_preview_widget::reset_rect, this));
-	b->set_loc(pos_label_->x() + pos_label_->width() + 58, y() + height() - b->height() - 5);
-	widgets_.push_back(widget_ptr(b));
+	b->setLoc(pos_label_->x() + pos_label_->width() + 58, y() + height() - b->height() - 5);
+	widgets_.push_back(WidgetPtr(b));
 }
 
 void animation_preview_widget::set_object(variant obj)
@@ -349,7 +349,7 @@ void animation_preview_widget::process()
 {
 }
 
-void animation_preview_widget::handle_draw() const
+void animation_preview_widget::handleDraw() const
 {
 	int mousex, mousey;
 	int mouse_buttons = input::sdl_get_mouse_state(&mousex, &mousey);
@@ -458,30 +458,30 @@ void animation_preview_widget::handle_draw() const
 			if(n == 0 && !mouse_buttons) {
 				bool rect_chosen = false;
 				if(box.w() > 10 && box.h() > 10) {
-					rect_chosen = point_in_rect(point(mousex, mousey), rect(box.x()+5, box.y()+5, box.w()-10, box.h()-10));
+					rect_chosen = pointInRect(point(mousex, mousey), rect(box.x()+5, box.y()+5, box.w()-10, box.h()-10));
 				}
 
-				if(rect_chosen || point_in_rect(point(mousex, mousey), rect(box.x(), box.y()-4, box.w(), 9))) {
+				if(rect_chosen || pointInRect(point(mousex, mousey), rect(box.x(), box.y()-4, box.w(), 9))) {
 					dragging_sides_bitmap_ |= TOP_SIDE;
 					graphics::draw_rect(rect(box.x(), box.y()-1, box.w(), 2).sdl_rect(), graphics::color_red());
 				}
 				
-				if(rect_chosen || !(dragging_sides_bitmap_&TOP_SIDE) && point_in_rect(point(mousex, mousey), rect(box.x(), box.y2()-4, box.w(), 9))) {
+				if(rect_chosen || !(dragging_sides_bitmap_&TOP_SIDE) && pointInRect(point(mousex, mousey), rect(box.x(), box.y2()-4, box.w(), 9))) {
 					dragging_sides_bitmap_ |= BOTTOM_SIDE;
 					graphics::draw_rect(rect(box.x(), box.y2()-1, box.w(), 2).sdl_rect(), graphics::color_red());
 				}
 
-				if(rect_chosen || point_in_rect(point(mousex, mousey), rect(box.x()-4, box.y(), 9, box.h()))) {
+				if(rect_chosen || pointInRect(point(mousex, mousey), rect(box.x()-4, box.y(), 9, box.h()))) {
 					dragging_sides_bitmap_ |= LEFT_SIDE;
 					graphics::draw_rect(rect(box.x()-1, box.y(), 2, box.h()).sdl_rect(), graphics::color_red());
 				}
 				
-				if(rect_chosen || (!dragging_sides_bitmap_&LEFT_SIDE) && point_in_rect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h()))) {
+				if(rect_chosen || (!dragging_sides_bitmap_&LEFT_SIDE) && pointInRect(point(mousex, mousey), rect(box.x2()-4, box.y(), 9, box.h()))) {
 					dragging_sides_bitmap_ |= RIGHT_SIDE;
 					graphics::draw_rect(rect(box.x2()-1, box.y(), 2, box.h()).sdl_rect(), graphics::color_red());
 				}
 			} else if(n != 0 && !mouse_buttons) {
-				if(point_in_rect(point(mousex, mousey), box)) {
+				if(pointInRect(point(mousex, mousey), box)) {
 					dragging_sides_bitmap_ = PADDING;
 					graphics::draw_rect(box.sdl_rect(), graphics::color_yellow(), 128);
 				}
@@ -490,7 +490,7 @@ void animation_preview_widget::handle_draw() const
 
 		if(anchor_x_ != -1 && !dragging_sides_bitmap_ &&
 		   input::sdl_get_mouse_state(&mousex, &mousey) &&
-		   point_in_rect(point(mousex, mousey), dst_rect_)) {
+		   pointInRect(point(mousex, mousey), dst_rect_)) {
 			const point p1 = mouse_point_to_image_loc(point(mousex, mousey));
 			const point p2 = mouse_point_to_image_loc(point(anchor_x_, anchor_y_));
 
@@ -534,7 +534,7 @@ void animation_preview_widget::handle_draw() const
 		graphics::draw_rect(solid_rect_, graphics::color(255, 255, 255, 64));
 	}
 
-	foreach(const_widget_ptr w, widgets_) {
+	foreach(ConstWidgetPtr w, widgets_) {
 		w->draw();
 	}
 }
@@ -550,10 +550,10 @@ point animation_preview_widget::mouse_point_to_image_loc(const point& p) const
 	return point(x, y);
 }
 
-bool animation_preview_widget::handle_event(const SDL_Event& event, bool claimed)
+bool animation_preview_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
-	foreach(widget_ptr w, widgets_) {
-		claimed = w->process_event(event, claimed) || claimed;
+	foreach(WidgetPtr w, widgets_) {
+		claimed = w->processEvent(event, claimed) || claimed;
 	}
 
 	if(event.type == SDL_MOUSEBUTTONUP) {
@@ -578,9 +578,9 @@ bool animation_preview_widget::handle_event(const SDL_Event& event, bool claimed
 		}
 
 		point p(e.x, e.y);
-		if(point_in_rect(p, dst_rect_)) {
+		if(pointInRect(p, dst_rect_)) {
 			p = mouse_point_to_image_loc(p);
-			pos_label_->set_text(formatter() << p.x << "," << p.y);
+			pos_label_->setText(formatter() << p.x << "," << p.y);
 		}
 
 		if(e.state && dragging_sides_bitmap_) {
@@ -650,15 +650,15 @@ bool animation_preview_widget::handle_event(const SDL_Event& event, bool claimed
 		anchor_area_ = frame_->area();
 		anchor_pad_ = frame_->pad();
 		has_motion_ = false;
-		if(point_in_rect(p, dst_rect_)) {
-			claimed = claim_mouse_events();
+		if(pointInRect(p, dst_rect_)) {
+			claimed = claimMouseEvents();
 			anchor_x_ = e.x;
 			anchor_y_ = e.y;
 		} else {
 			anchor_x_ = anchor_y_ = -1;
 
-			if(point_in_rect(p, solid_rect_)) {
-				moving_solid_rect_ = claim_mouse_events();
+			if(pointInRect(p, solid_rect_)) {
+				moving_solid_rect_ = claimMouseEvents();
 				anchor_solid_x_ = e.x/2;
 				anchor_solid_y_ = e.y/2;
 			}
@@ -669,7 +669,7 @@ bool animation_preview_widget::handle_event(const SDL_Event& event, bool claimed
 		point anchor(anchor_x_, anchor_y_);
 		point p(e.x, e.y);
 		if(anchor == p && !has_motion_) {
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 			p = mouse_point_to_image_loc(p);
 			graphics::surface surf = graphics::surface_cache::get(obj_["image"].as_string());
 			std::vector<graphics::surface> surf_key;
@@ -704,8 +704,8 @@ bool animation_preview_widget::handle_event(const SDL_Event& event, bool claimed
 					}
 				}
 			}
-		} else if(!dragging_sides_bitmap_ && point_in_rect(anchor, dst_rect_) && point_in_rect(p, dst_rect_)) {
-			claimed = claim_mouse_events();
+		} else if(!dragging_sides_bitmap_ && pointInRect(anchor, dst_rect_) && pointInRect(p, dst_rect_)) {
+			claimed = claimMouseEvents();
 
 			anchor = mouse_point_to_image_loc(anchor);
 			p = mouse_point_to_image_loc(p);
@@ -767,7 +767,7 @@ void animation_preview_widget::update_zoom_label() const
 			}
 		}
 
-		zoom_label_->set_text(formatter() << "Zoom: " << percent << "%");
+		zoom_label_->setText(formatter() << "Zoom: " << percent << "%");
 	}
 }
 
@@ -799,11 +799,11 @@ void animation_preview_widget::set_solid_handler(boost::function<void(int,int)> 
 void animation_preview_widget::rect_handler_delegate(rect r)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("new_rect", r.write());
 		variant value = ffl_rect_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "animation_preview_widget::rect_handler_delegate() called without environment!" << std::endl;
 	}
@@ -812,11 +812,11 @@ void animation_preview_widget::rect_handler_delegate(rect r)
 void animation_preview_widget::pad_handler_delegate(int pad)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("new_pad", variant(pad));
 		variant value = ffl_pad_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "animation_preview_widget::pad_handler_delegate() called without environment!" << std::endl;
 	}
@@ -825,11 +825,11 @@ void animation_preview_widget::pad_handler_delegate(int pad)
 void animation_preview_widget::num_frames_handler_delegate(int frames)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("new_frames", variant(frames));
 		variant value = ffl_num_frames_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "animation_preview_widget::num_frames_handler_delegate() called without environment!" << std::endl;
 	}
@@ -838,11 +838,11 @@ void animation_preview_widget::num_frames_handler_delegate(int frames)
 void animation_preview_widget::frames_per_row_handler_delegate(int frames_per_row)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("new_frames_per_row", variant(frames_per_row));
 		variant value = ffl_frames_per_row_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "animation_preview_widget::frames_per_row_handler_delegate() called without environment!" << std::endl;
 	}
@@ -851,18 +851,18 @@ void animation_preview_widget::frames_per_row_handler_delegate(int frames_per_ro
 void animation_preview_widget::solid_handler_delegate(int x, int y)
 {
 	using namespace game_logic;
-	if(get_environment()) {
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+	if(getEnvironment()) {
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 		callable->add("new_solidx", variant(x));
 		callable->add("new_solidy", variant(y));
 		variant value = ffl_solid_handler_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "animation_preview_widget::solid_handler_delegate() called without environment!" << std::endl;
 	}
 }
 
-void animation_preview_widget::set_value(const std::string& key, const variant& v)
+void animation_preview_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "object") {
 		try {
@@ -873,15 +873,15 @@ void animation_preview_widget::set_value(const std::string& key, const variant& 
 		} catch(graphics::load_image_error&) {
 		}
 	}
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant animation_preview_widget::get_value(const std::string& key) const
+variant animation_preview_widget::getValue(const std::string& key) const
 {
 	if(key == "object") {
 		return obj_;
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

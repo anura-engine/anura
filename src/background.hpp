@@ -24,10 +24,8 @@
 
 #include "boost/shared_ptr.hpp"
 
-#include "graphics.hpp"
-
 #include "kre/Geometry.hpp"
-#include "texture.hpp"
+#include "kre/Material.hpp"
 #include "variant.hpp"
 
 class level;
@@ -62,7 +60,7 @@ private:
 	struct layer {
 		std::string image;
 		std::string image_formula;
-		mutable graphics::texture texture;
+		mutable KRE::MaterialPtr texture;
 		int xscale, yscale_top, yscale_bot;		//scales are how quickly the background scrolls compared to normal ground movement when the player
 								//walks around.  They give us the illusion of 'depth'. 100 is normal ground, less=distant, more=closer
 		
@@ -71,14 +69,10 @@ private:
 		int scale;				//a multiplier on the dimensions of the image.  Usually unused.
 		int xoffset;
 		int yoffset;			
-		GLfloat color[4];
+		KRE::Color color;
 
-		boost::shared_ptr<SDL_Color> color_above, color_below;
+		KRE::ColorPtr color_above, color_below;
 		
-		GLenum mode;			//Do we use the regular 'GL_FUNC_ADD' blend mode, or do we do something special?  Examples:
-								//GL_MAX ->  Max(src,dest) pixels, displays whichever's brighter.  Useful for clouds.
-								//GL_MIN ->  vice-versa, useful for spooky mist.
-
 		// Top and bottom edges of the background.
 		mutable int y1, y2;
 

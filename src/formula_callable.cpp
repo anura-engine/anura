@@ -4,7 +4,7 @@
 namespace game_logic
 {
 
-void map_formula_callable::visit_values(formula_callable_visitor& visitor)
+void map_FormulaCallable::visitValues(FormulaCallableVisitor& visitor)
 {
 	for(std::map<std::string,variant>::iterator i = values_.begin();
 	    i != values_.end(); ++i) {
@@ -15,15 +15,15 @@ void map_formula_callable::visit_values(formula_callable_visitor& visitor)
 fn_command_callable::fn_command_callable(std::function<void()> fn) : fn_(fn)
 {}
 
-void fn_command_callable::execute(formula_callable& context) const
+void fn_command_callable::execute(FormulaCallable& context) const
 {
 	fn_();
 }
 
-fn_command_callable_arg::fn_command_callable_arg(std::function<void(formula_callable*)> fn) : fn_(fn)
+fn_command_callable_arg::fn_command_callable_arg(std::function<void(FormulaCallable*)> fn) : fn_(fn)
 {}
 
-void fn_command_callable_arg::execute(formula_callable& context) const
+void fn_command_callable_arg::execute(FormulaCallable& context) const
 {
 	fn_(&context);
 }

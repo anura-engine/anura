@@ -38,7 +38,7 @@ using game_logic::function_symbol_table;
 function_symbol_table& get_voxel_object_functions_symbol_table();
 void init_voxel_object_functions(variant node);
 
-class voxel_object_command_callable : public game_logic::formula_callable 
+class voxel_object_command_callable : public game_logic::FormulaCallable 
 {
 public:
 	voxel_object_command_callable() : expr_(NULL) {}
@@ -50,7 +50,7 @@ public:
 
 private:
 	virtual void execute(voxel::world& world, voxel::user_voxel_object& ob) const = 0;
-	variant get_value(const std::string& key) const { return variant(); }
+	variant getValue(const std::string& key) const { return variant(); }
 	void get_inputs(std::vector<game_logic::formula_input>* inputs) const {}
 
 	//these two members are used as a more compiler-friendly version of a

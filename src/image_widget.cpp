@@ -25,18 +25,18 @@ namespace gui {
 image_widget::image_widget(const std::string& fname, int w, int h)
   : texture_(graphics::texture::get(fname)), rotate_(0.0), image_name_(fname)
 {
-	set_environment();
+	setEnvironment();
 	init(w, h);
 }
 
 image_widget::image_widget(graphics::texture tex, int w, int h)
   : texture_(tex), rotate_(0.0)
 {
-	set_environment();
+	setEnvironment();
 	init(w, h);
 }
 
-image_widget::image_widget(const variant& v, game_logic::formula_callable* e) 
+image_widget::image_widget(const variant& v, game_logic::FormulaCallable* e) 
 	: widget(v, e)
 {
 	if(v.has_key("area")) {
@@ -56,7 +56,7 @@ image_widget::image_widget(const variant& v, game_logic::formula_callable* e)
 	rotate_ = v.has_key("rotation") ? v["rotation"].as_decimal().as_float() : 0.0;
 	init(v["image_width"].as_int(-1), v["image_height"].as_int(-1));
 
-	set_claim_mouse_events(v["claim_mouse_events"].as_bool(false));
+	setClaimMouseEvents(v["claim_mouse_events"].as_bool(false));
 }
 
 void image_widget::init(int w, int h)
@@ -77,10 +77,10 @@ void image_widget::init(int w, int h)
 		}
 	}
 
-	set_dim(w,h);
+	setDim(w,h);
 }
 
-void image_widget::handle_draw() const
+void image_widget::handleDraw() const
 {
 	if(area_.w() == 0) {
 		graphics::blit_texture(texture_, x(), y(), width(), height(), rotate_);
@@ -93,7 +93,7 @@ void image_widget::handle_draw() const
 	}
 }
 
-void image_widget::set_value(const std::string& key, const variant& v)
+void image_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "image") {
 		if(v.is_string()) {
@@ -113,10 +113,10 @@ void image_widget::set_value(const std::string& key, const variant& v)
 		ASSERT_LOG(v.is_list() && v.num_elements() == 2, "parameter to 'image_wv' must be two-element list. Found: " << v.to_debug_string());
 		init(v[0].as_int(), v[1].as_int());
 	}
-	return widget::set_value(key, v);
+	return widget::setValue(key, v);
 }
 
-variant image_widget::get_value(const std::string& key) const
+variant image_widget::getValue(const std::string& key) const
 {
 	if(key == "image") {
 		return variant(image_name_);
@@ -136,27 +136,27 @@ variant image_widget::get_value(const std::string& key) const
 	} else if(key == "image_height") {
 		return variant(texture_.height());
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 gui_section_widget::gui_section_widget(const std::string& id, int w, int h, int scale)
   : section_(gui_section::get(id)), scale_(scale)
 {
-	set_environment();
+	setEnvironment();
 	if(section_ && w == -1) {
-		set_dim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
+		setDim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
 	} else {
-		set_dim(w,h);
+		setDim(w,h);
 	}
 }
 
-gui_section_widget::gui_section_widget(const variant& v, game_logic::formula_callable* e) 
+gui_section_widget::gui_section_widget(const variant& v, game_logic::FormulaCallable* e) 
 	: widget(v,e)
 {
 	section_ = gui_section::get(v);
 	scale_ = v["scale"].as_int(1);
 	if(!v.has_key("width") && section_) {
-		set_dim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
+		setDim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
 	}
 }
 
@@ -165,29 +165,29 @@ void gui_section_widget::set_gui_section(const std::string& id)
 	section_ = gui_section::get(id);
 }
 
-void gui_section_widget::handle_draw() const
+void gui_section_widget::handleDraw() const
 {
 	if(section_) {
 		section_->blit(x(), y(), width(), height());
 	}
 }
 
-void gui_section_widget::set_value(const std::string& key, const variant& v)
+void gui_section_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "name") {
 		set_gui_section(v.as_string());
 	} else if(key == "scale" && section_) {
-		set_dim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
+		setDim((section_->width()/2)*scale_, (section_->height()/2)*scale_);
 	}
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant gui_section_widget::get_value(const std::string& key) const
+variant gui_section_widget::getValue(const std::string& key) const
 {
 	if(key == "scale") {
 		return variant(scale_);
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

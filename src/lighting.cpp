@@ -450,11 +450,11 @@ namespace graphics
 		}
 	}
 
-	/*class lighting_value_callable : public game_logic::formula_callable {
-		variant get_value(const std::string& key) const {
+	/*class lighting_value_callable : public game_logic::FormulaCallable {
+		variant getValue(const std::string& key) const {
 			return variant();
 		}
-		void set_value(const std::string& key, const variant& value) {
+		void setValue(const std::string& key, const variant& value) {
 		}
 	public:
 		explicit lighting_value_callable() : obj_(const_cast<custom_object*>(&obj))
@@ -520,9 +520,9 @@ namespace graphics
 		: shader_(shader), enabled_(false)
 	{
 		if(node.has_key("color")) {
-			set_color(graphics::color(node["color"]));
+			setColor(graphics::color(node["color"]));
 		} else {
-			set_color(graphics::color("white"));
+			setColor(graphics::color("white"));
 		}
 
 		if(node.has_key("direction")) {
@@ -562,7 +562,7 @@ namespace graphics
 		}
 	}
 
-	void sunlight::set_color(const graphics::color& color)
+	void sunlight::setColor(const graphics::color& color)
 	{
 		color_ = color;
 		if(enabled_) {
@@ -612,7 +612,7 @@ namespace graphics
 	DEFINE_FIELD(color, "[decimal|int,decimal|int,decimal|int,decimal|int]")
 		return obj.get_color().write();
 	DEFINE_SET_FIELD
-		obj.set_color(graphics::color(value));
+		obj.setColor(graphics::color(value));
 	
 	DEFINE_FIELD(direction, "[decimal|int,decimal|int,decimal|int]")
 		return vec3_to_variant(obj.direction());

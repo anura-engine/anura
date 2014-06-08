@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <cmath>
 #include <iostream>
@@ -27,10 +34,6 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/scoped_ptr.hpp>
 
-#ifdef TARGET_OS_HARMATTAN
-#include <glib-object.h>
-#endif
-
 #include "asserts.hpp"
 #include "background_task_pool.hpp"
 #include "checksum.hpp"
@@ -39,13 +42,10 @@
 #include "custom_object_functions.hpp"
 #include "custom_object_type.hpp"
 #include "draw_scene.hpp"
-#ifndef NO_EDITOR
 #include "editor.hpp"
-#endif
 #include "difficulty.hpp"
 #include "external_text_editor.hpp"
 #include "filesystem.hpp"
-#include "font.hpp"
 #include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
@@ -71,14 +71,10 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "preprocessor.hpp"
-#include "raster.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
-#include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
-#include "texture.hpp"
-#include "texture_frame_buffer.hpp"
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
@@ -97,12 +93,6 @@
 
 #if defined(USE_BOX2D)
 #include "b2d_ffl.hpp"
-#endif
-
-#if defined(TARGET_PANDORA) || defined(TARGET_TEGRA)
-#include "eglport.h"
-#elif defined(TARGET_BLACKBERRY)
-#include <EGL/egl.h>
 #endif
 
 #define DEFAULT_MODULE	"frogatto"
@@ -753,14 +743,11 @@ extern "C" int main(int argcount, char* argvec[])
 	const load_level_manager load_manager;
 
 	{ //manager scope
-	const font::manager font_manager;
 	const sound::manager sound_manager;
 #if !defined(__native_client__)
 	const joystick::manager joystick_manager;
 #endif 
 	
-	graphics::texture::manager texture_manager;
-
 #ifndef NO_EDITOR
 	editor::manager editor_manager;
 #endif
@@ -771,7 +758,7 @@ extern "C" int main(int argcount, char* argvec[])
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
 		gui_section::init(gui_node);
 		loader.draw_and_increment(_("Initializing GUI"));
-		framed_gui_element::init(gui_node);
+		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
 		graphical_font::init_for_locale(i18n::get_locale());
@@ -784,7 +771,6 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.load(preloads);
 		loader.draw_and_increment(_("Initializing tiles"));
 		tile_map::init(json::parse_from_file("data/tiles.cfg"));
-
 
 		game_logic::formula_object::load_all_classes();
 
@@ -816,12 +802,6 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	formula_profiler::manager profiler(profile_output);
-
-#ifdef USE_SHADERS
-	texture_frame_buffer::init(preferences::actual_screen_width(), preferences::actual_screen_height());
-#else
-	texture_frame_buffer::init();
-#endif
 
 	if(run_benchmarks) {
 		if(benchmarks_list.empty() == false) {
@@ -892,10 +872,6 @@ extern "C" int main(int argcount, char* argvec[])
 	level::clear_current_level();
 
 	} //end manager scope, make managers destruct before calling SDL_Quit
-//	controls::debug_dump_controls();
-#if defined(TARGET_PANDORA) || defined(TARGET_TEGRA)
-    EGL_Destroy();
-#endif
 
 	preferences::save_preferences();
 
@@ -905,10 +881,6 @@ extern "C" int main(int argcount, char* argvec[])
 		fprintf(stderr, "Illegal object: %p\n", (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
-
-//#ifdef _MSC_VER
-//	ExitProcess(0);
-//#endif
 
 	return 0;
 }

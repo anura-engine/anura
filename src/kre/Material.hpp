@@ -25,7 +25,7 @@
 
 #include "Geometry.hpp"
 #include "Texture.hpp"
-#include "variant.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {
@@ -100,6 +100,12 @@ namespace KRE
 		void SetBlendMode(BlendMode::BlendModeConstants src, BlendMode::BlendModeConstants dst);
 
 		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
+		template<typename T>
+		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
+			float w = static_cast<float>((*it)->Width());
+			float h = static_cast<float>((*it)->Height());
+			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
+		}
 
 		template<typename T> void SetCoords(const Geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();

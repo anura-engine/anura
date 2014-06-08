@@ -16,16 +16,16 @@
 */
 #include <boost/bind.hpp>
 
-#include "scrollable_widget.hpp"
+#include "scrollable_widget"
 
 namespace gui {
 
-scrollable_widget::scrollable_widget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0), auto_scroll_bottom_(false)
+ScrollableWidget::ScrollableWidget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0), auto_scroll_bottom_(false)
 {
-	set_environment();
+	setEnvironment();
 }
 
-scrollable_widget::scrollable_widget(const variant& v, game_logic::formula_callable* e)
+ScrollableWidget::ScrollableWidget(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0),
 	  auto_scroll_bottom_(v["auto_scroll_bottom"].as_bool())
 {
@@ -40,26 +40,26 @@ scrollable_widget::scrollable_widget(const variant& v, game_logic::formula_calla
 	}
 }
 
-scrollable_widget::~scrollable_widget()
+ScrollableWidget::~ScrollableWidget()
 {}
 
-void scrollable_widget::set_yscroll(int yscroll)
+void ScrollableWidget::set_yscroll(int yscroll)
 {
 	const int old = yscroll_;
 	yscroll_ = yscroll;
 	on_set_yscroll(old, yscroll);
 }
 
-void scrollable_widget::set_dim(int w, int h)
+void ScrollableWidget::setDim(int w, int h)
 {
-	widget::set_dim(w, h);
+	widget::setDim(w, h);
 	update_scrollbar();
 }
 
-void scrollable_widget::on_set_yscroll(int old_yscroll, int new_yscroll)
+void ScrollableWidget::on_set_yscroll(int old_yscroll, int new_yscroll)
 {}
 
-void scrollable_widget::set_virtual_height(int height)
+void ScrollableWidget::set_virtual_height(int height)
 {
 	virtual_height_ = height;
 	if(auto_scroll_bottom_) {
@@ -68,21 +68,21 @@ void scrollable_widget::set_virtual_height(int height)
 	update_scrollbar();
 }
 
-void scrollable_widget::set_scroll_step(int step)
+void ScrollableWidget::set_scroll_step(int step)
 {
 	step_ = step;
 }
 
-void scrollable_widget::set_arrow_scroll_step(int step)
+void ScrollableWidget::set_arrow_scroll_step(int step)
 {
 	arrow_step_ = step;
 }
 
-void scrollable_widget::update_scrollbar()
+void ScrollableWidget::update_scrollbar()
 {
 	if(height() < virtual_height_) {
 		if(!scrollbar_) {
-			scrollbar_.reset(new scrollbar_widget(boost::bind(&scrollable_widget::set_yscroll, this, _1)));
+			scrollbar_.reset(new scrollbar_widget(boost::bind(&ScrollableWidget::set_yscroll, this, _1)));
 		}
 		scrollbar_->set_step(step_);
 //		if(step_ != arrow_step_) {
@@ -90,39 +90,39 @@ void scrollable_widget::update_scrollbar()
 //		}
 		scrollbar_->set_range(virtual_height_, height());
 		scrollbar_->set_window_pos(yscroll_);
-		scrollbar_->set_loc(x() + width(), y());
-		scrollbar_->set_dim(10, height());
+		scrollbar_->setLoc(x() + width(), y());
+		scrollbar_->setDim(10, height());
 	} else {
 		scrollbar_.reset();
 	}
 
 }
 
-void scrollable_widget::handle_draw() const
+void ScrollableWidget::handleDraw() const
 {
 	if(scrollbar_) {
 		scrollbar_->draw();
 	}
 }
 
-bool scrollable_widget::handle_event(const SDL_Event& event, bool claimed)
+bool ScrollableWidget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(scrollbar_) {
-		return scrollbar_->process_event(event, claimed);
+		return scrollbar_->processEvent(event, claimed);
 	}
 
 	return claimed;
 }
 
-void scrollable_widget::set_loc(int x, int y)
+void ScrollableWidget::setLoc(int x, int y)
 {
-	widget::set_loc(x, y);
+	widget::setLoc(x, y);
 	if(scrollbar_) {
-		scrollbar_->set_loc(x + width(), y);
+		scrollbar_->setLoc(x + width(), y);
 	}
 }
 
-void scrollable_widget::set_value(const std::string& key, const variant& v)
+void ScrollableWidget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "yscroll") {
 		set_yscroll(v.as_int());
@@ -131,10 +131,10 @@ void scrollable_widget::set_value(const std::string& key, const variant& v)
 	} else if(key == "step") {
 		set_scroll_step(v.as_int());
 	}
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant scrollable_widget::get_value(const std::string& key) const
+variant ScrollableWidget::getValue(const std::string& key) const
 {
 	if(key == "yscroll") {
 		return variant(yscroll_);
@@ -143,7 +143,7 @@ variant scrollable_widget::get_value(const std::string& key) const
 	} else if(key == "step") {
 		return variant(step_);
 	}
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 }

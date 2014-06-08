@@ -22,6 +22,7 @@
 */
 
 #include "../asserts.hpp"
+#include "Renderable.hpp"
 #include "RenderQueue.hpp"
 #include "WindowManager.hpp"
 
@@ -36,33 +37,33 @@ namespace KRE
 	{
 	}
 
-	void RenderQueue::Enqueue(uint64_t order, RenderablePtr p)
+	void RenderQueue::enQueue(uint64_t order, RenderablePtr p)
 	{
 		renderables_[order] = p;
 	}
 
-	void RenderQueue::Dequeue(uint64_t order)
+	void RenderQueue::deQueue(uint64_t order)
 	{
 		auto it = renderables_.find(order);
 		ASSERT_LOG(it != renderables_.end(), "RenderQueue(" << name() << ") nothing to dequeue at order: " << order);
 		renderables_.erase(it);
 	}
 
-	void RenderQueue::PreRender()
+	void RenderQueue::preRender()
 	{
 		for(auto r : renderables_) {
-			r.second->PreRender();
+			r.second->preRender();
 		}
 	}
 
-	void RenderQueue::Render(const WindowManagerPtr& wm) const 
+	void RenderQueue::render(const WindowManagerPtr& wm) const 
 	{
 		for(auto r : renderables_) {
-			wm->Render(r.second);
+			wm->render(r.second);
 		}
 	}
 
-	void RenderQueue::PostRender()
+	void RenderQueue::postRender()
 	{
 		renderables_.clear();
 	}

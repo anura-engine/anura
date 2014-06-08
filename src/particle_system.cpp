@@ -117,8 +117,8 @@ public:
 	}
 	
 	
-	void set_texture() const {
-		texture_.set_as_current_texture();
+	void setTexture() const {
+		texture_.set_as_currentTexture();
 	}
 
 	int width() const { return width_; }
@@ -225,7 +225,7 @@ public:
 private:
 	void prepump(const entity& e);
 
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		if(key == "spawn_rate") {
 			return variant(info_.spawn_rate_);
 		} else if(key == "spawn_rate_random") {
@@ -281,7 +281,7 @@ private:
 		}
 	}
 
-	void set_value(const std::string& key, const variant& value) {
+	void setValue(const std::string& key, const variant& value) {
 		if(key == "spawn_rate") {
 			info_.spawn_rate_ = value.as_int();
 		} else if(key == "spawn_rate_random") {
@@ -527,7 +527,7 @@ void simple_particle_system::draw(const rect& area, const entity& e) const
 	std::deque<particle>::const_iterator p = particles_.begin();
 
 	//all particles must have the same texture, so just set it once.
-	p->anim->set_texture();
+	p->anim->setTexture();
 	std::vector<GLfloat>& varray = graphics::global_vertex_array();
 	std::vector<GLfloat>& tcarray = graphics::global_texcoords_array();
 	std::vector<GLbyte>& carray = graphics::global_vertex_color_array();
@@ -862,11 +862,11 @@ private:
 	int pos_x_, pos_x_rand_, pos_y_, pos_y_rand_;
 	std::vector<particle> particles_;
 
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		return variant();
 	}
 
-	void set_value(const std::string& key, const variant& value) {
+	void setValue(const std::string& key, const variant& value) {
 		if(key == "generation_rate" || key == "generation_rate_millis") {
 			generation_rate_millis_ = value.as_int();
 		} else if (key == "pos_x") {

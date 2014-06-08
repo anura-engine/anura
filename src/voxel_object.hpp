@@ -35,7 +35,7 @@
 
 namespace voxel
 {
-class voxel_object : public game_logic::formula_callable
+class voxel_object : public game_logic::FormulaCallable
 {
 public:
 	voxel_object(const std::string& type, float x, float y, float z);
@@ -70,12 +70,12 @@ public:
 	voxel_model_ptr& model() { return model_; }
 	const voxel_model_ptr& model_const() { return model_; }
 
-	void add_widget(const gui::widget_ptr& w);
-	void add_widgets(std::vector<gui::widget_ptr>* widgets);
+	void add_widget(const gui::WidgetPtr& w);
+	void add_widgets(std::vector<gui::WidgetPtr>* widgets);
 	void clear_widgets();
-	void remove_widget(gui::widget_ptr w);
-	gui::widget_ptr get_widget_by_id(const std::string& id);
-	gui::const_widget_ptr get_widget_by_id(const std::string& id) const;
+	void remove_widget(gui::WidgetPtr w);
+	gui::WidgetPtr getWidgetById(const std::string& id);
+	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
 	std::vector<variant> get_variant_widget_list() const;
 
 	bool paused() const { return paused_; }
@@ -111,7 +111,7 @@ private:
 
 	gles2::program_ptr shader_;
 
-	typedef std::set<gui::widget_ptr, gui::widget_sort_zorder> widget_list;
+	typedef std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list;
 	widget_list widgets_;	
 
 	GLuint a_normal_;

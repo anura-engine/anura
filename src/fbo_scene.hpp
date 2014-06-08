@@ -24,7 +24,7 @@
 #include "kre/Geometry.hpp"
 #include "texture.hpp"
 
-class texture_object : public game_logic::formula_callable
+class texture_object : public game_logic::FormulaCallable
 {
 public:
 	explicit texture_object(const graphics::texture& texture);

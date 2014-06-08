@@ -44,7 +44,7 @@ circle_light::circle_light(const custom_object& obj, int radius)
   : light(obj), center_(obj.midpoint()), radius_(radius)
 {}
 
-variant light::get_value(const std::string& key) const
+variant light::getValue(const std::string& key) const
 {
 	return variant();
 }

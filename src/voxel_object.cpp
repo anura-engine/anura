@@ -156,7 +156,7 @@ namespace voxel
 
 		std::vector<variant> scheduled_commands = pop_scheduled_commands();
 		foreach(const variant& cmd, scheduled_commands) {
-			execute_command(cmd);
+			executeCommand(cmd);
 		}
 
 		if(model_) {

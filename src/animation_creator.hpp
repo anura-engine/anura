@@ -1,22 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 #pragma once
-#ifndef ANIMATION_CREATOR_HPP_INCLUDED
-#define ANIMATION_CREATOR_HPP_INCLUDED
 #ifndef NO_EDITOR
 
 #include <boost/bind.hpp>
@@ -29,10 +33,8 @@
 #include "button.hpp"
 #include "dialog.hpp"
 #include "dropdown_widget.hpp"
-#include "graphics.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
-#include "raster.hpp"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "variant.hpp"
@@ -62,8 +64,8 @@ protected:
 	void check_anim_changed();
 	void reset_current_object();
 
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed);
 private:
 	std::vector<variant> anims_;
 	variant current_;				// Holds the currently selected variant.
@@ -78,13 +80,13 @@ private:
 	bool simple_options_;			// simplified list of options.
 
 	std::vector<std::string> common_animation_list();
-	void on_id_change(dropdown_widget_ptr editor, const std::string& s);
-	void on_id_set(dropdown_widget_ptr editor, int selection, const std::string& s);
+	void on_id_change(dropdown_WidgetPtr editor, const std::string& s);
+	void on_id_set(dropdown_WidgetPtr editor, int selection, const std::string& s);
 	void set_image_file();
-	void change_text(const std::string& s, text_editor_widget_ptr editor, slider_ptr slider);
-	void execute_change_text(const std::string& s, text_editor_widget_ptr editor, slider_ptr slider);
-	void change_slide(const std::string& s, text_editor_widget_ptr editor, double d);
-	void end_slide(const std::string& s, slider_ptr slide, text_editor_widget_ptr editor, double d);
+	void change_text(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider);
+	void execute_change_text(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider);
+	void change_slide(const std::string& s, TextEditorWidgetPtr editor, double d);
+	void end_slide(const std::string& s, slider_ptr slide, TextEditorWidgetPtr editor, double d);
 
 	void set_animation_rect(rect r);
 	void move_solid_rect(int dx, int dy);
@@ -94,10 +96,9 @@ private:
 	std::map<std::string, int> slider_offset_;
 	bool dragging_slider_;
 
-	animation_preview_widget_ptr animation_preview_;
+	animation_preview_WidgetPtr animation_preview_;
 };
 
 }
 
 #endif // NO_EDITOR
-#endif // ANIMATION_CREATOR_HPP_INCLUDED

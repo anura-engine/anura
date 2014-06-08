@@ -76,7 +76,7 @@ void render_scene(const level& lvl, const screen_position& pos);
 //draw_scene calls both update_camera_position() and then render_scene()
 void draw_scene(const level& lvl, screen_position& pos, const entity* focus=NULL, bool do_draw=true);
 
-struct performance_data : public game_logic::formula_callable {
+struct performance_data : public game_logic::FormulaCallable {
 	int fps;
 	int cycles_per_second;
 	int delay;
@@ -94,7 +94,7 @@ struct performance_data : public game_logic::formula_callable {
 		nevents(nevents_), profiling_info(profiling_info_)
 	{}
 
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 	void get_inputs(std::vector<game_logic::formula_input>* inputs) const;
 
 	static void set_current(const performance_data& d);

@@ -25,6 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "../asserts.hpp"
+#include "../logger.hpp"
 #include "ShadersOpenGL.hpp"
 
 namespace Shader

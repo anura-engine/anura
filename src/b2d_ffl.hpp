@@ -74,7 +74,7 @@ namespace box2d
 		void DrawAABB(b2AABB* aabb, const b2Color& color);
 	};
 
-	class body : public game_logic::formula_callable
+	class body : public game_logic::FormulaCallable
 	{
 	public:
 		explicit body(const variant& b);
@@ -86,8 +86,8 @@ namespace box2d
 		b2Body* get_raw_body_ptr() { return body_.get(); }
 		const b2BodyDef* get_body_definition() const { return &body_def_; }
 
-		virtual variant get_value(const std::string&) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string&) const;
+		virtual void setValue(const std::string& key, const variant& value);
 
 		bool active() const;
 		void set_active(bool actv=true);
@@ -106,19 +106,19 @@ namespace box2d
 		boost::shared_ptr<b2Body> body_;
 	};
 
-	class joint : public game_logic::formula_callable
+	class joint : public game_logic::FormulaCallable
 	{
 	public:
 		explicit joint(b2Joint* j);
-		virtual variant get_value(const std::string& key) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string& key) const;
+		virtual void setValue(const std::string& key, const variant& value);
 		
 		b2Joint* get_b2Joint() { return joint_; }
 	private:
 		b2Joint* joint_;
 	};
 
-	class world : public game_logic::formula_callable
+	class world : public game_logic::FormulaCallable
 	{
 	public:
 		world(const variant& w);
@@ -126,8 +126,8 @@ namespace box2d
 		const b2World& get_world() const { return world_; }
 		b2World& get_world() { return world_; }
 
-		virtual variant get_value(const std::string&) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string&) const;
+		virtual void setValue(const std::string& key, const variant& value);
 
 		void finish_loading();
 		void step(float time_step);

@@ -167,4 +167,9 @@ namespace Geometry
 		return variant(&v);
 	}
 
+	template<typename T> inline
+	bool pointInRect(const Point<T>& p, const Rect<T>& r)
+	{	
+		return p.x >= r.x() && p.y >= r.y() && p.x < r.x2() && p.y < r.y2();
+	}
 }

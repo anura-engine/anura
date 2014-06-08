@@ -25,7 +25,7 @@
 namespace game_logic
 {
 
-class formula_variable_storage : public formula_callable
+class formula_variable_storage : public FormulaCallable
 {
 public:
 	formula_variable_storage();
@@ -48,10 +48,10 @@ public:
 	void disallow_new_keys(bool value=true) { disallow_new_keys_ = value; }
 
 private:
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValue(const std::string& key) const;
+	variant getValue_by_slot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValue_by_slot(int slot, const variant& value);
 
 	void get_inputs(std::vector<formula_input>* inputs) const;
 

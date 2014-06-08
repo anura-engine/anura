@@ -44,23 +44,23 @@ void enable_screen_output(bool en=true);
 class console_dialog : public gui::dialog
 {
 public:
-	console_dialog(level& lvl, game_logic::formula_callable& obj);
+	console_dialog(level& lvl, game_logic::FormulaCallable& obj);
 	~console_dialog();
 
 	bool has_keyboard_focus() const;
 
 	void add_message(const std::string& msg);
 
-	void set_focus(game_logic::formula_callable_ptr e);
+	void setFocus(game_logic::FormulaCallablePtr e);
 private:
 	console_dialog(const console_dialog&);
 	void init();
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed);
 
-	gui::text_editor_widget* text_editor_;
+	gui::TextEditorWidget* text_editor_;
 
 	boost::intrusive_ptr<level> lvl_;
-	game_logic::formula_callable_ptr focus_;
+	game_logic::FormulaCallablePtr focus_;
 
 	void on_move_cursor();
 	bool on_begin_enter();

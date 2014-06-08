@@ -24,7 +24,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 
-class data_blob : public game_logic::formula_callable
+class data_blob : public game_logic::FormulaCallable
 {
 public:
 	data_blob(const std::string& key, const std::vector<char>& in_data);

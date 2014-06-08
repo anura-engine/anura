@@ -26,22 +26,22 @@ class graphical_font_label : public widget
 {
 public:
 	graphical_font_label(const std::string& text, const std::string& font, int size=1);
-	graphical_font_label(const variant& v, game_logic::formula_callable* e);
+	graphical_font_label(const variant& v, game_logic::FormulaCallable* e);
 
-	void set_text(const std::string& text);
-	void reset_text_dimensions();
+	void setText(const std::string& text);
+	void resetText_dimensions();
 	
-	void set_value(const std::string& key, const variant& v);
-	variant get_value(const std::string& key) const;
+	void setValue(const std::string& key, const variant& v);
+	variant getValue(const std::string& key) const;
 private:
-	void handle_draw() const;
+	void handleDraw() const;
 
 	std::string text_;
 	const_graphical_font_ptr font_;
 	int size_;
 };
 
-typedef boost::intrusive_ptr<graphical_font_label> graphical_font_label_ptr;
+typedef boost::intrusive_ptr<graphical_font_label> graphical_font_LabelPtr;
 
 }
 

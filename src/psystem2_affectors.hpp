@@ -47,7 +47,7 @@ namespace graphics
 		protected:
 			//virtual void handle_apply(std::vector<particle>& particles, float t) = 0;
 			//virtual void handle_apply(std::vector<emit_object_ptr>& objs, float t) = 0;
-			virtual void handle_process(float t);
+			virtual void handleProcess(float t);
 			virtual void internal_apply(particle& p, float t) = 0;
 
 			float mass() const { return mass_; }

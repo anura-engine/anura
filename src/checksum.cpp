@@ -62,7 +62,7 @@ manager::manager() {
 		}
 
 		std::vector<std::string> keys = v.get_keys().as_list_string();
-		std::vector<std::string> values = v.get_values().as_list_string();
+		std::vector<std::string> values = v.getValues().as_list_string();
 		ASSERT_EQ(keys.size(), values.size());
 		for(int n = 0; n != keys.size(); ++n) {
 			hashes[keys[n]] = values[n];

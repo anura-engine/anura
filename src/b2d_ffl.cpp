@@ -78,16 +78,16 @@ namespace box2d
 		return joint_ptr();
 	}
 
-	class joints_command : public game_logic::formula_callable
+	class joints_command : public game_logic::FormulaCallable
 	{
 	public:
 		explicit joints_command()
 		{}
-		virtual variant get_value(const std::string& key) const
+		virtual variant getValue(const std::string& key) const
 		{
 			return variant(this_world->find_joint_by_id(key).get());
 		}
-		void set_value(const std::string& key, const variant& value)
+		void setValue(const std::string& key, const variant& value)
 		{
 		}
 	};
@@ -203,7 +203,7 @@ namespace box2d
 		current_world = NULL;
 	}
 
-	variant world::get_value(const std::string& key) const
+	variant world::getValue(const std::string& key) const
 	{
 		if(key == "gravity") {
 			std::vector<variant> v;
@@ -234,7 +234,7 @@ namespace box2d
 		return variant();
 	}
 
-	void world::set_value(const std::string& key, const variant& value)
+	void world::setValue(const std::string& key, const variant& value)
 	{
 		if(key == "gravity") {
 			ASSERT_LOG(value.is_list() && value.num_elements() == 2, 
@@ -274,10 +274,10 @@ namespace box2d
 	variant world::write()
 	{
 		variant_builder res;
-		res.add("gravity", get_value("gravity"));
-		res.add("allow_sleeping", get_value("allow_sleeping"));
-		res.add("iterations", get_value("iterations"));
-		res.add("viewport", get_value("viewport"));
+		res.add("gravity", getValue("gravity"));
+		res.add("allow_sleeping", getValue("allow_sleeping"));
+		res.add("iterations", getValue("iterations"));
+		res.add("viewport", getValue("viewport"));
 		foreach(const joint_factory_pair& j, get_joint_defs()) {
 			res.add("joints", j.second->write());
 		}
@@ -523,7 +523,7 @@ namespace box2d
 	}
 
 
-	variant body::get_value(const std::string& key) const
+	variant body::getValue(const std::string& key) const
 	{
 		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
 		if(key == "active") {
@@ -581,7 +581,7 @@ namespace box2d
 		return variant();
 	}
 
-	void body::set_value(const std::string& key, const variant& value)
+	void body::setValue(const std::string& key, const variant& value)
 	{
 		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
 		if(key == "active") {
@@ -1116,7 +1116,7 @@ namespace box2d
 	{
 	}
 
-	variant joint::get_value(const std::string& key) const
+	variant joint::getValue(const std::string& key) const
 	{
 		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
 		if(key == "a") {
@@ -1426,7 +1426,7 @@ namespace box2d
 		return variant();
 	}
 
-	void joint::set_value(const std::string& key, const variant& value)
+	void joint::setValue(const std::string& key, const variant& value)
 	{
 		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
 		if(joint_->GetType() == e_revoluteJoint) {

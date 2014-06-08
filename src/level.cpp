@@ -33,8 +33,8 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "gui_formula_functions.hpp"
-#include "hex_map.hpp"
-#include "hex_object.hpp"
+#include "HexMap.hpp"
+#include "HexObject.hpp"
 #include "iphone_controls.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -142,7 +142,7 @@ current_level_scope::~current_level_scope() {
 void level::set_as_current_level()
 {
 	get_current_level() = this;
-	frame::set_color_palette(palettes_used_);
+	frame::setColor_palette(palettes_used_);
 
 	if(false && preferences::auto_size_window()) {
 		static bool auto_sized = false;
@@ -162,7 +162,7 @@ void level::set_as_current_level()
 	static const int starting_virtual_x_resolution = preferences::virtual_screen_width();
 	static const int starting_virtual_y_resolution = preferences::virtual_screen_height();
 
-	if(set_screen_resolution_on_entry_ && !editor_ && !editor_resolution_manager::is_active() && starting_x_resolution == starting_virtual_x_resolution && !preferences::auto_size_window()) {
+	if(set_screen_resolution_on_entry_ && !editor_ && !editor_resolution_manager::isActive() && starting_x_resolution == starting_virtual_x_resolution && !preferences::auto_size_window()) {
 		if(!x_resolution_) {
 			x_resolution_ = starting_x_resolution;
 		}
@@ -413,11 +413,11 @@ level::level(const std::string& level_cfg, variant node)
 	///////////////////////
 	// hex tiles starts
 	foreach(variant tile_node, node["hex_tile_map"].as_list()) {
-		hex::hex_map_ptr m(new hex::hex_map(tile_node));
-		hex_maps_[m->zorder()] = m;
+		hex::HexMapPtr m(new hex::HexMap(tile_node));
+		HexMaps_[m->zorder()] = m;
 		//tile_maps_[m.zorder()].build_tiles();
-		std::cerr << "LAYER " << m->zorder() << " BUILT " << hex_maps_[m->zorder()]->size() << " tiles\n";
-		hex_maps_[m->zorder()]->build();
+		std::cerr << "LAYER " << m->zorder() << " BUILT " << HexMaps_[m->zorder()]->size() << " tiles\n";
+		HexMaps_[m->zorder()]->build();
 	}
 	std::cerr << "done building hex_tile_map..." << SDL_GetTicks() << "\n";
 	// hex tiles ends
@@ -612,7 +612,7 @@ void level::load_character(variant c)
 	chars_.push_back(entity::build(c));
 	layers_.insert(chars_.back()->zorder());
 	if(!chars_.back()->is_human()) {
-		chars_.back()->set_id(chars_.size());
+		chars_.back()->setId(chars_.size());
 	}
 	if(chars_.back()->is_human()) {
 #if !defined(__native_client__)
@@ -711,10 +711,10 @@ void level::finish_loading()
 	std::vector<entity_ptr> objects_not_in_level;
 
 	{
-	game_logic::wml_formula_callable_read_scope read_scope;
+	game_logic::wmlFormulaCallableReadScope read_scope;
 	foreach(variant node, serialized_objects_) {
 		foreach(variant obj_node, node["character"].as_list()) {
-			game_logic::wml_serializable_formula_callable_ptr obj;
+			game_logic::WmlSerializableFormulaCallablePtr obj;
 
 			std::string addr_str;
 
@@ -724,12 +724,12 @@ void level::finish_loading()
 				objects_not_in_level.push_back(e);
 				obj = e;
 			} else {
-				obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
+				obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 				addr_str = obj->addr();
 			}
 			const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
 
-			game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, obj);
+			game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 		}
 	}
 
@@ -737,7 +737,7 @@ void level::finish_loading()
 		load_character(node);
 
 		const intptr_t addr_id = strtoll(node["_addr"].as_string().c_str(), NULL, 16);
-		game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, chars_.back());
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, chars_.back());
 
 		if(node.has_key("attached_objects")) {
 			std::cerr << "LOADING ATTACHED: " << node["attached_objects"].as_string() << "\n";
@@ -746,7 +746,7 @@ void level::finish_loading()
 			foreach(const std::string& s, v) {
 				std::cerr << "ATTACHED: " << s << "\n";
 				const intptr_t addr_id = strtoll(s.c_str(), NULL, 16);
-				game_logic::wml_serializable_formula_callable_ptr obj = game_logic::wml_formula_callable_read_scope::get_serialized_object(addr_id);
+				game_logic::WmlSerializableFormulaCallablePtr obj = game_logic::wmlFormulaCallableReadScope::getSerializedObject(addr_id);
 				entity* e = dynamic_cast<entity*>(obj.get());
 				if(e) {
 					std::cerr << "GOT ATTACHED\n";
@@ -935,7 +935,7 @@ void build_tiles_thread_function(level_tile_rebuild_info* info, std::map<int, ti
 
 void level::start_rebuild_hex_tiles_in_background(const std::vector<int>& layers)
 {
-	hex_maps_[layers[0]]->build();
+	HexMaps_[layers[0]]->build();
 }
 
 void level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
@@ -1018,11 +1018,11 @@ void level::set_player_variant_type(variant type_str)
 
 	g_player_type = parse_variant_type(type_str);
 
-	const_formula_callable_definition_ptr def = game_logic::get_formula_callable_definition("level");
+	const_FormulaCallable_definition_ptr def = game_logic::get_FormulaCallable_definition("level");
 	assert(def.get());
 
-	formula_callable_definition* mutable_def = const_cast<formula_callable_definition*>(def.get());
-	formula_callable_definition::entry* entry = mutable_def->get_entry_by_id("player");
+	FormulaCallable_definition* mutable_def = const_cast<FormulaCallable_definition*>(def.get());
+	FormulaCallable_definition::entry* entry = mutable_def->get_entry_by_id("player");
 	assert(entry);
 	entry->set_variant_type(g_player_type);
 }
@@ -1109,7 +1109,7 @@ void level::complete_tiles_refresh()
 
 	const std::vector<entity_ptr> chars = chars_;
 	foreach(const entity_ptr& e, chars) {
-		e->handle_event("level_tiles_refreshed");
+		e->handleEvent("level_tiles_refreshed");
 	}
 }
 
@@ -1145,7 +1145,7 @@ struct TileInRect {
 	{}
 
 	bool operator()(const level_tile& t) const {
-		return point_in_rect(point(t.x, t.y), rect_);
+		return pointInRect(point(t.x, t.y), rect_);
 	}
 
 	rect rect_;
@@ -1198,7 +1198,7 @@ std::string level::package() const
 variant level::write() const
 {
 	std::sort(tiles_.begin(), tiles_.end(), level_tile_zorder_pos_comparer());
-	game_logic::wml_formula_callable_serialization_scope serialization_scope;
+	game_logic::wmlFormulaCallableSerializationScope serialization_scope;
 
 	variant_builder res;
 	res.add("id", id_);
@@ -1271,7 +1271,7 @@ variant level::write() const
 		res.add("solid_rect", node.build());
 	}
 
-	for(std::map<int,hex::hex_map_ptr>::const_iterator i = hex_maps_.begin(); i != hex_maps_.end(); ++i) {
+	for(std::map<int,hex::HexMapPtr>::const_iterator i = HexMaps_.begin(); i != HexMaps_.end(); ++i) {
 		res.add("hex_tile_map", i->second->write());
 	}
 
@@ -1490,7 +1490,7 @@ variant level::write() const
 		}
 
 		variant node(ch->write());
-		game_logic::wml_formula_callable_serialization_scope::register_serialized_object(ch);
+		game_logic::wmlFormulaCallableSerializationScope::registerSerializedObject(ch);
 		res.add("character", node);
 	}
 
@@ -1580,7 +1580,7 @@ variant level::write() const
 #endif
 
 	variant result = res.build();
-	result.add_attr(variant("serialized_objects"), serialization_scope.write_objects(result));
+	result.add_attr(variant("serialized_objects"), serialization_scope.writeObjects(result));
 	return result;
 }
 
@@ -1747,7 +1747,7 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 	glDisable(GL_BLEND);
 	draw_layer_solid(layer, x, y, w, h);
 	if(blit_info.texture_id != GLuint(-1)) {
-		graphics::texture::set_current_texture(blit_info.texture_id);
+		graphics::texture::set_currentTexture(blit_info.texture_id);
 	}
 
 #if defined(USE_SHADERS)
@@ -1778,7 +1778,7 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 			//we have multiple different texture ID's in this layer. This means
 			//we will draw each tile seperately.
 			for(int n = 0; n < translucent_indexes.size(); n += 6) {
-				graphics::texture::set_current_texture(blit_info.vertex_texture_ids[translucent_indexes[n]/4]);
+				graphics::texture::set_currentTexture(blit_info.vertex_texture_ids[translucent_indexes[n]/4]);
 				glDrawElements(GL_TRIANGLES, 6, TILE_INDEX_TYPE, &translucent_indexes[n]);
 			}
 		} else {
@@ -2095,8 +2095,8 @@ void level::draw(int x, int y, int w, int h) const
 	const std::vector<entity_ptr>* chars_ptr = &active_chars_;
 	std::vector<entity_ptr> editor_chars_buf;
 
-	std::map<int, hex::hex_map_ptr>::const_iterator hit = hex_maps_.begin();
-	while(hit != hex_maps_.end()) {
+	std::map<int, hex::HexMapPtr>::const_iterator hit = HexMaps_.begin();
+	while(hit != HexMaps_.end()) {
 		hit->second->draw();
 		++hit;
 	}
@@ -2154,7 +2154,7 @@ void level::draw(int x, int y, int w, int h) const
 #ifdef USE_SHADERS
 		frame_buffer_enter_zorder(*layer);
 		const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
-		gles2::set_alpha_test(alpha_test);
+		gles2::setAlpha_test(alpha_test);
 		glStencilMask(alpha_test ? 0x02 : 0x0);
 #endif
 		if(!water_drawn && *layer > water_zorder) {
@@ -2182,7 +2182,7 @@ void level::draw(int x, int y, int w, int h) const
 			last_zorder = (*entity_itor)->zorder();
 			frame_buffer_enter_zorder(last_zorder);
 			const bool alpha_test = last_zorder >= begin_alpha_test && last_zorder < end_alpha_test;
-			gles2::set_alpha_test(alpha_test);
+			gles2::setAlpha_test(alpha_test);
 			glStencilMask(alpha_test ? 0x02 : 0x0);
 		}
 #endif
@@ -2192,7 +2192,7 @@ void level::draw(int x, int y, int w, int h) const
 	}
 
 #ifdef USE_SHADERS
-	gles2::set_alpha_test(false);
+	gles2::setAlpha_test(false);
 	frame_buffer_enter_zorder(1000000);
 #endif
 
@@ -2331,7 +2331,7 @@ void level::flush_frame_buffer_shaders_to_screen() const
 
 void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const
 {
-	texture_frame_buffer::set_as_current_texture();
+	texture_frame_buffer::set_as_currentTexture();
 
 	if(render_to_screen) {
 		texture_frame_buffer::set_render_to_screen();
@@ -2403,7 +2403,7 @@ void level::calculate_lighting(int x, int y, int w, int h) const
 	}
 
 	//now blit the light buffer onto the screen
-	texture_frame_buffer::set_as_current_texture();
+	texture_frame_buffer::set_as_currentTexture();
 
 	glPushMatrix();
 	glLoadIdentity();
@@ -2597,7 +2597,7 @@ void level::process_draw()
 {
 	std::vector<entity_ptr> chars = active_chars_;
 	foreach(const entity_ptr& e, chars) {
-		e->handle_event(OBJECT_EVENT_DRAW);
+		e->handleEvent(OBJECT_EVENT_DRAW);
 	}
 }
 
@@ -2629,9 +2629,9 @@ void level::set_active_chars()
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
 	foreach(entity_ptr& c, chars_) {
-		const bool is_active = c->is_active(screen_area) || c->use_absolute_screen_coordinates();
+		const bool isActive = c->isActive(screen_area) || c->use_absolute_screen_coordinates();
 
-		if(is_active) {
+		if(isActive) {
 			if(c->group() >= 0) {
 				assert(c->group() < groups_.size());
 				const entity_group& group = groups_[c->group()];
@@ -2663,7 +2663,7 @@ void level::do_processing()
 	if(cycle_ == 0) {
 		const std::vector<entity_ptr> chars = chars_;
 		foreach(const entity_ptr& e, chars) {
-			e->handle_event(OBJECT_EVENT_START_LEVEL);
+			e->handleEvent(OBJECT_EVENT_START_LEVEL);
 			e->create_object();
 		}
 	}
@@ -3040,7 +3040,7 @@ void level::add_hex_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2,
 void level::set_tile_layer_speed(int zorder, int x_speed, int y_speed)
 {
 	tile_map& m = tile_maps_[zorder];
-	m.set_zorder(zorder);
+	m.setZOrder(zorder);
 	m.set_speed(x_speed, y_speed);
 }
 
@@ -3082,7 +3082,7 @@ bool level::add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, in
 	y2 = round_tile_size(y2 + TileSize);
 
 	tile_map& m = tile_maps_[zorder];
-	m.set_zorder(zorder);
+	m.setZOrder(zorder);
 
 	bool changed = false;
 
@@ -3113,19 +3113,19 @@ bool level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2
 		std::swap(y1, y2);
 	}
 
-	std::map<int, hex::hex_map_ptr>::iterator it = hex_maps_.find(zorder);
-	if(it == hex_maps_.end()) {
-		hex_maps_[zorder] = hex::hex_map_ptr(new hex::hex_map());
+	std::map<int, hex::HexMapPtr>::iterator it = HexMaps_.find(zorder);
+	if(it == HexMaps_.end()) {
+		HexMaps_[zorder] = hex::HexMapPtr(new hex::HexMap());
 	}
-	hex::hex_map_ptr& m = hex_maps_[zorder];
-	m->set_zorder(zorder);
+	hex::HexMapPtr& m = HexMaps_[zorder];
+	m->setZOrder(zorder);
 
 	bool changed = false;
 	int index = 0;
 	const int HexTileSize = 72;
 	for(int x = x1; x <= x2; x += HexTileSize) {
 		for(int y = y1; y <= y2; y += HexTileSize) {
-			const point p = hex::hex_map::get_tile_pos_from_pixel_pos(x, y);
+			const point p = hex::HexMap::get_tile_pos_from_pixel_pos(x, y);
 			changed = m->set_tile(p.x, p.y, tiles[index]) || changed;
 			if(index+1 < tiles.size()) {
 				++index;
@@ -3205,17 +3205,17 @@ void level::get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::v
 		std::swap(y1, y2);
 	}
 
-	std::map<int, hex::hex_map_ptr>::const_iterator map_iterator = hex_maps_.find(zorder);
-	if(map_iterator == hex_maps_.end()) {
+	std::map<int, hex::HexMapPtr>::const_iterator map_iterator = HexMaps_.find(zorder);
+	if(map_iterator == HexMaps_.end()) {
 		tiles.push_back("");
 		return;
 	}
-	const hex::hex_map_ptr& m = map_iterator->second;
+	const hex::HexMapPtr& m = map_iterator->second;
 
 	const int HexTileSize = 72;
 	for(int x = x1; x < x2; x += HexTileSize) {
 		for(int y = y1; y < y2; y += HexTileSize) {
-			hex::hex_object_ptr p = m->get_tile_from_pixel_pos(x, y);
+			hex::HexObjectPtr p = m->get_tile_from_pixel_pos(x, y);
 			tiles.push_back((p) ? p->type() : "");
 		}
 	}
@@ -3412,7 +3412,7 @@ std::vector<entity_ptr> level::get_characters_in_rect(const rect& r, int screen_
 			+ (obj->use_absolute_screen_coordinates() ? screen_xpos : 0);
 		const int yP = c->midpoint().y + ((c->parallax_scale_millis_y() - 1000)*screen_ypos)/1000 
 			+ (obj->use_absolute_screen_coordinates() ? screen_ypos : 0);
-		if(point_in_rect(point(xP, yP), r)) {
+		if(pointInRect(point(xP, yP), r)) {
 			res.push_back(c);
 		}
 	}
@@ -3651,7 +3651,7 @@ void level::add_character(entity_ptr p)
 	const int screen_bottom = last_draw_position().y/100 + graphics::screen_height();
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
-	if(!active_chars_.empty() && (p->is_active(screen_area) || p->use_absolute_screen_coordinates())) {
+	if(!active_chars_.empty() && (p->isActive(screen_area) || p->use_absolute_screen_coordinates())) {
 		new_chars_.push_back(p);
 	}
 	p->being_added();
@@ -3778,7 +3778,7 @@ DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
 DEFINE_FIELD(in_dialog, "bool")
-	//boost::intrusive_ptr<const game_logic::formula_callable_definition> def(variant_type::get_builtin("level")->get_definition());
+	//boost::intrusive_ptr<const game_logic::FormulaCallable_definition> def(variant_type::get_builtin("level")->get_definition());
 	return variant::from_bool(obj.in_dialog_);
 DEFINE_FIELD(local_player, "null|custom_obj")
 	ASSERT_LOG(obj.player_, "No player found in level");
@@ -3944,16 +3944,16 @@ DEFINE_SET_FIELD
 	}
 
 DEFINE_FIELD(hexmap, "null|object")
-	if(obj.hex_maps_.empty() == false) {
-		return variant(obj.hex_maps_.rbegin()->second.get());
+	if(obj.HexMaps_.empty() == false) {
+		return variant(obj.HexMaps_.rbegin()->second.get());
 	} else {
 		return variant();
 	}
 
 DEFINE_FIELD(hexmaps, "{int -> object}")
 	std::map<variant, variant> m;
-	std::map<int, hex::hex_map_ptr>::const_iterator it = obj.hex_maps_.begin();
-	while(it != obj.hex_maps_.end()) {
+	std::map<int, hex::HexMapPtr>::const_iterator it = obj.HexMaps_.begin();
+	while(it != obj.HexMaps_.end()) {
 		m[variant(it->first)] = variant(it->second.get());
 		++it;
 	}
@@ -4088,7 +4088,7 @@ DEFINE_FIELD(suspended_level, "builtin level")
 	ASSERT_LOG(obj.suspended_level_, "Query of suspended_level when there is no suspended level");
 	return variant(obj.suspended_level_.get());
 
-DEFINE_FIELD(show_builtin_settings_dialog, "bool")
+DEFINE_FIELD(show_builtin_settingsDialog, "bool")
 	return variant::from_bool(obj.show_builtin_settings_);
 DEFINE_SET_FIELD
 	obj.show_builtin_settings_ = value.as_bool();
@@ -4361,7 +4361,7 @@ void level::restore_from_backup(backup_snapshot& snapshot)
 	}
 
 	for(const entity_ptr& ch : snapshot.chars) {
-		ch->handle_event(OBJECT_EVENT_LOAD);
+		ch->handleEvent(OBJECT_EVENT_LOAD);
 	}
 }
 
@@ -4475,7 +4475,7 @@ void level::hide_object_classification(const std::string& classification, bool h
 bool level::object_classification_hidden(const entity& e) const
 {
 #ifndef NO_EDITOR
-	return e.editor_info() && hidden_object_classifications().count(e.editor_info()->classification());
+	return e.EditorInfo() && hidden_object_classifications().count(e.EditorInfo()->classification());
 #else
 	return false;
 #endif
@@ -4561,7 +4561,7 @@ void level::add_sub_level(const std::string& lvl, int xoffset, int yoffset, bool
 			relocate_object(c, c->x() + itor->second.xoffset, c->y() + itor->second.yoffset);
 			if(c->appears_at_difficulty(difficulty)) {
 				add_character(c);
-				c->handle_event(OBJECT_EVENT_START_LEVEL);
+				c->handleEvent(OBJECT_EVENT_START_LEVEL);
 
 				itor->second.objects.push_back(c);
 			}
@@ -4614,13 +4614,13 @@ void level::build_solid_data_from_sub_levels()
 
 void level::adjust_level_offset(int xoffset, int yoffset)
 {
-	game_logic::map_formula_callable* callable(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable);
 	variant holder(callable);
 	callable->add("xshift", variant(xoffset));
 	callable->add("yshift", variant(yoffset));
 	foreach(entity_ptr e, chars_) {
 		e->shift_position(xoffset, yoffset);
-		e->handle_event(OBJECT_EVENT_COSMIC_SHIFT, callable);
+		e->handleEvent(OBJECT_EVENT_COSMIC_SHIFT, callable);
 	}
 
 	boundaries_ = rect(boundaries_.x() + xoffset, boundaries_.y() + yoffset, boundaries_.w(), boundaries_.h());
@@ -4659,22 +4659,22 @@ bool level::relocate_object(entity_ptr e, int new_x, int new_y)
 #ifndef NO_EDITOR
 	//update any x/y co-ordinates to be the same relative to the object's
 	//new position.
-	if(e->editor_info()) {
-		foreach(const editor_variable_info& var, e->editor_info()->vars_and_properties()) {
+	if(e->EditorInfo()) {
+		foreach(const editor_variable_info& var, e->EditorInfo()->vars_and_properties()) {
 			const variant value = e->query_value(var.variable_name());
 			switch(var.type()) {
 			case editor_variable_info::XPOSITION:
 				if(value.is_int()) {
-					e->handle_event("editor_changing_variable");
+					e->handleEvent("editor_changing_variable");
 					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_x));
-					e->handle_event("editor_changed_variable");
+					e->handleEvent("editor_changed_variable");
 				}
 				break;
 			case editor_variable_info::YPOSITION:
 				if(value.is_int()) {
-					e->handle_event("editor_changing_variable");
+					e->handleEvent("editor_changing_variable");
 					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_y));
-					e->handle_event("editor_changed_variable");
+					e->handleEvent("editor_changed_variable");
 				}
 				break;
 			case editor_variable_info::TYPE_POINTS:
@@ -4688,9 +4688,9 @@ bool level::relocate_object(entity_ptr e, int new_x, int new_y)
 							new_value.push_back(variant(&p));
 						}
 					}
-					e->handle_event("editor_changing_variable");
+					e->handleEvent("editor_changing_variable");
 					e->mutate_value(var.variable_name(), variant(&new_value));
-					e->handle_event("editor_changed_variable");
+					e->handleEvent("editor_changed_variable");
 				}
 			default:
 				break;
@@ -4769,7 +4769,7 @@ bool level::gui_event(const SDL_Event &event)
 	return false;
 }
 
-void level::launch_new_module(const std::string& module_id, game_logic::const_formula_callable_ptr callable)
+void level::launch_new_module(const std::string& module_id, game_logic::const_FormulaCallablePtr callable)
 {
 	module::reload(module_id);
 	reload_level_paths();
@@ -4812,13 +4812,13 @@ std::pair<std::vector<level_tile>::const_iterator, std::vector<level_tile>::cons
 	return std::equal_range(tiles_by_position_.begin(), tiles_by_position_.end(), loc, level_tile_pos_comparer());
 }
 
-game_logic::formula_ptr level::create_formula(const variant& v)
+game_logic::formula_ptr level::executeCommand(const variant& v)
 {
 	// XXX Add symbol table here?
 	return game_logic::formula_ptr(new game_logic::formula(v));
 }
 
-bool level::execute_command(const variant& var)
+bool level::executeCommand(const variant& var)
 {
 	bool result = true;
 	if(var.is_null()) {
@@ -4829,7 +4829,7 @@ bool level::execute_command(const variant& var)
 		const int num_elements = var.num_elements();
 		for(int n = 0; n != num_elements; ++n) {
 			if(var[n].is_null() == false) {
-				result = execute_command(var[n]) && result;
+				result = executeCommand(var[n]) && result;
 			}
 		}
 	} else {
@@ -4863,8 +4863,8 @@ UTILITY(correct_solidity)
 				}
 			}
 
-			c->handle_event("editor_removed");
-			c->handle_event("editor_added");
+			c->handleEvent("editor_removed");
+			c->handleEvent("editor_added");
 		}
 
 		sys::write_file(preferences::level_path() + file, lvl->write().write_json(true));

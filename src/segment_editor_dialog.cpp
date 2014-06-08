@@ -41,7 +41,7 @@ void segment_editor_dialog::init()
 {
 	clear();
 	using namespace gui;
-	set_padding(20);
+	setPadding(20);
 
 	if(segment_ < 0) {
 		return;
@@ -50,14 +50,14 @@ void segment_editor_dialog::init()
 	variant start = editor_.get_level().get_var(formatter() << "segment_difficulty_start_" << segment_);
 	const int start_value = start.as_int();
 
-	add_widget(widget_ptr(new label(formatter() << "Difficulty: " << start_value, graphics::color_white())), 5, 5);
+	add_widget(WidgetPtr(new label(formatter() << "Difficulty: " << start_value, graphics::color_white())), 5, 5);
 
 				grid_ptr buttons_grid(new grid(4));
-				buttons_grid->add_col(widget_ptr(new button(widget_ptr(new label("-10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this, start_value - 10))));
-				buttons_grid->add_col(widget_ptr(new button(widget_ptr(new label("-1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value - 1))));
-				buttons_grid->add_col(widget_ptr(new button(widget_ptr(new label("+1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 1))));
-				buttons_grid->add_col(widget_ptr(new button(widget_ptr(new label("+10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 10))));
-				add_widget(widget_ptr(buttons_grid));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this, start_value - 10))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value - 1))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 1))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 10))));
+				add_widget(WidgetPtr(buttons_grid));
 
 }
 

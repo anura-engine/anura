@@ -47,13 +47,13 @@ tree_view_widget::tree_view_widget(int w, int h, const variant& tree)
 	highlight_color_(graphics::color_blue()), highlighted_row_(-1)
 {
 	row_height_ = font::char_height(font_size_);
-	set_environment();
-	widget::set_dim(w, h);
+	setEnvironment();
+	widget::setDim(w, h);
 	init();
 }
 
-tree_view_widget::tree_view_widget(const variant& v, game_logic::formula_callable* e)
-	: scrollable_widget(v,e), selected_row_(-1), nrows_(0), min_col_size_(20), max_col_size_(80),
+tree_view_widget::tree_view_widget(const variant& v, game_logic::FormulaCallable* e)
+	: ScrollableWidget(v,e), selected_row_(-1), nrows_(0), min_col_size_(20), max_col_size_(80),
 	persistent_highlight_(false), highlight_color_(graphics::color_blue()), highlighted_row_(-1)
 {
 	tree_ = v["child"];
@@ -105,11 +105,11 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 	points.push_back(point(x/2, last_y));
 	points.push_back(point(x/2, y+char_height_/2));
 	points.push_back(point(x, y+char_height_/2 ));
-	poly_line_widget_ptr plw(new poly_line_widget(&points, graphics::color_grey()));
+	poly_line_WidgetPtr plw(new poly_line_widget(&points, graphics::color_grey()));
 	widgets_.push_back(plw);
 	last_coords_[x] = y + char_height_/2;
 
-	label_ptr key_label;
+	LabelPtr key_label;
 	if(key.is_null() == false) {
 		std::string str(key.as_string());
 		// list or map don't need to trunate the key.
@@ -120,31 +120,31 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 			}
 		}
 		key_label.reset(new label(str, graphics::color_white(), font_size_));
-		key_label->set_loc(x, y);
-		key_label->set_dim(col_widths_[depth], key_label->height());
+		key_label->setLoc(x, y);
+		key_label->setDim(col_widths_[depth], key_label->height());
 		x += col_widths_[depth] + hpad_;
 		widgets_.push_back(key_label);
 	}
 	if(value->is_null()) {
-		label_ptr null_label(new label("<null>", graphics::color_yellow(), font_size_));
-		null_label->set_loc(x, y);
-		null_label->set_dim(col_widths_[depth], null_label->height());
+		LabelPtr null_label(new label("<null>", graphics::color_yellow(), font_size_));
+		null_label->setLoc(x, y);
+		null_label->setDim(col_widths_[depth], null_label->height());
 		widgets_.push_back(null_label);
 		y += widgets_.back()->height();
 	} else if(value->is_int()) {
 		std::stringstream ss;
 		ss << value->as_int();
-		label_ptr int_label(new label(ss.str(), graphics::color_yellow(), font_size_));
-		int_label->set_loc(x, y);
-		int_label->set_dim(col_widths_[depth], int_label->height());
+		LabelPtr int_label(new label(ss.str(), graphics::color_yellow(), font_size_));
+		int_label->setLoc(x, y);
+		int_label->setDim(col_widths_[depth], int_label->height());
 		widgets_.push_back(int_label);
 		y += widgets_.back()->height();
 	} else if(value->is_decimal()) {
 		std::stringstream ss;
 		ss << value->as_decimal();
-		label_ptr decimal_label(new label(ss.str(), graphics::color_yellow(), font_size_));
-		decimal_label->set_loc(x, y);
-		decimal_label->set_dim(col_widths_[depth], decimal_label->height());
+		LabelPtr decimal_label(new label(ss.str(), graphics::color_yellow(), font_size_));
+		decimal_label->setLoc(x, y);
+		decimal_label->setDim(col_widths_[depth], decimal_label->height());
 		widgets_.push_back(decimal_label);
 		y += widgets_.back()->height();
 	} else if(value->is_string()) {
@@ -154,9 +154,9 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 		if(str.length() > max_chars && max_chars > 3) {
 			str = str.substr(0, max_chars-3) + "...";
 		}
-		label_ptr string_label(new label(str, graphics::color_yellow(), font_size_));
-		string_label->set_loc(x, y);
-		string_label->set_dim(col_widths_[depth], string_label->height());
+		LabelPtr string_label(new label(str, graphics::color_yellow(), font_size_));
+		string_label->setLoc(x, y);
+		string_label->setDim(col_widths_[depth], string_label->height());
 		widgets_.push_back(string_label);
 		y += widgets_.back()->height();
 	} else if(value->is_list()) {
@@ -180,9 +180,9 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 		}
 		last_coords_.erase(x);
 	} else if(value->is_bool()) {
-		label_ptr bool_label(new label(value->as_bool() ? "true" : "false", graphics::color_yellow(), font_size_));
-		bool_label->set_loc(x, y);
-		bool_label->set_dim(col_widths_[depth], bool_label->height());
+		LabelPtr bool_label(new label(value->as_bool() ? "true" : "false", graphics::color_yellow(), font_size_));
+		bool_label->setLoc(x, y);
+		bool_label->setDim(col_widths_[depth], bool_label->height());
 		widgets_.push_back(bool_label);
 		y += widgets_.back()->height();
 	}
@@ -276,7 +276,7 @@ variant tree_view_widget::get_selection_key(int selection) const
 	return it->second.first;
 }
 
-void tree_view_widget::handle_draw() const
+void tree_view_widget::handleDraw() const
 {
 	graphics::draw_hollow_rect(
 		rect(x(), y(), width(), height()).sdl_rect(), 
@@ -297,12 +297,12 @@ void tree_view_widget::handle_draw() const
 	}
 	glTranslatef(0, GLfloat(-yscroll() & ~1), 0.0);
 
-	foreach(const widget_ptr& w, widgets_) {
+	foreach(const WidgetPtr& w, widgets_) {
 		w->draw();
 	}
 	glPopMatrix();
 
-	scrollable_widget::handle_draw();
+	ScrollableWidget::handleDraw();
 }
 
 int tree_view_widget::row_at(int xpos, int ypos) const
@@ -330,11 +330,11 @@ void tree_view_widget::recalculate_dimensions()
 		}
 	}
 
-	foreach(const widget_ptr& w, widgets_) {
+	foreach(const WidgetPtr& w, widgets_) {
 		if(w->y() - yscroll() >= 0 && w->y() + w->height() - yscroll() < height()+2) {
-			w->set_visible(true);
+			w->setVisible(true);
 		} else {
-			w->set_visible(false);
+			w->setVisible(false);
 		}
 	}
 	
@@ -347,15 +347,15 @@ void tree_view_widget::on_set_yscroll(int old_value, int value)
 }
 
 
-bool tree_view_widget::handle_event(const SDL_Event& event, bool claimed)
+bool tree_view_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
-	claimed = scrollable_widget::handle_event(event, claimed);
+	claimed = ScrollableWidget::handleEvent(event, claimed);
 
 	rect r(x(), y(), width(), height());
 	if(!claimed && allow_selection_) {
 		if(event.type == SDL_MOUSEMOTION) {
 			const SDL_MouseMotionEvent& e = event.motion;
-			if(point_in_rect(point(e.x, e.y), r)) {
+			if(pointInRect(point(e.x, e.y), r)) {
 				int new_row = row_at(e.x,e.y);
 				if(new_row != selected_row_) {
 					selected_row_ = new_row;
@@ -365,7 +365,7 @@ bool tree_view_widget::handle_event(const SDL_Event& event, bool claimed)
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
 			point p(mx, my);
-			if(point_in_rect(p, r)) {
+			if(pointInRect(p, r)) {
 				if(event.wheel.y < 0 ) {
 					set_yscroll(yscroll() - 3*row_height_ < 0 ? 0 : yscroll() - 3*row_height_);
 					selected_row_ -= 3;
@@ -382,7 +382,7 @@ bool tree_view_widget::handle_event(const SDL_Event& event, bool claimed)
 						selected_row_ = nrows() - 1;
 					}
 				}
-				claimed = claim_mouse_events();
+				claimed = claimMouseEvents();
 			}
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
@@ -411,10 +411,10 @@ bool tree_view_widget::handle_event(const SDL_Event& event, bool claimed)
 	}
 
 	SDL_Event ev = event;
-	normalize_event(&ev);
-	reverse_foreach(const widget_ptr& widget, widgets_) {
+	normalizeEvent(&ev);
+	reverse_foreach(const WidgetPtr& widget, widgets_) {
 		if(widget) {
-			if(widget->process_event(ev, claimed)) {
+			if(widget->processEvent(ev, claimed)) {
 				return true;
 			}
 		}
@@ -439,36 +439,36 @@ void tree_view_widget::on_select(Uint8 button, int selection)
 	}
 }
 
-widget_ptr tree_view_widget::get_widget_by_id(const std::string& id)
+WidgetPtr tree_view_widget::getWidgetById(const std::string& id)
 {
-	foreach(const widget_ptr& w, widgets_) {
-		widget_ptr wx = w->get_widget_by_id(id);
+	foreach(const WidgetPtr& w, widgets_) {
+		WidgetPtr wx = w->getWidgetById(id);
 		if(wx) {
 			return wx;
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-const_widget_ptr tree_view_widget::get_widget_by_id(const std::string& id) const
+ConstWidgetPtr tree_view_widget::getWidgetById(const std::string& id) const
 {
-	foreach(const widget_ptr& w, widgets_) {
-		widget_ptr wx = w->get_widget_by_id(id);
+	foreach(const WidgetPtr& w, widgets_) {
+		WidgetPtr wx = w->getWidgetById(id);
 		if(wx) {
 			return wx;
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-void tree_view_widget::set_value(const std::string& key, const variant& v)
+void tree_view_widget::setValue(const std::string& key, const variant& v)
 {
-	widget::set_value(key, v);
+	widget::setValue(key, v);
 }
 
-variant tree_view_widget::get_value(const std::string& key) const
+variant tree_view_widget::getValue(const std::string& key) const
 {
-	return widget::get_value(key);
+	return widget::getValue(key);
 }
 
 tree_editor_widget::tree_editor_widget(int w, int h, const variant& tree)
@@ -477,7 +477,7 @@ tree_editor_widget::tree_editor_widget(int w, int h, const variant& tree)
 	init();
 }
 
-tree_editor_widget::tree_editor_widget(const variant& v, game_logic::formula_callable* e)
+tree_editor_widget::tree_editor_widget(const variant& v, game_logic::FormulaCallable* e)
 	: tree_view_widget(v,e)
 {
 }
@@ -488,9 +488,9 @@ void tree_editor_widget::on_traverse_element(const variant& key, variant* parent
 	tree_view_widget::on_traverse_element(key, parent, value, row);
 }
 
-void tree_editor_widget::handle_draw() const
+void tree_editor_widget::handleDraw() const
 {
-	tree_view_widget::handle_draw();
+	tree_view_widget::handleDraw();
 
 	if(context_menu_) {
 		context_menu_->draw();
@@ -500,18 +500,18 @@ void tree_editor_widget::handle_draw() const
 	}
 }
 
-bool tree_editor_widget::handle_event(const SDL_Event& event, bool claimed)
+bool tree_editor_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
-	if(edit_menu_ && edit_menu_->process_event(event, claimed)) {
+	if(edit_menu_ && edit_menu_->processEvent(event, claimed)) {
 		return true;
 	}
 
-	if(context_menu_ && context_menu_->process_event(event, claimed)) {
-		return claim_mouse_events();
+	if(context_menu_ && context_menu_->processEvent(event, claimed)) {
+		return claimMouseEvents();
 	}
 
-	if(claimed || tree_view_widget::handle_event(event, claimed)) {
-		return claim_mouse_events();
+	if(claimed || tree_view_widget::handleEvent(event, claimed)) {
+		return claimMouseEvents();
 	}
 	return claimed;
 }
@@ -570,7 +570,7 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 			}
 
 			foreach(const std::string& str, choices) {
-				g->add_col(label_ptr(new label(str)));
+				g->add_col(LabelPtr(new label(str)));
 			}
 			g->register_selection_callback(boost::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
 			int mousex, mousey;
@@ -582,7 +582,7 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 			if(posy + g->height() > y() + height()) {
 				posy = y() + height() - posy + g->height();
 			}
-			context_menu_->set_loc(mousex, posy);
+			context_menu_->setLoc(mousex, posy);
 		}
 	}
 	tree_view_widget::on_select(button, selection);
@@ -620,13 +620,13 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		grid->allow_selection(true);
 		grid->swallow_clicks(false);
 		grid->allow_draw_highlight(false);
-		text_editor_widget_ptr editor = new text_editor_widget(200, 28);
-		editor->set_font_size(14);
+		TextEditorWidgetPtr editor = new TextEditorWidget(200, 28);
+		editor->setFontSize(14);
 		editor->set_on_enter_handler(boost::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
 		editor->set_on_tab_handler(boost::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
 		editor->set_on_esc_handler(boost::bind(&tree_editor_widget::init, this));
-		editor->set_text(get_selection_key(tree_selection).as_string());
-		editor->set_focus(true);
+		editor->setText(get_selection_key(tree_selection).as_string());
+		editor->setFocus(true);
 		grid->add_col(editor);
 		grid->register_selection_callback(boost::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
 		int mousex, mousey;
@@ -634,7 +634,7 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		mousex -= x();
 		mousey -= y();
 		edit_menu_.reset(grid);
-		edit_menu_->set_loc(mousex, y() + row_height_ * tree_selection - yscroll());
+		edit_menu_->setLoc(mousex, y() + row_height_ * tree_selection - yscroll());
 	} else if(choices[menu_selection].substr(0, 4) == "Edit") {
 		std::string choice_type = choices[menu_selection].length() > 4 ? choices[menu_selection].substr(9) : "";
 		if(choice_type == "Integer") {
@@ -713,7 +713,7 @@ void tree_editor_widget::edit_field(int row, variant* v)
 		edit_menu_.reset();
 	}
 
-	std::map<variant::TYPE, widget_ptr>::iterator it = ex_editor_map_.find(v->type());
+	std::map<variant::TYPE, WidgetPtr>::iterator it = ex_editor_map_.find(v->type());
 	if(it != ex_editor_map_.end()) {
 		if(on_editor_select_) {
 		    on_editor_select_(v, boost::bind(&tree_editor_widget::external_editor_save, this, v, _1));
@@ -737,8 +737,8 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	grid->allow_draw_highlight(false);
 
 	if(v->is_numeric() || v->is_string()) {
-		text_editor_widget_ptr editor = new text_editor_widget(200, 28);
-		editor->set_font_size(14);
+		TextEditorWidgetPtr editor = new TextEditorWidget(200, 28);
+		editor->setFontSize(14);
 		editor->set_on_enter_handler(boost::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
 		editor->set_on_tab_handler(boost::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
 		editor->set_on_esc_handler(boost::bind(&tree_editor_widget::init, this));
@@ -750,14 +750,14 @@ void tree_editor_widget::edit_field(int row, variant* v)
 		} else if(v->is_string()) {
 			ss << v->as_string();
 		}
-		editor->set_text(ss.str());
-		editor->set_focus(true);
+		editor->setText(ss.str());
+		editor->setFocus(true);
 		grid->add_col(editor);
 	} else if(v->is_bool()) {
 		std::vector<std::string> bool_list;
 		bool_list.push_back("false");
 		bool_list.push_back("true");
-		dropdown_widget_ptr bool_dd(new dropdown_widget(bool_list, 100, 30));
+		dropdown_WidgetPtr bool_dd(new dropdown_widget(bool_list, 100, 30));
 		bool_dd->set_selection(v->as_bool());
 		bool_dd->set_on_select_handler(boost::bind(&tree_editor_widget::on_bool_change, this, v, _1, _2));
 		grid->add_col(bool_dd);
@@ -769,10 +769,10 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	mousex -= x();
 	mousey -= y();
 	edit_menu_.reset(grid);
-	edit_menu_->set_loc(mousex, y() + row_height_ * row - yscroll());
+	edit_menu_->setLoc(mousex, y() + row_height_ * row - yscroll());
 }
 
-void tree_editor_widget::execute_edit_enter(const text_editor_widget_ptr editor, variant* value)
+void tree_editor_widget::execute_edit_enter(const TextEditorWidgetPtr editor, variant* value)
 {
 	if(edit_menu_) {
 		edit_menu_.reset();
@@ -795,7 +795,7 @@ void tree_editor_widget::execute_edit_enter(const text_editor_widget_ptr editor,
 	init();
 }
 
-void tree_editor_widget::execute_key_edit_enter(const text_editor_widget_ptr editor, variant* parent, const variant& key, variant* value)
+void tree_editor_widget::execute_key_edit_enter(const TextEditorWidgetPtr editor, variant* parent, const variant& key, variant* value)
 {
 	if(editor->text().empty() == false) {
 		if(edit_menu_) {
@@ -844,14 +844,14 @@ void tree_editor_widget::on_bool_change(variant* v, int selection, const std::st
 	init();
 }
 
-void tree_editor_widget::set_value(const std::string& key, const variant& v)
+void tree_editor_widget::setValue(const std::string& key, const variant& v)
 {
-	tree_view_widget::set_value(key, v);
+	tree_view_widget::setValue(key, v);
 }
 
-variant tree_editor_widget::get_value(const std::string& key) const
+variant tree_editor_widget::getValue(const std::string& key) const
 {
-	return tree_view_widget::get_value(key);
+	return tree_view_widget::getValue(key);
 }
 
 }

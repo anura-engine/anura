@@ -14,19 +14,19 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef SETTINGS_DIALOG_HPP_INCLUDED
-#define SETTINGS_DIALOG_HPP_INCLUDED
+#ifndef settingsDialog_HPP_INCLUDED
+#define settingsDialog_HPP_INCLUDED
 
 #include "gui_section.hpp"
 #include "graphics.hpp"
 
-class settings_dialog
+class settingsDialog
 {
 public:
-	settings_dialog ();
-	~settings_dialog ();
+	settingsDialog ();
+	~settingsDialog ();
 	
-	bool handle_event (const SDL_Event& event); //returns whether the game should be paused
+	bool handleEvent (const SDL_Event& event); //returns whether the game should be paused
 	void draw (bool in_speech_dialog) const;
 	void reset ();
 	

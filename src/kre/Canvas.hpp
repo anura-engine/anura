@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "Color.hpp"
+#include "../Color.hpp"
 #include "Geometry.hpp"
 #include "Material.hpp"
 #include "Util.hpp"
@@ -42,25 +42,33 @@ namespace KRE
 	public:
 		virtual ~Canvas();
 
-		void SetDimensions(unsigned w, unsigned h);
+		void setDimensions(unsigned w, unsigned h);
 
-		unsigned Width() const { return width_; }
-		unsigned Height() const { return height_; }
+		unsigned width() const { return width_; }
+		unsigned height() const { return height_; }
 
 		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
-		virtual void BlitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color) = 0;
+		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
+		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
+		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color=nullptr) const;
 
 		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
-		virtual void BlitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) = 0;
+		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
+		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
 
-		//void DrawVectorContext(const Vector::ContextPtr& context);
-		static CanvasPtr GetInstance();
+		virtual void drawRect(const rect& r, const ColorPtr& fill_color, const ColorPtr& stroke_color=nullptr, float rotate=0) const = 0;
+		virtual void drawLine(const point& p1, const point& p2, const Color& color) const = 0;
+		virtual void drawCircle(const point& centre, double radius, const Color& color) const = 0;
+
+		void drawVectorContext(const Vector::ContextPtr& context);
+
+		static CanvasPtr getInstance();
 	protected:
 		Canvas();
 	private:
 		DISALLOW_COPY_AND_ASSIGN(Canvas);
 		unsigned width_;
 		unsigned height_;
-		virtual void HandleDimensionsChanged() = 0;
+		virtual void handleDimensionsChanged() = 0;
 	};
 }

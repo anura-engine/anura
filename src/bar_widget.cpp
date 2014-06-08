@@ -20,7 +20,7 @@
 
 namespace gui
 {
-	bar_widget::bar_widget(const variant& v, game_logic::formula_callable* e)
+	bar_widget::bar_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v, e), segments_(v["segments"].as_int(1)), 
 		segment_length_(v["segment_length"].as_int(5)), 
 		rotate_(GLfloat(v["rotation"].as_decimal().as_float())),
@@ -121,7 +121,7 @@ namespace gui
 			w = bar_max_width_;
 		}
 
-		set_dim(w, h);
+		setDim(w, h);
 	}
 
 	void bar_widget::set_rotation(GLfloat rotate)
@@ -185,7 +185,7 @@ BEGIN_DEFINE_CALLABLE(bar_widget, widget)
 		obj.animation_current_position_ = value.as_decimal().as_float();
 END_DEFINE_CALLABLE(bar_widget)
 
-	void bar_widget::handle_process()
+	void bar_widget::handleProcess()
 	{
 		if(animating_) {
 			int end_point_unscaled = animation_end_point_unscaled_ * segment_length_;
@@ -210,7 +210,7 @@ END_DEFINE_CALLABLE(bar_widget)
 			}
 		}
 
-		widget::handle_process();
+		widget::handleProcess();
 	}
 
 	void bar_widget::draw_ticks(GLfloat x_offset, int segments, const SDL_Color& color) const
@@ -245,7 +245,7 @@ END_DEFINE_CALLABLE(bar_widget)
 		}
 	}
 
-	void bar_widget::handle_draw() const
+	void bar_widget::handleDraw() const
 	{
 		int x_offset = x();
 		{
@@ -303,7 +303,7 @@ END_DEFINE_CALLABLE(bar_widget)
 		}
 	}
 
-	bool bar_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool bar_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		return claimed;
 	}

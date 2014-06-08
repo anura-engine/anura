@@ -28,7 +28,7 @@
 namespace game_logic
 {
 
-void formula_callable_definition::entry::set_variant_type(variant_type_ptr type)
+void FormulaCallable_definition::entry::set_variant_type(variant_type_ptr type)
 {
 	variant_type = type;
 	if(type) {
@@ -36,20 +36,20 @@ void formula_callable_definition::entry::set_variant_type(variant_type_ptr type)
 	}
 }
 
-formula_callable_definition::formula_callable_definition() : is_strict_(false), supports_slot_lookups_(true)
+FormulaCallable_definition::FormulaCallable_definition() : is_strict_(false), supports_slot_lookups_(true)
 {
 	int x = 4;
 	ASSERT_LOG((char*)&x - (char*)this > 10000 || (char*)this - (char*)&x > 10000 , "BAD BAD");
 }
 
-formula_callable_definition::~formula_callable_definition()
+FormulaCallable_definition::~FormulaCallable_definition()
 {
 }
 
 namespace
 {
 
-class simple_definition : public formula_callable_definition
+class simple_definition : public FormulaCallable_definition
 {
 public:
 	simple_definition() : base_(NULL)
@@ -77,7 +77,7 @@ public:
 
 	entry* get_entry(int slot) {
 		if(base_ && slot < base_num_slots()) {
-			return const_cast<formula_callable_definition*>(base_.get())->get_entry(slot);
+			return const_cast<FormulaCallable_definition*>(base_.get())->get_entry(slot);
 		}
 
 		slot -= base_num_slots();
@@ -125,7 +125,7 @@ public:
 		entries_.push_back(e);
 	}
 
-	void set_base(const_formula_callable_definition_ptr base) { base_ = base; }
+	void set_base(const_FormulaCallable_definition_ptr base) { base_ = base; }
 
 	void set_default(const entry& e) {
 		default_entry_.reset(new entry(e));
@@ -135,16 +135,16 @@ public:
 
 private:
 	int base_num_slots() const { return base_ ? base_->num_slots() : 0; }
-	const_formula_callable_definition_ptr base_;
+	const_FormulaCallable_definition_ptr base_;
 	std::vector<entry> entries_;
 
 	boost::shared_ptr<entry> default_entry_;
 };
 
-class modified_definition : public formula_callable_definition
+class modified_definition : public FormulaCallable_definition
 {
 public:
-	modified_definition(const_formula_callable_definition_ptr base, int modified_slot, const entry& modification) : base_(base), slot_(modified_slot), mod_(modification)
+	modified_definition(const_FormulaCallable_definition_ptr base, int modified_slot, const entry& modification) : base_(base), slot_(modified_slot), mod_(modification)
 	{
 		set_supports_slot_lookups(base_->supports_slot_lookups());
 	}
@@ -158,7 +158,7 @@ public:
 			return &mod_;
 		}
 
-		return const_cast<formula_callable_definition*>(base_.get())->get_entry(slot);
+		return const_cast<FormulaCallable_definition*>(base_.get())->get_entry(slot);
 	}
 
 	const entry* get_entry(int slot) const {
@@ -176,19 +176,19 @@ public:
 	bool is_strict() const { return base_->is_strict(); }
 
 private:
-	const_formula_callable_definition_ptr base_;
+	const_FormulaCallable_definition_ptr base_;
 	const int slot_;
 	entry mod_;
 };
 
 }
 
-formula_callable_definition_ptr modify_formula_callable_definition(const_formula_callable_definition_ptr base_def, int slot, variant_type_ptr new_type, const formula_callable_definition* new_def)
+FormulaCallable_definition_ptr modify_FormulaCallable_definition(const_FormulaCallable_definition_ptr base_def, int slot, variant_type_ptr new_type, const FormulaCallable_definition* new_def)
 {
-	const formula_callable_definition::entry* e = base_def->get_entry(slot);
+	const FormulaCallable_definition::entry* e = base_def->get_entry(slot);
 	ASSERT_LOG(e, "NO DEFINITION FOUND");
 
-	formula_callable_definition::entry new_entry(*e);
+	FormulaCallable_definition::entry new_entry(*e);
 
 	if(new_type) {
 		if(!new_entry.write_type) {
@@ -205,10 +205,10 @@ formula_callable_definition_ptr modify_formula_callable_definition(const_formula
 		new_entry.type_definition = new_def;
 	}
 
-	return formula_callable_definition_ptr(new modified_definition(base_def, slot, new_entry));
+	return FormulaCallable_definition_ptr(new modified_definition(base_def, slot, new_entry));
 }
 
-formula_callable_definition_ptr create_formula_callable_definition(const std::string* i1, const std::string* i2, const_formula_callable_definition_ptr base, variant_type_ptr* types)
+FormulaCallable_definition_ptr executeCommand_callable_definition(const std::string* i1, const std::string* i2, const_FormulaCallable_definition_ptr base, variant_type_ptr* types)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -222,10 +222,10 @@ formula_callable_definition_ptr create_formula_callable_definition(const std::st
 		++i1;
 	}
 
-	return formula_callable_definition_ptr(def);
+	return FormulaCallable_definition_ptr(def);
 }
 
-formula_callable_definition_ptr create_formula_callable_definition(const formula_callable_definition::entry* i1, const formula_callable_definition::entry* i2, const_formula_callable_definition_ptr base)
+FormulaCallable_definition_ptr executeCommand_callable_definition(const FormulaCallable_definition::entry* i1, const FormulaCallable_definition::entry* i2, const_FormulaCallable_definition_ptr base)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -234,20 +234,20 @@ formula_callable_definition_ptr create_formula_callable_definition(const formula
 		++i1;
 	}
 
-	return formula_callable_definition_ptr(def);
+	return FormulaCallable_definition_ptr(def);
 }
 
-formula_callable_definition_ptr create_map_formula_callable_definition(variant_type_ptr value_type)
+FormulaCallable_definition_ptr create_map_FormulaCallable_definition(variant_type_ptr value_type)
 {
 	simple_definition* def = new simple_definition;
-	formula_callable_definition::entry e("");
+	FormulaCallable_definition::entry e("");
 	e.set_variant_type(value_type);
 	def->set_default(e);
-	return formula_callable_definition_ptr(def);
+	return FormulaCallable_definition_ptr(def);
 }
 
 namespace {
-std::map<std::string, const_formula_callable_definition_ptr> registry;
+std::map<std::string, const_FormulaCallable_definition_ptr> registry;
 int num_definitions = 0;
 
 std::vector<boost::function<void()> >& callable_init_routines() {
@@ -262,18 +262,18 @@ std::map<std::string, std::string>& g_builtin_bases()
 }
 }
 
-int register_formula_callable_definition(const std::string& id, const_formula_callable_definition_ptr def)
+int register_FormulaCallable_definition(const std::string& id, const_FormulaCallable_definition_ptr def)
 {
 	registry[id] = def;
 	return ++num_definitions;
 }
 
-int register_formula_callable_definition(const std::string& id, const std::string& base_id, const_formula_callable_definition_ptr def)
+int register_FormulaCallable_definition(const std::string& id, const std::string& base_id, const_FormulaCallable_definition_ptr def)
 {
 	if(base_id != "") {
 		g_builtin_bases()[id] = base_id;
 	}
-	return register_formula_callable_definition(id, def);
+	return register_FormulaCallable_definition(id, def);
 }
 
 bool registered_definition_is_a(const std::string& derived, const std::string& base)
@@ -294,13 +294,13 @@ bool registered_definition_is_a(const std::string& derived, const std::string& b
 	return registered_definition_is_a(itor->second, base);
 }
 
-const_formula_callable_definition_ptr get_formula_callable_definition(const std::string& id)
+const_FormulaCallable_definition_ptr get_FormulaCallable_definition(const std::string& id)
 {
-	std::map<std::string, const_formula_callable_definition_ptr>::const_iterator itor = registry.find(id);
+	std::map<std::string, const_FormulaCallable_definition_ptr>::const_iterator itor = registry.find(id);
 	if(itor != registry.end()) {
 		return itor->second;
 	} else {
-		return const_formula_callable_definition_ptr();
+		return const_FormulaCallable_definition_ptr();
 	}
 }
 

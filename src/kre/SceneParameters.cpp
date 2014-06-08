@@ -148,7 +148,7 @@ namespace KRE
 	{
 	}
 
-	float RandomParameter::get_value(float t)
+	float RandomParameter::getValue(float t)
 	{
 		return get_random_float(min_value_, max_value_);
 	}
@@ -202,7 +202,7 @@ namespace KRE
 	{
 	}
 
-	float OscillateParameter::get_value(float t)
+	float OscillateParameter::getValue(float t)
 	{
 		if(osc_type_ == TYPE_SINE) {
 			return float(base_ + amplitude_ * sin(2*M_PI*frequency_*t + phase_));
@@ -263,7 +263,7 @@ namespace KRE
 		return --it;
 	}
 
-	float CurvedParameter::get_value(float t)
+	float CurvedParameter::getValue(float t)
 	{
 		if(curve_type_ == INTERPOLATE_LINEAR) {
 			auto it = find_closest_point(t);

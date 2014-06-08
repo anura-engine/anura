@@ -96,7 +96,7 @@ std::map<tile_id, int> compiled_tile_ids;
 
 //defined in texture.cpp
 namespace graphics {
-void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
+void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
 }
 
 void create_compiled_tiles_image()
@@ -201,7 +201,7 @@ void create_compiled_tiles_image()
 		SDL_BlitSurface(src.get(), &src_rect, s.get(), &dst_rect);
 	}
 
-	graphics::set_alpha_for_transparent_colors_in_rgba_surface(s.get());
+	graphics::setAlpha_for_transparent_colors_in_rgba_surface(s.get());
 
 //  don't need to save the main compiled tile anymore.
 //	IMG_SavePNG("images/tiles-compiled.png", s.get(), 5);

@@ -48,22 +48,22 @@ private:
 	void close_context_menu(int index);
 	editor& editor_;
 	std::string category_;
-	gui::widget_ptr context_menu_;
+	gui::WidgetPtr context_menu_;
 
-	gui::widget_ptr generate_grid(const std::string& category);
-	std::map<std::string, gui::widget_ptr> grids_;
+	gui::WidgetPtr generate_grid(const std::string& category);
+	std::map<std::string, gui::WidgetPtr> grids_;
 
 	//the borders around each object, we set the currently selected one
 	//to white, and all the others to transparent.
-	std::map<std::string, std::vector<gui::border_widget_ptr> > grid_borders_;
+	std::map<std::string, std::vector<gui::border_WidgetPtr> > grid_borders_;
 
 	//the first object in each category
 	std::map<std::string, int> first_obj_;
 
-	boost::intrusive_ptr<gui::text_editor_widget> find_edit_;
+	boost::intrusive_ptr<gui::TextEditorWidget> find_edit_;
 };
 
-typedef boost::intrusive_ptr<character_editor_dialog> character_editor_dialog_ptr;
+typedef boost::intrusive_ptr<character_editor_dialog> character_editor_DialogPtr;
 
 }
 

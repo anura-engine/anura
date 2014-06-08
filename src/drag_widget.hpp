@@ -39,12 +39,12 @@ public:
 		boost::function<void(int, int)> drag_start, 
 		boost::function<void(int, int)> drag_end, 
 		boost::function<void(int, int)> drag_move);
-	explicit drag_widget(const variant&, game_logic::formula_callable* e);
+	explicit drag_widget(const variant&, game_logic::FormulaCallable* e);
 
 private:
 	void init();
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleDraw() const;
+	bool handleEvent(const SDL_Event& event, bool claimed);
 	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
 	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
 	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
@@ -65,7 +65,7 @@ private:
 	game_logic::formula_ptr drag_start_handler_;
 	game_logic::formula_ptr drag_end_handler_;
 
-	widget_ptr dragger_;
+	WidgetPtr dragger_;
 	drag_direction dir_;
 	SDL_Cursor *old_cursor_;
 	cursor_ptr drag_cursor_;
@@ -74,7 +74,7 @@ private:
 	int dragging_handle_;
 };
 
-typedef boost::intrusive_ptr<drag_widget> drag_widget_ptr;
+typedef boost::intrusive_ptr<drag_widget> drag_WidgetPtr;
 
 }
 

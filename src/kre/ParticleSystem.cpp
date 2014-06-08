@@ -238,7 +238,7 @@ namespace KRE
 			}
 		}
 
-		void particle_system::handle_process(float t)
+		void particle_system::handleProcess(float t)
 		{
 			update(t);
 			elapsed_time_ += t;
@@ -394,7 +394,7 @@ namespace KRE
 			instanced_affectors_.push_back(a);
 		}
 
-		void technique::handle_process(float t)
+		void technique::handleProcess(float t)
 		{
 			// run objects
 			for(auto e : active_emitters_) {
@@ -485,9 +485,9 @@ namespace KRE
 			return def;
 		}
 
-		void technique::PreRender()
+		void technique::preRender()
 		{
-			//LOG_DEBUG("technique::PreRender, particle count: " << active_particles_.size());
+			//LOG_DEBUG("technique::preRender, particle count: " << active_particles_.size());
 			std::vector<vertex_texture_color> vtc;
 			vtc.reserve(active_particles_.size() * 6);
 			for(auto& p : active_particles_) {

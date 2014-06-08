@@ -49,44 +49,44 @@ void character_editor_dialog::init()
 {
 	clear();
 	using namespace gui;
-	set_padding(20);
+	setPadding(20);
 
 	if(!find_edit_) {
-		find_edit_.reset(new text_editor_widget(140));
+		find_edit_.reset(new TextEditorWidget(140));
 		find_edit_->set_on_change_handler(boost::bind(&character_editor_dialog::init, this));
 	}
 
 	grid_ptr find_grid(new gui::grid(2));
-	find_grid->add_col(widget_ptr(new label("Search: ", graphics::color_white())));
-	find_grid->add_col(widget_ptr(find_edit_));
+	find_grid->add_col(WidgetPtr(new label("Search: ", graphics::color_white())));
+	find_grid->add_col(WidgetPtr(find_edit_));
 	add_widget(find_grid, 10, 10);
 
 	const frame& frame = *editor_.all_characters()[editor_.get_object()].preview_frame();
 
 	button* facing_button = new button(
-	  widget_ptr(new label(editor_.face_right() ? "right" : "left", graphics::color_white())),
+	  WidgetPtr(new label(editor_.face_right() ? "right" : "left", graphics::color_white())),
 	  boost::bind(&editor::toggle_facing, &editor_));
-	facing_button->set_tooltip("f  Change Facing");
+	facing_button->setTooltip("f  Change Facing");
 	if(find_edit_->text().empty() == false) {
-		add_widget(widget_ptr(facing_button));
+		add_widget(WidgetPtr(facing_button));
 		add_widget(generate_grid(""));
 	} else {
 
-		button* category_button = new button(widget_ptr(new label(category_, graphics::color_white())), boost::bind(&character_editor_dialog::show_category_menu, this));
-		add_widget(widget_ptr(category_button));
+		button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&character_editor_dialog::show_category_menu, this));
+		add_widget(WidgetPtr(category_button));
 
 		add_widget(generate_grid(category_));
 	
-		add_widget(widget_ptr(facing_button), category_button->x() + category_button->width() + 10, category_button->y());
+		add_widget(WidgetPtr(facing_button), category_button->x() + category_button->width() + 10, category_button->y());
 	}
 }
 
-gui::widget_ptr character_editor_dialog::generate_grid(const std::string& category)
+gui::WidgetPtr character_editor_dialog::generate_grid(const std::string& category)
 {
 	std::cerr << "generate grid: " << category << "\n";
 	using namespace gui;
-	widget_ptr& result = grids_[category];
-	std::vector<gui::border_widget_ptr>& borders = grid_borders_[category];
+	WidgetPtr& result = grids_[category];
+	std::vector<gui::border_WidgetPtr>& borders = grid_borders_[category];
 	if(!result || category == "") {
 		const std::string search_string = find_edit_->text();
 
@@ -107,19 +107,19 @@ gui::widget_ptr character_editor_dialog::generate_grid(const std::string& catego
 				}
 
 				image_widget* preview = new image_widget(c.preview_frame()->img());
-				preview->set_dim(36, 36);
+				preview->setDim(36, 36);
 				preview->set_area(c.preview_frame()->area());
-				button_ptr char_button(new button(widget_ptr(preview), boost::bind(&character_editor_dialog::set_character, this, index)));
+				ButtonPtr char_button(new button(WidgetPtr(preview), boost::bind(&character_editor_dialog::set_character, this, index)));
 	
 				std::string tooltip_str = c.node["type"].as_string();
 
 				if(c.help.empty() == false) {
 					tooltip_str += "\n" + c.help;
 				}
-				char_button->set_tooltip(tooltip_str);
-				char_button->set_dim(40, 40);
+				char_button->setTooltip(tooltip_str);
+				char_button->setDim(40, 40);
 				borders.push_back(new gui::border_widget(char_button, graphics::color(0,0,0,0)));
-				grid->add_col(gui::widget_ptr(borders.back()));
+				grid->add_col(gui::WidgetPtr(borders.back()));
 			} else {
 				borders.push_back(NULL);
 			}
@@ -136,7 +136,7 @@ gui::widget_ptr character_editor_dialog::generate_grid(const std::string& catego
 		if(!borders[n]) {
 			continue;
 		}
-		borders[n]->set_color(n == editor_.get_object() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0));
+		borders[n]->setColor(n == editor_.get_object() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0));
 	}
 	std::cerr << "done generate grid: " << category << "\n";
 
@@ -147,7 +147,7 @@ void character_editor_dialog::show_category_menu()
 {
 	using namespace gui;
 	gui::grid* grid = new gui::grid(2);
-	grid->set_zorder(100);
+	grid->setZOrder(100);
 	grid->set_max_height(height());
 	grid->set_show_background(true);
 	grid->set_hpad(10);
@@ -173,10 +173,10 @@ void character_editor_dialog::show_category_menu()
 		const editor::enemy_type& c = *cp.second;
 
 		image_widget* preview = new image_widget(c.preview_frame()->img());
-		preview->set_dim(28, 28);
+		preview->setDim(28, 28);
 		preview->set_area(c.preview_frame()->area());
-		grid->add_col(widget_ptr(preview))
-		     .add_col(widget_ptr(new label(c.category, graphics::color_white())));
+		grid->add_col(WidgetPtr(preview))
+		     .add_col(WidgetPtr(new label(c.category, graphics::color_white())));
 		grid->register_row_selection_callback(boost::bind(&character_editor_dialog::select_category, this, c.category));
 	}
 

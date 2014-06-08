@@ -47,7 +47,7 @@ public:
 		points_.push_back(p2);
 		calc_coords();
 	}
-	poly_line_widget(const variant& v, game_logic::formula_callable* e)
+	poly_line_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v,e)
 	{
 		width_ = v.has_key("width") ? v["width"].as_int() : 1.0f;
@@ -69,11 +69,11 @@ public:
 		calc_coords();
 	}
 protected:
-	virtual bool handle_event(const SDL_Event& event, bool claimed)
+	virtual bool handleEvent(const SDL_Event& event, bool claimed)
 	{
 		return claimed;
 	}
-	virtual void handle_draw() const
+	virtual void handleDraw() const
 	{
 		std::vector<GLfloat>& varray = graphics::global_vertex_array();
 		varray.clear();
@@ -99,7 +99,7 @@ protected:
 		glColor4ub(255, 255, 255, 255);
 #endif
 	}
-	virtual void set_value(const std::string& key, const variant& v)
+	virtual void setValue(const std::string& key, const variant& v)
 	{
 		if(key == "points") {
 			points_.clear();
@@ -112,9 +112,9 @@ protected:
 		} else if(key == "color") {
 			color_ = graphics::color(v).as_sdl_color();
 		}
-		widget::set_value(key, v);
+		widget::setValue(key, v);
 	}
-	virtual variant get_value(const std::string& key) const
+	virtual variant getValue(const std::string& key) const
 	{
 		if(key == "points") {
 			std::vector<variant> v;
@@ -127,7 +127,7 @@ protected:
 		} else if(key == "color") {
 			return graphics::color(color_).write();
 		}
-		return widget::get_value(key);
+		return widget::getValue(key);
 	}
 private:
 	void calc_coords()
@@ -147,16 +147,16 @@ private:
 				max_y = p.y;
 			}
 		}
-		set_loc(min_x, min_y);
-		set_dim(max_x-min_x, max_y-min_y);
+		setLoc(min_x, min_y);
+		setDim(max_x-min_x, max_y-min_y);
 	}
 	SDL_Color color_;
 	GLfloat width_;
 	std::vector<point> points_;
 };
 
-typedef boost::intrusive_ptr<poly_line_widget> poly_line_widget_ptr;
-typedef boost::intrusive_ptr<const poly_line_widget> const_poly_line_widget_ptr;
+typedef boost::intrusive_ptr<poly_line_widget> poly_line_WidgetPtr;
+typedef boost::intrusive_ptr<const poly_line_widget> const_poly_line_WidgetPtr;
 
 }
 

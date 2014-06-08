@@ -31,7 +31,7 @@ user_voxel_object::user_voxel_object(const variant& node)
 	for(const variant::map_pair& p : node.as_map()) {
 		auto itor = type_->properties().find(p.first.as_string());
 		if(itor != type_->properties().end()) {
-			set_value_by_slot(type_->num_base_slots() + itor->second.slot, p.second);
+			setValue_by_slot(type_->num_base_slots() + itor->second.slot, p.second);
 			require_init.erase(std::remove(require_init.begin(), require_init.end(), itor->second.slot), require_init.end());
 		}
 	}
@@ -45,14 +45,14 @@ void user_voxel_object::process(level& lvl)
 
 	if(!created_) {
 		created_ = true;
-		handle_event(OBJECT_EVENT_CREATE);
+		handleEvent(OBJECT_EVENT_CREATE);
 	}
 
-	handle_event(OBJECT_EVENT_PROCESS);
+	handleEvent(OBJECT_EVENT_PROCESS);
 
 }
 
-bool user_voxel_object::execute_command(const variant& b)
+bool user_voxel_object::executeCommand(const variant& b)
 {
 	const voxel_object_command_callable* cmd = b.try_convert<voxel_object_command_callable>();
 	if(cmd) {
@@ -60,22 +60,22 @@ bool user_voxel_object::execute_command(const variant& b)
 		return true;
 	}
 
-	return formula_callable::execute_command(b);
+	return FormulaCallable::executeCommand(b);
 }
 
-void user_voxel_object::handle_event(int nevent, const formula_callable* context)
+void user_voxel_object::handleEvent(int nevent, const FormulaCallable* context)
 {
 	set_event_arg(variant(context));
 	const game_logic::formula* handler = type_->event_handler(nevent);
 	if(handler) {
 		variant result = handler->execute(*this);
-		execute_command(result);
+		executeCommand(result);
 	}
 }
 
-void user_voxel_object::handle_event(const std::string& event, const formula_callable* context)
+void user_voxel_object::handleEvent(const std::string& event, const FormulaCallable* context)
 {
-	handle_event(get_object_event_id(event), context);
+	handleEvent(get_object_event_id(event), context);
 }
 
 namespace {
@@ -96,11 +96,11 @@ public:
 };
 }
 
-variant user_voxel_object::get_value_by_slot(int slot) const
+variant user_voxel_object::getValue_by_slot(int slot) const
 {
 	static const int NumBaseSlots = type_->num_base_slots();
 	if(slot < NumBaseSlots) {
-		return voxel_object::get_value_by_slot(slot);
+		return voxel_object::getValue_by_slot(slot);
 	}
 
 	slot -= NumBaseSlots;
@@ -121,11 +121,11 @@ variant user_voxel_object::get_value_by_slot(int slot) const
 	}
 }
 
-void user_voxel_object::set_value_by_slot(int slot, const variant& value)
+void user_voxel_object::setValue_by_slot(int slot, const variant& value)
 {
 	static const int NumBaseSlots = type_->num_base_slots();
 	if(slot < NumBaseSlots) {
-		voxel_object::set_value_by_slot(slot, value);
+		voxel_object::setValue_by_slot(slot, value);
 		return;
 	}
 
@@ -152,7 +152,7 @@ void user_voxel_object::set_value_by_slot(int slot, const variant& value)
 			//in this scope.
 			ValueScopeSetter<int> target_scope_setter(&data_target_, entry.storage_slot);
 
-			execute_command(cmd);
+			executeCommand(cmd);
 		}
 
 		return;
@@ -165,11 +165,11 @@ void user_voxel_object::set_value_by_slot(int slot, const variant& value)
 	}
 }
 
-variant user_voxel_object::get_value(const std::string& key) const
+variant user_voxel_object::getValue(const std::string& key) const
 {
 	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
 		if(type_->slot_properties()[slot].id == key) {
-			return get_value_by_slot(type_->num_base_slots() + slot);
+			return getValue_by_slot(type_->num_base_slots() + slot);
 		}
 	}
  
@@ -177,16 +177,16 @@ variant user_voxel_object::get_value(const std::string& key) const
 	return variant();
 }
  
-void user_voxel_object::set_value(const std::string& key, const variant& value)
+void user_voxel_object::setValue(const std::string& key, const variant& value)
 {
 	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
 		if(type_->slot_properties()[slot].id == key) {
-			set_value_by_slot(type_->num_base_slots() + slot, value);
+			setValue_by_slot(type_->num_base_slots() + slot, value);
 			return;
 		}
 	}
  
-	voxel_object::set_value(key, value);
+	voxel_object::setValue(key, value);
 }
 
 }

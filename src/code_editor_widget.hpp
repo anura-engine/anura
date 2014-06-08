@@ -26,14 +26,14 @@
 
 namespace gui {
 
-class code_editor_widget : public text_editor_widget
+class code_editor_widget : public TextEditorWidget
 {
 public:
 	code_editor_widget(int width, int height);
-	code_editor_widget(const variant& v, game_logic::formula_callable* e);
+	code_editor_widget(const variant& v, game_logic::FormulaCallable* e);
 	void on_slider_move(double value);
 
-	const std::string& current_text() const { return current_text_; }
+	const std::string& currentText() const { return currentText_; }
 	struct ObjectInfo {
 		int begin, end;
 		variant obj;
@@ -51,8 +51,8 @@ public:
 private:
 	ObjectInfo get_object_at(int row, int col) const;
 
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed);
 	void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
 	void on_change();
 	void on_move_cursor(bool auto_shift=false);
@@ -77,17 +77,17 @@ private:
 	};
 
 	std::vector<slider_range> slider_range_;
-	std::vector<widget_ptr> slider_labels_;
+	std::vector<WidgetPtr> slider_labels_;
 
 	void generate_tokens();
-	std::string current_text_;
+	std::string currentText_;
 	variant current_obj_;
 	std::vector<json::Token> tokens_;
 
 	bool is_formula_;
 };
 
-typedef boost::intrusive_ptr<code_editor_widget> code_editor_widget_ptr;
+typedef boost::intrusive_ptr<code_editor_widget> code_editor_WidgetPtr;
 
 }
 

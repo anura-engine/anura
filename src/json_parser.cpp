@@ -230,7 +230,7 @@ std::set<std::string> filename_registry;
 variant parse_internal(const std::string& doc, const std::string& fname,
                        JSON_PARSE_OPTIONS options,
 					   std::map<std::string, json_macro_ptr>* macros,
-					   const game_logic::formula_callable* callable)
+					   const game_logic::FormulaCallable* callable)
 {
 	std::map<std::string, json_macro_ptr> macros_buf;
 	if(!macros) {
@@ -329,7 +329,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 				} else if(begin_macro) {
 					(*macros)[name.as_string()].reset(new json_macro(std::string(begin_macro, t.end), *macros));
 					use_preprocessor = true;
-				} else if(use_preprocessor && v.is_map() && game_logic::wml_serializable_formula_callable::deserialize_obj(v, &v)) {
+				} else if(use_preprocessor && v.is_map() && game_logic::WmlSerializableFormulaCallable::deserializeObj(v, &v)) {
 					stack.back().add(name, v);
 				} else {
 					stack.back().add(name, v);
@@ -531,7 +531,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 variant json_macro::call(variant arg) const
 {
 	std::map<std::string, json_macro_ptr> m = macros_;
-	game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+	game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 	foreach(const variant_pair& p, arg.as_map()) {
 		callable->add(p.first.as_string(), p.second);
 	}

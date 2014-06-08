@@ -35,7 +35,7 @@ vector_text::vector_text(const variant& node)
 	std::vector<int> r = node["rect"].as_list_int();
 	draw_area_ = rect(r[0], r[1], r[2], r[3]);
 	if(node.has_key("color")) {
-		set_color(node["color"]);
+		setColor(node["color"]);
 	} else {
 		color_ = graphics::color(255,255,255,255).as_sdl_color();
 	}
@@ -54,17 +54,17 @@ vector_text::vector_text(const variant& node)
 		align_ = ALIGN_LEFT;
 	}
 
-	recalculate_texture();
+	recalculateTexture();
 }
 
-void vector_text::handle_draw() const
+void vector_text::handleDraw() const
 {
-	foreach(const offset_texture& tex, textures_) {
+	foreach(const offsetTexture& tex, textures_) {
 		graphics::blit_texture(tex.first, x() + tex.second.x, y() + tex.second.y);
 	}
 }
 
-void vector_text::recalculate_texture()
+void vector_text::recalculateTexture()
 {
 	textures_.clear();
 
@@ -96,46 +96,46 @@ void vector_text::recalculate_texture()
 		if(tex_y < height()) {
 			graphics::texture tex = font::render_text(line, color_, size_, font_);
 			if(align_ == ALIGN_LEFT) {
-				textures_.push_back(offset_texture(tex, point(0,tex_y)));
+				textures_.push_back(offsetTexture(tex, point(0,tex_y)));
 			} else if(align_ == ALIGN_CENTER) {
-				textures_.push_back(offset_texture(tex, point((width() - tex.width())/2,tex_y)));
+				textures_.push_back(offsetTexture(tex, point((width() - tex.width())/2,tex_y)));
 			} else {
-				textures_.push_back(offset_texture(tex, point(width() - tex.width(),tex_y)));
+				textures_.push_back(offsetTexture(tex, point(width() - tex.width(),tex_y)));
 			}
 			tex_y += tex.height();
 		} else {
-			std::cerr << "vector_text::recalculate_texture(): Ignored line: \"" 
+			std::cerr << "vector_text::recalculateTexture(): Ignored line: \"" 
 				<< line << "\" line is outside the maximum area" << std::endl;
 		}
 	}
 }
 
-void vector_text::set_text(const std::string& txt)
+void vector_text::setText(const std::string& txt)
 {
 	text_ = i18n::tr(txt);
-	recalculate_texture();
+	recalculateTexture();
 }
 
-void vector_text::set_font(const std::string& fnt)
+void vector_text::setFont(const std::string& fnt)
 {
 	font_ = fnt;
-	recalculate_texture();
+	recalculateTexture();
 }
 
 void vector_text::set_size(int size)
 {
 	size_ = size;
-	recalculate_texture();
+	recalculateTexture();
 }
 
-void vector_text::set_color(const variant& node)
+void vector_text::setColor(const variant& node)
 {
 	if(node.is_string()) {
 		color_ = graphics::get_color_from_name(node.as_string());
 	} else {
 		color_ = graphics::color(node).as_sdl_color();
 	}
-	recalculate_texture();
+	recalculateTexture();
 }
 
 void vector_text::set_align(const std::string& align)
@@ -156,10 +156,10 @@ void vector_text::set_align(const std::string& align)
 void vector_text::set_align(TEXT_ALIGNMENT align)
 {
 	align_ = align;
-	recalculate_texture();
+	recalculateTexture();
 }
 
-variant vector_text::get_value(const std::string& key) const
+variant vector_text::getValue(const std::string& key) const
 {
 	if(key == "text") {
 		return variant(text_);
@@ -189,20 +189,20 @@ variant vector_text::get_value(const std::string& key) const
 	return variant();
 }
 
-void vector_text::set_value(const std::string& key, const variant& value)
+void vector_text::setValue(const std::string& key, const variant& value)
 {
 	if(key == "text") {
-		set_text(value.as_string());
+		setText(value.as_string());
 	} else if(key == "color") {
-		set_color(value);
+		setColor(value);
 	} else if(key == "size") {
 		set_size(value.as_int());
 	} else if(key == "font") {
-		set_font(value.as_string());
+		setFont(value.as_string());
 	} else if(key == "align") {
 		set_align(value.as_string());
 	} else if(key == "visible") {
-		set_visible(value.as_bool());
+		setVisible(value.as_bool());
 	} else if(key == "rect") {
 		std::vector<int> r = value.as_list_int();
 		draw_area_ = rect(r[0], r[1], r[2], r[3]);

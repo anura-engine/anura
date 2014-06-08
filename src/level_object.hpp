@@ -99,7 +99,7 @@ struct palette_scope {
 	unsigned int original_value;
 };
 
-class level_object : public game_logic::formula_callable {
+class level_object : public game_logic::FormulaCallable {
 public:
 	static std::vector<const_level_object_ptr> all();
 	static level_tile build_tile(variant node);

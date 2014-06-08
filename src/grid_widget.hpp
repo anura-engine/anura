@@ -22,31 +22,31 @@
 #include <vector>
 
 #include "grid_widget_fwd.hpp"
-#include "scrollable_widget.hpp"
+#include "scrollable_widget"
 #include "widget.hpp"
 
 namespace gui {
 
 class dropdown_widget;
 
-class grid : public scrollable_widget
+class grid : public ScrollableWidget
 {
 public:
 	typedef boost::function<void (int)> callback_type;
 	enum COLUMN_ALIGN { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
 
 	explicit grid(int ncols);
-	explicit grid(const variant& v, game_logic::formula_callable* e);
+	explicit grid(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~grid() {}
 	grid& set_show_background(bool val) {
 		show_background_ = val;
 		return *this;
 	}
-	virtual void set_dim(int w, int h);
-	void add_row(const std::vector<widget_ptr>& widgets);
+	virtual void setDim(int w, int h);
+	void add_row(const std::vector<WidgetPtr>& widgets);
 
 	grid& add_col(const std::string& str);
-	grid& add_col(const widget_ptr& widget=widget_ptr());
+	grid& add_col(const WidgetPtr& widget=WidgetPtr());
 
 	grid& finish_row();
 
@@ -74,15 +74,15 @@ public:
 
 	void allow_draw_highlight(bool val=true) { allow_highlight_ = val; }
 
-	bool has_focus() const;
-	virtual widget_ptr get_widget_by_id(const std::string& id);
-	virtual const_widget_ptr get_widget_by_id(const std::string& id) const;
+	bool hasFocus() const;
+	virtual WidgetPtr getWidgetById(const std::string& id);
+	virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 
-	virtual std::vector<widget_ptr> get_children() const;
+	virtual std::vector<WidgetPtr> getChildren() const;
 protected:
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
-	virtual void handle_draw() const;
-	virtual void handle_process();
+	virtual bool handleEvent(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const;
+	virtual void handleProcess();
 
 private:
 	DECLARE_CALLABLE(grid);
@@ -90,12 +90,12 @@ private:
 	int row_at(int x, int y) const;
 	void recalculate_dimensions();
 
-	void visit_values(game_logic::formula_callable_visitor& visitor);
+	void visitValues(game_logic::FormulaCallableVisitor& visitor);
 
 	int nrows() const { return cells_.size()/ncols_; }
 	int ncols_;
-	std::vector<widget_ptr> cells_;
-	std::vector<widget_ptr> visible_cells_;
+	std::vector<WidgetPtr> cells_;
+	std::vector<WidgetPtr> visible_cells_;
 	std::vector<int> col_widths_;
 	std::vector<COLUMN_ALIGN> col_aligns_;
 	std::vector<int> header_rows_;
@@ -112,7 +112,7 @@ private:
 	int set_w_;
 	int set_h_;
 
-	std::vector<widget_ptr> new_row_;
+	std::vector<WidgetPtr> new_row_;
 	std::vector<boost::function<void()> > row_callbacks_;
 	callback_type on_mouseover_;
 	callback_type on_select_;
@@ -126,8 +126,8 @@ private:
 
 	game_logic::formula_ptr ffl_on_select_;
 	game_logic::formula_ptr ffl_on_mouseover_;
-	game_logic::formula_callable_ptr select_arg_;
-	game_logic::formula_callable_ptr mouseover_arg_;
+	game_logic::FormulaCallablePtr select_arg_;
+	game_logic::FormulaCallablePtr mouseover_arg_;
 
 	friend class dropdown_widget;
 };
@@ -135,8 +135,8 @@ private:
 typedef boost::intrusive_ptr<grid> grid_ptr;
 typedef boost::intrusive_ptr<const grid> const_grid_ptr;
 
-int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget);
-int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_widgets);
+int show_grid_as_context_menu(grid_ptr grid, WidgetPtr draw_widget);
+int show_grid_as_context_menu(grid_ptr grid, const std::vector<WidgetPtr> draw_widgets);
 
 }
 

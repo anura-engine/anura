@@ -5,11 +5,11 @@
 namespace game_logic
 {
 
-formula_callable_suspended::~formula_callable_suspended()
+FormulaCallable_suspended::~FormulaCallable_suspended()
 {
 }
 
-void formula_callable_visitor::visit(variant* v)
+void FormulaCallableVisitor::visit(variant* v)
 {
 	if(!v) {
 		return;
@@ -35,23 +35,23 @@ void formula_callable_visitor::visit(variant* v)
 			visit(v->get_attr_mutable(key));
 		}
 	} else if(v->is_callable()) {
-		ptr_.push_back(formula_callable_suspended_ptr(new formula_callable_suspended_variant(v)));
+		ptr_.push_back(FormulaCallable_suspended_ptr(new FormulaCallable_suspended_variant(v)));
 		visit(*v->as_callable());
 	} else if(v->is_function()) {
-		std::vector<boost::intrusive_ptr<const formula_callable>*> items;
+		std::vector<boost::intrusive_ptr<const FormulaCallable>*> items;
 		v->get_mutable_closure_ref(items);
-		foreach(boost::intrusive_ptr<const formula_callable>* ptr, items) {
+		foreach(boost::intrusive_ptr<const FormulaCallable>* ptr, items) {
 			visit(ptr);
 		}
 	}
 }
 
-void formula_callable_visitor::visit(const formula_callable& callable)
+void FormulaCallableVisitor::visit(const FormulaCallable& callable)
 {
-	visit(const_cast<formula_callable&>(callable));
+	visit(const_cast<FormulaCallable&>(callable));
 }
 
-void formula_callable_visitor::visit(formula_callable& callable)
+void FormulaCallableVisitor::visit(FormulaCallable& callable)
 {
 	if(visited_.count(&callable)) {
 		return;
@@ -59,7 +59,7 @@ void formula_callable_visitor::visit(formula_callable& callable)
 
 	visited_.insert(&callable);
 
-	callable.perform_visit_values(*this);
+	callable.performVisitValues(*this);
 }
 
 }

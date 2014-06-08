@@ -58,7 +58,7 @@ movement_script::movement_script(variant node) : id_(node["id"].as_string()) {
 	}
 }
 
-active_movement_script_ptr movement_script::begin_execution(const game_logic::formula_callable& callable) const
+active_movement_script_ptr movement_script::begin_execution(const game_logic::FormulaCallable& callable) const
 {
 	active_movement_script_ptr result(new active_movement_script);
 	foreach(const modification& m, modifications_) {

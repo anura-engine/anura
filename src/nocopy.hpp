@@ -20,21 +20,14 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#define DISALLOW_COPY_AND_ASSIGN(TypeName)  \
+    TypeName(const TypeName&);              \
+    void operator=(const TypeName&)
 
-namespace hex 
-{
-	class HexMap;
-
-	class HexObject;
-	typedef boost::intrusive_ptr<HexObject> HexObjectPtr;
-	typedef boost::intrusive_ptr<const HexObject> ConstHexObjectPtr;
-
-	class TileSheet;
-	typedef boost::shared_ptr<const TileSheet> TileSheetPtr;
-
-	class TileType;
-	typedef boost::intrusive_ptr<const TileType> TileTypePtr;
-}
+#define DISALLOW_COPY_ASSIGN_AND_DEFAULT(TypeName)  \
+    TypeName();                                     \
+    TypeName(const TypeName&);                      \
+    void operator=(const TypeName&)

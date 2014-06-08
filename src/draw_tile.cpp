@@ -95,7 +95,7 @@ void queue_draw_from_tilesheet(graphics::blit_queue& q, const graphics::texture&
 		return;
 	}
 
-	q.set_texture(t.get_id());
+	q.setTexture(t.get_id());
 
 	const int width = std::max<int>(t.width(), t.height());
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();

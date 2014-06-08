@@ -26,10 +26,10 @@ namespace gui
 		int do_commands_on_process = 0;
 	}
 
-	custom_object_widget::custom_object_widget(const variant& v, game_logic::formula_callable* e)
+	custom_object_widget::custom_object_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v, e)
 	{
-		ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		ASSERT_LOG(v.has_key("object") == true, "You must provide an object");
 		init(v);
 	}
@@ -41,7 +41,7 @@ namespace gui
 	void custom_object_widget::init(const variant& v)
 	{
 		entity_.reset();
-		handle_process_on_entity_ = v["handle_process"].as_bool(false);
+		handleProcess_on_entity_ = v["handleProcess"].as_bool(false);
 		if(v["object"].is_string()) {
 			// type name, has obj_x, obj_y, facing			
 			entity_ = entity_ptr(new custom_object(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1)));
@@ -66,41 +66,41 @@ namespace gui
 		}
 		if(v.has_key("commands")) {
 			do_commands_on_process = 10;
-			commands_handler_ = entity_->create_formula(v["commands"]);
+			commands_handler_ = entity_->executeCommand(v["commands"]);
 			using namespace game_logic;
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(entity_.get()));
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(entity_.get()));
 			callable->add("id", variant(id()));
 			variant value = commands_handler_->execute(*callable);
-			entity_->execute_command(value);
+			entity_->executeCommand(value);
 		}
 		if(v.has_key("on_click")) {
-			click_handler_ = get_environment()->create_formula(v["on_click"]);
+			click_handler_ = getEnvironment()->createFormula(v["on_click"]);
 			on_click_ = boost::bind(&custom_object_widget::click, this, _1);
 		}
 		if(v.has_key("on_mouse_enter")) {
-			mouse_enter_handler_ = get_environment()->create_formula(v["on_mouse_enter"]);
+			mouse_enter_handler_ = getEnvironment()->createFormula(v["on_mouse_enter"]);
 			on_mouse_enter_ = boost::bind(&custom_object_widget::mouse_enter, this);
 		}
 		if(v.has_key("on_mouse_leave")) {
-			mouse_leave_handler_ = get_environment()->create_formula(v["on_mouse_leave"]);
+			mouse_leave_handler_ = getEnvironment()->createFormula(v["on_mouse_leave"]);
 			on_mouse_leave_ = boost::bind(&custom_object_widget::mouse_leave, this);
 		}
 		if(v.has_key("overlay") && v["overlay"].is_null() == false) {
-			overlay_ = widget_factory::create(v["overlay"], get_environment());
+			overlay_ = widget_factory::create(v["overlay"], getEnvironment());
 		}
-		set_dim(entity_->current_frame().width(), entity_->current_frame().height());
+		setDim(entity_->current_frame().width(), entity_->current_frame().height());
 	}
 
 	void custom_object_widget::click(int button)
 	{
 		using namespace game_logic;
-		if(get_environment()) {
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+		if(getEnvironment()) {
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			callable->add("mouse_button", variant(button));
 			variant value = click_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "custom_object_widget::click() called without environment!" << std::endl;
 		}
@@ -109,12 +109,12 @@ namespace gui
 	void custom_object_widget::mouse_enter()
 	{
 		using namespace game_logic;
-		if(get_environment()) {
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+		if(getEnvironment()) {
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_enter_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_enter() called without environment!" << std::endl;
 		}
@@ -123,12 +123,12 @@ namespace gui
 	void custom_object_widget::mouse_leave()
 	{
 		using namespace game_logic;
-		if(get_environment()) {
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+		if(getEnvironment()) {
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_leave_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "custom_object_widget::mouse_leave() called without environment!" << std::endl;
 		}
@@ -159,12 +159,12 @@ BEGIN_DEFINE_CALLABLE(custom_object_widget, widget)
 	DEFINE_FIELD(overlay, "map|builtin widget|null")
 		return variant(obj.overlay_.get());
 	DEFINE_SET_FIELD
-		obj.overlay_ = widget_factory::create(value, obj.get_environment());
-	DEFINE_FIELD(handle_process, "bool")
-		return variant::from_bool(obj.handle_process_on_entity_);
+		obj.overlay_ = widget_factory::create(value, obj.getEnvironment());
+	DEFINE_FIELD(handleProcess, "bool")
+		return variant::from_bool(obj.handleProcess_on_entity_);
 END_DEFINE_CALLABLE(custom_object_widget)
 
-	void custom_object_widget::handle_draw() const
+	void custom_object_widget::handleDraw() const
 	{
 		if(entity_) {
 			glPushMatrix();
@@ -174,14 +174,14 @@ END_DEFINE_CALLABLE(custom_object_widget)
 			glPopMatrix();
 		}
 		if(overlay_) {
-			overlay_->set_loc(x() + width()/2 - overlay_->width()/2, y() + height()/2 - overlay_->height()/2);
+			overlay_->setLoc(x() + width()/2 - overlay_->width()/2, y() + height()/2 - overlay_->height()/2);
 			overlay_->draw();
 		}
 	}
 
-	bool custom_object_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool custom_object_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		if((event.type == SDL_MOUSEWHEEL) && in_widget(event.button.x, event.button.y)) {
+		if((event.type == SDL_MOUSEWHEEL) && inWidget(event.button.x, event.button.y)) {
 			// skip processing if mousewheel event
 			if(entity_) {
 				custom_object* obj = static_cast<custom_object*>(entity_.get());
@@ -191,7 +191,7 @@ END_DEFINE_CALLABLE(custom_object_widget)
 
 		if(event.type == SDL_MOUSEMOTION) {
 			const SDL_MouseMotionEvent& e = event.motion;
-			if(in_widget(e.x,e.y)) {
+			if(inWidget(e.x,e.y)) {
 				if(on_mouse_enter_) {
 					on_mouse_enter_();
 				}
@@ -202,16 +202,16 @@ END_DEFINE_CALLABLE(custom_object_widget)
 			}
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& e = event.button;
-			if(in_widget(e.x,e.y)) {
-				claimed = claim_mouse_events();
+			if(inWidget(e.x,e.y)) {
+				claimed = claimMouseEvents();
 			}
 		} else if(event.type == SDL_MOUSEBUTTONUP) {
 			const SDL_MouseButtonEvent& e = event.button;
-			if(in_widget(e.x,e.y)) {
+			if(inWidget(e.x,e.y)) {
 				if(on_click_) {
 					on_click_(event.button.button);
 				}
-				claimed = claim_mouse_events();
+				claimed = claimMouseEvents();
 			}
 		}
 
@@ -222,10 +222,10 @@ END_DEFINE_CALLABLE(custom_object_widget)
 		return claimed;
 	}
 
-	void custom_object_widget::handle_process()
+	void custom_object_widget::handleProcess()
 	{
-		widget::handle_process();
-		if(entity_ && handle_process_on_entity_) {
+		widget::handleProcess();
+		if(entity_ && handleProcess_on_entity_) {
 			custom_object* obj = static_cast<custom_object*>(entity_.get());
 			obj->process(level::current());
 		}
@@ -236,7 +236,7 @@ END_DEFINE_CALLABLE(custom_object_widget)
 
 //		if(do_commands_on_process && --do_commands_on_process == 0) {
 //			variant value = commands_handler_->execute();
-//			entity_->execute_command(value);
+//			entity_->executeCommand(value);
 //		}
 	}
 

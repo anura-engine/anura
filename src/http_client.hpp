@@ -29,7 +29,7 @@
 
 using boost::asio::ip::tcp;
 
-class http_client : public game_logic::formula_callable
+class http_client : public game_logic::FormulaCallable
 {
 public:
 	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
@@ -41,7 +41,7 @@ public:
 	virtual void process();
 
 protected:
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 
 private:
 	
@@ -59,7 +59,7 @@ private:
 		int nbytes_sent;
 		boost::function<void(int,int,bool)> progress_handler;
 		boost::function<void(std::string)> handler, error_handler;
-		game_logic::map_formula_callable_ptr callable;
+		game_logic::map_FormulaCallablePtr callable;
 
 		boost::array<char, 1024> buf;
 		

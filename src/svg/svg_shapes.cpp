@@ -379,7 +379,7 @@ namespace KRE
 			adjust_(LengthAdjust::SPACING)
 		{
 			// XXX should we use provided <xmltext> instead?
-			text_ = pt.get_value<std::string>();
+			text_ = pt.getValue<std::string>();
 
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {

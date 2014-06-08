@@ -53,13 +53,13 @@ void editor_layers_dialog::init()
 
 		row_data row = { section, layer, hidden };
 		rows_.push_back(row);
-		g->add_col(widget_ptr(section));
-		g->add_col(widget_ptr(new label(formatter() << layer, graphics::color_white())));
+		g->add_col(WidgetPtr(section));
+		g->add_col(WidgetPtr(new label(formatter() << layer, graphics::color_white())));
 	}
 
 	gui_section_widget* section = new gui_section_widget(locked_ ? "checkbox-filled" : "checkbox-empty");
-	g->add_col(widget_ptr(section));
-	g->add_col(widget_ptr(new label("lock", graphics::color_white())));
+	g->add_col(WidgetPtr(section));
+	g->add_col(WidgetPtr(new label("lock", graphics::color_white())));
 
 	g->allow_selection();
 	g->register_selection_callback(boost::bind(&editor_layers_dialog::row_selected, this, _1));
@@ -74,8 +74,8 @@ void editor_layers_dialog::init()
 	foreach(const std::string& classification, all_classifications_) {
 		const bool hidden = editor_.get_level().hidden_object_classifications().count(classification) != 0;
 		gui_section_widget* section = new gui_section_widget(hidden ? "checkbox-empty" : "checkbox-filled");
-		g->add_col(widget_ptr(section));
-		g->add_col(widget_ptr(new label(classification, graphics::color_white())));
+		g->add_col(WidgetPtr(section));
+		g->add_col(WidgetPtr(new label(classification, graphics::color_white())));
 	}
 
 	g->allow_selection();
@@ -167,8 +167,8 @@ void editor_layers_dialog::find_classifications()
 	all_classifications_.clear();
 	foreach(level_ptr lvl, editor_.get_level_list()) {
 		foreach(entity_ptr e, lvl->get_chars()) {
-			if(e->editor_info() && !e->editor_info()->classification().empty()) {
-				all_classifications_.insert(e->editor_info()->classification());
+			if(e->EditorInfo() && !e->EditorInfo()->classification().empty()) {
+				all_classifications_.insert(e->EditorInfo()->classification());
 			}
 		}
 	}

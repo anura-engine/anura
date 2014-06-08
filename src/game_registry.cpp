@@ -23,7 +23,7 @@
 game_registry& game_registry::instance()
 {
 	static game_registry* obj = new game_registry;
-	static game_logic::formula_callable_ptr holder(obj);
+	static game_logic::FormulaCallablePtr holder(obj);
 	return *obj;
 }
 
@@ -46,12 +46,12 @@ variant game_registry::write_contents()
 	return values_;
 }
 
-variant game_registry::get_value(const std::string& key) const
+variant game_registry::getValue(const std::string& key) const
 {
 	return values_[variant(key)];
 }
 
-void game_registry::set_value(const std::string& key, const variant& value)
+void game_registry::setValue(const std::string& key, const variant& value)
 {
 	values_ = values_.add_attr(variant(key), value);
 }

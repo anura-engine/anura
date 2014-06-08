@@ -203,7 +203,7 @@ namespace KRE
 		return def;
 	}
 
-	void FboOpenGL::PreRender()
+	void FboOpenGL::preRender()
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		// XXX wip
@@ -217,7 +217,7 @@ namespace KRE
 			//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 
-		Blittable::PreRender();
+		Blittable::preRender();
 	}
 
 	void FboOpenGL::HandleApply()

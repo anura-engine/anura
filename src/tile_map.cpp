@@ -233,14 +233,14 @@ namespace {
 std::vector<tile_pattern> patterns;
 int current_patterns_version = 0;
 
-class filter_callable : public game_logic::formula_callable {
+class filter_callable : public game_logic::FormulaCallable {
 	const tile_map& m_;
 	int x_, y_;
 public:
 	filter_callable(const tile_map& m, int x, int y) : m_(m), x_(x), y_(y)
 	{}
 
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		if(key == "tiles") {
 			return variant(&m_);
 		} else if(key == "x") {
@@ -262,7 +262,7 @@ public:
 	{}
 
 private:
-	variant execute(const formula_callable& variables) const {
+	variant execute(const FormulaCallable& variables) const {
 		variant v = args()[0]->evaluate(variables);
 		tile_map* m = v.convert_to<tile_map>();
 		return variant(m->get_tile(args()[1]->evaluate(variables).as_int(),
@@ -274,7 +274,7 @@ class tile_map_function_symbol_table : public function_symbol_table
 {
 public:
 	expression_ptr create_function(
-	           const std::string& fn, const std::vector<expression_ptr>& args, const_formula_callable_definition_ptr callable_def) const {
+	           const std::string& fn, const std::vector<expression_ptr>& args, const_FormulaCallable_definition_ptr callable_def) const {
 		if(fn == "tile_at") {
 			return expression_ptr(new tile_at_function(args));
 		} else {

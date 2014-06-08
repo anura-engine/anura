@@ -43,16 +43,16 @@ namespace movie
 	{
 	public:
 		vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress);
-		vpx(const variant& v, game_logic::formula_callable* e);
+		vpx(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~vpx();
 	protected:
 		void init();
 		void stop();
 		void gen_textures();
 		void decode_frame();
-		virtual void handle_process();
-		virtual bool handle_event(const SDL_Event& event, bool claimed);
-		virtual void handle_draw() const;
+		virtual void handleProcess();
+		virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual void handleDraw() const;
 	private:
 		std::ifstream file_;
 		std::string file_name_;

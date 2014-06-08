@@ -49,7 +49,7 @@ struct cairo_matrix_saver
 	cairo_context& ctx_;
 };
 
-class cairo_callable : public game_logic::formula_callable
+class cairo_callable : public game_logic::FormulaCallable
 {
 public:
 	cairo_callable();

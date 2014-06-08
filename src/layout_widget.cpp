@@ -7,7 +7,7 @@
 
 namespace gui
 {
-	layout_widget::layout_widget(const variant& v, game_logic::formula_callable* e)
+	layout_widget::layout_widget(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v,e), fixed_width_(0), fixed_height_(0), layout_type_(ABSOLUTE_LAYOUT)
 	{
 		if(v.has_key("style")) {
@@ -55,7 +55,7 @@ namespace gui
 					lh = 0;
 				}
 				lh = std::max(lh, w->height());
-				w->set_loc(lx, ly);
+				w->setLoc(lx, ly);
 				lx += w->width();
 				lw = std::max(lw, lx);
 			}
@@ -69,13 +69,13 @@ namespace gui
 			ASSERT_LOG(false, "Incorrect layout style");
 		}
 		if(fixed_height_ == 0 && fixed_width_ == 0) {
-			set_dim(lw, lh);
+			setDim(lw, lh);
 		}
 	}
 
-	void layout_widget::recalc_loc()
+	void layout_widget::recalcLoc()
 	{
-		widget::recalc_loc();
+		widget::recalcLoc();
 		if(width()) {
 			fixed_width_ = width();
 		}
@@ -84,7 +84,7 @@ namespace gui
 		}
 	}
 
-	void layout_widget::handle_draw() const
+	void layout_widget::handleDraw() const
 	{
 		glPushMatrix();
 		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -94,10 +94,10 @@ namespace gui
 		glPopMatrix();
 	}
 
-	bool layout_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool layout_widget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		for(auto w : children_) {
-			claimed = w->process_event(event, claimed);
+			claimed = w->processEvent(event, claimed);
 			if(claimed) {
 				return claimed;
 			}
@@ -105,24 +105,24 @@ namespace gui
 		return claimed;
 	}
 
-	std::vector<widget_ptr> layout_widget::get_children() const
+	std::vector<WidgetPtr> layout_widget::getChildren() const
 	{
 
-		std::vector<widget_ptr> v;
+		std::vector<WidgetPtr> v;
 		for(auto w : children_) {
 			v.push_back(w);
 		}
 		return v;
 	}
 
-	void layout_widget::visit_values(game_logic::formula_callable_visitor& visitor)
+	void layout_widget::visitValues(game_logic::FormulaCallableVisitor& visitor)
 	{
 		for(auto w : children_) {
 			visitor.visit(&w);
 		}
 	}
 
-	variant layout_widget::handle_write()
+	variant layout_widget::handleWrite()
 	{
 		variant_builder res;
 		res.add("type", "layout");

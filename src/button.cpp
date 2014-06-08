@@ -25,9 +25,7 @@
 #include "grid_widget.hpp"
 #include "iphone_controls.hpp"
 #include "label.hpp"
-#include "raster.hpp"
 #include "slider.hpp"
-#include "surface_cache.hpp"
 #include "framed_gui_element.hpp"
 #include "widget_settings_dialog.hpp"
 #include "widget_factory.hpp"
@@ -41,49 +39,49 @@ namespace {
 	variant g_color_scheme;
 }
 
-button::SetColorSchemeScope::SetColorSchemeScope(variant v) : backup(g_color_scheme)
+Button::SetColorSchemeScope::SetColorSchemeScope(variant v) : backup(g_color_scheme)
 {
 	g_color_scheme = v;
 	fprintf(stderr, "ZZZ: SET COLOR SCHEME: %s\n", g_color_scheme.write_json().c_str());
 }
 
-button::SetColorSchemeScope::~SetColorSchemeScope()
+Button::SetColorSchemeScope::~SetColorSchemeScope()
 {
 	g_color_scheme = backup;
 	fprintf(stderr, "ZZZ: DONE SET COLOR SCHEME: %s\n", g_color_scheme.write_json().c_str());
 }
 
-button::button(const std::string& str, boost::function<void()> onclick)
+Button::Button(const std::string& str, boost::function<void()> onclick)
   : label_(new label(str, graphics::color_white())),
     onclick_(onclick), button_resolution_(BUTTON_SIZE_NORMAL_RESOLUTION),
 	button_style_(BUTTON_STYLE_NORMAL), hpadding_(default_hpadding), vpadding_(default_vpadding),
 	down_(false)
 {
-	set_environment();
+	setEnvironment();
 
 	if(g_color_scheme.is_null() == false) {
-		set_color_scheme(g_color_scheme);
+		setColorScheme(g_color_scheme);
 		return;
 	}
 
 	setup();
 }
 
-button::button(widget_ptr label, boost::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION button_resolution)
-  : label_(label), onclick_(onclick), button_resolution_(button_resolution), button_style_(button_style),
+Button::Button(WidgetPtr label, boost::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION buttonResolution)
+  : label_(label), onclick_(onclick), button_resolution_(buttonResolution), button_style_(button_style),
 	down_(false), hpadding_(default_hpadding), vpadding_(default_vpadding)
 	
 {
-	set_environment();
+	setEnvironment();
 	if(g_color_scheme.is_null() == false) {
-		set_color_scheme(g_color_scheme);
+		setColorScheme(g_color_scheme);
 		return;
 	}
 
 	setup();
 }
 
-button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e), down_(false)
+Button::Button(const variant& v, game_logic::FormulaCallable* e) : widget(v,e), down_(false)
 {
 	variant label_var = v["label"];
 	if(!label_var.is_callable()) {
@@ -91,7 +89,7 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 	}
 	ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an on_click handler: " << v.write_json() << " " << v.debug_location());
 	// create delegate for onclick
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
 	const variant on_click_value = v["on_click"];
 	if(on_click_value.is_function()) {
@@ -99,15 +97,15 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 		static const variant fml("fn()");
 		click_handler_.reset(new game_logic::formula(fml));
 
-		game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 		callable->add("fn", on_click_value);
 
 		handler_arg_.reset(callable);
 	} else { 
-		click_handler_ = get_environment()->create_formula(on_click_value);
+		click_handler_ = getEnvironment()->createFormula(on_click_value);
 	}
 
-	onclick_ = boost::bind(&button::click, this);
+	onclick_ = boost::bind(&Button::click, this);
 	button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 	button_style_ = v["style"].as_string_default("default") == "default" ? BUTTON_STYLE_DEFAULT : BUTTON_STYLE_NORMAL;
 	hpadding_ = v["hpad"].as_int(default_hpadding);
@@ -121,17 +119,17 @@ button::button(const variant& v, game_logic::formula_callable* e) : widget(v,e),
 	if(v.has_key("color_scheme")) {
 		variant m = v["color_scheme"];
 
-		set_color_scheme(m);
+		setColorScheme(m);
 		return;
 	} else if(g_color_scheme.is_null() == false) {
-		set_color_scheme(g_color_scheme);
+		setColorScheme(g_color_scheme);
 		return;
 	}
 
 	setup();
 }
 
-void button::set_color_scheme(const variant& m)
+void Button::setColorScheme(const variant& m)
 {
 	if(m.is_null()) {
 		return;
@@ -160,61 +158,61 @@ void button::set_color_scheme(const variant& m)
 	setup();
 }
 
-void button::click()
+void Button::click()
 {
 	if(handler_arg_) {
 		variant value = click_handler_->execute(*handler_arg_);
-		get_environment()->execute_command(value);
-	} else if(get_environment()) {
-		variant value = click_handler_->execute(*get_environment());
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
+	} else if(getEnvironment()) {
+		variant value = click_handler_->execute(*getEnvironment());
+		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "button::click() called without environment!" << std::endl;
+		std::cerr << "Button::click() called without environment!" << std::endl;
 	}
 }
 
-void button::setup()
+void Button::setup()
 {
 	if(button_style_ == BUTTON_STYLE_DEFAULT){
-		normal_button_image_set_ = framed_gui_element::get("default_button");
-		depressed_button_image_set_ = framed_gui_element::get("default_button_pressed");
-		focus_button_image_set_ = framed_gui_element::get("default_button_focus");
+		normal_button_image_set_ = FramedGuiElement::get("default_button");
+		depressed_button_image_set_ = FramedGuiElement::get("default_button_pressed");
+		focus_button_image_set_ = FramedGuiElement::get("default_button_focus");
 	}else{
-		normal_button_image_set_ = framed_gui_element::get("regular_button");
-		depressed_button_image_set_ = framed_gui_element::get("regular_button_pressed");
-		focus_button_image_set_ = framed_gui_element::get("regular_button_focus");
+		normal_button_image_set_ = FramedGuiElement::get("regular_button");
+		depressed_button_image_set_ = FramedGuiElement::get("regular_button_pressed");
+		focus_button_image_set_ = FramedGuiElement::get("regular_button_focus");
 	}
 	current_button_image_set_ = normal_button_image_set_;
 	
 	set_label(label_);
 }
 
-void button::set_focus(bool f)
+void Button::setFocus(bool f)
 {
-	widget::set_focus();
+	Widget::setFocus();
 	current_button_image_set_ = f ? (down_ ? depressed_button_image_set_ : focus_button_image_set_) : normal_button_image_set_;
 }
 
-void button::do_execute()
+void Button::doExecute()
 { 
 	if(onclick_) { 
 		onclick_();
 	} 
 }
 
-void button::set_label(widget_ptr label)
+void Button::set_label(WidgetPtr label)
 {
 	label_ = label;
 	if(width() == 0 && height() == 0) {
-		set_dim(label_->width()+hpadding_*2,label_->height()+vpadding_*2);
+		setDim(label_->width()+hpadding_*2,label_->height()+vpadding_*2);
 	}
 }
 
-void button::handle_draw() const
+void Button::handleDraw() const
 {
-	label_->set_loc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
+	label_->setLoc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
 
-	const boost::scoped_ptr<graphics::color>& col = current_button_image_set_ == normal_button_image_set_ ? normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
+	const boost::scoped_ptr<KRE::Color>& col = current_button_image_set_ == normal_button_image_set_ ? normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
 
 	if(col.get() != NULL) {
 		col->set_as_current_color();
@@ -223,24 +221,24 @@ void button::handle_draw() const
 	current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0);
 	graphics::color(255, 255, 255, 255).set_as_current_color();
 
-	const boost::scoped_ptr<graphics::color>& text_col = current_button_image_set_ == normal_button_image_set_ ? text_normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
+	const boost::scoped_ptr<KRE::Color>& text_col = current_button_image_set_ == normal_button_image_set_ ? text_normal_color_ : (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
 	if(text_col.get() != NULL) {
 		text_col->set_as_current_color();
 	}
 	label_->draw();
-	graphics::color(255, 255, 255, 255).set_as_current_color();
+	KRE::Color(255, 255, 255, 255).set_as_current_color();
 }
 
-void button::handle_process()
+void Button::handleProcess()
 {
-	widget::handle_process();
+	Widget::handleProcess();
 	label_->process();
 }
 
-bool button::handle_event(const SDL_Event& event, bool claimed)
+bool Button::handleEvent(const SDL_Event& event, bool claimed)
 {
-	if((event.type == SDL_MOUSEWHEEL) && in_widget(event.button.x, event.button.y)) {
+	if((event.type == SDL_MOUSEWHEEL) && inWidget(event.button.x, event.button.y)) {
 		// skip processing if mousewheel event
 		return claimed;
 	}
@@ -253,31 +251,31 @@ bool button::handle_event(const SDL_Event& event, bool claimed)
 
 	if(event.type == SDL_MOUSEMOTION) {
 		const SDL_MouseMotionEvent& e = event.motion;
-		if(in_widget(e.x,e.y)) {
+		if(inWidget(e.x,e.y)) {
 			current_button_image_set_ = down_ ? depressed_button_image_set_ : focus_button_image_set_;
 		} else {
 			current_button_image_set_ = normal_button_image_set_;
 		}
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 		const SDL_MouseButtonEvent& e = event.button;
-		if(in_widget(e.x,e.y)) {
-		if(clip_area()) {
-			std::cerr << *clip_area() << "\n";
+		if(inWidget(e.x,e.y)) {
+		if(clipArea()) {
+			std::cerr << *clipArea() << "\n";
 		} else {
 			std::cerr << "(null)\n";
 		}
 			current_button_image_set_ = depressed_button_image_set_;
 			down_ = true;
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 		}
 	} else if(event.type == SDL_MOUSEBUTTONUP) {
 		down_ = false;
 		const SDL_MouseButtonEvent& e = event.button;
 		if(current_button_image_set_ == depressed_button_image_set_) {
-			if(in_widget(e.x,e.y)) {
+			if(inWidget(e.x,e.y)) {
 				current_button_image_set_ = focus_button_image_set_;
 				onclick_();
-				claimed = claim_mouse_events();
+				claimed = claimMouseEvents();
 			} else {
 				current_button_image_set_ = normal_button_image_set_;
 			}
@@ -286,92 +284,92 @@ bool button::handle_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-widget_ptr button::get_widget_by_id(const std::string& id)
+WidgetPtr Button::getWidgetById(const std::string& id)
 {
-	if(label_ && label_->get_widget_by_id(id)) {
+	if(label_ && label_->getWidgetById(id)) {
 		return label_;
 	}
-	return widget::get_widget_by_id(id);
+	return Widget::getWidgetById(id);
 }
 
-const_widget_ptr button::get_widget_by_id(const std::string& id) const
+ConstWidgetPtr Button::getWidgetById(const std::string& id) const
 {
-	if(label_ && label_->get_widget_by_id(id)) {
+	if(label_ && label_->getWidgetById(id)) {
 		return label_;
 	}
-	return widget::get_widget_by_id(id);
+	return Widget::getWidgetById(id);
 }
 
-std::vector<widget_ptr> button::get_children() const
+std::vector<WidgetPtr> Button::getChildren() const
 {
-	std::vector<widget_ptr> result;
+	std::vector<WidgetPtr> result;
 	result.push_back(label_);
 	return result;
 }
 
-BEGIN_DEFINE_CALLABLE(button, widget)
+BEGIN_DEFINE_CALLABLE(Button, Widget)
 	DEFINE_FIELD(label, "builtin widget")
 		return variant(obj.label_.get());
-END_DEFINE_CALLABLE(button)
+END_DEFINE_CALLABLE(Button)
 
-void button::visit_values(game_logic::formula_callable_visitor& visitor)
+void Button::visitValues(game_logic::FormulaCallableVisitor& visitor)
 {
 	if(handler_arg_) {
 		visitor.visit(&handler_arg_);
 	}
 }
 
-void button::set_hpadding(int hpad)
+void Button::setHPadding(int hpad)
 {
 	hpadding_ = hpad;
 	setup();
 }
 
-void button::set_vpadding(int vpad)
+void Button::setVPadding(int vpad)
 {
 	vpadding_ = vpad;
 	setup();
 }
 
 
-widget_settings_dialog* button::settings_dialog(int x, int y, int w, int h)
+WidgetSettingsDialog* Button::settingsDialog(int x, int y, int w, int h)
 {
-	widget_settings_dialog* d = widget::settings_dialog(x,y,w,h);
-
+	WidgetSettingsDialog* d = Widget::settingsDialog(x,y,w,h);
+/*
 	grid_ptr g(new grid(2));
-	g->add_col(new label("H Pad:", d->text_size(), d->font()));
-	g->add_col(new slider(120, [&](double f){this->set_dim(0,0); this->set_hpadding(int(f*100.0));}, hpadding_/100.0, 1));
-	g->add_col(new label("V Pad:", d->text_size(), d->font()));
-	g->add_col(new slider(120, [&](double f){this->set_dim(0,0); this->set_vpadding(int(f*100.0));}, vpadding_/100.0, 1));
+	g->add_col(new label("H Pad:", d->getTextSize(), d->font()));
+	g->add_col(new slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
+	g->add_col(new label("V Pad:", d->getTextSize(), d->font()));
+	g->add_col(new slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
 
 	std::vector<std::string> v;
 	v.push_back("normal");
 	v.push_back("double");
-	dropdown_widget_ptr resolution(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
-	resolution->set_font_size(14);
+	dropdown_WidgetPtr resolution(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+	resolution->setFontSize(14);
 	resolution->set_dropdown_height(h);
 	resolution->set_selection(button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? 0 : 1);
 	resolution->set_on_select_handler([&](int n, const std::string& s){
 		this->button_resolution_ = s == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 		this->setup();
 	});
-	resolution->set_zorder(11);
-	g->add_col(new label("Resolution:", d->text_size(), d->font()));
+	resolution->setZOrder(11);
+	g->add_col(new label("Resolution:", d->getTextSize(), d->font()));
 	g->add_col(resolution);
 
 	v.clear();
 	v.push_back("default");
 	v.push_back("normal");
-	dropdown_widget_ptr style(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
-	style->set_font_size(14);
+	dropdown_WidgetPtr style(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+	style->setFontSize(14);
 	style->set_dropdown_height(h);
 	style->set_selection(button_style_ == BUTTON_STYLE_DEFAULT ? 0 : 1);
 	style->set_on_select_handler([&](int n, const std::string& s){
 		this->button_style_ = s == "normal" ? BUTTON_STYLE_NORMAL : BUTTON_STYLE_DEFAULT;
 		this->setup();
 	});
-	style->set_zorder(10);
-	g->add_col(new label("Style:", d->text_size(), d->font()));
+	style->setZOrder(10);
+	g->add_col(new label("Style:", d->getTextSize(), d->font()));
 	g->add_col(style);
 
 	// label: widget
@@ -381,10 +379,11 @@ widget_settings_dialog* button::settings_dialog(int x, int y, int w, int h)
 	// *** hpad: int
 	// *** vpad: int
 	d->add_widget(g);
+	*/
 	return d;
 }
 
-variant button::handle_write()
+variant Button::handleWrite()
 {
 	variant_builder res;
 	res.add("type", "button");

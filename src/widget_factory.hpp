@@ -26,7 +26,7 @@
 
 namespace widget_factory {
 
-gui::widget_ptr create(const variant& v, game_logic::formula_callable* e);
+gui::WidgetPtr create(const variant& v, game_logic::FormulaCallable* e);
 
 }
 

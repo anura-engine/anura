@@ -95,19 +95,19 @@ variant vec4_to_variant(const glm::vec4& v)
 	return variant(&result);
 }
 
-game_logic::formula_callable_ptr map_into_callable(variant v)
+game_logic::FormulaCallablePtr map_into_callable(variant v)
 {
 	if(v.is_callable()) {
-		return game_logic::formula_callable_ptr(v.mutable_callable());
+		return game_logic::FormulaCallablePtr(v.mutable_callable());
 	} else if(v.is_map()) {
-		game_logic::map_formula_callable* res = new game_logic::map_formula_callable;
+		game_logic::map_FormulaCallable* res = new game_logic::map_FormulaCallable;
 		foreach(const variant_pair& p, v.as_map()) {
 			res->add(p.first.as_string(), p.second);
 		}
 
-		return game_logic::formula_callable_ptr(res);
+		return game_logic::FormulaCallablePtr(res);
 	} else {
-		return game_logic::formula_callable_ptr();
+		return game_logic::FormulaCallablePtr();
 	}
 }
 
@@ -272,7 +272,7 @@ variant_builder& variant_builder::add_value(const std::string& name, const varia
 	return *this;
 }
 
-variant_builder& variant_builder::set_value(const std::string& name, const variant& val)
+variant_builder& variant_builder::setValue(const std::string& name, const variant& val)
 {
 	variant key(name);
 	attr_.erase(key);
@@ -283,7 +283,7 @@ variant_builder& variant_builder::set_value(const std::string& name, const varia
 void variant_builder::merge_object(variant obj)
 {
 	foreach(variant key, obj.get_keys().as_list()) {
-		set_value(key.as_string(), obj[key]);
+		setValue(key.as_string(), obj[key]);
 	}
 }
 

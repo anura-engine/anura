@@ -26,7 +26,7 @@
 #include "editor_variable_info.hpp"
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"
-#include "formula_callable_definition_fwd.hpp"
+#include "FormulaCallable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
 #include "kre/Geometry.hpp"
 #include "light.hpp"
@@ -42,7 +42,7 @@ class player_info;
 
 typedef boost::intrusive_ptr<character> character_ptr;
 
-class entity : public game_logic::wml_serializable_formula_callable
+class entity : public game_logic::WmlSerializableFormulaCallable
 {
 public:
 	static entity_ptr build(variant node);
@@ -64,7 +64,7 @@ public:
 	virtual const player_info* is_human() const { return NULL; }
 	virtual player_info* is_human() { return NULL; }
 	virtual void process(level& lvl);
-	virtual bool execute_command(const variant& var) = 0;
+	virtual bool executeCommand(const variant& var) = 0;
 
 	const std::string& label() const { return label_; }
 	void set_label(const std::string& lb) { label_ = lb; }
@@ -160,12 +160,12 @@ public:
 	virtual entity_ptr standing_on() const = 0;
 
 	virtual void die_with_no_event() = 0;
-	virtual bool is_active(const rect& screen_area) const = 0;
+	virtual bool isActive(const rect& screen_area) const = 0;
 	virtual bool dies_on_inactive() const { return false; } 
 	virtual bool always_active() const { return false; } 
 	
-	virtual formula_callable* vars() { return NULL; }
-	virtual const formula_callable* vars() const { return NULL; }
+	virtual FormulaCallable* vars() { return NULL; }
+	virtual const FormulaCallable* vars() const { return NULL; }
 
 	virtual bool body_passthrough() const { return false; }
 
@@ -173,7 +173,7 @@ public:
 	//object is focused.
 	virtual int vertical_look() const { return 0; }
 
-	void set_id(int id) { id_ = id; }
+	void setId(int id) { id_ = id; }
 	int get_id() const { return id_; }
 
 	bool respawn() const { return respawn_; }
@@ -193,7 +193,7 @@ public:
 	void draw_debug_rects() const;
 
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr editor_info() const { return const_editor_entity_info_ptr(); }
+	virtual const_editor_entity_info_ptr EditorInfo() const { return const_editor_entity_info_ptr(); }
 #endif // !NO_EDITOR
 
 	virtual entity_ptr clone() const { return entity_ptr(); }
@@ -204,9 +204,9 @@ public:
 	virtual game_logic::const_formula_ptr get_event_handler(int key) const { return game_logic::const_formula_ptr(); }
 	virtual void set_event_handler(int, game_logic::const_formula_ptr f) { return; }
 
-	virtual bool handle_event(const std::string& id, const formula_callable* context=NULL) { return false; }
-	virtual bool handle_event(int id, const formula_callable* context=NULL) { return false; }
-	virtual bool handle_event_delay(int id, const formula_callable* context=NULL) { return false; }
+	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
+	virtual bool handleEvent(int id, const FormulaCallable* context=NULL) { return false; }
+	virtual bool handleEvent_delay(int id, const FormulaCallable* context=NULL) { return false; }
 	virtual void resolve_delayed_events() = 0;
 
 	//function which returns true if this object can be 'interacted' with.
@@ -285,11 +285,11 @@ public:
 	Uint8 get_mouse_buttons() const { return mouse_button_state_; }
 	bool is_being_dragged() const { return being_dragged_; }
 	void set_being_dragged(bool val=true) { being_dragged_ = val; }
-	virtual bool get_clip_area(rect* clip_area) = 0;
+	virtual bool get_clipArea(rect* clipArea) = 0;
 	void set_mouse_over_area(const rect& area);
 	const rect& mouse_over_area() const;
 
-	virtual game_logic::const_formula_callable_definition_ptr get_definition() const = 0;
+	virtual game_logic::const_FormulaCallable_definition_ptr get_definition() const = 0;
 
 	virtual bool create_object() = 0;
 
@@ -336,7 +336,7 @@ protected:
 
 	virtual void control(const level& lvl) = 0;
 
-	variant serialize_to_wml() const { return write(); }
+	variant serializeToWml() const { return write(); }
 
 	int prev_feet_x() const { return prev_feet_x_; }
 	int prev_feet_y() const { return prev_feet_y_; }

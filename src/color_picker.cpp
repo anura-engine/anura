@@ -56,8 +56,8 @@ namespace gui
 		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
 	{
-		set_loc(area.x(), area.y());
-		set_dim(area.w(), area.h());
+		setLoc(area.x(), area.y());
+		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
 			palette_.push_back(graphics::color(default_palette[n]));
@@ -74,8 +74,8 @@ namespace gui
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
 		onchange_(change_fun)
 	{
-		set_loc(area.x(), area.y());
-		set_dim(area.w(), area.h());
+		setLoc(area.x(), area.y());
+		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
 			palette_.push_back(graphics::color(default_palette[n]));
@@ -87,13 +87,13 @@ namespace gui
 		init();
 	}
 
-	color_picker::color_picker(const variant& v, game_logic::formula_callable* e)
+	color_picker::color_picker(const variant& v, game_logic::FormulaCallable* e)
 		: widget(v, e), selected_palette_color_(-1), hue_(0), saturation_(0), 
 		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0),
 		main_color_selected_(1)
 	{
 		// create delegate for onchange
-		ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
 		if(v.has_key("on_change")) {
 			const variant on_change_value = v["on_change"];
@@ -102,12 +102,12 @@ namespace gui
 				static const variant fml("fn(color)");
 				change_handler_.reset(new game_logic::formula(fml));
 
-				game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+				game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 				callable->add("fn", on_change_value);
 
 				handler_arg_.reset(callable);
 			} else { 
-				change_handler_ = get_environment()->create_formula(on_change_value);
+				change_handler_ = getEnvironment()->createFormula(on_change_value);
 			}
 			onchange_ = boost::bind(&color_picker::change, this);
 		}
@@ -155,7 +155,7 @@ namespace gui
 
 	void color_picker::color_updated()
 	{
-		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		setText_from_color(main_color_selected_ ? primary_ : secondary_);
 		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 	}
 
@@ -173,7 +173,7 @@ namespace gui
 		palette_[size_t(n)] = color;
 	}
 
-	void color_picker::handle_process()
+	void color_picker::handleProcess()
 	{
 	}
 
@@ -292,7 +292,7 @@ namespace gui
 		}
 	}
 
-	void color_picker::handle_draw() const
+	void color_picker::handleDraw() const
 	{
 		glPushMatrix();
 		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -353,7 +353,7 @@ namespace gui
 				secondary_ = graphics::color(red_, green_, blue_, alpha_);
 			}
 
-			set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+			setText_from_color(main_color_selected_ ? primary_ : secondary_);
 			set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 			if(onchange_) {
@@ -362,18 +362,18 @@ namespace gui
 		}
 	}
 
-	bool color_picker::handle_event(const SDL_Event& event, bool claimed)
+	bool color_picker::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(claimed) {
 			return claimed;
 		}
 		SDL_Event ev = event;
-		normalize_event(&ev);
+		normalizeEvent(&ev);
 
-		if(g_ && g_->process_event(ev, claimed)) {
+		if(g_ && g_->processEvent(ev, claimed)) {
 			return true;
 		}
-		if(copy_to_palette_ && copy_to_palette_->process_event(ev, claimed)) {
+		if(copy_to_palette_ && copy_to_palette_->processEvent(ev, claimed)) {
 			return true;
 		}
 
@@ -397,7 +397,7 @@ namespace gui
 							secondary_ = palette_[selected_palette_color_];
 						}
 						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-						set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+						setText_from_color(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
@@ -418,7 +418,7 @@ namespace gui
 							primary_ = palette_[selected_palette_color_];
 						}
 						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-						set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+						setText_from_color(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
@@ -440,18 +440,18 @@ namespace gui
 			palette_.push_back(graphics::color("white"));
 		}
 
-		std::vector<label_ptr> labels;
+		std::vector<LabelPtr> labels;
 		const char* label_text[] =
 		{
 			"R:", "G:", "B:", "H:", "S:", "V:", "A:"
 		};
 
 		g_.reset(new grid(3));
-		g_->set_loc(5, color_box_length_ + wheel_radius_*2 + 40);
+		g_->setLoc(5, color_box_length_ + wheel_radius_*2 + 40);
 		for(int n = 0; n != 7; ++n) {
 			labels.push_back(new label(label_text[n], graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"));
 			s_.push_back(new slider(50, boost::bind(&color_picker::slider_change, this, n, _1), 0, 1));
-			t_.push_back(new text_editor_widget(40));
+			t_.push_back(new TextEditorWidget(40));
 			t_.back()->set_on_user_change_handler(boost::bind(&color_picker::text_change, this, n));
 			t_.back()->set_on_tab_handler(boost::bind(&color_picker::text_tab_pressed, this, n));
 
@@ -462,13 +462,13 @@ namespace gui
 		palette_offset_y_ = g_->y() + g_->height() + 10;
 
 		copy_to_palette_.reset(new button(new label("Set", graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"), boost::bind(&color_picker::copy_to_palette_fn, this)));
-		copy_to_palette_->set_loc(5, palette_offset_y_);
-		copy_to_palette_->set_tooltip("Set palette color", 12, graphics::color("antique_white").as_sdl_color(), "Montaga-Regular");
+		copy_to_palette_->setLoc(5, palette_offset_y_);
+		copy_to_palette_->setTooltip("Set palette color", 12, graphics::color("antique_white").as_sdl_color(), "Montaga-Regular");
 
 		palette_offset_y_ = copy_to_palette_->y() + copy_to_palette_->height() + 10;
 
 		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		setText_from_color(main_color_selected_ ? primary_ : secondary_);
 	}
 
 	void color_picker::copy_to_palette_fn()
@@ -517,7 +517,7 @@ namespace gui
 				secondary_ = graphics::color(red_, green_, blue_, alpha_);
 			}
 		}
-		set_text_from_color(main_color_selected_ ? primary_ : secondary_);
+		setText_from_color(main_color_selected_ ? primary_ : secondary_);
 		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
@@ -528,11 +528,11 @@ namespace gui
 	void color_picker::text_tab_pressed(int n)
 	{
 		ASSERT_LOG(size_t(n) < t_.size(), "color_picker::text_change invalid array access: " << n << " >= " << t_.size());
-		t_[n]->set_focus(false);
+		t_[n]->setFocus(false);
 		if(++n >= 7) {
 			n = 0;
 		}
-		t_[n]->set_focus(true);
+		t_[n]->setFocus(true);
 	}
 
 	void color_picker::text_change(int n)
@@ -574,7 +574,7 @@ namespace gui
 		} else {
 			secondary_ = graphics::color(red_, green_, blue_, alpha_);
 		}
-		set_text_from_color(primary_);
+		setText_from_color(primary_);
 		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
@@ -595,38 +595,38 @@ namespace gui
 		s_[6]->set_position(alpha_/255.0);
 	}
 
-	void color_picker::set_text_from_color(const graphics::color& c, int n)
+	void color_picker::setText_from_color(const graphics::color& c, int n)
 	{
 		ASSERT_LOG(t_.size() == 7, "Didn't find the correct number of sliders.");
 		std::stringstream str;
 		if(n != 0) {
 			str << int(c.r());
-			t_[0]->set_text(str.str(), false);
+			t_[0]->setText(str.str(), false);
 		}
 		if(n != 1) {
 			str.str(std::string()); str << int(c.g());
-			t_[1]->set_text(str.str(), false);
+			t_[1]->setText(str.str(), false);
 		}
 		if(n != 2) {
 			str.str(std::string()); str << int(c.b());
-			t_[2]->set_text(str.str(), false);
+			t_[2]->setText(str.str(), false);
 		}
 		hsv out = rgb_to_hsv(c.r(), c.g(), c.b());
 		if(n != 3) {
 			str.str(std::string()); str << int(out.h);
-			t_[3]->set_text(str.str(), false);
+			t_[3]->setText(str.str(), false);
 		}
 		if(n != 4) {
 			str.str(std::string()); str << int(out.s);
-			t_[4]->set_text(str.str(), false);
+			t_[4]->setText(str.str(), false);
 		}
 		if(n != 5) {
 			str.str(std::string()); str << int(out.v);
-			t_[5]->set_text(str.str(), false);
+			t_[5]->setText(str.str(), false);
 		}
 		if(n != 6) {
 			str.str(std::string()); str << int(alpha_);
-			t_[6]->set_text(str.str(), false);
+			t_[6]->setText(str.str(), false);
 		}
 	}
 
@@ -634,15 +634,15 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(handler_arg_) {
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(handler_arg_.get()));
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(handler_arg_.get()));
 			callable->add("color", get_primary_color().write());
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
-		} else if(get_environment()) {
-			map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(get_environment()));
+			getEnvironment()->createFormula(value);
+		} else if(getEnvironment()) {
+			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
 			callable->add("color", get_primary_color().write());
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
 			std::cerr << "color_picker::change() called without environment!" << std::endl;
 		}

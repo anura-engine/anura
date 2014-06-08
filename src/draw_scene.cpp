@@ -573,7 +573,7 @@ namespace {
 boost::intrusive_ptr<performance_data> current_perf_data;
 }
 
-variant performance_data::get_value(const std::string& key) const
+variant performance_data::getValue(const std::string& key) const
 {
 #define PERF_ATTR(m) if(key == #m) return variant(m);
 	PERF_ATTR(fps);

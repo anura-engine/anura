@@ -41,11 +41,11 @@ namespace tbs
 		internal_server();
 		virtual ~internal_server();
 
-		void handle_process();
+		void handleProcess();
 
 		static void send_request(const variant& request, 
 			int session_id,
-			game_logic::map_formula_callable_ptr callable, 
+			game_logic::map_FormulaCallablePtr callable, 
 			boost::function<void(const std::string&)> handler);		
 		static void process();
 		static boost::asio::io_service& get_io_service() { return io_service_; }
@@ -57,7 +57,7 @@ namespace tbs
 		void send_msg(const variant& resp, 
 			int session_id,
 			boost::function<void(const std::string&)> handler, 
-			game_logic::map_formula_callable_ptr callable);
+			game_logic::map_FormulaCallablePtr callable);
 		static boost::asio::io_service io_service_;
 
 		void write_queue(send_function send_fn, const variant& v, int session_id);

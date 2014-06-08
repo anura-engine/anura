@@ -38,19 +38,19 @@ grid::grid(int ncols)
 	max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
 	default_selection_(-1), draw_selection_highlight_(false)
 {
-	set_environment();
-	set_dim(0,0);
+	setEnvironment();
+	setDim(0,0);
 }
 
-grid::grid(const variant& v, game_logic::formula_callable* e)
-	: scrollable_widget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
+grid::grid(const variant& v, game_logic::FormulaCallable* e)
+	: ScrollableWidget(v, e), row_height_(v["row_height"].as_int(0)), selected_row_(-1), 
 	allow_selection_(false), must_select_(false),
     swallow_clicks_(false), hpad_(0), vpad_(0), show_background_(false),
 	max_height_(-1), allow_highlight_(true), set_h_(0), set_w_(0),
 	default_selection_(v["default_select"].as_int(-1)), 
 	draw_selection_highlight_(v["draw_selection_highlighted"].as_bool(false))
 {
-	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
+	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	if(v.has_key("on_select")) {
 		const variant on_select_value = v["on_select"];
 		if(on_select_value.is_function()) {
@@ -58,12 +58,12 @@ grid::grid(const variant& v, game_logic::formula_callable* e)
 			static const variant fml("fn(selection)");
 			ffl_on_select_.reset(new game_logic::formula(fml));
 
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 			callable->add("fn", on_select_value);
 
 			select_arg_.reset(callable);
 		} else {
-			ffl_on_select_ = get_environment()->create_formula(on_select_value);
+			ffl_on_select_ = getEnvironment()->createFormula(on_select_value);
 		}
 		on_select_ = boost::bind(&grid::select_delegate, this, _1);
 	}
@@ -76,12 +76,12 @@ grid::grid(const variant& v, game_logic::formula_callable* e)
 			static const variant fml("fn(selection)");
 			ffl_on_mouseover_.reset(new game_logic::formula(fml));
 
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
 			callable->add("fn", on_mouseover_value);
 
 			mouseover_arg_.reset(callable);
 		} else {
-			ffl_on_mouseover_ = get_environment()->create_formula(v["on_mouseover"]);
+			ffl_on_mouseover_ = getEnvironment()->createFormula(v["on_mouseover"]);
 		}
 	}
 
@@ -196,32 +196,32 @@ grid::grid(const variant& v, game_logic::formula_callable* e)
 	}
 
 	if(!ffl_on_select_ && !ffl_on_mouseover_) {
-		set_claim_mouse_events(v["claim_mouse_events"].as_bool(false));
+		setClaimMouseEvents(v["claim_mouse_events"].as_bool(false));
 	}
 }
 
-void grid::set_dim(int w, int h)
+void grid::setDim(int w, int h)
 {
-	widget::set_dim(w,h);
+	widget::setDim(w,h);
 	set_h_ = h;
 	set_w_ = w;
 }
 
-void grid::handle_process()
+void grid::handleProcess()
 {
-    foreach(widget_ptr w, cells_) {
+    foreach(WidgetPtr w, cells_) {
 		if(w != NULL) {
 			w->process();
 		}
 	}
-	widget::handle_process();
+	widget::handleProcess();
 }
 
-void grid::add_row(const std::vector<widget_ptr>& widgets)
+void grid::add_row(const std::vector<WidgetPtr>& widgets)
 {
 	assert(widgets.size() == ncols_);
 	int index = 0;
-	foreach(const widget_ptr& widget, widgets) {
+	foreach(const WidgetPtr& widget, widgets) {
 		cells_.push_back(widget);
 
 		if(widget && widget->width()+hpad_ > col_widths_[index]) {
@@ -239,10 +239,10 @@ void grid::add_row(const std::vector<widget_ptr>& widgets)
 }
 
 grid& grid::add_col(const std::string& str) {
-	return add_col(widget_ptr(new label(str, graphics::color_white())));
+	return add_col(WidgetPtr(new label(str, graphics::color_white())));
 }
 
-grid& grid::add_col(const widget_ptr& widget) {
+grid& grid::add_col(const WidgetPtr& widget) {
 	new_row_.push_back(widget);
 	if(new_row_.size() == ncols_) {
 		add_row(new_row_);
@@ -292,11 +292,11 @@ void grid::reset_contents(const variant& v)
 	foreach(const variant& row, v.as_list()) {
 		if(row.is_list()) {
 			foreach(const variant& col, row.as_list()) {
-				add_col(widget_factory::create(col,get_environment()));
+				add_col(widget_factory::create(col,getEnvironment()));
 			}
 			finish_row();
 		} else {
-			add_col(widget_factory::create(row,get_environment()));
+			add_col(widget_factory::create(row,getEnvironment()));
 				//.finish_row();
 			check_end = true;
 		}
@@ -355,9 +355,9 @@ void grid::recalculate_dimensions()
 	}
 
 	if(set_h_ != 0 || set_w_ != 0) {
-		widget::set_dim(set_w_ ? set_w_ : w, set_h_ ? set_h_ : desired_height);
+		widget::setDim(set_w_ ? set_w_ : w, set_h_ ? set_h_ : desired_height);
 	} else {
-		widget::set_dim(w, desired_height);
+		widget::setDim(w, desired_height);
 	}
 
 	int y = 0;
@@ -365,7 +365,7 @@ void grid::recalculate_dimensions()
 		int x = 0;
 		for(int m = 0; m != ncols_; ++m) {
 			int align = 0;
-			widget_ptr widget = cells_[n*ncols_ + m];
+			WidgetPtr widget = cells_[n*ncols_ + m];
 			if(widget) {
 				switch(col_aligns_[m]) {
 				case ALIGN_LEFT:
@@ -379,12 +379,12 @@ void grid::recalculate_dimensions()
 					break;
 				}
 
-				widget->set_loc(x+align,y+row_height_/2 - widget->height()/2 - yscroll());
+				widget->setLoc(x+align,y+row_height_/2 - widget->height()/2 - yscroll());
 				if(widget->y() + widget->height() > 0 && widget->y() < height()) {
 					visible_cells_.push_back(widget);
-					widget->set_clip_area(rect(0, 0, width(), height()));
+					widget->setClipArea(rect(0, 0, width(), height()));
 				}
-				std::sort(visible_cells_.begin(), visible_cells_.end(), widget_sort_zorder());
+				std::sort(visible_cells_.begin(), visible_cells_.end(), WidgetSortZOrder());
 			}
 
 			x += col_widths_[m];
@@ -396,9 +396,9 @@ void grid::recalculate_dimensions()
 	update_scrollbar();
 }
 
-void grid::visit_values(game_logic::formula_callable_visitor& visitor)
+void grid::visitValues(game_logic::FormulaCallableVisitor& visitor)
 {
-	foreach(widget_ptr& cell, cells_) {
+	foreach(WidgetPtr& cell, cells_) {
 		visitor.visit(&cell);
 	}
 }
@@ -408,7 +408,7 @@ void grid::on_set_yscroll(int old_value, int value)
 	recalculate_dimensions();
 }
 
-void grid::handle_draw() const
+void grid::handleDraw() const
 {
 	GLfloat current_color[4];
 #if defined(USE_SHADERS)
@@ -449,7 +449,7 @@ void grid::handle_draw() const
 		}
 	}
 	//glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
-	foreach(const widget_ptr& widget, visible_cells_) {
+	foreach(const WidgetPtr& widget, visible_cells_) {
 		if(widget) {
 			widget->draw();
 		}
@@ -457,19 +457,19 @@ void grid::handle_draw() const
 	glPopMatrix();
 	} //end of scope so clip_scope goes away.
 
-	scrollable_widget::handle_draw();
+	ScrollableWidget::handleDraw();
 }
 
-bool grid::handle_event(const SDL_Event& event, bool claimed)
+bool grid::handleEvent(const SDL_Event& event, bool claimed)
 {
-	claimed = scrollable_widget::handle_event(event, claimed);
+	claimed = ScrollableWidget::handleEvent(event, claimed);
 
 	SDL_Event ev = event;
-	normalize_event(&ev);
-	std::vector<widget_ptr> cells = visible_cells_;
-	reverse_foreach(widget_ptr widget, cells) {
+	normalizeEvent(&ev);
+	std::vector<WidgetPtr> cells = visible_cells_;
+	reverse_foreach(WidgetPtr widget, cells) {
 		if(widget) {
-			claimed = widget->process_event(ev, claimed);
+			claimed = widget->processEvent(ev, claimed);
 		}
 	}
 
@@ -478,7 +478,7 @@ bool grid::handle_event(const SDL_Event& event, bool claimed)
 		input::sdl_get_mouse_state(&mx, &my);
 		point p(mx, my);
 		rect r(x(), y(), width(), height());
-		if(point_in_rect(p, r)) {
+		if(pointInRect(p, r)) {
 			if(event.wheel.y > 0) {
 				set_yscroll(yscroll() - 3*row_height_ < 0 ? 0 : yscroll() - 3*row_height_);
 				if(allow_selection_) {
@@ -499,7 +499,7 @@ bool grid::handle_event(const SDL_Event& event, bool claimed)
 					}
 				}
 			}
-			claimed = claim_mouse_events();
+			claimed = claimMouseEvents();
 		}
 	}
 
@@ -570,10 +570,10 @@ bool grid::handle_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-bool grid::has_focus() const
+bool grid::hasFocus() const
 {
-	foreach(const widget_ptr& w, cells_) {
-		if(w && w->has_focus()) {
+	foreach(const WidgetPtr& w, cells_) {
+		if(w && w->hasFocus()) {
 			return true;
 		}
 	}
@@ -585,16 +585,16 @@ void grid::select_delegate(int selection)
 {
 	if(select_arg_) {
 		using namespace game_logic;
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(select_arg_.get()));
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(select_arg_.get()));
 		callable->add("selection", variant(selection));
 		variant value = ffl_on_select_->execute(*callable);
-		get_environment()->execute_command(value);
-	} else if(get_environment()) {
-		game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		getEnvironment()->createFormula(value);
+	} else if(getEnvironment()) {
+		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
 		callable->add("selection", variant(selection));
 		variant v(callable);
 		variant value = ffl_on_select_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "grid::select_delegate() called without environment!" << std::endl;
 	}
@@ -604,60 +604,60 @@ void grid::mouseover_delegate(int selection)
 {
 	if(mouseover_arg_) {
 		using namespace game_logic;
-		map_formula_callable_ptr callable = map_formula_callable_ptr(new map_formula_callable(mouseover_arg_.get()));
+		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(mouseover_arg_.get()));
 		callable->add("selection", variant(selection));
 		variant value = ffl_on_mouseover_->execute(*callable);
-		get_environment()->execute_command(value);
-	} else if(get_environment()) {
-		game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		getEnvironment()->createFormula(value);
+	} else if(getEnvironment()) {
+		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
 		callable->add("selection", variant(selection));
 		variant v(callable);
 		variant value = ffl_on_mouseover_->execute(*callable);
-		get_environment()->execute_command(value);
+		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "grid::mouseover_delegate() called without environment!" << std::endl;
 	}
 }
 
-const_widget_ptr grid::get_widget_by_id(const std::string& id) const
+ConstWidgetPtr grid::getWidgetById(const std::string& id) const
 {
-	foreach(widget_ptr w, cells_) {
+	foreach(WidgetPtr w, cells_) {
 		if(w) {
-			widget_ptr wx = w->get_widget_by_id(id);
+			WidgetPtr wx = w->getWidgetById(id);
 			if(wx) {
 				return wx;
 			}
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-widget_ptr grid::get_widget_by_id(const std::string& id)
+WidgetPtr grid::getWidgetById(const std::string& id)
 {
-	foreach(widget_ptr w, cells_) {
+	foreach(WidgetPtr w, cells_) {
 		if(w) {
-			widget_ptr wx = w->get_widget_by_id(id);
+			WidgetPtr wx = w->getWidgetById(id);
 			if(wx) {
 				return wx;
 			}
 		}
 	}
-	return widget::get_widget_by_id(id);
+	return widget::getWidgetById(id);
 }
 
-std::vector<widget_ptr> grid::get_children() const
+std::vector<WidgetPtr> grid::getChildren() const
 {
 	return cells_;
 }
 
-int show_grid_as_context_menu(grid_ptr grid, widget_ptr draw_widget)
+int show_grid_as_context_menu(grid_ptr grid, WidgetPtr draw_widget)
 {
-	std::vector<widget_ptr> v;
+	std::vector<WidgetPtr> v;
 	v.push_back(draw_widget);
 	return show_grid_as_context_menu(grid, v);
 }
 
-int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_widgets)
+int show_grid_as_context_menu(grid_ptr grid, const std::vector<WidgetPtr> draw_widgets)
 {
 	grid->set_show_background(true);
 	grid->allow_selection();
@@ -677,12 +677,12 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 	const int max_x = graphics::screen_width() - grid->width() - 6;
 	const int max_y = graphics::screen_height() - grid->height() - 6;
 
-	grid->set_loc(std::min<int>(max_x, mousex), std::min<int>(max_y, mousey));
+	grid->setLoc(std::min<int>(max_x, mousex), std::min<int>(max_y, mousey));
 
 	while(!quit) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
-			bool claimed = grid->process_event(event, false);
+			bool claimed = grid->processEvent(event, false);
 
 			if(claimed) {
 				continue;
@@ -701,7 +701,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 		}
 
 		get_main_window()->prepare_raster();
-		for(widget_ptr w : draw_widgets) {
+		for(WidgetPtr w : draw_widgets) {
 			w->draw();
 		}
 
@@ -720,7 +720,7 @@ int show_grid_as_context_menu(grid_ptr grid, const std::vector<widget_ptr> draw_
 BEGIN_DEFINE_CALLABLE(grid, widget)
 	DEFINE_FIELD(children, "[widget]")
 		std::vector<variant> v;
-	    foreach(widget_ptr w, obj.cells_) {
+	    foreach(WidgetPtr w, obj.cells_) {
 			v.push_back(variant(w.get()));
 		}
 		return variant(&v);
@@ -731,7 +731,7 @@ BEGIN_DEFINE_CALLABLE(grid, widget)
 	DEFINE_FIELD(child, "null")
 		return variant();
 	DEFINE_SET_FIELD_TYPE("map")
-		obj.add_col(widget_factory::create(value, obj.get_environment())).finish_row();
+		obj.add_col(widget_factory::create(value, obj.getEnvironment())).finish_row();
 		obj.recalculate_dimensions();
 	DEFINE_FIELD(selected_row, "int")
 		return variant(obj.selected_row_);

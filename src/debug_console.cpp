@@ -298,7 +298,7 @@ std::string console_history_path()
 }
 }
 
-console_dialog::console_dialog(level& lvl, game_logic::formula_callable& obj)
+console_dialog::console_dialog(level& lvl, game_logic::FormulaCallable& obj)
    : dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
      history_pos_(0)
 {
@@ -314,7 +314,7 @@ console_dialog::console_dialog(level& lvl, game_logic::formula_callable& obj)
 
 	consoles_.insert(this);
 
-	text_editor_->set_focus(true);
+	text_editor_->setFocus(true);
 }
 
 console_dialog::~console_dialog()
@@ -325,14 +325,14 @@ console_dialog::~console_dialog()
 void console_dialog::init()
 {
 	using namespace gui;
-	text_editor_ = new text_editor_widget(width() - 20, height() - 20);
-	add_widget(widget_ptr(text_editor_), 10, 10);
+	text_editor_ = new TextEditorWidget(width() - 20, height() - 20);
+	add_widget(WidgetPtr(text_editor_), 10, 10);
 
 	text_editor_->set_on_move_cursor_handler(boost::bind(&console_dialog::on_move_cursor, this));
 	text_editor_->set_on_begin_enter_handler(boost::bind(&console_dialog::on_begin_enter, this));
 	text_editor_->set_on_enter_handler(boost::bind(&console_dialog::on_enter, this));
 
-	text_editor_->set_text(Prompt);
+	text_editor_->setText(Prompt);
 	text_editor_->set_cursor(0, Prompt.size());
 }
 
@@ -363,7 +363,7 @@ bool console_dialog::on_begin_enter()
 	}
 
 	ffl.erase(ffl.begin(), ffl.begin() + Prompt.size());
-	text_editor_->set_text(text_editor_->text() + "\n" + Prompt);
+	text_editor_->setText(text_editor_->text() + "\n" + Prompt);
 	text_editor_->set_cursor(text_editor_->get_data().size()-1, Prompt.size());
 	if(!ffl.empty()) {
 		history_.push_back(ffl);
@@ -389,7 +389,7 @@ bool console_dialog::on_begin_enter()
 			variant v = f.execute(*focus_);
 			if(ent) {
 				try {
-					ent->execute_command(v);
+					ent->executeCommand(v);
 				} catch(validation_failure_exception& e) {
 					//if this was a failure due to it not being a real command,
 					//that's fine, since we just want to output the result.
@@ -418,7 +418,7 @@ void console_dialog::on_enter()
 
 bool console_dialog::has_keyboard_focus() const
 {
-	return text_editor_->has_focus();
+	return text_editor_->hasFocus();
 }
 
 void console_dialog::add_message(const std::string& msg)
@@ -433,11 +433,11 @@ void console_dialog::add_message(const std::string& msg)
 	m += text_editor_->get_data().back();
 
 	int col = text_editor_->cursor_col();
-	text_editor_->set_text(m);
+	text_editor_->setText(m);
 	text_editor_->set_cursor(text_editor_->get_data().size()-1, col);
 }
 
-bool console_dialog::handle_event(const SDL_Event& event, bool claimed)
+bool console_dialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(!claimed && has_keyboard_focus()) {
 		switch(event.type) {
@@ -462,7 +462,7 @@ bool console_dialog::handle_event(const SDL_Event& event, bool claimed)
 		}
 	}
 
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 void console_dialog::load_history()
@@ -478,15 +478,15 @@ void console_dialog::load_history()
 	}
 
 	m += Prompt + str;
-	text_editor_->set_text(m);
+	text_editor_->setText(m);
 
 	text_editor_->set_cursor(text_editor_->get_data().size()-1, text_editor_->get_data().back().size());
 }
 
-void console_dialog::set_focus(game_logic::formula_callable_ptr e)
+void console_dialog::setFocus(game_logic::FormulaCallablePtr e)
 {
 	focus_ = e;
-	text_editor_->set_focus(true);
+	text_editor_->setFocus(true);
 	entity* ent = dynamic_cast<entity*>(focus_.get());
 	if(ent) {
 		add_message(formatter() << "Selected object: " << ent->debug_description());

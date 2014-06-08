@@ -42,7 +42,7 @@ private:
 	std::vector<entity_ptr> group_;
 };
 
-typedef boost::intrusive_ptr<group_property_editor_dialog> group_property_editor_dialog_ptr;
+typedef boost::intrusive_ptr<group_property_editor_dialog> group_property_editor_DialogPtr;
 
 }
 

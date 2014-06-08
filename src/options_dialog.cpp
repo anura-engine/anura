@@ -53,7 +53,7 @@ options_dialog::options_dialog(int x, int y, int w, int h)
 
 }
 
-void options_dialog::handle_draw() const
+void options_dialog::handleDraw() const
 {
 	/*if(clear_bg()) {
 		SDL_Rect rect = {x(),y(),width(),height()};
@@ -71,5 +71,5 @@ void options_dialog::handle_draw() const
 		}
 	}*/
 	draw_frame( rect(x(),y(),width(),height()) );
-	//handle_draw_children();
+	//handleDraw_children();
 }

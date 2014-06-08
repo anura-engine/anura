@@ -42,7 +42,7 @@
 
 namespace graphics 
 {
-	extern void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options);
+	extern void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options);
 }
 
 namespace
@@ -132,7 +132,7 @@ namespace
 	{
 		ASSERT_LOG(s != NULL, "FATAL: Invalid surface");
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(s, 0);
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(s, 0);
 
 		// convert to array of values (from hsv)
 		const int sz = s->w * s->h;
@@ -544,7 +544,7 @@ namespace
 
 			set_uniforms();
 
-			set_frame_set("empty_window");
+			setFrameSet("empty_window");
 		}
 		virtual ~image_widget_lighted() {
 		}
@@ -555,10 +555,10 @@ namespace
 			glUniform2f(u_resolution_, GLfloat(width()), GLfloat(height()));
 		}
 	protected:
-		virtual void handle_draw() const {
+		virtual void handleDraw() const {
 			manager m(shader_);
 
-			GLint cur_id = graphics::texture::get_current_texture();
+			GLint cur_id = graphics::texture::get_currentTexture();
 
 			if(lighting_) {
 				lighting_->set_all_uniforms();
@@ -613,10 +613,10 @@ namespace
 			glPopMatrix();
 		}
 
-		virtual bool handle_event(const SDL_Event& event, bool claimed) { 
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) { 
 			if(event.type == SDL_MOUSEMOTION) {
 				const SDL_MouseMotionEvent& e = event.motion;
-				if(in_widget(e.x, e.y) && lighting_) {
+				if(inWidget(e.x, e.y) && lighting_) {
 					lighting_->set_light_position(0, glm::vec3(float(e.x-x()), float(e.y-y()), 0.07f));
 					claimed = true;
 				}
@@ -651,9 +651,9 @@ namespace
 		std::string fname_;
 		rect area_;
 
-		gui::image_widget_ptr img_;
-		gui::image_widget_ptr normal_;
-		gui::image_widget_ptr aux_;
+		gui::image_WidgetPtr img_;
+		gui::image_WidgetPtr normal_;
+		gui::image_WidgetPtr aux_;
 		image_widget_lighted_ptr output_img_;
 
 		normal_viewer();
@@ -692,7 +692,7 @@ namespace
 		calculate_normal(s_sobel.get(), gs_param);
 		texture s_tex = texture::get_no_cache(s_sobel);
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(s, 0);
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(s, 0);
 		surface s_aux = drop_shadow_filter(s, graphics::color(0,0,0), 3, 3, 0.0, 3, 1.0, true, false, 3);
 		//graphics::surface s_aux = extract_alpha_mask(s, graphics::color(0,0,0), graphics::color(255,255,255));
 		//surface s_emb_h = emboss(s_aux, 0);

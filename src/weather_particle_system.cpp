@@ -110,7 +110,7 @@ void weather_particle_system::draw(const rect& area, const entity& e) const
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 }
 
-variant weather_particle_system::get_value(const std::string& key) const
+variant weather_particle_system::getValue(const std::string& key) const
 {
 	if(key == "velocity_x") {
 		return variant(decimal(direction[0]));
@@ -121,7 +121,7 @@ variant weather_particle_system::get_value(const std::string& key) const
 	}
 }
 
-void weather_particle_system::set_value(const std::string& key, const variant& value)
+void weather_particle_system::setValue(const std::string& key, const variant& value)
 {
 	if(key == "velocity_x") {
 		direction[0] = value.as_decimal().as_float();

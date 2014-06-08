@@ -40,7 +40,7 @@ client::client(const std::string& host, const std::string& port,
 {
 }
 
-void client::send_request(variant request, game_logic::map_formula_callable_ptr callable, boost::function<void(std::string)> handler)
+void client::send_request(variant request, game_logic::map_FormulaCallablePtr callable, boost::function<void(std::string)> handler)
 {
 	handler_ = handler;
 	callable_ = callable;
@@ -117,9 +117,9 @@ void client::error_handler(const std::string& err)
 	}
 }
 
-variant client::get_value(const std::string& key) const
+variant client::getValue(const std::string& key) const
 {
-	return http_client::get_value(key);
+	return http_client::getValue(key);
 }
 
 void client::process()
@@ -134,7 +134,7 @@ void client::process()
 	http_client::process();
 }
 
-void client::set_id(const std::string& id)
+void client::setId(const std::string& id)
 {
 	connection_id_ = id;
 	if(id != "") {

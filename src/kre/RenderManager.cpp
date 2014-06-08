@@ -55,13 +55,13 @@ namespace KRE
 	void RenderManager::Render(const WindowManagerPtr& wm) const
 	{
 		for(auto& q : render_queues_) {
-			q.second->PreRender();
+			q.second->preRender();
 		}
 		for(auto& q : render_queues_) {
 			q.second->Render(wm);
 		}
 		for(auto& q : render_queues_) {
-			q.second->PostRender();
+			q.second->postRender();
 		}
 	}
 

@@ -92,7 +92,7 @@ namespace KRE
 		}
 		~BoxOutline() {}
 		const glm::vec4& get_color() const { return color_; }
-		void set_color(const glm::vec4& c) {
+		void setColor(const glm::vec4& c) {
 			color_ = c;
 		}
 		void draw(const glm::vec3& translation, const glm::quat& rotation, const glm::vec3& scale) const {
@@ -379,12 +379,12 @@ namespace KRE
 			if(node.has_key("debug_draw") && node["debug_draw"].as_bool()) {
 				/*debug_draw_outline_.reset(new BoxOutline());
 				if(node.has_key("debug_draw_color")) {
-					debug_draw_outline_->set_color(variant_to_vec4(node["debug_draw_color"]));
+					debug_draw_outline_->setColor(variant_to_vec4(node["debug_draw_color"]));
 				}*/
 			}
 			// Set a default duration for the emitter.
 			ASSERT_LOG(duration_ != NULL, "PSYSTEM2: duration_ is null");
-			duration_remaining_ = duration_->get_value(0);
+			duration_remaining_ = duration_->getValue(0);
 		}
 
 		emitter::~emitter()
@@ -421,17 +421,17 @@ namespace KRE
 			}
 			/*if(e.debug_draw_outline_) {
 				debug_draw_outline_.reset(new BoxOutline());
-				debug_draw_outline_->set_color(e.debug_draw_outline_->get_color());
+				debug_draw_outline_->setColor(e.debug_draw_outline_->get_color());
 			}*/
-			duration_remaining_ = duration_->get_value(0);
+			duration_remaining_ = duration_->getValue(0);
 		}
 
-		void emitter::handle_process(float t) 
+		void emitter::handleProcess(float t) 
 		{
 			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique is null");
 			std::vector<particle>& particles = technique_->active_particles();
 
-			float duration = duration_->get_value(t);
+			float duration = duration_->getValue(t);
 			if(duration == 0.0f || duration_remaining_ >= 0.0f) {
 				if(emits_type_ == EMITS_VISUAL) {
 					std::vector<particle>::iterator start;
@@ -507,13 +507,13 @@ namespace KRE
 				duration_remaining_ -= t;
 				if(duration_remaining_ < 0.0f) {
 					ASSERT_LOG(repeat_delay_ != NULL, "PSYSTEM2: repeat_delay_ is null");
-					repeat_delay_remaining_ = repeat_delay_->get_value(t);
+					repeat_delay_remaining_ = repeat_delay_->getValue(t);
 				}
 			} else {
 				repeat_delay_remaining_ -= t;
 				if(repeat_delay_remaining_ < 0.0f) {
 					ASSERT_LOG(duration_ != NULL, "PSYSTEM2: duration_ is null");
-					duration_remaining_ = duration_->get_value(t);
+					duration_remaining_ = duration_->getValue(t);
 				}
 			}
 		}
@@ -524,7 +524,7 @@ namespace KRE
 			if(force_emission_) {
 				if(!force_emission_processed_) {
 					// Single shot of all particles at once.
-					cnt = emission_rate_->get_value(technique_->get_particle_system()->elapsed_time());
+					cnt = emission_rate_->getValue(technique_->get_particle_system()->elapsed_time());
 					force_emission_processed_ = true;
 				}
 			} else {
@@ -560,9 +560,9 @@ namespace KRE
 			init_physics_parameters(p.current);
 			p.initial.position = current.position;
 			p.initial.color = get_color();
-			p.initial.time_to_live = time_to_live_->get_value(technique_->get_particle_system()->elapsed_time());
-			p.initial.velocity = velocity_->get_value(technique_->get_particle_system()->elapsed_time());
-			p.initial.mass = mass_->get_value(technique_->get_particle_system()->elapsed_time());
+			p.initial.time_to_live = time_to_live_->getValue(technique_->get_particle_system()->elapsed_time());
+			p.initial.velocity = velocity_->getValue(technique_->get_particle_system()->elapsed_time());
+			p.initial.mass = mass_->getValue(technique_->get_particle_system()->elapsed_time());
 			p.initial.dimensions = technique_->default_dimensions();
 			if(orientation_range_) {
 				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
@@ -578,7 +578,7 @@ namespace KRE
 			ASSERT_LOG(emission_rate_ != NULL, "PSYSTEM2: emission_rate_ is NULL");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
-			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->get_value(t)*t, &cnt);
+			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->getValue(t)*t, &cnt);
 			return cnt;
 		}
 
@@ -586,7 +586,7 @@ namespace KRE
 		{
 			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
 			ASSERT_LOG(technique_->get_particle_system() != NULL, "PSYSTEM2: technique_->get_parent_system() is null");
-			float angle = angle_->get_value(technique_->get_particle_system()->elapsed_time());
+			float angle = angle_->getValue(technique_->get_particle_system()->elapsed_time());
 			if(angle_->type() == parameter::PARAMETER_FIXED) {
 				return get_random_float() * angle;
 			}
@@ -620,7 +620,7 @@ namespace KRE
 			return c;
 		}
 
-		void emitter::handle_draw() const
+		void emitter::handleDraw() const
 		{
 			/*if(debug_draw_outline_) {
 				debug_draw_outline_->draw(current.position, current.orientation, glm::vec3(0.25f,0.25f,0.25f));

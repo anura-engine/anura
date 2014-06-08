@@ -25,10 +25,10 @@
 
 #include <memory>
 #include <string>
-#include "Color.hpp"
+#include "../Color.hpp"
 #include "Geometry.hpp"
 #include "Surface.hpp"
-#include "variant.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {

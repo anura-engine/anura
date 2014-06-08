@@ -23,8 +23,8 @@ void do_draw_scene() {
 	draw_scene(level::current(), last_draw_position());
 }
 
-void set_locale(const std::string& value) {
-	preferences::set_locale(value);
+void setLocale(const std::string& value) {
+	preferences::setLocale(value);
 	i18n::init();
 	graphical_font::init_for_locale(i18n::get_locale());
 }
@@ -45,7 +45,7 @@ class grid {
    dialog_(dialog), cell_width_(cell_width), cell_height_(cell_height), h_padding_(h_padding), v_padding_(v_padding), start_x_(start_x), start_y_(start_y), column_count_(column_count), widget_count_(0) {
 	}
 
-	void add_widget(gui::widget_ptr widget) {
+	void add_widget(gui::WidgetPtr widget) {
 		dialog_.add_widget(widget,
 			start_x_ + h_padding_ + (widget_count_ % column_count_) * (cell_width_ + h_padding_),
 			start_y_ + v_padding_ + (widget_count_ / column_count_) * (cell_height_ + v_padding_));
@@ -73,7 +73,7 @@ void show_language_dialog()
 	const int button_height = 50;
 	const int padding = 20;
 
-	d.add_widget(widget_ptr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
+	d.add_widget(WidgetPtr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
 
 	grid g(d, button_width, button_height, padding, padding, 0, 40, 2);
 
@@ -81,30 +81,30 @@ void show_language_dialog()
 	variant_map languages = json::parse_from_file("data/languages.cfg").as_map();
 	int index = 0;
 	foreach(variant_map::value_type pair, languages) {
-		widget_ptr b(new button(
-			widget_ptr(new graphical_font_label(pair.second.as_string(), "language_names", 2)),
-			boost::bind(set_locale, pair.first.as_string()),
+		WidgetPtr b(new button(
+			WidgetPtr(new graphical_font_label(pair.second.as_string(), "language_names", 2)),
+			boost::bind(setLocale, pair.first.as_string()),
 			BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
-		b->set_dim(button_width, button_height);
+		b->setDim(button_width, button_height);
 		g.add_widget(b);
 	}
 
-	widget_ptr system_button(new button(
-		widget_ptr(new graphical_font_label(_("Use system language"), "door_label", 2)),
-	   	boost::bind(set_locale, "system"),
+	WidgetPtr system_button(new button(
+		WidgetPtr(new graphical_font_label(_("Use system language"), "door_label", 2)),
+	   	boost::bind(setLocale, "system"),
 		BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
-	system_button->set_dim(button_width, button_height);
+	system_button->setDim(button_width, button_height);
 	g.add_widget(system_button);
 
-	widget_ptr back_button(new button(widget_ptr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
-	back_button->set_dim(button_width, button_height);
+	WidgetPtr back_button(new button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
+	back_button->setDim(button_width, button_height);
 	g.add_widget(back_button);
 
         int dialog_width = g.total_width() + padding;
         int dialog_height = g.total_height() + padding;
-        d.set_loc((preferences::virtual_screen_width() - dialog_width) / 2,
+        d.setLoc((preferences::virtual_screen_width() - dialog_width) / 2,
 		(preferences::virtual_screen_height() - dialog_height) / 2);
-	d.set_dim(g.total_width() + padding, g.total_height() + padding);
+	d.setDim(g.total_width() + padding, g.total_height() + padding);
 
 	d.show_modal();
 }

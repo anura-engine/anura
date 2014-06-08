@@ -46,7 +46,7 @@ public:
 
 	virtual int vertical_look() const { return vertical_look_; }
 
-	virtual bool is_active(const rect& screen_area) const;
+	virtual bool isActive(const rect& screen_area) const;
 
 	bool can_interact() const { return can_interact_ != 0; }
 
@@ -58,8 +58,8 @@ private:
 	int walk_up_or_down_stairs() const;
 
 	virtual void process(level& lvl);
-	variant get_value(const std::string& key) const;	
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;	
+	void setValue(const std::string& key, const variant& value);
 
 	variant get_player_value_by_slot(int slot) const;
 	void set_player_value_by_slot(int slot, const variant& value);

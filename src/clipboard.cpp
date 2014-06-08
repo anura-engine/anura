@@ -35,7 +35,7 @@ std::string copy_from_clipboard(const bool mouse)
 	return result;
 }
 
-bool clipboard_handle_event(const SDL_Event& ev)
+bool clipboard_handleEvent(const SDL_Event& ev)
 {
 	return false;
 }
@@ -45,7 +45,7 @@ bool clipboard_handle_event(const SDL_Event& ev)
 #include <windows.h>
 #define CLIPBOARD_FUNCS_DEFINED
 
-bool clipboard_handle_event(const SDL_Event& )
+bool clipboard_handleEvent(const SDL_Event& )
 {
 	return false;
 }
@@ -186,7 +186,7 @@ std::string copy_from_clipboard(const bool)
             return finalClipString;
         }
 
-        bool clipboard_handle_event(const SDL_Event& )
+        bool clipboard_handleEvent(const SDL_Event& )
         {
             return false;
         }
@@ -204,7 +204,7 @@ std::string copy_from_clipboard(const bool)
 	return "";
 }
 
-bool clipboard_handle_event(const SDL_Event& )
+bool clipboard_handleEvent(const SDL_Event& )
 {
 	return false;
 }

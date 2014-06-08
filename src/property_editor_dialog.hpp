@@ -44,7 +44,7 @@ public:
 	void remove_object_from_group(entity_ptr e);
 	void remove_group(int ngroup);
 private:
-	void set_label(gui::text_editor_widget* e);
+	void set_label(gui::TextEditorWidget* e);
 	entity_ptr get_static_entity() const;
 	void change_min_difficulty(int amount);
 	void change_max_difficulty(int amount);
@@ -53,9 +53,9 @@ private:
 	void change_level_property(const std::string& id);
 
 	void change_label_property(const std::string& id);
-	void change_text_property(const std::string& id, const gui::text_editor_widget_ptr w);
+	void change_text_property(const std::string& id, const gui::TextEditorWidgetPtr w);
 
-	typedef std::pair<gui::text_editor_widget_ptr, gui::slider_ptr> numeric_widgets;
+	typedef std::pair<gui::TextEditorWidgetPtr, gui::slider_ptr> numeric_widgets;
 	void change_numeric_property(const std::string& id, boost::shared_ptr<numeric_widgets> w);
 	void change_numeric_property_slider(const std::string& id, boost::shared_ptr<numeric_widgets> w, double value);
 	void change_enum_property(const std::string& id);
@@ -67,16 +67,16 @@ private:
 
 	void deselect_object_type(std::string type);
 
-	void change_event_handler(const std::string& id, gui::label_ptr lb, gui::text_editor_widget_ptr text_editor);
+	void change_event_handler(const std::string& id, gui::LabelPtr lb, gui::TextEditorWidgetPtr text_editor);
 
 	editor& editor_;
 	std::vector<entity_ptr> entity_;
-	gui::widget_ptr context_menu_;
+	gui::WidgetPtr context_menu_;
 
 	boost::scoped_ptr<assert_recover_scope> assert_recover_scope_;
 };
 
-typedef boost::intrusive_ptr<property_editor_dialog> property_editor_dialog_ptr;
+typedef boost::intrusive_ptr<property_editor_dialog> property_editor_DialogPtr;
 
 }
 

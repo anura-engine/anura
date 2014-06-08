@@ -34,27 +34,27 @@ std::string get_key_name(key_type key);
 class key_button : public widget
 {
 public:
-	key_button(key_type key, BUTTON_RESOLUTION button_resolution);
-	key_button(const variant& v, game_logic::formula_callable* e);
+	key_button(key_type key, buttonResolution buttonResolution);
+	key_button(const variant& v, game_logic::FormulaCallable* e);
 
 	key_type get_key();
 
-	void set_value(const std::string& key, const variant& v);
-	variant get_value(const std::string& key) const;
+	void setValue(const std::string& key, const variant& v);
+	variant getValue(const std::string& key) const;
 private:
 	bool in_button(int x, int y) const;
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleDraw() const;
+	bool handleEvent(const SDL_Event& event, bool claimed);
 
-	BUTTON_RESOLUTION button_resolution_;
-	widget_ptr label_;
+	buttonResolution button_resolution_;
+	WidgetPtr label_;
 	key_type key_;
 	bool grab_keys_;
 
-	const_framed_gui_element_ptr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
+	ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
 };
 
-typedef boost::intrusive_ptr<key_button> key_button_ptr;
+typedef boost::intrusive_ptr<key_button> key_ButtonPtr;
 
 }
 

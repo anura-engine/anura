@@ -1,9 +1,29 @@
+/*
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
 #pragma once
 
 #if defined(USE_ISOMAP)
-#if !defined(USE_SHADERS)
-#error in order to build with Iso tiles you need to be building with shaders (USE_SHADERS)
-#endif
 
 #include <boost/intrusive_ptr.hpp>
 #include <boost/unordered_map.hpp>
@@ -17,11 +37,9 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "kre/Geometry.hpp"
-#include "graphics.hpp"
 #include "isochunk.hpp"
-#include "lighting.hpp"
-#include "raster.hpp"
-#include "shaders.hpp"
+#include "nocopy.hpp"
+#include "pathfinding.hpp"
 #include "skybox.hpp"
 #include "variant.hpp"
 #include "wml_formula_callable.hpp"
@@ -29,35 +47,35 @@
 namespace voxel
 {
 	class user_voxel_object;
-	typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
+	typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
 
-	class logical_world : public game_logic::wml_serializable_formula_callable
+	class LogicalWorld : public game_logic::WmlSerializableFormulaCallable
 	{
 	public:
-		explicit logical_world(const variant& node);
-		virtual ~logical_world();
+		explicit LogicalWorld(const variant& node);
+		virtual ~LogicalWorld();
 
-		pathfinding::directed_graph_ptr create_directed_graph(bool allow_diagonals=false) const;
+		pathfinding::directed_graph_ptr createDirectedGraph(bool allow_diagonals=false) const;
 
-		bool is_solid(int x, int y, int z) const;
+		bool isSolid(int x, int y, int z) const;
 
-		bool is_xedge(int x) const;
-		bool is_yedge(int y) const;
-		bool is_zedge(int z) const;
+		bool isXEdge(int x) const;
+		bool isyEedge(int y) const;
+		bool isZEdge(int z) const;
 		
-		size_t size_x() const { return size_x_; }
-		size_t size_y() const { return size_y_; }
-		size_t size_z() const { return size_z_; }
+		size_t sizeX() const { return size_x_; }
+		size_t sizeY() const { return size_y_; }
+		size_t sizeZ() const { return size_z_; }
 
-		size_t scale_x() const { return scale_x_; }
-		size_t scale_y() const { return scale_y_; }
-		size_t scale_z() const { return scale_z_; }
+		size_t scaleX() const { return scale_x_; }
+		size_t scaleY() const { return scale_y_; }
+		size_t scaleZ() const { return scale_z_; }
 
-		glm::ivec3 worldspace_to_logical(const glm::vec3& wsp) const;
+		glm::ivec3 worldspaceToLogical(const glm::vec3& wsp) const;
 	private:
-		DECLARE_CALLABLE(logical_world);
+		DECLARE_CALLABLE(LogicalWorld);
 
-		variant serialize_to_wml() const;
+		variant serializeToWml() const;
 
 		boost::unordered_map<std::pair<int,int>, int> heightmap_;
 		// Only valid for fixed size worlds
@@ -72,41 +90,36 @@ namespace voxel
 		size_t scale_y_;
 		size_t scale_z_;
 
-		logical_world();
-		logical_world(const logical_world&);
+		LogicalWorld();
+		LogicalWorld(const LogicalWorld&);
 	};
 
-	typedef boost::intrusive_ptr<logical_world> logical_world_ptr;
+	typedef boost::intrusive_ptr<LogicalWorld> LogicalWorldPtr;
 
-	class world : public game_logic::formula_callable
+	class World : public game_logic::FormulaCallable
 	{
 	public:
-		explicit world(const variant& node);
-		virtual ~world();
-		
-		gles2::program_ptr shader() { return shader_; }
+		explicit World(const variant& node);
+		virtual ~World();
 
-		void set_tile(int x, int y, int z, const variant& type);
-		void del_tile(int x, int y, int z);
-		variant get_tile_type(int x, int y, int z) const;
+		void setTile(int x, int y, int z, const variant& type);
+		void delTile(int x, int y, int z);
+		variant getTileType(int x, int y, int z) const;
 
-		void build_infinite();
-		void build_fixed(const variant& node);
+		void buildInfinite();
+		void buildFixed(const variant& node);
 		void draw(const camera_callable_ptr& camera) const;
 		variant write();
 		void process();
 
-		void add_object(user_voxel_object_ptr obj);
-		void remove_object(user_voxel_object_ptr obj);
+		void addObject(UserVoxelObjectPtr obj);
+		void removeObject(UserVoxelObjectPtr obj);
 
-		void get_objects_at_point(const glm::vec3& pt, std::vector<user_voxel_object_ptr>& obj);
-		std::set<user_voxel_object_ptr>& get_objects() { return objects_; }
-	protected:
+		void getObjectsAtPoint(const glm::vec3& pt, std::vector<UserVoxelObjectPtr>& obj);
+		std::set<UserVoxelObjectPtr>& getObjects() { return objects_; }
 	private:
-		DECLARE_CALLABLE(world);
-		gles2::program_ptr shader_;
-
-		graphics::lighting_ptr lighting_;
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(World);
+		DECLARE_CALLABLE(World);
 
 		graphics::skybox_ptr skybox_;
 
@@ -114,22 +127,19 @@ namespace voxel
 
 		uint32_t seed_;
 
-		std::vector<chunk_ptr> active_chunks_;
-		boost::unordered_map<position, chunk_ptr> chunks_;
+		std::vector<ChunkPtr> active_chunks_;
+		boost::unordered_map<ChunkPosition, ChunkPtr> chunks_;
 
-		std::set<user_voxel_object_ptr> objects_;
+		std::set<UserVoxelObjectPtr> objects_;
 
 		std::vector<graphics::draw_primitive_ptr> draw_primitives_;
 
-		logical_world_ptr logic_;
+		LogicalWorldPtr logic_;
 		
 		void get_active_chunks();
-
-		world();
-		world(const world&);
 	};
 
-	typedef boost::intrusive_ptr<world> world_ptr;
+	typedef boost::intrusive_ptr<World> WorldPtr;
 }
 
 #endif

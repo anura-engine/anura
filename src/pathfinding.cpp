@@ -62,7 +62,7 @@ DEFINE_FIELD(edge_map, "map")
 		return variant(&edgemap);
 END_DEFINE_CALLABLE(directed_graph)
 
-/*variant directed_graph::get_value(const std::string& key) const {
+/*variant directed_graph::getValue(const std::string& key) const {
 	if(key == "vertices") {
 		std::vector<variant> v(vertices_);
 		return variant(&v);
@@ -102,14 +102,14 @@ DEFINE_FIELD(weights, "map")
 		}
 		return variant(&w);
 DEFINE_FIELD(vertices, "list")
-	return obj.dg_->get_value("vertices");
+	return obj.dg_->getValue("vertices");
 DEFINE_FIELD(edges, "map")
-	return obj.dg_->get_value("list");
+	return obj.dg_->getValue("list");
 DEFINE_FIELD(edge_map, "map")
-	return obj.dg_->get_value("edge_map");
+	return obj.dg_->getValue("edge_map");
 END_DEFINE_CALLABLE(weighted_directed_graph)
 /*
-variant weighted_directed_graph::get_value(const std::string& key) const {
+variant weighted_directed_graph::getValue(const std::string& key) const {
 	if(key == "weights") {
 		std::map<variant, variant> w;
 		std::pair<graph_edge, decimal> wit;
@@ -121,11 +121,11 @@ variant weighted_directed_graph::get_value(const std::string& key) const {
 		}
 		return variant(&w);
 	} else if(key == "vertices"){
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	} else if(key == "edges") {
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	} else if(key == "edge_map") {
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	}
 	return variant();
 }*/
@@ -134,7 +134,7 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	const variant src_node, 
 	const variant dst_node, 
 	game_logic::expression_ptr heuristic, 
-	game_logic::map_formula_callable_ptr callable)
+	game_logic::map_FormulaCallablePtr callable)
 {
 	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
 	std::priority_queue<gnp, std::vector<gnp> > open_list;
@@ -289,7 +289,7 @@ variant a_star_find_path(level_ptr lvl,
 	const point& dst_pt1, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 
-	game_logic::map_formula_callable_ptr callable, 
+	game_logic::map_FormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y) 
 {

@@ -9,7 +9,7 @@
 #include "frustum.hpp"
 #include "variant.hpp"
 
-class camera_callable : public game_logic::formula_callable
+class camera_callable : public game_logic::FormulaCallable
 {
 public:
 	enum CAMERA_TYPE { PERSPECTIVE_CAMERA, ORTHOGONAL_CAMERA };
@@ -18,8 +18,8 @@ public:
 	explicit camera_callable(CAMERA_TYPE type, float fov, float aspect, float near_clip, float far_clip);
 	explicit camera_callable(const variant& node);
 	virtual ~camera_callable();
-	//virtual variant get_value(const std::string&) const;
-	//virtual void set_value(const std::string& key, const variant& value);
+	//virtual variant getValue(const std::string&) const;
+	//virtual void setValue(const std::string& key, const variant& value);
 
 	void compute_view();
 	void compute_projection();

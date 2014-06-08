@@ -33,22 +33,22 @@ namespace gui
 {
 
 code_editor_widget::code_editor_widget(int width, int height)
-  : text_editor_widget(width, height),
+  : TextEditorWidget(width, height),
   row_slider_(0), begin_col_slider_(0), end_col_slider_(0),
   slider_decimal_(false), slider_magnitude_(0), is_formula_(false)
 {
-	set_environment();
+	setEnvironment();
 }
 
-code_editor_widget::code_editor_widget(const variant& v, game_logic::formula_callable* e) 
-	: text_editor_widget(v,e), row_slider_(0), begin_col_slider_(0), 
+code_editor_widget::code_editor_widget(const variant& v, game_logic::FormulaCallable* e) 
+	: TextEditorWidget(v,e), row_slider_(0), begin_col_slider_(0), 
 	end_col_slider_(0),	slider_decimal_(false), slider_magnitude_(0), is_formula_(false)
 {
 }
 
 void code_editor_widget::on_move_cursor(bool auto_shift)
 {
-	text_editor_widget::on_move_cursor(auto_shift);
+	TextEditorWidget::on_move_cursor(auto_shift);
 
 	ObjectInfo info = get_current_object();
 }
@@ -196,7 +196,7 @@ static const graphics::color TokenColors[] = {
 		}
 	}
 
-	text_editor_widget::on_change();
+	TextEditorWidget::on_change();
 }
 
 graphics::color code_editor_widget::get_character_color(int row, int col) const
@@ -230,7 +230,7 @@ void code_editor_widget::select_token(const std::string& row, int& begin_row, in
 		return;
 	}
 
-	text_editor_widget::select_token(row, begin_row, end_row, begin_col, end_col);
+	TextEditorWidget::select_token(row, begin_row, end_row, begin_col, end_col);
 
 	std::string token(row.begin() + begin_col, row.begin() + end_col);
 	
@@ -290,11 +290,11 @@ void code_editor_widget::select_token(const std::string& row, int& begin_row, in
 				y = height() - slider_->height();
 			}
 	
-			slider_->set_loc(x, y);
+			slider_->setLoc(x, y);
 
 			foreach(slider_range& r, slider_range_) {
-				slider_labels_.push_back(widget_ptr(new gui::label(formatter() << r.target_begin, 10)));
-				slider_labels_.back()->set_loc(x + slider_->width()*r.begin - slider_labels_.back()->width()/2, y);
+				slider_labels_.push_back(WidgetPtr(new gui::label(formatter() << r.target_begin, 10)));
+				slider_labels_.back()->setLoc(x + slider_->width()*r.begin - slider_labels_.back()->width()/2, y);
 			}
 		}
 	}
@@ -341,22 +341,22 @@ void code_editor_widget::on_slider_move(double value)
 	set_row_contents(row_slider_, row);
 }
 
-void code_editor_widget::handle_draw() const
+void code_editor_widget::handleDraw() const
 {
-	text_editor_widget::handle_draw();
+	TextEditorWidget::handleDraw();
 
 	if(slider_) {
 		slider_->draw();
-		foreach(widget_ptr w, slider_labels_) {
+		foreach(WidgetPtr w, slider_labels_) {
 			w->draw();
 		}
 	}
 }
 
-bool code_editor_widget::handle_event(const SDL_Event& event, bool claimed)
+bool code_editor_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(slider_) {
-		if(slider_->process_event(event, claimed)) {
+		if(slider_->processEvent(event, claimed)) {
 			return true;
 		}
 	}
@@ -365,21 +365,21 @@ bool code_editor_widget::handle_event(const SDL_Event& event, bool claimed)
 		slider_.reset();
 	}
 
-	return text_editor_widget::handle_event(event, claimed) || claimed;
+	return TextEditorWidget::handleEvent(event, claimed) || claimed;
 }
 
 void code_editor_widget::generate_tokens()
 {
-	current_text_ = text();
+	currentText_ = text();
 
 	try {
-		current_obj_ = json::parse(current_text_);
+		current_obj_ = json::parse(currentText_);
 	} catch(...) {
 	}
 
 	tokens_.clear();
-	const char* begin = current_text_.c_str();
-	const char* end = begin + current_text_.size();
+	const char* begin = currentText_.c_str();
+	const char* end = begin + currentText_.size();
 
 	try {
 		json::Token token = json::get_token(begin, end);
@@ -404,7 +404,7 @@ variant get_map_editing(int row, int col, variant item)
 	const int end_row = item.get_debug_info()->end_line;
 	const int end_col = item.get_debug_info()->end_column;
 
-	typedef text_editor_widget::Loc Loc;
+	typedef TextEditorWidget::Loc Loc;
 
 	if(Loc(row,col) < Loc(begin_row,begin_col) ||
 	   Loc(row,col) > Loc(end_row,end_col)) {
@@ -437,8 +437,8 @@ variant get_map_editing(int row, int col, variant item)
 code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int col) const
 {
 	const int pos = row_col_to_text_pos(row, col);
-	const char* ptr = current_text_.c_str() + pos;
-	ASSERT_LOG(pos >= 0 && pos <= current_text_.size(), "Unexpected position in code editor widget: " << pos << " / " << current_text_.size());
+	const char* ptr = currentText_.c_str() + pos;
+	ASSERT_LOG(pos >= 0 && pos <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
 	const json::Token* begin_token = NULL;
 	const json::Token* end_token = NULL;
 	std::stack<const json::Token*> begin_stack;
@@ -468,8 +468,8 @@ code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int co
 	}
 
 	ObjectInfo result;
-	result.begin = begin_token->begin - current_text_.c_str();
-	result.end = end_token->end - current_text_.c_str();
+	result.begin = begin_token->begin - currentText_.c_str();
+	result.end = end_token->end - currentText_.c_str();
 	result.tokens = std::vector<json::Token>(begin_token, end_token+1);
 	try {
 		result.obj = get_map_editing(row, col, current_obj_);
@@ -512,7 +512,7 @@ void code_editor_widget::modify_current_object(variant new_obj)
 	save_undo_state();
 
 
-	const std::string str(current_text_.begin() + info.begin, current_text_.begin() + info.end);
+	const std::string str(currentText_.begin() + info.begin, currentText_.begin() + info.end);
 
 	//calculate the indentation this object has based on the first attribute.
 	std::string indent;
@@ -531,8 +531,8 @@ void code_editor_widget::modify_current_object(variant new_obj)
 	}
 
 	const std::string new_str = modify_variant_text(str, info.obj, new_obj, info.obj.get_debug_info()->line, info.obj.get_debug_info()->column, indent);
-	current_text_ = std::string(current_text_.begin(), current_text_.begin() + info.begin) + new_str + std::string(current_text_.begin() + info.end, current_text_.end());
-	set_text(current_text_, false /*don't move cursor*/);
+	currentText_ = std::string(currentText_.begin(), currentText_.begin() + info.begin) + new_str + std::string(currentText_.begin() + info.end, currentText_.end());
+	setText(currentText_, false /*don't move cursor*/);
 }
 
 

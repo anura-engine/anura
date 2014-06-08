@@ -59,7 +59,7 @@ const std::vector<std::string>& module_dirs() {
 	return result;
 }
 
-game_logic::const_formula_callable_ptr module_args;
+game_logic::const_FormulaCallablePtr module_args;
 }
 
 const std::string get_module_name(){
@@ -215,12 +215,12 @@ std::string make_module_id(const std::string& name) {
 	return conv_name;
 }
 
-void set_module_args(game_logic::const_formula_callable_ptr callable)
+void set_module_args(game_logic::const_FormulaCallablePtr callable)
 {
 	module_args = callable;
 }
 
-game_logic::const_formula_callable_ptr get_module_args()
+game_logic::const_FormulaCallablePtr get_module_args()
 {
 	return module_args;
 }
@@ -993,7 +993,7 @@ bool client::process()
 	return true;
 }
 
-variant client::get_value(const std::string& key) const
+variant client::getValue(const std::string& key) const
 {
 	if(key == "is_complete") {
 		return variant(operation_ == OPERATION_NONE);

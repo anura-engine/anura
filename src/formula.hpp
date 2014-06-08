@@ -14,8 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef FORMULA_HPP_INCLUDED
-#define FORMULA_HPP_INCLUDED
+#pragma once
 
 #include <map>
 #include <string>
@@ -34,7 +33,7 @@ namespace game_logic
 
 void set_verbatim_string_expressions(bool verbatim);
 
-class formula_callable;
+class FormulaCallable;
 class formula_expression;
 class function_symbol_table;
 typedef boost::intrusive_ptr<formula_expression> expression_ptr;
@@ -45,7 +44,7 @@ struct where_variables_info : public reference_counted_object {
 	std::vector<std::string> names;
 	std::vector<expression_ptr> entries;
 	int base_slot;
-	const_formula_callable_definition_ptr callable_where_def;
+	const_FormulaCallable_definition_ptr callable_where_def;
 };
 
 typedef boost::intrusive_ptr<where_variables_info> where_variables_info_ptr;
@@ -66,7 +65,7 @@ public:
 	static void fail_if_static_context();
 
 	static variant evaluate(const const_formula_ptr& f,
-	                    const formula_callable& variables,
+	                    const FormulaCallable& variables,
 						variant default_res=variant(0)) {
 		if(f) {
 			return f->execute(variables);
@@ -87,11 +86,11 @@ public:
 
 	static const std::set<formula*>& get_all();
 
-	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
-	explicit formula(const variant& val, function_symbol_table* symbols=NULL, const_formula_callable_definition_ptr def=NULL);
+	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, const_FormulaCallable_definition_ptr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
+	explicit formula(const variant& val, function_symbol_table* symbols=NULL, const_FormulaCallable_definition_ptr def=NULL);
 	formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 	~formula();
-	variant execute(const formula_callable& variables) const;
+	variant execute(const FormulaCallable& variables) const;
 	variant execute() const;
 	bool evaluates_to_constant(variant& result) const;
 	std::string str() const { return str_.as_string(); }
@@ -100,12 +99,12 @@ public:
 	std::string output_debug_info() const;
 
 	bool has_guards() const { return base_expr_.empty() == false; }
-	int guard_matches(const formula_callable& variables) const;
+	int guard_matches(const FormulaCallable& variables) const;
 
 	//guard matches without wrapping 'variables' in the global callable.
-	int raw_guard_matches(const formula_callable& variables) const;
+	int raw_guard_matches(const FormulaCallable& variables) const;
 
-	const_formula_callable_ptr wrap_callable_with_global_where(const formula_callable& callable) const;
+	const_FormulaCallablePtr wrap_callable_with_global_where(const FormulaCallable& callable) const;
 
 	const expression_ptr& expr() const { return expr_; }
 
@@ -116,7 +115,7 @@ private:
 	variant str_;
 	expression_ptr expr_;
 
-	const_formula_callable_definition_ptr def_;
+	const_FormulaCallable_definition_ptr def_;
 
 	//for recursive function formulae, we have base cases along with
 	//base expressions.
@@ -133,5 +132,3 @@ private:
 };
 
 }
-
-#endif

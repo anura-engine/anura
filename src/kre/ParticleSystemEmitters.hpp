@@ -48,8 +48,8 @@ namespace KRE
 			static emitter* factory(ParticleSystemContainer* parent, const variant& node);
 		protected:
 			virtual void internal_create(particle& p, float t) = 0;
-			virtual void handle_process(float t);
-			virtual void handle_draw() const;
+			virtual void handleProcess(float t);
+			virtual void handleDraw() const;
 			virtual bool duration_expired() { return can_be_deleted_; }
 
 			enum EMITS_TYPE {

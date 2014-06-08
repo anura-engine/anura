@@ -1,21 +1,28 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef EDITOR_HPP_INCLUDED
-#define EDITOR_HPP_INCLUDED
+
+#pragma once
+
 #ifndef NO_EDITOR
 
 #include <boost/function.hpp>
@@ -33,20 +40,22 @@
 static const int EDITOR_MENUBAR_HEIGHT = 40;
 static const int EDITOR_SIDEBAR_WIDTH = 220;
 
-namespace gui {
-class dialog;
+namespace gui 
+{
+	class dialog;
 }
 
-namespace editor_dialogs {
-class character_editor_dialog;
-class editor_layers_dialog;
-class property_editor_dialog;
-class segment_editor_dialog;
-class tileset_editor_dialog;
-class custom_object_dialog;
-class hex_tileset_editor_dialog;
+namespace editor_dialogs 
+{
+	class character_editor_dialog;
+	class editor_layers_dialog;
+	class property_editor_dialog;
+	class segment_editor_dialog;
+	class tileset_editor_dialog;
+	class custom_object_dialog;
+	class hex_tileset_editor_dialog;
 #if defined(USE_ISOMAP)
-class voxel_editor_dialog;
+	class voxel_editor_dialog;
 #endif
 }
 
@@ -75,7 +84,7 @@ public:
 	void setup_for_editing();
 
 	void process();
-	bool handle_event(const SDL_Event& event, bool swallowed);
+	bool handleEvent(const SDL_Event& event, bool swallowed);
 	void handle_scrolling();
 
 	int xpos() const { return xpos_; }
@@ -215,12 +224,12 @@ public:
 	//function to execute a command which will go into the undo/redo list.
 	//normally any time the editor mutates the level, it should be done
 	//through this function
-	void execute_command(boost::function<void()> command, boost::function<void()> undo, EXECUTABLE_COMMAND_TYPE type=COMMAND_TYPE_DEFAULT);
+	void executeCommand(boost::function<void()> command, boost::function<void()> undo, EXECUTABLE_COMMAND_TYPE type=COMMAND_TYPE_DEFAULT);
 
 	//functions to begin and end a group of commands. This is used when we
 	//are going to execute a bunch of commands, and from the point of view of
 	//undoing, they should be viewed as a single operation.
-	//When end_command_group() is called, all calls to execute_command since
+	//When end_command_group() is called, all calls to executeCommand since
 	//the corresponding call to begin_command_group() will be rolled up
 	//into a single command.
 	//
@@ -264,7 +273,7 @@ private:
 	void handle_key_press(const SDL_KeyboardEvent& key);
 
 	void handle_object_dragging(int mousex, int mousey);
-	void handle_drawing_rect(int mousex, int mousey);
+	void handleDrawing_rect(int mousex, int mousey);
 
 	void process_ghost_objects();
 	void remove_ghost_objects();
@@ -396,7 +405,7 @@ private:
 
 struct editor_resolution_manager : private preferences::editor_screen_size_scope
 {
-	static bool is_active();
+	static bool isActive();
 	explicit editor_resolution_manager(int xres, int yres);
 	~editor_resolution_manager();
 	
@@ -404,4 +413,3 @@ struct editor_resolution_manager : private preferences::editor_screen_size_scope
 };
 
 #endif // !NO_EDITOR
-#endif

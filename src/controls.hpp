@@ -22,7 +22,7 @@
 #include <vector>
 #include <cstddef>
 
-#include "graphics.hpp"
+#include "SDL.h"
 
 typedef SDL_Keycode key_type;
 

@@ -67,7 +67,7 @@ void queue_draw_number(graphics::blit_queue& q, int number, int places, int xpos
 	static const std::string Texture = "statusbar.png";
 	static const graphics::texture t = graphics::texture::get(Texture);
 
-	q.set_texture(t.get_id());
+	q.setTexture(t.get_id());
 
 	const int number_low = number/100;
 	const int number_high = 1 + number/100;

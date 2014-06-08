@@ -98,7 +98,7 @@ void formula_variable_storage::add(const formula_variable_storage& value)
 	}
 }
 
-variant formula_variable_storage::get_value(const std::string& key) const
+variant formula_variable_storage::getValue(const std::string& key) const
 {
 	std::map<std::string,int>::const_iterator i = strings_to_values_.find(key);
 	if(i != strings_to_values_.end()) {
@@ -109,17 +109,17 @@ variant formula_variable_storage::get_value(const std::string& key) const
 	}
 }
 
-variant formula_variable_storage::get_value_by_slot(int slot) const
+variant formula_variable_storage::getValue_by_slot(int slot) const
 {
 	return values_[slot];
 }
 
-void formula_variable_storage::set_value(const std::string& key, const variant& value)
+void formula_variable_storage::setValue(const std::string& key, const variant& value)
 {
 	add(key, value);
 }
 
-void formula_variable_storage::set_value_by_slot(int slot, const variant& value)
+void formula_variable_storage::setValue_by_slot(int slot, const variant& value)
 {
 	values_[slot] = value;
 }

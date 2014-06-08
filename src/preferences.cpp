@@ -169,11 +169,11 @@ namespace preferences {
 		return instance;
 	}
 
-	class SettingsObject : public game_logic::formula_callable
+	class SettingsObject : public game_logic::FormulaCallable
 	{
 	public:
 	private:
-		variant get_value(const std::string& key) const {
+		variant getValue(const std::string& key) const {
 			if(key == "dir") {
 				std::vector<variant> result;
 				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
@@ -201,7 +201,7 @@ namespace preferences {
 			}
 		}
 
-		void set_value(const std::string& key, const variant& value) {
+		void setValue(const std::string& key, const variant& value) {
 			std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
 			if(itor == g_registered_settings().end()) {
 				return;
@@ -224,9 +224,9 @@ namespace preferences {
 	};
 	}
 
-	game_logic::formula_callable* get_settings_obj()
+	game_logic::FormulaCallable* get_settings_obj()
 	{
-		static boost::intrusive_ptr<game_logic::formula_callable> obj(new SettingsObject);
+		static boost::intrusive_ptr<game_logic::FormulaCallable> obj(new SettingsObject);
 		return obj.get();
 	}
 
@@ -670,7 +670,7 @@ namespace preferences {
 	}
 
 	bool edit_and_continue() {
-		return edit_and_continue_ && !editor_resolution_manager::is_active();
+		return edit_and_continue_ && !editor_resolution_manager::isActive();
 	}
 
 	void set_edit_and_continue(bool value) {
@@ -955,7 +955,7 @@ namespace preferences {
 		return use_joystick_;
 	}
 	
-	game_logic::formula_callable* registry()
+	game_logic::FormulaCallable* registry()
 	{
 		return &game_registry::instance();
 	}
@@ -1263,7 +1263,7 @@ namespace preferences {
 		} else if(arg_name == "--pass") {
 			set_password(arg_value);
 		} else if(arg_name == "--module-args") {
-			game_logic::const_formula_callable_ptr callable = map_into_callable(json::parse(arg_value));
+			game_logic::const_FormulaCallablePtr callable = map_into_callable(json::parse(arg_value));
 			module::set_module_args(callable);
 		} else if(s == "--relay") {
 			relay_through_server_ = true;
@@ -1449,7 +1449,7 @@ namespace preferences {
 		return res;
 	}
 
-	void set_locale(const std::string& value) {
+	void setLocale(const std::string& value) {
 		locale_ = value;
 	}
 #if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)

@@ -38,7 +38,7 @@
 
 namespace graphics
 {
-	class skybox : public game_logic::formula_callable
+	class skybox : public game_logic::FormulaCallable
 	{
 	public:
 		explicit skybox(const variant& node);

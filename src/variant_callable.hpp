@@ -27,17 +27,17 @@ class variant_callable;
 typedef boost::intrusive_ptr<variant_callable> variant_callable_ptr;
 typedef boost::intrusive_ptr<const variant_callable> const_variant_callable_ptr;
 
-class variant_callable : public game_logic::formula_callable
+class variant_callable : public game_logic::FormulaCallable
 {
 public:
 	static variant create(variant* v);
 
-	const variant& get_value() const { return value_; }
+	const variant& getValue() const { return value_; }
 private:
 	variant_callable(const variant& v);
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	variant create_for_list(const variant& list) const;
 

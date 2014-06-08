@@ -726,7 +726,7 @@ void voxel_model::process_animation(GLfloat advance)
 
 	clear_transforms();
 
-	game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+	game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
 
 	if(old_anim_) {
 		callable->add("time", variant(decimal(old_anim_time_)));

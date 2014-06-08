@@ -85,7 +85,7 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 
 		if(allow_platform == SOLID_AND_PLATFORMS || obj->solid_platform()) {
 			const rect& platform_rect = obj->platform_rect_at(pt.x);
-			if(point_in_rect(pt, platform_rect) && obj->platform()) {
+			if(pointInRect(pt, platform_rect) && obj->platform()) {
 				if(info) {
 					info->collide_with = obj;
 					info->friction = obj->surface_friction();
@@ -103,7 +103,7 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 			continue;
 		}
 
-		if(!point_in_rect(pt, obj->solid_rect())) {
+		if(!pointInRect(pt, obj->solid_rect())) {
 			continue;
 		}
 
@@ -328,9 +328,9 @@ bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 
 	const int increment = e.face_right() ? 2 : -2;
 	for(int y = 0; y < f.height(); y += 2) {
-		std::vector<bool>::const_iterator i = f.get_alpha_itor(0, y, e.time_in_frame(), e.face_right());
+		std::vector<bool>::const_iterator i = f.getAlpha_itor(0, y, e.time_in_frame(), e.face_right());
 		for(int x = 0; x < f.width(); x += 2) {
-			if(i == f.get_alpha_buf().end() || i == f.get_alpha_buf().begin()) {
+			if(i == f.getAlpha_buf().end() || i == f.getAlpha_buf().begin()) {
 				continue;
 			}
 			if(!*i && lvl.solid(e.x() + x, e.y() + y)) {
@@ -561,7 +561,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 }
 
 namespace {
-class user_collision_callable : public game_logic::formula_callable {
+class user_collision_callable : public game_logic::FormulaCallable {
 	entity_ptr a_, b_;
 	const std::string* area_a_;
 	const std::string* area_b_;
@@ -667,8 +667,8 @@ void detect_user_collisions(level& lvl)
 
 		foreach(const boost::intrusive_ptr<user_collision_callable>& p, v) {
 			p->set_all_collisions(all_callables_variant);
-			key.first->handle_event_delay(CollideObjectID, p.get());
-			key.first->handle_event_delay(get_collision_event_id(*i->first.second), p.get());
+			key.first->handleEvent_delay(CollideObjectID, p.get());
+			key.first->handleEvent_delay(get_collision_event_id(*i->first.second), p.get());
 		}
 
 		foreach(const boost::intrusive_ptr<user_collision_callable>& p, v) {

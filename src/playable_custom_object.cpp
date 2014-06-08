@@ -90,7 +90,7 @@ entity_ptr playable_custom_object::clone() const
 	return entity_ptr(new playable_custom_object(*this));
 }
 
-bool playable_custom_object::is_active(const rect& screen_area) const
+bool playable_custom_object::isActive(const rect& screen_area) const
 {
 	//player objects are always active.
 	return true;
@@ -145,9 +145,9 @@ void playable_custom_object::process(level& lvl)
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
 		if(controls[n] != control_status(static_cast<controls::CONTROL_ITEM>(n))) {
 			if(controls[n]) {
-				handle_event("end_ctrl_" + keys[n]);
+				handleEvent("end_ctrl_" + keys[n]);
 			} else {
-				handle_event("ctrl_" + keys[n]);
+				handleEvent("ctrl_" + keys[n]);
 			}
 		}
 	}
@@ -160,32 +160,32 @@ namespace {
 	static const char* ctrl[] = { "ctrl_up", "ctrl_down", "ctrl_left", "ctrl_right", "ctrl_attack", "ctrl_jump", "ctrl_tongue" };
 }
 
-variant playable_custom_object::get_value(const std::string& key) const
+variant playable_custom_object::getValue(const std::string& key) const
 {
 	if(key.substr(0, 11) == "difficulty_") {
 		return variant(difficulty::from_string(key.substr(11)));		
 	} else if(key == "difficulty") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
 	} else if(key == "can_interact") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
 	} else if(key == "underwater_controls") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
 	} else if(key == "ctrl_mod_key") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
 	} else if(key == "ctrl_keys") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
 	} else if(key == "ctrl_mice") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
 	} else if(key == "ctrl_tilt") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
 	} else if(key == "ctrl_x") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_X);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_X);
 	} else if(key == "ctrl_y") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
 	} else if(key == "ctrl_reverse_ab") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
 	} else if(key == "control_scheme") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
 	}
 
 	for(int n = 0; n < sizeof(ctrl)/sizeof(*ctrl); ++n) {
@@ -201,10 +201,10 @@ variant playable_custom_object::get_value(const std::string& key) const
 	if(key == "player") {
 		return variant::from_bool(true);
 	} else if(key == "vertical_look") {
-		return get_value_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
+		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
 	}
 
-	return custom_object::get_value(key);
+	return custom_object::getValue(key);
 }
 
 variant playable_custom_object::get_player_value_by_slot(int slot) const
@@ -381,7 +381,7 @@ void playable_custom_object::set_player_value_by_slot(int slot, const variant& v
 	}
 }
 
-void playable_custom_object::set_value(const std::string& key, const variant& value)
+void playable_custom_object::setValue(const std::string& key, const variant& value)
 {
 	if(key == "difficulty") {
 		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY, value);
@@ -394,6 +394,6 @@ void playable_custom_object::set_value(const std::string& key, const variant& va
 	} else if(key == "control_lock") {
 		set_player_value_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_LOCK, value);
 	} else {
-		custom_object::set_value(key, value);
+		custom_object::setValue(key, value);
 	}
 }

@@ -113,7 +113,7 @@ template<typename N, typename T> T manhattan_distance(const N& p1, const N& p2);
 
 typedef std::map<variant, graph_node<variant, decimal>::graph_node_ptr > vertex_list;
 
-class directed_graph : public game_logic::formula_callable {
+class directed_graph : public game_logic::FormulaCallable {
 	DECLARE_CALLABLE(directed_graph);
 	std::vector<variant> vertices_;
 	graph_edge_list edges_;
@@ -136,7 +136,7 @@ public:
 	}
 };
 
-class weighted_directed_graph : public game_logic::formula_callable {
+class weighted_directed_graph : public game_logic::FormulaCallable {
 	DECLARE_CALLABLE(weighted_directed_graph);
 	edge_weights weights_;
 	directed_graph_ptr dg_;
@@ -192,13 +192,13 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	const variant src_node, 
 	const variant dst_node, 
 	game_logic::expression_ptr heuristic, 
-	game_logic::map_formula_callable_ptr callable);
+	game_logic::map_FormulaCallablePtr callable);
 
 variant a_star_find_path(level_ptr lvl, const point& src, 
 	const point& dst, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 
-	game_logic::map_formula_callable_ptr callable, 
+	game_logic::map_FormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y);
 

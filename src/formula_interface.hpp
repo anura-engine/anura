@@ -27,7 +27,7 @@ public:
 	virtual int get_id() const = 0;
 };
 
-class formula_interface : public formula_callable
+class formula_interface : public FormulaCallable
 {
 public:
 	struct interface_mismatch_error {
@@ -41,14 +41,14 @@ public:
 	formula_interface_instance_factory* create_factory(variant_type_ptr type) const; //throw interface_mismatch_error
 	formula_interface_instance_factory* get_dynamic_factory() const;
 
-	const_formula_callable_definition_ptr get_definition() const;
+	const_FormulaCallable_definition_ptr get_definition() const;
 
 	bool match(const variant& v) const;
 
 	std::string to_string() const;
 
 private:
-	variant get_value(const std::string& key) const;
+	variant getValue(const std::string& key) const;
 
 	std::map<std::string, variant_type_ptr> types_;
 	boost::scoped_ptr<formula_interface_impl> impl_;

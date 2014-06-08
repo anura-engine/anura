@@ -52,7 +52,7 @@ namespace KRE
 		public:
 			random_parameter(const variant& node);
 			virtual ~random_parameter();
-			virtual float get_value(float t);
+			virtual float getValue(float t);
 		private:
 			float min_value_;
 			float max_value_;
@@ -64,7 +64,7 @@ namespace KRE
 		public:
 			oscillate_parameter(const variant& node);
 			virtual ~oscillate_parameter();
-			virtual float get_value(float t);
+			virtual float getValue(float t);
 		private:
 			enum WaveType {
 				TYPE_SINE,
@@ -87,7 +87,7 @@ namespace KRE
 			};
 			curved_parameter(InterpolationType type, const variant& node);
 			virtual ~curved_parameter();
-			virtual float get_value(float t);
+			virtual float getValue(float t);
 		private:
 			InterpolationType curve_type_;
 			geometry::control_point_vector control_points_;
@@ -153,7 +153,7 @@ namespace KRE
 		{
 		}
 
-		float random_parameter::get_value(float t)
+		float random_parameter::getValue(float t)
 		{
 			return get_random_float(min_value_, max_value_);
 		}
@@ -191,7 +191,7 @@ namespace KRE
 		{
 		}
 
-		float oscillate_parameter::get_value(float t)
+		float oscillate_parameter::getValue(float t)
 		{
 			if(osc_type_ == TYPE_SINE) {
 				return float(base_ + amplitude_ * sin(2*M_PI*frequency_*t + phase_));
@@ -238,7 +238,7 @@ namespace KRE
 			return --it;
 		}
 
-		float curved_parameter::get_value(float t)
+		float curved_parameter::getValue(float t)
 		{
 			if(curve_type_ == INTERPOLATE_LINEAR) {
 				auto it = find_closest_point(t);

@@ -281,4 +281,22 @@ namespace KRE
 			ASSERT_LOG(false, "Unrecognised Color value: " << node.to_debug_string());
 		}
 	}
+
+	ColorPtr Color::factory(const std::string& name)
+	{
+		auto it = get_color_table().find(name);
+		ASSERT_LOG(it != get_color_table().end(), "Couldn't find color '" << name << "' in known color list");
+		return ColorPtr(new Color(it->second));
+	}
+
+	variant Color::write() const
+	{
+		std::vector<variant> v;
+		v.reserve(4);
+		v.push_back(variant(r()));
+		v.push_back(variant(g()));
+		v.push_back(variant(b()));
+		v.push_back(variant(a()));
+		return variant(&v);
+	}
 }

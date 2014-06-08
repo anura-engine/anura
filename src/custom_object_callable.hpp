@@ -143,7 +143,7 @@ enum CUSTOM_OBJECT_PROPERTY {
 	CUSTOM_OBJECT_DRAW_AREA,
 	CUSTOM_OBJECT_SCALE,
 	CUSTOM_OBJECT_ACTIVATION_AREA,
-	CUSTOM_OBJECT_CLIP_AREA,
+	CUSTOM_OBJECT_clipArea,
 	CUSTOM_OBJECT_ALWAYS_ACTIVE,
 	CUSTOM_OBJECT_ACTIVATION_BORDER,
 	CUSTOM_OBJECT_FALL_THROUGH_PLATFORMS,
@@ -201,7 +201,7 @@ enum CUSTOM_OBJECT_PROPERTY {
 	NUM_CUSTOM_OBJECT_PROPERTIES
 };
 
-class custom_object_callable : public game_logic::formula_callable_definition
+class custom_object_callable : public game_logic::FormulaCallable_definition
 {
 public:
 	static const custom_object_callable& instance();
@@ -250,7 +250,7 @@ public:
 
 private:
 	custom_object_callable& c_;
-	game_logic::formula_callable_definition::entry entry_;
+	game_logic::FormulaCallable_definition::entry entry_;
 	int slot_;
 };
 

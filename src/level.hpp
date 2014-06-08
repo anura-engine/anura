@@ -40,10 +40,10 @@
 #include "entity.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
-#include "formula_callable_definition_fwd.hpp"
+#include "FormulaCallable_definition_fwd.hpp"
 #include "kre/Geometry.hpp"
 #include "gui_formula_functions.hpp"
-#include "hex_map.hpp"
+#include "HexMap.hpp"
 #include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
@@ -66,7 +66,7 @@ public:
 };
 
 
-class level : public game_logic::formula_callable
+class level : public game_logic::FormulaCallable
 {
 public:
 	struct summary {
@@ -91,8 +91,8 @@ public:
 	//in the main thread.
 	void finish_loading();
 
-	virtual game_logic::formula_ptr create_formula(const variant& v);
-	bool execute_command(const variant& var);
+	virtual game_logic::formula_ptr createFormula(const variant& v);
+	bool executeCommand(const variant& var);
 
 	//function which sets which player we're controlling on this machine.
 	void set_multiplayer_slot(int slot);
@@ -102,7 +102,7 @@ public:
 	void set_save_point(int x, int y) { save_point_x_ = x; save_point_y_ = y; }
 
 	const std::string& id() const { return id_; }
-	void set_id(const std::string& s) { id_ = s; }
+	void setId(const std::string& s) { id_ = s; }
 	const std::string& music() const { return music_; }
 
 	std::string package() const;
@@ -396,7 +396,7 @@ public:
 	int x_resolution() const { return x_resolution_; }
 	int y_resolution() const { return y_resolution_; }
 
-	void launch_new_module(const std::string& module_id, game_logic::const_formula_callable_ptr callable = NULL);
+	void launch_new_module(const std::string& module_id, game_logic::const_FormulaCallablePtr callable = NULL);
 
 	bool gui_event(const SDL_Event &event);
 
@@ -414,9 +414,9 @@ public:
 	boost::intrusive_ptr<level> suspended_level() const { return suspended_level_; }
 	void set_suspended_level(const boost::intrusive_ptr<level>& lvl) { suspended_level_ = lvl; }
 
-	void set_show_builtin_settings_dialog(bool value) { show_builtin_settings_ = value; }
+	void set_show_builtin_settingsDialog(bool value) { show_builtin_settings_ = value; }
 
-	bool show_builtin_settings_dialog() const { return show_builtin_settings_; }
+	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
 private:
 	DECLARE_CALLABLE(level);
@@ -586,7 +586,7 @@ private:
 	std::map<int, tile_map> tile_maps_;
 	int xscale_, yscale_;
 
-	std::map<int, hex::hex_map_ptr> hex_maps_;
+	std::map<int, hex::HexMapPtr> HexMaps_;
 	//current shader we're using to draw with.
 #ifdef USE_SHADERS
 	gles2::shader_program_ptr shader_;

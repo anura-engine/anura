@@ -26,7 +26,7 @@
 
 namespace gui
 {
-typedef std::pair<std::string, widget_ptr> selector_pair;
+typedef std::pair<std::string, WidgetPtr> selector_pair;
 typedef std::vector<selector_pair> selector_list;
 
 class selector_widget : public widget
@@ -34,7 +34,7 @@ class selector_widget : public widget
 public:
 	explicit selector_widget(const std::vector<std::string>& list);
 	explicit selector_widget(const selector_list& list);
-	explicit selector_widget(const variant& v, game_logic::formula_callable* e);
+	explicit selector_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~selector_widget() {}
 
 	void set_on_change_handler(boost::function<void(const std::string&)> fn) { on_change_ = fn; }
@@ -43,11 +43,11 @@ public:
 	void set_selection(size_t sel);
 	std::string get_selection();
 protected:
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed);
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 	void init();
 private:
 	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
@@ -61,8 +61,8 @@ private:
 	boost::function<void(const std::string&)> on_change_;
 	boost::function<void(const std::string&)> on_select_;
 
-	widget_ptr left_arrow_;
-	widget_ptr right_arrow_;
+	WidgetPtr left_arrow_;
+	WidgetPtr right_arrow_;
 
 	// delgate 
 	void change_delegate(const std::string& s);
@@ -72,8 +72,8 @@ private:
 	game_logic::formula_ptr select_handler_;
 };
 
-typedef boost::intrusive_ptr<selector_widget> selector_widget_ptr;
-typedef boost::intrusive_ptr<const selector_widget> const_selector_widget_ptr;
+typedef boost::intrusive_ptr<selector_widget> selector_WidgetPtr;
+typedef boost::intrusive_ptr<const selector_widget> const_selector_WidgetPtr;
 }
 
 #endif

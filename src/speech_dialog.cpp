@@ -79,7 +79,7 @@ bool speech_dialog::handle_mouse_move(int x, int y)
 		option_width_ + OptionsBorder*2, OptionHeight*options_.size() + OptionsBorder*2
 	);
 	//std::cerr << "Options box: " << box << " : " << x << " : " << y << "\n";
-	if (point_in_rect(point(x, y), box))
+	if (pointInRect(point(x, y), box))
 	{
 		option_selected_ = (y-box.y())/OptionHeight;
 		return true;
@@ -363,7 +363,7 @@ void speech_dialog::draw() const
 
 	if(text_char_ == num_chars() && options_.empty() == false) {
 		//const_gui_section_ptr options_panel = gui_section::get("speech_portrait_pane");
-		const_framed_gui_element_ptr options_panel = framed_gui_element::get("regular_window");
+		ConstFramedGuiElementPtr options_panel = FramedGuiElement::get("regular_window");
 		int xpos = graphics::screen_width()/2 - option_width_/2 - OptionsBorder*2;
 		int ypos = 0;
 		options_panel->blit(xpos, ypos, OptionsBorder*4 + option_width_, OptionsBorder*2 + OptionHeight*options_.size(), true);
@@ -422,7 +422,7 @@ void speech_dialog::set_side(bool left_side)
 	left_side_speaking_ = left_side;
 }
 
-void speech_dialog::set_text(const std::vector<std::string>& text)
+void speech_dialog::setText(const std::vector<std::string>& text)
 {
 	text_.clear();
 	markup_.clear();

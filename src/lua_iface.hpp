@@ -53,7 +53,7 @@ namespace lua
 		mutable chunk_list_type::const_iterator chunks_it_;
 	};
 
-	class lua_compiled : public game_logic::formula_callable, public compiled_chunk
+	class lua_compiled : public game_logic::FormulaCallable, public compiled_chunk
 	{
 	public:
 		lua_compiled();
@@ -63,13 +63,13 @@ namespace lua
 	};
 	typedef boost::intrusive_ptr<lua_compiled> lua_compiled_ptr;
 
-	class lua_function_reference : public game_logic::formula_callable
+	class lua_function_reference : public game_logic::FormulaCallable
 	{
 	public:
 		lua_function_reference(lua_State* L, int ref);
 		virtual ~lua_function_reference();
 
-		virtual variant get_value(const std::string& key) const;
+		virtual variant getValue(const std::string& key) const;
 		virtual variant call();
 	private:
 		lua_State* L_; 
@@ -85,7 +85,7 @@ namespace lua
 	{
 	public:
 		lua_context();
-		explicit lua_context(game_logic::formula_callable& callable);
+		explicit lua_context(game_logic::FormulaCallable& callable);
 		virtual ~lua_context();
 
 		static lua_context& get_instance();
@@ -93,12 +93,12 @@ namespace lua
 		std::shared_ptr<lua_State>& context() { return state_; }
 		lua_State* context_ptr() { return state_.get(); }
 
-		void set_self_callable(game_logic::formula_callable& callable);
+		void set_self_callable(game_logic::FormulaCallable& callable);
 
-		bool execute(const variant& value, game_logic::formula_callable* callable=NULL);
+		bool execute(const variant& value, game_logic::FormulaCallable* callable=NULL);
 
-		bool dostring(const std::string&name, const std::string& str, game_logic::formula_callable* callable=NULL);
-		bool dofile(const std::string&name, const std::string& str, game_logic::formula_callable* callable=NULL);
+		bool dostring(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=NULL);
+		bool dofile(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=NULL);
 
 		lua_compiled_ptr compile(const std::string& name, const std::string& str);
 

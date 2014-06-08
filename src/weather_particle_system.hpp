@@ -70,8 +70,8 @@ public:
 	void draw(const rect& area, const entity& e) const;
 	
 private:
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 	
 	const weather_particle_system_factory& factory_;
 	const weather_particle_system_info& info_;

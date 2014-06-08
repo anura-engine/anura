@@ -99,7 +99,7 @@ namespace KRE
 			virtual void AddPath(const PathPtr& path) override;
 			virtual void AddSubPath(const PathPtr& path) override;
 		
-			virtual void PreRender() override;
+			virtual void preRender() override;
 
 			virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd);
 		protected:

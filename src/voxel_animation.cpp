@@ -51,9 +51,9 @@ public:
 
 	const voxel_model& model() const { return *vox_model_; }
 private:
-	void handle_draw() const;
-	void handle_process();
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleDraw() const;
+	void handleProcess();
+	bool handleEvent(const SDL_Event& event, bool claimed);
 
 	void calculate_camera();
 
@@ -105,8 +105,8 @@ animation_renderer::animation_renderer(const rect& area, const std::string& fnam
 	//lighting_->set_light_position(0, glm::vec3(0.0f, 0.0f, 50.0f));
 	//lighting_->set_light_power(0, 2000.0f);
 
-	set_loc(area.x(), area.y());
-	set_dim(area.w(), area.h());
+	setLoc(area.x(), area.y());
+	setDim(area.w(), area.h());
 
 	init();
 	calculate_camera();
@@ -231,12 +231,12 @@ void animation_renderer::render_fbo()
 	glDisable(GL_DEPTH_TEST);
 }
 
-void animation_renderer::handle_draw() const
+void animation_renderer::handleDraw() const
 {
 	//std::cerr << "draw anim...\n";
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
-	GLint cur_id = graphics::texture::get_current_texture();
+	GLint cur_id = graphics::texture::get_currentTexture();
 	glBindTexture(GL_TEXTURE_2D, fbo_texture_ids_[0]);
 
 	const int w_odd = width() % 2;
@@ -270,7 +270,7 @@ void animation_renderer::handle_draw() const
 	glPopMatrix();
 }
 
-void animation_renderer::handle_process()
+void animation_renderer::handleProcess()
 {
 	int num_keys = 0;
 	const Uint8* keystate = SDL_GetKeyboardState(&num_keys);
@@ -295,7 +295,7 @@ void animation_renderer::handle_process()
 	render_fbo();
 }
 
-bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
+bool animation_renderer::handleEvent(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
 	case SDL_MOUSEBUTTONDOWN: {
@@ -331,7 +331,7 @@ bool animation_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 	}
 
-	return widget::handle_event(event, claimed);
+	return widget::handleEvent(event, claimed);
 }
 
 void animation_renderer::calculate_camera()
@@ -351,7 +351,7 @@ public:
 	voxel_animation_editor(const rect& r, const std::string& fname);
 	void init();
 private:
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed);
 
 	boost::intrusive_ptr<animation_renderer> renderer_;
 	rect area_;
@@ -384,9 +384,9 @@ void voxel_animation_editor::init()
 	add_widget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
 }
 
-bool voxel_animation_editor::handle_event(const SDL_Event& event, bool claimed)
+bool voxel_animation_editor::handleEvent(const SDL_Event& event, bool claimed)
 {
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 }

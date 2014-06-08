@@ -39,7 +39,7 @@ namespace gui
 	{
 	public:
 		view3d_widget(int x, int y, int width, int height);
-		view3d_widget(const variant& v, game_logic::formula_callable* e);
+		view3d_widget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~view3d_widget();
 	protected:
 		void init();
@@ -58,21 +58,21 @@ namespace gui
 		size_t tex_width_;
 		size_t tex_height_;
 
-		void handle_process();
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
+		void handleProcess();
+		void handleDraw() const;
+		bool handleEvent(const SDL_Event& event, bool claimed);
 		void render_fbo() const;
 		void render_texture() const;
 		glm::mat4 proj_2d_;
 
-		std::vector<widget_ptr> children_;
+		std::vector<WidgetPtr> children_;
 
 		view3d_widget();
 		view3d_widget(const view3d_widget&);
 	};
 
-	typedef boost::intrusive_ptr<view3d_widget> view3d_widget_ptr;
-	typedef boost::intrusive_ptr<const view3d_widget> const_view3d_widget_ptr;
+	typedef boost::intrusive_ptr<view3d_widget> view3d_WidgetPtr;
+	typedef boost::intrusive_ptr<const view3d_widget> const_view3d_WidgetPtr;
 }
 
 #endif

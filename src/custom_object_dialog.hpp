@@ -26,7 +26,7 @@
 #include "label.hpp"
 #include "module.hpp"
 #include "variant.hpp"
-#include "scrollable_widget.hpp"
+#include "scrollable_widget"
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 
@@ -40,10 +40,10 @@ public:
 	variant get_object() const { return object_template_; }
 	void show_modal();
 protected:
-	void change_text_attribute(const gui::text_editor_widget_ptr editor, const std::string& s);
-	void change_int_attribute_text(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide);
-	void change_int_attribute_slider(const gui::text_editor_widget_ptr editor, const std::string& s, double d);
-	void slider_drag_end(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide, double d);
+	void change_text_attribute(const gui::TextEditorWidgetPtr editor, const std::string& s);
+	void change_int_attribute_text(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::slider_ptr slide);
+	void change_int_attribute_slider(const gui::TextEditorWidgetPtr editor, const std::string& s, double d);
+	void slider_drag_end(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::slider_ptr slide, double d);
 	void change_template(int selection, const std::string& s);
 	void change_prototype();
 	void remove_prototype(const std::string& s);
@@ -56,7 +56,7 @@ protected:
 	void on_edit_animations();
 	void on_edit_items(const std::string& name, const std::string& attr, bool allow_functions);
 
-	std::vector<gui::widget_ptr> get_widget_for_attribute(const std::string& attr);
+	std::vector<gui::WidgetPtr> get_widget_for_attribute(const std::string& attr);
 private:
 	module::module_file_pair template_file_;
 	variant object_template_;
@@ -64,7 +64,7 @@ private:
 	int selected_template_;
 	std::string current_object_save_path_;
 
-	gui::widget_ptr context_menu_;
+	gui::WidgetPtr context_menu_;
 
 	std::string error_text_;
 

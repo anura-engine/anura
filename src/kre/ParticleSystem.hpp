@@ -92,18 +92,18 @@ namespace KRE
 			virtual ~emit_object() {}
 			const std::string& name() const { return name_; }
 			void process(float t) {
-				handle_process(t);
+				handleProcess(t);
 			}
 			void draw() const {
-				handle_draw();
+				handleDraw();
 			}
 			ParticleSystemContainer* parent_container() { 
 				ASSERT_LOG(parent_container_ != NULL, "PSYSTEM2: parent container is NULL");
 				return parent_container_; 
 			}
 		protected:
-			virtual void handle_process(float t) = 0;
-			virtual void handle_draw() const {}
+			virtual void handleProcess(float t) = 0;
+			virtual void handleDraw() const {}
 			virtual bool duration_expired() { return false; }
 		private:
 			std::string name_;
@@ -135,11 +135,11 @@ namespace KRE
 			std::vector<affector_ptr>& active_affectors() { return instanced_affectors_; }
 			void add_emitter(emitter_ptr e);
 			void add_affector(affector_ptr a);
-			void PreRender() override;
+			void preRender() override;
 		protected:
 			DisplayDeviceDef Attach(const DisplayDevicePtr& dd);
 
-			virtual void handle_process(float t);
+			virtual void handleProcess(float t);
 		private:
 			void Init();
 
@@ -192,7 +192,7 @@ namespace KRE
 
 			void NodeAttached() override;
 		protected:
-			virtual void handle_process(float t);
+			virtual void handleProcess(float t);
 		private:
 			void update(float t);
 
