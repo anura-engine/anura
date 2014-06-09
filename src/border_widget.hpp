@@ -28,7 +28,7 @@
 namespace gui {
 
 //a widget which draws a border around another widget it holds as its child.
-class border_widget : public widget
+class border_widget : public Widget
 {
 public:
 	border_widget(WidgetPtr child, const KRE::Color& col, int border_size=2);

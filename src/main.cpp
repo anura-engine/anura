@@ -80,6 +80,7 @@
 #include "variant_utils.hpp"
 
 #include "kre/SDLWrapper.hpp"
+#include "kre/Font.hpp"
 #include "kre/WindowManager.hpp"
 
 #if defined(__APPLE__)
@@ -715,6 +716,12 @@ extern "C" int main(int argcount, char* argvec[])
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
 
+	// Set the default font to use for rendering. This can of course be overridden when rendering the
+	// text to a texture.
+	KRE::Font::getInstance()->setDefaultFont(module::get_default_font() == "bitmap" 
+		? "FreeMono" 
+		: module::get_default_font());
+
 	i18n::init ();
 	LOG( "After i18n::init()" );
 
@@ -756,7 +763,7 @@ extern "C" int main(int argcount, char* argvec[])
 	loading_screen loader;
 	try {
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
-		gui_section::init(gui_node);
+		GuiSection::init(gui_node);
 		loader.draw_and_increment(_("Initializing GUI"));
 		FramedGuiElement::init(gui_node);
 

@@ -22,7 +22,7 @@
 #include <vector>
 
 #include "grid_widget_fwd.hpp"
-#include "scrollable_widget"
+#include "scrollable_widget.hpp"
 #include "widget.hpp"
 
 namespace gui {

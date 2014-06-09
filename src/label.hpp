@@ -45,7 +45,7 @@ namespace gui
 	{
 	public:
 		static LabelPtr create(const std::string& text,
-								const SDL_Color& color, 
+								const KRE::Color& color, 
 								int size=14, 
 								const std::string& font="") 
 		{

@@ -29,7 +29,7 @@ namespace gui
 		virtual ~bar_widget();
 		void init();
 
-		void set_rotation(GLfloat rotate);
+		void setRotation(GLfloat rotate);
 	private:
 	DECLARE_CALLABLE(bar_widget);
 	protected:

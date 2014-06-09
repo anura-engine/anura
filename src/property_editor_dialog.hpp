@@ -44,7 +44,7 @@ public:
 	void remove_object_from_group(entity_ptr e);
 	void remove_group(int ngroup);
 private:
-	void set_label(gui::TextEditorWidget* e);
+	void setLabel(gui::TextEditorWidget* e);
 	entity_ptr get_static_entity() const;
 	void change_min_difficulty(int amount);
 	void change_max_difficulty(int amount);

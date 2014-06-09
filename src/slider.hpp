@@ -20,7 +20,6 @@
 #include <boost/function.hpp>
 
 #include "image_widget.hpp"
-#include "texture.hpp"
 #include "widget.hpp"
 #include "gui_section.hpp"
 
@@ -28,7 +27,7 @@
 namespace gui {
 	
 //A slider widget. Forwards to a given function whenever its value changes.
-class slider : public widget
+class slider : public Widget
 {
 public:
 	explicit slider(int width, boost::function<void (double)> onchange, double position=0.0, int scale=2);

@@ -90,9 +90,9 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 	} else if(wtype == "grid") {
 		return WidgetPtr(new gui::grid(v,e));
 	} else if(wtype == "image") {
-		return WidgetPtr(new gui::image_widget(v,e));
+		return WidgetPtr(new gui::ImageWidget(v,e));
 	} else if(wtype == "section") {
-		return WidgetPtr(new gui::gui_section_widget(v,e));
+		return WidgetPtr(new gui::GuiSectionWidget(v,e));
 	} else if(wtype == "key_button") {
 		return WidgetPtr(new gui::key_button(v,e));
 	} else if(wtype == "label") {

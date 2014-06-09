@@ -27,7 +27,8 @@
 #include <boost/function.hpp>
 #include <boost/shared_ptr.hpp>
 
-#include "kre/Material.hpp"
+#include "kre/Geometry.hpp"
+#include "kre/Texture.hpp"
 #include "Color.hpp"
 
 #include "formula.hpp"

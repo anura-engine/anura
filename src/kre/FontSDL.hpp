@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,11 +23,20 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
+#include "SDL_ttf.h"
+#include "Font.hpp"
 
-namespace gui 
+namespace KRE
 {
-	class ImageWidget;
-	typedef boost::intrusive_ptr<ImageWidget> ImageWidgetPtr;
-	typedef boost::intrusive_ptr<const ImageWidget> ConstImageWidgetPtr;
+	class FontSDL : public Font
+	{
+	public:
+		FontSDL();
+		virtual ~FontSDL();
+	private:
+		DISALLOW_COPY_AND_ASSIGN(FontSDL);
+		TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const override;
+		void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const override;
+		TTF_Font* getFont(int size, const std::string& font_name) const;
+	};
 }

@@ -2028,7 +2028,7 @@ void voxel_editor::init()
 	for(int n = 0; ToolIcons[n]; ++n) {
 		assert(n < NUM_VOXEL_TOOLS);
 		ButtonPtr tool_button(
-		  new button(WidgetPtr(new gui_section_widget(ToolIcons[n], 26, 26)),
+		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 		      boost::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
 		tool_borders_.push_back(new border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
 		tools_grid->add_col(WidgetPtr(tool_borders_.back()));

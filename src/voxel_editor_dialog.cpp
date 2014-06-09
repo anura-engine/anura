@@ -158,8 +158,8 @@ namespace editor_dialogs
 					if(first_index_ == -1) {
 						first_index_ = index;
 					}
-					image_widget* preview = new image_widget(t.tex, 54, 54);
-					preview->set_area(t.area);
+					ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
+					preview->setArea(t.area);
 					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
@@ -183,8 +183,8 @@ namespace editor_dialogs
 					if(first_index_ == -1) {
 						first_index_ = index;
 					}
-					image_widget* preview = new image_widget(t.tex, 54, 54);
-					preview->set_area(t.area);
+					ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
+					preview->setArea(t.area);
 					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
@@ -297,8 +297,8 @@ namespace editor_dialogs
 
 			categories.insert(t.group);
 
-			image_widget* preview = new image_widget(t.tex, 54, 54);
-			preview->set_area(t.area);
+			ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
+			preview->setArea(t.area);
 			grid->add_col(WidgetPtr(preview))
 				 .add_col(WidgetPtr(new label(t.group, graphics::color_white())));
 			grid->register_row_selection_callback(boost::bind(&voxel_editor_dialog::select_category, this, t.group));

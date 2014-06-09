@@ -106,9 +106,9 @@ gui::WidgetPtr character_editor_dialog::generate_grid(const std::string& categor
 					first_obj_[category] = index;
 				}
 
-				image_widget* preview = new image_widget(c.preview_frame()->img());
+				ImageWidget* preview = new ImageWidget(c.preview_frame()->img());
 				preview->setDim(36, 36);
-				preview->set_area(c.preview_frame()->area());
+				preview->setArea(c.preview_frame()->area());
 				ButtonPtr char_button(new button(WidgetPtr(preview), boost::bind(&character_editor_dialog::set_character, this, index)));
 	
 				std::string tooltip_str = c.node["type"].as_string();
@@ -172,9 +172,9 @@ void character_editor_dialog::show_category_menu()
 	foreach(const cat_pair& cp, categories) {
 		const editor::enemy_type& c = *cp.second;
 
-		image_widget* preview = new image_widget(c.preview_frame()->img());
+		ImageWidget* preview = new ImageWidget(c.preview_frame()->img());
 		preview->setDim(28, 28);
-		preview->set_area(c.preview_frame()->area());
+		preview->setArea(c.preview_frame()->area());
 		grid->add_col(WidgetPtr(preview))
 		     .add_col(WidgetPtr(new label(c.category, graphics::color_white())));
 		grid->register_row_selection_callback(boost::bind(&character_editor_dialog::select_category, this, c.category));

@@ -84,7 +84,7 @@ ConstFramedGuiElementPtr FramedGuiElement::get(const std::string& key)
 	return itor->second;
 }
 
-void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled) const
+void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled, const KRE::Color& color) const
 {
 	/*blit_subsection(interior_fill_,x,y,w/2,h/2,scale);
 	
@@ -102,20 +102,21 @@ void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled) const
 	
 	int scale = upscaled? 2:1;
 	
-	blitSubsection(interior_fill_,x+ cornerHeight_,y+ cornerHeight_,w-2*cornerHeight_,h-2*cornerHeight_);
+	blitSubsection(interior_fill_,x+ cornerHeight_,y+ cornerHeight_,w-2*cornerHeight_,h-2*cornerHeight_, color);
 	
-	blitSubsection(top_border_,x + cornerHeight_,y,w - cornerHeight_*2,top_border_.h()*scale);
-	blitSubsection(bottom_border_,x + cornerHeight_,y + h - bottom_border_.h()*scale,w-cornerHeight_*2,bottom_border_.h()*scale);
-	blitSubsection(left_border_,x,y+cornerHeight_,left_border_.w()*scale,h-2*cornerHeight_);
-	blitSubsection(right_border_,x + w - right_border_.w()*scale, y+cornerHeight_,right_border_.w()*scale,h-2*cornerHeight_);
+	blitSubsection(top_border_,x + cornerHeight_,y,w - cornerHeight_*2,top_border_.h()*scale, color);
+	blitSubsection(bottom_border_,x + cornerHeight_,y + h - bottom_border_.h()*scale,w-cornerHeight_*2,bottom_border_.h()*scale, color);
+	blitSubsection(left_border_,x,y+cornerHeight_,left_border_.w()*scale,h-2*cornerHeight_, color);
+	blitSubsection(right_border_,x + w - right_border_.w()*scale, y+cornerHeight_,right_border_.w()*scale,h-2*cornerHeight_, color);
 	
-	blitSubsection(top_left_corner_,x,y,top_left_corner_.w()*scale,top_left_corner_.h()*scale);
-	blitSubsection(top_right_corner_,x + w - top_right_corner_.w()*scale,y, top_right_corner_.w()*scale, top_right_corner_.h()*scale);
-	blitSubsection(bottom_left_corner_,x,y + h - bottom_left_corner_.h()*scale,bottom_left_corner_.w()*scale, bottom_left_corner_.h()*scale);
-	blitSubsection(bottom_right_corner_,x + w - bottom_right_corner_.w()*scale,y + h - bottom_right_corner_.h()*scale,bottom_right_corner_.w()*scale, bottom_right_corner_.h()*scale); 
+	blitSubsection(top_left_corner_,x,y,top_left_corner_.w()*scale,top_left_corner_.h()*scale, color);
+	blitSubsection(top_right_corner_,x + w - top_right_corner_.w()*scale,y, top_right_corner_.w()*scale, top_right_corner_.h()*scale, color);
+	blitSubsection(bottom_left_corner_,x,y + h - bottom_left_corner_.h()*scale,bottom_left_corner_.w()*scale, bottom_left_corner_.h()*scale, color);
+	blitSubsection(bottom_right_corner_,x + w - bottom_right_corner_.w()*scale,y + h - bottom_right_corner_.h()*scale,bottom_right_corner_.w()*scale, bottom_right_corner_.h()*scale, color); 
 }
 
-void FramedGuiElement::blitSubsection(rect subsection, int x, int y, int w, int h) const
+void FramedGuiElement::blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const
 {
-	Canvas::GetInstance()->BlitTexture(texture_, subsection, 0, rect(x,y,w,h));
+	// I can't but help feel the ColorPtr code here is evil. Note that it is a null-deleter.
+	Canvas::getInstance()->blitTexture(texture_, subsection, 0, rect(x,y,w,h), ColorPtr(&color,[](){}));
 }

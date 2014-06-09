@@ -124,7 +124,7 @@ namespace gui
 		setDim(w, h);
 	}
 
-	void bar_widget::set_rotation(GLfloat rotate)
+	void bar_widget::setRotation(GLfloat rotate)
 	{
 		rotate_ = rotate;
 	}

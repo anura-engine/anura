@@ -494,9 +494,9 @@ void render_scene(const level& lvl, const screen_position& pos) {
 	if(current_achievement && current_achievement_duration > 0) {
 		--current_achievement_duration;
 
-		const_gui_section_ptr left = gui_section::get("achievements_left");
-		const_gui_section_ptr right = gui_section::get("achievements_right");
-		const_gui_section_ptr main = gui_section::get("achievements_main");
+		ConstGuiSectionPtr left = GuiSection::get("achievements_left");
+		ConstGuiSectionPtr right = GuiSection::get("achievements_right");
+		ConstGuiSectionPtr main = GuiSection::get("achievements_main");
 
 		const const_graphical_font_ptr title_font = graphical_font::get("white_outline");
 		const const_graphical_font_ptr main_font = graphical_font::get("door_label");

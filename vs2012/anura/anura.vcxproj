@@ -212,9 +212,9 @@
     <ClInclude Include="..\..\src\entity.hpp" />
     <ClInclude Include="..\..\src\entity_fwd.hpp" />
     <ClInclude Include="..\..\src\external_text_editor.hpp" />
+    <ClInclude Include="..\..\src\filecache.hpp" />
     <ClInclude Include="..\..\src\filesystem.hpp" />
     <ClInclude Include="..\..\src\file_chooser_dialog.hpp" />
-    <ClInclude Include="..\..\src\font.hpp" />
     <ClInclude Include="..\..\src\foreach.hpp" />
     <ClInclude Include="..\..\src\formatter.hpp" />
     <ClInclude Include="..\..\src\formula.hpp" />
@@ -274,6 +274,8 @@
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGLFixed.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceSDL.hpp" />
     <ClInclude Include="..\..\src\kre\FboOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Font.hpp" />
+    <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\Geometry.hpp" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
@@ -567,6 +569,7 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\src\filecache.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
@@ -620,6 +623,8 @@
     <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\filesystem.cpp" />
+    <ClCompile Include="..\..\src\kre\Font.cpp" />
+    <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
     <ClCompile Include="..\..\src\kre\logger.cpp" />

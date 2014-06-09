@@ -44,7 +44,7 @@ dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int heigh
 	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::text_change, this));
 	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
 	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
-	dropdown_image_ = WidgetPtr(new gui_section_widget(dropdown_button_image));
+	dropdown_image_ = WidgetPtr(new GuiSectionWidget(dropdown_button_image));
 	//if(type_ == DROPDOWN_COMBOBOX) {
 	//	editor_->setFocus(true);
 	//}

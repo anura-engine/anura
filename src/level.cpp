@@ -3628,7 +3628,7 @@ void level::add_character(entity_ptr p)
 			target = p;
 		} else {
 			while(chars_by_label_[p->label()]) {
-				p->set_label(formatter() << p->label() << rand());
+				p->setLabel(formatter() << p->label() << rand());
 			}
 
 			chars_by_label_[p->label()] = p;

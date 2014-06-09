@@ -332,7 +332,7 @@ custom_object::custom_object(variant node)
 	}
 
 	if(node.has_key("label")) {
-		set_label(node["label"].as_string());
+		setLabel(node["label"].as_string());
 	} else {
 		set_distinct_label();
 	}
@@ -558,7 +558,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 		//generate a random label for the object
 		char buf[64];
 		sprintf(buf, "_%x", rand());
-		set_label(buf);
+		setLabel(buf);
 	}
 
 	parallax_scale_millis_.reset(new std::pair<int, int>(type_->parallax_scale_millis_x(), type_->parallax_scale_millis_y()));

@@ -62,9 +62,9 @@ void property_editor_dialog::init()
 	setPadding(5);
 
 	const frame& frame = get_static_entity()->current_frame();
-	image_widget* preview = new image_widget(frame.img());
+	ImageWidget* preview = new ImageWidget(frame.img());
 	preview->setDim(frame.width(), frame.height());
-	preview->set_area(frame.area());
+	preview->setArea(frame.area());
 
 	grid_ptr preview_grid(new grid(2));
 	preview_grid->add_col(WidgetPtr(preview));
@@ -119,7 +119,7 @@ void property_editor_dialog::init()
 		labels_grid->set_hpad(5);
 		TextEditorWidget* e = new TextEditorWidget(120);
 		e->setText(get_entity()->label());
-		e->set_on_change_handler(boost::bind(&property_editor_dialog::set_label, this, e));
+		e->set_on_change_handler(boost::bind(&property_editor_dialog::setLabel, this, e));
 		labels_grid->add_col(WidgetPtr(new label("Label: ")))
 		            .add_col(WidgetPtr(e));
 		add_widget(labels_grid);
@@ -433,7 +433,7 @@ void property_editor_dialog::change_level_property(const std::string& id)
 	}
 }
 
-void property_editor_dialog::set_label(gui::TextEditorWidget* editor)
+void property_editor_dialog::setLabel(gui::TextEditorWidget* editor)
 {
 	if(editor->text().empty()) {
 		return;
@@ -444,7 +444,7 @@ void property_editor_dialog::set_label(gui::TextEditorWidget* editor)
 			entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
 			if(e) {
 				lvl->remove_character(e);
-				e->set_label(editor->text());
+				e->setLabel(editor->text());
 				lvl->add_character(e);
 			}
 		}

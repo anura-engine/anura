@@ -112,7 +112,7 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 		p.reset(new gui::checkbox("checkbox", false, boost::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_IMAGE:
-		p.reset(new gui::image_widget("window-icon.png"));
+		p.reset(new gui::ImageWidget("window-icon.png"));
 		break;
 	case TOOL_SCROLLBAR:
 		p.reset(new gui::scrollbar_widget(boost::bind(dummy_fn, _1, 0.0)));
@@ -212,7 +212,7 @@ private:
 		gui::grid_ptr tools_grid(new gui::grid(5));
 		for(size_t n = WIDGET_TOOL_FIRST; n != NUM_WIDGET_TOOLS; ++n) {
 			gui::ButtonPtr tool_button(
-			  new gui::button(gui::WidgetPtr(new gui::gui_section_widget(ToolIcons[n], 26, 26)),
+			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
 				  boost::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
 			tool_borders_.push_back(new gui::border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
 			tools_grid->add_col(gui::WidgetPtr(tool_borders_.back()));
@@ -248,7 +248,7 @@ widget_window::widget_window(const rect& area, widget_editor& editor)
 	setLoc(area.x(), area.y());
 	setDim(area.w(), area.h());
 	if(editor_.is_tool_widget()) {
-		placement_.reset(new gui::gui_section_widget(ToolIcons[editor_.tool()], 26, 26));
+		placement_.reset(new gui::GuiSectionWidget(ToolIcons[editor_.tool()], 26, 26));
 	}
 }
 
@@ -347,7 +347,7 @@ bool widget_window::handleEvent(const SDL_Event& event, bool claimed)
 			//Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
 			if(motion.x >= x() && motion.x < x()+width() && motion.y >= y() && motion.y < y()+height()-info_bar_height_ && editor_.tool() < NUM_WIDGET_TOOLS) {
 				if((selected_ != editor_.tool() || placement_ == NULL) && editor_.is_tool_widget()) {
-					placement_.reset(new gui::gui_section_widget(ToolIcons[editor_.tool()], 26, 26));
+					placement_.reset(new gui::GuiSectionWidget(ToolIcons[editor_.tool()], 26, 26));
 					selected_ = editor_.tool();
 				} else if(editor_.tool() == TOOL_SELECT) {
 					bool highlight_one = false;
@@ -403,7 +403,7 @@ UTILITY(widget_editor)
 	}
 
 	variant gui_node = json::parse_from_file("data/gui.cfg");
-	gui_section::init(gui_node);
+	GuiSection::init(gui_node);
 	FramedGuiElement::init(gui_node);
 
 	if(!fname.empty() && sys::file_exists(fname)) {

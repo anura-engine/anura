@@ -650,7 +650,7 @@ ConstWidgetPtr dialog::getWidgetById(const std::string& id) const
 }
 
 BEGIN_DEFINE_CALLABLE(dialog, widget)
-	DEFINE_FIELD(child, "builtin widget")
+	DEFINE_FIELD(child, "builtin Widget")
 		return variant();
 	DEFINE_SET_FIELD
 		WidgetPtr w = widget_factory::create(value, obj.getEnvironment());

@@ -49,7 +49,7 @@ void editor_layers_dialog::init()
 
 	foreach(int layer, all_layers) {
 		const bool hidden = hidden_layers.count(layer);
-		gui_section_widget* section = new gui_section_widget(hidden ? "checkbox-empty" : "checkbox-filled");
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
 
 		row_data row = { section, layer, hidden };
 		rows_.push_back(row);
@@ -57,7 +57,7 @@ void editor_layers_dialog::init()
 		g->add_col(WidgetPtr(new label(formatter() << layer, graphics::color_white())));
 	}
 
-	gui_section_widget* section = new gui_section_widget(locked_ ? "checkbox-filled" : "checkbox-empty");
+	GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "checkbox-filled" : "checkbox-empty");
 	g->add_col(WidgetPtr(section));
 	g->add_col(WidgetPtr(new label("lock", graphics::color_white())));
 
@@ -73,7 +73,7 @@ void editor_layers_dialog::init()
 	g.reset(new grid(2));
 	foreach(const std::string& classification, all_classifications_) {
 		const bool hidden = editor_.get_level().hidden_object_classifications().count(classification) != 0;
-		gui_section_widget* section = new gui_section_widget(hidden ? "checkbox-empty" : "checkbox-filled");
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
 		g->add_col(WidgetPtr(section));
 		g->add_col(WidgetPtr(new label(classification, graphics::color_white())));
 	}

@@ -92,8 +92,8 @@ void hex_tileset_editor_dialog::init()
 			if(first_index_ == -1) {
 				first_index_ = index;
 			}
-			image_widget* preview = new image_widget(t->getEditorInfo().texture, 54, 54);
-			preview->set_area(t->getEditorInfo().image_rect);
+			ImageWidget* preview = new ImageWidget(t->getEditorInfo().texture, 54, 54);
+			preview->setArea(t->getEditorInfo().image_rect);
 			ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
 			tileset_button->setTooltip(t->id() + "/" + t->getEditorInfo().name, 14);
 			tileset_button->setDim(58, 58);
@@ -140,8 +140,8 @@ void hex_tileset_editor_dialog::show_category_menu()
 
 		categories.insert(t->getEditorInfo().group);
 
-		image_widget* preview = new image_widget(t->getEditorInfo().texture, 54, 54);
-		preview->set_area(t->getEditorInfo().image_rect);
+		ImageWidget* preview = new ImageWidget(t->getEditorInfo().texture, 54, 54);
+		preview->setArea(t->getEditorInfo().image_rect);
 		grid->add_col(WidgetPtr(preview))
 		     .add_col(WidgetPtr(new label(t->getEditorInfo().group, graphics::color_white())));
 		grid->register_row_selection_callback(boost::bind(&hex_tileset_editor_dialog::select_category, this, t->getEditorInfo().group));

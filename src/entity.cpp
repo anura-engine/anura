@@ -332,7 +332,7 @@ void entity::set_distinct_label()
 	//generate a random label for the object
 	char buf[64];
 	sprintf(buf, "_%x", rand());
-	set_label(buf);
+	setLabel(buf);
 }
 
 void entity::set_control_status(const std::string& key, bool value)

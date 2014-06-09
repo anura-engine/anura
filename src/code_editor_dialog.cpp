@@ -189,9 +189,9 @@ void code_editor_dialog::init_files_grid()
 	files_grid_->register_selection_callback(boost::bind(&code_editor_dialog::select_file, this, _1));
 	foreach(const KnownFile& f, files_) {
 		if(f.anim) {
-			image_widget* img = new image_widget(f.anim->img());
+			ImageWidget* img = new ImageWidget(f.anim->img());
 			img->setDim(42, 42);
-			img->set_area(f.anim->area());
+			img->setArea(f.anim->area());
 
 			files_grid_->add_col(WidgetPtr(img));
 		} else {
@@ -1175,7 +1175,7 @@ COMMAND_LINE_UTILITY(codeedit)
 	graphics::texture::manager texture_manager;
 
 	variant gui_node = json::parse_from_file("data/gui.cfg");
-	gui_section::init(gui_node);
+	GuiSection::init(gui_node);
 
 	FramedGuiElement::init(gui_node);
 

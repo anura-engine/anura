@@ -67,7 +67,7 @@ public:
 	virtual bool executeCommand(const variant& var) = 0;
 
 	const std::string& label() const { return label_; }
-	void set_label(const std::string& lb) { label_ = lb; }
+	void setLabel(const std::string& lb) { label_ = lb; }
 	void set_distinct_label();
 
 	virtual void shift_position(int x, int y) { x_ += x*100; y_ += y*100; prev_feet_x_ += x; prev_feet_y_ += y; calculate_solid_rect(); }

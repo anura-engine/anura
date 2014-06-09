@@ -39,13 +39,13 @@ public:
 	static void init(variant node);
 	static ConstFramedGuiElementPtr get(const std::string& key);
 
-	void blit(int x, int y, int w, int h, bool upscaled = 0) const;
+	void blit(int x, int y, int w, int h, bool upscaled = 0, const KRE::Color& color=KRE::Color::colorWhite()) const;
 
 	int cornerHeight() const { return cornerHeight_; }
 	
 	static std::vector<std::string> getElements();
 private:
-	void blitSubsection(rect subsection, int x, int y, int w, int h) const;
+	void blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const;
 
 	KRE::MaterialPtr texture_;
 

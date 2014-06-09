@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,13 +21,19 @@
 	   distribution.
 */
 
-#pragma once
+#include "module.hpp"
 
-#include <boost/intrusive_ptr.hpp>
-
-namespace gui 
+namespace sys
 {
-	class ImageWidget;
-	typedef boost::intrusive_ptr<ImageWidget> ImageWidgetPtr;
-	typedef boost::intrusive_ptr<const ImageWidget> ConstImageWidgetPtr;
+	namespace
+	{
+		typedef std::map<std::string,std::string> FilesUnderFolder;
+		typedef std::map<std::string, FilesUnderFolder> FileMap;
+		FileMap& get_filepath_cache()
+		{
+			static FileMap res;
+			return res;
+		}
+	}
+
 }

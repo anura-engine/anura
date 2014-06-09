@@ -30,8 +30,17 @@
 
 namespace gui 
 {
-	enum BUTTON_RESOLUTION { BUTTON_SIZE_NORMAL_RESOLUTION, BUTTON_SIZE_DOUBLE_RESOLUTION };
-	enum BUTTON_STYLE { BUTTON_STYLE_NORMAL, BUTTON_STYLE_DEFAULT };	//"default" means a visually fat-edged button - the one that gets pressed by hitting enter.  This is standard gui lingo, it's what the dialogue "defaults" to doing when you press return.
+	enum BUTTON_RESOLUTION { 
+		BUTTON_SIZE_NORMAL_RESOLUTION, 
+		BUTTON_SIZE_DOUBLE_RESOLUTION 
+	};
+	//"default" means a visually fat-edged button - the one that gets pressed 
+	// by hitting enter.  This is standard gui lingo, it's what the dialogue 
+	// "defaults" to doing when you press return.
+	enum BUTTON_STYLE { 
+		BUTTON_STYLE_NORMAL, 
+		BUTTON_STYLE_DEFAULT 
+	};
 
 	//a button widget. Forwards to a given function whenever it is clicked.
 	class Button : public Widget
@@ -60,13 +69,13 @@ namespace gui
 
 		std::vector<WidgetPtr> getChildren() const;
 	protected:
-		void set_label(WidgetPtr label);
+		DECLARE_CALLABLE(button);
+		void setLabel(WidgetPtr label);
 		virtual void handleProcess();
 		virtual variant handleWrite();
 		BUTTON_RESOLUTION buttonResolution() const { return button_resolution_; }
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
-		DECLARE_CALLABLE(button);
 	private:
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor);
 

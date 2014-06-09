@@ -32,7 +32,7 @@ WidgetPtr create_checkbox_widget(WidgetPtr label,
 	int hpadding=12) {
 	grid_ptr g(new grid(2));
 	g->set_hpad(hpadding);
-	g->add_col(WidgetPtr(new gui_section_widget(checked ? "checkbox_ticked" : "checkbox_unticked", -1, -1, resolution == BUTTON_SIZE_NORMAL_RESOLUTION ? 1 : 2)));
+	g->add_col(WidgetPtr(new GuiSectionWidget(checked ? "checkbox_ticked" : "checkbox_unticked", -1, -1, resolution == BUTTON_SIZE_NORMAL_RESOLUTION ? 1 : 2)));
 
 	g->add_col(label);
 
@@ -75,7 +75,7 @@ checkbox::checkbox(const variant& v, game_logic::FormulaCallable* e)
 	onclick_ = boost::bind(&checkbox::click, this, _1);
 	setClickHandler(boost::bind(&checkbox::on_click, this));
 
-	set_label(create_checkbox_widget(label_widget_, 
+	setLabel(create_checkbox_widget(label_widget_, 
 		checked_, 
 		buttonResolution(),
 		hpadding_));
@@ -91,9 +91,9 @@ void checkbox::on_click()
 	const int w = width();
 	const int h = height();
 	if(label_widget_) {
-		set_label(create_checkbox_widget(label_widget_, checked_, buttonResolution(), hpadding_));
+		setLabel(create_checkbox_widget(label_widget_, checked_, buttonResolution(), hpadding_));
 	} else {
-		set_label(create_checkbox_widget(label_, checked_, buttonResolution()));
+		setLabel(create_checkbox_widget(label_, checked_, buttonResolution()));
 	}
 	setDim(w, h);
 	onclick_(checked_);

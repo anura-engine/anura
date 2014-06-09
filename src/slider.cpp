@@ -30,10 +30,10 @@ namespace gui {
 	
 slider::slider(int width, boost::function<void (double)> onchange, double position, int scale)
 	: width_(width), onchange_(onchange), dragging_(false), position_(position),
-	slider_left_(new gui_section_widget("slider_side_left", -1, -1, scale)),
-	slider_right_(new gui_section_widget("slider_side_right", -1, -1, scale)),
-	slider_middle_(new gui_section_widget("slider_middle", -1, -1, scale)),
-	slider_button_(new gui_section_widget("slider_button", -1, -1, scale))
+	slider_left_(new GuiSectionWidget("slider_side_left", -1, -1, scale)),
+	slider_right_(new GuiSectionWidget("slider_side_right", -1, -1, scale)),
+	slider_middle_(new GuiSectionWidget("slider_middle", -1, -1, scale)),
+	slider_button_(new GuiSectionWidget("slider_button", -1, -1, scale))
 {
 	setEnvironment();
 	init();
@@ -55,16 +55,16 @@ slider::slider(const variant& v, game_logic::FormulaCallable* e)
 	
 	slider_left_ = v.has_key("slider_left") 
 		? widget_factory::create(v["slider_left"], e) 
-		: new gui_section_widget("slider_side_left", -1, -1, 2);
+		: new GuiSectionWidget("slider_side_left", -1, -1, 2);
 	slider_right_ = v.has_key("slider_right") 
 		? widget_factory::create(v["slider_right"], e) 
-		: new gui_section_widget("slider_side_right", -1, -1, 2);
+		: new GuiSectionWidget("slider_side_right", -1, -1, 2);
 	slider_middle_ = v.has_key("slider_middle") 
 		? widget_factory::create(v["slider_middle"], e) 
-		: new gui_section_widget("slider_middle", -1, -1, 2);
+		: new GuiSectionWidget("slider_middle", -1, -1, 2);
 	slider_button_ = v.has_key("slider_button") 
 		? widget_factory::create(v["slider_button"], e) 
-		: new gui_section_widget("slider_button", -1, -1, 2);
+		: new GuiSectionWidget("slider_button", -1, -1, 2);
 
 	init();
 	setDim(width_+slider_left_->width()*2, slider_button_->height());

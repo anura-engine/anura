@@ -116,8 +116,8 @@ namespace gui
 
 	void selector_widget::init()
 	{
-		left_arrow_ = WidgetPtr(new gui_section_widget(selector_left_arrow));
-		right_arrow_ = WidgetPtr(new gui_section_widget(selector_right_arrow));
+		left_arrow_ = WidgetPtr(new GuiSectionWidget(selector_left_arrow));
+		right_arrow_ = WidgetPtr(new GuiSectionWidget(selector_right_arrow));
 
 		int width = 16;
 		int height = 16;

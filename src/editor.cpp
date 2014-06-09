@@ -516,7 +516,7 @@ public:
 				continue;
 			}
 			ButtonPtr tool_button(
-			  new button(WidgetPtr(new gui_section_widget(ToolIcons[n], 26, 26)),
+			  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 			             boost::bind(&editor_mode_dialog::select_tool, this, n)));
 			tool_button->setTooltip(ToolStrings[n]);
 			tool_borders_.push_back(new border_widget(tool_button, graphics::color(0,0,0,0)));

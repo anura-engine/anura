@@ -17,11 +17,11 @@
 #include <iostream>
 
 #include "kre/Canvas.hpp"
+#include "kre/Font.hpp"
 
 #include "button.hpp"
 #include "color_picker.hpp"
 #include "dropdown_widget.hpp"
-#include "font.hpp"
 #include "grid_widget.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
@@ -167,11 +167,11 @@ namespace gui
 
 	void Label::recalculateTexture()
 	{
-		texture_ = font::render_text(currentText(), *color_, size_, font_);
+		texture_ = KRE::Font::getInstance()->renderText(currentText(), *color_, size_, true, font_);
 		innerSetDim(texture_->Width(),texture_->Height());
 
 		if(border_color_) {
-			border_texture_ = font::render_text(currentText(), *border_color_, size_, font_);
+			border_texture_ = KRE::Font::getInstance()->renderText(currentText(), *border_color_, size_, true, font_);
 		}
 	}
 

@@ -1,0 +1,67 @@
+/*
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+#pragma once
+
+#include "Texture.hpp"
+#include "Util.hpp"
+
+namespace KRE
+{
+	class Font;
+	typedef std::shared_ptr<Font> FontPtr;
+
+	struct FontError
+	{
+	};
+
+	class Font
+	{
+	public:
+		virtual ~Font();
+		TexturePtr renderText(const std::string& text, const Color& color, int size, bool cache=true, const std::string& font_name="") const;
+		void setDefaultFont(const std::string& font_name);
+		const std::string& getDefaultFont() const { return default_font_name_; }
+		void getTextSize(const std::string& text, int* width, int* height, int size, const std::string& font_name="") const;
+		static void registerFactoryFunction(const std::string& type, std::function<FontPtr()>);
+		static FontPtr getInstance(const std::string& hint="");
+	protected:
+		Font();
+	private:
+		DISALLOW_COPY_AND_ASSIGN(Font);
+		std::string default_font_name_;
+		virtual TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const = 0;
+		virtual void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const = 0;
+	};
+
+	template<class T>
+	struct FontRegistrar
+	{
+		FontRegistrar(const std::string& type)
+		{
+			// register the class factory function 
+			Font::registerFactoryFunction(type, []() -> FontPtr { return FontPtr(new T());});
+		}
+	};
+
+}

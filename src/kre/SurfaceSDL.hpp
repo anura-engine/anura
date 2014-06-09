@@ -142,6 +142,8 @@ namespace KRE
 
 		void Lock() override;
 		void Unlock() override;
+
+		SDL_Surface* get() { return surface_; }
 	private:
 		SurfacePtr HandleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
 

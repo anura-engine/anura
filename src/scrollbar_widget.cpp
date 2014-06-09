@@ -34,12 +34,12 @@ const std::string VerticalBackground = "scrollbar-vertical-background";
 
 scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
   : handler_(handler),
-    up_arrow_(new gui_section_widget(UpArrow)),
-    down_arrow_(new gui_section_widget(DownArrow)),
-	handle_(new gui_section_widget(VerticalHandle)),
-	handle_bot_(new gui_section_widget(VerticalHandleBot)),
-	handle_top_(new gui_section_widget(VerticalHandleTop)),
-	background_(new gui_section_widget(VerticalBackground)),
+    up_arrow_(new GuiSectionWidget(UpArrow)),
+    down_arrow_(new GuiSectionWidget(DownArrow)),
+	handle_(new GuiSectionWidget(VerticalHandle)),
+	handle_bot_(new GuiSectionWidget(VerticalHandleBot)),
+	handle_top_(new GuiSectionWidget(VerticalHandleTop)),
+	background_(new GuiSectionWidget(VerticalBackground)),
 	
 	window_pos_(0), window_size_(0), range_(0), step_(0), arrow_step_(0),
 	dragging_handle_(false),
@@ -57,12 +57,12 @@ scrollbar_widget::scrollbar_widget(const variant& v, game_logic::FormulaCallable
 	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
 	
-    up_arrow_ = v.has_key("up_arrow") ? widget_factory::create(v["up_arrow"], e) : new gui_section_widget(UpArrow);
-    down_arrow_ = v.has_key("down_arrow") ? widget_factory::create(v["down_arrow"], e) : new gui_section_widget(DownArrow);
-	handle_ = v.has_key("handle") ? widget_factory::create(v["handle"], e) : new gui_section_widget(VerticalHandle);
-	handle_bot_ = v.has_key("handle_bottom") ? widget_factory::create(v["handle_bottom"], e) : new gui_section_widget(VerticalHandleBot);
-	handle_top_ = v.has_key("handle_top") ? widget_factory::create(v["handle_top"], e) : new gui_section_widget(VerticalHandleTop);
-	background_ = v.has_key("background") ? widget_factory::create(v["background"], e) : new gui_section_widget(VerticalBackground);
+    up_arrow_ = v.has_key("up_arrow") ? widget_factory::create(v["up_arrow"], e) : new GuiSectionWidget(UpArrow);
+    down_arrow_ = v.has_key("down_arrow") ? widget_factory::create(v["down_arrow"], e) : new GuiSectionWidget(DownArrow);
+	handle_ = v.has_key("handle") ? widget_factory::create(v["handle"], e) : new GuiSectionWidget(VerticalHandle);
+	handle_bot_ = v.has_key("handle_bottom") ? widget_factory::create(v["handle_bottom"], e) : new GuiSectionWidget(VerticalHandleBot);
+	handle_top_ = v.has_key("handle_top") ? widget_factory::create(v["handle_top"], e) : new GuiSectionWidget(VerticalHandleTop);
+	background_ = v.has_key("background") ? widget_factory::create(v["background"], e) : new GuiSectionWidget(VerticalBackground);
 	if(v.has_key("range")) {
 		std::vector<int> range = v["range"].as_list_int();
 		ASSERT_EQ(range.size(), 2);

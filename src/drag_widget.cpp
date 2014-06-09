@@ -135,13 +135,13 @@ void drag_widget::init()
 	if(dir_ == DRAG_HORIZONTAL) {
 		curs = SDL_CreateCursor(const_cast<Uint8*>(horiz_cursor_data), const_cast<Uint8*>(horiz_cursor_mask), 
 			CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
-		dragger_ = WidgetPtr(new gui_section_widget(DraggerImageHoriz));
+		dragger_ = WidgetPtr(new GuiSectionWidget(DraggerImageHoriz));
 	} else if(dir_ == DRAG_VERTICAL) {
 		curs = SDL_CreateCursor(const_cast<Uint8*>(vert_cursor_data), const_cast<Uint8*>(vert_cursor_mask), 
 			CURSOR_WIDTH, CURSOR_HEIGHT, HOT_X, HOT_Y);
 		drag_cursor_ = cursor_ptr(curs, SDL_FreeCursor);
 
-		dragger_ = WidgetPtr(new gui_section_widget(DraggerImageVert));
+		dragger_ = WidgetPtr(new GuiSectionWidget(DraggerImageVert));
 	} else {
 		ASSERT_LOG(false, "Drag direction not given as horizontal or vertical " << dir_);
 	}

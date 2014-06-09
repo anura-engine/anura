@@ -522,11 +522,11 @@ namespace
 	};
 
 
-	class image_widget_lighted : public gui::image_widget
+	class ImageWidget_lighted : public gui::ImageWidget
 	{
 	public:
-		explicit image_widget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
-			: image_widget(tex, w, h), tex_normal_(tex_normal) {
+		explicit ImageWidget_lighted(graphics::texture tex, graphics::texture tex_normal, int w, int h) 
+			: ImageWidget(tex, w, h), tex_normal_(tex_normal) {
 			shader_ = gles2::shader_program::get_global("texture_2d_lighted")->shader();
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
 
@@ -546,7 +546,7 @@ namespace
 
 			setFrameSet("empty_window");
 		}
-		virtual ~image_widget_lighted() {
+		virtual ~ImageWidget_lighted() {
 		}
 		void set_uniforms() const {
 			manager m(shader_);
@@ -638,7 +638,7 @@ namespace
 		graphics::lighting_ptr lighting_;
 	};
 
-	typedef boost::intrusive_ptr<image_widget_lighted> image_widget_lighted_ptr;
+	typedef boost::intrusive_ptr<ImageWidget_lighted> ImageWidget_lighted_ptr;
 
 	class normal_viewer : public gui::dialog
 	{
@@ -651,10 +651,10 @@ namespace
 		std::string fname_;
 		rect area_;
 
-		gui::image_WidgetPtr img_;
-		gui::image_WidgetPtr normal_;
-		gui::image_WidgetPtr aux_;
-		image_widget_lighted_ptr output_img_;
+		gui::ImageWidgetPtr img_;
+		gui::ImageWidgetPtr normal_;
+		gui::ImageWidgetPtr aux_;
+		ImageWidget_lighted_ptr output_img_;
 
 		normal_viewer();
 		normal_viewer(const normal_viewer&);
@@ -684,7 +684,7 @@ namespace
 		surface s = surface_cache::get_no_cache(fname_);
 		texture tex = texture::get_no_cache(s);
 
-		img_.reset(new gui::image_widget(tex, widget_width, widget_height));
+		img_.reset(new gui::ImageWidget(tex, widget_width, widget_height));
 		add_widget(img_, 0, 0);
 
 		surface s_sobel = s.clone();
@@ -700,13 +700,13 @@ namespace
 		surface s_norm = calculate_normal2(emboss(s_aux, 0), emboss(s_aux, 90));
 		s_norm = alpha_clip(s_norm, s);
 		//surface s_emb = s_aux;
-		aux_.reset(new gui::image_widget(texture::get_no_cache(s_norm), widget_width, widget_height));
+		aux_.reset(new gui::ImageWidget(texture::get_no_cache(s_norm), widget_width, widget_height));
 		add_widget(aux_, 0, widget_height + between_padding);
 
-		normal_.reset(new gui::image_widget(s_tex, widget_width, widget_height));
+		normal_.reset(new gui::ImageWidget(s_tex, widget_width, widget_height));
 		add_widget(normal_, widget_width + between_padding, 0);
 
-		output_img_.reset(new image_widget_lighted(tex, texture::get_no_cache(s_norm), widget_width, widget_height));
+		output_img_.reset(new ImageWidget_lighted(tex, texture::get_no_cache(s_norm), widget_width, widget_height));
 		add_widget(output_img_, widget_width + between_padding, widget_height + between_padding);
 	}
 
