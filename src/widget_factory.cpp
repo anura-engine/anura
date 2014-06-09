@@ -117,8 +117,8 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 		return WidgetPtr(new gui::custom_object_widget(v, e));
 	} else if(wtype == "bar") {
 		return WidgetPtr(new gui::bar_widget(v, e));
-	} else if(wtype == "color_picker") {
-		return WidgetPtr(new gui::color_picker(v, e));
+	} else if(wtype == "ColorPicker") {
+		return WidgetPtr(new gui::ColorPicker(v, e));
 	} else if(wtype == "layout") {
 		return WidgetPtr(new gui::layout_widget(v, e));
 	} else if(wtype == "file_chooser") {

@@ -68,7 +68,7 @@ namespace editor_dialogs
 		gui::WidgetPtr mode_swap_button_;
 		void swap_mode();
 
-		gui::color_picker_ptr color_picker_;		
+		gui::ColorPickerPtr ColorPicker_;		
 
 		//index of the first item in the current category
 		int first_index_;

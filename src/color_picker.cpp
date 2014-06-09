@@ -20,12 +20,12 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include "kre/Geometry.hpp"
+
 #include "asserts.hpp"
 #include "color_picker.hpp"
-#include "kre/Geometry.hpp"
 #include "grid_widget.hpp"
 #include "label.hpp"
-#include "raster.hpp"
 
 namespace 
 {
@@ -34,14 +34,14 @@ namespace
 		"black",
 		"maroon",
 		"green",
-		"olive_drab",
+		"olivedrab",
 		"navy",
-		"medium_purple",
+		"mediumpurple",
 		"turquoise",
 		"cornsilk",
 		"grey",
 		"red",
-		"lime_green",
+		"limegreen",
 		"yellow",
 		"blue",
 		"purple",
@@ -52,7 +52,7 @@ namespace
 
 namespace gui
 {
-	color_picker::color_picker(const rect& area)
+	ColorPicker::ColorPicker(const rect& area)
 		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
 	{
@@ -60,16 +60,16 @@ namespace gui
 		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-			palette_.push_back(graphics::color(default_palette[n]));
+			palette_.push_back(KRE::Color(default_palette[n]));
 		}
 
-		primary_ = graphics::color("black");
-		secondary_ = graphics::color("white");
+		primary_ = KRE::Color::colorBlack();
+		secondary_ = KRE::Color::colorWhite();
 
 		init();
 	}
 
-	color_picker::color_picker(const rect& area, boost::function<void (const graphics::color&)> change_fun)
+	ColorPicker::ColorPicker(const rect& area, boost::function<void (const KRE::Color&)> change_fun)
 		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
 		onchange_(change_fun)
@@ -78,17 +78,17 @@ namespace gui
 		setDim(area.w(), area.h());
 
 		for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-			palette_.push_back(graphics::color(default_palette[n]));
+			palette_.push_back(KRE::Color(default_palette[n]));
 		}
 
-		primary_ = graphics::color("black");
-		secondary_ = graphics::color("white");
+		primary_ = KRE::Color::colorBlack();
+		secondary_ = KRE::Color::colorWhite();
 
 		init();
 	}
 
-	color_picker::color_picker(const variant& v, game_logic::FormulaCallable* e)
-		: widget(v, e), selected_palette_color_(-1), hue_(0), saturation_(0), 
+	ColorPicker::ColorPicker(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v, e), selected_palette_color_(-1), hue_(0), saturation_(0), 
 		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0),
 		main_color_selected_(1)
 	{
@@ -98,7 +98,7 @@ namespace gui
 		if(v.has_key("on_change")) {
 			const variant on_change_value = v["on_change"];
 			if(on_change_value.is_function()) {
-				ASSERT_LOG(on_change_value.min_function_arguments() <= 1 && on_change_value.max_function_arguments() >= 1, "on_change color_picker function should take 1 argument: " << v.debug_location());
+				ASSERT_LOG(on_change_value.min_function_arguments() <= 1 && on_change_value.max_function_arguments() >= 1, "on_change ColorPicker function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(color)");
 				change_handler_.reset(new game_logic::formula(fml));
 
@@ -109,71 +109,71 @@ namespace gui
 			} else { 
 				change_handler_ = getEnvironment()->createFormula(on_change_value);
 			}
-			onchange_ = boost::bind(&color_picker::change, this);
+			onchange_ = boost::bind(&ColorPicker::change, this);
 		}
 
 		if(v.has_key("palette")) {
 			ASSERT_LOG(v["palette"].num_elements() <= 16, "'palette' attribute must have 16 or less elements.");
 			for(int n = 0; n != v["palette"].num_elements(); ++n) {
-				palette_.push_back(graphics::color(v["palette"][n]));
+				palette_.push_back(KRE::Color(v["palette"][n]));
 			}
 		} else {
 			for(int n = 0; n != sizeof(default_palette)/sizeof(default_palette[0]); ++n) {
-				palette_.push_back(graphics::color(default_palette[n]));
+				palette_.push_back(KRE::Color(default_palette[n]));
 			}
 		}
 
 		if(v.has_key("primary")) {
-			primary_ = graphics::color(v["primary"]);
+			primary_ = KRE::Color(v["primary"]);
 		} else {
-			primary_ = graphics::color("black");
+			primary_ = KRE::Color::colorBlack();
 		}
 		if(v.has_key("secondary")) {
-			secondary_ = graphics::color(v["secondary"]);
+			secondary_ = KRE::Color(v["secondary"]);
 		} else {
-			secondary_ = graphics::color("white");
+			secondary_ = KRE::Color::colorWhite();
 		}
 
 		init();
 	}
 
-	color_picker::~color_picker()
+	ColorPicker::~ColorPicker()
 	{
 	}
 
-	void color_picker::set_primary_color(graphics::color color)
+	void ColorPicker::setPrimaryColor(KRE::Color color)
 	{
 		primary_ = color;
-		color_updated();
+		colorUpdated();
 	}
 
-	void color_picker::set_secondary_color(graphics::color color)
+	void ColorPicker::setSecondaryColor(KRE::Color color)
 	{
 		secondary_ = color;
-		color_updated();
+		colorUpdated();
 	}
 
-	void color_picker::color_updated()
+	void ColorPicker::colorUpdated()
 	{
-		setText_from_color(main_color_selected_ ? primary_ : secondary_);
-		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+		setTextFromColor(main_color_selected_ ? primary_ : secondary_);
+		setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
 	}
 
-	bool color_picker::get_palette_color(int n, graphics::color* color)
+	bool ColorPicker::getPaletteColor(int n, KRE::Color* color)
 	{
-		ASSERT_LOG(size_t(n) < palette_.size(), "color_picker::get_palette_color selected color out of range: " << n << " >= " << palette_.size());
-		ASSERT_LOG(color != NULL, "color_picker::get_palette_color: NULL color pointer given");
+		ASSERT_LOG(size_t(n) < palette_.size(), "ColorPicker::getPaletteColor selected color out of range: " << n << " >= " << palette_.size());
+		ASSERT_LOG(color != NULL, "ColorPicker::getPaletteColor: NULL color pointer given");
 		*color = palette_[size_t(n)];
 		return true;
 	}
 
-	void color_picker::set_palette_color(int n, const graphics::color& color)
+	void ColorPicker::setPaletteColor(int n, const KRE::Color& color)
 	{
-		ASSERT_LOG(size_t(n) < palette_.size(), "color_picker::set_palette_color selected color out of range: " << n << " >= " << palette_.size());
+		ASSERT_LOG(size_t(n) < palette_.size(), "ColorPicker::setPaletteColor selected color out of range: " << n << " >= " << palette_.size());
 		palette_[size_t(n)] = color;
 	}
 
-	void color_picker::handleProcess()
+	void ColorPicker::handleProcess()
 	{
 	}
 
@@ -251,15 +251,15 @@ namespace gui
 
 		void draw_colored_circle(int x, int y, int radius) 
 		{
-			static std::vector<GLfloat> varray;
+			static std::vector<float> varray;
 			static std::vector<uint8_t> carray;
 			if(varray.empty()) {
 				varray.push_back(0);
 				varray.push_back(0);
 				carray.push_back(255); carray.push_back(255); carray.push_back(255); carray.push_back(255);
 				for(double angle = 0; angle < M_PI * 2.0; angle += 0.0245436926) {
-					varray.push_back(GLfloat(radius*cos(angle)));
-					varray.push_back(GLfloat(radius*sin(angle)));
+					varray.push_back(float(radius*cos(angle)));
+					varray.push_back(float(radius*sin(angle)));
 					const rgb cc = hsv_to_rgb(uint8_t(angle*255.0/(M_PI*2.0)), 255, 255);
 					carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
 				}
@@ -292,7 +292,7 @@ namespace gui
 		}
 	}
 
-	void color_picker::handleDraw() const
+	void ColorPicker::handleDraw() const
 	{
 		glPushMatrix();
 		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -303,9 +303,9 @@ namespace gui
 		const rect srect_border(srect.x()-2, srect.y()-2, srect.w()+4, srect.h()+4);
 
 		if(main_color_selected_) {
-			graphics::draw_hollow_rect(prect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+			graphics::draw_hollow_rect(prect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
 		} else {
-			graphics::draw_hollow_rect(srect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+			graphics::draw_hollow_rect(srect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
 		}
 		graphics::draw_rect(prect, primary_);
 		graphics::draw_rect(srect, secondary_);
@@ -316,7 +316,7 @@ namespace gui
 		const int rx = int((saturation_ / 255.0 * wheel_radius_) * cos(hue_ / 255.0 * M_PI * 2.0));
 		const int ry = int((saturation_ / 255.0 * wheel_radius_) * sin(hue_ / 255.0 * M_PI * 2.0));
 		const rect selected_color_rect(xoffset + rx, yoffset + ry, 4, 4);
-		graphics::draw_rect(selected_color_rect, graphics::color("black"));
+		graphics::draw_rect(selected_color_rect, KRE::Color::colorBlack());
 
 		g_->draw();
 		copy_to_palette_->draw();
@@ -329,12 +329,12 @@ namespace gui
 		}
 		if(selected_palette_color_ >= 0 && selected_palette_color_ < palette_.size()) {
 			const rect prect_border(5 + 22*(selected_palette_color_%8)-1, palette_offset_y_ + (selected_palette_color_/8)*22-1, 24, 24);
-			graphics::draw_hollow_rect(prect_border.sdl_rect(), graphics::color(255,255,255).as_sdl_color());
+			graphics::draw_hollow_rect(prect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
 		}
 		glPopMatrix();
 	}
 
-	void color_picker::process_mouse_in_wheel(int x, int y)
+	void ColorPicker::processMouseInWheel(int x, int y)
 	{
 		x -= wheel_radius_ + 5;
 		y -= color_box_length_ + wheel_radius_ + 20;
@@ -348,13 +348,13 @@ namespace gui
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
 			if(main_color_selected_) {
-				primary_ = graphics::color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color(red_, green_, blue_, alpha_);
 			} else {
-				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
 			}
 
-			setText_from_color(main_color_selected_ ? primary_ : secondary_);
-			set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+			setTextFromColor(main_color_selected_ ? primary_ : secondary_);
+			setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
 
 			if(onchange_) {
 				onchange_(main_color_selected_ ? primary_ : secondary_);
@@ -362,7 +362,7 @@ namespace gui
 		}
 	}
 
-	bool color_picker::handleEvent(const SDL_Event& event, bool claimed)
+	bool ColorPicker::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		if(claimed) {
 			return claimed;
@@ -380,7 +380,7 @@ namespace gui
 		if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_LEFT) {
 			const SDL_MouseButtonEvent& button = ev.button;
 			dragging_ = true;
-			process_mouse_in_wheel(button.x, button.y);
+			processMouseInWheel(button.x, button.y);
 
 			if(button.x >= 5 && button.x <= color_box_length_+5 && button.y >= 5 && button.y <= color_box_length_+5) {
 				main_color_selected_ = 1;
@@ -396,15 +396,15 @@ namespace gui
 						} else {
 							secondary_ = palette_[selected_palette_color_];
 						}
-						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-						setText_from_color(main_color_selected_ ? primary_ : secondary_);
+						setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
+						setTextFromColor(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
 		} else if(ev.type == SDL_MOUSEBUTTONUP && ev.button.button == SDL_BUTTON_LEFT && dragging_) {
 			dragging_ = false;
 		} else if(ev.type == SDL_MOUSEMOTION && dragging_) {
-			process_mouse_in_wheel(ev.motion.x, ev.motion.y);
+			processMouseInWheel(ev.motion.x, ev.motion.y);
 		} else if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_RIGHT) {
 			const SDL_MouseButtonEvent& button = ev.button;
 			if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + palette_.size()/8*22) {
@@ -417,8 +417,8 @@ namespace gui
 						} else {
 							primary_ = palette_[selected_palette_color_];
 						}
-						set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-						setText_from_color(main_color_selected_ ? primary_ : secondary_);
+						setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
+						setTextFromColor(main_color_selected_ ? primary_ : secondary_);
 					}
 				}
 			}
@@ -427,17 +427,17 @@ namespace gui
 		return false;
 	}
 
-	void color_picker::init()
+	void ColorPicker::init()
 	{
 		color_box_length_ = width() / 2 - 20;
 		wheel_radius_ = width() / 2 - 10;
 
-		set_hsv_from_color(primary_);
+		setHSVFromColor(primary_);
 		s_.clear();
 		t_.clear();
 
 		while(palette_.size() < 16) {
-			palette_.push_back(graphics::color("white"));
+			palette_.push_back(KRE::Color::colorWhite());
 		}
 
 		std::vector<LabelPtr> labels;
@@ -449,11 +449,11 @@ namespace gui
 		g_.reset(new grid(3));
 		g_->setLoc(5, color_box_length_ + wheel_radius_*2 + 40);
 		for(int n = 0; n != 7; ++n) {
-			labels.push_back(new label(label_text[n], graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"));
-			s_.push_back(new slider(50, boost::bind(&color_picker::slider_change, this, n, _1), 0, 1));
+			labels.push_back(new Label(label_text[n], KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"));
+			s_.push_back(new slider(50, boost::bind(&ColorPicker::sliderChange, this, n, _1), 0, 1));
 			t_.push_back(new TextEditorWidget(40));
-			t_.back()->set_on_user_change_handler(boost::bind(&color_picker::text_change, this, n));
-			t_.back()->set_on_tab_handler(boost::bind(&color_picker::text_tab_pressed, this, n));
+			t_.back()->set_on_user_change_handler(boost::bind(&ColorPicker::textChange, this, n));
+			t_.back()->set_on_tab_handler(boost::bind(&ColorPicker::textTabPressed, this, n));
 
 			g_->add_col(labels.back());
 			g_->add_col(s_.back());
@@ -461,27 +461,27 @@ namespace gui
 		}
 		palette_offset_y_ = g_->y() + g_->height() + 10;
 
-		copy_to_palette_.reset(new button(new label("Set", graphics::color("antique_white").as_sdl_color(), 12, "Montaga-Regular"), boost::bind(&color_picker::copy_to_palette_fn, this)));
+		copy_to_palette_.reset(new Button(new Label("Set", KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"), boost::bind(&ColorPicker::copyToPaletteFn, this)));
 		copy_to_palette_->setLoc(5, palette_offset_y_);
-		copy_to_palette_->setTooltip("Set palette color", 12, graphics::color("antique_white").as_sdl_color(), "Montaga-Regular");
+		copy_to_palette_->setTooltip("Set palette color", 12, KRE::Color::colorAntiquewhite(), "Montaga-Regular");
 
 		palette_offset_y_ = copy_to_palette_->y() + copy_to_palette_->height() + 10;
 
-		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
-		setText_from_color(main_color_selected_ ? primary_ : secondary_);
+		setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
+		setTextFromColor(main_color_selected_ ? primary_ : secondary_);
 	}
 
-	void color_picker::copy_to_palette_fn()
+	void ColorPicker::copyToPaletteFn()
 	{
-		std::cerr << "copy_to_palette_fn()" << std::endl;
+		std::cerr << "copyToPaletteFn()" << std::endl;
 		if(selected_palette_color_ >= 0 &&  size_t(selected_palette_color_) < palette_.size()) {
 			palette_[selected_palette_color_] = main_color_selected_ ? primary_ : secondary_;
 		}
 	}
 
-	void color_picker::slider_change(int n, double p)
+	void ColorPicker::sliderChange(int n, double p)
 	{
-		ASSERT_LOG(size_t(n) < s_.size(), "color_picker::slider_change: invalid array access: " << n << " >= " << s_.size());
+		ASSERT_LOG(size_t(n) < s_.size(), "ColorPicker::sliderChange: invalid array access: " << n << " >= " << s_.size());
 		if(n >= 0 && n <= 2) {
 			switch(n) {
 			case 0:  red_ = uint8_t(255.0 * p); break;
@@ -491,9 +491,9 @@ namespace gui
 			hsv out = rgb_to_hsv(red_, green_, blue_);
 			hue_ = out.h; saturation_ = out.s; value_ = out.v;
 			if(main_color_selected_) {
-				primary_ = graphics::color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color(red_, green_, blue_, alpha_);
 			} else {
-				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
 			}
 		} else if(n >= 3 && n <= 5) {
 			switch(n) {
@@ -504,30 +504,30 @@ namespace gui
 			rgb out = hsv_to_rgb(hue_, saturation_, value_);
 			red_ = out.r; green_ = out.g; blue_ = out.b;
 			if(main_color_selected_) {
-				primary_ = graphics::color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color(red_, green_, blue_, alpha_);
 			} else {
-				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
 			}
 		} else {
 			// alpha
 			alpha_ = uint8_t(255.0 * p);
 			if(main_color_selected_) {
-				primary_ = graphics::color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color(red_, green_, blue_, alpha_);
 			} else {
-				secondary_ = graphics::color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
 			}
 		}
-		setText_from_color(main_color_selected_ ? primary_ : secondary_);
-		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+		setTextFromColor(main_color_selected_ ? primary_ : secondary_);
+		setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
 			onchange_(main_color_selected_ ? primary_ : secondary_);
 		}
 	}
 
-	void color_picker::text_tab_pressed(int n)
+	void ColorPicker::textTabPressed(int n)
 	{
-		ASSERT_LOG(size_t(n) < t_.size(), "color_picker::text_change invalid array access: " << n << " >= " << t_.size());
+		ASSERT_LOG(size_t(n) < t_.size(), "ColorPicker::textChange invalid array access: " << n << " >= " << t_.size());
 		t_[n]->setFocus(false);
 		if(++n >= 7) {
 			n = 0;
@@ -535,9 +535,9 @@ namespace gui
 		t_[n]->setFocus(true);
 	}
 
-	void color_picker::text_change(int n)
+	void ColorPicker::textChange(int n)
 	{
-		ASSERT_LOG(size_t(n) < t_.size(), "color_picker::text_change invalid array access: " << n << " >= " << t_.size());
+		ASSERT_LOG(size_t(n) < t_.size(), "ColorPicker::textChange invalid array access: " << n << " >= " << t_.size());
 		int val;
 		switch(n) {
 			case 0:  val = red_; break;
@@ -570,19 +570,19 @@ namespace gui
 			red_ = out.r; green_ = out.g; blue_ = out.b;
 		}
 		if(main_color_selected_) {
-			primary_ = graphics::color(red_, green_, blue_, alpha_);
+			primary_ = KRE::Color(red_, green_, blue_, alpha_);
 		} else {
-			secondary_ = graphics::color(red_, green_, blue_, alpha_);
+			secondary_ = KRE::Color(red_, green_, blue_, alpha_);
 		}
-		setText_from_color(primary_);
-		set_sliders_from_color(main_color_selected_ ? primary_ : secondary_);
+		setTextFromColor(primary_);
+		setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
 
 		if(onchange_) {
 			onchange_(main_color_selected_ ? primary_ : secondary_);
 		}
 	}
 
-	void color_picker::set_sliders_from_color(const graphics::color& c)
+	void ColorPicker::setSlidersFromColor(const KRE::Color& c)
 	{
 		ASSERT_LOG(s_.size() == 7, "Didn't find the correct number of sliders.");
 		s_[0]->set_position(c.r()/255.0);
@@ -595,7 +595,7 @@ namespace gui
 		s_[6]->set_position(alpha_/255.0);
 	}
 
-	void color_picker::setText_from_color(const graphics::color& c, int n)
+	void ColorPicker::setTextFromColor(const KRE::Color& c, int n)
 	{
 		ASSERT_LOG(t_.size() == 7, "Didn't find the correct number of sliders.");
 		std::stringstream str;
@@ -630,26 +630,26 @@ namespace gui
 		}
 	}
 
-	void color_picker::change()
+	void ColorPicker::change()
 	{
 		using namespace game_logic;
 		if(handler_arg_) {
 			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(handler_arg_.get()));
-			callable->add("color", get_primary_color().write());
+			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else if(getEnvironment()) {
 			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
-			callable->add("color", get_primary_color().write());
+			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "color_picker::change() called without environment!" << std::endl;
+			std::cerr << "ColorPicker::change() called without environment!" << std::endl;
 		}
 	}
 
 
-	void color_picker::set_hsv_from_color(const graphics::color& in_color)
+	void ColorPicker::setHSVFromColor(const KRE::Color& in_color)
 	{
 		hsv out = rgb_to_hsv(in_color.r(), in_color.g(), in_color.b());
 		hue_ = out.h;
@@ -657,18 +657,18 @@ namespace gui
 		value_ = out.v;
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(color_picker)
+	BEGIN_DEFINE_CALLABLE_NOBASE(ColorPicker)
 	DEFINE_FIELD(primary, "[int,int,int,int]")
 		return obj.primary_.write();
 	DEFINE_SET_FIELD_TYPE("[int]|string")
-		obj.primary_ = graphics::color(value);
+		obj.primary_ = KRE::Color(value);
 	DEFINE_FIELD(color, "[int,int,int,int]")
 		return obj.primary_.write();
 	DEFINE_SET_FIELD_TYPE("[int]|string")
-		obj.primary_ = graphics::color(value);
+		obj.primary_ = KRE::Color(value);
 	DEFINE_FIELD(secondary, "[int,int,int,int]")
 		return obj.secondary_.write();
 	DEFINE_SET_FIELD_TYPE("[int]|string")
-		obj.secondary_ = graphics::color(value);
-	END_DEFINE_CALLABLE(color_picker)
+		obj.secondary_ = KRE::Color(value);
+	END_DEFINE_CALLABLE(ColorPicker)
 }

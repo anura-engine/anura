@@ -39,6 +39,7 @@ namespace KRE
 		~Color();
 		explicit Color(const double r, const double g, const double b, const double a=1.0);
 		explicit Color(const int r, const int g, const int b, const int a=255);
+		explicit Color(const std::string& s);
 		explicit Color(const variant& node);
 
 		double r() const { return color_[0]; }
@@ -55,6 +56,9 @@ namespace KRE
 		int g_int() const { return static_cast<int>(255*color_[1]); }
 		int b_int() const { return static_cast<int>(255*color_[2]); }
 		int a_int() const { return static_cast<int>(255*color_[3]); }
+
+		void setAlpha(int a);
+		void setAlpha(double a);
 
 		unsigned long asARGB() const {
 			return (a_int() << 24) | (r_int() << 16) | (g_int() << 8) | b_int();

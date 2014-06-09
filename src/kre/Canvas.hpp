@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <stack>
+
 #include "../Color.hpp"
 #include "Geometry.hpp"
 #include "Material.hpp"
@@ -63,6 +65,25 @@ namespace KRE
 		void drawVectorContext(const Vector::ContextPtr& context);
 
 		static CanvasPtr getInstance();
+
+		struct ColorManager
+		{
+			ColorManager(CanvasPtr& canvas, const ColorPtr& color) : canvas_(canvas) {
+				canvas->color_stack_.push(color);
+			}
+			~ColorManager() {
+				canvas_->color_stack_.pop();
+			}
+			CanvasPtr& canvas_;
+		};
+
+		ColorPtr getColor() const {
+			if(color_stack_.empty()) {
+				return ColorPtr();
+			}
+			return color_stack_.top();
+		}
+
 	protected:
 		Canvas();
 	private:
@@ -70,5 +91,6 @@ namespace KRE
 		unsigned width_;
 		unsigned height_;
 		virtual void handleDimensionsChanged() = 0;
+		std::stack<ColorPtr> color_stack_;
 	};
 }

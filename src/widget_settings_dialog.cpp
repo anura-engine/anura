@@ -149,8 +149,8 @@ namespace gui
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
 				my = my + 600 > preferences::actual_screen_height() ? preferences::actual_screen_height()-600 : my;
 				my -= y();
-				color_picker* cp = new color_picker(rect(0, 0, 200, 600), [&](const graphics::color& color){widget_->setTooltipColor(color);});
-				cp->set_primary_color(graphics::color(widget_->tooltipColor()));
+				ColorPicker* cp = new ColorPicker(rect(0, 0, 200, 600), [&](const graphics::color& color){widget_->setTooltipColor(color);});
+				cp->setPrimaryColor(graphics::color(widget_->tooltipColor()));
 
 				grid_ptr gg = new grid(1);
 				gg->allow_selection();

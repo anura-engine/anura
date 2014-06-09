@@ -102,8 +102,8 @@ public:
 
 	VoxelPos get_selected_voxel(const VoxelPos& pos, int facing, bool reverse);
 
-	graphics::color current_color() const { return color_picker_->get_selected_color(); }
-	gui::color_picker& get_color_picker() { return *color_picker_; }
+	graphics::color current_color() const { return ColorPicker_->getSelectedColor(); }
+	gui::ColorPicker& get_ColorPicker() { return *ColorPicker_; }
 	Layer& layer() { assert(current_layer_ >= 0 && current_layer_ < layers_.size()); return layers_[current_layer_]; }
 
 	const std::vector<VoxelPair>& get_clipboard() const { return clipboard_; }
@@ -168,7 +168,7 @@ private:
 	std::string fname_;
 
 	boost::intrusive_ptr<iso_renderer> iso_renderer_;
-	boost::intrusive_ptr<gui::color_picker> color_picker_;
+	boost::intrusive_ptr<gui::ColorPicker> ColorPicker_;
 
 	std::vector<Command> undo_, redo_;
 
@@ -338,7 +338,7 @@ private:
 	GLint video_framebuffer_id_;
 
 	slider_ptr light_power_slider_;
-	void light_power_slider_change(double p);
+	void light_power_sliderChange(double p);
 	float light_power_;
 	float specularity_coef_;
 
@@ -375,7 +375,7 @@ iso_renderer::iso_renderer(const rect& area)
 
 	calculate_camera();
 
-	light_power_slider_.reset(new slider(150, boost::bind(&iso_renderer::light_power_slider_change, this, _1), 1));
+	light_power_slider_.reset(new slider(150, boost::bind(&iso_renderer::light_power_sliderChange, this, _1), 1));
 	light_power_slider_->set_position(light_power_/20000.0);
 
 	init();
@@ -388,7 +388,7 @@ iso_renderer::~iso_renderer()
 	}
 }
 
-void iso_renderer::light_power_slider_change(double p)
+void iso_renderer::light_power_sliderChange(double p)
 {
 	light_power_ = float(p * 20000.0);
 }
@@ -1409,9 +1409,9 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 					if(voxel_itor != get_editor().voxels().end()) {
 						const graphics::color color = voxel_itor->second.color;
 						if(e.button == SDL_BUTTON_LEFT) {
-							get_editor().get_color_picker().set_primary_color(color);
+							get_editor().get_ColorPicker().setPrimaryColor(color);
 						} else if(e.button == SDL_BUTTON_RIGHT) {
-							get_editor().get_color_picker().set_secondary_color(color);
+							get_editor().get_ColorPicker().setSecondaryColor(color);
 						}
 					}
 				}
@@ -2058,11 +2058,11 @@ void voxel_editor::init()
 		add_widget(layers_grid);
 	}
 
-	if(!color_picker_) {
-		color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
-		color_picker_->set_primary_color(graphics::color(255, 0, 0));
+	if(!ColorPicker_) {
+		ColorPicker_.reset(new ColorPicker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+		ColorPicker_->setPrimaryColor(graphics::color(255, 0, 0));
 	}
-	add_widget(color_picker_);
+	add_widget(ColorPicker_);
 
 	pos_label_.reset(new label("", 12));
 	add_widget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,

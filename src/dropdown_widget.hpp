@@ -60,7 +60,7 @@ protected:
 	virtual variant getValue(const std::string& key) const;
 	void init();
 	void text_enter();
-	void text_change();
+	void textChange();
 private:
 	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
 	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);

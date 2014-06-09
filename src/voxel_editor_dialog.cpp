@@ -79,8 +79,8 @@ namespace editor_dialogs
 
 		// The color picker contains state, resetting it all the time loses that state.
 		rect area(0, 0, EDITOR_SIDEBAR_WIDTH, 220);
-		color_picker_ = new gui::color_picker(area);
-		color_picker_->set_primary_color(graphics::color("lawn_green"));
+		ColorPicker_ = new gui::ColorPicker(area);
+		ColorPicker_->setPrimaryColor(graphics::color("lawn_green"));
 
 		init();
 	}
@@ -195,7 +195,7 @@ namespace editor_dialogs
 
 			grid->finish_row();
 			add_widget(grid);*/
-			add_widget(color_picker_);
+			add_widget(ColorPicker_);
 		}
 	}
 
@@ -375,7 +375,7 @@ namespace editor_dialogs
 			}
 			tile_to_add = voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].id;
 		} else {
-			tile_to_add = color_picker_->get_selected_color().write();
+			tile_to_add = ColorPicker_->getSelectedColor().write();
 		}
 
 		variant_builder res;
@@ -409,7 +409,7 @@ namespace editor_dialogs
 			}
 			tile_to_add = voxel::chunk::getTexturedEditorTiles()[editor_.get_voxel_tileset()].id;
 		} else {
-			tile_to_add = color_picker_->get_selected_color().write();
+			tile_to_add = ColorPicker_->getSelectedColor().write();
 		}
 
 		variant_builder res;
@@ -447,8 +447,8 @@ namespace editor_dialogs
 
 	graphics::color voxel_editor_dialog::selected_color() const
 	{
-		if(color_picker_) {
-			return color_picker_->get_selected_color();
+		if(ColorPicker_) {
+			return ColorPicker_->getSelectedColor();
 		}
 		return graphics::color(255,255,255,255);
 	}

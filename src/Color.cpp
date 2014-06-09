@@ -282,6 +282,23 @@ namespace KRE
 		}
 	}
 
+	Color::Color(const std::string& colstr)
+	{
+		auto it = get_color_table().find(colstr);
+		ASSERT_LOG(it != get_color_table().end(), "Couldn't find color '" << colstr << "' in known color list");
+		*this = it->second;
+	}
+
+	void Color::setAlpha(int a)
+	{
+		color_[3] = clamp<int>(a, 0, 255) / 255.0f;
+	}
+
+	void Color::setAlpha(double a)
+	{
+		color_[3] = clamp<float>(float(a), 0.0f, 1.0f);
+	}
+
 	ColorPtr Color::factory(const std::string& name)
 	{
 		auto it = get_color_table().find(name);

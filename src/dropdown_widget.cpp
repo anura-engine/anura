@@ -41,7 +41,7 @@ dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int heigh
 	setEnvironment();
 	setDim(width, height);
 	editor_ = new TextEditorWidget(width, height);
-	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::text_change, this));
+	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::textChange, this));
 	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
 	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
 	dropdown_image_ = WidgetPtr(new GuiSectionWidget(dropdown_button_image));
@@ -74,7 +74,7 @@ dropdown_widget::dropdown_widget(const variant& v, game_logic::FormulaCallable* 
 	}
 	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
 	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
-	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::text_change, this));
+	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::textChange, this));
 	if(v.has_key("on_change")) {
 		change_handler_ = getEnvironment()->createFormula(v["on_change"]);
 		on_change_ = boost::bind(&dropdown_widget::change_delegate, this, _1);
@@ -182,7 +182,7 @@ void dropdown_widget::text_enter()
 	}
 }
 
-void dropdown_widget::text_change()
+void dropdown_widget::textChange()
 {
 	if(on_change_) {
 		on_change_(editor_->text());

@@ -23,6 +23,8 @@
 
 #include <boost/bind.hpp>
 
+#include "kre/Canvas.hpp"
+
 #include "asserts.hpp"
 #include "button.hpp"
 #include "custom_object_functions.hpp"
@@ -218,22 +220,19 @@ namespace gui
 	{
 		label_->setLoc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
 
-		const boost::scoped_ptr<KRE::Color>& col = current_button_image_set_ == normal_button_image_set_ 
+		const KRE::ColorPtr& col = current_button_image_set_ == normal_button_image_set_ 
 			? normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
 		col->setAlpha(disabled() ? disabledOpacity() : getAlpha());
 
 		current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0, *col);
 
-		const boost::scoped_ptr<KRE::Color>& text_col = current_button_image_set_ == normal_button_image_set_ 
+		const KRE::ColorPtr& text_col = current_button_image_set_ == normal_button_image_set_ 
 			? text_normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
-		if(text_col.get() != NULL) {
-			text_col->set_as_current_color();
-		}
+		KRE::Canvas::ColorManager cm(KRE::Canvas::getInstance(), text_col);
 		label_->draw();
-		KRE::Color(255, 255, 255, 255).set_as_current_color();
 	}
 
 	void Button::handleProcess()
