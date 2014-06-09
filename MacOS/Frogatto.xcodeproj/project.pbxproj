@@ -196,6 +196,35 @@
 		C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */; };
 		C06FF3F31741751800377772 /* libboost_filesystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
 		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
+		C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
+		C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
+		C07A47A319443FC000F1190E /* libpixman-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; };
+		C07A47A419443FC900F1190E /* libfontconfig.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
+		C07A47A519443FCB00F1190E /* libglib-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
+		C07A47A619443FCE00F1190E /* libpixman-1.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; };
+		C07A47A8194440A400F1190E /* libcairo.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; };
+		C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; };
+		C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; };
+		C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; };
+		C07A47CE19444C2000F1190E /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47AE19444C2000F1190E /* color.cpp */; };
+		C07A47CF19444C2000F1190E /* geometry.inl in Resources */ = {isa = PBXBuildFile; fileRef = C07A47B119444C2000F1190E /* geometry.inl */; };
+		C07A47D019444C2000F1190E /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B219444C2000F1190E /* logger.cpp */; };
+		C07A47D119444C2000F1190E /* svg_attribs.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B419444C2000F1190E /* svg_attribs.cpp */; };
+		C07A47D219444C2000F1190E /* svg_container.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B619444C2000F1190E /* svg_container.cpp */; };
+		C07A47D319444C2000F1190E /* svg_element.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B819444C2000F1190E /* svg_element.cpp */; };
+		C07A47D419444C2000F1190E /* svg_gradient.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47BB19444C2000F1190E /* svg_gradient.cpp */; };
+		C07A47D519444C2000F1190E /* svg_paint.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47BE19444C2000F1190E /* svg_paint.cpp */; };
+		C07A47D619444C2000F1190E /* svg_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47C019444C2000F1190E /* svg_parse.cpp */; };
+		C07A47D719444C2000F1190E /* svg_path_parse.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47C219444C2000F1190E /* svg_path_parse.cpp */; };
+		C07A47D819444C2000F1190E /* svg_shapes.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47C519444C2000F1190E /* svg_shapes.cpp */; };
+		C07A47D919444C2000F1190E /* svg_style.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47C719444C2000F1190E /* svg_style.cpp */; };
+		C07A47DA19444C2000F1190E /* svg_transform.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47C919444C2000F1190E /* svg_transform.cpp */; };
+		C07A47DB19444C2000F1190E /* svg_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47CB19444C2000F1190E /* svg_utils.cpp */; };
+		C07A47DE1944595400F1190E /* ft_iface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47DC1944595400F1190E /* ft_iface.cpp */; };
+		C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47DF1944696C00F1190E /* libintl.8.dylib */; };
+		C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47DF1944696C00F1190E /* libintl.8.dylib */; };
+		C08047DE1944884300AA7C82 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C08047DD1944884300AA7C82 /* libpng16.16.dylib */; };
+		C08047DF1944888E00AA7C82 /* libpng16.16.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08047DD1944884300AA7C82 /* libpng16.16.dylib */; };
 		C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */; };
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
 		C08DF5AA178A5511006E061D /* frustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5A8178A5510006E061D /* frustum.cpp */; };
@@ -243,10 +272,7 @@
 		C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0AECE0818E541BD00CD3161 /* uuid.cpp */; };
 		C0B1908916CD9437008FF14A /* ipc.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B1908716CD9437008FF14A /* ipc.cpp */; };
 		C0B87BD4166725A700D66B15 /* formula_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0B87BD21667256F00D66B15 /* formula_object.cpp */; };
-		C0CB6CF81933E1B6004A6450 /* libcairo.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CF61933DE66004A6450 /* libcairo.dylib */; };
 		C0CB6CFA1933E62C004A6450 /* cairo.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0CB6CF91933E62C004A6450 /* cairo.cpp */; };
-		C0CB6CFD1933E970004A6450 /* libfreetype.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CFC1933E970004A6450 /* libfreetype.dylib */; };
-		C0CB6CFF1933E9A1004A6450 /* librsvg-2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */; };
 		C0D6EB6C16DB25C000B5ABCA /* tbs_internal_client.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */; };
 		C0D6EB6D16DB25C000B5ABCA /* tbs_internal_server.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */; };
 		C0D6EB6E16DB25C000B5ABCA /* tbs_server_base.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6A16DB25C000B5ABCA /* tbs_server_base.cpp */; };
@@ -273,7 +299,14 @@
 			dstPath = "";
 			dstSubfolderSpec = 10;
 			files = (
+				C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */,
+				C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */,
+				C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */,
+				C07A47A419443FC900F1190E /* libfontconfig.1.dylib in CopyFiles */,
+				C07A47A519443FCB00F1190E /* libglib-2.0.0.dylib in CopyFiles */,
+				C07A47A619443FCE00F1190E /* libpixman-1.0.dylib in CopyFiles */,
 				C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */,
+				C08047DF1944888E00AA7C82 /* libpng16.16.dylib in CopyFiles */,
 				C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */,
 				C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */,
 				C0EF2A5A1622296E004CD227 /* libboost_iostreams.dylib in CopyFiles */,
@@ -688,6 +721,47 @@
 		C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_visualize_widget.cpp; sourceTree = "<group>"; };
 		C06FF3F01740B9F000377772 /* formula_visualize_widget.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_visualize_widget.hpp; sourceTree = "<group>"; };
 		C06FF3F21741751800377772 /* libboost_filesystem.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libboost_filesystem.dylib; sourceTree = "<group>"; };
+		C07A479E19443FC000F1190E /* libfontconfig.1.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libfontconfig.1.dylib; sourceTree = "<group>"; };
+		C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libglib-2.0.0.dylib"; sourceTree = "<group>"; };
+		C07A47A019443FC000F1190E /* libpixman-1.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = "libpixman-1.0.dylib"; sourceTree = "<group>"; };
+		C07A47A7194440A400F1190E /* libcairo.2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libcairo.2.dylib; sourceTree = "<group>"; };
+		C07A47AA1944487300F1190E /* libfreetype.6.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libfreetype.6.dylib; sourceTree = "<group>"; };
+		C07A47AE19444C2000F1190E /* color.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = color.cpp; path = svg/color.cpp; sourceTree = "<group>"; };
+		C07A47AF19444C2000F1190E /* color.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = color.hpp; path = svg/color.hpp; sourceTree = "<group>"; };
+		C07A47B019444C2000F1190E /* geometry.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = geometry.hpp; path = svg/geometry.hpp; sourceTree = "<group>"; };
+		C07A47B119444C2000F1190E /* geometry.inl */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = geometry.inl; path = svg/geometry.inl; sourceTree = "<group>"; };
+		C07A47B219444C2000F1190E /* logger.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = logger.cpp; path = svg/logger.cpp; sourceTree = "<group>"; };
+		C07A47B319444C2000F1190E /* logger.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = logger.hpp; path = svg/logger.hpp; sourceTree = "<group>"; };
+		C07A47B419444C2000F1190E /* svg_attribs.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_attribs.cpp; path = svg/svg_attribs.cpp; sourceTree = "<group>"; };
+		C07A47B519444C2000F1190E /* svg_attribs.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_attribs.hpp; path = svg/svg_attribs.hpp; sourceTree = "<group>"; };
+		C07A47B619444C2000F1190E /* svg_container.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_container.cpp; path = svg/svg_container.cpp; sourceTree = "<group>"; };
+		C07A47B719444C2000F1190E /* svg_container.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_container.hpp; path = svg/svg_container.hpp; sourceTree = "<group>"; };
+		C07A47B819444C2000F1190E /* svg_element.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_element.cpp; path = svg/svg_element.cpp; sourceTree = "<group>"; };
+		C07A47B919444C2000F1190E /* svg_element.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_element.hpp; path = svg/svg_element.hpp; sourceTree = "<group>"; };
+		C07A47BA19444C2000F1190E /* svg_fwd.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_fwd.hpp; path = svg/svg_fwd.hpp; sourceTree = "<group>"; };
+		C07A47BB19444C2000F1190E /* svg_gradient.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_gradient.cpp; path = svg/svg_gradient.cpp; sourceTree = "<group>"; };
+		C07A47BC19444C2000F1190E /* svg_gradient.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_gradient.hpp; path = svg/svg_gradient.hpp; sourceTree = "<group>"; };
+		C07A47BD19444C2000F1190E /* svg_length.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_length.hpp; path = svg/svg_length.hpp; sourceTree = "<group>"; };
+		C07A47BE19444C2000F1190E /* svg_paint.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_paint.cpp; path = svg/svg_paint.cpp; sourceTree = "<group>"; };
+		C07A47BF19444C2000F1190E /* svg_paint.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_paint.hpp; path = svg/svg_paint.hpp; sourceTree = "<group>"; };
+		C07A47C019444C2000F1190E /* svg_parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_parse.cpp; path = svg/svg_parse.cpp; sourceTree = "<group>"; };
+		C07A47C119444C2000F1190E /* svg_parse.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_parse.hpp; path = svg/svg_parse.hpp; sourceTree = "<group>"; };
+		C07A47C219444C2000F1190E /* svg_path_parse.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_path_parse.cpp; path = svg/svg_path_parse.cpp; sourceTree = "<group>"; };
+		C07A47C319444C2000F1190E /* svg_path_parse.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_path_parse.hpp; path = svg/svg_path_parse.hpp; sourceTree = "<group>"; };
+		C07A47C419444C2000F1190E /* svg_render.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_render.hpp; path = svg/svg_render.hpp; sourceTree = "<group>"; };
+		C07A47C519444C2000F1190E /* svg_shapes.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_shapes.cpp; path = svg/svg_shapes.cpp; sourceTree = "<group>"; };
+		C07A47C619444C2000F1190E /* svg_shapes.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_shapes.hpp; path = svg/svg_shapes.hpp; sourceTree = "<group>"; };
+		C07A47C719444C2000F1190E /* svg_style.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_style.cpp; path = svg/svg_style.cpp; sourceTree = "<group>"; };
+		C07A47C819444C2000F1190E /* svg_style.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_style.hpp; path = svg/svg_style.hpp; sourceTree = "<group>"; };
+		C07A47C919444C2000F1190E /* svg_transform.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_transform.cpp; path = svg/svg_transform.cpp; sourceTree = "<group>"; };
+		C07A47CA19444C2000F1190E /* svg_transform.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = svg_transform.hpp; path = svg/svg_transform.hpp; sourceTree = "<group>"; };
+		C07A47CB19444C2000F1190E /* svg_utils.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; name = svg_utils.cpp; path = svg/svg_utils.cpp; sourceTree = "<group>"; };
+		C07A47CC19444C2000F1190E /* uri.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = uri.hpp; path = svg/uri.hpp; sourceTree = "<group>"; };
+		C07A47CD19444C2000F1190E /* utils.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; name = utils.hpp; path = svg/utils.hpp; sourceTree = "<group>"; };
+		C07A47DC1944595400F1190E /* ft_iface.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ft_iface.cpp; sourceTree = "<group>"; };
+		C07A47DD1944595400F1190E /* ft_iface.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ft_iface.hpp; sourceTree = "<group>"; };
+		C07A47DF1944696C00F1190E /* libintl.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libintl.8.dylib; sourceTree = "<group>"; };
+		C08047DD1944884300AA7C82 /* libpng16.16.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpng16.16.dylib; sourceTree = "<group>"; };
 		C0812FCC17EED7C400ADDA70 /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = modules; path = ../modules; sourceTree = "<group>"; };
 		C089D451162BDF7B009D2878 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../master-config.cfg"; sourceTree = "<group>"; };
 		C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable_visitor.cpp; sourceTree = "<group>"; };
@@ -773,11 +847,8 @@
 		C0B87BD21667256F00D66B15 /* formula_object.cpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.cpp; path = formula_object.cpp; sourceTree = "<group>"; };
 		C0B87BD31667256F00D66B15 /* formula_object.hpp */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.cpp.h; path = formula_object.hpp; sourceTree = "<group>"; };
 		C0C291901665F21600DB88A6 /* es */ = {isa = PBXFileReference; lastKnownFileType = text.plist.strings; name = es; path = es.lproj/InfoPlist.strings; sourceTree = "<group>"; };
-		C0CB6CF61933DE66004A6450 /* libcairo.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libcairo.dylib; path = ../../../../../usr/local/Cellar/cairo/1.12.16_1/lib/libcairo.dylib; sourceTree = "<group>"; };
 		C0CB6CF91933E62C004A6450 /* cairo.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = cairo.cpp; sourceTree = "<group>"; };
 		C0CB6CFB1933E631004A6450 /* cairo.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = cairo.hpp; sourceTree = "<group>"; };
-		C0CB6CFC1933E970004A6450 /* libfreetype.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libfreetype.dylib; path = ../../../../../usr/local/Cellar/freetype/2.5.3_1/lib/libfreetype.dylib; sourceTree = "<group>"; };
-		C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = "librsvg-2.dylib"; path = "../../../../../usr/local/Cellar/librsvg/2.36.3/lib/librsvg-2.dylib"; sourceTree = "<group>"; };
 		C0D6EB6616DB25C000B5ABCA /* tbs_internal_client.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_internal_client.cpp; sourceTree = "<group>"; };
 		C0D6EB6716DB25C000B5ABCA /* tbs_internal_client.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = tbs_internal_client.hpp; sourceTree = "<group>"; };
 		C0D6EB6816DB25C000B5ABCA /* tbs_internal_server.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = tbs_internal_server.cpp; sourceTree = "<group>"; };
@@ -806,18 +877,22 @@
 				C010C572160AFAD9006E7D90 /* Cocoa.framework in Frameworks */,
 				C010C5BB160AFD09006E7D90 /* OpenGL.framework in Frameworks */,
 				C0EF2A5816215F78004CD227 /* libboost_system.dylib in Frameworks */,
+				C07A47A8194440A400F1190E /* libcairo.2.dylib in Frameworks */,
+				C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */,
+				C07A47A319443FC000F1190E /* libpixman-1.0.dylib in Frameworks */,
 				C06FF3F31741751800377772 /* libboost_filesystem.dylib in Frameworks */,
 				C0EF2A5616215F78004CD227 /* libboost_iostreams.dylib in Frameworks */,
 				C0EF2A5716215F78004CD227 /* libboost_regex.dylib in Frameworks */,
+				C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */,
 				C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */,
+				C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */,
 				C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */,
+				C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */,
+				C08047DE1944884300AA7C82 /* libpng16.16.dylib in Frameworks */,
 				C08E628017B5EC3B0097B642 /* SDL2_image.framework in Frameworks */,
 				C08E628117B5EC3B0097B642 /* SDL2_mixer.framework in Frameworks */,
 				C08E628217B5EC3B0097B642 /* SDL2_ttf.framework in Frameworks */,
 				C08E628317B5EC3B0097B642 /* SDL2.framework in Frameworks */,
-				C0CB6CF81933E1B6004A6450 /* libcairo.dylib in Frameworks */,
-				C0CB6CFD1933E970004A6450 /* libfreetype.dylib in Frameworks */,
-				C0CB6CFF1933E9A1004A6450 /* librsvg-2.dylib in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -851,9 +926,6 @@
 		C010C570160AFAD9006E7D90 /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
-				C0CB6CFE1933E9A1004A6450 /* librsvg-2.dylib */,
-				C0CB6CFC1933E970004A6450 /* libfreetype.dylib */,
-				C0CB6CF61933DE66004A6450 /* libcairo.dylib */,
 				C010C5A5160AFC60006E7D90 /* External Frameworks */,
 				C010C573160AFAD9006E7D90 /* Apple Frameworks */,
 			);
@@ -889,7 +961,9 @@
 		C010C5A5160AFC60006E7D90 /* External Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				C07A47E11944697300F1190E /* SVG Frameworks */,
 				C0D78B5E171F215D00980007 /* libpng15.15.dylib */,
+				C08047DD1944884300AA7C82 /* libpng16.16.dylib */,
 				C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */,
 				C0EF2A5316215F78004CD227 /* libboost_iostreams.dylib */,
 				C06FF3F21741751800377772 /* libboost_filesystem.dylib */,
@@ -908,8 +982,11 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C07A47AD19444C1000F1190E /* svg */,
 				C0CB6CF91933E62C004A6450 /* cairo.cpp */,
 				C0CB6CFB1933E631004A6450 /* cairo.hpp */,
+				C07A47DC1944595400F1190E /* ft_iface.cpp */,
+				C07A47DD1944595400F1190E /* ft_iface.hpp */,
 				C008A2CC1804EFFE0061363A /* input.cpp */,
 				C008A2CD1804EFFE0061363A /* input.hpp */,
 				C008A2C11804E8980061363A /* wm.cpp */,
@@ -1381,6 +1458,58 @@
 			path = ../src;
 			sourceTree = "<group>";
 		};
+		C07A47AD19444C1000F1190E /* svg */ = {
+			isa = PBXGroup;
+			children = (
+				C07A47AE19444C2000F1190E /* color.cpp */,
+				C07A47AF19444C2000F1190E /* color.hpp */,
+				C07A47B019444C2000F1190E /* geometry.hpp */,
+				C07A47B119444C2000F1190E /* geometry.inl */,
+				C07A47B219444C2000F1190E /* logger.cpp */,
+				C07A47B319444C2000F1190E /* logger.hpp */,
+				C07A47B419444C2000F1190E /* svg_attribs.cpp */,
+				C07A47B519444C2000F1190E /* svg_attribs.hpp */,
+				C07A47B619444C2000F1190E /* svg_container.cpp */,
+				C07A47B719444C2000F1190E /* svg_container.hpp */,
+				C07A47B819444C2000F1190E /* svg_element.cpp */,
+				C07A47B919444C2000F1190E /* svg_element.hpp */,
+				C07A47BA19444C2000F1190E /* svg_fwd.hpp */,
+				C07A47BB19444C2000F1190E /* svg_gradient.cpp */,
+				C07A47BC19444C2000F1190E /* svg_gradient.hpp */,
+				C07A47BD19444C2000F1190E /* svg_length.hpp */,
+				C07A47BE19444C2000F1190E /* svg_paint.cpp */,
+				C07A47BF19444C2000F1190E /* svg_paint.hpp */,
+				C07A47C019444C2000F1190E /* svg_parse.cpp */,
+				C07A47C119444C2000F1190E /* svg_parse.hpp */,
+				C07A47C219444C2000F1190E /* svg_path_parse.cpp */,
+				C07A47C319444C2000F1190E /* svg_path_parse.hpp */,
+				C07A47C419444C2000F1190E /* svg_render.hpp */,
+				C07A47C519444C2000F1190E /* svg_shapes.cpp */,
+				C07A47C619444C2000F1190E /* svg_shapes.hpp */,
+				C07A47C719444C2000F1190E /* svg_style.cpp */,
+				C07A47C819444C2000F1190E /* svg_style.hpp */,
+				C07A47C919444C2000F1190E /* svg_transform.cpp */,
+				C07A47CA19444C2000F1190E /* svg_transform.hpp */,
+				C07A47CB19444C2000F1190E /* svg_utils.cpp */,
+				C07A47CC19444C2000F1190E /* uri.hpp */,
+				C07A47CD19444C2000F1190E /* utils.hpp */,
+			);
+			name = svg;
+			sourceTree = "<group>";
+		};
+		C07A47E11944697300F1190E /* SVG Frameworks */ = {
+			isa = PBXGroup;
+			children = (
+				C07A47AA1944487300F1190E /* libfreetype.6.dylib */,
+				C07A47A7194440A400F1190E /* libcairo.2.dylib */,
+				C07A479E19443FC000F1190E /* libfontconfig.1.dylib */,
+				C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */,
+				C07A47A019443FC000F1190E /* libpixman-1.0.dylib */,
+				C07A47DF1944696C00F1190E /* libintl.8.dylib */,
+			);
+			name = "SVG Frameworks";
+			sourceTree = "<group>";
+		};
 		C089D450162BDF59009D2878 /* Other Resources */ = {
 			isa = PBXGroup;
 			children = (
@@ -1453,6 +1582,7 @@
 				C02751C317FD4A1400173646 /* SDLMain.nib in Resources */,
 				C02751C217FD4A0C00173646 /* icon.icns in Resources */,
 				C02751C117FD4A0600173646 /* InfoPlist.strings in Resources */,
+				C07A47CF19444C2000F1190E /* geometry.inl in Resources */,
 				C02751C017FD49F900173646 /* data in Resources */,
 				C02751BF17FD49F500173646 /* images in Resources */,
 				C0A362471873BB65002571F3 /* music in Resources */,
@@ -1508,11 +1638,13 @@
 				C010C74F160AFD4D006E7D90 /* checksum.cpp in Sources */,
 				C010C750160AFD4D006E7D90 /* clipboard.cpp in Sources */,
 				C010C752160AFD4D006E7D90 /* code_editor_dialog.cpp in Sources */,
+				C07A47CE19444C2000F1190E /* color.cpp in Sources */,
 				C010C753160AFD4D006E7D90 /* code_editor_widget.cpp in Sources */,
 				C010C754160AFD4D006E7D90 /* collision_utils.cpp in Sources */,
 				C010C755160AFD4D006E7D90 /* color_chart.cpp in Sources */,
 				C010C756160AFD4D006E7D90 /* color_utils.cpp in Sources */,
 				C010C758160AFD4D006E7D90 /* compress.cpp in Sources */,
+				C07A47D619444C2000F1190E /* svg_parse.cpp in Sources */,
 				C010C759160AFD4D006E7D90 /* controls.cpp in Sources */,
 				C010C75A160AFD4D006E7D90 /* controls_dialog.cpp in Sources */,
 				C0AECE0718E541A200CD3161 /* db_client.cpp in Sources */,
@@ -1523,6 +1655,7 @@
 				C010C75F160AFD4D006E7D90 /* custom_object_functions.cpp in Sources */,
 				C010C760160AFD4D006E7D90 /* custom_object_type.cpp in Sources */,
 				C010C761160AFD4D006E7D90 /* debug_console.cpp in Sources */,
+				C07A47D419444C2000F1190E /* svg_gradient.cpp in Sources */,
 				C010C762160AFD4D006E7D90 /* decimal.cpp in Sources */,
 				C010C763160AFD4D006E7D90 /* dialog.cpp in Sources */,
 				C010C764160AFD4D006E7D90 /* difficulty.cpp in Sources */,
@@ -1539,8 +1672,10 @@
 				C010C76E160AFD4D006E7D90 /* editor_level_properties_dialog.cpp in Sources */,
 				C010C76F160AFD4D006E7D90 /* editor_module_properties_dialog.cpp in Sources */,
 				C010C770160AFD4D006E7D90 /* editor_stats_dialog.cpp in Sources */,
+				C07A47D019444C2000F1190E /* logger.cpp in Sources */,
 				C010C771160AFD4D006E7D90 /* editor_variable_info.cpp in Sources */,
 				C010C774160AFD4D006E7D90 /* entity.cpp in Sources */,
+				C07A47DA19444C2000F1190E /* svg_transform.cpp in Sources */,
 				C010C775160AFD4D006E7D90 /* external_text_editor.cpp in Sources */,
 				C010C776160AFD4D006E7D90 /* file_chooser_dialog.cpp in Sources */,
 				C010C778160AFD4D006E7D90 /* filesystem.cpp in Sources */,
@@ -1586,6 +1721,7 @@
 				C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */,
 				C010C7A3160AFD4D006E7D90 /* level.cpp in Sources */,
 				C010C7A4160AFD4D006E7D90 /* level_logic.cpp in Sources */,
+				C07A47D219444C2000F1190E /* svg_container.cpp in Sources */,
 				C010C7A5160AFD4D006E7D90 /* level_object.cpp in Sources */,
 				C010C7A6160AFD4D006E7D90 /* level_runner.cpp in Sources */,
 				C010C7A7160AFD4D006E7D90 /* level_solid_map.cpp in Sources */,
@@ -1595,6 +1731,7 @@
 				C010C7AD160AFD4D006E7D90 /* main.cpp in Sources */,
 				C010C7AE160AFD4D006E7D90 /* md5.cpp in Sources */,
 				C010C7AF160AFD4D006E7D90 /* message_dialog.cpp in Sources */,
+				C07A47D119444C2000F1190E /* svg_attribs.cpp in Sources */,
 				C0A29484184B1303002B757E /* psystem2_affectors.cpp in Sources */,
 				C010C7B0160AFD4D006E7D90 /* module.cpp in Sources */,
 				C010C7B2160AFD4D006E7D90 /* movement_script.cpp in Sources */,
@@ -1611,6 +1748,7 @@
 				C010C7BE160AFD4D006E7D90 /* preprocessor.cpp in Sources */,
 				C010C7BF160AFD4D006E7D90 /* preview_tileset_widget.cpp in Sources */,
 				C010C7C0160AFD4D006E7D90 /* progress_bar.cpp in Sources */,
+				C07A47D519444C2000F1190E /* svg_paint.cpp in Sources */,
 				C010C7C1160AFD4D006E7D90 /* property_editor_dialog.cpp in Sources */,
 				C010C7C2160AFD4D006E7D90 /* random.cpp in Sources */,
 				C010C7C3160AFD4D006E7D90 /* raster.cpp in Sources */,
@@ -1630,6 +1768,7 @@
 				C010C7D9160AFD4D006E7D90 /* surface.cpp in Sources */,
 				C010C7DA160AFD4D006E7D90 /* surface_cache.cpp in Sources */,
 				C010C7DB160AFD4E006E7D90 /* surface_formula.cpp in Sources */,
+				C07A47D819444C2000F1190E /* svg_shapes.cpp in Sources */,
 				C010C7DC160AFD4E006E7D90 /* surface_palette.cpp in Sources */,
 				C010C7DD160AFD4E006E7D90 /* surface_scaling.cpp in Sources */,
 				C010C7DE160AFD4E006E7D90 /* tbs_ai_player.cpp in Sources */,
@@ -1685,8 +1824,10 @@
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
 				C0917B1617670039004307B0 /* camera.cpp in Sources */,
+				C07A47D719444C2000F1190E /* svg_path_parse.cpp in Sources */,
 				C0917B19176700BD004307B0 /* simplex_noise.cpp in Sources */,
 				C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */,
+				C07A47DB19444C2000F1190E /* svg_utils.cpp in Sources */,
 				C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */,
 				C090AAB5177C14740046CC87 /* voxel_editor_dialog.cpp in Sources */,
 				C090E8E6178795EC00E6FC5A /* color_picker.cpp in Sources */,
@@ -1694,11 +1835,14 @@
 				C090E8EC1787962600E6FC5A /* isoworld.cpp in Sources */,
 				C090E8EF1787964600E6FC5A /* view3d_widget.cpp in Sources */,
 				C090E8F31787967200E6FC5A /* voxel_animation.cpp in Sources */,
+				C07A47D919444C2000F1190E /* svg_style.cpp in Sources */,
 				C090E8F41787967200E6FC5A /* voxel_model.cpp in Sources */,
 				C08DF5AA178A5511006E061D /* frustum.cpp in Sources */,
+				C07A47D319444C2000F1190E /* svg_element.cpp in Sources */,
 				C08DF5AE178BC1AA006E061D /* lighting.cpp in Sources */,
 				C08DF5B3178BC1CA006E061D /* voxel_object_functions.cpp in Sources */,
 				C08DF5B4178BC1CA006E061D /* voxel_object.cpp in Sources */,
+				C07A47DE1944595400F1190E /* ft_iface.cpp in Sources */,
 				C09185191797BE9B00F415C0 /* widget_editor.cpp in Sources */,
 				C091851A1797BE9B00F415C0 /* widget_settings_dialog.cpp in Sources */,
 				C091851D1797BEB600F415C0 /* voxel_object_type.cpp in Sources */,
@@ -1732,7 +1876,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1759,7 +1902,6 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = YES;
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				CLANG_CXX_LANGUAGE_STANDARD = "c++0x";
 				CLANG_CXX_LIBRARY = "libc++";
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
@@ -1778,7 +1920,6 @@
 		C010C58C160AFADA006E7D90 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1798,23 +1939,15 @@
 					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
-					"./dependency-headers",
+					"./dependency-headers/**",
 					../include,
-					"/usr/local/Cellar/librsvg/**",
-					"/usr/local/Cellar/cairo/**",
-					"/usr/local/Cellar/glib/**",
-					"/usr/local/Cellar/gdk-pixbuf/**",
-					"/usr/local/Cellar/freetype/**",
-					"/usr/local/Cellar/fontconfig/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
-					"\"/usr/local/Cellar/cairo/1.12.16_1/lib\"",
-					"\"/usr/local/Cellar/freetype/2.5.3_1/lib\"",
-					"\"/usr/local/Cellar/librsvg/2.36.3/lib\"",
+					"$(PROJECT_DIR)/dylibs",
 				);
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
@@ -1853,7 +1986,6 @@
 		C010C58D160AFADA006E7D90 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
-				ARCHS = "$(ARCHS_STANDARD_64_BIT)";
 				COMBINE_HIDPI_IMAGES = YES;
 				FRAMEWORK_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1873,23 +2005,15 @@
 					./boost/,
 					"./glew-1.9.0/include",
 					"./libpng-1.5.5/",
-					"./dependency-headers",
+					"./dependency-headers/**",
 					../include,
-					"/usr/local/Cellar/librsvg/**",
-					"/usr/local/Cellar/cairo/**",
-					"/usr/local/Cellar/glib/**",
-					"/usr/local/Cellar/gdk-pixbuf/**",
-					"/usr/local/Cellar/freetype/**",
-					"/usr/local/Cellar/fontconfig/**",
 				);
 				INFOPLIST_FILE = resources/Info.plist;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
 					"\"$(SRCROOT)/dylibs\"",
 					"\"$(SRCROOT)/dylibs/SDL2.framework/Versions/A\"",
-					"\"/usr/local/Cellar/cairo/1.12.16_1/lib\"",
-					"\"/usr/local/Cellar/freetype/2.5.3_1/lib\"",
-					"\"/usr/local/Cellar/librsvg/2.36.3/lib\"",
+					"$(PROJECT_DIR)/dylibs",
 				);
 				OTHER_CFLAGS = (
 					"-DIMPLEMENT_SAVE_PNG",
