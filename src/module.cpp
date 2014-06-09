@@ -91,6 +91,10 @@ std::string get_module_version() {
 
 std::string map_file(const std::string& passed_fname)
 {
+	if(sys::is_path_absolute(passed_fname)) {
+		return passed_fname;
+	}
+
 	std::string fname = passed_fname;
 	std::string module_id;
 	if(std::find(fname.begin(), fname.end(), ':') != fname.end()) {
