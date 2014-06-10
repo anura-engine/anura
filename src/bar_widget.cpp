@@ -293,7 +293,7 @@ END_DEFINE_CALLABLE(bar_widget)
 
 		// right cap
 		if(right_cap_.area.w() == 0) {
-			graphics::blit_texture(left_cap_.texture, x_offset, y(), right_cap_width_, height(), rotate_);
+			graphics::blit_texture(right_cap_.texture, x_offset, y(), right_cap_width_, height(), rotate_);
 		} else {
 			graphics::blit_texture(right_cap_.texture, x_offset, y(), right_cap_width_, height(), rotate_,
 				GLfloat(right_cap_.area.x())/right_cap_.texture.width(),
