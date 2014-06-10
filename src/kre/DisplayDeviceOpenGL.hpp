@@ -46,6 +46,7 @@ namespace KRE
 		void Render(const RenderablePtr& r) override;
 
 		CanvasPtr GetCanvas() override;
+		ClipScopePtr createClipScope(const rect& r) override;
 
 		void Init(size_t width, size_t height) override;
 		void PrintDeviceInfo() override;

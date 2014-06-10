@@ -67,16 +67,17 @@ namespace gui
 
 		virtual void doExecute();
 
+		BUTTON_RESOLUTION buttonResolution() const { return button_resolution_; }
+
 		std::vector<WidgetPtr> getChildren() const;
 	protected:
-		DECLARE_CALLABLE(button);
 		void setLabel(WidgetPtr label);
 		virtual void handleProcess();
 		virtual variant handleWrite();
-		BUTTON_RESOLUTION buttonResolution() const { return button_resolution_; }
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
 	private:
+		DECLARE_CALLABLE(Button);
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor);
 
 		void setup();

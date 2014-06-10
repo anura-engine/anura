@@ -109,7 +109,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		return;
 	}
 #if defined(_MSC_VER)
-	conn->socket.set_option(boost::asio::ip::tcp::no_delay(true));
+	conn->socket.setOption(boost::asio::ip::tcp::no_delay(true));
 #endif
 
 	//we've connected okay, mark DNS resolution as good.

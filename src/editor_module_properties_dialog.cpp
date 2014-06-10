@@ -97,7 +97,7 @@ void editor_module_properties_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(WidgetPtr(new label("Module Properties", graphics::color_white(), 48)), 10, 10);
+	addWidget(WidgetPtr(new label("Module Properties", graphics::color_white(), 48)), 10, 10);
 
 	grid_ptr g(new grid(2));
 	g->set_max_height(320);
@@ -135,7 +135,7 @@ void editor_module_properties_dialog::init()
 		g->add_col(WidgetPtr(new label(s, graphics::color_white(), 36)))
 			.add_col(WidgetPtr(new button(WidgetPtr(new label("Remove", graphics::color_white())), boost::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
 	}
-	add_widget(g);
+	addWidget(g);
 
 	add_ok_and_cancel_buttons();
 }
@@ -161,7 +161,7 @@ void editor_module_properties_dialog::change_module_includes()
 {
 	using namespace gui;
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(WidgetPtr(new label("Change Included Modules", graphics::color_white(), 48)));
+	d.addWidget(WidgetPtr(new label("Change Included Modules", graphics::color_white(), 48)));
 	if(dirs_.empty()) {
 		return;
 	}
@@ -191,7 +191,7 @@ void editor_module_properties_dialog::change_module_includes()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void editor_module_properties_dialog::remove_module_include(const std::string& s)

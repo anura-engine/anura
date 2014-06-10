@@ -167,11 +167,11 @@ void file_chooser_dialog::init()
 	}
 
 	LabelPtr lp = new label(l, graphics::color_white(), 20);
-	add_widget(WidgetPtr(lp), 30, current_height);
+	addWidget(WidgetPtr(lp), 30, current_height);
 	current_height += lp->height() + hpad;
 
 	lp = new label("Current Path: " + current_path_, graphics::color_green(), 16);
-	add_widget(WidgetPtr(lp), 30, current_height);
+	addWidget(WidgetPtr(lp), 30, current_height);
 	current_height += lp->height() + hpad;
 
 	/*  Basic list of things needed after extensive review.
@@ -190,7 +190,7 @@ void file_chooser_dialog::init()
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", graphics::color_white())), boost::bind(&file_chooser_dialog::up_button, this))));
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", graphics::color_white())), boost::bind(&file_chooser_dialog::home_button, this))));
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), boost::bind(&file_chooser_dialog::add_dir_button, this))));
-	add_widget(g, 30, current_height);	
+	addWidget(g, 30, current_height);	
 	current_height += g->height() + hpad;
 
 	grid_ptr container(new grid(dir_only_ ? 1 : 2));
@@ -230,10 +230,10 @@ void file_chooser_dialog::init()
 		g->register_selection_callback(boost::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
 		container->add_col(g);
 	}
-	add_widget(container, 30, current_height);
+	addWidget(container, 30, current_height);
 	current_height += container->height() + hpad;
 
-	add_widget(editor_, 30, current_height);
+	addWidget(editor_, 30, current_height);
 	current_height += editor_->height() + hpad;
 
 	if(dir_only_ == false) {
@@ -245,7 +245,7 @@ void file_chooser_dialog::init()
 		filter_widget_->set_on_select_handler(boost::bind(&file_chooser_dialog::change_filter, this, _1, _2));
 		//std::cerr << "filter_selection: " << filter_selection_ << std::endl;
 		filter_widget_->set_selection(filter_selection_);
-		add_widget(filter_widget_, 30, current_height);
+		addWidget(filter_widget_, 30, current_height);
 		current_height += filter_widget_->get_max_height() + hpad;
 	}
 
@@ -253,7 +253,7 @@ void file_chooser_dialog::init()
 	g->set_hpad(20);
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", graphics::color_white())), boost::bind(&file_chooser_dialog::ok_button, this))));
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", graphics::color_white())), boost::bind(&file_chooser_dialog::cancel_button, this))));
-	add_widget(g, 30, current_height);
+	addWidget(g, 30, current_height);
 	current_height += g->height() + hpad;
 }
 
@@ -345,7 +345,7 @@ void file_chooser_dialog::add_dir_button()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void file_chooser_dialog::execute_dir_name_select(int row)

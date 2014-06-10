@@ -49,7 +49,7 @@ void editor_layers_dialog::init()
 
 	foreach(int layer, all_layers) {
 		const bool hidden = hidden_layers.count(layer);
-		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
 
 		row_data row = { section, layer, hidden };
 		rows_.push_back(row);
@@ -57,7 +57,7 @@ void editor_layers_dialog::init()
 		g->add_col(WidgetPtr(new label(formatter() << layer, graphics::color_white())));
 	}
 
-	GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "checkbox-filled" : "checkbox-empty");
+	GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "Checkbox-filled" : "Checkbox-empty");
 	g->add_col(WidgetPtr(section));
 	g->add_col(WidgetPtr(new label("lock", graphics::color_white())));
 
@@ -65,7 +65,7 @@ void editor_layers_dialog::init()
 	g->register_selection_callback(boost::bind(&editor_layers_dialog::row_selected, this, _1));
 	g->register_mouseover_callback(boost::bind(&editor_layers_dialog::row_mouseover, this, _1));
 	
-	add_widget(g, 0, 0);
+	addWidget(g, 0, 0);
 
 	const int ypos = g->y() + g->height();
 
@@ -73,7 +73,7 @@ void editor_layers_dialog::init()
 	g.reset(new grid(2));
 	foreach(const std::string& classification, all_classifications_) {
 		const bool hidden = editor_.get_level().hidden_object_classifications().count(classification) != 0;
-		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
 		g->add_col(WidgetPtr(section));
 		g->add_col(WidgetPtr(new label(classification, graphics::color_white())));
 	}
@@ -81,7 +81,7 @@ void editor_layers_dialog::init()
 	g->allow_selection();
 	g->register_selection_callback(boost::bind(&editor_layers_dialog::classification_selected, this, _1));
 
-	add_widget(g, 0, ypos + 80);
+	addWidget(g, 0, ypos + 80);
 }
 
 void editor_layers_dialog::process()

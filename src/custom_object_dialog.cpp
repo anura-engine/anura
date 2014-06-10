@@ -202,7 +202,7 @@ void custom_object_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(WidgetPtr(new label("Object Properties", graphics::color_white(), 20)), border_offset, border_offset);
+	addWidget(WidgetPtr(new label("Object Properties", graphics::color_white(), 20)), border_offset, border_offset);
 
 	grid_ptr container(new grid(1));
 	container->set_col_width(0, width() - border_offset);
@@ -272,7 +272,7 @@ void custom_object_dialog::init()
 		object_ = custom_object_type_ptr(new custom_object_type(object_template_["id"].as_string(), object_template_, NULL, NULL));
 
 		animation_WidgetPtr preview(new animation_widget(128, 128, object_template_));
-		add_widget(preview, width() - border_offset - 128, border_offset + 200);
+		addWidget(preview, width() - border_offset - 128, border_offset + 200);
 	} catch(validation_failure_exception& e) {
 		error_text_ = e.msg;
 		std::cerr << "error parsing formula: " << e.msg << std::endl;
@@ -288,7 +288,7 @@ void custom_object_dialog::init()
 		err_text = err_text.substr(0, max_chars-3) + "...";
 	}
 	LabelPtr error_text(new label(err_text, graphics::color_red(), 14));
-	add_widget(error_text, border_offset, height() - g->height() - border_offset - error_text->height() - 5);
+	addWidget(error_text, border_offset, height() - g->height() - border_offset - error_text->height() - 5);
 
 	g.reset(new grid(3));
 	g->set_hpad(20);
@@ -301,10 +301,10 @@ void custom_object_dialog::init()
 		path += "<no id>.cfg";
 	}
 	g->add_col(LabelPtr(new label(path, graphics::color_green())));
-	add_widget(g, border_offset, height() - g->height() - border_offset);
+	addWidget(g, border_offset, height() - g->height() - border_offset);
 
 	container->set_max_height(height() - g->height() - border_offset - error_text->height() - 10);
-	add_widget(container, border_offset, border_offset*2);
+	addWidget(container, border_offset, border_offset*2);
 }
 
 void custom_object_dialog::on_set_path()
@@ -544,7 +544,7 @@ void custom_object_dialog::change_prototype()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void custom_object_dialog::remove_prototype(const std::string& s)
@@ -587,7 +587,7 @@ void custom_object_dialog::on_create()
 
 void custom_object_dialog::on_edit_animations()
 {
-	gui::animation_creator_dialog d(0, 0, preferences::virtual_screen_width(), 
+	gui::AnimationCreatorDialog d(0, 0, preferences::virtual_screen_width(), 
 		preferences::virtual_screen_height(),
 		object_template_.has_key("animation") ? object_template_["animation"] : variant());
 	d.set_background_frame("empty_window");
@@ -595,7 +595,7 @@ void custom_object_dialog::on_edit_animations()
 
 	d.show_modal();
 	if(d.cancelled() == false) {
-		object_template_.add_attr(variant("animation"), d.get_animations());
+		object_template_.add_attr(variant("animation"), d.getAnimations());
 	}
 }
 
@@ -653,7 +653,7 @@ void item_edit_dialog::init()
 	const int hpad = 20;
 	int current_height = border_offset;
 	LabelPtr title(new label(display_name_.empty() ? "Edit" : display_name_, graphics::color_white(), 20));
-	add_widget(title, border_offset, current_height);
+	addWidget(title, border_offset, current_height);
 	current_height += title->height() + hpad;
 
 	grid_ptr g(new grid(2));
@@ -661,7 +661,7 @@ void item_edit_dialog::init()
 	ButtonPtr mod_button(new button(new label("Save&Close", graphics::color_white(), 16), boost::bind(&item_edit_dialog::on_save, this)));
 	ButtonPtr del_button(new button(new label("Cancel", graphics::color_white(), 16), boost::bind(&item_edit_dialog::cancel, this)));
 	g->add_col(mod_button).add_col(del_button);
-	add_widget(g, (width() - g->width())/2, current_height);
+	addWidget(g, (width() - g->width())/2, current_height);
 	current_height += g->height() + hpad;
 
 
@@ -675,7 +675,7 @@ void item_edit_dialog::init()
 	const int string_entry_height = height() - current_height - border_offset - text_button_grid->height() - 5;
 	const int string_entry_width = 2*width()/3 - 2*border_offset;
 
-	add_widget(text_button_grid, width()/3 + border_offset + (string_entry_width - text_button_grid->width())/2, string_entry_height + current_height + 5);
+	addWidget(text_button_grid, width()/3 + border_offset + (string_entry_width - text_button_grid->width())/2, string_entry_height + current_height + 5);
 
 	string_entry_.reset(new code_editor_widget(string_entry_width, string_entry_height));
 	string_entry_->setFontSize(12);
@@ -689,7 +689,7 @@ void item_edit_dialog::init()
 	item_grid_->allow_selection();
 	item_grid_->allow_persistent_highlight();
 	item_grid_->set_editor_handler(variant::VARIANT_TYPE_STRING, string_entry_, boost::bind(&item_edit_dialog::editor_select, this, _1, _2));
-	add_widget(item_grid_, border_offset, current_height);
+	addWidget(item_grid_, border_offset, current_height);
 
 	current_height += item_grid_->height() + hpad;
 }

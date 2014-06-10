@@ -41,7 +41,7 @@ loading_screen::loading_screen (int items) : items_(items), status_(0),
 		} else {
 			splash_ = graphics::texture::get("splash-wide.jpg");
 		}
-	} catch(graphics::load_image_error& e) {
+	} catch(KRE::ImageLoadError& e) {
 	}
 }
 

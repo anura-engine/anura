@@ -21,9 +21,9 @@ public:
 	explicit expression_widget(game_logic::const_expression_ptr expression,
 	                           int x, int y, int w, int h, bool focused,
 							   TextEditorWidget* editor,
-							   boost::function<void()> on_click)
+							   boost::function<void()> onClick)
 	  : dialog(x, y, w, h), expression_(expression), focused_(focused),
-	    editor_(editor), on_click_(on_click)
+	    editor_(editor), on_click_(onClick)
 	{
 		init();
 	}
@@ -31,10 +31,10 @@ public:
 	void init() {
 		graphics::color text_color(focused_ ? "yellow" : "white");
 		gui::label* label = new gui::label(expression_->name(), text_color.as_sdl_color());
-		add_widget(gui::WidgetPtr(label), width()/2 - label->width()/2, 10);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 10);
 
 		label = new gui::label(expression_->query_variant_type()->to_string(), text_color.as_sdl_color());
-		add_widget(gui::WidgetPtr(label), width()/2 - label->width()/2, 26);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 26);
 
 		std::string s = expression_->str();
 		s.erase(std::remove_if(s.begin(), s.end(), util::c_isspace), s.end());
@@ -44,7 +44,7 @@ public:
 		}
 
 		label = new gui::label(s, text_color.as_sdl_color());
-		add_widget(gui::WidgetPtr(label), width()/2 - label->width()/2, 42);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 42);
 	}
 
 private:

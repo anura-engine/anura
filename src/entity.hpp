@@ -26,7 +26,7 @@
 #include "editor_variable_info.hpp"
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"
-#include "FormulaCallable_definition_fwd.hpp"
+#include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
 #include "kre/Geometry.hpp"
 #include "light.hpp"

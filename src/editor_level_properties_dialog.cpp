@@ -102,7 +102,7 @@ void editor_level_properties_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(WidgetPtr(new label("Level Properties", graphics::color_white(), 48)), 10, 10);
+	addWidget(WidgetPtr(new label("Level Properties", graphics::color_white(), 48)), 10, 10);
 
 	TextEditorWidget* change_title_entry(new TextEditorWidget(200, 30));
 	change_title_entry->setText(editor_.get_level().title());
@@ -113,7 +113,7 @@ void editor_level_properties_dialog::init()
 	g->add_col(WidgetPtr(new label("Change Title", graphics::color_white(), 36)))
 	  .add_col(WidgetPtr(change_title_entry));
 
-	add_widget(g);
+	addWidget(g);
 
 	std::string background_id = editor_.get_level().get_background_id();
 	if(background_id.empty()) {
@@ -122,7 +122,7 @@ void editor_level_properties_dialog::init()
 	g.reset(new grid(2));
 	g->add_col(WidgetPtr(new label("Background", graphics::color_white())))
 	  .add_col(WidgetPtr(new button(WidgetPtr(new label(background_id, graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_background, this))));
-	add_widget(g);
+	addWidget(g);
 
 	g.reset(new grid(3));
 	g->set_hpad(10);
@@ -133,15 +133,15 @@ void editor_level_properties_dialog::init()
 	g->add_col(WidgetPtr(new label("Previous Level", graphics::color_white())));
 	g->add_col(WidgetPtr(new label(editor_.get_level().previous_level(), graphics::color_white())));
 	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_previous_level, this))));
-	add_widget(g);
+	addWidget(g);
 
-	checkbox* hz_segmented_checkbox = new checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, boost::bind(set_segmented_level_width, this, &editor_, _1));
+	Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, boost::bind(set_segmented_level_width, this, &editor_, _1));
 	WidgetPtr hz_checkbox(hz_segmented_checkbox);
-	add_widget(hz_checkbox);
+	addWidget(hz_checkbox);
 
-	checkbox* vt_segmented_checkbox = new checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, boost::bind(set_segmented_level_height, this, &editor_, _1));
+	Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, boost::bind(set_segmented_level_height, this, &editor_, _1));
 	WidgetPtr vt_checkbox(vt_segmented_checkbox);
-	add_widget(vt_checkbox);
+	addWidget(vt_checkbox);
 
 	if(editor_.get_level().segment_height() != 0) {
 		remove_widget(hz_checkbox);
@@ -192,7 +192,7 @@ void editor_level_properties_dialog::change_background()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void editor_level_properties_dialog::execute_change_background(const std::vector<std::string>& choices, int index)

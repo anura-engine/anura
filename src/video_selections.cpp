@@ -104,7 +104,7 @@ void show_video_selection_dialog()
 
 	int selected_mode = -1;
 
-	d.add_widget(WidgetPtr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
+	d.addWidget(WidgetPtr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
 	wh_data display_modes;
 	int current_mode_index = enumerate_video_modes(display_modes);
 	if(!display_modes.empty()) {
@@ -121,9 +121,9 @@ void show_video_selection_dialog()
 		mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
 			selected_mode = selection;
 		});
-		d.add_widget(WidgetPtr(mode_list));
+		d.addWidget(WidgetPtr(mode_list));
 	} else {
-		d.add_widget(WidgetPtr(new graphical_font_label(_("Unable to enumerate video modes"), "door_label", 2)), padding, padding);
+		d.addWidget(WidgetPtr(new graphical_font_label(_("Unable to enumerate video modes"), "door_label", 2)), padding, padding);
 	}
 
 	// Fullscreen selection
@@ -142,7 +142,7 @@ void show_video_selection_dialog()
 			case 2:	fs_mode = preferences::FULLSCREEN; break;
 		}
 	});
-	d.add_widget(WidgetPtr(fs_list));
+	d.addWidget(WidgetPtr(fs_list));
 
 	// Vertical sync options
 	std::vector<std::string> vsync_options;
@@ -159,7 +159,7 @@ void show_video_selection_dialog()
 			case 2:	g_vsync = -1; break;
 		}
 	});
-	d.add_widget(WidgetPtr(synch_list));
+	d.addWidget(WidgetPtr(synch_list));
 
 	WidgetPtr b_okay = new button(new graphical_font_label(_("OK"), "door_label", 2), [&d](){ 
 		d.close();
@@ -169,8 +169,8 @@ void show_video_selection_dialog()
 	});
 	b_okay->setDim(button_width, button_height);
 	b_cancel->setDim(button_width, button_height);
-	d.add_widget(b_okay, 20, d.height() - button_height - 20);
-	d.add_widget(b_cancel, d.width() - button_width - 20, d.height() - button_height - 20);
+	d.addWidget(b_okay, 20, d.height() - button_height - 20);
+	d.addWidget(b_cancel, d.width() - button_width - 20, d.height() - button_height - 20);
 
 	d.show_modal();
 	if(d.cancelled() == false) {

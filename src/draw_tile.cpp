@@ -31,7 +31,7 @@ void queue_draw_tile(graphics::blit_queue& q, const level_tile& t)
 	level_object::queue_draw(q, t);
 }
 
-int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse)
+int get_tile_corners(KRE::ImageLoadError* result, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse)
 {
 	if(tile_num < 0 || area.w() <= 0 || area.h() <= 0 || area.x() < 0 || area.y() < 0) {
 		return 0;

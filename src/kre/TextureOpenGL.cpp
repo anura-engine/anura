@@ -22,7 +22,7 @@
 */
 
 #include "../asserts.hpp"
-#include "logger.hpp"
+#include "../logger.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE

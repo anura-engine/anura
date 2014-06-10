@@ -76,7 +76,7 @@ void tileset_editor_dialog::init()
 	assert(editor_.get_tileset() >= 0 && editor_.get_tileset() < editor_.all_tilesets().size());
 
 	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&tileset_editor_dialog::show_category_menu, this));
-	add_widget(WidgetPtr(category_button), 10, 10);
+	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
 	int index = 0, first_index = -1;
@@ -97,7 +97,7 @@ void tileset_editor_dialog::init()
 	}
 
 	grid->finish_row();
-	add_widget(grid);
+	addWidget(grid);
 }
 
 void tileset_editor_dialog::select_category(const std::string& category)
@@ -156,7 +156,7 @@ void tileset_editor_dialog::show_category_menu()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void tileset_editor_dialog::set_tileset(int index)

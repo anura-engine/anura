@@ -46,7 +46,7 @@ editor_stats_dialog::editor_stats_dialog(editor& e)
 void editor_stats_dialog::init()
 {
 	using namespace gui;
-	add_widget(WidgetPtr(new label("Statistics (whole level)", graphics::color_white(), 36)));
+	addWidget(WidgetPtr(new label("Statistics (whole level)", graphics::color_white(), 36)));
 /*
 	std::vector<stats::record_ptr> stats = editor_.stats();
 	add_stats(stats);
@@ -68,7 +68,7 @@ void editor_stats_dialog::init()
 			}
 		}
 
-		add_widget(WidgetPtr(new label("Statistics (selection)", graphics::color_white(), 36)));
+		addWidget(WidgetPtr(new label("Statistics (selection)", graphics::color_white(), 36)));
 		add_stats(stats);
 	}
 	*/

@@ -243,7 +243,7 @@ public:
 
 	bool mouse_event_swallowed() const {return swallow_mouse_event_;}
 	void reset_mouse_event() {swallow_mouse_event_ = false;}
-	void add_widget(const gui::WidgetPtr& w);
+	void addWidget(const gui::WidgetPtr& w);
 	void add_widgets(std::vector<gui::WidgetPtr>* widgets);
 	void clear_widgets();
 	void remove_widget(gui::WidgetPtr w);

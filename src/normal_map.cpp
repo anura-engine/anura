@@ -685,7 +685,7 @@ namespace
 		texture tex = texture::get_no_cache(s);
 
 		img_.reset(new gui::ImageWidget(tex, widget_width, widget_height));
-		add_widget(img_, 0, 0);
+		addWidget(img_, 0, 0);
 
 		surface s_sobel = s.clone();
 		double gs_param[3] = {0.21, 0.71, 0.07};
@@ -701,13 +701,13 @@ namespace
 		s_norm = alpha_clip(s_norm, s);
 		//surface s_emb = s_aux;
 		aux_.reset(new gui::ImageWidget(texture::get_no_cache(s_norm), widget_width, widget_height));
-		add_widget(aux_, 0, widget_height + between_padding);
+		addWidget(aux_, 0, widget_height + between_padding);
 
 		normal_.reset(new gui::ImageWidget(s_tex, widget_width, widget_height));
-		add_widget(normal_, widget_width + between_padding, 0);
+		addWidget(normal_, widget_width + between_padding, 0);
 
 		output_img_.reset(new ImageWidget_lighted(tex, texture::get_no_cache(s_norm), widget_width, widget_height));
-		add_widget(output_img_, widget_width + between_padding, widget_height + between_padding);
+		addWidget(output_img_, widget_width + between_padding, widget_height + between_padding);
 	}
 
 }

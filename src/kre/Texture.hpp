@@ -43,6 +43,9 @@ namespace KRE
 		return n;
 	}
 
+	class Texture;
+	typedef std::shared_ptr<Texture> TexturePtr;
+
 	class Texture
 	{
 	public:
@@ -113,6 +116,21 @@ namespace KRE
 		virtual void Update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) = 0;
 
 		static void RebuildAll();
+
+		// XXX Need to add a pixel filter function, so when we load the surface we apply the filter.
+		static TexturePtr createTexture(const std::string& filename,
+			Type type=Type::TEXTURE_2D, 
+			int mipmap_levels=0);
+		/* XXX need to add all these.
+		static TexturePtr CreateTexture(const SurfacePtr& surface, const variant& node);
+		static TexturePtr CreateTexture(const SurfacePtr& surface, 
+			Texture::Type type=Texture::Type::TEXTURE_2D, 
+			int mipmap_levels=0);
+		static TexturePtr CreateTexture(unsigned width, PixelFormat::PF fmt);
+		static TexturePtr CreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D);
+		static TexturePtr CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
+
+		*/
 	protected:
 		const SurfacePtr& GetSurface() const { return surface_; }
 		void SetTextureDimensions(unsigned w, unsigned h, unsigned d=0);
@@ -139,6 +157,4 @@ namespace KRE
 		unsigned height_;
 		unsigned depth_;
 	};
-
-	typedef std::shared_ptr<Texture> TexturePtr;
 }

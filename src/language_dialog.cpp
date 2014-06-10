@@ -45,8 +45,8 @@ class grid {
    dialog_(dialog), cell_width_(cell_width), cell_height_(cell_height), h_padding_(h_padding), v_padding_(v_padding), start_x_(start_x), start_y_(start_y), column_count_(column_count), widget_count_(0) {
 	}
 
-	void add_widget(gui::WidgetPtr widget) {
-		dialog_.add_widget(widget,
+	void addWidget(gui::WidgetPtr widget) {
+		dialog_.addWidget(widget,
 			start_x_ + h_padding_ + (widget_count_ % column_count_) * (cell_width_ + h_padding_),
 			start_y_ + v_padding_ + (widget_count_ / column_count_) * (cell_height_ + v_padding_));
 		widget_count_++;
@@ -73,7 +73,7 @@ void show_language_dialog()
 	const int button_height = 50;
 	const int padding = 20;
 
-	d.add_widget(WidgetPtr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
+	d.addWidget(WidgetPtr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
 
 	grid g(d, button_width, button_height, padding, padding, 0, 40, 2);
 
@@ -86,7 +86,7 @@ void show_language_dialog()
 			boost::bind(setLocale, pair.first.as_string()),
 			BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
 		b->setDim(button_width, button_height);
-		g.add_widget(b);
+		g.addWidget(b);
 	}
 
 	WidgetPtr system_button(new button(
@@ -94,11 +94,11 @@ void show_language_dialog()
 	   	boost::bind(setLocale, "system"),
 		BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	system_button->setDim(button_width, button_height);
-	g.add_widget(system_button);
+	g.addWidget(system_button);
 
 	WidgetPtr back_button(new button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	back_button->setDim(button_width, button_height);
-	g.add_widget(back_button);
+	g.addWidget(back_button);
 
         int dialog_width = g.total_width() + padding;
         int dialog_height = g.total_height() + padding;

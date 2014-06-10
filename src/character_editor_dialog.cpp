@@ -59,7 +59,7 @@ void character_editor_dialog::init()
 	grid_ptr find_grid(new gui::grid(2));
 	find_grid->add_col(WidgetPtr(new label("Search: ", graphics::color_white())));
 	find_grid->add_col(WidgetPtr(find_edit_));
-	add_widget(find_grid, 10, 10);
+	addWidget(find_grid, 10, 10);
 
 	const frame& frame = *editor_.all_characters()[editor_.get_object()].preview_frame();
 
@@ -68,16 +68,16 @@ void character_editor_dialog::init()
 	  boost::bind(&editor::toggle_facing, &editor_));
 	facing_button->setTooltip("f  Change Facing");
 	if(find_edit_->text().empty() == false) {
-		add_widget(WidgetPtr(facing_button));
-		add_widget(generate_grid(""));
+		addWidget(WidgetPtr(facing_button));
+		addWidget(generate_grid(""));
 	} else {
 
 		button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&character_editor_dialog::show_category_menu, this));
-		add_widget(WidgetPtr(category_button));
+		addWidget(WidgetPtr(category_button));
 
-		add_widget(generate_grid(category_));
+		addWidget(generate_grid(category_));
 	
-		add_widget(WidgetPtr(facing_button), category_button->x() + category_button->width() + 10, category_button->y());
+		addWidget(WidgetPtr(facing_button), category_button->x() + category_button->width() + 10, category_button->y());
 	}
 }
 
@@ -195,13 +195,13 @@ void character_editor_dialog::show_category_menu()
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex - 20, mousey);
+	addWidget(context_menu_, mousex - 20, mousey);
 }
 
 void character_editor_dialog::set_character(int index)
 {
 	category_ = editor_.all_characters()[index].category;
-	editor_.set_object(index);
+	editor_.setObject(index);
 	init();
 }
 

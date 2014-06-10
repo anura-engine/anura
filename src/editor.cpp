@@ -147,7 +147,7 @@ public:
 
 		remove_widget(context_menu_);
 		context_menu_.reset(grid);
-		add_widget(context_menu_, mousex, mousey);
+		addWidget(context_menu_, mousex, mousey);
 	}
 
 private:
@@ -210,8 +210,8 @@ private:
 
 	void show_view_menu() {
 		menu_item items[] = {
-			"Zoom Out", "x", boost::bind(&editor::zoom_out, &editor_),
-			"Zoom In", "z", boost::bind(&editor::zoom_in, &editor_),
+			"Zoom Out", "x", boost::bind(&editor::zoomOut, &editor_),
+			"Zoom In", "z", boost::bind(&editor::zoomIn, &editor_),
 			editor_.get_level().show_foreground() ? "Hide Foreground" : "Show Foreground", "f", boost::bind(&level::set_show_foreground, &editor_.get_level(), !editor_.get_level().show_foreground()),
 			editor_.get_level().show_background() ? "Hide Background" : "Show Background", "b", boost::bind(&level::set_show_background, &editor_.get_level(), !editor_.get_level().show_background()),
 			g_draw_stats ? "Hide Stats" : "Show Stats", "", toggle_draw_stats,
@@ -297,7 +297,7 @@ public:
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Scripts", graphics::color_white())),
 		             boost::bind(&editor_menu_dialog::show_scripts_menu, this))));
-		add_widget(WidgetPtr(grid));
+		addWidget(WidgetPtr(grid));
 
 		code_button_text_ = "";
 		set_code_button_text("Code ->");
@@ -323,7 +323,7 @@ public:
 
 		code_button_ = ButtonPtr(new button(text, boost::bind(&editor::toggle_code, &editor_)));
 
-		add_widget(code_button_, (editor_.xres() ? editor_.xres() : 1200) - 612, 4);
+		addWidget(code_button_, (editor_.xres() ? editor_.xres() : 1200) - 612, 4);
 	}
 
 
@@ -333,15 +333,15 @@ public:
 		d.set_background_frame("empty_window");
 		d.set_draw_background_fn(gui::dialog::draw_last_scene);
 		d.set_cursor(20, 20);
-		d.add_widget(WidgetPtr(new label("New Level", graphics::color_white(), 48)));
+		d.addWidget(WidgetPtr(new label("New Level", graphics::color_white(), 48)));
 		TextEditorWidget* entry = new TextEditorWidget(200);
 		entry->set_on_enter_handler(boost::bind(&dialog::close, &d));
 		entry->setFocus(true);
-		d.add_widget(WidgetPtr(new label("Filename:", graphics::color_white())))
-		 .add_widget(WidgetPtr(entry));
+		d.addWidget(WidgetPtr(new label("Filename:", graphics::color_white())))
+		 .addWidget(WidgetPtr(entry));
 
-		checkbox* clone_level_check = new checkbox("Clone current level", false, [](bool value) {});
-		d.add_widget(WidgetPtr(clone_level_check));
+		Checkbox* clone_level_check = new Checkbox("Clone current level", false, [](bool value) {});
+		d.addWidget(WidgetPtr(clone_level_check));
 
 		grid_ptr ok_cancel_grid(new gui::grid(2));
 		ok_cancel_grid->set_hpad(12);
@@ -355,7 +355,7 @@ public:
 
 		ok_cancel_grid->finish_row();
 
-		d.add_widget(ok_cancel_grid);
+		d.addWidget(ok_cancel_grid);
 
 		d.show_modal();
 		
@@ -391,11 +391,11 @@ public:
 	void save_level_as() {
 		using namespace gui;
 		dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-		d.add_widget(WidgetPtr(new label("Save As", graphics::color_white(), 48)));
+		d.addWidget(WidgetPtr(new label("Save As", graphics::color_white(), 48)));
 		TextEditorWidget* entry = new TextEditorWidget(200);
 		entry->set_on_enter_handler(boost::bind(&dialog::close, &d));
-		d.add_widget(WidgetPtr(new label("Name:", graphics::color_white())))
-		 .add_widget(WidgetPtr(entry));
+		d.addWidget(WidgetPtr(new label("Name:", graphics::color_white())))
+		 .addWidget(WidgetPtr(entry));
 		d.show_modal();
 		
 		if(!d.cancelled() && entry->text().empty() == false) {
@@ -524,7 +524,7 @@ public:
 		}
 
 		grid->finish_row();
-		add_widget(grid, 5, 5);
+		addWidget(grid, 5, 5);
 
 		refresh_selection();
 	}
@@ -1153,9 +1153,9 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 			const int xpos = xpos_ + mousex*zoom_;
 			if(xpos < editor_x_resolution-sidebar_width()) {
 				if(event.wheel.y < 0) {
-					zoom_in();
+					zoomIn();
 				} else {
-					zoom_out();
+					zoomOut();
 				}
 			}
 		break;
@@ -1543,7 +1543,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 	}
 
 	if(key.keysym.sym == SDLK_z) {
-		zoom_in();
+		zoomIn();
 	}
 
 	if(key.keysym.sym == SDLK_h) {
@@ -1664,7 +1664,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 	
 	
 	if(key.keysym.sym == SDLK_x) {
-		zoom_out();
+		zoomOut();
 	}
 
 	if(key.keysym.sym == SDLK_f) {
@@ -2941,7 +2941,7 @@ void editor::set_voxel_tileset(int index)
 }
 #endif
 
-void editor::set_object(int index)
+void editor::setObject(int index)
 {
 	int max = all_characters().size();
 
@@ -3103,7 +3103,7 @@ bool editor::confirm_quit(bool allow_cancel)
 	using namespace gui;
 	dialog d(center_x - 140, center_y - 100, center_x + 140, center_y + 100);
 
-	d.add_widget(WidgetPtr(new label("Do you want to save the level?", graphics::color_white())), dialog::MOVE_DOWN);
+	d.addWidget(WidgetPtr(new label("Do you want to save the level?", graphics::color_white())), dialog::MOVE_DOWN);
 
 	gui::grid* grid = new gui::grid(allow_cancel ? 3 : 2);
 
@@ -3119,7 +3119,7 @@ bool editor::confirm_quit(bool allow_cancel)
 		  new button(WidgetPtr(new label("Cancel", graphics::color_white())),
 		             boost::bind(quit_editor_result, &d, &result, 2))));
 	}
-	d.add_widget(WidgetPtr(grid));
+	d.addWidget(WidgetPtr(grid));
 	d.show_modal();
 
 	if(result == 2) {
@@ -3238,14 +3238,14 @@ void editor::save_level()
 	toggle_active_level();
 }
 
-void editor::zoom_in()
+void editor::zoomIn()
 {
 	if(zoom_ > 1) {
 		zoom_ /= 2;
 	}
 }
 
-void editor::zoom_out()
+void editor::zoomOut()
 {
 	if(zoom_ < 8) {
 		zoom_ *= 2;

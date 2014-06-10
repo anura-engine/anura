@@ -41,7 +41,7 @@ private:
 	editor& editor_;
 
 	struct row_data {
-		gui::GuiSectionWidgetPtr checkbox;
+		gui::GuiSectionWidgetPtr Checkbox;
 		int layer;
 		bool hidden;
 	};

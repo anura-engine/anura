@@ -77,9 +77,9 @@ namespace gui
 		}
 
 		size_ = v.has_key("size") ? v["size"].as_int() : default_font_size;
-		if(v.has_key("on_click")) {
+		if(v.has_key("onClick")) {
 			ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
-			ffl_click_handler_ = getEnvironment()->createFormula(v["on_click"]);
+			ffl_click_handler_ = getEnvironment()->createFormula(v["onClick"]);
 			on_click_ = boost::bind(&Label::click_delegate, this);
 		}
 		if(v.has_key("highlight_color")) {
@@ -306,10 +306,10 @@ namespace gui
 				gg->register_selection_callback([=](int n){if(n != 0){d->remove_widget(gg); d->init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
-				d->add_widget(gg, d->x()-mx-100, my);
+				d->addWidget(gg, d->x()-mx-100, my);
 		}));
 
-		d->add_widget(g);*/
+		d->addWidget(g);*/
 		return d;
 	}
 

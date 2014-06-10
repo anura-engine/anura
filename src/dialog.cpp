@@ -145,10 +145,10 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 		if(w->x() != 0 || w->y() != 0) {
 		//if(child.has_key("add_xy")) {
 		//	std::vector<int> addxy = child["add_xy"].as_list_int();
-		//	add_widget(widget_factory::create(child, e), addxy[0], addxy[1]);
-			add_widget(w, w->x(), w->y());
+		//	addWidget(widget_factory::create(child, e), addxy[0], addxy[1]);
+			addWidget(w, w->x(), w->y());
 		} else {
-			add_widget(w);
+			addWidget(w);
 		}
 	}
 	recalculate_dimensions();
@@ -237,13 +237,13 @@ void dialog::handleProcess()
 	}
 }
 
-dialog& dialog::add_widget(WidgetPtr w, dialog::MOVE_DIRECTION dir)
+dialog& dialog::addWidget(WidgetPtr w, dialog::MOVE_DIRECTION dir)
 {
-	add_widget(w, add_x_, add_y_, dir);
+	addWidget(w, add_x_, add_y_, dir);
 	return *this;
 }
 
-dialog& dialog::add_widget(WidgetPtr w, int x, int y,
+dialog& dialog::addWidget(WidgetPtr w, int x, int y,
                            dialog::MOVE_DIRECTION dir)
 {
 	w->setLoc(x,y);
@@ -428,8 +428,8 @@ void dialog::add_ok_and_cancel_buttons()
 	WidgetPtr ok(new button("Ok", boost::bind(&dialog::close, this)));
 	WidgetPtr cancel(new button("Cancel", boost::bind(&dialog::cancel, this)));
 	ok->setDim(cancel->width(), ok->height());
-	add_widget(ok, width() - 160, height() - 40);
-	add_widget(cancel, width() - 80, height() - 40);
+	addWidget(ok, width() - 160, height() - 40);
+	addWidget(cancel, width() - 80, height() - 40);
 }
 
 void dialog::handleDraw_children() const {
@@ -654,7 +654,7 @@ BEGIN_DEFINE_CALLABLE(dialog, widget)
 		return variant();
 	DEFINE_SET_FIELD
 		WidgetPtr w = widget_factory::create(value, obj.getEnvironment());
-		obj.add_widget(w, w->x(), w->y());
+		obj.addWidget(w, w->x(), w->y());
 	DEFINE_FIELD(background_alpha, "decimal")
 		return variant(obj.bg_alpha_);
 	DEFINE_SET_FIELD

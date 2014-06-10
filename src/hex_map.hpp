@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -29,8 +29,8 @@ namespace hex {
 	enum direction {NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST};
 }
 
-#include "HexObject_fwd.hpp"
-#include "HexObject.hpp"
+#include "hex_object_fwd.hpp"
+#include "hex_object.hpp"
 #include "formula_callable.hpp"
 #include "variant.hpp"
 

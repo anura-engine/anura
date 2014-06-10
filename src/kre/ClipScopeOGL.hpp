@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,29 +23,19 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
+#include "ClipScope.hpp"
 
-#include <string>
-
-#include "variant.hpp"
-
-class Achievement;
-
-typedef boost::shared_ptr<const Achievement> AchievementPtr;
-
-class Achievement
+namespace KRE
 {
-public:
-	static AchievementPtr get(const std::string& id);
+	class ClipScopeOGL : public ClipScope
+	{
+	public:
+		explicit ClipScopeOGL(const rect& r);
+		virtual ~ClipScopeOGL();
 
-	explicit Achievement(variant node);
-
-	const std::string& id() const { return id_; }
-	const std::string& name() const { return name_; }
-	const std::string& description() const { return description_; }
-	int points() const { return points_; }
-	static bool attain(const std::string& id);
-private:
-	std::string id_, name_, description_;
-	int points_;
-};
+		void apply() const override;
+		void clear() const override;
+	private:
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ClipScopeOGL);
+	};
+}

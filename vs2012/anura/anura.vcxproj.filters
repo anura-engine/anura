@@ -57,9 +57,6 @@
     <ClInclude Include="..\..\src\simplex_noise.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\camera.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\base64.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -91,9 +88,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\voxel_object_functions.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\lighting.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\widget_settings_dialog.hpp">
@@ -960,6 +954,18 @@
     <ClInclude Include="..\..\src\filecache.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\ClipScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\StencilScopeOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\StencilSettings.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -984,9 +990,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\simplex_noise.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\camera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\data_blob.cpp">
@@ -1023,9 +1026,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\voxel_object_functions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\lighting.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\widget_editor.cpp">
@@ -1921,6 +1921,15 @@
     </ClCompile>
     <ClCompile Include="..\..\src\filecache.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ClipScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

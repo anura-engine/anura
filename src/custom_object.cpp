@@ -2838,7 +2838,7 @@ class widgets_callable : public FormulaCallable {
 				}
 			}
 
-			obj_->add_widget(new_widget);
+			obj_->addWidget(new_widget);
 			return;
 		}
 		if(value.is_null()) {
@@ -2850,7 +2850,7 @@ class widgets_callable : public FormulaCallable {
 			gui::WidgetPtr w = obj_->getWidgetById(key);
 			ASSERT_LOG(w != NULL, "no widget with identifier " << key << " found");
 			obj_->remove_widget(w);
-			obj_->add_widget(widget_factory::create(value, obj_.get()));
+			obj_->addWidget(widget_factory::create(value, obj_.get()));
 		}
 	}
 public:
@@ -5869,7 +5869,7 @@ std::vector<variant> custom_object::get_variant_widget_list() const
 	return v;
 }
 
-void custom_object::add_widget(const gui::WidgetPtr& w)
+void custom_object::addWidget(const gui::WidgetPtr& w)
 { 
 	widgets_.insert(w); 
 }

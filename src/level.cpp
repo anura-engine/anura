@@ -1756,11 +1756,11 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	if(!opaque_indexes.empty()) {
 #if defined(USE_SHADERS)
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
 #else
-		glVertexPointer(2, GL_SHORT, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
+		glVertexPointer(2, GL_SHORT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
 #endif
 		glDrawElements(GL_TRIANGLES, opaque_indexes.size(), TILE_INDEX_TYPE, &opaque_indexes[0]);
 	}
@@ -1768,11 +1768,11 @@ void level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	if(!translucent_indexes.empty()) {
 #if defined(USE_SHADERS)
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
 #else
-		glVertexPointer(2, GL_SHORT, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
+		glVertexPointer(2, GL_SHORT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
 #endif
 		if(blit_info.texture_id == GLuint(-1)) {
 			//we have multiple different texture ID's in this layer. This means

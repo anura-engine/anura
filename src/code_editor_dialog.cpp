@@ -95,28 +95,28 @@ void code_editor_dialog::init()
 	replace_label_ = label::create("Replace: ", col);
 	status_label_ = label::create("Ok", col);
 	error_label_ = label::create("", col);
-	add_widget(find_label, 42, 12, MOVE_RIGHT);
-	add_widget(WidgetPtr(search_), MOVE_RIGHT);
-	add_widget(replace_label_, MOVE_RIGHT);
-	add_widget(WidgetPtr(replace_), MOVE_RIGHT);
-	add_widget(WidgetPtr(save_button), MOVE_RIGHT);
+	addWidget(find_label, 42, 12, MOVE_RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_RIGHT);
+	addWidget(replace_label_, MOVE_RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_RIGHT);
+	addWidget(WidgetPtr(save_button), MOVE_RIGHT);
 
 	if(have_close_buttons_) {
 		button* save_and_close_button = new button("Save+Close", boost::bind(&code_editor_dialog::save_and_close, this));
 		button* abort_button = new button("Abort", boost::bind(&dialog::cancel, this));
-		add_widget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
-		add_widget(WidgetPtr(abort_button), MOVE_RIGHT);
+		addWidget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
+		addWidget(WidgetPtr(abort_button), MOVE_RIGHT);
 	}
 
-	add_widget(WidgetPtr(increase_font), MOVE_RIGHT);
-	add_widget(WidgetPtr(decrease_font), MOVE_RIGHT);
-	add_widget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
+	addWidget(WidgetPtr(increase_font), MOVE_RIGHT);
+	addWidget(WidgetPtr(decrease_font), MOVE_RIGHT);
+	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
 	if(optional_error_text_area_) {
-		add_widget(optional_error_text_area_);
+		addWidget(optional_error_text_area_);
 	}
-	add_widget(status_label_);
-	add_widget(error_label_, status_label_->x() + 480, status_label_->y());
-	add_widget(WidgetPtr(dragger));
+	addWidget(status_label_);
+	addWidget(error_label_, status_label_->x() + 480, status_label_->y());
+	addWidget(WidgetPtr(dragger));
 
 	replace_label_->setVisible(false);
 	replace_->setVisible(false);
@@ -207,7 +207,7 @@ void code_editor_dialog::init_files_grid()
 		}
 	}
 
-	add_widget(files_grid_, 2, 2);
+	addWidget(files_grid_, 2, 2);
 }
 
 void code_editor_dialog::load_file(std::string fname, bool focus, boost::function<void()>* fn)
@@ -287,7 +287,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 	files_.erase(files_.begin() + index);
 	files_.insert(files_.begin(), f);
 
-	add_widget(f.editor, editor_->x(), editor_->y());
+	addWidget(f.editor, editor_->x(), editor_->y());
 	remove_widget(editor_);
 
 	editor_ = f.editor;
@@ -709,19 +709,19 @@ void code_editor_dialog::process()
 
 	try {
 		editor_->set_highlight_current_object(false);
-		if(gui::animation_preview_widget::is_animation(info.obj)) {
+		if(gui::AnimationPreviewWidget::is_animation(info.obj)) {
 			if(!animation_preview_) {
-				animation_preview_.reset(new gui::animation_preview_widget(info.obj));
-				animation_preview_->set_rect_handler(boost::bind(&code_editor_dialog::set_animation_rect, this, _1));
-				animation_preview_->set_solid_handler(boost::bind(&code_editor_dialog::move_solid_rect, this, _1, _2));
-				animation_preview_->set_pad_handler(boost::bind(&code_editor_dialog::set_integer_attr, this, "pad", _1));
-				animation_preview_->set_num_frames_handler(boost::bind(&code_editor_dialog::set_integer_attr, this, "frames", _1));
-				animation_preview_->set_frames_per_row_handler(boost::bind(&code_editor_dialog::set_integer_attr, this, "frames_per_row", _1));
+				animation_preview_.reset(new gui::AnimationPreviewWidget(info.obj));
+				animation_preview_->setRectHandler(boost::bind(&code_editor_dialog::setAnimationRect, this, _1));
+				animation_preview_->setSolidHandler(boost::bind(&code_editor_dialog::moveSolidRect, this, _1, _2));
+				animation_preview_->setPadHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "pad", _1));
+				animation_preview_->setNumFramesHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "frames", _1));
+				animation_preview_->setFramesPerRowHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "frames_per_row", _1));
 				animation_preview_->setLoc(x() - 520, y() + 100);
 				animation_preview_->setDim(500, 400);
 				animation_preview_->init();
 			} else {
-				animation_preview_->set_object(info.obj);
+				animation_preview_->setObject(info.obj);
 			}
 
 			editor_->set_highlight_current_object(true);
@@ -738,7 +738,7 @@ void code_editor_dialog::process()
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
-	} catch(graphics::load_image_error&) {
+	} catch(KRE::ImageLoadError&) {
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
@@ -920,7 +920,7 @@ void code_editor_dialog::on_move_cursor()
 	}
 }
 
-void code_editor_dialog::set_animation_rect(rect r)
+void code_editor_dialog::setAnimationRect(rect r)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -928,13 +928,13 @@ void code_editor_dialog::set_animation_rect(rect r)
 		v.add_attr(variant("rect"), r.write());
 		editor_->modify_current_object(v);
 		try {
-			animation_preview_->set_object(v);
+			animation_preview_->setObject(v);
 		} catch(frame::error& e) {
 		}
 	}
 }
 
-void code_editor_dialog::move_solid_rect(int dx, int dy)
+void code_editor_dialog::moveSolidRect(int dx, int dy)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -955,13 +955,13 @@ void code_editor_dialog::move_solid_rect(int dx, int dy)
 		v.add_attr(variant("solid_area"), area.write());
 		editor_->modify_current_object(v);
 		try {
-			animation_preview_->set_object(v);
+			animation_preview_->setObject(v);
 		} catch(frame::error& e) {
 		}
 	}
 }
 
-void code_editor_dialog::set_integer_attr(const char* attr, int value)
+void code_editor_dialog::setIntegerAttr(const char* attr, int value)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -969,7 +969,7 @@ void code_editor_dialog::set_integer_attr(const char* attr, int value)
 		v.add_attr(variant(attr), variant(value));
 		editor_->modify_current_object(v);
 		try {
-			animation_preview_->set_object(v);
+			animation_preview_->setObject(v);
 		} catch(frame::error& e) {
 		}
 	}

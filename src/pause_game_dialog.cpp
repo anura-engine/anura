@@ -224,7 +224,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	ButtonPtr language_button(new button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b3(new button(return_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b4(new button(exit_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
-	ButtonPtr b5(new checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), buttonResolution));
+	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), buttonResolution));
 	ButtonPtr b_video(new button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 
 	
@@ -237,36 +237,36 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	b_video->setDim(button_width, button_height);
 	
 	d.setPadding(padding-12);
-	d.add_widget(t1, padding*2, padding*2);
+	d.addWidget(t1, padding*2, padding*2);
 	d.setPadding(padding+12);
-	d.add_widget(s1);
+	d.addWidget(s1);
 
 	if(preferences::virtual_screen_height() >= 600) {
 		d.setPadding(padding-12);
-		d.add_widget(t2);
+		d.addWidget(t2);
 		d.setPadding(padding+12);
-		d.add_widget(s2);
+		d.addWidget(s2);
 		d.setPadding(padding);
-		if(show_button_swap) { d.add_widget(b5); }
-		d.add_widget(b1);
-		if(show_controls) { d.add_widget(b2); }
-		if(show_video_mode_select) { d.add_widget(b_video); }
-		d.add_widget(language_button);
-		d.add_widget(b3);
-		if(show_exit) { d.add_widget(b4); }
+		if(show_button_swap) { d.addWidget(b5); }
+		d.addWidget(b1);
+		if(show_controls) { d.addWidget(b2); }
+		if(show_video_mode_select) { d.addWidget(b_video); }
+		d.addWidget(language_button);
+		d.addWidget(b3);
+		if(show_exit) { d.addWidget(b4); }
 	} else {
 		d.setPadding(padding);
-		d.add_widget(b1);
-		if(show_controls) { d.add_widget(b2); }
-		if(show_video_mode_select) { d.add_widget(b_video); }
+		d.addWidget(b1);
+		if(show_controls) { d.addWidget(b2); }
+		if(show_video_mode_select) { d.addWidget(b_video); }
 		d.setPadding(padding-12);
-		d.add_widget(t2, padding*3 + button_width, padding*2);
+		d.addWidget(t2, padding*3 + button_width, padding*2);
 		d.setPadding(padding+12);
-		d.add_widget(s2);
+		d.addWidget(s2);
 		d.setPadding(padding);
-		d.add_widget(language_button);
-		d.add_widget(b3);
-		if(show_exit) { d.add_widget(b4); }
+		d.addWidget(language_button);
+		d.addWidget(b3);
+		if(show_exit) { d.addWidget(b4); }
 	}
 
 	d.set_on_quit(boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));

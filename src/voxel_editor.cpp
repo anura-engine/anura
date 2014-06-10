@@ -1013,8 +1013,8 @@ public:
 	perspective_renderer(int xdir, int ydir, int zdir);
 	void handleDraw() const;
 
-	void zoom_in();
-	void zoom_out();
+	void zoomIn();
+	void zoomOut();
 
 	//converts given pos to [x,y,0]
 	VoxelPos normalize_pos(const VoxelPos& pos) const;
@@ -1073,14 +1073,14 @@ perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
 	}
 };
 
-void perspective_renderer::zoom_in()
+void perspective_renderer::zoomIn()
 {
 	if(voxel_width_ < 80) {
 		voxel_width_ *= 2;
 	}
 }
 
-void perspective_renderer::zoom_out()
+void perspective_renderer::zoomOut()
 {
 	if(voxel_width_ > 5) {
 		voxel_width_ /= 2;
@@ -1911,11 +1911,11 @@ void perspective_widget::init()
 	description_label_.reset(new label(description, 12));
 	toolbar->add_col(description_label_);
 	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_widget::flip, this)));
-	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_in, renderer_.get())));
-	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_out, renderer_.get())));
-	add_widget(toolbar);
+	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoomIn, renderer_.get())));
+	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoomOut, renderer_.get())));
+	addWidget(toolbar);
 
-	add_widget(renderer_);
+	addWidget(renderer_);
 	renderer_->setDim(width(), height() - renderer_->y());
 };
 
@@ -1996,7 +1996,7 @@ void voxel_editor::init()
 
 	if(!iso_maximized) {
 		for(int n = 0; n != 3; ++n) {
-			add_widget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
+			addWidget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
 		}
 	}
 
@@ -2013,14 +2013,14 @@ void voxel_editor::init()
 		iso_renderer_->setDim(iso_renderer_area.w(), iso_renderer_area.h());
 		iso_renderer_->init();
 	}
-	add_widget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
+	addWidget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
 
 	grid_ptr toolbar(new grid(3));
 
 	toolbar->add_col(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::on_save, this))));
 	toolbar->add_col(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::undo, this))));
 	toolbar->add_col(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::redo, this))));
-	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
+	addWidget(toolbar, area_.x2() - 190, area_.y() + 4);
 
 	tool_borders_.clear();
 	grid_ptr tools_grid(new grid(3));
@@ -2036,9 +2036,9 @@ void voxel_editor::init()
 
 	tools_grid->finish_row();
 
-	add_widget(tools_grid);
+	addWidget(tools_grid);
 
-	add_widget(WidgetPtr(new checkbox(new label("Symmetric", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
+	addWidget(WidgetPtr(new Checkbox(new label("Symmetric", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
 
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
@@ -2055,17 +2055,17 @@ void voxel_editor::init()
 		layers_grid->register_mouseover_callback(boost::bind(&voxel_editor::mouseover_layer, this, _1));
 		layers_grid->register_selection_callback(boost::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
 
-		add_widget(layers_grid);
+		addWidget(layers_grid);
 	}
 
 	if(!ColorPicker_) {
 		ColorPicker_.reset(new ColorPicker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
 		ColorPicker_->setPrimaryColor(graphics::color(255, 0, 0));
 	}
-	add_widget(ColorPicker_);
+	addWidget(ColorPicker_);
 
 	pos_label_.reset(new label("", 12));
-	add_widget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
+	addWidget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
 	                       area_.y() + area_.h() - pos_label_->height() - 30 );
 
 

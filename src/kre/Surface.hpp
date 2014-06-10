@@ -33,6 +33,10 @@
 
 namespace KRE
 {
+	struct ImageLoadError
+	{
+	};
+
 	class PixelFormat
 	{
 	public:

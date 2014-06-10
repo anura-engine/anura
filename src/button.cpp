@@ -95,13 +95,13 @@ namespace gui
 		if(!label_var.is_callable()) {
 			label_ = label_var.is_map() ? widget_factory::create(label_var, e) : new Label(label_var.as_string_default("Button"), KRE::Color::colorWhite());
 		}
-		ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an on_click handler: " << v.write_json() << " " << v.debug_location());
+		ASSERT_LOG(v.has_key("onClick"), "Button must be supplied with an onClick handler: " << v.write_json() << " " << v.debug_location());
 		// create delegate for onclick
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
-		const variant on_click_value = v["on_click"];
+		const variant on_click_value = v["onClick"];
 		if(on_click_value.is_function()) {
-			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "on_click button function should take 0 arguments: " << v.debug_location());
+			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "onClick button function should take 0 arguments: " << v.debug_location());
 			static const variant fml("fn()");
 			click_handler_.reset(new game_logic::formula(fml));
 
@@ -223,7 +223,6 @@ namespace gui
 		const KRE::ColorPtr& col = current_button_image_set_ == normal_button_image_set_ 
 			? normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
-		col->setAlpha(disabled() ? disabledOpacity() : getAlpha());
 
 		current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0, *col);
 
@@ -231,7 +230,7 @@ namespace gui
 			? text_normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
-		KRE::Canvas::ColorManager cm(KRE::Canvas::getInstance(), text_col);
+		KRE::Canvas::ColorManager cm(*text_col);
 		label_->draw();
 	}
 
@@ -378,12 +377,12 @@ namespace gui
 		g->add_col(style);
 
 		// label: widget
-		// on_click: function
+		// onClick: function
 		// *** resolution: string/dropdown (normal/double)
 		// *** style: string/dropdown (default/formal)
 		// *** hpad: int
 		// *** vpad: int
-		d->add_widget(g);
+		d->addWidget(g);
 		*/
 		return d;
 	}
@@ -399,9 +398,9 @@ namespace gui
 		res.add("resolution", button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? "normal" : "double");
 		res.add("style", button_style_ == BUTTON_STYLE_DEFAULT ? "default" : "normal");
 		if(click_handler_) {
-			res.add("on_click", click_handler_->str());
+			res.add("onClick", click_handler_->str());
 		} else {
-			res.add("on_click", "def()");
+			res.add("onClick", "def()");
 		}
 		res.add("label", label_->write());
 		return res.build();

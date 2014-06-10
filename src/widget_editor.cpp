@@ -109,7 +109,7 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 		return d;
 	}
 	case TOOL_CHECKBOX:
-		p.reset(new gui::checkbox("checkbox", false, boost::bind(dummy_fn, -1, 0.0)));
+		p.reset(new gui::Checkbox("Checkbox", false, boost::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_IMAGE:
 		p.reset(new gui::ImageWidget("window-icon.png"));
@@ -199,14 +199,14 @@ private:
 		if(!ww_) {
 			ww_.reset(new widget_window(rect(area_.x(), area_.y(), area_.w()-sidebar_width,area_.h()), *this));
 		}
-		add_widget(ww_, 0, 0);
+		addWidget(ww_, 0, 0);
 
 		gui::ButtonPtr save_button = new gui::button(new gui::label("Save", graphics::color("antique_white").as_sdl_color(), 16, default_font_name),
 			[&](){ww_->save(fname_);});
 		if(fname_.empty()) {
 			save_button->enable(false);
 		}
-		add_widget(save_button, area_.x2() - sidebar_width, area_.y() + 4);
+		addWidget(save_button, area_.x2() - sidebar_width, area_.y() + 4);
 
 		tool_borders_.clear();
 		gui::grid_ptr tools_grid(new gui::grid(5));
@@ -219,12 +219,12 @@ private:
 		}
 		tools_grid->finish_row();
 
-		add_widget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
+		addWidget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
 
-		// need a checkbox for relative/absolute mode
+		// need a Checkbox for relative/absolute mode
 
 		if(selected_widget_) {
-			add_widget(selected_widget_->getSettingsDialog(0, 0, sidebar_width,height()-tools_grid->height()-20), 
+			addWidget(selected_widget_->getSettingsDialog(0, 0, sidebar_width,height()-tools_grid->height()-20), 
 				area_.x2()-sidebar_width, 
 				tools_grid->height()+20);
 		}

@@ -326,7 +326,7 @@ void console_dialog::init()
 {
 	using namespace gui;
 	text_editor_ = new TextEditorWidget(width() - 20, height() - 20);
-	add_widget(WidgetPtr(text_editor_), 10, 10);
+	addWidget(WidgetPtr(text_editor_), 10, 10);
 
 	text_editor_->set_on_move_cursor_handler(boost::bind(&console_dialog::on_move_cursor, this));
 	text_editor_->set_on_begin_enter_handler(boost::bind(&console_dialog::on_begin_enter, this));

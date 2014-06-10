@@ -123,7 +123,7 @@ public:
 	int damage() const { return damage_; }
 	const graphics::texture& texture() const { return t_; }
 	static void queue_draw(graphics::blit_queue& q, const level_tile& t);
-	static int calculate_tile_corners(tile_corner* result, const level_tile& t);
+	static int calculate_tile_corners(KRE::ImageLoadError* result, const level_tile& t);
 
 	bool is_opaque() const { return opaque_; }
 	bool calculate_opaque() const;

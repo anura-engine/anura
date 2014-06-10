@@ -66,9 +66,9 @@ private:
 
 	void change_font_size(int amount);
 
-	void set_animation_rect(rect r);
-	void move_solid_rect(int dx, int dy);
-	void set_integer_attr(const char* attr, int value);
+	void setAnimationRect(rect r);
+	void moveSolidRect(int dx, int dy);
+	void setIntegerAttr(const char* attr, int value);
 
 	void save();
 	void save_and_close();
@@ -111,7 +111,7 @@ private:
 	//recover from errors.
 	assert_recover_scope assert_recovery_;
 
-	gui::animation_preview_WidgetPtr animation_preview_;
+	gui::AnimationPreviewWidgetPtr animation_preview_;
 	gui::formula_visualize_WidgetPtr visualize_widget_;
 
 	struct KnownFile {

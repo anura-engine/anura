@@ -2288,19 +2288,19 @@ FUNCTION_DEF(end_game, 0, 0, "end_game(): exits the game")
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(end_game)
 
-class achievement_command : public entity_command_callable
+class AchievementCommand : public entity_command_callable
 {
 public:
-	explicit achievement_command(const std::string& str) : str_(str)
+	explicit AchievementCommand(const std::string& str) : str_(str)
 	{}
 
 	virtual void execute(level& lvl, entity& ob) const {
-		if(attain_achievement(str_)) {
-			achievement_ptr a = achievement::get(str_);
+		if(Achievement::attain(str_)) {
+			AchievementPtr a = Achievement::get(str_);
 			if(a) {
 				stats::entry("achievement").add_player_pos().set("achievement", variant(str_));
 				sound::play("achievement-attained.wav");
-				set_displayed_achievement(a);
+				set_displayed_Achievement(a);
 			}
 		}
 	}
@@ -2309,7 +2309,7 @@ private:
 };
 
 FUNCTION_DEF(achievement, 1, 1, "achievement(id): unlocks the achievement with the given id")
-	achievement_command* cmd = (new achievement_command(args()[0]->evaluate(variables).as_string()));
+	AchievementCommand* cmd = (new AchievementCommand(args()[0]->evaluate(variables).as_string()));
 	cmd->set_expression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF

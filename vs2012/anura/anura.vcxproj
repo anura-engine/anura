@@ -268,6 +268,8 @@
     <ClInclude Include="..\..\src\kre\CameraObject.hpp" />
     <ClInclude Include="..\..\src\kre\Canvas.hpp" />
     <ClInclude Include="..\..\src\kre\CanvasOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\ClipScope.hpp" />
+    <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
@@ -301,6 +303,8 @@
     <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
     <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\spline.hpp" />
+    <ClInclude Include="..\..\src\kre\StencilScopeOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\StencilSettings.hpp" />
     <ClInclude Include="..\..\src\kre\Surface.hpp" />
     <ClInclude Include="..\..\src\kre\SurfaceSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Texture.hpp" />
@@ -437,7 +441,6 @@
     <ClInclude Include="..\..\src\wml_formula_callable.hpp" />
     <ClInclude Include="..\..\src\bar_widget.hpp" />
     <ClInclude Include="..\..\src\base64.hpp" />
-    <ClInclude Include="..\..\src\camera.hpp" />
     <ClInclude Include="..\..\src\color_picker.hpp" />
     <ClInclude Include="..\..\src\data_blob.hpp" />
     <ClInclude Include="..\..\src\fbo_scene.hpp" />
@@ -450,7 +453,6 @@
     <ClInclude Include="..\..\src\isochunk.hpp" />
     <ClInclude Include="..\..\src\isoworld.hpp" />
     <ClInclude Include="..\..\src\layout_widget.hpp" />
-    <ClInclude Include="..\..\src\lighting.hpp" />
     <ClInclude Include="..\..\src\lua_iface.hpp" />
     <ClInclude Include="..\..\src\octree.hpp" />
     <ClInclude Include="..\..\src\poly_map.hpp" />
@@ -617,6 +619,8 @@
     <ClCompile Include="..\..\src\kre\CameraObject.cpp" />
     <ClCompile Include="..\..\src\kre\Canvas.cpp" />
     <ClCompile Include="..\..\src\kre\CanvasOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\ClipScope.cpp" />
+    <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />
@@ -644,6 +648,7 @@
     <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
     <ClCompile Include="..\..\src\kre\ShadersOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />
@@ -756,7 +761,6 @@
     <ClCompile Include="..\..\src\widget_factory.cpp" />
     <ClCompile Include="..\..\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
-    <ClCompile Include="..\..\src\camera.cpp" />
     <ClCompile Include="..\..\src\color_picker.cpp" />
     <ClCompile Include="..\..\src\data_blob.cpp" />
     <ClCompile Include="..\..\src\fbo_scene.cpp" />
@@ -769,7 +773,6 @@
     <ClCompile Include="..\..\src\isochunk.cpp" />
     <ClCompile Include="..\..\src\isoworld.cpp" />
     <ClCompile Include="..\..\src\layout_widget.cpp" />
-    <ClCompile Include="..\..\src\lighting.cpp" />
     <ClCompile Include="..\..\src\lua_iface.cpp" />
     <ClCompile Include="..\..\src\multiplayer_server.cpp" />
     <ClCompile Include="..\..\src\normal_map.cpp" />

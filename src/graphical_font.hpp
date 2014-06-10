@@ -24,7 +24,7 @@
 #include <vector>
 
 #include "kre/Geometry.hpp"
-#include "texture.hpp"
+#include "kre/Texture.hpp"
 #include "variant.hpp"
 
 class graphical_font;
@@ -47,7 +47,7 @@ private:
 
 	std::string id_;
 
-	graphics::texture texture_;
+	KRE::TexturePtr texture_;
 	//hashmap to map characters to rectangles in the texture
 	typedef boost::unordered_map<unsigned int, rect> char_rect_map;
 	char_rect_map char_rect_map_;

@@ -172,4 +172,17 @@ namespace Geometry
 	{	
 		return p.x >= r.x() && p.y >= r.y() && p.x < r.x2() && p.y < r.y2();
 	}
+
+	template<typename T> inline
+	bool operator==(const Rect<T>& a, const Rect<T>& b)
+	{
+		return a.top_left() == b.top_left() && a.bottom_right() == b.bottom_right();
+	}
+
+	template<typename T> inline
+	bool operator!=(const Rect<T>& a, const Rect<T>& b)
+	{
+		return !operator==(a, b);
+	}
+
 }

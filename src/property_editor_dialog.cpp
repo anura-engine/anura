@@ -110,9 +110,9 @@ void property_editor_dialog::init()
 
 	preview_grid->add_col(difficulty_grid);
 	
-	add_widget(preview_grid, 10, 10);
+	addWidget(preview_grid, 10, 10);
 
-	add_widget(WidgetPtr(new label(obj->debug_description(), graphics::color_white())));
+	addWidget(WidgetPtr(new label(obj->debug_description(), graphics::color_white())));
 
 	if(get_entity()->label().empty() == false) {
 		grid_ptr labels_grid(new grid(2));
@@ -122,7 +122,7 @@ void property_editor_dialog::init()
 		e->set_on_change_handler(boost::bind(&property_editor_dialog::setLabel, this, e));
 		labels_grid->add_col(WidgetPtr(new label("Label: ")))
 		            .add_col(WidgetPtr(e));
-		add_widget(labels_grid);
+		addWidget(labels_grid);
 	}
 
 	std::map<std::string, int> types_selected;
@@ -144,11 +144,11 @@ void property_editor_dialog::init()
 					   .add_col(WidgetPtr(new button("Deselect", boost::bind(&property_editor_dialog::deselect_object_type, this, i->first))));
 		}
 
-		add_widget(types_grid);
+		addWidget(types_grid);
 	}
 
 	if(entity_.size() > 1) {
-		add_widget(WidgetPtr(new button("Group Objects", boost::bind(&editor::group_selection, &editor_))));
+		addWidget(WidgetPtr(new button("Group Objects", boost::bind(&editor::group_selection, &editor_))));
 	}
 
 	game_logic::FormulaCallable* vars = get_static_entity()->vars();
@@ -159,20 +159,20 @@ void property_editor_dialog::init()
 			group_grid->add_col(WidgetPtr(new button("Remove from Group", boost::bind(&property_editor_dialog::remove_object_from_group, this, get_entity()))));
 			group_grid->add_col(WidgetPtr(new button("Breakup Group", boost::bind(&property_editor_dialog::remove_group, this, get_entity()->group()))));
 
-			add_widget(group_grid);
+			addWidget(group_grid);
 		}
 
 		//output an editing area for each editable event.
 		foreach(const std::string& handler, get_entity()->EditorInfo()->editable_events()) {
 			LabelPtr lb = label::create(handler + " event handler", graphics::color_white());
-			add_widget(lb);
+			addWidget(lb);
 
 			TextEditorWidget* e = new TextEditorWidget(220, 90);
 			game_logic::const_formula_ptr f = get_entity()->get_event_handler(get_object_event_id(handler));
 			if(f) {
 				e->setText(f->str());
 			}
-			add_widget(WidgetPtr(e));
+			addWidget(WidgetPtr(e));
 
 			e->set_on_change_handler(boost::bind(&property_editor_dialog::change_event_handler, this, handler, lb.get(), e));
 
@@ -206,7 +206,7 @@ void property_editor_dialog::init()
 				std::ostringstream s;
 				s << info.variable_name() << ": " << current_val_str;
 				LabelPtr lb = label::create(s.str(), graphics::color_white());
-				add_widget(WidgetPtr(lb));
+				addWidget(WidgetPtr(lb));
 			}
 
 			if(info.type() == editor_variable_info::TYPE_TEXT) {
@@ -228,7 +228,7 @@ void property_editor_dialog::init()
 
 				text_grid->add_col(WidgetPtr(e));
 
-				add_widget(WidgetPtr(text_grid));
+				addWidget(WidgetPtr(text_grid));
 
 			} else if(info.type() == editor_variable_info::TYPE_ENUM) {
 				grid_ptr enum_grid(new grid(2));
@@ -248,7 +248,7 @@ void property_editor_dialog::init()
 				enum_grid->add_col(WidgetPtr(new button(
 				     WidgetPtr(new label(current_value, graphics::color_white())),
 					 boost::bind(&property_editor_dialog::change_enum_property, this, info.variable_name()))));
-				add_widget(WidgetPtr(enum_grid));
+				addWidget(WidgetPtr(enum_grid));
 			} else if(info.type() == editor_variable_info::TYPE_LEVEL) {
 				std::string current_value;
 				variant current_value_var = get_static_entity()->query_value(info.variable_name());
@@ -256,7 +256,7 @@ void property_editor_dialog::init()
 					current_value = current_value_var.as_string();
 				}
 
-				add_widget(WidgetPtr(new button(
+				addWidget(WidgetPtr(new button(
 				         WidgetPtr(new label(current_value.empty() ? "(set level)" : current_value, graphics::color_white())),
 				         boost::bind(&property_editor_dialog::change_level_property, this, info.variable_name()))));
 			} else if(info.type() == editor_variable_info::TYPE_LABEL) {
@@ -266,14 +266,14 @@ void property_editor_dialog::init()
 					current_value = current_value_var.as_string();
 				}
 
-				add_widget(WidgetPtr(new button(
+				addWidget(WidgetPtr(new button(
 				         WidgetPtr(new label(current_value.empty() ? "(set label)" : current_value, graphics::color_white())),
 				         boost::bind(&property_editor_dialog::change_label_property, this, info.variable_name()))));
 				
 			} else if(info.type() == editor_variable_info::TYPE_BOOLEAN) {
 				variant current_value = get_static_entity()->query_value(info.variable_name());
 
-				add_widget(WidgetPtr(new checkbox(WidgetPtr(new label(info.variable_name(), graphics::color_white())),
+				addWidget(WidgetPtr(new Checkbox(WidgetPtr(new label(info.variable_name(), graphics::color_white())),
 				               current_value.as_bool(),
 							   boost::bind(&property_editor_dialog::toggle_property, this, info.variable_name()))));
 			} else if(info.type() == editor_variable_info::TYPE_POINTS) {
@@ -281,7 +281,7 @@ void property_editor_dialog::init()
 				const int npoints = current_value.is_list() ? current_value.num_elements() : 0;
 
 				const bool already_adding = editor_.adding_points() == info.variable_name();
-				add_widget(WidgetPtr(new button(already_adding ? "Done Adding" : "Add Points",
+				addWidget(WidgetPtr(new button(already_adding ? "Done Adding" : "Add Points",
 						 boost::bind(&property_editor_dialog::change_points_property, this, info.variable_name()))));
 
 			} else {
@@ -309,7 +309,7 @@ void property_editor_dialog::init()
 
 				text_grid->add_col(WidgetPtr(e));
 
-				add_widget(WidgetPtr(text_grid));
+				addWidget(WidgetPtr(text_grid));
 
 				float pos = ((value - info.numeric_min())/(info.numeric_max() - info.numeric_min())).as_float();
 				if(pos < 0.0) {
@@ -321,13 +321,13 @@ void property_editor_dialog::init()
 				}
 
 				lb.reset(new gui::label(formatter() << info.numeric_min().as_int(), 10));
-				add_widget(lb, text_grid->x(), text_grid->y() + text_grid->height() + 6);
+				addWidget(lb, text_grid->x(), text_grid->y() + text_grid->height() + 6);
 				lb.reset(new gui::label(formatter() << info.numeric_max().as_int(), 10));
-				add_widget(lb, text_grid->x() + 170, text_grid->y() + text_grid->height() + 6);
+				addWidget(lb, text_grid->x() + 170, text_grid->y() + text_grid->height() + 6);
 
 				gui::slider* slider = new gui::slider(160, boost::bind(&property_editor_dialog::change_numeric_property_slider, this, info.variable_name(), widgets, _1), pos);
 
-				add_widget(WidgetPtr(slider), text_grid->x(), text_grid->y() + text_grid->height() + 8);
+				addWidget(WidgetPtr(slider), text_grid->x(), text_grid->y() + text_grid->height() + 8);
 
 				*widgets = numeric_widgets(e, slider);
 			}
@@ -538,7 +538,7 @@ void property_editor_dialog::change_enum_property(const std::string& id)
 
 	remove_widget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 namespace {
@@ -600,7 +600,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 
 		remove_widget(context_menu_);
 		context_menu_.reset(grid);
-		add_widget(context_menu_, mousex, mousey);
+		addWidget(context_menu_, mousex, mousey);
 
 	}
 }

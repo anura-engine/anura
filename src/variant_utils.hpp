@@ -21,7 +21,6 @@
 
 #include <map>
 
-#include "foreach.hpp"
 #include "formula_callable.hpp"
 #include "variant.hpp"
 

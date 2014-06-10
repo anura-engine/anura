@@ -1,28 +1,34 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef LEVEL_HPP_INCLUDED
-#define LEVEL_HPP_INCLUDED
 
 #include <boost/dynamic_bitset.hpp>
 #include <deque>
 #include <map>
 #include <queue>
 #include <set>
+#include <stack>
 #include <string>
 #include <vector>
 
@@ -35,25 +41,21 @@
 #endif
 #include "background.hpp"
 #include "camera.hpp"
-#include "color_utils.hpp"
 #include "decimal.hpp"
 #include "entity.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
-#include "FormulaCallable_definition_fwd.hpp"
+#include "formula_callable_definition_fwd.hpp"
 #include "kre/Geometry.hpp"
-#include "gui_formula_functions.hpp"
-#include "HexMap.hpp"
+#include "hex_map.hpp"
 #include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "movement_script.hpp"
-#include "raster.hpp"
 #include "speech_dialog.hpp"
 #include "tile_map.hpp"
 #include "variant.hpp"
 #include "water.hpp"
-#include "color_utils.hpp"
 
 class tile_corner;
 
@@ -160,7 +162,7 @@ public:
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 	std::vector<entity_ptr> get_characters_at_world_point(const glm::vec3& pt);
 
-	voxel::world_ptr& iso_world() { return iso_world_; }
+	voxel::WorldPtr& iso_world() { return iso_world_; }
 #endif
 
 
@@ -654,9 +656,6 @@ private:
 	int editor_tile_updates_frozen_;
 	bool editor_dragging_objects_;
 
-	std::vector<std::string> gui_algo_str_;
-	std::vector<gui_algorithm_ptr> gui_algorithm_;
-
 	decimal zoom_level_;
 	std::vector<entity_ptr> focus_override_;
 
@@ -694,7 +693,7 @@ private:
 #endif
 
 #if defined(USE_ISOMAP)
-	voxel::world_ptr iso_world_;
+	voxel::WorldPtr iso_world_;
 	camera_callable_ptr camera_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;
@@ -713,5 +712,3 @@ private:
 bool entity_in_current_level(const entity* e);
 
 typedef boost::intrusive_ptr<level> level_ptr;
-
-#endif

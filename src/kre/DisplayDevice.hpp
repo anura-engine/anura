@@ -29,6 +29,7 @@
 
 #include "AttributeSet.hpp"
 #include "Canvas.hpp"
+#include "ClipScope.hpp"
 #include "../Color.hpp"
 #include "DisplayDeviceFwd.hpp"
 #include "Material.hpp"
@@ -124,6 +125,8 @@ namespace KRE
 		static TexturePtr CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
 
 		virtual CanvasPtr GetCanvas() = 0;
+
+		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 
 		static void BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 

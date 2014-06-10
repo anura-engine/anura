@@ -279,4 +279,9 @@ namespace KRE
 		height_ = h;
 		depth_ = d;
 	}
+
+	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)
+	{
+		return DisplayDevice::CreateTexture(filename, type, mipmap_levels);
+	}
 }

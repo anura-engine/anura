@@ -23,6 +23,7 @@
 #include <boost/bind.hpp>
 
 #include "kre/WindowManager.hpp"
+#include "kre/ClipScope.hpp"
 
 #include "asserts.hpp"
 #include "preferences.hpp"
@@ -312,6 +313,8 @@ namespace gui
 	void Widget::draw() const
 	{
 		if(visible_) {
+			KRE::Canvas::ColorManager cm(KRE::Color(255,255,255,disabled() ? disabledOpacity() : getAlpha()));
+
 			if(frame_set_ != NULL) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
 					y() - getPadHeight() - frame_set_->cornerHeight(), 
@@ -320,8 +323,7 @@ namespace gui
 			}
 
 			if(clip_area_) {
-				//const graphics::clip_scope clipping_scope(clip_area_->sdl_rect());
-				// XXX Fixme need to add a clipping scope functionality.
+				auto cs = KRE::ClipScope::create(*clip_area_);
 				handleDraw();
 			} else {
 				handleDraw();

@@ -39,7 +39,7 @@ std::string show_choose_level_dialog(const std::string& prompt)
 {
 	using namespace gui;
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(WidgetPtr(new label(prompt, graphics::color_white(), 48)));
+	d.addWidget(WidgetPtr(new label(prompt, graphics::color_white(), 48)));
 
 	std::string result;
 	std::vector<std::string> levels = get_known_levels();
@@ -53,7 +53,7 @@ std::string show_choose_level_dialog(const std::string& prompt)
 		grid->add_col(WidgetPtr(new label(lvl, graphics::color_white())));
 	}
 
-	d.add_widget(WidgetPtr(grid));
+	d.addWidget(WidgetPtr(grid));
 	d.show_modal();
 	return result;
 }

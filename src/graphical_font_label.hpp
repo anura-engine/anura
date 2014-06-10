@@ -22,7 +22,7 @@
 
 namespace gui {
 
-class graphical_font_label : public widget
+class graphical_font_label : public Widget
 {
 public:
 	graphical_font_label(const std::string& text, const std::string& font, int size=1);

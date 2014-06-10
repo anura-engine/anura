@@ -57,8 +57,8 @@ std::string& scene_title() {
 	return title;
 }
 
-achievement_ptr current_achievement;
-int current_achievement_duration = 0;
+AchievementPtr current_Achievement;
+int current_Achievement_duration = 0;
 
 	
 struct screen_flash {
@@ -76,8 +76,8 @@ int scene_title_duration_;
 screen_position last_position;
 }
 
-bool is_achievement_displayed() {
-	return current_achievement && current_achievement_duration > 0;
+bool is_Achievement_displayed() {
+	return current_Achievement && current_Achievement_duration > 0;
 }
 
 screen_position& last_draw_position()
@@ -113,10 +113,10 @@ void set_scene_title(const std::string& msg, int duration) {
 	scene_title_duration_ = duration;
 }
 
-void set_displayed_achievement(achievement_ptr a)
+void set_displayed_Achievement(AchievementPtr a)
 {
-	current_achievement = a;
-	current_achievement_duration = 250;
+	current_Achievement = a;
+	current_Achievement_duration = 250;
 }
 
 GLfloat hp_ratio = -1.0;
@@ -491,8 +491,8 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		}
 	}
 	
-	if(current_achievement && current_achievement_duration > 0) {
-		--current_achievement_duration;
+	if(current_Achievement && current_Achievement_duration > 0) {
+		--current_Achievement_duration;
 
 		ConstGuiSectionPtr left = GuiSection::get("achievements_left");
 		ConstGuiSectionPtr right = GuiSection::get("achievements_right");
@@ -501,9 +501,9 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		const const_graphical_font_ptr title_font = graphical_font::get("white_outline");
 		const const_graphical_font_ptr main_font = graphical_font::get("door_label");
 
-		const std::string title_text = _("Achievement Unlocked!");
-		const std::string name = current_achievement->name();
-		const std::string description = "(" + current_achievement->description() + ")";
+		const std::string title_text = _("achievement Unlocked!");
+		const std::string name = current_Achievement->name();
+		const std::string description = "(" + current_Achievement->description() + ")";
 		const int width = std::max<int>(std::max<int>(
 		  title_font->dimensions(title_text).w(),
 		  main_font->dimensions(name).w()),
@@ -513,7 +513,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		const int xpos = graphics::screen_width() - 16 - left->width() - right->width() - width;
 		const int ypos = 16;
 
-		const GLfloat alpha = current_achievement_duration > 10 ? 1.0 : current_achievement_duration/10.0;
+		const GLfloat alpha = current_Achievement_duration > 10 ? 1.0 : current_Achievement_duration/10.0;
 
 		glColor4f(1.0, 1.0, 1.0, alpha);
 

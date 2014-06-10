@@ -70,7 +70,7 @@ public:
 	voxel_model_ptr& model() { return model_; }
 	const voxel_model_ptr& model_const() { return model_; }
 
-	void add_widget(const gui::WidgetPtr& w);
+	void addWidget(const gui::WidgetPtr& w);
 	void add_widgets(std::vector<gui::WidgetPtr>* widgets);
 	void clear_widgets();
 	void remove_widget(gui::WidgetPtr w);

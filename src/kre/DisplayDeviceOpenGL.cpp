@@ -27,6 +27,7 @@
 #include "AttributeSetOpenGL.hpp"
 #include "CameraObject.hpp"
 #include "CanvasOGL.hpp"
+#include "ClipScopeOGL.hpp"
 #include "DisplayDeviceOpenGL.hpp"
 #include "FboOpenGL.hpp"
 #include "LightObject.hpp"
@@ -408,7 +409,12 @@ namespace KRE
 
 	CanvasPtr DisplayDeviceOpenGL::GetCanvas()
 	{
-		return CanvasOGL::GetInstance();
+		return CanvasOGL::getInstance();
+	}
+
+	ClipScopePtr DisplayDeviceOpenGL::createClipScope(const rect& r)
+	{
+		return ClipScopePtr(new ClipScopeOGL(r));
 	}
 	
 	bool DisplayDeviceOpenGL::DoCheckForFeature(DisplayDeviceCapabilties cap)

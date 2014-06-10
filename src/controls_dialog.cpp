@@ -79,20 +79,20 @@ void show_controls_dialog()
 	b8->setDim(230, 60);
 
 	int start_y = (d.height() - 4*b1->height() - 2*t1->height() - 7*d.padding())/2;
-	d.add_widget(t1, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
-	d.add_widget(b1, d.width()/2 - b1->width()/2, start_y + t1->height() + d.padding());
-	d.add_widget(b3, d.width()/2 - b1->width()*1.5 - d.padding(), start_y + t1->height() + b1->height() + 2*d.padding(), dialog::MOVE_RIGHT);
-	d.add_widget(b2, dialog::MOVE_RIGHT);
-	d.add_widget(b4);
+	d.addWidget(t1, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
+	d.addWidget(b1, d.width()/2 - b1->width()/2, start_y + t1->height() + d.padding());
+	d.addWidget(b3, d.width()/2 - b1->width()*1.5 - d.padding(), start_y + t1->height() + b1->height() + 2*d.padding(), dialog::MOVE_RIGHT);
+	d.addWidget(b2, dialog::MOVE_RIGHT);
+	d.addWidget(b4);
 
 	start_y += t1->height() + 5*d.padding() + 2*b1->height();
-	d.add_widget(t2, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
-	d.add_widget(b5);
-	d.add_widget(t3, d.width()/2 - b1->width()/2, start_y);
-	d.add_widget(b6);
-	d.add_widget(t4, d.width()/2 + b1->width()/2 + d.padding(), start_y);
-	d.add_widget(b7);
-	d.add_widget(b8, d.width()/2 - b8->width()/2, start_y + t2->height() + b5->height() + 3*d.padding());
+	d.addWidget(t2, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
+	d.addWidget(b5);
+	d.addWidget(t3, d.width()/2 - b1->width()/2, start_y);
+	d.addWidget(b6);
+	d.addWidget(t4, d.width()/2 + b1->width()/2 + d.padding(), start_y);
+	d.addWidget(b7);
+	d.addWidget(b8, d.width()/2 - b8->width()/2, start_y + t2->height() + b5->height() + 3*d.padding());
 
 	d.show_modal();
 }

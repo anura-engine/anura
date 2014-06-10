@@ -86,9 +86,9 @@ namespace KRE
 		texture->Bind();
 		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
 		if(color) {
-			shader->SetUniformValue(shader->GetColorUniform(), color->asFloatVector());
-		} else if(getColor()) {
-			shader->SetUniformValue(shader->GetColorUniform(), getColor()->asFloatVector());
+			shader->SetUniformValue(shader->GetColorUniform(), (*color*getColor()).asFloatVector());
+		} else {
+			shader->SetUniformValue(shader->GetColorUniform(), getColor().asFloatVector());
 		}
 		shader->SetUniformValue(shader->GetTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.

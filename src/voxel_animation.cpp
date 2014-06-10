@@ -373,7 +373,7 @@ void voxel_animation_editor::init()
 		renderer_.reset(new animation_renderer(rect(area_.x() + 10, area_.y() + 10, area_.w() - 200, area_.h() - 20), fname_));
 	}
 
-	add_widget(renderer_, renderer_->x(), renderer_->y());
+	addWidget(renderer_, renderer_->x(), renderer_->y());
 
 	grid_ptr anim_grid(new grid(1));
 
@@ -381,7 +381,7 @@ void voxel_animation_editor::init()
 		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
 	}
 
-	add_widget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
+	addWidget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());
 }
 
 bool voxel_animation_editor::handleEvent(const SDL_Event& event, bool claimed)

@@ -24,6 +24,7 @@
 #include "SDL_image.h"
 
 #include "../asserts.hpp"
+#include "../logger.hpp"
 #include "SurfaceSDL.hpp"
 
 namespace KRE
@@ -454,12 +455,17 @@ namespace KRE
 
 	SurfacePtr SurfaceSDL::CreateFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceConvertFn fn)
 	{
-		auto surface = new SurfaceSDL(IMG_Load(filename.c_str()));
+		auto s = IMG_Load(filename.c_str());
+		if(s == NULL) {
+			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
+			throw ImageLoadError();
+		}
+		auto surface = SurfacePtr(new SurfaceSDL(s));
 		// format means don't convert the surface from the loaded format.
 		if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
 			return surface->Convert(fmt, fn);
 		}
-		return SurfacePtr(surface);
+		return surface;
 	}
 
 	std::tuple<int,int> SDLPixelFormat::ExtractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha)

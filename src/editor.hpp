@@ -156,7 +156,7 @@ public:
 	std::vector<enemy_type>& all_characters() const;
 
 	int get_object() const { return cur_object_; }
-	void set_object(int index);
+	void setObject(int index);
 
 	enum EDIT_TOOL { 
 		TOOL_ADD_RECT, 
@@ -185,8 +185,8 @@ public:
 	void quit();
 	bool confirm_quit(bool allow_cancel=true);
 	void autosave_level();
-	void zoom_in();
-	void zoom_out();
+	void zoomIn();
+	void zoomOut();
 	int zoom() const { return zoom_; }
 
 	void undo_command();

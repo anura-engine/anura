@@ -20,16 +20,10 @@
 #include "kre/Geometry.hpp"
 #include "kre/Material.hpp"
 
-#include "color_utils.hpp"
-
-namespace graphics {
-class blit_queue;
-}
-
 struct level_tile;
 struct hex_level_tile;
 
-class tile_corner
+class KRE::ImageLoadError
 {
 public:
 	short vertex[2];
@@ -37,7 +31,7 @@ public:
 };
 
 void queue_draw_tile(graphics::blit_queue& q, const level_tile& t);
-int get_tile_corners(tile_corner* result, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
+int get_tile_corners(KRE::ImageLoadError* result, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
 void queue_draw_from_tilesheet(graphics::blit_queue& q, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
 
 bool is_tile_opaque(const KRE::MaterialPtr& t, int tile_num);

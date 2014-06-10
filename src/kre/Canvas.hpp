@@ -58,9 +58,13 @@ namespace KRE
 		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
 		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
 
-		virtual void drawRect(const rect& r, const ColorPtr& fill_color, const ColorPtr& stroke_color=nullptr, float rotate=0) const = 0;
+		virtual void drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotate=0) const = 0;
+		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const = 0;
+		virtual void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawLine(const point& p1, const point& p2, const Color& color) const = 0;
-		virtual void drawCircle(const point& centre, double radius, const Color& color) const = 0;
+		virtual void drawSolidCircle(const point& centre, double radius, const Color& color) const = 0;
+		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<Color>& color) const = 0;
+		virtual void drawHollowCircle(const point& centre, double radius, const Color& color) const = 0;
 
 		void drawVectorContext(const Vector::ContextPtr& context);
 
@@ -68,18 +72,18 @@ namespace KRE
 
 		struct ColorManager
 		{
-			ColorManager(CanvasPtr& canvas, const ColorPtr& color) : canvas_(canvas) {
-				canvas->color_stack_.push(color);
+			ColorManager(const Color& color) : canvas_(KRE::Canvas::getInstance()) {
+				canvas_->color_stack_.push(color);
 			}
 			~ColorManager() {
 				canvas_->color_stack_.pop();
 			}
-			CanvasPtr& canvas_;
+			CanvasPtr canvas_;
 		};
 
-		ColorPtr getColor() const {
+		const Color getColor() const {
 			if(color_stack_.empty()) {
-				return ColorPtr();
+				return Color::colorWhite();
 			}
 			return color_stack_.top();
 		}
@@ -91,6 +95,8 @@ namespace KRE
 		unsigned width_;
 		unsigned height_;
 		virtual void handleDimensionsChanged() = 0;
-		std::stack<ColorPtr> color_stack_;
+		std::stack<Color> color_stack_;
 	};
+
+	Color operator*(const Color& lhs, const Color& rhs);
 }

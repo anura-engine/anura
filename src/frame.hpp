@@ -84,9 +84,9 @@ public:
 		point offset;
 	};
 
-	void draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const;
+	void draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
 
-	void draw_custom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const;
+	void draw_custom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
 	void set_image_as_solid();
 	const_solid_info_ptr solid() const { return solid_; }
 	int collide_x() const { return static_cast<int>(collide_rect_.x()*scale_); }

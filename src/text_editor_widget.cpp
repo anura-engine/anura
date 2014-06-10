@@ -1781,8 +1781,8 @@ UTILITY(textedit)
 	entry->set_on_enter_handler(boost::bind(&TextEditorWidget::next_search_match, editor));
 
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(WidgetPtr(entry), 10, 10);
-	d.add_widget(WidgetPtr(editor), 10, 30);
+	d.addWidget(WidgetPtr(entry), 10, 10);
+	d.addWidget(WidgetPtr(editor), 10, 30);
 	d.show_modal();
 }
 

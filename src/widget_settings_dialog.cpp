@@ -71,7 +71,7 @@ namespace gui
 		g->add_col(id_edit);
 
 		g->add_col(new label("", getTextSize(), font()))
-			.add_col(new checkbox(WidgetPtr(new label("Enabled", text_size_, font_name_)), 
+			.add_col(new Checkbox(WidgetPtr(new label("Enabled", text_size_, font_name_)), 
 			!widget_->disabled(), 
 			[&](bool checked){widget_->enable(!checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
@@ -81,7 +81,7 @@ namespace gui
 			this->widget_->disabledOpacity()/255.0, 1));
 
 		g->add_col(new label("", getTextSize(), font()))
-			.add_col(new checkbox(WidgetPtr(new label("Visible", text_size_, font_name_)), 
+			.add_col(new Checkbox(WidgetPtr(new label("Visible", text_size_, font_name_)), 
 			!widget_->visible(), 
 			[&](bool checked){}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
@@ -110,7 +110,7 @@ namespace gui
 		g->add_col(frame_set);
 
 		g->add_col(new label("", getTextSize(), font()))
-			.add_col(new checkbox(WidgetPtr(new label("Double frame size", text_size_, font_name_)), 
+			.add_col(new Checkbox(WidgetPtr(new label("Double frame size", text_size_, font_name_)), 
 			widget_->getFrameResolution() != 0, 
 			[&](bool checked){widget_->setFrameResolution(checked ? 1 : 0);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
@@ -160,7 +160,7 @@ namespace gui
 				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){remove_widget(gg); init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
-				add_widget(gg, x()-mx-100, my);
+				addWidget(gg, x()-mx-100, my);
 		}));
 
 		g->add_col(new label("Tooltip Delay:", getTextSize(), font()))
@@ -168,13 +168,13 @@ namespace gui
 			widget_->getTooltipDelay()/5000.0, 1));
 
 		g->add_col(new label("", getTextSize(), font()))
-			.add_col(new checkbox(WidgetPtr(new label("Claim Mouse Events", text_size_, font_name_)), 
+			.add_col(new Checkbox(WidgetPtr(new label("Claim Mouse Events", text_size_, font_name_)), 
 			claimMouseEvents(), 
 			[&](bool checked){widget_->setClaimMouseEvents(checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->add_col(new label("", getTextSize(), font()))
-			.add_col(new checkbox(WidgetPtr(new label("Draw with Object shader", text_size_, font_name_)), 
+			.add_col(new Checkbox(WidgetPtr(new label("Draw with Object shader", text_size_, font_name_)), 
 			drawWithObjectShader(), 
 			[&](bool checked){widget_->setDrawWithObjectShader(checked);}, 
 			BUTTON_SIZE_NORMAL_RESOLUTION));
@@ -220,7 +220,7 @@ namespace gui
 		on_process: function
 		children: widget_list
 		*/
-		add_widget(g);
+		addWidget(g);
 	}
 
 	void WidgetSettingsDialog::idChanged(TextEditorWidgetPtr text)

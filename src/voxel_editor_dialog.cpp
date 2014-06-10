@@ -132,7 +132,7 @@ namespace editor_dialogs
 		grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_height, this, 1)));
 		grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_height, this, 10)));
 
-		add_widget(grid, 10, 10);
+		addWidget(grid, 10, 10);
 		int next_height = grid->x() + grid->height() + 5;
 
 		button* random_landscape = new button(WidgetPtr(new label("Random", graphics::color_white())), boost::bind(&voxel_editor_dialog::random_isomap, this));
@@ -143,11 +143,11 @@ namespace editor_dialogs
 		grid->add_col(random_landscape);
 		grid->add_col(flat_landscape);
 		grid->add_col(mode_swap_button_).finish_row();
-		add_widget(grid, 10, next_height);
+		addWidget(grid, 10, next_height);
 
 		if(textured_mode_) {
 			button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
-			add_widget(category_button, 10, grid->y() + grid->height() + 5);
+			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
 			int index = 0, first_index = -1;
@@ -169,10 +169,10 @@ namespace editor_dialogs
 			}
 
 			grid->finish_row();
-			add_widget(grid);
+			addWidget(grid);
 		} else {
 			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
-			add_widget(category_button, 10, grid->y() + grid->height() + 5);
+			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
 			int index = 0, first_index = -1;
@@ -194,8 +194,8 @@ namespace editor_dialogs
 			}
 
 			grid->finish_row();
-			add_widget(grid);*/
-			add_widget(ColorPicker_);
+			addWidget(grid);*/
+			addWidget(ColorPicker_);
 		}
 	}
 
@@ -319,7 +319,7 @@ namespace editor_dialogs
 
 		remove_widget(context_menu_);
 		context_menu_.reset(grid);
-		add_widget(context_menu_, mousex, mousey);
+		addWidget(context_menu_, mousex, mousey);
 	}
 
 	void voxel_editor_dialog::set_tileset(int index)
