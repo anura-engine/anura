@@ -17,7 +17,6 @@
 #include "asserts.hpp"
 #include "concurrent_cache.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "load_level.hpp"

@@ -246,7 +246,7 @@ public:
 	void toggle_pause() const;
 	void toggle_code();
 
-	bool has_keyboard_focus() const;
+	bool hasKeyboardFocus() const;
 
 	void start_adding_points(const std::string& field_name);
 	const std::string& adding_points() const { return adding_points_; }

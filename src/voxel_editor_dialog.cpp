@@ -163,7 +163,7 @@ namespace editor_dialogs
 					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
-					grid->add_col(gui::WidgetPtr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+					grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 				}
 				++index;
 			}
@@ -188,7 +188,7 @@ namespace editor_dialogs
 					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
-					grid->add_col(gui::WidgetPtr(new gui::border_widget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+					grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 				}
 				++index;
 			}

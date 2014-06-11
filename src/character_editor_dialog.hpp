@@ -28,7 +28,7 @@
 class editor;
 
 namespace gui {
-class border_widget;
+class BorderWidget;
 }
 
 namespace editor_dialogs
@@ -55,7 +55,7 @@ private:
 
 	//the borders around each object, we set the currently selected one
 	//to white, and all the others to transparent.
-	std::map<std::string, std::vector<gui::border_WidgetPtr> > grid_borders_;
+	std::map<std::string, std::vector<gui::BorderWidgetPtr> > grid_borders_;
 
 	//the first object in each category
 	std::map<std::string, int> first_obj_;

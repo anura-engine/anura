@@ -257,7 +257,7 @@ namespace voxel
 			obj->draw(lighting_, camera);
 		}
 
-		for(auto prim : draw_primitives_) {
+		for(auto prim : DrawPrimitives_) {
 			prim->draw(lighting_, camera);
 		}
 
@@ -551,16 +551,16 @@ namespace voxel
 	DEFINE_FIELD(logical, "builtin LogicalWorld")
 		return variant(obj.logic_.get());
 
-	DEFINE_FIELD(draw_primitive, "[builtin draw_primitive]")
+	DEFINE_FIELD(DrawPrimitive, "[builtin DrawPrimitive]")
 		std::vector<variant> v;
-		for(auto prim : obj.draw_primitives_) {
+		for(auto prim : obj.DrawPrimitives_) {
 			v.push_back(variant(prim.get()));
 		}
 		return variant(&v);
-	DEFINE_SET_FIELD_TYPE("[map|builtin draw_primitive]")
-		obj.draw_primitives_.clear();
+	DEFINE_SET_FIELD_TYPE("[map|builtin DrawPrimitive]")
+		obj.DrawPrimitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			obj.draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
+			obj.DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));
 		}
 	END_DEFINE_CALLABLE(world)
 }

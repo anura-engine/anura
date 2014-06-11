@@ -189,7 +189,7 @@ struct version_data {
 version_data read_version_data(variant v)
 {
 	version_data result;
-	variant keys = v.get_keys();
+	variant keys = v.getKeys();
 	for(int n = 0; n != keys.num_elements(); ++n) {
 		if(keys[n].as_string() == "_GLOBAL_") {
 			result.global_data = read_type_data_map(v[keys[n]]);
@@ -232,7 +232,7 @@ variant write_data_table()
 void read_data_table(variant v)
 {
 	data_table.clear();
-	variant keys = v.get_keys();
+	variant keys = v.getKeys();
 	for(int n = 0; n != keys.num_elements(); ++n) {
 		data_table[keys[n].as_list_string()] = read_version_data(v[keys[n]]);
 	}
@@ -242,7 +242,7 @@ void read_data_table(variant v)
 
 void init_tables(const variant& doc)
 {
-	foreach(const variant module, doc.get_keys().as_list()) {
+	foreach(const variant module, doc.getKeys().as_list()) {
 		init_tables_for_module(module.as_string(), doc[module]);
 	}
 }

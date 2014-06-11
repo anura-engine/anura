@@ -46,9 +46,9 @@ code_editor_widget::code_editor_widget(const variant& v, game_logic::FormulaCall
 {
 }
 
-void code_editor_widget::on_move_cursor(bool auto_shift)
+void code_editor_widget::onMoveCursor(bool auto_shift)
 {
-	TextEditorWidget::on_move_cursor(auto_shift);
+	TextEditorWidget::onMoveCursor(auto_shift);
 
 	ObjectInfo info = get_current_object();
 }

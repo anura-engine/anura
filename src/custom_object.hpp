@@ -213,7 +213,7 @@ public:
 
 	virtual bool serializable() const;
 
-	void set_blur(const blur_info* blur);
+	void set_blur(const BlurInfo* blur);
 	void set_sound_volume(const int volume);
 	void set_zsub_order(const int zsub_order) {zsub_order_ = zsub_order;}
 	
@@ -460,7 +460,7 @@ private:
 
 	entity_ptr driver_;
 
-	boost::shared_ptr<blur_info> blur_;
+	boost::shared_ptr<BlurInfo> blur_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
@@ -531,7 +531,7 @@ private:
 	mutable screen_position adjusted_draw_position_;
 
 #if defined(USE_SHADERS)
-	std::vector<graphics::draw_primitive_ptr> draw_primitives_;
+	std::vector<graphics::DrawPrimitivePtr> DrawPrimitives_;
 #endif
 
 	bool paused_;

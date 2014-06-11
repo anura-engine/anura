@@ -175,7 +175,7 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 			y += key_label->height();
 			on_traverse_element(key, parent, value, nrows_);
 		}
-		foreach(const variant& k, value->get_keys().as_list()) {
+		foreach(const variant& k, value->getKeys().as_list()) {
 			y = traverse(depth+1, x, y, value, k, value->get_attr_mutable(k));
 		}
 		last_coords_.erase(x);
@@ -198,7 +198,7 @@ void tree_view_widget::gen_traverse(int depth,
 	variant* value)
 {
 	if(value->is_map()) {
-		foreach(const variant& k, value->get_keys().as_list()) {
+		foreach(const variant& k, value->getKeys().as_list()) {
 			gen_traverse(depth + 1, fn, k, value->get_attr_mutable(k));
 		}
 	} else if(value->is_list()) {

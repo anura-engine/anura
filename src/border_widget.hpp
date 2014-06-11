@@ -25,29 +25,30 @@
 #include "Color.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-//a widget which draws a border around another widget it holds as its child.
-class border_widget : public Widget
+namespace gui 
 {
-public:
-	border_widget(WidgetPtr child, const KRE::Color& col, int border_size=2);
-	border_widget(const variant& v, game_logic::FormulaCallable* e);
-	void setColor(const KRE::Color& col);
-	virtual WidgetPtr getWidgetById(const std::string& id);
-	ConstWidgetPtr getWidgetById(const std::string& id) const;
-	std::vector<WidgetPtr> getChildren() const;
-protected:
-	virtual void handleDraw() const;
-	virtual void handleProcess();
-private:
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	//a widget which draws a border around another widget it holds as its child.
+	class BorderWidget : public Widget
+	{
+	public:
+		BorderWidget(WidgetPtr child, const KRE::Color& col, int border_size=2);
+		BorderWidget(const variant& v, game_logic::FormulaCallable* e);
+		void setColor(const KRE::Color& col);
+		virtual WidgetPtr getWidgetById(const std::string& id);
+		ConstWidgetPtr getWidgetById(const std::string& id) const;
+		std::vector<WidgetPtr> getChildren() const;
+	protected:
+		virtual void handleDraw() const;
+		virtual void handleProcess();
+	private:
+		DECLARE_CALLABLE(BorderWidget);
+		bool handleEvent(const SDL_Event& event, bool claimed);
 
-	WidgetPtr child_;
-	KRE::Color color_;
-	int border_size_;
-};
+		WidgetPtr child_;
+		KRE::Color color_;
+		int border_size_;
+	};
 
-typedef boost::intrusive_ptr<border_widget> border_WidgetPtr;
+	typedef boost::intrusive_ptr<BorderWidget> BorderWidgetPtr;
 
 }

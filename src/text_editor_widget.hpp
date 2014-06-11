@@ -76,7 +76,7 @@ namespace gui
 
 		void set_on_change_handler(boost::function<void()> fn) { on_change_ = fn; }
 		void set_on_user_change_handler(boost::function<void()> fn) { on_user_change_ = fn; }
-		void set_on_move_cursor_handler(boost::function<void()> fn) { on_move_cursor_ = fn; }
+		void set_onMoveCursor_handler(boost::function<void()> fn) { onMoveCursor_ = fn; }
 		void set_on_enter_handler(boost::function<void()> fn) { on_enter_ = fn; }
 		void set_on_begin_enter_handler(boost::function<bool()> fn) { on_begin_enter_ = fn; }
 		void set_on_tab_handler(boost::function<void()> fn) { on_tab_ = fn; }
@@ -119,7 +119,7 @@ namespace gui
 
 		std::pair<int, int> mouse_position_to_row_col(int x, int y) const;
 
-		virtual void on_move_cursor(bool auto_shift=false);
+		virtual void onMoveCursor(bool auto_shift=false);
 
 	private:
 		DECLARE_CALLABLE(TextEditorWidget);
@@ -183,7 +183,7 @@ namespace gui
 
 		void truncate_col_position();
 
-		boost::function<void()> on_change_, on_user_change_, on_move_cursor_, on_enter_, on_tab_, on_escape_;
+		boost::function<void()> on_change_, on_user_change_, onMoveCursor_, on_enter_, on_tab_, on_escape_;
 		boost::function<void(bool)> on_change_focus_;
 		boost::function<bool()> on_begin_enter_;
 
@@ -196,7 +196,7 @@ namespace gui
 		bool begin_enter_delegate();
 
 		game_logic::formula_ptr ffl_on_change_;
-		game_logic::formula_ptr ffl_on_move_cursor_;
+		game_logic::formula_ptr ffl_onMoveCursor_;
 		game_logic::formula_ptr ffl_on_enter_;
 		game_logic::formula_ptr ffl_on_tab_;
 		game_logic::formula_ptr ffl_on_escape_;

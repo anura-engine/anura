@@ -197,9 +197,9 @@ TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable
 		on_change_ = boost::bind(&TextEditorWidget::change_delegate, this);
 		ffl_on_change_ = getEnvironment()->createFormula(v["on_change"]);
 	}
-	if(v.has_key("on_move_cursor")) {
-		on_move_cursor_ = boost::bind(&TextEditorWidget::move_cursor_delegate, this);
-		ffl_on_move_cursor_ = getEnvironment()->createFormula(v["on_move_cursor"]);
+	if(v.has_key("onMoveCursor")) {
+		onMoveCursor_ = boost::bind(&TextEditorWidget::move_cursor_delegate, this);
+		ffl_onMoveCursor_ = getEnvironment()->createFormula(v["onMoveCursor"]);
 	}
 	if(v.has_key("on_enter")) {
 		on_enter_ = boost::bind(&TextEditorWidget::enter_delegate, this);
@@ -558,7 +558,7 @@ bool TextEditorWidget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 					scroll_pos_ = 0; 
 				}
 				cursor_.col = find_equivalent_col(cursor_.col, cursor_.row+3, cursor_.row);
-				on_move_cursor();
+				onMoveCursor();
 			}
 			return true;
 		} else {
@@ -569,7 +569,7 @@ bool TextEditorWidget::handle_mouse_wheel(const SDL_MouseWheelEvent& event)
 					scroll_pos_ = text_.size(); 
 				}
 				cursor_.col = find_equivalent_col(cursor_.col, cursor_.row-3, cursor_.row);
-				on_move_cursor();
+				onMoveCursor();
 			}
 			return true;
 		}
@@ -592,7 +592,7 @@ void TextEditorWidget::setFocus(bool value)
 	if(nrows_ == 1 && value) {
 		cursor_ = Loc(0, text_.front().size());
 		select_ = Loc(0, 0);
-		on_move_cursor();
+		onMoveCursor();
 	}
 }
 
@@ -620,7 +620,7 @@ void TextEditorWidget::set_cursor(int row, int col, bool move_selection)
 		select_ = cursor_;
 	}
 
-	on_move_cursor();
+	onMoveCursor();
 }
 
 int TextEditorWidget::row_col_to_text_pos(int row, int col) const
@@ -669,7 +669,7 @@ bool TextEditorWidget::handle_mouse_button_down(const SDL_MouseButtonEvent& even
 		if(pos.first != -1) {
 			cursor_.row = pos.first;
 			cursor_.col = pos.second;
-			on_move_cursor();
+			onMoveCursor();
 		}
 
 		if(last_click_at_ != -1 && SDL_GetTicks() - last_click_at_ < 500) {
@@ -730,7 +730,7 @@ bool TextEditorWidget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 		if(pos.first != -1) {
 			cursor_.row = pos.first;
 			cursor_.col = pos.second;
-			on_move_cursor(true /*don't check for shift, assume it is*/);
+			onMoveCursor(true /*don't check for shift, assume it is*/);
 		}
 
 		if(mousey >= y() + height() && scroll_pos_ < int(text_.size())-2) {
@@ -741,12 +741,12 @@ bool TextEditorWidget::handle_mouse_motion(const SDL_MouseMotionEvent& event)
 			}
 
 			cursor_ = Loc(end, text_[end].size());
-			on_move_cursor(true /*don't check for shift, assume it is*/);
+			onMoveCursor(true /*don't check for shift, assume it is*/);
 			refresh_scrollbar();
 		} else if(mousey <= y() && scroll_pos_ > 0) {
 			--scroll_pos_;
 			cursor_ = Loc(scroll_pos_, 0);
-			on_move_cursor(true /*don't check for shift, assume it is*/);
+			onMoveCursor(true /*don't check for shift, assume it is*/);
 
 			refresh_scrollbar();
 		}
@@ -765,7 +765,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 		record_op();
 		cursor_.row = text_.size()-1;
 		cursor_.col = text_[cursor_.row].size();
-		on_move_cursor();
+		onMoveCursor();
 		select_ = Loc(0, 0);
 		if(select_ != cursor_) {
 			//a mouse-based copy for X-style copy/paste
@@ -882,7 +882,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 			}
 		}
 
-		on_move_cursor();
+		onMoveCursor();
 		break;
 	case SDLK_RIGHT:
 		record_op();
@@ -907,7 +907,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 				}
 			}
 		}
-		on_move_cursor();
+		onMoveCursor();
 		break;
 	case SDLK_UP:
 		record_op();
@@ -915,7 +915,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 			--cursor_.row;
 			cursor_.col = find_equivalent_col(cursor_.col, cursor_.row+1, cursor_.row);
 		}
-		on_move_cursor();
+		onMoveCursor();
 
 		break;
 	case SDLK_DOWN:
@@ -924,7 +924,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 			++cursor_.row;
 			cursor_.col = find_equivalent_col(cursor_.col, cursor_.row-1, cursor_.row);
 		}
-		on_move_cursor();
+		onMoveCursor();
 
 		break;
 	case SDLK_PAGEUP: {
@@ -938,7 +938,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 		}
 
 		if(move_cursor) {
-			on_move_cursor();
+			onMoveCursor();
 		}
 
 		if(!(SDL_GetModState()&KMOD_SHIFT)) {
@@ -958,7 +958,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 		}
 
 		if(move_cursor) {
-			on_move_cursor();
+			onMoveCursor();
 		}
 
 		if(!(SDL_GetModState()&KMOD_SHIFT)) {
@@ -976,7 +976,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 		}
 
 		cursor_.col = 0;
-		on_move_cursor();
+		onMoveCursor();
 		break;
 	case SDLK_END:
 		record_op();
@@ -988,7 +988,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 		}
 
 		cursor_.col = text_[cursor_.row].size();
-		on_move_cursor();
+		onMoveCursor();
 		break;
 	case SDLK_DELETE:
 	case SDLK_BACKSPACE:
@@ -1013,7 +1013,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 					cursor_.col = text_[cursor_.row].size();
 				}
 
-				on_move_cursor();
+				onMoveCursor();
 			}
 
 			if(cursor_.col >= text_[cursor_.row].size()) {
@@ -1071,7 +1071,7 @@ bool TextEditorWidget::handle_key_press(const SDL_KeyboardEvent& event)
 
 		refresh_scrollbar();
 		on_change();
-		on_move_cursor();
+		onMoveCursor();
 
 		if(on_enter_) {
 			on_enter_();
@@ -1118,7 +1118,7 @@ bool TextEditorWidget::handle_text_input_internal(const char* text)
 	}
 	select_ = cursor_;
 	if(nrows_ == 1) {
-		on_move_cursor();
+		onMoveCursor();
 	}
 
 	refresh_scrollbar();
@@ -1345,7 +1345,7 @@ void TextEditorWidget::on_page_down()
 	refresh_scrollbar();
 }
 
-void TextEditorWidget::on_move_cursor(bool auto_shift)
+void TextEditorWidget::onMoveCursor(bool auto_shift)
 {
 	const int start_pos = scroll_pos_;
 	if(cursor_.row < scroll_pos_) {
@@ -1379,8 +1379,8 @@ void TextEditorWidget::on_move_cursor(bool auto_shift)
 		handle_copy(true);
 	}
 
-	if(on_move_cursor_) {
-		on_move_cursor_();
+	if(onMoveCursor_) {
+		onMoveCursor_();
 	}
 }
 
@@ -1554,7 +1554,7 @@ void TextEditorWidget::set_search(const std::string& term)
 
 	select_ = cursor_ = search_itor->first;
 
-	on_move_cursor();
+	onMoveCursor();
 }
 
 void TextEditorWidget::next_search_match()
@@ -1672,7 +1672,7 @@ void TextEditorWidget::change_delegate()
 void TextEditorWidget::move_cursor_delegate()
 {
 	if(getEnvironment()) {
-		variant value = ffl_on_move_cursor_->execute(*getEnvironment());
+		variant value = ffl_onMoveCursor_->execute(*getEnvironment());
 		getEnvironment()->createFormula(value);
 	} else {
 		std::cerr << "TextEditorWidget::move_cursor_delegate() called without environment!" << std::endl;

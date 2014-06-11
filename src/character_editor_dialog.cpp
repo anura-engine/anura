@@ -86,7 +86,7 @@ gui::WidgetPtr character_editor_dialog::generate_grid(const std::string& categor
 	std::cerr << "generate grid: " << category << "\n";
 	using namespace gui;
 	WidgetPtr& result = grids_[category];
-	std::vector<gui::border_WidgetPtr>& borders = grid_borders_[category];
+	std::vector<gui::BorderWidgetPtr>& borders = grid_borders_[category];
 	if(!result || category == "") {
 		const std::string search_string = find_edit_->text();
 
@@ -118,7 +118,7 @@ gui::WidgetPtr character_editor_dialog::generate_grid(const std::string& categor
 				}
 				char_button->setTooltip(tooltip_str);
 				char_button->setDim(40, 40);
-				borders.push_back(new gui::border_widget(char_button, graphics::color(0,0,0,0)));
+				borders.push_back(new gui::BorderWidget(char_button, graphics::color(0,0,0,0)));
 				grid->add_col(gui::WidgetPtr(borders.back()));
 			} else {
 				borders.push_back(NULL);

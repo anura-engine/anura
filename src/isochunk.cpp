@@ -568,7 +568,7 @@ namespace voxel{
 			min_x = min_y = min_z = std::numeric_limits<int>::max();
 			max_x = max_y = max_z = std::numeric_limits<int>::min();
 
-			const variant& voxel_keys = voxels.get_keys();
+			const variant& voxel_keys = voxels.getKeys();
 			for(int n = 0; n != voxel_keys.num_elements(); ++n) {
 				ASSERT_LOG(voxel_keys[n].is_list() && voxel_keys[n].num_elements() == 3, "keys for voxels must be 3 elment lists.");
 				const int x = voxel_keys[n][0].as_int();
@@ -662,7 +662,7 @@ namespace voxel{
 			min_x = min_y = min_z = std::numeric_limits<int>::max();
 			max_x = max_y = max_z = std::numeric_limits<int>::min();
 
-			const variant& voxel_keys = voxels.get_keys();
+			const variant& voxel_keys = voxels.getKeys();
 			for(int n = 0; n != voxel_keys.num_elements(); ++n) {
 				ASSERT_LOG(voxel_keys[n].is_list() && voxel_keys[n].num_elements() == 3, "keys for voxels must be 3 elment lists.");
 				const int x = voxel_keys[n][0].as_int();

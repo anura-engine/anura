@@ -27,13 +27,9 @@
 #include <boost/shared_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
-#include "camera.hpp"
+#include "Color.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
-#include "lighting.hpp"
-#include "raster.hpp"
-#include "shaders.hpp"
-#include "texture.hpp"
 #include "variant.hpp"
 
 namespace graphics
@@ -43,21 +39,13 @@ namespace graphics
 	public:
 		explicit skybox(const variant& node);
 		virtual ~skybox();
-		void draw(const lighting_ptr lighting, const camera_callable_ptr& camera) const;
+		void draw() const;
 	private:
 		DECLARE_CALLABLE(skybox);
 
-		gles2::program_ptr shader_;
-
-		boost::shared_ptr<GLuint> tex_id_;
+		KRE::TexturePtr tex_;
 		
-		GLuint u_texture_id_;
-		GLuint u_mv_inverse_matrix_;
-		GLuint u_p_inverse_matrix_;
-		GLuint u_color_;
-		GLuint a_position_;
-
-		graphics::color color_;
+		KRE::Color color_;
 
 		skybox();
 		skybox(const skybox&);

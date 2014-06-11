@@ -310,11 +310,10 @@ namespace gui
 		return handleEvent(event, claimed) || must_swallow;
 	}
 
-	void Widget::draw() const
+	void Widget::draw(int xt, int yt, float rotate, float scale) const
 	{
 		if(visible_) {
 			KRE::Canvas::ColorManager cm(KRE::Color(255,255,255,disabled() ? disabledOpacity() : getAlpha()));
-
 			if(frame_set_ != NULL) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
 					y() - getPadHeight() - frame_set_->cornerHeight(), 
@@ -322,6 +321,7 @@ namespace gui
 					height() + getPadHeight()*2 + 2*frame_set_->cornerHeight(), resolution_ != 0);
 			}
 
+			KRE::Canvas::ModelManager mm(x(), y(), 0.0f, 1.0f);
 			if(clip_area_) {
 				auto cs = KRE::ClipScope::create(*clip_area_);
 				handleDraw();

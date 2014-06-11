@@ -58,7 +58,7 @@ struct game_type {
 
 		variant handlers_var = value["handlers"];
 		if(handlers_var.is_map()) {
-			foreach(const variant& key, handlers_var.get_keys().as_list()) {
+			foreach(const variant& key, handlers_var.getKeys().as_list()) {
 				handlers[key.as_string()] = game_logic::formula::create_optional_formula(handlers_var[key], functions.get());
 			}
 		}
@@ -432,8 +432,8 @@ void game::set_message(const std::string& msg)
 
 void game::process()
 {
-	if(db_client_) {
-		db_client_->process(100);
+	if(DbClient_) {
+		DbClient_->process(100);
 	}
 
 	if(started_) {
@@ -457,12 +457,12 @@ variant game::getValue(const std::string& key) const
 		}
 
 		return variant(&v);
-	} else if(key == "db_client") {
-		if(db_client_.get() == NULL) {
-			db_client_ = db_client::create();
+	} else if(key == "DbClient") {
+		if(DbClient_.get() == NULL) {
+			DbClient_ = DbClient::create();
 		}
 
-		return variant(db_client_.get());
+		return variant(DbClient_.get());
 	} else if(backup_callable_) {
 		return backup_callable_->query_value(key);
 	} else {

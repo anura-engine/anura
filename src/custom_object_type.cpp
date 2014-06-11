@@ -147,11 +147,11 @@ variant merge_into_prototype(variant prototype_node, variant node)
 		}
 	}
 
-	foreach(variant key, prototype_node.get_keys().as_list()) {
+	foreach(variant key, prototype_node.getKeys().as_list()) {
 		result[key] = prototype_node[key];
 	}
 
-	foreach(variant key, node.get_keys().as_list()) {
+	foreach(variant key, node.getKeys().as_list()) {
 		variant proto_value = result[key];
 		variant value = node[key];
 
@@ -393,7 +393,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 			continue;
 		}
 
-		foreach(variant key, properties_node.get_keys().as_list()) {
+		foreach(variant key, properties_node.getKeys().as_list()) {
 			const std::string& k = key.as_string();
 			ASSERT_LOG(k.empty() == false, "property is empty");
 			ASSERT_LOG(properties_to_infer.count(k) == 0, "Object " << id_ << " overrides property " << k << " which is defined with no type definition in a prototype. If you want to override a property in a prototype that property must have a type definition in the prototype");
@@ -513,7 +513,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 				continue;
 			}
 
-			foreach(variant key, properties_node.get_keys().as_list()) {
+			foreach(variant key, properties_node.getKeys().as_list()) {
 				const std::string& k = key.as_string();
 				if(properties_to_infer.count(k) == 0) {
 					continue;
@@ -1301,7 +1301,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	variant vars = node["vars"];
 	if(vars.is_null() == false) {
 		std::vector<std::string> var_str;
-		foreach(variant key, vars.get_keys().as_list()) {
+		foreach(variant key, vars.getKeys().as_list()) {
 			variables_[key.as_string()] = vars[key];
 			var_str.push_back(key.as_string());
 		}
@@ -1318,7 +1318,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	variant tmp_vars = node["tmp"];
 	if(tmp_vars.is_null() == false) {
 		std::vector<std::string> var_str;
-		foreach(variant key, tmp_vars.get_keys().as_list()) {
+		foreach(variant key, tmp_vars.getKeys().as_list()) {
 			tmp_variables_[key.as_string()] = tmp_vars[key];
 			var_str.push_back(key.as_string());
 		}
@@ -1337,7 +1337,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	consts_.reset(new game_logic::map_FormulaCallable);
 	variant consts = node["consts"];
 	if(consts.is_null() == false) {
-		foreach(variant key, consts.get_keys().as_list()) {
+		foreach(variant key, consts.getKeys().as_list()) {
 			consts_->add(key.as_string(), consts[key]);
 		}
 	}
@@ -1392,7 +1392,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 		}
 
 		const custom_object_callable_expose_private_scope expose_scope(*callable_definition_);
-		foreach(variant key, properties_node.get_keys().as_list()) {
+		foreach(variant key, properties_node.getKeys().as_list()) {
 			const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 			const std::string& k = key.as_string();
 			bool dynamic_initialization = false;

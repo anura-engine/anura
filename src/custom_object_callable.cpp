@@ -203,7 +203,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "collide_dimensions_not_in", "[string]" },
 	
 	{ "brightness", "int" },
-	{ "current_generator", "object" },
+	{ "CurrentGenerator", "object" },
 	{ "tags", "object" },
 	{ "draw_area", "any" },
 	{ "scale", "decimal" },
@@ -231,7 +231,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "xy_array", "[decimal]" },
 	{ "uv_segments", "[int]" },
 	
-	{ "draw_primitives", "[object]/[object|map]|map" },
+	{ "DrawPrimitives", "[object]/[object|map]|map" },
 	{ "event_handlers", "object" },
 	
 	{ "use_absolute_screen_coordinates", "bool" },

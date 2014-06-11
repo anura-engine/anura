@@ -171,7 +171,7 @@ namespace voxel
 		void addFaceTop(float x, float y, float z, float size, const variant& col);
 		void addFaceBottom(float x, float y, float z, float size, const variant& col);
 
-		void addColorAarrayData(int face, const graphics::color& color, std::vector<uint8_t>& carray);
+		void addColorAarrayData(int face, const KRE::Color& color, std::vector<uint8_t>& carray);
 
 		std::vector<std::vector<uint8_t> > carray_;
 		std::vector<size_t> cattrib_offsets_;

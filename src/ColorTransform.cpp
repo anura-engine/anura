@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -20,21 +20,11 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#pragma once
 
-#include <string>
+#include "ColorTransform.hpp"
 
-namespace checksum 
+/// XXX
+
+namespace KRE
 {
-	struct manager 
-	{
-		manager();
-		~manager();
-	};
-
-	const std::string& build_description();
-	const std::string& game_signature();
-	bool is_verified();
-	void verify_file(const std::string& fname, const std::string& contents);
-
 }

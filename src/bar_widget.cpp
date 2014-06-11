@@ -1,32 +1,40 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include "kre/Canvas.hpp"
+
 #include "asserts.hpp"
 #include "bar_widget.hpp"
-#include "raster.hpp"
 
 namespace gui
 {
-	bar_widget::bar_widget(const variant& v, game_logic::FormulaCallable* e)
-		: widget(v, e), segments_(v["segments"].as_int(1)), 
+	BarWidget::BarWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v, e), segments_(v["segments"].as_int(1)), 
 		segment_length_(v["segment_length"].as_int(5)), 
-		rotate_(GLfloat(v["rotation"].as_decimal().as_float())),
+		rotate_(v["rotation"].as_float(0)),
 		tick_width_(v["tick_width"].as_int(1)), scale_(2.0f),
 		drained_segments_(v["drained"].as_int(0)), animating_(false),
-		drain_rate_(v["drain_rate"].as_decimal(decimal(10.0)).as_float()),
+		drain_rate_(v["drain_rate"].as_double(10.0)),
 		total_bar_length_(0), drained_bar_length_(0), active_bar_length_(0),
 		left_cap_width_(0), right_cap_width_(0), 
 		animation_end_point_unscaled_(0.0f),
@@ -34,28 +42,28 @@ namespace gui
 		bar_max_width_(v["max_width"].as_int())
 	{
 		if(v.has_key("bar_color")) {
-			bar_color_ = graphics::color(v["bar_color"]).as_sdl_color();
+			bar_color_ = KRE::Color(v["bar_color"]);
 		} else {
-			bar_color_ = graphics::color("red").as_sdl_color();
+			bar_color_ = KRE::Color("red");
 		}
 		if(v.has_key("tick_color")) {
-			tick_mark_color_ = graphics::color(v["tick_color"]).as_sdl_color();
+			tick_mark_color_ = KRE::Color(v["tick_color"]);
 		} else {
-			tick_mark_color_ = graphics::color("black").as_sdl_color();
+			tick_mark_color_ = KRE::Color("black");
 		}
 		if(v.has_key("drained_bar_color")) {
-			drained_bar_color_ = graphics::color(v["drained_bar_color"]).as_sdl_color();
+			drained_bar_color_ = KRE::Color(v["drained_bar_color"]);
 		} else {
-			drained_bar_color_ = graphics::color("black").as_sdl_color();
+			drained_bar_color_ = KRE::Color("black");
 		}
 		if(v.has_key("drained_tick_color")) {
-			drained_tick_mark_color_ = graphics::color(v["drained_tick_color"]).as_sdl_color();
+			drained_tick_mark_color_ = KRE::Color(v["drained_tick_color"]);
 		} else {
-			drained_tick_mark_color_ = graphics::color("white").as_sdl_color();
+			drained_tick_mark_color_ = KRE::Color("white");
 		}
 
 		if(v.has_key("scale")) {
-			scale_ = GLfloat(v["scale"].as_decimal().as_float());
+			scale_ = v["scale"].as_float();
 		}
 
 		ASSERT_LOG(v.has_key("bar"), "Missing 'bar' attribute");
@@ -77,59 +85,59 @@ namespace gui
 		init();
 	}
 
-	bar_widget::~bar_widget()
+	BarWidget::~BarWidget()
 	{
 	}
 
-	void bar_widget::init_bar_section(const variant&v, bar_section* b)
+	void BarWidget::init_bar_section(const variant&v, bar_section* b)
 	{
-		b->texture = graphics::texture::get(v["image"].as_string());
+		b->texture = KRE::Texture::createTexture(v["image"].as_string());
 		if(v.has_key("area")) {
 			ASSERT_LOG(v["area"].is_list() && v["area"].num_elements() == 4, "'area' attribute must be four element list.");
 			b->area = rect(v["area"][0].as_int(), v["area"][1].as_int(), v["area"][2].as_int(), v["area"][3].as_int());
 		} else {
-			b->area = rect(0, 0, b->texture.width(), b->texture.height());
+			b->area = rect(0, 0, b->texture->width(), b->texture->height());
 		}
 	}
 
-	void bar_widget::init()
+	void BarWidget::init()
 	{
-		left_cap_width_ = left_cap_.area.w() ? left_cap_.area.w()*scale_ : left_cap_.texture.width()*scale_;
-		right_cap_width_ = right_cap_.area.w() ? right_cap_.area.w()*scale_ : right_cap_.texture.width()*scale_;
+		left_cap_width_ = left_cap_.area.w() ? static_cast<int>(left_cap_.area.w()*scale_) : static_cast<int>(left_cap_.texture->width()*scale_);
+		right_cap_width_ = right_cap_.area.w() ? static_cast<int>(right_cap_.area.w()*scale_) : static_cast<int>(right_cap_.texture->width()*scale_);
 
-		total_bar_length_ = (segments_ * segment_length_ + (segments_-1) * tick_width_) * scale_;
-		drained_bar_length_ = (drained_segments_ * segment_length_ + (drained_segments_-1) * tick_width_) * scale_;
-		active_bar_length_ = ((segments_-drained_segments_) * segment_length_ + (segments_-(drained_segments_?drained_segments_:1)) * tick_width_) * scale_;
+		total_bar_length_ = static_cast<int>(((segments_ * segment_length_ + (segments_-1) * tick_width_) * scale_));
+		drained_bar_length_ = static_cast<int>((drained_segments_ * segment_length_ + (drained_segments_-1) * tick_width_) * scale_);
+		active_bar_length_ = static_cast<int>(((segments_-drained_segments_) * segment_length_ + (segments_-(drained_segments_?drained_segments_:1)) * tick_width_) * scale_);
 		int w = total_bar_length_ + left_cap_width_ + right_cap_width_;
 		int h;
 		if(bar_height_ == 0) {
-			h = std::max(bar_.area.h(), std::max(left_cap_.area.h(), right_cap_.area.h()))*scale_;
+			h = static_cast<int>(std::max(bar_.area.h(), std::max(left_cap_.area.h(), right_cap_.area.h()))*scale_);
 		} else {
-			h = bar_height_*scale_;
+			h = static_cast<int>(bar_height_*scale_);
 		}
 
-		tick_distance_ = (segment_length_ + tick_width_) * scale_;
+		tick_distance_ = static_cast<int>((segment_length_ + tick_width_) * scale_);
 
 		if(bar_max_width_ != 0 && w > bar_max_width_) {
 			double ratio = bar_max_width_ / double(w);
-			left_cap_width_ = int(double(left_cap_width_) * ratio);
-			right_cap_width_ = int(double(right_cap_width_) * ratio);
-			total_bar_length_ = int(double(total_bar_length_) * ratio);
-			drained_bar_length_ = int(double(drained_bar_length_) * ratio);
-			active_bar_length_ = int(double(active_bar_length_) * ratio);
-			tick_distance_ = int(double(tick_distance_) * ratio);
+			left_cap_width_ = static_cast<int>(double(left_cap_width_) * ratio);
+			right_cap_width_ = static_cast<int>(double(right_cap_width_) * ratio);
+			total_bar_length_ = static_cast<int>(double(total_bar_length_) * ratio);
+			drained_bar_length_ = static_cast<int>(double(drained_bar_length_) * ratio);
+			active_bar_length_ = static_cast<int>(double(active_bar_length_) * ratio);
+			tick_distance_ = static_cast<int>(double(tick_distance_) * ratio);
 			w = bar_max_width_;
 		}
 
 		setDim(w, h);
 	}
 
-	void bar_widget::setRotation(GLfloat rotate)
+	void BarWidget::setRotation(float rotate)
 	{
 		rotate_ = rotate;
 	}
 
-BEGIN_DEFINE_CALLABLE(bar_widget, widget)
+BEGIN_DEFINE_CALLABLE(BarWidget, Widget)
 	DEFINE_FIELD(segments, "int")
 		return variant(obj.segments_);
 	DEFINE_SET_FIELD
@@ -148,7 +156,7 @@ BEGIN_DEFINE_CALLABLE(bar_widget, widget)
 	DEFINE_FIELD(scale, "decimal")
 		return variant(decimal(obj.scale_));
 	DEFINE_SET_FIELD
-		obj.scale_ = value.as_decimal().as_float();
+		obj.scale_ = value.as_float();
 		ASSERT_GT(obj.scale_, 0.0f);
 		obj.init();
 	DEFINE_FIELD(drained, "int")
@@ -166,7 +174,7 @@ BEGIN_DEFINE_CALLABLE(bar_widget, widget)
 				obj.drained_segments_after_anim_ = obj.segments_;
 			}
 			int animation_end_position = obj.segments_-obj.drained_segments_after_anim_;
-			obj.animation_end_point_unscaled_ = animation_end_position - animation_start_position;
+			obj.animation_end_point_unscaled_ = static_cast<float>(animation_end_position - animation_start_position);
 			obj.animating_ = true;
 			obj.init();
 		}
@@ -182,16 +190,16 @@ BEGIN_DEFINE_CALLABLE(bar_widget, widget)
 	DEFINE_FIELD(animation_position, "decimal")
 		return variant(decimal(0.0));
 	DEFINE_SET_FIELD
-		obj.animation_current_position_ = value.as_decimal().as_float();
-END_DEFINE_CALLABLE(bar_widget)
+		obj.animation_current_position_ = value.as_float();
+END_DEFINE_CALLABLE(BarWidget)
 
-	void bar_widget::handleProcess()
+	void BarWidget::handleProcess()
 	{
 		if(animating_) {
-			int end_point_unscaled = animation_end_point_unscaled_ * segment_length_;
+			int end_point_unscaled = static_cast<int>(animation_end_point_unscaled_ * segment_length_);
 			if(animation_end_point_unscaled_ > 0) {
 				// gaining segments
-				animation_current_position_ += (1.0 / drain_rate_) * segment_length_;
+				animation_current_position_ += static_cast<float>((1.0 / drain_rate_) * segment_length_);
 				if(animation_current_position_ >= end_point_unscaled) {
 					animation_current_position_ = 0;
 					drained_segments_ = drained_segments_after_anim_;
@@ -200,7 +208,7 @@ END_DEFINE_CALLABLE(bar_widget)
 				}
 			} else {
 				// loosing segments
-				animation_current_position_ -= (1.0 / drain_rate_) * segment_length_;
+				animation_current_position_ -= static_cast<float>((1.0 / drain_rate_) * segment_length_);
 				if(animation_current_position_ <= end_point_unscaled) {
 					animation_current_position_ = 0;
 					drained_segments_ = drained_segments_after_anim_;
@@ -210,100 +218,72 @@ END_DEFINE_CALLABLE(bar_widget)
 			}
 		}
 
-		widget::handleProcess();
+		Widget::handleProcess();
 	}
 
-	void bar_widget::draw_ticks(GLfloat x_offset, int segments, const SDL_Color& color) const
+	void BarWidget::drawTicks(float x_offset, int segments, const KRE::Color& color) const
 	{
 		// tick marks
 		if(segments > 1) {
-			std::vector<GLfloat>& varray = graphics::global_vertex_array();
-			varray.clear();
+			std::vector<float> varray;
+			varray.reserve(segments-1);
 			for(int n = 1; n < segments; ++n) {
-				//GLfloat lx = x_offset + GLfloat((segment_length_ * n + (n - 1) * tick_width_ + 1) * scale_);
-				GLfloat lx = x_offset + tick_distance_ * n;
+				const float lx = static_cast<float>(x_offset + tick_distance_ * n);
 				varray.push_back(lx);
-				varray.push_back(GLfloat(y()));
+				varray.push_back(static_cast<float>(y()));
 				varray.push_back(lx);
-				varray.push_back(GLfloat(y()+height()));
+				varray.push_back(static_cast<float>(y()+height()));
 			}
-			glLineWidth(GLfloat(tick_width_) * scale_);
-			glColor4ub(color.r, color.g, color.b, 255);
-#if defined(USE_SHADERS)
-			gles2::manager gles2_manager(gles2::get_simple_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-			glDrawArrays(GL_LINES, 0, varray.size()/2);
-#else
-			glDisable(GL_TEXTURE_2D);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-			glDrawArrays(GL_LINES, 0, varray.size()/2);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glEnable(GL_TEXTURE_2D);
-#endif
-			glLineWidth(1.0f);
+			KRE::Canvas::getInstance()->drawLines(varray, static_cast<float>(tick_width_)*scale_, color);
 		}
 	}
 
-	void bar_widget::handleDraw() const
+	void BarWidget::handleDraw() const
 	{
+		auto canvas = KRE::Canvas::getInstance();
 		int x_offset = x();
 		{
-			color_save_context color_saver;
-
 			// draw color under end caps.			
-			graphics::draw_rect(rect(x()+scale_, y()+scale_, left_cap_width_-2*scale_, height()-2*scale_), graphics::color(bar_color_));
-			graphics::draw_rect(rect(x()+left_cap_width_+total_bar_length_, y()+scale_, right_cap_width_-scale_, height()-2*scale_), graphics::color(drained_segments_ ? drained_bar_color_ : bar_color_));
+			canvas->drawSolidRect(rect(static_cast<int>(x()+scale_), static_cast<int>(y()+scale_), static_cast<int>(left_cap_width_-2*scale_), static_cast<int>(height()-2*scale_)), bar_color_);
+			canvas->drawSolidRect(rect(x()+left_cap_width_+total_bar_length_, static_cast<int>(y()+scale_), static_cast<int>(right_cap_width_-scale_), static_cast<int>(height()-2*scale_)), drained_segments_ ? drained_bar_color_ : bar_color_);
 
 			// background for active segments.
-			int anim_offset = animation_current_position_*scale_;
-			graphics::draw_rect(rect(x()+left_cap_width_, y(), active_bar_length_+anim_offset, height()), graphics::color(bar_color_));
+			int anim_offset = static_cast<int>(animation_current_position_*scale_);
+			canvas->drawSolidRect(rect(x()+left_cap_width_, y(), active_bar_length_+anim_offset, height()), bar_color_);
 
 			// background for drained segments.
 			if(drained_segments_ || animating_) {
-				graphics::draw_rect(rect(x()+active_bar_length_+left_cap_width_+anim_offset, y(), drained_bar_length_-anim_offset, height()), graphics::color(drained_bar_color_));
+				canvas->drawSolidRect(rect(x()+active_bar_length_+left_cap_width_+anim_offset, y(), drained_bar_length_-anim_offset, height()), drained_bar_color_);
 			}
 			
-			draw_ticks(x()+left_cap_width_, segments_-drained_segments_+(drained_segments_?1:0), tick_mark_color_);
-			draw_ticks(x()+left_cap_width_+active_bar_length_, drained_segments_, drained_tick_mark_color_);
+			drawTicks(static_cast<float>(x()+left_cap_width_), segments_-drained_segments_+(drained_segments_?1:0), tick_mark_color_);
+			drawTicks(static_cast<float>(x()+left_cap_width_+active_bar_length_), drained_segments_, drained_tick_mark_color_);
 		}
 
 		// left cap
 		if(left_cap_.area.w() == 0) {
-			graphics::blit_texture(left_cap_.texture, x_offset, y(), left_cap_width_, height(), rotate_);
+			canvas->blitTexture(left_cap_.texture, rotate_, rect(x_offset, y(), left_cap_width_, height()));
 		} else {
-			graphics::blit_texture(left_cap_.texture, x_offset, y(), left_cap_width_, height(), rotate_,
-				GLfloat(left_cap_.area.x())/left_cap_.texture.width(),
-				GLfloat(left_cap_.area.y())/left_cap_.texture.height(),
-				GLfloat(left_cap_.area.x2())/left_cap_.texture.width(),
-				GLfloat(left_cap_.area.y2())/left_cap_.texture.height());
+			canvas->blitTexture(left_cap_.texture, left_cap_.area, rotate_, rect(x_offset, y(), left_cap_width_, height()));
 		}
 		x_offset += left_cap_width_;
 		// bar
 		if(bar_.area.w() == 0) {
-			graphics::blit_texture(bar_.texture, x_offset, y(), total_bar_length_, height(), rotate_);
+			canvas->blitTexture(bar_.texture, rotate_, rect(x_offset, y(), total_bar_length_, height()));
 		} else {
-			graphics::blit_texture(bar_.texture, x_offset, y(), total_bar_length_, height(), rotate_,
-				GLfloat(bar_.area.x())/bar_.texture.width(),
-				GLfloat(bar_.area.y())/bar_.texture.height(),
-				GLfloat(bar_.area.x2())/bar_.texture.width(),
-				GLfloat(bar_.area.y2())/bar_.texture.height());
+			canvas->blitTexture(bar_.texture, bar_.area, rotate_, rect(x_offset, y(), total_bar_length_, height()));
 		}
 		x_offset += total_bar_length_;
 
 		// right cap
 		if(right_cap_.area.w() == 0) {
-			graphics::blit_texture(left_cap_.texture, x_offset, y(), right_cap_width_, height(), rotate_);
+			canvas->blitTexture(right_cap_.texture, rotate_, rect(x_offset, y(), right_cap_width_, height()));
 		} else {
-			graphics::blit_texture(right_cap_.texture, x_offset, y(), right_cap_width_, height(), rotate_,
-				GLfloat(right_cap_.area.x())/right_cap_.texture.width(),
-				GLfloat(right_cap_.area.y())/right_cap_.texture.height(),
-				GLfloat(right_cap_.area.x2())/right_cap_.texture.width(),
-				GLfloat(right_cap_.area.y2())/right_cap_.texture.height());
+			canvas->blitTexture(right_cap_.texture, right_cap_.area, rotate_, rect(x_offset, y(), right_cap_width_, height()));
 		}
 	}
 
-	bool bar_widget::handleEvent(const SDL_Event& event, bool claimed)
+	bool BarWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		return claimed;
 	}

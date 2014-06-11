@@ -160,7 +160,7 @@ void merge_variant_over(variant* aptr, variant b)
 {
 	variant& a = *aptr;
 
-	foreach(variant key, b.get_keys().as_list()) {
+	foreach(variant key, b.getKeys().as_list()) {
 		a = a.add_attr(key, append_variants(a[key], b[key]));
 	}
 	
@@ -208,7 +208,7 @@ variant deep_copy_variant(variant v)
 {
 	if(v.is_map()) {
 		std::map<variant,variant> m;
-		foreach(variant key, v.get_keys().as_list()) {
+		foreach(variant key, v.getKeys().as_list()) {
 			m[key] = deep_copy_variant(v[key]);
 		}
 
@@ -282,7 +282,7 @@ variant_builder& variant_builder::setValue(const std::string& name, const varian
 
 void variant_builder::merge_object(variant obj)
 {
-	foreach(variant key, obj.get_keys().as_list()) {
+	foreach(variant key, obj.getKeys().as_list()) {
 		setValue(key.as_string(), obj[key]);
 	}
 }

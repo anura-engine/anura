@@ -141,7 +141,7 @@ public:
 	explicit debug_command(const std::string& str) : str_(str)
 	{}
 	virtual void execute(editor& e) {
-		debug_console::add_message(str_);
+		debug_console::addMessage(str_);
 	}
 private:
 	std::string str_;

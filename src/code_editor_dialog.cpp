@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #ifndef NO_EDITOR
 #include <boost/bind.hpp>
 
@@ -30,7 +37,6 @@
 #include "drag_widget.hpp"
 #include "filesystem.hpp"
 #include "font.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
@@ -43,8 +49,6 @@
 #include "module.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
-#include "surface_cache.hpp"
 #include "text_editor_widget.hpp"
 #include "tile_map.hpp"
 #include "tileset_editor_dialog.hpp"
@@ -256,7 +260,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 
 		f.editor->setText(json::get_file_contents(fname));
 		f.editor->set_on_change_handler(boost::bind(&code_editor_dialog::on_code_changed, this));
-		f.editor->set_on_move_cursor_handler(boost::bind(&code_editor_dialog::on_move_cursor, this));
+		f.editor->set_onMoveCursor_handler(boost::bind(&code_editor_dialog::onMoveCursor, this));
 
 		foreach(const std::string& obj_type, custom_object_type::get_all_ids()) {
 			const std::string* path = custom_object_type::get_object_path(obj_type + ".cfg");
@@ -303,7 +307,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 	}
 
 	modified_ = editor_->text() != sys::read_file(module::map_file(fname));
-	on_move_cursor();
+	onMoveCursor();
 }
 
 void code_editor_dialog::select_file(int index)
@@ -317,7 +321,7 @@ void code_editor_dialog::select_file(int index)
 	load_file(files_[index].fname);
 }
 
-bool code_editor_dialog::has_keyboard_focus() const
+bool code_editor_dialog::hasKeyboardFocus() const
 {
 	return editor_->hasFocus() || search_->hasFocus() || replace_->hasFocus();
 }
@@ -353,7 +357,7 @@ bool code_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 		return claimed;
 	}
 
-	if(has_keyboard_focus()) {
+	if(hasKeyboardFocus()) {
 		switch(event.type) {
 		case SDL_KEYDOWN: {
 			if(event.key.keysym.sym == SDLK_f && (event.key.keysym.mod&KMOD_CTRL)) {
@@ -686,7 +690,7 @@ void code_editor_dialog::process()
 				suggestions_grid->add_col(WidgetPtr(new label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
 			}
 
-			suggestions_grid_.reset(new border_widget(suggestions_grid, graphics::color(255,255,255,255)));
+			suggestions_grid_.reset(new BorderWidget(suggestions_grid, graphics::color(255,255,255,255)));
 		}
 		std::cerr << "SUGGESTIONS: " << suggestions_.size() << ":\n";
 		foreach(const Suggestion& suggestion, suggestions_) {
@@ -841,7 +845,7 @@ void code_editor_dialog::on_code_changed()
 {
 	if(!modified_) {
 		modified_ = true;
-		on_move_cursor();
+		onMoveCursor();
 	}
 
 	if(!invalidated_) {
@@ -864,7 +868,7 @@ void visit_potential_formula_str(variant candidate, variant* result, int row, in
 }
 }
 
-void code_editor_dialog::on_move_cursor()
+void code_editor_dialog::onMoveCursor()
 {
 	visualize_widget_.reset();
 
@@ -1078,9 +1082,9 @@ void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn
 
 	using namespace gui;
 
-	using debug_console::console_dialog;
+	using debug_console::ConsoleDialog;
 
-	boost::intrusive_ptr<console_dialog> console(new console_dialog(level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
+	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
 
 	grid_ptr call_grid(new grid(1));
 	call_grid->set_max_height(graphics::screen_height() - console->y());

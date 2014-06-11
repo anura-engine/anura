@@ -43,7 +43,7 @@ using namespace gles2;
 namespace
 {
 
-class rect_primitive : public draw_primitive
+class rect_primitive : public DrawPrimitive
 {
 public:
 	explicit rect_primitive(const variant& v);
@@ -65,7 +65,7 @@ private:
 };
 
 rect_primitive::rect_primitive(const variant& v)
-	: draw_primitive(v), area_(v["area"]), color_(v["color"]), 
+	: DrawPrimitive(v), area_(v["area"]), color_(v["color"]), 
      shader_(gles2::get_simple_shader())
 {
 	if(v.has_key("shader")) {
@@ -108,17 +108,17 @@ void rect_primitive::handleDraw(const lighting_ptr& lighting, const camera_calla
 
 variant rect_primitive::getValue(const std::string& key) const
 {
-	return draw_primitive::getValue(key);
+	return DrawPrimitive::getValue(key);
 }
 
 void rect_primitive::setValue(const std::string& key, const variant& value)
 {
-	draw_primitive::setValue(key, value);
+	DrawPrimitive::setValue(key, value);
 }
 
 typedef boost::array<GLfloat, 2> FPoint;
 
-class circle_primitive : public draw_primitive
+class circle_primitive : public DrawPrimitive
 {
 public:
 	explicit circle_primitive(const variant& v);
@@ -144,7 +144,7 @@ private:
 };
 
 circle_primitive::circle_primitive(const variant& v)
-   : draw_primitive(v),
+   : DrawPrimitive(v),
      radius_(v["radius"].as_decimal().as_float()),
      shader_(gles2::get_simple_shader())
 {
@@ -211,7 +211,7 @@ void circle_primitive::setValue(const std::string& key, const variant& value)
 {
 }
 
-class arrow_primitive : public draw_primitive
+class arrow_primitive : public DrawPrimitive
 {
 public:
 	explicit arrow_primitive(const variant& v);
@@ -250,7 +250,7 @@ private:
 };
 
 arrow_primitive::arrow_primitive(const variant& v)
-  : draw_primitive(v),
+  : DrawPrimitive(v),
     granularity_(v["granularity"].as_decimal(decimal(0.005)).as_float()),
     arrow_head_length_(v["arrow_head_length"].as_int(10)),
     arrow_head_width_(v["arrow_head_width"].as_decimal(decimal(2.0)).as_float()),
@@ -472,7 +472,7 @@ void arrow_primitive::curve(const FPoint& p0, const FPoint& p1, const FPoint& p2
 	}
 }
 
-class wireframe_box_primitive : public draw_primitive
+class wireframe_box_primitive : public DrawPrimitive
 {
 public:
 	explicit wireframe_box_primitive(const variant& v);
@@ -506,7 +506,7 @@ private:
 };
 
 wireframe_box_primitive::wireframe_box_primitive(const variant& v)
-	: draw_primitive(v), scale_(glm::vec3(1.0f))
+	: DrawPrimitive(v), scale_(glm::vec3(1.0f))
 {
 	if(v.has_key("points")) {
 		ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
@@ -601,7 +601,7 @@ void wireframe_box_primitive::handleDraw(const lighting_ptr& lighting, const cam
 }
 #endif
 
-BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, draw_primitive)
+BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, DrawPrimitive)
 	DEFINE_FIELD(color, "[int,int,int,int]")
 		return obj.color_.write();
 	DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
@@ -638,11 +638,11 @@ END_DEFINE_CALLABLE(wireframe_box_primitive)
 
 }
 
-class box_primitive : public draw_primitive
+class box_primitive : public DrawPrimitive
 {
 public:
 	explicit box_primitive(const variant& v)
-		: draw_primitive(v), scale_(glm::vec3(1.0f))
+		: DrawPrimitive(v), scale_(glm::vec3(1.0f))
 	{
 		if(v.has_key("points")) {
 			ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
@@ -793,7 +793,7 @@ private:
 	box_primitive(const box_primitive&);
 };
 
-BEGIN_DEFINE_CALLABLE(box_primitive, draw_primitive)
+BEGIN_DEFINE_CALLABLE(box_primitive, DrawPrimitive)
 	DEFINE_FIELD(color, "[int,int,int,int]")
 		return obj.color_.write();
 	DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
@@ -829,11 +829,11 @@ BEGIN_DEFINE_CALLABLE(box_primitive, draw_primitive)
 END_DEFINE_CALLABLE(box_primitive)
 
 
-draw_primitive_ptr draw_primitive::create(const variant& v)
+DrawPrimitivePtr DrawPrimitive::create(const variant& v)
 {
 	if(v.is_callable()) {
-		draw_primitive_ptr dp = v.try_convert<draw_primitive>();
-		ASSERT_LOG(dp != NULL, "Couldn't convert callable type to draw_primitive");
+		DrawPrimitivePtr dp = v.try_convert<DrawPrimitive>();
+		ASSERT_LOG(dp != NULL, "Couldn't convert callable type to DrawPrimitive");
 		return dp;
 	}
 	const std::string type = v["type"].as_string();
@@ -850,10 +850,10 @@ draw_primitive_ptr draw_primitive::create(const variant& v)
 	}
 
 	ASSERT_LOG(false, "UNKNOWN DRAW PRIMITIVE TYPE: " << v["type"].as_string());
-	return draw_primitive_ptr();
+	return DrawPrimitivePtr();
 }
 
-draw_primitive::draw_primitive(const variant& v)
+DrawPrimitive::DrawPrimitive(const variant& v)
   : src_factor_(GL_SRC_ALPHA), dst_factor_(GL_ONE_MINUS_SRC_ALPHA)
 {
 	if(v.has_key("blend")) {
@@ -867,7 +867,7 @@ draw_primitive::draw_primitive(const variant& v)
 	}
 }
 
-void draw_primitive::draw() const
+void DrawPrimitive::draw() const
 {
 	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
 		glBlendFunc(src_factor_, dst_factor_);
@@ -879,7 +879,7 @@ void draw_primitive::draw() const
 }
 
 #ifdef USE_ISOMAP
-void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
+void DrawPrimitive::draw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
 {
 	if(src_factor_ != GL_SRC_ALPHA || dst_factor_ != GL_ONE_MINUS_SRC_ALPHA) {
 		glBlendFunc(src_factor_, dst_factor_);
@@ -891,7 +891,7 @@ void draw_primitive::draw(const lighting_ptr& lighting, const camera_callable_pt
 }
 #endif
 
-BEGIN_DEFINE_CALLABLE_NOBASE(draw_primitive)
+BEGIN_DEFINE_CALLABLE_NOBASE(DrawPrimitive)
 	DEFINE_FIELD(blend, "string")
 		if(obj.src_factor_ == GL_ONE && obj.dst_factor_ == GL_ZERO) {
 			return variant("overwrite");
@@ -907,7 +907,7 @@ BEGIN_DEFINE_CALLABLE_NOBASE(draw_primitive)
 		} else {
 			ASSERT_LOG(false, "Unrecognized blend mode: " << value.as_string());
 		}
-END_DEFINE_CALLABLE(draw_primitive)
+END_DEFINE_CALLABLE(DrawPrimitive)
 
 }
 #endif

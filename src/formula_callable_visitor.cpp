@@ -31,7 +31,7 @@ void FormulaCallableVisitor::visit(variant* v)
 		}
 		visited_.insert(v->get_addr());
 
-		foreach(const variant& key, v->get_keys().as_list()) {
+		foreach(const variant& key, v->getKeys().as_list()) {
 			visit(v->get_attr_mutable(key));
 		}
 	} else if(v->is_callable()) {

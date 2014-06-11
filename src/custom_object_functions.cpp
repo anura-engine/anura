@@ -1094,7 +1094,7 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(shake_screen)
 
 FUNCTION_DEF(radial_current, 2, 2, "radial_current(int intensity, int radius) -> current object: creates a current generator with the given intensity and radius")
-	return variant(new radial_current_generator(args()[0]->evaluate(variables).as_int(), args()[1]->evaluate(variables).as_int()));
+	return variant(new RadialCurrentGenerator(args()[0]->evaluate(variables).as_int(), args()[1]->evaluate(variables).as_int()));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
 	ARG_TYPE("int")
@@ -1203,7 +1203,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 		variant last_key;
 
 		variant properties = arg3;
-		variant keys = properties.get_keys();
+		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			ASSERT_LOG(keys[n].is_string(), "Non-string key in spawn map: " << keys[n].write_json());
 			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
@@ -1355,7 +1355,7 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	if(properties.is_map()) {
 		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
 		variant last_key;
-		variant keys = properties.get_keys();
+		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
 				last_key = keys[n];
@@ -1443,7 +1443,7 @@ FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoin
 		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
 		variant last_key;
 		variant properties = args()[4]->evaluate(variables);
-		variant keys = properties.get_keys();
+		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
 				last_key = keys[n];
@@ -2847,7 +2847,7 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(add_wave)
 
 FUNCTION_DEF(rect_current, 7, 7, "rect_current(int x, int y, int w, int h, int xvelocity, int yvelocity, int strength) -> current generator object: creates a current generator object that has a current with the given parameters. Set the return value of this function to an object's rect_current to attach it to an object and thus place it in the level.")
-	return variant(new rect_current_generator(rect(
+	return variant(new RectCurrentGenerator(rect(
 	                  args()[0]->evaluate(variables).as_int(),
 	                  args()[1]->evaluate(variables).as_int(),
 	                  args()[2]->evaluate(variables).as_int(),
@@ -2973,7 +2973,7 @@ public:
 			return;
 		}
 
-		blur_info blur(double(alpha_)/1000.0, double(fade_)/1000.0, granularity_);
+		BlurInfo blur(double(alpha_)/1000.0, double(fade_)/1000.0, granularity_);
 		ob.set_blur(&blur);
 	}
 };

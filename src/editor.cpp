@@ -462,7 +462,7 @@ class editor_mode_dialog : public gui::dialog
 	editor& editor_;
 	gui::WidgetPtr context_menu_;
 
-	std::vector<gui::border_widget*> tool_borders_;
+	std::vector<gui::BorderWidget*> tool_borders_;
 
 	void select_tool(int tool)
 	{
@@ -519,7 +519,7 @@ public:
 			  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 			             boost::bind(&editor_mode_dialog::select_tool, this, n)));
 			tool_button->setTooltip(ToolStrings[n]);
-			tool_borders_.push_back(new border_widget(tool_button, graphics::color(0,0,0,0)));
+			tool_borders_.push_back(new BorderWidget(tool_button, graphics::color(0,0,0,0)));
 			grid->add_col(WidgetPtr(tool_borders_.back()));
 		}
 
@@ -1049,7 +1049,7 @@ void editor::setup_for_editing()
 	try {
 		load_stats();
 	} catch(...) {
-		debug_console::add_message("Error parsing stats");
+		debug_console::addMessage("Error parsing stats");
 		std::cerr << "ERROR LOADING STATS\n";
 	}
 
@@ -1063,10 +1063,10 @@ void editor::setup_for_editing()
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
 					assert(c->allow_level_collisions() || !entity_collides_with_level(*lvl, *c, MOVE_NONE));
 					if(lvl == lvl_) {
-						debug_console::add_message(formatter() << "Adjusted position of " << c->debug_description() << " to fit: (" << x << "," << y << ") -> (" << c->x() << "," << c->y() << ")");
+						debug_console::addMessage(formatter() << "Adjusted position of " << c->debug_description() << " to fit: (" << x << "," << y << ") -> (" << c->x() << "," << c->y() << ")");
 					}
 				} else {
-					debug_console::add_message(formatter() << c->debug_description() << " is in an illegal position and can't be auto-corrected");
+					debug_console::addMessage(formatter() << c->debug_description() << " is in an illegal position and can't be auto-corrected");
 				}
 			}
 		}
@@ -1210,7 +1210,7 @@ void editor::process()
 
 	g_codebar_width = code_dialog_ ? code_dialog_->width() : 0;
 
-	if(code_dialog_ && code_dialog_->has_keyboard_focus()) {
+	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
 		return;
 	}
 
@@ -1557,7 +1557,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 			SDL_SetRelativeMouseMode(mouselook_mode_ ? SDL_TRUE : SDL_FALSE);
 			SDL_GetRelativeMouseState(NULL, NULL);
 			if(mouselook_mode_) {
-				debug_console::add_message("Entering mouselook mode. Press 'e' to exit");
+				debug_console::addMessage("Entering mouselook mode. Press 'e' to exit");
 			}
 		}
 
@@ -1779,7 +1779,7 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 
 void editor::handle_scrolling()
 {
-	if(code_dialog_ && code_dialog_->has_keyboard_focus()) {
+	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
 		return;
 	}
 	const int ScrollSpeed = 24*zoom_;
@@ -2624,15 +2624,15 @@ void editor::download_stats()
 {
 	const bool result = stats::download(lvl_->id());
 	if(result) {
-		debug_console::add_message("Got latest stats from the server");
+		debug_console::addMessage("Got latest stats from the server");
 		try {
 			load_stats();
 		} catch(...) {
-			debug_console::add_message("Error parsing stats");
+			debug_console::addMessage("Error parsing stats");
 			std::cerr << "ERROR LOADING STATS\n";
 		}
 	} else {
-		debug_console::add_message("Download of stats failed");
+		debug_console::addMessage("Download of stats failed");
 	}
 }
 
@@ -3026,7 +3026,7 @@ void editor::change_tool(EDIT_TOOL tool)
 			lvl_->editor_clear_selection();
 		} else {
 			tool_ = last_tool;
-			debug_console::add_message("There isn't a hex tile definition file or file is empty/invalid!");
+			debug_console::addMessage("There isn't a hex tile definition file or file is empty/invalid!");
 			return;
 		}
 		break;
@@ -3041,7 +3041,7 @@ void editor::change_tool(EDIT_TOOL tool)
 			lvl_->editor_clear_selection();
 		} else {
 			tool_ = last_tool;
-			debug_console::add_message("Not built with 'isomap' support, i.e. -DUSE_ISOMAP");
+			debug_console::addMessage("Not built with 'isomap' support, i.e. -DUSE_ISOMAP");
 			return;
 		}
 	}
@@ -4123,9 +4123,9 @@ void editor::generate_remove_commands(entity_ptr c, std::vector<boost::function<
 	}
 }
 
-bool editor::has_keyboard_focus() const
+bool editor::hasKeyboardFocus() const
 {
-	if(code_dialog_ && code_dialog_->has_keyboard_focus()) {
+	if(code_dialog_ && code_dialog_->hasKeyboardFocus()) {
 		return true;
 	}
 

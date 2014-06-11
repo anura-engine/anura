@@ -300,7 +300,7 @@ namespace KRE
 	}
 
 	/*BEGIN_DEFINE_CALLABLE_NOBASE(Camera)
-	BEGIN_DEFINE_FN(screen_to_world, "(int,int,int=0,int=0) -> [decimal,decimal,decimal]")
+	CompressedData(screen_to_world, "(int,int,int=0,int=0) -> [decimal,decimal,decimal]")
 		int wx = preferences::actual_screen_width();
 		int wy = preferences::actual_screen_height();
 		if(NUM_FN_ARGS > 2) {

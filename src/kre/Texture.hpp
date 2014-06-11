@@ -100,12 +100,12 @@ namespace KRE
 
 		void InternalInit();
 
-		unsigned Width() const { return width_; }
-		unsigned Height() const { return height_; }
-		unsigned Depth() const { return depth_; }
+		unsigned width() const { return width_; }
+		unsigned height() const { return height_; }
+		unsigned depth() const { return depth_; }
 
-		unsigned SurfaceWidth() const { return surface_width_; }
-		unsigned SurfacehHeight() const { return surface_height_; }
+		unsigned surfaceWidth() const { return surface_width_; }
+		unsigned surfacehHeight() const { return surface_height_; }
 
 		virtual void Init() = 0;
 		virtual void Bind() = 0;

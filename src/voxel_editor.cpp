@@ -174,7 +174,7 @@ private:
 
 	VOXEL_TOOL tool_;
 
-	std::vector<gui::border_widget*> tool_borders_;
+	std::vector<gui::BorderWidget*> tool_borders_;
 
 	bool symmetric_;
 };
@@ -2030,7 +2030,7 @@ void voxel_editor::init()
 		ButtonPtr tool_button(
 		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 		      boost::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
-		tool_borders_.push_back(new border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
 		tools_grid->add_col(WidgetPtr(tool_borders_.back()));
 	}
 

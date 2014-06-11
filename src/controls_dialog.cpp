@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <boost/bind.hpp>
 
 #include "button.hpp"
@@ -23,27 +30,22 @@
 #include "draw_scene.hpp"
 #include "graphical_font_label.hpp"
 #include "i18n.hpp"
-#include "level.hpp"
 #include "key_button.hpp"
 #include "preferences.hpp"
 
-namespace {
-gui::key_ButtonPtr key_buttons[controls::NUM_CONTROLS];
-
-void end_dialog(gui::dialog* d)
+namespace 
 {
-	using namespace controls;
-	for(int n = 0; n < NUM_CONTROLS; ++n) {
-		const CONTROL_ITEM item = static_cast<CONTROL_ITEM>(n);
-		set_keycode(item, key_buttons[item]->get_key());
+	gui::KeyButtonPtr KeyButtons[controls::NUM_CONTROLS];
+
+	void end_dialog(gui::Dialog* d)
+	{
+		using namespace controls;
+		for(int n = 0; n < NUM_CONTROLS; ++n) {
+			const CONTROL_ITEM item = static_cast<CONTROL_ITEM>(n);
+			set_keycode(item, KeyButtons[item]->get_key());
+		}
+		d->close();
 	}
-	d->close();
-}
-
-void do_draw_scene() {
-	draw_scene(level::current(), last_draw_position());
-}
-
 }
 
 void show_controls_dialog()
@@ -53,40 +55,40 @@ void show_controls_dialog()
 	int height = preferences::virtual_screen_height() - 20;
 	if (preferences::virtual_screen_height() > 480)
 		height -= 100;
-	dialog d(200, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-400, height);
+	Dialog d(200, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-400, height);
 	d.set_background_frame("empty_window");
-	d.set_draw_background_fn(do_draw_scene);
+	d.set_draw_background_fn(draw_last_scene);
 
 
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
 		const CONTROL_ITEM item = static_cast<CONTROL_ITEM>(n);
-		key_buttons[item] = key_ButtonPtr(new key_button(get_keycode(item), BUTTON_SIZE_DOUBLE_RESOLUTION));
-		key_buttons[item]->setDim(70, 60);
+		KeyButtons[item] = KeyButtonPtr(new KeyButton(get_keycode(item), BUTTON_SIZE_DOUBLE_RESOLUTION));
+		KeyButtons[item]->setDim(70, 60);
 	}
 
 	WidgetPtr t1(new graphical_font_label(_("Directions"), "door_label", 2));
-	WidgetPtr b1(key_buttons[CONTROL_UP]);
-	WidgetPtr b2(key_buttons[CONTROL_DOWN]);
-	WidgetPtr b3(key_buttons[CONTROL_LEFT]);
-	WidgetPtr b4(key_buttons[CONTROL_RIGHT]);
+	WidgetPtr b1(KeyButtons[CONTROL_UP]);
+	WidgetPtr b2(KeyButtons[CONTROL_DOWN]);
+	WidgetPtr b3(KeyButtons[CONTROL_LEFT]);
+	WidgetPtr b4(KeyButtons[CONTROL_RIGHT]);
 	WidgetPtr t2(new graphical_font_label(_("Jump"), "door_label", 2));
-	WidgetPtr b5(key_buttons[CONTROL_JUMP]);
+	WidgetPtr b5(KeyButtons[CONTROL_JUMP]);
 	WidgetPtr t3(new graphical_font_label(_("Tongue"), "door_label", 2));
-	WidgetPtr b6(key_buttons[CONTROL_TONGUE]);
+	WidgetPtr b6(KeyButtons[CONTROL_TONGUE]);
 	WidgetPtr t4(new graphical_font_label(_("Attack"), "door_label", 2));
-	WidgetPtr b7(key_buttons[CONTROL_ATTACK]);
-	WidgetPtr b8(new button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
+	WidgetPtr b7(KeyButtons[CONTROL_ATTACK]);
+	WidgetPtr b8(new Button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	b8->setDim(230, 60);
 
-	int start_y = (d.height() - 4*b1->height() - 2*t1->height() - 7*d.padding())/2;
-	d.addWidget(t1, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
-	d.addWidget(b1, d.width()/2 - b1->width()/2, start_y + t1->height() + d.padding());
-	d.addWidget(b3, d.width()/2 - b1->width()*1.5 - d.padding(), start_y + t1->height() + b1->height() + 2*d.padding(), dialog::MOVE_RIGHT);
-	d.addWidget(b2, dialog::MOVE_RIGHT);
+	int start_y = static_cast<int>((d.height() - 4.0*b1->height() - 2.0*t1->height() - 7.0*d.padding())/2.0);
+	d.addWidget(t1, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), start_y);
+	d.addWidget(b1, static_cast<int>(d.width()/2.0 - b1->width()/2.0), start_y + t1->height() + d.padding());
+	d.addWidget(b3, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), static_cast<int>(start_y + t1->height() + b1->height() + 2.0*d.padding()), Dialog::MOVE_RIGHT);
+	d.addWidget(b2, Dialog::MOVE_RIGHT);
 	d.addWidget(b4);
 
 	start_y += t1->height() + 5*d.padding() + 2*b1->height();
-	d.addWidget(t2, d.width()/2 - b1->width()*1.5 - d.padding(), start_y);
+	d.addWidget(t2, static_cast<int>(d.width()/2 - b1->width()*1.5 - d.padding()), start_y);
 	d.addWidget(b5);
 	d.addWidget(t3, d.width()/2 - b1->width()/2, start_y);
 	d.addWidget(b6);

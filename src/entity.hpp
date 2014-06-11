@@ -321,7 +321,7 @@ protected:
 	variant control_status_user() const { return controls_user_; }
 	void read_controls(int cycle);
 
-	void set_current_generator(current_generator* generator);
+	void set_CurrentGenerator(CurrentGenerator* generator);
 
 	void set_respawn(bool value) { respawn_ = value; }
 
@@ -366,7 +366,7 @@ private:
 	unsigned int solid_dimensions_, collide_dimensions_;
 	unsigned int weak_solid_dimensions_, weak_collide_dimensions_;
 
-	current_generator_ptr current_generator_;
+	CurrentGeneratorPtr CurrentGenerator_;
 
 	typedef std::pair<int, variant> ScheduledCommand;
 	std::vector<ScheduledCommand> scheduled_commands_;

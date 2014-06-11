@@ -30,11 +30,11 @@
 
 namespace gui
 {
-	class scrollbar_widget : public Widget
+	class scrollBarWidget : public Widget
 	{
 	public:
-		explicit scrollbar_widget(boost::function<void(int)> handler);
-		explicit scrollbar_widget(const variant& v, game_logic::FormulaCallable* e);
+		explicit scrollBarWidget(boost::function<void(int)> handler);
+		explicit scrollBarWidget(const variant& v, game_logic::FormulaCallable* e);
 
 		void set_range(int total_height, int window_height);
 		void setLoc(int x, int y);
@@ -67,6 +67,6 @@ namespace gui
 		void handler_delegate(int);
 	};
 
-	typedef boost::intrusive_ptr<scrollbar_widget> ScrollbarWidgetPtr;
+	typedef boost::intrusive_ptr<scrollBarWidget> ScrollbarWidgetPtr;
 
 }

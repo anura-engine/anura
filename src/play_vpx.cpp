@@ -68,7 +68,7 @@ namespace movie
 	}
 
 	vpx::vpx(const variant& v, game_logic::FormulaCallable* e)
-		: widget(v, e), loop_(false), cancel_on_keypress_(false), playing_(false), flags_(0), img_(NULL)
+		: Widget(v, e), loop_(false), cancel_on_keypress_(false), playing_(false), flags_(0), img_(NULL)
 	{
 		for(auto& ut : u_tex_) {
 			ut = -1;

@@ -27,7 +27,7 @@ namespace gui
 	}
 
 	custom_object_widget::custom_object_widget(const variant& v, game_logic::FormulaCallable* e)
-		: widget(v, e)
+		: Widget(v, e)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		ASSERT_LOG(v.has_key("object") == true, "You must provide an object");
@@ -58,7 +58,7 @@ namespace gui
 		if(v.has_key("properties")) {
 			ASSERT_LOG(v["properties"].is_map(), "properties field must be a map");
 			const variant& properties = v["properties"];
-			variant keys = properties.get_keys();
+			variant keys = properties.getKeys();
 			for(int n = 0; n != keys.num_elements(); ++n) {
 				variant value = properties[keys[n]];
 				entity_->mutate_value(keys[n].as_string(), value);

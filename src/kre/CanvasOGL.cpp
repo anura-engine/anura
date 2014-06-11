@@ -57,10 +57,10 @@ namespace KRE
 		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
 		ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
-		const float tx1 = float(src.x()) / texture->Width();
-		const float ty1 = float(src.y()) / texture->Height();
-		const float tx2 = src.w() == 0 ? 1.0f : float(src.x2()) / texture->Width();
-		const float ty2 = src.h() == 0 ? 1.0f : float(src.y2()) / texture->Height();
+		const float tx1 = float(src.x()) / texture->width();
+		const float ty1 = float(src.y()) / texture->height();
+		const float tx2 = src.w() == 0 ? 1.0f : float(src.x2()) / texture->width();
+		const float ty2 = src.h() == 0 ? 1.0f : float(src.y2()) / texture->height();
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,
@@ -80,7 +80,7 @@ namespace KRE
 		};
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vx2)/2.0f,-(vy1+vy2)/2.0f,0.0f));
-		glm::mat4 mvp = mvp_ * model;
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = Shader::ShaderProgram::DefaultSystemShader();
 		shader->MakeActive();
 		texture->Bind();
@@ -119,7 +119,7 @@ namespace KRE
 		};
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
-		glm::mat4 mvp = mvp_ * model;
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = Shader::ShaderProgram::DefaultSystemShader();
 		shader->MakeActive();
 		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
@@ -167,7 +167,7 @@ namespace KRE
 		};
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
-		glm::mat4 mvp = mvp_ * model;
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		auto shader = Shader::ShaderProgram::DefaultSystemShader();
 		shader->MakeActive();
 		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
@@ -224,7 +224,7 @@ namespace KRE
 		};
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
-		glm::mat4 mvp = mvp_ * model;
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
 		static Shader::ShaderProgramPtr shader = Shader::ShaderProgram::Factory("simple");
 		shader->MakeActive();
 		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));

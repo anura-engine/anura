@@ -119,7 +119,7 @@ namespace Geometry
 		int num_items = 0;
 		std::vector<std::string> buf = split(str, ",| |;");
 		for(int n = 0; n != 4 && n != buf.size(); ++n) {
-			items[num_items++] = lex::lexical_cast<T>(buf[n]);
+			items[num_items++] = boost::lexical_cast<T>(buf[n]);
 		}
 
 		switch(num_items) {
@@ -185,4 +185,31 @@ namespace Geometry
 		return !operator==(a, b);
 	}
 
+	template<typename T> inline
+	bool rects_intersect(const Rect<T>& a, const Rect<T>& b)
+	{
+		if(a.x2() <= b.x() || b.x2() <= a.x()) {
+			return false;
+		}
+
+		if(a.y2() <= b.y() || b.y2() <= a.y()) {
+			return false;
+		}
+
+		if(a.w() == 0 || a.h() == 0 || b.w() == 0 || b.h() == 0) {
+			return false;
+		}
+
+		return true;
+	}
+
+	template<typename T> inline
+	Rect<T> intersection_rect(const Rect<T>& a, const Rect<T>& b)
+	{
+		const int x = std::max(a.x(), b.x());
+		const int y = std::max(a.y(), b.y());
+		const int w = std::max(0, std::min(a.x2(), b.x2()) - x);
+		const int h = std::max(0, std::min(a.y2(), b.y2()) - y);
+		return Rect<T>(x, y, w, h);
+	}
 }

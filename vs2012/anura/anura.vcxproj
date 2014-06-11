@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
@@ -179,7 +179,7 @@
     <ClInclude Include="..\..\src\code_editor_widget.hpp" />
     <ClInclude Include="..\..\src\collision_utils.hpp" />
     <ClInclude Include="..\..\src\Color.hpp" />
-    <ClInclude Include="..\..\src\compat.hpp" />
+    <ClInclude Include="..\..\src\ColorTransform.hpp" />
     <ClInclude Include="..\..\src\concurrent_cache.hpp" />
     <ClInclude Include="..\..\src\controls.hpp" />
     <ClInclude Include="..\..\src\controls_dialog.hpp" />
@@ -442,7 +442,6 @@
     <ClInclude Include="..\..\src\bar_widget.hpp" />
     <ClInclude Include="..\..\src\base64.hpp" />
     <ClInclude Include="..\..\src\color_picker.hpp" />
-    <ClInclude Include="..\..\src\data_blob.hpp" />
     <ClInclude Include="..\..\src\fbo_scene.hpp" />
     <ClInclude Include="..\..\src\formula_callable_visitor.hpp" />
     <ClInclude Include="..\..\src\formula_interface.hpp" />
@@ -540,6 +539,7 @@
     <ClCompile Include="..\..\src\code_editor_widget.cpp" />
     <ClCompile Include="..\..\src\collision_utils.cpp" />
     <ClCompile Include="..\..\src\Color.cpp" />
+    <ClCompile Include="..\..\src\ColorTransform.cpp" />
     <ClCompile Include="..\..\src\compress.cpp" />
     <ClCompile Include="..\..\src\controls.cpp" />
     <ClCompile Include="..\..\src\controls_dialog.cpp" />
@@ -762,7 +762,6 @@
     <ClCompile Include="..\..\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
     <ClCompile Include="..\..\src\color_picker.cpp" />
-    <ClCompile Include="..\..\src\data_blob.cpp" />
     <ClCompile Include="..\..\src\fbo_scene.cpp" />
     <ClCompile Include="..\..\src\formula_callable.cpp" />
     <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />

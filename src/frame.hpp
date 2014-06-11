@@ -73,7 +73,7 @@ public:
 	const std::vector<bool>& getAlpha_buf() const { return alpha_; }
 
 	void draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right=true, bool upside_down=false, int time=0) const;
-	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
+	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0, KRE::Color=KRE::Color::colorWhite()) const;
 	void draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
 	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
 	void draw3(int time, int va, int tc) const;

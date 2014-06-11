@@ -115,7 +115,7 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 		p.reset(new gui::ImageWidget("window-icon.png"));
 		break;
 	case TOOL_SCROLLBAR:
-		p.reset(new gui::scrollbar_widget(boost::bind(dummy_fn, _1, 0.0)));
+		p.reset(new gui::scrollBarWidget(boost::bind(dummy_fn, _1, 0.0)));
 		break;
 	case TOOL_SLIDE:
 		p.reset(new gui::slider(100, boost::bind(dummy_fn, -1, _1)));
@@ -187,7 +187,7 @@ private:
 	rect area_;
 	std::string fname_;
 	WIDGET_TOOL tool_;
-	std::vector<gui::border_widget*> tool_borders_;
+	std::vector<gui::BorderWidget*> tool_borders_;
 	widget_window_ptr ww_;
 	gui::WidgetPtr selected_widget_;
 
@@ -214,7 +214,7 @@ private:
 			gui::ButtonPtr tool_button(
 			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
 				  boost::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
-			tool_borders_.push_back(new gui::border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
 			tools_grid->add_col(gui::WidgetPtr(tool_borders_.back()));
 		}
 		tools_grid->finish_row();

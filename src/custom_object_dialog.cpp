@@ -74,7 +74,7 @@ protected:
 
 	void init();
 	void on_save();
-	bool has_keyboard_focus();
+	bool hasKeyboardFocus();
 
 	void editor_select(variant* v, boost::function<void(const variant&)> save_fn);
 	void string_entry_save();
@@ -255,7 +255,7 @@ void custom_object_dialog::init()
 			}
 		}
 	} else {
-		std::vector<variant> keys = object_template_.get_keys().as_list();
+		std::vector<variant> keys = object_template_.getKeys().as_list();
 		foreach(const variant& v, keys) {
 			std::vector<WidgetPtr> widget_list = get_widget_for_attribute(v.as_string());
 			foreach(const WidgetPtr& w, widget_list) {
@@ -708,7 +708,7 @@ void item_edit_dialog::on_save()
 	close();
 }
 
-bool item_edit_dialog::has_keyboard_focus()
+bool item_edit_dialog::hasKeyboardFocus()
 {
 	return string_entry_->hasFocus();
 }
@@ -719,7 +719,7 @@ bool item_edit_dialog::handleEvent(const SDL_Event& event, bool claimed)
 		return true;
 	}
 
-	if(has_keyboard_focus()) {
+	if(hasKeyboardFocus()) {
 		if(event.type == SDL_KEYDOWN) {
 			if(event.key.keysym.sym == SDLK_s && (event.key.keysym.mod&KMOD_CTRL)) {
 				string_entry_save();

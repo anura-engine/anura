@@ -25,6 +25,8 @@
 
 #include <stack>
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include "../Color.hpp"
 #include "Geometry.hpp"
 #include "Material.hpp"
@@ -62,8 +64,9 @@ namespace KRE
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const = 0;
 		virtual void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawLine(const point& p1, const point& p2, const Color& color) const = 0;
+		virtual void drawLines(const std::vector<float>& varray, float line_width, const Color& color) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const Color& color) const = 0;
-		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<Color>& color) const = 0;
+		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const = 0;
 		virtual void drawHollowCircle(const point& centre, double radius, const Color& color) const = 0;
 
 		void drawVectorContext(const Vector::ContextPtr& context);
@@ -81,6 +84,29 @@ namespace KRE
 			CanvasPtr canvas_;
 		};
 
+		struct ModelManager
+		{
+			ModelManager(int tx, int ty, float rotation, float scale) : canvas_(KRE::Canvas::getInstance()) {
+				glm::mat4 m_trans	= glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
+				glm::mat4 m_rotate  = glm::rotate(m_trans, rotation, glm::vec3(0.0f,0.0f,1.0f));
+				glm::mat4 model		= glm::scale(m_rotate, glm::vec3(scale));
+				if(!canvas_->model_stack_.empty()) {
+					model = canvas_->model_stack_.top() * model;
+				}
+				canvas_->model_stack_.emplace(model);
+			}
+			~ModelManager() {
+				canvas_->model_stack_.pop();
+			}
+			CanvasPtr canvas_;
+		};
+
+		const glm::mat4& getModelMatrix() const 
+		{
+			ASSERT_LOG(!model_stack_.empty(), "Model stack was empty");
+			return model_stack_.top();
+		}
+
 		const Color getColor() const {
 			if(color_stack_.empty()) {
 				return Color::colorWhite();
@@ -96,6 +122,7 @@ namespace KRE
 		unsigned height_;
 		virtual void handleDimensionsChanged() = 0;
 		std::stack<Color> color_stack_;
+		std::stack<glm::mat4> model_stack_;
 	};
 
 	Color operator*(const Color& lhs, const Color& rhs);

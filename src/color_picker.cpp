@@ -1,18 +1,24 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
 #include <limits>
@@ -20,6 +26,7 @@
 #include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
+#include "kre/Canvas.hpp"
 #include "kre/Geometry.hpp"
 
 #include "asserts.hpp"
@@ -53,7 +60,7 @@ namespace
 namespace gui
 {
 	ColorPicker::ColorPicker(const rect& area)
-		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
+		: selected_palette_color_(0), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1)
 	{
 		setLoc(area.x(), area.y());
@@ -70,7 +77,7 @@ namespace gui
 	}
 
 	ColorPicker::ColorPicker(const rect& area, boost::function<void (const KRE::Color&)> change_fun)
-		: selected_palette_color_(-1), hue_(0), saturation_(0), value_(0), alpha_(255),
+		: selected_palette_color_(), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
 		onchange_(change_fun)
 	{
@@ -88,7 +95,7 @@ namespace gui
 	}
 
 	ColorPicker::ColorPicker(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), selected_palette_color_(-1), hue_(0), saturation_(0), 
+		: Widget(v, e), selected_palette_color_(0), hue_(0), saturation_(0), 
 		value_(0), alpha_(255), red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0),
 		main_color_selected_(1)
 	{
@@ -251,64 +258,38 @@ namespace gui
 
 		void draw_colored_circle(int x, int y, int radius) 
 		{
-			static std::vector<float> varray;
+			auto canvas = KRE::Canvas::getInstance();
+
 			static std::vector<uint8_t> carray;
-			if(varray.empty()) {
-				varray.push_back(0);
-				varray.push_back(0);
+			if(carray.empty()) {
 				carray.push_back(255); carray.push_back(255); carray.push_back(255); carray.push_back(255);
 				for(double angle = 0; angle < M_PI * 2.0; angle += 0.0245436926) {
-					varray.push_back(float(radius*cos(angle)));
-					varray.push_back(float(radius*sin(angle)));
 					const rgb cc = hsv_to_rgb(uint8_t(angle*255.0/(M_PI*2.0)), 255, 255);
 					carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
 				}
 				//repeat the first coordinate to complete the circle.
-				varray.push_back(varray[2]);
-				varray.push_back(varray[3]);
 				const rgb cc = hsv_to_rgb(0, 255, 255);
 				carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
 			}
-
-			glPushMatrix();
-			glTranslatef(GLfloat(x), GLfloat(y), 0);
-#if defined(USE_SHADERS)
-			gles2::manager gles2_manager(gles2::get_simple_col_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray.front());
-			glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-#else
-			glDisable(GL_TEXTURE_2D);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glEnableClientState(GL_COLOR_ARRAY);
-			glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-			glColorPointer(4, GL_UNSIGNED_BYTE, 0, &carray.front());
-			glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glDisableClientState(GL_COLOR_ARRAY);
-			glEnable(GL_TEXTURE_2D);
-#endif
-			glPopMatrix();
+			canvas->drawSolidCircle(point(x, y), radius, carray);
 		}
 	}
 
 	void ColorPicker::handleDraw() const
 	{
-		glPushMatrix();
-		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
-
+		auto canvas = KRE::Canvas::getInstance();
 		const rect prect(5, 5, color_box_length_, color_box_length_);
 		const rect srect(10+color_box_length_, 5, color_box_length_, color_box_length_);
 		const rect prect_border(prect.x()-2, prect.y()-2, prect.w()+4, prect.h()+4);
 		const rect srect_border(srect.x()-2, srect.y()-2, srect.w()+4, srect.h()+4);
 
 		if(main_color_selected_) {
-			graphics::draw_hollow_rect(prect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
+			canvas->drawHollowRect(prect_border, KRE::Color::colorWhite());
 		} else {
-			graphics::draw_hollow_rect(srect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
+			canvas->drawHollowRect(srect_border, KRE::Color::colorWhite());
 		}
-		graphics::draw_rect(prect, primary_);
-		graphics::draw_rect(srect, secondary_);
+		canvas->drawSolidRect(prect, primary_);
+		canvas->drawSolidRect(srect, secondary_);
 
 		const int xoffset = wheel_radius_ + 5;
 		const int yoffset = color_box_length_ + wheel_radius_ + 20;
@@ -316,7 +297,7 @@ namespace gui
 		const int rx = int((saturation_ / 255.0 * wheel_radius_) * cos(hue_ / 255.0 * M_PI * 2.0));
 		const int ry = int((saturation_ / 255.0 * wheel_radius_) * sin(hue_ / 255.0 * M_PI * 2.0));
 		const rect selected_color_rect(xoffset + rx, yoffset + ry, 4, 4);
-		graphics::draw_rect(selected_color_rect, KRE::Color::colorBlack());
+		canvas->drawSolidRect(selected_color_rect, KRE::Color::colorBlack());
 
 		g_->draw();
 		copy_to_palette_->draw();
@@ -324,14 +305,13 @@ namespace gui
 		int cnt = 0;
 		for(auto& color : palette_) {
 			const rect palette_rect(5 + 22*(cnt%8), palette_offset_y_ + (cnt/8)*22, 20, 20);
-			graphics::draw_rect(palette_rect, color);
+			canvas->drawSolidRect(palette_rect, color);
 			++cnt;
 		}
-		if(selected_palette_color_ >= 0 && selected_palette_color_ < palette_.size()) {
+		if(selected_palette_color_ < palette_.size()) {
 			const rect prect_border(5 + 22*(selected_palette_color_%8)-1, palette_offset_y_ + (selected_palette_color_/8)*22-1, 24, 24);
-			graphics::draw_hollow_rect(prect_border.sdl_rect(), KRE::Color(255,255,255).as_sdl_color());
+			canvas->drawHollowRect(prect_border, KRE::Color::colorWhite());
 		}
-		glPopMatrix();
 	}
 
 	void ColorPicker::processMouseInWheel(int x, int y)
@@ -386,7 +366,7 @@ namespace gui
 				main_color_selected_ = 1;
 			} else if(button.x >= 10+color_box_length_ && button.x <= 10+color_box_length_*2 && button.y >= 5 && button.y <= color_box_length_+5) {
 				main_color_selected_ = 0;
-			} else if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + palette_.size()/8*22) {
+			} else if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + static_cast<int>(palette_.size()/8*22)) {
 				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
@@ -407,7 +387,7 @@ namespace gui
 			processMouseInWheel(ev.motion.x, ev.motion.y);
 		} else if(ev.type == SDL_MOUSEBUTTONDOWN && ev.button.button == SDL_BUTTON_RIGHT) {
 			const SDL_MouseButtonEvent& button = ev.button;
-			if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + palette_.size()/8*22) {
+			if(button.x >= 5 && button.x < 5 + 22*8 && button.y >= palette_offset_y_ && button.y <= palette_offset_y_ + static_cast<int>(palette_.size()/8*22)) {
 				size_t color_ndx = (button.y-palette_offset_y_)/22*8+(button.x-5)/22;
 				if(color_ndx < palette_.size()) {
 					selected_palette_color_ = color_ndx;
@@ -474,7 +454,7 @@ namespace gui
 	void ColorPicker::copyToPaletteFn()
 	{
 		std::cerr << "copyToPaletteFn()" << std::endl;
-		if(selected_palette_color_ >= 0 &&  size_t(selected_palette_color_) < palette_.size()) {
+		if(selected_palette_color_ < palette_.size()) {
 			palette_[selected_palette_color_] = main_color_selected_ ? primary_ : secondary_;
 		}
 	}
@@ -588,7 +568,7 @@ namespace gui
 		s_[0]->set_position(c.r()/255.0);
 		s_[1]->set_position(c.g()/255.0);
 		s_[2]->set_position(c.b()/255.0);
-		hsv out = rgb_to_hsv(c.r(), c.g(), c.b());
+		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
 		s_[3]->set_position(out.h/255.0);
 		s_[4]->set_position(out.s/255.0);
 		s_[5]->set_position(out.v/255.0);
@@ -611,7 +591,7 @@ namespace gui
 			str.str(std::string()); str << int(c.b());
 			t_[2]->setText(str.str(), false);
 		}
-		hsv out = rgb_to_hsv(c.r(), c.g(), c.b());
+		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
 		if(n != 3) {
 			str.str(std::string()); str << int(out.h);
 			t_[3]->setText(str.str(), false);
@@ -651,7 +631,7 @@ namespace gui
 
 	void ColorPicker::setHSVFromColor(const KRE::Color& in_color)
 	{
-		hsv out = rgb_to_hsv(in_color.r(), in_color.g(), in_color.b());
+		hsv out = rgb_to_hsv(in_color.r_int(), in_color.g_int(), in_color.b_int());
 		hue_ = out.h;
 		saturation_ = out.s;
 		value_ = out.v;

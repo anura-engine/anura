@@ -734,7 +734,7 @@ bool variant::has_key(const std::string& key) const
 	return has_key(variant(key));
 }
 
-variant variant::get_keys() const
+variant variant::getKeys() const
 {
 	must_be(VARIANT_TYPE_MAP);
 	assert(map_);

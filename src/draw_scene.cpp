@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "graphics.hpp"
 
 #include <algorithm>
 #include <cmath>
@@ -30,7 +29,6 @@
 #include "draw_scene.hpp"
 #include "editor.hpp"
 #include "font.hpp"
-#include "foreach.hpp"
 #include "formula_profiler.hpp"
 #include "globals.h"
 #include "graphical_font.hpp"
@@ -40,53 +38,51 @@
 #include "message_dialog.hpp"
 #include "player_info.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "speech_dialog.hpp"
-#include "texture.hpp"
-#include "texture_frame_buffer.hpp"
 
 #include "tooltip.hpp"
 
-namespace {
+namespace 
+{
+	int g_flash_disable = 0;
 
-std::vector<rect> current_debug_rects;
-int current_debug_rects_valid_cycle = -1;
+	std::vector<rect> current_debug_rects;
+	int current_debug_rects_valid_cycle = -1;
 
-std::string& scene_title() {
-	static std::string title;
-	return title;
+	std::string& scene_title() 
+	{
+		static std::string title;
+		return title;
+	}
+
+	AchievementPtr current_Achievement;
+	int current_Achievement_duration = 0;
+
+	struct screen_flash 
+	{
+		KRE::ColorTransform color, delta;
+		int duration;
+	};
+
+	std::vector<screen_flash>& flashes() 
+	{
+		static std::vector<screen_flash> obj;
+		return obj;
+	}
+
+	int scene_title_duration_;
+
+	screen_position last_position;
 }
 
-AchievementPtr current_Achievement;
-int current_Achievement_duration = 0;
-
-	
-struct screen_flash {
-	graphics::color_transform color, delta;
-	int duration;
-};
-
-std::vector<screen_flash>& flashes() {
-	static std::vector<screen_flash> obj;
-	return obj;
-}
-
-int scene_title_duration_;
-
-screen_position last_position;
-}
-
-bool is_Achievement_displayed() {
+bool is_Achievement_displayed() 
+{
 	return current_Achievement && current_Achievement_duration > 0;
 }
 
 screen_position& last_draw_position()
 {
 	return last_position;
-}
-
-namespace {
-int g_flash_disable = 0;
 }
 
 disable_flashes_scope::disable_flashes_scope()
@@ -99,12 +95,17 @@ disable_flashes_scope::~disable_flashes_scope()
 	--g_flash_disable;
 }
 
-void screen_color_flash(const graphics::color_transform& color, const graphics::color_transform& color_delta, int duration)
+void screen_color_flash(const KRE::ColorTransform& color, const KRE::ColorTransform& color_delta, int duration)
 {
 	if(!g_flash_disable) {
 		screen_flash f = { color, color_delta, duration };
 		flashes().push_back(f);
 	}
+}
+
+void draw_last_scene() 
+{
+	draw_scene(level::current(), last_draw_position());
 }
 
 void set_scene_title(const std::string& msg, int duration) {
@@ -119,15 +120,16 @@ void set_displayed_Achievement(AchievementPtr a)
 	current_Achievement_duration = 250;
 }
 
-GLfloat hp_ratio = -1.0;
-void draw_scene(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) {
+void draw_scene(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) 
+{
 	const bool draw_ready = update_camera_position(lvl, pos, focus, do_draw);
 	if(draw_ready) {
 		render_scene(lvl, pos);
 	}
 }
 
-bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) {
+bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) 
+{
 	if(focus == NULL && lvl.player()) {
 		focus = &lvl.player()->get_entity();
 	}
@@ -226,7 +228,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 				right = v[0]->feet_x();
 				top = v[0]->feet_y();
 				bottom = v[0]->feet_y();
-				foreach(const entity_ptr& e, v) {
+				for(const entity_ptr& e : v) {
 					left = std::min<int>(e->feet_x(), left);
 					right = std::max<int>(e->feet_x(), right);
 					top = std::min<int>(e->feet_y(), top);

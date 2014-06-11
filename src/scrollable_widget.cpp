@@ -82,7 +82,7 @@ void ScrollableWidget::update_scrollbar()
 {
 	if(height() < virtual_height_) {
 		if(!scrollbar_) {
-			scrollbar_.reset(new scrollbar_widget(boost::bind(&ScrollableWidget::set_yscroll, this, _1)));
+			scrollbar_.reset(new scrollBarWidget(boost::bind(&ScrollableWidget::set_yscroll, this, _1)));
 		}
 		scrollbar_->set_step(step_);
 //		if(step_ != arrow_step_) {

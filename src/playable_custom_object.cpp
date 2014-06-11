@@ -228,7 +228,7 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLAYER_CTRL_KEYS: {
 		std::vector<variant> result;
-		if(level_runner::get_current() && level_runner::get_current()->get_debug_console() && level_runner::get_current()->get_debug_console()->has_keyboard_focus()) {
+		if(level_runner::get_current() && level_runner::get_current()->get_debug_console() && level_runner::get_current()->get_debug_console()->hasKeyboardFocus()) {
 			//the debug console is stealing all keystrokes.
 			return variant(&result);
 		}
@@ -240,7 +240,7 @@ variant playable_custom_object::get_player_value_by_slot(int slot) const
 #ifndef NO_EDITOR
 		if(level_runner::get_current()) {
 			const editor* e = level_runner::get_current()->get_editor();
-			if(e && e->has_keyboard_focus()) {
+			if(e && e->hasKeyboardFocus()) {
 				//the editor has the focus, so we tell the game there
 				//are no keys pressed.
 				ary_length = 0;

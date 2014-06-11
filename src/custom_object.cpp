@@ -1344,7 +1344,7 @@ void custom_object::draw(int xx, int yy) const
 //	}
 
 #if defined(USE_SHADERS)
-	foreach(const graphics::draw_primitive_ptr& p, draw_primitives_) {
+	foreach(const graphics::DrawPrimitivePtr& p, DrawPrimitives_) {
 		p->draw();
 	}
 #endif
@@ -2294,7 +2294,7 @@ void custom_object::process(level& lvl)
 	}
 
 	if(blur_) {
-		blur_->next_frame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, face_right(), upside_down(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
+		blur_->nextFrame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, face_right(), upside_down(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
 		if(blur_->destroyed()) {
 			blur_.reset();
 		}
@@ -3309,10 +3309,10 @@ variant custom_object::getValue_by_slot(int slot) const
 		return controls::user_ctrl_output();
 	}
 
-	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
+	case CUSTOM_OBJECT_DrawPrimitiveS: {
 #if defined(USE_SHADERS)
 		std::vector<variant> v;
-		foreach(boost::intrusive_ptr<graphics::draw_primitive> p, draw_primitives_) {
+		foreach(boost::intrusive_ptr<graphics::DrawPrimitive> p, DrawPrimitives_) {
 			v.push_back(variant(p.get()));
 		}
 
@@ -3573,8 +3573,8 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		draw_color_->buf()[2] = value.as_int();
 	} else if(key == "distortion") {
 		distortion_ = value.try_convert<graphics::raster_distortion>();
-	} else if(key == "current_generator") {
-		set_current_generator(value.try_convert<current_generator>());
+	} else if(key == "CurrentGenerator") {
+		set_CurrentGenerator(value.try_convert<CurrentGenerator>());
 	} else if(key == "invincible") {
 		invincible_ = value.as_int();
 	} else if(key == "fall_through_platforms") {
@@ -4221,8 +4221,8 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		distortion_ = value.try_convert<graphics::raster_distortion>();
 		break;
 	
-	case CUSTOM_OBJECT_CURRENT_GENERATOR:
-		set_current_generator(value.try_convert<current_generator>());
+	case CUSTOM_OBJECT_CurrentGenerator:
+		set_CurrentGenerator(value.try_convert<CurrentGenerator>());
 		break;
 
 	case CUSTOM_OBJECT_INVINCIBLE:
@@ -4709,16 +4709,16 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		break;
 	}
 
-	case CUSTOM_OBJECT_DRAW_PRIMITIVES: {
+	case CUSTOM_OBJECT_DrawPrimitiveS: {
 #if defined(USE_SHADERS)
-		draw_primitives_.clear();
+		DrawPrimitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
-				boost::intrusive_ptr<graphics::draw_primitive> obj(value[n].try_convert<graphics::draw_primitive>());
-				ASSERT_LOG(obj.get() != NULL, "BAD OBJECT PASSED WHEN SETTING draw_primitives");
-				draw_primitives_.push_back(obj);
+				boost::intrusive_ptr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
+				ASSERT_LOG(obj.get() != NULL, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
+				DrawPrimitives_.push_back(obj);
 			} else if(!value[n].is_null()) {
-				draw_primitives_.push_back(graphics::draw_primitive::create(value[n]));
+				DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));
 			}
 		}
 		break;
@@ -5502,7 +5502,7 @@ void custom_object::extract_gc_object_references(variant& var, std::vector<gc_ob
 			extract_gc_object_references(*var.get_index_mutable(n), v);
 		}
 	} else if(var.is_map()) {
-		foreach(variant k, var.get_keys().as_list()) {
+		foreach(variant k, var.getKeys().as_list()) {
 			extract_gc_object_references(*var.get_attr_mutable(k), v);
 		}
 	}
@@ -5606,13 +5606,13 @@ void custom_object::unboard_vehicle()
 {
 }
 
-void custom_object::set_blur(const blur_info* blur)
+void custom_object::set_blur(const BlurInfo* blur)
 {
 	if(blur) {
 		if(blur_) {
-			blur_->copy_settings(*blur); 
+			blur_->copySettings(*blur); 
 		} else {
-			blur_.reset(new blur_info(*blur));
+			blur_.reset(new BlurInfo(*blur));
 		}
 	} else {
 		blur_.reset();

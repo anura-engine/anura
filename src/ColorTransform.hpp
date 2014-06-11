@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,36 +23,17 @@
 
 #pragma once
 
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
-#include "SDL.h"
-#endif
+#include <memory>
 
-void translate_mouse_coords (int *x, int *y);
-
-class iphone_controls
+namespace KRE
 {
-public:
-	static bool up();
-	static bool down();
-	static bool left();
-	static bool right();
-	static bool attack();
-	static bool jump();
-	static bool tongue();
-	static bool water_dir(float* x, float* y);
+	class ColorTransform
+	{
+	public:
+		ColorTransform();
+		~ColorTransform();
+	private:
+	};
 
-	static void set_underwater(bool value);
-	static void set_can_interact(bool value);
-	static void set_on_platform(bool value);
-	static void set_standing(bool value);
-
-	static void draw();
-
-	static void read_controls();
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
-	static void handleEvent(const SDL_Event& event);
-#endif
-
-private:
-	static bool hittest_button (const rect& r);
-};
+	typedef std::shared_ptr<ColorTransform> ColorTransformPtr;
+}

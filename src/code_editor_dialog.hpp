@@ -48,7 +48,7 @@ public:
 
 	void load_file(std::string fname, bool focus=true, boost::function<void()>* fn=NULL);
 
-	bool has_keyboard_focus() const;
+	bool hasKeyboardFocus() const;
 
 	void process();
 
@@ -102,7 +102,7 @@ private:
 	void on_replace_enter();
 
 	void on_code_changed();
-	void on_move_cursor();
+	void onMoveCursor();
 
 	void on_drag(int dx, int dy);
 	void on_drag_end(int x, int y);

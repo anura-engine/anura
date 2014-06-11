@@ -271,10 +271,10 @@ void entity::draw_debug_rects() const
 
 void entity::generate_current(const entity& target, int* velocity_x, int* velocity_y) const
 {
-	if(current_generator_) {
+	if(CurrentGenerator_) {
 		const rect& my_rect = body_rect();
 		const rect& target_rect = target.body_rect();
-		current_generator_->generate(my_rect.mid_x(), my_rect.mid_y(),
+		CurrentGenerator_->generate(my_rect.mid_x(), my_rect.mid_y(),
 		                             target_rect.mid_x(), target_rect.mid_y(), target.mass(),
 		                             velocity_x, velocity_y);
 	}
@@ -301,9 +301,9 @@ std::vector<variant> entity::pop_scheduled_commands()
 	return result;
 }
 
-void entity::set_current_generator(current_generator* generator)
+void entity::set_CurrentGenerator(CurrentGenerator* generator)
 {
-	current_generator_ = current_generator_ptr(generator);
+	CurrentGenerator_ = CurrentGeneratorPtr(generator);
 }
 
 void entity::set_attached_objects(const std::vector<entity_ptr>& v)

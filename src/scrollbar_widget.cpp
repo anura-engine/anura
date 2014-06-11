@@ -32,7 +32,7 @@ const std::string VerticalHandleTop = "scrollbar-vertical-handle-top";
 const std::string VerticalBackground = "scrollbar-vertical-background";
 }
 
-scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
+scrollBarWidget::scrollBarWidget(boost::function<void(int)> handler)
   : handler_(handler),
     up_arrow_(new GuiSectionWidget(UpArrow)),
     down_arrow_(new GuiSectionWidget(DownArrow)),
@@ -48,12 +48,12 @@ scrollbar_widget::scrollbar_widget(boost::function<void(int)> handler)
 	setEnvironment();
 }
 
-scrollbar_widget::scrollbar_widget(const variant& v, game_logic::FormulaCallable* e)
+scrollBarWidget::scrollBarWidget(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e),	window_pos_(0), window_size_(0), range_(0),
 	step_(0), arrow_step_(0),
 	dragging_handle_(false), drag_start_(0), drag_anchor_y_(0)
 {
-	handler_ = boost::bind(&scrollbar_widget::handler_delegate, this, _1);
+	handler_ = boost::bind(&scrollBarWidget::handler_delegate, this, _1);
 	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
 	
@@ -70,7 +70,7 @@ scrollbar_widget::scrollbar_widget(const variant& v, game_logic::FormulaCallable
 	}
 }
 
-void scrollbar_widget::handler_delegate(int yscroll)
+void scrollBarWidget::handler_delegate(int yscroll)
 {
 	using namespace game_logic;
 	if(getEnvironment()) {
@@ -79,11 +79,11 @@ void scrollbar_widget::handler_delegate(int yscroll)
 		variant value = ffl_handler_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "scrollbar_widget::handler_delegate() called without environment!" << std::endl;
+		std::cerr << "scrollBarWidget::handler_delegate() called without environment!" << std::endl;
 	}
 }
 
-void scrollbar_widget::set_range(int total_height, int window_height)
+void scrollBarWidget::set_range(int total_height, int window_height)
 {
 	window_size_ = window_height;
 	range_ = total_height;
@@ -92,13 +92,13 @@ void scrollbar_widget::set_range(int total_height, int window_height)
 	}
 }
 
-void scrollbar_widget::setLoc(int x, int y)
+void scrollBarWidget::setLoc(int x, int y)
 {
 	widget::setLoc(x, y);
 	setDim(width(), height());
 }
 
-void scrollbar_widget::setDim(int w, int h)
+void scrollBarWidget::setDim(int w, int h)
 {
 	w = up_arrow_->width();
 	up_arrow_->setLoc(x(), y());
@@ -120,15 +120,15 @@ void scrollbar_widget::setDim(int w, int h)
 	widget::setDim(w, h);
 }
 
-void scrollbar_widget::down_button_pressed()
+void scrollBarWidget::down_button_pressed()
 {
 }
 
-void scrollbar_widget::up_button_pressed()
+void scrollBarWidget::up_button_pressed()
 {
 }
 
-void scrollbar_widget::handleDraw() const
+void scrollBarWidget::handleDraw() const
 {
 	up_arrow_->draw();
 	down_arrow_->draw();
@@ -138,7 +138,7 @@ void scrollbar_widget::handleDraw() const
 	handle_top_->draw();
 }
 
-void scrollbar_widget::clip_window_position()
+void scrollBarWidget::clip_window_position()
 {
 	if(window_pos_ < 0) {
 		window_pos_ = 0;
@@ -149,7 +149,7 @@ void scrollbar_widget::clip_window_position()
 	}
 }
 
-bool scrollbar_widget::handleEvent(const SDL_Event& event, bool claimed)
+bool scrollBarWidget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(claimed) {
 		return claimed;
@@ -255,7 +255,7 @@ bool scrollbar_widget::handleEvent(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-void scrollbar_widget::setValue(const std::string& key, const variant& v)
+void scrollBarWidget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "on_scroll") {
 		ffl_handler_ = getEnvironment()->createFormula(v["on_scroll"]);
@@ -283,7 +283,7 @@ void scrollbar_widget::setValue(const std::string& key, const variant& v)
 	widget::setValue(key, v);
 }
 
-variant scrollbar_widget::getValue(const std::string& key) const
+variant scrollBarWidget::getValue(const std::string& key) const
 {
 	if(key == "range") {
 		std::vector<variant> vv;

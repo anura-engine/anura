@@ -30,6 +30,7 @@ namespace KRE
 		: width_(0),
 		height_(0)
 	{
+		model_stack_.emplace(glm::mat4(1.0f));
 	}
 
 	void Canvas::setDimensions(unsigned w, unsigned h)

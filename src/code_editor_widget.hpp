@@ -55,7 +55,7 @@ private:
 	virtual bool handleEvent(const SDL_Event& event, bool claimed);
 	void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
 	void on_change();
-	void on_move_cursor(bool auto_shift=false);
+	void onMoveCursor(bool auto_shift=false);
 	graphics::color get_character_color(int row, int col) const;
 
 	std::vector<std::vector<graphics::color> > colors_;

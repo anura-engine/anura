@@ -148,7 +148,7 @@ private:
 	void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=NULL);
 	void executeCommand(variant cmd);
 
-	mutable db_client_ptr db_client_;
+	mutable DbClientPtr DbClient_;
 };
 
 class game_context {

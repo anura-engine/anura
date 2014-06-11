@@ -73,8 +73,8 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 	} else if(wtype == "animation_preview") {
 		return WidgetPtr(new gui::AnimationPreviewWidget(v,e));
 #endif
-	} else if(wtype == "border_widget") {
-		return WidgetPtr(new gui::border_widget(v,e));
+	} else if(wtype == "BorderWidget") {
+		return WidgetPtr(new gui::BorderWidget(v,e));
 	} else if(wtype == "button") {
 		return WidgetPtr(new gui::button(v,e));
 	} else if(wtype == "Checkbox") {
@@ -93,8 +93,8 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 		return WidgetPtr(new gui::ImageWidget(v,e));
 	} else if(wtype == "section") {
 		return WidgetPtr(new gui::GuiSectionWidget(v,e));
-	} else if(wtype == "key_button") {
-		return WidgetPtr(new gui::key_button(v,e));
+	} else if(wtype == "KeyButton") {
+		return WidgetPtr(new gui::KeyButton(v,e));
 	} else if(wtype == "label") {
 		return WidgetPtr(new gui::label(v,e));
 	} else if(wtype == "poly_line_widget") {
@@ -104,7 +104,7 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 	} else if(wtype == "tileset_preview") {
 		return WidgetPtr(new gui::preview_tileset_widget(v,e));
 	} else if(wtype == "scrollbar") {
-		return WidgetPtr(new gui::scrollbar_widget(v,e));
+		return WidgetPtr(new gui::scrollBarWidget(v,e));
 	} else if(wtype == "slider") {
 		return WidgetPtr(new gui::slider(v,e));
 	} else if(wtype == "text_editor") {
@@ -112,25 +112,25 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 	} else if(wtype == "progress") {
 		return WidgetPtr(new gui::progress_bar(v, e));
 	} else if(wtype == "selector") {
-		return WidgetPtr(new gui::selector_widget(v, e));
+		return WidgetPtr(new gui::selector_Widget(v, e));
 	} else if(wtype == "object") {
-		return WidgetPtr(new gui::custom_object_widget(v, e));
+		return WidgetPtr(new gui::custom_object_Widget(v, e));
 	} else if(wtype == "bar") {
-		return WidgetPtr(new gui::bar_widget(v, e));
+		return WidgetPtr(new gui::BarWidget(v, e));
 	} else if(wtype == "ColorPicker") {
 		return WidgetPtr(new gui::ColorPicker(v, e));
 	} else if(wtype == "layout") {
-		return WidgetPtr(new gui::layout_widget(v, e));
+		return WidgetPtr(new gui::layout_Widget(v, e));
 	} else if(wtype == "file_chooser") {
 		return WidgetPtr(new gui::file_chooser_dialog(v, e));
 #if defined(USE_ISOMAP)
 	} else if(wtype == "view3d") {
-		return WidgetPtr(new gui::view3d_widget(v, e));
+		return WidgetPtr(new gui::view3d_Widget(v, e));
 #endif
 	} else if(wtype == "poly_map") {
 		return WidgetPtr(new geometry::poly_map(v, e));
 	} else if(wtype == "particle_system") {
-		return WidgetPtr(new graphics::particles::particle_system_widget(v, e));
+		return WidgetPtr(new graphics::particles::particle_system_Widget(v, e));
 #if defined(USE_LIBVPX)
 	} else if(wtype == "movie") {
 		return WidgetPtr(new movie::vpx(v, e));
@@ -138,7 +138,7 @@ WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
 	//} else if(wtype == "scrollable") {
 	//} else if(wtype == "widget") {
 	} else if(wtype == "tree") {
-		return WidgetPtr(new gui::tree_view_widget(v, e));
+		return WidgetPtr(new gui::tree_view_Widget(v, e));
 	} else {
 		ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
 		return WidgetPtr();

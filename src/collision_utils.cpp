@@ -1,29 +1,37 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include "asserts.hpp"
 #include "collision_utils.hpp"
-#include "foreach.hpp"
+#include "frame.hpp"
 #include "kre/Geometry.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
 
-namespace {
-std::map<std::string, int> solid_dimensions;
-std::vector<std::string> solid_dimension_ids;
+namespace 
+{
+	std::map<std::string, int> solid_dimensions;
+	std::vector<std::string> solid_dimension_ids;
 }
 
 void collision_info::read_surf_info()
@@ -160,9 +168,9 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 		int min_x = INT_MIN, max_x = INT_MIN, min_y = INT_MIN, max_y = INT_MIN;
 		std::set<point> solid_points;
 
-		foreach(const const_solid_map_ptr& m, s->solid()) {
+		for(const const_solid_map_ptr& m : s->solid()) {
 			const std::vector<point>& points = m->dir(MOVE_NONE);
-			foreach(const point& p, points) {
+			for(const point& p : points) {
 				const int x = e.x() + (e.face_right() ? p.x : (f.width() - 1 - p.x));
 				const int y = e.y() + p.y;
 
@@ -284,7 +292,7 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 		}
 	}
 
-	foreach(const const_solid_map_ptr& m, s->solid()) {
+	for(const const_solid_map_ptr& m : s->solid()) {
 		if(lvl.solid(e, m->dir(dir), info ? &info->surf_info : NULL)) {
 			if(info) {
 				info->read_surf_info();
@@ -306,9 +314,9 @@ int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIR
 
 	const frame& f = e.current_frame();
 	int count = 0;
-	foreach(const const_solid_map_ptr& m, s->solid()) {
+	for(const const_solid_map_ptr& m : s->solid()) {
 		const std::vector<point>& points = m->dir(dir);
-		foreach(const point& p, points) {
+		for(const point& p : points) {
 			const int xpos = e.face_right() ? e.x() + p.x : e.x() + f.width() - 1 - p.x;
 			if(lvl.solid(xpos, e.y() + p.y)) {
 				++count;
@@ -419,7 +427,7 @@ bool place_entity_in_level_with_large_displacement(level& lvl, entity& e)
 			                         point(xpos+distance, ypos),
 			                         point(xpos, ypos-distance),
 			                         point(xpos, ypos+distance), };
-			foreach(const point& p, points) {
+			for(const point& p : points) {
 				e.set_pos(p);
 				if(place_entity_in_level(lvl, e)) {
 					found = true;
@@ -449,11 +457,11 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 
 	int result = 0;
 
-	foreach(const frame::collision_area& area_a, fa.collision_areas()) {
+	for(const frame::collision_area& area_a : fa.collision_areas()) {
 		rect rect_a(a.face_right() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
 		            a.y() + area_a.area.y(),
 					area_a.area.w(), area_a.area.h());
-		foreach(const frame::collision_area& area_b, fb.collision_areas()) {
+		for(const frame::collision_area& area_b : fb.collision_areas()) {
 			rect rect_b(b.face_right() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
 			            b.y() + area_b.area.y(),
 						area_b.area.w(), area_b.area.h());
@@ -511,7 +519,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 	}
 
 	const frame::collision_area* area_a = NULL;
-	foreach(const frame::collision_area& area, fa.collision_areas()) {
+	for(const frame::collision_area& area : fa.collision_areas()) {
 		if(area.name == area_a_id) {
 			area_a = &area;
 			break;
@@ -523,7 +531,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 	}
 
 	const frame::collision_area* area_b = NULL;
-	foreach(const frame::collision_area& area, fb.collision_areas()) {
+	for(const frame::collision_area& area : fb.collision_areas()) {
 		if(area.name == area_b_id) {
 			area_b = &area;
 			break;
@@ -609,7 +617,7 @@ void detect_user_collisions(level& lvl)
 {
 	std::vector<entity_ptr> chars;
 	chars.reserve(lvl.get_active_chars().size());
-	foreach(const entity_ptr& a, lvl.get_active_chars()) {
+	for(const entity_ptr& a : lvl.get_active_chars()) {
 		if(a->weak_collide_dimensions() != 0 && a->current_frame().collision_areas().empty() == false) {
 			chars.push_back(a);
 		}
@@ -655,7 +663,7 @@ void detect_user_collisions(level& lvl)
 		std::vector<variant> all_callables;
 		v.reserve(i->second.size());
 		int index = 0;
-		foreach(const collision_key& k, i->second) {
+		for(const collision_key& k : i->second) {
 			v.push_back(boost::intrusive_ptr<user_collision_callable>(new user_collision_callable(i->first.first, k.first, *i->first.second, *k.second, index)));
 			all_callables.push_back(variant(v.back().get()));
 			++index;
@@ -665,13 +673,13 @@ void detect_user_collisions(level& lvl)
 
 		collision_key key = i->first;
 
-		foreach(const boost::intrusive_ptr<user_collision_callable>& p, v) {
+		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
 			p->set_all_collisions(all_callables_variant);
 			key.first->handleEvent_delay(CollideObjectID, p.get());
 			key.first->handleEvent_delay(get_collision_event_id(*i->first.second), p.get());
 		}
 
-		foreach(const boost::intrusive_ptr<user_collision_callable>& p, v) {
+		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
 			//make sure we don't retain circular references.
 			p->set_all_collisions(variant());
 		}

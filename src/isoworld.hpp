@@ -108,7 +108,7 @@ namespace voxel
 
 		void buildInfinite();
 		void buildFixed(const variant& node);
-		void draw(const camera_callable_ptr& camera) const;
+		void draw() const;
 		variant write();
 		void process();
 
@@ -132,7 +132,7 @@ namespace voxel
 
 		std::set<UserVoxelObjectPtr> objects_;
 
-		std::vector<graphics::draw_primitive_ptr> draw_primitives_;
+		std::vector<graphics::DrawPrimitivePtr> DrawPrimitives_;
 
 		LogicalWorldPtr logic_;
 		

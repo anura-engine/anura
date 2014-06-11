@@ -1103,7 +1103,7 @@ namespace box2d
 	{
 		variant_builder res;
 		ASSERT_LOG(joint_def_ != NULL, "No joint definition found.");
-		variant keys = joint_variant_def_.get_keys();
+		variant keys = joint_variant_def_.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			res.add(keys[n].as_string(), joint_variant_def_[keys[n]]);
 		}

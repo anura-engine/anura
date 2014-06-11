@@ -43,7 +43,7 @@ public:
 	static level_runner* get_current();
 	level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
 
-	const debug_console::console_dialog* get_debug_console() const {
+	const debug_console::ConsoleDialog* get_debug_console() const {
 #ifndef NO_EDITOR
 		return console_.get();
 #endif
@@ -126,7 +126,7 @@ private:
 	void on_history_change(double value);
 	void update_history_trails();
 
-	boost::scoped_ptr<debug_console::console_dialog> console_;
+	boost::scoped_ptr<debug_console::ConsoleDialog> console_;
 #endif
 };
 

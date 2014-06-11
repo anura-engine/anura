@@ -1038,7 +1038,7 @@ void client::on_response(std::string response)
 			module_info_ = doc[variant("summary")];
 
 			std::vector<variant> needed_icons;
-			foreach(variant m, module_info_.get_keys().as_list()) {
+			foreach(variant m, module_info_.getKeys().as_list()) {
 				variant icon = module_info_[m][variant("icon")];
 				if(icon.is_string()) {
 					const std::string icon_path = std::string(preferences::user_data_path()) + "/tmp_images/" + icon.as_string() + ".png";
@@ -1064,7 +1064,7 @@ void client::on_response(std::string response)
 			}
 			std::cerr << "FINISH GET. SET STATUS\n";
 		} else if(operation_ == OPERATION_GET_ICONS) {
-			foreach(variant k, doc.get_keys().as_list()) {
+			foreach(variant k, doc.getKeys().as_list()) {
 				const std::string key = k.as_string();
 				if(key.size() != 32) {
 					continue;
@@ -1114,16 +1114,16 @@ void client::perform_install(const std::string& response)
 	}
 
 	variant manifest = module_data["manifest"];
-	foreach(variant path, manifest.get_keys().as_list()) {
+	foreach(variant path, manifest.getKeys().as_list()) {
 		const std::string path_str = path.as_string();
 		ASSERT_LOG(is_module_path_valid(path_str), "INVALID PATH IN MODULE: " << path_str);
 	}
 
 	variant full_manifest;
 
-	fprintf(stderr, "Install files: %d\n", (int)manifest.get_keys().as_list().size());
+	fprintf(stderr, "Install files: %d\n", (int)manifest.getKeys().as_list().size());
 
-	foreach(variant path, manifest.get_keys().as_list()) {
+	foreach(variant path, manifest.getKeys().as_list()) {
 		variant info = manifest[path];
 		std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
@@ -1184,7 +1184,7 @@ void client::perform_install(const std::string& response)
 	//if we downloaded a full manifest of all files, make sure that
 	//locally all the files we already had are copied appropriately.
 	if(full_manifest.is_null() == false && install_image_ == false) {
-		foreach(variant path, full_manifest.get_keys().as_list()) {
+		foreach(variant path, full_manifest.getKeys().as_list()) {
 			if(manifest.has_key(path)) {
 				//we just downloaded this file.
 				continue;

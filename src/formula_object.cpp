@@ -165,7 +165,7 @@ void load_class_node(const std::string& type, const variant& node)
 	
 	const variant classes = flatten_list_of_maps(node["classes"]);
 	if(classes.is_map()) {
-		foreach(variant key, classes.get_keys().as_list()) {
+		foreach(variant key, classes.getKeys().as_list()) {
 			load_class_node(type + "." + key.as_string(), classes[key]);
 		}
 	}
@@ -269,7 +269,7 @@ public:
 				properties = node;
 			}
 
-			foreach(variant key, properties.get_keys().as_list()) {
+			foreach(variant key, properties.getKeys().as_list()) {
 				ASSERT_LOG(std::count(BaseFields, BaseFields + NUM_BASE_FIELDS, key.as_string()) == 0, "Class " << class_name << " has property '" << key.as_string() << "' which is a reserved word");
 				ASSERT_LOG(key.as_string() != "", "Class " << class_name << " has property name which is empty");
 
@@ -533,7 +533,7 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 
 	const definition_access_private_in_scope expose_scope(*class_definition);
 
-	foreach(variant key, properties.get_keys().as_list()) {
+	foreach(variant key, properties.getKeys().as_list()) {
 		const variant prop_node = properties[key];
 		property_entry entry(class_name, key.as_string(), prop_node, nstate_slots_);
 
@@ -569,7 +569,7 @@ void formula_class::build_nested_classes(variant classes)
 			build_nested_classes(v);
 		}
 	} else if(classes.is_map()) {
-		foreach(variant key, classes.get_keys().as_list()) {
+		foreach(variant key, classes.getKeys().as_list()) {
 			const variant class_node = classes[key];
 			sub_classes_[key.as_string()].reset(new formula_class(name_ + "." + key.as_string(), class_node));
 		}
@@ -683,7 +683,7 @@ void record_classes(const std::string& name, const variant& node)
 
 	const variant classes = flatten_list_of_maps(node["classes"]);
 	if(classes.is_map()) {
-		foreach(variant key, classes.get_keys().as_list()) {
+		foreach(variant key, classes.getKeys().as_list()) {
 			const variant class_node = classes[key];
 			record_classes(name + "." + key.as_string(), class_node);
 		}
@@ -1002,7 +1002,7 @@ void formula_object::call_constructors(variant args)
 {
 	if(args.is_map()) {
 		const_FormulaCallable_definition_ptr def = get_class_definition(class_->name());
-		foreach(const variant& key, args.get_keys().as_list()) {
+		foreach(const variant& key, args.getKeys().as_list()) {
 			std::map<std::string, int>::const_iterator itor = class_->properties().find(key.as_string());
 			if(itor != class_->properties().end() && class_->slots()[itor->second].setter.get() == NULL && class_->slots()[itor->second].variable_slot == -1) {
 				if(property_overrides_.size() <= itor->second) {

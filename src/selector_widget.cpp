@@ -46,7 +46,7 @@ namespace gui
 	}
 
 	selector_widget::selector_widget(const variant& v, game_logic::FormulaCallable* e)
-		: widget(v, e), current_selection_(v["selection"].as_int(0))
+		: Widget(v, e), current_selection_(v["selection"].as_int(0))
 	{
 		if(v.has_key("list") || v.has_key("children")) {
 			const variant& l = v.has_key("list") ? v["list"] : v["children"];

@@ -40,7 +40,6 @@
 #include "b2d_ffl.hpp"
 #endif
 #include "background.hpp"
-#include "camera.hpp"
 #include "decimal.hpp"
 #include "entity.hpp"
 #include "formula.hpp"
@@ -529,7 +528,7 @@ private:
 	mutable std::map<int, layer_blit_info> blit_cache_;
 
 	struct solid_color_rect {
-		graphics::color color;
+		KRE::Color color;
 		rect area;
 		int layer;
 	};
@@ -694,7 +693,6 @@ private:
 
 #if defined(USE_ISOMAP)
 	voxel::WorldPtr iso_world_;
-	camera_callable_ptr camera_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;
 #endif

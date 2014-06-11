@@ -26,7 +26,6 @@
 #include <boost/shared_ptr.hpp>
 
 #include "decimal.hpp"
-#include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
@@ -146,7 +145,7 @@ public:
 		: dg_(dg)
 	{
 		weights_.swap(*weights);
-		foreach(const variant& v, dg->get_vertices()) {
+		for(const variant& v : dg->get_vertices()) {
 			graph_node_list_[v] = boost::shared_ptr<graph_node<variant, decimal> >(new graph_node<variant, decimal>(v));
 		}
 	}
@@ -174,8 +173,7 @@ public:
 		throw src_not_found;
 	}
 	void reset_graph() {
-		std::pair<variant, graph_node<variant, decimal>::graph_node_ptr> p;
-		foreach(p, graph_node_list_) {
+		for(auto& p : graph_node_list_) {
 			p.second->reset_node();
 		}
 	}

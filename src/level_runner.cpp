@@ -125,7 +125,7 @@ void done_upload_screenshot(boost::shared_ptr<upload_screenshot_info> info)
 		if(info->error == false) {
 			fprintf(stderr, "DONE UPLOAD SCREENSHOT (%s)\n", info->result.c_str());
 			variant v = json::parse(info->result, json::JSON_NO_PREPROCESSOR);
-			debug_console::add_message(formatter() << "Uploaded screenshot to " << v["url"].as_string() << " (set url in clipboard)");;
+			debug_console::addMessage(formatter() << "Uploaded screenshot to " << v["url"].as_string() << " (set url in clipboard)");;
 			copy_to_clipboard(v["url"].as_string(), true);
 		}
 	} catch(...) {
@@ -133,7 +133,7 @@ void done_upload_screenshot(boost::shared_ptr<upload_screenshot_info> info)
 	}
 
 	if(info->error) {
-		debug_console::add_message("error uploading screenshot");
+		debug_console::addMessage("error uploading screenshot");
 	}
 }
 
@@ -810,8 +810,8 @@ bool level_runner::play_level()
 		const Uint8 *key = SDL_GetKeyboardState(NULL);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
 #ifndef NO_EDITOR
-			&& (!editor_ || !editor_->has_keyboard_focus())
-			&& (!console_ || !console_->has_keyboard_focus())
+			&& (!editor_ || !editor_->hasKeyboardFocus())
+			&& (!console_ || !console_->hasKeyboardFocus())
 #endif
 		) {
 				if(!reversing) {
@@ -879,8 +879,8 @@ bool level_runner::play_cycle()
 
 	boost::scoped_ptr<controls::local_controls_lock> controls_lock;
 #ifndef NO_EDITOR
-	if(editor_ && editor_->has_keyboard_focus() ||
-	   console_ && console_->has_keyboard_focus()) {
+	if(editor_ && editor_->hasKeyboardFocus() ||
+	   console_ && console_->hasKeyboardFocus()) {
 		controls_lock.reset(new controls::local_controls_lock);
 	}
 
@@ -1373,7 +1373,7 @@ bool level_runner::play_cycle()
 				} else if(key == SDLK_d && (mod&KMOD_CTRL)) {
 #ifndef NO_EDITOR
 					if(!console_ && lvl_->player()) {
-						console_.reset(new debug_console::console_dialog(*lvl_, lvl_->player()->get_entity()));
+						console_.reset(new debug_console::ConsoleDialog(*lvl_, lvl_->player()->get_entity()));
 					} else {
 						console_.reset();
 					}
@@ -1617,8 +1617,8 @@ bool level_runner::play_cycle()
 #ifndef NO_EDITOR
 			const Uint8 *key = SDL_GetKeyboardState(NULL);
 			if(editor_ && key[SDL_SCANCODE_L] 
-				&& !editor_->has_keyboard_focus() 
-				&& (!console_ || !console_->has_keyboard_focus())) {
+				&& !editor_->hasKeyboardFocus() 
+				&& (!console_ || !console_->hasKeyboardFocus())) {
 #endif
 				editor_->toggle_active_level();
 				render_scene(editor_->get_level(), last_draw_position());

@@ -673,7 +673,7 @@ UNIT_TEST(json_macro)
 	                  "value: {\"@call\": \"f\", x: 2, y: {a: 4, z: 5}}}";
 	variant v = parse(doc);
 	std::cerr << v.write_json();
-	CHECK_EQ(v.get_keys().num_elements(), 1);
+	CHECK_EQ(v.getKeys().num_elements(), 1);
 
 	v = v["value"];
 	CHECK_EQ(v["a"], variant(6));

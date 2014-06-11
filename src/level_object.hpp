@@ -20,12 +20,10 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
-#include "color_utils.hpp"
+#include "Color.hpp"
 #include "draw_tile.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
-#include "raster.hpp"
-#include "texture.hpp"
 #include "variant.hpp"
 
 class level_object;
@@ -121,18 +119,18 @@ public:
 	int friction() const { return friction_; }
 	int traction() const { return traction_; }
 	int damage() const { return damage_; }
-	const graphics::texture& texture() const { return t_; }
+	const KRE::TexturePtr& texture() const { return t_; }
 	static void queue_draw(graphics::blit_queue& q, const level_tile& t);
 	static int calculate_tile_corners(KRE::ImageLoadError* result, const level_tile& t);
 
 	bool is_opaque() const { return opaque_; }
 	bool calculate_opaque() const;
 	bool calculate_uses_alpha_channel() const;
-	bool calculate_is_solid_color(graphics::color& col) const;
+	bool calculate_is_solid_color(KRE::Color& col) const;
 
 	bool calculate_draw_area();
 
-	const graphics::color* solid_color() const { return solid_color_.get(); }
+	const KRE::Color* solid_color() const { return solid_color_.get(); }
 
 	//write the compiled index of this object. buf MUST point to a buf
 	//of at least 4 chars.
@@ -152,7 +150,7 @@ private:
 	std::string id_;
 	std::string image_;
 	std::string info_;
-	graphics::texture t_;
+	KRE::TexturePtr t_;
 	std::vector<int> tiles_;
 	std::vector<bool> solid_;
 	bool all_solid_;
@@ -166,7 +164,7 @@ private:
 
 	rect draw_area_;
 
-	boost::intrusive_ptr<graphics::color> solid_color_;
+	KRE::ColorPtr solid_color_;
 
 	int tile_index_;
 

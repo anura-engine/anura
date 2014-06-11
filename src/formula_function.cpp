@@ -1009,7 +1009,7 @@ FUNCTION_DEF(keys, 1, 1, "keys(map) -> list: gives the keys for a map")
 		return variant(&v);
 	}
 
-	return map.get_keys();
+	return map.getKeys();
 
 FUNCTION_ARGS_DEF
 	ARG_TYPE("map");
@@ -1534,7 +1534,7 @@ FUNCTION_DEF(zip, 2, 3, "zip(list1, list2, expr=null) -> list")
 		return variant(&result);
 	} else {
 		std::map<variant,variant> retMap(item1.as_map());
-		variant keys = item2.get_keys();
+		variant keys = item2.getKeys();
 		for(int n = 0; n != keys.num_elements(); n++) {
 			if(retMap[keys[n]].is_null() == false) {
 				if(callable) {
@@ -2452,7 +2452,7 @@ void visit_objects(variant v, std::vector<variant>& res) {
 		}
 	} else if(v.try_convert<variant_callable>()) {
 		res.push_back(v);
-		variant keys = v.try_convert<variant_callable>()->getValue().get_keys();
+		variant keys = v.try_convert<variant_callable>()->getValue().getKeys();
 		foreach(variant k, keys.as_list()) {
 			visit_objects(v.try_convert<variant_callable>()->query_value(k.as_string()), res);
 		}
@@ -2810,16 +2810,16 @@ FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Co
 		compression_level = args()[1]->evaluate(variables).as_int();
 	}
 	const std::string s = args()[0]->evaluate(variables).as_string();
-	return variant(new zip::compressed_data(std::vector<char>(s.begin(), s.end()), compression_level));
+	return variant(new zip::CompressedData(std::vector<char>(s.begin(), s.end()), compression_level));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string");
 END_FUNCTION_DEF(compress)
 
 FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given object, returns the data if successful.")
 	variant compressed = args()[0]->evaluate(variables);
-	zip::compressed_data_ptr cd = boost::intrusive_ptr<zip::compressed_data>(compressed.try_convert<zip::compressed_data>());
+	zip::CompressedDataPtr cd = boost::intrusive_ptr<zip::CompressedData>(compressed.try_convert<zip::CompressedData>());
 	if(cd == NULL) {
-		ASSERT_LOG(compressed.is_string(), "decompress takes either a compressed_data object or string.");
+		ASSERT_LOG(compressed.is_string(), "decompress takes either a CompressedData object or string.");
 		std::string s = compressed.as_string();
 		std::string key = s.length() > 10 ? s.substr(0,10) : s;
 		size_t n;
@@ -2833,7 +2833,7 @@ FUNCTION_DEF(decompress, 1, 1, "decompress(expr): Tries to decompress the given 
 		return cd->getValue("decompress");
 	}
 FUNCTION_ARGS_DEF
-	ARG_TYPE("string"); // |builtin compressed_data
+	ARG_TYPE("string"); // |builtin CompressedData
 	RETURN_TYPE("builtin data_blob")
 END_FUNCTION_DEF(decompress)
 
@@ -3576,7 +3576,7 @@ public:
 	{}
 	virtual void execute(FormulaCallable& ob) const {
 #ifndef NO_EDITOR
-		debug_console::add_message(str_);
+		debug_console::addMessage(str_);
 #endif
 		std::cerr << "CONSOLE: " << str_ << "\n";
 	}
@@ -3612,7 +3612,7 @@ void debug_side_effect(variant v)
 
 	std::string s = v.to_debug_string();
 #ifndef NO_EDITOR
-	debug_console::add_message(s);
+	debug_console::addMessage(s);
 #endif
 	std::cerr << "CONSOLE: " << s << "\n";
 }
@@ -4740,13 +4740,13 @@ END_FUNCTION_DEF(voxel_model)
 #endif
 
 #if defined(USE_SHADERS)
-FUNCTION_DEF(draw_primitive, 1, 1, "draw_primitive(map): create and return a draw_primitive")
+FUNCTION_DEF(DrawPrimitive, 1, 1, "DrawPrimitive(map): create and return a DrawPrimitive")
 	variant v = args()[0]->evaluate(variables);
-	return variant(graphics::draw_primitive::create(v).get());
+	return variant(graphics::DrawPrimitive::create(v).get());
 FUNCTION_ARGS_DEF
 ARG_TYPE("map")
-RETURN_TYPE("builtin draw_primitive")
-END_FUNCTION_DEF(draw_primitive)
+RETURN_TYPE("builtin DrawPrimitive")
+END_FUNCTION_DEF(DrawPrimitive)
 #endif
 
 FUNCTION_DEF(auto_update_status, 0, 0, "auto_update_info(): get info on auto update status")

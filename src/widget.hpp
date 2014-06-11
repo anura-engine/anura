@@ -51,7 +51,7 @@ namespace gui
 		enum VERTICAL_ALIGN   {VALIGN_TOP,  VALIGN_CENTER, VALIGN_BOTTOM};
 
 		bool processEvent(const SDL_Event& event, bool claimed);
-		void draw() const;
+		void draw(int xt=0, int yt=0, float rotate=0, float scale=0) const;
 
 		virtual void setLoc(int x, int y) { true_x_ = x_ = x; true_y_ = y_ = y; recalcLoc(); }
 		virtual void setDim(int w, int h) { w_ = w; h_ = h; recalcLoc(); }
