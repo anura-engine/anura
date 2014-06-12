@@ -43,7 +43,6 @@
 #include "light.hpp"
 #include "particle_system.hpp"
 #include "variant.hpp"
-#include "vector_text.hpp"
 #include "widget.hpp"
 
 struct collision_info;
@@ -57,8 +56,8 @@ public:
 	static const std::string* current_debug_error();
 	static void reset_current_debug_error();
 
-	static std::set<custom_object*>& get_all();
-	static std::set<custom_object*>& get_all(const std::string& type);
+	static std::set<custom_object*>& getAll();
+	static std::set<custom_object*>& getAll(const std::string& type);
 	static void init();
 
 	static void run_garbage_collection();
@@ -87,16 +86,16 @@ public:
 
 	void check_initialized();
 
-	int parallax_scale_millis_x() const {
+	int parallaxScaleMillisX() const {
 		if(parallax_scale_millis_.get() == NULL){
-			return type_->parallax_scale_millis_x();
+			return type_->parallaxScaleMillisX();
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
-	int parallax_scale_millis_y() const {
+	int parallaxScaleMillisY() const {
 		if(parallax_scale_millis_.get() == NULL){
-			return type_->parallax_scale_millis_y();
+			return type_->parallaxScaleMillisY();
 		}else{
 			return parallax_scale_millis_->second;
 		}
@@ -104,18 +103,18 @@ public:
 
 	
 	virtual int zorder() const;
-	virtual int zsub_order() const;
+	virtual int zSubOrder() const;
 
 	virtual int velocity_x() const;
 	virtual int velocity_y() const;
 	virtual int mass() const { return type_->mass(); }
 
-	int teleport_offset_x() const { return type_->teleport_offset_x(); }
-	int teleport_offset_y() const { return type_->teleport_offset_y(); }
-	bool no_move_to_standing() const { return type_->no_move_to_standing(); };
-	bool reverse_global_vertical_zordering() const { return type_->reverse_global_vertical_zordering(); };
+	int getTeleportOffsetX() const { return type_->getTeleportOffsetX(); }
+	int getTeleportOffsetY() const { return type_->getTeleportOffsetY(); }
+	bool hasNoMoveToStanding() const { return type_->hasNoMoveToStanding(); };
+	bool hasReverseGlobalVerticalZordering() const { return type_->hasReverseGlobalVerticalZordering(); };
 
-	bool has_feet() const;
+	bool hasFeet() const;
 
 	
 	virtual bool is_standable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
@@ -138,12 +137,12 @@ public:
 	void die();
 	void die_with_no_event();
 	virtual bool isActive(const rect& screen_area) const;
-	bool dies_on_inactive() const;
-	bool always_active() const;
+	bool diesOnInactive() const;
+	bool isAlwaysActive() const;
 	bool move_to_standing(level& lvl, int max_displace=10000);
 
-	bool body_harmful() const;
-	bool body_passthrough() const;
+	bool isBodyHarmful() const;
+	bool isBodyPassthrough() const;
 
 	int time_in_frame() const { return time_in_frame_; }
 
@@ -152,11 +151,11 @@ public:
 
 	int cycle() const { return cycle_; }
 
-	int surface_friction() const;
-	int surface_traction() const;
+	int getSurfaceFriction() const;
+	int getSurfaceTraction() const;
 
-	variant get_child(const std::string& key) const {
-		return type_->get_child(key);
+	variant getChild(const std::string& key) const {
+		return type_->getChild(key);
 	}
 
 	const frame& icon_frame() const;
@@ -164,7 +163,7 @@ public:
 	virtual entity_ptr clone() const;
 	virtual entity_ptr backup() const;
 
-	game_logic::const_formula_ptr get_event_handler(int key) const;
+	game_logic::const_formula_ptr getEventHandler(int key) const;
 	void set_event_handler(int, game_logic::const_formula_ptr f);
 
 	bool can_interact_with() const;
@@ -177,13 +176,9 @@ public:
 	void add_particle_system(const std::string& key, const std::string& type);
 	void remove_particle_system(const std::string& key);
 
-	void setText(const std::string& text, const std::string& font, int size, int align);
-	void add_vector_text(const gui::vector_text_ptr& txtp) {
-		vector_text_.push_back(txtp);
-	}
-	void clear_vector_text() { vector_text_.clear(); }
-
 	virtual int hitpoints() const { return hitpoints_; }
+
+	void setText(const std::string& text, const std::string& font, int size, int align);
 
 	virtual bool boardable_vehicle() const;
 
@@ -195,13 +190,13 @@ public:
 
 	void set_driver_position();
 
-	virtual bool use_absolute_screen_coordinates() const { return use_absolute_screen_coordinates_; }
+	virtual bool useAbsoluteScreenCoordinates() const { return use_absolute_screen_coordinates_; }
 
 	virtual int current_animation_id() const { return current_animation_id_; }
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr EditorInfo() const;
+	virtual const_editor_entity_info_ptr getEditorInfo() const;
 #endif // !NO_EDITOR
 
 	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);
@@ -237,8 +232,8 @@ public:
 
 	void set_difficulty(int min, int max) { min_difficulty_ = min; max_difficulty_ = max; }
 
-	void update_type(const_custom_object_type_ptr old_type,
-	                 const_custom_object_type_ptr new_type);
+	void update_type(ConstCustomObjectTypePtr old_type,
+	                 ConstCustomObjectTypePtr new_type);
 
 	bool mouse_event_swallowed() const {return swallow_mouse_event_;}
 	void reset_mouse_event() {swallow_mouse_event_ = false;}
@@ -314,9 +309,9 @@ protected:
 
 	virtual int parent_depth(bool* has_human_parent=NULL, int cur_depth=0) const;
 
-	virtual bool editor_force_standing() const;
+	virtual bool editorForceStanding() const;
 
-	virtual game_logic::const_FormulaCallable_definition_ptr get_definition() const;
+	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const;
 
 	entity_ptr standing_on() const { return standing_on_; }
 	virtual void add_to_level();
@@ -324,7 +319,7 @@ protected:
 	virtual rect platform_rect_at(int xpos) const;
 	virtual int platform_slope_at(int xpos) const;
 
-	virtual bool solid_platform() const;
+	virtual bool isSolidPlatform() const;
 
 	virtual void being_removed();
 	virtual void being_added();
@@ -364,8 +359,8 @@ private:
 	int previous_y_;
 
 	variant custom_type_;
-	const_custom_object_type_ptr type_; //the type after variations are applied
-	const_custom_object_type_ptr base_type_; //the type without any variation
+	ConstCustomObjectTypePtr type_; //the type after variations are applied
+	ConstCustomObjectTypePtr base_type_; //the type without any variation
 	std::vector<std::string> current_variation_;
 	boost::intrusive_ptr<const frame> frame_;
 	std::string frame_name_;
@@ -441,8 +436,8 @@ private:
 	int standing_on_prev_x_, standing_on_prev_y_;
 
 	void make_draw_color();
-	const graphics::color_transform& draw_color() const;
-	std::shared_ptr<graphics::color_transform> draw_color_;
+	const KRE::ColorTransform& draw_color() const;
+	std::shared_ptr<KRE::ColorTransform> draw_color_;
 
 	std::shared_ptr<decimal> draw_scale_;
 	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
@@ -454,8 +449,6 @@ private:
 
 	typedef std::shared_ptr<custom_object_text> custom_object_text_ptr;
 	custom_object_text_ptr text_;
-
-	std::vector<gui::vector_text_ptr> vector_text_;
 
 	entity_ptr driver_;
 

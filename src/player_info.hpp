@@ -54,7 +54,7 @@ public:
 	void read_controls(int cycle);
 
 	
-	bool reverse_global_vertical_zordering() const { return entity_->reverse_global_vertical_zordering(); }
+	bool hasReverseGlobalVerticalZordering() const { return entity_->hasReverseGlobalVerticalZordering(); }
 
 private:
 	entity* entity_;

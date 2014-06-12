@@ -149,7 +149,7 @@ public:
 	explicit voxel_model(const variant& node);
 	voxel_model(const Layer& layer, const LayerType& layer_type);
 
-	voxel_model_ptr get_child(const std::string& id) const;
+	voxel_model_ptr getChild(const std::string& id) const;
 
 	void add_face(int face, const VoxelPair& p, std::vector<GLfloat>& varray, std::vector<GLubyte>& carray);
 	void add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, std::vector<GLfloat>& varray);

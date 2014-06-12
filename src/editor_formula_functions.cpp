@@ -177,7 +177,7 @@ public:
 	expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
-							   const_FormulaCallable_definition_ptr callable_def) const
+							   ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 		if(fn == "remove_tiles") {
 			return expression_ptr(new remove_tiles_function(args));
@@ -237,7 +237,7 @@ private:
 		std::vector<variant> result;
 
 		std::map<int, std::vector<std::string> > m;
-		editor_.get_level().get_all_tiles_rect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
+		editor_.get_level().getAll_tiles_rect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = m.begin(); i != m.end(); ++i) {
 			foreach(const std::string& s, i->second) {
 				result.push_back(variant(s));

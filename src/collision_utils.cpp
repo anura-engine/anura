@@ -43,7 +43,7 @@ void collision_info::read_surf_info()
 	}
 }
 
-int get_num_solid_dimensions()
+int get_num_getSolidDimensions()
 {
 	return solid_dimensions.size();
 }
@@ -91,23 +91,23 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 			continue;
 		}
 
-		if(allow_platform == SOLID_AND_PLATFORMS || obj->solid_platform()) {
+		if(allow_platform == SOLID_AND_PLATFORMS || obj->isSolidPlatform()) {
 			const rect& platform_rect = obj->platform_rect_at(pt.x);
 			if(pointInRect(pt, platform_rect) && obj->platform()) {
 				if(info) {
 					info->collide_with = obj;
-					info->friction = obj->surface_friction();
-					info->traction = obj->surface_traction();
+					info->friction = obj->getSurfaceFriction();
+					info->traction = obj->getSurfaceTraction();
 					info->adjust_y = y - platform_rect.y();
-					info->platform = !obj->solid_platform();
+					info->platform = !obj->isSolidPlatform();
 				}
 
 				return true;
 			}
 		}
 
-		if((e.weak_solid_dimensions()&obj->solid_dimensions()) == 0 &&
-		   (e.solid_dimensions()&obj->weak_solid_dimensions()) == 0) {
+		if((e.getWeakSolidDimensions()&obj->getSolidDimensions()) == 0 &&
+		   (e.getSolidDimensions()&obj->getWeakSolidDimensions()) == 0) {
 			continue;
 		}
 
@@ -123,8 +123,8 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 		if(solid && solid->solid_at(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : NULL)) {
 			if(info) {
 				info->collide_with = obj;
-				info->friction = obj->surface_friction();
-				info->traction = obj->surface_traction();
+				info->friction = obj->getSurfaceFriction();
+				info->traction = obj->getSurfaceTraction();
 			}
 
 			return true;
@@ -220,8 +220,8 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 
 bool entity_collides_with_entity(const entity& e, const entity& other, collision_info* info)
 {
-	if((e.solid_dimensions()&other.weak_solid_dimensions()) == 0 &&
-	   (e.weak_solid_dimensions()&other.solid_dimensions()) == 0) {
+	if((e.getSolidDimensions()&other.getWeakSolidDimensions()) == 0 &&
+	   (e.getWeakSolidDimensions()&other.getSolidDimensions()) == 0) {
 		return false;
 	}
 
@@ -354,7 +354,7 @@ bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 
 bool place_entity_in_level(level& lvl, entity& e)
 {
-	if(e.editor_force_standing()) {
+	if(e.editorForceStanding()) {
 		if(!e.move_to_standing(lvl, 128)) {
 			return false;
 		}
@@ -618,7 +618,7 @@ void detect_user_collisions(level& lvl)
 	std::vector<entity_ptr> chars;
 	chars.reserve(lvl.get_active_chars().size());
 	for(const entity_ptr& a : lvl.get_active_chars()) {
-		if(a->weak_collide_dimensions() != 0 && a->current_frame().collision_areas().empty() == false) {
+		if(a->getWeakCollideDimensions() != 0 && a->current_frame().collision_areas().empty() == false) {
 			chars.push_back(a);
 		}
 	}
@@ -635,8 +635,8 @@ void detect_user_collisions(level& lvl)
 			const entity_ptr& a = *i;
 			const entity_ptr& b = *j;
 			if(a == b ||
-			   (a->weak_collide_dimensions()&b->collide_dimensions()) == 0 &&
-			   (a->collide_dimensions()&b->weak_collide_dimensions()) == 0) {
+			   (a->getWeakCollideDimensions()&b->getCollideDimensions()) == 0 &&
+			   (a->getCollideDimensions()&b->getWeakCollideDimensions()) == 0) {
 				//the objects do not share a dimension, and so can't collide.
 				continue;
 			}

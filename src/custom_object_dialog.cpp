@@ -131,7 +131,7 @@ void load_default_attributes(std::vector<std::string>& d)
 {
 	//d.push_back("id");
 	//d.push_back("animation");
-	//d.push_back("EditorInfo");
+	//d.push_back("editor_info");
 	d.push_back("prototype");
 	d.push_back("hitpoints");
 	d.push_back("mass");
@@ -241,7 +241,7 @@ void custom_object_dialog::init()
 	g->add_col(WidgetPtr(new button(new label("Animations", graphics::color_white(), 20), std::bind(&custom_object_dialog::on_edit_animations, this))));
 	g->add_col(WidgetPtr(new button(new label("Variables", graphics::color_white(), 20), std::bind(&custom_object_dialog::on_edit_items, this, "Variables Editor", "vars", false))));
 	g->add_col(WidgetPtr(new button(new label("Properties", graphics::color_white(), 20), std::bind(&custom_object_dialog::on_edit_items, this, "Properties Editor", "properties", true))));
-	g->add_col(WidgetPtr(new button(new label("Editor Info", graphics::color_white(), 20), std::bind(&custom_object_dialog::on_edit_items, this, "Editor Info", "EditorInfo", false))));
+	g->add_col(WidgetPtr(new button(new label("Editor Info", graphics::color_white(), 20), std::bind(&custom_object_dialog::on_edit_items, this, "Editor Info", "editor_info", false))));
 	container->add_col(g);
 
 	if(template_file_.first.empty()) {
@@ -268,7 +268,7 @@ void custom_object_dialog::init()
 	error_text_.clear();
 	assert_recover_scope recover_from_assert;
 	try {
-		object_ = custom_object_type_ptr(new custom_object_type(object_template_["id"].as_string(), object_template_, NULL, NULL));
+		object_ = CustomObjectTypePtr(new CustomObjectType(object_template_["id"].as_string(), object_template_, NULL, NULL));
 
 		AnimationWidgetPtr preview(new AnimationWidget(128, 128, object_template_));
 		addWidget(preview, width() - border_offset - 128, border_offset + 200);
@@ -388,7 +388,7 @@ std::vector<gui::WidgetPtr> custom_object_dialog::get_widget_for_attribute(const
 		//grid_ptr g(new grid(1));
 		//g->add_col(WidgetPtr(new label(attr + ": ", graphics::color_white(), 14)));
 		//return std::vector<gui::WidgetPtr>(1, g);
-	} else if(attr == "EditorInfo") {
+	} else if(attr == "editor_info") {
 		//grid_ptr g(new grid(1));
 		//g->add_col(WidgetPtr(new label(attr + ": ", graphics::color_white(), 14)));
 		//return std::vector<gui::WidgetPtr>(1, g);
@@ -499,7 +499,7 @@ void custom_object_dialog::change_template(int selection, const std::string& s)
 		// ignorning these exceptions till we're finished
 		//assert_recover_scope recover_from_assert;
 		//try {
-		//	object_ = custom_object_type_ptr(new custom_object_type(object_template_, NULL, NULL));
+		//	object_ = CustomObjectTypePtr(new CustomObjectType(object_template_, NULL, NULL));
 		//} catch(validation_failure_exception& e) {
 		//	std::cerr << "error parsing formula: " << e.msg << std::endl;
 		//} catch(type_error& e) {

@@ -80,7 +80,7 @@ entity_ptr entity::build(variant node)
 	}
 }
 
-bool entity::has_feet() const
+bool entity::hasFeet() const
 {
 	return solid();
 }
@@ -390,7 +390,7 @@ void entity::set_mouse_over_area(const rect& area)
 	mouse_over_area_ = area;
 }
 
-const rect& entity::mouse_over_area() const
+const rect& entity::getMouseOverArea() const
 {
 	return mouse_over_area_;
 }
@@ -398,16 +398,16 @@ const rect& entity::mouse_over_area() const
 bool zorder_compare(const entity_ptr& a, const entity_ptr& b)
 {
 	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.
-	if(level::current().player() && level::current().player()->reverse_global_vertical_zordering()){
+	if(level::current().player() && level::current().player()->hasReverseGlobalVerticalZordering()){
 		return a->zorder() < b->zorder() ||
-			a->zorder() == b->zorder() && a->zsub_order() < b->zsub_order() ||
-			a->zorder() == b->zorder() && a->zsub_order() == b->zsub_order() && a->midpoint().y < b->midpoint().y ||
-			a->zorder() == b->zorder() && a->zsub_order() == b->zsub_order() && a->midpoint().y == b->midpoint().y && a.get() < b.get();		
+			a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
+			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y < b->midpoint().y ||
+			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y == b->midpoint().y && a.get() < b.get();		
 	}
 	return a->zorder() < b->zorder() ||
-		a->zorder() == b->zorder() && a->zsub_order() < b->zsub_order() ||
-		a->zorder() == b->zorder() && a->zsub_order() == b->zsub_order() && a->midpoint().y > b->midpoint().y ||
-		a->zorder() == b->zorder() && a->zsub_order() == b->zsub_order() && a->midpoint().y == b->midpoint().y && a.get() > b.get();
+		a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
+		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y > b->midpoint().y ||
+		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y == b->midpoint().y && a.get() > b.get();
 }
 
 bool entity_zorder_compare::operator()(const entity_ptr& lhs, const entity_ptr& rhs) 

@@ -542,12 +542,12 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				std::set<entity_ptr> mouse_in;
 				for(it = cs.begin(); it != cs.end(); ++it) {
 					entity_ptr& e = *it;
-					rect m_area = e->mouse_over_area();
+					rect m_area = e->getMouseOverArea();
 					m_area += e->midpoint();
 					// n.b. mouse_over_area is relative to the object.
 					if(m_area.w() != 0) {
 						point p(x,y);
-						if(e->use_absolute_screen_coordinates()) {
+						if(e->useAbsoluteScreenCoordinates()) {
 							p = point(mx,my);
 						}
 						if(pointInRect(p, m_area) == false) {
@@ -560,11 +560,11 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					} else if(event_type == SDL_MOUSEMOTION) {
 						// handling for mouse_enter
 						if(e->is_mouse_over_entity() == false) {
-							if((e->get_mouseover_delay() == 0 || unsigned(lvl_->cycle()) > e->get_mouseover_trigger_cycle())) {
+							if((e->getMouseoverDelay() == 0 || unsigned(lvl_->cycle()) > e->get_mouseover_trigger_cycle())) {
 								e->handleEvent(MouseEnterID, callable.get());
 								e->set_mouse_over_entity();
 							} else if(e->get_mouseover_trigger_cycle() == INT_MAX) {
-								e->set_mouseover_trigger_cycle(e->get_mouseover_delay() + lvl_->cycle());
+								e->set_mouseover_trigger_cycle(e->getMouseoverDelay() + lvl_->cycle());
 							}
 						}
 						mouse_in.insert(e);
@@ -646,11 +646,11 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						}
 
 						// n.b. mouse_over_area is relative to the object.
-						rect m_area = e->mouse_over_area();
+						rect m_area = e->getMouseOverArea();
 						m_area += e->midpoint();
 						bool has_m_area = m_area.w() != 0;
 						point p(x,y);
-						if(e->use_absolute_screen_coordinates()) {
+						if(e->useAbsoluteScreenCoordinates()) {
 							p = point(mx,my);
 						}
 
@@ -885,7 +885,7 @@ bool level_runner::play_cycle()
 	}
 
 	if(!editor_ && g_reload_modified_objects) {
-		custom_object_type::reload_modified_code();
+		CustomObjectType::reloadModifiedCode();
 	}
 
 	if(editor_) {
@@ -898,14 +898,14 @@ bool level_runner::play_cycle()
 
 		lvl_->mutate_value("zoom", variant(decimal(1.0/editor_->zoom())));
 
-		custom_object_type::reload_modified_code();
+		CustomObjectType::reloadModifiedCode();
 		graphics::texture::clear_modified_files_from_cache();
 
 		if(lvl_->cycle()%25 == 0) {
 			background::load_modified_backgrounds();
 		}
 
-		if(history_trails_.empty() == false && (tile_rebuild_state_id_ != level::tile_rebuild_state_id() || history_trails_state_id_ != editor_->level_state_id() || object_reloads_state_id_ != custom_object_type::num_object_reloads())) {
+		if(history_trails_.empty() == false && (tile_rebuild_state_id_ != level::tile_rebuild_state_id() || history_trails_state_id_ != editor_->level_state_id() || object_reloads_state_id_ != CustomObjectType::numObjectReloads())) {
 			update_history_trails();
 		}
 
@@ -1043,7 +1043,7 @@ bool level_runner::play_cycle()
 			if(portal->dest_label.empty() == false) {
 				const_entity_ptr dest_door = lvl_->get_entity_by_label(portal->dest_label);
 				if(dest_door) {
-					mutable_portal.dest = point(dest_door->x() + dest_door->teleport_offset_x()*dest_door->face_dir(), dest_door->y() + dest_door->teleport_offset_y());
+					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->face_dir(), dest_door->y() + dest_door->getTeleportOffsetY());
 					mutable_portal.dest_starting_pos = false;
 				}
 
@@ -1061,7 +1061,7 @@ bool level_runner::play_cycle()
 
 			if(player) {
 				player->get_entity().set_pos(portal->dest);
-				if(!player->get_entity().no_move_to_standing() && !portal->no_move_to_standing){
+				if(!player->get_entity().hasNoMoveToStanding() && !portal->no_move_to_standing){
 					player->get_entity().move_to_standing(*lvl_);
 				}
 			}
@@ -1106,7 +1106,7 @@ bool level_runner::play_cycle()
 				//so set our position there.
 				const_entity_ptr dest_door = new_level->get_entity_by_label(portal->dest_label);
 				if(dest_door) {
-					mutable_portal.dest = point(dest_door->x() + dest_door->teleport_offset_x()*dest_door->face_dir(), dest_door->y() + dest_door->teleport_offset_y());
+					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->face_dir(), dest_door->y() + dest_door->getTeleportOffsetY());
 					mutable_portal.dest_starting_pos = false;
 				}
 			}
@@ -1146,7 +1146,7 @@ bool level_runner::play_cycle()
 				}
 				player->get_entity().set_pos(dest);
 				new_level->add_player(&player->get_entity());
-				if(!player->get_entity().no_move_to_standing() && !portal->no_move_to_standing){
+				if(!player->get_entity().hasNoMoveToStanding() && !portal->no_move_to_standing){
 					player->get_entity().move_to_standing(*new_level);
 				}
 				player->get_entity().handleEvent("enter_level");
@@ -1845,21 +1845,21 @@ void level_runner::on_history_change(double value)
 {
 	const int first_frame = lvl_->earliest_backup_cycle();
 	const int last_frame = controls::local_controls_end();
-	int target_frame = first_frame + (last_frame + 1 - first_frame)*value;
-	if(target_frame > last_frame) {
-		target_frame = last_frame;
+	int targetFrame = first_frame + (last_frame + 1 - first_frame)*value;
+	if(targetFrame > last_frame) {
+		targetFrame = last_frame;
 	}
 
-	std::cerr << "TARGET FRAME: " << target_frame << " IN [" << first_frame << ", " << last_frame << "]\n";
+	std::cerr << "TARGET FRAME: " << targetFrame << " IN [" << first_frame << ", " << last_frame << "]\n";
 
-	if(target_frame < lvl_->cycle()) {
-		lvl_->reverse_to_cycle(target_frame);
-	} else if(target_frame > lvl_->cycle()) {
-		std::cerr << "STEPPING FORWARD FROM " << lvl_->cycle() << " TO " << target_frame << " /" << controls::local_controls_end() << "\n";
+	if(targetFrame < lvl_->cycle()) {
+		lvl_->reverse_to_cycle(targetFrame);
+	} else if(targetFrame > lvl_->cycle()) {
+		std::cerr << "STEPPING FORWARD FROM " << lvl_->cycle() << " TO " << targetFrame << " /" << controls::local_controls_end() << "\n";
 
 		const controls::control_backup_scope ctrl_scope;
 		
-		while(lvl_->cycle() < target_frame) {
+		while(lvl_->cycle() < targetFrame) {
 			lvl_->process();
 			lvl_->process_draw();
 			lvl_->backup();
@@ -1897,7 +1897,7 @@ void level_runner::update_history_trails()
 		const int ncycles = (last_frame - first_frame) + 1;
 		history_trails_ = lvl_->predict_future(e, ncycles);
 		history_trails_state_id_ = editor_->level_state_id();
-		object_reloads_state_id_ = custom_object_type::num_object_reloads();
+		object_reloads_state_id_ = CustomObjectType::numObjectReloads();
 		tile_rebuild_state_id_ = level::tile_rebuild_state_id();
 
 		history_trails_label_ = e->label();

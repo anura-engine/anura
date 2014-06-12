@@ -53,8 +53,8 @@ void load_editor_tiles()
 {
 	std::map<std::string, TileTypePtr>::const_iterator it = get_TileType_map().begin();
 	while(it != get_TileType_map().end()) {
-		if(it->second->getEditorInfo().name.empty() == false 
-			&& it->second->getEditorInfo().type.empty() == false) {
+		if(it->second->getgetEditorInfo().name.empty() == false 
+			&& it->second->getgetEditorInfo().type.empty() == false) {
 			get_hex_editor_tiles().push_back(it->second);
 		}
 		++it;
@@ -65,8 +65,8 @@ void load_hex_editor_tiles()
 {
 	std::map<std::string, TileTypePtr>::const_iterator it = get_TileType_map().begin();
 	while(it != get_TileType_map().end()) {
-		if(it->second->getEditorInfo().type.empty() == false) {
-			get_editor_hex_tile_map()[it->second->getEditorInfo().type] = it->second;
+		if(it->second->getgetEditorInfo().type.empty() == false) {
+			get_editor_hex_tile_map()[it->second->getgetEditorInfo().type] = it->second;
 		}
 		++it;
 	}
@@ -82,7 +82,7 @@ void load_hex_tiles(variant node)
 		get_TileType_map()[key_str] = TileTypePtr(new TileType(key_str, p.second));
 	}
 
-	// get list of all tiles have non-empty "EditorInfo" blocks.
+	// get list of all tiles have non-empty "editor_info" blocks.
 	if(!get_hex_editor_tiles().empty()) {
 		get_hex_editor_tiles().clear();
 	}
@@ -115,7 +115,7 @@ public:
 	game_logic::expression_ptr create_function(
 		const std::string& fn,
 		const std::vector<game_logic::expression_ptr>& args,
-		game_logic::const_FormulaCallable_definition_ptr callable_def) const
+		game_logic::ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 		if(fn == "get_tile") {
 			return game_logic::expression_ptr(new get_tile_function(args));

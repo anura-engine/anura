@@ -1,26 +1,30 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CUSTOM_OBJECT_TYPE_HPP_INCLUDED
-#define CUSTOM_OBJECT_TYPE_HPP_INCLUDED
+
+#pragma once
 
 #include <map>
 #include <string>
-
-#include "boost/shared_ptr.hpp"
 
 #include "custom_object_callable.hpp"
 #include "editor_variable_info.hpp"
@@ -31,7 +35,6 @@
 #include "frame.hpp"
 #include "lua_iface.hpp"
 #include "particle_system.hpp"
-#include "raster.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 #include "variant_type.hpp"
@@ -39,34 +42,35 @@
 #include "b2d_ffl.hpp"
 #endif
 
-class custom_object_type;
+class CustomObjectType;
 
-typedef std::shared_ptr<custom_object_type> custom_object_type_ptr;
-typedef std::shared_ptr<const custom_object_type> const_custom_object_type_ptr;
+typedef std::shared_ptr<CustomObjectType> CustomObjectTypePtr;
+typedef std::shared_ptr<const CustomObjectType> ConstCustomObjectTypePtr;
 
 std::map<std::string, std::string>& prototype_file_paths();
 
-namespace wml {
-class modifier;
-typedef std::shared_ptr<const modifier> const_modifier_ptr;
+namespace wml 
+{
+	class modifier;
+	typedef std::shared_ptr<const modifier> const_modifier_ptr;
 }
 
-class custom_object_type
+class CustomObjectType
 {
 public:
-	static void set_player_variant_type(variant type_str);
+	static void setPlayerVariantType(variant type_str);
 
-	static game_logic::FormulaCallable_definition_ptr get_definition(const std::string& id);
-	static bool is_derived_from(const std::string& base, const std::string& derived);
-	static variant merge_prototype(variant node, std::vector<std::string>* proto_paths=NULL);
-	static const std::string* get_object_path(const std::string& id);
-	static const_custom_object_type_ptr get(const std::string& id);
-	static const_custom_object_type_ptr get_or_die(const std::string& id);
-	static custom_object_type_ptr create(const std::string& id);
-	static void invalidate_object(const std::string& id);
-	static void invalidate_all_objects();
-	static std::vector<const_custom_object_type_ptr> get_all();
-	static std::vector<std::string> get_all_ids();
+	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);
+	static bool isDerivedFrom(const std::string& base, const std::string& derived);
+	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=NULL);
+	static const std::string* getObjectPath(const std::string& id);
+	static ConstCustomObjectTypePtr get(const std::string& id);
+	static ConstCustomObjectTypePtr getOrDie(const std::string& id);
+	static CustomObjectTypePtr create(const std::string& id);
+	static void invalidateObject(const std::string& id);
+	static void invalidateAllObjects();
+	static std::vector<ConstCustomObjectTypePtr> getAll();
+	static std::vector<std::string> getAllIds();
 
 	//a function which returns all objects that have an editor category
 	//mapped to the category they are in.
@@ -75,49 +79,49 @@ public:
 		variant first_frame;
 	};
 
-	static std::map<std::string,EditorSummary> get_editor_categories();
+	static std::map<std::string,EditorSummary> getEditorCategories();
 
-	static void set_file_contents(const std::string& path, const std::string& contents);
+	static void setFileContents(const std::string& path, const std::string& contents);
 
-	static int reload_modified_code();
-	static void reload_object(const std::string& type);
+	static int reloadModifiedCode();
+	static void reloadObject(const std::string& type);
 
-	static int num_object_reloads();
+	static int numObjectReloads();
 
 	typedef std::vector<game_logic::const_formula_ptr> event_handler_map;
 
-	void init_event_handlers(variant node,
+	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
 							 game_logic::function_symbol_table* symbols=0,
 							 const event_handler_map* base_handlers=NULL) const;
 
-	custom_object_type(const std::string& id, variant node, const custom_object_type* base_type=NULL, const custom_object_type* old_type=NULL);
-	~custom_object_type();
+	CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type=NULL, const CustomObjectType* old_type=NULL);
+	~CustomObjectType();
 
-	const_custom_object_type_ptr get_sub_object(const std::string& id) const;
+	ConstCustomObjectTypePtr getSubObject(const std::string& id) const;
 
-	const_custom_object_callable_ptr callable_definition() const { return callable_definition_; }
+	ConstCustomObjectCallablePtr callableDefinition() const { return callable_definition_; }
 
 	const std::string& id() const { return id_; }
 	int hitpoints() const { return hitpoints_; }
 
-	int timer_frequency() const { return timer_frequency_; }
+	int timerFrequency() const { return timerFrequency_; }
 
-	const frame& default_frame() const;
-	const frame& get_frame(const std::string& key) const;
-	bool has_frame(const std::string& key) const;
+	const frame& defaultFrame() const;
+	const frame& getFrame(const std::string& key) const;
+	bool hasFrame(const std::string& key) const;
 
-	const game_logic::const_formula_ptr& next_animation_formula() const { return next_animation_formula_; }
+	const game_logic::const_formula_ptr& nextAnimationFormula() const { return next_animation_formula_; }
 
-	game_logic::const_formula_ptr get_event_handler(int event) const;
-	int parallax_scale_millis_x() const {
+	game_logic::const_formula_ptr getEventHandler(int event) const;
+	int parallaxScaleMillisX() const {
 		if(parallax_scale_millis_.get() == NULL){
 			return 1000;
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
-	int parallax_scale_millis_y() const {
+	int parallaxScaleMillisY() const {
 		if(parallax_scale_millis_.get() == NULL){
 			return 1000;
 		}else{
@@ -126,40 +130,40 @@ public:
 	}
 	
 	int zorder() const { return zorder_; }
-	int zsub_order() const { return zsub_order_; }
-	bool is_human() const { return is_human_;}
-	bool goes_inactive_only_when_standing() const { return goes_inactive_only_when_standing_; }
-	bool dies_on_inactive() const { return dies_on_inactive_;}
-	bool always_active() const { return always_active_;}
-	bool body_harmful() const { return body_harmful_; }
-	bool body_passthrough() const { return body_passthrough_; }
-	bool ignore_collide() const { return ignore_collide_; }
+	int zSubOrder() const { return zsub_order_; }
+	bool isHuman() const { return is_human_;}
+	bool goesInactiveOnlyWhenStanding() const { return goes_inactive_only_when_standing_; }
+	bool diesOnInactive() const { return dies_on_inactive_;}
+	bool isAlwaysActive() const { return always_active_;}
+	bool isBodyHarmful() const { return body_harmful_; }
+	bool isBodyPassthrough() const { return body_passthrough_; }
+	bool hasIgnoreCollide() const { return ignore_collide_; }
 
 #ifdef USE_BOX2D
 	box2d::body_ptr body() { return body_; }
 	box2d::const_body_ptr body() const { return body_; }
 #endif
 
-	int get_mouseover_delay() const { return mouseover_delay_; }
-	const rect& mouse_over_area() const { return mouse_over_area_; }
+	int getMouseoverDelay() const { return mouseover_delay_; }
+	const rect& getMouseOverArea() const { return mouse_over_area_; }
 
-	bool object_level_collisions() const { return object_level_collisions_; }
+	bool hasObjectLevelCollisions() const { return object_level_collisions_; }
 
-	int surface_friction() const { return surface_friction_; }
-	int surface_traction() const { return surface_traction_; }
+	int getSurfaceFriction() const { return surface_friction_; }
+	int getSurfaceTraction() const { return surface_traction_; }
 	int mass() const { return mass_; }
 
 	//amount of friction we experience.
 	int friction() const { return friction_; }
 	int traction() const { return traction_; }
-	int traction_in_air() const { return traction_in_air_; }
-	int traction_in_water() const { return traction_in_water_; }
+	int getTractionInAir() const { return traction_in_air_; }
+	int getTractionInWater() const { return traction_in_water_; }
 
 	bool respawns() const { return respawns_; }
 
-	bool affected_by_currents() const { return affected_by_currents_; }
+	bool isAffectedByCurrents() const { return affected_by_currents_; }
 
-	variant get_child(const std::string& key) const {
+	variant getChild(const std::string& key) const {
 		if(children_.count(key)) {
 			return children_.find(key)->second;
 		}
@@ -167,36 +171,36 @@ public:
 		return variant();
 	}
 
-	const_particle_system_factory_ptr get_particle_system_factory(const std::string& id) const;
+	const_particle_system_factory_ptr getParticleSystemFactory(const std::string& id) const;
 
-	bool is_vehicle() const { return is_vehicle_; }
+	bool isVehicle() const { return is_vehicle_; }
 
-	int passenger_x() const { return passenger_x_; }
-	int passenger_y() const { return passenger_y_; }
+	int getPassengerX() const { return passenger_x_; }
+	int getPassengerY() const { return passenger_y_; }
 
-	int feet_width() const { return feet_width_; }
+	int getFeetWidth() const { return feet_width_; }
 
-	int teleport_offset_x() const { return teleport_offset_x_; }
-	int teleport_offset_y() const { return teleport_offset_y_; }
-	bool no_move_to_standing() const { return no_move_to_standing_; }
-	bool reverse_global_vertical_zordering() const { return reverse_global_vertical_zordering_; }
+	int getTeleportOffsetX() const { return teleport_offset_x_; }
+	int getTeleportOffsetY() const { return teleport_offset_y_; }
+	bool hasNoMoveToStanding() const { return no_move_to_standing_; }
+	bool hasReverseGlobalVerticalZordering() const { return reverse_global_vertical_zordering_; }
 
 	bool serializable() const { return serializable_; }
 
-	bool use_image_for_collisions() const { return use_image_for_collisions_; }
-	bool static_object() const { return static_object_; }
-	bool collides_with_level() const { return collides_with_level_; }
-	bool has_feet() const { return has_feet_; }
-	bool adjust_feet_on_animationChange() const { return adjust_feet_on_animation_change_; }
-	bool use_absolute_screen_coordinates() const { return use_absolute_screen_coordinates_; }
+	bool useImageForCollisions() const { return use_image_for_collisions_; }
+	bool isStaticObject() const { return static_object_; }
+	bool collidesWithLevel() const { return collides_with_level_; }
+	bool hasFeet() const { return has_feet_; }
+	bool adjustFeetOnAnimationChange() const { return adjust_feet_on_animation_change_; }
+	bool useAbsoluteScreenCoordinates() const { return use_absolute_screen_coordinates_; }
 
 	const std::map<std::string, variant>& variables() const { return variables_; }
-	const std::map<std::string, variant>& tmp_variables() const { return tmp_variables_; }
+	const std::map<std::string, variant>& tmpVariables() const { return tmp_variables_; }
 	game_logic::ConstMapFormulaCallablePtr consts() const { return consts_; }
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
-	struct property_entry {
-		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_EditorInfo(false) {}
+	struct PropertyEntry {
+		PropertyEntry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
 		std::shared_ptr<variant> const_value;
@@ -205,88 +209,76 @@ public:
 		int slot, storage_slot;
 		bool persistent;
 		bool requires_initialization;
-		bool has_EditorInfo;
+		bool has_editor_info;
 	};
 
-	const std::map<std::string, property_entry>& properties() const { return properties_; }
-	const std::vector<property_entry>& slot_properties() const { return slot_properties_; }
-	const std::vector<int>& properties_with_init() const { return properties_with_init_; }
-	const std::vector<int>& properties_requiring_initialization() const { return properties_requiring_initialization_; }
-	const std::vector<int>& properties_requiring_dynamic_initialization() const { return properties_requiring_dynamic_initialization_; }
+	const std::map<std::string, PropertyEntry>& properties() const { return properties_; }
+	const std::vector<PropertyEntry>& getSlotProperties() const { return slot_properties_; }
+	const std::vector<int>& getPropertiesWithInit() const { return properties_with_init_; }
+	const std::vector<int>& getPropertiesRequiringInitialization() const { return properties_requiring_initialization_; }
+	const std::vector<int>& getPropertiesRequiringDynamicInitialization() const { return properties_requiring_dynamic_initialization_; }
 
 	//this is the last required initialization property that should be
 	//initialized. It's the only such property that has a custom setter.
-	const std::string& last_initialization_property() const { return last_initialization_property_; }
-	int slot_properties_base() const { return slot_properties_base_; }
+	const std::string& getLastInitializationProperty() const { return last_initialization_property_; }
+	int getSlotPropertiesBase() const { return slot_properties_base_; }
 
-	game_logic::function_symbol_table* function_symbols() const;
+	game_logic::function_symbol_table* getFunctionSymbols() const;
 
 	const const_solid_info_ptr& solid() const { return solid_; }
 	const const_solid_info_ptr& platform() const { return platform_; }
 
-	const std::vector<int>& platform_offsets() const { return platform_offsets_; }
+	const std::vector<int>& getPlatformOffsets() const { return platform_offsets_; }
 
-	bool solid_platform() const { return solid_platform_; }
+	bool isSolidPlatform() const { return solid_platform_; }
 
 	//true if the object can ever be solid or standable
-	bool has_solid() const { return has_solid_; }
+	bool hasSolid() const { return has_solid_; }
 
-	unsigned int solid_dimensions() const { return solid_dimensions_; }
-	unsigned int collide_dimensions() const { return collide_dimensions_; }
+	unsigned int getSolidDimensions() const { return solid_dimensions_; }
+	unsigned int getCollideDimensions() const { return collide_dimensions_; }
 
-	unsigned int weak_solid_dimensions() const { return weak_solid_dimensions_; }
-	unsigned int weak_collide_dimensions() const { return weak_collide_dimensions_; }
+	unsigned int getWeakSolidDimensions() const { return weak_solid_dimensions_; }
+	unsigned int getWeakCollideDimensions() const { return weak_collide_dimensions_; }
 
-	const_custom_object_type_ptr get_variation(const std::vector<std::string>& variations) const;
-	void load_variations() const;
+	ConstCustomObjectTypePtr getVariation(const std::vector<std::string>& variations) const;
+	void loadVariations() const;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr EditorInfo() const { return EditorInfo_; }
+	const_editor_entity_info_ptr getEditorInfo() const { return editor_info_; }
 #endif // !NO_EDITOR
 
 	variant node() const { return node_; }
 
-	int activation_border() const { return activation_border_; }
-	const variant& available_frames() const { return available_frames_; }
+	int getActivationBorder() const { return activation_border_; }
+	const variant& getAvailableFrames() const { return available_frames_; }
 
-	bool editor_force_standing() const { return editor_force_standing_; }
-	bool hidden_in_game() const { return hidden_in_game_; }
+	bool editorForceStanding() const { return editor_force_standing_; }
+	bool isHiddenInGame() const { return hidden_in_game_; }
 	bool stateless() const { return stateless_; }
 
-#if defined(USE_SHADERS)
-	const gles2::shader_program_ptr& shader() const { return shader_; }
-	const std::vector<gles2::shader_program_ptr>& effects() const { return effects_; }
-#endif
+	static void ReloadFilePaths();
 
-	static void reload_file_paths();
+	bool isStrict() const { return is_strict_; }
 
-	bool is_strict() const { return is_strict_; }
+	bool isShadow() const { return is_shadow_; }
 
-	const graphics::blend_mode* blend_mode() const { return blend_mode_.get(); }
-
-	bool is_shadow() const { return is_shadow_; }
-
-	bool truez() const { return true_z_; }
-	double tx() const { return tx_; }
-	double ty() const { return ty_; }
-	double tz() const { return tz_; }
-
-	const std::string& get_lua_source() const { return lua_source_; }
-	void set_lua_source(const std::string& ls) { lua_source_ = ls; }
+	const std::string& getLuaSource() const { return lua_source_; }
+	void setLuaSource(const std::string& ls) { lua_source_ = ls; }
 
 private:
-	void init_sub_objects(variant node, const custom_object_type* old_type);
+	void initSubObjects(variant node, const CustomObjectType* old_type);
 
 	//recreate an object type, optionally given the old version to base
 	//things off where possible
-	static custom_object_type_ptr recreate(const std::string& id, const custom_object_type* old_type);
+	static CustomObjectTypePtr recreate(const std::string& id, const CustomObjectType* old_type);
 
-	custom_object_callable_ptr callable_definition_;
+	CustomObjectCallablePtr callable_definition_;
 
 	std::string id_;
 	int hitpoints_;
 
-	int timer_frequency_;
+	int timerFrequency_;
 
 	typedef boost::intrusive_ptr<frame> frame_ptr;
 
@@ -294,7 +286,7 @@ private:
 	frame_map frames_;
 	variant available_frames_;
 
-	boost::intrusive_ptr<frame> default_frame_;
+	boost::intrusive_ptr<frame> defaultFrame_;
 
 	game_logic::const_formula_ptr next_animation_formula_;
 
@@ -349,8 +341,8 @@ private:
 	game_logic::MapFormulaCallablePtr consts_;
 	std::map<std::string, variant> tags_;
 
-	std::map<std::string, property_entry> properties_;
-	std::vector<property_entry> slot_properties_;
+	std::map<std::string, PropertyEntry> properties_;
+	std::vector<PropertyEntry> slot_properties_;
 	std::vector<int> properties_with_init_, properties_requiring_initialization_, properties_requiring_dynamic_initialization_;
 	std::string last_initialization_property_;
 	int slot_properties_base_;
@@ -374,13 +366,13 @@ private:
 	int activation_border_;
 
 	std::map<std::string, game_logic::const_formula_ptr> variations_;
-	mutable std::map<std::vector<std::string>, const_custom_object_type_ptr> variations_cache_;
+	mutable std::map<std::vector<std::string>, ConstCustomObjectTypePtr> variations_cache_;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr EditorInfo_;
+	const_editor_entity_info_ptr editor_info_;
 #endif // !NO_EDITOR
 
-	std::map<std::string, const_custom_object_type_ptr> sub_objects_;
+	std::map<std::string, ConstCustomObjectTypePtr> sub_objects_;
 
 	bool editor_force_standing_;
 
@@ -393,11 +385,6 @@ private:
 
 	std::vector<int> platform_offsets_;
 
-#ifdef USE_SHADERS
-	gles2::shader_program_ptr shader_;
-	std::vector<gles2::shader_program_ptr> effects_;
-#endif
-
 #ifdef USE_BOX2D
 	box2d::body_ptr body_;
 #endif
@@ -405,17 +392,11 @@ private:
 	//does this object use strict checking?
 	bool is_strict_;
 
-	std::shared_ptr<graphics::blend_mode> blend_mode_;
-
 	//if this is a shadow, it will render only on top of foreground level
 	//components.
 	bool is_shadow_;
-
-	bool true_z_;
-	double tx_, ty_, tz_;
 
 	// For lua integration
 	std::string lua_source_;
 };
 
-#endif

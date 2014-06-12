@@ -291,7 +291,7 @@ extern "C" int main(int argcount, char* argvec[])
 		std::cout<< "Changed working directory to: " << getcwd(0, 0) << std::endl;
 	#endif
 
-	game_logic::init_callable_definitions();
+	game_logic::init_callableDefinitions();
 
 	std::string level_cfg = "titlescreen.cfg";
 	bool unit_tests_only = false, skip_tests = false;

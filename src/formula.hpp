@@ -44,7 +44,7 @@ struct where_variables_info : public reference_counted_object {
 	std::vector<std::string> names;
 	std::vector<expression_ptr> entries;
 	int base_slot;
-	const_FormulaCallable_definition_ptr callable_where_def;
+	ConstFormulaCallableDefinitionPtr callable_where_def;
 };
 
 typedef boost::intrusive_ptr<where_variables_info> where_variables_info_ptr;
@@ -84,10 +84,10 @@ public:
 
 	enum FORMULA_LANGUAGE { LANGUAGE_FFL, LANGUAGE_LUA  };
 
-	static const std::set<formula*>& get_all();
+	static const std::set<formula*>& getAll();
 
-	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, const_FormulaCallable_definition_ptr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
-	explicit formula(const variant& val, function_symbol_table* symbols=NULL, const_FormulaCallable_definition_ptr def=NULL);
+	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
+	explicit formula(const variant& val, function_symbol_table* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
 	formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 	~formula();
 	variant execute(const FormulaCallable& variables) const;
@@ -115,7 +115,7 @@ private:
 	variant str_;
 	expression_ptr expr_;
 
-	const_FormulaCallable_definition_ptr def_;
+	ConstFormulaCallableDefinitionPtr def_;
 
 	//for recursive function formulae, we have base cases along with
 	//base expressions.

@@ -59,10 +59,10 @@ public:
 	virtual void draw(int x, int y) const = 0;
 	virtual void draw_later(int x, int y) const = 0;
 	virtual void draw_group() const = 0;
-	player_info* get_player_info() { return is_human(); }
-	const player_info* get_player_info() const { return is_human(); }
-	virtual const player_info* is_human() const { return NULL; }
-	virtual player_info* is_human() { return NULL; }
+	player_info* get_player_info() { return isHuman(); }
+	const player_info* get_player_info() const { return isHuman(); }
+	virtual const player_info* isHuman() const { return NULL; }
+	virtual player_info* isHuman() { return NULL; }
 	virtual void process(level& lvl);
 	virtual bool executeCommand(const variant& var) = 0;
 
@@ -84,11 +84,11 @@ public:
 	int x() const { return x_/100 - (x_ < 0 && x_%100 ? 1 : 0); }
 	int y() const { return y_/100 - (y_ < 0 && y_%100 ? 1 : 0); }
 
-	virtual int parallax_scale_millis_x() const { return 1000;}
-	virtual int parallax_scale_millis_y() const { return 1000;}
+	virtual int parallaxScaleMillisX() const { return 1000;}
+	virtual int parallaxScaleMillisY() const { return 1000;}
 		
 	virtual int zorder() const { return 0; }
-	virtual int zsub_order() const { return 0; }
+	virtual int zSubOrder() const { return 0; }
 
 	virtual const std::pair<int,int>* parallax_scale_millis() const { return 0; }
 
@@ -105,8 +105,8 @@ public:
 
 	virtual bool destroyed() const = 0;
 
-	virtual int surface_friction() const { return 0; }
-	virtual int surface_traction() const { return 0; }
+	virtual int getSurfaceFriction() const { return 0; }
+	virtual int getSurfaceTraction() const { return 0; }
 
 	virtual bool point_collides(int x, int y) const = 0;
 	virtual bool rect_collides(const rect& r) const = 0;
@@ -117,7 +117,7 @@ public:
 	rect platform_rect() const { return platform_rect_; }
 	virtual rect platform_rect_at(int xpos) const { return platform_rect(); }
 	virtual int platform_slope_at(int xpos) const { return 0; }
-	virtual bool solid_platform() const { return false; }
+	virtual bool isSolidPlatform() const { return false; }
 	rect body_rect() const;
 	rect hit_rect() const;
 	point midpoint() const;
@@ -129,7 +129,7 @@ public:
 
 	bool is_alpha(int xpos, int ypos) const;
 
-	virtual bool has_feet() const;
+	virtual bool hasFeet() const;
 	int feet_x() const;
 	int feet_y() const;
 
@@ -148,26 +148,26 @@ public:
 
 	int face_dir() const { return face_right() ? 1 : -1; }
 
-	virtual bool body_harmful() const { return true; }
+	virtual bool isBodyHarmful() const { return true; }
 
 	virtual int time_in_frame() const = 0;
 
-	virtual int teleport_offset_x() const { return 0; }
-	virtual int teleport_offset_y() const { return 0; }
-	virtual bool no_move_to_standing() const { return 0; }
-	virtual bool reverse_global_vertical_zordering() const { return 0; }
+	virtual int getTeleportOffsetX() const { return 0; }
+	virtual int getTeleportOffsetY() const { return 0; }
+	virtual bool hasNoMoveToStanding() const { return 0; }
+	virtual bool hasReverseGlobalVerticalZordering() const { return 0; }
 
 	virtual entity_ptr standing_on() const = 0;
 
 	virtual void die_with_no_event() = 0;
 	virtual bool isActive(const rect& screen_area) const = 0;
-	virtual bool dies_on_inactive() const { return false; } 
-	virtual bool always_active() const { return false; } 
+	virtual bool diesOnInactive() const { return false; } 
+	virtual bool isAlwaysActive() const { return false; } 
 	
 	virtual FormulaCallable* vars() { return NULL; }
 	virtual const FormulaCallable* vars() const { return NULL; }
 
-	virtual bool body_passthrough() const { return false; }
+	virtual bool isBodyPassthrough() const { return false; }
 
 	//the number of pixels up or down to adjust the scroll position if this
 	//object is focused.
@@ -193,7 +193,7 @@ public:
 	void draw_debug_rects() const;
 
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr EditorInfo() const { return const_editor_entity_info_ptr(); }
+	virtual const_editor_entity_info_ptr getEditorInfo() const { return const_editor_entity_info_ptr(); }
 #endif // !NO_EDITOR
 
 	virtual entity_ptr clone() const { return entity_ptr(); }
@@ -201,7 +201,7 @@ public:
 
 	virtual void generate_current(const entity& target, int* velocity_x, int* velocity_y) const;
 
-	virtual game_logic::const_formula_ptr get_event_handler(int key) const { return game_logic::const_formula_ptr(); }
+	virtual game_logic::const_formula_ptr getEventHandler(int key) const { return game_logic::const_formula_ptr(); }
 	virtual void set_event_handler(int, game_logic::const_formula_ptr f) { return; }
 
 	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
@@ -253,11 +253,11 @@ public:
 
 	virtual void set_level(level* lvl) {}
 
-	unsigned int solid_dimensions() const { return solid_dimensions_; }
-	unsigned int collide_dimensions() const { return collide_dimensions_; }
+	unsigned int getSolidDimensions() const { return solid_dimensions_; }
+	unsigned int getCollideDimensions() const { return collide_dimensions_; }
 
-	unsigned int weak_solid_dimensions() const { return weak_solid_dimensions_; }
-	unsigned int weak_collide_dimensions() const { return weak_collide_dimensions_; }
+	unsigned int getWeakSolidDimensions() const { return weak_solid_dimensions_; }
+	unsigned int getWeakCollideDimensions() const { return weak_collide_dimensions_; }
 
 	void set_attached_objects(const std::vector<entity_ptr>& v);
 
@@ -272,7 +272,7 @@ public:
 
 	virtual int parent_depth(bool* has_human_parent=NULL, int cur_depth=0) const { return 0; }
 
-	virtual bool editor_force_standing() const = 0;
+	virtual bool editorForceStanding() const = 0;
 
 	void set_spawned_by(const std::string& key);
 	const std::string& spawned_by() const;
@@ -287,18 +287,18 @@ public:
 	void set_being_dragged(bool val=true) { being_dragged_ = val; }
 	virtual bool get_clipArea(rect* clipArea) = 0;
 	void set_mouse_over_area(const rect& area);
-	const rect& mouse_over_area() const;
+	const rect& getMouseOverArea() const;
 
-	virtual game_logic::const_FormulaCallable_definition_ptr get_definition() const = 0;
+	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const = 0;
 
 	virtual bool create_object() = 0;
 
-	virtual bool use_absolute_screen_coordinates() const = 0;
+	virtual bool useAbsoluteScreenCoordinates() const = 0;
 
 	virtual void being_removed() = 0;
 	virtual void being_added() = 0;
 
-	int get_mouseover_delay() const { return mouseover_delay_; }
+	int getMouseoverDelay() const { return mouseover_delay_; }
 	void set_mouseover_delay(int dly) { mouseover_delay_ = dly; }
 	unsigned get_mouseover_trigger_cycle() const { return mouseover_trigger_cycle_; }
 	void set_mouseover_trigger_cycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }

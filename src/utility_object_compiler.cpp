@@ -205,9 +205,9 @@ UTILITY(compile_objects)
 		}
 	}
 
-	std::vector<const_custom_object_type_ptr> types = custom_object_type::get_all();
-	foreach(const_custom_object_type_ptr type, types) {
-		const std::string* path = custom_object_type::get_object_path(type->id() + ".cfg");
+	std::vector<ConstCustomObjectTypePtr> types = CustomObjectType::getAll();
+	foreach(ConstCustomObjectTypePtr type, types) {
+		const std::string* path = CustomObjectType::getObjectPath(type->id() + ".cfg");
 
 		//skip any experimental stuff so it isn't compiled
 		const std::string Experimental = "experimental";
@@ -217,12 +217,12 @@ UTILITY(compile_objects)
 
 		std::cerr << "OBJECT: " << type->id() << " -> " << *path << "\n";
 		variant obj_node =  json::parse_from_file(*path);
-		obj_node = custom_object_type::merge_prototype(obj_node);
+		obj_node = CustomObjectType::mergePrototype(obj_node);
 		obj_node.remove_attr(variant("prototype"));
 
-		if(obj_node["EditorInfo"].is_map() && obj_node["EditorInfo"]["var"].is_list()) {
+		if(obj_node["editor_info"].is_map() && obj_node["editor_info"]["var"].is_list()) {
 			std::vector<std::string> names;
-			foreach(variant entry, obj_node["EditorInfo"]["var"].as_list()) {
+			foreach(variant entry, obj_node["editor_info"]["var"].as_list()) {
 				names.push_back(entry["name"].as_string());
 			}
 

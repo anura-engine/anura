@@ -206,7 +206,7 @@ namespace movie
 				iter_ = NULL;
 			}
 
-			img_ = vpx_codec_get_frame(&codec_, &iter_);
+			img_ = vpx_codec_getFrame(&codec_, &iter_);
 			if(img_ != NULL) {
 				done = true;
 			}

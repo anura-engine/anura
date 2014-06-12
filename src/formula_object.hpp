@@ -33,7 +33,7 @@ namespace game_logic
 
 class formula_class;
 
-FormulaCallable_definition_ptr get_class_definition(const std::string& name);
+FormulaCallableDefinitionPtr get_class_definition(const std::string& name);
 
 bool is_class_derived_from(const std::string& derived, const std::string& base);
 
@@ -107,7 +107,7 @@ struct formula_class_manager {
 };
 
 
-FormulaCallable_definition_ptr get_library_definition();
+FormulaCallableDefinitionPtr get_library_definition();
 FormulaCallablePtr get_library_object();
 
 }

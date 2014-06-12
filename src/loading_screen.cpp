@@ -47,13 +47,13 @@ loading_screen::loading_screen (int items) : items_(items), status_(0),
 
 void loading_screen::load(variant node)
 {
-	//custom_object_type::get("frogatto_playable");
+	//CustomObjectType::get("frogatto_playable");
 	foreach(variant preload_node, node["preload"].as_list())
 	{
 		draw_and_increment(preload_node["message"].as_string());
 		if(preload_node["type"].as_string() == "object")
 		{
-			custom_object_type::get(preload_node["name"].as_string());
+			CustomObjectType::get(preload_node["name"].as_string());
 		} else if(preload_node["type"].as_string() == "texture") {
 			graphics::texture::get(preload_node["name"].as_string());
 		}

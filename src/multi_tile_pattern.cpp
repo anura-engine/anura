@@ -59,7 +59,7 @@ const boost::regex& get_regex_from_pool(const std::string& key)
 	return *re;
 }
 
-const std::deque<multi_tile_pattern>& multi_tile_pattern::get_all()
+const std::deque<multi_tile_pattern>& multi_tile_pattern::getAll()
 {
 	return patterns();
 }

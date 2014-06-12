@@ -23,7 +23,7 @@
 
 class level;
 
-int get_num_solid_dimensions();
+int get_num_getSolidDimensions();
 const std::string& get_solid_dimension_key(int id);
 int get_solid_dimension_id(const std::string& key);
 

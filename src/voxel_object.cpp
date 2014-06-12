@@ -45,7 +45,7 @@ namespace voxel
 			return res;
 		}
 
-		std::string model_path_get_or_die(const std::string& model_name)
+		std::string model_path_getOrDie(const std::string& model_name)
 		{
 			auto it = model_path_cache().find(model_name);
 			if(it ==  model_path_cache().end()) {
@@ -79,7 +79,7 @@ namespace voxel
 		
 		if(!model_ || node.has_key("model")) {
 			std::map<variant,variant> m;
-			m[variant("model")] = variant(model_path_get_or_die(node["model"].as_string()));
+			m[variant("model")] = variant(model_path_getOrDie(node["model"].as_string()));
  			model_.reset(new voxel_model(variant(&m)));
 			model_->set_animation("stand");
 		}

@@ -1197,7 +1197,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 	obj->set_pos(obj->x() - obj->current_frame().width() / 2 , obj->y() - obj->current_frame().height() / 2);
 
 	if(arg3.is_map()) {
-		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+		ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
 
 		variant last_key;
 
@@ -1205,7 +1205,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			ASSERT_LOG(keys[n].is_string(), "Non-string key in spawn map: " << keys[n].write_json());
-			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+			if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == keys[n].as_string()) {
 				last_key = keys[n];
 				continue;
 			}
@@ -1228,7 +1228,7 @@ FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y,
 		//spawn() and give a callable definition with the child.
 		boost::intrusive_ptr<slot_FormulaCallable> callable = new slot_FormulaCallable;
 		callable->set_fallback(&variables);
-		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
+		callable->set_base_slot(args()[4]->getDefinition_used_by_expression()->getNumSlots()-1);
 
 		callable->add(variant(obj.get()));
 		commands = args()[4]->evaluate(*callable);
@@ -1247,8 +1247,8 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
-		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 3) {
@@ -1258,21 +1258,21 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
 
-		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
 	}
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn)
@@ -1297,7 +1297,7 @@ FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, i
 		//spawn() and give a callable definition with the child.
 		boost::intrusive_ptr<slot_FormulaCallable> callable = new slot_FormulaCallable;
 		callable->set_fallback(&variables);
-		callable->set_base_slot(args()[4]->get_definition_used_by_expression()->num_slots()-1);
+		callable->set_base_slot(args()[4]->getDefinition_used_by_expression()->getNumSlots()-1);
 
 		callable->add(variant(obj.get()));
 		commands = args()[4]->evaluate(*callable);
@@ -1352,11 +1352,11 @@ FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_
 	}
 
 	if(properties.is_map()) {
-		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+		ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
 		variant last_key;
 		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
-			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+			if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == keys[n].as_string()) {
 				last_key = keys[n];
 				continue;
 			}
@@ -1380,8 +1380,8 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
-		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 4) {
@@ -1391,16 +1391,16 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
@@ -1439,12 +1439,12 @@ FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoin
 	obj->construct();
 
 	if(args().size() > 4) {
-		const_custom_object_type_ptr type_ptr = custom_object_type::get_or_die(type);
+		ConstCustomObjectTypePtr type_ptr = CustomObjectType::getOrDie(type);
 		variant last_key;
 		variant properties = args()[4]->evaluate(variables);
 		variant keys = properties.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
-			if(type_ptr->last_initialization_property().empty() == false && type_ptr->last_initialization_property() == keys[n].as_string()) {
+			if(type_ptr->getLastInitializationProperty().empty() == false && type_ptr->getLastInitializationProperty() == keys[n].as_string()) {
 				last_key = keys[n];
 				continue;
 			}
@@ -1468,8 +1468,8 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
-		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 4) {
@@ -1479,16 +1479,16 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
@@ -1567,7 +1567,7 @@ END_FUNCTION_DEF(facing)
 
 FUNCTION_DEF(debug_all_custom_objects, 0, 0, "debug_all_custom_objects(): gets access to all custom objects in memory")
 	std::vector<variant> v;
-	foreach(custom_object* obj, custom_object::get_all()) {
+	foreach(custom_object* obj, custom_object::getAll()) {
 		v.push_back(variant(obj));
 	}
 
@@ -3040,76 +3040,6 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(text)
 
-class vector_text_command : public custom_object_command_callable 
-{
-public:
-	vector_text_command(entity_ptr target, std::vector<variant>* textv)
-		: target_(target)
-	{
-		foreach(const variant& v, *textv) {
-			textv_.push_back(gui::vector_text_ptr(new gui::vector_text(v)));
-		}
-	}
-
-	virtual void execute(level& lvl, custom_object& ob) const 
-	{
-		custom_object* custom_obj = target_ ? dynamic_cast<custom_object*>(target_.get()) : &ob;
-		custom_obj->clear_vector_text();
-		foreach(gui::vector_text_ptr txtp, textv_) {
-			custom_obj->add_vector_text(txtp);
-		}
-	}
-private:
-	std::vector<gui::vector_text_ptr> textv_;
-	entity_ptr target_;
-};
-
-FUNCTION_DEF(textv, 1, -1, "textv(object, text_map, ...): Adds text objects to the object.  object format: {text:<string>, align: \"left|right|center\", size:<n>, rect:[x,y,w,h]}")
-	entity_ptr target = args()[0]->evaluate(variables).try_convert<entity>();
-	int arg_start = (target == NULL) ? 0 : 1;
-	std::vector<variant> textv;
-	for(int i = arg_start; i < args().size(); i++) {
-		variant item = args()[i]->evaluate(variables);
-		if(!item.is_null()) {
-			textv.push_back(item);
-		}
-	}
-
-	vector_text_command* cmd = (new vector_text_command(target, &textv));
-	cmd->set_expression(this);
-	return variant(cmd);
-FUNCTION_ARGS_DEF
-	ARG_TYPE("object")
-RETURN_TYPE("commands")
-END_FUNCTION_DEF(textv)
-
-class clear_vector_text_command : public custom_object_command_callable 
-{
-public:
-	clear_vector_text_command(entity_ptr target)
-		: target_(target)
-	{}
-
-	virtual void execute(level& lvl, custom_object& ob) const 
-	{
-		custom_object* custom_obj = target_ ? dynamic_cast<custom_object*>(target_.get()) : &ob;
-		custom_obj->clear_vector_text();
-	}
-
-private:
-	entity_ptr target_;
-};
-
-FUNCTION_DEF(clear_textv, 0, 1, "clear_textv(object): Clears all the custom text from the object")
-	entity_ptr target = args()[0]->evaluate(variables).try_convert<entity>();
-	clear_vector_text_command* cmd = (new clear_vector_text_command(target));
-	cmd->set_expression(this);
-	return variant(cmd);
-FUNCTION_ARGS_DEF
-	ARG_TYPE("object")
-RETURN_TYPE("commands")
-END_FUNCTION_DEF(clear_textv)
-
 FUNCTION_DEF(swallow_event, 0, 0, "swallow_event(): when used in an instance-specific event handler, this causes the event to be swallowed and not passed to the object's main event handler.")
 	return variant(new swallow_object_command_callable);
 RETURN_TYPE("commands")
@@ -3537,8 +3467,8 @@ FUNCTION_ARGS_DEF
 
 	/*variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::const_FormulaCallable_definition_ptr type_def = voxel::voxel_object_type::get_definition(v.as_string());
-		XXX const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::ConstFormulaCallableDefinitionPtr type_def = voxel::voxel_object_type::getDefinition(v.as_string());
+		XXX const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 3) {
@@ -3548,21 +3478,21 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
 
-		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
 	}*/
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_voxel_object)
@@ -3574,13 +3504,13 @@ public:
 	virtual expression_ptr create_function(
 	                           const std::string& fn,
 	                           const std::vector<expression_ptr>& args,
-							   const_FormulaCallable_definition_ptr callable_def) const;
+							   ConstFormulaCallableDefinitionPtr callable_def) const;
 };
 
 expression_ptr custom_object_function_symbol_table::create_function(
                            const std::string& fn,
                            const std::vector<expression_ptr>& args,
-						   const_FormulaCallable_definition_ptr callable_def) const
+						   ConstFormulaCallableDefinitionPtr callable_def) const
 {
 	const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 	std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);

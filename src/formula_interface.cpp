@@ -81,15 +81,15 @@ public:
 	static_bound_factory(const std::vector<Entry>& slots, variant_type_ptr type, int id)
 	  : slots_(slots), id_(id)
 	{
-		const FormulaCallable_definition* def = type->get_definition();
+		const FormulaCallableDefinition* def = type->getDefinition();
 		RAISE_MISMATCH(def != NULL, "Trying to make an interface out of an invalid type");
 		foreach(const Entry& e, slots) {
-			const FormulaCallable_definition::entry* entry = def->get_entry_by_id(e.id);
+			const FormulaCallableDefinition::Entry* entry = def->getEntryById(e.id);
 			RAISE_MISMATCH(entry != NULL, "Type " << type->to_string() << " does not match interface because it does not contain " << e.id);
 			RAISE_MISMATCH(entry->variant_type, "Type " << type->to_string() << " does not match interface because " << e.id << " does not have type information");
 			RAISE_MISMATCH(variant_types_compatible(e.type, entry->variant_type), "Type " << type->to_string() << " does not match interface because " << e.id << " is a " << entry->variant_type->to_string() << " when a " << e.type->to_string() << " is expected");
 
-			const int nslot = def->get_slot(e.id);
+			const int nslot = def->getSlot(e.id);
 			mapping_.push_back(nslot);
 		}
 	}
@@ -189,7 +189,7 @@ struct formula_interface_impl
 	}
 	int id_;
 	std::vector<Entry> entries_;
-	const_FormulaCallable_definition_ptr def_;
+	ConstFormulaCallableDefinitionPtr def_;
 	boost::intrusive_ptr<dynamic_bound_factory> dynamic_factory_;
 };
 
@@ -206,7 +206,7 @@ formula_interface::formula_interface(const std::map<std::string, variant_type_pt
 		types.push_back(i->second);
 	}
 
-	impl_->def_ = executeCommand_callable_definition(&names[0], &names[0] + names.size(), const_FormulaCallable_definition_ptr(), &types[0]);
+	impl_->def_ = executeCommand_callableDefinition(&names[0], &names[0] + names.size(), ConstFormulaCallableDefinitionPtr(), &types[0]);
 
 }
 
@@ -225,7 +225,7 @@ formula_interface_instance_factory* formula_interface::create_factory(variant_ty
 		return get_dynamic_factory();
 	}
 
-	RAISE_MISMATCH(type->get_definition(), "Attempt to create interface from non-map type with no definition: " << type->to_string());
+	RAISE_MISMATCH(type->getDefinition(), "Attempt to create interface from non-map type with no definition: " << type->to_string());
 	return new static_bound_factory(impl_->entries_, type, impl_->id_);
 }
 
@@ -238,7 +238,7 @@ formula_interface_instance_factory* formula_interface::get_dynamic_factory() con
 	return impl_->dynamic_factory_.get();
 }
 
-const_FormulaCallable_definition_ptr formula_interface::get_definition() const
+ConstFormulaCallableDefinitionPtr formula_interface::getDefinition() const
 {
 	return impl_->def_;
 }

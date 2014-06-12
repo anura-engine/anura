@@ -61,7 +61,7 @@ inline std::string get_profile_summary() { return ""; }
 #include <sys/time.h>
 #endif
 
-class custom_object_type;
+class CustomObjectType;
 
 namespace formula_profiler
 {
@@ -83,7 +83,7 @@ void dump_instrumentation();
 void pump();
 
 struct custom_object_event_frame {
-	const custom_object_type* type;
+	const CustomObjectType* type;
 	int event_id;
 	bool executing_commands;
 

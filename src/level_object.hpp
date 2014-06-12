@@ -112,7 +112,7 @@ public:
 	bool is_passthrough() const { return passthrough_; }
 	bool is_solid(int x, int y) const;
 	bool flipped() const { return flip_; }
-	bool has_solid() const { return !solid_.empty(); }
+	bool hasSolid() const { return !solid_.empty(); }
 	bool all_solid() const { return all_solid_; }
 	const std::string& id() const { return id_; }
 	const std::string& info() const { return info_; }

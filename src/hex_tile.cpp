@@ -113,20 +113,20 @@ hex_tile::hex_tile(const std::string& type, variant node)
 	: type_(type), name_(node["name"].as_string())
 {
 
-	if(node.has_key("EditorInfo")) {
-		ASSERT_LOG(node["EditorInfo"].is_map(), "Must have editor info map, none found in: " << type_);
-		EditorInfo_.name = node["EditorInfo"]["name"].as_string();
-		EditorInfo_.image = node["EditorInfo"]["image"].as_string();
-		EditorInfo_.group = node["EditorInfo"]["group"].as_string();
-		EditorInfo_.type = node["EditorInfo"]["type"].as_string();
-		ASSERT_LOG(node["EditorInfo"]["rect"].num_elements() == 4 && node["EditorInfo"]["rect"].is_list(), "rect must be a list of four(4) integers.");
-		EditorInfo_.image_rect = rect::from_coordinates(node["EditorInfo"]["rect"][0].as_int(), 
-			node["EditorInfo"]["rect"][1].as_int(), 
-			node["EditorInfo"]["rect"][2].as_int(), 
-			node["EditorInfo"]["rect"][3].as_int());
+	if(node.has_key("editor_info")) {
+		ASSERT_LOG(node["editor_info"].is_map(), "Must have editor info map, none found in: " << type_);
+		editor_info_.name = node["editor_info"]["name"].as_string();
+		editor_info_.image = node["editor_info"]["image"].as_string();
+		editor_info_.group = node["editor_info"]["group"].as_string();
+		editor_info_.type = node["editor_info"]["type"].as_string();
+		ASSERT_LOG(node["editor_info"]["rect"].num_elements() == 4 && node["editor_info"]["rect"].is_list(), "rect must be a list of four(4) integers.");
+		editor_info_.image_rect = rect::from_coordinates(node["editor_info"]["rect"][0].as_int(), 
+			node["editor_info"]["rect"][1].as_int(), 
+			node["editor_info"]["rect"][2].as_int(), 
+			node["editor_info"]["rect"][3].as_int());
 
-		if(!EditorInfo_.texture.valid() && !EditorInfo_.image.empty()) {
-			EditorInfo_.texture = graphics::texture::get(EditorInfo_.image);
+		if(!editor_info_.texture.valid() && !editor_info_.image.empty()) {
+			editor_info_.texture = graphics::texture::get(editor_info_.image);
 		}
 	}
 
@@ -234,44 +234,44 @@ public:
 	{}
 };
 
-class EditorInfo_callable : public game_logic::FormulaCallable
+class editor_info_callable : public game_logic::FormulaCallable
 {
 	hex_tile_ptr tile_;
 	variant getValue(const std::string& key) const
 	{
 		if(key == "type") {
-			return variant(tile_->getEditorInfo().type);
+			return variant(tile_->getgetEditorInfo().type);
 		} else if(key == "name") {
-			return variant(tile_->getEditorInfo().name);
+			return variant(tile_->getgetEditorInfo().name);
 		} else if(key == "image") {
-			return variant(tile_->getEditorInfo().image);
+			return variant(tile_->getgetEditorInfo().image);
 		} else if(key == "rect") {
 			std::vector<variant> v;
-			v.push_back(variant(tile_->getEditorInfo().image_rect.x()));
-			v.push_back(variant(tile_->getEditorInfo().image_rect.y()));
-			v.push_back(variant(tile_->getEditorInfo().image_rect.w()));
-			v.push_back(variant(tile_->getEditorInfo().image_rect.h()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.x()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.y()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.w()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.h()));
 			return variant(&v);
 		} else if(key == "group") {
-			return variant(tile_->getEditorInfo().group);
+			return variant(tile_->getgetEditorInfo().group);
 		}
 		std::map<variant, variant> m;
-		m[variant("type")] = variant(tile_->getEditorInfo().type);
-		m[variant("name")] = variant(tile_->getEditorInfo().name);
-		m[variant("image")] = variant(tile_->getEditorInfo().image);
-		m[variant("group")] = variant(tile_->getEditorInfo().group);
+		m[variant("type")] = variant(tile_->getgetEditorInfo().type);
+		m[variant("name")] = variant(tile_->getgetEditorInfo().name);
+		m[variant("image")] = variant(tile_->getgetEditorInfo().image);
+		m[variant("group")] = variant(tile_->getgetEditorInfo().group);
 		std::vector<variant> v;
-		v.push_back(variant(tile_->getEditorInfo().image_rect.x()));
-		v.push_back(variant(tile_->getEditorInfo().image_rect.y()));
-		v.push_back(variant(tile_->getEditorInfo().image_rect.w()));
-		v.push_back(variant(tile_->getEditorInfo().image_rect.h()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.x()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.y()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.w()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.h()));
 		m[variant("rect")] = variant(&v);
 		return variant(&m);
 	}
 	void setValue(const std::string& key, const variant& value)
 	{}
 public:
-	explicit EditorInfo_callable(const hex_tile& tile)
+	explicit editor_info_callable(const hex_tile& tile)
 		: tile_(const_cast<hex_tile*>(&tile))
 	{}
 };
@@ -285,8 +285,8 @@ variant hex_tile::getValue(const std::string& key) const
 		return variant(type());
 	} else if(key == "name") {
 		return variant(name());
-	} else if(key == "EditorInfo") {
-		return variant(new EditorInfo_callable(*this));
+	} else if(key == "editor_info") {
+		return variant(new editor_info_callable(*this));
 	}
 	return variant();
 }
@@ -381,13 +381,13 @@ TileType::TileType(const std::string& id, variant node)
 
 	ASSERT_LOG(sheetIndexes_.empty() == false, "No sheet indexes in hex tile sheet: " << id);
 
-	if(node.has_key("EditorInfo")) {
-		ASSERT_LOG(node["EditorInfo"].is_map(), "Must have editor info map, none found in: " << id_);
-		EditorInfo_.texture = sheet_->getTexture();
-		EditorInfo_.name = node["EditorInfo"]["name"].as_string();
-		EditorInfo_.group = node["EditorInfo"]["group"].as_string();
-		EditorInfo_.type = id;
-		EditorInfo_.image_rect = sheet_->getArea(0);
+	if(node.has_key("editor_info")) {
+		ASSERT_LOG(node["editor_info"].is_map(), "Must have editor info map, none found in: " << id_);
+		editor_info_.texture = sheet_->getTexture();
+		editor_info_.name = node["editor_info"]["name"].as_string();
+		editor_info_.group = node["editor_info"]["group"].as_string();
+		editor_info_.type = id;
+		editor_info_.image_rect = sheet_->getArea(0);
 	}
 }
 

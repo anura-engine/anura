@@ -12,7 +12,7 @@ namespace gui {
 	
 class TextEditorWidget;
 
-class formula_visualize_widget : public gui::widget
+class formula_visualize_widget : public gui::Widget
 {
 public:
 	formula_visualize_widget(game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor);

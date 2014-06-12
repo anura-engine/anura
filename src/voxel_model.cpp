@@ -591,7 +591,7 @@ void voxel_model::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, std
 	}
 }
 
-voxel_model_ptr voxel_model::get_child(const std::string& id) const
+voxel_model_ptr voxel_model::getChild(const std::string& id) const
 {
 	for(const voxel_model_ptr& child : children_) {
 		if(child->name() == id) {
@@ -629,8 +629,8 @@ void voxel_model::attach_child(voxel_model_ptr child, const std::string& src_att
 	const AttachmentPoint& src_attach = src_attach_itor->second;
 	const AttachmentPoint& dst_attach = dst_attach_itor->second;
 
-	voxel_model_ptr src_model = child->get_child(src_attach.layer);
-	voxel_model_ptr dst_model = get_child(dst_attach.layer);
+	voxel_model_ptr src_model = child->getChild(src_attach.layer);
+	voxel_model_ptr dst_model = getChild(dst_attach.layer);
 
 	ASSERT_LOG(src_model, "Could not find source model: " << src_attach.layer);
 	ASSERT_LOG(dst_model, "Could not find dest model: " << dst_attach.layer);
@@ -743,7 +743,7 @@ void voxel_model::process_animation(GLfloat advance)
 				rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
 			}
 
-			get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio), translate, transform.children_only);
+			getChild(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*(1.0-ratio), translate, transform.children_only);
 		}
 	}
 
@@ -761,7 +761,7 @@ void voxel_model::process_animation(GLfloat advance)
 			rotation = transform.rotation_formula->execute(*callable).as_decimal().as_float();
 		}
 
-		get_child(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, translate, transform.children_only);
+		getChild(transform.layer)->accumulate_rotation(transform.pivot_src, transform.pivot_dst, rotation*ratio, translate, transform.children_only);
 	}
 
 	generate_geometry();

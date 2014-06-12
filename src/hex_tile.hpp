@@ -65,7 +65,7 @@ namespace hex
 
 		const std::string& id() const { return id_; }
 
-		const EditorInfo& getEditorInfo() const { return EditorInfo_; } 
+		const EditorInfo& getgetEditorInfo() const { return editor_info_; } 
 
 		const std::vector<int>& sheetIndexes() const { return sheet_indexes_; }
 
@@ -97,6 +97,6 @@ namespace hex
 		mutable AdjacencyPattern adjacency_patterns_[64];
 		void calculateAdjacencyPattern(unsigned char adjmap) const;
 
-		EditorInfo EditorInfo_;
+		EditorInfo editor_info_;
 	};
 }

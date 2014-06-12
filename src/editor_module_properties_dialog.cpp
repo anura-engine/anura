@@ -226,7 +226,7 @@ const std::string editor_module_properties_dialog::on_exit() {
 	module::reload(mod_.name_);
 	// Reload level paths
 	reload_level_paths();
-	custom_object_type::reload_file_paths();
+	CustomObjectType::ReloadFilePaths();
 	font::reloadFontPaths();
 	if(mod_.abbreviation_.empty() == false) {
 		return mod_.abbreviation_ + ":titlescreen.cfg";

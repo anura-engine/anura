@@ -35,8 +35,8 @@ public:
 
 	virtual variant write() const;
 
-	virtual player_info* is_human() { return &player_info_; }
-	virtual const player_info* is_human() const { return &player_info_; }
+	virtual player_info* isHuman() { return &player_info_; }
+	virtual const player_info* isHuman() const { return &player_info_; }
 
 	void save_game();
 	entity_ptr save_condition() const { return save_condition_; }

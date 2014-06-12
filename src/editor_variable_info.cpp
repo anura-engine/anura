@@ -185,7 +185,7 @@ const editor_variable_info* editor_entity_info::get_var_or_property_info(const s
 	return result;
 }
 
-void editor_entity_info::add_property(const editor_variable_info& prop)
+void editor_entity_info::addProperty(const editor_variable_info& prop)
 {
 	properties_.push_back(prop);
 	vars_and_properties_ = vars_;

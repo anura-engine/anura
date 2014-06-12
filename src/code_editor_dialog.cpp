@@ -59,7 +59,7 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
-std::set<level*>& get_all_levels_set();
+std::set<level*>& getAll_levels_set();
 
 code_editor_dialog::code_editor_dialog(const rect& r)
   : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), has_error_(false),
@@ -261,11 +261,11 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 		f.editor->setOnChangeHandler(std::bind(&code_editor_dialog::on_code_changed, this));
 		f.editor->setOnMoveCursorHandler(std::bind(&code_editor_dialog::onMoveCursor, this));
 
-		foreach(const std::string& obj_type, custom_object_type::get_all_ids()) {
-			const std::string* path = custom_object_type::get_object_path(obj_type + ".cfg");
+		foreach(const std::string& obj_type, CustomObjectType::getAllIds()) {
+			const std::string* path = CustomObjectType::getObjectPath(obj_type + ".cfg");
 			if(path && *path == fname) {
 				try {
-					f.anim.reset(new frame(custom_object_type::get(obj_type)->default_frame()));
+					f.anim.reset(new frame(CustomObjectType::get(obj_type)->defaultFrame()));
 				} catch(...) {
 				}
 				break;
@@ -429,16 +429,16 @@ void code_editor_dialog::process()
 			file_contents_set_ = true;
 			if(op_fn_) {
 				json::parse(editor_->text());
-				json::set_file_contents(fname_, editor_->text());
+				json::setFileContents(fname_, editor_->text());
 
 				if(strstr(fname_.c_str(), "/objects/")) {
-					custom_object_type::set_file_contents(fname_, editor_->text());
+					CustomObjectType::setFileContents(fname_, editor_->text());
 				}
 
 				op_fn_();
 			} else if(strstr(fname_.c_str(), "/level/")) {
 				json::parse(editor_->text());
-				json::set_file_contents(fname_, editor_->text());
+				json::setFileContents(fname_, editor_->text());
 
 				level_runner::get_current()->replay_level_from_start();
 				
@@ -449,7 +449,7 @@ void code_editor_dialog::process()
 
 				//verify the text is parseable before we bother setting it.
 				json::parse(editor_->text());
-				json::set_file_contents(fname_, editor_->text());
+				json::setFileContents(fname_, editor_->text());
 				const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 				tile_map::prepare_rebuild_all();
 				try {
@@ -458,16 +458,16 @@ void code_editor_dialog::process()
 					tile_map::rebuild_all();
 					std::cerr << "done tile_map::init()\n";
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, get_all_levels_set()) {
+					foreach(level* lvl, getAll_levels_set()) {
 						lvl->rebuild_tiles();
 					}
 				} catch(...) {
-					json::set_file_contents(fname_, old_contents);
+					json::setFileContents(fname_, old_contents);
 					const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 					tile_map::init(tiles_data);
 					tile_map::rebuild_all();
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, get_all_levels_set()) {
+					foreach(level* lvl, getAll_levels_set()) {
 						lvl->rebuild_tiles();
 					}
 					throw;
@@ -477,7 +477,7 @@ void code_editor_dialog::process()
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
 				std::cerr << "CODE_EDIT_DIALOG FILE: " << fname_ << std::endl;
 				gles2::program::load_shaders(editor_->text());
-				foreach(level* lvl, get_all_levels_set()) {
+				foreach(level* lvl, getAll_levels_set()) {
 					lvl->shaders_updated();
 				}
 #endif
@@ -492,12 +492,12 @@ void code_editor_dialog::process()
 				std::string::const_iterator end = fname_.end()-4;
 				const std::string class_name(slash+1, end);;
 				json::parse(editor_->text());
-				json::set_file_contents(fname_, editor_->text());
+				json::setFileContents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
 				game_logic::formula_object::try_load_class(class_name);
 			} else { 
 				std::cerr << "SET FILE: " << fname_ << "\n";
-				custom_object_type::set_file_contents(fname_, editor_->text());
+				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
 			error_label_->setTooltip("");
@@ -632,9 +632,9 @@ void code_editor_dialog::process()
 				if(selected && selected->type == formula_tokenizer::TOKEN_IDENTIFIER) {
 					const std::string identifier(selected->begin, selected->end);
 
-					static const boost::intrusive_ptr<custom_object_callable> obj_definition(new custom_object_callable);
-					for(int n = 0; n != obj_definition->num_slots(); ++n) {
-						const std::string id = obj_definition->get_entry(n)->id;
+					static const boost::intrusive_ptr<CustomObjectCallable> obj_definition(new CustomObjectCallable);
+					for(int n = 0; n != obj_definition->getNumSlots(); ++n) {
+						const std::string id = obj_definition->getEntry(n)->id;
 						if(id.size() > identifier.size() && std::equal(identifier.begin(), identifier.end(), id.begin())) {
 							Suggestion s = { id, "", "", 0 };
 							suggestions.push_back(s);
@@ -883,7 +883,7 @@ void code_editor_dialog::onMoveCursor()
 			if(formula_str.is_string()) {
 
 				const variant::debug_info& str_info = *formula_str.get_debug_info();
-				const std::set<game_logic::formula*>& formulae = game_logic::formula::get_all();
+				const std::set<game_logic::formula*>& formulae = game_logic::formula::getAll();
 				int best_result = -1;
 				variant result_variant;
 				const game_logic::formula* best_formula = NULL;

@@ -77,7 +77,7 @@ public:
 	const editor_variable_info* get_var_info(const std::string& var_name) const;
 	const editor_variable_info* get_property_info(const std::string& var_name) const;
 	const editor_variable_info* get_var_or_property_info(const std::string& var_name) const;
-	void add_property(const editor_variable_info& prop);
+	void addProperty(const editor_variable_info& prop);
 	const std::string& help() const { return help_; }
 	const std::vector<std::string>& editable_events() const { return editable_events_; }
 private:

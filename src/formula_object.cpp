@@ -58,10 +58,10 @@ variant flatten_list_of_maps(variant v) {
 }
 
 class backup_entry_scope {
-	FormulaCallable_definition::entry backup_;
-	FormulaCallable_definition::entry& target_;
+	FormulaCallableDefinition::Entry backup_;
+	FormulaCallableDefinition::Entry& target_;
 public:
-	backup_entry_scope(FormulaCallable_definition::entry& e) : backup_(e), target_(e) {
+	backup_entry_scope(FormulaCallableDefinition::Entry& e) : backup_(e), target_(e) {
 	}
 	~backup_entry_scope() {
 		target_ = backup_;
@@ -70,17 +70,17 @@ public:
 
 boost::intrusive_ptr<const formula_class> get_class(const std::string& type);
 
-struct property_entry {
-	property_entry() : variable_slot(-1) {
+struct PropertyEntry {
+	PropertyEntry() : variable_slot(-1) {
 	}
-	property_entry(const std::string& class_name, const std::string& prop_name, variant node, int& state_slot) : variable_slot(-1) {
+	PropertyEntry(const std::string& class_name, const std::string& prop_name, variant node, int& state_slot) : variable_slot(-1) {
 		name = prop_name;
 
-		FormulaCallable_definition_ptr class_def = get_class_definition(class_name);
+		FormulaCallableDefinitionPtr class_def = get_class_definition(class_name);
 
-		FormulaCallable_definition::entry* data_entry = class_def->get_entry(class_def->get_slot("_data"));
-		FormulaCallable_definition::entry* value_entry = class_def->get_entry(class_def->get_slot("value"));
-		FormulaCallable_definition::entry* prop_entry = class_def->get_entry(class_def->get_slot(prop_name));
+		FormulaCallableDefinition::Entry* data_entry = class_def->getEntry(class_def->getSlot("_data"));
+		FormulaCallableDefinition::Entry* value_entry = class_def->getEntry(class_def->getSlot("value"));
+		FormulaCallableDefinition::Entry* prop_entry = class_def->getEntry(class_def->getSlot(prop_name));
 		assert(data_entry);
 		assert(value_entry);
 		assert(prop_entry);
@@ -98,7 +98,7 @@ struct property_entry {
 
 			ASSERT_LOG(getter->query_variant_type()->is_any() == false, "COULD NOT INFER TYPE FOR CLASS PROPERTY " << class_name << "." << prop_name << ". SET THIS PROPERTY EXPLICITLY");
 
-			FormulaCallable_definition::entry* entry = class_def->get_entry_by_id(prop_name);
+			FormulaCallableDefinition::Entry* entry = class_def->getEntryById(prop_name);
 			ASSERT_LOG(entry != NULL, "COULD NOT FIND CLASS PROPERTY ENTRY " << class_name << "." << prop_name);
 
 			entry->set_variant_type(getter->query_variant_type());
@@ -205,13 +205,13 @@ variant get_class_node(const std::string& type)
 enum CLASS_BASE_FIELDS { FIELD_PRIVATE, FIELD_VALUE, FIELD_SELF, FIELD_ME, FIELD_NEW_IN_UPDATE, FIELD_ORPHANED, FIELD_PREVIOUS, FIELD_CLASS, FIELD_LIB, FIELD_UUID, NUM_BASE_FIELDS };
 static const std::string BaseFields[] = {"_data", "value", "self", "me", "new_in_update", "orphaned_by_update", "previous", "_class", "lib", "_uuid"};
 
-class formula_class_definition : public FormulaCallable_definition
+class formula_class_definition : public FormulaCallableDefinition
 {
 public:
 	formula_class_definition(const std::string& class_name, const variant& var)
 	  : type_name_("class " + class_name)
 	{
-		set_strict();
+		setStrict();
 
 		for(int n = 0; n != NUM_BASE_FIELDS; ++n) {
 			properties_[BaseFields[n]] = n;
@@ -339,12 +339,12 @@ public:
 	void init() {
 		foreach(entry& e, slots_) {
 			if(e.variant_type && !e.type_definition) {
-				e.type_definition = e.variant_type->get_definition();
+				e.type_definition = e.variant_type->getDefinition();
 			}
 		}
 	}
 
-	virtual int get_slot(const std::string& key) const {
+	virtual int getSlot(const std::string& key) const {
 		std::map<std::string, int>::const_iterator itor = properties_.find(key);
 		if(itor != properties_.end()) {
 			return itor->second;
@@ -353,7 +353,7 @@ public:
 		return -1;
 	}
 
-	virtual entry* get_entry(int slot) {
+	virtual entry* getEntry(int slot) {
 		if(slot < 0 || slot >= slots_.size()) {
 			return NULL;
 		}
@@ -361,28 +361,28 @@ public:
 		return &slots_[slot];
 	}
 
-	virtual const entry* get_entry(int slot) const {
+	virtual const entry* getEntry(int slot) const {
 		if(slot < 0 || slot >= slots_.size()) {
 			return NULL;
 		}
 
 		return &slots_[slot];
 	}
-	virtual int num_slots() const {
+	virtual int getNumSlots() const {
 		return slots_.size();
 	}
 
-	const std::string* type_name() const {
+	const std::string* getTypeName() const {
 		return &type_name_;
 	}
 
-	void push_private_access() {
+	void pushPrivateAccess() {
 		foreach(entry& e, slots_) {
 			e.private_counter--;
 		}
 	}
 
-	void pop_private_access() {
+	void popPrivateAccess() {
 		foreach(entry& e, slots_) {
 			e.private_counter++;
 		}
@@ -398,11 +398,11 @@ struct definition_access_private_in_scope
 {
 	definition_access_private_in_scope(formula_class_definition& def) : def_(def)
 	{
-		def_.push_private_access();
+		def_.pushPrivateAccess();
 	}
 	~definition_access_private_in_scope()
 	{
-		def_.pop_private_access();
+		def_.popPrivateAccess();
 	}
 
 	formula_class_definition& def_;
@@ -418,7 +418,7 @@ std::vector<formula_class*> unit_test_queue;
 
 }
 
-FormulaCallable_definition_ptr get_class_definition(const std::string& name)
+FormulaCallableDefinitionPtr get_class_definition(const std::string& name)
 {
 	class_definition_map::iterator itor = class_definitions.find(name);
 	if(itor != class_definitions.end()) {
@@ -442,7 +442,7 @@ public:
 	const variant& private_data() const { return private_data_; }
 	const std::vector<game_logic::const_formula_ptr>& constructor() const { return constructor_; }
 	const std::map<std::string, int>& properties() const { return properties_; }
-	const std::vector<property_entry>& slots() const { return slots_; }
+	const std::vector<PropertyEntry>& slots() const { return slots_; }
 	const classes_map& sub_classes() const { return sub_classes_; }
 
 	bool is_a(const std::string& name) const;
@@ -460,7 +460,7 @@ private:
 	std::vector<game_logic::const_formula_ptr> constructor_;
 	std::map<std::string, int> properties_;
 
-	std::vector<property_entry> slots_;
+	std::vector<PropertyEntry> slots_;
 	
 	classes_map sub_classes_;
 
@@ -524,7 +524,7 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 		properties = node;
 	}
 
-	FormulaCallable_definition_ptr class_def = get_class_definition(class_name);
+	FormulaCallableDefinitionPtr class_def = get_class_definition(class_name);
 	assert(class_def);
 
 	formula_class_definition* class_definition = dynamic_cast<formula_class_definition*>(class_def.get());
@@ -534,11 +534,11 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 
 	foreach(variant key, properties.getKeys().as_list()) {
 		const variant prop_node = properties[key];
-		property_entry entry(class_name, key.as_string(), prop_node, nstate_slots_);
+		PropertyEntry entry(class_name, key.as_string(), prop_node, nstate_slots_);
 
 		if(properties_.count(key.as_string()) == 0) {
 			properties_[key.as_string()] = slots_.size();
-			slots_.push_back(property_entry());
+			slots_.push_back(PropertyEntry());
 		}
 
 		slots_[properties_[key.as_string()]] = entry;
@@ -976,7 +976,7 @@ formula_object::formula_object(const std::string& type, variant args)
     class_(get_class(type)), private_data_(-1)
 {
 	variables_.resize(class_->nstate_slots());
-	foreach(const property_entry& slot, class_->slots()) {
+	foreach(const PropertyEntry& slot, class_->slots()) {
 		if(slot.variable_slot != -1) {
 			if(slot.initializer) {
 				variables_[slot.variable_slot] = slot.initializer->execute(*this);
@@ -1000,7 +1000,7 @@ const std::string& formula_object::get_class_name() const
 void formula_object::call_constructors(variant args)
 {
 	if(args.is_map()) {
-		const_FormulaCallable_definition_ptr def = get_class_definition(class_->name());
+		ConstFormulaCallableDefinitionPtr def = get_class_definition(class_->name());
 		foreach(const variant& key, args.getKeys().as_list()) {
 			std::map<std::string, int>::const_iterator itor = class_->properties().find(key.as_string());
 			if(itor != class_->properties().end() && class_->slots()[itor->second].setter.get() == NULL && class_->slots()[itor->second].variable_slot == -1) {
@@ -1010,7 +1010,7 @@ void formula_object::call_constructors(variant args)
 
 				//A read-only property. Set the formula to what is passed in.
 				formula_ptr f(new formula(args[key], NULL, def));
-				const FormulaCallable_definition::entry* entry = def->get_entry_by_id(key.as_string());
+				const FormulaCallableDefinition::Entry* entry = def->getEntryById(key.as_string());
 				ASSERT_LOG(entry, "COULD NOT FIND ENTRY IN CLASS DEFINITION: " << key.as_string());
 				if(entry->variant_type) {
 					ASSERT_LOG(variant_types_compatible(entry->variant_type, f->query_variant_type()), "ERROR: property override in instance of class " << class_->name() << " has mis-matched type for property " << key.as_string() << ": " << entry->variant_type->to_string() << " doesn't match " << f->query_variant_type()->to_string() << " at " << args[key].debug_location());
@@ -1039,7 +1039,7 @@ formula_object::formula_object(variant data)
 			std::map<std::string, int>::const_iterator itor = class_->properties().find(p.first.as_string());
 			ASSERT_LOG(itor != class_->properties().end(), "No property " << p.first.as_string() << " in class " << class_->name());
 
-			const property_entry& entry = class_->slots()[itor->second];
+			const PropertyEntry& entry = class_->slots()[itor->second];
 			ASSERT_NE(entry.variable_slot, -1);
 
 			variables_[entry.variable_slot] = p.second;
@@ -1078,7 +1078,7 @@ variant formula_object::serializeToWml() const
 	result[variant("id")] = variant(write_uuid(id_));
 
 	std::map<variant,variant> state;
-	foreach(const property_entry& slot, class_->slots()) {
+	foreach(const PropertyEntry& slot, class_->slots()) {
 		const int nstate_slot = slot.variable_slot;
 		if(nstate_slot != -1 && nstate_slot < variables_.size() &&
 		   variables_[nstate_slot].is_null() == false) {
@@ -1135,7 +1135,7 @@ variant formula_object::getValue(const std::string& key) const
 		return property_overrides_[itor->second]->execute(*this);
 	}
 
-	const property_entry& entry = class_->slots()[itor->second];
+	const PropertyEntry& entry = class_->slots()[itor->second];
 
 	if(entry.getter) {
 		private_data_scope scope(&private_data_, entry.variable_slot);
@@ -1175,7 +1175,7 @@ variant formula_object::getValue_by_slot(int slot) const
 		return property_overrides_[slot]->execute(*this);
 	}
 	
-	const property_entry& entry = class_->slots()[slot];
+	const PropertyEntry& entry = class_->slots()[slot];
 
 	if(entry.getter) {
 		private_data_scope scope(&private_data_, entry.variable_slot);
@@ -1217,7 +1217,7 @@ void formula_object::setValue_by_slot(int slot, const variant& value)
 	slot -= NUM_BASE_FIELDS;
 	ASSERT_LOG(slot >= 0 && slot < class_->slots().size(), "ILLEGAL VALUE SET TO FORMULA OBJECT: " << slot << " IN " << class_->name());
 
-	const property_entry& entry = class_->slots()[slot];
+	const PropertyEntry& entry = class_->slots()[slot];
 
 	if(entry.set_type) {
 		if(!entry.set_type->match(value)) {
@@ -1267,7 +1267,7 @@ void formula_object::validate() const
 	}
 
 	int index = 0;
-	foreach(const property_entry& entry, class_->slots()) {
+	foreach(const PropertyEntry& entry, class_->slots()) {
 		if(!entry.get_type) {
 			++index;
 			continue;
@@ -1302,7 +1302,7 @@ void formula_object::validate() const
 
 void formula_object::get_inputs(std::vector<formula_input>* inputs) const
 {
-	foreach(const property_entry& entry, class_->slots()) {
+	foreach(const PropertyEntry& entry, class_->slots()) {
 		FORMULA_ACCESS_TYPE type = FORMULA_READ_ONLY;
 		if(entry.getter && entry.setter || entry.variable_slot != -1) {
 			type = FORMULA_READ_WRITE;
@@ -1366,7 +1366,7 @@ void invalidate_class_definition(const std::string& name)
 
 namespace {
 
-FormulaCallable_definition_ptr g_library_definition;
+FormulaCallableDefinitionPtr g_library_definition;
 FormulaCallablePtr g_library_obj;
 
 }
@@ -1379,7 +1379,7 @@ formula_class_manager::~formula_class_manager()
 {
 }
 
-FormulaCallable_definition_ptr get_library_definition()
+FormulaCallableDefinitionPtr get_library_definition()
 {
 	if(!g_library_definition) {
 		std::vector<std::string> files;
@@ -1407,14 +1407,14 @@ FormulaCallable_definition_ptr get_library_definition()
 		}
 
 		if(!types.empty()) {
-			g_library_definition = game_logic::executeCommand_callable_definition(&classes[0], &classes[0] + classes.size(), NULL);
-			game_logic::register_FormulaCallable_definition("library", g_library_definition);
+			g_library_definition = game_logic::executeCommand_callableDefinition(&classes[0], &classes[0] + classes.size(), NULL);
+			game_logic::register_formula_callable_definition("library", g_library_definition);
 
-			for(int n = 0; n != g_library_definition->num_slots(); ++n) {
-				g_library_definition->get_entry(n)->set_variant_type(types[n]);
+			for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
+				g_library_definition->getEntry(n)->set_variant_type(types[n]);
 			}
 		} else {
-			g_library_definition = game_logic::executeCommand_callable_definition(NULL, NULL, NULL, NULL);
+			g_library_definition = game_logic::executeCommand_callableDefinition(NULL, NULL, NULL, NULL);
 		}
 	}
 
@@ -1426,12 +1426,12 @@ class library_callable : public game_logic::FormulaCallable
 {
 public:
 	library_callable() {
-		items_.resize(get_library_definition()->num_slots());
+		items_.resize(get_library_definition()->getNumSlots());
 	}
 private:
 	variant getValue(const std::string& key) const {
-		FormulaCallable_definition_ptr def = get_library_definition();
-		const int slot = def->get_slot(key);
+		FormulaCallableDefinitionPtr def = get_library_definition();
+		const int slot = def->getSlot(key);
 		ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
 		return query_value_by_slot(slot);
 	}
@@ -1439,8 +1439,8 @@ private:
 	variant getValue_by_slot(int slot) const {
 		ASSERT_LOG(slot >= 0 && slot < items_.size(), "ILLEGAL LOOK UP IN LIBRARY: " << slot << "/" << items_.size());
 		if(items_[slot].is_null()) {
-			FormulaCallable_definition_ptr def = get_library_definition();
-			const FormulaCallable_definition::entry* entry = def->get_entry(slot);
+			FormulaCallableDefinitionPtr def = get_library_definition();
+			const FormulaCallableDefinition::Entry* entry = def->getEntry(slot);
 			ASSERT_LOG(entry != NULL, "INVALID SLOT: " << slot);
 			std::string class_name;
 			if(entry->variant_type->is_class(&class_name) == false) {

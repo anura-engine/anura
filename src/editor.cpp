@@ -564,11 +564,11 @@ const editor_variable_info* variable_info_selected(const_entity_ptr e, int xpos,
 		*index_selected = -1;
 	}
 
-	if(!e || !e->EditorInfo()) {
+	if(!e || !e->getEditorInfo()) {
 		return NULL;
 	}
 
-	foreach(const editor_variable_info& var, e->EditorInfo()->vars_and_properties()) {
+	foreach(const editor_variable_info& var, e->getEditorInfo()->vars_and_properties()) {
 		const variant value = e->query_value(var.variable_name());
 		switch(var.type()) {
 			case editor_variable_info::XPOSITION: {
@@ -1306,7 +1306,7 @@ void editor::process()
 		lvl_->set_editor_highlight(c);
 		//See if we should add ghost objects. Human objects don't get
 		//ghost (it doesn't make much sense for them to do so)
-		if(ghost_objects_.empty() && c && !c->is_human() && !editing_level_being_played()) {
+		if(ghost_objects_.empty() && c && !c->isHuman() && !editing_level_being_played()) {
 			//we have an object but no ghost for it, make the
 			//object's ghost and deploy it.
 			entity_ptr clone = c->clone();
@@ -1500,7 +1500,7 @@ void editor::reset_dialog_positions()
 
 namespace {
 	bool sort_entity_zsub_orders(const entity_ptr& a, const entity_ptr& b) {
-	return a->zsub_order() < b->zsub_order();
+	return a->zSubOrder() < b->zSubOrder();
 }
 }
 
@@ -1641,8 +1641,8 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj = lvl->get_entity_by_label(v2.front()->label());
 					if(obj) {
-						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order()+1),
-										std::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order() ));
+						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.back()->zSubOrder()+1),
+										std::bind(&entity::set_zsub_order, obj, v2.front()->zSubOrder() ));
 					}
 				}
 				end_command_group();
@@ -1651,8 +1651,8 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj = lvl->get_entity_by_label(v2.back()->label());
 					if(obj) {
-						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order()-1),
-										std::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order() ));
+						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.front()->zSubOrder()-1),
+										std::bind(&entity::set_zsub_order, obj, v2.back()->zSubOrder() ));
 				
 					}
 				}
@@ -1711,7 +1711,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 				redo.push_back(std::bind(&level::clear_tile_rect, lvl.get(), x, y, x, y));
 				std::map<int, std::vector<std::string> > old_tiles;
-				lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
+				lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
 				for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 					undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
 				}
@@ -2090,7 +2090,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		} else {
 			//pick the top most tile at this point.
 			std::map<int, std::vector<std::string> > tiles;
-			lvl_->get_all_tiles_rect(anchorx_, anchory_, anchorx_, anchory_, tiles);
+			lvl_->getAll_tiles_rect(anchorx_, anchory_, anchorx_, anchory_, tiles);
 			std::string tile;
 			for(std::map<int, std::vector<std::string> >::reverse_iterator i = tiles.rbegin(); i != tiles.rend(); ++i) {
 				if(i->second.empty() == false) {
@@ -2238,7 +2238,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		node.set("face_right", face_right_);
 		node.set("upside_down", upside_down_);
 
-		if(custom_object_type::get(all_characters()[cur_object_].node["type"].as_string())->is_human()) {
+		if(CustomObjectType::get(all_characters()[cur_object_].node["type"].as_string())->isHuman()) {
 			node.set("is_human", true);
 		}
 
@@ -2246,21 +2246,21 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 		//any vars that require formula initialization are calculated here.
 		std::map<std::string, variant> vars, props;
-		foreach(const editor_variable_info& info, c->EditorInfo()->vars()) {
+		foreach(const editor_variable_info& info, c->getEditorInfo()->vars()) {
 			if(info.formula()) {
 				vars[info.variable_name()] = info.formula()->execute(*c);
 			}
 		}
 
-		foreach(const editor_variable_info& info, c->EditorInfo()->properties()) {
+		foreach(const editor_variable_info& info, c->getEditorInfo()->properties()) {
 			if(info.formula()) {
 				props[info.variable_name()] = info.formula()->execute(*c);
 			}
 		}
 		
 		//if we have parallax, offset the object so it's placed at the same position it's graphically visible at
-		c->set_x( c->x() +  + ((1000 - (c->parallax_scale_millis_x()))* xpos_ )/1000);
-		c->set_y( c->y() +  + ((1000 - (c->parallax_scale_millis_y()))* ypos_ )/1000);
+		c->set_x( c->x() +  + ((1000 - (c->parallaxScaleMillisX()))* xpos_ )/1000);
+		c->set_y( c->y() +  + ((1000 - (c->parallaxScaleMillisY()))* ypos_ )/1000);
 		
 
 		//we only want to actually set the vars once we've calculated all of
@@ -2280,7 +2280,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			//could not place entity. Not really an error; the user just
 			//clicked in an illegal position to place an object.
 
-		} else if(c->is_human() && lvl_->player()) {
+		} else if(c->isHuman() && lvl_->player()) {
 			if(!shift_pressed) {
 				begin_command_group();
 				foreach(level_ptr lvl, levels_) {
@@ -2396,7 +2396,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					max_y = std::max(y, max_y);
 
 					std::map<int, std::vector<std::string> > old_tiles;
-					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 						undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
 						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
@@ -2412,7 +2412,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					min_y = std::min(y, min_y);
 					max_y = std::max(y, max_y);
 
-					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 						undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
 						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
@@ -2430,7 +2430,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					max_y = std::max(y + diffy*TileSize, max_y);
 	
 					std::map<int, std::vector<std::string> > old_tiles;
-					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
+					lvl->getAll_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i->second));
 					}
@@ -2533,10 +2533,10 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 				}
 			}
 
-			if(property_dialog_ && property_dialog_.get() == current_dialog_ && property_dialog_->get_entity() && property_dialog_->get_entity()->EditorInfo()) {
+			if(property_dialog_ && property_dialog_.get() == current_dialog_ && property_dialog_->get_entity() && property_dialog_->get_entity()->getEditorInfo()) {
 				//As well as removing objects, we will remove any vertices
 				//that we see.
-				foreach(const editor_variable_info& var, property_dialog_->get_entity()->EditorInfo()->vars_and_properties()) {
+				foreach(const editor_variable_info& var, property_dialog_->get_entity()->getEditorInfo()->vars_and_properties()) {
 					const std::string& name = var.variable_name();
 					const editor_variable_info::VARIABLE_TYPE type = var.type();
 					if(type != editor_variable_info::TYPE_POINTS) {
@@ -2719,7 +2719,7 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 	foreach(level_ptr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
-		lvl->get_all_tiles_rect(x1, y1, x2, y2, old_tiles);
+		lvl->getAll_tiles_rect(x1, y1, x2, y2, old_tiles);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 			undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
 		}
@@ -2809,7 +2809,7 @@ void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
 		std::vector<std::string> old_rect;
 		lvl->get_hex_tile_rect(zorder, x1, y1, x2, y2, old_rect);
 
-		redo.push_back(std::bind(&level::add_hex_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, t[get_hex_tileset()]->getEditorInfo().type));
+		redo.push_back(std::bind(&level::add_hex_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, t[get_hex_tileset()]->getgetEditorInfo().type));
 		undo.push_back(std::bind(&level::add_hex_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
 
 		std::vector<int> layers;
@@ -2841,7 +2841,7 @@ void editor::remove_hex_tile_rect(int x1, int y1, int x2, int y2)
 	foreach(level_ptr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
-		lvl->get_all_hex_tiles_rect(x1, y1, x2, y2, old_tiles);
+		lvl->getAll_hex_tiles_rect(x1, y1, x2, y2, old_tiles);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 			undo.push_back(std::bind(&level::add_hex_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
 		}
@@ -2892,8 +2892,8 @@ const std::vector<editor::tileset>& editor::all_tilesets() const
 std::vector<editor::enemy_type>& editor::all_characters() const
 {
 	if(enemy_types.empty()) {
-		typedef std::pair<std::string, custom_object_type::EditorSummary> type_cat;
-		foreach(const type_cat& item, custom_object_type::get_editor_categories()) {
+		typedef std::pair<std::string, CustomObjectType::EditorSummary> type_cat;
+		foreach(const type_cat& item, CustomObjectType::getEditorCategories()) {
 			enemy_types.push_back(enemy_type(item.first, item.second.category, item.second.first_frame));
 			enemy_types.back().help = item.second.help;
 		}
@@ -3329,7 +3329,7 @@ void editor::draw_gui() const
 		}
 		point p = hex::HexMap::get_tile_pos_from_pixel_pos(x, y);
 		glColor4f(1.0, 1.0, 1.0, 0.7);
-		hex::HexObject::get_editor_tiles()[get_hex_tileset()]->getEditorInfo().draw(p.x, p.y);
+		hex::HexObject::get_editor_tiles()[get_hex_tileset()]->getgetEditorInfo().draw(p.x, p.y);
 		glColor4f(1.0, 1.0, 1.0, 1.0);
 	}
 
@@ -3354,7 +3354,7 @@ void editor::draw_gui() const
 	std::vector<GLfloat>& varray = graphics::global_vertex_array();
 	if(property_dialog_ && property_dialog_.get() == current_dialog_ &&
 	   property_dialog_->get_entity() &&
-	   property_dialog_->get_entity()->EditorInfo() &&
+	   property_dialog_->get_entity()->getEditorInfo() &&
 	   std::count(lvl_->get_chars().begin(), lvl_->get_chars().end(),
 	              property_dialog_->get_entity())) {
 #if !defined(USE_SHADERS)
@@ -3368,7 +3368,7 @@ void editor::draw_gui() const
 
 		int selected_index = -1;
 		const editor_variable_info* selected_var = variable_info_selected(property_dialog_->get_entity(), xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, zoom_, &selected_index);
-		foreach(const editor_variable_info& var, property_dialog_->get_entity()->EditorInfo()->vars_and_properties()) {
+		foreach(const editor_variable_info& var, property_dialog_->get_entity()->getEditorInfo()->vars_and_properties()) {
 			const std::string& name = var.variable_name();
 			const editor_variable_info::VARIABLE_TYPE type = var.type();
 			const int color_index = nseen_variables[type]++;
@@ -3994,14 +3994,14 @@ void editor::create_new_object()
 	object_dialog.set_draw_background_fn(gui::dialog::draw_last_scene);
 	object_dialog.show_modal();
 	if(object_dialog.cancelled() == false) {
-		custom_object_type::reload_file_paths();
+		CustomObjectType::ReloadFilePaths();
 		lvl_->editor_clear_selection();
 		change_tool(TOOL_ADD_OBJECT);
 		const std::string type = object_dialog.get_object()["id"].as_string();
-		const_custom_object_type_ptr obj = custom_object_type::get(type);
+		ConstCustomObjectTypePtr obj = CustomObjectType::get(type);
 
-		if(obj->EditorInfo()) {
-			all_characters().push_back(editor::enemy_type(type, obj->EditorInfo()->category(), variant()));
+		if(obj->getEditorInfo()) {
+			all_characters().push_back(editor::enemy_type(type, obj->getEditorInfo()->category(), variant()));
 			current_dialog_ = character_dialog_.get();
 
 			for(int n = 0; n != all_characters().size(); ++n) {
@@ -4151,7 +4151,7 @@ void editor::toggle_code()
 			std::string::iterator dot_itor = std::find(type.begin(), type.end(), '.');
 			type.erase(dot_itor, type.end());
 
-			const std::string* path = custom_object_type::get_object_path(type + ".cfg");
+			const std::string* path = CustomObjectType::getObjectPath(type + ".cfg");
 			ASSERT_LOG(path, "Could not find path for object " << type);
 			std::cerr << "Loading file in external editor: " << *path << "\n";
 			external_code_editor_->load_file(*path);
@@ -4206,7 +4206,7 @@ void editor::set_code_file()
 		type = std::string(type.begin(), std::find(type.begin(), type.end(), '.'));
 	}
 
-	const std::string* path = custom_object_type::get_object_path(type + ".cfg");
+	const std::string* path = CustomObjectType::getObjectPath(type + ".cfg");
 
 	entity_ptr obj_instance;
 	if(code_dialog_ && lvl_->editor_selection().empty() == false && tool() == TOOL_SELECT_OBJECT && levels_.size() == 2 && lvl_ == levels_.back()) {
@@ -4222,7 +4222,7 @@ void editor::set_code_file()
 		if(obj_instance) {
 			variant v = obj_instance->write();
 			const std::string pseudo_fname = "@instance:" + obj_instance->label();
-			json::set_file_contents(pseudo_fname, v.write_json());
+			json::setFileContents(pseudo_fname, v.write_json());
 			if(path) {
 				code_dialog_->load_file(*path);
 			}

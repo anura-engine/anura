@@ -65,7 +65,7 @@
 #include "compat.hpp"
 
 #ifndef NO_EDITOR
-std::set<level*>& get_all_levels_set() {
+std::set<level*>& getAll_levels_set() {
 	static std::set<level*> all;
 	return all;
 }
@@ -217,7 +217,7 @@ level::level(const std::string& level_cfg, variant node)
 	  show_builtin_settings_(false)
 {
 #ifndef NO_EDITOR
-	get_all_levels_set().insert(this);
+	getAll_levels_set().insert(this);
 #endif
 
 	std::cerr << "in level constructor...\n";
@@ -546,7 +546,7 @@ level::level(const std::string& level_cfg, variant node)
 level::~level()
 {
 #ifndef NO_EDITOR
-	get_all_levels_set().erase(this);
+	getAll_levels_set().erase(this);
 #endif
 
 	for(std::deque<backup_snapshot_ptr>::iterator i = backups_.begin();
@@ -610,10 +610,10 @@ void level::load_character(variant c)
 {
 	chars_.push_back(entity::build(c));
 	layers_.insert(chars_.back()->zorder());
-	if(!chars_.back()->is_human()) {
+	if(!chars_.back()->isHuman()) {
 		chars_.back()->setId(chars_.size());
 	}
-	if(chars_.back()->is_human()) {
+	if(chars_.back()->isHuman()) {
 #if !defined(__native_client__)
 		if(players_.size() == multiplayer::slot()) {
 			last_touched_player_ = player_ = chars_.back();
@@ -680,7 +680,7 @@ void level::finish_loading()
 
 		const std::vector<entity_ptr> objects = get_chars();
 		foreach(const entity_ptr& obj, objects) {
-			if(!obj->is_human()) {
+			if(!obj->isHuman()) {
 				remove_character(obj);
 			}
 		}
@@ -788,7 +788,7 @@ void level::finish_loading()
 			for(int x = boundaries_.x(); x < boundaries_.x2(); x += seg_width) {
 				const std::vector<entity_ptr> objects = get_chars();
 				foreach(const entity_ptr& obj, objects) {
-					if(!obj->is_human() && obj->midpoint().x >= x && obj->midpoint().x < x + seg_width && obj->midpoint().y >= y && obj->midpoint().y < y + seg_height) {
+					if(!obj->isHuman() && obj->midpoint().x >= x && obj->midpoint().x < x + seg_width && obj->midpoint().y >= y && obj->midpoint().y < y + seg_height) {
 						ASSERT_INDEX_INTO_VECTOR(segment_number, sub_levels);
 						sub_levels[segment_number].lvl->add_character(obj);
 						remove_character(obj);
@@ -1007,7 +1007,7 @@ int level::tile_rebuild_state_id()
 	return g_tile_rebuild_state_id;
 }
 
-void level::set_player_variant_type(variant type_str)
+void level::setPlayerVariantType(variant type_str)
 {
 	if(type_str.is_null()) {
 		type_str = variant("custom_obj");
@@ -1017,11 +1017,11 @@ void level::set_player_variant_type(variant type_str)
 
 	g_player_type = parse_variant_type(type_str);
 
-	const_FormulaCallable_definition_ptr def = game_logic::get_FormulaCallable_definition("level");
+	ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition("level");
 	assert(def.get());
 
-	FormulaCallable_definition* mutable_def = const_cast<FormulaCallable_definition*>(def.get());
-	FormulaCallable_definition::entry* entry = mutable_def->get_entry_by_id("player");
+	FormulaCallableDefinition* mutable_def = const_cast<FormulaCallableDefinition*>(def.get());
+	FormulaCallableDefinition::Entry* entry = mutable_def->getEntryById("player");
 	assert(entry);
 	entry->set_variant_type(g_player_type);
 }
@@ -1293,7 +1293,7 @@ variant level::write() const
 		int last_x = 0, last_y = 0;
 		std::string tiles_str;
 		for(int n = 0; n <= tiles_.size(); ++n) {
-			if(n != tiles_.size() && tiles_[n].draw_disabled && tiles_[n].object->has_solid() == false) {
+			if(n != tiles_.size() && tiles_[n].draw_disabled && tiles_[n].object->hasSolid() == false) {
 				continue;
 			}
 
@@ -1979,7 +1979,7 @@ void level::draw_status() const
 
 namespace {
 void draw_entity(const entity& obj, int x, int y, bool editor) {
-	if(obj.use_absolute_screen_coordinates()) {
+	if(obj.useAbsoluteScreenCoordinates()) {
 		return;
 	}
 
@@ -2049,7 +2049,7 @@ void level::draw_absolutely_positioned_objects() const
 #endif
 	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
 	while(entity_itor != active_chars_.end()) {
-		if((*entity_itor)->use_absolute_screen_coordinates()) {
+		if((*entity_itor)->useAbsoluteScreenCoordinates()) {
 			(*entity_itor)->draw(0, 0);
 		}
 		++entity_itor;
@@ -2126,7 +2126,7 @@ void level::draw(int x, int y, int w, int h) const
 	
 	/*std::cerr << "SUMMARY " << cycle_ << ": ";
 	foreach(const entity_ptr& e, chars_) {
-		std::cerr << e->debug_description() << "(" << e->zsub_order() << "):";
+		std::cerr << e->debug_description() << "(" << e->zSubOrder() << "):";
 	}
 	
 	std::cerr << "\n";*/
@@ -2612,7 +2612,7 @@ bool compare_entity_num_parents(const entity_ptr& a, const entity_ptr& b) {
 	const bool standa = a->standing_on().get() ? true : false;
 	const bool standb = b->standing_on().get() ? true : false;
 	return deptha < depthb || deptha == depthb && standa < standb ||
-	     deptha == depthb && standa == standb && a->is_human() < b->is_human();
+	     deptha == depthb && standa == standb && a->isHuman() < b->isHuman();
 }
 }
 
@@ -2628,7 +2628,7 @@ void level::set_active_chars()
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
 	foreach(entity_ptr& c, chars_) {
-		const bool isActive = c->isActive(screen_area) || c->use_absolute_screen_coordinates();
+		const bool isActive = c->isActive(screen_area) || c->useAbsoluteScreenCoordinates();
 
 		if(isActive) {
 			if(c->group() >= 0) {
@@ -2639,7 +2639,7 @@ void level::set_active_chars()
 				active_chars_.push_back(c);
 			}
 		} else { //char is inactive
-			if( c->dies_on_inactive() ){
+			if( c->diesOnInactive() ){
 				if(c->label().empty() == false) {
 					c->die_with_no_event();
 					chars_by_label_.erase(c->label());
@@ -2683,7 +2683,7 @@ void level::do_processing()
 /*
 	std::cerr << "SUMMARY " << cycle_ << ": ";
 	foreach(const entity_ptr& e, chars_) {
-		std::cerr << e->debug_description() << "(" << (e->is_human() ? "HUMAN," : "") << e->centi_x() << "," << e->centi_y() << "):";
+		std::cerr << e->debug_description() << "(" << (e->isHuman() ? "HUMAN," : "") << e->centi_x() << "," << e->centi_y() << "):";
 	}
 
 	std::cerr << "\n";
@@ -2708,13 +2708,13 @@ void level::do_processing()
 	while(!active_chars.empty()) {
 		new_chars_.clear();
 		foreach(const entity_ptr& c, active_chars) {
-			if(!c->destroyed() && (chars_by_label_.count(c->label()) || c->is_human())) {
+			if(!c->destroyed() && (chars_by_label_.count(c->label()) || c->isHuman())) {
 				c->process(*this);
 			}
 	
-			if(c->destroyed() && !c->is_human()) {
+			if(c->destroyed() && !c->isHuman()) {
 				if(player_ && !c->respawn() && c->get_id() != -1) {
-					player_->is_human()->object_destroyed(id(), c->get_id());
+					player_->isHuman()->object_destroyed(id(), c->get_id());
 				}
 	
 				erase_char(c);
@@ -3164,7 +3164,7 @@ void level::get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vecto
 	}
 }
 
-void level::get_all_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
+void level::getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
 {
 	for(std::set<int>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
 		if(hidden_layers_.count(*i)) {
@@ -3179,7 +3179,7 @@ void level::get_all_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std
 	}
 }
 
-void level::get_all_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
+void level::getAll_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
 {
 	for(std::set<int>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
 		if(hidden_layers_.count(*i)) {
@@ -3290,7 +3290,7 @@ void level::add_tile_solid(const level_tile& t)
 		return;
 	}
 
-	if(obj->has_solid()) {
+	if(obj->hasSolid()) {
 		for(int y = 0; y != obj->height(); ++y) {
 			for(int x = 0; x != obj->width(); ++x) {
 				int xpos = x;
@@ -3407,10 +3407,10 @@ std::vector<entity_ptr> level::get_characters_in_rect(const rect& r, int screen_
 		}
 		custom_object* obj = dynamic_cast<custom_object*>(c.get());
 
-		const int xP = c->midpoint().x + ((c->parallax_scale_millis_x() - 1000)*screen_xpos)/1000 
-			+ (obj->use_absolute_screen_coordinates() ? screen_xpos : 0);
-		const int yP = c->midpoint().y + ((c->parallax_scale_millis_y() - 1000)*screen_ypos)/1000 
-			+ (obj->use_absolute_screen_coordinates() ? screen_ypos : 0);
+		const int xP = c->midpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000 
+			+ (obj->useAbsoluteScreenCoordinates() ? screen_xpos : 0);
+		const int yP = c->midpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000 
+			+ (obj->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
 		if(pointInRect(point(xP, yP), r)) {
 			res.push_back(c);
 		}
@@ -3427,10 +3427,10 @@ std::vector<entity_ptr> level::get_characters_at_point(int x, int y, int screen_
 			continue;
 		}
 
-		const int xP = x + ((1000 - (c->parallax_scale_millis_x()))* screen_xpos )/1000
-			- (c->use_absolute_screen_coordinates() ? screen_xpos : 0);
-		const int yP = y + ((1000 - (c->parallax_scale_millis_y()))* screen_ypos )/1000
-			- (c->use_absolute_screen_coordinates() ? screen_ypos : 0);
+		const int xP = x + ((1000 - (c->parallaxScaleMillisX()))* screen_xpos )/1000
+			- (c->useAbsoluteScreenCoordinates() ? screen_xpos : 0);
+		const int yP = y + ((1000 - (c->parallaxScaleMillisY()))* screen_ypos )/1000
+			- (c->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
 
 		if(!c->is_alpha(xP, yP)) {
 			result.push_back(c);
@@ -3580,7 +3580,7 @@ void level::add_player(entity_ptr p)
 		player_->get_player_info()->set_player_slot(players_.size());
 		players_.push_back(player_);
 	} else {
-		ASSERT_LOG(player_->is_human(), "level::add_player(): Tried to add player to the level that isn't human.");
+		ASSERT_LOG(player_->isHuman(), "level::add_player(): Tried to add player to the level that isn't human.");
 		player_->get_player_info()->set_player_slot(0);
 		players_[0] = player_;
 	}
@@ -3634,7 +3634,7 @@ void level::add_character(entity_ptr p)
 		}
 	}
 
-	if(p->is_human()) {
+	if(p->isHuman()) {
 		add_player(p);
 	} else {
 		chars_.push_back(p);
@@ -3650,7 +3650,7 @@ void level::add_character(entity_ptr p)
 	const int screen_bottom = last_draw_position().y/100 + graphics::screen_height();
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
-	if(!active_chars_.empty() && (p->isActive(screen_area) || p->use_absolute_screen_coordinates())) {
+	if(!active_chars_.empty() && (p->isActive(screen_area) || p->useAbsoluteScreenCoordinates())) {
 		new_chars_.push_back(p);
 	}
 	p->being_added();
@@ -3777,7 +3777,7 @@ DEFINE_FIELD(player_info, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
 DEFINE_FIELD(in_dialog, "bool")
-	//boost::intrusive_ptr<const game_logic::FormulaCallable_definition> def(variant_type::get_builtin("level")->get_definition());
+	//boost::intrusive_ptr<const game_logic::FormulaCallableDefinition> def(variant_type::get_builtin("level")->getDefinition());
 	return variant::from_bool(obj.in_dialog_);
 DEFINE_FIELD(local_player, "null|custom_obj")
 	ASSERT_LOG(obj.player_, "No player found in level");
@@ -4169,7 +4169,7 @@ const_entity_ptr level::get_entity_by_label(const std::string& label) const
 	return const_entity_ptr();
 }
 
-void level::get_all_labels(std::vector<std::string>& labels) const
+void level::getAll_labels(std::vector<std::string>& labels) const
 {
 	for(std::map<std::string, entity_ptr>::const_iterator i = chars_by_label_.begin(); i != chars_by_label_.end(); ++i) {
 		labels.push_back(i->first);
@@ -4262,7 +4262,7 @@ void level::backup()
 		snapshot->chars.push_back(e->backup());
 		entity_map[e] = snapshot->chars.back();
 
-		if(snapshot->chars.back()->is_human()) {
+		if(snapshot->chars.back()->isHuman()) {
 			snapshot->players.push_back(snapshot->chars.back());
 			if(e == player_) {
 				snapshot->player = snapshot->players.back();
@@ -4474,7 +4474,7 @@ void level::hide_object_classification(const std::string& classification, bool h
 bool level::object_classification_hidden(const entity& e) const
 {
 #ifndef NO_EDITOR
-	return e.EditorInfo() && hidden_object_classifications().count(e.EditorInfo()->classification());
+	return e.getEditorInfo() && hidden_object_classifications().count(e.getEditorInfo()->classification());
 #else
 	return false;
 #endif
@@ -4548,7 +4548,7 @@ void level::add_sub_level(const std::string& lvl, int xoffset, int yoffset, bool
 	if(add_objects) {
 		const int difficulty = current_difficulty();
 		foreach(entity_ptr e, sub.chars_) {
-			if(e->is_human()) {
+			if(e->isHuman()) {
 				continue;
 			}
 	
@@ -4658,8 +4658,8 @@ bool level::relocate_object(entity_ptr e, int new_x, int new_y)
 #ifndef NO_EDITOR
 	//update any x/y co-ordinates to be the same relative to the object's
 	//new position.
-	if(e->EditorInfo()) {
-		foreach(const editor_variable_info& var, e->EditorInfo()->vars_and_properties()) {
+	if(e->getEditorInfo()) {
+		foreach(const editor_variable_info& var, e->getEditorInfo()->vars_and_properties()) {
 			const variant value = e->query_value(var.variable_name());
 			switch(var.type()) {
 			case editor_variable_info::XPOSITION:
@@ -4772,7 +4772,7 @@ void level::launch_new_module(const std::string& module_id, game_logic::ConstFor
 {
 	module::reload(module_id);
 	reload_level_paths();
-	custom_object_type::reload_file_paths();
+	CustomObjectType::ReloadFilePaths();
 	font::reloadFontPaths();
 #if defined(USE_SHADERS)
 	gles2::init_default_shader();

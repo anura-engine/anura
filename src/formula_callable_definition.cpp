@@ -28,45 +28,45 @@
 namespace game_logic
 {
 
-void FormulaCallable_definition::entry::set_variant_type(variant_type_ptr type)
+void FormulaCallableDefinition::Entry::set_variant_type(variant_type_ptr type)
 {
 	variant_type = type;
 	if(type) {
-		type_definition.reset(type->get_definition());
+		type_definition.reset(type->getDefinition());
 	}
 }
 
-FormulaCallable_definition::FormulaCallable_definition() : is_strict_(false), supports_slot_lookups_(true)
+FormulaCallableDefinition::FormulaCallableDefinition() : is_strict_(false), supports_slot_lookups_(true)
 {
 	int x = 4;
 	ASSERT_LOG((char*)&x - (char*)this > 10000 || (char*)this - (char*)&x > 10000 , "BAD BAD");
 }
 
-FormulaCallable_definition::~FormulaCallable_definition()
+FormulaCallableDefinition::~FormulaCallableDefinition()
 {
 }
 
 namespace
 {
 
-class simple_definition : public FormulaCallable_definition
+class simple_definition : public FormulaCallableDefinition
 {
 public:
 	simple_definition() : base_(NULL)
 	{}
 
-	int get_slot(const std::string& key) const {
+	int getSlot(const std::string& key) const {
 		int index = 0;
 		foreach(const entry& e, entries_) {
 			if(e.id == key) {
-				return base_num_slots() + index;
+				return base_getNumSlots() + index;
 			}
 
 			++index;
 		}
 
 		if(base_) {
-			int result = base_->get_slot(key);
+			int result = base_->getSlot(key);
 			if(result != -1) {
 				return result;
 			}
@@ -75,12 +75,12 @@ public:
 		return -1;
 	}
 
-	entry* get_entry(int slot) {
-		if(base_ && slot < base_num_slots()) {
-			return const_cast<FormulaCallable_definition*>(base_.get())->get_entry(slot);
+	entry* getEntry(int slot) {
+		if(base_ && slot < base_getNumSlots()) {
+			return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 		}
 
-		slot -= base_num_slots();
+		slot -= base_getNumSlots();
 
 		if(slot < 0 || slot >= entries_.size()) {
 			return NULL;
@@ -89,12 +89,12 @@ public:
 		return &entries_[slot];
 	}
 
-	const entry* get_entry(int slot) const {
-		if(base_ && slot < base_num_slots()) {
-			return base_->get_entry(slot);
+	const entry* getEntry(int slot) const {
+		if(base_ && slot < base_getNumSlots()) {
+			return base_->getEntry(slot);
 		}
 
-		slot -= base_num_slots();
+		slot -= base_getNumSlots();
 
 		if(slot < 0 || slot >= entries_.size()) {
 			return NULL;
@@ -103,7 +103,7 @@ public:
 		return &entries_[slot];
 	}
 
-	int num_slots() const { return base_num_slots() + entries_.size(); }
+	int getNumSlots() const { return base_getNumSlots() + entries_.size(); }
 
 	void add(const std::string& id) {
 		entries_.push_back(entry(id));
@@ -125,70 +125,70 @@ public:
 		entries_.push_back(e);
 	}
 
-	void set_base(const_FormulaCallable_definition_ptr base) { base_ = base; }
+	void set_base(ConstFormulaCallableDefinitionPtr base) { base_ = base; }
 
 	void set_default(const entry& e) {
 		default_entry_.reset(new entry(e));
 	}
 
-	const entry* get_default_entry() const { return default_entry_.get(); }
+	const entry* getDefaultEntry() const { return default_entry_.get(); }
 
 private:
-	int base_num_slots() const { return base_ ? base_->num_slots() : 0; }
-	const_FormulaCallable_definition_ptr base_;
+	int base_getNumSlots() const { return base_ ? base_->getNumSlots() : 0; }
+	ConstFormulaCallableDefinitionPtr base_;
 	std::vector<entry> entries_;
 
 	std::shared_ptr<entry> default_entry_;
 };
 
-class modified_definition : public FormulaCallable_definition
+class modified_definition : public FormulaCallableDefinition
 {
 public:
-	modified_definition(const_FormulaCallable_definition_ptr base, int modified_slot, const entry& modification) : base_(base), slot_(modified_slot), mod_(modification)
+	modified_definition(ConstFormulaCallableDefinitionPtr base, int modified_slot, const entry& modification) : base_(base), slot_(modified_slot), mod_(modification)
 	{
-		set_supports_slot_lookups(base_->supports_slot_lookups());
+		setSupportsSlotLookups(base_->supportsSlotLookups());
 	}
 
-	int get_slot(const std::string& key) const {
-		return base_->get_slot(key);
+	int getSlot(const std::string& key) const {
+		return base_->getSlot(key);
 	}
 
-	entry* get_entry(int slot) {
+	entry* getEntry(int slot) {
 		if(slot == slot_) {
 			return &mod_;
 		}
 
-		return const_cast<FormulaCallable_definition*>(base_.get())->get_entry(slot);
+		return const_cast<FormulaCallableDefinition*>(base_.get())->getEntry(slot);
 	}
 
-	const entry* get_entry(int slot) const {
+	const entry* getEntry(int slot) const {
 		if(slot == slot_) {
 			return &mod_;
 		}
 
-		return base_->get_entry(slot);
+		return base_->getEntry(slot);
 	}
 
-	int num_slots() const { return base_->num_slots(); }
+	int getNumSlots() const { return base_->getNumSlots(); }
 
-	const std::string* type_name() const { return base_->type_name(); }
+	const std::string* getTypeName() const { return base_->getTypeName(); }
 
-	bool is_strict() const { return base_->is_strict(); }
+	bool isStrict() const { return base_->isStrict(); }
 
 private:
-	const_FormulaCallable_definition_ptr base_;
+	ConstFormulaCallableDefinitionPtr base_;
 	const int slot_;
 	entry mod_;
 };
 
 }
 
-FormulaCallable_definition_ptr modify_FormulaCallable_definition(const_FormulaCallable_definition_ptr base_def, int slot, variant_type_ptr new_type, const FormulaCallable_definition* new_def)
+FormulaCallableDefinitionPtr modify_FormulaCallableDefinition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def)
 {
-	const FormulaCallable_definition::entry* e = base_def->get_entry(slot);
+	const FormulaCallableDefinition::Entry* e = base_def->getEntry(slot);
 	ASSERT_LOG(e, "NO DEFINITION FOUND");
 
-	FormulaCallable_definition::entry new_entry(*e);
+	FormulaCallableDefinition::Entry new_entry(*e);
 
 	if(new_type) {
 		if(!new_entry.write_type) {
@@ -197,7 +197,7 @@ FormulaCallable_definition_ptr modify_FormulaCallable_definition(const_FormulaCa
 
 		new_entry.variant_type = new_type;
 		if(!new_def) {
-			new_def = new_type->get_definition();
+			new_def = new_type->getDefinition();
 		}
 	}
 
@@ -205,10 +205,10 @@ FormulaCallable_definition_ptr modify_FormulaCallable_definition(const_FormulaCa
 		new_entry.type_definition = new_def;
 	}
 
-	return FormulaCallable_definition_ptr(new modified_definition(base_def, slot, new_entry));
+	return FormulaCallableDefinitionPtr(new modified_definition(base_def, slot, new_entry));
 }
 
-FormulaCallable_definition_ptr executeCommand_callable_definition(const std::string* i1, const std::string* i2, const_FormulaCallable_definition_ptr base, variant_type_ptr* types)
+FormulaCallableDefinitionPtr executeCommand_callableDefinition(const std::string* i1, const std::string* i2, ConstFormulaCallableDefinitionPtr base, variant_type_ptr* types)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -222,10 +222,10 @@ FormulaCallable_definition_ptr executeCommand_callable_definition(const std::str
 		++i1;
 	}
 
-	return FormulaCallable_definition_ptr(def);
+	return FormulaCallableDefinitionPtr(def);
 }
 
-FormulaCallable_definition_ptr executeCommand_callable_definition(const FormulaCallable_definition::entry* i1, const FormulaCallable_definition::entry* i2, const_FormulaCallable_definition_ptr base)
+FormulaCallableDefinitionPtr executeCommand_callableDefinition(const FormulaCallableDefinition::Entry* i1, const FormulaCallableDefinition::Entry* i2, ConstFormulaCallableDefinitionPtr base)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -234,20 +234,20 @@ FormulaCallable_definition_ptr executeCommand_callable_definition(const FormulaC
 		++i1;
 	}
 
-	return FormulaCallable_definition_ptr(def);
+	return FormulaCallableDefinitionPtr(def);
 }
 
-FormulaCallable_definition_ptr create_MapFormulaCallable_definition(variant_type_ptr value_type)
+FormulaCallableDefinitionPtr create_MapFormulaCallableDefinition(variant_type_ptr value_type)
 {
 	simple_definition* def = new simple_definition;
-	FormulaCallable_definition::entry e("");
+	FormulaCallableDefinition::Entry e("");
 	e.set_variant_type(value_type);
 	def->set_default(e);
-	return FormulaCallable_definition_ptr(def);
+	return FormulaCallableDefinitionPtr(def);
 }
 
 namespace {
-std::map<std::string, const_FormulaCallable_definition_ptr> registry;
+std::map<std::string, ConstFormulaCallableDefinitionPtr> registry;
 int num_definitions = 0;
 
 std::vector<std::function<void()> >& callable_init_routines() {
@@ -262,18 +262,18 @@ std::map<std::string, std::string>& g_builtin_bases()
 }
 }
 
-int register_FormulaCallable_definition(const std::string& id, const_FormulaCallable_definition_ptr def)
+int register_formula_callable_definition(const std::string& id, ConstFormulaCallableDefinitionPtr def)
 {
 	registry[id] = def;
 	return ++num_definitions;
 }
 
-int register_FormulaCallable_definition(const std::string& id, const std::string& base_id, const_FormulaCallable_definition_ptr def)
+int register_formula_callable_definition(const std::string& id, const std::string& base_id, ConstFormulaCallableDefinitionPtr def)
 {
 	if(base_id != "") {
 		g_builtin_bases()[id] = base_id;
 	}
-	return register_FormulaCallable_definition(id, def);
+	return register_formula_callable_definition(id, def);
 }
 
 bool registered_definition_is_a(const std::string& derived, const std::string& base)
@@ -294,13 +294,13 @@ bool registered_definition_is_a(const std::string& derived, const std::string& b
 	return registered_definition_is_a(itor->second, base);
 }
 
-const_FormulaCallable_definition_ptr get_FormulaCallable_definition(const std::string& id)
+ConstFormulaCallableDefinitionPtr get_formula_callable_definition(const std::string& id)
 {
-	std::map<std::string, const_FormulaCallable_definition_ptr>::const_iterator itor = registry.find(id);
+	std::map<std::string, ConstFormulaCallableDefinitionPtr>::const_iterator itor = registry.find(id);
 	if(itor != registry.end()) {
 		return itor->second;
 	} else {
-		return const_FormulaCallable_definition_ptr();
+		return ConstFormulaCallableDefinitionPtr();
 	}
 }
 
@@ -310,7 +310,7 @@ int add_callable_definition_init(void(*fn)())
 	return callable_init_routines().size();
 }
 
-void init_callable_definitions()
+void init_callableDefinitions()
 {
 	foreach(const std::function<void()>& fn, callable_init_routines()) {
 		fn();
@@ -335,11 +335,11 @@ COMMAND_LINE_UTILITY(document_builtins)
 
 		std::cout << "\n";
 
-		for(int n = 0; n != item->num_slots(); ++n) {
-			auto entry = item->get_entry(n);
+		for(int n = 0; n != item->getNumSlots(); ++n) {
+			auto entry = item->getEntry(n);
 			std::cout << "  - " << entry->id << ": " << entry->variant_type->to_string();
-			if(entry->get_write_type() != entry->variant_type) {
-				std::string write_type = entry->get_write_type()->to_string();
+			if(entry->getWriteType() != entry->variant_type) {
+				std::string write_type = entry->getWriteType()->to_string();
 				if(write_type == "null") {
 					std::cout << " (read-only)";
 				} else {

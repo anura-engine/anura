@@ -47,7 +47,7 @@ namespace {
 std::map<std::string, std::string> pseudo_file_contents;
 }
 
-void set_file_contents(const std::string& path, const std::string& contents)
+void setFileContents(const std::string& path, const std::string& contents)
 {
 	game_logic::remove_formula_function_cached_doc(contents);
 	pseudo_file_contents[path] = contents;

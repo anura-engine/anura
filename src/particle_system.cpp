@@ -95,7 +95,7 @@ public:
 		int x_adjust, y_adjust, x2_adjust, y2_adjust;
 	};
 
-	const frame_area& get_frame(int t) const {
+	const frame_area& getFrame(int t) const {
 		int index = t/duration_;
 		if(index < 0) {
 			index = 0;
@@ -541,7 +541,7 @@ void simple_particle_system::draw(const rect& area, const entity& e) const
 	foreach(const generation& gen, generations_) {
 		for(int n = 0; n != gen.members; ++n) {
 			const particle_animation* anim = p->anim;
-			const particle_animation::frame_area& f = anim->get_frame(cycle_ - gen.created_at);
+			const particle_animation::frame_area& f = anim->getFrame(cycle_ - gen.created_at);
 
 			if(info_.delta_a_){
 				//Spare the bandwidth if we're opaque

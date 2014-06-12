@@ -150,7 +150,7 @@ void property_editor_dialog::init()
 	}
 
 	game_logic::FormulaCallable* vars = get_static_entity()->vars();
-	if(get_entity()->EditorInfo() && types_selected.size() == 1) {
+	if(get_entity()->getEditorInfo() && types_selected.size() == 1) {
 		if(get_entity()->group() >= 0) {
 			grid_ptr group_grid(new grid(1));
 
@@ -161,12 +161,12 @@ void property_editor_dialog::init()
 		}
 
 		//output an editing area for each editable event.
-		foreach(const std::string& handler, get_entity()->EditorInfo()->editable_events()) {
+		foreach(const std::string& handler, get_entity()->getEditorInfo()->editable_events()) {
 			LabelPtr lb = label::create(handler + " event handler", graphics::color_white());
 			addWidget(lb);
 
 			TextEditorWidget* e = new TextEditorWidget(220, 90);
-			game_logic::const_formula_ptr f = get_entity()->get_event_handler(get_object_event_id(handler));
+			game_logic::const_formula_ptr f = get_entity()->getEventHandler(get_object_event_id(handler));
 			if(f) {
 				e->setText(f->str());
 			}
@@ -176,7 +176,7 @@ void property_editor_dialog::init()
 
 		}
 
-		foreach(const editor_variable_info& info, get_entity()->EditorInfo()->vars_and_properties()) {
+		foreach(const editor_variable_info& info, get_entity()->getEditorInfo()->vars_and_properties()) {
 
 			if(info.type() == editor_variable_info::XPOSITION ||
 			   info.type() == editor_variable_info::YPOSITION) {
@@ -456,7 +456,7 @@ void property_editor_dialog::change_text_property(const std::string& id, const g
 
 void property_editor_dialog::change_numeric_property(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w)
 {
-	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->getEditorInfo() ? get_static_entity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -483,7 +483,7 @@ void property_editor_dialog::change_numeric_property(const std::string& id, std:
 
 void property_editor_dialog::change_numeric_property_Slider(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w, double value)
 {
-	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->getEditorInfo() ? get_static_entity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -504,7 +504,7 @@ void property_editor_dialog::change_numeric_property_Slider(const std::string& i
 
 void property_editor_dialog::change_enum_property(const std::string& id)
 {
-	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->getEditorInfo() ? get_static_entity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -549,7 +549,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 {
 	const controls::control_backup_scope ctrl_scope;
 
-	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
+	const editor_variable_info* var_info = get_static_entity()->getEditorInfo() ? get_static_entity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
 		return;
 	}
@@ -561,13 +561,13 @@ void property_editor_dialog::change_label_property(const std::string& id)
 		if(level_id.is_string() && level_id.as_string().empty() == false && level_id.as_string() != editor_.get_level().id()) {
 			level lvl(level_id.as_string());
 			lvl.finish_loading();
-			lvl.get_all_labels(labels);
+			lvl.getAll_labels(labels);
 			loaded_level = true;
 		}
 	}
 
 	if(!loaded_level) {
-		editor_.get_level().get_all_labels(labels);
+		editor_.get_level().getAll_labels(labels);
 	}
 
 	labels.erase(std::remove_if(labels.begin(), labels.end(), hidden_label), labels.end());
@@ -667,7 +667,7 @@ entity_ptr property_editor_dialog::get_static_entity() const
 void property_editor_dialog::change_event_handler(const std::string& id, gui::LabelPtr lb, gui::TextEditorWidgetPtr text_editor)
 {
 	assert_recover_scope_.reset(new assert_recover_scope);
-	static boost::intrusive_ptr<custom_object_callable> custom_object_definition(new custom_object_callable);
+	static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
 	std::cerr << "TRYING TO CHANGE EVENT HANDLER...\n";
 	const std::string text = text_editor->text();

@@ -207,8 +207,8 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::FormulaCallable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
-		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 3) {
@@ -218,21 +218,21 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const FormulaCallable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
 
-		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
 	}
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_voxel)
@@ -244,7 +244,7 @@ class voxel_object_function_symbol_table : public function_symbol_table
 public:
 	expression_ptr create_function(const std::string& fn,
 		const std::vector<expression_ptr>& args,
-		const_FormulaCallable_definition_ptr callable_def) const
+		ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);

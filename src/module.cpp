@@ -223,7 +223,7 @@ game_logic::ConstFormulaCallablePtr get_module_args()
 }
 
 
-std::vector<variant> get_all()
+std::vector<variant> getAll()
 {
 	std::vector<variant> result;
 
@@ -406,7 +406,7 @@ void load(const std::string& mod_file_name, bool initial)
 	loaded_paths().insert(loaded_paths().begin(), m);
 
 	if(initial) {
-		custom_object_type::set_player_variant_type(player_type);
+		CustomObjectType::setPlayerVariantType(player_type);
 	}
 }
 

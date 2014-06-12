@@ -83,7 +83,7 @@ public:
 
 	static int tile_rebuild_state_id();
 
-	static void set_player_variant_type(variant type);
+	static void setPlayerVariantType(variant type);
 
 	explicit level(const std::string& level_cfg, variant node=variant());
 	~level();
@@ -136,13 +136,13 @@ public:
 	void set_tile_layer_speed(int zorder, int x_speed, int y_speed);
 	void refresh_tile_rect(int x1, int y1, int x2, int y2);
 	void get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const;
-	void get_all_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
+	void getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	bool clear_tile_rect(int x1, int y1, int x2, int y2);
 	bool remove_tiles_at(int x, int y);
 	void add_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
 	void add_hex_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 	void get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const;
-	void get_all_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
+	void getAll_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	void clear_hex_tile_rect(int x1, int y1, int x2, int y2);
 
 #if defined(USE_SHADERS)
@@ -307,7 +307,7 @@ public:
 	entity_ptr get_entity_by_label(const std::string& label);
 	const_entity_ptr get_entity_by_label(const std::string& label) const;
 
-	void get_all_labels(std::vector<std::string>& labels) const;
+	void getAll_labels(std::vector<std::string>& labels) const;
 
 	const std::vector<entity_ptr>& get_active_chars() const { return active_chars_; }
 	const std::vector<entity_ptr>& get_chars() const { return chars_; }

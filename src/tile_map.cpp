@@ -274,7 +274,7 @@ class tile_map_function_symbol_table : public function_symbol_table
 {
 public:
 	expression_ptr create_function(
-	           const std::string& fn, const std::vector<expression_ptr>& args, const_FormulaCallable_definition_ptr callable_def) const {
+	           const std::string& fn, const std::vector<expression_ptr>& args, ConstFormulaCallableDefinitionPtr callable_def) const {
 		if(fn == "tile_at") {
 			return expression_ptr(new tile_at_function(args));
 		} else {
@@ -552,7 +552,7 @@ void tile_map::build_patterns()
 		}
 	}
 
-	foreach(const multi_tile_pattern& p, multi_tile_pattern::get_all()) {
+	foreach(const multi_tile_pattern& p, multi_tile_pattern::getAll()) {
 		std::vector<const boost::regex*> re;
 		std::vector<const boost::regex*> accepted_re;
 
@@ -882,7 +882,7 @@ void tile_map::build_tiles(std::vector<level_tile>* tiles, const rect* r) const
 	point_map<level_object*> multi_pattern_matches;
 	std::map<point_zorder, level_object*> different_zorder_multi_pattern_matches;
 
-	//std::cerr << "MULTIPATTERNS: " << multi_patterns_.size() << "/" << multi_tile_pattern::get_all().size() << "\n";
+	//std::cerr << "MULTIPATTERNS: " << multi_patterns_.size() << "/" << multi_tile_pattern::getAll().size() << "\n";
 	foreach(const multi_tile_pattern* p, multi_patterns_) {
 		for(int y = -p->height(); y < static_cast<int>(map_.size()) + p->height(); ++y) {
 			const int ypos = ypos_ + y*TileSize;

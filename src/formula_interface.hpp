@@ -41,7 +41,7 @@ public:
 	formula_interface_instance_factory* create_factory(variant_type_ptr type) const; //throw interface_mismatch_error
 	formula_interface_instance_factory* get_dynamic_factory() const;
 
-	const_FormulaCallable_definition_ptr get_definition() const;
+	ConstFormulaCallableDefinitionPtr getDefinition() const;
 
 	bool match(const variant& v) const;
 

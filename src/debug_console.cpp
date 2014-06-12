@@ -373,7 +373,7 @@ namespace debug_console
 
 				entity* ent = dynamic_cast<entity*>(focus_.get());
 
-				game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->get_definition() : NULL);
+				game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->getDefinition() : NULL);
 				variant v = f.execute(*focus_);
 				if(ent) {
 					try {

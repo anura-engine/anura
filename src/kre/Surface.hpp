@@ -155,6 +155,8 @@ namespace KRE
 
 		virtual bool HasData() const = 0;
 
+		static void clearSurfaceCache();
+
 		enum BlendMode {
 			BLEND_MODE_NONE,
 			BLEND_MODE_BLEND,

@@ -324,7 +324,7 @@ void external_text_editor::process()
 			const std::string contents = get_file_contents(fname);
 			if(contents != json::get_file_contents(fname)) {
 				try {
-					custom_object_type::set_file_contents(fname, contents);
+					CustomObjectType::setFileContents(fname, contents);
 				} catch(...) {
 				}
 			}

@@ -35,7 +35,7 @@ class multi_tile_pattern
 public:
 	//all multi tile patterns loaded. This is a deque meaning callers can
 	//save pointers to members, knowing they will never be destroyed.
-	static const std::deque<multi_tile_pattern>& get_all();
+	static const std::deque<multi_tile_pattern>& getAll();
 	static void init(variant node);
 	static void load(variant node, const std::string& tile_id);
 	multi_tile_pattern(variant node, const std::string& tile_id);

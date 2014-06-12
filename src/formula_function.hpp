@@ -97,7 +97,7 @@ public:
 		return false;
 	}
 
-	virtual const_FormulaCallable_definition_ptr get_type_definition() const;
+	virtual ConstFormulaCallableDefinitionPtr get_type_definition() const;
 
 	const char* name() const { return name_; }
 	void set_name(const char* name) { name_ = name; }
@@ -121,13 +121,13 @@ public:
 
 	variant_type_ptr query_mutable_type() const { return get_mutable_type(); }
 
-	const_FormulaCallable_definition_ptr query_modified_definition_based_on_result(bool result, const_FormulaCallable_definition_ptr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
+	ConstFormulaCallableDefinitionPtr query_modified_definition_based_on_result(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
 
 	std::vector<const_expression_ptr> query_children() const;
 	std::vector<const_expression_ptr> query_children_recursive() const;
 
-	void set_definition_used_by_expression(const_FormulaCallable_definition_ptr def) { definition_used_ = def; }
-	const_FormulaCallable_definition_ptr get_definition_used_by_expression() const { return definition_used_; }
+	void set_definition_used_by_expression(ConstFormulaCallableDefinitionPtr def) { definition_used_ = def; }
+	ConstFormulaCallableDefinitionPtr getDefinition_used_by_expression() const { return definition_used_; }
 
 protected:
 	virtual variant_type_ptr get_variant_type() const { return variant_type_ptr(); }
@@ -136,7 +136,7 @@ protected:
 private:
 	virtual variant execute(const FormulaCallable& variables) const = 0;
 	virtual void static_error_analysis() const {}
-	virtual const_FormulaCallable_definition_ptr get_modified_definition_based_on_result(bool result, const_FormulaCallable_definition_ptr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
+	virtual ConstFormulaCallableDefinitionPtr get_modified_definition_based_on_result(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
 
 	virtual std::vector<const_expression_ptr> getChildren() const { return std::vector<const_expression_ptr>(); }
 
@@ -148,7 +148,7 @@ private:
 
 	mutable int ntimes_called_;
 
-	const_FormulaCallable_definition_ptr definition_used_;
+	ConstFormulaCallableDefinitionPtr definition_used_;
 };
 
 class function_expression : public formula_expression {
@@ -240,7 +240,7 @@ public:
 	virtual void add_formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types);
 	virtual expression_ptr create_function(const std::string& fn,
 					                       const std::vector<expression_ptr>& args,
-										   const_FormulaCallable_definition_ptr callable_def) const;
+										   ConstFormulaCallableDefinitionPtr callable_def) const;
 	std::vector<std::string> get_function_names() const;
 	const formula_function* get_formula_function(const std::string& fn) const;
 };
@@ -254,19 +254,19 @@ class recursive_function_symbol_table : public function_symbol_table {
 	formula_function stub_;
 	function_symbol_table* backup_;
 	mutable std::vector<formula_function_expression_ptr> expr_;
-	const_FormulaCallable_definition_ptr closure_definition_;
+	ConstFormulaCallableDefinitionPtr closure_definition_;
 public:
-	recursive_function_symbol_table(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, function_symbol_table* backup, const_FormulaCallable_definition_ptr closure_definition, const std::vector<variant_type_ptr>& variant_types);
+	recursive_function_symbol_table(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, function_symbol_table* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types);
 	virtual expression_ptr create_function(const std::string& fn,
 					                       const std::vector<expression_ptr>& args,
-										   const_FormulaCallable_definition_ptr callable_def) const;
+										   ConstFormulaCallableDefinitionPtr callable_def) const;
 	void resolve_recursive_calls(const_formula_ptr f);
 };
 
 expression_ptr create_function(const std::string& fn,
                                const std::vector<expression_ptr>& args,
 							   const function_symbol_table* symbols,
-							   const_FormulaCallable_definition_ptr callable_def);
+							   ConstFormulaCallableDefinitionPtr callable_def);
 bool optimize_function_arguments(const std::string& fn,
                                  const function_symbol_table* symbols);
 std::vector<std::string> builtin_function_names();
@@ -300,8 +300,8 @@ private:
 	variant_type_ptr type_override_;
 };
 
-const_FormulaCallable_definition_ptr get_map_callable_definition(const_FormulaCallable_definition_ptr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name);
-const_FormulaCallable_definition_ptr get_variant_comparator_definition(const_FormulaCallable_definition_ptr base_def, variant_type_ptr type);
+ConstFormulaCallableDefinitionPtr get_map_callableDefinition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name);
+ConstFormulaCallableDefinitionPtr get_variant_comparator_definition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr type);
 
 }
 

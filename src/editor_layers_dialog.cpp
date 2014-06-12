@@ -166,8 +166,8 @@ void editor_layers_dialog::find_classifications()
 	all_classifications_.clear();
 	foreach(level_ptr lvl, editor_.get_level_list()) {
 		foreach(entity_ptr e, lvl->get_chars()) {
-			if(e->EditorInfo() && !e->EditorInfo()->classification().empty()) {
-				all_classifications_.insert(e->EditorInfo()->classification());
+			if(e->getEditorInfo() && !e->getEditorInfo()->classification().empty()) {
+				all_classifications_.insert(e->getEditorInfo()->classification());
 			}
 		}
 	}

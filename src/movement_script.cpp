@@ -35,7 +35,7 @@ void active_movement_script::modify(entity_ptr entity, const std::map<std::strin
 	entity_mod mod;
 	mod.entity = entity;
 	for(std::map<std::string, game_logic::const_formula_ptr>::const_iterator i = handlers.begin(); i != handlers.end(); ++i) {
-		mod.handlers_backup[i->first] = entity->get_event_handler(get_object_event_id(i->first));
+		mod.handlers_backup[i->first] = entity->getEventHandler(get_object_event_id(i->first));
 		entity->set_event_handler(get_object_event_id(i->first), i->second);
 	}
 

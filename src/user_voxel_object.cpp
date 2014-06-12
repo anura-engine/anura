@@ -14,7 +14,7 @@ user_voxel_object::user_voxel_object(const variant& node)
 {
 	data_.resize(type_->num_storage_slots());
 	std::vector<int> require_init;
-	for(const voxel_object_type::property_entry& entry : type_->slot_properties()) {
+	for(const voxel_object_type::PropertyEntry& entry : type_->getSlotProperties()) {
 		if(entry.storage_slot != -1) {
 			if(entry.init) {
 				data_[entry.storage_slot] = entry.init->execute(*this);
@@ -36,7 +36,7 @@ user_voxel_object::user_voxel_object(const variant& node)
 		}
 	}
 
-	ASSERT_LOG(require_init.empty(), "Object " << type_->id() << " did not have field " << type_->slot_properties()[require_init.front()].id << " initialized");
+	ASSERT_LOG(require_init.empty(), "Object " << type_->id() << " did not have field " << type_->getSlotProperties()[require_init.front()].id << " initialized");
 }
 
 void user_voxel_object::process(level& lvl)
@@ -108,8 +108,8 @@ variant user_voxel_object::getValue_by_slot(int slot) const
 		return variant(this);
 	}
 
-	assert(slot < type_->slot_properties().size());
-	const voxel_object_type::property_entry& entry = type_->slot_properties()[slot];
+	assert(slot < type_->getSlotProperties().size());
+	const voxel_object_type::PropertyEntry& entry = type_->getSlotProperties()[slot];
 	if(entry.getter) {
 		const ValueScopeSetter<variant> value_scope_setter(const_cast<variant*>(&data_[voxel_object_type::ENTRY_DATA]), entry.storage_slot == -1 ? variant() : data_[entry.storage_slot]);
 		return entry.getter->execute(*this);
@@ -136,8 +136,8 @@ void user_voxel_object::setValue_by_slot(int slot, const variant& value)
 		return;
 	}
 
-	assert(slot < type_->slot_properties().size());
-	const voxel_object_type::property_entry& entry = type_->slot_properties()[slot];
+	assert(slot < type_->getSlotProperties().size());
+	const voxel_object_type::PropertyEntry& entry = type_->getSlotProperties()[slot];
 	if(entry.setter) {
 		variant cmd;
 		{
@@ -167,8 +167,8 @@ void user_voxel_object::setValue_by_slot(int slot, const variant& value)
 
 variant user_voxel_object::getValue(const std::string& key) const
 {
-	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
-		if(type_->slot_properties()[slot].id == key) {
+	for(int slot = 0; slot != type_->getSlotProperties().size(); ++slot) {
+		if(type_->getSlotProperties()[slot].id == key) {
 			return getValue_by_slot(type_->num_base_slots() + slot);
 		}
 	}
@@ -179,8 +179,8 @@ variant user_voxel_object::getValue(const std::string& key) const
  
 void user_voxel_object::setValue(const std::string& key, const variant& value)
 {
-	for(int slot = 0; slot != type_->slot_properties().size(); ++slot) {
-		if(type_->slot_properties()[slot].id == key) {
+	for(int slot = 0; slot != type_->getSlotProperties().size(); ++slot) {
+		if(type_->getSlotProperties()[slot].id == key) {
 			setValue_by_slot(type_->num_base_slots() + slot, value);
 			return;
 		}

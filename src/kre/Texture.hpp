@@ -117,6 +117,8 @@ namespace KRE
 
 		static void RebuildAll();
 
+		static void clearTextures();
+
 		// XXX Need to add a pixel filter function, so when we load the surface we apply the filter.
 		static TexturePtr createTexture(const std::string& filename,
 			Type type=Type::TEXTURE_2D, 

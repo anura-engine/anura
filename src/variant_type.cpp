@@ -425,7 +425,7 @@ public:
 		return false;
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		return game_logic::get_class_definition(type_).get();
 	}
 private:
@@ -471,15 +471,15 @@ public:
 			return false;
 		}
 
-		return type_ == "" || custom_object_type::is_derived_from(type_, other->type_);
+		return type_ == "" || CustomObjectType::isDerivedFrom(type_, other->type_);
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		if(type_ == "") {
-			return &custom_object_callable::instance();
+			return &CustomObjectCallable::instance();
 		}
 
-		const game_logic::FormulaCallable_definition* def = custom_object_type::get_definition(type_).get();
+		const game_logic::FormulaCallableDefinition* def = CustomObjectType::getDefinition(type_).get();
 		ASSERT_LOG(def, "Could not find custom object: " << type_);
 		return def;
 	}
@@ -530,15 +530,15 @@ public:
 			return false;
 		}
 
-		return type_ == "" || voxel_object_type::is_derived_from(type_, other->type_);
+		return type_ == "" || voxel_object_type::isDerivedFrom(type_, other->type_);
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		if(type_ == "") {
-			return variant_type::get_builtin("voxel_object")->get_definition();
+			return variant_type::get_builtin("voxel_object")->getDefinition();
 		}
 
-		const game_logic::FormulaCallable_definition* def = voxel_object_type::get_definition(type_).get();
+		const game_logic::FormulaCallableDefinition* def = voxel_object_type::getDefinition(type_).get();
 		ASSERT_LOG(def, "Could not find custom object: " << type_);
 		return def;
 	}
@@ -552,7 +552,7 @@ private:
 class variant_type_builtin : public variant_type
 {
 public:
-	variant_type_builtin(const std::string& type, game_logic::const_FormulaCallable_definition_ptr def) : type_(type), def_(def)
+	variant_type_builtin(const std::string& type, game_logic::ConstFormulaCallableDefinitionPtr def) : type_(type), def_(def)
 	{
 	}
 
@@ -591,9 +591,9 @@ public:
 		return false;
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		if(!def_) {
-			game_logic::const_FormulaCallable_definition_ptr def = game_logic::get_FormulaCallable_definition(type_);
+			game_logic::ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition(type_);
 			ASSERT_LOG(def, "Could not find builtin type definition: " << type_);
 			def_ = def;
 		}
@@ -603,7 +603,7 @@ public:
 	const std::string* is_builtin() const { return &type_; }
 private:
 	std::string type_;
-	mutable game_logic::const_FormulaCallable_definition_ptr def_;
+	mutable game_logic::ConstFormulaCallableDefinitionPtr def_;
 };
 
 class variant_type_interface : public variant_type
@@ -696,8 +696,8 @@ public:
 		}*/
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
-		return interface_->get_definition().get();
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
+		return interface_->getDefinition().get();
 	}
 
 	const game_logic::formula_interface* is_interface() const {
@@ -1127,9 +1127,9 @@ public:
 
 	}
 
-	const game_logic::FormulaCallable_definition* get_definition() const {
+	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		if(!def_) {
-			def_ = game_logic::create_MapFormulaCallable_definition(value_type_);
+			def_ = game_logic::create_MapFormulaCallableDefinition(value_type_);
 		}
 
 		return def_.get();
@@ -1137,7 +1137,7 @@ public:
 private:
 	variant_type_ptr key_type_, value_type_;
 
-	mutable game_logic::FormulaCallable_definition_ptr def_;
+	mutable game_logic::FormulaCallableDefinitionPtr def_;
 };
 
 class variant_type_specific_map : public variant_type
@@ -1157,8 +1157,8 @@ public:
 				must_have_keys_.insert(i->first);
 			}
 		}
-		def_ = game_logic::executeCommand_callable_definition(&keys[0], &keys[0] + keys.size(), game_logic::const_FormulaCallable_definition_ptr(), &values[0]);
-		def_->set_supports_slot_lookups(false);
+		def_ = game_logic::executeCommand_callableDefinition(&keys[0], &keys[0] + keys.size(), game_logic::ConstFormulaCallableDefinitionPtr(), &values[0]);
+		def_->setSupportsSlotLookups(false);
 	}
 
 	bool match(const variant& v) const {
@@ -1284,7 +1284,7 @@ public:
 
 	const std::map<variant, variant_type_ptr>* is_specific_map() const { return &type_map_; }
 
-	const game_logic::FormulaCallable_definition* get_definition() const
+	const game_logic::FormulaCallableDefinition* getDefinition() const
 	{
 		return def_.get();
 	}
@@ -1292,7 +1292,7 @@ private:
 	std::map<variant, variant_type_ptr> type_map_;
 	std::set<variant> must_have_keys_;
 	variant_type_ptr key_type_, value_type_;
-	game_logic::FormulaCallable_definition_ptr def_;
+	game_logic::FormulaCallableDefinitionPtr def_;
 };
 
 class variant_type_function : public variant_type
@@ -1764,7 +1764,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		return variant_type::get_map(key_type, value_type);
 	} else if(value.is_callable() && value.as_callable()->is_command()) {
 		return variant_type::get_commands();
-	} else if(value.is_callable() && game_logic::get_FormulaCallable_definition(value.as_callable()->query_id())) {
+	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->query_id())) {
 		return variant_type::get_builtin(value.as_callable()->query_id());
 	} else if(value.is_function()) {
 		return variant_type::get_function_type(value.function_arg_types(), value.function_return_type(), value.min_function_arguments());
@@ -2069,9 +2069,9 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("builtin") && i1+1 != i2) {
 			++i1;
 
-			v.push_back(variant_type_ptr(new variant_type_builtin(std::string(i1->begin, i1->end), game_logic::const_FormulaCallable_definition_ptr())));
+			v.push_back(variant_type_ptr(new variant_type_builtin(std::string(i1->begin, i1->end), game_logic::ConstFormulaCallableDefinitionPtr())));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && game_logic::get_FormulaCallable_definition(std::string(i1->begin, i1->end)).get()) {
+		} else if(i1->type == TOKEN_IDENTIFIER && game_logic::get_formula_callable_definition(std::string(i1->begin, i1->end)).get()) {
 			v.push_back(variant_type::get_builtin(std::string(i1->begin, i1->end)));
 			++i1;
 		} else if(i1->type == TOKEN_IDENTIFIER || (i1->type == TOKEN_KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
@@ -2558,7 +2558,7 @@ variant_type_ptr variant_type::get_voxel_object(const std::string& name)
 
 variant_type_ptr variant_type::get_builtin(const std::string& name)
 {
-	game_logic::const_FormulaCallable_definition_ptr def = game_logic::get_FormulaCallable_definition(name);
+	game_logic::ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition(name);
 	if(def) {
 		return variant_type_ptr(new variant_type_builtin(name, def));
 	} else {

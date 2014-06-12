@@ -22,7 +22,7 @@
 #include "variant.hpp"
 
 namespace json {
-void set_file_contents(const std::string& path, const std::string& contents);
+void setFileContents(const std::string& path, const std::string& contents);
 std::string get_file_contents(const std::string& path);
 
 enum JSON_PARSE_OPTIONS { JSON_NO_PREPROCESSOR = 0, JSON_USE_PREPROCESSOR };

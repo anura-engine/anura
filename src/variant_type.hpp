@@ -28,7 +28,7 @@
 
 namespace game_logic
 {
-class FormulaCallable_definition;
+class FormulaCallableDefinition;
 class formula_interface;
 }
 
@@ -103,7 +103,7 @@ public:
 	virtual bool is_generic(std::string* id=NULL) const { return false; }
 	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
 
-	virtual const game_logic::FormulaCallable_definition* get_definition() const { return NULL; }
+	virtual const game_logic::FormulaCallableDefinition* getDefinition() const { return NULL; }
 
 	virtual const game_logic::formula_interface* is_interface() const { return NULL; }
 

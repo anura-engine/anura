@@ -58,7 +58,7 @@ protected:
 private:
 	module::module_file_pair template_file_;
 	variant object_template_;
-	custom_object_type_ptr object_;
+	CustomObjectTypePtr object_;
 	int selected_template_;
 	std::string current_object_save_path_;
 

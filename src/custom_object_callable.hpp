@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CUSTOM_OBJECT_CALLABLE_HPP_INCLUDED
-#define CUSTOM_OBJECT_CALLABLE_HPP_INCLUDED
+
+#pragma once
 
 #include <map>
 #include <vector>
@@ -138,12 +144,12 @@ enum CUSTOM_OBJECT_PROPERTY {
 	CUSTOM_OBJECT_COLLIDE_DIMENSIONS_IN,
 	CUSTOM_OBJECT_COLLIDE_DIMENSIONS_NOT_IN,
 	CUSTOM_OBJECT_BRIGHTNESS,
-	CUSTOM_OBJECT_CurrentGenerator,
+	CUSTOM_OBJECT_CURRENTGENERATOR,
 	CUSTOM_OBJECT_TAGS,
 	CUSTOM_OBJECT_DRAW_AREA,
 	CUSTOM_OBJECT_SCALE,
 	CUSTOM_OBJECT_ACTIVATION_AREA,
-	CUSTOM_OBJECT_clipArea,
+	CUSTOM_OBJECT_CLIPAREA,
 	CUSTOM_OBJECT_ALWAYS_ACTIVE,
 	CUSTOM_OBJECT_ACTIVATION_BORDER,
 	CUSTOM_OBJECT_FALL_THROUGH_PLATFORMS,
@@ -159,7 +165,7 @@ enum CUSTOM_OBJECT_PROPERTY {
 	CUSTOM_OBJECT_UV_ARRAY,
 	CUSTOM_OBJECT_XY_ARRAY,
 	CUSTOM_OBJECT_UV_SEGMENTS,
-	CUSTOM_OBJECT_DrawPrimitiveS,
+	CUSTOM_OBJECT_DRAWPRIMITIVES,
 	CUSTOM_OBJECT_EVENT_HANDLERS,
 	CUSTOM_OBJECT_USE_ABSOLUTE_SCREEN_COORDINATES,
 	CUSTOM_OBJECT_WIDGETS,
@@ -170,10 +176,6 @@ enum CUSTOM_OBJECT_PROPERTY {
 	CUSTOM_OBJECT_MOUSEOVER_DELAY,
 	CUSTOM_OBJECT_MOUSEOVER_AREA,
 	CUSTOM_OBJECT_PARTICLE_SYSTEMS,
-	CUSTOM_OBJECT_TRUEZ,
-	CUSTOM_OBJECT_TX,
-	CUSTOM_OBJECT_TY,
-	CUSTOM_OBJECT_TZ,
 	CUSTOM_OBJECT_CTRL_USER_OUTPUT,
 	CUSTOM_OBJECT_CTRL_UP,
 	CUSTOM_OBJECT_CTRL_DOWN,
@@ -201,60 +203,58 @@ enum CUSTOM_OBJECT_PROPERTY {
 	NUM_CUSTOM_OBJECT_PROPERTIES
 };
 
-class custom_object_callable : public game_logic::FormulaCallable_definition
+class CustomObjectCallable : public game_logic::FormulaCallableDefinition
 {
 public:
-	static const custom_object_callable& instance();
+	static const CustomObjectCallable& instance();
 
-	static int get_key_slot(const std::string& key);
+	static int getKeySlot(const std::string& key);
 
-	explicit custom_object_callable(bool is_singleton=false);
+	explicit CustomObjectCallable(bool is_singleton=false);
 
-	void set_object_type(variant_type_ptr type);
+	void setObjectType(variant_type_ptr type);
 
-	int get_slot(const std::string& key) const;
-	entry* get_entry(int slot);
-	const entry* get_entry(int slot) const;
-	int num_slots() const { return entries_.size(); }
+	int getSlot(const std::string& key) const;
+	Entry* getEntry(int slot);
+	const Entry* getEntry(int slot) const;
+	int getNumSlots() const { return entries_.size(); }
 
 	const std::vector<int>& slots_requiring_initialization() const { return slots_requiring_initialization_; }
 
-	void add_property(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private);
+	void addProperty(const std::string& id, variant_type_ptr type, variant_type_ptr write_type, bool requires_initialization, bool is_private);
 
-	void finalize_properties();
+	void finalizeProperties();
 
-	void push_private_access();
-	void pop_private_access();
+	void pushPrivateAccess();
+	void popPrivateAccess();
 
 private:
-	std::vector<entry> entries_;
+	std::vector<Entry> entries_;
 
 	std::map<std::string, int> properties_;
 
 	std::vector<int> slots_requiring_initialization_;
 };
 
-struct custom_object_callable_expose_private_scope
+struct CustomObjectCallableExposePrivateScope
 {
-	custom_object_callable_expose_private_scope(custom_object_callable& c);
-	~custom_object_callable_expose_private_scope();
+	CustomObjectCallableExposePrivateScope(CustomObjectCallable& c);
+	~CustomObjectCallableExposePrivateScope();
 
-	custom_object_callable& c_;
+	CustomObjectCallable& c_;
 };
 
-class custom_object_callable_modify_scope
+class CustomObjectCallableModifyScope
 {
 public:
-	custom_object_callable_modify_scope(const custom_object_callable& c, int slot, variant_type_ptr type);
-	~custom_object_callable_modify_scope();
+	CustomObjectCallableModifyScope(const CustomObjectCallable& c, int slot, variant_type_ptr type);
+	~CustomObjectCallableModifyScope();
 
 private:
-	custom_object_callable& c_;
-	game_logic::FormulaCallable_definition::entry entry_;
+	CustomObjectCallable& c_;
+	game_logic::FormulaCallableDefinition::Entry entry_;
 	int slot_;
 };
 
-typedef boost::intrusive_ptr<custom_object_callable> custom_object_callable_ptr;
-typedef boost::intrusive_ptr<const custom_object_callable> const_custom_object_callable_ptr;
-
-#endif
+typedef boost::intrusive_ptr<CustomObjectCallable> CustomObjectCallablePtr;
+typedef boost::intrusive_ptr<const CustomObjectCallable> ConstCustomObjectCallablePtr;
