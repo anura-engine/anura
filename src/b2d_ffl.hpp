@@ -86,8 +86,8 @@ namespace box2d
 		virtual ~body();
 		const b2Body& get_body() const { return *body_; }
 		b2Body& get_body() { return *body_; }
-		const boost::shared_ptr<const b2Body> get_body_ptr() const { return body_; }
-		boost::shared_ptr<b2Body> get_body_ptr() { return body_; }
+		const std::shared_ptr<const b2Body> get_body_ptr() const { return body_; }
+		std::shared_ptr<b2Body> get_body_ptr() { return body_; }
 		b2Body* get_raw_body_ptr() { return body_.get(); }
 		const b2BodyDef* get_body_definition() const { return &body_def_; }
 
@@ -98,7 +98,7 @@ namespace box2d
 		void set_active(bool actv=true);
 
 		void finish_loading(entity_ptr e=NULL);
-		boost::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
+		std::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
 
 		variant write();
 		variant fix_write();
@@ -106,9 +106,9 @@ namespace box2d
 	protected:
 	private:
 		b2BodyDef body_def_;
-		std::vector<boost::shared_ptr<b2FixtureDef> > fix_defs_;
-		std::vector<boost::shared_ptr<b2Shape> > shape_list_;
-		boost::shared_ptr<b2Body> body_;
+		std::vector<std::shared_ptr<b2FixtureDef> > fix_defs_;
+		std::vector<std::shared_ptr<b2Shape> > shape_list_;
+		std::shared_ptr<b2Body> body_;
 	};
 
 	class joint : public game_logic::FormulaCallable

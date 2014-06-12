@@ -274,7 +274,7 @@ namespace sys
 
 	namespace 
 	{
-		typedef std::map<std::string, std::vector<boost::function<void()> > > file_mod_handler_map;
+		typedef std::map<std::string, std::vector<std::function<void()> > > file_mod_handler_map;
 		file_mod_handler_map& get_mod_map() 
 		{
 			static file_mod_handler_map instance;
@@ -289,7 +289,7 @@ namespace sys
 		return instance;
 	}
 
-	std::vector<boost::function<void()> > file_mod_notification_queue;
+	std::vector<std::function<void()> > file_mod_notification_queue;
 
 	threading::mutex& get_mod_queue_mutex() {
 		static threading::mutex instance;
@@ -348,7 +348,7 @@ namespace sys
 							fd_to_path[fd] = path;
 						}
 					}
-					std::vector<boost::function<void()> >& handlers = m[path];
+					std::vector<std::function<void()> >& handlers = m[path];
 					std::cerr << "FILE HANDLERS: " << handlers.size() << "\n";
 
 					threading::lock lck(get_mod_queue_mutex());
@@ -423,11 +423,11 @@ namespace sys
 		return get_dir(dir_path);
 	}
 
-	void notify_on_file_modification(const std::string& path, boost::function<void()> handler)
+	void notify_on_file_modification(const std::string& path, std::function<void()> handler)
 	{
 		{
 			threading::lock lck(get_mod_map_mutex());
-			std::vector<boost::function<void()> >& handlers = get_mod_map()[path];
+			std::vector<std::function<void()> >& handlers = get_mod_map()[path];
 			if(handlers.empty()) {
 				new_files_listening.push_back(path);
 			}
@@ -445,13 +445,13 @@ namespace sys
 			return;
 		}
 
-		std::vector<boost::function<void()> > v;
+		std::vector<std::function<void()> > v;
 		{
 			threading::lock lck(get_mod_queue_mutex());
 			v.swap(file_mod_notification_queue);
 		}
 
-		foreach(boost::function<void()> f, v) {
+		foreach(std::function<void()> f, v) {
 			std::cerr << "CALLING FILE MOD HANDLER\n";
 			f();
 		}

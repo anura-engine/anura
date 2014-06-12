@@ -4,7 +4,7 @@
 namespace game_logic
 {
 
-void map_FormulaCallable::visitValues(FormulaCallableVisitor& visitor)
+void MapFormulaCallable::visitValues(FormulaCallableVisitor& visitor)
 {
 	for(std::map<std::string,variant>::iterator i = values_.begin();
 	    i != values_.end(); ++i) {

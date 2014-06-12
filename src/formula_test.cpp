@@ -57,7 +57,7 @@ class mock_party : public FormulaCallable {
 	}
 
 	mock_char c_;
-	mutable map_FormulaCallable i_[3];
+	mutable MapFormulaCallable i_[3];
 
 };
 

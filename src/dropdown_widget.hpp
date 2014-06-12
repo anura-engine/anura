@@ -20,8 +20,6 @@
 #ifndef NO_EDITOR
 
 #include <vector>
-#include <boost/intrusive_ptr.hpp>
-#include <boost/function.hpp>
 
 #include "border_widget.hpp"
 #include "label.hpp"
@@ -44,17 +42,17 @@ public:
 	dropdown_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~dropdown_widget() {}
 
-	void set_on_change_handler(boost::function<void(const std::string&)> fn) { on_change_ = fn; }
-	void set_on_select_handler(boost::function<void(int,const std::string&)> fn) { on_select_ = fn; }
-	void set_selection(int selection);
+	void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
+	void setOnSelectHandler(std::function<void(int,const std::string&)> fn) { on_select_ = fn; }
+	void setSelection(int selection);
 	int get_max_height() const;
 	void set_dropdown_height(int h);
 	void setFontSize(int size) { editor_->setFontSize(size); }
 	void setText(const std::string& s) { editor_->setText(s); }
 protected:
-	virtual void handleDraw() const;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
-	virtual void handleProcess();
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+	virtual void handleProcess() override;
 
 	virtual void setValue(const std::string& key, const variant& v);
 	virtual variant getValue(const std::string& key) const;
@@ -62,9 +60,9 @@ protected:
 	void text_enter();
 	void textChange();
 private:
-	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
+	bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
 	void execute_selection(int selection);
 
 	int dropdown_height_;
@@ -75,12 +73,12 @@ private:
 	grid_ptr dropdown_menu_;
 	LabelPtr label_;
 	WidgetPtr dropdown_image_;
-	boost::function<void(const std::string&)> on_change_;
-	boost::function<void(int, const std::string&)> on_select_;
+	std::function<void(const std::string&)> on_change_;
+	std::function<void(int, const std::string&)> on_select_;
 
 	// delgate 
-	void change_delegate(const std::string& s);
-	void select_delegate(int selection, const std::string& s);
+	void changeDelegate(const std::string& s);
+	void selectDelegate(int selection, const std::string& s);
 	// FFL formula
 	game_logic::formula_ptr change_handler_;
 	game_logic::formula_ptr select_handler_;

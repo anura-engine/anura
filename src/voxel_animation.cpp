@@ -15,20 +15,17 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 
-#if defined(USE_SHADERS) && defined(USE_ISOMAP)
+#if defined(USE_ISOMAP)
 
-#include <boost/bind.hpp>
 #include <boost/shared_array.hpp>
 
 #include <glm/gtc/matrix_transform.hpp>
 
 #include "button.hpp"
-#include "camera.hpp"
 #include "dialog.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
-#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
@@ -51,9 +48,9 @@ public:
 
 	const voxel_model& model() const { return *vox_model_; }
 private:
-	void handleDraw() const;
-	void handleProcess();
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	void handleDraw() const override;
+	void handleProcess() override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	void calculate_camera();
 
@@ -61,8 +58,8 @@ private:
 
 	boost::shared_array<GLuint> fbo_texture_ids_;
 	glm::mat4 fbo_proj_;
-	boost::shared_ptr<GLuint> framebuffer_id_;
-	boost::shared_ptr<GLuint> depth_id_;
+	std::shared_ptr<GLuint> framebuffer_id_;
+	std::shared_ptr<GLuint> depth_id_;
 
 	graphics::lighting_ptr lighting_;
 
@@ -135,14 +132,14 @@ void animation_renderer::init()
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 	glBindTexture(GL_TEXTURE_2D, 0);
 
-	framebuffer_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
+	framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteFramebuffers(1, id); delete id;});
 	EXT_CALL(glGenFramebuffers)(1, framebuffer_id_.get());
 	EXT_CALL(glBindFramebuffer)(EXT_MACRO(GL_FRAMEBUFFER), *framebuffer_id_);
 
 	// attach the texture to FBO color attachment point
 	EXT_CALL(glFramebufferTexture2D)(EXT_MACRO(GL_FRAMEBUFFER), EXT_MACRO(GL_COLOR_ATTACHMENT0),
                           GL_TEXTURE_2D, fbo_texture_ids_[0], 0);
-	depth_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
+	depth_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glBindRenderbuffer(GL_RENDERBUFFER, 0); glDeleteRenderbuffers(1, id); delete id;});
 	glGenRenderbuffers(1, depth_id_.get());
 	glBindRenderbuffer(GL_RENDERBUFFER, *depth_id_);
 	glRenderbufferStorage(GL_RENDERBUFFER, GL_DEPTH_COMPONENT, tex_width_, tex_height_);
@@ -351,7 +348,7 @@ public:
 	voxel_animation_editor(const rect& r, const std::string& fname);
 	void init();
 private:
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	boost::intrusive_ptr<animation_renderer> renderer_;
 	rect area_;
@@ -378,7 +375,7 @@ void voxel_animation_editor::init()
 	grid_ptr anim_grid(new grid(1));
 
 	for(auto p : renderer_->model().animations()) {
-		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
+		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
 	}
 
 	addWidget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());

@@ -1263,7 +1263,7 @@ namespace preferences {
 		} else if(arg_name == "--pass") {
 			set_password(arg_value);
 		} else if(arg_name == "--module-args") {
-			game_logic::const_FormulaCallablePtr callable = map_into_callable(json::parse(arg_value));
+			game_logic::ConstFormulaCallablePtr callable = map_into_callable(json::parse(arg_value));
 			module::set_module_args(callable);
 		} else if(s == "--relay") {
 			relay_through_server_ = true;

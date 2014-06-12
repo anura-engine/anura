@@ -17,13 +17,9 @@
 #ifndef THREAD_HPP_INCLUDED
 #define THREAD_HPP_INCLUDED
 
-#include "graphics.hpp"
+#error Abstract SDLfrom this.
 
 #include <list>
-
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/smart_ptr.hpp>
 
 // Threading primitives wrapper for SDL_Thread.
 //
@@ -54,7 +50,7 @@ public:
 	// \param data passed to f
 	//
 	// \pre f != NULL
-	explicit thread(const std::string& name, boost::function<void ()> f);
+	explicit thread(const std::string& name, std::function<void ()> f);
 
 	// Destroy the thread object. This is done by waiting on the
 	// thread with the join() operation, thus blocking until the
@@ -73,7 +69,7 @@ private:
 	thread(const thread&);
 	void operator=(const thread&);
 
-	boost::function<void ()> fn_;
+	std::function<void ()> fn_;
 	SDL_Thread* thread_;
 };
 

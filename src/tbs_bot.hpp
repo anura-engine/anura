@@ -49,8 +49,8 @@ private:
 	std::string host_, port_;
 	std::vector<variant> script_;
 	std::vector<variant> response_;
-	boost::shared_ptr<client> client_;
-	boost::shared_ptr<internal_client> internal_client_;
+	std::shared_ptr<client> client_;
+	std::shared_ptr<internal_client> internal_client_;
 
 	boost::asio::io_service& service_;
 	boost::asio::deadline_timer timer_;

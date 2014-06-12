@@ -17,8 +17,6 @@
 #include <cassert>
 #include <iostream>
 
-#include <boost/bind.hpp>
-
 #include "asserts.hpp"
 #include "code_editor_dialog.hpp"
 #include "collision_utils.hpp"
@@ -755,7 +753,7 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 		ASSERT_LOG(node["id"].as_string() == module::get_id(id), "IN " << path_itor->second << " OBJECT ID DOES NOT MATCH FILENAME");
 		
 		try {
-			boost::scoped_ptr<assert_recover_scope> recover_scope;
+			std::unique_ptr<assert_recover_scope> recover_scope;
 			if(preferences::edit_and_continue()) {
 				recover_scope.reset(new assert_recover_scope);
 			}
@@ -772,7 +770,7 @@ custom_object_type_ptr custom_object_type::recreate(const std::string& id,
 			}
 
 			in_edit_and_continue = true;
-			edit_and_continue_fn(path_itor->second, e.msg, boost::bind(&custom_object_type::recreate, id, old_type));
+			edit_and_continue_fn(path_itor->second, e.msg, std::bind(&custom_object_type::recreate, id, old_type));
 			in_edit_and_continue = false;
 			return recreate(id, old_type);
 		}
@@ -950,7 +948,7 @@ int custom_object_type::reload_modified_code()
 		}
 
 		if(listening_for_files.count(*path) == 0) {
-			sys::notify_on_file_modification(*path, boost::bind(on_object_file_updated, *path));
+			sys::notify_on_file_modification(*path, std::bind(on_object_file_updated, *path));
 			listening_for_files.insert(*path);
 		}
 
@@ -1057,7 +1055,7 @@ void custom_object_type::init_event_handlers(variant node,
 			if(base_handlers && base_handlers->size() > event_id && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.second.as_string()) {
 				handlers[event_id] = (*base_handlers)[event_id];
 			} else {
-				boost::scoped_ptr<custom_object_callable_modify_scope> modify_scope;
+				std::unique_ptr<custom_object_callable_modify_scope> modify_scope;
 				const variant_type_ptr arg_type = get_object_event_arg_type(event_id);
 				if(arg_type) {
 					modify_scope.reset(new custom_object_callable_modify_scope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
@@ -1115,7 +1113,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	static_object_(node["static_object"].as_bool(use_image_for_collisions_)),
 	collides_with_level_(node["collides_with_level"].as_bool(true)),
 	has_feet_(node["has_feet"].as_bool(true) && static_object_ == false),
-	adjust_feet_on_animation_change_(node["adjust_feet_on_animation_change"].as_bool(true)),
+	adjust_feet_on_animation_change_(node["adjust_feet_on_animationChange"].as_bool(true)),
 	teleport_offset_x_(node["teleport_offset_x"].as_int()),
 	teleport_offset_y_(node["teleport_offset_y"].as_int()),
 	no_move_to_standing_(node["no_move_to_standing"].as_bool()),
@@ -1155,7 +1153,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 	if(editor_force_standing_) {
 		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
 	}
-	boost::scoped_ptr<strict_mode_scope> strict_scope;
+	std::unique_ptr<strict_mode_scope> strict_scope;
 	if(is_strict_) {
 		strict_scope.reset(new strict_mode_scope);
 	}
@@ -1334,7 +1332,7 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 
 	//std::cerr << "TMP_VARIABLES: '" << id_ << "' -> " << tmp_variables_.size() << "\n";
 
-	consts_.reset(new game_logic::map_FormulaCallable);
+	consts_.reset(new game_logic::MapFormulaCallable);
 	variant consts = node["consts"];
 	if(consts.is_null() == false) {
 		foreach(variant key, consts.getKeys().as_list()) {
@@ -1703,7 +1701,7 @@ const_custom_object_type_ptr custom_object_type::get_variation(const std::vector
 	if(!result) {
 		variant node = node_;
 
-		boost::intrusive_ptr<game_logic::map_FormulaCallable> callable(new game_logic::map_FormulaCallable);
+		boost::intrusive_ptr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
 		callable->add("doc", variant(variant_callable::create(&node)));
 
 		foreach(const std::string& v, variations) {

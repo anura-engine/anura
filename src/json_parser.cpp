@@ -116,7 +116,7 @@ void escape_string(std::string& s) {
 namespace {
 
 class json_macro;
-typedef boost::shared_ptr<json_macro> json_macro_ptr;
+typedef std::shared_ptr<json_macro> json_macro_ptr;
 
 class json_macro {
 	std::string code_;
@@ -531,7 +531,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 variant json_macro::call(variant arg) const
 {
 	std::map<std::string, json_macro_ptr> m = macros_;
-	game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+	game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 	foreach(const variant_pair& p, arg.as_map()) {
 		callable->add(p.first.as_string(), p.second);
 	}
@@ -583,7 +583,7 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 			}
 
 			in_edit_and_continue = true;
-			edit_and_continue_fn(module::map_file(fname), formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, boost::bind(parse_from_file, fname, options));
+			edit_and_continue_fn(module::map_file(fname), formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, std::bind(parse_from_file, fname, options));
 			in_edit_and_continue = false;
 			return parse_from_file(fname, options);
 		}

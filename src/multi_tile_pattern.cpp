@@ -144,7 +144,7 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 			}
 		}
 
-		alternatives_.push_back(boost::shared_ptr<multi_tile_pattern>(new multi_tile_pattern(alternative_node, default_tile_id_)));
+		alternatives_.push_back(std::shared_ptr<multi_tile_pattern>(new multi_tile_pattern(alternative_node, default_tile_id_)));
 	}
 
 	std::vector<raw_cell> cells;

@@ -31,7 +31,7 @@
 
 class Achievement;
 
-typedef boost::shared_ptr<const Achievement> AchievementPtr;
+typedef std::shared_ptr<const Achievement> AchievementPtr;
 
 class Achievement
 {

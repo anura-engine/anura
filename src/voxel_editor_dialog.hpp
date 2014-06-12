@@ -58,7 +58,7 @@ namespace editor_dialogs
 		void random_isomap();
 		void flat_plane_isomap();
 
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 		editor& editor_;
 
 		gui::WidgetPtr context_menu_;

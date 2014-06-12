@@ -18,8 +18,6 @@
 #ifndef TBS_SERVER_VIRT_HPP_INCLUDED
 #define TBS_SERVER_VIRT_HPP_INCLUDED
 
-#include <boost/function.hpp>
-
 #include <map>
 #include <vector>
 
@@ -28,7 +26,7 @@
 
 namespace tbs
 {
-	typedef boost::function<void(variant)> send_function;
+	typedef std::function<void(variant)> send_function;
 
 	struct exit_exception {};
 
@@ -52,7 +50,7 @@ namespace tbs
 			bool quit_server_on_exit;
 		};
 
-		typedef boost::shared_ptr<game_info> game_info_ptr;
+		typedef std::shared_ptr<game_info> game_info_ptr;
 
 		game_info_ptr create_game(variant msg);
 	protected:
@@ -80,8 +78,8 @@ namespace tbs
 		};
 
 		virtual void handle_message(send_function send_fn, 
-			boost::function<void(client_info&)> close_fn,
-			boost::function<socket_info&(void)> socket_info_fn,
+			std::function<void(client_info&)> close_fn,
+			std::function<socket_info&(void)> socket_info_fn,
 			int session_id, 
 			const variant& msg);
 

@@ -18,9 +18,6 @@
 #include <map>
 #include <vector>
 
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "module.hpp"
@@ -148,7 +145,7 @@ struct mixer
 class sound
 {
 	public:
-	boost::shared_ptr<Uint8> buffer; /* audio buffer for sound file */
+	std::shared_ptr<Uint8> buffer; /* audio buffer for sound file */
 	Uint32 length; /* length of the buffer (in bytes) */
 	sound (const std::string& file = "") : length(0)
 	{
@@ -165,7 +162,7 @@ class sound
 			std::cerr << "Could not load sound: " << file << "\n";
 			return; //should maybe die
 		}
-		buffer = boost::shared_ptr<Uint8>(tmp_buffer, SDL_free);
+		buffer = std::shared_ptr<Uint8>(tmp_buffer, SDL_free);
 		return; // don't convert the audio, assume it's already in the right format
 		/* build the audio converter */
 		int result = SDL_BuildAudioCVT(&cvt, spec.format, spec.channels, spec.freq,
@@ -188,7 +185,7 @@ class sound
 				SDL_free(cvt.buf);
 				return; //should maybe die
 			}
-			buffer = boost::shared_ptr<Uint8>(cvt.buf, SDL_free); /* point sound buffer to converted buffer */
+			buffer = std::shared_ptr<Uint8>(cvt.buf, SDL_free); /* point sound buffer to converted buffer */
 			length = cvt.len_cvt; /* set sound buffer's new length */
 		}
 	}
@@ -331,7 +328,7 @@ void thread_load(const std::string& file)
 #endif
 }
 
-std::map<std::string, boost::shared_ptr<threading::thread> > loading_threads;
+std::map<std::string, std::shared_ptr<threading::thread> > loading_threads;
 
 }
 
@@ -435,7 +432,7 @@ void preload(const std::string& file)
 		return;
 	}
 
-	boost::shared_ptr<threading::thread> t(new threading::thread("sounds", boost::bind(thread_load, file)));
+	std::shared_ptr<threading::thread> t(new threading::thread("sounds", std::bind(thread_load, file)));
 	loading_threads[file] = t;
 }
 

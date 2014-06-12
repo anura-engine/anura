@@ -16,15 +16,12 @@
 */
 #include <deque>
 
-#include <boost/bind.hpp>
-
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "compress.hpp"
 #include "custom_object_type.hpp"
 #include "i18n.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formula_constants.hpp"
 #if !defined(NO_TCP)
 #include "http_client.hpp"
@@ -59,7 +56,7 @@ const std::vector<std::string>& module_dirs() {
 	return result;
 }
 
-game_logic::const_FormulaCallablePtr module_args;
+game_logic::ConstFormulaCallablePtr module_args;
 }
 
 const std::string get_module_name(){
@@ -215,12 +212,12 @@ std::string make_module_id(const std::string& name) {
 	return conv_name;
 }
 
-void set_module_args(game_logic::const_FormulaCallablePtr callable)
+void set_module_args(game_logic::ConstFormulaCallablePtr callable)
 {
 	module_args = callable;
 }
 
-game_logic::const_FormulaCallablePtr get_module_args()
+game_logic::ConstFormulaCallablePtr get_module_args()
 {
 	return module_args;
 }
@@ -718,9 +715,9 @@ COMMAND_LINE_UTILITY(replicate_module)
 
 	http_client client(server, port);
 	client.send_request("POST /replicate_module", msg, 
-	                    boost::bind(finish_upload, _1, &done, &response),
-	                    boost::bind(error_upload, _1, &error),
-	                    boost::bind(upload_progress, _1, _2, _3));
+	                    std::bind(finish_upload, _1, &done, &response),
+	                    std::bind(error_upload, _1, &error),
+	                    std::bind(upload_progress, _1, _2, _3));
 
 	while(!done) {
 		client.process();
@@ -792,9 +789,9 @@ COMMAND_LINE_UTILITY(publish_module)
 
 		http_client client(server, port);
 		client.send_request("POST /upload_module", msg, 
-		                    boost::bind(finish_upload, _1, &done, &response),
-		                    boost::bind(error_upload, _1, &error),
-		                    boost::bind(upload_progress, _1, _2, _3));
+		                    std::bind(finish_upload, _1, &done, &response),
+		                    std::bind(error_upload, _1, &error),
+		                    std::bind(upload_progress, _1, _2, _3));
 
 		while(!done) {
 			client.process();
@@ -853,9 +850,9 @@ COMMAND_LINE_UTILITY(publish_module)
 
 	http_client client(server, port);
 	client.send_request("POST /upload_module", msg, 
-	                    boost::bind(finish_upload, _1, &done, response),
-	                    boost::bind(error_upload, _1, &done),
-	                    boost::bind(upload_progress, _1, _2, _3));
+	                    std::bind(finish_upload, _1, &done, response),
+	                    std::bind(error_upload, _1, &done),
+	                    std::bind(upload_progress, _1, _2, _3));
 
 	while(!done) {
 		client.process();
@@ -947,9 +944,9 @@ void client::install_module(const std::string& module_id, bool force)
 	std::string response;
 
 	client_->send_request("POST /download_module?module_id=" + module_id + version_str, request.build().write_json(), 
-	                      boost::bind(&client::on_response, this, _1),
-	                      boost::bind(&client::on_error, this, _1),
-	                      boost::bind(&client::on_progress, this, _1, _2, _3));
+	                      std::bind(&client::on_response, this, _1),
+	                      std::bind(&client::on_error, this, _1),
+	                      std::bind(&client::on_progress, this, _1, _2, _3));
 }
 
 void client::rate_module(const std::string& module_id, int rating, const std::string& review)
@@ -963,9 +960,9 @@ void client::rate_module(const std::string& module_id, int rating, const std::st
 	}
 	operation_ = OPERATION_RATE;
 	client_->send_request("POST /rate_module", variant(&m).write_json(),
-	                      boost::bind(&client::on_response, this, _1),
-	                      boost::bind(&client::on_error, this, _1),
-	                      boost::bind(&client::on_progress, this, _1, _2, _3));
+	                      std::bind(&client::on_response, this, _1),
+	                      std::bind(&client::on_error, this, _1),
+	                      std::bind(&client::on_progress, this, _1, _2, _3));
 }
 
 void client::get_status()
@@ -973,9 +970,9 @@ void client::get_status()
 	data_.clear();
 	operation_ = OPERATION_GET_STATUS;
 	client_->send_request("GET /get_summary", "",
-	                      boost::bind(&client::on_response, this, _1),
-	                      boost::bind(&client::on_error, this, _1),
-	                      boost::bind(&client::on_progress, this, _1, _2, _3));
+	                      std::bind(&client::on_response, this, _1),
+	                      std::bind(&client::on_error, this, _1),
+	                      std::bind(&client::on_progress, this, _1, _2, _3));
 }
 
 bool client::process()
@@ -1057,9 +1054,9 @@ void client::on_response(std::string response)
 				request[variant("keys")] = variant(&needed_icons);
 				operation_ = OPERATION_GET_ICONS;
 				client_->send_request("POST /query_globs", variant(&request).write_json(),
-	                      boost::bind(&client::on_response, this, _1),
-	                      boost::bind(&client::on_error, this, _1),
-	                      boost::bind(&client::on_progress, this, _1, _2, _3));
+	                      std::bind(&client::on_response, this, _1),
+	                      std::bind(&client::on_error, this, _1),
+	                      std::bind(&client::on_progress, this, _1, _2, _3));
 				return;
 			}
 			std::cerr << "FINISH GET. SET STATUS\n";
@@ -1320,9 +1317,9 @@ COMMAND_LINE_UTILITY(publish_module_stats)
 
 	http_client client(server, port);
 	client.send_request("POST /stats", msg, 
-	                    boost::bind(finish_upload, _1, &done, response),
-	                    boost::bind(error_upload, _1, &done),
-	                    boost::bind(upload_progress, _1, _2, _3));
+	                    std::bind(finish_upload, _1, &done, response),
+	                    std::bind(error_upload, _1, &done),
+	                    std::bind(upload_progress, _1, _2, _3));
 
 	while(!done) {
 		client.process();
@@ -1355,9 +1352,9 @@ COMMAND_LINE_UTILITY(list_modules)
 
 	http_client client(server, port);
 	client.send_request("GET /get_summary", "", 
-	                    boost::bind(finish_upload, _1, &done, &response),
-	                    boost::bind(error_upload, _1, &done),
-	                    boost::bind(upload_progress, _1, _2, _3));
+	                    std::bind(finish_upload, _1, &done, &response),
+	                    std::bind(error_upload, _1, &done),
+	                    std::bind(upload_progress, _1, _2, _3));
 
 	while(!done) {
 		client.process();

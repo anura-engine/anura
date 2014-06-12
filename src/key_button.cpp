@@ -80,7 +80,7 @@ namespace gui
 	}
 
 	KeyButton::KeyButton(key_type key, BUTTON_RESOLUTION buttonResolution)
-	  : label_(WidgetPtr(new graphical_font_label(get_key_name(key), "door_label", 2))),
+	  : label_(WidgetPtr(new GraphicalFontLabel(get_key_name(key), "door_label", 2))),
 		key_(key), button_resolution_(buttonResolution),
 		normal_button_image_set_(FramedGuiElement::get("regular_button")),
 		depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
@@ -100,7 +100,7 @@ namespace gui
 	{
 		std::string key = v["key"].as_string();
 		key_ = get_key_sym(key);
-		label_ = v.has_key("label") ? widget_factory::create(v["label"], e) : WidgetPtr(new graphical_font_label(key, "door_label", 2));
+		label_ = v.has_key("label") ? widget_factory::create(v["label"], e) : WidgetPtr(new GraphicalFontLabel(key, "door_label", 2));
 		button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 
 		setDim(label_->width()+hpadding*2,label_->height()+vpadding*2);
@@ -139,13 +139,13 @@ namespace gui
 				if(inWidget(e.x,e.y)) {
 					current_button_image_set_ = focus_button_image_set_;
 					grab_keys_ = true;
-					dynamic_cast<graphical_font_label*>(label_.get())->setText("...");
+					dynamic_cast<GraphicalFontLabel*>(label_.get())->setText("...");
 					claimed = claimMouseEvents();
 				} else {
 					current_button_image_set_ = normal_button_image_set_;
 				}
 			} else if (grab_keys_) {
-				dynamic_cast<graphical_font_label*>(label_.get())->setText(get_key_name(key_));
+				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(get_key_name(key_));
 				current_button_image_set_ = normal_button_image_set_;
 				grab_keys_ = false;
 			}
@@ -154,7 +154,7 @@ namespace gui
 		if(event.type == SDL_KEYDOWN && grab_keys_) {
 			key_ = event.key.keysym.sym;
 			if(key_ != SDLK_RETURN && key_ != SDLK_ESCAPE) {
-				dynamic_cast<graphical_font_label*>(label_.get())->setText(get_key_name(key_));
+				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(get_key_name(key_));
 				claimed = true;
 				current_button_image_set_ = normal_button_image_set_;
 				grab_keys_ = false;

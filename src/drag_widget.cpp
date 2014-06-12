@@ -15,7 +15,7 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
+
 #include <vector>
 
 #include "asserts.hpp"
@@ -91,9 +91,9 @@ const std::string DraggerImageHoriz = "drag-widget-horizontal";
 
 drag_widget::drag_widget(const int x, const int y, const int w, const int h,
 	const drag_direction dir,
-    boost::function<void(int, int)> drag_start, 
-    boost::function<void(int, int)> drag_end, 
-    boost::function<void(int, int)> drag_move)
+    std::function<void(int, int)> drag_start, 
+    std::function<void(int, int)> drag_end, 
+    std::function<void(int, int)> drag_move)
     : x_(x), y_(y), w_(w), h_(h), dir_(dir), 
     drag_start_(drag_start), drag_end_(drag_end), drag_move_(drag_move),
 	
@@ -109,15 +109,15 @@ drag_widget::drag_widget(const variant& v, game_logic::FormulaCallable* e)
 	ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 	dir_ = v["direction"].as_string_default("horizontal") == "horizontal" ? DRAG_HORIZONTAL : DRAG_VERTICAL;
 	if(v.has_key("on_drag_start")) {
-		drag_start_ = boost::bind(&drag_widget::drag_start, this, _1, _2);
+		drag_start_ = std::bind(&drag_widget::drag_start, this, _1, _2);
 		drag_start_handler_ = getEnvironment()->createFormula(v["on_drag_start"]);
 	}
 	if(v.has_key("on_drag_end")) {
-		drag_end_ = boost::bind(&drag_widget::drag_end, this, _1, _2);
+		drag_end_ = std::bind(&drag_widget::drag_end, this, _1, _2);
 		drag_end_handler_ = getEnvironment()->createFormula(v["on_drag_end"]);
 	}
 	if(v.has_key("on_drag")) {
-		drag_move_ = boost::bind(&drag_widget::drag, this, _1, _2);
+		drag_move_ = std::bind(&drag_widget::drag, this, _1, _2);
 		drag_handler_ = getEnvironment()->createFormula(v["on_drag"]);
 	}
 	std::vector<int> r = v["rect"].as_list_int();
@@ -156,7 +156,7 @@ void drag_widget::drag(int dx, int dy)
 {
 	using namespace game_logic;
 	if(getEnvironment()) {
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 		callable->add("drag_dx", variant(dx));
 		callable->add("drag_dy", variant(dy));
 		variant value = drag_handler_->execute(*callable);
@@ -170,7 +170,7 @@ void drag_widget::drag_start(int x, int y)
 {
 	using namespace game_logic;
 	if(getEnvironment()) {
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 		callable->add("drag_x", variant(x));
 		callable->add("drag_y", variant(y));
 		variant value = drag_start_handler_->execute(*callable);
@@ -184,7 +184,7 @@ void drag_widget::drag_end(int x, int y)
 {
 	using namespace game_logic;
 	if(getEnvironment()) {
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 		callable->add("drag_x", variant(x));
 		callable->add("drag_y", variant(y));
 		variant value = drag_end_handler_->execute(*callable);
@@ -208,11 +208,11 @@ bool drag_widget::handleEvent(const SDL_Event& event, bool claimed)
 	}
 
 	if(event.type == SDL_MOUSEMOTION) {
-		return handle_mousemotion(event.motion, claimed);
+		return handleMouseMotion(event.motion, claimed);
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
-		return handle_mousedown(event.button, claimed);
+		return handleMousedown(event.button, claimed);
 	} else if(event.type == SDL_MOUSEBUTTONUP) {
-		return handle_mouseup(event.button, claimed);
+		return handleMouseup(event.button, claimed);
 	}
 
 	return claimed;
@@ -231,7 +231,7 @@ rect drag_widget::get_dragger_rect() const
 	return rect(x_, y_ + h_/2 - dragger_->height()/2, dragger_->width(), dragger_->height() );
 }
 
-bool drag_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
+bool drag_widget::handleMousedown(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p;
 	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
@@ -248,7 +248,7 @@ bool drag_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claim
 	return claimed;
 }
 
-bool drag_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
+bool drag_widget::handleMouseup(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	int mousex, mousey;
 	int button_state = input::sdl_get_mouse_state(&mousex, &mousey);
@@ -262,7 +262,7 @@ bool drag_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed
 	return claimed;
 }
 
-bool drag_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed)
+bool drag_widget::handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed)
 {
 	point p;
 	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);

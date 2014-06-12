@@ -16,8 +16,6 @@
 */
 #ifndef NO_EDITOR
 #if defined(USE_ISOMAP)
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <iostream>
 
@@ -26,7 +24,6 @@
 #include "button.hpp"
 #include "compress.hpp"
 #include "editor.hpp"
-#include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "image_widget.hpp"
 #include "input.hpp"
@@ -107,37 +104,37 @@ namespace editor_dialogs
 		grid->set_hpad(5);
 
 		grid->add_col(new label("W: "));
-		grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_width, this, 10)));
-		grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_width, this, 1)));
+		grid->add_col(new button("-10", std::bind(&voxel_editor_dialog::decrement_width, this, 10)));
+		grid->add_col(new button("-", std::bind(&voxel_editor_dialog::decrement_width, this, 1)));
 		str << map_width_;
 		grid->add_col(new label(str.str()));
-		grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_width, this, 1)));
-		grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_width, this, 10)));
+		grid->add_col(new button("+", std::bind(&voxel_editor_dialog::increment_width, this, 1)));
+		grid->add_col(new button("+10", std::bind(&voxel_editor_dialog::increment_width, this, 10)));
 
 		grid->add_col(new label("D: "));
-		grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_depth, this, 10)));
-		grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_depth, this, 1)));
+		grid->add_col(new button("-10", std::bind(&voxel_editor_dialog::decrement_depth, this, 10)));
+		grid->add_col(new button("-", std::bind(&voxel_editor_dialog::decrement_depth, this, 1)));
 		str.str("");
 		str << map_depth_;
 		grid->add_col(new label(str.str()));
-		grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_depth, this, 1)));
-		grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_depth, this, 10)));
+		grid->add_col(new button("+", std::bind(&voxel_editor_dialog::increment_depth, this, 1)));
+		grid->add_col(new button("+10", std::bind(&voxel_editor_dialog::increment_depth, this, 10)));
 
 		grid->add_col(new label("H: "));
-		grid->add_col(new button("-10", boost::bind(&voxel_editor_dialog::decrement_height, this, 10)));
-		grid->add_col(new button("-", boost::bind(&voxel_editor_dialog::decrement_height, this, 1)));
+		grid->add_col(new button("-10", std::bind(&voxel_editor_dialog::decrement_height, this, 10)));
+		grid->add_col(new button("-", std::bind(&voxel_editor_dialog::decrement_height, this, 1)));
 		str.str("");
 		str << map_height_;
 		grid->add_col(new label(str.str()));
-		grid->add_col(new button("+", boost::bind(&voxel_editor_dialog::increment_height, this, 1)));
-		grid->add_col(new button("+10", boost::bind(&voxel_editor_dialog::increment_height, this, 10)));
+		grid->add_col(new button("+", std::bind(&voxel_editor_dialog::increment_height, this, 1)));
+		grid->add_col(new button("+10", std::bind(&voxel_editor_dialog::increment_height, this, 10)));
 
 		addWidget(grid, 10, 10);
 		int next_height = grid->x() + grid->height() + 5;
 
-		button* random_landscape = new button(WidgetPtr(new label("Random", graphics::color_white())), boost::bind(&voxel_editor_dialog::random_isomap, this));
-		button* flat_landscape = new button(WidgetPtr(new label("Flat", graphics::color_white())), boost::bind(&voxel_editor_dialog::flat_plane_isomap, this));
-		mode_swap_button_.reset(new button(WidgetPtr(new label(textured_mode_ ? "Textured" : "Colored", graphics::color_white())), boost::bind(&voxel_editor_dialog::swap_mode, this)));
+		button* random_landscape = new button(WidgetPtr(new label("Random", graphics::color_white())), std::bind(&voxel_editor_dialog::random_isomap, this));
+		button* flat_landscape = new button(WidgetPtr(new label("Flat", graphics::color_white())), std::bind(&voxel_editor_dialog::flat_plane_isomap, this));
+		mode_swap_button_.reset(new button(WidgetPtr(new label(textured_mode_ ? "Textured" : "Colored", graphics::color_white())), std::bind(&voxel_editor_dialog::swap_mode, this)));
 		grid.reset(new gui::grid(2));
 		grid->set_hpad(10);
 		grid->add_col(random_landscape);
@@ -146,7 +143,7 @@ namespace editor_dialogs
 		addWidget(grid, 10, next_height);
 
 		if(textured_mode_) {
-			button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+			button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), std::bind(&voxel_editor_dialog::show_category_menu, this));
 			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
@@ -160,7 +157,7 @@ namespace editor_dialogs
 					}
 					ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
 					preview->setArea(t.area);
-					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
+					ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
 					grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
@@ -171,7 +168,7 @@ namespace editor_dialogs
 			grid->finish_row();
 			addWidget(grid);
 		} else {
-			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), boost::bind(&voxel_editor_dialog::show_category_menu, this));
+			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), std::bind(&voxel_editor_dialog::show_category_menu, this));
 			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
@@ -185,7 +182,7 @@ namespace editor_dialogs
 					}
 					ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
 					preview->setArea(t.area);
-					ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&voxel_editor_dialog::set_tileset, this, index)));
+					ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&voxel_editor_dialog::set_tileset, this, index)));
 					tileset_button->setTooltip(t.name + "(" + t.id.as_string() + ")", 14);
 					tileset_button->setDim(58, 58);
 					grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_voxel_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
@@ -287,7 +284,7 @@ namespace editor_dialogs
 		grid->set_show_background(true);
 		grid->set_hpad(10);
 		grid->allow_selection();
-		grid->register_selection_callback(boost::bind(&voxel_editor_dialog::close_context_menu, this, _1));
+		grid->register_selection_callback(std::bind(&voxel_editor_dialog::close_context_menu, this, _1));
 
 		std::set<std::string> categories;
 		foreach(const voxel::TexturedTileEditorInfo& t, voxel::chunk::getTexturedEditorTiles()) {
@@ -301,7 +298,7 @@ namespace editor_dialogs
 			preview->setArea(t.area);
 			grid->add_col(WidgetPtr(preview))
 				 .add_col(WidgetPtr(new label(t.group, graphics::color_white())));
-			grid->register_row_selection_callback(boost::bind(&voxel_editor_dialog::select_category, this, t.group));
+			grid->register_row_selection_callback(std::bind(&voxel_editor_dialog::select_category, this, t.group));
 		}
 
 		int mousex, mousey;

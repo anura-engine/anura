@@ -30,8 +30,8 @@ namespace tbs
 
 	void internal_client::send_request(const variant& request, 
 		int session_id,
-		game_logic::map_FormulaCallablePtr callable, 
-		boost::function<void(const std::string&)> handler)
+		game_logic::MapFormulaCallablePtr callable, 
+		std::function<void(const std::string&)> handler)
 	{
 		internal_server::send_request(request, session_id, callable, handler);
 	}

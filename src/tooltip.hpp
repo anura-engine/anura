@@ -22,11 +22,9 @@
 */
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include <string>
 
 #include "Color.hpp"
-#include "font.hpp"
 
 namespace gui 
 {
@@ -41,7 +39,7 @@ namespace gui
 		std::string font_name;
 	};
 
-	void setTooltip(const boost::shared_ptr<TooltipItem>& str);
-	void remove_tooltip(const boost::shared_ptr<TooltipItem>& str);
+	void setTooltip(const std::shared_ptr<TooltipItem>& str);
+	void remove_tooltip(const std::shared_ptr<TooltipItem>& str);
 	void draw_tooltip();
 }

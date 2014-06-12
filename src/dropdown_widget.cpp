@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 #include <vector>
 
 #include "asserts.hpp"
@@ -41,9 +40,9 @@ dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int heigh
 	setEnvironment();
 	setDim(width, height);
 	editor_ = new TextEditorWidget(width, height);
-	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::textChange, this));
-	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
-	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
+	editor_->setOnUserChangeHandler(std::bind(&dropdown_widget::textChange, this));
+	editor_->setOnEnterHandler(std::bind(&dropdown_widget::text_enter, this));
+	editor_->setOnTabHandler(std::bind(&dropdown_widget::text_enter, this));
 	dropdown_image_ = WidgetPtr(new GuiSectionWidget(dropdown_button_image));
 	//if(type_ == DROPDOWN_COMBOBOX) {
 	//	editor_->setFocus(true);
@@ -72,16 +71,16 @@ dropdown_widget::dropdown_widget(const variant& v, game_logic::FormulaCallable* 
 	} else {
 		editor_ = new TextEditorWidget(width(), height());
 	}
-	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
-	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
-	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::textChange, this));
+	editor_->setOnEnterHandler(std::bind(&dropdown_widget::text_enter, this));
+	editor_->setOnTabHandler(std::bind(&dropdown_widget::text_enter, this));
+	editor_->setOnUserChangeHandler(std::bind(&dropdown_widget::textChange, this));
 	if(v.has_key("on_change")) {
 		change_handler_ = getEnvironment()->createFormula(v["on_change"]);
-		on_change_ = boost::bind(&dropdown_widget::change_delegate, this, _1);
+		on_change_ = std::bind(&dropdown_widget::changeDelegate, this, _1);
 	}
 	if(v.has_key("on_select")) {
 		select_handler_ = getEnvironment()->createFormula(v["on_select"]);
-		on_select_ = boost::bind(&dropdown_widget::select_delegate, this, _1, _2);
+		on_select_ = std::bind(&dropdown_widget::selectDelegate, this, _1, _2);
 	}
 	if(v.has_key("item_list")) {
 		list_ = v["item_list"].as_list_string();
@@ -122,12 +121,12 @@ void dropdown_widget::init()
 	foreach(const std::string& s, list_) {
 		dropdown_menu_->add_col(WidgetPtr(new label(s, graphics::color_white())));
 	}
-	dropdown_menu_->register_selection_callback(boost::bind(&dropdown_widget::execute_selection, this, _1));
+	dropdown_menu_->register_selection_callback(std::bind(&dropdown_widget::execute_selection, this, _1));
 	dropdown_menu_->setVisible(false);
 
 }
 
-void dropdown_widget::set_selection(int selection)
+void dropdown_widget::setSelection(int selection)
 {
 	if(selection >= 0 || size_t(selection) < list_.size()) {
 		current_selection_ = selection;
@@ -139,23 +138,23 @@ void dropdown_widget::set_selection(int selection)
 	}
 }
 
-void dropdown_widget::change_delegate(const std::string& s)
+void dropdown_widget::changeDelegate(const std::string& s)
 {
 	if(getEnvironment()) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 		callable->add("selection", variant(s));
 		variant v(callable);
 		variant value = change_handler_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "dropdown_widget::change_delegate() called without environment!" << std::endl;
+		std::cerr << "dropdown_widget::changeDelegate() called without environment!" << std::endl;
 	}
 }
 
-void dropdown_widget::select_delegate(int selection, const std::string& s)
+void dropdown_widget::selectDelegate(int selection, const std::string& s)
 {
 	if(getEnvironment()) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 		if(selection == -1) {
 			callable->add("selection", variant(selection));
 		} else {
@@ -165,7 +164,7 @@ void dropdown_widget::select_delegate(int selection, const std::string& s)
 		variant value = select_handler_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "dropdown_widget::select_delegate() called without environment!" << std::endl;
+		std::cerr << "dropdown_widget::selectDelegate() called without environment!" << std::endl;
 	}
 }
 
@@ -272,16 +271,16 @@ bool dropdown_widget::handleEvent(const SDL_Event& event, bool claimed)
 	}
 
 	if(event.type == SDL_MOUSEMOTION) {
-		return handle_mousemotion(event.motion, claimed);
+		return handleMouseMotion(event.motion, claimed);
 	} else if(event.type == SDL_MOUSEBUTTONDOWN) {
-		return handle_mousedown(event.button, claimed);
+		return handleMousedown(event.button, claimed);
 	} else if(event.type == SDL_MOUSEBUTTONUP) {
-		return handle_mouseup(event.button, claimed);
+		return handleMouseup(event.button, claimed);
 	}
 	return claimed;
 }
 
-bool dropdown_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
+bool dropdown_widget::handleMousedown(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p(event.x, event.y);
 	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
@@ -302,7 +301,7 @@ void dropdown_widget::set_dropdown_height(int h)
 	}
 }
 
-bool dropdown_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
+bool dropdown_widget::handleMouseup(const SDL_MouseButtonEvent& event, bool claimed)
 {
 	point p(event.x, event.y);
 	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
@@ -312,7 +311,7 @@ bool dropdown_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool cla
 	return claimed;
 }
 
-bool dropdown_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed)
+bool dropdown_widget::handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed)
 {
 	point p;
 	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
@@ -352,10 +351,10 @@ int dropdown_widget::get_max_height() const
 void dropdown_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "on_change") {
-		on_change_ = boost::bind(&dropdown_widget::change_delegate, this, _1);
+		on_change_ = std::bind(&dropdown_widget::changeDelegate, this, _1);
 		change_handler_ = getEnvironment()->createFormula(v);
 	} else if(key == "on_select") {
-		on_select_ = boost::bind(&dropdown_widget::select_delegate, this, _1, _2);
+		on_select_ = std::bind(&dropdown_widget::selectDelegate, this, _1, _2);
 		select_handler_ = getEnvironment()->createFormula(v);
 	} else if(key == "item_list") {
 		list_ = v.as_list_string();

@@ -38,9 +38,9 @@ namespace gui
 	private:
 	DECLARE_CALLABLE(BarWidget);
 	protected:
-		virtual void handleDraw() const;
-		virtual void handleProcess();
-		virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual void handleDraw() const override;
+		virtual void handleProcess() override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		void drawTicks(float x_offset, int segments, const KRE::Color& color) const;
 
 		struct bar_section

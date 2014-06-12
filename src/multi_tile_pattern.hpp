@@ -73,7 +73,7 @@ private:
 	std::string default_tile_id_;
 	std::string id_;
 	std::vector<tile_info> tiles_;
-	std::vector<boost::shared_ptr<multi_tile_pattern> > alternatives_;
+	std::vector<std::shared_ptr<multi_tile_pattern> > alternatives_;
 	std::vector<match_cell> try_order_;
 	int width_, height_;
 	int chance_;

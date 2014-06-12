@@ -75,8 +75,8 @@ level_tile level_object::build_tile(variant node)
 
 namespace {
 
-typedef boost::shared_ptr<variant> obj_variant_ptr;
-typedef boost::shared_ptr<const variant> const_obj_variant_ptr;
+typedef std::shared_ptr<variant> obj_variant_ptr;
+typedef std::shared_ptr<const variant> const_obj_variant_ptr;
 
 std::vector<obj_variant_ptr> level_object_index;
 std::vector<const_obj_variant_ptr> original_level_object_nodes;

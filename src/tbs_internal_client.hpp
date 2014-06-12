@@ -18,9 +18,6 @@
 #ifndef TBS_INTERNAL_CLIENT_HPP_INCLUDED
 #define TBS_INTERNAL_CLIENT_HPP_INCLUDED
 
-#include <boost/function.hpp>
-#include <boost/intrusive_ptr.hpp>
-
 #include "formula_callable.hpp"
 #include "variant.hpp"
 
@@ -33,16 +30,16 @@ namespace tbs
 		virtual ~internal_client();
 		virtual void send_request(const variant& request, 
 			int session_id,
-			game_logic::map_FormulaCallablePtr callable, 
-			boost::function<void(const std::string&)> handler);
+			game_logic::MapFormulaCallablePtr callable, 
+			std::function<void(const std::string&)> handler);
 		void process();
 		int session_id() const { return session_id_; }
 	protected:
 		variant getValue(const std::string& key) const;
 	private:
 		int session_id_;
-		boost::function<void(variant)> handler_;
-		game_logic::map_FormulaCallablePtr callable_;
+		std::function<void(variant)> handler_;
+		game_logic::MapFormulaCallablePtr callable_;
 	};
 
 	typedef boost::intrusive_ptr<internal_client> internal_client_ptr;

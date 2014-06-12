@@ -16,7 +16,6 @@
 */
 #include <functional>
 #include <iostream>
-#include <boost/bind.hpp>
 
 #include "controls.hpp"
 #include "foreach.hpp"
@@ -58,25 +57,25 @@ grid::grid(const variant& v, game_logic::FormulaCallable* e)
 			static const variant fml("fn(selection)");
 			ffl_on_select_.reset(new game_logic::formula(fml));
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_select_value);
 
 			select_arg_.reset(callable);
 		} else {
 			ffl_on_select_ = getEnvironment()->createFormula(on_select_value);
 		}
-		on_select_ = boost::bind(&grid::select_delegate, this, _1);
+		on_select_ = std::bind(&grid::selectDelegate, this, _1);
 	}
 	if(v.has_key("on_mouseover")) {
 		allow_selection_ = true;
-		on_mouseover_ = boost::bind(&grid::mouseover_delegate, this, _1);
+		on_mouseover_ = std::bind(&grid::mouseover_delegate, this, _1);
 		const variant on_mouseover_value = v["on_mouseover"];
 		if(on_mouseover_value.is_function()) {
 			ASSERT_LOG(on_mouseover_value.min_function_arguments() <= 1 && on_mouseover_value.max_function_arguments() >= 1, "on_mouseover grid function should take 1 argument: " << v.debug_location());
 			static const variant fml("fn(selection)");
 			ffl_on_mouseover_.reset(new game_logic::formula(fml));
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_mouseover_value);
 
 			mouseover_arg_.reset(callable);
@@ -181,7 +180,7 @@ grid::grid(const variant& v, game_logic::FormulaCallable* e)
 	if(v.has_key("children")) {
 		// children is a list of lists or a list of single widgets, the outmost list being rows, 
 		// the inner list being the columns. 
-		reset_contents(v["children"]);
+		resetContents(v["children"]);
 	}
 
 	set_h_ = height();
@@ -282,7 +281,7 @@ grid& grid::set_hpad(int pad)
 	return *this;
 }
 
-void grid::reset_contents(const variant& v)
+void grid::resetContents(const variant& v)
 {
 	cells_.clear();
 	if(v.is_null()) {
@@ -316,7 +315,7 @@ void grid::register_selection_callback(grid::callback_type ptr)
 	on_select_ = ptr;
 }
 
-void grid::register_row_selection_callback(boost::function<void()> ptr)
+void grid::register_row_selection_callback(std::function<void()> ptr)
 {
 	row_callbacks_.push_back(ptr);
 }
@@ -403,7 +402,7 @@ void grid::visitValues(game_logic::FormulaCallableVisitor& visitor)
 	}
 }
 
-void grid::on_set_yscroll(int old_value, int value)
+void grid::onSetYscroll(int old_value, int value)
 {
 	recalculate_dimensions();
 }
@@ -581,22 +580,22 @@ bool grid::hasFocus() const
 	return false;
 }
 
-void grid::select_delegate(int selection)
+void grid::selectDelegate(int selection)
 {
 	if(select_arg_) {
 		using namespace game_logic;
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(select_arg_.get()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(select_arg_.get()));
 		callable->add("selection", variant(selection));
 		variant value = ffl_on_select_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else if(getEnvironment()) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 		callable->add("selection", variant(selection));
 		variant v(callable);
 		variant value = ffl_on_select_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else {
-		std::cerr << "grid::select_delegate() called without environment!" << std::endl;
+		std::cerr << "grid::selectDelegate() called without environment!" << std::endl;
 	}
 }
 
@@ -604,12 +603,12 @@ void grid::mouseover_delegate(int selection)
 {
 	if(mouseover_arg_) {
 		using namespace game_logic;
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(mouseover_arg_.get()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(mouseover_arg_.get()));
 		callable->add("selection", variant(selection));
 		variant value = ffl_on_mouseover_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else if(getEnvironment()) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable(getEnvironment());
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 		callable->add("selection", variant(selection));
 		variant v(callable);
 		variant value = ffl_on_mouseover_->execute(*callable);
@@ -725,7 +724,7 @@ BEGIN_DEFINE_CALLABLE(grid, widget)
 		}
 		return variant(&v);
 	DEFINE_SET_FIELD_TYPE("list")
-		obj.reset_contents(value);
+		obj.resetContents(value);
 		obj.finish_row();
 		obj.recalculate_dimensions();
 	DEFINE_FIELD(child, "null")

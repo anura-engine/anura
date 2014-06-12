@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/function.hpp>
-
 #include "button.hpp"
 #include "controls.hpp"
 #include "widget.hpp"
@@ -46,8 +44,8 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(KeyButton);
 
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		BUTTON_RESOLUTION button_resolution_;
 		WidgetPtr label_;

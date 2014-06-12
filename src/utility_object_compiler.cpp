@@ -69,7 +69,7 @@ struct animation_area {
 	bool is_particle;
 };
 
-typedef boost::shared_ptr<animation_area> animation_area_ptr;
+typedef std::shared_ptr<animation_area> animation_area_ptr;
 
 bool operator==(const animation_area& a, const animation_area& b)
 {

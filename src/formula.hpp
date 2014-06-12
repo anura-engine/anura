@@ -104,7 +104,7 @@ public:
 	//guard matches without wrapping 'variables' in the global callable.
 	int raw_guard_matches(const FormulaCallable& variables) const;
 
-	const_FormulaCallablePtr wrap_callable_with_global_where(const FormulaCallable& callable) const;
+	ConstFormulaCallablePtr wrap_callable_with_global_where(const FormulaCallable& callable) const;
 
 	const expression_ptr& expr() const { return expr_; }
 

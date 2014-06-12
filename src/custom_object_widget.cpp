@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "custom_object_widget.hpp"
 #include "level.hpp"
@@ -68,22 +67,22 @@ namespace gui
 			do_commands_on_process = 10;
 			commands_handler_ = entity_->executeCommand(v["commands"]);
 			using namespace game_logic;
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(entity_.get()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(entity_.get()));
 			callable->add("id", variant(id()));
 			variant value = commands_handler_->execute(*callable);
 			entity_->executeCommand(value);
 		}
 		if(v.has_key("onClick")) {
 			click_handler_ = getEnvironment()->createFormula(v["onClick"]);
-			on_click_ = boost::bind(&custom_object_widget::click, this, _1);
+			on_click_ = std::bind(&custom_object_widget::click, this, _1);
 		}
 		if(v.has_key("on_mouse_enter")) {
 			mouse_enter_handler_ = getEnvironment()->createFormula(v["on_mouse_enter"]);
-			on_mouse_enter_ = boost::bind(&custom_object_widget::mouse_enter, this);
+			on_mouse_enter_ = std::bind(&custom_object_widget::mouse_enter, this);
 		}
 		if(v.has_key("on_mouse_leave")) {
 			mouse_leave_handler_ = getEnvironment()->createFormula(v["on_mouse_leave"]);
-			on_mouse_leave_ = boost::bind(&custom_object_widget::mouse_leave, this);
+			on_mouse_leave_ = std::bind(&custom_object_widget::mouse_leave, this);
 		}
 		if(v.has_key("overlay") && v["overlay"].is_null() == false) {
 			overlay_ = widget_factory::create(v["overlay"], getEnvironment());
@@ -95,7 +94,7 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(getEnvironment()) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			callable->add("mouse_button", variant(button));
@@ -110,7 +109,7 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(getEnvironment()) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_enter_handler_->execute(*callable);
@@ -124,7 +123,7 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(getEnvironment()) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("id", variant(id()));
 			callable->add("object", variant(entity_.get()));
 			variant value = mouse_leave_handler_->execute(*callable);

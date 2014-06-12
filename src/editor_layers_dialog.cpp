@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "editor_layers_dialog.hpp"
 #include "foreach.hpp"
@@ -62,8 +61,8 @@ void editor_layers_dialog::init()
 	g->add_col(WidgetPtr(new label("lock", graphics::color_white())));
 
 	g->allow_selection();
-	g->register_selection_callback(boost::bind(&editor_layers_dialog::row_selected, this, _1));
-	g->register_mouseover_callback(boost::bind(&editor_layers_dialog::row_mouseover, this, _1));
+	g->register_selection_callback(std::bind(&editor_layers_dialog::row_selected, this, _1));
+	g->register_mouseover_callback(std::bind(&editor_layers_dialog::row_mouseover, this, _1));
 	
 	addWidget(g, 0, 0);
 
@@ -79,7 +78,7 @@ void editor_layers_dialog::init()
 	}
 
 	g->allow_selection();
-	g->register_selection_callback(boost::bind(&editor_layers_dialog::classification_selected, this, _1));
+	g->register_selection_callback(std::bind(&editor_layers_dialog::classification_selected, this, _1));
 
 	addWidget(g, 0, ypos + 80);
 }

@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <sstream>
 
 #include "button.hpp"
@@ -48,7 +46,7 @@ void group_property_editor_dialog::init()
 
 	if(group_.empty() == false) {
 		std::cerr << "ADD BUTTON\n";
-		addWidget(WidgetPtr(new button(WidgetPtr(new label("Group Objects", graphics::color_white())), boost::bind(&group_property_editor_dialog::group_objects, this))), 10, 10);
+		addWidget(WidgetPtr(new button(WidgetPtr(new label("Group Objects", graphics::color_white())), std::bind(&group_property_editor_dialog::group_objects, this))), 10, 10);
 	}
 }
 

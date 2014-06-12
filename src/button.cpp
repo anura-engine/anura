@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-#include <boost/bind.hpp>
-
 #include "kre/Canvas.hpp"
 
 #include "asserts.hpp"
@@ -58,7 +56,7 @@ namespace gui
 		g_color_scheme = backup;
 	}
 
-	Button::Button(const std::string& str, boost::function<void()> onclick)
+	Button::Button(const std::string& str, std::function<void()> onclick)
 	  : label_(new Label(str, KRE::Color::colorWhite())),
 		onclick_(onclick), button_resolution_(BUTTON_SIZE_NORMAL_RESOLUTION),
 		button_style_(BUTTON_STYLE_NORMAL), hpadding_(default_hpadding), vpadding_(default_vpadding),
@@ -74,7 +72,7 @@ namespace gui
 		setup();
 	}
 
-	Button::Button(WidgetPtr label, boost::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION buttonResolution)
+	Button::Button(WidgetPtr label, std::function<void ()> onclick, BUTTON_STYLE button_style, BUTTON_RESOLUTION buttonResolution)
 	  : label_(label), onclick_(onclick), button_resolution_(buttonResolution), button_style_(button_style),
 		down_(false), hpadding_(default_hpadding), vpadding_(default_vpadding)
 	
@@ -105,7 +103,7 @@ namespace gui
 			static const variant fml("fn()");
 			click_handler_.reset(new game_logic::formula(fml));
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_click_value);
 
 			handler_arg_.reset(callable);
@@ -113,7 +111,7 @@ namespace gui
 			click_handler_ = getEnvironment()->createFormula(on_click_value);
 		}
 
-		onclick_ = boost::bind(&Button::click, this);
+		onclick_ = std::bind(&Button::click, this);
 		button_resolution_ = v["resolution"].as_string_default("normal") == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 		button_style_ = v["style"].as_string_default("default") == "default" ? BUTTON_STYLE_DEFAULT : BUTTON_STYLE_NORMAL;
 		hpadding_ = v["hpad"].as_int(default_hpadding);
@@ -342,9 +340,9 @@ namespace gui
 	/*
 		grid_ptr g(new grid(2));
 		g->add_col(new label("H Pad:", d->getTextSize(), d->font()));
-		g->add_col(new slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
+		g->add_col(new Slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
 		g->add_col(new label("V Pad:", d->getTextSize(), d->font()));
-		g->add_col(new slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
+		g->add_col(new Slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
 
 		std::vector<std::string> v;
 		v.push_back("normal");
@@ -352,8 +350,8 @@ namespace gui
 		dropdown_WidgetPtr resolution(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		resolution->setFontSize(14);
 		resolution->set_dropdown_height(h);
-		resolution->set_selection(button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? 0 : 1);
-		resolution->set_on_select_handler([&](int n, const std::string& s){
+		resolution->setSelection(button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? 0 : 1);
+		resolution->setOnSelectHandler([&](int n, const std::string& s){
 			this->button_resolution_ = s == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 			this->setup();
 		});
@@ -367,8 +365,8 @@ namespace gui
 		dropdown_WidgetPtr style(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		style->setFontSize(14);
 		style->set_dropdown_height(h);
-		style->set_selection(button_style_ == BUTTON_STYLE_DEFAULT ? 0 : 1);
-		style->set_on_select_handler([&](int n, const std::string& s){
+		style->setSelection(button_style_ == BUTTON_STYLE_DEFAULT ? 0 : 1);
+		style->setOnSelectHandler([&](int n, const std::string& s){
 			this->button_style_ = s == "normal" ? BUTTON_STYLE_NORMAL : BUTTON_STYLE_DEFAULT;
 			this->setup();
 		});

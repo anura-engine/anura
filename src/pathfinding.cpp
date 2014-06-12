@@ -134,7 +134,7 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	const variant src_node, 
 	const variant dst_node, 
 	game_logic::expression_ptr heuristic, 
-	game_logic::map_FormulaCallablePtr callable)
+	game_logic::MapFormulaCallablePtr callable)
 {
 	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
 	std::priority_queue<gnp, std::vector<gnp> > open_list;
@@ -289,7 +289,7 @@ variant a_star_find_path(level_ptr lvl,
 	const point& dst_pt1, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 
-	game_logic::map_FormulaCallablePtr callable, 
+	game_logic::MapFormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y) 
 {
@@ -320,7 +320,7 @@ variant a_star_find_path(level_ptr lvl,
 	try {
 		a = point_as_variant_list(src);
 		b = point_as_variant_list(dst);
-		graph_node<point, double>::graph_node_ptr current = boost::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(src));
+		graph_node<point, double>::graph_node_ptr current = std::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(src));
 		current->set_cost(0.0, heuristic->evaluate(*callable).as_decimal().as_float());
 		current->set_on_open_list(true);
 		open_list.push(current);
@@ -379,7 +379,7 @@ variant a_star_find_path(level_ptr lvl,
 							// not on open or closed list (i.e. no mapping for it yet.
 							a = point_as_variant_list(p);
 							b = point_as_variant_list(dst);
-							graph_node<point, double>::graph_node_ptr new_node = boost::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(p));
+							graph_node<point, double>::graph_node_ptr new_node = std::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(p));
 							new_node->set_parent(current);
 							new_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal().as_float());
 							new_node->set_on_open_list(true);

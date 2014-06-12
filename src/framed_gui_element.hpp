@@ -22,13 +22,12 @@
 */
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include "kre/Geometry.hpp"
 #include "kre/Material.hpp"
 #include "variant.hpp"
 
 class FramedGuiElement;
-typedef boost::shared_ptr<const FramedGuiElement> ConstFramedGuiElementPtr;
+typedef std::shared_ptr<const FramedGuiElement> ConstFramedGuiElementPtr;
 
 
 class FramedGuiElement

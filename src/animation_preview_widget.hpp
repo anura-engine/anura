@@ -24,9 +24,6 @@
 #pragma once
 #ifndef NO_EDITOR
 
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-
 #include "frame.hpp"
 #include "label.hpp"
 #include "variant.hpp"
@@ -46,17 +43,17 @@ namespace gui
 
 		void process();
 
-		void setRectHandler(boost::function<void(rect)>);
-		void setPadHandler(boost::function<void(int)>);
-		void setNumFramesHandler(boost::function<void(int)>);
-		void setFramesPerRowHandler(boost::function<void(int)>);
-		void setSolidHandler(boost::function<void(int,int)>);
+		void setRectHandler(std::function<void(rect)>);
+		void setPadHandler(std::function<void(int)>);
+		void setNumFramesHandler(std::function<void(int)>);
+		void setFramesPerRowHandler(std::function<void(int)>);
+		void setSolidHandler(std::function<void(int,int)>);
 
 	private:
 		DECLARE_CALLABLE(AnimationPreviewWidget);
 		
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		void zoomIn();
 		void zoomOut();
@@ -66,7 +63,7 @@ namespace gui
 
 		variant obj_;
 
-		boost::scoped_ptr<frame> frame_;
+		std::unique_ptr<frame> frame_;
 		mutable int cycle_;
 
 		std::vector<WidgetPtr> widgets_;
@@ -93,11 +90,11 @@ namespace gui
 		bool moving_solid_rect_;
 		int anchor_solid_x_, anchor_solid_y_;
 
-		boost::function<void(rect)> rect_handler_;
-		boost::function<void(int)> pad_handler_;
-		boost::function<void(int)> num_frames_handler_;
-		boost::function<void(int)> frames_per_row_handler_;
-		boost::function<void(int,int)> solid_handler_;
+		std::function<void(rect)> rect_handler_;
+		std::function<void(int)> pad_handler_;
+		std::function<void(int)> num_frames_handler_;
+		std::function<void(int)> frames_per_row_handler_;
+		std::function<void(int,int)> solid_handler_;
 
 		void rectHandlerDelegate(rect r);
 		void padHandlerDelegate(int pad);

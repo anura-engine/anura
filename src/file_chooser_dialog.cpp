@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
@@ -112,9 +111,9 @@ file_chooser_dialog::file_chooser_dialog(int x, int y, int w, int h, const filte
 	
 	editor_ = new TextEditorWidget(400, 32);
 	editor_->setFontSize(16);
-	//file_text->set_on_change_handler(boost::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
-	editor_->set_on_enter_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
-	editor_->set_on_tab_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
+	//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
+	editor_->setOnEnterHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_->setOnTabHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
 
 	init();
 }
@@ -136,9 +135,9 @@ file_chooser_dialog::file_chooser_dialog(variant v, game_logic::FormulaCallable*
 
 	editor_ = new TextEditorWidget(400, 32);
 	editor_->setFontSize(16);
-	//file_text->set_on_change_handler(boost::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
-	editor_->set_on_enter_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
-	editor_->set_on_tab_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
+	//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
+	editor_->setOnEnterHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_->setOnTabHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
 	init();
 }
 
@@ -187,9 +186,9 @@ void file_chooser_dialog::init()
 
 	grid_ptr g(new grid(3));
 	g->set_hpad(50);
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", graphics::color_white())), boost::bind(&file_chooser_dialog::up_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", graphics::color_white())), boost::bind(&file_chooser_dialog::home_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), boost::bind(&file_chooser_dialog::add_dir_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", graphics::color_white())), std::bind(&file_chooser_dialog::up_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", graphics::color_white())), std::bind(&file_chooser_dialog::home_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), std::bind(&file_chooser_dialog::add_dir_button, this))));
 	addWidget(g, 30, current_height);	
 	current_height += g->height() + hpad;
 
@@ -210,7 +209,7 @@ void file_chooser_dialog::init()
 	foreach(const std::string& dir, dirs) {
 		g->add_col(WidgetPtr(new label(dir, graphics::color_white())));
 	}
-	g->register_selection_callback(boost::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
+	g->register_selection_callback(std::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
 	container->add_col(g);
 
 	if(dir_only_ == false) {
@@ -227,7 +226,7 @@ void file_chooser_dialog::init()
 				g->add_col(WidgetPtr(new label(file, graphics::color_white())));
 			}
 		}
-		g->register_selection_callback(boost::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
+		g->register_selection_callback(std::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
 		container->add_col(g);
 	}
 	addWidget(container, 30, current_height);
@@ -240,19 +239,19 @@ void file_chooser_dialog::init()
 		dropdown_list dl_list;
 		std::transform(filters_.begin(), filters_.end(), 
 			std::back_inserter(dl_list), 
-			boost::bind(&filter_list::value_type::first,_1));
+			std::bind(&filter_list::value_type::first,_1));
 		filter_widget_ = new dropdown_widget(dl_list, width()/2, 20);
-		filter_widget_->set_on_select_handler(boost::bind(&file_chooser_dialog::change_filter, this, _1, _2));
+		filter_widget_->setOnSelectHandler(std::bind(&file_chooser_dialog::change_filter, this, _1, _2));
 		//std::cerr << "filter_selection: " << filter_selection_ << std::endl;
-		filter_widget_->set_selection(filter_selection_);
+		filter_widget_->setSelection(filter_selection_);
 		addWidget(filter_widget_, 30, current_height);
 		current_height += filter_widget_->get_max_height() + hpad;
 	}
 
 	g.reset(new grid(2));
 	g->set_hpad(20);
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", graphics::color_white())), boost::bind(&file_chooser_dialog::ok_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", graphics::color_white())), boost::bind(&file_chooser_dialog::cancel_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", graphics::color_white())), std::bind(&file_chooser_dialog::ok_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", graphics::color_white())), std::bind(&file_chooser_dialog::cancel_button, this))));
 	addWidget(g, 30, current_height);
 	current_height += g->height() + hpad;
 }
@@ -331,11 +330,11 @@ void file_chooser_dialog::add_dir_button()
 	grid->allow_draw_highlight(false);
 	TextEditorWidgetPtr dir_name_editor = new TextEditorWidget(200, 28);
 	dir_name_editor->setFontSize(14);
-	dir_name_editor->set_on_enter_handler(boost::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
-	dir_name_editor->set_on_tab_handler(boost::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
+	dir_name_editor->setOnEnterHandler(std::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
+	dir_name_editor->setOnTabHandler(std::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
 	dir_name_editor->setFocus(true);
 	grid->add_col(dir_name_editor);
-	grid->register_selection_callback(boost::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
+	grid->register_selection_callback(std::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);

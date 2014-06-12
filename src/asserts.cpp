@@ -40,15 +40,15 @@
 #endif
 
 namespace {
-boost::function<void()> g_edit_and_continue_fn;
+std::function<void()> g_edit_and_continue_fn;
 }
 
-void set_assert_edit_and_continue_fn(boost::function<void()> fn)
+void set_assert_edit_and_continue_fn(std::function<void()> fn)
 {
 	g_edit_and_continue_fn = fn;
 }
 
-assert_edit_and_continue_fn_scope::assert_edit_and_continue_fn_scope(boost::function<void()> fn)
+assert_edit_and_continue_fn_scope::assert_edit_and_continue_fn_scope(std::function<void()> fn)
   : fn_(g_edit_and_continue_fn)
 {
 	g_edit_and_continue_fn = fn;

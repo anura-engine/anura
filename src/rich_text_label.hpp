@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "formula_callable.hpp"
-#include "scrollable_widget"
+#include "scrollable_widget.hpp"
 #include "widget.hpp"
 
 namespace gui
@@ -35,9 +35,9 @@ public:
 	std::vector<WidgetPtr> getChildren() const;
 private:
 
-	void handleProcess();
-	void handleDraw() const;
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	void handleProcess() override;
+	void handleDraw() const override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	variant getValue(const std::string& key) const;
 	void setValue(const std::string& key, const variant& v);

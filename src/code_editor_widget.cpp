@@ -24,7 +24,6 @@
 #include "string_utils.hpp"
 #include "utility_query.hpp"
 
-#include <boost/bind.hpp>
 #include <boost/regex.hpp>
 
 #include <stack>
@@ -53,7 +52,7 @@ void code_editor_widget::onMoveCursor(bool auto_shift)
 	ObjectInfo info = get_current_object();
 }
 
-void code_editor_widget::on_change()
+void code_editor_widget::onChange()
 {
 	generate_tokens();
 
@@ -125,34 +124,34 @@ void code_editor_widget::on_change()
 							if(*begin == '\n') {
 								colors_.resize(colors_.size()+1);
 							} else {
-static const graphics::color TokenColors[] = {
-	graphics::color(128, 128, 255), //operator
-	graphics::color(64, 255, 64), //string literal
-	graphics::color(196, 196, 196), //const identifier
-	graphics::color(255, 255, 255), //identifier
-	graphics::color(255, 196, 196), //integer
-	graphics::color(255, 196, 196), //decimal
-	graphics::color(128, 128, 255), //lparens
-	graphics::color(128, 128, 255), //rparens
-	graphics::color(128, 128, 255), //lsquare
-	graphics::color(128, 128, 255), //rsquare
-	graphics::color(128, 128, 255), //lbracket
-	graphics::color(128, 128, 255), //rbracket
-	graphics::color(128, 128, 255), //comma
-	graphics::color(128, 128, 255), //semi
-	graphics::color(128, 128, 255), //colon
-	graphics::color(255, 255, 255), //whitespace
-	graphics::color(64, 255, 64), //keyword
-	graphics::color(64, 255, 64), //comment
-	graphics::color(255, 255, 255), //pointer
+static const KRE::Color TokenColors[] = {
+	KRE::Color(128, 128, 255), //operator
+	KRE::Color(64, 255, 64), //string literal
+	KRE::Color(196, 196, 196), //const identifier
+	KRE::Color(255, 255, 255), //identifier
+	KRE::Color(255, 196, 196), //integer
+	KRE::Color(255, 196, 196), //decimal
+	KRE::Color(128, 128, 255), //lparens
+	KRE::Color(128, 128, 255), //rparens
+	KRE::Color(128, 128, 255), //lsquare
+	KRE::Color(128, 128, 255), //rsquare
+	KRE::Color(128, 128, 255), //lbracket
+	KRE::Color(128, 128, 255), //rbracket
+	KRE::Color(128, 128, 255), //comma
+	KRE::Color(128, 128, 255), //semi
+	KRE::Color(128, 128, 255), //colon
+	KRE::Color(255, 255, 255), //whitespace
+	KRE::Color(64, 255, 64), //keyword
+	KRE::Color(64, 255, 64), //comment
+	KRE::Color(255, 255, 255), //pointer
 };
-								graphics::color col(255, 255, 255);
+								KRE::Color col(255, 255, 255);
 								if(t.type >= 0 && t.type < sizeof(TokenColors)/sizeof(TokenColors[0])) {
 									col = TokenColors[t.type];
 								}
 
 								if(error_color) {
-									col = graphics::color(255, 0, 0);
+									col = KRE::Color::colorRed();
 								}
 
 								colors_.back().push_back(col);
@@ -168,7 +167,7 @@ static const graphics::color TokenColors[] = {
 
 				for(int n = 0; n != opening_brackets.size(); ++n) {
 					//any remaining brackets that weren't matched can be marked as errors.
-					colors_[opening_brackets[n].front().first][opening_brackets[n].front().second] = graphics::color(255, 0, 0);
+					colors_[opening_brackets[n].front().first][opening_brackets[n].front().second] = KRE::Color::colorRed();
 				}
 
 				while(i != end) {
@@ -177,12 +176,12 @@ static const graphics::color TokenColors[] = {
 					if(*i == '\n') {
 						colors_.resize(colors_.size()+1);
 					} else {
-						colors_.back().push_back(graphics::color(196, 196, 196));
+						colors_.back().push_back(KRE::Color(196, 196, 196));
 					}
 					++i;
 				}
 
-				colors_.back().push_back(graphics::color(196, 196, 196));
+				colors_.back().push_back(KRE::Color(196, 196, 196));
 				i = end + 1;
 			}
 
@@ -191,24 +190,24 @@ static const graphics::color TokenColors[] = {
 			colors_.resize(colors_.size()+1);
 			++i;
 		} else {
-			colors_.back().push_back(graphics::color(255, 255, 255));
+			colors_.back().push_back(KRE::Color::colorWhite());
 			++i;
 		}
 	}
 
-	TextEditorWidget::on_change();
+	TextEditorWidget::onChange();
 }
 
-graphics::color code_editor_widget::get_character_color(int row, int col) const
+KRE::Color code_editor_widget::getCharacterColor(int row, int col) const
 {
 	std::map<std::pair<int, int>, std::vector<std::pair<int, int> > >::const_iterator itor = bracket_match_.find(std::pair<int,int>(row,col));
 	if(itor != bracket_match_.end()) {
 		for(int n = 0; n != itor->second.size(); ++n) {
 			const int match_row = itor->second[n].first;
 			const int match_col = itor->second[n].second;
-			if(cursor_row() == match_row) {
-				if(cursor_col() == match_col+1 || colors_[match_row].size() == match_col+1 && cursor_col() > match_col+1) {
-					return graphics::color(255, 0, 0);
+			if(cursorRow() == match_row) {
+				if(cursorCol() == match_col+1 || colors_[match_row].size() == match_col+1 && cursorCol() > match_col+1) {
+					return KRE::Color::colorRed();
 				}
 			}
 		}
@@ -219,7 +218,7 @@ graphics::color code_editor_widget::get_character_color(int row, int col) const
 	return colors_[row][col];
 }
 
-void code_editor_widget::select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
+void code_editor_widget::selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
 {
 	std::pair<int,int> key(begin_row, begin_col);
 	if(bracket_match_.count(key)) {
@@ -230,7 +229,7 @@ void code_editor_widget::select_token(const std::string& row, int& begin_row, in
 		return;
 	}
 
-	TextEditorWidget::select_token(row, begin_row, end_row, begin_col, end_col);
+	TextEditorWidget::selectToken(row, begin_row, end_row, begin_col, end_col);
 
 	std::string token(row.begin() + begin_col, row.begin() + end_col);
 	
@@ -240,33 +239,33 @@ void code_editor_widget::select_token(const std::string& row, int& begin_row, in
 
 		const decimal current_value(decimal::from_string(token));
 		if(current_value <= 10000000 && current_value >= -10000000) {
-			slider_.reset(new slider(200, boost::bind(&code_editor_widget::on_slider_move, this, _1)));
+			slider_.reset(new Slider(200, std::bind(&code_editor_widget::onSliderMove, this, _1)));
 			slider_decimal_ = std::count(token.begin(), token.end(), '.') ? true : false;
 			slider_magnitude_ = (abs(current_value.as_int())+1) * 5;
 	
 			const decimal slider_value = (current_value - decimal::from_int(-slider_magnitude_)) / decimal::from_int(slider_magnitude_*2);
-			slider_->set_position(slider_value.as_float());
+			slider_->setPosition(slider_value.as_float());
 
 			slider_range_.clear();
 			slider_labels_.clear();
 			if(current_value > 0) {
-				slider_range_.push_back(slider_range(0.0, 0.1, -current_value*5, -current_value));
-				slider_range_.push_back(slider_range(0.1, 0.2, -current_value, decimal(0)));
-				slider_range_.push_back(slider_range(0.2, 0.3, decimal(0), current_value));
-				slider_range_.push_back(slider_range(0.3, 0.5, decimal(0), current_value));
-				slider_range_.push_back(slider_range(0.5, 0.7, current_value, 2*current_value));
-				slider_range_.push_back(slider_range(0.7, 0.9, 2*current_value, 5*current_value));
-				slider_range_.push_back(slider_range(0.9, 1.0, 5*current_value, 10*current_value));
-				slider_range_.push_back(slider_range(1.0, 2.0, 10*current_value, 20*current_value));
-				slider_->set_position(0.5);
+				slider_range_.push_back(SliderRange(0.0, 0.1, -current_value*5, -current_value));
+				slider_range_.push_back(SliderRange(0.1, 0.2, -current_value, decimal(0)));
+				slider_range_.push_back(SliderRange(0.2, 0.3, decimal(0), current_value));
+				slider_range_.push_back(SliderRange(0.3, 0.5, decimal(0), current_value));
+				slider_range_.push_back(SliderRange(0.5, 0.7, current_value, 2*current_value));
+				slider_range_.push_back(SliderRange(0.7, 0.9, 2*current_value, 5*current_value));
+				slider_range_.push_back(SliderRange(0.9, 1.0, 5*current_value, 10*current_value));
+				slider_range_.push_back(SliderRange(1.0, 2.0, 10*current_value, 20*current_value));
+				slider_->setPosition(0.5);
 			} else {
-				slider_range_.push_back(slider_range(0.0, 0.5, current_value*2, decimal(0)));
-				slider_range_.push_back(slider_range(0.5, 1.0, decimal(0), -current_value*2));
-				slider_range_.push_back(slider_range(1.0, 2.0, -current_value*2, -current_value*4));
-				slider_->set_position(0.25);
+				slider_range_.push_back(SliderRange(0.0, 0.5, current_value*2, decimal(0)));
+				slider_range_.push_back(SliderRange(0.5, 1.0, decimal(0), -current_value*2));
+				slider_range_.push_back(SliderRange(1.0, 2.0, -current_value*2, -current_value*4));
+				slider_->setPosition(0.25);
 			}
 
-			std::pair<int,int> pos = char_position_on_screen(begin_row, (begin_col+end_col)/2);
+			std::pair<int,int> pos = charPositionOnScreen(begin_row, (begin_col+end_col)/2);
 
 			row_slider_ = begin_row;
 			begin_col_slider_ = begin_col;
@@ -292,24 +291,24 @@ void code_editor_widget::select_token(const std::string& row, int& begin_row, in
 	
 			slider_->setLoc(x, y);
 
-			foreach(slider_range& r, slider_range_) {
-				slider_labels_.push_back(WidgetPtr(new gui::label(formatter() << r.target_begin, 10)));
+			for(SliderRange& r : slider_range_) {
+				slider_labels_.push_back(WidgetPtr(new gui::Label(formatter() << r.target_begin, 10)));
 				slider_labels_.back()->setLoc(x + slider_->width()*r.begin - slider_labels_.back()->width()/2, y);
 			}
 		}
 	}
 }
 
-void code_editor_widget::on_slider_move(double value)
+void code_editor_widget::onSliderMove(float value)
 {
-	if(record_op("slider")) {
-		save_undo_state();
+	if(recordOp("slider")) {
+		saveUndoState();
 	}
 
 	std::ostringstream s;
 
 	decimal new_value;
-	foreach(const slider_range& r, slider_range_) {
+	for(const SliderRange& r : slider_range_) {
 		if(value <= r.end) {
 			const float pos = (value - r.begin)/(r.end - r.begin);
 			new_value = decimal(r.target_begin.as_float() + (r.target_end.as_float() - r.target_begin.as_float())*pos);
@@ -325,8 +324,8 @@ void code_editor_widget::on_slider_move(double value)
 
 	std::string new_string = s.str();
 
-	ASSERT_LOG(row_slider_ >= 0 && row_slider_ < get_data().size(), "Illegal row value for slider: " << row_slider_ << " / " << get_data().size());
-	std::string row = get_data()[row_slider_];
+	ASSERT_LOG(row_slider_ >= 0 && row_slider_ < getData().size(), "Illegal row value for Slider: " << row_slider_ << " / " << getData().size());
+	std::string row = getData()[row_slider_];
 
 	row.erase(row.begin() + begin_col_slider_, row.begin() + end_col_slider_);
 	row.insert(row.begin() + begin_col_slider_, new_string.begin(), new_string.end());
@@ -334,11 +333,11 @@ void code_editor_widget::on_slider_move(double value)
 	const int old_end = end_col_slider_;
 	end_col_slider_ = begin_col_slider_ + new_string.size();
 
-	if(cursor_row() == row_slider_ && cursor_col() == old_end) {
-		set_cursor(cursor_row(), end_col_slider_);
+	if(cursorRow() == row_slider_ && cursorCol() == old_end) {
+		setCursor(cursorRow(), end_col_slider_);
 	}
 
-	set_row_contents(row_slider_, row);
+	setRowContents(row_slider_, row);
 }
 
 void code_editor_widget::handleDraw() const
@@ -347,7 +346,7 @@ void code_editor_widget::handleDraw() const
 
 	if(slider_) {
 		slider_->draw();
-		foreach(WidgetPtr w, slider_labels_) {
+		for(WidgetPtr w : slider_labels_) {
 			w->draw();
 		}
 	}
@@ -412,14 +411,14 @@ variant get_map_editing(int row, int col, variant item)
 	}
 
 	if(item.is_list()) {
-		foreach(variant v, item.as_list()) {
+		for(variant v : item.as_list()) {
 			variant result = get_map_editing(row, col, v);
 			if(result.is_null() == false) {
 				return result;
 			}
 		}
 	} else if(item.is_map()) {
-		foreach(const variant_pair& p, item.as_map()) {
+		for(const variant_pair& p : item.as_map()) {
 			variant result = get_map_editing(row, col, p.second);
 			if(result.is_null() == false) {
 				return result;
@@ -436,14 +435,14 @@ variant get_map_editing(int row, int col, variant item)
 
 code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int col) const
 {
-	const int pos = row_col_to_text_pos(row, col);
+	const int pos = rowColToTextPos(row, col);
 	const char* ptr = currentText_.c_str() + pos;
 	ASSERT_LOG(pos >= 0 && pos <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
 	const json::Token* begin_token = NULL;
 	const json::Token* end_token = NULL;
 	std::stack<const json::Token*> begin_stack;
 	int nbracket = 0;
-	foreach(const json::Token& token, tokens_) {
+	for(const json::Token& token : tokens_) {
 		if(token.type == json::Token::TYPE_LCURLY) {
 			begin_stack.push(&token);
 		}
@@ -483,22 +482,22 @@ code_editor_widget::ObjectInfo code_editor_widget::get_object_at(int row, int co
 
 code_editor_widget::ObjectInfo code_editor_widget::get_current_object() const
 {
-	return get_object_at(cursor_row(), cursor_col());
+	return get_object_at(cursorRow(), cursorCol());
 }
 
 void code_editor_widget::set_highlight_current_object(bool value)
 {
 	if(!value) {
-		clear_highlight_lines();
+		clearHighlightLines();
 		return;
 	}
 
 	ObjectInfo info = get_current_object();
 	if(info.obj.is_null() == false) {
-		set_highlight_lines(text_pos_to_row_col(info.begin).first,
+		setHighlightLines(text_pos_to_row_col(info.begin).first,
 		                    text_pos_to_row_col(info.end).first);
 	} else {
-		clear_highlight_lines();
+		clearHighlightLines();
 	}
 }
 
@@ -509,7 +508,7 @@ void code_editor_widget::modify_current_object(variant new_obj)
 		return;
 	}
 
-	save_undo_state();
+	saveUndoState();
 
 
 	const std::string str(currentText_.begin() + info.begin, currentText_.begin() + info.end);

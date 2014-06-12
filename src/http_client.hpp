@@ -19,8 +19,6 @@
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -35,9 +33,9 @@ public:
 	http_client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
 	void send_request(const std::string& method_path,
 	                  const std::string& request,
-					  boost::function<void(std::string)> handler,
-					  boost::function<void(std::string)> error_handler,
-					  boost::function<void(int,int,bool)> progress_handler);
+					  std::function<void(std::string)> handler,
+					  std::function<void(std::string)> error_handler,
+					  std::function<void(int,int,bool)> progress_handler);
 	virtual void process();
 
 protected:
@@ -47,7 +45,7 @@ private:
 	
 	int session_id_;
 
-	boost::shared_ptr<boost::asio::io_service> io_service_buf_;
+	std::shared_ptr<boost::asio::io_service> io_service_buf_;
 	boost::asio::io_service& io_service_;
 
 	struct Connection {
@@ -57,21 +55,21 @@ private:
 		std::string method_path;
 		std::string request, response;
 		int nbytes_sent;
-		boost::function<void(int,int,bool)> progress_handler;
-		boost::function<void(std::string)> handler, error_handler;
-		game_logic::map_FormulaCallablePtr callable;
+		std::function<void(int,int,bool)> progress_handler;
+		std::function<void(std::string)> handler, error_handler;
+		game_logic::MapFormulaCallablePtr callable;
 
 		boost::array<char, 1024> buf;
 		
 		int expected_len;
 	};
 
-	typedef boost::shared_ptr<Connection> connection_ptr;
+	typedef std::shared_ptr<Connection> connection_ptr;
 
 	void handle_resolve(const boost::system::error_code& err, tcp::resolver::iterator endpoint_iterator, connection_ptr conn);
 	void handle_connect(const boost::system::error_code& error, connection_ptr conn, tcp::resolver::iterator resolve_itor);
 	void write_connection_data(connection_ptr conn);
-	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf_ptr);
+	void handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf_ptr);
 	void handle_receive(connection_ptr conn, const boost::system::error_code& e, size_t nbytes);
 
 	void async_connect(connection_ptr conn);

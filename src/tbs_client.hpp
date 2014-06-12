@@ -19,8 +19,6 @@
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include <string>
 #include <vector>
@@ -39,16 +37,16 @@ public:
 	client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
 
 	void send_request(variant request, 
-		game_logic::map_FormulaCallablePtr callable, 
-		boost::function<void(std::string)> handler);
+		game_logic::MapFormulaCallablePtr callable, 
+		std::function<void(std::string)> handler);
 
 	virtual void process();
 	void setId(const std::string& id);
 
 	void set_use_local_cache(bool value) { use_local_cache_ = value; }
 private:
-	boost::function<void(std::string)> handler_;
-	game_logic::map_FormulaCallablePtr callable_;
+	std::function<void(std::string)> handler_;
+	game_logic::MapFormulaCallablePtr callable_;
 
 	void recv_handler(const std::string& msg);
 	void error_handler(const std::string& err);

@@ -20,7 +20,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#include <boost/bind.hpp>
+#include <functional>
 
 #include "kre/WindowManager.hpp"
 #include "kre/ClipScope.hpp"
@@ -44,7 +44,7 @@ namespace gui
 		display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
 		draw_with_object_shader_(true), tooltip_font_size_(18),
 		swallow_all_events_(false), tab_stop_(0), has_focus_(false),
-		tooltip_color_(255,255,255)
+		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f)
 		{
 		}
 
@@ -57,7 +57,7 @@ namespace gui
 		pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
 		draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_font_size_(18),
 		swallow_all_events_(false), tab_stop_(v["tab_stop"].as_int(0)), has_focus_(false),
-		tooltip_color_(255,255,255)
+		tooltip_color_(255,255,255), rotation_(0), scale_(1.0f)
 	{
 		setAlpha(display_alpha_ < 0 ? 0 : (display_alpha_ > 256 ? 256 : display_alpha_));
 		if(v.has_key("width")) {
@@ -98,7 +98,7 @@ namespace gui
 		}
 		zorder_ = v["zorder"].as_int(0);
 		if(v.has_key("on_process")) {
-			on_process_ = boost::bind(&Widget::processDelegate, this);
+			on_process_ = std::bind(&Widget::processDelegate, this);
 			ffl_on_process_ = getEnvironment()->createFormula(v["on_process"]);
 		}
 		if(v.has_key("tooltip")) {
@@ -162,6 +162,13 @@ namespace gui
 			if(v["clip_to_dimensions"].as_bool()) {
 				setClipAreaToDim();
 			}
+		}
+
+		if(v.has_key("rotation")) {
+			setRotation(v["rotation"].as_float());
+		}
+		if(v.has_key("scale")) {
+			setScale(v["scale"].as_float());
 		}
 	}
 
@@ -313,6 +320,7 @@ namespace gui
 	void Widget::draw(int xt, int yt, float rotate, float scale) const
 	{
 		if(visible_) {
+			KRE::Canvas::ModelManager mm(xt, yt, rotate, scale);
 			KRE::Canvas::ColorManager cm(KRE::Color(255,255,255,disabled() ? disabledOpacity() : getAlpha()));
 			if(frame_set_ != NULL) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
@@ -321,7 +329,6 @@ namespace gui
 					height() + getPadHeight()*2 + 2*frame_set_->cornerHeight(), resolution_ != 0);
 			}
 
-			KRE::Canvas::ModelManager mm(x(), y(), 0.0f, 1.0f);
 			if(clip_area_) {
 				auto cs = KRE::ClipScope::create(*clip_area_);
 				handleDraw();
@@ -537,6 +544,17 @@ namespace gui
 			&& obj.clipArea()->w() == obj.width() && obj.clipArea()->h() == obj.height()) {
 			obj.clearClipArea();
 		}
+
+	DEFINE_FIELD(rotation, "decimal")
+		return variant(obj.getRotation());
+	DEFINE_SET_FIELD_TYPE("decimal|int")
+		obj.setRotation(value.as_float());
+
+	DEFINE_FIELD(scale, "decimal")
+		return variant(obj.getScale());
+	DEFINE_SET_FIELD_TYPE("decimal|int")
+		obj.setScale(value.as_float());
+
 	END_DEFINE_CALLABLE(Widget)
 
 	bool Widget::inWidget(int xloc, int yloc) const
@@ -586,6 +604,19 @@ namespace gui
 		variant v = Widget::handleWrite();
 		merge_variant_over(&v, handleWrite());	
 		return v;
+	}
+
+	void Widget::setScale(float s) 
+	{
+		scale_ = s;
+		if(scale_ < FLT_EPSILON) {
+			scale_ = 1.0f;
+		}
+	}
+
+	void Widget::setRotation(float r) 
+	{ 
+		rotation_ = r;
 	}
 
 	variant Widget::handleWrite()
@@ -665,6 +696,12 @@ namespace gui
 				res.add("clip_area", clipArea()->w());
 				res.add("clip_area", clipArea()->h());
 			}
+		}
+		if(getRotation() != 0) {
+			res.add("rotation", getRotation());
+		}
+		if(getScale() != 1.0f) {
+			res.add("scale", getScale());
 		}
 		return res.build();
 	}

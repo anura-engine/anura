@@ -16,12 +16,10 @@
 */
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_object.hpp"
 #include "ipc.hpp"
@@ -56,7 +54,7 @@ web_server::web_server(server& serv, boost::asio::io_service& io_service, int po
 {
 	web_server_instance = this;
 	timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-	timer_.async_wait(boost::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
+	timer_.async_wait(std::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
 }
 
 web_server::~web_server()
@@ -141,7 +139,7 @@ void web_server::heartbeat(const boost::system::error_code& error)
 	}
 	debug_state_sockets.clear();
 	timer_.expires_from_now(boost::posix_time::milliseconds(1000));
-	timer_.async_wait(boost::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
+	timer_.async_wait(std::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
 }
 
 void web_server::handle_get(socket_ptr socket, 

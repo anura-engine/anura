@@ -16,7 +16,6 @@
 */
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <deque>
 #include <iostream>
 
@@ -61,7 +60,7 @@ module_web_server::module_web_server(const std::string& data_path, boost::asio::
 void module_web_server::heartbeat()
 {
 	timer_.expires_from_now(boost::posix_time::seconds(1));
-	timer_.async_wait(boost::bind(&module_web_server::heartbeat, this));
+	timer_.async_wait(std::bind(&module_web_server::heartbeat, this));
 }
 
 void module_web_server::handle_post(socket_ptr socket, variant doc, const http::environment& env)

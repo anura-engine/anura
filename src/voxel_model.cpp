@@ -677,12 +677,12 @@ void voxel_model::set_prototype()
 
 void voxel_model::set_animation(const std::string& anim_str)
 {
-	boost::shared_ptr<Animation> anim = animations_[anim_str];
+	std::shared_ptr<Animation> anim = animations_[anim_str];
 	ASSERT_LOG(anim, "Could not find animation " << anim_str);
 	set_animation(anim);
 }
 
-void voxel_model::set_animation(boost::shared_ptr<Animation> anim)
+void voxel_model::set_animation(std::shared_ptr<Animation> anim)
 {
 	if(anim_) {
 		old_anim_ = anim_;
@@ -726,7 +726,7 @@ void voxel_model::process_animation(GLfloat advance)
 
 	clear_transforms();
 
-	game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 
 	if(old_anim_) {
 		callable->add("time", variant(decimal(old_anim_time_)));

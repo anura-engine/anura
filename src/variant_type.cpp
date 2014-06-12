@@ -930,7 +930,7 @@ private:
 
 	std::vector<variant_type_ptr> types_;
 
-	mutable boost::shared_ptr<std::map<variant, variant_type_ptr> > specific_map_;
+	mutable std::shared_ptr<std::map<variant, variant_type_ptr> > specific_map_;
 };
 
 class variant_type_list : public variant_type
@@ -1129,7 +1129,7 @@ public:
 
 	const game_logic::FormulaCallable_definition* get_definition() const {
 		if(!def_) {
-			def_ = game_logic::create_map_FormulaCallable_definition(value_type_);
+			def_ = game_logic::create_MapFormulaCallable_definition(value_type_);
 		}
 
 		return def_.get();

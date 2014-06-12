@@ -45,6 +45,11 @@ namespace KRE
 		void getTextSize(const std::string& text, int* width, int* height, int size, const std::string& font_name="") const;
 		static void registerFactoryFunction(const std::string& type, std::function<FontPtr()>);
 		static FontPtr getInstance(const std::string& hint="");
+		static std::string get_default_monospace_font() { return "FreeMono"; }
+		static void reloadFontPaths();
+		static std::vector<std::string> getAvailableFonts();
+		static int charWidth(int size, const std::string& fn="");
+		static int charHeight(int size, const std::string& fn="");
 	protected:
 		Font();
 	private:
@@ -52,6 +57,10 @@ namespace KRE
 		std::string default_font_name_;
 		virtual TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const = 0;
 		virtual void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const = 0;
+		virtual void doReloadFontPaths() = 0;
+		virtual std::vector<std::string> handleGetAvailableFonts() = 0;
+		virtual int getCharWidth(int size, const std::string& fn) = 0;
+		virtual int getCharHeight(int size, const std::string& fn) = 0;
 	};
 
 	template<class T>

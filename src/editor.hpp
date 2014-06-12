@@ -25,8 +25,7 @@
 
 #ifndef NO_EDITOR
 
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
+#include <functional>
 #include <stack>
 #include <vector>
 
@@ -114,9 +113,9 @@ public:
 		bool sloped;
 		variant node_info;
 
-		boost::shared_ptr<tile_map> preview() const;
+		std::shared_ptr<tile_map> preview() const;
 	private:
-		mutable boost::shared_ptr<tile_map> preview_;
+		mutable std::shared_ptr<tile_map> preview_;
 	};
 
 	struct enemy_type {
@@ -126,11 +125,11 @@ public:
 		std::string help;
 
 		const entity_ptr& preview_object() const;
-		const boost::shared_ptr<const frame>& preview_frame() const;
+		const std::shared_ptr<const frame>& preview_frame() const;
 	
 	private:
 		mutable entity_ptr preview_object_;
-		mutable boost::shared_ptr<const frame> preview_frame_;
+		mutable std::shared_ptr<const frame> preview_frame_;
 		variant frame_info_;
 	};
 
@@ -224,7 +223,7 @@ public:
 	//function to execute a command which will go into the undo/redo list.
 	//normally any time the editor mutates the level, it should be done
 	//through this function
-	void executeCommand(boost::function<void()> command, boost::function<void()> undo, EXECUTABLE_COMMAND_TYPE type=COMMAND_TYPE_DEFAULT);
+	void executeCommand(std::function<void()> command, std::function<void()> undo, EXECUTABLE_COMMAND_TYPE type=COMMAND_TYPE_DEFAULT);
 
 	//functions to begin and end a group of commands. This is used when we
 	//are going to execute a bunch of commands, and from the point of view of
@@ -268,9 +267,9 @@ private:
 
 	void reset_dialog_positions();
 
-	void handle_mouse_button_down(const SDL_MouseButtonEvent& event);
-	void handle_mouse_button_up(const SDL_MouseButtonEvent& event);
-	void handle_key_press(const SDL_KeyboardEvent& key);
+	void handleMouseButtonDown(const SDL_MouseButtonEvent& event);
+	void handleMouseButtonUp(const SDL_MouseButtonEvent& event);
+	void handleKeyPress(const SDL_KeyboardEvent& key);
 
 	void handle_object_dragging(int mousex, int mousey);
 	void handleDrawing_rect(int mousex, int mousey);
@@ -288,7 +287,7 @@ private:
 	void select_tile_rect(int x1, int y1, int x2, int y2);
 	void select_magic_wand(int xpos, int ypos);
 
-	void set_selection(const tile_selection& s);
+	void setSelection(const tile_selection& s);
 
 	void execute_shift_object(entity_ptr e, int dx, int dy);
 
@@ -306,10 +305,10 @@ private:
 	void object_instance_modified_in_editor(const std::string& label);
 
 	void generate_mutate_commands(entity_ptr e, const std::string& attr, variant new_value,
-	                              std::vector<boost::function<void()> >& undo,
-	                              std::vector<boost::function<void()> >& redo);
+	                              std::vector<std::function<void()> >& undo,
+	                              std::vector<std::function<void()> >& redo);
 
-	void generate_remove_commands(entity_ptr e, std::vector<boost::function<void()> >& undo, std::vector<boost::function<void()> >& redo);
+	void generate_remove_commands(entity_ptr e, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo);
 
 	void pencil_motion(int prev_x, int prev_y, int x, int y, bool left_button);
 
@@ -347,20 +346,20 @@ private:
 
 	tile_selection tile_selection_;
 
-	boost::scoped_ptr<editor_menu_dialog> editor_menu_dialog_;
-	boost::scoped_ptr<editor_mode_dialog> editor_mode_dialog_;
-	boost::scoped_ptr<editor_dialogs::character_editor_dialog> character_dialog_;
-	boost::scoped_ptr<editor_dialogs::editor_layers_dialog> layers_dialog_;
-	boost::scoped_ptr<editor_dialogs::property_editor_dialog> property_dialog_;
-	boost::scoped_ptr<editor_dialogs::tileset_editor_dialog> tileset_dialog_;
-	boost::scoped_ptr<editor_dialogs::hex_tileset_editor_dialog> hex_tileset_dialog_;
+	std::unique_ptr<editor_menu_dialog> editor_menu_dialog_;
+	std::unique_ptr<editor_mode_dialog> editor_mode_dialog_;
+	std::unique_ptr<editor_dialogs::character_editor_dialog> character_dialog_;
+	std::unique_ptr<editor_dialogs::editor_layers_dialog> layers_dialog_;
+	std::unique_ptr<editor_dialogs::property_editor_dialog> property_dialog_;
+	std::unique_ptr<editor_dialogs::tileset_editor_dialog> tileset_dialog_;
+	std::unique_ptr<editor_dialogs::hex_tileset_editor_dialog> hex_tileset_dialog_;
 #if defined(USE_ISOMAP)
-	boost::scoped_ptr<editor_dialogs::voxel_editor_dialog> voxel_dialog_;
+	std::unique_ptr<editor_dialogs::voxel_editor_dialog> voxel_dialog_;
 #endif
 
-	boost::scoped_ptr<editor_dialogs::segment_editor_dialog> segment_dialog_;
+	std::unique_ptr<editor_dialogs::segment_editor_dialog> segment_dialog_;
 
-	boost::scoped_ptr<code_editor_dialog> code_dialog_;
+	std::unique_ptr<code_editor_dialog> code_dialog_;
 
 	external_text_editor_ptr external_code_editor_;
 
@@ -372,8 +371,8 @@ private:
 	bool drawing_rect_, dragging_;
 
 	struct executable_command {
-		boost::function<void()> redo_command;
-		boost::function<void()> undo_command;
+		std::function<void()> redo_command;
+		std::function<void()> undo_command;
 		EXECUTABLE_COMMAND_TYPE type;
 	};
 
@@ -381,7 +380,7 @@ private:
 
 	//a temporary undo which is used for when we execute commands on
 	//a temporary basis -- e.g. for a preview -- so we can later undo them.
-	boost::scoped_ptr<executable_command> tmp_undo_;
+	std::unique_ptr<executable_command> tmp_undo_;
 
 	//indexes into undo_ which records the beginning of the current 'group'
 	//of commands. When begin_command_group() is called, a value is added

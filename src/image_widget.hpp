@@ -48,7 +48,7 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(ImageWidget);
 
-		void handleDraw() const;
+		void handleDraw() const override;
 
 		KRE::TexturePtr texture_;
 		float rotate_;
@@ -66,7 +66,7 @@ namespace gui
 		//you should set a GUI section that is the same size.
 		void setGuiSection(const std::string& id);
 
-		void handleDraw() const;
+		void handleDraw() const override;
 	private:
 		DECLARE_CALLABLE(GuiSectionWidget);
 		ConstGuiSectionPtr section_;

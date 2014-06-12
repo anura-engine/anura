@@ -166,7 +166,7 @@ namespace geometry
 		void init();
 
 	protected:
-		virtual void handleDraw() const;
+		virtual void handleDraw() const override;
 	private:
 		DECLARE_CALLABLE(poly_map);
 

@@ -14,9 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
-#include "scrollable_widget"
+#include "scrollable_widget.hpp"
 
 namespace gui {
 
@@ -47,7 +46,7 @@ void ScrollableWidget::set_yscroll(int yscroll)
 {
 	const int old = yscroll_;
 	yscroll_ = yscroll;
-	on_set_yscroll(old, yscroll);
+	onSetYscroll(old, yscroll);
 }
 
 void ScrollableWidget::setDim(int w, int h)
@@ -56,7 +55,7 @@ void ScrollableWidget::setDim(int w, int h)
 	update_scrollbar();
 }
 
-void ScrollableWidget::on_set_yscroll(int old_yscroll, int new_yscroll)
+void ScrollableWidget::onSetYscroll(int old_yscroll, int new_yscroll)
 {}
 
 void ScrollableWidget::set_virtual_height(int height)
@@ -82,7 +81,7 @@ void ScrollableWidget::update_scrollbar()
 {
 	if(height() < virtual_height_) {
 		if(!scrollbar_) {
-			scrollbar_.reset(new scrollBarWidget(boost::bind(&ScrollableWidget::set_yscroll, this, _1)));
+			scrollbar_.reset(new ScrollBarWidget(std::bind(&ScrollableWidget::set_yscroll, this, _1)));
 		}
 		scrollbar_->set_step(step_);
 //		if(step_ != arrow_step_) {

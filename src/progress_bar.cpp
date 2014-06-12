@@ -40,7 +40,7 @@ progress_bar::progress_bar(const variant& v, game_logic::FormulaCallable* e)
 	if(v.has_key("on_completion")) {
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		completion_handler_ = getEnvironment()->createFormula(v["on_completion"]);
-		oncompletion_ = boost::bind(&progress_bar::complete, this);
+		oncompletion_ = std::bind(&progress_bar::complete, this);
 	}
 
 	std::string frame_set = v["frame_set"].as_string_default("");
@@ -96,7 +96,7 @@ void progress_bar::update_progress(int delta)
 	}
 }
 
-void progress_bar::set_completion_handler(boost::function<void ()> oncompletion)
+void progress_bar::set_completion_handler(std::function<void ()> oncompletion)
 {
 	oncompletion_ = oncompletion;
 }

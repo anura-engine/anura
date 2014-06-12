@@ -50,9 +50,9 @@ namespace movie
 		void stop();
 		void gen_textures();
 		void decode_frame();
-		virtual void handleProcess();
-		virtual bool handleEvent(const SDL_Event& event, bool claimed);
-		virtual void handleDraw() const;
+		virtual void handleProcess() override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleDraw() const override;
 	private:
 		std::ifstream file_;
 		std::string file_name_;

@@ -60,7 +60,7 @@ namespace debug_console
 	private:
 		ConsoleDialog(const ConsoleDialog&);
 		void init();
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		gui::TextEditorWidget* text_editor_;
 

@@ -22,9 +22,6 @@
 */
 #pragma once
 
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-
 #include "widget.hpp"
 #include "framed_gui_element.hpp"
 
@@ -52,13 +49,13 @@ namespace gui
 			variant backup;
 		};
 
-		Button(const std::string& label, boost::function<void ()> onclick);
-		Button(WidgetPtr label, boost::function<void ()> onclick, BUTTON_STYLE button_style = BUTTON_STYLE_NORMAL, BUTTON_RESOLUTION buttonResolution = BUTTON_SIZE_NORMAL_RESOLUTION);
+		Button(const std::string& label, std::function<void ()> onclick);
+		Button(WidgetPtr label, std::function<void ()> onclick, BUTTON_STYLE button_style = BUTTON_STYLE_NORMAL, BUTTON_RESOLUTION buttonResolution = BUTTON_SIZE_NORMAL_RESOLUTION);
 		Button(const variant& v, game_logic::FormulaCallable* e);
 		void setColorScheme(const variant& v);
 		virtual WidgetPtr getWidgetById(const std::string& id);
 		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
-		void setClickHandler(boost::function<void ()> click_fun) { onclick_ = click_fun; }
+		void setClickHandler(std::function<void ()> click_fun) { onclick_ = click_fun; }
 
 		void setHPadding(int hpad);
 		void setVPadding(int vpad);
@@ -72,7 +69,7 @@ namespace gui
 		std::vector<WidgetPtr> getChildren() const;
 	protected:
 		void setLabel(WidgetPtr label);
-		virtual void handleProcess();
+		virtual void handleProcess() override;
 		virtual variant handleWrite();
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
@@ -82,8 +79,8 @@ namespace gui
 
 		void setup();
 
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 		void click();
 		int vpadding_;
 		int hpadding_;
@@ -91,7 +88,7 @@ namespace gui
 		BUTTON_RESOLUTION button_resolution_;
 		BUTTON_STYLE button_style_;
 		WidgetPtr label_;
-		boost::function<void ()> onclick_;
+		std::function<void ()> onclick_;
 		bool down_;
 		game_logic::formula_ptr click_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;

@@ -31,7 +31,7 @@ class code_editor_widget : public TextEditorWidget
 public:
 	code_editor_widget(int width, int height);
 	code_editor_widget(const variant& v, game_logic::FormulaCallable* e);
-	void on_slider_move(double value);
+	void onSliderMove(float value);
 
 	const std::string& currentText() const { return currentText_; }
 	struct ObjectInfo {
@@ -51,32 +51,32 @@ public:
 private:
 	ObjectInfo get_object_at(int row, int col) const;
 
-	virtual void handleDraw() const;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
-	void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
-	void on_change();
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+	void selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
+	void onChange();
 	void onMoveCursor(bool auto_shift=false);
-	graphics::color get_character_color(int row, int col) const;
+	KRE::Color getCharacterColor(int row, int col) const;
 
-	std::vector<std::vector<graphics::color> > colors_;
+	std::vector<std::vector<KRE::Color>> colors_;
 
 	//maps a location (a bracket or comma) to matching locations.
 	std::map<std::pair<int, int>, std::vector<std::pair<int, int> > > bracket_match_;
 
-	mutable slider_ptr slider_;
+	mutable SliderPtr slider_;
 	int row_slider_, begin_col_slider_, end_col_slider_;
 	bool slider_decimal_;
 	int slider_magnitude_;
 
-	struct slider_range {
-		slider_range(float b, float e, decimal tb, decimal te)
+	struct SliderRange {
+		SliderRange(float b, float e, decimal tb, decimal te)
 		  : begin(b), end(e), target_begin(tb), target_end(te)
 		{}
 		float begin, end;
 		decimal target_begin, target_end;
 	};
 
-	std::vector<slider_range> slider_range_;
+	std::vector<SliderRange> slider_range_;
 	std::vector<WidgetPtr> slider_labels_;
 
 	void generate_tokens();

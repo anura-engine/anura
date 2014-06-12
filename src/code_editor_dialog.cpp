@@ -22,7 +22,6 @@
 */
 
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include <algorithm>
 
@@ -80,17 +79,17 @@ void code_editor_dialog::init()
 		editor_.reset(new code_editor_widget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
 
-	button* save_button = new button("Save", boost::bind(&code_editor_dialog::save, this));
-	button* increase_font = new button("+", boost::bind(&code_editor_dialog::change_font_size, this, 1));
-	button* decrease_font = new button("-", boost::bind(&code_editor_dialog::change_font_size, this, -1));
+	button* save_button = new button("Save", std::bind(&code_editor_dialog::save, this));
+	button* increase_font = new button("+", std::bind(&code_editor_dialog::changeFontSize, this, 1));
+	button* decrease_font = new button("-", std::bind(&code_editor_dialog::changeFontSize, this, -1));
 
 	save_button_.reset(save_button);
 
 	//std::cerr << "CED: " << x() << "," << y() << "; " << width() << "," << height() << std::endl;
 	drag_widget* dragger = new drag_widget(x(), y(), width(), height(),
 		drag_widget::DRAG_HORIZONTAL, NULL, 
-		boost::bind(&code_editor_dialog::on_drag_end, this, _1, _2), 
-		boost::bind(&code_editor_dialog::on_drag, this, _1, _2));
+		std::bind(&code_editor_dialog::on_drag_end, this, _1, _2), 
+		std::bind(&code_editor_dialog::on_drag, this, _1, _2));
 
 	search_ = new TextEditorWidget(120);
 	replace_ = new TextEditorWidget(120);
@@ -106,8 +105,8 @@ void code_editor_dialog::init()
 	addWidget(WidgetPtr(save_button), MOVE_RIGHT);
 
 	if(have_close_buttons_) {
-		button* save_and_close_button = new button("Save+Close", boost::bind(&code_editor_dialog::save_and_close, this));
-		button* abort_button = new button("Abort", boost::bind(&dialog::cancel, this));
+		button* save_and_close_button = new button("Save+Close", std::bind(&code_editor_dialog::save_and_close, this));
+		button* abort_button = new button("Abort", std::bind(&dialog::cancel, this));
 		addWidget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
 		addWidget(WidgetPtr(abort_button), MOVE_RIGHT);
 	}
@@ -129,12 +128,12 @@ void code_editor_dialog::init()
 		save_button->setVisible(false);
 	}
 
-	search_->set_on_tab_handler(boost::bind(&code_editor_dialog::on_tab, this));
-	replace_->set_on_tab_handler(boost::bind(&code_editor_dialog::on_tab, this));
+	search_->setOnTabHandler(std::bind(&code_editor_dialog::on_tab, this));
+	replace_->setOnTabHandler(std::bind(&code_editor_dialog::on_tab, this));
 
-	search_->set_on_change_handler(boost::bind(&code_editor_dialog::on_search_changed, this));
-	search_->set_on_enter_handler(boost::bind(&code_editor_dialog::on_search_enter, this));
-	replace_->set_on_enter_handler(boost::bind(&code_editor_dialog::on_replace_enter, this));
+	search_->setOnChangeHandler(std::bind(&code_editor_dialog::on_search_changed, this));
+	search_->setOnEnterHandler(std::bind(&code_editor_dialog::on_search_enter, this));
+	replace_->setOnEnterHandler(std::bind(&code_editor_dialog::on_replace_enter, this));
 
 
 	init_files_grid();
@@ -167,7 +166,7 @@ bool code_editor_dialog::jump_to_error(const std::string& text)
 		const int line_num = atoi(p);
 
 		if(line_num > 0) {
-			editor_->set_cursor(line_num-1, 0);
+			editor_->setCursor(line_num-1, 0);
 		}
 
 		return true;
@@ -190,7 +189,7 @@ void code_editor_dialog::init_files_grid()
 
 	files_grid_.reset(new grid(1));
 	files_grid_->allow_selection();
-	files_grid_->register_selection_callback(boost::bind(&code_editor_dialog::select_file, this, _1));
+	files_grid_->register_selection_callback(std::bind(&code_editor_dialog::select_file, this, _1));
 	foreach(const KnownFile& f, files_) {
 		if(f.anim) {
 			ImageWidget* img = new ImageWidget(f.anim->img());
@@ -214,7 +213,7 @@ void code_editor_dialog::init_files_grid()
 	addWidget(files_grid_, 2, 2);
 }
 
-void code_editor_dialog::load_file(std::string fname, bool focus, boost::function<void()>* fn)
+void code_editor_dialog::load_file(std::string fname, bool focus, std::function<void()>* fn)
 {
 	if(fname_ == fname) {
 		return;
@@ -259,8 +258,8 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 		}
 
 		f.editor->setText(json::get_file_contents(fname));
-		f.editor->set_on_change_handler(boost::bind(&code_editor_dialog::on_code_changed, this));
-		f.editor->set_onMoveCursor_handler(boost::bind(&code_editor_dialog::onMoveCursor, this));
+		f.editor->setOnChangeHandler(std::bind(&code_editor_dialog::on_code_changed, this));
+		f.editor->setOnMoveCursorHandler(std::bind(&code_editor_dialog::onMoveCursor, this));
 
 		foreach(const std::string& obj_type, custom_object_type::get_all_ids()) {
 			const std::string* path = custom_object_type::get_object_path(obj_type + ".cfg");
@@ -281,7 +280,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, boost::functio
 	KnownFile f = files_[index];
 
 	if(editor_) {
-		f.editor->setFontSize(editor_->get_font_size());
+		f.editor->setFontSize(editor_->getFontSize());
 	}
 
 	if(!focus) {
@@ -366,7 +365,7 @@ bool code_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 				editor_->setFocus(false);
 				return true;
 			} else if(event.key.keysym.sym == SDLK_n && (event.key.keysym.mod&KMOD_CTRL) || event.key.keysym.sym == SDLK_F3) {
-				editor_->next_search_match();
+				editor_->nextSearchMatch();
 			} else if(event.key.keysym.sym == SDLK_s && (event.key.keysym.mod&KMOD_CTRL)) {
 				save();
 				return true;
@@ -407,10 +406,10 @@ void code_editor_dialog::handleDraw_children() const
 	}
 }
 
-void code_editor_dialog::change_font_size(int amount)
+void code_editor_dialog::changeFontSize(int amount)
 {
 	if(editor_) {
-		editor_->change_font_size(amount);
+		editor_->changeFontSize(amount);
 	}
 }
 
@@ -546,11 +545,11 @@ void code_editor_dialog::process()
 	}
 #endif
 
-	const bool show_replace = editor_->has_search_matches();
+	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
 	replace_->setVisible(show_replace);
 
-	const int cursor_pos = editor_->row_col_to_text_pos(editor_->cursor_row(), editor_->cursor_col());
+	const int cursor_pos = editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol());
 	const std::string& text = editor_->currentText();
 
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
@@ -681,7 +680,7 @@ void code_editor_dialog::process()
 
 		if(suggestions_.empty() == false) {
 			grid_ptr suggestions_grid(new grid(1));
-			suggestions_grid->register_selection_callback(boost::bind(&code_editor_dialog::select_suggestion, this, _1));
+			suggestions_grid->register_selection_callback(std::bind(&code_editor_dialog::select_suggestion, this, _1));
 			suggestions_grid->swallow_clicks();
 			suggestions_grid->allow_selection(true);
 			suggestions_grid->set_show_background(true);
@@ -699,7 +698,7 @@ void code_editor_dialog::process()
 	}
 
 	if(suggestions_grid_) {
-		const std::pair<int,int> cursor_pos = editor_->char_position_on_screen(editor_->cursor_row(), editor_->cursor_col());
+		const std::pair<int,int> cursor_pos = editor_->charPositionOnScreen(editor_->cursorRow(), editor_->cursorCol());
 		suggestions_grid_->setLoc(x() + editor_->x() + cursor_pos.second, y() + editor_->y() + cursor_pos.first - suggestions_grid_->height());
 		
 		if(suggestions_grid_->y() < 10) {
@@ -716,11 +715,11 @@ void code_editor_dialog::process()
 		if(gui::AnimationPreviewWidget::is_animation(info.obj)) {
 			if(!animation_preview_) {
 				animation_preview_.reset(new gui::AnimationPreviewWidget(info.obj));
-				animation_preview_->setRectHandler(boost::bind(&code_editor_dialog::setAnimationRect, this, _1));
-				animation_preview_->setSolidHandler(boost::bind(&code_editor_dialog::moveSolidRect, this, _1, _2));
-				animation_preview_->setPadHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "pad", _1));
-				animation_preview_->setNumFramesHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "frames", _1));
-				animation_preview_->setFramesPerRowHandler(boost::bind(&code_editor_dialog::setIntegerAttr, this, "frames_per_row", _1));
+				animation_preview_->setRectHandler(std::bind(&code_editor_dialog::setAnimationRect, this, _1));
+				animation_preview_->setSolidHandler(std::bind(&code_editor_dialog::moveSolidRect, this, _1, _2));
+				animation_preview_->setPadHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "pad", _1));
+				animation_preview_->setNumFramesHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "frames", _1));
+				animation_preview_->setFramesPerRowHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "frames_per_row", _1));
 				animation_preview_->setLoc(x() - 520, y() + 100);
 				animation_preview_->setDim(500, 400);
 				animation_preview_->init();
@@ -813,7 +812,7 @@ void code_editor_dialog::on_tab()
 {
 	if(search_->hasFocus()) {
 		search_->setFocus(false);
-		if(editor_->has_search_matches()) {
+		if(editor_->hasSearchMatches()) {
 			replace_->setFocus(true);
 		} else {
 			editor_->setFocus(true);
@@ -826,7 +825,7 @@ void code_editor_dialog::on_tab()
 
 void code_editor_dialog::on_search_changed()
 {
-	editor_->set_search(search_->text());
+	editor_->setSearch(search_->text());
 }
 
 void code_editor_dialog::on_search_enter()
@@ -872,14 +871,14 @@ void code_editor_dialog::onMoveCursor()
 {
 	visualize_widget_.reset();
 
-	status_label_->setText(formatter() << "Line " << (editor_->cursor_row()+1) << " Col " << (editor_->cursor_col()+1) << (modified_ ? " (Modified)" : ""));
+	status_label_->setText(formatter() << "Line " << (editor_->cursorRow()+1) << " Col " << (editor_->cursorCol()+1) << (modified_ ? " (Modified)" : ""));
 
 	if(file_contents_set_) {
 		try {
 			variant v = json::parse_from_file(fname_);
 			variant formula_str;
 			assert(v.is_map());
-			visit_variants(v, boost::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursor_row()+1, editor_->cursor_col()+1));
+			visit_variants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
 
 			if(formula_str.is_string()) {
 
@@ -895,7 +894,7 @@ void code_editor_dialog::onMoveCursor()
 					}
 
 					variant result;
-					visit_potential_formula_str(f->str_var(), &result, editor_->cursor_row()+1, editor_->cursor_col()+1);
+					visit_potential_formula_str(f->str_var(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
 					if(result.is_null()) {
 						continue;
 					}
@@ -910,9 +909,9 @@ void code_editor_dialog::onMoveCursor()
 
 				if(best_formula) {
 					const variant::debug_info& info = *result_variant.get_debug_info();
-					const int text_pos = editor_->row_col_to_text_pos(editor_->cursor_row(), editor_->cursor_col()) - editor_->row_col_to_text_pos(info.line-1, info.column-1);
+					const int text_pos = editor_->rowColToTextPos(editor_->cursorRow(), editor_->cursorCol()) - editor_->rowColToTextPos(info.line-1, info.column-1);
 					//TODO: make the visualize widget good enough to use.
-					//visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursor_row()+1, editor_->cursor_col()+1, 20, 20, 500, 400, editor_.get()));
+					//visualize_widget_.reset(new gui::formula_visualize_widget(best_formula->expr(), text_pos, editor_->cursorRow()+1, editor_->cursorCol()+1, 20, 20, 500, 400, editor_.get()));
 				}
 			}
 
@@ -998,13 +997,13 @@ void code_editor_dialog::select_suggestion(int index)
 		std::cerr << "SELECT " << suggestions_[index].suggestion << "\n";
 		const std::string& str = suggestions_[index].suggestion;
 		if(suggestions_prefix_ >= 0 && suggestions_prefix_ < str.size()) {
-			const int col = editor_->cursor_col();
+			const int col = editor_->cursorCol();
 			const std::string insert(str.begin() + suggestions_prefix_, str.end());
 			const std::string postfix = suggestions_[index].postfix;
-			const std::string row = editor_->get_data()[editor_->cursor_row()];
-			const std::string new_row = std::string(row.begin(), row.begin() + editor_->cursor_col()) + insert + postfix + std::string(row.begin() + editor_->cursor_col(), row.end());
-			editor_->set_row_contents(editor_->cursor_row(), new_row);
-			editor_->set_cursor(editor_->cursor_row(), col + insert.size() + suggestions_[index].postfix_index);
+			const std::string row = editor_->getData()[editor_->cursorRow()];
+			const std::string new_row = std::string(row.begin(), row.begin() + editor_->cursorCol()) + insert + postfix + std::string(row.begin() + editor_->cursorCol(), row.end());
+			editor_->setRowContents(editor_->cursorRow(), new_row);
+			editor_->setCursor(editor_->cursorRow(), col + insert.size() + suggestions_[index].postfix_index);
 		}
 	} else {
 		suggestions_grid_.reset();
@@ -1018,13 +1017,13 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 	const std::string::const_iterator end_itor = std::find(class_name.begin(), class_name.end(), '.');
 	const std::string filename = "data/classes/" + std::string(class_name.begin(), end_itor) + ".cfg";
 
-	d->set_process_hook(boost::bind(&code_editor_dialog::process, d.get()));
+	d->set_process_hook(std::bind(&code_editor_dialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename);
 	d->jump_to_error(error);
-	d->set_on_quit(boost::bind(&gui::dialog::cancel, d.get()));
+	d->set_on_quit(std::bind(&gui::dialog::cancel, d.get()));
 	d->show_modal();
 
 	if(d->cancelled()) {
@@ -1032,11 +1031,11 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 	}
 }
 
-void edit_and_continue_fn(const std::string& filename, const std::string& error, boost::function<void()> fn)
+void edit_and_continue_fn(const std::string& filename, const std::string& error, std::function<void()> fn)
 {
 	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(0,0,graphics::screen_width(),graphics::screen_height())));
 
-	d->set_process_hook(boost::bind(&code_editor_dialog::process, d.get()));
+	d->set_process_hook(std::bind(&code_editor_dialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
@@ -1067,7 +1066,7 @@ void try_fix_assert()
 }
 }
 
-void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn)
+void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 {
 	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
 	std::vector<CallStackEntry> reverse_stack = stack;
@@ -1111,7 +1110,7 @@ void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn
 	const variant::debug_info* debug_info = stack.back().expression->parent_formula().get_debug_info();
 	if(debug_info && debug_info->filename) {
 		if(!fn) {
-			fn = boost::function<void()>(try_fix_assert);
+			fn = std::function<void()>(try_fix_assert);
 		}
 		d->load_file(*debug_info->filename, true, &fn);
 		d->jump_to_error(msg);

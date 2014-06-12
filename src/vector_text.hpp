@@ -59,7 +59,7 @@ public:
 protected:
 	virtual ~vector_text()
 	{}
-	virtual void handleDraw() const;
+	virtual void handleDraw() const override;
 
 	variant getValue(const std::string& key) const;
 	void setValue(const std::string& key, const variant& value);

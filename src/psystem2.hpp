@@ -165,7 +165,7 @@ namespace graphics
 			void add_affector(affector_ptr a);
 		protected:
 			virtual void handleProcess(float t);
-			virtual void handleDraw() const;
+			virtual void handleDraw() const override;
 		private:
 			float default_particle_width_;
 			float default_particle_height_;
@@ -217,7 +217,7 @@ namespace graphics
 			void add_technique(technique_ptr tq);
 			std::vector<technique_ptr>& active_techniques() { return active_techniques_; }
 		protected:
-			virtual void handleDraw() const;
+			virtual void handleDraw() const override;
 			virtual void handleProcess(float t);
 		private:
 			void update(float t);
@@ -282,8 +282,8 @@ namespace graphics
 			particle_system_widget(const variant& node, game_logic::FormulaCallable* environment);
 			virtual ~particle_system_widget();
 		protected:
-			virtual void handleDraw() const;
-			virtual void handleProcess();
+			virtual void handleDraw() const override;
+			virtual void handleProcess() override;
 		private:
 			DECLARE_CALLABLE(particle_system_widget);
 			particle_system_container particle_systems_;

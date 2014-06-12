@@ -69,7 +69,7 @@ void vector_text::recalculateTexture()
 	textures_.clear();
 
 	size_t tex_y = 0;
-	int letter_size = font::char_width(size(), font_);
+	int letter_size = KRE::Font::charWidth(size(), font_);
 	std::vector<std::string> lines;
 
 	foreach(const std::string& paragraph, util::split(text_, '\n')) {

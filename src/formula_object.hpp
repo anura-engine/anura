@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/function.hpp>
 #include <boost/uuid/uuid.hpp>
 
 #include "formula.hpp"
@@ -41,7 +40,7 @@ bool is_class_derived_from(const std::string& derived, const std::string& base);
 class formula_object : public game_logic::WmlSerializableFormulaCallable
 {
 public:
-	static void visit_variants(variant v, boost::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
+	static void visit_variants(variant v, std::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
 	static void map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
 
 	void update(formula_object& updated);

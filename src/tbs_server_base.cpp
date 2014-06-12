@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
+
 #include <boost/asio.hpp>
 
 #include "filesystem.hpp"
@@ -104,8 +104,8 @@ namespace tbs
 	}
 
 	void server_base::handle_message(send_function send_fn, 
-		boost::function<void(client_info&)> close_fn, 
-		boost::function<socket_info&(void)> socket_info_fn,
+		std::function<void(client_info&)> close_fn, 
+		std::function<socket_info&(void)> socket_info_fn,
 		int session_id, 
 		const variant& msg)
 	{
@@ -394,7 +394,7 @@ namespace tbs
 			return;
 		}
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_server_delay_ms));
-		timer_.async_wait(boost::bind(&server_base::heartbeat, this, 
+		timer_.async_wait(std::bind(&server_base::heartbeat, this, 
 			boost::asio::placeholders::error));
 
 		foreach(game_info_ptr g, games_) {

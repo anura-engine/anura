@@ -17,8 +17,7 @@
 #ifndef UNIT_TEST_HPP_INCLUDED
 #define UNIT_TEST_HPP_INCLUDED
 
-#include <boost/function.hpp>
-
+#include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
@@ -28,10 +27,10 @@ namespace test {
 struct failure_exception {
 };
 
-typedef boost::function<void ()> UnitTest;
-typedef boost::function<void (int)> BenchmarkTest;
-typedef boost::function<void (int, const std::string&)> CommandLineBenchmarkTest;
-typedef boost::function<void (const std::vector<std::string>&)> UtilityProgram;
+typedef std::function<void ()> UnitTest;
+typedef std::function<void (int)> BenchmarkTest;
+typedef std::function<void (int, const std::string&)> CommandLineBenchmarkTest;
+typedef std::function<void (const std::vector<std::string>&)> UtilityProgram;
 
 int register_test(const std::string& name, UnitTest test);
 int register_benchmark(const std::string& name, BenchmarkTest test);

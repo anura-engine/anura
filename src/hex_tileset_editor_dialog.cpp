@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <iostream>
 
@@ -80,7 +78,7 @@ void hex_tileset_editor_dialog::init()
 		"Index of hex tileset out of bounds must be between 0 and " 
 		<< hex::HexObject::get_editor_tiles().size() << ", found " << editor_.get_hex_tileset());
 
-	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&hex_tileset_editor_dialog::show_category_menu, this));
+	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&hex_tileset_editor_dialog::show_category_menu, this));
 	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
@@ -94,7 +92,7 @@ void hex_tileset_editor_dialog::init()
 			}
 			ImageWidget* preview = new ImageWidget(t->getEditorInfo().texture, 54, 54);
 			preview->setArea(t->getEditorInfo().image_rect);
-			ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
+			ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
 			tileset_button->setTooltip(t->id() + "/" + t->getEditorInfo().name, 14);
 			tileset_button->setDim(58, 58);
 			grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_hex_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
@@ -130,7 +128,7 @@ void hex_tileset_editor_dialog::show_category_menu()
 	grid->set_show_background(true);
 	grid->set_hpad(10);
 	grid->allow_selection();
-	grid->register_selection_callback(boost::bind(&hex_tileset_editor_dialog::close_context_menu, this, _1));
+	grid->register_selection_callback(std::bind(&hex_tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
 	foreach(const hex::TileTypePtr& t, hex::HexObject::get_hex_tiles()) {
@@ -144,7 +142,7 @@ void hex_tileset_editor_dialog::show_category_menu()
 		preview->setArea(t->getEditorInfo().image_rect);
 		grid->add_col(WidgetPtr(preview))
 		     .add_col(WidgetPtr(new label(t->getEditorInfo().group, graphics::color_white())));
-		grid->register_row_selection_callback(boost::bind(&hex_tileset_editor_dialog::select_category, this, t->getEditorInfo().group));
+		grid->register_row_selection_callback(std::bind(&hex_tileset_editor_dialog::select_category, this, t->getEditorInfo().group));
 	}
 
 	int mousex, mousey;

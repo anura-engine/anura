@@ -30,9 +30,7 @@
 #include <sys/wait.h>
 #endif
 
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include "asserts.hpp"
 #include "background_task_pool.hpp"
@@ -46,7 +44,6 @@
 #include "difficulty.hpp"
 #include "external_text_editor.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
@@ -768,7 +765,7 @@ extern "C" int main(int argcount, char* argvec[])
 		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
-		graphical_font::init_for_locale(i18n::get_locale());
+		GraphicalFont::initForLocale(i18n::get_locale());
 		preloads = json::parse_from_file("data/preload.cfg");
 		int preload_items = preloads["preload"].num_elements();
 		loader.set_number_of_items(preload_items+7); // 7 is the number of items that will be loaded below
@@ -849,7 +846,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			level_runner runner(wait_lvl, level_cfg, orig_level_cfg);
 
-			multiplayer::sync_start_time(*lvl, boost::bind(&level_runner::play_cycle, &runner));
+			multiplayer::sync_start_time(*lvl, std::bind(&level_runner::play_cycle, &runner));
 
 			lvl->set_multiplayer_slot(multiplayer::slot());
 		}

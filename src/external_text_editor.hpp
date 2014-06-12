@@ -27,7 +27,7 @@
 
 class external_text_editor;
 
-typedef boost::shared_ptr<external_text_editor> external_text_editor_ptr;
+typedef std::shared_ptr<external_text_editor> external_text_editor_ptr;
 
 class external_text_editor
 {

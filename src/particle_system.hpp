@@ -30,7 +30,7 @@ typedef boost::intrusive_ptr<particle_system> particle_system_ptr;
 typedef boost::intrusive_ptr<const particle_system> const_particle_system_ptr;
 
 class particle_system_factory;
-typedef boost::shared_ptr<const particle_system_factory> const_particle_system_factory_ptr;
+typedef std::shared_ptr<const particle_system_factory> const_particle_system_factory_ptr;
 
 class particle_system_factory
 {

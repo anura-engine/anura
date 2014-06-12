@@ -53,6 +53,7 @@ namespace KRE
 
 		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
 		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
+		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation);
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color=nullptr) const;
 
@@ -65,6 +66,7 @@ namespace KRE
 		virtual void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawLine(const point& p1, const point& p2, const Color& color) const = 0;
 		virtual void drawLines(const std::vector<float>& varray, float line_width, const Color& color) const = 0;
+		virtual void drawLineStrip(const std::vector<glm::vec2>& points, float line_width, const Color& color) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const Color& color) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const = 0;
 		virtual void drawHollowCircle(const point& centre, double radius, const Color& color) const = 0;

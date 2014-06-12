@@ -1,6 +1,4 @@
 
-#include <boost/bind.hpp>
-
 #include "button.hpp"
 #include "language_dialog.hpp"
 #include "dialog.hpp"
@@ -19,14 +17,14 @@ void end_dialog(gui::dialog* d)
 	d->close();
 }
 
-void do_draw_scene() {
+void doDraw_scene() {
 	draw_scene(level::current(), last_draw_position());
 }
 
 void setLocale(const std::string& value) {
 	preferences::setLocale(value);
 	i18n::init();
-	graphical_font::init_for_locale(i18n::get_locale());
+	GraphicalFont::initForLocale(i18n::get_locale());
 }
 
 class grid {
@@ -67,13 +65,13 @@ void show_language_dialog()
 	using namespace gui;
 	dialog d(0, 0, 0, 0);
 	d.set_background_frame("empty_window");
-	d.set_draw_background_fn(do_draw_scene);
+	d.set_draw_background_fn(doDraw_scene);
 
 	const int button_width = 300;
 	const int button_height = 50;
 	const int padding = 20;
 
-	d.addWidget(WidgetPtr(new graphical_font_label(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
+	d.addWidget(WidgetPtr(new GraphicalFontLabel(_("Language change will take effect in next level."), "door_label", 2)), padding, padding);
 
 	grid g(d, button_width, button_height, padding, padding, 0, 40, 2);
 
@@ -82,21 +80,21 @@ void show_language_dialog()
 	int index = 0;
 	foreach(variant_map::value_type pair, languages) {
 		WidgetPtr b(new button(
-			WidgetPtr(new graphical_font_label(pair.second.as_string(), "language_names", 2)),
-			boost::bind(setLocale, pair.first.as_string()),
+			WidgetPtr(new GraphicalFontLabel(pair.second.as_string(), "language_names", 2)),
+			std::bind(setLocale, pair.first.as_string()),
 			BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
 		b->setDim(button_width, button_height);
 		g.addWidget(b);
 	}
 
 	WidgetPtr system_button(new button(
-		WidgetPtr(new graphical_font_label(_("Use system language"), "door_label", 2)),
-	   	boost::bind(setLocale, "system"),
+		WidgetPtr(new GraphicalFontLabel(_("Use system language"), "door_label", 2)),
+	   	std::bind(setLocale, "system"),
 		BUTTON_STYLE_NORMAL, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	system_button->setDim(button_width, button_height);
 	g.addWidget(system_button);
 
-	WidgetPtr back_button(new button(WidgetPtr(new graphical_font_label(_("Back"), "door_label", 2)), boost::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
+	WidgetPtr back_button(new button(WidgetPtr(new GraphicalFontLabel(_("Back"), "door_label", 2)), std::bind(end_dialog, &d), BUTTON_STYLE_DEFAULT, BUTTON_SIZE_DOUBLE_RESOLUTION));
 	back_button->setDim(button_width, button_height);
 	g.addWidget(back_button);
 

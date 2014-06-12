@@ -14,17 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <iostream>
 #include <map>
 #include <set>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
-
-#include "graphics.hpp"
 
 namespace test {
 
@@ -200,7 +196,7 @@ void run_benchmarks(const std::vector<std::string>* benchmarks)
 
 void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg)
 {
-	run_benchmark(benchmark_name, boost::bind(get_cl_benchmark_map()[benchmark_name], _1, arg));
+	run_benchmark(benchmark_name, std::bind(get_cl_benchmark_map()[benchmark_name], _1, arg));
 }
 
 void run_utility(const std::string& utility_name, const std::vector<std::string>& arg)

@@ -234,5 +234,10 @@ namespace KRE
 		return lhs.asARGB() == rhs.asARGB();
 	}
 
+	bool operator!=(const Color& lhs, const Color& rhs)
+	{
+		return !operator==(lhs, rhs);
+	}
+
 	typedef std::shared_ptr<Color> ColorPtr;
 }

@@ -35,7 +35,7 @@ namespace box2d
 		variant write();
 	protected:
 	private:
-		boost::shared_ptr<b2JointDef> joint_def_;
+		std::shared_ptr<b2JointDef> joint_def_;
 		std::string id_;
 
 		variant joint_variant_def_;
@@ -46,8 +46,8 @@ namespace box2d
 		b2World *current_world = NULL;
 		world_ptr this_world;
 
-		typedef std::map<std::string, boost::shared_ptr<joint_factory> > joint_factory_map;
-		typedef std::pair<std::string, boost::shared_ptr<joint_factory> > joint_factory_pair;
+		typedef std::map<std::string, std::shared_ptr<joint_factory> > joint_factory_map;
+		typedef std::pair<std::string, std::shared_ptr<joint_factory> > joint_factory_pair;
 		joint_factory_map& get_joint_defs()
 		{
 			static joint_factory_map res;
@@ -136,11 +136,11 @@ namespace box2d
 		if(w.has_key("joints")) {
 			if(w["joints"].is_list()) {
 				for(size_t n = 0; n < w["joints"].num_elements(); ++n) {
-					boost::shared_ptr<joint_factory> p = boost::shared_ptr<joint_factory>(new joint_factory(w["joints"][n]));
+					std::shared_ptr<joint_factory> p = std::shared_ptr<joint_factory>(new joint_factory(w["joints"][n]));
 					get_joint_defs()[w["joints"][n]["id"].as_string()] = p;
 				}
 			} else if(w["joints"].is_map()) {
-				boost::shared_ptr<joint_factory> p = boost::shared_ptr<joint_factory>(new joint_factory(w["joints"]));
+				std::shared_ptr<joint_factory> p = std::shared_ptr<joint_factory>(new joint_factory(w["joints"]));
 				get_joint_defs()[w["joints"]["id"].as_string()] = p;
 			}
 		}
@@ -300,7 +300,7 @@ namespace box2d
 		//std::cerr << "fixture being destructed: " << std::hex << intptr_t(fix) << std::dec << std::endl;
 	}
 
-	boost::shared_ptr<b2FixtureDef> body::create_fixture(const variant& fix)
+	std::shared_ptr<b2FixtureDef> body::create_fixture(const variant& fix)
 	{
 		b2FixtureDef* fix_def = new b2FixtureDef();
 		fix_def->friction = float(fix["friction"].as_decimal().as_float());
@@ -351,7 +351,7 @@ namespace box2d
 					poly_shape->Set(&v[0], num_elements);
 				}
 				fix_def->shape = poly_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(poly_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(poly_shape));
 			} else if(type == "circle") {
 				b2CircleShape* circle_shape = new b2CircleShape;
 				circle_shape->m_radius = float(shape["radius"].as_decimal().as_float());
@@ -362,7 +362,7 @@ namespace box2d
 						float(shape["position"][1].as_decimal().as_float()));
 				}
 				fix_def->shape = circle_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(circle_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(circle_shape));
 			} else if(type == "edge") {
 				b2EdgeShape* edge_shape = new b2EdgeShape;
 				ASSERT_LOG(shape.has_key("vertex1") && shape["vertex1"].is_list() && shape["vertex1"].num_elements() == 2,
@@ -384,7 +384,7 @@ namespace box2d
 					edge_shape->m_hasVertex3 = true;
 				}
 				fix_def->shape = edge_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(edge_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(edge_shape));
 			} else if(type == "chain") {
 				b2ChainShape* chain_shape = new b2ChainShape;
 				ASSERT_LOG(shape.has_key("vertices") && shape["vertices"].is_list(), "verticies must be a list");
@@ -407,12 +407,12 @@ namespace box2d
 					chain_shape->SetNextVertex(b2Vec2(float32(shape["next_vertex"][0].as_decimal().as_float()), float32(shape["next_vertex"][1].as_decimal().as_float())));
 				}
 				fix_def->shape = chain_shape;
-				shape_list_.push_back(boost::shared_ptr<b2Shape>(chain_shape));
+				shape_list_.push_back(std::shared_ptr<b2Shape>(chain_shape));
 			} else {
 				ASSERT_LOG(false, "Unrecognised shape type: " << type);
 			}
 		}
-		return boost::shared_ptr<b2FixtureDef>(fix_def);
+		return std::shared_ptr<b2FixtureDef>(fix_def);
 	}
 
 	body::body(const variant& value) 
@@ -503,8 +503,8 @@ namespace box2d
 		body_def_.position.x /= wp->scale();
 		body_def_.position.y /= wp->scale();
 
-		body_ = boost::shared_ptr<b2Body>(wp->create_body(this), body_destructor());
-		foreach(const boost::shared_ptr<b2FixtureDef> fix_def, fix_defs_) {
+		body_ = std::shared_ptr<b2Body>(wp->create_body(this), body_destructor());
+		foreach(const std::shared_ptr<b2FixtureDef> fix_def, fix_defs_) {
 			body_->CreateFixture(fix_def.get());
 		}
 		body_->ResetMassData();
@@ -723,7 +723,7 @@ namespace box2d
 	variant body::fix_write()
 	{
 		variant_builder res;
-		std::vector<boost::shared_ptr<b2FixtureDef> >::const_iterator it = fix_defs_.begin();
+		std::vector<std::shared_ptr<b2FixtureDef> >::const_iterator it = fix_defs_.begin();
 		while(it != fix_defs_.end()) {
 			variant_builder fix;
 			fix.add("friction", variant((*it)->friction));
@@ -861,7 +861,7 @@ namespace box2d
 		bool collide_connected = value["collide_connected"].as_bool(false);
 
 		if(type == "revolute") {
-			boost::shared_ptr<b2RevoluteJointDef> revolute = boost::shared_ptr<b2RevoluteJointDef>(new b2RevoluteJointDef);
+			std::shared_ptr<b2RevoluteJointDef> revolute = std::shared_ptr<b2RevoluteJointDef>(new b2RevoluteJointDef);
 			b2Vec2 anchor = body_a_->get_raw_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -892,7 +892,7 @@ namespace box2d
 			}
 			joint_def_ = revolute;
 		} else if(type == "distance") {
-			boost::shared_ptr<b2DistanceJointDef> distance = boost::shared_ptr<b2DistanceJointDef>(new b2DistanceJointDef);
+			std::shared_ptr<b2DistanceJointDef> distance = std::shared_ptr<b2DistanceJointDef>(new b2DistanceJointDef);
 			b2Vec2 anchor_a = body_a_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 anchor_b = body_b_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor_a")) {
@@ -914,7 +914,7 @@ namespace box2d
 			}
 			joint_def_ = distance;
 		} else if(type == "prismatic") {
-			boost::shared_ptr<b2PrismaticJointDef> prismatic = boost::shared_ptr<b2PrismaticJointDef>(new b2PrismaticJointDef);
+			std::shared_ptr<b2PrismaticJointDef> prismatic = std::shared_ptr<b2PrismaticJointDef>(new b2PrismaticJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -951,7 +951,7 @@ namespace box2d
 			}
 			joint_def_ = prismatic;
 		} else if(type == "pulley") {
-			boost::shared_ptr<b2PulleyJointDef> pulley = boost::shared_ptr<b2PulleyJointDef>(new b2PulleyJointDef);
+			std::shared_ptr<b2PulleyJointDef> pulley = std::shared_ptr<b2PulleyJointDef>(new b2PulleyJointDef);
 			b2Vec2 anchor_a = body_a_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 anchor_b = body_b_->get_body_ptr()->GetWorldCenter();
 			b2Vec2 ground_anchor_a;
@@ -976,7 +976,7 @@ namespace box2d
 			pulley->Initialize(body_a_->get_raw_body_ptr(), body_b_->get_raw_body_ptr(), ground_anchor_a, ground_anchor_b, anchor_a, anchor_b, ratio);
 			joint_def_ = pulley;
 		} else if(type == "gear") {
-			boost::shared_ptr<b2GearJointDef> gear = boost::shared_ptr<b2GearJointDef>(new b2GearJointDef);
+			std::shared_ptr<b2GearJointDef> gear = std::shared_ptr<b2GearJointDef>(new b2GearJointDef);
 			gear->ratio = float(value["ratio"].as_decimal(decimal(1.0)).as_float());
 			gear->bodyA = body_a_->get_raw_body_ptr();
 			gear->bodyB = body_b_->get_raw_body_ptr();
@@ -989,7 +989,7 @@ namespace box2d
 			gear->joint2 = j1->get_b2Joint();
 			joint_def_ = gear;
 		} else if(type == "mouse") {
-			boost::shared_ptr<b2MouseJointDef> mouse = boost::shared_ptr<b2MouseJointDef>(new b2MouseJointDef);
+			std::shared_ptr<b2MouseJointDef> mouse = std::shared_ptr<b2MouseJointDef>(new b2MouseJointDef);
 			b2Vec2 target = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("target")) {
 				ASSERT_LOG(value["target"].is_list() && value["target"].num_elements() == 2,
@@ -1008,7 +1008,7 @@ namespace box2d
 			}
 			joint_def_ = mouse;
 		} else if(type == "wheel") {
-			boost::shared_ptr<b2WheelJointDef> wheel = boost::shared_ptr<b2WheelJointDef>(new b2WheelJointDef);
+			std::shared_ptr<b2WheelJointDef> wheel = std::shared_ptr<b2WheelJointDef>(new b2WheelJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -1029,7 +1029,7 @@ namespace box2d
 			wheel->dampingRatio = float(value["damping_ratio"].as_decimal(decimal(0.7)).as_float());
 			joint_def_ = wheel;
 		} else if(type == "weld") {
-			boost::shared_ptr<b2WeldJointDef> weld = boost::shared_ptr<b2WeldJointDef>(new b2WeldJointDef);
+			std::shared_ptr<b2WeldJointDef> weld = std::shared_ptr<b2WeldJointDef>(new b2WeldJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,
@@ -1042,7 +1042,7 @@ namespace box2d
 			weld->dampingRatio = float(value["damping_ratio"].as_decimal(decimal(0.0)).as_float());
 			joint_def_ = weld;
 		} else if(type == "rope") {
-			boost::shared_ptr<b2RopeJointDef> rope = boost::shared_ptr<b2RopeJointDef>(new b2RopeJointDef);
+			std::shared_ptr<b2RopeJointDef> rope = std::shared_ptr<b2RopeJointDef>(new b2RopeJointDef);
 			rope->bodyA = body_a_->get_raw_body_ptr();
 			rope->bodyB = body_b_->get_raw_body_ptr();
 			b2Vec2 local_anchor_a(-1.0f, 0.0f);
@@ -1062,7 +1062,7 @@ namespace box2d
 			rope->maxLength = float(value["max_length"].as_decimal(decimal(0.0)).as_float());
 			joint_def_ = rope;
 		} else if(type == "friction") {
-			boost::shared_ptr<b2FrictionJointDef> friction = boost::shared_ptr<b2FrictionJointDef>(new b2FrictionJointDef);
+			std::shared_ptr<b2FrictionJointDef> friction = std::shared_ptr<b2FrictionJointDef>(new b2FrictionJointDef);
 			b2Vec2 anchor = body_a_->get_body_ptr()->GetWorldCenter();
 			if(value.has_key("anchor")) {
 				ASSERT_LOG(value["anchor"].is_list() && value["anchor"].num_elements() == 2,

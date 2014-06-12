@@ -49,7 +49,7 @@ namespace KRE
 		protected:
 			virtual void internal_create(particle& p, float t) = 0;
 			virtual void handleProcess(float t);
-			virtual void handleDraw() const;
+			virtual void handleDraw() const override;
 			virtual bool duration_expired() { return can_be_deleted_; }
 
 			enum EMITS_TYPE {

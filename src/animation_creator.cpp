@@ -43,7 +43,7 @@ namespace gui
 
 	namespace 
 	{
-		void do_draw_scene() 
+		void doDraw_scene() 
 		{
 			draw_scene(level::current(), last_draw_position());
 		}
@@ -139,7 +139,7 @@ namespace gui
 			anims_.push_back(anims);
 		}
 
-		set_process_hook(boost::bind(&AnimationCreatorDialog::process, this));
+		set_process_hook(std::bind(&AnimationCreatorDialog::process, this));
 		init();
 	}
 
@@ -193,7 +193,7 @@ namespace gui
 		// Add copy desintation box
 		grid_ptr g(new grid(2));
 		g->set_hpad(20);
-		g->add_col(ButtonPtr(new Button(new Label("Set Destination", 14), boost::bind(&AnimationCreatorDialog::setDestination, this))))
+		g->add_col(ButtonPtr(new Button(new Label("Set Destination", 14), std::bind(&AnimationCreatorDialog::setDestination, this))))
 			.add_col(LabelPtr(new Label(copy_path_, KRE::Color::colorGreen(), 14)));
 		g->add_col(WidgetPtr(new Label("", KRE::Color::colorYellow(), 12)))
 			.add_col(WidgetPtr(new Label("Images will be copied to the destination directory", KRE::Color::colorYellow(), 12)));
@@ -227,7 +227,7 @@ namespace gui
 				.add_col(LabelPtr(new Label(v.has_key("image") ? v["image"].as_string() : "", 12)))
 				.add_col(LabelPtr(new Label(ss.str(), 12)));
 		}
-		g->register_selection_callback(boost::bind(&AnimationCreatorDialog::selectAnimation, this, _1));
+		g->register_selection_callback(std::bind(&AnimationCreatorDialog::selectAnimation, this, _1));
 		addWidget(g, border_offset, current_height);
 		current_height += g->height() + hpad;
 
@@ -239,13 +239,13 @@ namespace gui
 		id_entry->setFontSize(14);
 		id_entry->setText(current_.has_key("id") ? current_["id"].as_string() : "normal");
 		id_entry->set_dropdown_height(height() - current_height - border_offset);
-		id_entry->set_on_change_handler(boost::bind(&AnimationCreatorDialog::onIdChange, this, id_entry, _1));
-		id_entry->set_on_select_handler(boost::bind(&AnimationCreatorDialog::onIdSet, this, id_entry, _1, _2));
+		id_entry->setOnChangeHandler(std::bind(&AnimationCreatorDialog::onIdChange, this, id_entry, _1));
+		id_entry->setOnSelectHandler(std::bind(&AnimationCreatorDialog::onIdSet, this, id_entry, _1, _2));
 		g->add_col(WidgetPtr(new Label("Identifier: ", KRE::Color::colorWhite(), 14)))
 			.add_col(WidgetPtr(id_entry))
 			.finish_row();
 
-		g->add_col(ButtonPtr(new Button(new Label("Choose Image File", 14), boost::bind(&AnimationCreatorDialog::setImageFile, this))))
+		g->add_col(ButtonPtr(new Button(new Label("Choose Image File", 14), std::bind(&AnimationCreatorDialog::setImageFile, this))))
 			.add_col(WidgetPtr(new Label(rel_path_, KRE::Color::colorGreen(), 14)))
 			.finish_row();
 
@@ -256,11 +256,11 @@ namespace gui
 				std::stringstream ss;
 				ss << p.second.as_int();
 				entry->setText(ss.str());
-				slider_ptr slide(new slider(200, boost::bind((&AnimationCreatorDialog::changeSlide), this, p.first.as_string(), entry, _1), 0.5));
-				slide->set_drag_end(boost::bind(&AnimationCreatorDialog::endSlide, this, p.first.as_string(), slide, entry, _1));
-				entry->set_on_change_handler(boost::bind(&AnimationCreatorDialog::changeText, this, p.first.as_string(), entry, slide));
-				entry->set_on_enter_handler(boost::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
-				entry->set_on_tab_handler(boost::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
+				SliderPtr slide(new Slider(200, std::bind((&AnimationCreatorDialog::changeSlide), this, p.first.as_string(), entry, _1), 0.5));
+				slide->setDragEnd(std::bind(&AnimationCreatorDialog::endSlide, this, p.first.as_string(), slide, entry, _1));
+				entry->setOnChangeHandler(std::bind(&AnimationCreatorDialog::changeText, this, p.first.as_string(), entry, slide));
+				entry->setOnEnterHandler(std::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
+				entry->setOnTabHandler(std::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
 				g->add_col(WidgetPtr(new Label(p.first.as_string(), KRE::Color::colorWhite(), 12)))
 					.add_col(entry)
 					.add_col(slide);
@@ -272,14 +272,14 @@ namespace gui
 		// Add/Delete animation buttons
 		g.reset(new grid(4));
 		g->set_hpad(50);
-		g->add_col(ButtonPtr(new Button(new Label("New", 14), boost::bind(&AnimationCreatorDialog::animNew, this))))
-			.add_col(ButtonPtr(new Button(new Label("Save", 14), boost::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
-			.add_col(ButtonPtr(new Button(new Label("Delete", 14), boost::bind(&AnimationCreatorDialog::animDel, this))))
-			.add_col(ButtonPtr(new Button(new Label("Finish", 14), boost::bind(&AnimationCreatorDialog::finish, this))));
+		g->add_col(ButtonPtr(new Button(new Label("New", 14), std::bind(&AnimationCreatorDialog::animNew, this))))
+			.add_col(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
+			.add_col(ButtonPtr(new Button(new Label("Delete", 14), std::bind(&AnimationCreatorDialog::animDel, this))))
+			.add_col(ButtonPtr(new Button(new Label("Finish", 14), std::bind(&AnimationCreatorDialog::finish, this))));
 		addWidget(g, border_offset, height() - border_offset - g->height());
 		current_height = height() - border_offset - g->height();
 
-		CheckboxPtr cb = new Checkbox("Simplified Options", simple_options_, boost::bind(&AnimationCreatorDialog::setOption, this), BUTTON_SIZE_DOUBLE_RESOLUTION);
+		CheckboxPtr cb = new Checkbox("Simplified Options", simple_options_, std::bind(&AnimationCreatorDialog::setOption, this), BUTTON_SIZE_DOUBLE_RESOLUTION);
 		addWidget(cb, border_offset, current_height - cb->height() - 10);
 	}
 
@@ -290,11 +290,11 @@ namespace gui
 			if(AnimationPreviewWidget::is_animation(current_)) {
 				if(!animation_preview_) {
 					animation_preview_.reset(new AnimationPreviewWidget(current_));
-					animation_preview_->setRectHandler(boost::bind(&AnimationCreatorDialog::setAnimationRect, this, _1));
-					animation_preview_->setSolidHandler(boost::bind(&AnimationCreatorDialog::moveSolidRect, this, _1, _2));
-					animation_preview_->setPadHandler(boost::bind(&AnimationCreatorDialog::setIntegerAttr, this, "pad", _1));
-					animation_preview_->setNumFramesHandler(boost::bind(&AnimationCreatorDialog::setIntegerAttr, this, "frames", _1));
-					animation_preview_->setFramesPerRowHandler(boost::bind(&AnimationCreatorDialog::setIntegerAttr, this, "frames_per_row", _1));
+					animation_preview_->setRectHandler(std::bind(&AnimationCreatorDialog::setAnimationRect, this, _1));
+					animation_preview_->setSolidHandler(std::bind(&AnimationCreatorDialog::moveSolidRect, this, _1, _2));
+					animation_preview_->setPadHandler(std::bind(&AnimationCreatorDialog::setIntegerAttr, this, "pad", _1));
+					animation_preview_->setNumFramesHandler(std::bind(&AnimationCreatorDialog::setIntegerAttr, this, "frames", _1));
+					animation_preview_->setFramesPerRowHandler(std::bind(&AnimationCreatorDialog::setIntegerAttr, this, "frames_per_row", _1));
 					animation_preview_->setLoc(width() - int(width()*0.42) - border_offset, border_offset);
 					animation_preview_->setDim(int(width()*0.42), height()-border_offset*2);
 					animation_preview_->init();
@@ -415,7 +415,7 @@ namespace gui
 			int(preferences::virtual_screen_height()*0.8),
 			f);
 		open_dlg.set_background_frame("empty_window");
-		open_dlg.set_draw_background_fn(do_draw_scene);
+		open_dlg.set_draw_background_fn(doDraw_scene);
 		open_dlg.show_modal();
 
 		if(open_dlg.cancelled() == false) {
@@ -431,12 +431,12 @@ namespace gui
 		init();
 	}
 
-	void AnimationCreatorDialog::changeText(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slide)
+	void AnimationCreatorDialog::changeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr slide)
 	{
 		if(!dragging_slider_) {
 			int i;
 			std::istringstream(editor->text()) >> i;
-			slide->set_position(0.5);
+			slide->setPosition(0.5);
 			if(current_.is_null() == false) {
 				current_.add_attr(variant(s), variant(i));
 			}
@@ -444,12 +444,12 @@ namespace gui
 		}
 	}
 
-	void AnimationCreatorDialog::executeChangeText(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider)
+	void AnimationCreatorDialog::executeChangeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr Slider)
 	{
 		if(!dragging_slider_) {
 			int i;
 			std::istringstream(editor->text()) >> i;
-			slider->set_position(0.5);
+			Slider->setPosition(0.5);
 			setIntegerAttr(s.c_str(), i);
 		}
 	}
@@ -471,11 +471,11 @@ namespace gui
 		//slider_offset_[s] = soffs;
 	}
 
-	void AnimationCreatorDialog::endSlide(const std::string& s, slider_ptr slide, TextEditorWidgetPtr editor, double d)
+	void AnimationCreatorDialog::endSlide(const std::string& s, SliderPtr slide, TextEditorWidgetPtr editor, double d)
 	{
 		int i = slider_transform(d) + slider_offset_[s];
 		setIntegerAttr(s.c_str(), i);
-		slide->set_position(0.5);
+		slide->setPosition(0.5);
 		dragging_slider_ = false;
 		init();
 	}
@@ -512,7 +512,7 @@ namespace gui
 
 		selected_frame_ = -1;
 
-		// reset the slider offsets.
+		// reset the Slider offsets.
 		for(std::map<std::string, int>::iterator it = slider_offset_.begin(); it != slider_offset_.end(); it++) {
 			it->second = 0;
 		}
@@ -577,8 +577,8 @@ namespace gui
 			d.addWidget(title, (d.width()-title->width())/2, 50);
 			grid_ptr g = new grid(2);
 			g->set_header_row(40);
-			g->add_col(WidgetPtr(new Button("Save", boost::bind(&AnimationCreatorDialog::animSave, this, &d))))
-				.add_col(WidgetPtr(new Button("Discard", boost::bind(&Dialog::cancel, &d))));
+			g->add_col(WidgetPtr(new Button("Save", std::bind(&AnimationCreatorDialog::animSave, this, &d))))
+				.add_col(WidgetPtr(new Button("Discard", std::bind(&Dialog::cancel, &d))));
 			d.addWidget(g, (d.width()-g->width())/2, 30+70+title->height());
 			d.show_modal();
 			changed_ = false;
@@ -610,7 +610,7 @@ namespace gui
 			gui::filter_list(), 
 			true, module::get_module_path("") + "images");
 		dir_dlg.set_background_frame("empty_window");
-		dir_dlg.set_draw_background_fn(do_draw_scene);
+		dir_dlg.set_draw_background_fn(doDraw_scene);
 		dir_dlg.use_relative_paths(true);
 		dir_dlg.show_modal();
 

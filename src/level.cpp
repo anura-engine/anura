@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include <algorithm>
 #include <iostream>
@@ -661,7 +660,7 @@ void level::finish_loading()
 				const rect bounds(x, y, seg_width, seg_height);
 
 				sub_level->boundaries_ = bounds;
-				sub_level->tiles_.erase(std::remove_if(sub_level->tiles_.begin(), sub_level->tiles_.end(), boost::bind(level_tile_not_in_rect, bounds, _1)), sub_level->tiles_.end());
+				sub_level->tiles_.erase(std::remove_if(sub_level->tiles_.begin(), sub_level->tiles_.end(), std::bind(level_tile_not_in_rect, bounds, _1)), sub_level->tiles_.end());
 				sub_level->solid_.clear();
 				sub_level->standable_.clear();
 				foreach(const level_tile& t, sub_level->tiles_) {
@@ -972,7 +971,7 @@ void level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
 
 	static threading::mutex* sync = new threading::mutex;
 
-	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", boost::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
+	info.rebuild_tile_thread = new threading::thread("rebuild_tiles", std::bind(build_tiles_thread_function, &info, worker_tile_maps, *sync));
 }
 
 void level::freeze_rebuild_tiles_in_background()
@@ -1051,7 +1050,7 @@ void level::complete_rebuild_tiles_in_background()
 		tiles_.clear();
 	} else {
 		foreach(int layer, info.rebuild_tile_layers_worker_buffer) {
-			tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), boost::bind(level_tile_from_layer, _1, layer)), tiles_.end());
+			tiles_.erase(std::remove_if(tiles_.begin(), tiles_.end(), std::bind(level_tile_from_layer, _1, layer)), tiles_.end());
 		}
 	}
 
@@ -4498,7 +4497,7 @@ decimal level::zoom_level() const
 	return zoom_level_;
 }
 
-void level::add_speech_dialog(boost::shared_ptr<speech_dialog> d)
+void level::add_speech_dialog(std::shared_ptr<speech_dialog> d)
 {
 	speech_dialogs_.push(d);
 }
@@ -4510,10 +4509,10 @@ void level::remove_speech_dialog()
 	}
 }
 
-boost::shared_ptr<const speech_dialog> level::current_speech_dialog() const
+std::shared_ptr<const speech_dialog> level::current_speech_dialog() const
 {
 	if(speech_dialogs_.empty()) {
-		return boost::shared_ptr<const speech_dialog>();
+		return std::shared_ptr<const speech_dialog>();
 	}
 
 	return speech_dialogs_.top();
@@ -4614,7 +4613,7 @@ void level::build_solid_data_from_sub_levels()
 
 void level::adjust_level_offset(int xoffset, int yoffset)
 {
-	game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
 	variant holder(callable);
 	callable->add("xshift", variant(xoffset));
 	callable->add("yshift", variant(yoffset));
@@ -4769,12 +4768,12 @@ bool level::gui_event(const SDL_Event &event)
 	return false;
 }
 
-void level::launch_new_module(const std::string& module_id, game_logic::const_FormulaCallablePtr callable)
+void level::launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable)
 {
 	module::reload(module_id);
 	reload_level_paths();
 	custom_object_type::reload_file_paths();
-	font::reload_font_paths();
+	font::reloadFontPaths();
 #if defined(USE_SHADERS)
 	gles2::init_default_shader();
 #endif

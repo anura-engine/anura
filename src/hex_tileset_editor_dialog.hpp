@@ -46,7 +46,7 @@ private:
 	void close_context_menu(int index);
 	void show_category_menu();
 
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	editor& editor_;
 
 	gui::WidgetPtr context_menu_;

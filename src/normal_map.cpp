@@ -1,9 +1,6 @@
 #include <boost/array.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <assert.h>
 
@@ -23,7 +20,6 @@
 #include "color_picker.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
-#include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "image_widget.hpp"
@@ -31,13 +27,9 @@
 #include "json_parser.hpp"
 #include "label.hpp"
 #include "level_runner.hpp"
-#include "lighting.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
 #include "slider.hpp"
-#include "surface.hpp"
-#include "surface_cache.hpp"
-#include "texture.hpp"
 #include "unit_test.hpp"
 
 namespace graphics 

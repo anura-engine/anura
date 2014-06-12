@@ -55,9 +55,9 @@ private:
 	void change_label_property(const std::string& id);
 	void change_text_property(const std::string& id, const gui::TextEditorWidgetPtr w);
 
-	typedef std::pair<gui::TextEditorWidgetPtr, gui::slider_ptr> numeric_widgets;
-	void change_numeric_property(const std::string& id, boost::shared_ptr<numeric_widgets> w);
-	void change_numeric_property_slider(const std::string& id, boost::shared_ptr<numeric_widgets> w, double value);
+	typedef std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> numeric_widgets;
+	void change_numeric_property(const std::string& id, std::shared_ptr<numeric_widgets> w);
+	void change_numeric_property_Slider(const std::string& id, std::shared_ptr<numeric_widgets> w, double value);
 	void change_enum_property(const std::string& id);
 	void set_enum_property(const std::string& id, const std::vector<std::string>& options, int index);
 
@@ -73,7 +73,7 @@ private:
 	std::vector<entity_ptr> entity_;
 	gui::WidgetPtr context_menu_;
 
-	boost::scoped_ptr<assert_recover_scope> assert_recover_scope_;
+	std::unique_ptr<assert_recover_scope> assert_recover_scope_;
 };
 
 typedef boost::intrusive_ptr<property_editor_dialog> property_editor_DialogPtr;

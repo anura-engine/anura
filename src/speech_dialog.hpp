@@ -66,7 +66,7 @@ private:
 
 	struct TextMarkup {
 		int begin;
-		boost::shared_ptr<KRE::Color> color;
+		std::shared_ptr<KRE::Color> color;
 	};
 
 	std::vector<std::vector<TextMarkup>> markup_;

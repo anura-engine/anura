@@ -43,11 +43,11 @@ namespace gui
 		~TextEditorWidget();
 
 		std::string text() const;
-		void setText(const std::string& value, bool reset_cursor=true);
+		void setText(const std::string& value, bool resetCursor=true);
 
-		int get_font_size() const { return font_size_; }
+		int getFontSize() const { return font_size_; }
 		void setFontSize(int font_size);
-		void change_font_size(int amount);
+		void changeFontSize(int amount);
 
 		virtual void setDim(int w, int h);
 
@@ -66,87 +66,87 @@ namespace gui
 			int row, col;
 		};
 
-		const std::vector<std::string>& get_data() const { return text_; }
+		const std::vector<std::string>& getData() const { return text_; }
 
-		void set_search(const std::string& term);
-		void next_search_match();
-		bool has_search_matches() const { return search_matches_.empty() == false; }
+		void setSearch(const std::string& term);
+		void nextSearchMatch();
+		bool hasSearchMatches() const { return search_matches_.empty() == false; }
 
 		void replace(const std::string& replace_with);
 
-		void set_on_change_handler(boost::function<void()> fn) { on_change_ = fn; }
-		void set_on_user_change_handler(boost::function<void()> fn) { on_user_change_ = fn; }
-		void set_onMoveCursor_handler(boost::function<void()> fn) { onMoveCursor_ = fn; }
-		void set_on_enter_handler(boost::function<void()> fn) { on_enter_ = fn; }
-		void set_on_begin_enter_handler(boost::function<bool()> fn) { on_begin_enter_ = fn; }
-		void set_on_tab_handler(boost::function<void()> fn) { on_tab_ = fn; }
-		void set_on_esc_handler(boost::function<void()> fn) { on_escape_ = fn; }
-		void set_on_change_focus_handler(boost::function<void(bool)> fn) { on_change_focus_ = fn; }
+		void setOnChangeHandler(std::function<void()> fn) { on_change_ = fn; }
+		void setOnUserChangeHandler(std::function<void()> fn) { on_user_change_ = fn; }
+		void setOnMoveCursorHandler(std::function<void()> fn) { onMoveCursor_ = fn; }
+		void setOnEnterHandler(std::function<void()> fn) { on_enter_ = fn; }
+		void setOnBeginEnterHandler(std::function<bool()> fn) { onBeginEnter_ = fn; }
+		void setOnTabHandler(std::function<void()> fn) { on_tab_ = fn; }
+		void setOnEscHandler(std::function<void()> fn) { on_escape_ = fn; }
+		void setOnChangeFocusHandler(std::function<void(bool)> fn) { on_change_focus_ = fn; }
 
 		bool hasFocus() const { return has_focus_; }
 		void setFocus(bool value);
 
-		int cursor_row() const { return cursor_.row; }
-		int cursor_col() const { return cursor_.col; }
+		int cursorRow() const { return cursor_.row; }
+		int cursorCol() const { return cursor_.col; }
 
-		void set_cursor(int row, int col, bool move_selection=true);
+		void setCursor(int row, int col, bool move_selection=true);
 
 		//convert a row/col cursor position to a position within the text()
 		//string that is returned.
-		int row_col_to_text_pos(int row, int col) const;
+		int rowColToTextPos(int row, int col) const;
 
 		std::pair<int,int> text_pos_to_row_col(int pos) const;
 
-		void set_highlight_lines(int begin, int end);
-		void clear_highlight_lines();
+		void setHighlightLines(int begin, int end);
+		void clearHighlightLines();
 
-		std::pair<int, int> char_position_on_screen(int row, int col) const;
+		std::pair<int, int> charPositionOnScreen(int row, int col) const;
 
-		void set_row_contents(int row, const std::string& value);
+		void setRowContents(int row, const std::string& value);
 
 		void highlight(Loc begin, Loc end);
 
 	protected:
-		virtual void select_token(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
+		virtual void selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col);
 
-		virtual void on_change();
+		virtual void onChange();
 
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-		void save_undo_state();
-		bool record_op(const char* type=NULL);
+		void saveUndoState();
+		bool recordOp(const char* type=NULL);
 
-		std::pair<int, int> mouse_position_to_row_col(int x, int y) const;
+		std::pair<int, int> mousePositiontoRowCol(int x, int y) const;
 
 		virtual void onMoveCursor(bool auto_shift=false);
 
 	private:
 		DECLARE_CALLABLE(TextEditorWidget);
-		bool handle_mouse_button_down(const SDL_MouseButtonEvent& event);
-		bool handle_mouse_button_up(const SDL_MouseButtonEvent& event);
-		bool handle_mouse_motion(const SDL_MouseMotionEvent& event);
-		bool handle_key_press(const SDL_KeyboardEvent& key);
-		bool handle_mouse_wheel(const SDL_MouseWheelEvent& event);
-		bool handle_text_input(const SDL_TextInputEvent& event);
-		bool handle_text_input_internal(const char* text);
-		bool handle_text_editing(const SDL_TextEditingEvent& event);
+		bool handleMouseButtonDown(const SDL_MouseButtonEvent& event);
+		bool handleMouseButtonUp(const SDL_MouseButtonEvent& event);
+		bool handleMouseMotion(const SDL_MouseMotionEvent& event);
+		bool handleKeyPress(const SDL_KeyboardEvent& key);
+		bool handleMouseWheel(const SDL_MouseWheelEvent& event);
+		bool handleTextInput(const SDL_TextInputEvent& event);
+		bool handleTextInputInternal(const char* text);
+		bool handleTextEditing(const SDL_TextEditingEvent& event);
 
-		void handle_paste(std::string txt);
-		void handle_copy(bool mouse_based=false);
+		void handlePaste(std::string txt);
+		void handleCopy(bool mouse_based=false);
 
-		virtual KRE::Color get_character_color(int row, int col) const;
+		virtual KRE::Color getCharacterColor(int row, int col) const;
 
-		void delete_selection();
+		void deleteSelection();
 
-		void on_page_up();
-		void on_page_down();
+		void onPageUp();
+		void onPageDown();
 
-		int find_equivalent_col(int old_col, int old_row, int new_row) const;
+		int findEquivalentCol(int old_col, int old_row, int new_row) const;
 
-		void on_set_yscroll(int old_pos, int new_pos);
+		void onSetYscroll(int old_pos, int new_pos);
 
-		void refresh_scrollbar();
+		void refreshScrollbar();
 
 		virtual TextEditorWidgetPtr clone() const;
 		virtual void restore(const TextEditorWidget* state);
@@ -179,21 +179,21 @@ namespace gui
 
 		std::string search_;
 		std::vector<std::pair<Loc, Loc> > search_matches_;
-		void calculate_search_matches();
+		void calculateSearchMatches();
 
-		void truncate_col_position();
+		void truncateColPosition();
 
-		boost::function<void()> on_change_, on_user_change_, onMoveCursor_, on_enter_, on_tab_, on_escape_;
-		boost::function<void(bool)> on_change_focus_;
-		boost::function<bool()> on_begin_enter_;
+		std::function<void()> on_change_, on_user_change_, onMoveCursor_, on_enter_, on_tab_, on_escape_;
+		std::function<void(bool)> on_change_focus_;
+		std::function<bool()> onBeginEnter_;
 
-		void change_delegate();
-		void move_cursor_delegate();
-		void enter_delegate();
-		void tab_delegate();
-		void escape_delegate();
-		void change_focus_delgate(bool new_focus_value);
-		bool begin_enter_delegate();
+		void changeDelegate();
+		void moveCursorDelegate();
+		void enterDelegate();
+		void tabDelegate();
+		void escapeDelegate();
+		void changeFocusDelgate(bool new_focus_value);
+		bool beginEnterDelegate();
 
 		game_logic::formula_ptr ffl_on_change_;
 		game_logic::formula_ptr ffl_onMoveCursor_;
@@ -201,7 +201,7 @@ namespace gui
 		game_logic::formula_ptr ffl_on_tab_;
 		game_logic::formula_ptr ffl_on_escape_;
 		game_logic::formula_ptr ffl_on_change_focus_;
-		game_logic::formula_ptr ffl_on_begin_enter_;
+		game_logic::formula_ptr ffl_onBeginEnter_;
 
 		bool begin_enter_return_;
 

@@ -138,7 +138,7 @@ private:
 	const_FormulaCallable_definition_ptr base_;
 	std::vector<entry> entries_;
 
-	boost::shared_ptr<entry> default_entry_;
+	std::shared_ptr<entry> default_entry_;
 };
 
 class modified_definition : public FormulaCallable_definition
@@ -237,7 +237,7 @@ FormulaCallable_definition_ptr executeCommand_callable_definition(const FormulaC
 	return FormulaCallable_definition_ptr(def);
 }
 
-FormulaCallable_definition_ptr create_map_FormulaCallable_definition(variant_type_ptr value_type)
+FormulaCallable_definition_ptr create_MapFormulaCallable_definition(variant_type_ptr value_type)
 {
 	simple_definition* def = new simple_definition;
 	FormulaCallable_definition::entry e("");
@@ -250,8 +250,8 @@ namespace {
 std::map<std::string, const_FormulaCallable_definition_ptr> registry;
 int num_definitions = 0;
 
-std::vector<boost::function<void()> >& callable_init_routines() {
-	static std::vector<boost::function<void()> > v;
+std::vector<std::function<void()> >& callable_init_routines() {
+	static std::vector<std::function<void()> > v;
 	return v;
 }
 
@@ -312,7 +312,7 @@ int add_callable_definition_init(void(*fn)())
 
 void init_callable_definitions()
 {
-	foreach(const boost::function<void()>& fn, callable_init_routines()) {
+	foreach(const std::function<void()>& fn, callable_init_routines()) {
 		fn();
 	}
 

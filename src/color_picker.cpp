@@ -23,7 +23,6 @@
 
 #include <limits>
 #include <sstream>
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 
 #include "kre/Canvas.hpp"
@@ -76,7 +75,7 @@ namespace gui
 		init();
 	}
 
-	ColorPicker::ColorPicker(const rect& area, boost::function<void (const KRE::Color&)> change_fun)
+	ColorPicker::ColorPicker(const rect& area, std::function<void (const KRE::Color&)> change_fun)
 		: selected_palette_color_(), hue_(0), saturation_(0), value_(0), alpha_(255),
 		red_(255), green_(255), blue_(255), dragging_(false), palette_offset_y_(0), main_color_selected_(1),
 		onchange_(change_fun)
@@ -105,18 +104,18 @@ namespace gui
 		if(v.has_key("on_change")) {
 			const variant on_change_value = v["on_change"];
 			if(on_change_value.is_function()) {
-				ASSERT_LOG(on_change_value.min_function_arguments() <= 1 && on_change_value.max_function_arguments() >= 1, "on_change ColorPicker function should take 1 argument: " << v.debug_location());
+				ASSERT_LOG(on_change_value.min_function_arguments() <= 1 && on_change_value.max_function_arguments() >= 1, "onChange ColorPicker function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(color)");
 				change_handler_.reset(new game_logic::formula(fml));
 
-				game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_change_value);
 
 				handler_arg_.reset(callable);
 			} else { 
 				change_handler_ = getEnvironment()->createFormula(on_change_value);
 			}
-			onchange_ = boost::bind(&ColorPicker::change, this);
+			onchange_ = std::bind(&ColorPicker::change, this);
 		}
 
 		if(v.has_key("palette")) {
@@ -430,10 +429,10 @@ namespace gui
 		g_->setLoc(5, color_box_length_ + wheel_radius_*2 + 40);
 		for(int n = 0; n != 7; ++n) {
 			labels.push_back(new Label(label_text[n], KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"));
-			s_.push_back(new slider(50, boost::bind(&ColorPicker::sliderChange, this, n, _1), 0, 1));
+			s_.push_back(new Slider(50, std::bind(&ColorPicker::SliderChange, this, n, _1), 0, 1));
 			t_.push_back(new TextEditorWidget(40));
-			t_.back()->set_on_user_change_handler(boost::bind(&ColorPicker::textChange, this, n));
-			t_.back()->set_on_tab_handler(boost::bind(&ColorPicker::textTabPressed, this, n));
+			t_.back()->setOnUserChangeHandler(std::bind(&ColorPicker::textChange, this, n));
+			t_.back()->setOnTabHandler(std::bind(&ColorPicker::textTabPressed, this, n));
 
 			g_->add_col(labels.back());
 			g_->add_col(s_.back());
@@ -441,7 +440,7 @@ namespace gui
 		}
 		palette_offset_y_ = g_->y() + g_->height() + 10;
 
-		copy_to_palette_.reset(new Button(new Label("Set", KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"), boost::bind(&ColorPicker::copyToPaletteFn, this)));
+		copy_to_palette_.reset(new Button(new Label("Set", KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"), std::bind(&ColorPicker::copyToPaletteFn, this)));
 		copy_to_palette_->setLoc(5, palette_offset_y_);
 		copy_to_palette_->setTooltip("Set palette color", 12, KRE::Color::colorAntiquewhite(), "Montaga-Regular");
 
@@ -459,9 +458,9 @@ namespace gui
 		}
 	}
 
-	void ColorPicker::sliderChange(int n, double p)
+	void ColorPicker::SliderChange(int n, double p)
 	{
-		ASSERT_LOG(size_t(n) < s_.size(), "ColorPicker::sliderChange: invalid array access: " << n << " >= " << s_.size());
+		ASSERT_LOG(size_t(n) < s_.size(), "ColorPicker::SliderChange: invalid array access: " << n << " >= " << s_.size());
 		if(n >= 0 && n <= 2) {
 			switch(n) {
 			case 0:  red_ = uint8_t(255.0 * p); break;
@@ -564,20 +563,20 @@ namespace gui
 
 	void ColorPicker::setSlidersFromColor(const KRE::Color& c)
 	{
-		ASSERT_LOG(s_.size() == 7, "Didn't find the correct number of sliders.");
-		s_[0]->set_position(c.r()/255.0);
-		s_[1]->set_position(c.g()/255.0);
-		s_[2]->set_position(c.b()/255.0);
+		ASSERT_LOG(s_.size() == 7, "Didn't find the correct number of Sliders.");
+		s_[0]->setPosition(c.r()/255.0);
+		s_[1]->setPosition(c.g()/255.0);
+		s_[2]->setPosition(c.b()/255.0);
 		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
-		s_[3]->set_position(out.h/255.0);
-		s_[4]->set_position(out.s/255.0);
-		s_[5]->set_position(out.v/255.0);
-		s_[6]->set_position(alpha_/255.0);
+		s_[3]->setPosition(out.h/255.0);
+		s_[4]->setPosition(out.s/255.0);
+		s_[5]->setPosition(out.v/255.0);
+		s_[6]->setPosition(alpha_/255.0);
 	}
 
 	void ColorPicker::setTextFromColor(const KRE::Color& c, int n)
 	{
-		ASSERT_LOG(t_.size() == 7, "Didn't find the correct number of sliders.");
+		ASSERT_LOG(t_.size() == 7, "Didn't find the correct number of Sliders.");
 		std::stringstream str;
 		if(n != 0) {
 			str << int(c.r());
@@ -614,12 +613,12 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(handler_arg_) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(handler_arg_.get()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(handler_arg_.get()));
 			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else if(getEnvironment()) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("color", getPrimaryColor().write());
 			variant value = change_handler_->execute(*callable);
 			getEnvironment()->createFormula(value);

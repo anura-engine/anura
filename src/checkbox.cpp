@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-#include <boost/bind.hpp>
-
 #include "checkbox.hpp"
 #include "graphical_font_label.hpp"
 #include "grid_widget.hpp"
@@ -49,18 +47,18 @@ namespace gui
 		}
 
 		WidgetPtr create_checkbox_widget(const std::string& text, bool checked, BUTTON_RESOLUTION resolution) {
-			return create_checkbox_widget(WidgetPtr(new graphical_font_label(text, "door_label", 2)), checked, resolution);
+			return create_checkbox_widget(WidgetPtr(new GraphicalFontLabel(text, "door_label", 2)), checked, resolution);
 		}
 	}
 
-	Checkbox::Checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), boost::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_(label), onclick_(onclick), checked_(checked), hpadding_(12)
+	Checkbox::Checkbox(const std::string& label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_(label), onclick_(onclick), checked_(checked), hpadding_(12)
 	{
 		setEnvironment();
 	}
 
-	Checkbox::Checkbox(WidgetPtr label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
-	  : Button(create_checkbox_widget(label, checked, buttonResolution), boost::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_widget_(label), onclick_(onclick), checked_(checked), hpadding_(12)
+	Checkbox::Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution)
+	  : Button(create_checkbox_widget(label, checked, buttonResolution), std::bind(&Checkbox::onClick, this), BUTTON_STYLE_NORMAL,buttonResolution), label_widget_(label), onclick_(onclick), checked_(checked), hpadding_(12)
 	{
 		setEnvironment();
 	}
@@ -79,11 +77,11 @@ namespace gui
 		label_ = (label_var.is_map() || label_var.is_callable()) ? "" : label_var.as_string_default("Checkbox");
 		label_widget_ = (label_var.is_map() || label_var.is_callable())
 			? widget_factory::create(label_var, e) 
-			: WidgetPtr(new graphical_font_label(label_, "door_label", 2));
+			: WidgetPtr(new GraphicalFontLabel(label_, "door_label", 2));
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 		click_handler_ = getEnvironment()->createFormula(v["onClick"]);
-		onclick_ = boost::bind(&Checkbox::click, this, _1);
-		setClickHandler(boost::bind(&Checkbox::onClick, this));
+		onclick_ = std::bind(&Checkbox::click, this, _1);
+		setClickHandler(std::bind(&Checkbox::onClick, this));
 
 		setLabel(create_checkbox_widget(label_widget_, 
 			checked_, 
@@ -113,7 +111,7 @@ namespace gui
 	{
 		using namespace game_logic;
 		if(getEnvironment()) {
-			map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+			MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 			callable->add("checked", variant::from_bool(checked));
 			variant value = click_handler_->execute(*callable);
 			getEnvironment()->createFormula(value);

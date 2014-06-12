@@ -20,10 +20,8 @@
 
 #include <map>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
-#include "scrollable_widget"
+#include "scrollable_widget.hpp"
 #include "widget.hpp"
 #include "variant.hpp"
 
@@ -44,7 +42,7 @@ public:
 	int nrows() const { return nrows_; }
 	void set_min_col_size(int minc) { min_col_size_ = minc; }
 	void set_max_col_size(int maxc) { max_col_size_ = maxc; }
-	void register_selection_callback(boost::function<void(const variant&, const variant&)> select_fn) 
+	void register_selection_callback(std::function<void(const variant&, const variant&)> select_fn) 
 	{
 		on_select_ = select_fn;
 	}
@@ -57,13 +55,13 @@ public:
 	virtual WidgetPtr getWidgetById(const std::string& id);
 	virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 protected:
-	virtual void handleDraw() const;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	virtual void setValue(const std::string& key, const variant& v);
 	virtual variant getValue(const std::string& key) const;
 
-	void on_set_yscroll(int old_value, int value);
+	void onSetYscroll(int old_value, int value);
 	virtual void init();
 	virtual void on_select(Uint8 button, int selection);
 
@@ -74,7 +72,7 @@ protected:
 	variant tree_;
 private:
 	virtual int traverse(int depth, int x, int y, variant* parent, const variant& key, variant* value);
-	void gen_traverse(int depth, boost::function<void(int,const variant&,variant*)> fn, const variant& key, variant* value);
+	void gen_traverse(int depth, std::function<void(int,const variant&,variant*)> fn, const variant& key, variant* value);
 	int row_at(int xpos, int ypos) const;
 	void recalculate_dimensions();
 	void calc_column_widths(int depth, const variant& key, variant* value);
@@ -98,7 +96,7 @@ private:
 	SDL_Color highlight_color_;
 	int highlighted_row_;
 
-	boost::function<void(const variant&, const variant&)> on_select_;
+	std::function<void(const variant&, const variant&)> on_select_;
 	std::vector<WidgetPtr> widgets_;
 	std::map<int, int> last_coords_;
 	std::vector<int> col_widths_;
@@ -115,7 +113,7 @@ public:
 	explicit tree_editor_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~tree_editor_widget()
 	{}
-	void set_editor_handler(variant::TYPE vt, WidgetPtr editor, boost::function<void(variant*,boost::function<void(const variant&)>)> editor_select) { 
+	void set_editor_handler(variant::TYPE vt, WidgetPtr editor, std::function<void(variant*,std::function<void(const variant&)>)> editor_select) { 
 		ex_editor_map_[vt] = editor; 
 		on_editor_select_ = editor_select;
 	}
@@ -123,8 +121,8 @@ public:
 protected:
 	virtual void init();
 
-	virtual void handleDraw() const;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	virtual void setValue(const std::string& key, const variant& v);
 	virtual variant getValue(const std::string& key) const;
@@ -137,7 +135,7 @@ private:
 	WidgetPtr context_menu_;
 	WidgetPtr edit_menu_;
 
-	boost::function<void(variant*,boost::function<void(const variant&)>)> on_editor_select_;
+	std::function<void(variant*,std::function<void(const variant&)>)> on_editor_select_;
 
 	void edit_field(int row, variant* v);
 	void execute_edit_enter(const TextEditorWidgetPtr editor, variant* value);

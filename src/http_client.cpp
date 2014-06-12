@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "asserts.hpp"
@@ -33,7 +32,7 @@ http_client::http_client(const std::string& host, const std::string& port, int s
 {
 }
 
-void http_client::send_request(const std::string& method_path, const std::string& request, boost::function<void(std::string)> handler, boost::function<void(std::string)> error_handler, boost::function<void(int,int,bool)> progress_handler)
+void http_client::send_request(const std::string& method_path, const std::string& request, std::function<void(std::string)> handler, std::function<void(std::string)> error_handler, std::function<void(int,int,bool)> progress_handler)
 {
 	++in_flight_;
 	connection_ptr conn(new Connection(io_service_));
@@ -47,7 +46,7 @@ void http_client::send_request(const std::string& method_path, const std::string
 		resolution_state_ = RESOLUTION_IN_PROGRESS;
 
 		resolver_.async_resolve(resolver_query_,
-			boost::bind(&http_client::handle_resolve, this,
+			std::bind(&http_client::handle_resolve, this,
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::iterator,
 				conn));
@@ -80,11 +79,11 @@ void http_client::async_connect(connection_ptr conn)
 #if BOOST_VERSION >= 104700
 		boost::asio::async_connect(conn->socket, 
 			endpoint_iterator_,
-			boost::bind(&http_client::handle_connect, this,
+			std::bind(&http_client::handle_connect, this,
 				boost::asio::placeholders::error, conn, endpoint_iterator_));
 #else
 		conn->socket.async_connect(*endpoint_iterator_,
-			boost::bind(&http_client::handle_connect, this,
+			std::bind(&http_client::handle_connect, this,
 				boost::asio::placeholders::error, conn, endpoint_iterator_));
 #endif
 }
@@ -151,13 +150,13 @@ void http_client::write_connection_data(connection_ptr conn)
 	const int bytes_to_send = conn->request.size() - conn->nbytes_sent;
 	const int nbytes = std::min<int>(bytes_to_send, 1024*64);
 
-	const boost::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
+	const std::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
 	boost::asio::async_write(conn->socket, boost::asio::buffer(*msg),
-	      boost::bind(&http_client::handle_send, this, conn, _1, _2, msg));
+	      std::bind(&http_client::handle_send, this, conn, _1, _2, msg));
 
 }
 
-void http_client::handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf_ptr)
+void http_client::handle_send(connection_ptr conn, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf_ptr)
 {
 
 	if(e) {
@@ -178,7 +177,7 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 	if(conn->nbytes_sent < conn->request.size()) {
 		write_connection_data(conn);
 	} else {
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), boost::bind(&http_client::handle_receive, this, conn, _1, _2));
+		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, _1, _2));
 	}
 }
 
@@ -255,7 +254,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		if(conn->expected_len != -1 && conn->progress_handler) {
 			conn->progress_handler(conn->response.size(), conn->expected_len, true);
 		}
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), boost::bind(&http_client::handle_receive, this, conn, _1, _2));
+		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, _1, _2));
 	}
 }
 

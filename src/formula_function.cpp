@@ -21,7 +21,6 @@
 	   distribution.
 */
 
-#include <boost/bind.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/uuid/sha1.hpp>
 #include <boost/algorithm/string.hpp>
@@ -650,7 +649,7 @@ FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(strin
 		return variant();
 	}
 
-	const_FormulaCallablePtr callable(&variables);
+	ConstFormulaCallablePtr callable(&variables);
 
 	return variant::create_delayed(f, callable);
 END_FUNCTION_DEF(delay_until_end_of_loading)
@@ -684,7 +683,7 @@ END_FUNCTION_DEF(compile_lua)
 #endif
 
 FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the given string as FFL")
-	const_FormulaCallablePtr callable(&variables);
+	ConstFormulaCallablePtr callable(&variables);
 
 	if(args().size() > 1) {
 		const variant v = args()[1]->evaluate(variables);
@@ -712,7 +711,7 @@ FUNCTION_ARGS_DEF
 END_FUNCTION_DEF(eval_no_recover)
 
 FUNCTION_DEF(eval, 1, 2, "eval(str, [arg]): evaluate the given string as FFL")
-	const_FormulaCallablePtr callable(&variables);
+	ConstFormulaCallablePtr callable(&variables);
 
 	if(args().size() > 1) {
 		const variant v = args()[1]->evaluate(variables);
@@ -754,7 +753,7 @@ FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'exp
 	try {
 		return args()[0]->evaluate(variables);
 	} catch(validation_failure_exception& e) {
-		boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable(&variables));
+		boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 		callable->add("context", variant(&variables));
 		callable->add("error_msg", variant(e.msg));
 		return args()[1]->evaluate(*callable);
@@ -1645,7 +1644,7 @@ FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_ex
 	pathfinding::graph_edge_list edges;
 	
 	std::vector<variant> vertex_list;
-	boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable(&variables));
+	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 	variant& a = callable->add_direct_access("v");
 	foreach(variant v, vertices.as_list()) {
 		a = v;
@@ -1691,7 +1690,7 @@ FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_no
 	variant src_node = args()[1]->evaluate(variables);
 	variant dst_node = args()[2]->evaluate(variables);
 	expression_ptr heuristic = args()[3];
-	boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable(&variables));
+	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 	return pathfinding::a_star_search(wg, src_node, dst_node, heuristic, callable);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("builtin weighted_directed_graph")
@@ -1776,7 +1775,7 @@ FUNCTION_DEF(plot_path, 6, 9, "plot_path(level, from_x, from_y, to_x, to_y, heur
 	point src(args()[1]->evaluate(variables).as_int(), args()[2]->evaluate(variables).as_int());
 	point dst(args()[3]->evaluate(variables).as_int(), args()[4]->evaluate(variables).as_int());
 	expression_ptr heuristic = args()[4];
-	boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable(&variables));
+	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 	return variant(pathfinding::a_star_find_path(lvl, src, dst, heuristic, weight_expr, callable, tile_size_x, tile_size_y));
 END_FUNCTION_DEF(plot_path)
 
@@ -2059,7 +2058,7 @@ class map_callable : public FormulaCallable {
 			}
 		}
 
-		const const_FormulaCallablePtr backup_;
+		const ConstFormulaCallablePtr backup_;
 		variant key_;
 		variant value_;
 		int index_;
@@ -2219,7 +2218,7 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(unique)
 	
 FUNCTION_DEF(mapping, -1, -1, "mapping(x): Turns the args passed in into a map. The first arg is a key, the second a value, the third a key, the fourth a value and so on and so forth.")
-	map_FormulaCallable* callable = new map_FormulaCallable;
+	MapFormulaCallable* callable = new MapFormulaCallable;
 	for(size_t n = 0; n < args().size()-1; n += 2) {
 		callable->add(args()[n]->evaluate(variables).as_string(),
 					args()[n+1]->evaluate(variables));
@@ -2801,7 +2800,7 @@ void evaluate_expr_for_benchmark(const formula_expression* expr, const FormulaCa
 }
 
 FUNCTION_DEF(benchmark, 1, 1, "benchmark(expr): Executes expr in a benchmark harness and returns a string describing its benchmark performance")
-	return variant(test::run_benchmark("benchmark", boost::bind(evaluate_expr_for_benchmark, args()[0].get(), &variables, _1)));
+	return variant(test::run_benchmark("benchmark", std::bind(evaluate_expr_for_benchmark, args()[0].get(), &variables, _1)));
 END_FUNCTION_DEF(benchmark)
 
 FUNCTION_DEF(compress, 1, 2, "compress(string, (optional) compression_level): Compress the given string object")
@@ -4442,7 +4441,7 @@ FUNCTION_DEF(edit_and_continue, 2, 2, "edit_and_continue(expr, filename)")
 		return args()[0]->evaluate(variables);
 	} catch (validation_failure_exception& e) {
 		bool success = false;
-		boost::function<void()> fn(boost::bind(run_expression_for_edit_and_continue, args()[0], &variables, &success));
+		std::function<void()> fn(std::bind(run_expression_for_edit_and_continue, args()[0], &variables, &success));
 
 		edit_and_continue_fn(filename, e.msg, fn);
 		if(success == false) {
@@ -4829,20 +4828,20 @@ UNIT_TEST(where_scope_function) {
 BENCHMARK(map_function) {
 	using namespace game_logic;
 
-	static map_FormulaCallable* callable = NULL;
+	static MapFormulaCallable* callable = NULL;
 	static variant callable_var;
 	static variant main_callable_var;
 	static std::vector<variant> v;
 	
 	if(callable == NULL) {
-		callable = new map_FormulaCallable;
+		callable = new MapFormulaCallable;
 		callable_var = variant(callable);
 		callable->add("x", variant(0));
 		for(int n = 0; n != 1000; ++n) {
 			v.push_back(callable_var);
 		}
 
-		callable = new map_FormulaCallable;
+		callable = new MapFormulaCallable;
 		main_callable_var = variant(callable);
 		callable->add("items", variant(&v));
 	}

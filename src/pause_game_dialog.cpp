@@ -14,8 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
-
 #include "button.hpp"
 #include "controls_dialog.hpp"
 #include "slider.hpp"
@@ -25,7 +23,6 @@
 #include "graphical_font_label.hpp"
 #include "i18n.hpp"
 #include "json_parser.hpp"
-#include "level.hpp"
 #include "module.hpp"
 #include "pause_game_dialog.hpp"
 #include "preferences.hpp"
@@ -34,17 +31,13 @@
 #include "video_selections.hpp"
 #include "widget_factory.hpp"
 
-namespace {
-void end_dialog(gui::dialog* d, PAUSE_GAME_RESULT* result, PAUSE_GAME_RESULT value)
+namespace 
 {
-	*result = value;
-	d->close();
-}
-
-void do_draw_scene() {
-	draw_scene(level::current(), last_draw_position());
-}
-
+	void end_dialog(gui::Dialog* d, PAUSE_GAME_RESULT* result, PAUSE_GAME_RESULT value)
+	{
+		*result = value;
+		d->close();
+	}
 }
 
 PAUSE_GAME_RESULT show_pause_game_dialog()
@@ -60,7 +53,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	bool show_button_swap = false;
 	bool show_video_mode_select = true;
 	bool show_of = false;
-	gui::buttonResolution buttonResolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
+	gui::BUTTON_RESOLUTION buttonResolution = gui::BUTTON_SIZE_DOUBLE_RESOLUTION;
 	bool upscale_dialog_frame = true;
 	
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
@@ -84,7 +77,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	WidgetPtr exit_label;
 	WidgetPtr button_swap_label;
 
-	boost::shared_ptr<button::SetColorSchemeScope> color_scheme_scope;
+	std::shared_ptr<Button::SetColorSchemeScope> color_scheme_scope;
 
 	variant v;
 	try {
@@ -92,7 +85,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		ASSERT_LOG(v.is_map(), "\"data/pause-menu.cfg\" found but isn't a map.");
 		variant button_color_scheme = v["button_color_scheme"];
 		if(!button_color_scheme.is_null()) {
-			color_scheme_scope.reset(new button::SetColorSchemeScope(button_color_scheme));
+			color_scheme_scope.reset(new Button::SetColorSchemeScope(button_color_scheme));
 		}
 
 		show_exit = v["show_exit"].as_bool(true);
@@ -138,42 +131,42 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	if(v.is_null() == false && v.has_key("music_label")) {
 		t1 = widget_factory::create(v["music_label"], NULL);
 	} else {
-		t1 = WidgetPtr(new graphical_font_label(_("Music Volume:"), "door_label", 2));
+		t1 = WidgetPtr(new GraphicalFontLabel(_("Music Volume:"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("sound_label")) {
 		t2 = widget_factory::create(v["sound_label"], NULL);
 	} else {
-		t2 = WidgetPtr(new graphical_font_label(_("Sound Volume:"), "door_label", 2));
+		t2 = WidgetPtr(new GraphicalFontLabel(_("Sound Volume:"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("resume_label")) {
 		resume_label = widget_factory::create(v["resume_label"], NULL);
 	} else {
-		resume_label = WidgetPtr(new graphical_font_label(_("Resume"), "door_label", 2));
+		resume_label = WidgetPtr(new GraphicalFontLabel(_("Resume"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("controls_label")) {
 		controls_label = widget_factory::create(v["controls_label"], NULL);
 	} else {
-		controls_label = WidgetPtr(new graphical_font_label(_("Controls..."), "door_label", 2));
+		controls_label = WidgetPtr(new GraphicalFontLabel(_("Controls..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("language_label")) {
 		language_label = widget_factory::create(v["language_label"], NULL);
 	} else {
-		language_label = WidgetPtr(new graphical_font_label(_("Language..."), "door_label", 2));
+		language_label = WidgetPtr(new GraphicalFontLabel(_("Language..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("video_select_label")) {
 		video_select_label = widget_factory::create(v["video_select_label"], NULL);
 	} else {
-		video_select_label = WidgetPtr(new graphical_font_label(_("Video Options..."), "door_label", 2));
+		video_select_label = WidgetPtr(new GraphicalFontLabel(_("Video Options..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("return_label")) {
 		return_label = widget_factory::create(v["return_label"], NULL);
 	} else {
-		return_label = WidgetPtr(new graphical_font_label(_("Return to Titlescreen"), "door_label", 2));
+		return_label = WidgetPtr(new GraphicalFontLabel(_("Return to Titlescreen"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("button_swap_label")) {
 		button_swap_label = widget_factory::create(v["button_swap_label"], NULL);
 	} else {
-		button_swap_label = WidgetPtr(new graphical_font_label(_("Reverse A and B"), "door_label", 2));
+		button_swap_label = WidgetPtr(new GraphicalFontLabel(_("Reverse A and B"), "door_label", 2));
 	}
 	if(module::get_module_args() != NULL) {
 		variant mod_args = module::get_module_args()->query_value("from_lobby");
@@ -184,7 +177,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	if(v.is_null() == false && v.has_key("exit_label")) {
 		exit_label = widget_factory::create(v["exit_label"], NULL);
 	} else {
-		exit_label = WidgetPtr(new graphical_font_label(_("Exit Game"), "door_label", 2));
+		exit_label = WidgetPtr(new GraphicalFontLabel(_("Exit Game"), "door_label", 2));
 	}
 	ASSERT_LOG(t1 != NULL, "Couldn't create music label widget.");
 	ASSERT_LOG(t2 != NULL, "Couldn't create sound label widget.");
@@ -196,8 +189,9 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	ASSERT_LOG(exit_label != NULL, "Couldn't create exit label widget.");
 	ASSERT_LOG(button_swap_label != NULL, "Couldn't create button swap label widget.");
 
-	WidgetPtr s1(new slider(slider_width, boost::bind(sound::set_music_volume, _1), sound::get_music_volume()));
-	WidgetPtr s2(new slider(slider_width, boost::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
+	using namespace std::placeholders;
+	WidgetPtr s1(new Slider(slider_width, std::bind(sound::set_music_volume, _1), sound::get_music_volume()));
+	WidgetPtr s2(new Slider(slider_width, std::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
 
 	// Prevents them from being selectable as tab items when using a controller, keys.
 	t1->setTabStop(-1);
@@ -212,20 +206,20 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		window_w = button_width*2 + padding*5;
 		window_h = button_height * num_buttons/2 + t1->height() + s1->height() + padding*(3+2+num_buttons/2);
 	}
-	dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
+	Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
 	d.setPadding(padding);
 	d.set_background_frame("empty_window");
 	d.set_upscale_frame(upscale_dialog_frame);
 
-	d.set_draw_background_fn(do_draw_scene);
+	d.set_draw_background_fn(draw_last_scene);
 
-	ButtonPtr b1(new button(resume_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b2(new button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr language_button(new button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b3(new button(return_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b4(new button(exit_label, boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
-	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), boost::bind(preferences::set_reverse_ab, _1), buttonResolution));
-	ButtonPtr b_video(new button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr language_button(new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
+	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), std::bind(preferences::set_reverse_ab, _1), buttonResolution));
+	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 
 	
 	b1->setDim(button_width, button_height);
@@ -269,7 +263,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		if(show_exit) { d.addWidget(b4); }
 	}
 
-	d.set_on_quit(boost::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
+	d.set_on_quit(std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
 	d.show_modal();
 	if(d.cancelled() && result == PAUSE_GAME_QUIT) {
 		result = PAUSE_GAME_CONTINUE;

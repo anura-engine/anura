@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/uuid/uuid_generators.hpp>
@@ -176,7 +175,7 @@ void load_class_nodes(const std::string& type)
 	const std::string path = "data/classes/" + type + ".cfg";
 	const std::string real_path = module::map_file(path);
 
-	sys::notify_on_file_modification(real_path, boost::bind(invalidate_class_definition, type));
+	sys::notify_on_file_modification(real_path, std::bind(invalidate_class_definition, type));
 
 	const variant v = json::parse_from_file(path);
 	ASSERT_LOG(v.is_map(), "COULD NOT FIND FFL CLASS: " << type);
@@ -619,7 +618,7 @@ void formula_class::run_unit_tests()
 
 	in_unit_test = true;
 
-	boost::intrusive_ptr<game_logic::map_FormulaCallable> callable(new game_logic::map_FormulaCallable);
+	boost::intrusive_ptr<game_logic::MapFormulaCallable> callable(new game_logic::MapFormulaCallable);
 	std::map<variant,variant> attr;
 	callable->add("vars", variant(&attr));
 	callable->add("lib", variant(game_logic::get_library_object().get()));
@@ -754,7 +753,7 @@ boost::intrusive_ptr<const formula_class> get_class(const std::string& type)
 
 }
 
-void formula_object::visit_variants(variant node, boost::function<void (variant)> fn, std::vector<formula_object*>* seen)
+void formula_object::visit_variants(variant node, std::function<void (variant)> fn, std::vector<formula_object*>* seen)
 {
 	std::vector<formula_object*> seen_buf;
 	if(!seen) {

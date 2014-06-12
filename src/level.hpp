@@ -354,9 +354,9 @@ public:
 
 	decimal zoom_level() const;
 
-	void add_speech_dialog(boost::shared_ptr<speech_dialog> d);
+	void add_speech_dialog(std::shared_ptr<speech_dialog> d);
 	void remove_speech_dialog();
-	boost::shared_ptr<const speech_dialog> current_speech_dialog() const;
+	std::shared_ptr<const speech_dialog> current_speech_dialog() const;
 
 	const std::vector<entity_ptr>& focus_override() const { return focus_override_; }
 
@@ -397,7 +397,7 @@ public:
 	int x_resolution() const { return x_resolution_; }
 	int y_resolution() const { return y_resolution_; }
 
-	void launch_new_module(const std::string& module_id, game_logic::const_FormulaCallablePtr callable = NULL);
+	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = NULL);
 
 	bool gui_event(const SDL_Event &event);
 
@@ -452,7 +452,7 @@ private:
 	int time_freeze_;
 
 	bool paused_;
-	boost::shared_ptr<controls::control_backup_scope> before_pause_controls_backup_;
+	std::shared_ptr<controls::control_backup_scope> before_pause_controls_backup_;
 
 	bool in_dialog_;
 
@@ -580,7 +580,7 @@ private:
 	mutable bool entered_portal_active_;
 	portal entered_portal_;
 
-	boost::shared_ptr<background> background_;
+	std::shared_ptr<background> background_;
 	point background_offset_;
 	int widest_tile_, highest_tile_;
 
@@ -630,12 +630,12 @@ private:
 
 	std::vector<std::string> preloads_; //future levels to preload
 
-	boost::shared_ptr<water> water_;
+	std::shared_ptr<water> water_;
 
 	std::map<std::string, movement_script> movement_scripts_;
 	std::vector<active_movement_script_ptr> active_movement_scripts_;
 
-	boost::shared_ptr<point> lock_screen_;
+	std::shared_ptr<point> lock_screen_;
 
 	struct backup_snapshot {
 		unsigned int rng_seed;
@@ -648,7 +648,7 @@ private:
 
 	void restore_from_backup(backup_snapshot& snapshot);
 
-	typedef boost::shared_ptr<backup_snapshot> backup_snapshot_ptr;
+	typedef std::shared_ptr<backup_snapshot> backup_snapshot_ptr;
 
 	std::deque<backup_snapshot_ptr> backups_;
 
@@ -658,7 +658,7 @@ private:
 	decimal zoom_level_;
 	std::vector<entity_ptr> focus_override_;
 
-	std::stack<boost::shared_ptr<speech_dialog> > speech_dialogs_;
+	std::stack<std::shared_ptr<speech_dialog> > speech_dialogs_;
 
 	std::set<std::string> hidden_classifications_;
 

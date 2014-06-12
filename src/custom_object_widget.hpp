@@ -37,9 +37,9 @@ namespace gui
 		void init(const variant& v);
 	protected:
 
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
-		virtual void handleProcess();
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleProcess() override;
 	private:
 		DECLARE_CALLABLE(custom_object_widget);
 
@@ -47,11 +47,11 @@ namespace gui
 		void mouse_enter();
 		void mouse_leave();
 
-		boost::function<void (int)> on_click_;
+		std::function<void (int)> on_click_;
 		game_logic::formula_ptr click_handler_;
-		boost::function<void ()> on_mouse_enter_;
+		std::function<void ()> on_mouse_enter_;
 		game_logic::formula_ptr mouse_enter_handler_;
-		boost::function<void ()> on_mouse_leave_;
+		std::function<void ()> on_mouse_leave_;
 		game_logic::formula_ptr mouse_leave_handler_;
 
 		game_logic::formula_ptr commands_handler_;

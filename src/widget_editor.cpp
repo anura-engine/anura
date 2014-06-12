@@ -61,7 +61,7 @@ const char* ToolIcons[] = {
 	"widget_checkbox",
 	"widget_image",
 	"widget_scrollbar",
-	"widget_slider",
+	"widget_Slider",
 	"widget_textbox",
 };
 
@@ -91,7 +91,7 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 	gui::WidgetPtr p;
 	switch(tool) {
 	case TOOL_BUTTON:
-		p.reset(new gui::button("button", boost::bind(dummy_fn, -1, 0.0)));
+		p.reset(new gui::button("button", std::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_LABEL:
 		p.reset(new gui::label("label text", 14, default_font_name));
@@ -109,16 +109,16 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 		return d;
 	}
 	case TOOL_CHECKBOX:
-		p.reset(new gui::Checkbox("Checkbox", false, boost::bind(dummy_fn, -1, 0.0)));
+		p.reset(new gui::Checkbox("Checkbox", false, std::bind(dummy_fn, -1, 0.0)));
 		break;
 	case TOOL_IMAGE:
 		p.reset(new gui::ImageWidget("window-icon.png"));
 		break;
 	case TOOL_SCROLLBAR:
-		p.reset(new gui::scrollBarWidget(boost::bind(dummy_fn, _1, 0.0)));
+		p.reset(new gui::ScrollBarWidget(std::bind(dummy_fn, _1, 0.0)));
 		break;
 	case TOOL_SLIDE:
-		p.reset(new gui::slider(100, boost::bind(dummy_fn, -1, _1)));
+		p.reset(new gui::Slider(100, std::bind(dummy_fn, -1, _1)));
 		break;
 	case TOOL_TEXTBOX:
 		p.reset(new gui::TextEditorWidget(100, 20));
@@ -153,9 +153,9 @@ private:
 	size_t cycle_;
 	gui::WidgetPtr selected_widget_;
 
-	void handleDraw() const;
-	bool handleEvent(const SDL_Event& event, bool claimed);
-	void handleProcess();
+	void handleDraw() const override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
+	void handleProcess() override;
 
 	widget_window();
 	widget_window(const widget_window&);
@@ -213,7 +213,7 @@ private:
 		for(size_t n = WIDGET_TOOL_FIRST; n != NUM_WIDGET_TOOLS; ++n) {
 			gui::ButtonPtr tool_button(
 			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
-				  boost::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
+				  std::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
 			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
 			tools_grid->add_col(gui::WidgetPtr(tool_borders_.back()));
 		}
@@ -244,7 +244,7 @@ widget_window::widget_window(const rect& area, widget_editor& editor)
 	: editor_(editor), selected_(editor.tool()),
 	text_color_(graphics::color("antique_white").as_sdl_color())
 {
-	info_bar_height_ = font::char_height(14, default_font_name);
+	info_bar_height_ = KRE::Font::charHeight(14, default_font_name);
 	setLoc(area.x(), area.y());
 	setDim(area.w(), area.h());
 	if(editor_.is_tool_widget()) {

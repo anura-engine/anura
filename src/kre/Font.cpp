@@ -172,9 +172,44 @@ namespace KRE
 		return it->second;
 	}
 
-	void Font::getTextSize(int* width, int* height, int size, const std::string& font_name) const
+	void Font::getTextSize(const std::string& text, int* width, int* height, int size, const std::string& font_name) const
 	{
-		calcTextSize(size, font_name, width, height);
+		calcTextSize(text, size, font_name, width, height);
+	}
+
+	void Font::reloadFontPaths()
+	{
+		auto font_instance = getInstance();
+		if(font_instance) {
+			font_instance->doReloadFontPaths();
+		}
+	}
+
+	std::vector<std::string> Font::getAvailableFonts()
+	{
+		auto font_instance = getInstance();
+		if(font_instance) {
+			return font_instance->handleGetAvailableFonts();
+		}
+		return std::vector<std::string>();
+	}
+
+	int Font::charWidth(int size, const std::string& fn)
+	{
+		auto font_instance = getInstance();
+		if(font_instance) {
+			font_instance->getCharWidth(size, fn);
+		}
+		return size;
+	}
+
+	int Font::charHeight(int size, const std::string& fn)
+	{
+		auto font_instance = getInstance();
+		if(font_instance) {
+			font_instance->getCharHeight(size, fn);
+		}
+		return size;
 	}
 
 	Font::Font()

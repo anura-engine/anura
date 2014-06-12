@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 
@@ -103,8 +101,8 @@ void editor_module_properties_dialog::init()
 	g->set_max_height(320);
 	if(new_mod_) {
 		TextEditorWidgetPtr change_id_entry(new TextEditorWidget(200, 30));
-		change_id_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_id, this, change_id_entry));
-		change_id_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+		change_id_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_id, this, change_id_entry));
+		change_id_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
 		g->add_col(WidgetPtr(new label("Identifier:  ", graphics::color_white(), 36)))
 			.add_col(WidgetPtr(change_id_entry));
@@ -115,25 +113,25 @@ void editor_module_properties_dialog::init()
 
 	TextEditorWidgetPtr change_name_entry(new TextEditorWidget(200, 30));
 	change_name_entry->setText(mod_.pretty_name_);
-	change_name_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_name, this, change_name_entry));
-	change_name_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	change_name_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_name, this, change_name_entry));
+	change_name_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
 	g->add_col(WidgetPtr(new label("Name:", graphics::color_white(), 36)))
 	  .add_col(WidgetPtr(change_name_entry));
 
 	TextEditorWidgetPtr change_abbrev_entry(new TextEditorWidget(200, 30));
 	change_abbrev_entry->setText(mod_.abbreviation_);
-	change_abbrev_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_prefix, this, change_abbrev_entry));
-	change_abbrev_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	change_abbrev_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_prefix, this, change_abbrev_entry));
+	change_abbrev_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
 	g->add_col(WidgetPtr(new label("Prefix:", graphics::color_white(), 36)))
 	  .add_col(WidgetPtr(change_abbrev_entry));
 
 	g->add_col(WidgetPtr(new label("Modules  ", graphics::color_white(), 36)))
-		.add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), boost::bind(&editor_module_properties_dialog::change_module_includes, this))));
+		.add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), std::bind(&editor_module_properties_dialog::change_module_includes, this))));
 	foreach(const std::string& s, mod_.included_modules_) {
 		g->add_col(WidgetPtr(new label(s, graphics::color_white(), 36)))
-			.add_col(WidgetPtr(new button(WidgetPtr(new label("Remove", graphics::color_white())), boost::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
+			.add_col(WidgetPtr(new button(WidgetPtr(new label("Remove", graphics::color_white())), std::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
 	}
 	addWidget(g);
 
@@ -181,7 +179,7 @@ void editor_module_properties_dialog::change_module_includes()
 			choices.push_back(dir);
 		}
 	}
-	grid->register_selection_callback(boost::bind(&editor_module_properties_dialog::execute_change_module_includes, this, choices, _1));
+	grid->register_selection_callback(std::bind(&editor_module_properties_dialog::execute_change_module_includes, this, choices, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
@@ -229,7 +227,7 @@ const std::string editor_module_properties_dialog::on_exit() {
 	// Reload level paths
 	reload_level_paths();
 	custom_object_type::reload_file_paths();
-	font::reload_font_paths();
+	font::reloadFontPaths();
 	if(mod_.abbreviation_.empty() == false) {
 		return mod_.abbreviation_ + ":titlescreen.cfg";
 	}

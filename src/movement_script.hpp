@@ -41,8 +41,8 @@ private:
 	std::vector<entity_mod> mods_;
 };
 
-typedef boost::shared_ptr<active_movement_script> active_movement_script_ptr;
-typedef boost::shared_ptr<const active_movement_script> const_active_movement_script_ptr;
+typedef std::shared_ptr<active_movement_script> active_movement_script_ptr;
+typedef std::shared_ptr<const active_movement_script> const_active_movement_script_ptr;
 
 class movement_script
 {

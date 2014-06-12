@@ -32,8 +32,8 @@ namespace gui
 	class Checkbox : public Button
 	{
 	public:
-		Checkbox(const std::string& label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
-		Checkbox(WidgetPtr label, bool checked, boost::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+		Checkbox(const std::string& label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
+		Checkbox(WidgetPtr label, bool checked, std::function<void(bool)> onclick, BUTTON_RESOLUTION buttonResolution=BUTTON_SIZE_NORMAL_RESOLUTION);
 		Checkbox(const variant& v, game_logic::FormulaCallable* e);
 		bool checked() const { return checked_; }
 	private:
@@ -42,7 +42,7 @@ namespace gui
 
 		std::string label_;
 		WidgetPtr label_widget_;
-		boost::function<void(bool)> onclick_;
+		std::function<void(bool)> onclick_;
 		bool checked_;
 		game_logic::formula_ptr click_handler_;
 		void click(bool checked);

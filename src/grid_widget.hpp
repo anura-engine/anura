@@ -17,8 +17,6 @@
 #ifndef GRID_WIDGET_HPP_INCLUDED
 #define GRID_WIDGET_HPP_INCLUDED
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <vector>
 
 #include "grid_widget_fwd.hpp"
@@ -32,7 +30,7 @@ class dropdown_widget;
 class grid : public ScrollableWidget
 {
 public:
-	typedef boost::function<void (int)> callback_type;
+	typedef std::function<void (int)> callback_type;
 	enum COLUMN_ALIGN { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
 
 	explicit grid(int ncols);
@@ -53,7 +51,7 @@ public:
 	grid& set_col_width(int col, int width);
 	grid& set_align(int col, COLUMN_ALIGN align);
 	grid& set_hpad(int pad);
-	void reset_contents(const variant&);
+	void resetContents(const variant&);
 	void set_header_row(int row) { header_rows_.push_back(row); }
 
 	void set_draw_selection_highlight(bool val=true) { draw_selection_highlight_ = val; }
@@ -66,11 +64,11 @@ public:
 	int selection() const { return selected_row_; }
 	void register_mouseover_callback(callback_type cb);
 	void register_selection_callback(callback_type cb);
-	void register_row_selection_callback(boost::function<void()> cb);
+	void register_row_selection_callback(std::function<void()> cb);
 
 	void set_max_height(int amount) { max_height_ = amount; }
 
-	void on_set_yscroll(int old_value, int value);
+	void onSetYscroll(int old_value, int value);
 
 	void allow_draw_highlight(bool val=true) { allow_highlight_ = val; }
 
@@ -80,9 +78,9 @@ public:
 
 	virtual std::vector<WidgetPtr> getChildren() const;
 protected:
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
-	virtual void handleDraw() const;
-	virtual void handleProcess();
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+	virtual void handleDraw() const override;
+	virtual void handleProcess() override;
 
 private:
 	DECLARE_CALLABLE(grid);
@@ -113,7 +111,7 @@ private:
 	int set_h_;
 
 	std::vector<WidgetPtr> new_row_;
-	std::vector<boost::function<void()> > row_callbacks_;
+	std::vector<std::function<void()> > row_callbacks_;
 	callback_type on_mouseover_;
 	callback_type on_select_;
 	int hpad_, vpad_;
@@ -121,7 +119,7 @@ private:
 
 	int max_height_;
 
-	void select_delegate(int selection);
+	void selectDelegate(int selection);
 	void mouseover_delegate(int selection);
 
 	game_logic::formula_ptr ffl_on_select_;

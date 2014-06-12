@@ -15,8 +15,8 @@ namespace voxel
 
 class voxel_object_type;
 
-typedef boost::shared_ptr<voxel_object_type> voxel_object_type_ptr;
-typedef boost::shared_ptr<const voxel_object_type> const_voxel_object_type_ptr;
+typedef std::shared_ptr<voxel_object_type> voxel_object_type_ptr;
+typedef std::shared_ptr<const voxel_object_type> const_voxel_object_type_ptr;
 
 class voxel_object;
 
@@ -39,7 +39,7 @@ public:
 		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
-		boost::shared_ptr<variant> const_value;
+		std::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
 		int slot;

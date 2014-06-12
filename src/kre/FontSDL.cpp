@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <boost/filesystem.hpp>
+
 #include "../logger.hpp"
 #include "../module.hpp"
 #include "../string_utils.hpp"
@@ -44,6 +46,9 @@ namespace KRE
 		std::map<std::string,std::string>& get_font_list()
 		{
 			static std::map<std::string,std::string> res;
+			if(res.empty()) {
+				module::get_unique_filenames_under_dir("data/fonts/", &res);
+			}
 			return res;
 		}
 
@@ -52,9 +57,6 @@ namespace KRE
 		bool get_font_path(const std::string& name, std::string& fontn)
 		{
 			std::map<std::string,std::string>& res = get_font_list();
-			if(res.empty()) {
-				module::get_unique_filenames_under_dir("data/fonts/", &res);
-			}
 			std::map<std::string, std::string>::const_iterator itor = module::find(res, name);
 			if(itor == res.end()) {
 				return false;
@@ -153,5 +155,50 @@ namespace KRE
 		TTF_Font* font = getFont(size, font_name);
 		int res = TTF_SizeUTF8(font, text.c_str(), width, height);
 		ASSERT_LOG(res == 0, "Error calculating size of string: " << TTF_GetError());
+	}
+
+	void FontSDL::doReloadFontPaths() 
+	{
+		get_font_list().clear();
+	}
+
+	std::vector<std::string> FontSDL::handleGetAvailableFonts() 
+	{
+		using namespace boost::filesystem;
+		auto& res = get_font_list();
+		std::vector<std::string> v;
+		for(auto it : res) {
+			path p(it.second);
+			if(p.extension() == ".ttf" || p.extension() == ".otf") {
+				v.push_back(p.stem().generic_string());
+			}
+		}
+		return v;
+	}
+
+	int FontSDL::getCharWidth(int size, const std::string& fn) 
+	{
+		static std::map<std::string, std::map<int, int>> size_cache;
+		int& width = size_cache[fn][size];
+		if(width) {
+			return width;
+		}
+		int w, h;
+		calcTextSize("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", size, fn, &w, &h);
+		width = w/36;
+		return width;
+	}
+
+	int FontSDL::getCharHeight(int size, const std::string& fn) 
+	{
+		static std::map<std::string, std::map<int, int>> size_cache;
+		int& height = size_cache[fn][size];
+		if(height) {
+			return height;
+		}
+		int w, h;
+		calcTextSize("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789", size, fn, &w, &h);
+		height = h;
+		return height;
 	}
 }

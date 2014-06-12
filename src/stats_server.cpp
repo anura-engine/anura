@@ -84,7 +84,7 @@ variant table_info::calculate_key(const variant& msg, const FormulaCallable& con
 variant table_info::calculate_value(const variant& msg, const variant& current_value) const
 {
 	if(value_) {
-		map_FormulaCallable* callable = new map_FormulaCallable;
+		MapFormulaCallable* callable = new MapFormulaCallable;
 		const variant scope(callable);
 		callable->add("value", current_value);
 		callable->add("sample", msg);
@@ -321,7 +321,7 @@ void process_stats(const variant& doc)
 	const std::string& module_version_str = module_version.as_string();
 	const int user_id = doc["user_id"].as_int();
 
-	game_logic::map_FormulaCallable* context_callable = new game_logic::map_FormulaCallable;
+	game_logic::MapFormulaCallable* context_callable = new game_logic::MapFormulaCallable;
 	context_callable->add("user_id", variant(user_id));
 	context_callable->add("program_args", doc["program_args"]);
 	context_callable->add("build_description", doc["build_description"]);

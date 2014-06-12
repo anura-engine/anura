@@ -16,8 +16,6 @@
 */
 #include <math.h>
 
-#include <boost/bind.hpp>
-
 #include <iostream>
 #include <map>
 
@@ -39,7 +37,7 @@
 namespace {
 //a cache key with background name and palette ID.
 typedef std::pair<std::string, int> cache_key;
-typedef std::map<cache_key, boost::shared_ptr<background> > bg_cache;
+typedef std::map<cache_key, std::shared_ptr<background> > bg_cache;
 bg_cache cache;
 
 #ifndef NO_EDITOR
@@ -71,7 +69,7 @@ void background::load_modified_backgrounds()
 		}
 
 		if(listening_for_files.count(j->second->file_) == 0) {
-			sys::notify_on_file_modification(j->second->file_, boost::bind(on_bg_file_updated, j->second->file_));
+			sys::notify_on_file_modification(j->second->file_, std::bind(on_bg_file_updated, j->second->file_));
 			listening_for_files.insert(j->second->file_);
 		}
 
@@ -92,11 +90,11 @@ void background::load_modified_backgrounds()
 }
 #endif // NO_EDITOR
 
-boost::shared_ptr<background> background::get(const std::string& name, int palette_id)
+std::shared_ptr<background> background::get(const std::string& name, int palette_id)
 {
 	const cache_key id(name, palette_id);
 
-	boost::shared_ptr<background>& obj = cache[id];
+	std::shared_ptr<background>& obj = cache[id];
 	if(!obj) {
 		const std::string fname = "data/backgrounds/" + name + ".cfg";
 		obj.reset(new background(json::parse_from_file(fname), palette_id));

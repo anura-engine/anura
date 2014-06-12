@@ -21,7 +21,7 @@ public:
 private:
 };
 
-typedef boost::shared_ptr<FormulaCallable_suspended> FormulaCallable_suspended_ptr;
+typedef std::shared_ptr<FormulaCallable_suspended> FormulaCallable_suspended_ptr;
 
 class FormulaCallable_suspended_variant : public FormulaCallable_suspended
 {

@@ -31,7 +31,7 @@ public:
 	void draw() const;
 	options_dialog(int x, int y, int w, int h);
 protected:
-	virtual void handleDraw() const;
+	virtual void handleDraw() const override;
 };
 
 typedef boost::intrusive_ptr<options_dialog> options_DialogPtr;

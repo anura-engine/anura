@@ -1,29 +1,31 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#if defined(USE_SHADERS) && defined(USE_ISOMAP)
 
 #include <map>
 #include <vector>
 
-#include "camera.hpp"
-#include "color_utils.hpp"
-#include "decimal.hpp"
-#include "lighting.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula.hpp"
@@ -31,7 +33,6 @@
 
 #include <boost/array.hpp>
 #include <boost/unordered_map.hpp>
-#include <boost/intrusive_ptr.hpp>
 
 #include <glm/glm.hpp>
 
@@ -156,11 +157,11 @@ public:
 	void attach_child(voxel_model_ptr child, const std::string& src_attachment, const std::string& dst_attachment);
 
 	std::string current_animation() const { return anim_ ? anim_->name : ""; }
-	void set_animation(boost::shared_ptr<Animation> anim);
+	void set_animation(std::shared_ptr<Animation> anim);
 	void set_animation(const std::string& id);
 	void process_animation(GLfloat advance=0.02);
 
-	const std::map<std::string, boost::shared_ptr<Animation> >& animations() const { return animations_; }
+	const std::map<std::string, std::shared_ptr<Animation> >& animations() const { return animations_; }
 
 	void accumulate_rotation(const std::string& pivot_a, const std::string& pivot_b, GLfloat rotation, glm::vec3 translation, bool children_only=false);
 	void clear_transforms();
@@ -208,15 +209,15 @@ private:
 
 	std::vector<voxel_model_ptr> children_;
 
-	boost::shared_ptr<Animation> anim_, old_anim_;
+	std::shared_ptr<Animation> anim_, old_anim_;
 	GLfloat anim_time_, old_anim_time_;
 
-	std::map<std::string, boost::shared_ptr<Animation> > animations_;
+	std::map<std::string, std::shared_ptr<Animation> > animations_;
 	std::map<std::string, AttachmentPoint> attachment_points_;
 
 	bool invalidated_;
 
-	typedef boost::shared_ptr<GLuint> vbo_ptr;
+	typedef std::shared_ptr<GLuint> vbo_ptr;
 	vbo_ptr vbo_id_;
 	size_t vattrib_offsets_[6];
 	size_t cattrib_offsets_[6];
@@ -231,5 +232,3 @@ private:
 };
 
 }
-
-#endif

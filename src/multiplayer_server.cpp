@@ -2,9 +2,7 @@
 
 #include <boost/array.hpp>
 #include <boost/asio.hpp>
-#include <boost/bind.hpp>
 #include <boost/regex.hpp>
-#include <boost/shared_ptr.hpp>
 // boost::thread < 1.51 conflicts with C++11-capable compilers
 #if BOOST_VERSION < 105100
     #include <ctime>
@@ -20,14 +18,13 @@
 #include <cstdint>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "unit_test.hpp"
 
 using boost::asio::ip::tcp;
 using boost::asio::ip::udp;
 
-typedef boost::shared_ptr<tcp::socket> socket_ptr;
-typedef boost::shared_ptr<boost::array<char, 1024> > buffer_ptr;
+typedef std::shared_ptr<tcp::socket> socket_ptr;
+typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
 
 namespace multiplayer {
 
@@ -47,7 +44,7 @@ private:
 	void start_accept()
 	{
 		socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
-		acceptor_.async_accept(*socket, boost::bind(&server::handle_accept, this, socket, boost::asio::placeholders::error));
+		acceptor_.async_accept(*socket, std::bind(&server::handle_accept, this, socket, boost::asio::placeholders::error));
 	}
 
 	void handle_accept(socket_ptr socket, const boost::system::error_code& error)
@@ -60,7 +57,7 @@ private:
 			memcpy(&buf[0], &info.id, 4);
 
 			boost::asio::async_write(*socket, boost::asio::buffer(buf),
-			                         boost::bind(&server::handle_send, this, socket, _1, _2));
+			                         std::bind(&server::handle_send, this, socket, _1, _2));
 
 			sockets_info_[socket] = info;
 			id_to_socket_[info.id] = socket;
@@ -83,7 +80,7 @@ private:
 	void start_receive(socket_ptr socket)
 	{
 		buffer_ptr buf(new boost::array<char, 1024>);
-		socket->async_read_some(boost::asio::buffer(*buf), boost::bind(&server::handle_receive, this, socket, buf, _1, _2));
+		socket->async_read_some(boost::asio::buffer(*buf), std::bind(&server::handle_receive, this, socket, buf, _1, _2));
 	}
 
 	void handle_receive(socket_ptr socket, buffer_ptr buf, const boost::system::error_code& e, size_t nbytes)
@@ -149,10 +146,10 @@ private:
 
 	std::vector<socket_ptr> sockets_;
 
-	typedef boost::shared_ptr<udp::endpoint> udp_endpoint_ptr;
+	typedef std::shared_ptr<udp::endpoint> udp_endpoint_ptr;
 
 	struct GameInfo;
-	typedef boost::shared_ptr<GameInfo> GameInfoPtr;
+	typedef std::shared_ptr<GameInfo> GameInfoPtr;
 
 	struct SocketInfo {
 		uint32_t id;
@@ -179,7 +176,7 @@ private:
 		udp_endpoint_ptr endpoint(new udp::endpoint);
 		udp_socket_.async_receive_from(
 		  boost::asio::buffer(udp_buf_), *endpoint,
-		  boost::bind(&server::handle_udp_receive, this, endpoint, _1, _2));
+		  std::bind(&server::handle_udp_receive, this, endpoint, _1, _2));
 	}
 
 	void handle_udp_receive(udp_endpoint_ptr endpoint, const boost::system::error_code& error, size_t len)
@@ -233,7 +230,7 @@ private:
 							const std::string msg_str = msg.str();
 
 							boost::asio::async_write(*socket, boost::asio::buffer(msg_str),
-				                         boost::bind(&server::handle_send, this, socket, _1, _2));
+				                         std::bind(&server::handle_send, this, socket, _1, _2));
 						}
 
 						game->started = true;
@@ -259,7 +256,7 @@ private:
 							if(socket_info != sockets_info_.end()) {
 								std::cerr << "  RELAY TO " << socket_info->second.udp_endpoint->port() << "\n";
 								udp_socket_.async_send_to(boost::asio::buffer(&udp_buf_[0], len), *socket_info->second.udp_endpoint,
-								    boost::bind(&server::handle_udp_send, this, socket_info->second.udp_endpoint, _1, _2));
+								    std::bind(&server::handle_udp_send, this, socket_info->second.udp_endpoint, _1, _2));
 							}
 						}
 					}

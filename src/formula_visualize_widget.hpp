@@ -18,9 +18,9 @@ public:
 	formula_visualize_widget(game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor);
 private:
 	void init(game_logic::const_expression_ptr expr=game_logic::const_expression_ptr());
-	void handleDraw() const;
+	void handleDraw() const override;
 
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	void on_select_expression(game_logic::const_expression_ptr expr);
 

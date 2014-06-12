@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "dialog.hpp"
 #include "editor_dialogs.hpp"
@@ -48,7 +47,7 @@ std::string show_choose_level_dialog(const std::string& prompt)
 	grid->set_show_background(true);
 	grid->allow_selection();
 
-	grid->register_selection_callback(boost::bind(&do_select_level, &d, levels, _1, &result));
+	grid->register_selection_callback(std::bind(&do_select_level, &d, levels, _1, &result));
 	foreach(const std::string& lvl, levels) {
 		grid->add_col(WidgetPtr(new label(lvl, graphics::color_white())));
 	}

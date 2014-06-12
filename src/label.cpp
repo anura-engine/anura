@@ -80,7 +80,7 @@ namespace gui
 		if(v.has_key("onClick")) {
 			ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 			ffl_click_handler_ = getEnvironment()->createFormula(v["onClick"]);
-			on_click_ = boost::bind(&Label::click_delegate, this);
+			on_click_ = std::bind(&Label::click_delegate, this);
 		}
 		if(v.has_key("highlight_color")) {
 			highlight_color_.reset(new KRE::Color(v["highlight_color"]));
@@ -270,21 +270,21 @@ namespace gui
 
 		TextEditorWidgetPtr text_edit = new TextEditorWidget(150, 30);
 		text_edit->setText(text());
-		text_edit->set_on_user_change_handler([=](){setText(text_edit->text());});
+		text_edit->setOnUserChangeHandler([=](){setText(text_edit->text());});
 		g->add_col(new Label("Text:", d->getTextSize(), d->font()))
 			.add_col(text_edit);
 
 		g->add_col(new Label("Size:", d->getTextSize(), d->font())).
-			add_col(new slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
+			add_col(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
 
-		std::vector<std::string> fonts = font::get_available_fonts();
+		std::vector<std::string> fonts = font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
 		dropdown_WidgetPtr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		font_list->setFontSize(14);
 		font_list->set_dropdown_height(height());
 		auto fit = std::find(fonts.begin(), fonts.end(), font());
-		font_list->set_selection(fit == fonts.end() ? 0 : fit-fonts.begin());
-		font_list->set_on_select_handler([&](int n, const std::string& s){setFont(s);});
+		font_list->setSelection(fit == fonts.end() ? 0 : fit-fonts.begin());
+		font_list->setOnSelectHandler([&](int n, const std::string& s){setFont(s);});
 		font_list->setZOrder(19);
 		g->add_col(new Label("Font:", d->getTextSize(), d->font()))
 			.add_col(font_list);

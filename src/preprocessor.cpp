@@ -125,7 +125,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::Form
 			const std::string expr(colon+1, fname.end());
 			const variant expr_variant(expr);
 			const game_logic::formula f(expr_variant);
-			game_logic::FormulaCallable* vars = new game_logic::map_FormulaCallable(doc);
+			game_logic::FormulaCallable* vars = new game_logic::MapFormulaCallable(doc);
 			const variant callable(vars);
 			if(vars) {
 				return f.execute(*vars);

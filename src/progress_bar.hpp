@@ -18,9 +18,6 @@
 #ifndef PROGRESS_BAR_HPP_INCLUDED
 #define PROGRESS_BAR_HPP_INCLUDED
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
 #include "color_utils.hpp"
 #include "framed_gui_element.hpp"
 #include "texture.hpp"
@@ -39,12 +36,12 @@ public:
 	int progress() const { return progress_; }
 	void setProgress(int value);
 	void update_progress(int delta);
-	void set_completion_handler(boost::function<void ()> oncompletion);
+	void set_completion_handler(std::function<void ()> oncompletion);
 	void reset();
 protected:
 	virtual variant getValue(const std::string& key) const;
 	virtual void setValue(const std::string& key, const variant& value);
-	void handleDraw() const;
+	void handleDraw() const override;
 private:
 	void complete();
 
@@ -55,7 +52,7 @@ private:
 	int max_;
 	int progress_;
 	bool completion_called_;
-	boost::function<void ()> oncompletion_;
+	std::function<void ()> oncompletion_;
 	game_logic::formula_ptr completion_handler_;
 
 	bool upscale_;

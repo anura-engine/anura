@@ -38,11 +38,11 @@ namespace gui
 		ConstWidgetPtr getWidgetById(const std::string& id) const;
 		std::vector<WidgetPtr> getChildren() const;
 	protected:
-		virtual void handleDraw() const;
-		virtual void handleProcess();
+		virtual void handleDraw() const override;
+		virtual void handleProcess() override;
 	private:
 		DECLARE_CALLABLE(BorderWidget);
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		WidgetPtr child_;
 		KRE::Color color_;

@@ -17,8 +17,7 @@
 #ifndef FILESYSTEM_HPP_INCLUDED
 #define FILESYSTEM_HPP_INCLUDED
 
-#include <boost/cstdint.hpp>
-#include <boost/function.hpp>
+#include <cstdint>
 
 #include <map>
 #include <string>
@@ -86,7 +85,7 @@ struct filesystem_manager {
 	~filesystem_manager();
 };
 
-void notify_on_file_modification(const std::string& path, boost::function<void()> handler);
+void notify_on_file_modification(const std::string& path, std::function<void()> handler);
 void pump_file_modifications();
 
 bool is_safe_write_path(const std::string& path, std::string* error=NULL);

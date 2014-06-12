@@ -99,7 +99,7 @@ void loading_screen::draw_internal (const std::string& message)
 	
 	std::string font = module::get_default_font();
 	if(font == "bitmap") {
-		const_graphical_font_ptr font = graphical_font::get("door_label");
+		ConstGraphicalFontPtr font = GraphicalFont::get("door_label");
 		// explicitly translate loading messages
 		if(font) {
 			rect getTextSize = font->dimensions(i18n::tr(message));

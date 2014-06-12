@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "border_widget.hpp"
 #include "button.hpp"
@@ -53,10 +52,10 @@ void segment_editor_dialog::init()
 	addWidget(WidgetPtr(new label(formatter() << "Difficulty: " << start_value, graphics::color_white())), 5, 5);
 
 				grid_ptr buttons_grid(new grid(4));
-				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this, start_value - 10))));
-				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value - 1))));
-				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+1", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 1))));
-				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+10", graphics::color_white())), boost::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 10))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-10", graphics::color_white())), std::bind(&segment_editor_dialog::set_segment_start_difficulty, this, start_value - 10))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("-1", graphics::color_white())), std::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value - 1))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+1", graphics::color_white())), std::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 1))));
+				buttons_grid->add_col(WidgetPtr(new button(WidgetPtr(new label("+10", graphics::color_white())), std::bind(&segment_editor_dialog::set_segment_start_difficulty, this,  start_value + 10))));
 				addWidget(WidgetPtr(buttons_grid));
 
 }

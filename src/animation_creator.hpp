@@ -24,8 +24,6 @@
 #pragma once
 #ifndef NO_EDITOR
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <vector>
 #include <map>
 
@@ -65,8 +63,8 @@ namespace gui
 		void checkAnimChanged();
 		void resetCurrentObject();
 
-		virtual void handleDraw() const;
-		virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 	private:
 		std::vector<variant> anims_;
 		variant current_;				// Holds the currently selected variant.
@@ -84,10 +82,10 @@ namespace gui
 		void onIdChange(dropdown_WidgetPtr editor, const std::string& s);
 		void onIdSet(dropdown_WidgetPtr editor, int selection, const std::string& s);
 		void setImageFile();
-		void changeText(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider);
-		void executeChangeText(const std::string& s, TextEditorWidgetPtr editor, slider_ptr slider);
+		void changeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr Slider);
+		void executeChangeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr Slider);
 		void changeSlide(const std::string& s, TextEditorWidgetPtr editor, double d);
-		void endSlide(const std::string& s, slider_ptr slide, TextEditorWidgetPtr editor, double d);
+		void endSlide(const std::string& s, SliderPtr slide, TextEditorWidgetPtr editor, double d);
 
 		void setAnimationRect(rect r);
 		void moveSolidRect(int dx, int dy);

@@ -240,7 +240,7 @@ struct variant_fn {
 
 	std::function<variant(const game_logic::FormulaCallable&)> builtin_fn;
 	game_logic::const_formula_ptr fn;
-	game_logic::const_FormulaCallablePtr callable;
+	game_logic::ConstFormulaCallablePtr callable;
 
 	std::vector<variant> bound_args;
 
@@ -258,7 +258,7 @@ struct variant_generic_fn {
 
 	variant fn;
 	std::vector<std::string> generic_types;
-	game_logic::const_FormulaCallablePtr callable;
+	game_logic::ConstFormulaCallablePtr callable;
 
 	std::vector<variant> bound_args;
 
@@ -296,7 +296,7 @@ if(!has_result) {
 }
 
 game_logic::const_formula_ptr fn;
-game_logic::const_FormulaCallablePtr callable;
+game_logic::ConstFormulaCallablePtr callable;
 
 bool has_result;
 variant result;
@@ -469,7 +469,7 @@ std::string variant::debug_location() const
 	}
 }
 
-variant variant::create_delayed(game_logic::const_formula_ptr f, game_logic::const_FormulaCallablePtr callable)
+variant variant::create_delayed(game_logic::const_formula_ptr f, game_logic::ConstFormulaCallablePtr callable)
 {
 	variant v;
 	v.type_ = VARIANT_TYPE_DELAYED;

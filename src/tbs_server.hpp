@@ -31,8 +31,8 @@
 
 namespace tbs {
 
-typedef boost::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
-typedef boost::shared_ptr<boost::array<char, 1024> > buffer_ptr;
+typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+typedef std::shared_ptr<boost::array<char, 1024> > buffer_ptr;
 
 class server : public server_base
 {
@@ -49,7 +49,7 @@ private:
 	void send_msg(socket_ptr socket, const variant& msg);
 	void send_msg(socket_ptr socket, const char* msg);
 	void send_msg(socket_ptr socket, const std::string& msg);
-	void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, boost::shared_ptr<std::string> buf, int session_id);
+	void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf, int session_id);
 	virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients);
 
 	socket_info& get_socket_info(socket_ptr socket);

@@ -23,30 +23,13 @@
 
 #pragma once
 
-#include <boost/function.hpp>
-
+#include <functional>
 #include <iostream>
 #include <sstream>
 #include <stdlib.h>
 #include <string>
 
-#if defined(__ANDROID__)
-#include <android/log.h>
-#include <sstream>
-#define LOG(str_data) \
-    do{ std::stringstream oss; \
-	    oss << str_data; \
-	    __android_log_print(ANDROID_LOG_INFO, "Frogatto", oss.str().c_str()); }while(0)
-#else
-#define LOG(fmt,...) do {}while(0)
-#endif // ANDROID
-
-#if defined(_MSC_VER)
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-#endif
-#include <windows.h>
-#endif
+#include "logger.hpp"
 
 void report_assert_msg(const std::string& m );
 
@@ -62,9 +45,9 @@ bool throw_validation_failure_on_assert();
 void output_backtrace();
 
 class assert_edit_and_continue_fn_scope {
-	boost::function<void()> fn_;
+	std::function<void()> fn_;
 public:
-	assert_edit_and_continue_fn_scope(boost::function<void()> fn);
+	assert_edit_and_continue_fn_scope(std::function<void()> fn);
 	~assert_edit_and_continue_fn_scope();
 };
 
@@ -93,16 +76,10 @@ public:
 	~fatal_assert_scope();
 };
 
+#define ABORT()		do { exit(1); } while(0)
+
 //various asserts of standard "equality" tests, such as "equals", "not equals", "greater than", etc.  Example usage:
 //ASSERT_NE(x, y);
-
-#if defined(_MSC_VER)
-// To make windows exit cleanly we do this.
-#define ABORT()		do{ ::ExitProcess(1); } while(0)
-#else
-// In order to break into GDB on linux we need to do this.
-#define ABORT()		abort()
-#endif
 
 #define ASSERT_EQ(a,b) if((a) != (b)) { std::ostringstream s; s << __FILE__ << ":" << __LINE__ << " ASSERT EQ FAILED: " << #a << " != " << #b << ": " << (a) << " != " << (b) << "\n"; if(throw_validation_failure_on_assert()) { throw validation_failure_exception(s.str()); } else if(throw_fatal_error_on_assert()) { throw fatal_assert_failure_exception(s.str()); } else { std::cerr << s.str(); output_backtrace(); report_assert_msg(s.str()); ABORT(); } }
 

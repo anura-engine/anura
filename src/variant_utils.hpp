@@ -17,8 +17,6 @@
 #ifndef VARIANT_UTILS_HPP_INCLUDED
 #define VARIANT_UTILS_HPP_INCLUDED
 
-#include <boost/function.hpp>
-
 #include <map>
 
 #include "formula_callable.hpp"
@@ -66,7 +64,7 @@ void merge_variant_over(variant* aptr, variant b);
 //If dst and src contain 'incompatible' types this function will assert.
 void smart_merge_variants(variant* dst, const variant& src);
 
-void visit_variants(variant v, boost::function<void (variant)> fn);
+void visit_variants(variant v, std::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);
 

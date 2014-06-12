@@ -21,7 +21,7 @@ public:
 	explicit expression_widget(game_logic::const_expression_ptr expression,
 	                           int x, int y, int w, int h, bool focused,
 							   TextEditorWidget* editor,
-							   boost::function<void()> onClick)
+							   std::function<void()> onClick)
 	  : dialog(x, y, w, h), expression_(expression), focused_(focused),
 	    editor_(editor), on_click_(onClick)
 	{
@@ -80,7 +80,7 @@ private:
 	game_logic::const_expression_ptr expression_;
 	bool focused_;
 	TextEditorWidget* editor_;
-	boost::function<void()> on_click_;
+	std::function<void()> on_click_;
 };
 
 }
@@ -172,7 +172,7 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 	foreach(const Edge& edge, edges_) {
 		WidgetPtr parent = edge.first;
 		WidgetPtr child = edge.second;
-		children_.push_back(WidgetPtr(new poly_line_widget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), graphics::color_white())));
+		children_.push_back(WidgetPtr(new PolyLineWidget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), graphics::color_white())));
 	}
 }
 
@@ -188,7 +188,7 @@ void formula_visualize_widget::on_select_expression(game_logic::const_expression
 void formula_visualize_widget::add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth, WidgetPtr parent)
 {
 	const bool focused = text_pos_ >= expr->debug_loc_in_file().first && text_pos_ <= expr->debug_loc_in_file().second;
-	boost::function<void()> on_click_expr = boost::bind(&formula_visualize_widget::on_select_expression, this, expr);
+	std::function<void()> on_click_expr = std::bind(&formula_visualize_widget::on_select_expression, this, expr);
 	children_.push_back(WidgetPtr(new expression_widget(expr, x, y, 100, 80, focused, editor_, on_click_expr)));
 	if(child_rows_.size() <= depth) {
 		child_rows_.resize(depth+1);

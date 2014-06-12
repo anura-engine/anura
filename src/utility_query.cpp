@@ -335,7 +335,7 @@ void process_file(const std::string& fname, std::map<std::string,std::string>& f
 
 	variant obj = variant_callable::create(&v);
 
-	boost::intrusive_ptr<map_FormulaCallable> map_callable(new map_FormulaCallable(obj.try_convert<FormulaCallable>()));
+	boost::intrusive_ptr<MapFormulaCallable> map_callable(new MapFormulaCallable(obj.try_convert<FormulaCallable>()));
 	map_callable->add("doc", v);
 	map_callable->add("filename", variant(fname));
 

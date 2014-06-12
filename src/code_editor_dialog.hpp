@@ -18,9 +18,6 @@
 #define CODE_EDITOR_DIALOG_HPP_INCLUDED
 #ifndef NO_EDITOR
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include <string>
 
 #include "animation_preview_widget.hpp"
@@ -38,7 +35,7 @@ class code_editor_widget;
 class TextEditorWidget;
 }
 
-class code_editor_dialog : public gui::dialog
+class code_editor_dialog : public gui::Dialog
 {
 public:
 	explicit code_editor_dialog(const rect& r);
@@ -46,7 +43,7 @@ public:
 	void add_optional_error_text_area(const std::string& text);
 	bool jump_to_error(const std::string& text);
 
-	void load_file(std::string fname, bool focus=true, boost::function<void()>* fn=NULL);
+	void load_file(std::string fname, bool focus=true, std::function<void()>* fn=NULL);
 
 	bool hasKeyboardFocus() const;
 
@@ -61,10 +58,10 @@ public:
 private:
 	void init_files_grid();
 
-	bool handleEvent(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	void handleDraw_children() const;
 
-	void change_font_size(int amount);
+	void changeFontSize(int amount);
 
 	void setAnimationRect(rect r);
 	void moveSolidRect(int dx, int dy);
@@ -118,7 +115,7 @@ private:
 		std::string fname;
 		boost::intrusive_ptr<frame> anim;
 		gui::code_editor_WidgetPtr editor;
-		boost::function<void()> op_fn;
+		std::function<void()> op_fn;
 	};
 
 	std::vector<KnownFile> files_;
@@ -139,15 +136,15 @@ private:
 
 	bool have_close_buttons_;
 
-	boost::function<void()> op_fn_;
+	std::function<void()> op_fn_;
 };
 
 typedef boost::intrusive_ptr<code_editor_dialog> code_editor_DialogPtr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
-void edit_and_continue_fn(const std::string& fname, const std::string& error, boost::function<void()> fn);
+void edit_and_continue_fn(const std::string& fname, const std::string& error, std::function<void()> fn);
 
-void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn=boost::function<void()>());
+void edit_and_continue_assert(const std::string& msg, std::function<void()> fn=std::function<void()>());
 
 #endif // !NO_EDITOR
 #endif

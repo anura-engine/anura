@@ -37,7 +37,7 @@ public:
 	void set_names(const std::vector<std::string>* names) {
 		value_names_ = names;
 	}
-	void set_fallback(const const_FormulaCallablePtr& fallback) { fallback_ = fallback; }
+	void set_fallback(const ConstFormulaCallablePtr& fallback) { fallback_ = fallback; }
 	void add(const variant& val) { values_.push_back(val); }
 	variant& back_direct_access() { return values_.back(); }
 	void reserve(size_t n) { values_.reserve(n); }
@@ -71,7 +71,7 @@ public:
 	void clear() {
 		value_names_ = 0;
 		values_.clear();
-		fallback_ = const_FormulaCallablePtr();
+		fallback_ = ConstFormulaCallablePtr();
 	}
 
 	void set_base_slot(int base) { base_slot_ = base; }
@@ -81,7 +81,7 @@ public:
 private:
 	const std::vector<std::string>* value_names_;
 	std::vector<variant> values_;
-	const_FormulaCallablePtr fallback_;
+	ConstFormulaCallablePtr fallback_;
 
 	int base_slot_;
 };

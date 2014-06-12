@@ -15,20 +15,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <iostream>
 
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "editor.hpp"
-#include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
-#include "raster.hpp"
 #include "tileset_editor_dialog.hpp"
 
 namespace editor_dialogs
@@ -75,7 +71,7 @@ void tileset_editor_dialog::init()
 
 	assert(editor_.get_tileset() >= 0 && editor_.get_tileset() < editor_.all_tilesets().size());
 
-	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&tileset_editor_dialog::show_category_menu, this));
+	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&tileset_editor_dialog::show_category_menu, this));
 	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
@@ -88,7 +84,7 @@ void tileset_editor_dialog::init()
 			}
 			preview_tileset_widget* preview = new preview_tileset_widget(*t.preview());
 			preview->setDim(40, 40);
-			ButtonPtr tileset_button(new button(WidgetPtr(preview), boost::bind(&tileset_editor_dialog::set_tileset, this, index)));
+			ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&tileset_editor_dialog::set_tileset, this, index)));
 			tileset_button->setDim(44, 44);
 			grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 		}
@@ -124,7 +120,7 @@ void tileset_editor_dialog::show_category_menu()
 	grid->set_show_background(true);
 	grid->set_hpad(10);
 	grid->allow_selection();
-	grid->register_selection_callback(boost::bind(&tileset_editor_dialog::close_context_menu, this, _1));
+	grid->register_selection_callback(std::bind(&tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
 	foreach(const editor::tileset& t, editor_.all_tilesets()) {
@@ -138,7 +134,7 @@ void tileset_editor_dialog::show_category_menu()
 		preview->setDim(48, 48);
 		grid->add_col(WidgetPtr(preview))
 		     .add_col(WidgetPtr(new label(t.category, graphics::color_white())));
-		grid->register_row_selection_callback(boost::bind(&tileset_editor_dialog::select_category, this, t.category));
+		grid->register_row_selection_callback(std::bind(&tileset_editor_dialog::select_category, this, t.category));
 	}
 
 	int mousex, mousey;

@@ -41,14 +41,14 @@
 
 class custom_object_type;
 
-typedef boost::shared_ptr<custom_object_type> custom_object_type_ptr;
-typedef boost::shared_ptr<const custom_object_type> const_custom_object_type_ptr;
+typedef std::shared_ptr<custom_object_type> custom_object_type_ptr;
+typedef std::shared_ptr<const custom_object_type> const_custom_object_type_ptr;
 
 std::map<std::string, std::string>& prototype_file_paths();
 
 namespace wml {
 class modifier;
-typedef boost::shared_ptr<const modifier> const_modifier_ptr;
+typedef std::shared_ptr<const modifier> const_modifier_ptr;
 }
 
 class custom_object_type
@@ -187,19 +187,19 @@ public:
 	bool static_object() const { return static_object_; }
 	bool collides_with_level() const { return collides_with_level_; }
 	bool has_feet() const { return has_feet_; }
-	bool adjust_feet_on_animation_change() const { return adjust_feet_on_animation_change_; }
+	bool adjust_feet_on_animationChange() const { return adjust_feet_on_animation_change_; }
 	bool use_absolute_screen_coordinates() const { return use_absolute_screen_coordinates_; }
 
 	const std::map<std::string, variant>& variables() const { return variables_; }
 	const std::map<std::string, variant>& tmp_variables() const { return tmp_variables_; }
-	game_logic::const_map_FormulaCallablePtr consts() const { return consts_; }
+	game_logic::ConstMapFormulaCallablePtr consts() const { return consts_; }
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
 		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_EditorInfo(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
-		boost::shared_ptr<variant> const_value;
+		std::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
 		int slot, storage_slot;
@@ -299,9 +299,9 @@ private:
 	game_logic::const_formula_ptr next_animation_formula_;
 
 	event_handler_map event_handlers_;
-	boost::shared_ptr<game_logic::function_symbol_table> object_functions_;
+	std::shared_ptr<game_logic::function_symbol_table> object_functions_;
 
-	boost::shared_ptr<std::pair<int, int> > parallax_scale_millis_;
+	std::shared_ptr<std::pair<int, int> > parallax_scale_millis_;
 	
 	int zorder_;
 	int zsub_order_;
@@ -346,7 +346,7 @@ private:
 	bool adjust_feet_on_animation_change_;
 
 	std::map<std::string, variant> variables_, tmp_variables_;
-	game_logic::map_FormulaCallablePtr consts_;
+	game_logic::MapFormulaCallablePtr consts_;
 	std::map<std::string, variant> tags_;
 
 	std::map<std::string, property_entry> properties_;
@@ -405,7 +405,7 @@ private:
 	//does this object use strict checking?
 	bool is_strict_;
 
-	boost::shared_ptr<graphics::blend_mode> blend_mode_;
+	std::shared_ptr<graphics::blend_mode> blend_mode_;
 
 	//if this is a shadow, it will render only on top of foreground level
 	//components.

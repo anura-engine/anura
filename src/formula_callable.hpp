@@ -191,13 +191,13 @@ public:
 	{}
 };
 
-class map_FormulaCallable : public FormulaCallable {
+class MapFormulaCallable : public FormulaCallable {
 public:
-	explicit map_FormulaCallable(variant node);
-	explicit map_FormulaCallable(const FormulaCallable* fallback=NULL);
-	explicit map_FormulaCallable(const std::map<std::string, variant>& m);
+	explicit MapFormulaCallable(variant node);
+	explicit MapFormulaCallable(const FormulaCallable* fallback=NULL);
+	explicit MapFormulaCallable(const std::map<std::string, variant>& m);
 	variant write() const;
-	map_FormulaCallable& add(const std::string& key, const variant& value);
+	MapFormulaCallable& add(const std::string& key, const variant& value);
 	void set_fallback(const FormulaCallable* fallback) { fallback_ = fallback; }
 
 	//adds an entry and gets direct access to the variant. Use with caution
@@ -218,7 +218,7 @@ public:
 	variant& ref(const std::string& key) { return values_[key]; }
 
 private:
-	//map_FormulaCallable(const map_FormulaCallable&);
+	//MapFormulaCallable(const MapFormulaCallable&);
 
 	variant getValue_by_slot(int slot) const {
 		return fallback_->query_value_by_slot(slot);
@@ -234,10 +234,10 @@ private:
 };
 
 typedef boost::intrusive_ptr<FormulaCallable> FormulaCallablePtr;
-typedef boost::intrusive_ptr<const FormulaCallable> const_FormulaCallablePtr;
+typedef boost::intrusive_ptr<const FormulaCallable> ConstFormulaCallablePtr;
 
-typedef boost::intrusive_ptr<map_FormulaCallable> map_FormulaCallablePtr;
-typedef boost::intrusive_ptr<const map_FormulaCallable> const_map_FormulaCallablePtr;
+typedef boost::intrusive_ptr<MapFormulaCallable> MapFormulaCallablePtr;
+typedef boost::intrusive_ptr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
 
 class formula_expression;
 

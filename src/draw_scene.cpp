@@ -120,15 +120,15 @@ void set_displayed_Achievement(AchievementPtr a)
 	current_Achievement_duration = 250;
 }
 
-void draw_scene(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) 
+void draw_scene(const level& lvl, screen_position& pos, const entity* focus, bool doDraw) 
 {
-	const bool draw_ready = update_camera_position(lvl, pos, focus, do_draw);
+	const bool draw_ready = update_camera_position(lvl, pos, focus, doDraw);
 	if(draw_ready) {
 		render_scene(lvl, pos);
 	}
 }
 
-bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus, bool do_draw) 
+bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus, bool doDraw) 
 {
 	if(focus == NULL && lvl.player()) {
 		focus = &lvl.player()->get_entity();
@@ -136,7 +136,7 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 
 	//flag which gets set to false if we abort drawing, due to the
 	//screen position being initialized now.
-	const bool draw_level = do_draw && pos.init;
+	const bool draw_level = doDraw && pos.init;
 	
 #ifndef NO_EDITOR
 	const int sidebar_width = editor::sidebar_width();
@@ -477,7 +477,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 
 	if(scene_title_duration_ > 0) {
 		--scene_title_duration_;
-		const const_graphical_font_ptr f = graphical_font::get("default");
+		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
 		ASSERT_LOG(f.get() != NULL, "COULD NOT LOAD DEFAULT FONT");
 		const rect r = f->dimensions(scene_title());
 		const GLfloat alpha = scene_title_duration_ > 10 ? 1.0 : scene_title_duration_/10.0;
@@ -500,8 +500,8 @@ void render_scene(const level& lvl, const screen_position& pos) {
 		ConstGuiSectionPtr right = GuiSection::get("achievements_right");
 		ConstGuiSectionPtr main = GuiSection::get("achievements_main");
 
-		const const_graphical_font_ptr title_font = graphical_font::get("white_outline");
-		const const_graphical_font_ptr main_font = graphical_font::get("door_label");
+		const ConstGraphicalFontPtr title_font = GraphicalFont::get("white_outline");
+		const ConstGraphicalFontPtr main_font = GraphicalFont::get("door_label");
 
 		const std::string title_text = _("achievement Unlocked!");
 		const std::string name = current_Achievement->name();
@@ -621,7 +621,7 @@ void draw_fps(const level& lvl, const performance_data& data)
 		return;
 	}
 
-	const_graphical_font_ptr font(graphical_font::get("door_label"));
+	ConstGraphicalFontPtr font(GraphicalFont::get("door_label"));
 	if(!font) {
 		return;
 	}

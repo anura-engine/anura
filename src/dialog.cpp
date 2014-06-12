@@ -16,7 +16,6 @@
 */
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 #include <iostream>
 
@@ -95,7 +94,7 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 	if(v.has_key("background_draw")) {
 		std::string scene = v["background_draw"].as_string();
 		if(scene == "last_scene") {
-			draw_background_fn_ = boost::bind(&dialog::draw_last_scene);
+			draw_background_fn_ = std::bind(&dialog::draw_last_scene);
 		}
 		// XXX could make this FFL callable. Or could allow any of the background scenes to be drawn. or both.
 	}
@@ -103,10 +102,10 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 	bg_alpha_ = v["background_alpha"].as_int(255) / GLfloat(255.0);
 	if(v.has_key("cursor")) {
 		std::vector<int> vi = v["cursor"].as_list_int();
-		set_cursor(vi[0], vi[1]);
+		setCursor(vi[0], vi[1]);
 	}
 	if(v.has_key("on_quit")) {
-		on_quit_ = boost::bind(&dialog::quit_delegate, this);
+		on_quit_ = std::bind(&dialog::quit_delegate, this);
 		ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 		const variant on_quit_value = v["on_quit"];
 		if(on_quit_value.is_function()) {
@@ -114,7 +113,7 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 			static const variant fml("fn()");
 			ffl_on_quit_.reset(new game_logic::formula(fml));
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_quit_value);
 
 			quit_arg_.reset(callable);
@@ -123,7 +122,7 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 		}
 	}
 	if(v.has_key("on_close")) {
-		on_close_ = boost::bind(&dialog::close_delegate, this, _1);
+		on_close_ = std::bind(&dialog::close_delegate, this, _1);
 		ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 		const variant on_close_value = v["on_close"];
 		if(on_close_value.is_function()) {
@@ -131,7 +130,7 @@ dialog::dialog(const variant& v, game_logic::FormulaCallable* e)
 			static const variant fml("fn(selection)");
 			ffl_on_close_.reset(new game_logic::formula(fml));
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_close_value);
 
 			close_arg_.reset(callable);
@@ -198,12 +197,12 @@ void dialog::close_delegate(bool cancelled)
 	using namespace game_logic;
 	if(close_arg_) {
 		using namespace game_logic;
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(close_arg_.get()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(close_arg_.get()));
 		callable->add("cancelled", variant::from_bool(cancelled));
 		variant value = ffl_on_close_->execute(*callable);
 		getEnvironment()->createFormula(value);
 	} else if(getEnvironment()) {
-		map_FormulaCallablePtr callable = map_FormulaCallablePtr(new map_FormulaCallable(getEnvironment()));
+		MapFormulaCallablePtr callable = MapFormulaCallablePtr(new MapFormulaCallable(getEnvironment()));
 		callable->add("cancelled", variant::from_bool(cancelled));
 		variant value = ffl_on_close_->execute(*callable);
 		getEnvironment()->createFormula(value);
@@ -425,8 +424,8 @@ std::vector<WidgetPtr> dialog::getChildren() const
 
 void dialog::add_ok_and_cancel_buttons()
 {
-	WidgetPtr ok(new button("Ok", boost::bind(&dialog::close, this)));
-	WidgetPtr cancel(new button("Cancel", boost::bind(&dialog::cancel, this)));
+	WidgetPtr ok(new button("Ok", std::bind(&dialog::close, this)));
+	WidgetPtr cancel(new button("Cancel", std::bind(&dialog::cancel, this)));
 	ok->setDim(cancel->width(), ok->height());
 	addWidget(ok, width() - 160, height() - 40);
 	addWidget(cancel, width() - 80, height() - 40);

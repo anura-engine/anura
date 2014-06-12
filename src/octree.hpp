@@ -109,7 +109,7 @@ namespace graphics
 		float radius_;
 
 		std::vector<octree_ptr<T1> > children_;
-		boost::shared_ptr<std::pair<glm::vec3, T2> > data_;
+		std::shared_ptr<std::pair<glm::vec3, T2> > data_;
 
 		octree();
 		octree(const octree&);

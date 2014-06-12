@@ -26,7 +26,6 @@
 #include <functional>
 #include <iostream>
 #include <string>
-#include <boost/function.hpp>
 
 #include "asserts.hpp"
 #include "formula_callable_definition_fwd.hpp"
@@ -100,7 +99,7 @@ FormulaCallable_definition_ptr modify_FormulaCallable_definition(const_FormulaCa
 FormulaCallable_definition_ptr executeCommand_callable_definition(const std::string* beg, const std::string* end, const_FormulaCallable_definition_ptr base=NULL, variant_type_ptr* begin_types=NULL);
 FormulaCallable_definition_ptr executeCommand_callable_definition(const FormulaCallable_definition::entry* begin, const FormulaCallable_definition::entry* end, const_FormulaCallable_definition_ptr base=NULL);
 
-FormulaCallable_definition_ptr create_map_FormulaCallable_definition(variant_type_ptr value_type);
+FormulaCallable_definition_ptr create_MapFormulaCallable_definition(variant_type_ptr value_type);
 
 int register_FormulaCallable_definition(const std::string& id, const_FormulaCallable_definition_ptr def);
 int register_FormulaCallable_definition(const std::string& id, const std::string& base_id, const_FormulaCallable_definition_ptr def);

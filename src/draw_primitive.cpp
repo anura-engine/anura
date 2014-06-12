@@ -50,7 +50,7 @@ public:
 private:
 	void init();
 
-	void handleDraw() const;
+	void handleDraw() const override;
 #ifdef USE_ISOMAP
 	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
@@ -126,7 +126,7 @@ public:
 private:
 	void init();
 
-	void handleDraw() const;
+	void handleDraw() const override;
 #ifdef USE_ISOMAP
 	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
@@ -218,7 +218,7 @@ public:
 
 private:
 
-	void handleDraw() const;
+	void handleDraw() const override;
 #ifdef USE_ISOMAP
 	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif
@@ -482,7 +482,7 @@ private:
 
 	void init();
 
-	void handleDraw() const;
+	void handleDraw() const override;
 #ifdef USE_ISOMAP
 	void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
 #endif

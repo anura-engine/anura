@@ -38,8 +38,8 @@ namespace gui
 		void set_yscroll(int yscroll);
 		virtual void setDim(int w, int h);
 
-		virtual void handleDraw() const;
-		virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		virtual void setLoc(int x, int y);
 	protected:
@@ -55,7 +55,7 @@ namespace gui
 		virtual void setValue(const std::string& key, const variant& v);
 		virtual variant getValue(const std::string& key) const;
 	private:
-		virtual void on_set_yscroll(int old_yscroll, int new_yscroll);
+		virtual void onSetYscroll(int old_yscroll, int new_yscroll);
 
 		int yscroll_;
 		int virtual_height_;

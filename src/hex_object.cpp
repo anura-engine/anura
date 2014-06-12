@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
 #include "foreach.hpp"
@@ -193,7 +192,7 @@ struct hex_engine
 	}
 
 	variant functions_var;
-	boost::shared_ptr<game_logic::function_symbol_table> functions;
+	std::shared_ptr<game_logic::function_symbol_table> functions;
 	std::map<std::string, game_logic::const_formula_ptr> handlers;
 	std::vector<std::string> rules;
 };
@@ -319,7 +318,7 @@ void HexObject::applyRules(const std::string& rule)
 	using namespace game_logic;
 	std::map<std::string, const_formula_ptr>::const_iterator it = generate_hex_engine().handlers.find(rule);
 	ASSERT_LOG(it != generate_hex_engine().handlers.end(), "Unable to find rule \"" << rule << "\" in the list of handlers.");
-	map_FormulaCallablePtr callable(new map_FormulaCallable(this));
+	MapFormulaCallablePtr callable(new MapFormulaCallable(this));
 	variant& a = callable->add_direct_access("hex");
 	a = variant(this);
 	variant value = it->second->execute(*callable.get());
@@ -383,7 +382,7 @@ std::vector<TileTypePtr> HexObject::get_hex_tiles()
 	std::vector<TileTypePtr> v;
 	std::transform(get_TileType_map().begin(), get_TileType_map().end(), 
 		std::back_inserter(v), 
-		boost::bind(&std::map<std::string, TileTypePtr>::value_type::second,_1));
+		std::bind(&std::map<std::string, TileTypePtr>::value_type::second,_1));
 	return v;
 }
 

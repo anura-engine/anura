@@ -320,7 +320,7 @@ namespace KRE
 		return variant(&v);
 	DEFINE_SET_FIELD
 		ASSERT_LOG(value.is_list() && value.num_elements() == 3, "position must be a list of 3 elements");
-		obj.set_position(glm::vec3(float(value[0].as_decimal().as_float()),
+		obj.setPosition(glm::vec3(float(value[0].as_decimal().as_float()),
 			float(value[1].as_decimal().as_float()),
 			float(value[2].as_decimal().as_float())));
 		if(obj.mode_ == MODE_MANUAL) {

@@ -200,7 +200,7 @@ private:
 	//called rather than recreating it each time.
 	mutable boost::intrusive_ptr<slot_FormulaCallable> callable_;
 
-	mutable boost::scoped_ptr<variant> fed_result_;
+	mutable std::unique_ptr<variant> fed_result_;
 	bool has_closure_;
 	int base_slot_;
 

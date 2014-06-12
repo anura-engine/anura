@@ -24,13 +24,13 @@
 #pragma once
 
 #include <string>
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
+#include <functional>
 
 #include "kre/Geometry.hpp"
 #include "kre/Texture.hpp"
 #include "Color.hpp"
 
+#include "asserts.hpp"
 #include "formula.hpp"
 #include "tooltip.hpp"
 #include "framed_gui_element.hpp"
@@ -135,6 +135,12 @@ namespace gui
 
 		void setTabStop(int ts) { tab_stop_ = ts; }
 		int tabStop() const { return tab_stop_; }
+
+		float getRotation() const { return rotation_; }
+		void setRotation(float r);
+
+		float getScale() const { return scale_; }
+		void setScale(float s);
 	protected:
 		Widget();
 		explicit Widget(const variant& v, game_logic::FormulaCallable* e);
@@ -143,7 +149,7 @@ namespace gui
 		void normalizeEvent(SDL_Event* event, bool translate_coords=false);
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) { return claimed; }
 		void setEnvironment(game_logic::FormulaCallable* e = 0) { environ_ = e; }
-		boost::function<void()> on_process_;
+		std::function<void()> on_process_;
 		virtual void handleProcess();
 		virtual void recalcLoc();
 		virtual bool inWidget(int xloc, int yloc) const;
@@ -161,7 +167,7 @@ namespace gui
 		int w_, h_;
 		int true_x_;
 		int true_y_;
-		boost::shared_ptr<gui::TooltipItem> tooltip_;
+		std::shared_ptr<gui::TooltipItem> tooltip_;
 		bool tooltip_displayed_;
 		std::string tooltipText_;
 		int tooltip_font_size_;
@@ -189,13 +195,16 @@ namespace gui
 		int tab_stop_;
 		bool has_focus_;
 
+		float rotation_;
+		float scale_;
+
 		std::string frame_set_name_;
 		ConstFramedGuiElementPtr frame_set_;
 		int resolution_;
 
 		bool swallow_all_events_;
 
-		boost::shared_ptr<rect> clip_area_;
+		std::shared_ptr<rect> clip_area_;
 	};
 
 	// Functor to sort widgets by z-ordering.

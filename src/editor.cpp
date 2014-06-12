@@ -20,7 +20,6 @@
 #include <cmath>
 #include <algorithm>
 
-#include <boost/bind.hpp>
 #include <boost/shared_ptr.hpp>
 #include <boost/algorithm/string.hpp>
 #if defined(_MSC_VER)
@@ -122,7 +121,7 @@ public:
 	struct menu_item {
 		std::string description;
 		std::string hotkey;
-		boost::function<void()> action;
+		std::function<void()> action;
 	};
 
 	void show_menu(const std::vector<menu_item>& items) {
@@ -133,7 +132,7 @@ public:
 		grid->allow_selection();
 		grid->swallow_clicks();
 		grid->swallowAllEvents();
-		grid->register_selection_callback(boost::bind(&editor_menu_dialog::execute_menu_item, this, items, _1));
+		grid->register_selection_callback(std::bind(&editor_menu_dialog::execute_menu_item, this, items, _1));
 		foreach(const menu_item& item, items) {
 			grid->add_col(WidgetPtr(new label(item.description, graphics::color_white()))).
 			      add_col(WidgetPtr(new label(item.hotkey, graphics::color_white())));
@@ -162,14 +161,14 @@ private:
 
 	void show_file_menu() {
 		menu_item items[] = {
-			"New...", "", boost::bind(&editor_menu_dialog::new_level, this),
-			"Open...", "ctrl+o", boost::bind(&editor_menu_dialog::open_level, this),
-			"Save", "ctrl+s", boost::bind(&editor::save_level, &editor_),
-			"Save As...", "", boost::bind(&editor_menu_dialog::save_level_as, this),
-			"Create New Module...", "", boost::bind(&editor::create_new_module, &editor_),
-			"Edit Module Properties...", "", boost::bind(&editor::edit_module_properties, &editor_),
-			"Create New Object...", "", boost::bind(&editor::create_new_object, &editor_),
-			"Exit", "<esc>", boost::bind(&editor::quit, &editor_),
+			"New...", "", std::bind(&editor_menu_dialog::new_level, this),
+			"Open...", "ctrl+o", std::bind(&editor_menu_dialog::open_level, this),
+			"Save", "ctrl+s", std::bind(&editor::save_level, &editor_),
+			"Save As...", "", std::bind(&editor_menu_dialog::save_level_as, this),
+			"Create New Module...", "", std::bind(&editor::create_new_module, &editor_),
+			"Edit Module Properties...", "", std::bind(&editor::edit_module_properties, &editor_),
+			"Create New Object...", "", std::bind(&editor::create_new_object, &editor_),
+			"Exit", "<esc>", std::bind(&editor::quit, &editor_),
 		};
 
 		std::vector<menu_item> res;
@@ -181,20 +180,20 @@ private:
 
 	void show_edit_menu() {
 		menu_item items[] = {
-			"Level Properties", "", boost::bind(&editor::edit_level_properties, &editor_),
-			"Undo", "u", boost::bind(&editor::undo_command, &editor_),
-			"Redo", "r", boost::bind(&editor::redo_command, &editor_),
-			"Restart Level", "ctrl+r", boost::bind(&editor::reset_playing_level, &editor_, true),
-			"Restart Level (including player)", "ctrl+alt+r", boost::bind(&editor::reset_playing_level, &editor_, false),
-			"Pause Game", "ctrl+p", boost::bind(&editor::toggle_pause, &editor_),
-			"Code", "", boost::bind(&editor::toggle_code, &editor_),
+			"Level Properties", "", std::bind(&editor::edit_level_properties, &editor_),
+			"Undo", "u", std::bind(&editor::undo_command, &editor_),
+			"Redo", "r", std::bind(&editor::redo_command, &editor_),
+			"Restart Level", "ctrl+r", std::bind(&editor::reset_playing_level, &editor_, true),
+			"Restart Level (including player)", "ctrl+alt+r", std::bind(&editor::reset_playing_level, &editor_, false),
+			"Pause Game", "ctrl+p", std::bind(&editor::toggle_pause, &editor_),
+			"Code", "", std::bind(&editor::toggle_code, &editor_),
 #if defined(USE_SHADERS)
-			"Shaders", "", boost::bind(&editor::edit_shaders, &editor_),
+			"Shaders", "", std::bind(&editor::edit_shaders, &editor_),
 #endif
-			"Level Code", "", boost::bind(&editor::edit_level_code, &editor_),
+			"Level Code", "", std::bind(&editor::edit_level_code, &editor_),
 		};
 
-		menu_item duplicate_item = { "Duplicate Object(s)", "ctrl+1", boost::bind(&editor::duplicate_selected_objects, &editor_) };
+		menu_item duplicate_item = { "Duplicate Object(s)", "ctrl+1", std::bind(&editor::duplicate_selected_objects, &editor_) };
 
 		std::vector<menu_item> res;
 		foreach(const menu_item& m, items) {
@@ -210,10 +209,10 @@ private:
 
 	void show_view_menu() {
 		menu_item items[] = {
-			"Zoom Out", "x", boost::bind(&editor::zoomOut, &editor_),
-			"Zoom In", "z", boost::bind(&editor::zoomIn, &editor_),
-			editor_.get_level().show_foreground() ? "Hide Foreground" : "Show Foreground", "f", boost::bind(&level::set_show_foreground, &editor_.get_level(), !editor_.get_level().show_foreground()),
-			editor_.get_level().show_background() ? "Hide Background" : "Show Background", "b", boost::bind(&level::set_show_background, &editor_.get_level(), !editor_.get_level().show_background()),
+			"Zoom Out", "x", std::bind(&editor::zoomOut, &editor_),
+			"Zoom In", "z", std::bind(&editor::zoomIn, &editor_),
+			editor_.get_level().show_foreground() ? "Hide Foreground" : "Show Foreground", "f", std::bind(&level::set_show_foreground, &editor_.get_level(), !editor_.get_level().show_foreground()),
+			editor_.get_level().show_background() ? "Hide Background" : "Show Background", "b", std::bind(&level::set_show_background, &editor_.get_level(), !editor_.get_level().show_background()),
 			g_draw_stats ? "Hide Stats" : "Show Stats", "", toggle_draw_stats,
 			g_editor_grid ? "Hide Grid" : "Show Grid", "", toggle_draw_grid,
 			preferences::show_debug_hitboxes() ? "Hide Hit Boxes" : "Show Hit Boxes", "h", preferences::toogle_debug_hitboxes,
@@ -228,8 +227,8 @@ private:
 
 	void show_stats_menu() {
 		menu_item items[] = {
-		        "Details...", "", boost::bind(&editor::show_stats, &editor_),
-		        "Refresh stats", "", boost::bind(&editor::download_stats, &editor_),
+		        "Details...", "", std::bind(&editor::show_stats, &editor_),
+		        "Refresh stats", "", std::bind(&editor::download_stats, &editor_),
 		};
 		std::vector<menu_item> res;
 		foreach(const menu_item& m, items) {
@@ -241,7 +240,7 @@ private:
 	void show_scripts_menu() {
 		std::vector<menu_item> res;
 		foreach(const editor_script::info& script, editor_script::all_scripts()) {
-			menu_item item = { script.name, "", boost::bind(&editor::run_script, &editor_, script.name) };
+			menu_item item = { script.name, "", std::bind(&editor::run_script, &editor_, script.name) };
 			res.push_back(item);
 		}
 		
@@ -255,7 +254,7 @@ private:
 			if(name == g_last_edited_level()) {
 				name += " *";
 			}
-			menu_item item = { name, "", boost::bind(&editor_menu_dialog::open_level_in_editor, this, i->first) };
+			menu_item item = { name, "", std::bind(&editor_menu_dialog::open_level_in_editor, this, i->first) };
 			res.push_back(item);
 		}
 		show_menu(res);
@@ -280,23 +279,23 @@ public:
 		gui::grid* grid = new gui::grid(6);
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("File", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_file_menu, this))));
+		             std::bind(&editor_menu_dialog::show_file_menu, this))));
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Edit", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_edit_menu, this))));
+		             std::bind(&editor_menu_dialog::show_edit_menu, this))));
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("View", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_view_menu, this))));
+		             std::bind(&editor_menu_dialog::show_view_menu, this))));
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Window", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_window_menu, this))));
+		             std::bind(&editor_menu_dialog::show_window_menu, this))));
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Statistics", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_stats_menu, this))));
+		             std::bind(&editor_menu_dialog::show_stats_menu, this))));
 
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Scripts", graphics::color_white())),
-		             boost::bind(&editor_menu_dialog::show_scripts_menu, this))));
+		             std::bind(&editor_menu_dialog::show_scripts_menu, this))));
 		addWidget(WidgetPtr(grid));
 
 		code_button_text_ = "";
@@ -321,7 +320,7 @@ public:
 			return;
 		}
 
-		code_button_ = ButtonPtr(new button(text, boost::bind(&editor::toggle_code, &editor_)));
+		code_button_ = ButtonPtr(new button(text, std::bind(&editor::toggle_code, &editor_)));
 
 		addWidget(code_button_, (editor_.xres() ? editor_.xres() : 1200) - 612, 4);
 	}
@@ -332,10 +331,10 @@ public:
 		dialog d(100, 100, graphics::screen_width()-200, graphics::screen_height()-200);
 		d.set_background_frame("empty_window");
 		d.set_draw_background_fn(gui::dialog::draw_last_scene);
-		d.set_cursor(20, 20);
+		d.setCursor(20, 20);
 		d.addWidget(WidgetPtr(new label("New Level", graphics::color_white(), 48)));
 		TextEditorWidget* entry = new TextEditorWidget(200);
-		entry->set_on_enter_handler(boost::bind(&dialog::close, &d));
+		entry->setOnEnterHandler(std::bind(&dialog::close, &d));
 		entry->setFocus(true);
 		d.addWidget(WidgetPtr(new label("Filename:", graphics::color_white())))
 		 .addWidget(WidgetPtr(entry));
@@ -393,7 +392,7 @@ public:
 		dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
 		d.addWidget(WidgetPtr(new label("Save As", graphics::color_white(), 48)));
 		TextEditorWidget* entry = new TextEditorWidget(200);
-		entry->set_on_enter_handler(boost::bind(&dialog::close, &d));
+		entry->setOnEnterHandler(std::bind(&dialog::close, &d));
 		d.addWidget(WidgetPtr(new label("Name:", graphics::color_white())))
 		 .addWidget(WidgetPtr(entry));
 		d.show_modal();
@@ -517,7 +516,7 @@ public:
 			}
 			ButtonPtr tool_button(
 			  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
-			             boost::bind(&editor_mode_dialog::select_tool, this, n)));
+			             std::bind(&editor_mode_dialog::select_tool, this, n)));
 			tool_button->setTooltip(ToolStrings[n]);
 			tool_borders_.push_back(new BorderWidget(tool_button, graphics::color(0,0,0,0)));
 			grid->add_col(WidgetPtr(tool_borders_.back()));
@@ -541,8 +540,8 @@ namespace {
 
 const int RectEdgeSelectThreshold = 6;
 
-void execute_functions(const std::vector<boost::function<void()> >& v) {
-	foreach(const boost::function<void()>& f, v) {
+void execute_functions(const std::vector<std::function<void()> >& v) {
+	foreach(const std::function<void()>& f, v) {
 		f();
 	}
 }
@@ -740,7 +739,7 @@ const entity_ptr& editor::enemy_type::preview_object() const
 	return preview_object_;
 }
 
-const boost::shared_ptr<const frame>& editor::enemy_type::preview_frame() const
+const std::shared_ptr<const frame>& editor::enemy_type::preview_frame() const
 {
 	if(!preview_frame_) {
 		if(frame_info_.is_map() && !preview_object_) {
@@ -771,7 +770,7 @@ editor::tileset::tileset(variant node)
 {
 }
 
-boost::shared_ptr<tile_map> editor::tileset::preview() const
+std::shared_ptr<tile_map> editor::tileset::preview() const
 {
 	if(!preview_ && node_info.has_key("preview")) {
 		preview_.reset(new tile_map(node_info["preview"]));
@@ -873,7 +872,7 @@ editor::~editor()
 
 void editor::group_selection()
 {
-	std::vector<boost::function<void()> > undo, redo;
+	std::vector<std::function<void()> > undo, redo;
 
 	foreach(level_ptr lvl, levels_) {
 		const int group = lvl->add_group();
@@ -883,14 +882,14 @@ void editor::group_selection()
 				continue;
 			}
 
-			undo.push_back(boost::bind(&level::set_character_group, lvl.get(), c, c->group()));
-			redo.push_back(boost::bind(&level::set_character_group, lvl.get(), c, group));
+			undo.push_back(std::bind(&level::set_character_group, lvl.get(), c, c->group()));
+			redo.push_back(std::bind(&level::set_character_group, lvl.get(), c, group));
 		}
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 }
 
 void editor::toggle_facing()
@@ -911,7 +910,7 @@ void editor::toggle_upside_down()
 
 void editor::duplicate_selected_objects()
 {
-	std::vector<boost::function<void()> > redo, undo;
+	std::vector<std::function<void()> > redo, undo;
 	foreach(const entity_ptr& c, lvl_->editor_selection()) {
 		entity_ptr duplicate_obj = c->clone();
 
@@ -921,14 +920,14 @@ void editor::duplicate_selected_objects()
 				continue;
 			}
 		
-			redo.push_back(boost::bind(&editor::add_object_to_level, this, lvl, duplicate_obj));
-			undo.push_back(boost::bind(&editor::remove_object_from_level, this, lvl, duplicate_obj));
+			redo.push_back(std::bind(&editor::add_object_to_level, this, lvl, duplicate_obj));
+			undo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, duplicate_obj));
 		}
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 }
 
 void editor::process_ghost_objects()
@@ -1125,7 +1124,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 			}
 		}
 
-		handle_key_press(event.key);
+		handleKeyPress(event.key);
 		break;
 	case SDL_MOUSEBUTTONDOWN:
 		//if the code dialog started with focus, we ignore mouse
@@ -1133,7 +1132,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		if(!dialog_started_with_focus) {
 			mouse_buttons_down_ = mouse_buttons_down_|SDL_BUTTON(event.button.button);
 
-			handle_mouse_button_down(event.button);
+			handleMouseButtonDown(event.button);
 		}
 		break;
 
@@ -1143,7 +1142,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 		//Also don't handle up events unless we handled the down event.
 		if(!dialog_started_with_focus && (mouse_buttons_down_&SDL_BUTTON(event.button.button))) {
 			mouse_buttons_down_ = mouse_buttons_down_&(~SDL_BUTTON(event.button.button));
-			handle_mouse_button_up(event.button);
+			handleMouseButtonUp(event.button);
 		}
 		break;
 	case SDL_MOUSEWHEEL: {
@@ -1283,11 +1282,11 @@ void editor::process()
 			}
 
 			if(!new_value.is_null()) {
-				std::vector<boost::function<void()> > undo, redo;
+				std::vector<std::function<void()> > undo, redo;
 				generate_mutate_commands(property_dialog_->get_entity(), g_variable_editing->variable_name(), new_value, undo, redo);
 				executeCommand(
-				  boost::bind(execute_functions, redo),
-				  boost::bind(execute_functions, undo));
+				  std::bind(execute_functions, redo),
+				  std::bind(execute_functions, undo));
 
 				//We don't want this to actually be undoable, since the whole
 				//drag operation will be undoable when we're done, so remove
@@ -1511,14 +1510,14 @@ void editor::execute_shift_object(entity_ptr e, int dx, int dy)
 	foreach(level_ptr lvl, levels_) {
 		entity_ptr obj = lvl->get_entity_by_label(e->label());
 		if(obj) {
-			executeCommand(boost::bind(&editor::move_object, this, lvl, obj, obj->x()+dx,obj->y()+dy),
-							boost::bind(&editor::move_object,this, lvl, obj,obj->x(),obj->y()));
+			executeCommand(std::bind(&editor::move_object, this, lvl, obj, obj->x()+dx,obj->y()+dy),
+							std::bind(&editor::move_object,this, lvl, obj,obj->x(),obj->y()));
 		}
 	}
 	end_command_group();
 }
 
-void editor::handle_key_press(const SDL_KeyboardEvent& key)
+void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 {
 	if(key.keysym.sym == SDLK_e && (key.keysym.mod&KMOD_ALT) && levels_.size() > 1) {
 		done_ = true;
@@ -1564,28 +1563,28 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 		if(key.keysym.sym == SDLK_w) {
 			camera_callable_ptr camera = lvl_->camera();
 			if(camera) {
-				camera->set_position(camera->position() + camera->direction() * 20.0f * camera->speed());
+				camera->setPosition(camera->position() + camera->direction() * 20.0f * camera->speed());
 				camera->compute_view();
 			}
 		}
 		if(key.keysym.sym == SDLK_a) {
 			camera_callable_ptr camera = lvl_->camera();
 			if(camera) {
-				camera->set_position(camera->position() - camera->right() * 20.0f * camera->speed());
+				camera->setPosition(camera->position() - camera->right() * 20.0f * camera->speed());
 				camera->compute_view();
 			}
 		}
 		if(key.keysym.sym == SDLK_s) {
 			camera_callable_ptr camera = lvl_->camera();
 			if(camera) {
-				camera->set_position(camera->position() - camera->direction() * 20.0f * camera->speed());
+				camera->setPosition(camera->position() - camera->direction() * 20.0f * camera->speed());
 				camera->compute_view();
 			}
 		}
 		if(key.keysym.sym == SDLK_d) {
 			camera_callable_ptr camera = lvl_->camera();
 			if(camera) {
-				camera->set_position(camera->position() + camera->right() * 20.0f * camera->speed());
+				camera->setPosition(camera->position() + camera->right() * 20.0f * camera->speed());
 				camera->compute_view();
 			}
 		}
@@ -1642,8 +1641,8 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj = lvl->get_entity_by_label(v2.front()->label());
 					if(obj) {
-						executeCommand(boost::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order()+1),
-										boost::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order() ));
+						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order()+1),
+										std::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order() ));
 					}
 				}
 				end_command_group();
@@ -1652,8 +1651,8 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj = lvl->get_entity_by_label(v2.back()->label());
 					if(obj) {
-						executeCommand(boost::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order()-1),
-										boost::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order() ));
+						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.front()->zsub_order()-1),
+										std::bind(&entity::set_zsub_order, obj, v2.back()->zsub_order() ));
 				
 					}
 				}
@@ -1679,26 +1678,26 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 		//deleting objects. We clear the selection as well as
 		//deleting. To undo, the previous selection will be cleared,
 		//and then the deleted objects re-selected.
-		std::vector<boost::function<void()> > redo, undo;
-		undo.push_back(boost::bind(&level::editor_clear_selection, lvl_.get()));
+		std::vector<std::function<void()> > redo, undo;
+		undo.push_back(std::bind(&level::editor_clear_selection, lvl_.get()));
 
 		//if we undo, return the objects to the property dialog
-		undo.push_back(boost::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), lvl_->editor_selection()));
-		redo.push_back(boost::bind(&level::editor_clear_selection, lvl_.get()));
+		undo.push_back(std::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), lvl_->editor_selection()));
+		redo.push_back(std::bind(&level::editor_clear_selection, lvl_.get()));
 		//we want to clear the objects in the property dialog
-		redo.push_back(boost::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), std::vector<entity_ptr>()));
+		redo.push_back(std::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), std::vector<entity_ptr>()));
 		foreach(const entity_ptr& e, lvl_->editor_selection()) {
 			generate_remove_commands(e, undo, redo);
-			undo.push_back(boost::bind(&level::editor_select_object, lvl_.get(), e));
+			undo.push_back(std::bind(&level::editor_select_object, lvl_.get(), e));
 		}
 		executeCommand(
-		  boost::bind(execute_functions, redo),
-		  boost::bind(execute_functions, undo));
+		  std::bind(execute_functions, redo),
+		  std::bind(execute_functions, undo));
 	}
 
 	if(!tile_selection_.empty() && (key.keysym.sym == SDLK_DELETE || key.keysym.sym == SDLK_BACKSPACE)) {
 		int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
-		std::vector<boost::function<void()> > redo, undo;
+		std::vector<std::function<void()> > redo, undo;
 
 		foreach(level_ptr lvl, levels_) {
 			foreach(const point& p, tile_selection_.tiles) {
@@ -1710,23 +1709,23 @@ void editor::handle_key_press(const SDL_KeyboardEvent& key)
 				min_y = std::min(y, min_y);
 				max_y = std::max(y, max_y);
 
-				redo.push_back(boost::bind(&level::clear_tile_rect, lvl.get(), x, y, x, y));
+				redo.push_back(std::bind(&level::clear_tile_rect, lvl.get(), x, y, x, y));
 				std::map<int, std::vector<std::string> > old_tiles;
 				lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
 				for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-					undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
+					undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
 				}
 			}
 
 			if(!tile_selection_.tiles.empty()) {
-				undo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-				redo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+				undo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+				redo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
 			}
 		}
 
 		executeCommand(
-		  boost::bind(execute_functions, redo),
-		  boost::bind(execute_functions, undo));
+		  std::bind(execute_functions, redo),
+		  std::bind(execute_functions, undo));
 	}
 
 	if(key.keysym.sym == SDLK_o && (key.keysym.mod&KMOD_CTRL)) {
@@ -1867,14 +1866,14 @@ void editor::handle_object_dragging(int mousex, int mousey)
 	         abs(dx) < 5 && abs(dy) < 5;
 
 	if(!too_small_to_move && (new_x != lvl_->editor_highlight()->x() || new_y != lvl_->editor_highlight()->y())) {
-		std::vector<boost::function<void()> > redo, undo;
+		std::vector<std::function<void()> > redo, undo;
 
 		foreach(const entity_ptr& e, lvl_->editor_selection()) {
 			foreach(level_ptr lvl, levels_) {
 				entity_ptr obj = lvl->get_entity_by_label(e->label());
 				if(obj) {
-					redo.push_back(boost::bind(&editor::move_object, this, lvl, obj, e->x() + delta_x, e->y() + delta_y));
-					undo.push_back(boost::bind(&editor::move_object, this, lvl, obj, obj->x(), obj->y()));
+					redo.push_back(std::bind(&editor::move_object, this, lvl, obj, e->x() + delta_x, e->y() + delta_y));
+					undo.push_back(std::bind(&editor::move_object, this, lvl, obj, obj->x(), obj->y()));
 				}
 			}
 
@@ -1884,14 +1883,14 @@ void editor::handle_object_dragging(int mousex, int mousey)
 		//from an undo/redo perspective. So, we see if we're already dragging
 		//and have performed existing drag operations, and if so we
 		//roll the previous undo command into this.
-		boost::function<void()> undo_fn = boost::bind(execute_functions, undo);
+		std::function<void()> undo_fn = std::bind(execute_functions, undo);
 
 		if(g_started_dragging_object && undo_.empty() == false && undo_.back().type == COMMAND_TYPE_DRAG_OBJECT) {
 			undo_fn = undo_.back().undo_command;
 			undo_command();
 		}
 
-		executeCommand(boost::bind(execute_functions, redo), undo_fn, COMMAND_TYPE_DRAG_OBJECT);
+		executeCommand(std::bind(execute_functions, redo), undo_fn, COMMAND_TYPE_DRAG_OBJECT);
 
 		g_started_dragging_object = true;
 
@@ -1948,7 +1947,7 @@ void editor::handleDrawing_rect(int mousex, int mousey)
 	g_rect_drawing = new_rect;
 }
 
-void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
+void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 {
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
@@ -2022,12 +2021,12 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			point.push_back(variant(ypos));
 			new_value.push_back(variant(&point));
 
-			std::vector<boost::function<void()> > redo, undo;
+			std::vector<std::function<void()> > redo, undo;
 			generate_mutate_commands(c, adding_points_, variant(&new_value), undo, redo);
 
 			executeCommand(
-			  boost::bind(execute_functions, redo),
-			  boost::bind(execute_functions, undo));
+			  std::bind(execute_functions, redo),
+			  std::bind(execute_functions, undo));
 
 
 			start_adding_points(adding_points_);
@@ -2161,11 +2160,11 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 
 			variant new_value(&points);
 
-			std::vector<boost::function<void()> > undo, redo;
+			std::vector<std::function<void()> > undo, redo;
 			generate_mutate_commands(property_dialog_->get_entity(), g_variable_editing->variable_name(), new_value, undo, redo);
 			executeCommand(
-			  boost::bind(execute_functions, redo),
-			  boost::bind(execute_functions, undo));
+			  std::bind(execute_functions, redo),
+			  std::bind(execute_functions, undo));
 
 			g_variable_editing = NULL;
 			g_variable_editing_original_value = variant();
@@ -2287,8 +2286,8 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj(c->backup());
 					executeCommand(
-					  boost::bind(&editor::add_object_to_level, this, lvl, obj),
-					  boost::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
+					  std::bind(&editor::add_object_to_level, this, lvl, obj),
+					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
 				}
 				end_command_group();
 			} else {
@@ -2296,8 +2295,8 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 				foreach(level_ptr lvl, levels_) {
 					entity_ptr obj(c->backup());
 					executeCommand(
-					  boost::bind(&editor::add_multi_object_to_level, this, lvl, obj),
-					  boost::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
+					  std::bind(&editor::add_multi_object_to_level, this, lvl, obj),
+					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
 				}
 				end_command_group();
 			}
@@ -2307,8 +2306,8 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 			foreach(level_ptr lvl, levels_) {
 				entity_ptr obj(c->backup());
 				executeCommand(
-				  boost::bind(&editor::add_object_to_level, this, lvl, obj),
-				  boost::bind(&editor::remove_object_from_level, this, lvl, obj));
+				  std::bind(&editor::add_object_to_level, this, lvl, obj),
+				  std::bind(&editor::remove_object_from_level, this, lvl, obj));
 				std::cerr << "ADD OBJECT: " << obj->x() << "," << obj->y() << "\n";
 			}
 			end_command_group();
@@ -2316,7 +2315,7 @@ void editor::handle_mouse_button_down(const SDL_MouseButtonEvent& event)
 	}
 }
 
-void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
+void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 {
 	const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 	const bool shift_pressed = (SDL_GetModState()&(KMOD_LSHIFT|KMOD_RSHIFT)) != 0;
@@ -2336,8 +2335,8 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 				entity_ptr obj = lvl->get_entity_by_label(e->label());
 				if(obj) {
 					executeCommand(
-					  boost::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, e->query_value(var)),
-					  boost::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, g_variable_editing_original_value));
+					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, e->query_value(var)),
+					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, g_variable_editing_original_value));
 				}
 			}
 			end_command_group();
@@ -2356,8 +2355,8 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 			begin_command_group();
 			foreach(level_ptr lvl, levels_) {
 				executeCommand(
-				  boost::bind(&level::set_boundaries, lvl.get(), boundaries),
-				  boost::bind(&level::set_boundaries, lvl.get(), lvl->boundaries()));
+				  std::bind(&level::set_boundaries, lvl.get(), boundaries),
+				  std::bind(&level::set_boundaries, lvl.get(), lvl->boundaries()));
 			}
 			end_command_group();
 		}
@@ -2375,13 +2374,13 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 			int diffy = (selecty - anchory_)/TileSize;
 
 			std::cerr << "MAKE DIFF: " << diffx << "," << diffy << "\n";
-			std::vector<boost::function<void()> > redo, undo;
+			std::vector<std::function<void()> > redo, undo;
 
 			foreach(level_ptr lvl, levels_) {
 				foreach(const point& p, tile_selection_.tiles) {
 					const int x = (p.x+diffx)*TileSize;
 					const int y = (p.y+diffy)*TileSize;
-					undo.push_back(boost::bind(&level::clear_tile_rect,lvl.get(), x, y, x, y));
+					undo.push_back(std::bind(&level::clear_tile_rect,lvl.get(), x, y, x, y));
 				}
 
 				int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
@@ -2399,8 +2398,8 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
-						redo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
+						undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
+						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
 					}
 
 					old_tiles.clear();
@@ -2415,8 +2414,8 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 
 					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
-						redo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
+						undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, i->second));
+						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x, y, x, y, std::vector<std::string>(1,"")));
 					}
 				}
 
@@ -2433,13 +2432,13 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 					std::map<int, std::vector<std::string> > old_tiles;
 					lvl->get_all_tiles_rect(x, y, x, y, old_tiles);
 					for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-						redo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i->second));
+						redo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x + diffx*TileSize, y + diffy*TileSize, x + diffx*TileSize, y + diffy*TileSize, i->second));
 					}
 				}
 
 				if(!tile_selection_.tiles.empty()) {
-					undo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-					redo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+					undo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+					redo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
 				}
 			}
 
@@ -2449,12 +2448,12 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 				p.y += diffy;
 			}
 			
-			redo.push_back(boost::bind(&editor::set_selection, this, new_selection));
-			undo.push_back(boost::bind(&editor::set_selection, this, tile_selection_));
+			redo.push_back(std::bind(&editor::setSelection, this, new_selection));
+			undo.push_back(std::bind(&editor::setSelection, this, tile_selection_));
 
 			executeCommand(
-			  boost::bind(execute_functions, redo),
-			  boost::bind(execute_functions, undo));
+			  std::bind(execute_functions, redo),
+			  std::bind(execute_functions, undo));
 			
 		} else if(!drawing_rect_) {
 			//wasn't drawing a rect.
@@ -2518,7 +2517,7 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 				return;
 			}
 			
-			std::vector<boost::function<void()> > undo, redo;
+			std::vector<std::function<void()> > undo, redo;
 			const rect rect_selected(rect::from_coordinates(anchorx_, anchory_, xpos, ypos));
 			std::vector<entity_ptr> chars = lvl_->get_characters_in_rect(rect_selected, xpos_, ypos_);
 
@@ -2576,8 +2575,8 @@ void editor::handle_mouse_button_up(const SDL_MouseButtonEvent& event)
 			}
 
 			executeCommand(
-			  boost::bind(execute_functions, redo),
-			  boost::bind(execute_functions, undo));
+			  std::bind(execute_functions, redo),
+			  std::bind(execute_functions, undo));
 		} else if(tool() == TOOL_SELECT_OBJECT && drawing_rect_) {
 			std::vector<entity_ptr> chars = lvl_->get_characters_in_rect(rect::from_coordinates(anchorx_, anchory_, xpos, ypos), xpos_, ypos_);
 			if(chars.empty()) {
@@ -2657,7 +2656,7 @@ void editor::add_tile_rect(int zorder, const std::string& tile_id, int x1, int y
 		std::swap(y1, y2);
 	}
 
-	std::vector<boost::function<void()> > undo, redo;
+	std::vector<std::function<void()> > undo, redo;
 
 	foreach(level_ptr lvl, levels_) {
 		std::vector<std::string> old_rect;
@@ -2668,18 +2667,18 @@ void editor::add_tile_rect(int zorder, const std::string& tile_id, int x1, int y
 			continue;
 		}
 
-		redo.push_back(boost::bind(&level::add_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, tile_id));
-		undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
+		redo.push_back(std::bind(&level::add_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, tile_id));
+		undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
 
 		std::vector<int> layers;
 		layers.push_back(zorder);
-		undo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), layers));
-		redo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), layers));
+		undo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), layers));
+		redo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), layers));
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 
 	if(layers_dialog_) {
 		layers_dialog_->init();
@@ -2716,23 +2715,23 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 		std::swap(y1, y2);
 	}
 
-	std::vector<boost::function<void()> > redo, undo;
+	std::vector<std::function<void()> > redo, undo;
 	foreach(level_ptr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->get_all_tiles_rect(x1, y1, x2, y2, old_tiles);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-			undo.push_back(boost::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
+			undo.push_back(std::bind(&level::add_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
 		}
 
-		redo.push_back(boost::bind(&level::clear_tile_rect, lvl.get(), x1, y1, x2, y2));
-		undo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-		redo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+		redo.push_back(std::bind(&level::clear_tile_rect, lvl.get(), x1, y1, x2, y2));
+		undo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+		redo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 }
 
 void editor::select_tile_rect(int x1, int y1, int x2, int y2)
@@ -2786,8 +2785,8 @@ void editor::select_tile_rect(int x1, int y1, int x2, int y2)
 	}
 
 	executeCommand(
-	  boost::bind(&editor::set_selection, this, new_selection),	
-	  boost::bind(&editor::set_selection, this, tile_selection_));
+	  std::bind(&editor::setSelection, this, new_selection),	
+	  std::bind(&editor::setSelection, this, tile_selection_));
 }
 
 void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
@@ -2804,24 +2803,24 @@ void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
 	const int zorder = -1000;
 	std::vector<hex::TileTypePtr>& t = hex::HexObject::get_editor_tiles();
 
-	std::vector<boost::function<void()> > undo, redo;
+	std::vector<std::function<void()> > undo, redo;
 
 	foreach(level_ptr lvl, levels_) {
 		std::vector<std::string> old_rect;
 		lvl->get_hex_tile_rect(zorder, x1, y1, x2, y2, old_rect);
 
-		redo.push_back(boost::bind(&level::add_hex_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, t[get_hex_tileset()]->getEditorInfo().type));
-		undo.push_back(boost::bind(&level::add_hex_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
+		redo.push_back(std::bind(&level::add_hex_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, t[get_hex_tileset()]->getEditorInfo().type));
+		undo.push_back(std::bind(&level::add_hex_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
 
 		std::vector<int> layers;
 		layers.push_back(zorder);
-		undo.push_back(boost::bind(&level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
-		redo.push_back(boost::bind(&level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
+		undo.push_back(std::bind(&level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
+		redo.push_back(std::bind(&level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 
 	if(layers_dialog_) {
 		layers_dialog_->init();
@@ -2838,23 +2837,23 @@ void editor::remove_hex_tile_rect(int x1, int y1, int x2, int y2)
 		std::swap(y1, y2);
 	}
 
-	std::vector<boost::function<void()> > redo, undo;
+	std::vector<std::function<void()> > redo, undo;
 	foreach(level_ptr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->get_all_hex_tiles_rect(x1, y1, x2, y2, old_tiles);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-			undo.push_back(boost::bind(&level::add_hex_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
+			undo.push_back(std::bind(&level::add_hex_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
 		}
 
-		redo.push_back(boost::bind(&level::clear_hex_tile_rect, lvl.get(), x1, y1, x2, y2));
-		undo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-		redo.push_back(boost::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+		redo.push_back(std::bind(&level::clear_hex_tile_rect, lvl.get(), x1, y1, x2, y2));
+		undo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
+		redo.push_back(std::bind(&level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 }
 
 void editor::select_magic_wand(int xpos, int ypos)
@@ -2870,11 +2869,11 @@ void editor::select_magic_wand(int xpos, int ypos)
 	std::vector<point> tiles = lvl_->get_solid_contiguous_region(xpos, ypos);
 	new_selection.tiles.insert(new_selection.tiles.end(), tiles.begin(), tiles.end());
 	executeCommand(
-	  boost::bind(&editor::set_selection, this, new_selection),	
-	  boost::bind(&editor::set_selection, this, tile_selection_));
+	  std::bind(&editor::setSelection, this, new_selection),	
+	  std::bind(&editor::setSelection, this, tile_selection_));
 }
 
-void editor::set_selection(const tile_selection& s)
+void editor::setSelection(const tile_selection& s)
 {
 	tile_selection_ = s;
 }
@@ -3110,14 +3109,14 @@ bool editor::confirm_quit(bool allow_cancel)
 	int result = 0;
 	grid->add_col(WidgetPtr(
 	  new button(WidgetPtr(new label("Yes", graphics::color_white())),
-	             boost::bind(quit_editor_result, &d, &result, 0))));
+	             std::bind(quit_editor_result, &d, &result, 0))));
 	grid->add_col(WidgetPtr(
 	  new button(WidgetPtr(new label("No", graphics::color_white())),
-	             boost::bind(quit_editor_result, &d, &result, 1))));
+	             std::bind(quit_editor_result, &d, &result, 1))));
 	if(allow_cancel) {
 		grid->add_col(WidgetPtr(
 		  new button(WidgetPtr(new label("Cancel", graphics::color_white())),
-		             boost::bind(quit_editor_result, &d, &result, 2))));
+		             std::bind(quit_editor_result, &d, &result, 2))));
 	}
 	d.addWidget(WidgetPtr(grid));
 	d.show_modal();
@@ -3851,7 +3850,7 @@ void editor::run_script(const std::string& id)
 	editor_script::execute(id, *this);
 }
 
-void editor::executeCommand(boost::function<void()> command, boost::function<void()> undo, EXECUTABLE_COMMAND_TYPE type)
+void editor::executeCommand(std::function<void()> command, std::function<void()> undo, EXECUTABLE_COMMAND_TYPE type)
 {
 	level_changed_++;
 
@@ -3888,7 +3887,7 @@ void editor::end_command_group()
 	}
 
 	//group all of the commands since beginning into one command
-	std::vector<boost::function<void()> > undo, redo;
+	std::vector<std::function<void()> > undo, redo;
 	for(int n = index; n != undo_.size(); ++n) {
 		undo.push_back(undo_[n].undo_command);
 		redo.push_back(undo_[n].redo_command);
@@ -3899,14 +3898,14 @@ void editor::end_command_group()
 
 	//make it so undoing and redoing will freeze tile updates during the
 	//group command, and then do a full refresh of tiles once we're done.
-	undo.insert(undo.begin(), boost::bind(&level::editor_freeze_tile_updates, lvl_.get(), true));
-	undo.push_back(boost::bind(&level::editor_freeze_tile_updates, lvl_.get(), false));
-	redo.insert(redo.begin(), boost::bind(&level::editor_freeze_tile_updates, lvl_.get(), true));
-	redo.push_back(boost::bind(&level::editor_freeze_tile_updates, lvl_.get(), false));
+	undo.insert(undo.begin(), std::bind(&level::editor_freeze_tile_updates, lvl_.get(), true));
+	undo.push_back(std::bind(&level::editor_freeze_tile_updates, lvl_.get(), false));
+	redo.insert(redo.begin(), std::bind(&level::editor_freeze_tile_updates, lvl_.get(), true));
+	redo.push_back(std::bind(&level::editor_freeze_tile_updates, lvl_.get(), false));
 
 	executable_command cmd;
-	cmd.redo_command = boost::bind(execute_functions, redo);
-	cmd.undo_command = boost::bind(execute_functions, undo);
+	cmd.redo_command = std::bind(execute_functions, redo);
+	cmd.undo_command = std::bind(execute_functions, undo);
 
 	//replace all the individual commands with the one group command.
 	undo_.erase(undo_.begin() + index, undo_.end());
@@ -3979,7 +3978,7 @@ void editor::edit_module_properties()
 }
 
 namespace {
-void do_draw_scene() {
+void doDraw_scene() {
 	draw_scene(level::current(), last_draw_position());
 }
 }
@@ -4079,7 +4078,7 @@ void editor::mutate_object_value(level_ptr lvl, entity_ptr e, const std::string&
 	e->handleEvent("editor_changed_variable");
 }
 
-void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, variant new_value, std::vector<boost::function<void()> >& undo, std::vector<boost::function<void()> >& redo)
+void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, variant new_value, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
 {
 	if(!c || c->spawned_by().empty() == false) {
 		return;
@@ -4092,12 +4091,12 @@ void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, var
 		}
 		variant current_value = obj->query_value(attr);
 
-		redo.push_back(boost::bind(&editor::mutate_object_value, this, lvl, obj, attr, new_value));
-		undo.push_back(boost::bind(&editor::mutate_object_value, this, lvl, obj, attr, current_value));
+		redo.push_back(std::bind(&editor::mutate_object_value, this, lvl, obj, attr, new_value));
+		undo.push_back(std::bind(&editor::mutate_object_value, this, lvl, obj, attr, current_value));
 	}
 }
 
-void editor::generate_remove_commands(entity_ptr c, std::vector<boost::function<void()> >& undo, std::vector<boost::function<void()> >& redo)
+void editor::generate_remove_commands(entity_ptr c, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
 {
 	if(!c || c->spawned_by().empty() == false) {
 		return;
@@ -4109,14 +4108,14 @@ void editor::generate_remove_commands(entity_ptr c, std::vector<boost::function<
 			continue;
 		}
 
-		redo.push_back(boost::bind(&editor::remove_object_from_level, this, lvl, obj));
-		undo.push_back(boost::bind(&editor::add_object_to_level, this, lvl, obj));
+		redo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, obj));
+		undo.push_back(std::bind(&editor::add_object_to_level, this, lvl, obj));
 		if(obj->label().empty() == false) {
 			foreach(entity_ptr child, lvl->get_chars()) {
 				if(child->spawned_by() == obj->label()) {
 		std::cerr << "REMOVING CHILD OBJECT: " << child->debug_description() << " " << child->label() << "\n";
-					redo.push_back(boost::bind(&editor::remove_object_from_level, this, lvl, child));
-					undo.push_back(boost::bind(&editor::add_object_to_level, this, lvl, child));
+					redo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, child));
+					undo.push_back(std::bind(&editor::add_object_to_level, this, lvl, child));
 				}
 			}
 		}
@@ -4228,7 +4227,7 @@ void editor::set_code_file()
 				code_dialog_->load_file(*path);
 			}
 	
-			boost::function<void()> fn(boost::bind(&editor::object_instance_modified_in_editor, this, obj_instance->label()));
+			std::function<void()> fn(std::bind(&editor::object_instance_modified_in_editor, this, obj_instance->label()));
 			code_dialog_->load_file(pseudo_fname, true, &fn);
 		} else if(path) {
 			code_dialog_->load_file(*path);
@@ -4247,7 +4246,7 @@ void editor::start_adding_points(const std::string& field_name)
 
 void editor::object_instance_modified_in_editor(const std::string& label)
 {
-	std::vector<boost::function<void()> > undo, redo;
+	std::vector<std::function<void()> > undo, redo;
 	const std::string pseudo_fname = "@instance:" + label;
 
 	entity_ptr existing_obj = lvl_->get_entity_by_label(label);
@@ -4258,13 +4257,13 @@ void editor::object_instance_modified_in_editor(const std::string& label)
 	generate_remove_commands(existing_obj, undo, redo);
 	foreach(level_ptr lvl, levels_) {
 		entity_ptr new_obj(entity::build(json::parse_from_file(pseudo_fname)));
-		redo.push_back(boost::bind(&editor::add_object_to_level, this, lvl, new_obj));
-		undo.push_back(boost::bind(&editor::remove_object_from_level, this, lvl, new_obj));
+		redo.push_back(std::bind(&editor::add_object_to_level, this, lvl, new_obj));
+		undo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, new_obj));
 	}
 
 	executeCommand(
-	  boost::bind(execute_functions, redo),
-	  boost::bind(execute_functions, undo));
+	  std::bind(execute_functions, redo),
+	  std::bind(execute_functions, undo));
 }
 
 #endif // !NO_EDITOR

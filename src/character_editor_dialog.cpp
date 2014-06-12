@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "border_widget.hpp"
 #include "button.hpp"
@@ -53,7 +52,7 @@ void character_editor_dialog::init()
 
 	if(!find_edit_) {
 		find_edit_.reset(new TextEditorWidget(140));
-		find_edit_->set_on_change_handler(boost::bind(&character_editor_dialog::init, this));
+		find_edit_->setOnChangeHandler(std::bind(&character_editor_dialog::init, this));
 	}
 
 	grid_ptr find_grid(new gui::grid(2));
@@ -65,14 +64,14 @@ void character_editor_dialog::init()
 
 	button* facing_button = new button(
 	  WidgetPtr(new label(editor_.face_right() ? "right" : "left", graphics::color_white())),
-	  boost::bind(&editor::toggle_facing, &editor_));
+	  std::bind(&editor::toggle_facing, &editor_));
 	facing_button->setTooltip("f  Change Facing");
 	if(find_edit_->text().empty() == false) {
 		addWidget(WidgetPtr(facing_button));
 		addWidget(generate_grid(""));
 	} else {
 
-		button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), boost::bind(&character_editor_dialog::show_category_menu, this));
+		button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&character_editor_dialog::show_category_menu, this));
 		addWidget(WidgetPtr(category_button));
 
 		addWidget(generate_grid(category_));
@@ -109,7 +108,7 @@ gui::WidgetPtr character_editor_dialog::generate_grid(const std::string& categor
 				ImageWidget* preview = new ImageWidget(c.preview_frame()->img());
 				preview->setDim(36, 36);
 				preview->setArea(c.preview_frame()->area());
-				ButtonPtr char_button(new button(WidgetPtr(preview), boost::bind(&character_editor_dialog::set_character, this, index)));
+				ButtonPtr char_button(new button(WidgetPtr(preview), std::bind(&character_editor_dialog::set_character, this, index)));
 	
 				std::string tooltip_str = c.node["type"].as_string();
 
@@ -152,7 +151,7 @@ void character_editor_dialog::show_category_menu()
 	grid->set_show_background(true);
 	grid->set_hpad(10);
 	grid->allow_selection();
-	grid->register_selection_callback(boost::bind(&character_editor_dialog::close_context_menu, this, _1));
+	grid->register_selection_callback(std::bind(&character_editor_dialog::close_context_menu, this, _1));
 
 	std::map<std::string, const editor::enemy_type*> categories;
 	foreach(const editor::enemy_type& c, editor_.all_characters()) {
@@ -177,7 +176,7 @@ void character_editor_dialog::show_category_menu()
 		preview->setArea(c.preview_frame()->area());
 		grid->add_col(WidgetPtr(preview))
 		     .add_col(WidgetPtr(new label(c.category, graphics::color_white())));
-		grid->register_row_selection_callback(boost::bind(&character_editor_dialog::select_category, this, c.category));
+		grid->register_row_selection_callback(std::bind(&character_editor_dialog::select_category, this, c.category));
 	}
 
 	int mousex, mousey;

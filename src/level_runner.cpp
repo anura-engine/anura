@@ -17,11 +17,7 @@
 #include <math.h>
 #include <climits>
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-
-#include "graphics.hpp"
 
 #include "background_task_pool.hpp"
 #include "base64.hpp"
@@ -36,12 +32,9 @@
 #include "editor.hpp"
 #endif
 #include "filesystem.hpp"
-#include "font.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "formula_callable.hpp"
-#include "gles2.hpp"
 #include "http_client.hpp"
 #if defined(TARGET_OS_HARMATTAN) || defined(TARGET_BLACKBERRY) || defined(__ANDROID__) || TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 #include "iphone_controls.hpp"
@@ -60,18 +53,14 @@
 #include "pause_game_dialog.hpp"
 #include "player_info.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
-#include "settingsDialog.hpp"
+#include "settings_dialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
-#include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
 #include "user_voxel_object.hpp"
 #include "utils.hpp"
 #include "variant_utils.hpp"
-#include "IMG_savepng.h"
 #include "globals.h"
-#include "texture.hpp"
 
 namespace {
 PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
@@ -106,20 +95,20 @@ struct upload_screenshot_info {
 	bool done;
 };
 
-void upload_screenshot(std::string file, boost::shared_ptr<upload_screenshot_info> info)
+void upload_screenshot(std::string file, std::shared_ptr<upload_screenshot_info> info)
 {
 	http_client client("www.theargentlark.com", "80");
 	client.send_request("POST /cgi-bin/upload-screenshot.pl", 
 		base64::b64encode(sys::read_file(file)), 
-		boost::bind(&upload_screenshot_info::finished, info.get(), _1, false),
-		boost::bind(&upload_screenshot_info::finished, info.get(), _1, true),
+		std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
+		std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
 		0);
 	while(!info->done) {
 		client.process();
 	}
 }
 
-void done_upload_screenshot(boost::shared_ptr<upload_screenshot_info> info)
+void done_upload_screenshot(std::shared_ptr<upload_screenshot_info> info)
 {
 	try {
 		if(info->error == false) {
@@ -141,7 +130,7 @@ int skipping_game = 0;
 
 int global_pause_time;
 
-typedef boost::function<void(const level&, screen_position&, float)> TransitionFn;
+typedef std::function<void(const level&, screen_position&, float)> TransitionFn;
 
 //prepare to call transition_scene by making sure that frame buffers are
 //filled with the image of the screen.
@@ -406,7 +395,7 @@ void video_resize(const SDL_Event &event)
 void level_runner::video_resize_event(const SDL_Event &event)
 {
 	static const int WindowResizeEventID = get_object_event_id("window_resize");
-	game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 	callable->add("width", variant(event.window.data1));
 	callable->add("height", variant(event.window.data2));
 	lvl_->player()->get_entity().handleEvent(WindowResizeEventID, callable.get());
@@ -416,7 +405,7 @@ void level_runner::video_resize_event(const SDL_Event &event)
 
 void level_runner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
-	game_logic::map_FormulaCallablePtr callable, 
+	game_logic::MapFormulaCallablePtr callable, 
 	const int basic_evt, 
 	const int catch_all_event)
 {
@@ -513,7 +502,7 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 			if(!lvl_->gui_event(event)) {
 				x = (mx*graphics::screen_width())/preferences::virtual_screen_width() + last_draw_position().x/100;
 				y = (my*graphics::screen_height())/preferences::virtual_screen_height() + last_draw_position().y/100;
-				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
+				game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 				callable->add("mouse_x", variant(x));
 				callable->add("mouse_y", variant(y));
 				if(event_type != SDL_MOUSEMOTION) {
@@ -757,7 +746,7 @@ void level_runner::start_editor()
 		editor_->setup_for_editing();
 		lvl_->set_editor();
 		lvl_->set_as_current_level();
-		init_history_slider();
+		init_history_Slider();
 	} else {
 		//Pause the game and set the level to its original
 		//state if the user presses ctrl+e twice.
@@ -765,7 +754,7 @@ void level_runner::start_editor()
 		show_pause_title();
 		editor_->reset_playing_level(false);
 		last_draw_position().init = false;
-		init_history_slider();
+		init_history_Slider();
 		if(!paused) {
 			controls::read_until(lvl_->cycle());
 		}
@@ -789,7 +778,7 @@ void level_runner::close_editor()
 	paused = false;
 	show_pause_title();
 	controls::read_until(lvl_->cycle());
-	init_history_slider();
+	init_history_Slider();
 #endif
 }
 
@@ -877,7 +866,7 @@ bool level_runner::play_cycle()
 	}
 #endif
 
-	boost::scoped_ptr<controls::local_controls_lock> controls_lock;
+	std::unique_ptr<controls::local_controls_lock> controls_lock;
 #ifndef NO_EDITOR
 	if(editor_ && editor_->hasKeyboardFocus() ||
 	   console_ && console_->hasKeyboardFocus()) {
@@ -925,7 +914,7 @@ bool level_runner::play_cycle()
 		if(monitoring_level_files.count(level_path) == 0) {
 			monitoring_level_files.insert(level_path);
 
-			sys::notify_on_file_modification(level_path, boost::bind(level_file_modified, level_path));
+			sys::notify_on_file_modification(level_path, std::bind(level_file_modified, level_path));
 		}
 
 		if(g_levels_modified.count(level_path)) {
@@ -1063,7 +1052,7 @@ bool level_runner::play_cycle()
 
 			player_info* player = lvl_->player();
 			if(portal->new_playable) {
-				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable());
+				game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
 				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
 				lvl_->add_player(portal->new_playable);
@@ -1146,7 +1135,7 @@ bool level_runner::play_cycle()
 
 			player_info* player = lvl_->player();
 			if(portal->new_playable) {
-				game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable());
+				game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
 				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
 			}
@@ -1189,7 +1178,7 @@ bool level_runner::play_cycle()
 				editor_->setup_for_editing();
 				lvl_->set_as_current_level();
 				lvl_->set_editor();
-				init_history_slider();
+				init_history_Slider();
 			}
 #endif
 
@@ -1256,7 +1245,7 @@ bool level_runner::play_cycle()
 					editor_->setup_for_editing();
 					lvl_->set_as_current_level();
 					lvl_->set_editor();
-					init_history_slider();
+					init_history_Slider();
 
 				}
 
@@ -1409,10 +1398,10 @@ bool level_runner::play_cycle()
 #if !defined(__native_client__)
 					const std::string fname = std::string(preferences::user_data_path()) + "screenshot.png";
 					IMG_SaveFrameBuffer(fname.c_str(), 5);
-					boost::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
+					std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
 					background_task_pool::submit(
-					  boost::bind(upload_screenshot, fname, info),
-					  boost::bind(done_upload_screenshot, info));
+					  std::bind(upload_screenshot, fname, info),
+					  std::bind(done_upload_screenshot, info));
 #endif
 				} else if(key == SDLK_l && (mod&KMOD_CTRL)) {
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
@@ -1427,7 +1416,7 @@ bool level_runner::play_cycle()
 				} else if(key == SDLK_p && mod & KMOD_CTRL) {
 					paused = !paused;
 #ifndef NO_EDITOR
-					init_history_slider();
+					init_history_Slider();
 #endif
 					show_pause_title();
 					if(!paused) {
@@ -1764,7 +1753,7 @@ void level_runner::toggle_pause()
 {
 	paused = !paused;
 #ifndef NO_EDITOR
-	init_history_slider();
+	init_history_Slider();
 #endif
 	show_pause_title();
 	if(!paused) {
@@ -1837,13 +1826,13 @@ void level_runner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 }
 
 #ifndef NO_EDITOR
-void level_runner::init_history_slider()
+void level_runner::init_history_Slider()
 {
 	if(paused && editor_) {
-		history_slider_.reset(new gui::slider(110, boost::bind(&level_runner::on_history_change, this, _1)));
+		history_slider_.reset(new gui::Slider(110, std::bind(&level_runner::on_history_change, this, _1)));
 		history_slider_->setLoc(370, 4);
-		history_slider_->set_position(1.0);
-		history_button_.reset(new gui::button("Trails", boost::bind(&level_runner::toggle_history_trails, this)));
+		history_slider_->setPosition(1.0);
+		history_button_.reset(new gui::button("Trails", std::bind(&level_runner::toggle_history_trails, this)));
 		history_button_->setLoc(history_slider_->x() + history_slider_->width(), history_slider_->y());
 	} else {
 		history_slider_.reset();
@@ -1917,7 +1906,7 @@ void level_runner::update_history_trails()
 
 void level_runner::replay_level_from_start()
 {
-	boost::scoped_ptr<controls::control_backup_scope> backup_ctrl_ptr(new controls::control_backup_scope);
+	std::unique_ptr<controls::control_backup_scope> backup_ctrl_ptr(new controls::control_backup_scope);
 	boost::intrusive_ptr<level> new_level = load_level(lvl_->id());
 	if(editor_) {
 		new_level->set_editor();
@@ -1937,7 +1926,7 @@ void level_runner::replay_level_from_start()
 	editor_->setup_for_editing();
 	lvl_->set_as_current_level();
 	lvl_->set_editor();
-	init_history_slider();
+	init_history_Slider();
 
 	backup_ctrl_ptr.reset();
 

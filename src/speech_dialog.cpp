@@ -247,7 +247,7 @@ void speech_dialog::draw() const
 	static const ConstGuiSectionPtr side_edge = GuiSection::get("speech_dialog_side_edge");
 	static const ConstGuiSectionPtr arrow = GuiSection::get("speech_dialog_arrow");
 
-	const_graphical_font_ptr font = graphical_font::get("default");
+	ConstGraphicalFontPtr font = GraphicalFont::get("default");
 
 	const int TextAreaHeight = 80;
 
@@ -477,7 +477,7 @@ void speech_dialog::set_options(const std::vector<std::string>& options)
 	option_selected_ = 0;
 #endif
 	option_width_ = OptionMinWidth;
-	const_graphical_font_ptr font = graphical_font::get("default");
+	ConstGraphicalFontPtr font = GraphicalFont::get("default");
 	foreach(const std::string& option, options_) {
 		rect area = font->dimensions(option);
 		if (area.w()+OptionXPad*2 > option_width_)

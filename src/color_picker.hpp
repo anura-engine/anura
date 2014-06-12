@@ -24,7 +24,6 @@
 #pragma once
 
 #include <vector>
-#include <boost/function.hpp>
 
 #include "Color.hpp"
 
@@ -41,10 +40,10 @@ namespace gui
 	{
 	public:
 		ColorPicker(const rect& area);
-		explicit ColorPicker(const rect& area, boost::function<void (const KRE::Color&)> change_fun);
+		explicit ColorPicker(const rect& area, std::function<void (const KRE::Color&)> change_fun);
 		explicit ColorPicker(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~ColorPicker();
-		void setChangeHandler(boost::function<void (const KRE::Color&)> change_fun) { onchange_ = change_fun; }
+		void setChangeHandler(std::function<void (const KRE::Color&)> change_fun) { onchange_ = change_fun; }
 
 		void setPrimaryColor(KRE::Color color);
 		void setSecondaryColor(KRE::Color color);
@@ -77,12 +76,12 @@ namespace gui
 		uint8_t blue_;
 
 		grid_ptr g_;
-		std::vector<slider_ptr> s_;
+		std::vector<SliderPtr> s_;
 		std::vector<TextEditorWidgetPtr> t_;
 		ButtonPtr copy_to_palette_;
 		void copyToPaletteFn();
 
-		void sliderChange(int n, double p);
+		void SliderChange(int n, double p);
 		void textChange(int n);
 		void textTabPressed(int n);
 
@@ -91,9 +90,9 @@ namespace gui
 
 		void setHSVFromColor(const KRE::Color&);
 
-		void handleProcess();
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleProcess() override;
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		int color_box_length_;
 		int wheel_radius_;
@@ -103,7 +102,7 @@ namespace gui
 		bool dragging_;
 
 		void change();
-		boost::function<void (const KRE::Color&)> onchange_;
+		std::function<void (const KRE::Color&)> onchange_;
 		game_logic::formula_ptr change_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	};

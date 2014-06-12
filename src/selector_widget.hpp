@@ -1,79 +1,80 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef SELECTOR_WIDGET_HPP_INCLUDED
-#define SELECTOR_WIDGET_HPP_INCLUDED
 
 #include <vector>
-#include <boost/intrusive_ptr.hpp>
-#include <boost/function.hpp>
 
 #include "widget.hpp"
 
 namespace gui
 {
-typedef std::pair<std::string, WidgetPtr> selector_pair;
-typedef std::vector<selector_pair> selector_list;
+	typedef std::pair<std::string, WidgetPtr> SelectorPair;
+	typedef std::vector<SelectorPair> SelectorList;
 
-class selector_widget : public widget
-{
-public:
-	explicit selector_widget(const std::vector<std::string>& list);
-	explicit selector_widget(const selector_list& list);
-	explicit selector_widget(const variant& v, game_logic::FormulaCallable* e);
-	virtual ~selector_widget() {}
+	class SelectorWidget : public Widget
+	{
+	public:
+		explicit SelectorWidget(const std::vector<std::string>& list);
+		explicit SelectorWidget(const SelectorList& list);
+		explicit SelectorWidget(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~SelectorWidget() {}
 
-	void set_on_change_handler(boost::function<void(const std::string&)> fn) { on_change_ = fn; }
-	void set_on_select_handler(boost::function<void(const std::string&)> fn) { on_select_ = fn; }
-	void set_selection(const std::string& sel);
-	void set_selection(size_t sel);
-	std::string get_selection();
-protected:
-	virtual void handleDraw() const;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
+		void setOnSelectHandler(std::function<void(const std::string&)> fn) { on_select_ = fn; }
+		void setSelection(const std::string& sel);
+		void setSelection(size_t sel);
+		std::string get_selection();
+	private:
+		DECLARE_CALLABLE(SelectorWidget);
 
-	virtual void setValue(const std::string& key, const variant& v);
-	virtual variant getValue(const std::string& key) const;
-	void init();
-private:
-	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
-	void select_left(size_t n=1);
-	void select_right(size_t n=1);
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	selector_list list_;
-	size_t current_selection_;
-	boost::function<void(const std::string&)> on_change_;
-	boost::function<void(const std::string&)> on_select_;
+		void init();
 
-	WidgetPtr left_arrow_;
-	WidgetPtr right_arrow_;
+		bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
+		void selectLeft(size_t n=1);
+		void selectRight(size_t n=1);
 
-	// delgate 
-	void change_delegate(const std::string& s);
-	void select_delegate(const std::string& s);
-	// FFL formula
-	game_logic::formula_ptr change_handler_;
-	game_logic::formula_ptr select_handler_;
-};
+		SelectorList list_;
+		size_t current_selection_;
+		std::function<void(const std::string&)> on_change_;
+		std::function<void(const std::string&)> on_select_;
 
-typedef boost::intrusive_ptr<selector_widget> selector_WidgetPtr;
-typedef boost::intrusive_ptr<const selector_widget> const_selector_WidgetPtr;
+		WidgetPtr left_arrow_;
+		WidgetPtr right_arrow_;
+
+		// delgate 
+		void changeDelegate(const std::string& s);
+		void selectDelegate(const std::string& s);
+		// FFL formula
+		game_logic::formula_ptr change_handler_;
+		game_logic::formula_ptr select_handler_;
+	};
+
+	typedef boost::intrusive_ptr<SelectorWidget> SelectorWidgetPtr;
+	typedef boost::intrusive_ptr<const SelectorWidget> ConstSelectorWidgetPtr;
 }
-
-#endif

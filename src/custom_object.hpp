@@ -31,7 +31,6 @@
 #include <stack>
 
 #include "blur.hpp"
-#include "color_utils.hpp"
 #include "custom_object_type.hpp"
 #include "decimal.hpp"
 #include "draw_primitive.hpp"
@@ -281,7 +280,7 @@ public:
 	};
 
 	void add_animated_movement(variant attr, variant options);
-	void set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement);
+	void set_animated_schedule(std::shared_ptr<AnimatedMovement> movement);
 	void cancel_animated_schedule(const std::string& name);
 
 protected:
@@ -343,7 +342,7 @@ private:
 		entity* target;
 		variant* from_variant;
 		entity_ptr* from_ptr;
-		boost::shared_ptr<game_logic::FormulaCallableVisitor> visitor;
+		std::shared_ptr<game_logic::FormulaCallableVisitor> visitor;
 	};
 
 	void extract_gc_object_references(std::vector<gc_object_reference>& v);
@@ -391,7 +390,7 @@ private:
 		set_pos(x(), new_mid_y - ydiff);
     }
     
-	boost::scoped_ptr<std::pair<int, int> > parallax_scale_millis_;
+	std::unique_ptr<std::pair<int, int> > parallax_scale_millis_;
 
 	int zorder_;
 	int zsub_order_;
@@ -410,7 +409,7 @@ private:
 	game_logic::const_formula_ptr next_animation_formula_;
 
 	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
-	game_logic::map_FormulaCallablePtr tags_;
+	game_logic::MapFormulaCallablePtr tags_;
 
 	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
 	variant get_property_data(int slot) const { if(property_data_.size() <= size_t(slot)) { return variant(); } return property_data_[slot]; }
@@ -443,24 +442,24 @@ private:
 
 	void make_draw_color();
 	const graphics::color_transform& draw_color() const;
-	boost::shared_ptr<graphics::color_transform> draw_color_;
+	std::shared_ptr<graphics::color_transform> draw_color_;
 
-	boost::shared_ptr<decimal> draw_scale_;
-	boost::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
+	std::shared_ptr<decimal> draw_scale_;
+	std::shared_ptr<rect> draw_area_, activation_area_, clip_area_;
 	int activation_border_;
 	
 	bool can_interact_with_;
 
 	std::map<std::string, particle_system_ptr> particle_systems_;
 
-	typedef boost::shared_ptr<custom_object_text> custom_object_text_ptr;
+	typedef std::shared_ptr<custom_object_text> custom_object_text_ptr;
 	custom_object_text_ptr text_;
 
 	std::vector<gui::vector_text_ptr> vector_text_;
 
 	entity_ptr driver_;
 
-	boost::shared_ptr<BlurInfo> blur_;
+	std::shared_ptr<BlurInfo> blur_;
 
 	//set if we should fall through platforms. This is decremented automatically
 	//at the end of every cycle.
@@ -485,13 +484,13 @@ private:
 		std::vector<decimal> rotation;
 	};
 
-	boost::scoped_ptr<PositionSchedule> position_schedule_;
+	std::unique_ptr<PositionSchedule> position_schedule_;
 
-	std::vector<boost::shared_ptr<AnimatedMovement> > animated_movement_;
+	std::vector<std::shared_ptr<AnimatedMovement> > animated_movement_;
 
 	std::vector<light_ptr> lights_;
 
-	boost::scoped_ptr<rect> platform_area_;
+	std::unique_ptr<rect> platform_area_;
 	const_solid_info_ptr platform_solid_info_;
 
 	point parent_position() const;
@@ -507,7 +506,7 @@ private:
 
 	int min_difficulty_, max_difficulty_;
 
-	boost::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
+	std::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
 
 	std::vector<float> custom_draw_xy_;
 	std::vector<float> custom_draw_uv_;

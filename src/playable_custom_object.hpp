@@ -80,7 +80,7 @@ private:
 	
 	bool reverse_ab_;
 
-	boost::scoped_ptr<controls::local_controls_lock> control_lock_;
+	std::unique_ptr<controls::local_controls_lock> control_lock_;
 
 	void operator=(const playable_custom_object);
 };

@@ -23,18 +23,15 @@
 
 #pragma once
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "widget.hpp"
 
 namespace gui
 {
-	class scrollBarWidget : public Widget
+	class ScrollBarWidget : public Widget
 	{
 	public:
-		explicit scrollBarWidget(boost::function<void(int)> handler);
-		explicit scrollBarWidget(const variant& v, game_logic::FormulaCallable* e);
+		explicit ScrollBarWidget(std::function<void(int)> handler);
+		explicit ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e);
 
 		void set_range(int total_height, int window_height);
 		void setLoc(int x, int y);
@@ -47,15 +44,15 @@ namespace gui
 		virtual void setValue(const std::string& key, const variant& v);
 		virtual variant getValue(const std::string& key) const;
 	private:
-		void handleDraw() const;
-		bool handleEvent(const SDL_Event& event, bool claimed);
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		void down_button_pressed();
 		void up_button_pressed();
 
 		void clip_window_position();
 
-		boost::function<void(int)> handler_;
+		std::function<void(int)> handler_;
 		WidgetPtr up_arrow_, down_arrow_, handle_, handle_bot_, handle_top_, background_;
 		int window_pos_, window_size_, range_, step_, arrow_step_;
 
@@ -67,6 +64,6 @@ namespace gui
 		void handler_delegate(int);
 	};
 
-	typedef boost::intrusive_ptr<scrollBarWidget> ScrollbarWidgetPtr;
+	typedef boost::intrusive_ptr<ScrollBarWidget> ScrollbarWidgetPtr;
 
 }

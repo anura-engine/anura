@@ -43,7 +43,7 @@ public:
 	static void load_modified_backgrounds();
 
 	//gets a background associated with a given ID.
-	static boost::shared_ptr<background> get(const std::string& id, int palette_id);
+	static std::shared_ptr<background> get(const std::string& id, int palette_id);
 
 	//all available backgrounds.
 	static std::vector<std::string> get_available_backgrounds();

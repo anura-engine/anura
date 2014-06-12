@@ -23,11 +23,6 @@
 
 #pragma once
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-
 #include "formula_callable_definition.hpp"
 #include "widget.hpp"
 
@@ -65,7 +60,7 @@ namespace gui
 		std::string font() const { return font_; }
 		int size() { return size_; }
 		std::string text() { return text_; }
-		void setClickHandler(boost::function<void()> click) { on_click_ = click; }
+		void setClickHandler(std::function<void()> click) { on_click_ = click; }
 		void setHighlightColor(const KRE::Color &col) {highlight_color_.reset(new KRE::Color(col));}
 		void allowHighlightOnMouseover(bool val=true) { highlight_on_mouseover_ = val; }
 	protected:
@@ -74,7 +69,7 @@ namespace gui
 		virtual void recalculateTexture();
 		void setTexture(KRE::TexturePtr t);
 
-		virtual bool handleEvent(const SDL_Event& event, bool claimed);
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		virtual variant handleWrite();
 		virtual WidgetSettingsDialog* settingsDialog(int x, int y, int w, int h);
 
@@ -82,7 +77,7 @@ namespace gui
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(Label);
 		DECLARE_CALLABLE(Label);
 
-		void handleDraw() const;
+		void handleDraw() const override;
 		void innerSetDim(int x, int y);
 		void reformatText();
 
@@ -91,12 +86,12 @@ namespace gui
 		int border_size_;
 		KRE::ColorPtr color_;
 		KRE::ColorPtr highlight_color_;
-		boost::scoped_ptr<KRE::Color> border_color_;
+		std::unique_ptr<KRE::Color> border_color_;
 		int size_;
 		std::string font_;
 		bool fixed_width_;
 
-		boost::function<void()> on_click_;
+		std::function<void()> on_click_;
 		game_logic::formula_ptr ffl_click_handler_;
 		void click_delegate();
 		bool highlight_on_mouseover_;

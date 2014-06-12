@@ -63,3 +63,14 @@ const char* get_log_level_as_string(LogLevel l);
 #define LOG_INFO(_msg)	LOG_MSG(LOG_LEVEL_INFO, _msg)
 #define LOG_WARN(_msg)	LOG_MSG(LOG_LEVEL_WARN, _msg)
 #define LOG_ERROR(_msg) LOG_MSG(LOG_LEVEL_ERROR, _msg)
+
+#if defined(__ANDROID__)
+#include <android/log.h>
+#include <sstream>
+#define LOG(str_data) \
+    do{ std::stringstream oss; \
+	    oss << str_data; \
+	    __android_log_print(ANDROID_LOG_INFO, "Frogatto", oss.str().c_str()); }while(0)
+#else
+#define LOG(fmt,...) do {}while(0)
+#endif // ANDROID

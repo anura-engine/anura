@@ -1928,6 +1928,9 @@
     <ClCompile Include="..\..\src\ColorTransform.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\poly_line_widget.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">

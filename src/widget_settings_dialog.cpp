@@ -20,7 +20,6 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
 #include "checkbox.hpp"
@@ -67,7 +66,7 @@ namespace gui
 		g->add_col(new label("ID:", text_size_, font_name_));
 		TextEditorWidgetPtr id_edit = new TextEditorWidget(150, 30);
 		id_edit->setText(widget_->id());
-		id_edit->set_on_user_change_handler([=](){widget_->setId(id_edit->text());});
+		id_edit->setOnUserChangeHandler([=](){widget_->setId(id_edit->text());});
 		g->add_col(id_edit);
 
 		g->add_col(new label("", getTextSize(), font()))
@@ -77,7 +76,7 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->add_col(new label("Disabled Opacity:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){this->widget_->setDisabledOpacity(int(f*255.0));}, 
+			.add_col(new Slider(120, [&](double f){this->widget_->setDisabledOpacity(int(f*255.0));}, 
 			this->widget_->disabledOpacity()/255.0, 1));
 
 		g->add_col(new label("", getTextSize(), font()))
@@ -87,7 +86,7 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->add_col(new label("Alpha:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setAlpha(int(f*255.0));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setAlpha(int(f*255.0));}, 
 			this->widget_->getAlpha()/255.0, 1));
 
 		std::vector<std::string> sections = FramedGuiElement::getElements();
@@ -97,8 +96,8 @@ namespace gui
 		frame_set->set_dropdown_height(height());
 		
 		auto it = std::find(sections.begin(), sections.end(), widget_->frameSetName());
-		frame_set->set_selection(it == sections.end() ? 0 : it-sections.begin());
-		frame_set->set_on_select_handler([&](int n, const std::string& s){
+		frame_set->setSelection(it == sections.end() ? 0 : it-sections.begin());
+		frame_set->setOnSelectHandler([&](int n, const std::string& s){
 			if(s != "<<none>>") {
 				widget_->setFrameSet(s);
 			} else {
@@ -116,29 +115,29 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->add_col(new label("pad width:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setPadding(int(f*100.0), widget_->getPadHeight());}, 
+			.add_col(new Slider(120, [&](double f){widget_->setPadding(int(f*100.0), widget_->getPadHeight());}, 
 			widget_->getPadWidth()/100.0, 1));
 		g->add_col(new label("pad height:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setPadding(widget_->getPadWidth(), int(f*100.0));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setPadding(widget_->getPadWidth(), int(f*100.0));}, 
 			widget_->getPadHeight()/100.0, 1));
 
 		TextEditorWidgetPtr tooltip_edit = new TextEditorWidget(150, 30);
 		tooltip_edit->setText(widget_->tooltipText());
-		tooltip_edit->set_on_user_change_handler([=](){widget_->setTooltipText(tooltip_edit->text());});
+		tooltip_edit->setOnUserChangeHandler([=](){widget_->setTooltipText(tooltip_edit->text());});
 		g->add_col(new label("Tooltip:", text_size_, font_name_))
 			.add_col(tooltip_edit);
 		g->add_col(new label("Tooltip Height:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setTooltipFontSize(int(f*72.0+6.0));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setTooltipFontSize(int(f*72.0+6.0));}, 
 			(widget_->tooltipFontSize()-6.0)/72.0, 1));
 		
-		std::vector<std::string> fonts = font::get_available_fonts();
+		std::vector<std::string> fonts = font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
 		dropdown_WidgetPtr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		font_list->setFontSize(14);
 		font_list->set_dropdown_height(height());
 		auto fit = std::find(fonts.begin(), fonts.end(), widget_->tooltipFont());
-		font_list->set_selection(fit == fonts.end() ? 0 : fit-fonts.begin());
-		font_list->set_on_select_handler([&](int n, const std::string& s){widget_->setTooltipFont(s);});
+		font_list->setSelection(fit == fonts.end() ? 0 : fit-fonts.begin());
+		font_list->setOnSelectHandler([&](int n, const std::string& s){widget_->setTooltipFont(s);});
 		font_list->setZOrder(19);
 		g->add_col(new label("Tooltip Font:", getTextSize(), font()))
 			.add_col(font_list);
@@ -164,7 +163,7 @@ namespace gui
 		}));
 
 		g->add_col(new label("Tooltip Delay:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setTooltipDelay(int(f*5000.0));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setTooltipDelay(int(f*5000.0));}, 
 			widget_->getTooltipDelay()/5000.0, 1));
 
 		g->add_col(new label("", getTextSize(), font()))
@@ -180,23 +179,23 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->add_col(new label("Width:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setDim(int(f*width()), widget_->height());}, 
+			.add_col(new Slider(120, [&](double f){widget_->setDim(int(f*width()), widget_->height());}, 
 			widget_->width()/double(width()), 1));
 		g->add_col(new label("Height:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setDim(widget_->width(), int(f*height()));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setDim(widget_->width(), int(f*height()));}, 
 			widget_->height()/double(height()), 1));
 
 		g->add_col(new label("X:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setLoc(int(f*width()), widget_->y());}, 
+			.add_col(new Slider(120, [&](double f){widget_->setLoc(int(f*width()), widget_->y());}, 
 			widget_->x()/double(width()), 1));
 		g->add_col(new label("Y:", getTextSize(), font()))
-			.add_col(new slider(120, [&](double f){widget_->setLoc(widget_->x(), int(f*height()));}, 
+			.add_col(new Slider(120, [&](double f){widget_->setLoc(widget_->x(), int(f*height()));}, 
 			widget_->y()/double(height()), 1));
 
 		grid* zg = new grid(3);
 		TextEditorWidgetPtr z_edit = new TextEditorWidget(60, 30);
 		z_edit->setText(formatter() << widget_->zorder());
-		z_edit->set_on_user_change_handler([=](){widget_->setZOrder(atoi(z_edit->text().c_str()));});
+		z_edit->setOnUserChangeHandler([=](){widget_->setZOrder(atoi(z_edit->text().c_str()));});
 		zg->add_col(new button(new label("+", getTextSize(), font()), [=](){widget_->setZOrder(widget_->zorder()+1); z_edit->setText(formatter() << widget_->zorder());}))
 			.add_col(z_edit)
 			.add_col(new button(new label("-", getTextSize(), font()), [=](){widget_->setZOrder(widget_->zorder()-1); z_edit->setText(formatter() << widget_->zorder());}));

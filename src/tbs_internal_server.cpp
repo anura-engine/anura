@@ -14,10 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "json_parser.hpp"
 #include "tbs_internal_server.hpp"
 #include "variant_utils.hpp"
@@ -47,18 +45,18 @@ namespace tbs
 
 	void internal_server::send_request(const variant& request, 
 		int session_id,
-		game_logic::map_FormulaCallablePtr callable, 
-		boost::function<void(const std::string&)> handler)
+		game_logic::MapFormulaCallablePtr callable, 
+		std::function<void(const std::string&)> handler)
 	{
 		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
-		send_function send_fn = boost::bind(&internal_server::send_msg, server_ptr.get(), _1, session_id, handler, callable);
+		send_function send_fn = std::bind(&internal_server::send_msg, server_ptr.get(), _1, session_id, handler, callable);
 		server_ptr->write_queue(send_fn, request, session_id);
 	}
 
 	void internal_server::send_msg(const variant& resp, 
 		int session_id,
-		boost::function<void(const std::string&)> handler, 
-		game_logic::map_FormulaCallablePtr callable)
+		std::function<void(const std::string&)> handler, 
+		game_logic::MapFormulaCallablePtr callable)
 	{
 		if(handler) {
 			callable->add("message", resp);
@@ -156,8 +154,8 @@ namespace tbs
 		if(read_queue(&send_fn, &request, &session_id)) {
 			server_ptr->handle_message(
 				send_fn,
-				boost::bind(&internal_server::finish_socket, this, send_fn, _1),
-				boost::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
+				std::bind(&internal_server::finish_socket, this, send_fn, _1),
+				std::bind(&internal_server::create_socket_info, server_ptr.get(), send_fn),
 				session_id, 
 				request);
 		}

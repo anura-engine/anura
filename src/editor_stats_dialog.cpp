@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 

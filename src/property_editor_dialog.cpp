@@ -16,8 +16,6 @@
 */
 #ifndef NO_EDITOR
 #include <assert.h>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <sstream>
 
 #include "button.hpp"
@@ -87,21 +85,21 @@ void property_editor_dialog::init()
 	max_difficulty = " " + max_difficulty;
 
 	ButtonPtr difficulty_button;
-	difficulty_button.reset(new button(WidgetPtr(new label("-", graphics::color_white())), boost::bind(&property_editor_dialog::change_min_difficulty, this, -1)));
+	difficulty_button.reset(new button(WidgetPtr(new label("-", graphics::color_white())), std::bind(&property_editor_dialog::change_min_difficulty, this, -1)));
 	difficulty_button->setTooltip("Decrease minimum difficulty");
 	difficulty_button->setDim(difficulty_button->width()-10, difficulty_button->height()-4);
 	difficulty_grid->add_col(difficulty_button);
-	difficulty_button.reset(new button(WidgetPtr(new label("+", graphics::color_white())), boost::bind(&property_editor_dialog::change_min_difficulty, this, 1)));
+	difficulty_button.reset(new button(WidgetPtr(new label("+", graphics::color_white())), std::bind(&property_editor_dialog::change_min_difficulty, this, 1)));
 	difficulty_button->setTooltip("Increase minimum difficulty");
 	difficulty_button->setDim(difficulty_button->width()-10, difficulty_button->height()-4);
 	difficulty_grid->add_col(difficulty_button);
 	difficulty_grid->add_col(WidgetPtr(new label(min_difficulty, graphics::color_white())));
 
-	difficulty_button.reset(new button(WidgetPtr(new label("-", graphics::color_white())), boost::bind(&property_editor_dialog::change_max_difficulty, this, -1)));
+	difficulty_button.reset(new button(WidgetPtr(new label("-", graphics::color_white())), std::bind(&property_editor_dialog::change_max_difficulty, this, -1)));
 	difficulty_button->setTooltip("Decrease maximum difficulty");
 	difficulty_button->setDim(difficulty_button->width()-10, difficulty_button->height()-4);
 	difficulty_grid->add_col(difficulty_button);
-	difficulty_button.reset(new button(WidgetPtr(new label("+", graphics::color_white())), boost::bind(&property_editor_dialog::change_max_difficulty, this, 1)));
+	difficulty_button.reset(new button(WidgetPtr(new label("+", graphics::color_white())), std::bind(&property_editor_dialog::change_max_difficulty, this, 1)));
 	difficulty_button->setTooltip("Increase maximum difficulty");
 	difficulty_button->setDim(difficulty_button->width()-10, difficulty_button->height()-4);
 	difficulty_grid->add_col(difficulty_button);
@@ -119,7 +117,7 @@ void property_editor_dialog::init()
 		labels_grid->set_hpad(5);
 		TextEditorWidget* e = new TextEditorWidget(120);
 		e->setText(get_entity()->label());
-		e->set_on_change_handler(boost::bind(&property_editor_dialog::setLabel, this, e));
+		e->setOnChangeHandler(std::bind(&property_editor_dialog::setLabel, this, e));
 		labels_grid->add_col(WidgetPtr(new label("Label: ")))
 		            .add_col(WidgetPtr(e));
 		addWidget(labels_grid);
@@ -141,14 +139,14 @@ void property_editor_dialog::init()
 			}
 			types_grid->add_col(WidgetPtr(new label(formatter() << i->second, 10)))
 			           .add_col(WidgetPtr(new label(type, 10)))
-					   .add_col(WidgetPtr(new button("Deselect", boost::bind(&property_editor_dialog::deselect_object_type, this, i->first))));
+					   .add_col(WidgetPtr(new button("Deselect", std::bind(&property_editor_dialog::deselect_object_type, this, i->first))));
 		}
 
 		addWidget(types_grid);
 	}
 
 	if(entity_.size() > 1) {
-		addWidget(WidgetPtr(new button("Group Objects", boost::bind(&editor::group_selection, &editor_))));
+		addWidget(WidgetPtr(new button("Group Objects", std::bind(&editor::group_selection, &editor_))));
 	}
 
 	game_logic::FormulaCallable* vars = get_static_entity()->vars();
@@ -156,8 +154,8 @@ void property_editor_dialog::init()
 		if(get_entity()->group() >= 0) {
 			grid_ptr group_grid(new grid(1));
 
-			group_grid->add_col(WidgetPtr(new button("Remove from Group", boost::bind(&property_editor_dialog::remove_object_from_group, this, get_entity()))));
-			group_grid->add_col(WidgetPtr(new button("Breakup Group", boost::bind(&property_editor_dialog::remove_group, this, get_entity()->group()))));
+			group_grid->add_col(WidgetPtr(new button("Remove from Group", std::bind(&property_editor_dialog::remove_object_from_group, this, get_entity()))));
+			group_grid->add_col(WidgetPtr(new button("Breakup Group", std::bind(&property_editor_dialog::remove_group, this, get_entity()->group()))));
 
 			addWidget(group_grid);
 		}
@@ -174,7 +172,7 @@ void property_editor_dialog::init()
 			}
 			addWidget(WidgetPtr(e));
 
-			e->set_on_change_handler(boost::bind(&property_editor_dialog::change_event_handler, this, handler, lb.get(), e));
+			e->setOnChangeHandler(std::bind(&property_editor_dialog::change_event_handler, this, handler, lb.get(), e));
 
 		}
 
@@ -224,7 +222,7 @@ void property_editor_dialog::init()
 
 				TextEditorWidget* e = new TextEditorWidget(200 - lb->width());
 				e->setText(current_value);
-				e->set_on_change_handler(boost::bind(&property_editor_dialog::change_text_property, this, info.variable_name(), e));
+				e->setOnChangeHandler(std::bind(&property_editor_dialog::change_text_property, this, info.variable_name(), e));
 
 				text_grid->add_col(WidgetPtr(e));
 
@@ -247,7 +245,7 @@ void property_editor_dialog::init()
 
 				enum_grid->add_col(WidgetPtr(new button(
 				     WidgetPtr(new label(current_value, graphics::color_white())),
-					 boost::bind(&property_editor_dialog::change_enum_property, this, info.variable_name()))));
+					 std::bind(&property_editor_dialog::change_enum_property, this, info.variable_name()))));
 				addWidget(WidgetPtr(enum_grid));
 			} else if(info.type() == editor_variable_info::TYPE_LEVEL) {
 				std::string current_value;
@@ -258,7 +256,7 @@ void property_editor_dialog::init()
 
 				addWidget(WidgetPtr(new button(
 				         WidgetPtr(new label(current_value.empty() ? "(set level)" : current_value, graphics::color_white())),
-				         boost::bind(&property_editor_dialog::change_level_property, this, info.variable_name()))));
+				         std::bind(&property_editor_dialog::change_level_property, this, info.variable_name()))));
 			} else if(info.type() == editor_variable_info::TYPE_LABEL) {
 				std::string current_value;
 				variant current_value_var = get_static_entity()->query_value(info.variable_name());
@@ -268,21 +266,21 @@ void property_editor_dialog::init()
 
 				addWidget(WidgetPtr(new button(
 				         WidgetPtr(new label(current_value.empty() ? "(set label)" : current_value, graphics::color_white())),
-				         boost::bind(&property_editor_dialog::change_label_property, this, info.variable_name()))));
+				         std::bind(&property_editor_dialog::change_label_property, this, info.variable_name()))));
 				
 			} else if(info.type() == editor_variable_info::TYPE_BOOLEAN) {
 				variant current_value = get_static_entity()->query_value(info.variable_name());
 
 				addWidget(WidgetPtr(new Checkbox(WidgetPtr(new label(info.variable_name(), graphics::color_white())),
 				               current_value.as_bool(),
-							   boost::bind(&property_editor_dialog::toggle_property, this, info.variable_name()))));
+							   std::bind(&property_editor_dialog::toggle_property, this, info.variable_name()))));
 			} else if(info.type() == editor_variable_info::TYPE_POINTS) {
 				variant current_value = get_static_entity()->query_value(info.variable_name());
 				const int npoints = current_value.is_list() ? current_value.num_elements() : 0;
 
 				const bool already_adding = editor_.adding_points() == info.variable_name();
 				addWidget(WidgetPtr(new button(already_adding ? "Done Adding" : "Add Points",
-						 boost::bind(&property_editor_dialog::change_points_property, this, info.variable_name()))));
+						 std::bind(&property_editor_dialog::change_points_property, this, info.variable_name()))));
 
 			} else {
 				grid_ptr text_grid(new grid(2));
@@ -301,11 +299,11 @@ void property_editor_dialog::init()
 					value = current_value_var.as_decimal();
 				}
 
-				boost::shared_ptr<numeric_widgets> widgets(new numeric_widgets);
+				std::shared_ptr<numeric_widgets> widgets(new numeric_widgets);
 
 				TextEditorWidget* e = new TextEditorWidget(80);
 				e->setText(current_value);
-				e->set_on_change_handler(boost::bind(&property_editor_dialog::change_numeric_property, this, info.variable_name(), widgets));
+				e->setOnChangeHandler(std::bind(&property_editor_dialog::change_numeric_property, this, info.variable_name(), widgets));
 
 				text_grid->add_col(WidgetPtr(e));
 
@@ -325,11 +323,11 @@ void property_editor_dialog::init()
 				lb.reset(new gui::label(formatter() << info.numeric_max().as_int(), 10));
 				addWidget(lb, text_grid->x() + 170, text_grid->y() + text_grid->height() + 6);
 
-				gui::slider* slider = new gui::slider(160, boost::bind(&property_editor_dialog::change_numeric_property_slider, this, info.variable_name(), widgets, _1), pos);
+				gui::Slider* Slider = new gui::Slider(160, std::bind(&property_editor_dialog::change_numeric_property_Slider, this, info.variable_name(), widgets, _1), pos);
 
-				addWidget(WidgetPtr(slider), text_grid->x(), text_grid->y() + text_grid->height() + 8);
+				addWidget(WidgetPtr(Slider), text_grid->x(), text_grid->y() + text_grid->height() + 8);
 
-				*widgets = numeric_widgets(e, slider);
+				*widgets = numeric_widgets(e, Slider);
 			}
 		}
 	}
@@ -456,7 +454,7 @@ void property_editor_dialog::change_text_property(const std::string& id, const g
 	mutate_value(id, variant(w->text()));
 }
 
-void property_editor_dialog::change_numeric_property(const std::string& id, boost::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::slider_ptr> >  w)
+void property_editor_dialog::change_numeric_property(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w)
 {
 	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
@@ -478,12 +476,12 @@ void property_editor_dialog::change_numeric_property(const std::string& id, boos
 	if(pos > 1.0) {
 		pos = 1.0;
 	}
-	w->second->set_position(pos);
+	w->second->setPosition(pos);
 	
 	mutate_value(id, v);
 }
 
-void property_editor_dialog::change_numeric_property_slider(const std::string& id, boost::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::slider_ptr> >  w, double value)
+void property_editor_dialog::change_numeric_property_Slider(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w, double value)
 {
 	const editor_variable_info* var_info = get_static_entity()->EditorInfo() ? get_static_entity()->EditorInfo()->get_var_or_property_info(id) : NULL;
 	if(!var_info) {
@@ -518,7 +516,7 @@ void property_editor_dialog::change_enum_property(const std::string& id)
 	grid->set_show_background(true);
 	grid->allow_selection();
 
-	grid->register_selection_callback(boost::bind(&property_editor_dialog::set_enum_property, this, id, var_info->enum_values(), _1));
+	grid->register_selection_callback(std::bind(&property_editor_dialog::set_enum_property, this, id, var_info->enum_values(), _1));
 	foreach(const std::string& s, var_info->enum_values()) {
 		grid->add_col(gui::WidgetPtr(new gui::label(s, graphics::color_white())));
 	}
@@ -580,7 +578,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 		grid->setZOrder(100);
 		grid->set_show_background(true);
 		grid->allow_selection();
-		grid->register_selection_callback(boost::bind(&property_editor_dialog::set_enum_property, this, id, labels, _1));
+		grid->register_selection_callback(std::bind(&property_editor_dialog::set_enum_property, this, id, labels, _1));
 		foreach(const std::string& lb, labels) {
 			grid->add_col(gui::WidgetPtr(new gui::label(lb, graphics::color_white())));
 		}

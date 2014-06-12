@@ -34,7 +34,7 @@ protected:
 	virtual void setValue(const std::string& key, const variant& v);
 	virtual variant getValue(const std::string& key) const;
 private:
-	void handleDraw() const;
+	void handleDraw() const override;
 	std::vector<level_tile> tiles_;
 	int width_, height_;
 };

@@ -687,6 +687,7 @@
     <ClCompile Include="..\..\src\playable_custom_object.cpp" />
     <ClCompile Include="..\..\src\player_info.cpp" />
     <ClCompile Include="..\..\src\play_vpx.cpp" />
+    <ClCompile Include="..\..\src\poly_line_widget.cpp" />
     <ClCompile Include="..\..\src\preferences.cpp" />
     <ClCompile Include="..\..\src\preprocessor.cpp" />
     <ClCompile Include="..\..\src\preview_tileset_widget.cpp" />

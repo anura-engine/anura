@@ -14,7 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -132,7 +131,7 @@ FUNCTION_DEF(set_language, 1, 1, "set_language(str): set the language using a ne
 	std::string locale = args()[0]->evaluate(variables).as_string();
 	preferences::setLocale(locale);
 	i18n::init();
-	graphical_font::init_for_locale(i18n::get_locale());
+	GraphicalFont::initForLocale(i18n::get_locale());
 	return variant(0);
 RETURN_TYPE("int")
 END_FUNCTION_DEF(set_language)
@@ -146,7 +145,7 @@ END_FUNCTION_DEF(time)
 */
 FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
 	formula::fail_if_static_context();
-	game_logic::map_FormulaCallable* time_(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallable* time_(new game_logic::MapFormulaCallable);
 	
 		time_t t1;
 		time(&t1);
@@ -321,7 +320,7 @@ RETURN_TYPE("object")
 END_FUNCTION_DEF(tbs_client)
 
 
-void tbs_send_event(entity_ptr e, game_logic::map_FormulaCallablePtr callable, const std::string& ev)
+void tbs_send_event(entity_ptr e, game_logic::MapFormulaCallablePtr callable, const std::string& ev)
 {
 	e->handleEvent(ev, callable.get());
 }
@@ -334,15 +333,15 @@ public:
 	{}
 
 	virtual void execute(level& lvl, entity& ob) const {
-		game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
+		game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 		tbs::client* tbs_client = client_.try_convert<tbs::client>();
 		if(tbs_client == NULL) {
 			tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
 		fprintf(stderr, "XX tbs_send: %d\n", tbs_iclient->session_id());
 			ASSERT_LOG(tbs_iclient != NULL, "tbs_client object isn't valid.");
-			tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, boost::bind(tbs_send_event, entity_ptr(&ob), callable, _1));
+			tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, std::bind(tbs_send_event, entity_ptr(&ob), callable, _1));
 		} else {
-			tbs_client->send_request(msg_, callable, boost::bind(tbs_send_event, entity_ptr(&ob), callable, _1));
+			tbs_client->send_request(msg_, callable, std::bind(tbs_send_event, entity_ptr(&ob), callable, _1));
 		}
 	}
 
@@ -417,7 +416,7 @@ int show_simple_option_dialog(level& lvl, const std::string& text, const std::ve
 {
 	std::vector<std::string> txt;
 	txt.push_back(text);
-	boost::shared_ptr<speech_dialog> d(new speech_dialog);
+	std::shared_ptr<speech_dialog> d(new speech_dialog);
 	d->setText(txt);
 	d->set_options(options);
 
@@ -1156,7 +1155,7 @@ public:
 
 		//send an event to the parent to let them know they've spawned a child,
 		//and let them record the child's details.
-		game_logic::map_FormulaCallable* spawn_callable(new game_logic::map_FormulaCallable);
+		game_logic::MapFormulaCallable* spawn_callable(new game_logic::MapFormulaCallable);
 		variant holder(spawn_callable);
 		spawn_callable->add("spawner", variant(&ob));
 		spawn_callable->add("child", variant(obj_.get()));
@@ -1934,7 +1933,7 @@ public:
 	transient_speech_dialog_command(entity_ptr speaker, const std::vector<std::string>& text, int duration) : speaker_(speaker), text_(text), duration_(duration)
 	{}
 	virtual void execute(level& lvl, custom_object& ob) const {
-		boost::shared_ptr<speech_dialog> d(new speech_dialog);
+		std::shared_ptr<speech_dialog> d(new speech_dialog);
 		if(speaker_) {
 			d->set_speaker(speaker_);
 		} else {
@@ -2004,9 +2003,9 @@ struct in_dialog_setter {
 
 struct speech_dialog_scope {
 	level& lvl_;
-	boost::shared_ptr<speech_dialog> dialog_;
+	std::shared_ptr<speech_dialog> dialog_;
 
-	speech_dialog_scope(level& lvl, boost::shared_ptr<speech_dialog> dialog)
+	speech_dialog_scope(level& lvl, std::shared_ptr<speech_dialog> dialog)
 	  : lvl_(lvl), dialog_(dialog)
 	{
 		lvl_.add_speech_dialog(dialog_);
@@ -2080,7 +2079,7 @@ private:
 		menu_button_.reset();
 		in_speech_dialog_tracker dialog_tracker;
 
-		boost::shared_ptr<speech_dialog> d(new speech_dialog());
+		std::shared_ptr<speech_dialog> d(new speech_dialog());
 		speech_dialog_scope dialog_scope(lvl, d);
 
 		foreach(variant var, commands) {
@@ -2326,9 +2325,9 @@ struct event_depth_scope {
 class fire_event_command : public entity_command_callable {
 	const entity_ptr target_;
 	const std::string event_;
-	const const_FormulaCallablePtr callable_;
+	const ConstFormulaCallablePtr callable_;
 public:
-	fire_event_command(entity_ptr target, const std::string& event, const_FormulaCallablePtr callable)
+	fire_event_command(entity_ptr target, const std::string& event, ConstFormulaCallablePtr callable)
 	  : target_(target), event_(event), callable_(callable)
 	{}
 
@@ -2343,7 +2342,7 @@ public:
 FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
 	entity_ptr target;
 	std::string event;
-	const_FormulaCallablePtr callable;
+	ConstFormulaCallablePtr callable;
 	variant arg_value;
 
 	if(args().size() == 3) {
@@ -2397,7 +2396,7 @@ FUNCTION_DEF(proto_event, 2, 3, "proto_event(prototype, event_name, (optional) a
 	const std::string proto = args()[0]->evaluate(variables).as_string();
 	const std::string event_type = args()[1]->evaluate(variables).as_string();
 	const std::string event_name = proto + "_PROTO_" + event_type;
-	const_FormulaCallablePtr callable;
+	ConstFormulaCallablePtr callable;
 	if(args().size() >= 3) {
 		callable.reset(args()[2]->evaluate(variables).as_callable());
 	} else {
@@ -2532,7 +2531,7 @@ public:
 		} else {
 			collision_info collide_info;
 			entity_collides(level::current(), *e_, MOVE_NONE, &collide_info);
-			game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable(this));
+			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
 
 			game_logic::FormulaCallablePtr callable_ptr(callable);
@@ -3184,7 +3183,7 @@ FUNCTION_DEF(set_widgets, 1, -1, "set_widgets((optional) obj, widget, ...): Adds
 			widgetsv.push_back(items);
 		}
 	}
-	//const_FormulaCallablePtr callable = map_into_callable(args()[2]->evaluate(variables));
+	//ConstFormulaCallablePtr callable = map_into_callable(args()[2]->evaluate(variables));
 	set_widgets_command* cmd = (new set_widgets_command(target, widgetsv));
 	cmd->set_expression(this);
 	return variant(cmd);
@@ -3419,9 +3418,9 @@ END_FUNCTION_DEF(module_rate)
 
 class module_launch_command : public entity_command_callable {
 	std::string id_;
-	const_FormulaCallablePtr callable_;
+	ConstFormulaCallablePtr callable_;
 public:
-	explicit module_launch_command(const std::string& id, const_FormulaCallablePtr callable) 
+	explicit module_launch_command(const std::string& id, ConstFormulaCallablePtr callable) 
 		: id_(id), callable_(callable)
 	{}
 
@@ -3432,7 +3431,7 @@ public:
 
 FUNCTION_DEF(module_launch, 1, 2, "module_launch(string module_id, (optional) callable): launch the game using the given module.")
 	const std::string module_id = args()[0]->evaluate(variables).as_string();
-	const_FormulaCallablePtr callable;
+	ConstFormulaCallablePtr callable;
 	if(args().size() > 1) {
 		callable = map_into_callable(args()[1]->evaluate(variables));
 	}
@@ -3493,7 +3492,7 @@ public:
 
 		//send an event to the parent to let them know they've spawned a child,
 		//and let them record the child's details.
-		game_logic::map_FormulaCallable* spawn_callable(new game_logic::map_FormulaCallable);
+		game_logic::MapFormulaCallable* spawn_callable(new game_logic::MapFormulaCallable);
 		variant holder(spawn_callable);
 		spawn_callable->add("spawner", variant(&ob));
 		spawn_callable->add("child", variant(obj_.get()));

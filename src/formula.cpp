@@ -167,7 +167,7 @@ namespace game_logic
 		return formula_ptr(new formula(v, 0));
 	}
 
-	map_FormulaCallable::map_FormulaCallable(variant node)
+	MapFormulaCallable::MapFormulaCallable(variant node)
 	  : FormulaCallable(false), fallback_(NULL)
 	{
 		foreach(const variant_pair& value, node.as_map()) {
@@ -175,27 +175,27 @@ namespace game_logic
 		}
 	}
 	
-	map_FormulaCallable::map_FormulaCallable(
+	MapFormulaCallable::MapFormulaCallable(
 											   const FormulaCallable* fallback) : FormulaCallable(false), fallback_(fallback)
 	{}
 	
-	map_FormulaCallable::map_FormulaCallable(
+	MapFormulaCallable::MapFormulaCallable(
 											   const std::map<std::string, variant>& values) : FormulaCallable(false), fallback_(NULL), values_(values)
 	{}
 	
-	map_FormulaCallable& map_FormulaCallable::add(const std::string& key,
+	MapFormulaCallable& MapFormulaCallable::add(const std::string& key,
 													const variant& value)
 	{
 		values_[key] = value;
 		return *this;
 	}
 
-	variant& map_FormulaCallable::add_direct_access(const std::string& key)
+	variant& MapFormulaCallable::add_direct_access(const std::string& key)
 	{
 		return values_[key];
 	}
 	
-	variant map_FormulaCallable::getValue(const std::string& key) const
+	variant MapFormulaCallable::getValue(const std::string& key) const
 	{
 		std::map<std::string, variant>::const_iterator itor = values_.find(key);
 		if(itor == values_.end()) {
@@ -209,7 +209,7 @@ namespace game_logic
 		}
 	}
 
-	variant map_FormulaCallable::write() const
+	variant MapFormulaCallable::write() const
 	{
 		variant_builder result;
 		for(std::map<std::string, variant>::const_iterator i = values_.begin();
@@ -219,7 +219,7 @@ namespace game_logic
 		return result.build();
 	}
 	
-	void map_FormulaCallable::get_inputs(std::vector<formula_input>* inputs) const
+	void MapFormulaCallable::get_inputs(std::vector<formula_input>* inputs) const
 	{
 		if(fallback_) {
 			fallback_->get_inputs(inputs);
@@ -229,7 +229,7 @@ namespace game_logic
 		}
 	}
 	
-	void map_FormulaCallable::setValue(const std::string& key, const variant& value)
+	void MapFormulaCallable::setValue(const std::string& key, const variant& value)
 	{
 		values_[key] = value;
 	}
@@ -906,7 +906,7 @@ private:
 
 class generic_lambda_function_expression : public formula_expression {
 public:
-	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, boost::shared_ptr<recursive_function_symbol_table> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
+	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, std::shared_ptr<recursive_function_symbol_table> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
 	{
 		type_info_->arg_names = args;
 		type_info_->default_args = default_args;
@@ -945,7 +945,7 @@ private:
 
 	VariantFunctionTypeInfoPtr type_info_;
 
-	boost::shared_ptr<recursive_function_symbol_table> symbol_table_;
+	std::shared_ptr<recursive_function_symbol_table> symbol_table_;
 	std::vector<std::string> generic_types_;
 	std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory_;
 };
@@ -1900,7 +1900,7 @@ private:
 };
 
 typedef std::map<std::string,expression_ptr> expr_table;
-typedef boost::shared_ptr<expr_table> expr_table_ptr;
+typedef std::shared_ptr<expr_table> expr_table_ptr;
 
 const_FormulaCallable_definition_ptr create_where_definition(expr_table_ptr table, const_FormulaCallable_definition_ptr def)
 {
@@ -2359,7 +2359,7 @@ void parse_function_args(variant formula_str, const token* &i1, const token* i2,
 				const expression_ptr expr = parse_expression(
 				    formula_str, begin, i1, NULL, NULL);
 
-				boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable);
+				boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
 				default_values->push_back(expr->evaluate(*callable));
 				if(variant_type_info && !variant_type_info->match(default_values->back())) {
 					ASSERT_LOG(false, "Default argument to function doesn't match type for argument " << (types->size()+1) << " arg: " << default_values->back().write_json() << " AT: " << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
@@ -2818,7 +2818,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		function_var.set_debug_info(info);
 	}
 	
-	boost::shared_ptr<recursive_function_symbol_table> recursive_symbols(new recursive_function_symbol_table(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
+	std::shared_ptr<recursive_function_symbol_table> recursive_symbols(new recursive_function_symbol_table(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
 
 	//create a definition of the callable representing
 	//function arguments.
@@ -3511,13 +3511,13 @@ formula::formula(const variant& lua_fn, FORMULA_LANGUAGE lang)
 #endif
 }
 
-const_FormulaCallablePtr formula::wrap_callable_with_global_where(const FormulaCallable& callable) const
+ConstFormulaCallablePtr formula::wrap_callable_with_global_where(const FormulaCallable& callable) const
 {
 	if(global_where_) {
-		const_FormulaCallablePtr wrapped_variables(new where_variables(callable, global_where_));
+		ConstFormulaCallablePtr wrapped_variables(new where_variables(callable, global_where_));
 		return wrapped_variables;
 	} else {
-		return const_FormulaCallablePtr(&callable);
+		return ConstFormulaCallablePtr(&callable);
 	}
 }
 
@@ -3722,7 +3722,7 @@ variant formula::execute() const
 {
 	last_executed_formula = this;
 	
-	map_FormulaCallable* null_callable = new map_FormulaCallable;
+	MapFormulaCallable* null_callable = new MapFormulaCallable;
 	variant ref(null_callable);
 	return execute(*null_callable);
 }
@@ -3762,12 +3762,12 @@ UNIT_TEST(array_index) {
 }
 
 UNIT_TEST(dot_precedence) {
-	map_FormulaCallable* callable = new map_FormulaCallable;
+	MapFormulaCallable* callable = new MapFormulaCallable;
 	variant ref(callable);
-	map_FormulaCallable* callable2 = new map_FormulaCallable;
+	MapFormulaCallable* callable2 = new MapFormulaCallable;
 	std::vector<variant> v;
 	for(int n = 0; n != 10; ++n) {
-		map_FormulaCallable* obj = new map_FormulaCallable;
+		MapFormulaCallable* obj = new MapFormulaCallable;
 		obj->add("value", variant(n));
 		v.push_back(variant(obj));
 	}
@@ -3779,7 +3779,7 @@ UNIT_TEST(dot_precedence) {
 }
 
 UNIT_TEST(short_circuit) {
-	map_FormulaCallable* callable = new map_FormulaCallable;
+	MapFormulaCallable* callable = new MapFormulaCallable;
 	variant ref(callable);
 	callable->add("x", variant(0));
 	formula f(variant("x and (5/x)"));
@@ -3867,7 +3867,7 @@ UNIT_TEST(formula_list_comprehension) {
 
 BENCHMARK(formula_list_comprehension_bench) {
 	formula f(variant("[x*x + 5 | x <- range(input)]"));
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("input", variant(1000));
 	BENCHMARK_LOOP {
 		f.execute(*callable);
@@ -3876,7 +3876,7 @@ BENCHMARK(formula_list_comprehension_bench) {
 
 BENCHMARK(formula_map_bench) {
 	formula f(variant("map(range(input), value*value + 5)"));
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("input", variant(1000));
 	BENCHMARK_LOOP {
 		f.execute(*callable);
@@ -3900,7 +3900,7 @@ BENCHMARK(formula_recurse_sort) {
 	variant expected_result_v(&expected_result);
 
 	std::random_shuffle(input.begin(), input.end());
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("input", variant(&input));
 	BENCHMARK_LOOP {
 		CHECK_EQ(f.execute(*callable), expected_result_v);
@@ -3920,7 +3920,7 @@ BENCHMARK(formula_recursion) {
 "base b <= 0: a "
 "recursive: silly_add(a+1, b-1);"
 "silly_add(0, pos)"));
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("pos", variant(100000));
 	BENCHMARK_LOOP {
 		CHECK_EQ(f.execute(*callable), variant(100000));
@@ -3928,7 +3928,7 @@ BENCHMARK(formula_recursion) {
 }
 
 BENCHMARK(formula_if) {
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("x", variant(1));
 	static formula f(variant("if(x, 1, 0)"));
 	BENCHMARK_LOOP {
@@ -3937,7 +3937,7 @@ BENCHMARK(formula_if) {
 }
 
 BENCHMARK(formula_add) {
-	static map_FormulaCallable* callable = new map_FormulaCallable;
+	static MapFormulaCallable* callable = new MapFormulaCallable;
 	callable->add("x", variant(1));
 	static formula f(variant("x+1"));
 	BENCHMARK_LOOP {

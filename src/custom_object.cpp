@@ -16,8 +16,6 @@
 */
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/math/special_functions/round.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -96,7 +94,7 @@ const game_logic::formula_variable_storage_ptr& global_vars()
 
 struct custom_object_text {
 	std::string text;
-	const_graphical_font_ptr font;
+	ConstGraphicalFontPtr font;
 	int size;
 	int align;
 	rect dimensions;
@@ -322,9 +320,9 @@ custom_object::custom_object(variant node)
 
 	variant tags_node = node["tags"];
 	if(tags_node.is_null() == false) {
-		tags_ = new game_logic::map_FormulaCallable(tags_node);
+		tags_ = new game_logic::MapFormulaCallable(tags_node);
 	} else {
-		tags_ = new game_logic::map_FormulaCallable(type_->tags());
+		tags_ = new game_logic::MapFormulaCallable(type_->tags());
 	}
 
 	if(node.has_key("draw_color")) {
@@ -496,7 +494,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	sound_volume_(128),
 	vars_(new game_logic::formula_variable_storage(type_->variables())),
 	tmp_vars_(new game_logic::formula_variable_storage(type_->tmp_variables())),
-	tags_(new game_logic::map_FormulaCallable(type_->tags())),
+	tags_(new game_logic::MapFormulaCallable(type_->tags())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
 	cycle_(0),
@@ -615,7 +613,7 @@ custom_object::custom_object(const custom_object& o) :
 
 	vars_(new game_logic::formula_variable_storage(*o.vars_)),
 	tmp_vars_(new game_logic::formula_variable_storage(*o.tmp_vars_)),
-	tags_(new game_logic::map_FormulaCallable(*o.tags_)),
+	tags_(new game_logic::MapFormulaCallable(*o.tags_)),
 
 	property_data_(deep_copy_property_data(o.property_data_)),
 
@@ -1246,8 +1244,8 @@ void custom_object::draw(int xx, int yy) const
 	}
 #endif
 
-	boost::scoped_ptr<graphics::clip_scope> clip_scope;
-	boost::scoped_ptr<graphics::stencil_scope> stencil_scope;
+	std::unique_ptr<graphics::clip_scope> clip_scope;
+	std::unique_ptr<graphics::stencil_scope> stencil_scope;
 	if(clip_area_) {
 		clip_scope.reset(new graphics::clip_scope(clip_area_->sdl_rect()));
 	} else if(type_->is_shadow()) {
@@ -1608,7 +1606,7 @@ void custom_object::process(level& lvl)
 		//We weren't standing on something last frame, but now we suddenly
 		//are. We should fire a collide_feet event as a result.
 
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 	
 		if(stand_info.area_id != NULL) {
@@ -1667,7 +1665,7 @@ void custom_object::process(level& lvl)
 	std::vector<std::pair<variant,variant> > follow_ons;
 
 	if(!animated_movement_.empty()) {
-		std::vector<boost::shared_ptr<AnimatedMovement> > movement = animated_movement_, removal;
+		std::vector<std::shared_ptr<AnimatedMovement> > movement = animated_movement_, removal;
 		for(int i = 0; i != movement.size(); ++i) {
 			auto& move = movement[i];
 
@@ -1701,7 +1699,7 @@ void custom_object::process(level& lvl)
 			}
 		}
 
-		animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
+		animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), std::shared_ptr<AnimatedMovement>()), animated_movement_.end());
 	}
 
 	for(const auto& p : follow_ons) {
@@ -1759,7 +1757,7 @@ void custom_object::process(level& lvl)
 	}
 
 	if(stand_info.damage) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		callable->add("surface_damage", variant(stand_info.damage));
 		variant v(callable);
 		handleEvent(OBJECT_EVENT_COLLIDE_DAMAGE, callable);
@@ -1974,7 +1972,7 @@ void custom_object::process(level& lvl)
 
 		if(!fired_collide_feet && (effective_velocity_y < 0 || !started_standing)) {
 
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			variant v(callable);
 	
 			if(collide_info.area_id != NULL) {
@@ -1994,7 +1992,7 @@ void custom_object::process(level& lvl)
 		}
 
 		if(collide_info.damage || jump_on_info.damage) {
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("surface_damage", variant(std::max(collide_info.damage, jump_on_info.damage)));
 			variant v(callable);
 			handleEvent(OBJECT_EVENT_COLLIDE_DAMAGE, callable);
@@ -2222,7 +2220,7 @@ void custom_object::process(level& lvl)
 
 	if(collide || horizontal_landed) {
 
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 
 		if(collide_info.area_id != NULL) {
@@ -2239,7 +2237,7 @@ void custom_object::process(level& lvl)
 		handleEvent(collide ? OBJECT_EVENT_COLLIDE_SIDE : OBJECT_EVENT_COLLIDE_FEET, callable);
 		fired_collide_feet = true;
 		if(collide_info.damage) {
-			game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("surface_damage", variant(collide_info.damage));
 			variant v(callable);
 			handleEvent(OBJECT_EVENT_COLLIDE_DAMAGE, callable);
@@ -2272,7 +2270,7 @@ void custom_object::process(level& lvl)
 		velocity_x_ -= stand_info.collide_with->last_move_x()*100 + stand_info.collide_with->platform_motion_x();
 		velocity_y_ = 0;
 
-		game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable(this));
+		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 		callable->add("jumped_on_by", variant(this));
 		game_logic::FormulaCallablePtr callable_ptr(callable);
 
@@ -2311,7 +2309,7 @@ void custom_object::process(level& lvl)
 				//b2WorldManifold wmf;
 				//c->GetWorldManifold(&wmf);
 				//std::cerr << "Collision points: " << wmf.points[0].x << ", " << wmf.points[0].y << "; " << wmf.points[1].x << "," << wmf.points[1].y << "; " << wmf.normal.x << "," << wmf.normal.y << std::endl;
-				map_FormulaCallablePtr fc = map_FormulaCallablePtr(new map_FormulaCallable);
+				MapFormulaCallablePtr fc = MapFormulaCallablePtr(new MapFormulaCallable);
 				fc->add("collide_with", variant((box2d::body*)ce->other->GetUserData()));
 				handleEvent("b2collide", fc.get());
 			}
@@ -2322,7 +2320,7 @@ void custom_object::process(level& lvl)
 
 	if(level::current().cycle() > int(get_mouseover_trigger_cycle())) {
 		if(is_mouse_over_entity() == false) {
-			game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable);
+			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
 			callable->add("mouse_x", variant(mx));
@@ -2692,7 +2690,7 @@ void custom_object::being_added()
 	handleEvent(OBJECT_EVENT_BEING_ADDED);
 }
 
-void custom_object::set_animated_schedule(boost::shared_ptr<AnimatedMovement> movement)
+void custom_object::set_animated_schedule(std::shared_ptr<AnimatedMovement> movement)
 {
 	assert(movement.get() != NULL);
 	animated_movement_.push_back(movement);
@@ -2759,7 +2757,7 @@ void custom_object::add_animated_movement(variant attr_var, variant options)
 		}
 	}
 
-	boost::shared_ptr<custom_object::AnimatedMovement> movement(new custom_object::AnimatedMovement);
+	std::shared_ptr<custom_object::AnimatedMovement> movement(new custom_object::AnimatedMovement);
 	movement->name = name;
 	movement->animation_values.swap(values);
 	movement->animation_slots.swap(slots);
@@ -2783,7 +2781,7 @@ void custom_object::cancel_animated_schedule(const std::string& name)
 		}
 	}
 
-	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), boost::shared_ptr<AnimatedMovement>()), animated_movement_.end());
+	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), std::shared_ptr<AnimatedMovement>()), animated_movement_.end());
 }
 
 namespace {
@@ -2910,7 +2908,7 @@ variant custom_object::getValue_by_slot(int slot) const
 			return variant(backup_callable_stack_.top());
 		}
 
-		game_logic::map_FormulaCallablePtr callable(new game_logic::map_FormulaCallable(this));
+		game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(this));
 		return variant(callable.get());
 	}
 
@@ -3581,7 +3579,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		fall_through_platforms_ = value.as_int();
 	} else if(key == "tags") {
 		if(value.is_list()) {
-			tags_ = new game_logic::map_FormulaCallable;
+			tags_ = new game_logic::MapFormulaCallable;
 			for(int n = 0; n != value.num_elements(); ++n) {
 				tags_->add(value[n].as_string(), variant(1));
 			}
@@ -3697,7 +3695,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			set_solid_dimensions(old_solid, old_weak);
 			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
 
-			game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable(this));
+			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
 			game_logic::FormulaCallablePtr callable_ptr(callable);
 
@@ -4239,7 +4237,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	
 	case CUSTOM_OBJECT_TAGS:
 		if(value.is_list()) {
-			tags_ = new game_logic::map_FormulaCallable;
+			tags_ = new game_logic::MapFormulaCallable;
 			for(int n = 0; n != value.num_elements(); ++n) {
 				tags_->add(value[n].as_string(), variant(1));
 			}
@@ -4430,7 +4428,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 			set_solid_dimensions(old_solid, old_weak);
 			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
 
-			game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable(this));
+			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
 			game_logic::FormulaCallablePtr callable_ptr(callable);
 
@@ -4801,7 +4799,7 @@ void custom_object::set_frame(const frame& new_frame)
 	const int diff_x = feet_x() - start_x;
 	const int diff_y = feet_y() - start_y;
 
-	if(type_->adjust_feet_on_animation_change()) {
+	if(type_->adjust_feet_on_animationChange()) {
 		move_centipixels(-diff_x*100, -diff_y*100);
 	}
 
@@ -4810,7 +4808,7 @@ void custom_object::set_frame(const frame& new_frame)
 	frame_->play_sound(this);
 
 	if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-		game_logic::map_FormulaCallable* callable(new game_logic::map_FormulaCallable);
+		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
 		callable->add("previous_animation", variant(previous_animation));
 		game_logic::FormulaCallablePtr callable_ptr(callable);
 		static int change_animation_failure_recurse = 0;
@@ -5052,7 +5050,7 @@ bool custom_object::handleEvent_delay(int event, const FormulaCallable* context)
 }
 
 namespace {
-void run_expression_for_edit_and_continue(boost::function<bool()> fn, bool* success, bool* res)
+void run_expression_for_edit_and_continue(std::function<bool()> fn, bool* success, bool* res)
 {
 	*success = false;
 	*res = fn();
@@ -5066,7 +5064,7 @@ bool custom_object::handleEvent(int event, const FormulaCallable* context)
 		try {
 			const_custom_object_type_ptr type_back = type_;
 			const_custom_object_type_ptr base_type_back = base_type_;
-			assert_edit_and_continue_fn_scope scope(boost::function<void()>(boost::bind(&custom_object::handleEvent_internal, this, event, context, true)));
+			assert_edit_and_continue_fn_scope scope(std::function<void()>(std::bind(&custom_object::handleEvent_internal, this, event, context, true)));
 			return handleEvent_internal(event, context);
 		} catch(validation_failure_exception& e) {
 			return true;
@@ -5115,7 +5113,7 @@ bool custom_object::handleEvent_internal(int event, const FormulaCallable* conte
 
 #ifndef NO_EDITOR
 	if(event != OBJECT_EVENT_ANY && (size_t(event) < event_handlers_.size() && event_handlers_[OBJECT_EVENT_ANY] || type_->get_event_handler(OBJECT_EVENT_ANY))) {
-		game_logic::map_FormulaCallable* callable = new game_logic::map_FormulaCallable;
+		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 
 		callable->add("event", variant(get_object_event_str(event)));
@@ -5536,7 +5534,7 @@ void custom_object::setText(const std::string& text, const std::string& font, in
 {
 	text_.reset(new custom_object_text);
 	text_->text = text;
-	text_->font = graphical_font::get(font);
+	text_->font = GraphicalFont::get(font);
 	text_->size = size;
 	text_->align = align;
 	text_->alpha = 255;

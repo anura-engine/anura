@@ -65,7 +65,7 @@ struct game_type {
 	}
 
 	std::string name;
-	boost::shared_ptr<game_logic::function_symbol_table> functions;
+	std::shared_ptr<game_logic::function_symbol_table> functions;
 	std::map<std::string, game_logic::const_formula_ptr> handlers;
 };
 
@@ -163,7 +163,7 @@ boost::intrusive_ptr<game> game::create(const variant& v)
 	}
 
 	boost::intrusive_ptr<game> result(new game(type_itor->second));
-	game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
 	vars->add("msg", v);
 	result->handleEvent("create", vars.get());
 	return result;
@@ -241,7 +241,7 @@ variant game::write(int nplayer) const
 
 	if(type_.handlers.count("transform")) {
 		variant msg = deep_copy_variant(doc_);
-		game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
+		game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
 		vars->add("message", msg);
 		vars->add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
 		const_cast<game*>(this)->handleEvent("transform", vars.get());
@@ -367,7 +367,7 @@ void game::remove_player(const std::string& name)
 std::vector<std::string> game::get_ai_players() const
 {
 	std::vector<std::string> result;
-	foreach(boost::shared_ptr<ai_player> a, ai_) {
+	foreach(std::shared_ptr<ai_player> a, ai_) {
 		ASSERT_LOG(a->player_id() >= 0 && a->player_id() < players_.size(), "BAD AI INDEX: " << a->player_id());
 		result.push_back(players_[a->player_id()].name);
 	}
@@ -380,7 +380,7 @@ int game::get_player_index(const std::string& nick) const
 	int nplayer = 0;
 	foreach(const player& p, players_) {
 		if(p.name == nick) {
-			foreach(boost::shared_ptr<ai_player> ai, ai_) {
+			foreach(std::shared_ptr<ai_player> ai, ai_) {
 				if(ai->player_id() == nplayer) {
 					return -1;
 				}
@@ -546,7 +546,7 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	}
 
-	game_logic::map_FormulaCallablePtr vars(new game_logic::map_FormulaCallable);
+	game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
 	vars->add("message", msg);
 	vars->add("player", variant(nplayer));
 	rng::set_seed(rng_seed_);
@@ -645,7 +645,7 @@ COMMAND_LINE_UTILITY(tbs_bot_game) {
 
 	variant start_game_request = json::parse("{type: 'start_game'}");
 
-	boost::intrusive_ptr<map_FormulaCallable> callable(new map_FormulaCallable);
+	boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
 	boost::intrusive_ptr<internal_client> client(new internal_client);
 	client->send_request(create_game_request, -1, callable, create_game_return);
 	while(!g_create_bot_game) {

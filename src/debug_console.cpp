@@ -26,19 +26,17 @@
 #include <numeric>
 #include <sstream>
 
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
-
 #include "kre/Canvas.hpp"
+#include "kre/Font.hpp"
 
 #include "asserts.hpp"
+#include "logger.hpp"
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
 #include "custom_object_type.hpp"
 #include "draw_scene.hpp"
 #include "editor.hpp"
 #include "filesystem.hpp"
-#include "font.hpp"
 #include "formatter.hpp"
 #include "debug_console.hpp"
 #include "decimal.hpp"
@@ -141,13 +139,15 @@ namespace debug_console
 		min_value = decimal::from_int(-round_up_value(-min_value));
 
 		const rect graph_area(50, 60, 500, 200);
-		graphics::draw_rect(graph_area, graphics::color(255, 255, 255, 64));
+		canvas->drawSolidRect(graph_area, KRE::Color(255, 255, 255, 64));
 
-		graphics::draw_rect(rect(graph_area.x(), graph_area.y(), graph_area.w(), 2), graphics::color(255,255,255,255));
-		graphics::blit_texture(font::render_text_uncached(formatter() << max_value.as_int(), graphics::color_white(), 14), graph_area.x2() + 4, graph_area.y());
+		canvas->drawSolidRect(rect(graph_area.x(), graph_area.y(), graph_area.w(), 2), KRE::Color::colorWhite());
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << max_value.as_int(), KRE::Color::colorWhite(), 14, false), 
+			0, rect(graph_area.x2() + 4, graph_area.y()));
 
-		graphics::draw_rect(rect(graph_area.x(), graph_area.y2(), graph_area.w(), 2), graphics::color(255,255,255,255));
-		graphics::blit_texture(font::render_text_uncached(formatter() << min_value.as_int(), graphics::color_white(), 14), graph_area.x2() + 4, graph_area.y2() - 12);
+		canvas->drawSolidRect(rect(graph_area.x(), graph_area.y2(), graph_area.w(), 2), KRE::Color::colorWhite());
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << min_value.as_int(), KRE::Color::colorWhite(), 14, false), 
+			0, rect(graph_area.x2() + 4, graph_area.y2() - 12));
 
 		KRE::Color GraphColors[] = {
 			KRE::Color(255,255,255,255),
@@ -165,7 +165,6 @@ namespace debug_console
 			}
 
 			const KRE::Color& graph_color = GraphColors[colors_index%(sizeof(GraphColors)/sizeof(*GraphColors))];
-			graph_color.set_as_current_color();
 
 			const int gap = graph_cycle - p.second.last_cycle;
 			int index = (gap + p.second.samples.size()) - 1000;
@@ -176,19 +175,18 @@ namespace debug_console
 			}
 
 			//collect the last 20 y samples to average for the label's position.
-			std::vector<GLfloat> y_samples;
+			std::vector<float> y_samples;
 
-			std::vector<GLfloat> points;
+			std::vector<glm::vec2> points;
 
 			while(index < p.second.samples.size()) {
 				decimal value = p.second.samples[index];
 
-				const GLfloat xpos = graph_area.x() + (GLfloat(pos)*graph_area.w())/GLfloat(1000);
+				const float xpos = graph_area.x() + (static_cast<float>(pos)*graph_area.w())/1000.0f;
 
-				const GLfloat value_ratio = ((value - min_value)/(max_value - min_value)).as_float();
-				const GLfloat ypos = graph_area.y2() - graph_area.h()*value_ratio;
-				points.push_back(xpos);
-				points.push_back(ypos);
+				const float value_ratio = ((value - min_value)/(max_value - min_value)).as_float();
+				const float ypos = graph_area.y2() - graph_area.h()*value_ratio;
+				points.emplace_back(xpos, ypos);
 				y_samples.push_back(ypos);
 				++index;
 				++pos;
@@ -202,44 +200,27 @@ namespace debug_console
 				y_samples.erase(y_samples.begin(), y_samples.end() - 20);
 			}
 
-			const GLfloat mean_ypos = std::accumulate(y_samples.begin(), y_samples.end(), 0.0)/y_samples.size();
+			const float mean_ypos = std::accumulate(y_samples.begin(), y_samples.end(), 0.0f)/y_samples.size();
 
-	#if defined(USE_SHADERS)
-			{
-				gles2::manager gles2_manager(gles2::get_simple_shader());
-				gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &points[0]);
-				glDrawArrays(GL_LINE_STRIP, 0, points.size()/2);
-			}
-	#else
-			glDisable(GL_TEXTURE_2D);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-
-			glVertexPointer(2, GL_FLOAT, 0, &points[0]);
-			glDrawArrays(GL_LINE_STRIP, 0, points.size()/2);
-
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glEnable(GL_TEXTURE_2D);
-	#endif
-
-			graphics::blit_texture(font::render_text_uncached(p.first, graph_color.as_sdl_color(), 14), points[points.size()-2] + 4, mean_ypos - 6);
+			canvas->drawLineStrip(points, 1.0f, graph_color);
+			canvas->blitTexture(KRE::Font::getInstance()->renderText(p.first, graph_color, 14), 0, rect(points[points.size()-1][0] + 4, mean_ypos - 6));
 
 			++colors_index;
 		}
-
-		glColor4f(1.0,1.0,1.0,1.0);
 	}
 
-	namespace {
-	static bool screen_output_enabled = true;
+	namespace 
+	{
+		static bool screen_output_enabled = true;
 
-	std::list<graphics::texture>& messages() {
-		static std::list<graphics::texture> message_queue;
-		return message_queue;
-	}
+		std::list<KRE::TexturePtr>& messages() {
+			static std::list<KRE::TexturePtr> message_queue;
+			return message_queue;
+		}
 
-	std::set<ConsoleDialog*> consoles_;
+		std::set<ConsoleDialog*> consoles_;
 
-	const std::string Prompt = "--> ";
+		const std::string Prompt = "--> ";
 	}
 
 	void enable_screen_output(bool en)
@@ -254,7 +235,7 @@ namespace debug_console
 		}
 
 		if(!consoles_.empty()) {
-			foreach(ConsoleDialog* d, consoles_) {
+			for(ConsoleDialog* d : consoles_) {
 				d->addMessage(msg);
 			}
 			return;
@@ -267,12 +248,10 @@ namespace debug_console
 			return;
 		}
 
-		const SDL_Color col = {255, 255, 255, 255};
 		try {
-			messages().push_back(font::render_text_uncached(msg, col, 14));
-		} catch(font::error& e) {
-
-			std::cerr << "FAILED TO ADD MESSAGE DUE TO FONT RENDERING FAILURE\n";
+			messages().push_back(KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 14));
+		} catch(KRE::FontError& e) {
+			LOG_ERROR("FAILED TO ADD MESSAGE DUE TO FONT RENDERING FAILURE");
 			return;
 		}
 		if(messages().size() > 8) {
@@ -282,6 +261,7 @@ namespace debug_console
 
 	void draw()
 	{
+		auto canvas = KRE::Canvas::getInstance();
 		if(messages().empty()) {
 			return;
 		}
@@ -290,23 +270,24 @@ namespace debug_console
 		}
 
 		int ypos = 100;
-		foreach(const graphics::texture& t, messages()) {
-			const SDL_Rect area = {0, ypos-2, int(t.width() + 10), int(t.height() + 5)};
-			graphics::draw_rect(area, graphics::color_black(), 128);
-			graphics::blit_texture(t, 5, ypos);
-			ypos += t.height() + 5;
+		for(const KRE::TexturePtr& t : messages()) {
+			const SDL_Rect area = {};
+			canvas->drawSolidRect(rect(0, ypos-2, t->width() + 10, t->height() + 5), KRE::Color(0,0,0,128));
+			canvas->blitTexture(t, 0, rect(5,ypos,0,0));
+			ypos += t->height() + 5;
 		}
 	}
 
-	namespace {
-	std::string console_history_path()
+	namespace 
 	{
-		return std::string(preferences::user_data_path()) + "/console-history.cfg";
-	}
+		std::string console_history_path()
+		{
+			return std::string(preferences::user_data_path()) + "/console-history.cfg";
+		}
 	}
 
 	ConsoleDialog::ConsoleDialog(level& lvl, game_logic::FormulaCallable& obj)
-	   : dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
+	   : Dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
 		 history_pos_(0)
 	{
 		if(sys::file_exists(console_history_path())) {
@@ -335,34 +316,34 @@ namespace debug_console
 		text_editor_ = new TextEditorWidget(width() - 20, height() - 20);
 		addWidget(WidgetPtr(text_editor_), 10, 10);
 
-		text_editor_->set_onMoveCursor_handler(boost::bind(&ConsoleDialog::onMoveCursor, this));
-		text_editor_->set_on_begin_enter_handler(boost::bind(&ConsoleDialog::on_begin_enter, this));
-		text_editor_->set_on_enter_handler(boost::bind(&ConsoleDialog::on_enter, this));
+		text_editor_->setOnMoveCursorHandler(std::bind(&ConsoleDialog::onMoveCursor, this));
+		text_editor_->setOnBeginEnterHandler(std::bind(&ConsoleDialog::onBeginEnter, this));
+		text_editor_->setOnEnterHandler(std::bind(&ConsoleDialog::onEnter, this));
 
 		text_editor_->setText(Prompt);
-		text_editor_->set_cursor(0, Prompt.size());
+		text_editor_->setCursor(0, Prompt.size());
 	}
 
 	void ConsoleDialog::onMoveCursor()
 	{
-		if(text_editor_->cursor_row() < text_editor_->get_data().size()-1) {
-			text_editor_->set_cursor(text_editor_->get_data().size()-1, text_editor_->cursor_col());
+		if(text_editor_->cursorRow() < text_editor_->getData().size()-1) {
+			text_editor_->setCursor(text_editor_->getData().size()-1, text_editor_->cursorCol());
 		}
 
-		if(text_editor_->cursor_col() < Prompt.size() && text_editor_->get_data().back().size() >= Prompt.size()) {
-			text_editor_->set_cursor(text_editor_->get_data().size()-1, Prompt.size());
+		if(text_editor_->cursorCol() < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
+			text_editor_->setCursor(text_editor_->getData().size()-1, Prompt.size());
 		}
 	}
 
-	bool ConsoleDialog::on_begin_enter()
+	bool ConsoleDialog::onBeginEnter()
 	{
 		if(lvl_->editor_selection().empty() == false) {
 			focus_ = lvl_->editor_selection().front();
 		}
 
-		std::vector<std::string> data = text_editor_->get_data();
+		std::vector<std::string> data = text_editor_->getData();
 
-		std::string ffl(text_editor_->get_data().back());
+		std::string ffl(text_editor_->getData().back());
 		while(ffl.size() < Prompt.size() || std::equal(Prompt.begin(), Prompt.end(), ffl.begin()) == false) {
 			data.pop_back();
 			ASSERT_LOG(data.empty() == false, "No prompt found in debug console: " << ffl);
@@ -371,7 +352,7 @@ namespace debug_console
 
 		ffl.erase(ffl.begin(), ffl.begin() + Prompt.size());
 		text_editor_->setText(text_editor_->text() + "\n" + Prompt);
-		text_editor_->set_cursor(text_editor_->get_data().size()-1, Prompt.size());
+		text_editor_->setCursor(text_editor_->getData().size()-1, Prompt.size());
 		if(!ffl.empty()) {
 			history_.push_back(ffl);
 			if(history_.size() > 128) {
@@ -419,7 +400,7 @@ namespace debug_console
 		return false;
 	}
 
-	void ConsoleDialog::on_enter()
+	void ConsoleDialog::onEnter()
 	{
 	}
 
@@ -432,16 +413,16 @@ namespace debug_console
 	{
 
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->get_data().begin(); i != text_editor_->get_data().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
 			m += *i + "\n";
 		}
 
 		m += msg + "\n";
-		m += text_editor_->get_data().back();
+		m += text_editor_->getData().back();
 
-		int col = text_editor_->cursor_col();
+		int col = text_editor_->cursorCol();
 		text_editor_->setText(m);
-		text_editor_->set_cursor(text_editor_->get_data().size()-1, col);
+		text_editor_->setCursor(text_editor_->getData().size()-1, col);
 	}
 
 	bool ConsoleDialog::handleEvent(const SDL_Event& event, bool claimed)
@@ -462,17 +443,17 @@ namespace debug_console
 						history_pos_ = history_.size();
 					}
 
-					load_history();
+					loadHistory();
 					return true;
 				}
 				break;
 			}
 		}
 
-		return dialog::handleEvent(event, claimed);
+		return Dialog::handleEvent(event, claimed);
 	}
 
-	void ConsoleDialog::load_history()
+	void ConsoleDialog::loadHistory()
 	{
 		std::string str;
 		if(history_pos_ < history_.size()) {
@@ -480,14 +461,14 @@ namespace debug_console
 		}
 
 		std::string m;
-		for(std::vector<std::string>::const_iterator i = text_editor_->get_data().begin(); i != text_editor_->get_data().end()-1; ++i) {
+		for(std::vector<std::string>::const_iterator i = text_editor_->getData().begin(); i != text_editor_->getData().end()-1; ++i) {
 			m += *i + "\n";
 		}
 
 		m += Prompt + str;
 		text_editor_->setText(m);
 
-		text_editor_->set_cursor(text_editor_->get_data().size()-1, text_editor_->get_data().back().size());
+		text_editor_->setCursor(text_editor_->getData().size()-1, text_editor_->getData().back().size());
 	}
 
 	void ConsoleDialog::setFocus(game_logic::FormulaCallablePtr e)

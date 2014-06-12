@@ -51,7 +51,7 @@ private:
 	variant getValue(const std::string& key) const;
 
 	std::map<std::string, variant_type_ptr> types_;
-	boost::scoped_ptr<formula_interface_impl> impl_;
+	std::unique_ptr<formula_interface_impl> impl_;
 };
 
 }

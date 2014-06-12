@@ -93,9 +93,9 @@ class fire_event_command : public voxel_object_command_callable
 {
 	const voxel::UserVoxelObjectPtr target_;
 	const std::string event_;
-	const const_FormulaCallablePtr callable_;
+	const ConstFormulaCallablePtr callable_;
 public:
-	fire_event_command(voxel::UserVoxelObjectPtr target, const std::string& event, const_FormulaCallablePtr callable)
+	fire_event_command(voxel::UserVoxelObjectPtr target, const std::string& event, ConstFormulaCallablePtr callable)
 	  : target_(target), event_(event), callable_(callable)
 	{}
 
@@ -111,7 +111,7 @@ public:
 FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
 	voxel::UserVoxelObjectPtr target;
 	std::string event;
-	const_FormulaCallablePtr callable;
+	ConstFormulaCallablePtr callable;
 	variant arg_value;
 
 	if(args().size() == 3) {

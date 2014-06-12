@@ -26,7 +26,6 @@
 #include <cmath>
 #include <iostream>
 #include <functional>
-#include <boost/bind.hpp>
 #ifdef _MSC_VER
 #include <boost/math/special_functions/round.hpp>
 #endif

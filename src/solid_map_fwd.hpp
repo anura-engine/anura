@@ -21,11 +21,11 @@
 
 class solid_map;
 
-typedef boost::shared_ptr<solid_map> solid_map_ptr;
-typedef boost::shared_ptr<const solid_map> const_solid_map_ptr;
+typedef std::shared_ptr<solid_map> solid_map_ptr;
+typedef std::shared_ptr<const solid_map> const_solid_map_ptr;
 
 class solid_info;
 
-typedef boost::shared_ptr<const solid_info> const_solid_info_ptr;
+typedef std::shared_ptr<const solid_info> const_solid_info_ptr;
 
 #endif

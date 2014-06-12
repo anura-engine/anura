@@ -25,8 +25,6 @@
 #include <stack>
 #include <string>
 
-#include <boost/bind.hpp>
-
 #include <stdio.h>
 
 #include "asserts.hpp"
@@ -142,7 +140,7 @@ namespace game_logic
 		std::map<variant, variant> res;
 		std::set<WmlSerializableFormulaCallable*> objects;
 		std::set<std::string> already_known;
-		game_logic::formula_object::visit_variants(obj, boost::bind(add_object_to_set, _1, &objects, &already_known));
+		game_logic::formula_object::visit_variants(obj, std::bind(add_object_to_set, _1, &objects, &already_known));
 
 		std::vector<variant> results_list;
 		for(WmlSerializableFormulaCallable* item : objects) {

@@ -20,19 +20,13 @@
 #include <sstream>
 
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include "dropdown_widget.hpp"
 #include "filesystem.hpp"
-#include "font.hpp"
-#include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
 #include "poly_line_widget.hpp"
-#include "raster.hpp"
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
 
@@ -40,13 +34,13 @@ namespace gui {
 
 tree_view_widget::tree_view_widget(int w, int h, const variant& tree)
 	: tree_(tree), hpad_(10), col_size_(80), font_size_(12), selected_row_(-1), 
-	char_height_(font::char_height(font_size_)), allow_selection_(false),
+	char_height_(KRE::Font::charHeight(font_size_)), allow_selection_(false),
 	must_select_(false), nrows_(0), swallow_clicks_(false),
-	max_height_(-1), min_col_size_(20), max_col_size_(80), char_width_(font::char_width(font_size_)),
+	max_height_(-1), min_col_size_(20), max_col_size_(80), char_width_(KRE::Font::charWidth(font_size_)),
 	persistent_highlight_(false), 
 	highlight_color_(graphics::color_blue()), highlighted_row_(-1)
 {
-	row_height_ = font::char_height(font_size_);
+	row_height_ = KRE::Font::charHeight(font_size_);
 	setEnvironment();
 	widget::setDim(w, h);
 	init();
@@ -65,9 +59,9 @@ tree_view_widget::tree_view_widget(const variant& v, game_logic::FormulaCallable
 	must_select_ = v["must_select"].as_bool(false);
 	max_height_ = v["max_height"].as_int(-1);
 
-	char_height_ = font::char_height(font_size_);
-	char_width_ = font::char_width(font_size_);
-	row_height_ = font::char_height(font_size_);
+	char_height_ = KRE::Font::charHeight(font_size_);
+	char_width_ = KRE::Font::charWidth(font_size_);
+	row_height_ = KRE::Font::charHeight(font_size_);
 
 	init();
 }
@@ -78,7 +72,7 @@ void tree_view_widget::init()
 
 	col_widths_.clear();
 	col_widths_.push_back(col_size_/2);
-	gen_traverse(0, boost::bind(&tree_view_widget::calc_column_widths, this, _1, _2, _3), variant(), &tree_);
+	gen_traverse(0, std::bind(&tree_view_widget::calc_column_widths, this, _1, _2, _3), variant(), &tree_);
 
 	std::cerr << "Column widths: ";
 	foreach(int colw, col_widths_) {
@@ -105,7 +99,7 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 	points.push_back(point(x/2, last_y));
 	points.push_back(point(x/2, y+char_height_/2));
 	points.push_back(point(x, y+char_height_/2 ));
-	poly_line_WidgetPtr plw(new poly_line_widget(&points, graphics::color_grey()));
+	PolyLineWidgetPtr plw(new PolyLineWidget(&points, graphics::color_grey()));
 	widgets_.push_back(plw);
 	last_coords_[x] = y + char_height_/2;
 
@@ -193,7 +187,7 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 }
 
 void tree_view_widget::gen_traverse(int depth, 
-	boost::function<void(int,const variant&,variant*)> fn, 
+	std::function<void(int,const variant&,variant*)> fn, 
 	const variant& key, 
 	variant* value)
 {
@@ -341,7 +335,7 @@ void tree_view_widget::recalculate_dimensions()
 	update_scrollbar();
 }
 
-void tree_view_widget::on_set_yscroll(int old_value, int value)
+void tree_view_widget::onSetYscroll(int old_value, int value)
 {
 	recalculate_dimensions();
 }
@@ -572,7 +566,7 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 			foreach(const std::string& str, choices) {
 				g->add_col(LabelPtr(new label(str)));
 			}
-			g->register_selection_callback(boost::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
+			g->register_selection_callback(std::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
 			int mousex, mousey;
 			input::sdl_get_mouse_state(&mousex, &mousey);
 			mousex -= x();
@@ -622,13 +616,13 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		grid->allow_draw_highlight(false);
 		TextEditorWidgetPtr editor = new TextEditorWidget(200, 28);
 		editor->setFontSize(14);
-		editor->set_on_enter_handler(boost::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
-		editor->set_on_tab_handler(boost::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
-		editor->set_on_esc_handler(boost::bind(&tree_editor_widget::init, this));
+		editor->setOnEnterHandler(std::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
+		editor->setOnTabHandler(std::bind(&tree_editor_widget::execute_key_edit_enter, this, editor, parent_container, get_selection_key(tree_selection), v));
+		editor->setOnEscHandler(std::bind(&tree_editor_widget::init, this));
 		editor->setText(get_selection_key(tree_selection).as_string());
 		editor->setFocus(true);
 		grid->add_col(editor);
-		grid->register_selection_callback(boost::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
+		grid->register_selection_callback(std::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
 		int mousex, mousey;
 		input::sdl_get_mouse_state(&mousex, &mousey);
 		mousex -= x();
@@ -716,7 +710,7 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	std::map<variant::TYPE, WidgetPtr>::iterator it = ex_editor_map_.find(v->type());
 	if(it != ex_editor_map_.end()) {
 		if(on_editor_select_) {
-		    on_editor_select_(v, boost::bind(&tree_editor_widget::external_editor_save, this, v, _1));
+		    on_editor_select_(v, std::bind(&tree_editor_widget::external_editor_save, this, v, _1));
 		}
 		edit_menu_ = it->second;
 		return;
@@ -739,9 +733,9 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	if(v->is_numeric() || v->is_string()) {
 		TextEditorWidgetPtr editor = new TextEditorWidget(200, 28);
 		editor->setFontSize(14);
-		editor->set_on_enter_handler(boost::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
-		editor->set_on_tab_handler(boost::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
-		editor->set_on_esc_handler(boost::bind(&tree_editor_widget::init, this));
+		editor->setOnEnterHandler(std::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
+		editor->setOnTabHandler(std::bind(&tree_editor_widget::execute_edit_enter, this, editor, v));
+		editor->setOnEscHandler(std::bind(&tree_editor_widget::init, this));
 		std::stringstream ss;
 		if(v->is_int()) {
 			ss << v->as_int();
@@ -758,11 +752,11 @@ void tree_editor_widget::edit_field(int row, variant* v)
 		bool_list.push_back("false");
 		bool_list.push_back("true");
 		dropdown_WidgetPtr bool_dd(new dropdown_widget(bool_list, 100, 30));
-		bool_dd->set_selection(v->as_bool());
-		bool_dd->set_on_select_handler(boost::bind(&tree_editor_widget::on_bool_change, this, v, _1, _2));
+		bool_dd->setSelection(v->as_bool());
+		bool_dd->setOnSelectHandler(std::bind(&tree_editor_widget::on_bool_change, this, v, _1, _2));
 		grid->add_col(bool_dd);
 	}
-	grid->register_selection_callback(boost::bind(&tree_editor_widget::execute_edit_select, this, _1));
+	grid->register_selection_callback(std::bind(&tree_editor_widget::execute_edit_select, this, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);

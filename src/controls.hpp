@@ -75,7 +75,7 @@ namespace controls
 		void restore_state();
 		void cancel();
 	private:
-		boost::scoped_ptr<control_backup_scope_impl> impl_;
+		std::unique_ptr<control_backup_scope_impl> impl_;
 	};
 
 	void read_until(int ncycle);

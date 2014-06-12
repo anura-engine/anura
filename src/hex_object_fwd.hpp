@@ -33,7 +33,7 @@ namespace hex
 	typedef boost::intrusive_ptr<const HexObject> ConstHexObjectPtr;
 
 	class TileSheet;
-	typedef boost::shared_ptr<const TileSheet> TileSheetPtr;
+	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
 
 	class TileType;
 	typedef boost::intrusive_ptr<const TileType> TileTypePtr;

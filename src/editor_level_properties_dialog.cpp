@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 
@@ -106,8 +104,8 @@ void editor_level_properties_dialog::init()
 
 	TextEditorWidget* change_title_entry(new TextEditorWidget(200, 30));
 	change_title_entry->setText(editor_.get_level().title());
-	change_title_entry->set_on_change_handler(boost::bind(&editor_level_properties_dialog::change_title, this, change_title_entry));
-	change_title_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	change_title_entry->setOnChangeHandler(std::bind(&editor_level_properties_dialog::change_title, this, change_title_entry));
+	change_title_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
 	grid_ptr g(new grid(2));
 	g->add_col(WidgetPtr(new label("Change Title", graphics::color_white(), 36)))
@@ -121,25 +119,25 @@ void editor_level_properties_dialog::init()
 	}
 	g.reset(new grid(2));
 	g->add_col(WidgetPtr(new label("Background", graphics::color_white())))
-	  .add_col(WidgetPtr(new button(WidgetPtr(new label(background_id, graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_background, this))));
+	  .add_col(WidgetPtr(new button(WidgetPtr(new label(background_id, graphics::color_white())), std::bind(&editor_level_properties_dialog::change_background, this))));
 	addWidget(g);
 
 	g.reset(new grid(3));
 	g->set_hpad(10);
 	g->add_col(WidgetPtr(new label("Next Level", graphics::color_white())));
 	g->add_col(WidgetPtr(new label(editor_.get_level().next_level(), graphics::color_white())));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_next_level, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_next_level, this))));
 
 	g->add_col(WidgetPtr(new label("Previous Level", graphics::color_white())));
 	g->add_col(WidgetPtr(new label(editor_.get_level().previous_level(), graphics::color_white())));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_previous_level, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_previous_level, this))));
 	addWidget(g);
 
-	Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, boost::bind(set_segmented_level_width, this, &editor_, _1));
+	Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, std::bind(set_segmented_level_width, this, &editor_, _1));
 	WidgetPtr hz_checkbox(hz_segmented_checkbox);
 	addWidget(hz_checkbox);
 
-	Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, boost::bind(set_segmented_level_height, this, &editor_, _1));
+	Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, std::bind(set_segmented_level_height, this, &editor_, _1));
 	WidgetPtr vt_checkbox(vt_segmented_checkbox);
 	addWidget(vt_checkbox);
 
@@ -179,7 +177,7 @@ void editor_level_properties_dialog::change_background()
 	grid->set_show_background(true);
 	grid->allow_selection();
 	grid->swallow_clicks();
-	grid->register_selection_callback(boost::bind(&editor_level_properties_dialog::execute_change_background, this, backgrounds, _1));
+	grid->register_selection_callback(std::bind(&editor_level_properties_dialog::execute_change_background, this, backgrounds, _1));
 	foreach(const std::string& bg, backgrounds) {
 		grid->add_col(WidgetPtr(new label(bg, graphics::color_white())));
 	}

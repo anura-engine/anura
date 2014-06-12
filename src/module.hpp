@@ -92,8 +92,8 @@ variant build_package(const std::string& id);
 
 bool uninstall_downloaded_module(const std::string& id);
 
-void set_module_args(game_logic::const_FormulaCallablePtr callable);
-game_logic::const_FormulaCallablePtr get_module_args();
+void set_module_args(game_logic::ConstFormulaCallablePtr callable);
+game_logic::ConstFormulaCallablePtr get_module_args();
 
 class client : public game_logic::FormulaCallable
 {
@@ -131,7 +131,7 @@ private:
 	OPERATION_TYPE operation_;
 	std::string module_id_;
 	std::string error_;
-	boost::scoped_ptr<class http_client> client_;
+	std::unique_ptr<class http_client> client_;
 
 	std::map<std::string, variant> data_;
 	variant module_info_;
