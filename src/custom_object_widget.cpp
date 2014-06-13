@@ -43,15 +43,15 @@ namespace gui
 		handleProcess_on_entity_ = v["handleProcess"].as_bool(false);
 		if(v["object"].is_string()) {
 			// type name, has obj_x, obj_y, facing			
-			entity_ = entity_ptr(new custom_object(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1)));
-			entity_->finish_loading(NULL);
+			entity_ = EntityPtr(new custom_object(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1)));
+			entity_->finishLoading(NULL);
 		} else if(v["object"].is_map()) {
-			entity_ = entity_ptr(new custom_object(v["object"]));
-			entity_->finish_loading(NULL);
+			entity_ = EntityPtr(new custom_object(v["object"]));
+			entity_->finishLoading(NULL);
 		} else {
 			entity_ = v["object"].try_convert<entity>();
 			ASSERT_LOG(entity_ != NULL, "Couldn't convert 'object' attribue to an entity");
-			entity_->finish_loading(NULL);
+			entity_->finishLoading(NULL);
 			entity_->validate_properties();
 		}
 		if(v.has_key("properties")) {
@@ -87,7 +87,7 @@ namespace gui
 		if(v.has_key("overlay") && v["overlay"].is_null() == false) {
 			overlay_ = widget_factory::create(v["overlay"], getEnvironment());
 		}
-		setDim(entity_->current_frame().width(), entity_->current_frame().height());
+		setDim(entity_->getCurrentFrame().width(), entity_->getCurrentFrame().height());
 	}
 
 	void custom_object_widget::click(int button)
@@ -133,17 +133,17 @@ namespace gui
 		}
 	}
 
-	void custom_object_widget::set_entity(entity_ptr e)
+	void custom_object_widget::setEntity(EntityPtr e)
 	{
 		entity_ = e;
 	}
 
-	entity_ptr custom_object_widget::get_entity()
+	EntityPtr custom_object_widget::getEntity()
 	{
 		return entity_;
 	}
 
-	const_entity_ptr custom_object_widget::get_entity() const
+	ConstEntityPtr custom_object_widget::getEntity() const
 	{
 		return entity_;
 	}
@@ -169,7 +169,7 @@ END_DEFINE_CALLABLE(custom_object_widget)
 			glPushMatrix();
 			glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
 			entity_->draw(x(), y());
-			entity_->draw_later(x(), y());
+			entity_->drawLater(x(), y());
 			glPopMatrix();
 		}
 		if(overlay_) {

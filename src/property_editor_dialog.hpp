@@ -37,15 +37,15 @@ public:
 	explicit property_editor_dialog(editor& e);
 	void init();
 
-	entity_ptr get_entity() const { return entity_.empty() ? entity_ptr() : entity_.front(); }
-	const std::vector<entity_ptr>& get_entity_list() const { return entity_; }
-	void set_entity(entity_ptr e);
-	void set_entity_group(const std::vector<entity_ptr>& entities);
-	void remove_object_from_group(entity_ptr e);
+	EntityPtr getEntity() const { return entity_.empty() ? EntityPtr() : entity_.front(); }
+	const std::vector<EntityPtr>& get_entity_list() const { return entity_; }
+	void setEntity(EntityPtr e);
+	void set_entity_group(const std::vector<EntityPtr>& entities);
+	void remove_object_from_group(EntityPtr e);
 	void remove_group(int ngroup);
 private:
 	void setLabel(gui::TextEditorWidget* e);
-	entity_ptr get_static_entity() const;
+	EntityPtr get_static_entity() const;
 	void change_min_difficulty(int amount);
 	void change_max_difficulty(int amount);
 	void toggle_property(const std::string& id);
@@ -70,7 +70,7 @@ private:
 	void change_event_handler(const std::string& id, gui::LabelPtr lb, gui::TextEditorWidgetPtr text_editor);
 
 	editor& editor_;
-	std::vector<entity_ptr> entity_;
+	std::vector<EntityPtr> entity_;
 	gui::WidgetPtr context_menu_;
 
 	std::unique_ptr<assert_recover_scope> assert_recover_scope_;

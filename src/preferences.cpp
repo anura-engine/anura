@@ -216,7 +216,7 @@ namespace preferences {
 			}
 		}
 
-		void get_inputs(std::vector<game_logic::formula_input>* inputs) const {
+		void getInputs(std::vector<game_logic::formula_input>* inputs) const {
 			for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
 				inputs->push_back(game_logic::formula_input(itor->first, game_logic::FORMULA_READ_WRITE));
 			}
@@ -1016,7 +1016,7 @@ namespace preferences {
 		allow_autopause_ = node["allow_autopause"].as_bool(allow_autopause_);
 		
 		sound::set_music_volume(node["music_volume"].as_int(1000)/1000.0);
-		sound::set_sound_volume(node["sound_volume"].as_int(1000)/1000.0);
+		sound::setSoundVolume(node["sound_volume"].as_int(1000)/1000.0);
 
 		locale_ = node["locale"].as_string_default("system");
 		

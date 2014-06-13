@@ -264,7 +264,7 @@ dialog& dialog::addWidget(WidgetPtr w, int x, int y,
 	return *this;
 }
 
-void dialog::remove_widget(WidgetPtr w)
+void dialog::removeWidget(WidgetPtr w)
 {
 	if(!w) {
 		return;

@@ -106,14 +106,14 @@ void water::delete_rect(const rect& r)
 	}
 }
 
-void water::begin_drawing()
+void water::beginDrawing()
 {
 	foreach(area& a, areas_) {
 		graphics::add_raster_distortion(&a.distortion_);
 	}
 }
 
-void water::end_drawing() const
+void water::endDrawing() const
 {
 	foreach(const area& a, areas_) {
 		graphics::remove_raster_distortion(&a.distortion_);
@@ -139,18 +139,18 @@ bool water::draw(int x, int y, int w, int h) const
 
 	bool result = false;
 	foreach(const area& a, areas_) {
-		if(draw_area(a, x, y, w, h)) {
+		if(drawArea(a, x, y, w, h)) {
 			result = true;
 		}
 	}
 
-	end_drawing();
+	endDrawing();
 	glShadeModel(GL_FLAT);
 
 	return result;
 }
 
-void water::add_wave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length)
+void water::addWave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length)
 {
 	foreach(area& a, areas_) {
 		if(pointInRect(p, a.rect_)) {
@@ -168,7 +168,7 @@ void water::add_wave(const point& p, double xvelocity, double height, double len
 	}
 }
 
-bool water::draw_area(const water::area& a, int x, int y, int w, int h) const
+bool water::drawArea(const water::area& a, int x, int y, int w, int h) const
 {
 	const graphics::color waterline_color(250, 240, 205, 255);
 	const graphics::color shallowwater_color(0, 51, 61, 140);
@@ -350,7 +350,7 @@ void water::wave::process() {
 	length += delta_length;
 }
 
-void water::get_current(const entity& e, int* velocity_x, int* velocity_y) const
+void water::getCurrent(const entity& e, int* velocity_x, int* velocity_y) const
 {
 	if(velocity_x && current_x_formula_) {
 		*velocity_x += current_x_formula_->execute(e).as_int();
@@ -361,7 +361,7 @@ void water::get_current(const entity& e, int* velocity_x, int* velocity_y) const
 	}
 }
 
-bool water::is_underwater(const rect& r, rect* result_water_area, variant* e) const
+bool water::isUnderwater(const rect& r, rect* result_water_area, variant* e) const
 {
 	//we don't take the vertical midpoint, because doing so can cause problems
 	//when objects change their animations and flip between not being

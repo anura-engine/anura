@@ -496,7 +496,7 @@ namespace gui
 
 		for(std::map<uint32_t, graphics::blit_queue>::iterator i = chars.begin(); i != chars.end(); ++i) {
 			graphics::color(i->first).set_as_current_color();
-			i->second.setTexture(char_textures[font_size_]->get_id());
+			i->second.setTexture(char_textures[font_size_]->getId());
 			i->second.do_blit();
 		}
 

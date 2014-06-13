@@ -69,12 +69,12 @@ public:
 	}
 
 	void mutate_value_by_slot(int slot, const variant& value) {
-		setValue_by_slot(slot, value);
+		setValueBySlot(slot, value);
 	}
 
 	std::vector<formula_input> inputs() const {
 		std::vector<formula_input> res;
-		get_inputs(&res);
+		getInputs(&res);
 		return res;
 	}
 
@@ -86,7 +86,7 @@ public:
 		return do_compare(other) < 0;
 	}
 
-	virtual void get_inputs(std::vector<formula_input>* /*inputs*/) const {};
+	virtual void getInputs(std::vector<formula_input>* /*inputs*/) const {};
 
 	void serialize(std::string& str) const {
 		serialize_to_string(str);
@@ -105,7 +105,7 @@ public:
 	virtual formula_ptr createFormula(const variant& v);
 
 	//is some kind of command to the engine.
-	virtual bool is_command() const { return false; }
+	virtual bool isCommand() const { return false; }
 	virtual bool is_cairo_op() const { return false; }
 
 	void performVisitValues(FormulaCallableVisitor& visitor) {
@@ -116,7 +116,7 @@ protected:
 	virtual ~FormulaCallable() {}
 
 	virtual void setValue(const std::string& key, const variant& value);
-	virtual void setValue_by_slot(int slot, const variant& value);
+	virtual void setValueBySlot(int slot, const variant& value);
 	virtual int do_compare(const FormulaCallable* callable) const {
 		return this < callable ? -1 : (this == callable ? 0 : 1);
 	}
@@ -157,9 +157,9 @@ class FormulaCallable_with_backup : public FormulaCallable {
 		return var;
 	}
 
-	void get_inputs(std::vector<formula_input>* inputs) const {
-		main_.get_inputs(inputs);
-		backup_.get_inputs(inputs);
+	void getInputs(std::vector<formula_input>* inputs) const {
+		main_.getInputs(inputs);
+		backup_.getInputs(inputs);
 	}
 public:
 	FormulaCallable_with_backup(const FormulaCallable& main, const FormulaCallable& backup) : FormulaCallable(false), main_(main), backup_(backup)
@@ -182,8 +182,8 @@ class formula_variant_callable_with_backup : public FormulaCallable {
 		return backup_.query_value_by_slot(slot);
 	}
 
-	void get_inputs(std::vector<formula_input>* inputs) const {
-		backup_.get_inputs(inputs);
+	void getInputs(std::vector<formula_input>* inputs) const {
+		backup_.getInputs(inputs);
 	}
 
 public:
@@ -227,7 +227,7 @@ private:
 	virtual void visitValues(FormulaCallableVisitor& visitor);
 
 	variant getValue(const std::string& key) const;
-	void get_inputs(std::vector<formula_input>* inputs) const;
+	void getInputs(std::vector<formula_input>* inputs) const;
 	void setValue(const std::string& key, const variant& value);
 	std::map<std::string,variant> values_;
 	const FormulaCallable* fallback_;
@@ -244,15 +244,15 @@ class formula_expression;
 class command_callable : public FormulaCallable {
 public:
 	command_callable();
-	void run_command(FormulaCallable& context) const;
+	void runCommand(FormulaCallable& context) const;
 
-	void set_expression(const formula_expression* expr);
+	void setExpression(const formula_expression* expr);
 
-	bool is_command() const { return true; }
+	bool isCommand() const { return true; }
 private:
 	virtual void execute(FormulaCallable& context) const = 0;
 	variant getValue(const std::string& key) const { return variant(); }
-	void get_inputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
 
 	//these two members are a more compiler-friendly version of a
 	//intrusive_ptr<formula_expression>

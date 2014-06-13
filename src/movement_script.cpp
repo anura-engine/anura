@@ -24,19 +24,19 @@ active_movement_script::~active_movement_script()
 {
 	foreach(const entity_mod& mod, mods_) {
 		for(std::map<std::string, game_logic::const_formula_ptr>::const_iterator i = mod.handlers_backup.begin(); i != mod.handlers_backup.end(); ++i) {
-			mod.entity->set_event_handler(get_object_event_id(i->first), i->second);
+			mod.entity->setEventHandler(get_object_event_id(i->first), i->second);
 		}
 		
 	}
 }
 
-void active_movement_script::modify(entity_ptr entity, const std::map<std::string, game_logic::const_formula_ptr>& handlers)
+void active_movement_script::modify(EntityPtr entity, const std::map<std::string, game_logic::const_formula_ptr>& handlers)
 {
 	entity_mod mod;
 	mod.entity = entity;
 	for(std::map<std::string, game_logic::const_formula_ptr>::const_iterator i = handlers.begin(); i != handlers.end(); ++i) {
 		mod.handlers_backup[i->first] = entity->getEventHandler(get_object_event_id(i->first));
-		entity->set_event_handler(get_object_event_id(i->first), i->second);
+		entity->setEventHandler(get_object_event_id(i->first), i->second);
 	}
 
 	mods_.push_back(mod);
@@ -73,7 +73,7 @@ active_movement_script_ptr movement_script::begin_execution(const game_logic::Fo
 
 		for(int n = 0; n != v.num_elements(); ++n) {
 			variant obj = v[n];
-			entity_ptr e(obj.try_convert<entity>());
+			EntityPtr e(obj.try_convert<entity>());
 			if(e) {
 				result->modify(e, m.handlers);
 			}

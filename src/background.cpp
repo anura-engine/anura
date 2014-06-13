@@ -357,7 +357,7 @@ void background::draw_layers(int x, int y, const rect& area_ref, const std::vect
 				if(bg.blend == false) {
 					glDisable(GL_BLEND);
 				}
-				blit_queue.setTexture(bg.texture.get_id());
+				blit_queue.setTexture(bg.texture.getId());
 				blit_queue.do_blit();
 				blit_queue.clear();
 				if(bg.blend == false) {
@@ -375,7 +375,7 @@ void background::draw_foreground(double xpos, double ypos, int rotation, int cyc
 		if(bg.foreground) {
 			draw_layer(xpos, ypos, rect(xpos, ypos, graphics::screen_width(), graphics::screen_height()), rotation, bg, cycle);
 			if(!blit_queue.empty()) {
-				blit_queue.setTexture(bg.texture.get_id());
+				blit_queue.setTexture(bg.texture.getId());
 				blit_queue.do_blit();
 				blit_queue.clear();
 			}

@@ -150,8 +150,8 @@ custom_object::custom_object(variant node)
 	gravity_shift_(node["gravity_shift"].as_int(0)),
 	rotate_x_(), rotate_y_(), rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
 	zsub_order_(node["zsub_order"].as_int(type_->zSubOrder())),
-	hitpoints_(node["hitpoints"].as_int(type_->hitpoints())),
-	max_hitpoints_(node["max_hitpoints"].as_int(type_->hitpoints()) - type_->hitpoints()),
+	hitpoints_(node["hitpoints"].as_int(type_->getHitpoints())),
+	max_hitpoints_(node["max_hitpoints"].as_int(type_->getHitpoints()) - type_->getHitpoints()),
 	was_underwater_(false),
 	has_feet_(node["has_feet"].as_bool(type_->hasFeet())),
 	invincible_(0),
@@ -178,8 +178,8 @@ custom_object::custom_object(variant node)
 	paused_(false), model_(glm::mat4(1.0f))
 {
 
-	vars_->set_object_name(debug_description());
-	tmp_vars_->set_object_name(debug_description());
+	vars_->set_object_name(getDebugDescription());
+	tmp_vars_->set_object_name(getDebugDescription());
 
 	if(!created_) {
 		properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
@@ -315,8 +315,8 @@ custom_object::custom_object(variant node)
 		}
 	}
 
-	set_solid_dimensions(solid_dim, weak_solid_dim);
-	set_collide_dimensions(collide_dim, weak_collide_dim);
+	setSolidDimensions(solid_dim, weak_solid_dim);
+	setCollideDimensions(collide_dim, weak_collide_dim);
 
 	variant tags_node = node["tags"];
 	if(tags_node.is_null() == false) {
@@ -332,17 +332,17 @@ custom_object::custom_object(variant node)
 	if(node.has_key("label")) {
 		setLabel(node["label"].as_string());
 	} else {
-		set_distinct_label();
+		setDistinctLabel();
 	}
 
 	if(!type_->respawns()) {
-		set_respawn(false);
+		setRespawn(false);
 	}
 
 	assert(type_.get());
 	//set_frame_no_adjustments(frame_name_);
 	frame_.reset(&type_->getFrame(frame_name_));
-	calculate_solid_rect();
+	calculateSolidRect();
 
 	next_animation_formula_ = type_->nextAnimationFormula();
 
@@ -382,10 +382,10 @@ custom_object::custom_object(variant node)
 	}
 
 	if(node.has_key("mouseover_area")) {
-		set_mouse_over_area(rect(node["mouseover_area"]));
+		setMouseOverArea(rect(node["mouseover_area"]));
 	}
 
-	set_mouseover_delay(node["mouseover_delay"].as_int(0));
+	setMouseoverDelay(node["mouseover_delay"].as_int(0));
 
 #if defined(USE_SHADERS)
 	if(node.has_key("shader")) {
@@ -486,7 +486,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	accel_x_(0), accel_y_(0), gravity_shift_(0),
 	rotate_x_(), rotate_y_(), rotate_z_(), zorder_(type_->zorder()),
 	zsub_order_(type_->zSubOrder()),
-	hitpoints_(type_->hitpoints()),
+	hitpoints_(type_->getHitpoints()),
 	max_hitpoints_(0),
 	was_underwater_(false),
 	has_feet_(type_->hasFeet()),
@@ -514,8 +514,8 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 
-	vars_->set_object_name(debug_description());
-	tmp_vars_->set_object_name(debug_description());
+	vars_->set_object_name(getDebugDescription());
+	tmp_vars_->set_object_name(getDebugDescription());
 
 	vars_->disallow_new_keys(type_->isStrict());
 	tmp_vars_->disallow_new_keys(type_->isStrict());
@@ -547,9 +547,9 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	}
 #endif
 
-	set_solid_dimensions(type_->getSolidDimensions(),
+	setSolidDimensions(type_->getSolidDimensions(),
 	                     type_->getWeakSolidDimensions());
-	set_collide_dimensions(type_->getCollideDimensions(),
+	setCollideDimensions(type_->getCollideDimensions(),
 	                       type_->getWeakCollideDimensions());
 
 	{
@@ -572,16 +572,16 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	}
 #endif
 
-	set_mouseover_delay(type_->getMouseoverDelay());
+	setMouseoverDelay(type_->getMouseoverDelay());
 	if(type_->getMouseOverArea().w() != 0) {
-		set_mouse_over_area(type_->getMouseOverArea());
+		setMouseOverArea(type_->getMouseOverArea());
 	}
 	set_truez(type_->truez());
 	set_tx(type_->tx());
 	set_ty(type_->ty());
 	set_tz(type_->tz());
 	//std::cerr << type << " " << truez() << " " << tx() << "," << ty() << "," << tz() << std::endl;
-	init_properties();
+	initProperties();
 }
 
 custom_object::custom_object(const custom_object& o) :
@@ -663,8 +663,8 @@ custom_object::custom_object(const custom_object& o) :
 	//widgets_(o.widgets_),
 	paused_(o.paused_), model_(glm::mat4(1.0f))
 {
-	vars_->set_object_name(debug_description());
-	tmp_vars_->set_object_name(debug_description());
+	vars_->set_object_name(getDebugDescription());
+	tmp_vars_->set_object_name(getDebugDescription());
 
 	vars_->disallow_new_keys(type_->isStrict());
 	tmp_vars_->disallow_new_keys(type_->isStrict());
@@ -687,8 +687,8 @@ custom_object::custom_object(const custom_object& o) :
 		body_.reset(new box2d::body(*o.body_));
 	}
 #endif
-	set_mouseover_delay(o.getMouseoverDelay());
-	set_mouse_over_area(o.getMouseOverArea());
+	setMouseoverDelay(o.getMouseoverDelay());
+	setMouseOverArea(o.getMouseOverArea());
 	
 	set_truez(o.truez());
 	set_tx(o.tx());
@@ -719,13 +719,13 @@ void custom_object::validate_properties()
 		if(e.storage_slot >= 0 && e.type && std::count(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), n) == 0) {
 			assert(e.storage_slot < property_data_.size());
 			variant result = property_data_[e.storage_slot];
-			ASSERT_LOG(e.type->match(result), "Object " << debug_description() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string() << " " << properties_requiring_dynamic_initialization_.size());
+			ASSERT_LOG(e.type->match(result), "Object " << getDebugDescription() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string() << " " << properties_requiring_dynamic_initialization_.size());
 			
 		}
 	}
 }
 
-void custom_object::init_properties()
+void custom_object::initProperties()
 {
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
 		if(!i->second.init || i->second.storage_slot == -1) {
@@ -742,10 +742,10 @@ bool custom_object::is_a(const std::string& type) const
 	return CustomObjectType::isDerivedFrom(type, type_->id());
 }
 
-void custom_object::finish_loading(level* lvl)
+void custom_object::finishLoading(level* lvl)
 {
 	if(parent_loading_.is_null() == false) {
-		entity_ptr p = parent_loading_.try_convert<entity>();
+		EntityPtr p = parent_loading_.try_convert<entity>();
 		if(p) {
 			parent_ = p;
 		}
@@ -759,7 +759,7 @@ void custom_object::finish_loading(level* lvl)
 #endif
 #ifdef USE_BOX2D
 	if(body_) {
-		body_->finish_loading(this);
+		body_->finishLoading(this);
 	}
 #endif
 
@@ -843,10 +843,10 @@ variant custom_object::write() const
 		}
 	}
 
-	if(!attached_objects().empty()) {
+	if(!attachedObjects().empty()) {
 		std::string s;
 
-		foreach(const entity_ptr& e, attached_objects()) {
+		foreach(const EntityPtr& e, attachedObjects()) {
 			if(s.empty() == false) {
 				s += ",";
 			}
@@ -895,8 +895,8 @@ variant custom_object::write() const
         res.add("velocity_y", velocity_y_);
     }
 	
-	if(platform_motion_x()) {
-		res.add("platform_motion_x", platform_motion_x());
+	if(getPlatformMotionX()) {
+		res.add("platform_motion_x", getPlatformMotionX());
 	}
 
 	if(getSolidDimensions() != type_->getSolidDimensions() ||
@@ -955,9 +955,9 @@ variant custom_object::write() const
 		res.add("collide_dimensions", collide_dim);
 	}
 
-	if(hitpoints_ != type_->hitpoints() || max_hitpoints_ != 0) {
+	if(hitpoints_ != type_->getHitpoints() || max_hitpoints_ != 0) {
 		res.add("hitpoints", hitpoints_);
-		res.add("max_hitpoints", type_->hitpoints() + max_hitpoints_);
+		res.add("max_hitpoints", type_->getHitpoints() + max_hitpoints_);
 	}
 
 #if defined(USE_SHADERS)
@@ -1004,11 +1004,11 @@ variant custom_object::write() const
 		res.add("zsub_order", zsub_order_);
 	}
 	
-    if(face_right() != 1){
-        res.add("face_right", face_right());
+    if(isFacingRight() != 1){
+        res.add("face_right", isFacingRight());
     }
         
-	if(upside_down()) {
+	if(isUpsideDown()) {
 		res.add("upside_down", true);
 	}
 
@@ -1050,7 +1050,7 @@ variant custom_object::write() const
 			continue;
 		}
 
-		if(!created_ && i->second.init && level::current_ptr() && level::current().in_editor() && !i->second.has_editor_info) {
+		if(!created_ && i->second.init && level::getCurrentPtr() && level::current().in_editor() && !i->second.has_editor_info) {
 			//In the editor try not to write out properties with an
 			//initializer, so they'll get inited when the level is
 			//actually started.
@@ -1169,14 +1169,14 @@ variant custom_object::write() const
 	return res.build();
 }
 
-void custom_object::setup_drawing() const
+void custom_object::setupDrawing() const
 {
 	if(distortion_) {
 		graphics::add_raster_distortion(distortion_.get());
 	}
 }
 
-void custom_object::draw_later(int xx, int yy) const
+void custom_object::drawLater(int xx, int yy) const
 {
 	// custom object evil hackery part one.
 	// Called nearer the end of rendering the scene, the
@@ -1216,7 +1216,7 @@ void custom_object::draw(int xx, int yy) const
 		adjusted_draw_position_.y = yy;
 	}
 
-	foreach(const entity_ptr& attached, attached_objects()) {
+	foreach(const EntityPtr& attached, attachedObjects()) {
 		if(attached->zorder() < zorder()) {
 			attached->draw(xx, yy);
 		}
@@ -1278,10 +1278,10 @@ void custom_object::draw(int xx, int yy) const
 		}
 
 		glm::mat4 flip(1.0f);
-		if(face_right()) {
+		if(isFacingRight()) {
 			flip = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f,1.0f,0.0f));
 		}
-		if(upside_down()) {
+		if(isUpsideDown()) {
 			flip = flip * glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f,0.0f,0.0f));
 		}
 		GLfloat scale = draw_scale_ ? GLfloat(draw_scale_->as_float()) : 1.0f;
@@ -1300,15 +1300,15 @@ void custom_object::draw(int xx, int yy) const
 #endif
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	} else if(draw_scale_) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()), GLfloat(draw_scale_->as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), GLfloat(draw_scale_->as_float()));
 	} else if(!draw_area_.get()) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	} else {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	}
 
 	if(blur_) {
@@ -1322,7 +1322,7 @@ void custom_object::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.to_color();
 				transform.to_color().set_as_current_color();
-				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, face_right(), upside_down(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 			}
 
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -1331,7 +1331,7 @@ void custom_object::draw(int xx, int yy) const
 		glColor4ub(255, 255, 255, 255);
 	}
 
-	foreach(const entity_ptr& attached, attached_objects()) {
+	foreach(const EntityPtr& attached, attachedObjects()) {
 		if(attached->zorder() >= zorder()) {
 			attached->draw(xx, yy);
 		}
@@ -1347,7 +1347,7 @@ void custom_object::draw(int xx, int yy) const
 	}
 #endif
 
-	draw_debug_rects();
+	drawDebugRects();
 
 	glPushMatrix();
 	glTranslatef(GLfloat(x()), GLfloat(y()), 0.0);
@@ -1369,7 +1369,7 @@ void custom_object::draw(int xx, int yy) const
 
 	if(text_ && text_->font && text_->alpha) {
 		glColor4ub(255, 255, 255, text_->alpha);
-		const int half_width = midpoint().x - draw_x;
+		const int half_width = getMidpoint().x - draw_x;
 		int xpos = draw_x;
 		if(text_->align == 0) {
 			xpos += half_width - text_->dimensions.w()/2;
@@ -1413,7 +1413,7 @@ void custom_object::draw(int xx, int yy) const
 
 		int pos = y();
 		for(int n = 0; n != left.size(); ++n) {
-			const int xpos = midpoint().x + 10;
+			const int xpos = getMidpoint().x + 10;
 			graphics::blit_texture(left[n], xpos, pos);
 			graphics::blit_texture(right[n], xpos + max_property_width + 10, pos);
 			pos += std::max(left[n].height(), right[n].height());
@@ -1422,10 +1422,10 @@ void custom_object::draw(int xx, int yy) const
 
 	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && level::current().in_editor())) {
 		std::vector<GLfloat> v;
-		const rect& r = platform_rect();
+		const rect& r = platformRect();
 		for(int x = 0; x < r.w(); x += 2) {
 			v.push_back(GLfloat(r.x() + x));
-			v.push_back(GLfloat(platform_rect_at(r.x() + x).y()));
+			v.push_back(GLfloat(platformRectAt(r.x() + x).y()));
 		}
 
 		if(!v.empty()) {
@@ -1479,7 +1479,7 @@ void custom_object::draw(int xx, int yy) const
 	}
 }
 
-void custom_object::draw_group() const
+void custom_object::drawGroup() const
 {
 	if(label().empty() == false && label()[0] != '_') {
 		blit_texture(font::render_text(label(), graphics::color_yellow(), 32), x(), y() + 26);
@@ -1495,13 +1495,13 @@ void custom_object::construct()
 	handleEvent(OBJECT_EVENT_CONSTRUCT);
 }
 
-bool custom_object::create_object()
+bool custom_object::createObject()
 {
 	if(!created_) {
 		validate_properties();
 		created_ = true;
 		handleEvent(OBJECT_EVENT_CREATE);
-		ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << debug_description() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized at end of on_create.");
+		ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << getDebugDescription() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized at end of on_create.");
 		return true;
 	}
 
@@ -1510,7 +1510,7 @@ bool custom_object::create_object()
 
 void custom_object::check_initialized()
 {
-	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << debug_description() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
+	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << getDebugDescription() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
 
 	validate_properties();
 }
@@ -1527,14 +1527,14 @@ void custom_object::process(level& lvl)
 		const b2Vec2 v = body_->get_body_ptr()->GetPosition();
 		const float a = body_->get_body_ptr()->GetAngle();
 		rotate_z_ = decimal(double(a) * 180.0 / M_PI);
-		set_x(int(v.x * world->scale() - (solid_rect().w() ? (solid_rect().w()/2) : current_frame().width()/2)));
-		set_y(int(v.y * world->scale() - (solid_rect().h() ? (solid_rect().h()/2) : current_frame().height()/2)));
-		//set_y(graphics::screen_height() - v.y * world->scale() - current_frame().height());
-		/*set_x((v.x + world->x1()) * graphics::screen_width() / (world->x2() - world->x1()));
+		setX(int(v.x * world->scale() - (solidRect().w() ? (solidRect().w()/2) : getCurrentFrame().width()/2)));
+		setY(int(v.y * world->scale() - (solidRect().h() ? (solidRect().h()/2) : getCurrentFrame().height()/2)));
+		//setY(graphics::screen_height() - v.y * world->scale() - getCurrentFrame().height());
+		/*setX((v.x + world->x1()) * graphics::screen_width() / (world->x2() - world->x1()));
 		if(world->y2() < 0) {
-			set_y(graphics::screen_height() - (v.y + world->y1()) * graphics::screen_height() / -(world->y2() + world->y1()));
+			setY(graphics::screen_height() - (v.y + world->y1()) * graphics::screen_height() / -(world->y2() + world->y1()));
 		} else {
-			set_y((v.y + world->y1()) * graphics::screen_height() / (world->y2() - world->y1()));
+			setY((v.y + world->y1()) * graphics::screen_height() / (world->y2() - world->y1()));
 		}*/
 	}
 #endif
@@ -1552,23 +1552,23 @@ void custom_object::process(level& lvl)
 			return;
 		}
 
-		if(level::current().is_editor_dragging_objects() && std::count(level::current().editor_selection().begin(), level::current().editor_selection().end(), entity_ptr(this))) {
+		if(level::current().is_editor_dragging_objects() && std::count(level::current().editor_selection().begin(), level::current().editor_selection().end(), EntityPtr(this))) {
 			//this object is being dragged and so gets frozen.
 			return;
 		}
 	}
 
 	collision_info debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_NONE, &debug_collide_info), "ENTITY " << debug_description() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->debug_description() : "THE LEVEL") << " AT START OF PROCESS");
+	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
 
 	if(parent_.get() != NULL) {
 		const point pos = parent_position();
-		const bool parent_facing = parent_->face_right();
-        const int parent_facing_sign = parent_->face_right() ? 1 : -1;
+		const bool parent_facing = parent_->isFacingRight();
+        const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
 
 		if(parent_prev_x_ != INT_MIN) {
-            set_mid_x(pos.x + (relative_x_ * parent_facing_sign));
-            set_mid_y(pos.y + relative_y_);
+            setMidX(pos.x + (relative_x_ * parent_facing_sign));
+            setMidY(pos.y + relative_y_);
    		}
 
 		parent_prev_x_ = pos.x;
@@ -1595,7 +1595,7 @@ void custom_object::process(level& lvl)
 	bool fired_collide_feet = false;
 
 	collision_info stand_info;
-	const bool started_standing = is_standing(lvl, &stand_info) != NOT_STANDING;
+	const bool started_standing = isStanding(lvl, &stand_info) != NOT_STANDING;
 	if(!started_standing && standing_on_) {
 		//if we were standing on something the previous frame, but aren't
 		//standing any longer, we use the value of what we were previously
@@ -1648,7 +1648,7 @@ void custom_object::process(level& lvl)
 		loaded_ = true;
 	}
 
-	create_object();
+	createObject();
 
 	if(cycle_ == 1) {
 		//these events are for backwards compatibility. It's not recommended
@@ -1657,7 +1657,7 @@ void custom_object::process(level& lvl)
 		handleEvent(OBJECT_EVENT_DONE_CREATE);
 	}
 
-	std::vector<variant> scheduled_commands = pop_scheduled_commands();
+	std::vector<variant> scheduled_commands = popScheduledCommands();
 	foreach(const variant& cmd, scheduled_commands) {
 		executeCommand(cmd);
 	}
@@ -1669,7 +1669,7 @@ void custom_object::process(level& lvl)
 		for(int i = 0; i != movement.size(); ++i) {
 			auto& move = movement[i];
 
-			if(move->pos >= move->animation_frames()) {
+			if(move->pos >= move->getAnimationFrames()) {
 				if(move->on_complete.is_null() == false) {
 					executeCommand(move->on_complete);
 				}
@@ -1703,7 +1703,7 @@ void custom_object::process(level& lvl)
 	}
 
 	for(const auto& p : follow_ons) {
-		add_animated_movement(p.first, p.second);
+		addAnimatedMovement(p.first, p.second);
 	}
 
 	if(position_schedule_.get() != NULL) {
@@ -1736,11 +1736,11 @@ void custom_object::process(level& lvl)
 			}
 
 			if(xpos != INT_MIN && ypos != INT_MIN) {
-				set_pos(xpos, ypos);
+				setPos(xpos, ypos);
 			} else if(xpos != INT_MIN) {
-				set_x(xpos);
+				setX(xpos);
 			} else if(ypos != INT_MIN) {
-				set_y(ypos);
+				setY(ypos);
 			}
 
 			if(position_schedule_->rotation.empty() == false) {
@@ -1794,7 +1794,7 @@ void custom_object::process(level& lvl)
 	}
 
 	rect water_bounds;
-	const bool is_underwater = solid() && lvl.is_underwater(solid_rect(), &water_bounds);
+	const bool is_underwater = solid() && lvl.isUnderwater(solidRect(), &water_bounds);
 	
 	if( is_underwater && !was_underwater_){
 		//event on_enter_water
@@ -1809,12 +1809,12 @@ void custom_object::process(level& lvl)
 	previous_water_bounds_ = water_bounds;
 	
 	if(type_->isStaticObject()) {
-		static_process(lvl);
+		staticProcess(lvl);
 		return;
 	}
 
 	const int traction_from_surface = (stand_info.traction*type_->traction())/1000;
-	velocity_x_ += (accel_x_ * (stand_info.traction ? traction_from_surface : (is_underwater?type_->getTractionInWater() : type_->getTractionInAir())) * (face_right() ? 1 : -1))/1000;
+	velocity_x_ += (accel_x_ * (stand_info.traction ? traction_from_surface : (is_underwater?type_->getTractionInWater() : type_->getTractionInAir())) * (isFacingRight() ? 1 : -1))/1000;
 	if(!standing_on_ && !started_standing || accel_y_ < 0) {
 		//do not accelerate downwards if standing on something.
 		velocity_y_ += accel_y_ * (gravity_shift_ + (is_underwater ? type_->getTractionInWater() : 1000))/1000;
@@ -1838,7 +1838,7 @@ void custom_object::process(level& lvl)
 	}
 
 	if(type_->isAffectedByCurrents()) {
-		lvl.get_current(*this, &velocity_x_, &velocity_y_);
+		lvl.getCurrent(*this, &velocity_x_, &velocity_y_);
 	}
 
 	bool collide = false;
@@ -1854,9 +1854,9 @@ void custom_object::process(level& lvl)
 	int platform_motion_x_movement = 0;
 	if(standing_on_) {
 
-		platform_motion_x_movement = standing_on_->platform_motion_x() + standing_on_->map_platform_pos(feet_x())*100;
-		effective_velocity_x += (standing_on_->feet_x() - standing_on_prev_x_)*100 + platform_motion_x_movement;
-		effective_velocity_y += (standing_on_->feet_y() - standing_on_prev_y_)*100;
+		platform_motion_x_movement = standing_on_->getPlatformMotionX() + standing_on_->mapPlatformPos(getFeetX())*100;
+		effective_velocity_x += (standing_on_->getFeetX() - standing_on_prev_x_)*100 + platform_motion_x_movement;
+		effective_velocity_y += (standing_on_->getFeetY() - standing_on_prev_y_)*100;
 	}
 
 	if(stand_info.collide_with != standing_on_ && stand_info.adjust_y) {
@@ -1869,19 +1869,19 @@ void custom_object::process(level& lvl)
 
 	if(effective_velocity_x || effective_velocity_y) {
 		if(!solid() && !type_->hasObjectLevelCollisions()) {
-			move_centipixels(effective_velocity_x, effective_velocity_y);
+			moveCentipixels(effective_velocity_x, effective_velocity_y);
 			effective_velocity_x = 0;
 			effective_velocity_y = 0;
 		} else if(!hasFeet() && solid()) {
-			move_centipixels(effective_velocity_x, effective_velocity_y);
-			if(is_flightpath_clear(lvl, *this, solid_rect())) {
+			moveCentipixels(effective_velocity_x, effective_velocity_y);
+			if(is_flightpath_clear(lvl, *this, solidRect())) {
 				effective_velocity_x = 0;
 				effective_velocity_y = 0;
 			} else {
 				//we can't guarantee smooth movement to this location, so
 				//roll the move back and we'll do a pixel-by-pixel move
 				//until we collide.
-				move_centipixels(-effective_velocity_x, -effective_velocity_y);
+				moveCentipixels(-effective_velocity_x, -effective_velocity_y);
 			}
 		}
 	}
@@ -1898,11 +1898,11 @@ void custom_object::process(level& lvl)
 		const int dir = effective_velocity_y > 0 ? 1 : -1;
 		int damage = 0;
 
-		const int original_centi_y = centi_y();
+		const int original_centi_y = centiY();
 
 		const int move_amount = std::min(std::max(move_left, 0), 100);
 		
-		const bool moved = move_centipixels(0, move_amount*dir);
+		const bool moved = moveCentipixels(0, move_amount*dir);
 		if(!moved) {
 			//we didn't actually move any pixels, so just abort.
 			break;
@@ -1917,15 +1917,15 @@ void custom_object::process(level& lvl)
 				//our 'legs' but not our feet collide with the level. Try to
 				//move one pixel to the left or right and see if either
 				//direction makes us no longer colliding.
-				set_x(x() + 1);
+				setX(x() + 1);
 				if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_RIGHT)) {
-					set_x(x() - 2);
+					setX(x() - 2);
 					if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_LEFT)) {
 						//moving in either direction fails to resolve the collision.
 						//This effectively means the object is 'stuck' in a small
 						//pit.
-						set_x(x() + 1);
-						move_centipixels(0, -move_amount*dir);
+						setX(x() + 1);
+						moveCentipixels(0, -move_amount*dir);
 						collide = true;
 						is_stuck = true;
 						break;
@@ -1938,12 +1938,12 @@ void custom_object::process(level& lvl)
 			//effective_velocity_y < 0 -- going up
 			if(entity_collides(lvl, *this, MOVE_UP, &collide_info)) {
 				collide = true;
-				move_centipixels(0, -move_amount*dir);
+				moveCentipixels(0, -move_amount*dir);
 				break;
 			}
 		}
 
-		if(!collide && !type_->hasIgnoreCollide() && effective_velocity_y > 0 && is_standing(lvl, &jump_on_info)) {
+		if(!collide && !type_->hasIgnoreCollide() && effective_velocity_y > 0 && isStanding(lvl, &jump_on_info)) {
 			if(!jump_on_info.collide_with || jump_on_info.collide_with != standing_on_) {
 				collide = true;
 				collide_info = jump_on_info;
@@ -2001,32 +2001,32 @@ void custom_object::process(level& lvl)
 
 	//If the object started out standing on a platform, keep it doing so.
 	if(standing_on_ && !fall_through_platforms_ && velocity_y_ >= 0) {
-		const int left_foot = feet_x() - type_->getFeetWidth();
-		const int right_foot = feet_x() + type_->getFeetWidth();
+		const int left_foot = getFeetX() - type_->getFeetWidth();
+		const int right_foot = getFeetX() + type_->getFeetWidth();
 
 		int target_y = INT_MAX;
-		rect area = standing_on_->platform_rect();
+		rect area = standing_on_->platformRect();
 		if(left_foot >= area.x() && left_foot < area.x() + area.w()) {
-			rect area = standing_on_->platform_rect_at(left_foot);
+			rect area = standing_on_->platformRectAt(left_foot);
 			target_y = area.y();
 		}
 
 		if(right_foot >= area.x() && right_foot < area.x() + area.w()) {
-			rect area = standing_on_->platform_rect_at(right_foot);
+			rect area = standing_on_->platformRectAt(right_foot);
 			if(area.y() < target_y) {
 				target_y = area.y();
 			}
 		}
 
 		if(target_y != INT_MAX) {
-			const int delta = target_y - feet_y();
+			const int delta = target_y - getFeetY();
 			const int dir = delta > 0 ? 1 : -1;
 			int nmoves = 0;
 			for(int n = 0; n != delta; n += dir) {
-				set_y(y()+dir);
+				setY(y()+dir);
 				++nmoves;
 				if(entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
-					set_y(y()-dir);
+					setY(y()-dir);
 					break;
 				}
 			}
@@ -2044,8 +2044,8 @@ void custom_object::process(level& lvl)
 	//detecting for collisions at each step, until we work out where exactly
 	//the collision occurs, and stop the object there.
 	for(int detect_collisions = 0; detect_collisions <= 1 && effective_velocity_x; ++detect_collisions) {
-		const int backup_centi_x = centi_x();
-		const int backup_centi_y = centi_y();
+		const int backup_centi_x = centiX();
+		const int backup_centi_y = centiY();
 
 
 		for(move_left = std::abs(effective_velocity_x); move_left > 0 && !collide && !type_->hasIgnoreCollide(); move_left -= 100) {
@@ -2053,24 +2053,24 @@ void custom_object::process(level& lvl)
 				handleEvent(OBJECT_EVENT_COLLIDE_LEVEL);
 			}
 
-			const STANDING_STATUS previous_standing = is_standing(lvl);
+			const STANDING_STATUS previous_standing = isStanding(lvl);
 
 			const int dir = effective_velocity_x > 0 ? 1 : -1;
-			const int original_centi_y = centi_y();
+			const int original_centi_y = centiY();
 
 			const int move_amount = std::min(std::max(move_left, 0), 100);
 		
-			const bool moved = move_centipixels(move_amount*dir, 0);
+			const bool moved = moveCentipixels(move_amount*dir, 0);
 			if(!moved) {
 				//we didn't actually move any pixels, so just abort.
 				break;
 			}
 
-			const int left_foot = feet_x() - type_->getFeetWidth();
-			const int right_foot = feet_x() + type_->getFeetWidth();
+			const int left_foot = getFeetX() - type_->getFeetWidth();
+			const int right_foot = getFeetX() + type_->getFeetWidth();
 			bool place_on_object = false;
 			if(standing_on_ && !fall_through_platforms_ && velocity_y_ >= 0) {
-				rect area = standing_on_->platform_rect();
+				rect area = standing_on_->platformRect();
 				if(left_foot >= area.x() && left_foot < area.x() + area.w() ||
 					right_foot >= area.x() && right_foot < area.x() + area.w()) {
 					place_on_object = true;
@@ -2081,28 +2081,28 @@ void custom_object::process(level& lvl)
 			//move the character up or down as appropriate to try to keep
 			//them standing.
 
-			const STANDING_STATUS standing = is_standing(lvl);
+			const STANDING_STATUS standing = isStanding(lvl);
 			if(place_on_object) {
 				int target_y = INT_MAX;
-				rect area = standing_on_->platform_rect();
+				rect area = standing_on_->platformRect();
 				if(left_foot >= area.x() && left_foot < area.x() + area.w()) {
-					const rect area = standing_on_->platform_rect_at(left_foot);
+					const rect area = standing_on_->platformRectAt(left_foot);
 					target_y = area.y();
 				}
 
 				if(right_foot >= area.x() && right_foot < area.x() + area.w()) {
-					const rect area = standing_on_->platform_rect_at(right_foot);
+					const rect area = standing_on_->platformRectAt(right_foot);
 					if(area.y() < target_y) {
 						target_y = area.y();
 					}
 				}
 
-				const int delta = target_y - feet_y();
+				const int delta = target_y - getFeetY();
 				const int dir = delta > 0 ? 1 : -1;
 				for(int n = 0; n != delta; n += dir) {
-					set_y(y()+dir);
+					setY(y()+dir);
 					if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
-						set_y(y()-dir);
+						setY(y()-dir);
 						break;
 					}
 				}
@@ -2113,18 +2113,18 @@ void custom_object::process(level& lvl)
 				//if the object is trying to walk down stairs, in which case
 				//we look downwards first, otherwise we look upwards first,
 				//then downwards.
-				int dir = walk_up_or_down_stairs() > 0 ? 1 : -1;
+				int dir = walkUpOrDownStairs() > 0 ? 1 : -1;
 
 				for(int tries = 0; tries != 2; ++tries) {
 					bool resolved = false;
 					const int SearchRange = 2;
 					for(int n = 0; n != SearchRange; ++n) {
-						set_y(y()+dir);
+						setY(y()+dir);
 						if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
 							break;
 						}
 
-						if(is_standing(lvl) >= previous_standing) {
+						if(isStanding(lvl) >= previous_standing) {
 							resolved = true;
 							break;
 						}
@@ -2135,7 +2135,7 @@ void custom_object::process(level& lvl)
 					}
 
 					dir *= -1;
-					set_centi_y(original_centi_y);
+					setCentiY(original_centi_y);
 				}
 			} else if(standing) {
 				if(!vertical_landed && !started_standing && !standing_on_) {
@@ -2153,14 +2153,14 @@ void custom_object::process(level& lvl)
 				//However, if there is a platform immediately above us, we only
 				//adjust our feet upward if the object is trying to walk up
 				//stairs, normally by the player pressing up while walking.
-				const int begin_y = feet_y();
+				const int begin_y = getFeetY();
 				int max_slope = 5;
-				while(--max_slope && is_standing(lvl, &slope_standing_info)) {
-					if(slope_standing_info.platform && walk_up_or_down_stairs() >= 0) {
+				while(--max_slope && isStanding(lvl, &slope_standing_info)) {
+					if(slope_standing_info.platform && walkUpOrDownStairs() >= 0) {
 						if(max_slope == 4) {
 							//we always move at least one pixel up, if there is
 							//solid, otherwise we'll fall through.
-							set_y(y()-1);
+							setY(y()-1);
 							if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
 								collide_head = true;
 								break;
@@ -2169,7 +2169,7 @@ void custom_object::process(level& lvl)
 						break;
 					}
 	
-					set_y(y()-1);
+					setY(y()-1);
 					if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
 						collide_head = true;
 						break;
@@ -2177,41 +2177,41 @@ void custom_object::process(level& lvl)
 				}
 	
 				if(!max_slope || collide_head) {
-					set_centi_y(original_centi_y);
+					setCentiY(original_centi_y);
 				} else {
-					set_y(y()+1);
+					setY(y()+1);
 				}
 	
-				if(walk_up_or_down_stairs() > 0) {
+				if(walkUpOrDownStairs() > 0) {
 					//if we are trying to walk down stairs and we're on a platform
 					//and one pixel below is walkable, then we move down by
 					//one pixel.
-					is_standing(lvl, &slope_standing_info);
+					isStanding(lvl, &slope_standing_info);
 					if(slope_standing_info.platform) {
-						set_y(y()+1);
-						if(!is_standing(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DOWN)) {
-							set_y(y()-1);
+						setY(y()+1);
+						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DOWN)) {
+							setY(y()-1);
 						}
 					}
 				}
 			}
 
-			if(detect_collisions && entity_collides(lvl, *this, centi_y() != original_centi_y ? MOVE_NONE : (dir > 0 ? MOVE_RIGHT : MOVE_LEFT), &collide_info)) {
+			if(detect_collisions && entity_collides(lvl, *this, centiY() != original_centi_y ? MOVE_NONE : (dir > 0 ? MOVE_RIGHT : MOVE_LEFT), &collide_info)) {
 				collide = true;
 			}
 
 			if(collide) {
 				//undo the move to cancel out the collision
-				move_centipixels(-dir*move_amount, 0);
-				set_centi_y(original_centi_y);
+				moveCentipixels(-dir*move_amount, 0);
+				setCentiY(original_centi_y);
 				break;
 			}
 		}
 
 		if(!detect_collisions) {
 			if(entity_collides(lvl, *this, MOVE_NONE)) {
-				set_centi_x(backup_centi_x);
-				set_centi_y(backup_centi_y);
+				setCentiX(backup_centi_x);
+				setCentiY(backup_centi_y);
 			} else {
 				break;
 			}
@@ -2246,19 +2246,19 @@ void custom_object::process(level& lvl)
 
 	stand_info = collision_info();
 	if(velocity_y_ >= 0) {
-		is_standing(lvl, &stand_info);
+		isStanding(lvl, &stand_info);
 	}
 
 	if(stand_info.collide_with && standing_on_ != stand_info.collide_with &&
-	   effective_velocity_y < stand_info.collide_with->velocity_y()) {
+	   effective_velocity_y < stand_info.collide_with->velocityY()) {
 		stand_info.collide_with = NULL;
 	}
 
 	if(standing_on_ && standing_on_ != stand_info.collide_with) {
 		//we were previously standing on an object and we're not anymore.
 		//add the object we were standing on's velocity to ours
-		velocity_x_ += standing_on_->last_move_x()*100 + platform_motion_x_movement;
-		velocity_y_ += standing_on_->last_move_y()*100;
+		velocity_x_ += standing_on_->getLastMoveX()*100 + platform_motion_x_movement;
+		velocity_y_ += standing_on_->getLastMoveY()*100;
 	}
 
 	if(stand_info.collide_with && standing_on_ != stand_info.collide_with) {
@@ -2267,7 +2267,7 @@ void custom_object::process(level& lvl)
 
 		//we are standing on a new object. Adjust our velocity relative to
 		//the object we're standing on
-		velocity_x_ -= stand_info.collide_with->last_move_x()*100 + stand_info.collide_with->platform_motion_x();
+		velocity_x_ -= stand_info.collide_with->getLastMoveX()*100 + stand_info.collide_with->getPlatformMotionX();
 		velocity_y_ = 0;
 
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
@@ -2279,8 +2279,8 @@ void custom_object::process(level& lvl)
 
 	standing_on_ = stand_info.collide_with;
 	if(standing_on_) {
-		standing_on_prev_x_ = standing_on_->feet_x();
-		standing_on_prev_y_ = standing_on_->feet_y();
+		standing_on_prev_x_ = standing_on_->getFeetX();
+		standing_on_prev_y_ = standing_on_->getFeetY();
 	}
 
 	if(lvl.players().empty() == false) {
@@ -2292,7 +2292,7 @@ void custom_object::process(level& lvl)
 	}
 
 	if(blur_) {
-		blur_->nextFrame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, face_right(), upside_down(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
+		blur_->nextFrame(start_x, start_y, x(), y(), frame_.get(), time_in_frame_, isFacingRight(), isUpsideDown(), float(start_rotate.as_float()), float(rotate_z_.as_float()));
 		if(blur_->destroyed()) {
 			blur_.reset();
 		}
@@ -2318,16 +2318,16 @@ void custom_object::process(level& lvl)
 	}
 #endif
 
-	if(level::current().cycle() > int(get_mouseover_trigger_cycle())) {
-		if(is_mouse_over_entity() == false) {
+	if(level::current().cycle() > int(getMouseoverTriggerCycle())) {
+		if(isMouseOverEntity() == false) {
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			int mx, my;
 			input::sdl_get_mouse_state(&mx, &my);
 			callable->add("mouse_x", variant(mx));
 			callable->add("mouse_y", variant(my));
 			handleEvent("mouse_enter", callable.get());
-			set_mouse_over_entity();
-			set_mouseover_trigger_cycle(INT_MAX);
+			setMouseOverEntity();
+			setMouseoverTriggerCycle(INT_MAX);
 		}
 	}
 
@@ -2335,10 +2335,10 @@ void custom_object::process(level& lvl)
 		w->process();
 	}
 
-	static_process(lvl);
+	staticProcess(lvl);
 }
 
-void custom_object::static_process(level& lvl)
+void custom_object::staticProcess(level& lvl)
 {
 	handleEvent(OBJECT_EVENT_PROCESS);
 	handleEvent(frame_->processEvent_id());
@@ -2368,10 +2368,10 @@ void custom_object::set_driver_position()
 {
 	if(driver_) {
 		const int pos_right = x() + type_->getPassengerX();
-		const int pos_left = x() + current_frame().width() - driver_->current_frame().width() - type_->getPassengerX();
-		driver_->set_face_right(face_right());
+		const int pos_left = x() + getCurrentFrame().width() - driver_->getCurrentFrame().width() - type_->getPassengerX();
+		driver_->setFacingRight(isFacingRight());
 
-		driver_->set_pos(face_right() ? pos_right : pos_left, y() + type_->getPassengerY());
+		driver_->setPos(isFacingRight() ? pos_right : pos_left, y() + type_->getPassengerY());
 	}
 }
 
@@ -2392,12 +2392,12 @@ int custom_object::zSubOrder() const
 	return zsub_order_;
 }
 
-int custom_object::velocity_x() const
+int custom_object::velocityX() const
 {
 	return velocity_x_;
 }
 
-int custom_object::velocity_y() const
+int custom_object::velocityY() const
 {
 	return velocity_y_;
 }
@@ -2417,9 +2417,9 @@ bool custom_object::hasFeet() const
 	return has_feet_ && solid();
 }
 
-bool custom_object::is_standable(int xpos, int ypos, int* friction, int* traction, int* adjust_y) const
+bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction, int* adjust_y) const
 {
-	if(!isBodyPassthrough() && !isBodyHarmful() && point_collides(xpos, ypos)) {
+	if(!isBodyPassthrough() && !isBodyHarmful() && pointCollides(xpos, ypos)) {
 		if(friction) {
 			*friction = type_->getSurfaceFriction();
 		}
@@ -2430,10 +2430,10 @@ bool custom_object::is_standable(int xpos, int ypos, int* friction, int* tractio
 
 		if(adjust_y) {
 			if(type_->useImageForCollisions()) {
-				for(*adjust_y = 0; point_collides(xpos, ypos - *adjust_y - 1); --(*adjust_y)) {
+				for(*adjust_y = 0; pointCollides(xpos, ypos - *adjust_y - 1); --(*adjust_y)) {
 				}
 			} else {
-				*adjust_y = ypos - body_rect().y();
+				*adjust_y = ypos - getBodyRect().y();
 			}
 		}
 
@@ -2480,25 +2480,25 @@ bool custom_object::destroyed() const
 	return hitpoints_ <= 0;
 }
 
-bool custom_object::point_collides(int xpos, int ypos) const
+bool custom_object::pointCollides(int xpos, int ypos) const
 {
 	if(type_->useImageForCollisions()) {
-		const bool result = !current_frame().is_alpha(xpos - x(), ypos - y(), time_in_frame_, face_right());
+		const bool result = !getCurrentFrame().isAlpha(xpos - x(), ypos - y(), time_in_frame_, isFacingRight());
 		return result;
 	} else {
-		return pointInRect(point(xpos, ypos), body_rect());
+		return pointInRect(point(xpos, ypos), getBodyRect());
 	}
 }
 
-bool custom_object::rect_collides(const rect& r) const
+bool custom_object::rectCollides(const rect& r) const
 {
 	if(type_->useImageForCollisions()) {
-		rect myrect(x(), y(), current_frame().width(), current_frame().height());
+		rect myrect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height());
 		if(rects_intersect(myrect, r)) {
 			rect intersection = intersection_rect(myrect, r);
 			for(int y = intersection.y(); y < intersection.y2(); ++y) {
 				for(int x = intersection.x(); x < intersection.x2(); ++x) {
-					if(point_collides(x, y)) {
+					if(pointCollides(x, y)) {
 						return true;
 					}
 				}
@@ -2509,17 +2509,17 @@ bool custom_object::rect_collides(const rect& r) const
 			return false;
 		}
 	} else {
-		return rects_intersect(r, body_rect());
+		return rects_intersect(r, getBodyRect());
 	}
 }
 
-const_solid_info_ptr custom_object::calculate_solid() const
+const_solid_info_ptr custom_object::calculateSolid() const
 {
 	if(!type_->hasSolid()) {
 		return const_solid_info_ptr();
 	}
 
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 	if(f.solid()) {
 		return f.solid();
 	}
@@ -2527,7 +2527,7 @@ const_solid_info_ptr custom_object::calculate_solid() const
 	return type_->solid();
 }
 
-const_solid_info_ptr custom_object::calculate_platform() const
+const_solid_info_ptr custom_object::calculatePlatform() const
 {
 	if(platform_solid_info_.get()) {
 		return platform_solid_info_;
@@ -2545,7 +2545,7 @@ void custom_object::control(const level& lvl)
 {
 }
 
-custom_object::STANDING_STATUS custom_object::is_standing(const level& lvl, collision_info* info) const
+custom_object::STANDING_STATUS custom_object::isStanding(const level& lvl, collision_info* info) const
 {
 	if(!hasFeet()) {
 		return NOT_STANDING;
@@ -2554,19 +2554,19 @@ custom_object::STANDING_STATUS custom_object::is_standing(const level& lvl, coll
 	const int width = type_->getFeetWidth();
 
 	if(width >= 1) {
-		const int facing = face_right() ? 1 : -1;
-		if(point_standable(lvl, *this, feet_x() + width*facing, feet_y(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
+		const int facing = isFacingRight() ? 1 : -1;
+		if(point_standable(lvl, *this, getFeetX() + width*facing, getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
 			return STANDING_FRONT_FOOT;
 		}
 
-		if(point_standable(lvl, *this, feet_x() - width*facing, feet_y(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
+		if(point_standable(lvl, *this, getFeetX() - width*facing, getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
 			return STANDING_BACK_FOOT;
 		}
 
 		return NOT_STANDING;
 	}
 
-	if(point_standable(lvl, *this, feet_x(), feet_y(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
+	if(point_standable(lvl, *this, getFeetX(), getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
 		return STANDING_FRONT_FOOT;
 	} else {
 		return NOT_STANDING;
@@ -2617,16 +2617,16 @@ void custom_object::run_garbage_collection()
 
 	std::cerr << "RUNNING GARBAGE COLLECTION FOR " << getAll().size() << " OBJECTS...\n";
 
-	std::vector<entity_ptr> references;
+	std::vector<EntityPtr> references;
 	foreach(custom_object* obj, getAll()) {
-		references.push_back(entity_ptr(obj));
+		references.push_back(EntityPtr(obj));
 	}
 
 	std::set<const void*> safe;
 	std::vector<gc_object_reference> refs;
 
 	foreach(custom_object* obj, getAll()) {
-		obj->extract_gc_object_references(refs);
+		obj->extractGcObjectReferences(refs);
 	}
 	
 	for(int pass = 1;; ++pass) {
@@ -2649,7 +2649,7 @@ void custom_object::run_garbage_collection()
 			}
 
 			if(safe.count(ref.owner)) {
-				restore_gc_object_reference(ref);
+				restoreGcObjectReference(ref);
 				ref.owner = NULL;
 			}
 		}
@@ -2670,7 +2670,7 @@ void custom_object::run_garbage_collection()
 	std::cerr << "RAN GARBAGE COLLECTION IN " << (SDL_GetTicks() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
 }
 
-void custom_object::being_removed()
+void custom_object::beingRemoved()
 {
 	handleEvent(OBJECT_EVENT_BEING_REMOVED);
 #if defined(USE_BOX2D)
@@ -2680,7 +2680,7 @@ void custom_object::being_removed()
 #endif
 }
 
-void custom_object::being_added()
+void custom_object::beingAdded()
 {
 #if defined(USE_BOX2D)
 	if(body_) {
@@ -2690,17 +2690,17 @@ void custom_object::being_added()
 	handleEvent(OBJECT_EVENT_BEING_ADDED);
 }
 
-void custom_object::set_animated_schedule(std::shared_ptr<AnimatedMovement> movement)
+void custom_object::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement)
 {
 	assert(movement.get() != NULL);
 	animated_movement_.push_back(movement);
 }
 
-void custom_object::add_animated_movement(variant attr_var, variant options)
+void custom_object::addAnimatedMovement(variant attr_var, variant options)
 {
 	const std::string& name = options["name"].as_string_default("");
 	if(options["replace_existing"].as_bool(false)) {
-		cancel_animated_schedule(name);
+		cancelAnimatedSchedule(name);
 	} else if(name != "") {
 		for(auto move : animated_movement_) {
 			if(move->name == name) {
@@ -2765,10 +2765,10 @@ void custom_object::add_animated_movement(variant attr_var, variant options)
 	movement->on_process = options["on_process"];
 	movement->on_complete = options["on_complete"];
 
-	set_animated_schedule(movement);
+	setAnimatedSchedule(movement);
 }
 
-void custom_object::cancel_animated_schedule(const std::string& name)
+void custom_object::cancelAnimatedSchedule(const std::string& name)
 {
 	if(name.empty()) {
 		animated_movement_.clear();
@@ -2804,7 +2804,7 @@ class event_handlers_callable : public FormulaCallable {
 		static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
 		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
-		obj_->set_event_handler(get_object_event_id(key), f);
+		obj_->setEventHandler(get_object_event_id(key), f);
 	}
 public:
 	explicit event_handlers_callable(const custom_object& obj) : obj_(const_cast<custom_object*>(&obj))
@@ -2819,7 +2819,7 @@ class widgets_callable : public FormulaCallable {
 
 	variant getValue(const std::string& key) const {
 		if(key == "children") {
-			std::vector<variant> v = obj_->get_variant_widget_list();
+			std::vector<variant> v = obj_->getVariantWidgetList();
 			return variant(&v);
 		}
 		return variant(obj_->getWidgetById(key).get());
@@ -2832,7 +2832,7 @@ class widgets_callable : public FormulaCallable {
 			if(new_widget->id().empty() == false) {
 				gui::WidgetPtr existing = obj_->getWidgetById(new_widget->id());
 				if(existing != NULL) {
-					obj_->remove_widget(existing);
+					obj_->removeWidget(existing);
 				}
 			}
 
@@ -2842,12 +2842,12 @@ class widgets_callable : public FormulaCallable {
 		if(value.is_null()) {
 			gui::WidgetPtr w = obj_->getWidgetById(key);
 			if(w != NULL) {
-				obj_->remove_widget(w);
+				obj_->removeWidget(w);
 			}
 		} else {
 			gui::WidgetPtr w = obj_->getWidgetById(key);
 			ASSERT_LOG(w != NULL, "no widget with identifier " << key << " found");
-			obj_->remove_widget(w);
+			obj_->removeWidget(w);
 			obj_->addWidget(widget_factory::create(value, obj_.get()));
 		}
 	}
@@ -2918,12 +2918,12 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_LIB:               return variant(game_logic::get_library_object().get());
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION: return variant(time_in_frame_);
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION_DELTA: return variant(time_in_frame_delta_);
-	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(current_frame().frame_number(time_in_frame_));
+	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frame_number(time_in_frame_));
 	case CUSTOM_OBJECT_LEVEL:             return variant(&level::current());
 	case CUSTOM_OBJECT_ANIMATION:         return frame_->variant_id();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
-	case CUSTOM_OBJECT_MAX_HITPOINTS:     return variant(type_->hitpoints() + max_hitpoints_);
+	case CUSTOM_OBJECT_MAX_HITPOINTS:     return variant(type_->getHitpoints() + max_hitpoints_);
 	case CUSTOM_OBJECT_MASS:              return variant(type_->mass());
 	case CUSTOM_OBJECT_LABEL:             return variant(label());
 	case CUSTOM_OBJECT_X:                 return variant(x());
@@ -2939,11 +2939,11 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_ZSUB_ORDER:        return variant(zsub_order_);
     case CUSTOM_OBJECT_RELATIVE_X:        return variant(relative_x_);
 	case CUSTOM_OBJECT_RELATIVE_Y:        return variant(relative_y_);
-	case CUSTOM_OBJECT_SPAWNED_BY:        if(spawned_by().empty()) return variant(); else return variant(level::current().get_entity_by_label(spawned_by()).get());
+	case CUSTOM_OBJECT_SPAWNED_BY:        if(wasSpawnedBy().empty()) return variant(); else return variant(level::current().get_entity_by_label(wasSpawnedBy()).get());
 	case CUSTOM_OBJECT_SPAWNED_CHILDREN: {
 		std::vector<variant> children;
-		foreach(const entity_ptr& e, level::current().get_chars()) {
-			if(e->spawned_by() == label()) {
+		foreach(const EntityPtr& e, level::current().get_chars()) {
+			if(e->wasSpawnedBy() == label()) {
 				children.push_back(variant(e.get()));
 			}
 		}
@@ -2953,54 +2953,54 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_PARENT:            return variant(parent_.get());
 	case CUSTOM_OBJECT_PIVOT:             return variant(parent_pivot_);
 	case CUSTOM_OBJECT_PREVIOUS_Y:        return variant(previous_y_);
-	case CUSTOM_OBJECT_X1:                return variant(solid_rect().x());
-	case CUSTOM_OBJECT_X2:                return variant(solid_rect().w() ? solid_rect().x2() : x() + current_frame().width());
-	case CUSTOM_OBJECT_Y1:                return variant(solid_rect().y());
-	case CUSTOM_OBJECT_Y2:                return variant(solid_rect().h() ? solid_rect().y2() : y() + current_frame().height());
-	case CUSTOM_OBJECT_W:                 return variant(solid_rect().w());
-	case CUSTOM_OBJECT_H:                 return variant(solid_rect().h());
+	case CUSTOM_OBJECT_X1:                return variant(solidRect().x());
+	case CUSTOM_OBJECT_X2:                return variant(solidRect().w() ? solidRect().x2() : x() + getCurrentFrame().width());
+	case CUSTOM_OBJECT_Y1:                return variant(solidRect().y());
+	case CUSTOM_OBJECT_Y2:                return variant(solidRect().h() ? solidRect().y2() : y() + getCurrentFrame().height());
+	case CUSTOM_OBJECT_W:                 return variant(solidRect().w());
+	case CUSTOM_OBJECT_H:                 return variant(solidRect().h());
 
 	case CUSTOM_OBJECT_ACTIVATION_BORDER: return variant(activation_border_);
 	case CUSTOM_OBJECT_MID_X:
-	case CUSTOM_OBJECT_MIDPOINT_X:        return variant(solid_rect().w() ? solid_rect().x() + solid_rect().w()/2 : x() + current_frame().width()/2);
+	case CUSTOM_OBJECT_MIDPOINT_X:        return variant(solidRect().w() ? solidRect().x() + solidRect().w()/2 : x() + getCurrentFrame().width()/2);
 	case CUSTOM_OBJECT_MID_Y:
-	case CUSTOM_OBJECT_MIDPOINT_Y:        return variant(solid_rect().h() ? solid_rect().y() + solid_rect().h()/2 : y() + current_frame().height()/2);
+	case CUSTOM_OBJECT_MIDPOINT_Y:        return variant(solidRect().h() ? solidRect().y() + solidRect().h()/2 : y() + getCurrentFrame().height()/2);
 	case CUSTOM_OBJECT_MID_XY:
 	case CUSTOM_OBJECT_MIDPOINT_XY: {
 		return two_element_variant_list(
-			variant(solid_rect().w() ? solid_rect().x() + solid_rect().w()/2 : x() + current_frame().width()/2),
-			variant(solid_rect().h() ? solid_rect().y() + solid_rect().h()/2 : y() + current_frame().height()/2));
+			variant(solidRect().w() ? solidRect().x() + solidRect().w()/2 : x() + getCurrentFrame().width()/2),
+			variant(solidRect().h() ? solidRect().y() + solidRect().h()/2 : y() + getCurrentFrame().height()/2));
 	}
 
-	case CUSTOM_OBJECT_SOLID_RECT:        return variant(solid_rect().callable());
-	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solid_rect().x() + solid_rect().w()/2);
-	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solid_rect().y() + solid_rect().h()/2);
+	case CUSTOM_OBJECT_SOLID_RECT:        return variant(solidRect().callable());
+	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solidRect().x() + solidRect().w()/2);
+	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solidRect().y() + solidRect().h()/2);
 	case CUSTOM_OBJECT_SOLID_MID_XY: {
 		return two_element_variant_list(
-			variant(solid_rect().x() + solid_rect().w()/2),
-			variant(solid_rect().y() + solid_rect().h()/2));
+			variant(solidRect().x() + solidRect().w()/2),
+			variant(solidRect().y() + solidRect().h()/2));
 	}
-	case CUSTOM_OBJECT_IMG_MID_X:       return variant(x() + current_frame().width()/2);
-	case CUSTOM_OBJECT_IMG_MID_Y:       return variant(y() + current_frame().height()/2);
+	case CUSTOM_OBJECT_IMG_MID_X:       return variant(x() + getCurrentFrame().width()/2);
+	case CUSTOM_OBJECT_IMG_MID_Y:       return variant(y() + getCurrentFrame().height()/2);
 	case CUSTOM_OBJECT_IMG_MID_XY: {
 		return two_element_variant_list(
-			variant(x() + current_frame().width()/2),
-			variant(y() + current_frame().height()/2));
+			variant(x() + getCurrentFrame().width()/2),
+			variant(y() + getCurrentFrame().height()/2));
 	}
-	case CUSTOM_OBJECT_IMG_W:             return variant(current_frame().width());
-	case CUSTOM_OBJECT_IMG_H:             return variant(current_frame().height());
+	case CUSTOM_OBJECT_IMG_W:             return variant(getCurrentFrame().width());
+	case CUSTOM_OBJECT_IMG_H:             return variant(getCurrentFrame().height());
 	case CUSTOM_OBJECT_IMG_WH: {
 		return two_element_variant_list(
-			variant(current_frame().width()),
-			variant(current_frame().height()));
+			variant(getCurrentFrame().width()),
+			variant(getCurrentFrame().height()));
 	}
-	case CUSTOM_OBJECT_FRONT:             return variant(face_right() ? body_rect().x2() : body_rect().x());
-	case CUSTOM_OBJECT_BACK:              return variant(face_right() ? body_rect().x() : body_rect().x2());
+	case CUSTOM_OBJECT_FRONT:             return variant(isFacingRight() ? getBodyRect().x2() : getBodyRect().x());
+	case CUSTOM_OBJECT_BACK:              return variant(isFacingRight() ? getBodyRect().x() : getBodyRect().x2());
 	case CUSTOM_OBJECT_CYCLE:             return variant(cycle_);
-	case CUSTOM_OBJECT_FACING:            return variant(face_right() ? 1 : -1);
-	case CUSTOM_OBJECT_UPSIDE_DOWN:       return variant(upside_down() ? 1 : -1);
-	case CUSTOM_OBJECT_UP:                return variant(upside_down() ? 1 : -1);
-	case CUSTOM_OBJECT_DOWN:              return variant(upside_down() ? -1 : 1);
+	case CUSTOM_OBJECT_FACING:            return variant(isFacingRight() ? 1 : -1);
+	case CUSTOM_OBJECT_UPSIDE_DOWN:       return variant(isUpsideDown() ? 1 : -1);
+	case CUSTOM_OBJECT_UP:                return variant(isUpsideDown() ? 1 : -1);
+	case CUSTOM_OBJECT_DOWN:              return variant(isUpsideDown() ? -1 : 1);
 	case CUSTOM_OBJECT_VELOCITY_X:        return variant(velocity_x_);
 	case CUSTOM_OBJECT_VELOCITY_Y:        return variant(velocity_y_);
 	case CUSTOM_OBJECT_VELOCITY_XY: {
@@ -3020,7 +3020,7 @@ variant custom_object::getValue_by_slot(int slot) const
 			variant(accel_y_));
 	}
 	case CUSTOM_OBJECT_GRAVITY_SHIFT:     return variant(gravity_shift_);
-	case CUSTOM_OBJECT_PLATFORM_MOTION_X: return variant(platform_motion_x());
+	case CUSTOM_OBJECT_PLATFORM_MOTION_X: return variant(getPlatformMotionX());
 	case CUSTOM_OBJECT_REGISTRY:          return variant(preferences::registry());
 	case CUSTOM_OBJECT_GLOBALS:           return variant(global_vars().get());
 	case CUSTOM_OBJECT_VARS:              return variant(vars_.get());
@@ -3038,28 +3038,28 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_BLUE:              return variant(draw_color().b());
 	case CUSTOM_OBJECT_ALPHA:             return variant(draw_color().a());
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
-	case CUSTOM_OBJECT_DAMAGE:            return variant(current_frame().damage());
+	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
 	case CUSTOM_OBJECT_DISTORTION:        return variant(distortion_.get());
-	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || is_standing(level::current()));
+	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(level::current()));
 	case CUSTOM_OBJECT_STANDING_INFO:     {
 		collision_info info;
-		is_standing(level::current(), &info);
+		isStanding(level::current(), &info);
 		if(info.surf_info && info.surf_info->info) {
 			return variant(*info.surf_info->info);
 		} else {
 			return variant();
 		}
 	}
-	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(is_standing(level::current()) && cliff_edge_within(level::current(), feet_x(), feet_y(), face_dir()*15));
-	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(level::current(), feet_x(), feet_y(), face_dir()));
+	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(level::current()) && cliff_edge_within(level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
+	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(level::current(), getFeetX(), getFeetY(), getFaceDir()));
 	case CUSTOM_OBJECT_SLOPE_STANDING_ON: {
 		if(standing_on_ && standing_on_->platform() && !standing_on_->isSolidPlatform()) {
-			return variant(standing_on_->platform_slope_at(feet_x()));
+			return variant(standing_on_->platformSlopeAt(getFeetX()));
 		}
-		return variant(-slope_standing_on(6)*face_dir());
+		return variant(-slopeStandingOn(6)*getFaceDir());
 	}
-	case CUSTOM_OBJECT_UNDERWATER:        return variant(level::current().is_underwater(solid() ? solid_rect() : rect(x(), y(), current_frame().width(), current_frame().height())));
+	case CUSTOM_OBJECT_UNDERWATER:        return variant(level::current().isUnderwater(solid() ? solidRect() : rect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height())));
 	case CUSTOM_OBJECT_PREVIOUS_WATER_BOUNDS: {
 		std::vector<variant> v;
 		v.push_back(variant(previous_water_bounds_.x()));
@@ -3071,7 +3071,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_WATER_BOUNDS: {
 		rect area;
-		if(level::current().is_underwater(solid_rect(), &area)) {
+		if(level::current().isUnderwater(solidRect(), &area)) {
 			std::vector<variant> v;
 			v.push_back(variant(area.x()));
 			v.push_back(variant(area.y()));
@@ -3084,7 +3084,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_WATER_OBJECT: {
 		variant v;
-		level::current().is_underwater(solid_rect(), NULL, &v);
+		level::current().isUnderwater(solidRect(), NULL, &v);
 		return v;
 	}
 	case CUSTOM_OBJECT_DRIVER:            return variant(driver_ ? driver_.get() : this);
@@ -3099,7 +3099,7 @@ variant custom_object::getValue_by_slot(int slot) const
 		}
 
 		collision_info info;
-		is_standing(level::current(), &info);
+		isStanding(level::current(), &info);
 		return variant(info.platform);
 	}
 
@@ -3108,9 +3108,9 @@ variant custom_object::getValue_by_slot(int slot) const
 			return variant(standing_on_.get());
 		}
 
-		entity_ptr stand_on;
+		EntityPtr stand_on;
 		collision_info info;
-		is_standing(level::current(), &info);
+		isStanding(level::current(), &info);
 		return variant(info.collide_with.get());
 	}
 
@@ -3170,7 +3170,7 @@ variant custom_object::getValue_by_slot(int slot) const
 
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<variant> result;
-		foreach(const entity_ptr& e, attached_objects()) {
+		foreach(const EntityPtr& e, attachedObjects()) {
 			result.push_back(variant(e.get()));
 		}
 
@@ -3255,7 +3255,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_WIDGET_LIST: {
-		std::vector<variant> v = get_variant_widget_list();
+		std::vector<variant> v = getVariantWidgetList();
 		return variant(&v);
 	}
 
@@ -3327,10 +3327,10 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_CTRL_ATTACK:
 	case CUSTOM_OBJECT_CTRL_JUMP:
 	case CUSTOM_OBJECT_CTRL_TONGUE:
-		return variant::from_bool(control_status(static_cast<controls::CONTROL_ITEM>(slot - CUSTOM_OBJECT_CTRL_UP)));
+		return variant::from_bool(controlStatus(static_cast<controls::CONTROL_ITEM>(slot - CUSTOM_OBJECT_CTRL_UP)));
 	
 	case CUSTOM_OBJECT_CTRL_USER:
-		return control_status_user();
+		return controlStatusUser();
 
 	case CUSTOM_OBJECT_PLAYER_DIFFICULTY:
 	case CUSTOM_OBJECT_PLAYER_CAN_INTERACT:
@@ -3345,14 +3345,14 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
 	case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 	case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
-		return get_player_value_by_slot(slot);
+		return getPlayerValueBySlot(slot);
 
 	default:
 		if(slot >= type_->getSlotPropertiesBase() && (size_t(slot - type_->getSlotPropertiesBase()) < type_->getSlotProperties().size())) {
 			const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[slot - type_->getSlotPropertiesBase()];
 			if(e.getter) {
 				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), slot - type_->getSlotPropertiesBase()) != properties_requiring_dynamic_initialization_.end()) {
-					ASSERT_LOG(false, "Read of uninitialized property " << debug_description() << "." << e.id << " " << get_full_call_stack());
+					ASSERT_LOG(false, "Read of uninitialized property " << getDebugDescription() << "." << e.id << " " << get_full_call_stack());
 				}
 				active_property_scope scope(*this, e.storage_slot);
 				return e.getter->execute(*this);
@@ -3378,14 +3378,14 @@ variant custom_object::getValue_by_slot(int slot) const
 	return variant();
 }
 
-variant custom_object::get_player_value_by_slot(int slot) const
+variant custom_object::getPlayerValueBySlot(int slot) const
 {
 	assert(CustomObjectCallable::instance().getEntry(slot));
 	ASSERT_LOG(false, "Query of value for player objects on non-player object. Key: " << CustomObjectCallable::instance().getEntry(slot)->id);
 	return variant();
 }
 
-void custom_object::set_player_value_by_slot(int slot, const variant& value)
+void custom_object::setPlayerValueBySlot(int slot, const variant& value)
 {
 	assert(CustomObjectCallable::instance().getEntry(slot));
 	ASSERT_LOG(false, "Set of value for player objects on non-player object. Key: " << CustomObjectCallable::instance().getEntry(slot)->id);
@@ -3457,12 +3457,12 @@ variant custom_object::getValue(const std::string& key) const
 		}
 	}
 
-	ASSERT_LOG(!type_->isStrict(), "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << debug_description() << ": " << key << " At " << get_full_call_stack());
+	ASSERT_LOG(!type_->isStrict(), "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << getDebugDescription() << ": " << key << " At " << get_full_call_stack());
 
 	return variant();
 }
 
-void custom_object::get_inputs(std::vector<game_logic::formula_input>* inputs) const
+void custom_object::getInputs(std::vector<game_logic::formula_input>* inputs) const
 {
 	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
 		const game_logic::FormulaCallableDefinition::Entry* entry = 
@@ -3477,13 +3477,13 @@ void custom_object::setValue(const std::string& key, const variant& value)
 {
 	const int slot = CustomObjectCallable::getKeySlot(key);
 	if(slot != -1) {
-		setValue_by_slot(slot, value);
+		setValueBySlot(slot, value);
 		return;
 	}
 
 	std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator property_itor = type_->properties().find(key);
 	if(property_itor != type_->properties().end()) {
-		setValue_by_slot(type_->getSlotPropertiesBase() + property_itor->second.slot, value);
+		setValueBySlot(type_->getSlotPropertiesBase() + property_itor->second.slot, value);
 		return;
 	}
 
@@ -3495,38 +3495,38 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	} else if(key == "time_in_animation_delta") {
 		time_in_frame_delta_ = value.as_int();
 	} else if(key == "x") {
-		const int start_x = centi_x();
-		set_x(value.as_int());
+		const int start_x = centiX();
+		setX(value.as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 	} else if(key == "y") {
-		const int start_y = centi_y();
-		set_y(value.as_int());
+		const int start_y = centiY();
+		setY(value.as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 	} else if(key == "xy") {
-		const int start_x = centi_x();
-		const int start_y = centi_y();
-		set_x(value[0].as_int());
-		set_y(value[1].as_int());
+		const int start_x = centiX();
+		const int start_y = centiY();
+		setX(value[0].as_int());
+		setY(value[1].as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
-			set_centi_y(start_y);
+			setCentiX(start_x);
+			setCentiY(start_y);
 		}
 	} else if(key == "z" || key == "zorder") {
 		zorder_ = value.as_int();
 	} else if(key == "zsub_order") {
 		zsub_order_ = value.as_int();
 	} else if(key == "midpoint_x" || key == "mid_x") {
-        set_mid_x(value.as_int());
+        setMidX(value.as_int());
 	} else if(key == "midpoint_y" || key == "mid_y") {
-        set_mid_y(value.as_int());
+        setMidY(value.as_int());
 	} else if(key == "facing") {
-		set_face_right(value.as_int() > 0);
+		setFacingRight(value.as_int() > 0);
 	} else if(key == "upside_down") {
-		set_upside_down(value.as_int() != 0);
+		setUpsideDown(value.as_int() != 0);
 	} else if(key == "hitpoints") {
 		const int old_hitpoints = hitpoints_;
 		hitpoints_ = value.as_int();
@@ -3534,9 +3534,9 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			die();
 		}
 	} else if(key == "max_hitpoints") {
-		max_hitpoints_ = value.as_int() - type_->hitpoints();
-		if(hitpoints_ > type_->hitpoints() + max_hitpoints_) {
-			hitpoints_ = type_->hitpoints() + max_hitpoints_;
+		max_hitpoints_ = value.as_int() - type_->getHitpoints();
+		if(hitpoints_ > type_->getHitpoints() + max_hitpoints_) {
+			hitpoints_ = type_->getHitpoints() + max_hitpoints_;
 		}
 	} else if(key == "velocity_x") {
 		velocity_x_ = value.as_int();
@@ -3572,7 +3572,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	} else if(key == "distortion") {
 		distortion_ = value.try_convert<graphics::raster_distortion>();
 	} else if(key == "CurrentGenerator") {
-		set_CurrentGenerator(value.try_convert<CurrentGenerator>());
+		setCurrentGenerator(value.try_convert<CurrentGenerator>());
 	} else if(key == "invincible") {
 		invincible_ = value.as_int();
 	} else if(key == "fall_through_platforms") {
@@ -3652,19 +3652,19 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			type_ = base_type_->getVariation(current_variation_);
 		}
 
-		calculate_solid_rect();
+		calculateSolidRect();
 
 		handleEvent("set_variations");
 	} else if(key == "attached_objects") {
-		std::vector<entity_ptr> v;
+		std::vector<EntityPtr> v;
 		for(int n = 0; n != value.num_elements(); ++n) {
 			entity* e = value[n].try_convert<entity>();
 			if(e) {
-				v.push_back(entity_ptr(e));
+				v.push_back(EntityPtr(e));
 			}
 		}
 
-		set_attached_objects(v);
+		setAttachedObjects(v);
 	} else if(key == "solid_dimensions_in" || key == "solid_dimensions_not_in") {
 
 		unsigned int solid = 0, weak = 0;
@@ -3689,10 +3689,10 @@ void custom_object::setValue(const std::string& key, const variant& value)
 
 		const unsigned int old_solid = getSolidDimensions();
 		const unsigned int old_weak = getWeakSolidDimensions();
-		set_solid_dimensions(solid, weak);
+		setSolidDimensions(solid, weak);
 		collision_info collide_info;
 		if(entity_in_current_level(this) && entity_collides(level::current(), *this, MOVE_NONE, &collide_info)) {
-			set_solid_dimensions(old_solid, old_weak);
+			setSolidDimensions(old_solid, old_weak);
 			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
@@ -3712,12 +3712,12 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		if(key == "xscale") {
 			const int current = (parallax_scale_millis_->first*x())/1000;
 			const int new_value = (v*current)/1000;
-			set_x(new_value);
+			setX(new_value);
 			parallax_scale_millis_->first = v;
 		} else {
 			const int current = (parallax_scale_millis_->second*y())/1000;
 			const int new_value = (v*current)/1000;
-			set_y(new_value);
+			setY(new_value);
 			parallax_scale_millis_->second = v;
 		}
 	} else if(key == "type") {
@@ -3731,8 +3731,8 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			has_feet_ = type_->hasFeet();
 			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(debug_description());
-			tmp_vars_->set_object_name(debug_description());
+			vars_->set_object_name(getDebugDescription());
+			tmp_vars_->set_object_name(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
@@ -3747,17 +3747,17 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	} else if(key == "use_absolute_screen_coordinates") {
 		use_absolute_screen_coordinates_ = value.as_bool();
 	} else if(key == "mouseover_delay") {
-		set_mouseover_delay(value.as_int());
+		setMouseoverDelay(value.as_int());
 #if defined(USE_BOX2D)
 	} else if(key == "body") {
 		//if(body_) {
 		//	box2d::world::our_world_ptr()->destroy_body(body_);
 		//}
 		body_.reset(new box2d::body(value));
-		body_->finish_loading(this);
+		body_->finishLoading(this);
 #endif
 	} else if(key == "mouseover_area") {
-		set_mouse_over_area(rect(value));
+		setMouseOverArea(rect(value));
 	} else if(key == "truez") {
 		set_truez(value.as_bool());
 	} else if(key == "tx") {
@@ -3774,11 +3774,11 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			known_properties << property_itor->first << ", ";
 		}
 
-		ASSERT_LOG(false, "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << debug_description() << ": " << key << " KNOWN PROPERTIES ARE: " << known_properties.str());
+		ASSERT_LOG(false, "ILLEGAL OBJECT ACCESS WITH STRICT CHECKING IN " << getDebugDescription() << ": " << key << " KNOWN PROPERTIES ARE: " << known_properties.str());
 	}
 }
 
-void custom_object::setValue_by_slot(int slot, const variant& value)
+void custom_object::setValueBySlot(int slot, const variant& value)
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_DATA: {
@@ -3809,8 +3809,8 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 			has_feet_ = type_->hasFeet();
 			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(debug_description());
-			tmp_vars_->set_object_name(debug_description());
+			vars_->set_object_name(getDebugDescription());
+			tmp_vars_->set_object_name(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
@@ -3871,10 +3871,10 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	
 	case CUSTOM_OBJECT_X1:
 	case CUSTOM_OBJECT_X: {
-		const int start_x = centi_x();
-		set_x(value.as_int());
+		const int start_x = centiX();
+		setX(value.as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 
 		break;
@@ -3882,50 +3882,50 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	
 	case CUSTOM_OBJECT_Y1:
 	case CUSTOM_OBJECT_Y: {
-		const int start_y = centi_y();
-		set_y(value.as_int());
+		const int start_y = centiY();
+		setY(value.as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 
 		break;
 	}
 
 	case CUSTOM_OBJECT_X2: {
-		const int start_x = centi_x();
-		const int current_x = solid_rect().w() ? solid_rect().x2() :
-		                                         x() + current_frame().width();
+		const int start_x = centiX();
+		const int current_x = solidRect().w() ? solidRect().x2() :
+		                                         x() + getCurrentFrame().width();
 		const int delta_x = value.as_int() - current_x;
-		set_x(x() + delta_x);
+		setX(x() + delta_x);
 		if(entity_collides(level::current(), *this, MOVE_NONE) &&
 		   entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 		break;
 	}
 
 	case CUSTOM_OBJECT_Y2: {
-		const int start_y = centi_y();
-		const int current_y = solid_rect().h() ? solid_rect().y2() :
-		                                         y() + current_frame().height();
+		const int start_y = centiY();
+		const int current_y = solidRect().h() ? solidRect().y2() :
+		                                         y() + getCurrentFrame().height();
 		const int delta_y = value.as_int() - current_y;
-		set_y(y() + delta_y);
+		setY(y() + delta_y);
 		if(entity_collides(level::current(), *this, MOVE_NONE) &&
 		   entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 		break;
 	}
 	
 	case CUSTOM_OBJECT_XY: {
 		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "set xy value of object to a value in incorrect format ([x,y] expected): " << value.to_debug_string());
-		const int start_x = centi_x();
-		const int start_y = centi_y();
-		set_x(value[0].as_int());
-		set_y(value[1].as_int());
+		const int start_x = centiX();
+		const int start_y = centiY();
+		setX(value[0].as_int());
+		setY(value[1].as_int());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
-			set_centi_y(start_y);
+			setCentiX(start_x);
+			setCentiY(start_y);
 		}
 
 		break;
@@ -3951,43 +3951,43 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_PARENT: {
-		entity_ptr e(value.try_convert<entity>());
-		set_parent(e, parent_pivot_);
+		EntityPtr e(value.try_convert<entity>());
+		setParent(e, parent_pivot_);
 		break;
 	}
 
 	case CUSTOM_OBJECT_PIVOT: {
-		set_parent(parent_, value.as_string());
+		setParent(parent_, value.as_string());
 		break;
 	}
 	
 	case CUSTOM_OBJECT_MID_X:
 	case CUSTOM_OBJECT_MIDPOINT_X: {
 		//midpoint is, unlike IMG_MID or SOLID_MID, meant to be less-rigorous, but more convenient; it default to basing the "midpoint" on solidity, but drops down to using img_mid if there is no solidity.  The rationale is that generally it doesn't matter which it comes from, and our form of failure (which is silent and returns just x1) is sneaky and can be very expensive because it can take a long time to realize that the value returned actually means the object doesn't have a midpoint for that criteria.  If you need to be rigorous, always use IMG_MID and SOLID_MID.
-		const int start_x = centi_x();
+		const int start_x = centiX();
 			
-		const int solid_diff_x = solid_rect().x() - x();
-		const int current_x = solid_rect().w() ? (x() + solid_diff_x + solid_rect().w()/2) : x() + current_frame().width()/2;
+		const int solid_diff_x = solidRect().x() - x();
+		const int current_x = solidRect().w() ? (x() + solid_diff_x + solidRect().w()/2) : x() + getCurrentFrame().width()/2;
 
 		const int xdiff = current_x - x();
-		set_pos(value.as_int() - xdiff, y());
+		setPos(value.as_int() - xdiff, y());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 		break;
 	}
 
 	case CUSTOM_OBJECT_MID_Y:
 	case CUSTOM_OBJECT_MIDPOINT_Y: {
-		const int start_y = centi_y();
+		const int start_y = centiY();
 		
-		const int solid_diff_y = solid_rect().y() - y();
-		const int current_y = solid_rect().h() ? (y() + solid_diff_y + solid_rect().h()/2) : y() + current_frame().height()/2;
+		const int solid_diff_y = solidRect().y() - y();
+		const int current_y = solidRect().h() ? (y() + solid_diff_y + solidRect().h()/2) : y() + getCurrentFrame().height()/2;
 
 		const int ydiff = current_y - y();
-		set_pos(x(), value.as_int() - ydiff);
+		setPos(x(), value.as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 		break;
 	}
@@ -3995,99 +3995,99 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	case CUSTOM_OBJECT_MID_XY:
 	case CUSTOM_OBJECT_MIDPOINT_XY: {
 		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "set midpoint_xy value of object to a value in incorrect format ([x,y] expected): " << value.to_debug_string());
-		const int start_x = centi_x();
-		const int solid_diff_x = solid_rect().x() - x();
-		const int current_x = solid_rect().w() ? (x() + solid_diff_x + solid_rect().w()/2) : x() + current_frame().width()/2;
+		const int start_x = centiX();
+		const int solid_diff_x = solidRect().x() - x();
+		const int current_x = solidRect().w() ? (x() + solid_diff_x + solidRect().w()/2) : x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
 
-		const int start_y = centi_y();
-		const int solid_diff_y = solid_rect().y() - y();
-		const int current_y = solid_rect().h() ? (y() + solid_diff_y + solid_rect().h()/2) : y() + current_frame().height()/2;
+		const int start_y = centiY();
+		const int solid_diff_y = solidRect().y() - y();
+		const int current_y = solidRect().h() ? (y() + solid_diff_y + solidRect().h()/2) : y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 
-		set_pos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
+		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
-			set_centi_y(start_y);
+			setCentiX(start_x);
+			setCentiY(start_y);
 		}
 		break;
 	}
 
 	case CUSTOM_OBJECT_SOLID_MID_X: {
-		const int start_x = centi_x();
-		const int solid_diff = solid_rect().x() - x();
-		const int current_x = x() + solid_diff + solid_rect().w()/2;
+		const int start_x = centiX();
+		const int solid_diff = solidRect().x() - x();
+		const int current_x = x() + solid_diff + solidRect().w()/2;
 		const int xdiff = current_x - x();
-		set_pos(value.as_int() - xdiff, y());
+		setPos(value.as_int() - xdiff, y());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 		break;
 	}
 			
 	case CUSTOM_OBJECT_SOLID_MID_Y: {
-		const int start_y= centi_y();
-		const int solid_diff = solid_rect().y() - y();
-		const int current_y = y() + solid_diff + solid_rect().h()/2;
+		const int start_y= centiY();
+		const int solid_diff = solidRect().y() - y();
+		const int current_y = y() + solid_diff + solidRect().h()/2;
 		const int ydiff = current_y - y();
-		set_pos(x(), value.as_int() - ydiff);
+		setPos(x(), value.as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 		break;
 	}
 
 	case CUSTOM_OBJECT_SOLID_MID_XY: {
-		const int start_x = centi_x();
-		const int solid_diff_x = solid_rect().x() - x();
-		const int current_x = x() + solid_diff_x + solid_rect().w()/2;
+		const int start_x = centiX();
+		const int solid_diff_x = solidRect().x() - x();
+		const int current_x = x() + solid_diff_x + solidRect().w()/2;
 		const int xdiff = current_x - x();
-		const int start_y= centi_y();
-		const int solid_diff_y = solid_rect().y() - y();
-		const int current_y = y() + solid_diff_y + solid_rect().h()/2;
+		const int start_y= centiY();
+		const int solid_diff_y = solidRect().y() - y();
+		const int current_y = y() + solid_diff_y + solidRect().h()/2;
 		const int ydiff = current_y - y();
-		set_pos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
+		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
-			set_centi_y(start_y);
+			setCentiX(start_x);
+			setCentiY(start_y);
 		}
 		break;
 	}
 
 	case CUSTOM_OBJECT_IMG_MID_X: {
-		const int start_x = centi_x();
-		const int current_x = x() + current_frame().width()/2;
+		const int start_x = centiX();
+		const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
-		set_pos(value.as_int() - xdiff, y());
+		setPos(value.as_int() - xdiff, y());
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
+			setCentiX(start_x);
 		}
 		break;
 	}
 		
 	case CUSTOM_OBJECT_IMG_MID_Y: {
-		const int start_y = centi_y();
-		const int current_y = y() + current_frame().height()/2;
+		const int start_y = centiY();
+		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
-		set_pos(x(), value.as_int() - ydiff);
+		setPos(x(), value.as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_y(start_y);
+			setCentiY(start_y);
 		}
 		break;
 	}
 		
 	case CUSTOM_OBJECT_IMG_MID_XY: {
 		ASSERT_LOG(value.is_list() && value.num_elements() == 2, "set midpoint_xy value of object to a value in incorrect format ([x,y] expected): " << value.to_debug_string());
-		const int start_x = centi_x();
-		const int current_x = x() + current_frame().width()/2;
+		const int start_x = centiX();
+		const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
-		const int start_y = centi_y();
-		const int current_y = y() + current_frame().height()/2;
+		const int start_y = centiY();
+		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
-		set_pos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
+		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
 		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
-			set_centi_x(start_x);
-			set_centi_y(start_y);
+			setCentiX(start_x);
+			setCentiY(start_y);
 		}
 		break;
 	}
@@ -4097,11 +4097,11 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_FACING:
-		set_face_right(value.as_int() > 0);
+		setFacingRight(value.as_int() > 0);
 		break;
 	
 	case CUSTOM_OBJECT_UPSIDE_DOWN:
-		set_upside_down(value.as_int() > 0);
+		setUpsideDown(value.as_int() > 0);
 		break;
 
 	case CUSTOM_OBJECT_HITPOINTS: {
@@ -4113,9 +4113,9 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		break;
 	}
 	case CUSTOM_OBJECT_MAX_HITPOINTS:
-		max_hitpoints_ = value.as_int() - type_->hitpoints();
-		if(hitpoints_ > type_->hitpoints() + max_hitpoints_) {
-			hitpoints_ = type_->hitpoints() + max_hitpoints_;
+		max_hitpoints_ = value.as_int() - type_->getHitpoints();
+		if(hitpoints_ > type_->getHitpoints() + max_hitpoints_) {
+			hitpoints_ = type_->getHitpoints() + max_hitpoints_;
 		}
 		break;
 
@@ -4166,7 +4166,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_PLATFORM_MOTION_X:
-		set_platform_motion_x(value.as_int());
+		setPlatformMotionX(value.as_int());
 		break;
 
 	case CUSTOM_OBJECT_ROTATE:
@@ -4220,7 +4220,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		break;
 	
 	case CUSTOM_OBJECT_CURRENTGENERATOR:
-		set_CurrentGenerator(value.try_convert<CurrentGenerator>());
+		setCurrentGenerator(value.try_convert<CurrentGenerator>());
 		break;
 
 	case CUSTOM_OBJECT_INVINCIBLE:
@@ -4340,24 +4340,24 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 			type_ = base_type_->getVariation(current_variation_);
 		}
 
-		calculate_solid_rect();
+		calculateSolidRect();
 		handleEvent("set_variations");
 		break;
 	
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
-		std::vector<entity_ptr> v;
+		std::vector<EntityPtr> v;
 		for(int n = 0; n != value.num_elements(); ++n) {
 			entity* e = value[n].try_convert<entity>();
 			if(e) {
-				v.push_back(entity_ptr(e));
+				v.push_back(EntityPtr(e));
 			}
 
 			//this will initialize shaders and such, which is
 			//desired for attached objects
-			e->add_to_level();
+			e->addToLevel();
 		}
 
-		set_attached_objects(v);
+		setAttachedObjects(v);
 		break;
 	}
 
@@ -4383,7 +4383,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 
 		weak |= solid;
 
-		set_collide_dimensions(solid, weak);
+		setCollideDimensions(solid, weak);
 		break;
 	}
 
@@ -4422,10 +4422,10 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 
 		const unsigned int old_solid = getSolidDimensions();
 		const unsigned int old_weak = getWeakSolidDimensions();
-		set_solid_dimensions(solid, weak);
+		setSolidDimensions(solid, weak);
 		collision_info collide_info;
 		if(entity_in_current_level(this) && entity_collides(level::current(), *this, MOVE_NONE, &collide_info)) {
-			set_solid_dimensions(old_solid, old_weak);
+			setSolidDimensions(old_solid, old_weak);
 			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
@@ -4500,7 +4500,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		if(value.is_null()) {
 			platform_area_.reset();
 			platform_solid_info_ = const_solid_info_ptr();
-			calculate_solid_rect();
+			calculateSolidRect();
 			break;
 		} else if(value.is_list() && value.num_elements() == 0) {
 			set_platform_area(rect());
@@ -4530,7 +4530,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	case CUSTOM_OBJECT_WIDGETS:
 	case CUSTOM_OBJECT_WIDGET_LIST: {
 		std::vector<gui::WidgetPtr> w;
-		clear_widgets();
+		clearWidgets();
 		if(value.is_list()) {
 			foreach(const variant& v, value.as_list()) {
 				w.push_back(widget_factory::create(v, this));
@@ -4538,17 +4538,17 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		} else {
 			w.push_back(widget_factory::create(value, this));
 		}
-		add_widgets(&w);
+		addWidgets(&w);
 		break;
 	}
 
 	case CUSTOM_OBJECT_MOUSEOVER_DELAY: {
-		set_mouseover_delay(value.as_int());
+		setMouseoverDelay(value.as_int());
 		break;
 	}
 
 	case CUSTOM_OBJECT_MOUSEOVER_AREA: {
-		set_mouse_over_area(rect(value));
+		setMouseOverArea(rect(value));
 		break;
 	}
 
@@ -4580,7 +4580,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		//	box2d::world::our_world_ptr()->destroy_body(body_);
 		//}
 		body_.reset(new box2d::body(value));
-		body_->finish_loading(this);
+		body_->finishLoading(this);
 		break;
 	}
 #endif
@@ -4728,11 +4728,11 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 	default:
 		if(slot >= type_->getSlotPropertiesBase() && (size_t(slot - type_->getSlotPropertiesBase()) < type_->getSlotProperties().size())) {
 			const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[slot - type_->getSlotPropertiesBase()];
-			ASSERT_LOG(!e.const_value, "Attempt to set const property: " << debug_description() << "." << e.id);
+			ASSERT_LOG(!e.const_value, "Attempt to set const property: " << getDebugDescription() << "." << e.id);
 			if(e.setter) {
 
 				if(e.set_type) {
-					ASSERT_LOG(e.set_type->match(value), "Setting " << debug_description() << "." << e.id << " to illegal value " << value.write_json() << " of type " << get_variant_type_from_value(value)->to_string() << " expected type " << e.set_type->to_string());
+					ASSERT_LOG(e.set_type->match(value), "Setting " << getDebugDescription() << "." << e.id << " to illegal value " << value.write_json() << " of type " << get_variant_type_from_value(value)->to_string() << " expected type " << e.set_type->to_string());
 				}
 
 				active_property_scope scope(*this, e.storage_slot, &value);
@@ -4741,7 +4741,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 			} else if(e.storage_slot >= 0) {
 				get_property_data(e.storage_slot) = value;
 			} else {
-				ASSERT_LOG(false, "Attempt to set const property: " << debug_description() << "." << e.id);
+				ASSERT_LOG(false, "Attempt to set const property: " << getDebugDescription() << "." << e.id);
 			}
 
 			if(!properties_requiring_dynamic_initialization_.empty()) {
@@ -4766,7 +4766,7 @@ void custom_object::setValue_by_slot(int slot, const variant& value)
 		case CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME:
 		case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 		case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
-			set_player_value_by_slot(slot, value);
+			setPlayerValueBySlot(slot, value);
 
 		break;
 	}
@@ -4789,18 +4789,18 @@ void custom_object::set_frame(const frame& new_frame)
 		handleEvent(frame_->leave_event_id());
 	}
 
-	const int start_x = feet_x();
-	const int start_y = feet_y();
+	const int start_x = getFeetX();
+	const int start_y = getFeetY();
 
 	frame_.reset(&new_frame);
-	calculate_solid_rect();
+	calculateSolidRect();
 	++current_animation_id_;
 
-	const int diff_x = feet_x() - start_x;
-	const int diff_y = feet_y() - start_y;
+	const int diff_x = getFeetX() - start_x;
+	const int diff_y = getFeetY() - start_y;
 
 	if(type_->adjustFeetOnAnimationChange()) {
-		move_centipixels(-diff_x*100, -diff_y*100);
+		moveCentipixels(-diff_x*100, -diff_y*100);
 	}
 
 	set_frame_no_adjustments(new_frame);
@@ -4825,7 +4825,7 @@ void custom_object::set_frame(const frame& new_frame)
 	handleEvent(frame_->enter_event_id());
 }
 
-rect custom_object::draw_rect() const
+rect custom_object::getDrawRect() const
 {
 	if(draw_area_) {
 		return rect(x(), y(), draw_area_->w()*2, draw_area_->h()*2);
@@ -4844,12 +4844,12 @@ void custom_object::set_frame_no_adjustments(const frame& new_frame)
 	frame_.reset(&new_frame);
 	frame_name_ = new_frame.id();
 	time_in_frame_ = 0;
-	if(frame_->velocity_x() != INT_MIN) {
-		velocity_x_ = frame_->velocity_x() * (face_right() ? 1 : -1);
+	if(frame_->velocityX() != INT_MIN) {
+		velocity_x_ = frame_->velocityX() * (isFacingRight() ? 1 : -1);
 	}
 
-	if(frame_->velocity_y() != INT_MIN) {
-		velocity_y_ = frame_->velocity_y();
+	if(frame_->velocityY() != INT_MIN) {
+		velocity_y_ = frame_->velocityY();
 	}
 
 	if(frame_->accel_x() != INT_MIN) {
@@ -4860,7 +4860,7 @@ void custom_object::set_frame_no_adjustments(const frame& new_frame)
 		accel_y_ = frame_->accel_y();
 	}
 
-	calculate_solid_rect();
+	calculateSolidRect();
 }
 
 void custom_object::die()
@@ -4875,7 +4875,7 @@ void custom_object::die()
 #endif
 }
 
-void custom_object::die_with_no_event()
+void custom_object::dieWithNoEvent()
 {
 	hitpoints_ = 0;
 
@@ -4899,7 +4899,7 @@ bool custom_object::isActive(const rect& screen_area) const
 		return true;
 	}
 
-	if(type_->goesInactiveOnlyWhenStanding() && !is_standing(level::current())) {
+	if(type_->goesInactiveOnlyWhenStanding() && !isStanding(level::current())) {
 		return true;
 	}
 
@@ -4914,9 +4914,9 @@ bool custom_object::isActive(const rect& screen_area) const
 		}
 	}
 
-	const rect& area = frame_rect();
+	const rect& area = frameRect();
 	if(draw_area_) {
-		rect draw_area(area.x(), area.y(), draw_area_->w()*2, draw_area_->h()*2);
+		rect drawArea(area.x(), area.y(), draw_area_->w()*2, draw_area_->h()*2);
 		return rects_intersect(draw_area, screen_area);
 	}
 	
@@ -4926,7 +4926,7 @@ bool custom_object::isActive(const rect& screen_area) const
 			const int diffy = ((parallax_scale_millis_->second - 1000)*screen_area.y())/1000;
 			rect screen(screen_area.x() - diffx, screen_area.y() - diffy,
 						screen_area.w(), screen_area.h());
-			const rect& area = frame_rect();
+			const rect& area = frameRect();
 			return rects_intersect(screen, area);
 		}
 	}
@@ -4943,30 +4943,30 @@ bool custom_object::isActive(const rect& screen_area) const
 	return false;
 }
 
-bool custom_object::move_to_standing(level& lvl, int max_displace)
+bool custom_object::moveToStanding(level& lvl, int max_displace)
 {
 	int start_y = y();
-	const bool result = move_to_standing_internal(lvl, max_displace);
+	const bool result = moveToStandingInternal(lvl, max_displace);
 	if(!result || entity_collides(level::current(), *this, MOVE_NONE)) {
-		set_pos(x(), start_y);
+		setPos(x(), start_y);
 		return false;
 	}
 
 	return result;
 }
 
-bool custom_object::move_to_standing_internal(level& lvl, int max_displace)
+bool custom_object::moveToStandingInternal(level& lvl, int max_displace)
 {
 	int start_y = y();
 	//descend from the initial-position (what the player was at in the prev level) until we're standing
 	for(int n = 0; n != max_displace; ++n) {
-		if(is_standing(lvl)) {
+		if(isStanding(lvl)) {
 			
 			if(n == 0) {  //if we've somehow managed to be standing on the very first frame, try to avoid the possibility that this is actually some open space underground on a cave level by scanning up till we reach the surface.
 				for(int n = 0; n != max_displace; ++n) {
-					set_pos(x(), y() - 1);
-					if(!is_standing(lvl)) {
-						set_pos(x(), y() + 1);
+					setPos(x(), y() - 1);
+					if(!isStanding(lvl)) {
+						setPos(x(), y() + 1);
 						
 						if(y() < lvl.boundaries().y()) {
 							//we are too high, out of the level. Move the
@@ -4974,9 +4974,9 @@ bool custom_object::move_to_standing_internal(level& lvl, int max_displace)
 							//call this function again to move them down
 							//to standing on the solid below.
 							for(int n = 0; n != max_displace; ++n) {
-								set_pos(x(), y() + 1);
-								if(!is_standing(lvl)) {
-									return move_to_standing_internal(lvl, max_displace);
+								setPos(x(), y() + 1);
+								if(!isStanding(lvl)) {
+									return moveToStandingInternal(lvl, max_displace);
 								}
 							}
 						}
@@ -4989,10 +4989,10 @@ bool custom_object::move_to_standing_internal(level& lvl, int max_displace)
 			return true;
 		}
 		
-		set_pos(x(), y() + 1);
+		setPos(x(), y() + 1);
 	}
 	
-	set_pos(x(), start_y);
+	setPos(x(), start_y);
 	return false;
 }
 
@@ -5017,25 +5017,25 @@ bool custom_object::isBodyPassthrough() const
 	return type_->isBodyPassthrough();
 }
 
-const frame& custom_object::icon_frame() const
+const frame& custom_object::getIconFrame() const
 {
 	return type_->defaultFrame();
 }
 
-entity_ptr custom_object::clone() const
+EntityPtr custom_object::clone() const
 {
-	entity_ptr res(new custom_object(*this));
-	res->set_distinct_label();
+	EntityPtr res(new custom_object(*this));
+	res->setDistinctLabel();
 	return res;
 }
 
-entity_ptr custom_object::backup() const
+EntityPtr custom_object::backup() const
 {
 	if(type_->stateless()) {
-		return entity_ptr(const_cast<custom_object*>(this));
+		return EntityPtr(const_cast<custom_object*>(this));
 	}
 
-	entity_ptr res(new custom_object(*this));
+	EntityPtr res(new custom_object(*this));
 	return res;
 }
 
@@ -5044,7 +5044,7 @@ bool custom_object::handleEvent(const std::string& event, const FormulaCallable*
 	return handleEvent(get_object_event_id(event), context);
 }
 
-bool custom_object::handleEvent_delay(int event, const FormulaCallable* context)
+bool custom_object::handleEventDelay(int event, const FormulaCallable* context)
 {
 	return handleEvent_internal(event, context, false);
 }
@@ -5192,7 +5192,7 @@ bool custom_object::handleEvent_internal(int event, const FormulaCallable* conte
 	return true;
 }
 
-void custom_object::resolve_delayed_events()
+void custom_object::resolveDelayedEvents()
 {
 	if(delayed_commands_.empty()) {
 		return;
@@ -5220,21 +5220,21 @@ bool custom_object::executeCommand(const variant& var)
 	} else {
 		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
 		if(cmd != NULL) {
-			cmd->run_command(*this);
+			cmd->runCommand(*this);
 		} else {
-			custom_object_command_callable* cmd = var.try_convert<custom_object_command_callable>();
+			CustomObjectCommandCallable* cmd = var.try_convert<CustomObjectCommandCallable>();
 			if(cmd != NULL) {
-				cmd->run_command(level::current(), *this);
+				cmd->runCommand(level::current(), *this);
 			} else {
-				entity_command_callable* cmd = var.try_convert<entity_command_callable>();
+				EntityCommandCallable* cmd = var.try_convert<EntityCommandCallable>();
 				if(cmd != NULL) {
-					cmd->run_command(level::current(), *this);
+					cmd->runCommand(level::current(), *this);
 				} else {
-					swallow_object_command_callable* cmd = var.try_convert<swallow_object_command_callable>();
+					SwallowObjectCommandCallable* cmd = var.try_convert<SwallowObjectCommandCallable>();
 					if(cmd) {
 						result = false;
 					} else {
-						swallow_mouse_command_callable* cmd = var.try_convert<swallow_mouse_command_callable>();
+						SwallowMouseCommandCallable* cmd = var.try_convert<SwallowMouseCommandCallable>();
 						if(cmd) {
 							swallow_mouse_event_ = true;
 						} else {
@@ -5249,15 +5249,15 @@ bool custom_object::executeCommand(const variant& var)
 	return result;
 }
 
-int custom_object::slope_standing_on(int range) const
+int custom_object::slopeStandingOn(int range) const
 {
-	if(!is_standing(level::current())) {
+	if(!isStanding(level::current())) {
 		return 0;
 	}
 
-	const int forward = face_right() ? 1 : -1;
-	const int xpos = feet_x();
-	int ypos = feet_y();
+	const int forward = isFacingRight() ? 1 : -1;
+	const int xpos = getFeetX();
+	int ypos = getFeetY();
 
 
 	for(int n = 0; !level::current().standable(xpos, ypos) && n != 10; ++n) {
@@ -5277,7 +5277,7 @@ int custom_object::slope_standing_on(int range) const
 
 		return 0;
 	} else {
-		if(!is_standing(level::current())) {
+		if(!isStanding(level::current())) {
 			return 0;
 		}
 
@@ -5325,7 +5325,7 @@ game_logic::const_formula_ptr custom_object::getEventHandler(int key) const
 	}
 }
 
-void custom_object::set_event_handler(int key, game_logic::const_formula_ptr f)
+void custom_object::setEventHandler(int key, game_logic::const_formula_ptr f)
 {
 	if(size_t(key) >= event_handlers_.size()) {
 		event_handlers_.resize(key+1);
@@ -5334,18 +5334,18 @@ void custom_object::set_event_handler(int key, game_logic::const_formula_ptr f)
 	event_handlers_[key] = f;
 }
 
-bool custom_object::can_interact_with() const
+bool custom_object::canInteractWith() const
 {
 	return can_interact_with_;
 }
 
-std::string custom_object::debug_description() const
+std::string custom_object::getDebugDescription() const
 {
 	return type_->id();
 }
 
 namespace {
-bool map_variant_entities(variant& v, const std::map<entity_ptr, entity_ptr>& m)
+bool map_variant_entities(variant& v, const std::map<EntityPtr, EntityPtr>& m)
 {
 	if(v.is_list()) {
 		for(int n = 0; n != v.num_elements(); ++n) {
@@ -5369,12 +5369,12 @@ bool map_variant_entities(variant& v, const std::map<entity_ptr, entity_ptr>& m)
 		}
 	} else if(v.try_convert<entity>()) {
 		entity* e = v.try_convert<entity>();
-		std::map<entity_ptr, entity_ptr>::const_iterator i = m.find(entity_ptr(e));
+		std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(EntityPtr(e));
 		if(i != m.end()) {
 			v = variant(i->second.get());
 			return true;
 		} else {
-			entity_ptr back = e->backup();
+			EntityPtr back = e->backup();
 			v = variant(back.get());
 			return true;
 		}
@@ -5383,10 +5383,10 @@ bool map_variant_entities(variant& v, const std::map<entity_ptr, entity_ptr>& m)
 	return false;
 }
 
-void do_map_entity(entity_ptr& e, const std::map<entity_ptr, entity_ptr>& m)
+void do_map_entity(EntityPtr& e, const std::map<EntityPtr, EntityPtr>& m)
 {
 	if(e) {
-		std::map<entity_ptr, entity_ptr>::const_iterator i = m.find(e);
+		std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(e);
 		if(i != m.end()) {
 			e = i->second;
 		}
@@ -5394,7 +5394,7 @@ void do_map_entity(entity_ptr& e, const std::map<entity_ptr, entity_ptr>& m)
 }
 }
 
-void custom_object::map_entities(const std::map<entity_ptr, entity_ptr>& m)
+void custom_object::mapEntities(const std::map<EntityPtr, EntityPtr>& m)
 {
 	do_map_entity(last_hit_by_, m);
 	do_map_entity(standing_on_, m);
@@ -5431,21 +5431,21 @@ void custom_object::cleanup_references()
 	}
 }
 
-void custom_object::extract_gc_object_references(std::vector<gc_object_reference>& v)
+void custom_object::extractGcObjectReferences(std::vector<gc_object_reference>& v)
 {
-	extract_gc_object_references(last_hit_by_, v);
-	extract_gc_object_references(standing_on_, v);
-	extract_gc_object_references(parent_, v);
+	extractGcObjectReferences(last_hit_by_, v);
+	extractGcObjectReferences(standing_on_, v);
+	extractGcObjectReferences(parent_, v);
 	foreach(variant& var, vars_->values()) {
-		extract_gc_object_references(var, v);
+		extractGcObjectReferences(var, v);
 	}
 
 	foreach(variant& var, tmp_vars_->values()) {
-		extract_gc_object_references(var, v);
+		extractGcObjectReferences(var, v);
 	}
 
 	foreach(variant& var, property_data_) {
-		extract_gc_object_references(var, v);
+		extractGcObjectReferences(var, v);
 	}
 
 	gc_object_reference visitor;
@@ -5466,7 +5466,7 @@ void custom_object::extract_gc_object_references(std::vector<gc_object_reference
 	v.push_back(visitor);
 }
 
-void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v)
+void custom_object::extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v)
 {
 	if(!e) {
 		return;
@@ -5482,7 +5482,7 @@ void custom_object::extract_gc_object_references(entity_ptr& e, std::vector<gc_o
 	e.reset();
 }
 
-void custom_object::extract_gc_object_references(variant& var, std::vector<gc_object_reference>& v)
+void custom_object::extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v)
 {
 	if(var.is_callable()) {
 		if(var.try_convert<entity>()) {
@@ -5497,16 +5497,16 @@ void custom_object::extract_gc_object_references(variant& var, std::vector<gc_ob
 		}
 	} else if(var.is_list()) {
 		for(int n = 0; n != var.num_elements(); ++n) {
-			extract_gc_object_references(*var.get_index_mutable(n), v);
+			extractGcObjectReferences(*var.get_index_mutable(n), v);
 		}
 	} else if(var.is_map()) {
 		foreach(variant k, var.getKeys().as_list()) {
-			extract_gc_object_references(*var.get_attr_mutable(k), v);
+			extractGcObjectReferences(*var.get_attr_mutable(k), v);
 		}
 	}
 }
 
-void custom_object::restore_gc_object_reference(gc_object_reference ref)
+void custom_object::restoreGcObjectReference(gc_object_reference ref)
 {
 	if(ref.visitor) {
 		foreach(game_logic::FormulaCallable_suspended_ptr ptr, ref.visitor->pointers()) {
@@ -5542,26 +5542,26 @@ void custom_object::setText(const std::string& text, const std::string& font, in
 	text_->dimensions = text_->font->dimensions(text_->text, size);
 }
 
-bool custom_object::boardable_vehicle() const
+bool custom_object::boardableVehicle() const
 {
 	return type_->isVehicle() && driver_.get() == NULL;
 }
 
-void custom_object::boarded(level& lvl, const entity_ptr& player)
+void custom_object::boarded(level& lvl, const EntityPtr& player)
 {
 	if(!player) {
 		return;
 	}
 
-	player->board_vehicle();
+	player->boardVehicle();
 
 	if(player->isHuman()) {
-		playable_custom_object* new_player(new playable_custom_object(*this));
+		PlayableCustomObject* new_player(new PlayableCustomObject(*this));
 		new_player->driver_ = player;
 
 		lvl.add_player(new_player);
 
-		new_player->get_player_info()->swap_player_state(*player->get_player_info());
+		new_player->getPlayerInfo()->swapPlayerState(*player->getPlayerInfo());
 		lvl.remove_character(this);
 	} else {
 		driver_ = player;
@@ -5571,36 +5571,36 @@ void custom_object::boarded(level& lvl, const entity_ptr& player)
 
 void custom_object::unboarded(level& lvl)
 {
-	if(velocity_x() > 100) {
-		driver_->set_face_right(false);
+	if(velocityX() > 100) {
+		driver_->setFacingRight(false);
 	}
 
-	if(velocity_x() < -100) {
-		driver_->set_face_right(true);
+	if(velocityX() < -100) {
+		driver_->setFacingRight(true);
 	}
 
 	if(isHuman()) {
 		custom_object* vehicle(new custom_object(*this));
-		vehicle->driver_ = entity_ptr();
+		vehicle->driver_ = EntityPtr();
 		lvl.add_character(vehicle);
 
 		lvl.add_player(driver_);
 
-		driver_->unboard_vehicle();
+		driver_->unboardVehicle();
 
-		driver_->get_player_info()->swap_player_state(*get_player_info());
+		driver_->getPlayerInfo()->swapPlayerState(*getPlayerInfo());
 	} else {
 		lvl.add_character(driver_);
-		driver_->unboard_vehicle();
-		driver_ = entity_ptr();
+		driver_->unboardVehicle();
+		driver_ = EntityPtr();
 	}
 }
 
-void custom_object::board_vehicle()
+void custom_object::boardVehicle()
 {
 }
 
-void custom_object::unboard_vehicle()
+void custom_object::unboardVehicle()
 {
 }
 
@@ -5617,13 +5617,13 @@ void custom_object::set_blur(const BlurInfo* blur)
 	}
 }
 
-void custom_object::set_sound_volume(const int sound_volume)
+void custom_object::setSoundVolume(const int sound_volume)
 {
 	sound::change_volume(this, sound_volume);
 	sound_volume_ = sound_volume;
 }
 
-bool custom_object::allow_level_collisions() const
+bool custom_object::allowLevelCollisions() const
 {
 	return type_->isStaticObject() || !type_->collidesWithLevel();
 }
@@ -5638,12 +5638,12 @@ void custom_object::set_platform_area(const rect& area)
 		platform_solid_info_ = solid_info::create_platform(area);
 	}
 
-	calculate_solid_rect();
+	calculateSolidRect();
 }
 
-void custom_object::shift_position(int x, int y)
+void custom_object::shiftPosition(int x, int y)
 {
-	entity::shift_position(x, y);
+	entity::shiftPosition(x, y);
 	if(standing_on_prev_x_ != INT_MIN) {
 		standing_on_prev_x_ += x;
 	}
@@ -5670,13 +5670,13 @@ void custom_object::shift_position(int x, int y)
 	}
 }
 
-bool custom_object::appears_at_difficulty(int difficulty) const
+bool custom_object::appearsAtDifficulty(int difficulty) const
 {
 	return (min_difficulty_ == -1 || difficulty >= min_difficulty_) &&
 	       (max_difficulty_ == -1 || difficulty <= max_difficulty_);
 }
 
-void custom_object::set_parent(entity_ptr e, const std::string& pivot_point)
+void custom_object::setParent(EntityPtr e, const std::string& pivot_point)
 {
 	parent_ = e;
 	parent_pivot_ = pivot_point;
@@ -5684,7 +5684,7 @@ void custom_object::set_parent(entity_ptr e, const std::string& pivot_point)
 	const point pos = parent_position();
 
 	if(parent_.get() != NULL) {
-        const int parent_facing_sign = parent_->face_right() ? 1 : -1;
+        const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
         relative_x_ = parent_facing_sign * (x() - pos.x);
         relative_y_ = (y() - pos.y);
     }
@@ -5693,11 +5693,11 @@ void custom_object::set_parent(entity_ptr e, const std::string& pivot_point)
 	parent_prev_y_ = pos.y;
     
 	if(parent_.get() != NULL) {
-		parent_prev_facing_ = parent_->face_right();
+		parent_prev_facing_ = parent_->isFacingRight();
 	}
 }
 
-int custom_object::parent_depth(bool* has_human_parent, int cur_depth) const
+int custom_object::parentDepth(bool* has_human_parent, int cur_depth) const
 {
 	if(!parent_ || cur_depth > 10) {
 		if(has_human_parent) {
@@ -5706,7 +5706,7 @@ int custom_object::parent_depth(bool* has_human_parent, int cur_depth) const
 		return cur_depth;
 	}
 
-	return parent_->parent_depth(has_human_parent, cur_depth+1);
+	return parent_->parentDepth(has_human_parent, cur_depth+1);
 }
 
 bool custom_object::editorForceStanding() const
@@ -5719,13 +5719,13 @@ game_logic::ConstFormulaCallableDefinitionPtr custom_object::getDefinition() con
 	return type_->callableDefinition();
 }
 
-rect custom_object::platform_rect_at(int xpos) const
+rect custom_object::platformRectAt(int xpos) const
 {
 	if(platform_offsets_.empty()) {
-		return platform_rect();
+		return platformRect();
 	}
 
-	rect area = platform_rect();
+	rect area = platformRect();
 	if(xpos < area.x() || xpos >= area.x() + area.w()) {
 		return area;
 	}
@@ -5745,13 +5745,13 @@ rect custom_object::platform_rect_at(int xpos) const
 	return rect(area.x(), area.y() + offset, area.w(), area.h());
 }
 
-int custom_object::platform_slope_at(int xpos) const
+int custom_object::platformSlopeAt(int xpos) const
 {
 	if(platform_offsets_.size() <= 1) {
 		return 0;
 	}
 
-	rect area = platform_rect();
+	rect area = platformRect();
 	if(xpos < area.x() || xpos >= area.x() + area.w()) {
 		return 0;
 	}
@@ -5780,7 +5780,7 @@ point custom_object::parent_position() const
 	return parent_->pivot(parent_pivot_);
 }
 
-void custom_object::update_type(ConstCustomObjectTypePtr old_type,
+void custom_object::updateType(ConstCustomObjectTypePtr old_type,
                                 ConstCustomObjectTypePtr new_type)
 {
 	if(old_type != base_type_) {
@@ -5797,7 +5797,7 @@ void custom_object::update_type(ConstCustomObjectTypePtr old_type,
 	game_logic::formula_variable_storage_ptr old_vars = vars_;
 
 	vars_.reset(new game_logic::formula_variable_storage(type_->variables()));
-	vars_->set_object_name(debug_description());
+	vars_->set_object_name(getDebugDescription());
 	foreach(const std::string& key, old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
@@ -5811,7 +5811,7 @@ void custom_object::update_type(ConstCustomObjectTypePtr old_type,
 	old_vars = tmp_vars_;
 
 	tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables()));
-	tmp_vars_->set_object_name(debug_description());
+	tmp_vars_->set_object_name(getDebugDescription());
 	foreach(const std::string& key, old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
@@ -5858,7 +5858,7 @@ void custom_object::update_type(ConstCustomObjectTypePtr old_type,
 	handleEvent("type_updated");
 }
 
-std::vector<variant> custom_object::get_variant_widget_list() const
+std::vector<variant> custom_object::getVariantWidgetList() const
 {
 	std::vector<variant> v;
 	for(widget_list::iterator it = widgets_.begin(); it != widgets_.end(); ++it) {
@@ -5872,18 +5872,18 @@ void custom_object::addWidget(const gui::WidgetPtr& w)
 	widgets_.insert(w); 
 }
 
-void custom_object::add_widgets(std::vector<gui::WidgetPtr>* widgets) 
+void custom_object::addWidgets(std::vector<gui::WidgetPtr>* widgets) 
 {
 	widgets_.clear();
 	std::copy(widgets->begin(), widgets->end(), std::inserter(widgets_, widgets_.end()));
 }
 
-void custom_object::clear_widgets() 
+void custom_object::clearWidgets() 
 { 
 	widgets_.clear(); 
 }
 
-void custom_object::remove_widget(gui::WidgetPtr w)
+void custom_object::removeWidget(gui::WidgetPtr w)
 {
 	widget_list::iterator it = widgets_.find(w);
 	ASSERT_LOG(it != widgets_.end(), "Tried to erase widget not in list.");
@@ -5944,9 +5944,9 @@ gui::WidgetPtr custom_object::getWidgetById(const std::string& id)
 	return gui::WidgetPtr();
 }
 
-void custom_object::add_to_level()
+void custom_object::addToLevel()
 {
-	entity::add_to_level();
+	entity::addToLevel();
 	standing_on_.reset();
 #if defined(USE_BOX2D)
 	if(body_) {
@@ -5968,8 +5968,8 @@ BENCHMARK(custom_object_spike) {
 	if(!lvl) {	
 		lvl = new level("test.cfg");
 		static variant v(lvl);
-		lvl->finish_loading();
-		lvl->set_as_current_level();
+		lvl->finishLoading();
+		lvl->setAsCurrentLevel();
 	}
 	BENCHMARK_LOOP {
 		custom_object* obj = new custom_object("chain_base", 0, 0, false);
@@ -5998,9 +5998,9 @@ BENCHMARK_ARG(custom_object_handleEvent, const std::string& object_event)
 	std::string obj_type(object_event.begin(), i);
 	std::string event_name(i+1, object_event.end());
 	static level* lvl = new level("titlescreen.cfg");
-	lvl->set_as_current_level();
+	lvl->setAsCurrentLevel();
 	static custom_object* obj = new custom_object(obj_type, 0, 0, false);
-	obj->set_level(*lvl);
+	obj->setLevel(*lvl);
 	const int event_id = get_object_event_id(event_name);
 	BENCHMARK_LOOP {
 		obj->handleEvent(event_id);

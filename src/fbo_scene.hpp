@@ -37,6 +37,6 @@ private:
 	graphics::texture texture_;
 };
 
-graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> objects);
+graphics::texture render_fbo(const rect& area, const std::vector<EntityPtr> objects);
 
 #endif

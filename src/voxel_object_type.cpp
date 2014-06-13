@@ -325,7 +325,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 		  [&]() { for(int n = 0; n != callable_definition_->getNumSlots(); ++n) { callable_definition_->getEntry(n)->private_counter++; } }
 		);
 
-		game_logic::function_symbol_table* symbols = &get_voxel_object_functions_symbol_table();
+		game_logic::FunctionSymbolTable* symbols = &get_voxel_object_functions_symbol_table();
 
 		for(const variant_pair& p : handlers_node.as_map()) {
 			const std::string& key = p.first.as_string();
@@ -339,7 +339,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 	}
 }
 
-game_logic::function_symbol_table* voxel_object_type::getFunctionSymbols() const
+game_logic::FunctionSymbolTable* voxel_object_type::getFunctionSymbols() const
 {
 	return &get_voxel_object_functions_symbol_table();
 }

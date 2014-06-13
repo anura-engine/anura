@@ -132,7 +132,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	bool found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t.is_alpha(area.x() + x, area.y() + area.h() - 1)) {
+			if(!t.isAlpha(area.x() + x, area.y() + area.h() - 1)) {
 				found_solid = true;
 				break;
 			}
@@ -146,7 +146,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t.is_alpha(area.x() + x, area.y())) {
+			if(!t.isAlpha(area.x() + x, area.y())) {
 				found_solid = true;
 				break;
 			}
@@ -160,7 +160,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t.is_alpha(area.x(), area.y() + y)) {
+			if(!t.isAlpha(area.x(), area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -174,7 +174,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t.is_alpha(area.x() + area.w() - 1, area.y() + y)) {
+			if(!t.isAlpha(area.x() + area.w() - 1, area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -190,15 +190,15 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 	solid->solid_.resize(solid->area_.w()*solid->area_.h(), false);
 	for(int y = 0; y < solid->area_.h(); ++y) {
 		for(int x = 0; x < solid->area_.w(); ++x) {
-			bool is_solid = !t.is_alpha(area.x() + x/2, area.y() + y/2);
-			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t.is_alpha(area.x() + x/2, area.y() + y/2 + 1)) {
+			bool is_solid = !t.isAlpha(area.x() + x/2, area.y() + y/2);
+			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t.isAlpha(area.x() + x/2, area.y() + y/2 + 1)) {
 				//we are scaling things up by double, so we want to smooth
 				//things out. In the bottom half of an empty source pixel, we
 				//will set it to solid if the pixel below is solid, and the
 				//adjacent horizontal pixel is solid
-				if((x&1) && x < solid->area_.w() - 1 && !t.is_alpha(area.x() + x/2 + 1, area.y() + y/2)) {
+				if((x&1) && x < solid->area_.w() - 1 && !t.isAlpha(area.x() + x/2 + 1, area.y() + y/2)) {
 					is_solid = true;
-				} else if(!(x&1) && x > 0 && !t.is_alpha(area.x() + x/2 - 1, area.y() + y/2)) {
+				} else if(!(x&1) && x > 0 && !t.isAlpha(area.x() + x/2 - 1, area.y() + y/2)) {
 					is_solid = true;
 				}
 			}

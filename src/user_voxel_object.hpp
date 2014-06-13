@@ -39,7 +39,7 @@ public:
 	virtual bool executeCommand(const variant& b);
 private:
 	variant getValue_by_slot(int slot) const;
-	void setValue_by_slot(int slot, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
 	variant getValue(const std::string& key) const;
 	void setValue(const std::string& key, const variant& value);

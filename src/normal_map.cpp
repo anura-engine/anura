@@ -557,9 +557,9 @@ namespace
 			}
 
 			glActiveTexture(GL_TEXTURE1);
-			glBindTexture(GL_TEXTURE_2D, tex_normal_.get_id());
+			glBindTexture(GL_TEXTURE_2D, tex_normal_.getId());
 			glActiveTexture(GL_TEXTURE0);
-			glBindTexture(GL_TEXTURE_2D, tex().get_id());
+			glBindTexture(GL_TEXTURE_2D, tex().getId());
 
 			const int w_odd = width() % 2;
 			const int h_odd = height() % 2;

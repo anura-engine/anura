@@ -64,7 +64,7 @@ public:
 
 	void detach();
 
-	Uint32 get_id() { return SDL_GetThreadID(thread_); }
+	Uint32 getId() { return SDL_GetThreadID(thread_); }
 private:
 	thread(const thread&);
 	void operator=(const thread&);

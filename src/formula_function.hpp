@@ -229,14 +229,14 @@ public:
 	const std::vector<variant_type_ptr>& variant_types() const { return variant_types_; }
 };	
 
-class function_symbol_table : private boost::noncopyable 
+class FunctionSymbolTable : private boost::noncopyable 
 {
 	std::map<std::string, formula_function> custom_formulas_;
-	const function_symbol_table* backup_;
+	const FunctionSymbolTable* backup_;
 public:
-	function_symbol_table() : backup_(0) {}
-	virtual ~function_symbol_table() {}
-	void set_backup(const function_symbol_table* backup) { backup_ = backup; }
+	FunctionSymbolTable() : backup_(0) {}
+	virtual ~FunctionSymbolTable() {}
+	void set_backup(const FunctionSymbolTable* backup) { backup_ = backup; }
 	virtual void add_formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types);
 	virtual expression_ptr create_function(const std::string& fn,
 					                       const std::vector<expression_ptr>& args,
@@ -249,14 +249,14 @@ public:
 //it is given to a formula function during parsing, and will give out
 //function stubs for recursive calls. At the end of parsing it can fill
 //in the real call.
-class recursive_function_symbol_table : public function_symbol_table {
+class recursive_FunctionSymbolTable : public FunctionSymbolTable {
 	std::string name_;
 	formula_function stub_;
-	function_symbol_table* backup_;
+	FunctionSymbolTable* backup_;
 	mutable std::vector<formula_function_expression_ptr> expr_;
 	ConstFormulaCallableDefinitionPtr closure_definition_;
 public:
-	recursive_function_symbol_table(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, function_symbol_table* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types);
+	recursive_FunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types);
 	virtual expression_ptr create_function(const std::string& fn,
 					                       const std::vector<expression_ptr>& args,
 										   ConstFormulaCallableDefinitionPtr callable_def) const;
@@ -265,10 +265,10 @@ public:
 
 expression_ptr create_function(const std::string& fn,
                                const std::vector<expression_ptr>& args,
-							   const function_symbol_table* symbols,
+							   const FunctionSymbolTable* symbols,
 							   ConstFormulaCallableDefinitionPtr callable_def);
 bool optimize_function_arguments(const std::string& fn,
-                                 const function_symbol_table* symbols);
+                                 const FunctionSymbolTable* symbols);
 std::vector<std::string> builtin_function_names();
 
 class variant_expression : public formula_expression {
@@ -305,4 +305,4 @@ ConstFormulaCallableDefinitionPtr get_variant_comparator_definition(ConstFormula
 
 }
 
-game_logic::function_symbol_table& get_formula_functions_symbol_table();
+game_logic::FunctionSymbolTable& get_formula_functions_symbol_table();

@@ -1346,8 +1346,8 @@ class variant_comparator : public FormulaCallable {
 		return fallback_->query_value_by_slot(slot - 2);
 	}
 
-	void get_inputs(std::vector<formula_input>* inputs) const {
-		fallback_->get_inputs(inputs);
+	void getInputs(std::vector<formula_input>* inputs) const {
+		fallback_->getInputs(inputs);
 	}
 public:
 	variant_comparator(const expression_ptr& expr, const FormulaCallable& fallback) : FormulaCallable(false), expr_(expr), fallback_(&fallback)
@@ -1725,7 +1725,7 @@ FUNCTION_DEF(create_graph_from_level, 1, 3, "create_graph_from_level(level, (opt
 	}
 	ASSERT_LOG((tile_size_x%2)==0 && (tile_size_y%2)==0, "The tile_size_x and tile_size_y values *must* be even. (" << tile_size_x << "," << tile_size_y << ")");
 	variant curlevel = args()[0]->evaluate(variables);
-	level_ptr lvl = curlevel.try_convert<level>();
+	LevelPtr lvl = curlevel.try_convert<level>();
 	ASSERT_LOG(lvl, "The level parameter passed to the function was couldn't be converted.");
 	rect b = lvl->boundaries();
 	b.from_coordinates(b.x() - b.x()%tile_size_x, 
@@ -1761,7 +1761,7 @@ FUNCTION_DEF(plot_path, 6, 9, "plot_path(level, from_x, from_y, to_x, to_y, heur
 	int tile_size_y = TileSize;
 	expression_ptr weight_expr = expression_ptr();
 	variant curlevel = args()[0]->evaluate(variables);
-	level_ptr lvl = curlevel.try_convert<level>();
+	LevelPtr lvl = curlevel.try_convert<level>();
 	if(args().size() > 6) {
 		weight_expr = args()[6];
 	}
@@ -3407,12 +3407,12 @@ private:
 		} else if(slot_ != -1) {
 			if(cmd_->refcount() == 1) {
 				cmd_->setValue(args()[1]->evaluate(variables));
-				cmd_->set_expression(this);
+				cmd_->setExpression(this);
 				return variant(cmd_.get());
 			}
 
 			cmd_ = boost::intrusive_ptr<set_by_slot_command>(new set_by_slot_command(slot_, args()[1]->evaluate(variables)));
-			cmd_->set_expression(this);
+			cmd_->setExpression(this);
 			return variant(cmd_.get());
 		}
 
@@ -3420,7 +3420,7 @@ private:
 			static const std::string MeKey = "me";
 			variant target = variables.query_value(MeKey);
 			set_command* cmd = new set_command(target, key_, variant(), args()[1]->evaluate(variables));
-			cmd->set_expression(this);
+			cmd->setExpression(this);
 			return variant(cmd);
 		}
 
@@ -3430,7 +3430,7 @@ private:
 			variant target = args()[0]->evaluate_with_member(variables, member, &variant_member);
 			set_command* cmd = new set_command(
 			  target, member, variant_member, args()[1]->evaluate(variables));
-			cmd->set_expression(this);
+			cmd->setExpression(this);
 			return variant(cmd);
 		}
 
@@ -3443,7 +3443,7 @@ private:
 		    target,
 		    args()[begin_index]->evaluate(variables).as_string(), variant(),
 			args()[begin_index + 1]->evaluate(variables));
-		cmd->set_expression(this);
+		cmd->setExpression(this);
 		return variant(cmd);
 	}
 
@@ -3506,12 +3506,12 @@ private:
 		} else if(slot_ != -1) {
 			if(cmd_->refcount() == 1) {
 				cmd_->setValue(args()[1]->evaluate(variables));
-				cmd_->set_expression(this);
+				cmd_->setExpression(this);
 				return variant(cmd_.get());
 			}
 
 			cmd_ = boost::intrusive_ptr<add_by_slot_command>(new add_by_slot_command(slot_, args()[1]->evaluate(variables)));
-			cmd_->set_expression(this);
+			cmd_->setExpression(this);
 			return variant(cmd_.get());
 		}
 
@@ -3519,7 +3519,7 @@ private:
 			static const std::string MeKey = "me";
 			variant target = variables.query_value(MeKey);
 			add_command* cmd = new add_command(target, key_, variant(), args()[1]->evaluate(variables));
-			cmd->set_expression(this);
+			cmd->setExpression(this);
 			return variant(cmd);
 		}
 
@@ -3529,7 +3529,7 @@ private:
 			variant target = args()[0]->evaluate_with_member(variables, member, &variant_member);
 			add_command* cmd = new add_command(
 			      target, member, variant_member, args()[1]->evaluate(variables));
-			cmd->set_expression(this);
+			cmd->setExpression(this);
 			return variant(cmd);
 		}
 
@@ -3542,7 +3542,7 @@ private:
 		    target,
 		    args()[begin_index]->evaluate(variables).as_string(), variant(),
 			args()[begin_index + 1]->evaluate(variables));
-		cmd->set_expression(this);
+		cmd->setExpression(this);
 		return variant(cmd);
 	}
 
@@ -4055,12 +4055,12 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		return formula_function_expression_ptr(new formula_function_expression(name_, args, formula_, precondition_, args_, variant_types_));
 	}
 
-	void function_symbol_table::add_formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types)
+	void FunctionSymbolTable::add_formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types)
 	{
 		custom_formulas_[name] = formula_function(name, formula, precondition, args, default_args, variant_types);
 	}
 
-	expression_ptr function_symbol_table::create_function(const std::string& fn, const std::vector<expression_ptr>& args, ConstFormulaCallableDefinitionPtr callable_def) const
+	expression_ptr FunctionSymbolTable::create_function(const std::string& fn, const std::vector<expression_ptr>& args, ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 
 		const std::map<std::string, formula_function>::const_iterator i = custom_formulas_.find(fn);
@@ -4075,7 +4075,7 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		return expression_ptr();
 	}
 
-	std::vector<std::string> function_symbol_table::get_function_names() const
+	std::vector<std::string> FunctionSymbolTable::get_function_names() const
 	{
 		std::vector<std::string> res;
 		for(std::map<std::string, formula_function>::const_iterator iter = custom_formulas_.begin(); iter != custom_formulas_.end(); iter++ ) {
@@ -4084,7 +4084,7 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		return res;
 	}
 
-	const formula_function* function_symbol_table::get_formula_function(const std::string& fn) const
+	const formula_function* FunctionSymbolTable::get_formula_function(const std::string& fn) const
 	{
 		const std::map<std::string, formula_function>::const_iterator i = custom_formulas_.find(fn);
 		if(i == custom_formulas_.end()) {
@@ -4094,12 +4094,12 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		}
 	}
 
-	recursive_function_symbol_table::recursive_function_symbol_table(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, function_symbol_table* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types)
+	recursive_FunctionSymbolTable::recursive_FunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types)
 	: name_(fn), stub_(fn, const_formula_ptr(), const_formula_ptr(), args, default_args, variant_types), backup_(backup), closure_definition_(closure_definition)
 	{
 	}
 
-	expression_ptr recursive_function_symbol_table::create_function(
+	expression_ptr recursive_FunctionSymbolTable::create_function(
 					const std::string& fn,
 					const std::vector<expression_ptr>& args,
 					ConstFormulaCallableDefinitionPtr callable_def) const
@@ -4118,7 +4118,7 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		return expression_ptr();
 	}
 
-	void recursive_function_symbol_table::resolve_recursive_calls(const_formula_ptr f)
+	void recursive_FunctionSymbolTable::resolve_recursive_calls(const_formula_ptr f)
 	{
 		foreach(formula_function_expression_ptr& fn, expr_) {
 			fn->set_formula(f);
@@ -4176,7 +4176,7 @@ namespace {
 
 expression_ptr create_function(const std::string& fn,
                                const std::vector<expression_ptr>& args,
-							   const function_symbol_table* symbols,
+							   const FunctionSymbolTable* symbols,
 							   ConstFormulaCallableDefinitionPtr callable_def)
 {
 	if(fn == "set") {
@@ -4864,7 +4864,7 @@ namespace game_logic
 		return ConstFormulaCallableDefinitionPtr(new variant_comparator_definition(base_def, type));
 	}
 
-	class formula_function_symbol_table : public function_symbol_table
+	class formula_FunctionSymbolTable : public FunctionSymbolTable
 	{
 	public:
 		virtual expression_ptr create_function(
@@ -4873,7 +4873,7 @@ namespace game_logic
 								   ConstFormulaCallableDefinitionPtr callable_def) const;
 	};
 
-	expression_ptr formula_function_symbol_table::create_function(
+	expression_ptr formula_FunctionSymbolTable::create_function(
 							   const std::string& fn,
 							   const std::vector<expression_ptr>& args,
 							   ConstFormulaCallableDefinitionPtr callable_def) const
@@ -4884,12 +4884,12 @@ namespace game_logic
 			return expression_ptr(i->second->create(args));
 		}
 
-		return function_symbol_table::create_function(fn, args, callable_def);
+		return FunctionSymbolTable::create_function(fn, args, callable_def);
 	}
 }
 
-function_symbol_table& get_formula_functions_symbol_table()
+FunctionSymbolTable& get_formula_functions_symbol_table()
 {
-	static formula_function_symbol_table table;
+	static formula_FunctionSymbolTable table;
 	return table;
 }

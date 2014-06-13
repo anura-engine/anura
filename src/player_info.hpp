@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef PLAYER_INFO_HPP_INCLUDED
-#define PLAYER_INFO_HPP_INCLUDED
+
+#pragma once
 
 #include <map>
 #include <string>
@@ -24,40 +30,40 @@
 #include "variant.hpp"
 
 //class which contains information about the player.
-class player_info
+class PlayerInfo
 {
 public:
-	explicit player_info(entity& e) : entity_(&e), slot_(0)
+	explicit PlayerInfo(Entity& e) : entity_(&e), slot_(0)
 	{}
-	player_info(entity& e, variant node);
+	PlayerInfo(Entity& e, variant node);
 	
-	void object_destroyed(const std::string& level_id, int item);
-	const std::vector<int>& get_objects_destroyed(const std::string& level_id) const;
+	void objectDestroyed(const std::string& level_id, int item);
+	const std::vector<int>& getObjectsDestroyed(const std::string& level_id) const;
 
 	variant write() const;
 
-	void swap_player_state(player_info& player) {
+	void swapPlayerState(PlayerInfo& player) {
 		items_destroyed_.swap(player.items_destroyed_);
 		objects_destroyed_.swap(player.objects_destroyed_);
 	}
 
-	const entity& get_entity() const { return *entity_; }
-	entity& get_entity() { return *entity_; }
+	const Entity& getEntity() const { return *entity_; }
+	Entity& getEntity() { return *entity_; }
 
-	void set_entity(entity& e) { entity_ = &e; }
+	void setEntity(Entity& e) { entity_ = &e; }
 
-	const std::string& current_level() const { return current_level_; }
-	void set_current_level(const std::string& lvl) { current_level_ = lvl; }
+	const std::string& currentLevel() const { return current_level_; }
+	void setCurrentLevel(const std::string& lvl) { current_level_ = lvl; }
 
-	void set_player_slot(int slot) { slot_ = slot; }
+	void setPlayerSlot(int slot) { slot_ = slot; }
 
-	void read_controls(int cycle);
+	void readControls(int cycle);
 
 	
 	bool hasReverseGlobalVerticalZordering() const { return entity_->hasReverseGlobalVerticalZordering(); }
 
 private:
-	entity* entity_;
+	Entity* entity_;
 
 	mutable std::map<std::string, std::vector<int> > items_destroyed_;
 	mutable std::map<std::string, std::vector<int> > objects_destroyed_;
@@ -67,5 +73,3 @@ private:
 
 	std::string current_level_;
 };
-
-#endif

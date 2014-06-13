@@ -31,9 +31,9 @@ namespace gui
 	public:
 		custom_object_widget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~custom_object_widget();
-		void set_entity(entity_ptr e);
-		entity_ptr get_entity();
-		const_entity_ptr get_entity() const;
+		void setEntity(EntityPtr e);
+		EntityPtr getEntity();
+		ConstEntityPtr getEntity() const;
 		void init(const variant& v);
 	protected:
 
@@ -58,7 +58,7 @@ namespace gui
 
 		WidgetPtr overlay_;
 
-		entity_ptr entity_;
+		EntityPtr entity_;
 		bool handleProcess_on_entity_;
 	};
 

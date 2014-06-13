@@ -40,7 +40,7 @@ struct editor_resolution_manager;
 
 class level_runner {
 public:
-	static level_runner* get_current();
+	static level_runner* getCurrent();
 	level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
 
 	const debug_console::ConsoleDialog* get_debug_console() const {
@@ -72,8 +72,8 @@ private:
 	void close_editor();
 	void reverse_cycle();
 	void handle_pause_game_result(PAUSE_GAME_RESULT result);
-	typedef boost::intrusive_ptr<level> level_ptr;
-	level_ptr& lvl_;
+	typedef boost::intrusive_ptr<level> LevelPtr;
+	LevelPtr& lvl_;
 	std::string& level_cfg_;
 	std::string& original_level_cfg_;
 
@@ -117,7 +117,7 @@ private:
 	std::unique_ptr<editor_resolution_manager> editor_resolution_manager_;
 	gui::SliderPtr history_slider_;
 	gui::ButtonPtr history_button_;
-	std::vector<entity_ptr> history_trails_;
+	std::vector<EntityPtr> history_trails_;
 	std::string history_trails_label_;
 	int history_trails_state_id_;
 	int object_reloads_state_id_;

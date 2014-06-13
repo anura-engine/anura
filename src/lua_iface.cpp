@@ -233,7 +233,7 @@ namespace lua
 			for(int n = 2; n <= nargs; ++n) {
 				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
 			}
-			auto& player = level::current().player()->get_entity();
+			auto& player = level::current().player()->getEntity();
 			auto value = symbols.create_function(fn->name, args, player.getDefinition());
 			if(value == NULL) {
 				luaL_error(L, "Function not found: %s", fn->name);

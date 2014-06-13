@@ -84,7 +84,7 @@ namespace controls
 	void unread_local_controls();
 	void ignore_current_keypresses();
 
-	void get_control_status(int cycle, int player, bool* output, const std::string** user=NULL);
+	void get_controlStatus(int cycle, int player, bool* output, const std::string** user=NULL);
 	void set_delay(int delay);
 
 	void read_control_packet(const char* buf, size_t len);

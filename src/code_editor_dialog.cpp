@@ -178,7 +178,7 @@ bool code_editor_dialog::jump_to_error(const std::string& text)
 void code_editor_dialog::init_files_grid()
 {
 	if(files_grid_) {
-		remove_widget(files_grid_);
+		removeWidget(files_grid_);
 	}
 
 	if(files_.empty()) {
@@ -291,7 +291,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 	files_.insert(files_.begin(), f);
 
 	addWidget(f.editor, editor_->x(), editor_->y());
-	remove_widget(editor_);
+	removeWidget(editor_);
 
 	editor_ = f.editor;
 	op_fn_ = f.op_fn;
@@ -440,7 +440,7 @@ void code_editor_dialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 
-				level_runner::get_current()->replay_level_from_start();
+				level_runner::getCurrent()->replay_level_from_start();
 				
 			} else if(strstr(fname_.c_str(), "/tiles/")) {
 				std::cerr << "INIT TILE MAP\n";
@@ -1071,7 +1071,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
-	if(stack.empty() || !level::current_ptr()) {
+	if(stack.empty() || !level::getCurrentPtr()) {
 		return;
 	}
 

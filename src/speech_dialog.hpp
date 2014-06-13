@@ -43,8 +43,8 @@ public:
 	bool key_press(const SDL_Event& e);
 	bool process();
 	void draw() const;
-	void set_speaker_and_flip_side(const_entity_ptr e);
-	void set_speaker(const_entity_ptr e, bool left_side=false);
+	void set_speaker_and_flip_side(ConstEntityPtr e);
+	void set_speaker(ConstEntityPtr e, bool left_side=false);
 	void set_side(bool left_side);
 	void setText(const std::vector<std::string>& text);
 	void set_options(const std::vector<std::string>& options);
@@ -60,7 +60,7 @@ private:
 	bool scroll_text();
 
 	int cycle_;
-	const_entity_ptr left_, right_;
+	ConstEntityPtr left_, right_;
 	bool left_side_speaking_;
 	int horizontal_position_;
 

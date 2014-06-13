@@ -154,7 +154,7 @@ namespace voxel
 			return;
 		}
 
-		std::vector<variant> scheduled_commands = pop_scheduled_commands();
+		std::vector<variant> scheduled_commands = popScheduledCommands();
 		foreach(const variant& cmd, scheduled_commands) {
 			executeCommand(cmd);
 		}
@@ -187,12 +187,12 @@ namespace voxel
 		event_arg_ = v;
 	}
 
-	void voxel_object::add_scheduled_command(int cycle, variant cmd)
+	void voxel_object::addScheduledCommand(int cycle, variant cmd)
 	{
 		scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
 	}
 
-	std::vector<variant> voxel_object::pop_scheduled_commands()
+	std::vector<variant> voxel_object::popScheduledCommands()
 	{
 		std::vector<variant> result;
 		std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();

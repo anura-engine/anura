@@ -31,8 +31,8 @@
 #include "achievements.hpp"
 #include "formula_callable.hpp"
 
-class entity;
-class level;
+class Entity;
+class Level;
 
 struct screen_position {
 	screen_position() : init(false), x(0), y(0), x_pos(0), y_pos(0),
@@ -74,11 +74,11 @@ void set_displayed_Achievement(AchievementPtr a);
 bool is_Achievement_displayed();
 
 
-bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus=NULL, bool doDraw=true);
-void render_scene(const level& lvl, const screen_position& pos);
+bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus=NULL, bool doDraw=true);
+void render_scene(const Level& lvl, const screen_position& pos);
 
 //draw_scene calls both update_camera_position() and then render_scene()
-void draw_scene(const level& lvl, screen_position& pos, const entity* focus=NULL, bool doDraw=true);
+void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus=NULL, bool doDraw=true);
 
 struct performance_data : public game_logic::FormulaCallable {
 	int fps;
@@ -99,13 +99,13 @@ struct performance_data : public game_logic::FormulaCallable {
 	{}
 
 	variant getValue(const std::string& key) const;
-	void get_inputs(std::vector<game_logic::formula_input>* inputs) const;
+	void getInputs(std::vector<game_logic::formula_input>* inputs) const;
 
 	static void set_current(const performance_data& d);
 	static performance_data* current();
 };
 
-void draw_fps(const level& lvl, const performance_data& data);
+void draw_fps(const Level& lvl, const performance_data& data);
 
 void add_debug_rect(const rect& r);
 

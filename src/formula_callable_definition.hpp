@@ -124,7 +124,7 @@ public: \
 	virtual variant getValue(const std::string& key) const; \
 	virtual variant getValue_by_slot(int slot) const; \
 	virtual void setValue(const std::string& key, const variant& value); \
-	virtual void setValue_by_slot(int slot, const variant& value); \
+	virtual void setValueBySlot(int slot, const variant& value); \
 	virtual std::string get_object_id() const { return #classname; } \
 public: \
 	static void init_callable_type(std::vector<callable_PropertyEntry>& v, std::map<std::string, int>& properties); \
@@ -240,7 +240,7 @@ variant classname::getValue(const std::string& key) const { \
 void classname::setValue(const std::string& key, const variant& value) { \
 	std::map<std::string, int>::const_iterator itor = classname##_properties.find(key); \
 	if(itor != classname##_properties.end()) { \
-		setValue_by_slot(itor->second, value); \
+		setValueBySlot(itor->second, value); \
 	} \
 } \
 variant classname::getValue_by_slot(int slot) const { \
@@ -249,7 +249,7 @@ variant classname::getValue_by_slot(int slot) const { \
 	if(slot < classname##_num_base_slots) callable = base_ptr; \
 	return classname##_fields[slot].get(*callable); \
 } \
-void classname::setValue_by_slot(int slot, const variant& value) { \
+void classname::setValueBySlot(int slot, const variant& value) { \
 	ASSERT_LOG(slot >= 0 && slot < classname##_fields.size() && classname##_fields[slot].set, "Illegal slot when writing to " << #classname << ": " << slot << "/" << classname##_fields.size()); \
 	game_logic::FormulaCallable* callable = this; \
 	if(slot < classname##_num_base_slots) callable = base_ptr; \

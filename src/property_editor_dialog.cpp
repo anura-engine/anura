@@ -59,7 +59,7 @@ void property_editor_dialog::init()
 
 	setPadding(5);
 
-	const frame& frame = get_static_entity()->current_frame();
+	const frame& frame = get_static_entity()->getCurrentFrame();
 	ImageWidget* preview = new ImageWidget(frame.img());
 	preview->setDim(frame.width(), frame.height());
 	preview->setArea(frame.area());
@@ -69,17 +69,17 @@ void property_editor_dialog::init()
 
 	//draw the object's difficulty settings.
 	grid_ptr difficulty_grid(new grid(3));
-	const custom_object* obj = dynamic_cast<const custom_object*>(get_entity().get());
+	const custom_object* obj = dynamic_cast<const custom_object*>(getEntity().get());
 	ASSERT_LOG(obj, "ENTITY IS NOT AN OBJECT");
-	std::string min_difficulty = difficulty::to_string(obj->min_difficulty());
-	std::string max_difficulty = difficulty::to_string(obj->max_difficulty());
+	std::string min_difficulty = difficulty::to_string(obj->getMinDifficulty());
+	std::string max_difficulty = difficulty::to_string(obj->getMaxDifficulty());
 	
 	if(min_difficulty.empty()) {
-		min_difficulty = formatter() << obj->min_difficulty();
+		min_difficulty = formatter() << obj->getMinDifficulty();
 	}
 
 	if(max_difficulty.empty()) {
-		max_difficulty = formatter() << obj->max_difficulty();
+		max_difficulty = formatter() << obj->getMaxDifficulty();
 	}
 	min_difficulty = " " + min_difficulty;
 	max_difficulty = " " + max_difficulty;
@@ -110,13 +110,13 @@ void property_editor_dialog::init()
 	
 	addWidget(preview_grid, 10, 10);
 
-	addWidget(WidgetPtr(new label(obj->debug_description(), graphics::color_white())));
+	addWidget(WidgetPtr(new label(obj->getDebugDescription(), graphics::color_white())));
 
-	if(get_entity()->label().empty() == false) {
+	if(getEntity()->label().empty() == false) {
 		grid_ptr labels_grid(new grid(2));
 		labels_grid->set_hpad(5);
 		TextEditorWidget* e = new TextEditorWidget(120);
-		e->setText(get_entity()->label());
+		e->setText(getEntity()->label());
 		e->setOnChangeHandler(std::bind(&property_editor_dialog::setLabel, this, e));
 		labels_grid->add_col(WidgetPtr(new label("Label: ")))
 		            .add_col(WidgetPtr(e));
@@ -124,7 +124,7 @@ void property_editor_dialog::init()
 	}
 
 	std::map<std::string, int> types_selected;
-	foreach(entity_ptr e, entity_) {
+	foreach(EntityPtr e, entity_) {
 		types_selected[e->query_value("type").as_string()]++;
 	}
 
@@ -150,23 +150,23 @@ void property_editor_dialog::init()
 	}
 
 	game_logic::FormulaCallable* vars = get_static_entity()->vars();
-	if(get_entity()->getEditorInfo() && types_selected.size() == 1) {
-		if(get_entity()->group() >= 0) {
+	if(getEntity()->getEditorInfo() && types_selected.size() == 1) {
+		if(getEntity()->group() >= 0) {
 			grid_ptr group_grid(new grid(1));
 
-			group_grid->add_col(WidgetPtr(new button("Remove from Group", std::bind(&property_editor_dialog::remove_object_from_group, this, get_entity()))));
-			group_grid->add_col(WidgetPtr(new button("Breakup Group", std::bind(&property_editor_dialog::remove_group, this, get_entity()->group()))));
+			group_grid->add_col(WidgetPtr(new button("Remove from Group", std::bind(&property_editor_dialog::remove_object_from_group, this, getEntity()))));
+			group_grid->add_col(WidgetPtr(new button("Breakup Group", std::bind(&property_editor_dialog::remove_group, this, getEntity()->group()))));
 
 			addWidget(group_grid);
 		}
 
 		//output an editing area for each editable event.
-		foreach(const std::string& handler, get_entity()->getEditorInfo()->editable_events()) {
+		foreach(const std::string& handler, getEntity()->getEditorInfo()->editable_events()) {
 			LabelPtr lb = label::create(handler + " event handler", graphics::color_white());
 			addWidget(lb);
 
 			TextEditorWidget* e = new TextEditorWidget(220, 90);
-			game_logic::const_formula_ptr f = get_entity()->getEventHandler(get_object_event_id(handler));
+			game_logic::const_formula_ptr f = getEntity()->getEventHandler(get_object_event_id(handler));
 			if(f) {
 				e->setText(f->str());
 			}
@@ -176,7 +176,7 @@ void property_editor_dialog::init()
 
 		}
 
-		foreach(const editor_variable_info& info, get_entity()->getEditorInfo()->vars_and_properties()) {
+		foreach(const editor_variable_info& info, getEntity()->getEditorInfo()->vars_and_properties()) {
 
 			if(info.type() == editor_variable_info::XPOSITION ||
 			   info.type() == editor_variable_info::YPOSITION) {
@@ -333,7 +333,7 @@ void property_editor_dialog::init()
 	}
 }
 
-void property_editor_dialog::set_entity(entity_ptr e)
+void property_editor_dialog::setEntity(EntityPtr e)
 {
 	entity_.clear();
 	if(e) {
@@ -342,16 +342,16 @@ void property_editor_dialog::set_entity(entity_ptr e)
 	init();
 }
 
-void property_editor_dialog::set_entity_group(const std::vector<entity_ptr>& e)
+void property_editor_dialog::set_entity_group(const std::vector<EntityPtr>& e)
 {
 	entity_ = e;
 	init();
 }
 
-void property_editor_dialog::remove_object_from_group(entity_ptr entity_obj)
+void property_editor_dialog::remove_object_from_group(EntityPtr entity_obj)
 {
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 		if(!e) {
 			continue;
 		}
@@ -362,8 +362,8 @@ void property_editor_dialog::remove_object_from_group(entity_ptr entity_obj)
 
 void property_editor_dialog::remove_group(int ngroup)
 {
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr e, lvl->get_chars()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr e, lvl->get_chars()) {
 			if(e->group() == ngroup) {
 				lvl->set_character_group(e, -1);
 			}
@@ -374,17 +374,17 @@ void property_editor_dialog::remove_group(int ngroup)
 
 void property_editor_dialog::change_min_difficulty(int amount)
 {
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr entity_obj, entity_) {
-			entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr entity_obj, entity_) {
+			EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 			if(!e) {
 				continue;
 			}
 			custom_object* obj = dynamic_cast<custom_object*>(e.get());
 			ASSERT_LOG(obj, "ENTITY IS NOT AN OBJECT");
 
-			const int new_difficulty = std::max<int>(-1, obj->min_difficulty() + amount);
-			obj->set_difficulty(new_difficulty, obj->max_difficulty());
+			const int new_difficulty = std::max<int>(-1, obj->getMinDifficulty() + amount);
+			obj->setDifficultyRange(new_difficulty, obj->getMaxDifficulty());
 		}
 	}
 
@@ -393,17 +393,17 @@ void property_editor_dialog::change_min_difficulty(int amount)
 
 void property_editor_dialog::change_max_difficulty(int amount)
 {
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr entity_obj, entity_) {
-			entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr entity_obj, entity_) {
+			EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 			if(!e) {
 				continue;
 			}
 			custom_object* obj = dynamic_cast<custom_object*>(e.get());
 			ASSERT_LOG(obj, "ENTITY IS NOT AN OBJECT");
 
-			const int new_difficulty = std::max<int>(-1, obj->max_difficulty() + amount);
-			obj->set_difficulty(obj->min_difficulty(), new_difficulty);
+			const int new_difficulty = std::max<int>(-1, obj->getMaxDifficulty() + amount);
+			obj->setDifficultyRange(obj->getMinDifficulty(), new_difficulty);
 		}
 	}
 
@@ -437,9 +437,9 @@ void property_editor_dialog::setLabel(gui::TextEditorWidget* editor)
 		return;
 	}
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr entity_obj, entity_) {
-			entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr entity_obj, entity_) {
+			EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 			if(e) {
 				lvl->remove_character(e);
 				e->setLabel(editor->text());
@@ -534,7 +534,7 @@ void property_editor_dialog::change_enum_property(const std::string& id)
 		mousex = graphics::screen_width() - grid->width();
 	}
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }
@@ -560,7 +560,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 		variant level_id = get_static_entity()->query_value(var_info->info());
 		if(level_id.is_string() && level_id.as_string().empty() == false && level_id.as_string() != editor_.get_level().id()) {
 			level lvl(level_id.as_string());
-			lvl.finish_loading();
+			lvl.finishLoading();
 			lvl.getAll_labels(labels);
 			loaded_level = true;
 		}
@@ -596,7 +596,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 			mousex = graphics::screen_width() - grid->width();
 		}
 
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset(grid);
 		addWidget(context_menu_, mousex, mousey);
 
@@ -605,7 +605,7 @@ void property_editor_dialog::change_label_property(const std::string& id)
 
 void property_editor_dialog::set_enum_property(const std::string& id, const std::vector<std::string>& labels, int index)
 {
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset();
 	if(index < 0 || index >= labels.size()) {
 		init();
@@ -628,9 +628,9 @@ void property_editor_dialog::change_points_property(const std::string& id)
 
 void property_editor_dialog::mutate_value(const std::string& key, variant value)
 {
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr entity_obj, entity_) {
-			entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr entity_obj, entity_) {
+			EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 			if(e) {
 				editor_.mutate_object_value(lvl, e, key, value);
 			}
@@ -643,7 +643,7 @@ void property_editor_dialog::deselect_object_type(std::string type)
 	level& lvl = editor_.get_level();
 	variant type_var(type);
 	lvl.editor_clear_selection();
-	foreach(entity_ptr& e, entity_) {
+	foreach(EntityPtr& e, entity_) {
 		if(e->query_value("type") != type_var) {
 			lvl.editor_select_object(e);
 		}
@@ -654,13 +654,13 @@ void property_editor_dialog::deselect_object_type(std::string type)
 	init();
 }
 
-entity_ptr property_editor_dialog::get_static_entity() const
+EntityPtr property_editor_dialog::get_static_entity() const
 {
-	entity_ptr result = editor_.get_level_list().front()->get_entity_by_label(get_entity()->label());
+	EntityPtr result = editor_.get_level_list().front()->get_entity_by_label(getEntity()->label());
 	if(result) {
 		return result;
 	} else {
-		return get_entity();
+		return getEntity();
 	}
 }
 
@@ -674,12 +674,12 @@ void property_editor_dialog::change_event_handler(const std::string& id, gui::La
 	try {
 		game_logic::formula_ptr f(new game_logic::formula(variant(text), &get_custom_object_functions_symbol_table(), custom_object_definition));
 		
-		foreach(level_ptr lvl, editor_.get_level_list()) {
-			foreach(entity_ptr entity_obj, entity_) {
-				entity_ptr e = lvl->get_entity_by_label(entity_obj->label());
+		foreach(LevelPtr lvl, editor_.get_level_list()) {
+			foreach(EntityPtr entity_obj, entity_) {
+				EntityPtr e = lvl->get_entity_by_label(entity_obj->label());
 				if(e) {
 					std::cerr << "SET EVENT HANDLER\n";
-					e->set_event_handler(get_object_event_id(id), f);
+					e->setEventHandler(get_object_event_id(id), f);
 				} else {
 					std::cerr << "NO EVENT HANDLER FOUND\n";
 				}

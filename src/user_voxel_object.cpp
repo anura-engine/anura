@@ -31,7 +31,7 @@ user_voxel_object::user_voxel_object(const variant& node)
 	for(const variant::map_pair& p : node.as_map()) {
 		auto itor = type_->properties().find(p.first.as_string());
 		if(itor != type_->properties().end()) {
-			setValue_by_slot(type_->num_base_slots() + itor->second.slot, p.second);
+			setValueBySlot(type_->num_base_slots() + itor->second.slot, p.second);
 			require_init.erase(std::remove(require_init.begin(), require_init.end(), itor->second.slot), require_init.end());
 		}
 	}
@@ -56,7 +56,7 @@ bool user_voxel_object::executeCommand(const variant& b)
 {
 	const voxel_object_command_callable* cmd = b.try_convert<voxel_object_command_callable>();
 	if(cmd) {
-		cmd->run_command(*level::current().iso_world().get(), *this);
+		cmd->runCommand(*level::current().iso_world().get(), *this);
 		return true;
 	}
 
@@ -121,11 +121,11 @@ variant user_voxel_object::getValue_by_slot(int slot) const
 	}
 }
 
-void user_voxel_object::setValue_by_slot(int slot, const variant& value)
+void user_voxel_object::setValueBySlot(int slot, const variant& value)
 {
 	static const int NumBaseSlots = type_->num_base_slots();
 	if(slot < NumBaseSlots) {
-		voxel_object::setValue_by_slot(slot, value);
+		voxel_object::setValueBySlot(slot, value);
 		return;
 	}
 
@@ -181,7 +181,7 @@ void user_voxel_object::setValue(const std::string& key, const variant& value)
 {
 	for(int slot = 0; slot != type_->getSlotProperties().size(); ++slot) {
 		if(type_->getSlotProperties()[slot].id == key) {
-			setValue_by_slot(type_->num_base_slots() + slot, value);
+			setValueBySlot(type_->num_base_slots() + slot, value);
 			return;
 		}
 	}

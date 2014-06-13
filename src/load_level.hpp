@@ -24,7 +24,7 @@
 
 #include "variant.hpp"
 
-class level;
+class Level;
 
 struct load_level_manager {
 	load_level_manager();

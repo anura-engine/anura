@@ -187,7 +187,7 @@ void editor_module_properties_dialog::change_module_includes()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }
@@ -204,7 +204,7 @@ void editor_module_properties_dialog::remove_module_include(const std::string& s
 void editor_module_properties_dialog::execute_change_module_includes(const std::vector<std::string>& choices, int index)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 

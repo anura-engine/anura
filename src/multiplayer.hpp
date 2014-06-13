@@ -25,7 +25,7 @@
 
 #include <functional>
 
-class level;
+class Level;
 
 namespace multiplayer 
 {
@@ -33,7 +33,7 @@ namespace multiplayer
 	int slot();
 	void setup_networked_game(const std::string& server);
 
-	void sync_start_time(const level& lvl, std::function<bool()> idle_fn);
+	void sync_start_time(const Level& lvl, std::function<bool()> idle_fn);
 
 	void send_and_receive();
 	void receive();

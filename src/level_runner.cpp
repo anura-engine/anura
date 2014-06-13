@@ -144,7 +144,7 @@ void prepare_transition_scene(level& lvl, screen_position& screen_pos)
 
 void transition_scene(level& lvl, screen_position& screen_pos, bool transition_out, TransitionFn draw_fn) {
 	if(lvl.player()) {
-		lvl.player()->get_entity().set_invisible(true);
+		lvl.player()->getEntity().setInvisible(true);
 	}
 
 	const int start_time = SDL_GetTicks();
@@ -165,7 +165,7 @@ void transition_scene(level& lvl, screen_position& screen_pos, bool transition_o
 	}
 	
 	if(lvl.player()) {
-		lvl.player()->get_entity().set_invisible(false);
+		lvl.player()->getEntity().setInvisible(false);
 	}
 }
 
@@ -192,8 +192,8 @@ void iris_scene(const level& lvl, screen_position& screen_pos, float amount) {
 		return;
 	}
 
-	const_entity_ptr player = &lvl.player()->get_entity();
-	const point light_pos = player->midpoint();
+	ConstEntityPtr player = &lvl.player()->getEntity();
+	const point light_pos = player->getMidpoint();
 
 	if(amount >= 0.99) {
 		SDL_Rect rect = {0, 0, graphics::screen_width(), graphics::screen_height()};
@@ -398,7 +398,7 @@ void level_runner::video_resize_event(const SDL_Event &event)
 	game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 	callable->add("width", variant(event.window.data1));
 	callable->add("height", variant(event.window.data2));
-	lvl_->player()->get_entity().handleEvent(WindowResizeEventID, callable.get());
+	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
 }
 
 #if defined(USE_ISOMAP)
@@ -526,9 +526,9 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				// Grab characters around point, z-order sort them, so that when
 				// we process them we go from highest to lowest, allowing a higher
 				// object to swallow an event before the lower ones get it.
-				std::vector<entity_ptr> cs = lvl_->get_characters_at_point(x, y, last_draw_position().x/100, last_draw_position().y/100);
+				std::vector<EntityPtr> cs = lvl_->get_characters_at_point(x, y, last_draw_position().x/100, last_draw_position().y/100);
 #if defined(USE_ISOMAP)
-				std::vector<entity_ptr> wcs = lvl_->get_characters_at_world_point(v3);
+				std::vector<EntityPtr> wcs = lvl_->get_characters_at_world_point(v3);
 				cs.insert(cs.end(), wcs.begin(), wcs.end());
 #endif
 				//zorder_compare sorts lowest-to-highest, so we do that
@@ -536,14 +536,14 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				std::sort(cs.begin(), cs.end(), zorder_compare);
 				std::reverse(cs.begin(), cs.end());
 
-				std::vector<entity_ptr>::iterator it;
+				std::vector<EntityPtr>::iterator it;
 				bool handled = false;
 				bool click_handled = false;
-				std::set<entity_ptr> mouse_in;
+				std::set<EntityPtr> mouse_in;
 				for(it = cs.begin(); it != cs.end(); ++it) {
-					entity_ptr& e = *it;
+					EntityPtr& e = *it;
 					rect m_area = e->getMouseOverArea();
-					m_area += e->midpoint();
+					m_area += e->getMidpoint();
 					// n.b. mouse_over_area is relative to the object.
 					if(m_area.w() != 0) {
 						point p(x,y);
@@ -556,29 +556,29 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					}
 
 					if(event_type == SDL_MOUSEBUTTONDOWN) {
-						e->set_mouse_buttons(e->get_mouse_buttons() | SDL_BUTTON(event_button_button));
+						e->setMouseButtons(e->getMouseButtons() | SDL_BUTTON(event_button_button));
 					} else if(event_type == SDL_MOUSEMOTION) {
 						// handling for mouse_enter
-						if(e->is_mouse_over_entity() == false) {
-							if((e->getMouseoverDelay() == 0 || unsigned(lvl_->cycle()) > e->get_mouseover_trigger_cycle())) {
+						if(e->isMouseOverEntity() == false) {
+							if((e->getMouseoverDelay() == 0 || unsigned(lvl_->cycle()) > e->getMouseoverTriggerCycle())) {
 								e->handleEvent(MouseEnterID, callable.get());
-								e->set_mouse_over_entity();
-							} else if(e->get_mouseover_trigger_cycle() == INT_MAX) {
-								e->set_mouseover_trigger_cycle(e->getMouseoverDelay() + lvl_->cycle());
+								e->setMouseOverEntity();
+							} else if(e->getMouseoverTriggerCycle() == INT_MAX) {
+								e->setMouseoverTriggerCycle(e->getMouseoverDelay() + lvl_->cycle());
 							}
 						}
 						mouse_in.insert(e);
 					}
 
-					if(e->is_mouse_over_entity() || basic_evt != MouseMoveEventID) {
+					if(e->isMouseOverEntity() || basic_evt != MouseMoveEventID) {
 						//only give mouse move events if we've actually
 						//recordered a mouse_enter event.
 						handled |= e->handleEvent(basic_evt, callable.get());
 					}
 
-					if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->is_being_dragged() == false) {
+					if(event_type == SDL_MOUSEBUTTONUP && mouse_clicking_ && !click_handled && e->isBeingDragged() == false) {
 						e->handleEvent(MouseClickID, callable.get());
-						if((*it)->mouse_event_swallowed()) {
+						if((*it)->isMouseEventSwallowed()) {
 							click_handled = true;
 						}
 					}
@@ -588,44 +588,44 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 				callable->add("handled", variant::from_bool(handled));
 				variant obj_ary(&items);
 				callable->add("objects_under_mouse", obj_ary);
-				std::vector<entity_ptr> level_chars(level::current().get_chars());
+				std::vector<EntityPtr> level_chars(level::current().get_chars());
 				//make events happen with highest zorder objects first.
 				std::sort(level_chars.begin(), level_chars.end(), zorder_compare);
 				std::reverse(level_chars.begin(), level_chars.end());
 
 				bool drag_handled = false;
-				foreach(entity_ptr object, level_chars) {
+				foreach(EntityPtr object, level_chars) {
 					if(object) {
 						object->handleEvent(catch_all_event, callable.get());
 
 						// drag handling
 						if(event_type == SDL_MOUSEBUTTONUP && !drag_handled) {
-							object->set_mouse_buttons(object->get_mouse_buttons() & ~SDL_BUTTON(event_button_button));
-							if(object->get_mouse_buttons() == 0 && object->is_being_dragged()) {
+							object->setMouseButtons(object->getMouseButtons() & ~SDL_BUTTON(event_button_button));
+							if(object->getMouseButtons() == 0 && object->isBeingDragged()) {
 								object->handleEvent(MouseDragEndID, callable.get());
-								object->set_being_dragged(false);
-								if(object->mouse_event_swallowed()) {
+								object->setBeingDragged(false);
+								if(object->isMouseEventSwallowed()) {
 									drag_handled = true;
 								}
 							}
 						} else if(event_type == SDL_MOUSEMOTION && !drag_handled) {
 							mouse_drag_count_ += abs(event.motion.xrel) + abs(event.motion.yrel);
 							// drag check.
-							if(object->is_being_dragged()) {
-								if(object->get_mouse_buttons() & button_state) {
+							if(object->isBeingDragged()) {
+								if(object->getMouseButtons() & button_state) {
 									object->handleEvent(MouseDragID, callable.get());
 								} else {
 									object->handleEvent(MouseDragEndID, callable.get());
-									object->set_being_dragged(false);
+									object->setBeingDragged(false);
 								}
-								if(object->mouse_event_swallowed()) {
+								if(object->isMouseEventSwallowed()) {
 									drag_handled = true;
 								}
-							} else if(object->get_mouse_buttons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
+							} else if(object->getMouseButtons() & button_state && mouse_drag_count_ > DragThresholdMilliPx) {
 								// start drag.
 								object->handleEvent(MouseDragStartID, callable.get());
-								object->set_being_dragged();
-								if(object->mouse_event_swallowed()) {
+								object->setBeingDragged();
+								if(object->isMouseEventSwallowed()) {
 									drag_handled = true;
 								}
 							}
@@ -640,14 +640,14 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 					//make events happen with highest zorder objects first.
 					std::sort(level_chars.begin(), level_chars.end(), zorder_compare);
 					std::reverse(level_chars.begin(), level_chars.end());
-					foreach(const entity_ptr& e, level_chars) {
+					foreach(const EntityPtr& e, level_chars) {
 						if(!e) {
 							continue;
 						}
 
 						// n.b. mouse_over_area is relative to the object.
 						rect m_area = e->getMouseOverArea();
-						m_area += e->midpoint();
+						m_area += e->getMidpoint();
 						bool has_m_area = m_area.w() != 0;
 						point p(x,y);
 						if(e->useAbsoluteScreenCoordinates()) {
@@ -655,19 +655,19 @@ bool level_runner::handle_mouse_events(const SDL_Event &event)
 						}
 
 						if(mouse_in.find(e) == mouse_in.end()) {
-							e->set_mouseover_trigger_cycle(INT_MAX);
+							e->setMouseoverTriggerCycle(INT_MAX);
 						}
 
 						if(mouse_in.find(e) == mouse_in.end()) {
 							if(has_m_area == false) {
-								if(e->is_mouse_over_entity()) {
+								if(e->isMouseOverEntity()) {
 									e->handleEvent(MouseLeaveID, callable.get());
-									e->set_mouse_over_entity(false);
+									e->setMouseOverEntity(false);
 								}
 							} else {
-								if(pointInRect(p, m_area) == false && e->is_mouse_over_entity()) {
+								if(pointInRect(p, m_area) == false && e->isMouseOverEntity()) {
 									e->handleEvent(MouseLeaveID, callable.get());
-									e->set_mouse_over_entity(false);
+									e->setMouseOverEntity(false);
 								}
 							}								
 						}
@@ -692,7 +692,7 @@ void level_runner::show_pause_title()
 	}
 }
 
-level_runner* level_runner::get_current()
+level_runner* level_runner::getCurrent()
 {
 	return current_level_runner;
 }
@@ -745,7 +745,7 @@ void level_runner::start_editor()
 		editor_->set_playing_level(lvl_);
 		editor_->setup_for_editing();
 		lvl_->set_editor();
-		lvl_->set_as_current_level();
+		lvl_->setAsCurrentLevel();
 		init_history_Slider();
 	} else {
 		//Pause the game and set the level to its original
@@ -788,7 +788,7 @@ bool level_runner::play_level()
 
 	sound::stop_looped_sounds(NULL);
 
-	lvl_->set_as_current_level();
+	lvl_->setAsCurrentLevel();
 	bool reversing = false;
 
 	if(preferences::edit_on_start()) {
@@ -891,10 +891,10 @@ bool level_runner::play_cycle()
 	if(editor_) {
 
 		controls::control_backup_scope ctrl_backup;
-		editor_->set_pos(last_draw_position().x/100 - (editor_->zoom()-1)*(graphics::screen_width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(graphics::screen_height())/2);
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(graphics::screen_width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(graphics::screen_height())/2);
 		editor_->process();
 		lvl_->complete_rebuild_tiles_in_background();
-		lvl_->set_as_current_level();
+		lvl_->setAsCurrentLevel();
 
 		lvl_->mutate_value("zoom", variant(decimal(1.0/editor_->zoom())));
 
@@ -905,7 +905,7 @@ bool level_runner::play_cycle()
 			background::load_modified_backgrounds();
 		}
 
-		if(history_trails_.empty() == false && (tile_rebuild_state_id_ != level::tile_rebuild_state_id() || history_trails_state_id_ != editor_->level_state_id() || object_reloads_state_id_ != CustomObjectType::numObjectReloads())) {
+		if(history_trails_.empty() == false && (tile_rebuild_state_id_ != level::tileRebuildStateId() || history_trails_state_id_ != editor_->level_state_id() || object_reloads_state_id_ != CustomObjectType::numObjectReloads())) {
 			update_history_trails();
 		}
 
@@ -957,7 +957,7 @@ bool level_runner::play_cycle()
 	//record player movement every minute on average.
 #if !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
 	if(rand()%3000 == 0 && lvl_->player()) {
-		point p = lvl_->player()->get_entity().midpoint();
+		point p = lvl_->player()->getEntity().getMidpoint();
 
 		if(last_stats_point_level_ == lvl_->id()) {
 			stats::entry("move").add_player_pos();
@@ -968,7 +968,7 @@ bool level_runner::play_cycle()
 	}
 #endif
 
-	if(die_at <= 0 && lvl_->players().size() == 1 && lvl_->player() && lvl_->player()->get_entity().hitpoints() <= 0) {
+	if(die_at <= 0 && lvl_->players().size() == 1 && lvl_->player() && lvl_->player()->getEntity().getHitpoints() <= 0) {
 		die_at = cycle;
 	}
 
@@ -985,26 +985,26 @@ bool level_runner::play_cycle()
 	} else if(die_at > 0 && cycle >= die_at + 30) {
 		die_at = -1;
 
-		foreach(entity_ptr e, lvl_->get_chars()) {
+		foreach(EntityPtr e, lvl_->get_chars()) {
 			e->handleEvent(OBJECT_EVENT_PLAYER_DEATH);
 		}
 
 		//record stats of the player's death
-		lvl_->player()->get_entity().record_stats_movement();
+		lvl_->player()->getEntity().recordStatsMovement();
 		stats::entry("die").add_player_pos();
 		last_stats_point_level_ = "";
 
-		entity_ptr save = lvl_->player()->get_entity().save_condition();
+		EntityPtr save = lvl_->player()->getEntity().saveCondition();
 		if(!save) {
 			return false;
 		}
 
 		prepare_transition_scene(*lvl_, last_draw_position());
 
-		preload_level(save->get_player_info()->current_level());
+		preload_level(save->getPlayerInfo()->currentLevel());
 		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
 		sound::stop_looped_sounds(NULL);
-		boost::intrusive_ptr<level> new_level = load_level(save->get_player_info()->current_level());
+		boost::intrusive_ptr<level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
 		if(!new_level->music().empty()) {
 			sound::play_music(new_level->music());
@@ -1012,8 +1012,8 @@ bool level_runner::play_cycle()
 
 		set_scene_title(new_level->title());
 		new_level->add_player(save);
-		new_level->set_as_current_level();
-		save->save_game();
+		new_level->setAsCurrentLevel();
+		save->saveGame();
 		save->handleEvent(OBJECT_EVENT_LOAD_CHECKPOINT);
 		place_entity_in_level(*new_level, *save);
 		lvl_ = new_level;
@@ -1022,10 +1022,10 @@ bool level_runner::play_cycle()
 		//trigger a garbage collection of objects now.
 		custom_object::run_garbage_collection();
 	} else if(lvl_->players().size() > 1) {
-		foreach(const entity_ptr& c, lvl_->players()) {
-			if(c->hitpoints() <= 0) {
+		foreach(const EntityPtr& c, lvl_->players()) {
+			if(c->getHitpoints() <= 0) {
 				//in multiplayer we respawn on death
-				c->respawn_player();
+				c->respawnPlayer();
 			}
 		}
 	}
@@ -1041,28 +1041,28 @@ bool level_runner::play_cycle()
 			//the portal is within the same level
 
 			if(portal->dest_label.empty() == false) {
-				const_entity_ptr dest_door = lvl_->get_entity_by_label(portal->dest_label);
+				ConstEntityPtr dest_door = lvl_->get_entity_by_label(portal->dest_label);
 				if(dest_door) {
-					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->face_dir(), dest_door->y() + dest_door->getTeleportOffsetY());
+					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->getFaceDir(), dest_door->y() + dest_door->getTeleportOffsetY());
 					mutable_portal.dest_starting_pos = false;
 				}
 
 			}
 			last_draw_position() = screen_position();
 
-			player_info* player = lvl_->player();
+			PlayerInfo* player = lvl_->player();
 			if(portal->new_playable) {
 				game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
-				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
+				player->getEntity().handleEvent("player_change_on_teleport", callable.get());
 				lvl_->add_player(portal->new_playable);
 				player = lvl_->player();
 			}
 
 			if(player) {
-				player->get_entity().set_pos(portal->dest);
-				if(!player->get_entity().hasNoMoveToStanding() && !portal->no_move_to_standing){
-					player->get_entity().move_to_standing(*lvl_);
+				player->getEntity().setPos(portal->dest);
+				if(!player->getEntity().hasNoMoveToStanding() && !portal->no_move_to_standing){
+					player->getEntity().moveToStanding(*lvl_);
 				}
 			}
 		} else {
@@ -1075,7 +1075,7 @@ bool level_runner::play_cycle()
 			
 			if (preferences::load_compiled())
 			{
-				level::summary summary = level::get_summary(level_cfg_);
+				level::summary summary = level::getSummary(level_cfg_);
 				if(!summary.music.empty()) {
 					sound::play_music(summary.music);
 				}
@@ -1104,9 +1104,9 @@ bool level_runner::play_cycle()
 			if(portal->dest_label.empty() == false) {
 				//the label of an object was specified as an entry point,
 				//so set our position there.
-				const_entity_ptr dest_door = new_level->get_entity_by_label(portal->dest_label);
+				ConstEntityPtr dest_door = new_level->get_entity_by_label(portal->dest_label);
 				if(dest_door) {
-					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->face_dir(), dest_door->y() + dest_door->getTeleportOffsetY());
+					mutable_portal.dest = point(dest_door->x() + dest_door->getTeleportOffsetX()*dest_door->getFaceDir(), dest_door->y() + dest_door->getTeleportOffsetY());
 					mutable_portal.dest_starting_pos = false;
 				}
 			}
@@ -1115,41 +1115,41 @@ bool level_runner::play_cycle()
 				new_level->set_editor();
 			}
 
-			new_level->set_as_current_level();
+			new_level->setAsCurrentLevel();
 
 			set_scene_title(new_level->title());
 			point dest = portal->dest;
 			if(portal->dest_str.empty() == false) {
 				dest = new_level->get_dest_from_str(portal->dest_str);
 			} else if(portal->dest_starting_pos) {
-				const player_info* new_player;
+				const PlayerInfo* new_player;
 				if(portal->new_playable) {
-					new_player = portal->new_playable->get_player_info();
+					new_player = portal->new_playable->getPlayerInfo();
 				} else {
 					new_player = new_level->player();
 				}
 				if(new_player) {
-					dest = point(new_player->get_entity().x(), new_player->get_entity().y());
+					dest = point(new_player->getEntity().x(), new_player->getEntity().y());
 				}
 			}
 
-			player_info* player = lvl_->player();
+			PlayerInfo* player = lvl_->player();
 			if(portal->new_playable) {
 				game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable());
 				callable->add("new_playable", variant(portal->new_playable.get()));
-				player->get_entity().handleEvent("player_change_on_teleport", callable.get());
+				player->getEntity().handleEvent("player_change_on_teleport", callable.get());
 			}
 
 			if(player && portal->saved_game == false) {
 				if(portal->new_playable) {
-					player = portal->new_playable->get_player_info();
+					player = portal->new_playable->getPlayerInfo();
 				}
-				player->get_entity().set_pos(dest);
-				new_level->add_player(&player->get_entity());
-				if(!player->get_entity().hasNoMoveToStanding() && !portal->no_move_to_standing){
-					player->get_entity().move_to_standing(*new_level);
+				player->getEntity().setPos(dest);
+				new_level->add_player(&player->getEntity());
+				if(!player->getEntity().hasNoMoveToStanding() && !portal->no_move_to_standing){
+					player->getEntity().moveToStanding(*new_level);
 				}
-				player->get_entity().handleEvent("enter_level");
+				player->getEntity().handleEvent("enter_level");
 			} else {
 				player = new_level->player();
 			}
@@ -1176,7 +1176,7 @@ bool level_runner::play_cycle()
 				editor_ = editor::get_editor(lvl_->id().c_str());
 				editor_->set_playing_level(lvl_);
 				editor_->setup_for_editing();
-				lvl_->set_as_current_level();
+				lvl_->setAsCurrentLevel();
 				lvl_->set_editor();
 				init_history_Slider();
 			}
@@ -1221,7 +1221,7 @@ bool level_runner::play_cycle()
 
 			if(editor_) {
 				swallowed = editor_->handleEvent(event, swallowed) || swallowed;
-				lvl_->set_as_current_level();
+				lvl_->setAsCurrentLevel();
 
 				if(editor::last_edited_level() != lvl_->id() && editor_->confirm_quit()) {
 
@@ -1230,7 +1230,7 @@ bool level_runner::play_cycle()
 						new_level->set_editor();
 					}
 
-					new_level->set_as_current_level();
+					new_level->setAsCurrentLevel();
 
 					if(!new_level->music().empty()) {
 						sound::play_music(new_level->music());
@@ -1243,7 +1243,7 @@ bool level_runner::play_cycle()
 					editor_ = editor::get_editor(lvl_->id().c_str());
 					editor_->set_playing_level(lvl_);
 					editor_->setup_for_editing();
-					lvl_->set_as_current_level();
+					lvl_->setAsCurrentLevel();
 					lvl_->set_editor();
 					init_history_Slider();
 
@@ -1262,8 +1262,8 @@ bool level_runner::play_cycle()
 				// pre-translate the mouse positions.
 				SDL_Event ev(event);
 				translate_mouse_event(&ev);
-				const std::vector<entity_ptr> active_chars = lvl_->get_active_chars();
-				foreach(const entity_ptr& e, active_chars) {
+				const std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
+				foreach(const EntityPtr& e, active_chars) {
 					custom_object* custom_obj = dynamic_cast<custom_object*>(e.get());
 					swallowed = custom_obj->handle_sdl_event(ev, swallowed);
 				}
@@ -1362,7 +1362,7 @@ bool level_runner::play_cycle()
 				} else if(key == SDLK_d && (mod&KMOD_CTRL)) {
 #ifndef NO_EDITOR
 					if(!console_ && lvl_->player()) {
-						console_.reset(new debug_console::ConsoleDialog(*lvl_, lvl_->player()->get_entity()));
+						console_.reset(new debug_console::ConsoleDialog(*lvl_, lvl_->player()->getEntity()));
 					} else {
 						console_.reset();
 					}
@@ -1410,7 +1410,7 @@ bool level_runner::play_cycle()
 				} else if(key == SDLK_i && lvl_->player()) {
 // INVENTORY CURRENTLY DISABLED
 //					pause_scope pauser;
-//					show_inventory(*lvl_, lvl_->player()->get_entity());
+//					show_inventory(*lvl_, lvl_->player()->getEntity());
 				} else if(key == SDLK_m && mod & KMOD_CTRL) {
 					sound::mute(!sound::muted()); //toggle sound
 				} else if(key == SDLK_p && mod & KMOD_CTRL) {
@@ -1461,7 +1461,7 @@ bool level_runner::play_cycle()
 				if(console_.get()) {
 					int mousex, mousey;
 					input::sdl_get_mouse_state(&mousex, &mousey);
-					entity_ptr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
+					EntityPtr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
 					if(selected) {
 						lvl_->set_editor_highlight(selected);
 						console_->setFocus(selected);
@@ -1612,11 +1612,11 @@ bool level_runner::play_cycle()
 				editor_->toggle_active_level();
 				render_scene(editor_->get_level(), last_draw_position());
 				editor_->toggle_active_level();
-				lvl_->set_as_current_level();
+				lvl_->setAsCurrentLevel();
 			} else {
 				std::vector<variant> alpha_values;
 				if(!history_trails_.empty()) {
-					foreach(entity_ptr e, history_trails_) {
+					foreach(EntityPtr e, history_trails_) {
 						alpha_values.push_back(e->query_value("alpha"));
 						e->mutate_value("alpha", variant(32));
 						lvl_->add_draw_character(e);
@@ -1626,7 +1626,7 @@ bool level_runner::play_cycle()
 #ifndef NO_EDITOR
 				int index = 0;
 				if(!history_trails_.empty()) {
-					foreach(entity_ptr e, history_trails_) {
+					foreach(EntityPtr e, history_trails_) {
 						e->mutate_value("alpha", alpha_values[index++]);
 					}
 
@@ -1653,7 +1653,7 @@ bool level_runner::play_cycle()
 	box2d::world_ptr world = box2d::world::our_world_ptr();
 	if(world) {
 		if(world->draw_debug_data()) {
-			world->current_ptr()->DrawDebugData();
+			world->getCurrentPtr()->DrawDebugData();
 		}
 	}
 #endif
@@ -1810,7 +1810,7 @@ void level_runner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 	if(result == PAUSE_GAME_QUIT) {
 		//record a quit event in stats
 		if(lvl_->player()) {
-			lvl_->player()->get_entity().record_stats_movement();
+			lvl_->player()->getEntity().recordStatsMovement();
 			stats::entry("quit").add_player_pos();
 		}
 		
@@ -1881,13 +1881,13 @@ void level_runner::toggle_history_trails()
 
 void level_runner::update_history_trails()
 {
-	entity_ptr e;
+	EntityPtr e;
 	if(history_trails_label_.empty() == false && lvl_->get_entity_by_label(history_trails_label_)) {
 		e = lvl_->get_entity_by_label(history_trails_label_);
 	} else if(lvl_->editor_selection().empty() == false) {
 		e = lvl_->editor_selection().front();
 	} else if(lvl_->player()) {
-		e = entity_ptr(&lvl_->player()->get_entity());
+		e = EntityPtr(&lvl_->player()->getEntity());
 	}
 
 	if(e) {
@@ -1898,7 +1898,7 @@ void level_runner::update_history_trails()
 		history_trails_ = lvl_->predict_future(e, ncycles);
 		history_trails_state_id_ = editor_->level_state_id();
 		object_reloads_state_id_ = CustomObjectType::numObjectReloads();
-		tile_rebuild_state_id_ = level::tile_rebuild_state_id();
+		tile_rebuild_state_id_ = level::tileRebuildStateId();
 
 		history_trails_label_ = e->label();
 	}
@@ -1912,7 +1912,7 @@ void level_runner::replay_level_from_start()
 		new_level->set_editor();
 	}
 
-	new_level->set_as_current_level();
+	new_level->setAsCurrentLevel();
 
 	if(!new_level->music().empty()) {
 		sound::play_music(new_level->music());
@@ -1924,7 +1924,7 @@ void level_runner::replay_level_from_start()
 	editor_ = editor::get_editor(lvl_->id().c_str());
 	editor_->set_playing_level(lvl_);
 	editor_->setup_for_editing();
-	lvl_->set_as_current_level();
+	lvl_->setAsCurrentLevel();
 	lvl_->set_editor();
 	init_history_Slider();
 

@@ -50,7 +50,7 @@ void group_property_editor_dialog::init()
 	}
 }
 
-void group_property_editor_dialog::set_group(const std::vector<entity_ptr>& group)
+void group_property_editor_dialog::setGroup(const std::vector<EntityPtr>& group)
 {
 	group_ = group;
 	init();

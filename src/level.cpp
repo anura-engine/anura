@@ -76,7 +76,7 @@ namespace {
 PREF_BOOL(debug_shadows, false, "Show debug visualization of shadow drawing");
 
 
-boost::intrusive_ptr<level>& get_current_level() {
+boost::intrusive_ptr<level>& get_currentLevel() {
 	static boost::intrusive_ptr<level> current_level;
 	return current_level;
 }
@@ -100,12 +100,12 @@ bool level_tile_not_in_rect(const rect& r, const level_tile& t) {
 
 }
 
-void level::clear_current_level()
+void level::clearCurrentLevel()
 {
-	get_current_level().reset();
+	get_currentLevel().reset();
 }
 
-level::summary level::get_summary(const std::string& id)
+level::summary level::getSummary(const std::string& id)
 {
 	static const std::map<std::string, summary> summaries = load_level_summaries();
 	std::map<std::string, summary>::const_iterator i = summaries.find(id);
@@ -118,29 +118,29 @@ level::summary level::get_summary(const std::string& id)
 
 level& level::current()
 {
-	ASSERT_LOG(get_current_level(), "Tried to query current level when there is none");
-	return *get_current_level();
+	ASSERT_LOG(get_currentLevel(), "Tried to query current level when there is none");
+	return *get_currentLevel();
 }
 
-level* level::current_ptr()
+level* level::getCurrentPtr()
 {
-	return get_current_level().get();
+	return get_currentLevel().get();
 }
 
-current_level_scope::current_level_scope(level* lvl) : old_(get_current_level())
+CurrentLevelScope::CurrentLevelScope(level* lvl) : old_(get_currentLevel())
 {
-	lvl->set_as_current_level();
+	lvl->setAsCurrentLevel();
 }
 
-current_level_scope::~current_level_scope() {
+CurrentLevelScope::~CurrentLevelScope() {
 	if(old_) {
-		old_->set_as_current_level();
+		old_->setAsCurrentLevel();
 	}
 }
 
-void level::set_as_current_level()
+void level::setAsCurrentLevel()
 {
-	get_current_level() = this;
+	get_currentLevel() = this;
 	frame::setColor_palette(palettes_used_);
 
 	if(false && preferences::auto_size_window()) {
@@ -551,7 +551,7 @@ level::~level()
 
 	for(std::deque<backup_snapshot_ptr>::iterator i = backups_.begin();
 	    i != backups_.end(); ++i) {
-		foreach(const entity_ptr& e, (*i)->chars) {
+		foreach(const EntityPtr& e, (*i)->chars) {
 			//kill off any references this entity holds, to workaround
 			//circular references causing things to stick around.
 			e->cleanup_references();
@@ -619,10 +619,10 @@ void level::load_character(variant c)
 			last_touched_player_ = player_ = chars_.back();
 		}
 #endif
-		ASSERT_LOG(!g_player_type || g_player_type->match(variant(chars_.back().get())), "Player object being added to level does not match required player type. " << chars_.back()->debug_description() << " is not a " << g_player_type->to_string());
+		ASSERT_LOG(!g_player_type || g_player_type->match(variant(chars_.back().get())), "Player object being added to level does not match required player type. " << chars_.back()->getDebugDescription() << " is not a " << g_player_type->to_string());
 
 		players_.push_back(chars_.back());
-		players_.back()->get_player_info()->set_player_slot(players_.size() - 1);
+		players_.back()->getPlayerInfo()->setPlayerSlot(players_.size() - 1);
 	}
 
 	const int group = chars_.back()->group();
@@ -643,10 +643,10 @@ void level::load_character(variant c)
 
 PREF_BOOL(respect_difficulty, false, "");
 
-void level::finish_loading()
+void level::finishLoading()
 {
 	assert(refcount() > 0);
-	current_level_scope level_scope(this);
+	CurrentLevelScope level_scope(this);
 
 	std::vector<sub_level_data> sub_levels;
 	if((segment_width_ > 0 || segment_height_ > 0) && !editor_ && !preferences::compiling_tiles) {
@@ -678,8 +678,8 @@ void level::finish_loading()
 			}
 		}
 
-		const std::vector<entity_ptr> objects = get_chars();
-		foreach(const entity_ptr& obj, objects) {
+		const std::vector<EntityPtr> objects = get_chars();
+		foreach(const EntityPtr& obj, objects) {
 			if(!obj->isHuman()) {
 				remove_character(obj);
 			}
@@ -707,7 +707,7 @@ void level::finish_loading()
 	if (editor_ || preferences::compiling_tiles)
 		game_logic::set_verbatim_string_expressions (true);
 
-	std::vector<entity_ptr> objects_not_in_level;
+	std::vector<EntityPtr> objects_not_in_level;
 
 	{
 	game_logic::wmlFormulaCallableReadScope read_scope;
@@ -719,7 +719,7 @@ void level::finish_loading()
 
 			if(obj_node.is_map()) {
 				addr_str = obj_node["_addr"].as_string();
-				entity_ptr e(entity::build(obj_node));
+				EntityPtr e(entity::build(obj_node));
 				objects_not_in_level.push_back(e);
 				obj = e;
 			} else {
@@ -740,7 +740,7 @@ void level::finish_loading()
 
 		if(node.has_key("attached_objects")) {
 			std::cerr << "LOADING ATTACHED: " << node["attached_objects"].as_string() << "\n";
-			std::vector<entity_ptr> attached;
+			std::vector<EntityPtr> attached;
 			std::vector<std::string> v = util::split(node["attached_objects"].as_string());
 			foreach(const std::string& s, v) {
 				std::cerr << "ATTACHED: " << s << "\n";
@@ -749,11 +749,11 @@ void level::finish_loading()
 				entity* e = dynamic_cast<entity*>(obj.get());
 				if(e) {
 					std::cerr << "GOT ATTACHED\n";
-					attached.push_back(entity_ptr(e));
+					attached.push_back(EntityPtr(e));
 				}
 			}
 
-			chars_.back()->set_attached_objects(attached);
+			chars_.back()->setAttachedObjects(attached);
 		}
 	}
 
@@ -786,9 +786,9 @@ void level::finish_loading()
 		int segment_number = 0;
 		for(int y = boundaries_.y(); y < boundaries_.y2(); y += seg_height) {
 			for(int x = boundaries_.x(); x < boundaries_.x2(); x += seg_width) {
-				const std::vector<entity_ptr> objects = get_chars();
-				foreach(const entity_ptr& obj, objects) {
-					if(!obj->isHuman() && obj->midpoint().x >= x && obj->midpoint().x < x + seg_width && obj->midpoint().y >= y && obj->midpoint().y < y + seg_height) {
+				const std::vector<EntityPtr> objects = get_chars();
+				foreach(const EntityPtr& obj, objects) {
+					if(!obj->isHuman() && obj->getMidpoint().x >= x && obj->getMidpoint().x < x + seg_width && obj->getMidpoint().y >= y && obj->getMidpoint().y < y + seg_height) {
 						ASSERT_INDEX_INTO_VECTOR(segment_number, sub_levels);
 						sub_levels[segment_number].lvl->add_character(obj);
 						remove_character(obj);
@@ -805,40 +805,40 @@ void level::finish_loading()
 	if((g_respect_difficulty || preferences::force_difficulty() != INT_MIN) && !editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
-			if(chars_[n].get() != NULL && !chars_[n]->appears_at_difficulty(difficulty)) {
-				chars_[n] = entity_ptr();
+			if(chars_[n].get() != NULL && !chars_[n]->appearsAtDifficulty(difficulty)) {
+				chars_[n] = EntityPtr();
 			}
 		}
 
-		chars_.erase(std::remove(chars_.begin(), chars_.end(), entity_ptr()), chars_.end());
+		chars_.erase(std::remove(chars_.begin(), chars_.end(), EntityPtr()), chars_.end());
 	}
 
 #if defined(USE_BOX2D)
 	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin(); 
 		it != bodies_.end();
 		++it) {
-		(*it)->finish_loading();
+		(*it)->finishLoading();
 		std::cerr << "level body finish loading: " << std::hex << intptr_t((*it).get()) << " " << intptr_t((*it)->get_raw_body_ptr()) << std::dec << std::endl;
 	}
 #endif
 
 	//iterate over all our objects and let them do any final loading actions.
-	foreach(entity_ptr e, objects_not_in_level) {
+	foreach(EntityPtr e, objects_not_in_level) {
 		if(e) {
-			e->finish_loading(this);
+			e->finishLoading(this);
 		}
 	}
 
-	foreach(entity_ptr e, chars_) {
+	foreach(EntityPtr e, chars_) {
 		if(e) {
-			e->finish_loading(this);
+			e->finishLoading(this);
 		}
 	}
-/*  Removed firing create_object() for now since create relies on things
+/*  Removed firing createObject() for now since create relies on things
     that might not be around yet.
-	const std::vector<entity_ptr> chars = chars_;
-	foreach(const entity_ptr& e, chars) {
-		const bool res = e->create_object();
+	const std::vector<EntityPtr> chars = chars_;
+	foreach(const EntityPtr& e, chars) {
+		const bool res = e->createObject();
 		if(!res) {
 			e->validate_properties();
 		}
@@ -846,7 +846,7 @@ void level::finish_loading()
 	*/
 }
 
-void level::set_multiplayer_slot(int slot)
+void level::setMultiplayerSlot(int slot)
 {
 #if !defined(__native_client__)
 	ASSERT_INDEX_INTO_VECTOR(slot, players_);
@@ -864,7 +864,7 @@ void level::load_save_point(const level& lvl)
 	save_point_x_ = lvl.save_point_x_;
 	save_point_y_ = lvl.save_point_y_;
 	if(player_) {
-		player_->set_pos(save_point_x_, save_point_y_);
+		player_->setPos(save_point_x_, save_point_y_);
 	}
 }
 
@@ -1002,7 +1002,7 @@ int g_tile_rebuild_state_id;
 
 }
 
-int level::tile_rebuild_state_id()
+int level::tileRebuildStateId()
 {
 	return g_tile_rebuild_state_id;
 }
@@ -1106,8 +1106,8 @@ void level::complete_tiles_refresh()
 	prepare_tiles_for_drawing();
 	std::cerr << "done..." << (SDL_GetTicks() - start) << "\n";
 
-	const std::vector<entity_ptr> chars = chars_;
-	foreach(const entity_ptr& e, chars) {
+	const std::vector<EntityPtr> chars = chars_;
+	foreach(const EntityPtr& e, chars) {
 		e->handleEvent("level_tiles_refreshed");
 	}
 }
@@ -1483,7 +1483,7 @@ variant level::write() const
 		}
 	} //end if preferences::compiling
 
-	foreach(entity_ptr ch, chars_) {
+	foreach(EntityPtr ch, chars_) {
 		if(!ch->serializable()) {
 			continue;
 		}
@@ -1587,7 +1587,7 @@ point level::get_dest_from_str(const std::string& key) const
 {
 	int ypos = 0;
 	if(player()) {
-		ypos = player()->get_entity().y();
+		ypos = player()->getEntity().y();
 	}
 	if(key == "left") {
 		return point(boundaries().x() + 32, ypos);
@@ -1858,7 +1858,7 @@ void level::prepare_tiles_for_drawing()
 
 		layer_blit_info& blit_info = blit_cache_[tiles_[n].zorder];
 		if(blit_info.xbase == -1) {
-			blit_info.texture_id = tiles_[n].object->texture().get_id();
+			blit_info.texture_id = tiles_[n].object->texture().getId();
 			blit_info.xbase = tiles_[n].x;
 			blit_info.ybase = tiles_[n].y;
 		}
@@ -1904,7 +1904,7 @@ void level::prepare_tiles_for_drawing()
 		if(npoints == 0) {
 			blit_info.blit_vertexes.resize(blit_info.blit_vertexes.size() - 4);
 		} else {
-			blit_info.vertex_texture_ids.push_back(tiles_[n].object->texture().get_id());
+			blit_info.vertex_texture_ids.push_back(tiles_[n].object->texture().getId());
 			if(blit_info.vertex_texture_ids.back() != blit_info.texture_id) {
 				blit_info.texture_id = GLuint(-1);
 			}
@@ -1983,7 +1983,7 @@ void draw_entity(const entity& obj, int x, int y, bool editor) {
 		return;
 	}
 
-	const std::pair<int,int>* scroll_speed = obj.parallax_scale_millis();
+	const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
 	if(scroll_speed) {
 		glPushMatrix();
@@ -1998,7 +1998,7 @@ void draw_entity(const entity& obj, int x, int y, bool editor) {
 
 	obj.draw(x, y);
 	if(editor) {
-		obj.draw_group();
+		obj.drawGroup();
 	}
 
 	if(scroll_speed) {
@@ -2006,7 +2006,7 @@ void draw_entity(const entity& obj, int x, int y, bool editor) {
 	}
 }
 void draw_entity_later(const entity& obj, int x, int y, bool editor) {
-	const std::pair<int,int>* scroll_speed = obj.parallax_scale_millis();
+	const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
 	if(scroll_speed) {
 		glPushMatrix();
@@ -2019,7 +2019,7 @@ void draw_entity_later(const entity& obj, int x, int y, bool editor) {
 		glTranslatef(diffx, diffy, 0.0);
 	}
 
-	obj.draw_later(x, y);
+	obj.drawLater(x, y);
 
 	if(scroll_speed) {
 		glPopMatrix();
@@ -2029,13 +2029,13 @@ void draw_entity_later(const entity& obj, int x, int y, bool editor) {
 
 extern std::vector<rect> background_rects_drawn;
 
-void level::draw_later(int x, int y, int w, int h) const
+void level::drawLater(int x, int y, int w, int h) const
 {
 	// Delayed drawing for some elements.
 #if defined(USE_SHADERS)
 	gles2::manager manager(shader_);
 #endif
-	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
+	std::vector<EntityPtr>::const_iterator entity_itor = active_chars_.begin();
 	while(entity_itor != active_chars_.end()) {
 		draw_entity_later(**entity_itor, x, y, editor_);
 		++entity_itor;
@@ -2047,7 +2047,7 @@ void level::draw_absolutely_positioned_objects() const
 #if defined(USE_SHADERS)
 	gles2::manager manager(shader_);
 #endif
-	std::vector<entity_ptr>::const_iterator entity_itor = active_chars_.begin();
+	std::vector<EntityPtr>::const_iterator entity_itor = active_chars_.begin();
 	while(entity_itor != active_chars_.end()) {
 		if((*entity_itor)->useAbsoluteScreenCoordinates()) {
 			(*entity_itor)->draw(0, 0);
@@ -2091,8 +2091,8 @@ void level::draw(int x, int y, int w, int h) const
 
 	std::sort(active_chars_.begin(), active_chars_.end(), zorder_compare);
 
-	const std::vector<entity_ptr>* chars_ptr = &active_chars_;
-	std::vector<entity_ptr> editor_chars_buf;
+	const std::vector<EntityPtr>* chars_ptr = &active_chars_;
+	std::vector<EntityPtr> editor_chars_buf;
 
 	std::map<int, hex::HexMapPtr>::const_iterator hit = HexMaps_.begin();
 	while(hit != HexMaps_.end()) {
@@ -2106,12 +2106,12 @@ void level::draw(int x, int y, int w, int h) const
 
 		//in the editor draw all characters that are on screen as well
 		//as active ones.
-		foreach(const entity_ptr& c, chars_) {
+		foreach(const EntityPtr& c, chars_) {
 			if(std::find(editor_chars_buf.begin(), editor_chars_buf.end(), c) != editor_chars_buf.end()) {
 				continue;
 			}
 
-			if(std::find(active_chars_.begin(), active_chars_.end(), c) != active_chars_.end() || rects_intersect(c->draw_rect(), screen_area)) {
+			if(std::find(active_chars_.begin(), active_chars_.end(), c) != active_chars_.end() || rects_intersect(c->getDrawRect(), screen_area)) {
 				editor_chars_buf.push_back(c);
 			}
 		}
@@ -2119,14 +2119,14 @@ void level::draw(int x, int y, int w, int h) const
 		std::sort(editor_chars_buf.begin(), editor_chars_buf.end(), zorder_compare);
 		chars_ptr = &editor_chars_buf;
 	}
-	const std::vector<entity_ptr>& chars = *chars_ptr;
+	const std::vector<EntityPtr>& chars = *chars_ptr;
 
-	std::vector<entity_ptr>::const_iterator entity_itor = chars.begin();
+	std::vector<EntityPtr>::const_iterator entity_itor = chars.begin();
 
 	
 	/*std::cerr << "SUMMARY " << cycle_ << ": ";
-	foreach(const entity_ptr& e, chars_) {
-		std::cerr << e->debug_description() << "(" << e->zSubOrder() << "):";
+	foreach(const EntityPtr& e, chars_) {
+		std::cerr << e->getDebugDescription() << "(" << e->zSubOrder() << "):";
 	}
 	
 	std::cerr << "\n";*/
@@ -2196,8 +2196,8 @@ void level::draw(int x, int y, int w, int h) const
 #endif
 
 	if(editor_) {
-		foreach(const entity_ptr& obj, chars_) {
-			if(!obj->allow_level_collisions() && entity_collides_with_level(*this, *obj, MOVE_NONE)) {
+		foreach(const EntityPtr& obj, chars_) {
+			if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_NONE)) {
 				//if the entity is colliding with the level, then draw
 				//it in red to mark as 'bad'.
 				glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -2215,7 +2215,7 @@ void level::draw(int x, int y, int w, int h) const
 			draw_entity(*editor_highlight_, x, y, true);
 		}
 
-		foreach(const entity_ptr& e, editor_selection_) {
+		foreach(const EntityPtr& e, editor_selection_) {
 			if(std::count(chars_.begin(), chars_.end(), e)) {
 				draw_entity(*e, x, y, true);
 			}
@@ -2226,7 +2226,7 @@ void level::draw(int x, int y, int w, int h) const
 		glColor4f(1.0, 1.0, 1.0, alpha);
 
 		if(editor_highlight_ && std::count(chars_.begin(), chars_.end(), editor_highlight_)) {
-			if(editor_highlight_->spawned_by().empty() == false) {
+			if(editor_highlight_->wasSpawnedBy().empty() == false) {
 				glColor4f(1.0, 1.0, 0.0, alpha);
 			}
 
@@ -2234,7 +2234,7 @@ void level::draw(int x, int y, int w, int h) const
 			glColor4f(1.0, 1.0, 1.0, alpha);
 		}
 
-		foreach(const entity_ptr& e, editor_selection_) {
+		foreach(const EntityPtr& e, editor_selection_) {
 			if(std::count(chars_.begin(), chars_.end(), e)) {
 				draw_entity(*e, x, y, true);
 			}
@@ -2354,7 +2354,7 @@ void level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shade
 
 	gles2::manager manager(shader);
 	//gles2::active_shader()->shader()->set_sprite_area(sprite_area);
-	gles2::active_shader()->shader()->set_draw_area(draw_area);
+	gles2::active_shader()->shader()->set_drawArea(draw_area);
 	gles2::active_shader()->shader()->set_cycle(cycle());
 	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
 	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, 
@@ -2382,7 +2382,7 @@ void level::calculate_lighting(int x, int y, int w, int h) const
 	//find all the lights in the level
 	static std::vector<const light*> lights;
 	lights.clear();
-	foreach(const entity_ptr& c, active_chars_) {
+	foreach(const EntityPtr& c, active_chars_) {
 		foreach(const light_ptr& lt, c->lights()) {
 			lights.push_back(lt.get());
 		}
@@ -2499,11 +2499,11 @@ void level::draw_background(int x, int y, int rotation) const
 	}
 
 	if(water_) {
-		water_->begin_drawing();
+		water_->beginDrawing();
 	}
 
-	foreach(const entity_ptr& c, active_chars_) {
-		c->setup_drawing();
+	foreach(const EntityPtr& c, active_chars_) {
+		c->setupDrawing();
 	}
 
 	if(background_) {
@@ -2594,23 +2594,23 @@ void level::process()
 
 void level::process_draw()
 {
-	std::vector<entity_ptr> chars = active_chars_;
-	foreach(const entity_ptr& e, chars) {
+	std::vector<EntityPtr> chars = active_chars_;
+	foreach(const EntityPtr& e, chars) {
 		e->handleEvent(OBJECT_EVENT_DRAW);
 	}
 }
 
 namespace {
-bool compare_entity_num_parents(const entity_ptr& a, const entity_ptr& b) {
+bool compare_entity_num_parents(const EntityPtr& a, const EntityPtr& b) {
 	bool a_human = false, b_human = false;
-	const int deptha = a->parent_depth(&a_human);
-	const int depthb = b->parent_depth(&b_human);
+	const int deptha = a->parentDepth(&a_human);
+	const int depthb = b->parentDepth(&b_human);
 	if(a_human != b_human) {
 		return b_human;
 	}
 
-	const bool standa = a->standing_on().get() ? true : false;
-	const bool standb = b->standing_on().get() ? true : false;
+	const bool standa = a->standingOn().get() ? true : false;
+	const bool standb = b->standingOn().get() ? true : false;
 	return deptha < depthb || deptha == depthb && standa < standb ||
 	     deptha == depthb && standa == standb && a->isHuman() < b->isHuman();
 }
@@ -2627,7 +2627,7 @@ void level::set_active_chars()
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
-	foreach(entity_ptr& c, chars_) {
+	foreach(EntityPtr& c, chars_) {
 		const bool isActive = c->isActive(screen_area) || c->useAbsoluteScreenCoordinates();
 
 		if(isActive) {
@@ -2641,16 +2641,16 @@ void level::set_active_chars()
 		} else { //char is inactive
 			if( c->diesOnInactive() ){
 				if(c->label().empty() == false) {
-					c->die_with_no_event();
+					c->dieWithNoEvent();
 					chars_by_label_.erase(c->label());
 				}
 				
-				c = entity_ptr(); //can't delete it while iterating over the container, so we null it for later removal
+				c = EntityPtr(); //can't delete it while iterating over the container, so we null it for later removal
 			}
 		}
 	}
 
-	chars_.erase(std::remove(chars_.begin(), chars_.end(), entity_ptr()), chars_.end());
+	chars_.erase(std::remove(chars_.begin(), chars_.end(), EntityPtr()), chars_.end());
 
 	std::sort(active_chars_.begin(), active_chars_.end());
 	active_chars_.erase(std::unique(active_chars_.begin(), active_chars_.end()), active_chars_.end());
@@ -2660,10 +2660,10 @@ void level::set_active_chars()
 void level::do_processing()
 {
 	if(cycle_ == 0) {
-		const std::vector<entity_ptr> chars = chars_;
-		foreach(const entity_ptr& e, chars) {
+		const std::vector<EntityPtr> chars = chars_;
+		foreach(const EntityPtr& e, chars) {
 			e->handleEvent(OBJECT_EVENT_START_LEVEL);
-			e->create_object();
+			e->createObject();
 		}
 	}
 
@@ -2682,15 +2682,15 @@ void level::do_processing()
 	
 /*
 	std::cerr << "SUMMARY " << cycle_ << ": ";
-	foreach(const entity_ptr& e, chars_) {
-		std::cerr << e->debug_description() << "(" << (e->isHuman() ? "HUMAN," : "") << e->centi_x() << "," << e->centi_y() << "):";
+	foreach(const EntityPtr& e, chars_) {
+		std::cerr << e->getDebugDescription() << "(" << (e->isHuman() ? "HUMAN," : "") << e->centiX() << "," << e->centiY() << "):";
 	}
 
 	std::cerr << "\n";
 	*/
 
 	int checksum = 0;
-	foreach(const entity_ptr& e, chars_) {
+	foreach(const EntityPtr& e, chars_) {
 		checksum += e->x() + e->y();
 	}
 
@@ -2698,7 +2698,7 @@ void level::do_processing()
 
 	const int ActivationDistance = 700;
 
-	std::vector<entity_ptr> active_chars = active_chars_;
+	std::vector<EntityPtr> active_chars = active_chars_;
 	std::sort(active_chars.begin(), active_chars.end(), compare_entity_num_parents);
 	if(time_freeze_ >= 1000) {
 		time_freeze_ -= 1000;
@@ -2707,14 +2707,14 @@ void level::do_processing()
 
 	while(!active_chars.empty()) {
 		new_chars_.clear();
-		foreach(const entity_ptr& c, active_chars) {
+		foreach(const EntityPtr& c, active_chars) {
 			if(!c->destroyed() && (chars_by_label_.count(c->label()) || c->isHuman())) {
 				c->process(*this);
 			}
 	
 			if(c->destroyed() && !c->isHuman()) {
-				if(player_ && !c->respawn() && c->get_id() != -1) {
-					player_->isHuman()->object_destroyed(id(), c->get_id());
+				if(player_ && !c->respawn() && c->getId() != -1) {
+					player_->isHuman()->objectDestroyed(id(), c->getId());
 				}
 	
 				erase_char(c);
@@ -2732,7 +2732,7 @@ void level::do_processing()
 	solid_chars_.clear();
 }
 
-void level::erase_char(entity_ptr c)
+void level::erase_char(EntityPtr c)
 {
 
 	if(c->label().empty() == false) {
@@ -2753,12 +2753,12 @@ bool level::is_solid(const level_solid_map& map, const entity& e, const std::vec
 	const tile_solid_info* info = NULL;
 	int prev_x = INT_MIN, prev_y = INT_MIN;
 
-	const frame& current_frame = e.current_frame();
+	const frame& current_frame = e.getCurrentFrame();
 	
 	for(std::vector<point>::const_iterator p = points.begin(); p != points.end(); ++p) {
 		int x, y;
 		if(prev_x != INT_MIN) {
-			const int diff_x = (p->x - (p-1)->x) * (e.face_right() ? 1 : -1);
+			const int diff_x = (p->x - (p-1)->x) * (e.isFacingRight() ? 1 : -1);
 			const int diff_y = p->y - (p-1)->y;
 
 			x = prev_x + diff_x;
@@ -2772,7 +2772,7 @@ bool level::is_solid(const level_solid_map& map, const entity& e, const std::vec
 		}
 		
 		if(prev_x == INT_MIN) {
-			x = e.x() + (e.face_right() ? p->x : (current_frame.width() - 1 - p->x));
+			x = e.x() + (e.isFacingRight() ? p->x : (current_frame.width() - 1 - p->x));
 			y = e.y() + p->y;
 
 			tile_pos pos(x/TileSize, y/TileSize);
@@ -2980,17 +2980,17 @@ void level::set_solid_area(const rect& r, bool solid)
 	}
 }
 
-entity_ptr level::board(int x, int y) const
+EntityPtr level::board(int x, int y) const
 {
-	for(std::vector<entity_ptr>::const_iterator i = active_chars_.begin();
+	for(std::vector<EntityPtr>::const_iterator i = active_chars_.begin();
 	    i != active_chars_.end(); ++i) {
-		const entity_ptr& c = *i;
-		if(c->boardable_vehicle() && c->point_collides(x, y)) {
+		const EntityPtr& c = *i;
+		if(c->boardableVehicle() && c->pointCollides(x, y)) {
 			return c;
 		}
 	}
 
-	return entity_ptr();
+	return EntityPtr();
 }
 
 void level::add_tile(const level_tile& t)
@@ -3387,9 +3387,9 @@ const level_tile* level::get_tile_at(int x, int y) const
 	}
 }
 
-void level::remove_character(entity_ptr e)
+void level::remove_character(EntityPtr e)
 {
-	e->being_removed();
+	e->beingRemoved();
 	if(e->label().empty() == false) {
 		chars_by_label_.erase(e->label());
 	}
@@ -3398,18 +3398,18 @@ void level::remove_character(entity_ptr e)
 	active_chars_.erase(std::remove(active_chars_.begin(), active_chars_.end(), e), active_chars_.end());
 }
 
-std::vector<entity_ptr> level::get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const
+std::vector<EntityPtr> level::get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const
 {
-	std::vector<entity_ptr> res;
-	foreach(entity_ptr c, chars_) {
+	std::vector<EntityPtr> res;
+	foreach(EntityPtr c, chars_) {
 		if(object_classification_hidden(*c)) {
 			continue;
 		}
 		custom_object* obj = dynamic_cast<custom_object*>(c.get());
 
-		const int xP = c->midpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000 
+		const int xP = c->getMidpoint().x + ((c->parallaxScaleMillisX() - 1000)*screen_xpos)/1000 
 			+ (obj->useAbsoluteScreenCoordinates() ? screen_xpos : 0);
-		const int yP = c->midpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000 
+		const int yP = c->getMidpoint().y + ((c->parallaxScaleMillisY() - 1000)*screen_ypos)/1000 
 			+ (obj->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
 		if(pointInRect(point(xP, yP), r)) {
 			res.push_back(c);
@@ -3419,10 +3419,10 @@ std::vector<entity_ptr> level::get_characters_in_rect(const rect& r, int screen_
 	return res;
 }
 
-std::vector<entity_ptr> level::get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const
+std::vector<EntityPtr> level::get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const
 {
-	std::vector<entity_ptr> result;
-	foreach(entity_ptr c, chars_) {
+	std::vector<EntityPtr> result;
+	foreach(EntityPtr c, chars_) {
 		if(object_classification_hidden(*c) || c->truez()) {
 			continue;
 		}
@@ -3432,7 +3432,7 @@ std::vector<entity_ptr> level::get_characters_at_point(int x, int y, int screen_
 		const int yP = y + ((1000 - (c->parallaxScaleMillisY()))* screen_ypos )/1000
 			- (c->useAbsoluteScreenCoordinates() ? screen_ypos : 0);
 
-		if(!c->is_alpha(xP, yP)) {
+		if(!c->isAlpha(xP, yP)) {
 			result.push_back(c);
 		}
 	}
@@ -3441,17 +3441,17 @@ std::vector<entity_ptr> level::get_characters_at_point(int x, int y, int screen_
 }
 
 namespace {
-bool compare_entities_by_spawned(entity_ptr a, entity_ptr b)
+bool compare_entities_by_spawned(EntityPtr a, EntityPtr b)
 {
-	return a->spawned_by().size() < b->spawned_by().size();
+	return a->wasSpawnedBy().size() < b->wasSpawnedBy().size();
 }
 }
 
-entity_ptr level::get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const
+EntityPtr level::get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const
 {
-	std::vector<entity_ptr> v = get_characters_at_point(x, y, screen_xpos, screen_ypos);
+	std::vector<EntityPtr> v = get_characters_at_point(x, y, screen_xpos, screen_ypos);
 	if(v.empty()) {
-		return entity_ptr();
+		return EntityPtr();
 	}
 
 	std::sort(v.begin(), v.end(), compare_entities_by_spawned);
@@ -3460,7 +3460,7 @@ entity_ptr level::get_next_character_at_point(int x, int y, int screen_xpos, int
 		return v.front();
 	}
 
-	std::vector<entity_ptr>::iterator itor = std::find(v.begin(), v.end(), editor_selection_.back());
+	std::vector<EntityPtr>::iterator itor = std::find(v.begin(), v.end(), editor_selection_.back());
 	if(itor == v.end()) {
 		return v.front();
 	}
@@ -3558,11 +3558,11 @@ void level::set_solid(level_solid_map& map, int x, int y, int friction, int trac
 	}
 }
 
-void level::add_multi_player(entity_ptr p)
+void level::add_multi_player(EntityPtr p)
 {
 	last_touched_player_ = p;
-	p->get_player_info()->set_player_slot(players_.size());
-	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->debug_description() << " is not a " << g_player_type->to_string());
+	p->getPlayerInfo()->setPlayerSlot(players_.size());
+	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
 	players_.push_back(p);
 	chars_.push_back(p);
 	if(p->label().empty() == false) {
@@ -3571,49 +3571,49 @@ void level::add_multi_player(entity_ptr p)
 	layers_.insert(p->zorder());
 }
 
-void level::add_player(entity_ptr p)
+void level::add_player(EntityPtr p)
 {
 	chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	last_touched_player_ = player_ = p;
-	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->debug_description() << " is not a " << g_player_type->to_string());
+	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->getDebugDescription() << " is not a " << g_player_type->to_string());
 	if(players_.empty()) {
-		player_->get_player_info()->set_player_slot(players_.size());
+		player_->getPlayerInfo()->setPlayerSlot(players_.size());
 		players_.push_back(player_);
 	} else {
 		ASSERT_LOG(player_->isHuman(), "level::add_player(): Tried to add player to the level that isn't human.");
-		player_->get_player_info()->set_player_slot(0);
+		player_->getPlayerInfo()->setPlayerSlot(0);
 		players_[0] = player_;
 	}
 
-	p->add_to_level();
+	p->addToLevel();
 
 	assert(player_);
 	chars_.push_back(p);
 
 	//remove objects that have already been destroyed
-	const std::vector<int>& destroyed_objects = player_->get_player_info()->get_objects_destroyed(id());
+	const std::vector<int>& destroyed_objects = player_->getPlayerInfo()->getObjectsDestroyed(id());
 	for(int n = 0; n != chars_.size(); ++n) {
-		if(chars_[n]->respawn() == false && std::binary_search(destroyed_objects.begin(), destroyed_objects.end(), chars_[n]->get_id())) {
+		if(chars_[n]->respawn() == false && std::binary_search(destroyed_objects.begin(), destroyed_objects.end(), chars_[n]->getId())) {
 			if(chars_[n]->label().empty() == false) {
 				chars_by_label_.erase(chars_[n]->label());
 			}
-			chars_[n] = entity_ptr();
+			chars_[n] = EntityPtr();
 		}
 	}
 
 	if(!editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
-			if(chars_[n].get() != NULL && !chars_[n]->appears_at_difficulty(difficulty)) {
-				chars_[n] = entity_ptr();
+			if(chars_[n].get() != NULL && !chars_[n]->appearsAtDifficulty(difficulty)) {
+				chars_[n] = EntityPtr();
 			}
 		}
 	}
 
-	chars_.erase(std::remove(chars_.begin(), chars_.end(), entity_ptr()), chars_.end());
+	chars_.erase(std::remove(chars_.begin(), chars_.end(), EntityPtr()), chars_.end());
 }
 
-void level::add_character(entity_ptr p)
+void level::add_character(EntityPtr p)
 {
 	if(solid_chars_.empty() == false && p->solid()) {
 		solid_chars_.push_back(p);
@@ -3622,7 +3622,7 @@ void level::add_character(entity_ptr p)
 	ASSERT_LOG(p->label().empty() == false, "Entity has no label");
 
 	if(p->label().empty() == false) {
-		entity_ptr& target = chars_by_label_[p->label()];
+		EntityPtr& target = chars_by_label_[p->label()];
 		if(!target) {
 			target = p;
 		} else {
@@ -3640,7 +3640,7 @@ void level::add_character(entity_ptr p)
 		chars_.push_back(p);
 	}
 
-	p->add_to_level();
+	p->addToLevel();
 
 	layers_.insert(p->zorder());
 
@@ -3653,10 +3653,10 @@ void level::add_character(entity_ptr p)
 	if(!active_chars_.empty() && (p->isActive(screen_area) || p->useAbsoluteScreenCoordinates())) {
 		new_chars_.push_back(p);
 	}
-	p->being_added();
+	p->beingAdded();
 }
 
-void level::add_draw_character(entity_ptr p)
+void level::add_draw_character(EntityPtr p)
 {
 	active_chars_.push_back(p);
 }
@@ -3678,7 +3678,7 @@ const level::portal* level::get_portal() const
 		return NULL;
 	}
 
-	const rect& r = player_->body_rect();
+	const rect& r = player_->getBodyRect();
 	if(r.x() < boundaries().x() && left_portal_.level_dest.empty() == false) {
 		return &left_portal_;
 	}
@@ -3698,7 +3698,7 @@ const level::portal* level::get_portal() const
 int level::group_size(int group) const
 {
 	int res = 0;
-	foreach(const entity_ptr& c, active_chars_) {
+	foreach(const EntityPtr& c, active_chars_) {
 		if(c->group() == group) {
 			++res;
 		}
@@ -3707,7 +3707,7 @@ int level::group_size(int group) const
 	return res;
 }
 
-void level::set_character_group(entity_ptr c, int group_num)
+void level::set_character_group(EntityPtr c, int group_num)
 {
 	assert(group_num < static_cast<int>(groups_.size()));
 
@@ -3718,7 +3718,7 @@ void level::set_character_group(entity_ptr c, int group_num)
 		group.erase(std::remove(group.begin(), group.end(), c), group.end());
 	}
 
-	c->set_group(group_num);
+	c->setGroup(group_num);
 
 	if(group_num >= 0) {
 		entity_group& group = groups_[group_num];
@@ -3732,7 +3732,7 @@ int level::add_group()
 	return groups_.size() - 1;
 }
 
-void level::editor_select_object(entity_ptr c)
+void level::editor_select_object(EntityPtr c)
 {
 	if(!c) {
 		return;
@@ -3740,7 +3740,7 @@ void level::editor_select_object(entity_ptr c)
 	editor_selection_.push_back(c);
 }
 
-void level::editor_deselect_object(entity_ptr c)
+void level::editor_deselect_object(EntityPtr c)
 {
 	editor_selection_.erase(std::remove(editor_selection_.begin(), editor_selection_.end(), c), editor_selection_.end());
 }
@@ -3773,7 +3773,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(player, "custom_obj")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
-DEFINE_FIELD(player_info, "object")
+DEFINE_FIELD(PlayerInfo, "object")
 	ASSERT_LOG(obj.last_touched_player_, "No player found in level");
 	return variant(obj.last_touched_player_.get());
 DEFINE_FIELD(in_dialog, "bool")
@@ -3786,19 +3786,19 @@ DEFINE_FIELD(num_active, "int")
 	return variant(static_cast<int>(obj.active_chars_.size()));
 DEFINE_FIELD(active_chars, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, obj.active_chars_) {
+	foreach(const EntityPtr& e, obj.active_chars_) {
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
 DEFINE_FIELD(chars, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, obj.chars_) {
+	foreach(const EntityPtr& e, obj.chars_) {
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
 DEFINE_FIELD(players, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, obj.players()) {
+	foreach(const EntityPtr& e, obj.players()) {
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
@@ -3810,7 +3810,7 @@ DEFINE_SET_FIELD
 	obj.zoom_level_ = value.as_decimal();
 DEFINE_FIELD(focus, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, obj.focus_override_) {
+	foreach(const EntityPtr& e, obj.focus_override_) {
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
@@ -3819,7 +3819,7 @@ DEFINE_SET_FIELD
 	for(int n = 0; n != value.num_elements(); ++n) {
 		entity* e = value[n].try_convert<entity>();
 		if(e) {
-			obj.focus_override_.push_back(entity_ptr(e));
+			obj.focus_override_.push_back(EntityPtr(e));
 		}
 	}
 
@@ -3859,12 +3859,12 @@ DEFINE_SET_FIELD
 		if(obj.paused_) {
 			obj.before_pause_controls_backup_.reset(new controls::control_backup_scope);
 		} else {
-			if(&obj != current_ptr()) {
+			if(&obj != getCurrentPtr()) {
 				obj.before_pause_controls_backup_->cancel();
 			}
 			obj.before_pause_controls_backup_.reset();
 		}
-		foreach(entity_ptr e, obj.chars_) {
+		foreach(EntityPtr e, obj.chars_) {
 			e->mutate_value("paused", value);
 		}
 	}
@@ -3886,14 +3886,14 @@ DEFINE_SET_FIELD
 	obj.time_freeze_ = value.as_int();
 DEFINE_FIELD(chars_immune_from_time_freeze, "[custom_obj]")
 	std::vector<variant> v;
-	foreach(const entity_ptr& e, obj.chars_immune_from_time_freeze_) {
+	foreach(const EntityPtr& e, obj.chars_immune_from_time_freeze_) {
 		v.push_back(variant(e.get()));
 	}
 	return variant(&v);
 DEFINE_SET_FIELD
 	obj.chars_immune_from_time_freeze_.clear();
 	for(int n = 0; n != value.num_elements(); ++n) {
-		entity_ptr e(value[n].try_convert<entity>());
+		EntityPtr e(value[n].try_convert<entity>());
 		if(e) {
 			obj.chars_immune_from_time_freeze_.push_back(e);
 		}
@@ -3966,15 +3966,15 @@ DEFINE_FIELD(shader, "null|object")
 #endif
 
 DEFINE_FIELD(is_paused, "bool")
-	if(level_runner::get_current()) {
-		return variant::from_bool(level_runner::get_current()->is_paused());
+	if(level_runner::getCurrent()) {
+		return variant::from_bool(level_runner::getCurrent()->is_paused());
 	}
 
 	return variant(false);
 
 DEFINE_FIELD(editor_selection, "[custom_obj]")
 	std::vector<variant> result;
-	foreach(entity_ptr s, obj.editor_selection_) {
+	foreach(EntityPtr s, obj.editor_selection_) {
 		result.push_back(variant(s.get()));
 	}
 
@@ -4103,22 +4103,22 @@ int level::camera_rotation() const
 	return camera_rotation_->execute(*this).as_int();
 }
 
-bool level::is_underwater(const rect& r, rect* res_water_area, variant* v) const
+bool level::isUnderwater(const rect& r, rect* res_water_area, variant* v) const
 {
-	return water_ && water_->is_underwater(r, res_water_area, v);
+	return water_ && water_->isUnderwater(r, res_water_area, v);
 }
 
-void level::get_current(const entity& e, int* velocity_x, int* velocity_y) const
+void level::getCurrent(const entity& e, int* velocity_x, int* velocity_y) const
 {
 	if(e.mass() == 0) {
 		return;
 	}
 
 	int delta_x = 0, delta_y = 0;
-	if(is_underwater(e.body_rect())) {
+	if(isUnderwater(e.getBodyRect())) {
 		delta_x += *velocity_x;
 		delta_y += *velocity_y;
-		water_->get_current(e, &delta_x, &delta_y);
+		water_->getCurrent(e, &delta_x, &delta_y);
 		delta_x -= *velocity_x;
 		delta_y -= *velocity_y;
 	}
@@ -4126,11 +4126,11 @@ void level::get_current(const entity& e, int* velocity_x, int* velocity_y) const
 	delta_x /= e.mass();
 	delta_y /= e.mass();
 
-	foreach(const entity_ptr& c, active_chars_) {
+	foreach(const EntityPtr& c, active_chars_) {
 		if(c.get() != &e) {
 			delta_x += *velocity_x;
 			delta_y += *velocity_y;
-			c->generate_current(e, &delta_x, &delta_y);
+			c->generateCurrent(e, &delta_x, &delta_y);
 			delta_x -= *velocity_x;
 			delta_y -= *velocity_y;
 		}
@@ -4149,37 +4149,37 @@ water& level::get_or_create_water()
 	return *water_;
 }
 
-entity_ptr level::get_entity_by_label(const std::string& label)
+EntityPtr level::get_entity_by_label(const std::string& label)
 {
-	std::map<std::string, entity_ptr>::iterator itor = chars_by_label_.find(label);
+	std::map<std::string, EntityPtr>::iterator itor = chars_by_label_.find(label);
 	if(itor != chars_by_label_.end()) {
 		return itor->second;
 	}
 
-	return entity_ptr();
+	return EntityPtr();
 }
 
-const_entity_ptr level::get_entity_by_label(const std::string& label) const
+ConstEntityPtr level::get_entity_by_label(const std::string& label) const
 {
-	std::map<std::string, entity_ptr>::const_iterator itor = chars_by_label_.find(label);
+	std::map<std::string, EntityPtr>::const_iterator itor = chars_by_label_.find(label);
 	if(itor != chars_by_label_.end()) {
 		return itor->second;
 	}
 
-	return const_entity_ptr();
+	return ConstEntityPtr();
 }
 
 void level::getAll_labels(std::vector<std::string>& labels) const
 {
-	for(std::map<std::string, entity_ptr>::const_iterator i = chars_by_label_.begin(); i != chars_by_label_.end(); ++i) {
+	for(std::map<std::string, EntityPtr>::const_iterator i = chars_by_label_.begin(); i != chars_by_label_.end(); ++i) {
 		labels.push_back(i->first);
 	}
 }
 
-const std::vector<entity_ptr>& level::get_solid_chars() const
+const std::vector<EntityPtr>& level::get_solid_chars() const
 {
 	if(solid_chars_.empty()) {
-		foreach(const entity_ptr& e, chars_) {
+		foreach(const EntityPtr& e, chars_) {
 			if(e->solid() || e->platform()) {
 				solid_chars_.push_back(e);
 			}
@@ -4214,9 +4214,9 @@ bool level::can_interact(const rect& body) const
 		}
 	}
 
-	foreach(const entity_ptr& c, active_chars_) {
-		if(c->can_interact_with() && rects_intersect(body, c->body_rect()) &&
-		   intersection_rect(body, c->body_rect()).w() >= std::min(body.w(), c->body_rect().w())/2) {
+	foreach(const EntityPtr& c, active_chars_) {
+		if(c->canInteractWith() && rects_intersect(body, c->getBodyRect()) &&
+		   intersection_rect(body, c->getBodyRect()).w() >= std::min(body.w(), c->getBodyRect().w())/2) {
 			return true;
 		}
 	}
@@ -4250,7 +4250,7 @@ void level::backup()
 		return;
 	}
 
-	std::map<entity_ptr, entity_ptr> entity_map;
+	std::map<EntityPtr, EntityPtr> entity_map;
 
 	backup_snapshot_ptr snapshot(new backup_snapshot);
 	snapshot->rng_seed = rng::get_seed();
@@ -4258,7 +4258,7 @@ void level::backup()
 	snapshot->chars.reserve(chars_.size());
 
 
-	foreach(const entity_ptr& e, chars_) {
+	foreach(const EntityPtr& e, chars_) {
 		snapshot->chars.push_back(e->backup());
 		entity_map[e] = snapshot->chars.back();
 
@@ -4273,16 +4273,16 @@ void level::backup()
 	foreach(entity_group& g, groups_) {
 		snapshot->groups.push_back(entity_group());
 
-		foreach(entity_ptr e, g) {
-			std::map<entity_ptr, entity_ptr>::iterator i = entity_map.find(e);
+		foreach(EntityPtr e, g) {
+			std::map<EntityPtr, EntityPtr>::iterator i = entity_map.find(e);
 			if(i != entity_map.end()) {
 				snapshot->groups.back().push_back(i->second);
 			}
 		}
 	}
 
-	foreach(const entity_ptr& e, snapshot->chars) {
-		e->map_entities(entity_map);
+	foreach(const EntityPtr& e, snapshot->chars) {
+		e->mapEntities(entity_map);
 	}
 
 	snapshot->last_touched_player = last_touched_player_;
@@ -4292,7 +4292,7 @@ void level::backup()
 
 		for(std::deque<backup_snapshot_ptr>::iterator i = backups_.begin();
 		    i != backups_.begin() + 1; ++i) {
-			foreach(const entity_ptr& e, (*i)->chars) {
+			foreach(const EntityPtr& e, (*i)->chars) {
 				//kill off any references this entity holds, to workaround
 				//circular references causing things to stick around.
 				e->cleanup_references();
@@ -4353,22 +4353,22 @@ void level::restore_from_backup(backup_snapshot& snapshot)
 	solid_chars_.clear();
 
 	chars_by_label_.clear();
-	foreach(const entity_ptr& e, chars_) {
+	foreach(const EntityPtr& e, chars_) {
 		if(e->label().empty() == false) {
 			chars_by_label_[e->label()] = e;
 		}
 	}
 
-	for(const entity_ptr& ch : snapshot.chars) {
+	for(const EntityPtr& ch : snapshot.chars) {
 		ch->handleEvent(OBJECT_EVENT_LOAD);
 	}
 }
 
-std::vector<entity_ptr> level::trace_past(entity_ptr e, int ncycle)
+std::vector<EntityPtr> level::trace_past(EntityPtr e, int ncycle)
 {
 	backup();
 	int prev_cycle = -1;
-	std::vector<entity_ptr> result;
+	std::vector<EntityPtr> result;
 	std::deque<backup_snapshot_ptr>::reverse_iterator i = backups_.rbegin();
 	while(i != backups_.rend() && (*i)->cycle >= ncycle) {
 		const backup_snapshot& snapshot = **i;
@@ -4379,7 +4379,7 @@ std::vector<entity_ptr> level::trace_past(entity_ptr e, int ncycle)
 
 		prev_cycle = snapshot.cycle;
 
-		foreach(const entity_ptr& ghost, snapshot.chars) {
+		foreach(const EntityPtr& ghost, snapshot.chars) {
 			if(ghost->label() == e->label()) {
 				result.push_back(ghost);
 				break;
@@ -4391,7 +4391,7 @@ std::vector<entity_ptr> level::trace_past(entity_ptr e, int ncycle)
 	return result;
 }
 
-std::vector<entity_ptr> level::predict_future(entity_ptr e, int ncycles)
+std::vector<EntityPtr> level::predict_future(EntityPtr e, int ncycles)
 {
 	disable_flashes_scope flashes_disabled_scope;
 	const controls::control_backup_scope ctrl_backup_scope;
@@ -4423,7 +4423,7 @@ std::vector<entity_ptr> level::predict_future(entity_ptr e, int ncycles)
 
 	begin_time = SDL_GetTicks();
 
-	std::vector<entity_ptr> result = trace_past(e, -1);
+	std::vector<EntityPtr> result = trace_past(e, -1);
 
 	std::cerr << "TOOK " << (SDL_GetTicks() - begin_time) << "ms to TRACE PAST OF " << result.size() << " FRAMES\n";
 
@@ -4547,18 +4547,18 @@ void level::add_sub_level(const std::string& lvl, int xoffset, int yoffset, bool
 
 	if(add_objects) {
 		const int difficulty = current_difficulty();
-		foreach(entity_ptr e, sub.chars_) {
+		foreach(EntityPtr e, sub.chars_) {
 			if(e->isHuman()) {
 				continue;
 			}
 	
-			entity_ptr c = e->clone();
+			EntityPtr c = e->clone();
 			if(!c) {
 				continue;
 			}
 
 			relocate_object(c, c->x() + itor->second.xoffset, c->y() + itor->second.yoffset);
-			if(c->appears_at_difficulty(difficulty)) {
+			if(c->appearsAtDifficulty(difficulty)) {
 				add_character(c);
 				c->handleEvent(OBJECT_EVENT_START_LEVEL);
 
@@ -4580,7 +4580,7 @@ void level::remove_sub_level(const std::string& lvl)
 	ASSERT_LOG(itor != sub_levels_.end(), "SUB LEVEL NOT FOUND: " << lvl);
 
 	if(itor->second.active) {
-		foreach(entity_ptr& e, itor->second.objects) {
+		foreach(EntityPtr& e, itor->second.objects) {
 			if(std::find(active_chars_.begin(), active_chars_.end(), e) == active_chars_.end()) {
 				remove_character(e);
 			}
@@ -4617,8 +4617,8 @@ void level::adjust_level_offset(int xoffset, int yoffset)
 	variant holder(callable);
 	callable->add("xshift", variant(xoffset));
 	callable->add("yshift", variant(yoffset));
-	foreach(entity_ptr e, chars_) {
-		e->shift_position(xoffset, yoffset);
+	foreach(EntityPtr e, chars_) {
+		e->shiftPosition(xoffset, yoffset);
 		e->handleEvent(OBJECT_EVENT_COSMIC_SHIFT, callable);
 	}
 
@@ -4637,7 +4637,7 @@ void level::adjust_level_offset(int xoffset, int yoffset)
 	last_draw_position().focus_y += yoffset;
 }
 
-bool level::relocate_object(entity_ptr e, int new_x, int new_y)
+bool level::relocate_object(EntityPtr e, int new_x, int new_y)
 {
 	const int orig_x = e->x();
 	const int orig_y = e->y();
@@ -4645,12 +4645,12 @@ bool level::relocate_object(entity_ptr e, int new_x, int new_y)
 	const int delta_x = new_x - orig_x;
 	const int delta_y = new_y - orig_y;
 
-	e->set_pos(new_x, new_y);
+	e->setPos(new_x, new_y);
 
 	if(!place_entity_in_level(*this, *e)) {
 		//if we can't place the object due to solidity, then cancel
 		//the movement.
-		e->set_pos(orig_x, orig_y);
+		e->setPos(orig_x, orig_y);
 		return false;
 	}
 
@@ -4721,11 +4721,11 @@ const float* level::view() const
 	return camera_->view();
 }
 
-std::vector<entity_ptr> level::get_characters_at_world_point(const glm::vec3& pt)
+std::vector<EntityPtr> level::get_characters_at_world_point(const glm::vec3& pt)
 {
 	const double tolerance = 0.25;
-	std::vector<entity_ptr> result;
-	foreach(entity_ptr c, chars_) {
+	std::vector<EntityPtr> result;
+	foreach(EntityPtr c, chars_) {
 		if(object_classification_hidden(*c) || c->truez() == false) {
 			continue;
 		}
@@ -4750,7 +4750,7 @@ int level::current_difficulty() const
 		return 0;
 	}
 
-	playable_custom_object* p = dynamic_cast<playable_custom_object*>(last_touched_player_.get());
+	PlayableCustomObject* p = dynamic_cast<PlayableCustomObject*>(last_touched_player_.get());
 	if(!p) {
 		return 0;
 	}
@@ -4779,8 +4779,8 @@ void level::launch_new_module(const std::string& module_id, game_logic::ConstFor
 #endif
 
 
-	const std::vector<entity_ptr> players = this->players();
-	foreach(entity_ptr e, players) {
+	const std::vector<EntityPtr> players = this->players();
+	foreach(EntityPtr e, players) {
 		this->remove_character(e);
 	}
 
@@ -4834,7 +4834,7 @@ bool level::executeCommand(const variant& var)
 	} else {
 		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
 		if(cmd != NULL) {
-			cmd->run_command(*this);
+			cmd->runCommand(*this);
 		}
 	}
 	return result;
@@ -4850,15 +4850,15 @@ UTILITY(correct_solidity)
 		}
 
 		boost::intrusive_ptr<level> lvl(new level(file));
-		lvl->finish_loading();
-		lvl->set_as_current_level();
+		lvl->finishLoading();
+		lvl->setAsCurrentLevel();
 
-		foreach(entity_ptr c, lvl->get_chars()) {
+		foreach(EntityPtr c, lvl->get_chars()) {
 			if(entity_collides_with_level(*lvl, *c, MOVE_NONE)) {
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
-					std::cerr << "LEVEL: " << lvl->id() << " CORRECTED " << c->debug_description() << "\n";
+					std::cerr << "LEVEL: " << lvl->id() << " CORRECTED " << c->getDebugDescription() << "\n";
 				} else {
-					std::cerr << "LEVEL: " << lvl->id() << " FAILED TO CORRECT " << c->debug_description() << "\n";
+					std::cerr << "LEVEL: " << lvl->id() << " FAILED TO CORRECT " << c->getDebugDescription() << "\n";
 				}
 			}
 
@@ -4897,7 +4897,7 @@ UTILITY(compile_levels)
 		const std::string& file = module::get_id(i->first);
 		std::cerr << "LOADING LEVEL '" << file << "'\n";
 		boost::intrusive_ptr<level> lvl(new level(file));
-		lvl->finish_loading();
+		lvl->finishLoading();
 		lvl->record_zorders();
 		module::write_file("data/compiled/level/" + file, lvl->write().write_json(true));
 		std::cerr << "SAVING LEVEL TO MODULE: data/compiled/level/" + file + "\n";
@@ -4950,7 +4950,7 @@ UTILITY(load_and_save_all_levels)
 		const std::string& file = i->first;
 		std::cerr << "LOAD_LEVEL '" << file << "'\n";
 		boost::intrusive_ptr<level> lvl(new level(file));
-		lvl->finish_loading();
+		lvl->finishLoading();
 
 		const std::string path = get_level_path(file);
 

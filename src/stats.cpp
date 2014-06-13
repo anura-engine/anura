@@ -251,8 +251,8 @@ entry& entry::set(const std::string& name, const variant& value)
 entry& entry::add_player_pos()
 {
 	if(level::current().player()) {
-		set("x", variant(level::current().player()->get_entity().midpoint().x));
-		set("y", variant(level::current().player()->get_entity().midpoint().y));
+		set("x", variant(level::current().player()->getEntity().getMidpoint().x));
+		set("y", variant(level::current().player()->getEntity().getMidpoint().y));
 	}
 
 	return *this;

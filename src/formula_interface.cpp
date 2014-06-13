@@ -25,7 +25,7 @@ private:
 	variant getValue(const std::string& key) const;
 	variant getValue_by_slot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
-	void setValue_by_slot(int slot, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
 	boost::intrusive_ptr<const dynamic_bound_factory> factory_;
 	variant obj_;
@@ -40,7 +40,7 @@ private:
 	variant getValue(const std::string& key) const;
 	variant getValue_by_slot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
-	void setValue_by_slot(int slot, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
 	boost::intrusive_ptr<const static_bound_factory> factory_;
 	boost::intrusive_ptr<FormulaCallable> obj_;
@@ -68,7 +68,7 @@ public:
 		return slots_[slot].id;
 	}
 
-	int get_id() const { return id_; }
+	int getId() const { return id_; }
 
 private:
 	std::vector<Entry> slots_;
@@ -103,7 +103,7 @@ public:
 		return mapping_[slot];
 	}
 
-	int get_id() const { return id_; }
+	int getId() const { return id_; }
 private:
 	std::vector<Entry> slots_;
 	std::vector<int> mapping_;
@@ -139,14 +139,14 @@ void dynamic_interface_instance::setValue(const std::string& key, const variant&
 	obj_.add_attr_mutation(variant(key), value);
 }
 
-void dynamic_interface_instance::setValue_by_slot(int slot, const variant& value)
+void dynamic_interface_instance::setValueBySlot(int slot, const variant& value)
 {
 	obj_.add_attr_mutation(variant(factory_->translate_slot(slot)), value);
 }
 
 int dynamic_interface_instance::id() const
 {
-	return factory_->get_id();
+	return factory_->getId();
 }
 
 static_interface_instance::static_interface_instance(const variant& obj, boost::intrusive_ptr<const static_bound_factory> parent)
@@ -169,14 +169,14 @@ void static_interface_instance::setValue(const std::string& key, const variant& 
 	obj_->mutate_value(key, value);
 }
 
-void static_interface_instance::setValue_by_slot(int slot, const variant& value)
+void static_interface_instance::setValueBySlot(int slot, const variant& value)
 {
 	obj_->mutate_value_by_slot(factory_->translate_slot(slot), value);
 }
 
 int static_interface_instance::id() const
 {
-	return factory_->get_id();
+	return factory_->getId();
 }
 
 }

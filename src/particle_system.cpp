@@ -396,7 +396,7 @@ void simple_particle_system::process(const entity& e)
 		for(int n = 0; n != gen.members; ++n) {
 			p->pos[0] += p->velocity[0];
 			p->pos[1] += p->velocity[1];
-			if(e.face_right()) {
+			if(e.isFacingRight()) {
 				p->velocity[0] += info_.accel_x_/1000.0;
 			} else {
 				p->velocity[0] -= info_.accel_x_/1000.0;
@@ -461,7 +461,7 @@ void simple_particle_system::process(const entity& e)
 
 	while(nspawn-- > 0) {
 		particle p;
-		p.pos[0] = e.face_right() ? (e.x() + info_.min_x_) : (e.x() + e.current_frame().width() - info_.max_x_);
+		p.pos[0] = e.isFacingRight() ? (e.x() + info_.min_x_) : (e.x() + e.getCurrentFrame().width() - info_.max_x_);
 		p.pos[1] = e.y() + info_.min_y_;
 		p.velocity[0] = info_.velocity_x_/1000.0;
 		p.velocity[1] = info_.velocity_y_/1000.0;
@@ -504,7 +504,7 @@ void simple_particle_system::process(const entity& e)
 			p.pos[1] += (rand()%(diff_y*1000))/1000.0;
 		}
 
-		if(!e.face_right()) {
+		if(!e.isFacingRight()) {
 			p.velocity[0] = -p.velocity[0];
 		}
 
@@ -532,7 +532,7 @@ void simple_particle_system::draw(const rect& area, const entity& e) const
 	std::vector<GLfloat>& tcarray = graphics::global_texcoords_array();
 	std::vector<GLbyte>& carray = graphics::global_vertex_color_array();
 
-	const int facing = e.face_right() ? 1 : -1;
+	const int facing = e.isFacingRight() ? 1 : -1;
 			
 
 	carray.clear();
@@ -721,7 +721,7 @@ public:
 		    p != particles_.end(); ++p) {
 			p->pos_x += p->velocity_x;
 			p->pos_y += p->velocity_y;
-			if(e.face_right()) {
+			if(e.isFacingRight()) {
 				p->velocity_x += info_.accel_x/1000.0;
 			} else {
 				p->velocity_x -= info_.accel_x/1000.0;

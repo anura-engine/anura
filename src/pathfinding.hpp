@@ -33,8 +33,8 @@
 #include "variant.hpp"
 
 // Need to forward declare this rather than including level.hpp
-class level;
-typedef boost::intrusive_ptr<level> level_ptr;
+class Level;
+typedef boost::intrusive_ptr<Level> LevelPtr;
 
 namespace pathfinding {
 
@@ -78,7 +78,7 @@ public:
 		h_ = h;
 		f_ = g+h;
 	}
-	void set_parent(graph_node_ptr parent) {parent_ = parent;}
+	void setParent(graph_node_ptr parent) {parent_ = parent;}
 	graph_node_ptr get_parent() const {return parent_;}
 	void set_on_open_list(const bool val) {on_open_list_ = val;}
 	bool on_open_list() const {return on_open_list_;}
@@ -192,7 +192,7 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	game_logic::expression_ptr heuristic, 
 	game_logic::MapFormulaCallablePtr callable);
 
-variant a_star_find_path(level_ptr lvl, const point& src, 
+variant a_star_find_path(LevelPtr lvl, const point& src, 
 	const point& dst, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 

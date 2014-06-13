@@ -354,12 +354,6 @@
     <ClInclude Include="..\..\src\preview_tileset_widget.hpp" />
     <ClInclude Include="..\..\src\progress_bar.hpp" />
     <ClInclude Include="..\..\src\property_editor_dialog.hpp" />
-    <ClInclude Include="..\..\src\psystem2.hpp" />
-    <ClInclude Include="..\..\src\psystem2_affectors.hpp" />
-    <ClInclude Include="..\..\src\psystem2_emitters.hpp" />
-    <ClInclude Include="..\..\src\psystem2_fwd.hpp" />
-    <ClInclude Include="..\..\src\psystem2_observers.hpp" />
-    <ClInclude Include="..\..\src\psystem2_parameters.hpp" />
     <ClInclude Include="..\..\src\random.hpp" />
     <ClInclude Include="..\..\src\raster.hpp" />
     <ClInclude Include="..\..\src\raster_distortion.hpp" />

@@ -356,7 +356,7 @@ namespace controls
 		highest_confirmed[local_player]--;
 	}
 
-	void get_control_status(int cycle, int player, bool* output, const std::string** user)
+	void get_controlStatus(int cycle, int player, bool* output, const std::string** user)
 	{
 		--cycle;
 		cycle -= starting_cycles;

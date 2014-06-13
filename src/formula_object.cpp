@@ -1197,11 +1197,11 @@ void formula_object::setValue(const std::string& key, const variant& value)
 	std::map<std::string, int>::const_iterator itor = class_->properties().find(key);
 	ASSERT_LOG(itor != class_->properties().end(), "UNKNOWN PROPERTY ACCESS " << key << " IN CLASS " << class_->name());
 
-	setValue_by_slot(itor->second+NUM_BASE_FIELDS, value);
+	setValueBySlot(itor->second+NUM_BASE_FIELDS, value);
 	return;
 }
 
-void formula_object::setValue_by_slot(int slot, const variant& value)
+void formula_object::setValueBySlot(int slot, const variant& value)
 {
 	if(slot < NUM_BASE_FIELDS) {
 		switch(slot) {
@@ -1300,7 +1300,7 @@ void formula_object::validate() const
 #endif
 }
 
-void formula_object::get_inputs(std::vector<formula_input>* inputs) const
+void formula_object::getInputs(std::vector<formula_input>* inputs) const
 {
 	foreach(const PropertyEntry& entry, class_->slots()) {
 		FORMULA_ACCESS_TYPE type = FORMULA_READ_ONLY;

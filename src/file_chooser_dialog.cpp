@@ -342,7 +342,7 @@ void file_chooser_dialog::add_dir_button()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }
@@ -350,7 +350,7 @@ void file_chooser_dialog::add_dir_button()
 void file_chooser_dialog::execute_dir_name_select(int row)
 {
 	if(row == -1 && context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 }
@@ -358,7 +358,7 @@ void file_chooser_dialog::execute_dir_name_select(int row)
 void file_chooser_dialog::execute_dir_name_enter(const TextEditorWidgetPtr editor)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 

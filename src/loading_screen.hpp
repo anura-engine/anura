@@ -33,7 +33,7 @@ class loading_screen
 	void draw_and_increment (const std::string& message) {draw(message); increment_status();}
 	void set_number_of_items (int items);
 
-	void finish_loading();
+	void finishLoading();
 	
 	private:
 	void draw_internal(const std::string& message);

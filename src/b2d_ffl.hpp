@@ -97,7 +97,7 @@ namespace box2d
 		bool active() const;
 		void set_active(bool actv=true);
 
-		void finish_loading(entity_ptr e=NULL);
+		void finishLoading(EntityPtr e=NULL);
 		std::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
 
 		variant write();
@@ -134,7 +134,7 @@ namespace box2d
 		virtual variant getValue(const std::string&) const;
 		virtual void setValue(const std::string& key, const variant& value);
 
-		void finish_loading();
+		void finishLoading();
 		void step(float time_step);
 
 		joint_ptr find_joint_by_id(const std::string& key) const;
@@ -151,7 +151,7 @@ namespace box2d
 		variant write();
 
 		static b2World& current();
-		static b2World* current_ptr();
+		static b2World* getCurrentPtr();
 		static const world& our_world();
 		static world_ptr our_world_ptr();
 

@@ -57,7 +57,7 @@ public:
 private:
 	void execute(editor& e) {
 		custom_object* obj = new custom_object(id_, x_, y_, facing_);
-		obj->set_level(e.get_level());
+		obj->setLevel(e.get_level());
 		e.get_level().add_character(obj);
 	}
 };
@@ -166,11 +166,11 @@ private:
 	}
 };
 
-class editor_command_function_symbol_table : public function_symbol_table
+class editor_command_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
-	static editor_command_function_symbol_table& instance() {
-		static editor_command_function_symbol_table result;
+	static editor_command_FunctionSymbolTable& instance() {
+		static editor_command_FunctionSymbolTable result;
 		return result;
 	}
 
@@ -188,7 +188,7 @@ public:
 		} else if(fn == "debug") {
 			return expression_ptr(new debug_function(args));
 		} else {
-			return function_symbol_table::create_function(fn, args, callable_def);
+			return FunctionSymbolTable::create_function(fn, args, callable_def);
 		}
 	}
 };
@@ -306,7 +306,7 @@ void load_scripts()
 		const std::string& id = script_node["id"].as_string();
 		info script = { id };
 		scripts_info.push_back(script);
-		scripts[id].reset(new formula(script_node["script"], &editor_command_function_symbol_table::instance()));
+		scripts[id].reset(new formula(script_node["script"], &editor_command_FunctionSymbolTable::instance()));
 	}
 }
 

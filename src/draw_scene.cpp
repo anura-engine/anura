@@ -131,7 +131,7 @@ void draw_scene(const level& lvl, screen_position& pos, const entity* focus, boo
 bool update_camera_position(const level& lvl, screen_position& pos, const entity* focus, bool doDraw) 
 {
 	if(focus == NULL && lvl.player()) {
-		focus = &lvl.player()->get_entity();
+		focus = &lvl.player()->getEntity();
 	}
 
 	//flag which gets set to false if we abort drawing, due to the
@@ -199,40 +199,40 @@ bool update_camera_position(const level& lvl, screen_position& pos, const entity
 
 		int displacement_x = 0, displacement_y = 0;
 		if(pos.focus_x || pos.focus_y) {
-			displacement_x = focus->feet_x() - pos.focus_x;
-			displacement_y = focus->feet_y() - pos.focus_y;
+			displacement_x = focus->getFeetX() - pos.focus_x;
+			displacement_y = focus->getFeetY() - pos.focus_y;
 		}
 
-		pos.focus_x = focus->feet_x();
-		pos.focus_y = focus->feet_y();
+		pos.focus_x = focus->getFeetX();
+		pos.focus_y = focus->getFeetY();
 
 		//find the point we want the camera to converge toward. It will be the
 		//feet of the player, but inside the boundaries we calculated above.
-		int x = focus->feet_x() + displacement_x*PredictiveFramesHorz;
+		int x = focus->getFeetX() + displacement_x*PredictiveFramesHorz;
 
 		//calculate the adjustment to the camera's target position based on
 		//our vertical look. This is calculated as the square root of the
 		//vertical look, to make the movement slowly converge.
-		const int vertical_look = focus->vertical_look();
+		const int vertical_look = focus->verticalLook();
 
 		//find the y point for the camera to converge toward
-		int y = focus->feet_y() - (screen_height/(5*lvl.zoom_level())).as_int() + displacement_y*PredictiveFramesVert + vertical_look;
+		int y = focus->getFeetY() - (screen_height/(5*lvl.zoom_level())).as_int() + displacement_y*PredictiveFramesVert + vertical_look;
 
 		//std::cerr << "POSITION: " << x << "," << y << " IN " << min_x << "," << min_y << "," << max_x << "," << max_y << "\n";
 
 		if(lvl.focus_override().empty() == false) {
-			std::vector<entity_ptr> v = lvl.focus_override();
+			std::vector<EntityPtr> v = lvl.focus_override();
 			int left = 0, right = 0, top = 0, bottom = 0;
 			while(v.empty() == false) {
-				left = v[0]->feet_x();
-				right = v[0]->feet_x();
-				top = v[0]->feet_y();
-				bottom = v[0]->feet_y();
-				for(const entity_ptr& e : v) {
-					left = std::min<int>(e->feet_x(), left);
-					right = std::max<int>(e->feet_x(), right);
-					top = std::min<int>(e->feet_y(), top);
-					bottom = std::min<int>(e->feet_y(), bottom);
+				left = v[0]->getFeetX();
+				right = v[0]->getFeetX();
+				top = v[0]->getFeetY();
+				bottom = v[0]->getFeetY();
+				for(const EntityPtr& e : v) {
+					left = std::min<int>(e->getFeetX(), left);
+					right = std::max<int>(e->getFeetX(), right);
+					top = std::min<int>(e->getFeetY(), top);
+					bottom = std::min<int>(e->getFeetY(), bottom);
 				}
 
 				const int BorderSize = 20;
@@ -429,7 +429,7 @@ void render_scene(const level& lvl, const screen_position& pos) {
 
 	graphics::clear_raster_distortion();
 
-	lvl.draw_later(xscroll, yscroll, draw_width, draw_height);
+	lvl.drawLater(xscroll, yscroll, draw_width, draw_height);
 	glPopMatrix();
 
 	lvl.draw_absolutely_positioned_objects();
@@ -591,7 +591,7 @@ variant performance_data::getValue(const std::string& key) const
 	return variant();
 }
 
-void performance_data::get_inputs(std::vector<game_logic::formula_input>* inputs) const
+void performance_data::getInputs(std::vector<game_logic::formula_input>* inputs) const
 {
 #define PERF_ATTR(m) inputs->push_back(std::string(#m))
 	PERF_ATTR(fps);

@@ -119,12 +119,12 @@ void formula_variable_storage::setValue(const std::string& key, const variant& v
 	add(key, value);
 }
 
-void formula_variable_storage::setValue_by_slot(int slot, const variant& value)
+void formula_variable_storage::setValueBySlot(int slot, const variant& value)
 {
 	values_[slot] = value;
 }
 
-void formula_variable_storage::get_inputs(std::vector<formula_input>* inputs) const
+void formula_variable_storage::getInputs(std::vector<formula_input>* inputs) const
 {
 	for(std::map<std::string,int>::const_iterator i = strings_to_values_.begin(); i != strings_to_values_.end(); ++i) {
 		inputs->push_back(formula_input(i->first, FORMULA_READ_WRITE));

@@ -61,7 +61,7 @@ assert_edit_and_continue_fn_scope::~assert_edit_and_continue_fn_scope()
 
 void report_assert_msg(const std::string& m)
 {
-	if(level::current_ptr()) {
+	if(level::getCurrentPtr()) {
 		std::cerr << "ATTEMPTING TO SEND CRASH REPORT...\n";
 		std::map<variant,variant> obj;
 		obj[variant("type")] = variant("crash");
@@ -81,7 +81,7 @@ void report_assert_msg(const std::string& m)
 			}
 		}
 
-		stats::record(variant(&obj), level::current_ptr()->id());
+		stats::record(variant(&obj), level::getCurrentPtr()->id());
 		stats::flush_and_quit();
 	}
 

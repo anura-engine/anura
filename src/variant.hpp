@@ -17,27 +17,24 @@
 #ifndef VARIANT_HPP_INCLUDED
 #define VARIANT_HPP_INCLUDED
 
-#include <functional>
-
 #include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <string>
+
+#include <cstdint>
+#include <functional>
 #include <map>
 #include <set>
-#include <vector>
 #include <sstream>
-
-#include <stdint.h>
-
-#include <string.h>
+#include <string>
+#include <vector>
 
 #include "decimal.hpp"
 #include "formula_fwd.hpp"
 #include "reference_counted_object.hpp"
 
-namespace game_logic {
-class FormulaCallable;
-class formula_expression;
+namespace game_logic 
+{
+	class FormulaCallable;
+	class formula_expression;
 }
 
 class variant_type;

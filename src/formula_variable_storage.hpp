@@ -51,9 +51,9 @@ private:
 	variant getValue(const std::string& key) const;
 	variant getValue_by_slot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
-	void setValue_by_slot(int slot, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
-	void get_inputs(std::vector<formula_input>* inputs) const;
+	void getInputs(std::vector<formula_input>* inputs) const;
 
 	std::string debug_object_name_;
 	

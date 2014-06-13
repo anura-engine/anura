@@ -24,14 +24,14 @@
 #include "voxel_object.hpp"
 #include "voxel_object_functions.hpp"
 
-void voxel_object_command_callable::set_expression(const game_logic::formula_expression* expr)
+void voxel_object_command_callable::setExpression(const game_logic::formula_expression* expr)
 {
 	expr_ = expr;
 	expr_holder_.reset(expr);
 }
 
 
-void voxel_object_command_callable::run_command(voxel::world& lvl, voxel::user_voxel_object& obj) const
+void voxel_object_command_callable::runCommand(voxel::world& lvl, voxel::user_voxel_object& obj) const
 {
 	if(expr_) {
 		try {
@@ -59,7 +59,7 @@ public:
 
 	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const 
 	{
-		ob.add_scheduled_command(cycles_, cmd_);
+		ob.addScheduledCommand(cycles_, cmd_);
 	}
 private:
 	int cycles_;
@@ -68,7 +68,7 @@ private:
 
 FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the level for the commands to be run.")
 	schedule_command* cmd = new schedule_command(EVAL_ARG(0).as_int(),EVAL_ARG(1));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
@@ -152,7 +152,7 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 	}
 
 	fire_event_command* cmd = (new fire_event_command(target, event, callable));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object|string")
@@ -194,7 +194,7 @@ FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal 
 
 	variant commands;
 	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
@@ -239,7 +239,7 @@ END_FUNCTION_DEF(spawn_voxel)
 */
 
 
-class voxel_object_function_symbol_table : public function_symbol_table
+class voxel_object_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
 	expression_ptr create_function(const std::string& fn,
@@ -252,16 +252,16 @@ public:
 			return expression_ptr(i->second->create(args));
 		}
 
-		return function_symbol_table::create_function(fn, args, callable_def);
+		return FunctionSymbolTable::create_function(fn, args, callable_def);
 	}
 
 };
 
 }
 
-function_symbol_table& get_voxel_object_functions_symbol_table()
+FunctionSymbolTable& get_voxel_object_functions_symbol_table()
 {
-	static voxel_object_function_symbol_table table;
+	static voxel_object_FunctionSymbolTable table;
 	return table;
 }
 

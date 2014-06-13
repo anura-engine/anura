@@ -671,7 +671,7 @@ float get_sound_volume()
 	return sfx_volume;
 }
 
-void set_sound_volume(float volume)
+void setSoundVolume(float volume)
 {
 	sfx_volume = volume;
 }

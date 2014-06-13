@@ -106,10 +106,10 @@ private:
 	}
 };
 
-class hex_function_symbol_table : public game_logic::function_symbol_table
+class hex_FunctionSymbolTable : public game_logic::FunctionSymbolTable
 {
 public:
-	hex_function_symbol_table()
+	hex_FunctionSymbolTable()
 	{}
 
 	game_logic::expression_ptr create_function(
@@ -120,13 +120,13 @@ public:
 		if(fn == "get_tile") {
 			return game_logic::expression_ptr(new get_tile_function(args));
 		}
-		return function_symbol_table::create_function(fn, args, callable_def);
+		return FunctionSymbolTable::create_function(fn, args, callable_def);
 	}
 };
 
-game_logic::function_symbol_table& get_hex_function_symbol_table()
+game_logic::FunctionSymbolTable& get_hex_FunctionSymbolTable()
 {
-	static hex_function_symbol_table table;
+	static hex_FunctionSymbolTable table;
 	return table;
 }
 
@@ -146,8 +146,8 @@ struct hex_engine
 		functions_var = value["functions"];
 		if(functions_var.is_null() == false) {
 			ASSERT_LOG(functions_var.is_string() == true || functions_var.is_list() == true, "\"functions must\" be specified as a string or list.");
-			functions.reset(new game_logic::function_symbol_table);
-			functions->set_backup(&get_hex_function_symbol_table());
+			functions.reset(new game_logic::FunctionSymbolTable);
+			functions->set_backup(&get_hex_FunctionSymbolTable());
 			if(functions_var.is_string()) {
 				game_logic::formula f(functions_var, functions.get());
 			} else if(functions_var.is_list()) {
@@ -192,7 +192,7 @@ struct hex_engine
 	}
 
 	variant functions_var;
-	std::shared_ptr<game_logic::function_symbol_table> functions;
+	std::shared_ptr<game_logic::FunctionSymbolTable> functions;
 	std::map<std::string, game_logic::const_formula_ptr> handlers;
 	std::vector<std::string> rules;
 };
@@ -307,7 +307,7 @@ bool HexObject::executeCommand(const variant& value)
 	} else {
 		game_logic::command_callable* cmd = value.try_convert<game_logic::command_callable>();
 		if(cmd != NULL) {
-			cmd->run_command(*this);
+			cmd->runCommand(*this);
 		}
 	}
 	return result;

@@ -42,7 +42,7 @@ namespace {
 
 void set_segmented_level_width(editor_level_properties_dialog* d, editor* e, bool value)
 {
-	foreach(level_ptr lvl, e->get_level_list()) {
+	foreach(LevelPtr lvl, e->get_level_list()) {
 		if(value) {
 			//make sure the segment width is divisible by the tile size.
 			int width = lvl->boundaries().w();
@@ -62,7 +62,7 @@ void set_segmented_level_width(editor_level_properties_dialog* d, editor* e, boo
 
 void set_segmented_level_height(editor_level_properties_dialog* d, editor* e, bool value)
 {
-	foreach(level_ptr lvl, e->get_level_list()) {
+	foreach(LevelPtr lvl, e->get_level_list()) {
 		if(value) {
 			//make sure the segment height is divisible by the tile size.
 			int height = lvl->boundaries().h();
@@ -142,11 +142,11 @@ void editor_level_properties_dialog::init()
 	addWidget(vt_checkbox);
 
 	if(editor_.get_level().segment_height() != 0) {
-		remove_widget(hz_checkbox);
+		removeWidget(hz_checkbox);
 	}
 
 	if(editor_.get_level().segment_width() != 0) {
-		remove_widget(vt_checkbox);
+		removeWidget(vt_checkbox);
 	}
 
 	add_ok_and_cancel_buttons();
@@ -156,7 +156,7 @@ void editor_level_properties_dialog::change_title(const gui::TextEditorWidgetPtr
 {
 	std::string title = editor->text();
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->set_title(title);
 	}
 }
@@ -188,7 +188,7 @@ void editor_level_properties_dialog::change_background()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }
@@ -196,7 +196,7 @@ void editor_level_properties_dialog::change_background()
 void editor_level_properties_dialog::execute_change_background(const std::vector<std::string>& choices, int index)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -204,7 +204,7 @@ void editor_level_properties_dialog::execute_change_background(const std::vector
 		return;
 	}
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->set_background_by_id(choices[index]);
 	}
 
@@ -215,7 +215,7 @@ void editor_level_properties_dialog::change_next_level()
 {
 	std::string result = show_choose_level_dialog("Next Level");
 	if(result.empty() == false) {
-		foreach(level_ptr lvl, editor_.get_level_list()) {
+		foreach(LevelPtr lvl, editor_.get_level_list()) {
 			lvl->set_next_level(result);
 		}
 	}
@@ -227,7 +227,7 @@ void editor_level_properties_dialog::change_previous_level()
 {
 	std::string result = show_choose_level_dialog("Previous Level");
 	if(result.empty() == false) {
-		foreach(level_ptr lvl, editor_.get_level_list()) {
+		foreach(LevelPtr lvl, editor_.get_level_list()) {
 			lvl->set_previous_level(result);
 		}
 	}

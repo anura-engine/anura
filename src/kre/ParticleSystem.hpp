@@ -128,7 +128,7 @@ namespace KRE
 			glm::vec3 default_dimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
 			particle_system* get_particle_system() { return particle_system_; }
 			emit_object_ptr get_object(const std::string& name);
-			void set_parent(particle_system* parent);
+			void setParent(particle_system* parent);
 			// Direct access here for *speed* reasons.
 			std::vector<particle>& active_particles() { return active_particles_; }
 			std::vector<emitter_ptr>& active_emitters() { return instanced_emitters_; }

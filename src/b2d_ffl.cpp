@@ -97,7 +97,7 @@ namespace box2d
 		try {
 			variant w = json::parse_from_file("data/world.cfg");
 			this_world = new world(w);
-			this_world->finish_loading();
+			this_world->finishLoading();
 		} catch(json::parse_error&) {
 			std::cerr << "WORLD NOT FOUND/NOT VALID. NOT LOADING WORLD. WORLD IS SAD." << std::endl;
 		}
@@ -174,7 +174,7 @@ namespace box2d
 		get_world().Step(time_step, velocity_iterations_, position_iterations_);
 	}
 
-	void world::finish_loading()
+	void world::finishLoading()
 	{
 		set_as_current_world();
 		debug_draw_.SetFlags(b2Draw::e_shapeBit | b2Draw::e_jointBit | b2Draw::e_aabbBit | b2Draw::e_pairBit | b2Draw::e_centerOfMassBit);
@@ -188,7 +188,7 @@ namespace box2d
 		return *current_world;
 	}
 
-	b2World* world::current_ptr()
+	b2World* world::getCurrentPtr()
 	{
 		return current_world;
 	}
@@ -488,7 +488,7 @@ namespace box2d
 	}
 
 	
-	void body::finish_loading(entity_ptr e)
+	void body::finishLoading(EntityPtr e)
 	{
 		world_ptr wp = world::our_world_ptr();
 		if(e != NULL) {

@@ -692,7 +692,7 @@ void frame::build_alpha()
 	}
 }
 
-bool frame::is_alpha(int x, int y, int time, bool face_right) const
+bool frame::isAlpha(int x, int y, int time, bool face_right) const
 {
 	std::vector<bool>::const_iterator itor = getAlpha_itor(x, y, time, face_right);
 	if(itor == alpha_.end()) {
@@ -743,7 +743,7 @@ void frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool 
 	rect[2] = texture_.translate_coord_x(rect[2]);
 	rect[3] = texture_.translate_coord_y(rect[3]);
 
-	blit.setTexture(texture_.get_id());
+	blit.setTexture(texture_.getId());
 
 
 	blit.add(x, y, rect[0], rect[1]);
@@ -854,7 +854,7 @@ void frame::draw3(int time, GLint va, GLint tc) const
 			if(tex_unit == GL_TEXTURE0) {
 				dd3d.tex_d.set_as_currentTexture();
 			} else {
-				glBindTexture(GL_TEXTURE_2D, dd3d.tex_d.get_id());
+				glBindTexture(GL_TEXTURE_2D, dd3d.tex_d.getId());
 			}
 			++tex_unit;
 		}
@@ -863,7 +863,7 @@ void frame::draw3(int time, GLint va, GLint tc) const
 			if(tex_unit == GL_TEXTURE0) {
 				dd3d.tex_s.set_as_currentTexture();
 			} else {
-				glBindTexture(GL_TEXTURE_2D, dd3d.tex_s.get_id());
+				glBindTexture(GL_TEXTURE_2D, dd3d.tex_s.getId());
 			}
 			++tex_unit;
 		}
@@ -1079,7 +1079,7 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 		}
 		gles2::active_shader()->prepare_draw();
 		gles2::active_shader()->shader()->set_sprite_area(rect);
-		gles2::active_shader()->shader()->set_draw_area(draw_area);
+		gles2::active_shader()->shader()->set_drawArea(draw_area);
 		gles2::active_shader()->shader()->set_cycle(cycle);
 		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
 		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
@@ -1210,7 +1210,7 @@ const std::string* frame::get_event(int time_in_frame) const
 point frame::pivot(const std::string& name, int time_in_frame) const
 {
 	if(time_in_frame < 0) {
-		return point(feet_x(),feet_y());
+		return point(getFeetX(),getFeetY());
 	}
 
 	foreach(const pivot_schedule& s, pivots_) {
@@ -1225,7 +1225,7 @@ point frame::pivot(const std::string& name, int time_in_frame) const
 		return s.points[time_in_frame];
 	}
 
-	return point(feet_x(),feet_y()); //default is to pivot around feet.
+	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
 }
 
 variant frame::getValue(const std::string& key) const

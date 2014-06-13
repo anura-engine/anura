@@ -145,7 +145,7 @@ namespace
 					int g_cost = path_cost_fn(s, p, current->get_node_value()) + current->G();
 					if(neighbour_node == node_list.end()) {
 						graph_node_ptr new_node = graph_node_ptr(new graph_node(point(p.x, p.y)));
-							new_node->set_parent(current);
+							new_node->setParent(current);
 							new_node->set_cost(g_cost, 0);
 							new_node->set_on_open_list(true);
 							node_list[p] = new_node;
@@ -158,7 +158,7 @@ namespace
 					} else if(neighbour_node->second->on_closed_list() || neighbour_node->second->on_open_list()) {
 						if(g_cost < neighbour_node->second->G()) {
 							neighbour_node->second->G(g_cost);
-							neighbour_node->second->set_parent(current);
+							neighbour_node->second->setParent(current);
 						}
 					} else {
 						throw "Path error node on list, but not on open or closed lists";

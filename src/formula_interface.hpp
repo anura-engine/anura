@@ -24,7 +24,7 @@ public:
 
 	virtual bool all_static_lookups() const = 0;
 	virtual variant create(const variant& v) const = 0;
-	virtual int get_id() const = 0;
+	virtual int getId() const = 0;
 };
 
 class formula_interface : public FormulaCallable

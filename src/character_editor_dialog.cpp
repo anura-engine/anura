@@ -63,7 +63,7 @@ void character_editor_dialog::init()
 	const frame& frame = *editor_.all_characters()[editor_.get_object()].preview_frame();
 
 	button* facing_button = new button(
-	  WidgetPtr(new label(editor_.face_right() ? "right" : "left", graphics::color_white())),
+	  WidgetPtr(new label(editor_.isFacingRight() ? "right" : "left", graphics::color_white())),
 	  std::bind(&editor::toggle_facing, &editor_));
 	facing_button->setTooltip("f  Change Facing");
 	if(find_edit_->text().empty() == false) {
@@ -192,7 +192,7 @@ void character_editor_dialog::show_category_menu()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex - 20, mousey);
 }
@@ -206,7 +206,7 @@ void character_editor_dialog::set_character(int index)
 
 void character_editor_dialog::close_context_menu(int index)
 {
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset();
 }
 

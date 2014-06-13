@@ -35,7 +35,7 @@ void set_verbatim_string_expressions(bool verbatim);
 
 class FormulaCallable;
 class formula_expression;
-class function_symbol_table;
+class FunctionSymbolTable;
 typedef boost::intrusive_ptr<formula_expression> expression_ptr;
 
 //helper struct which contains info for a where expression.
@@ -86,8 +86,8 @@ public:
 
 	static const std::set<formula*>& getAll();
 
-	static formula_ptr create_optional_formula(const variant& str, function_symbol_table* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
-	explicit formula(const variant& val, function_symbol_table* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
+	static formula_ptr create_optional_formula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
+	explicit formula(const variant& val, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
 	formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 	~formula();
 	variant execute(const FormulaCallable& variables) const;

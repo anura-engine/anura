@@ -66,12 +66,12 @@ namespace voxel
 		const voxel_model_ptr& model_const() { return model_; }
 
 		void addWidget(const gui::WidgetPtr& w);
-		void add_widgets(std::vector<gui::WidgetPtr>* widgets);
-		void clear_widgets();
-		void remove_widget(gui::WidgetPtr w);
+		void addWidgets(std::vector<gui::WidgetPtr>* widgets);
+		void clearWidgets();
+		void removeWidget(gui::WidgetPtr w);
 		gui::WidgetPtr getWidgetById(const std::string& id);
 		gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
-		std::vector<variant> get_variant_widget_list() const;
+		std::vector<variant> getVariantWidgetList() const;
 
 		bool paused() const { return paused_; }
 		void set_paused(bool p=true);
@@ -85,8 +85,8 @@ namespace voxel
 		bool is_mouseover_object() const { return is_mouseover_; }
 		void set_mouseover_object(bool mo=true) { is_mouseover_ = mo; }
 
-		void add_scheduled_command(int cycle, variant cmd);
-		std::vector<variant> pop_scheduled_commands();
+		void addScheduledCommand(int cycle, variant cmd);
+		std::vector<variant> popScheduledCommands();
 
 	protected:
 	private:

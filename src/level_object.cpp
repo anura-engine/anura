@@ -580,7 +580,7 @@ level_object::level_object(variant node, const char* id)
 				node_copy = node_copy.add_attr(variant("solid_color"), variant(graphics::color_transform(col).to_string()));
 			}
 
-			if(calculate_draw_area()) {
+			if(calculate_drawArea()) {
 				node_copy = node_copy.add_attr(variant("draw_area"), variant(draw_area_.to_string()));
 			}
 
@@ -860,7 +860,7 @@ bool level_object::calculate_is_solid_color(graphics::color& col) const
 	return true;
 }
 
-bool level_object::calculate_draw_area()
+bool level_object::calculate_drawArea()
 {
 	draw_area_ = rect();
 	foreach(int tile, tiles_) {

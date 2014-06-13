@@ -92,7 +92,7 @@ public:
 
 	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
-							 game_logic::function_symbol_table* symbols=0,
+							 game_logic::FunctionSymbolTable* symbols=0,
 							 const event_handler_map* base_handlers=NULL) const;
 
 	CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type=NULL, const CustomObjectType* old_type=NULL);
@@ -103,7 +103,7 @@ public:
 	ConstCustomObjectCallablePtr callableDefinition() const { return callable_definition_; }
 
 	const std::string& id() const { return id_; }
-	int hitpoints() const { return hitpoints_; }
+	int getHitpoints() const { return hitpoints_; }
 
 	int timerFrequency() const { return timerFrequency_; }
 
@@ -223,7 +223,7 @@ public:
 	const std::string& getLastInitializationProperty() const { return last_initialization_property_; }
 	int getSlotPropertiesBase() const { return slot_properties_base_; }
 
-	game_logic::function_symbol_table* getFunctionSymbols() const;
+	game_logic::FunctionSymbolTable* getFunctionSymbols() const;
 
 	const const_solid_info_ptr& solid() const { return solid_; }
 	const const_solid_info_ptr& platform() const { return platform_; }
@@ -291,7 +291,7 @@ private:
 	game_logic::const_formula_ptr next_animation_formula_;
 
 	event_handler_map event_handlers_;
-	std::shared_ptr<game_logic::function_symbol_table> object_functions_;
+	std::shared_ptr<game_logic::FunctionSymbolTable> object_functions_;
 
 	std::shared_ptr<std::pair<int, int> > parallax_scale_millis_;
 	

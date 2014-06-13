@@ -270,7 +270,7 @@ private:
 	}
 };
 
-class tile_map_function_symbol_table : public function_symbol_table
+class tile_map_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
 	expression_ptr create_function(
@@ -278,7 +278,7 @@ public:
 		if(fn == "tile_at") {
 			return expression_ptr(new tile_at_function(args));
 		} else {
-			return function_symbol_table::create_function(fn, args, callable_def);
+			return FunctionSymbolTable::create_function(fn, args, callable_def);
 		}
 	}
 };

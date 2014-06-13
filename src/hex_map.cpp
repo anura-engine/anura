@@ -313,7 +313,7 @@ bool HexMap::executeCommand(const variant& var)
 	} else {
 		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
 		if(cmd != NULL) {
-			cmd->run_command(*this);
+			cmd->runCommand(*this);
 		}
 	}
 	return result;

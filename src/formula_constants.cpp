@@ -112,7 +112,7 @@ variant get_constant(const std::string& id)
 	return variant();
 }
 
-constants_loader::constants_loader(variant node) : same_as_base_(false)
+ConstantsLoader::ConstantsLoader(variant node) : same_as_base_(false)
 {
 	constants_map m;
 	if(node.is_null() == false) {
@@ -134,7 +134,7 @@ constants_loader::constants_loader(variant node) : same_as_base_(false)
 	constants_stack.push_back(m);
 }
 
-constants_loader::~constants_loader()
+ConstantsLoader::~ConstantsLoader()
 {
 	ASSERT_EQ(constants_stack.empty(), false);
 	constants_stack.pop_back();

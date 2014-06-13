@@ -34,7 +34,7 @@ namespace
 	std::vector<std::string> solid_dimension_ids;
 }
 
-void collision_info::read_surf_info()
+void collision_info::readSurfInfo()
 {
 	if(surf_info) {
 		friction = surf_info->friction;
@@ -43,7 +43,7 @@ void collision_info::read_surf_info()
 	}
 }
 
-int get_num_getSolidDimensions()
+int get_num_solid_dimensions()
 {
 	return solid_dimensions.size();
 }
@@ -71,7 +71,7 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 	if(allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : NULL) ||
 	   allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : NULL)) {
 		if(info) {
-			info->read_surf_info();
+			info->readSurfInfo();
 		}
 
 		if(info && !lvl.solid(x, y)) {
@@ -82,17 +82,17 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 
 	const point pt(x, y);
 
-	const std::vector<entity_ptr>& chars = lvl.get_solid_chars();
+	const std::vector<EntityPtr>& chars = lvl.get_solid_chars();
 
-	for(std::vector<entity_ptr>::const_iterator i = chars.begin();
+	for(std::vector<EntityPtr>::const_iterator i = chars.begin();
 	    i != chars.end(); ++i) {
-		const entity_ptr& obj = *i;
+		const EntityPtr& obj = *i;
 		if(&e == obj.get()) {
 			continue;
 		}
 
 		if(allow_platform == SOLID_AND_PLATFORMS || obj->isSolidPlatform()) {
-			const rect& platform_rect = obj->platform_rect_at(pt.x);
+			const rect& platform_rect = obj->platformRectAt(pt.x);
 			if(pointInRect(pt, platform_rect) && obj->platform()) {
 				if(info) {
 					info->collide_with = obj;
@@ -111,12 +111,12 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 			continue;
 		}
 
-		if(!pointInRect(pt, obj->solid_rect())) {
+		if(!pointInRect(pt, obj->solidRect())) {
 			continue;
 		}
 
-		const frame& f = obj->current_frame();
-		const int xpos = obj->face_right() ? x - obj->x() : obj->x() + f.width() - x - 1;
+		const frame& f = obj->getCurrentFrame();
+		const int xpos = obj->isFacingRight() ? x - obj->x() : obj->x() + f.width() - x - 1;
 
 		const solid_info* solid = obj->solid();
 
@@ -140,12 +140,12 @@ bool entity_collides(level& lvl, const entity& e, MOVE_DIRECTION dir, collision_
 		return false;
 	}
 
-	if(!e.allow_level_collisions() && entity_collides_with_level(lvl, e, dir, info)) {
+	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, dir, info)) {
 		return true;
 	}
 
-	const std::vector<entity_ptr>& solid_chars = lvl.get_solid_chars();
-	for(std::vector<entity_ptr>::const_iterator obj = solid_chars.begin(); obj != solid_chars.end(); ++obj) {
+	const std::vector<EntityPtr>& solid_chars = lvl.get_solid_chars();
+	for(std::vector<EntityPtr>::const_iterator obj = solid_chars.begin(); obj != solid_chars.end(); ++obj) {
 		if(obj->get() != &e && entity_collides_with_entity(e, **obj, info)) {
 			if(info) {
 				info->collide_with = *obj;
@@ -159,10 +159,10 @@ bool entity_collides(level& lvl, const entity& e, MOVE_DIRECTION dir, collision_
 
 void debug_check_entity_solidity(const level& lvl, const entity& e)
 {
-	if(!e.allow_level_collisions() && entity_collides_with_level(lvl, e, MOVE_NONE, NULL)) {
+	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_NONE, NULL)) {
 		const solid_info* s = e.solid();
 		ASSERT_LOG(s, "ENTITY COLLIDES BUT DOES NOT HAVE SOLID");
-		const frame& f = e.current_frame();
+		const frame& f = e.getCurrentFrame();
 		const rect& area = s->area();
 
 		int min_x = INT_MIN, max_x = INT_MIN, min_y = INT_MIN, max_y = INT_MIN;
@@ -171,7 +171,7 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 		for(const const_solid_map_ptr& m : s->solid()) {
 			const std::vector<point>& points = m->dir(MOVE_NONE);
 			for(const point& p : points) {
-				const int x = e.x() + (e.face_right() ? p.x : (f.width() - 1 - p.x));
+				const int x = e.x() + (e.isFacingRight() ? p.x : (f.width() - 1 - p.x));
 				const int y = e.y() + p.y;
 
 				if(min_x == INT_MIN || x < min_x) {
@@ -214,7 +214,7 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 		}
 		std::cerr << "\n";
 
-		ASSERT_LOG(false, "ENTITY " << e.debug_description() << " COLLIDES WITH LEVEL");
+		ASSERT_LOG(false, "ENTITY " << e.getDebugDescription() << " COLLIDES WITH LEVEL");
 	}
 }
 
@@ -225,8 +225,8 @@ bool entity_collides_with_entity(const entity& e, const entity& other, collision
 		return false;
 	}
 
-	const rect& our_rect = e.solid_rect();
-	const rect& other_rect = other.solid_rect();
+	const rect& our_rect = e.solidRect();
+	const rect& other_rect = other.solidRect();
 
 	if(!rects_intersect(our_rect, other_rect)) {
 		return false;
@@ -242,15 +242,15 @@ bool entity_collides_with_entity(const entity& e, const entity& other, collision
 	const solid_info* other_solid = other.solid();
 	assert(our_solid && other_solid);
 
-	const frame& our_frame = e.current_frame();
-	const frame& other_frame = other.current_frame();
+	const frame& our_frame = e.getCurrentFrame();
+	const frame& other_frame = other.getCurrentFrame();
 
 	for(int y = area.y(); y <= area.y2(); ++y) {
 		for(int x = area.x(); x < area.x2(); ++x) {
-			const int our_x = e.face_right() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
+			const int our_x = e.isFacingRight() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
 			const int our_y = y - e.y();
 			if(our_solid->solid_at(our_x, our_y, info ? &info->area_id : NULL)) {
-				const int other_x = other.face_right() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
+				const int other_x = other.isFacingRight() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
 				const int other_y = y - other.y();
 				if(other_solid->solid_at(other_x, other_y, info ? &info->collide_with_area_id : NULL)) {
 					return true;
@@ -269,7 +269,7 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 		return false;
 	}
 
-	if(e.face_right() == false) {
+	if(e.isFacingRight() == false) {
 		if(dir == MOVE_RIGHT) {
 			dir = MOVE_LEFT;
 		} else if(dir == MOVE_LEFT) {
@@ -277,10 +277,10 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 		}
 	}
 
-	const frame& f = e.current_frame();
+	const frame& f = e.getCurrentFrame();
 
 	const rect& area = s->area();
-	if(e.face_right()) {
+	if(e.isFacingRight()) {
 		rect solid_area(e.x() + area.x(), e.y() + area.y(), area.w(), area.h());
 		if(!lvl.may_be_solid_in_rect(solid_area)) {
 			return false;
@@ -295,7 +295,7 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 	for(const const_solid_map_ptr& m : s->solid()) {
 		if(lvl.solid(e, m->dir(dir), info ? &info->surf_info : NULL)) {
 			if(info) {
-				info->read_surf_info();
+				info->readSurfInfo();
 			}
 
 			return true;
@@ -312,12 +312,12 @@ int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIR
 		return 0;
 	}
 
-	const frame& f = e.current_frame();
+	const frame& f = e.getCurrentFrame();
 	int count = 0;
 	for(const const_solid_map_ptr& m : s->solid()) {
 		const std::vector<point>& points = m->dir(dir);
 		for(const point& p : points) {
-			const int xpos = e.face_right() ? e.x() + p.x : e.x() + f.width() - 1 - p.x;
+			const int xpos = e.isFacingRight() ? e.x() + p.x : e.x() + f.width() - 1 - p.x;
 			if(lvl.solid(xpos, e.y() + p.y)) {
 				++count;
 			}
@@ -329,14 +329,14 @@ int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIR
 
 bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 {
-	const frame& f = e.current_frame();
+	const frame& f = e.getCurrentFrame();
 	if(!lvl.may_be_solid_in_rect(rect(e.x(), e.y(), f.width(), f.height()))) {
 		return false;
 	}
 
-	const int increment = e.face_right() ? 2 : -2;
+	const int increment = e.isFacingRight() ? 2 : -2;
 	for(int y = 0; y < f.height(); y += 2) {
-		std::vector<bool>::const_iterator i = f.getAlpha_itor(0, y, e.time_in_frame(), e.face_right());
+		std::vector<bool>::const_iterator i = f.getAlpha_itor(0, y, e.getTimeInFrame(), e.isFacingRight());
 		for(int x = 0; x < f.width(); x += 2) {
 			if(i == f.getAlpha_buf().end() || i == f.getAlpha_buf().begin()) {
 				continue;
@@ -355,7 +355,7 @@ bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 bool place_entity_in_level(level& lvl, entity& e)
 {
 	if(e.editorForceStanding()) {
-		if(!e.move_to_standing(lvl, 128)) {
+		if(!e.moveToStanding(lvl, 128)) {
 			return false;
 		}
 	}
@@ -366,7 +366,7 @@ bool place_entity_in_level(level& lvl, entity& e)
 
 	if(!entity_collides(lvl, e, MOVE_UP)) {
 		while(entity_collides(lvl, e, MOVE_NONE)) {
-			e.set_pos(e.x(), e.y()-1);
+			e.setPos(e.x(), e.y()-1);
 			if(entity_collides(lvl, e, MOVE_UP)) {
 				return false;
 			}
@@ -377,7 +377,7 @@ bool place_entity_in_level(level& lvl, entity& e)
 
 	if(!entity_collides(lvl, e, MOVE_DOWN)) {
 		while(entity_collides(lvl, e, MOVE_NONE)) {
-			e.set_pos(e.x(), e.y()+1);
+			e.setPos(e.x(), e.y()+1);
 			if(entity_collides(lvl, e, MOVE_DOWN)) {
 				return false;
 			}
@@ -388,7 +388,7 @@ bool place_entity_in_level(level& lvl, entity& e)
 
 	if(!entity_collides(lvl, e, MOVE_LEFT)) {
 		while(entity_collides(lvl, e, MOVE_NONE)) {
-			e.set_pos(e.x()-1, e.y());
+			e.setPos(e.x()-1, e.y());
 			if(entity_collides(lvl, e, MOVE_LEFT)) {
 				return false;
 			}
@@ -399,7 +399,7 @@ bool place_entity_in_level(level& lvl, entity& e)
 
 	if(!entity_collides(lvl, e, MOVE_RIGHT)) {
 		while(entity_collides(lvl, e, MOVE_NONE)) {
-			e.set_pos(e.x()+1, e.y());
+			e.setPos(e.x()+1, e.y());
 			if(entity_collides(lvl, e, MOVE_RIGHT)) {
 				return false;
 			}
@@ -428,7 +428,7 @@ bool place_entity_in_level_with_large_displacement(level& lvl, entity& e)
 			                         point(xpos, ypos-distance),
 			                         point(xpos, ypos+distance), };
 			for(const point& p : points) {
-				e.set_pos(p);
+				e.setPos(p);
 				if(place_entity_in_level(lvl, e)) {
 					found = true;
 					break;
@@ -446,28 +446,28 @@ bool place_entity_in_level_with_large_displacement(level& lvl, entity& e)
 
 int entity_user_collision(const entity& a, const entity& b, collision_pair* areas_colliding, int buf_size)
 {
-	const frame& fa = a.current_frame();
-	const frame& fb = b.current_frame();
+	const frame& fa = a.getCurrentFrame();
+	const frame& fb = b.getCurrentFrame();
 
 	if(fa.collision_areas().empty() || fb.collision_areas().empty() ||
 	   fa.collision_areas_inside_frame() && fb.collision_areas_inside_frame() &&
-	   !rects_intersect(a.frame_rect(), b.frame_rect())) {
+	   !rects_intersect(a.frameRect(), b.frameRect())) {
 		return 0;
 	}
 
 	int result = 0;
 
 	for(const frame::collision_area& area_a : fa.collision_areas()) {
-		rect rect_a(a.face_right() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
+		rect rect_a(a.isFacingRight() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
 		            a.y() + area_a.area.y(),
 					area_a.area.w(), area_a.area.h());
 		for(const frame::collision_area& area_b : fb.collision_areas()) {
-			rect rect_b(b.face_right() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
+			rect rect_b(b.isFacingRight() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
 			            b.y() + area_b.area.y(),
 						area_b.area.w(), area_b.area.h());
 			if(rects_intersect(rect_a, rect_b)) {
-				const int time_a = a.time_in_frame();
-				const int time_b = b.time_in_frame();
+				const int time_a = a.getTimeInFrame();
+				const int time_b = b.getTimeInFrame();
 
 				//we only check every other pixel, since this gives us
 				//enough accuracy and is 4x faster.
@@ -476,8 +476,8 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 				const rect intersection = intersection_rect(rect_a, rect_b);
 				for(int y = intersection.y(); y <= intersection.y2() && !found; y += Stride) {
 					for(int x = intersection.x(); x <= intersection.x2(); x += Stride) {
-						if((area_a.no_alpha_check || !fa.is_alpha(x - a.x(), y - a.y(), time_a, a.face_right())) &&
-						   (area_b.no_alpha_check || !fb.is_alpha(x - b.x(), y - b.y(), time_b, b.face_right()))) {
+						if((area_a.no_alpha_check || !fa.isAlpha(x - a.x(), y - a.y(), time_a, a.isFacingRight())) &&
+						   (area_b.no_alpha_check || !fb.isAlpha(x - b.x(), y - b.y(), time_b, b.isFacingRight()))) {
 							found = true;
 							break;
 						}
@@ -506,8 +506,8 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 		return false;
 	}
 
-	const frame& fa = a.current_frame();
-	const frame& fb = b.current_frame();
+	const frame& fa = a.getCurrentFrame();
+	const frame& fb = b.getCurrentFrame();
 
 	if(fa.collision_areas().empty() || fb.collision_areas().empty()) {
 		return false;
@@ -542,24 +542,24 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 		return false;
 	}
 
-	rect rect_a(a.face_right() ? a.x() + area_a->area.x() : a.x() + fa.width() - area_a->area.x() - area_a->area.w(),
+	rect rect_a(a.isFacingRight() ? a.x() + area_a->area.x() : a.x() + fa.width() - area_a->area.x() - area_a->area.w(),
 	            a.y() + area_a->area.y(),
 				area_a->area.w(), area_a->area.h());
-	rect rect_b(b.face_right() ? b.x() + area_b->area.x() : b.x() + fb.width() - area_b->area.x() - area_b->area.w(),
+	rect rect_b(b.isFacingRight() ? b.x() + area_b->area.x() : b.x() + fb.width() - area_b->area.x() - area_b->area.w(),
 	            b.y() + area_b->area.y(),
 				area_b->area.w(), area_b->area.h());
 	if(!rects_intersect(rect_a, rect_b)) {
 		return false;
 	}
 
-	const int time_a = a.time_in_frame();
-	const int time_b = b.time_in_frame();
+	const int time_a = a.getTimeInFrame();
+	const int time_b = b.getTimeInFrame();
 
 	const rect intersection = intersection_rect(rect_a, rect_b);
 	for(int y = intersection.y(); y <= intersection.y2(); ++y) {
 		for(int x = intersection.x(); x <= intersection.x2(); ++x) {
-			if(!fa.is_alpha(x - a.x(), y - a.y(), time_a, a.face_right()) &&
-			   !fb.is_alpha(x - b.x(), y - b.y(), time_b, b.face_right())) {
+			if(!fa.isAlpha(x - a.x(), y - a.y(), time_a, a.isFacingRight()) &&
+			   !fb.isAlpha(x - b.x(), y - b.y(), time_b, b.isFacingRight())) {
 				return true;
 			}
 		}
@@ -570,7 +570,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 
 namespace {
 class user_collision_callable : public game_logic::FormulaCallable {
-	entity_ptr a_, b_;
+	EntityPtr a_, b_;
 	const std::string* area_a_;
 	const std::string* area_b_;
 	int index_;
@@ -578,7 +578,7 @@ class user_collision_callable : public game_logic::FormulaCallable {
 
 	DECLARE_CALLABLE(user_collision_callable);
 public:
-	user_collision_callable(entity_ptr a, entity_ptr b, const std::string& area_a, const std::string& area_b, int index) : a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
+	user_collision_callable(EntityPtr a, EntityPtr b, const std::string& area_a, const std::string& area_b, int index) : a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
 	}
 
 	void set_all_collisions(variant v) {
@@ -615,25 +615,25 @@ int get_collision_event_id(const std::string& area)
 
 void detect_user_collisions(level& lvl)
 {
-	std::vector<entity_ptr> chars;
+	std::vector<EntityPtr> chars;
 	chars.reserve(lvl.get_active_chars().size());
-	for(const entity_ptr& a : lvl.get_active_chars()) {
-		if(a->getWeakCollideDimensions() != 0 && a->current_frame().collision_areas().empty() == false) {
+	for(const EntityPtr& a : lvl.get_active_chars()) {
+		if(a->getWeakCollideDimensions() != 0 && a->getCurrentFrame().collision_areas().empty() == false) {
 			chars.push_back(a);
 		}
 	}
 
-	typedef std::pair<entity_ptr, const std::string*> collision_key;
+	typedef std::pair<EntityPtr, const std::string*> collision_key;
 	std::map<collision_key, std::vector<collision_key> > collision_info;
 
 	static const int CollideObjectID = get_object_event_id("collide_object");
 
 	const int MaxCollisions = 16;
 	collision_pair collision_buf[MaxCollisions];
-	for(std::vector<entity_ptr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
-		for(std::vector<entity_ptr>::const_iterator j = i + 1; j != chars.end(); ++j) {
-			const entity_ptr& a = *i;
-			const entity_ptr& b = *j;
+	for(std::vector<EntityPtr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
+		for(std::vector<EntityPtr>::const_iterator j = i + 1; j != chars.end(); ++j) {
+			const EntityPtr& a = *i;
+			const EntityPtr& b = *j;
 			if(a == b ||
 			   (a->getWeakCollideDimensions()&b->getCollideDimensions()) == 0 &&
 			   (a->getCollideDimensions()&b->getWeakCollideDimensions()) == 0) {
@@ -675,8 +675,8 @@ void detect_user_collisions(level& lvl)
 
 		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
 			p->set_all_collisions(all_callables_variant);
-			key.first->handleEvent_delay(CollideObjectID, p.get());
-			key.first->handleEvent_delay(get_collision_event_id(*i->first.second), p.get());
+			key.first->handleEventDelay(CollideObjectID, p.get());
+			key.first->handleEventDelay(get_collision_event_id(*i->first.second), p.get());
 		}
 
 		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
@@ -685,9 +685,9 @@ void detect_user_collisions(level& lvl)
 		}
 	}
 
-	for(std::vector<entity_ptr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
-		const entity_ptr& a = *i;
-		a->resolve_delayed_events();
+	for(std::vector<EntityPtr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
+		const EntityPtr& a = *i;
+		a->resolveDelayedEvents();
 	}
 }
 
@@ -697,14 +697,14 @@ bool is_flightpath_clear(const level& lvl, const entity& e, const rect& area)
 		return false;
 	}
 
-	const std::vector<entity_ptr>& v = lvl.get_solid_chars();
-	for(std::vector<entity_ptr>::const_iterator obj = v.begin();
+	const std::vector<EntityPtr>& v = lvl.get_solid_chars();
+	for(std::vector<EntityPtr>::const_iterator obj = v.begin();
 	    obj != v.end(); ++obj) {
 		if(obj->get() == &e) {
 			continue;
 		}
 
-		if(rects_intersect(area, (*obj)->solid_rect())) {
+		if(rects_intersect(area, (*obj)->solidRect())) {
 			return false;
 		}
 	}

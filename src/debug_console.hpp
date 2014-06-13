@@ -31,8 +31,8 @@
 #include "level.hpp"
 #include "text_editor_widget.hpp"
 
-class level;
-class entity;
+class Level;
+class Entity;
 
 #include <string>
 
@@ -49,7 +49,7 @@ namespace debug_console
 	class ConsoleDialog : public gui::Dialog
 	{
 	public:
-		ConsoleDialog(level& lvl, game_logic::FormulaCallable& obj);
+		ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj);
 		~ConsoleDialog();
 
 		bool hasKeyboardFocus() const;

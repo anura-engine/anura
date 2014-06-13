@@ -794,7 +794,7 @@ extern "C" int main(int argcount, char* argvec[])
 	CGLSetParameter(CGLGetCurrentContext(), kCGLCPSwapInterval, &swapInterval);
 #endif
 
-	loader.finish_loading();
+	loader.finishLoading();
 	//look to see if we got any quit events while loading.
 	{
 	SDL_Event event;
@@ -837,18 +837,18 @@ extern "C" int main(int argcount, char* argvec[])
 			last_draw_position() = screen_position();
 			std::string level_cfg = "waiting-room.cfg";
 			boost::intrusive_ptr<level> wait_lvl(load_level(level_cfg));
-			wait_lvl->finish_loading();
-			wait_lvl->set_multiplayer_slot(0);
+			wait_lvl->finishLoading();
+			wait_lvl->setMultiplayerSlot(0);
 			if(wait_lvl->player()) {
-				wait_lvl->player()->set_current_level(level_cfg);
+				wait_lvl->player()->setCurrentLevel(level_cfg);
 			}
-			wait_lvl->set_as_current_level();
+			wait_lvl->setAsCurrentLevel();
 
 			level_runner runner(wait_lvl, level_cfg, orig_level_cfg);
 
 			multiplayer::sync_start_time(*lvl, std::bind(&level_runner::play_cycle, &runner));
 
-			lvl->set_multiplayer_slot(multiplayer::slot());
+			lvl->setMultiplayerSlot(multiplayer::slot());
 		}
 #endif
 
@@ -860,8 +860,8 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 
 		if(lvl->player() && level_cfg != "autosave.cfg") {
-			lvl->player()->set_current_level(level_cfg);
-			lvl->player()->get_entity().save_game();
+			lvl->player()->setCurrentLevel(level_cfg);
+			lvl->player()->getEntity().saveGame();
 		}
 
 		set_scene_title(lvl->title());
@@ -873,7 +873,7 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 	}
 
-	level::clear_current_level();
+	level::clearCurrentLevel();
 
 	} //end manager scope, make managers destruct before calling SDL_Quit
 

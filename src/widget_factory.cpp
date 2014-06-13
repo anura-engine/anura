@@ -45,7 +45,6 @@
 #include "label.hpp"
 #include "layout_widget.hpp"
 #include "play_vpx.hpp"
-#include "psystem2.hpp"
 #include "poly_line_widget.hpp"
 #include "poly_map.hpp"
 #include "preview_tileset_widget.hpp"
@@ -132,8 +131,6 @@ namespace widget_factory
 			return WidgetPtr(new View3DWidget(v, e));
 		} else if(wtype == "poly_map") {
 			return WidgetPtr(new geometry::poly_map(v, e));
-		} else if(wtype == "particle_system") {
-			return WidgetPtr(new graphics::particles::particle_system_Widget(v, e));
 	#if defined(USE_LIBVPX)
 		} else if(wtype == "movie") {
 			return WidgetPtr(new movie::vpx(v, e));

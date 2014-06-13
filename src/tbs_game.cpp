@@ -52,7 +52,7 @@ struct game_type {
 	{
 		variant functions_var = value["functions"];
 		if(functions_var.is_string()) {
-			functions.reset(new game_logic::function_symbol_table);
+			functions.reset(new game_logic::FunctionSymbolTable);
 			game_logic::formula f(functions_var, functions.get());
 		}
 
@@ -65,7 +65,7 @@ struct game_type {
 	}
 
 	std::string name;
-	std::shared_ptr<game_logic::function_symbol_table> functions;
+	std::shared_ptr<game_logic::FunctionSymbolTable> functions;
 	std::map<std::string, game_logic::const_formula_ptr> handlers;
 };
 
@@ -601,7 +601,7 @@ void game::executeCommand(variant cmd)
 	} else if(cmd.is_callable()) {
 		const game_logic::command_callable* command = cmd.try_convert<game_logic::command_callable>();
 		if(command) {
-			command->run_command(*this);
+			command->runCommand(*this);
 		}
 	} else if(cmd.is_map()) {
 		if(cmd.has_key("execute")) {

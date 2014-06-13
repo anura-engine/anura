@@ -1021,14 +1021,14 @@ void CustomObjectType::reloadObject(const std::string& type)
 	const int start = SDL_GetTicks();
 	for(custom_object* obj : custom_object::getAll(old_obj->id())) {
 		assert(obj);
-		obj->update_type(old_obj, new_obj);
+		obj->updateType(old_obj, new_obj);
 	}
 
 	for(std::map<std::string, ConstCustomObjectTypePtr>::const_iterator i = old_obj->sub_objects_.begin(); i != old_obj->sub_objects_.end(); ++i) {
 		std::map<std::string, ConstCustomObjectTypePtr>::const_iterator j = new_obj->sub_objects_.find(i->first);
 		if(j != new_obj->sub_objects_.end() && i->second != j->second) {
 			for(custom_object* obj : custom_object::getAll(i->second->id())) {
-				obj->update_type(i->second, j->second);
+				obj->updateType(i->second, j->second);
 			}
 		}
 	}
@@ -1048,7 +1048,7 @@ int CustomObjectType::numObjectReloads()
 
 void CustomObjectType::initEventHandlers(variant node,
                                              event_handler_map& handlers,
-											 game_logic::function_symbol_table* symbols,
+											 game_logic::FunctionSymbolTable* symbols,
 											 const event_handler_map* base_handlers) const
 {
 	const CustomObjectCallableExposePrivateScope expose_scope(*callable_definition_);
@@ -1206,7 +1206,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	const bool is_variation = base_type != NULL;
 
 	//make it so any formula has these constants defined.
-	const game_logic::constants_loader scope_consts(node["consts"]);
+	const game_logic::ConstantsLoader scope_consts(node["consts"]);
 
 	//if some constants change from base to variation, then we have to
 	//re-parse all formulas.
@@ -1558,7 +1558,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		//variations can't define new functions.
 		object_functions_ = base_type->object_functions_;
 	} else if(node.has_key("functions")) {
-		object_functions_.reset(new game_logic::function_symbol_table);
+		object_functions_.reset(new game_logic::FunctionSymbolTable);
 		object_functions_->set_backup(&get_custom_object_functions_symbol_table());
 		const variant fn = node["functions"];
 		if(fn.is_string()) {
@@ -1666,7 +1666,7 @@ const_particle_system_factory_ptr CustomObjectType::getParticleSystemFactory(con
 	return i->second;
 }
 
-game_logic::function_symbol_table* CustomObjectType::getFunctionSymbols() const
+game_logic::FunctionSymbolTable* CustomObjectType::getFunctionSymbols() const
 {
 	if(object_functions_) {
 		return object_functions_.get();
@@ -1675,17 +1675,18 @@ game_logic::function_symbol_table* CustomObjectType::getFunctionSymbols() const
 	}
 }
 
-namespace {
-void execute_variation_command(variant cmd, game_logic::FormulaCallable& obj)
+namespace 
 {
-	if(cmd.is_list()) {
-		for(variant c : cmd.as_list()) {
-			execute_variation_command(c, obj);
+	void execute_variation_command(variant cmd, game_logic::FormulaCallable& obj)
+	{
+		if(cmd.is_list()) {
+			for(variant c : cmd.as_list()) {
+				execute_variation_command(c, obj);
+			}
+		} else if(cmd.try_convert<game_logic::command_callable>()) {
+			cmd.try_convert<game_logic::command_callable>()->runCommand(obj);
 		}
-	} else if(cmd.try_convert<game_logic::command_callable>()) {
-		cmd.try_convert<game_logic::command_callable>()->run_command(obj);
 	}
-}
 }
 
 ConstCustomObjectTypePtr CustomObjectType::getVariation(const std::vector<std::string>& variations) const
@@ -1712,7 +1713,7 @@ ConstCustomObjectTypePtr CustomObjectType::getVariation(const std::vector<std::s
 
 		//set our constants so the variation can decide whether it needs
 		//to re-parse formulas or not.
-		const game_logic::constants_loader scope_consts(node_["consts"]);
+		const game_logic::ConstantsLoader scope_consts(node_["consts"]);
 
 		//copy the id over from the parent object, to make sure it's
 		//the same. This is important for nested objects.

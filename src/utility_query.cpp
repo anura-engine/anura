@@ -317,7 +317,7 @@ void executeCommand(variant cmd, variant obj, const std::string& fname)
 			executeCommand(v, obj, fname);
 		}
 	} else if(cmd.try_convert<game_logic::command_callable>()) {
-		cmd.try_convert<game_logic::command_callable>()->run_command(*obj.try_convert<FormulaCallable>());
+		cmd.try_convert<game_logic::command_callable>()->runCommand(*obj.try_convert<FormulaCallable>());
 	} else if(cmd.as_bool()) {
 		std::cout << cmd.write_json() << "\n";
 	}

@@ -124,7 +124,7 @@ void loading_screen::set_number_of_items (int items)
 	items_ = items;
 }
 
-void loading_screen::finish_loading()
+void loading_screen::finishLoading()
 {
 	//display the splash screen for a minimum amount of time, if there is one.
 	if(!splash_.valid()) {

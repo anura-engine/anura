@@ -181,18 +181,18 @@ namespace KRE
 				if(node["active_techniques"].is_list()) {
 					for(size_t n = 0; n != node["active_techniques"].num_elements(); ++n) {
 						active_techniques_.push_back(parent_container()->clone_technique(node["active_techniques"][n].as_string()));
-						active_techniques_.back()->set_parent(this);
+						active_techniques_.back()->setParent(this);
 					}
 				} else if(node["active_techniques"].is_string()) {
 					active_techniques_.push_back(parent_container()->clone_technique(node["active_techniques"].as_string()));
-					active_techniques_.back()->set_parent(this);					
+					active_techniques_.back()->setParent(this);					
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: 'active_techniques' attribute must be list of strings or single string.");
 				}
 			} else {
 				active_techniques_ = parent_container()->clone_techniques();
 				for(auto tq : active_techniques_) {
-					tq->set_parent(this);
+					tq->setParent(this);
 				}
 			}
 
@@ -247,7 +247,7 @@ namespace KRE
 		void particle_system::add_technique(technique_ptr tq)
 		{
 			active_techniques_.push_back(tq);
-			tq->set_parent(this);
+			tq->setParent(this);
 		}
 
 		particle_system* particle_system::factory(ParticleSystemContainer* parent, const variant& node)
@@ -374,7 +374,7 @@ namespace KRE
 			Init();
 		}
 
-		void technique::set_parent(particle_system* parent)
+		void technique::setParent(particle_system* parent)
 		{
 			ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
 			particle_system_ = parent;

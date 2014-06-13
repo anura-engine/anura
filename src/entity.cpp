@@ -1,33 +1,40 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <limits.h>
 
+#include "kre/Canvas.hpp"
+
 #include "custom_object.hpp"
 #include "entity.hpp"
-#include "foreach.hpp"
 #include "level.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "solid_map.hpp"
 #include "variant_utils.hpp"
 
-entity::entity(variant node)
+Entity::Entity(variant node)
   : x_(node["x"].as_int()*100),
     y_(node["y"].as_int()*100),
 	prev_feet_x_(INT_MIN), prev_feet_y_(INT_MIN),
@@ -43,12 +50,12 @@ entity::entity(variant node)
 	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
 	true_z_(false), tx_(node["x"].as_decimal().as_float()), ty_(node["y"].as_decimal().as_float()), tz_(0.0f)
 {
-	foreach(bool& b, controls_) {
+	for(bool& b : controls_) {
 		b = false;
 	}
 }
 
-entity::entity(int x, int y, bool face_right)
+Entity::Entity(int x, int y, bool face_right)
   : x_(x*100), y_(y*100), prev_feet_x_(INT_MIN), prev_feet_y_(INT_MIN),
 	last_move_x_(0), last_move_y_(0),
     face_right_(face_right), upside_down_(false), group_(-1), id_(-1),
@@ -58,66 +65,66 @@ entity::entity(int x, int y, bool face_right)
 	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
 	true_z_(false), tx_(double(x)), ty_(double(y)), tz_(0.0f)
 {
-	foreach(bool& b, controls_) {
+	for(bool& b : controls_) {
 		b = false;
 	}
 }
 
-void entity::add_to_level()
+void Entity::addToLevel()
 {
 	last_move_x_ = last_move_y_ = 0;
 	prev_feet_x_ = prev_feet_y_ = INT_MIN;
 	prev_platform_rect_ = rect();
-	calculate_solid_rect();
+	calculateSolidRect();
 }
 
-entity_ptr entity::build(variant node)
+EntityPtr Entity::build(variant node)
 {
 	if(node["is_human"].as_bool()) {
-		return entity_ptr(new playable_custom_object(node));
+		return EntityPtr(new PlayableCustomObject(node));
 	} else {
-		return entity_ptr(new custom_object(node));
+		return EntityPtr(new custom_object(node));
 	}
 }
 
-bool entity::hasFeet() const
+bool Entity::hasFeet() const
 {
 	return solid();
 }
 
-int entity::feet_x() const
+int Entity::getFeetX() const
 {
 	if(solid_) {
 		const int diff = solid_->area().x() + solid_->area().w()/2;
-		return face_right() ? x() + diff : x() + current_frame().width() - diff;
+		return isFacingRight() ? x() + diff : x() + getCurrentFrame().width() - diff;
 	}
-	return face_right() ? x() + current_frame().feet_x() : x() + current_frame().width() - current_frame().feet_x();
+	return isFacingRight() ? x() + getCurrentFrame().getFeetX() : x() + getCurrentFrame().width() - getCurrentFrame().getFeetX();
 }
 
-int entity::feet_y() const
+int Entity::getFeetY() const
 {
 	if(solid_) {
 		return y() + solid_->area().y() + solid_->area().h();
 	}
-	return y() + current_frame().feet_y();
+	return y() + getCurrentFrame().getFeetY();
 }
 
-int entity::last_move_x() const
+int Entity::getLastMoveX() const
 {
 	return last_move_x_;
 }
 
-int entity::last_move_y() const
+int Entity::getLastMoveY() const
 {
 	return last_move_y_;
 }
 
-void entity::set_platform_motion_x(int value)
+void Entity::setPlatformMotionX(int value)
 {
 	platform_motion_x_ = value;
 }
 
-int entity::map_platform_pos(int xpos) const
+int Entity::mapPlatformPos(int xpos) const
 {
 	if(platform_rect_.w() > 0 && platform_rect_.h() > 0 && xpos >= prev_platform_rect_.x() && xpos < prev_platform_rect_.x() + prev_platform_rect_.w()) {
 		const int proportion = xpos - prev_platform_rect_.x();
@@ -129,58 +136,58 @@ int entity::map_platform_pos(int xpos) const
 		}
 
 
-		return maps_to - xpos - (feet_x() - prev_feet_x_);
+		return maps_to - xpos - (getFeetX() - prev_feet_x_);
 	}
 
 	return 0;
 }
 
-int entity::platform_motion_x() const
+int Entity::getPlatformMotionX() const
 {
 	return platform_motion_x_;
 }
 
-void entity::process(level& lvl)
+void Entity::process(level& lvl)
 {
 	if(prev_feet_x_ != INT_MIN) {
-		last_move_x_ = feet_x() - prev_feet_x_;
-		last_move_y_ = feet_y() - prev_feet_y_;
+		last_move_x_ = getFeetX() - prev_feet_x_;
+		last_move_y_ = getFeetY() - prev_feet_y_;
 	}
-	prev_feet_x_ = feet_x();
-	prev_feet_y_ = feet_y();
+	prev_feet_x_ = getFeetX();
+	prev_feet_y_ = getFeetY();
 	prev_platform_rect_ = platform_rect_;
 }
 
-void entity::set_face_right(bool facing)
+void Entity::setFacingRight(bool facing)
 {
 	if(facing == face_right_) {
 		return;
 	}
-	const int start_x = feet_x();
+	const int start_x = getFeetX();
 	face_right_ = facing;
-	const int delta_x = feet_x() - start_x;
+	const int delta_x = getFeetX() - start_x;
 	x_ -= delta_x*100;
-	assert(feet_x() == start_x);
+	assert(getFeetX() == start_x);
 
-	calculate_solid_rect();
+	calculateSolidRect();
 }
 
-void entity::set_upside_down(bool facing)
+void Entity::setUpsideDown(bool facing)
 {
 	upside_down_ = facing;
 }
 
-void entity::calculate_solid_rect()
+void Entity::calculateSolidRect()
 {
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 
 	frame_rect_ = rect(x(), y(), f.width(), f.height());
 	
-	solid_ = calculate_solid();
+	solid_ = calculateSolid();
 	if(solid_) {
 		const rect& area = solid_->area();
 
-		if(face_right()) {
+		if(isFacingRight()) {
 			solid_rect_ = rect(x() + area.x(), y() + area.y(), area.w(), area.h());
 		} else {
 			solid_rect_ = rect(x() + f.width() - area.x() - area.w(), y() + area.y(), area.w(), area.h());
@@ -189,9 +196,9 @@ void entity::calculate_solid_rect()
 		solid_rect_ = rect();
 	}
 
-	platform_ = calculate_platform();
+	platform_ = calculatePlatform();
 	if(platform_) {
-		const int delta_y = last_move_y();
+		const int delta_y = getLastMoveY();
 		const rect& area = platform_->area();
 		
 		if(area.empty()) {
@@ -208,84 +215,83 @@ void entity::calculate_solid_rect()
 	}
 }
 
-rect entity::body_rect() const
+rect Entity::getBodyRect() const
 {
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 
-	const int ypos = y() + (upside_down() ? (f.height() - (f.collide_y() + f.collide_h())) : f.collide_y());
-	return rect(face_right() ? x() + f.collide_x() : x() + f.width() - f.collide_x() - f.collide_w(),
+	const int ypos = y() + (isUpsideDown() ? (f.height() - (f.collide_y() + f.collide_h())) : f.collide_y());
+	return rect(isFacingRight() ? x() + f.collide_x() : x() + f.width() - f.collide_x() - f.collide_w(),
 	            ypos, f.collide_w(), f.collide_h());
 }
 
-rect entity::hit_rect() const
+rect Entity::getHitRect() const
 {
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 	const std::vector<frame::collision_area>& areas = f.collision_areas();
-	foreach(const frame::collision_area& a, areas) {
+	for(const frame::collision_area& a : areas) {
 		if(a.name == "attack") {
 			const rect& r = a.area;
-			return rect(face_right() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
+			return rect(isFacingRight() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
 		}
 	}
 
 	return rect();
 }
 
-point entity::midpoint() const
+point Entity::getMidpoint() const
 {
 	if(solid()) {
-		const rect r = solid_rect();
+		const rect r = solidRect();
 		return point(r.x() + r.w()/2, r.y() + r.h()/2);
 	}
 
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 	return point(x() + f.width()/2, y() + f.height()/2);
 }
 
-bool entity::is_alpha(int xpos, int ypos) const
+bool Entity::isAlpha(int xpos, int ypos) const
 {
-	return current_frame().is_alpha(xpos - x(), ypos - y(), time_in_frame(), face_right());
+	return getCurrentFrame().isAlpha(xpos - x(), ypos - y(), getTimeInFrame(), isFacingRight());
 }
 
-void entity::draw_debug_rects() const
+void Entity::drawDebugRects() const
 {
 	if(preferences::show_debug_hitboxes() == false) {
 		return;
 	}
 
-	const rect& body = solid_rect();
+	auto canvas = KRE::Canvas::getInstance();
+
+	const rect& body = solidRect();
 	if(body.w() > 0 && body.h() > 0) {
-		const SDL_Rect rect = { body.x(), body.y(), body.w(), body.h() };
-		graphics::draw_rect(rect, graphics::color_black(), 0xAA);
+		canvas->drawSolidRect(body, KRE::Color(0,0,0,0xaa));
 	}
 
-	const rect& hit = hit_rect();
+	const rect& hit = getHitRect();
 	if(hit.w() > 0 && hit.h() > 0) {
-		const SDL_Rect rect = { hit.x(), hit.y(), hit.w(), hit.h() };
-		graphics::draw_rect(rect, graphics::color_red(), 0xAA);
+		canvas->drawSolidRect(hit, KRE::Color(255,0,0,0xaa));
 	}
 
-	const SDL_Rect rect = { feet_x() - 1, feet_y() - 1, 3, 3 };
-	graphics::draw_rect(rect, graphics::color_white(), 0xFF);
+	canvas->drawSolidRect(rect(getFeetX() - 1, getFeetY() - 1, 3, 3), KRE::Color(255,255,255,0xaa));
 }
 
-void entity::generate_current(const entity& target, int* velocity_x, int* velocity_y) const
+void Entity::generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const
 {
-	if(CurrentGenerator_) {
-		const rect& my_rect = body_rect();
-		const rect& target_rect = target.body_rect();
-		CurrentGenerator_->generate(my_rect.mid_x(), my_rect.mid_y(),
+	if(current_generator_) {
+		const rect& my_rect = getBodyRect();
+		const rect& target_rect = target.getBodyRect();
+		current_generator_->generate(my_rect.mid_x(), my_rect.mid_y(),
 		                             target_rect.mid_x(), target_rect.mid_y(), target.mass(),
 		                             velocity_x, velocity_y);
 	}
 }
 
-void entity::add_scheduled_command(int cycle, variant cmd)
+void Entity::addScheduledCommand(int cycle, variant cmd)
 {
 	scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
 }
 
-std::vector<variant> entity::pop_scheduled_commands()
+std::vector<variant> Entity::popScheduledCommands()
 {
 	std::vector<variant> result;
 	std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();
@@ -301,33 +307,33 @@ std::vector<variant> entity::pop_scheduled_commands()
 	return result;
 }
 
-void entity::set_CurrentGenerator(CurrentGenerator* generator)
+void Entity::setCurrentGenerator(CurrentGenerator* generator)
 {
-	CurrentGenerator_ = CurrentGeneratorPtr(generator);
+	current_generator_ = CurrentGeneratorPtr(generator);
 }
 
-void entity::set_attached_objects(const std::vector<entity_ptr>& v)
+void Entity::setAttachedObjects(const std::vector<EntityPtr>& v)
 {
 	if(v != attached_objects_) {
 		attached_objects_ = v;
 	}
 }
 
-bool entity::move_centipixels(int dx, int dy)
+bool Entity::moveCentipixels(int dx, int dy)
 {
 	int start_x = x();
 	int start_y = y();
 	x_ += dx;
 	y_ += dy;
 	if(x() != start_x || y() != start_y) {
-		calculate_solid_rect();
+		calculateSolidRect();
 		return true;
 	} else {
 		return false;
 	}
 }
 
-void entity::set_distinct_label()
+void Entity::setDistinctLabel()
 {
 	//generate a random label for the object
 	char buf[64];
@@ -335,7 +341,7 @@ void entity::set_distinct_label()
 	setLabel(buf);
 }
 
-void entity::set_control_status(const std::string& key, bool value)
+void Entity::setControlStatus(const std::string& key, bool value)
 {
 	static const std::string keys[] = { "up", "down", "left", "right", "attack", "jump" };
 	const std::string* k = std::find(keys, keys + controls::NUM_CONTROLS, key);
@@ -347,27 +353,27 @@ void entity::set_control_status(const std::string& key, bool value)
 	controls_[index] = value;
 }
 
-void entity::read_controls(int cycle)
+void Entity::readControls(int cycle)
 {
-	player_info* info = get_player_info();
+	PlayerInfo* info = getPlayerInfo();
 	if(info) {
-		info->read_controls(cycle);
+		info->readControls(cycle);
 	}
 }
 
-point entity::pivot(const std::string& name, bool reverse_facing) const
+point Entity::pivot(const std::string& name, bool reverse_facing) const
 {
-	const frame& f = current_frame();
+	const frame& f = getCurrentFrame();
 	if(name == "") {
-		return midpoint();
+		return getMidpoint();
 	}
 
-	bool facing_right = face_right();
+	bool facing_right = isFacingRight();
 	if(reverse_facing) {
 		facing_right = !facing_right;
 	}
 
-	const point pos = f.pivot(name, time_in_frame());
+	const point pos = f.pivot(name, getTimeInFrame());
 	if(facing_right) {
 		return point(x() + pos.x, y() + pos.y);
 	} else {
@@ -375,42 +381,42 @@ point entity::pivot(const std::string& name, bool reverse_facing) const
 	}
 }
 
-void entity::set_spawned_by(const std::string& key)
+void Entity::setSpawnedBy(const std::string& key)
 {
 	spawned_by_ = key;
 }
 
-const std::string& entity::spawned_by() const
+const std::string& Entity::wasSpawnedBy() const
 {
 	return spawned_by_;
 }
 
-void entity::set_mouse_over_area(const rect& area)
+void Entity::setMouseOverArea(const rect& area)
 {
 	mouse_over_area_ = area;
 }
 
-const rect& entity::getMouseOverArea() const
+const rect& Entity::getMouseOverArea() const
 {
 	return mouse_over_area_;
 }
 
-bool zorder_compare(const entity_ptr& a, const entity_ptr& b)
+bool zorder_compare(const EntityPtr& a, const EntityPtr& b)
 {
 	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.
 	if(level::current().player() && level::current().player()->hasReverseGlobalVerticalZordering()){
 		return a->zorder() < b->zorder() ||
 			a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
-			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y < b->midpoint().y ||
-			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y == b->midpoint().y && a.get() < b.get();		
+			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y ||
+			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() < b.get();		
 	}
 	return a->zorder() < b->zorder() ||
 		a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
-		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y > b->midpoint().y ||
-		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->midpoint().y == b->midpoint().y && a.get() > b.get();
+		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y > b->getMidpoint().y ||
+		a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y == b->getMidpoint().y && a.get() > b.get();
 }
 
-bool entity_zorder_compare::operator()(const entity_ptr& lhs, const entity_ptr& rhs) 
+bool EntityZOrderCompare::operator()(const EntityPtr& lhs, const EntityPtr& rhs) 
 {
 	return zorder_compare(lhs, rhs);
 }

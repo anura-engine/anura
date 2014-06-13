@@ -31,10 +31,10 @@ class active_movement_script {
 public:
 	~active_movement_script();
 
-	void modify(entity_ptr entity, const std::map<std::string, game_logic::const_formula_ptr>& handlers);
+	void modify(EntityPtr entity, const std::map<std::string, game_logic::const_formula_ptr>& handlers);
 private:
 	struct entity_mod {
-		entity_ptr entity;
+		EntityPtr entity;
 		std::map<std::string, game_logic::const_formula_ptr> handlers_backup;
 	};
 

@@ -1,25 +1,33 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef ENTITY_HPP_INCLUDED
-#define ENTITY_HPP_INCLUDED
+
+#pragma once
 
 #include <string>
 
 #include "boost/intrusive_ptr.hpp"
+
+#include "kre/Geometry.hpp"
 
 #include "controls.hpp"
 #include "current_generator.hpp"
@@ -28,7 +36,6 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
-#include "kre/Geometry.hpp"
 #include "light.hpp"
 #include "solid_map_fwd.hpp"
 #include "wml_formula_callable.hpp"
@@ -36,50 +43,50 @@
 
 class character;
 class frame;
-class level;
+class Level;
 class pc_character;
-class player_info;
+class PlayerInfo;
 
-typedef boost::intrusive_ptr<character> character_ptr;
+typedef boost::intrusive_ptr<character> CharacterPtr;
 
-class entity : public game_logic::WmlSerializableFormulaCallable
+class Entity : public game_logic::WmlSerializableFormulaCallable
 {
 public:
-	static entity_ptr build(variant node);
-	explicit entity(variant node);
-	entity(int x, int y, bool face_right);
-	virtual ~entity() {}
+	static EntityPtr build(variant node);
+	explicit Entity(variant node);
+	Entity(int x, int y, bool face_right);
+	virtual ~Entity() {}
 
 	virtual void validate_properties() {}
-	virtual void add_to_level();
+	virtual void addToLevel();
 
-	virtual void finish_loading(level*) {}
+	virtual void finishLoading(Level*) {}
 	virtual variant write() const = 0;
-	virtual void setup_drawing() const {}
+	virtual void setupDrawing() const {}
 	virtual void draw(int x, int y) const = 0;
-	virtual void draw_later(int x, int y) const = 0;
-	virtual void draw_group() const = 0;
-	player_info* get_player_info() { return isHuman(); }
-	const player_info* get_player_info() const { return isHuman(); }
-	virtual const player_info* isHuman() const { return NULL; }
-	virtual player_info* isHuman() { return NULL; }
-	virtual void process(level& lvl);
+	virtual void drawLater(int x, int y) const = 0;
+	virtual void drawGroup() const = 0;
+	PlayerInfo* getPlayerInfo() { return isHuman(); }
+	const PlayerInfo* getPlayerInfo() const { return isHuman(); }
+	virtual const PlayerInfo* isHuman() const { return NULL; }
+	virtual PlayerInfo* isHuman() { return NULL; }
+	virtual void process(Level& lvl);
 	virtual bool executeCommand(const variant& var) = 0;
 
 	const std::string& label() const { return label_; }
 	void setLabel(const std::string& lb) { label_ = lb; }
-	void set_distinct_label();
+	void setDistinctLabel();
 
-	virtual void shift_position(int x, int y) { x_ += x*100; y_ += y*100; prev_feet_x_ += x; prev_feet_y_ += y; calculate_solid_rect(); }
+	virtual void shiftPosition(int x, int y) { x_ += x*100; y_ += y*100; prev_feet_x_ += x; prev_feet_y_ += y; calculateSolidRect(); }
 	
-	void set_pos(const point& p) { x_ = p.x*100; y_ = p.y*100; calculate_solid_rect(); }
-	void set_pos(int x, int y) { x_ = x*100; y_ = y*100; calculate_solid_rect(); }
-	void set_x(int x) { x_ = x*100; calculate_solid_rect(); }
-	void set_y(int y) { y_ = y*100; calculate_solid_rect(); }
+	void setPos(const point& p) { x_ = p.x*100; y_ = p.y*100; calculateSolidRect(); }
+	void setPos(int x, int y) { x_ = x*100; y_ = y*100; calculateSolidRect(); }
+	void setX(int x) { x_ = x*100; calculateSolidRect(); }
+	void setY(int y) { y_ = y*100; calculateSolidRect(); }
 
-	void set_centi_x(int x) { x_ = x; calculate_solid_rect(); }
-	void set_centi_y(int y) { y_ = y; calculate_solid_rect(); }
-	virtual void set_zsub_order(const int zsub_order) = 0;
+	void setCentiX(int x) { x_ = x; calculateSolidRect(); }
+	void setCentiY(int y) { y_ = y; calculateSolidRect(); }
+	virtual void setZSubOrder(const int zsub_order) = 0;
 
 	int x() const { return x_/100 - (x_ < 0 && x_%100 ? 1 : 0); }
 	int y() const { return y_/100 - (y_ < 0 && y_%100 ? 1 : 0); }
@@ -90,76 +97,76 @@ public:
 	virtual int zorder() const { return 0; }
 	virtual int zSubOrder() const { return 0; }
 
-	virtual const std::pair<int,int>* parallax_scale_millis() const { return 0; }
+	virtual const std::pair<int,int>* parallaxScaleMillis() const { return 0; }
 
-	int centi_x() const { return x_; }
-	int centi_y() const { return y_; }
+	int centiX() const { return x_; }
+	int centiY() const { return y_; }
 
-	virtual int velocity_x() const { return 0; }
-	virtual int velocity_y() const { return 0; }
+	virtual int velocityX() const { return 0; }
+	virtual int velocityY() const { return 0; }
 
 	int group() const { return group_; }
-	void set_group(int group) { group_ = group; }
+	void setGroup(int group) { group_ = group; }
 
-	virtual bool is_standable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const { return false; }
+	virtual bool isStandable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const { return false; }
 
 	virtual bool destroyed() const = 0;
 
 	virtual int getSurfaceFriction() const { return 0; }
 	virtual int getSurfaceTraction() const { return 0; }
 
-	virtual bool point_collides(int x, int y) const = 0;
-	virtual bool rect_collides(const rect& r) const = 0;
+	virtual bool pointCollides(int x, int y) const = 0;
+	virtual bool rectCollides(const rect& r) const = 0;
 	const solid_info* platform() const { return platform_.get(); }
 	const solid_info* solid() const { return solid_.get(); }
-	const rect& solid_rect() const { return solid_rect_; }
-	const rect& frame_rect() const { return frame_rect_; }
-	rect platform_rect() const { return platform_rect_; }
-	virtual rect platform_rect_at(int xpos) const { return platform_rect(); }
-	virtual int platform_slope_at(int xpos) const { return 0; }
+	const rect& solidRect() const { return solid_rect_; }
+	const rect& frameRect() const { return frame_rect_; }
+	rect platformRect() const { return platform_rect_; }
+	virtual rect platformRectAt(int xpos) const { return platformRect(); }
+	virtual int platformSlopeAt(int xpos) const { return 0; }
 	virtual bool isSolidPlatform() const { return false; }
-	rect body_rect() const;
-	rect hit_rect() const;
-	point midpoint() const;
+	rect getBodyRect() const;
+	rect getHitRect() const;
+	point getMidpoint() const;
 
-	virtual const frame& icon_frame() const = 0;
-	virtual const frame& current_frame() const = 0;
+	virtual const frame& getIconFrame() const = 0;
+	virtual const frame& getCurrentFrame() const = 0;
 
-	virtual rect draw_rect() const = 0;
+	virtual rect getDrawRect() const = 0;
 
-	bool is_alpha(int xpos, int ypos) const;
+	bool isAlpha(int xpos, int ypos) const;
 
 	virtual bool hasFeet() const;
-	int feet_x() const;
-	int feet_y() const;
+	int getFeetX() const;
+	int getFeetY() const;
 
-	int last_move_x() const;
-	int last_move_y() const;
+	int getLastMoveX() const;
+	int getLastMoveY() const;
 
-	void set_platform_motion_x(int value);
-	int platform_motion_x() const;
-	int map_platform_pos(int xpos) const;
+	void setPlatformMotionX(int value);
+	int getPlatformMotionX() const;
+	int mapPlatformPos(int xpos) const;
 
-	bool face_right() const { return face_right_; }
-	virtual void set_face_right(bool facing);
+	bool isFacingRight() const { return face_right_; }
+	virtual void setFacingRight(bool facing);
 
-	bool upside_down() const { return upside_down_; }
-	virtual void set_upside_down(bool facing);
+	bool isUpsideDown() const { return upside_down_; }
+	virtual void setUpsideDown(bool facing);
 
-	int face_dir() const { return face_right() ? 1 : -1; }
+	int getFaceDir() const { return isFacingRight() ? 1 : -1; }
 
 	virtual bool isBodyHarmful() const { return true; }
 
-	virtual int time_in_frame() const = 0;
+	virtual int getTimeInFrame() const = 0;
 
 	virtual int getTeleportOffsetX() const { return 0; }
 	virtual int getTeleportOffsetY() const { return 0; }
 	virtual bool hasNoMoveToStanding() const { return 0; }
 	virtual bool hasReverseGlobalVerticalZordering() const { return 0; }
 
-	virtual entity_ptr standing_on() const = 0;
+	virtual EntityPtr standingOn() const = 0;
 
-	virtual void die_with_no_event() = 0;
+	virtual void dieWithNoEvent() = 0;
 	virtual bool isActive(const rect& screen_area) const = 0;
 	virtual bool diesOnInactive() const { return false; } 
 	virtual bool isAlwaysActive() const { return false; } 
@@ -171,87 +178,87 @@ public:
 
 	//the number of pixels up or down to adjust the scroll position if this
 	//object is focused.
-	virtual int vertical_look() const { return 0; }
+	virtual int verticalLook() const { return 0; }
 
 	void setId(int id) { id_ = id; }
-	int get_id() const { return id_; }
+	int getId() const { return id_; }
 
 	bool respawn() const { return respawn_; }
 
-	virtual bool boardable_vehicle() const { return false; }
-	virtual void boarded(level& lvl, const entity_ptr& player) {}
-	virtual void unboarded(level& lvl) {}
+	virtual bool boardableVehicle() const { return false; }
+	virtual void boarded(Level& lvl, const EntityPtr& player) {}
+	virtual void unboarded(Level& lvl) {}
 
-	virtual void board_vehicle() {}
-	virtual void unboard_vehicle() {}
+	virtual void boardVehicle() {}
+	virtual void unboardVehicle() {}
 
-	virtual void set_sound_volume(const int volume) = 0;
+	virtual void setSoundVolume(const int volume) = 0;
 	virtual int weight() const { return 1; }
 	
 	virtual int mass() const = 0;
 
-	void draw_debug_rects() const;
+	void drawDebugRects() const;
 
 #ifndef NO_EDITOR
 	virtual const_editor_entity_info_ptr getEditorInfo() const { return const_editor_entity_info_ptr(); }
 #endif // !NO_EDITOR
 
-	virtual entity_ptr clone() const { return entity_ptr(); }
-	virtual entity_ptr backup() const = 0;
+	virtual EntityPtr clone() const { return EntityPtr(); }
+	virtual EntityPtr backup() const = 0;
 
-	virtual void generate_current(const entity& target, int* velocity_x, int* velocity_y) const;
+	virtual void generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const;
 
 	virtual game_logic::const_formula_ptr getEventHandler(int key) const { return game_logic::const_formula_ptr(); }
-	virtual void set_event_handler(int, game_logic::const_formula_ptr f) { return; }
+	virtual void setEventHandler(int, game_logic::const_formula_ptr f) { return; }
 
 	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
 	virtual bool handleEvent(int id, const FormulaCallable* context=NULL) { return false; }
-	virtual bool handleEvent_delay(int id, const FormulaCallable* context=NULL) { return false; }
-	virtual void resolve_delayed_events() = 0;
+	virtual bool handleEventDelay(int id, const FormulaCallable* context=NULL) { return false; }
+	virtual void resolveDelayedEvents() = 0;
 
 	//function which returns true if this object can be 'interacted' with.
 	//i.e. if the player ovelaps with the object and presses up if they will
 	//talk to or enter the object.
-	virtual bool can_interact_with() const { return false; }
+	virtual bool canInteractWith() const { return false; }
 
 	virtual bool serializable() const { return true; }
 
-	virtual std::string debug_description() const = 0;
+	virtual std::string getDebugDescription() const = 0;
 
 	//a function call which tells us to get any references to other entities
 	//that we hold, and map them according to the mapping given. This is useful
 	//when we back up an entire level and want to make references match.
-	virtual void map_entities(const std::map<entity_ptr, entity_ptr>& m) {}
+	virtual void mapEntities(const std::map<EntityPtr, EntityPtr>& m) {}
 	virtual void cleanup_references() {}
 
-	void add_scheduled_command(int cycle, variant cmd);
-	std::vector<variant> pop_scheduled_commands();
+	void addScheduledCommand(int cycle, variant cmd);
+	std::vector<variant> popScheduledCommands();
 
-	virtual void save_game() {}
+	virtual void saveGame() {}
 
-	virtual entity_ptr driver() { return entity_ptr(); }
-	virtual const_entity_ptr driver() const { return const_entity_ptr(); }
+	virtual EntityPtr driver() { return EntityPtr(); }
+	virtual ConstEntityPtr driver() const { return ConstEntityPtr(); }
 
-	virtual bool move_to_standing(level& lvl, int max_displace=10000) { return false; }
-	virtual int hitpoints() const { return 1; }
-	virtual int max_hitpoints() const { return 1; }
+	virtual bool moveToStanding(Level& lvl, int max_displace=10000) { return false; }
+	virtual int getHitpoints() const { return 1; }
+	virtual int getMaxHitpoints() const { return 1; }
 
-	void set_control_status_user(const variant& v) { controls_user_ = v; }
-	void set_control_status(const std::string& key, bool value);
-	void set_control_status(controls::CONTROL_ITEM ctrl, bool value) { controls_[ctrl] = value; }
-	void clear_control_status() { for(int n = 0; n != controls::NUM_CONTROLS; ++n) { controls_[n] = false; } }
+	void setControlStatusUser(const variant& v) { controls_user_ = v; }
+	void setControlStatus(const std::string& key, bool value);
+	void setControlStatus(controls::CONTROL_ITEM ctrl, bool value) { controls_[ctrl] = value; }
+	void clearControlStatus() { for(int n = 0; n != controls::NUM_CONTROLS; ++n) { controls_[n] = false; } }
 
 	virtual bool enter() const { return false; }
 
-	virtual void set_invisible(bool value) {}
-	virtual void record_stats_movement() {}
+	virtual void setInvisible(bool value) {}
+	virtual void recordStatsMovement() {}
 
-	virtual entity_ptr save_condition() const { return entity_ptr(); }
-	virtual void respawn_player() {}
+	virtual EntityPtr saveCondition() const { return EntityPtr(); }
+	virtual void respawnPlayer() {}
 
-	virtual int current_animation_id() const { return 0; }
+	virtual int getCurrentAnimationId() const { return 0; }
 
-	virtual void set_level(level* lvl) {}
+	virtual void setLevel(Level* lvl) {}
 
 	unsigned int getSolidDimensions() const { return solid_dimensions_; }
 	unsigned int getCollideDimensions() const { return collide_dimensions_; }
@@ -259,87 +266,78 @@ public:
 	unsigned int getWeakSolidDimensions() const { return weak_solid_dimensions_; }
 	unsigned int getWeakCollideDimensions() const { return weak_collide_dimensions_; }
 
-	void set_attached_objects(const std::vector<entity_ptr>& v);
+	void setAttachedObjects(const std::vector<EntityPtr>& v);
 
-	virtual bool allow_level_collisions() const { return false; }
+	virtual bool allowLevelCollisions() const { return false; }
 
 	virtual const std::vector<light_ptr>& lights() const = 0;
-	virtual void swap_lights(std::vector<light_ptr>& lights) = 0;
+	virtual void swapLights(std::vector<light_ptr>& lights) = 0;
 
 	point pivot(const std::string& name, bool reverse_facing=false) const;
 
-	virtual bool appears_at_difficulty(int difficulty) const = 0;
+	virtual bool appearsAtDifficulty(int difficulty) const = 0;
 
-	virtual int parent_depth(bool* has_human_parent=NULL, int cur_depth=0) const { return 0; }
+	virtual int parentDepth(bool* has_human_parent=NULL, int cur_depth=0) const { return 0; }
 
 	virtual bool editorForceStanding() const = 0;
 
-	void set_spawned_by(const std::string& key);
-	const std::string& spawned_by() const;
+	void setSpawnedBy(const std::string& key);
+	const std::string& wasSpawnedBy() const;
 
-	virtual bool mouse_event_swallowed() const {return false;}
+	virtual bool isMouseEventSwallowed() const {return false;}
 
-	bool is_mouse_over_entity() const { return mouse_over_entity_; }
-	void set_mouse_over_entity(bool val=true) { mouse_over_entity_=val; }
-	void set_mouse_buttons(Uint8 buttons) { mouse_button_state_ = buttons; }
-	Uint8 get_mouse_buttons() const { return mouse_button_state_; }
-	bool is_being_dragged() const { return being_dragged_; }
-	void set_being_dragged(bool val=true) { being_dragged_ = val; }
-	virtual bool get_clipArea(rect* clipArea) = 0;
-	void set_mouse_over_area(const rect& area);
+	bool isMouseOverEntity() const { return mouse_over_entity_; }
+	void setMouseOverEntity(bool val=true) { mouse_over_entity_=val; }
+	void setMouseButtons(Uint8 buttons) { mouse_button_state_ = buttons; }
+	Uint8 getMouseButtons() const { return mouse_button_state_; }
+	bool isBeingDragged() const { return being_dragged_; }
+	void setBeingDragged(bool val=true) { being_dragged_ = val; }
+	virtual bool getClipArea(rect* clipArea) = 0;
+	void setMouseOverArea(const rect& area);
 	const rect& getMouseOverArea() const;
 
 	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const = 0;
 
-	virtual bool create_object() = 0;
+	virtual bool createObject() = 0;
 
 	virtual bool useAbsoluteScreenCoordinates() const = 0;
 
-	virtual void being_removed() = 0;
-	virtual void being_added() = 0;
+	virtual void beingRemoved() = 0;
+	virtual void beingAdded() = 0;
 
 	int getMouseoverDelay() const { return mouseover_delay_; }
-	void set_mouseover_delay(int dly) { mouseover_delay_ = dly; }
-	unsigned get_mouseover_trigger_cycle() const { return mouseover_trigger_cycle_; }
-	void set_mouseover_trigger_cycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
-
-	bool truez() const { return true_z_; }
-	double tx() const { return tx_; }
-	double ty() const { return ty_; }
-	double tz() const { return tz_; }
-	void set_truez(bool en=false) { true_z_ = en; }
-	void set_tx(double x) { tx_ = x; }
-	void set_ty(double y) { ty_ = y; }
-	void set_tz(double z) { tz_ = z; }
+	void setMouseoverDelay(int dly) { mouseover_delay_ = dly; }
+	unsigned getMouseoverTriggerCycle() const { return mouseover_trigger_cycle_; }
+	void setMouseoverTriggerCycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
 
 protected:
-	virtual const_solid_info_ptr calculate_solid() const = 0;
-	virtual const_solid_info_ptr calculate_platform() const = 0;
-	void calculate_solid_rect();
+	virtual const_solid_info_ptr calculateSolid() const = 0;
+	virtual const_solid_info_ptr calculatePlatform() const = 0;
+	void calculateSolidRect();
 
-	bool control_status(controls::CONTROL_ITEM ctrl) const { return controls_[ctrl]; }
-	variant control_status_user() const { return controls_user_; }
-	void read_controls(int cycle);
+	bool controlStatus(controls::CONTROL_ITEM ctrl) const { return controls_[ctrl]; }
+	variant controlStatusUser() const { return controls_user_; }
+	void readControls(int cycle);
 
-	void set_CurrentGenerator(CurrentGenerator* generator);
+	void setCurrentGenerator(CurrentGenerator* generator);
 
-	void set_respawn(bool value) { respawn_ = value; }
+	void setRespawn(bool value) { respawn_ = value; }
 
 	//move the entity by a number of centi pixels. Returns true if its
 	//position is changed.
-	bool move_centipixels(int dx, int dy);
+	bool moveCentipixels(int dx, int dy);
 
-	void set_solid_dimensions(unsigned int dim, unsigned int weak) { solid_dimensions_ = dim; weak_solid_dimensions_ = dim|weak; }
-	void set_collide_dimensions(unsigned int dim, unsigned int weak) { collide_dimensions_ = dim; weak_collide_dimensions_ = dim|weak; }
+	void setSolidDimensions(unsigned int dim, unsigned int weak) { solid_dimensions_ = dim; weak_solid_dimensions_ = dim|weak; }
+	void setCollideDimensions(unsigned int dim, unsigned int weak) { collide_dimensions_ = dim; weak_collide_dimensions_ = dim|weak; }
 
-	const std::vector<entity_ptr>& attached_objects() const { return attached_objects_; }
+	const std::vector<EntityPtr>& attachedObjects() const { return attached_objects_; }
 
-	virtual void control(const level& lvl) = 0;
+	virtual void control(const Level& lvl) = 0;
 
 	variant serializeToWml() const { return write(); }
 
-	int prev_feet_x() const { return prev_feet_x_; }
-	int prev_feet_y() const { return prev_feet_y_; }
+	int getPrevFeetX() const { return prev_feet_x_; }
+	int getPrevFeetY() const { return prev_feet_y_; }
 
 private:
 	std::string label_;
@@ -366,7 +364,7 @@ private:
 	unsigned int solid_dimensions_, collide_dimensions_;
 	unsigned int weak_solid_dimensions_, weak_collide_dimensions_;
 
-	CurrentGeneratorPtr CurrentGenerator_;
+	CurrentGeneratorPtr current_generator_;
 
 	typedef std::pair<int, variant> ScheduledCommand;
 	std::vector<ScheduledCommand> scheduled_commands_;
@@ -377,7 +375,7 @@ private:
 	//attached objects are objects which are also drawn with this object.
 	//attached objects should generally NOT be present in the level, and are
 	//NOT processed independently of this object.
-	std::vector<entity_ptr> attached_objects_;
+	std::vector<EntityPtr> attached_objects_;
 
 	//caches of commonly queried rects.
 	rect solid_rect_, frame_rect_, platform_rect_, prev_platform_rect_;
@@ -396,10 +394,8 @@ private:
 	double tx_, ty_, tz_;
 };
 
-bool zorder_compare(const entity_ptr& e1, const entity_ptr& e2);	
-struct entity_zorder_compare
+bool zorder_compare(const EntityPtr& e1, const EntityPtr& e2);	
+struct EntityZOrderCompare
 {
-	bool operator()(const entity_ptr& lhs, const entity_ptr& rhs);
+	bool operator()(const EntityPtr& lhs, const EntityPtr& rhs);
 };
-
-#endif

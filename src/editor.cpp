@@ -144,7 +144,7 @@ public:
 		mousex -= x();
 		mousey -= y();
 
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset(grid);
 		addWidget(context_menu_, mousex, mousey);
 	}
@@ -155,7 +155,7 @@ private:
 			items[n].action();
 		}
 
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -313,7 +313,7 @@ public:
 		code_button_text_ = text;
 
 		if(code_button_) {
-			remove_widget(code_button_);
+			removeWidget(code_button_);
 		}
 
 		if(text.empty()) {
@@ -408,7 +408,7 @@ public:
 
 	void open_level_in_editor(const std::string& lvl) {
 		if(lvl.empty() == false && lvl != g_last_edited_level()) {
-			remove_widget(context_menu_);
+			removeWidget(context_menu_);
 			context_menu_.reset();
 			editor_.close();
 			g_last_edited_level() = lvl;
@@ -558,7 +558,7 @@ std::vector<point> g_current_draw_hex_tiles;
 const editor_variable_info* g_variable_editing = NULL;
 int g_variable_editing_index = -1;
 variant g_variable_editing_original_value;
-const editor_variable_info* variable_info_selected(const_entity_ptr e, int xpos, int ypos, int zoom, int* index_selected=NULL)
+const editor_variable_info* variable_info_selected(ConstEntityPtr e, int xpos, int ypos, int zoom, int* index_selected=NULL)
 {
 	if(index_selected) {
 		*index_selected = -1;
@@ -730,7 +730,7 @@ editor::enemy_type::enemy_type(const std::string& type, const std::string& categ
 	node = new_node.build();
 }
 
-const entity_ptr& editor::enemy_type::preview_object() const
+const EntityPtr& editor::enemy_type::preview_object() const
 {
 	if(!preview_object_) {
 		preview_object_ = entity::build(node);
@@ -746,7 +746,7 @@ const std::shared_ptr<const frame>& editor::enemy_type::preview_frame() const
 			preview_frame_.reset(new frame(frame_info_));
 		} else {
 			std::cerr << "COULD NOT READ FROM FRAME: " << frame_info_.write_json() << "\n";
-			preview_frame_.reset(new frame(preview_object()->current_frame()));
+			preview_frame_.reset(new frame(preview_object()->getCurrentFrame()));
 		}
 	}
 
@@ -850,8 +850,8 @@ editor::editor(const char* level_cfg)
 	assert(!tilesets.empty());
 	lvl_.reset(new level(level_cfg));
 	lvl_->set_editor();
-	lvl_->finish_loading();
-	lvl_->set_as_current_level();
+	lvl_->finishLoading();
+	lvl_->setAsCurrentLevel();
 
 	levels_.push_back(lvl_);
 
@@ -874,10 +874,10 @@ void editor::group_selection()
 {
 	std::vector<std::function<void()> > undo, redo;
 
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		const int group = lvl->add_group();
-		foreach(const entity_ptr& e, lvl_->editor_selection()) {
-			entity_ptr c = lvl->get_entity_by_label(e->label());
+		foreach(const EntityPtr& e, lvl_->editor_selection()) {
+			EntityPtr c = lvl->get_entity_by_label(e->label());
 			if(!c) {
 				continue;
 			}
@@ -900,7 +900,7 @@ void editor::toggle_facing()
 	}
 }
 
-void editor::toggle_upside_down()
+void editor::toggle_isUpsideDown()
 {
 	upside_down_ = !upside_down_;
 	if(character_dialog_) {
@@ -911,11 +911,11 @@ void editor::toggle_upside_down()
 void editor::duplicate_selected_objects()
 {
 	std::vector<std::function<void()> > redo, undo;
-	foreach(const entity_ptr& c, lvl_->editor_selection()) {
-		entity_ptr duplicate_obj = c->clone();
+	foreach(const EntityPtr& c, lvl_->editor_selection()) {
+		EntityPtr duplicate_obj = c->clone();
 
-		foreach(level_ptr lvl, levels_) {
-			entity_ptr obj = duplicate_obj->backup();
+		foreach(LevelPtr lvl, levels_) {
+			EntityPtr obj = duplicate_obj->backup();
 			if(!place_entity_in_level_with_large_displacement(*lvl, *obj)) {
 				continue;
 			}
@@ -939,30 +939,30 @@ void editor::process_ghost_objects()
 	lvl_->swap_chars(ghost_objects_);
 
 	const size_t num_chars_before = lvl_->get_chars().size();
-	const std::vector<entity_ptr> chars = lvl_->get_chars();
-	foreach(const entity_ptr& p, chars) {
+	const std::vector<EntityPtr> chars = lvl_->get_chars();
+	foreach(const EntityPtr& p, chars) {
 		p->process(*lvl_);
 	}
 
-	foreach(const entity_ptr& p, chars) {
+	foreach(const EntityPtr& p, chars) {
 		p->handleEvent(OBJECT_EVENT_DRAW);
 	}
 
 	lvl_->swap_chars(ghost_objects_);
 
-	foreach(entity_ptr& p, ghost_objects_) {
+	foreach(EntityPtr& p, ghost_objects_) {
 		if(p && p->destroyed()) {
 			lvl_->remove_character(p);
-			p = entity_ptr();
+			p = EntityPtr();
 		}
 	}
 
-	ghost_objects_.erase(std::remove(ghost_objects_.begin(), ghost_objects_.end(), entity_ptr()), ghost_objects_.end());
+	ghost_objects_.erase(std::remove(ghost_objects_.begin(), ghost_objects_.end(), EntityPtr()), ghost_objects_.end());
 }
 
 void editor::remove_ghost_objects()
 {
-	foreach(entity_ptr c, ghost_objects_) {
+	foreach(EntityPtr c, ghost_objects_) {
 		lvl_->remove_character(c);
 	}
 }
@@ -1052,20 +1052,20 @@ void editor::setup_for_editing()
 		std::cerr << "ERROR LOADING STATS\n";
 	}
 
-	lvl_->set_as_current_level();
+	lvl_->setAsCurrentLevel();
 
-	foreach(level_ptr lvl, levels_) {
-		foreach(entity_ptr c, lvl->get_chars()) {
+	foreach(LevelPtr lvl, levels_) {
+		foreach(EntityPtr c, lvl->get_chars()) {
 			if(entity_collides_with_level(*lvl, *c, MOVE_NONE)) {
 				const int x = c->x();
 				const int y = c->y();
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
-					assert(c->allow_level_collisions() || !entity_collides_with_level(*lvl, *c, MOVE_NONE));
+					assert(c->allowLevelCollisions() || !entity_collides_with_level(*lvl, *c, MOVE_NONE));
 					if(lvl == lvl_) {
-						debug_console::addMessage(formatter() << "Adjusted position of " << c->debug_description() << " to fit: (" << x << "," << y << ") -> (" << c->x() << "," << c->y() << ")");
+						debug_console::addMessage(formatter() << "Adjusted position of " << c->getDebugDescription() << " to fit: (" << x << "," << y << ") -> (" << c->x() << "," << c->y() << ")");
 					}
 				} else {
-					debug_console::addMessage(formatter() << c->debug_description() << " is in an illegal position and can't be auto-corrected");
+					debug_console::addMessage(formatter() << c->getDebugDescription() << " is in an illegal position and can't be auto-corrected");
 				}
 			}
 		}
@@ -1162,7 +1162,7 @@ bool editor::handleEvent(const SDL_Event& event, bool swallowed)
 	case SDL_WINDOWEVENT:
 		if(event.window.event == SDL_WINDOWEVENT_RESIZED) {
 			video_resize(event);
-			level_runner::get_current()->video_resize_event(event);
+			level_runner::getCurrent()->video_resize_event(event);
 			editor_x_resolution = event.window.data1;
 			editor_y_resolution = event.window.data2;
 			reset_dialog_positions();
@@ -1256,7 +1256,7 @@ void editor::process()
 			break;
 		}
 
-		if(property_dialog_ && property_dialog_->get_entity()) {
+		if(property_dialog_ && property_dialog_->getEntity()) {
 			variant new_value;
 			const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
 
@@ -1283,7 +1283,7 @@ void editor::process()
 
 			if(!new_value.is_null()) {
 				std::vector<std::function<void()> > undo, redo;
-				generate_mutate_commands(property_dialog_->get_entity(), g_variable_editing->variable_name(), new_value, undo, redo);
+				generate_mutate_commands(property_dialog_->getEntity(), g_variable_editing->variable_name(), new_value, undo, redo);
 				executeCommand(
 				  std::bind(execute_functions, redo),
 				  std::bind(execute_functions, undo));
@@ -1298,8 +1298,8 @@ void editor::process()
 		//remove ghost objects and re-add them. This guarantees ghost
 		//objects always remain at the end of the level ordering.
 		remove_ghost_objects();
-		entity_ptr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
-		foreach(const entity_ptr& ghost, ghost_objects_) {
+		EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
+		foreach(const EntityPtr& ghost, ghost_objects_) {
 			lvl_->add_character(ghost);
 		}
 
@@ -1309,7 +1309,7 @@ void editor::process()
 		if(ghost_objects_.empty() && c && !c->isHuman() && !editing_level_being_played()) {
 			//we have an object but no ghost for it, make the
 			//object's ghost and deploy it.
-			entity_ptr clone = c->clone();
+			EntityPtr clone = c->clone();
 			if(clone && !entity_collides_with_level(*lvl_, *clone, MOVE_NONE)) {
 				ghost_objects_.push_back(clone);
 				lvl_->add_character(clone);
@@ -1326,7 +1326,7 @@ void editor::process()
 			ghost_objects_.clear();
 		}
 	} else if(object_mode && lvl_->editor_highlight()) {
-		foreach(level_ptr lvl, levels_) {
+		foreach(LevelPtr lvl, levels_) {
 			lvl->set_editor_dragging_objects();
 		}
 		
@@ -1345,10 +1345,10 @@ void editor::process()
 		//not in object mode, the picker still highlights objects,
 		//though it won't create ghosts, so remove all ghosts.
 		if(tool() == TOOL_PICKER) {
-			entity_ptr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
+			EntityPtr c = lvl_->get_next_character_at_point(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, xpos_, ypos_);
 			lvl_->set_editor_highlight(c);
 		} else {
-			lvl_->set_editor_highlight(entity_ptr());
+			lvl_->set_editor_highlight(EntityPtr());
 		}
 
 		remove_ghost_objects();
@@ -1410,7 +1410,7 @@ void editor::process()
 	}
 #endif
 
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		lvl->complete_rebuild_tiles_in_background();
 	}
 }
@@ -1439,13 +1439,13 @@ void editor::pencil_motion(int prev_x, int prev_y, int x, int y, bool left_butto
 }
 
 
-void editor::set_pos(int x, int y)
+void editor::setPos(int x, int y)
 {
 	xpos_ = x;
 	ypos_ = y;
 }
 
-void editor::set_playing_level(level_ptr lvl)
+void editor::set_playing_level(LevelPtr lvl)
 {
 	levels_.resize(1);
 	levels_.push_back(lvl);
@@ -1454,7 +1454,7 @@ void editor::set_playing_level(level_ptr lvl)
 
 void editor::toggle_active_level()
 {
-	std::vector<level_ptr>::iterator i = std::find(levels_.begin(), levels_.end(), lvl_);
+	std::vector<LevelPtr>::iterator i = std::find(levels_.begin(), levels_.end(), lvl_);
 	if(i != levels_.end()) {
 		++i;
 		if(i == levels_.end()) {
@@ -1463,7 +1463,7 @@ void editor::toggle_active_level()
 
 		lvl_ = *i;
 	}
-	lvl_->set_as_current_level();
+	lvl_->setAsCurrentLevel();
 }
 
 bool editor::editing_level_being_played() const
@@ -1499,16 +1499,16 @@ void editor::reset_dialog_positions()
 }
 
 namespace {
-	bool sort_entity_zsub_orders(const entity_ptr& a, const entity_ptr& b) {
+	bool sort_entity_zsub_orders(const EntityPtr& a, const EntityPtr& b) {
 	return a->zSubOrder() < b->zSubOrder();
 }
 }
 
-void editor::execute_shift_object(entity_ptr e, int dx, int dy)
+void editor::execute_shift_object(EntityPtr e, int dx, int dy)
 {
 	begin_command_group();
-	foreach(level_ptr lvl, levels_) {
-		entity_ptr obj = lvl->get_entity_by_label(e->label());
+	foreach(LevelPtr lvl, levels_) {
+		EntityPtr obj = lvl->get_entity_by_label(e->label());
 		if(obj) {
 			executeCommand(std::bind(&editor::move_object, this, lvl, obj, obj->x()+dx,obj->y()+dy),
 							std::bind(&editor::move_object,this, lvl, obj,obj->x(),obj->y()));
@@ -1593,7 +1593,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 	if(key.keysym.sym == SDLK_KP_8) {
 		begin_command_group();
-		foreach(const entity_ptr& e, lvl_->editor_selection()){
+		foreach(const EntityPtr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 0, -2);
 		}
 		end_command_group();
@@ -1601,7 +1601,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 	if(key.keysym.sym == SDLK_KP_5) {
 		begin_command_group();
-		foreach(const entity_ptr& e, lvl_->editor_selection()){
+		foreach(const EntityPtr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 0, 2);
 		}
 		end_command_group();
@@ -1609,7 +1609,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	
 	if(key.keysym.sym == SDLK_KP_4) {
 		begin_command_group();
-		foreach(const entity_ptr& e, lvl_->editor_selection()){
+		foreach(const EntityPtr& e, lvl_->editor_selection()){
 			execute_shift_object(e, -2, 0);
 		}
 		end_command_group();
@@ -1617,7 +1617,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	
 	if(key.keysym.sym == SDLK_KP_6) {
 		begin_command_group();
-		foreach(const entity_ptr& e, lvl_->editor_selection()){
+		foreach(const EntityPtr& e, lvl_->editor_selection()){
 			execute_shift_object(e, 2, 0);
 		}
 		end_command_group();
@@ -1627,8 +1627,8 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 		if(lvl_->editor_selection().size() > 1){
 			
 			//store them in a new container
-			std::vector <entity_ptr> v2;
-			foreach(const entity_ptr& e, lvl_->editor_selection()){
+			std::vector <EntityPtr> v2;
+			foreach(const EntityPtr& e, lvl_->editor_selection()){
 				v2.push_back(e.get());
 			}
 			//sort this container in ascending zsub_order
@@ -1638,21 +1638,21 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 			//if it was -, do vice versa (frontmost object goes behind backmost object)
 			if(key.keysym.sym == SDLK_EQUALS){
 				begin_command_group();
-				foreach(level_ptr lvl, levels_) {
-					entity_ptr obj = lvl->get_entity_by_label(v2.front()->label());
+				foreach(LevelPtr lvl, levels_) {
+					EntityPtr obj = lvl->get_entity_by_label(v2.front()->label());
 					if(obj) {
-						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.back()->zSubOrder()+1),
-										std::bind(&entity::set_zsub_order, obj, v2.front()->zSubOrder() ));
+						executeCommand(std::bind(&entity::setZSubOrder, obj, v2.back()->zSubOrder()+1),
+										std::bind(&entity::setZSubOrder, obj, v2.front()->zSubOrder() ));
 					}
 				}
 				end_command_group();
 			}else if(key.keysym.sym == SDLK_MINUS){
 				begin_command_group();
-				foreach(level_ptr lvl, levels_) {
-					entity_ptr obj = lvl->get_entity_by_label(v2.back()->label());
+				foreach(LevelPtr lvl, levels_) {
+					EntityPtr obj = lvl->get_entity_by_label(v2.back()->label());
 					if(obj) {
-						executeCommand(std::bind(&entity::set_zsub_order, obj, v2.front()->zSubOrder()-1),
-										std::bind(&entity::set_zsub_order, obj, v2.back()->zSubOrder() ));
+						executeCommand(std::bind(&entity::setZSubOrder, obj, v2.front()->zSubOrder()-1),
+										std::bind(&entity::setZSubOrder, obj, v2.back()->zSubOrder() ));
 				
 					}
 				}
@@ -1685,8 +1685,8 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 		undo.push_back(std::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), lvl_->editor_selection()));
 		redo.push_back(std::bind(&level::editor_clear_selection, lvl_.get()));
 		//we want to clear the objects in the property dialog
-		redo.push_back(std::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), std::vector<entity_ptr>()));
-		foreach(const entity_ptr& e, lvl_->editor_selection()) {
+		redo.push_back(std::bind(&editor_dialogs::property_editor_dialog::set_entity_group, property_dialog_.get(), std::vector<EntityPtr>()));
+		foreach(const EntityPtr& e, lvl_->editor_selection()) {
 			generate_remove_commands(e, undo, redo);
 			undo.push_back(std::bind(&level::editor_select_object, lvl_.get(), e));
 		}
@@ -1699,7 +1699,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 		int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
 		std::vector<std::function<void()> > redo, undo;
 
-		foreach(level_ptr lvl, levels_) {
+		foreach(LevelPtr lvl, levels_) {
 			foreach(const point& p, tile_selection_.tiles) {
 				const int x = p.x*TileSize;
 				const int y = p.y*TileSize;
@@ -1741,16 +1741,16 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	}
 
 	if(key.keysym.sym == SDLK_i) {
-		toggle_upside_down();
+		toggle_isUpsideDown();
 	}
 
 	if(key.keysym.sym == SDLK_r &&
 	   (key.keysym.mod&KMOD_CTRL) && levels_.size() == 2 &&
 	   lvl_ == levels_.back()) {
 
-		entity_ptr player;
+		EntityPtr player;
 		if(lvl_->player()) {
-			player.reset(&lvl_->player()->get_entity());
+			player.reset(&lvl_->player()->getEntity());
 		}
 
 		levels_.front()->transfer_state_to(*levels_.back());
@@ -1766,7 +1766,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	}
 
 	if(key.keysym.sym == SDLK_c) {
-		foreach(const entity_ptr& obj, lvl_->get_chars()) {
+		foreach(const EntityPtr& obj, lvl_->get_chars()) {
 			if(entity_collides_with_level(*lvl_, *obj, MOVE_NONE)) {
 				xpos_ = obj->x() - graphics::screen_width()/2;
 				ypos_ = obj->y() - graphics::screen_height()/2;
@@ -1814,9 +1814,9 @@ void editor::handle_scrolling()
 void editor::reset_playing_level(bool keep_player)
 {
 	if(levels_.size() == 2 && lvl_ == levels_.back()) {
-		entity_ptr player;
+		EntityPtr player;
 		if(keep_player && lvl_->player()) {
-			player.reset(&lvl_->player()->get_entity());
+			player.reset(&lvl_->player()->getEntity());
 		}
 
 		levels_.front()->transfer_state_to(*levels_.back());
@@ -1834,8 +1834,8 @@ void editor::reset_playing_level(bool keep_player)
 
 void editor::toggle_pause() const
 {
-	if(level_runner::get_current()) {
-		level_runner::get_current()->toggle_pause();
+	if(level_runner::getCurrent()) {
+		level_runner::getCurrent()->toggle_pause();
 	}
 }
 
@@ -1868,9 +1868,9 @@ void editor::handle_object_dragging(int mousex, int mousey)
 	if(!too_small_to_move && (new_x != lvl_->editor_highlight()->x() || new_y != lvl_->editor_highlight()->y())) {
 		std::vector<std::function<void()> > redo, undo;
 
-		foreach(const entity_ptr& e, lvl_->editor_selection()) {
-			foreach(level_ptr lvl, levels_) {
-				entity_ptr obj = lvl->get_entity_by_label(e->label());
+		foreach(const EntityPtr& e, lvl_->editor_selection()) {
+			foreach(LevelPtr lvl, levels_) {
+				EntityPtr obj = lvl->get_entity_by_label(e->label());
 				if(obj) {
 					redo.push_back(std::bind(&editor::move_object, this, lvl, obj, e->x() + delta_x, e->y() + delta_y));
 					undo.push_back(std::bind(&editor::move_object, this, lvl, obj, obj->x(), obj->y()));
@@ -2003,12 +2003,12 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	} else 
 #endif
 	if(adding_points_.empty() == false) {
-		if(event.button == SDL_BUTTON_LEFT && property_dialog_ && property_dialog_->get_entity()) {
+		if(event.button == SDL_BUTTON_LEFT && property_dialog_ && property_dialog_->getEntity()) {
 			const int xpos = anchorx_;
 			const int ypos = anchory_;
 			std::cerr << "ADD POINT: " << xpos << ", " << ypos << "\n";
 
-			entity_ptr c = property_dialog_->get_entity();
+			EntityPtr c = property_dialog_->getEntity();
 
 			variant current_value = c->query_value(adding_points_);
 			std::vector<variant> new_value;
@@ -2148,9 +2148,9 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		}
 		g_current_draw_hex_tiles.clear();
 		g_current_draw_hex_tiles.push_back(p);
-	} else if(property_dialog_ && variable_info_selected(property_dialog_->get_entity(), anchorx_, anchory_, zoom_)) {
-		g_variable_editing = variable_info_selected(property_dialog_->get_entity(), anchorx_, anchory_, zoom_, &g_variable_editing_index);
-		g_variable_editing_original_value = property_dialog_->get_entity()->query_value(g_variable_editing->variable_name());
+	} else if(property_dialog_ && variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_)) {
+		g_variable_editing = variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_, &g_variable_editing_index);
+		g_variable_editing_original_value = property_dialog_->getEntity()->query_value(g_variable_editing->variable_name());
 
 		if(g_variable_editing->type() == editor_variable_info::TYPE_POINTS && event.button == SDL_BUTTON_RIGHT) {
 			std::vector<variant> points = g_variable_editing_original_value.as_list();
@@ -2161,7 +2161,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			variant new_value(&points);
 
 			std::vector<std::function<void()> > undo, redo;
-			generate_mutate_commands(property_dialog_->get_entity(), g_variable_editing->variable_name(), new_value, undo, redo);
+			generate_mutate_commands(property_dialog_->getEntity(), g_variable_editing->variable_name(), new_value, undo, redo);
 			executeCommand(
 			  std::bind(execute_functions, redo),
 			  std::bind(execute_functions, undo));
@@ -2179,7 +2179,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		//dragging a rectangle to select objects
 		drawing_rect_ = true;
 	} else if(property_dialog_) {
-		property_dialog_->set_entity(lvl_->editor_highlight());
+		property_dialog_->setEntity(lvl_->editor_highlight());
 
 		set_code_file();
 	}
@@ -2188,7 +2188,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		//pass. This is either the start of a right click drag, or will show
 		//a context menu on mouse up.
 	} else if(lvl_->editor_highlight()) {
-		entity_ptr obj_selecting = lvl_->editor_highlight();
+		EntityPtr obj_selecting = lvl_->editor_highlight();
 		if(std::count(lvl_->editor_selection().begin(),
 		              lvl_->editor_selection().end(), lvl_->editor_highlight()) == 0) {
 			//set the object as selected in the editor.
@@ -2198,8 +2198,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 			obj_selecting = lvl_->editor_highlight();
 			const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
-			while(!ctrl_pressed && obj_selecting->spawned_by().empty() == false && lvl_->get_entity_by_label(obj_selecting->spawned_by())) {
-				obj_selecting = lvl_->get_entity_by_label(obj_selecting->spawned_by());
+			while(!ctrl_pressed && obj_selecting->wasSpawnedBy().empty() == false && lvl_->get_entity_by_label(obj_selecting->wasSpawnedBy())) {
+				obj_selecting = lvl_->get_entity_by_label(obj_selecting->wasSpawnedBy());
 			}
 
 			lvl_->editor_select_object(obj_selecting);
@@ -2229,8 +2229,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 	}
 
 	if(tool() == TOOL_ADD_OBJECT && event.button == SDL_BUTTON_LEFT && !lvl_->editor_highlight()) {
-		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->current_frame().width()/2;
-		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->current_frame().height()/2;
+		const int xpos = anchorx_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().width()/2;
+		const int ypos = anchory_ - all_characters()[cur_object_].preview_object()->getCurrentFrame().height()/2;
 		variant_builder node;
 		node.merge_object(all_characters()[cur_object_].node);
 		node.set("x", (ctrl_pressed ? xpos : round_tile_size(xpos)));
@@ -2242,7 +2242,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			node.set("is_human", true);
 		}
 
-		entity_ptr c(entity::build(node.build()));
+		EntityPtr c(entity::build(node.build()));
 
 		//any vars that require formula initialization are calculated here.
 		std::map<std::string, variant> vars, props;
@@ -2259,8 +2259,8 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		}
 		
 		//if we have parallax, offset the object so it's placed at the same position it's graphically visible at
-		c->set_x( c->x() +  + ((1000 - (c->parallaxScaleMillisX()))* xpos_ )/1000);
-		c->set_y( c->y() +  + ((1000 - (c->parallaxScaleMillisY()))* ypos_ )/1000);
+		c->setX( c->x() +  + ((1000 - (c->parallaxScaleMillisX()))* xpos_ )/1000);
+		c->setY( c->y() +  + ((1000 - (c->parallaxScaleMillisY()))* ypos_ )/1000);
 		
 
 		//we only want to actually set the vars once we've calculated all of
@@ -2283,28 +2283,28 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		} else if(c->isHuman() && lvl_->player()) {
 			if(!shift_pressed) {
 				begin_command_group();
-				foreach(level_ptr lvl, levels_) {
-					entity_ptr obj(c->backup());
+				foreach(LevelPtr lvl, levels_) {
+					EntityPtr obj(c->backup());
 					executeCommand(
 					  std::bind(&editor::add_object_to_level, this, lvl, obj),
-					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
+					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->getEntity()));
 				}
 				end_command_group();
 			} else {
 				begin_command_group();
-				foreach(level_ptr lvl, levels_) {
-					entity_ptr obj(c->backup());
+				foreach(LevelPtr lvl, levels_) {
+					EntityPtr obj(c->backup());
 					executeCommand(
 					  std::bind(&editor::add_multi_object_to_level, this, lvl, obj),
-					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->get_entity()));
+					  std::bind(&editor::add_object_to_level, this, lvl, &lvl->player()->getEntity()));
 				}
 				end_command_group();
 			}
 
 		} else {
 			begin_command_group();
-			foreach(level_ptr lvl, levels_) {
-				entity_ptr obj(c->backup());
+			foreach(LevelPtr lvl, levels_) {
+				EntityPtr obj(c->backup());
 				executeCommand(
 				  std::bind(&editor::add_object_to_level, this, lvl, obj),
 				  std::bind(&editor::remove_object_from_level, this, lvl, obj));
@@ -2326,13 +2326,13 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 	const int ypos = ypos_ + mousey*zoom_;
 
 	if(g_variable_editing) {
-		if(property_dialog_ && property_dialog_->get_entity()) {
-			entity_ptr e = property_dialog_->get_entity();
+		if(property_dialog_ && property_dialog_->getEntity()) {
+			EntityPtr e = property_dialog_->getEntity();
 			const std::string& var = g_variable_editing->variable_name();
 
 			begin_command_group();
-			foreach(level_ptr lvl, levels_) {
-				entity_ptr obj = lvl->get_entity_by_label(e->label());
+			foreach(LevelPtr lvl, levels_) {
+				EntityPtr obj = lvl->get_entity_by_label(e->label());
 				if(obj) {
 					executeCommand(
 					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, e->query_value(var)),
@@ -2353,7 +2353,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 
 		if(boundaries != lvl_->boundaries()) {
 			begin_command_group();
-			foreach(level_ptr lvl, levels_) {
+			foreach(LevelPtr lvl, levels_) {
 				executeCommand(
 				  std::bind(&level::set_boundaries, lvl.get(), boundaries),
 				  std::bind(&level::set_boundaries, lvl.get(), lvl->boundaries()));
@@ -2376,7 +2376,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			std::cerr << "MAKE DIFF: " << diffx << "," << diffy << "\n";
 			std::vector<std::function<void()> > redo, undo;
 
-			foreach(level_ptr lvl, levels_) {
+			foreach(LevelPtr lvl, levels_) {
 				foreach(const point& p, tile_selection_.tiles) {
 					const int x = (p.x+diffx)*TileSize;
 					const int y = (p.y+diffy)*TileSize;
@@ -2494,11 +2494,11 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 		if(event.button == SDL_BUTTON_RIGHT) {
 			fprintf(stderr, "RIGHT: %d, %d -- %d, %d\n", anchorx_, xpos, anchory_, ypos);
 			if(abs(anchorx_ - xpos) < 16 && abs(anchory_ - ypos) < 16) {
-				std::vector<entity_ptr> chars = lvl_->get_characters_at_point(anchorx_, anchory_, xpos_, ypos_);
+				std::vector<EntityPtr> chars = lvl_->get_characters_at_point(anchorx_, anchory_, xpos_, ypos_);
 				std::vector<editor_menu_dialog::menu_item> items;
-				for(entity_ptr e : chars) {
+				for(EntityPtr e : chars) {
 					editor_menu_dialog::menu_item item;
-					item.description = e->debug_description();
+					item.description = e->getDebugDescription();
 					item.action = [=]() {
 						lvl_->editor_clear_selection();
 						lvl_->editor_select_object(e);
@@ -2519,31 +2519,31 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			
 			std::vector<std::function<void()> > undo, redo;
 			const rect rect_selected(rect::from_coordinates(anchorx_, anchory_, xpos, ypos));
-			std::vector<entity_ptr> chars = lvl_->get_characters_in_rect(rect_selected, xpos_, ypos_);
+			std::vector<EntityPtr> chars = lvl_->get_characters_in_rect(rect_selected, xpos_, ypos_);
 
 			//Delete all the objects in the rect.
-			foreach(const entity_ptr& c, chars) {
-				if(c->spawned_by().empty() == false) {
+			foreach(const EntityPtr& c, chars) {
+				if(c->wasSpawnedBy().empty() == false) {
 					continue;
 				}
-				std::cerr << "REMOVING RECT CHAR: " << c->debug_description() << "\n";
-				foreach(level_ptr lvl, levels_) {
-					entity_ptr obj = lvl->get_entity_by_label(c->label());
+				std::cerr << "REMOVING RECT CHAR: " << c->getDebugDescription() << "\n";
+				foreach(LevelPtr lvl, levels_) {
+					EntityPtr obj = lvl->get_entity_by_label(c->label());
 					generate_remove_commands(obj, undo, redo);
 				}
 			}
 
-			if(property_dialog_ && property_dialog_.get() == current_dialog_ && property_dialog_->get_entity() && property_dialog_->get_entity()->getEditorInfo()) {
+			if(property_dialog_ && property_dialog_.get() == current_dialog_ && property_dialog_->getEntity() && property_dialog_->getEntity()->getEditorInfo()) {
 				//As well as removing objects, we will remove any vertices
 				//that we see.
-				foreach(const editor_variable_info& var, property_dialog_->get_entity()->getEditorInfo()->vars_and_properties()) {
+				foreach(const editor_variable_info& var, property_dialog_->getEntity()->getEditorInfo()->vars_and_properties()) {
 					const std::string& name = var.variable_name();
 					const editor_variable_info::VARIABLE_TYPE type = var.type();
 					if(type != editor_variable_info::TYPE_POINTS) {
 						continue;
 					}
 
-					variant value = property_dialog_->get_entity()->query_value(name);
+					variant value = property_dialog_->getEntity()->query_value(name);
 					if(!value.is_list()) {
 						continue;
 					}
@@ -2569,7 +2569,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 							points_var.push_back(p.write());
 						}
 
-						generate_mutate_commands(property_dialog_->get_entity(), name, variant(&points_var), undo, redo);
+						generate_mutate_commands(property_dialog_->getEntity(), name, variant(&points_var), undo, redo);
 					}
 				}
 			}
@@ -2578,7 +2578,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			  std::bind(execute_functions, redo),
 			  std::bind(execute_functions, undo));
 		} else if(tool() == TOOL_SELECT_OBJECT && drawing_rect_) {
-			std::vector<entity_ptr> chars = lvl_->get_characters_in_rect(rect::from_coordinates(anchorx_, anchory_, xpos, ypos), xpos_, ypos_);
+			std::vector<EntityPtr> chars = lvl_->get_characters_in_rect(rect::from_coordinates(anchorx_, anchory_, xpos, ypos), xpos_, ypos_);
 			if(chars.empty()) {
 				//no chars is just a no-op.
 				drawing_rect_ = dragging_ = false;
@@ -2586,8 +2586,8 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			}
 
 			const bool ctrl_pressed = (SDL_GetModState()&(KMOD_LCTRL|KMOD_RCTRL)) != 0;
-			foreach(const entity_ptr& c, chars) {
-				if(c->spawned_by().empty() || ctrl_pressed) {
+			foreach(const EntityPtr& c, chars) {
+				if(c->wasSpawnedBy().empty() || ctrl_pressed) {
 					lvl_->editor_select_object(c);
 				}
 			}
@@ -2596,7 +2596,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 
 			if(lvl_->editor_selection().size() == 1) {
 				current_dialog_ = property_dialog_.get();
-				property_dialog_->set_entity(lvl_->editor_selection().front());
+				property_dialog_->setEntity(lvl_->editor_selection().front());
 
 				set_code_file();
 			} else {
@@ -2658,7 +2658,7 @@ void editor::add_tile_rect(int zorder, const std::string& tile_id, int x1, int y
 
 	std::vector<std::function<void()> > undo, redo;
 
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		std::vector<std::string> old_rect;
 		lvl->get_tile_rect(zorder, x1, y1, x2, y2, old_rect);
 
@@ -2693,7 +2693,7 @@ void editor::add_tile_rect(int x1, int y1, int x2, int y2)
 	y2 += ((100 - tilesets[cur_tileset_].y_speed)*ypos_)/100;
 
 	add_tile_rect(tilesets[cur_tileset_].zorder, tilesets[cur_tileset_].type, x1, y1, x2, y2);
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		lvl->set_tile_layer_speed(tilesets[cur_tileset_].zorder,
 		                          tilesets[cur_tileset_].x_speed,
 								  tilesets[cur_tileset_].y_speed);
@@ -2716,7 +2716,7 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 	}
 
 	std::vector<std::function<void()> > redo, undo;
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAll_tiles_rect(x1, y1, x2, y2, old_tiles);
@@ -2805,7 +2805,7 @@ void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
 
 	std::vector<std::function<void()> > undo, redo;
 
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		std::vector<std::string> old_rect;
 		lvl->get_hex_tile_rect(zorder, x1, y1, x2, y2, old_rect);
 
@@ -2838,7 +2838,7 @@ void editor::remove_hex_tile_rect(int x1, int y1, int x2, int y2)
 	}
 
 	std::vector<std::function<void()> > redo, undo;
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
 		lvl->getAll_hex_tiles_rect(x1, y1, x2, y2, old_tiles);
@@ -2878,9 +2878,9 @@ void editor::setSelection(const tile_selection& s)
 	tile_selection_ = s;
 }
 
-void editor::move_object(level_ptr lvl, entity_ptr e, int new_x, int new_y)
+void editor::move_object(LevelPtr lvl, EntityPtr e, int new_x, int new_y)
 {
-	current_level_scope scope(lvl.get());
+	CurrentLevelScope scope(lvl.get());
 	lvl->relocate_object(e, new_x, new_y);
 }
 
@@ -2911,7 +2911,7 @@ void editor::set_tileset(int index)
 		cur_tileset_ = 0;
 	}
 
-	foreach(level_ptr lvl, levels_) {
+	foreach(LevelPtr lvl, levels_) {
 		lvl->set_tile_layer_speed(tilesets[cur_tileset_].zorder,
 		                          tilesets[cur_tileset_].x_speed,
 								  tilesets[cur_tileset_].y_speed);
@@ -3200,8 +3200,8 @@ void editor::save_level()
 	//based on them having changed.
 	if(lvl_->previous_level().empty() == false) {
 		try {
-			level_ptr prev(new level(lvl_->previous_level()));
-			prev->finish_loading();
+			LevelPtr prev(new level(lvl_->previous_level()));
+			prev->finishLoading();
 			if(prev->next_level() != lvl_->id()) {
 				prev->set_next_level(lvl_->id());
 				if(preferences::is_level_path_set()) {
@@ -3218,8 +3218,8 @@ void editor::save_level()
 
 	if(lvl_->next_level().empty() == false) {
 		try {
-			level_ptr next(new level(lvl_->next_level()));
-			next->finish_loading();
+			LevelPtr next(new level(lvl_->next_level()));
+			next->finishLoading();
 			if(next->previous_level() != lvl_->id()) {
 				next->set_previous_level(lvl_->id());
 				if(preferences::is_level_path_set()) {
@@ -3304,8 +3304,8 @@ void editor::draw_gui() const
 
 	if(tool() == TOOL_ADD_OBJECT && !lvl_->editor_highlight()) {
 		entity& e = *all_characters()[cur_object_].preview_object();
-		const int xpos = xpos_ - e.current_frame().width()/2;
-		const int ypos = ypos_ - e.current_frame().height()/2;
+		const int xpos = xpos_ - e.getCurrentFrame().width()/2;
+		const int ypos = ypos_ - e.getCurrentFrame().height()/2;
 		int x = round_tile_size(xpos + mousex*zoom_);
 		int y = round_tile_size(ypos + mousey*zoom_);
 		if(ctrl_pressed) {
@@ -3313,7 +3313,7 @@ void editor::draw_gui() const
 			y = ypos + mousey*zoom_;
 		}
 
-		e.set_pos(x, y);
+		e.setPos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
 			glColor4f(1.0, 1.0, 1.0, 0.5);
 			all_characters()[cur_object_].preview_frame()->draw(e.x(), e.y(), face_right_, upside_down_);
@@ -3353,10 +3353,10 @@ void editor::draw_gui() const
 	
 	std::vector<GLfloat>& varray = graphics::global_vertex_array();
 	if(property_dialog_ && property_dialog_.get() == current_dialog_ &&
-	   property_dialog_->get_entity() &&
-	   property_dialog_->get_entity()->getEditorInfo() &&
+	   property_dialog_->getEntity() &&
+	   property_dialog_->getEntity()->getEditorInfo() &&
 	   std::count(lvl_->get_chars().begin(), lvl_->get_chars().end(),
-	              property_dialog_->get_entity())) {
+	              property_dialog_->getEntity())) {
 #if !defined(USE_SHADERS)
 		glDisable(GL_TEXTURE_2D);
 		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
@@ -3367,12 +3367,12 @@ void editor::draw_gui() const
 		std::map<editor_variable_info::VARIABLE_TYPE, int> nseen_variables;
 
 		int selected_index = -1;
-		const editor_variable_info* selected_var = variable_info_selected(property_dialog_->get_entity(), xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, zoom_, &selected_index);
-		foreach(const editor_variable_info& var, property_dialog_->get_entity()->getEditorInfo()->vars_and_properties()) {
+		const editor_variable_info* selected_var = variable_info_selected(property_dialog_->getEntity(), xpos_ + mousex*zoom_, ypos_ + mousey*zoom_, zoom_, &selected_index);
+		foreach(const editor_variable_info& var, property_dialog_->getEntity()->getEditorInfo()->vars_and_properties()) {
 			const std::string& name = var.variable_name();
 			const editor_variable_info::VARIABLE_TYPE type = var.type();
 			const int color_index = nseen_variables[type]++;
-			variant value = property_dialog_->get_entity()->query_value(name);
+			variant value = property_dialog_->getEntity()->query_value(name);
 			graphics::color color;
 			switch(color_index) {
 				case 0: color = graphics::color(255, 0, 0, 255); break;
@@ -4048,44 +4048,44 @@ void editor::edit_level_code()
 	code_dialog_->load_file(path);
 }
 
-void editor::add_multi_object_to_level(level_ptr lvl, entity_ptr e)
+void editor::add_multi_object_to_level(LevelPtr lvl, EntityPtr e)
 {
-	current_level_scope scope(lvl.get());
+	CurrentLevelScope scope(lvl.get());
 	lvl->add_multi_player(e);
 	e->handleEvent("editor_added");
 }
 
-void editor::add_object_to_level(level_ptr lvl, entity_ptr e)
+void editor::add_object_to_level(LevelPtr lvl, EntityPtr e)
 {
-	current_level_scope scope(lvl.get());
+	CurrentLevelScope scope(lvl.get());
 	lvl->add_character(e);
 	e->handleEvent("editor_added");
 }
 
-void editor::remove_object_from_level(level_ptr lvl, entity_ptr e)
+void editor::remove_object_from_level(LevelPtr lvl, EntityPtr e)
 {
-	current_level_scope scope(lvl.get());
+	CurrentLevelScope scope(lvl.get());
 	e->handleEvent("editor_removed");
 	lvl->remove_character(e);
 	lvl->set_active_chars();
 }
 
-void editor::mutate_object_value(level_ptr lvl, entity_ptr e, const std::string& value, variant new_value)
+void editor::mutate_object_value(LevelPtr lvl, EntityPtr e, const std::string& value, variant new_value)
 {
-	current_level_scope scope(lvl.get());
+	CurrentLevelScope scope(lvl.get());
 	e->handleEvent("editor_changing_variable");
 	e->mutate_value(value, new_value);
 	e->handleEvent("editor_changed_variable");
 }
 
-void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, variant new_value, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
+void editor::generate_mutate_commands(EntityPtr c, const std::string& attr, variant new_value, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
 {
-	if(!c || c->spawned_by().empty() == false) {
+	if(!c || c->wasSpawnedBy().empty() == false) {
 		return;
 	}
 
-	foreach(level_ptr lvl, levels_) {
-		entity_ptr obj = lvl->get_entity_by_label(c->label());
+	foreach(LevelPtr lvl, levels_) {
+		EntityPtr obj = lvl->get_entity_by_label(c->label());
 		if(!obj) {
 			continue;
 		}
@@ -4096,14 +4096,14 @@ void editor::generate_mutate_commands(entity_ptr c, const std::string& attr, var
 	}
 }
 
-void editor::generate_remove_commands(entity_ptr c, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
+void editor::generate_remove_commands(EntityPtr c, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo)
 {
-	if(!c || c->spawned_by().empty() == false) {
+	if(!c || c->wasSpawnedBy().empty() == false) {
 		return;
 	}
 	
-	foreach(level_ptr lvl, levels_) {
-		entity_ptr obj = lvl->get_entity_by_label(c->label());
+	foreach(LevelPtr lvl, levels_) {
+		EntityPtr obj = lvl->get_entity_by_label(c->label());
 		if(!obj) {
 			continue;
 		}
@@ -4111,9 +4111,9 @@ void editor::generate_remove_commands(entity_ptr c, std::vector<std::function<vo
 		redo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, obj));
 		undo.push_back(std::bind(&editor::add_object_to_level, this, lvl, obj));
 		if(obj->label().empty() == false) {
-			foreach(entity_ptr child, lvl->get_chars()) {
-				if(child->spawned_by() == obj->label()) {
-		std::cerr << "REMOVING CHILD OBJECT: " << child->debug_description() << " " << child->label() << "\n";
+			foreach(EntityPtr child, lvl->get_chars()) {
+				if(child->wasSpawnedBy() == obj->label()) {
+		std::cerr << "REMOVING CHILD OBJECT: " << child->getDebugDescription() << " " << child->label() << "\n";
 					redo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, child));
 					undo.push_back(std::bind(&editor::add_object_to_level, this, lvl, child));
 				}
@@ -4194,7 +4194,7 @@ void editor::set_code_file()
 	if(lvl_->editor_selection().empty() == false) {
 		type = lvl_->editor_selection().back()->query_value("type").as_string();
 	} else if(lvl_->player()) {
-		type = lvl_->player()->get_entity().query_value("type").as_string();
+		type = lvl_->player()->getEntity().query_value("type").as_string();
 	}
 
 	if(type.empty()) {
@@ -4208,12 +4208,12 @@ void editor::set_code_file()
 
 	const std::string* path = CustomObjectType::getObjectPath(type + ".cfg");
 
-	entity_ptr obj_instance;
+	EntityPtr obj_instance;
 	if(code_dialog_ && lvl_->editor_selection().empty() == false && tool() == TOOL_SELECT_OBJECT && levels_.size() == 2 && lvl_ == levels_.back()) {
 		// See if we can find an instance of the object in the canonical
 		// version of the level. If we can we allow object instance editing,
 		// otherwise we'll just allow editing of the type.
-		entity_ptr selected = lvl_->editor_selection().back();
+		EntityPtr selected = lvl_->editor_selection().back();
 
 		obj_instance = levels_.front()->get_entity_by_label(selected->label());
 	}
@@ -4249,14 +4249,14 @@ void editor::object_instance_modified_in_editor(const std::string& label)
 	std::vector<std::function<void()> > undo, redo;
 	const std::string pseudo_fname = "@instance:" + label;
 
-	entity_ptr existing_obj = lvl_->get_entity_by_label(label);
+	EntityPtr existing_obj = lvl_->get_entity_by_label(label);
 	if(!existing_obj) {
 		return;
 	}
 
 	generate_remove_commands(existing_obj, undo, redo);
-	foreach(level_ptr lvl, levels_) {
-		entity_ptr new_obj(entity::build(json::parse_from_file(pseudo_fname)));
+	foreach(LevelPtr lvl, levels_) {
+		EntityPtr new_obj(entity::build(json::parse_from_file(pseudo_fname)));
 		redo.push_back(std::bind(&editor::add_object_to_level, this, lvl, new_obj));
 		undo.push_back(std::bind(&editor::remove_object_from_level, this, lvl, new_obj));
 	}

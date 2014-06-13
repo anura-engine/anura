@@ -20,19 +20,16 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+
 #pragma once
 
+#include <cstdint>
 #include <memory>
 #include <set>
-
-#include <boost/scoped_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include <boost/cstdint.hpp>
 #include <stack>
 
 #include "blur.hpp"
 #include "custom_object_type.hpp"
-#include "decimal.hpp"
 #include "draw_primitive.hpp"
 #include "draw_scene.hpp"
 #include "entity.hpp"
@@ -46,11 +43,11 @@
 #include "widget.hpp"
 
 struct collision_info;
-class level;
+class Level;
 
 struct custom_object_text;
 
-class custom_object : public entity
+class custom_object : public Entity
 {
 public:
 	static const std::string* current_debug_error();
@@ -71,18 +68,18 @@ public:
 
 	bool is_a(const std::string& type) const;
 
-	//finish_loading(): called when a level finishes loading all objects,
+	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
-	void finish_loading(level* lvl);
+	void finishLoading(level* lvl);
 	virtual variant write() const;
-	virtual void setup_drawing() const;
+	virtual void setupDrawing() const;
 	virtual void draw(int x, int y) const;
-	virtual void draw_later(int x, int y) const;
-	virtual void draw_group() const;
+	virtual void drawLater(int x, int y) const;
+	virtual void drawGroup() const;
 	virtual void process(level& lvl);
 	virtual void construct();
-	virtual bool create_object();
-	void set_level(level& lvl) { }
+	virtual bool createObject();
+	void setLevel(level& lvl) { }
 
 	void check_initialized();
 
@@ -105,8 +102,8 @@ public:
 	virtual int zorder() const;
 	virtual int zSubOrder() const;
 
-	virtual int velocity_x() const;
-	virtual int velocity_y() const;
+	virtual int velocityX() const;
+	virtual int velocityY() const;
 	virtual int mass() const { return type_->mass(); }
 
 	int getTeleportOffsetX() const { return type_->getTeleportOffsetX(); }
@@ -117,34 +114,34 @@ public:
 	bool hasFeet() const;
 
 	
-	virtual bool is_standable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
+	virtual bool isStandable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
 
 	virtual bool destroyed() const;
-	virtual bool point_collides(int x, int y) const;
-	virtual bool rect_collides(const rect& r) const;
+	virtual bool pointCollides(int x, int y) const;
+	virtual bool rectCollides(const rect& r) const;
 
-	virtual const frame& current_frame() const { return *frame_; }
+	virtual const frame& getCurrentFrame() const { return *frame_; }
 
 	void set_frame(const std::string& name);
 	void set_frame(const frame& new_frame);
 
-	virtual rect draw_rect() const;
+	virtual rect getDrawRect() const;
 
 	//bare setting of the frame without adjusting position/checking solidity
 	//etc etc.
 	void set_frame_no_adjustments(const std::string& name);
 	void set_frame_no_adjustments(const frame& new_frame);
 	void die();
-	void die_with_no_event();
+	void dieWithNoEvent();
 	virtual bool isActive(const rect& screen_area) const;
 	bool diesOnInactive() const;
 	bool isAlwaysActive() const;
-	bool move_to_standing(level& lvl, int max_displace=10000);
+	bool moveToStanding(level& lvl, int max_displace=10000);
 
 	bool isBodyHarmful() const;
 	bool isBodyPassthrough() const;
 
-	int time_in_frame() const { return time_in_frame_; }
+	int getTimeInFrame() const { return time_in_frame_; }
 
 	FormulaCallable* vars() { return vars_.get(); }
 	const FormulaCallable* vars() const { return vars_.get(); }
@@ -158,41 +155,41 @@ public:
 		return type_->getChild(key);
 	}
 
-	const frame& icon_frame() const;
+	const frame& getIconFrame() const;
 
-	virtual entity_ptr clone() const;
-	virtual entity_ptr backup() const;
+	virtual EntityPtr clone() const;
+	virtual EntityPtr backup() const;
 
 	game_logic::const_formula_ptr getEventHandler(int key) const;
-	void set_event_handler(int, game_logic::const_formula_ptr f);
+	void setEventHandler(int, game_logic::const_formula_ptr f);
 
-	bool can_interact_with() const;
+	bool canInteractWith() const;
 
-	std::string debug_description() const;
+	std::string getDebugDescription() const;
 
-	void map_entities(const std::map<entity_ptr, entity_ptr>& m);
+	void mapEntities(const std::map<EntityPtr, EntityPtr>& m);
 	void cleanup_references();
 
 	void add_particle_system(const std::string& key, const std::string& type);
 	void remove_particle_system(const std::string& key);
 
-	virtual int hitpoints() const { return hitpoints_; }
+	virtual int getHitpoints() const { return hitpoints_; }
 
 	void setText(const std::string& text, const std::string& font, int size, int align);
 
-	virtual bool boardable_vehicle() const;
+	virtual bool boardableVehicle() const;
 
-	virtual void boarded(level& lvl, const entity_ptr& player);
+	virtual void boarded(level& lvl, const EntityPtr& player);
 	virtual void unboarded(level& lvl);
 
-	virtual void board_vehicle();
-	virtual void unboard_vehicle();
+	virtual void boardVehicle();
+	virtual void unboardVehicle();
 
 	void set_driver_position();
 
 	virtual bool useAbsoluteScreenCoordinates() const { return use_absolute_screen_coordinates_; }
 
-	virtual int current_animation_id() const { return current_animation_id_; }
+	virtual int getCurrentAnimationId() const { return current_animation_id_; }
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
@@ -201,52 +198,52 @@ public:
 
 	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);
 	virtual bool handleEvent(int event, const FormulaCallable* context=NULL);
-	virtual bool handleEvent_delay(int event, const FormulaCallable* context=NULL);
+	virtual bool handleEventDelay(int event, const FormulaCallable* context=NULL);
 
-	virtual void resolve_delayed_events();
+	virtual void resolveDelayedEvents();
 
 	virtual bool serializable() const;
 
 	void set_blur(const BlurInfo* blur);
-	void set_sound_volume(const int volume);
-	void set_zsub_order(const int zsub_order) {zsub_order_ = zsub_order;}
+	void setSoundVolume(const int volume);
+	void setZSubOrder(const int zsub_order) {zsub_order_ = zsub_order;}
 	
 	bool executeCommand(const variant& var);
 
 	virtual game_logic::formula_ptr createFormula(const variant& v);
 
-	bool allow_level_collisions() const;
+	bool allowLevelCollisions() const;
 
 	//statistic on how many FFL events are handled every second.
 	static int events_handled_per_second;
 
 	const std::vector<light_ptr>& lights() const { return lights_; }
-	void swap_lights(std::vector<light_ptr>& lights) { lights_.swap(lights); }
+	void swapLights(std::vector<light_ptr>& lights) { lights_.swap(lights); }
 
-	void shift_position(int x, int y);
+	void shiftPosition(int x, int y);
 
-	bool appears_at_difficulty(int difficulty) const;
+	bool appearsAtDifficulty(int difficulty) const;
 
-	int min_difficulty() const { return min_difficulty_; }
-	int max_difficulty() const { return max_difficulty_; }
+	int getMinDifficulty() const { return min_difficulty_; }
+	int getMaxDifficulty() const { return max_difficulty_; }
 
-	void set_difficulty(int min, int max) { min_difficulty_ = min; max_difficulty_ = max; }
+	void setDifficultyRange(int min, int max) { min_difficulty_ = min; max_difficulty_ = max; }
 
-	void update_type(ConstCustomObjectTypePtr old_type,
+	void updateType(ConstCustomObjectTypePtr old_type,
 	                 ConstCustomObjectTypePtr new_type);
 
-	bool mouse_event_swallowed() const {return swallow_mouse_event_;}
-	void reset_mouse_event() {swallow_mouse_event_ = false;}
+	bool isMouseEventSwallowed() const {return swallow_mouse_event_;}
+	void resetMouseEvent() {swallow_mouse_event_ = false;}
 	void addWidget(const gui::WidgetPtr& w);
-	void add_widgets(std::vector<gui::WidgetPtr>* widgets);
-	void clear_widgets();
-	void remove_widget(gui::WidgetPtr w);
+	void addWidgets(std::vector<gui::WidgetPtr>* widgets);
+	void clearWidgets();
+	void removeWidget(gui::WidgetPtr w);
 	gui::WidgetPtr getWidgetById(const std::string& id);
 	gui::ConstWidgetPtr getWidgetById(const std::string& id) const;
-	std::vector<variant> get_variant_widget_list() const;
-	bool get_clipArea(rect* clipArea) {
-		if(clip_area_ && clipArea) {
-			*clipArea = *clip_area_.get();
+	std::vector<variant> getVariantWidgetList() const;
+	bool getClipArea(rect* clip_area) {
+		if(clip_area_ && clip_area) {
+			*clip_area = *clip_area_.get();
 			return true;
 		}
 		return false;
@@ -271,90 +268,90 @@ public:
 		AnimatedMovement() : pos(0)
 		{}
 
-		int animation_frames() const { return animation_values.size()/animation_slots.size(); }
+		int getAnimationFrames() const { return animation_values.size()/animation_slots.size(); }
 	};
 
-	void add_animated_movement(variant attr, variant options);
-	void set_animated_schedule(std::shared_ptr<AnimatedMovement> movement);
-	void cancel_animated_schedule(const std::string& name);
+	void addAnimatedMovement(variant attr, variant options);
+	void setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement);
+	void cancelAnimatedSchedule(const std::string& name);
 
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
-	void static_process(level& lvl);
+	void staticProcess(level& lvl);
 
 	virtual void control(const level& lvl);
 	variant getValue(const std::string& key) const;
 	variant getValue_by_slot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
-	void setValue_by_slot(int slot, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
-	virtual variant get_player_value_by_slot(int slot) const;
-	virtual void set_player_value_by_slot(int slot, const variant& value);
+	virtual variant getPlayerValueBySlot(int slot) const;
+	virtual void setPlayerValueBySlot(int slot, const variant& value);
 
 	//function which indicates if the object wants to walk up or down stairs.
 	//-1 = up stairs, 0 = no change, 1 = down stairs
-	virtual int walk_up_or_down_stairs() const { return 0; }
+	virtual int walkUpOrDownStairs() const { return 0; }
 
-	bool is_underwater() const {
+	bool isUnderwater() const {
 		return was_underwater_;
 	}
 
-	const std::pair<int,int>* parallax_scale_millis() const { return parallax_scale_millis_.get(); }
+	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
 	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
-	STANDING_STATUS is_standing(const level& lvl, collision_info* info=NULL) const;
+	STANDING_STATUS isStanding(const level& lvl, collision_info* info=NULL) const;
 
-	void set_parent(entity_ptr e, const std::string& pivot_point);
+	void setParent(EntityPtr e, const std::string& pivot_point);
 
-	virtual int parent_depth(bool* has_human_parent=NULL, int cur_depth=0) const;
+	virtual int parentDepth(bool* has_human_parent=NULL, int cur_depth=0) const;
 
 	virtual bool editorForceStanding() const;
 
 	virtual game_logic::ConstFormulaCallableDefinitionPtr getDefinition() const;
 
-	entity_ptr standing_on() const { return standing_on_; }
-	virtual void add_to_level();
+	EntityPtr standingOn() const { return standing_on_; }
+	virtual void addToLevel();
 
-	virtual rect platform_rect_at(int xpos) const;
-	virtual int platform_slope_at(int xpos) const;
+	virtual rect platformRectAt(int xpos) const;
+	virtual int platformSlopeAt(int xpos) const;
 
 	virtual bool isSolidPlatform() const;
 
-	virtual void being_removed();
-	virtual void being_added();
+	virtual void beingRemoved();
+	virtual void beingAdded();
 
 	//set up an animation schedule. values.size() should be a multiple of
 	//slots.size().
 
 private:
-	void init_properties();
+	void initProperties();
 	custom_object& operator=(const custom_object& o);
 	struct Accessor;
 
 	struct gc_object_reference {
-		entity* owner;
-		entity* target;
+		Entity* owner;
+		Entity* target;
 		variant* from_variant;
-		entity_ptr* from_ptr;
+		EntityPtr* from_ptr;
 		std::shared_ptr<game_logic::FormulaCallableVisitor> visitor;
 	};
 
-	void extract_gc_object_references(std::vector<gc_object_reference>& v);
-	void extract_gc_object_references(entity_ptr& e, std::vector<gc_object_reference>& v);
-	void extract_gc_object_references(variant& var, std::vector<gc_object_reference>& v);
-	static void restore_gc_object_reference(gc_object_reference ref);
+	void extractGcObjectReferences(std::vector<gc_object_reference>& v);
+	void extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v);
+	void extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v);
+	static void restoreGcObjectReference(gc_object_reference ref);
 
-	bool move_to_standing_internal(level& lvl, int max_displace);
+	bool moveToStandingInternal(level& lvl, int max_displace);
 
-	void process_frame();
+	void processFrame();
 
-	const_solid_info_ptr calculate_solid() const;
-	const_solid_info_ptr calculate_platform() const;
+	const_solid_info_ptr calculateSolid() const;
+	const_solid_info_ptr calculatePlatform() const;
 
-	virtual void get_inputs(std::vector<game_logic::formula_input>* inputs) const;
+	virtual void getInputs(std::vector<game_logic::formula_input>* inputs) const;
 
-	int slope_standing_on(int range) const;
+	int slopeStandingOn(int range) const;
 
 	int previous_y_;
 
@@ -374,15 +371,15 @@ private:
 	decimal rotate_y_;
 	decimal rotate_z_;
 
-    void set_mid_x(int new_mid_x) {
-        const int current_x = x() + current_frame().width()/2;
+    void setMidX(int new_mid_x) {
+        const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
-		set_pos(new_mid_x - xdiff, y());
+		setPos(new_mid_x - xdiff, y());
     }
-    void set_mid_y(int new_mid_y) {
-		const int current_y = y() + current_frame().height()/2;
+    void setMidY(int new_mid_y) {
+		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
-		set_pos(x(), new_mid_y - ydiff);
+		setPos(x(), new_mid_y - ydiff);
     }
     
 	std::unique_ptr<std::pair<int, int> > parallax_scale_millis_;
@@ -417,7 +414,7 @@ private:
 
 	friend class active_property_scope;
 
-	entity_ptr last_hit_by_;
+	EntityPtr last_hit_by_;
 	int last_hit_by_anim_;
 	int current_animation_id_;
 
@@ -431,7 +428,7 @@ private:
 
 	std::vector<game_logic::const_formula_ptr> event_handlers_;
 
-	entity_ptr standing_on_;
+	EntityPtr standing_on_;
 
 	int standing_on_prev_x_, standing_on_prev_y_;
 
@@ -450,7 +447,7 @@ private:
 	typedef std::shared_ptr<custom_object_text> custom_object_text_ptr;
 	custom_object_text_ptr text_;
 
-	entity_ptr driver_;
+	EntityPtr driver_;
 
 	std::shared_ptr<BlurInfo> blur_;
 
@@ -491,7 +488,7 @@ private:
 	//storage of the parent object while we're loading the object still.
 	variant parent_loading_;
 
-	entity_ptr parent_;
+	EntityPtr parent_;
 	std::string parent_pivot_;
 	int parent_prev_x_, parent_prev_y_;
 	bool parent_prev_facing_;

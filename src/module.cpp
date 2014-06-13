@@ -328,7 +328,7 @@ void load(const std::string& mod_file_name, bool initial)
 	if(sys::file_exists(constants_path)) {
 		const std::string contents = sys::read_file(constants_path);
 		variant v = json::parse(contents, json::JSON_NO_PREPROCESSOR);
-		new game_logic::constants_loader(v);
+		new game_logic::ConstantsLoader(v);
 	}
 
 	if(v.is_map()) {

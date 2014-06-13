@@ -95,7 +95,7 @@ void queue_draw_from_tilesheet(graphics::blit_queue& q, const graphics::texture&
 		return;
 	}
 
-	q.setTexture(t.get_id());
+	q.setTexture(t.getId());
 
 	const int width = std::max<int>(t.width(), t.height());
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
@@ -134,7 +134,7 @@ bool is_tile_opaque(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(t.is_alpha(u, v)) {
+			if(t.isAlpha(u, v)) {
 				return false;
 			}
 		}
@@ -204,7 +204,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				top = y;
 				break;
 			}
@@ -215,7 +215,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				bottom = y + 1;
 				break;
 			}
@@ -226,7 +226,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				left = x;
 				break;
 			}
@@ -237,7 +237,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				right = x + 1;
 				break;
 			}

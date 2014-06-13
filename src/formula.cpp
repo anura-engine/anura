@@ -87,7 +87,7 @@ namespace game_logic
 		std::cerr << "ERROR: cannot set key '" << key << "' on object\n";
 	}
 
-	void FormulaCallable::setValue_by_slot(int slot, const variant& /*value*/)
+	void FormulaCallable::setValueBySlot(int slot, const variant& /*value*/)
 	{
 		std::cerr << "ERROR: cannot set slot '" << slot << "' on object\n";
 	}
@@ -122,7 +122,7 @@ namespace game_logic
 		} else {
 			command_callable* callable = v.try_convert<command_callable>();
 			if(callable) {
-				callable->run_command(*this);
+				callable->runCommand(*this);
 			} else {
 				ASSERT_LOG(false, "EXPECTED EXECUTABLE COMMAND OBJECT, INSTEAD FOUND: " << v.to_debug_string() << "\nFORMULA INFO: " << output_formula_error_info() << "\n");
 			}
@@ -143,7 +143,7 @@ namespace game_logic
 	{
 	}
 
-	void command_callable::run_command(FormulaCallable& context) const
+	void command_callable::runCommand(FormulaCallable& context) const
 	{
 		if(expr_) {
 			try {
@@ -157,7 +157,7 @@ namespace game_logic
 		}
 	}
 
-	void command_callable::set_expression(const formula_expression* expr) {
+	void command_callable::setExpression(const formula_expression* expr) {
 		expr_ = expr;
 		expr_holder_.reset(expr);
 	}
@@ -219,10 +219,10 @@ namespace game_logic
 		return result.build();
 	}
 	
-	void MapFormulaCallable::get_inputs(std::vector<formula_input>* inputs) const
+	void MapFormulaCallable::getInputs(std::vector<formula_input>* inputs) const
 	{
 		if(fallback_) {
-			fallback_->get_inputs(inputs);
+			fallback_->getInputs(inputs);
 		}
 		for(std::map<std::string,variant>::const_iterator i = values_.begin(); i != values_.end(); ++i) {
 			inputs->push_back(formula_input(i->first, FORMULA_READ_WRITE));
@@ -276,7 +276,7 @@ private:
 		
 class function_list_expression : public formula_expression {
 public:
-	explicit function_list_expression(function_symbol_table *symbols)
+	explicit function_list_expression(FunctionSymbolTable *symbols)
 	: formula_expression("_function_list"), symbols_(symbols)
 	{}
 
@@ -295,7 +295,7 @@ private:
 		return variant(&res);
 	}
 	
-	function_symbol_table* symbols_;
+	FunctionSymbolTable* symbols_;
 };
 
 class list_expression : public formula_expression {
@@ -588,7 +588,7 @@ public:
 	explicit list_callable(const variant& list) : FormulaCallable(false), list_(list)
 	{}
 	
-	void get_inputs(std::vector<formula_input>* inputs) const {
+	void getInputs(std::vector<formula_input>* inputs) const {
 		inputs->push_back(formula_input("size", FORMULA_READ_WRITE));
 		inputs->push_back(formula_input("empty", FORMULA_READ_WRITE));
 		inputs->push_back(formula_input("first", FORMULA_READ_WRITE));
@@ -906,7 +906,7 @@ private:
 
 class generic_lambda_function_expression : public formula_expression {
 public:
-	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, std::shared_ptr<recursive_function_symbol_table> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
+	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, std::shared_ptr<recursive_FunctionSymbolTable> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
 	{
 		type_info_->arg_names = args;
 		type_info_->default_args = default_args;
@@ -945,7 +945,7 @@ private:
 
 	VariantFunctionTypeInfoPtr type_info_;
 
-	std::shared_ptr<recursive_function_symbol_table> symbol_table_;
+	std::shared_ptr<recursive_FunctionSymbolTable> symbol_table_;
 	std::vector<std::string> generic_types_;
 	std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory_;
 };
@@ -2188,7 +2188,7 @@ private:
 
 class string_expression : public formula_expression {
 public:
-	explicit string_expression(std::string str, bool translate = false, function_symbol_table* symbols = 0) : formula_expression("_string")
+	explicit string_expression(std::string str, bool translate = false, FunctionSymbolTable* symbols = 0) : formula_expression("_string")
 	{
 		if (!_verbatim_string_expressions) {
 			const formula::strict_check_scope strict_checking(false);
@@ -2318,7 +2318,7 @@ int operator_precedence(const token& t)
 	return precedence_map[std::string(t.begin,t.end)];
 }
 
-expression_ptr parse_expression(const variant& formula_str, const token* i1, const token* i2, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+expression_ptr parse_expression(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
 
 void parse_function_args(variant formula_str, const token* &i1, const token* i2,
 						 std::vector<std::string>* res,
@@ -2411,7 +2411,7 @@ void parse_function_args(variant formula_str, const token* &i1, const token* i2,
 void parse_args(const variant& formula_str, const std::string* function_name,
                 const token* i1, const token* i2,
 				std::vector<expression_ptr>* res,
-				function_symbol_table* symbols,
+				FunctionSymbolTable* symbols,
 				ConstFormulaCallableDefinitionPtr definition,
 				bool* can_optimize)
 {
@@ -2520,7 +2520,7 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 
 void parse_set_args(const variant& formula_str, const token* i1, const token* i2,
 					std::vector<expression_ptr>* res,
-					function_symbol_table* symbols,
+					FunctionSymbolTable* symbols,
 				    ConstFormulaCallableDefinitionPtr callable_def)
 {
 	int parens = 0;
@@ -2561,7 +2561,7 @@ void parse_set_args(const variant& formula_str, const token* i1, const token* i2
 
 void parse_where_clauses(const variant& formula_str,
                          const token* i1, const token * i2,
-						 expr_table_ptr res, function_symbol_table* symbols,
+						 expr_table_ptr res, FunctionSymbolTable* symbols,
 						 ConstFormulaCallableDefinitionPtr callable_def) {
 	int parens = 0;
 	const token *original_i1_cached = i1;
@@ -2605,7 +2605,7 @@ void parse_where_clauses(const variant& formula_str,
 	}
 }
 
-expression_ptr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+expression_ptr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
 
 namespace {
 	
@@ -2651,7 +2651,7 @@ struct static_context {
 	~static_context() { --in_static_context; }
 };
 
-expression_ptr optimize_expression(expression_ptr result, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool reduce_to_static)
+expression_ptr optimize_expression(expression_ptr result, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool reduce_to_static)
 {
 	expression_ptr original = result;
 
@@ -2731,7 +2731,7 @@ expression_ptr optimize_expression(expression_ptr result, function_symbol_table*
 	return result;
 }
 
-expression_ptr parse_expression(const variant& formula_str, const token* i1, const token* i2, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
+expression_ptr parse_expression(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
 {
 	bool optimize = true;
 	expression_ptr result(parse_expression_internal(formula_str, i1, i2, symbols, callable_def, &optimize));
@@ -2748,7 +2748,7 @@ expression_ptr parse_expression(const variant& formula_str, const token* i1, con
 
 //only returns a value in the case of a lambda function, otherwise
 //returns NULL.
-expression_ptr parse_function_def(const variant& formula_str, const token*& i1, const token* i2, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def)
+expression_ptr parse_function_def(const variant& formula_str, const token*& i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def)
 {
 	assert(i1->type == TOKEN_KEYWORD && std::string(i1->begin, i1->end) == "def");
 
@@ -2818,7 +2818,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		function_var.set_debug_info(info);
 	}
 	
-	std::shared_ptr<recursive_function_symbol_table> recursive_symbols(new recursive_function_symbol_table(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
+	std::shared_ptr<recursive_FunctionSymbolTable> recursive_symbols(new recursive_FunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
 
 	//create a definition of the callable representing
 	//function arguments.
@@ -2901,7 +2901,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 	return expression_ptr();
 }
 
-expression_ptr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
+expression_ptr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
 {
 	ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
 	
@@ -3369,7 +3369,7 @@ formula::strict_check_scope::~strict_check_scope()
 	g_strict_formula_checking_warnings = old_warning_value;
 }
 
-formula_ptr formula::create_optional_formula(const variant& val, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callableDefinition, FORMULA_LANGUAGE lang)
+formula_ptr formula::create_optional_formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition, FORMULA_LANGUAGE lang)
 {
 	if(val.is_null() || val.is_string() && val.as_string().empty()) {
 		return formula_ptr();
@@ -3382,11 +3382,11 @@ formula_ptr formula::create_optional_formula(const variant& val, function_symbol
 	}
 }
 
-formula::formula(const variant& val, function_symbol_table* symbols, ConstFormulaCallableDefinitionPtr callableDefinition) : str_(val), def_(callableDefinition)
+formula::formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition) : str_(val), def_(callableDefinition)
 {
 	using namespace formula_tokenizer;
 
-	function_symbol_table symbol_table;
+	FunctionSymbolTable symbol_table;
 	if(!symbols) {
 		symbols = &symbol_table;
 	}
@@ -3751,7 +3751,7 @@ UNIT_TEST(formula_in) {
 }
 
 UNIT_TEST(formula_fn) {
-	function_symbol_table symbols;
+	FunctionSymbolTable symbols;
 	CHECK(formula(variant("def f(g) g(5) + 1; def fn(n) n*n; f(fn)"), &symbols).execute() == variant(26), "test failed");
 }
 
@@ -3804,7 +3804,7 @@ UNIT_TEST(map_to_maps_FAILS) {
 }
 
 UNIT_TEST(formula_test_recursion) {
-	function_symbol_table symbols;
+	FunctionSymbolTable symbols;
 	formula f(variant(
 "def silly_add(a, c)"
 "base b <= 0: a "

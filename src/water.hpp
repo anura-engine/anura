@@ -24,12 +24,14 @@
 
 #include <vector>
 
+#include "Color.hpp"
+
 #include "entity_fwd.hpp"
 #include "formula_fwd.hpp"
 #include "kre/Geometry.hpp"
 #include "variant.hpp"
 
-class level;
+class Level;
 
 class water
 {
@@ -39,22 +41,21 @@ public:
 
 	variant write() const;
 
-	//color must point to an array of 4 bytes.
-	void add_rect(const rect& r, const unsigned char* color, variant obj);
+	void add_rect(const rect& r, const KRE::Color& color, variant obj);
 	void delete_rect(const rect& r);
 
 	bool draw(int x, int y, int w, int h) const;
 	int zorder() const { return zorder_; }
 
-	void begin_drawing();
-	void end_drawing() const;
-	void process(const level& lvl);
+	void beginDrawing();
+	void endDrawing() const;
+	void process(const Level& lvl);
 
-	void get_current(const entity& e, int* velocity_x, int* velocity_y) const;
+	void getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const;
 
-	bool is_underwater(const rect& r, rect* water_area=NULL, variant* obj=NULL) const;
+	bool isUnderwater(const rect& r, rect* water_area=NULL, variant* obj=NULL) const;
 
-	void add_wave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length);
+	void addWave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length);
 
 	struct wave {
 		double xpos;
@@ -89,11 +90,11 @@ private:
 
 	std::vector<area> areas_;
 
-	static void init_area_surface_segments(const level& lvl, area& a);
+	static void init_area_surface_segments(const Level& lvl, area& a);
 
-	bool draw_area(const area& a, int x, int y, int w, int h) const;
+	bool drawArea(const area& a, int x, int y, int w, int h) const;
 
-	bool draw_area(const area& a, int begin_layer, int end_layer, int x, int y, int w, int h) const;
+	bool drawArea(const area& a, int begin_layer, int end_layer, int x, int y, int w, int h) const;
 
 	int zorder_;
 

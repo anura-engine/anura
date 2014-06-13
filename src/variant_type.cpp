@@ -284,7 +284,7 @@ public:
 		}
 
 		if(v.is_callable()) {
-			return v.as_callable()->is_command();
+			return v.as_callable()->isCommand();
 		}
 
 		if(v.is_list()) {
@@ -1762,7 +1762,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		}
 
 		return variant_type::get_map(key_type, value_type);
-	} else if(value.is_callable() && value.as_callable()->is_command()) {
+	} else if(value.is_callable() && value.as_callable()->isCommand()) {
 		return variant_type::get_commands();
 	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->query_id())) {
 		return variant_type::get_builtin(value.as_callable()->query_id());

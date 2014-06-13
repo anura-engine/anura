@@ -66,7 +66,7 @@ public:
 	//play a sound. 'object' is just the address of the object playing the
 	//sound, useful if the sound is later cancelled.
 	void play_sound(const void* object=NULL) const;
-	bool is_alpha(int x, int y, int time, bool face_right) const;
+	bool isAlpha(int x, int y, int time, bool face_right) const;
 
 	//Low level interface to alpha information.
 	std::vector<bool>::const_iterator getAlpha_itor(int x, int y, int time, bool face_right) const;
@@ -101,12 +101,12 @@ public:
 	int platform_y() const { return static_cast<int>(platform_rect_.y()*scale_); }
 	int platform_w() const { return static_cast<int>(platform_rect_.w()*scale_); }
 	bool has_platform() const { return platform_rect_.w() > 0; }
-	int feet_x() const { return static_cast<int>(feet_x_*scale_); }
-	int feet_y() const { return static_cast<int>(feet_y_*scale_); }
+	int getFeetX() const { return static_cast<int>(feet_x_*scale_); }
+	int getFeetY() const { return static_cast<int>(feet_y_*scale_); }
 	int accel_x() const { return accel_x_; }
 	int accel_y() const { return accel_y_; }
-	int velocity_x() const { return velocity_x_; }
-	int velocity_y() const { return velocity_y_; }
+	int velocityX() const { return velocity_x_; }
+	int velocityY() const { return velocity_y_; }
 	int width() const { return static_cast<int>(img_rect_.w()*scale_); }
 	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;

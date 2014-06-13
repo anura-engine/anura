@@ -55,8 +55,8 @@ UTILITY(render_level)
 		
 		boost::intrusive_ptr<level> lvl(new level(file));
 		lvl->set_editor();
-		lvl->finish_loading();
-		lvl->set_as_current_level();
+		lvl->finishLoading();
+		lvl->setAsCurrentLevel();
 
 		const int lvl_width = lvl->boundaries().w();
 		const int lvl_height = lvl->boundaries().h();

@@ -34,8 +34,6 @@
 #include "kre/Material.hpp"
 #include "variant.hpp"
 
-class level;
-
 //class which represents the background to a level.
 class background
 {

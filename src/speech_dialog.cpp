@@ -256,14 +256,14 @@ void speech_dialog::draw() const
 	int speaker_xpos = INT_MAX;
 	int speaker_ypos = INT_MAX;
 
-	const_entity_ptr speaker = left_side_speaking_ ? left_ : right_;
+	ConstEntityPtr speaker = left_side_speaking_ ? left_ : right_;
 	if(speaker) {
 		const screen_position& pos = last_draw_position();
 		const int screen_x = pos.x/100 + (graphics::screen_width()/2)*(-1.0/pos.zoom + 1.0);
 		const int screen_y = pos.y/100 + (graphics::screen_height()/2)*(-1.0/pos.zoom + 1.0);
 
-		speaker_xpos = (speaker->feet_x() - screen_x)*pos.zoom - 36;
-		speaker_ypos = (speaker->feet_y() - screen_y)*pos.zoom - 10;
+		speaker_xpos = (speaker->getFeetX() - screen_x)*pos.zoom - 36;
+		speaker_ypos = (speaker->getFeetY() - screen_y)*pos.zoom - 10;
 	}
 
 	if(pane_area_.w() == 0) {
@@ -399,14 +399,14 @@ void speech_dialog::draw() const
 	}
 }
 
-void speech_dialog::set_speaker_and_flip_side(const_entity_ptr e)
+void speech_dialog::set_speaker_and_flip_side(ConstEntityPtr e)
 {
 	//std::cerr << "set speaker\n";
 	left_side_speaking_ = !left_side_speaking_;
 	set_speaker(e, left_side_speaking_);
 }
 
-void speech_dialog::set_speaker(const_entity_ptr e, bool left_side)
+void speech_dialog::set_speaker(ConstEntityPtr e, bool left_side)
 {
 	if(left_side) {
 		left_ = e;

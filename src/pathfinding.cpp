@@ -187,12 +187,12 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 					if(neighbour_node->on_closed_list() || neighbour_node->on_open_list()) {
 						if(g_cost < neighbour_node->G()) {
 							neighbour_node->G(g_cost);
-							neighbour_node->set_parent(current);
+							neighbour_node->setParent(current);
 						}
 					} else {
 						// not on open or closed lists.
 						a = e;
-						neighbour_node->set_parent(current);
+						neighbour_node->setParent(current);
 						neighbour_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal());
 						neighbour_node->set_on_open_list(true);
 						open_list.push(neighbour_node);
@@ -284,7 +284,7 @@ bool graph_node_cmp(const typename graph_node<N,T>::graph_node_ptr& lhs,
 	return lhs->F() < rhs->F();
 }
 
-variant a_star_find_path(level_ptr lvl,
+variant a_star_find_path(LevelPtr lvl,
 	const point& src_pt1, 
 	const point& dst_pt1, 
 	game_logic::expression_ptr heuristic, 
@@ -380,7 +380,7 @@ variant a_star_find_path(level_ptr lvl,
 							a = point_as_variant_list(p);
 							b = point_as_variant_list(dst);
 							graph_node<point, double>::graph_node_ptr new_node = std::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(p));
-							new_node->set_parent(current);
+							new_node->setParent(current);
 							new_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal().as_float());
 							new_node->set_on_open_list(true);
 							node_list[p] = new_node;
@@ -389,7 +389,7 @@ variant a_star_find_path(level_ptr lvl,
 							// on closed list.
 							if(g_cost < neighbour_node->second->G()) {
 								neighbour_node->second->G(g_cost);
-								neighbour_node->second->set_parent(current);
+								neighbour_node->second->setParent(current);
 							}
 						} else {
 							PathfindingException<point> path_error = {
@@ -439,11 +439,11 @@ variant path_cost_search(weighted_directed_graph_ptr wg,
 				if(neighbour_node->on_closed_list() || neighbour_node->on_open_list()) {
 					if(g_cost < neighbour_node->G()) {
 						neighbour_node->G(g_cost);
-						neighbour_node->set_parent(current);
+						neighbour_node->setParent(current);
 					}
 				} else {
 					// not on open or closed lists.
-					neighbour_node->set_parent(current);
+					neighbour_node->setParent(current);
 					neighbour_node->set_cost(g_cost, decimal::from_int(0));
 					if(g_cost > max_cost) {
 						neighbour_node->set_on_closed_list(true);

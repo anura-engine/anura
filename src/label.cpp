@@ -303,7 +303,7 @@ namespace gui
 				gg->swallow_clicks();
 				gg->set_show_background(true);
 				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){if(n != 0){d->remove_widget(gg); d->init();}});
+				gg->register_selection_callback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
 				d->addWidget(gg, d->x()-mx-100, my);

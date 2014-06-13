@@ -128,7 +128,7 @@ public:
 	bool calculate_uses_alpha_channel() const;
 	bool calculate_is_solid_color(KRE::Color& col) const;
 
-	bool calculate_draw_area();
+	bool calculate_drawArea();
 
 	const KRE::Color* solid_color() const { return solid_color_.get(); }
 

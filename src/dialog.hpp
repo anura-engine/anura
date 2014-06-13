@@ -46,7 +46,7 @@ namespace gui
 		Dialog& addWidget(WidgetPtr w, MOVE_DIRECTION dir=MOVE_DOWN);
 		Dialog& addWidget(WidgetPtr w, int x, int y,
 						MOVE_DIRECTION dir=MOVE_DOWN);
-		void remove_widget(WidgetPtr w);
+		void removeWidget(WidgetPtr w);
 		void replace_widget(WidgetPtr w_old, WidgetPtr w_new);
 		void clear();
 		int padding() const { return padding_; }

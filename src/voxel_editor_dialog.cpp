@@ -214,7 +214,7 @@ namespace editor_dialogs
 
 	void voxel_editor_dialog::close_context_menu(int index)
 	{
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -314,7 +314,7 @@ namespace editor_dialogs
 		mousex -= x();
 		mousey -= y();
 
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset(grid);
 		addWidget(context_menu_, mousex, mousey);
 	}

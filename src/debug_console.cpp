@@ -477,7 +477,7 @@ namespace debug_console
 		text_editor_->setFocus(true);
 		entity* ent = dynamic_cast<entity*>(focus_.get());
 		if(ent) {
-			addMessage(formatter() << "Selected object: " << ent->debug_description());
+			addMessage(formatter() << "Selected object: " << ent->getDebugDescription());
 		}
 	}
 }

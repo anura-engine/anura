@@ -156,7 +156,7 @@ namespace gui
 				gg->swallow_clicks();
 				gg->set_show_background(true);
 				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){remove_widget(gg); init();}});
+				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){removeWidget(gg); init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
 				addWidget(gg, x()-mx-100, my);

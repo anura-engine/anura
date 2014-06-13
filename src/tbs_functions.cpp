@@ -23,7 +23,7 @@ using namespace game_logic;
 namespace {
 const std::string FunctionModule = "tbs";
 
-class tbs_function_symbol_table : public function_symbol_table
+class tbs_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
 	expression_ptr create_function(
@@ -32,7 +32,7 @@ public:
 							   ConstFormulaCallableDefinitionPtr callable_def) const;
 };
 
-expression_ptr tbs_function_symbol_table::create_function(
+expression_ptr tbs_FunctionSymbolTable::create_function(
                            const std::string& fn,
                            const std::vector<expression_ptr>& args,
 						   ConstFormulaCallableDefinitionPtr callable_def) const
@@ -43,14 +43,14 @@ expression_ptr tbs_function_symbol_table::create_function(
 		return expression_ptr(i->second->create(args));
 	}
 
-	return function_symbol_table::create_function(fn, args, callable_def);
+	return FunctionSymbolTable::create_function(fn, args, callable_def);
 }
 
 }
 
-game_logic::function_symbol_table& get_tbs_functions_symbol_table()
+game_logic::FunctionSymbolTable& get_tbs_functions_symbol_table()
 {
-	static tbs_function_symbol_table table;
+	static tbs_FunctionSymbolTable table;
 	return table;
 }
 

@@ -92,10 +92,10 @@ public:
 	int xres() const { return xres_; }
 	int yres() const { return yres_; }
 
-	void set_pos(int x, int y);
+	void setPos(int x, int y);
 
-	typedef boost::intrusive_ptr<level> level_ptr;
-	void set_playing_level(level_ptr lvl);
+	typedef boost::intrusive_ptr<level> LevelPtr;
+	void set_playing_level(LevelPtr lvl);
 	void toggle_active_level();
 
 	void load_stats();
@@ -124,11 +124,11 @@ public:
 		std::string category;
 		std::string help;
 
-		const entity_ptr& preview_object() const;
+		const EntityPtr& preview_object() const;
 		const std::shared_ptr<const frame>& preview_frame() const;
 	
 	private:
-		mutable entity_ptr preview_object_;
+		mutable EntityPtr preview_object_;
 		mutable std::shared_ptr<const frame> preview_frame_;
 		variant frame_info_;
 	};
@@ -177,7 +177,7 @@ public:
 	level& get_level() { return *lvl_; }
 	const level& get_level() const { return *lvl_; }
 
-	std::vector<level_ptr> get_level_list() const { return levels_; }
+	std::vector<LevelPtr> get_level_list() const { return levels_; }
 
 	void save_level();
 	void save_level_as(const std::string& filename);
@@ -203,12 +203,12 @@ public:
 	//make the selected objects part of a group
 	void group_selection();
 
-	bool face_right() const { return face_right_; }
+	bool isFacingRight() const { return face_right_; }
 
 	//switch the current facing.
 	void toggle_facing();
 
-	void toggle_upside_down();
+	void toggle_isUpsideDown();
 
 	void duplicate_selected_objects();
 
@@ -252,7 +252,7 @@ public:
 
 	int level_state_id() const { return level_changed_; }
 
-	void mutate_object_value(level_ptr lvl, entity_ptr e, const std::string& value, variant new_value);
+	void mutate_object_value(LevelPtr lvl, EntityPtr e, const std::string& value, variant new_value);
 
 	bool done() const { return done_; }
 
@@ -289,32 +289,32 @@ private:
 
 	void setSelection(const tile_selection& s);
 
-	void execute_shift_object(entity_ptr e, int dx, int dy);
+	void execute_shift_object(EntityPtr e, int dx, int dy);
 
-	void move_object(level_ptr lvl, entity_ptr e, int delta_x, int delta_y);
+	void move_object(LevelPtr lvl, EntityPtr e, int delta_x, int delta_y);
 
 	bool editing_objects() const { return tool_ == TOOL_ADD_OBJECT || tool_ == TOOL_SELECT_OBJECT; }
 	bool editing_tiles() const { return !editing_objects(); }
 
 	//functions which add and remove an object from a level, as well as
 	//sending the object appropriate events.
-	void add_multi_object_to_level(level_ptr lvl, entity_ptr e);
-	void add_object_to_level(level_ptr lvl, entity_ptr e);
-	void remove_object_from_level(level_ptr lvl, entity_ptr e);
+	void add_multi_object_to_level(LevelPtr lvl, EntityPtr e);
+	void add_object_to_level(LevelPtr lvl, EntityPtr e);
+	void remove_object_from_level(LevelPtr lvl, EntityPtr e);
 
 	void object_instance_modified_in_editor(const std::string& label);
 
-	void generate_mutate_commands(entity_ptr e, const std::string& attr, variant new_value,
+	void generate_mutate_commands(EntityPtr e, const std::string& attr, variant new_value,
 	                              std::vector<std::function<void()> >& undo,
 	                              std::vector<std::function<void()> >& redo);
 
-	void generate_remove_commands(entity_ptr e, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo);
+	void generate_remove_commands(EntityPtr e, std::vector<std::function<void()> >& undo, std::vector<std::function<void()> >& redo);
 
 	void pencil_motion(int prev_x, int prev_y, int x, int y, bool left_button);
 
-	level_ptr lvl_;
+	LevelPtr lvl_;
 
-	std::vector<level_ptr> levels_;
+	std::vector<LevelPtr> levels_;
 	int zoom_;
 	int xpos_, ypos_;
 	int anchorx_, anchory_;
@@ -389,7 +389,7 @@ private:
 	//and the top value is popped.
 	std::stack<int> undo_commands_groups_;
 
-	std::vector<entity_ptr> ghost_objects_;
+	std::vector<EntityPtr> ghost_objects_;
 
 	int level_changed_;
 	int selected_segment_;

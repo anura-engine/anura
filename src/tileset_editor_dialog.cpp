@@ -108,7 +108,7 @@ void tileset_editor_dialog::select_category(const std::string& category)
 
 void tileset_editor_dialog::close_context_menu(int index)
 {
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset();
 }
 
@@ -150,7 +150,7 @@ void tileset_editor_dialog::show_category_menu()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }

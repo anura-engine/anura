@@ -59,7 +59,7 @@ public:
 	const voxel_object* prototype() const { return prototype_.get(); }
 
 private:
-	game_logic::function_symbol_table* getFunctionSymbols() const;
+	game_logic::FunctionSymbolTable* getFunctionSymbols() const;
 
 	std::string id_;
 	int num_base_slots_;

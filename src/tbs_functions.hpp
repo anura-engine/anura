@@ -19,6 +19,6 @@
 
 #include "formula_function.hpp"
 
-game_logic::function_symbol_table& get_tbs_functions_symbol_table();
+game_logic::FunctionSymbolTable& get_tbs_functions_symbol_table();
 
 #endif

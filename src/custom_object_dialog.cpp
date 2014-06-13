@@ -541,7 +541,7 @@ void custom_object_dialog::change_prototype()
 	}
 	grid->register_selection_callback(std::bind(&custom_object_dialog::execute_change_prototype, this, choices, _1));
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
 	addWidget(context_menu_, mousex, mousey);
 }
@@ -559,7 +559,7 @@ void custom_object_dialog::remove_prototype(const std::string& s)
 void custom_object_dialog::execute_change_prototype(const std::vector<std::string>& choices, size_t index)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 	if(index >= choices.size()) {
