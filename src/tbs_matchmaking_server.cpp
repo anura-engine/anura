@@ -519,6 +519,7 @@ public:
 					itor->second.last_contact = time_ms_;
 					if(itor->second.game_details != "" && !itor->second.game_pending) {
 						send_msg(socket, "text/json", itor->second.game_details, "");
+						itor->second.game_details = "";
 					} else {
 						if(itor->second.current_socket) {
 							disconnect(itor->second.current_socket);
@@ -551,6 +552,7 @@ public:
 						if(itor->second.current_socket) {
 							send_msg(itor->second.current_socket, "text/json", itor->second.game_details, "");
 							itor->second.current_socket.reset();
+							itor->second.game_details = "";
 						}
 					}
 				}
