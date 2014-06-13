@@ -552,7 +552,6 @@ public:
 						if(itor->second.current_socket) {
 							send_msg(itor->second.current_socket, "text/json", itor->second.game_details, "");
 							itor->second.current_socket.reset();
-							itor->second.game_details = "";
 						}
 					}
 				}
