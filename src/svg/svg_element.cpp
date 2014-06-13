@@ -99,13 +99,21 @@ namespace KRE
 		{
 		}
 
+		struct context_save
+		{
+			context_save(cairo_t* ctx) : ctx_(ctx) {cairo_save(ctx);}
+			~context_save() {cairo_restore(ctx_);}
+			cairo_t* ctx_;
+		};
+
 		void element::render(render_context& ctx) const 
 		{
 			// XXX Need to do some normalising of co-ordinates to the viewBox.
 			// XXX need to translate if x/y specified and use width/height from svg element if
 			// overriding -- well map them to ctx.width()/ctx.height()
 			// XXX also need to process preserveAspectRatio value.
-			cairo_save(ctx.cairo());
+			
+			context_save cs(ctx.cairo());
 			// disabled this as cairo scales stuff correctly. Still need to alter at some
 			// point in the future.
 			//if(view_box_.w() != 0 && view_box_.h() != 0) {
@@ -116,8 +124,8 @@ namespace KRE
 			}
 			attribute_manager pp1(pp(), ctx);
 			attribute_manager ca1(ca(), ctx);
+			attribute_manager va1(va(), ctx);
 			handle_render(ctx);
-			cairo_restore(ctx.cairo());
 		}
 
 		void element::resolve()
