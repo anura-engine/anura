@@ -386,6 +386,28 @@ public:
 			} else if(request_type == "get_server_info") {
 				static const std::string server_info = get_server_info_file().write_json();
 				send_msg(socket, "text/json", server_info, "");
+			} else if(request_type == "cancel_matchmake") {
+				const int session_id = doc["session_id"].as_int(request_session_id);
+
+				if(sessions_.count(session_id) == 0) {
+					variant_builder response;
+					response.add("type", "matchmaking_fail");
+					response.add("reason", "bad_session");
+					response.add("message", "Invalid session ID");
+					send_response(socket, response.build());
+					return;
+				}
+
+				SessionInfo& info = sessions_[session_id];
+				info.session_id = session_id;
+				info.last_contact = time_ms_;
+				info.queued_for_game = false;
+
+				std::map<variant,variant> response;
+				response[variant("type")] = variant("matchmaking_cancelled");
+				response[variant("session_id")] = variant(session_id);
+				send_msg(socket, "text/json", variant(&response).write_json(), "");
+
 			} else if(request_type == "matchmake") {
 				const int session_id = doc["session_id"].as_int(request_session_id);
 
