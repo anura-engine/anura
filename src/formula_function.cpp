@@ -383,13 +383,17 @@ END_FUNCTION_DEF(overload)
 
 FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
 	
-	formula_callable* addr = args()[0]->evaluate(variables).convert_to<formula_callable>();
+	variant v = args()[0]->evaluate(variables);
+	formula_callable* addr = NULL;
+	if(!v.is_null()) {
+		addr = v.convert_to<formula_callable>();
+	}
 	char buf[128];
 	sprintf(buf, "%p", addr);
 	return variant(std::string(buf));
 
 FUNCTION_ARGS_DEF
-	ARG_TYPE("object");
+	ARG_TYPE("object|null");
 	RETURN_TYPE("string");
 END_FUNCTION_DEF(addr)
 
