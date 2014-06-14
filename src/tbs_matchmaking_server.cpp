@@ -175,12 +175,12 @@ public:
 		std::string heartbeat_msg = heartbeat_message.build().write_json();
 
 		for(auto& p : sessions_) {
-			if(p.second.current_socket && time_ms_ - p.second.last_contact >= 5000) {
+			if(p.second.current_socket && time_ms_ - p.second.last_contact >= 20000) {
 
 				send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
 				p.second.last_contact = time_ms_;
 				p.second.current_socket = socket_ptr();
-			} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
+			} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 30000) {
 				p.second.session_id = 0;
 			}
 		}
