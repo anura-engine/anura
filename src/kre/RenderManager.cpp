@@ -22,7 +22,6 @@
 */
 
 #include "../asserts.hpp"
-#include "logger.hpp"
 #include "RenderManager.hpp"
 #include "RenderQueue.hpp"
 
@@ -55,13 +54,13 @@ namespace KRE
 	void RenderManager::Render(const WindowManagerPtr& wm) const
 	{
 		for(auto& q : render_queues_) {
-			q.second->preRender();
+			q.second->preRender(wm);
 		}
 		for(auto& q : render_queues_) {
-			q.second->Render(wm);
+			q.second->render(wm);
 		}
 		for(auto& q : render_queues_) {
-			q.second->postRender();
+			q.second->postRender(wm);
 		}
 	}
 
@@ -69,6 +68,6 @@ namespace KRE
 	{
 		auto it = render_queues_.find(q);
 		ASSERT_LOG(it != render_queues_.end(), "Tried to add renderable to non-existant render queue at priority: " << q);
-		it->second->Enqueue(order, r);
+		it->second->enQueue(order, r);
 	}
 }

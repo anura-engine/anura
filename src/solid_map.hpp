@@ -34,9 +34,9 @@ class texture;
 class solid_map
 {
 public:
-	static void create_object_solid_maps(variant node, std::vector<const_solid_map_ptr>& v);
-	static void create_object_platform_maps(const rect& area, std::vector<const_solid_map_ptr>& v);
-	static solid_map_ptr create_from_texture(const graphics::texture& t, const rect& area);
+	static void create_object_solid_maps(variant node, std::vector<ConstSolidMapPtr>& v);
+	static void create_object_platform_maps(const rect& area, std::vector<ConstSolidMapPtr>& v);
+	static SolidMapPtr create_from_texture(const graphics::texture& t, const rect& area);
 
 	const std::string& id() const { return id_; }
 	const rect& area() const { return area_; }
@@ -50,7 +50,7 @@ public:
 	const std::vector<point>& bottom() const { return bottom_; }
 	const std::vector<point>& all() const { return all_; }
 private:
-	static const_solid_map_ptr create_object_solid_map_from_solid_node(variant node);
+	static ConstSolidMapPtr create_object_solid_map_from_solid_node(variant node);
 
 	solid_map() {}
 
@@ -72,17 +72,17 @@ private:
 class solid_info
 {
 public:
-	static const_solid_info_ptr create(variant node);
-	static const_solid_info_ptr create_platform(variant node);
-	static const_solid_info_ptr create_platform(const rect& area);
-	static const_solid_info_ptr create_from_texture(const graphics::texture& t, const rect& area);
-	const std::vector<const_solid_map_ptr>& solid() const { return solid_; }
+	static ConstSolidInfoPtr create(variant node);
+	static ConstSolidInfoPtr create_platform(variant node);
+	static ConstSolidInfoPtr create_platform(const rect& area);
+	static ConstSolidInfoPtr create_from_texture(const graphics::texture& t, const rect& area);
+	const std::vector<ConstSolidMapPtr>& solid() const { return solid_; }
 	const rect& area() const { return area_; }
 	bool solid_at(int x, int y, const std::string** area_id=NULL) const;
 private:
-	static const_solid_info_ptr create_from_solid_maps(const std::vector<const_solid_map_ptr>& v);
+	static ConstSolidInfoPtr create_from_solid_maps(const std::vector<ConstSolidMapPtr>& v);
 
-	std::vector<const_solid_map_ptr> solid_;
+	std::vector<ConstSolidMapPtr> solid_;
 	rect area_;
 };
 

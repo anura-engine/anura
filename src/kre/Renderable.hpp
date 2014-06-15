@@ -83,7 +83,8 @@ namespace KRE
 		const std::vector<AttributeSetPtr>& GetAttributeSet() const { return attributes_; }
 		//const std::vector<UniformSetPtr>& GetUniformSet() const { return uniforms_; }
 
-		virtual void preRender() {}
+		virtual void preRender(const WindowManagerPtr& wm) {}
+		virtual void postRender(const WindowManagerPtr& wm) {}
 
 		// Called just before rendering this item, after shaders and other variables
 		// have been set-up

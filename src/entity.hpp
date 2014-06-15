@@ -42,7 +42,7 @@
 #include "variant.hpp"
 
 class character;
-class frame;
+class Frame;
 class Level;
 class pc_character;
 class PlayerInfo;
@@ -311,8 +311,8 @@ public:
 	void setMouseoverTriggerCycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
 
 protected:
-	virtual const_solid_info_ptr calculateSolid() const = 0;
-	virtual const_solid_info_ptr calculatePlatform() const = 0;
+	virtual ConstSolidInfoPtr calculateSolid() const = 0;
+	virtual ConstSolidInfoPtr calculatePlatform() const = 0;
 	void calculateSolidRect();
 
 	bool controlStatus(controls::CONTROL_ITEM ctrl) const { return controls_[ctrl]; }
@@ -379,8 +379,8 @@ private:
 
 	//caches of commonly queried rects.
 	rect solid_rect_, frame_rect_, platform_rect_, prev_platform_rect_;
-	const_solid_info_ptr solid_;
-	const_solid_info_ptr platform_;
+	ConstSolidInfoPtr solid_;
+	ConstSolidInfoPtr platform_;
 
 	int platform_motion_x_;
 

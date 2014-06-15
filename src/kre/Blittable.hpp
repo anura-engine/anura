@@ -26,6 +26,7 @@
 #include "Geometry.hpp"
 #include "Material.hpp"
 #include "SceneObject.hpp"
+#include "SceneUtil.hpp"
 
 namespace KRE
 {
@@ -53,7 +54,7 @@ namespace KRE
 		void SetDrawRect(const Geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
-		virtual void preRender() override;
+		virtual void preRender(const KRE::WindowManagerPtr& wm) override;
 
 		Centre GetCentre() const { return centre_; }
 		void SetCentre(Centre c);

@@ -49,10 +49,10 @@ namespace KRE
 		renderables_.erase(it);
 	}
 
-	void RenderQueue::preRender()
+	void RenderQueue::preRender(const WindowManagerPtr& wm)
 	{
 		for(auto r : renderables_) {
-			r.second->preRender();
+			r.second->preRender(wm);
 		}
 	}
 
@@ -63,8 +63,11 @@ namespace KRE
 		}
 	}
 
-	void RenderQueue::postRender()
+	void RenderQueue::postRender(const WindowManagerPtr& wm)
 	{
+		for(auto r : renderables_) {
+			r.second->postRender(wm);
+		}
 		renderables_.clear();
 	}
 }

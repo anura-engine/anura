@@ -22,7 +22,7 @@
 */
 
 #include "../asserts.hpp"
-#include "ParticleSystem.hpp"
+#include "particle_system.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "ParticleSystemParameters.hpp"
@@ -480,24 +480,24 @@ namespace KRE
 							technique_->add_affector(a);
 						}
 					} else if(emits_type_ == EMITS_TECHNIQUE) {
-						size_t cnt = calculate_particles_to_emit(t, technique_->technique_quota(), technique_->get_particle_system()->active_techniques().size());
+						size_t cnt = calculate_particles_to_emit(t, technique_->technique_quota(), technique_->get_ParticleSystem()->active_techniques().size());
 						for(int n = 0; n != cnt; ++n) {
 							technique_ptr tq = parent_container()->clone_technique(emits_name_);
 							tq->emitted_by = this;
 							init_particle(*tq, t);
 							internal_create(*tq, t);
 							memcpy(&tq->current, &tq->initial, sizeof(tq->current));
-							technique_->get_particle_system()->add_technique(tq);
+							technique_->get_ParticleSystem()->add_technique(tq);
 						}
 					} else if(emits_type_ == EMITS_SYSTEM) {
-						size_t cnt = calculate_particles_to_emit(t, technique_->system_quota(), parent_container()->active_particle_systems().size());
+						size_t cnt = calculate_particles_to_emit(t, technique_->system_quota(), parent_container()->active_ParticleSystems().size());
 						for(int n = 0; n != cnt; ++n) {
-							particle_system_ptr ps = parent_container()->clone_particle_system(emits_name_);
+							ParticleSystemPtr ps = parent_container()->clone_ParticleSystem(emits_name_);
 							ps->emitted_by = this;
 							init_particle(*ps, t);
 							internal_create(*ps, t);
 							memcpy(&ps->current, &ps->initial, sizeof(ps->current));
-							parent_container()->add_particle_system(ps.get());
+							parent_container()->addParticleSystem(ps.get());
 						}
 					} else {
 						ASSERT_LOG(false, "PSYSTEM2: unknown emits_type: " << emits_type_);
@@ -524,7 +524,7 @@ namespace KRE
 			if(force_emission_) {
 				if(!force_emission_processed_) {
 					// Single shot of all particles at once.
-					cnt = emission_rate_->getValue(technique_->get_particle_system()->elapsed_time());
+					cnt = emission_rate_->getValue(technique_->get_ParticleSystem()->elapsed_time());
 					force_emission_processed_ = true;
 				}
 			} else {
@@ -560,9 +560,9 @@ namespace KRE
 			init_physics_parameters(p.current);
 			p.initial.position = current.position;
 			p.initial.color = get_color();
-			p.initial.time_to_live = time_to_live_->getValue(technique_->get_particle_system()->elapsed_time());
-			p.initial.velocity = velocity_->getValue(technique_->get_particle_system()->elapsed_time());
-			p.initial.mass = mass_->getValue(technique_->get_particle_system()->elapsed_time());
+			p.initial.time_to_live = time_to_live_->getValue(technique_->get_ParticleSystem()->elapsed_time());
+			p.initial.velocity = velocity_->getValue(technique_->get_ParticleSystem()->elapsed_time());
+			p.initial.mass = mass_->getValue(technique_->get_ParticleSystem()->elapsed_time());
 			p.initial.dimensions = technique_->default_dimensions();
 			if(orientation_range_) {
 				p.initial.orientation = glm::slerp(orientation_range_->first, orientation_range_->second, get_random_float(0.0f,1.0f));
@@ -585,8 +585,8 @@ namespace KRE
 		float emitter::generate_angle() const
 		{
 			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
-			ASSERT_LOG(technique_->get_particle_system() != NULL, "PSYSTEM2: technique_->get_parent_system() is null");
-			float angle = angle_->getValue(technique_->get_particle_system()->elapsed_time());
+			ASSERT_LOG(technique_->get_ParticleSystem() != NULL, "PSYSTEM2: technique_->get_parent_system() is null");
+			float angle = angle_->getValue(technique_->get_ParticleSystem()->elapsed_time());
 			if(angle_->type() == parameter::PARAMETER_FIXED) {
 				return get_random_float() * angle;
 			}

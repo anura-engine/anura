@@ -24,7 +24,7 @@
 #include <cmath>
 #include <chrono>
 
-#include "ParticleSystem.hpp"
+#include "particle_system.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemParameters.hpp"
 #include "ParticleSystemEmitters.hpp"
@@ -42,7 +42,7 @@ namespace KRE
 
 		namespace 
 		{
-			SceneNodeRegistrar<ParticleSystemContainer> psc_register("particle_system_container");
+			SceneNodeRegistrar<ParticleSystemContainer> psc_register("ParticleSystem_container");
 
 			std::default_random_engine& get_rng_engine() 
 			{
@@ -144,7 +144,7 @@ namespace KRE
 			return q * v;
 		}
 
-		particle_system::particle_system(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node)
+		ParticleSystem::ParticleSystem(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node)
 			: emit_object(parent, node), 
 			SceneNode(sg),
 			elapsed_time_(0.0f), 
@@ -204,13 +204,13 @@ namespace KRE
 			}
 		}
 
-		particle_system::~particle_system()
+		ParticleSystem::~ParticleSystem()
 		{
 		}
 
-		particle_system::particle_system(const particle_system& ps)
+		ParticleSystem::ParticleSystem(const ParticleSystem& ps)
 			: emit_object(ps),
-			SceneNode(const_cast<particle_system&>(ps).ParentGraph()),
+			SceneNode(const_cast<ParticleSystem&>(ps).ParentGraph()),
 			elapsed_time_(0),
 			scale_velocity_(ps.scale_velocity_),
 			scale_time_(ps.scale_time_),
@@ -224,35 +224,35 @@ namespace KRE
 			}
 		}
 
-		void particle_system::NodeAttached()
+		void ParticleSystem::NodeAttached()
 		{
 			for(auto t : active_techniques_) {
 				AttachObject(t);
 			}
 		}
 
-		void particle_system::update(float dt)
+		void ParticleSystem::update(float dt)
 		{
 			for(auto t : active_techniques_) {
 				t->process(dt);
 			}
 		}
 
-		void particle_system::handleProcess(float t)
+		void ParticleSystem::handleProcess(float t)
 		{
 			update(t);
 			elapsed_time_ += t;
 		}
 
-		void particle_system::add_technique(technique_ptr tq)
+		void ParticleSystem::add_technique(technique_ptr tq)
 		{
 			active_techniques_.push_back(tq);
 			tq->setParent(this);
 		}
 
-		particle_system* particle_system::factory(ParticleSystemContainer* parent, const variant& node)
+		ParticleSystem* ParticleSystem::factory(ParticleSystemContainer* parent, const variant& node)
 		{
-			return new particle_system(parent->ParentGraph(), parent, node);
+			return new ParticleSystem(parent->ParentGraph(), parent, node);
 		}
 
 		technique::technique(ParticleSystemContainer* parent, const variant& node)
@@ -350,7 +350,7 @@ namespace KRE
 			system_quota_(tq.system_quota_),
 			lod_index_(tq.lod_index_),
 			velocity_(tq.velocity_),
-			particle_system_(tq.particle_system_)
+			ParticleSystem_(tq.ParticleSystem_)
 		{
 			if(tq.Material()) {
 				SetMaterial(tq.Material());
@@ -374,10 +374,10 @@ namespace KRE
 			Init();
 		}
 
-		void technique::setParent(particle_system* parent)
+		void technique::setParent(ParticleSystem* parent)
 		{
 			ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
-			particle_system_ = parent;
+			ParticleSystem_ = parent;
 		}
 
 		void technique::add_emitter(emitter_ptr e) 
@@ -510,35 +510,35 @@ namespace KRE
 			if(node.has_key("systems")) {
 				if(node["systems"].is_list()) {
 					for(size_t n = 0; n != node["systems"].num_elements(); ++n) {
-						add_particle_system(particle_system::factory(this, node["systems"][n]));
+						addParticleSystem(ParticleSystem::factory(this, node["systems"][n]));
 					}
 				} else if(node["systems"].is_map()) {
-					add_particle_system(particle_system::factory(this, node["systems"]));
+					addParticleSystem(ParticleSystem::factory(this, node["systems"]));
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: unrecognised type for 'systems' attribute must be list or map");
 				}
 			} else {
-				add_particle_system(particle_system::factory(this, node));
+				addParticleSystem(ParticleSystem::factory(this, node));
 			}
 
 			if(node.has_key("active_systems")) {
 				if(node["active_systems"].is_list()) {
 					for(size_t n = 0; n != node["active_systems"].num_elements(); ++n) {
-						active_particle_systems_.push_back(clone_particle_system(node["active_systems"][n].as_string()));
+						active_ParticleSystems_.push_back(clone_ParticleSystem(node["active_systems"][n].as_string()));
 					}
 				} else if(node["active_systems"].is_string()) {
-					active_particle_systems_.push_back(clone_particle_system(node["active_systems"].as_string()));
+					active_ParticleSystems_.push_back(clone_ParticleSystem(node["active_systems"].as_string()));
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: 'active_systems' attribute must be a string or list of strings.");
 				}
 			} else {
-				active_particle_systems_ = clone_particle_systems();
+				active_ParticleSystems_ = clone_ParticleSystems();
 			}
 		}
 
 		void ParticleSystemContainer::NodeAttached()
 		{
-			for(auto& a : active_particle_systems_) {
+			for(auto& a : active_ParticleSystems_) {
 				AttachNode(a);
 				a->SetNodeName("ps_node_" + a->name());
 			}
@@ -551,14 +551,14 @@ namespace KRE
 		void ParticleSystemContainer::Process(double current_time)
 		{
 			//LOG_DEBUG("ParticleSystemContainer::Process: " << current_time);
-			for(auto ps : active_particle_systems_) {
+			for(auto ps : active_ParticleSystems_) {
 				ps->process(process_step_time);
 			}
 		}
 
-		void ParticleSystemContainer::add_particle_system(particle_system* obj)
+		void ParticleSystemContainer::addParticleSystem(ParticleSystem* obj)
 		{
-			particle_systems_.push_back(particle_system_ptr(obj));
+			ParticleSystems_.push_back(ParticleSystemPtr(obj));
 		}
 
 		void ParticleSystemContainer::add_technique(technique* obj)
@@ -576,20 +576,20 @@ namespace KRE
 			affectors_.push_back(affector_ptr(obj));
 		}
 
-		void ParticleSystemContainer::activate_particle_system(const std::string& name)
+		void ParticleSystemContainer::activate_ParticleSystem(const std::string& name)
 		{
-			active_particle_systems_.push_back(clone_particle_system(name));
+			active_ParticleSystems_.push_back(clone_ParticleSystem(name));
 		}
 
-		particle_system_ptr ParticleSystemContainer::clone_particle_system(const std::string& name)
+		ParticleSystemPtr ParticleSystemContainer::clone_ParticleSystem(const std::string& name)
 		{
-			for(auto ps : particle_systems_) {
+			for(auto ps : ParticleSystems_) {
 				if(ps->name() == name) {
-					return particle_system_ptr(new particle_system(*ps));
+					return ParticleSystemPtr(new ParticleSystem(*ps));
 				}
 			}
-			ASSERT_LOG(false, "PSYSTEM2: particle_system not found: " << name);
-			return particle_system_ptr();
+			ASSERT_LOG(false, "PSYSTEM2: ParticleSystem not found: " << name);
+			return ParticleSystemPtr();
 		}
 
 		technique_ptr ParticleSystemContainer::clone_technique(const std::string& name)
@@ -625,11 +625,11 @@ namespace KRE
 			return affector_ptr();
 		}
 
-		std::vector<particle_system_ptr> ParticleSystemContainer::clone_particle_systems()
+		std::vector<ParticleSystemPtr> ParticleSystemContainer::clone_ParticleSystems()
 		{
-			std::vector<particle_system_ptr> res;
-			for(auto ps : particle_systems_) {
-				res.push_back(particle_system_ptr(new particle_system(*ps)));
+			std::vector<ParticleSystemPtr> res;
+			for(auto ps : ParticleSystems_) {
+				res.push_back(ParticleSystemPtr(new ParticleSystem(*ps)));
 			}
 			return res;
 		}

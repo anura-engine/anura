@@ -1,18 +1,24 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 #include <assert.h>
 
@@ -24,40 +30,34 @@
 
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
-#include "foreach.hpp"
 #include "frame.hpp"
 #include "level.hpp"
 #include "module.hpp"
 #include "object_events.hpp"
 #include "obj_reader.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 #include "sound.hpp"
 #include "string_utils.hpp"
-#include "surface_cache.hpp"
 #include "surface_formula.hpp"
 #include "surface_palette.hpp"
-#include "texture.hpp"
 #include "variant_utils.hpp"
 
 PREF_FLOAT(global_frame_scale, 2.0, "Sets the global frame scales for all frames in all animations");
 
-namespace {
-
-	std::set<frame*>& palette_frames() {
-		static std::set<frame*>* instance = new std::set<frame*>;
-		return *instance;
-}
-
-unsigned int current_palette_mask = 0;
-}
-
-void frame::build_patterns(variant obj_variant)
+namespace 
 {
-	using namespace graphics;
+	std::set<Frame*>& palette_frames() {
+		static std::set<Frame*>* instance = new std::set<Frame*>;
+		return *instance;
+	}
 
+	static unsigned int current_palette_mask = 0;
+}
+
+void Frame::buildPatterns(variant obj_variant)
+{
 	if(!obj_variant["animation"].is_list()) {
 		return;
 	}
@@ -85,19 +85,19 @@ void frame::build_patterns(variant obj_variant)
 
 		std::sort(files.begin(), files.end());
 
-		std::vector<surface> surfaces;
+		std::vector<KRE::SurfacePtr> surfaces;
 		for(const std::string& fname : files) {
-			surfaces.push_back(surface_cache::get_no_cache(dir + "/" + fname));
+			surfaces.emplace_back(KRE::Surface::Create(dir + "/" + fname, true));
 
-			ASSERT_LOG(surfaces.back()->w == surfaces.front()->w &&
-			           surfaces.back()->h == surfaces.front()->h,
+			ASSERT_LOG(surfaces.back()->width() == surfaces.front()->width() &&
+			           surfaces.back()->height() == surfaces.front()->height(),
 					   pattern.debug_location() << ": All images in image pattern must be the same size: " << fname);
-			ASSERT_LOG(surfaces.back()->w <= 2048 && surfaces.back()->h <= 2048, "Image too large: " << fname);
+			ASSERT_LOG(surfaces.back()->width() <= 2048 && surfaces.back()->height() <= 2048, "Image too large: " << fname);
 		}
 
 		int frames_per_row = files.size();
-		int total_width = surfaces.front()->w*surfaces.size();
-		int total_height = surfaces.front()->h;
+		int total_width = surfaces.front()->width()*surfaces.size();
+		int total_height = surfaces.front()->height();
 		while(total_width > 2048) {
 			frames_per_row = frames_per_row/2 + frames_per_row%2;
 			total_width /= 2;
@@ -139,7 +139,7 @@ void frame::build_patterns(variant obj_variant)
 	}
 }
 
-frame::frame(variant node)
+Frame::frame(variant node)
    : id_(node["id"].as_string()),
      variant_id_(id_),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
@@ -305,9 +305,9 @@ frame::frame(variant node)
 
 		ASSERT_EQ(frames_.size(), nframes_);
 
-		build_alpha_from_frame_info();
+		buildAlphaFromFrameInfo();
 	} else {
-		build_alpha();
+		buildAlpha();
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
@@ -318,7 +318,7 @@ frame::frame(variant node)
 	if(palettes_recognized_.empty() == false) {
 		palette_frames().insert(this);
 		if(current_palette_mask) {
-			set_palettes(current_palette_mask);
+			setPalettes(current_palette_mask);
 		}
 	}
 
@@ -450,7 +450,7 @@ frame::frame(variant node)
 			for(int t = 0; t < nframes_; ++t) {
 				const frame_info* info = NULL;
 				GLfloat rect[4];
-				get_rect_in_texture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
+				getRectInTexture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
 				rect[0] = texture_.translate_coord_x(rect[0]);
 				rect[1] = texture_.translate_coord_y(rect[1]);
 				rect[2] = texture_.translate_coord_x(rect[2]);
@@ -482,14 +482,14 @@ frame::frame(variant node)
 	}
 }
 
-frame::~frame()
+Frame::~frame()
 {
 	if(palettes_recognized_.empty() == false) {
 		palette_frames().erase(this);
 	}
 }
 
-void frame::set_palettes(unsigned int palettes)
+void Frame::setPalettes(unsigned int palettes)
 {
 	if(current_palette_ >= 0 && (1 << current_palette_) == palettes) {
 		return;
@@ -516,20 +516,20 @@ void frame::set_palettes(unsigned int palettes)
 	current_palette_ = npalette;
 }
 
-void frame::setColor_palette(unsigned int palettes)
+void Frame::setColorPalette(unsigned int palettes)
 {
 	current_palette_mask = palettes;
 	for(std::set<frame*>::iterator i = palette_frames().begin(); i != palette_frames().end(); ++i) {
-		(*i)->set_palettes(palettes);
+		(*i)->setPalettes(palettes);
 	}
 }
 
-void frame::set_image_as_solid()
+void Frame::setImageAsSolid()
 {
 	solid_ = solid_info::create_from_texture(texture_, img_rect_);
 }
 
-void frame::play_sound(const void* object) const
+void Frame::playSound(const void* object) const
 {
 	if (sounds_.empty() == false){
 		int randomNum = rand()%sounds_.size();  //like a 1d-size die
@@ -539,7 +539,7 @@ void frame::play_sound(const void* object) const
 	}
 }
 
-void frame::build_alpha_from_frame_info()
+void Frame::buildAlphaFromFrameInfo()
 {
 	if(!texture_.valid()) {
 		return;
@@ -572,7 +572,7 @@ void frame::build_alpha_from_frame_info()
 	}
 }
 
-void frame::build_alpha()
+void Frame::buildAlpha()
 {
 	frames_.resize(nframes_);
 	if(!texture_.valid()) {
@@ -692,9 +692,9 @@ void frame::build_alpha()
 	}
 }
 
-bool frame::isAlpha(int x, int y, int time, bool face_right) const
+bool Frame::isAlpha(int x, int y, int time, bool face_right) const
 {
-	std::vector<bool>::const_iterator itor = getAlpha_itor(x, y, time, face_right);
+	std::vector<bool>::const_iterator itor = getAlphaItor(x, y, time, face_right);
 	if(itor == alpha_.end()) {
 		return true;
 	} else {
@@ -702,7 +702,7 @@ bool frame::isAlpha(int x, int y, int time, bool face_right) const
 	}
 }
 
-std::vector<bool>::const_iterator frame::getAlpha_itor(int x, int y, int time, bool face_right) const
+std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bool face_right) const
 {
 	if(alpha_.empty()) {
 		return alpha_.end();
@@ -719,7 +719,7 @@ std::vector<bool>::const_iterator frame::getAlpha_itor(int x, int y, int time, b
 	x /= scale_;
 	y /= scale_;
 
-	const int nframe = frame_number(time);
+	const int nframe = frameNumber(time);
 	x += nframe*img_rect_.w();
 	
 	const int index = y*img_rect_.w()*nframes_ + x;
@@ -727,11 +727,11 @@ std::vector<bool>::const_iterator frame::getAlpha_itor(int x, int y, int time, b
 	return alpha_.begin() + index;
 }
 
-void frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right, bool upside_down, int time) const
+void Frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right, bool upside_down, int time) const
 {
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += (info->y_adjust)*scale_;
@@ -752,11 +752,11 @@ void frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool 
 	blit.add(x + w, y + h, rect[2], rect[3]);
 }
 
-void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate) const
+void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
@@ -776,11 +776,11 @@ void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfl
 	graphics::flush_blit_texture();
 }
 
-void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const
+void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const
 {
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
@@ -806,11 +806,11 @@ void frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfl
 	graphics::flush_blit_texture();
 }
 
-void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_down, int time, GLfloat rotate) const
+void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 
 	const int x_adjust = area.x();
 	const int y_adjust = area.y();
@@ -831,9 +831,9 @@ void frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 }
 
 #if defined(USE_ISOMAP)
-void frame::draw3(int time, GLint va, GLint tc) const
+void Frame::draw3(int time, GLint va, GLint tc) const
 {
-	const int nframe = frame_number(time);
+	const int nframe = frameNumber(time);
 
 	glEnable(GL_DEPTH_TEST);
 	if(back_face_culling_) {
@@ -896,13 +896,13 @@ void frame::draw3(int time, GLint va, GLint tc) const
 }
 #endif
 
-void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
+void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
 	texture_.set_as_currentTexture();
 
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 	rect[0] = texture_.translate_coord_x(rect[0]);
 	rect[1] = texture_.translate_coord_y(rect[1]);
 	rect[2] = texture_.translate_coord_x(rect[2]);
@@ -1021,13 +1021,13 @@ void frame::draw_custom(int x, int y, const std::vector<CustomPoint>& points, co
 
 PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
-void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
+void Frame::drawCustom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
 {
 	texture_.set_as_currentTexture();
 
 	const frame_info* info = NULL;
 	GLfloat rect[4];
-	get_rect_in_texture(time, &rect[0], info);
+	getRectInTexture(time, &rect[0], info);
 	rect[0] = texture_.translate_coord_x(rect[0]);
 	rect[1] = texture_.translate_coord_y(rect[1]);
 	rect[2] = texture_.translate_coord_x(rect[2]);
@@ -1105,13 +1105,13 @@ void frame::draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int 
 	glPopMatrix();
 }
 
-void frame::get_rect_in_texture(int time, GLfloat* output_rect, const frame_info*& info) const
+void Frame::getRectInTexture(int time, GLfloat* output_rect, const frame_info*& info) const
 {
 	//picks out a single frame to draw from a whole animation, based on time
-	get_rect_in_frame_number(frame_number(time), output_rect, info);
+	getRectInFrameNumber(frameNumber(time), output_rect, info);
 }
 
-void frame::get_rect_in_frame_number(int nframe, GLfloat* output_rect, const frame_info*& info_result) const
+void Frame::getRectInFrameNumber(int nframe, GLfloat* output_rect, const frame_info*& info_result) const
 {
 	const frame_info& info = frames_[nframe];
 	info_result = &info;
@@ -1138,21 +1138,21 @@ void frame::get_rect_in_frame_number(int nframe, GLfloat* output_rect, const fra
 	info.draw_rect_init = true;
 }
 
-int frame::duration() const
+int Frame::duration() const
 {
 	return (nframes_ + (reverse_frame_ ? nframes_ : 0))*frame_time_;
 }
 
-bool frame::hit(int time_in_frame) const
+bool Frame::hit(int time_in_frame) const
 {
 	if(hit_frames_.empty()) {
 		return false;
 	}
 
-	return std::find(hit_frames_.begin(), hit_frames_.end(), frame_number(time_in_frame)) != hit_frames_.end();
+	return std::find(hit_frames_.begin(), hit_frames_.end(), frameNumber(time_in_frame)) != hit_frames_.end();
 }
 
-int frame::frame_number(int time) const
+int Frame::frameNumber(int time) const
 {
 	if(play_backwards_){
 		int frame_num = nframes_-1;
@@ -1193,7 +1193,7 @@ int frame::frame_number(int time) const
 	}
 }
 
-const std::string* frame::get_event(int time_in_frame) const
+const std::string* Frame::getEvent(int time_in_frame) const
 {
 	if(event_frames_.empty()) {
 		return NULL;
@@ -1207,7 +1207,7 @@ const std::string* frame::get_event(int time_in_frame) const
 	return &event_names_[i - event_frames_.begin()];
 }
 
-point frame::pivot(const std::string& name, int time_in_frame) const
+point Frame::pivot(const std::string& name, int time_in_frame) const
 {
 	if(time_in_frame < 0) {
 		return point(getFeetX(),getFeetY());
@@ -1228,7 +1228,7 @@ point frame::pivot(const std::string& name, int time_in_frame) const
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
 }
 
-variant frame::getValue(const std::string& key) const
+variant Frame::getValue(const std::string& key) const
 {
 	return variant();
 }

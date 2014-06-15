@@ -110,7 +110,7 @@ namespace KRE
 		virtual void Init(size_t width, size_t height) = 0;
 		virtual void PrintDeviceInfo() = 0;
 
-		virtual void Render(const RenderablePtr& r) = 0;
+		virtual void render(const Renderable* r) const = 0;
 
 		static TexturePtr CreateTexture(const std::string& filename, 
 			Texture::Type type=Texture::Type::TEXTURE_2D, 

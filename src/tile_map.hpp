@@ -79,7 +79,7 @@ public:
 #endif
 
 private:
-	void build_patterns();
+	void buildPatterns();
 	const std::vector<const tile_pattern*>& get_patterns() const;
 
 	int variation(int x, int y) const;

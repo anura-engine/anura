@@ -162,7 +162,7 @@ namespace KRE
 			display_->Init(width_, height_);
 			display_->PrintDeviceInfo();
 			display_->Clear(DisplayDevice::DISPLAY_CLEAR_ALL);
-			Swap();
+			swap();
 		}
 
 		void destroyWindow() override {
@@ -239,9 +239,9 @@ namespace KRE
 			SDL_SetWindowTitle(window_.get(), title.c_str());		
 		}
 
-		virtual void render(const RenderablePtr& r) override {
+		virtual void render(const Renderable* r) const override {
 			ASSERT_LOG(display_ != NULL, "No display to render to.");
-			display_->Render(r);
+			display_->render(r);
 		}
 	protected:
 	private:

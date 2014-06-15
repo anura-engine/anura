@@ -27,7 +27,6 @@
 #include <random>
 #include <sstream>
 #include <glm/glm.hpp>
-#include <glm/gtc/type_precision.hpp>
 
 #include "../asserts.hpp"
 #include "AttributeSet.hpp"
@@ -35,18 +34,10 @@
 #include "ParticleSystemFwd.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
+#include "SceneUtil.hpp"
 
 namespace KRE
 {
-	struct vertex_texture_color
-	{
-		vertex_texture_color(const glm::vec3& v, const glm::vec2& t, const glm::u8vec4& c)
-			: vertex(v), texcoord(t), color(c) {}
-		glm::vec3 vertex;
-		glm::vec2 texcoord;
-		glm::u8vec4 color;
-	};
-
 	namespace Particles
 	{
 		typedef glm::detail::tvec4<unsigned char> color_vector;
@@ -126,9 +117,9 @@ namespace KRE
 			size_t technique_quota() const { return technique_quota_; }
 			size_t affector_quota() const { return affector_quota_; }
 			glm::vec3 default_dimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
-			particle_system* get_particle_system() { return particle_system_; }
+			ParticleSystem* get_ParticleSystem() { return ParticleSystem_; }
 			emit_object_ptr get_object(const std::string& name);
-			void setParent(particle_system* parent);
+			void setParent(ParticleSystem* parent);
 			// Direct access here for *speed* reasons.
 			std::vector<particle>& active_particles() { return active_particles_; }
 			std::vector<emitter_ptr>& active_emitters() { return instanced_emitters_; }
@@ -165,7 +156,7 @@ namespace KRE
 			std::vector<affector_ptr> instanced_affectors_;
 
 			// Parent particle system
-			particle_system* particle_system_;
+			ParticleSystem* ParticleSystem_;
 
 			// List of particles currently active.
 			std::vector<particle> active_particles_;
@@ -173,19 +164,19 @@ namespace KRE
 			technique();
 		};
 
-		class particle_system : public emit_object, public SceneNode
+		class ParticleSystem : public emit_object, public SceneNode
 		{
 		public:
-			explicit particle_system(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node);
-			particle_system(const particle_system& ps);
-			virtual ~particle_system();
+			explicit ParticleSystem(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node);
+			ParticleSystem(const ParticleSystem& ps);
+			virtual ~ParticleSystem();
 
 			float elapsed_time() const { return elapsed_time_; }
 			float scale_velocity() const { return scale_velocity_; }
 			float scale_time() const { return scale_time_; }
 			const glm::vec3& scale_dimensions() const { return scale_dimensions_; }
 
-			static particle_system* factory(ParticleSystemContainer* parent, const variant& node);
+			static ParticleSystem* factory(ParticleSystemContainer* parent, const variant& node);
 
 			void add_technique(technique_ptr tq);
 			std::vector<technique_ptr>& active_techniques() { return active_techniques_; }
@@ -206,7 +197,7 @@ namespace KRE
 			// List of how to create and manipulate particles.
 			std::vector<technique_ptr> active_techniques_;
 
-			particle_system();
+			ParticleSystem();
 		};
 
 		class ParticleSystemContainer : public SceneNode
@@ -215,20 +206,20 @@ namespace KRE
 			explicit ParticleSystemContainer(SceneGraph* sg, const variant& node);
 			virtual ~ParticleSystemContainer();
 
-			void activate_particle_system(const std::string& name);
-			std::vector<particle_system_ptr>& active_particle_systems() { return active_particle_systems_; }
+			void activate_ParticleSystem(const std::string& name);
+			std::vector<ParticleSystemPtr>& active_ParticleSystems() { return active_ParticleSystems_; }
 
-			particle_system_ptr clone_particle_system(const std::string& name);
+			ParticleSystemPtr clone_ParticleSystem(const std::string& name);
 			technique_ptr clone_technique(const std::string& name);
 			emitter_ptr clone_emitter(const std::string& name);
 			affector_ptr clone_affector(const std::string& name);
 
-			void add_particle_system(particle_system* obj);
+			void addParticleSystem(ParticleSystem* obj);
 			void add_technique(technique* obj);
 			void add_emitter(emitter* obj);
 			void add_affector(affector* obj);
 
-			std::vector<particle_system_ptr> clone_particle_systems();
+			std::vector<ParticleSystemPtr> clone_ParticleSystems();
 			std::vector<technique_ptr> clone_techniques();
 			std::vector<emitter_ptr> clone_emitters();
 			std::vector<affector_ptr> clone_affectors();
@@ -236,9 +227,9 @@ namespace KRE
 			void Process(double current_time) override;
 			void NodeAttached() override;
 		private:
-			std::vector<particle_system_ptr> active_particle_systems_;
+			std::vector<ParticleSystemPtr> active_ParticleSystems_;
 
-			std::vector<particle_system_ptr> particle_systems_;
+			std::vector<ParticleSystemPtr> ParticleSystems_;
 			std::vector<technique_ptr> techniques_;
 			std::vector<emitter_ptr> emitters_;
 			std::vector<affector_ptr> affectors_;

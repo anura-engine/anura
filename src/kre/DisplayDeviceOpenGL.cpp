@@ -224,7 +224,7 @@ namespace KRE
 		return DisplayDeviceDataPtr(dd);
 	}
 
-	void DisplayDeviceOpenGL::Render(const RenderablePtr& r)
+	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
 		auto dd = std::dynamic_pointer_cast<OpenGLDeviceData>(r->GetDisplayData());
 		ASSERT_LOG(dd != NULL, "Failed to cast display data to the type required(OpenGLDeviceData).");

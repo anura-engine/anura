@@ -171,7 +171,7 @@ public:
 		return variant();
 	}
 
-	const_particle_system_factory_ptr getParticleSystemFactory(const std::string& id) const;
+	ConstParticleSystemFactoryPtr getParticleSystemFactory(const std::string& id) const;
 
 	bool isVehicle() const { return is_vehicle_; }
 
@@ -225,8 +225,8 @@ public:
 
 	game_logic::FunctionSymbolTable* getFunctionSymbols() const;
 
-	const const_solid_info_ptr& solid() const { return solid_; }
-	const const_solid_info_ptr& platform() const { return platform_; }
+	const ConstSolidInfoPtr& solid() const { return solid_; }
+	const ConstSolidInfoPtr& platform() const { return platform_; }
 
 	const std::vector<int>& getPlatformOffsets() const { return platform_offsets_; }
 
@@ -320,7 +320,7 @@ private:
 
 	variant node_;
 
-	std::map<std::string, const_particle_system_factory_ptr> particle_factories_;
+	std::map<std::string, ConstParticleSystemFactoryPtr> particle_factories_;
 
 	bool is_vehicle_;
 	int passenger_x_, passenger_y_;
@@ -353,7 +353,7 @@ private:
 	
 	bool serializable_;
 
-	const_solid_info_ptr solid_, platform_;
+	ConstSolidInfoPtr solid_, platform_;
 
 	bool solid_platform_;
 

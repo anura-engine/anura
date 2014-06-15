@@ -488,7 +488,7 @@ tile_map::tile_map(variant node)
 		}
 	}
 
-	build_patterns();
+	buildPatterns();
 
 	}
 }
@@ -510,7 +510,7 @@ tile_map::~tile_map()
 #endif
 }
 
-void tile_map::build_patterns()
+void tile_map::buildPatterns()
 {
 	std::vector<const boost::regex*> all_regexes;
 
@@ -608,7 +608,7 @@ void tile_map::build_patterns()
 const std::vector<const tile_pattern*>& tile_map::get_patterns() const
 {
 	if(patterns_version_ != current_patterns_version) {
-		const_cast<tile_map*>(this)->build_patterns();
+		const_cast<tile_map*>(this)->buildPatterns();
 	}
 
 	return patterns_;
@@ -1151,6 +1151,6 @@ int tile_map::get_pattern_index_entry(const tile_string& str) {
 
 	pattern_index_.push_back(pattern_index_entry());
 	pattern_index_.back().str = str;
-	build_patterns();
+	buildPatterns();
 	return index;
 }

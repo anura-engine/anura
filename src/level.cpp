@@ -19,7 +19,6 @@
 #include <iostream>
 #include <math.h>
 
-#include "IMG_savepng.h"
 #include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "controls.hpp"
@@ -28,13 +27,8 @@
 #include "editor.hpp"
 #include "entity.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
-#include "gui_formula_functions.hpp"
-#include "HexMap.hpp"
-#include "HexObject.hpp"
-#include "iphone_controls.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
@@ -49,24 +43,19 @@
 #include "preferences.hpp"
 #include "preprocessor.hpp"
 #include "random.hpp"
-#include "raster.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
 #include "surface_palette.hpp"
-#include "texture_frame_buffer.hpp"
 #include "thread.hpp"
 #include "tile_map.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 #include "wml_formula_callable.hpp"
-#include "color_utils.hpp"
-
-#include "compat.hpp"
 
 #ifndef NO_EDITOR
-std::set<level*>& getAll_levels_set() {
-	static std::set<level*> all;
+std::set<Level*>& get_all_levels_set() {
+	static std::set<Level*> all;
 	return all;
 }
 #endif
@@ -76,17 +65,17 @@ namespace {
 PREF_BOOL(debug_shadows, false, "Show debug visualization of shadow drawing");
 
 
-boost::intrusive_ptr<level>& get_currentLevel() {
-	static boost::intrusive_ptr<level> current_level;
+boost::intrusive_ptr<Level>& get_current_level() {
+	static boost::intrusive_ptr<Level> current_level;
 	return current_level;
 }
 
-std::map<std::string, level::summary> load_level_summaries() {
-	std::map<std::string, level::summary> result;
+std::map<std::string, Level::summary> load_level_summaries() {
+	std::map<std::string, Level::summary> result;
 	const variant node = json::parse_from_file("data/compiled/level_index.cfg");
 	
-	foreach(variant level_node, node["level"].as_list()) {
-		level::summary& s = result[level_node["level"].as_string()];
+	for(variant level_node : node["level"].as_list()) {
+		Level::summary& s = result[level_node["level"].as_string()];
 		s.music = level_node["music"].as_string();
 		s.title = level_node["title"].as_string();
 	}
@@ -102,7 +91,7 @@ bool level_tile_not_in_rect(const rect& r, const level_tile& t) {
 
 void level::clearCurrentLevel()
 {
-	get_currentLevel().reset();
+	get_current_level().reset();
 }
 
 level::summary level::getSummary(const std::string& id)
@@ -118,16 +107,16 @@ level::summary level::getSummary(const std::string& id)
 
 level& level::current()
 {
-	ASSERT_LOG(get_currentLevel(), "Tried to query current level when there is none");
-	return *get_currentLevel();
+	ASSERT_LOG(get_current_level(), "Tried to query current level when there is none");
+	return *get_current_level();
 }
 
 level* level::getCurrentPtr()
 {
-	return get_currentLevel().get();
+	return get_current_level().get();
 }
 
-CurrentLevelScope::CurrentLevelScope(level* lvl) : old_(get_currentLevel())
+CurrentLevelScope::CurrentLevelScope(level* lvl) : old_(get_current_level())
 {
 	lvl->setAsCurrentLevel();
 }
@@ -140,8 +129,8 @@ CurrentLevelScope::~CurrentLevelScope() {
 
 void level::setAsCurrentLevel()
 {
-	get_currentLevel() = this;
-	frame::setColor_palette(palettes_used_);
+	get_current_level() = this;
+	frame::setColorPalette(palettes_used_);
 
 	if(false && preferences::auto_size_window()) {
 		static bool auto_sized = false;
@@ -217,7 +206,7 @@ level::level(const std::string& level_cfg, variant node)
 	  show_builtin_settings_(false)
 {
 #ifndef NO_EDITOR
-	getAll_levels_set().insert(this);
+	get_all_levels_set().insert(this);
 #endif
 
 	std::cerr << "in level constructor...\n";
@@ -546,7 +535,7 @@ level::level(const std::string& level_cfg, variant node)
 level::~level()
 {
 #ifndef NO_EDITOR
-	getAll_levels_set().erase(this);
+	get_all_levels_set().erase(this);
 #endif
 
 	for(std::deque<backup_snapshot_ptr>::iterator i = backups_.begin();

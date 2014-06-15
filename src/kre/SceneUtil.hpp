@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,11 +23,24 @@
 
 #pragma once
 
-#include <memory>
+#include <glm/gtc/type_precision.hpp>
 
-class SolidMap;
-typedef std::shared_ptr<SolidMap> SolidMapPtr;
-typedef std::shared_ptr<const SolidMap> ConstSolidMapPtr;
+namespace KRE
+{
+	struct vertex_texture_color
+	{
+		vertex_texture_color(const glm::vec2& v, const glm::vec2& t, const glm::u8vec4& c)
+			: vertex(v), texcoord(t), color(c) {}
+		glm::vec2 vertex;
+		glm::vec2 texcoord;
+		glm::u8vec4 color;
+	};
 
-class SolidInfo;
-typedef std::shared_ptr<const SolidInfo> ConstSolidInfoPtr;
+	struct vertex_texcoord
+	{
+		vertex_texcoord() : vtx(0.0f), tc(0.0f) {}
+		vertex_texcoord(const glm::vec2& v, const glm::vec2& c) : vtx(v), tc(c) {}
+		glm::vec2 vtx;
+		glm::vec2 tc;
+	};
+}

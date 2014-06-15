@@ -358,7 +358,7 @@ custom_object::custom_object(variant node)
 	if(node.has_key("particles")) {
 		std::vector<std::string> particles = util::split(node["particles"].as_string());
 		foreach(const std::string& p, particles) {
-			add_particle_system(p, p);
+			addParticleSystem(p, p);
 		}
 	}
 
@@ -635,7 +635,7 @@ custom_object::custom_object(const custom_object& o) :
 	clip_area_(o.clip_area_ ? new rect(*o.clip_area_) : NULL),
 	activation_border_(o.activation_border_),
 	can_interact_with_(o.can_interact_with_),
-	particle_systems_(o.particle_systems_),
+	ParticleSystems_(o.ParticleSystems_),
 	text_(o.text_),
 	driver_(o.driver_),
 	blur_(o.blur_),
@@ -1097,10 +1097,10 @@ variant custom_object::write() const
 		res.add("clipArea", clip_area_->write());
 	}
 
-	if(!particle_systems_.empty()) {
+	if(!ParticleSystems_.empty()) {
 		std::string systems;
-		for(std::map<std::string, particle_system_ptr>::const_iterator i = particle_systems_.begin(); i != particle_systems_.end(); ++i) {
-			if(i->second->should_save() == false) {
+		for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
+			if(i->second->shouldSave() == false) {
 				continue;
 			}
 
@@ -1300,9 +1300,9 @@ void custom_object::draw(int xx, int yy) const
 #endif
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
+		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
-		frame_->draw_custom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
 	} else if(draw_scale_) {
 		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), GLfloat(draw_scale_->as_float()));
 	} else if(!draw_area_.get()) {
@@ -1363,7 +1363,7 @@ void custom_object::draw(int xx, int yy) const
 	}
 	glPopMatrix();
 
-	for(std::map<std::string, particle_system_ptr>::const_iterator i = particle_systems_.begin(); i != particle_systems_.end(); ++i) {
+	for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
 		i->second->draw(rect(last_draw_position().x/100, last_draw_position().y/100, graphics::screen_width(), graphics::screen_height()), *this);
 	}
 
@@ -1780,15 +1780,15 @@ void custom_object::process(level& lvl)
 	}
 
 	if(time_in_frame_ == frame_->duration()) {
-		handleEvent(frame_->end_event_id());
+		handleEvent(frame_->endEventId());
 		handleEvent(OBJECT_EVENT_END_ANIM);
 		if(next_animation_formula_) {
 			variant var = next_animation_formula_->execute(*this);
-			set_frame(var.as_string());
+			setFrame(var.as_string());
 		}
 	}
 
-	const std::string* event = frame_->get_event(time_in_frame_);
+	const std::string* event = frame_->getEvent(time_in_frame_);
 	if(event) {
 		handleEvent(*event);
 	}
@@ -2341,17 +2341,17 @@ void custom_object::process(level& lvl)
 void custom_object::staticProcess(level& lvl)
 {
 	handleEvent(OBJECT_EVENT_PROCESS);
-	handleEvent(frame_->processEvent_id());
+	handleEvent(frame_->processEventId());
 
 	if(type_->timerFrequency() > 0 && (cycle_%type_->timerFrequency()) == 0) {
 		static const std::string TimerStr = "timer";
 		handleEvent(OBJECT_EVENT_TIMER);
 	}
 
-	for(std::map<std::string, particle_system_ptr>::iterator i = particle_systems_.begin(); i != particle_systems_.end(); ) {
+	for(std::map<std::string, ParticleSystemPtr>::iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ) {
 		i->second->process(*this);
-		if(i->second->is_destroyed()) {
-			particle_systems_.erase(i++);
+		if(i->second->isDestroyed()) {
+			ParticleSystems_.erase(i++);
 		} else {
 			++i;
 		}
@@ -2440,10 +2440,10 @@ bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction
 		return true;
 	}
 
-	if(frame_->has_platform()) {
+	if(frame_->hasPlatform()) {
 		const frame& f = *frame_;
-		int y1 = y() + f.platform_y();
-		int y2 = previous_y_ + f.platform_y();
+		int y1 = y() + f.platformY();
+		int y2 = previous_y_ + f.platformY();
 
 		if(y1 > y2) {
 			std::swap(y1, y2);
@@ -2453,7 +2453,7 @@ bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction
 			return false;
 		}
 
-		if(xpos < x() + f.platform_x() || xpos >= x() + f.platform_x() + f.platform_w()) {
+		if(xpos < x() + f.platformX() || xpos >= x() + f.platformX() + f.platformW()) {
 			return false;
 		}
 
@@ -2466,7 +2466,7 @@ bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction
 		}
 
 		if(adjust_y) {
-			*adjust_y = y() + f.platform_y() - ypos;
+			*adjust_y = y() + f.platformY() - ypos;
 		}
 
 		return true;
@@ -2513,10 +2513,10 @@ bool custom_object::rectCollides(const rect& r) const
 	}
 }
 
-const_solid_info_ptr custom_object::calculateSolid() const
+ConstSolidInfoPtr custom_object::calculateSolid() const
 {
 	if(!type_->hasSolid()) {
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	}
 
 	const frame& f = getCurrentFrame();
@@ -2527,7 +2527,7 @@ const_solid_info_ptr custom_object::calculateSolid() const
 	return type_->solid();
 }
 
-const_solid_info_ptr custom_object::calculatePlatform() const
+ConstSolidInfoPtr custom_object::calculatePlatform() const
 {
 	if(platform_solid_info_.get()) {
 		return platform_solid_info_;
@@ -2535,7 +2535,7 @@ const_solid_info_ptr custom_object::calculatePlatform() const
 		//if platform_solid_info_ is NULL but we have a rect, that
 		//means there is no platform, so return NULL instead of
 		//defaulting to the type.
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	}
 
 	return type_->platform();
@@ -2918,9 +2918,9 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_LIB:               return variant(game_logic::get_library_object().get());
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION: return variant(time_in_frame_);
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION_DELTA: return variant(time_in_frame_delta_);
-	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frame_number(time_in_frame_));
+	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frameNumber(time_in_frame_));
 	case CUSTOM_OBJECT_LEVEL:             return variant(&level::current());
-	case CUSTOM_OBJECT_ANIMATION:         return frame_->variant_id();
+	case CUSTOM_OBJECT_ANIMATION:         return frame_->variantId();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
 	case CUSTOM_OBJECT_MAX_HITPOINTS:     return variant(type_->getHitpoints() + max_hitpoints_);
@@ -3285,7 +3285,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PARTICLE_SYSTEMS: {
 		std::map<variant, variant> v;
-		for(std::map<std::string, particle_system_ptr>::const_iterator i = particle_systems_.begin(); i != particle_systems_.end(); ++i) {
+		for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
 			v[variant(i->first)] = variant(i->second.get());
 		}
 		return variant(&v);
@@ -3444,8 +3444,8 @@ variant custom_object::getValue(const std::string& key) const
 		return i->second;
 	}
 
-	std::map<std::string, particle_system_ptr>::const_iterator particle_itor = particle_systems_.find(key);
-	if(particle_itor != particle_systems_.end()) {
+	std::map<std::string, ParticleSystemPtr>::const_iterator particle_itor = ParticleSystems_.find(key);
+	if(particle_itor != ParticleSystems_.end()) {
 		return variant(particle_itor->second.get());
 	}
 
@@ -3488,7 +3488,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	}
 
 	if(key == "animation") {
-		set_frame(value.as_string());
+		setFrame(value.as_string());
 	} else if(key == "time_in_animation") {
 		ASSERT_GE(value.as_int(), 0);
 		time_in_frame_ = value.as_int()%frame_->duration();
@@ -3741,7 +3741,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			tmp_vars_->disallow_new_keys(type_->isStrict());
 
 			//set the animation to the default animation for the new type.
-			set_frame(type_->defaultFrame().id());
+			setFrame(type_->defaultFrame().id());
 			//std::cerr << "SET TYPE WHEN CHANGING TO '" << type_->id() << "'\n";
 		}
 	} else if(key == "use_absolute_screen_coordinates") {
@@ -3843,7 +3843,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 			}
 
 			//set the animation to the default animation for the new type.
-			set_frame(type_->defaultFrame().id());
+			setFrame(type_->defaultFrame().id());
 			//std::cerr << "SET TYPE WHEN CHANGING TO '" << type_->id() << "'\n";
 		}
 	}
@@ -3857,15 +3857,15 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		break;
 	case CUSTOM_OBJECT_ANIMATION:
 		if(value.is_string()) {
-			set_frame(value.as_string());
+			setFrame(value.as_string());
 		} else if(value.is_map()) {
 			frame_ptr f(new frame(value));
 			if(type_->useImageForCollisions()) {
-				f->set_image_as_solid();
+				f->setImageAsSolid();
 			}
-			set_frame(*f);
+			setFrame(*f);
 		} else {
-			set_frame(*value.convert_to<frame>());
+			setFrame(*value.convert_to<frame>());
 		}
 		break;
 	
@@ -4499,7 +4499,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_PLATFORM_AREA: {
 		if(value.is_null()) {
 			platform_area_.reset();
-			platform_solid_info_ = const_solid_info_ptr();
+			platform_solid_info_ = ConstSolidInfoPtr();
 			calculateSolidRect();
 			break;
 		} else if(value.is_list() && value.num_elements() == 0) {
@@ -4772,12 +4772,12 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 	}
 }
 
-void custom_object::set_frame(const std::string& name)
+void custom_object::setFrame(const std::string& name)
 {
-	set_frame(type_->getFrame(name));
+	setFrame(type_->getFrame(name));
 }
 
-void custom_object::set_frame(const frame& new_frame)
+void custom_object::setFrame(const frame& new_frame)
 {
 	const std::string& name = new_frame.id();
 	const std::string previous_animation = frame_name_;
@@ -4786,7 +4786,7 @@ void custom_object::set_frame(const frame& new_frame)
 
 	//fire an event to say that we're leaving the current frame.
 	if(frame_ && changing_anim) {
-		handleEvent(frame_->leave_event_id());
+		handleEvent(frame_->leaveEventId());
 	}
 
 	const int start_x = getFeetX();
@@ -4805,7 +4805,7 @@ void custom_object::set_frame(const frame& new_frame)
 
 	set_frame_no_adjustments(new_frame);
 
-	frame_->play_sound(this);
+	frame_->playSound(this);
 
 	if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
@@ -4822,7 +4822,7 @@ void custom_object::set_frame(const frame& new_frame)
 	}
 
 	handleEvent(OBJECT_EVENT_ENTER_ANIM);
-	handleEvent(frame_->enter_event_id());
+	handleEvent(frame_->enterEventId());
 }
 
 rect custom_object::getDrawRect() const
@@ -4852,12 +4852,12 @@ void custom_object::set_frame_no_adjustments(const frame& new_frame)
 		velocity_y_ = frame_->velocityY();
 	}
 
-	if(frame_->accel_x() != INT_MIN) {
-		accel_x_ = frame_->accel_x();
+	if(frame_->accelX() != INT_MIN) {
+		accel_x_ = frame_->accelX();
 	}
 	
-	if(frame_->accel_y() != INT_MIN) {
-		accel_y_ = frame_->accel_y();
+	if(frame_->accelY() != INT_MIN) {
+		accel_y_ = frame_->accelY();
 	}
 
 	calculateSolidRect();
@@ -5519,15 +5519,15 @@ void custom_object::restoreGcObjectReference(gc_object_reference ref)
 	}
 }
 
-void custom_object::add_particle_system(const std::string& key, const std::string& type)
+void custom_object::addParticleSystem(const std::string& key, const std::string& type)
 {
-	particle_systems_[key] = type_->getParticleSystemFactory(type)->create(*this);
-	particle_systems_[key]->set_type(type);
+	ParticleSystems_[key] = type_->getParticleSystemFactory(type)->create(*this);
+	ParticleSystems_[key]->setType(type);
 }
 
-void custom_object::remove_particle_system(const std::string& key)
+void custom_object::remove_ParticleSystem(const std::string& key)
 {
-	particle_systems_.erase(key);
+	ParticleSystems_.erase(key);
 }
 
 void custom_object::setText(const std::string& text, const std::string& font, int size, int align)
@@ -5632,7 +5632,7 @@ void custom_object::set_platform_area(const rect& area)
 {
 	if(area.w() <= 0 || area.h() <= 0) {
 		platform_area_.reset(new rect(area));
-		platform_solid_info_ = const_solid_info_ptr();
+		platform_solid_info_ = ConstSolidInfoPtr();
 	} else {
 		platform_area_.reset(new rect(area));
 		platform_solid_info_ = solid_info::create_platform(area);
@@ -5829,10 +5829,10 @@ void custom_object::updateType(ConstCustomObjectTypePtr old_type,
 		frame_.reset(&type_->getFrame(frame_name_));
 	}
 
-	std::map<std::string, particle_system_ptr> systems;
-	systems.swap(particle_systems_);
-	for(std::map<std::string, particle_system_ptr>::const_iterator i = systems.begin(); i != systems.end(); ++i) {
-		add_particle_system(i->first, i->second->type());
+	std::map<std::string, ParticleSystemPtr> systems;
+	systems.swap(ParticleSystems_);
+	for(std::map<std::string, ParticleSystemPtr>::const_iterator i = systems.begin(); i != systems.end(); ++i) {
+		addParticleSystem(i->first, i->second->type());
 	}
 
 #if defined(USE_SHADERS)

@@ -28,6 +28,8 @@
 #include <set>
 #include <stack>
 
+#include "kre/SceneObject.hpp"
+
 #include "blur.hpp"
 #include "custom_object_type.hpp"
 #include "draw_primitive.hpp"
@@ -44,25 +46,24 @@
 
 struct collision_info;
 class Level;
+struct CustomObjectText;
 
-struct custom_object_text;
-
-class custom_object : public Entity
+class CustomObject : public Entity, public KRE::SceneObject
 {
 public:
 	static const std::string* current_debug_error();
 	static void reset_current_debug_error();
 
-	static std::set<custom_object*>& getAll();
-	static std::set<custom_object*>& getAll(const std::string& type);
+	static std::set<CustomObject*>& getAll();
+	static std::set<CustomObject*>& getAll(const std::string& type);
 	static void init();
 
 	static void run_garbage_collection();
 
-	explicit custom_object(variant node);
-	custom_object(const std::string& type, int x, int y, bool face_right);
-	custom_object(const custom_object& o);
-	virtual ~custom_object();
+	explicit CustomObject(variant node);
+	CustomObject(const std::string& type, int x, int y, bool face_right);
+	CustomObject(const CustomObject& o);
+	virtual ~CustomObject();
 
 	void validate_properties();
 
@@ -70,16 +71,16 @@ public:
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
-	void finishLoading(level* lvl);
+	void finishLoading(Level* lvl);
 	virtual variant write() const;
 	virtual void setupDrawing() const;
 	virtual void draw(int x, int y) const;
 	virtual void drawLater(int x, int y) const;
 	virtual void drawGroup() const;
-	virtual void process(level& lvl);
+	virtual void process(Level& lvl);
 	virtual void construct();
 	virtual bool createObject();
-	void setLevel(level& lvl) { }
+	void setLevel(Level& lvl) { }
 
 	void check_initialized();
 
@@ -122,8 +123,8 @@ public:
 
 	virtual const frame& getCurrentFrame() const { return *frame_; }
 
-	void set_frame(const std::string& name);
-	void set_frame(const frame& new_frame);
+	void setFrame(const std::string& name);
+	void setFrame(const frame& new_frame);
 
 	virtual rect getDrawRect() const;
 
@@ -136,7 +137,7 @@ public:
 	virtual bool isActive(const rect& screen_area) const;
 	bool diesOnInactive() const;
 	bool isAlwaysActive() const;
-	bool moveToStanding(level& lvl, int max_displace=10000);
+	bool moveToStanding(Level& lvl, int max_displace=10000);
 
 	bool isBodyHarmful() const;
 	bool isBodyPassthrough() const;
@@ -170,8 +171,8 @@ public:
 	void mapEntities(const std::map<EntityPtr, EntityPtr>& m);
 	void cleanup_references();
 
-	void add_particle_system(const std::string& key, const std::string& type);
-	void remove_particle_system(const std::string& key);
+	void addParticleSystem(const std::string& key, const std::string& type);
+	void remove_ParticleSystem(const std::string& key);
 
 	virtual int getHitpoints() const { return hitpoints_; }
 
@@ -179,8 +180,8 @@ public:
 
 	virtual bool boardableVehicle() const;
 
-	virtual void boarded(level& lvl, const EntityPtr& player);
-	virtual void unboarded(level& lvl);
+	virtual void boarded(Level& lvl, const EntityPtr& player);
+	virtual void unboarded(Level& lvl);
 
 	virtual void boardVehicle();
 	virtual void unboardVehicle();
@@ -263,7 +264,7 @@ public:
 
 		variant on_process, on_complete;
 
-		std::vector<std::pair<variant,variant> > follow_on;
+		std::vector<std::pair<variant,variant>> follow_on;
 
 		AnimatedMovement() : pos(0)
 		{}
@@ -278,9 +279,9 @@ public:
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
-	void staticProcess(level& lvl);
+	void staticProcess(Level& lvl);
 
-	virtual void control(const level& lvl);
+	virtual void control(const Level& lvl);
 	variant getValue(const std::string& key) const;
 	variant getValue_by_slot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
@@ -300,7 +301,7 @@ protected:
 	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
 	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
-	STANDING_STATUS isStanding(const level& lvl, collision_info* info=NULL) const;
+	STANDING_STATUS isStanding(const Level& lvl, collision_info* info=NULL) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);
 
@@ -326,7 +327,7 @@ protected:
 
 private:
 	void initProperties();
-	custom_object& operator=(const custom_object& o);
+	CustomObject& operator=(const CustomObject& o);
 	struct Accessor;
 
 	struct gc_object_reference {
@@ -342,12 +343,12 @@ private:
 	void extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v);
 	static void restoreGcObjectReference(gc_object_reference ref);
 
-	bool moveToStandingInternal(level& lvl, int max_displace);
+	bool moveToStandingInternal(Level& lvl, int max_displace);
 
 	void processFrame();
 
-	const_solid_info_ptr calculateSolid() const;
-	const_solid_info_ptr calculatePlatform() const;
+	ConstSolidInfoPtr calculateSolid() const;
+	ConstSolidInfoPtr calculatePlatform() const;
 
 	virtual void getInputs(std::vector<game_logic::formula_input>* inputs) const;
 
@@ -442,10 +443,10 @@ private:
 	
 	bool can_interact_with_;
 
-	std::map<std::string, particle_system_ptr> particle_systems_;
+	std::map<std::string, ParticleSystemPtr> ParticleSystems_;
 
-	typedef std::shared_ptr<custom_object_text> custom_object_text_ptr;
-	custom_object_text_ptr text_;
+	typedef std::shared_ptr<CustomObjectText> CustomObjectText_ptr;
+	CustomObjectText_ptr text_;
 
 	EntityPtr driver_;
 
@@ -481,7 +482,7 @@ private:
 	std::vector<light_ptr> lights_;
 
 	std::unique_ptr<rect> platform_area_;
-	const_solid_info_ptr platform_solid_info_;
+	ConstSolidInfoPtr platform_solid_info_;
 
 	point parent_position() const;
 
@@ -519,9 +520,7 @@ private:
 
 	mutable screen_position adjusted_draw_position_;
 
-#if defined(USE_SHADERS)
 	std::vector<graphics::DrawPrimitivePtr> DrawPrimitives_;
-#endif
 
 	bool paused_;
 

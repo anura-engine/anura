@@ -53,7 +53,7 @@ namespace KRE
 		virtual void setWindowTitle(const std::string& title) = 0;
 		virtual void setWindowIcon(const std::string& name) = 0;
 
-		virtual void render(const RenderablePtr& r) = 0;
+		virtual void render(const Renderable* r) const = 0;
 
 		virtual SurfacePtr createSurface(size_t width, 
 			size_t height, 

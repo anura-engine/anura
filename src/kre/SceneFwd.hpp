@@ -55,12 +55,4 @@ namespace KRE
 	};
 
 	class Blittable;
-
-	struct vertex_texcoord
-	{
-		vertex_texcoord() : vtx(0.0f), tc(0.0f) {}
-		vertex_texcoord(const glm::vec2& v, const glm::vec2& c) : vtx(v), tc(c) {}
-		glm::vec2 vtx;
-		glm::vec2 tc;
-	};
 }

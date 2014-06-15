@@ -168,7 +168,7 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 		int min_x = INT_MIN, max_x = INT_MIN, min_y = INT_MIN, max_y = INT_MIN;
 		std::set<point> solid_points;
 
-		for(const const_solid_map_ptr& m : s->solid()) {
+		for(const ConstSolidMapPtr& m : s->solid()) {
 			const std::vector<point>& points = m->dir(MOVE_NONE);
 			for(const point& p : points) {
 				const int x = e.x() + (e.isFacingRight() ? p.x : (f.width() - 1 - p.x));
@@ -292,7 +292,7 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 		}
 	}
 
-	for(const const_solid_map_ptr& m : s->solid()) {
+	for(const ConstSolidMapPtr& m : s->solid()) {
 		if(lvl.solid(e, m->dir(dir), info ? &info->surf_info : NULL)) {
 			if(info) {
 				info->readSurfInfo();
@@ -314,7 +314,7 @@ int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIR
 
 	const frame& f = e.getCurrentFrame();
 	int count = 0;
-	for(const const_solid_map_ptr& m : s->solid()) {
+	for(const ConstSolidMapPtr& m : s->solid()) {
 		const std::vector<point>& points = m->dir(dir);
 		for(const point& p : points) {
 			const int xpos = e.isFacingRight() ? e.x() + p.x : e.x() + f.width() - 1 - p.x;
@@ -336,9 +336,9 @@ bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 
 	const int increment = e.isFacingRight() ? 2 : -2;
 	for(int y = 0; y < f.height(); y += 2) {
-		std::vector<bool>::const_iterator i = f.getAlpha_itor(0, y, e.getTimeInFrame(), e.isFacingRight());
+		std::vector<bool>::const_iterator i = f.getAlphaItor(0, y, e.getTimeInFrame(), e.isFacingRight());
 		for(int x = 0; x < f.width(); x += 2) {
-			if(i == f.getAlpha_buf().end() || i == f.getAlpha_buf().begin()) {
+			if(i == f.getAlphaBuf().end() || i == f.getAlphaBuf().begin()) {
 				continue;
 			}
 			if(!*i && lvl.solid(e.x() + x, e.y() + y)) {
@@ -449,19 +449,19 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 	const frame& fa = a.getCurrentFrame();
 	const frame& fb = b.getCurrentFrame();
 
-	if(fa.collision_areas().empty() || fb.collision_areas().empty() ||
-	   fa.collision_areas_inside_frame() && fb.collision_areas_inside_frame() &&
+	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty() ||
+	   fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
 	   !rects_intersect(a.frameRect(), b.frameRect())) {
 		return 0;
 	}
 
 	int result = 0;
 
-	for(const frame::collision_area& area_a : fa.collision_areas()) {
+	for(const frame::collision_area& area_a : fa.getCollisionAreas()) {
 		rect rect_a(a.isFacingRight() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
 		            a.y() + area_a.area.y(),
 					area_a.area.w(), area_a.area.h());
-		for(const frame::collision_area& area_b : fb.collision_areas()) {
+		for(const frame::collision_area& area_b : fb.getCollisionAreas()) {
 			rect rect_b(b.isFacingRight() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
 			            b.y() + area_b.area.y(),
 						area_b.area.w(), area_b.area.h());
@@ -509,7 +509,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 	const frame& fa = a.getCurrentFrame();
 	const frame& fb = b.getCurrentFrame();
 
-	if(fa.collision_areas().empty() || fb.collision_areas().empty()) {
+	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty()) {
 		return false;
 	}
 
@@ -519,7 +519,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 	}
 
 	const frame::collision_area* area_a = NULL;
-	for(const frame::collision_area& area : fa.collision_areas()) {
+	for(const frame::collision_area& area : fa.getCollisionAreas()) {
 		if(area.name == area_a_id) {
 			area_a = &area;
 			break;
@@ -531,7 +531,7 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 	}
 
 	const frame::collision_area* area_b = NULL;
-	for(const frame::collision_area& area : fb.collision_areas()) {
+	for(const frame::collision_area& area : fb.getCollisionAreas()) {
 		if(area.name == area_b_id) {
 			area_b = &area;
 			break;
@@ -618,7 +618,7 @@ void detect_user_collisions(level& lvl)
 	std::vector<EntityPtr> chars;
 	chars.reserve(lvl.get_active_chars().size());
 	for(const EntityPtr& a : lvl.get_active_chars()) {
-		if(a->getWeakCollideDimensions() != 0 && a->getCurrentFrame().collision_areas().empty() == false) {
+		if(a->getWeakCollideDimensions() != 0 && a->getCurrentFrame().getCollisionAreas().empty() == false) {
 			chars.push_back(a);
 		}
 	}

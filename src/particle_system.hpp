@@ -24,38 +24,45 @@
 #pragma once
 
 #include "kre/Geometry.hpp"
+#include "kre/SceneObject.hpp"
+#include "kre/SceneUtil.hpp"
+#include "Color.hpp"
 
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
-class particle_system;
-typedef boost::intrusive_ptr<particle_system> particle_system_ptr;
-typedef boost::intrusive_ptr<const particle_system> const_particle_system_ptr;
+class ParticleSystem;
+typedef boost::intrusive_ptr<ParticleSystem> ParticleSystemPtr;
+typedef boost::intrusive_ptr<const ParticleSystem> ConstParticleSystemPtr;
 
-class particle_system_factory;
-typedef std::shared_ptr<const particle_system_factory> const_particle_system_factory_ptr;
+class ParticleSystemFactory;
+typedef std::shared_ptr<const ParticleSystemFactory> ConstParticleSystemFactoryPtr;
 
-class particle_system_factory
+class ParticleSystemFactory
 {
 public:
-	static const_particle_system_factory_ptr create_factory(variant node);
+	static ConstParticleSystemFactoryPtr create_factory(variant node);
 	
-	virtual ~particle_system_factory();
-	virtual particle_system_ptr create(const Entity& e) const = 0;
+	virtual ~ParticleSystemFactory();
+	virtual ParticleSystemPtr create(const Entity& e) const = 0;
 };
 
-class particle_system : public game_logic::FormulaCallable
+class ParticleSystem : public game_logic::FormulaCallable, public KRE::SceneObject
 {
 public:
-	virtual ~particle_system();
-	virtual bool is_destroyed() const { return false; }
-	virtual bool should_save() const { return true; }
+	virtual ~ParticleSystem();
+	virtual bool isDestroyed() const { return false; }
+	virtual bool shouldSave() const { return true; }
 	virtual void process(const Entity& e) = 0;
-	virtual void draw(const rect& area, const Entity& e) const = 0;
+	virtual void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const = 0;
 
-	void set_type(const std::string& type) { type_ = type; }
+	void setType(const std::string& type) { type_ = type; }
 	const std::string& type() const { return type_; }
+protected:
+	ParticleSystem() : SceneObject("ParticleSystem") {}
 private:
+	DECLARE_CALLABLE(ParticleSystem);
 	std::string type_;
 };

@@ -42,9 +42,9 @@ namespace KRE
 		void enQueue(uint64_t order, RenderablePtr p);	
 		void deQueue(uint64_t order);
 
-		void preRender();
+		void preRender(const WindowManagerPtr& wm);
 		void render(const WindowManagerPtr& wm) const;
-		void postRender();
+		void postRender(const WindowManagerPtr& wm);
 	private:
 		std::map<uint64_t, RenderablePtr> renderables_;
 		std::string name_;

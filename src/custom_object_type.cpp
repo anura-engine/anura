@@ -1166,7 +1166,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		level::setPlayerVariantType(type);
 	}
 
-	frame::build_patterns(node);
+	frame::buildPatterns(node);
 
 	if(editor_force_standing_) {
 		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
@@ -1260,7 +1260,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		}
 
 		if(use_image_for_collisions_) {
-			f->set_image_as_solid();
+			f->setImageAsSolid();
 		}
 
 		if(f->solid()) {
@@ -1288,7 +1288,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	available_frames_ = variant(&available_frames);
 
-	mass_ = node["mass"].as_int(defaultFrame_->collide_w() * defaultFrame_->collide_h());
+	mass_ = node["mass"].as_int(defaultFrame_->collideW() * defaultFrame_->collideH());
 	
 	for(variant child : node["child"].as_list()) {
 		const std::string& child_id = child["child_id"].as_string();
@@ -1299,8 +1299,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	next_animation_formula_ = game_logic::formula::create_optional_formula(node["next_animation"], getFunctionSymbols());
 
-	for(variant particle_node : node["particle_system"].as_list()) {
-		particle_factories_[particle_node["id"].as_string()] = particle_system_factory::create_factory(particle_node);
+	for(variant particle_node : node["ParticleSystem"].as_list()) {
+		particle_factories_[particle_node["id"].as_string()] = ParticleSystemFactory::create_factory(particle_node);
 	}
 
 	if(!is_variation && !is_recursive_call) {
@@ -1659,9 +1659,9 @@ game_logic::const_formula_ptr CustomObjectType::getEventHandler(int event) const
 	}
 }
 
-const_particle_system_factory_ptr CustomObjectType::getParticleSystemFactory(const std::string& id) const
+ConstParticleSystemFactoryPtr CustomObjectType::getParticleSystemFactory(const std::string& id) const
 {
-	std::map<std::string, const_particle_system_factory_ptr>::const_iterator i = particle_factories_.find(id);
+	std::map<std::string, ConstParticleSystemFactoryPtr>::const_iterator i = particle_factories_.find(id);
 	ASSERT_LOG(i != particle_factories_.end(), "Unknown particle system type in " << id_ << ": " << id);
 	return i->second;
 }

@@ -144,10 +144,15 @@ namespace KRE
 		HandleUnapply();
 	}
 
+	MaterialPtr Material::createMaterial(const variant& node)
+	{
+		return DisplayDevice::GetCurrent()->CreateMaterial(node);
+	}
+
 	const rectf Material::GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it)
 	{
-		float w = (*it)->Width();
-		float h = (*it)->Height();
+		float w = (*it)->width();
+		float h = (*it)->height();
 		if(draw_rect_.x() == 0.0f && draw_rect_.y() == 0.0f && draw_rect_.x2() == 0.0f && draw_rect_.y2() == 0.0f) {
 			return rectf(0.0f, 0.0f, 1.0f, 1.0f);
 		}
@@ -222,7 +227,7 @@ namespace KRE
 				"BlendMode: Blend mode must be specified by a list of two strings.");
 			Set(parse_blend_string(node[0].as_string()), parse_blend_string(node[1].as_string()));
 		} else {
-			ASSERT_LOG(false, "BlendMode: Setting blend requires either a string or a list of greater than two elements." << node.type_as_string());
+			ASSERT_LOG(false, "BlendMode: Setting blend requires either a string or a list of greater than two elements." << node.to_debug_string());
 		}
 	}
 }

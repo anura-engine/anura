@@ -299,6 +299,36 @@ namespace KRE
 		color_[3] = clamp<float>(float(a), 0.0f, 1.0f);
 	}
 
+	void Color::setRed(int a)
+	{
+		color_[0] = clamp<int>(a, 0, 255) / 255.0f;
+	}
+
+	void Color::setRed(double a)
+	{
+		color_[0] = clamp<float>(float(a), 0.0f, 1.0f);
+	}
+
+	void Color::setGreen(int a)
+	{
+		color_[1] = clamp<int>(a, 0, 255) / 255.0f;
+	}
+
+	void Color::setGreen(double a)
+	{
+		color_[1] = clamp<float>(float(a), 0.0f, 1.0f);
+	}
+
+	void Color::setBlue(int a)
+	{
+		color_[2] = clamp<int>(a, 0, 255) / 255.0f;
+	}
+
+	void Color::setBlue(double a)
+	{
+		color_[2] = clamp<float>(float(a), 0.0f, 1.0f);
+	}
+
 	ColorPtr Color::factory(const std::string& name)
 	{
 		auto it = get_color_table().find(name);

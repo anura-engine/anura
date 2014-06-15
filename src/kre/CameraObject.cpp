@@ -418,9 +418,9 @@ namespace KRE
 		return variant("perspective");
 	DEFINE_SET_FIELD
 		if(value.as_string() == "orthogonal") {
-			obj.set_type(ORTHOGONAL_CAMERA);
+			obj.setType(ORTHOGONAL_CAMERA);
 		} else {
-			obj.set_type(PERSPECTIVE_CAMERA);
+			obj.setType(PERSPECTIVE_CAMERA);
 		}
 	
 	DEFINE_FIELD(ortho_window, "[int,int,int,int]")

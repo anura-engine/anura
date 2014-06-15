@@ -59,7 +59,7 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
-std::set<level*>& getAll_levels_set();
+std::set<level*>& get_all_levels_set();
 
 code_editor_dialog::code_editor_dialog(const rect& r)
   : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), has_error_(false),
@@ -458,7 +458,7 @@ void code_editor_dialog::process()
 					tile_map::rebuild_all();
 					std::cerr << "done tile_map::init()\n";
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, getAll_levels_set()) {
+					foreach(level* lvl, get_all_levels_set()) {
 						lvl->rebuild_tiles();
 					}
 				} catch(...) {
@@ -467,7 +467,7 @@ void code_editor_dialog::process()
 					tile_map::init(tiles_data);
 					tile_map::rebuild_all();
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, getAll_levels_set()) {
+					foreach(level* lvl, get_all_levels_set()) {
 						lvl->rebuild_tiles();
 					}
 					throw;
@@ -477,7 +477,7 @@ void code_editor_dialog::process()
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
 				std::cerr << "CODE_EDIT_DIALOG FILE: " << fname_ << std::endl;
 				gles2::program::load_shaders(editor_->text());
-				foreach(level* lvl, getAll_levels_set()) {
+				foreach(level* lvl, get_all_levels_set()) {
 					lvl->shaders_updated();
 				}
 #endif

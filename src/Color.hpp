@@ -25,6 +25,8 @@
 
 #include <memory>
 #include <string>
+#include <glm/gtc/type_precision.hpp>
+
 #include "variant.hpp"
 
 namespace KRE
@@ -57,11 +59,24 @@ namespace KRE
 		int b_int() const { return static_cast<int>(255*color_[2]); }
 		int a_int() const { return static_cast<int>(255*color_[3]); }
 
+		void setRed(int a);
+		void setRed(double a);
+
+		void setGreen(int a);
+		void setGreen(double a);
+
+		void setBlue(int a);
+		void setBlue(double a);
+
 		void setAlpha(int a);
 		void setAlpha(double a);
 
 		unsigned long asARGB() const {
 			return (a_int() << 24) | (r_int() << 16) | (g_int() << 8) | b_int();
+		}
+
+		glm::u8vec4 as_u8vec4() const {
+			return glm::u8vec4(r_int(), g_int(), b_int(), a_int());
 		}
 
 		const float* asFloatVector() const {

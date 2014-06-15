@@ -219,15 +219,15 @@ rect Entity::getBodyRect() const
 {
 	const frame& f = getCurrentFrame();
 
-	const int ypos = y() + (isUpsideDown() ? (f.height() - (f.collide_y() + f.collide_h())) : f.collide_y());
-	return rect(isFacingRight() ? x() + f.collide_x() : x() + f.width() - f.collide_x() - f.collide_w(),
-	            ypos, f.collide_w(), f.collide_h());
+	const int ypos = y() + (isUpsideDown() ? (f.height() - (f.collideY() + f.collideH())) : f.collideY());
+	return rect(isFacingRight() ? x() + f.collideX() : x() + f.width() - f.collideX() - f.collideW(),
+	            ypos, f.collideW(), f.collideH());
 }
 
 rect Entity::getHitRect() const
 {
 	const frame& f = getCurrentFrame();
-	const std::vector<frame::collision_area>& areas = f.collision_areas();
+	const std::vector<frame::collision_area>& areas = f.getCollisionAreas();
 	for(const frame::collision_area& a : areas) {
 		if(a.name == "attack") {
 			const rect& r = a.area;

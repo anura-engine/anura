@@ -29,6 +29,9 @@
 
 namespace KRE
 {
+	class Material;
+	typedef std::shared_ptr<Material> MaterialPtr;
+
 	class BlendMode
 	{
 	public:
@@ -102,8 +105,8 @@ namespace KRE
 		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
 		template<typename T>
 		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
-			float w = static_cast<float>((*it)->Width());
-			float h = static_cast<float>((*it)->Height());
+			float w = static_cast<float>((*it)->width());
+			float h = static_cast<float>((*it)->height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 
@@ -117,6 +120,8 @@ namespace KRE
 		// material.
 		bool Apply();
 		void Unapply();
+
+		static MaterialPtr createMaterial(const variant& node);
 	protected:
 		void Init(const variant& node);
 	private:
@@ -135,6 +140,4 @@ namespace KRE
 		Material(const Material&);
 		Material& operator=(const Material&);
 	};
-
-	typedef std::shared_ptr<Material> MaterialPtr;
 }

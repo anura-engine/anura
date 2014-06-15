@@ -32,6 +32,7 @@
 #include "Material.hpp"
 #include "Util.hpp"
 #include "VGraph.hpp"
+#include "SceneUtil.hpp"
 
 namespace KRE
 {

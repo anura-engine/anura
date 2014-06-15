@@ -383,12 +383,12 @@ namespace gui
 			const bool view_locked = mouse_buttons && locked_focus_.w()*locked_focus_.h();
 
 			rect focus_area;
-			if(frame_->num_frames_per_row() == 0) {
+			if(frame_->numFramesPerRow() == 0) {
 				focus_area = rect();
 			} else {
 				focus_area = rect(frame_->area().x(), frame_->area().y(),
-					  (frame_->area().w() + frame_->pad())*frame_->num_frames_per_row(),
-					  (frame_->area().h() + frame_->pad())*(frame_->num_frames()/frame_->num_frames_per_row() + (frame_->num_frames()%frame_->num_frames_per_row() ? 1 : 0)));
+					  (frame_->area().w() + frame_->pad())*frame_->numFramesPerRow(),
+					  (frame_->area().h() + frame_->pad())*(frame_->numFrames()/frame_->numFramesPerRow() + (frame_->numFrames()%frame_->numFramesPerRow() ? 1 : 0)));
 			}
 
 			if(view_locked) {
@@ -461,14 +461,14 @@ namespace gui
 				dragging_sides_bitmap_ = 0;
 			}
 
-			for(int n = 0; n != frame_->num_frames(); ++n) {
-				const int row = n/frame_->num_frames_per_row();
-				const int col = n%frame_->num_frames_per_row();
+			for(int n = 0; n != frame_->numFrames(); ++n) {
+				const int row = n/frame_->numFramesPerRow();
+				const int col = n%frame_->numFramesPerRow();
 				const int x = xpos - x1*scale + (frame_->area().x() + col*(frame_->area().w()+frame_->pad()))*scale;
 				const int y = ypos - y1*scale + (frame_->area().y() + row*(frame_->area().h()+frame_->pad()))*scale;
 				const rect box(x, y, frame_->area().w()*scale, frame_->area().h()*scale);
 				{
-					KRE::Color color(255, 255, n == 0 ? 0 : 255, frame_->frame_number(cycle_) == n ? 0xFF : 0x88);
+					KRE::Color color(255, 255, n == 0 ? 0 : 255, frame_->frameNumber(cycle_) == n ? 0xFF : 0x88);
 					canvas->drawHollowRect(box, color);
 				}
 
@@ -543,7 +543,7 @@ namespace gui
 
 		solid_rect_ = rect();
 
-		const_solid_info_ptr solid = frame_->solid();
+		ConstSolidInfoPtr solid = frame_->solid();
 		if(solid && solid->area().w()*solid->area().h()) {
 			const rect area = solid->area();
 			solid_rect_ = rect(framex + area.x(), framey + area.y(), area.w(), area.h());

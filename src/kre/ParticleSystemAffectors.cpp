@@ -22,7 +22,7 @@
 */
 
 #include "../asserts.hpp"
-#include "ParticleSystem.hpp"
+#include "particle_system.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "ParticleSystemParameters.hpp"
@@ -608,7 +608,7 @@ namespace KRE
 		{
 			float scale;
 			if(since_system_start_) {
-				scale = s->getValue(get_technique()->get_particle_system()->elapsed_time());
+				scale = s->getValue(get_technique()->get_ParticleSystem()->elapsed_time());
 			} else {
 				scale = s->getValue(1.0f - p.current.time_to_live / p.initial.time_to_live);
 			}

@@ -48,7 +48,7 @@ struct animation_area {
 	{
 		width = 0;
 		height = 0;
-		foreach(const frame::frame_info& f, anim->frame_layout()) {
+		foreach(const frame::frame_info& f, anim->frameLayout()) {
 			width += f.area.w();
 			if(f.area.h() > height) {
 				height = f.area.h();
@@ -73,7 +73,7 @@ typedef std::shared_ptr<animation_area> animation_area_ptr;
 
 bool operator==(const animation_area& a, const animation_area& b)
 {
-	return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->num_frames() == b.anim->num_frames() && a.anim->num_frames_per_row() == b.anim->num_frames_per_row();
+	return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->numFrames() == b.anim->numFrames() && a.anim->numFramesPerRow() == b.anim->numFramesPerRow();
 }
 
 std::set<animation_area_ptr> animation_areas_with_alpha;
@@ -134,11 +134,11 @@ bool animation_area_has_alpha_channel(animation_area_ptr anim)
 
 	const uint32_t* pixels = reinterpret_cast<const uint32_t*>(surf->pixels);
 
-	for(int f = 0; f != anim->anim->num_frames(); ++f) {
-		const frame::frame_info& info = anim->anim->frame_layout()[f];
+	for(int f = 0; f != anim->anim->numFrames(); ++f) {
+		const frame::frame_info& info = anim->anim->frameLayout()[f];
 
-		const int x = f%anim->anim->num_frames_per_row();
-		const int y = f/anim->anim->num_frames_per_row();
+		const int x = f%anim->anim->numFramesPerRow();
+		const int y = f/anim->anim->numFramesPerRow();
 
 		const rect& base_area = anim->anim->area();
 		const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
@@ -254,7 +254,7 @@ UTILITY(compile_objects)
 
 		animation_containing_nodes.push_back(obj_node);
 
-		foreach(variant v, obj_node["particle_system"].as_list()) {
+		foreach(variant v, obj_node["ParticleSystem"].as_list()) {
 			animation_containing_nodes.push_back(v);
 		}
 
@@ -289,7 +289,7 @@ UTILITY(compile_objects)
 					}
 				}
 
-				if(attr_name == "particle_system") {
+				if(attr_name == "ParticleSystem") {
 					anim->is_particle = true;
 				}
 
@@ -358,11 +358,11 @@ UTILITY(compile_objects)
 		surface src = graphics::surface_cache::get(anim->src_image);
 		ASSERT_LOG(src.get() != NULL, "COULD NOT LOAD IMAGE: '" << anim->src_image << "'");
 		int xdst = 0;
-		for(int f = 0; f != anim->anim->num_frames(); ++f) {
-			const frame::frame_info& info = anim->anim->frame_layout()[f];
+		for(int f = 0; f != anim->anim->numFrames(); ++f) {
+			const frame::frame_info& info = anim->anim->frameLayout()[f];
 
-			const int x = f%anim->anim->num_frames_per_row();
-			const int y = f/anim->anim->num_frames_per_row();
+			const int x = f%anim->anim->numFramesPerRow();
+			const int y = f/anim->anim->numFramesPerRow();
 
 			const rect& base_area = anim->anim->area();
 			const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
@@ -403,7 +403,7 @@ UTILITY(compile_objects)
 		node.remove_attr_mutation(variant("h"));
 		node.remove_attr_mutation(variant("pad"));
 
-		const frame::frame_info& first_frame = anim->anim->frame_layout().front();
+		const frame::frame_info& first_frame = anim->anim->frameLayout().front();
 		
 		rect r(anim->dst_area.x() - first_frame.x_adjust, anim->dst_area.y() - first_frame.y_adjust, anim->anim->area().w(), anim->anim->area().h());
 		node.add_attr_mutation(variant("rect"), r.write());
@@ -411,7 +411,7 @@ UTILITY(compile_objects)
 		int xpos = anim->dst_area.x();
 
 		std::vector<int> v;
-		foreach(const frame::frame_info& f, anim->anim->frame_layout()) {
+		foreach(const frame::frame_info& f, anim->anim->frameLayout()) {
 			ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, anim->anim->area().w());
 			ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, anim->anim->area().h());
 			v.push_back(f.x_adjust);

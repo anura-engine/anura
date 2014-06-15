@@ -1478,7 +1478,7 @@ public:
 	{}
 
 	virtual void execute(Level& lvl, custom_object& ob) const {
-		ob.set_frame(anim_);
+		ob.setFrame(anim_);
 	}
 private:
 	std::string anim_;
@@ -2875,7 +2875,7 @@ public:
 	}
 
 	virtual void execute(Level& lvl, custom_object& ob) const {
-		ob.add_particle_system(id_, type_);
+		ob.addParticleSystem(id_, type_);
 	}
 private:
 	std::string id_, type_;

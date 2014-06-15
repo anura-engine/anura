@@ -25,7 +25,7 @@
 
 #include <deque>
 
-class frame;
+class Frame;
 
 //class which represents the blur information for a single object.
 //a blur contains three parameters:
@@ -49,7 +49,7 @@ public:
 	//'granularity' copies of the object's image will be made, linearly
 	//interpolated between start_x,start_y and end_x,end_y.
 	void nextFrame(int start_x, int start_y, int end_x, int end_y,
-	                const frame* f, int time_in_frame, bool facing,
+	                const Frame* f, int time_in_frame, bool facing,
 					bool upside_down, float start_rotate, float rotate);
 
 	void draw() const;
@@ -59,7 +59,7 @@ public:
 
 private:
 	struct BlurFrame {
-		const frame* object_frame;
+		const Frame* object_frame;
 		int time_in_frame;
 		double x, y;
 		bool facing, upside_down;

@@ -474,7 +474,7 @@ int play_internal(const std::string& file, int loops, const void* object, float 
 		return -1;
 	}
 	
-	int result = sdl_play_sound(&s, loops);
+	int result = sdl_playSound(&s, loops);
 #endif
 
 	//record which channel the sound is playing on.

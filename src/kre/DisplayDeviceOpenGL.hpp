@@ -43,7 +43,7 @@ namespace KRE
 		void SetClearColor(float r, float g, float b, float a) override;
 		void SetClearColor(const Color& color) override;
 
-		void Render(const RenderablePtr& r) override;
+		void render(const Renderable* r) const override;
 
 		CanvasPtr GetCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;

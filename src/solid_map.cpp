@@ -21,15 +21,15 @@
 #include "texture.hpp"
 #include "variant.hpp"
 
-const_solid_map_ptr solid_map::create_object_solid_map_from_solid_node(variant node)
+ConstSolidMapPtr solid_map::create_object_solid_map_from_solid_node(variant node)
 {
-	solid_map_ptr result(create_from_texture(graphics::texture::get(node["image"].as_string()), rect(node["area"])));
+	SolidMapPtr result(create_from_texture(graphics::texture::get(node["image"].as_string()), rect(node["area"])));
 	result->id_ = node["id"].as_string();
 	return result;
 
 }
 
-void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_map_ptr>& v)
+void solid_map::create_object_solid_maps(variant node, std::vector<ConstSolidMapPtr>& v)
 {
 	foreach(variant solid_node, node["solid"].as_list()) {
 		v.push_back(create_object_solid_map_from_solid_node(solid_node));
@@ -59,7 +59,7 @@ void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_m
 
 	if(legs_height < area.h()) {
 		rect body(area.x(), area.y(), area.w(), area.h() - legs_height);
-		solid_map_ptr body_map(new solid_map);
+		SolidMapPtr body_map(new solid_map);
 		body_map->id_ = "body";
 		body_map->area_ = body;
 		body_map->solid_.resize(body.w()*body.h(), true);
@@ -83,7 +83,7 @@ void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_m
 	if(legs_height) {
 		//std::cerr << "LEGS_HEIGHT: " << node["id"].as_string() << " " << legs_height << ", FEET_WIDTH: " << feet_width << "\n";
 		rect legs(area.x(), area.y2() - legs_height, area.w(), legs_height);
-		solid_map_ptr legs_map(new solid_map);
+		SolidMapPtr legs_map(new solid_map);
 		legs_map->id_ = "legs";
 		legs_map->area_ = legs;
 		legs_map->solid_.resize(legs.w()*legs.h(), false);
@@ -106,7 +106,7 @@ void solid_map::create_object_solid_maps(variant node, std::vector<const_solid_m
 	}
 }
 
-void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<const_solid_map_ptr>& v)
+void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<ConstSolidMapPtr>& v)
 {
 
 	//intentionally do NOT double the height of the area.
@@ -114,7 +114,7 @@ void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<co
 
 	ASSERT_EQ(area.h(), 1);
 
-	solid_map_ptr platform(new solid_map);
+	SolidMapPtr platform(new solid_map);
 	platform->id_ = "platform";
 	platform->area_ = area;
 	platform->solid_.resize(area.w()*area.h(), true);
@@ -125,7 +125,7 @@ void solid_map::create_object_platform_maps(const rect& area_ref, std::vector<co
 	platform->calculate_side(-100000, 0, platform->all_);
 	v.push_back(platform);
 }
-solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const rect& area_rect)
+SolidMapPtr solid_map::create_from_texture(const graphics::texture& t, const rect& area_rect)
 {
 	rect area = area_rect;
 
@@ -185,7 +185,7 @@ solid_map_ptr solid_map::create_from_texture(const graphics::texture& t, const r
 		}
 	}
 
-	solid_map_ptr solid(new solid_map);
+	SolidMapPtr solid(new solid_map);
 	solid->area_ = rect(area.x()*2, area.y()*2, area.w()*2, area.h()*2);
 	solid->solid_.resize(solid->area_.w()*solid->area_.h(), false);
 	for(int y = 0; y < solid->area_.h(); ++y) {
@@ -284,17 +284,17 @@ void solid_map::calculate_side(int xdir, int ydir, std::vector<point>& points) c
 	}
 }
 
-const_solid_info_ptr solid_info::create_from_solid_maps(const std::vector<const_solid_map_ptr>& solid)
+ConstSolidInfoPtr solid_info::create_from_solid_maps(const std::vector<ConstSolidMapPtr>& solid)
 {
 	if(solid.empty()) {
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	} else {
 		solid_info* result = new solid_info;
 		int x1 = solid.front()->area().x();
 		int y1 = solid.front()->area().y();
 		int x2 = solid.front()->area().x2();
 		int y2 = solid.front()->area().y2();
-		foreach(const_solid_map_ptr s, solid) {
+		foreach(ConstSolidMapPtr s, solid) {
 			if(s->area().x() < x1) {
 				x1 = s->area().x();
 			}
@@ -311,23 +311,23 @@ const_solid_info_ptr solid_info::create_from_solid_maps(const std::vector<const_
 
 		result->area_ = rect::from_coordinates(x1, y1, x2-1, y2-1);
 		result->solid_= solid;
-		return const_solid_info_ptr(result);
+		return ConstSolidInfoPtr(result);
 	}
 }
 
-const_solid_info_ptr solid_info::create(variant node)
+ConstSolidInfoPtr solid_info::create(variant node)
 {
-	std::vector<const_solid_map_ptr> solid;
+	std::vector<ConstSolidMapPtr> solid;
 	solid_map::create_object_solid_maps(node, solid);
 	return create_from_solid_maps(solid);
 }
 
-const_solid_info_ptr solid_info::create_platform(variant node)
+ConstSolidInfoPtr solid_info::create_platform(variant node)
 {
-	std::vector<const_solid_map_ptr> platform;
+	std::vector<ConstSolidMapPtr> platform;
 
 	if(!node.has_key("platform_area")) {
-		return const_solid_info_ptr();
+		return ConstSolidInfoPtr();
 	}
 
 	solid_map::create_object_platform_maps(rect(node["platform_area"]), platform);
@@ -335,23 +335,23 @@ const_solid_info_ptr solid_info::create_platform(variant node)
 	return create_from_solid_maps(platform);
 }
 
-const_solid_info_ptr solid_info::create_platform(const rect& area)
+ConstSolidInfoPtr solid_info::create_platform(const rect& area)
 {
-	std::vector<const_solid_map_ptr> platform;
+	std::vector<ConstSolidMapPtr> platform;
 	solid_map::create_object_platform_maps(area, platform);
 	return create_from_solid_maps(platform);
 }
 
-const_solid_info_ptr solid_info::create_from_texture(const graphics::texture& t, const rect& area)
+ConstSolidInfoPtr solid_info::create_from_texture(const graphics::texture& t, const rect& area)
 {
-	std::vector<const_solid_map_ptr> solid;
+	std::vector<ConstSolidMapPtr> solid;
 	solid.push_back(solid_map::create_from_texture(t, area));
 	return create_from_solid_maps(solid);
 }
 
 bool solid_info::solid_at(int x, int y, const std::string** area_id) const
 {
-	foreach(const const_solid_map_ptr& s, solid_) {
+	foreach(const ConstSolidMapPtr& s, solid_) {
 		if(s->solid_at(x - s->area().x(), y - s->area().y())) {
 			if(area_id) {
 				*area_id = &s->id();

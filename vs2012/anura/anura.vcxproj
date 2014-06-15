@@ -300,6 +300,7 @@
     <ClInclude Include="..\..\src\kre\SceneNode.hpp" />
     <ClInclude Include="..\..\src\kre\SceneObject.hpp" />
     <ClInclude Include="..\..\src\kre\SceneParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\SceneUtil.hpp" />
     <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
     <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\spline.hpp" />
