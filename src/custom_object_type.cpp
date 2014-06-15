@@ -1299,7 +1299,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	next_animation_formula_ = game_logic::formula::create_optional_formula(node["next_animation"], getFunctionSymbols());
 
-	for(variant particle_node : node["ParticleSystem"].as_list()) {
+	for(variant particle_node : node["particle_system"].as_list()) {
 		particle_factories_[particle_node["id"].as_string()] = ParticleSystemFactory::create_factory(particle_node);
 	}
 

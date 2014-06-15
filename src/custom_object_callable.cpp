@@ -252,7 +252,7 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "paused", "bool" },
 		{ "mouseover_delay", "int" },
 		{ "mouseover_area", "[int]" },
-		{ "ParticleSystems", "{string -> object}" },
+		{ "particle_systems", "{string -> object}" },
 
 		{ "truez", "bool" },
 		{ "tx", "decimal" },

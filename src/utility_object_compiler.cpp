@@ -254,7 +254,7 @@ UTILITY(compile_objects)
 
 		animation_containing_nodes.push_back(obj_node);
 
-		foreach(variant v, obj_node["ParticleSystem"].as_list()) {
+		foreach(variant v, obj_node["particle_system"].as_list()) {
 			animation_containing_nodes.push_back(v);
 		}
 
@@ -289,7 +289,7 @@ UTILITY(compile_objects)
 					}
 				}
 
-				if(attr_name == "ParticleSystem") {
+				if(attr_name == "particle_system") {
 					anim->is_particle = true;
 				}
 
