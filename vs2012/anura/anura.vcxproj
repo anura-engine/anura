@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
@@ -311,6 +311,7 @@
     <ClInclude Include="..\..\src\kre\Texture.hpp" />
     <ClInclude Include="..\..\src\kre\TextureOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\TextureSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\TextureUtils.hpp" />
     <ClInclude Include="..\..\src\kre\UniformBuffer.hpp" />
     <ClInclude Include="..\..\src\kre\UniformBufferOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Util.hpp" />
@@ -411,6 +412,7 @@
     <ClInclude Include="..\..\src\tbs_server.hpp" />
     <ClInclude Include="..\..\src\tbs_server_base.hpp" />
     <ClInclude Include="..\..\src\tbs_web_server.hpp" />
+    <ClInclude Include="..\..\src\TextureObject.hpp" />
     <ClInclude Include="..\..\src\text_editor_widget.hpp" />
     <ClInclude Include="..\..\src\thread.hpp" />
     <ClInclude Include="..\..\src\tileset_editor_dialog.hpp" />
@@ -733,6 +735,7 @@
     <ClCompile Include="..\..\src\tbs_server.cpp" />
     <ClCompile Include="..\..\src\tbs_server_base.cpp" />
     <ClCompile Include="..\..\src\tbs_web_server.cpp" />
+    <ClCompile Include="..\..\src\TextureObject.cpp" />
     <ClCompile Include="..\..\src\text_editor_widget.cpp" />
     <ClCompile Include="..\..\src\thread.cpp" />
     <ClCompile Include="..\..\src\tileset_editor_dialog.cpp" />

@@ -43,40 +43,40 @@ namespace KRE
 		PixelFormat();
 		virtual ~PixelFormat();
 
-		virtual uint8_t BitsPerPixel() const = 0;
-		virtual uint8_t BytesPerPixel() const = 0;
+		virtual uint8_t bitsPerPixel() const = 0;
+		virtual uint8_t bytesPerPixel() const = 0;
 
-		virtual bool IsYuvPlanar() const = 0;
-		virtual bool IsYuvPacked() const = 0;
-		virtual bool YuvHeightReversed() const = 0;
-		virtual bool IsInterlaced() const = 0;
+		virtual bool isYuvPlanar() const = 0;
+		virtual bool isYuvPacked() const = 0;
+		virtual bool isYuvHeightReversed() const = 0;
+		virtual bool isInterlaced() const = 0;
 		
-		virtual bool IsRGB() const = 0;
-		virtual bool HasRedChannel() const = 0;
-		virtual bool HasGreenChannel() const = 0;
-		virtual bool HasBlueChannel() const = 0;
-		virtual bool HasAlphaChannel() const = 0;
-		virtual bool HasLuminance() const = 0;
+		virtual bool isRGB() const = 0;
+		virtual bool hasRedChannel() const = 0;
+		virtual bool hasGreenChannel() const = 0;
+		virtual bool hasBlueChannel() const = 0;
+		virtual bool hasAlphaChannel() const = 0;
+		virtual bool hasLuminance() const = 0;
 
-		virtual uint32_t RedMask() const = 0;
-		virtual uint32_t GreenMask() const = 0;
-		virtual uint32_t BlueMask() const = 0;
-		virtual uint32_t AlphaMask() const = 0;
-		virtual uint32_t LuminanceMask() const = 0;
+		virtual uint32_t getRedMask() const = 0;
+		virtual uint32_t getGreenMask() const = 0;
+		virtual uint32_t getBlueMask() const = 0;
+		virtual uint32_t getAlphaMask() const = 0;
+		virtual uint32_t getLuminanceMask() const = 0;
 
-		virtual uint32_t RedShift() const = 0;
-		virtual uint32_t GreenShift() const = 0;
-		virtual uint32_t BlueShift() const = 0;
-		virtual uint32_t AlphaShift() const = 0;
-		virtual uint32_t LuminanceShift() const = 0;
+		virtual uint32_t getRedShift() const = 0;
+		virtual uint32_t getGreenShift() const = 0;
+		virtual uint32_t getBlueShift() const = 0;
+		virtual uint32_t getAlphaShift() const = 0;
+		virtual uint32_t getLuminanceShift() const = 0;
 
-		virtual uint8_t RedBits() const = 0;
-		virtual uint8_t GreenBits() const = 0;
-		virtual uint8_t BlueBits() const = 0;
-		virtual uint8_t AlphaBits() const = 0;
-		virtual uint8_t LuminanceBits() const = 0;
+		virtual uint8_t getRedBits() const = 0;
+		virtual uint8_t getGreenBits() const = 0;
+		virtual uint8_t getBlueBits() const = 0;
+		virtual uint8_t getAlphaBits() const = 0;
+		virtual uint8_t getLuminanceBits() const = 0;
 
-		virtual bool HasPalette() const = 0;
+		virtual bool hasPalette() const = 0;
 
 		enum class PF {
 			PIXELFORMAT_UNKNOWN,
@@ -117,10 +117,10 @@ namespace KRE
 			PIXELFORMAT_UYVY,
 			PIXELFORMAT_YVYU,
 		};
-		virtual PF GetFormat() const = 0;
+		virtual PF getFormat() const = 0;
 
-		virtual std::tuple<int,int> ExtractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) = 0;
-		virtual void EncodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) = 0;
+		virtual std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) = 0;
+		virtual void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) = 0;
 	private:
 		PixelFormat(const PixelFormat&);
 	};
@@ -129,33 +129,41 @@ namespace KRE
 
 	typedef std::function<void(uint32_t&,uint32_t&,uint32_t&,uint32_t&)> SurfaceConvertFn;
 
-	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFn;
+	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFileFn;
+	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
+	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
 
 	class Surface
 	{
 	public:
 		virtual ~Surface();
-		virtual const void* Pixels() const = 0;
+		virtual const void* pixels() const = 0;
 		virtual unsigned width() = 0;
 		virtual unsigned height() = 0;
-		virtual unsigned row_pitch() = 0;
+		virtual unsigned rowPitch() = 0;
 
-		virtual void WritePixels(unsigned bpp, 
+		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
+		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
+		virtual void blitTo(SurfacePtr src, const rect& dst_rect) = 0;
+
+		virtual void writePixels(unsigned bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask,
 			const void* pixels) = 0;
-		virtual void WritePixels(const void* pixels) = 0;
+		virtual void writePixels(const void* pixels) = 0;
 
-		PixelFormatPtr GetPixelFormat();
+		PixelFormatPtr getPixelFormat();
 
-		virtual void Lock() = 0;
-		virtual void Unlock() = 0;
+		virtual void lock() = 0;
+		virtual void unlock() = 0;
 
-		virtual bool HasData() const = 0;
+		virtual bool hasData() const = 0;
 
 		static void clearSurfaceCache();
+
+		virtual void savePng(const std::string& filename) = 0;
 
 		enum BlendMode {
 			BLEND_MODE_NONE,
@@ -163,24 +171,41 @@ namespace KRE
 			BLEND_MODE_ADD,
 			BLEND_MODE_MODULATE,
 		};
-		virtual void SetBlendMode(BlendMode bm) = 0;
-		virtual BlendMode GetBlendMode() const = 0;
+		virtual void setBlendMode(BlendMode bm) = 0;
+		virtual BlendMode getBlendMode() const = 0;
 
-		virtual bool SetClipRect(int x, int y, unsigned width, unsigned height) = 0;
-		virtual void GetClipRect(int& x, int& y, unsigned& width, unsigned& height) = 0;
-		virtual bool SetClipRect(const rect& r) = 0;
-		virtual const rect GetClipRect() = 0;
-		SurfacePtr Convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
+		virtual bool setClipRect(int x, int y, unsigned width, unsigned height) = 0;
+		virtual void getClipRect(int& x, int& y, unsigned& width, unsigned& height) = 0;
+		virtual bool setClipRect(const rect& r) = 0;
+		virtual const rect getClipRect() = 0;
+		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
-		static bool RegisterSurfaceCreator(const std::string& name, SurfaceCreatorFn fn);
-		static void UnRegisterSurfaceCreator(const std::string& name);
-		static SurfacePtr Create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
-		static void ResetSurfaceCache();
+		static bool registerSurfaceCreator(const std::string& name, SurfaceCreatorFileFn file_fn, SurfaceCreatorPixelsFn pixels_fn, SurfaceCreatorMaskFn mask_fn);
+		static void unRegisterSurfaceCreator(const std::string& name);
+		static SurfacePtr create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
+		static SurfacePtr create(unsigned width, 
+			unsigned height, 
+			unsigned bpp, 
+			unsigned row_pitch, 
+			uint32_t rmask, 
+			uint32_t gmask, 
+			uint32_t bmask, 
+			uint32_t amask, 
+			const void* pixels);
+		static SurfacePtr create(unsigned width, 
+			unsigned height, 
+			unsigned bpp, 
+			uint32_t rmask, 
+			uint32_t gmask, 
+			uint32_t bmask, 
+			uint32_t amask);
+
+		static void resetSurfaceCache();
 	protected:
 		Surface();
-		void SetPixelFormat(PixelFormatPtr pf);
+		void setPixelFormat(PixelFormatPtr pf);
 	private:
-		virtual SurfacePtr HandleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
+		virtual SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
 		PixelFormatPtr pf_;
 	};
 

@@ -26,7 +26,8 @@
 #include <iostream>
 
 #include <boost/lexical_cast.hpp>
-#include <glm/gtc/type_ptr.hpp>
+
+#include "kre/TextureUtils.hpp"
 
 #include "asserts.hpp"
 #include "fbo_scene.hpp"
@@ -42,6 +43,7 @@
 #include "string_utils.hpp"
 #include "surface_formula.hpp"
 #include "surface_palette.hpp"
+#include "TextureObject.hpp"
 #include "variant_utils.hpp"
 
 PREF_FLOAT(global_frame_scale, 2.0, "Sets the global frame scales for all frames in all animations");
@@ -87,7 +89,7 @@ void Frame::buildPatterns(variant obj_variant)
 
 		std::vector<KRE::SurfacePtr> surfaces;
 		for(const std::string& fname : files) {
-			surfaces.emplace_back(KRE::Surface::Create(dir + "/" + fname, true));
+			surfaces.emplace_back(KRE::Surface::create(dir + "/" + fname, true));
 
 			ASSERT_LOG(surfaces.back()->width() == surfaces.front()->width() &&
 			           surfaces.back()->height() == surfaces.front()->height(),
@@ -106,29 +108,31 @@ void Frame::buildPatterns(variant obj_variant)
 
 		ASSERT_LOG(total_height <= 2048, pattern.debug_location() << ": Animation too large: cannot fit in 2048x2048: " << pattern.as_string());
 
-		const int texture_width = texture::next_power_of_2(total_width);
-		const int texture_height = texture::next_power_of_2(total_height);
+		const unsigned texture_width = KRE::next_power_of_two(total_width);
+		const unsigned texture_height = KRE::next_power_of_two(total_height);
 
-		surface sheet(SDL_CreateRGBSurface(0, texture_width, texture_height, 32, SURFACE_MASK));
+		KRE::SurfacePtr sheet = KRE::Surface::create(texture_width, texture_height, 32, 0, 0, 0, 0xff);
 
 		for(int n = 0; n != surfaces.size(); ++n) {
-			surface src = surfaces[n];
-			SDL_Rect blit_src = {0, 0, surfaces.front()->w, surfaces.front()->h};
 			const int xframe = n%frames_per_row;
 			const int yframe = n/frames_per_row;
-			SDL_Rect blit_dst = {xframe*surfaces.front()->w, yframe*surfaces.front()->h, blit_src.w, blit_src.h};
-			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
-			SDL_BlitSurface(src.get(), &blit_src, sheet.get(), &blit_dst);
+			auto src = surfaces[n];
+			src->setBlendMode(KRE::Surface::BlendMode::BLEND_MODE_NONE);
+			unsigned sw = surfaces.front()->width();
+			unsigned sh = surfaces.front()->height();
+			sheet->blitTo(src, rect(xframe*sw, yframe*sh, sw, sh));
 		}
 
-		graphics::texture tex = graphics::texture::get_no_cache(sheet);
-		boost::intrusive_ptr<texture_object> tex_obj(new texture_object(tex));
+		// Create uncached texture from surface.
+		auto tex = KRE::Texture::createTexture(sheet, false);
+
+		boost::intrusive_ptr<TextureObject> tex_obj(new TextureObject(tex));
 
 		std::vector<variant> area;
 		area.push_back(variant(0));
 		area.push_back(variant(0));
-		area.push_back(variant(surfaces.front()->w-1));
-		area.push_back(variant(surfaces.front()->h-1));
+		area.push_back(variant(surfaces.front()->width()-1));
+		area.push_back(variant(surfaces.front()->height()-1));
 
 		item.add_attr_mutation(variant("fbo"), variant(tex_obj.get()));
 		item.add_attr_mutation(variant("image"), variant("fbo"));
@@ -139,7 +143,7 @@ void Frame::buildPatterns(variant obj_variant)
 	}
 }
 
-Frame::frame(variant node)
+Frame::Frame(variant node)
    : id_(node["id"].as_string()),
      variant_id_(id_),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
@@ -187,20 +191,19 @@ Frame::frame(variant node)
 	 force_no_alpha_(node["force_no_alpha"].as_bool(false)),
 	 no_remove_alpha_borders_(node["no_remove_alpha_borders"].as_bool(false)),
 	 collision_areas_inside_frame_(true),
-	 current_palette_(-1), 
-	 back_face_culling_(node["cull"].as_bool(false))
+	 current_palette_(-1)
 {
 	if(node.has_key("obj") == false) {
 		image_ = node["image"].as_string();
 		if(node.has_key("fbo")) {
-			texture_ = node["fbo"].convert_to<texture_object>()->texture();
+			texture_ = node["fbo"].convert_to<TextureObject>()->texture();
 		} else {
-			texture_ = graphics::texture::get(image_, node["image_formula"].as_string_default());
+			texture_ = KRE::Texture::createTexture(image_, node["image_formula"]);
 		}
 	}
 
 	std::vector<std::string> hit_frames = util::split(node["hit_frames"].as_string_default());
-	foreach(const std::string& f, hit_frames) {
+	for(const std::string& f : hit_frames) {
 		hit_frames_.push_back(boost::lexical_cast<int>(f));
 	}
 
@@ -209,7 +212,7 @@ Frame::frame(variant node)
 		//events are in the format time0:time1:...:timen:event0,time0:time1:...:timen:event1,...
 		std::vector<std::string> event_vector = util::split(events);
 		std::map<int, std::string> event_map;
-		foreach(const std::string& e, event_vector) {
+		for(const std::string& e : event_vector) {
 			std::vector<std::string> time_event = util::split(e, ':');
 			if(time_event.size() < 2) {
 				continue;
@@ -224,14 +227,14 @@ Frame::frame(variant node)
 		}
 
 		typedef std::pair<int,std::string> event_pair;
-		foreach(const event_pair& p, event_map) {
+		for(const event_pair& p : event_map) {
 			event_frames_.push_back(p.first);
 			event_names_.push_back(p.second);
 		}
 	}
 
 	static const std::string AreaPostfix = "_area";
-	foreach(const variant_pair& val, node.as_map()) {
+	for(const variant_pair& val : node.as_map()) {
 		const std::string& attr = val.first.as_string();
 		if(attr.size() <= AreaPostfix.size() || std::equal(AreaPostfix.begin(), AreaPostfix.end(), attr.end() - AreaPostfix.size()) == false || attr == "solid_area" ||attr == "platform_area") {
 			continue;
@@ -249,7 +252,7 @@ Frame::frame(variant node)
 			r = rect(0, 0, width(), height());
 		} else if(value.is_list()) {
 			std::vector<int> v;
-			foreach(const variant& var, value.as_list()) {
+			for(const variant& var : value.as_list()) {
 				if(var.is_int()) {
 					v.push_back(var.as_int());
 				} else if(var.is_string() && var.as_string() == "solid") {
@@ -267,7 +270,7 @@ Frame::frame(variant node)
 			}
 		}
 
-		collision_area area = { area_id, r, solid };
+		CollisionArea area = { area_id, r, solid };
 		collision_areas_.push_back(area);
 
 		if(solid && (r.x() < 0 || r.y() < 0 || r.x2() > width() || r.y2() > height())) {
@@ -286,7 +289,7 @@ Frame::frame(variant node)
 		const int* i = &values[0];
 		const int* i2 = &values[0] + num_values;
 		while(i != i2) {
-			frame_info info;
+			FrameInfo info;
 			info.x_adjust = *i++;
 			info.y_adjust = *i++;
 			info.x2_adjust = *i++;
@@ -311,7 +314,7 @@ Frame::frame(variant node)
 	}
 
 	std::vector<std::string> palettes = parse_variant_list_or_csv_string(node["palettes"]);
-	foreach(const std::string& p, palettes) {
+	for(const std::string& p : palettes) {
 		palettes_recognized_.push_back(graphics::get_palette_id(p));
 	}
 
@@ -322,11 +325,11 @@ Frame::frame(variant node)
 		}
 	}
 
-	foreach(const variant_pair& value, node.as_map()) {
+	for(const variant_pair& value : node.as_map()) {
 		static const std::string PivotPrefix = "pivot_";
 		const std::string& attr = value.first.as_string();
 		if(attr.size() > PivotPrefix.size() && std::equal(PivotPrefix.begin(), PivotPrefix.end(), attr.begin())) {
-			pivot_schedule schedule;
+			PivotSchedule schedule;
 			schedule.name = std::string(attr.begin() + PivotPrefix.size(), attr.end());
 
 			std::vector<int> values = value.second.as_list_int();
@@ -354,135 +357,10 @@ Frame::frame(variant node)
 		}
 	}
 
-	if(node.has_key("obj")) {
-		if(node["obj"].is_string()) {
-			std::vector<obj::obj_data> odata;
-			obj::load_obj_file(node["obj"].as_string(), odata);
-			ASSERT_LOG(!odata.empty(), "No data read from .obj file: " << node["obj"].as_string());
-
-			const size_t vbo_cnt = odata.size();
-			vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
-			glGenBuffers(vbo_cnt, &vbo_array_[0]);
-
-			int bufcnt = 0;
-			for(auto o : odata) {
-				ASSERT_LOG(o.face_vertices.size() == o.face_normals.size(), "Number of vertices != number of normals: " << o.face_vertices.size()/3 << " != " << o.face_normals.size()/3);
-				ASSERT_LOG(o.face_vertices.size()/3 == o.face_uvs.size()/2, "Number of vertices != number of uv co-ords: " << o.face_vertices.size()/3 << " != " << o.face_uvs.size()/2);
-				draw_data_3d dd3d;
-				dd3d.num_vertices = 3;
-				dd3d.vertex_count = o.face_vertices.size()/3;
-				dd3d.vertex_offset = 0;
-				dd3d.texture_offset = o.face_vertices.size() * sizeof(GLfloat);
-				dd3d.normal_offset = (o.face_uvs.size() + o.face_vertices.size()) * sizeof(GLfloat);
-				dd3d.mtl = o.mtl;
-				dd3d.vbo_cnt = bufcnt;
-
-				if(dd3d.mtl.tex_ambient.empty() == false) {
-					dd3d.tex_a = graphics::texture::get(dd3d.mtl.tex_ambient);
-				}
-				if(dd3d.mtl.tex_diffuse.empty() == false) {
-					dd3d.tex_d = graphics::texture::get(dd3d.mtl.tex_diffuse);
-				}
-				if(dd3d.mtl.tex_specular.empty() == false) {
-					dd3d.tex_s = graphics::texture::get(dd3d.mtl.tex_specular);
-				}
-
-				glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[bufcnt]);
-				const size_t data_size = (o.face_vertices.size() + o.face_normals.size() + o.face_uvs.size()) * sizeof(GLfloat);
-				glBufferData(GL_ARRAY_BUFFER, data_size, NULL, GL_STATIC_DRAW);
-				glBufferSubData(GL_ARRAY_BUFFER, dd3d.vertex_offset, o.face_vertices.size() * sizeof(GLfloat), &o.face_vertices[0]);
-				glBufferSubData(GL_ARRAY_BUFFER, dd3d.texture_offset, o.face_uvs.size() * sizeof(GLfloat), &o.face_uvs[0]);
-				glBufferSubData(GL_ARRAY_BUFFER, dd3d.normal_offset, o.face_normals.size() * sizeof(GLfloat), &o.face_normals[0]);
-				glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-				dd3d_array_.push_back(dd3d);
-				++bufcnt;
-			}
-		} else {
-			ASSERT_LOG(node["obj"].is_list(), "Attribute 'obj' must either be a a string or list of strings.");
-			// XXX
-		}
-	} else {
-		draw_data_3d dd3d;
-		dd3d.normal_offset = 0;
-		dd3d.vertex_offset = 0;
-		std::vector<GLfloat> vertex_data;
-		const int vbo_cnt = 1;
-		vbo_array_ = graphics::vbo_array(new GLuint[vbo_cnt], graphics::vbo_deleter(vbo_cnt));
-		glGenBuffers(vbo_cnt, &vbo_array_[0]);
-
-		if(node.has_key("vertices")) {
-			const variant& vertices = node["vertices"];
-			ASSERT_LOG(vertices.is_list(), "Attribute 'vertices' must be a list type.");
-
-			dd3d.num_vertices = vertices[0].num_elements();
-			for(int n = 0; n != vertices.num_elements(); ++n) {
-				ASSERT_LOG(vertices[n].is_list(), "Each element of the 'vertices' list must be a list.");
-				ASSERT_LOG(vertices[n].num_elements() == dd3d.num_vertices, "Each element in 'vertices' list must have same number of co-ordinates.");
-				for(int m = 0; m != vertices[n].num_elements(); ++m) {
-					vertex_data.push_back(GLfloat(vertices[n][m].as_decimal().as_float()));
-				}
-			}
-
-		} else {
-			vertex_data.push_back(0);	vertex_data.push_back(0);	vertex_data.push_back(0);
-			vertex_data.push_back(1);	vertex_data.push_back(0);	vertex_data.push_back(0);
-			vertex_data.push_back(1);	vertex_data.push_back(1);	vertex_data.push_back(0);
-
-			vertex_data.push_back(1);	vertex_data.push_back(1);	vertex_data.push_back(0);
-			vertex_data.push_back(0);	vertex_data.push_back(1);	vertex_data.push_back(0);
-			vertex_data.push_back(0);	vertex_data.push_back(0);	vertex_data.push_back(0);
-			dd3d.num_vertices = 3;
-		}
-
-		std::vector<GLfloat> texcoords;
-		if(node.has_key("texcoords")) {
-			const variant& tc = node["texcoords"];
-			ASSERT_LOG(tc.is_list(), "Attribute 'texcoords' must be a list type.");
-			for(int n = 0; n != tc.num_elements(); ++n) {
-				ASSERT_LOG(tc[n].is_list(), "Each element of the 'texcoords' list must be a list.");
-				for(int m = 0; m != tc[n].num_elements(); ++m) {
-					texcoords.push_back(GLfloat(tc[n][m].as_decimal().as_float()));
-				}
-			}
-		} else {
-
-			for(int t = 0; t < nframes_; ++t) {
-				const frame_info* info = NULL;
-				GLfloat rect[4];
-				getRectInTexture(frame_time_ > 0 ? t * frame_time_ : t, &rect[0], info);
-				rect[0] = texture_.translate_coord_x(rect[0]);
-				rect[1] = texture_.translate_coord_y(rect[1]);
-				rect[2] = texture_.translate_coord_x(rect[2]);
-				rect[3] = texture_.translate_coord_y(rect[3]);
-
-				texcoords.push_back(rect[2]); texcoords.push_back(rect[3]);
-				texcoords.push_back(rect[0]); texcoords.push_back(rect[3]);
-				texcoords.push_back(rect[0]); texcoords.push_back(rect[1]);
-	
-				texcoords.push_back(rect[0]); texcoords.push_back(rect[1]);
-				texcoords.push_back(rect[2]); texcoords.push_back(rect[1]);
-				texcoords.push_back(rect[2]); texcoords.push_back(rect[3]);
-			}
-		}
-
-		const size_t data_size = (vertex_data.size() + texcoords.size()) * sizeof(GLfloat);
-		dd3d.vertex_count = vertex_data.size()/dd3d.num_vertices;
-		dd3d.vbo_cnt = 0;
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[0]);
-		glBufferData(GL_ARRAY_BUFFER, data_size, NULL, GL_STATIC_DRAW);
-		glBufferSubData(GL_ARRAY_BUFFER, 0, vertex_data.size()*sizeof(GLfloat), &vertex_data[0]);
-		dd3d.texture_offset = vertex_data.size()*sizeof(GLfloat);
-		dd3d.tex_a = texture_;
-
-		glBufferSubData(GL_ARRAY_BUFFER, dd3d.texture_offset, texcoords.size()*sizeof(GLfloat), &texcoords[0]);
-		glBindBuffer(GL_ARRAY_BUFFER, 0);
-
-		dd3d_array_.push_back(dd3d);
-	}
+	// Need to do stuff with co-ordinates here I think.
 }
 
-Frame::~frame()
+Frame::~Frame()
 {
 	if(palettes_recognized_.empty() == false) {
 		palette_frames().erase(this);
@@ -506,12 +384,14 @@ void Frame::setPalettes(unsigned int palettes)
 
 	if(palettes == 0) {
 		if(current_palette_ != -1) {
-			texture_ = graphics::texture::get(image_);
+			auto texture_ = KRE::Texture::createTexture(image_);
 			current_palette_ = -1;
 		}
 		return;
 	}
 
+	auto texture_ = KRE::Texture::createTexture(image_);
+	// XXX Need to add this.
 	texture_ = graphics::texture::get_palette_mapped(image_, npalette);
 	current_palette_ = npalette;
 }
@@ -519,8 +399,8 @@ void Frame::setPalettes(unsigned int palettes)
 void Frame::setColorPalette(unsigned int palettes)
 {
 	current_palette_mask = palettes;
-	for(std::set<frame*>::iterator i = palette_frames().begin(); i != palette_frames().end(); ++i) {
-		(*i)->setPalettes(palettes);
+	for(auto i : palette_frames()) {
+		i->setPalettes(palettes);
 	}
 }
 
@@ -541,7 +421,7 @@ void Frame::playSound(const void* object) const
 
 void Frame::buildAlphaFromFrameInfo()
 {
-	if(!texture_.valid()) {
+	if(texture_ == NULL) {
 		return;
 	}
 
@@ -556,7 +436,7 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_LT(area.x(), texture_.width());
 			ASSERT_LE(area.x() + area.w(), texture_.width());
 			ASSERT_LT(area.y() + y, texture_.height());
-			std::vector<bool>::const_iterator src = texture_.getAlpha_row(area.x(), area.y() + y);
+			std::vector<bool>::const_iterator src = texture_->getAlpha_row(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
 			
@@ -575,7 +455,7 @@ void Frame::buildAlphaFromFrameInfo()
 void Frame::buildAlpha()
 {
 	frames_.resize(nframes_);
-	if(!texture_.valid()) {
+	if(texture_ == NULL) {
 		return;
 	}
 
@@ -587,10 +467,10 @@ void Frame::buildAlpha()
 		const int xbase = img_rect_.x() + current_col*(img_rect_.w()+pad_);
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
-		if(xbase < 0 || ybase < 0 || xbase + img_rect_.w() > texture_.width() ||
-		   ybase + img_rect_.h() > texture_.height()) {
+		if(xbase < 0 || ybase < 0 || xbase + img_rect_.w() > texture_->width() ||
+		   ybase + img_rect_.h() > texture_->height()) {
 			std::cerr << "IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_.width() << "," << texture_.height() << "\n";
-			throw error();
+			throw Error();
 		}
 
 		for(int y = 0; y != img_rect_.h(); ++y) {
@@ -605,7 +485,7 @@ void Frame::buildAlpha()
 
 		//now calculate if the actual frame we should be using for drawing
 		//is smaller than the outer rectangle, so we can save on drawing space
-		frame_info& f = frames_[n];
+		auto& f = frames_[n];
 		f.area = rect(xbase, ybase, img_rect_.w(), img_rect_.h());
 
 		if(no_remove_alpha_borders_) {
@@ -638,7 +518,7 @@ void Frame::buildAlpha()
 					has_opaque = true;
 				}
 				if(n+1 != img_rect_.h()) {
-					a += texture_.width();
+					a += texture_->width();
 				}
 			}
 
@@ -658,7 +538,7 @@ void Frame::buildAlpha()
 				}
 
 				if(n+1 != img_rect_.h()) {
-					a += texture_.width();
+					a += texture_->width();
 				}
 			}
 
@@ -830,71 +710,6 @@ void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 	                       rect[0], rect[1], rect[2], rect[3]);
 }
 
-#if defined(USE_ISOMAP)
-void Frame::draw3(int time, GLint va, GLint tc) const
-{
-	const int nframe = frameNumber(time);
-
-	glEnable(GL_DEPTH_TEST);
-	if(back_face_culling_) {
-		glEnable(GL_CULL_FACE);
-	}
-	glEnableVertexAttribArray(va);
-	glEnableVertexAttribArray(tc);
-
-	for(auto& dd3d : dd3d_array_) {
-		size_t tex_unit = GL_TEXTURE0;
-		if(dd3d.tex_a.valid()) {
-			glActiveTexture(tex_unit);
-			dd3d.tex_a.set_as_currentTexture();
-			++tex_unit;
-		}
-		if(dd3d.tex_d.valid()) {
-			glActiveTexture(tex_unit);
-			if(tex_unit == GL_TEXTURE0) {
-				dd3d.tex_d.set_as_currentTexture();
-			} else {
-				glBindTexture(GL_TEXTURE_2D, dd3d.tex_d.getId());
-			}
-			++tex_unit;
-		}
-		if(dd3d.tex_s.valid()) {
-			glActiveTexture(tex_unit);
-			if(tex_unit == GL_TEXTURE0) {
-				dd3d.tex_s.set_as_currentTexture();
-			} else {
-				glBindTexture(GL_TEXTURE_2D, dd3d.tex_s.getId());
-			}
-			++tex_unit;
-		}
-
-		glBindBuffer(GL_ARRAY_BUFFER, vbo_array_[dd3d.vbo_cnt]);
-		glVertexAttribPointer(va, 
-			dd3d.num_vertices,  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,					// stride
-			0					// array buffer offset
-		);
-	
-		glVertexAttribPointer(tc, 
-			2,                  // size
-			GL_FLOAT,           // type
-			GL_FALSE,           // normalized?
-			0,					// stride
-			reinterpret_cast<const GLfloat*>(dd3d.texture_offset + sizeof(GLfloat)*nframe*12)	// array buffer offset
-		);
-		glDrawArrays(GL_TRIANGLES, 0, dd3d.vertex_count);
-	}
-	glDisableVertexAttribArray(va);
-	glDisableVertexAttribArray(tc);
-	glBindBuffer(GL_ARRAY_BUFFER, 0);
-	if(back_face_culling_) {
-		glDisable(GL_CULL_FACE);
-	}
-	glDisable(GL_DEPTH_TEST);
-}
-#endif
 
 void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
 {
@@ -948,7 +763,7 @@ void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, con
 	glTranslatef(center_x, center_y, 0.0);
 	glRotatef(rotate,0.0,0.0,1.0);
 
-	foreach(const CustomPoint& p, points) {
+	for(const CustomPoint& p : points) {
 		GLfloat pos = p.pos;
 
 		if(pos > 4.0) {
@@ -1021,7 +836,7 @@ void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, con
 
 PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
-void Frame::drawCustom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
+void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
 {
 	texture_.set_as_currentTexture();
 
@@ -1105,36 +920,28 @@ void Frame::drawCustom(int x, int y, const GLfloat* xy, const GLfloat* uv, int n
 	glPopMatrix();
 }
 
-void Frame::getRectInTexture(int time, GLfloat* output_rect, const frame_info*& info) const
+void Frame::getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const
 {
 	//picks out a single frame to draw from a whole animation, based on time
 	getRectInFrameNumber(frameNumber(time), output_rect, info);
 }
 
-void Frame::getRectInFrameNumber(int nframe, GLfloat* output_rect, const frame_info*& info_result) const
+void Frame::getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info_result) const
 {
-	const frame_info& info = frames_[nframe];
+	const FrameInfo& info = frames_[nframe];
 	info_result = &info;
 
 	if(info.draw_rect_init) {
-		memcpy(output_rect, info.draw_rect, sizeof(*output_rect)*4);
+		output_rect = info.draw_rect;
 		return;
 	}
 
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
-	//a tiny amount we subtract from the right/bottom side of the texture,
-	//to avoid rounding errors in floating point going over the edge.
-	//This seems like a kludge but I don't know of a better way to do it. :(
-	const GLfloat TextureEpsilon = 0.1;
+	output_rect = texture_->GetNormalisedTextureCoords(info.area);
 
-	output_rect[0] = GLfloat(info.area.x() + TextureEpsilon)/GLfloat(texture_.width());
-	output_rect[1] = GLfloat(info.area.y() + TextureEpsilon) / GLfloat(texture_.height());
-	output_rect[2] = GLfloat(info.area.x() + info.area.w() - TextureEpsilon)/GLfloat(texture_.width());
-	output_rect[3] = GLfloat(info.area.y() + info.area.h() - TextureEpsilon)/GLfloat(texture_.height());
-
-	memcpy(info.draw_rect, output_rect, sizeof(*output_rect)*4);
+	info.draw_rect = output_rect;
 	info.draw_rect_init = true;
 }
 
@@ -1213,7 +1020,7 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 		return point(getFeetX(),getFeetY());
 	}
 
-	foreach(const pivot_schedule& s, pivots_) {
+	for(const PivotSchedule& s : pivots_) {
 		if(s.name != name) {
 			continue;
 		}
@@ -1228,7 +1035,9 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
 }
 
-variant Frame::getValue(const std::string& key) const
-{
-	return variant();
-}
+BEGIN_DEFINE_CALLABLE_NOBASE(Frame)
+	DEFINE_FIELD(id, "string")
+		return obj.variantId();
+	DEFINE_FIELD(image, "string")
+		return variant(obj.getImageName());
+END_DEFINE_CALLABLE(Frame)

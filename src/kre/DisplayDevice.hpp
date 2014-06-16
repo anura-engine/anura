@@ -116,7 +116,8 @@ namespace KRE
 			Texture::Type type=Texture::Type::TEXTURE_2D, 
 			int mipmap_levels=0);
 
-		static TexturePtr CreateTexture(const SurfacePtr& surface, const variant& node);
+		static TexturePtr CreateTexture(const SurfacePtr& surface, bool cache);
+		static TexturePtr CreateTexture(const SurfacePtr& surface, bool cache, const variant& node);
 		static TexturePtr CreateTexture(const SurfacePtr& surface, 
 			Texture::Type type=Texture::Type::TEXTURE_2D, 
 			int mipmap_levels=0);

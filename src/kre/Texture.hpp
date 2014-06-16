@@ -32,17 +32,6 @@
 
 namespace KRE
 {
-	inline unsigned next_power_of_2(unsigned n) {
-		--n;
-		n = n|(n >> 1);
-		n = n|(n >> 2);
-		n = n|(n >> 4);
-		n = n|(n >> 8);
-		n = n|(n >> 16);
-		++n;
-		return n;
-	}
-
 	class Texture;
 	typedef std::shared_ptr<Texture> TexturePtr;
 
@@ -123,18 +112,17 @@ namespace KRE
 		static TexturePtr createTexture(const std::string& filename,
 			Type type=Type::TEXTURE_2D, 
 			int mipmap_levels=0);
+		static TexturePtr createTexture(const std::string& filename, const variant& node);
+		static TexturePtr createTexture(const SurfacePtr& surface, bool cache);
+		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
 		/* XXX need to add all these.
-		static TexturePtr CreateTexture(const SurfacePtr& surface, const variant& node);
-		static TexturePtr CreateTexture(const SurfacePtr& surface, 
-			Texture::Type type=Texture::Type::TEXTURE_2D, 
-			int mipmap_levels=0);
 		static TexturePtr CreateTexture(unsigned width, PixelFormat::PF fmt);
 		static TexturePtr CreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D);
 		static TexturePtr CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
 
 		*/
+		const SurfacePtr& getSurface() const { return surface_; }
 	protected:
-		const SurfacePtr& GetSurface() const { return surface_; }
 		void SetTextureDimensions(unsigned w, unsigned h, unsigned d=0);
 	private:
 		virtual void Rebuild() = 0;

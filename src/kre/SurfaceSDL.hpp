@@ -36,45 +36,45 @@ namespace KRE
 		SDLPixelFormat(const SDL_PixelFormat* pf);
 		virtual ~SDLPixelFormat();
 
-		uint8_t BitsPerPixel() const override;
-		uint8_t BytesPerPixel() const override;
+		uint8_t bitsPerPixel() const override;
+		uint8_t bytesPerPixel() const override;
 
-		bool IsYuvPlanar() const override;
-		bool IsYuvPacked() const override;
-		bool YuvHeightReversed() const override;
-		bool IsInterlaced() const override;
+		bool isYuvPlanar() const override;
+		bool isYuvPacked() const override;
+		bool isYuvHeightReversed() const override;
+		bool isInterlaced() const override;
 		
-		bool IsRGB() const override;
-		bool HasRedChannel() const override;
-		bool HasGreenChannel() const override;
-		bool HasBlueChannel() const override;
-		bool HasAlphaChannel() const override;
-		bool HasLuminance() const override;
+		bool isRGB() const override;
+		bool hasRedChannel() const override;
+		bool hasGreenChannel() const override;
+		bool hasBlueChannel() const override;
+		bool hasAlphaChannel() const override;
+		bool hasLuminance() const override;
 
-		uint32_t RedMask() const override;
-		uint32_t GreenMask() const override;
-		uint32_t BlueMask() const override;
-		uint32_t AlphaMask() const override;
-		uint32_t LuminanceMask() const override;
+		uint32_t getRedMask() const override;
+		uint32_t getGreenMask() const override;
+		uint32_t getBlueMask() const override;
+		uint32_t getAlphaMask() const override;
+		uint32_t getLuminanceMask() const override;
 
-		uint8_t RedBits() const override;
-		uint8_t GreenBits() const override;
-		uint8_t BlueBits() const override;
-		uint8_t AlphaBits() const override;
-		uint8_t LuminanceBits() const override;
+		uint8_t getRedBits() const override;
+		uint8_t getGreenBits() const override;
+		uint8_t getBlueBits() const override;
+		uint8_t getAlphaBits() const override;
+		uint8_t getLuminanceBits() const override;
 
-		uint32_t RedShift() const override;
-		uint32_t GreenShift() const override;
-		uint32_t BlueShift() const override;
-		uint32_t AlphaShift() const override;
-		uint32_t LuminanceShift() const override;
+		uint32_t getRedShift() const override;
+		uint32_t getGreenShift() const override;
+		uint32_t getBlueShift() const override;
+		uint32_t getAlphaShift() const override;
+		uint32_t getLuminanceShift() const override;
 
-		PixelFormat::PF GetFormat() const override;
+		PixelFormat::PF getFormat() const override;
 
-		std::tuple<int,int> ExtractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
-		void EncodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
+		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
+		void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
 
-		bool HasPalette() const override;
+		bool hasPalette() const override;
 	private:
 		const SDL_PixelFormat* pf_;
 	};
@@ -92,9 +92,9 @@ namespace KRE
 			uint32_t bmask, 
 			uint32_t amask, 
 			void* pixels);
-		SurfaceSDL(size_t width, 
-			size_t height, 
-			size_t bpp, 
+		SurfaceSDL(unsigned width, 
+			unsigned height, 
+			unsigned bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
@@ -102,14 +102,14 @@ namespace KRE
 		SurfaceSDL(SDL_Surface* surface);
 		SurfaceSDL(unsigned width, unsigned height, PixelFormat::PF format);
 		virtual ~SurfaceSDL();
-		const void* Pixels() const override;
-		void WritePixels(unsigned bpp, 
+		const void* pixels() const override;
+		void writePixels(unsigned bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask,
 			const void* pixels) override;
-		void WritePixels(const void* pixels) override;
+		void writePixels(const void* pixels) override;
 		unsigned width() override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->w;
@@ -118,34 +118,52 @@ namespace KRE
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->h;
 		}
-		unsigned row_pitch() override {
+		unsigned rowPitch() override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->pitch;
 		}
 
-		virtual bool HasData() const override {
+		virtual bool hasData() const override {
 			if(surface_ == NULL) {
 				return false;
 			}
 			return has_data_;
 		}
 
-		void SetBlendMode(BlendMode bm) override;
-		BlendMode GetBlendMode() const override;
+		void setBlendMode(BlendMode bm) override;
+		BlendMode getBlendMode() const override;
 
-		bool SetClipRect(int x, int y, unsigned width, unsigned height) override;
-		void GetClipRect(int& x, int& y, unsigned& width, unsigned& height) override;
-		bool SetClipRect(const rect& r) override;
-		const rect GetClipRect() override;
+		bool setClipRect(int x, int y, unsigned width, unsigned height) override;
+		void getClipRect(int& x, int& y, unsigned& width, unsigned& height) override;
+		bool setClipRect(const rect& r) override;
+		const rect getClipRect() override;
 
-		static SurfacePtr CreateFromFile(const std::string&, PixelFormat::PF fmt, SurfaceConvertFn fn);
+		static SurfacePtr createFromFile(const std::string&, PixelFormat::PF fmt, SurfaceConvertFn fn);
+		static SurfacePtr createFromPixels(unsigned width, 
+			unsigned height, 
+			unsigned bpp, 
+			unsigned row_pitch, 
+			uint32_t rmask, 
+			uint32_t gmask, 
+			uint32_t bmask, 
+			uint32_t amask, 
+			void* pixels);
+		static SurfacePtr createFromMask(unsigned width, 
+			unsigned height, 
+			unsigned bpp, 
+			uint32_t rmask, 
+			uint32_t gmask, 
+			uint32_t bmask, 
+			uint32_t amask);
 
-		void Lock() override;
-		void Unlock() override;
+		void lock() override;
+		void unlock() override;
+
+		void savePng(const std::string& filename) override;
 
 		SDL_Surface* get() { return surface_; }
 	private:
-		SurfacePtr HandleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
+		SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
 
 		SDL_Surface* surface_;
 		bool has_data_;

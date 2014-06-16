@@ -75,7 +75,7 @@ public:
 	static ConstSolidInfoPtr create(variant node);
 	static ConstSolidInfoPtr create_platform(variant node);
 	static ConstSolidInfoPtr create_platform(const rect& area);
-	static ConstSolidInfoPtr create_from_texture(const graphics::texture& t, const rect& area);
+	static ConstSolidInfoPtr create_from_texture(const KRE::TexturePtr& t, const rect& area);
 	const std::vector<ConstSolidMapPtr>& solid() const { return solid_; }
 	const rect& area() const { return area_; }
 	bool solid_at(int x, int y, const std::string** area_id=NULL) const;

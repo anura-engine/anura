@@ -27,6 +27,7 @@
 #include <vector>
 
 #include "kre/Material.hpp"
+#include "kre/SceneObject.hpp"
 
 #include "formula.hpp"
 #include "solid_map_fwd.hpp"
@@ -34,7 +35,7 @@
 #include <glm/glm.hpp>
 
 
-class Frame : public game_logic::FormulaCallable
+class Frame : public game_logic::FormulaCallable, public KRE::SceneObject
 {
 public:
 	//exception thrown when there's a loading error.
@@ -134,7 +135,7 @@ public:
 		rect area;
 
 		mutable bool draw_rect_init;
-		mutable float draw_rect[4];
+		mutable rectf draw_rect;
 	};
 
 	const std::vector<FrameInfo>& frameLayout() const { return frames_; }
@@ -142,9 +143,10 @@ public:
 	point pivot(const std::string& name, int time_in_frame) const;
 	int frameNumber(int time_in_frame) const;
 private:
+	DECLARE_CALLABLE(Frame);
 
-	void getRectInTexture(int time, float* output_rect, const FrameInfo*& info) const;
-	void getRectInFrameNumber(int nframe, float* output_rect, const FrameInfo*& info) const;
+	void getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const;
+	void getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info) const;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -204,6 +206,4 @@ private:
 	std::vector<PivotSchedule> pivots_;
 
 	void setPalettes(unsigned int palettes);
-
-	variant getValue(const std::string& key) const;
 };

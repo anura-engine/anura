@@ -21,23 +21,25 @@
 	   distribution.
 */
 
+#include <tuple>
+
 #include "Surface.hpp"
 
 namespace KRE
 {
 	namespace
 	{
-		typedef std::map<std::string,SurfaceCreatorFn> CreatorMap;
+		typedef std::map<std::string,std::tuple<SurfaceCreatorFileFn,SurfaceCreatorPixelsFn,SurfaceCreatorMaskFn>> CreatorMap;
 		CreatorMap& get_surface_creator()
 		{
 			static CreatorMap res;
 			return res;
 		}
 
-		typedef std::map<std::string, SurfacePtr> surface_cache_type;
-		surface_cache_type& get_surface_cache()
+		typedef std::map<std::string, SurfacePtr> SurfaceCacheType;
+		SurfaceCacheType& get_surface_cache()
 		{
-			static surface_cache_type res;
+			static SurfaceCacheType res;
 			return res;
 		}
 	}
@@ -50,12 +52,12 @@ namespace KRE
 	{
 	}
 
-	PixelFormatPtr Surface::GetPixelFormat()
+	PixelFormatPtr Surface::getPixelFormat()
 	{
 		return pf_;
 	}
 
-	void Surface::SetPixelFormat(PixelFormatPtr pf)
+	void Surface::setPixelFormat(PixelFormatPtr pf)
 	{
 		pf_ = pf;
 	}
@@ -63,47 +65,78 @@ namespace KRE
 	SurfaceLock::SurfaceLock(const SurfacePtr& surface)
 		: surface_(surface)
 	{
-		surface_->Lock();
+		surface_->lock();
 	}
 
 	SurfaceLock::~SurfaceLock()
 	{
-		surface_->Unlock();
+		surface_->unlock();
 	}
 
-	SurfacePtr Surface::Convert(PixelFormat::PF fmt, SurfaceConvertFn convert)
+	SurfacePtr Surface::convert(PixelFormat::PF fmt, SurfaceConvertFn convert)
 	{
-		return HandleConvert(fmt, convert);
+		return handleConvert(fmt, convert);
 	}
 
-	bool Surface::RegisterSurfaceCreator(const std::string& name, SurfaceCreatorFn Creator)
+	bool Surface::registerSurfaceCreator(const std::string& name, SurfaceCreatorFileFn file_fn, SurfaceCreatorPixelsFn pixels_fn, SurfaceCreatorMaskFn mask_fn)
 	{
-		return get_surface_creator().insert(std::make_pair(name, Creator)).second;
+		return get_surface_creator().insert(std::make_pair(name,std::make_tuple(file_fn, pixels_fn, mask_fn))).second;
 	}
 
-	void Surface::UnRegisterSurfaceCreator(const std::string& name)
+	void Surface::unRegisterSurfaceCreator(const std::string& name)
 	{
 		auto it = get_surface_creator().find(name);
 		ASSERT_LOG(it != get_surface_creator().end(), "Unable to find surface creator: " << name);
 		get_surface_creator().erase(it);
 	}
 
-	SurfacePtr Surface::Create(const std::string& filename, bool no_cache, PixelFormat::PF fmt, SurfaceConvertFn convert)
+	SurfacePtr Surface::create(const std::string& filename, bool no_cache, PixelFormat::PF fmt, SurfaceConvertFn convert)
 	{
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		auto create_fn_tuple = get_surface_creator().begin()->second;
 		if(!no_cache) {
 			auto it = get_surface_cache().find(filename);
 			if(it != get_surface_cache().end()) {
 				return it->second;
 			}
-			auto surface = get_surface_creator().begin()->second(filename, fmt, convert);
+			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, convert);
 			get_surface_cache()[filename] = surface;
 			return surface;
 		} 
-		return get_surface_creator().begin()->second(filename, fmt, convert);
+		return std::get<0>(create_fn_tuple)(filename, fmt, convert);
 	}
 
-	void Surface::ResetSurfaceCache()
+	SurfacePtr Surface::create(unsigned width, 
+		unsigned height, 
+		unsigned bpp, 
+		unsigned row_pitch, 
+		uint32_t rmask, 
+		uint32_t gmask, 
+		uint32_t bmask, 
+		uint32_t amask, 
+		const void* pixels)
+	{
+		// XXX no caching as default?
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		auto create_fn_tuple = get_surface_creator().begin()->second;
+		return std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
+	}
+
+	SurfacePtr Surface::create(unsigned width, 
+		unsigned height, 
+		unsigned bpp, 
+		uint32_t rmask, 
+		uint32_t gmask, 
+		uint32_t bmask, 
+		uint32_t amask)
+	{
+		// XXX no caching as default?
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		auto create_fn_tuple = get_surface_creator().begin()->second;
+		return std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
+	}
+
+	void Surface::resetSurfaceCache()
 	{
 		get_surface_cache().clear();
 	}

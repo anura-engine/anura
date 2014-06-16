@@ -25,6 +25,7 @@
 #include "../asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "Texture.hpp"
+#include "TextureUtils.hpp"
 
 namespace KRE
 {
@@ -222,8 +223,8 @@ namespace KRE
 		// we are forced to use power-of-two textures anyway if we want mip-mapping and
 		// address modes other than CLAMP.
 		if(!DisplayDevice::CheckForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
-			width_ = next_power_of_2(surface_width_);
-			height_ = next_power_of_2(surface_height_);
+			width_ = next_power_of_two(surface_width_);
+			height_ = next_power_of_two(surface_height_);
 			depth_ = 0;
 		} else {
 			width_ = surface_width_;
@@ -283,5 +284,15 @@ namespace KRE
 	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)
 	{
 		return DisplayDevice::CreateTexture(filename, type, mipmap_levels);
+	}
+
+	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache)
+	{
+		return DisplayDevice::CreateTexture(surface, cache);
+	}
+
+	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
+	{
+		return DisplayDevice::CreateTexture(surface, cache, node);
 	}
 }

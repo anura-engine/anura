@@ -102,11 +102,20 @@ namespace KRE
 		void SetBlendMode(const BlendMode& bm);
 		void SetBlendMode(BlendMode::BlendModeConstants src, BlendMode::BlendModeConstants dst);
 
+		float width() const;
+		float height() const;
+
 		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
 		template<typename T>
 		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
 			float w = static_cast<float>((*it)->width());
 			float h = static_cast<float>((*it)->height());
+			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
+		}
+		template<typename T>
+		const rectf GetNormalisedTextureCoords(const Geometry::Rect<T>& r) {
+			float w = static_cast<float>(width());
+			float h = static_cast<float>(height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 
