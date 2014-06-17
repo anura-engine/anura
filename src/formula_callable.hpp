@@ -61,7 +61,7 @@ public:
 	}
 
 	variant query_value_by_slot(int slot) const {
-		return getValue_by_slot(slot);
+		return getValueBySlot(slot);
 	}
 
 	void mutate_value(const std::string& key, const variant& value) {
@@ -126,7 +126,7 @@ protected:
 	virtual void visitValues(FormulaCallableVisitor& visitor) {}
 private:
 	virtual variant getValue(const std::string& key) const = 0;
-	virtual variant getValue_by_slot(int slot) const;
+	virtual variant getValueBySlot(int slot) const;
 
 	virtual std::string get_object_id() const { return "FormulaCallable"; }
 
@@ -144,7 +144,7 @@ public:
 class FormulaCallable_with_backup : public FormulaCallable {
 	const FormulaCallable& main_;
 	const FormulaCallable& backup_;
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		return backup_.query_value_by_slot(slot);
 	}
 
@@ -178,7 +178,7 @@ class formula_variant_callable_with_backup : public FormulaCallable {
 		return var;
 	}
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		return backup_.query_value_by_slot(slot);
 	}
 
@@ -220,7 +220,7 @@ public:
 private:
 	//MapFormulaCallable(const MapFormulaCallable&);
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		return fallback_->query_value_by_slot(slot);
 	}
 

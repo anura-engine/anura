@@ -23,18 +23,23 @@
 
 #pragma once
 
-#include "StencilScope.hpp"
+#include <memory>
+#include "StencilSettings.hpp"
 #include "Util.hpp"
 
 namespace KRE
 {
-	class StencilScopeOGL : public StencilScope
+	class StencilScope;
+	typedef std::unique_ptr<StencilScope> StencilScopePtr;
+
+	class StencilScope
 	{
 	public:
-		StencilScopeOGL(const StencilSettings& settings);
-		~StencilScopeOGL();
+		StencilScope(const StencilSettings& settings);
+		virtual ~StencilScope();
+		static StencilScopePtr create(const StencilSettings& settings);
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(StencilScopeOGL);
-		void applySettings(const StencilSettings& settings);
+		DISALLOW_COPY_AND_ASSIGN(StencilScope);
+		StencilSettings settings_;
 	};
 }

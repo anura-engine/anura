@@ -31,7 +31,7 @@
 #include "reference_counted_object.hpp"
 #include "variant.hpp"
 
-class custom_object;
+class CustomObject;
 class Entity;
 class Level;
 
@@ -65,14 +65,14 @@ class CustomObjectCommandCallable : public game_logic::FormulaCallable
 {
 public:
 	CustomObjectCommandCallable() : expr_(NULL) {}
-	void runCommand(Level& lvl, custom_object& ob) const;
+	void runCommand(Level& lvl, CustomObject& ob) const;
 
 	void setExpression(const game_logic::formula_expression* expr);
 
 	bool isCommand() const { return true; }
 
 private:
-	virtual void execute(Level& lvl, custom_object& ob) const = 0;
+	virtual void execute(Level& lvl, CustomObject& ob) const = 0;
 	variant getValue(const std::string& key) const { return variant(); }
 	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
 	

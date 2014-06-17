@@ -645,6 +645,7 @@
     <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
     <ClCompile Include="..\..\src\kre\ShadersOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />

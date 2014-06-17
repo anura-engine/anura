@@ -117,8 +117,8 @@ public:
 
 	virtual bool pointCollides(int x, int y) const = 0;
 	virtual bool rectCollides(const rect& r) const = 0;
-	const solid_info* platform() const { return platform_.get(); }
-	const solid_info* solid() const { return solid_.get(); }
+	const SolidInfo* platform() const { return platform_.get(); }
+	const SolidInfo* solid() const { return solid_.get(); }
 	const rect& solidRect() const { return solid_rect_; }
 	const rect& frameRect() const { return frame_rect_; }
 	rect platformRect() const { return platform_rect_; }
@@ -129,8 +129,8 @@ public:
 	rect getHitRect() const;
 	point getMidpoint() const;
 
-	virtual const frame& getIconFrame() const = 0;
-	virtual const frame& getCurrentFrame() const = 0;
+	virtual const Frame& getIconFrame() const = 0;
+	virtual const Frame& getCurrentFrame() const = 0;
 
 	virtual rect getDrawRect() const = 0;
 

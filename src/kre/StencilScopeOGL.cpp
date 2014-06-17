@@ -85,6 +85,7 @@ namespace KRE
 	}
 
 	StencilScopeOGL::StencilScopeOGL(const StencilSettings& settings)
+		: StencilScope(settings)
 	{
 		get_stencil_stack().emplace(settings);
 		applySettings(settings);

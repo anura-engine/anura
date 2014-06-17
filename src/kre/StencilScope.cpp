@@ -23,18 +23,21 @@
 
 #pragma once
 
-#include "StencilScope.hpp"
-#include "Util.hpp"
+#include "DisplayDevice.hpp"
 
 namespace KRE
 {
-	class StencilScopeOGL : public StencilScope
+	StencilScope::StencilScope(const StencilSettings& settings)
+		: settings_(settings)
 	{
-	public:
-		StencilScopeOGL(const StencilSettings& settings);
-		~StencilScopeOGL();
-	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(StencilScopeOGL);
-		void applySettings(const StencilSettings& settings);
-	};
+	}
+
+	StencilScope::~StencilScope()
+	{
+	}
+
+	StencilScopePtr StencilScope::create(const StencilSettings& settings)
+	{
+		return DisplayDevice::GetCurrent()->createStencilScope(settings);
+	}
 }

@@ -165,27 +165,27 @@ variant PlayableCustomObject::getValue(const std::string& key) const
 	if(key.substr(0, 11) == "difficulty_") {
 		return variant(difficulty::from_string(key.substr(11)));		
 	} else if(key == "difficulty") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_DIFFICULTY);
 	} else if(key == "can_interact") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CAN_INTERACT);
 	} else if(key == "underwater_controls") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_UNDERWATER_CONTROLS);
 	} else if(key == "ctrl_mod_key") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MOD_KEY);
 	} else if(key == "ctrl_keys") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_KEYS);
 	} else if(key == "ctrl_mice") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_MICE);
 	} else if(key == "ctrl_tilt") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_TILT);
 	} else if(key == "ctrl_x") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_X);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_X);
 	} else if(key == "ctrl_y") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_Y);
 	} else if(key == "ctrl_reverse_ab") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CTRL_REVERSE_AB);
 	} else if(key == "control_scheme") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_CONTROL_SCHEME);
 	}
 
 	for(int n = 0; n < sizeof(ctrl)/sizeof(*ctrl); ++n) {
@@ -201,7 +201,7 @@ variant PlayableCustomObject::getValue(const std::string& key) const
 	if(key == "player") {
 		return variant::from_bool(true);
 	} else if(key == "vertical_look") {
-		return getValue_by_slot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
+		return getValueBySlot(CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK);
 	}
 
 	return custom_object::getValue(key);

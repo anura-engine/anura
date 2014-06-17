@@ -92,7 +92,7 @@ namespace game_logic
 		std::cerr << "ERROR: cannot set slot '" << slot << "' on object\n";
 	}
 
-	variant FormulaCallable::getValue_by_slot(int slot) const
+	variant FormulaCallable::getValueBySlot(int slot) const
 	{
 		ASSERT_LOG(false, "Could not get value by slot from formula callable " << typeid(*this).name() << ": " << slot);
 		return variant(0); //so VC++ doesn't complain
@@ -1929,7 +1929,7 @@ private:
 	
 	mutable std::vector<variant> results_cache_;
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		if(slot >= info_->base_slot) {
 			slot -= info_->base_slot;
 			if(slot < results_cache_.size() && results_cache_[slot].is_null() == false) {
@@ -1954,7 +1954,7 @@ private:
 			std::vector<std::string>::const_iterator i = std::find(info_->names.begin(), info_->names.end(), key);
 			if(i != info_->names.end()) {
 				const int slot = i - info_->names.begin();
-				return getValue_by_slot(info_->base_slot + slot);
+				return getValueBySlot(info_->base_slot + slot);
 			}
 		}
 		return result;
@@ -2639,7 +2639,7 @@ namespace {
 			throw non_static_expression_exception();
 		}
 
-		variant getValue_by_slot(int slot) const {
+		variant getValueBySlot(int slot) const {
 			throw non_static_expression_exception();
 		}
 	};

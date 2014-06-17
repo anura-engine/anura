@@ -122,7 +122,7 @@ struct callable_PropertyEntry {
 #define DECLARE_CALLABLE(classname) \
 public: \
 	virtual variant getValue(const std::string& key) const; \
-	virtual variant getValue_by_slot(int slot) const; \
+	virtual variant getValueBySlot(int slot) const; \
 	virtual void setValue(const std::string& key, const variant& value); \
 	virtual void setValueBySlot(int slot, const variant& value); \
 	virtual std::string get_object_id() const { return #classname; } \
@@ -232,7 +232,7 @@ int dummy_var_##classname = game_logic::add_callable_definition_init(init_defini
 variant classname::getValue(const std::string& key) const { \
 	std::map<std::string, int>::const_iterator itor = classname##_properties.find(key); \
 	if(itor != classname##_properties.end()) { \
-		return getValue_by_slot(itor->second); \
+		return getValueBySlot(itor->second); \
 	} else { \
 		return variant(); \
 	} \
@@ -243,7 +243,7 @@ void classname::setValue(const std::string& key, const variant& value) { \
 		setValueBySlot(itor->second, value); \
 	} \
 } \
-variant classname::getValue_by_slot(int slot) const { \
+variant classname::getValueBySlot(int slot) const { \
 	ASSERT_LOG(slot >= 0 && slot < classname##_fields.size(), "Illegal slot when accessing " << #classname << ": " << slot << "/" << classname##_fields.size()); \
 	const game_logic::FormulaCallable* callable = this; \
 	if(slot < classname##_num_base_slots) callable = base_ptr; \

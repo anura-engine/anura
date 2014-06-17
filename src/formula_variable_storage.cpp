@@ -109,7 +109,7 @@ variant formula_variable_storage::getValue(const std::string& key) const
 	}
 }
 
-variant formula_variable_storage::getValue_by_slot(int slot) const
+variant formula_variable_storage::getValueBySlot(int slot) const
 {
 	return values_[slot];
 }

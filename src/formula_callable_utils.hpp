@@ -58,7 +58,7 @@ public:
 		return variant();
 	}
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		if(slot < base_slot_) {
 			return fallback_->query_value_by_slot(slot);
 		}

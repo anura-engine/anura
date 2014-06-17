@@ -23,7 +23,7 @@ public:
 	int id() const;
 private:
 	variant getValue(const std::string& key) const;
-	variant getValue_by_slot(int slot) const;
+	variant getValueBySlot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 
@@ -38,7 +38,7 @@ public:
 	int id() const;
 private:
 	variant getValue(const std::string& key) const;
-	variant getValue_by_slot(int slot) const;
+	variant getValueBySlot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 
@@ -124,7 +124,7 @@ variant dynamic_interface_instance::getValue(const std::string& key) const
 	}
 }
 
-variant dynamic_interface_instance::getValue_by_slot(int slot) const
+variant dynamic_interface_instance::getValueBySlot(int slot) const
 {
 	const std::string& key = factory_->translate_slot(slot);
 	if(obj_.is_callable()) {
@@ -159,7 +159,7 @@ variant static_interface_instance::getValue(const std::string& key) const
 	return obj_->query_value(key);
 }
 
-variant static_interface_instance::getValue_by_slot(int slot) const
+variant static_interface_instance::getValueBySlot(int slot) const
 {
 	return obj_->query_value_by_slot(factory_->translate_slot(slot));
 }

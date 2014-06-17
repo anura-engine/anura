@@ -27,6 +27,7 @@
 #include "kre/Geometry.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
+#include "solid_map.hpp"
 
 namespace 
 {
@@ -34,7 +35,7 @@ namespace
 	std::vector<std::string> solid_dimension_ids;
 }
 
-void collision_info::readSurfInfo()
+void CollisionInfo::readSurfInfo()
 {
 	if(surf_info) {
 		friction = surf_info->friction;
@@ -66,7 +67,7 @@ int get_solid_dimension_id(const std::string& key)
 	return solid_dimensions.size()-1;
 }
 
-bool point_standable(const level& lvl, const entity& e, int x, int y, collision_info* info, ALLOW_PLATFORM allow_platform)
+bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)
 {
 	if(allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : NULL) ||
 	   allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : NULL)) {
@@ -115,10 +116,10 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 			continue;
 		}
 
-		const frame& f = obj->getCurrentFrame();
+		const Frame& f = obj->getCurrentFrame();
 		const int xpos = obj->isFacingRight() ? x - obj->x() : obj->x() + f.width() - x - 1;
 
-		const solid_info* solid = obj->solid();
+		const SolidInfo* solid = obj->solid();
 
 		if(solid && solid->solid_at(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : NULL)) {
 			if(info) {
@@ -134,7 +135,7 @@ bool point_standable(const level& lvl, const entity& e, int x, int y, collision_
 	return false;
 }
 
-bool entity_collides(level& lvl, const entity& e, MOVE_DIRECTION dir, collision_info* info)
+bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info)
 {
 	if(!e.solid()) {
 		return false;
@@ -157,12 +158,12 @@ bool entity_collides(level& lvl, const entity& e, MOVE_DIRECTION dir, collision_
 	return false;
 }
 
-void debug_check_entity_solidity(const level& lvl, const entity& e)
+void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 {
 	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_NONE, NULL)) {
-		const solid_info* s = e.solid();
+		const SolidInfo* s = e.solid();
 		ASSERT_LOG(s, "ENTITY COLLIDES BUT DOES NOT HAVE SOLID");
-		const frame& f = e.getCurrentFrame();
+		const Frame& f = e.getCurrentFrame();
 		const rect& area = s->area();
 
 		int min_x = INT_MIN, max_x = INT_MIN, min_y = INT_MIN, max_y = INT_MIN;
@@ -218,7 +219,7 @@ void debug_check_entity_solidity(const level& lvl, const entity& e)
 	}
 }
 
-bool entity_collides_with_entity(const entity& e, const entity& other, collision_info* info)
+bool entity_collides_with_entity(const Entity& e, const Entity& other, CollisionInfo* info)
 {
 	if((e.getSolidDimensions()&other.getWeakSolidDimensions()) == 0 &&
 	   (e.getWeakSolidDimensions()&other.getSolidDimensions()) == 0) {
@@ -238,12 +239,12 @@ bool entity_collides_with_entity(const entity& e, const entity& other, collision
 
 	const rect area = intersection_rect(our_rect, other_rect);
 
-	const solid_info* our_solid = e.solid();
-	const solid_info* other_solid = other.solid();
+	const SolidInfo* our_solid = e.solid();
+	const SolidInfo* other_solid = other.solid();
 	assert(our_solid && other_solid);
 
-	const frame& our_frame = e.getCurrentFrame();
-	const frame& other_frame = other.getCurrentFrame();
+	const Frame& our_frame = e.getCurrentFrame();
+	const Frame& other_frame = other.getCurrentFrame();
 
 	for(int y = area.y(); y <= area.y2(); ++y) {
 		for(int x = area.x(); x < area.x2(); ++x) {
@@ -262,9 +263,9 @@ bool entity_collides_with_entity(const entity& e, const entity& other, collision
 	return false;
 }
 
-bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTION dir, collision_info* info)
+bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info)
 {
-	const solid_info* s = e.solid();
+	const SolidInfo* s = e.solid();
 	if(!s) {
 		return false;
 	}
@@ -277,7 +278,7 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 		}
 	}
 
-	const frame& f = e.getCurrentFrame();
+	const Frame& f = e.getCurrentFrame();
 
 	const rect& area = s->area();
 	if(e.isFacingRight()) {
@@ -305,14 +306,14 @@ bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTIO
 	return false;
 }
 
-int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIRECTION dir)
+int entity_collides_with_level_count(const Level& lvl, const Entity& e, MOVE_DIRECTION dir)
 {
-	const solid_info* s = e.solid();
+	const SolidInfo* s = e.solid();
 	if(!s) {
 		return 0;
 	}
 
-	const frame& f = e.getCurrentFrame();
+	const Frame& f = e.getCurrentFrame();
 	int count = 0;
 	for(const ConstSolidMapPtr& m : s->solid()) {
 		const std::vector<point>& points = m->dir(dir);
@@ -327,9 +328,9 @@ int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIR
 	return count;
 }
 
-bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
+bool non_solid_entity_collides_with_level(const Level& lvl, const Entity& e)
 {
-	const frame& f = e.getCurrentFrame();
+	const Frame& f = e.getCurrentFrame();
 	if(!lvl.may_be_solid_in_rect(rect(e.x(), e.y(), f.width(), f.height()))) {
 		return false;
 	}
@@ -352,7 +353,7 @@ bool non_solid_entity_collides_with_level(const level& lvl, const entity& e)
 	return false;
 }
 
-bool place_entity_in_level(level& lvl, entity& e)
+bool place_entity_in_level(Level& lvl, Entity& e)
 {
 	if(e.editorForceStanding()) {
 		if(!e.moveToStanding(lvl, 128)) {
@@ -411,7 +412,7 @@ bool place_entity_in_level(level& lvl, entity& e)
 	return false;
 }
 
-bool place_entity_in_level_with_large_displacement(level& lvl, entity& e)
+bool place_entity_in_level_with_large_displacement(Level& lvlE entity& e)
 {
 	if(!place_entity_in_level(lvl, e)) {
 		//the object can't immediately/easily be placed in the level
@@ -444,10 +445,10 @@ bool place_entity_in_level_with_large_displacement(level& lvl, entity& e)
 	return true;
 }
 
-int entity_user_collision(const entity& a, const entity& b, collision_pair* areas_colliding, int buf_size)
+int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas_colliding, int buf_size)
 {
-	const frame& fa = a.getCurrentFrame();
-	const frame& fb = b.getCurrentFrame();
+	const Frame& fa = a.getCurrentFrame();
+	const Frame& fb = b.getCurrentFrame();
 
 	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty() ||
 	   fa.hasCollisionAreasInsideFrame() && fb.hasCollisionAreasInsideFrame() &&
@@ -457,11 +458,11 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 
 	int result = 0;
 
-	for(const frame::collision_area& area_a : fa.getCollisionAreas()) {
+	for(const auto& area_a : fa.getCollisionAreas()) {
 		rect rect_a(a.isFacingRight() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
 		            a.y() + area_a.area.y(),
 					area_a.area.w(), area_a.area.h());
-		for(const frame::collision_area& area_b : fb.getCollisionAreas()) {
+		for(const auto& area_b : fb.getCollisionAreas()) {
 			rect rect_b(b.isFacingRight() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
 			            b.y() + area_b.area.y(),
 						area_b.area.w(), area_b.area.h());
@@ -500,14 +501,14 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 	return result;
 }
 
-bool entity_user_collision_specific_areas(const entity& a, const std::string& area_a_id, const entity& b, const std::string& area_b_id)
+bool entity_user_collision_specific_areas(const Entity& a, const std::string& area_a_id, const Entity& b, const std::string& area_b_id)
 {
 	if(&a == &b) {
 		return false;
 	}
 
-	const frame& fa = a.getCurrentFrame();
-	const frame& fb = b.getCurrentFrame();
+	const Frame& fa = a.getCurrentFrame();
+	const Frame& fb = b.getCurrentFrame();
 
 	if(fa.getCollisionAreas().empty() || fb.getCollisionAreas().empty()) {
 		return false;
@@ -518,8 +519,8 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 		return false;
 	}
 
-	const frame::collision_area* area_a = NULL;
-	for(const frame::collision_area& area : fa.getCollisionAreas()) {
+	const Frame::CollisionArea* area_a = NULL;
+	for(const auto& area : fa.getCollisionAreas()) {
 		if(area.name == area_a_id) {
 			area_a = &area;
 			break;
@@ -530,8 +531,8 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 		return false;
 	}
 
-	const frame::collision_area* area_b = NULL;
-	for(const frame::collision_area& area : fb.getCollisionAreas()) {
+	const Frame::CollisionArea* area_b = NULL;
+	for(const Frame::CollisionArea& area : fb.getCollisionAreas()) {
 		if(area.name == area_b_id) {
 			area_b = &area;
 			break;
@@ -569,24 +570,25 @@ bool entity_user_collision_specific_areas(const entity& a, const std::string& ar
 }
 
 namespace {
-class user_collision_callable : public game_logic::FormulaCallable {
+class UserCollisionCallable : public game_logic::FormulaCallable {
 	EntityPtr a_, b_;
 	const std::string* area_a_;
 	const std::string* area_b_;
 	int index_;
 	variant all_collisions_;
 
-	DECLARE_CALLABLE(user_collision_callable);
+	DECLARE_CALLABLE(UserCollisionCallable);
 public:
-	user_collision_callable(EntityPtr a, EntityPtr b, const std::string& area_a, const std::string& area_b, int index) : a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
+	UserCollisionCallable(EntityPtr a, EntityPtr b, const std::string& area_a, const std::string& area_b, int index) 
+		: a_(a), b_(b), area_a_(&area_a), area_b_(&area_b), index_(index) {
 	}
 
-	void set_all_collisions(variant v) {
+	void setAllCollisions(variant v) {
 		all_collisions_ = v;
 	}
 };
 
-BEGIN_DEFINE_CALLABLE_NOBASE(user_collision_callable)
+BEGIN_DEFINE_CALLABLE_NOBASE(UserCollisionCallable)
 DEFINE_FIELD(collide_with, "custom_obj")
 	return variant(obj.b_.get());
 DEFINE_FIELD(area, "string")
@@ -595,9 +597,9 @@ DEFINE_FIELD(collide_with_area, "string")
 	return variant(*obj.area_b_);
 DEFINE_FIELD(collision_index, "int")
 	return variant(obj.index_);
-DEFINE_FIELD(all_collisions, "[builtin user_collision_callable]")
+DEFINE_FIELD(all_collisions, "[builtin UserCollisionCallable]")
 	return obj.all_collisions_;
-END_DEFINE_CALLABLE(user_collision_callable)
+END_DEFINE_CALLABLE(UserCollisionCallable)
 
 int get_collision_event_id(const std::string& area)
 {
@@ -613,7 +615,7 @@ int get_collision_event_id(const std::string& area)
 
 }
 
-void detect_user_collisions(level& lvl)
+void detect_user_collisions(Level& lvl)
 {
 	std::vector<EntityPtr> chars;
 	chars.reserve(lvl.get_active_chars().size());
@@ -629,7 +631,7 @@ void detect_user_collisions(level& lvl)
 	static const int CollideObjectID = get_object_event_id("collide_object");
 
 	const int MaxCollisions = 16;
-	collision_pair collision_buf[MaxCollisions];
+	CollisionPair collision_buf[MaxCollisions];
 	for(std::vector<EntityPtr>::const_iterator i = chars.begin(); i != chars.end(); ++i) {
 		for(std::vector<EntityPtr>::const_iterator j = i + 1; j != chars.end(); ++j) {
 			const EntityPtr& a = *i;
@@ -659,12 +661,12 @@ void detect_user_collisions(level& lvl)
 	}
 
 	for(std::map<collision_key, std::vector<collision_key> >::iterator i = collision_info.begin(); i != collision_info.end(); ++i) {
-		std::vector<boost::intrusive_ptr<user_collision_callable> > v;
+		std::vector<boost::intrusive_ptr<UserCollisionCallable> > v;
 		std::vector<variant> all_callables;
 		v.reserve(i->second.size());
 		int index = 0;
 		for(const collision_key& k : i->second) {
-			v.push_back(boost::intrusive_ptr<user_collision_callable>(new user_collision_callable(i->first.first, k.first, *i->first.second, *k.second, index)));
+			v.push_back(boost::intrusive_ptr<UserCollisionCallable>(new UserCollisionCallable(i->first.first, k.first, *i->first.second, *k.second, index)));
 			all_callables.push_back(variant(v.back().get()));
 			++index;
 		}
@@ -673,15 +675,15 @@ void detect_user_collisions(level& lvl)
 
 		collision_key key = i->first;
 
-		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
-			p->set_all_collisions(all_callables_variant);
+		for(const boost::intrusive_ptr<UserCollisionCallable>& p : v) {
+			p->setAllCollisions(all_callables_variant);
 			key.first->handleEventDelay(CollideObjectID, p.get());
 			key.first->handleEventDelay(get_collision_event_id(*i->first.second), p.get());
 		}
 
-		for(const boost::intrusive_ptr<user_collision_callable>& p : v) {
+		for(const boost::intrusive_ptr<UserCollisionCallable>& p : v) {
 			//make sure we don't retain circular references.
-			p->set_all_collisions(variant());
+			p->setAllCollisions(variant());
 		}
 	}
 
@@ -691,7 +693,7 @@ void detect_user_collisions(level& lvl)
 	}
 }
 
-bool is_flightpath_clear(const level& lvl, const entity& e, const rect& area)
+bool is_flightpath_clear(const Level& lvl, const Entity& e, const rect& area)
 {
 	if(lvl.may_be_solid_in_rect(area)) {
 		return false;

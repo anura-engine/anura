@@ -49,7 +49,7 @@ public:
 
 private:
 	variant getValue(const std::string& key) const;
-	variant getValue_by_slot(int slot) const;
+	variant getValueBySlot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 

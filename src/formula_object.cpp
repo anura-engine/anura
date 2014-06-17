@@ -1147,7 +1147,7 @@ variant formula_object::getValue(const std::string& key) const
 	}
 }
 
-variant formula_object::getValue_by_slot(int slot) const
+variant formula_object::getValueBySlot(int slot) const
 {
 	switch(slot) {
 		case FIELD_PRIVATE: {
@@ -1436,7 +1436,7 @@ private:
 		return query_value_by_slot(slot);
 	}
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		ASSERT_LOG(slot >= 0 && slot < items_.size(), "ILLEGAL LOOK UP IN LIBRARY: " << slot << "/" << items_.size());
 		if(items_[slot].is_null()) {
 			FormulaCallableDefinitionPtr def = get_library_definition();

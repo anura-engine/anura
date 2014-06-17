@@ -43,7 +43,7 @@ public:
 	static ConstGraphicalFontPtr get(const std::string& id);
 	explicit GraphicalFont(variant node);
 	const std::string& id() const { return id_; }
-	rect draw(int x, int y, const std::string& text, int size=2) const;
+	rect draw(int x, int y, const std::string& text, int size=2, int alpha=255) const;
 	rect dimensions(const std::string& text, int size=2) const;
 
 private:

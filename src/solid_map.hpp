@@ -69,7 +69,7 @@ private:
 	std::vector<point> left_, right_, top_, bottom_, all_;
 };
 
-class solid_info
+class SolidInfo
 {
 public:
 	static ConstSolidInfoPtr create(variant node);

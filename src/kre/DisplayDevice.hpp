@@ -35,6 +35,7 @@
 #include "Material.hpp"
 #include "Renderable.hpp"
 #include "RenderTarget.hpp"
+#include "StencilScope.hpp"
 #include "../variant.hpp"
 
 namespace KRE
@@ -128,6 +129,7 @@ namespace KRE
 		virtual CanvasPtr GetCanvas() = 0;
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
+		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
 
 		static void BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 

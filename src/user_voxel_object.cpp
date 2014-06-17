@@ -96,11 +96,11 @@ public:
 };
 }
 
-variant user_voxel_object::getValue_by_slot(int slot) const
+variant user_voxel_object::getValueBySlot(int slot) const
 {
 	static const int NumBaseSlots = type_->num_base_slots();
 	if(slot < NumBaseSlots) {
-		return voxel_object::getValue_by_slot(slot);
+		return voxel_object::getValueBySlot(slot);
 	}
 
 	slot -= NumBaseSlots;
@@ -169,7 +169,7 @@ variant user_voxel_object::getValue(const std::string& key) const
 {
 	for(int slot = 0; slot != type_->getSlotProperties().size(); ++slot) {
 		if(type_->getSlotProperties()[slot].id == key) {
-			return getValue_by_slot(type_->num_base_slots() + slot);
+			return getValueBySlot(type_->num_base_slots() + slot);
 		}
 	}
  

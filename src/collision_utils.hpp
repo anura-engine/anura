@@ -114,8 +114,8 @@ bool non_solid_entity_collides_with_level(const Level& lvl, const Entity& e);
 //collision areas on the objects will be checked, and the results stored
 //in areas_colliding. The function will return the number of collision
 //combinations that were found.
-typedef std::pair<const std::string*, const std::string*> collision_pair;
-int entity_user_collision(const Entity& a, const Entity& b, collision_pair* areas_colliding, int buf_size);
+typedef std::pair<const std::string*, const std::string*> CollisionPair;
+int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas_colliding, int buf_size);
 
 //function which returns true iff area_a of 'a' collides with area_b of 'b'
 bool entity_user_collision_specific_areas(const Entity& a, const std::string& area_a, const Entity& b, const std::string& area_b);

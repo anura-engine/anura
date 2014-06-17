@@ -24,16 +24,49 @@
 #pragma once
 
 #include <memory>
+#include "Color.hpp"
+#include "variant.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace KRE
 {
-	class ColorTransform
+	class ColorTransform : public game_logic::FormulaCallable
 	{
 	public:
 		ColorTransform();
+		explicit ColorTransform(const variant& node);
+		explicit ColorTransform(double mr, double mg, double mb, double ma, double ar, double ag, double ab, double aa);
+		explicit ColorTransform(int mr, int mg, int mb, int ma, int ar, int ag, int ab, int aa);
 		~ColorTransform();
+
+		double mulRed() const { return mul_rgba_[0]; }
+		double mulGreen() const { return mul_rgba_[1]; }
+		double mulBlue() const { return mul_rgba_[2]; }
+		double mulAlpha() const { return mul_rgba_[3]; }
+
+		double addRed() const { return add_rgba_[0]; }
+		double addGreen() const { return add_rgba_[1]; }
+		double addBlue() const { return add_rgba_[2]; }
+		double addAlpha() const { return add_rgba_[3]; }
+
+		Color applyWhite() const;
+		Color applyBlack() const;
+
+		Color apply(const Color& color) const;
+		variant write() const;
+
+		// compatibility functions
+		bool fits_in_color() const;
+		Color toColor() const;
 	private:
+		DECLARE_CALLABLE(ColorTransform);
+		double mul_rgba_[4];
+		double add_rgba_[4];
 	};
 
-	typedef std::shared_ptr<ColorTransform> ColorTransformPtr;
+	ColorTransform operator+(const ColorTransform& a, const ColorTransform& b);
+	ColorTransform operator-(const ColorTransform& a, const ColorTransform& b);
+
+	typedef boost::instrusive_ptr<ColorTransform> ColorTransformPtr;
 }

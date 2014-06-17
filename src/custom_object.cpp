@@ -1,24 +1,32 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
 
 #include <boost/math/special_functions/round.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "kre/ClipScope.hpp"
+#include "kre/Font.hpp"
+#include "kre/StencilScope.hpp"
 
 #include <stdio.h>
 
@@ -34,7 +42,6 @@
 #include "debug_console.hpp"
 #include "difficulty.hpp"
 #include "draw_scene.hpp"
-#include "font.hpp"
 #include "formatter.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
@@ -49,7 +56,6 @@
 #include "object_events.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "string_utils.hpp"
 #include "surface_formula.hpp"
 #include "variant.hpp"
@@ -59,12 +65,16 @@
 #include "sound.hpp"
 #include "widget_factory.hpp"
 
-class active_property_scope {
-	const custom_object& obj_;
+class ActivePropertyScope 
+{
+	const CustomObject& obj_;
 	int prev_prop_;
 	bool pop_value_stack_;
 public:
-	active_property_scope(const custom_object& obj, int prop_num, const variant* value=NULL) : obj_(obj), prev_prop_(obj.active_property_), pop_value_stack_(false)
+	ActivePropertyScope(const CustomObject& obj, int prop_num, const variant* value=NULL) 
+		: obj_(obj), 
+		prev_prop_(obj.active_property_), 
+		pop_value_stack_(false)
 	{
 		obj_.active_property_ = prop_num;
 		if(value) {
@@ -73,7 +83,7 @@ public:
 		}
 	}
 
-	~active_property_scope() {
+	~ActivePropertyScope() {
 		obj_.active_property_ = prev_prop_;
 		if(pop_value_stack_) {
 			obj_.value_stack_.pop();
@@ -81,18 +91,19 @@ public:
 	}
 };
 
-namespace {
-
-const int widget_zorder_draw_later_threshold = 1000;
-
-const game_logic::formula_variable_storage_ptr& global_vars()
+namespace 
 {
-	static game_logic::formula_variable_storage_ptr obj(new game_logic::formula_variable_storage);
-	return obj;
-}
+	const int widget_zorder_draw_later_threshold = 1000;
+
+	const game_logic::formula_variable_storage_ptr& global_vars()
+	{
+		static game_logic::formula_variable_storage_ptr obj(new game_logic::formula_variable_storage);
+		return obj;
+	}
 }
 
-struct custom_object_text {
+struct CustomObjectText 
+{
 	std::string text;
 	ConstGraphicalFontPtr font;
 	int size;
@@ -101,23 +112,23 @@ struct custom_object_text {
 	int alpha;
 };
 
-namespace {
-std::string current_error_msg;
-
-std::vector<variant> deep_copy_property_data(const std::vector<variant>& property_data)
+namespace 
 {
-	std::vector<variant> result;
-	result.reserve(property_data.size());
-	for(const variant& v : property_data) {
-		result.push_back(deep_copy_variant(v));
+	std::string current_error_msg;
+
+	std::vector<variant> deep_copy_property_data(const std::vector<variant>& property_data)
+	{
+		std::vector<variant> result;
+		result.reserve(property_data.size());
+		for(const variant& v : property_data) {
+			result.push_back(deep_copy_variant(v));
+		}
+
+		return result;
 	}
-
-	return result;
 }
 
-}
-
-const std::string* custom_object::current_debug_error()
+const std::string* CustomObject::current_debug_error()
 {
 	if(current_error_msg == "") {
 		return NULL;
@@ -126,13 +137,13 @@ const std::string* custom_object::current_debug_error()
 	return &current_error_msg;
 }
 
-void custom_object::reset_current_debug_error()
+void CustomObject::reset_current_debug_error()
 {
 	current_error_msg = "";
 }
 
-custom_object::custom_object(variant node)
-  : entity(node),
+CustomObject::CustomObject(variant node)
+  : Entity(node),
     previous_y_(y()),
 	custom_type_(node["custom_type"]),
     type_(custom_type_.is_map() ?
@@ -148,7 +159,7 @@ custom_object::custom_object(variant node)
 	accel_x_(node["accel_x"].as_int()),
 	accel_y_(node["accel_y"].as_int()),
 	gravity_shift_(node["gravity_shift"].as_int(0)),
-	rotate_x_(), rotate_y_(), rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
+	rotate_z_(node["rotate"].as_decimal()), zorder_(node["zorder"].as_int(type_->zorder())),
 	zsub_order_(node["zsub_order"].as_int(type_->zSubOrder())),
 	hitpoints_(node["hitpoints"].as_int(type_->getHitpoints())),
 	max_hitpoints_(node["max_hitpoints"].as_int(type_->getHitpoints()) - type_->getHitpoints()),
@@ -174,8 +185,7 @@ custom_object::custom_object(variant node)
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(node["use_absolute_screen_coordinates"].as_bool(type_->useAbsoluteScreenCoordinates())),
-	vertex_location_(-1), texcoord_location_(-1),
-	paused_(false), model_(glm::mat4(1.0f))
+	paused_(false)
 {
 
 	vars_->set_object_name(getDebugDescription());
@@ -254,8 +264,8 @@ custom_object::custom_object(variant node)
 		activation_area_.reset(new rect(node["activation_area"]));
 	}
 
-	if(node.has_key("clipArea")) {
-		clip_area_.reset(new rect(node["clipArea"]));
+	if(node.has_key("clip_area")) {
+		clip_area_.reset(new rect(node["clip_area"]));
 	}
 
 	if(node.has_key("variations")) {
@@ -340,7 +350,7 @@ custom_object::custom_object(variant node)
 	}
 
 	assert(type_.get());
-	//set_frame_no_adjustments(frame_name_);
+	//setFrameNoAdjustments(frame_name_);
 	frame_.reset(&type_->getFrame(frame_name_));
 	calculateSolidRect();
 
@@ -387,24 +397,7 @@ custom_object::custom_object(variant node)
 
 	setMouseoverDelay(node["mouseover_delay"].as_int(0));
 
-#if defined(USE_SHADERS)
-	if(node.has_key("shader")) {
-		shader_.reset(new gles2::shader_program(node["shader"]));
-	} else if(type_->shader()) {
-		shader_.reset(new gles2::shader_program(*type_->shader()));
-	}
-
-	if(node.has_key("effects")) {
-		variant effects = node["effects"];
-		for(int n = 0; n != effects.num_elements(); ++n) {
-			effects_.push_back(new gles2::shader_program(effects[n]));
-		}
-	} else {
-		for(size_t n = 0; n < type_->effects().size(); ++n) {
-			effects_.push_back(new gles2::shader_program(*type_->effects()[n]));
-		}
-	}
-#endif
+	// XXX Process shader and effects here if needed.
 
 #ifdef USE_BOX2D
 	if(node.has_key("body")) {
@@ -417,27 +410,6 @@ custom_object::custom_object(variant node)
 		lua_ptr_.reset(new lua::lua_context());
 	}
 #endif
-
-	if(node.has_key("truez")) {
-		set_truez(node["truez"].as_bool());
-	} else if(type_ != NULL) {
-		set_truez(type_->truez());
-	}
-	if(node.has_key("tx")) {
-		set_tx(node["tx"].as_decimal().as_float());
-	} else if(type_ != NULL) {
-		set_tx(type_->tx());
-	}
-	if(node.has_key("ty")) {
-		set_ty(node["ty"].as_decimal().as_float());
-	} else if(type_ != NULL) {
-		set_ty(type_->ty());
-	}
-	if(node.has_key("tz")) {
-		set_tz(node["tz"].as_decimal().as_float());
-	} else if(type_ != NULL) {
-		set_tz(type_->tz());
-	}
 
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
@@ -469,13 +441,10 @@ custom_object::custom_object(variant node)
 			properties_requiring_dynamic_initialization_.erase(std::remove(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), i), properties_requiring_dynamic_initialization_.end());
 		}
 	}
-
-	//fprintf(stderr, "object address= %p, ", this);
-	//fprintf(stderr, "zsub_order=%d,", zsub_order_);
 }
 
-custom_object::custom_object(const std::string& type, int x, int y, bool face_right)
-  : entity(x, y, face_right),
+CustomObject::CustomObject(const std::string& type, int x, int y, bool face_right)
+  : Entity(x, y, face_right),
     previous_y_(y),
     type_(CustomObjectType::getOrDie(type)),
 	base_type_(type_),
@@ -484,7 +453,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	time_in_frame_(0), time_in_frame_delta_(1),
 	velocity_x_(0), velocity_y_(0),
 	accel_x_(0), accel_y_(0), gravity_shift_(0),
-	rotate_x_(), rotate_y_(), rotate_z_(), zorder_(type_->zorder()),
+	rotate_z_(), zorder_(type_->zorder()),
 	zsub_order_(type_->zSubOrder()),
 	hitpoints_(type_->getHitpoints()),
 	max_hitpoints_(0),
@@ -508,8 +477,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	min_difficulty_(-1), max_difficulty_(-1),
 	currently_handling_die_event_(0),
 	use_absolute_screen_coordinates_(type_->useAbsoluteScreenCoordinates()),
-	vertex_location_(-1), texcoord_location_(-1),
-	paused_(false), model_(glm::mat4(1.0f))
+	paused_(false)
 {
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
@@ -531,15 +499,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
 
-#if defined(USE_SHADERS)
-	if(type_->shader()) {
-		shader_.reset(new gles2::shader_program(*type_->shader()));
-	}
-	effects_.clear();
-	for(size_t n = 0; n < type_->effects().size(); ++n) {
-		effects_.push_back(new gles2::shader_program(*type_->effects()[n]));
-	}
-#endif
+	// XXX Copy shader/effects from type_ here
 
 #ifdef USE_BOX2D
 	if(type_->body()) {
@@ -562,7 +522,7 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	parallax_scale_millis_.reset(new std::pair<int, int>(type_->parallaxScaleMillisX(), type_->parallaxScaleMillisY()));
 
 	assert(type_.get());
-	set_frame_no_adjustments(frame_name_);
+	setFrameNoAdjustments(frame_name_);
 
 	next_animation_formula_ = type_->nextAnimationFormula();
 
@@ -576,16 +536,11 @@ custom_object::custom_object(const std::string& type, int x, int y, bool face_ri
 	if(type_->getMouseOverArea().w() != 0) {
 		setMouseOverArea(type_->getMouseOverArea());
 	}
-	set_truez(type_->truez());
-	set_tx(type_->tx());
-	set_ty(type_->ty());
-	set_tz(type_->tz());
-	//std::cerr << type << " " << truez() << " " << tx() << "," << ty() << "," << tz() << std::endl;
 	initProperties();
 }
 
-custom_object::custom_object(const custom_object& o) :
-	entity(o),
+CustomObject::CustomObject(const CustomObject& o)
+	: Entity(o),
 	previous_y_(o.previous_y_),
 	custom_type_(o.custom_type_),
 	type_(o.type_),
@@ -598,7 +553,7 @@ custom_object::custom_object(const custom_object& o) :
 	velocity_x_(o.velocity_x_), velocity_y_(o.velocity_y_),
 	accel_x_(o.accel_x_), accel_y_(o.accel_y_),
 	gravity_shift_(o.gravity_shift_),
-	rotate_x_(o.rotate_x_), rotate_y_(o.rotate_y_), rotate_z_(o.rotate_z_),
+	rotate_z_(o.rotate_z_),
 	parallax_scale_millis_(new std::pair<int, int>(*o.parallax_scale_millis_)),
 	zorder_(o.zorder_),
 	zsub_order_(o.zsub_order_),
@@ -627,8 +582,8 @@ custom_object::custom_object(const custom_object& o) :
 	event_handlers_(o.event_handlers_),
 	standing_on_(o.standing_on_),
 	standing_on_prev_x_(o.standing_on_prev_x_), standing_on_prev_y_(o.standing_on_prev_y_),
-	distortion_(o.distortion_),
-	draw_color_(o.draw_color_ ? new graphics::color_transform(*o.draw_color_) : NULL),
+	//distortion_(o.distortion_),
+	draw_color_(o.draw_color_ ? new KRE::ColorTransform(*o.draw_color_) : NULL),
 	draw_scale_(o.draw_scale_ ? new decimal(*o.draw_scale_) : NULL),
 	draw_area_(o.draw_area_ ? new rect(*o.draw_area_) : NULL),
 	activation_area_(o.activation_area_ ? new rect(*o.activation_area_) : NULL),
@@ -640,8 +595,8 @@ custom_object::custom_object(const custom_object& o) :
 	driver_(o.driver_),
 	blur_(o.blur_),
 	fall_through_platforms_(o.fall_through_platforms_),
-	shader_(o.shader_),
-	effects_(o.effects_),
+	//shader_(o.shader_),
+	//effects_(o.effects_),
 	always_active_(o.always_active_),
 	last_cycle_active_(0),
 	parent_(o.parent_),
@@ -657,11 +612,10 @@ custom_object::custom_object(const custom_object& o) :
 	platform_offsets_(o.platform_offsets_),
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
-	vertex_location_(o.vertex_location_), texcoord_location_(o.texcoord_location_),
 	//do NOT copy widgets since they do not support deep copying
 	//and re-seating references is difficult.
 	//widgets_(o.widgets_),
-	paused_(o.paused_), model_(glm::mat4(1.0f))
+	paused_(o.paused_)
 {
 	vars_->set_object_name(getDebugDescription());
 	tmp_vars_->set_object_name(getDebugDescription());
@@ -672,15 +626,6 @@ custom_object::custom_object(const custom_object& o) :
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
 
-#if defined(USE_SHADERS)
-	if(o.shader_) {
-		shader_.reset(new gles2::shader_program(*o.shader_));
-	}
-	for(size_t n = 0; n < o.effects_.size(); ++n) {
-		effects_.push_back(new gles2::shader_program(*o.effects_[n]));
-	}
-#endif
-
 #ifdef USE_BOX2D
 	std::stringstream ss;
 	if(o.body_) {
@@ -690,11 +635,6 @@ custom_object::custom_object(const custom_object& o) :
 	setMouseoverDelay(o.getMouseoverDelay());
 	setMouseOverArea(o.getMouseOverArea());
 	
-	set_truez(o.truez());
-	set_tx(o.tx());
-	set_ty(o.ty());
-	set_tz(o.tz());
-
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
 		lua_ptr_.reset(new lua::lua_context());
@@ -702,7 +642,7 @@ custom_object::custom_object(const custom_object& o) :
 #endif
 }
 
-custom_object::~custom_object()
+CustomObject::~CustomObject()
 {
 	getAll().erase(this);
 	getAll(base_type_->id()).erase(this);
@@ -710,7 +650,7 @@ custom_object::~custom_object()
 	sound::stop_looped_sounds(this);
 }
 
-void custom_object::validate_properties()
+void CustomObject::validate_properties()
 {
 	//TODO: make this more efficient. For now it errs on the side of
 	//providing lots of debug info.
@@ -725,7 +665,7 @@ void custom_object::validate_properties()
 	}
 }
 
-void custom_object::initProperties()
+void CustomObject::initProperties()
 {
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
 		if(!i->second.init || i->second.storage_slot == -1) {
@@ -737,26 +677,23 @@ void custom_object::initProperties()
 	}
 }
 
-bool custom_object::is_a(const std::string& type) const
+bool CustomObject::is_a(const std::string& type) const
 {
 	return CustomObjectType::isDerivedFrom(type, type_->id());
 }
 
-void custom_object::finishLoading(level* lvl)
+void CustomObject::finishLoading(Level* lvl)
 {
 	if(parent_loading_.is_null() == false) {
-		EntityPtr p = parent_loading_.try_convert<entity>();
+		EntityPtr p = parent_loading_.try_convert<Entity>();
 		if(p) {
 			parent_ = p;
 		}
 		parent_loading_ = variant();
 	}
-#if defined(USE_SHADERS)
-	if(shader_) { shader_->init(this); }
-	for(size_t n = 0; n < effects_.size(); ++n) {
-		effects_[n]->init(this);
-	}
-#endif
+
+	// XXX Do shader/effects initialisation here (like setting object on them)
+
 #ifdef USE_BOX2D
 	if(body_) {
 		body_->finishLoading(this);
@@ -770,7 +707,7 @@ void custom_object::finishLoading(level* lvl)
 
 
 #if defined(USE_LUA)
-void custom_object::init_lua()
+void CustomObject::init_lua()
 {
 	if(lua_ptr_) {
 		lua_ptr_->set_self_callable(*this);
@@ -780,12 +717,12 @@ void custom_object::init_lua()
 }
 #endif
 
-bool custom_object::serializable() const
+bool CustomObject::serializable() const
 {
 	return type_->serializable();
 }
 
-variant custom_object::write() const
+variant CustomObject::write() const
 {
 	variant_builder res;
 
@@ -819,13 +756,13 @@ variant custom_object::write() const
 	if(position_schedule_.get() != NULL) {
 		res.add("schedule_speed", position_schedule_->speed);
 		if(position_schedule_->x_pos.empty() == false) {
-			foreach(int xpos, position_schedule_->x_pos) {
+			for(int xpos : position_schedule_->x_pos) {
 				res.add("x_schedule", xpos);
 			}
 		}
 
 		if(position_schedule_->y_pos.empty() == false) {
-			foreach(int ypos, position_schedule_->y_pos) {
+			for(int ypos : position_schedule_->y_pos) {
 				res.add("y_schedule", ypos);
 			}
 		}
@@ -846,7 +783,7 @@ variant custom_object::write() const
 	if(!attachedObjects().empty()) {
 		std::string s;
 
-		foreach(const EntityPtr& e, attachedObjects()) {
+		for(const EntityPtr& e : attachedObjects()) {
 			if(s.empty() == false) {
 				s += ",";
 			}
@@ -863,7 +800,7 @@ variant custom_object::write() const
 		res.add("variations", util::join(current_variation_));
 	}
 
-	if(draw_color_ && (!draw_color_->fits_in_color() || draw_color_->to_color().value() != 0xFFFFFFFF)) {
+	if(draw_color_ && (!draw_color_->fits_in_color() || draw_color_->toColor().asARGB() != 0xFFFFFFFF)) {
 		res.add("draw_color", draw_color_->write());
 	}
 
@@ -960,28 +897,8 @@ variant custom_object::write() const
 		res.add("max_hitpoints", type_->getHitpoints() + max_hitpoints_);
 	}
 
-#if defined(USE_SHADERS)
-	if(shader_ &&
-	   (!type_->shader() || type_->shader()->name() != shader_->name())) {
-		res.add("shader", shader_->write());
-	}
 
-	bool write_effects = effects_.size() != type_->effects().size();
-	if(!write_effects) {
-		for(size_t n = 0; n < effects_.size(); ++n) {
-			if(effects_[n]->name() != type_->effects()[n]->name()) {
-				write_effects = true;
-				break;
-			}
-		}
-	}
-
-	if(write_effects) {
-		for(size_t n = 0; n < effects_.size(); ++n) {
-			res.add("effects", effects_[n]->write());
-		}
-	}
-#endif
+	// XXX write out shader and effects here.
 
 #if defined(USE_BOX2D)
 	if(body_) {
@@ -1050,7 +967,7 @@ variant custom_object::write() const
 			continue;
 		}
 
-		if(!created_ && i->second.init && level::getCurrentPtr() && level::current().in_editor() && !i->second.has_editor_info) {
+		if(!created_ && i->second.init && Level::getCurrentPtr() && Level::current().in_editor() && !i->second.has_editor_info) {
 			//In the editor try not to write out properties with an
 			//initializer, so they'll get inited when the level is
 			//actually started.
@@ -1082,7 +999,7 @@ variant custom_object::write() const
 	}
 
 	if(draw_area_) {
-		res.add("draw_area", draw_area_->to_string());
+		res.add("draw_area", draw_area_->write());
 	}
 
 	if(draw_scale_) {
@@ -1094,7 +1011,7 @@ variant custom_object::write() const
 	}
 
 	if(clip_area_) {
-		res.add("clipArea", clip_area_->write());
+		res.add("clip_area", clip_area_->write());
 	}
 
 	if(!ParticleSystems_.empty()) {
@@ -1116,7 +1033,7 @@ variant custom_object::write() const
 		}
 	}
 
-	foreach(const light_ptr& p, lights_) {
+	for(const light_ptr& p : lights_) {
 		res.add("lights", p->write());
 	}
 
@@ -1159,97 +1076,73 @@ variant custom_object::write() const
 		res.add("use_absolute_screen_coordinates", use_absolute_screen_coordinates_);
 	}
 
-	if(truez()) {
-		res.add("truez", truez());
-		res.add("tx", tx());
-		res.add("ty", ty());
-		res.add("tz", tz());
-	}
-	
 	return res.build();
 }
 
-void custom_object::setupDrawing() const
+void CustomObject::setupDrawing() const
 {
-	if(distortion_) {
-		graphics::add_raster_distortion(distortion_.get());
-	}
+	//if(distortion_) {
+	//	graphics::add_raster_distortion(distortion_.get());
+	//}
 }
 
-void custom_object::drawLater(int xx, int yy) const
+void CustomObject::drawLater(int xx, int yy) const
 {
 	// custom object evil hackery part one.
 	// Called nearer the end of rendering the scene, the
 	// idea is to draw widgets with z-orders over the
 	// threshold now rather than during the normal draw
 	// processing.
+	int offs_x = x();
+	int offs_y = y();
 	if(use_absolute_screen_coordinates_) {
-		glPushMatrix();
-		glTranslatef(GLfloat(xx), GLfloat(yy), 0.0);
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
 	}
-	glPushMatrix();
-	glTranslatef(GLfloat(x()), GLfloat(y()), 0.0);
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw();
+			w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
 		}
-	}
-	glPopMatrix();
-
-	if(use_absolute_screen_coordinates_) {
-		glPopMatrix();
 	}
 }
 
-void custom_object::draw(int xx, int yy) const
+void CustomObject::draw(int xx, int yy) const
 {
 	if(frame_ == NULL) {
 		return;
 	}
 
+	int offs_x = x();
+	int offs_y = y();
+
 	if(use_absolute_screen_coordinates_) {
-		glPushMatrix();
-		glTranslatef(GLfloat(xx), GLfloat(yy), 0.0);
 		adjusted_draw_position_.x = xx;
 		adjusted_draw_position_.y = yy;
+		offs_x = xx;
+		offs_y = yy;
 	}
 
-	foreach(const EntityPtr& attached, attachedObjects()) {
+	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() < zorder()) {
 			attached->draw(xx, yy);
 		}
 	}
 
-	if(type_->blend_mode()) {
-		glBlendFunc(type_->blend_mode()->sfactor, type_->blend_mode()->dfactor);
-	}
+	std::unique_ptr<KRE::ClipScope::Manager> clip_scope;
 
-#if defined(USE_SHADERS)
-	const gles2::shader_program_ptr active = gles2::active_shader();
-#ifndef NO_EDITOR
-	try {
-#endif
-	for(size_t n = 0; n < effects_.size(); ++n) {
-		if(effects_[n]->zorder() < 0 && effects_[n]->enabled()) {
-			effects_[n]->refresh_for_draw();
-			gles2::manager gles2_manager(effects_[n]);
-		}
-	}
-
-	gles2::manager manager(truez() ? 0 : shader_);
-	if(shader_ && truez() == false) {
-		shader_->refresh_for_draw();
-	}
-#endif
-
-	std::unique_ptr<graphics::clip_scope> clip_scope;
-	std::unique_ptr<graphics::stencil_scope> stencil_scope;
+	KRE::StencilScopePtr stencil_scope;
 	if(clip_area_) {
-		clip_scope.reset(new graphics::clip_scope(clip_area_->sdl_rect()));
+		clip_scope.reset(new KRE::ClipScope::Manager(*clip_area_));
 	} else if(type_->isShadow()) {
-		stencil_scope.reset(new graphics::stencil_scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP));
+		stencil_scope = KRE::StencilScope::create(KRE::StencilSettings(true, 
+			KRE::StencilFace::FRONT_AND_BACK, 
+			KRE::StencilFunc::EQUAL, 
+			0xff,
+			0x02,
+			0x00,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::KEEP));
 	}
 
 	if(driver_) {
@@ -1257,47 +1150,14 @@ void custom_object::draw(int xx, int yy) const
 	}
 
 	if(draw_color_) {
-		draw_color_->to_color().set_as_current_color();
+		SetColor(draw_color_->toColor());
 	}
 
 	const int draw_x = x();
 	const int draw_y = y();
 
-	if(type_->isHiddenInGame() && !level::current().in_editor()) {
+	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass
-#if defined(USE_ISOMAP)
-	} else if(truez()) {
-		ASSERT_LOG(shader_ != NULL, "No shader found in the object, to use truez a shader must be given.");
-		//XXX All this is a big hack till I fix up frames/objects to use shaders differently
-		glUseProgram(shader_->shader()->get());
-		if(vertex_location_ == -1) {
-			vertex_location_ = shader_->shader()->get_attribute("a_position");
-		}
-		if(texcoord_location_ == -1) {
-			texcoord_location_ = shader_->shader()->get_attribute("a_texcoord");
-		}
-
-		glm::mat4 flip(1.0f);
-		if(isFacingRight()) {
-			flip = glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(0.0f,1.0f,0.0f));
-		}
-		if(isUpsideDown()) {
-			flip = flip * glm::rotate(glm::mat4(1.0f), 180.0f, glm::vec3(1.0f,0.0f,0.0f));
-		}
-		GLfloat scale = draw_scale_ ? GLfloat(draw_scale_->as_float()) : 1.0f;
-		glm::mat4 model = model_ * glm::translate(glm::mat4(1.0f), glm::vec3(tx(),ty(),tz()))
-			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_x_.as_float()), glm::vec3(1.0f,0.0f,0.0f)) 
-			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_y_.as_float()), glm::vec3(0.0f,1.0f,0.0f)) 
-			* glm::rotate(glm::mat4(1.0f), GLfloat(rotate_z_.as_float()), glm::vec3(0.0f,0.0f,1.0f)) 
-			* flip
-			* glm::scale(glm::mat4(1.0f), glm::vec3(GLfloat(scale), GLfloat(scale), GLfloat(scale)));
-
-		glm::mat4 mvp = level::current().projection_mat() * level::current().view_mat() * model;
-		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
-
-		frame_->draw3(time_in_frame_, vertex_location_, texcoord_location_);
-		glUseProgram(active->shader()->get());
-#endif
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
 		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
@@ -1331,44 +1191,31 @@ void custom_object::draw(int xx, int yy) const
 		glColor4ub(255, 255, 255, 255);
 	}
 
-	foreach(const EntityPtr& attached, attachedObjects()) {
+	for(const EntityPtr& attached : attachedObjects()) {
 		if(attached->zorder() >= zorder()) {
 			attached->draw(xx, yy);
 		}
 	}
 
-//	if(draw_color_int_ != DefaultColor) {
-//		glColor4ub(255, 255, 255, 255);
-//	}
-
-#if defined(USE_SHADERS)
-	foreach(const graphics::DrawPrimitivePtr& p, DrawPrimitives_) {
+	for(const graphics::DrawPrimitivePtr& p : DrawPrimitives_) {
 		p->draw();
 	}
-#endif
 
 	drawDebugRects();
 
-	glPushMatrix();
-	glTranslatef(GLfloat(x()), GLfloat(y()), 0.0);
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader()) {
-				w->draw();
+				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
 			}
 		}
 	}
-	foreach(const gui::vector_text_ptr& txt, vector_text_) {
-		txt->draw();
-	}
-	glPopMatrix();
 
-	for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
-		i->second->draw(rect(last_draw_position().x/100, last_draw_position().y/100, graphics::screen_width(), graphics::screen_height()), *this);
+	for(auto& ps : ParticleSystems_) {
+		ps.second->draw(rect(last_draw_position().x/100, last_draw_position().y/100, graphics::screen_width(), graphics::screen_height()), *this);
 	}
 
 	if(text_ && text_->font && text_->alpha) {
-		glColor4ub(255, 255, 255, text_->alpha);
 		const int half_width = getMidpoint().x - draw_x;
 		int xpos = draw_x;
 		if(text_->align == 0) {
@@ -1376,36 +1223,26 @@ void custom_object::draw(int xx, int yy) const
 		} else if(text_->align > 0) {
 			xpos += half_width*2 - text_->dimensions.w();
 		}
-		text_->font->draw(xpos, draw_y, text_->text, text_->size);
-
-		glColor4ub(255, 255, 255, 255);
+		text_->font->draw(xpos, draw_y, text_->text, text_->size, text_->alpha);
 	}
 	
 	clip_scope.reset();
 
-#if defined(USE_SHADERS)
-	for(size_t n = 0; n < effects_.size(); ++n) {
-		if(effects_[n]->zorder() >= 0 && effects_[n]->enabled()) {
-			gles2::manager gles2_manager(effects_[n]);
-		}
-	}
-#endif
-
-	if(level::current().debug_properties().empty() == false) {
-		std::vector<graphics::texture> left, right;
+	if(Level::current().debug_properties().empty() == false) {
+		std::vector<KRE::TexturePtr> left, right;
 		int max_property_width = 0;
-		foreach(const std::string& s, level::current().debug_properties()) {
+		for(const std::string& s : Level::current().debug_properties()) {
 			try {
 				const assert_recover_scope scope;
 				variant result = game_logic::formula(variant(s)).execute(*this);
 				const std::string result_str = result.write_json();
-				graphics::texture key_texture = font::render_text(s, graphics::color_white(), 16);
-				graphics::texture value_texture = font::render_text(result_str, graphics::color_white(), 16);
+				auto key_texture = KRE::Font::getInstance()->renderText(s, KRE::Color::colorWhite(), 16);
+				auto value_texture = KRE::Font::getInstance()->renderText(result_str, KRE::Color::colorWhite(), 16);
 				left.push_back(key_texture);
 				right.push_back(value_texture);
 	
-				if(key_texture.width() > size_t(max_property_width)) {
-					max_property_width = key_texture.width();
+				if(key_texture->width() > size_t(max_property_width)) {
+					max_property_width = key_texture->width();
 				}
 			} catch(validation_failure_exception&) {
 			}
@@ -1420,7 +1257,7 @@ void custom_object::draw(int xx, int yy) const
 		}
 	}
 
-	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && level::current().in_editor())) {
+	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && Level::current().in_editor())) {
 		std::vector<GLfloat> v;
 		const rect& r = platformRect();
 		for(int x = 0; x < r.w(); x += 2) {
@@ -1452,34 +1289,16 @@ void custom_object::draw(int xx, int yy) const
 		}
 	}
 
-#if defined(USE_SHADERS) && !defined(NO_EDITOR)
-	//catch errors that result from bad shaders etc while in the editor.
-	} catch(validation_failure_exception& e) {
-		gles2::shader::set_runtime_error("HEX MAP SHADER ERROR: " + e.msg);
-	}
-#endif
-
-	glPushMatrix();
-	glTranslatef(GLfloat(x()&~1), GLfloat(y()&~1), 0.0);
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader() == false) {
-				w->draw();
+				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
 			}
 		}
 	}
-	glPopMatrix();
-
-	if(use_absolute_screen_coordinates_) {
-		glPopMatrix();
-	}
-
-	if(type_->blend_mode()) {
-		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-	}
 }
 
-void custom_object::drawGroup() const
+void CustomObject::drawGroup() const
 {
 	if(label().empty() == false && label()[0] != '_') {
 		blit_texture(font::render_text(label(), graphics::color_yellow(), 32), x(), y() + 26);
@@ -1490,12 +1309,12 @@ void custom_object::drawGroup() const
 	}
 }
 
-void custom_object::construct()
+void CustomObject::construct()
 {
 	handleEvent(OBJECT_EVENT_CONSTRUCT);
 }
 
-bool custom_object::createObject()
+bool CustomObject::createObject()
 {
 	if(!created_) {
 		validate_properties();
@@ -1508,14 +1327,14 @@ bool custom_object::createObject()
 	return false;
 }
 
-void custom_object::check_initialized()
+void CustomObject::check_initialized()
 {
 	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << getDebugDescription() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
 
 	validate_properties();
 }
 
-void custom_object::process(level& lvl)
+void CustomObject::process(level& lvl)
 {
 	if(paused_) {
 		return;
@@ -2338,7 +2157,7 @@ void custom_object::process(level& lvl)
 	staticProcess(lvl);
 }
 
-void custom_object::staticProcess(level& lvl)
+void CustomObject::staticProcess(level& lvl)
 {
 	handleEvent(OBJECT_EVENT_PROCESS);
 	handleEvent(frame_->processEventId());
@@ -2364,7 +2183,7 @@ void custom_object::staticProcess(level& lvl)
 	}
 }
 
-void custom_object::set_driver_position()
+void CustomObject::set_driver_position()
 {
 	if(driver_) {
 		const int pos_right = x() + type_->getPassengerX();
@@ -2376,48 +2195,48 @@ void custom_object::set_driver_position()
 }
 
 #ifndef NO_EDITOR
-const_editor_entity_info_ptr custom_object::getEditorInfo() const
+const_editor_entity_info_ptr CustomObject::getEditorInfo() const
 {
 	return type_->getEditorInfo();
 }
 #endif // !NO_EDITOR
 
-int custom_object::zorder() const
+int CustomObject::zorder() const
 {
 	return zorder_;
 }
 
-int custom_object::zSubOrder() const
+int CustomObject::zSubOrder() const
 {
 	return zsub_order_;
 }
 
-int custom_object::velocityX() const
+int CustomObject::velocityX() const
 {
 	return velocity_x_;
 }
 
-int custom_object::velocityY() const
+int CustomObject::velocityY() const
 {
 	return velocity_y_;
 }
 
-int custom_object::getSurfaceFriction() const
+int CustomObject::getSurfaceFriction() const
 {
 	return type_->getSurfaceFriction();
 }
 
-int custom_object::getSurfaceTraction() const
+int CustomObject::getSurfaceTraction() const
 {
 	return type_->getSurfaceTraction();
 }
 
-bool custom_object::hasFeet() const
+bool CustomObject::hasFeet() const
 {
 	return has_feet_ && solid();
 }
 
-bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction, int* adjust_y) const
+bool CustomObject::isStandable(int xpos, int ypos, int* friction, int* traction, int* adjust_y) const
 {
 	if(!isBodyPassthrough() && !isBodyHarmful() && pointCollides(xpos, ypos)) {
 		if(friction) {
@@ -2475,12 +2294,12 @@ bool custom_object::isStandable(int xpos, int ypos, int* friction, int* traction
 	return false;
 }
 
-bool custom_object::destroyed() const
+bool CustomObject::destroyed() const
 {
 	return hitpoints_ <= 0;
 }
 
-bool custom_object::pointCollides(int xpos, int ypos) const
+bool CustomObject::pointCollides(int xpos, int ypos) const
 {
 	if(type_->useImageForCollisions()) {
 		const bool result = !getCurrentFrame().isAlpha(xpos - x(), ypos - y(), time_in_frame_, isFacingRight());
@@ -2490,7 +2309,7 @@ bool custom_object::pointCollides(int xpos, int ypos) const
 	}
 }
 
-bool custom_object::rectCollides(const rect& r) const
+bool CustomObject::rectCollides(const rect& r) const
 {
 	if(type_->useImageForCollisions()) {
 		rect myrect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height());
@@ -2513,7 +2332,7 @@ bool custom_object::rectCollides(const rect& r) const
 	}
 }
 
-ConstSolidInfoPtr custom_object::calculateSolid() const
+ConstSolidInfoPtr CustomObject::calculateSolid() const
 {
 	if(!type_->hasSolid()) {
 		return ConstSolidInfoPtr();
@@ -2527,7 +2346,7 @@ ConstSolidInfoPtr custom_object::calculateSolid() const
 	return type_->solid();
 }
 
-ConstSolidInfoPtr custom_object::calculatePlatform() const
+ConstSolidInfoPtr CustomObject::calculatePlatform() const
 {
 	if(platform_solid_info_.get()) {
 		return platform_solid_info_;
@@ -2541,11 +2360,11 @@ ConstSolidInfoPtr custom_object::calculatePlatform() const
 	return type_->platform();
 }
 
-void custom_object::control(const level& lvl)
+void CustomObject::control(const level& lvl)
 {
 }
 
-custom_object::STANDING_STATUS custom_object::isStanding(const level& lvl, collision_info* info) const
+CustomObject::STANDING_STATUS CustomObject::isStanding(const level& lvl, collision_info* info) const
 {
 	if(!hasFeet()) {
 		return NOT_STANDING;
@@ -2579,7 +2398,7 @@ namespace {
 using formula_profiler::event_call_stack;
 #endif
 
-variant call_stack(const custom_object& obj) {
+variant call_stack(const CustomObject& obj) {
 	std::vector<variant> result;
 
 #ifndef DISABLE_FORMULA_PROFILER
@@ -2593,39 +2412,39 @@ variant call_stack(const custom_object& obj) {
 
 }
 
-std::set<custom_object*>& custom_object::getAll()
+std::set<CustomObject*>& CustomObject::getAll()
 {
-	typedef std::set<custom_object*> Set;
+	typedef std::set<CustomObject*> Set;
 	static Set* all = new Set;
 	return *all;
 }
 
-std::set<custom_object*>& custom_object::getAll(const std::string& type)
+std::set<CustomObject*>& CustomObject::getAll(const std::string& type)
 {
-	typedef std::map<std::string, std::set<custom_object*> > Map;
+	typedef std::map<std::string, std::set<CustomObject*> > Map;
 	static Map* all = new Map;
 	return (*all)[type];
 }
 
-void custom_object::init()
+void CustomObject::init()
 {
 }
 
-void custom_object::run_garbage_collection()
+void CustomObject::run_garbage_collection()
 {
 	const int starting_ticks = SDL_GetTicks();
 
 	std::cerr << "RUNNING GARBAGE COLLECTION FOR " << getAll().size() << " OBJECTS...\n";
 
 	std::vector<EntityPtr> references;
-	foreach(custom_object* obj, getAll()) {
+	for(CustomObject* obj : getAll()) {
 		references.push_back(EntityPtr(obj));
 	}
 
 	std::set<const void*> safe;
 	std::vector<gc_object_reference> refs;
 
-	foreach(custom_object* obj, getAll()) {
+	for(CustomObject* obj : getAll()) {
 		obj->extractGcObjectReferences(refs);
 	}
 	
@@ -2670,7 +2489,7 @@ void custom_object::run_garbage_collection()
 	std::cerr << "RAN GARBAGE COLLECTION IN " << (SDL_GetTicks() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
 }
 
-void custom_object::beingRemoved()
+void CustomObject::beingRemoved()
 {
 	handleEvent(OBJECT_EVENT_BEING_REMOVED);
 #if defined(USE_BOX2D)
@@ -2680,7 +2499,7 @@ void custom_object::beingRemoved()
 #endif
 }
 
-void custom_object::beingAdded()
+void CustomObject::beingAdded()
 {
 #if defined(USE_BOX2D)
 	if(body_) {
@@ -2690,13 +2509,13 @@ void custom_object::beingAdded()
 	handleEvent(OBJECT_EVENT_BEING_ADDED);
 }
 
-void custom_object::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement)
+void CustomObject::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement)
 {
 	assert(movement.get() != NULL);
 	animated_movement_.push_back(movement);
 }
 
-void custom_object::addAnimatedMovement(variant attr_var, variant options)
+void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 {
 	const std::string& name = options["name"].as_string_default("");
 	if(options["replace_existing"].as_bool(false)) {
@@ -2710,7 +2529,7 @@ void custom_object::addAnimatedMovement(variant attr_var, variant options)
 		}
 	}
 
-	const std::string type = query_value_by_slot(CustomObjectType).as_string();
+	const std::string type = query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
 	game_logic::FormulaCallableDefinitionPtr def = CustomObjectType::getDefinition(type);
 	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
 
@@ -2747,9 +2566,9 @@ void custom_object::addAnimatedMovement(variant attr_var, variant options)
 	values.reserve(slots.size()*ncycles);
 
 	for(int cycle = 0; cycle != ncycles; ++cycle) {
-		GLfloat ratio = 1.0;
+		float ratio = 1.0;
 		if(cycle < ncycles-1) {
-			ratio = GLfloat(cycle)/GLfloat(ncycles-1);
+			ratio = static_cast<float>(cycle)/static_cast<float>(ncycles-1);
 			ratio = easing_fn(ratio);
 		}
 		for(int n = 0; n != slots.size(); ++n) {
@@ -2757,7 +2576,7 @@ void custom_object::addAnimatedMovement(variant attr_var, variant options)
 		}
 	}
 
-	std::shared_ptr<custom_object::AnimatedMovement> movement(new custom_object::AnimatedMovement);
+	std::shared_ptr<CustomObject::AnimatedMovement> movement(new CustomObject::AnimatedMovement);
 	movement->name = name;
 	movement->animation_values.swap(values);
 	movement->animation_slots.swap(slots);
@@ -2768,7 +2587,7 @@ void custom_object::addAnimatedMovement(variant attr_var, variant options)
 	setAnimatedSchedule(movement);
 }
 
-void custom_object::cancelAnimatedSchedule(const std::string& name)
+void CustomObject::cancelAnimatedSchedule(const std::string& name)
 {
 	if(name.empty()) {
 		animated_movement_.clear();
@@ -2784,110 +2603,112 @@ void custom_object::cancelAnimatedSchedule(const std::string& name)
 	animated_movement_.erase(std::remove(animated_movement_.begin(), animated_movement_.end(), std::shared_ptr<AnimatedMovement>()), animated_movement_.end());
 }
 
-namespace {
+namespace 
+{
+	using game_logic::FormulaCallable;
 
-using game_logic::FormulaCallable;
+	//Object that provides an FFL interface to an object's event handlers.
+	class event_handlers_callable : public FormulaCallable 
+	{
+		boost::intrusive_ptr<CustomObject> obj_;
 
-//Object that provides an FFL interface to an object's event handlers.
-class event_handlers_callable : public FormulaCallable {
-	boost::intrusive_ptr<custom_object> obj_;
-
-	variant getValue(const std::string& key) const {
-		game_logic::const_formula_ptr f = obj_->getEventHandler(get_object_event_id(key));
-		if(!f) {
-			return variant();
-		} else {
-			return variant(f->str());
+		variant getValue(const std::string& key) const {
+			game_logic::const_formula_ptr f = obj_->getEventHandler(get_object_event_id(key));
+			if(!f) {
+				return variant();
+			} else {
+				return variant(f->str());
+			}
 		}
-	}
-	void setValue(const std::string& key, const variant& value) {
-		static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
+		void setValue(const std::string& key, const variant& value) {
+			static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
-		game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
-		obj_->setEventHandler(get_object_event_id(key), f);
-	}
-public:
-	explicit event_handlers_callable(const custom_object& obj) : obj_(const_cast<custom_object*>(&obj))
-	{}
-
-	const custom_object& obj() const { return *obj_; }
-};
-
-// FFL widget interface.
-class widgets_callable : public FormulaCallable {
-	boost::intrusive_ptr<custom_object> obj_;
-
-	variant getValue(const std::string& key) const {
-		if(key == "children") {
-			std::vector<variant> v = obj_->getVariantWidgetList();
-			return variant(&v);
+			game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
+			obj_->setEventHandler(get_object_event_id(key), f);
 		}
-		return variant(obj_->getWidgetById(key).get());
-	}
-	void setValue(const std::string& key, const variant& value) {
-		if(key == "child") {
+	public:
+		explicit event_handlers_callable(const CustomObject& obj) : obj_(const_cast<CustomObject*>(&obj))
+		{}
 
-			gui::WidgetPtr new_widget = widget_factory::create(value, obj_.get());
+		const CustomObject& obj() const { return *obj_; }
+	};
 
-			if(new_widget->id().empty() == false) {
-				gui::WidgetPtr existing = obj_->getWidgetById(new_widget->id());
-				if(existing != NULL) {
-					obj_->removeWidget(existing);
+	// FFL widget interface.
+	class widgets_callable : public FormulaCallable 
+	{
+		boost::intrusive_ptr<CustomObject> obj_;
+
+		variant getValue(const std::string& key) const {
+			if(key == "children") {
+				std::vector<variant> v = obj_->getVariantWidgetList();
+				return variant(&v);
+			}
+			return variant(obj_->getWidgetById(key).get());
+		}
+		void setValue(const std::string& key, const variant& value) {
+			if(key == "child") {
+
+				gui::WidgetPtr new_widget = widget_factory::create(value, obj_.get());
+
+				if(new_widget->id().empty() == false) {
+					gui::WidgetPtr existing = obj_->getWidgetById(new_widget->id());
+					if(existing != NULL) {
+						obj_->removeWidget(existing);
+					}
 				}
-			}
 
-			obj_->addWidget(new_widget);
-			return;
-		}
-		if(value.is_null()) {
-			gui::WidgetPtr w = obj_->getWidgetById(key);
-			if(w != NULL) {
+				obj_->addWidget(new_widget);
+				return;
+			}
+			if(value.is_null()) {
+				gui::WidgetPtr w = obj_->getWidgetById(key);
+				if(w != NULL) {
+					obj_->removeWidget(w);
+				}
+			} else {
+				gui::WidgetPtr w = obj_->getWidgetById(key);
+				ASSERT_LOG(w != NULL, "no widget with identifier " << key << " found");
 				obj_->removeWidget(w);
+				obj_->addWidget(widget_factory::create(value, obj_.get()));
 			}
-		} else {
-			gui::WidgetPtr w = obj_->getWidgetById(key);
-			ASSERT_LOG(w != NULL, "no widget with identifier " << key << " found");
-			obj_->removeWidget(w);
-			obj_->addWidget(widget_factory::create(value, obj_.get()));
 		}
-	}
-public:
-	explicit widgets_callable(const custom_object& obj) : obj_(const_cast<custom_object*>(&obj))
-	{}
-};
+	public:
+		explicit widgets_callable(const CustomObject& obj) : obj_(const_cast<CustomObject*>(&obj))
+		{}
+	};
 
-decimal calculate_velocity_magnitude(int velocity_x, int velocity_y)
-{
-	const int64_t xval = velocity_x;
-	const int64_t yval = velocity_y;
-	int64_t value = xval*xval + yval*yval;
-	value = int64_t(sqrt(double(value)));
-	decimal result(decimal::from_int(static_cast<int>(value)));
-	result /= 1000;
-	return result;
-}
-
-static const double radians_to_degrees = 57.29577951308232087;
-decimal calculate_velocity_angle(int velocity_x, int velocity_y)
-{
-	if(velocity_y == 0 && velocity_x == 0) {
-		return decimal::from_int(0);
+	decimal calculate_velocity_magnitude(int velocity_x, int velocity_y)
+	{
+		const int64_t xval = velocity_x;
+		const int64_t yval = velocity_y;
+		int64_t value = xval*xval + yval*yval;
+		value = int64_t(sqrt(double(value)));
+		decimal result(decimal::from_int(static_cast<int>(value)));
+		result /= 1000;
+		return result;
 	}
 
-	const double theta = atan2(double(velocity_y), double(velocity_x));
-	return decimal(theta*radians_to_degrees);
+	static const double radians_to_degrees = 57.29577951308232087;
+	decimal calculate_velocity_angle(int velocity_x, int velocity_y)
+	{
+		if(velocity_y == 0 && velocity_x == 0) {
+			return decimal::from_int(0);
+		}
+
+		const double theta = atan2(double(velocity_y), double(velocity_x));
+		return decimal(theta*radians_to_degrees);
+	}
+
+	variant two_element_variant_list(const variant& a, const variant&b) 
+	{
+		std::vector<variant> v;
+		v.push_back(a);
+		v.push_back(b);
+		return variant(&v);
+	}
 }
 
-variant two_element_variant_list(const variant& a, const variant&b) 
-{
-	std::vector<variant> v;
-	v.push_back(a);
-	v.push_back(b);
-	return variant(&v);
-}
-}
-
-variant custom_object::getValue_by_slot(int slot) const
+variant CustomObject::getValueBySlot(int slot) const
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_VALUE: {
@@ -2913,13 +2734,13 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_CONSTS:            return variant(type_->consts().get());
-	case CustomObjectType:              return variant(type_->id());
-	case CUSTOM_OBJECT_ACTIVE:            return variant::from_bool(last_cycle_active_ >= level::current().cycle() - 2);
+	case CUSTOM_OBJECT_TYPE:              return variant(type_->id());
+	case CUSTOM_OBJECT_ACTIVE:            return variant::from_bool(last_cycle_active_ >= Level::current().cycle() - 2);
 	case CUSTOM_OBJECT_LIB:               return variant(game_logic::get_library_object().get());
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION: return variant(time_in_frame_);
 	case CUSTOM_OBJECT_TIME_IN_ANIMATION_DELTA: return variant(time_in_frame_delta_);
 	case CUSTOM_OBJECT_FRAME_IN_ANIMATION: return variant(getCurrentFrame().frameNumber(time_in_frame_));
-	case CUSTOM_OBJECT_LEVEL:             return variant(&level::current());
+	case CUSTOM_OBJECT_LEVEL:             return variant(&Level::current());
 	case CUSTOM_OBJECT_ANIMATION:         return frame_->variantId();
 	case CUSTOM_OBJECT_AVAILABLE_ANIMATIONS: return type_->getAvailableFrames();
 	case CUSTOM_OBJECT_HITPOINTS:         return variant(hitpoints_);
@@ -2939,10 +2760,10 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_ZSUB_ORDER:        return variant(zsub_order_);
     case CUSTOM_OBJECT_RELATIVE_X:        return variant(relative_x_);
 	case CUSTOM_OBJECT_RELATIVE_Y:        return variant(relative_y_);
-	case CUSTOM_OBJECT_SPAWNED_BY:        if(wasSpawnedBy().empty()) return variant(); else return variant(level::current().get_entity_by_label(wasSpawnedBy()).get());
+	case CUSTOM_OBJECT_SPAWNED_BY:        if(wasSpawnedBy().empty()) return variant(); else return variant(Level::current().get_entity_by_label(wasSpawnedBy()).get());
 	case CUSTOM_OBJECT_SPAWNED_CHILDREN: {
 		std::vector<variant> children;
-		foreach(const EntityPtr& e, level::current().get_chars()) {
+		for(const EntityPtr& e : |Level::current().get_chars()) {
 			if(e->wasSpawnedBy() == label()) {
 				children.push_back(variant(e.get()));
 			}
@@ -3027,39 +2848,36 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_TMP:               return variant(tmp_vars_.get());
 	case CUSTOM_OBJECT_GROUP:             return variant(group());
 	case CUSTOM_OBJECT_ROTATE:            return variant(rotate_z_);
-	case CUSTOM_OBJECT_ROTATE_X:            return variant(rotate_x_);
-	case CUSTOM_OBJECT_ROTATE_Y:            return variant(rotate_y_);
-	case CUSTOM_OBJECT_ROTATE_Z:            return variant(rotate_z_);
 	case CUSTOM_OBJECT_ME:
 	case CUSTOM_OBJECT_SELF:              return variant(this);
-	case CUSTOM_OBJECT_BRIGHTNESS:		  return variant((draw_color().r() + draw_color().g() + draw_color().b())/3);
-	case CUSTOM_OBJECT_RED:               return variant(draw_color().r());
-	case CUSTOM_OBJECT_GREEN:             return variant(draw_color().g());
-	case CUSTOM_OBJECT_BLUE:              return variant(draw_color().b());
-	case CUSTOM_OBJECT_ALPHA:             return variant(draw_color().a());
+	case CUSTOM_OBJECT_BRIGHTNESS:		  return variant((draw_color().addRed() + draw_color().addGreen() + draw_color().addBlue())/3);
+	case CUSTOM_OBJECT_RED:               return variant(draw_color().addRed());
+	case CUSTOM_OBJECT_GREEN:             return variant(draw_color().addGreen());
+	case CUSTOM_OBJECT_BLUE:              return variant(draw_color().addBlue());
+	case CUSTOM_OBJECT_ALPHA:             return variant(draw_color().addAlpha());
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
 	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
-	case CUSTOM_OBJECT_DISTORTION:        return variant(distortion_.get());
-	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(level::current()));
+	//case CUSTOM_OBJECT_DISTORTION:        return variant(distortion_.get());
+	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(Level::current()));
 	case CUSTOM_OBJECT_STANDING_INFO:     {
-		collision_info info;
-		isStanding(level::current(), &info);
+		CollisionInfo info;
+		isStanding(Level::current(), &info);
 		if(info.surf_info && info.surf_info->info) {
 			return variant(*info.surf_info->info);
 		} else {
 			return variant();
 		}
 	}
-	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(level::current()) && cliff_edge_within(level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
-	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(level::current(), getFeetX(), getFeetY(), getFaceDir()));
+	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(Level::current()) && cliff_edge_within(Level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
+	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), getFaceDir()));
 	case CUSTOM_OBJECT_SLOPE_STANDING_ON: {
 		if(standing_on_ && standing_on_->platform() && !standing_on_->isSolidPlatform()) {
 			return variant(standing_on_->platformSlopeAt(getFeetX()));
 		}
 		return variant(-slopeStandingOn(6)*getFaceDir());
 	}
-	case CUSTOM_OBJECT_UNDERWATER:        return variant(level::current().isUnderwater(solid() ? solidRect() : rect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height())));
+	case CUSTOM_OBJECT_UNDERWATER:        return variant(Level::current().isUnderwater(solid() ? solidRect() : rect(x(), y(), getCurrentFrame().width(), getCurrentFrame().height())));
 	case CUSTOM_OBJECT_PREVIOUS_WATER_BOUNDS: {
 		std::vector<variant> v;
 		v.push_back(variant(previous_water_bounds_.x()));
@@ -3071,7 +2889,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_WATER_BOUNDS: {
 		rect area;
-		if(level::current().isUnderwater(solidRect(), &area)) {
+		if(Level::current().isUnderwater(solidRect(), &area)) {
 			std::vector<variant> v;
 			v.push_back(variant(area.x()));
 			v.push_back(variant(area.y()));
@@ -3084,7 +2902,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_WATER_OBJECT: {
 		variant v;
-		level::current().isUnderwater(solidRect(), NULL, &v);
+		Level::current().isUnderwater(solidRect(), NULL, &v);
 		return v;
 	}
 	case CUSTOM_OBJECT_DRIVER:            return variant(driver_ ? driver_.get() : this);
@@ -3098,8 +2916,8 @@ variant custom_object::getValue_by_slot(int slot) const
 			return variant::from_bool(true);
 		}
 
-		collision_info info;
-		isStanding(level::current(), &info);
+		CollisionInfo info;
+		isStanding(Level::current(), &info);
 		return variant(info.platform);
 	}
 
@@ -3109,27 +2927,18 @@ variant custom_object::getValue_by_slot(int slot) const
 		}
 
 		EntityPtr stand_on;
-		collision_info info;
-		isStanding(level::current(), &info);
+		CollisionInfo info;
+		isStanding(Level::current(), &info);
 		return variant(info.collide_with.get());
 	}
 
 	case CUSTOM_OBJECT_EFFECTS: {
-#if defined(USE_SHADERS)
-		std::vector<variant> v;
-		for(size_t n = 0; n < effects_.size(); ++n) {
-			v.push_back(variant(effects_[n].get()));
-		}
-		return variant(&v);
-#else
+		// Return shader effects variant list
 		return variant();
-#endif
 	}
 
 	case CUSTOM_OBJECT_SHADER: {
-#if defined(USE_SHADERS)
-		return variant(shader_.get());
-#endif
+		// Return shader variant
 		return variant();
 	}
 
@@ -3161,7 +2970,7 @@ variant custom_object::getValue_by_slot(int slot) const
 
 	case CUSTOM_OBJECT_VARIATIONS: {
 		std::vector<variant> result;
-		foreach(const std::string& s, current_variation_) {
+		for(const std::string& s : current_variation_) {
 			result.push_back(variant(s));
 		}
 
@@ -3170,7 +2979,7 @@ variant custom_object::getValue_by_slot(int slot) const
 
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<variant> result;
-		foreach(const EntityPtr& e, attachedObjects()) {
+		for(const EntityPtr& e : attachedObjects()) {
 			result.push_back(variant(e.get()));
 		}
 
@@ -3183,7 +2992,7 @@ variant custom_object::getValue_by_slot(int slot) const
 
 	case CUSTOM_OBJECT_LIGHTS: {
 		std::vector<variant> result;
-		foreach(const light_ptr& p, lights_) {
+		for(const light_ptr& p : lights_) {
 			result.push_back(variant(p.get()));
 		}
 
@@ -3199,7 +3008,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PLATFORM_OFFSETS: {
 		std::vector<variant> result;
-		foreach(int n, platform_offsets_) {
+		for(int n : platform_offsets_) {
 			result.push_back(variant(n));
 		}
 		return variant(&result);
@@ -3225,7 +3034,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_UV_ARRAY: {
 		std::vector<variant> result;
 		result.reserve(custom_draw_uv_.size());
-		foreach(GLfloat f, custom_draw_uv_) {
+		for(float f : custom_draw_uv_) {
 			result.push_back(variant(decimal(f)));
 		}
 
@@ -3235,7 +3044,7 @@ variant custom_object::getValue_by_slot(int slot) const
 	case CUSTOM_OBJECT_XY_ARRAY: {
 		std::vector<variant> result;
 		result.reserve(custom_draw_xy_.size());
-		foreach(GLfloat f, custom_draw_xy_) {
+		for(float f : custom_draw_xy_) {
 			result.push_back(variant(decimal(f)));
 		}
 
@@ -3269,14 +3078,6 @@ variant custom_object::getValue_by_slot(int slot) const
 		return variant::from_bool(paused_);
 	}
 
-	case CUSTOM_OBJECT_TEXTV: {
-		std::vector<variant> v;
-		foreach(const gui::vector_text_ptr& vt, vector_text_) {
-			v.push_back(variant(vt.get()));
-		}
-		return(variant(&v));
-	}
-
 	case CUSTOM_OBJECT_MOUSEOVER_DELAY: {
 		return variant(getMouseoverDelay());
 	}
@@ -3285,22 +3086,10 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 	case CUSTOM_OBJECT_PARTICLE_SYSTEMS: {
 		std::map<variant, variant> v;
-		for(std::map<std::string, ParticleSystemPtr>::const_iterator i = ParticleSystems_.begin(); i != ParticleSystems_.end(); ++i) {
-			v[variant(i->first)] = variant(i->second.get());
+		for(auto& ps : ParticleSystems_) {
+			v[variant(ps.first)] = variant(ps.second.get());
 		}
 		return variant(&v);
-	}
-	case CUSTOM_OBJECT_TRUEZ: {
-		return variant::from_bool(truez());
-	}
-	case CUSTOM_OBJECT_TX: {
-		return variant(tx());
-	}
-	case CUSTOM_OBJECT_TY: {
-		return variant(ty());
-	}
-	case CUSTOM_OBJECT_TZ: {
-		return variant(tz());
 	}
 
 	case CUSTOM_OBJECT_CTRL_USER_OUTPUT: {
@@ -3308,16 +3097,11 @@ variant custom_object::getValue_by_slot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_DRAWPRIMITIVES: {
-#if defined(USE_SHADERS)
 		std::vector<variant> v;
-		foreach(boost::intrusive_ptr<graphics::DrawPrimitive> p, DrawPrimitives_) {
+		for(auto& p : DrawPrimitives_) {
 			v.push_back(variant(p.get()));
 		}
-
 		return variant(&v);
-#else
-		return variant();
-#endif
 	}
 
 	case CUSTOM_OBJECT_CTRL_UP:
@@ -3354,7 +3138,7 @@ variant custom_object::getValue_by_slot(int slot) const
 				if(std::find(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), slot - type_->getSlotPropertiesBase()) != properties_requiring_dynamic_initialization_.end()) {
 					ASSERT_LOG(false, "Read of uninitialized property " << getDebugDescription() << "." << e.id << " " << get_full_call_stack());
 				}
-				active_property_scope scope(*this, e.storage_slot);
+				ActivePropertyScope scope(*this, e.storage_slot);
 				return e.getter->execute(*this);
 			} else if(e.const_value) {
 				return *e.const_value;
@@ -3378,47 +3162,50 @@ variant custom_object::getValue_by_slot(int slot) const
 	return variant();
 }
 
-variant custom_object::getPlayerValueBySlot(int slot) const
+variant CustomObject::getPlayerValueBySlot(int slot) const
 {
 	assert(CustomObjectCallable::instance().getEntry(slot));
 	ASSERT_LOG(false, "Query of value for player objects on non-player object. Key: " << CustomObjectCallable::instance().getEntry(slot)->id);
 	return variant();
 }
 
-void custom_object::setPlayerValueBySlot(int slot, const variant& value)
+void CustomObject::setPlayerValueBySlot(int slot, const variant& value)
 {
 	assert(CustomObjectCallable::instance().getEntry(slot));
 	ASSERT_LOG(false, "Set of value for player objects on non-player object. Key: " << CustomObjectCallable::instance().getEntry(slot)->id);
 }
 
-namespace {
+namespace 
+{
+	using game_logic::FormulaCallable;
 
-using game_logic::FormulaCallable;
+	class BackupCallableStackScope 
+	{
+		std::stack<const FormulaCallable*>* stack_;
+	public:
+		BackupCallableStackScope(std::stack<const FormulaCallable*>* s, const FormulaCallable* item) 
+			: stack_(s) 
+		{
+			stack_->push(item);
+		}
 
-class BackupCallableStackScope {
-	std::stack<const FormulaCallable*>* stack_;
-public:
-	BackupCallableStackScope(std::stack<const FormulaCallable*>* s, const FormulaCallable* item) : stack_(s) {
-		stack_->push(item);
-	}
-
-	~BackupCallableStackScope() {
-		stack_->pop();
-	}
-};
+		~BackupCallableStackScope() {
+			stack_->pop();
+		}
+	};
 }
 
-variant custom_object::getValue(const std::string& key) const
+variant CustomObject::getValue(const std::string& key) const
 {
 	const int slot = type_->callableDefinition()->getSlot(key);
 	if(slot >= 0 && slot < NUM_CUSTOM_OBJECT_PROPERTIES) {
-		return getValue_by_slot(slot);
+		return getValueBySlot(slot);
 	}
 
 	std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator property_itor = type_->properties().find(key);
 	if(property_itor != type_->properties().end()) {
 		if(property_itor->second.getter) {
-			active_property_scope scope(*this, property_itor->second.storage_slot);
+			ActivePropertyScope scope(*this, property_itor->second.storage_slot);
 			return property_itor->second.getter->execute(*this);
 		} else if(property_itor->second.const_value) {
 			return *property_itor->second.const_value;
@@ -3462,18 +3249,18 @@ variant custom_object::getValue(const std::string& key) const
 	return variant();
 }
 
-void custom_object::getInputs(std::vector<game_logic::formula_input>* inputs) const
+void CustomObject::getInputs(std::vector<game_logic::formula_input>* inputs) const
 {
 	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
 		const game_logic::FormulaCallableDefinition::Entry* entry = 
 		    CustomObjectCallable::instance().getEntry(n);
-		if(!getValue_by_slot(n).is_null()) {
+		if(!getValueBySlot(n).is_null()) {
 			inputs->push_back(entry->id);
 		}
 	}
 }
 
-void custom_object::setValue(const std::string& key, const variant& value)
+void CustomObject::setValue(const std::string& key, const variant& value)
 {
 	const int slot = CustomObjectCallable::getKeySlot(key);
 	if(slot != -1) {
@@ -3481,7 +3268,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		return;
 	}
 
-	std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator property_itor = type_->properties().find(key);
+	auto property_itor = type_->properties().find(key);
 	if(property_itor != type_->properties().end()) {
 		setValueBySlot(type_->getSlotPropertiesBase() + property_itor->second.slot, value);
 		return;
@@ -3497,13 +3284,13 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	} else if(key == "x") {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 	} else if(key == "y") {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 	} else if(key == "xy") {
@@ -3511,7 +3298,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3548,10 +3335,6 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		accel_y_ = value.as_int();
 	} else if(key == "rotate" || key == "rotate_z") {
 		rotate_z_ = value.as_decimal();
-	} else if(key == "rotate_x") {
-		rotate_x_ = value.as_decimal();
-	} else if(key == "rotate_y") {
-		rotate_y_ = value.as_decimal();
 	} else if(key == "red") {
 		make_draw_color();
 		draw_color_->buf()[0] = truncate_to_char(value.as_int());
@@ -3571,7 +3354,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 		draw_color_->buf()[2] = value.as_int();
 	} else if(key == "distortion") {
 		distortion_ = value.try_convert<graphics::raster_distortion>();
-	} else if(key == "CurrentGenerator") {
+	} else if(key == "current_generator") {
 		setCurrentGenerator(value.try_convert<CurrentGenerator>());
 	} else if(key == "invincible") {
 		invincible_ = value.as_int();
@@ -3628,7 +3411,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 			ASSERT_LOG(value.is_null(), "BAD ACTIVATION AREA: " << value.to_debug_string());
 			activation_area_.reset();
 		}
-	} else if(key == "clipArea") {
+	} else if(key == "clip_area") {
 		if(value.is_list() && value.num_elements() == 4) {
 			clip_area_.reset(new rect(value[0].as_int(), value[1].as_int(), value[2].as_int(), value[3].as_int()));
 		} else {
@@ -3778,7 +3561,7 @@ void custom_object::setValue(const std::string& key, const variant& value)
 	}
 }
 
-void custom_object::setValueBySlot(int slot, const variant& value)
+void CustomObject::setValueBySlot(int slot, const variant& value)
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_DATA: {
@@ -4170,14 +3953,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		break;
 
 	case CUSTOM_OBJECT_ROTATE:
-	case CUSTOM_OBJECT_ROTATE_Z:
 		rotate_z_ = value.as_decimal();
-		break;
-	case CUSTOM_OBJECT_ROTATE_X:
-		rotate_x_ = value.as_decimal();
-		break;
-	case CUSTOM_OBJECT_ROTATE_Y:
-		rotate_y_ = value.as_decimal();
 		break;
 
 	case CUSTOM_OBJECT_RED:
@@ -4200,7 +3976,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		draw_color_->buf()[3] = truncate_to_char(value.as_int());
 		break;
 
-	case CUSTOM_OBJECT_TEXT_ALPHA:
+	case CustomObjectText_ALPHA:
 		if(!text_) {
 			setText("", "default", 10, false);
 		}
@@ -4245,36 +4021,14 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 
 		break;
 
-#if defined(USE_SHADERS)
 	case CUSTOM_OBJECT_SHADER: {
-		using namespace gles2;
-		if(value.is_map()) {
-			shader_.reset(new shader_program(value));
-		} else {
-			shader_.reset(value.try_convert<shader_program>());
-		}
+		/// XXX custom object shader
 		break;
 	}
 	case CUSTOM_OBJECT_EFFECTS: {
-		using namespace gles2;
-		effects_.clear();
-		if(value.is_list()) {
-			for(size_t n = 0; n < value.num_elements(); ++n) {
-				if(value[n].is_map()) {
-					effects_.push_back(new shader_program(value[n]));
-				} else {
-					effects_.push_back(shader_program_ptr(value[n].try_convert<shader_program>()));
-				}
-			}
-		} else if(value.is_map()) {
-			effects_.push_back(new shader_program(value));
-		} else {
-			effects_.push_back(shader_program_ptr(value.try_convert<shader_program>()));
-			ASSERT_LOG(effects_.size() > 0, "Couldn't convert type to shader");
-		}
+		/// XXX custom object effects
 		break;
 	}
-#endif
 
 	case CUSTOM_OBJECT_DRAW_AREA:
 		if(value.is_list() && value.num_elements() == 4) {
@@ -4347,7 +4101,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_ATTACHED_OBJECTS: {
 		std::vector<EntityPtr> v;
 		for(int n = 0; n != value.num_elements(); ++n) {
-			entity* e = value[n].try_convert<entity>();
+			Entity* e = value[n].try_convert<Entity>();
 			if(e) {
 				v.push_back(EntityPtr(e));
 			}
@@ -4423,10 +4177,10 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		const unsigned int old_solid = getSolidDimensions();
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
-		collision_info collide_info;
-		if(entity_in_current_level(this) && entity_collides(level::current(), *this, MOVE_NONE, &collide_info)) {
+		CollisionInfo collide_info;
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -4532,7 +4286,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		std::vector<gui::WidgetPtr> w;
 		clearWidgets();
 		if(value.is_list()) {
-			foreach(const variant& v, value.as_list()) {
+			for(const variant& v : value.as_list()) {
 				w.push_back(widget_factory::create(v, this));
 			}
 		} else {
@@ -4549,23 +4303,6 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_MOUSEOVER_AREA: {
 		setMouseOverArea(rect(value));
-		break;
-	}
-
-	case CUSTOM_OBJECT_TRUEZ: {
-		set_truez(value.as_bool());
-		break;
-	}
-	case CUSTOM_OBJECT_TX: {
-		set_tx(value.as_decimal().as_float());
-		break;
-	}
-	case CUSTOM_OBJECT_TY: {
-		set_ty(value.as_decimal().as_float());
-		break;
-	}
-	case CUSTOM_OBJECT_TZ: {
-		set_tz(value.as_decimal().as_float());
 		break;
 	}
 
@@ -4591,27 +4328,28 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_CUSTOM_DRAW: {
+		// XXX Figure this mess out
 		if(value.is_null()) {
 			custom_draw_.reset();
 		}
 
-		std::vector<frame::CustomPoint>* v = new std::vector<frame::CustomPoint>;
+		std::vector<Frame::CustomPoint>* v = new std::vector<Frame::CustomPoint>;
 
 		custom_draw_.reset(v);
 
-		std::vector<GLfloat> positions;
+		std::vector<float> positions;
 
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_decimal() || value[n].is_int()) {
-				positions.push_back(GLfloat(value[n].as_decimal().as_float()));
+				positions.push_back(float(value[n].as_decimal().as_float()));
 			} else if(value[n].is_list()) {
 				for(int index = 0; index != value[n].num_elements(); index += 2) {
 					ASSERT_LOG(value[n].num_elements() - index >= 2, "ILLEGAL VALUE TO custom_draw: " << value.to_debug_string() << ", " << n << ", " << index << "/" << value[n].num_elements());
 
 					ASSERT_LOG(v->size() < positions.size(), "ILLEGAL VALUE TO custom_draw -- not enough positions for number of offsets: " << value.to_debug_string() << " " << v->size() << " VS " << positions.size());
-					const GLfloat pos = positions[v->size()];
+					const float pos = positions[v->size()];
 
-					v->push_back(frame::CustomPoint());
+					v->push_back(Frame::CustomPoint());
 					v->back().pos = pos;
 					v->back().offset = point(value[n][index].as_int(), value[n][index + 1].as_int());
 				}
@@ -4620,7 +4358,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 
 		ASSERT_LOG(v->size() >= 3, "ILLEGAL VALUE TO custom_draw: " << value.to_debug_string());
 
-		std::vector<frame::CustomPoint> draw_order;
+		std::vector<Frame::CustomPoint> draw_order;
 		int n1 = 0, n2 = v->size() - 1;
 		while(n1 <= n2) {
 			draw_order.push_back((*v)[n1]);
@@ -4642,11 +4380,10 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 			custom_draw_uv_.clear();
 		} else {
 			custom_draw_uv_.clear();
-			foreach(const variant& v, value.as_list()) {
-				custom_draw_uv_.push_back(v.as_decimal().as_float());
+			for(const variant& v : value.as_list()) {
+				custom_draw_uv_.push_back(v.as_float());
 			}
 		}
-
 		break;
 	}
 
@@ -4655,11 +4392,10 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 			custom_draw_xy_.clear();
 		} else {
 			custom_draw_xy_.clear();
-			foreach(const variant& v, value.as_list()) {
-				custom_draw_xy_.push_back(v.as_decimal().as_float());
+			for(const variant& v : value.as_list()) {
+				custom_draw_xy_.push_back(v.as_float());
 			}
 		}
-
 		break;
 	}
 
@@ -4681,10 +4417,10 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		custom_draw_uv_.clear();
 
 		for(int ypos = 0; ypos < ydim-1; ++ypos) {
-			const GLfloat y = GLfloat(ypos)/GLfloat(ydim-1);
-			const GLfloat y2 = GLfloat(ypos+1)/GLfloat(ydim-1);
+			const float y = static_cast<float>(ypos)/static_cast<float>(ydim-1);
+			const float y2 = static_cast<float>(ypos+1)/static_cast<float>(ydim-1);
 			for(int xpos = 0; xpos < xdim; ++xpos) {
-				const GLfloat x = GLfloat(xpos)/GLfloat(xdim-1);
+				const float x = static_cast<float>(xpos)/static_cast<float>(xdim-1);
 
 				if(xpos == 0 && ypos > 0) {
 					custom_draw_uv_.push_back(x);
@@ -4708,7 +4444,6 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_DRAWPRIMITIVES: {
-#if defined(USE_SHADERS)
 		DrawPrimitives_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
@@ -4720,9 +4455,6 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 			}
 		}
 		break;
-#else
-		break;
-#endif
 	}
 
 	default:
@@ -4735,7 +4467,7 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 					ASSERT_LOG(e.set_type->match(value), "Setting " << getDebugDescription() << "." << e.id << " to illegal value " << value.write_json() << " of type " << get_variant_type_from_value(value)->to_string() << " expected type " << e.set_type->to_string());
 				}
 
-				active_property_scope scope(*this, e.storage_slot, &value);
+				ActivePropertyScope scope(*this, e.storage_slot, &value);
 				variant value = e.setter->execute(*this);
 				executeCommand(value);
 			} else if(e.storage_slot >= 0) {
@@ -4767,17 +4499,16 @@ void custom_object::setValueBySlot(int slot, const variant& value)
 		case CUSTOM_OBJECT_PLAYER_VERTICAL_LOOK:
 		case CUSTOM_OBJECT_PLAYER_CONTROL_LOCK:
 			setPlayerValueBySlot(slot, value);
-
 		break;
 	}
 }
 
-void custom_object::setFrame(const std::string& name)
+void CustomObject::setFrame(const std::string& name)
 {
 	setFrame(type_->getFrame(name));
 }
 
-void custom_object::setFrame(const frame& new_frame)
+void CustomObject::setFrame(const Frame& new_frame)
 {
 	const std::string& name = new_frame.id();
 	const std::string previous_animation = frame_name_;
@@ -4803,11 +4534,11 @@ void custom_object::setFrame(const frame& new_frame)
 		moveCentipixels(-diff_x*100, -diff_y*100);
 	}
 
-	set_frame_no_adjustments(new_frame);
+	setFrameNoAdjustments(new_frame);
 
 	frame_->playSound(this);
 
-	if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+	if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
 		callable->add("previous_animation", variant(previous_animation));
 		game_logic::FormulaCallablePtr callable_ptr(callable);
@@ -4817,7 +4548,7 @@ void custom_object::setFrame(const frame& new_frame)
 		handleEvent(OBJECT_EVENT_CHANGE_ANIMATION_FAILURE, callable);
 		handleEvent("change_animation_failure_" + frame_name_, callable);
 		--change_animation_failure_recurse;
-		ASSERT_LOG(destroyed() || !entity_collides(level::current(), *this, MOVE_NONE),
+		ASSERT_LOG(destroyed() || !entity_collides(Level::current(), *this, MOVE_NONE),
 		  "Object '" << type_->id() << "' has different solid areas when changing from frame " << previous_animation << " to " << frame_name_ << " and doesn't handle it properly");
 	}
 
@@ -4825,7 +4556,7 @@ void custom_object::setFrame(const frame& new_frame)
 	handleEvent(frame_->enterEventId());
 }
 
-rect custom_object::getDrawRect() const
+rect CustomObject::getDrawRect() const
 {
 	if(draw_area_) {
 		return rect(x(), y(), draw_area_->w()*2, draw_area_->h()*2);
@@ -4834,12 +4565,12 @@ rect custom_object::getDrawRect() const
 	}
 }
 
-void custom_object::set_frame_no_adjustments(const std::string& name)
+void CustomObject::setFrameNoAdjustments(const std::string& name)
 {
-	set_frame_no_adjustments(type_->getFrame(name));
+	setFrameNoAdjustments(type_->getFrame(name));
 }
 
-void custom_object::set_frame_no_adjustments(const frame& new_frame)
+void CustomObject::setFrameNoAdjustments(const Frame& new_frame)
 {
 	frame_.reset(&new_frame);
 	frame_name_ = new_frame.id();
@@ -4863,7 +4594,7 @@ void custom_object::set_frame_no_adjustments(const frame& new_frame)
 	calculateSolidRect();
 }
 
-void custom_object::die()
+void CustomObject::die()
 {
 	hitpoints_ = 0;
 	handleEvent(OBJECT_EVENT_DIE);
@@ -4875,7 +4606,7 @@ void custom_object::die()
 #endif
 }
 
-void custom_object::dieWithNoEvent()
+void CustomObject::dieWithNoEvent()
 {
 	hitpoints_ = 0;
 
@@ -4887,7 +4618,7 @@ void custom_object::dieWithNoEvent()
 }
 
 
-bool custom_object::isActive(const rect& screen_area) const
+bool CustomObject::isActive(const rect& screen_area) const
 {
 	if(controls::num_players() > 1) {
 		//in multiplayer, make all objects always active
@@ -4899,7 +4630,7 @@ bool custom_object::isActive(const rect& screen_area) const
 		return true;
 	}
 
-	if(type_->goesInactiveOnlyWhenStanding() && !isStanding(level::current())) {
+	if(type_->goesInactiveOnlyWhenStanding() && !isStanding(Level::current())) {
 		return true;
 	}
 
@@ -4916,7 +4647,7 @@ bool custom_object::isActive(const rect& screen_area) const
 
 	const rect& area = frameRect();
 	if(draw_area_) {
-		rect drawArea(area.x(), area.y(), draw_area_->w()*2, draw_area_->h()*2);
+		rect draw_area(area.x(), area.y(), draw_area_->w()*2, draw_area_->h()*2);
 		return rects_intersect(draw_area, screen_area);
 	}
 	
@@ -4943,11 +4674,11 @@ bool custom_object::isActive(const rect& screen_area) const
 	return false;
 }
 
-bool custom_object::moveToStanding(level& lvl, int max_displace)
+bool CustomObject::moveToStanding(Level& lvl, int max_displace)
 {
 	int start_y = y();
 	const bool result = moveToStandingInternal(lvl, max_displace);
-	if(!result || entity_collides(level::current(), *this, MOVE_NONE)) {
+	if(!result || entity_collides(Level::current(), *this, MOVE_NONE)) {
 		setPos(x(), start_y);
 		return false;
 	}
@@ -4955,7 +4686,7 @@ bool custom_object::moveToStanding(level& lvl, int max_displace)
 	return result;
 }
 
-bool custom_object::moveToStandingInternal(level& lvl, int max_displace)
+bool CustomObject::moveToStandingInternal(Level& lvl, int max_displace)
 {
 	int start_y = y();
 	//descend from the initial-position (what the player was at in the prev level) until we're standing
@@ -4997,74 +4728,75 @@ bool custom_object::moveToStandingInternal(level& lvl, int max_displace)
 }
 
 
-bool custom_object::diesOnInactive() const
+bool CustomObject::diesOnInactive() const
 {
 	return type_->diesOnInactive();
 }
 
-bool custom_object::isAlwaysActive() const
+bool CustomObject::isAlwaysActive() const
 {
 	return always_active_ || type_->isAlwaysActive();
 }
 
-bool custom_object::isBodyHarmful() const
+bool CustomObject::isBodyHarmful() const
 {
 	return type_->isBodyHarmful();
 }
 
-bool custom_object::isBodyPassthrough() const
+bool CustomObject::isBodyPassthrough() const
 {
 	return type_->isBodyPassthrough();
 }
 
-const frame& custom_object::getIconFrame() const
+const Frame& CustomObject::getIconFrame() const
 {
 	return type_->defaultFrame();
 }
 
-EntityPtr custom_object::clone() const
+EntityPtr CustomObject::clone() const
 {
-	EntityPtr res(new custom_object(*this));
+	EntityPtr res(new CustomObject(*this));
 	res->setDistinctLabel();
 	return res;
 }
 
-EntityPtr custom_object::backup() const
+EntityPtr CustomObject::backup() const
 {
 	if(type_->stateless()) {
-		return EntityPtr(const_cast<custom_object*>(this));
+		return EntityPtr(const_cast<CustomObject*>(this));
 	}
 
-	EntityPtr res(new custom_object(*this));
+	EntityPtr res(new CustomObject(*this));
 	return res;
 }
 
-bool custom_object::handleEvent(const std::string& event, const FormulaCallable* context)
+bool CustomObject::handleEvent(const std::string& event, const FormulaCallable* context)
 {
 	return handleEvent(get_object_event_id(event), context);
 }
 
-bool custom_object::handleEventDelay(int event, const FormulaCallable* context)
+bool CustomObject::handleEventDelay(int event, const FormulaCallable* context)
 {
 	return handleEvent_internal(event, context, false);
 }
 
-namespace {
-void run_expression_for_edit_and_continue(std::function<bool()> fn, bool* success, bool* res)
+namespace 
 {
-	*success = false;
-	*res = fn();
-	*success = true;
-}
+	void run_expression_for_edit_and_continue(std::function<bool()> fn, bool* success, bool* res)
+	{
+		*success = false;
+		*res = fn();
+		*success = true;
+	}
 }
 
-bool custom_object::handleEvent(int event, const FormulaCallable* context)
+bool CustomObject::handleEvent(int event, const FormulaCallable* context)
 {
 	if(preferences::edit_and_continue()) {
 		try {
 			ConstCustomObjectTypePtr type_back = type_;
 			ConstCustomObjectTypePtr base_type_back = base_type_;
-			assert_edit_and_continue_fn_scope scope(std::function<void()>(std::bind(&custom_object::handleEvent_internal, this, event, context, true)));
+			assert_edit_and_continue_fn_scope scope(std::function<void()>(std::bind(&CustomObject::handleEvent_internal, this, event, context, true)));
 			return handleEvent_internal(event, context);
 		} catch(validation_failure_exception& e) {
 			return true;
@@ -5073,7 +4805,7 @@ bool custom_object::handleEvent(int event, const FormulaCallable* context)
 		try {
 			return handleEvent_internal(event, context);
 		} catch(validation_failure_exception& e) {
-			if(level::current().in_editor()) {
+			if(Level::current().in_editor()) {
 				return true;
 			}
 
@@ -5082,31 +4814,35 @@ bool custom_object::handleEvent(int event, const FormulaCallable* context)
 	}
 }
 
-namespace {
-struct die_event_scope {
-	int event_;
-	int& flag_;
-	die_event_scope(int event, int& flag) : event_(event), flag_(flag) {
-		if(event_ == OBJECT_EVENT_DIE) {
-			++flag_;
+namespace 
+{
+	struct DieEventScope 
+	{
+		int event_;
+		int& flag_;
+		DieEventScope(int event, int& flag) 
+			: event_(event), flag_(flag) 
+		{
+			if(event_ == OBJECT_EVENT_DIE) {
+				++flag_;
+			}
 		}
-	}
 
-	~die_event_scope() {
-		if(event_ == OBJECT_EVENT_DIE) {
-			--flag_;
+		~DieEventScope() {
+			if(event_ == OBJECT_EVENT_DIE) {
+				--flag_;
+			}
 		}
-	}
-};
+	};
 }
 
-bool custom_object::handleEvent_internal(int event, const FormulaCallable* context, bool executeCommands_now)
+bool CustomObject::handleEvent_internal(int event, const FormulaCallable* context, bool executeCommands_now)
 {
 	if(paused_) {
 		return false;
 	}
 
-	const die_event_scope die_scope(event, currently_handling_die_event_);
+	const DieEventScope die_scope(event, currently_handling_die_event_);
 	if(hitpoints_ <= 0 && !currently_handling_die_event_) {
 		return false;
 	}
@@ -5192,14 +4928,14 @@ bool custom_object::handleEvent_internal(int event, const FormulaCallable* conte
 	return true;
 }
 
-void custom_object::resolveDelayedEvents()
+void CustomObject::resolveDelayedEvents()
 {
 	if(delayed_commands_.empty()) {
 		return;
 	}
 
 	try {
-		foreach(const variant& v, delayed_commands_) {
+		for(const variant& v : delayed_commands_) {
 			executeCommand(v);
 		}
 	} catch(validation_failure_exception&) {
@@ -5208,7 +4944,7 @@ void custom_object::resolveDelayedEvents()
 	delayed_commands_.clear();
 }
 
-bool custom_object::executeCommand(const variant& var)
+bool CustomObject::executeCommand(const variant& var)
 {
 	bool result = true;
 	if(var.is_null()) { return result; }
@@ -5224,11 +4960,11 @@ bool custom_object::executeCommand(const variant& var)
 		} else {
 			CustomObjectCommandCallable* cmd = var.try_convert<CustomObjectCommandCallable>();
 			if(cmd != NULL) {
-				cmd->runCommand(level::current(), *this);
+				cmd->runCommand(Level::current(), *this);
 			} else {
 				EntityCommandCallable* cmd = var.try_convert<EntityCommandCallable>();
 				if(cmd != NULL) {
-					cmd->runCommand(level::current(), *this);
+					cmd->runCommand(Level::current(), *this);
 				} else {
 					SwallowObjectCommandCallable* cmd = var.try_convert<SwallowObjectCommandCallable>();
 					if(cmd) {
@@ -5249,9 +4985,9 @@ bool custom_object::executeCommand(const variant& var)
 	return result;
 }
 
-int custom_object::slopeStandingOn(int range) const
+int CustomObject::slopeStandingOn(int range) const
 {
-	if(!isStanding(level::current())) {
+	if(!isStanding(Level::current())) {
 		return 0;
 	}
 
@@ -5260,32 +4996,32 @@ int custom_object::slopeStandingOn(int range) const
 	int ypos = getFeetY();
 
 
-	for(int n = 0; !level::current().standable(xpos, ypos) && n != 10; ++n) {
+	for(int n = 0; !Level::current().standable(xpos, ypos) && n != 10; ++n) {
 		++ypos;
 	}
 
 	if(range == 1) {
-		if(level::current().standable(xpos + forward, ypos - 1) &&
-		   !level::current().standable(xpos - forward, ypos)) {
+		if(Level::current().standable(xpos + forward, ypos - 1) &&
+		   !Level::current().standable(xpos - forward, ypos)) {
 			return 45;
 		}
 
-		if(!level::current().standable(xpos + forward, ypos) &&
-		   level::current().standable(xpos - forward, ypos - 1)) {
+		if(!Level::current().standable(xpos + forward, ypos) &&
+		   Level::current().standable(xpos - forward, ypos - 1)) {
 			return -45;
 		}
 
 		return 0;
 	} else {
-		if(!isStanding(level::current())) {
+		if(!isStanding(Level::current())) {
 			return 0;
 		}
 
-		int y1 = find_ground_level(level::current(), xpos + forward*range, ypos, range+1);
-		int y2 = find_ground_level(level::current(), xpos - forward*range, ypos, range+1);
+		int y1 = find_ground_level(Level::current(), xpos + forward*range, ypos, range+1);
+		int y2 = find_ground_level(Level::current(), xpos - forward*range, ypos, range+1);
 		while((y1 == INT_MIN || y2 == INT_MIN) && range > 0) {
-			y1 = find_ground_level(level::current(), xpos + forward*range, ypos, range+1);
-			y2 = find_ground_level(level::current(), xpos - forward*range, ypos, range+1);
+			y1 = find_ground_level(Level::current(), xpos + forward*range, ypos, range+1);
+			y2 = find_ground_level(Level::current(), xpos - forward*range, ypos, range+1);
 			--range;
 		}
 
@@ -5299,24 +5035,24 @@ int custom_object::slopeStandingOn(int range) const
 	}
 }
 
-void custom_object::make_draw_color()
+void CustomObject::make_draw_color()
 {
 	if(!draw_color_.get()) {
-		draw_color_.reset(new graphics::color_transform(draw_color()));
+		draw_color_.reset(new KRE::ColorTransform(draw_color()));
 	}
 }
 
-const graphics::color_transform& custom_object::draw_color() const
+const KRE::ColorTransform& CustomObject::draw_color() const
 {
 	if(draw_color_.get()) {
 		return *draw_color_;
 	}
 
-	static const graphics::color_transform white(0xFF, 0xFF, 0xFF, 0xFF);
+	static const KRE::ColorTransform white(0, 0, 0, 0, 255, 255, 255, 255);
 	return white;
 }
 
-game_logic::const_formula_ptr custom_object::getEventHandler(int key) const
+game_logic::const_formula_ptr CustomObject::getEventHandler(int key) const
 {
 	if(size_t(key) < event_handlers_.size()) {
 		return event_handlers_[key];
@@ -5325,7 +5061,7 @@ game_logic::const_formula_ptr custom_object::getEventHandler(int key) const
 	}
 }
 
-void custom_object::setEventHandler(int key, game_logic::const_formula_ptr f)
+void CustomObject::setEventHandler(int key, game_logic::const_formula_ptr f)
 {
 	if(size_t(key) >= event_handlers_.size()) {
 		event_handlers_.resize(key+1);
@@ -5334,117 +5070,118 @@ void custom_object::setEventHandler(int key, game_logic::const_formula_ptr f)
 	event_handlers_[key] = f;
 }
 
-bool custom_object::canInteractWith() const
+bool CustomObject::canInteractWith() const
 {
 	return can_interact_with_;
 }
 
-std::string custom_object::getDebugDescription() const
+std::string CustomObject::getDebugDescription() const
 {
 	return type_->id();
 }
 
-namespace {
-bool map_variant_entities(variant& v, const std::map<EntityPtr, EntityPtr>& m)
+namespace 
 {
-	if(v.is_list()) {
-		for(int n = 0; n != v.num_elements(); ++n) {
-			variant var = v[n];
-			if(map_variant_entities(var, m)) {
-				std::vector<variant> new_values;
-				for(int i = 0; i != n; ++i) {
-					new_values.push_back(v[i]);
-				}
+	bool map_variant_entities(variant& v, const std::map<EntityPtr, EntityPtr>& m)
+	{
+		if(v.is_list()) {
+			for(int n = 0; n != v.num_elements(); ++n) {
+				variant var = v[n];
+				if(map_variant_entities(var, m)) {
+					std::vector<variant> new_values;
+					for(int i = 0; i != n; ++i) {
+						new_values.push_back(v[i]);
+					}
 
-				new_values.push_back(var);
-				for(size_t i = n+1; i < v.num_elements(); ++i) {
-					var = v[i];
-					map_variant_entities(var, m);
 					new_values.push_back(var);
-				}
+					for(size_t i = n+1; i < v.num_elements(); ++i) {
+						var = v[i];
+						map_variant_entities(var, m);
+						new_values.push_back(var);
+					}
 
-				v = variant(&new_values);
+					v = variant(&new_values);
+					return true;
+				}
+			}
+		} else if(v.try_convert<Entity>()) {
+			Entity* e = v.try_convert<entity>();
+			std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(EntityPtr(e));
+			if(i != m.end()) {
+				v = variant(i->second.get());
+				return true;
+			} else {
+				EntityPtr back = e->backup();
+				v = variant(back.get());
 				return true;
 			}
 		}
-	} else if(v.try_convert<entity>()) {
-		entity* e = v.try_convert<entity>();
-		std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(EntityPtr(e));
-		if(i != m.end()) {
-			v = variant(i->second.get());
-			return true;
-		} else {
-			EntityPtr back = e->backup();
-			v = variant(back.get());
-			return true;
-		}
+
+		return false;
 	}
 
-	return false;
-}
-
-void do_map_entity(EntityPtr& e, const std::map<EntityPtr, EntityPtr>& m)
-{
-	if(e) {
-		std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(e);
-		if(i != m.end()) {
-			e = i->second;
+	void do_map_entity(EntityPtr& e, const std::map<EntityPtr, EntityPtr>& m)
+	{
+		if(e) {
+			std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(e);
+			if(i != m.end()) {
+				e = i->second;
+			}
 		}
 	}
 }
-}
 
-void custom_object::mapEntities(const std::map<EntityPtr, EntityPtr>& m)
+void CustomObject::mapEntities(const std::map<EntityPtr, EntityPtr>& m)
 {
 	do_map_entity(last_hit_by_, m);
 	do_map_entity(standing_on_, m);
 	do_map_entity(parent_, m);
 
-	foreach(variant& v, vars_->values()) {
+	for(variant& v : vars_->values()) {
 		map_variant_entities(v, m);
 	}
 
-	foreach(variant& v, tmp_vars_->values()) {
+	for(variant& v : tmp_vars_->values()) {
 		map_variant_entities(v, m);
 	}
 
-	foreach(variant& v, property_data_) {
+	for(variant& v : property_data_) {
 		map_variant_entities(v, m);
 	}
 }
 
-void custom_object::cleanup_references()
+void CustomObject::cleanup_references()
 {
 	last_hit_by_.reset();
 	standing_on_.reset();
 	parent_.reset();
-	foreach(variant& v, vars_->values()) {
+	for(variant& v : vars_->values()) {
 		v = variant();
 	}
 
-	foreach(variant& v, tmp_vars_->values()) {
+	for(variant& v : tmp_vars_->values()) {
 		v = variant();
 	}
 
-	foreach(variant& v, property_data_) {
+	for(variant& v : property_data_) {
 		v = variant();
 	}
 }
 
-void custom_object::extractGcObjectReferences(std::vector<gc_object_reference>& v)
+void CustomObject::extractGcObjectReferences(std::vector<gc_object_reference>& v)
 {
 	extractGcObjectReferences(last_hit_by_, v);
 	extractGcObjectReferences(standing_on_, v);
 	extractGcObjectReferences(parent_, v);
-	foreach(variant& var, vars_->values()) {
+	for(variant& var : vars_->values()) {
 		extractGcObjectReferences(var, v);
 	}
 
-	foreach(variant& var, tmp_vars_->values()) {
+	for(variant& var : tmp_vars_->values()) {
 		extractGcObjectReferences(var, v);
 	}
 
-	foreach(variant& var, property_data_) {
+	for(variant& var : property_data_) {
 		extractGcObjectReferences(var, v);
 	}
 
@@ -5453,12 +5190,12 @@ void custom_object::extractGcObjectReferences(std::vector<gc_object_reference>& 
 	visitor.target = NULL;
 	visitor.from_variant = NULL;
 	visitor.visitor.reset(new game_logic::FormulaCallableVisitor);
-	foreach(gui::WidgetPtr w, widgets_) {
+	for(gui::WidgetPtr w : widgets_) {
 		w->performVisitValues(*visitor.visitor);
 	}
 
-	foreach(game_logic::FormulaCallable_suspended_ptr ptr, visitor.visitor->pointers()) {
-		if(dynamic_cast<const custom_object*>(ptr->value())) {
+	for(game_logic::FormulaCallable_suspended_ptr ptr : visitor.visitor->pointers()) {
+		if(dynamic_cast<const CustomObject*>(ptr->value())) {
 			ptr->destroy_ref();
 		}
 	}
@@ -5466,7 +5203,7 @@ void custom_object::extractGcObjectReferences(std::vector<gc_object_reference>& 
 	v.push_back(visitor);
 }
 
-void custom_object::extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v)
+void CustomObject::extractGcObjectReferences(EntityPtr& e, std::vector<gc_object_reference>& v)
 {
 	if(!e) {
 		return;
@@ -5482,14 +5219,14 @@ void custom_object::extractGcObjectReferences(EntityPtr& e, std::vector<gc_objec
 	e.reset();
 }
 
-void custom_object::extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v)
+void CustomObject::extractGcObjectReferences(variant& var, std::vector<gc_object_reference>& v)
 {
 	if(var.is_callable()) {
-		if(var.try_convert<entity>()) {
+		if(var.try_convert<Entity>()) {
 			v.resize(v.size()+1);
 			gc_object_reference& ref = v.back();
 			ref.owner = this;
-			ref.target = var.try_convert<entity>();
+			ref.target = var.try_convert<Entity>();
 			ref.from_variant = &var;
 			ref.from_ptr = NULL;
 
@@ -5500,16 +5237,16 @@ void custom_object::extractGcObjectReferences(variant& var, std::vector<gc_objec
 			extractGcObjectReferences(*var.get_index_mutable(n), v);
 		}
 	} else if(var.is_map()) {
-		foreach(variant k, var.getKeys().as_list()) {
+		for(variant k : var.getKeys().as_list()) {
 			extractGcObjectReferences(*var.get_attr_mutable(k), v);
 		}
 	}
 }
 
-void custom_object::restoreGcObjectReference(gc_object_reference ref)
+void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 {
 	if(ref.visitor) {
-		foreach(game_logic::FormulaCallable_suspended_ptr ptr, ref.visitor->pointers()) {
+		for(game_logic::FormulaCallable_suspended_ptr ptr : ref.visitor->pointers()) {
 			ptr->restore_ref();
 		}
 	} else if(ref.from_variant) {
@@ -5519,20 +5256,20 @@ void custom_object::restoreGcObjectReference(gc_object_reference ref)
 	}
 }
 
-void custom_object::addParticleSystem(const std::string& key, const std::string& type)
+void CustomObject::addParticleSystem(const std::string& key, const std::string& type)
 {
 	ParticleSystems_[key] = type_->getParticleSystemFactory(type)->create(*this);
 	ParticleSystems_[key]->setType(type);
 }
 
-void custom_object::remove_ParticleSystem(const std::string& key)
+void CustomObject::remove_ParticleSystem(const std::string& key)
 {
 	ParticleSystems_.erase(key);
 }
 
-void custom_object::setText(const std::string& text, const std::string& font, int size, int align)
+void CustomObject::setText(const std::string& text, const std::string& font, int size, int align)
 {
-	text_.reset(new custom_object_text);
+	text_.reset(new CustomObjectText);
 	text_->text = text;
 	text_->font = GraphicalFont::get(font);
 	text_->size = size;
@@ -5542,12 +5279,12 @@ void custom_object::setText(const std::string& text, const std::string& font, in
 	text_->dimensions = text_->font->dimensions(text_->text, size);
 }
 
-bool custom_object::boardableVehicle() const
+bool CustomObject::boardableVehicle() const
 {
 	return type_->isVehicle() && driver_.get() == NULL;
 }
 
-void custom_object::boarded(level& lvl, const EntityPtr& player)
+void CustomObject::boarded(Level& lvl, const EntityPtr& player)
 {
 	if(!player) {
 		return;
@@ -5569,7 +5306,7 @@ void custom_object::boarded(level& lvl, const EntityPtr& player)
 	}
 }
 
-void custom_object::unboarded(level& lvl)
+void CustomObject::unboarded(Level& lvl)
 {
 	if(velocityX() > 100) {
 		driver_->setFacingRight(false);
@@ -5580,7 +5317,7 @@ void custom_object::unboarded(level& lvl)
 	}
 
 	if(isHuman()) {
-		custom_object* vehicle(new custom_object(*this));
+		CustomObject* vehicle(new CustomObject(*this));
 		vehicle->driver_ = EntityPtr();
 		lvl.add_character(vehicle);
 
@@ -5596,15 +5333,15 @@ void custom_object::unboarded(level& lvl)
 	}
 }
 
-void custom_object::boardVehicle()
+void CustomObject::boardVehicle()
 {
 }
 
-void custom_object::unboardVehicle()
+void CustomObject::unboardVehicle()
 {
 }
 
-void custom_object::set_blur(const BlurInfo* blur)
+void CustomObject::set_blur(const BlurInfo* blur)
 {
 	if(blur) {
 		if(blur_) {
@@ -5617,33 +5354,33 @@ void custom_object::set_blur(const BlurInfo* blur)
 	}
 }
 
-void custom_object::setSoundVolume(const int sound_volume)
+void CustomObject::setSoundVolume(const int sound_volume)
 {
 	sound::change_volume(this, sound_volume);
 	sound_volume_ = sound_volume;
 }
 
-bool custom_object::allowLevelCollisions() const
+bool CustomObject::allowLevelCollisions() const
 {
 	return type_->isStaticObject() || !type_->collidesWithLevel();
 }
 
-void custom_object::set_platform_area(const rect& area)
+void CustomObject::set_platform_area(const rect& area)
 {
 	if(area.w() <= 0 || area.h() <= 0) {
 		platform_area_.reset(new rect(area));
 		platform_solid_info_ = ConstSolidInfoPtr();
 	} else {
 		platform_area_.reset(new rect(area));
-		platform_solid_info_ = solid_info::create_platform(area);
+		platform_solid_info_ = SolidInfo::create_platform(area);
 	}
 
 	calculateSolidRect();
 }
 
-void custom_object::shiftPosition(int x, int y)
+void CustomObject::shiftPosition(int x, int y)
 {
-	entity::shiftPosition(x, y);
+	Entity::shiftPosition(x, y);
 	if(standing_on_prev_x_ != INT_MIN) {
 		standing_on_prev_x_ += x;
 	}
@@ -5653,11 +5390,11 @@ void custom_object::shiftPosition(int x, int y)
 	}
 
 	if(position_schedule_.get() != NULL) {
-		foreach(int& xpos, position_schedule_->x_pos) {
+		for(int& xpos : position_schedule_->x_pos) {
 			xpos += x;
 		}
 
-		foreach(int& ypos, position_schedule_->y_pos) {
+		for(int& ypos : position_schedule_->y_pos) {
 			ypos += y;
 		}
 	}
@@ -5670,13 +5407,13 @@ void custom_object::shiftPosition(int x, int y)
 	}
 }
 
-bool custom_object::appearsAtDifficulty(int difficulty) const
+bool CustomObject::appearsAtDifficulty(int difficulty) const
 {
 	return (min_difficulty_ == -1 || difficulty >= min_difficulty_) &&
 	       (max_difficulty_ == -1 || difficulty <= max_difficulty_);
 }
 
-void custom_object::setParent(EntityPtr e, const std::string& pivot_point)
+void CustomObject::setParent(EntityPtr e, const std::string& pivot_point)
 {
 	parent_ = e;
 	parent_pivot_ = pivot_point;
@@ -5697,7 +5434,7 @@ void custom_object::setParent(EntityPtr e, const std::string& pivot_point)
 	}
 }
 
-int custom_object::parentDepth(bool* has_human_parent, int cur_depth) const
+int CustomObject::parentDepth(bool* has_human_parent, int cur_depth) const
 {
 	if(!parent_ || cur_depth > 10) {
 		if(has_human_parent) {
@@ -5709,17 +5446,17 @@ int custom_object::parentDepth(bool* has_human_parent, int cur_depth) const
 	return parent_->parentDepth(has_human_parent, cur_depth+1);
 }
 
-bool custom_object::editorForceStanding() const
+bool CustomObject::editorForceStanding() const
 {
 	return type_->editorForceStanding();
 }
 
-game_logic::ConstFormulaCallableDefinitionPtr custom_object::getDefinition() const
+game_logic::ConstFormulaCallableDefinitionPtr CustomObject::getDefinition() const
 {
 	return type_->callableDefinition();
 }
 
-rect custom_object::platformRectAt(int xpos) const
+rect CustomObject::platformRectAt(int xpos) const
 {
 	if(platform_offsets_.empty()) {
 		return platformRect();
@@ -5745,7 +5482,7 @@ rect custom_object::platformRectAt(int xpos) const
 	return rect(area.x(), area.y() + offset, area.w(), area.h());
 }
 
-int custom_object::platformSlopeAt(int xpos) const
+int CustomObject::platformSlopeAt(int xpos) const
 {
 	if(platform_offsets_.size() <= 1) {
 		return 0;
@@ -5766,12 +5503,12 @@ int custom_object::platformSlopeAt(int xpos) const
 	return (dy*45)/dx;
 }
 
-bool custom_object::isSolidPlatform() const
+bool CustomObject::isSolidPlatform() const
 {
 	return type_->isSolidPlatform();
 }
 
-point custom_object::parent_position() const
+point CustomObject::parent_position() const
 {
 	if(parent_.get() == NULL) {
 		return point(0,0);
@@ -5780,7 +5517,7 @@ point custom_object::parent_position() const
 	return parent_->pivot(parent_pivot_);
 }
 
-void custom_object::updateType(ConstCustomObjectTypePtr old_type,
+void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
                                 ConstCustomObjectTypePtr new_type)
 {
 	if(old_type != base_type_) {
@@ -5798,7 +5535,7 @@ void custom_object::updateType(ConstCustomObjectTypePtr old_type,
 
 	vars_.reset(new game_logic::formula_variable_storage(type_->variables()));
 	vars_->set_object_name(getDebugDescription());
-	foreach(const std::string& key, old_vars->keys()) {
+	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->variables().find(key);
@@ -5812,7 +5549,7 @@ void custom_object::updateType(ConstCustomObjectTypePtr old_type,
 
 	tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables()));
 	tmp_vars_->set_object_name(getDebugDescription());
-	foreach(const std::string& key, old_vars->keys()) {
+	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->query_value(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->tmpVariables().find(key);
@@ -5835,18 +5572,7 @@ void custom_object::updateType(ConstCustomObjectTypePtr old_type,
 		addParticleSystem(i->first, i->second->type());
 	}
 
-#if defined(USE_SHADERS)
-	shader_.reset(new_type->shader() ? new gles2::shader_program(*new_type->shader()) : NULL);
-	if(shader_) {
-		shader_->init(this);
-	}
-
-	effects_.clear();
-	for(size_t n = 0; n < new_type->effects().size(); ++n) {
-		effects_.push_back(new gles2::shader_program(*new_type->effects()[n]));
-		effects_.back()->init(this);
-	}
-#endif
+	// XXX Update shader and re-init with new object.
 
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
@@ -5858,7 +5584,7 @@ void custom_object::updateType(ConstCustomObjectTypePtr old_type,
 	handleEvent("type_updated");
 }
 
-std::vector<variant> custom_object::getVariantWidgetList() const
+std::vector<variant> CustomObject::getVariantWidgetList() const
 {
 	std::vector<variant> v;
 	for(widget_list::iterator it = widgets_.begin(); it != widgets_.end(); ++it) {
@@ -5867,30 +5593,30 @@ std::vector<variant> custom_object::getVariantWidgetList() const
 	return v;
 }
 
-void custom_object::addWidget(const gui::WidgetPtr& w)
+void CustomObject::addWidget(const gui::WidgetPtr& w)
 { 
 	widgets_.insert(w); 
 }
 
-void custom_object::addWidgets(std::vector<gui::WidgetPtr>* widgets) 
+void CustomObject::addWidgets(std::vector<gui::WidgetPtr>* widgets) 
 {
 	widgets_.clear();
 	std::copy(widgets->begin(), widgets->end(), std::inserter(widgets_, widgets_.end()));
 }
 
-void custom_object::clearWidgets() 
+void CustomObject::clearWidgets() 
 { 
 	widgets_.clear(); 
 }
 
-void custom_object::removeWidget(gui::WidgetPtr w)
+void CustomObject::removeWidget(gui::WidgetPtr w)
 {
 	widget_list::iterator it = widgets_.find(w);
 	ASSERT_LOG(it != widgets_.end(), "Tried to erase widget not in list.");
 	widgets_.erase(it);
 }
 
-bool custom_object::handle_sdl_event(const SDL_Event& event, bool claimed)
+bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 {
 	SDL_Event ev(event);
 	if(event.type == SDL_MOUSEMOTION) {
@@ -5917,14 +5643,14 @@ bool custom_object::handle_sdl_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-game_logic::formula_ptr custom_object::executeCommand(const variant& v)
+game_logic::formula_ptr CustomObject::createFormula(const variant& v)
 {
 	return game_logic::formula_ptr(new game_logic::formula(v, &get_custom_object_functions_symbol_table()));
 }
 
-gui::ConstWidgetPtr custom_object::getWidgetById(const std::string& id) const
+gui::ConstWidgetPtr CustomObject::getWidgetById(const std::string& id) const
 {
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		gui::WidgetPtr wx = w->getWidgetById(id);
 		if(wx) {
 			return wx;
@@ -5933,9 +5659,9 @@ gui::ConstWidgetPtr custom_object::getWidgetById(const std::string& id) const
 	return gui::ConstWidgetPtr();
 }
 
-gui::WidgetPtr custom_object::getWidgetById(const std::string& id)
+gui::WidgetPtr CustomObject::getWidgetById(const std::string& id)
 {
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		gui::WidgetPtr wx = w->getWidgetById(id);
 		if(wx) {
 			return wx;
@@ -5944,9 +5670,9 @@ gui::WidgetPtr custom_object::getWidgetById(const std::string& id)
 	return gui::WidgetPtr();
 }
 
-void custom_object::addToLevel()
+void CustomObject::addToLevel()
 {
-	entity::addToLevel();
+	Entity::addToLevel();
 	standing_on_.reset();
 #if defined(USE_BOX2D)
 	if(body_) {
@@ -5964,25 +5690,25 @@ void custom_object::addToLevel()
 }
 
 BENCHMARK(custom_object_spike) {
-	static level* lvl = NULL;
+	static Level* lvl = NULL;
 	if(!lvl) {	
-		lvl = new level("test.cfg");
+		lvl = new Level("test.cfg");
 		static variant v(lvl);
 		lvl->finishLoading();
 		lvl->setAsCurrentLevel();
 	}
 	BENCHMARK_LOOP {
-		custom_object* obj = new custom_object("chain_base", 0, 0, false);
+		CustomObject* obj = new CustomObject("chain_base", 0, 0, false);
 		variant v(obj);
 		obj->handleEvent(OBJECT_EVENT_CREATE);
 	}
 }
 
-int custom_object::events_handled_per_second = 0;
+int CustomObject::events_handled_per_second = 0;
 
 BENCHMARK_ARG(custom_object_get_attr, const std::string& attr)
 {
-	static custom_object* obj = new custom_object("ant_black", 0, 0, false);
+	static CustomObject* obj = new CustomObject("ant_black", 0, 0, false);
 	BENCHMARK_LOOP {
 		obj->query_value(attr);
 	}
@@ -5997,9 +5723,9 @@ BENCHMARK_ARG(custom_object_handleEvent, const std::string& object_event)
 	ASSERT_LOG(i != object_event.end(), "custom_object_event_handle argument must have a colon seperator: " << object_event);
 	std::string obj_type(object_event.begin(), i);
 	std::string event_name(i+1, object_event.end());
-	static level* lvl = new level("titlescreen.cfg");
+	static Level* lvl = new Level("titlescreen.cfg");
 	lvl->setAsCurrentLevel();
-	static custom_object* obj = new custom_object(obj_type, 0, 0, false);
+	static CustomObject* obj = new CustomObject(obj_type, 0, 0, false);
 	obj->setLevel(*lvl);
 	const int event_id = get_object_event_id(event_name);
 	BENCHMARK_LOOP {

@@ -1336,7 +1336,7 @@ class variant_comparator : public FormulaCallable {
 		}
 	}
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		if(slot == 0) {
 			return a_;
 		} else if(slot == 1) {
@@ -2041,7 +2041,7 @@ class map_callable : public FormulaCallable {
 			}
 		}
 
-		variant getValue_by_slot(int slot) const {
+		variant getValueBySlot(int slot) const {
 			ASSERT_LOG(slot >= 0, "BAD SLOT VALUE: " << slot);
 			if(slot < NUM_MAP_CALLABLE_SLOTS) {
 				switch(slot) {
@@ -2411,7 +2411,7 @@ private:
 			}
 		}
 
-		variant getValue_by_slot(int slot) const {
+		variant getValueBySlot(int slot) const {
 			return backup_.query_value_by_slot(slot);
 		}
 
@@ -4661,7 +4661,7 @@ private:
 		return variant();
 	}
 
-	variant getValue_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		if(slot == 0) {
 			return v_;
 		}

@@ -159,9 +159,6 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "group", "int" },
 
 		{ "rotate", "decimal" },
-		{ "rotate_x", "decimal" },
-		{ "rotate_y", "decimal" },
-		{ "rotate_z", "decimal" },
 
 		{ "me", "any" },
 		{ "self", "any" },
@@ -212,13 +209,13 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "collide_dimensions_not_in", "[string]" },
 	
 		{ "brightness", "int" },
-		{ "CurrentGenerator", "object" },
+		{ "current_generator", "object" },
 		{ "tags", "object" },
 		{ "draw_area", "any" },
 		{ "scale", "decimal" },
 	
 		{ "activation_area", "null|[int|decimal]" },
-		{ "clipArea", "null|[int]" },
+		{ "clip_area", "null|[int]" },
 
 		{ "always_active", "bool" },
 		{ "activation_border", "int/int|decimal" },
@@ -247,7 +244,6 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 	
 		{ "widgets", "object/[object|map]|object|map" },
 		{ "widget_list", "[widget]" },
-		{ "textv", "any" },
 		{ "body", "any" },
 		{ "paused", "bool" },
 		{ "mouseover_delay", "int" },

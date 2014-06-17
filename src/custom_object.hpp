@@ -28,7 +28,7 @@
 #include <set>
 #include <stack>
 
-#include "kre/SceneObject.hpp"
+#include "kre/SceneNode.hpp"
 
 #include "blur.hpp"
 #include "custom_object_type.hpp"
@@ -39,16 +39,17 @@
 #include "formula_callable.hpp"
 #include "formula_callable_visitor.hpp"
 #include "formula_variable_storage.hpp"
+#include "frame.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
 #include "variant.hpp"
 #include "widget.hpp"
 
-struct collision_info;
+struct CollisionInfo;
 class Level;
 struct CustomObjectText;
 
-class CustomObject : public Entity, public KRE::SceneObject
+class CustomObject : public Entity, public KRE::SceneNode
 {
 public:
 	static const std::string* current_debug_error();
@@ -121,17 +122,17 @@ public:
 	virtual bool pointCollides(int x, int y) const;
 	virtual bool rectCollides(const rect& r) const;
 
-	virtual const frame& getCurrentFrame() const { return *frame_; }
+	virtual const Frame& getCurrentFrame() const { return *frame_; }
 
 	void setFrame(const std::string& name);
-	void setFrame(const frame& new_frame);
+	void setFrame(const Frame& new_frame);
 
 	virtual rect getDrawRect() const;
 
 	//bare setting of the frame without adjusting position/checking solidity
 	//etc etc.
-	void set_frame_no_adjustments(const std::string& name);
-	void set_frame_no_adjustments(const frame& new_frame);
+	void setFrameNoAdjustments(const std::string& name);
+	void setFrameNoAdjustments(const Frame& new_frame);
 	void die();
 	void dieWithNoEvent();
 	virtual bool isActive(const rect& screen_area) const;
@@ -156,7 +157,7 @@ public:
 		return type_->getChild(key);
 	}
 
-	const frame& getIconFrame() const;
+	const Frame& getIconFrame() const;
 
 	virtual EntityPtr clone() const;
 	virtual EntityPtr backup() const;
@@ -283,7 +284,7 @@ protected:
 
 	virtual void control(const Level& lvl);
 	variant getValue(const std::string& key) const;
-	variant getValue_by_slot(int slot) const;
+	variant getValueBySlot(int slot) const;
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 
@@ -301,7 +302,7 @@ protected:
 	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
 	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
-	STANDING_STATUS isStanding(const Level& lvl, collision_info* info=NULL) const;
+	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=NULL) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);
 
@@ -360,7 +361,7 @@ private:
 	ConstCustomObjectTypePtr type_; //the type after variations are applied
 	ConstCustomObjectTypePtr base_type_; //the type without any variation
 	std::vector<std::string> current_variation_;
-	boost::intrusive_ptr<const frame> frame_;
+	boost::intrusive_ptr<const Frame> frame_;
 	std::string frame_name_;
 	int time_in_frame_;
 	int time_in_frame_delta_;
@@ -368,8 +369,6 @@ private:
 	int velocity_x_, velocity_y_;
 	int accel_x_, accel_y_;
 	int gravity_shift_;
-	decimal rotate_x_;
-	decimal rotate_y_;
 	decimal rotate_z_;
 
     void setMidX(int new_mid_x) {
@@ -413,7 +412,7 @@ private:
 	//property setters.
 	mutable std::stack<variant> value_stack_;
 
-	friend class active_property_scope;
+	friend class ActivePropertyScope;
 
 	EntityPtr last_hit_by_;
 	int last_hit_by_anim_;
@@ -497,7 +496,7 @@ private:
 
 	int min_difficulty_, max_difficulty_;
 
-	std::shared_ptr<const std::vector<frame::CustomPoint> > custom_draw_;
+	std::shared_ptr<const std::vector<Frame::CustomPoint> > custom_draw_;
 
 	std::vector<float> custom_draw_xy_;
 	std::vector<float> custom_draw_uv_;
