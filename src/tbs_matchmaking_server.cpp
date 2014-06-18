@@ -176,10 +176,15 @@ public:
 		std::vector<variant> servers;
 		for(auto p : servers_) {
 			variant_builder server;
-			server.add("pid", p.first);
 			server.add("port", p.second.port);
-			server.add("sessions", vector_to_variant(p.second.sessions));
-			server.add("users", p.second.users);
+
+			std::vector<variant> users;
+			for(int n = 0; n != p.second.users.num_elements(); ++n) {
+				std::map<variant,variant> m;
+				m[variant("user")] = p.second.users[n]["user"];
+				users.push_back(variant(&m));
+			}
+			server.add("users", variant(&users));
 
 			servers.push_back(server.build());
 		}
