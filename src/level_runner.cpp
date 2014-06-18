@@ -147,7 +147,7 @@ void transition_scene(level& lvl, screen_position& screen_pos, bool transition_o
 		lvl.player()->getEntity().setInvisible(true);
 	}
 
-	const int start_time = SDL_GetTicks();
+	const int start_time = profile::get_tick_time();
 
 	for(int n = 0; n <= 20; ++n) {
 //		lvl.process();
@@ -157,7 +157,7 @@ void transition_scene(level& lvl, screen_position& screen_pos, bool transition_o
 		get_main_window()->swap();
 
 		const int target_end_time = start_time + (n+1)*preferences::frame_time_millis();
-		const int current_time = SDL_GetTicks();
+		const int current_time = profile::get_tick_time();
 		const int skip_time = target_end_time - current_time;
 		if(skip_time > 0) {
 			SDL_Delay(skip_time);
@@ -729,7 +729,7 @@ level_runner::level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_
 	die_at = -1;
 	paused = false;
 	done = false;
-	start_time_ = SDL_GetTicks();
+	start_time_ = profile::get_tick_time();
 	pause_time_ = -global_pause_time;
 	mouse_clicking_ = false;
 	mouse_drag_count_ = 0;
@@ -804,14 +804,14 @@ bool level_runner::play_level()
 #endif
 		) {
 				if(!reversing) {
-					pause_time_ -= SDL_GetTicks();
+					pause_time_ -= profile::get_tick_time();
 				}
 				reverse_cycle();
 				reversing = true;
 		} else {
 			if(reversing) {
 				controls::read_until(lvl_->cycle());
-				pause_time_ += SDL_GetTicks();
+				pause_time_ += profile::get_tick_time();
 			}
 			reversing = false;
 			bool res = play_cycle();
@@ -946,7 +946,7 @@ bool level_runner::play_cycle()
 	int desired_end_time = start_time_ + pause_time_ + global_pause_time + cycle*preferences::frame_time_millis() + preferences::frame_time_millis();
 
 	if(!is_multiplayer) {
-		const int ticks = SDL_GetTicks();
+		const int ticks = profile::get_tick_time();
 		if(desired_end_time < ticks || alt_frame_time_scoper.active()) {
 			const int new_desired_end_time = ticks + preferences::frame_time_millis();
 			pause_time_ += new_desired_end_time - desired_end_time;
@@ -1522,7 +1522,7 @@ bool level_runner::play_cycle()
 		pause_time_ += preferences::frame_time_millis();
 	} else {
 		if (!paused && pause_stack == 0) {
-			const int start_process = SDL_GetTicks();
+			const int start_process = profile::get_tick_time();
 
 			try {
 				debug_console::process_graph();
@@ -1548,7 +1548,7 @@ bool level_runner::play_cycle()
 
 	const int MaxSkips = 3;
 
-	const int start_draw = SDL_GetTicks();
+	const int start_draw = profile::get_tick_time();
 	if(start_draw < desired_end_time || nskip_draw_ >= MaxSkips) {
 		bool should_draw = true;
 		
@@ -1674,7 +1674,7 @@ bool level_runner::play_cycle()
 		next_draw_ += draw_time;
 		current_perf.draw = draw_time;
 
-		const int start_flip = SDL_GetTicks();
+		const int start_flip = profile::get_tick_time();
 		if(!is_skipping_game()) {
 			get_main_window()->swap();
 		}
@@ -1718,7 +1718,7 @@ bool level_runner::play_cycle()
 
 	formula_profiler::pump();
 
-	const int raw_wait_time = desired_end_time - SDL_GetTicks();
+	const int raw_wait_time = desired_end_time - profile::get_tick_time();
 	const int wait_time = std::max<int>(1, desired_end_time - SDL_GetTicks());
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
@@ -1729,7 +1729,7 @@ bool level_runner::play_cycle()
 	performance_data::set_current(current_perf);
 	
 	if(is_skipping_game()) {
-		const int adjust_time = desired_end_time - SDL_GetTicks();
+		const int adjust_time = desired_end_time - profile::get_tick_time();
 		if(adjust_time > 0) {
 			pause_time_ -= adjust_time;
 		}
@@ -1763,7 +1763,7 @@ void level_runner::toggle_pause()
 
 void level_runner::reverse_cycle()
 {
-	const int begin_time = SDL_GetTicks();
+	const int begin_time = profile::get_tick_time();
 	lvl_->reverse_one_cycle();
 	lvl_->set_active_chars();
 	lvl_->process_draw();
@@ -1779,7 +1779,7 @@ void level_runner::reverse_cycle()
 	render_scene(*lvl_, last_draw_position());
 	get_main_window()->swap();
 
-	const int wait_time = begin_time + 20 - SDL_GetTicks();
+	const int wait_time = begin_time + 20 - profile::get_tick_time();
 	if(wait_time > 0) {
 		SDL_Delay(wait_time);
 	}

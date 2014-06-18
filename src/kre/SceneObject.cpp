@@ -35,4 +35,9 @@ namespace KRE
 	SceneObject::~SceneObject()
 	{
 	}
+
+	DisplayDeviceDef SceneObject::attach(const DisplayDevicePtr& dd)
+	{
+		return doAttach(dd);
+	}
 }

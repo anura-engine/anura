@@ -31,6 +31,9 @@
 #include <string>
 #include <vector>
 
+#include "kre/Geometry.hpp"
+#include "kre/SceneNode.hpp"
+
 #if defined(USE_BOX2D)
 #include "b2d_ffl.hpp"
 #endif
@@ -39,7 +42,6 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
-#include "kre/Geometry.hpp"
 #include "hex_map.hpp"
 #include "isoworld.hpp"
 #include "level_object.hpp"
@@ -49,8 +51,6 @@
 #include "tile_map.hpp"
 #include "variant.hpp"
 #include "water.hpp"
-
-class tile_corner;
 
 class Level;
 typedef boost::intrusive_ptr<Level> LevelPtr;
@@ -63,8 +63,7 @@ public:
 	~CurrentLevelScope();
 };
 
-
-class Level : public game_logic::FormulaCallable
+class Level : public game_logic::FormulaCallable, public KRE::SceneNode
 {
 public:
 	struct Summary {
@@ -127,7 +126,7 @@ public:
 	EntityPtr board(int x, int y) const;
 	const rect& boundaries() const { return boundaries_; }
 	void set_boundaries(const rect& bounds) { boundaries_ = bounds; }
-	void add_tile(const level_tile& t);
+	void add_tile(const LevelTile& t);
 	bool add_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
 	bool add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 	void set_tile_layer_speed(int zorder, int x_speed, int y_speed);
@@ -139,12 +138,8 @@ public:
 	void add_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
 	void add_hex_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 	void get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const;
-	void getAll_hex_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
+	void getAllHexTilesRect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	void clear_hex_tile_rect(int x1, int y1, int x2, int y2);
-
-#if defined(USE_SHADERS)
-	gles2::shader_program_ptr shader() const { return shader_; }
-#endif
 
 	bool is_mouselook_enabled() const { return mouselook_enabled_; }
 	void set_mouselook(bool ml=true) { mouselook_enabled_ = ml; }
@@ -159,7 +154,7 @@ public:
 	//will return all the solid tiles connected
 	std::vector<point> get_solid_contiguous_region(int xpos, int ypos) const;
 
-	const level_tile* get_tile_at(int x, int y) const;
+	const LevelTile* get_getTileAt(int x, int y) const;
 	void remove_character(EntityPtr e);
 	std::vector<EntityPtr> get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const;
 	std::vector<EntityPtr> get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
@@ -251,7 +246,7 @@ public:
 
 	void unfreeze_rebuild_tiles_in_background();
 
-	void rebuild_tiles();
+	void rebuildTiles();
 
 	const std::string& title() const { return title_; }
 	void set_title(const std::string& t) { title_ = t; }
@@ -389,18 +384,12 @@ public:
 
 	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = NULL);
 
-	bool gui_event(const SDL_Event &event);
-
-	typedef std::vector<level_tile>::const_iterator TileItor;
+	typedef std::vector<LevelTile>::const_iterator TileItor;
 	std::pair<TileItor, TileItor> tiles_at_loc(int x, int y) const;
 
 	const std::vector<std::string>& debug_properties() const { return debug_properties_; }
 
 	bool allow_touch_controls() const { return allow_touch_controls_; }
-
-#ifdef USE_SHADERS
-	void shaders_updated();
-#endif
 
 	LevelPtr suspended_level() const { return suspended_level_; }
 	void set_suspended_level(const LevelPtr& lvl) { suspended_level_ = lvl; }
@@ -410,9 +399,9 @@ public:
 	bool show_builtin_settingsDialog() const { return show_builtin_settings_; }
 
 private:
-	DECLARE_CALLABLE(level);
+	DECLARE_CALLABLE(Level);
 
-	void read_compiled_tiles(variant node, std::vector<level_tile>::iterator& out);
+	void read_compiled_tiles(variant node, std::vector<LevelTile>::iterator& out);
 
 	void complete_tiles_refresh();
 	void prepare_tiles_for_drawing();
@@ -428,7 +417,7 @@ private:
 	void draw_layer_solid(int layer, int x, int y, int w, int h) const;
 
 	void rebuild_tiles_rect(const rect& r);
-	void add_tile_solid(const level_tile& t);
+	void add_tile_solid(const LevelTile& t);
 	void add_solid_rect(int x1, int y1, int x2, int y2, int friction, int traction, int damage, const std::string& info);
 	void add_solid(int x, int y, int friction, int traction, int damage, const std::string& info);
 	void add_standable(int x, int y, int friction, int traction, int damage, const std::string& info);
@@ -459,8 +448,8 @@ private:
 	level_solid_map solid_base_;
 	level_solid_map standable_base_;
 
-	bool is_solid(const level_solid_map& map, int x, int y, const surface_info** surf_info) const;
-	bool is_solid(const level_solid_map& map, const Entity& e, const std::vector<point>& points, const surface_info** surf_info) const;
+	bool isSolid(const level_solid_map& map, int x, int y, const surface_info** surf_info) const;
+	bool isSolid(const level_solid_map& map, const Entity& e, const std::vector<point>& points, const surface_info** surf_info) const;
 
 	void set_solid(level_solid_map& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
 
@@ -475,47 +464,13 @@ private:
 		int damage;
 	};
 	std::vector<solid_rect> solid_rects_;
-	mutable std::vector<level_tile> tiles_;
+	mutable std::vector<LevelTile> tiles_;
 
 	//tiles sorted by position rather than zorder.
-	mutable std::vector<level_tile> tiles_by_position_;
+	mutable std::vector<LevelTile> tiles_by_position_;
 	std::set<int> layers_;
 	std::set<int> hidden_layers_; //layers hidden in the editor.
 	int highlight_layer_;
-
-	struct layer_blit_info {
-		layer_blit_info() : texture_id(0), xbase(-1), ybase(-1)
-		{}
-
-		GLuint texture_id;
-
-		std::vector<tile_corner> blit_vertexes;
-
-		//texture ID's for each set of corners, used if texture_id == -1
-		//(i.e. if there are 
-		std::vector<GLuint> vertex_texture_ids;
-
-		int xbase, ybase;
-
-		typedef GLint IndexType;
-#define TILE_INDEX_TYPE GL_UNSIGNED_INT
-#define TILE_INDEX_TYPE_MAX INT_MAX
-
-		//a two dimensional array of indexes into vertex_texture_ids,
-		//representing the tiles in a layer.
-		std::vector<std::vector<IndexType> > indexes;
-
-		//we have two blit queues for a layer. One to draw tiles which have
-		//some alpha (GL_BLEND enabled) and others which are completely opaque
-		//and can be drawn more efficiently without alpha blending.
-		std::vector<IndexType> opaque_indexes, translucent_indexes;
-
-		rect tile_positions;
-
-		//graphics::vbo_array vbo;
-	};
-
-	mutable std::map<int, layer_blit_info> blit_cache_;
 
 	struct solid_color_rect {
 		KRE::Color color;
@@ -574,31 +529,10 @@ private:
 	point background_offset_;
 	int widest_tile_, highest_tile_;
 
-	std::map<int, tile_map> tile_maps_;
+	std::map<int, TileMap> tile_maps_;
 	int xscale_, yscale_;
 
 	std::map<int, hex::HexMapPtr> HexMaps_;
-	//current shader we're using to draw with.
-#ifdef USE_SHADERS
-	gles2::shader_program_ptr shader_;
-
-	struct FrameBufferShaderEntry {
-		int begin_zorder, end_zorder;
-		variant shader_node;
-		mutable gles2::shader_program_ptr shader;
-	};
-
-	std::vector<FrameBufferShaderEntry> fb_shaders_;
-	mutable variant fb_shaders_variant_;
-
-	mutable std::vector<gles2::shader_program_ptr> active_fb_shaders_;
-
-	void frame_buffer_enter_zorder(int zorder) const;
-
-	void flush_frame_buffer_shaders_to_screen() const;
-	void apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const;
-
-#endif
 
 	int save_point_x_, save_point_y_;
 	bool editor_;

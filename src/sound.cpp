@@ -280,7 +280,7 @@ int sdl_play_sound (sound *s, int loops)
 	/* point channel data to wav data */
 	mixer.channels[selected_channel].position = s->buffer.get();
 	mixer.channels[selected_channel].remaining = s->length;
-	mixer.channels[selected_channel].timestamp = SDL_GetTicks();
+	mixer.channels[selected_channel].timestamp = profile::get_tick_time();
 	mixer.channels[selected_channel].volume = SDL_MIX_MAXVOLUME;
 	mixer.channels[selected_channel].loops = loops;
 	mixer.channels[selected_channel].s = s;

@@ -4257,7 +4257,7 @@ bool point_in_triangle(point p, point t[3])
 }
 }
 
-FUNCTION_DEF(hex_get_tile_at, 3, 3, "hex_get_tile_at(hexmap, x, y) -> hex_tile object: Finds the hex tile at the given level co-ordinates")
+FUNCTION_DEF(hex_get_tile_at, 3, 3, "hex_get_getTileAt(hexmap, x, y) -> hex_tile object: Finds the hex tile at the given level co-ordinates")
 	// Because we assume hexes are placed at a regular series of intervals
 	variant v = args()[0]->evaluate(variables);
 	hex::HexMapPtr hexmap = hex::HexMapPtr(v.try_convert<hex::HexMap>());
@@ -4265,7 +4265,7 @@ FUNCTION_DEF(hex_get_tile_at, 3, 3, "hex_get_tile_at(hexmap, x, y) -> hex_tile o
 	const int mx = args()[1]->evaluate(variables).as_int();
 	const int my = args()[2]->evaluate(variables).as_int();
 
-	return variant(hexmap->get_tile_from_pixel_pos(mx, my).get());
+	return variant(hexmap->getTileFromPixelPos(mx, my).get());
 END_FUNCTION_DEF(hex_get_tile_at)
 
 FUNCTION_DEF(pixel_to_tile_coords, 1, 2, "pixel_to_tile_coords(args) -> [x,y]: Gets the tile at the pixel position given in the arguments. The position"
@@ -4349,7 +4349,7 @@ FUNCTION_DEF(hex_location, 3, 3, "hex_location(x,y,string dir) -> [x,y]: calcula
 	return variant(&v);
 END_FUNCTION_DEF(hex_location)
 
-FUNCTION_DEF(hex_get_tile, 1, 1, "hex_get_tile(string) -> hex_tile object: Returns a hex tile object with the given name.")
+FUNCTION_DEF(hex_get_tile, 1, 1, "hex_getTile(string) -> hex_tile object: Returns a hex tile object with the given name.")
 	const std::string& tstr(args()[0]->evaluate(variables).as_string());
 	return variant(hex::HexObject::get_hex_tile(tstr).get());
 END_FUNCTION_DEF(hex_get_tile)

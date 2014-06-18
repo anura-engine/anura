@@ -182,6 +182,23 @@ namespace KRE
 		return applyBlack();
 	}
 
+	bool operator==(const ColorTransform& a, const ColorTransform& b)
+	{
+		return std::abs(a.addRed()-b.addRed())<DBL_EPSILON 
+			&& std::abs(a.addGreen()-b.addGreen())<DBL_EPSILON
+			&& std::abs(a.addBlue()-b.addBlue())<DBL_EPSILON
+			&& std::abs(a.addAlpha()-b.addAlpha())<DBL_EPSILON
+			&& std::abs(a.mulRed()-b.mulRed())<DBL_EPSILON
+			&& std::abs(a.mulGreen()-b.mulGreen())<DBL_EPSILON
+			&& std::abs(a.mulBlue()-b.mulBlue())<DBL_EPSILON
+			&& std::abs(a.mulAlpha()-b.mulAlpha())<DBL_EPSILON;
+	}
+
+	bool operator!=(const ColorTransform& a, const ColorTransform& b)
+	{
+		return !operator==(a,b);
+	}
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(ColorTransform)
 		DEFINE_FIELD(r, "int")
 			return variant(obj.add_rgba_[0]);

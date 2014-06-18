@@ -328,8 +328,10 @@
     <ClInclude Include="..\..\src\level.hpp" />
     <ClInclude Include="..\..\src\level_logic.hpp" />
     <ClInclude Include="..\..\src\level_object.hpp" />
+    <ClInclude Include="..\..\src\level_object_fwd.hpp" />
     <ClInclude Include="..\..\src\level_runner.hpp" />
     <ClInclude Include="..\..\src\level_solid_map.hpp" />
+    <ClInclude Include="..\..\src\drawable_level_tiles.hpp" />
     <ClInclude Include="..\..\src\light.hpp" />
     <ClInclude Include="..\..\src\loading_screen.hpp" />
     <ClInclude Include="..\..\src\map_utils.hpp" />
@@ -587,8 +589,6 @@
     <ClCompile Include="..\..\src\framed_gui_element.cpp" />
     <ClCompile Include="..\..\src\ft_iface.cpp" />
     <ClCompile Include="..\..\src\game_registry.cpp" />
-    <ClCompile Include="..\..\src\geometry.cpp" />
-    <ClCompile Include="..\..\src\gles2.cpp" />
     <ClCompile Include="..\..\src\globals.cpp" />
     <ClCompile Include="..\..\src\graphical_font.cpp" />
     <ClCompile Include="..\..\src\graphical_font_label.cpp" />
@@ -604,7 +604,6 @@
     <ClCompile Include="..\..\src\http_server.cpp" />
     <ClCompile Include="..\..\src\i18n.cpp" />
     <ClCompile Include="..\..\src\image_widget.cpp" />
-    <ClCompile Include="..\..\src\ipc.cpp" />
     <ClCompile Include="..\..\src\iphone_controls.cpp" />
     <ClCompile Include="..\..\src\joystick.cpp" />
     <ClCompile Include="..\..\src\json_parser.cpp" />
@@ -666,6 +665,7 @@
     <ClCompile Include="..\..\src\level_object.cpp" />
     <ClCompile Include="..\..\src\level_runner.cpp" />
     <ClCompile Include="..\..\src\level_solid_map.cpp" />
+    <ClCompile Include="..\..\src\drawable_level_tiles.cpp" />
     <ClCompile Include="..\..\src\light.cpp" />
     <ClCompile Include="..\..\src\loading_screen.cpp" />
     <ClCompile Include="..\..\src\load_level_nothread.cpp" />
@@ -689,6 +689,7 @@
     <ClCompile Include="..\..\src\preferences.cpp" />
     <ClCompile Include="..\..\src\preprocessor.cpp" />
     <ClCompile Include="..\..\src\preview_tileset_widget.cpp" />
+    <ClCompile Include="..\..\src\profile_timer.cpp" />
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />

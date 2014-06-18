@@ -825,16 +825,16 @@ editor::editor(const char* level_cfg)
 	xres_(0), yres_(0), mouselook_mode_(false)
 {
 	fprintf(stderr, "BEGIN EDITOR::EDITOR\n");
-	const int begin = SDL_GetTicks();
+	const int begin = profile::get_tick_time();
 	preferences::set_record_history(true);
 
 	static bool first_time = true;
 	if(first_time) {
 		variant editor_cfg = json::parse_from_file("data/editor.cfg");
-		const int begin = SDL_GetTicks();
-		tile_map::load_all();
-		const int mid = SDL_GetTicks();
-		fprintf(stderr, "tile_map::load_all(): %dms\n", mid - begin);
+		const int begin = profile::get_tick_time();
+		tile_map::loadAll();
+		const int mid = profile::get_tick_time();
+		fprintf(stderr, "tile_map::loadAll(): %dms\n", mid - begin);
 		tileset::init(editor_cfg);
 		fprintf(stderr, "tileset::init(): %dms\n", SDL_GetTicks() - mid);
 		first_time = false;
@@ -1991,11 +1991,11 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 					ASSERT_LOG(cur_voxel_tileset_ < voxel::chunk::getTexturedEditorTiles().size(), 
 						"cur_voxel_tileset_ is out of bounds legal bounds: " << cur_voxel_tileset_ << " >= " << voxel::chunk::getTexturedEditorTiles().size());
 					if(lvl_->iso_world()) {
-						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::getTexturedEditorTiles()[cur_voxel_tileset_].id);
+						lvl_->iso_world()->setTile(at_pos.x, at_pos.y, at_pos.z, voxel::chunk::getTexturedEditorTiles()[cur_voxel_tileset_].id);
 					}
 				} else {
 					if(lvl_->iso_world()) {
-						lvl_->iso_world()->set_tile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
+						lvl_->iso_world()->setTile(at_pos.x, at_pos.y, at_pos.z, voxel_dialog_->selected_color().write());
 					}
 				}
 			}
@@ -2841,7 +2841,7 @@ void editor::remove_hex_tile_rect(int x1, int y1, int x2, int y2)
 	foreach(LevelPtr lvl, levels_) {
 
 		std::map<int, std::vector<std::string> > old_tiles;
-		lvl->getAll_hex_tiles_rect(x1, y1, x2, y2, old_tiles);
+		lvl->getAllHexTilesRect(x1, y1, x2, y2, old_tiles);
 		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
 			undo.push_back(std::bind(&level::add_hex_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
 		}
@@ -4173,7 +4173,7 @@ void editor::set_code_file()
 	if(tool_ == TOOL_ADD_RECT || tool_ == TOOL_SELECT_RECT || tool_ == TOOL_MAGIC_WAND || tool_ == TOOL_PENCIL) {
 		std::cerr << "SET TILESET..\n";
 		if(cur_tileset_ >= 0 && cur_tileset_ < tilesets.size()) {
-			const std::vector<std::string>& files = tile_map::get_files(tilesets[cur_tileset_].type);
+			const std::vector<std::string>& files = tile_map::getFiles(tilesets[cur_tileset_].type);
 			std::cerr << "TILESET: " << files.size() << " FOR " << tilesets[cur_tileset_].type << "\n";
 			foreach(const std::string& file, files) {
 				std::map<std::string, std::string> fnames;

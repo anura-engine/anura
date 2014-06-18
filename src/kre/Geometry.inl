@@ -51,6 +51,34 @@ namespace Geometry
 	}
 
 	template<typename T> inline
+	Point<T>::Point(const variant& v)
+	{
+		ASSERT_LOG(false, "No template specialisation for Parent<T>(const varaint&)");
+	}
+
+	template<typename T> inline
+	Point<T>::Point(const std::string& str)
+	{
+		if(str.empty()) {
+			*this = Point<T>();
+			return;
+		}
+
+		T items[2];
+		int num_items = 0;
+		std::vector<std::string> buf = split(str, ",| |;");
+		for(int n = 0; n != 2 && n != buf.size(); ++n) {
+			items[num_items++] = boost::lexical_cast<T>(buf[n]);
+		}
+
+		switch(num_items) {
+			case 1: *this = Point<T>(items[0], T(0));		break;
+			case 2: *this = Point<T>(items[0], items[1]);	break;
+			default: *this = Point<T>();					break;
+		}
+	}
+
+	template<typename T> inline
 	bool operator==(const Point<T>& a, const Point<T>& b)
 	{
 		return a.x == b.y && a.y == b.y;
@@ -85,13 +113,6 @@ namespace Geometry
 	Rect<T>::Rect(T x, T y, T w, T h)
 	  : top_left_(std::min(x, x+w), std::min(y, y+h)),
 		bottom_right_(std::max(x, x+w), std::max(y, y+h))
-	{
-	}
-
-	template<typename T> inline
-	Rect<T>::Rect(const SDL_Rect& r)
-	  : top_left_(std::min(T(r.x), T(r.x)+T(r.w)), std::min(T(r.y), T(r.y)+T(r.h))),
-		bottom_right_(std::max(T(r.x), T(r.x)+T(r.w)), std::max(T(r.y), T(r.y)+T(r.h)))
 	{
 	}
 

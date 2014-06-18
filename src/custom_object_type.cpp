@@ -1008,7 +1008,7 @@ void CustomObjectType::reloadObject(const std::string& type)
 
 	CustomObjectTypePtr new_obj;
 	
-	const int begin = SDL_GetTicks();
+	const int begin = profile::get_tick_time();
 	{
 		const assert_recover_scope scope;
 		new_obj = recreate(type, old_obj.get());
@@ -1018,7 +1018,7 @@ void CustomObjectType::reloadObject(const std::string& type)
 		return;
 	}
 
-	const int start = SDL_GetTicks();
+	const int start = profile::get_tick_time();
 	for(custom_object* obj : custom_object::getAll(old_obj->id())) {
 		assert(obj);
 		obj->updateType(old_obj, new_obj);
@@ -1033,7 +1033,7 @@ void CustomObjectType::reloadObject(const std::string& type)
 		}
 	}
 
-	const int end = SDL_GetTicks();
+	const int end = profile::get_tick_time();
 	std::cerr << "UPDATED " << custom_object::getAll(old_obj->id()).size() << " OBJECTS IN " << (end - start) << "ms\n";
 
 	itor->second = new_obj;

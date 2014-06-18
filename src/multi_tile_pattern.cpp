@@ -344,7 +344,7 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 	}
 }
 
-const multi_tile_pattern::tile_info& multi_tile_pattern::tile_at(int x, int y) const
+const multi_tile_pattern::tile_info& multi_tile_pattern::getTileAt(int x, int y) const
 {
 	//asserts commented out for performance
 //	ASSERT_GE(x, 0);
@@ -366,7 +366,7 @@ int multi_tile_pattern::height() const
 	return height_;
 }
 
-const multi_tile_pattern& multi_tile_pattern::choose_random_alternative(int seed) const
+const multi_tile_pattern& multi_tile_pattern::chooseRandomAlternative(int seed) const
 {
 	if(alternatives_.empty()) {
 		return *this;

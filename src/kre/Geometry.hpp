@@ -28,7 +28,6 @@
 
 #include "../asserts.hpp"
 #include "../variant.hpp"
-#include "SDL.h"
 
 namespace Geometry
 {
@@ -36,7 +35,8 @@ namespace Geometry
 	struct Point {
 		explicit Point(T x=0, T y=0) : x(x), y(y)
 		{}
-
+		explicit Point(const std::string& s);
+		explicit Point(const variant& v);
 		explicit Point(const std::vector<T>& v);
 		variant write() const;
 
@@ -53,12 +53,16 @@ namespace Geometry
 	template<typename T> inline
 	bool operator<(const Point<T>& a, const Point<T>& b);
 
+	template<> inline Point<int>::Point(const variant& v)
+	{
+		*this = Point<int>(v.as_list_int());
+	}
+
 	template<typename T>
 	class Rect
 	{
 	public:
 		inline explicit Rect(T x=0, T y=0, T w=0, T h=0);
-		inline explicit Rect(const SDL_Rect& r);
 		explicit Rect(const std::vector<T>& v);
 		explicit Rect(const std::string& s);
 		explicit Rect(const variant& v);
@@ -117,11 +121,6 @@ namespace Geometry
 		template<typename F>
 		Rect<F> as_type() const {
 			return Rect<F>::from_coordinates(F(top_left_.x), F(top_left_.y), F(bottom_right_.x), F(bottom_right_.y));
-		}
-
-		SDL_Rect sdl_rect() const {
-			SDL_Rect r = {x(), y(), w(), h()};
-			return r;
 		}
 	private:
 		Point<T> top_left_;
@@ -184,4 +183,3 @@ typedef Geometry::Point<float> pointf;
 
 typedef Geometry::Rect<int> rect;
 typedef Geometry::Rect<float> rectf;
-

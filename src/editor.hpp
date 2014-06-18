@@ -174,8 +174,8 @@ public:
 	EDIT_TOOL tool() const;
 	void change_tool(EDIT_TOOL tool);
 
-	level& get_level() { return *lvl_; }
-	const level& get_level() const { return *lvl_; }
+	Level& get_level() { return *lvl_; }
+	const Level& get_level() const { return *lvl_; }
 
 	std::vector<LevelPtr> get_level_list() const { return levels_; }
 

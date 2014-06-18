@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 
 #include "boost/intrusive_ptr.hpp"
@@ -288,8 +289,8 @@ public:
 
 	bool isMouseOverEntity() const { return mouse_over_entity_; }
 	void setMouseOverEntity(bool val=true) { mouse_over_entity_=val; }
-	void setMouseButtons(Uint8 buttons) { mouse_button_state_ = buttons; }
-	Uint8 getMouseButtons() const { return mouse_button_state_; }
+	void setMouseButtons(uint8_t buttons) { mouse_button_state_ = buttons; }
+	uint8_t getMouseButtons() const { return mouse_button_state_; }
 	bool isBeingDragged() const { return being_dragged_; }
 	void setBeingDragged(bool val=true) { being_dragged_ = val; }
 	virtual bool getClipArea(rect* clipArea) = 0;
@@ -358,7 +359,7 @@ private:
 	bool respawn_;
 
 	bool mouse_over_entity_;
-	Uint8 mouse_button_state_;
+	uint8_t mouse_button_state_;
 	bool being_dragged_;
 
 	unsigned int solid_dimensions_, collide_dimensions_;

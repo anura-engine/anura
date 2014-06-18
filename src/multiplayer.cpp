@@ -380,7 +380,7 @@ void sync_start_time(const level& lvl, std::function<bool()> idle_fn)
 		const int game_start = SDL_GetTicks() + 1000;
 		boost::array<char, 1024> receive_buf;
 		while(SDL_GetTicks() < game_start) {
-			const int ticks = SDL_GetTicks();
+			const int ticks = profile::get_tick_time();
 			const int start_in = game_start - ticks;
 
 			if(start_in < 500 && delay == 0) {

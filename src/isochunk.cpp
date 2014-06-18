@@ -459,7 +459,7 @@ namespace voxel{
 		return variant(); // -- todo
 	}
 
-	void chunk::set_tile(int x, int y, int z, const variant& type)
+	void chunk::setTile(int x, int y, int z, const variant& type)
 	{
 		handleSetTile(x,y,z,type);
 		build();
@@ -706,42 +706,42 @@ namespace voxel{
 			for(int h = 0; h <= y; ++h) {
 				GLfloat yf = GLfloat(h * scale_y());
 				if(x > 0) {
-					if(is_solid(x-1, h, z) == false) {
+					if(isSolid(x-1, h, z) == false) {
 						addFaceLeft(xf,yf,zf,sx,t.second);
 					}
 				} else {
 					addFaceLeft(xf,yf,zf,sx,t.second);
 				}
 				if(x < size_x() - 1) {
-					if(is_solid(x+1, h, z) == false) {
+					if(isSolid(x+1, h, z) == false) {
 						addFaceRight(xf,yf,zf,sx,t.second);
 					}
 				} else {
 					addFaceRight(xf,yf,zf,sx,t.second);
 				}
 				if(y > 0) {
-					if(is_solid(x, h-1, z) == false) {
+					if(isSolid(x, h-1, z) == false) {
 						addFaceBottom(xf,yf,zf,sy,t.second);
 					}
 				} else {
 					addFaceBottom(xf,yf,zf,sy,t.second);
 				}
 				if(y < size_y() - 1) {
-					if(is_solid(x, h+1, z) == false) {
+					if(isSolid(x, h+1, z) == false) {
 						addFaceTop(xf,yf,zf,sy,t.second);
 					}
 				} else {
 					addFaceTop(xf,yf,zf,sy,t.second);
 				}
 				if(z > 0) {
-					if(is_solid(x, h, z-1) == false) {
+					if(isSolid(x, h, z-1) == false) {
 						addFaceBack(xf,yf,zf,sz,t.second);
 					}
 				} else {
 					addFaceBack(xf,yf,zf,sz,t.second);
 				}
 				if(z < size_z() - 1) {
-					if(is_solid(x, h, z+1) == false) {
+					if(isSolid(x, h, z+1) == false) {
 						addFaceFront(xf,yf,zf,sz,t.second);
 					}
 				} else {
@@ -786,42 +786,42 @@ namespace voxel{
 			GLfloat zf = GLfloat(z);
 
 			if(x > 0) {
-				if(is_solid(x-1, y, z) == false) {
+				if(isSolid(x-1, y, z) == false) {
 					addFaceLeft(xf,yf,zf,1,t.second);
 				}
 			} else {
 				addFaceLeft(xf,yf,zf,1,t.second);
 			}
 			if(x < size_x() - 1) {
-				if(is_solid(x+1, y, z) == false) {
+				if(isSolid(x+1, y, z) == false) {
 					addFaceRight(xf,yf,zf,1,t.second);
 				}
 			} else {
 				addFaceRight(xf,yf,zf,1,t.second);
 			}
 			if(y > 0) {
-				if(is_solid(x, y-1, z) == false) {
+				if(isSolid(x, y-1, z) == false) {
 					addFaceBottom(xf,yf,zf,1,t.second);
 				}
 			} else {
 				addFaceBottom(xf,yf,zf,1,t.second);
 			}
 			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
+				if(isSolid(x, y+1, z) == false) {
 					addFaceTop(xf,yf,zf,1,t.second);
 				}
 			} else {
 				addFaceTop(xf,yf,zf,1,t.second);
 			}
 			if(z > 0) {
-				if(is_solid(x, y, z-1) == false) {
+				if(isSolid(x, y, z-1) == false) {
 					addFaceBack(xf,yf,zf,1,t.second);
 				}
 			} else {
 				addFaceBack(xf,yf,zf,1,t.second);
 			}
 			if(z < size_z() - 1) {
-				if(is_solid(x, y, z+1) == false) {
+				if(isSolid(x, y, z+1) == false) {
 					addFaceFront(xf,yf,zf,1,t.second);
 				}
 			} else {
@@ -1179,7 +1179,7 @@ namespace voxel{
 		}
 	}
 
-	bool ChunkTextured::is_solid(int x, int y, int z) const
+	bool ChunkTextured::isSolid(int x, int y, int z) const
 	{
 		auto it = tiles_.find(position(x,y,z));
 		if(it != tiles_.end()) {
@@ -1192,7 +1192,7 @@ namespace voxel{
 		return false;
 	}
 
-	bool ChunkColored::is_solid(int x, int y, int z) const
+	bool ChunkColored::isSolid(int x, int y, int z) const
 	{
 		auto it = tiles_.find(position(x,y,z));
 		if(it != tiles_.end()) {

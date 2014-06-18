@@ -202,10 +202,10 @@ point HexMap::get_tile_pos_from_pixel_pos(int mx, int my)
 	return point(x_base + x_modifier, y_base + y_modifier);
 }
 
-HexObjectPtr HexMap::get_tile_from_pixel_pos(int mx, int my) const
+HexObjectPtr HexMap::getTileFromPixelPos(int mx, int my) const
 {
 	point p = get_tile_pos_from_pixel_pos(mx, my);
-	return get_tile_at(p.x, p.y);
+	return get_getTileAt(p.x, p.y);
 }
 
 point HexMap::get_pixel_pos_from_tile_pos(int x, int y)
@@ -217,7 +217,7 @@ point HexMap::get_pixel_pos_from_tile_pos(int x, int y)
 	return point(tx, ty);
 }
 
-HexObjectPtr HexMap::get_tile_at(int x, int y) const
+HexObjectPtr HexMap::get_getTileAt(int x, int y) const
 {
 	x -= x_;
 	y -= y_;
@@ -230,7 +230,7 @@ HexObjectPtr HexMap::get_tile_at(int x, int y) const
 	return tiles_[index];
 }
 
-bool HexMap::set_tile(int xx, int yy, const std::string& tile)
+bool HexMap::setTile(int xx, int yy, const std::string& tile)
 {
 	if(xx < 0 || yy < 0 || xx >= width_ || yy >= height_) {
 		return false;

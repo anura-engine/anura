@@ -558,8 +558,8 @@ extern "C" int main(int argcount, char* argvec[])
 		SDL_Window* update_window = NULL;
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
-		int start_time = SDL_GetTicks();
-		int original_start_time = SDL_GetTicks();
+		int start_time = profile::get_tick_time();
+		int original_start_time = profile::get_tick_time();
 		bool timeout = false;
 		bool require_restart = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
@@ -577,7 +577,7 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
 					fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
-					start_time = SDL_GetTicks();
+					start_time = profile::get_tick_time();
 					nbytes_transferred = transferred;
 				}
 			}
@@ -588,7 +588,7 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
 					fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
-					start_time = SDL_GetTicks();
+					start_time = profile::get_tick_time();
 					nbytes_anura_transferred = transferred;
 				}
 			}

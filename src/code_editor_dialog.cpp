@@ -451,24 +451,24 @@ void code_editor_dialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 				const variant tiles_data = json::parse_from_file("data/tiles.cfg");
-				tile_map::prepare_rebuild_all();
+				tile_map::prepareRebuildAll();
 				try {
 					std::cerr << "tile_map::init()\n";
 					tile_map::init(tiles_data);
-					tile_map::rebuild_all();
+					tile_map::rebuildAll();
 					std::cerr << "done tile_map::init()\n";
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
 					foreach(level* lvl, get_all_levels_set()) {
-						lvl->rebuild_tiles();
+						lvl->rebuildTiles();
 					}
 				} catch(...) {
 					json::setFileContents(fname_, old_contents);
 					const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 					tile_map::init(tiles_data);
-					tile_map::rebuild_all();
+					tile_map::rebuildAll();
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
 					foreach(level* lvl, get_all_levels_set()) {
-						lvl->rebuild_tiles();
+						lvl->rebuildTiles();
 					}
 					throw;
 				}
@@ -848,7 +848,7 @@ void code_editor_dialog::on_code_changed()
 	}
 
 	if(!invalidated_) {
-		invalidated_ = SDL_GetTicks();
+		invalidated_ = profile::get_tick_time();
 		error_label_->setText("Processing...");
 	}
 }

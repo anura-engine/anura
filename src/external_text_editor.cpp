@@ -61,7 +61,7 @@ class vi_editor : public external_text_editor
 
 	void refresh_editor_list()
 	{
-		const int begin = SDL_GetTicks();
+		const int begin = profile::get_tick_time();
 		const std::string cmd = "gvim --serverlist";
 		FILE* p = popen(cmd.c_str(), "r");
 		if(p) {
@@ -319,7 +319,7 @@ void external_text_editor::process()
 {
 	std::vector<std::string> files = loaded_files();
 	if(files.empty() == false) {
-		const int begin = SDL_GetTicks();
+		const int begin = profile::get_tick_time();
 		foreach(const std::string& fname, files) {
 			const std::string contents = get_file_contents(fname);
 			if(contents != json::get_file_contents(fname)) {

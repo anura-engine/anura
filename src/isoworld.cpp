@@ -122,14 +122,14 @@ namespace voxel
 	{
 	}
 
-	void world::set_tile(int x, int y, int z, const variant& type)
+	void world::setTile(int x, int y, int z, const variant& type)
 	{
 		int fx = int(floor(x));
 		int fy = int(floor(y));
 		int fz = int(floor(z));
 		auto it = chunks_.find(position(fx, fy, fz));
 		if(it != chunks_.end()) {
-			it->second->set_tile(x-fx, y-fy, z-fz, type);
+			it->second->setTile(x-fx, y-fy, z-fz, type);
 		}
 	}
 	
@@ -366,7 +366,7 @@ namespace voxel
 		return true;
 	}
 
-	bool LogicalWorld::is_solid(int x, int y, int z) const
+	bool LogicalWorld::isSolid(int x, int y, int z) const
 	{
 		auto it = heightmap_.find(std::make_pair(x,z));
 		if(it == heightmap_.end()) {
@@ -392,7 +392,7 @@ namespace voxel
 			int z = p.first.second;
 
 			if(y < size_y() - 1) {
-				if(is_solid(x, y+1, z) == false) {
+				if(isSolid(x, y+1, z) == false) {
 					vertex_list.push_back(variant_list_from_position(x,y+1,z));
 					vlist[std::make_pair(x,z)] = y+1;
 				}
@@ -411,36 +411,36 @@ namespace voxel
 			std::vector<variant> current_edges;
 			
 			auto it = vlist.find(std::make_pair(x+1,z));
-			if(it != vlist.end() && !is_xedge(x+1) && !is_solid(x+1,it->second,z)) {
+			if(it != vlist.end() && !is_xedge(x+1) && !isSolid(x+1,it->second,z)) {
 				current_edges.push_back(variant_list_from_position(x+1,it->second,z));
 			}
 			it = vlist.find(std::make_pair(x-1,z));
-			if(it != vlist.end() && !is_xedge(x-1) && !is_solid(x-1,it->second,z)) {
+			if(it != vlist.end() && !is_xedge(x-1) && !isSolid(x-1,it->second,z)) {
 				current_edges.push_back(variant_list_from_position(x-1,it->second,z));
 			}
 			it = vlist.find(std::make_pair(x,z+1));
-			if(it != vlist.end() && !is_zedge(z+1) && !is_solid(x,it->second,z+1)) {
+			if(it != vlist.end() && !is_zedge(z+1) && !isSolid(x,it->second,z+1)) {
 				current_edges.push_back(variant_list_from_position(x,it->second,z+1));
 			}
 			it = vlist.find(std::make_pair(x,z-1));
-			if(it != vlist.end() && !is_zedge(z-1) && !is_solid(x,it->second,z-1)) {
+			if(it != vlist.end() && !is_zedge(z-1) && !isSolid(x,it->second,z-1)) {
 				current_edges.push_back(variant_list_from_position(x,it->second,z-1));
 			}
 			if(allow_diagonals) {
 				it = vlist.find(std::make_pair(x+1,z+1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !is_solid(x+1,it->second,z+1)) {
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z+1) && !isSolid(x+1,it->second,z+1)) {
 					current_edges.push_back(variant_list_from_position(x+1,it->second,z+1));
 				}
 				it = vlist.find(std::make_pair(x+1,z-1));
-				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !is_solid(x+1,it->second,z-1)) {
+				if(it != vlist.end() && !is_xedge(x+1) && !is_zedge(z-1) && !isSolid(x+1,it->second,z-1)) {
 					current_edges.push_back(variant_list_from_position(x+1,it->second,z-1));
 				}
 				it = vlist.find(std::make_pair(x-1,z+1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !is_solid(x-1,it->second,z+1)) {
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z+1) && !isSolid(x-1,it->second,z+1)) {
 					current_edges.push_back(variant_list_from_position(x-1,it->second,z+1));
 				}
 				it = vlist.find(std::make_pair(x-1,z-1));
-				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !is_solid(x-1,it->second,z-1)) {
+				if(it != vlist.end() && !is_xedge(x-1) && !is_zedge(z-1) && !isSolid(x-1,it->second,z-1)) {
 					current_edges.push_back(variant_list_from_position(x-1,it->second,z-1));
 				}
 			}

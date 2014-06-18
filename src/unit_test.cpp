@@ -82,7 +82,7 @@ bool utility_needs_video(const std::string& name)
 
 bool run_tests(const std::vector<std::string>* tests)
 {
-	const int start_time = SDL_GetTicks();
+	const int start_time = profile::get_tick_time();
 	std::vector<std::string> all_tests;
 	if(!tests) {
 		for(TestMap::const_iterator i = get_test_map().begin(); i != get_test_map().end(); ++i) {
@@ -140,7 +140,7 @@ std::string run_benchmark(const std::string& name, BenchmarkTest fn)
 	std::cerr << "RUNNING BENCHMARK " << name << "...\n";
 	const int MinTicks = 1000;
 	for(int64_t nruns = 10; ; nruns *= 10) {
-		const int start_time = SDL_GetTicks();
+		const int start_time = profile::get_tick_time();
 		fn(nruns);
 		const int64_t time_taken_ms = SDL_GetTicks() - start_time;
 		if(time_taken_ms >= MinTicks || nruns > 1000000000) {

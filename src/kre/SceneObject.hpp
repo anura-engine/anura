@@ -33,12 +33,12 @@ namespace KRE
 	public:
 		SceneObject(const std::string& name);
 		virtual ~SceneObject();
-		size_t Queue() const { return queue_; }
-		void SetQueue(size_t q) { queue_ = q; }
-		const std::string& ObjectName() const { return name_; }
-		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd) = 0;
+		size_t getQueue() const { return queue_; }
+		void setQueue(size_t q) { queue_ = q; }
+		const std::string& objectName() const { return name_; }
+		DisplayDeviceDef attach(const DisplayDevicePtr& dd);
 	private:
-
+		virtual DisplayDeviceDef doAttach(const DisplayDevicePtr& dd) = 0;
 		size_t queue_;
 		std::string name_;
 		SceneObject();

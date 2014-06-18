@@ -2432,7 +2432,7 @@ void CustomObject::init()
 
 void CustomObject::run_garbage_collection()
 {
-	const int starting_ticks = SDL_GetTicks();
+	const int starting_ticks = profile::get_tick_time();
 
 	std::cerr << "RUNNING GARBAGE COLLECTION FOR " << getAll().size() << " OBJECTS...\n";
 

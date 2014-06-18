@@ -53,7 +53,7 @@ namespace KRE
 		auto dd = DisplayDevice::GetCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
 		objects_.emplace_back(obj);
-		obj->SetDisplayData(dd, obj->Attach(dd));
+		obj->SetDisplayData(dd, obj->attach(dd));
 	}
 
 	void SceneNode::AttachLight(size_t ref, const LightPtr& obj)
@@ -65,7 +65,7 @@ namespace KRE
 		lights_.emplace(ref,obj);
 		auto dd = DisplayDevice::GetCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->Attach(dd));		
+		obj->SetDisplayData(dd, obj->attach(dd));		
 	}
 
 	void SceneNode::AttachCamera(const CameraPtr& obj)
@@ -73,7 +73,7 @@ namespace KRE
 		camera_ = obj;
 		auto dd = DisplayDevice::GetCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->Attach(dd));		
+		obj->SetDisplayData(dd, obj->attach(dd));		
 	}
 
 	void SceneNode::AttachRenderTarget(const RenderTargetPtr& obj)
@@ -81,7 +81,7 @@ namespace KRE
 		render_target_ = obj;
 		auto dd = DisplayDevice::GetCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->Attach(dd));		
+		obj->SetDisplayData(dd, obj->attach(dd));		
 	}
 
 	void SceneNode::RenderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp)
@@ -101,7 +101,7 @@ namespace KRE
 			o->SetCamera(rp->camera);
 			o->SetLights(rp->lights);
 			o->SetRenderTarget(rp->render_target);
-			renderer->AddRenderableToQueue(o->Queue(), o->Order(), o);
+			renderer->AddRenderableToQueue(o->getQueue(), o->Order(), o);
 		}
 	}
 
@@ -123,7 +123,7 @@ namespace KRE
 			<< node.lights_.size() << " light" << (node.lights_.size() != 1 ? "s" : "") << ", "
 			<< node.objects_.size() << " object" << (node.objects_.size() != 1 ? "s (" : " (");
 		for(auto o : node.objects_) {
-			os << ", \"" << o->ObjectName() << "\"";
+			os << ", \"" << o->objectName() << "\"";
 		}
 		os << "))";
 		return os;

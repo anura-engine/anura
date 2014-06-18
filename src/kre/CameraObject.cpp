@@ -333,7 +333,7 @@ namespace KRE
 	DEFINE_FIELD(speed, "decimal")
 		return variant(obj.speed());
 	DEFINE_SET_FIELD
-		obj.set_speed(value.as_decimal().as_float());
+		obj.setSpeed(value.as_decimal().as_float());
 
 	DEFINE_FIELD(right, "[decimal,decimal,decimal]")
 		std::vector<variant> v;

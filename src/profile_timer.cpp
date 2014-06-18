@@ -21,30 +21,27 @@
 	   distribution.
 */
 
-#pragma once
+#include "SDL.h"
 
-#include "kre/Geometry.hpp"
-#include "kre/Material.hpp"
+#include "profile_timer.hpp"
 
-#include "level_object_fwd.hpp"
-
-struct hex_level_tile;
-
-class tile_corner
+namespace profile 
 {
-public:
-	short vertex[2];
-	float uv[2];
-};
+	manager::manager(const char* const str) : name(str)
+	{
+		frequency = SDL_GetPerformanceFrequency();
+		t1 = SDL_GetPerformanceCounter();
+	}
 
-/*
-void queue_draw_tile(graphics::blit_queue& q, const level_tile& t);
-int get_tile_corners(tile_corner* result, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
-void queue_draw_from_tilesheet(graphics::blit_queue& q, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
+	manager::~manager()
+	{
+		t2 = SDL_GetPerformanceCounter();
+		elapsedTime = (t2 - t1) * 1000.0 / frequency;
+		std::cerr << name << ": " << elapsedTime << " milliseconds" << std::endl;
+	}
 
-bool is_tile_opaque(const KRE::MaterialPtr& t, int tile_num);
-bool is_tile_using_alpha_channel(const KRE::MaterialPtr& t, int tile_num);
-bool is_tile_solid_color(const KRE::MaterialPtr& t, int tile_num, const KRE::Color& col);
-
-rect get_tile_non_alpha_area(const KRE::MaterialPtr& t, int tile_num);
-*/
+	unsigned get_tick_time()
+	{
+		return profile::get_tick_time();
+	}
+}

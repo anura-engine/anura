@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <boost/intrusive_ptr.hpp>
+
 #include <memory>
 #include "Color.hpp"
 #include "variant.hpp"
@@ -67,6 +69,9 @@ namespace KRE
 
 	ColorTransform operator+(const ColorTransform& a, const ColorTransform& b);
 	ColorTransform operator-(const ColorTransform& a, const ColorTransform& b);
+
+	bool operator==(const ColorTransform& a, const ColorTransform& b);
+	bool operator!=(const ColorTransform& a, const ColorTransform& b);
 
 	typedef boost::instrusive_ptr<ColorTransform> ColorTransformPtr;
 }

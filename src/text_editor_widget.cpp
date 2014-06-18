@@ -390,7 +390,7 @@ namespace gui
 		std::vector<RectDraw> rects;
 		std::map<uint32_t, graphics::blit_queue> chars;
 
-		int begin_build = SDL_GetTicks();
+		int begin_build = profile::get_tick_time();
 
 		const int xpos = x() + BorderSize;
 		const int ypos = y() + BorderSize;
@@ -482,7 +482,7 @@ namespace gui
 			}
 		}
 
-		const int begin_draw = SDL_GetTicks();
+		const int begin_draw = profile::get_tick_time();
 
 		if(bg_color_.get() != NULL) {
 			SDL_Rect area = {x(), y(), width(), height()};
@@ -702,7 +702,7 @@ namespace gui
 				}
 			}
 
-			last_click_at_ = SDL_GetTicks();
+			last_click_at_ = profile::get_tick_time();
 
 			is_dragging_ = true;
 			return claimMouseEvents();

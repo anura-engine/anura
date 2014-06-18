@@ -27,14 +27,14 @@ preview_tileset_widget::preview_tileset_widget(const tile_map& tiles)
   : width_(0), height_(0)
 {
 	setEnvironment();
-	tiles.build_tiles(&tiles_);
+	tiles.buildTiles(&tiles_);
 	init();
 }
 
 preview_tileset_widget::preview_tileset_widget(const variant& v, game_logic::FormulaCallable* e)
 	: widget(v,e)
 {
-	tile_map(v["tile_map"]).build_tiles(&tiles_);
+	tile_map(v["tile_map"]).buildTiles(&tiles_);
 	init();
 }
 
@@ -72,7 +72,7 @@ void preview_tileset_widget::handleDraw() const
 void preview_tileset_widget::setValue(const std::string& key, const variant& v)
 {
 	if(key == "tile_map") {
-		tile_map(v).build_tiles(&tiles_);
+		tile_map(v).buildTiles(&tiles_);
 		init();
 	}
 	widget::setValue(key, v);

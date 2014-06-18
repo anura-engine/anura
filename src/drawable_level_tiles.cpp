@@ -21,30 +21,22 @@
 	   distribution.
 */
 
-#pragma once
+#include "kre/DisplayDevice.hpp"
 
-#include "kre/Geometry.hpp"
-#include "kre/Material.hpp"
+#include "level_tile_object.hpp"
 
-#include "level_object_fwd.hpp"
-
-struct hex_level_tile;
-
-class tile_corner
+namespace level_objects
 {
-public:
-	short vertex[2];
-	float uv[2];
-};
+	LevelTileObject::LevelTileObject()
+		: SceneObject("LevelTileObject")
+	{
+	}
 
-/*
-void queue_draw_tile(graphics::blit_queue& q, const level_tile& t);
-int get_tile_corners(tile_corner* result, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
-void queue_draw_from_tilesheet(graphics::blit_queue& q, const KRE::MaterialPtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
+	LevelTileObject::~LevelTileObject()
+	{
+	}
 
-bool is_tile_opaque(const KRE::MaterialPtr& t, int tile_num);
-bool is_tile_using_alpha_channel(const KRE::MaterialPtr& t, int tile_num);
-bool is_tile_solid_color(const KRE::MaterialPtr& t, int tile_num, const KRE::Color& col);
-
-rect get_tile_non_alpha_area(const KRE::MaterialPtr& t, int tile_num);
-*/
+	KRE::DisplayDeviceDef LevelTileObject::doAttach(const KRE::DisplayDevicePtr& dd)
+	{
+	}
+}

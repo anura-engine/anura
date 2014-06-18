@@ -372,7 +372,7 @@ void dialog::show_modal()
 	int joystick_lockout = 25;
 
 	while(opened_ && pump_events()) {
-		Uint32 t = SDL_GetTicks();
+		Uint32 t = profile::get_tick_time();
 		process();
 		prepare_draw();
 		draw();
@@ -387,7 +387,7 @@ void dialog::show_modal()
 			opened_ = false;
 		}
 
-		t = t - SDL_GetTicks();
+		t = t - profile::get_tick_time();
 		if(t < 20) {
 			SDL_Delay(20 - t);
 		}
@@ -412,7 +412,7 @@ void dialog::complete_draw()
 
 	SDL_Delay(delay_time);
 
-	last_draw_ = SDL_GetTicks();
+	last_draw_ = profile::get_tick_time();
 }
 
 std::vector<WidgetPtr> dialog::getChildren() const
