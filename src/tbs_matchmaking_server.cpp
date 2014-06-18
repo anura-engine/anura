@@ -172,6 +172,19 @@ public:
 		heartbeat_message.add("type", "heartbeat");
 		heartbeat_message.add("users", sessions_.size());
 		heartbeat_message.add("games", servers_.size());
+
+		std::vector<variant> servers;
+		for(auto p : servers_) {
+			variant_builder server;
+			server.add("pid", p.first);
+			server.add("port", p.second.port);
+			server.add("sessions", vector_to_variant(p.second.sessions));
+			server.add("users", p.second.users);
+
+			servers.push_back(server.build());
+		}
+
+		heartbeat_message.add("servers", variant(&servers));
 		std::string heartbeat_msg = heartbeat_message.build().write_json();
 
 		for(auto& p : sessions_) {

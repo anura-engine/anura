@@ -1154,6 +1154,7 @@ bool level_runner::play_cycle()
 			if(player && portal->saved_game == false) {
 				if(portal->new_playable) {
 					player = portal->new_playable->get_player_info();
+					ASSERT_LOG(player != NULL, "Object is not playable: " << portal->new_playable->debug_description().c_str());
 				}
 				player->get_entity().set_pos(dest);
 				new_level->add_player(&player->get_entity());

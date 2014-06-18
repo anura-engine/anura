@@ -383,13 +383,17 @@ END_FUNCTION_DEF(overload)
 
 FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
 	
-	formula_callable* addr = args()[0]->evaluate(variables).convert_to<formula_callable>();
+	variant v = args()[0]->evaluate(variables);
+	formula_callable* addr = NULL;
+	if(!v.is_null()) {
+		addr = v.convert_to<formula_callable>();
+	}
 	char buf[128];
 	sprintf(buf, "%p", addr);
 	return variant(std::string(buf));
 
 FUNCTION_ARGS_DEF
-	ARG_TYPE("object");
+	ARG_TYPE("object|null");
 	RETURN_TYPE("string");
 END_FUNCTION_DEF(addr)
 
@@ -1191,6 +1195,16 @@ FUNCTION_ARGS_DEF
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(hypot)
+	
+	
+FUNCTION_DEF(exp, 1, 1, "exp(x): Calculate the exponential function of x, whatever that means.")
+	const float input = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<decimal>(expf(input)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+END_FUNCTION_DEF(exp)
     
 FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from 0°, made by the line described by the two points (x1, y1) and (x2, y2).")
 	const float a = args()[0]->evaluate(variables).as_int();
