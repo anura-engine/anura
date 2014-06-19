@@ -25,30 +25,29 @@
 #include <vector>
 
 #include "Color.hpp"
+#include "kre/Geometry.hpp"
+#include "kre/SceneObject.hpp"
+#include "kre/SceneUtil.hpp"
 
 #include "entity_fwd.hpp"
 #include "formula_fwd.hpp"
-#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 class Level;
 
-class water
+class Water : public KRE::SceneObject
 {
 public:
-	water();
-	explicit water(variant node);
+	Water();
+	explicit Water(variant node);
 
 	variant write() const;
 
-	void add_rect(const rect& r, const KRE::Color& color, variant obj);
-	void delete_rect(const rect& r);
+	void addRect(const rect& r, const KRE::Color& color, variant obj);
+	void deleteRect(const rect& r);
 
-	bool draw(int x, int y, int w, int h) const;
 	int zorder() const { return zorder_; }
 
-	void beginDrawing();
-	void endDrawing() const;
 	void process(const Level& lvl);
 
 	void getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const;
@@ -70,33 +69,37 @@ public:
 		void process();
 	};
 	
+	void preRender(const KRE::WindowManagerPtr& wm) override;
 private:
+	KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
+	void init();
 
 	struct area {
-		area(const rect& r, const unsigned char* color, variant obj);
+		area(const rect& r, const KRE::Color& color, variant obj);
 		rect rect_;
-		graphics::water_distortion distortion_;
 		std::vector<char> draw_detection_buf_;
 
 		std::vector<wave> waves_;
 
 		//segments of the surface without solid.
-		std::vector<std::pair<int, int> > surface_segments_;
+		std::vector<std::pair<int, int>> surface_segments_;
 		bool surface_segments_init_;
 
-		unsigned char color_[4];
+		KRE::Color color_;
 		variant obj_;
 	};
 
 	std::vector<area> areas_;
 
-	static void init_area_surface_segments(const Level& lvl, area& a);
+	static void initAreaSurfaceSegments(const Level& lvl, area& a);
 
-	bool drawArea(const area& a, int x, int y, int w, int h) const;
-
-	bool drawArea(const area& a, int begin_layer, int end_layer, int x, int y, int w, int h) const;
+	bool drawArea(const area& a) const;
 
 	int zorder_;
+
+	std::shared_ptr<KRE::Attribute<KRE::vertex_color>> waterline_;
+	std::shared_ptr<KRE::Attribute<KRE::vertex_color>> line1_;
+	std::shared_ptr<KRE::Attribute<KRE::vertex_color>> line2_;
 
 	enum { BadOffset = -100000 };
 

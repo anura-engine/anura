@@ -1325,7 +1325,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		if(!var_str. empty()) {
 			game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(CUSTOM_OBJECT_VARS);
 			ASSERT_LOG(entry != NULL, "CANNOT FIND VARS ENTRY IN OBJECT");
-			game_logic::FormulaCallableDefinitionPtr def = game_logic::executeCommand_callableDefinition(&var_str[0], &var_str[0] + var_str.size());
+			game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->setStrict(is_strict_);
 			entry->type_definition = def;
 		}
@@ -1342,7 +1342,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		if(!var_str.empty()) {
 			game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(CUSTOM_OBJECT_TMP);
 			ASSERT_LOG(entry != NULL, "CANNOT FIND TMP ENTRY IN OBJECT");
-			game_logic::FormulaCallableDefinitionPtr def = game_logic::executeCommand_callableDefinition(&var_str[0], &var_str[0] + var_str.size());
+			game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->setStrict(is_strict_);
 			entry->type_definition = def;
 		}
@@ -1429,12 +1429,12 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 				game_logic::ConstFormulaCallableDefinitionPtr property_def = callable_definition_;
 				if(entry.type) {
-					property_def = modify_FormulaCallableDefinition(property_def, CUSTOM_OBJECT_DATA, entry.type);
+					property_def = modify_formula_callable_definition(property_def, CUSTOM_OBJECT_DATA, entry.type);
 				}
 
 				game_logic::ConstFormulaCallableDefinitionPtr setter_def = property_def;
 				if(entry.set_type) {
-					setter_def = modify_FormulaCallableDefinition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
+					setter_def = modify_formula_callable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
 				}
 
 				entry.getter = game_logic::formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);

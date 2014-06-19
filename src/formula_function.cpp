@@ -4257,7 +4257,7 @@ bool point_in_triangle(point p, point t[3])
 }
 }
 
-FUNCTION_DEF(hex_get_tile_at, 3, 3, "hex_get_getTileAt(hexmap, x, y) -> hex_tile object: Finds the hex tile at the given level co-ordinates")
+FUNCTION_DEF(hex_get_tile_at, 3, 3, "hex_getTileAt(hexmap, x, y) -> hex_tile object: Finds the hex tile at the given level co-ordinates")
 	// Because we assume hexes are placed at a regular series of intervals
 	variant v = args()[0]->evaluate(variables);
 	hex::HexMapPtr hexmap = hex::HexMapPtr(v.try_convert<hex::HexMap>());

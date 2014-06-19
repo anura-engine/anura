@@ -286,7 +286,7 @@ namespace KRE
 				color_[3] = convert_numeric(node["a"]);
 			}
 		} else {
-			ASSERT_LOG(false, "Unrecognised color value: " << node.type_as_string());
+			ASSERT_LOG(false, "Unrecognised color value: " << node.to_debug_string());
 		}
 	}*/
 }

@@ -44,4 +44,9 @@ namespace profile
 	{
 		return profile::get_tick_time();
 	}
+
+	void delay(unsigned ticks)
+	{
+		SDL_Delay(ticks);
+	}
 }

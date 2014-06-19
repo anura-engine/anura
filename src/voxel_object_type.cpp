@@ -209,7 +209,7 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 			property_type_entries.push_back(entry);
 		}
 
-		callable_definition_ = executeCommand_callableDefinition(&property_type_entries[0], &property_type_entries[0] + property_type_entries.size(), base_definition);
+		callable_definition_ = execute_command_callable_definition(&property_type_entries[0], &property_type_entries[0] + property_type_entries.size(), base_definition);
 		callable_definition_->setStrict(true);
 
 		defs_cache[id_] = callable_definition_;
@@ -240,12 +240,12 @@ voxel_object_type::voxel_object_type(const std::string& id, variant node)
 
 				game_logic::ConstFormulaCallableDefinitionPtr property_def = callable_definition_;
 				if(entry.type) {
-					property_def = modify_FormulaCallableDefinition(property_def, num_base_slots() + ENTRY_DATA, entry.type);
+					property_def = modify_formula_callable_definition(property_def, num_base_slots() + ENTRY_DATA, entry.type);
 				}
 
 				game_logic::ConstFormulaCallableDefinitionPtr setter_def = property_def;
 				if(entry.set_type) {
-					setter_def = modify_FormulaCallableDefinition(setter_def, num_base_slots() + ENTRY_VALUE, entry.set_type);
+					setter_def = modify_formula_callable_definition(setter_def, num_base_slots() + ENTRY_VALUE, entry.set_type);
 				}
 
 				entry.getter = game_logic::formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);

@@ -205,7 +205,7 @@ point HexMap::get_tile_pos_from_pixel_pos(int mx, int my)
 HexObjectPtr HexMap::getTileFromPixelPos(int mx, int my) const
 {
 	point p = get_tile_pos_from_pixel_pos(mx, my);
-	return get_getTileAt(p.x, p.y);
+	return getTileAt(p.x, p.y);
 }
 
 point HexMap::get_pixel_pos_from_tile_pos(int x, int y)
@@ -217,7 +217,7 @@ point HexMap::get_pixel_pos_from_tile_pos(int x, int y)
 	return point(tx, ty);
 }
 
-HexObjectPtr HexMap::get_getTileAt(int x, int y) const
+HexObjectPtr HexMap::getTileAt(int x, int y) const
 {
 	x -= x_;
 	y -= y_;

@@ -206,7 +206,7 @@ formula_interface::formula_interface(const std::map<std::string, variant_type_pt
 		types.push_back(i->second);
 	}
 
-	impl_->def_ = executeCommand_callableDefinition(&names[0], &names[0] + names.size(), ConstFormulaCallableDefinitionPtr(), &types[0]);
+	impl_->def_ = execute_command_callable_definition(&names[0], &names[0] + names.size(), ConstFormulaCallableDefinitionPtr(), &types[0]);
 
 }
 

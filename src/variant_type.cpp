@@ -1129,7 +1129,7 @@ public:
 
 	const game_logic::FormulaCallableDefinition* getDefinition() const {
 		if(!def_) {
-			def_ = game_logic::create_MapFormulaCallableDefinition(value_type_);
+			def_ = game_logic::create_map_formula_callable_definition(value_type_);
 		}
 
 		return def_.get();
@@ -1157,7 +1157,7 @@ public:
 				must_have_keys_.insert(i->first);
 			}
 		}
-		def_ = game_logic::executeCommand_callableDefinition(&keys[0], &keys[0] + keys.size(), game_logic::ConstFormulaCallableDefinitionPtr(), &values[0]);
+		def_ = game_logic::execute_command_callable_definition(&keys[0], &keys[0] + keys.size(), game_logic::ConstFormulaCallableDefinitionPtr(), &values[0]);
 		def_->setSupportsSlotLookups(false);
 	}
 

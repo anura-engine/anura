@@ -697,7 +697,7 @@ private:
 			}
 
 			if(new_type != current_type) {
-				FormulaCallableDefinitionPtr new_def = modify_FormulaCallableDefinition(current_def, slot_, new_type);
+				FormulaCallableDefinitionPtr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
 				return new_def;
 			}
 		}
@@ -705,7 +705,7 @@ private:
 		if(!result && current_type && expression_is_this_type) {
 			variant_type_ptr new_type = variant_type::get_with_exclusion(current_type, expression_is_this_type);
 			if(new_type != current_type) {
-				FormulaCallableDefinitionPtr new_def = modify_FormulaCallableDefinition(current_def, slot_, new_type);
+				FormulaCallableDefinitionPtr new_def = modify_formula_callable_definition(current_def, slot_, new_type);
 				return new_def;
 			}
 		}
@@ -808,7 +808,7 @@ private:
 			}
 
 			if(new_type != current_type) {
-				FormulaCallableDefinitionPtr new_def = modify_FormulaCallableDefinition(current_def, slot, new_type);
+				FormulaCallableDefinitionPtr new_def = modify_formula_callable_definition(current_def, slot, new_type);
 				return new_def;
 			}
 		}
@@ -816,7 +816,7 @@ private:
 		if(!result && current_type && expression_is_this_type) {
 			variant_type_ptr new_type = variant_type::get_with_exclusion(current_type, expression_is_this_type);
 			if(new_type != current_type) {
-				FormulaCallableDefinitionPtr new_def = modify_FormulaCallableDefinition(current_def, slot, new_type);
+				FormulaCallableDefinitionPtr new_def = modify_formula_callable_definition(current_def, slot, new_type);
 				return new_def;
 			}
 		}
@@ -1261,7 +1261,7 @@ private:
 			ConstFormulaCallableDefinitionPtr new_right_def = right_->query_modified_definition_based_on_result(result, right_def_, expression_is_this_type);
 			const int slot = current_def->getSlot(key_name);
 			if(new_right_def && slot >= 0) {
-				return modify_FormulaCallableDefinition(current_def, slot, variant_type_ptr(), new_right_def.get());
+				return modify_formula_callable_definition(current_def, slot, variant_type_ptr(), new_right_def.get());
 			}
 		}
 
@@ -1913,7 +1913,7 @@ ConstFormulaCallableDefinitionPtr create_where_definition(expr_table_ptr table, 
 
 	ASSERT_LOG(items.empty() == false, "EMPTY WHERE CLAUSE");
 
-	FormulaCallableDefinitionPtr result = executeCommand_callableDefinition(&items[0], &items[0] + items.size(), def, &types[0]);
+	FormulaCallableDefinitionPtr result = execute_command_callable_definition(&items[0], &items[0] + items.size(), def, &types[0]);
 	result->setStrict(def && def->isStrict());
 	return result;
 }
@@ -2503,7 +2503,7 @@ void parse_args(const variant& formula_str, const std::string* function_name,
 				types[0] = variant_type::get_custom_object();
 			}
 
-			callable_def = game_logic::executeCommand_callableDefinition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
+			callable_def = game_logic::execute_command_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 		}
 
 		if(function_name != NULL && *function_name == "if" && n >= 1) {
@@ -2825,7 +2825,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 	FormulaCallableDefinitionPtr args_definition;
 	ConstFormulaCallableDefinitionPtr args_definition_ptr;
 	if(args.size()) {
-		args_definition = executeCommand_callableDefinition(&args[0], &args[0] + args.size(), formula_name.empty() ? callable_def : NULL /*only get the surrounding scope if we have a lambda function.*/);
+		args_definition = execute_command_callable_definition(&args[0], &args[0] + args.size(), formula_name.empty() ? callable_def : NULL /*only get the surrounding scope if we have a lambda function.*/);
 	} else if(formula_name.empty()) {
 		//empty arg lambda function. Give the definition as our context.
 		args_definition_ptr = callable_def;
@@ -3037,7 +3037,7 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 									foreach(const std::string& item, items) {
 										types.push_back(item_types[item]);
 									}
-									def = executeCommand_callableDefinition(&items[0], &items[0] + items.size(), callable_def, &types[0]);
+									def = execute_command_callable_definition(&items[0], &items[0] + items.size(), callable_def, &types[0]);
 								}
 								filter_expr.push_back(parse_expression(formula_str, arg.first, arg.second, symbols, def.get(), can_optimize));
 								seen_filter = true;
@@ -3060,7 +3060,7 @@ expression_ptr parse_expression_internal(const variant& formula_str, const token
 							foreach(const std::string& item, items) {
 								types.push_back(item_types[item]);
 							}
-							def = executeCommand_callableDefinition(&items[0], &items[0] + items.size(), callable_def, &types[0]);
+							def = execute_command_callable_definition(&items[0], &items[0] + items.size(), callable_def, &types[0]);
 						}
 
 						expression_ptr expr = parse_expression(formula_str, begin_start_expr, pipe, symbols, def.get(), can_optimize);

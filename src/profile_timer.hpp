@@ -40,4 +40,5 @@ namespace profile
 	};
 
 	unsigned get_tick_time();
+	void delay(unsigned);
 }

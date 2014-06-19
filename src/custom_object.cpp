@@ -582,7 +582,6 @@ CustomObject::CustomObject(const CustomObject& o)
 	event_handlers_(o.event_handlers_),
 	standing_on_(o.standing_on_),
 	standing_on_prev_x_(o.standing_on_prev_x_), standing_on_prev_y_(o.standing_on_prev_y_),
-	//distortion_(o.distortion_),
 	draw_color_(o.draw_color_ ? new KRE::ColorTransform(*o.draw_color_) : NULL),
 	draw_scale_(o.draw_scale_ ? new decimal(*o.draw_scale_) : NULL),
 	draw_area_(o.draw_area_ ? new rect(*o.draw_area_) : NULL),
@@ -1077,13 +1076,6 @@ variant CustomObject::write() const
 	}
 
 	return res.build();
-}
-
-void CustomObject::setupDrawing() const
-{
-	//if(distortion_) {
-	//	graphics::add_raster_distortion(distortion_.get());
-	//}
 }
 
 void CustomObject::drawLater(int xx, int yy) const
@@ -2858,7 +2850,6 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
 	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
-	//case CUSTOM_OBJECT_DISTORTION:        return variant(distortion_.get());
 	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(Level::current()));
 	case CUSTOM_OBJECT_STANDING_INFO:     {
 		CollisionInfo info;
@@ -3152,8 +3143,7 @@ variant CustomObject::getValueBySlot(int slot) const
 		break;
 	}
 
-	const game_logic::FormulaCallableDefinition::Entry* entry = 
-		    CustomObjectCallable::instance().getEntry(slot);
+	auto entry = CustomObjectCallable::instance().getEntry(slot);
 	if(entry != NULL) {
 		return variant();
 	}
@@ -3252,8 +3242,7 @@ variant CustomObject::getValue(const std::string& key) const
 void CustomObject::getInputs(std::vector<game_logic::formula_input>* inputs) const
 {
 	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
-		const game_logic::FormulaCallableDefinition::Entry* entry = 
-		    CustomObjectCallable::instance().getEntry(n);
+		auto entry = CustomObjectCallable::instance().getEntry(n);
 		if(!getValueBySlot(n).is_null()) {
 			inputs->push_back(entry->id);
 		}
@@ -3352,8 +3341,6 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		draw_color_->buf()[0] = value.as_int();
 		draw_color_->buf()[1] = value.as_int();
 		draw_color_->buf()[2] = value.as_int();
-	} else if(key == "distortion") {
-		distortion_ = value.try_convert<graphics::raster_distortion>();
 	} else if(key == "current_generator") {
 		setCurrentGenerator(value.try_convert<CurrentGenerator>());
 	} else if(key == "invincible") {
@@ -3441,7 +3428,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "attached_objects") {
 		std::vector<EntityPtr> v;
 		for(int n = 0; n != value.num_elements(); ++n) {
-			entity* e = value[n].try_convert<entity>();
+			Entity* e = value[n].try_convert<Entity>();
 			if(e) {
 				v.push_back(EntityPtr(e));
 			}
@@ -3473,10 +3460,10 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		const unsigned int old_solid = getSolidDimensions();
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
-		collision_info collide_info;
-		if(entity_in_current_level(this) && entity_collides(level::current(), *this, MOVE_NONE, &collide_info)) {
+		CollisionInfo collide_info;
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -3533,22 +3520,11 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		setMouseoverDelay(value.as_int());
 #if defined(USE_BOX2D)
 	} else if(key == "body") {
-		//if(body_) {
-		//	box2d::world::our_world_ptr()->destroy_body(body_);
-		//}
 		body_.reset(new box2d::body(value));
 		body_->finishLoading(this);
 #endif
 	} else if(key == "mouseover_area") {
 		setMouseOverArea(rect(value));
-	} else if(key == "truez") {
-		set_truez(value.as_bool());
-	} else if(key == "tx") {
-		set_tx(value.as_decimal().as_float());
-	} else if(key == "ty") {
-		set_ty(value.as_decimal().as_float());
-	} else if(key == "tz") {
-		set_tz(value.as_decimal().as_float());
 	} else if(!type_->isStrict()) {
 		vars_->add(key, value);
 	} else {
@@ -3579,7 +3555,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		
 		break;
 	}
-	case CustomObjectType: {
+	case CUSTOM_OBJECT_TYPE: {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
 			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
@@ -3642,13 +3618,13 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		if(value.is_string()) {
 			setFrame(value.as_string());
 		} else if(value.is_map()) {
-			frame_ptr f(new frame(value));
+			FramePtr f(new Frame(value));
 			if(type_->useImageForCollisions()) {
 				f->setImageAsSolid();
 			}
 			setFrame(*f);
 		} else {
-			setFrame(*value.convert_to<frame>());
+			setFrame(*value.convert_to<Frame>());
 		}
 		break;
 	
@@ -3976,7 +3952,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		draw_color_->buf()[3] = truncate_to_char(value.as_int());
 		break;
 
-	case CustomObjectText_ALPHA:
+	case CUSTOM_OBJECT_TEXT_ALPHA:
 		if(!text_) {
 			setText("", "default", 10, false);
 		}
@@ -3989,10 +3965,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		draw_color_->buf()[0] = value.as_int();
 		draw_color_->buf()[1] = value.as_int();
 		draw_color_->buf()[2] = value.as_int();
-		break;
-	
-	case CUSTOM_OBJECT_DISTORTION:
-		distortion_ = value.try_convert<graphics::raster_distortion>();
 		break;
 	
 	case CUSTOM_OBJECT_CURRENTGENERATOR:
@@ -4313,9 +4285,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 #if defined(USE_BOX2D)
 	case CUSTOM_OBJECT_BODY: {
-		//if(body_) {
-		//	box2d::world::our_world_ptr()->destroy_body(body_);
-		//}
 		body_.reset(new box2d::body(value));
 		body_->finishLoading(this);
 		break;
@@ -5019,7 +4988,7 @@ int CustomObject::slopeStandingOn(int range) const
 
 		int y1 = find_ground_level(Level::current(), xpos + forward*range, ypos, range+1);
 		int y2 = find_ground_level(Level::current(), xpos - forward*range, ypos, range+1);
-		while((y1 == INT_MIN || y2 == INT_MIN) && range > 0) {
+		while((y1 == std::numeric_limits<int>::min() || y2 == std::numeric_limits<int>::min()) && range > 0) {
 			y1 = find_ground_level(Level::current(), xpos + forward*range, ypos, range+1);
 			y2 = find_ground_level(Level::current(), xpos - forward*range, ypos, range+1);
 			--range;
@@ -5105,8 +5074,8 @@ namespace
 				}
 			}
 		} else if(v.try_convert<Entity>()) {
-			Entity* e = v.try_convert<entity>();
-			std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(EntityPtr(e));
+			Entity* e = v.try_convert<Entity>();
+			auto i = m.find(EntityPtr(e));
 			if(i != m.end()) {
 				v = variant(i->second.get());
 				return true;
@@ -5123,7 +5092,7 @@ namespace
 	void do_map_entity(EntityPtr& e, const std::map<EntityPtr, EntityPtr>& m)
 	{
 		if(e) {
-			std::map<EntityPtr, EntityPtr>::const_iterator i = m.find(e);
+			auto i = m.find(e);
 			if(i != m.end()) {
 				e = i->second;
 			}
@@ -5717,9 +5686,9 @@ BENCHMARK_ARG(custom_object_get_attr, const std::string& attr)
 BENCHMARK_ARG_CALL(custom_object_get_attr, easy_lookup, "x");
 BENCHMARK_ARG_CALL(custom_object_get_attr, hard_lookup, "xxxx");
 
-BENCHMARK_ARG(custom_object_handleEvent, const std::string& object_event)
+BENCHMARK_ARG(custom_object_handle_event, const std::string& object_event)
 {
-	std::string::const_iterator i = std::find(object_event.begin(), object_event.end(), ':');
+	auto i = std::find(object_event.begin(), object_event.end(), ':');
 	ASSERT_LOG(i != object_event.end(), "custom_object_event_handle argument must have a colon seperator: " << object_event);
 	std::string obj_type(object_event.begin(), i);
 	std::string event_name(i+1, object_event.end());
@@ -5733,6 +5702,6 @@ BENCHMARK_ARG(custom_object_handleEvent, const std::string& object_event)
 	}
 }
 
-BENCHMARK_ARG_CALL(custom_object_handleEvent, ant_non_exist, "ant_black:blahblah");
+BENCHMARK_ARG_CALL(custom_object_handle_event, ant_non_exist, "ant_black:blahblah");
 
-BENCHMARK_ARG_CALL_COMMAND_LINE(custom_object_handleEvent);
+BENCHMARK_ARG_CALL_COMMAND_LINE(custom_object_handle_event);

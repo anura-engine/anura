@@ -73,5 +73,5 @@ namespace KRE
 	bool operator==(const ColorTransform& a, const ColorTransform& b);
 	bool operator!=(const ColorTransform& a, const ColorTransform& b);
 
-	typedef boost::instrusive_ptr<ColorTransform> ColorTransformPtr;
+	typedef boost::intrusive_ptr<ColorTransform> ColorTransformPtr;
 }

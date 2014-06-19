@@ -93,12 +93,12 @@ namespace game_logic
 		std::string type_name_;
 	};
 
-	FormulaCallableDefinitionPtr modify_FormulaCallableDefinition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=NULL);
+	FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=NULL);
 
-	FormulaCallableDefinitionPtr executeCommand_callableDefinition(const std::string* beg, const std::string* end, ConstFormulaCallableDefinitionPtr base=NULL, variant_type_ptr* begin_types=NULL);
-	FormulaCallableDefinitionPtr executeCommand_callableDefinition(const FormulaCallableDefinition::Entry* begin, const FormulaCallableDefinition::Entry* end, ConstFormulaCallableDefinitionPtr base=NULL);
+	FormulaCallableDefinitionPtr execute_command_callable_definition(const std::string* beg, const std::string* end, ConstFormulaCallableDefinitionPtr base=NULL, variant_type_ptr* begin_types=NULL);
+	FormulaCallableDefinitionPtr execute_command_callable_definition(const FormulaCallableDefinition::Entry* begin, const FormulaCallableDefinition::Entry* end, ConstFormulaCallableDefinitionPtr base=NULL);
 
-	FormulaCallableDefinitionPtr create_MapFormulaCallableDefinition(variant_type_ptr value_type);
+	FormulaCallableDefinitionPtr create_map_formula_callable_definition(variant_type_ptr value_type);
 
 	int register_formula_callable_definition(const std::string& id, ConstFormulaCallableDefinitionPtr def);
 	int register_formula_callable_definition(const std::string& id, const std::string& base_id, ConstFormulaCallableDefinitionPtr def);
@@ -106,7 +106,7 @@ namespace game_logic
 	ConstFormulaCallableDefinitionPtr get_formula_callable_definition(const std::string& id);
 
 	int add_callable_definition_init(void(*fn)());
-	void init_callableDefinitions();
+	void init_callable_definitions();
 }
 
 typedef std::function<variant(const game_logic::FormulaCallable&)> GetterFn;
@@ -211,7 +211,7 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 		types.push_back(fields[n].type); \
 		set_types.push_back(fields[n].set_type); \
 	} \
-	game_logic::FormulaCallableDefinitionPtr def = game_logic::executeCommand_callableDefinition(&field_names[0], &field_names[0] + field_names.size(), game_logic::FormulaCallableDefinitionPtr(), &types[0]); \
+	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&field_names[0], &field_names[0] + field_names.size(), game_logic::FormulaCallableDefinitionPtr(), &types[0]); \
 	for(int n = 0; n != fields.size(); ++n) { \
 		if(set_types[n]) { \
 			def->getEntry(n)->write_type = set_types[n]; \

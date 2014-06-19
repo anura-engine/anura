@@ -27,6 +27,14 @@
 
 namespace KRE
 {
+	struct vertex_color
+	{
+		vertex_color(const glm::vec2& v, const glm::u8vec4& c)
+			: vertex(v), color(c) {}
+		glm::vec2 vertex;
+		glm::u8vec4 color;
+	};
+
 	struct vertex_texture_color
 	{
 		vertex_texture_color(const glm::vec2& v, const glm::vec2& t, const glm::u8vec4& c)

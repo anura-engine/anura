@@ -43,58 +43,40 @@ namespace KRE
 		};
 		explicit WindowManager(const std::string& title);
 		virtual ~WindowManager();
-		virtual void createWindow(size_t width, size_t height) = 0;
-		virtual void destroyWindow() = 0;
+		void createWindow(unsigned width, unsigned height);
+		void destroyWindow();
 		
-		virtual bool setWindowSize(size_t width, size_t height) = 0;
-		virtual bool autoWindowSize(size_t& width, size_t& height) = 0;
-		virtual bool setLogicalWindowSize(size_t width, size_t height) = 0;
+		virtual bool setWindowSize(unsigned width, unsigned height) = 0;
+		virtual bool autoWindowSize(unsigned& width, unsigned& height) = 0;
+		virtual bool setLogicalWindowSize(unsigned width, unsigned height) = 0;
 
 		virtual void setWindowTitle(const std::string& title) = 0;
 		virtual void setWindowIcon(const std::string& name) = 0;
 
 		virtual void render(const Renderable* r) const = 0;
 
-		virtual SurfacePtr createSurface(size_t width, 
-			size_t height, 
-			size_t bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask) = 0;
-		virtual SurfacePtr createSurface(size_t width, 
-			size_t height, 
-			size_t bpp, 
-			size_t row_pitch, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask, 
-			void* pixels) = 0;
-		virtual SurfacePtr createSurface(const std::string& filename) = 0;
-
 		virtual void swap() = 0;
 
-		void mapMousePosition(size_t* x, size_t* y);
+		void mapMousePosition(unsigned* x, unsigned* y);
 
 		void enable16bpp(bool bpp=true);
-		void enableMultisampling(bool multi_sampling=true, size_t samples=4);
+		void enableMultisampling(bool multi_sampling=true, unsigned samples=4);
 		void enableResizeableWindow(bool en=true);
 		void setFullscreenMode(FullScreenMode mode);
 		void enableVsync(bool en=true);
 
 		bool use16bpp() const { return use_16bpp_; }
 		bool useMultiSampling() const { return use_multi_sampling_; }
-		size_t multiSamples() const { return samples_; }
+		unsigned multiSamples() const { return samples_; }
 		bool resizeable() const { return is_resizeable_; }
 		FullScreenMode fullscreenMode() const { return fullscreen_mode_; }
 		bool vSync() const { return use_vsync_; }
 
-		size_t width() const { return width_; }
-		size_t height() const { return height_; }
+		unsigned width() const { return width_; }
+		unsigned height() const { return height_; }
 
-		size_t logicalWidth() const { return logical_width_; }
-		size_t logicalHeight() const { return logical_height_; }
+		unsigned logicalWidth() const { return logical_width_; }
+		unsigned logicalHeight() const { return logical_height_; }
 
 		const std::string& getTitle() const { return title_; }
 
@@ -107,11 +89,13 @@ namespace KRE
 		virtual void clear(DisplayDevice::ClearFlags f) = 0;
 
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
+		static std::vector<WindowManagerPtr> getWindowList();
+		static WindowManagerPtr getMainWindow();
 	protected:
-		size_t width_;
-		size_t height_;
-		size_t logical_width_;
-		size_t logical_height_;
+		unsigned width_;
+		unsigned height_;
+		unsigned logical_width_;
+		unsigned logical_height_;
 		Color clear_color_;
 
 		DisplayDevicePtr display_;
@@ -119,10 +103,12 @@ namespace KRE
 		virtual void changeFullscreenMode() = 0;
 		virtual void handleSetClearColor() = 0;
 		virtual bool handleLogicalWindowSizeChange() = 0;
+		virtual void doCreateWindow(unsigned width, unsigned height) = 0;
+		virtual void doDestroyWindow() = 0;
 
 		bool use_16bpp_;
 		bool use_multi_sampling_;
-		size_t samples_;
+		unsigned samples_;
 		bool is_resizeable_;
 		FullScreenMode fullscreen_mode_;
 		std::string title_;

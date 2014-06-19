@@ -74,7 +74,6 @@ public:
 	//and allows us to do any final setup such as finding our parent.
 	void finishLoading(Level* lvl);
 	virtual variant write() const;
-	virtual void setupDrawing() const;
 	virtual void draw(int x, int y) const;
 	virtual void drawLater(int x, int y) const;
 	virtual void drawGroup() const;

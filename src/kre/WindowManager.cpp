@@ -70,10 +70,10 @@ namespace KRE
 			current_display_device() = display_ = DisplayDevice::Factory(renderer_hint_);
 		}
 		~SDLWindowManager() {
-			DestroyWindow();
+			destroyWindow();
 		}
 
-		void createWindow(size_t width, size_t height) override {
+		void doCreateWindow(unsigned width, unsigned height) override {
 			logical_width_ = width_ = width;
 			logical_height_ = height_ = height;
 
@@ -102,7 +102,7 @@ namespace KRE
 					if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
 						LOG_WARN("MSAA(" << multiSamples() << ") requested but mutlisample buffer couldn't be allocated.");
 					} else {
-						size_t msaa = next_pow2(multiSamples());
+						unsigned msaa = next_pow2(multiSamples());
 						if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa) != 0) {
 							LOG_INFO("Requested MSAA of " << msaa << " but couldn't allocate");
 						}
@@ -165,7 +165,7 @@ namespace KRE
 			swap();
 		}
 
-		void destroyWindow() override {
+		void doDestroyWindow() override {
 			window_.reset();
 		}
 
@@ -189,49 +189,19 @@ namespace KRE
 			// XXX SDL_SetWindowIcon(window_.get(), wm_icon.get());
 		}
 		
-		bool setWindowSize(size_t width, size_t height) override {
+		bool setWindowSize(unsigned width, unsigned height) override {
 			// XXX
 			return false;
 		}
 
-		bool setLogicalWindowSize(size_t width, size_t height) override {
+		bool setLogicalWindowSize(unsigned width, unsigned height) override {
 			// XXX
 			return false;
 		}
 
-		bool autoWindowSize(size_t& width, size_t& height) override {
+		bool autoWindowSize(unsigned& width, unsigned& height) override {
 			// XXX
 			return false;
-		}
-
-		SurfacePtr createSurface(size_t width, 
-			size_t height, 
-			size_t bpp, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask) override {
-			return SurfacePtr(new SurfaceSDL(width, height, bpp, rmask, gmask, bmask, amask));
-		}
-		SurfacePtr createSurface(size_t width, 
-			size_t height, 
-			size_t bpp, 
-			size_t row_pitch, 
-			uint32_t rmask, 
-			uint32_t gmask, 
-			uint32_t bmask, 
-			uint32_t amask, 
-			void* pixels) override {
-			// XXX feed into surface cache. 
-			// will need to update cache if pixels change.
-			return SurfacePtr(new SurfaceSDL(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels));
-		}
-
-		SurfacePtr createSurface(const std::string& filename) override {
-			// XXX Here is were we can abstract image loading and provide an
-			// image cache.
-			// return SurfacePtr(WindowManager::LoadImage(filename));
-			return Surface::Create(filename);
 		}
 
 		void setWindowTitle(const std::string& title) override {
@@ -287,7 +257,7 @@ namespace KRE
 		use_16bpp_ = bpp;
 	}
 
-	void WindowManager::enableMultisampling(bool multi_sampling, size_t samples) {
+	void WindowManager::enableMultisampling(bool multi_sampling, unsigned samples) {
 		use_multi_sampling_ = multi_sampling;
 		samples_ = samples;
 	}
@@ -310,7 +280,7 @@ namespace KRE
 		use_vsync_ = en;
 	}
 
-	void WindowManager::mapMousePosition(size_t* x, size_t* y) 
+	void WindowManager::mapMousePosition(unsigned* x, unsigned* y) 
 	{
 		if(x) {
 			*x = int(*x * double(logical_width_) / width_);
@@ -320,7 +290,7 @@ namespace KRE
 		}
 	}
 
-	bool WindowManager::setLogicalWindowSize(size_t width, size_t height)
+	bool WindowManager::setLogicalWindowSize(unsigned width, unsigned height)
 	{
 		logical_width_ = width;
 		logical_height_ = height;
@@ -339,11 +309,47 @@ namespace KRE
 		handleSetClearColor();
 	}
 
+	namespace
+	{
+		std::vector<WindowManagerPtr>& get_window_list()
+		{
+			static std::vector<WindowManagerPtr> res;
+			return res;
+		}
+	}
+
+	void WindowManager::createWindow(unsigned width, unsigned height)
+	{
+		doCreateWindow(width, height);
+	}
+
+	void WindowManager::destroyWindow()
+	{
+		auto it = std::remove_if(get_window_list().begin(), 
+			get_window_list().end(),
+			[this](WindowManagerPtr p){ return this == p.get(); });
+		get_window_list().erase(it, get_window_list().end());
+		doDestroyWindow();
+	}
+
 	WindowManagerPtr WindowManager::factory(const std::string& title, const std::string& wnd_hint, const std::string& rend_hint)
 	{
 		// We really only support one sub-class of the window manager
 		// at the moment, so we just return it. We could use hint in the
 		// future if we had more.
-		return WindowManagerPtr(new SDLWindowManager(title, rend_hint));
+		WindowManager* wm = new SDLWindowManager(title, rend_hint);
+		get_window_list().emplace_back(wm);
+		return get_window_list().back();
+	}
+
+	std::vector<WindowManagerPtr> WindowManager::getWindowList()
+	{
+		return get_window_list();
+	}
+
+	WindowManagerPtr WindowManager::getMainWindow()
+	{
+		// We consider the first window on the list the main one.
+		return get_window_list()[0];
 	}
 }

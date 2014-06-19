@@ -1407,14 +1407,14 @@ FormulaCallableDefinitionPtr get_library_definition()
 		}
 
 		if(!types.empty()) {
-			g_library_definition = game_logic::executeCommand_callableDefinition(&classes[0], &classes[0] + classes.size(), NULL);
+			g_library_definition = game_logic::execute_command_callable_definition(&classes[0], &classes[0] + classes.size(), NULL);
 			game_logic::register_formula_callable_definition("library", g_library_definition);
 
 			for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
 				g_library_definition->getEntry(n)->set_variant_type(types[n]);
 			}
 		} else {
-			g_library_definition = game_logic::executeCommand_callableDefinition(NULL, NULL, NULL, NULL);
+			g_library_definition = game_logic::execute_command_callable_definition(NULL, NULL, NULL, NULL);
 		}
 	}
 

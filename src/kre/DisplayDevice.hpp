@@ -72,6 +72,7 @@ namespace KRE
 	enum class DisplayDeviceCapabilties
 	{
 		NPOT_TEXTURES,
+		BLEND_EQUATION_SEPERATE,
 	};
 
 	class DisplayDevice

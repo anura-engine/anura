@@ -52,7 +52,6 @@
 #include "gui_section.hpp"
 #include "i18n.hpp"
 #include "input.hpp"
-#include "ipc.hpp"
 #include "iphone_device_info.h"
 #include "joystick.hpp"
 #include "json_parser.hpp"
@@ -68,6 +67,7 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "preprocessor.hpp"
+#include "profile_timer.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
@@ -78,6 +78,7 @@
 
 #include "kre/SDLWrapper.hpp"
 #include "kre/Font.hpp"
+#include "kre/SceneGraph.hpp"
 #include "kre/WindowManager.hpp"
 
 #if defined(__APPLE__)
@@ -206,12 +207,6 @@ namespace
 }
 
 
-#if defined(__native_client__)
-void register_file_and_data(const char* filename, const char* mode, char* buffer, int size)
-{
-}
-#endif
-
 int load_module(const std::string& mod, std::vector<std::string>* argv)
 {
 	variant mod_info = module::get(mod);
@@ -232,22 +227,17 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 
 		argv->insert(argv->begin() + insertion_point, arguments.begin(), arguments.end());
 
-		std::cerr << "ARGS: ";
+		LOG_INFO_NOLF("ARGS:");
 		for(int i = 0; i != argv->size(); ++i) {
-			std::cerr << (*argv)[i] << " ";
+			LOG_INFO_NOLF(" " << (*argv)[i]);
 		}
-
-		std::cerr << "\n";
+		LOG_INFO("");
 
 	}	
 	return 0;
 }
 
-#if defined(__native_client__)
-extern "C" int game_main(int argcount, char* argvec[])
-#else
 extern "C" int main(int argcount, char* argvec[])
-#endif
 {
 	{
 		std::vector<std::string> args;
@@ -258,40 +248,33 @@ extern "C" int main(int argcount, char* argvec[])
 		preferences::set_argv(args);
 	}
 
-#if defined(__native_client__)
-	std::cerr << "Running game_main" << std::endl;
-
-	chdir("/frogatto");
-	{
-		char buf[256];
-		const char* const res = getcwd(buf,sizeof(buf));
-		std::cerr << "Current working directory: " << res << std::endl;
-	}
-#endif 
-
 #ifdef _MSC_VER
-	freopen("CON", "w", stderr);
-	freopen("CON", "w", stdout);
+	std::freopen("CON", "w", stderr);
+	std::freopen("CON", "w", stdout);
+#endif
+#if defined(__ANDROID__)
+	std::freopen("stdout.txt","w",stdout);
+	std::freopen("stderr.txt","w",stderr);
+	std::cerr.sync_with_stdio(true);
 #endif
 
 #if defined(__APPLE__) && TARGET_OS_MAC
     chdir([[[NSBundle mainBundle] resourcePath] fileSystemRepresentation]);
 #endif
 
-	#ifdef NO_STDERR
+#ifdef NO_STDERR
 	std::freopen("/dev/null", "w", stderr);
 	std::cerr.sync_with_stdio(true);
-	#endif
+#endif
 
-	std::cerr << "Anura engine version " << preferences::version() << "\n";
-	LOG( "After print engine version" );
+	LOG_INFO("Anura engine version " << preferences::version());
 
-	#if defined(TARGET_BLACKBERRY)
-		chdir("app/native");
-		std::cout<< "Changed working directory to: " << getcwd(0, 0) << std::endl;
-	#endif
+#if defined(TARGET_BLACKBERRY)
+	chdir("app/native");
+	std::cout<< "Changed working directory to: " << getcwd(0, 0) << std::endl;
+#endif
 
-	game_logic::init_callableDefinitions();
+	game_logic::init_callable_definitions();
 
 	std::string level_cfg = "titlescreen.cfg";
 	bool unit_tests_only = false, skip_tests = false;
@@ -312,37 +295,36 @@ extern "C" int main(int argcount, char* argvec[])
 
 	std::vector<std::string> argv;
 	for(int n = 1; n < argcount; ++n) {
-		argv.push_back(argvec[n]);
-        
+		argv.push_back(argvec[n]);        
         if(argv.size() >= 2 && argv[argv.size()-2] == "-NSDocumentRevisionsDebugMode" && argv.back() == "YES") {
             //XCode passes these arguments by default when debugging -- make sure they are ignored.
             argv.resize(argv.size()-2);
         }
 	}
 
-	std::cerr << "Build Options:";
+	LOG_INFO_NOLF("Build Options:");
 	for(auto bo : preferences::get_build_options()) {
-		std::cerr << " " << bo;
+		LOG_INFO_NOLF(" " << bo);
 	}
-	std::cerr << std::endl;
+	LOG_INFO("");
 
 	if(sys::file_exists("./master-config.cfg")) {
-		std::cerr << "LOADING CONFIGURATION FROM master-config.cfg" << std::endl;
+		LOG_INFO("LOADING CONFIGURATION FROM master-config.cfg");
 		variant cfg = json::parse_from_file("./master-config.cfg");
 		if(cfg.is_map()) {
 			if( cfg["id"].is_null() == false) {
-				std::cerr << "SETTING MODULE PATH FROM master-config.cfg: " << cfg["id"].as_string() << std::endl;
+				LOG_INFO("SETTING MODULE PATH FROM master-config.cfg: " << cfg["id"].as_string());
 				preferences::set_preferences_path_from_module(cfg["id"].as_string());
 				//XXX module::set_module_name(cfg["id"].as_string(), cfg["id"].as_string());
 			}
 			if(cfg["arguments"].is_null() == false) {
 				std::vector<std::string> additional_args = cfg["arguments"].as_list_string();
 				argv.insert(argv.begin(), additional_args.begin(), additional_args.end());
-				std::cerr << "ADDING ARGUMENTS FROM master-config.cfg:";
+				LOG_INFO_NOLF("ADDING ARGUMENTS FROM master-config.cfg:");
 				for(size_t n = 0; n < cfg["arguments"].num_elements(); ++n) {
-					std::cerr << " " << cfg["arguments"][n].as_string();
+					LOG_INFO_NOLF(" " << cfg["arguments"][n].as_string());
 				}
-				std::cerr << std::endl;
+				LOG_INFO("");
 			}
 		}
 	}
@@ -360,7 +342,7 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 		if(arg_name == "--module") {
 			if(load_module(arg_value, &argv) != 0) {
-				std::cerr << "FAILED TO LOAD MODULE: " << arg_value << "\n";
+				LOG_INFO("FAILED TO LOAD MODULE: " << arg_value);
 				return -1;
 			}
 			++modules_loaded;
@@ -371,13 +353,12 @@ extern "C" int main(int argcount, char* argvec[])
 
 	if(modules_loaded == 0 && !unit_tests_only) {
 		if(load_module(DEFAULT_MODULE, &argv) != 0) {
-			std::cerr << "FAILED TO LOAD MODULE: " << DEFAULT_MODULE << "\n";
+			LOG_INFO("FAILED TO LOAD MODULE: " << DEFAULT_MODULE);
 			return -1;
 		}
 	}
 
 	preferences::load_preferences();
-	LOG( "After load_preferences()" );
 
 	// load difficulty settings after module, before rest of args.
 	difficulty::manager();
@@ -391,7 +372,7 @@ extern "C" int main(int argcount, char* argvec[])
 			arg_name = std::string(arg.begin(), equal);
 			arg_value = std::string(equal+1, arg.end());
 		}
-		std::cerr << "ARGS: " << arg << std::endl;
+		LOG_INFO("ARGS: " << arg);
 		if(arg.substr(0,4) == "-psn") {
 			// ignore.
 		} else if(arg_name == "--module") {
@@ -459,7 +440,7 @@ extern "C" int main(int argcount, char* argvec[])
 		} else {
 			const bool res = preferences::parse_arg(argv[n].c_str());
 			if(!res) {
-				std::cerr << "unrecognized arg: '" << arg << "'\n";
+				LOG_ERROR("unrecognized arg: '" << arg);
 				return -1;
 			}
 		}
@@ -504,9 +485,8 @@ extern "C" int main(int argcount, char* argvec[])
 						exe_name.resize(exe_name.size() - anura_exe_name.size());
 						exe_name += match;
 						args[0] = const_cast<char*>(exe_name.c_str());
-						fprintf(stderr, "ZZZ: CALLING EXEC...\n");
 						_execv(args[0], &args[0]);
-						fprintf(stderr, "Could not exec()\n");
+						LOG_ERROR("Could not exec()");
 					}
 				}
 			}
@@ -514,16 +494,13 @@ extern "C" int main(int argcount, char* argvec[])
 	}
 
 	background_task_pool::manager bg_task_pool_manager;
-	LOG( "After expand_data_paths()" );
 
-	std::cerr << "Preferences dir: " << preferences::user_data_path() << '\n';
+	LOG_INFO("Preferences dir: " << preferences::user_data_path());
 
 	//make sure that the user data path exists.
 	if(!preferences::setup_preferences_dir()) {
-		std::cerr << "cannot create preferences dir!\n";
+		LOG_ERROR("cannot create preferences dir!");
 	}
-
-	std::cerr << "\n";
 
 	variant_builder update_info;
 	if(g_auto_update_module || g_auto_update_anura != "") {
@@ -562,7 +539,7 @@ extern "C" int main(int argcount, char* argvec[])
 		int original_start_time = profile::get_tick_time();
 		bool timeout = false;
 		bool require_restart = false;
-		fprintf(stderr, "Requesting update to module from server...\n");
+		LOG_INFO("Requesting update to module from server...");
 		while(cl || anura_cl) {
 			if(update_window == NULL && SDL_GetTicks() - original_start_time > 2000) {
 				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
@@ -576,7 +553,7 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_obtained += transferred;
 				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
-					fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+					LOG_INFO("Transferred " << (transferred/1024) << "/" << (cl->nbytes_total()/1024) << "KB");
 					start_time = profile::get_tick_time();
 					nbytes_transferred = transferred;
 				}
@@ -587,7 +564,7 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_obtained += transferred;
 				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
-					fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
+					LOG_INFO("Transferred " << (transferred/1024) << "/" << (anura_cl->nbytes_total()/1024) << "KB");
 					start_time = profile::get_tick_time();
 					nbytes_anura_transferred = transferred;
 				}
@@ -595,7 +572,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			const int time_taken = SDL_GetTicks() - start_time;
 			if(time_taken > g_auto_update_timeout) {
-				fprintf(stderr, "Timed out updating module. Canceling. %dms vs %dms\n", time_taken, g_auto_update_timeout);
+				LOG_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << g_auto_update_timeout << "ms");
 				break;
 			}
 
@@ -629,7 +606,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			if(cl && !cl->process()) {
 				if(cl->error().empty() == false) {
-					fprintf(stderr, "Error while updating module: %s\n", cl->error().c_str());
+					LOG_ERROR("Error while updating module: " << cl->error().c_str());
 					update_info.add("module_error", variant(cl->error()));
 				} else {
 					update_info.add("complete_module", true);
@@ -639,7 +616,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			if(anura_cl && !anura_cl->process()) {
 				if(anura_cl->error().empty() == false) {
-					fprintf(stderr, "Error while updating anura: %s\n", anura_cl->error().c_str());
+					LOG_ERROR("Error while updating anura: " << anura_cl->error().c_str());
 					update_info.add("anura_error", variant(anura_cl->error()));
 				} else {
 					update_info.add("complete_anura", true);
@@ -662,9 +639,8 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 			args.push_back(NULL);
-			fprintf(stderr, "ZZZ: CALLING EXEC...\n");
 			_execv(args[0], &args[0]);
-			fprintf(stderr, "Could not exec()\n");
+			LOG_ERROR("Could not exec()");
 		}
 	}
 
@@ -682,18 +658,6 @@ extern "C" int main(int argcount, char* argvec[])
 		test::run_utility(utility_program, util_args);
 		return 0;
 	}
-
-#if defined(TARGET_PANDORA)
-    EGL_Open();
-#endif
-
-#if defined(__ANDROID__)
-	std::freopen("stdout.txt","w",stdout);
-	std::freopen("stderr.txt","w",stderr);
-	std::cerr.sync_with_stdio(true);
-#endif
-
-	LOG( "Start of main" );
 
 	if(!skip_tests && !test::run_tests()) {
 		return -1;
@@ -713,22 +677,27 @@ extern "C" int main(int argcount, char* argvec[])
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
 
+	SceneGraphPtr scene = SceneGraph::Create("root");
+	SceneNodePtr root = scene->RootNode();
+	root->SetNodeName("root_node");
+	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->logicalWidth(), 0, main_wnd->logicalHeight());
+	root->AttachCamera(orthocam);
+
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
-	KRE::Font::getInstance()->setDefaultFont(module::get_default_font() == "bitmap" 
+	Font::getInstance()->setDefaultFont(module::get_default_font() == "bitmap" 
 		? "FreeMono" 
 		: module::get_default_font());
 
 	i18n::init ();
 	LOG( "After i18n::init()" );
 
-#if TARGET_OS_IPHONE || defined(TARGET_BLACKBERRY) || defined(__ANDROID__)
-	//on the iPhone and PlayBook, try to restore the auto-save if it exists
-	if(sys::file_exists(preferences::auto_save_file_path()) && sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
+	// Read auto-save file if it exists.
+	if(sys::file_exists(preferences::auto_save_file_path()) 
+		&& sys::read_file(std::string(preferences::auto_save_file_path()) + ".stat") == "1") {
 		level_cfg = "autosave.cfg";
 		sys::write_file(std::string(preferences::auto_save_file_path()) + ".stat", "0");
 	}
-#endif
 
 	if(override_level_cfg.empty() != true) {
 		level_cfg = override_level_cfg;
@@ -748,46 +717,39 @@ extern "C" int main(int argcount, char* argvec[])
 
 	{ //manager scope
 	const sound::manager sound_manager;
-#if !defined(__native_client__)
 	const joystick::manager joystick_manager;
-#endif 
 	
 #ifndef NO_EDITOR
 	editor::manager editor_manager;
 #endif
 
 	variant preloads;
-	loading_screen loader;
+	LoadingScreen loader;
 	try {
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
 		GuiSection::init(gui_node);
-		loader.draw_and_increment(_("Initializing GUI"));
+		loader.drawAndIncrement(_("Initializing GUI"));
 		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));
 		GraphicalFont::initForLocale(i18n::get_locale());
 		preloads = json::parse_from_file("data/preload.cfg");
 		int preload_items = preloads["preload"].num_elements();
-		loader.set_number_of_items(preload_items+7); // 7 is the number of items that will be loaded below
-		custom_object::init();
-		loader.draw_and_increment(_("Initializing custom object functions"));
-		loader.draw_and_increment(_("Initializing textures"));
+		loader.setNumberOfItems(preload_items+7); // 7 is the number of items that will be loaded below
+		CustomObject::init();
+		loader.drawAndIncrement(_("Initializing custom object functions"));
+		loader.drawAndIncrement(_("Initializing textures"));
 		loader.load(preloads);
-		loader.draw_and_increment(_("Initializing tiles"));
-		tile_map::init(json::parse_from_file("data/tiles.cfg"));
+		loader.drawAndIncrement(_("Initializing tiles"));
+		TileMap::init(json::parse_from_file("data/tiles.cfg"));
 
 		game_logic::formula_object::load_all_classes();
 
 	} catch(const json::parse_error& e) {
-		std::cerr << "ERROR PARSING: " << e.error_message() << "\n";
+		LOG_ERROR("ERROR PARSING: " << e.error_message());
 		return 0;
 	}
 	loader.draw(_("Loading level"));
-
-#if defined(__native_client__)
-	while(1) {
-	}
-#endif
 
 #if defined(__APPLE__) && !(TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE) && !defined(USE_SHADERS)
 	GLint swapInterval = 1;
@@ -797,12 +759,12 @@ extern "C" int main(int argcount, char* argvec[])
 	loader.finishLoading();
 	//look to see if we got any quit events while loading.
 	{
-	SDL_Event event;
-	while(input::sdl_poll_event(&event)) {
-		if(event.type == SDL_QUIT) {
-			return 0;
+		SDL_Event event;
+		while(input::sdl_poll_event(&event)) {
+			if(event.type == SDL_QUIT) {
+				return 0;
+			}
 		}
-	}
 	}
 
 	formula_profiler::manager profiler(profile_output);
@@ -822,10 +784,8 @@ extern "C" int main(int argcount, char* argvec[])
 	bool quit = false;
 
 	while(!quit && !show_title_screen(level_cfg)) {
-		boost::intrusive_ptr<level> lvl(load_level(level_cfg));
+		LevelPtr lvl(load_level(level_cfg));
 		
-
-#if !defined(__native_client__)
 		//see if we're loading a multiplayer level, in which case we
 		//connect to the server.
 		multiplayer::manager mp_manager(lvl->is_multiplayer());
@@ -836,7 +796,7 @@ extern "C" int main(int argcount, char* argvec[])
 		if(lvl->is_multiplayer()) {
 			last_draw_position() = screen_position();
 			std::string level_cfg = "waiting-room.cfg";
-			boost::intrusive_ptr<level> wait_lvl(load_level(level_cfg));
+			LevelPtr wait_lvl(load_level(level_cfg));
 			wait_lvl->finishLoading();
 			wait_lvl->setMultiplayerSlot(0);
 			if(wait_lvl->player()) {
@@ -850,7 +810,6 @@ extern "C" int main(int argcount, char* argvec[])
 
 			lvl->setMultiplayerSlot(multiplayer::slot());
 		}
-#endif
 
 		last_draw_position() = screen_position();
 
@@ -873,7 +832,7 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 	}
 
-	level::clearCurrentLevel();
+	Level::clearCurrentLevel();
 
 	} //end manager scope, make managers destruct before calling SDL_Quit
 
@@ -882,7 +841,7 @@ extern "C" int main(int argcount, char* argvec[])
 	std::set<variant*> loading;
 	swap_variants_loading(loading);
 	if(loading.empty() == false) {
-		fprintf(stderr, "Illegal object: %p\n", (void*)(*loading.begin())->as_callable_loading());
+		LOG_ERROR("Illegal object: " << (void*)(*loading.begin())->as_callable_loading());
 		ASSERT_LOG(false, "Unresolved unserialized objects: " << loading.size());
 	}
 

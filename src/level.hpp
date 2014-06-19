@@ -154,7 +154,7 @@ public:
 	//will return all the solid tiles connected
 	std::vector<point> get_solid_contiguous_region(int xpos, int ypos) const;
 
-	const LevelTile* get_getTileAt(int x, int y) const;
+	const LevelTile* getTileAt(int x, int y) const;
 	void remove_character(EntityPtr e);
 	std::vector<EntityPtr> get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const;
 	std::vector<EntityPtr> get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
@@ -284,10 +284,10 @@ public:
 
 	void getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const;
 
-	water* get_water() { return water_.get(); }
-	const water* get_water() const { return water_.get(); }
+	Water* get_water() { return water_.get(); }
+	const Water* get_water() const { return water_.get(); }
 
-	water& get_or_create_water();
+	Water& get_or_create_water();
 
 	EntityPtr get_entity_by_label(const std::string& label);
 	ConstEntityPtr get_entity_by_label(const std::string& label) const;
@@ -554,7 +554,7 @@ private:
 
 	std::vector<std::string> preloads_; //future levels to preload
 
-	std::shared_ptr<water> water_;
+	std::shared_ptr<Water> water_;
 
 	std::map<std::string, movement_script> movement_scripts_;
 	std::vector<active_movement_script_ptr> active_movement_scripts_;

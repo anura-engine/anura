@@ -183,7 +183,7 @@ private:
 
 }
 
-FormulaCallableDefinitionPtr modify_FormulaCallableDefinition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def)
+FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def)
 {
 	const FormulaCallableDefinition::Entry* e = base_def->getEntry(slot);
 	ASSERT_LOG(e, "NO DEFINITION FOUND");
@@ -208,7 +208,7 @@ FormulaCallableDefinitionPtr modify_FormulaCallableDefinition(ConstFormulaCallab
 	return FormulaCallableDefinitionPtr(new modified_definition(base_def, slot, new_entry));
 }
 
-FormulaCallableDefinitionPtr executeCommand_callableDefinition(const std::string* i1, const std::string* i2, ConstFormulaCallableDefinitionPtr base, variant_type_ptr* types)
+FormulaCallableDefinitionPtr execute_command_callable_definition(const std::string* i1, const std::string* i2, ConstFormulaCallableDefinitionPtr base, variant_type_ptr* types)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -225,7 +225,7 @@ FormulaCallableDefinitionPtr executeCommand_callableDefinition(const std::string
 	return FormulaCallableDefinitionPtr(def);
 }
 
-FormulaCallableDefinitionPtr executeCommand_callableDefinition(const FormulaCallableDefinition::Entry* i1, const FormulaCallableDefinition::Entry* i2, ConstFormulaCallableDefinitionPtr base)
+FormulaCallableDefinitionPtr execute_command_callable_definition(const FormulaCallableDefinition::Entry* i1, const FormulaCallableDefinition::Entry* i2, ConstFormulaCallableDefinitionPtr base)
 {
 	simple_definition* def = new simple_definition;
 	def->set_base(base);
@@ -237,7 +237,7 @@ FormulaCallableDefinitionPtr executeCommand_callableDefinition(const FormulaCall
 	return FormulaCallableDefinitionPtr(def);
 }
 
-FormulaCallableDefinitionPtr create_MapFormulaCallableDefinition(variant_type_ptr value_type)
+FormulaCallableDefinitionPtr create_map_formula_callable_definition(variant_type_ptr value_type)
 {
 	simple_definition* def = new simple_definition;
 	FormulaCallableDefinition::Entry e("");
@@ -310,7 +310,7 @@ int add_callable_definition_init(void(*fn)())
 	return callable_init_routines().size();
 }
 
-void init_callableDefinitions()
+void init_callable_definitions()
 {
 	foreach(const std::function<void()>& fn, callable_init_routines()) {
 		fn();

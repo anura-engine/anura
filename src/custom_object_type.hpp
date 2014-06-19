@@ -107,8 +107,8 @@ public:
 
 	int timerFrequency() const { return timerFrequency_; }
 
-	const frame& defaultFrame() const;
-	const frame& getFrame(const std::string& key) const;
+	const Frame& defaultFrame() const;
+	const Frame& getFrame(const std::string& key) const;
 	bool hasFrame(const std::string& key) const;
 
 	const game_logic::const_formula_ptr& nextAnimationFormula() const { return next_animation_formula_; }
@@ -280,13 +280,13 @@ private:
 
 	int timerFrequency_;
 
-	typedef boost::intrusive_ptr<frame> frame_ptr;
+	typedef boost::intrusive_ptr<Frame> FramePtr;
 
-	typedef std::map<std::string, std::vector<frame_ptr> > frame_map;
+	typedef std::map<std::string, std::vector<FramePtr>> frame_map;
 	frame_map frames_;
 	variant available_frames_;
 
-	boost::intrusive_ptr<frame> defaultFrame_;
+	FramePtr defaultFrame_;
 
 	game_logic::const_formula_ptr next_animation_formula_;
 

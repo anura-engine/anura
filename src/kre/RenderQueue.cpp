@@ -59,7 +59,7 @@ namespace KRE
 	void RenderQueue::render(const WindowManagerPtr& wm) const 
 	{
 		for(auto r : renderables_) {
-			wm->render(r.second);
+			wm->render(r.second.get());
 		}
 	}
 

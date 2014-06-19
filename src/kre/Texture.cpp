@@ -79,15 +79,15 @@ namespace KRE
 			}
 		}
 		if(node.has_key("mipmaps")) {
-			ASSERT_LOG(node["mipmaps"].is_int(), "'mipmaps' not an integer type, found: " << node["mipmaps"].type_as_string());
+			ASSERT_LOG(node["mipmaps"].is_int(), "'mipmaps' not an integer type, found: " << node["mipmaps"].to_debug_string());
 			mipmaps_ = int(node["mipmaps"].as_int());
 		}
 		if(node.has_key("lod_bias")) {
-			ASSERT_LOG(node["lod_bias"].is_numeric(), "'lod_bias' not a numeric type, found: " << node["lod_bias"].type_as_string());
+			ASSERT_LOG(node["lod_bias"].is_numeric(), "'lod_bias' not a numeric type, found: " << node["lod_bias"].to_debug_string());
 			lod_bias_ = node["lod_bias"].as_float();
 		}
 		if(node.has_key("max_anisotropy")) {
-			ASSERT_LOG(node["max_anisotropy"].is_int(), "'max_anisotropy' not an integer type, found: " << node["max_anisotropy"].type_as_string());
+			ASSERT_LOG(node["max_anisotropy"].is_int(), "'max_anisotropy' not an integer type, found: " << node["max_anisotropy"].to_debug_string());
 			max_anisotropy_ = int(node["max_anisotropy"].as_int());
 		}
 		if(node.has_key("filtering")) {
@@ -116,7 +116,7 @@ namespace KRE
 				size_t list_size = node["filtering"].num_elements();
 				ASSERT_LOG(list_size == 3, "Size of list for 'filtering' attribute must be 3 elements. Found: " << list_size);
 				for(size_t n = 0; n != 3; ++n) {
-					ASSERT_LOG(node["filtering"][n].is_string(), "Element " << n << " of filtering is not a string: " << node["filtering"][0].type_as_string());
+					ASSERT_LOG(node["filtering"][n].is_string(), "Element " << n << " of filtering is not a string: " << node["filtering"][0].to_debug_string());
 					const std::string& f = node["filtering"][n].as_string();
 					if(f == "none") {
 						filtering_[n] = Filtering::NONE;
@@ -131,7 +131,7 @@ namespace KRE
 					}
 				}
 			} else {
-				ASSERT_LOG(false, "'filtering' must be either a string value or list of strings. Found: " << node["filtering"].type_as_string());
+				ASSERT_LOG(false, "'filtering' must be either a string value or list of strings. Found: " << node["filtering"].to_debug_string());
 			}
 		}
 		if(node.has_key("address_mode")) {
@@ -140,7 +140,7 @@ namespace KRE
 				ASSERT_LOG(list_size >= 1 && list_size <= 3, "Size of list for 'address_mode' attribute must be between 1 and 3 elements. Found: " << list_size);
 				size_t n = 0;
 				for(; n != list_size; ++n) {
-					ASSERT_LOG(node["address_mode"][n].is_string(), "Element " << n << " of 'address_mode' attribute is not a string: " << node["address_mode"][0].type_as_string());
+					ASSERT_LOG(node["address_mode"][n].is_string(), "Element " << n << " of 'address_mode' attribute is not a string: " << node["address_mode"][0].to_debug_string());
 					const std::string& am = node["address_mode"][n].as_string();
 					if(am == "wrap") {
 						address_mode_[n] = AddressMode::WRAP;
@@ -158,7 +158,7 @@ namespace KRE
 					address_mode_[n] = AddressMode::WRAP;
 				}
 			} else {
-				ASSERT_LOG(false, "'filtering' must be a list of strings. Found: " << node["filtering"].type_as_string());
+				ASSERT_LOG(false, "'filtering' must be a list of strings. Found: " << node["filtering"].to_debug_string());
 			}
 		}
 		if(node.has_key("border_color")) {

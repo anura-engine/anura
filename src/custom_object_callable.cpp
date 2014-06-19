@@ -171,7 +171,6 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "damage", "int" },
 		{ "hit_by", "null|custom_obj" },
 
-		{ "distortion", "null|object" },
 		{ "is_standing", "bool" },
 		{ "standing_info", "null|object" },
 	

@@ -24,6 +24,7 @@
 #pragma once
 
 #include <algorithm>
+#include <sstream>
 #include <vector>
 
 #include "../asserts.hpp"
@@ -86,6 +87,12 @@ namespace Geometry
 					*this = Rect<T>();
 					break;
 			}
+		}
+
+		std::string toString() const {
+			std::stringstream ss;
+			ss << x() << "," << y() << "," (x2()-1) << "," << (y2()-1);
+			return ss.str();
 		}
 
 		T x() const { return top_left_.x; }

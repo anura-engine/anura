@@ -195,6 +195,7 @@
     <ClInclude Include="..\..\src\decimal.hpp" />
     <ClInclude Include="..\..\src\dialog.hpp" />
     <ClInclude Include="..\..\src\difficulty.hpp" />
+    <ClInclude Include="..\..\src\distortion.hpp" />
     <ClInclude Include="..\..\src\drag_widget.hpp" />
     <ClInclude Include="..\..\src\draw_number.hpp" />
     <ClInclude Include="..\..\src\draw_primitive.hpp" />
@@ -554,6 +555,7 @@
     <ClCompile Include="..\..\src\decimal.cpp" />
     <ClCompile Include="..\..\src\dialog.cpp" />
     <ClCompile Include="..\..\src\difficulty.cpp" />
+    <ClCompile Include="..\..\src\distortion.cpp" />
     <ClCompile Include="..\..\src\drag_widget.cpp" />
     <ClCompile Include="..\..\src\draw_number.cpp" />
     <ClCompile Include="..\..\src\draw_primitive.cpp" />
