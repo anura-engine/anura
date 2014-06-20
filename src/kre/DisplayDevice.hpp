@@ -132,6 +132,8 @@ namespace KRE
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
 
+		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
+
 		static void BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 
 		static MaterialPtr CreateMaterial(const variant& node);

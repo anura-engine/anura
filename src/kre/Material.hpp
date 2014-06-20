@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include "Blend.hpp"
 #include "Geometry.hpp"
 #include "Texture.hpp"
 #include "../variant.hpp"
@@ -31,53 +32,6 @@ namespace KRE
 {
 	class Material;
 	typedef std::shared_ptr<Material> MaterialPtr;
-
-	class BlendMode
-	{
-	public:
-		enum class BlendModeConstants {
-			BM_ZERO,
-			BM_ONE,
-			BM_SRC_COLOR,
-			BM_ONE_MINUS_SRC_COLOR,
-			BM_DST_COLOR,
-			BM_ONE_MINUS_DST_COLOR,
-			BM_SRC_ALPHA,
-			BM_ONE_MINUS_SRC_ALPHA,
-			BM_DST_ALPHA,
-			BM_ONE_MINUS_DST_ALPHA,
-			BM_CONSTANT_COLOR,
-			BM_ONE_MINUS_CONSTANT_COLOR,
-			BM_CONSTANT_ALPHA,
-			BM_ONE_MINUS_CONSTANT_ALPHA,
-		};
-		BlendMode() : src_(BlendModeConstants::BM_SRC_ALPHA), dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {}
-		BlendMode(BlendModeConstants src, BlendModeConstants dst) : src_(src), dst_(dst) {}
-		BlendModeConstants Source() const { return src_; }
-		BlendModeConstants Destination() const { return dst_; }
-		BlendModeConstants Src() const { return src_; }
-		BlendModeConstants Dst() const { return dst_; }
-		void Set(BlendModeConstants src, BlendModeConstants dst) {
-			src_ = src;
-			dst_ = dst;
-		}
-		void SetSource(BlendModeConstants src) {
-			src_ = src;
-		}
-		void SetDestination(BlendModeConstants dst) {
-			dst_ = dst;
-		}
-		void SetSrc(BlendModeConstants src) {
-			src_ = src;
-		}
-		void SetDst(BlendModeConstants dst) {
-			dst_ = dst;
-		}
-		void Set(const variant& node);
-	private:
-		BlendModeConstants src_;
-		BlendModeConstants dst_;
-	};
 
 	class Material
 	{
@@ -100,7 +54,7 @@ namespace KRE
 		void EnableDepthWrite(bool en=true);
 		void EnableDepthCheck(bool en=true);
 		void SetBlendMode(const BlendMode& bm);
-		void SetBlendMode(BlendMode::BlendModeConstants src, BlendMode::BlendModeConstants dst);
+		void SetBlendMode(BlendModeConstants src, BlendModeConstants dst);
 
 		float width() const;
 		float height() const;

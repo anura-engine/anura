@@ -470,7 +470,8 @@ Level::Level(const std::string& level_cfg, variant node)
 	}
 
 	if(node.has_key("water")) {
-		water_.reset(new water(node["water"]));
+		water_.reset(new Water(node["water"]));
+		AttachObject(water_);
 	}
 
 	for(variant script_node : node["script"].as_list()) {
@@ -577,11 +578,9 @@ void Level::load_character(variant c)
 		chars_.back()->setId(chars_.size());
 	}
 	if(chars_.back()->isHuman()) {
-#if !defined(__native_client__)
 		if(players_.size() == multiplayer::slot()) {
 			last_touched_player_ = player_ = chars_.back();
 		}
-#endif
 		ASSERT_LOG(!g_player_type || g_player_type->match(variant(chars_.back().get())), "Player object being added to level does not match required player type. " << chars_.back()->getDebugDescription() << " is not a " << g_player_type->to_string());
 
 		players_.push_back(chars_.back());
@@ -727,14 +726,7 @@ void Level::finishLoading()
 	wml_chars_.clear();
 	serialized_objects_.clear();
 
-	controls::new_level(cycle_, 
-		players_.empty() ? 1 : players_.size(), 
-#if !defined(__native_client__)
-		multiplayer::slot()	
-#else
-		0
-#endif
-		);
+	controls::new_level(cycle_, players_.empty() ? 1 : players_.size(), multiplayer::slot());
 
 	//start loading FML for previous and next level
 	if(!previous_level().empty()) {
@@ -811,11 +803,9 @@ void Level::finishLoading()
 
 void Level::setMultiplayerSlot(int slot)
 {
-#if !defined(__native_client__)
 	ASSERT_INDEX_INTO_VECTOR(slot, players_);
 	last_touched_player_ = player_ = players_[slot];
 	controls::new_level(cycle_, players_.empty() ? 1 : players_.size(), slot);
-#endif
 }
 
 void Level::load_save_point(const Level& lvl)
@@ -2005,10 +1995,6 @@ void Level::draw(int x, int y, int w, int h) const
 	w += widest_tile_;
 	h += highest_tile_;
 	
-	if(iso_world_) {
-		iso_world_->draw();
-	}
-
 	{
 		std::sort(active_chars_.begin(), active_chars_.end(), zorder_compare);
 
@@ -2021,30 +2007,29 @@ void Level::draw(int x, int y, int w, int h) const
 			++hit;
 		}
 	
-	if(editor_) {
-		editor_chars_buf = active_chars_;
-		rect screen_area(x, y, w, h);
+		if(editor_) {
+			editor_chars_buf = active_chars_;
+			rect screen_area(x, y, w, h);
 
-		//in the editor draw all characters that are on screen as well
-		//as active ones.
-		for(const EntityPtr& c : chars_) {
-			if(std::find(editor_chars_buf.begin(), editor_chars_buf.end(), c) != editor_chars_buf.end()) {
-				continue;
+			//in the editor draw all characters that are on screen as well
+			//as active ones.
+			for(const EntityPtr& c : chars_) {
+				if(std::find(editor_chars_buf.begin(), editor_chars_buf.end(), c) != editor_chars_buf.end()) {
+					continue;
+				}
+
+				if(std::find(active_chars_.begin(), active_chars_.end(), c) != active_chars_.end() || rects_intersect(c->getDrawRect(), screen_area)) {
+					editor_chars_buf.push_back(c);
+				}
 			}
 
-			if(std::find(active_chars_.begin(), active_chars_.end(), c) != active_chars_.end() || rects_intersect(c->getDrawRect(), screen_area)) {
-				editor_chars_buf.push_back(c);
-			}
+			std::sort(editor_chars_buf.begin(), editor_chars_buf.end(), zorder_compare);
+			chars_ptr = &editor_chars_buf;
 		}
 
-		std::sort(editor_chars_buf.begin(), editor_chars_buf.end(), zorder_compare);
-		chars_ptr = &editor_chars_buf;
-		}
 		const std::vector<EntityPtr>& chars = *chars_ptr;
-
 		std::vector<EntityPtr>::const_iterator entity_itor = chars.begin();
 
-	
 		bool water_drawn = true;
 		int water_zorder = 0;
 		if(water_) {
@@ -2472,9 +2457,7 @@ void Level::process()
 
 	controls::read_local_controls();
 
-#if !defined(__native_client__)
 	multiplayer::send_and_receive();
-#endif
 
 	do_processing();
 

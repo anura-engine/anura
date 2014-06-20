@@ -21,24 +21,27 @@
 	   distribution.
 */
 
-#pragma once
-
-#include "BlendOGL.hpp"
-#include "Material.hpp"
-#include "WindowManagerFwd.hpp"
+#include "Blend.hpp"
 
 namespace KRE
 {
-	class OpenGLMaterial : public Material
+	class BlendModeManagerOGL
 	{
 	public:
-		OpenGLMaterial(const variant& node);
-		OpenGLMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
-		virtual ~OpenGLMaterial();
+		BlendModeManagerOGL(const BlendMode& bm);
+		~BlendModeManagerOGL();
 	private:
-		void HandleApply() override;
-		void HandleUnapply() override;
-		TexturePtr CreateTexture(const variant& node) override;
-		std::unique_ptr<BlendModeManagerOGL> blend_mode_manager_;
+		const BlendMode& blend_mode_;
+	};
+
+	class BlendEquationImplOGL : public BlendEquationImplBase
+	{
+	public:
+		BlendEquationImplOGL();
+		~BlendEquationImplOGL();
+		void apply(const BlendEquation& eqn) const override;
+		void clear(const BlendEquation& eqn) const override;
+	private:
+		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
 	};
 }

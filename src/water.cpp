@@ -78,11 +78,10 @@ void Water::init()
 	waterline_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 	ab->AddAttribute(AttributeBasePtr(waterline_));
 	ab->SetDrawMode(AttributeSet::DrawMode::TRIANGLE_STRIP);
-	// set blend func as glBlendFunc(GL_ONE, GL_ONE);
-	// if(KRE::DisplayDevice::CheckForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
-	// set blend equation as GL_FUNC_REVERSE_SUBTRACT
-	// }
-	// If we can't then we need to manual process the color.
+	if(DisplayDevice::CheckForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+		ab->setBlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT);
+	}
+	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
 	AddAttributeSet(ab);
 
 	auto seg1 = DisplayDevice::CreateAttributeSet(true);
@@ -99,6 +98,7 @@ void Water::init()
 	line2_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 	seg2->AddAttribute(AttributeBasePtr(line2_));
 	seg2->SetDrawMode(AttributeSet::DrawMode::LINE_STRIP);
+	seg2->setColor(Color(0.0, 0.9, 0.75, 0.5));
 	AddAttributeSet(seg2);
 }
 
@@ -125,7 +125,7 @@ variant Water::write() const
 
 void Water::addRect(const rect& r, const KRE::Color& color, variant obj)
 {
-	std::cerr << "ADD WATER: " << r << "\n";
+	LOG_INFO("ADD WATER: " << r);
 	areas_.emplace_back(r, color, obj);
 }
 
@@ -183,25 +183,6 @@ bool Water::drawArea(const Water::area& a) const
 
 	KRE::Color water_color = a.color_;
 
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	if (glBlendEquationOES) {
-		glBlendEquationOES(GL_FUNC_REVERSE_SUBTRACT_OES);
-	}
-#elif defined(GL_OES_blend_subtract)
-	glBlendEquationOES(GL_FUNC_REVERSE_SUBTRACT_OES);
-#elif defined(USE_SHADERS)
-	glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-#else
-	if(GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(GL_FUNC_REVERSE_SUBTRACT);
-	} else {
-		const int max_color = std::max(water_color[0], std::max(water_color[1], water_color[2]));
-		water_color[0] = (max_color - water_color[0])/8;
-		water_color[1] = (max_color - water_color[1])/8;
-		water_color[2] = (max_color - water_color[2])/8;
-	}
-#endif
-
 	if(KRE::DisplayDevice::CheckForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
 		const double max_color = std::max(water_color.r(), std::max(water_color.g(), water_color.b()));
 		water_color.setRed((max_color - water_color.r())/8.0);
@@ -229,75 +210,26 @@ bool Water::drawArea(const Water::area& a) const
 	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()), col);
 	waterline_->Update(&water_rect);
 
-
-
-	glColor4ub(water_color[0], water_color[1], water_color[2], water_color[3]);
-	gles2::manager gles2_manager(gles2::get_simple_shader());
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, vertices);
-	glBlendFunc(GL_ONE, GL_ONE);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, sizeof(vertices)/sizeof(GLfloat)/2);
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	if (glBlendEquationOES) {
-		glBlendEquationOES(GL_FUNC_ADD_OES);
-	}
-#elif defined(GL_OES_blend_subtract)
-	glBlendEquationOES(GL_FUNC_ADD_OES);
-#elif defined(USE_SHADERS)
-	glBlendEquation(GL_FUNC_ADD);
-#else
-	if (GLEW_EXT_blend_equation_separate && (GLEW_ARB_imaging || GLEW_VERSION_1_4)) {
-		glBlendEquation(GL_FUNC_ADD);
-	}
-#endif
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glLineWidth(2.0);
+	// XXX set line width uniform to 2.0
 
 	typedef std::pair<int, int> Segment;
 
 	const int EndSegmentSize = 20;
 
 	for(const Segment& seg : a.surface_segments_) {
-		glColor4f(1.0, 1.0, 1.0, 1.0);
-		float varray[] = {
-			static_cast<float>(seg.first - EndSegmentSize), static_cast<float>(waterline_rect.y),
-			static_cast<float>(seg.first), static_cast<float>(waterline_rect.y),
-			static_cast<float>(seg.second), static_cast<float>(waterline_rect.y),
-			static_cast<float>(seg.second + EndSegmentSize), static_cast<float>(waterline_rect.y),
-		};
-		static const unsigned char vcolors[] = {
-			255, 255, 255, 0,
-			255, 255, 255, 255,
-			255, 255, 255, 255,
-			255, 255, 255, 0,
-		};
-		{
-			gles2::manager gles2_manager(gles2::get_simple_col_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, vcolors);
-			glDrawArrays(GL_LINE_STRIP, 0, 4);
-		}
-	
-		//draw a second line, in a different color, just below the first
-		glColor4f(0.0, 0.9, 0.75, 0.5);
-		float varray2[] = {
-			static_cast<float>(seg.first - EndSegmentSize), static_cast<float>(waterline_rect.y+2),
-			static_cast<float>(seg.first), static_cast<float>(waterline_rect.y+2),
-			static_cast<float>(seg.second), static_cast<float>(waterline_rect.y+2),
-			static_cast<float>(seg.second + EndSegmentSize), static_cast<float>(waterline_rect.y+2),
-		};
-		static const unsigned char vcolors2[] = {
-			0, 230, 200, 0,
-			0, 230, 200, 128,
-			0, 230, 200, 128,
-			0, 230, 200, 0,
-		};
-		{
-			gles2::manager gles2_manager(gles2::get_simple_col_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray2);
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, vcolors2);
-			glDrawArrays(GL_LINE_STRIP, 0, 4);
-		}
+
+		std::vector<KRE::vertex_color> line1;
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y), glm::u8vec4(255, 255, 255, 0));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y), glm::u8vec4(255, 255, 255, 0));
+		line1_->Update(&line1);
+
+		std::vector<KRE::vertex_color> line2;
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 0));
 	}
 
 	return true;

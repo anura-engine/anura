@@ -25,6 +25,7 @@
 
 #include "../asserts.hpp"
 #include "AttributeSetOpenGL.hpp"
+#include "BlendOGL.hpp"
 #include "CameraObject.hpp"
 #include "CanvasOGL.hpp"
 #include "ClipScopeOGL.hpp"
@@ -231,6 +232,9 @@ namespace KRE
 		auto shader = dd->GetShader();
 		shader->MakeActive();
 
+		BlendEquation::Manager blend(r->getBlendEquation());
+		BlendModeManagerOGL blend_mode(r->getBlendMode());
+
 		// lighting can be switched on or off at a material level.
 		// so we grab the return of the Material::Apply() function
 		// to find whether to apply it or not.
@@ -282,6 +286,14 @@ namespace KRE
 		for(auto as : r->GetAttributeSet()) {
 			GLenum draw_mode = ConvertDrawingMode(as->GetDrawMode());
 			std::vector<GLuint> enabled_attribs;
+
+			// apply blend, if any, from attribute set.
+			BlendEquation::Manager attrset_eq(r->getBlendEquation());
+			BlendModeManagerOGL attrset_mode(r->getBlendMode());
+
+			if(shader->GetColorUniform() != shader->UniformsIteratorEnd() && as->getColor()) {
+				shader->SetUniformValue(shader->GetColorUniform(), as->getColor()->asFloatVector());
+			}
 
 			for(auto& attr : as->GetAttributes()) {
 				auto attr_hw = attr->GetDeviceBufferData();
@@ -362,7 +374,7 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
 	{
-		auto surface = Surface::Create(filename);
+		auto surface = Surface::create(filename);
 		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
 	}
 
@@ -415,6 +427,11 @@ namespace KRE
 	ClipScopePtr DisplayDeviceOpenGL::createClipScope(const rect& r)
 	{
 		return ClipScopePtr(new ClipScopeOGL(r));
+	}
+
+	BlendEquationImplBasePtr DisplayDeviceOpenGL::getBlendEquationImpl()
+	{
+		return BlendEquationImplBasePtr(new BlendEquationImplOGL());
 	}
 	
 	bool DisplayDeviceOpenGL::DoCheckForFeature(DisplayDeviceCapabilties cap)

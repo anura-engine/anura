@@ -72,6 +72,13 @@ namespace KRE
 		const MaterialPtr& Material() const { return material_; }
 		void SetMaterial(const MaterialPtr& material);
 
+		const BlendEquation& getBlendEquation() const { return blend_eqn_; }
+		void setBlendEquation(const BlendEquation& eqn) { blend_eqn_ = eqn; }
+
+		const BlendMode& getBlendMode() const { return blend_mode_; }
+		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.Set(src, dst); }
+
 		const RenderTargetPtr& GetRenderTarget() const { return render_target_; }
 		void SetRenderTarget(const RenderTargetPtr& rt);
 
@@ -102,6 +109,8 @@ namespace KRE
 		RenderTargetPtr render_target_;
 		Color color_;
 		bool color_set_;
+		BlendEquation blend_eqn_;
+		BlendMode blend_mode_;
 
 		std::vector<AttributeSetPtr> attributes_;
 		//std::vector<UniformSetPtr> uniforms_;

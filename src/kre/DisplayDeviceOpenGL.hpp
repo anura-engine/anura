@@ -48,6 +48,8 @@ namespace KRE
 		CanvasPtr GetCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
 
+		BlendEquationImplBasePtr getBlendEquationImpl() override;
+
 		void Init(size_t width, size_t height) override;
 		void PrintDeviceInfo() override;
 

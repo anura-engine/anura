@@ -265,6 +265,8 @@
     <ClInclude Include="..\..\src\key_button.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSetOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Blend.hpp" />
+    <ClInclude Include="..\..\src\kre\BlendOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blittable.hpp" />
     <ClInclude Include="..\..\src\kre\CameraObject.hpp" />
     <ClInclude Include="..\..\src\kre\Canvas.hpp" />
@@ -613,6 +615,8 @@
     <ClCompile Include="..\..\src\key_button.cpp" />
     <ClCompile Include="..\..\src\kre\AttributeSet.cpp" />
     <ClCompile Include="..\..\src\kre\AttributeSetOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Blend.cpp" />
+    <ClCompile Include="..\..\src\kre\BlendOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Blittable.cpp" />
     <ClCompile Include="..\..\src\kre\CameraObject.cpp" />
     <ClCompile Include="..\..\src\kre\Canvas.cpp" />

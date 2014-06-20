@@ -31,6 +31,8 @@
 #include <memory>
 #include <vector>
 #include "../asserts.hpp"
+#include "Blend.hpp"
+#include "../Color.hpp"
 #include "DisplayDeviceFwd.hpp"
 #include "Util.hpp"
 
@@ -343,6 +345,16 @@ namespace KRE
 		virtual bool IsHardwareBacked() const { return false; }
 
 		std::vector<AttributeBasePtr>& GetAttributes() { return attributes_; }
+
+		const BlendEquation& getBlendEquation() const { return blend_eqn_; }
+		void setBlendEquation(const BlendEquation& eqn) { blend_eqn_ = eqn; }
+
+		const BlendMode& getBlendMode() const { return blend_mode_; }
+		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.Set(src, dst); }
+
+		ColorPtr getColor() const { return color_; }
+		void setColor(const Color& color) { color_.reset(new Color(color)); }
 	protected:
 		const void* GetIndexData() const { 
 			switch(index_type_) {
@@ -367,6 +379,9 @@ namespace KRE
 		std::vector<AttributeBasePtr> attributes_;
 		size_t count_;
 		ptrdiff_t offset_;
+		BlendEquation blend_eqn_;
+		BlendMode blend_mode_;
+		KRE::ColorPtr color_;
 	};
 	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;
 }

@@ -31,6 +31,7 @@
 #include <string>
 #include <vector>
 
+#include "ColorTransform.hpp"
 #include "kre/Geometry.hpp"
 #include "kre/SceneNode.hpp"
 

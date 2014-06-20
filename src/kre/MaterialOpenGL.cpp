@@ -22,36 +22,12 @@
 */
 
 #include "../asserts.hpp"
+#include "BlendOGL.hpp"
 #include "MaterialOpenGL.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
 {
-	namespace
-	{
-		GLenum convert_blend_mode(BlendMode::BlendModeConstants bm)
-		{
-			switch(bm) {
-				case BlendMode::BlendModeConstants::BM_ZERO:					return GL_ZERO;
-				case BlendMode::BlendModeConstants::BM_ONE:						return GL_ONE;
-				case BlendMode::BlendModeConstants::BM_SRC_COLOR:				return GL_SRC_COLOR;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_COLOR:		return GL_ONE_MINUS_SRC_COLOR;
-				case BlendMode::BlendModeConstants::BM_DST_COLOR:				return GL_DST_COLOR;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_DST_COLOR:		return GL_ONE_MINUS_DST_COLOR;
-				case BlendMode::BlendModeConstants::BM_SRC_ALPHA:				return GL_SRC_ALPHA;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA:		return GL_ONE_MINUS_SRC_ALPHA;
-				case BlendMode::BlendModeConstants::BM_DST_ALPHA:				return GL_DST_ALPHA;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_DST_ALPHA:		return GL_ONE_MINUS_DST_ALPHA;
-				case BlendMode::BlendModeConstants::BM_CONSTANT_COLOR:			return GL_CONSTANT_COLOR;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_CONSTANT_COLOR:return GL_ONE_MINUS_CONSTANT_COLOR;
-				case BlendMode::BlendModeConstants::BM_CONSTANT_ALPHA:			return GL_CONSTANT_ALPHA;
-				case BlendMode::BlendModeConstants::BM_ONE_MINUS_CONSTANT_ALPHA:return GL_ONE_MINUS_CONSTANT_ALPHA;
-			}
-			ASSERT_LOG(false, "Unrecognised blend mode");
-			return GL_ZERO;
-		}
-	}
-
 	OpenGLMaterial::OpenGLMaterial(const variant& node) 
 	{
 		Init(node);
@@ -83,11 +59,7 @@ namespace KRE
 			(*it)->Bind();
 		}
 
-		auto& bm = GetBlendMode();
-		if(bm.Src() != BlendMode::BlendModeConstants::BM_SRC_ALPHA 
-			|| bm.Dst() != BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
-			glBlendFunc(convert_blend_mode(bm.Src()), convert_blend_mode(bm.Dst()));
-		}
+		blend_mode_manager_.reset(new BlendModeManagerOGL(GetBlendMode()));
 
 		if(DoDepthCheck()) {
 			glEnable(GL_DEPTH_TEST);
@@ -105,17 +77,13 @@ namespace KRE
 
 	void OpenGLMaterial::HandleUnapply() 
 	{
+		blend_mode_manager_.reset();
+
 		if(DoDepthCheck() || DoDepthWrite()) {
 			glDisable(GL_DEPTH_TEST);
 			if(DoDepthWrite()) {
 				glDepthFunc(GL_LESS);
 			}
-		}
-
-		auto& bm = GetBlendMode();
-		if(bm.Src() != BlendMode::BlendModeConstants::BM_SRC_ALPHA 
-			|| bm.Dst() != BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 	}
 
@@ -123,7 +91,7 @@ namespace KRE
 	{
 		ASSERT_LOG(node.has_key("image") || node.has_key("texture"), "Must have either 'image' or 'texture' attribute.");
 		const std::string image_name = node.has_key("image") ? node["image"].as_string() : node["texture"].as_string();
-		auto surface = Surface::Create(image_name);
+		auto surface = Surface::create(image_name);
 		return TexturePtr(new OpenGLTexture(surface, node));
 	}
 }
