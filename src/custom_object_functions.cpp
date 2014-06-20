@@ -3445,16 +3445,23 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(module_launch)
 
-FUNCTION_DEF(eval, 1, 1, "eval(str): evaluate the given string as FFL")
+FUNCTION_DEF(eval, 1, 2, "eval(str, [arg map]): evaluate the given string as FFL")
 	variant s = args()[0]->evaluate(variables);
 	try {
+		const_formula_callable_ptr callable(&variables);
+
+		if(args().size() > 1) {
+			variant v = args()[1]->evaluate(variables);
+			callable = map_into_callable(v);
+		}
+
 		const assert_recover_scope recovery_scope;
 		const_formula_ptr f(formula::create_optional_formula(s, &get_custom_object_functions_symbol_table()));
 		if(!f) {
 			return variant();
 		}
 
-		return f->execute(variables);
+		return f->execute(*callable);
 	} catch(type_error&) {
 	} catch(validation_failure_exception&) {
 	}
@@ -3462,6 +3469,7 @@ FUNCTION_DEF(eval, 1, 1, "eval(str): evaluate the given string as FFL")
 	return variant();
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string")
+	ARG_TYPE("map")
 RETURN_TYPE("any")
 END_FUNCTION_DEF(eval)
 
