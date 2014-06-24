@@ -43,11 +43,11 @@ public:
 	static ConstGraphicalFontPtr get(const std::string& id);
 	explicit GraphicalFont(variant node);
 	const std::string& id() const { return id_; }
-	rect draw(int x, int y, const std::string& text, int size=2, int alpha=255) const;
+	rect draw(int x, int y, const std::string& text, int size=2, const KRE::Color& color=KRE::Color::colorWhite()) const;
 	rect dimensions(const std::string& text, int size=2) const;
 
 private:
-	rect doDraw(int x, int y, const std::string& text, bool draw_text, int size) const;
+	rect doDraw(int x, int y, const std::string& text, bool draw_text, int size, const KRE::Color& color) const;
 
 	std::string id_;
 

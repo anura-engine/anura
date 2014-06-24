@@ -110,6 +110,9 @@ namespace Geometry
 		const Point<T>& top_left() const { return top_left_; }
 		const Point<T>& bottom_right() const { return bottom_right_; }
 
+		int rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output) const;
+		Rect<T> rect_union(const Rect<T>& a, const Rect<T>& b) const;
+
 		variant write() const;
 
 		void operator+=(const Point<T>& p) {

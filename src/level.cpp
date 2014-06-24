@@ -199,7 +199,7 @@ Level::Level(const std::string& level_cfg, variant node)
 		id_(level_cfg),
 	  x_resolution_(0), y_resolution_(0),
 	  set_screen_resolution_on_entry_(false),
-	  highlight_layer_(INT_MIN),
+	  highlight_layer_(std::numeric_limits<int>::min()),
 	  num_compiled_tiles_(0),
 	  entered_portal_active_(false), save_point_x_(-1), save_point_y_(-1),
 	  editor_(false), show_foreground_(true), show_background_(true), dark_(false), 
@@ -472,11 +472,6 @@ Level::Level(const std::string& level_cfg, variant node)
 	if(node.has_key("water")) {
 		water_.reset(new Water(node["water"]));
 		AttachObject(water_);
-	}
-
-	for(variant script_node : node["script"].as_list()) {
-		movement_script s(script_node);
-		movement_scripts_[s.id()] = s;
 	}
 
 	sub_level_str_ = node["sub_levels"].as_string_default();
@@ -759,7 +754,7 @@ void Level::finishLoading()
 
 	} //end serialization read scope. Now all objects should be fully resolved.
 
-	if((g_respect_difficulty || preferences::force_difficulty() != INT_MIN) && !editor_) {
+	if((g_respect_difficulty || preferences::force_difficulty() != std::numeric_limits<int>::min()) && !editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
 			if(chars_[n].get() != NULL && !chars_[n]->appearsAtDifficulty(difficulty)) {
@@ -1090,17 +1085,18 @@ void Level::flip_variations(int xtile, int ytile, int delta)
 	rebuild_tiles_rect(rect(xtile*TileSize, ytile*TileSize, TileSize, TileSize));
 }
 
-namespace {
-struct TileInRect {
-	explicit TileInRect(const rect& r) : rect_(r)
-	{}
+namespace 
+{
+	struct TileInRect {
+		explicit TileInRect(const rect& r) : rect_(r)
+		{}
 
-	bool operator()(const LevelTile& t) const {
-		return pointInRect(point(t.x, t.y), rect_);
-	}
+		bool operator()(const LevelTile& t) const {
+			return pointInRect(point(t.x, t.y), rect_);
+		}
 
-	rect rect_;
-};
+		rect rect_;
+	};
 }
 
 void Level::rebuild_tiles_rect(const rect& r)
@@ -1233,7 +1229,7 @@ variant Level::write() const
 		LevelObject::setCurrentPalette(palettes_used_);
 
 		int num_tiles = 0;
-		int last_zorder = INT_MIN;
+		int last_zorder = std::numeric_limits<int>::min();
 		int basex = 0, basey = 0;
 		int last_x = 0, last_y = 0;
 		std::string tiles_str;
@@ -1260,7 +1256,7 @@ variant Level::write() const
 
 				last_zorder = tiles_[n].zorder;
 
-				basex = basey = INT_MAX;
+				basex = basey = std::numeric_limits<int>::max();
 				for(int m = n; m != tiles_.size() && tiles_[m].zorder == tiles_[n].zorder; ++m) {
 					if(tiles_[m].x < basex) {
 						basex = tiles_[m].x;
@@ -1467,10 +1463,6 @@ variant Level::write() const
 		}
 	}
 
-	for(std::map<std::string, movement_script>::const_iterator i = movement_scripts_.begin(); i != movement_scripts_.end(); ++i) {
-		res.add("script", i->second.write());
-	}
-
 	if(num_compiled_tiles_ > 0) {
 		res.add("num_compiled_tiles", num_compiled_tiles_);
 		for(variant compiled_node : wml_compiled_tiles_) {
@@ -1589,10 +1581,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	glPushMatrix();
 
-	graphics::distortion_translation distort_translation;
-	
 	// parallax scrolling for tiles.
-	std::map<int, tile_map>::const_iterator tile_map_iterator = tile_maps_.find(layer);
+	auto tile_map_iterator = tile_maps_.find(layer);
 	if(tile_map_iterator != tile_maps_.end()) {
 		int scrollx = tile_map_iterator->second.getXSpeed();
 		int scrolly = tile_map_iterator->second.getYSpeed();
@@ -1601,7 +1591,6 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		const int diffy = ((scrolly - 100)*y)/100;
 
 		glTranslatef(diffx, diffy, 0.0);
-		distort_translation.translate(diffx, diffy);
 		
 		//here, we adjust the screen bounds (they're a first order optimization) to account for the parallax shift
 		x -= diffx;
@@ -1634,8 +1623,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	                          (x + w)/TileSize - (x + w < 0 ? 1 : 0),
 							  (y + h)/TileSize - (y + h < 0 ? 1 : 0));
 
-	std::vector<layer_blit_info::IndexType>& opaque_indexes = blit_info.opaque_indexes;
-	std::vector<layer_blit_info::IndexType>& translucent_indexes = blit_info.translucent_indexes;
+	auto& opaque_indexes = blit_info.opaque_indexes;
+	auto& translucent_indexes = blit_info.translucent_indexes;
 
 	if(blit_info.tile_positions != tile_positions || editor_) {
 		blit_info.tile_positions = tile_positions;
@@ -2338,7 +2327,7 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 	for(int xpos = 0; xpos < w/TileSize + 4; ++xpos) {
 		for(int ypos = 0; ypos < h/TileSize + 4; ++ypos) {
 			const tile_pos pos(tile_x + xpos, tile_y + ypos);
-			const tile_solid_info* info = solid_.find(pos);
+			const TileSolidInfo* info = solid_.find(pos);
 			if(info == NULL) {
 				continue;
 			}
@@ -2396,6 +2385,7 @@ void Level::draw_background(int x, int y, int rotation) const
 	if(show_background_ == false) {
 		return;
 	}
+	auto& wnd = KRE::WindowManager::getMainWindow();
 
 	if(background_) {
 #ifdef USE_SHADERS
@@ -2404,8 +2394,8 @@ void Level::draw_background(int x, int y, int rotation) const
 #endif
 		static std::vector<rect> opaque_areas;
 		opaque_areas.clear();
-		int screen_width = graphics::screen_width();
-		int screen_height = graphics::screen_height();
+		int screen_width = wnd->width();
+		int screen_height = wnd->height();
 		if(last_draw_position().zoom < 1.0) {
 			screen_width /= last_draw_position().zoom;
 			screen_height /= last_draw_position().zoom;
@@ -2419,7 +2409,7 @@ void Level::draw_background(int x, int y, int rotation) const
 
 				if(intersection.w() == screen_area.w() || intersection.h() == screen_area.h()) {
 					rect result[2];
-					const int nrects = rect_difference(screen_area, intersection, result);
+					const int nrects = rect::rect_difference(screen_area, intersection, result);
 					ASSERT_LOG(nrects <= 2, "TOO MANY RESULTS " << nrects << " IN " << screen_area << " - " << intersection);
 					if(nrects < 1) {
 						//background is completely obscured, so return
@@ -2622,9 +2612,9 @@ void Level::erase_char(EntityPtr c)
 	solid_chars_.clear();
 }
 
-bool Level::isSolid(const level_solid_map& map, const Entity& e, const std::vector<point>& points, const surface_info** surf_info) const
+bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector<point>& points, const SurfaceInfo** surf_info) const
 {
-	const tile_solid_info* info = NULL;
+	const TileSolidInfo* info = NULL;
 	int prev_x = std::numeric_limits<int>::min(), prev_y = std::numeric_limits<int>::min();
 
 	const Frame& current_frame = e.getCurrentFrame();
@@ -2691,7 +2681,7 @@ bool Level::isSolid(const level_solid_map& map, const Entity& e, const std::vect
 	return false;
 }
 
-bool Level::isSolid(const level_solid_map& map, int x, int y, const surface_info** surf_info) const
+bool Level::isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** surf_info) const
 {
 	tile_pos pos(x/TileSize, y/TileSize);
 	x = x%TileSize;
@@ -2706,7 +2696,7 @@ bool Level::isSolid(const level_solid_map& map, int x, int y, const surface_info
 		y += TileSize;
 	}
 
-	const tile_solid_info* info = map.find(pos);
+	const TileSolidInfo* info = map.find(pos);
 	if(info != NULL) {
 		if(info->all_solid) {
 			if(surf_info) {
@@ -2731,7 +2721,7 @@ bool Level::isSolid(const level_solid_map& map, int x, int y, const surface_info
 	return false;
 }
 
-bool Level::standable(const rect& r, const surface_info** info) const
+bool Level::standable(const rect& r, const SurfaceInfo** info) const
 {
 	const int ybegin = r.y();
 	const int yend = r.y2();
@@ -2749,7 +2739,7 @@ bool Level::standable(const rect& r, const surface_info** info) const
 	return false;
 }
 
-bool Level::standable(int x, int y, const surface_info** info) const
+bool Level::standable(int x, int y, const SurfaceInfo** info) const
 {
 	if(isSolid(solid_, x, y, info) || isSolid(standable_, x, y, info)) {
 	   return true;
@@ -2758,7 +2748,7 @@ bool Level::standable(int x, int y, const surface_info** info) const
 	return false;
 }
 
-bool Level::standable_tile(int x, int y, const surface_info** info) const
+bool Level::standable_tile(int x, int y, const SurfaceInfo** info) const
 {
 	if(isSolid(solid_, x, y, info) || isSolid(standable_, x, y, info)) {
 		return true;
@@ -2768,17 +2758,17 @@ bool Level::standable_tile(int x, int y, const surface_info** info) const
 }
 
 
-bool Level::solid(int x, int y, const surface_info** info) const
+bool Level::solid(int x, int y, const SurfaceInfo** info) const
 {
 	return isSolid(solid_, x, y, info);
 }
 
-bool Level::solid(const Entity& e, const std::vector<point>& points, const surface_info** info) const
+bool Level::solid(const Entity& e, const std::vector<point>& points, const SurfaceInfo** info) const
 {
 	return isSolid(solid_, e, points, info);
 }
 
-bool Level::solid(int xbegin, int ybegin, int w, int h, const surface_info** info) const
+bool Level::solid(int xbegin, int ybegin, int w, int h, const SurfaceInfo** info) const
 {
 	const int xend = xbegin + w;
 	const int yend = ybegin + h;
@@ -2794,7 +2784,7 @@ bool Level::solid(int xbegin, int ybegin, int w, int h, const surface_info** inf
 	return false;
 }
 
-bool Level::solid(const rect& r, const surface_info** info) const
+bool Level::solid(const rect& r, const SurfaceInfo** info) const
 {
 	//TODO: consider optimizing this function.
 	const int ybegin = r.y();
@@ -3210,7 +3200,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 	ypos = round_tile_size(ypos);
 
 	tile_pos base(xpos/TileSize, ypos/TileSize);
-	const tile_solid_info* info = solid_.find(base);
+	const TileSolidInfo* info = solid_.find(base);
 	if(info == NULL || info->all_solid == false && info->bitmap.any() == false) {
 		return result;
 	}
@@ -3235,7 +3225,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 				continue;
 			}
 
-			const tile_solid_info* info = solid_.find(pos);
+			const TileSolidInfo* info = solid_.find(pos);
 			if(info == NULL || info->all_solid == false && info->bitmap.any() == false) {
 				continue;
 			}
@@ -3364,7 +3354,7 @@ void Level::add_solid_rect(int x1, int y1, int x2, int y2, int friction, int tra
 	for(int y = y1; y < y2; y += TileSize) {
 		for(int x = x1; x < x2; x += TileSize) {
 			tile_pos pos(x/TileSize, y/TileSize);
-			tile_solid_info& s = solid_.insert_or_find(pos);
+			TileSolidInfo& s = solid_.insertOrFind(pos);
 			s.all_solid = true;
 			s.info.friction = friction;
 			s.info.traction = traction;
@@ -3376,7 +3366,7 @@ void Level::add_solid_rect(int x1, int y1, int x2, int y2, int friction, int tra
 			}
 
 			if(info_str.empty() == false) {
-				s.info.info = surface_info::get_info_str(info_str);
+				s.info.info = SurfaceInfo::get_info_str(info_str);
 			}
 		}
 	}
@@ -3392,7 +3382,7 @@ void Level::add_standable(int x, int y, int friction, int traction, int damage, 
 	set_solid(standable_, x, y, friction, traction, damage, info);
 }
 
-void Level::set_solid(level_solid_map& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
+void Level::set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
 {
 	tile_pos pos(x/TileSize, y/TileSize);
 	x = x%TileSize;
@@ -3407,7 +3397,7 @@ void Level::set_solid(level_solid_map& map, int x, int y, int friction, int trac
 		y += TileSize;
 	}
 	const int index = y*TileSize + x;
-	tile_solid_info& info = map.insert_or_find(pos);
+	TileSolidInfo& info = map.insertOrFind(pos);
 
 	if(info.info.damage >= 0) {
 		info.info.damage = std::min(info.info.damage, damage);
@@ -3429,7 +3419,7 @@ void Level::set_solid(level_solid_map& map, int x, int y, int friction, int trac
 	}
 
 	if(info_str.empty() == false) {
-		info.info.info = surface_info::get_info_str(info_str);
+		info.info.info = SurfaceInfo::get_info_str(info_str);
 	}
 }
 
@@ -3832,8 +3822,8 @@ DEFINE_FIELD(shader, "null|object")
 #endif
 
 DEFINE_FIELD(is_paused, "bool")
-	if(level_runner::getCurrent()) {
-		return variant::from_bool(level_runner::getCurrent()->is_paused());
+	if(LevelRunner::getCurrent()) {
+		return variant::from_bool(LevelRunner::getCurrent()->is_paused());
 	}
 
 	return variant(false);
@@ -3989,10 +3979,10 @@ void Level::getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const
 	*velocity_y += delta_y;
 }
 
-water& Level::get_or_create_water()
+Water& Level::get_or_create_water()
 {
 	if(!water_) {
-		water_.reset(new water);
+		water_.reset(new Water());
 	}
 
 	return *water_;
@@ -4018,7 +4008,7 @@ ConstEntityPtr Level::get_entity_by_label(const std::string& label) const
 	return ConstEntityPtr();
 }
 
-void Level::getAll_labels(std::vector<std::string>& labels) const
+void Level::getAllLabels(std::vector<std::string>& labels) const
 {
 	for(std::map<std::string, EntityPtr>::const_iterator i = chars_by_label_.begin(); i != chars_by_label_.end(); ++i) {
 		labels.push_back(i->first);
@@ -4036,23 +4026,6 @@ const std::vector<EntityPtr>& Level::get_solid_chars() const
 	}
 
 	return solid_chars_;
-}
-
-void Level::begin_movement_script(const std::string& key, Entity& e)
-{
-	std::map<std::string, movement_script>::const_iterator itor = movement_scripts_.find(key);
-	if(itor == movement_scripts_.end()) {
-		return;
-	}
-
-	active_movement_scripts_.push_back(itor->second.begin_execution(e));
-}
-
-void Level::end_movement_script()
-{
-	if(!active_movement_scripts_.empty()) {
-		active_movement_scripts_.pop_back();
-	}
 }
 
 bool Level::can_interact(const rect& body) const
@@ -4579,7 +4552,7 @@ std::vector<EntityPtr> Level::get_characters_at_world_point(const glm::vec3& pt)
 
 int Level::current_difficulty() const
 {
-	if(!editor_ && preferences::force_difficulty() != INT_MIN) {
+	if(!editor_ && preferences::force_difficulty() != std::numeric_limits<int>::min()) {
 		return preferences::force_difficulty();
 	}
 

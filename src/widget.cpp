@@ -40,7 +40,7 @@ namespace gui
 		: x_(0), y_(0), w_(0), h_(0), align_h_(HALIGN_LEFT), align_v_(VALIGN_TOP),
 		true_x_(0), true_y_(0), disabled_(false), disabled_opacity_(127),
 		tooltip_displayed_(false), visible_(true), zorder_(0), environ_(0),
-		tooltip_display_delay_(0), tooltip_ticks_(INT_MAX), resolution_(0),
+		tooltip_display_delay_(0), tooltip_ticks_(std::numeric_limits<int>::max()), resolution_(0),
 		display_alpha_(256), pad_h_(0), pad_w_(0), claim_mouse_events_(true),
 		draw_with_object_shader_(true), tooltip_font_size_(18),
 		swallow_all_events_(false), tab_stop_(0), has_focus_(false),
@@ -52,7 +52,7 @@ namespace gui
 		: environ_(e), w_(0), h_(0), x_(0), y_(0), zorder_(0), 
 		true_x_(0), true_y_(0), disabled_(false), disabled_opacity_(v["disabled_opacity"].as_int(127)),
 		tooltip_displayed_(false), id_(v["id"].as_string_default()), align_h_(HALIGN_LEFT), align_v_(VALIGN_TOP),
-		tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(INT_MAX),
+		tooltip_display_delay_(v["tooltip_delay"].as_int(0)), tooltip_ticks_(std::numeric_limits<int>::max()),
 		resolution_(v["frame_size"].as_int(0)), display_alpha_(v["alpha"].as_int(256)),
 		pad_w_(0), pad_h_(0), claim_mouse_events_(v["claim_mouse_events"].as_bool(true)),
 		draw_with_object_shader_(v["draw_with_object_shader"].as_bool(true)), tooltip_font_size_(18),
@@ -285,7 +285,7 @@ namespace gui
 	bool Widget::processEvent(const SDL_Event& event, bool claimed)
 	{
 		if(disabled_) {
-			tooltip_ticks_ = INT_MAX;
+			tooltip_ticks_ = std::numeric_limits<int>::max();
 			return claimed;
 		}
 		if(!claimed) {
@@ -296,12 +296,12 @@ namespace gui
 						if(tooltip_display_delay_ == 0 || SDL_GetTicks() > tooltip_ticks_) {
 							gui::setTooltip(tooltip_);
 							tooltip_displayed_ = true;
-						} else if(tooltip_ticks_ == INT_MAX) {
+						} else if(tooltip_ticks_ == std::numeric_limits<int>::max()) {
 							tooltip_ticks_ = SDL_GetTicks() + tooltip_display_delay_;
 						}
 					}
 				} else {
-					tooltip_ticks_ = INT_MAX;
+					tooltip_ticks_ = std::numeric_limits<int>::max();
 					if(tooltip_displayed_) {
 						gui::remove_tooltip(tooltip_);
 						tooltip_displayed_ = false;
@@ -309,7 +309,7 @@ namespace gui
 				}
 			}
 		} else {
-			tooltip_ticks_ = INT_MAX;
+			tooltip_ticks_ = std::numeric_limits<int>::max();
 		}
 
 		const bool must_swallow = swallow_all_events_ && event.type != SDL_QUIT;

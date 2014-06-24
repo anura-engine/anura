@@ -1047,7 +1047,7 @@ private:
 };
 
 perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
-  : voxel_width_(20), last_select_x_(INT_MIN), last_select_y_(INT_MIN),
+  : voxel_width_(20), last_select_x_(std::numeric_limits<int>::min()), last_select_y_(std::numeric_limits<int>::min()),
     invert_y_(1), dragging_on_(false), anchor_drag_x_(0), anchor_drag_y_(0),
 	focus_(false), selection_border_(-1)
 {
@@ -1138,7 +1138,7 @@ VoxelPos perspective_renderer::get_mouse_pos(int mousex, int mousey) const
 
 bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 {
-	if(mousex == INT_MIN) {
+	if(mousex == std::numeric_limits<int>::min()) {
 		return false;
 	}
 
@@ -1211,24 +1211,24 @@ VoxelArea perspective_renderer::calculate_selection(int mousex1, int mousey1, in
 		std::swap(top_left[1], bot_right[1]);
 	}
 
-	int min_value = INT_MIN, max_value = INT_MIN;
+	int min_value = std::numeric_limits<int>::min(), max_value = std::numeric_limits<int>::min();
 
 	for(const VoxelPair& vp : get_editor().layer().map) {
 		const VoxelPos pos = normalize_pos(vp.first);
 		if(pos[0] >= top_left[0] && pos[1] >= top_left[1] &&
 		   pos[0] < bot_right[0] && pos[1] < bot_right[1]) {
 			int zpos = vp.first[facing_];
-			if(min_value == INT_MIN || zpos < min_value) {
+			if(min_value == std::numeric_limits<int>::min() || zpos < min_value) {
 				min_value = zpos;
 			}
 
-			if(max_value == INT_MIN || zpos > max_value) {
+			if(max_value == std::numeric_limits<int>::min() || zpos > max_value) {
 				max_value = zpos;
 			}
 		}
 	}
 
-	if(min_value != INT_MIN) {
+	if(min_value != std::numeric_limits<int>::min()) {
 		top_left = denormalize_pos(top_left);
 		bot_right = denormalize_pos(bot_right);
 		top_left[facing_] = min_value;
@@ -1237,7 +1237,7 @@ VoxelArea perspective_renderer::calculate_selection(int mousex1, int mousey1, in
 		return area;
 	} else {
 		VoxelArea result;
-		result.top_left[0] = result.top_left[1] = result.top_left[2] = result.bot_right[0] = result.bot_right[1] = result.bot_right[2] = INT_MIN;
+		result.top_left[0] = result.top_left[1] = result.top_left[2] = result.bot_right[0] = result.bot_right[1] = result.bot_right[2] = std::numeric_limits<int>::min();
 		return result;
 	}
 }
@@ -1352,7 +1352,7 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 		   e.x <= x() + width() && e.y <= y() + height()) {
 			if(selection_border_ == -1) {
 				VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, e.x, e.y);
-				if(selection.top_left[0] == INT_MIN) {
+				if(selection.top_left[0] == std::numeric_limits<int>::min()) {
 					get_editor().clear_selection();
 				} else {
 					get_editor().setSelection(selection);
@@ -1472,7 +1472,7 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 				case TOOL_SELECT: {
 					if(dragging_on_ && selection_border_ == -1) {
 						VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, motion.x, motion.y);
-						if(selection.top_left[0] == INT_MIN) {
+						if(selection.top_left[0] == std::numeric_limits<int>::min()) {
 							get_editor().clear_selection();
 						} else {
 							get_editor().setSelection(selection);
@@ -1594,7 +1594,7 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 
 			break;
 		} else {
-			last_select_x_ = last_select_y_ = INT_MIN;
+			last_select_x_ = last_select_y_ = std::numeric_limits<int>::min();
 			focus_ = false;
 			selection_border_ = -1;
 		}

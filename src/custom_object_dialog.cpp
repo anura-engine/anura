@@ -401,7 +401,7 @@ std::vector<gui::WidgetPtr> custom_object_dialog::get_widget_for_attribute(const
 		// width then we do a .finish_row() (if needed) and start continue
 		// adding the column to the next row (with .add_col()).
 		std::vector<ButtonPtr> buttons;
-		int min_size_button = INT_MAX;
+		int min_size_button = std::numeric_limits<int>::max();
 		if(object_template_.has_key("prototype")) {
 			foreach(const std::string& s, object_template_["prototype"].as_list_string()) {
 				buttons.push_back(new button(WidgetPtr(new label(s, graphics::color_white())), 

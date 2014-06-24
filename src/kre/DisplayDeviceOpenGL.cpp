@@ -433,6 +433,11 @@ namespace KRE
 	{
 		return BlendEquationImplBasePtr(new BlendEquationImplOGL());
 	}
+
+	void DisplayDeviceOpenGL::setViewPort(int x, int y, unsigned width, unsigned height)
+	{
+		glViewport(x, y, width, height);
+	}
 	
 	bool DisplayDeviceOpenGL::DoCheckForFeature(DisplayDeviceCapabilties cap)
 	{

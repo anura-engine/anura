@@ -35,5 +35,5 @@ int distance_to_cliff(const Level& lvl, int xpos, int ypos, int facing);
 
 // given a position, will return the xpos of the ground level closest to this
 // position. Will search downwards if (xpos,ypos) is not solid, and upwards
-// if (xpos,ypos) is solid. Will return INT_MIN on failure to find a result.
+// if (xpos,ypos) is solid. Will return std::numeric_limits<int>::min() on failure to find a result.
 int find_ground_level(const Level& lvl, int xpos, int ypos, int max_search=20);

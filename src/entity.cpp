@@ -37,7 +37,7 @@
 Entity::Entity(variant node)
   : x_(node["x"].as_int()*100),
     y_(node["y"].as_int()*100),
-	prev_feet_x_(INT_MIN), prev_feet_y_(INT_MIN),
+	prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
 	face_right_(node["face_right"].as_bool(true)),
 	upside_down_(node["upside_down"].as_bool(false)),
@@ -47,7 +47,7 @@ Entity::Entity(variant node)
 	weak_solid_dimensions_(0), weak_collide_dimensions_(0),
 	platform_motion_x_(node["platform_motion_x"].as_int()),
 	mouse_over_entity_(false), being_dragged_(false), mouse_button_state_(0),
-	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
+	mouseover_delay_(0), mouseover_trigger_cycle_(std::numeric_limits<int>::max()),
 	true_z_(false), tx_(node["x"].as_decimal().as_float()), ty_(node["y"].as_decimal().as_float()), tz_(0.0f)
 {
 	for(bool& b : controls_) {
@@ -56,13 +56,13 @@ Entity::Entity(variant node)
 }
 
 Entity::Entity(int x, int y, bool face_right)
-  : x_(x*100), y_(y*100), prev_feet_x_(INT_MIN), prev_feet_y_(INT_MIN),
+  : x_(x*100), y_(y*100), prev_feet_x_(std::numeric_limits<int>::min()), prev_feet_y_(std::numeric_limits<int>::min()),
 	last_move_x_(0), last_move_y_(0),
     face_right_(face_right), upside_down_(false), group_(-1), id_(-1),
 	respawn_(true), solid_dimensions_(0), collide_dimensions_(0),
 	weak_solid_dimensions_(0), weak_collide_dimensions_(0),	platform_motion_x_(0), 
 	mouse_over_entity_(false), being_dragged_(false), mouse_button_state_(0),
-	mouseover_delay_(0), mouseover_trigger_cycle_(INT_MAX),
+	mouseover_delay_(0), mouseover_trigger_cycle_(std::numeric_limits<int>::max()),
 	true_z_(false), tx_(double(x)), ty_(double(y)), tz_(0.0f)
 {
 	for(bool& b : controls_) {
@@ -73,7 +73,7 @@ Entity::Entity(int x, int y, bool face_right)
 void Entity::addToLevel()
 {
 	last_move_x_ = last_move_y_ = 0;
-	prev_feet_x_ = prev_feet_y_ = INT_MIN;
+	prev_feet_x_ = prev_feet_y_ = std::numeric_limits<int>::min();
 	prev_platform_rect_ = rect();
 	calculateSolidRect();
 }
@@ -149,7 +149,7 @@ int Entity::getPlatformMotionX() const
 
 void Entity::process(level& lvl)
 {
-	if(prev_feet_x_ != INT_MIN) {
+	if(prev_feet_x_ != std::numeric_limits<int>::min()) {
 		last_move_x_ = getFeetX() - prev_feet_x_;
 		last_move_y_ = getFeetY() - prev_feet_y_;
 	}

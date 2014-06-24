@@ -25,8 +25,7 @@
 
 #if defined(USE_ISOMAP)
 
-#include <boost/intrusive_ptr.hpp>
-#include <boost/unordered_map.hpp>
+#include <unordered_map>
 
 #include <vector>
 #include <set>
@@ -77,7 +76,7 @@ namespace voxel
 
 		variant serializeToWml() const;
 
-		boost::unordered_map<std::pair<int,int>, int> heightmap_;
+		std::unordered_map<std::pair<int,int>, int> heightmap_;
 		// Only valid for fixed size worlds
 		int size_x_;
 		int size_y_;
@@ -128,7 +127,7 @@ namespace voxel
 		uint32_t seed_;
 
 		std::vector<ChunkPtr> active_chunks_;
-		boost::unordered_map<ChunkPosition, ChunkPtr> chunks_;
+		std::unordered_map<ChunkPosition, ChunkPtr> chunks_;
 
 		std::set<UserVoxelObjectPtr> objects_;
 

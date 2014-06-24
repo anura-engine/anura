@@ -97,12 +97,12 @@ GraphicalFont::GraphicalFont(variant node)
 	}
 }
 
-rect GraphicalFont::draw(int x, int y, const std::string& text, int size) const
+rect GraphicalFont::draw(int x, int y, const std::string& text, int size, const KRE::Color& color) const
 {
-	return doDraw(x, y, text, true, size);
+	return doDraw(x, y, text, true, size, color);
 }
 
-rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text, int size) const
+rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text, int size, const KRE::Color& color) const
 {
 	if(text.empty()) {
 		return rect(x, y, 0, 0);
@@ -165,14 +165,14 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 
 	if(draw_text && !font_vtxarray.empty()) {
 		auto canvas = KRE::Canvas::getInstance();
-		canvas->blitTexture(texture_, font_vtxarray, 0);
+		canvas->blitTexture(texture_, font_vtxarray, 0, color);
 	}
 	return rect(x, y, x2 - x, y2 - y);
 }
 
 rect GraphicalFont::dimensions(const std::string& text, int size) const
 {
-	return doDraw(0, 0, text, false, size);
+	return doDraw(0, 0, text, false, size, KRE::Color::colorWhite());
 }
 
 // Initialize the graphical font for the given locale

@@ -50,6 +50,22 @@ namespace KRE
 		virtual void NodeAttached();
 		void SetNodeName(const std::string& s) { name_ = s; }
 		const std::string& NodeName() const { return name_; }
+
+		void setPosition(const glm::vec3& position);
+		void setPosition(float x, float y, float z=0.0f);
+		void setPosition(int x, int y, int z=0);
+		const glm::vec3& getPosition() const { return position_; }
+
+		void setRotation(float angle, const glm::vec3& axis);
+		void setRotation(const glm::quat& rot);
+		const glm::quat& getRotation() const { return rotation_; }
+
+		void setScale(float xs, float ys, float zs=1.0f);
+		void setScale(const glm::vec3& scale);
+		const glm::vec3& getScale() const { return scale_; }
+
+		glm::mat4 ModelMatrix() const;
+
 	private:
 		std::string name_;
 		SceneGraph* scene_graph_;
@@ -57,6 +73,10 @@ namespace KRE
 		LightPtrList lights_;
 		CameraPtr camera_;
 		RenderTargetPtr render_target_;
+		glm::vec3 position_;
+		glm::quat rotation_;
+		glm::vec3 scale_;
+
 		SceneNode();
 		SceneNode(const SceneNode&);
 		SceneNode& operator=(const SceneNode&);

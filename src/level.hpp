@@ -47,7 +47,6 @@
 #include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
-#include "movement_script.hpp"
 #include "speech_dialog.hpp"
 #include "tile_map.hpp"
 #include "variant.hpp"
@@ -115,13 +114,13 @@ public:
 	void process();
 	void set_active_chars();
 	void process_draw();
-	bool standable(const rect& r, const surface_info** info=NULL) const;
-	bool standable(int x, int y, const surface_info** info=NULL) const;
-	bool standable_tile(int x, int y, const surface_info** info=NULL) const;
-	bool solid(int x, int y, const surface_info** info=NULL) const;
-	bool solid(const Entity& e, const std::vector<point>& points, const surface_info** info=NULL) const;
-	bool solid(const rect& r, const surface_info** info=NULL) const;
-	bool solid(int xbegin, int ybegin, int w, int h, const surface_info** info=NULL) const;
+	bool standable(const rect& r, const SurfaceInfo** info=NULL) const;
+	bool standable(int x, int y, const SurfaceInfo** info=NULL) const;
+	bool standable_tile(int x, int y, const SurfaceInfo** info=NULL) const;
+	bool solid(int x, int y, const SurfaceInfo** info=NULL) const;
+	bool solid(const Entity& e, const std::vector<point>& points, const SurfaceInfo** info=NULL) const;
+	bool solid(const rect& r, const SurfaceInfo** info=NULL) const;
+	bool solid(int xbegin, int ybegin, int w, int h, const SurfaceInfo** info=NULL) const;
 	bool may_be_solid_in_rect(const rect& r) const;
 	void set_solid_area(const rect& r, bool solid);
 	EntityPtr board(int x, int y) const;
@@ -293,16 +292,13 @@ public:
 	EntityPtr get_entity_by_label(const std::string& label);
 	ConstEntityPtr get_entity_by_label(const std::string& label) const;
 
-	void getAll_labels(std::vector<std::string>& labels) const;
+	void getAllLabels(std::vector<std::string>& labels) const;
 
 	const std::vector<EntityPtr>& get_active_chars() const { return active_chars_; }
 	const std::vector<EntityPtr>& get_chars() const { return chars_; }
 	const std::vector<EntityPtr>& get_solid_chars() const;
 	void swap_chars(std::vector<EntityPtr>& v) { chars_.swap(v); solid_chars_.clear(); }
 	int num_active_chars() const { return active_chars_.size(); }
-
-	void begin_movement_script(const std::string& name, Entity& e);
-	void end_movement_script();
 
 	//function which, given the rect of the player's body will return true iff
 	//the player can currently "interact" with a portal or object. i.e. if
@@ -443,16 +439,16 @@ private:
 
 	variant vars_;
 	
-	level_solid_map solid_;
-	level_solid_map standable_;
+	LevelSolidMap solid_;
+	LevelSolidMap standable_;
 
-	level_solid_map solid_base_;
-	level_solid_map standable_base_;
+	LevelSolidMap solid_base_;
+	LevelSolidMap standable_base_;
 
-	bool isSolid(const level_solid_map& map, int x, int y, const surface_info** surf_info) const;
-	bool isSolid(const level_solid_map& map, const Entity& e, const std::vector<point>& points, const surface_info** surf_info) const;
+	bool isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** surf_info) const;
+	bool isSolid(const LevelSolidMap& map, const Entity& e, const std::vector<point>& points, const SurfaceInfo** surf_info) const;
 
-	void set_solid(level_solid_map& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
+	void set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
 
 	std::string title_;
 
@@ -556,9 +552,6 @@ private:
 	std::vector<std::string> preloads_; //future levels to preload
 
 	std::shared_ptr<Water> water_;
-
-	std::map<std::string, movement_script> movement_scripts_;
-	std::vector<active_movement_script_ptr> active_movement_scripts_;
 
 	std::shared_ptr<point> lock_screen_;
 

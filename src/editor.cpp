@@ -1696,7 +1696,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 	}
 
 	if(!tile_selection_.empty() && (key.keysym.sym == SDLK_DELETE || key.keysym.sym == SDLK_BACKSPACE)) {
-		int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+		int min_x = std::numeric_limits<int>::max(), min_y = std::numeric_limits<int>::max(), max_x = std::numeric_limits<int>::min(), max_y = std::numeric_limits<int>::min();
 		std::vector<std::function<void()> > redo, undo;
 
 		foreach(LevelPtr lvl, levels_) {
@@ -2383,7 +2383,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 					undo.push_back(std::bind(&level::clear_tile_rect,lvl.get(), x, y, x, y));
 				}
 
-				int min_x = INT_MAX, min_y = INT_MAX, max_x = INT_MIN, max_y = INT_MIN;
+				int min_x = std::numeric_limits<int>::max(), min_y = std::numeric_limits<int>::max(), max_x = std::numeric_limits<int>::min(), max_y = std::numeric_limits<int>::min();
 
 				//backup both the contents of the old and new regions, so we can restore them both
 				foreach(const point& p, tile_selection_.tiles) {

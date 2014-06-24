@@ -686,7 +686,7 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 			std::swap(a,b);
 		}
 
-		int best_score = INT_MAX;
+		int best_score = std::numeric_limits<int>::max();
 
 		for(int xoffset = 0; xoffset < b.w() - a.w(); ++xoffset) {
 			rect r(b.x() + xoffset, b.y(), a.w(), b.h());
@@ -700,7 +700,7 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 	}
 
 	if(areaa.w() != areab.w() || areaa.h() != areab.h()) {
-		return INT_MAX;
+		return std::numeric_limits<int>::max();
 	}
 
 	int errors = 0;
@@ -871,7 +871,7 @@ void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimati
 		new_yoffsets.push_back(yoffsets[0]);
 		while(frames.size() < anim.frames.size()) {
 			int best_frame = -1;
-			int best_score = INT_MAX;
+			int best_score = std::numeric_limits<int>::max();
 			for(int n = 0; n < anim.frames.size(); ++n) {
 				if(std::count(frames.begin(), frames.end(), anim.frames[n])) {
 					continue;

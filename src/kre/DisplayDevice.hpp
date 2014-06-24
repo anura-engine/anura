@@ -147,6 +147,8 @@ namespace KRE
 			size_t multi_samples=0);
 		static RenderTargetPtr RenderTargetInstance(const variant& node);
 
+		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
+
 		virtual DisplayDeviceDataPtr CreateDisplayDeviceData(const DisplayDeviceDef& def) = 0;
 
 		static AttributeSetPtr CreateAttributeSet(bool hardware_hint=false, bool indexed=false, bool instanced=false);

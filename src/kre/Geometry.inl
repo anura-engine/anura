@@ -160,6 +160,65 @@ namespace Geometry
 	}
 
 	template<typename T> inline
+	int Rect<T>::rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output) const
+	{
+		if (rects_intersect(a,b) == false){ //return empty if there's no intersection
+		return -1;
+		}
+
+		/* returning 4 rectangles in this orientation:
+		_________
+		| |___| |
+		| | | |
+		| |___| |
+		|_|___|_| */
+
+		const Rect<T>* begin_output = output;
+
+		if(a.x() < b.x()) {
+			//get the left section of the source rectangle
+			*output++ = rect(a.x(), a.y(), b.x() - a.x(), a.h());
+			}
+
+		if(a.x() + a.w() > b.x() + b.w()) {
+			*output++ = rect(b.x() + b.w(), a.y(), (a.x() + a.w()) - (b.x() + b.w()), a.h());
+			}
+
+		if(a.y() < b.y()) {
+			const int x1 = std::max(a.x(), b.x());
+			const int x2 = std::min(a.x() + a.w(), b.x() + b.w());
+			*output++ = rect(x1, a.y(), x2 - x1, b.y() - a.y());
+			}
+
+		if(a.y() + a.h() > b.y() + b.h()) {
+			const int x1 = std::max(a.x(), b.x());
+			const int x2 = std::min(a.x() + a.w(), b.x() + b.w());
+			*output++ = rect(x1, b.y() + b.h(), x2 - x1, (a.y() + a.h()) - (b.y() + b.h()));
+		}
+
+		return output - begin_output;
+	}
+
+	template<typename T> inline
+	Rect<T> Rect<T>::rect_union(const Rect<T>& a, const Rect<T>& b) const
+	{
+		if(a.w() == 0 || a.h() == 0) {
+			return b;
+		}
+		
+		if(b.w() == 0 || b.h() == 0) {
+			return a;
+		}
+
+		const int x = std::min<int>(a.x(), b.x());
+		const int y = std::min<int>(a.y(), b.y());
+		const int x2 = std::max<int>(a.x2(), b.x2());
+		const int y2 = std::max<int>(a.y2(), b.y2());
+
+		return Rect<T>(x, y, x2 - x, y2 - y);
+	}
+
+	template<typename T> inline
 	std::ostream& operator<<(std::ostream& os, const Rect<T>& r)
 	{
 		os << "rect(" << r.x() << ", " << r.y() << ", " << r.x2() << ", " << r.y2() << ")";

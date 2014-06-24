@@ -53,11 +53,13 @@ namespace KRE
 		virtual void setWindowTitle(const std::string& title) = 0;
 		virtual void setWindowIcon(const std::string& name) = 0;
 
+		virtual unsigned getWindowID() const = 0;
+
 		virtual void render(const Renderable* r) const = 0;
 
 		virtual void swap() = 0;
 
-		void mapMousePosition(unsigned* x, unsigned* y);
+		void mapMousePosition(int* x, int* y);
 
 		void enable16bpp(bool bpp=true);
 		void enableMultisampling(bool multi_sampling=true, unsigned samples=4);
@@ -88,8 +90,11 @@ namespace KRE
 
 		virtual void clear(DisplayDevice::ClearFlags f) = 0;
 
+		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
+
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();
+		static WindowManagerPtr getWindowFromID(unsigned id);
 		static WindowManagerPtr getMainWindow();
 	protected:
 		unsigned width_;

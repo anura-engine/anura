@@ -174,13 +174,13 @@ CustomObject::CustomObject(variant node)
 	current_animation_id_(0),
 	cycle_(node["cycle"].as_int()),
 	created_(node["created"].as_bool(false)), loaded_(false),
-	standing_on_prev_x_(INT_MIN), standing_on_prev_y_(INT_MIN),
+	standing_on_prev_x_(std::numeric_limits<int>::min()), standing_on_prev_y_(std::numeric_limits<int>::min()),
 	can_interact_with_(false), fall_through_platforms_(0),
 	always_active_(node["always_active"].as_bool(false)),
 	activation_border_(node["activation_border"].as_int(type_->getActivationBorder())),
 	last_cycle_active_(0),
 	parent_pivot_(node["pivot"].as_string_default()),
-	parent_prev_x_(INT_MIN), parent_prev_y_(INT_MIN), parent_prev_facing_(true),
+	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(node["relative_x"].as_int(0)), relative_y_(node["relative_y"].as_int(0)),
 	swallow_mouse_event_(false),
 	currently_handling_die_event_(0),
@@ -471,7 +471,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	always_active_(false),
 	activation_border_(type_->getActivationBorder()),
 	last_cycle_active_(0),
-	parent_prev_x_(INT_MIN), parent_prev_y_(INT_MIN), parent_prev_facing_(true),
+	parent_prev_x_(std::numeric_limits<int>::min()), parent_prev_y_(std::numeric_limits<int>::min()), parent_prev_facing_(true),
     relative_x_(0), relative_y_(0),
 	swallow_mouse_event_(false),
 	min_difficulty_(-1), max_difficulty_(-1),
@@ -1377,7 +1377,7 @@ void CustomObject::process(level& lvl)
 		const bool parent_facing = parent_->isFacingRight();
         const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
 
-		if(parent_prev_x_ != INT_MIN) {
+		if(parent_prev_x_ != std::numeric_limits<int>::min()) {
             setMidX(pos.x + (relative_x_ * parent_facing_sign));
             setMidY(pos.y + relative_y_);
    		}
@@ -1531,7 +1531,7 @@ void CustomObject::process(level& lvl)
 			const int next_fraction = (cycle_ - position_schedule_->base_cycle)%position_schedule_->speed;
 			const int this_fraction = position_schedule_->speed - next_fraction;
 
-			int xpos = INT_MIN, ypos = INT_MIN;
+			int xpos = std::numeric_limits<int>::min(), ypos = std::numeric_limits<int>::min();
 			if(position_schedule_->x_pos.empty() == false) {
 				xpos = position_schedule_->x_pos[pos%position_schedule_->x_pos.size()];
 				if(next_fraction && pos+1 != position_schedule_->x_pos.size()) {
@@ -1546,11 +1546,11 @@ void CustomObject::process(level& lvl)
 				}
 			}
 
-			if(xpos != INT_MIN && ypos != INT_MIN) {
+			if(xpos != std::numeric_limits<int>::min() && ypos != std::numeric_limits<int>::min()) {
 				setPos(xpos, ypos);
-			} else if(xpos != INT_MIN) {
+			} else if(xpos != std::numeric_limits<int>::min()) {
 				setX(xpos);
-			} else if(ypos != INT_MIN) {
+			} else if(ypos != std::numeric_limits<int>::min()) {
 				setY(ypos);
 			}
 
@@ -1815,7 +1815,7 @@ void CustomObject::process(level& lvl)
 		const int left_foot = getFeetX() - type_->getFeetWidth();
 		const int right_foot = getFeetX() + type_->getFeetWidth();
 
-		int target_y = INT_MAX;
+		int target_y = std::numeric_limits<int>::max();
 		rect area = standing_on_->platformRect();
 		if(left_foot >= area.x() && left_foot < area.x() + area.w()) {
 			rect area = standing_on_->platformRectAt(left_foot);
@@ -1829,7 +1829,7 @@ void CustomObject::process(level& lvl)
 			}
 		}
 
-		if(target_y != INT_MAX) {
+		if(target_y != std::numeric_limits<int>::max()) {
 			const int delta = target_y - getFeetY();
 			const int dir = delta > 0 ? 1 : -1;
 			int nmoves = 0;
@@ -1894,7 +1894,7 @@ void CustomObject::process(level& lvl)
 
 			const STANDING_STATUS standing = isStanding(lvl);
 			if(place_on_object) {
-				int target_y = INT_MAX;
+				int target_y = std::numeric_limits<int>::max();
 				rect area = standing_on_->platformRect();
 				if(left_foot >= area.x() && left_foot < area.x() + area.w()) {
 					const rect area = standing_on_->platformRectAt(left_foot);
@@ -2138,7 +2138,7 @@ void CustomObject::process(level& lvl)
 			callable->add("mouse_y", variant(my));
 			handleEvent("mouse_enter", callable.get());
 			setMouseOverEntity();
-			setMouseoverTriggerCycle(INT_MAX);
+			setMouseoverTriggerCycle(std::numeric_limits<int>::max());
 		}
 	}
 
@@ -4544,19 +4544,19 @@ void CustomObject::setFrameNoAdjustments(const Frame& new_frame)
 	frame_.reset(&new_frame);
 	frame_name_ = new_frame.id();
 	time_in_frame_ = 0;
-	if(frame_->velocityX() != INT_MIN) {
+	if(frame_->velocityX() != std::numeric_limits<int>::min()) {
 		velocity_x_ = frame_->velocityX() * (isFacingRight() ? 1 : -1);
 	}
 
-	if(frame_->velocityY() != INT_MIN) {
+	if(frame_->velocityY() != std::numeric_limits<int>::min()) {
 		velocity_y_ = frame_->velocityY();
 	}
 
-	if(frame_->accelX() != INT_MIN) {
+	if(frame_->accelX() != std::numeric_limits<int>::min()) {
 		accel_x_ = frame_->accelX();
 	}
 	
-	if(frame_->accelY() != INT_MIN) {
+	if(frame_->accelY() != std::numeric_limits<int>::min()) {
 		accel_y_ = frame_->accelY();
 	}
 
@@ -5350,11 +5350,11 @@ void CustomObject::set_platform_area(const rect& area)
 void CustomObject::shiftPosition(int x, int y)
 {
 	Entity::shiftPosition(x, y);
-	if(standing_on_prev_x_ != INT_MIN) {
+	if(standing_on_prev_x_ != std::numeric_limits<int>::min()) {
 		standing_on_prev_x_ += x;
 	}
 
-	if(standing_on_prev_y_ != INT_MIN) {
+	if(standing_on_prev_y_ != std::numeric_limits<int>::min()) {
 		standing_on_prev_y_ += y;
 	}
 

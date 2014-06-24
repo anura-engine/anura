@@ -1,40 +1,48 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <string.h>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
+#include "level_object.hpp"
 #include "multi_tile_pattern.hpp"
 #include "tile_map.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
-namespace {
-//a pool of regular expressions. This makes sure that two regexes that
-//are identical will point to the same place, and so we can easily
-//test equality of regexes.
-std::map<std::string, const boost::regex*> regex_pool;
+namespace 
+{
+	//a pool of regular expressions. This makes sure that two regexes that
+	//are identical will point to the same place, and so we can easily
+	//test equality of regexes.
+	std::map<std::string, const boost::regex*> regex_pool;
 
-std::deque<multi_tile_pattern>& patterns() {
-	static std::deque<multi_tile_pattern> instance;
-	return instance;
-}
-
+	std::deque<MultiTilePattern>& patterns()
+	{
+		static std::deque<MultiTilePattern> instance;
+		return instance;
+	}
 }
 
 const boost::regex& get_regex_from_pool(const std::string& key)
@@ -59,92 +67,99 @@ const boost::regex& get_regex_from_pool(const std::string& key)
 	return *re;
 }
 
-const std::deque<multi_tile_pattern>& multi_tile_pattern::getAll()
+const std::deque<MultiTilePattern>& MultiTilePattern::getAll()
 {
 	return patterns();
 }
 
-void multi_tile_pattern::init(variant node)
+void MultiTilePattern::init(variant node)
 {
 	patterns().clear();
 }
 
-void multi_tile_pattern::load(variant node, const std::string& tile_id)
+void MultiTilePattern::load(variant node, const std::string& tile_id)
 {
-	foreach(variant pattern, node["multi_tile_pattern"].as_list()) {
-		patterns().push_back(multi_tile_pattern(pattern, tile_id));
+	for(variant pattern : node["MultiTilePattern"].as_list()) {
+		patterns().push_back(MultiTilePattern(pattern, tile_id));
 	}
 }
 
-namespace {
-bool compare_match_cell_by_run_length(const multi_tile_pattern::match_cell& a,
-                                      const multi_tile_pattern::match_cell& b) {
-	return a.run_length > b.run_length;
-}
+namespace 
+{
+	bool compare_match_cell_by_run_length(const MultiTilePattern::MatchCell& a,
+										  const MultiTilePattern::MatchCell& b) 
+	{
+		return a.run_length > b.run_length;
+	}
 
-struct raw_cell {
-	std::string regex;
-	std::vector<std::string> map_to;
-};
+	struct raw_cell 
+	{
+		std::string regex;
+		std::vector<std::string> map_to;
+	};
 
-int parse_pattern(const std::string& pattern, std::vector<raw_cell>& out) {
+	int parse_pattern(const std::string& pattern, std::vector<raw_cell>& out) 
+	{
 
-	std::vector<std::string> lines = util::split(pattern, '\n', 0);
-	const int height = lines.size();
-	int width = -1;
+		std::vector<std::string> lines = util::split(pattern, '\n', 0);
+		const int height = lines.size();
+		int width = -1;
 
-	foreach(const std::string& line, lines) {
-		std::vector<std::string> items = util::split(line, ',', util::STRIP_SPACES);
-		if(width == -1) {
-			width = items.size();
-		}
-
-		ASSERT_LOG(width == items.size(), "Inconsistent multi_tile_pattern size in pattern " << pattern);
-
-		foreach(std::string item, items) {
-			std::vector<const char*> arrows;
-			const char* arrow = strstr(item.c_str(), "->");
-			while(arrow) {
-				arrows.push_back(arrow);
-				arrow = strstr(arrow+2, "->");
+		for(const std::string& line : lines) {
+			std::vector<std::string> items = util::split(line, ',', util::STRIP_SPACES);
+			if(width == -1) {
+				width = items.size();
 			}
 
-			raw_cell cell;
+			ASSERT_LOG(width == items.size(), "Inconsistent MultiTilePattern size in pattern " << pattern);
 
-			if(arrows.empty() == false) {
-				arrows.push_back(item.c_str() + item.size());
-				for(int n = 0; n != arrows.size()-1; ++n) {
-					std::string m(arrows[n]+2, arrows[n+1]);
-					util::strip(m);
-					cell.map_to.push_back(m);
+			for(std::string item : items) {
+				std::vector<const char*> arrows;
+				const char* arrow = strstr(item.c_str(), "->");
+				while(arrow) {
+					arrows.push_back(arrow);
+					arrow = strstr(arrow+2, "->");
 				}
 
-				item = std::string(item.c_str(), arrows.front());
+				raw_cell cell;
+
+				if(arrows.empty() == false) {
+					arrows.push_back(item.c_str() + item.size());
+					for(int n = 0; n != arrows.size()-1; ++n) {
+						std::string m(arrows[n]+2, arrows[n+1]);
+						util::strip(m);
+						cell.map_to.push_back(m);
+					}
+
+					item = std::string(item.c_str(), arrows.front());
+				}
+
+				util::strip(item);
+
+				cell.regex = item;
+				out.push_back(cell);
 			}
-
-			util::strip(item);
-
-			cell.regex = item;
-			out.push_back(cell);
 		}
+
+		return width;
 	}
-
-	return width;
 }
 
-}
-
-multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
-  : default_tile_id_(tile_id), id_(node["id"].as_string_default()), width_(-1), height_(-1), chance_(node["chance"].as_int(100))
+MultiTilePattern::MultiTilePattern(variant node, const std::string& tile_id)
+  : default_tile_id_(tile_id), 
+	id_(node["id"].as_string_default()), 
+	width_(-1), 
+	height_(-1), 
+	chance_(node["chance"].as_int(100))
 {
-	foreach(variant alternative_node, node["alternative"].as_list()) {
-		foreach(variant_pair val, node.as_map()) {
+	for(variant alternative_node : node["alternative"].as_list()) {
+		for(variant_pair val : node.as_map()) {
 			if(val.second.is_list() == false && val.second.is_map() == false && !alternative_node.has_key(val.first)) {
 				alternative_node.add_attr(val.first, val.second);
 			}
 		}
 
-		alternatives_.push_back(std::shared_ptr<multi_tile_pattern>(new multi_tile_pattern(alternative_node, default_tile_id_)));
+		alternatives_.push_back(std::shared_ptr<MultiTilePattern>(new MultiTilePattern(alternative_node, default_tile_id_)));
 	}
 
 	std::vector<raw_cell> cells;
@@ -156,7 +171,7 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 
 	std::map<std::string, variant> base_nodes;
 
-	foreach(variant range_node, node["range"].as_list()) {
+	for(variant range_node : node["range"].as_list()) {
 		const std::string from = range_node["from"].as_string();
 		const std::string to = range_node["to"].as_string();
 
@@ -171,22 +186,22 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 		int from_index = -1;
 		int to_index = -1;
 		for(int n = 0; n != cells.size(); ++n) {
-			foreach(const std::string& m, cells[n].map_to) {
+			for(const std::string& m : cells[n].map_to) {
 				if(m == from) {
-					ASSERT_LOG(from_index == -1, "In multi_tile_pattern range specification for " << id_ << " the cell " << m << " is ambiguous since it appears multiple times");
+					ASSERT_LOG(from_index == -1, "In MultiTilePattern range specification for " << id_ << " the cell " << m << " is ambiguous since it appears multiple times");
 					from_index = n;
 				}
 
 				if(m == to) {
-					ASSERT_LOG(to_index == -1, "In multi_tile_pattern range specification for " << id_ << " the cell " << m << " is ambiguous since it appears multiple times");
+					ASSERT_LOG(to_index == -1, "In MultiTilePattern range specification for " << id_ << " the cell " << m << " is ambiguous since it appears multiple times");
 					to_index = n;
 				}
 			}
 		}
 
-		ASSERT_LOG(from_index != -1, "In multi_tile_pattern range specification for " << id_ << " the cell '" << from << "' was not found");
-		ASSERT_LOG(to_index != -1, "In multi_tile_pattern range specification for " << id_ << " the cell " << to << " was not found");
-		ASSERT_LOG(to_index > from_index, "In multi_tile_pattern range specification for " << id_ << " the cell " << to << " comes before the cell " << from);
+		ASSERT_LOG(from_index != -1, "In MultiTilePattern range specification for " << id_ << " the cell '" << from << "' was not found");
+		ASSERT_LOG(to_index != -1, "In MultiTilePattern range specification for " << id_ << " the cell " << to << " was not found");
+		ASSERT_LOG(to_index > from_index, "In MultiTilePattern range specification for " << id_ << " the cell " << to << " comes before the cell " << from);
 
 		const int from_x = from_index%width_;
 		const int from_y = from_index/width_;
@@ -198,8 +213,8 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 			char col = tile_pos[1];
 			for(int x = from_x; x <= to_x; ++x) {
 				const int index = y*width_ + x;
-				ASSERT_LT(index, cells.size());
-				foreach(std::string m, cells[index].map_to) {
+				ASSERT_LT(index, static_cast<int>(cells.size()));
+				for(std::string m : cells[index].map_to) {
 					if(different_zorder) {
 						m += "_zorder";
 						cells_different_zorder[index].map_to.push_back(m);
@@ -235,20 +250,20 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 	}
 
 	for(int n = 0; n != cells.size(); ++n) {
-		foreach(const std::string& m, cells_different_zorder[n].map_to) {
+		for(const std::string& m : cells_different_zorder[n].map_to) {
 			cells[n].map_to.push_back(m);
 		}
 	}
 
-	std::map<std::string, level_object_ptr> objects;
+	std::map<std::string, LevelObjectPtr> objects;
 	std::map<std::string, int> object_zorders;
 
-	foreach(variant_pair value, node.as_map()) {
+	for(variant_pair value : node.as_map()) {
 		if(value.first.as_string() == "alternative" || value.first.as_string() == "range" || value.first.as_string() == "chance" || value.first.as_string() == "pattern" || value.first.as_string() == "id" || value.first.as_string() == "image") {
 			continue;
 		}
 
-		foreach(variant obj_node, value.second.as_list()) {
+		for(variant obj_node : value.second.as_list()) {
 			if(base_nodes.count(value.first.as_string())) {
 				variant& v = base_nodes[value.first.as_string()];
 				merge_variant_over(&v, obj_node);
@@ -257,7 +272,7 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 
 			ASSERT_LOG(obj_node["image"].as_string().empty() == false, "object node has no image\n" << obj_node.write_json() << "\n");
 
-			level_object_ptr new_object(new level_object(obj_node, default_tile_id_.c_str()));
+			LevelObjectPtr new_object(new LevelObject(obj_node, default_tile_id_.c_str()));
 	
 			objects[value.first.as_string()] = new_object;
 			if(obj_node.has_key("zorder")) {
@@ -266,14 +281,14 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 		}
 	}
 
-	foreach(const raw_cell& cell, cells) {
+	for(const raw_cell& cell : cells) {
 
-		tile_info info;
+		TileInfo info;
 		info.re = &get_regex_from_pool(cell.regex);
 
-		foreach(const std::string& m, cell.map_to) {
-			tile_entry entry;
-			entry.zorder = INT_MIN;
+		for(const std::string& m : cell.map_to) {
+			TileEntry entry;
+			entry.zorder = std::numeric_limits<int>::min();
 			std::map<std::string, int>::const_iterator zorder_itor = object_zorders.find(m);
 			if(zorder_itor != object_zorders.end()) {
 				entry.zorder = zorder_itor->second;
@@ -302,10 +317,10 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 				}
 			}
 
-			match_cell cell;
-			cell.loc = point(x, y);
+			MatchCell cell;
+			cell.loc = point(x, y); 
 			cell.run_length = run_length;
-			try_order_.push_back(cell);
+			try_order_.emplace_back(cell);
 		}
 	}
 	
@@ -318,10 +333,10 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 	          compare_match_cell_by_run_length);
 	if(!try_order_.empty()) {
 		for(int n = 0; n != try_order_.size(); ++n) {
-			const match_cell& cell = try_order_[n];
+			const MatchCell& cell = try_order_[n];
 			if(tiles_[cell.loc.y*width_ + cell.loc.x].re != &get_regex_from_pool("")) {
 				if(n != 0) {
-					match_cell c = try_order_[n];
+					MatchCell c = try_order_[n];
 					try_order_.erase(try_order_.begin() + n);
 					try_order_.insert(try_order_.begin(), c);
 				}
@@ -333,9 +348,9 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 			const boost::regex* re = tiles_[try_order_[0].loc.y*width_ + try_order_[0].loc.x].re;
 
 			for(int n = 2; n != try_order_.size(); ++n) {
-				const match_cell& cell = try_order_[n];
+				const MatchCell& cell = try_order_[n];
 				if(tiles_[cell.loc.y*width_ + cell.loc.x].re != re) {
-					match_cell c = try_order_[n];
+					MatchCell c = try_order_[n];
 					try_order_.erase(try_order_.begin() + n);
 					try_order_.insert(try_order_.begin() + 1, c);
 				}
@@ -344,7 +359,7 @@ multi_tile_pattern::multi_tile_pattern(variant node, const std::string& tile_id)
 	}
 }
 
-const multi_tile_pattern::tile_info& multi_tile_pattern::getTileAt(int x, int y) const
+const MultiTilePattern::TileInfo& MultiTilePattern::getTileAt(int x, int y) const
 {
 	//asserts commented out for performance
 //	ASSERT_GE(x, 0);
@@ -356,17 +371,17 @@ const multi_tile_pattern::tile_info& multi_tile_pattern::getTileAt(int x, int y)
 	return tiles_[y*width_ + x];
 }
 
-int multi_tile_pattern::width() const
+int MultiTilePattern::width() const
 {
 	return width_;
 }
 
-int multi_tile_pattern::height() const
+int MultiTilePattern::height() const
 {
 	return height_;
 }
 
-const multi_tile_pattern& multi_tile_pattern::chooseRandomAlternative(int seed) const
+const MultiTilePattern& MultiTilePattern::chooseRandomAlternative(int seed) const
 {
 	if(alternatives_.empty()) {
 		return *this;

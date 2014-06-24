@@ -253,8 +253,8 @@ void speech_dialog::draw() const
 
 	const int TextBorder = 10;
 
-	int speaker_xpos = INT_MAX;
-	int speaker_ypos = INT_MAX;
+	int speaker_xpos = std::numeric_limits<int>::max();
+	int speaker_ypos = std::numeric_limits<int>::max();
 
 	ConstEntityPtr speaker = left_side_speaking_ ? left_ : right_;
 	if(speaker) {

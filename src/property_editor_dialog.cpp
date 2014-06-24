@@ -561,13 +561,13 @@ void property_editor_dialog::change_label_property(const std::string& id)
 		if(level_id.is_string() && level_id.as_string().empty() == false && level_id.as_string() != editor_.get_level().id()) {
 			level lvl(level_id.as_string());
 			lvl.finishLoading();
-			lvl.getAll_labels(labels);
+			lvl.getAllLabels(labels);
 			loaded_level = true;
 		}
 	}
 
 	if(!loaded_level) {
-		editor_.get_level().getAll_labels(labels);
+		editor_.get_level().getAllLabels(labels);
 	}
 
 	labels.erase(std::remove_if(labels.begin(), labels.end(), hidden_label), labels.end());

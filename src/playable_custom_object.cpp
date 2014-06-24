@@ -211,7 +211,7 @@ variant PlayableCustomObject::getPlayerValueBySlot(int slot) const
 {
 	switch(slot) {
 	case CUSTOM_OBJECT_PLAYER_DIFFICULTY: {
-		if(preferences::force_difficulty() != INT_MIN) {
+		if(preferences::force_difficulty() != std::numeric_limits<int>::min()) {
 			return variant(preferences::force_difficulty());
 		}
 

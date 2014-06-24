@@ -166,7 +166,7 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 		const Frame& f = e.getCurrentFrame();
 		const rect& area = s->area();
 
-		int min_x = INT_MIN, max_x = INT_MIN, min_y = INT_MIN, max_y = INT_MIN;
+		int min_x = std::numeric_limits<int>::min(), max_x = std::numeric_limits<int>::min(), min_y = std::numeric_limits<int>::min(), max_y = std::numeric_limits<int>::min();
 		std::set<point> solid_points;
 
 		for(const ConstSolidMapPtr& m : s->solid()) {
@@ -175,19 +175,19 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 				const int x = e.x() + (e.isFacingRight() ? p.x : (f.width() - 1 - p.x));
 				const int y = e.y() + p.y;
 
-				if(min_x == INT_MIN || x < min_x) {
+				if(min_x == std::numeric_limits<int>::min() || x < min_x) {
 					min_x = x;
 				}
 
-				if(max_x == INT_MIN || x > max_x) {
+				if(max_x == std::numeric_limits<int>::min() || x > max_x) {
 					max_x = x;
 				}
 
-				if(min_y == INT_MIN || y < min_y) {
+				if(min_y == std::numeric_limits<int>::min() || y < min_y) {
 					min_y = y;
 				}
 
-				if(max_y == INT_MIN || y > max_y) {
+				if(max_y == std::numeric_limits<int>::min() || y > max_y) {
 					max_y = y;
 				}
 

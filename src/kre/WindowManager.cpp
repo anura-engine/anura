@@ -185,6 +185,14 @@ namespace KRE
 			}
 		}
 
+		void setViewPort(int x, int y, unsigned width, unsigned height) override {
+			display_->setViewPort(x, y, width, height);
+		}
+
+		unsigned getWindowID() const override {
+			return SDL_GetWindowID(window_.get());
+		}
+
 		void setWindowIcon(const std::string& name) override {
 			// XXX SDL_SetWindowIcon(window_.get(), wm_icon.get());
 		}
@@ -311,11 +319,13 @@ namespace KRE
 
 	namespace
 	{
-		std::vector<WindowManagerPtr>& get_window_list()
+		std::map<unsigned,WindowManagerPtr>& get_window_list()
 		{
-			static std::vector<WindowManagerPtr> res;
+			static std::map<unsigned,WindowManagerPtr> res;
 			return res;
 		}
+
+		WindowManagerPtr main_window = nullptr;
 	}
 
 	void WindowManager::createWindow(unsigned width, unsigned height)
@@ -338,18 +348,32 @@ namespace KRE
 		// at the moment, so we just return it. We could use hint in the
 		// future if we had more.
 		WindowManager* wm = new SDLWindowManager(title, rend_hint);
-		get_window_list().emplace_back(wm);
-		return get_window_list().back();
+		get_window_list()[wm->getWindowID()] = WindowManagerPtr(wm);
+		// We consider the first window created the main one.
+		if(main_window == nullptr) {
+			main_window = get_window_list()[wm->getWindowID()];
+		}
+		return main_window;
 	}
 
 	std::vector<WindowManagerPtr> WindowManager::getWindowList()
 	{
-		return get_window_list();
+		std::vector<WindowManagerPtr> res;
+		for(auto pr : get_window_list()) {
+			res.push_back(pr.second);
+		}
+		return res;
 	}
 
 	WindowManagerPtr WindowManager::getMainWindow()
 	{
-		// We consider the first window on the list the main one.
-		return get_window_list()[0];
+		return main_window;
+	}
+
+	WindowManagerPtr getWindowFromID(unsigned id)
+	{
+		auto it = get_window_list().find(id);
+		ASSERT_LOG(it != get_window_list().end(), "Couldn't get window from id: " << id);
+		return it->second;
 	}
 }

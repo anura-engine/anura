@@ -43,7 +43,7 @@ struct CollisionInfo {
 
 	void readSurfInfo();
 
-	const surface_info* surf_info;
+	const SurfaceInfo* surf_info;
 	int friction;
 	int traction;
 	int damage;

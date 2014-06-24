@@ -32,7 +32,10 @@
 namespace KRE
 {
 	SceneNode::SceneNode(SceneGraph* sg)
-		: scene_graph_(sg)
+		: scene_graph_(sg),
+		position_(0.0f),
+		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		scale_(1.0f)
 	{
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
 	}
@@ -103,6 +106,46 @@ namespace KRE
 			o->SetRenderTarget(rp->render_target);
 			renderer->AddRenderableToQueue(o->getQueue(), o->Order(), o);
 		}
+	}
+
+	void SceneNode::setPosition(const glm::vec3& position) 
+	{
+		position_ = position;
+	}
+
+	void SceneNode::setPosition(float x, float y, float z) 
+	{
+		position_ = glm::vec3(x, y, z);
+	}
+
+	void SceneNode::setPosition(int x, int y, int z) 
+	{
+		position_ = glm::vec3(float(x), float(y), float(z));
+	}
+
+	void SceneNode::setRotation(float angle, const glm::vec3& axis) 
+	{
+		rotation_ = glm::angleAxis(angle, axis);
+	}
+
+	void SceneNode::setRotation(const glm::quat& rot) 
+	{
+		rotation_ = rot;
+	}
+
+	void SceneNode::setScale(float xs, float ys, float zs) 
+	{
+		scale_ = glm::vec3(xs, ys, zs);
+	}
+
+	void SceneNode::setScale(const glm::vec3& scale) 
+	{
+		scale_ = scale;
+	}
+
+	glm::mat4 SceneNode::ModelMatrix() const 
+	{
+		return glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_) * glm::scale(glm::mat4(1.0f), scale_);
 	}
 
 	void SceneNode::NodeAttached()

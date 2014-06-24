@@ -87,10 +87,10 @@ namespace gui
 			(*def_properties)[variant("damage")] = variant(0);
 			(*def_properties)[variant("feet_x")] = variant(0);
 			(*def_properties)[variant("feet_y")] = variant(0);
-			(*def_properties)[variant("velocity_x")] = variant(INT_MIN);
-			(*def_properties)[variant("velocity_y")] = variant(INT_MIN);
-			(*def_properties)[variant("accel_x")] = variant(INT_MIN);
-			(*def_properties)[variant("accel_y")] = variant(INT_MIN);
+			(*def_properties)[variant("velocity_x")] = variant(std::numeric_limits<int>::min());
+			(*def_properties)[variant("velocity_y")] = variant(std::numeric_limits<int>::min());
+			(*def_properties)[variant("accel_x")] = variant(std::numeric_limits<int>::min());
+			(*def_properties)[variant("accel_y")] = variant(std::numeric_limits<int>::min());
 			(*def_properties)[variant("scale")] = variant(2);
 		
 			(*def_properties)[variant("id")] = variant("id");

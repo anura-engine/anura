@@ -154,7 +154,7 @@ void editor_layers_dialog::row_selected(int nrow)
 void editor_layers_dialog::row_mouseover(int nrow)
 {
 	if(nrow < 0 || nrow >= rows_.size()) {
-		editor_.get_level().highlight_tile_layer(INT_MIN);
+		editor_.get_level().highlight_tile_layer(std::numeric_limits<int>::min());
 		return;
 	}
 

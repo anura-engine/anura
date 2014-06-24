@@ -53,6 +53,8 @@ namespace KRE
 		void Init(size_t width, size_t height) override;
 		void PrintDeviceInfo() override;
 
+		void setViewPort(int x, int y, unsigned width, unsigned height) override;
+
 		virtual DisplayDeviceDataPtr CreateDisplayDeviceData(const DisplayDeviceDef& def) override;
 
 	private:

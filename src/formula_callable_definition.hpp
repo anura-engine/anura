@@ -125,7 +125,7 @@ public: \
 	virtual variant getValueBySlot(int slot) const; \
 	virtual void setValue(const std::string& key, const variant& value); \
 	virtual void setValueBySlot(int slot, const variant& value); \
-	virtual std::string get_object_id() const { return #classname; } \
+	virtual std::string getObjectId() const { return #classname; } \
 public: \
 	static void init_callable_type(std::vector<callable_PropertyEntry>& v, std::map<std::string, int>& properties); \
 private:

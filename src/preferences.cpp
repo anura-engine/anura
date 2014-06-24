@@ -364,7 +364,7 @@ namespace preferences {
 		
 		variant external_code_editor_;
 		
-		int force_difficulty_ = INT_MIN;
+		int force_difficulty_ = std::numeric_limits<int>::min();
 		
 		uri::uri tbs_uri_ = uri::uri::parse("http://localhost:23456");
 		

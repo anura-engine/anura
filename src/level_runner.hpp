@@ -1,26 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef LEVEL_RUNNER_HPP_INCLUDED
-#define LEVEL_RUNNER_HPP_INCLUDED
+
+#pragma once
 
 #include <string>
-
-#include <boost/intrusive_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include "button.hpp"
 #include "debug_console.hpp"
@@ -38,10 +41,11 @@ struct multiplayer_exception {
 class editor;
 struct editor_resolution_manager;
 
-class level_runner {
+class LevelRunner 
+{
 public:
-	static level_runner* getCurrent();
-	level_runner(boost::intrusive_ptr<level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
+	static LevelRunner* getCurrent();
+	LevelRunner(boost::intrusive_ptr<Level>& lvl, std::string& level_cfg, std::string& original_level_cfg);
 
 	const debug_console::ConsoleDialog* get_debug_console() const {
 #ifndef NO_EDITOR
@@ -72,7 +76,6 @@ private:
 	void close_editor();
 	void reverse_cycle();
 	void handle_pause_game_result(PAUSE_GAME_RESULT result);
-	typedef boost::intrusive_ptr<level> LevelPtr;
 	LevelPtr& lvl_;
 	std::string& level_cfg_;
 	std::string& original_level_cfg_;
@@ -97,13 +100,11 @@ private:
 	point last_stats_point_;
 	std::string last_stats_point_level_;
 	bool handle_mouse_events(const SDL_Event &event);
-#if defined(USE_ISOMAP)
 	void handle_mouse_over_voxel_objects(const SDL_Event &event,
 		const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
 		game_logic::MapFormulaCallablePtr callable, 
 		const int basic_evt, 
 		const int catch_all_event);
-#endif
 
 	//mouse event handling state
 	bool mouse_clicking_;
@@ -122,8 +123,8 @@ private:
 	int history_trails_state_id_;
 	int object_reloads_state_id_;
 	int tile_rebuild_state_id_;
-	void init_history_Slider();
-	void on_history_change(double value);
+	void initHistorySlider();
+	void onHistoryChange(float value);
 	void update_history_trails();
 
 	std::unique_ptr<debug_console::ConsoleDialog> console_;
@@ -144,5 +145,3 @@ void end_skipping_game();
 bool is_skipping_game();
 
 void video_resize(const SDL_Event &event );
-
-#endif
