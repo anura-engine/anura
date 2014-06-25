@@ -458,11 +458,15 @@ variant game::get_value(const std::string& key) const
 
 		return variant(&v);
 	} else if(key == "db_client") {
+#ifdef USE_DB_CLIENT
 		if(db_client_.get() == NULL) {
 			db_client_ = db_client::create();
 		}
 
 		return variant(db_client_.get());
+#else
+		return variant();
+#endif
 	} else if(backup_callable_) {
 		return backup_callable_->query_value(key);
 	} else {

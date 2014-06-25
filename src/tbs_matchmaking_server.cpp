@@ -172,14 +172,33 @@ public:
 		heartbeat_message.add("type", "heartbeat");
 		heartbeat_message.add("users", sessions_.size());
 		heartbeat_message.add("games", servers_.size());
+
+		std::vector<variant> servers;
+		for(auto p : servers_) {
+			variant_builder server;
+			server.add("port", p.second.port);
+
+			std::vector<variant> users;
+			for(int n = 0; n != p.second.users.num_elements(); ++n) {
+				std::map<variant,variant> m;
+				m[variant("user")] = p.second.users[n]["user"];
+				users.push_back(variant(&m));
+			}
+			server.add("users", variant(&users));
+
+			servers.push_back(server.build());
+		}
+
+		heartbeat_message.add("servers", variant(&servers));
 		std::string heartbeat_msg = heartbeat_message.build().write_json();
 
 		for(auto& p : sessions_) {
-			if(p.second.current_socket && time_ms_ - p.second.last_contact >= 5000) {
+			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 5000)) {
 
 				send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
 				p.second.last_contact = time_ms_;
 				p.second.current_socket = socket_ptr();
+				p.second.sent_heartbeat = true;
 			} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
 				p.second.session_id = 0;
 			}
@@ -668,7 +687,7 @@ private:
 	db_client_ptr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false) {}
+		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -677,6 +696,7 @@ private:
 		int game_port;
 		socket_ptr current_socket;
 		bool queued_for_game;
+		bool sent_heartbeat;
 	};
 
 	std::map<int, SessionInfo> sessions_;
