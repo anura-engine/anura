@@ -136,8 +136,11 @@ private:
 
 	FPoint center_;
 	float radius_;
+	float y_radius_;
+	float stroke_width_;
 
 	graphics::color color_;
+	graphics::color stroke_color_;
 
 	shader_program_ptr shader_;
 
@@ -147,6 +150,8 @@ private:
 circle_primitive::circle_primitive(const variant& v)
    : draw_primitive(v),
      radius_(v["radius"].as_decimal().as_float()),
+     y_radius_(v["y_radius"].as_decimal(decimal(radius_)).as_float()),
+	 stroke_width_(0.0),
      shader_(gles2::get_simple_shader())
 {
 	if(v.has_key("shader")) {
@@ -162,6 +167,12 @@ circle_primitive::circle_primitive(const variant& v)
 		color_ = color(200, 0, 0, 255);
 	}
 
+	if(v.has_key("stroke_color")) {
+		stroke_color_ = color(v["stroke_color"]);
+		stroke_width_ = v["stroke_width"].as_decimal().as_float();
+	}
+
+
 	init();
 }
 
@@ -172,7 +183,7 @@ void circle_primitive::init()
 	varray_.push_back(center_[1]);
 	for(double angle = 0; angle < 3.1459*2.0; angle += 0.1) {
 		const double xpos = center_[0] + radius_*cos(angle);
-		const double ypos = center_[1] + radius_*sin(angle);
+		const double ypos = center_[1] + y_radius_*sin(angle);
 		varray_.push_back(xpos);
 		varray_.push_back(ypos);
 	}
@@ -191,13 +202,25 @@ void circle_primitive::handle_draw(const lighting_ptr& lighting, const camera_ca
 
 void circle_primitive::handle_draw() const
 {
-	
-	color_.set_as_current_color();
-
 	gles2::manager gles2_manager(shader_);
-	gles2::active_shader()->prepare_draw();
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
-	glDrawArrays(GL_TRIANGLE_FAN, 0, varray_.size()/2);
+
+	if(color_.a() > 0) {
+		color_.set_as_current_color();
+
+		gles2::active_shader()->prepare_draw();
+		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
+		glDrawArrays(GL_TRIANGLE_FAN, 0, varray_.size()/2);
+	}
+
+	if(stroke_color_.a() > 0) {
+		glLineWidth(stroke_width_);
+		stroke_color_.set_as_current_color();
+
+		gles2::active_shader()->prepare_draw();
+        gles2::active_shader()->shader()->disable_vertex_attrib(-1);
+		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_[2]);
+        glDrawArrays(GL_LINE_LOOP, 0, (varray_.size()-2)/2);
+	}
 
 	glColor4f(1.0, 1.0, 1.0, 1.0);
 	
