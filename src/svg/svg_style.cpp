@@ -227,7 +227,7 @@ namespace KRE
 
 				FT_Face face = FT::get_font_face(family_[0]);
 				auto ff = cairo_ft_font_face_create_for_ft_face(face, 0);
-				cairo_setFont_face(ctx.cairo(), ff);
+				cairo_set_font_face(ctx.cairo(), ff);
 
 				ctx.fa().push_font_face(face);
 			}
@@ -252,7 +252,7 @@ namespace KRE
 			}
 			if(size > 0) {
 				ctx.fa().push_font_size(size);
-				cairo_setFontSize(ctx.cairo(), size);
+				cairo_set_font_size(ctx.cairo(), size);
 			}
 			// XXX use font_size_adjust if defined to scale the height of X in the chosen font to the given value.
 			// seems rather annoyingly all-in-all.

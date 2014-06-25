@@ -1968,8 +1968,6 @@ void Level::draw_absolutely_positioned_objects() const
 
 void Level::draw(int x, int y, int w, int h) const
 {
-	sound::process();
-
 	++draw_count;
 
 	const int start_x = x;
@@ -1990,10 +1988,8 @@ void Level::draw(int x, int y, int w, int h) const
 		const std::vector<EntityPtr>* chars_ptr = &active_chars_;
 		std::vector<EntityPtr> editor_chars_buf;
 
-		std::map<int, hex::HexMapPtr>::const_iterator hit = HexMaps_.begin();
-		while(hit != HexMaps_.end()) {
-			hit->second->draw();
-			++hit;
+		for(auto& hm : HexMaps_) {
+			hm.second->draw();
 		}
 	
 		if(editor_) {
@@ -2409,7 +2405,7 @@ void Level::draw_background(int x, int y, int rotation) const
 
 				if(intersection.w() == screen_area.w() || intersection.h() == screen_area.h()) {
 					rect result[2];
-					const int nrects = rect::rect_difference(screen_area, intersection, result);
+					const int nrects = Geometry::rect_difference(screen_area, intersection, result);
 					ASSERT_LOG(nrects <= 2, "TOO MANY RESULTS " << nrects << " IN " << screen_area << " - " << intersection);
 					if(nrects < 1) {
 						//background is completely obscured, so return
@@ -2462,6 +2458,8 @@ void Level::process()
 	if(iso_world_) {
 		iso_world_->process();
 	}
+
+	sound::process();
 }
 
 void Level::process_draw()

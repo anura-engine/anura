@@ -861,7 +861,7 @@ bool level_object::calculateDrawArea()
 {
 	draw_area_ = rect();
 	foreach(int tile, tiles_) {
-		draw_area_ = rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
+		draw_area_ = Geometry::rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
 	}
 
 	return draw_area_ != rect(0, 0, BaseTileSize, BaseTileSize);

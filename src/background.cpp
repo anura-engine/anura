@@ -1,52 +1,56 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include <math.h>
+
+#include <cmath>
 
 #include <iostream>
 #include <map>
 
 #include "background.hpp"
-#include "color_utils.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
-#include "graphics.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "surface_palette.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-namespace {
-//a cache key with background name and palette ID.
-typedef std::pair<std::string, int> cache_key;
-typedef std::map<cache_key, std::shared_ptr<background> > bg_cache;
-bg_cache cache;
+namespace 
+{
+	//a cache key with background name and palette ID.
+	typedef std::pair<std::string, int> cache_key;
+	typedef std::map<cache_key, std::shared_ptr<background>> bg_cache;
+	bg_cache cache;
 
 #ifndef NO_EDITOR
-std::set<std::string> listening_for_files, files_updated;
+	std::set<std::string> listening_for_files, files_updated;
 
-void on_bg_file_updated(std::string path)
-{
-	files_updated.insert(path);
-}
+	void on_bg_file_updated(std::string path)
+	{
+		files_updated.insert(path);
+	}
 #endif // NO_EDITOR
 }
 
@@ -111,7 +115,7 @@ std::vector<std::string> background::get_available_backgrounds()
 	module::get_files_in_dir("data/backgrounds/", &files);
 
 	std::vector<std::string> result;
-	foreach(const std::string& fname, files) {
+	for(const std::string& fname : files) {
 		if(fname.size() > 4 && std::equal(fname.end() - 4, fname.end(), ".cfg")) {
 			result.push_back(std::string(fname.begin(), fname.end() - 4));
 		}
@@ -122,8 +126,8 @@ std::vector<std::string> background::get_available_backgrounds()
 
 background::background(variant node, int palette) : palette_(palette)
 {
-	top_ = string_to_color(node["top"].as_string());
-	bot_ = string_to_color(node["bottom"].as_string());
+	top_ = KRE::Color(node["top"]);
+	bot_ = KRE::Color(node["bottom"]);
 
 	if(palette_ != -1) {
 		top_ = graphics::map_palette(top_, palette);
@@ -133,7 +137,7 @@ background::background(variant node, int palette) : palette_(palette)
 	width_ = node["width"].as_int();
 	height_ = node["height"].as_int();
 
-	foreach(variant layer_node, node["layer"].as_list()) {
+	for(variant layer_node : node["layer"].as_list()) {
 		layer bg;
 		bg.image = layer_node["image"].as_string();
 		bg.image_formula = layer_node["image_formula"].as_string_default();
@@ -165,23 +169,17 @@ background::background(variant node, int palette) : palette_(palette)
 		}
 #endif
 		
-		std::fill(bg.color, bg.color + 4, GLfloat(0.0));
-		bg.color[0] = layer_node["red"].as_decimal(decimal(1.0)).as_float();
-		bg.color[1] = layer_node["green"].as_decimal(decimal(1.0)).as_float();
-		bg.color[2] = layer_node["blue"].as_decimal(decimal(1.0)).as_float();
-		bg.color[3] = layer_node["alpha"].as_decimal(decimal(1.0)).as_float();
+		bg.color = KRE::Color(layer_node);
 
 		if(layer_node.has_key("color_above")) {
-			bg.color_above.reset(new SDL_Color);
-			*bg.color_above = string_to_color(layer_node["color_above"].as_string());
+			bg.color_above.reset(new KRE::Color(layer_node["color_above"]));
 			if(palette_ != -1) {
 				*bg.color_above = graphics::map_palette(*bg.color_above, palette);
 			}
 		}
 
 		if(layer_node.has_key("color_below")) {
-			bg.color_below.reset(new SDL_Color);
-			*bg.color_below = string_to_color(layer_node["color_below"].as_string());
+			bg.color_below.reset(new KRE::Color(layer_node["color_below"]));
 			if(palette_ != -1) {
 				*bg.color_below = graphics::map_palette(*bg.color_below, palette);
 			}
@@ -208,7 +206,7 @@ variant background::write() const
 	res.add("width", formatter() << width_);
 	res.add("height", formatter() << height_);
 
-	foreach(const layer& bg, layers_) {
+	for(const layer& bg : layers_) {
 		variant_builder layer_node;
 		layer_node.add("image", bg.image);
 		layer_node.add("xscale", formatter() << bg.xscale);
@@ -225,19 +223,17 @@ variant background::write() const
 		layer_node.add("y1", formatter() << bg.y1);
 		layer_node.add("y2", formatter() << bg.y2);
 		layer_node.add("scale", formatter() << bg.scale);
-		layer_node.add("red", formatter() << bg.color[0]);
+		layer_node.add("red", formatter() << bg.color.r_int());
 		layer_node.add("green", formatter() << bg.color[1]);
 		layer_node.add("blue", formatter() << bg.color[2]);
 		layer_node.add("alpha", formatter() << bg.color[3]);
 
 		if(bg.color_above) {
-			sprintf(buf, "%02x%02x%02x", bg.color_above->r, bg.color_above->g, bg.color_above->b);
-			layer_node.add("color_above", buf);
+			layer_node.add("color_above", bg.color_above->write());
 		}
 
 		if(bg.color_below) {
-			sprintf(buf, "%02x%02x%02x", bg.color_below->r, bg.color_below->g, bg.color_below->b);
-			layer_node.add("color_below", buf);
+			layer_node.add("color_below", bg.color_below->write());
 		}
 		if(bg.foreground) {
 			layer_node.add("foreground", "true");
@@ -317,7 +313,7 @@ void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, 
 
 	rect sub_areas[4];
 	for(; opaque1 != opaque2; ++opaque1) {
-		const int result = rect_difference(area, *opaque1, sub_areas);
+		const int result = Geometry::rect_difference(area, *opaque1, sub_areas);
 		if(result == -1) {
 			continue;
 		}
@@ -371,7 +367,7 @@ void background::draw_layers(int x, int y, const rect& area_ref, const std::vect
 
 void background::draw_foreground(double xpos, double ypos, int rotation, int cycle) const
 {
-	foreach(const layer& bg, layers_) {
+	for(const layer& bg : layers_) {
 		if(bg.foreground) {
 			draw_layer(xpos, ypos, rect(xpos, ypos, graphics::screen_width(), graphics::screen_height()), rotation, bg, cycle);
 			if(!blit_queue.empty()) {

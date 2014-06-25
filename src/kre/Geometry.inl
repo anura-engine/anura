@@ -160,7 +160,7 @@ namespace Geometry
 	}
 
 	template<typename T> inline
-	int Rect<T>::rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output) const
+	int rect_difference(const Rect<T>& a, const Rect<T>& b, Rect<T>* output) const
 	{
 		if (rects_intersect(a,b) == false){ //return empty if there's no intersection
 		return -1;
@@ -200,7 +200,7 @@ namespace Geometry
 	}
 
 	template<typename T> inline
-	Rect<T> Rect<T>::rect_union(const Rect<T>& a, const Rect<T>& b) const
+	Rect<T> rect_union(const Rect<T>& a, const Rect<T>& b) const
 	{
 		if(a.w() == 0 || a.h() == 0) {
 			return b;

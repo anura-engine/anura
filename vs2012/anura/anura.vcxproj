@@ -236,7 +236,6 @@
     <ClInclude Include="..\..\src\ft_iface.hpp" />
     <ClInclude Include="..\..\src\functional.hpp" />
     <ClInclude Include="..\..\src\game_registry.hpp" />
-    <ClInclude Include="..\..\src\geometry.hpp" />
     <ClInclude Include="..\..\src\globals.h" />
     <ClInclude Include="..\..\src\graphical_font.hpp" />
     <ClInclude Include="..\..\src\graphical_font_label.hpp" />

@@ -437,11 +437,11 @@ END_CAIRO_FN
 BEGIN_CAIRO_FN(setFont, "(string)")
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + args[0].as_string()));
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_setFont_face(context.get(), cairo_face);
+	cairo_set_font_face(context.get(), cairo_face);
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(setFontSize, "(decimal)")
-	cairo_setFontSize(context.get(), args[0].as_decimal().as_float());
+	cairo_set_font_size(context.get(), args[0].as_decimal().as_float());
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(show_text, "(string)")
@@ -755,9 +755,9 @@ BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, he
 
 	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_setFont_face(context.get(), cairo_face);
+	cairo_set_font_face(context.get(), cairo_face);
 
-	cairo_setFontSize(context.get(), FN_ARG(1).as_decimal().as_float());
+	cairo_set_font_size(context.get(), FN_ARG(1).as_decimal().as_float());
 
 	std::string text = FN_ARG(2).as_string();
 	std::vector<std::string> lines = util::split(text, '\n');

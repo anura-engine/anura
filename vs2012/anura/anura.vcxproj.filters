@@ -333,9 +333,6 @@
     <ClInclude Include="..\..\src\game_registry.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\geometry.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\globals.h">
       <Filter>Header Files</Filter>
     </ClInclude>
