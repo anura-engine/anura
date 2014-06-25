@@ -786,6 +786,10 @@ BEGIN_DEFINE_FN(parse_special_chars, "(string) -> string")
 	std::string result;
 	auto start = s.begin();
 	auto itor = std::find(s.begin(), s.end(), '&');
+	if(itor == s.end()) {
+		return variant(s);
+	}
+
 	while(itor != s.end()) {
 		result += std::string(start, itor);
 
