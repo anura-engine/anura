@@ -3574,7 +3574,13 @@ void level::add_multi_player(entity_ptr p)
 
 void level::add_player(entity_ptr p)
 {
-	chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
+	if(player_) {
+		if(player_ != p) {
+			player_->being_removed();
+		}
+		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
+	}
+
 	last_touched_player_ = player_ = p;
 	ASSERT_LOG(!g_player_type || g_player_type->match(variant(p.get())), "Player object being added to level does not match required player type. " << p->debug_description() << " is not a " << g_player_type->to_string());
 	if(players_.empty()) {
