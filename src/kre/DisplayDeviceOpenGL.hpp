@@ -47,6 +47,7 @@ namespace KRE
 
 		CanvasPtr GetCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
+		ScissorPtr getScissor(const rect& r) override;
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;
 

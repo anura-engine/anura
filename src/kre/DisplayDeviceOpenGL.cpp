@@ -33,6 +33,7 @@
 #include "FboOpenGL.hpp"
 #include "LightObject.hpp"
 #include "MaterialOpenGL.hpp"
+#include "ScissorOGL.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -345,6 +346,12 @@ namespace KRE
 		if(r->GetRenderTarget()) {
 			r->GetRenderTarget()->Unapply();
 		}
+	}
+
+	ScissorPtr DisplayDeviceOpenGL::getScissor(const rect& r)
+	{
+		auto scissor = new ScissorOGL(r);
+		return ScissorPtr(scissor);
 	}
 
 	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(const SurfacePtr& surface, const variant& node)

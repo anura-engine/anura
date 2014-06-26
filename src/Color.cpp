@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <boost/lexical_cast.hpp>
+
 #include <algorithm>
 #include <map>
 #include <string>
@@ -204,13 +206,64 @@ namespace KRE
 				return clamp<int>(node.as_int(), 0, 255) / 255.0f;
 			} else if(node.is_float()) {
 				return clamp<float>(node.as_float(), 0.0f, 1.0f);
+			} else if(node.is_string()) {
+				try {
+					double value = boost::lexical_cast<double>(node.as_string());
+					if(value > 1.0) {
+						// Assume it's an integer value.
+						return static_cast<float>(value / 255.0);
+					} else if(value < 1.0) {
+						return static_cast<float>(value);
+					} else {
+						// value = 1.0 -- check the string to try and disambiguate
+						const std::string& s = node.as_string();
+						if(s == "1" || s.find('.') == std::string::npos) {
+							return 1.0f / 255.0f;
+						}
+						return 1.0f;
+					}
+				} catch(boost::bad_lexical_cast&) {
+					ASSERT_LOG(false, "unable to convert value to number: " << node.to_debug_string());
+				}
 			}
 			ASSERT_LOG(false, "attribute of Color value was expected to be numeric type.");
 			return 1.0f;
 		}
+
+		uint8_t convert_hex_digit(char d) 
+		{
+			uint8_t value = 0;
+			if(d >= 'A' && d <= 'F') {
+				value = d - 'A' + 10;
+			} else if(d >= 'a' && d <= 'f') {
+				value = d - 'a' + 10;
+			} else if(d >= '0' && d <= '9') {
+				value = d - '0';
+			} else {
+				ASSERT_LOG(false, "Unrecognised hex digit: " << d);
+			}
+			return value;
+		}
+
+		Color color_from_hex_string(const std::string& colstr)
+		{
+			std::string s = colstr;
+			ASSERT_LOG(!s.empty(), "No color detail found in string.");
+			if(s[0] == '#') {
+				s = s.substr(1);
+			}
+			ASSERT_LOG(s.length() == 3 || s.length() == 6, "Expected length of color definition to be 3 or 6 characters long, found: " << s);
+			if(s.length() == 3) {
+				int r_hex = convert_hex_digit(s[1]);
+				int g_hex = convert_hex_digit(s[2]);
+				int b_hex = convert_hex_digit(s[3]);
+				return Color((r_hex << 4) | r_hex, (g_hex << 4) | g_hex, (b_hex << 4) | b_hex);
+			}
+			return Color((convert_hex_digit(s[1]) << 4) | convert_hex_digit(s[2]),
+				(convert_hex_digit(s[3]) << 4) | convert_hex_digit(s[4]),
+				(convert_hex_digit(s[5]) << 4) | convert_hex_digit(s[6]));
+		}
 	}
-
-
 
 	Color::Color()
 	{
@@ -248,7 +301,9 @@ namespace KRE
 		if(node.is_string()) {
 			const std::string& colstr = node.as_string();
 			auto it = get_color_table().find(colstr);
-			ASSERT_LOG(it != get_color_table().end(), "Couldn't find color '" << colstr << "' in known color list");
+			if(it == get_color_table().end()) {
+				*this = color_from_hex_string(colstr);
+			}
 			*this = it->second;
 		} else if(node.is_list()) {
 			ASSERT_LOG(node.num_elements() == 3 || node.num_elements() == 4,

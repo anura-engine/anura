@@ -35,6 +35,7 @@
 #include "Material.hpp"
 #include "Renderable.hpp"
 #include "RenderTarget.hpp"
+#include "Scissor.hpp"
 #include "StencilScope.hpp"
 #include "../variant.hpp"
 
@@ -131,6 +132,8 @@ namespace KRE
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
+
+		virtual ScissorPtr getScissor(const rect& r) = 0;
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 

@@ -300,6 +300,8 @@
     <ClInclude Include="..\..\src\kre\SceneObject.hpp" />
     <ClInclude Include="..\..\src\kre\SceneParameters.hpp" />
     <ClInclude Include="..\..\src\kre\SceneUtil.hpp" />
+    <ClInclude Include="..\..\src\kre\Scissor.hpp" />
+    <ClInclude Include="..\..\src\kre\ScissorOGL.hpp" />
     <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
     <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\spline.hpp" />
@@ -644,6 +646,8 @@
     <ClCompile Include="..\..\src\kre\SceneNode.cpp" />
     <ClCompile Include="..\..\src\kre\SceneObject.cpp" />
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
+    <ClCompile Include="..\..\src\kre\Scissor.cpp" />
+    <ClCompile Include="..\..\src\kre\ScissorOGL.cpp" />
     <ClCompile Include="..\..\src\kre\ShadersOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
@@ -713,7 +717,6 @@
     <ClCompile Include="..\..\src\string_utils.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_scaling.cpp" />
-    <ClCompile Include="..\..\src\svg\color.cpp" />
     <ClCompile Include="..\..\src\svg\logger.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
     <ClCompile Include="..\..\src\svg\svg_container.cpp" />

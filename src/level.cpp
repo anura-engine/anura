@@ -2423,8 +2423,8 @@ void Level::draw_background(int x, int y, int rotation) const
 
 		background_->draw(x, y, screen_area, opaque_areas, rotation, cycle());
 	} else {
-		glClearColor(0.0, 0.0, 0.0, 0.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
+		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
 	}
 }
 

@@ -375,7 +375,6 @@ void render_scene(Level& lvl, const screen_position& pos)
 #endif
 	const int screen_width = wnd->width() - (lvl.in_editor() ? sidebar_width : 0);
 
-
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
 		float rotate = static_cast<float>(camera_rotation)/1000.0f;
@@ -441,11 +440,11 @@ void render_scene(Level& lvl, const screen_position& pos)
 			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), tint);
 		}
 
-		i->color = KRE::ColorTransform(1.0, 1.0, 1.0, 1.0, 
+		i->color = i->color + i->delta;/*KRE::ColorTransform(1.0, 1.0, 1.0, 1.0, 
 			i->color.addRed() + i->delta.addRed(),
 			i->color.addGreen() + i->delta.addGreen(),
 			i->color.addBlue() + i->delta.addBlue(),
-			i->color.addAlpha() + i->delta.addAlpha());
+			i->color.addAlpha() + i->delta.addAlpha());*/
 
 		if(--i->duration <= 0) {
 			i = flashes().erase(i);

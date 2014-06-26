@@ -954,6 +954,12 @@
     <ClInclude Include="..\..\src\kre\BlendOGL.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\ScissorOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Scissor.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1712,9 +1718,6 @@
     <ClCompile Include="..\..\src\db_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\svg\color.cpp">
-      <Filter>Source Files\svg</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\svg\logger.cpp">
       <Filter>Source Files\svg</Filter>
     </ClCompile>
@@ -1929,6 +1932,12 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\BlendOGL.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Scissor.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ScissorOGL.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>

@@ -26,6 +26,9 @@
 #include <iostream>
 #include <map>
 
+#include "kre/Scissor.hpp"
+#include "kre/WindowManager.hpp"
+
 #include "background.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
@@ -198,11 +201,8 @@ background::background(variant node, int palette) : palette_(palette)
 variant background::write() const
 {
 	variant_builder res;
-	char buf[128];
-	sprintf(buf, "%02x%02x%02x", top_.r, top_.g, top_.b);
-	res.add("top", buf);
-	sprintf(buf, "%02x%02x%02x", bot_.r, bot_.g, bot_.b);
-	res.add("bottom", buf);
+	res.add("top", top_.write());
+	res.add("bottom", bot_.write());
 	res.add("width", formatter() << width_);
 	res.add("height", formatter() << height_);
 
@@ -224,9 +224,9 @@ variant background::write() const
 		layer_node.add("y2", formatter() << bg.y2);
 		layer_node.add("scale", formatter() << bg.scale);
 		layer_node.add("red", formatter() << bg.color.r_int());
-		layer_node.add("green", formatter() << bg.color[1]);
-		layer_node.add("blue", formatter() << bg.color[2]);
-		layer_node.add("alpha", formatter() << bg.color[3]);
+		layer_node.add("green", formatter() << bg.color.g_int());
+		layer_node.add("blue", formatter() << bg.color.b_int());
+		layer_node.add("alpha", formatter() << bg.color.a_int());
 
 		if(bg.color_above) {
 			layer_node.add("color_above", bg.color_above->write());
@@ -254,6 +254,7 @@ variant background::write() const
 
 void background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, int rotation, int cycle) const
 {
+	auto& wnd = KRE::WindowManager::getMainWindow();
 	const int height = height_ + offset_.y*2;
 
 	//set the background colors for the level. The area above 'height' is
@@ -262,18 +263,16 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	//scissors to divide the screen into top and bottom.
 	if(height < y) {
 		//the entire screen is full of the bottom color
-		glClearColor(bot_.r/255.0, bot_.g/255.0, bot_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-	} else if(height > y + graphics::screen_height()) {
+		wnd->setClearColor(bot_);
+		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+	} else if(height > y + wnd->height()) {
 		//the entire screen is full of the top color.
-		glClearColor(top_.r/255.0, top_.g/255.0, top_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		wnd->setClearColor(top_);
+		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
 		//using scissors to delinate their areas.
-		const int dist_from_bottom = y + graphics::screen_height() - height;
-
-		glEnable(GL_SCISSOR_TEST);
+		const int dist_from_bottom = y + wnd->height() - height;
 
 		const int scissor_scale = preferences::double_scale() ? 2 : 1;
 
@@ -281,58 +280,54 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		//to transform the iPhone's display, which is fine normally, but
 		//here we have to accomodate the iPhone being "on its side"
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		glScissor(dist_from_bottom/scissor_scale, 0, (graphics::screen_height() - dist_from_bottom)/scissor_scale, graphics::screen_width()/scissor_scale);
+		KRE::Scissor::Manager sm1(rect(dist_from_bottom/scissor_scale, 0, (graphics::screen_height() - dist_from_bottom)/scissor_scale, graphics::screen_width()/scissor_scale));
 #else
-		glScissor(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600));
+		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600)));
 #endif
-		glClearColor(top_.r/255.0, top_.g/255.0, top_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
+		wnd->setClearColor(top_);
+		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		glScissor(0, 0, dist_from_bottom/scissor_scale, graphics::screen_width()/scissor_scale);
+		KRE::Scissor::Manager sm2(rect(0, 0, dist_from_bottom/scissor_scale, graphics::screen_width()/scissor_scale));
 #else
-		glScissor(0, 0, preferences::actual_screen_width(), dist_from_bottom);
+		KRE::Scissor::Manager sm2(rect(0, 0, preferences::actual_screen_width(), dist_from_bottom));
 #endif
-		glClearColor(bot_.r/255.0, bot_.g/255.0, bot_.b/255.0, 1.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-
-		glDisable(GL_SCISSOR_TEST);
+		wnd->setClearColor(bot_);
+		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
 	}
 
 	draw_layers(x, y, area, opaque_areas, rotation, cycle);
 }
 
-namespace {
-graphics::blit_queue blit_queue;
-
-void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
-	if(opaque1 == opaque2) {
-		areas->push_back(area);
-		return;
-	}
-
-	rect sub_areas[4];
-	for(; opaque1 != opaque2; ++opaque1) {
-		const int result = Geometry::rect_difference(area, *opaque1, sub_areas);
-		if(result == -1) {
-			continue;
-		}
-
-		if(result != 1) {
-			for(int n = 0; n < result; ++n) {
-
-				calculate_draw_areas(sub_areas[n], opaque1+1, opaque2, areas);
-			}
-
+namespace 
+{
+	void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
+		if(opaque1 == opaque2) {
+			areas->push_back(area);
 			return;
 		}
 
-		area = sub_areas[0];
+		rect sub_areas[4];
+		for(; opaque1 != opaque2; ++opaque1) {
+			const int result = Geometry::rect_difference(area, *opaque1, sub_areas);
+			if(result == -1) {
+				continue;
+			}
+
+			if(result != 1) {
+				for(int n = 0; n < result; ++n) {
+
+					calculate_draw_areas(sub_areas[n], opaque1+1, opaque2, areas);
+				}
+
+				return;
+			}
+
+			area = sub_areas[0];
+		}
+
+		areas->push_back(area);
 	}
-
-	areas->push_back(area);
-}
-
 }
 
 void background::draw_layers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, int rotation, int cycle) const
@@ -341,12 +336,11 @@ void background::draw_layers(int x, int y, const rect& area_ref, const std::vect
 	areas.clear();
 	calculate_draw_areas(area_ref, opaque_areas.begin(), opaque_areas.end(), &areas);
 
-	for(std::vector<layer>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
-		const layer& bg = *i;
+	for(auto& bg : layers_) {
 		if(bg.foreground == false) {
 
-			for(std::vector<rect>::const_iterator a = areas.begin(); a != areas.end(); ++a) {
-				draw_layer(x, y, *a, rotation, bg, cycle);
+			for(auto& a : areas) {
+				draw_layer(x, y, a, rotation, bg, cycle);
 			}
 
 			if(!blit_queue.empty() && (i+1 == layers_.end() || i->texture != (i+1)->texture || (i+1)->foreground || i->blend != (i+1)->blend)) {
