@@ -87,6 +87,7 @@
 
 #include "IMG_savepng.h"
 
+extern int g_tile_scale;
 extern int g_tile_size;
 #define BaseTileSize g_tile_size
 
@@ -3513,12 +3514,12 @@ void editor::draw_gui() const
 #endif
 	   varray.clear();
 	   glColor4ub(255, 255, 255, 64);
-	   for(int x = -TileSize - (xpos_/zoom_)%TileSize; x < graphics::screen_width(); x += (BaseTileSize*2)/zoom_) {
+	   for(int x = -TileSize - (xpos_/zoom_)%TileSize; x < graphics::screen_width(); x += (BaseTileSize*g_tile_scale)/zoom_) {
 		   varray.push_back(x); varray.push_back(0);
 		   varray.push_back(x); varray.push_back(graphics::screen_height());
 	   }
 
-		for(int y = -TileSize - (ypos_/zoom_)%TileSize; y < graphics::screen_height(); y += (BaseTileSize*2)/zoom_) {
+		for(int y = -TileSize - (ypos_/zoom_)%TileSize; y < graphics::screen_height(); y += (BaseTileSize*g_tile_scale)/zoom_) {
 			varray.push_back(0); varray.push_back(y);
 			varray.push_back(graphics::screen_width()); varray.push_back(y);
 		}

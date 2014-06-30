@@ -23,6 +23,7 @@
 #include <algorithm>
 #include <iostream>
 
+extern int g_tile_scale;
 extern int g_tile_size;
 #define BaseTileSize g_tile_size
 
@@ -53,14 +54,14 @@ int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect
 	const GLfloat y1 = t.translate_coord_y(GLfloat(ypos + TileEpsilon)/GLfloat(t.height()));
 	const GLfloat y2 = t.translate_coord_y(GLfloat(ypos+area.h() - TileEpsilon)/GLfloat(t.height()));
 
-	int area_x = area.x()*2;
+	int area_x = area.x()*g_tile_scale;
 	if(reverse) {
 		std::swap(x1, x2);
-		area_x = 32 - area.x()*2 - area.w()*2; // 2*BaseTileSize ?
+		area_x = 32 - area.x()*g_tile_scale - area.w()*g_tile_scale; // 2*BaseTileSize ?
 	}
 
 	x += area_x;
-	y += area.y()*2;
+	y += area.y()*g_tile_scale;
 
 	result->vertex[0] = x;
 	result->vertex[1] = y;
@@ -69,19 +70,19 @@ int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect
 	++result;
 
 	result->vertex[0] = x;
-	result->vertex[1] = y + area.h()*2;
+	result->vertex[1] = y + area.h()*g_tile_scale;
 	result->uv[0] = x1;
 	result->uv[1] = y2;
 	++result;
 
-	result->vertex[0] = x + area.w()*2;
+	result->vertex[0] = x + area.w()*g_tile_scale;
 	result->vertex[1] = y;
 	result->uv[0] = x2;
 	result->uv[1] = y1;
 	++result;
 
-	result->vertex[0] = x + area.w()*2;
-	result->vertex[1] = y + area.h()*2;
+	result->vertex[0] = x + area.w()*g_tile_scale;
+	result->vertex[1] = y + area.h()*g_tile_scale;
 	result->uv[0] = x2;
 	result->uv[1] = y2;
 	++result;

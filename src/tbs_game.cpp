@@ -171,7 +171,7 @@ boost::intrusive_ptr<game> game::create(const variant& v)
 
 game::game(const game_type& type)
   : type_(type), game_id_(generate_game_id()),
-    started_(false), state_(STATE_SETUP), state_id_(0), rng_seed_(rng::get_seed()),
+    started_(false), state_(STATE_SETUP), state_id_(0), rng_seed_(rng::get_seed()), cycle_(0), tick_rate_(50),
 	backup_callable_(NULL)
 {
 }
@@ -182,6 +182,8 @@ game::game(const variant& value)
     started_(value["started"].as_bool(false)),
 	state_(STATE_SETUP),
 	state_id_(0), rng_seed_(rng::get_seed()),
+	cycle_(value["cycle"].as_int(0)),
+	tick_rate_(value["tick_rate"].as_int(50)),
 	backup_callable_(NULL)
 {
 }
@@ -193,6 +195,8 @@ game::game(const std::string& game_type, const variant& doc)
 	state_(started_ ? STATE_PLAYING : STATE_SETUP),
 	state_id_(doc["state_id"].as_int()),
 	rng_seed_(doc["rng_seed"].as_int()),
+	cycle_(doc["cycle"].as_int(0)),
+	tick_rate_(doc["tick_rate"].as_int(50)),
 	backup_callable_(NULL),
 	doc_(doc["state"])
 {
@@ -439,6 +443,7 @@ void game::process()
 	if(started_) {
 		static const std::string ProcessStr = "process";
 		handle_event(ProcessStr);
+		++cycle_;
 	}
 }
 

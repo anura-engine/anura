@@ -25,9 +25,10 @@
 #define MAX_TILE_SIZE 64
 #endif
 
+extern int g_tile_scale;
 extern int g_tile_size;
 
-#define TileSize (g_tile_size*2)
+#define TileSize (g_tile_size*g_tile_scale)
 
 typedef std::pair<int,int> tile_pos;
 typedef boost::dynamic_bitset<> tile_bitmap;

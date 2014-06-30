@@ -30,6 +30,7 @@
 #include "level_solid_map.hpp"
 #include "multi_tile_pattern.hpp"
 #include "point_map.hpp"
+#include "preferences.hpp"
 #include "random.hpp"
 #include "string_utils.hpp"
 #include "thread.hpp"
@@ -37,6 +38,8 @@
 #include "variant_utils.hpp"
 
 namespace {
+
+PREF_INT(tile_pattern_search_border, 1, "How many extra tiles to search for patterns");
 
 const std::map<std::string, int>& str_to_zorder() {
 	static std::map<std::string, int>* instance = NULL;
@@ -920,14 +923,14 @@ void tile_map::build_tiles(std::vector<level_tile>* tiles, const rect* r) const
 	tile_pattern_cache cache;
 
 	int ntiles = 0;
-	for(int y = -1; y <= static_cast<int>(map_.size()); ++y) {
+	for(int y = -g_tile_pattern_search_border; y < static_cast<int>(map_.size()) + g_tile_pattern_search_border; ++y) {
 		const int ypos = ypos_ + y*TileSize;
 
 		if(r && ypos < r->y() || r && ypos > r->y2()) {
 			continue;
 		}
 
-		for(int x = -1; x <= width; ++x) {
+		for(int x = -g_tile_pattern_search_border; x < width + g_tile_pattern_search_border; ++x) {
 			const int xpos = xpos_ + x*TileSize;
 
 			const level_object* obj = multi_pattern_matches.get(point(x, y));

@@ -36,6 +36,8 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
+PREF_INT(tile_scale, 2, "Scaling of game tiles");
+
 PREF_INT(tile_size, 16, "Size of game tile edges");
 #define BaseTileSize g_tile_size
 
@@ -383,7 +385,7 @@ level_object::level_object(variant node, const char* id)
 			tiles_.push_back(strtol(variation.c_str()+1, NULL, 10));
 		} else {
 			const int width = std::max<int>(t_.width(), t_.height());
-			assert(width%BaseTileSize == 0);
+			ASSERT_LOG(width%BaseTileSize == 0, "image width: " << width << " not multiple of base tile size: " << BaseTileSize);
 			const int base = std::min<int>(32, width/BaseTileSize);
 			tiles_.push_back((base == 1) ? 0 : strtol(variation.c_str(), NULL, base));
 		}
@@ -775,12 +777,12 @@ void level_object::write_compiled_index(char* buf) const
 
 int level_object::width() const
 {
-	return BaseTileSize*2;
+	return BaseTileSize*g_tile_scale;
 }
 
 int level_object::height() const
 {
-	return BaseTileSize*2;
+	return BaseTileSize*g_tile_scale;
 }
 
 bool level_object::is_solid(int x, int y) const
@@ -931,4 +933,38 @@ UNIT_TEST(level_object_base64)
 	//CHECK_EQ(buf[0], s[0]);
 	//CHECK_EQ(buf[1], s[1]);
 	//CHECK_EQ(buf[2], s[2]);
+}
+
+COMMAND_LINE_UTILITY(annotate_tilesheet)
+{
+	std::deque<std::string> argv(args.begin(), args.end());
+	ASSERT_LOG(argv.size() == 1, "Expect one argument: tilesheet to process");
+
+	std::string arg = argv.front();
+	graphics::surface surf = graphics::surface_cache::get(arg);
+	ASSERT_LOG(surf.get() != NULL, "Could not load image: " << arg);
+
+	unsigned char* p = reinterpret_cast<unsigned char*>(surf->pixels);
+
+	for(int ypos = BaseTileSize; ypos < surf->h; ypos += BaseTileSize) {
+		for(int xpos = 0; xpos < surf->w; ++xpos) {
+			unsigned char* pos = p + (ypos * surf->w + xpos)*4;
+			pos[0] = 0xf9;
+			pos[1] = 0x30;
+			pos[2] = 0x3d;
+			pos[3] = 0xff;
+		}
+	}
+
+	for(int xpos = BaseTileSize; xpos < surf->w; xpos += BaseTileSize) {
+		for(int ypos = 0; ypos < surf->h; ++ypos) {
+			unsigned char* pos = p + (ypos * surf->w + xpos)*4;
+			pos[0] = 0xf9;
+			pos[1] = 0x30;
+			pos[2] = 0x3d;
+			pos[3] = 0xff;
+		}
+	}
+
+	IMG_SavePNG("annotated.png", surf.get(), 5);
 }

@@ -125,6 +125,9 @@ private:
 
 	int rng_seed_;
 
+	int cycle_;
+	int tick_rate_;
+
 	//a message which explains the reason for the last game state change.
 	std::string current_message_;
 
