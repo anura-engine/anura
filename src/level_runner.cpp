@@ -1091,6 +1091,7 @@ bool LevelRunner::play_cycle()
 			if(player && portal->saved_game == false) {
 				if(portal->new_playable) {
 					player = portal->new_playable->getPlayerInfo();
+					ASSERT_LOG(player != NULL, "Object is not playable: " << portal->new_playable->debug_description().c_str());
 				}
 				player->getEntity().setPos(dest);
 				new_level->add_player(&player->getEntity());
@@ -1440,8 +1441,9 @@ bool LevelRunner::play_cycle()
 
 		if(should_pause) {
 			lvl_->set_show_builtin_settingsDialog(true);
-			for(const auto& c : lvl_->get_active_chars()) {
-				c->handleEvent(OBJECT_EVENT_SETTINGS_MENU);
+			std::vector<entity_ptr> active_chars = lvl_->get_active_chars();
+			for(const auto& c : active_chars) {
+				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
 			}
 		}
 		

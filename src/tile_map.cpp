@@ -39,6 +39,7 @@
 #include "multi_tile_pattern.hpp"
 #include "point_map.hpp"
 #include "profile_timer.hpp"
+#include "preferences.hpp"
 #include "random.hpp"
 #include "string_utils.hpp"
 #include "thread.hpp"
@@ -47,8 +48,9 @@
 
 namespace 
 {
-	const std::map<std::string, int>& str_to_zorder() 
-	{
+	PREF_INT(tile_pattern_search_border, 1, "How many extra tiles to search for patterns");
+
+	const std::map<std::string, int>& str_to_zorder() {
 		static std::map<std::string, int>* instance = NULL;
 		if(!instance) {
 			instance = new std::map<std::string, int>;
@@ -949,14 +951,14 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 	TilePatternCache cache;
 
 	int ntiles = 0;
-	for(int y = -1; y <= static_cast<int>(map_.size()); ++y) {
+	for(int y = -g_tile_pattern_search_border; y < static_cast<int>(map_.size()) + g_tile_pattern_search_border; ++y) {
 		const int ypos = ypos_ + y*TileSize;
 
 		if(r && ypos < r->y() || r && ypos > r->y2()) {
 			continue;
 		}
 
-		for(int x = -1; x <= width; ++x) {
+		for(int x = -g_tile_pattern_search_border; x < width + g_tile_pattern_search_border; ++x) {
 			const int xpos = xpos_ + x*TileSize;
 
 			const LevelObject* obj = multi_pattern_matches.get(point(x, y));
