@@ -1,20 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include <stdio.h>
+
+#include <cstdio>
 
 #ifdef _MSC_VER
 #include "StackWalker.h"
@@ -35,12 +42,9 @@
 #include "stats.hpp"
 #include "variant.hpp"
 
-#if defined(_WINDOWS)
-#include "SDL_syswm.h"
-#endif
-
-namespace {
-std::function<void()> g_edit_and_continue_fn;
+namespace 
+{
+	std::function<void()> g_edit_and_continue_fn;
 }
 
 void set_assert_edit_and_continue_fn(std::function<void()> fn)
@@ -61,7 +65,7 @@ assert_edit_and_continue_fn_scope::~assert_edit_and_continue_fn_scope()
 
 void report_assert_msg(const std::string& m)
 {
-	if(level::getCurrentPtr()) {
+	if(Level::getCurrentPtr()) {
 		std::cerr << "ATTEMPTING TO SEND CRASH REPORT...\n";
 		std::map<variant,variant> obj;
 		obj[variant("type")] = variant("crash");
@@ -81,7 +85,7 @@ void report_assert_msg(const std::string& m)
 			}
 		}
 
-		stats::record(variant(&obj), level::getCurrentPtr()->id());
+		stats::record(variant(&obj), Level::getCurrentPtr()->id());
 		stats::flush_and_quit();
 	}
 
@@ -94,9 +98,7 @@ void report_assert_msg(const std::string& m)
 
 #endif
 	
-#if defined(_WINDOWS)
-	::MessageBoxA(NULL, m.c_str(), "Assertion failed", MB_OK|MB_ICONSTOP);
-#endif
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, m.c_str(), "Assertion failed", NULL);
 }
 
 validation_failure_exception::validation_failure_exception(const std::string& m)

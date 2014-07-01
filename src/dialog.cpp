@@ -431,7 +431,7 @@ void dialog::add_ok_and_cancel_buttons()
 	addWidget(cancel, width() - 80, height() - 40);
 }
 
-void dialog::handleDraw_children() const {
+void dialog::handleDrawChildren() const {
 	glPushMatrix();
 	glTranslatef(GLfloat(x()),GLfloat(y()),0.0);
 	foreach(const WidgetPtr& w, widgets_) {
@@ -478,7 +478,7 @@ void dialog::handleDraw() const
 	}
 
 	glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);
-	handleDraw_children();
+	handleDrawChildren();
 }
 
 bool dialog::processEvent(const SDL_Event& ev, bool claimed) {

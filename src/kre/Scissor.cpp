@@ -37,7 +37,7 @@ namespace KRE
 
 	ScissorPtr Scissor::getInstance(const rect& area)
 	{
-		return DisplayDevice::GetCurrent()->getScissor(area);
+		return DisplayDevice::getCurrent()->getScissor(area);
 	}
 
 	Scissor::Manager::Manager(const rect& area)

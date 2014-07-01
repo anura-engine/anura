@@ -48,6 +48,24 @@ namespace voxel
 	class user_voxel_object;
 	typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
 
+	template <class T>
+	inline void hash_combine(std::size_t& seed, const T& v)
+	{
+		std::hash<T> hasher;
+		seed ^= hasher(v) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+	}
+
+	struct pair_hash
+	{
+		inline size_t operator()(const std::pair<int, int> & v) const
+		{
+			size_t seed = 0;
+			voxel::hash_combine(seed, v.first);
+			voxel::hash_combine(seed, v.second);
+			return seed;
+		}
+	};
+
 	class LogicalWorld : public game_logic::WmlSerializableFormulaCallable
 	{
 	public:
@@ -76,7 +94,7 @@ namespace voxel
 
 		variant serializeToWml() const;
 
-		std::unordered_map<std::pair<int,int>, int> heightmap_;
+		std::unordered_map<std::pair<int,int>, int, pair_hash> heightmap_;
 		// Only valid for fixed size worlds
 		int size_x_;
 		int size_y_;
@@ -127,7 +145,7 @@ namespace voxel
 		uint32_t seed_;
 
 		std::vector<ChunkPtr> active_chunks_;
-		std::unordered_map<ChunkPosition, ChunkPtr> chunks_;
+		std::unordered_map<ChunkPosition, ChunkPtr, chunk_hasher> chunks_;
 
 		std::set<UserVoxelObjectPtr> objects_;
 

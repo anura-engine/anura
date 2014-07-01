@@ -46,7 +46,7 @@ namespace gui
 
 namespace editor_dialogs 
 {
-	class character_editor_dialog;
+	class CharacterEditorDialog;
 	class editor_layers_dialog;
 	class property_editor_dialog;
 	class segment_editor_dialog;
@@ -58,7 +58,7 @@ namespace editor_dialogs
 #endif
 }
 
-class code_editor_dialog;
+class CodeEditorDialog;
 
 class editor_menu_dialog;
 class editor_mode_dialog;
@@ -94,7 +94,6 @@ public:
 
 	void setPos(int x, int y);
 
-	typedef boost::intrusive_ptr<level> LevelPtr;
 	void set_playing_level(LevelPtr lvl);
 	void toggle_active_level();
 
@@ -113,9 +112,9 @@ public:
 		bool sloped;
 		variant node_info;
 
-		std::shared_ptr<tile_map> preview() const;
+		std::shared_ptr<TileMap> preview() const;
 	private:
-		mutable std::shared_ptr<tile_map> preview_;
+		mutable std::shared_ptr<TileMap> preview_;
 	};
 
 	struct enemy_type {
@@ -125,11 +124,11 @@ public:
 		std::string help;
 
 		const EntityPtr& preview_object() const;
-		const std::shared_ptr<const frame>& preview_frame() const;
+		const std::shared_ptr<const Frame>& preview_frame() const;
 	
 	private:
 		mutable EntityPtr preview_object_;
-		mutable std::shared_ptr<const frame> preview_frame_;
+		mutable std::shared_ptr<const Frame> preview_frame_;
 		variant frame_info_;
 	};
 
@@ -348,7 +347,7 @@ private:
 
 	std::unique_ptr<editor_menu_dialog> editor_menu_dialog_;
 	std::unique_ptr<editor_mode_dialog> editor_mode_dialog_;
-	std::unique_ptr<editor_dialogs::character_editor_dialog> character_dialog_;
+	std::unique_ptr<editor_dialogs::CharacterEditorDialog> character_dialog_;
 	std::unique_ptr<editor_dialogs::editor_layers_dialog> layers_dialog_;
 	std::unique_ptr<editor_dialogs::property_editor_dialog> property_dialog_;
 	std::unique_ptr<editor_dialogs::tileset_editor_dialog> tileset_dialog_;
@@ -359,7 +358,7 @@ private:
 
 	std::unique_ptr<editor_dialogs::segment_editor_dialog> segment_dialog_;
 
-	std::unique_ptr<code_editor_dialog> code_dialog_;
+	std::unique_ptr<CodeEditorDialog> code_dialog_;
 
 	external_text_editor_ptr external_code_editor_;
 

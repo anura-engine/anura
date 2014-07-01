@@ -727,11 +727,20 @@ namespace KRE
 		void visual_attribs::apply(render_context& ctx) const
 		{
 			// XXX
+			cairo_push_group(ctx.cairo());
 		}
 
 		void visual_attribs::clear(render_context& ctx) const
 		{
 			// XXX
+			auto patt = cairo_pop_group(ctx.cairo());
+			if(display_ == Display::NONE) {
+				cairo_pattern_destroy(patt);
+			} else {
+				cairo_set_source(ctx.cairo(), patt);
+				cairo_pattern_destroy(patt);
+				cairo_paint(ctx.cairo());
+			}
 		}
 
 		void visual_attribs::resolve(const element* doc)

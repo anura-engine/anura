@@ -88,7 +88,7 @@ struct PropertyEntry {
 		backup_entry_scope backup1(*data_entry);
 		backup_entry_scope backup2(*value_entry);
 
-		value_entry->set_variant_type(prop_entry->variant_type);
+		value_entry->setVariantType(prop_entry->variant_type);
 		*data_entry = *prop_entry;
 
 		const formula::strict_check_scope strict_checking;
@@ -101,7 +101,7 @@ struct PropertyEntry {
 			FormulaCallableDefinition::Entry* entry = class_def->getEntryById(prop_name);
 			ASSERT_LOG(entry != NULL, "COULD NOT FIND CLASS PROPERTY ENTRY " << class_name << "." << prop_name);
 
-			entry->set_variant_type(getter->query_variant_type());
+			entry->setVariantType(getter->query_variant_type());
 			return;
 		} else if(node.is_map()) {
 			if(node["variable"].as_bool(true)) {
@@ -1411,7 +1411,7 @@ FormulaCallableDefinitionPtr get_library_definition()
 			game_logic::register_formula_callable_definition("library", g_library_definition);
 
 			for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
-				g_library_definition->getEntry(n)->set_variant_type(types[n]);
+				g_library_definition->getEntry(n)->setVariantType(types[n]);
 			}
 		} else {
 			g_library_definition = game_logic::execute_command_callable_definition(NULL, NULL, NULL, NULL);

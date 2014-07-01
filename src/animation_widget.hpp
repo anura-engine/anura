@@ -48,7 +48,7 @@ namespace gui
 
 		std::vector<variant> nodes_;
 		mutable LabelPtr label_;
-		mutable std::unique_ptr<frame> frame_;
+		mutable std::unique_ptr<Frame> frame_;
 		mutable int cycle_;
 		mutable int play_sequence_count_;
 		// Number of times to repeat play each animation sequence.

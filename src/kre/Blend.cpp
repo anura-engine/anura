@@ -144,7 +144,7 @@ namespace KRE
 	}
 
 	BlendEquation::Manager::Manager(const BlendEquation& eqn)
-		: impl_(DisplayDevice::GetCurrent()->getBlendEquationImpl()),
+		: impl_(DisplayDevice::getCurrent()->getBlendEquationImpl()),
 		eqn_(eqn)
 	{
 		impl_->apply(eqn_);

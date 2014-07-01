@@ -85,7 +85,7 @@ namespace gui
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		virtual bool handleEvent_children(const SDL_Event& event, bool claimed);
 		virtual void handleDraw() const override;
-		virtual void handleDraw_children() const;
+		virtual void handleDrawChildren() const;
 		void set_clear_bg(bool clear) { clear_bg_ = clear; };
 		void set_clear_bg_amount(int amount) { clear_bg_ = amount; }
 		int clear_bg() const { return clear_bg_; };

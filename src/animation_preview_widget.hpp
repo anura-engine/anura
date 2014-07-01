@@ -63,7 +63,7 @@ namespace gui
 
 		variant obj_;
 
-		std::unique_ptr<frame> frame_;
+		std::unique_ptr<Frame> frame_;
 		mutable int cycle_;
 
 		std::vector<WidgetPtr> widgets_;

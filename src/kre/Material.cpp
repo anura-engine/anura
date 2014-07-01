@@ -146,7 +146,7 @@ namespace KRE
 
 	MaterialPtr Material::createMaterial(const variant& node)
 	{
-		return DisplayDevice::GetCurrent()->CreateMaterial(node);
+		return DisplayDevice::getCurrent()->CreateMaterial(node);
 	}
 
 	const rectf Material::GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it)

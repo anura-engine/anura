@@ -38,6 +38,6 @@ namespace KRE
 
 	StencilScopePtr StencilScope::create(const StencilSettings& settings)
 	{
-		return DisplayDevice::GetCurrent()->createStencilScope(settings);
+		return DisplayDevice::getCurrent()->createStencilScope(settings);
 	}
 }

@@ -30,7 +30,6 @@
 #include "editor_variable_info.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
 #include "formula_function.hpp"
 #include "frame.hpp"
 #include "lua_iface.hpp"

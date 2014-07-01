@@ -23,10 +23,7 @@
 
 #pragma once
 
-#if defined(USE_ISOMAP)
-
 #include <boost/intrusive_ptr.hpp>
-#include <boost/unordered_map.hpp>
 #include <vector>
 
 #include "kre/Geometry.hpp"
@@ -47,6 +44,12 @@ namespace voxel
 	};
 	bool operator==(ChunkPosition const& p1, ChunkPosition const& p2);
 	std::size_t hash_value(ChunkPosition const& p);
+	struct chunk_hasher
+	{
+		size_t operator()(ChunkPosition const& p) {
+			return hash_value(p);
+		}
+	};
 
 	struct TexturedTileEditorInfo
 	{
@@ -175,7 +178,7 @@ namespace voxel
 
 		std::vector<std::vector<uint8_t> > carray_;
 		std::vector<size_t> cattrib_offsets_;
-		boost::unordered_map<ChunkPosition, variant> tiles_;
+		std::unordered_map<ChunkPosition, variant, chunk_hasher> tiles_;
 	};
 
 	class ChunkTextured : public Chunk
@@ -205,7 +208,7 @@ namespace voxel
 
 		std::vector<std::vector<float>> tarray_;
 		std::vector<size_t> tattrib_offsets_;
-		boost::unordered_map<ChunkPosition, std::string> tiles_;
+		std::unordered_map<ChunkPosition, std::string, chunk_hasher> tiles_;
 	};
 
 	typedef boost::intrusive_ptr<Chunk> ChunkPtr;
@@ -216,5 +219,3 @@ namespace voxel
 		ChunkPtr create(LogicalWorldPtr logic, const variant& v);
 	}
 }
-
-#endif // USE_ISOMAP

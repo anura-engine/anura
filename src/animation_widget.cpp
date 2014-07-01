@@ -59,7 +59,7 @@ namespace gui
 		current_anim_ = nodes_.begin();
 		play_sequence_count_ = 0;
 
-		frame_.reset(new frame(*current_anim_));
+		frame_.reset(new Frame(*current_anim_));
 		label_.reset(new Label(frame_->id(), KRE::Color::colorYellow(), 16));
 		label_->setLoc((width() - label_->width())/2, height()-label_->height());
 	}
@@ -78,7 +78,7 @@ namespace gui
 				if(++current_anim_ == nodes_.end()) {
 					current_anim_ = nodes_.begin();
 				}
-				frame_.reset(new frame(*current_anim_));
+				frame_.reset(new Frame(*current_anim_));
 				label_.reset(new Label(frame_->id(), KRE::Color::colorYellow(), 16));
 				label_->setLoc((width() - label_->width())/2, height()-label_->height());
 			}

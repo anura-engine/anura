@@ -36,6 +36,7 @@
 #include "Renderable.hpp"
 #include "RenderTarget.hpp"
 #include "Scissor.hpp"
+#include "Shaders.hpp"
 #include "StencilScope.hpp"
 #include "../variant.hpp"
 
@@ -135,6 +136,9 @@ namespace KRE
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 
+		virtual void loadShadersFromFile(const std::string& filename) = 0;
+		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
+
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 
 		static void BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
@@ -159,7 +163,7 @@ namespace KRE
 
 		static DisplayDevicePtr Factory(const std::string& type);
 
-		static DisplayDevicePtr GetCurrent();
+		static DisplayDevicePtr getCurrent();
 
 		static bool CheckForFeature(DisplayDeviceCapabilties cap);
 

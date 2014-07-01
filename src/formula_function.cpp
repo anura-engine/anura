@@ -382,13 +382,17 @@ END_FUNCTION_DEF(overload)
 
 FUNCTION_DEF(addr, 1, 1, "addr(obj): Provides the address of the given object as a string. Useful for distinguishing objects")
 	
-	FormulaCallable* addr = args()[0]->evaluate(variables).convert_to<FormulaCallable>();
+	variant v = args()[0]->evaluate(variables);
+	FormulaCallable* addr = NULL;
+	if(!v.is_null()) {
+		addr = v.convert_to<FormulaCallable>();
+	}
 	char buf[128];
 	sprintf(buf, "%p", addr);
 	return variant(std::string(buf));
 
 FUNCTION_ARGS_DEF
-	ARG_TYPE("object");
+	ARG_TYPE("object|null");
 	RETURN_TYPE("string");
 END_FUNCTION_DEF(addr)
 
@@ -1190,6 +1194,16 @@ FUNCTION_ARGS_DEF
 FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(hypot)
+	
+	
+FUNCTION_DEF(exp, 1, 1, "exp(x): Calculate the exponential function of x, whatever that means.")
+	const float input = args()[0]->evaluate(variables).as_decimal().as_float();
+	return variant(static_cast<decimal>(expf(input)));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int|decimal");
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+END_FUNCTION_DEF(exp)
     
 FUNCTION_DEF(angle, 4, 4, "angle(x1, y1, x2, y2) -> int: Returns the angle, from 0°, made by the line described by the two points (x1, y1) and (x2, y2).")
 	const float a = args()[0]->evaluate(variables).as_int();
@@ -1375,7 +1389,7 @@ public:
 		for(int n = 0; n != 2; ++n) {
 			const std::string name = (n == 0) ? "a" : "b";
 			entries_.push_back(entry(name));
-			entries_.back().set_variant_type(type_);
+			entries_.back().setVariantType(type_);
 		}
 	}
 
@@ -4094,12 +4108,12 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		}
 	}
 
-	recursive_FunctionSymbolTable::recursive_FunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types)
+	RecursiveFunctionSymbolTable::RecursiveFunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types)
 	: name_(fn), stub_(fn, const_formula_ptr(), const_formula_ptr(), args, default_args, variant_types), backup_(backup), closure_definition_(closure_definition)
 	{
 	}
 
-	expression_ptr recursive_FunctionSymbolTable::create_function(
+	expression_ptr RecursiveFunctionSymbolTable::create_function(
 					const std::string& fn,
 					const std::vector<expression_ptr>& args,
 					ConstFormulaCallableDefinitionPtr callable_def) const
@@ -4118,7 +4132,7 @@ variant formula_function_expression::execute(const FormulaCallable& variables) c
 		return expression_ptr();
 	}
 
-	void recursive_FunctionSymbolTable::resolve_recursive_calls(const_formula_ptr f)
+	void RecursiveFunctionSymbolTable::resolve_recursive_calls(const_formula_ptr f)
 	{
 		foreach(formula_function_expression_ptr& fn, expr_) {
 			fn->set_formula(f);

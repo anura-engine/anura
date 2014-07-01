@@ -371,7 +371,7 @@ void CustomObjectCallable::addProperty(const std::string& id, variant_type_ptr t
 		slots_requiring_initialization_.push_back(slot);
 	}
 
-	//do NOT call set_variant_type() because that will do queries of
+	//do NOT call setVariantType() because that will do queries of
 	//objects and such and we want this operation to avoid doing that, because
 	//it might be called at a sensitive time when we don't want to
 	//instantiate new object definitions.

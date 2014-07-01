@@ -49,7 +49,7 @@ namespace
 			return false;
 		}
 
-		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->Pixels()) + y*s->row_pitch() + x*4;
+		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->pixels()) + y*s->rowPitch() + x*4;
 		for(int n = 0; n != 3; ++n) {
 			if(pixel[n] != RedBorder[n]) {
 				return false;
@@ -61,7 +61,7 @@ namespace
 
 	bool is_pixel_alpha(const SurfacePtr& s, const point& p)
 	{
-		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->Pixels()) + p.y*s->row_pitch() + p.x*4;
+		const unsigned char* pixel = reinterpret_cast<const unsigned char*>(s->pixels()) + p.y*s->rowPitch() + p.x*4;
 		if(pixel[3] == 0) {
 			return true;
 		}
@@ -214,7 +214,7 @@ namespace
 		const int y = r.y() + r.h()/2;
 
 		int next_x = x + r.w();
-		if(next_x >= s->width()) {
+		if(next_x >= static_cast<int>(s->width())) {
 			LOG_INFO("FAIL FIND " << next_x << " >= " << s->width());
 			return false;
 		}
@@ -236,7 +236,7 @@ namespace
 		auto old_r = rect(next_rect.x() + next_rect.w() + *pad, y, r.w(), r.h());
 		LOG_INFO("SETTING... " << new_r << " VS " << old_r);
 
-		while(next_x + r.w() + *pad < s->width() && new_r == old_r) {
+		while(next_x + r.w() + *pad < static_cast<int>(s->width()) && new_r == old_r) {
 				LOG_INFO("ITER");
 			*num_frames += 1;
 			next_x += r.w() + *pad;
@@ -253,7 +253,7 @@ namespace
 				rect next_rect(r.x(), r.y() + r.h() + *pad, r.w(), r.h());
 				auto rr = get_border_rect_around_loc(s, next_rect.x() + next_rect.w()/2, next_rect.y() + next_rect.h()/2);
 				LOG_INFO("MATCHING: " << rr << " VS " << next_rect);
-				if(next_rect.y2() >= s->height() || rr != next_rect) {
+				if(next_rect.y2() >= static_cast<int>(s->height()) || rr != next_rect) {
 					LOG_INFO("MISMATCH: " << index << "/" << rect_row.size() << " -- " << rr << " VS " << next_rect);
 					row_valid = false;
 					break;
@@ -312,7 +312,7 @@ namespace gui
 		try {
 			setObject(v);
 		} catch(type_error&) {
-		} catch(frame::error&) {
+		} catch(Frame::Error&) {
 		} catch(validation_failure_exception&) {
 		} catch(KRE::ImageLoadError&) {
 		}
@@ -354,7 +354,7 @@ namespace gui
 			return;
 		}
 
-		frame* f = new frame(obj);
+		Frame* f = new Frame(obj);
 
 		obj_ = obj;
 		frame_.reset(f);
@@ -418,8 +418,8 @@ namespace gui
 				}
 			}
 
-			const int show_width = image_area.w()/scale;
-			const int show_height = image_area.h()/scale;
+			const int show_width = static_cast<int>(image_area.w()/scale);
+			const int show_height = static_cast<int>(image_area.h()/scale);
 
 			int x1 = focus_area.x() + (focus_area.w() - show_width)/2;
 			int y1 = focus_area.y() + (focus_area.h() - show_height)/2;
@@ -433,7 +433,7 @@ namespace gui
 
 			int x2 = x1 + show_width;
 			int y2 = y1 + show_height;
-			if(x2 > image_texture->width()) {
+			if(x2 > static_cast<int>(image_texture->width())) {
 				x1 -= (x2 - image_texture->width());
 				x2 = image_texture->width();
 				if(x1 < 0) {
@@ -441,7 +441,7 @@ namespace gui
 				}
 			}
 
-			if(y2 > image_texture->height()) {
+			if(y2 > static_cast<int>(image_texture->height())) {
 				y1 -= (y2 - image_texture->height());
 				y2 = image_texture->height();
 				if(y1 < 0) {
@@ -453,7 +453,7 @@ namespace gui
 			int ypos = image_area.y();
 
 			src_rect_ = rect(x1, y1, x2 - x1, y2 - y1);
-			dst_rect_ = rect(xpos, ypos, (x2-x1)*scale, (y2-y1)*scale);
+			dst_rect_ = rect(xpos, ypos, static_cast<int>((x2-x1)*scale), static_cast<int>((y2-y1)*scale));
 
 			canvas->blitTexture(image_texture, src_rect_, 0, dst_rect_);
 
@@ -464,9 +464,9 @@ namespace gui
 			for(int n = 0; n != frame_->numFrames(); ++n) {
 				const int row = n/frame_->numFramesPerRow();
 				const int col = n%frame_->numFramesPerRow();
-				const int x = xpos - x1*scale + (frame_->area().x() + col*(frame_->area().w()+frame_->pad()))*scale;
-				const int y = ypos - y1*scale + (frame_->area().y() + row*(frame_->area().h()+frame_->pad()))*scale;
-				const rect box(x, y, frame_->area().w()*scale, frame_->area().h()*scale);
+				const int x = static_cast<int>(xpos - x1*scale + (frame_->area().x() + col*(frame_->area().w()+frame_->pad()))*scale);
+				const int y = static_cast<int>(ypos - y1*scale + (frame_->area().y() + row*(frame_->area().h()+frame_->pad()))*scale);
+				const rect box(x, y, static_cast<int>(frame_->area().w()*scale), static_cast<int>(frame_->area().h()*scale));
 				{
 					KRE::Color color(255, 255, n == 0 ? 0 : 255, frame_->frameNumber(cycle_) == n ? 0xFF : 0x88);
 					canvas->drawHollowRect(box, color);
@@ -511,10 +511,10 @@ namespace gui
 				const point p1 = mousePointToImageLoc(point(mousex, mousey));
 				const point p2 = mousePointToImageLoc(point(anchor_x_, anchor_y_));
 
-				int xpos1 = xpos - x1*scale + p1.x*scale;
-				int xpos2 = xpos - x1*scale + p2.x*scale;
-				int ypos1 = ypos - y1*scale + p1.y*scale;
-				int ypos2 = ypos - y1*scale + p2.y*scale;
+				int xpos1 = static_cast<int>(xpos - x1*scale + p1.x*scale);
+				int xpos2 = static_cast<int>(xpos - x1*scale + p2.x*scale);
+				int ypos1 = static_cast<int>(ypos - y1*scale + p1.y*scale);
+				int ypos2 = static_cast<int>(ypos - y1*scale + p2.y*scale);
 			
 				if(xpos2 < xpos1) {
 					std::swap(xpos1, xpos2);
@@ -534,8 +534,8 @@ namespace gui
 			scale *= 0.5;
 		}
 
-		const int framex = preview_area.x() + (preview_area.w() - frame_->width()*scale)/2;
-		const int framey = preview_area.y() + (preview_area.h() - frame_->height()*scale)/2;
+		const int framex = static_cast<int>(preview_area.x() + (preview_area.w() - frame_->width()*scale)/2);
+		const int framey = static_cast<int>(preview_area.y() + (preview_area.h() - frame_->height()*scale)/2);
 		frame_->draw(framex, framey, true, false, cycle_, 0, scale);
 		if(++cycle_ >= frame_->duration()) {
 			cycle_ = 0;
@@ -560,8 +560,8 @@ namespace gui
 		const double xpos = double(p.x - dst_rect_.x())/double(dst_rect_.w());
 		const double ypos = double(p.y - dst_rect_.y())/double(dst_rect_.h());
 
-		const int x = src_rect_.x() + (double(src_rect_.w()) + 1.0)*xpos;
-		const int y = src_rect_.y() + (double(src_rect_.h()) + 1.0)*ypos;
+		const int x = static_cast<int>(src_rect_.x() + (src_rect_.w() + 1.0)*xpos);
+		const int y = static_cast<int>(src_rect_.y() + (src_rect_.h() + 1.0)*ypos);
 	
 		return point(x, y);
 	}
@@ -688,7 +688,7 @@ namespace gui
 				claimed = claimMouseEvents();
 				p = mousePointToImageLoc(p);
 
-				auto surf = KRE::Surface::Create(obj_["image"].as_string());
+				auto surf = KRE::Surface::create(obj_["image"].as_string());
 
 				if(surf) {
 					rect area = get_border_rect_around_loc(surf, p.x, p.y);
@@ -881,7 +881,7 @@ namespace gui
 			try {
 				obj.setObject(value);
 			} catch(type_error&) {
-			} catch(frame::error&) {
+			} catch(Frame::Error&) {
 			} catch(validation_failure_exception&) {
 			} catch(KRE::ImageLoadError&) {
 			}

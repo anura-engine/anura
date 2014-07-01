@@ -34,6 +34,7 @@
 #include "LightObject.hpp"
 #include "MaterialOpenGL.hpp"
 #include "ScissorOGL.hpp"
+#include "ShadersOpenGL.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -462,16 +463,26 @@ namespace KRE
 		return ret_val;
 	}
 
+	void DisplayDeviceOpenGL::loadShadersFromFile(const std::string& filename) 
+	{
+		OpenGL::ShaderProgramOGL::loadFromFile(filename);
+	}
+
+	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
+	{
+		return OpenGL::ShaderProgramOGL::factory(name);
+	}
+
 	// XXX Need a way to deal with blits with Camera/Lighting.
 	void DisplayDeviceOpenGL::DoBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
 		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
 		ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
-		const float tx1 = float(srcx) / texture->Width();
-		const float ty1 = float(srcy) / texture->Height();
-		const float tx2 = srcw == 0 ? 1.0f : float(srcx + srcw) / texture->Width();
-		const float ty2 = srch == 0 ? 1.0f : float(srcy + srch) / texture->Height();
+		const float tx1 = float(srcx) / texture->width();
+		const float ty1 = float(srcy) / texture->height();
+		const float tx2 = srcw == 0 ? 1.0f : float(srcx + srcw) / texture->width();
+		const float ty2 = srch == 0 ? 1.0f : float(srcy + srch) / texture->height();
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,
@@ -492,22 +503,22 @@ namespace KRE
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
-		auto shader = Shader::ShaderProgram::DefaultSystemShader();
-		shader->MakeActive();
+		auto shader = OpenGL::ShaderProgramOGL::defaultSystemShader();
+		shader->makeActive();
 		texture->Bind();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
-		shader->SetUniformValue(shader->GetColorUniform(), glm::value_ptr(glm::vec4(1.0f,1.0f,1.0f,1.0f)));
-		shader->SetUniformValue(shader->GetTexMapUniform(), 0);
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f,1.0f,1.0f,1.0f)));
+		shader->setUniformValue(shader->getTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.
-		shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-		glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-		glEnableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->GetTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
+		shader->setUniformValue(shader->getUniformIterator("discard"), 0);
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		glDisableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-		glDisableVertexAttribArray(shader->GetVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 }

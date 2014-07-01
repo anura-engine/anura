@@ -26,6 +26,8 @@
 #include <string>
 #include <functional>
 
+#include "SDL.h"
+
 #include "kre/Geometry.hpp"
 #include "kre/Texture.hpp"
 #include "Color.hpp"

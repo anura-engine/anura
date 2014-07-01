@@ -26,7 +26,6 @@
 
 #include "achievements.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formula_callable.hpp"
 #include "i18n.hpp"
 #include "json_parser.hpp"
@@ -51,7 +50,7 @@ AchievementPtr Achievement::get(const std::string& id)
 		}
 
 		
-		foreach(variant Achievement_node, node["achievement"].as_list()) {
+		for(variant Achievement_node : node["achievement"].as_list()) {
 			AchievementPtr a(new Achievement(Achievement_node));
 			cache[a->id()] = a;
 		}

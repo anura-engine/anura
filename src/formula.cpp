@@ -906,7 +906,7 @@ private:
 
 class generic_lambda_function_expression : public formula_expression {
 public:
-	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, std::shared_ptr<recursive_FunctionSymbolTable> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
+	generic_lambda_function_expression(const std::vector<std::string>& args, variant fml, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type, std::shared_ptr<RecursiveFunctionSymbolTable> symbol_table, const std::vector<std::string>& generic_types, std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory) :    fml_(fml), base_slot_(base_slot), type_info_(new VariantFunctionTypeInfo), symbol_table_(symbol_table), generic_types_(generic_types), factory_(factory)
 	{
 		type_info_->arg_names = args;
 		type_info_->default_args = default_args;
@@ -945,7 +945,7 @@ private:
 
 	VariantFunctionTypeInfoPtr type_info_;
 
-	std::shared_ptr<recursive_FunctionSymbolTable> symbol_table_;
+	std::shared_ptr<RecursiveFunctionSymbolTable> symbol_table_;
 	std::vector<std::string> generic_types_;
 	std::function<const_formula_ptr(const std::vector<variant_type_ptr>&)> factory_;
 };
@@ -2818,7 +2818,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 		function_var.set_debug_info(info);
 	}
 	
-	std::shared_ptr<recursive_FunctionSymbolTable> recursive_symbols(new recursive_FunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
+	std::shared_ptr<RecursiveFunctionSymbolTable> recursive_symbols(new RecursiveFunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
 
 	//create a definition of the callable representing
 	//function arguments.
@@ -2853,7 +2853,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 
 	if(args_definition) {
 		for(int n = 0; n != variant_types.size(); ++n) {
-			args_definition->getEntryById(args[n])->set_variant_type(variant_types[n]);
+			args_definition->getEntryById(args[n])->setVariantType(variant_types[n]);
 		}
 	}
 
@@ -2873,7 +2873,7 @@ expression_ptr parse_function_def(const variant& formula_str, const token*& i1, 
 			for(int n = 0; n != variant_types.size(); ++n) {
 				const variant_type_ptr def = variant_types[n]->map_generic_types(mapping);
 				if(def) {
-					args_definition->getEntryById(args[n])->set_variant_type(def);
+					args_definition->getEntryById(args[n])->setVariantType(def);
 				}
 			}
 

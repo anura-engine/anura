@@ -30,113 +30,117 @@
 
 #include <GL/glew.h>
 
-namespace Shader
+#include "Shaders.hpp"
+
+namespace KRE
 {
-	// Abstraction of vertex/geometry/fragment shader
-	class Shader
+	namespace OpenGL
 	{
-	public:
-		explicit Shader(GLenum type, const std::string& name, const std::string& code);
-		GLuint Get() const { return shader_; }
-		std::string Name() const { return name_; }
-	protected:
-		bool Compile(const std::string& code);
-	private:
-		GLenum type_;
-		GLuint shader_;
-		std::string name_;
-		Shader();
-		Shader(const Shader&);
-	};
-	typedef std::unique_ptr<Shader> ShaderPtr;
+		// Abstraction of vertex/geometry/fragment shader
+		class Shader
+		{
+		public:
+			explicit Shader(GLenum type, const std::string& name, const std::string& code);
+			GLuint get() const { return shader_; }
+			std::string name() const { return name_; }
+		protected:
+			bool compile(const std::string& code);
+		private:
+			DISALLOW_COPY_AND_ASSIGN(Shader);
+			GLenum type_;
+			GLuint shader_;
+			std::string name_;
+		};
+		typedef std::unique_ptr<Shader> ShaderPtr;
 
-	struct Actives
-	{
-		// Name of variable.
-		std::string name;
-		// type of the uniform/attribute variable
-		GLenum type;
-		// If an array type, this is the maximum number of array elements used 
-		// in the program. Value is 1 if type is not an array type.
-		GLsizei num_elements;
-		// Location of the active uniform/attribute
-		GLint location;
-	};
+		struct Actives
+		{
+			// Name of variable.
+			std::string name;
+			// type of the uniform/attribute variable
+			GLenum type;
+			// If an array type, this is the maximum number of array elements used 
+			// in the program. Value is 1 if type is not an array type.
+			GLsizei num_elements;
+			// Location of the active uniform/attribute
+			GLint location;
+		};
 
-	typedef std::map<std::string, Actives> ActivesMap;
-	typedef ActivesMap::iterator ActivesMapIterator;
-	typedef ActivesMap::const_iterator ConstActivesMapIterator;
+		typedef std::map<std::string, Actives> ActivesMap;
+		typedef ActivesMap::iterator ActivesMapIterator;
+		typedef ActivesMap::const_iterator ConstActivesMapIterator;
 
-	typedef std::pair<std::string,std::string> ShaderDef;
+		typedef std::pair<std::string,std::string> ShaderDef;
 
-	class ShaderProgram;
-	typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
+		class ShaderProgramOGL;
+		typedef std::shared_ptr<ShaderProgramOGL> ShaderProgramOGLPtr;
 
-	class ShaderProgram
-	{
-	public:
-		ShaderProgram(const std::string& name, const ShaderDef& va, const ShaderDef& fs);
-		virtual ~ShaderProgram();
-		void Init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
-		std::string Name() const { return name_; }
-		GLint GetAttributeOrDie(const std::string& attr) const;
-		GLint GetUniformOrDie(const std::string& attr) const;
-		GLint GetAttribute(const std::string& attr) const;
-		GLint GetUniform(const std::string& attr) const;
-		ConstActivesMapIterator GetAttributeIterator(const std::string& attr) const;
-		ConstActivesMapIterator GetUniformIterator(const std::string& attr) const;
+		class ShaderProgramOGL : public KRE::ShaderProgram
+		{
+		public:
+			ShaderProgramOGL(const std::string& name, const ShaderDef& va, const ShaderDef& fs);
+			virtual ~ShaderProgramOGL();
+			void init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
+			std::string name() const { return name_; }
+			GLint getAttributeOrDie(const std::string& attr) const;
+			GLint getUniformOrDie(const std::string& attr) const;
+			GLint getAttribute(const std::string& attr) const;
+			GLint getUniform(const std::string& attr) const;
+			ConstActivesMapIterator getAttributeIterator(const std::string& attr) const;
+			ConstActivesMapIterator getUniformIterator(const std::string& attr) const;
 
-		void SetActives();
+			void setActives();
 
-		void SetUniformValue(ConstActivesMapIterator it, const GLint);
-		void SetUniformValue(ConstActivesMapIterator it, const GLfloat);
-		void SetUniformValue(ConstActivesMapIterator it, const GLfloat*);
-		void SetUniformValue(ConstActivesMapIterator it, const GLint*);
-		void SetUniformValue(ConstActivesMapIterator it, const void*);
+			void setUniformValue(ConstActivesMapIterator it, const GLint);
+			void setUniformValue(ConstActivesMapIterator it, const GLfloat);
+			void setUniformValue(ConstActivesMapIterator it, const GLfloat*);
+			void setUniformValue(ConstActivesMapIterator it, const GLint*);
+			void setUniformValue(ConstActivesMapIterator it, const void*);
 
-		void MakeActive();
+			void makeActive() override;
 
-		void SetAlternateUniformName(const std::string& name, const std::string& alt_name);
-		void SetAlternateAttributeName(const std::string& name, const std::string& alt_name);
+			void setAlternateUniformName(const std::string& name, const std::string& alt_name);
+			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
 
-		static ShaderProgramPtr Factory(const std::string& name);
-		static ShaderProgramPtr DefaultSystemShader();
+			static ShaderProgramPtr factory(const std::string& name);
+			static ShaderProgramOGLPtr defaultSystemShader();
+			static void loadFromFile(const std::string& filename);
 
-		ConstActivesMapIterator GetColorUniform() const { return u_color_; }
-		ConstActivesMapIterator GetMvpUniform() const { return u_mvp_; }
-		ConstActivesMapIterator GetTexMapUniform() const { return u_tex_; }
-		ConstActivesMapIterator GetColorAttribute() const { return a_color_; }
-		ConstActivesMapIterator GetVertexAttribute() const { return a_vertex_; }
-		ConstActivesMapIterator GetTexcoordAttribute() const { return a_texcoord_; }
+			ConstActivesMapIterator getColorUniform() const { return u_color_; }
+			ConstActivesMapIterator getMvpUniform() const { return u_mvp_; }
+			ConstActivesMapIterator getTexMapUniform() const { return u_tex_; }
+			ConstActivesMapIterator getColorAttribute() const { return a_color_; }
+			ConstActivesMapIterator getVertexAttribute() const { return a_vertex_; }
+			ConstActivesMapIterator getTexcoordAttribute() const { return a_texcoord_; }
 		
-		ConstActivesMapIterator UniformsIteratorEnd() const { return uniforms_.end(); }
-		ConstActivesMapIterator AttributesIteratorEnd() const { return attribs_.end(); }
+			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
+			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
 
-	protected:
-		bool Link();
-		bool QueryUniforms();
-		bool QueryAttributes();
+		protected:
+			bool link();
+			bool queryUniforms();
+			bool queryAttributes();
 
-		std::vector<GLint> active_attributes_;
-	private:
-		std::string name_;
-		ShaderPtr vs_;
-		ShaderPtr fs_;
-		GLuint object_;
-		ActivesMap attribs_;
-		ActivesMap uniforms_;
-		std::map<std::string, std::string> uniform_alternate_name_map_;
-		std::map<std::string, std::string> attribute_alternate_name_map_;
+			std::vector<GLint> active_attributes_;
+		private:
+			DISALLOW_COPY_AND_ASSIGN(ShaderProgramOGL);
 
-		// Store for common attributes and uniforms
-		ConstActivesMapIterator u_mvp_;
-		ConstActivesMapIterator u_color_;
-		ConstActivesMapIterator u_tex_;
-		ConstActivesMapIterator a_vertex_;
-		ConstActivesMapIterator a_texcoord_;
-		ConstActivesMapIterator a_color_;
+			std::string name_;
+			ShaderPtr vs_;
+			ShaderPtr fs_;
+			GLuint object_;
+			ActivesMap attribs_;
+			ActivesMap uniforms_;
+			std::map<std::string, std::string> uniform_alternate_name_map_;
+			std::map<std::string, std::string> attribute_alternate_name_map_;
 
-		ShaderProgram();
-		ShaderProgram(const ShaderProgram&);
-	};
+			// Store for common attributes and uniforms
+			ConstActivesMapIterator u_mvp_;
+			ConstActivesMapIterator u_color_;
+			ConstActivesMapIterator u_tex_;
+			ConstActivesMapIterator a_vertex_;
+			ConstActivesMapIterator a_texcoord_;
+			ConstActivesMapIterator a_color_;
+		};
+	}
 }

@@ -23,7 +23,6 @@
 
 #include "kre/DisplayDevice.hpp"
 
-#include "data_blob.hpp"
 #include "image_widget.hpp"
 
 #include <iostream>
@@ -31,7 +30,7 @@
 namespace gui 
 {
 	ImageWidget::ImageWidget(const std::string& fname, int w, int h)
-	  : texture_(KRE::DisplayDevice::GetCurrent()->CreateTexture(fname)), 
+	  : texture_(KRE::DisplayDevice::getCurrent()->CreateTexture(fname)), 
 	  rotate_(0.0f), 
 	  image_name_(fname)
 	{
@@ -47,6 +46,14 @@ namespace gui
 		init(w, h);
 	}
 
+	ImageWidget::ImageWidget(KRE::MaterialPtr mat, int w, int h)
+	{
+		// Kind of a fudge if passed a material, we just grab the first texture.
+		texture_ = mat->GetTexture().front();
+		setEnvironment();
+		init(w, h);
+	}
+
 	ImageWidget::ImageWidget(const variant& v, game_logic::FormulaCallable* e) 
 		: Widget(v, e)
 	{
@@ -56,12 +63,7 @@ namespace gui
 
 		if(v["image"].is_string()) {
 			image_name_ = v["image"].as_string();
-			texture_ = KRE::DisplayDevice::GetCurrent()->CreateTexture(image_name_);
-		} else if(v["image"].is_callable()) {
-			data_blob_ptr image_blob = data_blob_ptr(v["image"].try_convert<data_blob>());
-			ASSERT_LOG(image_blob != NULL, "Couldn't convert callable in 'image' attribute into a data_blob.");
-			image_name_ = (*image_blob)();
-			texture_ = KRE::DisplayDevice::GetCurrent()->CreateTexture(image_name_);
+			texture_ = KRE::DisplayDevice::getCurrent()->CreateTexture(image_name_);
 		}
 
 		rotate_ = v.has_key("rotation") ? v["rotation"].as_float() : 0.0f;
@@ -76,7 +78,7 @@ namespace gui
 			if(area_.w()) {
 				w = area_.w()*2;
 			} else {
-				w = texture_->Width();
+				w = texture_->width();
 			}
 		}
 
@@ -84,7 +86,7 @@ namespace gui
 			if(area_.h()) {
 				h = area_.h()*2;
 			} else {
-				h = texture_->Height();
+				h = texture_->height();
 			}
 		}
 
@@ -103,15 +105,10 @@ namespace gui
 	BEGIN_DEFINE_CALLABLE(ImageWidget, Widget)
 		DEFINE_FIELD(image, "string")
 			return variant(obj.image_name_);
-		DEFINE_SET_FIELD_TYPE("string|callable")
+		DEFINE_SET_FIELD_TYPE("string")
 			if(value.is_string()) {
 				obj.image_name_ = value.as_string();
-				obj.texture_ = KRE::DisplayDevice::GetCurrent()->CreateTexture(obj.image_name_);
-			} else if(value.is_callable()) {
-				data_blob_ptr image_blob = data_blob_ptr(value.try_convert<data_blob>());
-				ASSERT_LOG(image_blob != NULL, "Couldn't convert callable in 'image' attribute into a data_blob.");
-				obj.image_name_ = (*image_blob)();
-				obj.texture_ = KRE::DisplayDevice::GetCurrent()->CreateTexture(obj.image_name_);
+				obj.texture_ = KRE::DisplayDevice::getCurrent()->CreateTexture(obj.image_name_);
 			}
 			
 		DEFINE_FIELD(area, "[int,int,int,int]")
@@ -125,13 +122,13 @@ namespace gui
 			obj.rotate_ = value.as_float();
 
 		DEFINE_FIELD(width, "int")
-			return variant(obj.texture_->Width());
+			return variant(obj.texture_->width());
 		DEFINE_FIELD(height, "int")
-			return variant(obj.texture_->Height());
+			return variant(obj.texture_->height());
 		DEFINE_FIELD(image_width, "int")
-			return variant(obj.texture_->Width());
+			return variant(obj.texture_->width());
 		DEFINE_FIELD(image_height, "int")
-			return variant(obj.texture_->Height());
+			return variant(obj.texture_->height());
 
 		DEFINE_FIELD(image_wh, "[int,int]")
 			std::vector<variant> v;
