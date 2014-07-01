@@ -283,6 +283,8 @@
     <ClInclude Include="..\..\src\kre\logger.hpp" />
     <ClInclude Include="..\..\src\kre\Material.hpp" />
     <ClInclude Include="..\..\src\kre\MaterialOpenGL.hpp" />
+    <ClInclude Include="..\..\src\kre\PaletteMap.hpp" />
+    <ClInclude Include="..\..\src\kre\PaletteMapOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemAffectors.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemEmitters.hpp" />
@@ -633,6 +635,7 @@
     <ClCompile Include="..\..\src\kre\logger.cpp" />
     <ClCompile Include="..\..\src\kre\Material.cpp" />
     <ClCompile Include="..\..\src\kre\MaterialOpenGL.cpp" />
+    <ClCompile Include="..\..\src\kre\PaletteMapOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemAffectors.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystemEmitters.cpp" />
