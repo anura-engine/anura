@@ -149,7 +149,7 @@ namespace KRE
 				}
 
 				// Use CreateMaterial.
-				auto dd = DisplayDevice::GetCurrent();
+				auto dd = DisplayDevice::getCurrent();
 				std::vector<TexturePtr> textures;
 				unsigned color_planes = ColorPlanes();
 				textures.reserve(color_planes);

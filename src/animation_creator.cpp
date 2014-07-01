@@ -32,7 +32,6 @@
 #include "dropdown_widget.hpp"
 #include "file_chooser_dialog.hpp"
 #include "frame.hpp"
-#include "level.hpp"
 #include "message_dialog.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
@@ -40,14 +39,11 @@
  
 namespace gui 
 {
+	using std::placeholders::_1;
+	using std::placeholders::_2;
 
 	namespace 
 	{
-		void doDraw_scene() 
-		{
-			draw_scene(level::current(), last_draw_position());
-		}
-
 		int slider_transform(double d)
 		{
 			// normalize to [-20.0,20.0] range.
@@ -249,8 +245,7 @@ namespace gui
 			.add_col(WidgetPtr(new Label(rel_path_, KRE::Color::colorGreen(), 14)))
 			.finish_row();
 
-		std::pair<variant, variant> p;
-		foreach(p, current_.as_map()) {
+		for(auto& p : current_.as_map()) {
 			if(p.second.is_int() && showAttribute(p.first)) {
 				TextEditorWidgetPtr entry(new TextEditorWidget(100, 28));
 				std::stringstream ss;
@@ -306,7 +301,7 @@ namespace gui
 			if(animation_preview_) {
 				animation_preview_.reset();
 			}
-		} catch(frame::error&) {
+		} catch(Frame::Error&) {
 			// skip
 		} catch(validation_failure_exception&) {
 			if(animation_preview_) {
@@ -415,7 +410,7 @@ namespace gui
 			int(preferences::virtual_screen_height()*0.8),
 			f);
 		open_dlg.set_background_frame("empty_window");
-		open_dlg.set_draw_background_fn(doDraw_scene);
+		open_dlg.set_draw_background_fn(draw_last_scene);
 		open_dlg.show_modal();
 
 		if(open_dlg.cancelled() == false) {
@@ -610,7 +605,7 @@ namespace gui
 			gui::filter_list(), 
 			true, module::get_module_path("") + "images");
 		dir_dlg.set_background_frame("empty_window");
-		dir_dlg.set_draw_background_fn(doDraw_scene);
+		dir_dlg.set_draw_background_fn(draw_last_scene);
 		dir_dlg.use_relative_paths(true);
 		dir_dlg.show_modal();
 

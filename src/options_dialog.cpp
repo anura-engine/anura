@@ -71,5 +71,5 @@ void options_dialog::handleDraw() const
 		}
 	}*/
 	draw_frame( rect(x(),y(),width(),height()) );
-	//handleDraw_children();
+	//handleDrawChildren();
 }

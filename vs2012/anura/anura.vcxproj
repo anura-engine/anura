@@ -303,6 +303,7 @@
     <ClInclude Include="..\..\src\kre\Scissor.hpp" />
     <ClInclude Include="..\..\src\kre\ScissorOGL.hpp" />
     <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
+    <ClInclude Include="..\..\src\kre\Shaders.hpp" />
     <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\spline.hpp" />
     <ClInclude Include="..\..\src\kre\StencilScopeOGL.hpp" />
@@ -648,6 +649,7 @@
     <ClCompile Include="..\..\src\kre\SceneParameters.cpp" />
     <ClCompile Include="..\..\src\kre\Scissor.cpp" />
     <ClCompile Include="..\..\src\kre\ScissorOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Shaders.cpp" />
     <ClCompile Include="..\..\src\kre\ShadersOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />

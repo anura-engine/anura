@@ -1,21 +1,28 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CODE_EDITOR_DIALOG_HPP_INCLUDED
-#define CODE_EDITOR_DIALOG_HPP_INCLUDED
+
+#pragma once
+
 #ifndef NO_EDITOR
 
 #include <string>
@@ -30,15 +37,16 @@
 #include "input.hpp"
 #include "label.hpp"
 
-namespace gui {
-class code_editor_widget;
-class TextEditorWidget;
+namespace gui 
+{
+	class code_editor_widget;
+	class TextEditorWidget;
 }
 
-class code_editor_dialog : public gui::Dialog
+class CodeEditorDialog : public gui::Dialog
 {
 public:
-	explicit code_editor_dialog(const rect& r);
+	explicit CodeEditorDialog(const rect& r);
 	void init();
 	void add_optional_error_text_area(const std::string& text);
 	bool jump_to_error(const std::string& text);
@@ -59,7 +67,7 @@ private:
 	void init_files_grid();
 
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
-	void handleDraw_children() const;
+	void handleDrawChildren() const;
 
 	void changeFontSize(int amount);
 
@@ -113,7 +121,7 @@ private:
 
 	struct KnownFile {
 		std::string fname;
-		boost::intrusive_ptr<frame> anim;
+		boost::intrusive_ptr<Frame> anim;
 		gui::code_editor_WidgetPtr editor;
 		std::function<void()> op_fn;
 	};
@@ -139,7 +147,7 @@ private:
 	std::function<void()> op_fn_;
 };
 
-typedef boost::intrusive_ptr<code_editor_dialog> code_editor_DialogPtr;
+typedef boost::intrusive_ptr<CodeEditorDialog> CodeEditorDialogPtr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
 void edit_and_continue_fn(const std::string& fname, const std::string& error, std::function<void()> fn);
@@ -147,4 +155,3 @@ void edit_and_continue_fn(const std::string& fname, const std::string& error, st
 void edit_and_continue_assert(const std::string& msg, std::function<void()> fn=std::function<void()>());
 
 #endif // !NO_EDITOR
-#endif

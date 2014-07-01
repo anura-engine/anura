@@ -21,33 +21,26 @@
 	   distribution.
 */
 
+#include "Shaders.hpp"
 #include "DisplayDevice.hpp"
-#include "Scissor.hpp"
 
 namespace KRE
 {
-	Scissor::Scissor(const rect& area)
-		: area_(area)
+	ShaderProgram::ShaderProgram()
 	{
 	}
 
-	Scissor::~Scissor()
+	ShaderProgram::~ShaderProgram()
 	{
 	}
 
-	ScissorPtr Scissor::getInstance(const rect& area)
+	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
 	{
-		return DisplayDevice::getCurrent()->getScissor(area);
+		DisplayDevice::getCurrent()->getShaderProgram(name);
 	}
 
-	Scissor::Manager::Manager(const rect& area)
-		: instance_(getInstance(area))
+	void ShaderProgram::loadFromFile(const std::string& filename)
 	{
-		instance_->apply();
-	}
-
-	Scissor::Manager::~Manager()
-	{
-		instance_->clear();
+		DisplayDevice::getCurrent()->loadShadersFromFile(filename);
 	}
 }

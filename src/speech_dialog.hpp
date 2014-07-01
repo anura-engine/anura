@@ -26,6 +26,8 @@
 #include <string>
 #include <vector>
 
+#include "SDL.h"
+
 #include "Color.hpp"
 #include "entity.hpp"
 #include "gui_section.hpp"

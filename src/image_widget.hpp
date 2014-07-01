@@ -35,6 +35,7 @@ namespace gui
 	public:
 		explicit ImageWidget(const std::string& fname, int w=-1, int h=-1);
 		explicit ImageWidget(KRE::TexturePtr tex, int w=-1, int h=-1);
+		explicit ImageWidget(KRE::MaterialPtr tex, int w=-1, int h=-1);
 		explicit ImageWidget(const variant& v, game_logic::FormulaCallable* e);
 
 		void init(int w, int h);

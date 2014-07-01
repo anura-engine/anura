@@ -239,7 +239,7 @@ namespace gui
 			tx = event->motion.x; ty = event->motion.y;
 	
 			/// XXX fixme
-			KRE::WindowManager::mapMousePosition(&tx, &ty);
+			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
 			event->motion.x = tx-x();
 			event->motion.y = ty-y();
 			break;
@@ -254,7 +254,7 @@ namespace gui
 	#endif
 			tx = event->button.x; ty = event->button.y;
 			/// XXX fixme
-			KRE::WindowManager::mapMousePosition(&tx, &ty);
+			KRE::WindowManager::getMainWindow()->mapMousePosition(&tx, &ty);
 			event->button.x = tx-x();
 			event->button.y = ty-y();
 			break;

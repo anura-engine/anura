@@ -25,6 +25,10 @@
 
 #include <algorithm>
 
+#include "kre/Font.hpp"
+#include "kre/WindowManager.hpp"
+#include "kre/SDLWrapper.hpp"
+
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "code_editor_dialog.hpp"
@@ -35,7 +39,6 @@
 #include "debug_console.hpp"
 #include "drag_widget.hpp"
 #include "filesystem.hpp"
-#include "font.hpp"
 #include "formatter.hpp"
 #include "formula_function_registry.hpp"
 #include "formula_object.hpp"
@@ -48,6 +51,7 @@
 #include "module.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "text_editor_widget.hpp"
 #include "tile_map.hpp"
 #include "tileset_editor_dialog.hpp"
@@ -59,17 +63,17 @@ namespace game_logic
 void invalidate_class_definition(const std::string& class_name);
 }
 
-std::set<level*>& get_all_levels_set();
+std::set<Level*>& get_all_levels_set();
 
-code_editor_dialog::code_editor_dialog(const rect& r)
-  : dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), has_error_(false),
+CodeEditorDialog::CodeEditorDialog(const rect& r)
+  : Dialog(r.x(), r.y(), r.w(), r.h()), invalidated_(0), has_error_(false),
     modified_(false), file_contents_set_(true), suggestions_prefix_(-1),
 	have_close_buttons_(false)
 {
 	init();
 }
 
-void code_editor_dialog::init()
+void CodeEditorDialog::init()
 {
 	clear();
 
@@ -79,25 +83,28 @@ void code_editor_dialog::init()
 		editor_.reset(new code_editor_widget(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0))));
 	}
 
-	button* save_button = new button("Save", std::bind(&code_editor_dialog::save, this));
-	button* increase_font = new button("+", std::bind(&code_editor_dialog::changeFontSize, this, 1));
-	button* decrease_font = new button("-", std::bind(&code_editor_dialog::changeFontSize, this, -1));
+	Button* save_button = new Button("Save", std::bind(&CodeEditorDialog::save, this));
+	Button* increase_font = new Button("+", std::bind(&CodeEditorDialog::changeFontSize, this, 1));
+	Button* decrease_font = new Button("-", std::bind(&CodeEditorDialog::changeFontSize, this, -1));
 
 	save_button_.reset(save_button);
+
+	using std::placeholders::_1;
+	using std::placeholders::_2;
 
 	//std::cerr << "CED: " << x() << "," << y() << "; " << width() << "," << height() << std::endl;
 	drag_widget* dragger = new drag_widget(x(), y(), width(), height(),
 		drag_widget::DRAG_HORIZONTAL, NULL, 
-		std::bind(&code_editor_dialog::on_drag_end, this, _1, _2), 
-		std::bind(&code_editor_dialog::on_drag, this, _1, _2));
+		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2), 
+		std::bind(&CodeEditorDialog::on_drag, this, _1, _2));
 
 	search_ = new TextEditorWidget(120);
 	replace_ = new TextEditorWidget(120);
-	const SDL_Color col = {255,255,255,255};
-	WidgetPtr find_label(label::create("Find: ", col));
-	replace_label_ = label::create("Replace: ", col);
-	status_label_ = label::create("Ok", col);
-	error_label_ = label::create("", col);
+	const KRE::Color col = KRE::Color::colorWhite();
+	WidgetPtr find_label(Label::create("Find: ", col));
+	replace_label_ = Label::create("Replace: ", col);
+	status_label_ = Label::create("Ok", col);
+	error_label_ = Label::create("", col);
 	addWidget(find_label, 42, 12, MOVE_RIGHT);
 	addWidget(WidgetPtr(search_), MOVE_RIGHT);
 	addWidget(replace_label_, MOVE_RIGHT);
@@ -105,8 +112,8 @@ void code_editor_dialog::init()
 	addWidget(WidgetPtr(save_button), MOVE_RIGHT);
 
 	if(have_close_buttons_) {
-		button* save_and_close_button = new button("Save+Close", std::bind(&code_editor_dialog::save_and_close, this));
-		button* abort_button = new button("Abort", std::bind(&dialog::cancel, this));
+		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
+		Button* abort_button = new Button("Abort", std::bind(&Dialog::cancel, this));
 		addWidget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
 		addWidget(WidgetPtr(abort_button), MOVE_RIGHT);
 	}
@@ -128,23 +135,23 @@ void code_editor_dialog::init()
 		save_button->setVisible(false);
 	}
 
-	search_->setOnTabHandler(std::bind(&code_editor_dialog::on_tab, this));
-	replace_->setOnTabHandler(std::bind(&code_editor_dialog::on_tab, this));
+	search_->setOnTabHandler(std::bind(&CodeEditorDialog::on_tab, this));
+	replace_->setOnTabHandler(std::bind(&CodeEditorDialog::on_tab, this));
 
-	search_->setOnChangeHandler(std::bind(&code_editor_dialog::on_search_changed, this));
-	search_->setOnEnterHandler(std::bind(&code_editor_dialog::on_search_enter, this));
-	replace_->setOnEnterHandler(std::bind(&code_editor_dialog::on_replace_enter, this));
+	search_->setOnChangeHandler(std::bind(&CodeEditorDialog::on_search_changed, this));
+	search_->setOnEnterHandler(std::bind(&CodeEditorDialog::on_search_enter, this));
+	replace_->setOnEnterHandler(std::bind(&CodeEditorDialog::on_replace_enter, this));
 
 
 	init_files_grid();
 }
 
-void code_editor_dialog::add_optional_error_text_area(const std::string& text)
+void CodeEditorDialog::add_optional_error_text_area(const std::string& text)
 {
 	using namespace gui;
 	optional_error_text_area_.reset(new TextEditorWidget(width() - 40, 160));
 	optional_error_text_area_->setText(text);
-	foreach(KnownFile& f, files_) {
+	for(KnownFile& f : files_) {
 		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
 	}
 
@@ -153,7 +160,7 @@ void code_editor_dialog::add_optional_error_text_area(const std::string& text)
 	}
 }
 
-bool code_editor_dialog::jump_to_error(const std::string& text)
+bool CodeEditorDialog::jump_to_error(const std::string& text)
 {
 	if(!editor_) {
 		return false;
@@ -175,7 +182,7 @@ bool code_editor_dialog::jump_to_error(const std::string& text)
 	}
 }
 
-void code_editor_dialog::init_files_grid()
+void CodeEditorDialog::init_files_grid()
 {
 	if(files_grid_) {
 		removeWidget(files_grid_);
@@ -186,11 +193,12 @@ void code_editor_dialog::init_files_grid()
 	}
 	
 	using namespace gui;
+	using std::placeholders::_1;
 
 	files_grid_.reset(new grid(1));
 	files_grid_->allow_selection();
-	files_grid_->register_selection_callback(std::bind(&code_editor_dialog::select_file, this, _1));
-	foreach(const KnownFile& f, files_) {
+	files_grid_->register_selection_callback(std::bind(&CodeEditorDialog::select_file, this, _1));
+	for(const KnownFile& f : files_) {
 		if(f.anim) {
 			ImageWidget* img = new ImageWidget(f.anim->img());
 			img->setDim(42, 42);
@@ -206,14 +214,14 @@ void code_editor_dialog::init_files_grid()
 				fname.resize(6);
 			}
 
-			files_grid_->add_col(label::create(fname, graphics::color_white()));
+			files_grid_->add_col(Label::create(fname, KRE::Color::colorWhite()));
 		}
 	}
 
 	addWidget(files_grid_, 2, 2);
 }
 
-void code_editor_dialog::load_file(std::string fname, bool focus, std::function<void()>* fn)
+void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<void()>* fn)
 {
 	if(fname_ == fname) {
 		return;
@@ -222,7 +230,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 	using namespace gui;
 
 	int index = 0;
-	foreach(const KnownFile& f, files_) {
+	for(const KnownFile& f : files_) {
 		if(f.fname == fname) {
 			break;
 		}
@@ -245,7 +253,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 			if(doc["prototype"].is_list()) {
 				std::map<std::string,std::string> paths;
 				module::get_unique_filenames_under_dir("data/object_prototypes", &paths);
-				foreach(variant proto, doc["prototype"].as_list()) {
+				for(variant proto : doc["prototype"].as_list()) {
 					std::string name = proto.as_string() + ".cfg";
 					std::map<std::string,std::string>::const_iterator itor = module::find(paths, name);
 					if(itor != paths.end()) {
@@ -258,14 +266,14 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 		}
 
 		f.editor->setText(json::get_file_contents(fname));
-		f.editor->setOnChangeHandler(std::bind(&code_editor_dialog::on_code_changed, this));
-		f.editor->setOnMoveCursorHandler(std::bind(&code_editor_dialog::onMoveCursor, this));
+		f.editor->setOnChangeHandler(std::bind(&CodeEditorDialog::on_code_changed, this));
+		f.editor->setOnMoveCursorHandler(std::bind(&CodeEditorDialog::onMoveCursor, this));
 
-		foreach(const std::string& obj_type, CustomObjectType::getAllIds()) {
+		for(const std::string& obj_type : CustomObjectType::getAllIds()) {
 			const std::string* path = CustomObjectType::getObjectPath(obj_type + ".cfg");
 			if(path && *path == fname) {
 				try {
-					f.anim.reset(new frame(CustomObjectType::get(obj_type)->defaultFrame()));
+					f.anim.reset(new Frame(CustomObjectType::get(obj_type)->defaultFrame()));
 				} catch(...) {
 				}
 				break;
@@ -309,7 +317,7 @@ void code_editor_dialog::load_file(std::string fname, bool focus, std::function<
 	onMoveCursor();
 }
 
-void code_editor_dialog::select_file(int index)
+void CodeEditorDialog::select_file(int index)
 {
 	if(index < 0 || index >= files_.size()) {
 		return;
@@ -320,12 +328,12 @@ void code_editor_dialog::select_file(int index)
 	load_file(files_[index].fname);
 }
 
-bool code_editor_dialog::hasKeyboardFocus() const
+bool CodeEditorDialog::hasKeyboardFocus() const
 {
 	return editor_->hasFocus() || search_->hasFocus() || replace_->hasFocus();
 }
 
-bool code_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
+bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(animation_preview_) {
 		claimed = animation_preview_->processEvent(event, claimed) || claimed;
@@ -351,7 +359,7 @@ bool code_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 		}
 	}
 
-	claimed = claimed || dialog::handleEvent(event, claimed);
+	claimed = claimed || Dialog::handleEvent(event, claimed);
 	if(claimed) {
 		return claimed;
 	}
@@ -390,9 +398,9 @@ bool code_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-void code_editor_dialog::handleDraw_children() const
+void CodeEditorDialog::handleDrawChildren() const
 {
-	dialog::handleDraw_children();
+	Dialog::handleDrawChildren();
 	if(animation_preview_) {
 		animation_preview_->draw();
 	}
@@ -406,20 +414,23 @@ void code_editor_dialog::handleDraw_children() const
 	}
 }
 
-void code_editor_dialog::changeFontSize(int amount)
+void CodeEditorDialog::changeFontSize(int amount)
 {
 	if(editor_) {
 		editor_->changeFontSize(amount);
 	}
 }
 
-void code_editor_dialog::process()
+void CodeEditorDialog::process()
 {
 	using namespace gui;
 
+	using std::placeholders::_1;
+	using std::placeholders::_2;
+
 	if(invalidated_ && SDL_GetTicks() > invalidated_ + 200) {
 		try {
-			custom_object::reset_current_debug_error();
+			CustomObject::reset_current_debug_error();
 
 #if defined(USE_SHADERS)
 			gles2::shader::get_and_clear_runtime_error();
@@ -440,7 +451,7 @@ void code_editor_dialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 
-				level_runner::getCurrent()->replay_level_from_start();
+				LevelRunner::getCurrent()->replay_level_from_start();
 				
 			} else if(strstr(fname_.c_str(), "/tiles/")) {
 				std::cerr << "INIT TILE MAP\n";
@@ -451,23 +462,23 @@ void code_editor_dialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 				const variant tiles_data = json::parse_from_file("data/tiles.cfg");
-				tile_map::prepareRebuildAll();
+				TileMap::prepareRebuildAll();
 				try {
 					std::cerr << "tile_map::init()\n";
-					tile_map::init(tiles_data);
-					tile_map::rebuildAll();
+					TileMap::init(tiles_data);
+					TileMap::rebuildAll();
 					std::cerr << "done tile_map::init()\n";
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, get_all_levels_set()) {
+					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 				} catch(...) {
 					json::setFileContents(fname_, old_contents);
 					const variant tiles_data = json::parse_from_file("data/tiles.cfg");
-					tile_map::init(tiles_data);
-					tile_map::rebuildAll();
+					TileMap::init(tiles_data);
+					TileMap::rebuildAll();
 					editor_dialogs::tileset_editor_dialog::global_tile_update();
-					foreach(level* lvl, get_all_levels_set()) {
+					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 					throw;
@@ -532,18 +543,10 @@ void code_editor_dialog::process()
 			}
 		}
 		invalidated_ = 0;
-	} else if(custom_object::current_debug_error()) {
+	} else if(CustomObject::current_debug_error()) {
 		error_label_->setText("Runtime Error");
-		error_label_->setTooltip(*custom_object::current_debug_error());
+		error_label_->setTooltip(*CustomObject::current_debug_error());
 	}
-
-#if defined(USE_SHADERS)
-	const std::string shader_error = gles2::shader::get_and_clear_runtime_error();
-	if(shader_error != "") {
-		error_label_->setText("Runtime Shader Error");
-		error_label_->setTooltip(shader_error);
-	}
-#endif
 
 	const bool show_replace = editor_->hasSearchMatches();
 	replace_label_->setVisible(show_replace);
@@ -555,7 +558,7 @@ void code_editor_dialog::process()
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	const json::Token* selected_token = NULL;
 	int token_pos = 0;
-	foreach(const json::Token& token, info.tokens) {
+	for(const json::Token& token : info.tokens) {
 		const int begin_pos = token.begin - text.c_str();
 		const int end_pos = token.end - text.c_str();
 		if(cursor_pos >= begin_pos && cursor_pos <= end_pos) {
@@ -585,16 +588,16 @@ void code_editor_dialog::process()
 
 			if(info.obj.is_map() && info.obj["animation"].is_list()) {
 				animations.clear();
-				foreach(variant anim, info.obj["animation"].as_list()) {
+				for(variant anim : info.obj["animation"].as_list()) {
 					if(anim.is_map() && anim["id"].is_string()) {
 						animations.push_back(anim["id"].as_string());
 					}
 				}
 			}
 
-			foreach(const std::string& str, animations) {
+			for(const std::string& str : animations) {
 				static const std::string types[] = {"enter", "end", "leave", "process"};
-				foreach(const std::string& type, types) {
+				for(const std::string& type : types) {
 					const std::string event_str = type + "_" + str + (type == "process" ? "" : "_anim");
 					if(event_str.size() >= id.size() && std::equal(id.begin(), id.end(), event_str.begin())) {
 						Suggestion s = { "on_" + event_str, "", ": \"\",", 3 };
@@ -622,7 +625,7 @@ void code_editor_dialog::process()
 				const formula_tokenizer::token* selected = NULL;
 				const std::string::const_iterator itor = formula_str.begin() + token_pos;
 
-				foreach(const formula_tokenizer::token& tok, tokens) {
+				for(const formula_tokenizer::token& tok : tokens) {
 					if(tok.end == itor) {
 						selected = &tok;
 						break;
@@ -642,14 +645,14 @@ void code_editor_dialog::process()
 					}
 
 					std::vector<std::string> helpstrings;
-					foreach(const std::string& s, function_helpstrings("core")) {
+					for(const std::string& s : function_helpstrings("core")) {
 						helpstrings.push_back(s);
 					}
-					foreach(const std::string& s, function_helpstrings("custom_object")) {
+					for(const std::string& s : function_helpstrings("custom_object")) {
 						helpstrings.push_back(s);
 					}
 
-					foreach(const std::string& str, helpstrings) {
+					for(const std::string& str : helpstrings) {
 						std::string::const_iterator paren = std::find(str.begin(), str.end(), '(');
 						std::string::const_iterator colon = std::find(paren, str.end(), ':');
 						if(colon == str.end()) {
@@ -680,19 +683,19 @@ void code_editor_dialog::process()
 
 		if(suggestions_.empty() == false) {
 			grid_ptr suggestions_grid(new grid(1));
-			suggestions_grid->register_selection_callback(std::bind(&code_editor_dialog::select_suggestion, this, _1));
+			suggestions_grid->register_selection_callback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
 			suggestions_grid->swallow_clicks();
 			suggestions_grid->allow_selection(true);
 			suggestions_grid->set_show_background(true);
 			suggestions_grid->set_max_height(160);
-			foreach(const Suggestion& s, suggestions_) {
-				suggestions_grid->add_col(WidgetPtr(new label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
+			for(const Suggestion& s : suggestions_) {
+				suggestions_grid->add_col(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
 			}
 
-			suggestions_grid_.reset(new BorderWidget(suggestions_grid, graphics::color(255,255,255,255)));
+			suggestions_grid_.reset(new BorderWidget(suggestions_grid, KRE::Color::colorWhite()));
 		}
 		std::cerr << "SUGGESTIONS: " << suggestions_.size() << ":\n";
-		foreach(const Suggestion& suggestion, suggestions_) {
+		for(const Suggestion& suggestion : suggestions_) {
 			std::cerr << " - " << suggestion.suggestion << "\n";
 		}
 	}
@@ -705,8 +708,9 @@ void code_editor_dialog::process()
 			suggestions_grid_->setLoc(suggestions_grid_->x(), suggestions_grid_->y() + suggestions_grid_->height() + 14);
 		}
 
-		if(suggestions_grid_->x() + suggestions_grid_->width() + 20 > graphics::screen_width()) {
-			suggestions_grid_->setLoc(graphics::screen_width() - suggestions_grid_->width() - 20, suggestions_grid_->y());
+		auto wnd_w = KRE::WindowManager::getMainWindow()->width();
+		if(suggestions_grid_->x() + suggestions_grid_->width() + 20 > wnd_w) {
+			suggestions_grid_->setLoc(wnd_w - suggestions_grid_->width() - 20, suggestions_grid_->y());
 		}
 	}
 
@@ -715,11 +719,11 @@ void code_editor_dialog::process()
 		if(gui::AnimationPreviewWidget::is_animation(info.obj)) {
 			if(!animation_preview_) {
 				animation_preview_.reset(new gui::AnimationPreviewWidget(info.obj));
-				animation_preview_->setRectHandler(std::bind(&code_editor_dialog::setAnimationRect, this, _1));
-				animation_preview_->setSolidHandler(std::bind(&code_editor_dialog::moveSolidRect, this, _1, _2));
-				animation_preview_->setPadHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "pad", _1));
-				animation_preview_->setNumFramesHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "frames", _1));
-				animation_preview_->setFramesPerRowHandler(std::bind(&code_editor_dialog::setIntegerAttr, this, "frames_per_row", _1));
+				animation_preview_->setRectHandler(std::bind(&CodeEditorDialog::setAnimationRect, this, _1));
+				animation_preview_->setSolidHandler(std::bind(&CodeEditorDialog::moveSolidRect, this, _1, _2));
+				animation_preview_->setPadHandler(std::bind(&CodeEditorDialog::setIntegerAttr, this, "pad", _1));
+				animation_preview_->setNumFramesHandler(std::bind(&CodeEditorDialog::setIntegerAttr, this, "frames", _1));
+				animation_preview_->setFramesPerRowHandler(std::bind(&CodeEditorDialog::setIntegerAttr, this, "frames_per_row", _1));
 				animation_preview_->setLoc(x() - 520, y() + 100);
 				animation_preview_->setDim(500, 400);
 				animation_preview_->init();
@@ -735,7 +739,7 @@ void code_editor_dialog::process()
 		if(animation_preview_) {
 			animation_preview_.reset();
 		}
-	} catch(frame::error&) {
+	} catch(Frame::Error&) {
 		// skip
 	} catch(validation_failure_exception&) {
 		if(animation_preview_) {
@@ -756,7 +760,7 @@ void code_editor_dialog::process()
 	}
 }
 
-void code_editor_dialog::change_width(int amount)
+void CodeEditorDialog::change_width(int amount)
 {
 	int new_width = width() + amount;
 	if(new_width < 200) {
@@ -772,17 +776,18 @@ void code_editor_dialog::change_width(int amount)
 	setDim(new_width, height());
 
 
-	foreach(KnownFile& f, files_) {
+	for(KnownFile& f : files_) {
 		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
 	}
 	init();
 }
 
-void code_editor_dialog::on_drag(int dx, int dy) 
+void CodeEditorDialog::on_drag(int dx, int dy) 
 {
+	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
 	int new_width = width() + dx;
-	int min_width = int(graphics::screen_width() * 0.17);
-	int max_width = int(graphics::screen_width() * 0.83);
+	int min_width = int(wnd_w * 0.17);
+	int max_width = int(wnd_w * 0.83);
 	//std::cerr << "ON_DRAG: " << dx << ", " << min_width << ", " << max_width << std::endl;
 	if(new_width < min_width) { 
 		new_width = min_width;
@@ -797,18 +802,18 @@ void code_editor_dialog::on_drag(int dx, int dy)
 	setDim(new_width, height());
 
 
-	foreach(KnownFile& f, files_) {
+	for(KnownFile& f : files_) {
 		f.editor->setDim(width() - 40, height() - (60 + (optional_error_text_area_ ? 170 : 0)));
 	}
 	//init();
 }
 
-void code_editor_dialog::on_drag_end(int x, int y)
+void CodeEditorDialog::on_drag_end(int x, int y)
 {
 	init();
 }
 
-void code_editor_dialog::on_tab()
+void CodeEditorDialog::on_tab()
 {
 	if(search_->hasFocus()) {
 		search_->setFocus(false);
@@ -823,24 +828,24 @@ void code_editor_dialog::on_tab()
 	}
 }
 
-void code_editor_dialog::on_search_changed()
+void CodeEditorDialog::on_search_changed()
 {
 	editor_->setSearch(search_->text());
 }
 
-void code_editor_dialog::on_search_enter()
+void CodeEditorDialog::on_search_enter()
 {
 	search_->setFocus(false);
 	replace_->setFocus(false);
 	editor_->setFocus(true);
 }
 
-void code_editor_dialog::on_replace_enter()
+void CodeEditorDialog::on_replace_enter()
 {
 	editor_->replace(replace_->text());
 }
 
-void code_editor_dialog::on_code_changed()
+void CodeEditorDialog::on_code_changed()
 {
 	if(!modified_) {
 		modified_ = true;
@@ -867,8 +872,10 @@ void visit_potential_formula_str(variant candidate, variant* result, int row, in
 }
 }
 
-void code_editor_dialog::onMoveCursor()
+void CodeEditorDialog::onMoveCursor()
 {
+	using std::placeholders::_1;
+
 	visualize_widget_.reset();
 
 	status_label_->setText(formatter() << "Line " << (editor_->cursorRow()+1) << " Col " << (editor_->cursorCol()+1) << (modified_ ? " (Modified)" : ""));
@@ -887,7 +894,7 @@ void code_editor_dialog::onMoveCursor()
 				int best_result = -1;
 				variant result_variant;
 				const game_logic::formula* best_formula = NULL;
-				foreach(const game_logic::formula* f, formulae) {
+				for(const game_logic::formula* f : formulae) {
 					const variant::debug_info* info = f->str_var().get_debug_info();
 					if(!info || !info->filename || *info->filename != *str_info.filename) {
 						continue;
@@ -923,7 +930,7 @@ void code_editor_dialog::onMoveCursor()
 	}
 }
 
-void code_editor_dialog::setAnimationRect(rect r)
+void CodeEditorDialog::setAnimationRect(rect r)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -932,12 +939,12 @@ void code_editor_dialog::setAnimationRect(rect r)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(frame::error& e) {
+		} catch(Frame::Error& e) {
 		}
 	}
 }
 
-void code_editor_dialog::moveSolidRect(int dx, int dy)
+void CodeEditorDialog::moveSolidRect(int dx, int dy)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -947,7 +954,7 @@ void code_editor_dialog::moveSolidRect(int dx, int dy)
 			return;
 		}
 
-		foreach(const variant& num, solid_area.as_list()) {
+		for(const variant& num : solid_area.as_list()) {
 			if(!num.is_int()) {
 				return;
 			}
@@ -959,12 +966,12 @@ void code_editor_dialog::moveSolidRect(int dx, int dy)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(frame::error& e) {
+		} catch(Frame::Error& e) {
 		}
 	}
 }
 
-void code_editor_dialog::setIntegerAttr(const char* attr, int value)
+void CodeEditorDialog::setIntegerAttr(const char* attr, int value)
 {
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
 	variant v = info.obj;
@@ -973,25 +980,25 @@ void code_editor_dialog::setIntegerAttr(const char* attr, int value)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(frame::error& e) {
+		} catch(Frame::Error& e) {
 		}
 	}
 }
 
-void code_editor_dialog::save()
+void CodeEditorDialog::save()
 {
 	sys::write_file(module::map_file(fname_), editor_->text());
 	status_label_->setText(formatter() << "Saved " << fname_);
 	modified_ = false;
 }
 
-void code_editor_dialog::save_and_close()
+void CodeEditorDialog::save_and_close()
 {
 	save();
 	close();
 }
 
-void code_editor_dialog::select_suggestion(int index)
+void CodeEditorDialog::select_suggestion(int index)
 {
 	if(index >= 0 && index < suggestions_.size()) {
 		std::cerr << "SELECT " << suggestions_[index].suggestion << "\n";
@@ -1012,18 +1019,20 @@ void code_editor_dialog::select_suggestion(int index)
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error)
 {
-	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(0,0,graphics::screen_width(),graphics::screen_height())));
+	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
+	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
+	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
 	const std::string::const_iterator end_itor = std::find(class_name.begin(), class_name.end(), '.');
 	const std::string filename = "data/classes/" + std::string(class_name.begin(), end_itor) + ".cfg";
 
-	d->set_process_hook(std::bind(&code_editor_dialog::process, d.get()));
+	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename);
 	d->jump_to_error(error);
-	d->set_on_quit(std::bind(&gui::dialog::cancel, d.get()));
+	d->set_on_quit(std::bind(&gui::Dialog::cancel, d.get()));
 	d->show_modal();
 
 	if(d->cancelled()) {
@@ -1033,9 +1042,11 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 
 void edit_and_continue_fn(const std::string& filename, const std::string& error, std::function<void()> fn)
 {
-	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(0,0,graphics::screen_width(),graphics::screen_height())));
+	auto wnd_w = KRE::WindowManager::getMainWindow()->width();
+	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
+	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
-	d->set_process_hook(std::bind(&code_editor_dialog::process, d.get()));
+	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
@@ -1071,37 +1082,39 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	const std::vector<CallStackEntry>& stack = get_expression_call_stack();
 	std::vector<CallStackEntry> reverse_stack = stack;
 	std::reverse(reverse_stack.begin(), reverse_stack.end());
-	if(stack.empty() || !level::getCurrentPtr()) {
+	if(stack.empty() || !Level::getCurrentPtr()) {
 		return;
 	}
 
-	int w, h;
-	get_main_window()->auto_window_size(w,h);
-	get_main_window()->set_window_size(w,h);
+	auto wnd = KRE::WindowManager::getMainWindow();
+
+	unsigned w, h;
+	wnd->autoWindowSize(w,h);
+	wnd->setWindowSize(w,h);
 
 	using namespace gui;
 
 	using debug_console::ConsoleDialog;
 
-	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
+	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(Level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
 
 	grid_ptr call_grid(new grid(1));
-	call_grid->set_max_height(graphics::screen_height() - console->y());
+	call_grid->set_max_height(wnd->height() - console->y());
 	call_grid->allow_selection();
 	call_grid->must_select();
-	foreach(const CallStackEntry& entry, reverse_stack) {
+	for(const CallStackEntry& entry : reverse_stack) {
 		std::string str = entry.expression->str();
 		std::string::iterator i = std::find(str.begin(), str.end(), '\n');
 		if(i != str.end()) {
 			str.erase(i, str.end());
 		}
-		call_grid->add_col(WidgetPtr(new label(str)));
+		call_grid->add_col(WidgetPtr(new Label(str)));
 	}
 
 	call_grid->setLoc(console->x() + console->width() + 6, console->y());
-	call_grid->setDim(graphics::screen_width() - call_grid->x(), graphics::screen_height() - call_grid->y());
+	call_grid->setDim(wnd->width() - call_grid->x(), wnd->height() - call_grid->y());
 
-	boost::intrusive_ptr<code_editor_dialog> d(new code_editor_dialog(rect(graphics::screen_width()/2,0,graphics::screen_width()/2,console->y())));
+	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(wnd->width()/2,0,wnd->width()/2,console->y())));
 
 	d->set_close_buttons();
 	d->show();
@@ -1134,7 +1147,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 			}
 
 			bool swallowed = false;
-			foreach(WidgetPtr w, widgets) {
+			for(WidgetPtr w : widgets) {
 				if(!swallowed) {
 					swallowed = w->processEvent(event, swallowed) || swallowed;
 				}
@@ -1144,7 +1157,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 		d->process();
 
 		console->prepare_draw();
-		foreach(WidgetPtr w, widgets) {
+		for(WidgetPtr w : widgets) {
 			w->draw();
 		}
 		console->complete_draw();
@@ -1157,41 +1170,23 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 COMMAND_LINE_UTILITY(codeedit)
 {
-	SDL_Init(SDL_INIT_VIDEO);
-	SDL_Window* wnd = SDL_CreateWindow("Code Editor", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, 600, 600, SDL_WINDOW_OPENGL|SDL_WINDOW_RESIZABLE);
-	SDL_GLContext ctx = SDL_GL_CreateContext(wnd);
-#ifdef USE_SHADERS
-	glViewport(0, 0, 600, 600);
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#else
-	glShadeModel(GL_SMOOTH);
-	glEnable(GL_BLEND);
-	glEnable(GL_TEXTURE_2D);
-	glEnableClientState(GL_VERTEX_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-#endif
-
-	const font::manager font_manager;
-	graphics::texture::manager texture_manager;
+	SDL::SDL_ptr manager(new SDL::SDL());
+	KRE::WindowManagerPtr main_wnd = KRE::WindowManager::factory("SDL", "opengl");
+	main_wnd->enableVsync(false);
+	main_wnd->createWindow(600, 600);
 
 	variant gui_node = json::parse_from_file("data/gui.cfg");
 	GuiSection::init(gui_node);
 
 	FramedGuiElement::init(gui_node);
 
-	code_editor_dialog d(rect(0,0,600,600));
+	CodeEditorDialog d(rect(0,0,600,600));
 	std::cerr << "CREATE DIALOG\n";
 	if(args.empty() == false) {
 		d.load_file(args[0]);
 	}
 
 	d.show_modal();
-
-	SDL_GL_DeleteContext(ctx);
-	SDL_DestroyWindow(wnd);
 }
 
 #endif // NO_EDITOR

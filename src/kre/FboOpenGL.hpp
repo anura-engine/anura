@@ -26,7 +26,7 @@
 #include <vector>
 #include "AttributeSet.hpp"
 #include "RenderTarget.hpp"
-#include "variant.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {
@@ -41,7 +41,7 @@ namespace KRE
 			unsigned multi_samples=0);
 		explicit FboOpenGL(const variant& node);
 		virtual ~FboOpenGL();
-		virtual void preRender() override;
+		virtual void preRender(const WindowManagerPtr&) override;
 	private:
 		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd) override;
 		void HandleCreate() override;

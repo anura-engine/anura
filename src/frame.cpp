@@ -27,6 +27,7 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "kre/DisplayDevice.hpp"
 #include "kre/TextureUtils.hpp"
 
 #include "asserts.hpp"
@@ -1033,6 +1034,13 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 	}
 
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
+}
+
+KRE::DisplayDeviceDef Frame::doAttach(const KRE::DisplayDevicePtr& dd)
+{
+	KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
+	// XXX
+	return def;
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(Frame)

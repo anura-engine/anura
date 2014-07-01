@@ -38,7 +38,6 @@
 #include "controls.hpp"
 #include "custom_object.hpp"
 #include "custom_object_functions.hpp"
-#include "custom_object_type.hpp"
 #include "draw_scene.hpp"
 #include "editor.hpp"
 #include "difficulty.hpp"
@@ -804,9 +803,9 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 			wait_lvl->setAsCurrentLevel();
 
-			level_runner runner(wait_lvl, level_cfg, orig_level_cfg);
+			LevelRunner runner(wait_lvl, level_cfg, orig_level_cfg);
 
-			multiplayer::sync_start_time(*lvl, std::bind(&level_runner::play_cycle, &runner));
+			multiplayer::sync_start_time(*lvl, std::bind(&LevelRunner::play_cycle, &runner));
 
 			lvl->setMultiplayerSlot(multiplayer::slot());
 		}
@@ -826,7 +825,7 @@ extern "C" int main(int argcount, char* argvec[])
 		set_scene_title(lvl->title());
 
 		try {
-			quit = level_runner(lvl, level_cfg, orig_level_cfg).play_level();
+			quit = LevelRunner(lvl, level_cfg, orig_level_cfg).play_level();
 			level_cfg = orig_level_cfg;
 		} catch(multiplayer_exception&) {
 		}

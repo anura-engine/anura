@@ -2997,7 +2997,7 @@ void editor::change_tool(EDIT_TOOL tool)
 	}
 	case TOOL_ADD_OBJECT: {
 		if(!character_dialog_) {
-			character_dialog_.reset(new editor_dialogs::character_editor_dialog(*this));
+			character_dialog_.reset(new editor_dialogs::CharacterEditorDialog(*this));
 		}
 		current_dialog_ = character_dialog_.get();
 		character_dialog_->set_character(cur_object_);
@@ -4032,7 +4032,7 @@ void editor::edit_shaders()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new code_editor_dialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
 		code_dialog_->load_file(path);
 	}
 #endif
@@ -4045,7 +4045,7 @@ void editor::edit_level_code()
 		external_code_editor_->load_file(path);
 	}
 	
-	code_dialog_.reset(new code_editor_dialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
+	code_dialog_.reset(new CodeEditorDialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
 	code_dialog_->load_file(path);
 }
 
@@ -4164,7 +4164,7 @@ void editor::toggle_code()
 	if(code_dialog_) {
 		code_dialog_.reset();
 	} else {
-		code_dialog_.reset(new code_editor_dialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
+		code_dialog_.reset(new CodeEditorDialog(rect(graphics::screen_width() - 620, 30, 620, graphics::screen_height() - 30)));
 		set_code_file();
 	}
 }

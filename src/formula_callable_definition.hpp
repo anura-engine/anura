@@ -206,13 +206,13 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 #define END_DEFINE_CALLABLE_BASE_PTR(classname, base_ptr) }; } \
 	std::vector<std::string> field_names;\
 	std::vector<variant_type_ptr> types, set_types; \
-	for(int n = 0; n != fields.size(); ++n) { \
+	for(int n = 0; n != static_cast<int>(fields.size()); ++n) { \
 		field_names.push_back(fields[n].id); \
 		types.push_back(fields[n].type); \
 		set_types.push_back(fields[n].set_type); \
 	} \
 	game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&field_names[0], &field_names[0] + field_names.size(), game_logic::FormulaCallableDefinitionPtr(), &types[0]); \
-	for(int n = 0; n != fields.size(); ++n) { \
+	for(int n = 0; n != static_cast<int>(fields.size()); ++n) { \
 		if(set_types[n]) { \
 			def->getEntry(n)->write_type = set_types[n]; \
 		} else { \
@@ -244,13 +244,13 @@ void classname::setValue(const std::string& key, const variant& value) { \
 	} \
 } \
 variant classname::getValueBySlot(int slot) const { \
-	ASSERT_LOG(slot >= 0 && slot < classname##_fields.size(), "Illegal slot when accessing " << #classname << ": " << slot << "/" << classname##_fields.size()); \
+	ASSERT_LOG(slot >= 0 && slot < static_cast<int>(classname##_fields.size()), "Illegal slot when accessing " << #classname << ": " << slot << "/" << classname##_fields.size()); \
 	const game_logic::FormulaCallable* callable = this; \
 	if(slot < classname##_num_base_slots) callable = base_ptr; \
 	return classname##_fields[slot].get(*callable); \
 } \
 void classname::setValueBySlot(int slot, const variant& value) { \
-	ASSERT_LOG(slot >= 0 && slot < classname##_fields.size() && classname##_fields[slot].set, "Illegal slot when writing to " << #classname << ": " << slot << "/" << classname##_fields.size()); \
+	ASSERT_LOG(slot >= 0 && slot < static_cast<int>(classname##_fields.size()) && classname##_fields[slot].set, "Illegal slot when writing to " << #classname << ": " << slot << "/" << classname##_fields.size()); \
 	game_logic::FormulaCallable* callable = this; \
 	if(slot < classname##_num_base_slots) callable = base_ptr; \
 	classname##_fields[slot].set(*callable, value); \

@@ -1255,7 +1255,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		boost::intrusive_ptr<frame> f;
 		try {
 			f.reset(new frame(anim));
-		} catch(frame::error&) {
+		} catch(Frame::Error&) {
 			ASSERT_LOG(false, "ERROR LOADING FRAME IN OBJECT '" << id_ << "'");
 		}
 

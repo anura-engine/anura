@@ -26,18 +26,7 @@
 
 #include <list>
 
-struct SDL_cond;
-struct SDL_Thread;
-struct SDL_mutex;
-
-#ifdef __cplusplus
-extern "C" {
-#endif
-unsigned SDL_GetThreadID(SDL_Thread*);
-unsigned SDL_ThreadID();
-#ifdef __cplusplus
-}
-#endif
+#include "SDL.h"
 
 // Threading primitives wrapper for SDL_Thread.
 //

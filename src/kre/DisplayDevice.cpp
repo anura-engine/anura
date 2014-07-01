@@ -82,7 +82,7 @@ namespace KRE
 		return it->second();
 	}
 
-	DisplayDevicePtr DisplayDevice::GetCurrent()
+	DisplayDevicePtr DisplayDevice::getCurrent()
 	{
 		ASSERT_LOG(current_display_device() != NULL, "display device is NULL");
 		return current_display_device();
@@ -99,13 +99,13 @@ namespace KRE
 
 	void DisplayDevice::BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
-		GetCurrent()->DoBlitTexture(tex, dstx, dsty, dstw, dsth, rotation, srcx, srcy, srcw, srch);
+		getCurrent()->DoBlitTexture(tex, dstx, dsty, dstw, dsth, rotation, srcx, srcy, srcw, srch);
 	}
 
 	AttributeSetPtr DisplayDevice::CreateAttributeSet(bool hardware_hint, bool indexed, bool instanced)
 	{
 		if(hardware_hint) {
-			auto as = DisplayDevice::GetCurrent()->HandleCreateAttributeSet(indexed, instanced);
+			auto as = DisplayDevice::getCurrent()->HandleCreateAttributeSet(indexed, instanced);
 			if(as) {
 				return as;
 			}
@@ -116,7 +116,7 @@ namespace KRE
 	HardwareAttributePtr DisplayDevice::CreateAttributeBuffer(bool hw_backed, AttributeBase* parent)
 	{
 		if(hw_backed) {
-			auto attrib = DisplayDevice::GetCurrent()->HandleCreateAttribute(parent);
+			auto attrib = DisplayDevice::getCurrent()->HandleCreateAttribute(parent);
 			if(attrib) {
 				return attrib;
 			}
@@ -131,7 +131,7 @@ namespace KRE
 		bool use_multi_sampling, 
 		size_t multi_samples)
 	{
-		return GetCurrent()->HandleCreateRenderTarget(width, height, 
+		return getCurrent()->HandleCreateRenderTarget(width, height, 
 			color_plane_count, 
 			depth, 
 			stencil, 
@@ -141,52 +141,52 @@ namespace KRE
 
 	TexturePtr DisplayDevice::CreateTexture(const SurfacePtr& surface, const variant& node)
 	{
-		return GetCurrent()->HandleCreateTexture(surface, node);
+		return getCurrent()->HandleCreateTexture(surface, node);
 	}
 
 	TexturePtr DisplayDevice::CreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
 	{
-		return GetCurrent()->HandleCreateTexture(surface, type, mipmap_levels);
+		return getCurrent()->HandleCreateTexture(surface, type, mipmap_levels);
 	}
 
 	TexturePtr DisplayDevice::CreateTexture(unsigned width, PixelFormat::PF fmt)
 	{
-		return GetCurrent()->HandleCreateTexture(width, fmt);
+		return getCurrent()->HandleCreateTexture(width, fmt);
 	}
 
 	TexturePtr DisplayDevice::CreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
 	{
-		return GetCurrent()->HandleCreateTexture(width, height, fmt, type);
+		return getCurrent()->HandleCreateTexture(width, height, fmt, type);
 	}
 
 	TexturePtr DisplayDevice::CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
-		return GetCurrent()->HandleCreateTexture(width, height, depth, fmt);
+		return getCurrent()->HandleCreateTexture(width, height, depth, fmt);
 	}
 
 	TexturePtr DisplayDevice::CreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
 	{
-		return GetCurrent()->HandleCreateTexture(filename, type, mipmap_levels);
+		return getCurrent()->HandleCreateTexture(filename, type, mipmap_levels);
 	}
 
 	MaterialPtr DisplayDevice::CreateMaterial(const variant& node)
 	{
-		return GetCurrent()->HandleCreateMaterial(node);
+		return getCurrent()->HandleCreateMaterial(node);
 	}
 
 	MaterialPtr DisplayDevice::CreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend, bool fog, bool lighting, bool depth_write, bool depth_check)
 	{
-		return GetCurrent()->HandleCreateMaterial(name, textures, blend, fog, lighting, depth_write, depth_check);
+		return getCurrent()->HandleCreateMaterial(name, textures, blend, fog, lighting, depth_write, depth_check);
 	}
 
 	RenderTargetPtr DisplayDevice::RenderTargetInstance(const variant& node)
 	{
-		return DisplayDevice::GetCurrent()->HandleCreateRenderTarget(node);
+		return DisplayDevice::getCurrent()->HandleCreateRenderTarget(node);
 	}
 
 	bool DisplayDevice::CheckForFeature(DisplayDeviceCapabilties cap)
 	{
-		return DisplayDevice::GetCurrent()->DoCheckForFeature(cap);
+		return DisplayDevice::getCurrent()->DoCheckForFeature(cap);
 	}
 
 	DisplayDeviceDef::DisplayDeviceDef(const std::vector<AttributeSetPtr>& as)

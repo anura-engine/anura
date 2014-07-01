@@ -37,6 +37,6 @@ namespace KRE
 
 	ClipScopePtr ClipScope::create(const rect& r)
 	{
-		return DisplayDevice::GetCurrent()->createClipScope(r);
+		return DisplayDevice::getCurrent()->createClipScope(r);
 	}
 }
