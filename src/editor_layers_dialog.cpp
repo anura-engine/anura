@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "editor_layers_dialog.hpp"
 #include "foreach.hpp"
@@ -49,23 +48,23 @@ void editor_layers_dialog::init()
 
 	foreach(int layer, all_layers) {
 		const bool hidden = hidden_layers.count(layer);
-		gui_section_widget* section = new gui_section_widget(hidden ? "checkbox-empty" : "checkbox-filled");
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
 
 		row_data row = { section, layer, hidden };
 		rows_.push_back(row);
-		g->add_col(widget_ptr(section));
-		g->add_col(widget_ptr(new label(formatter() << layer, graphics::color_white())));
+		g->add_col(WidgetPtr(section));
+		g->add_col(WidgetPtr(new label(formatter() << layer, graphics::color_white())));
 	}
 
-	gui_section_widget* section = new gui_section_widget(locked_ ? "checkbox-filled" : "checkbox-empty");
-	g->add_col(widget_ptr(section));
-	g->add_col(widget_ptr(new label("lock", graphics::color_white())));
+	GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "Checkbox-filled" : "Checkbox-empty");
+	g->add_col(WidgetPtr(section));
+	g->add_col(WidgetPtr(new label("lock", graphics::color_white())));
 
 	g->allow_selection();
-	g->register_selection_callback(boost::bind(&editor_layers_dialog::row_selected, this, _1));
-	g->register_mouseover_callback(boost::bind(&editor_layers_dialog::row_mouseover, this, _1));
+	g->register_selection_callback(std::bind(&editor_layers_dialog::row_selected, this, _1));
+	g->register_mouseover_callback(std::bind(&editor_layers_dialog::row_mouseover, this, _1));
 	
-	add_widget(g, 0, 0);
+	addWidget(g, 0, 0);
 
 	const int ypos = g->y() + g->height();
 
@@ -73,15 +72,15 @@ void editor_layers_dialog::init()
 	g.reset(new grid(2));
 	foreach(const std::string& classification, all_classifications_) {
 		const bool hidden = editor_.get_level().hidden_object_classifications().count(classification) != 0;
-		gui_section_widget* section = new gui_section_widget(hidden ? "checkbox-empty" : "checkbox-filled");
-		g->add_col(widget_ptr(section));
-		g->add_col(widget_ptr(new label(classification, graphics::color_white())));
+		GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
+		g->add_col(WidgetPtr(section));
+		g->add_col(WidgetPtr(new label(classification, graphics::color_white())));
 	}
 
 	g->allow_selection();
-	g->register_selection_callback(boost::bind(&editor_layers_dialog::classification_selected, this, _1));
+	g->register_selection_callback(std::bind(&editor_layers_dialog::classification_selected, this, _1));
 
-	add_widget(g, 0, ypos + 80);
+	addWidget(g, 0, ypos + 80);
 }
 
 void editor_layers_dialog::process()
@@ -99,7 +98,7 @@ void editor_layers_dialog::process()
 
 		if(hidden_layers.size() != 1 || *hidden_layers.begin() != t.zorder) {
 			std::cerr << "CHANGING LOCK\n";
-			foreach(level_ptr lvl, editor_.get_level_list()) {
+			foreach(LevelPtr lvl, editor_.get_level_list()) {
 				foreach(int layer, all_layers) {
 					lvl->hide_tile_layer(layer, true);
 				}
@@ -129,7 +128,7 @@ void editor_layers_dialog::row_selected(int nrow)
 		} else if(!locked_) {
 			std::set<int> all_layers, hidden_layers;
 			editor_.get_level().get_tile_layers(&all_layers, &hidden_layers);
-			foreach(level_ptr lvl, editor_.get_level_list()) {
+			foreach(LevelPtr lvl, editor_.get_level_list()) {
 				foreach(int layer, all_layers) {
 					lvl->hide_tile_layer(layer, before_locked_state_.count(layer));
 				}
@@ -145,7 +144,7 @@ void editor_layers_dialog::row_selected(int nrow)
 
 	locked_ = false;
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->hide_tile_layer(rows_[nrow].layer, !rows_[nrow].hidden);
 	}
 
@@ -155,7 +154,7 @@ void editor_layers_dialog::row_selected(int nrow)
 void editor_layers_dialog::row_mouseover(int nrow)
 {
 	if(nrow < 0 || nrow >= rows_.size()) {
-		editor_.get_level().highlight_tile_layer(INT_MIN);
+		editor_.get_level().highlight_tile_layer(std::numeric_limits<int>::min());
 		return;
 	}
 
@@ -165,10 +164,10 @@ void editor_layers_dialog::row_mouseover(int nrow)
 void editor_layers_dialog::find_classifications()
 {
 	all_classifications_.clear();
-	foreach(level_ptr lvl, editor_.get_level_list()) {
-		foreach(entity_ptr e, lvl->get_chars()) {
-			if(e->editor_info() && !e->editor_info()->classification().empty()) {
-				all_classifications_.insert(e->editor_info()->classification());
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
+		foreach(EntityPtr e, lvl->get_chars()) {
+			if(e->getEditorInfo() && !e->getEditorInfo()->classification().empty()) {
+				all_classifications_.insert(e->getEditorInfo()->classification());
 			}
 		}
 	}
@@ -183,7 +182,7 @@ void editor_layers_dialog::classification_selected(int index)
 
 	std::set<std::string>::const_iterator itor = all_classifications_.begin();
 	std::advance(itor, index);
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->hide_object_classification(*itor, !lvl->hidden_object_classifications().count(*itor));
 	}
 

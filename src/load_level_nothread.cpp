@@ -17,7 +17,6 @@
 #include "asserts.hpp"
 #include "concurrent_cache.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
 #include "load_level.hpp"
@@ -96,7 +95,7 @@ void preload_level(const std::string& lvl)
 boost::intrusive_ptr<level> load_level(const std::string& lvl)
 {
 	boost::intrusive_ptr<level> res(new level(lvl));
-	res->finish_loading();
+	res->finishLoading();
 	return res;
 }
 

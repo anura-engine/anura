@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 
@@ -97,62 +95,62 @@ void editor_module_properties_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(widget_ptr(new label("Module Properties", graphics::color_white(), 48)), 10, 10);
+	addWidget(WidgetPtr(new label("Module Properties", graphics::color_white(), 48)), 10, 10);
 
 	grid_ptr g(new grid(2));
 	g->set_max_height(320);
 	if(new_mod_) {
-		text_editor_widget_ptr change_id_entry(new text_editor_widget(200, 30));
-		change_id_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_id, this, change_id_entry));
-		change_id_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+		TextEditorWidgetPtr change_id_entry(new TextEditorWidget(200, 30));
+		change_id_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_id, this, change_id_entry));
+		change_id_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
-		g->add_col(widget_ptr(new label("Identifier:  ", graphics::color_white(), 36)))
-			.add_col(widget_ptr(change_id_entry));
+		g->add_col(WidgetPtr(new label("Identifier:  ", graphics::color_white(), 36)))
+			.add_col(WidgetPtr(change_id_entry));
 	} else {
-		g->add_col(widget_ptr(new label("Identifier: ", graphics::color_white(), 36)))
-			.add_col(widget_ptr(new label(mod_.name_, graphics::color_white(), 36)));
+		g->add_col(WidgetPtr(new label("Identifier: ", graphics::color_white(), 36)))
+			.add_col(WidgetPtr(new label(mod_.name_, graphics::color_white(), 36)));
 	}
 
-	text_editor_widget_ptr change_name_entry(new text_editor_widget(200, 30));
-	change_name_entry->set_text(mod_.pretty_name_);
-	change_name_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_name, this, change_name_entry));
-	change_name_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	TextEditorWidgetPtr change_name_entry(new TextEditorWidget(200, 30));
+	change_name_entry->setText(mod_.pretty_name_);
+	change_name_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_name, this, change_name_entry));
+	change_name_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
-	g->add_col(widget_ptr(new label("Name:", graphics::color_white(), 36)))
-	  .add_col(widget_ptr(change_name_entry));
+	g->add_col(WidgetPtr(new label("Name:", graphics::color_white(), 36)))
+	  .add_col(WidgetPtr(change_name_entry));
 
-	text_editor_widget_ptr change_abbrev_entry(new text_editor_widget(200, 30));
-	change_abbrev_entry->set_text(mod_.abbreviation_);
-	change_abbrev_entry->set_on_change_handler(boost::bind(&editor_module_properties_dialog::change_prefix, this, change_abbrev_entry));
-	change_abbrev_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	TextEditorWidgetPtr change_abbrev_entry(new TextEditorWidget(200, 30));
+	change_abbrev_entry->setText(mod_.abbreviation_);
+	change_abbrev_entry->setOnChangeHandler(std::bind(&editor_module_properties_dialog::change_prefix, this, change_abbrev_entry));
+	change_abbrev_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
-	g->add_col(widget_ptr(new label("Prefix:", graphics::color_white(), 36)))
-	  .add_col(widget_ptr(change_abbrev_entry));
+	g->add_col(WidgetPtr(new label("Prefix:", graphics::color_white(), 36)))
+	  .add_col(WidgetPtr(change_abbrev_entry));
 
-	g->add_col(widget_ptr(new label("Modules  ", graphics::color_white(), 36)))
-		.add_col(widget_ptr(new button(widget_ptr(new label("Add", graphics::color_white())), boost::bind(&editor_module_properties_dialog::change_module_includes, this))));
+	g->add_col(WidgetPtr(new label("Modules  ", graphics::color_white(), 36)))
+		.add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), std::bind(&editor_module_properties_dialog::change_module_includes, this))));
 	foreach(const std::string& s, mod_.included_modules_) {
-		g->add_col(widget_ptr(new label(s, graphics::color_white(), 36)))
-			.add_col(widget_ptr(new button(widget_ptr(new label("Remove", graphics::color_white())), boost::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
+		g->add_col(WidgetPtr(new label(s, graphics::color_white(), 36)))
+			.add_col(WidgetPtr(new button(WidgetPtr(new label("Remove", graphics::color_white())), std::bind(&editor_module_properties_dialog::remove_module_include, this, s))));
 	}
-	add_widget(g);
+	addWidget(g);
 
 	add_ok_and_cancel_buttons();
 }
 
-void editor_module_properties_dialog::change_id(const gui::text_editor_widget_ptr editor)
+void editor_module_properties_dialog::change_id(const gui::TextEditorWidgetPtr editor)
 {
 	if(std::find(dirs_.begin(), dirs_.end(), editor->text()) == dirs_.end()) {
 		mod_.name_ = editor->text();
 	}
 }
 
-void editor_module_properties_dialog::change_name(const gui::text_editor_widget_ptr editor)
+void editor_module_properties_dialog::change_name(const gui::TextEditorWidgetPtr editor)
 {
 	mod_.pretty_name_ = editor->text();
 }
 
-void editor_module_properties_dialog::change_prefix(const gui::text_editor_widget_ptr editor)
+void editor_module_properties_dialog::change_prefix(const gui::TextEditorWidgetPtr editor)
 {
 	mod_.abbreviation_ = editor->text();
 }
@@ -161,7 +159,7 @@ void editor_module_properties_dialog::change_module_includes()
 {
 	using namespace gui;
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(widget_ptr(new label("Change Included Modules", graphics::color_white(), 48)));
+	d.addWidget(WidgetPtr(new label("Change Included Modules", graphics::color_white(), 48)));
 	if(dirs_.empty()) {
 		return;
 	}
@@ -177,11 +175,11 @@ void editor_module_properties_dialog::change_module_includes()
 		// only include modules not included already.
 		if(std::find(mod_.included_modules_.begin(), mod_.included_modules_.end(), dir) == mod_.included_modules_.end() 
 			&& dir != mod_.name_) {
-			grid->add_col(widget_ptr(new label(dir, graphics::color_white())));
+			grid->add_col(WidgetPtr(new label(dir, graphics::color_white())));
 			choices.push_back(dir);
 		}
 	}
-	grid->register_selection_callback(boost::bind(&editor_module_properties_dialog::execute_change_module_includes, this, choices, _1));
+	grid->register_selection_callback(std::bind(&editor_module_properties_dialog::execute_change_module_includes, this, choices, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
@@ -189,9 +187,9 @@ void editor_module_properties_dialog::change_module_includes()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void editor_module_properties_dialog::remove_module_include(const std::string& s)
@@ -206,7 +204,7 @@ void editor_module_properties_dialog::remove_module_include(const std::string& s
 void editor_module_properties_dialog::execute_change_module_includes(const std::vector<std::string>& choices, int index)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -228,8 +226,8 @@ const std::string editor_module_properties_dialog::on_exit() {
 	module::reload(mod_.name_);
 	// Reload level paths
 	reload_level_paths();
-	custom_object_type::reload_file_paths();
-	font::reload_font_paths();
+	CustomObjectType::ReloadFilePaths();
+	font::reloadFontPaths();
 	if(mod_.abbreviation_.empty() == false) {
 		return mod_.abbreviation_ + ":titlescreen.cfg";
 	}
@@ -269,7 +267,7 @@ void editor_module_properties_dialog::create_new_module() {
 		// Module specifed as standalone, write out a few extra useful files.
 		if(mod_.included_modules_.empty()) {
 			// data/fonts.cfg			-- {font:["@flatten","@include data/dialog_font.cfg","@include data/label_font.cfg"]}
-			// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],framed_gui_element: ["@flatten","@include data/framed-gui-elements.cfg"]}
+			// data/gui.cfg				-- {section:["@flatten","@include data/editor-tools.cfg","@include data/gui-elements.cfg"],FramedGuiElement: ["@flatten","@include data/framed-gui-elements.cfg"]}
 			// data/music.cfg			-- {}
 			// data/preload.cfg			-- { preload: [], }
 			// data/tiles.cfg			-- {}
@@ -285,7 +283,7 @@ void editor_module_properties_dialog::create_new_module() {
 				"\tid: \"simple_playable\",\n"
 				"\tis_human: true,\n"
 				"\thitpoints: 4,\n"
-				"\teditor_info: { category: \"player\" },\n"
+				"\tEditorInfo: { category: \"player\" },\n"
 				"\tanimation: [\n"
 				"\t\t{\n"
 				"\t\tid: \"stand\",\n"

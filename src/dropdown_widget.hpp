@@ -20,8 +20,6 @@
 #ifndef NO_EDITOR
 
 #include <vector>
-#include <boost/intrusive_ptr.hpp>
-#include <boost/function.hpp>
 
 #include "border_widget.hpp"
 #include "label.hpp"
@@ -33,7 +31,7 @@ namespace gui {
 
 typedef std::vector<std::string> dropdown_list;
 
-class dropdown_widget : public widget
+class dropdown_widget : public Widget
 {
 public:
 	enum dropdown_type {
@@ -41,53 +39,53 @@ public:
 		DROPDOWN_COMBOBOX,
 	};
 	dropdown_widget(const dropdown_list& list, int width, int height=0, dropdown_type type=DROPDOWN_LIST);
-	dropdown_widget(const variant& v, game_logic::formula_callable* e);
+	dropdown_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~dropdown_widget() {}
 
-	void set_on_change_handler(boost::function<void(const std::string&)> fn) { on_change_ = fn; }
-	void set_on_select_handler(boost::function<void(int,const std::string&)> fn) { on_select_ = fn; }
-	void set_selection(int selection);
+	void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
+	void setOnSelectHandler(std::function<void(int,const std::string&)> fn) { on_select_ = fn; }
+	void setSelection(int selection);
 	int get_max_height() const;
 	void set_dropdown_height(int h);
-	void set_font_size(int size) { editor_->set_font_size(size); }
-	void set_text(const std::string& s) { editor_->set_text(s); }
+	void setFontSize(int size) { editor_->setFontSize(size); }
+	void setText(const std::string& s) { editor_->setText(s); }
 protected:
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
-	virtual void handle_process();
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+	virtual void handleProcess() override;
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 	void init();
 	void text_enter();
-	void text_change();
+	void textChange();
 private:
-	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
+	bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
 	void execute_selection(int selection);
 
 	int dropdown_height_;
 	dropdown_list list_;
 	int current_selection_;
 	dropdown_type type_;
-	text_editor_widget_ptr editor_;
+	TextEditorWidgetPtr editor_;
 	grid_ptr dropdown_menu_;
-	label_ptr label_;
-	widget_ptr dropdown_image_;
-	boost::function<void(const std::string&)> on_change_;
-	boost::function<void(int, const std::string&)> on_select_;
+	LabelPtr label_;
+	WidgetPtr dropdown_image_;
+	std::function<void(const std::string&)> on_change_;
+	std::function<void(int, const std::string&)> on_select_;
 
 	// delgate 
-	void change_delegate(const std::string& s);
-	void select_delegate(int selection, const std::string& s);
+	void changeDelegate(const std::string& s);
+	void selectDelegate(int selection, const std::string& s);
 	// FFL formula
 	game_logic::formula_ptr change_handler_;
 	game_logic::formula_ptr select_handler_;
 };
 
-typedef boost::intrusive_ptr<dropdown_widget> dropdown_widget_ptr;
-typedef boost::intrusive_ptr<const dropdown_widget> const_dropdown_widget_ptr;
+typedef boost::intrusive_ptr<dropdown_widget> dropdown_WidgetPtr;
+typedef boost::intrusive_ptr<const dropdown_widget> const_dropdown_WidgetPtr;
 
 }
 

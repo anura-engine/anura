@@ -37,14 +37,14 @@ light::light(const custom_object& obj) : obj_(obj)
 light::~light() {}
 
 circle_light::circle_light(const custom_object& obj, variant node)
-  : light(obj), center_(obj.midpoint()), radius_(node["radius"].as_int())
+  : light(obj), center_(obj.getMidpoint()), radius_(node["radius"].as_int())
 {}
 
 circle_light::circle_light(const custom_object& obj, int radius)
-  : light(obj), center_(obj.midpoint()), radius_(radius)
+  : light(obj), center_(obj.getMidpoint()), radius_(radius)
 {}
 
-variant light::get_value(const std::string& key) const
+variant light::getValue(const std::string& key) const
 {
 	return variant();
 }
@@ -60,7 +60,7 @@ variant circle_light::write() const
 
 void circle_light::process()
 {
-	center_ = object().midpoint();
+	center_ = object().getMidpoint();
 }
 
 bool circle_light::on_screen(const rect& screen_area) const

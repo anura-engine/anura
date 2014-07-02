@@ -1,22 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef B2D_FFL_HPP_INCLUDED
-#define B2D_FFL_HPP_INCLUDED
 
 #ifdef USE_BOX2D
 
@@ -29,7 +34,7 @@
 
 #include "entity.hpp"
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 namespace box2d
@@ -74,26 +79,26 @@ namespace box2d
 		void DrawAABB(b2AABB* aabb, const b2Color& color);
 	};
 
-	class body : public game_logic::formula_callable
+	class body : public game_logic::FormulaCallable
 	{
 	public:
 		explicit body(const variant& b);
 		virtual ~body();
 		const b2Body& get_body() const { return *body_; }
 		b2Body& get_body() { return *body_; }
-		const boost::shared_ptr<const b2Body> get_body_ptr() const { return body_; }
-		boost::shared_ptr<b2Body> get_body_ptr() { return body_; }
+		const std::shared_ptr<const b2Body> get_body_ptr() const { return body_; }
+		std::shared_ptr<b2Body> get_body_ptr() { return body_; }
 		b2Body* get_raw_body_ptr() { return body_.get(); }
 		const b2BodyDef* get_body_definition() const { return &body_def_; }
 
-		virtual variant get_value(const std::string&) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string&) const;
+		virtual void setValue(const std::string& key, const variant& value);
 
 		bool active() const;
 		void set_active(bool actv=true);
 
-		void finish_loading(entity_ptr e=NULL);
-		boost::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
+		void finishLoading(EntityPtr e=NULL);
+		std::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
 
 		variant write();
 		variant fix_write();
@@ -101,24 +106,24 @@ namespace box2d
 	protected:
 	private:
 		b2BodyDef body_def_;
-		std::vector<boost::shared_ptr<b2FixtureDef> > fix_defs_;
-		std::vector<boost::shared_ptr<b2Shape> > shape_list_;
-		boost::shared_ptr<b2Body> body_;
+		std::vector<std::shared_ptr<b2FixtureDef> > fix_defs_;
+		std::vector<std::shared_ptr<b2Shape> > shape_list_;
+		std::shared_ptr<b2Body> body_;
 	};
 
-	class joint : public game_logic::formula_callable
+	class joint : public game_logic::FormulaCallable
 	{
 	public:
 		explicit joint(b2Joint* j);
-		virtual variant get_value(const std::string& key) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string& key) const;
+		virtual void setValue(const std::string& key, const variant& value);
 		
 		b2Joint* get_b2Joint() { return joint_; }
 	private:
 		b2Joint* joint_;
 	};
 
-	class world : public game_logic::formula_callable
+	class world : public game_logic::FormulaCallable
 	{
 	public:
 		world(const variant& w);
@@ -126,10 +131,10 @@ namespace box2d
 		const b2World& get_world() const { return world_; }
 		b2World& get_world() { return world_; }
 
-		virtual variant get_value(const std::string&) const;
-		virtual void set_value(const std::string& key, const variant& value);
+		virtual variant getValue(const std::string&) const;
+		virtual void setValue(const std::string& key, const variant& value);
 
-		void finish_loading();
+		void finishLoading();
 		void step(float time_step);
 
 		joint_ptr find_joint_by_id(const std::string& key) const;
@@ -146,7 +151,7 @@ namespace box2d
 		variant write();
 
 		static b2World& current();
-		static b2World* current_ptr();
+		static b2World* getCurrentPtr();
 		static const world& our_world();
 		static world_ptr our_world_ptr();
 
@@ -181,5 +186,4 @@ namespace box2d
 	};
 }
 
-#endif
 #endif

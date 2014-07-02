@@ -45,17 +45,17 @@ private:
 	void close_context_menu(int index);
 	void show_category_menu();
 
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	editor& editor_;
 
-	gui::widget_ptr context_menu_;
+	gui::WidgetPtr context_menu_;
 	std::string category_;
 
 	//index of the first item in the current category
 	int first_index_;
 };
 
-typedef boost::intrusive_ptr<tileset_editor_dialog> tileset_editor_dialog_ptr;
+typedef boost::intrusive_ptr<tileset_editor_dialog> tileset_editor_DialogPtr;
 
 }
 

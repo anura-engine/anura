@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef DEBUG_CONSOLE_HPP_INCLUDED
-#define DEBUG_CONSOLE_HPP_INCLUDED
+
+#pragma once
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -25,52 +31,48 @@
 #include "level.hpp"
 #include "text_editor_widget.hpp"
 
-class level;
-class entity;
+class Level;
+class Entity;
 
 #include <string>
 
 namespace debug_console
 {
+	void add_graph_sample(const std::string& id, decimal value);
+	void process_graph();
+	void draw_graph();
 
-void add_graph_sample(const std::string& id, decimal value);
-void process_graph();
-void draw_graph();
+	void addMessage(const std::string& msg);
+	void draw();
+	void enable_screen_output(bool en=true);
 
-void add_message(const std::string& msg);
-void draw();
-void enable_screen_output(bool en=true);
+	class ConsoleDialog : public gui::Dialog
+	{
+	public:
+		ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj);
+		~ConsoleDialog();
 
-class console_dialog : public gui::dialog
-{
-public:
-	console_dialog(level& lvl, game_logic::formula_callable& obj);
-	~console_dialog();
+		bool hasKeyboardFocus() const;
 
-	bool has_keyboard_focus() const;
+		void addMessage(const std::string& msg);
 
-	void add_message(const std::string& msg);
+		void setFocus(game_logic::FormulaCallablePtr e);
+	private:
+		ConsoleDialog(const ConsoleDialog&);
+		void init();
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	void set_focus(game_logic::formula_callable_ptr e);
-private:
-	console_dialog(const console_dialog&);
-	void init();
-	bool handle_event(const SDL_Event& event, bool claimed);
+		gui::TextEditorWidget* text_editor_;
 
-	gui::text_editor_widget* text_editor_;
+		boost::intrusive_ptr<level> lvl_;
+		game_logic::FormulaCallablePtr focus_;
 
-	boost::intrusive_ptr<level> lvl_;
-	game_logic::formula_callable_ptr focus_;
+		void onMoveCursor();
+		bool onBeginEnter();
+		void onEnter();
 
-	void on_move_cursor();
-	bool on_begin_enter();
-	void on_enter();
-
-	void load_history();
-	std::vector<std::string> history_;
-	int history_pos_;
-};
-
+		void loadHistory();
+		std::vector<std::string> history_;
+		int history_pos_;
+	};
 }
-
-#endif

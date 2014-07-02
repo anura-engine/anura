@@ -84,7 +84,7 @@ std::string preprocess(const std::string& input){
 	return output_string;
 }
 
-variant preprocess_string_value(const std::string& input, const game_logic::formula_callable* callable)
+variant preprocess_string_value(const std::string& input, const game_logic::FormulaCallable* callable)
 {
 	const game_logic::formula::strict_check_scope strict_checking(false);
 
@@ -101,7 +101,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 		return variant(input);
 	}
 
-	if(game_logic::wml_serializable_formula_callable::registered_types().count(input)) {
+	if(game_logic::WmlSerializableFormulaCallable::registeredTypes().count(input)) {
 		return variant(input);
 	}
 
@@ -125,7 +125,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::form
 			const std::string expr(colon+1, fname.end());
 			const variant expr_variant(expr);
 			const game_logic::formula f(expr_variant);
-			game_logic::formula_callable* vars = new game_logic::map_formula_callable(doc);
+			game_logic::FormulaCallable* vars = new game_logic::MapFormulaCallable(doc);
 			const variant callable(vars);
 			if(vars) {
 				return f.execute(*vars);

@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 
@@ -44,7 +42,7 @@ namespace {
 
 void set_segmented_level_width(editor_level_properties_dialog* d, editor* e, bool value)
 {
-	foreach(level_ptr lvl, e->get_level_list()) {
+	foreach(LevelPtr lvl, e->get_level_list()) {
 		if(value) {
 			//make sure the segment width is divisible by the tile size.
 			int width = lvl->boundaries().w();
@@ -64,7 +62,7 @@ void set_segmented_level_width(editor_level_properties_dialog* d, editor* e, boo
 
 void set_segmented_level_height(editor_level_properties_dialog* d, editor* e, bool value)
 {
-	foreach(level_ptr lvl, e->get_level_list()) {
+	foreach(LevelPtr lvl, e->get_level_list()) {
 		if(value) {
 			//make sure the segment height is divisible by the tile size.
 			int height = lvl->boundaries().h();
@@ -102,63 +100,63 @@ void editor_level_properties_dialog::init()
 	using namespace gui;
 	clear();
 
-	add_widget(widget_ptr(new label("Level Properties", graphics::color_white(), 48)), 10, 10);
+	addWidget(WidgetPtr(new label("Level Properties", graphics::color_white(), 48)), 10, 10);
 
-	text_editor_widget* change_title_entry(new text_editor_widget(200, 30));
-	change_title_entry->set_text(editor_.get_level().title());
-	change_title_entry->set_on_change_handler(boost::bind(&editor_level_properties_dialog::change_title, this, change_title_entry));
-	change_title_entry->set_on_enter_handler(boost::bind(&dialog::close, this));
+	TextEditorWidget* change_title_entry(new TextEditorWidget(200, 30));
+	change_title_entry->setText(editor_.get_level().title());
+	change_title_entry->setOnChangeHandler(std::bind(&editor_level_properties_dialog::change_title, this, change_title_entry));
+	change_title_entry->setOnEnterHandler(std::bind(&dialog::close, this));
 
 	grid_ptr g(new grid(2));
-	g->add_col(widget_ptr(new label("Change Title", graphics::color_white(), 36)))
-	  .add_col(widget_ptr(change_title_entry));
+	g->add_col(WidgetPtr(new label("Change Title", graphics::color_white(), 36)))
+	  .add_col(WidgetPtr(change_title_entry));
 
-	add_widget(g);
+	addWidget(g);
 
 	std::string background_id = editor_.get_level().get_background_id();
 	if(background_id.empty()) {
 		background_id = "(no background)";
 	}
 	g.reset(new grid(2));
-	g->add_col(widget_ptr(new label("Background", graphics::color_white())))
-	  .add_col(widget_ptr(new button(widget_ptr(new label(background_id, graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_background, this))));
-	add_widget(g);
+	g->add_col(WidgetPtr(new label("Background", graphics::color_white())))
+	  .add_col(WidgetPtr(new button(WidgetPtr(new label(background_id, graphics::color_white())), std::bind(&editor_level_properties_dialog::change_background, this))));
+	addWidget(g);
 
 	g.reset(new grid(3));
 	g->set_hpad(10);
-	g->add_col(widget_ptr(new label("Next Level", graphics::color_white())));
-	g->add_col(widget_ptr(new label(editor_.get_level().next_level(), graphics::color_white())));
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Set", graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_next_level, this))));
+	g->add_col(WidgetPtr(new label("Next Level", graphics::color_white())));
+	g->add_col(WidgetPtr(new label(editor_.get_level().next_level(), graphics::color_white())));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_next_level, this))));
 
-	g->add_col(widget_ptr(new label("Previous Level", graphics::color_white())));
-	g->add_col(widget_ptr(new label(editor_.get_level().previous_level(), graphics::color_white())));
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Set", graphics::color_white())), boost::bind(&editor_level_properties_dialog::change_previous_level, this))));
-	add_widget(g);
+	g->add_col(WidgetPtr(new label("Previous Level", graphics::color_white())));
+	g->add_col(WidgetPtr(new label(editor_.get_level().previous_level(), graphics::color_white())));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_previous_level, this))));
+	addWidget(g);
 
-	checkbox* hz_segmented_checkbox = new checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, boost::bind(set_segmented_level_width, this, &editor_, _1));
-	widget_ptr hz_checkbox(hz_segmented_checkbox);
-	add_widget(hz_checkbox);
+	Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, std::bind(set_segmented_level_width, this, &editor_, _1));
+	WidgetPtr hz_checkbox(hz_segmented_checkbox);
+	addWidget(hz_checkbox);
 
-	checkbox* vt_segmented_checkbox = new checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, boost::bind(set_segmented_level_height, this, &editor_, _1));
-	widget_ptr vt_checkbox(vt_segmented_checkbox);
-	add_widget(vt_checkbox);
+	Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, std::bind(set_segmented_level_height, this, &editor_, _1));
+	WidgetPtr vt_checkbox(vt_segmented_checkbox);
+	addWidget(vt_checkbox);
 
 	if(editor_.get_level().segment_height() != 0) {
-		remove_widget(hz_checkbox);
+		removeWidget(hz_checkbox);
 	}
 
 	if(editor_.get_level().segment_width() != 0) {
-		remove_widget(vt_checkbox);
+		removeWidget(vt_checkbox);
 	}
 
 	add_ok_and_cancel_buttons();
 }
 
-void editor_level_properties_dialog::change_title(const gui::text_editor_widget_ptr editor)
+void editor_level_properties_dialog::change_title(const gui::TextEditorWidgetPtr editor)
 {
 	std::string title = editor->text();
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->set_title(title);
 	}
 }
@@ -174,14 +172,14 @@ void editor_level_properties_dialog::change_background()
 	std::sort(backgrounds.begin(), backgrounds.end());
 
 	gui::grid* grid = new gui::grid(1);
-	grid->set_zorder(100);
+	grid->setZOrder(100);
 	grid->set_hpad(40);
 	grid->set_show_background(true);
 	grid->allow_selection();
 	grid->swallow_clicks();
-	grid->register_selection_callback(boost::bind(&editor_level_properties_dialog::execute_change_background, this, backgrounds, _1));
+	grid->register_selection_callback(std::bind(&editor_level_properties_dialog::execute_change_background, this, backgrounds, _1));
 	foreach(const std::string& bg, backgrounds) {
-		grid->add_col(widget_ptr(new label(bg, graphics::color_white())));
+		grid->add_col(WidgetPtr(new label(bg, graphics::color_white())));
 	}
 
 	int mousex, mousey;
@@ -190,15 +188,15 @@ void editor_level_properties_dialog::change_background()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void editor_level_properties_dialog::execute_change_background(const std::vector<std::string>& choices, int index)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -206,7 +204,7 @@ void editor_level_properties_dialog::execute_change_background(const std::vector
 		return;
 	}
 
-	foreach(level_ptr lvl, editor_.get_level_list()) {
+	foreach(LevelPtr lvl, editor_.get_level_list()) {
 		lvl->set_background_by_id(choices[index]);
 	}
 
@@ -217,7 +215,7 @@ void editor_level_properties_dialog::change_next_level()
 {
 	std::string result = show_choose_level_dialog("Next Level");
 	if(result.empty() == false) {
-		foreach(level_ptr lvl, editor_.get_level_list()) {
+		foreach(LevelPtr lvl, editor_.get_level_list()) {
 			lvl->set_next_level(result);
 		}
 	}
@@ -229,7 +227,7 @@ void editor_level_properties_dialog::change_previous_level()
 {
 	std::string result = show_choose_level_dialog("Previous Level");
 	if(result.empty() == false) {
-		foreach(level_ptr lvl, editor_.get_level_list()) {
+		foreach(LevelPtr lvl, editor_.get_level_list()) {
 			lvl->set_previous_level(result);
 		}
 	}

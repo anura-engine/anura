@@ -19,42 +19,39 @@
 #define DRAG_WIDGET_HPP_INCLUDED
 #ifndef NO_EDITOR
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
-
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "widget.hpp"
 
 namespace gui
 {
 
-typedef boost::shared_ptr<SDL_Cursor> cursor_ptr;
+typedef std::shared_ptr<SDL_Cursor> cursor_ptr;
 
-class drag_widget : public widget
+class drag_widget : public Widget
 {
 public:
 	enum drag_direction {DRAG_HORIZONTAL, DRAG_VERTICAL};
 	explicit drag_widget(const int x, const int y, const int w, const int h,
 		const drag_direction dir,
-		boost::function<void(int, int)> drag_start, 
-		boost::function<void(int, int)> drag_end, 
-		boost::function<void(int, int)> drag_move);
-	explicit drag_widget(const variant&, game_logic::formula_callable* e);
+		std::function<void(int, int)> drag_start, 
+		std::function<void(int, int)> drag_end, 
+		std::function<void(int, int)> drag_move);
+	explicit drag_widget(const variant&, game_logic::FormulaCallable* e);
 
 private:
 	void init();
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
-	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
+	void handleDraw() const override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
+	bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+	bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
 	rect get_border_rect() const;
 	rect get_dragger_rect() const;
 
 	int x_, y_, w_, h_;
-	boost::function<void(int, int)> drag_start_;
-	boost::function<void(int, int)> drag_end_;
-	boost::function<void(int, int)> drag_move_;
+	std::function<void(int, int)> drag_start_;
+	std::function<void(int, int)> drag_end_;
+	std::function<void(int, int)> drag_move_;
 
 	// delegates
 	void drag(int dx, int dy);
@@ -65,7 +62,7 @@ private:
 	game_logic::formula_ptr drag_start_handler_;
 	game_logic::formula_ptr drag_end_handler_;
 
-	widget_ptr dragger_;
+	WidgetPtr dragger_;
 	drag_direction dir_;
 	SDL_Cursor *old_cursor_;
 	cursor_ptr drag_cursor_;
@@ -74,7 +71,7 @@ private:
 	int dragging_handle_;
 };
 
-typedef boost::intrusive_ptr<drag_widget> drag_widget_ptr;
+typedef boost::intrusive_ptr<drag_widget> drag_WidgetPtr;
 
 }
 

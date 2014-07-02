@@ -17,8 +17,6 @@
 #ifndef NO_EDITOR
 #include "graphics.hpp"
 
-#include <boost/bind.hpp>
-
 #include <algorithm>
 #include <iostream>
 
@@ -46,7 +44,7 @@ editor_stats_dialog::editor_stats_dialog(editor& e)
 void editor_stats_dialog::init()
 {
 	using namespace gui;
-	add_widget(widget_ptr(new label("Statistics (whole level)", graphics::color_white(), 36)));
+	addWidget(WidgetPtr(new label("Statistics (whole level)", graphics::color_white(), 36)));
 /*
 	std::vector<stats::record_ptr> stats = editor_.stats();
 	add_stats(stats);
@@ -68,7 +66,7 @@ void editor_stats_dialog::init()
 			}
 		}
 
-		add_widget(widget_ptr(new label("Statistics (selection)", graphics::color_white(), 36)));
+		addWidget(WidgetPtr(new label("Statistics (selection)", graphics::color_white(), 36)));
 		add_stats(stats);
 	}
 	*/

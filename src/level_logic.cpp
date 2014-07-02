@@ -92,7 +92,7 @@ int find_ground_level(const level& lvl, int xpos, int ypos, int max_search)
 		}
 
 		if(!max_search) {
-			return INT_MIN;
+			return std::numeric_limits<int>::min();
 		}
 
 		return ypos + 1;
@@ -109,6 +109,6 @@ int find_ground_level(const level& lvl, int xpos, int ypos, int max_search)
 			}
 		}
 
-		return INT_MIN;
+		return std::numeric_limits<int>::min();
 	}
 }

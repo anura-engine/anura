@@ -30,8 +30,8 @@ namespace tbs
 
 	void internal_client::send_request(const variant& request, 
 		int session_id,
-		game_logic::map_formula_callable_ptr callable, 
-		boost::function<void(const std::string&)> handler)
+		game_logic::MapFormulaCallablePtr callable, 
+		std::function<void(const std::string&)> handler)
 	{
 		internal_server::send_request(request, session_id, callable, handler);
 	}
@@ -41,7 +41,7 @@ namespace tbs
 		// do nothing
 	}
 
-	variant internal_client::get_value(const std::string& key) const
+	variant internal_client::getValue(const std::string& key) const
 	{
 		if(key == "in_flight") {
 			return variant(internal_server::requests_in_flight(session_id_));

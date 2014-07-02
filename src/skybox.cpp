@@ -63,7 +63,7 @@ namespace graphics
 
 	skybox::skybox(const variant& node)
 	{
-		tex_id_ = boost::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
+		tex_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){glDeleteTextures(1,id); delete id;});
 		glGenTextures(1, tex_id_.get());
 		glBindTexture(GL_TEXTURE_CUBE_MAP, *tex_id_);
 

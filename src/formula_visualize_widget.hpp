@@ -10,37 +10,37 @@
 
 namespace gui {
 	
-class text_editor_widget;
+class TextEditorWidget;
 
-class formula_visualize_widget : public gui::widget
+class formula_visualize_widget : public gui::Widget
 {
 public:
-	formula_visualize_widget(game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, text_editor_widget* editor);
+	formula_visualize_widget(game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor);
 private:
 	void init(game_logic::const_expression_ptr expr=game_logic::const_expression_ptr());
-	void handle_draw() const;
+	void handleDraw() const override;
 
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	void on_select_expression(game_logic::const_expression_ptr expr);
 
-	void add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth=0, widget_ptr parent=widget_ptr());
+	void add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth=0, WidgetPtr parent=WidgetPtr());
 
 	game_logic::expression_ptr expression_;
 	int text_pos_;
 	int row_, col_;
 
-	std::vector<widget_ptr> children_;
+	std::vector<WidgetPtr> children_;
 
-	std::vector<std::vector<widget_ptr> > child_rows_;
+	std::vector<std::vector<WidgetPtr> > child_rows_;
 
-	typedef std::pair<widget_ptr, widget_ptr> Edge;
+	typedef std::pair<WidgetPtr, WidgetPtr> Edge;
 	std::vector<Edge> edges_;
-	text_editor_widget* editor_;
+	TextEditorWidget* editor_;
 };
 
-typedef boost::intrusive_ptr<formula_visualize_widget> formula_visualize_widget_ptr;
-typedef boost::intrusive_ptr<const formula_visualize_widget> const_formula_visualize_widget_ptr;
+typedef boost::intrusive_ptr<formula_visualize_widget> formula_visualize_WidgetPtr;
+typedef boost::intrusive_ptr<const formula_visualize_widget> const_formula_visualize_WidgetPtr;
 
 }
 

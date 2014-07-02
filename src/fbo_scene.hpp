@@ -21,10 +21,10 @@
 
 #include "entity.hpp"
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "texture.hpp"
 
-class texture_object : public game_logic::formula_callable
+class texture_object : public game_logic::FormulaCallable
 {
 public:
 	explicit texture_object(const graphics::texture& texture);
@@ -37,6 +37,6 @@ private:
 	graphics::texture texture_;
 };
 
-graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> objects);
+graphics::texture render_fbo(const rect& area, const std::vector<EntityPtr> objects);
 
 #endif

@@ -27,10 +27,7 @@
 #include "level_object.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "string_utils.hpp"
-#include "surface.hpp"
-#include "surface_cache.hpp"
 #include "surface_palette.hpp"
 #include "tile_map.hpp"
 #include "unit_test.hpp"
@@ -47,9 +44,9 @@ tiles_map tiles_cache;
 
 }
 
-bool level_tile::is_solid(int xpos, int ypos) const
+bool level_tile::isSolid(int xpos, int ypos) const
 {
-	return object->is_solid(face_right ? (xpos - x) : (x + object->width() - xpos - 1), ypos - y);
+	return object->isSolid(face_right ? (xpos - x) : (x + object->width() - xpos - 1), ypos - y);
 }
 
 std::vector<const_level_object_ptr> level_object::all()
@@ -62,7 +59,7 @@ std::vector<const_level_object_ptr> level_object::all()
 	return res;
 }
 
-level_tile level_object::build_tile(variant node)
+level_tile level_object::buildTile(variant node)
 {
 	level_tile res;
 	res.x = node["x"].as_int();
@@ -77,8 +74,8 @@ level_tile level_object::build_tile(variant node)
 
 namespace {
 
-typedef boost::shared_ptr<variant> obj_variant_ptr;
-typedef boost::shared_ptr<const variant> const_obj_variant_ptr;
+typedef std::shared_ptr<variant> obj_variant_ptr;
+typedef std::shared_ptr<const variant> const_obj_variant_ptr;
 
 std::vector<obj_variant_ptr> level_object_index;
 std::vector<const_obj_variant_ptr> original_level_object_nodes;
@@ -98,7 +95,7 @@ std::map<tile_id, int> compiled_tile_ids;
 
 //defined in texture.cpp
 namespace graphics {
-void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
+void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
 }
 
 void create_compiled_tiles_image()
@@ -203,7 +200,7 @@ void create_compiled_tiles_image()
 		SDL_BlitSurface(src.get(), &src_rect, s.get(), &dst_rect);
 	}
 
-	graphics::set_alpha_for_transparent_colors_in_rgba_surface(s.get());
+	graphics::setAlpha_for_transparent_colors_in_rgba_surface(s.get());
 
 //  don't need to save the main compiled tile anymore.
 //	IMG_SavePNG("images/tiles-compiled.png", s.get(), 5);
@@ -317,10 +314,10 @@ palette_scope::~palette_scope()
 	current_palette_set = original_value;
 }
 
-void level_object::set_current_palette(unsigned int palette)
+void level_object::setCurrentPalette(unsigned int palette)
 {
 	foreach(level_object* obj, palette_level_objects()) {
-		obj->set_palette(palette);
+		obj->setPalette(palette);
 	}
 }
 
@@ -556,16 +553,16 @@ level_object::level_object(variant node, const char* id)
 		//solid colors will confuse the compilation.
 		solid_color_ = boost::intrusive_ptr<graphics::color>();
 
-		const bool uses_alpha_channel = calculate_uses_alpha_channel();
+		const bool uses_alpha_channel = calculateUsesAlphaChannel();
 
 		std::vector<int> palettes;
 		palettes.push_back(-1);
-		get_palettes_used(palettes);
+		getPalettesUsed(palettes);
 
 		foreach(int palette, palettes) {
 			variant node_copy = node.add_attr(variant("palettes"), variant());
 			node_copy = node_copy.add_attr(variant("id"), variant(id_));
-			if(calculate_opaque()) {
+			if(calculateOpaque()) {
 				node_copy = node_copy.add_attr(variant("opaque"), variant(true));
 				opaque_ = true;
 			}
@@ -575,14 +572,14 @@ level_object::level_object(variant node, const char* id)
 			}
 
 			graphics::color col;
-			if(calculate_is_solid_color(col)) {
+			if(calculateIsSolidColor(col)) {
 				if(palette >= 0) {
 					col = graphics::map_palette(col, palette);
 				}
 				node_copy = node_copy.add_attr(variant("solid_color"), variant(graphics::color_transform(col).to_string()));
 			}
 
-			if(calculate_draw_area()) {
+			if(calculateDrawArea()) {
 				node_copy = node_copy.add_attr(variant("draw_area"), variant(draw_area_.to_string()));
 			}
 
@@ -666,7 +663,7 @@ int base64_unencode(const char* begin, const char* end)
 
 }
 
-void level_object::write_compiled()
+void level_object::writeCompiled()
 {
 	create_compiled_tiles_image();
 
@@ -705,7 +702,7 @@ void load_compiled_tiles(int index)
 
 }
 
-const_level_object_ptr level_object::get_compiled(const char* buf)
+const_level_object_ptr level_object::getCompiled(const char* buf)
 {
 	const int index = base64_unencode(buf, buf+3);
 	if(index >= compiled_tiles.size() || !compiled_tiles[index]) {
@@ -717,7 +714,7 @@ const_level_object_ptr level_object::get_compiled(const char* buf)
 	return compiled_tiles[index];
 }
 
-level_object_ptr level_object::record_zorder(int zorder) const
+level_object_ptr level_object::recordZorder(int zorder) const
 {
 	std::vector<int>::const_iterator i = std::find(zorders_.begin(), zorders_.end(), zorder);
 	if(i == zorders_.end()) {
@@ -731,7 +728,7 @@ level_object_ptr level_object::record_zorder(int zorder) const
 
 			std::vector<int> palettes;
 			palettes.push_back(-1);
-			result->get_palettes_used(palettes);
+			result->getPalettesUsed(palettes);
 
 			for(int n = 0; n != palettes.size(); ++n) {
 				tile_nodes_to_zorders[level_object_index[result->tile_index_ + n]] = zorder;
@@ -741,7 +738,7 @@ level_object_ptr level_object::record_zorder(int zorder) const
 		} else {
 			std::vector<int> palettes;
 			palettes.push_back(-1);
-			get_palettes_used(palettes);
+			getPalettesUsed(palettes);
 
 			for(int n = 0; n != palettes.size(); ++n) {
 				tile_nodes_to_zorders[level_object_index[tile_index_ + n]] = zorder;
@@ -755,7 +752,7 @@ level_object_ptr level_object::record_zorder(int zorder) const
 	return level_object_ptr();
 }
 
-void level_object::write_compiled_index(char* buf) const
+void level_object::writeCompiledIndex(char* buf) const
 {
 	if(current_palettes_ == 0) {
 		base64_encode(tile_index_, buf, 3);
@@ -768,7 +765,7 @@ void level_object::write_compiled_index(char* buf) const
 		}
 
 		std::vector<int> palettes;
-		get_palettes_used(palettes);
+		getPalettesUsed(palettes);
 		std::vector<int>::const_iterator i = std::find(palettes.begin(), palettes.end(), npalette);
 		ASSERT_LOG(i != palettes.end(), "PALETTE NOT FOUND: " << npalette);
 		base64_encode(tile_index_ + 1 + (i - palettes.begin()), buf, 3);
@@ -785,7 +782,7 @@ int level_object::height() const
 	return BaseTileSize*g_tile_scale;
 }
 
-bool level_object::is_solid(int x, int y) const
+bool level_object::isSolid(int x, int y) const
 {
 	if(solid_.empty()) {
 		return false;
@@ -821,7 +818,7 @@ void level_object::queue_draw(graphics::blit_queue& q, const level_tile& t)
 	queue_draw_from_tilesheet(q, t.object->t_, t.object->draw_area_, tile, t.x, t.y, t.face_right);
 }
 
-int level_object::calculate_tile_corners(tile_corner* result, const level_tile& t)
+int level_object::calculateTileCorners(KRE::ImageLoadError* result, const level_tile& t)
 {
 	const int random_index = hash_level_object(t.x,t.y);
 	const int tile = t.object->tiles_[random_index%t.object->tiles_.size()];
@@ -829,7 +826,7 @@ int level_object::calculate_tile_corners(tile_corner* result, const level_tile& 
 	return get_tile_corners(result, t.object->t_, t.object->draw_area_, tile, t.x, t.y, t.face_right);
 }
 
-bool level_object::calculate_opaque() const
+bool level_object::calculateOpaque() const
 {
 	foreach(int tile, tiles_) {
 		if(!is_tile_opaque(t_, tile)) {
@@ -840,7 +837,7 @@ bool level_object::calculate_opaque() const
 	return true;
 }
 
-bool level_object::calculate_uses_alpha_channel() const
+bool level_object::calculateUsesAlphaChannel() const
 {
 	foreach(int tile, tiles_) {
 		if(is_tile_using_alpha_channel(t_, tile)) {
@@ -851,7 +848,7 @@ bool level_object::calculate_uses_alpha_channel() const
 	return false;
 }
 
-bool level_object::calculate_is_solid_color(graphics::color& col) const
+bool level_object::calculateIsSolidColor(const KRE::Color& col) const
 {
 	foreach(int tile, tiles_) {
 		if(!is_tile_solid_color(t_, tile, col)) {
@@ -862,17 +859,17 @@ bool level_object::calculate_is_solid_color(graphics::color& col) const
 	return true;
 }
 
-bool level_object::calculate_draw_area()
+bool level_object::calculateDrawArea()
 {
 	draw_area_ = rect();
 	foreach(int tile, tiles_) {
-		draw_area_ = rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
+		draw_area_ = Geometry::rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
 	}
 
 	return draw_area_ != rect(0, 0, BaseTileSize, BaseTileSize);
 }
 
-void level_object::set_palette(unsigned int palette)
+void level_object::setPalette(unsigned int palette)
 {
 	palette &= palettes_recognized_;
 	if(palette == current_palettes_) {
@@ -894,7 +891,7 @@ void level_object::set_palette(unsigned int palette)
 	}
 }
 
-void level_object::get_palettes_used(std::vector<int>& v) const
+void level_object::getPalettesUsed(std::vector<int>& v) const
 {
 	unsigned int p = palettes_recognized_;
 	int palette = 0;

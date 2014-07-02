@@ -28,7 +28,7 @@ variant_callable::variant_callable(const variant& v) : value_(v)
 {
 }
 
-variant variant_callable::get_value(const std::string& key) const
+variant variant_callable::getValue(const std::string& key) const
 {
 	if(key == "self") {
 		return variant(this);
@@ -61,7 +61,7 @@ variant variant_callable::create_for_list(const variant& value) const
 	return variant(&v);
 }
 
-void variant_callable::set_value(const std::string& key, const variant& value)
+void variant_callable::setValue(const std::string& key, const variant& value)
 {
 	value_.add_attr_mutation(variant(key), value);
 }

@@ -31,18 +31,18 @@ class user_voxel_object : public voxel_object
 {
 public:
 	explicit user_voxel_object(const variant& node);
-	void handle_event(int nevent, const formula_callable* context=NULL);
-	void handle_event(const std::string& event, const formula_callable* context=NULL);
+	void handleEvent(int nevent, const FormulaCallable* context=NULL);
+	void handleEvent(const std::string& event, const FormulaCallable* context=NULL);
 
 	virtual void process(level& lvl);
 
-	virtual bool execute_command(const variant& b);
+	virtual bool executeCommand(const variant& b);
 private:
-	variant get_value_by_slot(int slot) const;
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValueBySlot(int slot) const;
+	void setValueBySlot(int slot, const variant& value);
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	const_voxel_object_type_ptr type_;
 	std::vector<variant> data_;
@@ -51,7 +51,7 @@ private:
 	bool created_;
 };
 
-typedef boost::intrusive_ptr<user_voxel_object> user_voxel_object_ptr;
+typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
 
 }
 

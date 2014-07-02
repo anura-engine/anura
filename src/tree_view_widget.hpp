@@ -20,8 +20,6 @@
 
 #include <map>
 #include <vector>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
@@ -29,11 +27,11 @@
 
 namespace gui {
 
-class tree_view_widget : public scrollable_widget
+class tree_view_widget : public ScrollableWidget
 {
 public:
 	explicit tree_view_widget(int w, int h, const variant& tree);
-	explicit tree_view_widget(const variant& v, game_logic::formula_callable* e);
+	explicit tree_view_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~tree_view_widget()
 	{}
 	void allow_selection(bool val=true) { allow_selection_ = val; }
@@ -44,7 +42,7 @@ public:
 	int nrows() const { return nrows_; }
 	void set_min_col_size(int minc) { min_col_size_ = minc; }
 	void set_max_col_size(int maxc) { max_col_size_ = maxc; }
-	void register_selection_callback(boost::function<void(const variant&, const variant&)> select_fn) 
+	void register_selection_callback(std::function<void(const variant&, const variant&)> select_fn) 
 	{
 		on_select_ = select_fn;
 	}
@@ -54,16 +52,16 @@ public:
 		highlight_color_ = col;
 	}
 	variant get_tree() const { return tree_; }
-	virtual widget_ptr get_widget_by_id(const std::string& id);
-	virtual const_widget_ptr get_widget_by_id(const std::string& id) const;
+	virtual WidgetPtr getWidgetById(const std::string& id);
+	virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 protected:
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 
-	void on_set_yscroll(int old_value, int value);
+	void onSetYscroll(int old_value, int value);
 	virtual void init();
 	virtual void on_select(Uint8 button, int selection);
 
@@ -74,7 +72,7 @@ protected:
 	variant tree_;
 private:
 	virtual int traverse(int depth, int x, int y, variant* parent, const variant& key, variant* value);
-	void gen_traverse(int depth, boost::function<void(int,const variant&,variant*)> fn, const variant& key, variant* value);
+	void gen_traverse(int depth, std::function<void(int,const variant&,variant*)> fn, const variant& key, variant* value);
 	int row_at(int xpos, int ypos) const;
 	void recalculate_dimensions();
 	void calc_column_widths(int depth, const variant& key, variant* value);
@@ -98,24 +96,24 @@ private:
 	SDL_Color highlight_color_;
 	int highlighted_row_;
 
-	boost::function<void(const variant&, const variant&)> on_select_;
-	std::vector<widget_ptr> widgets_;
+	std::function<void(const variant&, const variant&)> on_select_;
+	std::vector<WidgetPtr> widgets_;
 	std::map<int, int> last_coords_;
 	std::vector<int> col_widths_;
 	std::map<int, variant_pair> selection_map_;
 };
 
-typedef boost::intrusive_ptr<tree_view_widget> tree_view_widget_ptr;
-typedef boost::intrusive_ptr<const tree_view_widget> const_tree_view_widget_ptr;
+typedef boost::intrusive_ptr<tree_view_widget> tree_view_WidgetPtr;
+typedef boost::intrusive_ptr<const tree_view_widget> const_tree_view_WidgetPtr;
 
 class tree_editor_widget : public tree_view_widget
 {
 public:
 	explicit tree_editor_widget(int w, int h, const variant& tree);
-	explicit tree_editor_widget(const variant& v, game_logic::formula_callable* e);
+	explicit tree_editor_widget(const variant& v, game_logic::FormulaCallable* e);
 	virtual ~tree_editor_widget()
 	{}
-	void set_editor_handler(variant::TYPE vt, widget_ptr editor, boost::function<void(variant*,boost::function<void(const variant&)>)> editor_select) { 
+	void set_editor_handler(variant::TYPE vt, WidgetPtr editor, std::function<void(variant*,std::function<void(const variant&)>)> editor_select) { 
 		ex_editor_map_[vt] = editor; 
 		on_editor_select_ = editor_select;
 	}
@@ -123,35 +121,35 @@ public:
 protected:
 	virtual void init();
 
-	virtual void handle_draw() const;
-	virtual bool handle_event(const SDL_Event& event, bool claimed);
+	virtual void handleDraw() const override;
+	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
+	virtual void setValue(const std::string& key, const variant& v);
+	virtual variant getValue(const std::string& key) const;
 
 	virtual void on_select(Uint8 button, int selection);
 
 	virtual void on_traverse_element(const variant& key, variant* parent, variant* value, int row);
 private:
 	void context_menu_handler(int tree_selection, const std::vector<std::string>& choices, int menu_selection);
-	widget_ptr context_menu_;
-	widget_ptr edit_menu_;
+	WidgetPtr context_menu_;
+	WidgetPtr edit_menu_;
 
-	boost::function<void(variant*,boost::function<void(const variant&)>)> on_editor_select_;
+	std::function<void(variant*,std::function<void(const variant&)>)> on_editor_select_;
 
 	void edit_field(int row, variant* v);
-	void execute_edit_enter(const text_editor_widget_ptr editor, variant* value);
+	void execute_edit_enter(const TextEditorWidgetPtr editor, variant* value);
 	void execute_edit_select(int selection);
 	void on_bool_change(variant* v, int selection, const std::string& s);
-	void execute_key_edit_enter(const text_editor_widget_ptr editor, variant* parent, const variant& key, variant* value);
+	void execute_key_edit_enter(const TextEditorWidgetPtr editor, variant* parent, const variant& key, variant* value);
 	void execute_key_edit_select(int selection);
 
 	std::map<int, std::pair<variant*, variant*> > row_map_;
-	std::map<variant::TYPE, widget_ptr> ex_editor_map_;
+	std::map<variant::TYPE, WidgetPtr> ex_editor_map_;
 };
 
-typedef boost::intrusive_ptr<tree_editor_widget> tree_editor_widget_ptr;
-typedef boost::intrusive_ptr<const tree_editor_widget> const_tree_editor_widget_ptr;
+typedef boost::intrusive_ptr<tree_editor_widget> tree_editor_WidgetPtr;
+typedef boost::intrusive_ptr<const tree_editor_widget> const_tree_editor_WidgetPtr;
 
 }
 

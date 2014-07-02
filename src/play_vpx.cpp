@@ -59,16 +59,16 @@ namespace movie
 		: loop_(loop), cancel_on_keypress_(cancel_on_keypress), playing_(false), flags_(0), img_(NULL)
 	{
 		file_name_ = module::map_file(file);
-		set_loc(x, y);
-		set_dim(width, height);
+		setLoc(x, y);
+		setDim(width, height);
 		init();
 		for(auto& ut : u_tex_) {
 			ut = -1;
 		}
 	}
 
-	vpx::vpx(const variant& v, game_logic::formula_callable* e)
-		: widget(v, e), loop_(false), cancel_on_keypress_(false), playing_(false), flags_(0), img_(NULL)
+	vpx::vpx(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v, e), loop_(false), cancel_on_keypress_(false), playing_(false), flags_(0), img_(NULL)
 	{
 		for(auto& ut : u_tex_) {
 			ut = -1;
@@ -141,7 +141,7 @@ namespace movie
 			unsigned height = i==0?texture_height_:texture_height_/2;
 			glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
 		}
-		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_current_texture());
+		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_currentTexture());
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 	}
 
@@ -193,7 +193,7 @@ namespace movie
 		}
 	}
 
-	void vpx::handle_process()
+	void vpx::handleProcess()
 	{
 		if(!playing_) {
 			return;
@@ -206,7 +206,7 @@ namespace movie
 				iter_ = NULL;
 			}
 
-			img_ = vpx_codec_get_frame(&codec_, &iter_);
+			img_ = vpx_codec_getFrame(&codec_, &iter_);
 			if(img_ != NULL) {
 				done = true;
 			}
@@ -217,7 +217,7 @@ namespace movie
 		}
 	}
 
-	bool vpx::handle_event(const SDL_Event& evt, bool claimed)
+	bool vpx::handleEvent(const SDL_Event& evt, bool claimed)
 	{
 		if(claimed) {
 			return true;
@@ -235,7 +235,7 @@ namespace movie
 			
 			case SDL_MOUSEBUTTONDOWN:
 			case SDL_MOUSEBUTTONUP:
-				if(in_widget(evt.button.x, evt.button.y)) {
+				if(inWidget(evt.button.x, evt.button.y)) {
 					stop();
 					claimed = true;
 				}
@@ -244,7 +244,7 @@ namespace movie
 		return claimed;
 	}
 
-	void vpx::handle_draw() const
+	void vpx::handleDraw() const
 	{
 		if(img_ == NULL) {
 			return;
@@ -308,7 +308,7 @@ namespace movie
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_current_texture());
+		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_currentTexture());
 		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 
 		glEnable(GL_BLEND);

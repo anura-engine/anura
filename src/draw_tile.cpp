@@ -32,7 +32,7 @@ void queue_draw_tile(graphics::blit_queue& q, const level_tile& t)
 	level_object::queue_draw(q, t);
 }
 
-int get_tile_corners(tile_corner* result, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse)
+int get_tile_corners(KRE::ImageLoadError* result, const graphics::texture& t, const rect& area, int tile_num, int x, int y, bool reverse)
 {
 	if(tile_num < 0 || area.w() <= 0 || area.h() <= 0 || area.x() < 0 || area.y() < 0) {
 		return 0;
@@ -96,7 +96,7 @@ void queue_draw_from_tilesheet(graphics::blit_queue& q, const graphics::texture&
 		return;
 	}
 
-	q.set_texture(t.get_id());
+	q.setTexture(t.getId());
 
 	const int width = std::max<int>(t.width(), t.height());
 	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
@@ -135,7 +135,7 @@ bool is_tile_opaque(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(t.is_alpha(u, v)) {
+			if(t.isAlpha(u, v)) {
 				return false;
 			}
 		}
@@ -205,7 +205,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				top = y;
 				break;
 			}
@@ -216,7 +216,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				bottom = y + 1;
 				break;
 			}
@@ -227,7 +227,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				left = x;
 				break;
 			}
@@ -238,7 +238,7 @@ rect get_tile_non_alpha_area(const graphics::texture& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t.is_alpha(u, v)) {
+			if(!t.isAlpha(u, v)) {
 				right = x + 1;
 				break;
 			}

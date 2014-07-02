@@ -979,7 +979,7 @@ namespace KRE
 			stroke_miter_limit_value_(4.0),
 			stroke_dash_array_(DashArrayAttrib::UNSET),
 			stroke_dash_offset_(DashOffsetAttrib::UNSET),
-			stroke_dash_offset_value_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
+			stroke_dash_offsetValue_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
 			fill_(paint_ptr()),
 			fill_rule_(FillRuleAttrib::UNSET),
 			fill_opacity_(OpacityAttrib::UNSET),
@@ -1003,7 +1003,7 @@ namespace KRE
 			stroke_miter_limit_value_(4.0),
 			stroke_dash_array_(DashArrayAttrib::NONE),
 			stroke_dash_offset_(DashOffsetAttrib::VALUE),
-			stroke_dash_offset_value_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
+			stroke_dash_offsetValue_(0, svg_length::SVG_LENGTHTYPE_NUMBER),
 			fill_(paint_ptr(new paint(0,0,0))),
 			fill_rule_(FillRuleAttrib::EVENODD),
 			fill_opacity_(OpacityAttrib::VALUE),
@@ -1132,7 +1132,7 @@ namespace KRE
 						stroke_dash_offset_ = DashOffsetAttrib::INHERIT;
 					} else {
 						stroke_dash_offset_ = DashOffsetAttrib::VALUE;
-						stroke_dash_offset_value_ = svg_length(sdo);
+						stroke_dash_offsetValue_ = svg_length(sdo);
 					}
 				}
 

@@ -14,10 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "formula.hpp"
 #include "preferences.hpp"
 #include "tbs_bot.hpp"
@@ -36,7 +34,7 @@ bot::bot(boost::asio::io_service& service, const std::string& host, const std::s
 {
 	std::cerr << "CREATE BOT\n";
 	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+	timer_.async_wait(std::bind(&bot::process, this, boost::asio::placeholders::error));
 }
 
 bot::~bot()
@@ -51,7 +49,7 @@ void bot::process(const boost::system::error_code& error)
 		return;
 	}
 	if(on_create_) {
-		execute_command(on_create_->execute(*this));
+		executeCommand(on_create_->execute(*this));
 		on_create_.reset();
 	}
 
@@ -69,32 +67,32 @@ void bot::process(const boost::system::error_code& error)
 		}
 
 		ASSERT_LOG(send.is_map(), "NO REQUEST TO SEND: " << send.write_json() << " IN " << script.write_json());
-		game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable(this));
+		game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(this));
 		if(preferences::internal_tbs_server()) {
 			internal_client_.reset(new internal_client(session_id));
-			internal_client_->send_request(send, session_id, callable, boost::bind(&bot::handle_response, this, _1, callable));
+			internal_client_->send_request(send, session_id, callable, std::bind(&bot::handle_response, this, _1, callable));
 		} else {
 			client_.reset(new client(host_, port_, session_id, &service_));
 			client_->set_use_local_cache(false);
-			client_->send_request(send, callable, boost::bind(&bot::handle_response, this, _1, callable));
+			client_->send_request(send, callable, std::bind(&bot::handle_response, this, _1, callable));
 		}
 	}
 
 	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+	timer_.async_wait(std::bind(&bot::process, this, boost::asio::placeholders::error));
 }
 
-void bot::handle_response(const std::string& type, game_logic::formula_callable_ptr callable)
+void bot::handle_response(const std::string& type, game_logic::FormulaCallablePtr callable)
 {
 	if(on_create_) {
-		execute_command(on_create_->execute(*this));
+		executeCommand(on_create_->execute(*this));
 		on_create_.reset();
 	}
 
 	if(on_message_) {
 		message_type_ = type;
 		message_callable_ = callable;
-		execute_command(on_message_->execute(*this));
+		executeCommand(on_message_->execute(*this));
 	}
 
 	ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->query_value("message").write_json());
@@ -132,7 +130,7 @@ void bot::handle_response(const std::string& type, game_logic::formula_callable_
 	tbs::web_server::set_debug_state(generate_report());
 }
 
-variant bot::get_value(const std::string& key) const
+variant bot::getValue(const std::string& key) const
 {
 	if(key == "script") {
 		std::vector<variant> s = script_;
@@ -149,7 +147,7 @@ variant bot::get_value(const std::string& key) const
 	return variant();
 }
 
-void bot::set_value(const std::string& key, const variant& value)
+void bot::setValue(const std::string& key, const variant& value)
 {
 	if(key == "script") {
 		script_ = value.as_list();

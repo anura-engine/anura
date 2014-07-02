@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 #include <boost/algorithm/string.hpp>
 #include <boost/regex.hpp>
 
@@ -110,16 +109,16 @@ file_chooser_dialog::file_chooser_dialog(int x, int y, int w, int h, const filte
 	relative_path_ = sys::get_absolute_path("");
 	set_default_path(default_path);
 	
-	editor_ = new text_editor_widget(400, 32);
-	editor_->set_font_size(16);
-	//file_text->set_on_change_handler(boost::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
-	editor_->set_on_enter_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
-	editor_->set_on_tab_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_ = new TextEditorWidget(400, 32);
+	editor_->setFontSize(16);
+	//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
+	editor_->setOnEnterHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_->setOnTabHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
 
 	init();
 }
 
-file_chooser_dialog::file_chooser_dialog(variant v, game_logic::formula_callable* e)
+file_chooser_dialog::file_chooser_dialog(variant v, game_logic::FormulaCallable* e)
 	: dialog(v, e), filter_selection_(0), file_open_dialog_(v["open_dialog"].as_bool(true)), 
 	use_relative_paths_(v["use_relative_paths"].as_bool(false))
 {
@@ -134,11 +133,11 @@ file_chooser_dialog::file_chooser_dialog(variant v, game_logic::formula_callable
 	relative_path_ = sys::get_absolute_path(preferences::user_data_path());
 	set_default_path(preferences::user_data_path());
 
-	editor_ = new text_editor_widget(400, 32);
-	editor_->set_font_size(16);
-	//file_text->set_on_change_handler(boost::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
-	editor_->set_on_enter_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
-	editor_->set_on_tab_handler(boost::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_ = new TextEditorWidget(400, 32);
+	editor_->setFontSize(16);
+	//file_text->setOnChangeHandler(std::bind(&file_chooser_dialog::change_text_attribute, this, change_entry, attr));
+	editor_->setOnEnterHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
+	editor_->setOnTabHandler(std::bind(&file_chooser_dialog::text_enter, this, editor_));
 	init();
 }
 
@@ -166,12 +165,12 @@ void file_chooser_dialog::init()
 		l += file_open_dialog_ ? "To Open" : "To Save";
 	}
 
-	label_ptr lp = new label(l, graphics::color_white(), 20);
-	add_widget(widget_ptr(lp), 30, current_height);
+	LabelPtr lp = new label(l, graphics::color_white(), 20);
+	addWidget(WidgetPtr(lp), 30, current_height);
 	current_height += lp->height() + hpad;
 
 	lp = new label("Current Path: " + current_path_, graphics::color_green(), 16);
-	add_widget(widget_ptr(lp), 30, current_height);
+	addWidget(WidgetPtr(lp), 30, current_height);
 	current_height += lp->height() + hpad;
 
 	/*  Basic list of things needed after extensive review.
@@ -187,10 +186,10 @@ void file_chooser_dialog::init()
 
 	grid_ptr g(new grid(3));
 	g->set_hpad(50);
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Up", graphics::color_white())), boost::bind(&file_chooser_dialog::up_button, this))));
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Home", graphics::color_white())), boost::bind(&file_chooser_dialog::home_button, this))));
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Add", graphics::color_white())), boost::bind(&file_chooser_dialog::add_dir_button, this))));
-	add_widget(g, 30, current_height);	
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", graphics::color_white())), std::bind(&file_chooser_dialog::up_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", graphics::color_white())), std::bind(&file_chooser_dialog::home_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), std::bind(&file_chooser_dialog::add_dir_button, this))));
+	addWidget(g, 30, current_height);	
 	current_height += g->height() + hpad;
 
 	grid_ptr container(new grid(dir_only_ ? 1 : 2));
@@ -203,19 +202,19 @@ void file_chooser_dialog::init()
 	container->set_show_background(false);
 
 	g.reset(new grid(1));
-	g->set_dim(dir_only_ ? width()/2 : width()/3, height()/3);
+	g->setDim(dir_only_ ? width()/2 : width()/3, height()/3);
 	g->set_max_height(height()/3);
 	g->set_show_background(true);
 	g->allow_selection();
 	foreach(const std::string& dir, dirs) {
-		g->add_col(widget_ptr(new label(dir, graphics::color_white())));
+		g->add_col(WidgetPtr(new label(dir, graphics::color_white())));
 	}
-	g->register_selection_callback(boost::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
+	g->register_selection_callback(std::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
 	container->add_col(g);
 
 	if(dir_only_ == false) {
 		g.reset(new grid(1));
-		g->set_dim(width()/3, height()/3);
+		g->setDim(width()/3, height()/3);
 		g->set_max_height(height()/3);
 		g->set_show_background(true);
 		g->allow_selection();
@@ -224,36 +223,36 @@ void file_chooser_dialog::init()
 			boost::regex re(filters_[filter_selection_].second, boost::regex_constants::icase);
 			if(boost::regex_match(file, re)) {
 				filtered_file_list.push_back(file);
-				g->add_col(widget_ptr(new label(file, graphics::color_white())));
+				g->add_col(WidgetPtr(new label(file, graphics::color_white())));
 			}
 		}
-		g->register_selection_callback(boost::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
+		g->register_selection_callback(std::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
 		container->add_col(g);
 	}
-	add_widget(container, 30, current_height);
+	addWidget(container, 30, current_height);
 	current_height += container->height() + hpad;
 
-	add_widget(editor_, 30, current_height);
+	addWidget(editor_, 30, current_height);
 	current_height += editor_->height() + hpad;
 
 	if(dir_only_ == false) {
 		dropdown_list dl_list;
 		std::transform(filters_.begin(), filters_.end(), 
 			std::back_inserter(dl_list), 
-			boost::bind(&filter_list::value_type::first,_1));
+			std::bind(&filter_list::value_type::first,_1));
 		filter_widget_ = new dropdown_widget(dl_list, width()/2, 20);
-		filter_widget_->set_on_select_handler(boost::bind(&file_chooser_dialog::change_filter, this, _1, _2));
+		filter_widget_->setOnSelectHandler(std::bind(&file_chooser_dialog::change_filter, this, _1, _2));
 		//std::cerr << "filter_selection: " << filter_selection_ << std::endl;
-		filter_widget_->set_selection(filter_selection_);
-		add_widget(filter_widget_, 30, current_height);
+		filter_widget_->setSelection(filter_selection_);
+		addWidget(filter_widget_, 30, current_height);
 		current_height += filter_widget_->get_max_height() + hpad;
 	}
 
 	g.reset(new grid(2));
 	g->set_hpad(20);
-	g->add_col(widget_ptr(new button(widget_ptr(new label("OK", graphics::color_white())), boost::bind(&file_chooser_dialog::ok_button, this))));
-	g->add_col(widget_ptr(new button(widget_ptr(new label("Cancel", graphics::color_white())), boost::bind(&file_chooser_dialog::cancel_button, this))));
-	add_widget(g, 30, current_height);
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", graphics::color_white())), std::bind(&file_chooser_dialog::ok_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", graphics::color_white())), std::bind(&file_chooser_dialog::cancel_button, this))));
+	addWidget(g, 30, current_height);
 	current_height += g->height() + hpad;
 }
 
@@ -279,9 +278,9 @@ void file_chooser_dialog::execute_change_directory(const dir_list& d, int index)
 	}
 	current_path_ = current_path_ + "/" + d[index];
 	if(dir_only_) {
-		editor_->set_text(get_path());
+		editor_->setText(get_path());
 	} else {
-		editor_->set_text("");
+		editor_->setText("");
 	}
 	init();
 }
@@ -301,9 +300,9 @@ void file_chooser_dialog::home_button()
 {
 	current_path_ = relative_path_;
 	if(dir_only_) {
-		editor_->set_text(get_path());
+		editor_->setText(get_path());
 	} else {
-		editor_->set_text("");
+		editor_->setText("");
 	}
 	init();
 }
@@ -314,9 +313,9 @@ void file_chooser_dialog::up_button()
 	if(current_path_.length() > 1 && offs != std::string::npos) {
 		current_path_.erase(offs);
 		if(dir_only_) {
-			editor_->set_text(get_path());
+			editor_->setText(get_path());
 		} else {
-			editor_->set_text("");
+			editor_->setText("");
 		}
 	}
 	init();
@@ -329,13 +328,13 @@ void file_chooser_dialog::add_dir_button()
 	grid->allow_selection(true);
 	grid->swallow_clicks(false);
 	grid->allow_draw_highlight(false);
-	text_editor_widget_ptr dir_name_editor = new text_editor_widget(200, 28);
-	dir_name_editor->set_font_size(14);
-	dir_name_editor->set_on_enter_handler(boost::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
-	dir_name_editor->set_on_tab_handler(boost::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
-	dir_name_editor->set_focus(true);
+	TextEditorWidgetPtr dir_name_editor = new TextEditorWidget(200, 28);
+	dir_name_editor->setFontSize(14);
+	dir_name_editor->setOnEnterHandler(std::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
+	dir_name_editor->setOnTabHandler(std::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
+	dir_name_editor->setFocus(true);
 	grid->add_col(dir_name_editor);
-	grid->register_selection_callback(boost::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
+	grid->register_selection_callback(std::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
@@ -343,23 +342,23 @@ void file_chooser_dialog::add_dir_button()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void file_chooser_dialog::execute_dir_name_select(int row)
 {
 	if(row == -1 && context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 }
 
-void file_chooser_dialog::execute_dir_name_enter(const text_editor_widget_ptr editor)
+void file_chooser_dialog::execute_dir_name_enter(const TextEditorWidgetPtr editor)
 {
 	if(context_menu_) {
-		remove_widget(context_menu_);
+		removeWidget(context_menu_);
 		context_menu_.reset();
 	}
 
@@ -368,9 +367,9 @@ void file_chooser_dialog::execute_dir_name_enter(const text_editor_widget_ptr ed
 		if(new_path.empty() == false) {
 			current_path_ = new_path;
 			if(dir_only_) {
-				editor_->set_text(get_path());
+				editor_->setText(get_path());
 			} else {
-				editor_->set_text("");
+				editor_->setText("");
 			}
 		} else {
 			std::cerr << "Failed to create directory " << editor->text() << " in " << current_path_ << std::endl;
@@ -379,18 +378,18 @@ void file_chooser_dialog::execute_dir_name_enter(const text_editor_widget_ptr ed
 	init();
 }
 
-void file_chooser_dialog::text_enter(const text_editor_widget_ptr editor)
+void file_chooser_dialog::text_enter(const TextEditorWidgetPtr editor)
 {
 	if(dir_only_) {
 		std::string path = sys::get_absolute_path(editor->text(), current_path_);
 		if(sys::is_directory(path)) {
 			current_path_ = path;
-			editor->set_text(get_path());
+			editor->setText(get_path());
 		} else {
 			path = sys::get_absolute_path(editor->text(), relative_path_);
 			if(sys::is_directory(path)) {
 				current_path_ = path;
-				editor->set_text(get_path());
+				editor->setText(get_path());
 			} else {
 				std::cerr << "Invalid Path: " << path << std::endl;
 			}
@@ -400,7 +399,7 @@ void file_chooser_dialog::text_enter(const text_editor_widget_ptr editor)
 			file_name_ = editor->text();
 		} else if(sys::is_directory(editor->text())) {
 			current_path_ = editor->text();
-			editor->set_text("");
+			editor->setText("");
 		} else {
 			// Not a valid file or directory name.
 			// XXX
@@ -412,7 +411,7 @@ void file_chooser_dialog::text_enter(const text_editor_widget_ptr editor)
 			file_name_ = editor->text();
 		} else if(sys::is_directory(editor->text())) {
 			current_path_ = editor->text();
-			editor->set_text("");
+			editor->setText("");
 		} else {
 			file_name_ = editor->text();
 		}
@@ -426,7 +425,7 @@ void file_chooser_dialog::execute_select_file(const file_list& f, int index)
 		return;
 	}
 	file_name_ = current_path_ + "/" + f[index];
-	editor_->set_text(f[index]);
+	editor_->setText(f[index]);
 	init();
 }
 
@@ -444,22 +443,22 @@ void file_chooser_dialog::use_relative_paths(bool val, const std::string& rel_pa
 	use_relative_paths_ = val; 
 	relative_path_ = sys::get_absolute_path(rel_path);
 	if(editor_) {
-		editor_->set_text(get_path());
+		editor_->setText(get_path());
 	}
 }
 
-void file_chooser_dialog::set_value(const std::string& key, const variant& value)
+void file_chooser_dialog::setValue(const std::string& key, const variant& value)
 {
 	// XXX
-	dialog::set_value(key, value);
+	dialog::setValue(key, value);
 }
 
-variant file_chooser_dialog::get_value(const std::string& key) const
+variant file_chooser_dialog::getValue(const std::string& key) const
 {
 	if(key == "relative_file_name") {
 		return variant(get_file_name());
 	}
-	return dialog::get_value(key);
+	return dialog::getValue(key);
 }
 
 }

@@ -24,14 +24,14 @@
 #include "voxel_object.hpp"
 #include "voxel_object_functions.hpp"
 
-void voxel_object_command_callable::set_expression(const game_logic::formula_expression* expr)
+void voxel_object_command_callable::setExpression(const game_logic::formula_expression* expr)
 {
 	expr_ = expr;
 	expr_holder_.reset(expr);
 }
 
 
-void voxel_object_command_callable::run_command(voxel::world& lvl, voxel::user_voxel_object& obj) const
+void voxel_object_command_callable::runCommand(voxel::world& lvl, voxel::user_voxel_object& obj) const
 {
 	if(expr_) {
 		try {
@@ -59,7 +59,7 @@ public:
 
 	virtual void execute(voxel::world& lvl, voxel::user_voxel_object& ob) const 
 	{
-		ob.add_scheduled_command(cycles_, cmd_);
+		ob.addScheduledCommand(cycles_, cmd_);
 	}
 private:
 	int cycles_;
@@ -68,7 +68,7 @@ private:
 
 FUNCTION_DEF(schedule, 2, 2, "schedule(int cycles_in_future, list of commands): schedules the given list of commands to be run on the current object the given number of cycles in the future. Note that the object must be valid (not destroyed) and still present in the level for the commands to be run.")
 	schedule_command* cmd = new schedule_command(EVAL_ARG(0).as_int(),EVAL_ARG(1));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int")
@@ -91,11 +91,11 @@ struct event_depth_scope
 
 class fire_event_command : public voxel_object_command_callable 
 {
-	const voxel::user_voxel_object_ptr target_;
+	const voxel::UserVoxelObjectPtr target_;
 	const std::string event_;
-	const const_formula_callable_ptr callable_;
+	const ConstFormulaCallablePtr callable_;
 public:
-	fire_event_command(voxel::user_voxel_object_ptr target, const std::string& event, const_formula_callable_ptr callable)
+	fire_event_command(voxel::UserVoxelObjectPtr target, const std::string& event, ConstFormulaCallablePtr callable)
 	  : target_(target), event_(event), callable_(callable)
 	{}
 
@@ -104,14 +104,14 @@ public:
 		ASSERT_LOG(event_depth < 1000, "INFINITE (or too deep?) RECURSION FOR EVENT " << event_);
 		event_depth_scope scope;
 		voxel::user_voxel_object* e = target_ ? target_.get() : &ob;
-		e->handle_event(event_, callable_.get());
+		e->handleEvent(event_, callable_.get());
 	}
 };
 
 FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, (optional)callable arg): fires the event with the given id. Targets the current object by default, or target if given. Sends arg as the event argument if given")
-	voxel::user_voxel_object_ptr target;
+	voxel::UserVoxelObjectPtr target;
 	std::string event;
-	const_formula_callable_ptr callable;
+	ConstFormulaCallablePtr callable;
 	variant arg_value;
 
 	if(args().size() == 3) {
@@ -152,7 +152,7 @@ FUNCTION_DEF(fire_event, 1, 3, "fire_event((optional) object target, string id, 
 	}
 
 	fire_event_command* cmd = (new fire_event_command(target, event, callable));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("object|string")
@@ -165,17 +165,17 @@ END_FUNCTION_DEF(fire_event)
 /*class spawn_voxel_command : public voxel_object_command_callable
 {
 public:
-	spawn_voxel_command(voxel::user_voxel_object_ptr obj, variant instantiation_commands)
+	spawn_voxel_command(voxel::UserVoxelObjectPtr obj, variant instantiation_commands)
 	  : obj_(obj), instantiation_commands_(instantiation_commands)
 	{}
 	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const {
 
 		lvl.add_object(obj_);
 
-		obj_->execute_command(instantiation_commands_);
+		obj_->executeCommand(instantiation_commands_);
 	}
 private:
-	voxel::user_voxel_object_ptr obj_;
+	voxel::UserVoxelObjectPtr obj_;
 	variant instantiation_commands_;
 };
 
@@ -190,11 +190,11 @@ FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal 
 
 	variant arg4 = EVAL_ARG(4);
 
-	voxel::user_voxel_object_ptr obj(new voxel::user_voxel_object(type, x, y, z));
+	voxel::UserVoxelObjectPtr obj(new voxel::user_voxel_object(type, x, y, z));
 
 	variant commands;
 	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
-	cmd->set_expression(this);
+	cmd->setExpression(this);
 	return variant(cmd);
 FUNCTION_ARGS_DEF
 	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debug_pinpoint_location());
@@ -207,8 +207,8 @@ FUNCTION_ARGS_DEF
 
 	variant v;
 	if(args()[0]->can_reduce_to_variant(v) && v.is_string()) {
-		game_logic::formula_callable_definition_ptr type_def = custom_object_type::get_definition(v.as_string());
-		const custom_object_callable* type = dynamic_cast<const custom_object_callable*>(type_def.get());
+		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
 		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debug_pinpoint_location());
 
 		if(args().size() > 3) {
@@ -218,33 +218,33 @@ FUNCTION_ARGS_DEF
 			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
 			if(props) {
 				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->get_entry(slot)->id;
+					const std::string& prop_id = type->getEntry(slot)->id;
 					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debug_pinpoint_location());
 				}
 
 				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->get_slot(itor->first.as_string());
+					const int slot = type->getSlot(itor->first.as_string());
 					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debug_pinpoint_location());
 
-					const formula_callable_definition::entry& entry = *type->get_entry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.get_write_type(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.get_write_type()->to_string() << " is expected " << debug_pinpoint_location());
+					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debug_pinpoint_location());
 				}
 			}
 		}
 
-		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->get_entry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
+		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->query_variant_type()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debug_pinpoint_location());
 	}
 RETURN_TYPE("commands")
 END_FUNCTION_DEF(spawn_voxel)
 */
 
 
-class voxel_object_function_symbol_table : public function_symbol_table
+class voxel_object_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
 	expression_ptr create_function(const std::string& fn,
 		const std::vector<expression_ptr>& args,
-		const_formula_callable_definition_ptr callable_def) const
+		ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);
@@ -252,16 +252,16 @@ public:
 			return expression_ptr(i->second->create(args));
 		}
 
-		return function_symbol_table::create_function(fn, args, callable_def);
+		return FunctionSymbolTable::create_function(fn, args, callable_def);
 	}
 
 };
 
 }
 
-function_symbol_table& get_voxel_object_functions_symbol_table()
+FunctionSymbolTable& get_voxel_object_functions_symbol_table()
 {
-	static voxel_object_function_symbol_table table;
+	static voxel_object_FunctionSymbolTable table;
 	return table;
 }
 

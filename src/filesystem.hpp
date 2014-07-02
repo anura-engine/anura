@@ -17,17 +17,11 @@
 #ifndef FILESYSTEM_HPP_INCLUDED
 #define FILESYSTEM_HPP_INCLUDED
 
-#include <boost/cstdint.hpp>
-#include <boost/function.hpp>
+#include <cstdint>
 
 #include <map>
 #include <string>
 #include <vector>
-
-#if defined(__ANDROID__)
-#include "SDL.h"
-#include "SDL_rwops.h"
-#endif
 
 namespace sys
 {
@@ -66,11 +60,6 @@ std::string find_file(const std::string& name);
 
 int64_t file_mod_time(const std::string& fname);
 
-#if defined(__ANDROID__)
-SDL_RWops* read_sdl_rw_from_asset(const std::string& name);
-void print_assets();
-#endif // ANDROID
-
 void move_file(const std::string& from, const std::string& to);
 void remove_file(const std::string& fname);
 void copy_file(const std::string& from, const std::string& to);
@@ -86,7 +75,7 @@ struct filesystem_manager {
 	~filesystem_manager();
 };
 
-void notify_on_file_modification(const std::string& path, boost::function<void()> handler);
+void notify_on_file_modification(const std::string& path, std::function<void()> handler);
 void pump_file_modifications();
 
 bool is_safe_write_path(const std::string& path, std::string* error=NULL);

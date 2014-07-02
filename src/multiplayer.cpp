@@ -49,12 +49,12 @@ using boost::asio::ip::udp;
 namespace multiplayer {
 
 namespace {
-boost::shared_ptr<boost::asio::io_service> asio_service;
-boost::shared_ptr<tcp::socket> tcp_socket;
-boost::shared_ptr<udp::socket> udp_socket;
-boost::shared_ptr<udp::endpoint> udp_endpoint;
+std::shared_ptr<boost::asio::io_service> asio_service;
+std::shared_ptr<tcp::socket> tcp_socket;
+std::shared_ptr<udp::socket> udp_socket;
+std::shared_ptr<udp::endpoint> udp_endpoint;
 
-std::vector<boost::shared_ptr<udp::endpoint> > udp_endpoint_peers;
+std::vector<std::shared_ptr<udp::endpoint> > udp_endpoint_peers;
 
 int32_t id;
 int player_slot;
@@ -186,7 +186,7 @@ void send_confirm_packet(int nplayer, std::vector<char>& msg, bool has_confirm) 
 }
 }
 
-void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
+void sync_start_time(const level& lvl, std::function<bool()> idle_fn)
 {
 	if(!tcp_socket) {
 		return;
@@ -268,7 +268,7 @@ void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
 
 		if(line == "SLOT") {
 			player_slot = n;
-			udp_endpoint_peers.push_back(boost::shared_ptr<udp::endpoint>());
+			udp_endpoint_peers.push_back(std::shared_ptr<udp::endpoint>());
 
 			std::cerr << "SLOT: " << player_slot << "\n";
 			continue;
@@ -281,7 +281,7 @@ void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
 
 		std::cerr << "SLOT " << n << " = " << host << " " << port << "\n";
 
-		udp_endpoint_peers.push_back(boost::shared_ptr<udp::endpoint>(new udp::endpoint));
+		udp_endpoint_peers.push_back(std::shared_ptr<udp::endpoint>(new udp::endpoint));
 		udp::resolver::query peer_query(udp::v4(), host, port);
 
 		*udp_endpoint_peers.back() = *udp_resolver.resolve(peer_query);
@@ -380,7 +380,7 @@ void sync_start_time(const level& lvl, boost::function<bool()> idle_fn)
 		const int game_start = SDL_GetTicks() + 1000;
 		boost::array<char, 1024> receive_buf;
 		while(SDL_GetTicks() < game_start) {
-			const int ticks = SDL_GetTicks();
+			const int ticks = profile::get_tick_time();
 			const int start_in = game_start - ticks;
 
 			if(start_in < 500 && delay == 0) {

@@ -26,16 +26,15 @@
 #include <boost/shared_ptr.hpp>
 
 #include "decimal.hpp"
-#include "foreach.hpp"
 #include "formula_callable_definition.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 // Need to forward declare this rather than including level.hpp
-class level;
-typedef boost::intrusive_ptr<level> level_ptr;
+class Level;
+typedef boost::intrusive_ptr<Level> LevelPtr;
 
 namespace pathfinding {
 
@@ -58,7 +57,7 @@ typedef boost::intrusive_ptr<weighted_directed_graph> weighted_directed_graph_pt
 template<typename N, typename T>
 class graph_node {
 public:
-	typedef boost::shared_ptr<graph_node<N, T> > graph_node_ptr;
+	typedef std::shared_ptr<graph_node<N, T> > graph_node_ptr;
 	graph_node(const N& src) 
 		: src_(src), f_(T(0)), g_(T(0)), 
 		h_(T(0)), on_open_list_(false), on_closed_list_(false)
@@ -79,7 +78,7 @@ public:
 		h_ = h;
 		f_ = g+h;
 	}
-	void set_parent(graph_node_ptr parent) {parent_ = parent;}
+	void setParent(graph_node_ptr parent) {parent_ = parent;}
 	graph_node_ptr get_parent() const {return parent_;}
 	void set_on_open_list(const bool val) {on_open_list_ = val;}
 	bool on_open_list() const {return on_open_list_;}
@@ -94,7 +93,7 @@ public:
 	}
 	friend std::ostream& operator<<(std::ostream& out, const graph_node<N,T>& n) {
 		out << "GNODE: " << n.src_.to_string() << " : cost( " << n.f_ << "," << n.g_ << "," << n.h_ 
-			<< ") : parent(" << (n.parent_ == boost::shared_ptr<graph_node<N,T> >() ? "NULL" : n.parent_->get_node_value().to_string())
+			<< ") : parent(" << (n.parent_ == std::shared_ptr<graph_node<N,T> >() ? "NULL" : n.parent_->get_node_value().to_string())
 			<< ") : (" << n.on_open_list_ << "," << n.on_closed_list_ << ")" << std::endl;
 		return out;
 	}
@@ -113,7 +112,7 @@ template<typename N, typename T> T manhattan_distance(const N& p1, const N& p2);
 
 typedef std::map<variant, graph_node<variant, decimal>::graph_node_ptr > vertex_list;
 
-class directed_graph : public game_logic::formula_callable {
+class directed_graph : public game_logic::FormulaCallable {
 	DECLARE_CALLABLE(directed_graph);
 	std::vector<variant> vertices_;
 	graph_edge_list edges_;
@@ -136,7 +135,7 @@ public:
 	}
 };
 
-class weighted_directed_graph : public game_logic::formula_callable {
+class weighted_directed_graph : public game_logic::FormulaCallable {
 	DECLARE_CALLABLE(weighted_directed_graph);
 	edge_weights weights_;
 	directed_graph_ptr dg_;
@@ -146,8 +145,8 @@ public:
 		: dg_(dg)
 	{
 		weights_.swap(*weights);
-		foreach(const variant& v, dg->get_vertices()) {
-			graph_node_list_[v] = boost::shared_ptr<graph_node<variant, decimal> >(new graph_node<variant, decimal>(v));
+		for(const variant& v : dg->get_vertices()) {
+			graph_node_list_[v] = std::shared_ptr<graph_node<variant, decimal> >(new graph_node<variant, decimal>(v));
 		}
 	}
 	std::vector<variant> get_edges_from_node(const variant node) const {
@@ -174,8 +173,7 @@ public:
 		throw src_not_found;
 	}
 	void reset_graph() {
-		std::pair<variant, graph_node<variant, decimal>::graph_node_ptr> p;
-		foreach(p, graph_node_list_) {
+		for(auto& p : graph_node_list_) {
 			p.second->reset_node();
 		}
 	}
@@ -192,13 +190,13 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	const variant src_node, 
 	const variant dst_node, 
 	game_logic::expression_ptr heuristic, 
-	game_logic::map_formula_callable_ptr callable);
+	game_logic::MapFormulaCallablePtr callable);
 
-variant a_star_find_path(level_ptr lvl, const point& src, 
+variant a_star_find_path(LevelPtr lvl, const point& src, 
 	const point& dst, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 
-	game_logic::map_formula_callable_ptr callable, 
+	game_logic::MapFormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y);
 

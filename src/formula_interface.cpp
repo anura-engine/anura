@@ -16,34 +16,34 @@ namespace {
 class dynamic_bound_factory;
 class static_bound_factory;
 
-class dynamic_interface_instance : public formula_callable
+class dynamic_interface_instance : public FormulaCallable
 {
 public:
 	dynamic_interface_instance(const variant& obj, boost::intrusive_ptr<const dynamic_bound_factory> parent);
 	int id() const;
 private:
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValue(const std::string& key) const;
+	variant getValueBySlot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
 	boost::intrusive_ptr<const dynamic_bound_factory> factory_;
 	variant obj_;
 };
 
-class static_interface_instance : public formula_callable
+class static_interface_instance : public FormulaCallable
 {
 public:
 	static_interface_instance(const variant& obj, boost::intrusive_ptr<const static_bound_factory> parent);
 	int id() const;
 private:
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValue(const std::string& key) const;
+	variant getValueBySlot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
 	boost::intrusive_ptr<const static_bound_factory> factory_;
-	boost::intrusive_ptr<formula_callable> obj_;
+	boost::intrusive_ptr<FormulaCallable> obj_;
 };
 
 struct Entry {
@@ -68,7 +68,7 @@ public:
 		return slots_[slot].id;
 	}
 
-	int get_id() const { return id_; }
+	int getId() const { return id_; }
 
 private:
 	std::vector<Entry> slots_;
@@ -81,15 +81,15 @@ public:
 	static_bound_factory(const std::vector<Entry>& slots, variant_type_ptr type, int id)
 	  : slots_(slots), id_(id)
 	{
-		const formula_callable_definition* def = type->get_definition();
+		const FormulaCallableDefinition* def = type->getDefinition();
 		RAISE_MISMATCH(def != NULL, "Trying to make an interface out of an invalid type");
 		foreach(const Entry& e, slots) {
-			const formula_callable_definition::entry* entry = def->get_entry_by_id(e.id);
+			const FormulaCallableDefinition::Entry* entry = def->getEntryById(e.id);
 			RAISE_MISMATCH(entry != NULL, "Type " << type->to_string() << " does not match interface because it does not contain " << e.id);
 			RAISE_MISMATCH(entry->variant_type, "Type " << type->to_string() << " does not match interface because " << e.id << " does not have type information");
 			RAISE_MISMATCH(variant_types_compatible(e.type, entry->variant_type), "Type " << type->to_string() << " does not match interface because " << e.id << " is a " << entry->variant_type->to_string() << " when a " << e.type->to_string() << " is expected");
 
-			const int nslot = def->get_slot(e.id);
+			const int nslot = def->getSlot(e.id);
 			mapping_.push_back(nslot);
 		}
 	}
@@ -103,7 +103,7 @@ public:
 		return mapping_[slot];
 	}
 
-	int get_id() const { return id_; }
+	int getId() const { return id_; }
 private:
 	std::vector<Entry> slots_;
 	std::vector<int> mapping_;
@@ -115,7 +115,7 @@ dynamic_interface_instance::dynamic_interface_instance(const variant& obj, boost
 {
 }
 
-variant dynamic_interface_instance::get_value(const std::string& key) const
+variant dynamic_interface_instance::getValue(const std::string& key) const
 {
 	if(obj_.is_callable()) {
 		return obj_.as_callable()->query_value(key);
@@ -124,7 +124,7 @@ variant dynamic_interface_instance::get_value(const std::string& key) const
 	}
 }
 
-variant dynamic_interface_instance::get_value_by_slot(int slot) const
+variant dynamic_interface_instance::getValueBySlot(int slot) const
 {
 	const std::string& key = factory_->translate_slot(slot);
 	if(obj_.is_callable()) {
@@ -134,19 +134,19 @@ variant dynamic_interface_instance::get_value_by_slot(int slot) const
 	}
 }
 
-void dynamic_interface_instance::set_value(const std::string& key, const variant& value)
+void dynamic_interface_instance::setValue(const std::string& key, const variant& value)
 {
 	obj_.add_attr_mutation(variant(key), value);
 }
 
-void dynamic_interface_instance::set_value_by_slot(int slot, const variant& value)
+void dynamic_interface_instance::setValueBySlot(int slot, const variant& value)
 {
 	obj_.add_attr_mutation(variant(factory_->translate_slot(slot)), value);
 }
 
 int dynamic_interface_instance::id() const
 {
-	return factory_->get_id();
+	return factory_->getId();
 }
 
 static_interface_instance::static_interface_instance(const variant& obj, boost::intrusive_ptr<const static_bound_factory> parent)
@@ -154,29 +154,29 @@ static_interface_instance::static_interface_instance(const variant& obj, boost::
 {
 }
 
-variant static_interface_instance::get_value(const std::string& key) const
+variant static_interface_instance::getValue(const std::string& key) const
 {
 	return obj_->query_value(key);
 }
 
-variant static_interface_instance::get_value_by_slot(int slot) const
+variant static_interface_instance::getValueBySlot(int slot) const
 {
 	return obj_->query_value_by_slot(factory_->translate_slot(slot));
 }
 
-void static_interface_instance::set_value(const std::string& key, const variant& value)
+void static_interface_instance::setValue(const std::string& key, const variant& value)
 {
 	obj_->mutate_value(key, value);
 }
 
-void static_interface_instance::set_value_by_slot(int slot, const variant& value)
+void static_interface_instance::setValueBySlot(int slot, const variant& value)
 {
 	obj_->mutate_value_by_slot(factory_->translate_slot(slot), value);
 }
 
 int static_interface_instance::id() const
 {
-	return factory_->get_id();
+	return factory_->getId();
 }
 
 }
@@ -189,7 +189,7 @@ struct formula_interface_impl
 	}
 	int id_;
 	std::vector<Entry> entries_;
-	const_formula_callable_definition_ptr def_;
+	ConstFormulaCallableDefinitionPtr def_;
 	boost::intrusive_ptr<dynamic_bound_factory> dynamic_factory_;
 };
 
@@ -206,11 +206,11 @@ formula_interface::formula_interface(const std::map<std::string, variant_type_pt
 		types.push_back(i->second);
 	}
 
-	impl_->def_ = create_formula_callable_definition(&names[0], &names[0] + names.size(), const_formula_callable_definition_ptr(), &types[0]);
+	impl_->def_ = execute_command_callable_definition(&names[0], &names[0] + names.size(), ConstFormulaCallableDefinitionPtr(), &types[0]);
 
 }
 
-variant formula_interface::get_value(const std::string& key) const
+variant formula_interface::getValue(const std::string& key) const
 {
 	return variant();
 }
@@ -225,7 +225,7 @@ formula_interface_instance_factory* formula_interface::create_factory(variant_ty
 		return get_dynamic_factory();
 	}
 
-	RAISE_MISMATCH(type->get_definition(), "Attempt to create interface from non-map type with no definition: " << type->to_string());
+	RAISE_MISMATCH(type->getDefinition(), "Attempt to create interface from non-map type with no definition: " << type->to_string());
 	return new static_bound_factory(impl_->entries_, type, impl_->id_);
 }
 
@@ -238,7 +238,7 @@ formula_interface_instance_factory* formula_interface::get_dynamic_factory() con
 	return impl_->dynamic_factory_.get();
 }
 
-const_formula_callable_definition_ptr formula_interface::get_definition() const
+ConstFormulaCallableDefinitionPtr formula_interface::getDefinition() const
 {
 	return impl_->def_;
 }

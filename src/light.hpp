@@ -18,7 +18,7 @@
 #define LIGHT_HPP_INCLUDED
 
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "variant.hpp"
 
 #include <boost/intrusive_ptr.hpp>
@@ -29,7 +29,7 @@ class light;
 typedef boost::intrusive_ptr<light> light_ptr;
 typedef boost::intrusive_ptr<const light> const_light_ptr;
 
-class light : public game_logic::formula_callable
+class light : public game_logic::FormulaCallable
 {
 public:
 	static light_ptr create_light(const custom_object& obj, variant node);
@@ -44,7 +44,7 @@ public:
 protected:
 	const custom_object& object() const { return obj_; }
 private:
-	virtual variant get_value(const std::string& key) const;
+	virtual variant getValue(const std::string& key) const;
 	const custom_object& obj_;
 };
 

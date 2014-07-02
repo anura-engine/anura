@@ -26,7 +26,6 @@
 #include <cmath>
 #include <iostream>
 #include <functional>
-#include <boost/bind.hpp>
 #ifdef _MSC_VER
 #include <boost/math/special_functions/round.hpp>
 #endif
@@ -65,14 +64,14 @@ namespace lua
 		return get_global_lua_instance();
 	}
 
-	void lua_context::set_self_callable(game_logic::formula_callable& callable)
+	void lua_context::set_self_callable(game_logic::FormulaCallable& callable)
 	{
 		using namespace game_logic;
 		// Gets the global "Anura" table
 		lua_getglobal(context_ptr(), anura_str);			// (-0,+1,e)
 
 		// Create a new holder for a fomula callable for the given callable
-		formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(context_ptr(), sizeof(formula_callable*))); //(-0,+1,e)
+		FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(context_ptr(), sizeof(FormulaCallable*))); //(-0,+1,e)
 		*a = &callable;
 		intrusive_ptr_add_ref(*a);
 
@@ -85,7 +84,7 @@ namespace lua
 		lua_pop(context_ptr(),1);						// (-n(1),+0,-)
 	}
 
-	bool lua_context::dostring(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
+	bool lua_context::dostring(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
 	{
 		if(callable) {
 			set_self_callable(*callable);
@@ -101,7 +100,7 @@ namespace lua
 		return false;
 	}
 
-	bool lua_context::dofile(const std::string&name, const std::string&str, game_logic::formula_callable* callable)
+	bool lua_context::dofile(const std::string&name, const std::string&str, game_logic::FormulaCallable* callable)
 	{
 		std::string file_contents = sys::read_file(module::map_file(str));
 		return dostring(name, file_contents, callable);
@@ -155,8 +154,8 @@ namespace lua
 				}
 				case variant::VARIANT_TYPE_CALLABLE: {
 					using namespace game_logic;
-					formula_callable** a = static_cast<formula_callable**>(lua_newuserdata(L, sizeof(formula_callable*))); //(-0,+1,e)
-					*a = const_cast<formula_callable*>(value.as_callable());
+					FormulaCallable** a = static_cast<FormulaCallable**>(lua_newuserdata(L, sizeof(FormulaCallable*))); //(-0,+1,e)
+					*a = const_cast<FormulaCallable*>(value.as_callable());
 					intrusive_ptr_add_ref(*a);
 
 					luaL_getmetatable(L, callable_str);	// (-0,+1,e)
@@ -234,14 +233,14 @@ namespace lua
 			for(int n = 2; n <= nargs; ++n) {
 				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
 			}
-			auto& player = level::current().player()->get_entity();
-			auto value = symbols.create_function(fn->name, args, player.get_definition());
+			auto& player = level::current().player()->getEntity();
+			auto value = symbols.create_function(fn->name, args, player.getDefinition());
 			if(value == NULL) {
 				luaL_error(L, "Function not found: %s", fn->name);
 			}
 			auto ret = value->evaluate(player);
 			if(ret.is_callable()) {
-				player.execute_command(ret);
+				player.executeCommand(ret);
 			} else {
 				return variant_to_lua_value(L, ret);
 			}
@@ -259,7 +258,7 @@ namespace lua
 		static int remove_callable_reference(lua_State* L)
 		{
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(lua_touserdata(L, 1));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(lua_touserdata(L, 1));	// (-0,+0,-)
 			luaL_argcheck(L, callable != NULL, 1, "'callable' was null");
 			intrusive_ptr_release(callable);
 			return 0;
@@ -268,7 +267,7 @@ namespace lua
 		static int get_callable_index(lua_State* L)
 		{
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = callable->query_value(name);
 			if(!value.is_null()) {
@@ -286,7 +285,7 @@ namespace lua
 		{
 			// stack -- table, key, value
 			using namespace game_logic;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			const char *name = lua_tostring(L, 2);						// (-0,+0,e)
 			variant value = lua_value_to_variant(L, 3);
 			callable->mutate_value(name, value);
@@ -297,7 +296,7 @@ namespace lua
 		{
 			using namespace game_logic;
 			std::string res;
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
 			std::vector<formula_input> inputs = callable->inputs();
 			for(auto inp : inputs) {
 				std::stringstream ss;
@@ -332,14 +331,14 @@ namespace lua
 			for(int n = 3; n <= nargs; ++n) {
 				args.push_back(expression_ptr(new variant_expression(lua_value_to_variant(L, n))));
 			}
-			formula_callable* callable = *static_cast<formula_callable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
+			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
 
 			auto& symbols = get_formula_functions_symbol_table();
 			auto value = symbols.create_function(fn->name, args, NULL);
 			if(value != NULL) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
-					callable->execute_command(ret);
+					callable->executeCommand(ret);
 				} else {
 					return variant_to_lua_value(L, ret);
 				}
@@ -350,7 +349,7 @@ namespace lua
 			if(value != NULL) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
-					callable->execute_command(ret);
+					callable->executeCommand(ret);
 				} else {
 					return variant_to_lua_value(L, ret);
 				}
@@ -491,7 +490,7 @@ namespace lua
 		}
 	}
 
-	bool lua_context::execute(const variant& value, game_logic::formula_callable* callable)
+	bool lua_context::execute(const variant& value, game_logic::FormulaCallable* callable)
 	{
 		bool res = false;
 		if(callable) {
@@ -512,7 +511,7 @@ namespace lua
 		init();
 	}
 
-	lua_context::lua_context(game_logic::formula_callable& callable)
+	lua_context::lua_context(game_logic::FormulaCallable& callable)
 	{
 		init();
 		set_self_callable(callable);
@@ -641,7 +640,7 @@ namespace lua
 	BEGIN_DEFINE_CALLABLE_NOBASE(lua_compiled)
 	BEGIN_DEFINE_FN(execute, "(object) ->any")
 		lua::lua_context ctx;
-		game_logic::formula_callable* callable = const_cast<game_logic::formula_callable*>(FN_ARG(0).as_callable());
+		game_logic::FormulaCallable* callable = const_cast<game_logic::FormulaCallable*>(FN_ARG(0).as_callable());
 		ctx.set_self_callable(*callable);
 		obj.run(ctx.context_ptr());
 		//return lua_value_to_variant(ctx.context_ptr());
@@ -662,7 +661,7 @@ namespace lua
 		luaL_unref(L_, LUA_REGISTRYINDEX, ref_);
 	}
 
-	variant lua_function_reference::get_value(const std::string& key) const
+	variant lua_function_reference::getValue(const std::string& key) const
 	{
 		return variant();
 	}

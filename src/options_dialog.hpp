@@ -21,7 +21,7 @@
 #include <vector>
 
 #include "texture.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "dialog.hpp"
 
 
@@ -31,10 +31,10 @@ public:
 	void draw() const;
 	options_dialog(int x, int y, int w, int h);
 protected:
-	virtual void handle_draw() const;
+	virtual void handleDraw() const override;
 };
 
-typedef boost::intrusive_ptr<options_dialog> options_dialog_ptr;
+typedef boost::intrusive_ptr<options_dialog> options_DialogPtr;
 
 
 #endif

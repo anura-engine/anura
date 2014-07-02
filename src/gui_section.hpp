@@ -21,30 +21,30 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "geometry.hpp"
-#include "texture.hpp"
+#include "kre/Geometry.hpp"
+#include "kre/Texture.hpp"
 #include "variant.hpp"
 
-class gui_section;
-typedef boost::shared_ptr<const gui_section> const_gui_section_ptr;
+class GuiSection;
+typedef boost::shared_ptr<const GuiSection> ConstGuiSectionPtr;
 
-class gui_section
+class GuiSection
 {
 public:
 	static void init(variant node);
-	static const_gui_section_ptr get(const std::string& key);
-	static const_gui_section_ptr get(const variant& v);
+	static ConstGuiSectionPtr get(const std::string& key);
+	static ConstGuiSectionPtr get(const variant& v);
 
-	explicit gui_section(variant node);
+	explicit GuiSection(variant node);
 
 	void blit(int x, int y) const { blit(x, y, width(), height()); }
 	void blit(int x, int y, int w, int h) const;
 	int width() const { return area_.w()*2; }
 	int height() const { return area_.h()*2; }
 
-	static std::vector<std::string> get_sections();
+	static std::vector<std::string> getSections();
 private:
-	graphics::texture texture_;
+	KRE::TexturePtr texture_;
 	rect area_;
 	rect draw_area_;
 

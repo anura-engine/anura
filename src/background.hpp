@@ -1,21 +1,27 @@
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef BACKGROUND_HPP_INCLUDED
-#define BACKGROUND_HPP_INCLUDED
+
+#pragma once
 
 #include <stdint.h>
 
@@ -24,13 +30,9 @@
 
 #include "boost/shared_ptr.hpp"
 
-#include "graphics.hpp"
-
-#include "geometry.hpp"
-#include "texture.hpp"
+#include "kre/Geometry.hpp"
+#include "kre/Material.hpp"
 #include "variant.hpp"
-
-class level;
 
 //class which represents the background to a level.
 class background
@@ -39,7 +41,7 @@ public:
 	static void load_modified_backgrounds();
 
 	//gets a background associated with a given ID.
-	static boost::shared_ptr<background> get(const std::string& id, int palette_id);
+	static std::shared_ptr<background> get(const std::string& id, int palette_id);
 
 	//all available backgrounds.
 	static std::vector<std::string> get_available_backgrounds();
@@ -55,14 +57,14 @@ private:
 
 	void draw_layers(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, int rotation, int cycle) const;
 	std::string id_, file_;
-	SDL_Color top_, bot_;
+	KRE::Color top_, bot_;
 	int width_, height_;
 	point offset_;
 
 	struct layer {
 		std::string image;
 		std::string image_formula;
-		mutable graphics::texture texture;
+		mutable KRE::MaterialPtr texture;
 		int xscale, yscale_top, yscale_bot;		//scales are how quickly the background scrolls compared to normal ground movement when the player
 								//walks around.  They give us the illusion of 'depth'. 100 is normal ground, less=distant, more=closer
 		
@@ -71,14 +73,10 @@ private:
 		int scale;				//a multiplier on the dimensions of the image.  Usually unused.
 		int xoffset;
 		int yoffset;			
-		GLfloat color[4];
+		KRE::Color color;
 
-		boost::shared_ptr<SDL_Color> color_above, color_below;
+		KRE::ColorPtr color_above, color_below;
 		
-		GLenum mode;			//Do we use the regular 'GL_FUNC_ADD' blend mode, or do we do something special?  Examples:
-								//GL_MAX ->  Max(src,dest) pixels, displays whichever's brighter.  Useful for clouds.
-								//GL_MIN ->  vice-versa, useful for spooky mist.
-
 		// Top and bottom edges of the background.
 		mutable int y1, y2;
 
@@ -99,5 +97,3 @@ private:
 	std::vector<layer> layers_;
 	int palette_;
 };
-
-#endif

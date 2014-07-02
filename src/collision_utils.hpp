@@ -1,40 +1,49 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef COLLISION_UTILS_HPP_INCLUDED
-#define COLLISION_UTILS_HPP_INCLUDED
 
-#include "entity.hpp"
+#pragma once
+
+#include "entity_fwd.hpp"
 #include "level_solid_map.hpp"
 #include "solid_map.hpp"
 
-class level;
+class Level;
 
 int get_num_solid_dimensions();
 const std::string& get_solid_dimension_key(int id);
 int get_solid_dimension_id(const std::string& key);
 
 //struct which provides information about a surface we collide with.
-struct collision_info {
-	collision_info() : surf_info(0), friction(0), traction(0), damage(0), adjust_y(0), platform(false), area_id(0), collide_with_area_id(0)
+struct CollisionInfo {
+	CollisionInfo() 
+		: surf_info(0), friction(0), traction(0), damage(0), 
+		adjust_y(0), platform(false), area_id(0), 
+		collide_with_area_id(0)
 	{}
 
-	void read_surf_info();
+	void readSurfInfo();
 
-	const surface_info* surf_info;
+	const SurfaceInfo* surf_info;
 	int friction;
 	int traction;
 	int damage;
@@ -55,7 +64,7 @@ struct collision_info {
 
 	//the object, if any, that we collided with. NULL if we collided with
 	//a tile in the level.
-	entity_ptr collide_with;
+	EntityPtr collide_with;
 
 	//if collide_with is non-null this will contain the ID of the area
 	//that we collided with.
@@ -67,54 +76,52 @@ struct collision_info {
 enum ALLOW_PLATFORM { SOLID_ONLY, SOLID_AND_PLATFORMS };
 
 //function which finds it a given point can be stood on.
-bool point_standable(const level& lvl, const entity& e, int x, int y, collision_info* info=NULL, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
+bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info=NULL, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
 
-//function which finds if an entity's solid area collides with anything, when
+//function which finds if an Entity's solid area collides with anything, when
 //the object has just moved one pixel in the direction given by 'dir'. If
 //'dir' is MOVE_NONE, then all pixels will be checked.
-bool entity_collides(level& lvl, const entity& e, MOVE_DIRECTION dir, collision_info* info=NULL);
+bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=NULL);
 
-void debug_check_entity_solidity(const level& lvl, const entity& e);
+void debug_check_entity_solidity(const Level& lvl, const Entity& e);
 
-//function which finds if one entity collides with another given entity.
-bool entity_collides_with_entity(const entity& e, const entity& other, collision_info* info=NULL);
+//function which finds if one Entity collides with another given Entity.
+bool entity_collides_with_entity(const Entity& e, const Entity& other, CollisionInfo* info=NULL);
 
 
-//function which finds if an entity collides with a level tile.
-bool entity_collides_with_level(const level& lvl, const entity& e, MOVE_DIRECTION dir, collision_info* info=NULL);
+//function which finds if an Entity collides with a level tile.
+bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=NULL);
 
-//function which finds how many pixels in an entity collide with the level.
+//function which finds how many pixels in an Entity collide with the level.
 //this is generally used for debug purposes.
-int entity_collides_with_level_count(const level& lvl, const entity& e, MOVE_DIRECTION dir);
+int entity_collides_with_level_count(const Level& lvl, const Entity& e, MOVE_DIRECTION dir);
 
-//function to try placing an entity in a level, without it colliding. The entity
+//function to try placing an Entity in a level, without it colliding. The Entity
 //may be moved according to some heuristics to place it sensibly -- the object's
 //location will be modified. Will return true iff it succeeds in placing it.
-bool place_entity_in_level(level& lvl, entity& e);
+bool place_entity_in_level(Level& lvl, Entity& e);
 
-//function to try to place an entity in a level, prioritizing finding a place
+//function to try to place an Entity in a level, prioritizing finding a place
 //to put it over keeping it near its starting point.
-bool place_entity_in_level_with_large_displacement(level& lvl, entity& e);
+bool place_entity_in_level_with_large_displacement(Level& lvl, Entity& e);
 
-//function which returns true iff an entity collides with the level in
-//'non-solid' space. That is, if any of the entity's pixels collide with
+//function which returns true iff an Entity collides with the level in
+//'non-solid' space. That is, if any of the Entity's pixels collide with
 //level solid space.
-bool non_solid_entity_collides_with_level(const level& lvl, const entity& e);
+bool non_solid_entity_collides_with_level(const Level& lvl, const Entity& e);
 
 //function which detects user collisions between two entities. All
 //collision areas on the objects will be checked, and the results stored
 //in areas_colliding. The function will return the number of collision
 //combinations that were found.
-typedef std::pair<const std::string*, const std::string*> collision_pair;
-int entity_user_collision(const entity& a, const entity& b, collision_pair* areas_colliding, int buf_size);
+typedef std::pair<const std::string*, const std::string*> CollisionPair;
+int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas_colliding, int buf_size);
 
 //function which returns true iff area_a of 'a' collides with area_b of 'b'
-bool entity_user_collision_specific_areas(const entity& a, const std::string& area_a, const entity& b, const std::string& area_b);
+bool entity_user_collision_specific_areas(const Entity& a, const std::string& area_a, const Entity& b, const std::string& area_b);
 
 //function to detect all user collisions and fire appropriate events to
 //the colliding objects.
-void detect_user_collisions(level& lvl);
+void detect_user_collisions(Level& lvl);
 
-bool is_flightpath_clear(const level& lvl, const entity& e, const rect& area);
-
-#endif
+bool is_flightpath_clear(const Level& lvl, const Entity& e, const rect& area);

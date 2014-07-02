@@ -34,15 +34,15 @@ public:
 	explicit group_property_editor_dialog(editor& e);
 	void init();
 
-	void set_group(const std::vector<entity_ptr>& group);
+	void setGroup(const std::vector<EntityPtr>& group);
 private:
 	void group_objects();
 
 	editor& editor_;
-	std::vector<entity_ptr> group_;
+	std::vector<EntityPtr> group_;
 };
 
-typedef boost::intrusive_ptr<group_property_editor_dialog> group_property_editor_dialog_ptr;
+typedef boost::intrusive_ptr<group_property_editor_dialog> group_property_editor_DialogPtr;
 
 }
 

@@ -16,7 +16,6 @@
 */
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <iostream>
 
 #if !defined(_WINDOWS)
@@ -128,5 +127,5 @@ void web_server::heartbeat()
 	}
 
 	timer_.expires_from_now(boost::posix_time::seconds(1));
-	timer_.async_wait(boost::bind(&web_server::heartbeat, this));
+	timer_.async_wait(std::bind(&web_server::heartbeat, this));
 }

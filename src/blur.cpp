@@ -1,40 +1,45 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
+
 #include "blur.hpp"
-#include "foreach.hpp"
 #include "frame.hpp"
 
-blur_info::blur_info(double alpha, double fade, int granularity)
+BlurInfo::BlurInfo(double alpha, double fade, int granularity)
   : alpha_(alpha), fade_(fade), granularity_(granularity)
 {
 }
 
-void blur_info::copy_settings(const blur_info& o)
+void BlurInfo::copySettings(const BlurInfo& o)
 {
 	alpha_ = o.alpha_;
 	fade_ = o.fade_;
 	granularity_ = o.granularity_;
 }
 
-void blur_info::next_frame(int start_x, int start_y, int end_x, int end_y,
+void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
                 const frame* object_frame, int time_in_frame, bool facing,
 				bool upside_down, float start_rotate, float rotate) {
-	foreach(blur_frame& f, frames_) {
+	for(BlurFrame& f : frames_) {
 		f.fade -= fade_;
 	}
 
@@ -43,7 +48,7 @@ void blur_info::next_frame(int start_x, int start_y, int end_x, int end_y,
 	}
 
 	for(int n = 0; n < granularity_; ++n) {
-		blur_frame f;
+		BlurFrame f;
 		f.object_frame = object_frame;
 		f.x = (start_x*n + end_x*(granularity_ - n))/granularity_;
 		f.y = (start_y*n + end_y*(granularity_ - n))/granularity_;
@@ -56,23 +61,14 @@ void blur_info::next_frame(int start_x, int start_y, int end_x, int end_y,
 	}
 }
 
-void blur_info::draw() const
+void BlurInfo::draw() const
 {
-	GLfloat color[4];
-#if defined(USE_SHADERS) && defined(GL_ES_VERSION_2_0)
-	glGetFloatv_1(GL_CURRENT_COLOR, color);
-#else
-	glGetFloatv(GL_CURRENT_COLOR, color);
-#endif
-	foreach(const blur_frame& f, frames_) {
-		glColor4f(color[0], color[1], color[2], color[3]*f.fade);
-		f.object_frame->draw(f.x, f.y, f.facing, f.upside_down, f.time_in_frame, f.rotate);
+	for(const BlurFrame& f : frames_) {
+		f.object_frame->draw(static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate, KRE::Color(1.0, 1.0, 1.0, f.fade));
 	}
-
-	glColor4f(color[0], color[1], color[2], color[3]);
 }
 
-bool blur_info::destroyed() const
+bool BlurInfo::destroyed() const
 {
 	return granularity_ == 0 && frames_.empty();
 }

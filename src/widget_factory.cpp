@@ -1,24 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "widget.hpp"
+
 #include "asserts.hpp"
-#include "formula_callable.hpp"
 #include "widget_factory.hpp"
-#include "variant.hpp"
+#include "widget.hpp"
 
 #include "animation_preview_widget.hpp"
 #include "animation_widget.hpp"
@@ -40,7 +45,6 @@
 #include "label.hpp"
 #include "layout_widget.hpp"
 #include "play_vpx.hpp"
-#include "psystem2.hpp"
 #include "poly_line_widget.hpp"
 #include "poly_map.hpp"
 #include "preview_tileset_widget.hpp"
@@ -52,97 +56,92 @@
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
-#include "view3d_widget.hpp"
+#include "view3D_widget.hpp"
 
-namespace widget_factory {
-
-using gui::widget_ptr;
-
-widget_ptr create(const variant& v, game_logic::formula_callable* e)
+namespace widget_factory 
 {
-	if(v.is_callable()) {
-		widget_ptr w = v.try_convert<gui::widget>();
-		ASSERT_LOG(w != NULL, "Error converting widget from callable.");
-		return w;
-	}
-	ASSERT_LOG(v.is_map(), "TYPE ERROR: widget must be specified by a map, found: " << v.to_debug_string());
-	std::string wtype = v["type"].as_string();
-	if(wtype == "animation_widget") {
-		return widget_ptr(new gui::animation_widget(v,e));
-#ifndef NO_EDITOR
-	} else if(wtype == "animation_preview") {
-		return widget_ptr(new gui::animation_preview_widget(v,e));
-#endif
-	} else if(wtype == "border_widget") {
-		return widget_ptr(new gui::border_widget(v,e));
-	} else if(wtype == "button") {
-		return widget_ptr(new gui::button(v,e));
-	} else if(wtype == "checkbox") {
-		return widget_ptr(new gui::checkbox(v,e));
-	} else if(wtype == "dialog") {
-		return widget_ptr(new gui::dialog(v,e));
-#ifndef NO_EDITOR
-	} else if(wtype == "drag_widget") {
-		return widget_ptr(new gui::drag_widget(v,e));
-#endif
-	} else if(wtype == "graphical_font_label") {
-		return widget_ptr(new gui::graphical_font_label(v,e));
-	} else if(wtype == "grid") {
-		return widget_ptr(new gui::grid(v,e));
-	} else if(wtype == "image") {
-		return widget_ptr(new gui::image_widget(v,e));
-	} else if(wtype == "section") {
-		return widget_ptr(new gui::gui_section_widget(v,e));
-	} else if(wtype == "key_button") {
-		return widget_ptr(new gui::key_button(v,e));
-	} else if(wtype == "label") {
-		return widget_ptr(new gui::label(v,e));
-	} else if(wtype == "poly_line_widget") {
-		return widget_ptr(new gui::poly_line_widget(v,e));
-	} else if(wtype == "rich_text_label") {
-		return widget_ptr(new gui::rich_text_label(v,e));
-	} else if(wtype == "tileset_preview") {
-		return widget_ptr(new gui::preview_tileset_widget(v,e));
-	} else if(wtype == "scrollbar") {
-		return widget_ptr(new gui::scrollbar_widget(v,e));
-	} else if(wtype == "slider") {
-		return widget_ptr(new gui::slider(v,e));
-	} else if(wtype == "text_editor") {
-		return widget_ptr(new gui::text_editor_widget(v,e));
-	} else if(wtype == "progress") {
-		return widget_ptr(new gui::progress_bar(v, e));
-	} else if(wtype == "selector") {
-		return widget_ptr(new gui::selector_widget(v, e));
-	} else if(wtype == "object") {
-		return widget_ptr(new gui::custom_object_widget(v, e));
-	} else if(wtype == "bar") {
-		return widget_ptr(new gui::bar_widget(v, e));
-	} else if(wtype == "color_picker") {
-		return widget_ptr(new gui::color_picker(v, e));
-	} else if(wtype == "layout") {
-		return widget_ptr(new gui::layout_widget(v, e));
-	} else if(wtype == "file_chooser") {
-		return widget_ptr(new gui::file_chooser_dialog(v, e));
-#if defined(USE_ISOMAP)
-	} else if(wtype == "view3d") {
-		return widget_ptr(new gui::view3d_widget(v, e));
-#endif
-	} else if(wtype == "poly_map") {
-		return widget_ptr(new geometry::poly_map(v, e));
-	} else if(wtype == "particle_system") {
-		return widget_ptr(new graphics::particles::particle_system_widget(v, e));
-#if defined(USE_LIBVPX)
-	} else if(wtype == "movie") {
-		return widget_ptr(new movie::vpx(v, e));
-#endif
-	//} else if(wtype == "scrollable") {
-	//} else if(wtype == "widget") {
-	} else if(wtype == "tree") {
-		return widget_ptr(new gui::tree_view_widget(v, e));
-	} else {
-		ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
-		return widget_ptr();
-	}
-}
+	using namespace gui;
 
+	WidgetPtr create(const variant& v, game_logic::FormulaCallable* e)
+	{
+		if(v.is_callable()) {
+			WidgetPtr w = v.try_convert<Widget>();
+			ASSERT_LOG(w != NULL, "Error converting widget from callable.");
+			return w;
+		}
+		ASSERT_LOG(v.is_map(), "TYPE ERROR: widget must be specified by a map, found: " << v.to_debug_string());
+		std::string wtype = v["type"].as_string();
+		if(wtype == "animation_widget") {
+			return WidgetPtr(new AnimationWidget(v,e));
+	#ifndef NO_EDITOR
+		} else if(wtype == "animation_preview") {
+			return WidgetPtr(new AnimationPreviewWidget(v,e));
+	#endif
+		} else if(wtype == "border_widget") {
+			return WidgetPtr(new BorderWidget(v,e));
+		} else if(wtype == "button") {
+			return WidgetPtr(new Button(v,e));
+		} else if(wtype == "checkbox") {
+			return WidgetPtr(new Checkbox(v,e));
+		} else if(wtype == "dialog") {
+			return WidgetPtr(new Dialog(v,e));
+	#ifndef NO_EDITOR
+		} else if(wtype == "drag_widget") {
+			return WidgetPtr(new drag_widget(v,e));
+	#endif
+		} else if(wtype == "graphical_font_label") {
+			return WidgetPtr(new GraphicalFontLabel(v,e));
+		} else if(wtype == "grid") {
+			return WidgetPtr(new grid(v,e));
+		} else if(wtype == "image") {
+			return WidgetPtr(new ImageWidget(v,e));
+		} else if(wtype == "section") {
+			return WidgetPtr(new GuiSectionWidget(v,e));
+		} else if(wtype == "key_button") {
+			return WidgetPtr(new KeyButton(v,e));
+		} else if(wtype == "label") {
+			return WidgetPtr(new Label(v,e));
+		} else if(wtype == "poly_line_widget") {
+			return WidgetPtr(new PolyLineWidget(v,e));
+		} else if(wtype == "rich_text_label") {
+			return WidgetPtr(new rich_text_label(v,e));
+		} else if(wtype == "tileset_preview") {
+			return WidgetPtr(new preview_tileset_widget(v,e));
+		} else if(wtype == "scrollbar") {
+			return WidgetPtr(new ScrollBarWidget(v,e));
+		} else if(wtype == "slider") {
+			return WidgetPtr(new Slider(v,e));
+		} else if(wtype == "text_editor") {
+			return WidgetPtr(new TextEditorWidget(v,e));
+		} else if(wtype == "progress") {
+			return WidgetPtr(new progress_bar(v, e));
+		} else if(wtype == "selector") {
+			return WidgetPtr(new SelectorWidget(v, e));
+		} else if(wtype == "object") {
+			return WidgetPtr(new custom_object_Widget(v, e));
+		} else if(wtype == "bar") {
+			return WidgetPtr(new BarWidget(v, e));
+		} else if(wtype == "color_picker") {
+			return WidgetPtr(new ColorPicker(v, e));
+		} else if(wtype == "layout") {
+			return WidgetPtr(new LayoutWidget(v, e));
+		} else if(wtype == "file_chooser") {
+			return WidgetPtr(new file_chooser_dialog(v, e));
+		} else if(wtype == "view3d") {
+			return WidgetPtr(new View3DWidget(v, e));
+		} else if(wtype == "poly_map") {
+			return WidgetPtr(new geometry::poly_map(v, e));
+	#if defined(USE_LIBVPX)
+		} else if(wtype == "movie") {
+			return WidgetPtr(new movie::vpx(v, e));
+	#endif
+		//} else if(wtype == "scrollable") {
+		//} else if(wtype == "widget") {
+		} else if(wtype == "tree") {
+			return WidgetPtr(new tree_view_Widget(v, e));
+		} else {
+			ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
+			return WidgetPtr();
+		}
+	}
 }

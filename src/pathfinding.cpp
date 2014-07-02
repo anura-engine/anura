@@ -62,7 +62,7 @@ DEFINE_FIELD(edge_map, "map")
 		return variant(&edgemap);
 END_DEFINE_CALLABLE(directed_graph)
 
-/*variant directed_graph::get_value(const std::string& key) const {
+/*variant directed_graph::getValue(const std::string& key) const {
 	if(key == "vertices") {
 		std::vector<variant> v(vertices_);
 		return variant(&v);
@@ -102,14 +102,14 @@ DEFINE_FIELD(weights, "map")
 		}
 		return variant(&w);
 DEFINE_FIELD(vertices, "list")
-	return obj.dg_->get_value("vertices");
+	return obj.dg_->getValue("vertices");
 DEFINE_FIELD(edges, "map")
-	return obj.dg_->get_value("list");
+	return obj.dg_->getValue("list");
 DEFINE_FIELD(edge_map, "map")
-	return obj.dg_->get_value("edge_map");
+	return obj.dg_->getValue("edge_map");
 END_DEFINE_CALLABLE(weighted_directed_graph)
 /*
-variant weighted_directed_graph::get_value(const std::string& key) const {
+variant weighted_directed_graph::getValue(const std::string& key) const {
 	if(key == "weights") {
 		std::map<variant, variant> w;
 		std::pair<graph_edge, decimal> wit;
@@ -121,11 +121,11 @@ variant weighted_directed_graph::get_value(const std::string& key) const {
 		}
 		return variant(&w);
 	} else if(key == "vertices"){
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	} else if(key == "edges") {
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	} else if(key == "edge_map") {
-		return dg_->get_value(key);
+		return dg_->getValue(key);
 	}
 	return variant();
 }*/
@@ -134,7 +134,7 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 	const variant src_node, 
 	const variant dst_node, 
 	game_logic::expression_ptr heuristic, 
-	game_logic::map_formula_callable_ptr callable)
+	game_logic::MapFormulaCallablePtr callable)
 {
 	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
 	std::priority_queue<gnp, std::vector<gnp> > open_list;
@@ -187,12 +187,12 @@ variant a_star_search(weighted_directed_graph_ptr wg,
 					if(neighbour_node->on_closed_list() || neighbour_node->on_open_list()) {
 						if(g_cost < neighbour_node->G()) {
 							neighbour_node->G(g_cost);
-							neighbour_node->set_parent(current);
+							neighbour_node->setParent(current);
 						}
 					} else {
 						// not on open or closed lists.
 						a = e;
-						neighbour_node->set_parent(current);
+						neighbour_node->setParent(current);
 						neighbour_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal());
 						neighbour_node->set_on_open_list(true);
 						open_list.push(neighbour_node);
@@ -284,12 +284,12 @@ bool graph_node_cmp(const typename graph_node<N,T>::graph_node_ptr& lhs,
 	return lhs->F() < rhs->F();
 }
 
-variant a_star_find_path(level_ptr lvl,
+variant a_star_find_path(LevelPtr lvl,
 	const point& src_pt1, 
 	const point& dst_pt1, 
 	game_logic::expression_ptr heuristic, 
 	game_logic::expression_ptr weight_expr, 
-	game_logic::map_formula_callable_ptr callable, 
+	game_logic::MapFormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y) 
 {
@@ -320,7 +320,7 @@ variant a_star_find_path(level_ptr lvl,
 	try {
 		a = point_as_variant_list(src);
 		b = point_as_variant_list(dst);
-		graph_node<point, double>::graph_node_ptr current = boost::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(src));
+		graph_node<point, double>::graph_node_ptr current = std::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(src));
 		current->set_cost(0.0, heuristic->evaluate(*callable).as_decimal().as_float());
 		current->set_on_open_list(true);
 		open_list.push(current);
@@ -379,8 +379,8 @@ variant a_star_find_path(level_ptr lvl,
 							// not on open or closed list (i.e. no mapping for it yet.
 							a = point_as_variant_list(p);
 							b = point_as_variant_list(dst);
-							graph_node<point, double>::graph_node_ptr new_node = boost::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(p));
-							new_node->set_parent(current);
+							graph_node<point, double>::graph_node_ptr new_node = std::shared_ptr<graph_node<point, double> >(new graph_node<point, double>(p));
+							new_node->setParent(current);
 							new_node->set_cost(g_cost, heuristic->evaluate(*callable).as_decimal().as_float());
 							new_node->set_on_open_list(true);
 							node_list[p] = new_node;
@@ -389,7 +389,7 @@ variant a_star_find_path(level_ptr lvl,
 							// on closed list.
 							if(g_cost < neighbour_node->second->G()) {
 								neighbour_node->second->G(g_cost);
-								neighbour_node->second->set_parent(current);
+								neighbour_node->second->setParent(current);
 							}
 						} else {
 							PathfindingException<point> path_error = {
@@ -439,11 +439,11 @@ variant path_cost_search(weighted_directed_graph_ptr wg,
 				if(neighbour_node->on_closed_list() || neighbour_node->on_open_list()) {
 					if(g_cost < neighbour_node->G()) {
 						neighbour_node->G(g_cost);
-						neighbour_node->set_parent(current);
+						neighbour_node->setParent(current);
 					}
 				} else {
 					// not on open or closed lists.
-					neighbour_node->set_parent(current);
+					neighbour_node->setParent(current);
 					neighbour_node->set_cost(g_cost, decimal::from_int(0));
 					if(g_cost > max_cost) {
 						neighbour_node->set_on_closed_list(true);

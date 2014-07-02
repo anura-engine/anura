@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-#include <boost/function.hpp>
 #include <boost/uuid/uuid.hpp>
 
 #include "formula.hpp"
@@ -34,14 +33,14 @@ namespace game_logic
 
 class formula_class;
 
-formula_callable_definition_ptr get_class_definition(const std::string& name);
+FormulaCallableDefinitionPtr get_class_definition(const std::string& name);
 
 bool is_class_derived_from(const std::string& derived, const std::string& base);
 
-class formula_object : public game_logic::wml_serializable_formula_callable
+class formula_object : public game_logic::WmlSerializableFormulaCallable
 {
 public:
-	static void visit_variants(variant v, boost::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
+	static void visit_variants(variant v, std::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
 	static void map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
 
 	void update(formula_object& updated);
@@ -71,14 +70,14 @@ private:
 	explicit formula_object(const std::string& type, variant args=variant());
 	void call_constructors(variant args);
 
-	variant serialize_to_wml() const;
+	variant serializeToWml() const;
 
-	variant get_value(const std::string& key) const;
-	variant get_value_by_slot(int slot) const;
-	void set_value(const std::string& key, const variant& value);
-	void set_value_by_slot(int slot, const variant& value);
+	variant getValue(const std::string& key) const;
+	variant getValueBySlot(int slot) const;
+	void setValue(const std::string& key, const variant& value);
+	void setValueBySlot(int slot, const variant& value);
 
-	void get_inputs(std::vector<formula_input>* inputs) const;
+	void getInputs(std::vector<formula_input>* inputs) const;
 
 	boost::uuids::uuid id_;
 
@@ -96,7 +95,7 @@ private:
 
 	variant tmp_value_;
 
-	//if this is non-zero, then private_data_ will be exposed via get_value.
+	//if this is non-zero, then private_data_ will be exposed via getValue.
 	mutable int private_data_;
 };
 
@@ -108,8 +107,8 @@ struct formula_class_manager {
 };
 
 
-formula_callable_definition_ptr get_library_definition();
-formula_callable_ptr get_library_object();
+FormulaCallableDefinitionPtr get_library_definition();
+FormulaCallablePtr get_library_object();
 
 }
 

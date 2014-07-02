@@ -15,20 +15,16 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <iostream>
 
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "editor.hpp"
-#include "foreach.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
 #include "preview_tileset_widget.hpp"
-#include "raster.hpp"
 #include "tileset_editor_dialog.hpp"
 
 namespace editor_dialogs
@@ -71,12 +67,12 @@ void tileset_editor_dialog::init()
 {
 	clear();
 	using namespace gui;
-	set_padding(20);
+	setPadding(20);
 
 	assert(editor_.get_tileset() >= 0 && editor_.get_tileset() < editor_.all_tilesets().size());
 
-	button* category_button = new button(widget_ptr(new label(category_, graphics::color_white())), boost::bind(&tileset_editor_dialog::show_category_menu, this));
-	add_widget(widget_ptr(category_button), 10, 10);
+	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&tileset_editor_dialog::show_category_menu, this));
+	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
 	int index = 0, first_index = -1;
@@ -87,17 +83,17 @@ void tileset_editor_dialog::init()
 				first_index_ = index;
 			}
 			preview_tileset_widget* preview = new preview_tileset_widget(*t.preview());
-			preview->set_dim(40, 40);
-			button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&tileset_editor_dialog::set_tileset, this, index)));
-			tileset_button->set_dim(44, 44);
-			grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+			preview->setDim(40, 40);
+			ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&tileset_editor_dialog::set_tileset, this, index)));
+			tileset_button->setDim(44, 44);
+			grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 		}
 
 		++index;
 	}
 
 	grid->finish_row();
-	add_widget(grid);
+	addWidget(grid);
 }
 
 void tileset_editor_dialog::select_category(const std::string& category)
@@ -112,7 +108,7 @@ void tileset_editor_dialog::select_category(const std::string& category)
 
 void tileset_editor_dialog::close_context_menu(int index)
 {
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset();
 }
 
@@ -124,7 +120,7 @@ void tileset_editor_dialog::show_category_menu()
 	grid->set_show_background(true);
 	grid->set_hpad(10);
 	grid->allow_selection();
-	grid->register_selection_callback(boost::bind(&tileset_editor_dialog::close_context_menu, this, _1));
+	grid->register_selection_callback(std::bind(&tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
 	foreach(const editor::tileset& t, editor_.all_tilesets()) {
@@ -135,10 +131,10 @@ void tileset_editor_dialog::show_category_menu()
 		categories.insert(t.category);
 
 		preview_tileset_widget* preview = new preview_tileset_widget(*t.preview());
-		preview->set_dim(48, 48);
-		grid->add_col(widget_ptr(preview))
-		     .add_col(widget_ptr(new label(t.category, graphics::color_white())));
-		grid->register_row_selection_callback(boost::bind(&tileset_editor_dialog::select_category, this, t.category));
+		preview->setDim(48, 48);
+		grid->add_col(WidgetPtr(preview))
+		     .add_col(WidgetPtr(new label(t.category, graphics::color_white())));
+		grid->register_row_selection_callback(std::bind(&tileset_editor_dialog::select_category, this, t.category));
 	}
 
 	int mousex, mousey;
@@ -154,9 +150,9 @@ void tileset_editor_dialog::show_category_menu()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void tileset_editor_dialog::set_tileset(int index)
@@ -167,14 +163,14 @@ void tileset_editor_dialog::set_tileset(int index)
 	}
 }
 
-bool tileset_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
+bool tileset_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(!claimed) {
 		if(context_menu_) {
-			gui::widget_ptr ptr = context_menu_;
+			gui::WidgetPtr ptr = context_menu_;
 			SDL_Event ev = event;
-			normalize_event(&ev);
-			return ptr->process_event(ev, claimed);
+			normalizeEvent(&ev);
+			return ptr->processEvent(ev, claimed);
 		}
 
 		switch(event.type) {
@@ -198,7 +194,7 @@ bool tileset_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
 		}
 	}
 
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 }
 #endif // !NO_EDITOR

@@ -1,100 +1,108 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include "label.hpp"
-#include "foreach.hpp"
 #include "image_widget.hpp"
 #include "selector_widget.hpp"
 #include "widget_factory.hpp"
 
 namespace gui
 {
+	using namespace std::placeholders;
+
 	namespace 
 	{
 		const std::string selector_left_arrow = "selector_left_arrow";
 		const std::string selector_right_arrow = "selector_right_arrow";
 	}
 
-	selector_widget::selector_widget(const std::vector<std::string>& list)
+	SelectorWidget::SelectorWidget(const std::vector<std::string>& list)
 		: current_selection_(0)
 	{
-		set_environment();
-		foreach(const std::string& s, list) {
-			list_.push_back(selector_pair(s, widget_ptr(new label(s))));
+		setEnvironment();
+		for(const std::string& s : list) {
+			list_.push_back(SelectorPair(s, WidgetPtr(new Label(s))));
 		}
 		init();
 	}
 
-	selector_widget::selector_widget(const selector_list& list)
+	SelectorWidget::SelectorWidget(const SelectorList& list)
 		: current_selection_(0), list_(list)
 	{
-		set_environment();
+		setEnvironment();
 		init();
 	}
 
-	selector_widget::selector_widget(const variant& v, game_logic::formula_callable* e)
-		: widget(v, e), current_selection_(v["selection"].as_int(0))
+	SelectorWidget::SelectorWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v, e), current_selection_(v["selection"].as_int(0))
 	{
 		if(v.has_key("list") || v.has_key("children")) {
 			const variant& l = v.has_key("list") ? v["list"] : v["children"];
 			ASSERT_LOG(l.is_list(), "'list'/'children' attribute must be a list");
-			foreach(const variant& child, l.as_list()) {
+			for(const variant& child : l.as_list()) {
 				if(child.is_list()) {
 					ASSERT_LOG(child.num_elements() == 2, "items in the sub-list must have two elements.");
-					widget_ptr w;
+					WidgetPtr w;
 					if(child[1].is_map()) {
 						w = widget_factory::create(child[1], e);
 					} else {
-						w = child[1].try_convert<widget>();
+						w = child[1].try_convert<Widget>();
 						ASSERT_LOG(w != NULL, "Couldn't convert second element to widget.");
 					}
-					list_.push_back(selector_pair(child[0].as_string(), w));
+					list_.push_back(SelectorPair(child[0].as_string(), w));
 				} else if(child.is_string()) {
 					const std::string& s = child.as_string();
-					list_.push_back(selector_pair(s, widget_ptr(new label(s))));
+					list_.push_back(SelectorPair(s, WidgetPtr(new Label(s))));
 				} else {
-					widget_ptr w;
+					WidgetPtr w;
 					std::string s;
 					if(child.is_map()) {
 						w = widget_factory::create(child, e);
 						ASSERT_LOG(child.has_key("id") || child.has_key("select_string"), "list items must supply 'id' or 'select_string' attribute.");
 						s = child.has_key("id") ? child["id"].as_string() : child["select_string"].as_string();
 					} else {
-						w = child.try_convert<widget>();
+						w = child.try_convert<Widget>();
 						ASSERT_LOG(w != NULL, "Couldn't convert item to widget.");
 						ASSERT_LOG(!w->id().empty(), "list items must have 'id' attribute");
 						s = w->id();
 					}
-					list_.push_back(selector_pair(s, w));
+					list_.push_back(SelectorPair(s, w));
 				}
 			}
 		}
 
 		if(v.has_key("on_change")) {
-			change_handler_ = get_environment()->create_formula(v["on_change"]);
-			on_change_ = boost::bind(&selector_widget::change_delegate, this, _1);
+			change_handler_ = getEnvironment()->createFormula(v["on_change"]);
+			on_change_ = std::bind(&SelectorWidget::changeDelegate, this, _1);
 		}
 		if(v.has_key("on_select")) {
-			select_handler_ = get_environment()->create_formula(v["on_select"]);
-			on_select_ = boost::bind(&selector_widget::select_delegate, this, _1);
+			select_handler_ = getEnvironment()->createFormula(v["on_select"]);
+			on_select_ = std::bind(&SelectorWidget::selectDelegate, this, _1);
 		}
 		init();
 	}
 
-	void selector_widget::set_selection(size_t sel)
+	void SelectorWidget::setSelection(size_t sel)
 	{
 		size_t old_sel = current_selection_;
 		current_selection_ = sel;
@@ -106,23 +114,23 @@ namespace gui
 		}
 	}
 
-	void selector_widget::set_selection(const std::string& sel)
+	void SelectorWidget::setSelection(const std::string& sel)
 	{
-		selector_list::iterator it = std::find_if(list_.begin(), list_.end(), 
-			boost::bind(&selector_list::value_type::first,_1) == sel);
+		SelectorList::iterator it = std::find_if(list_.begin(), list_.end(), 
+			[=](const SelectorPair& s){ return s.first == sel; });
 		ASSERT_LOG(it != list_.end(), "Selection not in list" << sel);
-		set_selection(it - list_.begin());
+		setSelection(it - list_.begin());
 	}
 
-	void selector_widget::init()
+	void SelectorWidget::init()
 	{
-		left_arrow_ = widget_ptr(new gui_section_widget(selector_left_arrow));
-		right_arrow_ = widget_ptr(new gui_section_widget(selector_right_arrow));
+		left_arrow_ = WidgetPtr(new GuiSectionWidget(selector_left_arrow));
+		right_arrow_ = WidgetPtr(new GuiSectionWidget(selector_right_arrow));
 
 		int width = 16;
 		int height = 16;
 		int n = 0;
-		foreach(const selector_pair& p, list_) {
+		for(const auto& p : list_) {
 			if(p.second->width() > width) {
 				width = p.second->width();
 			}
@@ -136,62 +144,59 @@ namespace gui
 			}
 			++n;
 		}
-		left_arrow_->set_loc(0, (abs(height-left_arrow_->height()))/2);
-		//left_arrow_->set_dim(left_arrow_->width(), height);
-		right_arrow_->set_loc(left_arrow_->width()+10+width, (abs(height-right_arrow_->height()))/2);
-		//right_arrow_->set_dim(right_arrow_->width(), height);
-		set_dim(width + left_arrow_->width() + right_arrow_->width() + 10, height);
+		left_arrow_->setLoc(0, (abs(height-left_arrow_->height()))/2);
+		//left_arrow_->setDim(left_arrow_->width(), height);
+		right_arrow_->setLoc(left_arrow_->width()+10+width, (abs(height-right_arrow_->height()))/2);
+		//right_arrow_->setDim(right_arrow_->width(), height);
+		setDim(width + left_arrow_->width() + right_arrow_->width() + 10, height);
 		for(int n = 0; n != list_.size(); ++n) {
-			widget_ptr& w = list_[n].second;
-			w->set_loc((width - w->width())/2 + left_arrow_->width()+5, abs(height - w->height())/2);
+			WidgetPtr& w = list_[n].second;
+			w->setLoc((width - w->width())/2 + left_arrow_->width()+5, abs(height - w->height())/2);
 		}
 	}
 
-	void selector_widget::handle_draw() const
+	void SelectorWidget::handleDraw() const
 	{
-		glPushMatrix();
-		glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
 		if(left_arrow_) {
-			left_arrow_->draw();
+			left_arrow_->draw(x(),y(),getRotation(),getScale());
 		}
 		if(right_arrow_) {
-			right_arrow_->draw();
+			right_arrow_->draw(x(),y(),getRotation(),getScale());
 		}
 		if(current_selection_ < list_.size()) {
 			if(list_[current_selection_].second) {
-				list_[current_selection_].second->draw();
+				list_[current_selection_].second->draw(x(),y(),getRotation(),getScale());
 			}
 		}
-		glPopMatrix();
 	}
 
-	bool selector_widget::handle_event(const SDL_Event& event, bool claimed)
+	bool SelectorWidget::handleEvent(const SDL_Event& event, bool claimed)
 	{
 		SDL_Event ev = event;
-		normalize_event(&ev);
+		normalizeEvent(&ev);
 
 		if(claimed) {
 			return claimed;
 		}
 		if(event.type == SDL_MOUSEMOTION) {
-			return handle_mousemotion(event.motion, claimed);
+			return handleMouseMotion(event.motion, claimed);
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
-			return handle_mousedown(event.button, claimed);
+			return handleMousedown(event.button, claimed);
 		} else if(event.type == SDL_MOUSEBUTTONUP) {
-			return handle_mouseup(event.button, claimed);
+			return handleMouseup(event.button, claimed);
 		} else if(event.type == SDL_KEYDOWN) {
 			const SDL_Keycode key = event.key.keysym.sym;
 			if(key == SDLK_LEFT || key == SDLK_PAGEUP) {
-				select_left();
+				selectLeft();
 			} else if(key == SDLK_RIGHT || key == SDLK_PAGEDOWN) {
-				select_right();
+				selectRight();
 			} else if(key == SDLK_HOME) {
 				if(!list_.empty()) {
-					set_selection(0);
+					setSelection(0);
 				}
 			} else if(key == SDLK_END) {
 				if(!list_.empty()) {
-					set_selection(list_.size()-1);
+					setSelection(list_.size()-1);
 				}
 			} else if(key == SDLK_RETURN && on_select_) {
 				on_select_(list_[current_selection_].first);
@@ -200,101 +205,94 @@ namespace gui
 		return claimed;
 	}
 
-	void selector_widget::set_value(const std::string& key, const variant& v)
-	{
-		if(key == "selection") {
-			set_selection(v.as_string());
-		}
-		widget::set_value(key, v);
-	}
+	BEGIN_DEFINE_CALLABLE(SelectorWidget, Widget)
+		DEFINE_FIELD(selection, "string")
+			return variant(obj.list_[obj.current_selection_].first);
+		DEFINE_SET_FIELD
+			obj.setSelection(value.as_string());
 
-	variant selector_widget::get_value(const std::string& key) const
-	{
-		if(key == "selection") {
-			return variant(list_[current_selection_].first);
-		} else if(key == "keys") {
+		DEFINE_FIELD(keys, "[string]")
 			std::vector<variant> v;
-			foreach(const selector_pair& p, list_) {
+			for(const SelectorPair& p : obj.list_) {
 				v.push_back(variant(p.first));
 			}
 			return variant(&v);
-		}
-		return widget::get_value(key);
-	}
 
-	bool selector_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed)
+	END_DEFINE_CALLABLE(SelectorWidget)
+
+	bool SelectorWidget::handleMousedown(const SDL_MouseButtonEvent& event, bool claimed)
 	{
 		return claimed;
 	}
 
-	bool selector_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed)
+	bool SelectorWidget::handleMouseup(const SDL_MouseButtonEvent& event, bool claimed)
 	{
 		point p(event.x, event.y);
-		if(point_in_rect(p, rect(left_arrow_->x(), 
+		if(pointInRect(p, rect(left_arrow_->x(), 
 			left_arrow_->y(), 
 			left_arrow_->width(), 
 			left_arrow_->height()))) {
-			select_left();
-			claimed = claim_mouse_events();
+			selectLeft();
+			claimed = claimMouseEvents();
 		}
-		if(point_in_rect(p, rect(right_arrow_->x(), 
+		if(pointInRect(p, rect(right_arrow_->x(), 
 			right_arrow_->y(), 
 			right_arrow_->width(), 
 			right_arrow_->height()))) {
-			select_right();
-			claimed = claim_mouse_events();
+			selectRight();
+			claimed = claimMouseEvents();
 		}
-		widget_ptr& cur = list_[current_selection_].second;
-		if(point_in_rect(p, rect(cur->x(), cur->y(), cur->width(), cur->height())) && on_select_) {
+		WidgetPtr& cur = list_[current_selection_].second;
+		if(pointInRect(p, rect(cur->x(), cur->y(), cur->width(), cur->height())) && on_select_) {
 			on_select_(list_[current_selection_].first);
 		}
 		return claimed;
 	}
 
-	bool selector_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed)
+	bool SelectorWidget::handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed)
 	{
 		return claimed;
 	}
 
-	void selector_widget::change_delegate(const std::string& s)
+	void SelectorWidget::changeDelegate(const std::string& s)
 	{
-		if(get_environment()) {
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		if(getEnvironment()) {
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "selector_widget::change_delegate() called without environment!" << std::endl;
+			std::cerr << "SelectorWidget::changeDelegate() called without environment!" << std::endl;
 		}
 	}
 
-	void selector_widget::select_delegate(const std::string& s)
+	void SelectorWidget::selectDelegate(const std::string& s)
 	{
-		if(get_environment()) {
-			game_logic::map_formula_callable* callable = new game_logic::map_formula_callable(get_environment());
+		if(getEnvironment()) {
+			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable(getEnvironment());
 			callable->add("selection", variant(s));
 			callable->add("selected", variant(current_selection_));
 			variant v(callable);
 			variant value = change_handler_->execute(*callable);
-			get_environment()->execute_command(value);
+			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "selector_widget::select_delegate() called without environment!" << std::endl;
+			std::cerr << "SelectorWidget::selectDelegate() called without environment!" << std::endl;
 		}
 	}
 
-	void selector_widget::select_left(size_t n)
+	void SelectorWidget::selectLeft(size_t n)
 	{
 		int new_sel = int(current_selection_) - int(n);
 		while(new_sel < 0) {
 			new_sel += int(list_.size());
 		}
-		set_selection(new_sel);
+		setSelection(new_sel);
 	}
 
-	void selector_widget::select_right(size_t n)
+	void SelectorWidget::selectRight(size_t n)
 	{
-		set_selection(list_[(current_selection_ + n) % list_.size()].first);
+		setSelection(list_[(current_selection_ + n) % list_.size()].first);
 	}
 }

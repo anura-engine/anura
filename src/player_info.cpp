@@ -24,7 +24,7 @@
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
 
-player_info::player_info(entity& e, variant node)
+PlayerInfo::PlayerInfo(entity& e, variant node)
   : entity_(&e),
 	slot_(0)
 {
@@ -34,12 +34,12 @@ player_info::player_info(entity& e, variant node)
 	}
 }
 
-void player_info::object_destroyed(const std::string& level_id, int object)
+void PlayerInfo::objectDestroyed(const std::string& level_id, int object)
 {
 	objects_destroyed_[level_id].push_back(object);
 }
 
-const std::vector<int>& player_info::get_objects_destroyed(const std::string& level_id) const
+const std::vector<int>& PlayerInfo::getObjectsDestroyed(const std::string& level_id) const
 {
 	std::vector<int>& v = objects_destroyed_[level_id];
 	std::sort(v.begin(), v.end());
@@ -47,11 +47,11 @@ const std::vector<int>& player_info::get_objects_destroyed(const std::string& le
 	return v;
 }
 
-variant player_info::write() const
+variant PlayerInfo::write() const
 {
 	variant_builder result;
 	for(std::map<std::string, std::vector<int> >::const_iterator i = objects_destroyed_.begin(); i != objects_destroyed_.end(); ++i) {
-		get_objects_destroyed(i->first); //remove duplicates.
+		getObjectsDestroyed(i->first); //remove duplicates.
 
 		variant_builder objects;
 		objects.add("level", i->first);
@@ -64,11 +64,11 @@ variant player_info::write() const
 	return result.build();
 }
 
-void player_info::read_controls(int cycle)
+void PlayerInfo::readControls(int cycle)
 {
 	bool status[controls::NUM_CONTROLS];
 	const std::string* user = NULL;
-	controls::get_control_status(cycle, slot_, status, &user);
+	controls::get_controlStatus(cycle, slot_, status, &user);
 
 	if(status[controls::CONTROL_LEFT] && status[controls::CONTROL_RIGHT]) {
 		//if both left and right are held, treat it as if neither are.
@@ -76,7 +76,7 @@ void player_info::read_controls(int cycle)
 	}
 
 	for(int n = 0; n != controls::NUM_CONTROLS; ++n) {
-		entity_->set_control_status(static_cast<controls::CONTROL_ITEM>(n), status[n]);
+		entity_->setControlStatus(static_cast<controls::CONTROL_ITEM>(n), status[n]);
 	}
 
 	variant user_value;
@@ -84,5 +84,5 @@ void player_info::read_controls(int cycle)
 		user_value = json::parse(*user, json::JSON_NO_PREPROCESSOR);
 	}
 
-	entity_->set_control_status_user(user_value);
+	entity_->setControlStatusUser(user_value);
 }

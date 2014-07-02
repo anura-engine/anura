@@ -1,25 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef CODE_EDITOR_DIALOG_HPP_INCLUDED
-#define CODE_EDITOR_DIALOG_HPP_INCLUDED
-#ifndef NO_EDITOR
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
+#pragma once
+
+#ifndef NO_EDITOR
 
 #include <string>
 
@@ -28,27 +32,28 @@
 #include "code_editor_widget.hpp"
 #include "dialog.hpp"
 #include "formula_visualize_widget.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
 
-namespace gui {
-class code_editor_widget;
-class text_editor_widget;
+namespace gui 
+{
+	class code_editor_widget;
+	class TextEditorWidget;
 }
 
-class code_editor_dialog : public gui::dialog
+class CodeEditorDialog : public gui::Dialog
 {
 public:
-	explicit code_editor_dialog(const rect& r);
+	explicit CodeEditorDialog(const rect& r);
 	void init();
 	void add_optional_error_text_area(const std::string& text);
 	bool jump_to_error(const std::string& text);
 
-	void load_file(std::string fname, bool focus=true, boost::function<void()>* fn=NULL);
+	void load_file(std::string fname, bool focus=true, std::function<void()>* fn=NULL);
 
-	bool has_keyboard_focus() const;
+	bool hasKeyboardFocus() const;
 
 	void process();
 
@@ -61,14 +66,14 @@ public:
 private:
 	void init_files_grid();
 
-	bool handle_event(const SDL_Event& event, bool claimed);
-	void handle_draw_children() const;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
+	void handleDrawChildren() const;
 
-	void change_font_size(int amount);
+	void changeFontSize(int amount);
 
-	void set_animation_rect(rect r);
-	void move_solid_rect(int dx, int dy);
-	void set_integer_attr(const char* attr, int value);
+	void setAnimationRect(rect r);
+	void moveSolidRect(int dx, int dy);
+	void setIntegerAttr(const char* attr, int value);
 
 	void save();
 	void save_and_close();
@@ -83,17 +88,17 @@ private:
 
 	bool file_contents_set_;
 
-	gui::code_editor_widget_ptr editor_;
-	gui::text_editor_widget_ptr search_;
-	gui::text_editor_widget_ptr replace_;
+	gui::code_editor_WidgetPtr editor_;
+	gui::TextEditorWidgetPtr search_;
+	gui::TextEditorWidgetPtr replace_;
 
-	gui::text_editor_widget_ptr optional_error_text_area_;
+	gui::TextEditorWidgetPtr optional_error_text_area_;
 
-	gui::label_ptr replace_label_, status_label_, error_label_;
+	gui::LabelPtr replace_label_, status_label_, error_label_;
 
 	gui::grid_ptr files_grid_;
 
-	gui::widget_ptr save_button_;
+	gui::WidgetPtr save_button_;
 
 	void on_tab();
 
@@ -102,7 +107,7 @@ private:
 	void on_replace_enter();
 
 	void on_code_changed();
-	void on_move_cursor();
+	void onMoveCursor();
 
 	void on_drag(int dx, int dy);
 	void on_drag_end(int x, int y);
@@ -111,14 +116,14 @@ private:
 	//recover from errors.
 	assert_recover_scope assert_recovery_;
 
-	gui::animation_preview_widget_ptr animation_preview_;
-	gui::formula_visualize_widget_ptr visualize_widget_;
+	gui::AnimationPreviewWidgetPtr animation_preview_;
+	gui::formula_visualize_WidgetPtr visualize_widget_;
 
 	struct KnownFile {
 		std::string fname;
-		boost::intrusive_ptr<frame> anim;
-		gui::code_editor_widget_ptr editor;
-		boost::function<void()> op_fn;
+		boost::intrusive_ptr<Frame> anim;
+		gui::code_editor_WidgetPtr editor;
+		std::function<void()> op_fn;
 	};
 
 	std::vector<KnownFile> files_;
@@ -134,20 +139,19 @@ private:
 	};
 
 	std::vector<Suggestion> suggestions_;
-	gui::widget_ptr suggestions_grid_;
+	gui::WidgetPtr suggestions_grid_;
 	int suggestions_prefix_;
 
 	bool have_close_buttons_;
 
-	boost::function<void()> op_fn_;
+	std::function<void()> op_fn_;
 };
 
-typedef boost::intrusive_ptr<code_editor_dialog> code_editor_dialog_ptr;
+typedef boost::intrusive_ptr<CodeEditorDialog> CodeEditorDialogPtr;
 
 void edit_and_continue_class(const std::string& class_name, const std::string& error);
-void edit_and_continue_fn(const std::string& fname, const std::string& error, boost::function<void()> fn);
+void edit_and_continue_fn(const std::string& fname, const std::string& error, std::function<void()> fn);
 
-void edit_and_continue_assert(const std::string& msg, boost::function<void()> fn=boost::function<void()>());
+void edit_and_continue_assert(const std::string& msg, std::function<void()> fn=std::function<void()>());
 
 #endif // !NO_EDITOR
-#endif

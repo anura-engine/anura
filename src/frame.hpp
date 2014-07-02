@@ -1,46 +1,47 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FRAME_HPP_INCLUDED
-#define FRAME_HPP_INCLUDED
 
-#include <boost/array.hpp>
+#pragma once
 
 #include <string>
 #include <vector>
 
+#include "kre/Material.hpp"
+#include "kre/SceneObject.hpp"
+
 #include "formula.hpp"
-#include "geometry.hpp"
-#include "obj_reader.hpp"
 #include "solid_map_fwd.hpp"
-#include "raster.hpp"
 #include "variant.hpp"
 #include <glm/glm.hpp>
 
-namespace graphics {
-class blit_queue;
-}
 
-class frame : public game_logic::formula_callable
+class Frame : public game_logic::FormulaCallable, public KRE::SceneObject
 {
 public:
 	//exception thrown when there's a loading error.
-	struct error {};
+	struct Error {};
 
-	struct collision_area {
+	struct CollisionArea {
 		std::string name;
 		rect area;
 
@@ -49,104 +50,104 @@ public:
 		bool no_alpha_check;
 	};
 
-	static void build_patterns(variant obj_variant);
+	static void buildPatterns(variant obj_variant);
 
-	static void set_color_palette(unsigned int palettes);
+	static void setColorPalette(unsigned int palettes);
 
-	explicit frame(variant node);
-	~frame();
+	explicit Frame(variant node);
+	~Frame();
 
 	//ID of the frame. Not unique, but is the name of the element the frame
 	//came from. Useful to tell what kind of frame it is.
 	const std::string& id() const { return id_; }
-	const variant& variant_id() const { return variant_id_; }
-	const std::string& image_name() const { return image_; }
+	const variant& variantId() const { return variant_id_; }
+	const std::string& getImageName() const { return image_; }
 
 	//play a sound. 'object' is just the address of the object playing the
 	//sound, useful if the sound is later cancelled.
-	void play_sound(const void* object=NULL) const;
-	bool is_alpha(int x, int y, int time, bool face_right) const;
+	void playSound(const void* object=NULL) const;
+	bool isAlpha(int x, int y, int time, bool face_right) const;
 
 	//Low level interface to alpha information.
-	std::vector<bool>::const_iterator get_alpha_itor(int x, int y, int time, bool face_right) const;
-	const std::vector<bool>& get_alpha_buf() const { return alpha_; }
+	std::vector<bool>::const_iterator getAlphaItor(int x, int y, int time, bool face_right) const;
+	const std::vector<bool>& getAlphaBuf() const { return alpha_; }
 
-	void draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right=true, bool upside_down=false, int time=0) const;
-	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
-	void draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const;
-	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, GLfloat rotate=0) const;
-	void draw3(int time, GLint va, GLint tc) const;
+	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0, KRE::Color=KRE::Color::colorWhite()) const;
+	void draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
+	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
 
 	struct CustomPoint {
 		CustomPoint() : pos(0) {}
-		GLfloat pos;
+		float pos;
 		point offset;
 	};
 
-	void draw_custom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const;
+	void drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
+	void drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
 
-	void draw_custom(int x, int y, const GLfloat* xy, const GLfloat* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const;
-	void set_image_as_solid();
-	const_solid_info_ptr solid() const { return solid_; }
-	int collide_x() const { return collide_rect_.x()*scale_; }
-	int collide_y() const { return collide_rect_.y()*scale_; }
-	int collide_w() const { return collide_rect_.w()*scale_; }
-	int collide_h() const { return collide_rect_.h()*scale_; }
-	int hit_x() const { return hit_rect_.x()*scale_; }
-	int hit_y() const { return hit_rect_.y()*scale_; }
-	int hit_w() const { return hit_rect_.w()*scale_; }
-	int hit_h() const { return hit_rect_.h()*scale_; }
-	int platform_x() const { return platform_rect_.x()*scale_; }
-	int platform_y() const { return platform_rect_.y()*scale_; }
-	int platform_w() const { return platform_rect_.w()*scale_; }
-	bool has_platform() const { return platform_rect_.w() > 0; }
-	int feet_x() const { return feet_x_*scale_; }
-	int feet_y() const { return feet_y_*scale_; }
-	int accel_x() const { return accel_x_; }
-	int accel_y() const { return accel_y_; }
-	int velocity_x() const { return velocity_x_; }
-	int velocity_y() const { return velocity_y_; }
-	int width() const { return img_rect_.w()*scale_; }
-	int height() const { return img_rect_.h()*scale_; }
+	void setImageAsSolid();
+	ConstSolidInfoPtr solid() const { return solid_; }
+	int collideX() const { return static_cast<int>(collide_rect_.x()*scale_); }
+	int collideY() const { return static_cast<int>(collide_rect_.y()*scale_); }
+	int collideW() const { return static_cast<int>(collide_rect_.w()*scale_); }
+	int collideH() const { return static_cast<int>(collide_rect_.h()*scale_); }
+	int hitX() const { return static_cast<int>(hit_rect_.x()*scale_); }
+	int hitY() const { return static_cast<int>(hit_rect_.y()*scale_); }
+	int hitW() const { return static_cast<int>(hit_rect_.w()*scale_); }
+	int hitH() const { return static_cast<int>(hit_rect_.h()*scale_); }
+	int platformX() const { return static_cast<int>(platform_rect_.x()*scale_); }
+	int platformY() const { return static_cast<int>(platform_rect_.y()*scale_); }
+	int platformW() const { return static_cast<int>(platform_rect_.w()*scale_); }
+	bool hasPlatform() const { return platform_rect_.w() > 0; }
+	int getFeetX() const { return static_cast<int>(feet_x_*scale_); }
+	int getFeetY() const { return static_cast<int>(feet_y_*scale_); }
+	int accelX() const { return accel_x_; }
+	int accelY() const { return accel_y_; }
+	int velocityX() const { return velocity_x_; }
+	int velocityY() const { return velocity_y_; }
+	int width() const { return static_cast<int>(img_rect_.w()*scale_); }
+	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;
 	bool hit(int time_in_frame) const;
-	const graphics::texture& img() const { return texture_; }
+	const KRE::MaterialPtr& img() const { return texture_; }
 	const rect& area() const { return img_rect_; }
-	int num_frames() const { return nframes_; }
-	int num_frames_per_row() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }
+	int numFrames() const { return nframes_; }
+	int numFramesPerRow() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }
 	int pad() const { return pad_; }
 	int blur() const { return blur_; }
-	bool rotate_on_slope() const { return rotate_on_slope_; }
+	bool rotateOnSlope() const { return rotate_on_slope_; }
 	int damage() const { return damage_; }
 
-	const std::string* get_event(int time_in_frame) const;
+	const std::string* getEvent(int time_in_frame) const;
 
-	const std::vector<collision_area>& collision_areas() const { return collision_areas_; }
-	bool collision_areas_inside_frame() const { return collision_areas_inside_frame_; }
+	const std::vector<CollisionArea>& getCollisionAreas() const { return collision_areas_; }
+	bool hasCollisionAreasInsideFrame() const { return collision_areas_inside_frame_; }
 
-	int enter_event_id() const { return enter_event_id_; }
-	int end_event_id() const { return end_event_id_; }
-	int leave_event_id() const { return leave_event_id_; }
-	int process_event_id() const { return process_event_id_; }
+	int enterEventId() const { return enter_event_id_; }
+	int endEventId() const { return end_event_id_; }
+	int leaveEventId() const { return leave_event_id_; }
+	int processEventId() const { return processEvent_id_; }
 
-	struct frame_info {
-		frame_info() : x_adjust(0), y_adjust(0), x2_adjust(0), y2_adjust(0), draw_rect_init(false)
+	struct FrameInfo {
+		FrameInfo() : x_adjust(0), y_adjust(0), x2_adjust(0), y2_adjust(0), draw_rect_init(false)
 		{}
 		int x_adjust, y_adjust, x2_adjust, y2_adjust;
 		rect area;
 
 		mutable bool draw_rect_init;
-		mutable GLfloat draw_rect[4];
+		mutable rectf draw_rect;
 	};
 
-	const std::vector<frame_info>& frame_layout() const { return frames_; }
+	const std::vector<FrameInfo>& frameLayout() const { return frames_; }
 
 	point pivot(const std::string& name, int time_in_frame) const;
-	int frame_number(int time_in_frame) const;
+	int frameNumber(int time_in_frame) const;
 private:
+	DECLARE_CALLABLE(Frame);
+	KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 
-	void get_rect_in_texture(int time, GLfloat* output_rect, const frame_info*& info) const;
-	void get_rect_in_frame_number(int nframe, GLfloat* output_rect, const frame_info*& info) const;
+	void getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const;
+	void getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info) const;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -154,14 +155,14 @@ private:
 	variant variant_id_;
 
 	//ID's used to signal events that occur on this animation.
-	int enter_event_id_, end_event_id_, leave_event_id_, process_event_id_;
-	graphics::texture texture_;
-	const_solid_info_ptr solid_;
+	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;
+	KRE::MaterialPtr texture_;
+	ConstSolidInfoPtr solid_;
 	rect collide_rect_;
 	rect hit_rect_;
 	rect img_rect_;
 
-	std::vector<frame_info> frames_;
+	std::vector<FrameInfo> frames_;
 
 	rect platform_rect_;
 	std::vector<int> hit_frames_;
@@ -185,11 +186,11 @@ private:
 	std::vector<std::string> event_names_;
 	std::vector <std::string> sounds_;
 
-	std::vector<collision_area> collision_areas_;
+	std::vector<CollisionArea> collision_areas_;
 	bool collision_areas_inside_frame_;
 
-	void build_alpha_from_frame_info();
-	void build_alpha();
+	void buildAlphaFromFrameInfo();
+	void buildAlpha();
 	std::vector<bool> alpha_;
 	bool force_no_alpha_;
 
@@ -198,33 +199,12 @@ private:
 	std::vector<int> palettes_recognized_;
 	int current_palette_;
 
-	struct pivot_schedule {
+	struct PivotSchedule {
 		std::string name;
 		std::vector<point> points;
 	};
 
-	std::vector<pivot_schedule> pivots_;
+	std::vector<PivotSchedule> pivots_;
 
-	void set_palettes(unsigned int palettes);
-
-	variant get_value(const std::string& key) const;
-
-	bool back_face_culling_;
-	struct draw_data_3d
-	{
-		size_t num_vertices;
-		size_t vertex_count;
-		size_t vertex_offset;
-		size_t texture_offset;
-		size_t normal_offset;
-		size_t vbo_cnt;
-		obj::mtl_data mtl;
-		graphics::texture tex_a;
-		graphics::texture tex_d;
-		graphics::texture tex_s;
-	};
-	std::vector<draw_data_3d> dd3d_array_;
-	graphics::vbo_array vbo_array_;
+	void setPalettes(unsigned int palettes);
 };
-
-#endif

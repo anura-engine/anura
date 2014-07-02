@@ -411,7 +411,7 @@ SDL_RWops* read_sdl_rw_from_asset(const std::string& name)
 	return ops;
 }
 
-void notify_on_file_modification(const std::string& path, boost::function<void()> handler)
+void notify_on_file_modification(const std::string& path, std::function<void()> handler)
 {
 	// XXX do nothing currently
 }

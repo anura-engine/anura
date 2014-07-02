@@ -15,8 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 
 #include <iostream>
 
@@ -25,7 +23,7 @@
 #include "editor.hpp"
 #include "foreach.hpp"
 #include "grid_widget.hpp"
-#include "hex_object.hpp"
+#include "HexObject.hpp"
 #include "hex_tile.hpp"
 #include "hex_tileset_editor_dialog.hpp"
 #include "image_widget.hpp"
@@ -57,8 +55,8 @@ hex_tileset_editor_dialog::hex_tileset_editor_dialog(editor& e)
 	all_tileset_editor_dialogs().insert(this);
 
 	set_clear_bg_amount(255);
-	if(hex::hex_object::get_editor_tiles().empty() == false) {
-		category_ = hex::hex_object::get_editor_tiles().front()->get_editor_info().group;
+	if(hex::HexObject::get_editor_tiles().empty() == false) {
+		category_ = hex::HexObject::get_editor_tiles().front()->getgetEditorInfo().group;
 	}
 
 	init();
@@ -73,37 +71,37 @@ void hex_tileset_editor_dialog::init()
 {
 	clear();
 	using namespace gui;
-	set_padding(20);
+	setPadding(20);
 
 	ASSERT_LOG(editor_.get_hex_tileset() >= 0 
-		&& size_t(editor_.get_hex_tileset()) < hex::hex_object::get_editor_tiles().size(),
+		&& size_t(editor_.get_hex_tileset()) < hex::HexObject::get_editor_tiles().size(),
 		"Index of hex tileset out of bounds must be between 0 and " 
-		<< hex::hex_object::get_editor_tiles().size() << ", found " << editor_.get_hex_tileset());
+		<< hex::HexObject::get_editor_tiles().size() << ", found " << editor_.get_hex_tileset());
 
-	button* category_button = new button(widget_ptr(new label(category_, graphics::color_white())), boost::bind(&hex_tileset_editor_dialog::show_category_menu, this));
-	add_widget(widget_ptr(category_button), 10, 10);
+	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&hex_tileset_editor_dialog::show_category_menu, this));
+	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
 	int index = 0, first_index = -1;
 	first_index_ = -1;
 	
-	foreach(const hex::tile_type_ptr& t, hex::hex_object::get_editor_tiles()) {
-		if(t->get_editor_info().group == category_) {
+	foreach(const hex::TileTypePtr& t, hex::HexObject::get_editor_tiles()) {
+		if(t->getgetEditorInfo().group == category_) {
 			if(first_index_ == -1) {
 				first_index_ = index;
 			}
-			image_widget* preview = new image_widget(t->get_editor_info().texture, 54, 54);
-			preview->set_area(t->get_editor_info().image_rect);
-			button_ptr tileset_button(new button(widget_ptr(preview), boost::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
-			tileset_button->set_tooltip(t->id() + "/" + t->get_editor_info().name, 14);
-			tileset_button->set_dim(58, 58);
-			grid->add_col(gui::widget_ptr(new gui::border_widget(tileset_button, index == editor_.get_hex_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
+			ImageWidget* preview = new ImageWidget(t->getgetEditorInfo().texture, 54, 54);
+			preview->setArea(t->getgetEditorInfo().image_rect);
+			ButtonPtr tileset_button(new button(WidgetPtr(preview), std::bind(&hex_tileset_editor_dialog::set_tileset, this, index)));
+			tileset_button->setTooltip(t->id() + "/" + t->getgetEditorInfo().name, 14);
+			tileset_button->setDim(58, 58);
+			grid->add_col(gui::WidgetPtr(new gui::BorderWidget(tileset_button, index == editor_.get_hex_tileset() ? graphics::color(255,255,255,255) : graphics::color(0,0,0,0))));
 		}
 		++index;
 	}
 
 	grid->finish_row();
-	add_widget(grid);
+	addWidget(grid);
 }
 
 void hex_tileset_editor_dialog::select_category(const std::string& category)
@@ -118,7 +116,7 @@ void hex_tileset_editor_dialog::select_category(const std::string& category)
 
 void hex_tileset_editor_dialog::close_context_menu(int index)
 {
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset();
 }
 
@@ -130,21 +128,21 @@ void hex_tileset_editor_dialog::show_category_menu()
 	grid->set_show_background(true);
 	grid->set_hpad(10);
 	grid->allow_selection();
-	grid->register_selection_callback(boost::bind(&hex_tileset_editor_dialog::close_context_menu, this, _1));
+	grid->register_selection_callback(std::bind(&hex_tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
-	foreach(const hex::tile_type_ptr& t, hex::hex_object::get_hex_tiles()) {
-		if(categories.count(t->get_editor_info().group)) {
+	foreach(const hex::TileTypePtr& t, hex::HexObject::get_hex_tiles()) {
+		if(categories.count(t->getgetEditorInfo().group)) {
 			continue;
 		}
 
-		categories.insert(t->get_editor_info().group);
+		categories.insert(t->getgetEditorInfo().group);
 
-		image_widget* preview = new image_widget(t->get_editor_info().texture, 54, 54);
-		preview->set_area(t->get_editor_info().image_rect);
-		grid->add_col(widget_ptr(preview))
-		     .add_col(widget_ptr(new label(t->get_editor_info().group, graphics::color_white())));
-		grid->register_row_selection_callback(boost::bind(&hex_tileset_editor_dialog::select_category, this, t->get_editor_info().group));
+		ImageWidget* preview = new ImageWidget(t->getgetEditorInfo().texture, 54, 54);
+		preview->setArea(t->getgetEditorInfo().image_rect);
+		grid->add_col(WidgetPtr(preview))
+		     .add_col(WidgetPtr(new label(t->getgetEditorInfo().group, graphics::color_white())));
+		grid->register_row_selection_callback(std::bind(&hex_tileset_editor_dialog::select_category, this, t->getgetEditorInfo().group));
 	}
 
 	int mousex, mousey;
@@ -160,9 +158,9 @@ void hex_tileset_editor_dialog::show_category_menu()
 	mousex -= x();
 	mousey -= y();
 
-	remove_widget(context_menu_);
+	removeWidget(context_menu_);
 	context_menu_.reset(grid);
-	add_widget(context_menu_, mousex, mousey);
+	addWidget(context_menu_, mousex, mousey);
 }
 
 void hex_tileset_editor_dialog::set_tileset(int index)
@@ -173,28 +171,28 @@ void hex_tileset_editor_dialog::set_tileset(int index)
 	}
 }
 
-bool hex_tileset_editor_dialog::handle_event(const SDL_Event& event, bool claimed)
+bool hex_tileset_editor_dialog::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(!claimed) {
 		if(context_menu_) {
-			gui::widget_ptr ptr = context_menu_;
+			gui::WidgetPtr ptr = context_menu_;
 			SDL_Event ev = event;
-			normalize_event(&ev);
-			return ptr->process_event(ev, claimed);
+			normalizeEvent(&ev);
+			return ptr->processEvent(ev, claimed);
 		}
 
 		switch(event.type) {
 		case SDL_KEYDOWN:
 			if(event.key.keysym.sym == SDLK_COMMA) {
 				editor_.set_hex_tileset(editor_.get_hex_tileset()-1);
-				while(hex::hex_object::get_hex_tiles()[editor_.get_hex_tileset()]->get_editor_info().group != category_) {
+				while(hex::HexObject::get_hex_tiles()[editor_.get_hex_tileset()]->getgetEditorInfo().group != category_) {
 					editor_.set_hex_tileset(editor_.get_hex_tileset()-1);
 				}
 				set_tileset(editor_.get_hex_tileset());
 				claimed = true;
 			} else if(event.key.keysym.sym == SDLK_PERIOD) {
 				editor_.set_hex_tileset(editor_.get_hex_tileset()+1);
-				while(hex::hex_object::get_hex_tiles()[editor_.get_hex_tileset()]->get_editor_info().group != category_) {
+				while(hex::HexObject::get_hex_tiles()[editor_.get_hex_tileset()]->getgetEditorInfo().group != category_) {
 					editor_.set_hex_tileset(editor_.get_hex_tileset()+1);
 				}
 				set_tileset(editor_.get_hex_tileset());
@@ -204,7 +202,7 @@ bool hex_tileset_editor_dialog::handle_event(const SDL_Event& event, bool claime
 		}
 	}
 
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 }

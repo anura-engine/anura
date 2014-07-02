@@ -26,7 +26,7 @@
 #include <sstream>
 
 #include "../asserts.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 
 #include "svg_element.hpp"
 #include "svg_paint.hpp"
@@ -49,7 +49,7 @@ namespace KRE
 			void display_ptree(ptree const& pt)
 			{
 				for(auto& v : pt) {
-					std::cout << v.first << ": " << v.second.get_value<std::string>() << "\n";
+					std::cout << v.first << ": " << v.second.getValue<std::string>() << "\n";
 					display_ptree( v.second );
 				}
 			}

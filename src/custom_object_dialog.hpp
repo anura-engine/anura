@@ -17,8 +17,6 @@
 #pragma once
 #ifndef CUSTOM_OBJECT_DIALOG_HPP_INCLUDED
 
-#include <boost/function.hpp>
-
 #include "custom_object.hpp"
 #include "custom_object_type.hpp"
 #include "dialog.hpp"
@@ -32,7 +30,7 @@
 
 namespace editor_dialogs {
 
-class custom_object_dialog : public gui::dialog
+class custom_object_dialog : public gui::Dialog
 {
 public:
 	explicit custom_object_dialog(editor& e, int x, int y, int w, int h);
@@ -40,10 +38,10 @@ public:
 	variant get_object() const { return object_template_; }
 	void show_modal();
 protected:
-	void change_text_attribute(const gui::text_editor_widget_ptr editor, const std::string& s);
-	void change_int_attribute_text(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide);
-	void change_int_attribute_slider(const gui::text_editor_widget_ptr editor, const std::string& s, double d);
-	void slider_drag_end(const gui::text_editor_widget_ptr editor, const std::string& s, gui::slider_ptr slide, double d);
+	void change_text_attribute(const gui::TextEditorWidgetPtr editor, const std::string& s);
+	void change_int_attribute_text(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::SliderPtr slide);
+	void change_int_attribute_Slider(const gui::TextEditorWidgetPtr editor, const std::string& s, float d);
+	void slider_drag_end(const gui::TextEditorWidgetPtr editor, const std::string& s, gui::SliderPtr slide, float d);
 	void change_template(int selection, const std::string& s);
 	void change_prototype();
 	void remove_prototype(const std::string& s);
@@ -56,15 +54,15 @@ protected:
 	void on_edit_animations();
 	void on_edit_items(const std::string& name, const std::string& attr, bool allow_functions);
 
-	std::vector<gui::widget_ptr> get_widget_for_attribute(const std::string& attr);
+	std::vector<gui::WidgetPtr> get_widget_for_attribute(const std::string& attr);
 private:
 	module::module_file_pair template_file_;
 	variant object_template_;
-	custom_object_type_ptr object_;
+	CustomObjectTypePtr object_;
 	int selected_template_;
 	std::string current_object_save_path_;
 
-	gui::widget_ptr context_menu_;
+	gui::WidgetPtr context_menu_;
 
 	std::string error_text_;
 

@@ -45,7 +45,7 @@ namespace voxel
 			return res;
 		}
 
-		std::string model_path_get_or_die(const std::string& model_name)
+		std::string model_path_getOrDie(const std::string& model_name)
 		{
 			auto it = model_path_cache().find(model_name);
 			if(it ==  model_path_cache().end()) {
@@ -79,7 +79,7 @@ namespace voxel
 		
 		if(!model_ || node.has_key("model")) {
 			std::map<variant,variant> m;
-			m[variant("model")] = variant(model_path_get_or_die(node["model"].as_string()));
+			m[variant("model")] = variant(model_path_getOrDie(node["model"].as_string()));
  			model_.reset(new voxel_model(variant(&m)));
 			model_->set_animation("stand");
 		}
@@ -154,9 +154,9 @@ namespace voxel
 			return;
 		}
 
-		std::vector<variant> scheduled_commands = pop_scheduled_commands();
+		std::vector<variant> scheduled_commands = popScheduledCommands();
 		foreach(const variant& cmd, scheduled_commands) {
-			execute_command(cmd);
+			executeCommand(cmd);
 		}
 
 		if(model_) {
@@ -187,12 +187,12 @@ namespace voxel
 		event_arg_ = v;
 	}
 
-	void voxel_object::add_scheduled_command(int cycle, variant cmd)
+	void voxel_object::addScheduledCommand(int cycle, variant cmd)
 	{
 		scheduled_commands_.push_back(ScheduledCommand(cycle, cmd));
 	}
 
-	std::vector<variant> voxel_object::pop_scheduled_commands()
+	std::vector<variant> voxel_object::popScheduledCommands()
 	{
 		std::vector<variant> result;
 		std::vector<ScheduledCommand>::iterator i = scheduled_commands_.begin();

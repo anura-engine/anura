@@ -100,16 +100,16 @@ decimal operator/(const decimal& a, const decimal& b)
 	}
 
 	int64_t orders_of_magnitude_shift = 0;
-	const int64_t target_value = DECIMAL(10000000000000);
+	const int64_t targetValue = DECIMAL(10000000000000);
 
-	while(va < target_value) {
+	while(va < targetValue) {
 		va *= DECIMAL(10);
 		++orders_of_magnitude_shift;
 	}
 
-	const int64_t target_value_b = DECIMAL(1000000);
+	const int64_t targetValue_b = DECIMAL(1000000);
 
-	while(vb > target_value_b) {
+	while(vb > targetValue_b) {
 		vb /= DECIMAL(10);
 		++orders_of_magnitude_shift;
 	}

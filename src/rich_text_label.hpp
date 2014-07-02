@@ -27,22 +27,22 @@
 namespace gui
 {
 
-class rich_text_label : public scrollable_widget
+class rich_text_label : public ScrollableWidget
 {
 public:
-	rich_text_label(const variant& v, game_logic::formula_callable* e);
+	rich_text_label(const variant& v, game_logic::FormulaCallable* e);
 
-	std::vector<widget_ptr> get_children() const;
+	std::vector<WidgetPtr> getChildren() const;
 private:
 
-	void handle_process();
-	void handle_draw() const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleProcess() override;
+	void handleDraw() const override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& v);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& v);
 
-	std::vector<std::vector<widget_ptr> > children_;
+	std::vector<std::vector<WidgetPtr> > children_;
 };
 
 }

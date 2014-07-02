@@ -15,7 +15,6 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #ifndef NO_EDITOR
-#include <boost/bind.hpp>
 
 #include "dialog.hpp"
 #include "editor_dialogs.hpp"
@@ -39,7 +38,7 @@ std::string show_choose_level_dialog(const std::string& prompt)
 {
 	using namespace gui;
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.add_widget(widget_ptr(new label(prompt, graphics::color_white(), 48)));
+	d.addWidget(WidgetPtr(new label(prompt, graphics::color_white(), 48)));
 
 	std::string result;
 	std::vector<std::string> levels = get_known_levels();
@@ -48,12 +47,12 @@ std::string show_choose_level_dialog(const std::string& prompt)
 	grid->set_show_background(true);
 	grid->allow_selection();
 
-	grid->register_selection_callback(boost::bind(&do_select_level, &d, levels, _1, &result));
+	grid->register_selection_callback(std::bind(&do_select_level, &d, levels, _1, &result));
 	foreach(const std::string& lvl, levels) {
-		grid->add_col(widget_ptr(new label(lvl, graphics::color_white())));
+		grid->add_col(WidgetPtr(new label(lvl, graphics::color_white())));
 	}
 
-	d.add_widget(widget_ptr(grid));
+	d.addWidget(WidgetPtr(grid));
 	d.show_modal();
 	return result;
 }

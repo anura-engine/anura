@@ -1,9 +1,6 @@
 #include <boost/array.hpp>
-#include <boost/bind.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 
 #include <assert.h>
 
@@ -17,14 +14,11 @@
 
 #include "border_widget.hpp"
 #include "button.hpp"
-#include "camera.hpp"
 #include "checkbox.hpp"
 #include "color_picker.hpp"
-#include "color_utils.hpp"
 #include "dialog.hpp"
 #include "filesystem.hpp"
 #include "formatter.hpp"
-#include "gles2.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "input.hpp"
@@ -45,7 +39,7 @@
 #define bmround	round
 #endif
 
-#if defined(USE_SHADERS) && defined(USE_ISOMAP)
+#if defined(USE_ISOMAP)
 
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
@@ -92,18 +86,18 @@ public:
 
 	void set_voxel(const VoxelPos& pos, const Voxel& voxel);
 	void delete_voxel(const VoxelPos& pos);
-	bool set_cursor(const VoxelPos& pos);
+	bool setCursor(const VoxelPos& pos);
 
 	const VoxelPos* get_cursor() const { return cursor_.get(); }
 	const VoxelArea* get_selection() const { return selection_.get(); }
 
-	void set_selection(const VoxelArea& area) { selection_.reset(new VoxelArea(area)); }
+	void setSelection(const VoxelArea& area) { selection_.reset(new VoxelArea(area)); }
 	void clear_selection() { selection_.reset(); }
 
 	VoxelPos get_selected_voxel(const VoxelPos& pos, int facing, bool reverse);
 
-	graphics::color current_color() const { return color_picker_->get_selected_color(); }
-	gui::color_picker& get_color_picker() { return *color_picker_; }
+	graphics::color current_color() const { return ColorPicker_->getSelectedColor(); }
+	gui::ColorPicker& get_ColorPicker() { return *ColorPicker_; }
 	Layer& layer() { assert(current_layer_ >= 0 && current_layer_ < layers_.size()); return layers_[current_layer_]; }
 
 	const std::vector<VoxelPair>& get_clipboard() const { return clipboard_; }
@@ -123,13 +117,13 @@ public:
 		return tool_;
 	}
 
-	void execute_command(std::function<void()> redo, std::function<void()> undo);
-	void execute_command(const Command& cmd);
+	void executeCommand(std::function<void()> redo, std::function<void()> undo);
+	void executeCommand(const Command& cmd);
 
 	void build_voxels();
 
 private:
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	void on_color_changed(const graphics::color& color);
 	void on_change_layer_button_clicked(int nlayer);
@@ -146,7 +140,7 @@ private:
 	void undo();
 	void redo();
 
-	void handle_process();
+	void handleProcess() override;
 
 	const Layer& layer() const { return layers_[current_layer_]; }
 
@@ -159,22 +153,22 @@ private:
 
 	std::vector<VoxelPair> clipboard_;
 
-	boost::scoped_ptr<VoxelPos> cursor_;
+	std::unique_ptr<VoxelPos> cursor_;
 
-	boost::scoped_ptr<VoxelArea> selection_;
+	std::unique_ptr<VoxelArea> selection_;
 
-	gui::label_ptr pos_label_;
+	gui::LabelPtr pos_label_;
 
 	std::string fname_;
 
 	boost::intrusive_ptr<iso_renderer> iso_renderer_;
-	boost::intrusive_ptr<gui::color_picker> color_picker_;
+	boost::intrusive_ptr<gui::ColorPicker> ColorPicker_;
 
 	std::vector<Command> undo_, redo_;
 
 	VOXEL_TOOL tool_;
 
-	std::vector<gui::border_widget*> tool_borders_;
+	std::vector<gui::BorderWidget*> tool_borders_;
 
 	bool symmetric_;
 };
@@ -232,7 +226,7 @@ void flood_voxel()
 
 		vox.color = get_editor().current_color();
 
-		get_editor().execute_command(
+		get_editor().executeCommand(
 			[=]() {
 				for(const VoxelPos& pos : flood) {
 					get_editor().set_voxel(pos, vox);
@@ -263,7 +257,7 @@ void pencil_voxel()
 			currently_has_voxel = true;
 		}
 
-		get_editor().execute_command(
+		get_editor().executeCommand(
 		  [cursor, voxel]() { get_editor().set_voxel(cursor, voxel); },
 		  [cursor, old_voxel, currently_has_voxel]() {
 			if(currently_has_voxel) {
@@ -286,7 +280,7 @@ void delete_voxel()
 
 		Voxel old_voxel = current_itor->second;
 
-		get_editor().execute_command(
+		get_editor().executeCommand(
 			[cursor]() { get_editor().delete_voxel(cursor); },
 			[cursor, old_voxel]() { get_editor().set_voxel(cursor, old_voxel); }
 		);
@@ -301,15 +295,15 @@ public:
 	explicit iso_renderer(const rect& area);
 	~iso_renderer();
 	void init();
-	void handle_draw() const;
+	void handleDraw() const override;
 
 	bool maximized() const { return maximized_; }
 
 	const camera_callable& camera() const { return *camera_; }
 private:
 	void maximize();
-	void handle_process();
-	bool handle_event(const SDL_Event& event, bool claimed);
+	void handleProcess() override;
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 	glm::ivec3 position_to_cube(int xp, int yp, glm::ivec3* facing);
 
@@ -337,15 +331,15 @@ private:
 	size_t tex_height_;
 	GLint video_framebuffer_id_;
 
-	slider_ptr light_power_slider_;
-	void light_power_slider_change(double p);
+	SliderPtr light_power_slider_;
+	void light_power_SliderChange(double p);
 	float light_power_;
 	float specularity_coef_;
 
 	bool focused_;
 	bool dragging_view_;
 
-	button_ptr maximize_button_;
+	ButtonPtr maximize_button_;
 	bool maximized_;
 
 	iso_renderer();
@@ -367,16 +361,16 @@ iso_renderer::iso_renderer(const rect& area)
 {
 	camera_->set_clip_planes(0.1f, 200.0f);
 	g_iso_renderer = this;
-	set_loc(area.x(), area.y());
-	set_dim(area.w(), area.h());
+	setLoc(area.x(), area.y());
+	setDim(area.w(), area.h());
 	vector_[0] = 1.0;
 	vector_[1] = 1.0;
 	vector_[2] = 1.0;
 
 	calculate_camera();
 
-	light_power_slider_.reset(new slider(150, boost::bind(&iso_renderer::light_power_slider_change, this, _1), 1));
-	light_power_slider_->set_position(light_power_/20000.0);
+	light_power_slider_.reset(new Slider(150, std::bind(&iso_renderer::light_power_SliderChange, this, _1), 1));
+	light_power_slider_->setPosition(light_power_/20000.0);
 
 	init();
 }
@@ -388,7 +382,7 @@ iso_renderer::~iso_renderer()
 	}
 }
 
-void iso_renderer::light_power_slider_change(double p)
+void iso_renderer::light_power_SliderChange(double p)
 {
 	light_power_ = float(p * 20000.0);
 }
@@ -404,11 +398,11 @@ void iso_renderer::calculate_camera()
 	camera_->look_at(glm::vec3(xdist, ydist, zdist), glm::vec3(0,0,0), glm::vec3(0.0, 1.0, 0.0));
 }
 
-void iso_renderer::handle_draw() const
+void iso_renderer::handleDraw() const
 {
 	gles2::manager gles2_manager(gles2::shader_program::get_global("texture2d"));
 
-	GLint cur_id = graphics::texture::get_current_texture();
+	GLint cur_id = graphics::texture::get_currentTexture();
 	glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
 
 	const int w_odd = width() % 2;
@@ -447,9 +441,9 @@ void iso_renderer::handle_draw() const
 	maximize_button_->draw();
 }
 
-void iso_renderer::handle_process()
+void iso_renderer::handleProcess()
 {
-	maximize_button_->set_loc(x() + 5, y() + 5);
+	maximize_button_->setLoc(x() + 5, y() + 5);
 	maximize_button_->process();
 
 	int num_keys = 0;
@@ -525,17 +519,17 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 	return voxel_coord;
 }
 
-bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
+bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 {
-	claimed = maximize_button_->process_event(event, claimed);
+	claimed = maximize_button_->processEvent(event, claimed);
 	if(claimed) {
-		return widget::handle_event(event, claimed);
+		return widget::handleEvent(event, claimed);
 	}
 
 	if(light_power_slider_) {
 		SDL_Event ev(event);
-		normalize_event(&ev);
-		if(light_power_slider_->process_event(ev, claimed)) {
+		normalizeEvent(&ev);
+		if(light_power_slider_->processEvent(ev, claimed)) {
 			return claimed;
 		}
 	}
@@ -580,7 +574,7 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 			auto it = get_editor().voxels().find(pos);
 			if(it != get_editor().voxels().end()) {
-				get_editor().set_cursor(pencil_pos);
+				get_editor().setCursor(pencil_pos);
 				if(e.button == SDL_BUTTON_LEFT) {
 					pencil_voxel();
 				} else if(e.button == SDL_BUTTON_RIGHT) {
@@ -625,7 +619,7 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 				if(SDL_GetModState()&KMOD_SHIFT) {
 					pos = voxel_coord + facing;
 				}
-				get_editor().set_cursor(pos);
+				get_editor().setCursor(pos);
 			}
 		} else {
 			focused_ = false;
@@ -634,7 +628,7 @@ bool iso_renderer::handle_event(const SDL_Event& event, bool claimed)
 	}
 	}
 
-	return widget::handle_event(event, claimed);
+	return widget::handleEvent(event, claimed);
 }
 
 void iso_renderer::maximize()
@@ -645,8 +639,8 @@ void iso_renderer::maximize()
 
 void iso_renderer::init()
 {
-	light_power_slider_->set_loc((width()-light_power_slider_->width())/2, height()-light_power_slider_->height());
-	maximize_button_.reset(new button("Max.", boost::bind(&iso_renderer::maximize, this)));
+	light_power_slider_->setLoc((width()-light_power_slider_->width())/2, height()-light_power_slider_->height());
+	maximize_button_.reset(new button("Max.", std::bind(&iso_renderer::maximize, this)));
 
 	fbo_proj_ = glm::ortho(0.0f, float(preferences::actual_screen_width()), float(preferences::actual_screen_height()), 0.0f);
 
@@ -1011,10 +1005,10 @@ class perspective_renderer : public gui::widget
 {
 public:
 	perspective_renderer(int xdir, int ydir, int zdir);
-	void handle_draw() const;
+	void handleDraw() const override;
 
-	void zoom_in();
-	void zoom_out();
+	void zoomIn();
+	void zoomOut();
 
 	//converts given pos to [x,y,0]
 	VoxelPos normalize_pos(const VoxelPos& pos) const;
@@ -1022,7 +1016,7 @@ public:
 	VoxelPos denormalize_pos(const VoxelPos& pos) const;
 private:
 	VoxelPos get_mouse_pos(int mousex, int mousey) const;
-	bool handle_event(const SDL_Event& event, bool claimed);
+	bool handleEvent(const SDL_Event& event, bool claimed) override;
 	bool calculate_cursor(int mousex, int mousey);
 	VoxelArea calculate_selection(int mousex1, int mousey1, int mousex2, int mousey2);
 	int touching_selection_border(int mousex, int mousey) const;
@@ -1049,11 +1043,11 @@ private:
 
 	bool focus_;
 	int selection_border_;
-	boost::scoped_ptr<VoxelArea> starting_selection_;
+	std::unique_ptr<VoxelArea> starting_selection_;
 };
 
 perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
-  : voxel_width_(20), last_select_x_(INT_MIN), last_select_y_(INT_MIN),
+  : voxel_width_(20), last_select_x_(std::numeric_limits<int>::min()), last_select_y_(std::numeric_limits<int>::min()),
     invert_y_(1), dragging_on_(false), anchor_drag_x_(0), anchor_drag_y_(0),
 	focus_(false), selection_border_(-1)
 {
@@ -1073,14 +1067,14 @@ perspective_renderer::perspective_renderer(int xdir, int ydir, int zdir)
 	}
 };
 
-void perspective_renderer::zoom_in()
+void perspective_renderer::zoomIn()
 {
 	if(voxel_width_ < 80) {
 		voxel_width_ *= 2;
 	}
 }
 
-void perspective_renderer::zoom_out()
+void perspective_renderer::zoomOut()
 {
 	if(voxel_width_ > 5) {
 		voxel_width_ /= 2;
@@ -1144,7 +1138,7 @@ VoxelPos perspective_renderer::get_mouse_pos(int mousex, int mousey) const
 
 bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 {
-	if(mousex == INT_MIN) {
+	if(mousex == std::numeric_limits<int>::min()) {
 		return false;
 	}
 
@@ -1158,7 +1152,7 @@ bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 		}
 	}
 
-	return get_editor().set_cursor(cursor);
+	return get_editor().setCursor(cursor);
 
 }
 
@@ -1217,24 +1211,24 @@ VoxelArea perspective_renderer::calculate_selection(int mousex1, int mousey1, in
 		std::swap(top_left[1], bot_right[1]);
 	}
 
-	int min_value = INT_MIN, max_value = INT_MIN;
+	int min_value = std::numeric_limits<int>::min(), max_value = std::numeric_limits<int>::min();
 
 	for(const VoxelPair& vp : get_editor().layer().map) {
 		const VoxelPos pos = normalize_pos(vp.first);
 		if(pos[0] >= top_left[0] && pos[1] >= top_left[1] &&
 		   pos[0] < bot_right[0] && pos[1] < bot_right[1]) {
 			int zpos = vp.first[facing_];
-			if(min_value == INT_MIN || zpos < min_value) {
+			if(min_value == std::numeric_limits<int>::min() || zpos < min_value) {
 				min_value = zpos;
 			}
 
-			if(max_value == INT_MIN || zpos > max_value) {
+			if(max_value == std::numeric_limits<int>::min() || zpos > max_value) {
 				max_value = zpos;
 			}
 		}
 	}
 
-	if(min_value != INT_MIN) {
+	if(min_value != std::numeric_limits<int>::min()) {
 		top_left = denormalize_pos(top_left);
 		bot_right = denormalize_pos(bot_right);
 		top_left[facing_] = min_value;
@@ -1243,12 +1237,12 @@ VoxelArea perspective_renderer::calculate_selection(int mousex1, int mousey1, in
 		return area;
 	} else {
 		VoxelArea result;
-		result.top_left[0] = result.top_left[1] = result.top_left[2] = result.bot_right[0] = result.bot_right[1] = result.bot_right[2] = INT_MIN;
+		result.top_left[0] = result.top_left[1] = result.top_left[2] = result.bot_right[0] = result.bot_right[1] = result.bot_right[2] = std::numeric_limits<int>::min();
 		return result;
 	}
 }
 
-bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
+bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 {
 	switch(event.type) {
 	case SDL_KEYUP:
@@ -1274,7 +1268,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 					}
 				}
 
-				get_editor().execute_command(
+				get_editor().executeCommand(
 					[=]() {
 						for(const VoxelPair& vp : items) {
 							get_editor().layer().map.erase(vp.first);
@@ -1290,7 +1284,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 						}
 
 						get_editor().build_voxels();
-						get_editor().set_selection(selection);
+						get_editor().setSelection(selection);
 						get_editor().set_clipboard(old_clipboard);
 					}
 				);
@@ -1307,7 +1301,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 				}
 			}
 
-			get_editor().execute_command(
+			get_editor().executeCommand(
 				[=]() {
 					for(const VoxelPair& vp : clipboard) {
 						get_editor().layer().map[vp.first] = vp.second;
@@ -1346,7 +1340,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		} else {
 			cursor[facing_] += vector_[facing_];
 		}
-		get_editor().set_cursor(cursor);
+		get_editor().setCursor(cursor);
 
 		break;
 	}
@@ -1358,10 +1352,10 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 		   e.x <= x() + width() && e.y <= y() + height()) {
 			if(selection_border_ == -1) {
 				VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, e.x, e.y);
-				if(selection.top_left[0] == INT_MIN) {
+				if(selection.top_left[0] == std::numeric_limits<int>::min()) {
 					get_editor().clear_selection();
 				} else {
-					get_editor().set_selection(selection);
+					get_editor().setSelection(selection);
 				}
 			}
 		} else if(get_editor().tool() == TOOL_SELECT && dragging_on_) {
@@ -1409,9 +1403,9 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 					if(voxel_itor != get_editor().voxels().end()) {
 						const graphics::color color = voxel_itor->second.color;
 						if(e.button == SDL_BUTTON_LEFT) {
-							get_editor().get_color_picker().set_primary_color(color);
+							get_editor().get_ColorPicker().setPrimaryColor(color);
 						} else if(e.button == SDL_BUTTON_RIGHT) {
-							get_editor().get_color_picker().set_secondary_color(color);
+							get_editor().get_ColorPicker().setSecondaryColor(color);
 						}
 					}
 				}
@@ -1478,10 +1472,10 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 				case TOOL_SELECT: {
 					if(dragging_on_ && selection_border_ == -1) {
 						VoxelArea selection = calculate_selection(anchor_drag_x_, anchor_drag_y_, motion.x, motion.y);
-						if(selection.top_left[0] == INT_MIN) {
+						if(selection.top_left[0] == std::numeric_limits<int>::min()) {
 							get_editor().clear_selection();
 						} else {
-							get_editor().set_selection(selection);
+							get_editor().setSelection(selection);
 						}
 					} else if(dragging_on_ && selection_border_ != -1 && starting_selection_ && get_editor().get_selection()) {
 						const int xdelta = motion.x - anchor_drag_x_;
@@ -1569,7 +1563,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 							}
 
 							if(extrusion.empty() == false) {
-								get_editor().execute_command(
+								get_editor().executeCommand(
 									[=]() {
 										for(auto p : extrusion) {
 											get_editor().set_voxel(p.first, p.second);
@@ -1588,7 +1582,7 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 							}
 						}
 
-						get_editor().set_selection(area);
+						get_editor().setSelection(area);
 					}
 					break;
 				}
@@ -1600,19 +1594,19 @@ bool perspective_renderer::handle_event(const SDL_Event& event, bool claimed)
 
 			break;
 		} else {
-			last_select_x_ = last_select_y_ = INT_MIN;
+			last_select_x_ = last_select_y_ = std::numeric_limits<int>::min();
 			focus_ = false;
 			selection_border_ = -1;
 		}
 	}
 	}
-	return widget::handle_event(event, claimed);
+	return widget::handleEvent(event, claimed);
 }
 
-void perspective_renderer::handle_draw() const
+void perspective_renderer::handleDraw() const
 {
-	const SDL_Rect clip_area = { x(), y(), width(), height() };
-	const graphics::clip_scope clipping_scope(clip_area);
+	const SDL_Rect clipArea = { x(), y(), width(), height() };
+	const graphics::clip_scope clipping_scope(clipArea);
 
 	gles2::manager gles2_manager(gles2::get_simple_col_shader());
 
@@ -1885,7 +1879,7 @@ private:
 	bool flipped_;
 
 	boost::intrusive_ptr<perspective_renderer> renderer_;
-	gui::label_ptr description_label_;
+	gui::LabelPtr description_label_;
 };
 
 perspective_widget::perspective_widget(const rect& area, int xdir, int ydir, int zdir)
@@ -1910,13 +1904,13 @@ void perspective_widget::init()
 
 	description_label_.reset(new label(description, 12));
 	toolbar->add_col(description_label_);
-	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_widget::flip, this)));
-	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_in, renderer_.get())));
-	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&perspective_renderer::zoom_out, renderer_.get())));
-	add_widget(toolbar);
+	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_widget::flip, this)));
+	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomIn, renderer_.get())));
+	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomOut, renderer_.get())));
+	addWidget(toolbar);
 
-	add_widget(renderer_);
-	renderer_->set_dim(width(), height() - renderer_->y());
+	addWidget(renderer_);
+	renderer_->setDim(width(), height() - renderer_->y());
 };
 
 void perspective_widget::flip()
@@ -1986,8 +1980,8 @@ void voxel_editor::init()
 		g_perspectives.push_back(boost::intrusive_ptr<perspective_widget>(new perspective_widget(perspective_areas[2], 0, 0, 1)));
 	} else {
 		for(int n = 0; n != 3; ++n) {
-			g_perspectives[n]->set_loc(perspective_areas[n].x(), perspective_areas[n].y());
-			g_perspectives[n]->set_dim(perspective_areas[n].w(), perspective_areas[n].h());
+			g_perspectives[n]->setLoc(perspective_areas[n].x(), perspective_areas[n].y());
+			g_perspectives[n]->setDim(perspective_areas[n].w(), perspective_areas[n].h());
 			g_perspectives[n]->init();
 		}
 	}
@@ -1996,7 +1990,7 @@ void voxel_editor::init()
 
 	if(!iso_maximized) {
 		for(int n = 0; n != 3; ++n) {
-			add_widget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
+			addWidget(g_perspectives[n], g_perspectives[n]->x(), g_perspectives[n]->y());
 		}
 	}
 
@@ -2009,63 +2003,63 @@ void voxel_editor::init()
 	if(!iso_renderer_) {
 		iso_renderer_.reset(new iso_renderer(iso_renderer_area));
 	} else {
-		iso_renderer_->set_loc(iso_renderer_area.x(), iso_renderer_area.y());
-		iso_renderer_->set_dim(iso_renderer_area.w(), iso_renderer_area.h());
+		iso_renderer_->setLoc(iso_renderer_area.x(), iso_renderer_area.y());
+		iso_renderer_->setDim(iso_renderer_area.w(), iso_renderer_area.h());
 		iso_renderer_->init();
 	}
-	add_widget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
+	addWidget(iso_renderer_, iso_renderer_->x(), iso_renderer_->y());
 
 	grid_ptr toolbar(new grid(3));
 
-	toolbar->add_col(widget_ptr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::on_save, this))));
-	toolbar->add_col(widget_ptr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::undo, this))));
-	toolbar->add_col(widget_ptr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), boost::bind(&voxel_editor::redo, this))));
-	add_widget(toolbar, area_.x2() - 190, area_.y() + 4);
+	toolbar->add_col(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::on_save, this))));
+	toolbar->add_col(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::undo, this))));
+	toolbar->add_col(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::redo, this))));
+	addWidget(toolbar, area_.x2() - 190, area_.y() + 4);
 
 	tool_borders_.clear();
 	grid_ptr tools_grid(new grid(3));
 
 	for(int n = 0; ToolIcons[n]; ++n) {
 		assert(n < NUM_VOXEL_TOOLS);
-		button_ptr tool_button(
-		  new button(widget_ptr(new gui_section_widget(ToolIcons[n], 26, 26)),
-		      boost::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
-		tool_borders_.push_back(new border_widget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
-		tools_grid->add_col(widget_ptr(tool_borders_.back()));
+		ButtonPtr tool_button(
+		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
+		      std::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
+		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+		tools_grid->add_col(WidgetPtr(tool_borders_.back()));
 	}
 
 	tools_grid->finish_row();
 
-	add_widget(tools_grid);
+	addWidget(tools_grid);
 
-	add_widget(widget_ptr(new checkbox(new label("Symmetric", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), symmetric_, boost::bind(&voxel_editor::set_symmetric, this, _1))));
+	addWidget(WidgetPtr(new Checkbox(new label("Symmetric", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), symmetric_, std::bind(&voxel_editor::set_symmetric, this, _1))));
 
 	if(model_.layer_types.empty() == false) {
 		assert(model_.layer_types.size() == layers_.size());
 		grid_ptr layers_grid(new grid(2));
 
 		for(int n = 0; n != layers_.size(); ++n) {
-			layers_grid->add_col(widget_ptr(new label(model_.layer_types[n].name)));
-			layers_grid->add_col(widget_ptr(new button(layers_[n].name, boost::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
+			layers_grid->add_col(WidgetPtr(new label(model_.layer_types[n].name)));
+			layers_grid->add_col(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
 		}
 
 		layers_grid->allow_selection();
 		layers_grid->set_draw_selection_highlight();
 		layers_grid->set_default_selection(current_layer_);
-		layers_grid->register_mouseover_callback(boost::bind(&voxel_editor::mouseover_layer, this, _1));
-		layers_grid->register_selection_callback(boost::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
+		layers_grid->register_mouseover_callback(std::bind(&voxel_editor::mouseover_layer, this, _1));
+		layers_grid->register_selection_callback(std::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
 
-		add_widget(layers_grid);
+		addWidget(layers_grid);
 	}
 
-	if(!color_picker_) {
-		color_picker_.reset(new color_picker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
-		color_picker_->set_primary_color(graphics::color(255, 0, 0));
+	if(!ColorPicker_) {
+		ColorPicker_.reset(new ColorPicker(rect(area_.x() + area_.w() - 190, area_.y() + 6, 180, 440)));
+		ColorPicker_->setPrimaryColor(graphics::color(255, 0, 0));
 	}
-	add_widget(color_picker_);
+	addWidget(ColorPicker_);
 
 	pos_label_.reset(new label("", 12));
-	add_widget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
+	addWidget(pos_label_, area_.x() + area_.w() - pos_label_->width() - 100,
 	                       area_.y() + area_.h() - pos_label_->height() - 30 );
 
 
@@ -2093,7 +2087,7 @@ void voxel_editor::delete_voxel(const VoxelPos& pos)
 	build_voxels();
 }
 
-bool voxel_editor::set_cursor(const VoxelPos& pos)
+bool voxel_editor::setCursor(const VoxelPos& pos)
 {
 	if(cursor_ && *cursor_ == pos) {
 		return false;
@@ -2101,8 +2095,8 @@ bool voxel_editor::set_cursor(const VoxelPos& pos)
 
 	cursor_.reset(new VoxelPos(pos));
 	if(pos_label_) {
-		pos_label_->set_text(formatter() << "(" << pos[0] << "," << pos[1] << "," << pos[2] << ")");
-		pos_label_->set_loc(area_.x() + area_.w() - pos_label_->width() - 8,
+		pos_label_->setText(formatter() << "(" << pos[0] << "," << pos[1] << "," << pos[2] << ")");
+		pos_label_->setLoc(area_.x() + area_.w() - pos_label_->width() - 8,
 		                    area_.y() + area_.h() - pos_label_->height() - 4);
 	}
 
@@ -2139,15 +2133,15 @@ VoxelPos voxel_editor::get_selected_voxel(const VoxelPos& pos, int facing, bool 
 	return result;
 }
 
-bool voxel_editor::handle_event(const SDL_Event& event, bool claimed)
+bool voxel_editor::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(event.type == SDL_WINDOWEVENT && event.window.event == SDL_WINDOWEVENT_RESIZED) {
 		video_resize(event);
-		set_dim(preferences::actual_screen_width(), preferences::actual_screen_height());
+		setDim(preferences::actual_screen_width(), preferences::actual_screen_height());
 		init();
 		return true;
 	}
-	return dialog::handle_event(event, claimed);
+	return dialog::handleEvent(event, claimed);
 }
 
 void voxel_editor::on_color_changed(const graphics::color& color)
@@ -2174,11 +2168,11 @@ void voxel_editor::on_change_layer_button_clicked(int nlayer)
 		context_menu->add_col("");
 	}
 
-	boost::intrusive_ptr<text_editor_widget> editor(new text_editor_widget(100));
+	boost::intrusive_ptr<TextEditorWidget> editor(new TextEditorWidget(100));
 	context_menu->add_col(editor);
 	context_menu->add_col("add");
 
-	int result = show_grid_as_context_menu(context_menu, widget_ptr(this));
+	int result = show_grid_as_context_menu(context_menu, WidgetPtr(this));
 	if(result < 0) {
 		return;
 	}
@@ -2228,7 +2222,7 @@ void voxel_editor::set_symmetric(bool value)
 {
 	const bool old_value = symmetric_;
 	symmetric_ = value;
-	get_editor().execute_command(
+	get_editor().executeCommand(
 		[this, value]() { this->symmetric_ = value; },
 		[this, old_value]() { this->symmetric_ = old_value; }
 	);
@@ -2246,7 +2240,7 @@ void voxel_editor::select_layer(int nlayer, grid* layer_grid)
 		assert(nlayer >= 0 && nlayer < layers_.size());
 		const int old_layer = current_layer_;
 
-		execute_command(
+		executeCommand(
 			[this, nlayer]() { this->current_layer_ = nlayer; },
 			[this, old_layer]() { this->current_layer_ = old_layer; }
 		);
@@ -2295,22 +2289,22 @@ void voxel_editor::redo()
 	}
 }
 
-void voxel_editor::handle_process()
+void voxel_editor::handleProcess()
 {
 	VOXEL_TOOL current_tool = tool();
 	for(int n = 0; n != tool_borders_.size(); ++n) {
-		tool_borders_[n]->set_color(n == current_tool ? graphics::color_white() : graphics::color_black());
+		tool_borders_[n]->setColor(n == current_tool ? graphics::color_white() : graphics::color_black());
 	}
 
-	dialog::handle_process();
+	dialog::handleProcess();
 }
 
-void voxel_editor::execute_command(std::function<void()> redo, std::function<void()> undo)
+void voxel_editor::executeCommand(std::function<void()> redo, std::function<void()> undo)
 {
-	execute_command(Command(redo, undo));
+	executeCommand(Command(redo, undo));
 }
 
-void voxel_editor::execute_command(const Command& cmd)
+void voxel_editor::executeCommand(const Command& cmd)
 {
 	cmd.redo();
 	undo_.push_back(cmd);

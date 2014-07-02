@@ -14,11 +14,9 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "json_parser.hpp"
 #include "preferences.hpp"
 #include "tbs_client.hpp"
@@ -40,7 +38,7 @@ client::client(const std::string& host, const std::string& port,
 {
 }
 
-void client::send_request(variant request, game_logic::map_formula_callable_ptr callable, boost::function<void(std::string)> handler)
+void client::send_request(variant request, game_logic::MapFormulaCallablePtr callable, std::function<void(std::string)> handler)
 {
 	handler_ = handler;
 	callable_ = callable;
@@ -50,8 +48,8 @@ void client::send_request(variant request, game_logic::map_formula_callable_ptr 
 
 	http_client::send_request("POST /tbs", 
 		request_str,
-		boost::bind(&client::recv_handler, this, _1), 
-		boost::bind(&client::error_handler, this, _1), 
+		std::bind(&client::recv_handler, this, _1), 
+		std::bind(&client::error_handler, this, _1), 
 		0);
 
 	if(local_game_cache_ && request["type"].as_string() == "moves" && request["state_id"].as_int() == local_game_cache_->state_id()) {
@@ -117,9 +115,9 @@ void client::error_handler(const std::string& err)
 	}
 }
 
-variant client::get_value(const std::string& key) const
+variant client::getValue(const std::string& key) const
 {
-	return http_client::get_value(key);
+	return http_client::getValue(key);
 }
 
 void client::process()
@@ -134,7 +132,7 @@ void client::process()
 	http_client::process();
 }
 
-void client::set_id(const std::string& id)
+void client::setId(const std::string& id)
 {
 	connection_id_ = id;
 	if(id != "") {

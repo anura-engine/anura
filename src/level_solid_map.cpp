@@ -1,84 +1,92 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+
 #include <iostream>
 #include <set>
 
-#include "foreach.hpp"
 #include "level_solid_map.hpp"
 #include "preferences.hpp"
 
-namespace {
-void merge_surface_info(surface_info& a, const surface_info& b)
+namespace 
 {
-	a.friction = std::max<int>(a.friction, b.friction);
-	a.traction = std::max<int>(a.traction, b.traction);
-	a.damage = std::max<int>(a.damage, b.damage);
-	if(b.info) {
-		a.info = b.info;
+	void merge_SurfaceInfo(SurfaceInfo& a, const SurfaceInfo& b)
+	{
+		a.friction = std::max<int>(a.friction, b.friction);
+		a.traction = std::max<int>(a.traction, b.traction);
+		a.damage = std::max<int>(a.damage, b.damage);
+		if(b.info) {
+			a.info = b.info;
+		}
 	}
 }
-}
 
-const std::string* surface_info::get_info_str(const std::string& key)
+const std::string* SurfaceInfo::get_info_str(const std::string& key)
 {
 	static std::set<std::string> info_set;
 	return &*info_set.insert(key).first;
 }
 
-level_solid_map::level_solid_map()
+LevelSolidMap::LevelSolidMap()
 {
 }
 
-level_solid_map::level_solid_map(const level_solid_map& m)
+LevelSolidMap::LevelSolidMap(const LevelSolidMap& m)
 {
 }
 
-level_solid_map& level_solid_map::operator=(const level_solid_map& m)
+LevelSolidMap& LevelSolidMap::operator=(const LevelSolidMap& m)
 {
 	return *this;
 }
 
-level_solid_map::~level_solid_map()
+LevelSolidMap::~LevelSolidMap()
 {
 	clear();
 }
 
-tile_solid_info& level_solid_map::insert_or_find(const tile_pos& pos)
+TileSolidInfo& LevelSolidMap::insertOrFind(const tile_pos& pos)
 {
-	tile_solid_info** result = insert_raw(pos);
+	TileSolidInfo** result = insertRaw(pos);
 	if(!*result) {
-		*result = new tile_solid_info;
+		*result = new TileSolidInfo;
 	}
 
 	return **result;
 }
 
-tile_solid_info** level_solid_map::insert_raw(const tile_pos& pos)
+TileSolidInfo** LevelSolidMap::insertRaw(const tile_pos& pos)
 {
 	row* r = NULL;
 	if(pos.second >= 0) {
-		if(positive_rows_.size() <= pos.second) {
+		if(positive_rows_.size() <= static_cast<unsigned>(pos.second)) {
 			positive_rows_.resize(pos.second + 1);
 		}
 
 		r = &positive_rows_[pos.second];
 	} else {
 		const int index = -(pos.second+1);
-		if(negative_rows_.size() <= index) {
+		if(negative_rows_.size() <= static_cast<unsigned>(index)) {
 			negative_rows_.resize(index + 1);
 		}
 
@@ -86,14 +94,14 @@ tile_solid_info** level_solid_map::insert_raw(const tile_pos& pos)
 	}
 
 	if(pos.first >= 0) {
-		if(r->positive_cells.size() <= pos.first) {
+		if(r->positive_cells.size() <= static_cast<unsigned>(pos.first)) {
 			r->positive_cells.resize(pos.first + 1);
 		}
 
 		return &r->positive_cells[pos.first];
 	} else {
 		const int index = -(pos.first+1);
-		if(r->negative_cells.size() <= index) {
+		if(r->negative_cells.size() <= static_cast<unsigned>(index)) {
 			r->negative_cells.resize(index + 1);
 		}
 
@@ -101,18 +109,18 @@ tile_solid_info** level_solid_map::insert_raw(const tile_pos& pos)
 	}
 }
 
-const tile_solid_info* level_solid_map::find(const tile_pos& pos) const
+const TileSolidInfo* LevelSolidMap::find(const tile_pos& pos) const
 {
 	const row* r = NULL;
 	if(pos.second >= 0) {
-		if(pos.second < positive_rows_.size()) {
+		if(static_cast<unsigned>(pos.second) < positive_rows_.size()) {
 			r = &positive_rows_[pos.second];
 		} else {
 			return NULL;
 		}
 	} else {
 		const int index = -(pos.second+1);
-		if(index < negative_rows_.size()) {
+		if(static_cast<unsigned>(index) < negative_rows_.size()) {
 			r = &negative_rows_[index];
 		} else {
 			return NULL;
@@ -120,14 +128,14 @@ const tile_solid_info* level_solid_map::find(const tile_pos& pos) const
 	}
 
 	if(pos.first >= 0) {
-		if(pos.first < r->positive_cells.size()) {
+		if(static_cast<unsigned>(pos.first) < r->positive_cells.size()) {
 			return r->positive_cells[pos.first];
 		} else {
 			return NULL;
 		}
 	} else {
 		const int index = -(pos.first+1);
-		if(index < r->negative_cells.size()) {
+		if(static_cast<unsigned>(index) < r->negative_cells.size()) {
 			return r->negative_cells[index];
 		} else {
 			return NULL;
@@ -135,31 +143,31 @@ const tile_solid_info* level_solid_map::find(const tile_pos& pos) const
 	}
 }
 
-void level_solid_map::erase(const tile_pos& pos)
+void LevelSolidMap::erase(const tile_pos& pos)
 {
-	tile_solid_info** info = insert_raw(pos);
+	TileSolidInfo** info = insertRaw(pos);
 	delete *info;
 	*info = NULL;
 }
 
-void level_solid_map::clear()
+void LevelSolidMap::clear()
 {
-	foreach(row& r, positive_rows_) {
-		foreach(tile_solid_info* info, r.positive_cells) {
+	for(row& r : positive_rows_) {
+		for(TileSolidInfo* info : r.positive_cells) {
 			delete info;
 		}
 
-		foreach(tile_solid_info* info, r.negative_cells) {
+		for(TileSolidInfo* info : r.negative_cells) {
 			delete info;
 		}
 	}
 
-	foreach(row& r, negative_rows_) {
-		foreach(tile_solid_info* info, r.positive_cells) {
+	for(row& r : negative_rows_) {
+		for(TileSolidInfo* info : r.positive_cells) {
 			delete info;
 		}
 
-		foreach(tile_solid_info* info, r.negative_cells) {
+		for(TileSolidInfo* info : r.negative_cells) {
 			delete info;
 		}
 	}
@@ -168,19 +176,19 @@ void level_solid_map::clear()
 	negative_rows_.clear();
 }
 
-void level_solid_map::merge(const level_solid_map& map, int xoffset, int yoffset)
+void LevelSolidMap::merge(const LevelSolidMap& map, int xoffset, int yoffset)
 {
 	for(int n = 0; n != map.negative_rows_.size(); ++n) {
 		for(int m = 0; m != map.negative_rows_[n].negative_cells.size(); ++m) {
 			const tile_pos pos(-m - 1 + xoffset, -n - 1 + yoffset);
-			tile_solid_info& dst = insert_or_find(pos);
-			const tile_solid_info* src = map.negative_rows_[n].negative_cells[m];
+			TileSolidInfo& dst = insertOrFind(pos);
+			const TileSolidInfo* src = map.negative_rows_[n].negative_cells[m];
 			if(!src) {
 				continue;
 			}
 
 			dst.all_solid = dst.all_solid || src->all_solid;
-			merge_surface_info(dst.info, src->info);
+			merge_SurfaceInfo(dst.info, src->info);
 			if(!dst.all_solid) {
 				dst.bitmap = dst.bitmap | src->bitmap;
 			}
@@ -188,14 +196,14 @@ void level_solid_map::merge(const level_solid_map& map, int xoffset, int yoffset
 
 		for(int m = 0; m != map.negative_rows_[n].positive_cells.size(); ++m) {
 			const tile_pos pos(m + xoffset, -n - 1 + yoffset);
-			tile_solid_info& dst = insert_or_find(pos);
-			const tile_solid_info* src = map.negative_rows_[n].positive_cells[m];
+			TileSolidInfo& dst = insertOrFind(pos);
+			const TileSolidInfo* src = map.negative_rows_[n].positive_cells[m];
 			if(!src) {
 				continue;
 			}
 
 			dst.all_solid = dst.all_solid || src->all_solid;
-			merge_surface_info(dst.info, src->info);
+			merge_SurfaceInfo(dst.info, src->info);
 			if(!dst.all_solid) {
 				dst.bitmap = dst.bitmap | src->bitmap;
 			}
@@ -205,14 +213,14 @@ void level_solid_map::merge(const level_solid_map& map, int xoffset, int yoffset
 	for(int n = 0; n != map.positive_rows_.size(); ++n) {
 		for(int m = 0; m != map.positive_rows_[n].negative_cells.size(); ++m) {
 			const tile_pos pos(-m - 1 + xoffset, n + yoffset);
-			tile_solid_info& dst = insert_or_find(pos);
-			const tile_solid_info* src = map.positive_rows_[n].negative_cells[m];
+			TileSolidInfo& dst = insertOrFind(pos);
+			const TileSolidInfo* src = map.positive_rows_[n].negative_cells[m];
 			if(!src) {
 				continue;
 			}
 
 			dst.all_solid = dst.all_solid || src->all_solid;
-			merge_surface_info(dst.info, src->info);
+			merge_SurfaceInfo(dst.info, src->info);
 			if(!dst.all_solid) {
 				dst.bitmap = dst.bitmap | src->bitmap;
 			}
@@ -220,15 +228,15 @@ void level_solid_map::merge(const level_solid_map& map, int xoffset, int yoffset
 
 		for(int m = 0; m != map.positive_rows_[n].positive_cells.size(); ++m) {
 			const tile_pos pos(m + xoffset, n + yoffset);
-			const tile_solid_info* src = map.positive_rows_[n].positive_cells[m];
+			const TileSolidInfo* src = map.positive_rows_[n].positive_cells[m];
 			if(!src) {
 				continue;
 			}
 
-			tile_solid_info& dst = insert_or_find(pos);
+			TileSolidInfo& dst = insertOrFind(pos);
 
 			dst.all_solid = dst.all_solid || src->all_solid;
-			merge_surface_info(dst.info, src->info);
+			merge_SurfaceInfo(dst.info, src->info);
 			if(!dst.all_solid) {
 				dst.bitmap = dst.bitmap | src->bitmap;
 			}

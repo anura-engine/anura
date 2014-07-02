@@ -16,7 +16,6 @@
 */
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <deque>
 #include <iostream>
 
@@ -53,7 +52,7 @@ web_server::~web_server()
 void web_server::start_accept()
 {
 	socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
-	acceptor_.async_accept(*socket, boost::bind(&web_server::handle_accept, this, socket, boost::asio::placeholders::error));
+	acceptor_.async_accept(*socket, std::bind(&web_server::handle_accept, this, socket, boost::asio::placeholders::error));
 }
 
 namespace {
@@ -78,7 +77,7 @@ void web_server::start_receive(socket_ptr socket, receive_buf_ptr recv_buf)
 	}
 
 	buffer_ptr buf(new boost::array<char, 64*1024>);
-	socket->async_read_some(boost::asio::buffer(*buf), boost::bind(&web_server::handle_receive, this, socket, buf, _1, _2, recv_buf));
+	socket->async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, _1, _2, recv_buf));
 }
 
 void web_server::handle_receive(socket_ptr socket, buffer_ptr buf, 
@@ -261,7 +260,7 @@ void web_server::handle_message(socket_ptr socket, receive_buf_ptr recv_buf)
 	disconnect(socket);
 }
 
-void web_server::handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, boost::shared_ptr<std::string> buf)
+void web_server::handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, std::shared_ptr<std::string> buf)
 {
 	if(nbytes == max_bytes || e) {
 		disconnect(socket);
@@ -295,11 +294,11 @@ void web_server::send_msg(socket_ptr socket, const std::string& type, const std:
         (header_parms.empty() ? "" : header_parms + "\r\n")
         << "\r\n";
 
-	boost::shared_ptr<std::string> str(new std::string(buf.str()));
+	std::shared_ptr<std::string> str(new std::string(buf.str()));
 	*str += msg;
 
 	boost::asio::async_write(*socket, boost::asio::buffer(*str),
-	                         boost::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
+	                         std::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
 }
 
 void web_server::send_404(socket_ptr socket)
@@ -312,9 +311,9 @@ void web_server::send_404(socket_ptr socket)
 		"Server: Wizard/1.0\r\n"
 		"Accept-Ranges: none\r\n"
 		"\r\n";
-	boost::shared_ptr<std::string> str(new std::string(buf.str()));
+	std::shared_ptr<std::string> str(new std::string(buf.str()));
 	boost::asio::async_write(*socket, boost::asio::buffer(*str),
-                boost::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
+                std::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
 }
 
 variant web_server::parse_message(const std::string& msg) const

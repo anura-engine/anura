@@ -24,7 +24,6 @@
 #if !defined(__native_client__)
 #include <boost/asio.hpp>
 #endif
-#include <boost/bind.hpp>
 
 #include "checksum.hpp"
 #include "filesystem.hpp"
@@ -141,9 +140,9 @@ void send_stats_thread() {
 			http_client client("theargentlark.com", "5000");
 			client.send_request("POST /cgi-bin/" + queue[n].first, 
 				queue[n].second, 
-				boost::bind(finish_upload, _1, &done),
-				boost::bind(finish_upload, _1, &done),
-				boost::bind(upload_progress, _1, _2, _3));				
+				std::bind(finish_upload, _1, &done),
+				std::bind(finish_upload, _1, &done),
+				std::bind(upload_progress, _1, _2, _3));				
 			while(!done) {
 				client.process();
 			}
@@ -180,9 +179,9 @@ bool download(const std::string& lvl) {
 	http_client client("www.wesnoth.org", "80");
 	client.send_request("GET /files/dave/frogatto-stats/" + lvl, 
 		"", 
-		boost::bind(download_finish, _1, &done, lvl),
-		boost::bind(download_error, _1, &done, &err),
-		boost::bind(download_progress, _1, _2, _3));				
+		std::bind(download_finish, _1, &done, lvl),
+		std::bind(download_error, _1, &done, &err),
+		std::bind(download_progress, _1, _2, _3));				
 	while(!done) {
 		client.process();
 	}
@@ -252,8 +251,8 @@ entry& entry::set(const std::string& name, const variant& value)
 entry& entry::add_player_pos()
 {
 	if(level::current().player()) {
-		set("x", variant(level::current().player()->get_entity().midpoint().x));
-		set("y", variant(level::current().player()->get_entity().midpoint().y));
+		set("x", variant(level::current().player()->getEntity().getMidpoint().x));
+		set("y", variant(level::current().player()->getEntity().getMidpoint().y));
 	}
 
 	return *this;

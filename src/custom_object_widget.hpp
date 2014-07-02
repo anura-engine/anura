@@ -29,17 +29,17 @@ namespace gui
 	class custom_object_widget : public widget
 	{
 	public:
-		custom_object_widget(const variant& v, game_logic::formula_callable* e);
+		custom_object_widget(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~custom_object_widget();
-		void set_entity(entity_ptr e);
-		entity_ptr get_entity();
-		const_entity_ptr get_entity() const;
+		void setEntity(EntityPtr e);
+		EntityPtr getEntity();
+		ConstEntityPtr getEntity() const;
 		void init(const variant& v);
 	protected:
 
-		void handle_draw() const;
-		bool handle_event(const SDL_Event& event, bool claimed);
-		virtual void handle_process();
+		void handleDraw() const override;
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleProcess() override;
 	private:
 		DECLARE_CALLABLE(custom_object_widget);
 
@@ -47,23 +47,23 @@ namespace gui
 		void mouse_enter();
 		void mouse_leave();
 
-		boost::function<void (int)> on_click_;
+		std::function<void (int)> on_click_;
 		game_logic::formula_ptr click_handler_;
-		boost::function<void ()> on_mouse_enter_;
+		std::function<void ()> on_mouse_enter_;
 		game_logic::formula_ptr mouse_enter_handler_;
-		boost::function<void ()> on_mouse_leave_;
+		std::function<void ()> on_mouse_leave_;
 		game_logic::formula_ptr mouse_leave_handler_;
 
 		game_logic::formula_ptr commands_handler_;
 
-		widget_ptr overlay_;
+		WidgetPtr overlay_;
 
-		entity_ptr entity_;
-		bool handle_process_on_entity_;
+		EntityPtr entity_;
+		bool handleProcess_on_entity_;
 	};
 
-	typedef boost::intrusive_ptr<custom_object_widget> custom_object_widget_ptr;
-	typedef boost::intrusive_ptr<const custom_object_widget> const_custom_object_widget_ptr;
+	typedef boost::intrusive_ptr<custom_object_widget> custom_object_WidgetPtr;
+	typedef boost::intrusive_ptr<const custom_object_widget> const_custom_object_WidgetPtr;
 }
 
 #endif

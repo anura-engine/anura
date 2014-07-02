@@ -14,8 +14,8 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#ifndef FORMULA_CALLABLE_UTILS_HPP_INCLUDED
-#define FORMULA_CALLABLE_UTILS_HPP_INCLUDED
+#ifndef FormulaCallable_UTILS_HPP_INCLUDED
+#define FormulaCallable_UTILS_HPP_INCLUDED
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -28,21 +28,21 @@
 namespace game_logic
 {
 
-class slot_formula_callable : public formula_callable
+class slot_FormulaCallable : public FormulaCallable
 {
 public:
-	slot_formula_callable() : value_names_(NULL), base_slot_(0)
+	slot_FormulaCallable() : value_names_(NULL), base_slot_(0)
 	{}
 
 	void set_names(const std::vector<std::string>* names) {
 		value_names_ = names;
 	}
-	void set_fallback(const const_formula_callable_ptr& fallback) { fallback_ = fallback; }
+	void set_fallback(const ConstFormulaCallablePtr& fallback) { fallback_ = fallback; }
 	void add(const variant& val) { values_.push_back(val); }
 	variant& back_direct_access() { return values_.back(); }
 	void reserve(size_t n) { values_.reserve(n); }
 
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		if(value_names_) {
 			for(int n = 0; n != value_names_->size(); ++n) {
 				if((*value_names_)[n] == key) {
@@ -58,7 +58,7 @@ public:
 		return variant();
 	}
 
-	variant get_value_by_slot(int slot) const {
+	variant getValueBySlot(int slot) const {
 		if(slot < base_slot_) {
 			return fallback_->query_value_by_slot(slot);
 		}
@@ -71,7 +71,7 @@ public:
 	void clear() {
 		value_names_ = 0;
 		values_.clear();
-		fallback_ = const_formula_callable_ptr();
+		fallback_ = ConstFormulaCallablePtr();
 	}
 
 	void set_base_slot(int base) { base_slot_ = base; }
@@ -81,7 +81,7 @@ public:
 private:
 	const std::vector<std::string>* value_names_;
 	std::vector<variant> values_;
-	const_formula_callable_ptr fallback_;
+	ConstFormulaCallablePtr fallback_;
 
 	int base_slot_;
 };

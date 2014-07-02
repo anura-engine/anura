@@ -19,7 +19,7 @@
 
 #include <boost/shared_ptr.hpp>
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "thread.hpp"
 #include "variant.hpp"
 

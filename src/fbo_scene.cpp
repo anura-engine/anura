@@ -70,7 +70,7 @@ texture_object::~texture_object()
 
 BEGIN_DEFINE_CALLABLE_NOBASE(texture_object)
 DEFINE_FIELD(id, "int")
-	return variant(obj.texture().get_id());
+	return variant(obj.texture().getId());
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;
 	using namespace graphics;
@@ -97,7 +97,7 @@ END_DEFINE_FN
 END_DEFINE_CALLABLE(texture_object)
 
 
-graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> objects)
+graphics::texture render_fbo(const rect& area, const std::vector<EntityPtr> objects)
 {
 	const controls::control_backup_scope ctrl_backup;
 
@@ -131,8 +131,8 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 
 	glViewport(0, 0, area.w(), area.h());
 
-	level_ptr lvl(new level("empty.cfg"));
-	foreach(const entity_ptr& e, objects) {
+	LevelPtr lvl(new level("empty.cfg"));
+	foreach(const EntityPtr& e, objects) {
 		lvl->add_character(e);
 		lvl->add_draw_character(e);
 	}
@@ -145,7 +145,7 @@ graphics::texture render_fbo(const rect& area, const std::vector<entity_ptr> obj
 		preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
 		lvl->process();
 		lvl->process_draw();
-		foreach(const entity_ptr& e, objects) {
+		foreach(const EntityPtr& e, objects) {
 			lvl->add_draw_character(e);
 		}
 		render_scene(*lvl, pos);

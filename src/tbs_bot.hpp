@@ -31,7 +31,7 @@
 
 namespace tbs {
 
-class bot : public game_logic::formula_callable
+class bot : public game_logic::FormulaCallable
 {
 public:
 	bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
@@ -40,17 +40,17 @@ public:
 	void process(const boost::system::error_code& error);
 
 private:
-	void handle_response(const std::string& type, game_logic::formula_callable_ptr callable);
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	void handle_response(const std::string& type, game_logic::FormulaCallablePtr callable);
+	variant getValue(const std::string& key) const;
+	void setValue(const std::string& key, const variant& value);
 
 	variant generate_report() const;
 
 	std::string host_, port_;
 	std::vector<variant> script_;
 	std::vector<variant> response_;
-	boost::shared_ptr<client> client_;
-	boost::shared_ptr<internal_client> internal_client_;
+	std::shared_ptr<client> client_;
+	std::shared_ptr<internal_client> internal_client_;
 
 	boost::asio::io_service& service_;
 	boost::asio::deadline_timer timer_;
@@ -60,7 +60,7 @@ private:
 	variant data_;
 
 	std::string message_type_;
-	game_logic::formula_callable_ptr message_callable_;
+	game_logic::FormulaCallablePtr message_callable_;
 };
 
 }

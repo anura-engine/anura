@@ -1,46 +1,51 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef BAR_WIDGET_HPP_INCLUDED
-#define BAR_WIDGET_HPP_INCLUDED
 
 #include "widget.hpp"
 
 namespace gui
 {
-	class bar_widget : public widget
+	class BarWidget : public Widget
 	{
 	public:
-		bar_widget(const variant& v, game_logic::formula_callable* e);
-		virtual ~bar_widget();
+		BarWidget(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~BarWidget();
 		void init();
 
-		void set_rotation(GLfloat rotate);
+		void setRotation(float rotate);
 	private:
-	DECLARE_CALLABLE(bar_widget);
+	DECLARE_CALLABLE(BarWidget);
 	protected:
-		virtual void handle_draw() const;
-		virtual void handle_process();
-		virtual bool handle_event(const SDL_Event& event, bool claimed);
-		void draw_ticks(GLfloat x_offset, int segments, const SDL_Color& color) const;
+		virtual void handleDraw() const override;
+		virtual void handleProcess() override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		void drawTicks(float x_offset, int segments, const KRE::Color& color) const;
 
 		struct bar_section
 		{
-			graphics::texture texture;
+			KRE::TexturePtr texture;
 			rect area;
 		};
 
@@ -50,16 +55,16 @@ namespace gui
 		bar_section left_cap_;
 		bar_section right_cap_;
 
-		SDL_Color bar_color_;
-		SDL_Color drained_bar_color_;
-		SDL_Color tick_mark_color_;
-		SDL_Color drained_tick_mark_color_;
+		KRE::Color bar_color_;
+		KRE::Color drained_bar_color_;
+		KRE::Color tick_mark_color_;
+		KRE::Color drained_tick_mark_color_;
 
-		GLfloat rotate_;
-		GLfloat scale_;
+		float rotate_;
+		float scale_;
 
-		GLfloat animation_end_point_unscaled_;
-		GLfloat animation_current_position_;
+		float animation_end_point_unscaled_;
+		float animation_current_position_;
 
 		// Rate (in frames/segment) that the bar goes removes
 		// segments when drained_segments_ is increased or decreased.
@@ -103,5 +108,3 @@ namespace gui
 		int drained_segments_after_anim_;
 	};
 }
-
-#endif

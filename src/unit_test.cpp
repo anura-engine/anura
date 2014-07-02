@@ -14,17 +14,13 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 #include <iostream>
 #include <map>
 #include <set>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "preferences.hpp"
 #include "unit_test.hpp"
-
-#include "graphics.hpp"
 
 namespace test {
 
@@ -86,7 +82,7 @@ bool utility_needs_video(const std::string& name)
 
 bool run_tests(const std::vector<std::string>* tests)
 {
-	const int start_time = SDL_GetTicks();
+	const int start_time = profile::get_tick_time();
 	std::vector<std::string> all_tests;
 	if(!tests) {
 		for(TestMap::const_iterator i = get_test_map().begin(); i != get_test_map().end(); ++i) {
@@ -144,7 +140,7 @@ std::string run_benchmark(const std::string& name, BenchmarkTest fn)
 	std::cerr << "RUNNING BENCHMARK " << name << "...\n";
 	const int MinTicks = 1000;
 	for(int64_t nruns = 10; ; nruns *= 10) {
-		const int start_time = SDL_GetTicks();
+		const int start_time = profile::get_tick_time();
 		fn(nruns);
 		const int64_t time_taken_ms = SDL_GetTicks() - start_time;
 		if(time_taken_ms >= MinTicks || nruns > 1000000000) {
@@ -200,7 +196,7 @@ void run_benchmarks(const std::vector<std::string>* benchmarks)
 
 void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg)
 {
-	run_benchmark(benchmark_name, boost::bind(get_cl_benchmark_map()[benchmark_name], _1, arg));
+	run_benchmark(benchmark_name, std::bind(get_cl_benchmark_map()[benchmark_name], _1, arg));
 }
 
 void run_utility(const std::string& utility_name, const std::vector<std::string>& arg)

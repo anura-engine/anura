@@ -47,7 +47,7 @@ namespace {
 std::map<std::string, std::string> pseudo_file_contents;
 }
 
-void set_file_contents(const std::string& path, const std::string& contents)
+void setFileContents(const std::string& path, const std::string& contents)
 {
 	game_logic::remove_formula_function_cached_doc(contents);
 	pseudo_file_contents[path] = contents;
@@ -116,7 +116,7 @@ void escape_string(std::string& s) {
 namespace {
 
 class json_macro;
-typedef boost::shared_ptr<json_macro> json_macro_ptr;
+typedef std::shared_ptr<json_macro> json_macro_ptr;
 
 class json_macro {
 	std::string code_;
@@ -230,7 +230,7 @@ std::set<std::string> filename_registry;
 variant parse_internal(const std::string& doc, const std::string& fname,
                        JSON_PARSE_OPTIONS options,
 					   std::map<std::string, json_macro_ptr>* macros,
-					   const game_logic::formula_callable* callable)
+					   const game_logic::FormulaCallable* callable)
 {
 	std::map<std::string, json_macro_ptr> macros_buf;
 	if(!macros) {
@@ -329,7 +329,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 				} else if(begin_macro) {
 					(*macros)[name.as_string()].reset(new json_macro(std::string(begin_macro, t.end), *macros));
 					use_preprocessor = true;
-				} else if(use_preprocessor && v.is_map() && game_logic::wml_serializable_formula_callable::deserialize_obj(v, &v)) {
+				} else if(use_preprocessor && v.is_map() && game_logic::WmlSerializableFormulaCallable::deserializeObj(v, &v)) {
 					stack.back().add(name, v);
 				} else {
 					stack.back().add(name, v);
@@ -531,7 +531,7 @@ variant parse_internal(const std::string& doc, const std::string& fname,
 variant json_macro::call(variant arg) const
 {
 	std::map<std::string, json_macro_ptr> m = macros_;
-	game_logic::map_formula_callable* callable = new game_logic::map_formula_callable;
+	game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 	foreach(const variant_pair& p, arg.as_map()) {
 		callable->add(p.first.as_string(), p.second);
 	}
@@ -583,7 +583,7 @@ variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
 			}
 
 			in_edit_and_continue = true;
-			edit_and_continue_fn(module::map_file(fname), formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, boost::bind(parse_from_file, fname, options));
+			edit_and_continue_fn(module::map_file(fname), formatter() << "At " << module::map_file(fname) << " " << e.line << ": " << e.message, std::bind(parse_from_file, fname, options));
 			in_edit_and_continue = false;
 			return parse_from_file(fname, options);
 		}
@@ -673,7 +673,7 @@ UNIT_TEST(json_macro)
 	                  "value: {\"@call\": \"f\", x: 2, y: {a: 4, z: 5}}}";
 	variant v = parse(doc);
 	std::cerr << v.write_json();
-	CHECK_EQ(v.get_keys().num_elements(), 1);
+	CHECK_EQ(v.getKeys().num_elements(), 1);
 
 	v = v["value"];
 	CHECK_EQ(v["a"], variant(6));

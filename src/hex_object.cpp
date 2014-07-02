@@ -14,15 +14,14 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "hex_tile.hpp"
-#include "hex_map.hpp"
-#include "hex_object.hpp"
+#include "HexMap.hpp"
+#include "HexObject.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "variant_utils.hpp"
@@ -32,30 +31,30 @@ namespace hex {
 
 namespace {
 
-std::map<std::string, tile_type_ptr>& get_tile_type_map()
+std::map<std::string, TileTypePtr>& get_TileType_map()
 {
-	static std::map<std::string, tile_type_ptr> tile_map;
+	static std::map<std::string, TileTypePtr> tile_map;
 	return tile_map;
 }
 
-std::vector<tile_type_ptr>& get_hex_editor_tiles()
+std::vector<TileTypePtr>& get_hex_editor_tiles()
 {
-	static std::vector<tile_type_ptr> tiles;
+	static std::vector<TileTypePtr> tiles;
 	return tiles;
 }
 
-std::map<std::string, tile_type_ptr>& get_editor_hex_tile_map()
+std::map<std::string, TileTypePtr>& get_editor_hex_tile_map()
 {
-	static std::map<std::string, tile_type_ptr> tile_map;
+	static std::map<std::string, TileTypePtr> tile_map;
 	return tile_map;
 }
 
 void load_editor_tiles()
 {
-	std::map<std::string, tile_type_ptr>::const_iterator it = get_tile_type_map().begin();
-	while(it != get_tile_type_map().end()) {
-		if(it->second->get_editor_info().name.empty() == false 
-			&& it->second->get_editor_info().type.empty() == false) {
+	std::map<std::string, TileTypePtr>::const_iterator it = get_TileType_map().begin();
+	while(it != get_TileType_map().end()) {
+		if(it->second->getgetEditorInfo().name.empty() == false 
+			&& it->second->getgetEditorInfo().type.empty() == false) {
 			get_hex_editor_tiles().push_back(it->second);
 		}
 		++it;
@@ -64,10 +63,10 @@ void load_editor_tiles()
 
 void load_hex_editor_tiles()
 {
-	std::map<std::string, tile_type_ptr>::const_iterator it = get_tile_type_map().begin();
-	while(it != get_tile_type_map().end()) {
-		if(it->second->get_editor_info().type.empty() == false) {
-			get_editor_hex_tile_map()[it->second->get_editor_info().type] = it->second;
+	std::map<std::string, TileTypePtr>::const_iterator it = get_TileType_map().begin();
+	while(it != get_TileType_map().end()) {
+		if(it->second->getgetEditorInfo().type.empty() == false) {
+			get_editor_hex_tile_map()[it->second->getgetEditorInfo().type] = it->second;
 		}
 		++it;
 	}
@@ -75,12 +74,12 @@ void load_hex_editor_tiles()
 
 void load_hex_tiles(variant node)
 {
-	if(!get_tile_type_map().empty()) {
-		get_tile_type_map().clear();
+	if(!get_TileType_map().empty()) {
+		get_TileType_map().clear();
 	}
 	for(auto p : node.as_map()) {
 		std::string key_str = p.first.as_string();
-		get_tile_type_map()[key_str] = tile_type_ptr(new tile_type(key_str, p.second));
+		get_TileType_map()[key_str] = TileTypePtr(new TileType(key_str, p.second));
 	}
 
 	// get list of all tiles have non-empty "editor_info" blocks.
@@ -101,33 +100,33 @@ public:
 	 : function_expression("get_tile", args, 1, 1)
 	{}
 private:
-	variant execute(const game_logic::formula_callable& variables) const {
+	variant execute(const game_logic::FormulaCallable& variables) const {
 		const std::string key = args()[0]->evaluate(variables).as_string();
-		return variant(hex_object::get_hex_tile(key).get());
+		return variant(HexObject::get_hex_tile(key).get());
 	}
 };
 
-class hex_function_symbol_table : public game_logic::function_symbol_table
+class hex_FunctionSymbolTable : public game_logic::FunctionSymbolTable
 {
 public:
-	hex_function_symbol_table()
+	hex_FunctionSymbolTable()
 	{}
 
 	game_logic::expression_ptr create_function(
 		const std::string& fn,
 		const std::vector<game_logic::expression_ptr>& args,
-		game_logic::const_formula_callable_definition_ptr callable_def) const
+		game_logic::ConstFormulaCallableDefinitionPtr callable_def) const
 	{
 		if(fn == "get_tile") {
 			return game_logic::expression_ptr(new get_tile_function(args));
 		}
-		return function_symbol_table::create_function(fn, args, callable_def);
+		return FunctionSymbolTable::create_function(fn, args, callable_def);
 	}
 };
 
-game_logic::function_symbol_table& get_hex_function_symbol_table()
+game_logic::FunctionSymbolTable& get_hex_FunctionSymbolTable()
 {
-	static hex_function_symbol_table table;
+	static hex_FunctionSymbolTable table;
 	return table;
 }
 
@@ -147,8 +146,8 @@ struct hex_engine
 		functions_var = value["functions"];
 		if(functions_var.is_null() == false) {
 			ASSERT_LOG(functions_var.is_string() == true || functions_var.is_list() == true, "\"functions must\" be specified as a string or list.");
-			functions.reset(new game_logic::function_symbol_table);
-			functions->set_backup(&get_hex_function_symbol_table());
+			functions.reset(new game_logic::FunctionSymbolTable);
+			functions->set_backup(&get_hex_FunctionSymbolTable());
 			if(functions_var.is_string()) {
 				game_logic::formula f(functions_var, functions.get());
 			} else if(functions_var.is_list()) {
@@ -182,8 +181,8 @@ struct hex_engine
 		foreach(const std::string& s, rules) {
 			res.add("rules", s);
 		}
-		std::map<std::string, tile_type_ptr>::const_iterator tile_it = get_tile_type_map().begin();
-		while(tile_it != get_tile_type_map().end()) {
+		std::map<std::string, TileTypePtr>::const_iterator tile_it = get_TileType_map().begin();
+		while(tile_it != get_TileType_map().end()) {
 			variant_builder node;
 			node.add(tile_it->first, tile_it->second->write());
 			res.add("tiles", node.build());
@@ -193,7 +192,7 @@ struct hex_engine
 	}
 
 	variant functions_var;
-	boost::shared_ptr<game_logic::function_symbol_table> functions;
+	std::shared_ptr<game_logic::FunctionSymbolTable> functions;
 	std::map<std::string, game_logic::const_formula_ptr> handlers;
 	std::vector<std::string> rules;
 };
@@ -206,46 +205,46 @@ hex_engine& generate_hex_engine()
 
 }
 
-hex_object::hex_object(const std::string& type, int x, int y, const hex_map* owner) 
+HexObject::HexObject(const std::string& type, int x, int y, const HexMap* owner) 
 	: neighbors_init_(false), owner_map_(owner), x_(x), y_(y), type_(type)
 {
 	generate_hex_engine(); // make sure hex engine is initialized.
-	tile_ = get_tile_type_map()[type_];
+	tile_ = get_TileType_map()[type_];
 	ASSERT_LOG(tile_, "Could not find tile: " << type_);
 }
 
-std::vector<std::string> hex_object::get_rules()
+std::vector<std::string> HexObject::get_rules()
 {
 	return generate_hex_engine().rules;
 }
 
-hex_object_ptr hex_object::get_tile_in_dir(enum direction d) const
+HexObjectPtr HexObject::getTileInDir(enum direction d) const
 {
 	return owner_map_->get_hex_tile(d, x_, y_);
 }
 
-hex_object_ptr hex_object::get_tile_in_dir(const std::string& s) const
+HexObjectPtr HexObject::getTileInDir(const std::string& s) const
 {
 	if(s == "north" || s == "n") {
-		return get_tile_in_dir(NORTH);
+		return getTileInDir(NORTH);
 	} else if(s == "south" || s == "s") {
-		return get_tile_in_dir(SOUTH);
+		return getTileInDir(SOUTH);
 	} else if(s == "north_west" || s == "nw" || s == "northwest") {
-		return get_tile_in_dir(NORTH_WEST);
+		return getTileInDir(NORTH_WEST);
 	} else if(s == "north_east" || s == "ne" || s == "northeast") {
-		return get_tile_in_dir(NORTH_EAST);
+		return getTileInDir(NORTH_EAST);
 	} else if(s == "south_west" || s == "sw" || s == "southwest") {
-		return get_tile_in_dir(SOUTH_WEST);
+		return getTileInDir(SOUTH_WEST);
 	} else if(s == "south_east" || s == "se" || s == "southeast") {
-		return get_tile_in_dir(SOUTH_EAST);
+		return getTileInDir(SOUTH_EAST);
 	}
-	return hex_object_ptr();
+	return HexObjectPtr();
 }
 
-variant hex_object::get_value(const std::string& key) const
+variant HexObject::getValue(const std::string& key) const
 {
 	ASSERT_LOG(owner_map_ != NULL, "Hex object not associated with a map! owner_ == NULL");
-	hex_object_ptr ho = get_tile_in_dir(key);
+	HexObjectPtr ho = getTileInDir(key);
 	if(ho != NULL) {
 		return variant(ho.get());
 	} else if(key == "self") {
@@ -274,7 +273,7 @@ variant hex_object::get_value(const std::string& key) const
 	return variant();
 }
 
-void hex_object::set_value(const std::string& key, const variant& value)
+void HexObject::setValue(const std::string& key, const variant& value)
 {
 
 #ifdef USE_SHADERS
@@ -286,12 +285,12 @@ void hex_object::set_value(const std::string& key, const variant& value)
 	}
 }
 
-void hex_object::build()
+void HexObject::build()
 {
 	// XXX
 }
 
-bool hex_object::execute_command(const variant& value)
+bool HexObject::executeCommand(const variant& value)
 {
 	bool result = true;
 	if(value.is_null()) {
@@ -302,36 +301,36 @@ bool hex_object::execute_command(const variant& value)
 		const int num_elements = value.num_elements();
 		for(int n = 0; n != num_elements; ++n) {
 			if(value[n].is_null() == false) {
-				result = execute_command(value[n]) && result;
+				result = executeCommand(value[n]) && result;
 			}
 		}
 	} else {
 		game_logic::command_callable* cmd = value.try_convert<game_logic::command_callable>();
 		if(cmd != NULL) {
-			cmd->run_command(*this);
+			cmd->runCommand(*this);
 		}
 	}
 	return result;
 }
 
-void hex_object::apply_rules(const std::string& rule)
+void HexObject::applyRules(const std::string& rule)
 {
 	using namespace game_logic;
 	std::map<std::string, const_formula_ptr>::const_iterator it = generate_hex_engine().handlers.find(rule);
 	ASSERT_LOG(it != generate_hex_engine().handlers.end(), "Unable to find rule \"" << rule << "\" in the list of handlers.");
-	map_formula_callable_ptr callable(new map_formula_callable(this));
+	MapFormulaCallablePtr callable(new MapFormulaCallable(this));
 	variant& a = callable->add_direct_access("hex");
 	a = variant(this);
 	variant value = it->second->execute(*callable.get());
-	execute_command(value);
+	executeCommand(value);
 }
 
-void hex_object::neighbors_changed()
+void HexObject::neighborsChanged()
 {
 	neighbors_init_ = false;
 }
 
-void hex_object::draw() const
+void HexObject::draw() const
 {
 	// Draw base tile.
 	if(tile_ == NULL) {
@@ -347,11 +346,11 @@ void hex_object::draw() const
 	tile_->draw(x_, y_);
 
 	for(const NeighborType& neighbor : neighbors_) {
-		neighbor.type->draw_adjacent(x_, y_, neighbor.dirmap);
+		neighbor.type->drawAdjacent(x_, y_, neighbor.dirmap);
 	}
 }
 
-void hex_object::init_neighbors() const
+void HexObject::init_neighbors() const
 {
 	if(neighbors_init_) {
 		return;
@@ -360,7 +359,7 @@ void hex_object::init_neighbors() const
 	neighbors_init_ = true;
 
 	for(int n = 0; n < 6; ++n) {
-		hex_object_ptr obj = get_tile_in_dir(static_cast<direction>(n));
+		HexObjectPtr obj = getTileInDir(static_cast<direction>(n));
 		if(obj && obj->tile() && obj->tile()->height() > tile()->height()) {
 			NeighborType* neighbor = NULL;
 			for(NeighborType& candidate : neighbors_) {
@@ -378,28 +377,28 @@ void hex_object::init_neighbors() const
 	}
 }
 
-std::vector<tile_type_ptr> hex_object::get_hex_tiles()
+std::vector<TileTypePtr> HexObject::get_hex_tiles()
 {
-	std::vector<tile_type_ptr> v;
-	std::transform(get_tile_type_map().begin(), get_tile_type_map().end(), 
+	std::vector<TileTypePtr> v;
+	std::transform(get_TileType_map().begin(), get_TileType_map().end(), 
 		std::back_inserter(v), 
-		boost::bind(&std::map<std::string, tile_type_ptr>::value_type::second,_1));
+		std::bind(&std::map<std::string, TileTypePtr>::value_type::second,_1));
 	return v;
 }
 
-std::vector<tile_type_ptr>& hex_object::get_editor_tiles()
+std::vector<TileTypePtr>& HexObject::get_editor_tiles()
 {
 	return get_hex_editor_tiles();
 }
 
-tile_type_ptr hex_object::get_hex_tile(const std::string& type)
+TileTypePtr HexObject::get_hex_tile(const std::string& type)
 {
-	std::map<std::string, tile_type_ptr>::const_iterator it 
+	std::map<std::string, TileTypePtr>::const_iterator it 
 		= get_editor_hex_tile_map().find(type);
 	if(it == get_editor_hex_tile_map().end()) {
-		it = get_tile_type_map().find(type);
-		if(it == get_tile_type_map().end()) {
-			return tile_type_ptr();
+		it = get_TileType_map().find(type);
+		if(it == get_TileType_map().end()) {
+			return TileTypePtr();
 		}
 	}
 	return it->second;

@@ -14,11 +14,10 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <boost/bind.hpp>
 
 #include "asserts.hpp"
 #include "foreach.hpp"
-#include "hex_object.hpp"
+#include "HexObject.hpp"
 #include "hex_tile.hpp"
 #include "string_utils.hpp"
 #include "variant_utils.hpp"
@@ -55,7 +54,7 @@ basic_hex_tile::~basic_hex_tile()
 
 void basic_hex_tile::draw(int x, int y) const
 {
-	point p(hex_map::get_pixel_pos_from_tile_pos(x,y));
+	point p(HexMap::get_pixel_pos_from_tile_pos(x,y));
 	p.x -= offset_x_;
 	p.y -= offset_y_;
 	if(frame_) {
@@ -74,14 +73,14 @@ void basic_hex_tile::draw(int x, int y) const
 	}
 }
 
-void basic_hex_tile::get_texture()
+void basic_hex_tile::getTexture()
 {
 	if(!texture_.valid() && !image_.empty()) {
 		texture_ = graphics::texture::get(image_);
 	}
 }
 
-variant basic_hex_tile::get_value(const std::string& key) const
+variant basic_hex_tile::getValue(const std::string& key) const
 {
 	if(key == "self") {
 		return variant(this);
@@ -93,7 +92,7 @@ variant basic_hex_tile::get_value(const std::string& key) const
 	return variant();
 }
 
-void basic_hex_tile::set_value(const std::string& key, const variant& value)
+void basic_hex_tile::setValue(const std::string& key, const variant& value)
 {
 }
 
@@ -181,11 +180,11 @@ variant hex_tile::get_transitions()
 	return variant(&v);
 }
 
-class transition_map_callable : public game_logic::formula_callable 
+class transition_map_callable : public game_logic::FormulaCallable 
 {
 	hex_tile_ptr tile_;
 	transition_map* tm_;
-	variant get_value(const std::string& key) const 
+	variant getValue(const std::string& key) const 
 	{
 		transition_map::const_iterator it = tm_->find(key);
 		if(it == tm_->end()) {
@@ -202,10 +201,10 @@ class transition_map_callable : public game_logic::formula_callable
 		}
 
 		int roll = rand() % it->second.size();
-		it->second[roll]->get_texture();
+		it->second[roll]->getTexture();
 		return variant(it->second[roll].get());
 	}
-	void set_value(const std::string& key, const variant& value) 
+	void setValue(const std::string& key, const variant& value) 
 	{}
 public:
 	explicit transition_map_callable(const hex_tile& tile, transition_map* tm) 
@@ -213,10 +212,10 @@ public:
 	{}
 };
 
-class transition_callable : public game_logic::formula_callable 
+class transition_callable : public game_logic::FormulaCallable 
 {
 	hex_tile_ptr tile_;
-	variant get_value(const std::string& key) const 
+	variant getValue(const std::string& key) const 
 	{
 		transition_map* tm = tile_->find_transition(key);
 		if(tm) {
@@ -227,7 +226,7 @@ class transition_callable : public game_logic::formula_callable
 		}
 		return variant();
 	}
-	void set_value(const std::string& key, const variant& value) 
+	void setValue(const std::string& key, const variant& value) 
 	{}
 public:
 	explicit transition_callable(const hex_tile& tile) 
@@ -235,41 +234,41 @@ public:
 	{}
 };
 
-class editor_info_callable : public game_logic::formula_callable
+class editor_info_callable : public game_logic::FormulaCallable
 {
 	hex_tile_ptr tile_;
-	variant get_value(const std::string& key) const
+	variant getValue(const std::string& key) const
 	{
 		if(key == "type") {
-			return variant(tile_->get_editor_info().type);
+			return variant(tile_->getgetEditorInfo().type);
 		} else if(key == "name") {
-			return variant(tile_->get_editor_info().name);
+			return variant(tile_->getgetEditorInfo().name);
 		} else if(key == "image") {
-			return variant(tile_->get_editor_info().image);
+			return variant(tile_->getgetEditorInfo().image);
 		} else if(key == "rect") {
 			std::vector<variant> v;
-			v.push_back(variant(tile_->get_editor_info().image_rect.x()));
-			v.push_back(variant(tile_->get_editor_info().image_rect.y()));
-			v.push_back(variant(tile_->get_editor_info().image_rect.w()));
-			v.push_back(variant(tile_->get_editor_info().image_rect.h()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.x()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.y()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.w()));
+			v.push_back(variant(tile_->getgetEditorInfo().image_rect.h()));
 			return variant(&v);
 		} else if(key == "group") {
-			return variant(tile_->get_editor_info().group);
+			return variant(tile_->getgetEditorInfo().group);
 		}
 		std::map<variant, variant> m;
-		m[variant("type")] = variant(tile_->get_editor_info().type);
-		m[variant("name")] = variant(tile_->get_editor_info().name);
-		m[variant("image")] = variant(tile_->get_editor_info().image);
-		m[variant("group")] = variant(tile_->get_editor_info().group);
+		m[variant("type")] = variant(tile_->getgetEditorInfo().type);
+		m[variant("name")] = variant(tile_->getgetEditorInfo().name);
+		m[variant("image")] = variant(tile_->getgetEditorInfo().image);
+		m[variant("group")] = variant(tile_->getgetEditorInfo().group);
 		std::vector<variant> v;
-		v.push_back(variant(tile_->get_editor_info().image_rect.x()));
-		v.push_back(variant(tile_->get_editor_info().image_rect.y()));
-		v.push_back(variant(tile_->get_editor_info().image_rect.w()));
-		v.push_back(variant(tile_->get_editor_info().image_rect.h()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.x()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.y()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.w()));
+		v.push_back(variant(tile_->getgetEditorInfo().image_rect.h()));
 		m[variant("rect")] = variant(&v);
 		return variant(&m);
 	}
-	void set_value(const std::string& key, const variant& value)
+	void setValue(const std::string& key, const variant& value)
 	{}
 public:
 	explicit editor_info_callable(const hex_tile& tile)
@@ -277,7 +276,7 @@ public:
 	{}
 };
 
-variant hex_tile::get_value(const std::string& key) const
+variant hex_tile::getValue(const std::string& key) const
 {
 	if(key == "variations") {
 	} else if(key == "transitions") {
@@ -292,7 +291,7 @@ variant hex_tile::get_value(const std::string& key) const
 	return variant();
 }
 
-void hex_tile::set_value(const std::string& key, const variant& value)
+void hex_tile::setValue(const std::string& key, const variant& value)
 {
 }
 
@@ -309,20 +308,20 @@ basic_hex_tile_ptr hex_tile::get_single_tile()
 	int roll = rand() % 100;
 	foreach(const basic_hex_tile_ptr& htp, variations_) {
 		if(roll < htp->chance()) {
-			htp->get_texture();
+			htp->getTexture();
 			return htp;
 		}
 		roll -= htp->chance();
 	}
 	// Ideally this shouldn't happen, but we'll just return the front item if it does.
-	variations_.front()->get_texture();
+	variations_.front()->getTexture();
 	return variations_.front();
 }
 */
 
-void tile_type::editor_info::draw(int x, int y) const
+void TileType::EditorInfo::draw(int x, int y) const
 {
-	point p(hex_map::get_pixel_pos_from_tile_pos(x,y));
+	point p(HexMap::get_pixel_pos_from_tile_pos(x,y));
 	graphics::blit_texture(texture, p.x, p.y, image_rect.w(), image_rect.h(), 0.0f, 
 		GLfloat(image_rect.x())/GLfloat(texture.width()),
 		GLfloat(image_rect.y())/GLfloat(texture.height()),
@@ -330,13 +329,13 @@ void tile_type::editor_info::draw(int x, int y) const
 		GLfloat(image_rect.y2())/GLfloat(texture.height()));
 }
 
-tile_sheet::tile_sheet(variant node)
+TileSheet::TileSheet(variant node)
     : texture_(graphics::texture::get(node["image"].as_string())),
 	  area_(rect(2, 2, 72, 72)), ncols_(36), pad_(4)
 {
 }
 
-rect tile_sheet::get_area(int index) const
+rect TileSheet::getArea(int index) const
 {
 	const int row = index/ncols_;
 	const int col = index%ncols_;
@@ -348,13 +347,13 @@ rect tile_sheet::get_area(int index) const
 	return result;
 }
 
-tile_type::tile_type(const std::string& id, variant node)
-  : id_(id), sheet_(new tile_sheet(node)),
+TileType::TileType(const std::string& id, variant node)
+  : id_(id), sheet_(new TileSheet(node)),
     height_(node["height"].as_decimal())
 {
 	for(const std::string& index_str : node["sheet_pos"].as_list_string()) {
 		const int index = strtol(index_str.c_str(), NULL, 36);
-		sheet_indexes_.push_back(index);
+		sheetIndexes_.push_back(index);
 	}
 
 	for(auto p : node["adjacent"].as_map()) {
@@ -373,26 +372,26 @@ tile_type::tile_type(const std::string& id, variant node)
 		AdjacencyPattern& pattern = adjacency_patterns_[dirmap];
 		for(const std::string& index_str : p.second.as_list_string()) {
 			const int index = strtol(index_str.c_str(), NULL, 36);
-			pattern.sheet_indexes.push_back(index);
+			pattern.sheetIndexes.push_back(index);
 		}
 
 		pattern.init = true;
 		pattern.depth = 0;
 	}
 
-	ASSERT_LOG(sheet_indexes_.empty() == false, "No sheet indexes in hex tile sheet: " << id);
+	ASSERT_LOG(sheetIndexes_.empty() == false, "No sheet indexes in hex tile sheet: " << id);
 
 	if(node.has_key("editor_info")) {
 		ASSERT_LOG(node["editor_info"].is_map(), "Must have editor info map, none found in: " << id_);
-		editor_info_.texture = sheet_->get_texture();
+		editor_info_.texture = sheet_->getTexture();
 		editor_info_.name = node["editor_info"]["name"].as_string();
 		editor_info_.group = node["editor_info"]["group"].as_string();
 		editor_info_.type = id;
-		editor_info_.image_rect = sheet_->get_area(0);
+		editor_info_.image_rect = sheet_->getArea(0);
 	}
 }
 
-variant tile_type::write() const
+variant TileType::write() const
 {
 	std::map<variant,variant> m;
 	m[variant("id")] = variant(id_);
@@ -410,48 +409,48 @@ int random_hash(int x, int y)
 }
 }
 
-void tile_type::draw(int x, int y) const
+void TileType::draw(int x, int y) const
 {
-	if(sheet_indexes_.empty()) {
+	if(sheetIndexes_.empty()) {
 		return;
 	}
 
 	int index = 0;
 
-	if(sheet_indexes_.size() > 1) {
-		index = random_hash(x, y)%sheet_indexes_.size();
+	if(sheetIndexes_.size() > 1) {
+		index = random_hash(x, y)%sheetIndexes_.size();
 	}
 
-	point p(hex_map::get_pixel_pos_from_tile_pos(x, y));
-	rect area = sheet_->get_area(sheet_indexes_[index]);
+	point p(HexMap::get_pixel_pos_from_tile_pos(x, y));
+	rect area = sheet_->getArea(sheetIndexes_[index]);
 	
-	graphics::blit_texture(sheet_->get_texture(),
+	graphics::blit_texture(sheet_->getTexture(),
 	    p.x, p.y, area.w(), area.h(), 0.0f, 
-		GLfloat(area.x())/GLfloat(sheet_->get_texture().width()),
-		GLfloat(area.y())/GLfloat(sheet_->get_texture().height()),
-		GLfloat(area.x2())/GLfloat(sheet_->get_texture().width()),
-		GLfloat(area.y2())/GLfloat(sheet_->get_texture().height()));
+		GLfloat(area.x())/GLfloat(sheet_->getTexture().width()),
+		GLfloat(area.y())/GLfloat(sheet_->getTexture().height()),
+		GLfloat(area.x2())/GLfloat(sheet_->getTexture().width()),
+		GLfloat(area.y2())/GLfloat(sheet_->getTexture().height()));
 }
 
-void tile_type::draw_adjacent(int x, int y, unsigned char adjmap) const
+void TileType::drawAdjacent(int x, int y, unsigned char adjmap) const
 {
-	calculate_adjacency_pattern(adjmap);
+	calculateAdjacencyPattern(adjmap);
 	const AdjacencyPattern& pattern = adjacency_patterns_[adjmap];
 	assert(pattern.init);
-	for(int index : pattern.sheet_indexes) {
-		point p(hex_map::get_pixel_pos_from_tile_pos(x, y));
-		rect area = sheet_->get_area(index);
+	for(int index : pattern.sheetIndexes) {
+		point p(HexMap::get_pixel_pos_from_tile_pos(x, y));
+		rect area = sheet_->getArea(index);
 	
-		graphics::blit_texture(sheet_->get_texture(),
+		graphics::blit_texture(sheet_->getTexture(),
 		    p.x, p.y, area.w(), area.h(), 0.0f, 
-			GLfloat(area.x())/GLfloat(sheet_->get_texture().width()),
-			GLfloat(area.y())/GLfloat(sheet_->get_texture().height()),
-			GLfloat(area.x2())/GLfloat(sheet_->get_texture().width()),
-			GLfloat(area.y2())/GLfloat(sheet_->get_texture().height()));
+			GLfloat(area.x())/GLfloat(sheet_->getTexture().width()),
+			GLfloat(area.y())/GLfloat(sheet_->getTexture().height()),
+			GLfloat(area.x2())/GLfloat(sheet_->getTexture().width()),
+			GLfloat(area.y2())/GLfloat(sheet_->getTexture().height()));
 	}
 }
 
-void tile_type::calculate_adjacency_pattern(unsigned char adjmap) const
+void TileType::calculateAdjacencyPattern(unsigned char adjmap) const
 {
 	if(adjacency_patterns_[adjmap].init) {
 		return;
@@ -463,7 +462,7 @@ void tile_type::calculate_adjacency_pattern(unsigned char adjmap) const
 		if(adjmap&mask) {
 			unsigned char newmap = adjmap&(~mask);
 			if(newmap != 0) {
-				calculate_adjacency_pattern(newmap);
+				calculateAdjacencyPattern(newmap);
 
 				if(best == -1 || adjacency_patterns_[newmap].depth < adjacency_patterns_[best].depth) {
 					best = newmap;
@@ -473,12 +472,12 @@ void tile_type::calculate_adjacency_pattern(unsigned char adjmap) const
 	}
 
 	if(best != -1) {
-		adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
+		adjacency_patterns_[adjmap].sheetIndexes.insert(adjacency_patterns_[adjmap].sheetIndexes.end(), adjacency_patterns_[best].sheetIndexes.begin(), adjacency_patterns_[best].sheetIndexes.end());
 		adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
 
 		best = adjmap&(~best);
-		calculate_adjacency_pattern(best);
-		adjacency_patterns_[adjmap].sheet_indexes.insert(adjacency_patterns_[adjmap].sheet_indexes.end(), adjacency_patterns_[best].sheet_indexes.begin(), adjacency_patterns_[best].sheet_indexes.end());
+		calculateAdjacencyPattern(best);
+		adjacency_patterns_[adjmap].sheetIndexes.insert(adjacency_patterns_[adjmap].sheetIndexes.end(), adjacency_patterns_[best].sheetIndexes.begin(), adjacency_patterns_[best].sheetIndexes.end());
 		if(adjacency_patterns_[best].depth + 1 > adjacency_patterns_[adjmap].depth) {
 			adjacency_patterns_[adjmap].depth = adjacency_patterns_[best].depth + 1;
 		}
@@ -487,9 +486,9 @@ void tile_type::calculate_adjacency_pattern(unsigned char adjmap) const
 	adjacency_patterns_[adjmap].init = true;
 }
 
-BEGIN_DEFINE_CALLABLE_NOBASE(tile_type)
+BEGIN_DEFINE_CALLABLE_NOBASE(TileType)
 DEFINE_FIELD(type, "string")
 	return variant(obj.id_);
-END_DEFINE_CALLABLE(tile_type)
+END_DEFINE_CALLABLE(TileType)
 
 }

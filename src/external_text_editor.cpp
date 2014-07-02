@@ -26,9 +26,6 @@
 
 #include <stdlib.h>
 
-#include <boost/bind.hpp>
-#include <boost/scoped_ptr.hpp>
-
 #ifdef _WINDOWS
 // Windows defines popen with an underscore, for reasons that seem "difficult" to fathom.
 #define popen _popen
@@ -58,13 +55,13 @@ class vi_editor : public external_text_editor
 	std::set<std::string> known_servers_;
 
 	threading::mutex mutex_;
-	boost::scoped_ptr<threading::thread> thread_;
+	std::unique_ptr<threading::thread> thread_;
 
 	bool shutdown_;
 
 	void refresh_editor_list()
 	{
-		const int begin = SDL_GetTicks();
+		const int begin = profile::get_tick_time();
 		const std::string cmd = "gvim --serverlist";
 		FILE* p = popen(cmd.c_str(), "r");
 		if(p) {
@@ -196,7 +193,7 @@ class vi_editor : public external_text_editor
 public:
 	explicit vi_editor(variant obj) : cmd_(obj["command"].as_string_default("gvim")), counter_(0), shutdown_(false)
 	{
-		thread_.reset(new threading::thread("vi_editor_thread", boost::bind(&vi_editor::run_thread, this)));
+		thread_.reset(new threading::thread("vi_editor_thread", std::bind(&vi_editor::run_thread, this)));
 	}
 
 	void shutdown()
@@ -322,12 +319,12 @@ void external_text_editor::process()
 {
 	std::vector<std::string> files = loaded_files();
 	if(files.empty() == false) {
-		const int begin = SDL_GetTicks();
+		const int begin = profile::get_tick_time();
 		foreach(const std::string& fname, files) {
 			const std::string contents = get_file_contents(fname);
 			if(contents != json::get_file_contents(fname)) {
 				try {
-					custom_object_type::set_file_contents(fname, contents);
+					CustomObjectType::setFileContents(fname, contents);
 				} catch(...) {
 				}
 			}

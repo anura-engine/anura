@@ -112,11 +112,11 @@ variant get_constant(const std::string& id)
 	return variant();
 }
 
-constants_loader::constants_loader(variant node) : same_as_base_(false)
+ConstantsLoader::ConstantsLoader(variant node) : same_as_base_(false)
 {
 	constants_map m;
 	if(node.is_null() == false) {
-		foreach(variant key, node.get_keys().as_list()) {
+		foreach(variant key, node.getKeys().as_list()) {
 			const std::string& attr = key.as_string();
 			if(std::find_if(attr.begin(), attr.end(), util::c_islower) != attr.end()) {
 				//only all upper case are loaded as consts
@@ -134,7 +134,7 @@ constants_loader::constants_loader(variant node) : same_as_base_(false)
 	constants_stack.push_back(m);
 }
 
-constants_loader::~constants_loader()
+ConstantsLoader::~ConstantsLoader()
 {
 	ASSERT_EQ(constants_stack.empty(), false);
 	constants_stack.pop_back();

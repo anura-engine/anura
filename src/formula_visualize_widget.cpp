@@ -20,10 +20,10 @@ class expression_widget : public gui::dialog
 public:
 	explicit expression_widget(game_logic::const_expression_ptr expression,
 	                           int x, int y, int w, int h, bool focused,
-							   text_editor_widget* editor,
-							   boost::function<void()> on_click)
+							   TextEditorWidget* editor,
+							   std::function<void()> onClick)
 	  : dialog(x, y, w, h), expression_(expression), focused_(focused),
-	    editor_(editor), on_click_(on_click)
+	    editor_(editor), on_click_(onClick)
 	{
 		init();
 	}
@@ -31,10 +31,10 @@ public:
 	void init() {
 		graphics::color text_color(focused_ ? "yellow" : "white");
 		gui::label* label = new gui::label(expression_->name(), text_color.as_sdl_color());
-		add_widget(gui::widget_ptr(label), width()/2 - label->width()/2, 10);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 10);
 
 		label = new gui::label(expression_->query_variant_type()->to_string(), text_color.as_sdl_color());
-		add_widget(gui::widget_ptr(label), width()/2 - label->width()/2, 26);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 26);
 
 		std::string s = expression_->str();
 		s.erase(std::remove_if(s.begin(), s.end(), util::c_isspace), s.end());
@@ -44,34 +44,34 @@ public:
 		}
 
 		label = new gui::label(s, text_color.as_sdl_color());
-		add_widget(gui::widget_ptr(label), width()/2 - label->width()/2, 42);
+		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 42);
 	}
 
 private:
-	bool handle_event(const SDL_Event& event, bool claimed) {
+	bool handleEvent(const SDL_Event& event, bool claimed) {
 		if(event.type == SDL_MOUSEMOTION) {
 			const SDL_MouseMotionEvent& motion = event.motion;
-			const bool in_widget = motion.x >= x() && motion.x <= x() + width() && motion.y >= y() && motion.y <= y() + height();
-			if(in_widget) {
+			const bool inWidget = motion.x >= x() && motion.x <= x() + width() && motion.y >= y() && motion.y <= y() + height();
+			if(inWidget) {
 				PinpointedLoc loc;
 				expression_->debug_pinpoint_location(&loc);
-				editor_->highlight(text_editor_widget::Loc(loc.begin_line-1, loc.begin_col-1), text_editor_widget::Loc(loc.end_line-1, loc.end_col-1));
+				editor_->highlight(TextEditorWidget::Loc(loc.begin_line-1, loc.begin_col-1), TextEditorWidget::Loc(loc.end_line-1, loc.end_col-1));
 			}
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
 			const SDL_MouseButtonEvent& ev = event.button;
-			const bool in_widget = ev.x >= x() && ev.x <= x() + width() && ev.y >= y() && ev.y <= y() + height();
-			if(in_widget) {
+			const bool inWidget = ev.x >= x() && ev.x <= x() + width() && ev.y >= y() && ev.y <= y() + height();
+			if(inWidget) {
 				on_click_();
 				claimed = true;
 				return true;
 			}
 		}
 
-		return gui::dialog::handle_event(event, claimed);
+		return gui::dialog::handleEvent(event, claimed);
 	}
 
-	void handle_draw() const {
-		gui::dialog::handle_draw();
+	void handleDraw() const {
+		gui::dialog::handleDraw();
 		const SDL_Rect r = {x(), y(), width(), height()};
 		const SDL_Color col = {255, 255, 255, 255};
 		graphics::draw_hollow_rect(r, col);
@@ -79,19 +79,19 @@ private:
 
 	game_logic::const_expression_ptr expression_;
 	bool focused_;
-	text_editor_widget* editor_;
-	boost::function<void()> on_click_;
+	TextEditorWidget* editor_;
+	std::function<void()> on_click_;
 };
 
 }
 
 formula_visualize_widget::formula_visualize_widget(
-  game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, text_editor_widget* editor)
+  game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor)
 	: expression_(expr), text_pos_(text_pos), row_(row), col_(col),
 	  editor_(editor)
 {
-	set_loc(x, y);
-	set_dim(w, h);
+	setLoc(x, y);
+	setDim(w, h);
 	init();
 }
 
@@ -107,9 +107,9 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 
 	add_expression(expr, x() + width()/2, y(), spacing);
 
-	std::map<widget_ptr, widget_ptr> parents;
+	std::map<WidgetPtr, WidgetPtr> parents;
 
-	foreach(const widget_ptr& w, children_) {
+	foreach(const WidgetPtr& w, children_) {
 		foreach(const Edge& edge, edges_) {
 			if(edge.second == w) {
 				parents[w] = edge.first;
@@ -118,7 +118,7 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 		}
 	}
 
-	foreach(const std::vector<widget_ptr>& row, child_rows_) {
+	foreach(const std::vector<WidgetPtr>& row, child_rows_) {
 		bool needs_rebalance = false;
 		for(int n = 1; n < row.size(); ++n) {
 			if(row[n-1]->x() + row[n-1]->width() >= row[n]->x() - 10) {
@@ -128,7 +128,7 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 
 		if(needs_rebalance) {
 			for(int n = 0; n != row.size(); ++n) {
-				row[n]->set_loc(n*110, row[n]->y());
+				row[n]->setLoc(n*110, row[n]->y());
 			}
 		}
 	}
@@ -137,9 +137,9 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 	while(adjustment) {
 		adjustment = false;
 
-		foreach(const std::vector<widget_ptr>& row, child_rows_) {
+		foreach(const std::vector<WidgetPtr>& row, child_rows_) {
 			for(int n = 0; n < row.size(); ++n) {
-				widget_ptr parent = parents[row[n]];
+				WidgetPtr parent = parents[row[n]];
 				if(!parent || parent->x() == row[n]->x()) {
 					continue;
 				}
@@ -147,21 +147,21 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 				if(row[n]->x() < parent->x()) {
 					if(n+1 == row.size()) {
 						adjustment = true;
-						row[n]->set_loc(parent->x(), row[n]->y());
+						row[n]->setLoc(parent->x(), row[n]->y());
 					} else {
 						if(row[n]->x() + row[n]->width() < row[n+1]->x()-10) {
 							adjustment = true;
-							row[n]->set_loc(row[n]->x()+1, row[n]->y());
+							row[n]->setLoc(row[n]->x()+1, row[n]->y());
 						}
 					}
 				} else {
 					if(n == 0) {
 						adjustment = true;
-						row[n]->set_loc(parent->x(), row[n]->y());
+						row[n]->setLoc(parent->x(), row[n]->y());
 					} else {
 						if(row[n]->x() > row[n-1]->x()+row[n-1]->width()+10) {
 							adjustment = true;
-							row[n]->set_loc(row[n]->x()-1, row[n]->y());
+							row[n]->setLoc(row[n]->x()-1, row[n]->y());
 						}
 					}
 				}
@@ -170,9 +170,9 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 	}
 
 	foreach(const Edge& edge, edges_) {
-		widget_ptr parent = edge.first;
-		widget_ptr child = edge.second;
-		children_.push_back(widget_ptr(new poly_line_widget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), graphics::color_white())));
+		WidgetPtr parent = edge.first;
+		WidgetPtr child = edge.second;
+		children_.push_back(WidgetPtr(new PolyLineWidget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), graphics::color_white())));
 	}
 }
 
@@ -185,11 +185,11 @@ void formula_visualize_widget::on_select_expression(game_logic::const_expression
 	init(expr);
 }
 
-void formula_visualize_widget::add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth, widget_ptr parent)
+void formula_visualize_widget::add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth, WidgetPtr parent)
 {
 	const bool focused = text_pos_ >= expr->debug_loc_in_file().first && text_pos_ <= expr->debug_loc_in_file().second;
-	boost::function<void()> on_click_expr = boost::bind(&formula_visualize_widget::on_select_expression, this, expr);
-	children_.push_back(widget_ptr(new expression_widget(expr, x, y, 100, 80, focused, editor_, on_click_expr)));
+	std::function<void()> on_click_expr = std::bind(&formula_visualize_widget::on_select_expression, this, expr);
+	children_.push_back(WidgetPtr(new expression_widget(expr, x, y, 100, 80, focused, editor_, on_click_expr)));
 	if(child_rows_.size() <= depth) {
 		child_rows_.resize(depth+1);
 	}
@@ -197,7 +197,7 @@ void formula_visualize_widget::add_expression(game_logic::const_expression_ptr e
 	child_rows_[depth].push_back(children_.back());
 
 	if(parent) {
-		edges_.push_back(std::pair<widget_ptr, widget_ptr>(parent, children_.back()));
+		edges_.push_back(std::pair<WidgetPtr, WidgetPtr>(parent, children_.back()));
 	}
 
 	parent = children_.back();
@@ -208,19 +208,19 @@ void formula_visualize_widget::add_expression(game_logic::const_expression_ptr e
 	}
 }
 
-void formula_visualize_widget::handle_draw() const
+void formula_visualize_widget::handleDraw() const
 {
 	graphics::draw_rect(rect(x(), y(), width(), height()), graphics::color(128, 128, 128, 128));
-	foreach(widget_ptr w, children_) {
+	foreach(WidgetPtr w, children_) {
 		w->draw();
 	}
 }
 
-bool formula_visualize_widget::handle_event(const SDL_Event& event, bool claimed)
+bool formula_visualize_widget::handleEvent(const SDL_Event& event, bool claimed)
 {
 	if(!claimed) {
-		foreach(const widget_ptr& child, children_) {
-			claimed = child->process_event(event, claimed) || claimed;
+		foreach(const WidgetPtr& child, children_) {
+			claimed = child->processEvent(event, claimed) || claimed;
 			if(claimed) {
 				//we MUST break here as when claiming an event it might
 				//modify children_.

@@ -1,34 +1,35 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef WEATHER_PARTICLE_SYSTEM_HPP_INCLUDED
-#define WEATHER_PARTICLE_SYSTEM_HPP_INCLUDED
 
-#include "graphics.hpp"
+#pragma once
 
 #include <deque>
 
 #include "particle_system.hpp"
-#include "foreach.hpp"
-#include "entity.hpp"
-#include "color_utils.hpp"
-#include "variant.hpp"
 
-struct weather_particle_system_info {
-	weather_particle_system_info(variant node)
+struct WeatherParticleSystemInfo 
+{
+	WeatherParticleSystemInfo(variant node)
 	: number_of_particles(node["number_of_particles"].as_int(1500)),
 	repeat_period(node["repeat_period"].as_int(1000)),
 	velocity_x(node["velocity_x"].as_int()),
@@ -37,7 +38,7 @@ struct weather_particle_system_info {
 	line_width(node["line_width"].as_int(1)),
 	line_length(node["line_length"].as_int(8))
 	{
-		irgba = graphics::color(node["color"].as_string()).value();
+		color = KRE::Color(node["color"]);
 	}
 	int number_of_particles;
 	int repeat_period;
@@ -45,48 +46,46 @@ struct weather_particle_system_info {
 	int velocity_rand;
 	int line_width, line_length;
 	
-	union {
-		uint8_t rgba[4];
-		uint32_t irgba;
-	};
+	KRE::Color color;
 };
 
-class weather_particle_system_factory : public particle_system_factory {
-public:
-	explicit weather_particle_system_factory(variant node);
-	~weather_particle_system_factory() {}
-	
-	particle_system_ptr create(const entity& e) const;
-	weather_particle_system_info info;
-};
-
-class weather_particle_system : public particle_system
+class WeatherParticleSystemFactory : public ParticleSystemFactory 
 {
 public:
-	weather_particle_system(const entity& e, const weather_particle_system_factory& factory);
+	explicit WeatherParticleSystemFactory(variant node);
+	~WeatherParticleSystemFactory() {}
 	
-	bool is_destroyed() const { return false; }
-	void process(const entity& e);
-	void draw(const rect& area, const entity& e) const;
+	ParticleSystemPtr create(const Entity& e) const;
+	WeatherParticleSystemInfo info;
+};
+
+class WeatherParticleSystem : public ParticleSystem
+{
+public:
+	WeatherParticleSystem(const Entity& e, const WeatherParticleSystemFactory& factory);
 	
+	bool isDestroyed() const override { return false; }
+	void process(const Entity& e) override;
+	void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const override;
 private:
-	variant get_value(const std::string& key) const;
-	void set_value(const std::string& key, const variant& value);
+	DECLARE_CALLABLE(WeatherParticleSystem);
 	
-	const weather_particle_system_factory& factory_;
-	const weather_particle_system_info& info_;
+	KRE::DisplayDeviceDef Attach(const KRE::DisplayDevicePtr& dd) override;
+
+	const WeatherParticleSystemFactory& factory_;
+	const WeatherParticleSystemInfo& info_;
 	
 	int cycle_;
 	
 	struct particle {
-		GLfloat pos[2];
-		GLfloat velocity;
+		float pos[2];
+		float velocity;
 	};
 	
-	GLfloat direction[2];
-	GLfloat base_velocity;
-	
+	float direction[2];
+	float base_velocity;
+
+	std::shared_ptr<KRE::Attribute<glm::vec2>> attribs_;
+
 	std::vector<particle> particles_;
 };
-
-#endif

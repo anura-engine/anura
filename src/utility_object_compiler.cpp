@@ -28,7 +28,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "frame.hpp"
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "string_utils.hpp"
@@ -48,7 +48,7 @@ struct animation_area {
 	{
 		width = 0;
 		height = 0;
-		foreach(const frame::frame_info& f, anim->frame_layout()) {
+		foreach(const frame::frame_info& f, anim->frameLayout()) {
 			width += f.area.w();
 			if(f.area.h() > height) {
 				height = f.area.h();
@@ -69,11 +69,11 @@ struct animation_area {
 	bool is_particle;
 };
 
-typedef boost::shared_ptr<animation_area> animation_area_ptr;
+typedef std::shared_ptr<animation_area> animation_area_ptr;
 
 bool operator==(const animation_area& a, const animation_area& b)
 {
-	return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->num_frames() == b.anim->num_frames() && a.anim->num_frames_per_row() == b.anim->num_frames_per_row();
+	return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->numFrames() == b.anim->numFrames() && a.anim->numFramesPerRow() == b.anim->numFramesPerRow();
 }
 
 std::set<animation_area_ptr> animation_areas_with_alpha;
@@ -120,7 +120,7 @@ rect use_output_area(const output_area& input, int width, int height, std::vecto
 }
 
 namespace graphics {
-void set_alpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
+void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
 }
 
 namespace {
@@ -134,11 +134,11 @@ bool animation_area_has_alpha_channel(animation_area_ptr anim)
 
 	const uint32_t* pixels = reinterpret_cast<const uint32_t*>(surf->pixels);
 
-	for(int f = 0; f != anim->anim->num_frames(); ++f) {
-		const frame::frame_info& info = anim->anim->frame_layout()[f];
+	for(int f = 0; f != anim->anim->numFrames(); ++f) {
+		const frame::frame_info& info = anim->anim->frameLayout()[f];
 
-		const int x = f%anim->anim->num_frames_per_row();
-		const int y = f/anim->anim->num_frames_per_row();
+		const int x = f%anim->anim->numFramesPerRow();
+		const int y = f/anim->anim->numFramesPerRow();
 
 		const rect& base_area = anim->anim->area();
 		const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
@@ -205,9 +205,9 @@ UTILITY(compile_objects)
 		}
 	}
 
-	std::vector<const_custom_object_type_ptr> types = custom_object_type::get_all();
-	foreach(const_custom_object_type_ptr type, types) {
-		const std::string* path = custom_object_type::get_object_path(type->id() + ".cfg");
+	std::vector<ConstCustomObjectTypePtr> types = CustomObjectType::getAll();
+	foreach(ConstCustomObjectTypePtr type, types) {
+		const std::string* path = CustomObjectType::getObjectPath(type->id() + ".cfg");
 
 		//skip any experimental stuff so it isn't compiled
 		const std::string Experimental = "experimental";
@@ -217,7 +217,7 @@ UTILITY(compile_objects)
 
 		std::cerr << "OBJECT: " << type->id() << " -> " << *path << "\n";
 		variant obj_node =  json::parse_from_file(*path);
-		obj_node = custom_object_type::merge_prototype(obj_node);
+		obj_node = CustomObjectType::mergePrototype(obj_node);
 		obj_node.remove_attr(variant("prototype"));
 
 		if(obj_node["editor_info"].is_map() && obj_node["editor_info"]["var"].is_list()) {
@@ -269,7 +269,7 @@ UTILITY(compile_objects)
 	foreach(variant node, animation_containing_nodes) {
 		foreach(const variant_pair& p, node.as_map()) {
 			std::string attr_name = p.first.as_string();
-			if(attr_name != "animation" && attr_name != "framed_gui_element" && attr_name != "section") {
+			if(attr_name != "animation" && attr_name != "FramedGuiElement" && attr_name != "section") {
 				continue;
 			}
 
@@ -358,11 +358,11 @@ UTILITY(compile_objects)
 		surface src = graphics::surface_cache::get(anim->src_image);
 		ASSERT_LOG(src.get() != NULL, "COULD NOT LOAD IMAGE: '" << anim->src_image << "'");
 		int xdst = 0;
-		for(int f = 0; f != anim->anim->num_frames(); ++f) {
-			const frame::frame_info& info = anim->anim->frame_layout()[f];
+		for(int f = 0; f != anim->anim->numFrames(); ++f) {
+			const frame::frame_info& info = anim->anim->frameLayout()[f];
 
-			const int x = f%anim->anim->num_frames_per_row();
-			const int y = f/anim->anim->num_frames_per_row();
+			const int x = f%anim->anim->numFramesPerRow();
+			const int y = f/anim->anim->numFramesPerRow();
 
 			const rect& base_area = anim->anim->area();
 			const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
@@ -385,7 +385,7 @@ UTILITY(compile_objects)
 		std::ostringstream fname;
 		fname << "images/compiled-" << n << ".png";
 
-		graphics::set_alpha_for_transparent_colors_in_rgba_surface(surfaces[n].get());
+		graphics::setAlpha_for_transparent_colors_in_rgba_surface(surfaces[n].get());
 
 		IMG_SavePNG((module::get_module_path() + fname.str()).c_str(), surfaces[n].get(), -1);
 	}
@@ -403,7 +403,7 @@ UTILITY(compile_objects)
 		node.remove_attr_mutation(variant("h"));
 		node.remove_attr_mutation(variant("pad"));
 
-		const frame::frame_info& first_frame = anim->anim->frame_layout().front();
+		const frame::frame_info& first_frame = anim->anim->frameLayout().front();
 		
 		rect r(anim->dst_area.x() - first_frame.x_adjust, anim->dst_area.y() - first_frame.y_adjust, anim->anim->area().w(), anim->anim->area().h());
 		node.add_attr_mutation(variant("rect"), r.write());
@@ -411,7 +411,7 @@ UTILITY(compile_objects)
 		int xpos = anim->dst_area.x();
 
 		std::vector<int> v;
-		foreach(const frame::frame_info& f, anim->anim->frame_layout()) {
+		foreach(const frame::frame_info& f, anim->anim->frameLayout()) {
 			ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, anim->anim->area().w());
 			ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, anim->anim->area().h());
 			v.push_back(f.x_adjust);
@@ -476,7 +476,7 @@ struct SpritesheetRow {
 struct SpritesheetAnimation {
 	std::vector<rect> frames;
 	variant node;
-	rect target_area;
+	rect targetArea;
 
 	int cell_width() const {
 		int result = 0;
@@ -604,7 +604,7 @@ void write_pixel_surface(graphics::surface surf, int x, int y, int r, int g, int
 
 void write_spritesheet_frame(graphics::surface src, const rect& src_area, graphics::surface dst, int target_x, int target_y)
 {
-	const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+	const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
 
 	std::vector<unsigned char*> border_pixels;
 
@@ -686,7 +686,7 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 			std::swap(a,b);
 		}
 
-		int best_score = INT_MAX;
+		int best_score = std::numeric_limits<int>::max();
 
 		for(int xoffset = 0; xoffset < b.w() - a.w(); ++xoffset) {
 			rect r(b.x() + xoffset, b.y(), a.w(), b.h());
@@ -700,7 +700,7 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 	}
 
 	if(areaa.w() != areab.w() || areaa.h() != areab.h()) {
-		return INT_MAX;
+		return std::numeric_limits<int>::max();
 	}
 
 	int errors = 0;
@@ -841,8 +841,8 @@ void flip_surface_area(graphics::surface surf, const rect& area)
 
 void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimation& anim, graphics::surface dst, bool reorder)
 {
-	int target_x = anim.target_area.x()+1;
-	int target_y = anim.target_area.y()+1;
+	int target_x = anim.targetArea.x()+1;
+	int target_y = anim.targetArea.y()+1;
 
 	const int cell_width = anim.cell_width();
 	const int cell_height = anim.cell_height();
@@ -871,7 +871,7 @@ void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimati
 		new_yoffsets.push_back(yoffsets[0]);
 		while(frames.size() < anim.frames.size()) {
 			int best_frame = -1;
-			int best_score = INT_MAX;
+			int best_score = std::numeric_limits<int>::max();
 			for(int n = 0; n < anim.frames.size(); ++n) {
 				if(std::count(frames.begin(), frames.end(), anim.frames[n])) {
 					continue;
@@ -1089,10 +1089,10 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			ASSERT_LOG(best != -1, "Could not find fit for animation " << new_anim.width() << "x" << new_anim.height() << ": " << animations.size());
 
-			new_anim.target_area = rect(available_space[best].x(), available_space[best].y(), new_anim.width(), new_anim.height());
+			new_anim.targetArea = rect(available_space[best].x(), available_space[best].y(), new_anim.width(), new_anim.height());
 
-			const rect right_area(new_anim.target_area.x2(), new_anim.target_area.y(), available_space[best].w() - new_anim.target_area.w(), new_anim.target_area.h());
-			const rect bottom_area(new_anim.target_area.x(), new_anim.target_area.y2(), available_space[best].w(), available_space[best].h() - new_anim.target_area.h());
+			const rect right_area(new_anim.targetArea.x2(), new_anim.targetArea.y(), available_space[best].w() - new_anim.targetArea.w(), new_anim.targetArea.h());
+			const rect bottom_area(new_anim.targetArea.x(), new_anim.targetArea.y2(), available_space[best].w(), available_space[best].h() - new_anim.targetArea.h());
 
 			available_space.push_back(right_area);
 			available_space.push_back(bottom_area);
@@ -1102,11 +1102,11 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			animations.push_back(new_anim);
 
-			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.target_area.x(), new_anim.target_area.y(), new_anim.target_area.w(), new_anim.target_area.h());
+			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.targetArea.x(), new_anim.targetArea.y(), new_anim.targetArea.w(), new_anim.targetArea.h());
 		}
 
 		graphics::surface target_surf(SDL_CreateRGBSurface(0,TargetTextureSize,TargetTextureSize,32,SURFACE_MASK));
-		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+		const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
 		unsigned char* target_pixels = (unsigned char*)target_surf->pixels;
 		for(int n = 0; n < target_surf->w*target_surf->h; ++n) {
 			memcpy(target_pixels, alpha_colors, 3);
@@ -1121,7 +1121,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			std::map<variant, variant> node = anim.node.as_map();
 			node.erase(variant("frames"));
-			rect area(anim.target_area.x()+2, anim.target_area.y()+2, anim.cell_width(), anim.cell_height());
+			rect area(anim.targetArea.x()+2, anim.targetArea.y()+2, anim.cell_width(), anim.cell_height());
 			node[variant("rect")] = area.write();
 			node[variant("image")] = baking_info["dest_image"];
 			node[variant("frames")] = variant(static_cast<int>(anim.frames.size()));

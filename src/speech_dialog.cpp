@@ -79,7 +79,7 @@ bool speech_dialog::handle_mouse_move(int x, int y)
 		option_width_ + OptionsBorder*2, OptionHeight*options_.size() + OptionsBorder*2
 	);
 	//std::cerr << "Options box: " << box << " : " << x << " : " << y << "\n";
-	if (point_in_rect(point(x, y), box))
+	if (pointInRect(point(x, y), box))
 	{
 		option_selected_ = (y-box.y())/OptionHeight;
 		return true;
@@ -192,7 +192,7 @@ bool speech_dialog::process()
 			}
 		}
 	} else {
-		const int width = gui_section::get("speech_portrait_pane")->width();
+		const int width = GuiSection::get("speech_portrait_pane")->width();
 		if(horizontal_position_ < width) {
 			horizontal_position_ += ScrollSpeed;
 			if(horizontal_position_ > width) {
@@ -240,30 +240,30 @@ bool speech_dialog::detect_joystick_press()
 
 void speech_dialog::draw() const
 {
-	static const const_gui_section_ptr top_corner = gui_section::get("speech_dialog_top_corner");
-	static const const_gui_section_ptr bottom_corner = gui_section::get("speech_dialog_bottom_corner");
-	static const const_gui_section_ptr top_edge = gui_section::get("speech_dialog_top_edge");
-	static const const_gui_section_ptr bottom_edge = gui_section::get("speech_dialog_bottom_edge");
-	static const const_gui_section_ptr side_edge = gui_section::get("speech_dialog_side_edge");
-	static const const_gui_section_ptr arrow = gui_section::get("speech_dialog_arrow");
+	static const ConstGuiSectionPtr top_corner = GuiSection::get("speech_dialog_top_corner");
+	static const ConstGuiSectionPtr bottom_corner = GuiSection::get("speech_dialog_bottom_corner");
+	static const ConstGuiSectionPtr top_edge = GuiSection::get("speech_dialog_top_edge");
+	static const ConstGuiSectionPtr bottom_edge = GuiSection::get("speech_dialog_bottom_edge");
+	static const ConstGuiSectionPtr side_edge = GuiSection::get("speech_dialog_side_edge");
+	static const ConstGuiSectionPtr arrow = GuiSection::get("speech_dialog_arrow");
 
-	const_graphical_font_ptr font = graphical_font::get("default");
+	ConstGraphicalFontPtr font = GraphicalFont::get("default");
 
 	const int TextAreaHeight = 80;
 
 	const int TextBorder = 10;
 
-	int speaker_xpos = INT_MAX;
-	int speaker_ypos = INT_MAX;
+	int speaker_xpos = std::numeric_limits<int>::max();
+	int speaker_ypos = std::numeric_limits<int>::max();
 
-	const_entity_ptr speaker = left_side_speaking_ ? left_ : right_;
+	ConstEntityPtr speaker = left_side_speaking_ ? left_ : right_;
 	if(speaker) {
 		const screen_position& pos = last_draw_position();
 		const int screen_x = pos.x/100 + (graphics::screen_width()/2)*(-1.0/pos.zoom + 1.0);
 		const int screen_y = pos.y/100 + (graphics::screen_height()/2)*(-1.0/pos.zoom + 1.0);
 
-		speaker_xpos = (speaker->feet_x() - screen_x)*pos.zoom - 36;
-		speaker_ypos = (speaker->feet_y() - screen_y)*pos.zoom - 10;
+		speaker_xpos = (speaker->getFeetX() - screen_x)*pos.zoom - 36;
+		speaker_ypos = (speaker->getFeetY() - screen_y)*pos.zoom - 10;
 	}
 
 	if(pane_area_.w() == 0) {
@@ -356,14 +356,14 @@ void speech_dialog::draw() const
 	}
 
 	if(text_.size() > 2 && text_char_ == num_chars() && (cycle_&16)) {
-		const_gui_section_ptr down_arrow = gui_section::get("speech_text_down_arrow");
+		ConstGuiSectionPtr down_arrow = GuiSection::get("speech_text_down_arrow");
 		down_arrow->blit(text_area.x2() - down_arrow->width() - 10, text_area.y2() - down_arrow->height() - 10);
 		
 	}
 
 	if(text_char_ == num_chars() && options_.empty() == false) {
-		//const_gui_section_ptr options_panel = gui_section::get("speech_portrait_pane");
-		const_framed_gui_element_ptr options_panel = framed_gui_element::get("regular_window");
+		//ConstGuiSectionPtr options_panel = GuiSection::get("speech_portrait_pane");
+		ConstFramedGuiElementPtr options_panel = FramedGuiElement::get("regular_window");
 		int xpos = graphics::screen_width()/2 - option_width_/2 - OptionsBorder*2;
 		int ypos = 0;
 		options_panel->blit(xpos, ypos, OptionsBorder*4 + option_width_, OptionsBorder*2 + OptionHeight*options_.size(), true);
@@ -386,7 +386,7 @@ void speech_dialog::draw() const
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 			if(index == option_selected_) {
 				glColor4f(1.0, 1.0, 1.0, 1.0);
-				const_gui_section_ptr cursor = gui_section::get("cursor");
+				ConstGuiSectionPtr cursor = GuiSection::get("cursor");
 				cursor->blit(area.x2(), area.y());
 				glColor4ub(255, 187, 10, 255); //reset color to what it was, since draw_rect changes it
 			}
@@ -399,14 +399,14 @@ void speech_dialog::draw() const
 	}
 }
 
-void speech_dialog::set_speaker_and_flip_side(const_entity_ptr e)
+void speech_dialog::set_speaker_and_flip_side(ConstEntityPtr e)
 {
 	//std::cerr << "set speaker\n";
 	left_side_speaking_ = !left_side_speaking_;
 	set_speaker(e, left_side_speaking_);
 }
 
-void speech_dialog::set_speaker(const_entity_ptr e, bool left_side)
+void speech_dialog::set_speaker(ConstEntityPtr e, bool left_side)
 {
 	if(left_side) {
 		left_ = e;
@@ -422,7 +422,7 @@ void speech_dialog::set_side(bool left_side)
 	left_side_speaking_ = left_side;
 }
 
-void speech_dialog::set_text(const std::vector<std::string>& text)
+void speech_dialog::setText(const std::vector<std::string>& text)
 {
 	text_.clear();
 	markup_.clear();
@@ -477,7 +477,7 @@ void speech_dialog::set_options(const std::vector<std::string>& options)
 	option_selected_ = 0;
 #endif
 	option_width_ = OptionMinWidth;
-	const_graphical_font_ptr font = graphical_font::get("default");
+	ConstGraphicalFontPtr font = GraphicalFont::get("default");
 	foreach(const std::string& option, options_) {
 		rect area = font->dimensions(option);
 		if (area.w()+OptionXPad*2 > option_width_)

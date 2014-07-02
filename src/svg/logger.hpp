@@ -60,7 +60,17 @@ const char* get_log_level_as_string(LogLevel l);
 			std::cerr << _s.str();											\
 	} while(0)
 
+#define LOG_MSG_NOLF(_ll, _msg)												\
+	do {																	\
+			std::ostringstream _s;											\
+			_s  << __SHORT_FORM_OF_FILE__ << ":" << __LINE__ << " "			\
+				<< get_log_level_as_string(_ll) << ": " << _msg;			\
+			std::cerr << _s.str();											\
+	} while(0)
+
 #define LOG_DEBUG(_msg)	LOG_MSG(LOG_LEVEL_DEBUG, _msg)
 #define LOG_INFO(_msg)	LOG_MSG(LOG_LEVEL_INFO, _msg)
 #define LOG_WARN(_msg)	LOG_MSG(LOG_LEVEL_WARN, _msg)
 #define LOG_ERROR(_msg) LOG_MSG(LOG_LEVEL_ERROR, _msg)
+
+#define LOG_INFO_NOLF(_msg)	LOG_MSG_NOLF(LOG_LEVEL_INFO, _msg)

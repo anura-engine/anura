@@ -104,7 +104,7 @@ void show_video_selection_dialog()
 
 	int selected_mode = -1;
 
-	d.add_widget(widget_ptr(new graphical_font_label(_("Select video options:"), "door_label", 2)), padding, padding);
+	d.addWidget(WidgetPtr(new GraphicalFontLabel(_("Select video options:"), "door_label", 2)), padding, padding);
 	wh_data display_modes;
 	int current_mode_index = enumerate_video_modes(display_modes);
 	if(!display_modes.empty()) {
@@ -116,14 +116,14 @@ void show_video_selection_dialog()
 
 		// Video mode list.
 		dropdown_widget* mode_list = new dropdown_widget(display_strings, 220, 20);
-		mode_list->set_selection(current_mode_index);
-		mode_list->set_zorder(10);
-		mode_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
+		mode_list->setSelection(current_mode_index);
+		mode_list->setZOrder(10);
+		mode_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){ 
 			selected_mode = selection;
 		});
-		d.add_widget(widget_ptr(mode_list));
+		d.addWidget(WidgetPtr(mode_list));
 	} else {
-		d.add_widget(widget_ptr(new graphical_font_label(_("Unable to enumerate video modes"), "door_label", 2)), padding, padding);
+		d.addWidget(WidgetPtr(new GraphicalFontLabel(_("Unable to enumerate video modes"), "door_label", 2)), padding, padding);
 	}
 
 	// Fullscreen selection
@@ -133,16 +133,16 @@ void show_video_selection_dialog()
 	fs_options.push_back("Fullscreen Windowed");
 	fs_options.push_back("Fullscreen");
 	dropdown_widget* fs_list = new dropdown_widget(fs_options, 220, 20);
-	fs_list->set_selection(int(preferences::fullscreen()));
-	fs_list->set_zorder(9);
-	fs_list->set_on_select_handler([&fs_mode](int selection,const std::string& s){ 
+	fs_list->setSelection(int(preferences::fullscreen()));
+	fs_list->setZOrder(9);
+	fs_list->setOnSelectHandler([&fs_mode](int selection,const std::string& s){ 
 		switch(selection) {
 			case 0:	fs_mode = preferences::FULLSCREEN_NONE; break;
 			case 1:	fs_mode = preferences::FULLSCREEN_WINDOWED; break;
 			case 2:	fs_mode = preferences::FULLSCREEN; break;
 		}
 	});
-	d.add_widget(widget_ptr(fs_list));
+	d.addWidget(WidgetPtr(fs_list));
 
 	// Vertical sync options
 	std::vector<std::string> vsync_options;
@@ -150,27 +150,27 @@ void show_video_selection_dialog()
 	vsync_options.push_back("Synchronised to retrace");
 	vsync_options.push_back("Late synchronisation");
 	dropdown_widget* synch_list = new dropdown_widget(vsync_options, 220, 20);
-	synch_list->set_selection(g_vsync);
-	synch_list->set_zorder(8);
-	synch_list->set_on_select_handler([&selected_mode](int selection,const std::string& s){ 
+	synch_list->setSelection(g_vsync);
+	synch_list->setZOrder(8);
+	synch_list->setOnSelectHandler([&selected_mode](int selection,const std::string& s){ 
 		switch(selection) {
 			case 0:	g_vsync = 0; break;
 			case 1:	g_vsync = 1; break;
 			case 2:	g_vsync = -1; break;
 		}
 	});
-	d.add_widget(widget_ptr(synch_list));
+	d.addWidget(WidgetPtr(synch_list));
 
-	widget_ptr b_okay = new button(new graphical_font_label(_("OK"), "door_label", 2), [&d](){ 
+	WidgetPtr b_okay = new button(new GraphicalFontLabel(_("OK"), "door_label", 2), [&d](){ 
 		d.close();
 	});
-	widget_ptr b_cancel = new button(new graphical_font_label(_("Cancel"), "door_label", 2), [&d](){ 
+	WidgetPtr b_cancel = new button(new GraphicalFontLabel(_("Cancel"), "door_label", 2), [&d](){ 
 		d.cancel();
 	});
-	b_okay->set_dim(button_width, button_height);
-	b_cancel->set_dim(button_width, button_height);
-	d.add_widget(b_okay, 20, d.height() - button_height - 20);
-	d.add_widget(b_cancel, d.width() - button_width - 20, d.height() - button_height - 20);
+	b_okay->setDim(button_width, button_height);
+	b_cancel->setDim(button_width, button_height);
+	d.addWidget(b_okay, 20, d.height() - button_height - 20);
+	d.addWidget(b_cancel, d.width() - button_width - 20, d.height() - button_height - 20);
 
 	d.show_modal();
 	if(d.cancelled() == false) {

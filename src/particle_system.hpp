@@ -1,59 +1,68 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef PARTICLE_SYSTEM_HPP_INCLUDED
-#define PARTICLE_SYSTEM_HPP_INCLUDED
 
-#include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
+#pragma once
 
+#include "kre/Geometry.hpp"
+#include "kre/SceneObject.hpp"
+#include "kre/SceneUtil.hpp"
+#include "Color.hpp"
+
+#include "entity_fwd.hpp"
 #include "formula_callable.hpp"
-#include "geometry.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
-class entity;
-class particle_system;
-typedef boost::intrusive_ptr<particle_system> particle_system_ptr;
-typedef boost::intrusive_ptr<const particle_system> const_particle_system_ptr;
+class ParticleSystem;
+typedef boost::intrusive_ptr<ParticleSystem> ParticleSystemPtr;
+typedef boost::intrusive_ptr<const ParticleSystem> ConstParticleSystemPtr;
 
-class particle_system_factory;
-typedef boost::shared_ptr<const particle_system_factory> const_particle_system_factory_ptr;
+class ParticleSystemFactory;
+typedef std::shared_ptr<const ParticleSystemFactory> ConstParticleSystemFactoryPtr;
 
-class particle_system_factory
+class ParticleSystemFactory
 {
 public:
-	static const_particle_system_factory_ptr create_factory(variant node);
+	static ConstParticleSystemFactoryPtr create_factory(variant node);
 	
-	virtual ~particle_system_factory();
-	virtual particle_system_ptr create(const entity& e) const = 0;
+	virtual ~ParticleSystemFactory();
+	virtual ParticleSystemPtr create(const Entity& e) const = 0;
 };
 
-class particle_system : public game_logic::formula_callable
+class ParticleSystem : public game_logic::FormulaCallable, public KRE::SceneObject
 {
 public:
-	virtual ~particle_system();
-	virtual bool is_destroyed() const { return false; }
-	virtual bool should_save() const { return true; }
-	virtual void process(const entity& e) = 0;
-	virtual void draw(const rect& area, const entity& e) const = 0;
+	virtual ~ParticleSystem();
+	virtual bool isDestroyed() const { return false; }
+	virtual bool shouldSave() const { return true; }
+	virtual void process(const Entity& e) = 0;
+	virtual void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const = 0;
 
-	void set_type(const std::string& type) { type_ = type; }
+	void setType(const std::string& type) { type_ = type; }
 	const std::string& type() const { return type_; }
+protected:
+	ParticleSystem() : SceneObject("ParticleSystem") {}
 private:
+	DECLARE_CALLABLE(ParticleSystem);
 	std::string type_;
 };
-
-#endif

@@ -17,11 +17,8 @@
 #ifndef VARIANT_UTILS_HPP_INCLUDED
 #define VARIANT_UTILS_HPP_INCLUDED
 
-#include <boost/function.hpp>
-
 #include <map>
 
-#include "foreach.hpp"
 #include "formula_callable.hpp"
 #include "variant.hpp"
 
@@ -40,7 +37,7 @@ variant quat_to_variant(const glm::quat& v);
 glm::vec4 variant_to_vec4(const variant& v);
 variant vec4_to_variant(const glm::vec4& v);
 
-game_logic::formula_callable_ptr map_into_callable(variant v);
+game_logic::FormulaCallablePtr map_into_callable(variant v);
 
 //Function which will try to append list of variations. Behaviors:
 //anya, nullb -> anya
@@ -67,7 +64,7 @@ void merge_variant_over(variant* aptr, variant b);
 //If dst and src contain 'incompatible' types this function will assert.
 void smart_merge_variants(variant* dst, const variant& src);
 
-void visit_variants(variant v, boost::function<void (variant)> fn);
+void visit_variants(variant v, std::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);
 
@@ -101,13 +98,13 @@ public:
 
 	template<typename T>
 	variant_builder& set(const std::string& name, const T& val) {
-		return set_value(name, variant(val));
+		return setValue(name, variant(val));
 	}
 	template<typename T>
 	variant_builder& set(const std::string& name, T& val) {
-		return set_value(name, variant(val));
+		return setValue(name, variant(val));
 	}
-	variant_builder& set_value(const std::string& name, const variant& val);
+	variant_builder& setValue(const std::string& name, const variant& val);
 
 	void merge_object(variant obj);
 

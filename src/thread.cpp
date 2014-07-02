@@ -40,15 +40,15 @@ namespace {
 
 int call_boost_function(void* arg)
 {
-	boost::scoped_ptr<boost::function<void()> > fn((boost::function<void()>*)arg);
+	std::unique_ptr<std::function<void()> > fn((std::function<void()>*)arg);
 	(*fn)();
 	return 0;
 }
 
 }
 
-thread::thread(const std::string& name, boost::function<void()> fn) 
-	: fn_(fn), thread_(SDL_CreateThread(call_boost_function, name.c_str(), new boost::function<void()>(fn_)))
+thread::thread(const std::string& name, std::function<void()> fn) 
+	: fn_(fn), thread_(SDL_CreateThread(call_boost_function, name.c_str(), new std::function<void()>(fn_)))
 {}
 
 thread::~thread()

@@ -22,8 +22,8 @@
 
 namespace {
 using namespace game_logic;
-class mock_char : public formula_callable {
-	variant get_value(const std::string& key) const {
+class mock_char : public FormulaCallable {
+	variant getValue(const std::string& key) const {
 		if(key == "strength") {
 			return variant(15);
 		} else if(key == "agility") {
@@ -33,8 +33,8 @@ class mock_char : public formula_callable {
 		return variant(10);
 	}
 };
-class mock_party : public formula_callable {
-	variant get_value(const std::string& key) const {
+class mock_party : public FormulaCallable {
+	variant getValue(const std::string& key) const {
 		c_.add_ref();
 		i_[0].add_ref();
 		i_[1].add_ref();
@@ -57,7 +57,7 @@ class mock_party : public formula_callable {
 	}
 
 	mock_char c_;
-	mutable map_formula_callable i_[3];
+	mutable MapFormulaCallable i_[3];
 
 };
 

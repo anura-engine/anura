@@ -190,12 +190,12 @@ namespace geometry
 	poly_map::poly_map(int npts, int relaxations, int width, int height) 
 		: npts_(npts), relaxations_(relaxations), noise_seed_(0)
 	{
-		set_environment();
-		set_dim(width, height);
+		setEnvironment();
+		setDim(width, height);
 		init();
 	}
 
-	poly_map::poly_map(const variant& v, game_logic::formula_callable* e) 
+	poly_map::poly_map(const variant& v, game_logic::FormulaCallable* e) 
 		: widget(v,e), npts_(v["points"].as_int(10)), relaxations_(v["relaxations"].as_int(2)),
 		noise_seed_(v["noise_seed"].as_int(0)), noise_multiplier_(1.5f)
 	{
@@ -228,10 +228,10 @@ namespace geometry
 			p->set_height(int(noise::simplex::noise2(&vec[0])*256.0f));
 			
 			if(p->height() < 0) {
-				p->set_color(graphics::color(52, 58, 94));
+				p->setColor(graphics::color(52, 58, 94));
 			} else {
 				rgb col = hsv_to_rgb(base_color.h, base_color.s, base_color.v * p->height()/200.0f+128.0f);
-				p->set_color(graphics::color(col.r, col.g, col.b));
+				p->setColor(graphics::color(col.r, col.g, col.b));
 			}
 		}
 
@@ -259,7 +259,7 @@ namespace geometry
 	{
 	}
 
-	void poly_map::handle_draw() const
+	void poly_map::handleDraw() const
 	{
 		gui::color_save_context ctx;
 		graphics::draw_hollow_rect(rect(x(), y(), width(), height()), graphics::color(255,255,255,255));

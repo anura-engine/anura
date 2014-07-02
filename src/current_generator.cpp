@@ -1,63 +1,71 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <math.h>
 
 #include "current_generator.hpp"
 #include "formatter.hpp"
+#include "logger.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
-current_generator_ptr current_generator::create(variant node)
+CurrentGeneratorPtr CurrentGenerator::create(variant node)
 {
 	const std::string& type = node["type"].as_string();
 	if(type == "radial") {
-		return current_generator_ptr(new radial_current_generator(node));
+		return CurrentGeneratorPtr(new RadialCurrentGenerator(node));
 	} else if(type == "rect") {
-		return current_generator_ptr(new rect_current_generator(node));
+		return CurrentGeneratorPtr(new RectCurrentGenerator(node));
 	} else {
 		return NULL;
 	}
 }
 
-current_generator::~current_generator() {
+CurrentGenerator::~CurrentGenerator() {
 }
 
-variant current_generator::get_value(const std::string& key) const
+variant CurrentGenerator::getValue(const std::string& key) const
 {
 	return variant();
 }
 
-radial_current_generator::radial_current_generator(int intensity, int radius)
+RadialCurrentGenerator::RadialCurrentGenerator(int intensity, int radius)
   : intensity_(intensity), radius_(radius)
 {}
 
-radial_current_generator::radial_current_generator(variant node)
+RadialCurrentGenerator::RadialCurrentGenerator(variant node)
   : intensity_(node["intensity"].as_int()),
     radius_(node["radius"].as_int())
 {}
 
-void radial_current_generator::generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) {
+void RadialCurrentGenerator::generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y) {
 	if(center_x == target_x && center_y == target_y) {
 		return;
 	}
 
-	const float xdiff = target_x - center_x;
-	const float ydiff = target_y - center_y;
+	const float xdiff = static_cast<float>(target_x - center_x);
+	const float ydiff = static_cast<float>(target_y - center_y);
 	if(abs(xdiff) >= radius_ || abs(ydiff) > radius_) {
 		return;
 	}
@@ -67,16 +75,16 @@ void radial_current_generator::generate(int center_x, int center_y, int target_x
 		return;
 	}
 
-	const float intensity = intensity_*(1.0 - distance/radius_);
+	const float intensity = intensity_*(1.0f - distance/radius_);
 	const float xdiff_normalized = xdiff/(abs(xdiff) + abs(ydiff));
 	const float ydiff_normalized = ydiff/(abs(xdiff) + abs(ydiff));
 
-	std::cerr << "DO_CURRENT: " << center_x << "," << center_y << " ~ " << target_x << "," << target_y << ": "<< intensity << " x " << xdiff_normalized << "," << ydiff_normalized << "\n";
-	*velocity_x += xdiff_normalized*intensity;
-	*velocity_y += ydiff_normalized*intensity;
+	LOG_INFO("DO_CURRENT: " << center_x << "," << center_y << " ~ " << target_x << "," << target_y << ": "<< intensity << " x " << xdiff_normalized << "," << ydiff_normalized);
+	*velocity_x += static_cast<int>(xdiff_normalized*intensity);
+	*velocity_y += static_cast<int>(ydiff_normalized*intensity);
 }
 
-variant radial_current_generator::write() const
+variant RadialCurrentGenerator::write() const
 {
 	variant_builder result;
 	result.add("type", "radial");
@@ -85,18 +93,18 @@ variant radial_current_generator::write() const
 	return result.build();
 }
 
-rect_current_generator::rect_current_generator(const rect& r, int xvelocity, int yvelocity, int strength)
+RectCurrentGenerator::RectCurrentGenerator(const rect& r, int xvelocity, int yvelocity, int strength)
   : rect_(r), xvelocity_(xvelocity), yvelocity_(yvelocity), strength_(strength)
 {}
 
-rect_current_generator::rect_current_generator(variant node)
+RectCurrentGenerator::RectCurrentGenerator(variant node)
   : rect_(node["rect"].as_string()), xvelocity_(node["xvelocity"].as_int()), yvelocity_(node["yvelocity"].as_int()), strength_(node["strength"].as_int())
 {}
 
-void rect_current_generator::generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y)
+void RectCurrentGenerator::generate(int center_x, int center_y, int target_x, int target_y, int target_mass, int* velocity_x, int* velocity_y)
 {
 	const int strength = strength_;
-	if(point_in_rect(point(target_x, target_y), rect_)) {
+	if(pointInRect(point(target_x, target_y), rect_)) {
 		if(xvelocity_ > 0 && *velocity_x < xvelocity_) {
 			int amount = (xvelocity_ - std::max(0, *velocity_x))*strength/(target_mass*1000);
 			const int distance = rect_.x2() - target_x;
@@ -126,25 +134,21 @@ void rect_current_generator::generate(int center_x, int center_y, int target_x, 
 		} else if(yvelocity_ < 0 && *velocity_y > yvelocity_) {
 			int amount = yvelocity_*strength/(target_mass*1000);
 			const int distance = target_y - rect_.y();
-//			amount = (amount*distance*distance)/(rect_.h()*rect_.h());
-			std::cerr << "DIST: " << distance << "/" << rect_.h() << " " << *velocity_y << "\n";
+			LOG_INFO("DIST: " << distance << "/" << rect_.h() << " " << *velocity_y);
 			if(distance < rect_.h()/2 && *velocity_y > 0) {
-				std::cerr << "CANCEL\n";
+				LOG_INFO("CANCEL");
 				amount = 0;
 			}
 			*velocity_y += amount;
-			if(*velocity_y < yvelocity_) {
-//				*velocity_y = yvelocity_;
-			}
 		}
 	}
 }
 
-variant rect_current_generator::write() const
+variant RectCurrentGenerator::write() const
 {
 	variant_builder node;
 	node.add("type", "rect");
-	node.add("rect", rect_.to_string());
+	node.add("rect", rect_.write());
 	node.add("xvelocity", formatter() << xvelocity_);
 	node.add("yvelocity", formatter() << yvelocity_);
 	node.add("strength", formatter() << strength_);

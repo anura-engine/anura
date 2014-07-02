@@ -14,7 +14,7 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include "settings_dialog.hpp"
+#include "settingsDialog.hpp"
 
 #include "gui_section.hpp"
 #include "iphone_controls.hpp"
@@ -28,11 +28,11 @@ namespace
 	const int padding = 10;
 }
 
-void settings_dialog::draw (bool in_speech_dialog) const
+void settingsDialog::draw (bool in_speech_dialog) const
 {
 	int sw = graphics::screen_width();
 	int sh = graphics::screen_height();
-	const const_gui_section_ptr button = gui_section::get(std::string(in_speech_dialog ? "skip" : "menu") + "_button_" + std::string(menu_button_state_ ? "down" : "normal") + std::string(sw == 1024 ? "_ipad" : ""));
+	const ConstGuiSectionPtr button = GuiSection::get(std::string(in_speech_dialog ? "skip" : "menu") + "_button_" + std::string(menu_button_state_ ? "down" : "normal") + std::string(sw == 1024 ? "_ipad" : ""));
 	if (sw != 1024) // not iPad
 	{
 		button->blit(sw - button->width() - padding, padding);
@@ -41,12 +41,12 @@ void settings_dialog::draw (bool in_speech_dialog) const
 	}
 }
 
-bool settings_dialog::handle_event (const SDL_Event& event)
+bool settingsDialog::handleEvent (const SDL_Event& event)
 {
 	int sw = graphics::screen_width();
 	int sh = graphics::screen_height();
 	// Not using _ipad for iPad here is a hack, which assumes the normal button is half the size of the iPad button
-	const const_gui_section_ptr button = gui_section::get("menu_button_normal");
+	const ConstGuiSectionPtr button = GuiSection::get("menu_button_normal");
 	if (event.type == SDL_MOUSEMOTION || event.type == SDL_MOUSEBUTTONDOWN || event.type == SDL_MOUSEBUTTONUP)
 	{
 		const int menu_button_x = sw - button->width() - padding;
@@ -71,14 +71,14 @@ bool settings_dialog::handle_event (const SDL_Event& event)
 	//return show_window_;
 }
 
-void settings_dialog::reset ()
+void settingsDialog::reset ()
 {
 	show_window_ = false;
 	menu_button_state_ = false;
 }
 
-settings_dialog::settings_dialog () : show_window_(false), menu_button_state_(false)
+settingsDialog::settingsDialog () : show_window_(false), menu_button_state_(false)
 {
 }
 
-settings_dialog::~settings_dialog () {}
+settingsDialog::~settingsDialog () {}

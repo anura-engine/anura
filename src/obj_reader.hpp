@@ -3,9 +3,10 @@
 #include <map>
 #include <vector>
 #include <cstdint>
-#include "graphics.hpp"
 
 #include <glm/glm.hpp>
+
+// XXX This all needs fixed up.
 
 namespace obj
 {
@@ -34,9 +35,9 @@ namespace obj
 		std::vector<glm::vec2> uvs;
 
 		// vertex, uv, normal
-		std::vector<GLfloat> face_vertices;
-		std::vector<GLfloat> face_normals;
-		std::vector<GLfloat> face_uvs;
+		std::vector<float> face_vertices;
+		std::vector<float> face_normals;
+		std::vector<float> face_uvs;
 
 		std::vector<glm::vec3> parameter_space_vertices;
 

@@ -80,10 +80,10 @@ namespace geometry
 		void set_centroid(const fpoint& ct) {
 			centroid_ = ct;
 		}
-		void set_color(const graphics::color& c) {
+		void setColor(const graphics::color& c) {
 			color_ = c;
 		}
-		void set_color(const SDL_Color& c) {
+		void setColor(const SDL_Color& c) {
 			color_ = graphics::color(c);
 		}
 
@@ -160,13 +160,13 @@ namespace geometry
 	{
 	public:
 		explicit poly_map(int n_pts, int relaxations_, int width, int height);
-		explicit poly_map(const variant& v, game_logic::formula_callable* e);
+		explicit poly_map(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~poly_map();
 
 		void init();
 
 	protected:
-		virtual void handle_draw() const;
+		virtual void handleDraw() const override;
 	private:
 		DECLARE_CALLABLE(poly_map);
 

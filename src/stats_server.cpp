@@ -35,7 +35,7 @@ public:
 	bool is_global() const { return is_global_; }
 
 	variant init_value() const { return init_value_; }
-	variant calculate_key(const variant& msg, const formula_callable& context_callable) const;
+	variant calculate_key(const variant& msg, const FormulaCallable& context_callable) const;
 	variant calculate_value(const variant& msg, const variant& current_value) const;
 private:
 	std::string name_;
@@ -56,9 +56,9 @@ table_info::table_info(const variant& v)
 }
 
 namespace {
-class variant_callable : public formula_callable {
+class variant_callable : public FormulaCallable {
 	variant var_;
-	variant get_value(const std::string& key) const {
+	variant getValue(const std::string& key) const {
 		return var_[variant(key)];
 	}
 public:
@@ -68,12 +68,12 @@ public:
 
 }
 
-variant table_info::calculate_key(const variant& msg, const formula_callable& context_callable) const
+variant table_info::calculate_key(const variant& msg, const FormulaCallable& context_callable) const
 {
 	if(key_) {
 		variant_callable* v = new variant_callable(msg);
 		variant holder(v);
-		formula_callable_with_backup* callable = new formula_callable_with_backup(*v, context_callable);
+		FormulaCallable_with_backup* callable = new FormulaCallable_with_backup(*v, context_callable);
 		variant callable_holder(callable);
 		return key_->execute(*callable);
 	} else {
@@ -84,7 +84,7 @@ variant table_info::calculate_key(const variant& msg, const formula_callable& co
 variant table_info::calculate_value(const variant& msg, const variant& current_value) const
 {
 	if(value_) {
-		map_formula_callable* callable = new map_formula_callable;
+		MapFormulaCallable* callable = new MapFormulaCallable;
 		const variant scope(callable);
 		callable->add("value", current_value);
 		callable->add("sample", msg);
@@ -189,7 +189,7 @@ struct version_data {
 version_data read_version_data(variant v)
 {
 	version_data result;
-	variant keys = v.get_keys();
+	variant keys = v.getKeys();
 	for(int n = 0; n != keys.num_elements(); ++n) {
 		if(keys[n].as_string() == "_GLOBAL_") {
 			result.global_data = read_type_data_map(v[keys[n]]);
@@ -232,7 +232,7 @@ variant write_data_table()
 void read_data_table(variant v)
 {
 	data_table.clear();
-	variant keys = v.get_keys();
+	variant keys = v.getKeys();
 	for(int n = 0; n != keys.num_elements(); ++n) {
 		data_table[keys[n].as_list_string()] = read_version_data(v[keys[n]]);
 	}
@@ -242,7 +242,7 @@ void read_data_table(variant v)
 
 void init_tables(const variant& doc)
 {
-	foreach(const variant module, doc.get_keys().as_list()) {
+	foreach(const variant module, doc.getKeys().as_list()) {
 		init_tables_for_module(module.as_string(), doc[module]);
 	}
 }
@@ -321,7 +321,7 @@ void process_stats(const variant& doc)
 	const std::string& module_version_str = module_version.as_string();
 	const int user_id = doc["user_id"].as_int();
 
-	game_logic::map_formula_callable* context_callable = new game_logic::map_formula_callable;
+	game_logic::MapFormulaCallable* context_callable = new game_logic::MapFormulaCallable;
 	context_callable->add("user_id", variant(user_id));
 	context_callable->add("program_args", doc["program_args"]);
 	context_callable->add("build_description", doc["build_description"]);

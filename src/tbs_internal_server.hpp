@@ -18,8 +18,6 @@
 #ifndef TBS_INTERNAL_SERVER_HPP_INCLUDED
 #define TBS_INTERNAL_SERVER_HPP_INCLUDED
 
-#include <boost/function.hpp>
-#include <boost/shared_ptr.hpp>
 #include <boost/tuple/tuple.hpp>
 #include <deque>
 #include <list>
@@ -41,12 +39,12 @@ namespace tbs
 		internal_server();
 		virtual ~internal_server();
 
-		void handle_process();
+		void handleProcess() override;
 
 		static void send_request(const variant& request, 
 			int session_id,
-			game_logic::map_formula_callable_ptr callable, 
-			boost::function<void(const std::string&)> handler);		
+			game_logic::MapFormulaCallablePtr callable, 
+			std::function<void(const std::string&)> handler);		
 		static void process();
 		static boost::asio::io_service& get_io_service() { return io_service_; }
 
@@ -56,8 +54,8 @@ namespace tbs
 	private:
 		void send_msg(const variant& resp, 
 			int session_id,
-			boost::function<void(const std::string&)> handler, 
-			game_logic::map_formula_callable_ptr callable);
+			std::function<void(const std::string&)> handler, 
+			game_logic::MapFormulaCallablePtr callable);
 		static boost::asio::io_service io_service_;
 
 		void write_queue(send_function send_fn, const variant& v, int session_id);
@@ -73,7 +71,7 @@ namespace tbs
 		std::deque<boost::tuple<send_function,variant,int> > msg_queue_;
 	};
 
-	typedef boost::shared_ptr<internal_server> internal_server_ptr;
+	typedef std::shared_ptr<internal_server> internal_server_ptr;
 }
 
 #endif

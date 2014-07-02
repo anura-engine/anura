@@ -41,8 +41,8 @@ void flatten_recursively(const std::vector<variant>& v, std::vector<variant>* re
 
 }
 
-rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable* e)
-	: scrollable_widget(v,e)
+rich_text_label::rich_text_label(const variant& v, game_logic::FormulaCallable* e)
+	: ScrollableWidget(v,e)
 {
 	children_.resize(1);
 	children_.front().clear();
@@ -73,8 +73,8 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 
 					std::string words(line.begin(), space_itor);
 					label_info.add_attr_mutation(variant("text"), variant(words));
-					widget_ptr label_widget_holder(widget_factory::create(label_info, e));
-					label_ptr label_widget(static_cast<label*>(label_widget_holder.get()));
+					WidgetPtr label_widget_holder(widget_factory::create(label_info, e));
+					LabelPtr label_widget(static_cast<label*>(label_widget_holder.get()));
 
 					bool skip_leading_space = false;
 
@@ -95,15 +95,15 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 						space_itor = std::find(space_itor+1, line.end(), ' ');
 
 						words = std::string(line.begin(), space_itor);
-						label_widget->set_text(words);
+						label_widget->setText(words);
 					}
 
 					line.erase(line.begin(), line.begin() + candidate.size());
 					if(skip_leading_space && candidate.empty() == false && candidate[0] == ' ') {
 						candidate.erase(candidate.begin());
 					}
-					label_widget->set_text(candidate);
-					label_widget->set_loc(xpos, ypos);
+					label_widget->setText(candidate);
+					label_widget->setLoc(xpos, ypos);
 
 					if(label_widget->height() > line_height) {
 						line_height = label_widget->height();
@@ -116,7 +116,7 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 			}
 		} else {
 			//any widget other than a label
-			widget_ptr w(widget_factory::create(item, e));
+			WidgetPtr w(widget_factory::create(item, e));
 
 			if(xpos != 0 && xpos + w->width() > width()) {
 				xpos = 0;
@@ -129,7 +129,7 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 				line_height = w->height();
 			}
 
-			w->set_loc(xpos, ypos);
+			w->setLoc(xpos, ypos);
 
 			xpos += w->width();
 
@@ -138,29 +138,29 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 	}
 
 	if(v["align"].as_string_default("left") == "right") {
-		foreach(std::vector<widget_ptr>& v, children_) {
+		foreach(std::vector<WidgetPtr>& v, children_) {
 			if(!v.empty()) {
 				const int delta = x() + width() - (v.back()->x() + v.back()->width());
-				foreach(widget_ptr w, v) {
-					w->set_loc(w->x() + delta, w->y());
+				foreach(WidgetPtr w, v) {
+					w->setLoc(w->x() + delta, w->y());
 				}
 			}
 		}
 	}
 
 	if(v["valign"].as_string_default("center") == "center") {
-		foreach(std::vector<widget_ptr>& v, children_) {
+		foreach(std::vector<WidgetPtr>& v, children_) {
 			if(!v.empty()) {
 				int height = 0;
-				foreach(const widget_ptr& w, v) {
+				foreach(const WidgetPtr& w, v) {
 					if(w->height() > height) {
 						height = w->height();
 					}
 				}
 
-				foreach(const widget_ptr& w, v) {
+				foreach(const WidgetPtr& w, v) {
 					if(w->height() < height) {
-						w->set_loc(w->x(), w->y() + (height - w->height())/2);
+						w->setLoc(w->x(), w->y() + (height - w->height())/2);
 					}
 				}
 			}
@@ -169,7 +169,7 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 
 	if(!v.has_key("height")) {
 		//if height isn't given, auto set it.
-		set_dim(width(), ypos + line_height);
+		setDim(width(), ypos + line_height);
 	}
 	
 	//ypos + line_height);
@@ -177,33 +177,33 @@ rich_text_label::rich_text_label(const variant& v, game_logic::formula_callable*
 	set_arrow_scroll_step(16);
 	update_scrollbar();
 
-	set_claim_mouse_events(v["claim_mouse_events"].as_bool(false));
+	setClaimMouseEvents(v["claim_mouse_events"].as_bool(false));
 }
 
-std::vector<widget_ptr> rich_text_label::get_children() const
+std::vector<WidgetPtr> rich_text_label::getChildren() const
 {
-	std::vector<widget_ptr> result;
-	foreach(const std::vector<widget_ptr>& row, children_) {
+	std::vector<WidgetPtr> result;
+	foreach(const std::vector<WidgetPtr>& row, children_) {
 		result.insert(result.end(), row.begin(), row.end());
 	}
 
 	return result;
 }
 
-void rich_text_label::handle_process()
+void rich_text_label::handleProcess()
 {
-	scrollable_widget::handle_process();
+	ScrollableWidget::handleProcess();
 
-	foreach(const std::vector<widget_ptr>& v, children_) {
-		foreach(const widget_ptr& widget, v) {
+	foreach(const std::vector<WidgetPtr>& v, children_) {
+		foreach(const WidgetPtr& widget, v) {
 			widget->process();
 		}
 	}
 }
 
-void rich_text_label::handle_draw() const
+void rich_text_label::handleDraw() const
 {
-	scrollable_widget::handle_draw();
+	ScrollableWidget::handleDraw();
 
 	const SDL_Rect rect = {x(),y(),width(),height()};
 	const graphics::clip_scope clipping_scope(rect);
@@ -213,8 +213,8 @@ void rich_text_label::handle_draw() const
 
 	{
 
-	foreach(const std::vector<widget_ptr>& v, children_) {
-		foreach(const widget_ptr& widget, v) {
+	foreach(const std::vector<WidgetPtr>& v, children_) {
+		foreach(const WidgetPtr& widget, v) {
 			if(widget->y() > yscroll() + height() ||
 			   widget->y() + widget->height() < yscroll()) {
 				continue;
@@ -229,29 +229,29 @@ void rich_text_label::handle_draw() const
 	glPopMatrix();
 }
 
-bool rich_text_label::handle_event(const SDL_Event& event, bool claimed)
+bool rich_text_label::handleEvent(const SDL_Event& event, bool claimed)
 {
-	claimed = scrollable_widget::handle_event(event, claimed);
+	claimed = ScrollableWidget::handleEvent(event, claimed);
 
 	SDL_Event ev = event;
-	normalize_event(&ev);
-	foreach(const std::vector<widget_ptr>& v, children_) {
-		foreach(const widget_ptr& widget, v) {
-			claimed = widget->process_event(ev, claimed);
+	normalizeEvent(&ev);
+	foreach(const std::vector<WidgetPtr>& v, children_) {
+		foreach(const WidgetPtr& widget, v) {
+			claimed = widget->processEvent(ev, claimed);
 		}
 	}
 
 	return claimed;
 }
 
-variant rich_text_label::get_value(const std::string& key) const
+variant rich_text_label::getValue(const std::string& key) const
 {
-	return scrollable_widget::get_value(key);
+	return ScrollableWidget::getValue(key);
 }
 
-void rich_text_label::set_value(const std::string& key, const variant& v)
+void rich_text_label::setValue(const std::string& key, const variant& v)
 {
-	scrollable_widget::set_value(key, v);
+	ScrollableWidget::setValue(key, v);
 }
 
 }

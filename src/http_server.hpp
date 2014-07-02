@@ -28,8 +28,8 @@ typedef std::map<std::string, std::string> environment;
 class web_server
 {
 public:
-	typedef boost::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
-	typedef boost::shared_ptr<boost::array<char, 64*1024> > buffer_ptr;
+	typedef std::shared_ptr<boost::asio::ip::tcp::socket> socket_ptr;
+	typedef std::shared_ptr<boost::array<char, 64*1024> > buffer_ptr;
 
 	explicit web_server(boost::asio::io_service& io_service, int port=23456);
 	virtual ~web_server();
@@ -43,7 +43,7 @@ protected:
 	void send_msg(socket_ptr socket, const std::string& mime_type, const std::string& msg, const std::string& header_parms);
 	void send_404(socket_ptr socket);
 
-	void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, boost::shared_ptr<std::string> buf);
+	void handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, size_t max_bytes, std::shared_ptr<std::string> buf);
 
 	virtual void disconnect(socket_ptr socket);
 
@@ -56,7 +56,7 @@ private:
 		std::string msg;
 		size_t wanted;
 	};
-	typedef boost::shared_ptr<receive_buf> receive_buf_ptr;
+	typedef std::shared_ptr<receive_buf> receive_buf_ptr;
 
 	void start_receive(socket_ptr socket, receive_buf_ptr buf=receive_buf_ptr());
 	void handle_receive(socket_ptr socket, buffer_ptr buf, const boost::system::error_code& e, size_t nbytes, receive_buf_ptr recv_buf);

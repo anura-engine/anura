@@ -1,24 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef EDITOR_VARIABLE_INFO_HPP_INCLUDED
-#define EDITOR_VARIABLE_INFO_HPP_INCLUDED
-#ifndef NO_EDITOR
 
-#include <boost/shared_ptr.hpp>
+#pragma once
+
+#ifndef NO_EDITOR
 
 #include <string>
 #include <vector>
@@ -26,7 +31,8 @@
 #include "formula_fwd.hpp"
 #include "variant.hpp"
 
-class editor_variable_info {
+class editor_variable_info 
+{
 public:
 	enum VARIABLE_TYPE { TYPE_INTEGER, XPOSITION, YPOSITION, TYPE_LEVEL, TYPE_LABEL, TYPE_TEXT, TYPE_BOOLEAN, TYPE_ENUM, TYPE_POINTS };
 
@@ -63,7 +69,8 @@ private:
 	decimal numeric_min_, numeric_max_;
 };
 
-class editor_entity_info {
+class editor_entity_info 
+{
 public:
 	explicit editor_entity_info(variant node);
 
@@ -77,7 +84,7 @@ public:
 	const editor_variable_info* get_var_info(const std::string& var_name) const;
 	const editor_variable_info* get_property_info(const std::string& var_name) const;
 	const editor_variable_info* get_var_or_property_info(const std::string& var_name) const;
-	void add_property(const editor_variable_info& prop);
+	void addProperty(const editor_variable_info& prop);
 	const std::string& help() const { return help_; }
 	const std::vector<std::string>& editable_events() const { return editable_events_; }
 private:
@@ -87,9 +94,7 @@ private:
 	std::string help_;
 };
 
-typedef boost::shared_ptr<editor_entity_info> editor_entity_info_ptr;
-typedef boost::shared_ptr<const editor_entity_info> const_editor_entity_info_ptr;
+typedef std::shared_ptr<editor_entity_info> editor_entity_info_ptr;
+typedef std::shared_ptr<const editor_entity_info> const_editor_entity_info_ptr;
 
-#endif
 #endif // !NO_EDITOR
-

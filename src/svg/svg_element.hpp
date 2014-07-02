@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "geometry.hpp"
+#include "kre/Geometry.hpp"
 #include "svg_fwd.hpp"
 #include "svg_render.hpp"
 #include "svg_style.hpp"
