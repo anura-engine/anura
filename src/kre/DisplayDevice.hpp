@@ -136,7 +136,7 @@ namespace KRE
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 
-		virtual void loadShadersFromFile(const std::string& filename) = 0;
+		virtual void loadShadersFromFile(const variant& node) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;

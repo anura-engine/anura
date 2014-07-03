@@ -49,7 +49,7 @@ namespace KRE
 		ClipScopePtr createClipScope(const rect& r) override;
 		ScissorPtr getScissor(const rect& r) override;
 
-		void loadShadersFromFile(const std::string& filename) override;
+		void loadShadersFromFile(const variant& node) override;
 		ShaderProgramPtr getShaderProgram(const std::string& name) override;
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;

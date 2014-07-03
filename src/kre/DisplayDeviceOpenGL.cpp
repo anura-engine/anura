@@ -202,7 +202,7 @@ namespace KRE
 		for(auto& hints : def.GetHints()) {
 			if(hints.first == "shader") {
 				// Need to have retrieved more shader data here.
-				dd->SetShader(Shader::ShaderProgram::Factory(hints.second[0]));
+				dd->SetShader(OpenGL::ShaderProgramOGL::factory(hints.second[0]));
 				use_default_shader = false;
 			}
 			// ...
@@ -210,7 +210,7 @@ namespace KRE
 		}
 		// If there is no shader hint, we will assume the default system shader.
 		if(use_default_shader) {
-			dd->SetShader(Shader::ShaderProgram::DefaultSystemShader());
+			dd->SetShader(OpenGL::ShaderProgramOGL::defaultSystemShader());
 		}
 		
 		// XXX Set uniforms from block here.
@@ -463,9 +463,9 @@ namespace KRE
 		return ret_val;
 	}
 
-	void DisplayDeviceOpenGL::loadShadersFromFile(const std::string& filename) 
+	void DisplayDeviceOpenGL::loadShadersFromFile(const variant& node) 
 	{
-		OpenGL::ShaderProgramOGL::loadFromFile(filename);
+		OpenGL::ShaderProgramOGL::loadFromFile(node);
 	}
 
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
