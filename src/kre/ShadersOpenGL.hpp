@@ -46,7 +46,6 @@ namespace KRE
 		protected:
 			bool compile(const std::string& code);
 		private:
-			DISALLOW_COPY_AND_ASSIGN(Shader);
 			GLenum type_;
 			GLuint shader_;
 			std::string name_;
@@ -70,6 +69,16 @@ namespace KRE
 		typedef ActivesMap::iterator ActivesMapIterator;
 		typedef ActivesMap::const_iterator ConstActivesMapIterator;
 
+		class ActivesHandleOGL : public ActivesHandle
+		{
+		public:
+			ActivesHandleOGL(ConstActivesMapIterator a) : active_(a) {}
+			~ActivesHandleOGL() {}
+			ConstActivesMapIterator getIterator() { return active_; }
+		private:
+			ConstActivesMapIterator active_;
+		};
+
 		typedef std::pair<std::string,std::string> ShaderDef;
 
 		class ShaderProgramOGL;
@@ -78,7 +87,7 @@ namespace KRE
 		class ShaderProgramOGL : public KRE::ShaderProgram
 		{
 		public:
-			ShaderProgramOGL(const std::string& name, const ShaderDef& va, const ShaderDef& fs);
+			ShaderProgramOGL(const std::string& name, const ShaderDef& va, const ShaderDef& fs, const variant& node);
 			virtual ~ShaderProgramOGL();
 			void init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
 			std::string name() const { return name_; }
@@ -104,7 +113,7 @@ namespace KRE
 
 			static ShaderProgramPtr factory(const std::string& name);
 			static ShaderProgramOGLPtr defaultSystemShader();
-			static void loadFromFile(const std::string& filename);
+			static void loadFromFile(const variant& node);
 
 			ConstActivesMapIterator getColorUniform() const { return u_color_; }
 			ConstActivesMapIterator getMvpUniform() const { return u_mvp_; }
@@ -115,6 +124,12 @@ namespace KRE
 		
 			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
 			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
+
+			ActivesHandlePtr getHandle(const std::string& name) override;
+
+			void setUniform(ActivesHandlePtr active, const void*) override;
+
+			void applyActives() override;
 
 		protected:
 			bool link();
