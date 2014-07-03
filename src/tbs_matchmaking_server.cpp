@@ -460,6 +460,7 @@ public:
 
 				auto itor = sessions_.find(session_id);
 				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
 					itor->second.last_contact = time_ms_;
