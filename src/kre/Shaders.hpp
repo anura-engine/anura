@@ -28,6 +28,8 @@
 #include <string>
 #include "Util.hpp"
 
+#include "../variant.hpp"
+
 namespace KRE
 {
 	class ShaderProgram;
@@ -36,9 +38,8 @@ namespace KRE
 	class ActivesHandle
 	{
 	public:
-		ActivesHandle();
-		virtual ~ActivesHandle();
-	private:
+		ActivesHandle() {}
+		virtual ~ActivesHandle() {}
 	};
 	typedef std::shared_ptr<ActivesHandle> ActivesHandlePtr;
 
@@ -65,23 +66,27 @@ namespace KRE
 	class ShaderProgram
 	{
 	public:
-		ShaderProgram();
+		ShaderProgram(const variant& node);
 		virtual ~ShaderProgram();
 
 		virtual ActivesHandlePtr getHandle(const std::string& name) = 0;
 
 		virtual void setUniform(ActivesHandlePtr active, const void*) = 0;
-		virtual void setAttribute(ActivesHandlePtr active, const void*) = 0;
 
 		virtual void makeActive() = 0;
 
 		virtual void applyActives() = 0;
 
+		const std::string& getDrawValue() const { return draw_; }
+		const std::string& getCreateValue() const { return create_; }
+
 		//! Look-up the given shader program name in the list and return it.
 		static ShaderProgramPtr getProgram(const std::string& name);
 		//! loads the internal store of shader programs from the given file.
-		static void loadFromFile(const std::string& filename);
+		static void loadFromFile(const variant& node);
 	private:
-		DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ShaderProgram);
+		std::string draw_;
+		std::string create_;
 	};
 }
