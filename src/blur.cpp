@@ -37,7 +37,7 @@ void BlurInfo::copySettings(const BlurInfo& o)
 }
 
 void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
-                const frame* object_frame, int time_in_frame, bool facing,
+                const Frame* object_frame, int time_in_frame, bool facing,
 				bool upside_down, float start_rotate, float rotate) {
 	for(BlurFrame& f : frames_) {
 		f.fade -= fade_;

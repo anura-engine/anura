@@ -408,6 +408,8 @@ namespace gui
 
 	void ColorPicker::init()
 	{
+		using std::placeholders::_1;
+
 		color_box_length_ = width() / 2 - 20;
 		wheel_radius_ = width() / 2 - 10;
 
@@ -564,14 +566,14 @@ namespace gui
 	void ColorPicker::setSlidersFromColor(const KRE::Color& c)
 	{
 		ASSERT_LOG(s_.size() == 7, "Didn't find the correct number of Sliders.");
-		s_[0]->setPosition(c.r()/255.0);
-		s_[1]->setPosition(c.g()/255.0);
-		s_[2]->setPosition(c.b()/255.0);
+		s_[0]->setPosition(static_cast<float>(c.r()/255.0));
+		s_[1]->setPosition(static_cast<float>(c.g()/255.0));
+		s_[2]->setPosition(static_cast<float>(c.b()/255.0));
 		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
-		s_[3]->setPosition(out.h/255.0);
-		s_[4]->setPosition(out.s/255.0);
-		s_[5]->setPosition(out.v/255.0);
-		s_[6]->setPosition(alpha_/255.0);
+		s_[3]->setPosition(static_cast<float>(out.h/255.0));
+		s_[4]->setPosition(static_cast<float>(out.s/255.0));
+		s_[5]->setPosition(static_cast<float>(out.v/255.0));
+		s_[6]->setPosition(static_cast<float>(alpha_/255.0));
 	}
 
 	void ColorPicker::setTextFromColor(const KRE::Color& c, int n)
@@ -636,7 +638,7 @@ namespace gui
 		value_ = out.v;
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(ColorPicker)
+	BEGIN_DEFINE_CALLABLE(ColorPicker, Widget)
 	DEFINE_FIELD(primary, "[int,int,int,int]")
 		return obj.primary_.write();
 	DEFINE_SET_FIELD_TYPE("[int]|string")

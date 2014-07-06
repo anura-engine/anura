@@ -61,7 +61,8 @@ namespace KRE
 		surface_height_(surface->height()),
 		width_(0),
 		height_(0),
-		depth_(0)
+		depth_(0),
+		unpack_alignment_(4)
 	{
 		InternalInit();
 		if(node.has_key("type")) {
@@ -180,7 +181,8 @@ namespace KRE
 		surface_height_(surface->height()),
 		width_(0),
 		height_(0),
-		depth_(0)
+		depth_(0),
+		unpack_alignment_(4)
 	{
 		InternalInit();
 	}
@@ -198,7 +200,8 @@ namespace KRE
 		surface_height_(0),
 		width_(width),
 		height_(height),
-		depth_(depth)
+		depth_(depth),
+		unpack_alignment_(4)
 	{
 		InternalInit();
 	}
@@ -279,6 +282,19 @@ namespace KRE
 		width_ = w;
 		height_ = h;
 		depth_ = d;
+	}
+
+	void Texture::setUnpackAlignment(int align)
+	{
+		ASSERT_LOG(align == 1 || align == 2 || align == 4 || align == 8, 
+			"texture unpacking alignment must be either 1,2,4 or 8: " << align);
+		unpack_alignment_ = align;
+	}
+
+	const BlendMode Texture::getBlendMode() const 
+	{ 
+		ASSERT_LOG(blend_mode_ != NULL, "Called getBlendMode(), but BlendMode is null. Maybe call hasBlendMode() first?"); 
+		return *(blend_mode_.get()); 
 	}
 
 	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)

@@ -33,7 +33,7 @@
 
 enum MOVE_DIRECTION { MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN, MOVE_NONE };
 
-class solid_map
+class SolidMap
 {
 public:
 	static void create_object_solid_maps(variant node, std::vector<ConstSolidMapPtr>& v);
@@ -54,7 +54,7 @@ public:
 private:
 	static ConstSolidMapPtr create_object_solid_map_from_solid_node(variant node);
 
-	solid_map() {}
+	SolidMap() {}
 
 	void set_solid(int x, int y, bool value=true);
 

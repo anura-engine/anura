@@ -145,6 +145,7 @@ namespace KRE
 
 		static MaterialPtr CreateMaterial(const variant& node);
 		static MaterialPtr CreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
+		static MaterialPtr CreateMaterial(const std::string& name, const TexturePtr& texture, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
 
 		static RenderTargetPtr RenderTargetInstance(size_t width, size_t height, 
 			size_t color_plane_count=1, 

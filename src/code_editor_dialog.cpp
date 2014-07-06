@@ -319,7 +319,7 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 
 void CodeEditorDialog::select_file(int index)
 {
-	if(index < 0 || index >= files_.size()) {
+	if(index < 0 || static_cast<unsigned>(index) >= files_.size()) {
 		return;
 	}
 
@@ -428,7 +428,7 @@ void CodeEditorDialog::process()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	if(invalidated_ && SDL_GetTicks() > invalidated_ + 200) {
+	if(invalidated_ && SDL_GetTicks() > static_cast<unsigned>(invalidated_ + 200)) {
 		try {
 			CustomObject::reset_current_debug_error();
 
@@ -709,7 +709,7 @@ void CodeEditorDialog::process()
 		}
 
 		auto wnd_w = KRE::WindowManager::getMainWindow()->width();
-		if(suggestions_grid_->x() + suggestions_grid_->width() + 20 > wnd_w) {
+		if(static_cast<unsigned>(suggestions_grid_->x() + suggestions_grid_->width() + 20) > wnd_w) {
 			suggestions_grid_->setLoc(wnd_w - suggestions_grid_->width() - 20, suggestions_grid_->y());
 		}
 	}
@@ -1000,10 +1000,10 @@ void CodeEditorDialog::save_and_close()
 
 void CodeEditorDialog::select_suggestion(int index)
 {
-	if(index >= 0 && index < suggestions_.size()) {
+	if(index >= 0 && static_cast<unsigned>(index) < suggestions_.size()) {
 		std::cerr << "SELECT " << suggestions_[index].suggestion << "\n";
 		const std::string& str = suggestions_[index].suggestion;
-		if(suggestions_prefix_ >= 0 && suggestions_prefix_ < str.size()) {
+		if(suggestions_prefix_ >= 0 && static_cast<unsigned>(suggestions_prefix_) < str.size()) {
 			const int col = editor_->cursorCol();
 			const std::string insert(str.begin() + suggestions_prefix_, str.end());
 			const std::string postfix = suggestions_[index].postfix;

@@ -24,7 +24,7 @@
 #include <string>
 #include <cairo.h>
 
-#include "kre/Texture.hpp"
+#include "kre/Material.hpp"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
@@ -43,8 +43,7 @@ namespace graphics
 		~cairo_context();
 
 		cairo_t* get() const;
-		KRE::SurfacePtr get_surface() const;
-		KRE::TexturePtr write() const;
+		KRE::MaterialPtr write() const;
 	
 		void render_svg(const std::string& fname);
 		void write_png(const std::string& fname);

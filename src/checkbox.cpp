@@ -29,6 +29,8 @@
 
 namespace gui 
 {
+	using std::placeholders::_1;
+
 	namespace 
 	{
 		WidgetPtr create_checkbox_widget(WidgetPtr label, 

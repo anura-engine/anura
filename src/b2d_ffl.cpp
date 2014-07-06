@@ -1,25 +1,35 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include <cstdarg>
+
+#include "kre/Canvas.hpp"
+#include "kre/Font.hpp"
+
 #include "asserts.hpp"
 #include "b2d_ffl.hpp"
-#include "graphics.hpp"			// -- needed for debug functions
 #include "json_parser.hpp"
 #include "level.hpp"
-#include "raster.hpp"
 #include "variant_utils.hpp"
 
 #ifdef USE_BOX2D
@@ -278,7 +288,7 @@ namespace box2d
 		res.add("allow_sleeping", getValue("allow_sleeping"));
 		res.add("iterations", getValue("iterations"));
 		res.add("viewport", getValue("viewport"));
-		foreach(const joint_factory_pair& j, get_joint_defs()) {
+		for(const joint_factory_pair& j : get_joint_defs()) {
 			res.add("joints", j.second->write());
 		}
 		return res.build();
@@ -504,7 +514,7 @@ namespace box2d
 		body_def_.position.y /= wp->scale();
 
 		body_ = std::shared_ptr<b2Body>(wp->create_body(this), body_destructor());
-		foreach(const std::shared_ptr<b2FixtureDef> fix_def, fix_defs_) {
+		for(const std::shared_ptr<b2FixtureDef> fix_def : fix_defs_) {
 			body_->CreateFixture(fix_def.get());
 		}
 		body_->ResetMassData();
@@ -1526,190 +1536,51 @@ namespace box2d
 
 	void debug_draw::DrawPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
-			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSolidPolygon(const b2Vec2* vertices, int32 vertexCount, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
 		for(int n = 0; n != vertexCount; ++n) {
-			varray.push_back(GLfloat(vertices[n].x * this_world->scale()));
-			varray.push_back(GLfloat(vertices[n].y * this_world->scale()));
+			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
+				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
-#if defined(USE_SHADERS)
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawPolygon(varray, KRE::Color(color.r*0.5, color.g*0.5, color.b*0.5, 0.5));
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawCircle(const b2Vec2& center, float32 radius, const b2Color& color)
 	{
-		const float32 k_segments = 32;
-		const float32 k_increment = 2.0f * b2_pi / k_segments;
-		float32 theta = 0.0f;
-
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		for(int n = 0; n < k_segments; ++n, theta += k_increment) {
-			b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
-			varray.push_back(GLfloat(v.x * this_world->scale()));
-			varray.push_back(GLfloat(v.y * this_world->scale()));
-		}
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawHollowCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), radius, KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSolidCircle(const b2Vec2& center, float32 radius, const b2Vec2& axis, const b2Color& color)
 	{
-		const float32 k_segments = 32.0f;
-		const float32 k_increment = 2.0f * b2_pi / k_segments;
-		float32 theta = 0.0f;
-
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		for(int n = 0; n < k_segments; ++n, theta += k_increment) {
-			b2Vec2 v = center + radius * b2Vec2(cosf(theta), sinf(theta));
-			varray.push_back(GLfloat(v.x * this_world->scale()));
-			varray.push_back(GLfloat(v.y * this_world->scale()));
-		}
-#if defined(USE_SHADERS)
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		varray.clear();
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawSolidCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
+			radius, 
+			KRE::Color(color.r*0.5, color.g*0.5, color.b*0.5, 0.5));
 		b2Vec2 p = center + radius * axis;
-		varray.push_back(center.x * this_world->scale());
-		varray.push_back(center.y * this_world->scale());
-		varray.push_back(p.x);
-		varray.push_back(p.y);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glColor4ub(255, 255, 255, 255);
-#else
-		glEnable(GL_BLEND);
-		glBlendFunc (GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r *0.5f, color.g*0.5f, color.b*0.5f, 0.5f);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-		glDisable(GL_BLEND);
-
-		glColor4f(color.r, color.g, color.b, 1.0f);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		varray.clear();
-		b2Vec2 p = center + radius * axis;
-		varray.push_back(center.x * world_->scale());
-		varray.push_back(center.y * world_->scale());
-		varray.push_back(p.x);
-		varray.push_back(p.y);
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLine(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
+			pointf(p.x, p.y), 
+			KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawSegment(const b2Vec2& p1, const b2Vec2& p2, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawLine(pointf(p1.x * this_world->scale(), p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(), p2.y * this_world->scale()), 
+			KRE::Color(color.r, color.g, color.b));
 	}
 
 	void debug_draw::DrawTransform(const b2Transform& xf)
@@ -1718,111 +1589,46 @@ namespace box2d
 		const float32 k_axisScale = 0.4f;
 		p2 = p1 + k_axisScale * xf.q.GetXAxis();
 
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(1.0f, 0.0f, 0.0f, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
+		auto canvas = KRE::Canvas::getInstance();
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+			KRE::Color::colorRed());
 		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		glColor4f(0.0f, 1.0f, 0.0f, 1.0);
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		p2 = p1 + k_axisScale * xf.q.GetYAxis();
-		glColor4f(0.0f, 1.0f, 0.0f, 1.0);
-		varray.clear();
-		varray.push_back(GLfloat(p1.x * this_world->scale()));
-		varray.push_back(GLfloat(p1.y * this_world->scale()));
-		varray.push_back(GLfloat(p2.x * this_world->scale()));
-		varray.push_back(GLfloat(p2.y * this_world->scale()));
-		glDrawArrays(GL_LINES, 0, varray.size()/2);
-
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		canvas->drawLine(pointf(p1.x * this_world->scale(),p1.y * this_world->scale()), 
+			pointf(p2.x * this_world->scale(),p2.y * this_world->scale()), 
+			KRE::Color::colorGreen());
 	}
 
 	void debug_draw::DrawPoint(const b2Vec2& p, float32 size, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(p.x));
-		varray.push_back(GLfloat(p.y));
-		glPointSize(size);
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_POINTS, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_POINTS, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
-		glPointSize(1.0f);
+		auto canvas = KRE::Canvas::getInstance();
+		// This is a little fudge, draw a circle rather than a point.
+		canvas->drawSolidCircle(pointf(p.x,p.y), size, KRE::Color(color.r,color.g,color.b));
 	}
 
 	void debug_draw::DrawString(int x, int y, const char *string, ...)
 	{
-		// XXX
+		char buffer[1024];
+		va_list args;
+		va_start(args, string);
+		int result = vsnprintf(buffer, sizeof(buffer), string, args);
+		va_end(args);
+		ASSERT_LOG(result < sizeof(buffer), "Unable to write all characters to buffer: " << result);
+		ASSERT_LOG(result >= 0, "Error encoding the string to be drawn: " << result);
+		auto canvas = KRE::Canvas::getInstance();
+		auto tex = KRE::Font::getInstance()->renderText(std::string(buffer), KRE::Color::colorWhite(), 12, false);
+		canvas->blitTexture(tex, 0, rect(x,y,0,0));
 	}
 
 	void debug_draw::DrawAABB(b2AABB* aabb, const b2Color& color)
 	{
-		std::vector<GLfloat>& varray = graphics::global_vertex_array();
-		varray.clear();
-		varray.push_back(GLfloat(aabb->lowerBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.x * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->lowerBound.y * this_world->scale()));
-		varray.push_back(GLfloat(aabb->upperBound.y * this_world->scale()));
-#if defined(USE_SHADERS)
-		glColor4f(color.r, color.g, color.b, 1.0);
-		gles2::manager gles2_manager(gles2::get_simple_shader());
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glColor4ub(255, 255, 255, 255);
-#else
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-		glLineWidth(1.0f);
-		glColor4f(color.r, color.g, color.b, 1.0);
-		glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-		glDrawArrays(GL_LINE_LOOP, 0, varray.size()/2);
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-		glColor4ub(255, 255, 255, 255);
-#endif
+		auto canvas = KRE::Canvas::getInstance();
+		std::vector<glm::vec2> varray;
+		varray.emplace_back(static_cast<float>(aabb->lowerBound.x * this_world->scale()), static_cast<float>(aabb->lowerBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->upperBound.x * this_world->scale()), static_cast<float>(aabb->lowerBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->upperBound.x * this_world->scale()), static_cast<float>(aabb->upperBound.y * this_world->scale()));
+		varray.emplace_back(static_cast<float>(aabb->lowerBound.y * this_world->scale()), static_cast<float>(aabb->upperBound.y * this_world->scale()));
+		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
 }

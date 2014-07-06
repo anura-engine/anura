@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "kre/Texture.hpp"
+#include "kre/Material.hpp"
 #include "kre/Util.hpp"
 
 #include "entity_fwd.hpp"
@@ -34,6 +34,7 @@ class TextureObject : public game_logic::FormulaCallable
 {
 public:
 	explicit TextureObject(KRE::TexturePtr texture);
+	explicit TextureObject(KRE::MaterialPtr texture);
 	~TextureObject();
 	const KRE::TexturePtr& texture() const { return texture_; }
 private:

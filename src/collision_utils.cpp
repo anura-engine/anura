@@ -199,7 +199,7 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 		for(int y = min_y - 5; y < max_y + 5; ++y) {
 			for(int x = min_x - 5; x < max_x + 5; ++x) {
 				const bool lvl_solid = lvl.solid(x, y, NULL);
-				const bool char_solid = solid_points.count(point(x, y));
+				const bool char_solid = solid_points.count(point(x, y)) != 0;
 				if(lvl_solid && char_solid) {
 					std::cerr << "X";
 				} else if(lvl_solid) {
@@ -412,7 +412,7 @@ bool place_entity_in_level(Level& lvl, Entity& e)
 	return false;
 }
 
-bool place_entity_in_level_with_large_displacement(Level& lvlE entity& e)
+bool place_entity_in_level_with_large_displacement(Level& lvl, Entity& e)
 {
 	if(!place_entity_in_level(lvl, e)) {
 		//the object can't immediately/easily be placed in the level

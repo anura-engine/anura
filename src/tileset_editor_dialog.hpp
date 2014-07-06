@@ -29,7 +29,7 @@ class editor;
 namespace editor_dialogs
 {
 
-class tileset_editor_dialog : public gui::dialog
+class tileset_editor_dialog : public gui::Dialog
 {
 public:
 	static void global_tile_update();

@@ -25,6 +25,7 @@
 
 #include <memory>
 #include <string>
+#include "Blend.hpp"
 #include "../Color.hpp"
 #include "Geometry.hpp"
 #include "Surface.hpp"
@@ -34,6 +35,12 @@ namespace KRE
 {
 	class Texture;
 	typedef std::shared_ptr<Texture> TexturePtr;
+
+	// XX Need to add functionality to encapsulate setting the unpack alignment and other parameters
+	// unpack swap bytes
+	// unpack lsb first
+	// unpack image height
+	// unpack skip rows, skip pixels
 
 	class Texture
 	{
@@ -122,6 +129,13 @@ namespace KRE
 
 		*/
 		const SurfacePtr& getSurface() const { return surface_; }
+
+		int getUnpackAlignment() const { return unpack_alignment_; }
+		void setUnpackAlignment(int align);
+
+		bool hasBlendMode() const { return blend_mode_ != NULL; }
+		const BlendMode getBlendMode() const;
+		void setBlendMode(const BlendMode& bm) { blend_mode_.reset(new BlendMode(bm)); }
 	protected:
 		void SetTextureDimensions(unsigned w, unsigned h, unsigned d=0);
 	private:
@@ -136,6 +150,8 @@ namespace KRE
 		float lod_bias_;
 		Texture();
 		SurfacePtr surface_;
+
+		std::unique_ptr<BlendMode> blend_mode_;
 		
 		unsigned surface_width_;
 		unsigned surface_height_;
@@ -146,5 +162,7 @@ namespace KRE
 		unsigned width_;
 		unsigned height_;
 		unsigned depth_;
+
+		int unpack_alignment_;
 	};
 }

@@ -27,6 +27,12 @@
 #include "../logger.hpp"
 #include "SurfaceSDL.hpp"
 
+enum {
+	SDL_PIXELFORMAT_XRGB8888 = 
+        SDL_DEFINE_PIXELFORMAT(SDL_PIXELTYPE_PACKED32, SDL_PACKEDORDER_XRGB,
+                               SDL_PACKEDLAYOUT_8888, 32, 4),
+};
+
 namespace KRE
 {
 	namespace
@@ -39,10 +45,10 @@ namespace KRE
 		Uint32 get_sdl_pixel_format(PixelFormat::PF fmt)
 		{
 			switch(fmt) {
-				case PixelFormat::PF::PIXELFORMAT_INDEX1LSB:	    return SDL_PIXELFORMAT_INDEX1LSB;
-				case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:	    return SDL_PIXELFORMAT_INDEX1MSB;
-				case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:	    return SDL_PIXELFORMAT_INDEX4LSB;
-				case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:	    return SDL_PIXELFORMAT_INDEX4MSB;
+				case PixelFormat::PF::PIXELFORMAT_INDEX1LSB:	return SDL_PIXELFORMAT_INDEX1LSB;
+				case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:	return SDL_PIXELFORMAT_INDEX1MSB;
+				case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:	return SDL_PIXELFORMAT_INDEX4LSB;
+				case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:	return SDL_PIXELFORMAT_INDEX4MSB;
 				case PixelFormat::PF::PIXELFORMAT_INDEX8:	    return SDL_PIXELFORMAT_INDEX8;
 				case PixelFormat::PF::PIXELFORMAT_RGB332:	    return SDL_PIXELFORMAT_RGB332;
 				case PixelFormat::PF::PIXELFORMAT_RGB444:	    return SDL_PIXELFORMAT_RGB444;
@@ -58,13 +64,14 @@ namespace KRE
 				case PixelFormat::PF::PIXELFORMAT_BGRA5551:	    return SDL_PIXELFORMAT_BGRA5551;
 				case PixelFormat::PF::PIXELFORMAT_RGB565:	    return SDL_PIXELFORMAT_RGB565;
 				case PixelFormat::PF::PIXELFORMAT_BGR565:	    return SDL_PIXELFORMAT_BGR565;
-				case PixelFormat::PF::PIXELFORMAT_RGB24:	        return SDL_PIXELFORMAT_RGB24;
-				case PixelFormat::PF::PIXELFORMAT_BGR24:	        return SDL_PIXELFORMAT_BGR24;
+				case PixelFormat::PF::PIXELFORMAT_RGB24:	    return SDL_PIXELFORMAT_RGB24;
+				case PixelFormat::PF::PIXELFORMAT_BGR24:	    return SDL_PIXELFORMAT_BGR24;
 				case PixelFormat::PF::PIXELFORMAT_RGB888:	    return SDL_PIXELFORMAT_RGB888;
 				case PixelFormat::PF::PIXELFORMAT_RGBX8888:	    return SDL_PIXELFORMAT_RGBX8888;
 				case PixelFormat::PF::PIXELFORMAT_BGR888:	    return SDL_PIXELFORMAT_BGR888;
 				case PixelFormat::PF::PIXELFORMAT_BGRX8888:	    return SDL_PIXELFORMAT_BGRX8888;
 				case PixelFormat::PF::PIXELFORMAT_ARGB8888:	    return SDL_PIXELFORMAT_ARGB8888;
+				case PixelFormat::PF::PIXELFORMAT_XRGB8888:	    return SDL_PIXELFORMAT_XRGB8888;
 				case PixelFormat::PF::PIXELFORMAT_RGBA8888:	    return SDL_PIXELFORMAT_RGBA8888;
 				case PixelFormat::PF::PIXELFORMAT_ABGR8888:	    return SDL_PIXELFORMAT_ABGR8888;
 				case PixelFormat::PF::PIXELFORMAT_BGRA8888:	    return SDL_PIXELFORMAT_BGRA8888;
@@ -606,6 +613,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_BGR888:
             case PixelFormat::PF::PIXELFORMAT_BGRX8888:
             case PixelFormat::PF::PIXELFORMAT_ARGB8888:
+			case PixelFormat::PF::PIXELFORMAT_XRGB8888:
             case PixelFormat::PF::PIXELFORMAT_RGBA8888:
             case PixelFormat::PF::PIXELFORMAT_ABGR8888:
             case PixelFormat::PF::PIXELFORMAT_BGRA8888:
@@ -662,6 +670,7 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_BGR888:
             case PixelFormat::PF::PIXELFORMAT_BGRX8888:
             case PixelFormat::PF::PIXELFORMAT_ARGB8888:
+			case PixelFormat::PF::PIXELFORMAT_XRGB8888:
             case PixelFormat::PF::PIXELFORMAT_RGBA8888:
             case PixelFormat::PF::PIXELFORMAT_ABGR8888:
             case PixelFormat::PF::PIXELFORMAT_BGRA8888:

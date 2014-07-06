@@ -270,6 +270,8 @@ namespace KRE
 			shader->SetUniformValue(shader->GetColorUniform(), r->GetColor().asFloatVector());
 		}
 
+		// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
+		// Or maybe it should be done through the uniform block and override this somehow.
 		if(shader->GetTexMapUniform() != shader->UniformsIteratorEnd()) {
 			shader->SetUniformValue(shader->GetTexMapUniform(), 0);
 		}
@@ -500,6 +502,12 @@ namespace KRE
 			vx1, vy2,
 			vx2, vy2,
 		};
+
+		// Apply blend mode from texture if there is any.
+		std::unique_ptr<BlendModeManagerOGL> bmm;
+		if(tex->hasBlendMode()) {
+			bmm.reset(new BlendModeManagerOGL(tex->getBlendMode()));
+		}
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
