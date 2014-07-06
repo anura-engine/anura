@@ -716,6 +716,6 @@ UTILITY(calculate_normal_map)
 	}
 
 	boost::intrusive_ptr<normal_viewer> editor(new normal_viewer(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
 

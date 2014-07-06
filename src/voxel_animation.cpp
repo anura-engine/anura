@@ -400,7 +400,7 @@ UTILITY(voxel_animator)
 	}
 
 	boost::intrusive_ptr<voxel_animation_editor> editor(new voxel_animation_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
 
 #endif //USE_SHADERS

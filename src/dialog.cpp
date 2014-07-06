@@ -363,7 +363,7 @@ bool dialog::pump_events()
     return running;
 }
 
-void dialog::show_modal()
+void dialog::showModal()
 {
 	opened_ = true;
 	cancelled_ = false;

@@ -94,5 +94,5 @@ void show_controls_dialog()
 	d.addWidget(b7);
 	d.addWidget(b8, d.width()/2 - b8->width()/2, start_y + t2->height() + b5->height() + 3*d.padding());
 
-	d.show_modal();
+	d.showModal();
 }

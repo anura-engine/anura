@@ -104,5 +104,5 @@ void show_language_dialog()
 		(preferences::virtual_screen_height() - dialog_height) / 2);
 	d.setDim(g.total_width() + padding, g.total_height() + padding);
 
-	d.show_modal();
+	d.showModal();
 }

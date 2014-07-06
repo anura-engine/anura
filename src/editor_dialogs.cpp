@@ -53,7 +53,7 @@ std::string show_choose_level_dialog(const std::string& prompt)
 	}
 
 	d.addWidget(WidgetPtr(grid));
-	d.show_modal();
+	d.showModal();
 	return result;
 }
 #endif // NO_EDITOR

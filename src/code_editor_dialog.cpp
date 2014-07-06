@@ -1033,7 +1033,7 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 	d->load_file(filename);
 	d->jump_to_error(error);
 	d->set_on_quit(std::bind(&gui::Dialog::cancel, d.get()));
-	d->show_modal();
+	d->showModal();
 
 	if(d->cancelled()) {
 		_exit(0);
@@ -1064,7 +1064,7 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 			}
 		}
 	}
-	d->show_modal();
+	d->showModal();
 
 	if(d->cancelled() || d->has_error()) {
 		_exit(0);
@@ -1186,7 +1186,7 @@ COMMAND_LINE_UTILITY(codeedit)
 		d.load_file(args[0]);
 	}
 
-	d.show_modal();
+	d.showModal();
 }
 
 #endif // NO_EDITOR

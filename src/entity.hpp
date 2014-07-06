@@ -271,8 +271,8 @@ public:
 
 	virtual bool allowLevelCollisions() const { return false; }
 
-	virtual const std::vector<light_ptr>& lights() const = 0;
-	virtual void swapLights(std::vector<light_ptr>& lights) = 0;
+	virtual const std::vector<LightPtr>& lights() const = 0;
+	virtual void swapLights(std::vector<LightPtr>& lights) = 0;
 
 	point pivot(const std::string& name, bool reverse_facing=false) const;
 

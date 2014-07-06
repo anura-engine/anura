@@ -342,7 +342,7 @@ int CustomObjectCallable::getSlot(const std::string& key) const
 
 game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int slot)
 {
-	if(slot < 0 || slot >= entries_.size()) {
+	if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
 		return NULL;
 	}
 
@@ -351,7 +351,7 @@ game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int
 
 const game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int slot) const
 {
-	if(slot < 0 || slot >= entries_.size()) {
+	if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
 		return NULL;
 	}
 

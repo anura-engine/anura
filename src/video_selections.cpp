@@ -172,7 +172,7 @@ void show_video_selection_dialog()
 	d.addWidget(b_okay, 20, d.height() - button_height - 20);
 	d.addWidget(b_cancel, d.width() - button_width - 20, d.height() - button_height - 20);
 
-	d.show_modal();
+	d.showModal();
 	if(d.cancelled() == false) {
 		// set selected video mode here
 		if(selected_mode >= 0 && selected_mode < display_modes.size()) {

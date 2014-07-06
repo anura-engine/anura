@@ -357,7 +357,7 @@ public:
 
 		d.addWidget(ok_cancel_grid);
 
-		d.show_modal();
+		d.showModal();
 		
 		std::string name = entry->text();
 		if(name.empty() == false) {
@@ -396,7 +396,7 @@ public:
 		entry->setOnEnterHandler(std::bind(&dialog::close, &d));
 		d.addWidget(WidgetPtr(new label("Name:", graphics::color_white())))
 		 .addWidget(WidgetPtr(entry));
-		d.show_modal();
+		d.showModal();
 		
 		if(!d.cancelled() && entry->text().empty() == false) {
 			editor_.save_level_as(entry->text());
@@ -2617,7 +2617,7 @@ void editor::load_stats()
 void editor::show_stats()
 {
 	editor_dialogs::editor_stats_dialog stats_dialog(*this);
-	stats_dialog.show_modal();
+	stats_dialog.showModal();
 }
 
 void editor::download_stats()
@@ -3120,7 +3120,7 @@ bool editor::confirm_quit(bool allow_cancel)
 		             std::bind(quit_editor_result, &d, &result, 2))));
 	}
 	d.addWidget(WidgetPtr(grid));
-	d.show_modal();
+	d.showModal();
 
 	if(result == 2) {
 		return false;
@@ -3954,13 +3954,13 @@ void launch_object_editor(const std::vector<std::string>& args);
 void editor::edit_level_properties()
 {
 	editor_dialogs::editor_level_properties_dialog prop_dialog(*this);
-	prop_dialog.show_modal();
+	prop_dialog.showModal();
 }
 
 void editor::create_new_module()
 {
 	editor_dialogs::editor_module_properties_dialog prop_dialog(*this);
-	prop_dialog.show_modal();
+	prop_dialog.showModal();
 	if(prop_dialog.cancelled() == false) {
 		prop_dialog.on_exit();
 		close();
@@ -3971,7 +3971,7 @@ void editor::create_new_module()
 void editor::edit_module_properties()
 {
 	editor_dialogs::editor_module_properties_dialog prop_dialog(*this, module::get_module_name());
-	prop_dialog.show_modal();
+	prop_dialog.showModal();
 	if(prop_dialog.cancelled() == false) {
 		prop_dialog.on_exit();
 		get_main_window()->set_window_title(module::get_module_pretty_name().c_str());
@@ -3993,7 +3993,7 @@ void editor::create_new_object()
 		preferences::virtual_screen_height()*0.9);
 	object_dialog.set_background_frame("empty_window");
 	object_dialog.set_draw_background_fn(gui::dialog::draw_last_scene);
-	object_dialog.show_modal();
+	object_dialog.showModal();
 	if(object_dialog.cancelled() == false) {
 		CustomObjectType::ReloadFilePaths();
 		lvl_->editor_clear_selection();

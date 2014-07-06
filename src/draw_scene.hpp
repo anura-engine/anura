@@ -75,10 +75,10 @@ bool isAchievementDisplayed();
 
 
 bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus=NULL, bool doDraw=true);
-void render_scene(Level& lvl, const screen_position& pos);
+void render_scene(const Level& lvl, const screen_position& pos);
 
 //draw_scene calls both update_camera_position() and then render_scene()
-void draw_scene(Level& lvl, screen_position& pos, const Entity* focus=NULL, bool doDraw=true);
+void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus=NULL, bool doDraw=true);
 
 struct performance_data : public game_logic::FormulaCallable {
 	int fps;

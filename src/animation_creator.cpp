@@ -411,7 +411,7 @@ namespace gui
 			f);
 		open_dlg.set_background_frame("empty_window");
 		open_dlg.set_draw_background_fn(draw_last_scene);
-		open_dlg.show_modal();
+		open_dlg.showModal();
 
 		if(open_dlg.cancelled() == false) {
 			image_file_ = open_dlg.get_file_name();
@@ -575,7 +575,7 @@ namespace gui
 			g->add_col(WidgetPtr(new Button("Save", std::bind(&AnimationCreatorDialog::animSave, this, &d))))
 				.add_col(WidgetPtr(new Button("Discard", std::bind(&Dialog::cancel, &d))));
 			d.addWidget(g, (d.width()-g->width())/2, 30+70+title->height());
-			d.show_modal();
+			d.showModal();
 			changed_ = false;
 			init();
 		}
@@ -607,7 +607,7 @@ namespace gui
 		dir_dlg.set_background_frame("empty_window");
 		dir_dlg.set_draw_background_fn(draw_last_scene);
 		dir_dlg.use_relative_paths(true);
-		dir_dlg.show_modal();
+		dir_dlg.showModal();
 
 		if(dir_dlg.cancelled() == false) {
 			copy_path_ = dir_dlg.get_path();

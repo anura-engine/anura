@@ -2784,7 +2784,7 @@ FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on t
 	variant graph = args()[0]->evaluate(variables);
 	gui::DialogPtr dialog = boost::intrusive_ptr<gui::dialog>(graph.try_convert<gui::dialog>());
 	ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
-	dialog->show_modal();
+	dialog->showModal();
 	return variant::from_bool(dialog->cancelled() == false);
 END_FUNCTION_DEF(show_modal)
 

@@ -136,7 +136,7 @@ private:
 	void mouseover_layer(int nlayer);
 	void select_layer(int nlayer, gui::grid* layer_grid);
 
-	void on_save();
+	void onSave();
 	void undo();
 	void redo();
 
@@ -2249,7 +2249,7 @@ void voxel_editor::select_layer(int nlayer, grid* layer_grid)
 	}
 }
 
-void voxel_editor::on_save()
+void voxel_editor::onSave()
 {
 	if(fname_.empty()) {
 		std::cerr << "NO FILENAME. CANNOT SAVE\n";
@@ -2355,7 +2355,7 @@ UTILITY(voxel_editor)
 	}
 	
 	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
 
 #endif //USE_SHADERS

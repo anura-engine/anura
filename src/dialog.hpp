@@ -39,7 +39,7 @@ namespace gui
 		explicit Dialog(int x, int y, int w, int h);
 		explicit Dialog(const variant& v, game_logic::FormulaCallable* e);
 		virtual ~Dialog();
-		virtual void show_modal();
+		virtual void showModal();
 		void show();
 
 		enum MOVE_DIRECTION { MOVE_DOWN, MOVE_RIGHT };

@@ -106,6 +106,18 @@ namespace KRE
 		add_rgba_[3] = aa/255.0;
 	}
 
+	ColorTransform::ColorTransform(int ar, int ag, int ab, int aa)
+	{
+		mul_rgba_[0] = 0;
+		mul_rgba_[1] = 0;
+		mul_rgba_[2] = 0;
+		mul_rgba_[3] = 0;
+		add_rgba_[0] = ar/255.0;
+		add_rgba_[1] = ag/255.0;
+		add_rgba_[2] = ab/255.0;
+		add_rgba_[3] = aa/255.0;
+	}
+
 	ColorTransform::~ColorTransform()
 	{
 	}

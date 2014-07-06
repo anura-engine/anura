@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -25,10 +25,13 @@
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
-#include "level.hpp"
 #include "variant.hpp"
 #include "voxel_model.hpp"
 #include "widget_factory.hpp"
+
+class Level;
+
+// XXX This needs re-written.
 
 namespace voxel
 {
@@ -43,7 +46,7 @@ namespace voxel
 		bool is_a(const std::string& type) const { return type_ == type; }
 
 		void draw() const;
-		virtual void process(level& lvl);
+		virtual void process(Level& lvl);
 		bool handle_sdl_event(const SDL_Event& event, bool claimed);
 
 		const glm::vec3& translation() const { return translation_; } 
@@ -88,7 +91,6 @@ namespace voxel
 		void addScheduledCommand(int cycle, variant cmd);
 		std::vector<variant> popScheduledCommands();
 
-	protected:
 	private:
 		DECLARE_CALLABLE(voxel_object);
 
@@ -104,17 +106,9 @@ namespace voxel
 
 		voxel_model_ptr model_;
 
-		gles2::program_ptr shader_;
-
 		typedef std::set<gui::WidgetPtr, gui::WidgetSortZOrder> widget_list;
 		widget_list widgets_;	
 
-		GLuint a_normal_;
-		GLuint mvp_matrix_;
-
-
-		mutable glm::mat4 model_matrix_;
-	
 		bool is_mouseover_;
 
 		typedef std::pair<int, variant> ScheduledCommand;

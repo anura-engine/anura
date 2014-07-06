@@ -218,8 +218,8 @@ public:
 	//statistic on how many FFL events are handled every second.
 	static int events_handled_per_second;
 
-	const std::vector<light_ptr>& lights() const { return lights_; }
-	void swapLights(std::vector<light_ptr>& lights) { lights_.swap(lights); }
+	const std::vector<LightPtr>& lights() const { return lights_; }
+	void swapLights(std::vector<LightPtr>& lights) { lights_.swap(lights); }
 
 	void shiftPosition(int x, int y);
 
@@ -477,7 +477,7 @@ private:
 
 	std::vector<std::shared_ptr<AnimatedMovement> > animated_movement_;
 
-	std::vector<light_ptr> lights_;
+	std::vector<LightPtr> lights_;
 
 	std::unique_ptr<rect> platform_area_;
 	ConstSolidInfoPtr platform_solid_info_;

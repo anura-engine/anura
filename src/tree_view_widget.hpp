@@ -46,7 +46,7 @@ public:
 	{
 		on_select_ = select_fn;
 	}
-	void allow_persistent_highlight(bool val=true, const SDL_Color& col=graphics::color_blue())
+	void allow_persistent_highlight(bool val=true, const KRE::Color& col=KRE::Color::colorBlue())
 	{
 		persistent_highlight_ = val;
 		highlight_color_ = col;
@@ -93,7 +93,7 @@ private:
 	int max_height_;
 
 	bool persistent_highlight_;
-	SDL_Color highlight_color_;
+	KRE::Color highlight_color_;
 	int highlighted_row_;
 
 	std::function<void(const variant&, const variant&)> on_select_;

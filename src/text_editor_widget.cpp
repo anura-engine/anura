@@ -1788,7 +1788,7 @@ UTILITY(textedit)
 	Dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
 	d.addWidget(WidgetPtr(entry), 10, 10);
 	d.addWidget(WidgetPtr(editor), 10, 30);
-	d.show_modal();
+	d.showModal();
 }
 
 UNIT_TEST(test_regex)

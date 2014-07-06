@@ -264,7 +264,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	}
 
 	d.set_on_quit(std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
-	d.show_modal();
+	d.showModal();
 	if(d.cancelled() && result == PAUSE_GAME_QUIT) {
 		result = PAUSE_GAME_CONTINUE;
 	}
