@@ -169,7 +169,7 @@ namespace KRE
 			window_.reset();
 		}
 
-		void clear(DisplayDevice::ClearFlags f) override {
+		void clear(ClearFlags f) override {
 			display_->Clear(DisplayDevice::DISPLAY_CLEAR_ALL);
 		}
 

@@ -53,14 +53,14 @@ namespace KRE
 		unsigned height() const { return height_; }
 
 		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
-		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
+		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
 		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color=Color::colorWhite());
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color=nullptr) const;
 
 		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
-		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
-		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color=nullptr) const = 0;
+		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
+		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
 
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const = 0;

@@ -22,7 +22,6 @@
 */
 
 #pragma once
-#include <boost/scoped_ptr.hpp>
 
 #include <vector>
 #include <cstddef>

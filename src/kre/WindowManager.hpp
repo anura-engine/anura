@@ -88,7 +88,7 @@ namespace KRE
 		
 		Color getClearColor() const { return clear_color_; }
 
-		virtual void clear(DisplayDevice::ClearFlags f) = 0;
+		virtual void clear(ClearFlags f) = 0;
 
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
 

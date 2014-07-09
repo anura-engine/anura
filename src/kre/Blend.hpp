@@ -58,8 +58,9 @@ namespace KRE
 	{
 	public:
 		BlendEquation();
-		BlendEquation(BlendEquationConstants rgba_eq);
-		BlendEquation(BlendEquationConstants rgb_eq, BlendEquationConstants alpha_eq);
+		explicit BlendEquation(BlendEquationConstants rgba_eq);
+		explicit BlendEquation(BlendEquationConstants rgb_eq, BlendEquationConstants alpha_eq);
+		explicit BlendEquation(const variant& node);
 		void setRgbEquation(BlendEquationConstants rgb_eq);
 		void setAlphaEquation(BlendEquationConstants alpha_eq);
 		void setEquation(BlendEquationConstants rgba_eq);
@@ -93,7 +94,8 @@ namespace KRE
 	{
 	public:
 		BlendMode() : src_(BlendModeConstants::BM_SRC_ALPHA), dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {}
-		BlendMode(BlendModeConstants src, BlendModeConstants dst) : src_(src), dst_(dst) {}
+		explicit BlendMode(BlendModeConstants src, BlendModeConstants dst) : src_(src), dst_(dst) {}
+		explicit BlendMode(const variant& node);
 		BlendModeConstants Source() const { return src_; }
 		BlendModeConstants Destination() const { return dst_; }
 		BlendModeConstants Src() const { return src_; }

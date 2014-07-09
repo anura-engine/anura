@@ -47,6 +47,27 @@ namespace KRE
 	{
 	}
 
+	Renderable::Renderable(const variant& node)
+		: order_(0),
+		position_(0.0f),
+		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		scale_(1.0f),
+		color_set_(false)
+	{
+		if(node.has_key("order")) {
+			order_ = node["order"].as_int();
+		}
+		// XXX set other stuff here, tbd
+		if(node.has_key("blend")) {
+			setBlendMode(KRE::BlendMode(node["blend"]));
+		}
+		if(node.has_key("blend_equation")) {
+			setBlendEquation(KRE::BlendEquation(node["blend_equation"]));
+		} else if(node.has_key("blend_eq")) {
+			setBlendEquation(KRE::BlendEquation(node["blend_eq"]));
+		}
+	}
+
 	Renderable::~Renderable()
 	{
 	}

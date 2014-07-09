@@ -211,7 +211,7 @@ namespace
 
 			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
 
-			SDL_SoftStretch(src.get(), &src_rect, dst.get(), &dst_rect);
+			SDL_BlitScaled(src.get(), &src_rect, dst.get(), &dst_rect);
 			t = texture::get_no_cache(dst);
 		}
 

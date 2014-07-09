@@ -264,11 +264,11 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 	if(height < y) {
 		//the entire screen is full of the bottom color
 		wnd->setClearColor(bot_);
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 	} else if(height > y + wnd->height()) {
 		//the entire screen is full of the top color.
 		wnd->setClearColor(top_);
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 	} else {
 		//both bottom and top colors are on the screen, so draw them both,
 		//using scissors to delinate their areas.
@@ -285,7 +285,7 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600)));
 #endif
 		wnd->setClearColor(top_);
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
 		KRE::Scissor::Manager sm2(rect(0, 0, dist_from_bottom/scissor_scale, graphics::screen_width()/scissor_scale));
@@ -293,7 +293,7 @@ void background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		KRE::Scissor::Manager sm2(rect(0, 0, preferences::actual_screen_width(), dist_from_bottom));
 #endif
 		wnd->setClearColor(bot_);
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 	}
 
 	draw_layers(x, y, area, opaque_areas, rotation, cycle);

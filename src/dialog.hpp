@@ -83,7 +83,7 @@ namespace gui
 
 	protected:
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-		virtual bool handleEvent_children(const SDL_Event& event, bool claimed);
+		virtual bool handleEventChildren(const SDL_Event& event, bool claimed);
 		virtual void handleDraw() const override;
 		virtual void handleDrawChildren() const;
 		void set_clear_bg(bool clear) { clear_bg_ = clear; };

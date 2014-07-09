@@ -73,7 +73,7 @@ void LoadingScreen::draw(const std::string& message)
 {
 	auto wnd = KRE::WindowManager::getMainWindow();
 	wnd->setClearColor(KRE::Color::colorBlack());
-	wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_ALL);
+	wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_ALL);
 
 	if(splash_) {
 		//draw the splash screen while loading

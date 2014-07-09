@@ -28,8 +28,18 @@
 namespace KRE
 {
 	SceneObject::SceneObject(const std::string& name)
-		: name_(name), queue_(0)
+		: name_(name), 
+		queue_(0)
 	{
+	}
+
+	SceneObject::SceneObject(const variant& node)
+		: Renderable(node),
+		queue_(0)
+	{
+		if(node.has_key("name")) {
+			name_ = node["name"].as_string();
+		}
 	}
 
 	SceneObject::~SceneObject()

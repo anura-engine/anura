@@ -29,6 +29,7 @@
 #include "Material.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {
@@ -36,41 +37,42 @@ namespace KRE
 	{
 	public:
 		Renderable();
-		Renderable(size_t order);
+		explicit Renderable(size_t order);
+		explicit Renderable(const variant& node);
 		virtual ~Renderable();
 
-		void SetPosition(const glm::vec3& position);
-		void SetPosition(float x, float y, float z=0.0f);
-		void SetPosition(int x, int y, int z=0);
-		const glm::vec3& Position() const { return position_; }
+		void setPosition(const glm::vec3& position);
+		void setPosition(float x, float y, float z=0.0f);
+		void setPosition(int x, int y, int z=0);
+		const glm::vec3& getPosition() const { return position_; }
 
-		void SetRotation(float angle, const glm::vec3& axis);
-		void SetRotation(const glm::quat& rot);
-		const glm::quat& Rotation() const { return rotation_; }
+		void setRotation(float angle, const glm::vec3& axis);
+		void setRotation(const glm::quat& rot);
+		const glm::quat& getRotation() const { return rotation_; }
 
-		void SetScale(float xs, float ys, float zs=1.0f);
-		void SetScale(const glm::vec3& scale);
-		const glm::vec3& Scale() const { return scale_; }
+		void setScale(float xs, float ys, float zs=1.0f);
+		void setScale(const glm::vec3& scale);
+		const glm::vec3& getScale() const { return scale_; }
 
-		glm::mat4 ModelMatrix() const;
+		glm::mat4 getModelMatrix() const;
 
-		void SetColor(float r, float g, float b, float a=1.0);
-		void SetColor(int r, int g, int b, int a=255);
-		void SetColor(const Color& color);
-		const Color& GetColor() const { return color_; }
-		bool IsColorSet() const { return color_set_; }
+		void setColor(float r, float g, float b, float a=1.0);
+		void setColor(int r, int g, int b, int a=255);
+		void setColor(const Color& color);
+		const Color& getColor() const { return color_; }
+		bool isColorSet() const { return color_set_; }
 
-		size_t Order() const { return order_; }
-		void SetOrder(size_t o) { order_ = o; }
+		size_t getOrder() const { return order_; }
+		void setOrder(size_t o) { order_ = o; }
 
-		const CameraPtr& Camera() const { return camera_; }
-		void SetCamera(const CameraPtr& camera);
+		const CameraPtr& getCamera() const { return camera_; }
+		void setCamera(const CameraPtr& camera);
 
-		const LightPtrList& Lights() const { return lights_; }
-		void SetLights(const LightPtrList& lights);
+		const LightPtrList& getLights() const { return lights_; }
+		void setLights(const LightPtrList& lights);
 
-		const MaterialPtr& Material() const { return material_; }
-		void SetMaterial(const MaterialPtr& material);
+		const MaterialPtr& getMaterial() const { return material_; }
+		void setMaterial(const MaterialPtr& material);
 
 		const BlendEquation& getBlendEquation() const { return blend_eqn_; }
 		void setBlendEquation(const BlendEquation& eqn) { blend_eqn_ = eqn; }
@@ -79,16 +81,16 @@ namespace KRE
 		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
 		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.Set(src, dst); }
 
-		const RenderTargetPtr& GetRenderTarget() const { return render_target_; }
-		void SetRenderTarget(const RenderTargetPtr& rt);
+		const RenderTargetPtr& getRenderTarget() const { return render_target_; }
+		void setRenderTarget(const RenderTargetPtr& rt);
 
-		void SetDisplayData(const DisplayDevicePtr& dd, const DisplayDeviceDef& def);
-		const DisplayDeviceDataPtr& GetDisplayData() const { return display_data_; }
+		void setDisplayData(const DisplayDevicePtr& dd, const DisplayDeviceDef& def);
+		const DisplayDeviceDataPtr& getDisplayData() const { return display_data_; }
 
-		void AddAttributeSet(const AttributeSetPtr& attrset);
-		//void AddUniformSet(const UniformSetPtr& uniset);
-		const std::vector<AttributeSetPtr>& GetAttributeSet() const { return attributes_; }
-		//const std::vector<UniformSetPtr>& GetUniformSet() const { return uniforms_; }
+		void addAttributeSet(const AttributeSetPtr& attrset);
+		//void addUniformSet(const UniformSetPtr& uniset);
+		const std::vector<AttributeSetPtr>& getAttributeSet() const { return attributes_; }
+		//const std::vector<UniformSetPtr>& getUniformSet() const { return uniforms_; }
 
 		virtual void preRender(const WindowManagerPtr& wm) {}
 		virtual void postRender(const WindowManagerPtr& wm) {}

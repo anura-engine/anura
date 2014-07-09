@@ -25,22 +25,22 @@
 
 #include <boost/intrusive_ptr.hpp>
 
+#include "kre/SceneObject.hpp"
+
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 
 namespace graphics
 {
-	class DrawPrimitive : public game_logic::FormulaCallable
+	class DrawPrimitive : public game_logic::FormulaCallable, public KRE::SceneObject
 	{
 	public:
 		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
 		explicit DrawPrimitive(const variant& v);
-		void draw() const;
-
 	private:
 		DECLARE_CALLABLE(DrawPrimitive);
-
-		virtual void handleDraw() const = 0;
+		virtual KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
+		std::string shader_name_;
 	};
 
 	typedef boost::intrusive_ptr<DrawPrimitive> DrawPrimitivePtr;

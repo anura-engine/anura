@@ -197,7 +197,6 @@
     <ClInclude Include="..\..\src\difficulty.hpp" />
     <ClInclude Include="..\..\src\distortion.hpp" />
     <ClInclude Include="..\..\src\drag_widget.hpp" />
-    <ClInclude Include="..\..\src\draw_number.hpp" />
     <ClInclude Include="..\..\src\draw_primitive.hpp" />
     <ClInclude Include="..\..\src\draw_scene.hpp" />
     <ClInclude Include="..\..\src\draw_tile.hpp" />
@@ -557,7 +556,6 @@
     <ClCompile Include="..\..\src\difficulty.cpp" />
     <ClCompile Include="..\..\src\distortion.cpp" />
     <ClCompile Include="..\..\src\drag_widget.cpp" />
-    <ClCompile Include="..\..\src\draw_number.cpp" />
     <ClCompile Include="..\..\src\draw_primitive.cpp" />
     <ClCompile Include="..\..\src\draw_scene.cpp" />
     <ClCompile Include="..\..\src\draw_tile.cpp" />

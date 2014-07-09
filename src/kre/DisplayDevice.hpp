@@ -50,12 +50,12 @@ namespace KRE
 		DisplayDeviceDef(const std::vector<AttributeSetPtr>& as/*, const std::vector<UniformSetPtr>& us*/);
 		~DisplayDeviceDef();
 
-		const std::vector<AttributeSetPtr>& GetAttributeSet() const { return attributes_; }
-		//const std::vector<UniformSetPtr>& GetUniformSet() const { return uniforms_; }
+		const std::vector<AttributeSetPtr>& getAttributeSet() const { return attributes_; }
+		//const std::vector<UniformSetPtr>& getUniformSet() const { return uniforms_; }
 
-		void SetHint(const std::string& hint_name, const std::string& hint);
-		void SetHint(const std::string& hint_name, const HintList& hint);
-		HintMap GetHints() const { return hints_; }
+		void setHint(const std::string& hint_name, const std::string& hint);
+		void setHint(const std::string& hint_name, const HintList& hint);
+		HintMap getHints() const { return hints_; }
 	private:
 		HintMap hints_;
 		const std::vector<AttributeSetPtr>& attributes_;
@@ -77,6 +77,18 @@ namespace KRE
 		BLEND_EQUATION_SEPERATE,
 	};
 
+	enum class ClearFlags {
+		DISPLAY_CLEAR_COLOR		= 1,
+		DISPLAY_CLEAR_DEPTH		= 2,
+		DISPLAY_CLEAR_STENCIL	= 4,
+		DISPLAY_CLEAR_ALL		= 0x7fffffff,
+	};
+
+	inline ClearFlags operator|(ClearFlags l, ClearFlags r)
+	{
+		return static_cast<ClearFlags>(static_cast<int>(l)|static_cast<int>(r));
+	}
+
 	class DisplayDevice
 	{
 	public:
@@ -92,44 +104,38 @@ namespace KRE
 			// Display device is Direct3D
 			DISPLAY_DEVICE_D3D,
 		};
-		enum ClearFlags {
-			DISPLAY_CLEAR_COLOR		= 1,
-			DISPLAY_CLEAR_DEPTH		= 2,
-			DISPLAY_CLEAR_STENCIL	= 4,
-			DISPLAY_CLEAR_ALL		= 0xffffffff,
-		};
 
 		DisplayDevice();
 		virtual ~DisplayDevice();
 
 		virtual DisplayDeviceId ID() const = 0;
 
-		virtual void SetClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
-		virtual void SetClearColor(float r, float g, float b, float a) = 0;
-		virtual void SetClearColor(const Color& color) = 0;
+		virtual void setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a);
+		virtual void setClearColor(float r, float g, float b, float a) = 0;
+		virtual void setClearColor(const Color& color) = 0;
 
-		virtual void Clear(uint32_t clr) = 0;
-		virtual void Swap() = 0;
+		virtual void clear(uint32_t clr) = 0;
+		virtual void swap() = 0;
 
-		virtual void Init(size_t width, size_t height) = 0;
-		virtual void PrintDeviceInfo() = 0;
+		virtual void init(size_t width, size_t height) = 0;
+		virtual void printDeviceInfo() = 0;
 
 		virtual void render(const Renderable* r) const = 0;
 
-		static TexturePtr CreateTexture(const std::string& filename, 
+		static TexturePtr createTexture(const std::string& filename, 
 			Texture::Type type=Texture::Type::TEXTURE_2D, 
 			int mipmap_levels=0);
 
-		static TexturePtr CreateTexture(const SurfacePtr& surface, bool cache);
-		static TexturePtr CreateTexture(const SurfacePtr& surface, bool cache, const variant& node);
-		static TexturePtr CreateTexture(const SurfacePtr& surface, 
+		static TexturePtr createTexture(const SurfacePtr& surface, bool cache);
+		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
+		static TexturePtr createTexture(const SurfacePtr& surface, 
 			Texture::Type type=Texture::Type::TEXTURE_2D, 
 			int mipmap_levels=0);
-		static TexturePtr CreateTexture(unsigned width, PixelFormat::PF fmt);
-		static TexturePtr CreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D);
-		static TexturePtr CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
+		static TexturePtr createTexture(unsigned width, PixelFormat::PF fmt);
+		static TexturePtr createTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D);
+		static TexturePtr createTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
 
-		virtual CanvasPtr GetCanvas() = 0;
+		virtual CanvasPtr getCanvas() = 0;
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
@@ -141,60 +147,60 @@ namespace KRE
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 
-		static void BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
+		static void blitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 
-		static MaterialPtr CreateMaterial(const variant& node);
-		static MaterialPtr CreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
-		static MaterialPtr CreateMaterial(const std::string& name, const TexturePtr& texture, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
+		static MaterialPtr createMaterial(const variant& node);
+		static MaterialPtr createMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
+		static MaterialPtr createMaterial(const std::string& name, const TexturePtr& texture, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
 
-		static RenderTargetPtr RenderTargetInstance(size_t width, size_t height, 
+		static RenderTargetPtr renderTargetInstance(size_t width, size_t height, 
 			size_t color_plane_count=1, 
 			bool depth=false, 
 			bool stencil=false, 
 			bool use_multi_sampling=false, 
 			size_t multi_samples=0);
-		static RenderTargetPtr RenderTargetInstance(const variant& node);
+		static RenderTargetPtr renderTargetInstance(const variant& node);
 
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
 
-		virtual DisplayDeviceDataPtr CreateDisplayDeviceData(const DisplayDeviceDef& def) = 0;
+		virtual DisplayDeviceDataPtr createDisplayDeviceData(const DisplayDeviceDef& def) = 0;
 
-		static AttributeSetPtr CreateAttributeSet(bool hardware_hint=false, bool indexed=false, bool instanced=false);
-		static HardwareAttributePtr CreateAttributeBuffer(bool hw_backed, AttributeBase* parent);
+		static AttributeSetPtr createAttributeSet(bool hardware_hint=false, bool indexed=false, bool instanced=false);
+		static HardwareAttributePtr createAttributeBuffer(bool hw_backed, AttributeBase* parent);
 
-		static DisplayDevicePtr Factory(const std::string& type);
+		static DisplayDevicePtr factory(const std::string& type);
 
 		static DisplayDevicePtr getCurrent();
 
-		static bool CheckForFeature(DisplayDeviceCapabilties cap);
+		static bool checkForFeature(DisplayDeviceCapabilties cap);
 
-		static void RegisterFactoryFunction(const std::string& type, std::function<DisplayDevicePtr()>);
+		static void registerFactoryFunction(const std::string& type, std::function<DisplayDevicePtr()>);
 	private:
 		DisplayDevice(const DisplayDevice&);
-		virtual AttributeSetPtr HandleCreateAttributeSet(bool indexed, bool instanced) = 0;
-		virtual HardwareAttributePtr HandleCreateAttribute(AttributeBase* parent) = 0;
+		virtual AttributeSetPtr handleCreateAttributeSet(bool indexed, bool instanced) = 0;
+		virtual HardwareAttributePtr handleCreateAttribute(AttributeBase* parent) = 0;
 
-		virtual RenderTargetPtr HandleCreateRenderTarget(size_t width, size_t height, 
+		virtual RenderTargetPtr handleCreateRenderTarget(size_t width, size_t height, 
 			size_t color_plane_count, 
 			bool depth, 
 			bool stencil, 
 			bool use_multi_sampling, 
 			size_t multi_samples) = 0;
-		virtual RenderTargetPtr HandleCreateRenderTarget(const variant& node) = 0;
+		virtual RenderTargetPtr handleCreateRenderTarget(const variant& node) = 0;
 		
-		virtual TexturePtr HandleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) = 0;
-		virtual TexturePtr HandleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
-		virtual TexturePtr HandleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) = 0;
-		virtual TexturePtr HandleCreateTexture(unsigned width, PixelFormat::PF fmt) = 0;
-		virtual TexturePtr HandleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) = 0;
-		virtual TexturePtr HandleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) = 0;
+		virtual TexturePtr handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) = 0;
+		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
+		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) = 0;
+		virtual TexturePtr handleCreateTexture(unsigned width, PixelFormat::PF fmt) = 0;
+		virtual TexturePtr handleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) = 0;
+		virtual TexturePtr handleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) = 0;
 
-		virtual MaterialPtr HandleCreateMaterial(const variant& node) = 0;
-		virtual MaterialPtr HandleCreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false) = 0;
+		virtual MaterialPtr handleCreateMaterial(const variant& node) = 0;
+		virtual MaterialPtr handleCreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false) = 0;
 
-		virtual bool DoCheckForFeature(DisplayDeviceCapabilties cap) = 0;
+		virtual bool doCheckForFeature(DisplayDeviceCapabilties cap) = 0;
 
-		virtual void DoBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) = 0;
+		virtual void doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch) = 0;
 	};
 
 	template<class T>
@@ -203,7 +209,7 @@ namespace KRE
 		DisplayDeviceRegistrar(const std::string& type)
 		{
 			// register the class factory function 
-			DisplayDevice::RegisterFactoryFunction(type, []() -> DisplayDevicePtr { return DisplayDevicePtr(new T());});
+			DisplayDevice::registerFactoryFunction(type, []() -> DisplayDevicePtr { return DisplayDevicePtr(new T());});
 		}
 	};
 }

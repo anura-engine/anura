@@ -40,6 +40,7 @@
 #include "module.hpp"
 #include "object_events.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "solid_map.hpp"
 #include "sound.hpp"
 #include "string_utils.hpp"
@@ -784,7 +785,7 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			}
 
 			in_edit_and_continue = true;
-			edit_and_continue_fn(path_itor->second, e.msg, std::bind(&CustomObjectType::recreate, id, old_type));
+			edit_and_continue_fn(path_itor->second, e.msg, [=](){ CustomObjectType::recreate(id, old_type); });
 			in_edit_and_continue = false;
 			return recreate(id, old_type);
 		}
@@ -1019,7 +1020,7 @@ void CustomObjectType::reloadObject(const std::string& type)
 	}
 
 	const int start = profile::get_tick_time();
-	for(custom_object* obj : custom_object::getAll(old_obj->id())) {
+	for(CustomObject* obj : CustomObject::getAll(old_obj->id())) {
 		assert(obj);
 		obj->updateType(old_obj, new_obj);
 	}
@@ -1027,14 +1028,14 @@ void CustomObjectType::reloadObject(const std::string& type)
 	for(std::map<std::string, ConstCustomObjectTypePtr>::const_iterator i = old_obj->sub_objects_.begin(); i != old_obj->sub_objects_.end(); ++i) {
 		std::map<std::string, ConstCustomObjectTypePtr>::const_iterator j = new_obj->sub_objects_.find(i->first);
 		if(j != new_obj->sub_objects_.end() && i->second != j->second) {
-			for(custom_object* obj : custom_object::getAll(i->second->id())) {
+			for(CustomObject* obj : CustomObject::getAll(i->second->id())) {
 				obj->updateType(i->second, j->second);
 			}
 		}
 	}
 
 	const int end = profile::get_tick_time();
-	std::cerr << "UPDATED " << custom_object::getAll(old_obj->id()).size() << " OBJECTS IN " << (end - start) << "ms\n";
+	std::cerr << "UPDATED " << CustomObject::getAll(old_obj->id()).size() << " OBJECTS IN " << (end - start) << "ms\n";
 
 	itor->second = new_obj;
 
@@ -1063,11 +1064,11 @@ void CustomObjectType::initEventHandlers(variant node,
 		if(key.size() > 3 && std::equal(key.begin(), key.begin() + 3, "on_")) {
 			const std::string event(key.begin() + 3, key.end());
 			const int event_id = get_object_event_id(event);
-			if(handlers.size() <= event_id) {
+			if(handlers.size() <= static_cast<unsigned>(event_id)) {
 				handlers.resize(event_id+1);
 			}
 
-			if(base_handlers && base_handlers->size() > event_id && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.second.as_string()) {
+			if(base_handlers && base_handlers->size() > static_cast<unsigned>(event_id) && (*base_handlers)[event_id] && (*base_handlers)[event_id]->str() == value.second.as_string()) {
 				handlers[event_id] = (*base_handlers)[event_id];
 			} else {
 				std::unique_ptr<CustomObjectCallableModifyScope> modify_scope;
@@ -1139,8 +1140,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	no_move_to_standing_(node["no_move_to_standing"].as_bool()),
 	reverse_global_vertical_zordering_(node["reverse_global_vertical_zordering"].as_bool(false)),
 	serializable_(node["serializable"].as_bool(true)),
-	solid_(solid_info::create(node)),
-	platform_(solid_info::create_platform(node)),
+	solid_(SolidInfo::create(node)),
+	platform_(SolidInfo::create_platform(node)),
 	solid_platform_(node["solid_platform"].as_bool(false)),
 	has_solid_(solid_ || use_image_for_collisions_),
 	solid_dimensions_(has_solid_ || platform_ ? 0xFFFFFFFF : 0),
@@ -1163,10 +1164,10 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		//the player is before we construct our object.
 		variant type = g_player_type_str;
 		g_player_type_str = variant();
-		level::setPlayerVariantType(type);
+		Level::setPlayerVariantType(type);
 	}
 
-	frame::buildPatterns(node);
+	Frame::buildPatterns(node);
 
 	if(editor_force_standing_) {
 		ASSERT_LOG(has_feet_, "OBject type " << id_ << " has editor_force_standing set but has no feet. has_feet must be true for an object forced to standing");
@@ -1252,9 +1253,9 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	}
 
 	for(variant anim : anim_list.as_list()) {
-		boost::intrusive_ptr<frame> f;
+		boost::intrusive_ptr<Frame> f;
 		try {
-			f.reset(new frame(anim));
+			f.reset(new Frame(anim));
 		} catch(Frame::Error&) {
 			ASSERT_LOG(false, "ERROR LOADING FRAME IN OBJECT '" << id_ << "'");
 		}
@@ -1524,7 +1525,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			if(entry.slot == slot_properties_.size()) {
 				slot_properties_.push_back(entry);
 			} else {
-				assert(entry.slot >= 0 && entry.slot < slot_properties_.size());
+				assert(entry.slot >= 0 && static_cast<unsigned>(entry.slot) < slot_properties_.size());
 				slot_properties_[entry.slot] = entry;
 			}
 		}
@@ -1623,12 +1624,12 @@ void CustomObjectType::initSubObjects(variant node, const CustomObjectType* old_
 	}
 }
 
-const frame& CustomObjectType::defaultFrame() const
+const Frame& CustomObjectType::defaultFrame() const
 {
 	return *defaultFrame_;
 }
 
-const frame& CustomObjectType::getFrame(const std::string& key) const
+const Frame& CustomObjectType::getFrame(const std::string& key) const
 {
 	frame_map::const_iterator itor = frames_.find(key);
 	if(itor == frames_.end() || itor->second.empty()) {
@@ -1652,7 +1653,7 @@ bool CustomObjectType::hasFrame(const std::string& key) const
 
 game_logic::const_formula_ptr CustomObjectType::getEventHandler(int event) const
 {
-	if(event >= event_handlers_.size()) {
+	if(static_cast<unsigned>(event) >= event_handlers_.size()) {
 		return game_logic::const_formula_ptr();
 	} else {
 		return event_handlers_[event];

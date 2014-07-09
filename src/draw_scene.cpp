@@ -34,7 +34,6 @@
 #include "asserts.hpp"
 #include "controls.hpp"
 #include "debug_console.hpp"
-#include "draw_number.hpp"
 #include "draw_scene.hpp"
 #include "editor.hpp"
 #include "formula_profiler.hpp"
@@ -383,7 +382,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	if(pos.flip_rotate) {
 		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
 		const int pixels = (preferences::actual_screen_width()/2)*angle;

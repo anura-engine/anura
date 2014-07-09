@@ -65,6 +65,11 @@ namespace KRE
 		}
 	}
 
+	BlendMode::BlendMode(const variant& node)
+	{
+		Set(node);
+	}
+
 	void BlendMode::Set(const variant& node) 
 	{
 		if(node.is_string()) {
@@ -115,6 +120,57 @@ namespace KRE
 		: rgb_(rgb_eq),
 		alpha_(alpha_eq)
 	{
+	}
+
+	namespace 
+	{
+		BlendEquationConstants convert_string_to_equation(const std::string& s) 
+		{
+			if(s == "add" || s == "ADD") {
+				return BlendEquationConstants::BE_ADD;
+			} else if(s == "subtract" || s == "subtract") {
+				return BlendEquationConstants::BE_SUBTRACT;
+			} else if(s == "reverse_subtract" || s == "REVERSE_SUBTRACT" 
+				|| s == "rsubtract" || s == " RSUBSTRACT" || s == "reverseSubtract") {
+				return BlendEquationConstants::BE_REVERSE_SUBTRACT;
+			} else {
+				ASSERT_LOG(false, "Unrecognised value for blend equation: " << s);
+			}
+			return BlendEquationConstants::BE_ADD;
+		}
+	}
+
+	BlendEquation::BlendEquation(const variant& node)
+		: rgb_(BlendEquationConstants::BE_ADD),
+		alpha_(BlendEquationConstants::BE_ADD)
+	{
+		if(node.is_map()) {
+			if(node.has_key("rgba")) {
+				rgb_ = alpha_ = convert_string_to_equation(node["rgba"].as_string());
+			} 
+			if(node.has_key("rgb")) {
+				rgb_ = convert_string_to_equation(node["rgb"].as_string());
+			}
+			if(node.has_key("alpha")) {
+				alpha_ = convert_string_to_equation(node["alpha"].as_string());
+			}
+			if(node.has_key("a")) {
+				alpha_ = convert_string_to_equation(node["a"].as_string());
+			}
+		} else if(node.is_list()) {
+			ASSERT_LOG(node.num_elements() > 0, "When using a list for blend equation must give at least one element");
+			if(node.num_elements() == 1) {
+				rgb_ = alpha_ = convert_string_to_equation(node[0].as_string());
+			} else {
+				rgb_   = convert_string_to_equation(node[0].as_string());
+				alpha_ = convert_string_to_equation(node[1].as_string());
+			}
+		} else if(node.is_string()) {
+			// simply setting the rgb/alpha values that same, from string
+			rgb_ = alpha_ = convert_string_to_equation(node.as_string());
+		} else {
+			ASSERT_LOG(false, "Unrecognised type for blend equation: " << node.to_debug_string());
+		}
 	}
 
 	void BlendEquation::setRgbEquation(BlendEquationConstants rgb_eq)

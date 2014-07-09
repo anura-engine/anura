@@ -2424,7 +2424,7 @@ void Level::draw_background(int x, int y, int rotation) const
 		background_->draw(x, y, screen_area, opaque_areas, rotation, cycle());
 	} else {
 		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 	}
 }
 
