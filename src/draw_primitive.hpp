@@ -37,6 +37,7 @@ namespace graphics
 	public:
 		static boost::intrusive_ptr<DrawPrimitive> create(const variant& v);
 		explicit DrawPrimitive(const variant& v);
+		const std::string& getShaderName() const { return shader_name_; }
 	private:
 		DECLARE_CALLABLE(DrawPrimitive);
 		virtual KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;

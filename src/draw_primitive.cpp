@@ -39,268 +39,269 @@ namespace graphics
 	namespace
 	{
 
-		class rect_primitive : public DrawPrimitive
+		class RectPrimitive : public DrawPrimitive
 		{
 		public:
-			explicit rect_primitive(const variant& v);
+			explicit RectPrimitive(const variant& v);
 		private:
+			DECLARE_CALLABLE(RectPrimitive)
 			void init();
 
-			void handleDraw() const override;
-		#ifdef USE_ISOMAP
-			void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-		#endif
-
-			variant getValue(const std::string& key) const;
-			void setValue(const std::string& key, const variant& value);
-
 			rect area_;
-			graphics::color color_;
-			shader_program_ptr shader_;
-			mutable std::vector<GLfloat> varray_;
+			KRE::Color color_;
 		};
 
-		rect_primitive::rect_primitive(const variant& v)
-			: DrawPrimitive(v), area_(v["area"]), color_(v["color"]), 
-				shader_(gles2::get_simple_shader())
+		RectPrimitive::RectPrimitive(const variant& v)
+			: DrawPrimitive(v), 
+			area_(v["area"]), 
+			color_(v["color"])
 		{
-			if(v.has_key("shader")) {
-				shader_.reset(new shader_program(v["shader"].as_string()));
-			}
-
 			init();
 		}
 
-		void rect_primitive::init()
+		void RectPrimitive::init()
 		{
-			varray_.clear();
-			varray_.push_back(area_.x());
-			varray_.push_back(area_.y());
-			varray_.push_back(area_.x2());
-			varray_.push_back(area_.y());
-			varray_.push_back(area_.x());
-			varray_.push_back(area_.y2());
-			varray_.push_back(area_.x2());
-			varray_.push_back(area_.y2());
+			std::vector<glm::vec2> varray;
+			varray.emplace_back(area_.x(), area_.y());
+			varray.emplace_back(area_.x2(),area_.y());
+			varray.emplace_back(area_.x(), area_.y2());
+			varray.emplace_back(area_.x2(),area_.y2());
+
+			using namespace KRE;
+
+			auto ab = DisplayDevice::createAttributeSet(false, false, false);
+			auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			ab->addAttribute(AttributeBasePtr(pos));
+
+			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+			addAttributeSet(ab);
+
+			pos->update(&varray);
+
+			setColor(color_);
 		}
 
-		void rect_primitive::handleDraw() const
-		{
-			color_.set_as_current_color();
+		BEGIN_DEFINE_CALLABLE(RectPrimitive, DrawPrimitive)
+			DEFINE_FIELD(color, "[int,int,int,int]|string")
+				return obj.color_.write();
+			DEFINE_SET_FIELD
+				obj.color_ = KRE::Color(value);
+				obj.setColor(obj.color_);
+		END_DEFINE_CALLABLE(RectPrimitive)
 
-			gles2::manager gles2_manager(shader_);
-			gles2::active_shader()->prepare_draw();
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
 
-			glColor4f(1.0, 1.0, 1.0, 1.0);
-		}
-
-		#ifdef USE_ISOMAP
-		void rect_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
-		{
-		}
-		#endif
-
-		variant rect_primitive::getValue(const std::string& key) const
-		{
-			return DrawPrimitive::getValue(key);
-		}
-
-		void rect_primitive::setValue(const std::string& key, const variant& value)
-		{
-			DrawPrimitive::setValue(key, value);
-		}
-
-		typedef boost::array<GLfloat, 2> FPoint;
-
-		class circle_primitive : public DrawPrimitive
+		class CirclePrimitive : public DrawPrimitive
 		{
 		public:
-			explicit circle_primitive(const variant& v);
-
+			explicit CirclePrimitive(const variant& v);
 		private:
+			DECLARE_CALLABLE(CirclePrimitive);
 			void init();
 
-			void handleDraw() const override;
-		#ifdef USE_ISOMAP
-			void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-		#endif
-			variant getValue(const std::string& key) const;
-			void setValue(const std::string& key, const variant& value);
-
-			FPoint center_;
+			glm::vec2 center_;
 			float radius_;
 			float y_radius_;
 			float stroke_width_;
 
-			graphics::color color_;
-			graphics::color stroke_color_;
-
-			shader_program_ptr shader_;
-
-			mutable std::vector<GLfloat> varray_;
+			KRE::Color color_;
+			KRE::Color stroke_color_;
 		};
 
-		circle_primitive::circle_primitive(const variant& v)
+		CirclePrimitive::CirclePrimitive(const variant& v)
 			: DrawPrimitive(v),
-				radius_(v["radius"].as_decimal().as_float()),
-				y_radius_(v["y_radius"].as_decimal(decimal(radius_)).as_float()),
-				stroke_width_(0.0),
-				shader_(gles2::get_simple_shader())
+				radius_(static_cast<float>(v["radius"].as_float())),
+				y_radius_(static_cast<float>(v["y_radius"].as_decimal(decimal(radius_)).as_float())),
+				stroke_width_(0.0f)
 		{
-			if(v.has_key("shader")) {
-				shader_.reset(new shader_program(v["shader"].as_string()));
-			}
-
-			center_[0] = v["x"].as_decimal().as_float();
-			center_[1] = v["y"].as_decimal().as_float();
+			center_.x = v["x"].as_float();
+			center_.y = v["y"].as_float();
 
 			if(v.has_key("color")) {
-				color_ = color(v["color"]);
+				color_ = KRE::Color(v["color"]);
 			} else {
-				color_ = color(200, 0, 0, 255);
+				color_ = KRE::Color(200, 0, 0, 255);
 			}
 
 			if(v.has_key("stroke_color")) {
-				stroke_color_ = color(v["stroke_color"]);
-				stroke_width_ = v["stroke_width"].as_decimal().as_float();
+				stroke_color_ = KRE::Color(v["stroke_color"]);
+				stroke_width_ = v["stroke_width"].as_float();
 			}
-
 
 			init();
 		}
 
-		void circle_primitive::init()
+		void CirclePrimitive::init()
 		{
-			varray_.clear();
-			varray_.push_back(center_[0]);
-			varray_.push_back(center_[1]);
-			for(double angle = 0; angle < 3.1459*2.0; angle += 0.1) {
-				const double xpos = center_[0] + radius_*cos(angle);
-				const double ypos = center_[1] + y_radius_*sin(angle);
-				varray_.push_back(xpos);
-				varray_.push_back(ypos);
+			// XXX should replace this with a circle shader.
+			std::vector<glm::vec2> varray;
+			varray.emplace_back(center_);
+			for(double angle = 0; angle < M_PI*2.0; angle += 0.1) {
+				const float xpos = static_cast<float>(center_.x +   radius_*cos(angle));
+				const float ypos = static_cast<float>(center_.y + y_radius_*sin(angle));
+				varray.emplace_back(xpos, ypos);
 			}
 
 			//repeat the first coordinate to complete the circle.
-			varray_.push_back(varray_[2]);
-			varray_.push_back(varray_[3]);
+			varray.emplace_back(varray[1]);
 
-		}
-
-		#ifdef USE_ISOMAP
-		void circle_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
-		{
-		}
-		#endif
-
-		void circle_primitive::handleDraw() const
-		{
-			gles2::manager gles2_manager(shader_);
-
+			using namespace KRE;
 			if(color_.a() > 0) {
-				color_.set_as_current_color();
-
-				gles2::active_shader()->prepare_draw();
-				gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_.front());
-				glDrawArrays(GL_TRIANGLE_FAN, 0, varray_.size()/2);
+				auto ab = DisplayDevice::createAttributeSet(false, false, false);
+				auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+				pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+				ab->addAttribute(AttributeBasePtr(pos));
+				ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_FAN);
+				ab->setColor(color_);
+				addAttributeSet(ab);
+				pos->update(varray);
 			}
 
 			if(stroke_color_.a() > 0) {
-				glLineWidth(stroke_width_);
-				stroke_color_.set_as_current_color();
-
-				gles2::active_shader()->prepare_draw();
-				gles2::active_shader()->shader()->disable_vertex_attrib(-1);
-				gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray_[2]);
-				glDrawArrays(GL_LINE_LOOP, 0, (varray_.size()-2)/2);
+				auto ll = DisplayDevice::createAttributeSet(false, false, false);
+				auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+				ll_pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+				ll->addAttribute(AttributeBasePtr(ll_pos));
+				ll->setDrawMode(KRE::AttributeSet::DrawMode::LINE_LOOP);
+				ll->setColor(stroke_color_);
+				addAttributeSet(ll);
+				ll_pos->update(varray);
+				ll->setCount(varray.size()-1);
 			}
-
-			glColor4f(1.0, 1.0, 1.0, 1.0);
-	
 		}
 
-		variant circle_primitive::getValue(const std::string& key) const
-		{
-			return variant();
-		}
+		BEGIN_DEFINE_CALLABLE(CirclePrimitive, DrawPrimitive)
+			DEFINE_FIELD(dummy, "any")
+				return variant();
+		END_DEFINE_CALLABLE(CirclePrimitive)
 
-		void circle_primitive::setValue(const std::string& key, const variant& value)
-		{
-		}
 
-		class arrow_primitive : public DrawPrimitive
+		class ArrowPrimitive : public DrawPrimitive
 		{
 		public:
-			explicit arrow_primitive(const variant& v);
-
+			explicit ArrowPrimitive(const variant& v);
+			void preRender(const KRE::WindowManagerPtr& wnd) override;
 		private:
+			DECLARE_CALLABLE(ArrowPrimitive);
+			KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
+			void init();
+			void setPoints(const variant& points);
+			void curve(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, std::vector<glm::vec2>* out) const;
 
-			void handleDraw() const override;
-		#ifdef USE_ISOMAP
-			void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-		#endif
-
-			variant getValue(const std::string& key) const;
-			void setValue(const std::string& key, const variant& value);
-
-			void set_points(const variant& points);
-
-			void curve(const FPoint& p1, const FPoint& p2, const FPoint& p3, std::vector<FPoint>* out) const;
-
-			std::vector<FPoint> points_;
-			GLfloat granularity_;
+			std::vector<glm::vec2> points_;
+			float granularity_;
 			int arrow_head_length_;
-			GLfloat arrow_head_width_;
-			graphics::color color_;
+			float arrow_head_width_;
+			KRE::Color color_;
 			int fade_in_length_;
 
-			GLfloat width_base_, width_head_;
+			float width_base_, width_head_;
 
-			mutable std::vector<GLfloat> uvarray_;
-			mutable std::vector<GLfloat> varray_;
-			mutable std::vector<unsigned char> carray_;
+			std::vector<glm::vec2> uvarray_;
+			std::vector<glm::vec2> varray_;
+			std::vector<glm::u8vec4> carray_;
 
-			texture texture_;
-			GLfloat texture_scale_;
+			std::shared_ptr<KRE::Attribute<glm::vec2>> pos_;
+			std::shared_ptr<KRE::Attribute<glm::vec2>> tex_;
+			std::shared_ptr<KRE::Attribute<glm::u8vec4>> col_;
 
-			void calculate_draw_arrays() const;
+
+			KRE::TexturePtr texture_;
+			float texture_scale_;
+
+			void calculate_draw_arrays();
 		};
 
-		arrow_primitive::arrow_primitive(const variant& v)
+		ArrowPrimitive::ArrowPrimitive(const variant& v)
 			: DrawPrimitive(v),
-			granularity_(v["granularity"].as_decimal(decimal(0.005)).as_float()),
+			granularity_(static_cast<float>(v["granularity"].as_decimal(decimal(0.005)).as_float())),
 			arrow_head_length_(v["arrow_head_length"].as_int(10)),
-			arrow_head_width_(v["arrow_head_width"].as_decimal(decimal(2.0)).as_float()),
+			arrow_head_width_(static_cast<float>(v["arrow_head_width"].as_decimal(decimal(2.0)).as_float())),
 			fade_in_length_(v["fade_in_length"].as_int(50)),
-			width_base_(v["width_base"].as_decimal(decimal(12.0)).as_float()),
-			width_head_(v["width_head"].as_decimal(decimal(5.0)).as_float())
+			width_base_(static_cast<float>(v["width_base"].as_decimal(decimal(12.0)).as_float())),
+			width_head_(static_cast<float>(v["width_head"].as_decimal(decimal(5.0)).as_float()))
 		{
 			if(v.has_key("texture")) {
-				texture_ = texture::get(v["texture"].as_string());
-				texture_scale_ = v["texture_scale"].as_decimal(decimal(1.0)).as_float();
+				texture_ = KRE::DisplayDevice::createTexture(v["texture"]);
+				texture_scale_ = static_cast<float>(v["texture_scale"].as_decimal(decimal(1.0)).as_float());
 			}
 
 			if(v.has_key("color")) {
-				color_ = color(v["color"]);
+				color_ = KRE::Color(v["color"]);
 			} else {
-				color_ = color(200, 0, 0, 255);
+				color_ = KRE::Color(200, 0, 0, 255);
 			}
 
-			set_points(v["points"]);
+			setPoints(v["points"]);
+			init();
 		}
 
-		void arrow_primitive::calculate_draw_arrays() const
+		KRE::DisplayDeviceDef ArrowPrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
+		{
+			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
+			if(getShaderName().empty()) {
+				if(texture_) {
+					def.setHint("shader", "vtc_shader");
+				} else {
+					def.setHint("shader", "attr_color_shader");
+				}
+			} else {
+				def.setHint("shader", getShaderName());
+			}
+			return def;
+		}
+
+		void ArrowPrimitive::init()
+		{
+			using namespace KRE;
+			auto ab = DisplayDevice::createAttributeSet(false, false, false);
+			pos_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
+			pos_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			ab->addAttribute(pos_);
+
+			col_.reset(new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
+			col_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true));
+			ab->addAttribute(col_);
+
+			tex_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
+			tex_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			if(texture_ == NULL) {
+				tex_->disable();
+			}
+			ab->addAttribute(tex_);
+
+			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+			addAttributeSet(ab);	
+		}
+
+		void ArrowPrimitive::preRender(const KRE::WindowManagerPtr& wnd)
+		{
+			if(varray_.empty()) {
+				calculate_draw_arrays();
+
+				pos_->update(varray_);
+				col_->update(carray_);
+				if(texture_) {
+					tex_->update(uvarray_);
+					tex_->enable();
+					// set shader if needed?
+				} else {
+					tex_->enable(false);
+					// set shader if needed?
+				}
+			}
+		}
+
+		void ArrowPrimitive::calculate_draw_arrays()
 		{
 			if(!varray_.empty()) {
 				return;
 			}
 
-			std::vector<FPoint> path;
+			std::vector<glm::vec2> path;
 
-			for(int n = 1; n < points_.size()-1; ++n) {
-				std::vector<FPoint> new_path;
+			for(unsigned n = 1; n < points_.size()-1; ++n) {
+				std::vector<glm::vec2> new_path;
 				curve(points_[n-1], points_[n], points_[n+1], &new_path);
 
 				if(path.empty()) {
@@ -309,55 +310,47 @@ namespace graphics
 					ASSERT_LOG(path.size() >= new_path.size(), "path.size() < new_path.size() : " << path.size() << " < " << new_path.size());
 					const int overlap = path.size()/2;
 					for(int n = 0; n != overlap; ++n) {
-						const float ratio = float(n)/float(overlap);
-						FPoint& value = path[(path.size() - overlap) + n];
-						FPoint new_value = new_path[n];
-						value[0] = value[0]*(1.0-ratio) + new_value[0]*ratio;
-						value[1] = value[1]*(1.0-ratio) + new_value[1]*ratio;
+						const float ratio = static_cast<float>(n)/static_cast<float>(overlap);
+						glm::vec2& value = path[(path.size() - overlap) + n];
+						glm::vec2 new_value = new_path[n];
+						value[0] = value[0]*(1.0f-ratio) + new_value[0]*ratio;
+						value[1] = value[1]*(1.0f-ratio) + new_value[1]*ratio;
 					}
 
 					path.insert(path.end(), new_path.begin() + overlap, new_path.end());
 				}
 			}
 
-			const GLfloat PathLength = path.size()-1;
+			const float PathLength = static_cast<float>(path.size()-1);
 
-			std::vector<FPoint> left_path, right_path;
-			for(int n = 0; n < path.size()-1; ++n) {
-				const FPoint& p = path[n];
-				const FPoint& next = path[n+1];
+			std::vector<glm::vec2> left_path, right_path;
+			for(unsigned n = 0; n < path.size()-1; ++n) {
+				const glm::vec2& p = path[n];
+				const glm::vec2& next = path[n+1];
 
-				FPoint direction;
+				glm::vec2 direction;
 				for(int m = 0; m != 2; ++m) {
 					direction[m] = next[m] - p[m];
 				}
 
-				const GLfloat vector_length = sqrt(direction[0]*direction[0] + direction[1]*direction[1]);
-				if(vector_length == 0.0) {
-					continue;
-				}
-
-				FPoint unit_direction;
-				for(int m = 0; m != 2; ++m) {
-					unit_direction[m] = direction[m]/vector_length;
-				}
+				glm::vec2 unit_direction = glm::normalize(direction);
 		
-				FPoint normal_direction_left, normal_direction_right;
+				glm::vec2 normal_direction_left, normal_direction_right;
 				normal_direction_left[0] = -unit_direction[1];
 				normal_direction_left[1] = unit_direction[0];
 				normal_direction_right[0] = unit_direction[1];
 				normal_direction_right[1] = -unit_direction[0];
 
-				const GLfloat ratio = n/PathLength;
+				const float ratio = n/PathLength;
 
-				GLfloat arrow_width = width_base_ - (width_base_-width_head_)*ratio;
+				float arrow_width = width_base_ - (width_base_-width_head_)*ratio;
 
 				const int time_until_end = path.size()-2 - n;
 				if(time_until_end < arrow_head_length_) {
 					arrow_width = arrow_head_width_*time_until_end;
 				}
 
-				FPoint left, right;
+				glm::vec2 left, right;
 				for(int m = 0; m != 2; ++m) {
 					left[m] = p[m] + normal_direction_left[m]*arrow_width;
 					right[m] = p[m] + normal_direction_right[m]*arrow_width;
@@ -367,102 +360,65 @@ namespace graphics
 				right_path.push_back(right);
 			}
 
-			for(int n = 0; n != left_path.size(); ++n) {
-				varray_.push_back(left_path[n][0]);
-				varray_.push_back(left_path[n][1]);
-				varray_.push_back(right_path[n][0]);
-				varray_.push_back(right_path[n][1]);
+			for(unsigned n = 0; n != left_path.size(); ++n) {
+				varray_.emplace_back(left_path[n]);
+				varray_.emplace_back(right_path[n]);
 
-				uvarray_.push_back(n*texture_scale_);
-				uvarray_.push_back(0.0);
-				uvarray_.push_back(n*texture_scale_);
-				uvarray_.push_back(1.0);
+				uvarray_.emplace_back(n*texture_scale_, 0.0f);
+				uvarray_.emplace_back(n*texture_scale_, 1.0f);
 
 				for(int m = 0; m != 2; ++m) {
-					carray_.push_back(color_.r());
-					carray_.push_back(color_.g());
-					carray_.push_back(color_.b());
-					if(n < fade_in_length_) {
-						carray_.push_back(int((GLfloat(color_.a())*GLfloat(n)*(255.0/GLfloat(fade_in_length_)))/255.0));
-					} else {
-						carray_.push_back(color_.a());
-					}
+					carray_.emplace_back(color_.r_int(), 
+						color_.g_int(), 
+						color_.b_int(), 
+						n < static_cast<unsigned>(fade_in_length_) 
+							? color_.a_int()
+							: static_cast<uint8_t>((color_.a_int()*n)/static_cast<float>(fade_in_length_))
+					);
 				}
 			}
 		}
 
-		#ifdef USE_ISOMAP
-		void arrow_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
-		{
-		}
-		#endif
-
-		void arrow_primitive::handleDraw() const
-		{
-			if(points_.size() < 3) {
-				return;
-			}
-
-			calculate_draw_arrays();
-
-			gles2::manager gles2_manager(texture_.valid() ? gles2::get_texcol_shader() : gles2::get_simple_col_shader());
-
-			if(texture_.valid()) {
-				glActiveTexture(GL_TEXTURE0);
-				texture_.set_as_currentTexture();
-				gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &uvarray_[0]);
-			}
-
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
-			gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray_[0]);
-
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, varray_.size()/2);
-		}
-
-		variant arrow_primitive::getValue(const std::string& key) const
-		{
-			if(key == "points") {
+		BEGIN_DEFINE_CALLABLE(ArrowPrimitive, DrawPrimitive)
+			DEFINE_FIELD(points, "[[int,int]]")
 				std::vector<variant> result;
-				foreach(const FPoint& p, points_) {
+				for(const glm::vec2& p : obj.points_) {
 					std::vector<variant> pos;
-					pos.push_back(variant(static_cast<int>(p[0])));
-					pos.push_back(variant(static_cast<int>(p[1])));
+					pos.emplace_back(variant(static_cast<int>(p.x)));
+					pos.emplace_back(variant(static_cast<int>(p.y)));
 					result.push_back(variant(&pos));
 				}
-
 				return variant(&result);
-			}
-			ASSERT_LOG(false, "ILLEGAL KEY IN ARROW: " << key);
-			return variant();
-		}
+			DEFINE_SET_FIELD
+				obj.setPoints(value);
+			DEFINE_FIELD(color, KRE::Color::getDefineFieldType())
+				return obj.color_.write();
+			DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
+				obj.color_ = KRE::Color(value);
+			DEFINE_FIELD(granularity, "decimal")
+				return variant(obj.granularity_);
+			DEFINE_SET_FIELD_TYPE("int|decimal")
+				obj.granularity_ = value.as_float();
+			DEFINE_FIELD(arrow_head_length, "int")
+				return variant(obj.arrow_head_length_);
+			DEFINE_SET_FIELD
+				obj.arrow_head_length_ = value.as_int();
+			DEFINE_FIELD(fade_in_length, "int")
+				return variant(obj.fade_in_length_);
+			DEFINE_SET_FIELD
+				obj.fade_in_length_ = value.as_int();
+			DEFINE_FIELD(width_base, "decimal")
+				return variant(obj.width_base_);
+			DEFINE_SET_FIELD_TYPE("int|decimal")
+				obj.width_base_ = value.as_float();
+			DEFINE_FIELD(width_head, "decimal")
+				return variant(obj.width_head_);
+			DEFINE_SET_FIELD_TYPE("int|decimal")
+				obj.width_head_ = value.as_float();
+		END_DEFINE_CALLABLE(ArrowPrimitive)
 
-		void arrow_primitive::setValue(const std::string& key, const variant& value)
-		{
-			if(key == "points") {
-				set_points(value);
-			} else if(key == "color") {
-				color_ = graphics::color(value);
-			} else if(key == "granularity") {
-				granularity_ = value.as_decimal().as_float();
-			} else if(key == "arrow_head_length") {
-				arrow_head_length_ = value.as_int();
-			} else if(key == "arrow_head_width") {
-				arrow_head_width_ = value.as_decimal().as_float();
-			} else if(key == "fade_in_length") {
-				fade_in_length_ = value.as_int();
-			} else if(key == "width_base") {
-				width_base_ = value.as_decimal().as_float();
-			} else if(key == "width_head") {
-				width_head_ = value.as_decimal().as_float();
-			} else {
-				ASSERT_LOG(false, "ILLEGAL KEY IN ARROW: " << key);
-			}
 
-			varray_.clear();
-			carray_.clear();
-		}
-
-		void arrow_primitive::set_points(const variant& points)
+		void ArrowPrimitive::setPoints(const variant& points)
 		{
 			ASSERT_LOG(points.is_list(), "arrow points is not a list: " << points.debug_location());
 
@@ -471,17 +427,17 @@ namespace graphics
 			for(int n = 0; n != points.num_elements(); ++n) {
 				variant p = points[n];
 				ASSERT_LOG(p.is_list() && p.num_elements() == 2, "arrow points in invalid format: " << points.debug_location() << " : " << p.write_json());
-				FPoint point;
-				point[0] = p[0].as_int();
-				point[1] = p[1].as_int();
-				points_.push_back(point);
+				glm::vec2 p1;
+				p1.x = p[0].as_float();
+				p1.y = p[1].as_float();
+				points_.push_back(p1);
 			}
 		}
 
-		void arrow_primitive::curve(const FPoint& p0, const FPoint& p1, const FPoint& p2, std::vector<FPoint>* out) const
+		void ArrowPrimitive::curve(const glm::vec2& p0, const glm::vec2& p1, const glm::vec2& p2, std::vector<glm::vec2>* out) const
 		{
 			for(float t = 0.0; t < 1.0 - granularity_; t += granularity_) {
-				FPoint p;
+				glm::vec2 p;
 				for(int n = 0; n != 2; ++n) {
 					//formula for a bezier curve.
 					p[n] = (1-t)*(1-t)*p0[n] + 2*(1-t)*t*p1[n] + t*t*p2[n];
@@ -491,41 +447,27 @@ namespace graphics
 			}
 		}
 
-		class wireframe_box_primitive : public DrawPrimitive
+		class WireframeBoxPrimitive : public DrawPrimitive
 		{
 		public:
-			explicit wireframe_box_primitive(const variant& v);
+			explicit WireframeBoxPrimitive(const variant& v);
 
 		private:
-			DECLARE_CALLABLE(wireframe_box_primitive);
+			DECLARE_CALLABLE(WireframeBoxPrimitive);
+			KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 
 			void init();
-
-			void handleDraw() const override;
-		#ifdef USE_ISOMAP
-			void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const;
-		#endif
 
 			glm::vec3 b1_;
 			glm::vec3 b2_;
 
-			graphics::color color_;
+			KRE::Color color_;
 
-			program_ptr shader_;
-
-			std::vector<GLfloat> varray_;
-	
-			GLuint u_mvp_matrix_;
-			GLuint a_position_;
-			GLuint u_color_;
-
-			glm::vec3 translation_;
-			glm::vec3 rotation_;
-			glm::vec3 scale_;
+			std::vector<glm::vec3> varray_;
 		};
 
-		wireframe_box_primitive::wireframe_box_primitive(const variant& v)
-			: DrawPrimitive(v), scale_(glm::vec3(1.0f))
+		WireframeBoxPrimitive::WireframeBoxPrimitive(const variant& v)
+			: DrawPrimitive(v)
 		{
 			if(v.has_key("points")) {
 				ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
@@ -537,33 +479,16 @@ namespace graphics
 				b2_ = variant_to_vec3(v["point2"]);
 			}
 			if(v.has_key("color")) {
-				color_ = color(v["color"]);
+				color_ = KRE::Color(v["color"]);
 			} else {
-				color_ = color(200, 0, 0, 255);
+				color_ = KRE::Color(200, 0, 0, 255);
 			}
-			if(v.has_key("translation")) {
-				translation_ = variant_to_vec3(v["translation"]);
-			}
-			if(v.has_key("scale")) {
-				scale_ = variant_to_vec3(v["scale"]);
-			}
-
-			if(v.has_key("shader")) {
-				shader_ = shader_program::get_global(v["shader"].as_string())->shader();
-			} else {
-				shader_ = shader_program::get_global("line_3d")->shader();
-			}
-			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-			u_color_ = shader_->get_fixed_uniform("color");
-			a_position_ = shader_->get_fixed_attribute("vertex");
-			ASSERT_LOG(u_mvp_matrix_ != -1, "Error getting mvp_matrix uniform");
-			ASSERT_LOG(u_color_ != -1, "Error getting color uniform");
-			ASSERT_LOG(a_position_ != -1, "Error getting vertex attribute");
+			setColor(color_);
 
 			init();
 		}
 
-		void wireframe_box_primitive::init()
+		void WireframeBoxPrimitive::init()
 		{
 			if(b1_.x > b2_.x) {
 				std::swap(b1_.x, b2_.x);
@@ -575,56 +500,55 @@ namespace graphics
 				std::swap(b1_.z, b2_.z);
 			}
 
+			// XXX need to adjust these to be centered.
 			varray_.clear();
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b2_.y, b1_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b2_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b2_.z); 
 
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b1_.x, b2_.y, b1_.z); 
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
 
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); 
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z); varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z); 
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b1_.x, b1_.y, b2_.z); 
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z); varray_.emplace_back(b2_.x, b1_.y, b1_.z); 
+
+			using namespace KRE;
+			auto ab = DisplayDevice::createAttributeSet(false, false, false);
+			auto pos = new Attribute<glm::vec3>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 3, AttributeDesc::VariableType::FLOAT, false));
+			ab->addAttribute(AttributeBasePtr(pos));
+
+			ab->setDrawMode(KRE::AttributeSet::DrawMode::LINES);
+			addAttributeSet(ab);
+
+			// might be better doing this in pre-render?
+			pos->update(&varray_);
 		}
 
-		void wireframe_box_primitive::handleDraw() const
+		KRE::DisplayDeviceDef WireframeBoxPrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
 		{
+			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
+			if(getShaderName().empty()) {
+				def.setHint("shader", "line_3d");
+			} else {
+				def.setHint("shader", getShaderName());
+			}
+			return def;
 		}
 
-		#ifdef USE_ISOMAP
-		void wireframe_box_primitive::handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
-		{
-			shader_save_context save;
-			glUseProgram(shader_->get());
-
-			glm::mat4 model = glm::translate(glm::mat4(), translation_) 
-				* glm::translate(glm::mat4(), glm::vec3((b2_.x - b1_.x)/2.0f,(b2_.y - b1_.y)/2.0f,(b2_.z - b1_.z)/2.0f))
-				* glm::scale(glm::mat4(), scale_)
-				* glm::translate(glm::mat4(), glm::vec3((b1_.x - b2_.x)/2.0f,(b1_.y - b2_.y)/2.0f,(b1_.z - b2_.z)/2.0f));
-			glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
-			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-
-			glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
-
-			glEnableVertexAttribArray(a_position_);
-			glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
-			glDrawArrays(GL_LINES, 0, varray_.size()/3);
-			glDisableVertexAttribArray(a_position_);
-		}
-		#endif
-
-		BEGIN_DEFINE_CALLABLE(wireframe_box_primitive, DrawPrimitive)
-			DEFINE_FIELD(color, "[int,int,int,int]")
+		BEGIN_DEFINE_CALLABLE(WireframeBoxPrimitive, DrawPrimitive)
+			DEFINE_FIELD(color, KRE::Color::getDefineFieldType())
 				return obj.color_.write();
-			DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
-				obj.color_ = graphics::color(value);
+			DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
+				obj.color_ = KRE::Color(value);
+				obj.setColor(obj.color_);
 			DEFINE_FIELD(points, "[[decimal,decimal,decimal],[decimal,decimal,decimal]]")
 				std::vector<variant> v;
 				v.push_back(vec3_to_variant(obj.b1_));
@@ -645,22 +569,14 @@ namespace graphics
 			DEFINE_SET_FIELD
 				obj.b2_ = variant_to_vec3(value);
 				obj.init();
-			DEFINE_FIELD(translation, "[decimal,decimal,decimal]")
-				return vec3_to_variant(obj.translation_);
-			DEFINE_SET_FIELD
-				obj.translation_ = variant_to_vec3(value);
-			DEFINE_FIELD(scale, "[decimal,decimal,decimal]")
-				return vec3_to_variant(obj.scale_);
-			DEFINE_SET_FIELD
-				obj.scale_ = variant_to_vec3(value);
-		END_DEFINE_CALLABLE(wireframe_box_primitive)
+		END_DEFINE_CALLABLE(WireframeBoxPrimitive)
 		}
 
-	class box_primitive : public DrawPrimitive
+	class BoxPrimitive : public DrawPrimitive
 	{
 	public:
-		explicit box_primitive(const variant& v)
-			: DrawPrimitive(v), scale_(glm::vec3(1.0f))
+		explicit BoxPrimitive(const variant& v)
+			: DrawPrimitive(v)
 		{
 			if(v.has_key("points")) {
 				ASSERT_LOG(v["points"].is_list() && v["points"].num_elements() == 2, "'points' must be a list of two elements.");
@@ -672,36 +588,30 @@ namespace graphics
 				b2_ = variant_to_vec3(v["point2"]);
 			}
 			if(v.has_key("color")) {
-				color_ = color(v["color"]);
+				color_ = KRE::Color(v["color"]);
 			} else {
-				color_ = color(200, 0, 0, 255);
+				color_ = KRE::Color(200, 0, 0, 255);
 			}
-			if(v.has_key("translation")) {
-				translation_ = variant_to_vec3(v["translation"]);
-			}
-			if(v.has_key("scale")) {
-				scale_ = variant_to_vec3(v["scale"]);
-			}
-
-			if(v.has_key("shader")) {
-				shader_ = shader_program::get_global(v["shader"].as_string())->shader();
-			} else {
-				shader_ = shader_program::get_global("line_3d")->shader();
-			}
-			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
-			u_color_ = shader_->get_fixed_uniform("color");
-			a_position_ = shader_->get_fixed_attribute("vertex");
-			ASSERT_LOG(u_mvp_matrix_ != -1, "Error getting mvp_matrix uniform");
-			ASSERT_LOG(u_color_ != -1, "Error getting color uniform");
-			ASSERT_LOG(a_position_ != -1, "Error getting vertex attribute");
+			setColor(color_);
 
 			init();
 		}
-		virtual ~box_primitive()
+		virtual ~BoxPrimitive()
 		{}
 
 	private:
-		DECLARE_CALLABLE(box_primitive);
+		DECLARE_CALLABLE(BoxPrimitive);
+
+		KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd)
+		{
+			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
+			if(getShaderName().empty()) {
+				def.setHint("shader", "line_3d");
+			} else {
+				def.setHint("shader", getShaderName());
+			}
+			return def;
+		}
 
 		void init()
 		{
@@ -715,107 +625,86 @@ namespace graphics
 				std::swap(b1_.z, b2_.z);
 			}
 
+			// XXX these need to be centered.
 			varray_.clear();
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b1_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z);
 
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b1_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b1_.z);
 
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b2_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b1_.z);
 
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
 
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b2_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b2_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b1_.z);
 
-			varray_.push_back(b2_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b2_.z);
-			varray_.push_back(b1_.x); varray_.push_back(b1_.y); varray_.push_back(b1_.z);
+			varray_.emplace_back(b2_.x, b1_.y, b1_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b2_.z);
+			varray_.emplace_back(b1_.x, b1_.y, b1_.z);
+
+			using namespace KRE;
+			auto ab = DisplayDevice::createAttributeSet(false, false, false);
+			auto pos = new Attribute<glm::vec3>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 3, AttributeDesc::VariableType::FLOAT, false));
+			ab->addAttribute(AttributeBasePtr(pos));
+
+			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLES);
+			addAttributeSet(ab);
+
+			// might be better doing this in pre-render?
+			pos->update(&varray_);
 		}
-
-		void handleDraw() const
-		{}
-
-	#ifdef USE_ISOMAP
-		void handleDraw(const lighting_ptr& lighting, const camera_callable_ptr& camera) const
-		{
-			shader_save_context save;
-			glUseProgram(shader_->get());
-
-			glm::mat4 model = glm::translate(glm::mat4(), translation_) 
-				* glm::translate(glm::mat4(), glm::vec3((b2_.x - b1_.x)/2.0f,(b2_.y - b1_.y)/2.0f,(b2_.z - b1_.z)/2.0f))
-				* glm::scale(glm::mat4(), scale_)
-				* glm::translate(glm::mat4(), glm::vec3((b1_.x - b2_.x)/2.0f,(b1_.y - b2_.y)/2.0f,(b1_.z - b2_.z)/2.0f));
-			glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
-			glUniformMatrix4fv(u_mvp_matrix_, 1, GL_FALSE, glm::value_ptr(mvp));
-
-			glUniform4f(u_color_, color_.r()/255.0f, color_.g()/255.0f, color_.b()/255.0f, color_.a()/255.0f);
-
-			glEnableVertexAttribArray(a_position_);
-			glVertexAttribPointer(a_position_, 3, GL_FLOAT, GL_FALSE, 0, &varray_[0]);
-			glDrawArrays(GL_TRIANGLES, 0, varray_.size()/3);
-			glDisableVertexAttribArray(a_position_);
-		}
-	#endif
 
 		glm::vec3 b1_;
 		glm::vec3 b2_;
 
-		graphics::color color_;
+		KRE::Color color_;
 
-		program_ptr shader_;
-
-		std::vector<GLfloat> varray_;
+		std::vector<glm::vec3> varray_;
 	
-		GLuint u_mvp_matrix_;
-		GLuint a_position_;
-		GLuint u_color_;
-
-		glm::vec3 translation_;
-		glm::vec3 rotation_;
-		glm::vec3 scale_;
-
-		box_primitive();
-		box_primitive(const box_primitive&);
+		BoxPrimitive();
+		BoxPrimitive(const BoxPrimitive&);
 	};
 
-	BEGIN_DEFINE_CALLABLE(box_primitive, DrawPrimitive)
-		DEFINE_FIELD(color, "[int,int,int,int]")
+	BEGIN_DEFINE_CALLABLE(BoxPrimitive, DrawPrimitive)
+		DEFINE_FIELD(color, KRE::Color::getDefineFieldType())
 			return obj.color_.write();
-		DEFINE_SET_FIELD_TYPE("[int,int,int,int]|string")
-			obj.color_ = graphics::color(value);
+		DEFINE_SET_FIELD_TYPE(KRE::Color::getSetFieldType())
+			obj.color_ = KRE::Color(value);
+			obj.setColor(obj.color_);
 		DEFINE_FIELD(points, "[[decimal,decimal,decimal],[decimal,decimal,decimal]]")
 			std::vector<variant> v;
 			v.push_back(vec3_to_variant(obj.b1_));
@@ -836,15 +725,7 @@ namespace graphics
 		DEFINE_SET_FIELD
 			obj.b2_ = variant_to_vec3(value);
 			obj.init();
-		DEFINE_FIELD(translation, "[decimal,decimal,decimal]")
-			return vec3_to_variant(obj.translation_);
-		DEFINE_SET_FIELD
-			obj.translation_ = variant_to_vec3(value);
-		DEFINE_FIELD(scale, "[decimal,decimal,decimal]")
-			return vec3_to_variant(obj.scale_);
-		DEFINE_SET_FIELD
-			obj.scale_ = variant_to_vec3(value);
-	END_DEFINE_CALLABLE(box_primitive)
+	END_DEFINE_CALLABLE(BoxPrimitive)
 
 
 	class LinePrimitive : public DrawPrimitive
@@ -944,11 +825,11 @@ namespace graphics
 
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
 		auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-		pos->addAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+		pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
 		ab->addAttribute(AttributeBasePtr(pos));
 
 		auto col = new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-		col->addAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true));
+		col->addAttributeDesc(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true));
 		ab->addAttribute(AttributeBasePtr(col));
 
 		ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
@@ -960,13 +841,13 @@ namespace graphics
 		if(has_stroke_) {
 			auto ll = DisplayDevice::createAttributeSet(false, false, false);
 			auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			ll_pos->addAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
-			ll->addAttribute(ll_pos);
+			ll_pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			ll->addAttribute(AttributeBasePtr(ll_pos));
 			ll->setColor(stroke_color_);
 			ll->setDrawMode(KRE::AttributeSet::DrawMode::LINE_LOOP);
 			addAttributeSet(ll);
 
-			ll->update(&v2array_);
+			ll_pos->update(&v2array_);
 		}
 	}
 
@@ -994,7 +875,6 @@ namespace graphics
 	END_DEFINE_CALLABLE(LinePrimitive)
 
 
-
 	DrawPrimitivePtr DrawPrimitive::create(const variant& v)
 	{
 		if(v.is_callable()) {
@@ -1004,17 +884,17 @@ namespace graphics
 		}
 		const std::string type = v["type"].as_string();
 		if(type == "arrow") {
-			return new arrow_primitive(v);
+			return new ArrowPrimitive(v);
 		} else if(type == "circle") {
-			return new circle_primitive(v);
+			return new CirclePrimitive(v);
 		} else if(type == "rect") {
-			return new rect_primitive(v);
+			return new RectPrimitive(v);
 		} else if(type == "line") {
 			return new LinePrimitive(v);
 		} else if(type == "box") {
-			return new box_primitive(v);
+			return new BoxPrimitive(v);
 		} else if(type == "box_wireframe") {
-			return new wireframe_box_primitive(v);
+			return new WireframeBoxPrimitive(v);
 		}
 
 		ASSERT_LOG(false, "UNKNOWN DRAW PRIMITIVE TYPE: " << v["type"].as_string());
@@ -1033,7 +913,7 @@ namespace graphics
 	{
 		KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
 		if(shader_name_.empty()) {
-			def.setHint("shader", "simple_color");
+			def.setHint("shader", "attr_color_shader");
 		} else {
 			def.setHint("shader", shader_name_);
 		}

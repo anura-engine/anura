@@ -72,6 +72,7 @@ namespace KRE
 			unsigned depth,
 			PixelFormat::PF fmt, 
 			Texture::Type type);
+		Texture(const variant& node);
 		virtual ~Texture();
 
 		void SetAddressModes(AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));

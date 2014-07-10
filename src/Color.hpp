@@ -235,6 +235,13 @@ namespace KRE
 		static Color colorYellow() { return Color(255, 255, 0); }
 		static Color colorYellowgreen() { return Color(154, 205, 50); }		
 
+		// XXX We should have a ColorCallable, in a seperate file, then move these two into the ColorCallable.
+		static std::string getSetFieldType() { return "string"
+			"|[int,int,int,int]"
+			"|[int,int,int]"
+			"|{red:int|decimal,green:int|decimal,blue:int|decimal,alpha:int|decimal|null}"
+			"|{r:int|decimal,g:int|decimal,b:int|decimal,a:int|decimal|null}"; }
+		static std::string getDefineFieldType() { return "[int,int,int,int]"; }
 	private:
 		float color_[4];
 	};

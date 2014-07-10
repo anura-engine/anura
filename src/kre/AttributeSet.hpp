@@ -47,10 +47,10 @@ namespace KRE
 	public:
 		HardwareAttribute(AttributeBase* parent) : parent_(parent) {}
 		virtual ~HardwareAttribute() {}
-		virtual void Update(const void* value, ptrdiff_t offset, size_t size) = 0;
-		virtual void Bind() {}
-		virtual void Unbind() {}
-		virtual intptr_t Value() = 0;		
+		virtual void update(const void* value, ptrdiff_t offset, size_t size) = 0;
+		virtual void bind() {}
+		virtual void unbind() {}
+		virtual intptr_t value() = 0;		
 	private:
 		AttributeBase* parent_;
 	};
@@ -61,14 +61,14 @@ namespace KRE
 	public:
 		HardwareAttributeImpl(AttributeBase* parent) : HardwareAttribute(parent) {}
 		virtual ~HardwareAttributeImpl() {}
-		void Update(const void* value, ptrdiff_t offset, size_t size) {
+		void update(const void* value, ptrdiff_t offset, size_t size) {
 			if(offset == 0) {
 				value_ = reinterpret_cast<intptr_t>(value);
 			}
 		}
-		void Bind() {}
-		void Unbind() {}
-		intptr_t Value() override { return value_; }
+		void bind() {}
+		void unbind() {}
+		intptr_t value() override { return value_; }
 	private:
 		intptr_t value_;
 	};
@@ -113,16 +113,16 @@ namespace KRE
 			ptrdiff_t stride=0,
 			ptrdiff_t offset=0,
 			size_t divisor=1);
-		Type AttrType() const { return type_; }
-		const std::string& AttrName() const { return type_name_; }
-		VariableType VarType() const { return var_type_; }
-		unsigned NumElements() const { return num_elements_; }
-		bool Normalise() const { return normalise_; }
-		ptrdiff_t Stride() const { return stride_; }
-		ptrdiff_t Offset() const { return offset_; }
-		size_t Divisor() const { return divisor_; }
-		void SetDisplayData(const DisplayDeviceDataPtr& ddp) { display_data_ = ddp; }
-		const DisplayDeviceDataPtr& GetDisplayData() const { return display_data_; }
+		Type getAttrType() const { return type_; }
+		const std::string& getAttrName() const { return type_name_; }
+		VariableType getVarType() const { return var_type_; }
+		unsigned getNumElements() const { return num_elements_; }
+		bool normalise() const { return normalise_; }
+		ptrdiff_t getStride() const { return stride_; }
+		ptrdiff_t getOffset() const { return offset_; }
+		size_t getDivisor() const { return divisor_; }
+		void setDisplayData(const DisplayDeviceDataPtr& ddp) { display_data_ = ddp; }
+		const DisplayDeviceDataPtr& getDisplayData() const { return display_data_; }
 	private:
 		Type type_;
 		std::string type_name_;
@@ -158,32 +158,37 @@ namespace KRE
 		AttributeBase(AccessFreqHint freq, AccessTypeHint type)
 			: access_freq_(freq),
 			access_type_(type),
-			offs_(0) {
+			offs_(0),
+			enabled_(true) {
 		}
 		virtual ~AttributeBase() {}
-		void AddAttributeDescription(const AttributeDesc& attrdesc) {
+		void addAttributeDesc(const AttributeDesc& attrdesc) {
 			desc_.emplace_back(attrdesc);
 		}
-		std::vector<AttributeDesc>& GetAttrDesc() { return desc_; }
-		void SetOffset(ptrdiff_t offs) {
+		std::vector<AttributeDesc>& getAttrDesc() { return desc_; }
+		void setOffset(ptrdiff_t offs) {
 			offs_ = offs;
 		}
-		ptrdiff_t GetOffset() const { return offs_; } 
-		AccessFreqHint AccessFrequency() const { return access_freq_; }
-		AccessTypeHint AccessType() const { return access_type_; }
-		HardwareAttributePtr GetDeviceBufferData() { return hardware_; }
-		void SetDeviceBufferData(const HardwareAttributePtr& hardware) { 
+		ptrdiff_t getOffset() const { return offs_; } 
+		AccessFreqHint getAccessFrequency() const { return access_freq_; }
+		AccessTypeHint getAccessType() const { return access_type_; }
+		HardwareAttributePtr getDeviceBufferData() { return hardware_; }
+		void setDeviceBufferData(const HardwareAttributePtr& hardware) { 
 			hardware_ = hardware; 
-			HandleAttachHardwareBuffer();
+			handleAttachHardwareBuffer();
 		}
+		void enable(bool e=true) { enabled_ = e; }
+		void disable() { enabled_ = false; }
+		bool isEnabled() const { return enabled_; }
 	private:
-		virtual void HandleAttachHardwareBuffer() = 0;
+		virtual void handleAttachHardwareBuffer() = 0;
 		AccessFreqHint access_freq_;
 		AccessTypeHint access_type_;
 		ptrdiff_t offs_;
 		std::vector<AttributeDesc> desc_;
 		HardwareAttributePtr hardware_;
 		bool hardware_buffer_;
+		bool enabled_;
 	};
 
 	/* Templated attribute buffer. Is sub-optimal in that we double buffer attributes
@@ -210,36 +215,36 @@ namespace KRE
 		}
 		virtual ~Attribute() {}
 		
-		void Update(const Container<T>& values) {
+		void update(const Container<T>& values) {
 			elements_ = values;
-			if(GetDeviceBufferData()) {
-				GetDeviceBufferData()->Update(&elements_[0], 0, elements_.size() * sizeof(T));
+			if(getDeviceBufferData()) {
+				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}
-		void Update(const Container<T>& src, iterator& dst) {
+		void update(const Container<T>& src, iterator& dst) {
 			std::copy(src.begin(), src.end(), dst);
-			if(GetDeviceBufferData()) {
-				GetDeviceBufferData()->Update(&elements_[0], 
+			if(getDeviceBufferData()) {
+				getDeviceBufferData()->update(&elements_[0], 
 					std::distance(elements_.begin(), dst), 
 					std::distance(src.begin(), src.end()) * sizeof(T));
 			}
 		}
-		void Update(Container<T>* values) {
+		void update(Container<T>* values) {
 			elements_.swap(*values);
-			if(GetDeviceBufferData()) {
-				GetDeviceBufferData()->Update(&elements_[0], 0, elements_.size() * sizeof(T));
+			if(getDeviceBufferData()) {
+				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}
 		size_t size() const { 
 			return elements_.size();
 		}
-		void Bind() {
+		void bind() {
 			ASSERT_LOG(GetDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
-			GetDeviceBufferData()->Bind();
+			getDeviceBufferData()->bind();
 		}		
-		void Unbind() {
+		void unbind() {
 			ASSERT_LOG(GetDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
-			GetDeviceBufferData()->Unbind();
+			getDeviceBufferData()->unbind();
 		}
 		const_iterator begin() const {
 			return elements_.begin();
@@ -259,16 +264,16 @@ namespace KRE
 		iterator end() {
 			return elements_.end();
 		}
-		void SetOffset(const_iterator& it) {
-			SetOffset(std::distance(elements_.begin(), it));
+		void setOffset(const_iterator& it) {
+			setOffset(std::distance(elements_.begin(), it));
 		}
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(Attribute);
-		void HandleAttachHardwareBuffer() override {
+		void handleAttachHardwareBuffer() override {
 			// This just makes sure that if we add any elements
 			// before an attach then they are all updated correctly.
 			if(elements_.size() > 0) {
-				GetDeviceBufferData()->Update(&elements_[0], 0, elements_.size() * sizeof(T));
+				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}
 		Container<T> elements_;
@@ -298,13 +303,13 @@ namespace KRE
 		explicit AttributeSet(bool indexed, bool instanced);
 		virtual ~AttributeSet();
 
-		void SetDrawMode(DrawMode dm);
-		DrawMode GetDrawMode() { return draw_mode_; }
+		void setDrawMode(DrawMode dm);
+		DrawMode getDrawMode() { return draw_mode_; }
 
-		bool IsIndexed() const { return indexed_draw_; }
-		bool IsInstanced() const { return instanced_draw_; }
-		IndexType GetIndexType() const { return index_type_; }
-		virtual const void* GetIndexArray() const { 
+		bool isIndexed() const { return indexed_draw_; }
+		bool isInstanced() const { return instanced_draw_; }
+		IndexType getIndexType() const { return index_type_; }
+		virtual const void* getIndexArray() const { 
 			switch(index_type_) {
 			case IndexType::INDEX_NONE:		break;
 			case IndexType::INDEX_UCHAR:	return &index8_[0];
@@ -313,7 +318,7 @@ namespace KRE
 			}
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		};
-		size_t GetTotalArraySize() const {
+		size_t getTotalArraySize() const {
 			switch(index_type_) {
 			case IndexType::INDEX_NONE:		break;
 			case IndexType::INDEX_UCHAR:	return index8_.size() * sizeof(uint8_t);
@@ -322,29 +327,29 @@ namespace KRE
 			}
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		}
-		void SetCount(size_t count) { count_= count; }
-		size_t GetCount() const { return count_; }
-		void SetInstanceCount(size_t instance_count) { instance_count_ = instance_count; }
-		size_t GetInstanceCount() const { return instance_count_; }
+		void setCount(size_t count) { count_= count; }
+		size_t getCount() const { return count_; }
+		void setInstanceCount(size_t instance_count) { instance_count_ = instance_count; }
+		size_t getInstanceCount() const { return instance_count_; }
 
-		void UpdateIndicies(const std::vector<uint8_t>& value);
-		void UpdateIndicies(const std::vector<uint16_t>& value);
-		void UpdateIndicies(const std::vector<uint32_t>& value);
-		void UpdateIndicies(std::vector<uint8_t>* value);
-		void UpdateIndicies(std::vector<uint16_t>* value);
-		void UpdateIndicies(std::vector<uint32_t>* value);
+		void updateIndicies(const std::vector<uint8_t>& value);
+		void updateIndicies(const std::vector<uint16_t>& value);
+		void updateIndicies(const std::vector<uint32_t>& value);
+		void updateIndicies(std::vector<uint8_t>* value);
+		void updateIndicies(std::vector<uint16_t>* value);
+		void updateIndicies(std::vector<uint32_t>* value);
 
-		void AddAttribute(const AttributeBasePtr& attrib);
+		void addAttribute(const AttributeBasePtr& attrib);
 
-		virtual void BindIndex() {};
-		virtual void UnbindIndex() {};
+		virtual void bindIndex() {};
+		virtual void unbindIndex() {};
 
-		void SetOffset(ptrdiff_t offset) { offset_ = offset; }
-		ptrdiff_t GetOffset() const { return offset_; }
+		void setOffset(ptrdiff_t offset) { offset_ = offset; }
+		ptrdiff_t getOffset() const { return offset_; }
 
-		virtual bool IsHardwareBacked() const { return false; }
+		virtual bool isHardwareBacked() const { return false; }
 
-		std::vector<AttributeBasePtr>& GetAttributes() { return attributes_; }
+		std::vector<AttributeBasePtr>& getAttributes() { return attributes_; }
 
 		const BlendEquation& getBlendEquation() const { return blend_eqn_; }
 		void setBlendEquation(const BlendEquation& eqn) { blend_eqn_ = eqn; }
@@ -356,18 +361,18 @@ namespace KRE
 		ColorPtr getColor() const { return color_; }
 		void setColor(const Color& color) { color_.reset(new Color(color)); }
 	protected:
-		const void* GetIndexData() const { 
+		const void* getIndexData() const { 
 			switch(index_type_) {
-			case IndexType::INDEX_NONE:		break;
-			case IndexType::INDEX_UCHAR:	return &index8_[0];
-			case IndexType::INDEX_USHORT:	return &index16_[0];
-			case IndexType::INDEX_ULONG:	return &index32_[0];
+				case IndexType::INDEX_NONE:		break;
+				case IndexType::INDEX_UCHAR:	return &index8_[0];
+				case IndexType::INDEX_USHORT:	return &index16_[0];
+				case IndexType::INDEX_ULONG:	return &index32_[0];
 			}
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		};
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(AttributeSet);
-		virtual void HandleIndexUpdate() {}
+		virtual void handleIndexUpdate() {}
 		DrawMode draw_mode_;
 		bool indexed_draw_;
 		bool instanced_draw_;

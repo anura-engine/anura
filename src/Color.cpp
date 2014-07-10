@@ -393,6 +393,8 @@ namespace KRE
 
 	variant Color::write() const
 	{
+		// XXX we should store information on how the Color value was given to us, if it was
+		// a variant, then output in same format.
 		std::vector<variant> v;
 		v.reserve(4);
 		v.push_back(variant(r()));

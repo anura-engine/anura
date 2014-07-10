@@ -230,10 +230,10 @@ namespace Geometry
 	{
 		std::vector<variant> v;
 		v.reserve(4);
-		v.push_back(variant(x()));
-		v.push_back(variant(y()));
-		v.push_back(variant(x2()-1));
-		v.push_back(variant(y2()-1));
+		v.emplace_back(x());
+		v.emplace_back(y());
+		v.emplace_back(x2()-1);
+		v.emplace_back(y2()-1);
 		return variant(&v);
 	}
 
@@ -242,8 +242,8 @@ namespace Geometry
 	{
 		std::vector<variant> v;
 		v.reserve(2);
-		v.push_back(variant(x()));
-		v.push_back(variant(y()));
+		v.emplace_back(x);
+		v.emplace_back(y);
 		return variant(&v);
 	}
 
