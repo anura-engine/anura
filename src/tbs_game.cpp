@@ -328,7 +328,7 @@ void game::send_notify(const std::string& msg, int nplayer)
 	queue_message(result.build(), nplayer);
 }
 
-game::player::player()
+game::player::player() : confirmed_state_id(-1)
 {
 }
 
@@ -444,9 +444,14 @@ void game::process()
 	}
 
 	if(started_) {
+		const int starting_state_id = state_id_;
 		static const std::string ProcessStr = "process";
 		handle_event(ProcessStr);
 		++cycle_;
+
+		if(state_id_ != starting_state_id) {
+			send_game_state();
+		}
 	}
 }
 
@@ -458,6 +463,8 @@ variant game::get_value(const std::string& key) const
 		return doc_;
 	} else if(key == "state_id") {
 		return variant(state_id_);
+	} else if(key == "cycle") {
+		return variant(cycle_);
 	} else if(key == "bots") {
 		std::vector<variant> v;
 		for(int n = 0; n != bots_.size(); ++n) {
@@ -537,8 +544,19 @@ void game::handle_message(int nplayer, const variant& msg)
 	} else if(type == "request_updates") {
 		if(msg.has_key("state_id") && !doc_.is_null()) {
 			const variant state_id = msg["state_id"];
-			if(state_id.as_int() != state_id_) {
+			if(state_id.as_int() != state_id_ && nplayer >= 0) {
 				send_game_state(nplayer);
+			} else if(state_id.as_int() == state_id_ && nplayer >= 0 && nplayer < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
+				players_[nplayer].confirmed_state_id = state_id_;
+
+				std::ostringstream s;
+				s << "{ type: \"confirm_sync\", player: " << nplayer << ", state_id: " << state_id_ << " }";
+				std::string msg = s.str();
+				for(int n = 0; n != players_.size(); ++n) {
+					if(n != nplayer && players_[n].is_human) {
+						queue_message(msg, nplayer);
+					}
+				}
 			}
 		}
 		return;
