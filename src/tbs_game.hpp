@@ -77,6 +77,7 @@ public:
 		std::string name;
 		int side;
 		bool is_human;
+		int confirmed_state_id;
 	};
 
 	int get_player_index(const std::string& nick) const;
