@@ -47,6 +47,8 @@ public:
 	// with the document on completion (null if no document is found).
 	virtual void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds=0) = 0;
 
+	virtual void remove(const std::string& key) = 0;
+
 private:
 	DECLARE_CALLABLE(db_client);
 };

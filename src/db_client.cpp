@@ -26,6 +26,22 @@ BEGIN_DEFINE_FN(read_modify_write, "(string, function(any)->any) ->commands")
 	return v;
 #endif
 END_DEFINE_FN
+
+BEGIN_DEFINE_FN(remove, "(string) ->commands")
+#ifndef USE_DB_CLIENT
+	return variant();
+#else
+	std::string key = FN_ARG(0).as_string();
+	db_client* cli = const_cast<db_client*>(&obj);
+	variant v(new game_logic::fn_command_callable([=]() {
+		cli->remove(key);
+	}
+	));
+
+	return v;
+	
+#endif
+END_DEFINE_FN
 BEGIN_DEFINE_FN(get, "(string) ->any")
 #ifndef USE_DB_CLIENT
 	return variant();
@@ -88,6 +104,8 @@ void store_callback(lcb_t instance, const void *cookie,
 void get_callback(lcb_t instance, const void *cookie, lcb_error_t error,
                   const lcb_get_resp_t *item);
 
+void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, const lcb_remove_resp_t* resp);
+
 void timer_callback(lcb_timer_t timer, lcb_t instance, const void* cookie);
 
 struct PutInfo {
@@ -126,6 +144,7 @@ public:
 		ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(NULL, err));
 
 		lcb_set_get_callback(instance_, get_callback);
+		lcb_set_remove_callback(instance_, remove_callback);
 		lcb_set_store_callback(instance_, store_callback);
 
 		lcb_wait(instance_);
@@ -168,6 +187,28 @@ public:
 
 		lcb_error_t err = lcb_store(instance_, cookie, 1, commands);
 		ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(NULL, err));
+	}
+
+	virtual void remove(const std::string& key)
+	{
+		lcb_remove_cmd_t cmd;
+		memset(&cmd, 0, sizeof(cmd));
+
+		cmd.v.v0.key = key.c_str();
+		cmd.v.v0.nkey = key.size();
+		
+		const lcb_remove_cmd_t* commands[1];
+		commands[0] = &cmd;
+
+		++outstanding_requests_;
+		int* poutstanding = &outstanding_requests_;
+
+		PutInfo* cookie = new PutInfo;
+		cookie->on_done = [=]() { --*poutstanding; };
+		cookie->on_error = [=]() { --*poutstanding; };
+
+		lcb_error_t err = lcb_remove(instance_, cookie, 1, commands);
+		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(NULL, err));
 	}
 
 	void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds)
@@ -231,6 +272,8 @@ void store_callback(lcb_t instance, const void *cookie,
 		if(info->on_done) {
 			info->on_done();
 		}
+
+		delete info;
 	}
 }
 
@@ -249,6 +292,20 @@ void get_callback(lcb_t instance, const void *cookie, lcb_error_t err,
 		if(info->on_done) {
 			info->on_done(v);
 		}
+
+		delete info;
+	}
+}
+
+void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, const lcb_remove_resp_t* resp)
+{
+	if(cookie) {
+		const PutInfo* info = reinterpret_cast<const PutInfo*>(cookie);
+		if(info->on_done) {
+			info->on_done();
+		}
+
+		delete info;
 	}
 }
 
