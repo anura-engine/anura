@@ -769,7 +769,6 @@
     <ClCompile Include="..\..\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
     <ClCompile Include="..\..\src\color_picker.cpp" />
-    <ClCompile Include="..\..\src\fbo_scene.cpp" />
     <ClCompile Include="..\..\src\formula_callable.cpp" />
     <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />

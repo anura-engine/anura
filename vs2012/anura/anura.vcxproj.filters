@@ -974,9 +974,6 @@
     <ClCompile Include="..\..\src\variant_type.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\fbo_scene.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\formula_callable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

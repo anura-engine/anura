@@ -427,7 +427,7 @@ namespace gui
 			"R:", "G:", "B:", "H:", "S:", "V:", "A:"
 		};
 
-		g_.reset(new grid(3));
+		g_.reset(new Grid(3));
 		g_->setLoc(5, color_box_length_ + wheel_radius_*2 + 40);
 		for(int n = 0; n != 7; ++n) {
 			labels.push_back(new Label(label_text[n], KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"));
@@ -436,9 +436,9 @@ namespace gui
 			t_.back()->setOnUserChangeHandler(std::bind(&ColorPicker::textChange, this, n));
 			t_.back()->setOnTabHandler(std::bind(&ColorPicker::textTabPressed, this, n));
 
-			g_->add_col(labels.back());
-			g_->add_col(s_.back());
-			g_->add_col(t_.back());
+			g_->addCol(labels.back());
+			g_->addCol(s_.back());
+			g_->addCol(t_.back());
 		}
 		palette_offset_y_ = g_->y() + g_->height() + 10;
 

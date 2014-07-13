@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #ifndef NO_EDITOR
 #include <map>
 
@@ -22,7 +29,6 @@
 #include "editor.hpp"
 #include "editor_formula_functions.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "json_parser.hpp"
@@ -30,311 +36,321 @@
 #include "level_solid_map.hpp"
 #include "variant_utils.hpp"
 
-namespace editor_script {
-
-using namespace game_logic;
-
-namespace {
-
-class editor_command : public FormulaCallable {
-public:
-	virtual ~editor_command() {}
-	virtual void execute(editor& e) = 0;
-private:
-	variant getValue(const std::string& key) const {
-		return variant();
-	}
-};
-
-class add_object_command : public editor_command {
-	std::string id_;
-	int x_, y_;
-	bool facing_;
-public:
-	add_object_command(const std::string& id, int x, int y, bool facing)
-	  : id_(id), x_(x), y_(y), facing_(facing)
-	{}
-private:
-	void execute(editor& e) {
-		custom_object* obj = new custom_object(id_, x_, y_, facing_);
-		obj->setLevel(e.get_level());
-		e.get_level().add_character(obj);
-	}
-};
-
-class add_object_function : public function_expression {
-public:
-	explicit add_object_function(const args_list& args)
-	  : function_expression("add_object", args, 4, 4)
-	{}
-private:
-	variant execute(const FormulaCallable& variables) const {
-		return variant(new add_object_command(
-		        args()[0]->evaluate(variables).as_string(),
-		        args()[1]->evaluate(variables).as_int(),
-		        args()[2]->evaluate(variables).as_int(),
-		        args()[3]->evaluate(variables).as_bool()));
-	}
-};
-
-class remove_tile_rect_command : public editor_command {
-	std::string tile_id_;
-	int x1_, y1_, x2_, y2_;
-public:
-	remove_tile_rect_command(const std::string& tile_id, int x1, int y1, int x2, int y2)
-	  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
-	{}
-
-	void execute(editor& e) {
-		e.add_tile_rect(e.get_tile_zorder(tile_id_), "", x1_, y1_, x2_, y2_);
-	}
-};
-
-class remove_tiles_function : public function_expression {
-public:
-	explicit remove_tiles_function(const args_list& args)
-	  : function_expression("remove_tiles", args, 3, 5)
-	{}
-private:
-	variant execute(const FormulaCallable& variables) const {
-		const std::string tile_id = args()[0]->evaluate(variables).as_string();
-		const int x1 = args()[1]->evaluate(variables).as_int();
-		const int y1 = args()[2]->evaluate(variables).as_int();
-		const int x2 = args().size() > 3 ? args()[3]->evaluate(variables).as_int() : x1;
-		const int y2 = args().size() > 4 ? args()[4]->evaluate(variables).as_int() : y1;
-		return variant(new remove_tile_rect_command(tile_id, x1*TileSize, y1*TileSize, x2*TileSize, y2*TileSize));
-	}
-};
-
-class add_tile_rect_command : public editor_command {
-	std::string tile_id_;
-	int x1_, y1_, x2_, y2_;
-public:
-	add_tile_rect_command(const std::string& tile_id, int x1, int y1, int x2, int y2)
-	  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
-	{}
-
-	void execute(editor& e) {
-		e.add_tile_rect(e.get_tile_zorder(tile_id_), tile_id_, x1_, y1_, x2_, y2_);
-	}
-};
-
-class add_tiles_function : public function_expression {
-public:
-	explicit add_tiles_function(const args_list& args)
-	  : function_expression("add_tiles", args, 3, 5)
-	{}
-private:
-	variant execute(const FormulaCallable& variables) const {
-		const std::string tile_id = args()[0]->evaluate(variables).as_string();
-		const int x1 = args()[1]->evaluate(variables).as_int();
-		const int y1 = args()[2]->evaluate(variables).as_int();
-		const int x2 = args().size() > 3 ? args()[3]->evaluate(variables).as_int() : x1;
-		const int y2 = args().size() > 4 ? args()[4]->evaluate(variables).as_int() : y1;
-		return variant(new add_tile_rect_command(tile_id, x1*TileSize, y1*TileSize, x2*TileSize, y2*TileSize));
-	}
-};
-
-class debug_command : public editor_command
+namespace editor_script 
 {
-public:
-	explicit debug_command(const std::string& str) : str_(str)
-	{}
-	virtual void execute(editor& e) {
-		debug_console::addMessage(str_);
-	}
-private:
-	std::string str_;
-};
+	using namespace game_logic;
 
-class debug_function : public function_expression {
-public:
-	explicit debug_function(const args_list& args)
-	  : function_expression("debug", args, 1, -1) {
-	}
-private:
-	variant execute(const FormulaCallable& variables) const {
-		std::string str;
-		for(int n = 0; n != args().size(); ++n) {
-			if(n) str += " ";
-			str += args()[n]->evaluate(variables).to_debug_string();
-		}
-
-		fprintf(stderr, "DEBUG FUNCTION: %s\n", str.c_str());
-
-		return variant(new debug_command(str));
-	}
-};
-
-class editor_command_FunctionSymbolTable : public FunctionSymbolTable
-{
-public:
-	static editor_command_FunctionSymbolTable& instance() {
-		static editor_command_FunctionSymbolTable result;
-		return result;
-	}
-
-	expression_ptr create_function(
-	                           const std::string& fn,
-	                           const std::vector<expression_ptr>& args,
-							   ConstFormulaCallableDefinitionPtr callable_def) const
+	namespace 
 	{
-		if(fn == "remove_tiles") {
-			return expression_ptr(new remove_tiles_function(args));
-		} else if(fn == "add_tiles") {
-			return expression_ptr(new add_tiles_function(args));
-		} else if(fn == "add_object") {
-			return expression_ptr(new add_object_function(args));
-		} else if(fn == "debug") {
-			return expression_ptr(new debug_function(args));
-		} else {
-			return FunctionSymbolTable::create_function(fn, args, callable_def);
-		}
-	}
-};
+		class EditorCommand : public FormulaCallable 
+		{
+		public:
+			virtual ~EditorCommand() {}
+			virtual void execute(editor& e) = 0;
+		private:
+			variant getValue(const std::string& key) const {
+				return variant();
+			}
+		};
 
-void executeCommand(variant cmd, editor& e) {
-	if(cmd.is_list()) {
-		for(int n = 0; n != cmd.num_elements(); ++n) {
-			executeCommand(cmd[n], e);
-		}
-	} else if(cmd.is_callable()) {
-		editor_command* command = cmd.try_convert<editor_command>();
-		if(command) {
-			command->execute(e);
-		}
-	}
-}
+		class AddObjectCommand : public EditorCommand 
+		{
+			std::string id_;
+			int x_, y_;
+			bool facing_;
+		public:
+			AddObjectCommand(const std::string& id, int x, int y, bool facing)
+			  : id_(id), x_(x), y_(y), facing_(facing)
+			{}
+		private:
+			void execute(editor& e) {
+				CustomObject* obj = new CustomObject(id_, x_, y_, facing_);
+				obj->setLevel(e.get_level());
+				e.get_level().add_character(obj);
+			}
+		};
 
-class tile_callable : public FormulaCallable {
-public:
-	tile_callable(editor& e, int x, int y)
-	  : editor_(e), x_(x), y_(y)
-	{}
+		class AddObjectFunction : public function_expression 
+		{
+		public:
+			explicit AddObjectFunction(const args_list& args)
+			  : function_expression("add_object", args, 4, 4)
+			{}
+		private:
+			variant execute(const FormulaCallable& variables) const {
+				return variant(new AddObjectCommand(
+						args()[0]->evaluate(variables).as_string(),
+						args()[1]->evaluate(variables).as_int(),
+						args()[2]->evaluate(variables).as_int(),
+						args()[3]->evaluate(variables).as_bool()));
+			}
+		};
 
-private:
-	variant getValue(const std::string& key) const {
-		if(key == "x") {
-			return variant(x_);
-		} else if(key == "y") {
-			return variant(y_);
-		} else if(key == "tiles") {
-			return get_tiles(x_, y_);
-		} else if(key == "up") {
-			return variant(new tile_callable(editor_, x_, y_-1));
-		} else if(key == "down") {
-			return variant(new tile_callable(editor_, x_, y_+1));
-		} else if(key == "left") {
-			return variant(new tile_callable(editor_, x_-1, y_));
-		} else if(key == "right") {
-			return variant(new tile_callable(editor_, x_+1, y_));
-		} else {
-			return variant();
-		}
-	}
+		class RemoveTileRectCommand : public EditorCommand 
+		{
+			std::string tile_id_;
+			int x1_, y1_, x2_, y2_;
+		public:
+			RemoveTileRectCommand(const std::string& tile_id, int x1, int y1, int x2, int y2)
+			  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
+			{}
 
-	variant get_tiles(int x, int y) const {
-		std::vector<variant> result;
+			void execute(editor& e) {
+				e.add_tile_rect(e.get_tile_zorder(tile_id_), "", x1_, y1_, x2_, y2_);
+			}
+		};
 
-		std::map<int, std::vector<std::string> > m;
-		editor_.get_level().getAll_tiles_rect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
-		for(std::map<int, std::vector<std::string> >::const_iterator i = m.begin(); i != m.end(); ++i) {
-			foreach(const std::string& s, i->second) {
-				result.push_back(variant(s));
+		class RemoveTilesFunction : public function_expression 
+		{
+		public:
+			explicit RemoveTilesFunction(const args_list& args)
+			  : function_expression("remove_tiles", args, 3, 5)
+			{}
+		private:
+			variant execute(const FormulaCallable& variables) const {
+				const std::string tile_id = args()[0]->evaluate(variables).as_string();
+				const int x1 = args()[1]->evaluate(variables).as_int();
+				const int y1 = args()[2]->evaluate(variables).as_int();
+				const int x2 = args().size() > 3 ? args()[3]->evaluate(variables).as_int() : x1;
+				const int y2 = args().size() > 4 ? args()[4]->evaluate(variables).as_int() : y1;
+				return variant(new RemoveTileRectCommand(tile_id, x1*TileSize, y1*TileSize, x2*TileSize, y2*TileSize));
+			}
+		};
+
+		class AddTileRectCommand : public EditorCommand 
+		{
+			std::string tile_id_;
+			int x1_, y1_, x2_, y2_;
+		public:
+			AddTileRectCommand(const std::string& tile_id, int x1, int y1, int x2, int y2)
+			  : tile_id_(tile_id), x1_(x1), y1_(y1), x2_(x2), y2_(y2)
+			{}
+
+			void execute(editor& e) {
+				e.add_tile_rect(e.get_tile_zorder(tile_id_), tile_id_, x1_, y1_, x2_, y2_);
+			}
+		};
+
+		class AddTilesFunction : public function_expression {
+		public:
+			explicit AddTilesFunction(const args_list& args)
+			  : function_expression("add_tiles", args, 3, 5)
+			{}
+		private:
+			variant execute(const FormulaCallable& variables) const {
+				const std::string tile_id = args()[0]->evaluate(variables).as_string();
+				const int x1 = args()[1]->evaluate(variables).as_int();
+				const int y1 = args()[2]->evaluate(variables).as_int();
+				const int x2 = args().size() > 3 ? args()[3]->evaluate(variables).as_int() : x1;
+				const int y2 = args().size() > 4 ? args()[4]->evaluate(variables).as_int() : y1;
+				return variant(new AddTileRectCommand(tile_id, x1*TileSize, y1*TileSize, x2*TileSize, y2*TileSize));
+			}
+		};
+
+		class DebugCommand : public EditorCommand
+		{
+		public:
+			explicit DebugCommand(const std::string& str) : str_(str)
+			{}
+			virtual void execute(editor& e) {
+				debug_console::addMessage(str_);
+			}
+		private:
+			std::string str_;
+		};
+
+		class DebugFunction : public function_expression 
+		{
+		public:
+			explicit DebugFunction(const args_list& args)
+			  : function_expression("debug", args, 1, -1) {
+			}
+		private:
+			variant execute(const FormulaCallable& variables) const {
+				std::string str;
+				for(int n = 0; n != args().size(); ++n) {
+					if(n) str += " ";
+					str += args()[n]->evaluate(variables).to_debug_string();
+				}
+
+				LOG_INFO("DEBUG FUNCTION: " << str);
+				return variant(new DebugCommand(str));
+			}
+		};
+
+		class EditorCommandFunctionSymbolTable : public FunctionSymbolTable
+		{
+		public:
+			static EditorCommandFunctionSymbolTable& instance() {
+				static EditorCommandFunctionSymbolTable result;
+				return result;
+			}
+
+			expression_ptr create_function(
+									   const std::string& fn,
+									   const std::vector<expression_ptr>& args,
+									   ConstFormulaCallableDefinitionPtr callable_def) const
+			{
+				if(fn == "remove_tiles") {
+					return expression_ptr(new RemoveTilesFunction(args));
+				} else if(fn == "add_tiles") {
+					return expression_ptr(new AddTilesFunction(args));
+				} else if(fn == "add_object") {
+					return expression_ptr(new AddObjectFunction(args));
+				} else if(fn == "debug") {
+					return expression_ptr(new DebugFunction(args));
+				} else {
+					return FunctionSymbolTable::create_function(fn, args, callable_def);
+				}
+			}
+		};
+
+		void executeCommand(variant cmd, editor& e) {
+			if(cmd.is_list()) {
+				for(int n = 0; n != cmd.num_elements(); ++n) {
+					executeCommand(cmd[n], e);
+				}
+			} else if(cmd.is_callable()) {
+				EditorCommand* command = cmd.try_convert<EditorCommand>();
+				if(command) {
+					command->execute(e);
+				}
 			}
 		}
 
-		return variant(&result);
-	}
+		class TileCallable : public FormulaCallable 
+		{
+		public:
+			TileCallable(editor& e, int x, int y)
+			  : editor_(e), 
+			  x_(x), 
+			  y_(y)
+			{}
 
-	editor& editor_;
-	int x_, y_;
-};
+		private:
+			variant getValue(const std::string& key) const {
+				if(key == "x") {
+					return variant(x_);
+				} else if(key == "y") {
+					return variant(y_);
+				} else if(key == "tiles") {
+					return get_tiles(x_, y_);
+				} else if(key == "up") {
+					return variant(new TileCallable(editor_, x_, y_-1));
+				} else if(key == "down") {
+					return variant(new TileCallable(editor_, x_, y_+1));
+				} else if(key == "left") {
+					return variant(new TileCallable(editor_, x_-1, y_));
+				} else if(key == "right") {
+					return variant(new TileCallable(editor_, x_+1, y_));
+				} else {
+					return variant();
+				}
+			}
 
-class editor_command_callable : public FormulaCallable {
-public:
-	explicit editor_command_callable(editor& e) : editor_(e)
-	{}
-private:
-	variant getValue(const std::string& key) const {
-		if(key == "cells") {
-			std::vector<variant> result;
+			variant get_tiles(int x, int y) const {
+				std::vector<variant> result;
 
-			const editor::tile_selection& selection = editor_.selection();
-			if(selection.empty()) {
-				const rect& dim = editor_.get_level().boundaries();
-				for(int y = dim.y() - dim.y()%TileSize; y < dim.y2(); y += TileSize) {
-					for(int x = dim.x() - dim.x()%TileSize; x < dim.x2(); x += TileSize) {
-						result.push_back(variant(new tile_callable(editor_, x/TileSize, y/TileSize)));
+				std::map<int, std::vector<std::string> > m;
+				editor_.get_level().getAll_tiles_rect(x*TileSize, y*TileSize, x*TileSize, y*TileSize, m);
+				for(auto i : m) {
+					for(const std::string& s : i.second) {
+						result.push_back(variant(s));
 					}
 				}
-			} else {
-				foreach(const point& p, selection.tiles) {
-					result.push_back(variant(new tile_callable(editor_, p.x, p.y)));
-				}
+
+				return variant(&result);
 			}
 
-			return variant(&result);
-		} else {
-			return variant();
+			editor& editor_;
+			int x_, y_;
+		};
+
+		class EditorCommandCallable : public FormulaCallable 
+		{
+		public:
+			explicit EditorCommandCallable(editor& e) : editor_(e)
+			{}
+		private:
+			variant getValue(const std::string& key) const {
+				if(key == "cells") {
+					std::vector<variant> result;
+
+					const editor::tile_selection& selection = editor_.selection();
+					if(selection.empty()) {
+						const rect& dim = editor_.get_level().boundaries();
+						for(int y = dim.y() - dim.y()%TileSize; y < dim.y2(); y += TileSize) {
+							for(int x = dim.x() - dim.x()%TileSize; x < dim.x2(); x += TileSize) {
+								result.push_back(variant(new TileCallable(editor_, x/TileSize, y/TileSize)));
+							}
+						}
+					} else {
+						for(const point& p : selection.tiles) {
+							result.push_back(variant(new TileCallable(editor_, p.x, p.y)));
+						}
+					}
+
+					return variant(&result);
+				} else {
+					return variant();
+				}
+			}
+			editor& editor_;
+		};
+
+
+		std::vector<info> scripts_info;
+		std::map<std::string, const_formula_ptr> scripts;
+
+		void load_scripts()
+		{
+			if(scripts_info.empty() == false) {
+				return;
+			}
+
+			if(!sys::file_exists("data/editor_scripts.cfg")) {
+				return;
+			}
+
+			variant node = json::parse_from_file("data/editor_scripts.cfg");
+
+			//load any functions defined here.
+			for(variant function_node : node["function"].as_list()) {
+			}
+
+			for(variant script_node : node["script"].as_list()) {
+				const std::string& id = script_node["id"].as_string();
+				info script = { id };
+				scripts_info.push_back(script);
+				scripts[id].reset(new formula(script_node["script"], &EditorCommandFunctionSymbolTable::instance()));
+			}
 		}
 	}
-	editor& editor_;
-};
 
-
-std::vector<info> scripts_info;
-std::map<std::string, const_formula_ptr> scripts;
-
-void load_scripts()
-{
-	if(scripts_info.empty() == false) {
-		return;
+	std::vector<info> all_scripts() 
+	{
+		load_scripts();
+		return scripts_info;
 	}
 
-	if(!sys::file_exists("data/editor_scripts.cfg")) {
-		return;
-	}
+	void execute(const std::string& id, editor& e)
+	{
+		load_scripts();
 
-	variant node = json::parse_from_file("data/editor_scripts.cfg");
+		std::map<std::string, const_formula_ptr>::const_iterator itor = scripts.find(id);
+		if(itor == scripts.end() || !itor->second) {
+			return;
+		}
 
-	//load any functions defined here.
-	foreach(variant function_node, node["function"].as_list()) {
-	}
+		FormulaCallablePtr callable(new EditorCommandCallable(e));
+		const variant cmd = itor->second->execute(*callable);
 
-	foreach(variant script_node, node["script"].as_list()) {
-		const std::string& id = script_node["id"].as_string();
-		info script = { id };
-		scripts_info.push_back(script);
-		scripts[id].reset(new formula(script_node["script"], &editor_command_FunctionSymbolTable::instance()));
+		//execute the command, making sure the editor allows the user to undo the
+		//entire script in one go.
+		e.begin_command_group();
+		executeCommand(cmd, e);
+		e.end_command_group();
 	}
 }
 
-}
-
-std::vector<info> all_scripts() {
-	load_scripts();
-	return scripts_info;
-}
-
-void execute(const std::string& id, editor& e)
-{
-	load_scripts();
-
-	std::map<std::string, const_formula_ptr>::const_iterator itor = scripts.find(id);
-	if(itor == scripts.end() || !itor->second) {
-		return;
-	}
-
-	FormulaCallablePtr callable(new editor_command_callable(e));
-	const variant cmd = itor->second->execute(*callable);
-
-	//execute the command, making sure the editor allows the user to undo the
-	//entire script in one go.
-	e.begin_command_group();
-	executeCommand(cmd, e);
-	e.end_command_group();
-}
-
-}
 #endif // NO_EDITOR
