@@ -64,8 +64,8 @@ void show_language_dialog()
 {
 	using namespace gui;
 	dialog d(0, 0, 0, 0);
-	d.set_background_frame("empty_window");
-	d.set_draw_background_fn(doDraw_scene);
+	d.setBackgroundFrame("empty_window");
+	d.setDrawBackgroundFn(doDraw_scene);
 
 	const int button_width = 300;
 	const int button_height = 50;

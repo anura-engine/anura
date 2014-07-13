@@ -59,7 +59,7 @@ namespace gui
 
 	void WidgetSettingsDialog::init()
 	{
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 	
 		grid_ptr g = grid_ptr(new grid(2));
 		g->set_max_height(height()-50);
@@ -152,11 +152,11 @@ namespace gui
 				cp->setPrimaryColor(graphics::color(widget_->tooltipColor()));
 
 				grid_ptr gg = new grid(1);
-				gg->allow_selection();
+				gg->allowSelection();
 				gg->swallow_clicks();
-				gg->set_show_background(true);
+				gg->setShowBackground(true);
 				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){removeWidget(gg); init();}});
+				gg->registerSelectionCallback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){removeWidget(gg); init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
 				addWidget(gg, x()-mx-100, my);

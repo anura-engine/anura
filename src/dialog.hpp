@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "widget_fwd.hpp"
+#include "widget.hpp"
 
 namespace gui 
 {
@@ -47,7 +47,7 @@ namespace gui
 		Dialog& addWidget(WidgetPtr w, int x, int y,
 						MOVE_DIRECTION dir=MOVE_DOWN);
 		void removeWidget(WidgetPtr w);
-		void replace_widget(WidgetPtr w_old, WidgetPtr w_new);
+		void replaceWidget(WidgetPtr w_old, WidgetPtr w_new);
 		void clear();
 		int padding() const { return padding_; }
 		void setPadding(int pad) { padding_ = pad; }
@@ -57,49 +57,49 @@ namespace gui
 		bool closed() { return !opened_; }
 		bool cancelled() { return cancelled_; }
 		void setCursor(int x, int y) { add_x_ = x; add_y_ = y; }
-		int cursor_x() const { return add_x_; }
-		int cursor_y() const { return add_y_; }
+		int getCursorX() const { return add_x_; }
+		int getCursorY() const { return add_y_; }
 		bool processEvent(const SDL_Event& e, bool claimed);
 	
-		void set_on_quit(std::function<void ()> onquit) { on_quit_ = onquit; }
+		void setOnQuit(std::function<void ()> onquit) { on_quit_ = onquit; }
 
-		void set_background_frame(const std::string& id) { background_FramedGuiElement_ = id; }
-		void set_draw_background_fn(std::function<void()> fn) { draw_background_fn_ = fn; }
-		void set_upscale_frame(bool upscale=true) { upscale_frame_ = upscale; }
+		void setBackgroundFrame(const std::string& id) { background_FramedGuiElement_ = id; }
+		void setDrawBackgroundFn(std::function<void()> fn) { draw_background_fn_ = fn; }
+		void setUpscaleFrame(bool upscale=true) { upscale_frame_ = upscale; }
 
 		virtual bool hasFocus() const;
-		void set_process_hook(std::function<void()> fn) { on_process_ = fn; }
+		void setProcessHook(std::function<void()> fn) { on_process_ = fn; }
 		static void draw_last_scene();
 		virtual WidgetPtr getWidgetById(const std::string& id);
 		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 
-		void prepare_draw();
-		void complete_draw();
+		void prepareDraw();
+		void completeDraw();
 
 		std::vector<WidgetPtr> getChildren() const;
 
 		//add standardized okay/cancel buttons in the bottom right corner.
-		void add_ok_and_cancel_buttons();
+		void addOkAndCancelButtons();
 
 	protected:
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		virtual bool handleEventChildren(const SDL_Event& event, bool claimed);
 		virtual void handleDraw() const override;
 		virtual void handleDrawChildren() const;
-		void set_clear_bg(bool clear) { clear_bg_ = clear; };
-		void set_clear_bg_amount(int amount) { clear_bg_ = amount; }
-		int clear_bg() const { return clear_bg_; };
+		void setClearBg(bool clear) { clear_bg_ = clear; };
+		void setClearBgAmount(int amount) { clear_bg_ = amount; }
+		int clearBg() const { return clear_bg_; };
 
-		bool pump_events();
+		bool pumpEvents();
 
 		virtual void handleProcess() override;
-		void recalculate_dimensions();
+		void recalculateDimensions();
 	private:
-		DECLARE_CALLABLE(dialog);
+		DECLARE_CALLABLE(Dialog);
 
-		void do_up_event();
-		void do_down_event();
-		void do_select_event();
+		void doUpEvent();
+		void doDownEvent();
+		void doSelectEvent();
 	
 		SortedWidgetList widgets_;
 		TabSortedWidgetList tab_widgets_;
@@ -114,8 +114,8 @@ namespace gui
 		std::function<void()> on_quit_;
 		std::function<void(bool)> on_close_;
 
-		void quit_delegate();
-		void close_delegate(bool cancelled);
+		void quitDelegate();
+		void closeDelegate(bool cancelled);
 
 		game_logic::formula_ptr ffl_on_quit_;
 		game_logic::formula_ptr ffl_on_close_;

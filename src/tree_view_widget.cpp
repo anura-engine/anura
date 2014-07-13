@@ -85,7 +85,7 @@ void tree_view_widget::init()
 	last_coords_.clear();
 	nrows_ = 0;
 	traverse(0, col_size_/2, 0, &tree_, variant(), &tree_);
-	recalculate_dimensions();
+	recalculateDimensions();
 }
 
 int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const variant& key, variant* value)
@@ -113,7 +113,7 @@ int tree_view_widget::traverse(int depth, int x, int y, variant* parent, const v
 				str = str.substr(0, max_chars-3) + "...";
 			}
 		}
-		key_label.reset(new label(str, graphics::color_white(), font_size_));
+		key_label.reset(new label(str, KRE::Color::colorWhite(), font_size_));
 		key_label->setLoc(x, y);
 		key_label->setDim(col_widths_[depth], key_label->height());
 		x += col_widths_[depth] + hpad_;
@@ -280,16 +280,16 @@ void tree_view_widget::handleDraw() const
 	glTranslatef(GLfloat(x()+2 & ~1), GLfloat(y()+2 & ~1), 0.0);
 
 	if(selected_row_ >= 0 && selected_row_ < nrows()) {
-		SDL_Rect rect = {0,row_height_*selected_row_ - yscroll(),width(),row_height_};
+		SDL_Rect rect = {0,row_height_*selected_row_ - getYscroll(),width(),row_height_};
 		const SDL_Color col = {0xFF,0x00,0x00,0x00};
 		graphics::draw_rect(rect,col,128);
 	}
 
 	if(persistent_highlight_ && highlighted_row_ >= 0 && size_t(persistent_highlight_) < nrows()) {
-		SDL_Rect rect = {0,row_height_*highlighted_row_ - yscroll(),width(),row_height_};
+		SDL_Rect rect = {0,row_height_*highlighted_row_ - getYscroll(),width(),row_height_};
 		graphics::draw_rect(rect, highlight_color_, 128);
 	}
-	glTranslatef(0, GLfloat(-yscroll() & ~1), 0.0);
+	glTranslatef(0, GLfloat(-getYscroll() & ~1), 0.0);
 
 	foreach(const WidgetPtr& w, widgets_) {
 		w->draw();
@@ -305,13 +305,13 @@ int tree_view_widget::row_at(int xpos, int ypos) const
 		return -1;
 	} else if(xpos > x()+1 && xpos < x()-1 + width() &&
 	   ypos > y()+1 && ypos < y()-1 + height()) {
-		return (ypos + yscroll() - y()-1) / row_height_;
+		return (ypos + getYscroll() - y()-1) / row_height_;
 	} else {
 		return -1;
 	}
 }
 
-void tree_view_widget::recalculate_dimensions()
+void tree_view_widget::recalculateDimensions()
 {
 	int desired_height = row_height_*nrows();
 	set_virtual_height(desired_height);
@@ -325,7 +325,7 @@ void tree_view_widget::recalculate_dimensions()
 	}
 
 	foreach(const WidgetPtr& w, widgets_) {
-		if(w->y() - yscroll() >= 0 && w->y() + w->height() - yscroll() < height()+2) {
+		if(w->y() - getYscroll() >= 0 && w->y() + w->height() - getYscroll() < height()+2) {
 			w->setVisible(true);
 		} else {
 			w->setVisible(false);
@@ -337,7 +337,7 @@ void tree_view_widget::recalculate_dimensions()
 
 void tree_view_widget::onSetYscroll(int old_value, int value)
 {
-	recalculate_dimensions();
+	recalculateDimensions();
 }
 
 
@@ -361,13 +361,13 @@ bool tree_view_widget::handleEvent(const SDL_Event& event, bool claimed)
 			point p(mx, my);
 			if(pointInRect(p, r)) {
 				if(event.wheel.y < 0 ) {
-					set_yscroll(yscroll() - 3*row_height_ < 0 ? 0 : yscroll() - 3*row_height_);
+					set_yscroll(getYscroll() - 3*row_height_ < 0 ? 0 : getYscroll() - 3*row_height_);
 					selected_row_ -= 3;
 					if(selected_row_ < 0) {
 						selected_row_ = 0;
 					}
 				} else {
-					int y3 = yscroll() + 3*row_height_;
+					int y3 = getYscroll() + 3*row_height_;
 					set_yscroll(virtual_height() - y3 < height() 
 						? virtual_height() - height()
 						: y3);
@@ -535,7 +535,7 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 
 			// Create a menu to select how to edit the item.
 			gui::grid* g = new gui::grid(1);
-			g->set_show_background(true);
+			g->setShowBackground(true);
 			g->allow_selection(true);
 			g->swallow_clicks(true);
 			g->allow_draw_highlight(true);
@@ -566,13 +566,13 @@ void tree_editor_widget::on_select(Uint8 button, int selection)
 			foreach(const std::string& str, choices) {
 				g->add_col(LabelPtr(new label(str)));
 			}
-			g->register_selection_callback(std::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
+			g->registerSelectionCallback(std::bind(&tree_editor_widget::context_menu_handler, this, selection, choices, _1));
 			int mousex, mousey;
 			input::sdl_get_mouse_state(&mousex, &mousey);
 			mousex -= x();
 			mousey -= y();
 			context_menu_.reset(g);
-			int posy = y() + row_height_ * selection - yscroll();
+			int posy = y() + row_height_ * selection - getYscroll();
 			if(posy + g->height() > y() + height()) {
 				posy = y() + height() - posy + g->height();
 			}
@@ -610,7 +610,7 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		init();
 	} else if(choices[menu_selection] == "Edit Key") {
 		gui::grid* grid = new gui::grid(1);
-		grid->set_show_background(true);
+		grid->setShowBackground(true);
 		grid->allow_selection(true);
 		grid->swallow_clicks(false);
 		grid->allow_draw_highlight(false);
@@ -622,13 +622,13 @@ void tree_editor_widget::context_menu_handler(int tree_selection, const std::vec
 		editor->setText(get_selection_key(tree_selection).as_string());
 		editor->setFocus(true);
 		grid->add_col(editor);
-		grid->register_selection_callback(std::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
+		grid->registerSelectionCallback(std::bind(&tree_editor_widget::execute_key_edit_select, this, _1));
 		int mousex, mousey;
 		input::sdl_get_mouse_state(&mousex, &mousey);
 		mousex -= x();
 		mousey -= y();
 		edit_menu_.reset(grid);
-		edit_menu_->setLoc(mousex, y() + row_height_ * tree_selection - yscroll());
+		edit_menu_->setLoc(mousex, y() + row_height_ * tree_selection - getYscroll());
 	} else if(choices[menu_selection].substr(0, 4) == "Edit") {
 		std::string choice_type = choices[menu_selection].length() > 4 ? choices[menu_selection].substr(9) : "";
 		if(choice_type == "Integer") {
@@ -725,7 +725,7 @@ void tree_editor_widget::edit_field(int row, variant* v)
 	}
 
 	gui::grid* grid = new gui::grid(1);
-	grid->set_show_background(true);
+	grid->setShowBackground(true);
 	grid->allow_selection(true);
 	grid->swallow_clicks(false);
 	grid->allow_draw_highlight(false);
@@ -756,14 +756,14 @@ void tree_editor_widget::edit_field(int row, variant* v)
 		bool_dd->setOnSelectHandler(std::bind(&tree_editor_widget::on_bool_change, this, v, _1, _2));
 		grid->add_col(bool_dd);
 	}
-	grid->register_selection_callback(std::bind(&tree_editor_widget::execute_edit_select, this, _1));
+	grid->registerSelectionCallback(std::bind(&tree_editor_widget::execute_edit_select, this, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);
 	mousex -= x();
 	mousey -= y();
 	edit_menu_.reset(grid);
-	edit_menu_->setLoc(mousex, y() + row_height_ * row - yscroll());
+	edit_menu_->setLoc(mousex, y() + row_height_ * row - getYscroll());
 }
 
 void tree_editor_widget::execute_edit_enter(const TextEditorWidgetPtr editor, variant* value)

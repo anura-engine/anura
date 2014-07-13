@@ -224,10 +224,10 @@ public:
 	const std::vector<EntityPtr>& editor_selection() const { return editor_selection_; }
 
 	bool show_foreground() const { return show_foreground_; }
-	void set_show_foreground(bool value) { show_foreground_ = value; }
+	void setShowForeground(bool value) { show_foreground_ = value; }
 
 	bool show_background() const { return show_background_; }
-	void set_show_background(bool value) { show_background_ = value; }
+	void setShowBackground(bool value) { show_background_ = value; }
 
 	const std::string& get_background_id() const;
 	void set_background_by_id(const std::string& id);

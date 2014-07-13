@@ -73,49 +73,50 @@ namespace KRE
 		intptr_t value_;
 	};
 
+	enum class AttrType {
+		UNKOWN,
+		POSITION,
+		COLOR, 
+		TEXTURE,
+		NORMAL,
+	};
+	enum class AttrFormat {
+		BOOL,
+		HALF_FLOAT,
+		FLOAT,
+		DOUBLE,
+		FIXED,
+		SHORT,
+		UNSIGNED_SHORT,
+		BYTE,
+		UNSIGNED_BYTE,
+		INT,
+		UNSIGNED_INT,
+		INT_2_10_10_10_REV,
+		UNSIGNED_INT_2_10_10_10_REV,
+		UNSIGNED_INT_10F_11F_11F_REV,
+	};
+
 	class AttributeDesc
 	{
 	public:
-		enum class Type {
-			UNKOWN,
-			POSITION,
-			COLOR, 
-			TEXTURE,
-			NORMAL,
-		};
-		enum class VariableType {
-			BOOL,
-			HALF_FLOAT,
-			FLOAT,
-			DOUBLE,
-			FIXED,
-			SHORT,
-			UNSIGNED_SHORT,
-			BYTE,
-			UNSIGNED_BYTE,
-			INT,
-			UNSIGNED_INT,
-			INT_2_10_10_10_REV,
-			UNSIGNED_INT_2_10_10_10_REV,
-			UNSIGNED_INT_10F_11F_11F_REV,
-		};
-		explicit AttributeDesc(Type type, 
+		explicit AttributeDesc(AttrType type, 
 			unsigned num_elements,
-			VariableType var_type,
+			AttrFormat var_type,
 			bool normalise=false,
 			ptrdiff_t stride=0,
 			ptrdiff_t offset=0,
 			size_t divisor=1);
 		explicit AttributeDesc(const std::string& type_name, 
 			unsigned num_elements,
-			VariableType var_type,
+			AttrFormat var_type,
 			bool normalise=false,
 			ptrdiff_t stride=0,
 			ptrdiff_t offset=0,
 			size_t divisor=1);
-		Type getAttrType() const { return type_; }
+		AttrType getAttrType() const { return type_; }
 		const std::string& getAttrName() const { return type_name_; }
-		VariableType getVarType() const { return var_type_; }
+		AttrFormat getVarType() const { return var_type_; }
 		unsigned getNumElements() const { return num_elements_; }
 		bool normalise() const { return normalise_; }
 		ptrdiff_t getStride() const { return stride_; }
@@ -124,9 +125,9 @@ namespace KRE
 		void setDisplayData(const DisplayDeviceDataPtr& ddp) { display_data_ = ddp; }
 		const DisplayDeviceDataPtr& getDisplayData() const { return display_data_; }
 	private:
-		Type type_;
+		AttrType type_;
 		std::string type_name_;
-		VariableType var_type_;
+		AttrFormat var_type_;
 		unsigned num_elements_;
 		bool normalise_;
 		ptrdiff_t stride_;
@@ -279,27 +280,29 @@ namespace KRE
 		Container<T> elements_;
 	};
 
+	enum class DrawMode {
+		POINTS,
+		LINE_STRIP,
+		LINE_LOOP,
+		LINES,
+		TRIANGLE_STRIP,
+		TRIANGLE_FAN,
+		TRIANGLES,
+		QUAD_STRIP,
+		QUADS,
+		POLYGON,		
+	};
+
+	enum class IndexType {
+		INDEX_NONE,
+		INDEX_UCHAR,
+		INDEX_USHORT,
+		INDEX_ULONG,
+	};
+
 	class AttributeSet
 	{
 	public:
-		enum class DrawMode {
-			POINTS,
-			LINE_STRIP,
-			LINE_LOOP,
-			LINES,
-			TRIANGLE_STRIP,
-			TRIANGLE_FAN,
-			TRIANGLES,
-			QUAD_STRIP,
-			QUADS,
-			POLYGON,		
-		};
-		enum class IndexType {
-			INDEX_NONE,
-			INDEX_UCHAR,
-			INDEX_USHORT,
-			INDEX_ULONG,
-		};
 		explicit AttributeSet(bool indexed, bool instanced);
 		virtual ~AttributeSet();
 

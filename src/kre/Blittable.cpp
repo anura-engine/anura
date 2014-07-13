@@ -32,7 +32,7 @@ namespace KRE
 		centre_(Centre::MIDDLE),
 		centre_offset_()
 	{
-		Init();
+		init();
 	}
 
 	Blittable::Blittable(const TexturePtr& tex)
@@ -40,8 +40,8 @@ namespace KRE
 		centre_(Centre::MIDDLE),
 		centre_offset_()
 	{
-		SetTexture(tex);
-		Init();
+		setTexture(tex);
+		init();
 	}
 
 	Blittable::Blittable(const MaterialPtr& mat)
@@ -49,38 +49,32 @@ namespace KRE
 		centre_(Centre::MIDDLE),
 		centre_offset_()
 	{
-		SetMaterial(mat);
-		Init();
+		setMaterial(mat);
+		init();
 	}
 
 	Blittable::~Blittable()
 	{
 	}
 
-	void Blittable::Init()
+	void Blittable::init()
 	{
-		auto as = DisplayDevice::CreateAttributeSet();
+		auto as = DisplayDevice::createAttributeSet();
 		attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-		attribs_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-		attribs_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::TEXTURE,  2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-		as->AddAttribute(AttributeBasePtr(attribs_));
-		as->SetDrawMode(AttributeSet::DrawMode::TRIANGLE_STRIP);
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+		as->addAttribute(AttributeBasePtr(attribs_));
+		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
 		
-		AddAttributeSet(as);
+		addAttributeSet(as);
 	}
 
-	void Blittable::SetTexture(const TexturePtr& tex)
+	void Blittable::setTexture(const TexturePtr& tex)
 	{
-		SetMaterial(DisplayDevice::CreateMaterial("blittable", std::vector<TexturePtr>(1,tex)));
+		setMaterial(DisplayDevice::createMaterial("blittable", std::vector<TexturePtr>(1,tex)));
 	}
 
-	DisplayDeviceDef Blittable::Attach(const DisplayDevicePtr& dd) 
-	{
-		DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-		return def;
-	}
-
-	void Blittable::preRender()
+	void Blittable::preRender(const WindowManagerPtr& wnd)
 	{
 		float offs_x = 0.0f;
 		float offs_y = 0.0f;
@@ -114,18 +108,18 @@ namespace KRE
 		const float vx2 = draw_rect_.x2() + offs_x;
 		const float vy2 = draw_rect_.y2() + offs_y;
 
-		rectf r = Material()->GetNormalisedTextureCoords(Material()->GetTexture().begin());
+		rectf r = getMaterial()->GetNormalisedTextureCoords(getMaterial()->GetTexture().begin());
 
 		std::vector<vertex_texcoord> vertices;
 		vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
 		vertices.emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
 		vertices.emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
 		vertices.emplace_back(glm::vec2(vx2,vy2), glm::vec2(r.x2(),r.y2()));
-		GetAttributeSet().back()->SetCount(vertices.size());
-		attribs_->Update(&vertices);
+		getAttributeSet().back()->setCount(vertices.size());
+		attribs_->update(&vertices);
 	}
 
-	void Blittable::SetCentre(Centre c)
+	void Blittable::setCentre(Centre c)
 	{
 		centre_  = c;
 		centre_offset_ = pointf();

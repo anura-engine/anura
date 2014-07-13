@@ -33,14 +33,13 @@
 
 namespace KRE
 {
+	enum class FullScreenMode {
+		WINDOWED,
+		FULLSCREEN_WINDOWED,
+	};
 	class WindowManager
 	{
 	public:
-		enum FullScreenMode {
-			WINDOWED_MODE,
-			FULLSCREEN_WINDOWED_MODE,
-			FULLSCREEN_MODE,
-		};
 		explicit WindowManager(const std::string& title);
 		virtual ~WindowManager();
 		void createWindow(unsigned width, unsigned height);
@@ -48,7 +47,8 @@ namespace KRE
 		
 		virtual bool setWindowSize(unsigned width, unsigned height) = 0;
 		virtual bool autoWindowSize(unsigned& width, unsigned& height) = 0;
-		virtual bool setLogicalWindowSize(unsigned width, unsigned height) = 0;
+		
+		bool setLogicalWindowSize(unsigned width, unsigned height);
 
 		virtual void setWindowTitle(const std::string& title) = 0;
 		virtual void setWindowIcon(const std::string& name) = 0;
@@ -91,6 +91,8 @@ namespace KRE
 		virtual void clear(ClearFlags f) = 0;
 
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
+
+		void saveFrameBuffer(const std::string& filename);
 
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();

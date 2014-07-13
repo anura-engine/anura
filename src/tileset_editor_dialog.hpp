@@ -1,24 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef TILESET_EDITOR_DIALOG_HPP_INCLUDED
-#define TILESET_EDITOR_DIALOG_HPP_INCLUDED
-#ifndef NO_EDITOR
 
-#include <boost/shared_ptr.hpp>
+#pragma once
+
+#ifndef NO_EDITOR
 
 #include "dialog.hpp"
 #include "tile_map.hpp"
@@ -28,37 +33,33 @@ class editor;
 
 namespace editor_dialogs
 {
+	class TilesetEditorDialog : public gui::Dialog
+	{
+	public:
+		static void globalTileUpdate();
+		explicit TilesetEditorDialog(editor& e);
+		~TilesetEditorDialog();
 
-class tileset_editor_dialog : public gui::Dialog
-{
-public:
-	static void global_tile_update();
-	explicit tileset_editor_dialog(editor& e);
-	~tileset_editor_dialog();
+		void init();
+		void selectCategory(const std::string& category);
+		void setTileset(int index);
+	private:
+		TilesetEditorDialog(const TilesetEditorDialog&);
 
-	void init();
-	void select_category(const std::string& category);
-	void set_tileset(int index);
-private:
-	tileset_editor_dialog(const tileset_editor_dialog&);
+		void closeContextMenu(int index);
+		void showCategoryMenu();
 
-	void close_context_menu(int index);
-	void show_category_menu();
+		bool handleEvent(const SDL_Event& event, bool claimed) override;
+		editor& editor_;
 
-	bool handleEvent(const SDL_Event& event, bool claimed) override;
-	editor& editor_;
+		gui::WidgetPtr context_menu_;
+		std::string category_;
 
-	gui::WidgetPtr context_menu_;
-	std::string category_;
+		//index of the first item in the current category
+		int first_index_;
+	};
 
-	//index of the first item in the current category
-	int first_index_;
-};
-
-typedef boost::intrusive_ptr<tileset_editor_dialog> tileset_editor_DialogPtr;
-
+	typedef boost::intrusive_ptr<TilesetEditorDialog> TilesetEditorDialogPtr;
 }
 
 #endif // !NO_EDITOR
-#endif
-

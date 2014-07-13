@@ -69,11 +69,11 @@ namespace KRE
 		typedef ActivesMap::iterator ActivesMapIterator;
 		typedef ActivesMap::const_iterator ConstActivesMapIterator;
 
-		class ActivesHandleOGL : public ActivesHandle
+		class ActivesHandle : public ActivesHandle
 		{
 		public:
-			ActivesHandleOGL(ConstActivesMapIterator a) : active_(a) {}
-			~ActivesHandleOGL() {}
+			ActivesHandle(ConstActivesMapIterator a) : active_(a) {}
+			~ActivesHandle() {}
 			ConstActivesMapIterator getIterator() { return active_; }
 		private:
 			ConstActivesMapIterator active_;
@@ -81,14 +81,14 @@ namespace KRE
 
 		typedef std::pair<std::string,std::string> ShaderDef;
 
-		class ShaderProgramOGL;
-		typedef std::shared_ptr<ShaderProgramOGL> ShaderProgramOGLPtr;
+		class ShaderProgram;
+		typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
 
-		class ShaderProgramOGL : public KRE::ShaderProgram
+		class ShaderProgram : public KRE::ShaderProgram
 		{
 		public:
-			ShaderProgramOGL(const std::string& name, const ShaderDef& va, const ShaderDef& fs, const variant& node);
-			virtual ~ShaderProgramOGL();
+			ShaderProgram(const std::string& name, const ShaderDef& va, const ShaderDef& fs, const variant& node);
+			virtual ~ShaderProgram();
 			void init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs);
 			std::string name() const { return name_; }
 			GLint getAttributeOrDie(const std::string& attr) const;
@@ -112,7 +112,7 @@ namespace KRE
 			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
 
 			static ShaderProgramPtr factory(const std::string& name);
-			static ShaderProgramOGLPtr defaultSystemShader();
+			static ShaderProgramPtr defaultSystemShader();
 			static void loadFromFile(const variant& node);
 
 			ConstActivesMapIterator getColorUniform() const { return u_color_; }
@@ -138,7 +138,7 @@ namespace KRE
 
 			std::vector<GLint> active_attributes_;
 		private:
-			DISALLOW_COPY_AND_ASSIGN(ShaderProgramOGL);
+			DISALLOW_COPY_AND_ASSIGN(ShaderProgram);
 
 			std::string name_;
 			ShaderPtr vs_;

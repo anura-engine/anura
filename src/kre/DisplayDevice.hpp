@@ -78,16 +78,43 @@ namespace KRE
 	};
 
 	enum class ClearFlags {
-		DISPLAY_CLEAR_COLOR		= 1,
-		DISPLAY_CLEAR_DEPTH		= 2,
-		DISPLAY_CLEAR_STENCIL	= 4,
-		DISPLAY_CLEAR_ALL		= 0x7fffffff,
+		COLOR		= 1,
+		DEPTH		= 2,
+		STENCIL		= 4,
+		ALL			= 0x7fffffff,
 	};
 
 	inline ClearFlags operator|(ClearFlags l, ClearFlags r)
 	{
-		return static_cast<ClearFlags>(static_cast<int>(l)|static_cast<int>(r));
+		return static_cast<ClearFlags>(static_cast<int>(l) | static_cast<int>(r));
 	}
+
+	inline bool operator&(ClearFlags l, ClearFlags r)
+	{
+		return (static_cast<int>(l) & static_cast<int>(r)) != 0;
+	}
+
+	enum class ReadFormat {
+		DEPTH,
+		STENCIL,
+		DEPTH_STENCIL,
+		RED,
+		GREEN,
+		BLUE,
+		RG,
+		RGB,
+		BGR,
+		RGBA,
+		BGRA,
+		RED_INT,
+		GREEN_INT,
+		BLUE_INT,
+		RG_INT,
+		RGB_INT,
+		BGR_INT,
+		RGBA_INT,
+		BGRA_INT,
+	};
 
 	class DisplayDevice
 	{
@@ -114,7 +141,7 @@ namespace KRE
 		virtual void setClearColor(float r, float g, float b, float a) = 0;
 		virtual void setClearColor(const Color& color) = 0;
 
-		virtual void clear(uint32_t clr) = 0;
+		virtual void clear(ClearFlags clr) = 0;
 		virtual void swap() = 0;
 
 		virtual void init(size_t width, size_t height) = 0;
@@ -148,6 +175,8 @@ namespace KRE
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 
+		virtual EffectPtr createEffect(const variant& node) = 0;
+
 		static void blitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch);
 
 		static MaterialPtr createMaterial(const variant& node);
@@ -166,12 +195,18 @@ namespace KRE
 
 		virtual DisplayDeviceDataPtr createDisplayDeviceData(const DisplayDeviceDef& def) = 0;
 
+		template<typename T>
+		bool readPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, std::vector<T>& data) {
+			data.resize(width * height);
+			return handleReadPixels(x, y, width, height, fmt, type, static_cast<void*>(&data[0]));
+		}
+
 		static AttributeSetPtr createAttributeSet(bool hardware_hint=false, bool indexed=false, bool instanced=false);
 		static HardwareAttributePtr createAttributeBuffer(bool hw_backed, AttributeBase* parent);
 
 		static DisplayDevicePtr factory(const std::string& type);
 
-		static DisplayDevicePtr getCurrent();
+		static DisplayDevicePtr getCurrent();		
 
 		static bool checkForFeature(DisplayDeviceCapabilties cap);
 
@@ -188,7 +223,10 @@ namespace KRE
 			bool use_multi_sampling, 
 			size_t multi_samples) = 0;
 		virtual RenderTargetPtr handleCreateRenderTarget(const variant& node) = 0;
+
+		virtual bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data) = 0;
 		
+		virtual TexturePtr handleCreateTexture(const variant& node) = 0;
 		virtual TexturePtr handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) = 0;

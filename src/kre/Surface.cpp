@@ -29,7 +29,7 @@ namespace KRE
 {
 	namespace
 	{
-		typedef std::map<std::string,std::tuple<SurfaceCreatorFileFn,SurfaceCreatorPixelsFn,SurfaceCreatorMaskFn>> CreatorMap;
+		typedef std::map<std::string,std::tuple<SurfaceCreatorFileFn,SurfaceCreatorPixelsFn,SurfaceCreatorMaskFn,SurfaceCreatorFormatFn>> CreatorMap;
 		CreatorMap& get_surface_creator()
 		{
 			static CreatorMap res;
@@ -78,9 +78,13 @@ namespace KRE
 		return handleConvert(fmt, convert);
 	}
 
-	bool Surface::registerSurfaceCreator(const std::string& name, SurfaceCreatorFileFn file_fn, SurfaceCreatorPixelsFn pixels_fn, SurfaceCreatorMaskFn mask_fn)
+	bool Surface::registerSurfaceCreator(const std::string& name, 
+		SurfaceCreatorFileFn file_fn, 
+		SurfaceCreatorPixelsFn pixels_fn, 
+		SurfaceCreatorMaskFn mask_fn,
+		SurfaceCreatorFormatFn format_fn)
 	{
-		return get_surface_creator().insert(std::make_pair(name,std::make_tuple(file_fn, pixels_fn, mask_fn))).second;
+		return get_surface_creator().insert(std::make_pair(name,std::make_tuple(file_fn, pixels_fn, mask_fn, format_fn))).second;
 	}
 
 	void Surface::unRegisterSurfaceCreator(const std::string& name)
@@ -92,7 +96,7 @@ namespace KRE
 
 	SurfacePtr Surface::create(const std::string& filename, bool no_cache, PixelFormat::PF fmt, SurfaceConvertFn convert)
 	{
-		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to surfaces images from files.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		if(!no_cache) {
 			auto it = get_surface_cache().find(filename);
@@ -117,7 +121,7 @@ namespace KRE
 		const void* pixels)
 	{
 		// XXX no caching as default?
-		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixels.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		return std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
 	}
@@ -131,9 +135,16 @@ namespace KRE
 		uint32_t amask)
 	{
 		// XXX no caching as default?
-		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create images from files.");
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from masks.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
 		return std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
+	}
+
+	SurfacePtr Surface::create(unsigned width, unsigned height, PixelFormat::PF fmt)
+	{
+		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixel format.");
+		auto create_fn_tuple = get_surface_creator().begin()->second;
+		return std::get<3>(create_fn_tuple)(width, height, fmt);
 	}
 
 	void Surface::resetSurfaceCache()

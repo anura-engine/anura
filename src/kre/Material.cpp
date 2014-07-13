@@ -139,7 +139,7 @@ namespace KRE
 		return UseLighting();
 	}
 
-	void Material::Unapply()
+	void Material::unApply()
 	{
 		HandleUnapply();
 	}

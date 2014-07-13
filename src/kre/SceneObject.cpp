@@ -40,14 +40,36 @@ namespace KRE
 		if(node.has_key("name")) {
 			name_ = node["name"].as_string();
 		}
+		if(node.has_key("queue_value")) {
+			queue_ = static_cast<size_t>(node["queue_value"].as_int());
+		}
+		if(node.has_key("shader")) {
+			shader_name_ = node["shader"].as_string();
+		}
+	}
+
+	SceneObject::SceneObject(const SceneObject& op)
+		: name_(op.name_),
+		queue_(op.queue_)
+	{
 	}
 
 	SceneObject::~SceneObject()
 	{
 	}
 
+	void SceneObject::setShaderName(const std::string& shader)
+	{
+		shader_name_ = shader;
+	}
+
 	DisplayDeviceDef SceneObject::attach(const DisplayDevicePtr& dd)
 	{
-		return doAttach(dd);
+		DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
+		if(!shader_name_.empty()) {
+			def.setHint("shader", shader_name_);
+		}
+		doAttach(dd, &def);
+		return def;
 	}
 }

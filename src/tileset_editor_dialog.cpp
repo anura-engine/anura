@@ -50,7 +50,7 @@ tileset_editor_dialog::tileset_editor_dialog(editor& e)
 {
 	all_tileset_editor_dialogs().insert(this);
 
-	set_clear_bg_amount(255);
+	setClearBgAmount(255);
 	if(editor_.all_tilesets().empty() == false) {
 		category_ = editor_.all_tilesets().front().category;
 	}
@@ -71,7 +71,7 @@ void tileset_editor_dialog::init()
 
 	assert(editor_.get_tileset() >= 0 && editor_.get_tileset() < editor_.all_tilesets().size());
 
-	button* category_button = new button(WidgetPtr(new label(category_, graphics::color_white())), std::bind(&tileset_editor_dialog::show_category_menu, this));
+	button* category_button = new button(WidgetPtr(new label(category_, KRE::Color::colorWhite())), std::bind(&tileset_editor_dialog::show_category_menu, this));
 	addWidget(WidgetPtr(category_button), 10, 10);
 
 	grid_ptr grid(new gui::grid(3));
@@ -117,10 +117,10 @@ void tileset_editor_dialog::show_category_menu()
 	using namespace gui;
 	gui::grid* grid = new gui::grid(2);
 	grid->swallow_clicks();
-	grid->set_show_background(true);
-	grid->set_hpad(10);
-	grid->allow_selection();
-	grid->register_selection_callback(std::bind(&tileset_editor_dialog::close_context_menu, this, _1));
+	grid->setShowBackground(true);
+	grid->setHpad(10);
+	grid->allowSelection();
+	grid->registerSelectionCallback(std::bind(&tileset_editor_dialog::close_context_menu, this, _1));
 
 	std::set<std::string> categories;
 	foreach(const editor::tileset& t, editor_.all_tilesets()) {
@@ -133,7 +133,7 @@ void tileset_editor_dialog::show_category_menu()
 		preview_tileset_widget* preview = new preview_tileset_widget(*t.preview());
 		preview->setDim(48, 48);
 		grid->add_col(WidgetPtr(preview))
-		     .add_col(WidgetPtr(new label(t.category, graphics::color_white())));
+		     .add_col(WidgetPtr(new label(t.category, KRE::Color::colorWhite())));
 		grid->register_row_selection_callback(std::bind(&tileset_editor_dialog::select_category, this, t.category));
 	}
 

@@ -2024,7 +2024,7 @@ void voxel_editor::init()
 		ButtonPtr tool_button(
 		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 		      std::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
-		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
 		tools_grid->add_col(WidgetPtr(tool_borders_.back()));
 	}
 
@@ -2043,11 +2043,11 @@ void voxel_editor::init()
 			layers_grid->add_col(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
 		}
 
-		layers_grid->allow_selection();
+		layers_grid->allowSelection();
 		layers_grid->set_draw_selection_highlight();
 		layers_grid->set_default_selection(current_layer_);
 		layers_grid->register_mouseover_callback(std::bind(&voxel_editor::mouseover_layer, this, _1));
-		layers_grid->register_selection_callback(std::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
+		layers_grid->registerSelectionCallback(std::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
 
 		addWidget(layers_grid);
 	}
@@ -2161,7 +2161,7 @@ void voxel_editor::on_change_layer_button_clicked(int nlayer)
 	std::vector<std::pair<std::string,Layer> > variations(layer.variations.begin(), layer.variations.end());
 
 	grid_ptr context_menu(new grid(2));
-	context_menu->set_hpad(10);
+	context_menu->setHpad(10);
 
 	for(const std::pair<std::string,Layer>& p : variations) {
 		context_menu->add_col(p.first);
@@ -2293,7 +2293,7 @@ void voxel_editor::handleProcess()
 {
 	VOXEL_TOOL current_tool = tool();
 	for(int n = 0; n != tool_borders_.size(); ++n) {
-		tool_borders_[n]->setColor(n == current_tool ? graphics::color_white() : graphics::color_black());
+		tool_borders_[n]->setColor(n == current_tool ? KRE::Color::colorWhite() : graphics::color_black());
 	}
 
 	dialog::handleProcess();

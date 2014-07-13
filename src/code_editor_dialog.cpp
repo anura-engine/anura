@@ -196,8 +196,8 @@ void CodeEditorDialog::init_files_grid()
 	using std::placeholders::_1;
 
 	files_grid_.reset(new grid(1));
-	files_grid_->allow_selection();
-	files_grid_->register_selection_callback(std::bind(&CodeEditorDialog::select_file, this, _1));
+	files_grid_->allowSelection();
+	files_grid_->registerSelectionCallback(std::bind(&CodeEditorDialog::select_file, this, _1));
 	for(const KnownFile& f : files_) {
 		if(f.anim) {
 			ImageWidget* img = new ImageWidget(f.anim->img());
@@ -683,10 +683,10 @@ void CodeEditorDialog::process()
 
 		if(suggestions_.empty() == false) {
 			grid_ptr suggestions_grid(new grid(1));
-			suggestions_grid->register_selection_callback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
+			suggestions_grid->registerSelectionCallback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
 			suggestions_grid->swallow_clicks();
 			suggestions_grid->allow_selection(true);
-			suggestions_grid->set_show_background(true);
+			suggestions_grid->setShowBackground(true);
 			suggestions_grid->set_max_height(160);
 			for(const Suggestion& s : suggestions_) {
 				suggestions_grid->add_col(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
@@ -1026,13 +1026,13 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 	const std::string::const_iterator end_itor = std::find(class_name.begin(), class_name.end(), '.');
 	const std::string filename = "data/classes/" + std::string(class_name.begin(), end_itor) + ".cfg";
 
-	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
+	d->setProcessHook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename);
 	d->jump_to_error(error);
-	d->set_on_quit(std::bind(&gui::Dialog::cancel, d.get()));
+	d->setOnQuit(std::bind(&gui::Dialog::cancel, d.get()));
 	d->showModal();
 
 	if(d->cancelled()) {
@@ -1046,7 +1046,7 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
 	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
-	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
+	d->setProcessHook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
@@ -1100,7 +1100,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 	grid_ptr call_grid(new grid(1));
 	call_grid->set_max_height(wnd->height() - console->y());
-	call_grid->allow_selection();
+	call_grid->allowSelection();
 	call_grid->must_select();
 	for(const CallStackEntry& entry : reverse_stack) {
 		std::string str = entry.expression->str();

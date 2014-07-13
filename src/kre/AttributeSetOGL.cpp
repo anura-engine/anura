@@ -61,7 +61,7 @@ namespace KRE
 	HardwareAttributeOGL::HardwareAttributeOGL(AttributeBase* parent)
 		: HardwareAttribute(parent), 
 		buffer_id_(-1),
-		access_pattern_(convert_access_type_and_frequency(parent->AccessFrequency(), parent->AccessType())),
+		access_pattern_(convert_access_type_and_frequency(parent->getAccessFrequency(), parent->getAccessType())),
 		size_(0)
 	{
 		glGenBuffers(1, &buffer_id_);
@@ -72,7 +72,7 @@ namespace KRE
 		glDeleteBuffers(1, &buffer_id_);
 	}
 
-	void HardwareAttributeOGL::Update(const void* value, ptrdiff_t offset, size_t size)
+	void HardwareAttributeOGL::update(const void* value, ptrdiff_t offset, size_t size)
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, buffer_id_);
 		if(offset == 0) {
@@ -95,12 +95,12 @@ namespace KRE
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
 
-	void HardwareAttributeOGL::Bind()
+	void HardwareAttributeOGL::bind()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, buffer_id_);
 	}
 
-	void HardwareAttributeOGL::Unbind()
+	void HardwareAttributeOGL::unbind()
 	{
 		glBindBuffer(GL_ARRAY_BUFFER, 0);
 	}
@@ -116,25 +116,34 @@ namespace KRE
 
 	AttributeSetOGL::~AttributeSetOGL()
 	{
-		if(IsIndexed()) {
+		if(isIndexed()) {
 			glDeleteBuffers(1, &index_buffer_id_);
 		}
 	}
 
-	void AttributeSetOGL::BindIndex()
+	struct IndexManager
+	{
+		IndexManager(GLuint buffer_id) {
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, buffer_id);
+		}
+		~IndexManager() {
+			glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+		}
+	};
+
+	void AttributeSetOGL::bindIndex()
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, index_buffer_id_);
 	}
 
-	void AttributeSetOGL::UnbindIndex()
+	void AttributeSetOGL::unbindIndex()
 	{
 		glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
 	}
 
-	void AttributeSetOGL::HandleIndexUpdate()
+	void AttributeSetOGL::handleIndexUpdate()
 	{
-		BindIndex();
-		glBufferData(GL_ELEMENT_ARRAY_BUFFER, GetTotalArraySize(), GetIndexData(), GL_STATIC_DRAW);
-		UnbindIndex();
+		IndexManager im(index_buffer_id_);
+		glBufferData(GL_ELEMENT_ARRAY_BUFFER, getTotalArraySize(), getIndexData(), GL_STATIC_DRAW);
 	}
 }

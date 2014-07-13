@@ -123,7 +123,7 @@ namespace gui
 		changed_(false), 
 		simple_options_(true)
 	{
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 		resetCurrentObject();
 		if(anims.is_list()) {
 			anims_ = anims.as_list();
@@ -135,7 +135,7 @@ namespace gui
 			anims_.push_back(anims);
 		}
 
-		set_process_hook(std::bind(&AnimationCreatorDialog::process, this));
+		setProcessHook(std::bind(&AnimationCreatorDialog::process, this));
 		init();
 	}
 
@@ -188,7 +188,7 @@ namespace gui
 
 		// Add copy desintation box
 		grid_ptr g(new grid(2));
-		g->set_hpad(20);
+		g->setHpad(20);
 		g->add_col(ButtonPtr(new Button(new Label("Set Destination", 14), std::bind(&AnimationCreatorDialog::setDestination, this))))
 			.add_col(LabelPtr(new Label(copy_path_, KRE::Color::colorGreen(), 14)));
 		g->add_col(WidgetPtr(new Label("", KRE::Color::colorYellow(), 12)))
@@ -200,8 +200,8 @@ namespace gui
 		g.reset(new grid(3));
 		g->setDim(width()/2, height()/5);
 		g->set_max_height(height()/5);
-		g->set_show_background(true);
-		g->set_hpad(10);
+		g->setShowBackground(true);
+		g->setHpad(10);
 		g->set_header_row(0);
 		g->allow_selection(true);
 		g->add_col(LabelPtr(new Label("Identifier", 14)))
@@ -223,7 +223,7 @@ namespace gui
 				.add_col(LabelPtr(new Label(v.has_key("image") ? v["image"].as_string() : "", 12)))
 				.add_col(LabelPtr(new Label(ss.str(), 12)));
 		}
-		g->register_selection_callback(std::bind(&AnimationCreatorDialog::selectAnimation, this, _1));
+		g->registerSelectionCallback(std::bind(&AnimationCreatorDialog::selectAnimation, this, _1));
 		addWidget(g, border_offset, current_height);
 		current_height += g->height() + hpad;
 
@@ -266,7 +266,7 @@ namespace gui
 
 		// Add/Delete animation buttons
 		g.reset(new grid(4));
-		g->set_hpad(50);
+		g->setHpad(50);
 		g->add_col(ButtonPtr(new Button(new Label("New", 14), std::bind(&AnimationCreatorDialog::animNew, this))))
 			.add_col(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
 			.add_col(ButtonPtr(new Button(new Label("Delete", 14), std::bind(&AnimationCreatorDialog::animDel, this))))
@@ -409,8 +409,8 @@ namespace gui
 			int(preferences::virtual_screen_width()*0.8), 
 			int(preferences::virtual_screen_height()*0.8),
 			f);
-		open_dlg.set_background_frame("empty_window");
-		open_dlg.set_draw_background_fn(draw_last_scene);
+		open_dlg.setBackgroundFrame("empty_window");
+		open_dlg.setDrawBackgroundFn(draw_last_scene);
 		open_dlg.showModal();
 
 		if(open_dlg.cancelled() == false) {
@@ -565,7 +565,7 @@ namespace gui
 		if(changed_) {
 			// Create message box with Save/Cancel options.
 			Dialog d((width()-400)/2, (height()-300)/2, 400, 300);
-			d.set_background_frame("empty_window");
+			d.setBackgroundFrame("empty_window");
 			d.setPadding(20);
 		
 			LabelPtr title = new Label("Animation has changed.", KRE::Color::colorWhite(), 24);
@@ -604,8 +604,8 @@ namespace gui
 			int(preferences::virtual_screen_height()*0.6),
 			gui::filter_list(), 
 			true, module::get_module_path("") + "images");
-		dir_dlg.set_background_frame("empty_window");
-		dir_dlg.set_draw_background_fn(draw_last_scene);
+		dir_dlg.setBackgroundFrame("empty_window");
+		dir_dlg.setDrawBackgroundFn(draw_last_scene);
 		dir_dlg.use_relative_paths(true);
 		dir_dlg.showModal();
 

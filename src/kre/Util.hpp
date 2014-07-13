@@ -32,3 +32,6 @@
     TypeName(const TypeName&);                      \
     void operator=(const TypeName&)
 
+#define DISALLOW_DEFAULT_AND_ASSIGN(TypeName)	\
+    TypeName();									\
+    void operator=(const TypeName&)

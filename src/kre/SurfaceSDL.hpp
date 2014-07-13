@@ -91,7 +91,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
-			void* pixels);
+			const void* pixels);
 		SurfaceSDL(unsigned width, 
 			unsigned height, 
 			unsigned bpp, 
@@ -99,6 +99,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		SurfaceSDL(const std::string& filename);
 		SurfaceSDL(SDL_Surface* surface);
 		SurfaceSDL(unsigned width, unsigned height, PixelFormat::PF format);
 		virtual ~SurfaceSDL();
@@ -130,6 +131,11 @@ namespace KRE
 			return has_data_;
 		}
 
+		void blit(SurfacePtr src, const rect& src_rect) override;
+		void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
+		void blitTo(SurfacePtr src, const rect& dst_rect) override;
+		void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
+
 		void setBlendMode(BlendMode bm) override;
 		BlendMode getBlendMode() const override;
 
@@ -147,7 +153,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
-			void* pixels);
+			const void* pixels);
 		static SurfacePtr createFromMask(unsigned width, 
 			unsigned height, 
 			unsigned bpp, 
@@ -155,6 +161,9 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		static SurfacePtr SurfaceSDL::createFromFormat(unsigned width,
+			unsigned height,
+			PixelFormat::PF fmt);
 
 		void lock() override;
 		void unlock() override;

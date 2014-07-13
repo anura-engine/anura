@@ -28,28 +28,31 @@
 
 #include "RenderFwd.hpp"
 #include "SceneFwd.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {
-	class SceneNode
+	class SceneNode : public std::enable_shared_from_this<SceneNode>
 	{
 	public:
 		explicit SceneNode(SceneGraph* sg);
+		explicit SceneNode(SceneGraph* sg, const variant& node);
+		SceneNode(const SceneNode& node);
 		virtual ~SceneNode();
-		void AttachNode(const SceneNodePtr& node);
-		void AttachLight(size_t ref, const LightPtr& obj);
-		void AttachCamera(const CameraPtr& obj);
-		void AttachObject(const SceneObjectPtr& obj);
-		void AttachRenderTarget(const RenderTargetPtr& obj);
-		const CameraPtr& Camera() const { return camera_; }
-		const LightPtrList& Lights() const { return lights_; }
-		const RenderTargetPtr GetRenderTarget() const { return render_target_; }
-		void RenderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp);
-		SceneGraph* ParentGraph() { return scene_graph_; }
-		virtual void Process(double);
-		virtual void NodeAttached();
-		void SetNodeName(const std::string& s) { name_ = s; }
-		const std::string& NodeName() const { return name_; }
+		void attachNode(const SceneNodePtr& node);
+		void attachLight(size_t ref, const LightPtr& obj);
+		void attachCamera(const CameraPtr& obj);
+		void attachObject(const SceneObjectPtr& obj);
+		void attachRenderTarget(const RenderTargetPtr& obj);
+		const CameraPtr& getCamera() const { return camera_; }
+		const LightPtrList& getLights() const { return lights_; }
+		const RenderTargetPtr getRenderTarget() const { return render_target_; }
+		void renderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp);
+		SceneGraph* parentGraph() { return scene_graph_; }
+		virtual void process(double);
+		virtual void notifyNodeAttached(SceneNode* parent);
+		void setNodeName(const std::string& s) { name_ = s; }
+		const std::string& getNodeName() const { return name_; }
 
 		void setPosition(const glm::vec3& position);
 		void setPosition(float x, float y, float z=0.0f);
@@ -64,11 +67,16 @@ namespace KRE
 		void setScale(const glm::vec3& scale);
 		const glm::vec3& getScale() const { return scale_; }
 
-		glm::mat4 ModelMatrix() const;
+		glm::mat4 getModelMatrix() const;
 
 	private:
+		// No default or assignment constructors
+		SceneNode();
+		void operator=(const SceneNode&);
+
 		std::string name_;
 		SceneGraph* scene_graph_;
+		SceneNode* parent_;
 		std::vector<SceneObjectPtr> objects_;
 		LightPtrList lights_;
 		CameraPtr camera_;
@@ -76,10 +84,6 @@ namespace KRE
 		glm::vec3 position_;
 		glm::quat rotation_;
 		glm::vec3 scale_;
-
-		SceneNode();
-		SceneNode(const SceneNode&);
-		SceneNode& operator=(const SceneNode&);
 
 		friend std::ostream& operator<<(std::ostream& os, const SceneNode& node);
 	};

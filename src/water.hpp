@@ -71,7 +71,6 @@ public:
 	
 	void preRender(const KRE::WindowManagerPtr& wm) override;
 private:
-	KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 	void init();
 
 	struct area {

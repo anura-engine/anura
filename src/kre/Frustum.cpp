@@ -52,7 +52,7 @@ namespace KRE
 	Frustum::Frustum(const glm::mat4& perspective, const glm::mat4& view)
 	{
 		planes_.resize(MAX_PLANES);
-		UpdateMatrices(perspective, view);
+		updateMatrices(perspective, view);
 	}
 
 	namespace
@@ -63,7 +63,7 @@ namespace KRE
 		}
 	}
 
-	void Frustum::UpdateMatrices(const glm::mat4& perspective, const glm::mat4& view)
+	void Frustum::updateMatrices(const glm::mat4& perspective, const glm::mat4& view)
 	{
 		vp_ = glm::transpose(perspective * view);
 
@@ -75,7 +75,7 @@ namespace KRE
 		planes_[TOP_PLANE] = normalize(vp_ * glm::vec4(0,-1,0,1));
 	}
 
-	bool Frustum::PointInside(const glm::vec3& pt) const
+	bool Frustum::isPointInside(const glm::vec3& pt) const
 	{
 		for(int n = NEAR_PLANE; n < MAX_PLANES; ++n) {
 			if(glm::dot(planes_[n], glm::vec4(pt, 1.0f)) < 0.0f) {
@@ -85,7 +85,7 @@ namespace KRE
 		return true;
 	}
 
-	bool Frustum::CircleInside(const glm::vec3& pt, float radius) const
+	bool Frustum::isCircleInside(const glm::vec3& pt, float radius) const
 	{
 		for(int n = NEAR_PLANE; n < MAX_PLANES; ++n) {
 			if(glm::dot(planes_[n], glm::vec4(pt, 1.0f)) < -radius) {
@@ -98,7 +98,7 @@ namespace KRE
 	// Returns >0 if circle is inside the frustum
 	// Returns <0 if circle is outside frustum
 	// Returns 0 if circle intersects.
-	int Frustum::CircleIntersects(const glm::vec3& pt, float radius) const
+	int Frustum::doesCircleIntersect(const glm::vec3& pt, float radius) const
 	{
 		int out = 0;
 		int in = 0;
@@ -114,7 +114,7 @@ namespace KRE
 
 	// Cube specified by one corner and the three side lenghts
 	// returns true if is inside else false
-	bool Frustum::CubeInside(const glm::vec3& pt, float xlen, float ylen, float zlen) const
+	bool Frustum::isCubeInside(const glm::vec3& pt, float xlen, float ylen, float zlen) const
 	{
 		for(int n = NEAR_PLANE; n < MAX_PLANES; ++n) {
 			if(glm::dot(planes_[n], glm::vec4(pt.x, pt.y, pt.z, 1.0)) >= 0.0f) {
@@ -150,7 +150,7 @@ namespace KRE
 	// Returns >0 if cube is inside the frustum
 	// Returns <0 if cube is outside frustum
 	// Returns 0 if cube intersects.
-	int Frustum::CubeIntersects(const glm::vec3& pt, float xlen, float ylen, float zlen) const
+	int Frustum::doesCubeIntersect(const glm::vec3& pt, float xlen, float ylen, float zlen) const
 	{
 		int in = 0;
 		int out = 0;

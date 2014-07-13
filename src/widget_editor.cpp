@@ -99,13 +99,13 @@ gui::WidgetPtr create_widget_from_tool(WIDGET_TOOL tool, size_t x, size_t y)
 	case TOOL_GRID: {
 		gui::grid* gg = new gui::grid(1);
 		gg->setDim(100,100);
-		gg->set_show_background(true);
+		gg->setShowBackground(true);
 		p.reset(gg);
 		break;
 	}
 	case TOOL_DIALOG: {
 		gui::dialog* d = new gui::dialog(x, y, 100, 100);
-		d->set_background_frame("empty_window");
+		d->setBackgroundFrame("empty_window");
 		return d;
 	}
 	case TOOL_CHECKBOX:
@@ -194,7 +194,7 @@ private:
 	void init()
 	{
 		clear();
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 
 		if(!ww_) {
 			ww_.reset(new widget_window(rect(area_.x(), area_.y(), area_.w()-sidebar_width,area_.h()), *this));
@@ -214,7 +214,7 @@ private:
 			gui::ButtonPtr tool_button(
 			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
 				  std::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
-			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
+			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
 			tools_grid->add_col(gui::WidgetPtr(tool_borders_.back()));
 		}
 		tools_grid->finish_row();

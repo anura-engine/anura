@@ -75,7 +75,7 @@ namespace gui
 		uint8_t green_;
 		uint8_t blue_;
 
-		grid_ptr g_;
+		GridPtr g_;
 		std::vector<SliderPtr> s_;
 		std::vector<TextEditorWidgetPtr> t_;
 		ButtonPtr copy_to_palette_;

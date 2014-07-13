@@ -46,7 +46,7 @@ void group_property_editor_dialog::init()
 
 	if(group_.empty() == false) {
 		std::cerr << "ADD BUTTON\n";
-		addWidget(WidgetPtr(new button(WidgetPtr(new label("Group Objects", graphics::color_white())), std::bind(&group_property_editor_dialog::group_objects, this))), 10, 10);
+		addWidget(WidgetPtr(new button(WidgetPtr(new label("Group Objects", KRE::Color::colorWhite())), std::bind(&group_property_editor_dialog::group_objects, this))), 10, 10);
 	}
 }
 

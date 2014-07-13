@@ -95,8 +95,8 @@ void show_video_selection_dialog()
 		int(preferences::virtual_screen_height()*0.1), 
 		int(preferences::virtual_screen_width()*0.8), 
 		int(preferences::virtual_screen_height()*0.8));
-	d.set_background_frame("empty_window");
-	d.set_draw_background_fn([](){ draw_scene(level::current(), last_draw_position()); });
+	d.setBackgroundFrame("empty_window");
+	d.setDrawBackgroundFn([](){ draw_scene(level::current(), last_draw_position()); });
 
 	const int button_width = 150;
 	const int button_height = 40;

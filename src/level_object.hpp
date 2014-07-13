@@ -1,25 +1,31 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
 #include <vector>
 
+#include "kre/Canvas.hpp"
 #include "kre/Material.hpp"
 
 #include "Color.hpp"
@@ -40,7 +46,8 @@ struct LevelTile
 	bool draw_disabled;
 };
 
-struct level_tile_zorder_comparer {
+struct level_tile_zorder_comparer 
+{
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.zorder < b.zorder;
 	}
@@ -54,7 +61,8 @@ struct level_tile_zorder_comparer {
 	}
 };
 
-struct level_tile_pos_comparer {
+struct level_tile_pos_comparer 
+{
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.y < b.y || a.y == b.y && a.x < b.x;
 	}
@@ -68,13 +76,15 @@ struct level_tile_pos_comparer {
 	}
 };
 
-struct level_tile_zorder_pos_comparer {
+struct level_tile_zorder_pos_comparer 
+{
 	bool operator()(const LevelTile& a, const LevelTile& b) const {
 		return a.zorder < b.zorder || a.zorder == b.zorder && a.y < b.y || a.zorder == b.zorder && a.y == b.y && a.x < b.x;
 	}
 };
 
-struct level_tile_y_pos_comparer {
+struct level_tile_y_pos_comparer 
+{
         bool operator()(const LevelTile& a, int b) const {
                 return a.y < b;
         }
@@ -121,7 +131,7 @@ public:
 	int traction() const { return traction_; }
 	int damage() const { return damage_; }
 	const KRE::TexturePtr& texture() const { return t_; }
-	//static void queue_draw(graphics::blit_queue& q, const LevelTile& t);
+	static void queueDraw(KRE::CanvasPtr canvas, const LevelTile& t);
 	static int calculateTileCorners(KRE::ImageLoadError* result, const LevelTile& t);
 
 	bool isOpaque() const { return opaque_; }

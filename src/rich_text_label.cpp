@@ -209,14 +209,14 @@ void rich_text_label::handleDraw() const
 	const graphics::clip_scope clipping_scope(rect);
 
 	glPushMatrix();
-	glTranslatef(x() & ~1, (y() & ~1) - yscroll(), 0.0);
+	glTranslatef(x() & ~1, (y() & ~1) - getYscroll(), 0.0);
 
 	{
 
 	foreach(const std::vector<WidgetPtr>& v, children_) {
 		foreach(const WidgetPtr& widget, v) {
-			if(widget->y() > yscroll() + height() ||
-			   widget->y() + widget->height() < yscroll()) {
+			if(widget->y() > getYscroll() + height() ||
+			   widget->y() + widget->height() < getYscroll()) {
 				continue;
 			}
 

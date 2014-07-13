@@ -37,57 +37,60 @@ namespace KRE
 		Camera(const std::string& name, const WindowManagerPtr& wnd);
 		explicit Camera(const std::string& name, int left, int right, int top, int bottom);
 		explicit Camera(const std::string& name, const WindowManagerPtr& wnd, float fov, float aspect, float near_clip, float far_clip);
-		virtual ~Camera();
+		explicit Camera(const variant& node, const WindowManagerPtr& wnd);
+		~Camera();
 
-		void SetMouseSpeed(float ms) { mouse_speed_ = ms; }
-		void SetSpeed(float spd) { speed_ = spd; }
-		void SetHangle(float ha) { horizontal_angle_ = ha; }
-		void SetVangle(float va) { vertical_angle_ = va; }
-		void SetFov(float fov);
-		void SetAspect(float aspect);
-		void SetClipPlanes(float z_near, float z_far);
-		void SetType(CameraType type);
-		void SetOrthoWindow(int left, int right, int top, int bottom);
-		float Mousespeed() const { return mouse_speed_; }
-		float Speed() const { return speed_; }
-		float Hangle() const { return horizontal_angle_; }
-		float Vangle() const { return vertical_angle_; }
-		float Fov() const { return fov_; }
-		float Aspect() const { return aspect_; }
-		float NearClip() const { return near_clip_; }
-		float FarClip() const { return far_clip_; }
-		CameraType Type() const { return type_; }
-		int OrthoLeft() const { return ortho_left_; }
-		int OrthoRight() const { return ortho_right_; }
-		int OrthoTop() const { return ortho_top_; }
-		int OrthoBottom() const { return ortho_bottom_; }
-		const glm::vec3& Position() const { return position_; }
-		const glm::vec3& Right() const { return right_; }
-		const glm::vec3& Direction() const { return direction_; }
-		const glm::vec3& Target() const { return target_; }
-		const glm::vec3& Up() const { return up_; }
-		void SetPosition(const glm::vec3& position) { position_ = position; }
+		void setMouseSpeed(float ms) { mouse_speed_ = ms; }
+		void setSpeed(float spd) { speed_ = spd; }
+		void setHangle(float ha) { horizontal_angle_ = ha; }
+		void setVangle(float va) { vertical_angle_ = va; }
+		void setFov(float fov);
+		void setAspect(float aspect);
+		void setClipPlanes(float z_near, float z_far);
+		void setType(CameraType type);
+		void setOrthoWindow(int left, int right, int top, int bottom);
+		float getMousespeed() const { return mouse_speed_; }
+		float getSpeed() const { return speed_; }
+		float getHangle() const { return horizontal_angle_; }
+		float getVangle() const { return vertical_angle_; }
+		float getFov() const { return fov_; }
+		float getAspect() const { return aspect_; }
+		float getNearClip() const { return near_clip_; }
+		float getFarClip() const { return far_clip_; }
+		CameraType getType() const { return type_; }
+		int getOrthoLeft() const { return ortho_left_; }
+		int getOrthoRight() const { return ortho_right_; }
+		int getOrthoTop() const { return ortho_top_; }
+		int getOrthoBottom() const { return ortho_bottom_; }
+		const glm::vec3& getPosition() const { return position_; }
+		const glm::vec3& getRight() const { return right_; }
+		const glm::vec3& getDirection() const { return direction_; }
+		const glm::vec3& getTarget() const { return target_; }
+		const glm::vec3& getUp() const { return up_; }
+		void setPosition(const glm::vec3& position) { position_ = position; }
 
-		void LookAt(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up);
+		void lookAt(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up);
 
-		const float* Projection() const { return glm::value_ptr(projection_); }
-		const float* View() const { return glm::value_ptr(view_); }
-		const glm::mat4& ViewMat() const { return view_; }
-		const glm::mat4& ProjectionMat() const { return projection_; }
+		const float* getProjection() const { return glm::value_ptr(projection_); }
+		const float* getView() const { return glm::value_ptr(view_); }
+		const glm::mat4& getViewMat() const { return view_; }
+		const glm::mat4& getProjectionMat() const { return projection_; }
 
-		const FrustumPtr& GetFrustum() const { return frustum_; }
-		void AttachFrustum(const FrustumPtr& frustum);
+		const FrustumPtr& getFrustum() const { return frustum_; }
+		void attachFrustum(const FrustumPtr& frustum);
 
-		glm::vec3 ScreenToWorld(int x, int y, int wx, int wy) const;
-		glm::ivec3 GetFacing(const glm::vec3& coords) const;
+		glm::vec3 screenToWorld(int x, int y, int wx, int wy) const;
+		glm::ivec3 getFacing(const glm::vec3& coords) const;
 
-		//variant write();
+		// should this be SceneObjectPtr clone(); ? 
+		// and should this be in the SceneObject class as overridable.
+		CameraPtr clone();
 
-		void ComputeView();
-		void ComputeProjection();
+		variant write();
 
-		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd) override;
 	private:
+		void computeView();
+		void computeProjection();
 		// special case handling if LookAt function is called.
 		// Since we then are specifying the position/target/up
 		// vectors directly rather than being calculated.
@@ -125,7 +128,6 @@ namespace KRE
 		glm::mat4 projection_;
 		glm::mat4 view_;
 
-		Camera(const Camera&);
 		Camera& operator=(const Camera&);
 	};
 }

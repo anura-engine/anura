@@ -157,14 +157,14 @@ namespace gui
 				addWidget(w);
 			}
 		}
-		recalculate_dimensions();
+		recalculateDimensions();
 	}
 
 	Dialog::~Dialog()
 	{
 	}
 
-	void Dialog::recalculate_dimensions()
+	void Dialog::recalculateDimensions()
 	{
 		if(forced_dimensions_.empty()) {
 			int new_w = 0;
@@ -186,7 +186,7 @@ namespace gui
 		::draw_last_scene();
 	}
 
-	void Dialog::quit_delegate()
+	void Dialog::quitDelegate()
 	{
 		if(quit_arg_) {
 			using namespace game_logic;
@@ -196,11 +196,11 @@ namespace gui
 			variant value = ffl_on_quit_->execute(*getEnvironment());
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "dialog::quit_delegate() called without environment!" << std::endl;
+			std::cerr << "dialog::quitDelegate() called without environment!" << std::endl;
 		}
 	}
 
-	void Dialog::close_delegate(bool cancelled)
+	void Dialog::closeDelegate(bool cancelled)
 	{
 		using namespace game_logic;
 		if(close_arg_) {
@@ -215,7 +215,7 @@ namespace gui
 			variant value = ffl_on_close_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "dialog::close_delegate() called without environment!" << std::endl;
+			std::cerr << "dialog::closeDelegate() called without environment!" << std::endl;
 		}
 	}
 
@@ -228,15 +228,15 @@ namespace gui
 
 		if(joystick::up() && !control_lockout_) {
 			control_lockout_ = 10;
-			do_up_event();
+			doUpEvent();
 		}
 		if(joystick::down() && !control_lockout_) {
 			control_lockout_ = 10;
-			do_down_event();
+			doDownEvent();
 		}
 		if((joystick::button(0) || joystick::button(1) || joystick::button(2)) && !control_lockout_) {
 			control_lockout_ = 10;
-			do_select_event();
+			doSelectEvent();
 		}
 
 		if(control_lockout_) {
@@ -267,7 +267,7 @@ namespace gui
 			add_y_ = y;
 			break;
 		}
-		recalculate_dimensions();
+		recalculateDimensions();
 		return *this;
 	}
 
@@ -288,17 +288,17 @@ namespace gui
 			}
 			tab_widgets_.erase(tw_it);
 		}
-		recalculate_dimensions();
+		recalculateDimensions();
 	}
 
 	void Dialog::clear() { 
 		add_x_ = add_y_ = 0;
 		widgets_.clear(); 
 		tab_widgets_.clear();
-		recalculate_dimensions();
+		recalculateDimensions();
 	}
 
-	void Dialog::replace_widget(WidgetPtr w_old, WidgetPtr w_new)
+	void Dialog::replaceWidget(WidgetPtr w_old, WidgetPtr w_new)
 	{
 		int x = w_old->x();
 		int y = w_old->y();
@@ -325,7 +325,7 @@ namespace gui
 		w_new->setLoc(x,y);
 		w_new->setDim(w,h);
 
-		recalculate_dimensions();
+		recalculateDimensions();
 	}
 
 	void Dialog::show() 
@@ -334,7 +334,7 @@ namespace gui
 		setVisible(true);
 	}
 
-	bool Dialog::pump_events()
+	bool Dialog::pumpEvents()
 	{
 		SDL_Event event;
 		bool running = true;
@@ -378,7 +378,7 @@ namespace gui
 		// We do an initial lockout on the controller start button to stop the dialog being instantly closed.
 		int joystick_lockout = 25;
 
-		while(opened_ && pump_events()) {
+		while(opened_ && pumpEvents()) {
 			Uint32 t = profile::get_tick_time();
 			process();
 			prepare_draw();
@@ -403,7 +403,7 @@ namespace gui
 
 	void Dialog::prepare_draw()
 	{
-		if(clear_bg()) {
+		if(clearBg()) {
 			KRE::WindowManager::getMainWindow()->setClearColor(KRE::Color::colorBlack());
 			KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR | KRE::ClearFlags::DISPLAY_CLEAR_DEPTH);
 		}
@@ -447,7 +447,7 @@ namespace gui
 	void Dialog::handleDraw() const
 	{
 		auto canvas = KRE::Canvas::getInstance();
-		if(clear_bg()) {
+		if(clearBg()) {
 			canvas->drawSolidRect(rect(x(),y(),width(),height()), KRE::Color(0,0,0,clear_bg_));
 
 			//fade effect for fullscreen dialogs
@@ -499,7 +499,7 @@ namespace gui
 		}
 	}
 
-	void Dialog::do_up_event()
+	void Dialog::doUpEvent()
 	{
 		if(tab_widgets_.size()) {
 			if(current_tab_focus_ == tab_widgets_.end()) {
@@ -517,7 +517,7 @@ namespace gui
 		}
 	}
 
-	void Dialog::do_down_event()
+	void Dialog::doDownEvent()
 	{
 		if(tab_widgets_.size()) {
 			if(current_tab_focus_ == tab_widgets_.end()) {
@@ -536,7 +536,7 @@ namespace gui
 		}
 	}
 
-	void Dialog::do_select_event()
+	void Dialog::doSelectEvent()
 	{
 		// Process key as an execute here.
 		if(current_tab_focus_ != tab_widgets_.end()) {
@@ -553,13 +553,13 @@ namespace gui
 			if(ev.type == SDL_KEYDOWN) {
 				if(ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_ATTACK) 
 					|| ev.key.keysym.sym == controls::get_keycode(controls::CONTROL_JUMP)) {
-					do_select_event();
+					doSelectEvent();
 				}
 				if(ev.key.keysym.sym == SDLK_TAB) {
 					if(ev.key.keysym.mod & KMOD_SHIFT) {
-						do_up_event();
+						doUpEvent();
 					} else {
-						do_down_event();
+						doDownEvent();
 					}
 					claimed = true;
 				}
@@ -575,11 +575,11 @@ namespace gui
 						claimed = true;
 						break;
 					case SDLK_DOWN:
-						do_down_event();
+						doDownEvent();
 						claimed = true;
 						break;
 					case SDLK_UP:
-						do_up_event();
+						doUpEvent();
 						claimed = true;
 						break;				
 					default: break;

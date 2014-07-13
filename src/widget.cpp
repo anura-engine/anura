@@ -502,7 +502,7 @@ namespace gui
 		v.push_back(variant(obj.getPadHeight()));
 		return variant(&v);
 
-	DEFINE_FIELD(children, "[builtin widget]")
+	DEFINE_FIELD(children, "[builtin Widget]")
 		std::vector<variant> v;
 		std::vector<WidgetPtr> w = obj.getChildren();
 		for(auto item : w) {

@@ -273,6 +273,8 @@
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGLFixed.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\Effects.hpp" />
+    <ClInclude Include="..\..\src\kre\EffectsOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\FboOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\Font.hpp" />
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
@@ -623,6 +625,7 @@
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\EffectsOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\filesystem.cpp" />
     <ClCompile Include="..\..\src\kre\Font.cpp" />

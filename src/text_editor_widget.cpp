@@ -90,7 +90,7 @@ namespace gui
 			}
 
 			char_texture_ptr& char_texture = char_textures[font_size];
-			char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size, monofont())));
+			char_texture.reset(new graphics::texture(font::render_text(str, KRE::Color::colorWhite(), font_size, monofont())));
 
 			for(std::map<char, CharArea>::iterator i = char_to_area.begin();
 				i != char_to_area.end(); ++i) {
@@ -500,7 +500,7 @@ namespace gui
 			i->second.do_blit();
 		}
 
-		SDL_Color border_color = graphics::color_white();
+		SDL_Color border_color = KRE::Color::colorWhite();
 		if(!has_focus_) {
 			border_color.r = 128;
 			border_color.g = 128;

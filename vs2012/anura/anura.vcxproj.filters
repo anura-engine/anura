@@ -960,6 +960,12 @@
     <ClInclude Include="..\..\src\kre\Shaders.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\kre\EffectsOpenGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Effects.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1938,6 +1944,9 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\Shaders.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\EffectsOpenGL.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>

@@ -42,7 +42,7 @@ public:
 	int nrows() const { return nrows_; }
 	void set_min_col_size(int minc) { min_col_size_ = minc; }
 	void set_max_col_size(int maxc) { max_col_size_ = maxc; }
-	void register_selection_callback(std::function<void(const variant&, const variant&)> select_fn) 
+	void registerSelectionCallback(std::function<void(const variant&, const variant&)> select_fn) 
 	{
 		on_select_ = select_fn;
 	}
@@ -74,7 +74,7 @@ private:
 	virtual int traverse(int depth, int x, int y, variant* parent, const variant& key, variant* value);
 	void gen_traverse(int depth, std::function<void(int,const variant&,variant*)> fn, const variant& key, variant* value);
 	int row_at(int xpos, int ypos) const;
-	void recalculate_dimensions();
+	void recalculateDimensions();
 	void calc_column_widths(int depth, const variant& key, variant* value);
 
 	int hpad_;			// Amount int pixels to horizonatally pad

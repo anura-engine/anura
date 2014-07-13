@@ -81,8 +81,8 @@ namespace KRE
 		// Performs the actions to apply the current material to the renderable object.
 		// Returns a boolean indicating whether to use lighting or not for this
 		// material.
-		bool Apply();
-		void Unapply();
+		bool apply();
+		void unApply();
 
 		static MaterialPtr createMaterial(const variant& node);
 	protected:

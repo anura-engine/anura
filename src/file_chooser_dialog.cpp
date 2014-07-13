@@ -165,7 +165,7 @@ void file_chooser_dialog::init()
 		l += file_open_dialog_ ? "To Open" : "To Save";
 	}
 
-	LabelPtr lp = new label(l, graphics::color_white(), 20);
+	LabelPtr lp = new label(l, KRE::Color::colorWhite(), 20);
 	addWidget(WidgetPtr(lp), 30, current_height);
 	current_height += lp->height() + hpad;
 
@@ -185,48 +185,48 @@ void file_chooser_dialog::init()
 	*/
 
 	grid_ptr g(new grid(3));
-	g->set_hpad(50);
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", graphics::color_white())), std::bind(&file_chooser_dialog::up_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", graphics::color_white())), std::bind(&file_chooser_dialog::home_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", graphics::color_white())), std::bind(&file_chooser_dialog::add_dir_button, this))));
+	g->setHpad(50);
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Up", KRE::Color::colorWhite())), std::bind(&file_chooser_dialog::up_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Home", KRE::Color::colorWhite())), std::bind(&file_chooser_dialog::home_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Add", KRE::Color::colorWhite())), std::bind(&file_chooser_dialog::add_dir_button, this))));
 	addWidget(g, 30, current_height);	
 	current_height += g->height() + hpad;
 
 	grid_ptr container(new grid(dir_only_ ? 1 : 2));
-	container->set_hpad(30);
+	container->setHpad(30);
 	container->allow_selection(false);
 	container->set_col_width(0, dir_only_ ? width()*2 : width()/3);
 	if(dir_only_ == false) {
 		container->set_col_width(1, width()/3);
 	}
-	container->set_show_background(false);
+	container->setShowBackground(false);
 
 	g.reset(new grid(1));
 	g->setDim(dir_only_ ? width()/2 : width()/3, height()/3);
 	g->set_max_height(height()/3);
-	g->set_show_background(true);
-	g->allow_selection();
+	g->setShowBackground(true);
+	g->allowSelection();
 	foreach(const std::string& dir, dirs) {
-		g->add_col(WidgetPtr(new label(dir, graphics::color_white())));
+		g->add_col(WidgetPtr(new label(dir, KRE::Color::colorWhite())));
 	}
-	g->register_selection_callback(std::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
+	g->registerSelectionCallback(std::bind(&file_chooser_dialog::execute_change_directory, this, dirs, _1));
 	container->add_col(g);
 
 	if(dir_only_ == false) {
 		g.reset(new grid(1));
 		g->setDim(width()/3, height()/3);
 		g->set_max_height(height()/3);
-		g->set_show_background(true);
-		g->allow_selection();
+		g->setShowBackground(true);
+		g->allowSelection();
 		std::vector<std::string> filtered_file_list;
 		foreach(const std::string& file, files) {
 			boost::regex re(filters_[filter_selection_].second, boost::regex_constants::icase);
 			if(boost::regex_match(file, re)) {
 				filtered_file_list.push_back(file);
-				g->add_col(WidgetPtr(new label(file, graphics::color_white())));
+				g->add_col(WidgetPtr(new label(file, KRE::Color::colorWhite())));
 			}
 		}
-		g->register_selection_callback(std::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
+		g->registerSelectionCallback(std::bind(&file_chooser_dialog::execute_select_file, this, filtered_file_list, _1));
 		container->add_col(g);
 	}
 	addWidget(container, 30, current_height);
@@ -249,9 +249,9 @@ void file_chooser_dialog::init()
 	}
 
 	g.reset(new grid(2));
-	g->set_hpad(20);
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", graphics::color_white())), std::bind(&file_chooser_dialog::ok_button, this))));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", graphics::color_white())), std::bind(&file_chooser_dialog::cancel_button, this))));
+	g->setHpad(20);
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("OK", KRE::Color::colorWhite())), std::bind(&file_chooser_dialog::ok_button, this))));
+	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Cancel", KRE::Color::colorWhite())), std::bind(&file_chooser_dialog::cancel_button, this))));
 	addWidget(g, 30, current_height);
 	current_height += g->height() + hpad;
 }
@@ -324,7 +324,7 @@ void file_chooser_dialog::up_button()
 void file_chooser_dialog::add_dir_button()
 {
 	gui::grid* grid = new gui::grid(1);
-	grid->set_show_background(true);
+	grid->setShowBackground(true);
 	grid->allow_selection(true);
 	grid->swallow_clicks(false);
 	grid->allow_draw_highlight(false);
@@ -334,7 +334,7 @@ void file_chooser_dialog::add_dir_button()
 	dir_name_editor->setOnTabHandler(std::bind(&file_chooser_dialog::execute_dir_name_enter, this, dir_name_editor));
 	dir_name_editor->setFocus(true);
 	grid->add_col(dir_name_editor);
-	grid->register_selection_callback(std::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
+	grid->registerSelectionCallback(std::bind(&file_chooser_dialog::execute_dir_name_select, this, _1));
 
 	int mousex, mousey;
 	input::sdl_get_mouse_state(&mousex, &mousey);

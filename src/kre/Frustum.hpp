@@ -37,14 +37,14 @@ namespace KRE
 		virtual ~Frustum();
 		explicit Frustum(const glm::mat4& perspective, const glm::mat4& view);
 		
-		void UpdateMatrices(const glm::mat4& perspective, const glm::mat4& view);
+		void updateMatrices(const glm::mat4& perspective, const glm::mat4& view);
 
-		bool PointInside(const glm::vec3& pt) const;
-		bool CircleInside(const glm::vec3& pt, float radius) const;
-		bool CubeInside(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
+		bool isPointInside(const glm::vec3& pt) const;
+		bool isCircleInside(const glm::vec3& pt, float radius) const;
+		bool isCubeInside(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
 		
-		int CircleIntersects(const glm::vec3& pt, float radius) const;
-		int CubeIntersects(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
+		int doesCircleIntersect(const glm::vec3& pt, float radius) const;
+		int doesCubeIntersect(const glm::vec3& pt, float xlen, float ylen, float zlen) const;
 	private:
 		enum 
 		{

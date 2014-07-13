@@ -67,7 +67,7 @@ namespace KRE
 			if(renderer_hint_.empty()) {
 				renderer_hint_ = "opengl";
 			}
-			current_display_device() = display_ = DisplayDevice::Factory(renderer_hint_);
+			current_display_device() = display_ = DisplayDevice::factory(renderer_hint_);
 		}
 		~SDLWindowManager() {
 			destroyWindow();
@@ -120,16 +120,16 @@ namespace KRE
 			int w = width_;
 			int h = height_;
 			switch(fullscreenMode()) {
-				case WINDOWED_MODE:		break;
-				case FULLSCREEN_WINDOWED_MODE:
-					x = y = SDL_WINDOWPOS_UNDEFINED;
-					w = h = 0;
-					wnd_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
-					break;
-				case FULLSCREEN_MODE:
-					x = y = SDL_WINDOWPOS_UNDEFINED;
-					wnd_flags |= SDL_WINDOW_FULLSCREEN;
-					break;
+			case FullScreenMode::WINDOWED:		break;
+			case FullScreenMode::FULLSCREEN_WINDOWED:
+				x = y = SDL_WINDOWPOS_UNDEFINED;
+				w = h = 0;
+				wnd_flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
+				break;
+			//case FullscreenMode::FULLSCREEN:
+			//	x = y = SDL_WINDOWPOS_UNDEFINED;
+			//	wnd_flags |= SDL_WINDOW_FULLSCREEN;
+			//	break;
 			}
 			window_.reset(SDL_CreateWindow(getTitle().c_str(), x, y, w, h, wnd_flags), [&](SDL_Window* wnd){
 				if(display_->ID() != DisplayDevice::DISPLAY_DEVICE_SDL) {
@@ -158,10 +158,10 @@ namespace KRE
 				ASSERT_LOG(context_ != NULL, "Failed to GL Context: " << SDL_GetError());
 			}
 
-			display_->SetClearColor(clear_color_);
-			display_->Init(width_, height_);
-			display_->PrintDeviceInfo();
-			display_->Clear(DisplayDevice::DISPLAY_CLEAR_ALL);
+			display_->setClearColor(clear_color_);
+			display_->init(width_, height_);
+			display_->printDeviceInfo();
+			display_->clear(ClearFlags::ALL);
 			swap();
 		}
 
@@ -170,7 +170,7 @@ namespace KRE
 		}
 
 		void clear(ClearFlags f) override {
-			display_->Clear(DisplayDevice::DISPLAY_CLEAR_ALL);
+			display_->clear(ClearFlags::ALL);
 		}
 
 		void swap() override {
@@ -181,7 +181,7 @@ namespace KRE
 				SDL_GL_SwapWindow(window_.get());
 			} else {
 				// default to delegating to the display device.
-				display_->Swap();
+				display_->swap();
 			}
 		}
 
@@ -194,16 +194,14 @@ namespace KRE
 		}
 
 		void setWindowIcon(const std::string& name) override {
-			// XXX SDL_SetWindowIcon(window_.get(), wm_icon.get());
+			SurfaceSDL icon(name);
+			SDL_SetWindowIcon(window_.get(), icon.get());
 		}
 		
 		bool setWindowSize(unsigned width, unsigned height) override {
-			// XXX
-			return false;
-		}
-
-		bool setLogicalWindowSize(unsigned width, unsigned height) override {
-			// XXX
+			SDL_SetWindowSize(window_.get(), width, height);
+			width_ = width;
+			height_ = height;
 			return false;
 		}
 
@@ -225,15 +223,15 @@ namespace KRE
 	private:
 		void handleSetClearColor() override {
 			if(display_ != NULL) {
-				display_->SetClearColor(clear_color_);
+				display_->setClearColor(clear_color_);
 			}
 		}
 		void changeFullscreenMode() override {
 			// XXX
 		}
 		bool handleLogicalWindowSizeChange() override {
-			// XXX
-			return false;
+			// do nothing for now
+			return true;
 		}
 
 		SDL_WindowPtr window_;
@@ -288,7 +286,7 @@ namespace KRE
 		use_vsync_ = en;
 	}
 
-	void WindowManager::mapMousePosition(unsigned* x, unsigned* y) 
+	void WindowManager::mapMousePosition(int* x, int* y) 
 	{
 		if(x) {
 			*x = int(*x * double(logical_width_) / width_);
@@ -335,11 +333,29 @@ namespace KRE
 
 	void WindowManager::destroyWindow()
 	{
-		auto it = std::remove_if(get_window_list().begin(), 
-			get_window_list().end(),
-			[this](WindowManagerPtr p){ return this == p.get(); });
-		get_window_list().erase(it, get_window_list().end());
+		for(auto it = get_window_list().begin(); it != get_window_list().end(); ) {
+			if(it->second.get() == this) {
+				get_window_list().erase(it++);
+			} else {
+				++it;
+			}
+		}
 		doDestroyWindow();
+	}
+
+	//! Save the current window display to a file
+	void WindowManager::saveFrameBuffer(const std::string& filename)
+	{
+		// XXX
+		auto surface = Surface::create(width_, height_, PixelFormat::PF::PIXELFORMAT_RGB24);
+		std::vector<glm::u8vec3> pixels;
+		if(display_->readPixels(0, 0, width_, height_, ReadFormat::RGB, AttrFormat::UNSIGNED_BYTE, pixels)) {
+			surface->writePixels(&pixels[0]);
+			surface->savePng(filename);
+			LOG_WARN("Saved screenshot to: " << filename);
+		} else {
+			LOG_WARN("Failed to save screenshot");
+		}
 	}
 
 	WindowManagerPtr WindowManager::factory(const std::string& title, const std::string& wnd_hint, const std::string& rend_hint)
@@ -359,8 +375,10 @@ namespace KRE
 	std::vector<WindowManagerPtr> WindowManager::getWindowList()
 	{
 		std::vector<WindowManagerPtr> res;
-		for(auto pr : get_window_list()) {
-			res.push_back(pr.second);
+		std::map<unsigned,WindowManagerPtr>::iterator& it = get_window_list().begin();
+		while(it != get_window_list().end()) {
+			res.push_back(it->second);
+			++it;
 		}
 		return res;
 	}

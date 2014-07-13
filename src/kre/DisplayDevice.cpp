@@ -24,7 +24,6 @@
 #include <map>
 
 #include "../asserts.hpp"
-#include "../logger.hpp"
 #include "DisplayDevice.hpp"
 
 namespace KRE
@@ -64,12 +63,12 @@ namespace KRE
 	{
 	}
 
-	void DisplayDevice::SetClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void DisplayDevice::setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
 	{
-		SetClearColor(r/255.0f, g/255.0f, b/255.0f, a/255.0f);
+		setClearColor(r/255.0f, g/255.0f, b/255.0f, a/255.0f);
 	}
 
-	DisplayDevicePtr DisplayDevice::Factory(const std::string& type)
+	DisplayDevicePtr DisplayDevice::factory(const std::string& type)
 	{
 		ASSERT_LOG(!get_display_registry().empty(), "No display device drivers registered.");
 		auto it = get_display_registry().find(type);
@@ -88,7 +87,7 @@ namespace KRE
 		return current_display_device();
 	}
 
-	void DisplayDevice::RegisterFactoryFunction(const std::string& type, std::function<DisplayDevicePtr()> create_fn)
+	void DisplayDevice::registerFactoryFunction(const std::string& type, std::function<DisplayDevicePtr()> create_fn)
 	{
 		auto it = get_display_registry().find(type);
 		if(it != get_display_registry().end()) {
@@ -97,15 +96,15 @@ namespace KRE
 		get_display_registry()[type] = create_fn;
 	}
 
-	void DisplayDevice::BlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
+	void DisplayDevice::blitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
-		getCurrent()->DoBlitTexture(tex, dstx, dsty, dstw, dsth, rotation, srcx, srcy, srcw, srch);
+		getCurrent()->doBlitTexture(tex, dstx, dsty, dstw, dsth, rotation, srcx, srcy, srcw, srch);
 	}
 
-	AttributeSetPtr DisplayDevice::CreateAttributeSet(bool hardware_hint, bool indexed, bool instanced)
+	AttributeSetPtr DisplayDevice::createAttributeSet(bool hardware_hint, bool indexed, bool instanced)
 	{
 		if(hardware_hint) {
-			auto as = DisplayDevice::getCurrent()->HandleCreateAttributeSet(indexed, instanced);
+			auto as = DisplayDevice::getCurrent()->handleCreateAttributeSet(indexed, instanced);
 			if(as) {
 				return as;
 			}
@@ -113,10 +112,10 @@ namespace KRE
 		return AttributeSetPtr(new AttributeSet(indexed, instanced));
 	}
 
-	HardwareAttributePtr DisplayDevice::CreateAttributeBuffer(bool hw_backed, AttributeBase* parent)
+	HardwareAttributePtr DisplayDevice::createAttributeBuffer(bool hw_backed, AttributeBase* parent)
 	{
 		if(hw_backed) {
-			auto attrib = DisplayDevice::getCurrent()->HandleCreateAttribute(parent);
+			auto attrib = DisplayDevice::getCurrent()->handleCreateAttribute(parent);
 			if(attrib) {
 				return attrib;
 			}
@@ -124,14 +123,14 @@ namespace KRE
 		return HardwareAttributePtr(new HardwareAttributeImpl(parent));
 	}
 
-	RenderTargetPtr DisplayDevice::RenderTargetInstance(size_t width, size_t height, 
+	RenderTargetPtr DisplayDevice::renderTargetInstance(size_t width, size_t height, 
 		size_t color_plane_count, 
 		bool depth, 
 		bool stencil, 
 		bool use_multi_sampling, 
 		size_t multi_samples)
 	{
-		return getCurrent()->HandleCreateRenderTarget(width, height, 
+		return getCurrent()->handleCreateRenderTarget(width, height, 
 			color_plane_count, 
 			depth, 
 			stencil, 
@@ -139,54 +138,76 @@ namespace KRE
 			multi_samples);
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(const SurfacePtr& surface, const variant& node)
+	TexturePtr DisplayDevice::createTexture(const variant& node)
 	{
-		return getCurrent()->HandleCreateTexture(surface, node);
+		// XXX Need to get a cache key from a variant to see if we've already create a texture.
+		auto tex = getCurrent()->handleCreateTexture(node);
+		return tex;
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
 	{
-		return getCurrent()->HandleCreateTexture(surface, type, mipmap_levels);
+		//if(cache) {
+		//	auto it = get_texture_cache().find(surface.getKey());
+		//	if(it != get_texture_cache().end()) {
+		//		return it->second;
+		//	}
+		//}
+		auto tex = getCurrent()->handleCreateTexture(surface, node);
+		if(!cache) {
+			return tex;
+		}
+		//auto it = get_texture_cache().find(surface.getKey());
+		//if(it != get_texture_cache().end()) {
+		//	LOG_WARN("replacing texture in cache: " << surface.name());
+		//}
+		//get_texture_cache[surface.getKey()] = tex;
+		return tex;
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(unsigned width, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
 	{
-		return getCurrent()->HandleCreateTexture(width, fmt);
+		return getCurrent()->handleCreateTexture(surface, type, mipmap_levels);
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDevice::createTexture(unsigned width, PixelFormat::PF fmt)
 	{
-		return getCurrent()->HandleCreateTexture(width, height, fmt, type);
+		return getCurrent()->handleCreateTexture(width, fmt);
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
 	{
-		return getCurrent()->HandleCreateTexture(width, height, depth, fmt);
+		return getCurrent()->handleCreateTexture(width, height, fmt, type);
 	}
 
-	TexturePtr DisplayDevice::CreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDevice::createTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
-		return getCurrent()->HandleCreateTexture(filename, type, mipmap_levels);
+		return getCurrent()->handleCreateTexture(width, height, depth, fmt);
 	}
 
-	MaterialPtr DisplayDevice::CreateMaterial(const variant& node)
+	TexturePtr DisplayDevice::createTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
 	{
-		return getCurrent()->HandleCreateMaterial(node);
+		return getCurrent()->handleCreateTexture(filename, type, mipmap_levels);
 	}
 
-	MaterialPtr DisplayDevice::CreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend, bool fog, bool lighting, bool depth_write, bool depth_check)
+	MaterialPtr DisplayDevice::createMaterial(const variant& node)
 	{
-		return getCurrent()->HandleCreateMaterial(name, textures, blend, fog, lighting, depth_write, depth_check);
+		return getCurrent()->handleCreateMaterial(node);
 	}
 
-	RenderTargetPtr DisplayDevice::RenderTargetInstance(const variant& node)
+	MaterialPtr DisplayDevice::createMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend, bool fog, bool lighting, bool depth_write, bool depth_check)
 	{
-		return DisplayDevice::getCurrent()->HandleCreateRenderTarget(node);
+		return getCurrent()->handleCreateMaterial(name, textures, blend, fog, lighting, depth_write, depth_check);
 	}
 
-	bool DisplayDevice::CheckForFeature(DisplayDeviceCapabilties cap)
+	RenderTargetPtr DisplayDevice::renderTargetInstance(const variant& node)
 	{
-		return DisplayDevice::getCurrent()->DoCheckForFeature(cap);
+		return DisplayDevice::getCurrent()->handleCreateRenderTarget(node);
+	}
+
+	bool DisplayDevice::checkForFeature(DisplayDeviceCapabilties cap)
+	{
+		return DisplayDevice::getCurrent()->doCheckForFeature(cap);
 	}
 
 	DisplayDeviceDef::DisplayDeviceDef(const std::vector<AttributeSetPtr>& as)
@@ -198,13 +219,13 @@ namespace KRE
 	{
 	}
 
-	void DisplayDeviceDef::SetHint(const std::string& hint_name, const std::string& hint)
+	void DisplayDeviceDef::setHint(const std::string& hint_name, const std::string& hint)
 	{
 		HintList hint_list(1,hint);
 		hints_.insert(std::make_pair(hint_name, hint_list));
 	}
 
-	void DisplayDeviceDef::SetHint(const std::string& hint_name, const HintList& hint)
+	void DisplayDeviceDef::setHint(const std::string& hint_name, const HintList& hint)
 	{
 		hints_[hint_name] = hint;
 	}

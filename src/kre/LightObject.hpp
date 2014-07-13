@@ -24,56 +24,56 @@
 #pragma once
 
 #include "SceneObject.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
+	enum class LightType {
+		POINT,
+		DIRECTIONAL,
+		SPOT,
+	};
+
 	class Light : public SceneObject
 	{
 	public:
-		enum LightType {
-			LT_POINT,
-			LT_DIRECTIONAL,
-			LT_SPOT,
-		};
 		explicit Light(const std::string& name, const glm::vec3& position);
-		//explicit Light(const variant& node);
+		explicit Light(const variant& node);
 		virtual ~Light();
-		DisplayDeviceDef Attach(const DisplayDevicePtr& dd) override;
-		void SetType(LightType type);
-		void SetPosition(const glm::vec3& position);
-		void SetAmbientColor(const glm::vec4& color);
-		void SetDiffuseColor(const glm::vec4& color);
-		void SetSpecularColor(const glm::vec4& color);
-		void SetSpotDirection(const glm::vec3& direction);
-		void SetSpotExponent(float sexp);
-		void SetSpotCutoff(float cutoff);
-		void SetAttenuation(float constant, float linear, float quadratic);
-		LightType Type() const { return type_; }
-		const glm::vec3 Position() const { return position_; }
-		const glm::vec4 AmbientColor() const { return ambient_color_; }
-		const glm::vec4 DiffuseColor() const { return diffuse_color_; }
-		const glm::vec4 SpecularColor() const { return specular_color_; }
-		const glm::vec3 SpotDirection() const { return spot_direction_; }
-		float SpotExponent() const { return spot_exponent_; }
-		float SpotCutoff() const { return spot_cutoff_; }
-		float ConstantAttenuation() const { return constant_attenuation_; }
-		float LinearAttenuation() const { return linear_attenuation_; }
-		float QuadraticAttenuation() const { return quadratic_attenuation_; }
-		//variant write() const;
+		void setType(LightType type);
+		void setPosition(const glm::vec3& position);
+		void setAmbientColor(const Color& color);
+		void setDiffuseColor(const Color& color);
+		void setSpecularColor(const Color& color);
+		void setSpotDirection(const glm::vec3& direction);
+		void setSpotExponent(float sexp);
+		void setSpotCutoff(float cutoff);
+		void setAttenuation(float constant, float linear, float quadratic);
+		LightType getType() const { return type_; }
+		const glm::vec3 getPosition() const { return position_; }
+		const Color getAmbientColor() const { return ambient_color_; }
+		const Color getDiffuseColor() const { return diffuse_color_; }
+		const Color getSpecularColor() const { return specular_color_; }
+		const glm::vec3 getSpotDirection() const { return spot_direction_; }
+		float getSpotExponent() const { return spot_exponent_; }
+		float getSpotCutoff() const { return spot_cutoff_; }
+		float getConstantAttenuation() const { return constant_attenuation_; }
+		float getLinearAttenuation() const { return linear_attenuation_; }
+		float getQuadraticAttenuation() const { return quadratic_attenuation_; }
+		variant write() const;
+		LightPtr clone();
 	private:
+		DISALLOW_DEFAULT_AND_ASSIGN(Light);
 		LightType type_;
 		glm::vec3 position_;
-		glm::vec4 ambient_color_;
-		glm::vec4 diffuse_color_;
-		glm::vec4 specular_color_;
+		Color ambient_color_;
+		Color diffuse_color_;
+		Color specular_color_;
 		glm::vec3 spot_direction_;
 		float spot_exponent_;
 		float spot_cutoff_;
 		float constant_attenuation_;
 		float linear_attenuation_;
 		float quadratic_attenuation_;
-		Light();
-		Light(const Light&);
-		Light& operator=(const Light&);
 	};
 }

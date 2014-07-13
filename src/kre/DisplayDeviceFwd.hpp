@@ -37,4 +37,7 @@ namespace KRE
 
 	class Texture;
 	typedef std::shared_ptr<Texture> TexturePtr;
+
+	class Effect;
+	typedef std::shared_ptr<Effect> EffectPtr;
 }

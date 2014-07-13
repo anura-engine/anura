@@ -54,6 +54,11 @@ namespace KRE
 		double blue() const { return color_[2]; }
 		double alpha() const { return color_[3]; }
 
+		float rf() const { return static_cast<float>(color_[0]); }
+		float gf() const { return static_cast<float>(color_[1]); }
+		float bf() const { return static_cast<float>(color_[2]); }
+		float af() const { return static_cast<float>(color_[3]); }
+
 		int r_int() const { return static_cast<int>(255*color_[0]); }
 		int g_int() const { return static_cast<int>(255*color_[1]); }
 		int b_int() const { return static_cast<int>(255*color_[2]); }

@@ -37,17 +37,17 @@ namespace KRE
 	public:
 		SceneGraph(const std::string& name);
 		~SceneGraph();
-		void AttachNode(SceneNode* parent, SceneNodePtr node);
-		static SceneGraphPtr Create(const std::string& name);
-		SceneNodePtr CreateNode(const std::string& node_type=std::string(), const variant& node=variant());
-		static void RegisterObjectType(const std::string& type, ObjectTypeFunction fn);
-		SceneNodePtr RootNode();
-		void RenderScene(const RenderManagerPtr& renderer);
-		void RenderSceneHelper(const RenderManagerPtr& renderer, the::tree<SceneNodePtr>::pre_iterator& it, SceneNodeParams* snp);
+		void attachNode(SceneNode* parent, SceneNodePtr node);
+		static SceneGraphPtr create(const std::string& name);
+		SceneNodePtr createNode(const std::string& node_type=std::string(), const variant& node=variant());
+		SceneNodePtr getRootNode();
+		void renderScene(const RenderManagerPtr& renderer);
+		void renderSceneHelper(const RenderManagerPtr& renderer, the::tree<SceneNodePtr>::pre_iterator& it, SceneNodeParams* snp);
 	
-		void Process(double);
+		void process(double);
 
-		static void RegisterFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)>);
+		static void registerObjectType(const std::string& type, ObjectTypeFunction fn);
+		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)>);
 	private:
 		std::string name_;
 		the::tree<SceneNodePtr> graph_;
@@ -64,7 +64,7 @@ namespace KRE
 		SceneNodeRegistrar(const std::string& type)
 		{
 			// register the class factory function 
-			SceneGraph::RegisterFactoryFunction(type, [](SceneGraph* sg, const variant& node) -> SceneNodePtr { return SceneNodePtr(new T(sg, node));});
+			SceneGraph::registerFactoryFunction(type, [](SceneGraph* sg, const variant& node) -> SceneNodePtr { return std::make_shared<SceneNode>(sg, node); });
 		}
 	};
 }

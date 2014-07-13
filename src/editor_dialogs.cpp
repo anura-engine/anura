@@ -38,18 +38,18 @@ std::string show_choose_level_dialog(const std::string& prompt)
 {
 	using namespace gui;
 	dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
-	d.addWidget(WidgetPtr(new label(prompt, graphics::color_white(), 48)));
+	d.addWidget(WidgetPtr(new label(prompt, KRE::Color::colorWhite(), 48)));
 
 	std::string result;
 	std::vector<std::string> levels = get_known_levels();
 	gui::grid* grid = new gui::grid(1);
 	grid->set_max_height(graphics::screen_height() - 80);
-	grid->set_show_background(true);
-	grid->allow_selection();
+	grid->setShowBackground(true);
+	grid->allowSelection();
 
-	grid->register_selection_callback(std::bind(&do_select_level, &d, levels, _1, &result));
+	grid->registerSelectionCallback(std::bind(&do_select_level, &d, levels, _1, &result));
 	foreach(const std::string& lvl, levels) {
-		grid->add_col(WidgetPtr(new label(lvl, graphics::color_white())));
+		grid->add_col(WidgetPtr(new label(lvl, KRE::Color::colorWhite())));
 	}
 
 	d.addWidget(WidgetPtr(grid));

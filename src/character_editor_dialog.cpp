@@ -42,7 +42,7 @@ namespace editor_dialogs
 	CharacterEditorDialog::CharacterEditorDialog(editor& e)
 	  : gui::Dialog(KRE::WindowManager::getMainWindow()->width() - EDITOR_SIDEBAR_WIDTH, 160, EDITOR_SIDEBAR_WIDTH, 440), editor_(e)
 	{
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 		if(editor_.all_characters().empty() == false) {
 			category_ = editor_.all_characters().front().category;
 		}
@@ -155,10 +155,10 @@ namespace editor_dialogs
 		gui::grid* grid = new gui::grid(2);
 		grid->setZOrder(100);
 		grid->set_max_height(height());
-		grid->set_show_background(true);
-		grid->set_hpad(10);
-		grid->allow_selection();
-		grid->register_selection_callback(std::bind(&CharacterEditorDialog::close_context_menu, this, _1));
+		grid->setShowBackground(true);
+		grid->setHpad(10);
+		grid->allowSelection();
+		grid->registerSelectionCallback(std::bind(&CharacterEditorDialog::close_context_menu, this, _1));
 
 		std::map<std::string, const editor::enemy_type*> categories;
 		for(const editor::enemy_type& c : editor_.all_characters()) {

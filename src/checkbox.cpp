@@ -38,7 +38,7 @@ namespace gui
 			BUTTON_RESOLUTION resolution,
 			int hpadding=12) {
 			grid_ptr g(new grid(2));
-			g->set_hpad(hpadding);
+			g->setHpad(hpadding);
 			g->add_col(WidgetPtr(new GuiSectionWidget(checked 
 				? "checkbox_ticked" 
 				: "checkbox_unticked", -1, -1, resolution == BUTTON_SIZE_NORMAL_RESOLUTION ? 1 : 2)));

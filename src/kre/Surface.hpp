@@ -133,6 +133,7 @@ namespace KRE
 	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFileFn;
 	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
 	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
+	typedef std::function<SurfacePtr(unsigned, unsigned, PixelFormat::PF)> SurfaceCreatorFormatFn;
 
 	class Surface
 	{
@@ -146,6 +147,7 @@ namespace KRE
 		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& dst_rect) = 0;
+		virtual void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 
 		virtual void writePixels(unsigned bpp, 
 			uint32_t rmask, 
@@ -181,7 +183,11 @@ namespace KRE
 		virtual const rect getClipRect() = 0;
 		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
-		static bool registerSurfaceCreator(const std::string& name, SurfaceCreatorFileFn file_fn, SurfaceCreatorPixelsFn pixels_fn, SurfaceCreatorMaskFn mask_fn);
+		static bool registerSurfaceCreator(const std::string& name, 
+			SurfaceCreatorFileFn file_fn, 
+			SurfaceCreatorPixelsFn pixels_fn, 
+			SurfaceCreatorMaskFn mask_fn,
+			SurfaceCreatorFormatFn format_fn);
 		static void unRegisterSurfaceCreator(const std::string& name);
 		static SurfacePtr create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
 		static SurfacePtr create(unsigned width, 
@@ -200,6 +206,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		static SurfacePtr create(unsigned width, unsigned height, PixelFormat::PF fmt);
 
 		static void resetSurfaceCache();
 	protected:

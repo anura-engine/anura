@@ -87,7 +87,7 @@ namespace widget_factory
 			return WidgetPtr(new Dialog(v,e));
 	#ifndef NO_EDITOR
 		} else if(wtype == "drag_widget") {
-			return WidgetPtr(new drag_widget(v,e));
+			return WidgetPtr(new DragWidget(v,e));
 	#endif
 		} else if(wtype == "graphical_font_label") {
 			return WidgetPtr(new GraphicalFontLabel(v,e));
@@ -118,7 +118,7 @@ namespace widget_factory
 		} else if(wtype == "selector") {
 			return WidgetPtr(new SelectorWidget(v, e));
 		} else if(wtype == "object") {
-			return WidgetPtr(new custom_object_Widget(v, e));
+			return WidgetPtr(new CustomObjectWidget(v, e));
 		} else if(wtype == "bar") {
 			return WidgetPtr(new BarWidget(v, e));
 		} else if(wtype == "color_picker") {

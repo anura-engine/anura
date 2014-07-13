@@ -382,7 +382,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	if(pos.flip_rotate) {
 		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
-		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
 		const int pixels = (preferences::actual_screen_width()/2)*angle;

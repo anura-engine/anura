@@ -25,6 +25,7 @@
 
 #include "Renderable.hpp"
 #include "SceneFwd.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
@@ -33,16 +34,19 @@ namespace KRE
 	public:
 		explicit SceneObject(const std::string& name);
 		explicit SceneObject(const variant& node);
+		SceneObject(const SceneObject& op);
 		virtual ~SceneObject();
 		size_t getQueue() const { return queue_; }
 		void setQueue(size_t q) { queue_ = q; }
 		const std::string& objectName() const { return name_; }
+		const std::string& getShaderName() const { return shader_name_; }
+		void setShaderName(const std::string& shader);
 		DisplayDeviceDef attach(const DisplayDevicePtr& dd);
 	private:
-		virtual DisplayDeviceDef doAttach(const DisplayDevicePtr& dd) = 0;
+		DISALLOW_DEFAULT_AND_ASSIGN(SceneObject);
+		virtual void doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) {}
 		size_t queue_;
 		std::string name_;
-		SceneObject();
-		SceneObject(const SceneObject&);
+		std::string shader_name_;
 	};
 }

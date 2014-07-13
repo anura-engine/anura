@@ -71,10 +71,10 @@ namespace graphics
 
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
 			auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			ab->addAttribute(AttributeBasePtr(pos));
 
-			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+			ab->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
 			addAttributeSet(ab);
 
 			pos->update(&varray);
@@ -148,10 +148,10 @@ namespace graphics
 			using namespace KRE;
 			if(color_.a() > 0) {
 				auto ab = DisplayDevice::createAttributeSet(false, false, false);
-				auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-				pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+				auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+				pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 				ab->addAttribute(AttributeBasePtr(pos));
-				ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_FAN);
+				ab->setDrawMode(DrawMode::TRIANGLE_FAN);
 				ab->setColor(color_);
 				addAttributeSet(ab);
 				pos->update(varray);
@@ -159,10 +159,10 @@ namespace graphics
 
 			if(stroke_color_.a() > 0) {
 				auto ll = DisplayDevice::createAttributeSet(false, false, false);
-				auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-				ll_pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+				auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+				ll_pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 				ll->addAttribute(AttributeBasePtr(ll_pos));
-				ll->setDrawMode(KRE::AttributeSet::DrawMode::LINE_LOOP);
+				ll->setDrawMode(DrawMode::LINE_LOOP);
 				ll->setColor(stroke_color_);
 				addAttributeSet(ll);
 				ll_pos->update(varray);
@@ -183,7 +183,7 @@ namespace graphics
 			void preRender(const KRE::WindowManagerPtr& wnd) override;
 		private:
 			DECLARE_CALLABLE(ArrowPrimitive);
-			KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
+			void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
 			void init();
 			void setPoints(const variant& points);
 			void curve(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, std::vector<glm::vec2>* out) const;
@@ -236,19 +236,15 @@ namespace graphics
 			init();
 		}
 
-		KRE::DisplayDeviceDef ArrowPrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
+		void ArrowPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
 		{
-			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
 			if(getShaderName().empty()) {
 				if(texture_) {
-					def.setHint("shader", "vtc_shader");
+					def->setHint("shader", "vtc_shader");
 				} else {
-					def.setHint("shader", "attr_color_shader");
+					def->setHint("shader", "attr_color_shader");
 				}
-			} else {
-				def.setHint("shader", getShaderName());
 			}
-			return def;
 		}
 
 		void ArrowPrimitive::init()
@@ -256,21 +252,21 @@ namespace graphics
 			using namespace KRE;
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
 			pos_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
-			pos_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			pos_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			ab->addAttribute(pos_);
 
 			col_.reset(new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
-			col_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true));
+			col_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
 			ab->addAttribute(col_);
 
 			tex_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
-			tex_->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			tex_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			if(texture_ == NULL) {
 				tex_->disable();
 			}
 			ab->addAttribute(tex_);
 
-			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+			ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 			addAttributeSet(ab);	
 		}
 
@@ -454,7 +450,7 @@ namespace graphics
 
 		private:
 			DECLARE_CALLABLE(WireframeBoxPrimitive);
-			KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
+			void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
 
 			void init();
 
@@ -522,25 +518,21 @@ namespace graphics
 			using namespace KRE;
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
 			auto pos = new Attribute<glm::vec3>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 3, AttributeDesc::VariableType::FLOAT, false));
+			pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 3, AttrFormat::FLOAT, false));
 			ab->addAttribute(AttributeBasePtr(pos));
 
-			ab->setDrawMode(KRE::AttributeSet::DrawMode::LINES);
+			ab->setDrawMode(KRE::DrawMode::LINES);
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
 			pos->update(&varray_);
 		}
 
-		KRE::DisplayDeviceDef WireframeBoxPrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
+		void WireframeBoxPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
 		{
-			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
 			if(getShaderName().empty()) {
-				def.setHint("shader", "line_3d");
-			} else {
-				def.setHint("shader", getShaderName());
+				def->setHint("shader", "line_3d");
 			}
-			return def;
 		}
 
 		BEGIN_DEFINE_CALLABLE(WireframeBoxPrimitive, DrawPrimitive)
@@ -602,15 +594,11 @@ namespace graphics
 	private:
 		DECLARE_CALLABLE(BoxPrimitive);
 
-		KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd)
+		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override
 		{
-			KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
 			if(getShaderName().empty()) {
-				def.setHint("shader", "line_3d");
-			} else {
-				def.setHint("shader", getShaderName());
+				def->setHint("shader", "line_3d");
 			}
-			return def;
 		}
 
 		void init()
@@ -678,10 +666,10 @@ namespace graphics
 			using namespace KRE;
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
 			auto pos = new Attribute<glm::vec3>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 3, AttributeDesc::VariableType::FLOAT, false));
+			pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 3, AttrFormat::FLOAT, false));
 			ab->addAttribute(AttributeBasePtr(pos));
 
-			ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLES);
+			ab->setDrawMode(KRE::DrawMode::TRIANGLES);
 			addAttributeSet(ab);
 
 			// might be better doing this in pre-render?
@@ -735,7 +723,6 @@ namespace graphics
 		~LinePrimitive() {}
 	private:
 		DECLARE_CALLABLE(LinePrimitive);
-		KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 		void init();
 		int x1_;
 		int y1_;
@@ -792,12 +779,6 @@ namespace graphics
 		init();
 	}
 
-	KRE::DisplayDeviceDef LinePrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
-	{
-		KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
-		return def;
-	}
-
 	void LinePrimitive::init()
 	{
 		double theta = std::atan2(static_cast<double>(y2_-y1_),static_cast<double>(x2_-x1_));
@@ -824,15 +805,15 @@ namespace graphics
 		using namespace KRE;
 
 		auto ab = DisplayDevice::createAttributeSet(false, false, false);
-		auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-		pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+		auto pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 		ab->addAttribute(AttributeBasePtr(pos));
 
-		auto col = new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-		col->addAttributeDesc(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true));
+		auto col = new Attribute<glm::u8vec4>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		col->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true));
 		ab->addAttribute(AttributeBasePtr(col));
 
-		ab->setDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 		addAttributeSet(ab);
 
 		pos->update(&v1array_);
@@ -841,10 +822,10 @@ namespace graphics
 		if(has_stroke_) {
 			auto ll = DisplayDevice::createAttributeSet(false, false, false);
 			auto ll_pos = new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-			ll_pos->addAttributeDesc(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false));
+			ll_pos->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
 			ll->addAttribute(AttributeBasePtr(ll_pos));
 			ll->setColor(stroke_color_);
-			ll->setDrawMode(KRE::AttributeSet::DrawMode::LINE_LOOP);
+			ll->setDrawMode(DrawMode::LINE_LOOP);
 			addAttributeSet(ll);
 
 			ll_pos->update(&v2array_);
@@ -904,20 +885,13 @@ namespace graphics
 	DrawPrimitive::DrawPrimitive(const variant& node)
 		: SceneObject(node)
 	{
-		if(node.has_key("shader")) {
-			shader_name_ = node["shader"].as_string();
-		}
 	}
 
-	KRE::DisplayDeviceDef DrawPrimitive::doAttach(const KRE::DisplayDevicePtr& dd)
+	void DrawPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
 	{
-		KRE::DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
-		if(shader_name_.empty()) {
-			def.setHint("shader", "attr_color_shader");
-		} else {
-			def.setHint("shader", shader_name_);
+		if(getShaderName().empty()) {
+			def->setHint("shader", "attr_color_shader");
 		}
-		return def;
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(DrawPrimitive)

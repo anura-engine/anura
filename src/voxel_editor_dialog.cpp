@@ -64,7 +64,7 @@ namespace editor_dialogs
 	{
 		all_tileset_editor_dialogs().insert(this);
 
-		set_clear_bg_amount(255);
+		setClearBgAmount(255);
 	
 		if(voxel::chunk::getTexturedEditorTiles().empty() == false) {
 			category_ = voxel::chunk::getTexturedEditorTiles().front().group;
@@ -101,7 +101,7 @@ namespace editor_dialogs
 		std::stringstream str;
 
 		grid_ptr grid(new gui::grid(6));
-		grid->set_hpad(5);
+		grid->setHpad(5);
 
 		grid->add_col(new label("W: "));
 		grid->add_col(new button("-10", std::bind(&voxel_editor_dialog::decrement_width, this, 10)));
@@ -132,18 +132,18 @@ namespace editor_dialogs
 		addWidget(grid, 10, 10);
 		int next_height = grid->x() + grid->height() + 5;
 
-		button* random_landscape = new button(WidgetPtr(new label("Random", graphics::color_white())), std::bind(&voxel_editor_dialog::random_isomap, this));
-		button* flat_landscape = new button(WidgetPtr(new label("Flat", graphics::color_white())), std::bind(&voxel_editor_dialog::flat_plane_isomap, this));
-		mode_swap_button_.reset(new button(WidgetPtr(new label(textured_mode_ ? "Textured" : "Colored", graphics::color_white())), std::bind(&voxel_editor_dialog::swap_mode, this)));
+		button* random_landscape = new button(WidgetPtr(new label("Random", KRE::Color::colorWhite())), std::bind(&voxel_editor_dialog::random_isomap, this));
+		button* flat_landscape = new button(WidgetPtr(new label("Flat", KRE::Color::colorWhite())), std::bind(&voxel_editor_dialog::flat_plane_isomap, this));
+		mode_swap_button_.reset(new button(WidgetPtr(new label(textured_mode_ ? "Textured" : "Colored", KRE::Color::colorWhite())), std::bind(&voxel_editor_dialog::swap_mode, this)));
 		grid.reset(new gui::grid(2));
-		grid->set_hpad(10);
+		grid->setHpad(10);
 		grid->add_col(random_landscape);
 		grid->add_col(flat_landscape);
 		grid->add_col(mode_swap_button_).finish_row();
 		addWidget(grid, 10, next_height);
 
 		if(textured_mode_) {
-			button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), std::bind(&voxel_editor_dialog::show_category_menu, this));
+			button* category_button = new button(WidgetPtr(new label("Category: " + category_, KRE::Color::colorWhite())), std::bind(&voxel_editor_dialog::show_category_menu, this));
 			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
@@ -168,7 +168,7 @@ namespace editor_dialogs
 			grid->finish_row();
 			addWidget(grid);
 		} else {
-			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, graphics::color_white())), std::bind(&voxel_editor_dialog::show_category_menu, this));
+			/*button* category_button = new button(WidgetPtr(new label("Category: " + category_, KRE::Color::colorWhite())), std::bind(&voxel_editor_dialog::show_category_menu, this));
 			addWidget(category_button, 10, grid->y() + grid->height() + 5);
 
 			grid.reset(new gui::grid(3));
@@ -281,10 +281,10 @@ namespace editor_dialogs
 		gui::grid* grid = new gui::grid(2);
 		grid->setZOrder(100);
 		grid->swallow_clicks();
-		grid->set_show_background(true);
-		grid->set_hpad(10);
-		grid->allow_selection();
-		grid->register_selection_callback(std::bind(&voxel_editor_dialog::close_context_menu, this, _1));
+		grid->setShowBackground(true);
+		grid->setHpad(10);
+		grid->allowSelection();
+		grid->registerSelectionCallback(std::bind(&voxel_editor_dialog::close_context_menu, this, _1));
 
 		std::set<std::string> categories;
 		foreach(const voxel::TexturedTileEditorInfo& t, voxel::chunk::getTexturedEditorTiles()) {
@@ -297,7 +297,7 @@ namespace editor_dialogs
 			ImageWidget* preview = new ImageWidget(t.tex, 54, 54);
 			preview->setArea(t.area);
 			grid->add_col(WidgetPtr(preview))
-				 .add_col(WidgetPtr(new label(t.group, graphics::color_white())));
+				 .add_col(WidgetPtr(new label(t.group, KRE::Color::colorWhite())));
 			grid->register_row_selection_callback(std::bind(&voxel_editor_dialog::select_category, this, t.group));
 		}
 

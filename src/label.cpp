@@ -299,11 +299,11 @@ namespace gui
 				cp->setPrimaryColor(graphics::color(color_));
 
 				grid_ptr gg = new grid(1);
-				gg->allow_selection();
+				gg->allowSelection();
 				gg->swallow_clicks();
-				gg->set_show_background(true);
+				gg->setShowBackground(true);
 				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
+				gg->registerSelectionCallback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);
 				d->addWidget(gg, d->x()-mx-100, my);

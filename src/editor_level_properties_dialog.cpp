@@ -1,240 +1,246 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #ifndef NO_EDITOR
-#include "graphics.hpp"
 
 #include <algorithm>
 #include <iostream>
 
+#include "kre/WindowManager.hpp"
+
 #include "background.hpp"
 #include "button.hpp"
 #include "checkbox.hpp"
+#include "draw_scene.hpp"
 #include "editor.hpp"
 #include "editor_dialogs.hpp"
 #include "editor_level_properties_dialog.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "grid_widget.hpp"
 #include "input.hpp"
 #include "label.hpp"
-#include "raster.hpp"
 #include "stats.hpp"
 #include "text_editor_widget.hpp"
 
 namespace editor_dialogs
 {
+	using std::placeholders::_1;
 
-namespace {
-
-void set_segmented_level_width(editor_level_properties_dialog* d, editor* e, bool value)
-{
-	foreach(LevelPtr lvl, e->get_level_list()) {
-		if(value) {
-			//make sure the segment width is divisible by the tile size.
-			int width = lvl->boundaries().w();
-			while(width%32) {
-				++width;
+	namespace 
+	{
+		void set_segmented_level_width(EditorLevelPropertiesDialog* d, editor* e, bool value)
+		{
+			for(LevelPtr lvl : e->get_level_list()) {
+				if(value) {
+					//make sure the segment width is divisible by the tile size.
+					int width = lvl->boundaries().w();
+					while(width%32) {
+						++width;
+					}
+					lvl->set_segment_width(width);
+					lvl->set_boundaries(rect(lvl->boundaries().x(), lvl->boundaries().y(),
+											 width, lvl->boundaries().h()));
+				} else {
+					lvl->set_segment_width(0);
+				}
 			}
-			lvl->set_segment_width(width);
-			lvl->set_boundaries(rect(lvl->boundaries().x(), lvl->boundaries().y(),
-			                         width, lvl->boundaries().h()));
-		} else {
-			lvl->set_segment_width(0);
+
+			d->init();
 		}
-	}
 
-	d->init();
-}
-
-void set_segmented_level_height(editor_level_properties_dialog* d, editor* e, bool value)
-{
-	foreach(LevelPtr lvl, e->get_level_list()) {
-		if(value) {
-			//make sure the segment height is divisible by the tile size.
-			int height = lvl->boundaries().h();
-			while(height%32) {
-				++height;
+		void set_segmented_level_height(EditorLevelPropertiesDialog* d, editor* e, bool value)
+		{
+			for(LevelPtr lvl : e->get_level_list()) {
+				if(value) {
+					//make sure the segment height is divisible by the tile size.
+					int height = lvl->boundaries().h();
+					while(height%32) {
+						++height;
+					}
+					lvl->set_segment_height(height);
+					lvl->set_boundaries(rect(lvl->boundaries().x(), lvl->boundaries().y(),
+											 lvl->boundaries().w(), height));
+				} else {
+					lvl->set_segment_height(0);
+				}
 			}
-			lvl->set_segment_height(height);
-			lvl->set_boundaries(rect(lvl->boundaries().x(), lvl->boundaries().y(),
-			                         lvl->boundaries().w(), height));
-		} else {
-			lvl->set_segment_height(0);
-		}
-	}
 	
-	d->init();
-}
-
-}
-
-editor_level_properties_dialog::editor_level_properties_dialog(editor& e)
-  : dialog(preferences::virtual_screen_width()/2 - 300, preferences::virtual_screen_height()/2 - 220, 600, 440), editor_(e)
-{
-	set_clear_bg_amount(255);
-	init();
-}
-
-void editor_level_properties_dialog::init()
-{
-	set_clear_bg_amount(255);
-	set_background_frame("empty_window");
-	set_draw_background_fn([]() {
-		draw_scene(level::current(), last_draw_position());
-	});
-
-	using namespace gui;
-	clear();
-
-	addWidget(WidgetPtr(new label("Level Properties", graphics::color_white(), 48)), 10, 10);
-
-	TextEditorWidget* change_title_entry(new TextEditorWidget(200, 30));
-	change_title_entry->setText(editor_.get_level().title());
-	change_title_entry->setOnChangeHandler(std::bind(&editor_level_properties_dialog::change_title, this, change_title_entry));
-	change_title_entry->setOnEnterHandler(std::bind(&dialog::close, this));
-
-	grid_ptr g(new grid(2));
-	g->add_col(WidgetPtr(new label("Change Title", graphics::color_white(), 36)))
-	  .add_col(WidgetPtr(change_title_entry));
-
-	addWidget(g);
-
-	std::string background_id = editor_.get_level().get_background_id();
-	if(background_id.empty()) {
-		background_id = "(no background)";
-	}
-	g.reset(new grid(2));
-	g->add_col(WidgetPtr(new label("Background", graphics::color_white())))
-	  .add_col(WidgetPtr(new button(WidgetPtr(new label(background_id, graphics::color_white())), std::bind(&editor_level_properties_dialog::change_background, this))));
-	addWidget(g);
-
-	g.reset(new grid(3));
-	g->set_hpad(10);
-	g->add_col(WidgetPtr(new label("Next Level", graphics::color_white())));
-	g->add_col(WidgetPtr(new label(editor_.get_level().next_level(), graphics::color_white())));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_next_level, this))));
-
-	g->add_col(WidgetPtr(new label("Previous Level", graphics::color_white())));
-	g->add_col(WidgetPtr(new label(editor_.get_level().previous_level(), graphics::color_white())));
-	g->add_col(WidgetPtr(new button(WidgetPtr(new label("Set", graphics::color_white())), std::bind(&editor_level_properties_dialog::change_previous_level, this))));
-	addWidget(g);
-
-	Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, std::bind(set_segmented_level_width, this, &editor_, _1));
-	WidgetPtr hz_checkbox(hz_segmented_checkbox);
-	addWidget(hz_checkbox);
-
-	Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, std::bind(set_segmented_level_height, this, &editor_, _1));
-	WidgetPtr vt_checkbox(vt_segmented_checkbox);
-	addWidget(vt_checkbox);
-
-	if(editor_.get_level().segment_height() != 0) {
-		removeWidget(hz_checkbox);
+			d->init();
+		}
 	}
 
-	if(editor_.get_level().segment_width() != 0) {
-		removeWidget(vt_checkbox);
+	EditorLevelPropertiesDialog::EditorLevelPropertiesDialog(editor& e)
+	  : Dialog(KRE::WindowManager::getMainWindow()->width()/2 - 300, KRE::WindowManager::getMainWindow()->height()/2 - 220, 600, 440), 
+	  editor_(e)
+	{
+		setClearBgAmount(255);
+		init();
 	}
 
-	add_ok_and_cancel_buttons();
-}
+	void EditorLevelPropertiesDialog::init()
+	{
+		setClearBgAmount(255);
+		setBackgroundFrame("empty_window");
+		setDrawBackgroundFn(::draw_last_scene);
 
-void editor_level_properties_dialog::change_title(const gui::TextEditorWidgetPtr editor)
-{
-	std::string title = editor->text();
+		using namespace gui;
+		clear();
 
-	foreach(LevelPtr lvl, editor_.get_level_list()) {
-		lvl->set_title(title);
+		addWidget(WidgetPtr(new Label("Level Properties", KRE::Color::colorWhite(), 48)), 10, 10);
+
+		TextEditorWidget* change_title_entry(new TextEditorWidget(200, 30));
+		change_title_entry->setText(editor_.get_level().title());
+		change_title_entry->setOnChangeHandler(std::bind(&EditorLevelPropertiesDialog::changeTitle, this, change_title_entry));
+		change_title_entry->setOnEnterHandler(std::bind(&Dialog::close, this));
+
+		GridPtr g(new Grid(2));
+		g->addCol(WidgetPtr(new Label("Change Title", KRE::Color::colorWhite(), 36)))
+		  .addCol(WidgetPtr(change_title_entry));
+
+		addWidget(g);
+
+		std::string background_id = editor_.get_level().get_background_id();
+		if(background_id.empty()) {
+			background_id = "(no background)";
+		}
+		g.reset(new Grid(2));
+		g->addCol(WidgetPtr(new Label("Background", KRE::Color::colorWhite())))
+		  .addCol(WidgetPtr(new Button(WidgetPtr(new Label(background_id, KRE::Color::colorWhite())), 
+			std::bind(&EditorLevelPropertiesDialog::changeBackground, this))));
+		addWidget(g);
+
+		g.reset(new Grid(3));
+		g->setHpad(10);
+		g->addCol(WidgetPtr(new Label("Next Level", KRE::Color::colorWhite())));
+		g->addCol(WidgetPtr(new Label(editor_.get_level().next_level(), KRE::Color::colorWhite())));
+		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Set", KRE::Color::colorWhite())), std::bind(&EditorLevelPropertiesDialog::changeNextLevel, this))));
+
+		g->addCol(WidgetPtr(new Label("Previous Level", KRE::Color::colorWhite())));
+		g->addCol(WidgetPtr(new Label(editor_.get_level().previous_level(), KRE::Color::colorWhite())));
+		g->addCol(WidgetPtr(new Button(WidgetPtr(new Label("Set", KRE::Color::colorWhite())), std::bind(&EditorLevelPropertiesDialog::changePreviousLevel, this))));
+		addWidget(g);
+
+		Checkbox* hz_segmented_checkbox = new Checkbox("Horizontally Segmented Level", editor_.get_level().segment_width() != 0, std::bind(set_segmented_level_width, this, &editor_, _1));
+		WidgetPtr hz_checkbox(hz_segmented_checkbox);
+		addWidget(hz_checkbox);
+
+		Checkbox* vt_segmented_checkbox = new Checkbox("Vertically Segmented Level", editor_.get_level().segment_height() != 0, std::bind(set_segmented_level_height, this, &editor_, _1));
+		WidgetPtr vt_checkbox(vt_segmented_checkbox);
+		addWidget(vt_checkbox);
+
+		if(editor_.get_level().segment_height() != 0) {
+			removeWidget(hz_checkbox);
+		}
+
+		if(editor_.get_level().segment_width() != 0) {
+			removeWidget(vt_checkbox);
+		}
+
+		addOkAndCancelButtons();
 	}
-}
 
-void editor_level_properties_dialog::change_background()
-{
-	using namespace gui;
-	std::vector<std::string> backgrounds = background::get_available_backgrounds();
-	if(backgrounds.empty()) {
-		return;
+	void EditorLevelPropertiesDialog::changeTitle(const gui::TextEditorWidgetPtr editor)
+	{
+		std::string title = editor->text();
+
+		for(LevelPtr lvl : editor_.get_level_list()) {
+			lvl->set_title(title);
+		}
 	}
 
-	std::sort(backgrounds.begin(), backgrounds.end());
+	void EditorLevelPropertiesDialog::changeBackground()
+	{
+		using namespace gui;
+		std::vector<std::string> backgrounds = background::get_available_backgrounds();
+		if(backgrounds.empty()) {
+			return;
+		}
 
-	gui::grid* grid = new gui::grid(1);
-	grid->setZOrder(100);
-	grid->set_hpad(40);
-	grid->set_show_background(true);
-	grid->allow_selection();
-	grid->swallow_clicks();
-	grid->register_selection_callback(std::bind(&editor_level_properties_dialog::execute_change_background, this, backgrounds, _1));
-	foreach(const std::string& bg, backgrounds) {
-		grid->add_col(WidgetPtr(new label(bg, graphics::color_white())));
-	}
+		std::sort(backgrounds.begin(), backgrounds.end());
 
-	int mousex, mousey;
-	input::sdl_get_mouse_state(&mousex, &mousey);
+		gui::Grid* grid = new gui::Grid(1);
+		grid->setZOrder(100);
+		grid->setHpad(40);
+		grid->setShowBackground(true);
+		grid->allowSelection();
+		grid->swallowClicks();
+		grid->registerSelectionCallback(std::bind(&EditorLevelPropertiesDialog::executeChangeBackground, this, backgrounds, _1));
+		for(const std::string& bg : backgrounds) {
+			grid->addCol(WidgetPtr(new Label(bg, KRE::Color::colorWhite())));
+		}
 
-	mousex -= x();
-	mousey -= y();
+		int mousex, mousey;
+		input::sdl_get_mouse_state(&mousex, &mousey);
 
-	removeWidget(context_menu_);
-	context_menu_.reset(grid);
-	addWidget(context_menu_, mousex, mousey);
-}
+		mousex -= x();
+		mousey -= y();
 
-void editor_level_properties_dialog::execute_change_background(const std::vector<std::string>& choices, int index)
-{
-	if(context_menu_) {
 		removeWidget(context_menu_);
-		context_menu_.reset();
+		context_menu_.reset(grid);
+		addWidget(context_menu_, mousex, mousey);
 	}
 
-	if(index < 0 || index >= choices.size()) {
-		return;
-	}
-
-	foreach(LevelPtr lvl, editor_.get_level_list()) {
-		lvl->set_background_by_id(choices[index]);
-	}
-
-	init();
-}
-
-void editor_level_properties_dialog::change_next_level()
-{
-	std::string result = show_choose_level_dialog("Next Level");
-	if(result.empty() == false) {
-		foreach(LevelPtr lvl, editor_.get_level_list()) {
-			lvl->set_next_level(result);
+	void EditorLevelPropertiesDialog::executeChangeBackground(const std::vector<std::string>& choices, int index)
+	{
+		if(context_menu_) {
+			removeWidget(context_menu_);
+			context_menu_.reset();
 		}
-	}
 
-	init();
-}
-
-void editor_level_properties_dialog::change_previous_level()
-{
-	std::string result = show_choose_level_dialog("Previous Level");
-	if(result.empty() == false) {
-		foreach(LevelPtr lvl, editor_.get_level_list()) {
-			lvl->set_previous_level(result);
+		if(index < 0 || static_cast<unsigned>(index) >= choices.size()) {
+			return;
 		}
+
+		for(LevelPtr lvl : editor_.get_level_list()) {
+			lvl->set_background_by_id(choices[index]);
+		}
+
+		init();
 	}
 
-	init();
+	void EditorLevelPropertiesDialog::changeNextLevel()
+	{
+		std::string result = show_choose_level_dialog("Next Level");
+		if(result.empty() == false) {
+			for(LevelPtr lvl : editor_.get_level_list()) {
+				lvl->set_next_level(result);
+			}
+		}
+
+		init();
+	}
+
+	void EditorLevelPropertiesDialog::changePreviousLevel()
+	{
+		std::string result = show_choose_level_dialog("Previous Level");
+		if(result.empty() == false) {
+			for(LevelPtr lvl : editor_.get_level_list()) {
+				lvl->set_previous_level(result);
+			}
+		}
+
+		init();
+	}
 }
 
-}
 #endif // !NO_EDITOR
-

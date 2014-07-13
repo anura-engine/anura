@@ -55,7 +55,7 @@ options_dialog::options_dialog(int x, int y, int w, int h)
 
 void options_dialog::handleDraw() const
 {
-	/*if(clear_bg()) {
+	/*if(clearBg()) {
 		SDL_Rect rect = {x(),y(),width(),height()};
 		SDL_Color col = {0,0,0,0};
 		graphics::draw_rect(rect,col,196);

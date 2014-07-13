@@ -172,7 +172,7 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 	foreach(const Edge& edge, edges_) {
 		WidgetPtr parent = edge.first;
 		WidgetPtr child = edge.second;
-		children_.push_back(WidgetPtr(new PolyLineWidget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), graphics::color_white())));
+		children_.push_back(WidgetPtr(new PolyLineWidget(point(parent->x() + parent->width()/2, parent->y() + parent->height()), point(child->x() + child->width()/2, child->y()), KRE::Color::colorWhite())));
 	}
 }
 

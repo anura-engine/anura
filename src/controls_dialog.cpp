@@ -54,8 +54,8 @@ void show_controls_dialog()
 	if (preferences::virtual_screen_height() > 480)
 		height -= 100;
 	Dialog d(200, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-400, height);
-	d.set_background_frame("empty_window");
-	d.set_draw_background_fn(draw_last_scene);
+	d.setBackgroundFrame("empty_window");
+	d.setDrawBackgroundFn(draw_last_scene);
 
 
 	for(int n = 0; n < NUM_CONTROLS; ++n) {

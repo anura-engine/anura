@@ -56,7 +56,8 @@ namespace KRE
 		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
 		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color=Color::colorWhite());
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
-		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color=nullptr) const;
+		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const;
+		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color=Color::colorWhite()) const;
 
 		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
 		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
@@ -66,18 +67,19 @@ namespace KRE
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const = 0;
 		virtual void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawLine(const point& p1, const point& p2, const Color& color) const = 0;
-		virtual void drawLines(const std::vector<float>& varray, float line_width, const Color& color) const = 0;
+		virtual void drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const = 0;
 		virtual void drawLineStrip(const std::vector<glm::vec2>& points, float line_width, const Color& color) const = 0;
 		virtual void drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const = 0;
 		virtual void drawLine(const pointf& p1, const pointf& p2, const Color& color) const = 0;
 		// Draw filled polygon (i.e. triangle fan) using given color	
-		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color) const = 0;
-		virtual void drawSolidCircle(const point& centre, double radius, const Color& color) const = 0;
+		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const point& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const = 0;
-		virtual void drawHollowCircle(const point& centre, double radius, const Color& color) const = 0;
-		virtual void drawSolidCircle(const pointf& centre, double radius, const Color& color) const = 0;
+		virtual void drawHollowCircle(const point& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawSolidCircle(const pointf& centre, double radius, const std::vector<uint8_t>& color) const = 0;
-		virtual void drawHollowCircle(const pointf& centre, double radius, const Color& color) const = 0;
+		virtual void drawHollowCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
 
 		void drawVectorContext(const Vector::ContextPtr& context);
 

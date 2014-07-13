@@ -96,7 +96,7 @@ private:
 
 	gui::LabelPtr replace_label_, status_label_, error_label_;
 
-	gui::grid_ptr files_grid_;
+	gui::GridPtr files_grid_;
 
 	gui::WidgetPtr save_button_;
 

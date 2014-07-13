@@ -208,10 +208,10 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	}
 	Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
 	d.setPadding(padding);
-	d.set_background_frame("empty_window");
-	d.set_upscale_frame(upscale_dialog_frame);
+	d.setBackgroundFrame("empty_window");
+	d.setUpscaleFrame(upscale_dialog_frame);
 
-	d.set_draw_background_fn(draw_last_scene);
+	d.setDrawBackgroundFn(draw_last_scene);
 
 	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
@@ -263,7 +263,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		if(show_exit) { d.addWidget(b4); }
 	}
 
-	d.set_on_quit(std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
+	d.setOnQuit(std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
 	d.showModal();
 	if(d.cancelled() && result == PAUSE_GAME_QUIT) {
 		result = PAUSE_GAME_CONTINUE;
