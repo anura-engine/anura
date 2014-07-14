@@ -677,6 +677,30 @@ void upload_progress(int sent, int total, bool uploaded)
 
 }
 
+COMMAND_LINE_UTILITY(generate_manifest)
+{
+	std::deque<std::string> arguments(args.begin(), args.end());
+	ASSERT_LOG(arguments.size() >= 1 && arguments.size() <= 2, "Expected arguments: module_name [path override]");
+
+	std::string module_id = arguments.front();
+
+	std::string path_override;
+	if(arguments.size() > 1) {
+		path_override = arguments.back();
+	}
+
+	variant package = build_package(module_id, false, path_override);
+
+	variant manifest = package["manifest"];
+	ASSERT_LOG(manifest.is_map(), "Could not find manifest");
+
+	for(auto p : manifest.as_map()) {
+		p.second.remove_attr_mutation(variant("data"));
+	}
+
+	std::cout << manifest.write_json();
+}
+
 COMMAND_LINE_UTILITY(replicate_module)
 {
 	std::string server = "theargentlark.com";
