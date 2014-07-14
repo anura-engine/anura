@@ -201,7 +201,7 @@ public:
 	void drawDebugRects() const;
 
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr getEditorInfo() const { return const_editor_entity_info_ptr(); }
+	virtual ConstEditorEntityInfoPtr getEditorInfo() const { return ConstEditorEntityInfoPtr(); }
 #endif // !NO_EDITOR
 
 	virtual EntityPtr clone() const { return EntityPtr(); }

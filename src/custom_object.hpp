@@ -194,7 +194,7 @@ public:
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr getEditorInfo() const;
+	virtual ConstEditorEntityInfoPtr getEditorInfo() const override;
 #endif // !NO_EDITOR
 
 	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);

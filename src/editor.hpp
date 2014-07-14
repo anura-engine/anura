@@ -343,7 +343,7 @@ private:
 
 	std::unique_ptr<CodeEditorDialog> code_dialog_;
 
-	external_text_editor_ptr external_code_editor_;
+	ExternalTextEditorPtr external_code_editor_;
 
 	void set_code_file();
 

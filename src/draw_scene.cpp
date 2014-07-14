@@ -471,7 +471,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 	debug_console::draw_graph();
 
-	if (!pause_stack) {
+	if (!g_pause_stack) {
 		lvl.draw_status();
 	}
 

@@ -1274,9 +1274,6 @@
     <ClCompile Include="..\..\src\group_property_editor_dialog.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\gui_formula_functions.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\gui_section.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1894,9 +1891,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\kre\FontSDL.cpp">
       <Filter>Source Files\kre</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\filecache.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ClipScope.cpp">
       <Filter>Source Files\kre</Filter>

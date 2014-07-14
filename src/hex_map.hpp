@@ -25,65 +25,60 @@
 #include <boost/intrusive_ptr.hpp>
 #include <vector>
 
-namespace hex {
-	enum direction {NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST};
-}
+#include "kre/Geometry.hpp"
 
 #include "hex_object_fwd.hpp"
-#include "hex_object.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 
-namespace hex {
-
-class HexMap : public game_logic::FormulaCallable
+namespace hex 
 {
-public:
-	HexMap() : zorder_(-1000), width_(0), height_(0), x_(0), y_(0)
-	{}
-	virtual ~HexMap()
-	{}
-	explicit HexMap(variant node);
-	int getZorder() const { return zorder_; }
-	void setZorder(int zorder) { zorder_ = zorder; }
+	class HexMap : public game_logic::FormulaCallable
+	{
+	public:
+		HexMap() : zorder_(-1000), width_(0), height_(0), x_(0), y_(0)
+		{}
+		virtual ~HexMap()
+		{}
+		explicit HexMap(variant node);
+		int getZorder() const { return zorder_; }
+		void setZorder(int zorder) { zorder_ = zorder; }
 
-	int x() const { return x_; }
-	int y() const { return y_; }
+		int x() const { return x_; }
+		int y() const { return y_; }
 
-	size_t width() const { return width_; }
-	size_t height() const { return height_; }
-	size_t size() const { return width_ * height_; }
-	void build();
-	virtual void draw() const;
-	variant write() const;
+		size_t width() const { return width_; }
+		size_t height() const { return height_; }
+		size_t size() const { return width_ * height_; }
+		void build();
+		virtual void draw() const;
+		variant write() const;
 
-	game_logic::formula_ptr createFormula(const variant& v);
-	bool executeCommand(const variant& var);
+		game_logic::formula_ptr createFormula(const variant& v);
+		bool executeCommand(const variant& var);
 
-	bool setTile(int x, int y, const std::string& tile);
+		bool setTile(int x, int y, const std::string& tile);
 
-	HexObjectPtr getHexTile(direction d, int x, int y) const;
-	HexObjectPtr getTileAt(int x, int y) const;
-	HexObjectPtr getTileFromPixelPos(int x, int y) const;
-	static point getTilePosFromPixelPos(int x, int y);
-	static point getPixelPosFromTilePos(int x, int y);
+		HexObjectPtr getHexTile(Direction d, int x, int y) const;
+		HexObjectPtr getTileAt(int x, int y) const;
+		HexObjectPtr getTileFromPixelPos(int x, int y) const;
+		static point getTilePosFromPixelPos(int x, int y);
+		static point getPixelPosFromTilePos(int x, int y);
 
-	static point locInDir(int x, int y, direction d);
-	static point locInDir(int x, int y, const std::string& s);
-protected:
-	virtual variant getValue(const std::string&) const;
-	virtual void setValue(const std::string& key, const variant& value);
+		static point locInDir(int x, int y, Direction d);
+		static point locInDir(int x, int y, const std::string& s);
+	private:
+		DECLARE_CALLABLE(HexMap)
 
-private:
-	std::vector<HexObjectPtr> tiles_;
-	size_t width_;
-	size_t height_;
-	int x_;
-	int y_;
-	int zorder_;
-};
+		std::vector<HexObjectPtr> tiles_;
+		size_t width_;
+		size_t height_;
+		int x_;
+		int y_;
+		int zorder_;
+	};
 
-typedef boost::intrusive_ptr<HexMap> HexMapPtr;
-typedef boost::intrusive_ptr<const HexMap> ConstHexMapPtr;
-
+	typedef boost::intrusive_ptr<HexMap> HexMapPtr;
+	typedef boost::intrusive_ptr<const HexMap> ConstHexMapPtr;
 }

@@ -572,7 +572,6 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
-    <ClCompile Include="..\..\src\filecache.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
@@ -596,7 +595,6 @@
     <ClCompile Include="..\..\src\graphical_font_label.cpp" />
     <ClCompile Include="..\..\src\grid_widget.cpp" />
     <ClCompile Include="..\..\src\group_property_editor_dialog.cpp" />
-    <ClCompile Include="..\..\src\gui_formula_functions.cpp" />
     <ClCompile Include="..\..\src\gui_section.cpp" />
     <ClCompile Include="..\..\src\hex_map.cpp" />
     <ClCompile Include="..\..\src\hex_object.cpp" />

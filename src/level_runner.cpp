@@ -1473,7 +1473,7 @@ bool LevelRunner::play_cycle()
 		message_dialog::get()->process();
 		pause_time_ += preferences::frame_time_millis();
 	} else {
-		if (!paused && pause_stack == 0) {
+		if (!paused && g_pause_stack == 0) {
 			const int start_process = profile::get_tick_time();
 
 			try {
@@ -1687,7 +1687,7 @@ bool LevelRunner::play_cycle()
 		}
 	}
 
-	if (!paused && pause_stack == 0) ++cycle;
+	if (!paused && g_pause_stack == 0) ++cycle;
 
 	
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE

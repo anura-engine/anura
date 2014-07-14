@@ -244,7 +244,7 @@ public:
 	void loadVariations() const;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr getEditorInfo() const { return editor_info_; }
+	ConstEditorEntityInfoPtr getEditorInfo() const { return editor_info_; }
 #endif // !NO_EDITOR
 
 	variant node() const { return node_; }
@@ -368,7 +368,7 @@ private:
 	mutable std::map<std::vector<std::string>, ConstCustomObjectTypePtr> variations_cache_;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr editor_info_;
+	ConstEditorEntityInfoPtr editor_info_;
 #endif // !NO_EDITOR
 
 	std::map<std::string, ConstCustomObjectTypePtr> sub_objects_;

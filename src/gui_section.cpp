@@ -1,31 +1,39 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <map>
 
+#include "kre/DisplayDevice.hpp"
+
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "gui_section.hpp"
-#include "raster.hpp"
 #include "string_utils.hpp"
 #include "variant.hpp"
 
-namespace {
-typedef std::map<std::string, ConstGuiSectionPtr> cache_map;
-cache_map cache;
+namespace 
+{
+	typedef std::map<std::string, ConstGuiSectionPtr> cache_map;
+	cache_map cache;
 }
 
 std::vector<std::string> GuiSection::getSections()
@@ -39,7 +47,7 @@ std::vector<std::string> GuiSection::getSections()
 
 void GuiSection::init(variant node)
 {
-	foreach(const variant& section_node, node["section"].as_list()) {
+	for(const variant& section_node : node["section"].as_list()) {
 		const std::string& id = section_node["id"].as_string();
 		cache[id].reset(new GuiSection(section_node));
 	}
@@ -68,7 +76,7 @@ ConstGuiSectionPtr GuiSection::get(const std::string& key)
 }
 
 GuiSection::GuiSection(variant node)
-  : texture_(graphics::texture::get(node["image"].as_string())),
+	: texture_(KRE::DisplayDevice::createTexture(node["image"])),
     area_(node["rect"]),
 	x_adjust_(0), y_adjust_(0), x2_adjust_(0), y2_adjust_(0)
 {
@@ -90,10 +98,9 @@ void GuiSection::blit(int x, int y, int w, int h) const
 {
 	const int scale = w/area_.w();
 
-	const GLfloat TextureEpsilon = 0.1;
-	graphics::blit_texture(texture_, x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale, 0.0,
-	                       GLfloat(draw_area_.x()+TextureEpsilon)/GLfloat(texture_.width()),
-	                       GLfloat(draw_area_.y()+TextureEpsilon)/GLfloat(texture_.height()),
-	                       GLfloat(draw_area_.x2()-TextureEpsilon)/GLfloat(texture_.width()),
-	                       GLfloat(draw_area_.y2()-TextureEpsilon)/GLfloat(texture_.height()));
+	auto canvas = KRE::Canvas::getInstance();
+	canvas->blitTexture(texture_,
+		rect(x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale),
+		0.0f,
+		draw_area_);
 }
