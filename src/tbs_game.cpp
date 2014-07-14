@@ -213,7 +213,7 @@ game::~game()
 	std::cerr << "DESTROY GAME\n";
 }
 
-variant game::write(int nplayer) const
+variant game::write(int nplayer, int processing_ms) const
 {
 	game_logic::wml_formula_callable_serialization_scope serialization_scope;
 
@@ -224,6 +224,10 @@ variant game::write(int nplayer) const
 	result.add("started", started_);
 	result.add("state_id", state_id_);
 	result.add("rng_seed", rng_seed_);
+
+	if(processing_ms != -1) {
+		result.add("server_time", processing_ms);
+	}
 
 	//observers see the perspective of the first player for now
 	result.add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
@@ -398,11 +402,11 @@ int game::get_player_index(const std::string& nick) const
 	return -1;
 }
 
-void game::send_game_state(int nplayer)
+void game::send_game_state(int nplayer, int processing_ms)
 {
 	if(nplayer == -1) {
 		for(int n = 0; n != players().size(); ++n) {
-			send_game_state(n);
+			send_game_state(n, processing_ms);
 		}
 
 		//Send to observers.
@@ -411,7 +415,7 @@ void game::send_game_state(int nplayer)
 
 		current_message_ = "";
 	} else if(nplayer >= 0 && nplayer < players().size()) {
-		queue_message(write(nplayer), nplayer);
+		queue_message(write(nplayer, processing_ms), nplayer);
 	}
 }
 
@@ -573,13 +577,18 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	}
 
+	int start_time = SDL_GetTicks();
+
 	game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
 	vars->add("message", msg);
 	vars->add("player", variant(nplayer));
 	rng::set_seed(rng_seed_);
 	handle_event("message", vars.get());
 	rng_seed_ = rng::get_seed();
-	send_game_state();
+
+	const int time_taken = SDL_GetTicks() - start_time;
+
+	send_game_state(-1, time_taken);
 }
 
 void game::setup_game()

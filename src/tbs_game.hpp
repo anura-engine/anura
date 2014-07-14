@@ -50,7 +50,7 @@ public:
 	game(const std::string& game_type, const variant& doc);
 	virtual ~game();
 
-	virtual variant write(int nplayer=-1) const;
+	virtual variant write(int nplayer=-1, int processing_ms=-1) const;
 	virtual void handle_message(int nplayer, const variant& msg);
 
 	int game_id() const { return game_id_; }
@@ -99,7 +99,7 @@ public:
 
 protected:
 	void start_game();
-	virtual void send_game_state(int nplayer=-1);
+	virtual void send_game_state(int nplayer=-1, int processing_ms=-1);
 
 	void ai_play();
 
