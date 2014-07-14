@@ -226,6 +226,7 @@ variant game::write(int nplayer, int processing_ms) const
 	result.add("rng_seed", rng_seed_);
 
 	if(processing_ms != -1) {
+		fprintf(stderr, "ZZZ: server_time: %d\n", processing_ms);
 		result.add("server_time", processing_ms);
 	}
 
