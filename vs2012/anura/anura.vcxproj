@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
@@ -367,6 +367,7 @@
     <ClInclude Include="..\..\src\reference_counted_object.hpp" />
     <ClInclude Include="..\..\src\regex_utils.hpp" />
     <ClInclude Include="..\..\src\rich_text_label.hpp" />
+    <ClInclude Include="..\..\src\SceneObjectCallable.hpp" />
     <ClInclude Include="..\..\src\scoped_resource.hpp" />
     <ClInclude Include="..\..\src\scrollable_widget.hpp" />
     <ClInclude Include="..\..\src\scrollbar_widget.hpp" />
@@ -604,7 +605,6 @@
     <ClCompile Include="..\..\src\http_server.cpp" />
     <ClCompile Include="..\..\src\i18n.cpp" />
     <ClCompile Include="..\..\src\image_widget.cpp" />
-    <ClCompile Include="..\..\src\iphone_controls.cpp" />
     <ClCompile Include="..\..\src\joystick.cpp" />
     <ClCompile Include="..\..\src\json_parser.cpp" />
     <ClCompile Include="..\..\src\json_tokenizer.cpp" />
@@ -702,6 +702,7 @@
     <ClCompile Include="..\..\src\raster_distortion.cpp" />
     <ClCompile Include="..\..\src\rectangle_rotator.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
+    <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
     <ClCompile Include="..\..\src\scrollable_widget.cpp" />
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />

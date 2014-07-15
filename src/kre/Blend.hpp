@@ -66,6 +66,7 @@ namespace KRE
 		void setEquation(BlendEquationConstants rgba_eq);
 		BlendEquationConstants getRgbEquation() const;
 		BlendEquationConstants getAlphaEquation() const;
+		variant write() const;
 		struct Manager
 		{
 			Manager(const BlendEquation& be);
@@ -100,6 +101,7 @@ namespace KRE
 		BlendModeConstants Destination() const { return dst_; }
 		BlendModeConstants Src() const { return src_; }
 		BlendModeConstants Dst() const { return dst_; }
+		variant write() const;
 		void Set(BlendModeConstants src, BlendModeConstants dst) {
 			src_ = src;
 			dst_ = dst;

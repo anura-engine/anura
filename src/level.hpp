@@ -44,7 +44,6 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "hex_map.hpp"
-#include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "speech_dialog.hpp"
@@ -146,9 +145,6 @@ public:
 	bool is_mouselook_inverted() const { return mouselook_inverted_; }
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 	std::vector<EntityPtr> get_characters_at_world_point(const glm::vec3& pt);
-
-	voxel::WorldPtr& iso_world() { return iso_world_; }
-
 
 	//function to do 'magic wand' selection -- given an x/y pixel position,
 	//will return all the solid tiles connected
@@ -609,7 +605,6 @@ private:
 	std::vector<box2d::body_ptr> bodies_;
 #endif
 
-	voxel::WorldPtr iso_world_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;
 

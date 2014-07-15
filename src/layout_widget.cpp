@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -30,14 +30,14 @@
 namespace gui
 {
 	LayoutWidget::LayoutWidget(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v,e), fixed_width_(0), fixed_height_(0), layout_type_(ABSOLUTE_LAYOUT)
+		: Widget(v,e), fixed_width_(0), fixed_height_(0), layout_type_(LayoutType::ABSOLUTE)
 	{
 		if(v.has_key("style")) {
 			const std::string style = v["style"].as_string();
 			if(style == "absolute") {
-				layout_type_ = ABSOLUTE_LAYOUT;
+				layout_type_ = LayoutType::ABSOLUTE;
 			} else if(style == "relative") {
-				layout_type_ = RELATIVE_LAYOUT;
+				layout_type_ = LayoutType::RELATIVE;
 			} else {
 				ASSERT_LOG(false, "Unrecognised layout style: " << style);
 			}
@@ -69,7 +69,7 @@ namespace gui
 		int ly = 0;
 		int lw = 0;
 		int lh = 0;
-		if(layout_type_ == RELATIVE_LAYOUT) {
+		if(layout_type_ == LayoutType::RELATIVE) {
 			for(auto w : children_) {
 				ASSERT_LOG(w->width() < fixed_width_, "width of child widget is greater than width of layout widget");
 				if(lx + w->width() > fixed_width_) {
@@ -81,7 +81,7 @@ namespace gui
 				lx += w->width();
 				lw = std::max(lw, lx);
 			}
-		} else if(layout_type_ == ABSOLUTE_LAYOUT) {
+		} else if(layout_type_ == LayoutType::ABSOLUTE) {
 			// do nothing
 			for(auto w : children_) {
 				lw = std::max(lw, w->width());
@@ -146,8 +146,8 @@ namespace gui
 		variant_builder res;
 		res.add("type", "layout");
 		switch(layout_type_) {
-			case ABSOLUTE_LAYOUT: res.add("style", "absolute"); break;
-			case RELATIVE_LAYOUT: res.add("style", "relative"); break;
+			case LayoutType::ABSOLUTE: res.add("style", "absolute"); break;
+			case LayoutType::RELATIVE: res.add("style", "relative"); break;
 			default:
 				ASSERT_LOG(false, "Incorrect layout style");
 		}

@@ -1,25 +1,31 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <sstream>
 #include <map>
 #include <string>
 
-#include "IMG_savepng.h"
 #include "asserts.hpp"
 #include "draw_tile.hpp"
 #include "filesystem.hpp"
@@ -38,10 +44,10 @@ PREF_INT(tile_scale, 2, "Scaling of game tiles");
 PREF_INT(tile_size, 16, "Size of game tile edges");
 #define BaseTileSize g_tile_size
 
-namespace {
-typedef std::map<std::string,const_level_object_ptr> tiles_map;
-tiles_map tiles_cache;
-
+namespace 
+{
+	typedef std::map<std::string,ConstLevelObjectPtr> tiles_map;
+	tiles_map tiles_cache;
 }
 
 bool level_tile::isSolid(int xpos, int ypos) const

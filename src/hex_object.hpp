@@ -20,6 +20,7 @@
 	   3. This notice may not be removed or altered from any source
 	   distribution.
 */
+
 #pragma once
 
 #include <boost/intrusive_ptr.hpp>
@@ -28,9 +29,9 @@
 #include "nocopy.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 #include "variant.hpp"
 #include "hex_object_fwd.hpp"
-#include "hex_map.hpp"
 #include "hex_tile.hpp"
 
 namespace hex 
@@ -40,9 +41,6 @@ namespace hex
 	public:
 		HexObject(const std::string& type, int x, int y, const HexMap* owner);
 		virtual ~HexObject() {}
-
-		virtual variant getValue(const std::string&) const;
-		virtual void setValue(const std::string& key, const variant& value);
 
 		virtual void draw() const;
 	
@@ -54,7 +52,7 @@ namespace hex
 		const std::string& type() const { return type_; }
 		virtual bool executeCommand(const variant& var);
 
-		HexObjectPtr getTileInDir(enum direction d) const;
+		HexObjectPtr getTileInDir(Direction d) const;
 		HexObjectPtr getTileInDir(const std::string& s) const;
 
 		int x() const { return x_; }
@@ -62,11 +60,14 @@ namespace hex
 
 		TileTypePtr tile() const { return tile_; }
 
+		void initNeighbors();
+
 		static std::vector<std::string> getRules();
 		static std::vector<TileTypePtr> getHexTiles();
 		static std::vector<TileTypePtr>& getEditorTiles();
 		static TileTypePtr getHexTile(const std::string& type);
 	private:
+		DECLARE_CALLABLE(HexObject)
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(HexObject);
 
 		// map coordinates.
@@ -82,9 +83,7 @@ namespace hex
 			unsigned char dirmap;
 		};
 
-		mutable std::vector<NeighborType> neighbors_;
-		mutable bool neighbors_init_;
-		void initNeighbors() const;
+		std::vector<NeighborType> neighbors_;
 
 		// String representing the base type of this tile.
 		std::string type_;

@@ -62,13 +62,53 @@ namespace KRE
 			} else {
 				ASSERT_LOG(false, "parse_blend_string: Unrecognised value: " << s);
 			}
+			return BlendModeConstants::BM_ZERO;
+		}
+
+		std::string blend_mode_to_string(BlendModeConstants bmc)
+		{
+			switch (bmc)
+			{
+				case BlendModeConstants::BM_ZERO:						return "zero";
+				case BlendModeConstants::BM_ONE:						return "one";
+				case BlendModeConstants::BM_SRC_COLOR:					return "src_color";
+				case BlendModeConstants::BM_ONE_MINUS_SRC_COLOR:		return "one_minus_src_color";
+				case BlendModeConstants::BM_DST_COLOR:					return "dst_color";
+				case BlendModeConstants::BM_ONE_MINUS_DST_COLOR:		return "one_minus_dst_color";
+				case BlendModeConstants::BM_SRC_ALPHA:					return "src_alpha";
+				case BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA:		return "one_minus_src_alpha";
+				case BlendModeConstants::BM_DST_ALPHA:					return "dst_alpha";
+				case BlendModeConstants::BM_ONE_MINUS_DST_ALPHA:		return "one_minus_dst_alpha";
+				case BlendModeConstants::BM_CONSTANT_COLOR:				return "const_color";
+				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_COLOR:	return "one_minus_const_color";
+				case BlendModeConstants::BM_CONSTANT_ALPHA:				return "const_alpha";
+				case BlendModeConstants::BM_ONE_MINUS_CONSTANT_ALPHA:	return "one_minus_const_alpha";
+				default: break;
+			}
+			ASSERT_LOG(false, "Unrecognised BlendModeConstants: " << static_cast<int>(bmc));
+			return "";
+		}
+
+		std::string blend_equation_to_string(BlendEquationConstants bec)
+		{
+			switch (bec)
+			{
+				case BlendEquationConstants::BE_ADD:				return "add";
+				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return "reverse_subtrace";
+				case BlendEquationConstants::BE_SUBTRACT:			return "subtract";
+				default: break;
+			}
+			ASSERT_LOG(false, "Unrecognised BlendEquationConstants: " << static_cast<int>(bec));
+			return "";
 		}
 	}
 
 	BlendMode::BlendMode(const variant& node)
+		: src_(BlendModeConstants::BM_SRC_ALPHA), 
+		dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA)
 	{
 		Set(node);
-	}
+	}	
 
 	void BlendMode::Set(const variant& node) 
 	{
@@ -78,19 +118,19 @@ namespace KRE
 				Set(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
 			} else if(blend == "alpha_blend") {
 				Set(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
-			} else if(blend == "colour_blend") {
+			} else if(blend == "colour_blend" || blend == "color_blend") {
 				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE_MINUS_SRC_COLOR);
 			} else if(blend == "modulate") {
 				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ZERO);
-			} else if(blend == "src_colour one") {
+			} else if(blend == "src_colour one" || blend == "src_color one") {
 				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE);
-			} else if(blend == "src_colour zero") {
+			} else if(blend == "src_colour zero" || blend == "src_color zero") {
 				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ZERO);
-			} else if(blend == "src_colour dest_colour") {
+			} else if(blend == "src_colour dest_colour" || blend == "src_color dest_color") {
 				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_DST_COLOR);
-			} else if(blend == "dest_colour one") {
+			} else if(blend == "dest_colour one" || blend == "dest_color one") {
 				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ONE);
-			} else if(blend == "dest_colour src_colour") {
+			} else if(blend == "dest_colour src_colour" || blend == "dest_color src_color") {
 				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_SRC_COLOR);
 			} else {
 				ASSERT_LOG(false, "BlendMode: Unrecognised scene_blend mode " << blend);
@@ -102,6 +142,23 @@ namespace KRE
 		} else {
 			ASSERT_LOG(false, "BlendMode: Setting blend requires either a string or a list of greater than two elements." << node.to_debug_string());
 		}
+	}
+
+	variant BlendMode::write() const
+	{
+		if(src_ == BlendModeConstants::BM_ONE && dst_ == BlendModeConstants::BM_ONE) {
+			return variant("add");
+		} else if(src_ == BlendModeConstants::BM_SRC_ALPHA && dst_ == BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
+			return variant("alpha_blend");
+		} else if(src_ == BlendModeConstants::BM_SRC_COLOR && dst_ == BlendModeConstants::BM_ONE_MINUS_SRC_COLOR) {
+			return variant("color_blend");
+		} else if(src_ == BlendModeConstants::BM_DST_COLOR && dst_ == BlendModeConstants::BM_ZERO) {
+			return variant("modulate");
+		}
+		std::vector<variant> v;
+		v.emplace_back(blend_mode_to_string(src_));
+		v.emplace_back(blend_mode_to_string(dst_));
+		return variant(&v);
 	}
 
 	BlendEquation::BlendEquation()
@@ -128,7 +185,7 @@ namespace KRE
 		{
 			if(s == "add" || s == "ADD") {
 				return BlendEquationConstants::BE_ADD;
-			} else if(s == "subtract" || s == "subtract") {
+			} else if(s == "subtract" || s == "SUBTRACT") {
 				return BlendEquationConstants::BE_SUBTRACT;
 			} else if(s == "reverse_subtract" || s == "REVERSE_SUBTRACT" 
 				|| s == "rsubtract" || s == " RSUBSTRACT" || s == "reverseSubtract") {
@@ -197,6 +254,20 @@ namespace KRE
 	BlendEquationConstants BlendEquation::getAlphaEquation() const 
 	{
 		return alpha_;
+	}
+
+	variant BlendEquation::write() const
+	{
+		if(rgb_ == alpha_) {
+			//if(rgb_ == BlendEquationConstants::BE_ADD) {
+			//	return variant();
+			//}
+			return variant(blend_equation_to_string(rgb_));
+		}
+		std::vector<variant> v;
+		v.emplace_back(blend_equation_to_string(rgb_));
+		v.emplace_back(blend_equation_to_string(alpha_));
+		return variant(&v);
 	}
 
 	BlendEquation::Manager::Manager(const BlendEquation& eqn)

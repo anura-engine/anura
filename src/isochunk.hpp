@@ -22,17 +22,16 @@
 */
 
 #pragma once
-
-#include <boost/intrusive_ptr.hpp>
+/*
 #include <vector>
 
 #include "kre/Geometry.hpp"
 #include "kre/Material.hpp"
-#include "kre/SceneObject.hpp"
 
 #include "Color.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
+#include "SceneObjectCallable.hpp"
 #include "variant.hpp"
 
 namespace voxel
@@ -71,7 +70,7 @@ namespace voxel
 	class LogicalWorld;
 	typedef boost::intrusive_ptr<LogicalWorld> LogicalWorldPtr;
 
-	class Chunk : public game_logic::FormulaCallable, public KRE::SceneObject
+	class Chunk : public graphics::SceneObjectCallable
 	{
 	public:
 		enum {
@@ -130,7 +129,7 @@ namespace voxel
 
 		const glm::vec3& getWorldspacePosition() const {return getWorldspacePosition_; }
 	private:
-		DECLARE_CALLABLE(chunk);
+		DECLARE_CALLABLE(Chunk);
 
 		// Vertex array data for the chunk
 		std::vector<std::vector<float>> varray_;
@@ -219,3 +218,4 @@ namespace voxel
 		ChunkPtr create(LogicalWorldPtr logic, const variant& v);
 	}
 }
+*/

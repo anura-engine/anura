@@ -39,6 +39,15 @@ namespace hex
 {
 	static const int HexTileSize = 72;
 
+	HexMap::HexMap() 
+		: zorder_(-1000), 
+		width_(0), 
+		height_(0), 
+		x_(0), 
+		y_(0)
+	{
+	}
+	
 	HexMap::HexMap(variant node)
 		: zorder_(node["zorder"].as_int(-1000)), 
 		x_(node["x"].as_int(0)), 
@@ -50,11 +59,15 @@ namespace hex
 		for(auto tile_str : node["tiles"].as_list_string()) {
 			const int x = index%width_;
 			const int y = index/width_;
-			tiles_.push_back(HexObjectPtr(new HexObject(tile_str, x, y, this)));
+			tiles_.emplace_back(new HexObject(tile_str, x, y, this));
 			++index;
 		}
-
 		height_ = tiles_.size()/width_;
+		calculateTileAdjacency();
+	}
+
+	HexMap::~HexMap()
+	{
 	}
 
 	void HexMap::draw() const
@@ -84,6 +97,13 @@ namespace hex
 		}
 	}
 
+	void HexMap::calculateTileAdjacency()
+	{
+		for(auto tile : tiles_) {
+			tile->initNeighbors();
+		}
+	}
+
 	variant HexMap::write() const
 	{
 		variant_builder res;
@@ -98,11 +118,6 @@ namespace hex
 
 		res.add("tiles", variant(&v));
 
-	#if defined(USE_SHADERS)
-		if(shader_) {
-			res.add("shader", shader_->write());
-		}
-	#endif
 		return res.build();
 	}
 

@@ -1,23 +1,30 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#include <boost/bind.hpp>
 #include <boost/algorithm/string/replace.hpp>
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "http_client.hpp"
 
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
@@ -46,7 +53,7 @@ void http_client::send_request(const std::string& method_path, const std::string
 		resolution_state_ = RESOLUTION_IN_PROGRESS;
 
 		resolver_.async_resolve(resolver_query_,
-			std::bind(&http_client::handle_resolve, this,
+			boost::bind(&http_client::handle_resolve, this,
 				boost::asio::placeholders::error,
 				boost::asio::placeholders::iterator,
 				conn));
@@ -79,11 +86,11 @@ void http_client::async_connect(connection_ptr conn)
 #if BOOST_VERSION >= 104700
 		boost::asio::async_connect(conn->socket, 
 			endpoint_iterator_,
-			std::bind(&http_client::handle_connect, this,
+			boost::bind(&http_client::handle_connect, this,
 				boost::asio::placeholders::error, conn, endpoint_iterator_));
 #else
 		conn->socket.async_connect(*endpoint_iterator_,
-			std::bind(&http_client::handle_connect, this,
+			boost::bind(&http_client::handle_connect, this,
 				boost::asio::placeholders::error, conn, endpoint_iterator_));
 #endif
 }
@@ -108,7 +115,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		return;
 	}
 #if defined(_MSC_VER)
-	conn->socket.setOption(boost::asio::ip::tcp::no_delay(true));
+	conn->socket.set_option(boost::asio::ip::tcp::no_delay(true));
 #endif
 
 	//we've connected okay, mark DNS resolution as good.
@@ -116,7 +123,7 @@ void http_client::handle_connect(const boost::system::error_code& error, connect
 		resolution_state_ = RESOLUTION_DONE;
 
 		//all those connections waiting on DNS resolution can now connect.
-		foreach(const connection_ptr conn, connections_waiting_on_dns_) {
+		for(const connection_ptr conn : connections_waiting_on_dns_) {
 			async_connect(conn);
 		}
 
@@ -152,7 +159,7 @@ void http_client::write_connection_data(connection_ptr conn)
 
 	const std::shared_ptr<std::string> msg(new std::string(conn->request.begin() + conn->nbytes_sent, conn->request.begin() + conn->nbytes_sent + nbytes));
 	boost::asio::async_write(conn->socket, boost::asio::buffer(*msg),
-	      std::bind(&http_client::handle_send, this, conn, _1, _2, msg));
+	      boost::bind(&http_client::handle_send, this, conn, _1, _2, msg));
 
 }
 
@@ -174,10 +181,10 @@ void http_client::handle_send(connection_ptr conn, const boost::system::error_co
 		conn->progress_handler(conn->nbytes_sent, conn->request.size(), false);
 	}
 
-	if(conn->nbytes_sent < conn->request.size()) {
+	if(static_cast<unsigned>(conn->nbytes_sent) < conn->request.size()) {
 		write_connection_data(conn);
 	} else {
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, _1, _2));
+		conn->socket.async_read_some(boost::asio::buffer(conn->buf), boost::bind(&http_client::handle_receive, this, conn, _1, _2));
 	}
 }
 
@@ -235,7 +242,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		}
 	}
 
-	if(conn->expected_len != -1 && conn->response.size() >= conn->expected_len) {
+	if(conn->expected_len != -1 && conn->response.size() >= static_cast<unsigned>(conn->expected_len)) {
 		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response << " " << conn->response.size());
 
 		//We have the full response now -- handle it.
@@ -254,7 +261,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		if(conn->expected_len != -1 && conn->progress_handler) {
 			conn->progress_handler(conn->response.size(), conn->expected_len, true);
 		}
-		conn->socket.async_read_some(boost::asio::buffer(conn->buf), std::bind(&http_client::handle_receive, this, conn, _1, _2));
+		conn->socket.async_read_some(boost::asio::buffer(conn->buf), boost::bind(&http_client::handle_receive, this, conn, _1, _2));
 	}
 }
 
@@ -264,10 +271,7 @@ void http_client::process()
 	io_service_.reset();
 }
 
-variant http_client::getValue(const std::string& key) const
-{
-	if(key == "in_flight") {
-		return variant(in_flight_);
-	}
-	return variant();
-}
+BEGIN_DEFINE_CALLABLE_NOBASE(http_client)
+	DEFINE_FIELD(in_flight, "int")
+		return variant(obj.in_flight_);
+END_DEFINE_CALLABLE(http_client)

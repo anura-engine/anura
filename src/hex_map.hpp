@@ -37,10 +37,8 @@ namespace hex
 	class HexMap : public game_logic::FormulaCallable
 	{
 	public:
-		HexMap() : zorder_(-1000), width_(0), height_(0), x_(0), y_(0)
-		{}
-		virtual ~HexMap()
-		{}
+		HexMap();
+		virtual ~HexMap();
 		explicit HexMap(variant node);
 		int getZorder() const { return zorder_; }
 		void setZorder(int zorder) { zorder_ = zorder; }
@@ -59,6 +57,7 @@ namespace hex
 		bool executeCommand(const variant& var);
 
 		bool setTile(int x, int y, const std::string& tile);
+		void calculateTileAdjacency();
 
 		HexObjectPtr getHexTile(Direction d, int x, int y) const;
 		HexObjectPtr getTileAt(int x, int y) const;

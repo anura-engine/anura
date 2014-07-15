@@ -39,6 +39,7 @@ namespace KRE
 		size_t getQueue() const { return queue_; }
 		void setQueue(size_t q) { queue_ = q; }
 		const std::string& objectName() const { return name_; }
+		void setObjectName(const std::string name) { name_ = name; }
 		const std::string& getShaderName() const { return shader_name_; }
 		void setShaderName(const std::string& shader);
 		DisplayDeviceDef attach(const DisplayDevicePtr& dd);

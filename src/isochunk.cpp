@@ -1,7 +1,28 @@
-#if defined(USE_ISOMAP)
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+/*
 #include <boost/lexical_cast.hpp>
-#include <boost/shared_array.hpp>
 #include <boost/regex.hpp>
 #include <boost/random/mersenne_twister.hpp>
 #include <boost/random/uniform_int_distribution.hpp>
@@ -15,7 +36,6 @@
 
 #include "base64.hpp"
 #include "compress.hpp"
-#include "foreach.hpp"
 #include "isochunk.hpp"
 #include "isoworld.hpp"
 #include "json_parser.hpp"
@@ -23,14 +43,14 @@
 #include "preferences.hpp"
 #include "profile_timer.hpp"
 #include "simplex_noise.hpp"
-#include "texture.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-namespace voxel{
+namespace voxel
+{
 	namespace 
 	{
-		const int debug_draw_faces = chunk::FRONT | chunk::RIGHT | chunk::TOP | chunk::BACK | chunk::LEFT | chunk::BOTTOM;
+		const int debug_draw_faces = Chunk::FRONT | Chunk::RIGHT | Chunk::TOP | Chunk::BACK | Chunk::LEFT | Chunk::BOTTOM;
 
 		boost::random::mt19937 rng(uint32_t(std::time(0)));
 
@@ -266,12 +286,12 @@ namespace voxel{
 		}
 	}
 
-	bool operator==(position const& p1, position const& p2)
+	bool operator==(ChunkPosition const& p1, ChunkPosition const& p2)
 	{
 		return p1.x == p1.x && p1.y == p2.y && p1.z == p2.z;
 	}
 
-	std::size_t hash_value(position const& p)
+	std::size_t hash_value(ChunkPosition const& p)
 	{
 		std::size_t seed = 0;
 		boost::hash_combine(seed, p.x);
@@ -280,26 +300,23 @@ namespace voxel{
 		return seed;
 	}
 
-	chunk::chunk()
-		: u_mvp_matrix_(-1), u_normal_(-1), a_position_(-1), textured_(true), 
+	Chunk::Chunk()
+		: SceneObjectCallable("Chunk"), 
 		getWorldspacePosition_(0.0f)
 	{
 		// Call init *before* doing anything else
 		init();
 	}
 
-	chunk::chunk(gles2::program_ptr shader, LogicalWorldPtr logic, const variant& node)
-		: u_mvp_matrix_(-1), u_normal_(-1), a_position_(-1), textured_(true), 
-		getWorldspacePosition_(0.0f), scale_x_(logic->scale_x()), scale_y_(logic->scale_y()), 
+	Chunk::Chunk(LogicalWorldPtr logic, const variant& node)
+		: SceneObjectCallable(node),
+		getWorldspacePosition_(0.0f), 
+		scale_x_(logic->scale_x()), 
+		scale_y_(logic->scale_y()), 
 		scale_z_(logic->scale_z())
 	{
 		// Call init *before* doing anything else
 		init();
-
-		// using textured or colored data
-		textured_ = node.has_key("colored") && node["colored"].as_bool() == true ? false : true;
-
-		get_uniforms_and_attributes(shader);
 
 		if(node.has_key("getWorldspacePosition")) {
 			const variant& wp = node["getWorldspacePosition"];
@@ -310,11 +327,8 @@ namespace voxel{
 		}
 	}
 
-	void chunk::init()
+	void Chunk::init()
 	{
-		vbos_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id) {glDeleteBuffers(2,id); delete [] id;});
-		glGenBuffers(2, &vbos_[0]);
-
 		get_textured_terrain_info().clear();
 		get_textured_terrain_info().load(json::parse_from_file("data/terrain.cfg"));
 		get_colored_terrain_info().clear();
@@ -329,29 +343,20 @@ namespace voxel{
 		normals_.push_back(glm::vec3(0,-1,0));	// bottom
 	}
 
-	chunk::~chunk()
+	Chunk::~Chunk()
 	{
 	}
 
-	void chunk::get_uniforms_and_attributes(gles2::program_ptr shader)
-	{
-		u_mvp_matrix_ = shader->get_fixed_uniform("mvp_matrix");
-		ASSERT_LOG(u_mvp_matrix_ != -1, "chunk: mvp_matrix_ == -1");
-		a_position_ = shader->get_fixed_attribute("vertex");
-		ASSERT_LOG(a_position_ != -1, "chunk: vertex == -1");
-		u_normal_ = shader->get_fixed_uniform("normal");
-	}
-
-	const std::vector<TexturedTileEditorInfo>& chunk::getTexturedEditorTiles()
+	const std::vector<TexturedTileEditorInfo>& Chunk::getTexturedEditorTiles()
 	{
 		return get_textured_editor_tile_info();
 	}
-	const std::vector<ColoredTileEditorInfo>& chunk::getColoredEditorTiles()
+	const std::vector<ColoredTileEditorInfo>& Chunk::getColoredEditorTiles()
 	{
 		return get_colored_editor_tile_info();
 	}
 
-	variant chunk::write()
+	variant Chunk::write()
 	{
 		variant_builder res;
 
@@ -360,7 +365,7 @@ namespace voxel{
 		return res.build();
 	}
 
-	void chunk::build()
+	void Chunk::build()
 	{
 		varray_.clear();
 		vattrib_offsets_.clear();
@@ -373,7 +378,7 @@ namespace voxel{
 		handleBuild();
 	}
 
-	void chunk::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat s, std::vector<GLfloat>& varray)
+	void Chunk::add_vertex_data(int face, GLfloat x, GLfloat y, GLfloat z, GLfloat s, std::vector<GLfloat>& varray)
 	{
 		switch(face) {
 		case FRONT_FACE:
@@ -434,7 +439,7 @@ namespace voxel{
 		}
 	}
 
-	void chunk::add_vertex_vbo_data()
+	void Chunk::add_vertex_vbo_data()
 	{
 		size_t total_size = 0;
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
@@ -449,44 +454,44 @@ namespace voxel{
 		}
 	}
 
-	void chunk::draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
+	void Chunk::draw(const graphics::lighting_ptr lighting, const camera_callable_ptr& camera) const
 	{
 		handleDraw(lighting, camera);
 	}
 
-	variant chunk::get_tile_info(const std::string& type)
+	variant Chunk::get_tile_info(const std::string& type)
 	{
 		return variant(); // -- todo
 	}
 
-	void chunk::setTile(int x, int y, int z, const variant& type)
+	void Chunk::setTile(int x, int y, int z, const variant& type)
 	{
 		handleSetTile(x,y,z,type);
 		build();
 	}
 
-	void chunk::del_tile(int x, int y, int z)
+	void Chunk::del_tile(int x, int y, int z)
 	{
 		handleDelTile(x,y,z);
 		build();
 	}
 
-	void chunk::set_size(int mx, int my, int mz)
+	void Chunk::set_size(int mx, int my, int mz)
 	{
 		size_x_ = mx;
 		size_y_ = my;
 		size_z_ = mz;
 	}
 
-	BEGIN_DEFINE_CALLABLE_NOBASE(chunk)
+	BEGIN_DEFINE_CALLABLE(Chunk, SceneObjectCallable)
 	DEFINE_FIELD(size, "[decimal,decimal,decimal]")
 		return vec3_to_variant(glm::vec3(obj.size_x_, obj.size_y_, obj.size_z_));
-	END_DEFINE_CALLABLE(chunk)
+	END_DEFINE_CALLABLE(Chunk)
 
 
 	///////////////////////////////////////////////////////////////
 	// Colored chunk functions
-	ChunkColored::ChunkColored() : chunk()
+	ChunkColored::ChunkColored() : Chunk()
 	{
 	}
 
@@ -494,7 +499,7 @@ namespace voxel{
 	{
 	}
 
-	ChunkTextured::ChunkTextured() : chunk()
+	ChunkTextured::ChunkTextured() : Chunk()
 	{
 	}
 
@@ -502,7 +507,8 @@ namespace voxel{
 	{
 	}
 
-	ChunkColored::ChunkColored(gles2::program_ptr shader, LogicalWorldPtr logic, const variant& node) : chunk(shader, logic, node)
+	ChunkColored::ChunkColored(LogicalWorldPtr logic, const variant& node) 
+		: chunk(shader, logic, node)
 	{
 		a_color_ = shader->get_fixed_attribute("color");
 		ASSERT_LOG(a_color_ != -1, "ChunkColored: color == -1");	
@@ -582,19 +588,6 @@ namespace voxel{
 				if(max_z < z) { max_z = z; }
 
 				tiles_[position(x,y,z)] = voxels[voxel_keys[n]];
-				/*for(int i = 0; i != scale_x(); ++i) {
-					for(int j = 0; j != scale_y(); ++j) {
-						for(int k = 0; k != scale_z(); ++k) {
-							tiles_[position(x+i,y+j,z+k)] = voxels[voxel_keys[n]];
-							if(min_x > x+i) { min_x = x+i; }
-							if(max_x < x+i) { max_x = x+i; }
-							if(min_y > y+j) { min_y = y+j; }
-							if(max_y < y+j) { max_y = y+j; }
-							if(min_z > z+k) { min_z = z+k; }
-							if(max_z < z+k) { max_z = z+k; }
-						}
-					}
-				}*/
 			}
 			set_size(max_x - min_x + 1, max_y - min_y + 1, max_z - min_z + 1);
 		}
@@ -1067,8 +1060,7 @@ namespace voxel{
 		ASSERT_LOG(get_vertex_attribute_offsets().size() != 0, "get_vertex_attribute_offsets().size() == 0");
 		ASSERT_LOG(cattrib_offsets_.size() != 0, "cattrib_offsets_.size() == 0");
 
-		glm::mat4 model = /*glm::scale(glm::mat4(1.0f), glm::vec3(1.0f/float(scale_x()), 1.0f/float(scale_y()), 1.0f/float(scale_z())))
-			* */glm::translate(glm::mat4(1.0f), getWorldspacePosition());
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), getWorldspacePosition());
 		glm::mat4 mvp = camera->projection_mat() * camera->view_mat() * model;
 		glUniformMatrix4fv(mvp_uniform(), 1, GL_FALSE, glm::value_ptr(mvp));
 
@@ -1158,7 +1150,7 @@ namespace voxel{
 	{
 		auto it = tiles_.find(position(x,y,z));
 		if(it == tiles_.end()) {
-			std::cerr << "ChunkColored::handleDelTile(): No tile at " << x << "," << y << "," << z << " to delete" << std::endl;
+			LOG_WARN("ChunkColored::handleDelTile(): No tile at " << x << "," << y << "," << z << " to delete");
 		} else {
 			tiles_.erase(it);
 		}
@@ -1173,7 +1165,7 @@ namespace voxel{
 	{
 		auto it = tiles_.find(position(x,y,z));
 		if(it == tiles_.end()) {
-			std::cerr << "ChunkTextured::handleDelTile(): No tile at " << x << "," << y << "," << z << " to delete" << std::endl;
+			LOG_WARN("ChunkTextured::handleDelTile(): No tile at " << x << "," << y << "," << z << " to delete");
 		} else {
 			tiles_.erase(it);
 		}
@@ -1263,5 +1255,4 @@ namespace voxel{
 		}
 	}
 }
-
-#endif
+*/

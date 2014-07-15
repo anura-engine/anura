@@ -67,6 +67,13 @@ namespace Geometry
 		explicit Rect(const std::vector<T>& v);
 		explicit Rect(const std::string& s);
 		explicit Rect(const variant& v);
+		explicit Rect(const Point<T>& p1, const Point<T>& p2) {
+			top_left_ = p1;
+			bottom_right_ = p2;
+		}
+		explicit Rect(const Point<T>& p1) {
+			bottom_right_ = top_left_ = p1;
+		}
 		static Rect FromCoordinates(T x1, T y1, T x2, T y2);
 		static Rect from_coordinates(T x1, T y1, T x2, T y2) {
 			return FromCoordinates(x1,y1,x2,y2);

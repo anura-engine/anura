@@ -36,7 +36,8 @@ namespace hex
 	typedef std::shared_ptr<const TileSheet> TileSheetPtr;
 
 	class TileType;
-	typedef boost::intrusive_ptr<const TileType> TileTypePtr;
+	typedef boost::intrusive_ptr<TileType> TileTypePtr;
+	typedef boost::intrusive_ptr<const TileType> ConstTileTypePtr;
 
 	enum class Direction {NORTH, NORTH_EAST, SOUTH_EAST, SOUTH, SOUTH_WEST, NORTH_WEST};
 }

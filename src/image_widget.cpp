@@ -30,7 +30,7 @@
 namespace gui 
 {
 	ImageWidget::ImageWidget(const std::string& fname, int w, int h)
-	  : texture_(KRE::DisplayDevice::getCurrent()->CreateTexture(fname)), 
+	  : texture_(KRE::DisplayDevice::getCurrent()->createTexture(fname)), 
 	  rotate_(0.0f), 
 	  image_name_(fname)
 	{
@@ -63,7 +63,7 @@ namespace gui
 
 		if(v["image"].is_string()) {
 			image_name_ = v["image"].as_string();
-			texture_ = KRE::DisplayDevice::getCurrent()->CreateTexture(image_name_);
+			texture_ = KRE::DisplayDevice::getCurrent()->createTexture(image_name_);
 		}
 
 		rotate_ = v.has_key("rotation") ? v["rotation"].as_float() : 0.0f;
@@ -108,7 +108,7 @@ namespace gui
 		DEFINE_SET_FIELD_TYPE("string")
 			if(value.is_string()) {
 				obj.image_name_ = value.as_string();
-				obj.texture_ = KRE::DisplayDevice::getCurrent()->CreateTexture(obj.image_name_);
+				obj.texture_ = KRE::DisplayDevice::getCurrent()->createTexture(obj.image_name_);
 			}
 			
 		DEFINE_FIELD(area, "[int,int,int,int]")

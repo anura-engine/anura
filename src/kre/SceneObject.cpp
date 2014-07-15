@@ -60,6 +60,8 @@ namespace KRE
 
 	void SceneObject::setShaderName(const std::string& shader)
 	{
+		// XXX hmm hmm there is no way to update hints currently -- this is a must fix item.
+		// since we can't dynamically change shaders otherwise.
 		shader_name_ = shader;
 	}
 

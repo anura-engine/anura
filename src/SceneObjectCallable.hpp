@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,28 +23,19 @@
 
 #pragma once
 
-#include <string>
-#include "variant.hpp"
+#include "kre/SceneObject.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
 
-namespace json 
+namespace graphics
 {
-	void set_file_contents(const std::string& path, const std::string& contents);
-	std::string get_file_contents(const std::string& path);
-
-	enum class JSON_PARSE_OPTIONS { NO_PREPROCESSOR, USE_PREPROCESSOR };
-	variant parse(const std::string& doc, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
-	variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
-	bool file_exists_and_is_valid(const std::string& fname);
-
-	struct ParseError 
+	class SceneObjectCallable : public game_logic::FormulaCallable, public KRE::SceneObject
 	{
-		explicit ParseError(const std::string& msg);
-		ParseError(const std::string& msg, const std::string& filename, int line, int col);
-
-		std::string errorMessage() const;
-
-		std::string message;
-		std::string fname;
-		int line, col;
+	public:
+		explicit SceneObjectCallable(const variant& node);
+		virtual ~SceneObjectCallable();
+	private:
+		DECLARE_CALLABLE(SceneObjectCallable)
+		DISALLOW_DEFAULT_AND_ASSIGN(SceneObjectCallable);
 	};
 }
