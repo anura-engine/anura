@@ -103,7 +103,7 @@ namespace gui
 
 		void change();
 		std::function<void (const KRE::Color&)> onchange_;
-		game_logic::formula_ptr change_handler_;
+		game_logic::FormulaPtr change_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	};
 

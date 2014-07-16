@@ -134,7 +134,7 @@ namespace editor_dialogs
 
 		std::map<std::string, int> types_selected;
 		for(EntityPtr e : entity_) {
-			types_selected[e->query_value("type").as_string()]++;
+			types_selected[e->queryValue("type").as_string()]++;
 		}
 
 		if(types_selected.size() > 1) {
@@ -175,7 +175,7 @@ namespace editor_dialogs
 				addWidget(lb);
 
 				TextEditorWidget* e = new TextEditorWidget(220, 90);
-				game_logic::const_formula_ptr f = getEntity()->getEventHandler(get_object_event_id(handler));
+				game_logic::ConstFormulaPtr f = getEntity()->getEventHandler(get_object_event_id(handler));
 				if(f) {
 					e->setText(f->str());
 				}
@@ -194,7 +194,7 @@ namespace editor_dialogs
 					continue;
 				}
 
-				variant val = info.is_property() ? getStaticEntity()->query_value(info.variable_name()) : vars->query_value(info.variable_name());
+				variant val = info.is_property() ? getStaticEntity()->queryValue(info.variable_name()) : vars->queryValue(info.variable_name());
 				std::string current_val_str;
 				if(info.type() == editor_variable_info::TYPE_POINTS) {
 					if(!val.is_list()) {
@@ -224,7 +224,7 @@ namespace editor_dialogs
 					text_grid->addCol(lb);
 
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->query_value(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
@@ -243,7 +243,7 @@ namespace editor_dialogs
 					enum_grid->addCol(lb);
 
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->query_value(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
@@ -258,7 +258,7 @@ namespace editor_dialogs
 					addWidget(WidgetPtr(enum_grid));
 				} else if(info.type() == editor_variable_info::TYPE_LEVEL) {
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->query_value(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
@@ -268,7 +268,7 @@ namespace editor_dialogs
 							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.variable_name()))));
 				} else if(info.type() == editor_variable_info::TYPE_LABEL) {
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->query_value(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
@@ -278,13 +278,13 @@ namespace editor_dialogs
 							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.variable_name()))));
 				
 				} else if(info.type() == editor_variable_info::TYPE_BOOLEAN) {
-					variant current_value = getStaticEntity()->query_value(info.variable_name());
+					variant current_value = getStaticEntity()->queryValue(info.variable_name());
 
 					addWidget(WidgetPtr(new Checkbox(WidgetPtr(new Label(info.variable_name(), KRE::Color::colorWhite())),
 								   current_value.as_bool(),
 								   std::bind(&PropertyEditorDialog::toggleProperty, this, info.variable_name()))));
 				} else if(info.type() == editor_variable_info::TYPE_POINTS) {
-					variant current_value = getStaticEntity()->query_value(info.variable_name());
+					variant current_value = getStaticEntity()->queryValue(info.variable_name());
 					const int npoints = current_value.is_list() ? current_value.num_elements() : 0;
 
 					const bool already_adding = editor_.adding_points() == info.variable_name();
@@ -299,7 +299,7 @@ namespace editor_dialogs
 
 					decimal value;
 					std::string current_value = "0";
-					variant current_value_var = getStaticEntity()->query_value(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
 					if(current_value_var.is_int()) {
 						current_value = formatter() << current_value_var.as_int();
 						value = current_value_var.as_decimal();
@@ -422,13 +422,13 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::toggleProperty(const std::string& id)
 	{
-		mutateValue(id, variant::from_bool(!getStaticEntity()->query_value(id).as_bool()));
+		mutateValue(id, variant::from_bool(!getStaticEntity()->queryValue(id).as_bool()));
 		init();
 	}
 
 	void PropertyEditorDialog::changeProperty(const std::string& id, int change)
 	{
-		mutateValue(id, getStaticEntity()->query_value(id) + variant(change));
+		mutateValue(id, getStaticEntity()->queryValue(id) + variant(change));
 		init();
 	}
 
@@ -569,7 +569,7 @@ namespace editor_dialogs
 		bool loaded_level = false;
 		std::vector<std::string> labels;
 		if(var_info->info().empty() == false && var_info->info() != editor_.get_level().id()) {
-			variant level_id = getStaticEntity()->query_value(var_info->info());
+			variant level_id = getStaticEntity()->queryValue(var_info->info());
 			if(level_id.is_string() && level_id.as_string().empty() == false && level_id.as_string() != editor_.get_level().id()) {
 				Level lvl(level_id.as_string());
 				lvl.finishLoading();
@@ -656,7 +656,7 @@ namespace editor_dialogs
 		variant type_var(type);
 		lvl.editor_clear_selection();
 		for(EntityPtr& e : entity_) {
-			if(e->query_value("type") != type_var) {
+			if(e->queryValue("type") != type_var) {
 				lvl.editor_select_object(e);
 			}
 		}
@@ -684,7 +684,7 @@ namespace editor_dialogs
 		LOG_INFO("TRYING TO CHANGE EVENT HANDLER...");
 		const std::string text = text_editor->text();
 		try {
-			game_logic::formula_ptr f(new game_logic::formula(variant(text), &get_custom_object_functions_symbol_table(), custom_object_definition));
+			game_logic::FormulaPtr f(new game_logic::Formula(variant(text), &get_custom_object_functions_symbol_table(), custom_object_definition));
 		
 			for(LevelPtr lvl : editor_.get_level_list()) {
 				for(EntityPtr entity_obj : entity_) {

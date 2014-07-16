@@ -33,12 +33,12 @@
 
 namespace game_logic
 {
-	enum FORMULA_ACCESS_TYPE { FORMULA_READ_ONLY, FORMULA_WRITE_ONLY, FORMULA_READ_WRITE };
-	struct formula_input 
+	enum class FORMULA_ACCESS_TYPE { READ_ONLY, WRITE_ONLY, READ_WRITE };
+	struct FormulaInput 
 	{
 		std::string name;
 		FORMULA_ACCESS_TYPE access;
-		formula_input(const std::string& name, FORMULA_ACCESS_TYPE access=FORMULA_READ_WRITE)
+		FormulaInput(const std::string& name, FORMULA_ACCESS_TYPE access=FORMULA_ACCESS_TYPE::READ_WRITE)
 				: name(name), access(access)
 		{}
 	};
@@ -52,62 +52,62 @@ namespace game_logic
 		explicit FormulaCallable(bool has_self=false) : has_self_(has_self)
 		{}
 
-		std::string query_id() const { return getObjectId(); }
+		std::string queryId() const { return getObjectId(); }
 
-		variant query_value(const std::string& key) const {
+		variant queryValue(const std::string& key) const {
 			if(has_self_ && key == "self") {
 				return variant(this);
 			}
 			return getValue(key);
 		}
 
-		variant query_value_by_slot(int slot) const {
+		variant queryValueBySlot(int slot) const {
 			return getValueBySlot(slot);
 		}
 
-		void mutate_value(const std::string& key, const variant& value) {
+		void mutateValue(const std::string& key, const variant& value) {
 			setValue(key, value);
 		}
 
-		void mutate_value_by_slot(int slot, const variant& value) {
+		void mutateValueBySlot(int slot, const variant& value) {
 			setValueBySlot(slot, value);
 		}
 
-		std::vector<formula_input> inputs() const {
-			std::vector<formula_input> res;
+		std::vector<FormulaInput> inputs() const {
+			std::vector<FormulaInput> res;
 			getInputs(&res);
 			return res;
 		}
 
 		bool equals(const FormulaCallable* other) const {
-			return do_compare(other) == 0;
+			return doCompare(other) == 0;
 		}
 
 		bool less(const FormulaCallable* other) const {
-			return do_compare(other) < 0;
+			return doCompare(other) < 0;
 		}
 
-		virtual void getInputs(std::vector<formula_input>* /*inputs*/) const {};
+		virtual void getInputs(std::vector<FormulaInput>* /*inputs*/) const {};
 
 		void serialize(std::string& str) const {
-			serialize_to_string(str);
+			serializeToString(str);
 		}
 
 		bool has_key(const std::string& key) const 
-			{ return !query_value(key).is_null(); }
+			{ return !queryValue(key).is_null(); }
 
 		// In order to provide support for widgets to be able to have FFL handlers for events
 		// The following two functions are provided for them to use to respectively execute
 		// a command and create a new formula from a variant (which is expected to contain FFL 
 		// commands).  If you're making some new that object that provides a custom symbol
-		// table or supports different types of command_callable you should override these 
+		// table or supports different types of CommandCallable you should override these 
 		// two functions to provide widget support.
 		virtual bool executeCommand(const variant &v);
-		virtual formula_ptr createFormula(const variant& v);
+		virtual FormulaPtr createFormula(const variant& v);
 
 		//is some kind of command to the engine.
 		virtual bool isCommand() const { return false; }
-		virtual bool is_cairo_op() const { return false; }
+		virtual bool isCairoOp() const { return false; }
 
 		void performVisitValues(FormulaCallableVisitor& visitor) {
 			visitValues(visitor);
@@ -118,11 +118,11 @@ namespace game_logic
 
 		virtual void setValue(const std::string& key, const variant& value);
 		virtual void setValueBySlot(int slot, const variant& value);
-		virtual int do_compare(const FormulaCallable* callable) const {
+		virtual int doCompare(const FormulaCallable* callable) const {
 			return this < callable ? -1 : (this == callable ? 0 : 1);
 		}
 
-		virtual void serialize_to_string(std::string& str) const;
+		virtual void serializeToString(std::string& str) const;
 
 		virtual void visitValues(FormulaCallableVisitor& visitor) {}
 	private:
@@ -134,61 +134,61 @@ namespace game_logic
 		bool has_self_;
 	};
 
-	class FormulaCallable_no_ref_count : public FormulaCallable {
+	class FormulaCallableNoRefCount : public FormulaCallable {
 	public:
-		FormulaCallable_no_ref_count() {
+		FormulaCallableNoRefCount() {
 			turn_reference_counting_off();
 		}
-		virtual ~FormulaCallable_no_ref_count() {}
+		virtual ~FormulaCallableNoRefCount() {}
 	};
 
-	class FormulaCallable_with_backup : public FormulaCallable {
+	class FormulaCallableWithBackup : public FormulaCallable {
 		const FormulaCallable& main_;
 		const FormulaCallable& backup_;
 		variant getValueBySlot(int slot) const {
-			return backup_.query_value_by_slot(slot);
+			return backup_.queryValueBySlot(slot);
 		}
 
 		variant getValue(const std::string& key) const {
-			variant var = main_.query_value(key);
+			variant var = main_.queryValue(key);
 			if(var.is_null()) {
-				return backup_.query_value(key);
+				return backup_.queryValue(key);
 			}
 
 			return var;
 		}
 
-		void getInputs(std::vector<formula_input>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const {
 			main_.getInputs(inputs);
 			backup_.getInputs(inputs);
 		}
 	public:
-		FormulaCallable_with_backup(const FormulaCallable& main, const FormulaCallable& backup) : FormulaCallable(false), main_(main), backup_(backup)
+		FormulaCallableWithBackup(const FormulaCallable& main, const FormulaCallable& backup) : FormulaCallable(false), main_(main), backup_(backup)
 		{}
 	};
 
-	class formula_variant_callable_with_backup : public FormulaCallable {
+	class FormulaVariantCallableWithBackup : public FormulaCallable {
 		variant var_;
 		const FormulaCallable& backup_;
 		variant getValue(const std::string& key) const {
 			variant var = var_.get_member(key);
 			if(var.is_null()) {
-				return backup_.query_value(key);
+				return backup_.queryValue(key);
 			}
 
 			return var;
 		}
 
 		variant getValueBySlot(int slot) const {
-			return backup_.query_value_by_slot(slot);
+			return backup_.queryValueBySlot(slot);
 		}
 
-		void getInputs(std::vector<formula_input>* inputs) const {
+		void getInputs(std::vector<FormulaInput>* inputs) const {
 			backup_.getInputs(inputs);
 		}
 
 	public:
-		formula_variant_callable_with_backup(const variant& var, const FormulaCallable& backup) : FormulaCallable(false), var_(var), backup_(backup)
+		FormulaVariantCallableWithBackup(const variant& var, const FormulaCallable& backup) : FormulaCallable(false), var_(var), backup_(backup)
 		{}
 	};
 
@@ -199,11 +199,11 @@ namespace game_logic
 		explicit MapFormulaCallable(const std::map<std::string, variant>& m);
 		variant write() const;
 		MapFormulaCallable& add(const std::string& key, const variant& value);
-		void set_fallback(const FormulaCallable* fallback) { fallback_ = fallback; }
+		void setFallback(const FormulaCallable* fallback) { fallback_ = fallback; }
 
 		//adds an entry and gets direct access to the variant. Use with caution
 		//and for cases where calling add() repeatedy isn't efficient enough.
-		variant& add_direct_access(const std::string& key);
+		variant& addDirectAccess(const std::string& key);
 
 		bool empty() const { return values_.empty(); }
 		void clear() { values_.clear(); }
@@ -222,13 +222,13 @@ namespace game_logic
 		//MapFormulaCallable(const MapFormulaCallable&);
 
 		variant getValueBySlot(int slot) const {
-			return fallback_->query_value_by_slot(slot);
+			return fallback_->queryValueBySlot(slot);
 		}
 
 		virtual void visitValues(FormulaCallableVisitor& visitor);
 
 		variant getValue(const std::string& key) const;
-		void getInputs(std::vector<formula_input>* inputs) const;
+		void getInputs(std::vector<FormulaInput>* inputs) const;
 		void setValue(const std::string& key, const variant& value);
 		std::map<std::string,variant> values_;
 		const FormulaCallable* fallback_;
@@ -240,38 +240,38 @@ namespace game_logic
 	typedef boost::intrusive_ptr<MapFormulaCallable> MapFormulaCallablePtr;
 	typedef boost::intrusive_ptr<const MapFormulaCallable> ConstMapFormulaCallablePtr;
 
-	class formula_expression;
+	class FormulaExpression;
 
-	class command_callable : public FormulaCallable {
+	class CommandCallable : public FormulaCallable {
 	public:
-		command_callable();
+		CommandCallable();
 		void runCommand(FormulaCallable& context) const;
 
-		void setExpression(const formula_expression* expr);
+		void setExpression(const FormulaExpression* expr);
 
 		bool isCommand() const { return true; }
 	private:
 		virtual void execute(FormulaCallable& context) const = 0;
 		variant getValue(const std::string& key) const { return variant(); }
-		void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 
 		//these two members are a more compiler-friendly version of a
-		//intrusive_ptr<formula_expression>
-		const formula_expression* expr_;
+		//intrusive_ptr<FormulaExpression>
+		const FormulaExpression* expr_;
 		boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 	};
 
-	class fn_command_callable : public command_callable {
+	class FnCommandCallable : public CommandCallable {
 	public:
-		explicit fn_command_callable(std::function<void()> fn);
+		explicit FnCommandCallable(std::function<void()> fn);
 	private:
 		virtual void execute(FormulaCallable& context) const;
 		std::function<void()> fn_;
 	};
 
-	class fn_command_callable_arg : public command_callable {
+	class FnCommandCallableArg : public CommandCallable {
 	public:
-		explicit fn_command_callable_arg(std::function<void(FormulaCallable*)> fn);
+		explicit FnCommandCallableArg(std::function<void(FormulaCallable*)> fn);
 	private:
 		virtual void execute(FormulaCallable& context) const;
 		std::function<void(FormulaCallable*)> fn_;

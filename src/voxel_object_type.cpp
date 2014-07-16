@@ -97,7 +97,7 @@ namespace voxel
 	{
 		prototype_.reset(new voxel_object(node));
 
-		const formula::strict_check_scope strict_checking(true);
+		const formula::StrictCheckScope strict_checking(true);
 
 		variant properties_node = node["properties"];
 		if(properties_node.is_null() == false) {
@@ -274,7 +274,7 @@ namespace voxel
 						entry.init = formula::create_optional_formula(value["init"], getFunctionSymbols(), ConstFormulaCallableDefinitionPtr(vox_object_type->getDefinition()));
 						assert(entry.init);
 						assert(entry.type);
-						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->query_variant_type()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->query_variant_type()->to_string() << " expected " << entry.type->to_string());
+						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->queryVariantType()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->queryVariantType()->to_string() << " expected " << entry.type->to_string());
 					}
 					entry.default_value = value["default"];
 
@@ -304,7 +304,7 @@ namespace voxel
 
 				if(entry.getter) {
 					variant v;
-					if(entry.getter->evaluates_to_constant(v)) {
+					if(entry.getter->evaluatesToConstantv)) {
 						entry.getter.reset();
 						entry.const_value.reset(new variant(v));
 					}

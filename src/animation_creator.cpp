@@ -403,7 +403,7 @@ namespace gui
 		gui::filter_list f;
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
-		gui::file_chooser_dialog open_dlg(
+		gui::FileChooserDialog open_dlg(
 			int(preferences::virtual_screen_width()*0.1), 
 			int(preferences::virtual_screen_height()*0.1), 
 			int(preferences::virtual_screen_width()*0.8), 
@@ -414,7 +414,7 @@ namespace gui
 		open_dlg.showModal();
 
 		if(open_dlg.cancelled() == false) {
-			image_file_ = open_dlg.get_file_name();
+			image_file_ = open_dlg.getFileName();
 			int offs = image_file_.rfind("/");
 			image_file_name_ = image_file_.substr(offs+1);
 			if(current_.is_null() == false) {

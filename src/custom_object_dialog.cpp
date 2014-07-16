@@ -307,11 +307,11 @@ namespace editor_dialogs
 
 	void CustomObjectDialog::onSetPath()
 	{
-		gui::file_chooser_dialog dir_dlg(
-			int(preferences::virtual_screen_width()*0.2), 
-			int(preferences::virtual_screen_height()*0.2), 
-			int(preferences::virtual_screen_width()*0.6), 
-			int(preferences::virtual_screen_height()*0.6),
+		gui::FileChooserDialog dir_dlg(
+			static_cast<int>(preferences::virtual_screen_width()*0.2), 
+			static_cast<int>(preferences::virtual_screen_height()*0.2), 
+			static_cast<int>(preferences::virtual_screen_width()*0.6), 
+			static_cast<int>(preferences::virtual_screen_height()*0.6),
 			gui::filter_list(), 
 			true, current_object_save_path_);
 		dir_dlg.setBackgroundFrame("empty_window");
@@ -320,7 +320,7 @@ namespace editor_dialogs
 		dir_dlg.showModal();
 
 		if(dir_dlg.cancelled() == false) {
-			current_object_save_path_ = dir_dlg.get_path() + "/";
+			current_object_save_path_ = dir_dlg.getPath() + "/";
 		}
 		init();
 	}

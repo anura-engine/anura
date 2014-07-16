@@ -26,24 +26,24 @@ const std::string FunctionModule = "tbs";
 class tbs_FunctionSymbolTable : public FunctionSymbolTable
 {
 public:
-	expression_ptr create_function(
+	ExpressionPtr createFunction(
 	                           const std::string& fn,
-	                           const std::vector<expression_ptr>& args,
+	                           const std::vector<ExpressionPtr>& args,
 							   ConstFormulaCallableDefinitionPtr callable_def) const;
 };
 
-expression_ptr tbs_FunctionSymbolTable::create_function(
+ExpressionPtr tbs_FunctionSymbolTable::createFunction(
                            const std::string& fn,
-                           const std::vector<expression_ptr>& args,
+                           const std::vector<ExpressionPtr>& args,
 						   ConstFormulaCallableDefinitionPtr callable_def) const
 {
 	const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
 	std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);
 	if(i != creators.end()) {
-		return expression_ptr(i->second->create(args));
+		return ExpressionPtr(i->second->create(args));
 	}
 
-	return FunctionSymbolTable::create_function(fn, args, callable_def);
+	return FunctionSymbolTable::createFunction(fn, args, callable_def);
 }
 
 }

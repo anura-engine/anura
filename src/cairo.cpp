@@ -177,7 +177,7 @@ namespace graphics
 			fn_(context, args_);
 		}
 
-		bool is_cairo_op() const { return true; }
+		bool isCairoOp() const { return true; }
 	private:
 		DECLARE_CALLABLE(cairo_op);
 	

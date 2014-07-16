@@ -101,7 +101,7 @@ namespace gui
 		if(on_click_value.is_function()) {
 			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "onClick button function should take 0 arguments: " << v.debug_location());
 			static const variant fml("fn()");
-			click_handler_.reset(new game_logic::formula(fml));
+			click_handler_.reset(new game_logic::Formula(fml));
 
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			callable->add("fn", on_click_value);

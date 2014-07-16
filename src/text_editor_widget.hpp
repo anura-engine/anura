@@ -195,13 +195,13 @@ namespace gui
 		void changeFocusDelgate(bool new_focus_value);
 		bool beginEnterDelegate();
 
-		game_logic::formula_ptr ffl_on_change_;
-		game_logic::formula_ptr ffl_onMoveCursor_;
-		game_logic::formula_ptr ffl_on_enter_;
-		game_logic::formula_ptr ffl_on_tab_;
-		game_logic::formula_ptr ffl_on_escape_;
-		game_logic::formula_ptr ffl_on_change_focus_;
-		game_logic::formula_ptr ffl_onBeginEnter_;
+		game_logic::FormulaPtr ffl_on_change_;
+		game_logic::FormulaPtr ffl_onMoveCursor_;
+		game_logic::FormulaPtr ffl_on_enter_;
+		game_logic::FormulaPtr ffl_on_tab_;
+		game_logic::FormulaPtr ffl_on_escape_;
+		game_logic::FormulaPtr ffl_on_change_focus_;
+		game_logic::FormulaPtr ffl_onBeginEnter_;
 
 		bool begin_enter_return_;
 

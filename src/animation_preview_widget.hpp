@@ -102,11 +102,11 @@ namespace gui
 		void framesPerRowHandlerDelegate(int frames_per_row);
 		void solidHandlerDelegate(int x, int y);
 
-		game_logic::formula_ptr ffl_rect_handler_;
-		game_logic::formula_ptr ffl_pad_handler_;
-		game_logic::formula_ptr ffl_num_frames_handler_;
-		game_logic::formula_ptr ffl_frames_per_row_handler_;
-		game_logic::formula_ptr ffl_solid_handler_;
+		game_logic::FormulaPtr ffl_rect_handler_;
+		game_logic::FormulaPtr ffl_pad_handler_;
+		game_logic::FormulaPtr ffl_num_frames_handler_;
+		game_logic::FormulaPtr ffl_frames_per_row_handler_;
+		game_logic::FormulaPtr ffl_solid_handler_;
 	};
 
 	typedef boost::intrusive_ptr<AnimationPreviewWidget> AnimationPreviewWidgetPtr;

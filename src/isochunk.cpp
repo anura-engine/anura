@@ -644,8 +644,8 @@ namespace voxel
 				std::vector<char> decomp = zip::decompress(std::vector<char>(decoded.begin(), decoded.end()));
 				try {
 					voxels = json::parse(std::string(decomp.begin(), decomp.end()));
-				} catch (json::parse_error& e) {
-					ASSERT_LOG(false, "Error parsing voxel data: " << e.error_message());
+				} catch (json::ParseError& e) {
+					ASSERT_LOG(false, "Error parsing voxel data: " << e.errorMessage());
 				}
 			} else {
 				voxels = node["voxels"];

@@ -332,7 +332,7 @@ public:
 		}
 
 		if(v.is_callable()) {
-			return v.as_callable()->is_cairo_op();
+			return v.as_callable()->isCairoOp();
 		}
 
 		if(v.is_list()) {
@@ -380,11 +380,11 @@ class variant_type_class : public variant_type
 public:
 	explicit variant_type_class(const std::string& type) : type_(type)
 	{
-		ASSERT_LOG(game_logic::formula_class_valid(type), "INVALID FORMULA CLASS: " << type);
+		ASSERT_LOG(game_logic::Formula_class_valid(type), "INVALID FORMULA CLASS: " << type);
 	}
 
 	bool match(const variant& v) const {
-		const game_logic::formula_object* obj = v.try_convert<game_logic::formula_object>();
+		const game_logic::Formula_object* obj = v.try_convert<game_logic::Formula_object>();
 		if(!obj) {
 			return false;
 		}
@@ -562,7 +562,7 @@ public:
 			return false;
 		}
 
-		return game_logic::registered_definition_is_a(obj->query_id(), type_);
+		return game_logic::registered_definition_is_a(obj->queryId(), type_);
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -627,8 +627,8 @@ public:
 	}
 
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
-		const game_logic::formula_interface* interface_a = is_interface();
-		const game_logic::formula_interface* interface_b = type->is_interface();
+		const game_logic::Formula_interface* interface_a = is_interface();
+		const game_logic::Formula_interface* interface_b = type->is_interface();
 		if(interface_a == interface_b) {
 			return true;
 		}
@@ -691,7 +691,7 @@ public:
 		try {
 			interface_->create_factory(type);
 			return true;
-		} catch(game_logic::formula_interface::interface_mismatch_error&) {
+		} catch(game_logic::Formula_interface::interface_mismatch_error&) {
 			return false;
 		}*/
 	}
@@ -700,7 +700,7 @@ public:
 		return interface_->getDefinition().get();
 	}
 
-	const game_logic::formula_interface* is_interface() const {
+	const game_logic::Formula_interface* is_interface() const {
 		return interface_.get();
 	}
 private:
@@ -1685,7 +1685,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		return variant_type::get_class(value.try_convert<formula_object>()->get_class_name());
 	} else if(value.try_convert<custom_object>()) {
 		const custom_object* obj = value.try_convert<custom_object>();
-		return variant_type::get_custom_object(obj->query_value("type").as_string());
+		return variant_type::get_custom_object(obj->queryValue("type").as_string());
 #if defined(USE_ISOMAP)
 	} else if(value.try_convert<voxel_object>()) {
 		const voxel_object* obj = value.try_convert<voxel_object>();
@@ -1764,8 +1764,8 @@ variant_type_ptr get_variant_type_from_value(const variant& value) {
 		return variant_type::get_map(key_type, value_type);
 	} else if(value.is_callable() && value.as_callable()->isCommand()) {
 		return variant_type::get_commands();
-	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->query_id())) {
-		return variant_type::get_builtin(value.as_callable()->query_id());
+	} else if(value.is_callable() && game_logic::get_formula_callable_definition(value.as_callable()->queryId())) {
+		return variant_type::get_builtin(value.as_callable()->queryId());
 	} else if(value.is_function()) {
 		return variant_type::get_function_type(value.function_arg_types(), value.function_return_type(), value.min_function_arguments());
 	} else {
@@ -1873,7 +1873,7 @@ bool parse_variant_constant(const variant& original_str,
 
 	variant formula_var(formula_str);
 	try {
-		game_logic::formula f(formula_var);
+		game_logic::Formula f(formula_var);
 		result = f.execute();
 		return true;
 	} catch(...) {
@@ -1938,7 +1938,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 
 			v.push_back(variant_type_ptr(new variant_type_interface(
-			    const_formula_interface_ptr(new game_logic::formula_interface(types)))));
+			    const_formula_interface_ptr(new game_logic::Formula_interface(types)))));
 		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("enum") && i1+1 != i2 && (i1+1)->equals("{")) {
 			i1 += 2;
 
@@ -2191,11 +2191,11 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 	}
 
 	if(v.size() == 1) {
-		v.front()->set_str(std::string(begin_token->begin, (i1-1)->end));
+		v.front()->setStr(std::string(begin_token->begin, (i1-1)->end));
 		return v.front();
 	} else {
 		variant_type_ptr result(new variant_type_union(v));
-		result->set_str(std::string(begin_token->begin, (i1-1)->end));
+		result->setStr(std::string(begin_token->begin, (i1-1)->end));
 		return result;
 	}
 #undef ASSERT_COND

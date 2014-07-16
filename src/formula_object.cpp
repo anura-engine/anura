@@ -91,17 +91,17 @@ struct PropertyEntry {
 		value_entry->setVariantType(prop_entry->variant_type);
 		*data_entry = *prop_entry;
 
-		const formula::strict_check_scope strict_checking;
+		const formula::StrictCheckScope strict_checking;
 		if(node.is_string()) {
-			getter = game_logic::formula::create_optional_formula(node, NULL, get_class_definition(class_name));
+			getter = game_logic::Formula::create_optional_formula(node, NULL, get_class_definition(class_name));
 			ASSERT_LOG(getter, "COULD NOT PARSE CLASS FORMULA " << class_name << "." << prop_name);
 
-			ASSERT_LOG(getter->query_variant_type()->is_any() == false, "COULD NOT INFER TYPE FOR CLASS PROPERTY " << class_name << "." << prop_name << ". SET THIS PROPERTY EXPLICITLY");
+			ASSERT_LOG(getter->queryVariantType()->is_any() == false, "COULD NOT INFER TYPE FOR CLASS PROPERTY " << class_name << "." << prop_name << ". SET THIS PROPERTY EXPLICITLY");
 
 			FormulaCallableDefinition::Entry* entry = class_def->getEntryById(prop_name);
 			ASSERT_LOG(entry != NULL, "COULD NOT FIND CLASS PROPERTY ENTRY " << class_name << "." << prop_name);
 
-			entry->setVariantType(getter->query_variant_type());
+			entry->setVariantType(getter->queryVariantType());
 			return;
 		} else if(node.is_map()) {
 			if(node["variable"].as_bool(true)) {
@@ -109,19 +109,19 @@ struct PropertyEntry {
 			}
 
 			if(node["get"].is_string()) {
-				getter = game_logic::formula::create_optional_formula(node["get"], NULL, get_class_definition(class_name));
+				getter = game_logic::Formula::create_optional_formula(node["get"], NULL, get_class_definition(class_name));
 			}
 
 			if(node["set"].is_string()) {
-				setter = game_logic::formula::create_optional_formula(node["set"], NULL, get_class_definition(class_name));
+				setter = game_logic::Formula::create_optional_formula(node["set"], NULL, get_class_definition(class_name));
 			}
 
 			default_value = node["default"];
 
 			if(node["initialize"].is_string()) {
-				initializer = game_logic::formula::create_optional_formula(node["initialize"], NULL);
+				initializer = game_logic::Formula::create_optional_formula(node["initialize"], NULL);
 			} else if(node["init"].is_string()) {
-				initializer = game_logic::formula::create_optional_formula(node["init"], NULL);
+				initializer = game_logic::Formula::create_optional_formula(node["init"], NULL);
 			}
 
 			variant valid_types = node["type"];
@@ -148,7 +148,7 @@ struct PropertyEntry {
 	}
 
 	std::string name;
-	game_logic::const_formula_ptr getter, setter, initializer;
+	game_logic::ConstFormulaPtr getter, setter, initializer;
 
 	variant_type_ptr get_type, set_type;
 	int variable_slot;
@@ -320,10 +320,10 @@ public:
 						if(type) {
 							slots_[slot].variant_type = type;
 						} else {
-							const formula::strict_check_scope strict_checking(false);
-							formula_ptr f = formula::create_optional_formula(prop_node);
+							const formula::StrictCheckScope strict_checking(false);
+							FormulaPtr f = formula::create_optional_formula(prop_node);
 							if(f) {
-								slots_[slot].variant_type = f->query_variant_type();
+								slots_[slot].variant_type = f->queryVariantType();
 							}
 						}
 					}
@@ -436,11 +436,11 @@ class formula_class : public reference_counted_object
 {
 public:
 	formula_class(const std::string& class_name, const variant& node);
-	void set_name(const std::string& name);
+	void setName(const std::string& name);
 	const std::string& name() const { return name_; }
 	const variant& name_variant() const { return name_variant_; }
 	const variant& private_data() const { return private_data_; }
-	const std::vector<game_logic::const_formula_ptr>& constructor() const { return constructor_; }
+	const std::vector<game_logic::ConstFormulaPtr>& constructor() const { return constructor_; }
 	const std::map<std::string, int>& properties() const { return properties_; }
 	const std::vector<PropertyEntry>& slots() const { return slots_; }
 	const classes_map& sub_classes() const { return sub_classes_; }
@@ -457,7 +457,7 @@ private:
 	std::string name_;
 	variant name_variant_;
 	variant private_data_;
-	std::vector<game_logic::const_formula_ptr> constructor_;
+	std::vector<game_logic::ConstFormulaPtr> constructor_;
 	std::map<std::string, int> properties_;
 
 	std::vector<PropertyEntry> slots_;
@@ -547,9 +547,9 @@ formula_class::formula_class(const std::string& class_name, const variant& node)
 	nested_classes_ = node["classes"];
 
 	if(node["constructor"].is_string()) {
-		const formula::strict_check_scope strict_checking;
+		const formula::StrictCheckScope strict_checking;
 
-		constructor_.push_back(game_logic::formula::create_optional_formula(node["constructor"], NULL, class_def));
+		constructor_.push_back(game_logic::Formula::create_optional_formula(node["constructor"], NULL, class_def));
 	}
 
 	unit_test_ = node["test"];
@@ -575,12 +575,12 @@ void formula_class::build_nested_classes(variant classes)
 	}
 }
 
-void formula_class::set_name(const std::string& name)
+void formula_class::setName(const std::string& name)
 {
 	name_ = name;
 	name_variant_ = variant(name);
 	for(classes_map::iterator i = sub_classes_.begin(); i != sub_classes_.end(); ++i) {
-		i->second->set_name(name + "." + i->first);
+		i->second->setName(name + "." + i->first);
 	}
 }
 bool formula_class::is_a(const std::string& name) const
@@ -601,8 +601,8 @@ bool formula_class::is_a(const std::string& name) const
 
 void formula_class::run_unit_tests()
 {
-	const formula::strict_check_scope strict_checking(false);
-	const formula::non_static_context non_static_context;
+	const formula::StrictCheckScope strict_checking(false);
+	const formula::NonStaticContext NonStaticContext;
 
 	if(unit_test_.is_null()) {
 		return;
@@ -625,15 +625,15 @@ void formula_class::run_unit_tests()
 
 	for(int n = 0; n != unit_test.num_elements(); ++n) {
 		variant test = unit_test[n];
-		game_logic::formula_ptr cmd = game_logic::formula::create_optional_formula(test["command"]);
+		game_logic::FormulaPtr cmd = game_logic::Formula::create_optional_formula(test["command"]);
 		if(cmd) {
 			variant v = cmd->execute(*callable);
 			callable->executeCommand(v);
 		}
 
-		game_logic::formula_ptr predicate = game_logic::formula::create_optional_formula(test["assert"]);
+		game_logic::FormulaPtr predicate = game_logic::Formula::create_optional_formula(test["assert"]);
 		if(predicate) {
-			game_logic::formula_ptr message = game_logic::formula::create_optional_formula(test["message"]);
+			game_logic::FormulaPtr message = game_logic::Formula::create_optional_formula(test["message"]);
 
 			std::string msg;
 			if(message) {
@@ -696,7 +696,7 @@ boost::intrusive_ptr<formula_class> build_class(const std::string& type)
 	record_classes(type, v);
 
 	boost::intrusive_ptr<formula_class> result(new formula_class(type, v));
-	result->set_name(type);
+	result->setName(type);
 	return result;
 }
 
@@ -964,7 +964,7 @@ void formula_object::try_load_class(const std::string& name)
 
 boost::intrusive_ptr<formula_object> formula_object::create(const std::string& type, variant args)
 {
-	const formula::strict_check_scope strict_checking;
+	const formula::StrictCheckScope strict_checking;
 	boost::intrusive_ptr<formula_object> res(new formula_object(type, args));
 	res->call_constructors(args);
 	res->validate();
@@ -1009,11 +1009,11 @@ void formula_object::call_constructors(variant args)
 				}
 
 				//A read-only property. Set the formula to what is passed in.
-				formula_ptr f(new formula(args[key], NULL, def));
+				FormulaPtr f(new formula(args[key], NULL, def));
 				const FormulaCallableDefinition::Entry* entry = def->getEntryById(key.as_string());
 				ASSERT_LOG(entry, "COULD NOT FIND ENTRY IN CLASS DEFINITION: " << key.as_string());
 				if(entry->variant_type) {
-					ASSERT_LOG(variant_types_compatible(entry->variant_type, f->query_variant_type()), "ERROR: property override in instance of class " << class_->name() << " has mis-matched type for property " << key.as_string() << ": " << entry->variant_type->to_string() << " doesn't match " << f->query_variant_type()->to_string() << " at " << args[key].debug_location());
+					ASSERT_LOG(variant_types_compatible(entry->variant_type, f->queryVariantType()), "ERROR: property override in instance of class " << class_->name() << " has mis-matched type for property " << key.as_string() << ": " << entry->variant_type->to_string() << " doesn't match " << f->queryVariantType()->to_string() << " at " << args[key].debug_location());
 				}
 				property_overrides_[itor->second] = f;
 			} else {
@@ -1022,7 +1022,7 @@ void formula_object::call_constructors(variant args)
 		}
 	}
 
-	foreach(const game_logic::const_formula_ptr f, class_->constructor()) {
+	foreach(const game_logic::ConstFormulaPtr f, class_->constructor()) {
 		executeCommand(f->execute(*this));
 	}
 }
@@ -1051,9 +1051,9 @@ formula_object::formula_object(variant data)
 		property_overrides_.reserve(overrides.num_elements());
 		for(int n = 0; n != overrides.num_elements(); ++n) {
 			if(overrides[n].is_null()) {
-				property_overrides_.push_back(formula_ptr());
+				property_overrides_.push_back(FormulaPtr());
 			} else {
-				property_overrides_.push_back(formula_ptr(new formula(overrides[n])));
+				property_overrides_.push_back(FormulaPtr(new formula(overrides[n])));
 			}
 		}
 	}
@@ -1090,7 +1090,7 @@ variant formula_object::serializeToWml() const
 
 	if(property_overrides_.empty() == false) {
 		std::vector<variant> properties;
-		foreach(const formula_ptr& f, property_overrides_) {
+		foreach(const FormulaPtr& f, property_overrides_) {
 			if(f) {
 				properties.push_back(variant(f->str()));
 			} else {
@@ -1240,7 +1240,7 @@ void formula_object::setValueBySlot(int slot, const variant& value)
 		//the type we expect.
 		variant var;
 
-		formula_ptr override;
+		FormulaPtr override;
 		if(slot < property_overrides_.size()) {
 			override = property_overrides_[slot];
 		}
@@ -1275,7 +1275,7 @@ void formula_object::validate() const
 
 		variant value;
 
-		formula_ptr override;
+		FormulaPtr override;
 		if(index < property_overrides_.size()) {
 			override = property_overrides_[index];
 		}
@@ -1303,13 +1303,13 @@ void formula_object::validate() const
 void formula_object::getInputs(std::vector<formula_input>* inputs) const
 {
 	foreach(const PropertyEntry& entry, class_->slots()) {
-		FORMULA_ACCESS_TYPE type = FORMULA_READ_ONLY;
+		FORMULA_ACCESS_TYPE type = FORMULA_ACCESS_TYPE::READ_ONLY;
 		if(entry.getter && entry.setter || entry.variable_slot != -1) {
-			type = FORMULA_READ_WRITE;
+			type = FORMULA_ACCESS_TYPE::READ_WRITE;
 		} else if(entry.getter) {
-			type = FORMULA_READ_ONLY;
+			type = FORMULA_ACCESS_TYPE::READ_ONLY;
 		} else if(entry.setter) {
-			type = FORMULA_WRITE_ONLY;
+			type = FORMULA_ACCESS_TYPE::WRITE_ONLY;
 		} else {
 			continue;
 		}
@@ -1433,7 +1433,7 @@ private:
 		FormulaCallableDefinitionPtr def = get_library_definition();
 		const int slot = def->getSlot(key);
 		ASSERT_LOG(slot >= 0, "Unknown library: " << key << "\n" << get_full_call_stack());
-		return query_value_by_slot(slot);
+		return queryValueBySlot(slot);
 	}
 
 	variant getValueBySlot(int slot) const {

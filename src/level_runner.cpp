@@ -722,7 +722,7 @@ void LevelRunner::close_editor()
 	history_button_.reset();
 	history_trails_.clear();
 	editor_resolution_manager_.reset();
-	lvl_->mutate_value("zoom", variant(1));
+	lvl_->mutateValue("zoom", variant(1));
 	lvl_->set_editor(false);
 	paused = false;
 	show_pause_title();
@@ -846,7 +846,7 @@ bool LevelRunner::play_cycle()
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
 
-		lvl_->mutate_value("zoom", variant(decimal(1.0/editor_->zoom())));
+		lvl_->mutateValue("zoom", variant(decimal(1.0/editor_->zoom())));
 
 		CustomObjectType::reloadModifiedCode();
 		// XXX graphics::texture::clear_modified_files_from_cache();
@@ -1569,8 +1569,8 @@ bool LevelRunner::play_cycle()
 				std::vector<variant> alpha_values;
 				if(!history_trails_.empty()) {
 					for(EntityPtr e : history_trails_) {
-						alpha_values.push_back(e->query_value("alpha"));
-						e->mutate_value("alpha", variant(32));
+						alpha_values.push_back(e->queryValue("alpha"));
+						e->mutateValue("alpha", variant(32));
 						lvl_->add_draw_character(e);
 					}
 				}
@@ -1579,7 +1579,7 @@ bool LevelRunner::play_cycle()
 				int index = 0;
 				if(!history_trails_.empty()) {
 					for(EntityPtr e : history_trails_) {
-						e->mutate_value("alpha", alpha_values[index++]);
+						e->mutateValue("alpha", alpha_values[index++]);
 					}
 
 					lvl_->set_active_chars();

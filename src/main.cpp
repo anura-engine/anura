@@ -742,10 +742,10 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.drawAndIncrement(_("Initializing tiles"));
 		TileMap::init(json::parse_from_file("data/tiles.cfg"));
 
-		game_logic::formula_object::load_all_classes();
+		game_logic::Formula_object::load_all_classes();
 
-	} catch(const json::parse_error& e) {
-		LOG_ERROR("ERROR PARSING: " << e.error_message());
+	} catch(const json::ParseError& e) {
+		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
 		return 0;
 	}
 	loader.draw(_("Loading level"));

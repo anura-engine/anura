@@ -220,8 +220,8 @@ namespace http
 
 			try {
 				doc = parse_message(std::string(payload, payload + payload_len));
-			} catch(json::parse_error& e) {
-				LOG_ERROR("ERROR PARSING JSON: " << e.error_message());
+			} catch(json::ParseError& e) {
+				LOG_ERROR("ERROR PARSING JSON: " << e.errorMessage());
 				sys::write_file("./error_payload2.txt", std::string(payload));
 			} catch(...) {
 				LOG_ERROR("UNKNOWN ERROR PARSING JSON");

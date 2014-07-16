@@ -370,11 +370,11 @@ namespace debug_console
 				variant::debug_info info;
 				info.filename = &filename;
 				info.line = info.column = 0;
-				ffl_variant.set_debug_info(info);
+				ffl_variant.setDebugInfo(info);
 
 				Entity* ent = dynamic_cast<Entity*>(focus_.get());
 
-				game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->getDefinition() : NULL);
+				game_logic::Formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->getDefinition() : NULL);
 				variant v = f.execute(*focus_);
 				if(ent) {
 					try {

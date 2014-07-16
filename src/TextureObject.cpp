@@ -45,7 +45,7 @@ DEFINE_FIELD(id, "int")
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;
 	using namespace KRE;
-	formula::fail_if_static_context();
+	formula::failIfStaticContext();
 
 	std::string fname = FN_ARG(0).as_string();
 
@@ -56,7 +56,7 @@ BEGIN_DEFINE_FN(save, "(string) ->commands")
 
 	boost::intrusive_ptr<const TextureObject> ptr(&obj);
 
-	return variant(new fn_command_callable([=]() {
+	return variant(new FnCommandCallable([=]() {
 		auto t = ptr->texture();
 		ASSERT_LOG(t != NULL, "Could not get texture");
 		auto s = t->getSurface();

@@ -313,7 +313,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	air_resistance_ = node["air_resistance"].as_int(20);
 	water_resistance_ = node["water_resistance"].as_int(100);
 
-	camera_rotation_ = game_logic::formula::create_optional_formula(node["camera_rotation"]);
+	camera_rotation_ = game_logic::Formula::create_optional_formula(node["camera_rotation"]);
 
 	preloads_ = util::split(node["preloads"].as_string());
 
@@ -3725,7 +3725,7 @@ DEFINE_SET_FIELD
 			obj.before_pause_controls_backup_.reset();
 		}
 		for(EntityPtr e : obj.chars_) {
-			e->mutate_value("paused", value);
+			e->mutateValue("paused", value);
 		}
 	}
 
@@ -4486,19 +4486,19 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 	//new position.
 	if(e->getEditorInfo()) {
 		for(const editor_variable_info& var : e->getEditorInfo()->vars_and_properties()) {
-			const variant value = e->query_value(var.variable_name());
+			const variant value = e->queryValue(var.variable_name());
 			switch(var.type()) {
 			case editor_variable_info::XPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_x));
+					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_x));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
 			case editor_variable_info::YPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_y));
+					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_y));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
@@ -4514,7 +4514,7 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 						}
 					}
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(&new_value));
+					e->mutateValue(var.variable_name(), variant(&new_value));
 					e->handleEvent("editor_changed_variable");
 				}
 			default:
@@ -4612,10 +4612,10 @@ std::pair<std::vector<LevelTile>::const_iterator, std::vector<LevelTile>::const_
 	return std::equal_range(tiles_by_position_.begin(), tiles_by_position_.end(), loc, level_tile_pos_comparer());
 }
 
-game_logic::formula_ptr Level::createFormula(const variant& v)
+game_logic::FormulaPtr Level::createFormula(const variant& v)
 {
 	// XXX Add symbol table here?
-	return game_logic::formula_ptr(new game_logic::formula(v));
+	return game_logic::FormulaPtr(new game_logic::Formula(v));
 }
 
 bool Level::executeCommand(const variant& var)
@@ -4633,7 +4633,7 @@ bool Level::executeCommand(const variant& var)
 			}
 		}
 	} else {
-		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
+		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
 		if(cmd != NULL) {
 			cmd->runCommand(*this);
 		}

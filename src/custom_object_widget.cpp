@@ -68,7 +68,7 @@ namespace gui
 			variant keys = properties.getKeys();
 			for(int n = 0; n != keys.num_elements(); ++n) {
 				variant value = properties[keys[n]];
-				entity_->mutate_value(keys[n].as_string(), value);
+				entity_->mutateValue(keys[n].as_string(), value);
 			}
 		}
 		if(v.has_key("commands")) {

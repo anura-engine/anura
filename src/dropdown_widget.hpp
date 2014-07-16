@@ -84,8 +84,8 @@ namespace gui
 		void changeDelegate(const std::string& s);
 		void selectDelegate(int selection, const std::string& s);
 		// FFL formula
-		game_logic::formula_ptr change_handler_;
-		game_logic::formula_ptr select_handler_;
+		game_logic::FormulaPtr change_handler_;
+		game_logic::FormulaPtr select_handler_;
 	};
 
 	typedef boost::intrusive_ptr<DropdownWidget> DropdownWidgetPtr;

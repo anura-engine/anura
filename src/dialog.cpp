@@ -118,7 +118,7 @@ namespace gui
 			if(on_quit_value.is_function()) {
 				ASSERT_LOG(on_quit_value.min_function_arguments() == 0, "on_quit_value dialog function should take 0 arguments: " << v.debug_location());
 				static const variant fml("fn()");
-				ffl_on_quit_.reset(new game_logic::formula(fml));
+				ffl_on_quit_.reset(new game_logic::Formula(fml));
 
 				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_quit_value);
@@ -135,7 +135,7 @@ namespace gui
 			if(on_close_value.is_function()) {
 				ASSERT_LOG(on_close_value.min_function_arguments() <= 1 && on_close_value.max_function_arguments() >= 1, "on_close dialog function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(selection)");
-				ffl_on_close_.reset(new game_logic::formula(fml));
+				ffl_on_close_.reset(new game_logic::Formula(fml));
 
 				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_close_value);

@@ -218,7 +218,7 @@ namespace voxel
 		boost::intrusive_ptr<voxel_model> model(model_var.convert_to<voxel_model>());
 
 		std::function<void()> fn = [=]() { obj.model_->attach_child(model, child_point.as_string(), parent_point.as_string()); };
-		return variant(new game_logic::fn_command_callable(fn));
+		return variant(new game_logic::FnCommandCallable(fn));
 	END_DEFINE_FN
 
 	DEFINE_FIELD(world, "builtin world")

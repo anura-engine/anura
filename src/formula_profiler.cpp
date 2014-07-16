@@ -269,7 +269,7 @@ void end_profiling()
 
 		sorted_samples.clear();
 
-		std::map<const game_logic::formula_expression*, int> expr_samples, cum_expr_samples;
+		std::map<const game_logic::FormulaExpression*, int> expr_samples, cum_expr_samples;
 
 		int total_expr_samples = 0;
 
@@ -289,12 +289,12 @@ void end_profiling()
 			total_expr_samples += nsamples;
 		}
 
-		for(std::map<const game_logic::formula_expression*, int>::const_iterator i = expr_samples.begin(); i != expr_samples.end(); ++i) {
-			sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debug_pinpoint_location() << " (called " << double(i->first->ntimes_called())/double(nframes_profiled) << " times per frame)"));
+		for(std::map<const game_logic::FormulaExpression*, int>::const_iterator i = expr_samples.begin(); i != expr_samples.end(); ++i) {
+			sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)"));
 		}
 
-		for(std::map<const game_logic::formula_expression*, int>::const_iterator i = cum_expr_samples.begin(); i != cum_expr_samples.end(); ++i) {
-			cum_sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debug_pinpoint_location() << " (called " << double(i->first->ntimes_called())/double(nframes_profiled) << " times per frame)"));
+		for(std::map<const game_logic::FormulaExpression*, int>::const_iterator i = cum_expr_samples.begin(); i != cum_expr_samples.end(); ++i) {
+			cum_sorted_samples.push_back(std::pair<int, std::string>(i->second, formatter() << i->first->debugPinpointLocation() << " (called " << double(i->first->getNTimesCalled())/double(nframes_profiled) << " times per frame)"));
 		}
 
 		std::sort(sorted_samples.begin(), sorted_samples.end());

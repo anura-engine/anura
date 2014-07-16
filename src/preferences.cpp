@@ -216,9 +216,9 @@ namespace preferences {
 			}
 		}
 
-		void getInputs(std::vector<game_logic::formula_input>* inputs) const {
+		void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {
 			for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-				inputs->push_back(game_logic::formula_input(itor->first, game_logic::FORMULA_READ_WRITE));
+				inputs->push_back(game_logic::FormulaInput(itor->first, game_logic::FORMULA_ACCESS_TYPE::READ_WRITE));
 			}
 		}
 	};
@@ -991,7 +991,7 @@ namespace preferences {
 		if(node.is_null()) {
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
-			} catch(json::parse_error&) {
+			} catch(json::ParseError&) {
 				return;
 			}
 		}

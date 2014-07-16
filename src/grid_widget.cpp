@@ -68,7 +68,7 @@ namespace gui
 			if(on_select_value.is_function()) {
 				ASSERT_LOG(on_select_value.min_function_arguments() <= 1 && on_select_value.max_function_arguments() >= 1, "on_select grid function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(selection)");
-				ffl_on_select_.reset(new game_logic::formula(fml));
+				ffl_on_select_.reset(new game_logic::Formula(fml));
 
 				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_select_value);
@@ -86,7 +86,7 @@ namespace gui
 			if(on_mouseover_value.is_function()) {
 				ASSERT_LOG(on_mouseover_value.min_function_arguments() <= 1 && on_mouseover_value.max_function_arguments() >= 1, "on_mouseover grid function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(selection)");
-				ffl_on_mouseover_.reset(new game_logic::formula(fml));
+				ffl_on_mouseover_.reset(new game_logic::Formula(fml));
 
 				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_mouseover_value);

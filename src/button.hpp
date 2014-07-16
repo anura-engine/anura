@@ -90,7 +90,7 @@ namespace gui
 		WidgetPtr label_;
 		std::function<void ()> onclick_;
 		bool down_;
-		game_logic::formula_ptr click_handler_;
+		game_logic::FormulaPtr click_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;

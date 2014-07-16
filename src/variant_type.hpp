@@ -32,7 +32,7 @@
 namespace game_logic
 {
 	class FormulaCallableDefinition;
-	class formula_interface;
+	class FormulaInterface;
 }
 
 struct types_cfg_scope
@@ -108,9 +108,9 @@ public:
 
 	virtual const game_logic::FormulaCallableDefinition* getDefinition() const { return NULL; }
 
-	virtual const game_logic::formula_interface* is_interface() const { return NULL; }
+	virtual const game_logic::FormulaInterface* is_interface() const { return NULL; }
 
-	void set_str(const std::string& s) const { str_ = s; }
+	void setStr(const std::string& s) const { str_ = s; }
 	const std::string& str() const { return str_; }
 
 	std::string to_string() const { return to_string_impl(); }

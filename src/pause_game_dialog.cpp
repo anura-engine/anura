@@ -169,7 +169,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		button_swap_label = WidgetPtr(new GraphicalFontLabel(_("Reverse A and B"), "door_label", 2));
 	}
 	if(module::get_module_args() != NULL) {
-		variant mod_args = module::get_module_args()->query_value("from_lobby");
+		variant mod_args = module::get_module_args()->queryValue("from_lobby");
 		if(mod_args.is_bool() && mod_args.as_bool() == true && module::get_module_name() != "lobby") {
 			return_label->setValue("text", variant(_("Return to Lobby")));
 		}

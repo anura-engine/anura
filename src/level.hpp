@@ -87,7 +87,7 @@ public:
 	//in the main thread.
 	void finishLoading();
 
-	virtual game_logic::formula_ptr createFormula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v);
 	bool executeCommand(const variant& var);
 
 	//function which sets which player we're controlling on this machine.
@@ -542,7 +542,7 @@ private:
 	int air_resistance_;
 	int water_resistance_;
 
-	game_logic::const_formula_ptr camera_rotation_;
+	game_logic::ConstFormulaPtr camera_rotation_;
 	bool end_game_;
 
 	std::vector<std::string> preloads_; //future levels to preload

@@ -40,38 +40,38 @@ namespace game_logic
 	void set_verbatim_string_expressions(bool verbatim);
 
 	class FormulaCallable;
-	class formula_expression;
+	class FormulaExpression;
 	class FunctionSymbolTable;
-	typedef boost::intrusive_ptr<formula_expression> expression_ptr;
+	typedef boost::intrusive_ptr<FormulaExpression> ExpressionPtr;
 
 	//helper struct which contains info for a where expression.
-	struct where_variables_info : public reference_counted_object {
-		explicit where_variables_info(int nslot) : base_slot(nslot) {}
+	struct WhereVariablesInfo : public reference_counted_object 
+	{
+		explicit WhereVariablesInfo(int nslot) : base_slot(nslot) {}
 		std::vector<std::string> names;
-		std::vector<expression_ptr> entries;
+		std::vector<ExpressionPtr> entries;
 		int base_slot;
 		ConstFormulaCallableDefinitionPtr callable_where_def;
 	};
 
-	typedef boost::intrusive_ptr<where_variables_info> where_variables_info_ptr;
+	typedef boost::intrusive_ptr<WhereVariablesInfo> WhereVariablesInfoPtr;
 
-	class formula 
+	class Formula 
 	{
 	public:
-
 		//use one of these guys if you want to evaluate a formula but lower
 		//down in the stack, formulas might be being parsed.
-		struct non_static_context {
+		struct NonStaticContext {
 			int old_value_;
-			non_static_context();
-			~non_static_context();
+			NonStaticContext();
+			~NonStaticContext();
 		};
 
 		//a function which makes the current executing formula fail if
 		//it's attempting to evaluate in a static context.
-		static void fail_if_static_context();
+		static void failIfStaticContext();
 
-		static variant evaluate(const const_formula_ptr& f,
+		static variant evaluate(const ConstFormulaPtr& f,
 							const FormulaCallable& variables,
 							variant default_res=variant(0)) {
 			if(f) {
@@ -81,46 +81,46 @@ namespace game_logic
 			}
 		}
 
-		struct strict_check_scope {
-			explicit strict_check_scope(bool is_strict=true, bool warnings=false);
-			~strict_check_scope();
+		struct StrictCheckScope {
+			explicit StrictCheckScope(bool is_strict=true, bool warnings=false);
+			~StrictCheckScope();
 
 			bool old_value;
 			bool old_warning_value;
 		};
 
-		enum FORMULA_LANGUAGE { LANGUAGE_FFL, LANGUAGE_LUA  };
+		enum class FORMULA_LANGUAGE { FFL, LUA };
 
-		static const std::set<formula*>& getAll();
+		static const std::set<Formula*>& getAll();
 
-		static formula_ptr create_optional_formula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=LANGUAGE_FFL);
-		explicit formula(const variant& val, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
-		formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
-		~formula();
+		static FormulaPtr create_optional_formula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=FORMULA_LANGUAGE::FFL);
+		explicit Formula(const variant& val, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
+		Formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
+		~Formula();
 		variant execute(const FormulaCallable& variables) const;
 		variant execute() const;
-		bool evaluates_to_constant(variant& result) const;
+		bool evaluatesToConstant(variant& result) const;
 		std::string str() const { return str_.as_string(); }
-		variant str_var() const { return str_; }
+		variant strVal() const { return str_; }
 
-		std::string output_debug_info() const;
+		std::string outputDebugInfo() const;
 
-		bool has_guards() const { return base_expr_.empty() == false; }
-		int guard_matches(const FormulaCallable& variables) const;
+		bool hasGuards() const { return base_expr_.empty() == false; }
+		int guardMatches(const FormulaCallable& variables) const;
 
 		//guard matches without wrapping 'variables' in the global callable.
-		int raw_guard_matches(const FormulaCallable& variables) const;
+		int rawGuardMatches(const FormulaCallable& variables) const;
 
-		ConstFormulaCallablePtr wrap_callable_with_global_where(const FormulaCallable& callable) const;
+		ConstFormulaCallablePtr wrapCallableWithGlobalWhere(const FormulaCallable& callable) const;
 
-		const expression_ptr& expr() const { return expr_; }
+		const ExpressionPtr& expr() const { return expr_; }
 
-		variant_type_ptr query_variant_type() const;
+		variant_type_ptr queryVariantType() const;
 
 	private:
-		formula() {}
+		Formula() {}
 		variant str_;
-		expression_ptr expr_;
+		ExpressionPtr expr_;
 
 		ConstFormulaCallableDefinitionPtr def_;
 
@@ -128,12 +128,12 @@ namespace game_logic
 		//base expressions.
 		struct BaseCase {
 			//raw_guard is the guard without wrapping in the global where.
-			expression_ptr raw_guard, guard, expr;
+			ExpressionPtr raw_guard, guard, expr;
 		};
 		std::vector<BaseCase> base_expr_;
 
-		where_variables_info_ptr global_where_;
+		WhereVariablesInfoPtr global_where_;
 
-		void check_brackets_match(const std::vector<formula_tokenizer::token>& tokens) const;
+		void checkBracketsMatch(const std::vector<formula_tokenizer::token>& tokens) const;
 	};
 }

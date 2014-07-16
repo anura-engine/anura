@@ -923,8 +923,8 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 		variant node;
 		try {
 			node = json::parse(sys::read_file(cfg_fname));
-		} catch(json::parse_error& e) {
-			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.error_message());
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.errorMessage());
 		}
 
 		variant baking_info = node["animation_baking"];

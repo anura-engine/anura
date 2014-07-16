@@ -53,20 +53,20 @@ struct game_type {
 		variant functions_var = value["functions"];
 		if(functions_var.is_string()) {
 			functions.reset(new game_logic::FunctionSymbolTable);
-			game_logic::formula f(functions_var, functions.get());
+			game_logic::Formula f(functions_var, functions.get());
 		}
 
 		variant handlers_var = value["handlers"];
 		if(handlers_var.is_map()) {
 			foreach(const variant& key, handlers_var.getKeys().as_list()) {
-				handlers[key.as_string()] = game_logic::formula::create_optional_formula(handlers_var[key], functions.get());
+				handlers[key.as_string()] = game_logic::Formula::create_optional_formula(handlers_var[key], functions.get());
 			}
 		}
 	}
 
 	std::string name;
 	std::shared_ptr<game_logic::FunctionSymbolTable> functions;
-	std::map<std::string, game_logic::const_formula_ptr> handlers;
+	std::map<std::string, game_logic::ConstFormulaPtr> handlers;
 };
 
 std::map<std::string, game_type> generate_game_types() {
@@ -473,7 +473,7 @@ variant game::getValue(const std::string& key) const
 		return variant();
 #endif
 	} else if(backup_callable_) {
-		return backup_callable_->query_value(key);
+		return backup_callable_->queryValue(key);
 	} else {
 		return variant();
 	}
@@ -518,7 +518,7 @@ void game::setValue(const std::string& key, const variant& value)
 			_exit(0);
 		}
 	} else if(backup_callable_) {
-		backup_callable_->mutate_value(key, value);
+		backup_callable_->mutateValue(key, value);
 	}
 }
 
@@ -592,7 +592,7 @@ void game::handleEvent(const std::string& name, game_logic::FormulaCallable* var
 {
 	const backup_callable_scope backup_scope(&backup_callable_, variables);
 
-	std::map<std::string, game_logic::const_formula_ptr>::const_iterator itor = type_.handlers.find(name);
+	std::map<std::string, game_logic::ConstFormulaPtr>::const_iterator itor = type_.handlers.find(name);
 	if(itor == type_.handlers.end() || !itor->second) {
 		return;
 	}
@@ -608,13 +608,13 @@ void game::executeCommand(variant cmd)
 			executeCommand(cmd[n]);
 		}
 	} else if(cmd.is_callable()) {
-		const game_logic::command_callable* command = cmd.try_convert<game_logic::command_callable>();
+		const game_logic::CommandCallable* command = cmd.try_convert<game_logic::CommandCallable>();
 		if(command) {
 			command->runCommand(*this);
 		}
 	} else if(cmd.is_map()) {
 		if(cmd.has_key("execute")) {
-			game_logic::formula f(cmd["execute"]);
+			game_logic::Formula f(cmd["execute"]);
 			game_logic::FormulaCallablePtr callable(map_into_callable(cmd["arg"]));
 			ASSERT_LOG(callable.get(), "NO ARG SPECIFIED IN EXECUTE AT " << cmd.debug_location());
 			variant v = f.execute(*callable);

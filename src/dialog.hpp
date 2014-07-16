@@ -117,8 +117,8 @@ namespace gui
 		void quitDelegate();
 		void closeDelegate(bool cancelled);
 
-		game_logic::formula_ptr ffl_on_quit_;
-		game_logic::formula_ptr ffl_on_close_;
+		game_logic::FormulaPtr ffl_on_quit_;
+		game_logic::FormulaPtr ffl_on_close_;
 
 		game_logic::FormulaCallablePtr quit_arg_;
 		game_logic::FormulaCallablePtr close_arg_;

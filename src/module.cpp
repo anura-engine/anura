@@ -1092,9 +1092,9 @@ void client::perform_install(const std::string& response)
 
 	try {
 		doc = json::parse(response, json::JSON_NO_PREPROCESSOR);
-	} catch(json::parse_error& e) {
+	} catch(json::ParseError& e) {
 		sys::write_file("./download.txt", response);
-		ASSERT_LOG(false, "Failed to parse: " << e.error_message());
+		ASSERT_LOG(false, "Failed to parse: " << e.errorMessage());
 	}
 
 	if(doc["status"].as_string() == "no_newer_module") {

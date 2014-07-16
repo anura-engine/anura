@@ -66,7 +66,7 @@ bool user_voxel_object::executeCommand(const variant& b)
 void user_voxel_object::handleEvent(int nevent, const FormulaCallable* context)
 {
 	set_event_arg(variant(context));
-	const game_logic::formula* handler = type_->event_handler(nevent);
+	const game_logic::Formula* handler = type_->event_handler(nevent);
 	if(handler) {
 		variant result = handler->execute(*this);
 		executeCommand(result);

@@ -304,7 +304,7 @@ std::string modify_variant_text(const std::string& contents, variant original, v
 
 namespace {
 
-const_formula_ptr formula_;
+ConstFormulaPtr formula_;
 
 void executeCommand(variant cmd, variant obj, const std::string& fname)
 {
@@ -316,8 +316,8 @@ void executeCommand(variant cmd, variant obj, const std::string& fname)
 		foreach(variant v, cmd.as_list()) {
 			executeCommand(v, obj, fname);
 		}
-	} else if(cmd.try_convert<game_logic::command_callable>()) {
-		cmd.try_convert<game_logic::command_callable>()->runCommand(*obj.try_convert<FormulaCallable>());
+	} else if(cmd.try_convert<game_logic::CommandCallable>()) {
+		cmd.try_convert<game_logic::CommandCallable>()->runCommand(*obj.try_convert<FormulaCallable>());
 	} else if(cmd.as_bool()) {
 		std::cout << cmd.write_json() << "\n";
 	}
@@ -350,8 +350,8 @@ void process_file(const std::string& fname, std::map<std::string,std::string>& f
 		std::string new_contents = modify_variant_text(contents, original, v, 1, 1, "");
 		try {
 			json::parse(new_contents, JSON_NO_PREPROCESSOR);
-		} catch(json::parse_error& e) {
-			ASSERT_LOG(false, "ERROR: MODIFIED DOCUMENT " << fname << " COULD NOT BE PARSED. FILE NOT WRITTEN: " << e.error_message() << "\n" << new_contents);
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, "ERROR: MODIFIED DOCUMENT " << fname << " COULD NOT BE PARSED. FILE NOT WRITTEN: " << e.errorMessage() << "\n" << new_contents);
 		}
 
 		file_mappings[fname] = new_contents;
@@ -370,7 +370,7 @@ void process_dir(const std::string& dir, std::map<std::string, std::string>& fil
 	foreach(const std::string& fname, files) {
 		try {
 			process_file(dir + "/" + fname, file_mappings);
-		} catch(json::parse_error& e) {
+		} catch(json::ParseError& e) {
 			std::cerr << "FAILED TO PARSE " << fname << "\n";
 		} catch(type_error& e) {
 			std::cerr << "TYPE ERROR PARSING " << fname << "\n";

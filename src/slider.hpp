@@ -63,9 +63,9 @@ namespace gui
 		
 		WidgetPtr slider_left_, slider_right_, slider_middle_, slider_button_;
 
-		game_logic::formula_ptr ffl_handler_;
+		game_logic::FormulaPtr ffl_handler_;
 		void changeDelegate(float);
-		game_logic::formula_ptr ffl_end_handler_;
+		game_logic::FormulaPtr ffl_end_handler_;
 		void dragEndDelegate(float);
 	};
 	

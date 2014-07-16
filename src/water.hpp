@@ -102,5 +102,5 @@ private:
 
 	enum { BadOffset = -100000 };
 
-	game_logic::const_formula_ptr current_x_formula_, current_y_formula_;
+	game_logic::ConstFormulaPtr current_x_formula_, current_y_formula_;
 };

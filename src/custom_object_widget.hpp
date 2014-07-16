@@ -53,13 +53,13 @@ namespace gui
 		void mouseLeave();
 
 		std::function<void (int)> on_click_;
-		game_logic::formula_ptr click_handler_;
+		game_logic::FormulaPtr click_handler_;
 		std::function<void ()> on_mouse_enter_;
-		game_logic::formula_ptr mouse_enter_handler_;
+		game_logic::FormulaPtr mouse_enter_handler_;
 		std::function<void ()> on_mouse_leave_;
-		game_logic::formula_ptr mouse_leave_handler_;
+		game_logic::FormulaPtr mouse_leave_handler_;
 
-		game_logic::formula_ptr commands_handler_;
+		game_logic::FormulaPtr commands_handler_;
 
 		WidgetPtr overlay_;
 

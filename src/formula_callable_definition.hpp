@@ -189,8 +189,8 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 		return variant([=](const game_logic::FormulaCallable& args) ->variant { \
 			const this_type& obj = *dynamic_cast<const this_type*>(ref.get());
 
-#define FN_ARG(n) args.query_value_by_slot(n)
-#define NUM_FN_ARGS reinterpret_cast<const game_logic::slot_FormulaCallable*>(&args)->num_args()
+#define FN_ARG(n) args.queryValueBySlot(n)
+#define NUM_FN_ARGS reinterpret_cast<const game_logic::SlotFormulaCallable*>(&args)->getNumArgs()
 
 #define END_DEFINE_FN }, type_info);
 

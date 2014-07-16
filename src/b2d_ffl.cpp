@@ -108,7 +108,7 @@ namespace box2d
 			variant w = json::parse_from_file("data/world.cfg");
 			this_world = new world(w);
 			this_world->finishLoading();
-		} catch(json::parse_error&) {
+		} catch(json::ParseError&) {
 			std::cerr << "WORLD NOT FOUND/NOT VALID. NOT LOADING WORLD. WORLD IS SAD." << std::endl;
 		}
 	}

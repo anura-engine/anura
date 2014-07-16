@@ -99,7 +99,7 @@ struct performance_data : public game_logic::FormulaCallable {
 	{}
 
 	variant getValue(const std::string& key) const;
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const;
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
 
 	static void set_current(const performance_data& d);
 	static performance_data* current();

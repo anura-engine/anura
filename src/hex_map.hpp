@@ -53,7 +53,7 @@ namespace hex
 		virtual void draw() const;
 		variant write() const;
 
-		game_logic::formula_ptr createFormula(const variant& v);
+		game_logic::FormulaPtr createFormula(const variant& v);
 		bool executeCommand(const variant& var);
 
 		bool setTile(int x, int y, const std::string& tile);

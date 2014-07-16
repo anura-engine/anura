@@ -196,7 +196,7 @@ namespace
 					proto_value = variant();
 
 					if(info) {
-						value.set_debug_info(*info);
+						value.setDebugInfo(*info);
 					}
 				}
 			}
@@ -336,7 +336,7 @@ namespace
 
 		variant res(&result);
 		if(node.get_debug_info()) {
-			res.set_debug_info(*node.get_debug_info());
+			res.setDebugInfo(*node.get_debug_info());
 		}
 
 		return res;
@@ -538,7 +538,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 					callable_definition_->getEntry(n)->access_count = 0;
 				}
 
-				game_logic::formula_ptr f = game_logic::formula::create_optional_formula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
+				game_logic::FormulaPtr f = game_logic::Formula::create_optional_formula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
 				bool inferred = true;
 				for(int n = 0; n != callable_definition_->getNumSlots(); ++n) {
 					const game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(n);
@@ -552,7 +552,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 				if(inferred) {
 					FormulaCallableDefinition::Entry* entry = callable_definition_->getEntryById(k);
 					assert(entry);
-					entry->variant_type = f->query_variant_type();
+					entry->variant_type = f->queryVariantType();
 					properties_to_infer.erase(k);
 				}
 			}
@@ -790,8 +790,8 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			return recreate(id, old_type);
 		}
 
-	} catch(json::parse_error& e) {
-		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.error_message() << "'");
+	} catch(json::ParseError& e) {
+		ASSERT_LOG(false, "Error parsing FML for custom object '" << id << "' in '" << path_itor->second << "': '" << e.errorMessage() << "'");
 	} catch(KRE::ImageLoadError&) {
 		ASSERT_LOG(false, "Error loading object '" << id << "': could not load needed image");
 	}
@@ -1053,7 +1053,7 @@ void CustomObjectType::initEventHandlers(variant node,
 											 const event_handler_map* base_handlers) const
 {
 	const CustomObjectCallableExposePrivateScope expose_scope(*callable_definition_);
-	const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
+	const game_logic::Formula::StrictCheckScope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 
 	if(symbols == NULL) {
 		symbols = &get_custom_object_functions_symbol_table();
@@ -1076,7 +1076,7 @@ void CustomObjectType::initEventHandlers(variant node,
 				if(arg_type) {
 					modify_scope.reset(new CustomObjectCallableModifyScope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
 				}
-				handlers[event_id] = game_logic::formula::create_optional_formula(value.second, symbols, callable_definition_);
+				handlers[event_id] = game_logic::Formula::create_optional_formula(value.second, symbols, callable_definition_);
 			}
 		}
 	}
@@ -1177,7 +1177,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		strict_scope.reset(new StrictModeScope);
 	}
 
-	const game_logic::formula::strict_check_scope strict_checking(false);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
 
 	const CustomObjectTypeInitScope init_scope(id);
 	const bool is_recursive_call = std::count(get_custom_object_type_stack().begin(), get_custom_object_type_stack().end(), id) > 0;
@@ -1298,7 +1298,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	assert(defaultFrame_);
 
-	next_animation_formula_ = game_logic::formula::create_optional_formula(node["next_animation"], getFunctionSymbols());
+	next_animation_formula_ = game_logic::Formula::create_optional_formula(node["next_animation"], getFunctionSymbols());
 
 	for(variant particle_node : node["particle_system"].as_list()) {
 		particle_factories_[particle_node["id"].as_string()] = ParticleSystemFactory::create_factory(particle_node);
@@ -1410,14 +1410,14 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 		const CustomObjectCallableExposePrivateScope expose_scope(*callable_definition_);
 		for(variant key : properties_node.getKeys().as_list()) {
-			const game_logic::formula::strict_check_scope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
+			const game_logic::Formula::StrictCheckScope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 			const std::string& k = key.as_string();
 			bool dynamic_initialization = false;
 			variant value = properties_node[key];
 			PropertyEntry& entry = properties_[k];
 			entry.id = k;
 			if(value.is_string()) {
-				entry.getter = game_logic::formula::create_optional_formula(value, getFunctionSymbols(), callable_definition_);
+				entry.getter = game_logic::Formula::create_optional_formula(value, getFunctionSymbols(), callable_definition_);
 			} else if(value.is_map()) {
 				if(value.has_key("type")) {
 					entry.type = parse_variant_type(value["type"]);
@@ -1438,14 +1438,14 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 					setter_def = modify_formula_callable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
 				}
 
-				entry.getter = game_logic::formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);
-				entry.setter = game_logic::formula::create_optional_formula(value["set"], getFunctionSymbols(), setter_def);
+				entry.getter = game_logic::Formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);
+				entry.setter = game_logic::Formula::create_optional_formula(value["set"], getFunctionSymbols(), setter_def);
 				if(value["init"].is_null() == false) {
-					entry.init = game_logic::formula::create_optional_formula(value["init"], getFunctionSymbols(), game_logic::ConstFormulaCallableDefinitionPtr(&CustomObjectCallable::instance()));
+					entry.init = game_logic::Formula::create_optional_formula(value["init"], getFunctionSymbols(), game_logic::ConstFormulaCallableDefinitionPtr(&CustomObjectCallable::instance()));
 					assert(entry.init);
 					if(is_strict_) {
 						assert(entry.type);
-						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->query_variant_type()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->query_variant_type()->to_string() << " expected " << entry.type->to_string());
+						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->queryVariantType()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->queryVariantType()->to_string() << " expected " << entry.type->to_string());
 					}
 				}
 				entry.default_value = value["default"];
@@ -1463,7 +1463,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 				if(value.has_key("editor_info")) {
 					entry.has_editor_info = true;
-					const game_logic::formula::strict_check_scope strict_checking(false);
+					const game_logic::Formula::StrictCheckScope strict_checking(false);
 					variant editor_info_var = value["editor_info"];
 					static const variant name_key("name");
 					editor_info_var = editor_info_var.add_attr(name_key, variant(k));
@@ -1492,7 +1492,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 			if(entry.getter) {
 				variant v;
-				if(entry.getter->evaluates_to_constant(v)) {
+				if(entry.getter->evaluatesToConstantv)) {
 					entry.getter.reset();
 					entry.const_value.reset(new variant(v));
 				}
@@ -1534,7 +1534,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	variant variations = node["variations"];
 	if(variations.is_null() == false) {
 		for(const variant_pair& v : variations.as_map()) {
-			variations_[v.first.as_string()] = game_logic::formula::create_optional_formula(v.second, &get_custom_object_functions_symbol_table());
+			variations_[v.first.as_string()] = game_logic::Formula::create_optional_formula(v.second, &get_custom_object_functions_symbol_table());
 		}
 		
 		node_ = node;
@@ -1560,13 +1560,13 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		object_functions_ = base_type->object_functions_;
 	} else if(node.has_key("functions")) {
 		object_functions_.reset(new game_logic::FunctionSymbolTable);
-		object_functions_->set_backup(&get_custom_object_functions_symbol_table());
+		object_functions_->setBackup(&get_custom_object_functions_symbol_table());
 		const variant fn = node["functions"];
 		if(fn.is_string()) {
-			game_logic::formula f(fn, object_functions_.get());
+			game_logic::Formula f(fn, object_functions_.get());
 		} else if(fn.is_list()) {
 			for(int n = 0; n != fn.num_elements(); ++n) {
-				game_logic::formula f(fn[n], object_functions_.get());
+				game_logic::Formula f(fn[n], object_functions_.get());
 			}
 		}
 	}
@@ -1651,10 +1651,10 @@ bool CustomObjectType::hasFrame(const std::string& key) const
 	return frames_.count(key) != 0;
 }
 
-game_logic::const_formula_ptr CustomObjectType::getEventHandler(int event) const
+game_logic::ConstFormulaPtr CustomObjectType::getEventHandler(int event) const
 {
 	if(static_cast<unsigned>(event) >= event_handlers_.size()) {
-		return game_logic::const_formula_ptr();
+		return game_logic::ConstFormulaPtr();
 	} else {
 		return event_handlers_[event];
 	}
@@ -1684,8 +1684,8 @@ namespace
 			for(variant c : cmd.as_list()) {
 				execute_variation_command(c, obj);
 			}
-		} else if(cmd.try_convert<game_logic::command_callable>()) {
-			cmd.try_convert<game_logic::command_callable>()->runCommand(obj);
+		} else if(cmd.try_convert<game_logic::CommandCallable>()) {
+			cmd.try_convert<game_logic::CommandCallable>()->runCommand(obj);
 		}
 	}
 }
@@ -1702,7 +1702,7 @@ ConstCustomObjectTypePtr CustomObjectType::getVariation(const std::vector<std::s
 		callable->add("doc", variant(variant_callable::create(&node)));
 
 		for(const std::string& v : variations) {
-			std::map<std::string, game_logic::const_formula_ptr>::const_iterator var_itor = variations_.find(v);
+			std::map<std::string, game_logic::ConstFormulaPtr>::const_iterator var_itor = variations_.find(v);
 			ASSERT_LOG(var_itor != variations_.end(), "COULD NOT FIND VARIATION " << v << " IN " << id_);
 
 			variant cmd = var_itor->second->execute(*callable);

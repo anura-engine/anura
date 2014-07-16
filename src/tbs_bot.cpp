@@ -28,8 +28,8 @@ PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
 
 bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   : service_(service), timer_(service), host_(host), port_(port), script_(v["script"].as_list()),
-    on_create_(game_logic::formula::create_optional_formula(v["on_create"])),
-    on_message_(game_logic::formula::create_optional_formula(v["on_message"]))
+    on_create_(game_logic::Formula::create_optional_formula(v["on_create"])),
+    on_message_(game_logic::Formula::create_optional_formula(v["on_message"]))
 
 {
 	std::cerr << "CREATE BOT\n";
@@ -58,7 +58,7 @@ void bot::process(const boost::system::error_code& error)
 		variant script = script_[response_.size()];
 		variant send = script["send"];
 		if(send.is_string()) {
-			send = game_logic::formula(send).execute(*this);
+			send = game_logic::Formula(send).execute(*this);
 		}
 
 		int session_id = -1;
@@ -95,7 +95,7 @@ void bot::handle_response(const std::string& type, game_logic::FormulaCallablePt
 		executeCommand(on_message_->execute(*this));
 	}
 
-	ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->query_value("message").write_json());
+	ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->queryValue("message").write_json());
 
 	ASSERT_LOG(type == "message_received", "UNRECOGNIZED RESPONSE: " << type);
 
@@ -107,7 +107,7 @@ void bot::handle_response(const std::string& type, game_logic::FormulaCallablePt
 			std::map<variant,variant> m;
 			m[variant("validate")] = validate[n][variant("expression")] + variant(" EQUALS ") + validate[n][variant("equals")];
 
-			game_logic::formula f(validate[n][variant("expression")]);
+			game_logic::Formula f(validate[n][variant("expression")]);
 			variant expression_result = f.execute(*callable);
 
 			if(expression_result != validate[n][variant("equals")]) {
@@ -120,7 +120,7 @@ void bot::handle_response(const std::string& type, game_logic::FormulaCallablePt
 	}
 
 	std::map<variant,variant> m;
-	m[variant("message")] = callable->query_value("message");
+	m[variant("message")] = callable->queryValue("message");
 	m[variant("validations")] = variant(&validations);
 
 	response_.push_back(variant(&m));
@@ -142,7 +142,7 @@ variant bot::getValue(const std::string& key) const
 	} else if(key == "me") {
 		return variant(this);
 	} else if(message_callable_) {
-		return message_callable_->query_value(key);
+		return message_callable_->queryValue(key);
 	}
 	return variant();
 }

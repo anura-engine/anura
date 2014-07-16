@@ -127,8 +127,8 @@ namespace gui
 		void selectDelegate(int selection);
 		void mouseoverDelegate(int selection);
 
-		game_logic::formula_ptr ffl_on_select_;
-		game_logic::formula_ptr ffl_on_mouseover_;
+		game_logic::FormulaPtr ffl_on_select_;
+		game_logic::FormulaPtr ffl_on_mouseover_;
 		game_logic::FormulaCallablePtr select_arg_;
 		game_logic::FormulaCallablePtr mouseover_arg_;
 	};

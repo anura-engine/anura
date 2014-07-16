@@ -479,7 +479,7 @@ namespace gui
 		result.tokens = std::vector<json::Token>(begin_token, end_token+1);
 		try {
 			result.obj = get_map_editing(row, col, current_obj_);
-		} catch(json::parse_error&) {
+		} catch(json::ParseError&) {
 			std::cerr << "json parse error: " << std::string(begin_token->begin, end_token->end) << "\n";
 			return result;
 		}

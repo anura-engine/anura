@@ -575,7 +575,7 @@ namespace
 		}
 
 		for(const EditorVariableInfo& var : e->getEditorInfo()->getVarsAndProperties()) {
-			const variant value = e->query_value(var.getVariableName());
+			const variant value = e->queryValue(var.getVariableName());
 			switch(var.getType()) {
 				case VARIABLE_TYPE::XPOSITION: {
 					if(!value.is_int()) {
@@ -1187,7 +1187,7 @@ void editor::process()
 	if(external_code_editor_ && external_code_editor_->replaceInGameEditor() && editor_menu_dialog_) {
 		std::string type;
 		if(lvl_->editor_selection().empty() == false) {
-			type = lvl_->editor_selection().back()->query_value("type").as_string();
+			type = lvl_->editor_selection().back()->queryValue("type").as_string();
 		}
 		if(type.empty() == false) {
 			editor_menu_dialog_->set_code_button_text("edit " + type);
@@ -1904,7 +1904,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 
 			EntityPtr c = property_dialog_->getEntity();
 
-			variant current_value = c->query_value(adding_points_);
+			variant current_value = c->queryValue(adding_points_);
 			std::vector<variant> new_value;
 			if(current_value.is_list()) {
 				new_value = current_value.as_list();
@@ -2044,7 +2044,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		g_current_draw_hex_tiles.push_back(p);
 	} else if(property_dialog_ && variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_)) {
 		g_variable_editing = variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_, &g_variable_editing_index);
-		g_variable_editing_original_value = property_dialog_->getEntity()->query_value(g_variable_editing->getVariableName());
+		g_variable_editing_original_value = property_dialog_->getEntity()->queryValue(g_variable_editing->getVariableName());
 
 		if(g_variable_editing->getType() == VARIABLE_TYPE::POINTS && event.button == SDL_BUTTON_RIGHT) {
 			std::vector<variant> points = g_variable_editing_original_value.as_list();
@@ -2161,12 +2161,12 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		//we only want to actually set the vars once we've calculated all of
 		//them, to avoid any ordering issues etc. So set them all here.
 		for(auto i : vars) {
-			game_logic::FormulaCallable* obj_vars = c->query_value("vars").mutable_callable();
-			obj_vars->mutate_value(i.first, i.second);
+			game_logic::FormulaCallable* obj_vars = c->queryValue("vars").mutable_callable();
+			obj_vars->mutateValue(i.first, i.second);
 		}
 
 		for(auto i : props) {
-			c->mutate_value(i.first, i.second);
+			c->mutateValue(i.first, i.second);
 		}
 
 		if(!place_entity_in_level(*lvl_, *c)) {
@@ -2228,7 +2228,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 				EntityPtr obj = lvl->get_entity_by_label(e->label());
 				if(obj) {
 					executeCommand(
-					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, e->query_value(var)),
+					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, e->queryValue(var)),
 					  std::bind(&editor::mutate_object_value, this, lvl, obj.get(), var, g_variable_editing_original_value));
 				}
 			}
@@ -2439,7 +2439,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 						continue;
 					}
 
-					variant value = property_dialog_->getEntity()->query_value(name);
+					variant value = property_dialog_->getEntity()->queryValue(name);
 					if(!value.is_list()) {
 						continue;
 					}
@@ -3232,7 +3232,7 @@ void editor::draw_gui() const
 			const std::string& name = var.getVariableName();
 			const VARIABLE_TYPE type = var.getType();
 			const int color_index = nseen_variables[type]++;
-			variant value = property_dialog_->getEntity()->query_value(name);
+			variant value = property_dialog_->getEntity()->queryValue(name);
 			KRE::Color color;
 			switch(color_index) {
 			case 0: color = KRE::Color(255, 0, 0, 255); break;
@@ -3765,7 +3765,7 @@ void editor::mutate_object_value(LevelPtr lvl, EntityPtr e, const std::string& v
 {
 	CurrentLevelScope scope(lvl.get());
 	e->handleEvent("editor_changing_variable");
-	e->mutate_value(value, new_value);
+	e->mutateValue(value, new_value);
 	e->handleEvent("editor_changed_variable");
 }
 
@@ -3780,7 +3780,7 @@ void editor::generate_mutate_commands(EntityPtr c, const std::string& attr, vari
 		if(!obj) {
 			continue;
 		}
-		variant current_value = obj->query_value(attr);
+		variant current_value = obj->queryValue(attr);
 
 		redo.push_back(std::bind(&editor::mutate_object_value, this, lvl, obj, attr, new_value));
 		undo.push_back(std::bind(&editor::mutate_object_value, this, lvl, obj, attr, current_value));
@@ -3832,7 +3832,7 @@ void editor::toggle_code()
 
 		std::string type;
 		if(lvl_->editor_selection().empty() == false) {
-			type = lvl_->editor_selection().back()->query_value("type").as_string();
+			type = lvl_->editor_selection().back()->queryValue("type").as_string();
 		}
 
 		if(type.empty()) {
@@ -3883,9 +3883,9 @@ void editor::set_code_file()
 	
 	std::string type;
 	if(lvl_->editor_selection().empty() == false) {
-		type = lvl_->editor_selection().back()->query_value("type").as_string();
+		type = lvl_->editor_selection().back()->queryValue("type").as_string();
 	} else if(lvl_->player()) {
-		type = lvl_->player()->getEntity().query_value("type").as_string();
+		type = lvl_->player()->getEntity().queryValue("type").as_string();
 	}
 
 	if(type.empty()) {

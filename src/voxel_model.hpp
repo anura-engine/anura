@@ -90,7 +90,7 @@ namespace voxel
 	struct AnimationTransform {
 		std::string layer;
 		std::string pivot_src, pivot_dst;
-		game_logic::formula_ptr rotation_formula, translation_formula;
+		game_logic::FormulaPtr rotation_formula, translation_formula;
 		bool children_only;
 	};
 

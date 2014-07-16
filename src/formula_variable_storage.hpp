@@ -53,7 +53,7 @@ private:
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 
-	void getInputs(std::vector<formula_input>* inputs) const;
+	void getInputs(std::vector<FormulaInput>* inputs) const;
 
 	std::string debug_object_name_;
 	

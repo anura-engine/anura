@@ -95,9 +95,9 @@ namespace
 {
 	const int widget_zorder_draw_later_threshold = 1000;
 
-	const game_logic::formula_variable_storage_ptr& global_vars()
+	const game_logic::Formula_variable_storage_ptr& global_vars()
 	{
-		static game_logic::formula_variable_storage_ptr obj(new game_logic::formula_variable_storage);
+		static game_logic::Formula_variable_storage_ptr obj(new game_logic::Formula_variable_storage);
 		return obj;
 	}
 }
@@ -167,8 +167,8 @@ CustomObject::CustomObject(variant node)
 	has_feet_(node["has_feet"].as_bool(type_->hasFeet())),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::Formula_variable_storage(type_->variables())),
+	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
 	current_animation_id_(0),
@@ -461,8 +461,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	has_feet_(type_->hasFeet()),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::Formula_variable_storage(type_->variables())),
+	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 	tags_(new game_logic::MapFormulaCallable(type_->tags())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
@@ -566,8 +566,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	sound_volume_(o.sound_volume_),
 	next_animation_formula_(o.next_animation_formula_),
 
-	vars_(new game_logic::formula_variable_storage(*o.vars_)),
-	tmp_vars_(new game_logic::formula_variable_storage(*o.tmp_vars_)),
+	vars_(new game_logic::Formula_variable_storage(*o.vars_)),
+	tmp_vars_(new game_logic::Formula_variable_storage(*o.tmp_vars_)),
 	tags_(new game_logic::MapFormulaCallable(*o.tags_)),
 
 	property_data_(deep_copy_property_data(o.property_data_)),
@@ -709,9 +709,9 @@ void CustomObject::finishLoading(Level* lvl)
 void CustomObject::init_lua()
 {
 	if(lua_ptr_) {
-		lua_ptr_->set_self_callable(*this);
-		lua_chunk_.reset(lua_ptr_->compile_chunk(type_->id(), type_->getLuaSource()));
-		lua_chunk_->run(lua_ptr_->context_ptr());
+		lua_ptr_->setSelfCallable(*this);
+		lua_chunk_.reset(lua_ptr_->compileChunk(type_->id(), type_->getLuaSource()));
+		lua_chunk_->run(lua_ptr_->getContextPtr());
 	}
 }
 #endif
@@ -1038,7 +1038,7 @@ variant CustomObject::write() const
 
 	if(parent_.get() != NULL) {
 		std::string str;
-		variant(parent_.get()).serialize_to_string(str);
+		variant(parent_.get()).serializeToString(str);
 		res.add("parent", str);
         
         res.add("relative_x", relative_x_);
@@ -1226,7 +1226,7 @@ void CustomObject::draw(int xx, int yy) const
 		for(const std::string& s : Level::current().debug_properties()) {
 			try {
 				const assert_recover_scope scope;
-				variant result = game_logic::formula(variant(s)).execute(*this);
+				variant result = game_logic::Formula(variant(s)).execute(*this);
 				const std::string result_str = result.write_json();
 				auto key_texture = KRE::Font::getInstance()->renderText(s, KRE::Color::colorWhite(), 16);
 				auto value_texture = KRE::Font::getInstance()->renderText(result_str, KRE::Color::colorWhite(), 16);
@@ -1493,7 +1493,7 @@ void CustomObject::process(level& lvl)
 				variant* v = &move->animation_values[0] + move->pos*move->animation_slots.size();
 	
 				for(int n = 0; n != move->animation_slots.size(); ++n) {
-					mutate_value_by_slot(move->animation_slots[n], v[n]);
+					mutateValueBySlot(move->animation_slots[n], v[n]);
 				}
 
 				if(move->on_process.is_null() == false) {
@@ -2521,7 +2521,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		}
 	}
 
-	const std::string type = query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
+	const std::string type = queryValueBySlot(CUSTOM_OBJECT_TYPE).as_string();
 	game_logic::FormulaCallableDefinitionPtr def = CustomObjectType::getDefinition(type);
 	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
 
@@ -2534,7 +2534,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		slots.push_back(def->getSlot(p.first.as_string()));
 		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
 		end_values.push_back(p.second);
-		begin_values.push_back(query_value_by_slot(slots.back()));
+		begin_values.push_back(queryValueBySlot(slots.back()));
 	}
 
 	const int ncycles = options["duration"].as_int(10);
@@ -2605,7 +2605,7 @@ namespace
 		boost::intrusive_ptr<CustomObject> obj_;
 
 		variant getValue(const std::string& key) const {
-			game_logic::const_formula_ptr f = obj_->getEventHandler(get_object_event_id(key));
+			game_logic::ConstFormulaPtr f = obj_->getEventHandler(get_object_event_id(key));
 			if(!f) {
 				return variant();
 			} else {
@@ -2615,7 +2615,7 @@ namespace
 		void setValue(const std::string& key, const variant& value) {
 			static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
-			game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
+			game_logic::FormulaPtr f(new game_logic::Formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
 			obj_->setEventHandler(get_object_event_id(key), f);
 		}
 	public:
@@ -3205,12 +3205,12 @@ variant CustomObject::getValue(const std::string& key) const
 	}
 
 	if(!type_->isStrict()) {
-		variant var_result = tmp_vars_->query_value(key);
+		variant var_result = tmp_vars_->queryValue(key);
 		if(!var_result.is_null()) {
 			return var_result;
 		}
 
-		var_result = vars_->query_value(key);
+		var_result = vars_->queryValue(key);
 		if(!var_result.is_null()) {
 			return var_result;
 		}
@@ -3230,7 +3230,7 @@ variant CustomObject::getValue(const std::string& key) const
 		if(backup_callable_stack_.top() != this) {
 			const FormulaCallable* callable = backup_callable_stack_.top();
 			BackupCallableStackScope callable_scope(&backup_callable_stack_, NULL);
-			return callable->query_value(key);
+			return callable->queryValue(key);
 		}
 	}
 
@@ -3239,7 +3239,7 @@ variant CustomObject::getValue(const std::string& key) const
 	return variant();
 }
 
-void CustomObject::getInputs(std::vector<game_logic::formula_input>* inputs) const
+void CustomObject::getInputs(std::vector<game_logic::FormulaInput>* inputs) const
 {
 	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
 		auto entry = CustomObjectCallable::instance().getEntry(n);
@@ -3493,14 +3493,14 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "type") {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			getAll(base_type_->id()).erase(this);
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
+			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
+			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 			vars_->set_object_name(getDebugDescription());
 			tmp_vars_->set_object_name(getDebugDescription());
 
@@ -3558,7 +3558,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_TYPE: {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			ConstCustomObjectTypePtr old_type = type_;
 
@@ -3566,8 +3566,8 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
+			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
+			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 			vars_->set_object_name(getDebugDescription());
 			tmp_vars_->set_object_name(getDebugDescription());
 
@@ -4827,14 +4827,14 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 	}
 #endif
 
-	const game_logic::formula* handlers[2];
+	const game_logic::Formula* handlers[2];
 	int nhandlers = 0;
 
 	if(size_t(event) < event_handlers_.size() && event_handlers_[event]) {
 		handlers[nhandlers++] = event_handlers_[event].get();
 	}
 
-	const game_logic::formula* type_handler = type_->getEventHandler(event).get();
+	const game_logic::Formula* type_handler = type_->getEventHandler(event).get();
 	if(type_handler != NULL) {
 		handlers[nhandlers++] = type_handler;
 	}
@@ -4847,7 +4847,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 	BackupCallableStackScope callable_scope(&backup_callable_stack_, context);
 
 	for(int n = 0; n != nhandlers; ++n) {
-		const game_logic::formula* handler = handlers[n];
+		const game_logic::Formula* handler = handlers[n];
 
 #ifndef DISABLE_FORMULA_PROFILER
 		formula_profiler::custom_object_event_frame event_frame = { type_.get(), event, false };
@@ -4923,7 +4923,7 @@ bool CustomObject::executeCommand(const variant& var)
 			result = executeCommand(var[n]) && result;
 		}
 	} else {
-		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
+		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
 		if(cmd != NULL) {
 			cmd->runCommand(*this);
 		} else {
@@ -5021,16 +5021,16 @@ const KRE::ColorTransform& CustomObject::draw_color() const
 	return white;
 }
 
-game_logic::const_formula_ptr CustomObject::getEventHandler(int key) const
+game_logic::ConstFormulaPtr CustomObject::getEventHandler(int key) const
 {
 	if(size_t(key) < event_handlers_.size()) {
 		return event_handlers_[key];
 	} else {
-		return game_logic::const_formula_ptr();
+		return game_logic::ConstFormulaPtr();
 	}
 }
 
-void CustomObject::setEventHandler(int key, game_logic::const_formula_ptr f)
+void CustomObject::setEventHandler(int key, game_logic::ConstFormulaPtr f)
 {
 	if(size_t(key) >= event_handlers_.size()) {
 		event_handlers_.resize(key+1);
@@ -5500,31 +5500,31 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		type_ = base_type_->getVariation(current_variation_);
 	}
 
-	game_logic::formula_variable_storage_ptr old_vars = vars_;
+	game_logic::Formula_variable_storage_ptr old_vars = vars_;
 
-	vars_.reset(new game_logic::formula_variable_storage(type_->variables()));
+	vars_.reset(new game_logic::Formula_variable_storage(type_->variables()));
 	vars_->set_object_name(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
-		const variant old_value = old_vars->query_value(key);
+		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->variables().find(key);
 		if(old_type_value == old_type->variables().end() ||
 		   old_type_value->second != old_value) {
-			vars_->mutate_value(key, old_value);
+			vars_->mutateValue(key, old_value);
 		}
 	}
 
 	old_vars = tmp_vars_;
 
-	tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables()));
+	tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables()));
 	tmp_vars_->set_object_name(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
-		const variant old_value = old_vars->query_value(key);
+		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->tmpVariables().find(key);
 		if(old_type_value == old_type->tmpVariables().end() ||
 		   old_type_value->second != old_value) {
-			tmp_vars_->mutate_value(key, old_value);
+			tmp_vars_->mutateValue(key, old_value);
 		}
 	}
 
@@ -5612,9 +5612,9 @@ bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-game_logic::formula_ptr CustomObject::createFormula(const variant& v)
+game_logic::FormulaPtr CustomObject::createFormula(const variant& v)
 {
-	return game_logic::formula_ptr(new game_logic::formula(v, &get_custom_object_functions_symbol_table()));
+	return game_logic::FormulaPtr(new game_logic::Formula(v, &get_custom_object_functions_symbol_table()));
 }
 
 gui::ConstWidgetPtr CustomObject::getWidgetById(const std::string& id) const
@@ -5679,7 +5679,7 @@ BENCHMARK_ARG(custom_object_get_attr, const std::string& attr)
 {
 	static CustomObject* obj = new CustomObject("ant_black", 0, 0, false);
 	BENCHMARK_LOOP {
-		obj->query_value(attr);
+		obj->queryValue(attr);
 	}
 }
 

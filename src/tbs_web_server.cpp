@@ -182,7 +182,7 @@ void on_code_modified()
 {
 	fprintf(stderr, "code modified\n");
 	tbs::game::reload_game_types();
-	game_logic::formula_object::reload_classes();
+	game_logic::Formula_object::reload_classes();
 	throw code_modified_exception();
 }
 }
@@ -288,7 +288,7 @@ COMMAND_LINE_UTILITY(tbs_server) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.msg);
 			tbs::web_server::set_debug_state(variant(&m));
-		} catch(json::parse_error& e) {
+		} catch(json::ParseError& e) {
 			std::map<variant,variant> m;
 			m[variant("error")] = variant(e.message);
 			tbs::web_server::set_debug_state(variant(&m));

@@ -580,7 +580,7 @@ variant performance_data::getValue(const std::string& key) const
 	return variant();
 }
 
-void performance_data::getInputs(std::vector<game_logic::formula_input>* inputs) const
+void performance_data::getInputs(std::vector<game_logic::FormulaInput>* inputs) const
 {
 #define PERF_ATTR(m) inputs->push_back(std::string(#m))
 	PERF_ATTR(fps);

@@ -165,7 +165,7 @@ void merge_variant_over(variant* aptr, variant b)
 	}
 	
 	if(!a.get_debug_info() && b.get_debug_info()) {
-		a.set_debug_info(*b.get_debug_info());
+		a.setDebugInfo(*b.get_debug_info());
 	}
 }
 

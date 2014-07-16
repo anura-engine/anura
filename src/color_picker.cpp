@@ -106,7 +106,7 @@ namespace gui
 			if(on_change_value.is_function()) {
 				ASSERT_LOG(on_change_value.min_function_arguments() <= 1 && on_change_value.max_function_arguments() >= 1, "onChange ColorPicker function should take 1 argument: " << v.debug_location());
 				static const variant fml("fn(color)");
-				change_handler_.reset(new game_logic::formula(fml));
+				change_handler_.reset(new game_logic::Formula(fml));
 
 				game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 				callable->add("fn", on_change_value);

@@ -297,9 +297,9 @@ namespace hex
 		return point();
 	}
 
-	game_logic::formula_ptr HexMap::createFormula(const variant& v)
+	game_logic::FormulaPtr HexMap::createFormula(const variant& v)
 	{
-		return game_logic::formula_ptr(new game_logic::formula(v));
+		return game_logic::FormulaPtr(new game_logic::Formula(v));
 	}
 
 	bool HexMap::executeCommand(const variant& var)
@@ -317,7 +317,7 @@ namespace hex
 				}
 			}
 		} else {
-			game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
+			game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
 			if(cmd != NULL) {
 				cmd->runCommand(*this);
 			}

@@ -505,7 +505,7 @@ void CodeEditorDialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
-				game_logic::formula_object::try_load_class(class_name);
+				game_logic::Formula_object::try_load_class(class_name);
 			} else { 
 				std::cerr << "SET FILE: " << fname_ << "\n";
 				CustomObjectType::setFileContents(fname_, editor_->text());
@@ -526,12 +526,12 @@ void CodeEditorDialog::process()
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText(e.msg);
 			}
-		} catch(json::parse_error& e) {
+		} catch(json::ParseError& e) {
 			file_contents_set_ = false;
 			error_label_->setText("Error");
-			error_label_->setTooltip(e.error_message());
+			error_label_->setTooltip(e.errorMessage());
 			if(optional_error_text_area_) {
-				optional_error_text_area_->setText(e.error_message());
+				optional_error_text_area_->setText(e.errorMessage());
 			}
 		} catch(...) {
 			file_contents_set_ = false;
@@ -890,18 +890,18 @@ void CodeEditorDialog::onMoveCursor()
 			if(formula_str.is_string()) {
 
 				const variant::debug_info& str_info = *formula_str.get_debug_info();
-				const std::set<game_logic::formula*>& formulae = game_logic::formula::getAll();
+				const std::set<game_logic::Formula*>& formulae = game_logic::Formula::getAll();
 				int best_result = -1;
 				variant result_variant;
-				const game_logic::formula* best_formula = NULL;
-				for(const game_logic::formula* f : formulae) {
-					const variant::debug_info* info = f->str_var().get_debug_info();
+				const game_logic::Formula* best_formula = NULL;
+				for(const game_logic::Formula* f : formulae) {
+					const variant::debug_info* info = f->strVal().get_debug_info();
 					if(!info || !info->filename || *info->filename != *str_info.filename) {
 						continue;
 					}
 
 					variant result;
-					visit_potential_formula_str(f->str_var(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
+					visit_potential_formula_str(f->strVal(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
 					if(result.is_null()) {
 						continue;
 					}
@@ -1120,7 +1120,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	d->show();
 	d->init();
 
-	const variant::debug_info* debug_info = stack.back().expression->parent_formula().get_debug_info();
+	const variant::debug_info* debug_info = stack.back().expression->getParentFormula().get_debug_info();
 	if(debug_info && debug_info->filename) {
 		if(!fn) {
 			fn = std::function<void()>(try_fix_assert);

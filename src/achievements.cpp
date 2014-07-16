@@ -44,7 +44,7 @@ AchievementPtr Achievement::get(const std::string& id)
 		variant node;
 		try {
 			node = (json::parse_from_file("data/Achievements.cfg"));
-		} catch(json::parse_error&) {
+		} catch(json::ParseError&) {
 			cache[""]; //mark as loaded
 			return AchievementPtr();
 		}
@@ -75,7 +75,7 @@ bool Achievement::attain(const std::string& id)
 {
 	if(achievements == NULL) {
 		achievements = new std::vector<std::string>;
-		variant val = preferences::registry()->query_value("achievements");
+		variant val = preferences::registry()->queryValue("achievements");
 		if(val.is_string()) {
 			*achievements = util::split(val.as_string());
 			std::sort(achievements->begin(), achievements->end());
@@ -89,7 +89,7 @@ bool Achievement::attain(const std::string& id)
 	achievements->push_back(id);
 	std::sort(achievements->begin(), achievements->end());
 
-	preferences::registry()->mutate_value("achievements", variant(util::join(*achievements)));
+	preferences::registry()->mutateValue("achievements", variant(util::join(*achievements)));
 
 	return true;
 }

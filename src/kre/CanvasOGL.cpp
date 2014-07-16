@@ -31,7 +31,7 @@ namespace KRE
 {
 	namespace
 	{
-		CanvasPtr& get_instance()
+		CanvasPtr& getInstance()
 		{
 			static CanvasPtr res = CanvasPtr(new CanvasOGL());
 			return res;
@@ -267,6 +267,6 @@ namespace KRE
 
 	CanvasPtr CanvasOGL::getInstance()
 	{
-		return get_instance();
+		return getInstance();
 	}
 }

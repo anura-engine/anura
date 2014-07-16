@@ -209,8 +209,8 @@ public:
 
 	virtual void generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const;
 
-	virtual game_logic::const_formula_ptr getEventHandler(int key) const { return game_logic::const_formula_ptr(); }
-	virtual void setEventHandler(int, game_logic::const_formula_ptr f) { return; }
+	virtual game_logic::ConstFormulaPtr getEventHandler(int key) const { return game_logic::ConstFormulaPtr(); }
+	virtual void setEventHandler(int, game_logic::ConstFormulaPtr f) { return; }
 
 	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
 	virtual bool handleEvent(int id, const FormulaCallable* context=NULL) { return false; }

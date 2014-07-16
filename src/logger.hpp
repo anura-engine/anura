@@ -59,7 +59,8 @@ const char* get_log_level_as_string(LogLevel l);
 			std::cerr << _s.str();											\
 	} while(0)
 
-#define LOG_INFO_NOLF(_msg)	LOG_MSG_NOLF(LOG_LEVEL_INFO, _msg)
+#define LOG_INFO_NOLF(_msg)		LOG_MSG_NOLF(LOG_LEVEL_INFO, _msg)
+#define LOG_ERROR_NOLF(_msg)	LOG_MSG_NOLF(LOG_LEVEL_ERROR, _msg)
 
 #define LOG_MSG(_ll, _msg)													\
 	do {																	\

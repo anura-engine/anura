@@ -161,8 +161,8 @@ public:
 	virtual EntityPtr clone() const;
 	virtual EntityPtr backup() const;
 
-	game_logic::const_formula_ptr getEventHandler(int key) const;
-	void setEventHandler(int, game_logic::const_formula_ptr f);
+	game_logic::ConstFormulaPtr getEventHandler(int key) const;
+	void setEventHandler(int, game_logic::ConstFormulaPtr f);
 
 	bool canInteractWith() const;
 
@@ -211,7 +211,7 @@ public:
 	
 	bool executeCommand(const variant& var);
 
-	virtual game_logic::formula_ptr createFormula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v);
 
 	bool allowLevelCollisions() const;
 
@@ -350,7 +350,7 @@ private:
 	ConstSolidInfoPtr calculateSolid() const;
 	ConstSolidInfoPtr calculatePlatform() const;
 
-	virtual void getInputs(std::vector<game_logic::formula_input>* inputs) const;
+	virtual void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
 
 	int slopeStandingOn(int range) const;
 
@@ -397,7 +397,7 @@ private:
 	
 	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
 
-	game_logic::const_formula_ptr next_animation_formula_;
+	game_logic::ConstFormulaPtr next_animation_formula_;
 
 	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
 	game_logic::MapFormulaCallablePtr tags_;
@@ -425,7 +425,7 @@ private:
 	//first time process is called will fire the on_load event and set to false
 	bool loaded_;
 
-	std::vector<game_logic::const_formula_ptr> event_handlers_;
+	std::vector<game_logic::ConstFormulaPtr> event_handlers_;
 
 	EntityPtr standing_on_;
 
@@ -527,7 +527,7 @@ private:
 	// for lua integration
 #if defined(USE_LUA)
 	void init_lua();
-	std::unique_ptr<lua::lua_context> lua_ptr_;
-	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
+	std::unique_ptr<lua::LuaContext> lua_ptr_;
+	std::unique_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
 };

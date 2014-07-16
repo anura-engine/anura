@@ -189,13 +189,13 @@ variant point_as_variant_list(const point& pt);
 variant a_star_search(weighted_directed_graph_ptr wg, 
 	const variant src_node, 
 	const variant dst_node, 
-	game_logic::expression_ptr heuristic, 
+	game_logic::ExpressionPtr heuristic, 
 	game_logic::MapFormulaCallablePtr callable);
 
 variant a_star_find_path(LevelPtr lvl, const point& src, 
 	const point& dst, 
-	game_logic::expression_ptr heuristic, 
-	game_logic::expression_ptr weight_expr, 
+	game_logic::ExpressionPtr heuristic, 
+	game_logic::ExpressionPtr weight_expr, 
 	game_logic::MapFormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y);

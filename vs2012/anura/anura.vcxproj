@@ -163,6 +163,7 @@
     <ClInclude Include="..\..\src\animation_creator.hpp" />
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
     <ClInclude Include="..\..\src\animation_widget.hpp" />
+    <ClInclude Include="..\..\src\array_callable.hpp" />
     <ClInclude Include="..\..\src\asserts.hpp" />
     <ClInclude Include="..\..\src\b2d_ffl.hpp" />
     <ClInclude Include="..\..\src\background.hpp" />
@@ -576,7 +577,6 @@
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
-    <ClCompile Include="..\..\src\font.cpp" />
     <ClCompile Include="..\..\src\formula.cpp" />
     <ClCompile Include="..\..\src\formula_callable_definition.cpp" />
     <ClCompile Include="..\..\src\formula_constants.cpp" />

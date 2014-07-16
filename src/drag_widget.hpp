@@ -62,9 +62,9 @@ namespace gui
 		void dragStart(int x, int y);
 		void dragEnd(int x, int y);
 		// FFL formulas
-		game_logic::formula_ptr drag_handler_;
-		game_logic::formula_ptr drag_start_handler_;
-		game_logic::formula_ptr drag_end_handler_;
+		game_logic::FormulaPtr drag_handler_;
+		game_logic::FormulaPtr drag_start_handler_;
+		game_logic::FormulaPtr drag_end_handler_;
 
 		WidgetPtr dragger_;
 		Direction dir_;

@@ -41,8 +41,8 @@ private:
 	std::string name_;
 	bool is_global_;
 
-	const_formula_ptr key_;
-	const_formula_ptr value_;
+	ConstFormulaPtr key_;
+	ConstFormulaPtr value_;
 	variant init_value_;
 };
 
@@ -73,7 +73,7 @@ variant table_info::calculate_key(const variant& msg, const FormulaCallable& con
 	if(key_) {
 		variant_callable* v = new variant_callable(msg);
 		variant holder(v);
-		FormulaCallable_with_backup* callable = new FormulaCallable_with_backup(*v, context_callable);
+		FormulaCallableWithBackup* callable = new FormulaCallableWithBackup(*v, context_callable);
 		variant callable_holder(callable);
 		return key_->execute(*callable);
 	} else {

@@ -239,7 +239,7 @@ namespace json
 
 						variant new_v(&items);
 						if(v.get_debug_info()) {
-							new_v.set_debug_info(*v.get_debug_info());
+							new_v.setDebugInfo(*v.get_debug_info());
 						}
 
 						array.push_back(new_v);
@@ -252,11 +252,11 @@ namespace json
 			variant as_variant() {
 				if(type == VAL_TYPE::OBJ) {
 					variant v(&obj);
-					v.set_debug_info(info);
+					v.setDebugInfo(info);
 					return v;
 				} else {
 					variant v(&array);
-					v.set_debug_info(info);
+					v.setDebugInfo(info);
 					return v;
 				}
 			}
@@ -487,7 +487,7 @@ namespace json
 							}
 
 							stack.push_back(JsonObject(str_debug_info, use_preprocessor));
-							v.set_debug_info(str_debug_info);
+							v.setDebugInfo(str_debug_info);
 							stack.back().name = v;
 							stack.back().require_colon = true;
 
@@ -505,7 +505,7 @@ namespace json
 						} else {
 							const char* begin_macro = stack.back().begin_macro;
 							variant name = stack.back().name;
-							v.set_debug_info(str_debug_info);
+							v.setDebugInfo(str_debug_info);
 							stack.pop_back();
 
 							if(begin_macro) {

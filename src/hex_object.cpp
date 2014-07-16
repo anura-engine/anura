@@ -118,15 +118,15 @@ namespace hex
 			HexFunctionSymbolTable()
 			{}
 
-			game_logic::expression_ptr create_function(
+			game_logic::ExpressionPtr createFunction(
 				const std::string& fn,
-				const std::vector<game_logic::expression_ptr>& args,
+				const std::vector<game_logic::ExpressionPtr>& args,
 				game_logic::ConstFormulaCallableDefinitionPtr callable_def) const
 			{
 				if(fn == "get_tile") {
-					return game_logic::expression_ptr(new GetTileFunction(args));
+					return game_logic::ExpressionPtr(new GetTileFunction(args));
 				}
-				return FunctionSymbolTable::create_function(fn, args, callable_def);
+				return FunctionSymbolTable::createFunction(fn, args, callable_def);
 			}
 		};
 
@@ -153,12 +153,12 @@ namespace hex
 				if(functions_var.is_null() == false) {
 					ASSERT_LOG(functions_var.is_string() == true || functions_var.is_list() == true, "\"functions must\" be specified as a string or list.");
 					functions.reset(new game_logic::FunctionSymbolTable());
-					functions->set_backup(&get_hex_function_symbol_table());
+					functions->setBackup(&get_hex_function_symbol_table());
 					if(functions_var.is_string()) {
-						game_logic::formula f(functions_var, functions.get());
+						game_logic::Formula f(functions_var, functions.get());
 					} else if(functions_var.is_list()) {
 						for(int n = 0; n != functions_var.num_elements(); ++n) {
-							game_logic::formula f(functions_var[n], functions.get());
+							game_logic::Formula f(functions_var[n], functions.get());
 						}
 					}
 				}
@@ -168,7 +168,7 @@ namespace hex
 					ASSERT_LOG(handlers_var.is_map() == true, "\"handlers\" must be specified by a map.");
 					handlers.clear();
 					for(const variant_pair& p : handlers_var.as_map()) {
-						handlers[p.first.as_string()] = game_logic::formula::create_optional_formula(p.second, functions.get());
+						handlers[p.first.as_string()] = game_logic::Formula::create_optional_formula(p.second, functions.get());
 					}
 				}
 			}
@@ -177,7 +177,7 @@ namespace hex
 			{
 				variant_builder res;
 				res.add("functions", functions_var);
-				std::map<std::string, game_logic::const_formula_ptr>::const_iterator it = handlers.begin();
+				std::map<std::string, game_logic::ConstFormulaPtr>::const_iterator it = handlers.begin();
 				while(it != handlers.end()) {
 					variant_builder node;
 					node.add(it->first, it->second->str());
@@ -197,7 +197,7 @@ namespace hex
 
 			variant functions_var;
 			std::shared_ptr<game_logic::FunctionSymbolTable> functions;
-			std::map<std::string, game_logic::const_formula_ptr> handlers;
+			std::map<std::string, game_logic::ConstFormulaPtr> handlers;
 			std::vector<std::string> rules;
 		};
 
@@ -307,7 +307,7 @@ namespace hex
 				}
 			}
 		} else {
-			game_logic::command_callable* cmd = value.try_convert<game_logic::command_callable>();
+			game_logic::CommandCallable* cmd = value.try_convert<game_logic::CommandCallable>();
 			if(cmd != NULL) {
 				cmd->runCommand(*this);
 			}
@@ -318,10 +318,10 @@ namespace hex
 	void HexObject::applyRules(const std::string& rule)
 	{
 		using namespace game_logic;
-		std::map<std::string, const_formula_ptr>::const_iterator it = generate_hex_engine().handlers.find(rule);
+		std::map<std::string, ConstFormulaPtr>::const_iterator it = generate_hex_engine().handlers.find(rule);
 		ASSERT_LOG(it != generate_hex_engine().handlers.end(), "Unable to find rule \"" << rule << "\" in the list of handlers.");
 		MapFormulaCallablePtr callable(new MapFormulaCallable(this));
-		variant& a = callable->add_direct_access("hex");
+		variant& a = callable->addDirectAccess("hex");
 		a = variant(this);
 		variant value = it->second->execute(*callable.get());
 		executeCommand(value);

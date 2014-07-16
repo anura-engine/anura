@@ -186,21 +186,21 @@ namespace editor_script
 				return result;
 			}
 
-			expression_ptr create_function(
+			ExpressionPtr createFunction(
 									   const std::string& fn,
-									   const std::vector<expression_ptr>& args,
+									   const std::vector<ExpressionPtr>& args,
 									   ConstFormulaCallableDefinitionPtr callable_def) const
 			{
 				if(fn == "remove_tiles") {
-					return expression_ptr(new RemoveTilesFunction(args));
+					return ExpressionPtr(new RemoveTilesFunction(args));
 				} else if(fn == "add_tiles") {
-					return expression_ptr(new AddTilesFunction(args));
+					return ExpressionPtr(new AddTilesFunction(args));
 				} else if(fn == "add_object") {
-					return expression_ptr(new AddObjectFunction(args));
+					return ExpressionPtr(new AddObjectFunction(args));
 				} else if(fn == "debug") {
-					return expression_ptr(new DebugFunction(args));
+					return ExpressionPtr(new DebugFunction(args));
 				} else {
-					return FunctionSymbolTable::create_function(fn, args, callable_def);
+					return FunctionSymbolTable::createFunction(fn, args, callable_def);
 				}
 			}
 		};
@@ -300,7 +300,7 @@ namespace editor_script
 
 
 		std::vector<info> scripts_info;
-		std::map<std::string, const_formula_ptr> scripts;
+		std::map<std::string, ConstFormulaPtr> scripts;
 
 		void load_scripts()
 		{
@@ -337,7 +337,7 @@ namespace editor_script
 	{
 		load_scripts();
 
-		std::map<std::string, const_formula_ptr>::const_iterator itor = scripts.find(id);
+		std::map<std::string, ConstFormulaPtr>::const_iterator itor = scripts.find(id);
 		if(itor == scripts.end() || !itor->second) {
 			return;
 		}

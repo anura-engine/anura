@@ -31,7 +31,7 @@
 
 std::string preprocess(const std::string& input){
 	
-	const game_logic::formula::strict_check_scope strict_checking(false);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
 
 	std::string output_string;
 	bool in_comment = false;
@@ -86,7 +86,7 @@ std::string preprocess(const std::string& input){
 
 variant preprocess_string_value(const std::string& input, const game_logic::FormulaCallable* callable)
 {
-	const game_logic::formula::strict_check_scope strict_checking(false);
+	const game_logic::Formula::StrictCheckScope strict_checking(false);
 
 	if(input.empty() || input[0] != '@') {
 		return variant(input);
@@ -124,7 +124,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::Form
 			variant doc = json::parse_from_file(file);
 			const std::string expr(colon+1, fname.end());
 			const variant expr_variant(expr);
-			const game_logic::formula f(expr_variant);
+			const game_logic::Formula f(expr_variant);
 			game_logic::FormulaCallable* vars = new game_logic::MapFormulaCallable(doc);
 			const variant callable(vars);
 			if(vars) {
@@ -153,7 +153,7 @@ variant preprocess_string_value(const std::string& input, const game_logic::Form
 			return variant(&res);
 		}
 	} else if(directive == "@eval") {
-		game_logic::formula f(variant(std::string(i, input.end())));
+		game_logic::Formula f(variant(std::string(i, input.end())));
 		if(callable) {
 			return f.execute(*callable);
 		} else {

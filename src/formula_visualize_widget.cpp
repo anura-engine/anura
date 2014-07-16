@@ -18,7 +18,7 @@ namespace {
 class expression_widget : public gui::dialog
 {
 public:
-	explicit expression_widget(game_logic::const_expression_ptr expression,
+	explicit expression_widget(game_logic::ConstExpressionPtr expression,
 	                           int x, int y, int w, int h, bool focused,
 							   TextEditorWidget* editor,
 							   std::function<void()> onClick)
@@ -33,7 +33,7 @@ public:
 		gui::label* label = new gui::label(expression_->name(), text_color.as_sdl_color());
 		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 10);
 
-		label = new gui::label(expression_->query_variant_type()->to_string(), text_color.as_sdl_color());
+		label = new gui::label(expression_->queryVariantType()->to_string(), text_color.as_sdl_color());
 		addWidget(gui::WidgetPtr(label), width()/2 - label->width()/2, 26);
 
 		std::string s = expression_->str();
@@ -54,7 +54,7 @@ private:
 			const bool inWidget = motion.x >= x() && motion.x <= x() + width() && motion.y >= y() && motion.y <= y() + height();
 			if(inWidget) {
 				PinpointedLoc loc;
-				expression_->debug_pinpoint_location(&loc);
+				expression_->debugPinpointLocation(&loc);
 				editor_->highlight(TextEditorWidget::Loc(loc.begin_line-1, loc.begin_col-1), TextEditorWidget::Loc(loc.end_line-1, loc.end_col-1));
 			}
 		} else if(event.type == SDL_MOUSEBUTTONDOWN) {
@@ -77,7 +77,7 @@ private:
 		graphics::draw_hollow_rect(r, col);
 	}
 
-	game_logic::const_expression_ptr expression_;
+	game_logic::ConstExpressionPtr expression_;
 	bool focused_;
 	TextEditorWidget* editor_;
 	std::function<void()> on_click_;
@@ -86,7 +86,7 @@ private:
 }
 
 formula_visualize_widget::formula_visualize_widget(
-  game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor)
+  game_logic::ExpressionPtr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor)
 	: expression_(expr), text_pos_(text_pos), row_(row), col_(col),
 	  editor_(editor)
 {
@@ -95,7 +95,7 @@ formula_visualize_widget::formula_visualize_widget(
 	init();
 }
 
-void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
+void formula_visualize_widget::init(game_logic::ConstExpressionPtr expr)
 {
 	if(!expr) {
 		expr = expression_;
@@ -176,7 +176,7 @@ void formula_visualize_widget::init(game_logic::const_expression_ptr expr)
 	}
 }
 
-void formula_visualize_widget::on_select_expression(game_logic::const_expression_ptr expr)
+void formula_visualize_widget::on_select_expression(game_logic::ConstExpressionPtr expr)
 {
 	std::cerr << "SELECT EXPR\n";
 	children_.clear();
@@ -185,9 +185,9 @@ void formula_visualize_widget::on_select_expression(game_logic::const_expression
 	init(expr);
 }
 
-void formula_visualize_widget::add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth, WidgetPtr parent)
+void formula_visualize_widget::add_expression(game_logic::ConstExpressionPtr expr, int x, int y, int spacing, int depth, WidgetPtr parent)
 {
-	const bool focused = text_pos_ >= expr->debug_loc_in_file().first && text_pos_ <= expr->debug_loc_in_file().second;
+	const bool focused = text_pos_ >= expr->debugLocInFile().first && text_pos_ <= expr->debugLocInFile().second;
 	std::function<void()> on_click_expr = std::bind(&formula_visualize_widget::on_select_expression, this, expr);
 	children_.push_back(WidgetPtr(new expression_widget(expr, x, y, 100, 80, focused, editor_, on_click_expr)));
 	if(child_rows_.size() <= depth) {
@@ -201,7 +201,7 @@ void formula_visualize_widget::add_expression(game_logic::const_expression_ptr e
 	}
 
 	parent = children_.back();
-	const std::vector<const_expression_ptr>& children = expr->query_children();
+	const std::vector<ConstExpressionPtr>& children = expr->queryChildren();
 	for(int n = 0; n != children.size(); ++n) {
 		const int xpos = children.size() == 1 ? x : (x - spacing/2 + (spacing*n)/(children.size()-1));
 		add_expression(children[n], xpos, y + 100, spacing/children.size(), depth+1, parent);

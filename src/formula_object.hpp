@@ -77,7 +77,7 @@ private:
 	void setValue(const std::string& key, const variant& value);
 	void setValueBySlot(int slot, const variant& value);
 
-	void getInputs(std::vector<formula_input>* inputs) const;
+	void getInputs(std::vector<FormulaInput>* inputs) const;
 
 	boost::uuids::uuid id_;
 
@@ -87,7 +87,7 @@ private:
 	boost::intrusive_ptr<formula_object> previous_;
 
 	//overrides of the class's read-only properties.
-	std::vector<formula_ptr> property_overrides_;
+	std::vector<FormulaPtr> property_overrides_;
 
 	std::vector<variant> variables_;
 

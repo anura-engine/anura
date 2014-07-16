@@ -60,7 +60,7 @@ namespace gui
 		int drag_start_;
 		int drag_anchor_y_;
 
-		game_logic::formula_ptr ffl_handler_;
+		game_logic::FormulaPtr ffl_handler_;
 		void handler_delegate(int);
 	};
 

@@ -133,14 +133,14 @@ variant weighted_directed_graph::getValue(const std::string& key) const {
 variant a_star_search(weighted_directed_graph_ptr wg, 
 	const variant src_node, 
 	const variant dst_node, 
-	game_logic::expression_ptr heuristic, 
+	game_logic::ExpressionPtr heuristic, 
 	game_logic::MapFormulaCallablePtr callable)
 {
 	typedef graph_node<variant, decimal>::graph_node_ptr gnp;
 	std::priority_queue<gnp, std::vector<gnp> > open_list;
 	std::vector<variant> path;
-	variant& a = callable->add_direct_access("a");
-	variant& b = callable->add_direct_access("b");
+	variant& a = callable->addDirectAccess("a");
+	variant& b = callable->addDirectAccess("b");
 	b = dst_node;
 
 	if(src_node == dst_node) {
@@ -287,8 +287,8 @@ bool graph_node_cmp(const typename graph_node<N,T>::graph_node_ptr& lhs,
 variant a_star_find_path(LevelPtr lvl,
 	const point& src_pt1, 
 	const point& dst_pt1, 
-	game_logic::expression_ptr heuristic, 
-	game_logic::expression_ptr weight_expr, 
+	game_logic::ExpressionPtr heuristic, 
+	game_logic::ExpressionPtr weight_expr, 
 	game_logic::MapFormulaCallablePtr callable, 
 	const int tile_size_x, 
 	const int tile_size_y) 
@@ -305,8 +305,8 @@ variant a_star_find_path(LevelPtr lvl,
 	clip_pt_to_rect(dst_pt, b_rect);
 	point src(get_midpoint(src_pt, tile_size_x, tile_size_y));
 	point dst(get_midpoint(dst_pt, tile_size_x, tile_size_y));
-	variant& a = callable->add_direct_access("a");
-	variant& b = callable->add_direct_access("b");
+	variant& a = callable->addDirectAccess("a");
+	variant& b = callable->addDirectAccess("b");
 
 	if(src == dst) {
 		return variant(&path);
@@ -464,16 +464,16 @@ variant path_cost_search(weighted_directed_graph_ptr wg,
 }
 
 UNIT_TEST(directed_graph_function) {
-	CHECK_EQ(game_logic::formula(variant("directed_graph(map(range(4), [value/2,value%2]), null).vertices")).execute(), game_logic::formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
-	CHECK_EQ(game_logic::formula(variant("directed_graph(map(range(4), [value/2,value%2]), filter(links(v), inside_bounds(value))).edges where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<2 and v[1]<2")).execute(), 
-		game_logic::formula(variant("[[[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 1], [1, 1]], [[0, 1], [0, 0]], [[1, 0], [0, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[1, 1], [1, 0]]]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("directed_graph(map(range(4), [value/2,value%2]), null).vertices")).execute(), game_logic::Formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("directed_graph(map(range(4), [value/2,value%2]), filter(links(v), inside_bounds(value))).edges where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<2 and v[1]<2")).execute(), 
+		game_logic::Formula(variant("[[[0, 0], [1, 0]], [[0, 0], [0, 1]], [[0, 1], [1, 1]], [[0, 1], [0, 0]], [[1, 0], [0, 0]], [[1, 0], [1, 1]], [[1, 1], [0, 1]], [[1, 1], [1, 0]]]")).execute());
 }
 
 UNIT_TEST(weighted_graph_function) {
-	CHECK_EQ(game_logic::formula(variant("weighted_graph(directed_graph(map(range(4), [value/2,value%2]), null), 10).vertices")).execute(), game_logic::formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
+	CHECK_EQ(game_logic::Formula(variant("weighted_graph(directed_graph(map(range(4), [value/2,value%2]), null), 10).vertices")).execute(), game_logic::Formula(variant("[[0,0],[0,1],[1,0],[1,1]]")).execute());
 }
 
 UNIT_TEST(cost_path_search_function) {
-	CHECK_EQ(game_logic::formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
-		game_logic::formula(variant("sort([[1,1], [1,0], [2,1], [1,2], [0,1]])")).execute());
+	CHECK_EQ(game_logic::Formula(variant("sort(path_cost_search(weighted_graph(directed_graph(map(range(9), [value/3,value%3]), filter(links(v), inside_bounds(value))), distance(a,b)), [1,1], 1)) where links = def(v) [[v[0]-1,v[1]], [v[0]+1,v[1]], [v[0],v[1]-1], [v[0],v[1]+1],[v[0]-1,v[1]-1],[v[0]-1,v[1]+1],[v[0]+1,v[1]-1],[v[0]+1,v[1]+1]], inside_bounds = def(v) v[0]>=0 and v[1]>=0 and v[0]<3 and v[1]<3, distance=def(a,b)sqrt((a[0]-b[0])^2+(a[1]-b[1])^2)")).execute(), 
+		game_logic::Formula(variant("sort([[1,1], [1,0], [2,1], [1,2], [0,1]])")).execute());
 }

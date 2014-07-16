@@ -15,18 +15,18 @@ class TextEditorWidget;
 class formula_visualize_widget : public gui::Widget
 {
 public:
-	formula_visualize_widget(game_logic::expression_ptr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor);
+	formula_visualize_widget(game_logic::ExpressionPtr expr, int text_pos, int row, int col, int x, int y, int w, int h, TextEditorWidget* editor);
 private:
-	void init(game_logic::const_expression_ptr expr=game_logic::const_expression_ptr());
+	void init(game_logic::ConstExpressionPtr expr=game_logic::ConstExpressionPtr());
 	void handleDraw() const override;
 
 	bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-	void on_select_expression(game_logic::const_expression_ptr expr);
+	void on_select_expression(game_logic::ConstExpressionPtr expr);
 
-	void add_expression(game_logic::const_expression_ptr expr, int x, int y, int spacing, int depth=0, WidgetPtr parent=WidgetPtr());
+	void add_expression(game_logic::ConstExpressionPtr expr, int x, int y, int spacing, int depth=0, WidgetPtr parent=WidgetPtr());
 
-	game_logic::expression_ptr expression_;
+	game_logic::ExpressionPtr expression_;
 	int text_pos_;
 	int row_, col_;
 

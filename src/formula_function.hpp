@@ -39,9 +39,9 @@
 
 namespace game_logic
 {
-	class formula_expression;
-	typedef boost::intrusive_ptr<formula_expression> expression_ptr;
-	typedef boost::intrusive_ptr<const formula_expression> const_expression_ptr;
+	class FormulaExpression;
+	typedef boost::intrusive_ptr<FormulaExpression> ExpressionPtr;
+	typedef boost::intrusive_ptr<const FormulaExpression> ConstExpressionPtr;
 
 	struct PinpointedLoc 
 	{
@@ -53,92 +53,92 @@ namespace game_logic
 											 std::string::const_iterator end,
 											 PinpointedLoc* pos_info=0);
 
-	class formula_expression : public reference_counted_object 
+	class FormulaExpression : public reference_counted_object 
 	{
 	public:
-		explicit formula_expression(const char* name=NULL);
-		virtual ~formula_expression() {}
-		virtual variant static_evaluate(const FormulaCallable& variables) const {
+		explicit FormulaExpression(const char* name=NULL);
+		virtual ~FormulaExpression() {}
+		virtual variant staticEvaluate(const FormulaCallable& variables) const {
 			return evaluate(variables);
 		}
 
-		virtual bool is_identifier(std::string* id) const {
+		virtual bool isIdentifier(std::string* id) const {
 			return false;
 		}
 
-		virtual bool is_literal(variant& result) const {
+		virtual bool isLiteral(variant& result) const {
 			return false;
 		}
 
 		variant evaluate(const FormulaCallable& variables) const {
 	#if !TARGET_OS_IPHONE
 			++ntimes_called_;
-			call_stack_manager manager(this, &variables);
+			CallStackManager manager(this, &variables);
 	#endif
 			return execute(variables);
 		}
 
-		variant evaluate_with_member(const FormulaCallable& variables, std::string& id, variant* variant_id=NULL) const {
+		variant evaluateWithMember(const FormulaCallable& variables, std::string& id, variant* variant_id=NULL) const {
 	#if !TARGET_OS_IPHONE
-			call_stack_manager manager(this, &variables);
+			CallStackManager manager(this, &variables);
 	#endif
-			return execute_member(variables, id, variant_id);
+			return executeMember(variables, id, variant_id);
 		}
 
-		void perform_static_error_analysis() const {
-			static_error_analysis();
+		void performStaticErrorAnalysis() const {
+			staticErrorAnalysis();
 		}
 
-		virtual expression_ptr optimize() const {
-			return expression_ptr();
+		virtual ExpressionPtr optimize() const {
+			return ExpressionPtr();
 		}
 
-		virtual bool can_reduce_to_variant(variant& v) const {
+		virtual bool canReduceToVariant(variant& v) const {
 			return false;
 		}
 
-		virtual ConstFormulaCallableDefinitionPtr get_type_definition() const;
+		virtual ConstFormulaCallableDefinitionPtr getTypeDefinition() const;
 
 		const char* name() const { return name_; }
-		void set_name(const char* name) { name_ = name; }
+		void setName(const char* name) { name_ = name; }
 
-		void copy_debug_info_from(const formula_expression& o);
-		virtual void set_debug_info(const variant& parent_formula,
+		void copyDebugInfoFrom(const FormulaExpression& o);
+		virtual void setDebugInfo(const variant& parent_formula,
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str);
-		bool has_debug_info() const;
-		std::string debug_pinpoint_location(PinpointedLoc* loc=NULL) const;
-		std::pair<int, int> debug_loc_in_file() const;
+		bool hasDebugInfo() const;
+		std::string debugPinpointLocation(PinpointedLoc* loc=NULL) const;
+		std::pair<int, int> debugLocInFile() const;
 
-		void set_str(const std::string& str) { str_ = str; }
+		void setStr(const std::string& str) { str_ = str; }
 		const std::string& str() const { return str_; }
 
-		variant parent_formula() const { return parent_formula_; }
+		variant getParentFormula() const { return parent_formula_; }
 
-		int ntimes_called() const { return ntimes_called_; }
+		int getNTimesCalled() const { return ntimes_called_; }
 
-		variant_type_ptr query_variant_type() const { variant_type_ptr res = get_variant_type(); if(res) { return res; } else { return variant_type::get_any(); } }
+		variant_type_ptr queryVariantType() const { variant_type_ptr res = getVariantType(); if(res) { return res; } else { return variant_type::get_any(); } }
 
-		variant_type_ptr query_mutable_type() const { return get_mutable_type(); }
+		variant_type_ptr queryMutableType() const { return getMutableType(); }
 
-		ConstFormulaCallableDefinitionPtr query_modified_definition_based_on_result(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return get_modified_definition_based_on_result(result, current_def, expression_is_this_type); }
+		ConstFormulaCallableDefinitionPtr queryModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type=variant_type_ptr()) const { return getModifiedDefinitionBasedOnResult(result, current_def, expression_is_this_type); }
 
-		std::vector<const_expression_ptr> query_children() const;
-		std::vector<const_expression_ptr> query_children_recursive() const;
+		std::vector<ConstExpressionPtr> queryChildren() const;
+		std::vector<ConstExpressionPtr> queryChildrenRecursive() const;
 
-		void set_definition_used_by_expression(ConstFormulaCallableDefinitionPtr def) { definition_used_ = def; }
-		ConstFormulaCallableDefinitionPtr getDefinition_used_by_expression() const { return definition_used_; }
+		void setDefinitionUsedByExpression(ConstFormulaCallableDefinitionPtr def) { definition_used_ = def; }
+		ConstFormulaCallableDefinitionPtr getDefinitionUsedByExpression() const { return definition_used_; }
 
 	protected:
-		virtual variant_type_ptr get_variant_type() const { return variant_type_ptr(); }
-		virtual variant_type_ptr get_mutable_type() const { return variant_type_ptr(); }
-		virtual variant execute_member(const FormulaCallable& variables, std::string& id, variant* variant_id) const;
+		virtual variant_type_ptr getVariantType() const { return variant_type_ptr(); }
+		virtual variant_type_ptr getMutableType() const { return variant_type_ptr(); }
+		virtual variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const;
 	private:
 		virtual variant execute(const FormulaCallable& variables) const = 0;
-		virtual void static_error_analysis() const {}
-		virtual ConstFormulaCallableDefinitionPtr get_modified_definition_based_on_result(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
+		virtual void staticErrorAnalysis() const {}
+		virtual ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
 
-		virtual std::vector<const_expression_ptr> getChildren() const { return std::vector<const_expression_ptr>(); }
+		virtual std::vector<ConstExpressionPtr> getChildren() const { return std::vector<ConstExpressionPtr>(); }
 
 		const char* name_;
 
@@ -151,16 +151,16 @@ namespace game_logic
 		ConstFormulaCallableDefinitionPtr definition_used_;
 	};
 
-	class function_expression : public formula_expression
+	class FunctionExpression : public FormulaExpression
 	{
 	public:
-		typedef std::vector<expression_ptr> args_list;
-		explicit function_expression(
+		typedef std::vector<ExpressionPtr> args_list;
+		explicit FunctionExpression(
 							const std::string& name,
 							const args_list& args,
 							int min_args=-1, int max_args=-1);
 
-		virtual void set_debug_info(const variant& parent_formula,
+		virtual void setDebugInfo(const variant& parent_formula,
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str);
 
@@ -171,8 +171,8 @@ namespace game_logic
 		void check_arg_type(int narg, const std::string& type) const;
 
 	private:
-		std::vector<const_expression_ptr> getChildren() const {
-			return std::vector<const_expression_ptr>(args_.begin(), args_.end());
+		std::vector<ConstExpressionPtr> getChildren() const override {
+			return std::vector<ConstExpressionPtr>(args_.begin(), args_.end());
 		}
 
 		std::string name_;
@@ -180,19 +180,19 @@ namespace game_logic
 		int min_args_, max_args_;
 	};
 
-	class formula_function_expression : public function_expression
+	class FormulaFunctionExpression : public FunctionExpression
 	{
 	public:
-		explicit formula_function_expression(const std::string& name, const args_list& args, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types);
-		virtual ~formula_function_expression() {}
+		explicit FormulaFunctionExpression(const std::string& name, const args_list& args, ConstFormulaPtr formula, ConstFormulaPtr precondition, const std::vector<std::string>& arg_names, const std::vector<variant_type_ptr>& variant_types);
+		virtual ~FormulaFunctionExpression() {}
 
-		void set_formula(const_formula_ptr f) { formula_ = f; }
+		void set_formula(ConstFormulaPtr f) { formula_ = f; }
 		void set_has_closure(int base_slot) { has_closure_ = true; base_slot_ = base_slot; }
 	private:
-		boost::intrusive_ptr<slot_FormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
+		boost::intrusive_ptr<SlotFormulaCallable> calculate_args_callable(const FormulaCallable& variables) const;
 		variant execute(const FormulaCallable& variables) const;
-		const_formula_ptr formula_;
-		const_formula_ptr precondition_;
+		ConstFormulaPtr formula_;
+		ConstFormulaPtr precondition_;
 		std::vector<std::string> arg_names_;
 		std::vector<variant_type_ptr> variant_types_;
 		int star_arg_;
@@ -200,7 +200,7 @@ namespace game_logic
 		//this is the callable object that is populated with the arguments to the
 		//function. We try to reuse the same object every time the function is
 		//called rather than recreating it each time.
-		mutable boost::intrusive_ptr<slot_FormulaCallable> callable_;
+		mutable boost::intrusive_ptr<SlotFormulaCallable> callable_;
 
 		mutable std::unique_ptr<variant> fed_result_;
 		bool has_closure_;
@@ -208,44 +208,55 @@ namespace game_logic
 
 	};
 
-	typedef boost::intrusive_ptr<function_expression> function_expression_ptr;
-	typedef boost::intrusive_ptr<formula_function_expression> formula_function_expression_ptr;
+	typedef boost::intrusive_ptr<FunctionExpression> FunctionExpressionPtr;
+	typedef boost::intrusive_ptr<FormulaFunctionExpression> FormulaFunctionExpressionPtr;
 
-	class formula_function
+	class FormulaFunction
 	{
 		std::string name_;
-		const_formula_ptr formula_;
-		const_formula_ptr precondition_;
+		ConstFormulaPtr formula_;
+		ConstFormulaPtr precondition_;
 		std::vector<std::string> args_;
 		std::vector<variant> default_args_;
 		std::vector<variant_type_ptr> variant_types_;
 	public:
-		formula_function() {}
-		formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types) : name_(name), formula_(formula), precondition_(precondition), args_(args), default_args_(default_args), variant_types_(variant_types)
+		FormulaFunction() {}
+		FormulaFunction(const std::string& name, 
+			ConstFormulaPtr formula, 
+			ConstFormulaPtr precondition, 
+			const std::vector<std::string>& args, 
+			const std::vector<variant>& default_args, 
+			const std::vector<variant_type_ptr>& variant_types) 
+			: name_(name), 
+			formula_(formula), 
+			precondition_(precondition), 
+			args_(args), 
+			default_args_(default_args), 
+			variant_types_(variant_types)
 		{}
 
-		formula_function_expression_ptr generate_function_expression(const std::vector<expression_ptr>& args) const;
+		FormulaFunctionExpressionPtr generateFunctionExpression(const std::vector<ExpressionPtr>& args) const;
 
 		const std::vector<std::string>& args() const { return args_; }
-		const std::vector<variant> default_args() const { return default_args_; }
-		const_formula_ptr get_formula() const { return formula_; }
-		const std::vector<variant_type_ptr>& variant_types() const { return variant_types_; }
+		const std::vector<variant> getDefaultArgs() const { return default_args_; }
+		ConstFormulaPtr getFormula() const { return formula_; }
+		const std::vector<variant_type_ptr>& variantTypes() const { return variant_types_; }
 	};	
 
 	class FunctionSymbolTable : private boost::noncopyable 
 	{
-		std::map<std::string, formula_function> custom_formulas_;
+		std::map<std::string, FormulaFunction> custom_formulas_;
 		const FunctionSymbolTable* backup_;
 	public:
 		FunctionSymbolTable() : backup_(0) {}
 		virtual ~FunctionSymbolTable() {}
-		void set_backup(const FunctionSymbolTable* backup) { backup_ = backup; }
-		virtual void add_formula_function(const std::string& name, const_formula_ptr formula, const_formula_ptr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types);
-		virtual expression_ptr create_function(const std::string& fn,
-											   const std::vector<expression_ptr>& args,
+		void setBackup(const FunctionSymbolTable* backup) { backup_ = backup; }
+		virtual void addFormulaFunction(const std::string& name, ConstFormulaPtr formula, ConstFormulaPtr precondition, const std::vector<std::string>& args, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types);
+		virtual ExpressionPtr createFunction(const std::string& fn,
+											   const std::vector<ExpressionPtr>& args,
 											   ConstFormulaCallableDefinitionPtr callable_def) const;
-		std::vector<std::string> get_function_names() const;
-		const formula_function* get_formula_function(const std::string& fn) const;
+		std::vector<std::string> getFunctionNames() const;
+		const FormulaFunction* getFormulaFunction(const std::string& fn) const;
 	};
 
 	//a special symbol table which is used to facilitate recursive functions.
@@ -255,43 +266,43 @@ namespace game_logic
 	class RecursiveFunctionSymbolTable : public FunctionSymbolTable
 	{
 		std::string name_;
-		formula_function stub_;
+		FormulaFunction stub_;
 		FunctionSymbolTable* backup_;
-		mutable std::vector<formula_function_expression_ptr> expr_;
+		mutable std::vector<FormulaFunctionExpressionPtr> expr_;
 		ConstFormulaCallableDefinitionPtr closure_definition_;
 	public:
 		RecursiveFunctionSymbolTable(const std::string& fn, const std::vector<std::string>& args, const std::vector<variant>& default_args, FunctionSymbolTable* backup, ConstFormulaCallableDefinitionPtr closure_definition, const std::vector<variant_type_ptr>& variant_types);
-		virtual expression_ptr create_function(const std::string& fn,
-											   const std::vector<expression_ptr>& args,
+		virtual ExpressionPtr createFunction(const std::string& fn,
+											   const std::vector<ExpressionPtr>& args,
 											   ConstFormulaCallableDefinitionPtr callable_def) const;
-		void resolve_recursive_calls(const_formula_ptr f);
+		void resolveRecursiveCalls(ConstFormulaPtr f);
 	};
 
-	expression_ptr create_function(const std::string& fn,
-								   const std::vector<expression_ptr>& args,
+	ExpressionPtr createFunction(const std::string& fn,
+								   const std::vector<ExpressionPtr>& args,
 								   const FunctionSymbolTable* symbols,
 								   ConstFormulaCallableDefinitionPtr callable_def);
 	bool optimize_function_arguments(const std::string& fn,
 									 const FunctionSymbolTable* symbols);
 	std::vector<std::string> builtin_function_names();
 
-	class variant_expression : public formula_expression
+	class VariantExpression : public FormulaExpression
 	{
 	public:
-		explicit variant_expression(variant v) : formula_expression("_var"), v_(v)
+		explicit VariantExpression(variant v) : FormulaExpression("_var"), v_(v)
 		{}
 
-		bool can_reduce_to_variant(variant& v) const {
+		bool canReduceToVariant(variant& v) const {
 			v = v_;
 			return true;
 		}
 
-		bool is_literal(variant& result) const {
+		bool isLiteral(variant& result) const {
 			result = v_;
 			return true;
 		}
 
-		void set_type_override(variant_type_ptr type) {
+		void setTypeOverride(variant_type_ptr type) {
 			type_override_ = type;
 		}
 	private:
@@ -299,13 +310,13 @@ namespace game_logic
 			return v_;
 		}
 
-		virtual variant_type_ptr get_variant_type() const;
+		virtual variant_type_ptr getVariantType() const;
 	
 		variant v_;
 		variant_type_ptr type_override_;
 	};
 
-	ConstFormulaCallableDefinitionPtr get_map_callableDefinition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name);
+	ConstFormulaCallableDefinitionPtr get_map_callable_definition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr key_type, variant_type_ptr value_type, const std::string& value_name);
 	ConstFormulaCallableDefinitionPtr get_variant_comparator_definition(ConstFormulaCallableDefinitionPtr base_def, variant_type_ptr type);
 }
 

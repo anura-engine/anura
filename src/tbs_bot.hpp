@@ -55,7 +55,7 @@ private:
 	boost::asio::io_service& service_;
 	boost::asio::deadline_timer timer_;
 
-	game_logic::formula_ptr on_create_, on_message_;
+	game_logic::FormulaPtr on_create_, on_message_;
 
 	variant data_;
 

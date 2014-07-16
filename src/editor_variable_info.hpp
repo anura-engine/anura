@@ -50,7 +50,7 @@ public:
 	const std::string& getInfo() const { return info_; }
 	const std::string& getHelp() const { return help_; }
 
-	const game_logic::const_formula_ptr& getFormula() const { return formula_; }
+	const game_logic::ConstFormulaPtr& getFormula() const { return formula_; }
 
 	bool numericDecimal() const { return numeric_decimal_; }
 	decimal numericMin() const { return numeric_min_; }
@@ -63,7 +63,7 @@ private:
 	std::vector<std::string> enum_values_;
 	std::string info_;
 	std::string help_;
-	game_logic::const_formula_ptr formula_;
+	game_logic::ConstFormulaPtr formula_;
 
 	bool numeric_decimal_;
 	decimal numeric_min_, numeric_max_;

@@ -53,7 +53,7 @@ private:
 	int progress_;
 	bool completion_called_;
 	std::function<void ()> oncompletion_;
-	game_logic::formula_ptr completion_handler_;
+	game_logic::FormulaPtr completion_handler_;
 
 	bool upscale_;
 	ConstFramedGuiElementPtr frame_image_set_;

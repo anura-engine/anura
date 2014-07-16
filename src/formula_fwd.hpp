@@ -26,7 +26,7 @@
 
 namespace game_logic 
 {
-	class formula;
-	typedef std::shared_ptr<formula> formula_ptr;
-	typedef std::shared_ptr<const formula> const_formula_ptr;
+	class Formula;
+	typedef std::shared_ptr<Formula> FormulaPtr;
+	typedef std::shared_ptr<const Formula> ConstFormulaPtr;
 }

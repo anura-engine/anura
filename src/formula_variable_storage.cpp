@@ -127,7 +127,7 @@ void formula_variable_storage::setValueBySlot(int slot, const variant& value)
 void formula_variable_storage::getInputs(std::vector<formula_input>* inputs) const
 {
 	for(std::map<std::string,int>::const_iterator i = strings_to_values_.begin(); i != strings_to_values_.end(); ++i) {
-		inputs->push_back(formula_input(i->first, FORMULA_READ_WRITE));
+		inputs->push_back(formula_input(i->first, FORMULA_ACCESS_TYPE::READ_WRITE));
 	}
 }
 
