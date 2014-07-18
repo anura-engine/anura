@@ -354,9 +354,9 @@ Animation read_animation(const variant& v)
 			ASSERT_LOG(pivots.size() == 2, "Must have two pivots in animation: " << t.to_debug_string());
 			transform.pivot_src = pivots[0];
 			transform.pivot_dst = pivots[1];
-			transform.rotation_formula = game_logic::Formula::create_optional_formula(t["rotation"]);
+			transform.rotation_formula = game_logic::Formula::createOptionalFormula(t["rotation"]);
 		}
-		transform.translation_formula = game_logic::Formula::create_optional_formula(t["translation"]);
+		transform.translation_formula = game_logic::Formula::createOptionalFormula(t["translation"]);
 		result.transforms.push_back(transform);
 	}
 

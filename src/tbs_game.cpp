@@ -59,7 +59,7 @@ struct game_type {
 		variant handlers_var = value["handlers"];
 		if(handlers_var.is_map()) {
 			foreach(const variant& key, handlers_var.getKeys().as_list()) {
-				handlers[key.as_string()] = game_logic::Formula::create_optional_formula(handlers_var[key], functions.get());
+				handlers[key.as_string()] = game_logic::Formula::createOptionalFormula(handlers_var[key], functions.get());
 			}
 		}
 	}

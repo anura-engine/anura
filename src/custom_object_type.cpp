@@ -538,7 +538,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 					callable_definition_->getEntry(n)->access_count = 0;
 				}
 
-				game_logic::FormulaPtr f = game_logic::Formula::create_optional_formula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
+				game_logic::FormulaPtr f = game_logic::Formula::createOptionalFormula(value, &get_custom_object_functions_symbol_table(), callable_definition_);
 				bool inferred = true;
 				for(int n = 0; n != callable_definition_->getNumSlots(); ++n) {
 					const game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(n);
@@ -1076,7 +1076,7 @@ void CustomObjectType::initEventHandlers(variant node,
 				if(arg_type) {
 					modify_scope.reset(new CustomObjectCallableModifyScope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
 				}
-				handlers[event_id] = game_logic::Formula::create_optional_formula(value.second, symbols, callable_definition_);
+				handlers[event_id] = game_logic::Formula::createOptionalFormula(value.second, symbols, callable_definition_);
 			}
 		}
 	}
@@ -1298,7 +1298,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	assert(defaultFrame_);
 
-	next_animation_formula_ = game_logic::Formula::create_optional_formula(node["next_animation"], getFunctionSymbols());
+	next_animation_formula_ = game_logic::Formula::createOptionalFormula(node["next_animation"], getFunctionSymbols());
 
 	for(variant particle_node : node["particle_system"].as_list()) {
 		particle_factories_[particle_node["id"].as_string()] = ParticleSystemFactory::create_factory(particle_node);
@@ -1417,7 +1417,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			PropertyEntry& entry = properties_[k];
 			entry.id = k;
 			if(value.is_string()) {
-				entry.getter = game_logic::Formula::create_optional_formula(value, getFunctionSymbols(), callable_definition_);
+				entry.getter = game_logic::Formula::createOptionalFormula(value, getFunctionSymbols(), callable_definition_);
 			} else if(value.is_map()) {
 				if(value.has_key("type")) {
 					entry.type = parse_variant_type(value["type"]);
@@ -1438,10 +1438,10 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 					setter_def = modify_formula_callable_definition(setter_def, CUSTOM_OBJECT_VALUE, entry.set_type);
 				}
 
-				entry.getter = game_logic::Formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);
-				entry.setter = game_logic::Formula::create_optional_formula(value["set"], getFunctionSymbols(), setter_def);
+				entry.getter = game_logic::Formula::createOptionalFormula(value["get"], getFunctionSymbols(), property_def);
+				entry.setter = game_logic::Formula::createOptionalFormula(value["set"], getFunctionSymbols(), setter_def);
 				if(value["init"].is_null() == false) {
-					entry.init = game_logic::Formula::create_optional_formula(value["init"], getFunctionSymbols(), game_logic::ConstFormulaCallableDefinitionPtr(&CustomObjectCallable::instance()));
+					entry.init = game_logic::Formula::createOptionalFormula(value["init"], getFunctionSymbols(), game_logic::ConstFormulaCallableDefinitionPtr(&CustomObjectCallable::instance()));
 					assert(entry.init);
 					if(is_strict_) {
 						assert(entry.type);
@@ -1534,7 +1534,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	variant variations = node["variations"];
 	if(variations.is_null() == false) {
 		for(const variant_pair& v : variations.as_map()) {
-			variations_[v.first.as_string()] = game_logic::Formula::create_optional_formula(v.second, &get_custom_object_functions_symbol_table());
+			variations_[v.first.as_string()] = game_logic::Formula::createOptionalFormula(v.second, &get_custom_object_functions_symbol_table());
 		}
 		
 		node_ = node;

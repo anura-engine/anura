@@ -956,7 +956,7 @@ void iso_renderer::render_fbo()
 		graphics::color color = p.second.color;
 		const bool is_selected = get_editor().get_cursor() && *get_editor().get_cursor() == pos || get_editor().nhighlight_layer() >= 0 && p.second.nlayer == get_editor().nhighlight_layer();
 		if(is_selected) {
-			const int delta = sin(SDL_GetTicks()*0.01)*64;
+			const int delta = sin(profile::get_tick_time()*0.01)*64;
 			graphics::color_transform transform(delta, delta, delta, 0);
 			graphics::color_transform new_color = graphics::color_transform(color) + transform;
 			color = new_color.to_color();
@@ -1707,7 +1707,7 @@ void perspective_renderer::handleDraw() const
 
 		graphics::color color = p.second.color;
 		if(is_selected) {
-			const int delta = sin(SDL_GetTicks()*0.01)*64;
+			const int delta = sin(profile::get_tick_time()*0.01)*64;
 			graphics::color_transform transform(delta, delta, delta, 0);
 			graphics::color_transform new_color = graphics::color_transform(color) + transform;
 			color = new_color.to_color();

@@ -1,22 +1,28 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula_tokenizer.hpp"
 #include "string_utils.hpp"
@@ -24,352 +30,349 @@
 
 namespace formula_tokenizer
 {
+	namespace 
+	{
+		const FFL_TOKEN_TYPE* create_single_char_tokens() {
+			static FFL_TOKEN_TYPE chars[256];
+			std::fill(chars, chars+256, FFL_TOKEN_TYPE::INVALID);
 
-namespace {
+			chars['('] = FFL_TOKEN_TYPE::LPARENS;
+			chars[')'] = FFL_TOKEN_TYPE::RPARENS;
+			chars['['] = FFL_TOKEN_TYPE::LSQUARE;
+			chars[']'] = FFL_TOKEN_TYPE::RSQUARE;
+			chars['{'] = FFL_TOKEN_TYPE::LBRACKET;
+			chars['}'] = FFL_TOKEN_TYPE::RBRACKET;
+			chars[','] = FFL_TOKEN_TYPE::COMMA;
+			chars[';'] = FFL_TOKEN_TYPE::SEMICOLON;
+			chars['.'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['+'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['*'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['/'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['='] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['%'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['^'] = FFL_TOKEN_TYPE::OPERATOR;
+			chars['|'] = FFL_TOKEN_TYPE::PIPE;
+			return chars;
+		}
 
-const FFL_TOKEN_TYPE* create_single_char_tokens() {
-	static FFL_TOKEN_TYPE chars[256];
-	std::fill(chars, chars+256, TOKEN_INVALID);
+		const FFL_TOKEN_TYPE* single_char_tokens = create_single_char_tokens();
+	}
 
-	chars['('] = TOKEN_LPARENS;
-	chars[')'] = TOKEN_RPARENS;
-	chars['['] = TOKEN_LSQUARE;
-	chars[']'] = TOKEN_RSQUARE;
-	chars['{'] = TOKEN_LBRACKET;
-	chars['}'] = TOKEN_RBRACKET;
-	chars[','] = TOKEN_COMMA;
-	chars[';'] = TOKEN_SEMICOLON;
-	chars['.'] = TOKEN_OPERATOR;
-	chars['+'] = TOKEN_OPERATOR;
-	chars['*'] = TOKEN_OPERATOR;
-	chars['/'] = TOKEN_OPERATOR;
-	chars['='] = TOKEN_OPERATOR;
-	chars['%'] = TOKEN_OPERATOR;
-	chars['^'] = TOKEN_OPERATOR;
-	chars['|'] = TOKEN_PIPE;
-	return chars;
-}
+	Token get_token(iterator& i1, iterator i2) {
+		Token t;
+		t.begin = i1;
 
-const FFL_TOKEN_TYPE* single_char_tokens = create_single_char_tokens();
+		if(*i1 == '/' && i1+1 != i2) {
+			if(*(i1+1) == '/') {
+				//special case for matching a // comment.
+				t.type = FFL_TOKEN_TYPE::COMMENT;
+				i1 = std::find(i1, i2, '\n');
+				t.end = i1;
+				return t;
+			} else if(*(i1+1) == '*') {
+				//special case for matching a /* comment.
+				t.type = FFL_TOKEN_TYPE::COMMENT;
 
-}
+				std::string::const_iterator itor = i1;
 
-token get_token(iterator& i1, iterator i2) {
-	token t;
-	t.begin = i1;
+				itor += 2;
 
-	if(*i1 == '/' && i1+1 != i2) {
-		if(*(i1+1) == '/') {
-			//special case for matching a // comment.
-			t.type = TOKEN_COMMENT;
-			i1 = std::find(i1, i2, '\n');
-			t.end = i1;
-			return t;
-		} else if(*(i1+1) == '*') {
-			//special case for matching a /* comment.
-			t.type = TOKEN_COMMENT;
-
-			std::string::const_iterator itor = i1;
-
-			itor += 2;
-
-			int nesting = 1;
-			while(itor != i2) {
-				if(itor+1 != i2) {
-					if(*itor == '/' && *(itor+1) == '*') {
-						++nesting;
-					} else if(*itor == '*' && *(itor+1) == '/') {
-						if(--nesting == 0) {
-							++itor;
-							break;
+				int nesting = 1;
+				while(itor != i2) {
+					if(itor+1 != i2) {
+						if(*itor == '/' && *(itor+1) == '*') {
+							++nesting;
+						} else if(*itor == '*' && *(itor+1) == '/') {
+							if(--nesting == 0) {
+								++itor;
+								break;
+							}
 						}
 					}
+
+					++itor;
 				}
 
-				++itor;
+				if(itor == i2) {
+					throw TokenError("Unterminated comment");
+				}
+
+				i1 = t.end = itor + 1;
+				return t;
 			}
-
-			if(itor == i2) {
-				throw token_error("Unterminated comment");
-			}
-
-			i1 = t.end = itor + 1;
-			return t;
 		}
-	}
 
-	if(*i1 == '.' && i1+1 != i2 && *(i1+1) == '.') {
-		i1 += 2;
-		t.end = i1;
-		t.type = TOKEN_ELLIPSIS;
-		return t;
-	}
-
-	t.type = single_char_tokens[*i1];
-	if(t.type != TOKEN_INVALID) {
-		t.end = ++i1;
-		return t;
-	}
-
-	switch(*i1) {
-	case '"':
-	case '\'':
-	case '~':
-	case '#': {
-		t.type = *i1 == '#' ? TOKEN_COMMENT : TOKEN_STRING_LITERAL;
-		std::string::const_iterator end = std::find(i1+1, i2, *i1);
-		if(end == i2) {
-			throw token_error("Unterminated string or comment");
-		}
-		i1 = t.end = end+1;
-		return t;
-	}
-	case 'q':
-		if(i1 + 1 != i2 && strchr("~#^({[", *(i1+1))) {
-			char end = *(i1+1);
-			if(strchr("({[", end)) {
-				char open = end;
-				char close = ')';
-				if(end == '{') close = '}';
-				if(end == '[') close = ']';
-
-				int nbracket = 1;
-
-				i1 += 2;
-				while(i1 != i2 && nbracket) {
-					if(*i1 == open) {
-						++nbracket;
-					} else if(*i1 == close) {
-						--nbracket;
-					}
-
-					++i1;
-				}
-
-				if(nbracket == 0) {
-					t.type = TOKEN_STRING_LITERAL;
-					t.end = i1;
-					return t;
-				}
-			} else {
-				i1 = std::find(i1+2, i2, end);
-				if(i1 != i2) {
-					t.type = TOKEN_STRING_LITERAL;
-					t.end = ++i1;
-					return t;
-				}
-			}
-
-			throw token_error("Unterminated q string");
-		}
-		break;
-	case '<':
-		if(i1+1 != i2 && *(i1+1) == '-') {
-			t.type = TOKEN_LEFT_POINTER;
+		if(*i1 == '.' && i1+1 != i2 && *(i1+1) == '.') {
 			i1 += 2;
 			t.end = i1;
+			t.type = FFL_TOKEN_TYPE::ELLIPSIS;
 			return t;
 		}
 
-	case '>':
-		if(i1+1 != i2 && *(i1+1) == *i1) {
-			t.type = *i1 == '<' ? TOKEN_LDUBANGLE : TOKEN_RDUBANGLE;
-			i1 += 2;
-			t.end = i1;
-			return t;
-		}
-
-	case '!':
-		t.type = TOKEN_OPERATOR;
-		++i1;
-		if(i1 != i2 && *i1 == '=') {
-			++i1;
-		} else if(*(i1-1) == '!') {
-			throw token_error("Unexpected character in formula: '!'");
-		}
-
-		t.end = i1;
-		return t;
-	case '-':
-		++i1;
-		if(i1 != i2 && *i1 == '>') {
-			t.type = TOKEN_POINTER;
-			++i1;
-		} else {
-			t.type = TOKEN_OPERATOR;
-		}
-
-		t.end = i1;
-		return t;
-	case ':':
-		++i1;
-		if(i1 != i2 && *i1 == ':') {
-			t.type = TOKEN_OPERATOR;
-			++i1;
-		} else {
-			t.type = TOKEN_COLON;
-		}
-
-		t.end = i1;
-		return t;
-	case '0':
-		if(i1 + 1 != i2 && *(i1+1) == 'x') {
-			t.type = TOKEN_INTEGER;
-			i1 += 2;
-			while(i1 != i2 && util::c_isxdigit(*i1)) {
-				++i1;
-			}
-
-			t.end = i1;
-
-			return t;
-		}
-
-		break;
-	case 'd':
-		if(i1 + 1 != i2 && !util::c_isalpha(*(i1+1)) && *(i1+1) != '_') {
-			//die operator as in 1d6.
-			t.type = TOKEN_OPERATOR;
+		t.type = single_char_tokens[*i1];
+		if(t.type != FFL_TOKEN_TYPE::INVALID) {
 			t.end = ++i1;
 			return t;
 		}
-		break;
-	}
 
-	if(util::c_isspace(*i1)) {
-		t.type = TOKEN_WHITESPACE;
-		while(i1 != i2 && util::c_isspace(*i1)) {
+		switch(*i1) {
+		case '"':
+		case '\'':
+		case '~':
+		case '#': {
+			t.type = *i1 == '#' ? FFL_TOKEN_TYPE::COMMENT : FFL_TOKEN_TYPE::STRING_LITERAL;
+			std::string::const_iterator end = std::find(i1+1, i2, *i1);
+			if(end == i2) {
+				throw TokenError("Unterminated string or comment");
+			}
+			i1 = t.end = end+1;
+			return t;
+		}
+		case 'q':
+			if(i1 + 1 != i2 && strchr("~#^({[", *(i1+1))) {
+				char end = *(i1+1);
+				if(strchr("({[", end)) {
+					char open = end;
+					char close = ')';
+					if(end == '{') close = '}';
+					if(end == '[') close = ']';
+
+					int nbracket = 1;
+
+					i1 += 2;
+					while(i1 != i2 && nbracket) {
+						if(*i1 == open) {
+							++nbracket;
+						} else if(*i1 == close) {
+							--nbracket;
+						}
+
+						++i1;
+					}
+
+					if(nbracket == 0) {
+						t.type = FFL_TOKEN_TYPE::STRING_LITERAL;
+						t.end = i1;
+						return t;
+					}
+				} else {
+					i1 = std::find(i1+2, i2, end);
+					if(i1 != i2) {
+						t.type = FFL_TOKEN_TYPE::STRING_LITERAL;
+						t.end = ++i1;
+						return t;
+					}
+				}
+
+				throw TokenError("Unterminated q string");
+			}
+			break;
+		case '<':
+			if(i1+1 != i2 && *(i1+1) == '-') {
+				t.type = FFL_TOKEN_TYPE::LEFT_POINTER;
+				i1 += 2;
+				t.end = i1;
+				return t;
+			}
+
+		case '>':
+			if(i1+1 != i2 && *(i1+1) == *i1) {
+				t.type = *i1 == '<' ? FFL_TOKEN_TYPE::LDUBANGLE : FFL_TOKEN_TYPE::RDUBANGLE;
+				i1 += 2;
+				t.end = i1;
+				return t;
+			}
+
+		case '!':
+			t.type = FFL_TOKEN_TYPE::OPERATOR;
 			++i1;
+			if(i1 != i2 && *i1 == '=') {
+				++i1;
+			} else if(*(i1-1) == '!') {
+				throw TokenError("Unexpected character in formula: '!'");
+			}
+
+			t.end = i1;
+			return t;
+		case '-':
+			++i1;
+			if(i1 != i2 && *i1 == '>') {
+				t.type = FFL_TOKEN_TYPE::POINTER;
+				++i1;
+			} else {
+				t.type = FFL_TOKEN_TYPE::OPERATOR;
+			}
+
+			t.end = i1;
+			return t;
+		case ':':
+			++i1;
+			if(i1 != i2 && *i1 == ':') {
+				t.type = FFL_TOKEN_TYPE::OPERATOR;
+				++i1;
+			} else {
+				t.type = FFL_TOKEN_TYPE::COLON;
+			}
+
+			t.end = i1;
+			return t;
+		case '0':
+			if(i1 + 1 != i2 && *(i1+1) == 'x') {
+				t.type = FFL_TOKEN_TYPE::INTEGER;
+				i1 += 2;
+				while(i1 != i2 && util::c_isxdigit(*i1)) {
+					++i1;
+				}
+
+				t.end = i1;
+
+				return t;
+			}
+
+			break;
+		case 'd':
+			if(i1 + 1 != i2 && !util::c_isalpha(*(i1+1)) && *(i1+1) != '_') {
+				//die operator as in 1d6.
+				t.type = FFL_TOKEN_TYPE::OPERATOR;
+				t.end = ++i1;
+				return t;
+			}
+			break;
 		}
 
-		t.end = i1;
-		return t;
-	}
+		if(util::c_isspace(*i1)) {
+			t.type = FFL_TOKEN_TYPE::WHITESPACE;
+			while(i1 != i2 && util::c_isspace(*i1)) {
+				++i1;
+			}
 
-	if(util::c_isdigit(*i1)) {
-		t.type = TOKEN_INTEGER;
-		while(i1 != i2 && util::c_isdigit(*i1)) {
-			++i1;
+			t.end = i1;
+			return t;
 		}
 
-		if(i1 != i2 && *i1 == '.' && (i1+1 == i2 || *(i1+1) != '.')) {
-			t.type = TOKEN_DECIMAL;
-
-			++i1;
+		if(util::c_isdigit(*i1)) {
+			t.type = FFL_TOKEN_TYPE::INTEGER;
 			while(i1 != i2 && util::c_isdigit(*i1)) {
 				++i1;
 			}
+
+			if(i1 != i2 && *i1 == '.' && (i1+1 == i2 || *(i1+1) != '.')) {
+				t.type = FFL_TOKEN_TYPE::DECIMAL;
+
+				++i1;
+				while(i1 != i2 && util::c_isdigit(*i1)) {
+					++i1;
+				}
+			}
+
+			t.end = i1;
+			return t;
 		}
 
-		t.end = i1;
-		return t;
+		if(util::c_isalpha(*i1) || *i1 == '_') {
+			++i1;
+			while(i1 != i2 && (util::c_isalnum(*i1) || *i1 == '_')) {
+				++i1;
+			}
+
+			t.end = i1;
+
+			static const std::string Keywords[] = { "functions", "def", "null", "true", "false", "base", "recursive" };
+			for(const std::string& str : Keywords) {
+				if(str.size() == (t.end - t.begin) && std::equal(str.begin(), str.end(), t.begin)) {
+					t.type = FFL_TOKEN_TYPE::KEYWORD;
+					return t;
+				}
+			}
+
+			static const std::string Operators[] = { "not", "and", "or", "where", "in", "asserting", "is" };
+			for(const std::string& str : Operators) {
+				if(str.size() == (t.end - t.begin) && std::equal(str.begin(), str.end(), t.begin)) {
+					t.type = FFL_TOKEN_TYPE::OPERATOR;
+					return t;
+				}
+			}
+
+			for(std::string::const_iterator i = t.begin; i != t.end; ++i) {
+				if(util::c_islower(*i)) {
+					t.type = FFL_TOKEN_TYPE::IDENTIFIER;
+					return t;
+				}
+			}
+
+			t.type = FFL_TOKEN_TYPE::CONST_IDENTIFIER;
+			return t;
+		}
+
+		throw TokenError(formatter() << "Unrecognized token: '" << std::string(i1,i2) << "'");
 	}
 
-	if(util::c_isalpha(*i1) || *i1 == '_') {
-		++i1;
-		while(i1 != i2 && (util::c_isalnum(*i1) || *i1 == '_')) {
+	TokenError::TokenError(const std::string& m) : msg(m)
+	{
+	}
+
+	TokenMatcher::TokenMatcher()
+	{
+	}
+
+	TokenMatcher::TokenMatcher(FFL_TOKEN_TYPE type)
+	{
+		add(type);
+	}
+
+	TokenMatcher& TokenMatcher::add(FFL_TOKEN_TYPE type)
+	{
+		types_.push_back(type);
+		return *this;
+	}
+
+	TokenMatcher& TokenMatcher::add(const std::string& str)
+	{
+		str_.push_back(str);
+		return *this;
+	}
+
+	bool TokenMatcher::match(const Token& t) const
+	{
+		if(types_.empty() == false && std::find(types_.begin(), types_.end(), t.type) == types_.end()) {
+			return false;
+		}
+
+		if(str_.empty() == false && std::find(str_.begin(), str_.end(), std::string(t.begin, t.end)) == str_.end()) {
+			return false;
+		}
+
+		return true;
+	}
+
+	bool TokenMatcher::find_match(const Token*& i1, const Token* i2) const
+	{
+		int nbrackets = 0;
+		while(i1 != i2 && (nbrackets > 0 || !match(*i1))) {
+			switch(i1->type) {
+			case FFL_TOKEN_TYPE::LPARENS:
+			case FFL_TOKEN_TYPE::LSQUARE:
+			case FFL_TOKEN_TYPE::LBRACKET:
+				++nbrackets;
+				break;
+
+			case FFL_TOKEN_TYPE::RPARENS:
+			case FFL_TOKEN_TYPE::RSQUARE:
+			case FFL_TOKEN_TYPE::RBRACKET:
+				--nbrackets;
+				if(nbrackets < 0) {
+					break;
+				}
+				break;
+			default:
+				break;
+			}
+
 			++i1;
 		}
 
-		t.end = i1;
-
-		static const std::string Keywords[] = { "functions", "def", "null", "true", "false", "base", "recursive" };
-		foreach(const std::string& str, Keywords) {
-			if(str.size() == (t.end - t.begin) && std::equal(str.begin(), str.end(), t.begin)) {
-				t.type = TOKEN_KEYWORD;
-				return t;
-			}
-		}
-
-		static const std::string Operators[] = { "not", "and", "or", "where", "in", "asserting", "is" };
-		foreach(const std::string& str, Operators) {
-			if(str.size() == (t.end - t.begin) && std::equal(str.begin(), str.end(), t.begin)) {
-				t.type = TOKEN_OPERATOR;
-				return t;
-			}
-		}
-
-		for(std::string::const_iterator i = t.begin; i != t.end; ++i) {
-			if(util::c_islower(*i)) {
-				t.type = TOKEN_IDENTIFIER;
-				return t;
-			}
-		}
-
-		t.type = TOKEN_CONST_IDENTIFIER;
-		return t;
+		return i1 != i2 && nbrackets == 0 && match(*i1);
 	}
-
-	throw token_error(formatter() << "Unrecognized token: '" << std::string(i1,i2) << "'");
-}
-
-token_error::token_error(const std::string& m) : msg(m)
-{
-}
-
-token_matcher::token_matcher()
-{
-}
-
-token_matcher::token_matcher(FFL_TOKEN_TYPE type)
-{
-	add(type);
-}
-
-token_matcher& token_matcher::add(FFL_TOKEN_TYPE type)
-{
-	types_.push_back(type);
-	return *this;
-}
-
-token_matcher& token_matcher::add(const std::string& str)
-{
-	str_.push_back(str);
-	return *this;
-}
-
-bool token_matcher::match(const token& t) const
-{
-	if(types_.empty() == false && std::find(types_.begin(), types_.end(), t.type) == types_.end()) {
-		return false;
-	}
-
-	if(str_.empty() == false && std::find(str_.begin(), str_.end(), std::string(t.begin, t.end)) == str_.end()) {
-		return false;
-	}
-
-	return true;
-}
-
-bool token_matcher::find_match(const token*& i1, const token* i2) const
-{
-	int nbrackets = 0;
-	while(i1 != i2 && (nbrackets > 0 || !match(*i1))) {
-		switch(i1->type) {
-		case TOKEN_LPARENS:
-		case TOKEN_LSQUARE:
-		case TOKEN_LBRACKET:
-			++nbrackets;
-			break;
-
-		case TOKEN_RPARENS:
-		case TOKEN_RSQUARE:
-		case TOKEN_RBRACKET:
-			--nbrackets;
-			if(nbrackets < 0) {
-				break;
-			}
-			break;
-		default:
-			break;
-		}
-
-		++i1;
-	}
-
-	return i1 != i2 && nbrackets == 0 && match(*i1);
-}
-
 }
 
 UNIT_TEST(tokenizer_test)
@@ -378,22 +381,22 @@ UNIT_TEST(tokenizer_test)
 	std::string test = "q(def)+(abc + 0x4 * (5+3))*2 in [4,5]";
 	std::string::const_iterator i1 = test.begin();
 	std::string::const_iterator i2 = test.end();
-	FFL_TOKEN_TYPE types[] = {TOKEN_STRING_LITERAL, TOKEN_OPERATOR,
-	                      TOKEN_LPARENS, TOKEN_IDENTIFIER,
-	                      TOKEN_WHITESPACE, TOKEN_OPERATOR,
-						  TOKEN_WHITESPACE, TOKEN_INTEGER,
-						  TOKEN_WHITESPACE, TOKEN_OPERATOR,
-						  TOKEN_WHITESPACE, TOKEN_LPARENS,
-						  TOKEN_INTEGER, TOKEN_OPERATOR,
-						  TOKEN_INTEGER, TOKEN_RPARENS,
-						  TOKEN_RPARENS, TOKEN_OPERATOR, TOKEN_INTEGER};
+	FFL_TOKEN_TYPE types[] = {FFL_TOKEN_TYPE::STRING_LITERAL, FFL_TOKEN_TYPE::OPERATOR,
+	                      FFL_TOKEN_TYPE::LPARENS, FFL_TOKEN_TYPE::IDENTIFIER,
+	                      FFL_TOKEN_TYPE::WHITESPACE, FFL_TOKEN_TYPE::OPERATOR,
+						  FFL_TOKEN_TYPE::WHITESPACE, FFL_TOKEN_TYPE::INTEGER,
+						  FFL_TOKEN_TYPE::WHITESPACE, FFL_TOKEN_TYPE::OPERATOR,
+						  FFL_TOKEN_TYPE::WHITESPACE, FFL_TOKEN_TYPE::LPARENS,
+						  FFL_TOKEN_TYPE::INTEGER, FFL_TOKEN_TYPE::OPERATOR,
+						  FFL_TOKEN_TYPE::INTEGER, FFL_TOKEN_TYPE::RPARENS,
+						  FFL_TOKEN_TYPE::RPARENS, FFL_TOKEN_TYPE::OPERATOR, FFL_TOKEN_TYPE::INTEGER};
 	std::string tokens[] = {"q(def)", "+", "(", "abc", " ", "+", " ", "0x4", " ",
 	                        "*", " ", "(", "5", "+", "3", ")", ")", "*", "2",
 							"in", "[", "4", ",", "5", "]"};
 	for(int n = 0; n != sizeof(types)/sizeof(*types); ++n) {
-		token t = get_token(i1,i2);
+		Token t = get_token(i1,i2);
 		CHECK_EQ(std::string(t.begin,t.end), tokens[n]);
-		CHECK_EQ(t.type, types[n]);
+		CHECK_EQ(static_cast<int>(t.type), static_cast<int>(types[n]));
 
 	}
 }

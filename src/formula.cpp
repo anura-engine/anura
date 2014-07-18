@@ -228,13 +228,13 @@ namespace game_logic
 		return result.build();
 	}
 	
-	void MapFormulaCallable::getInputs(std::vector<formula_input>* inputs) const
+	void MapFormulaCallable::getInputs(std::vector<FormulaInput>* inputs) const
 	{
 		if(fallback_) {
 			fallback_->getInputs(inputs);
 		}
 		for(std::map<std::string,variant>::const_iterator i = values_.begin(); i != values_.end(); ++i) {
-			inputs->push_back(formula_input(i->first, FORMULA_ACCESS_TYPE::READ_WRITE));
+			inputs->push_back(FormulaInput(i->first, FORMULA_ACCESS_TYPE::READ_WRITE));
 		}
 	}
 	
@@ -599,11 +599,11 @@ namespace game_logic
 			explicit ListCallable(const variant& list) : FormulaCallable(false), list_(list)
 			{}
 	
-			void getInputs(std::vector<formula_input>* inputs) const {
-				inputs->push_back(formula_input("size", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(formula_input("empty", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(formula_input("first", FORMULA_ACCESS_TYPE::READ_WRITE));
-				inputs->push_back(formula_input("last", FORMULA_ACCESS_TYPE::READ_WRITE));
+			void getInputs(std::vector<FormulaInput>* inputs) const {
+				inputs->push_back(FormulaInput("size", FORMULA_ACCESS_TYPE::READ_WRITE));
+				inputs->push_back(FormulaInput("empty", FORMULA_ACCESS_TYPE::READ_WRITE));
+				inputs->push_back(FormulaInput("first", FORMULA_ACCESS_TYPE::READ_WRITE));
+				inputs->push_back(FormulaInput("last", FORMULA_ACCESS_TYPE::READ_WRITE));
 			}
 	
 			variant getValue(const std::string& key) const {
@@ -889,14 +889,14 @@ namespace game_logic
 			ExpressionPtr left_;
 			std::vector<variant_type_ptr> types_;
 		public:
-			InstantiateGenericExpression(variant formula_str, ExpressionPtr left, const formula_tokenizer::token* i1, const formula_tokenizer::token* i2)
+			InstantiateGenericExpression(variant formula_str, ExpressionPtr left, const formula_tokenizer::Token* i1, const formula_tokenizer::Token* i2)
 			  : left_(left)
 			{
 				while(i1 != i2) {
 					variant_type_ptr type = parse_variant_type(formula_str, i1, i2);
 					types_.push_back(type);
-					ASSERT_LOG(i1 == i2 || i1->type == formula_tokenizer::TOKEN_COMMA, "Unexpected token while parsing generic parameters\n" << pinpoint_location(formula_str, i1->begin, i1->end));
-					if(i1->type == formula_tokenizer::TOKEN_COMMA) {
+					ASSERT_LOG(i1 == i2 || i1->type == formula_tokenizer::FFL_TOKEN_TYPE::COMMA, "Unexpected token while parsing generic parameters\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+					if(i1->type == formula_tokenizer::FFL_TOKEN_TYPE::COMMA) {
 						++i1;
 					}
 				}
@@ -1194,7 +1194,7 @@ namespace game_logic
 	
 			ExpressionPtr left_;
 			std::vector<ExpressionPtr> args_;
-			std::vector<boost::intrusive_ptr<formula_interface_instance_factory> > interfaces_;
+			std::vector<boost::intrusive_ptr<FormulaInterfaceInstanceFactory> > interfaces_;
 			std::string error_msg_;
 		};
 
@@ -2045,7 +2045,7 @@ namespace game_logic
 				if(interface) {
 					boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_factory;
 					try {
-						interface_factory.reset(interface->create_factory(expr->queryVariantType()));
+						interface_factory.reset(interface->createFactory(expr->queryVariantType()));
 					} catch(FormulaInterface::interface_mismatch_error& e) {
 						ASSERT_LOG(false, "Could not create interface: " << e.msg << " " << debugPinpointLocation());
 					}
@@ -2088,7 +2088,7 @@ namespace game_logic
 				ASSERT_LOG(variant_types_compatible(type_, expression_->queryVariantType()), "Expression is not declared type. Of type " << expression_->queryVariantType()->to_string() << " when type " << type_->to_string() << " expected " << debugPinpointLocation());
 			}
 
-			boost::intrusive_ptr<formula_interface_instance_factory> interface_;
+			boost::intrusive_ptr<FormulaInterfaceInstanceFactory> interface_;
 		};
 
 		class TypeExpression : public FormulaExpression {
@@ -2289,7 +2289,7 @@ namespace game_logic
 		};
 
 		using namespace formula_tokenizer;
-		int operator_precedence(const token& t)
+		int operator_precedence(const Token& t)
 		{
 			static std::map<std::string,int> precedence_map;
 			if(precedence_map.empty()) {
@@ -2330,30 +2330,30 @@ namespace game_logic
 			return precedence_map[std::string(t.begin,t.end)];
 		}
 
-		ExpressionPtr parse_expression(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+		ExpressionPtr parse_expression(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
 
-		void parse_function_args(variant formula_str, const token* &i1, const token* i2,
+		void parse_function_args(variant formula_str, const Token* &i1, const Token* i2,
 								 std::vector<std::string>* res,
 								 std::vector<std::string>* types,
 								 std::vector<variant_type_ptr>* variant_types,
 								 std::vector<variant>* default_values,
 								 variant_type_ptr* result_type)
 		{
-			if(i1->type == TOKEN_LPARENS) {
+			if(i1->type == FFL_TOKEN_TYPE::LPARENS) {
 				++i1;
 			} else {
 				ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 			}
 	
-			while((i1->type != TOKEN_RPARENS) && (i1 != i2)) {
+			while((i1->type != FFL_TOKEN_TYPE::RPARENS) && (i1 != i2)) {
 				variant_type_ptr variant_type_info;
-				if(i1+1 != i2 && i1->type != TOKEN_COMMA && (i1+1)->type != TOKEN_COMMA && (i1+1)->type != TOKEN_RPARENS && std::string((i1+1)->begin, (i1+1)->end) != "=") {
+				if(i1+1 != i2 && i1->type != FFL_TOKEN_TYPE::COMMA && (i1+1)->type != FFL_TOKEN_TYPE::COMMA && (i1+1)->type != FFL_TOKEN_TYPE::RPARENS && std::string((i1+1)->begin, (i1+1)->end) != "=") {
 					variant_type_info = parse_variant_type(formula_str, i1, i2);
 				}
 
-				ASSERT_LOG(i1->type != TOKEN_RPARENS && i1 != i2, "UNEXPECTED END OF FUNCTION DEF: " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
+				ASSERT_LOG(i1->type != FFL_TOKEN_TYPE::RPARENS && i1 != i2, "UNEXPECTED END OF FUNCTION DEF: " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
 
-				if(i1->type == TOKEN_IDENTIFIER) {
+				if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 					if(i1+1 != i2 && std::string((i1+1)->begin, (i1+1)->end) == "=") {
 						types->push_back("");
 						res->push_back(std::string(i1->begin, i1->end));
@@ -2362,8 +2362,8 @@ namespace game_logic
 						i1 += 2;
 						ASSERT_LOG(i1 != i2, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 
-						const token* begin = i1;
-						if(!token_matcher().add(TOKEN_COMMA).add(TOKEN_RPARENS)
+						const Token* begin = i1;
+						if(!TokenMatcher().add(FFL_TOKEN_TYPE::COMMA).add(FFL_TOKEN_TYPE::RPARENS)
 							.find_match(i1, i2)) {
 							ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 						}
@@ -2386,7 +2386,7 @@ namespace game_logic
 						res->push_back(std::string(i1->begin, i1->end) + std::string("*"));
 						variant_types->push_back(variant_type_info);
 						++i1;
-					} else if(i1+1 != i2 && (i1+1)->type == TOKEN_IDENTIFIER) {
+					} else if(i1+1 != i2 && (i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 						types->push_back(std::string(i1->begin, i1->end));
 						res->push_back(std::string((i1+1)->begin, (i1+1)->end));
 						variant_types->push_back(variant_type_info);
@@ -2396,7 +2396,7 @@ namespace game_logic
 						res->push_back(std::string(i1->begin, i1->end));
 						variant_types->push_back(variant_type_info);
 					}
-				} else if (i1->type == TOKEN_COMMA) {
+				} else if (i1->type == FFL_TOKEN_TYPE::COMMA) {
 					//do nothing
 				} else {
 					ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
@@ -2404,12 +2404,12 @@ namespace game_logic
 				++i1;
 			}
 	
-			if(i1->type != TOKEN_RPARENS) {
+			if(i1->type != FFL_TOKEN_TYPE::RPARENS) {
 				ASSERT_LOG(false, "Invalid function definition\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 			}
 			++i1;
 
-			if(i1 != i2 && i1->type == TOKEN_POINTER) {
+			if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::POINTER) {
 				++i1;
 				ASSERT_LOG(i1 != i2, "Unexpected end of function definition: " << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
 
@@ -2421,24 +2421,24 @@ namespace game_logic
 		}
 
 		void parse_args(const variant& formula_str, const std::string* function_name,
-						const token* i1, const token* i2,
+						const Token* i1, const Token* i2,
 						std::vector<ExpressionPtr>* res,
 						FunctionSymbolTable* symbols,
 						ConstFormulaCallableDefinitionPtr definition,
 						bool* can_optimize)
 		{
-			std::vector<std::pair<const token*, const token*> > args;
+			std::vector<std::pair<const Token*, const Token*> > args;
 
 			ASSERT_LE(i1, i2);
 			int parens = 0;
-			const token* beg = i1;
+			const Token* beg = i1;
 			while(i1 != i2) {
-				if(i1->type == TOKEN_LPARENS || i1->type == TOKEN_LSQUARE || i1->type == TOKEN_LBRACKET ) {
+				if(i1->type == FFL_TOKEN_TYPE::LPARENS || i1->type == FFL_TOKEN_TYPE::LSQUARE || i1->type == FFL_TOKEN_TYPE::LBRACKET ) {
 					++parens;
-				} else if(i1->type == TOKEN_RPARENS || i1->type == TOKEN_RSQUARE || i1->type == TOKEN_RBRACKET) {
+				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RSQUARE || i1->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
-				} else if(i1->type == TOKEN_COMMA && !parens) {
-					args.push_back(std::pair<const token*, const token*>(beg, i1));
+				} else if(i1->type == FFL_TOKEN_TYPE::COMMA && !parens) {
+					args.push_back(std::pair<const Token*, const Token*>(beg, i1));
 					beg = i1+1;
 				}
 		
@@ -2446,7 +2446,7 @@ namespace game_logic
 			}
 	
 			if(beg != i1) {
-				args.push_back(std::pair<const token*, const token*>(beg, i1));
+				args.push_back(std::pair<const Token*, const Token*>(beg, i1));
 			}
 
 			for(int n = 0; n != args.size(); ++n) {
@@ -2530,24 +2530,24 @@ namespace game_logic
 			}
 		}
 
-		void parse_set_args(const variant& formula_str, const token* i1, const token* i2,
+		void parse_set_args(const variant& formula_str, const Token* i1, const Token* i2,
 							std::vector<ExpressionPtr>* res,
 							FunctionSymbolTable* symbols,
 							ConstFormulaCallableDefinitionPtr callable_def)
 		{
 			int parens = 0;
 			bool check_pointer = false;
-			const token* beg = i1;
+			const Token* beg = i1;
 			while(i1 != i2) {
-				if(i1->type == TOKEN_LPARENS || i1->type == TOKEN_LSQUARE || i1->type == TOKEN_LBRACKET) {
+				if(i1->type == FFL_TOKEN_TYPE::LPARENS || i1->type == FFL_TOKEN_TYPE::LSQUARE || i1->type == FFL_TOKEN_TYPE::LBRACKET) {
 					++parens;
-				} else if(i1->type == TOKEN_RPARENS || i1->type == TOKEN_RSQUARE || i1->type == TOKEN_RBRACKET) {
+				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RSQUARE || i1->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
-				} else if((i1->type == TOKEN_POINTER || i1->type == TOKEN_COLON) && !parens ) {
+				} else if((i1->type == FFL_TOKEN_TYPE::POINTER || i1->type == FFL_TOKEN_TYPE::COLON) && !parens ) {
 					if (!check_pointer) {
 						check_pointer = true;
 
-						if(i1 - beg == 1 && beg->type == TOKEN_IDENTIFIER) {
+						if(i1 - beg == 1 && beg->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 							//make it so that {a: 4} is the same as {'a': 4}
 							res->push_back(ExpressionPtr(new VariantExpression(variant(std::string(beg->begin, beg->end)))));
 						} else {
@@ -2557,7 +2557,7 @@ namespace game_logic
 					} else {
 						ASSERT_LOG(false, "Too many ':' operators.\n" << pinpoint_location(formula_str, i1->begin, (i2-1)->end));
 					}
-				} else if( i1->type == TOKEN_COMMA && !parens ) {
+				} else if( i1->type == FFL_TOKEN_TYPE::COMMA && !parens ) {
 					check_pointer = false;
 					res->push_back(parse_expression(formula_str, beg,i1, symbols, callable_def));
 					beg = i1+1;
@@ -2572,20 +2572,20 @@ namespace game_logic
 		}
 
 		void parse_where_clauses(const variant& formula_str,
-								 const token* i1, const token * i2,
+								 const Token* i1, const Token * i2,
 								 expr_table_ptr res, FunctionSymbolTable* symbols,
 								 ConstFormulaCallableDefinitionPtr callable_def) {
 			int parens = 0;
-			const token *original_i1_cached = i1;
-			const token *beg = i1;
+			const Token *original_i1_cached = i1;
+			const Token *beg = i1;
 			std::string var_name;
 			while(i1 != i2) {
-				if(i1->type == TOKEN_LPARENS || i1->type == TOKEN_LBRACKET || i1->type == TOKEN_LSQUARE) {
+				if(i1->type == FFL_TOKEN_TYPE::LPARENS || i1->type == FFL_TOKEN_TYPE::LBRACKET || i1->type == FFL_TOKEN_TYPE::LSQUARE) {
 					++parens;
-				} else if(i1->type == TOKEN_RPARENS || i1->type == TOKEN_RBRACKET || i1->type == TOKEN_RSQUARE) {
+				} else if(i1->type == FFL_TOKEN_TYPE::RPARENS || i1->type == FFL_TOKEN_TYPE::RBRACKET || i1->type == FFL_TOKEN_TYPE::RSQUARE) {
 					--parens;
 				} else if(!parens) {
-					if(i1->type == TOKEN_COMMA) {
+					if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 						if(var_name.empty()) {
 							ASSERT_LOG(false, "There is 'where <expression>,; "
 							<< "'where name=<expression>,' was needed.\n" <<
@@ -2594,10 +2594,10 @@ namespace game_logic
 						(*res)[var_name] = parse_expression(formula_str, beg,i1, symbols, callable_def);
 						beg = i1+1;
 						var_name = "";
-					} else if(i1->type == TOKEN_OPERATOR) {
+					} else if(i1->type == FFL_TOKEN_TYPE::OPERATOR) {
 						std::string op_name(i1->begin, i1->end);
 						if(op_name == "=") {
-							if(beg->type != TOKEN_IDENTIFIER || beg+1 != i1 || !var_name.empty()) {
+							if(beg->type != FFL_TOKEN_TYPE::IDENTIFIER || beg+1 != i1 || !var_name.empty()) {
 								ASSERT_LOG(false, "Unexpected tokens after where\n"
 								  << pinpoint_location(formula_str, i1->begin));
 							}
@@ -2617,7 +2617,7 @@ namespace game_logic
 			}
 		}
 
-		ExpressionPtr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
 
 		namespace 
 		{
@@ -2743,7 +2743,7 @@ namespace game_logic
 			return result;
 		}
 
-		ExpressionPtr parse_expression(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
+		ExpressionPtr parse_expression(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
 		{
 			bool optimize = true;
 			ExpressionPtr result(parse_expression_internal(formula_str, i1, i2, symbols, callable_def, &optimize));
@@ -2760,14 +2760,14 @@ namespace game_logic
 
 		//only returns a value in the case of a lambda function, otherwise
 		//returns NULL.
-		ExpressionPtr parse_function_def(const variant& formula_str, const token*& i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def)
+		ExpressionPtr parse_function_def(const variant& formula_str, const Token*& i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def)
 		{
-			assert(i1->type == TOKEN_KEYWORD && std::string(i1->begin, i1->end) == "def");
+			assert(i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def");
 
 			++i1;
 
 			std::string formula_name;
-			if(i1->type == TOKEN_IDENTIFIER) {
+			if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 				formula_name = std::string(i1->begin, i1->end);
 				++i1;
 
@@ -2778,11 +2778,11 @@ namespace game_logic
 
 			std::vector<std::string> generic_types;
 
-			if(i1->type == TOKEN_LDUBANGLE) {
+			if(i1->type == FFL_TOKEN_TYPE::LDUBANGLE) {
 				++i1;
-				while(i1 != i2 && i1->type != TOKEN_RDUBANGLE) {
-					ASSERT_LOG(i1->type != TOKEN_IDENTIFIER, "Generic type names must be Capitalized\n" << pinpoint_location(formula_str, i1->begin, i1->end));
-					ASSERT_LOG(i1->type == TOKEN_CONST_IDENTIFIER, "Unexpected token when looking for generic type name\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+				while(i1 != i2 && i1->type != FFL_TOKEN_TYPE::RDUBANGLE) {
+					ASSERT_LOG(i1->type != FFL_TOKEN_TYPE::IDENTIFIER, "Generic type names must be Capitalized\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+					ASSERT_LOG(i1->type == FFL_TOKEN_TYPE::CONST_IDENTIFIER, "Unexpected token when looking for generic type name\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 					std::string id(i1->begin, i1->end);
 					ASSERT_LOG(std::count(generic_types.begin(), generic_types.end(), id) == 0, "Repeated type name " << id << "\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 
@@ -2790,13 +2790,13 @@ namespace game_logic
 					generic_scope.register_type(id);
 
 					++i1;
-					if(i1 != i2 && i1->type == TOKEN_COMMA) {
+					if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::COMMA) {
 						++i1;
 					}
 				}
 
 				ASSERT_LOG(i1 != i2 && i1 + 1 != i2, "Unexpected end of input\n" << pinpoint_location(formula_str, (i1-1)->begin, (i1-1)->end));
-				ASSERT_LOG(i1->type == TOKEN_RDUBANGLE, "Unexpected token while looking for > to end generic function\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+				ASSERT_LOG(i1->type == FFL_TOKEN_TYPE::RDUBANGLE, "Unexpected token while looking for > to end generic function\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 
 				++i1;
 			}
@@ -2806,8 +2806,8 @@ namespace game_logic
 			std::vector<variant_type_ptr> variant_types;
 			variant_type_ptr result_type;
 			parse_function_args(formula_str, i1, i2, &args, &types, &variant_types, &default_args, &result_type);
-			const token* const beg = i1;
-			while((i1 != i2) && (i1->type != TOKEN_SEMICOLON)) {
+			const Token* const beg = i1;
+			while((i1 != i2) && (i1->type != FFL_TOKEN_TYPE::SEMICOLON)) {
 				++i1;
 			}
 			const std::string function_str = std::string(beg->begin, (i1-1)->end);
@@ -2908,17 +2908,17 @@ namespace game_logic
 			}
 
 			const std::string precond = "";
-			symbols->addFormulaFunction(formula_name, fml, Formula::create_optional_formula(variant(precond), symbols), args, default_args, variant_types);
+			symbols->addFormulaFunction(formula_name, fml, Formula::createOptionalFormula(variant(precond), symbols), args, default_args, variant_types);
 			return ExpressionPtr();
 		}
 
-		ExpressionPtr parse_expression_internal(const variant& formula_str, const token* i1, const token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
+		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize)
 		{
 			ASSERT_LOG(i1 != i2, "Empty expression in formula\n" << pinpoint_location(formula_str, (i1-1)->end));
 	
-			if(symbols && i1->type == TOKEN_KEYWORD && std::string(i1->begin, i1->end) == "def" &&
-			   ((i1+1)->type == TOKEN_IDENTIFIER || (i1+1)->type == TOKEN_LPARENS ||
-				(i1+1)->type == TOKEN_LDUBANGLE)) {
+			if(symbols && i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def" &&
+			   ((i1+1)->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1+1)->type == FFL_TOKEN_TYPE::LPARENS ||
+				(i1+1)->type == FFL_TOKEN_TYPE::LDUBANGLE)) {
 
 				ExpressionPtr lambda = parse_function_def(formula_str, i1, i2, symbols, callable_def);
 				if(lambda) {
@@ -2934,30 +2934,30 @@ namespace game_logic
 			}
 	
 			int parens = 0;
-			const token* op = NULL;
-			const token* fn_call = NULL;
+			const Token* op = NULL;
+			const Token* fn_call = NULL;
 	
-			for(const token* i = i1; i != i2; ++i) {
-				if(fn_call && i+1 == i2 && i->type != TOKEN_RPARENS) {
+			for(const Token* i = i1; i != i2; ++i) {
+				if(fn_call && i+1 == i2 && i->type != FFL_TOKEN_TYPE::RPARENS) {
 					fn_call = NULL;
 				}
 		
-				if(i->type == TOKEN_LPARENS || i->type == TOKEN_LSQUARE || i->type == TOKEN_LBRACKET) {
-					if(i->type == TOKEN_LPARENS && parens == 0 && i != i1) {
+				if(i->type == FFL_TOKEN_TYPE::LPARENS || i->type == FFL_TOKEN_TYPE::LSQUARE || i->type == FFL_TOKEN_TYPE::LBRACKET) {
+					if(i->type == FFL_TOKEN_TYPE::LPARENS && parens == 0 && i != i1) {
 						fn_call = i;
-					} else if(i->type == TOKEN_LSQUARE && parens == 0 && i != i1 && (i-1)->type != TOKEN_OPERATOR && (op == NULL || operator_precedence(*op) >= operator_precedence(*i))) {
+					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == NULL || operator_precedence(*op) >= operator_precedence(*i))) {
 						//the square bracket itself is an operator
 						op = i;
 					}
 			
 					++parens;
-				} else if(i->type == TOKEN_RPARENS || i->type == TOKEN_RSQUARE || i->type == TOKEN_RBRACKET) {
+				} else if(i->type == FFL_TOKEN_TYPE::RPARENS || i->type == FFL_TOKEN_TYPE::RSQUARE || i->type == FFL_TOKEN_TYPE::RBRACKET) {
 					--parens;
 			
 					if(parens == 0 && i+1 != i2) {
 						fn_call = NULL;
 					}
-				} else if(parens == 0 && (i->type == TOKEN_OPERATOR || i->type == TOKEN_LEFT_POINTER || i->type == TOKEN_LDUBANGLE && (i2-1)->type == TOKEN_RDUBANGLE)) {
+				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE)) {
 					if(op == NULL || operator_precedence(*op) >= operator_precedence(*i)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
@@ -2970,39 +2970,39 @@ namespace game_logic
 				}
 			}
 	
-			if(op != NULL && (op->type == TOKEN_LSQUARE)) {
+			if(op != NULL && (op->type == FFL_TOKEN_TYPE::LSQUARE)) {
 				//the square bracket operator is handled below, just set the op
 				//to NULL and it'll be handled.
 				op = NULL;
 			}
 	
 			if(op == NULL) {
-				if(i1->type == TOKEN_LPARENS && (i2-1)->type == TOKEN_RPARENS) {
+				if(i1->type == FFL_TOKEN_TYPE::LPARENS && (i2-1)->type == FFL_TOKEN_TYPE::RPARENS) {
 					return parse_expression(formula_str, i1+1,i2-1,symbols, callable_def, can_optimize);
-				} else if( (i2-1)->type == TOKEN_RSQUARE) { //check if there is [ ] : either a list definition, or a operator 
-					const token* tok = i2-2;
+				} else if( (i2-1)->type == FFL_TOKEN_TYPE::RSQUARE) { //check if there is [ ] : either a list definition, or a operator 
+					const Token* tok = i2-2;
 					int square_parens = 0;
-					while ( (tok->type != TOKEN_LSQUARE || square_parens) && tok != i1) {
-						if (tok->type == TOKEN_RSQUARE) {
+					while ( (tok->type != FFL_TOKEN_TYPE::LSQUARE || square_parens) && tok != i1) {
+						if (tok->type == FFL_TOKEN_TYPE::RSQUARE) {
 							square_parens++;
-						} else if(tok->type == TOKEN_LSQUARE) {
+						} else if(tok->type == FFL_TOKEN_TYPE::LSQUARE) {
 							square_parens--;
 						}
 						--tok;
 					}	
 
-					if (tok->type == TOKEN_LSQUARE) {
+					if (tok->type == FFL_TOKEN_TYPE::LSQUARE) {
 						if (tok == i1) {
-							const token* pipe = i1+1;
-							if(token_matcher().add(TOKEN_PIPE).find_match(pipe, i2)) {
+							const Token* pipe = i1+1;
+							if(TokenMatcher().add(FFL_TOKEN_TYPE::PIPE).find_match(pipe, i2)) {
 								//a list comprehension
-								const token* const begin_start_expr = i1+1;
+								const Token* const begin_start_expr = i1+1;
 
-								typedef std::pair<const token*,const token*> Arg;
+								typedef std::pair<const Token*,const Token*> Arg;
 								std::vector<Arg> args;
-								const token* arg = pipe+1;
-								const token* end_arg = arg;
-								while(token_matcher().add(TOKEN_COMMA).find_match(end_arg, i2-1)) {
+								const Token* arg = pipe+1;
+								const Token* end_arg = arg;
+								while(TokenMatcher().add(FFL_TOKEN_TYPE::COMMA).find_match(end_arg, i2-1)) {
 									args.push_back(Arg(arg, end_arg));
 									arg = ++end_arg;
 								}
@@ -3019,9 +3019,9 @@ namespace game_logic
 								bool seen_filter = false;
 
 								for(const Arg& arg : args) {
-									const token* arrow = arg.first;
-									if(token_matcher().add(TOKEN_LEFT_POINTER).find_match(arrow, arg.second)) {
-										ASSERT_LOG(arrow - arg.first == 1 && arg.first->type == TOKEN_IDENTIFIER, "expected identifier to the left of <- in list comprehension\n" << pinpoint_location(formula_str, arg.first->begin, arrow->end));
+									const Token* arrow = arg.first;
+									if(TokenMatcher().add(FFL_TOKEN_TYPE::LEFT_POINTER).find_match(arrow, arg.second)) {
+										ASSERT_LOG(arrow - arg.first == 1 && arg.first->type == FFL_TOKEN_TYPE::IDENTIFIER, "expected identifier to the left of <- in list comprehension\n" << pinpoint_location(formula_str, arg.first->begin, arrow->end));
 										ASSERT_LOG(!seen_filter, "found <- after finding a filter in list comprehension\n" << pinpoint_location(formula_str, arg.first->begin, arrow->end));
 
 										const std::string key(arg.first->begin, arg.first->end);
@@ -3085,15 +3085,15 @@ namespace game_logic
 							}
 						} else {
 							//determine if it's an array-style access of a single list element, or a slice.
-							const token* tok2 = i2-2;
+							const Token* tok2 = i2-2;
 							int bracket_parens_count = 0;
-							const token* colon_tok = NULL;
+							const Token* colon_tok = NULL;
 							while (tok2 != tok){
-								if (tok2->type == TOKEN_RSQUARE || tok2->type == TOKEN_RPARENS) {
+								if (tok2->type == FFL_TOKEN_TYPE::RSQUARE || tok2->type == FFL_TOKEN_TYPE::RPARENS) {
 									bracket_parens_count++;
-								} else if (tok2->type == TOKEN_LSQUARE || tok2->type == TOKEN_LPARENS){
+								} else if (tok2->type == FFL_TOKEN_TYPE::LSQUARE || tok2->type == FFL_TOKEN_TYPE::LPARENS){
 									bracket_parens_count--;
-								} else if (tok2->type == TOKEN_COLON){
+								} else if (tok2->type == FFL_TOKEN_TYPE::COLON){
 									if(bracket_parens_count != 0){
 											//TODO - handle error - mismatching brackets
 											LOG_ERROR("mismatching brackets or parentheses inside [ ]: '" << std::string((i1+1)->begin, (i2-1)->end) << "'");
@@ -3128,13 +3128,13 @@ namespace game_logic
 							}
 						}
 					}
-				} else if(i1->type == TOKEN_LBRACKET && (i2-1)->type == TOKEN_RBRACKET) {
+				} else if(i1->type == FFL_TOKEN_TYPE::LBRACKET && (i2-1)->type == FFL_TOKEN_TYPE::RBRACKET) {
 					//create a map TODO: add support for a set
 					std::vector<ExpressionPtr> args;
 					parse_set_args(formula_str,i1+1,i2-1,&args,symbols,callable_def);
 					return ExpressionPtr(new MapExpression(args));
 				} else if(i2 - i1 == 1) {
-					if(i1->type == TOKEN_KEYWORD) {
+					if(i1->type == FFL_TOKEN_TYPE::KEYWORD) {
 						if(std::string(i1->begin,i1->end) == "functions") {
 							return ExpressionPtr(new FunctionListExpression(symbols));
 						} else if(std::string(i1->begin,i1->end) == "null") {
@@ -3144,10 +3144,10 @@ namespace game_logic
 						} else if(std::string(i1->begin,i1->end) == "false") {
 							return ExpressionPtr(new VariantExpression(variant::from_bool(false)));
 						}
-					} else if(i1->type == TOKEN_CONST_IDENTIFIER) {
+					} else if(i1->type == FFL_TOKEN_TYPE::CONST_IDENTIFIER) {
 						return ExpressionPtr(new ConstIdentifierExpression(
 																			  std::string(i1->begin,i1->end)));
-					} else if(i1->type == TOKEN_IDENTIFIER) {
+					} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 						if(can_optimize) {
 						//	*can_optimize = false;
 						}
@@ -3161,25 +3161,25 @@ namespace game_logic
 							expr->set_function(function);
 						}
 						return ExpressionPtr(expr);
-					} else if(i1->type == TOKEN_INTEGER) {
+					} else if(i1->type == FFL_TOKEN_TYPE::INTEGER) {
 						int n = strtol(std::string(i1->begin,i1->end).c_str(), NULL, 0);
 						return ExpressionPtr(new IntegerExpression(n));
-					} else if(i1->type == TOKEN_DECIMAL) {
+					} else if(i1->type == FFL_TOKEN_TYPE::DECIMAL) {
 						std::string decimal_string(i1->begin, i1->end);
 						return ExpressionPtr(new decimal_expression(decimal::from_string(decimal_string)));
-					} else if(i1->type == TOKEN_STRING_LITERAL) {
+					} else if(i1->type == FFL_TOKEN_TYPE::STRING_LITERAL) {
 						bool translate = *(i1->begin) == '~';
 						int add = *(i1->begin) == 'q' ? 2 : 1;
 						return ExpressionPtr(new StringExpression(std::string(i1->begin+add,i1->end-1), translate, symbols));
 					}
-				} else if(i1->type == TOKEN_IDENTIFIER &&
-						  (i1+1)->type == TOKEN_LPARENS &&
-						  (i2-1)->type == TOKEN_RPARENS) {
+				} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER &&
+						  (i1+1)->type == FFL_TOKEN_TYPE::LPARENS &&
+						  (i2-1)->type == FFL_TOKEN_TYPE::RPARENS) {
 					int nleft = 0, nright = 0;
-					for(const token* i = i1; i != i2; ++i) {
-						if(i->type == TOKEN_LPARENS) {
+					for(const Token* i = i1; i != i2; ++i) {
+						if(i->type == FFL_TOKEN_TYPE::LPARENS) {
 							++nleft;
-						} else if(i->type == TOKEN_RPARENS) {
+						} else if(i->type == FFL_TOKEN_TYPE::RPARENS) {
 							++nright;
 						}
 					}
@@ -3196,13 +3196,13 @@ namespace game_logic
 				}
 		
 				if(!fn_call) {
-					if(i1->type == TOKEN_IDENTIFIER && (i1+1)->type == TOKEN_LPARENS) {
-						const token* match = i1+2;
+					if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && (i1+1)->type == FFL_TOKEN_TYPE::LPARENS) {
+						const Token* match = i1+2;
 						int depth = 0;
 						while(match < i2) {
-							if(match->type == TOKEN_LPARENS) {
+							if(match->type == FFL_TOKEN_TYPE::LPARENS) {
 								++depth;
-							} else if(match->type == TOKEN_RPARENS) {
+							} else if(match->type == FFL_TOKEN_TYPE::RPARENS) {
 								if(depth == 0) {
 									break;
 								}
@@ -3241,8 +3241,8 @@ namespace game_logic
 																	parse_expression(formula_str, op+1,i2,symbols, callable_def, can_optimize)));
 			}
 
-			if(op->type == TOKEN_LDUBANGLE) {
-				ASSERT_LOG((i2-1)->type == TOKEN_RDUBANGLE, "Could not find matching closing >>\n" << pinpoint_location(formula_str, op->begin, op->end));
+			if(op->type == FFL_TOKEN_TYPE::LDUBANGLE) {
+				ASSERT_LOG((i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE, "Could not find matching closing >>\n" << pinpoint_location(formula_str, op->begin, op->end));
 				ASSERT_LOG(i1 != op, "Could not find expression to apply << >> to\n" << pinpoint_location(formula_str, op->begin, op->end));
 
 				ExpressionPtr left = parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize);
@@ -3271,7 +3271,7 @@ namespace game_logic
 			}
 
 			if(op_name == "is") {
-				const token* type_tok = op+1;
+				const Token* type_tok = op+1;
 				variant_type_ptr type = parse_variant_type(formula_str, type_tok, i2);
 				ASSERT_LOG(type_tok == i2, "Unexpected tokens after type: " << pinpoint_location(formula_str, type_tok->begin, (i2-1)->end));
 
@@ -3315,8 +3315,8 @@ namespace game_logic
 			} else if(op_name == "asserting") {
 				ExpressionPtr debug_expr;
 
-				const token* pipe = op+1;
-				if(token_matcher().add(TOKEN_PIPE).find_match(pipe, i2)) {
+				const Token* pipe = op+1;
+				if(TokenMatcher().add(FFL_TOKEN_TYPE::PIPE).find_match(pipe, i2)) {
 					debug_expr = parse_expression(formula_str, pipe+1, i2, symbols, callable_def, can_optimize);
 					i2 = pipe;
 				}
@@ -3380,7 +3380,7 @@ Formula::StrictCheckScope::~StrictCheckScope()
 	g_strict_formula_checking_warnings = old_warning_value;
 }
 
-FormulaPtr Formula::create_optional_formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition, FORMULA_LANGUAGE lang)
+FormulaPtr Formula::createOptionalFormula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callableDefinition, FORMULA_LANGUAGE lang)
 {
 	if(val.is_null() || val.is_string() && val.as_string().empty()) {
 		return FormulaPtr();
@@ -3418,15 +3418,15 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 		str_ = variant(str_.string_cast());
 	}
 
-	std::vector<token> tokens;
+	std::vector<Token> tokens;
 	std::string::const_iterator i1 = str_.as_string().begin(), i2 = str_.as_string().end();
 	while(i1 != i2) {
 		try {
 			tokens.push_back(get_token(i1,i2));
-			if((tokens.back().type == TOKEN_WHITESPACE) || (tokens.back().type == TOKEN_COMMENT)) {
+			if((tokens.back().type == FFL_TOKEN_TYPE::WHITESPACE) || (tokens.back().type == FFL_TOKEN_TYPE::COMMENT)) {
 				tokens.pop_back();
 			}
-		} catch(token_error& e) {
+		} catch(TokenError& e) {
 			ASSERT_LOG(false, "Token error: " << e.msg << ": " << pinpoint_location(str_, i1, i1));
 		}
 	}
@@ -3436,20 +3436,20 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 	if(tokens.size() != 0) {
 		ConstFormulaCallableDefinitionPtr global_where_def;
 
-		const token* tok = &tokens[0];
-		const token* end_tokens = &tokens[0] + tokens.size();
+		const Token* tok = &tokens[0];
+		const Token* end_tokens = &tokens[0] + tokens.size();
 
-		if(tokens[0].type == TOKEN_KEYWORD && std::string(tokens[0].begin, tokens[0].end) == "base") {
+		if(tokens[0].type == FFL_TOKEN_TYPE::KEYWORD && std::string(tokens[0].begin, tokens[0].end) == "base") {
 
-			const token* recursive_case = tok;
-			if(!token_matcher(TOKEN_KEYWORD).add("recursive").find_match(recursive_case, end_tokens)) {
+			const Token* recursive_case = tok;
+			if(!TokenMatcher(FFL_TOKEN_TYPE::KEYWORD).add("recursive").find_match(recursive_case, end_tokens)) {
 				ASSERT_LOG(false, "ERROR WHILE PARSING FORMULA: NO RECURSIVE CASE FOUND");
 			}
 
 
-			const token* where_tok = recursive_case;
+			const Token* where_tok = recursive_case;
 
-			if(token_matcher(TOKEN_OPERATOR).add("where").find_match(where_tok, end_tokens)) {
+			if(TokenMatcher(FFL_TOKEN_TYPE::OPERATOR).add("where").find_match(where_tok, end_tokens)) {
 				global_where_.reset(new WhereVariablesInfo(callableDefinition ? callableDefinition->getNumSlots() : 0));
 				expr_table_ptr table(new expr_table());
 				parse_where_clauses(str_, where_tok+1, end_tokens, table, symbols, callableDefinition);
@@ -3464,18 +3464,18 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 				end_tokens = where_tok;
 			}
 
-			while(tok->type == TOKEN_KEYWORD && std::string(tok->begin, tok->end) == "base") {
+			while(tok->type == FFL_TOKEN_TYPE::KEYWORD && std::string(tok->begin, tok->end) == "base") {
 				++tok;
 
-				const token* colon_ptr = tok;
+				const Token* colon_ptr = tok;
 
-				if(!token_matcher(TOKEN_COLON).find_match(colon_ptr, end_tokens)) {
+				if(!TokenMatcher(FFL_TOKEN_TYPE::COLON).find_match(colon_ptr, end_tokens)) {
 					ASSERT_LOG(false, "ERROR WHILE PARSING FORMULA: ':' EXPECTED AFTER BASE");
 				}
 
-				const token* end_ptr = colon_ptr;
+				const Token* end_ptr = colon_ptr;
 
-				if(!token_matcher(TOKEN_KEYWORD).add("base").add("recursive").find_match(end_ptr, end_tokens)) {
+				if(!TokenMatcher(FFL_TOKEN_TYPE::KEYWORD).add("base").add("recursive").find_match(end_ptr, end_tokens)) {
 					ASSERT_LOG(false, "ERROR WHILE PARSING FORMULA: NO RECURSIVE CASE FOUND");
 				}
 
@@ -3489,7 +3489,7 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 			}
 
 			//check that the part before the actual formula is recursive:
-			ASSERT_LOG(tok + 2 < end_tokens && tok->type == TOKEN_KEYWORD && std::string(tok->begin, tok->end) == "recursive" && (tok+1)->type == TOKEN_COLON, "RECURSIVE CASE NOT FOUND");
+			ASSERT_LOG(tok + 2 < end_tokens && tok->type == FFL_TOKEN_TYPE::KEYWORD && std::string(tok->begin, tok->end) == "recursive" && (tok+1)->type == FFL_TOKEN_TYPE::COLON, "RECURSIVE CASE NOT FOUND");
 
 			tok += 2;
 
@@ -3539,7 +3539,7 @@ variant_type_ptr Formula::queryVariantType() const
 	return expr_->queryVariantType();
 }
 
-void Formula::checkBracketsMatch(const std::vector<token>& tokens) const
+void Formula::checkBracketsMatch(const std::vector<Token>& tokens) const
 {
 	std::string error_msg;
 	int error_loc = -1;
@@ -3548,15 +3548,15 @@ void Formula::checkBracketsMatch(const std::vector<token>& tokens) const
 	std::stack<int> brackets_locs;
 	for(int n = 0; n != tokens.size(); ++n) {
 		switch(tokens[n].type) {
-		case TOKEN_LPARENS:
-		case TOKEN_LSQUARE:
-		case TOKEN_LBRACKET:
+		case FFL_TOKEN_TYPE::LPARENS:
+		case FFL_TOKEN_TYPE::LSQUARE:
+		case FFL_TOKEN_TYPE::LBRACKET:
 			brackets.push(tokens[n].type);
 			brackets_locs.push(n);
 			break;
-		case TOKEN_RPARENS:
-		case TOKEN_RSQUARE:
-		case TOKEN_RBRACKET:
+		case FFL_TOKEN_TYPE::RPARENS:
+		case FFL_TOKEN_TYPE::RSQUARE:
+		case FFL_TOKEN_TYPE::RBRACKET:
 			if(brackets.empty()) {
 				error_msg = "UNEXPECTED TOKEN: " + std::string(tokens[n].begin, tokens[n].end);
 				error_loc = n;
@@ -3583,7 +3583,7 @@ void Formula::checkBracketsMatch(const std::vector<token>& tokens) const
 	}
 
 	if(error_loc != -1) {
-		const token& tok = tokens[error_loc];
+		const Token& tok = tokens[error_loc];
 		std::string::const_iterator begin_line = tokens.front().begin;
 		std::string::const_iterator i = begin_line;
 		int nline = 0;

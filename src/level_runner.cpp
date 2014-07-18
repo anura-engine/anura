@@ -1151,7 +1151,7 @@ bool LevelRunner::play_cycle()
 
 
 	SDL_StartTextInput();
-	if(message_dialog::get() == NULL) {
+	if(MessageDialog::get() == NULL) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
@@ -1469,8 +1469,8 @@ bool LevelRunner::play_cycle()
 		}
 	}
 
-	if(message_dialog::get()) {
-		message_dialog::get()->process();
+	if(MessageDialog::get()) {
+		MessageDialog::get()->process();
 		pause_time_ += preferences::frame_time_millis();
 	} else {
 		if (!paused && g_pause_stack == 0) {
@@ -1483,7 +1483,7 @@ bool LevelRunner::play_cycle()
 				handle_pause_game_result(e.result);
 			}
 
-			const int process_time = SDL_GetTicks() - start_process;
+			const int process_time = profile::get_tick_time() - start_process;
 			next_process_ += process_time;
 			current_perf.process = process_time;
 		} else {
@@ -1622,7 +1622,7 @@ bool LevelRunner::play_cycle()
 			draw_fps(*lvl_, perf);
 		}
 
-		const int draw_time = SDL_GetTicks() - start_draw;
+		const int draw_time = profile::get_tick_time() - start_draw;
 		next_draw_ += draw_time;
 		current_perf.draw = draw_time;
 
@@ -1631,7 +1631,7 @@ bool LevelRunner::play_cycle()
 			KRE::WindowManager::getMainWindow()->swap();
 		}
 
-		const int flip_time = SDL_GetTicks() - start_flip;
+		const int flip_time = profile::get_tick_time() - start_flip;
 		next_flip_ += flip_time;
 		current_perf.flip = flip_time;
 		++next_fps_;
@@ -1671,7 +1671,7 @@ bool LevelRunner::play_cycle()
 	formula_profiler::pump();
 
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
-	const int wait_time = std::max<int>(1, desired_end_time - SDL_GetTicks());
+	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
 	if (wait_time != 1 && !is_skipping_game()) {
@@ -1743,7 +1743,7 @@ namespace {
 bool pause_scope_active = false;
 }
 
-pause_scope::pause_scope() : ticks_(SDL_GetTicks()), active_(!pause_scope_active)
+pause_scope::pause_scope() : ticks_(profile::get_tick_time()), active_(!pause_scope_active)
 {
 	pause_scope_active = true;
 }
@@ -1751,7 +1751,7 @@ pause_scope::pause_scope() : ticks_(SDL_GetTicks()), active_(!pause_scope_active
 pause_scope::~pause_scope()
 {
 	if(active_) {
-		const int t = SDL_GetTicks() - ticks_;
+		const int t = profile::get_tick_time() - ticks_;
 		global_pause_time += t;
 		pause_scope_active = false;
 	}

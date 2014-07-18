@@ -59,7 +59,7 @@ namespace sys
 	bool file_exists(const std::string& fname);
 	std::string find_file(const std::string& name);
 
-	int64_t file_mod_time(const std::string& fname);
+	long long file_mod_time(const std::string& fname);
 
 	void move_file(const std::string& from, const std::string& to);
 	void remove_file(const std::string& fname);

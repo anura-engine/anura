@@ -3323,7 +3323,7 @@ namespace
 			}
 
 			const assert_recover_scope recovery_scope;
-			ConstFormulaPtr f(formula::create_optional_formula(s, &get_custom_object_functions_symbol_table()));
+			ConstFormulaPtr f(Formula::createOptionalFormula(s, &get_custom_object_functions_symbol_table()));
 			if(!f) {
 				return variant();
 			}

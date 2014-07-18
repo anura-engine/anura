@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FORMULA_VARIABLE_STORAGE_HPP_INCLUDED
-#define FORMULA_VARIABLE_STORAGE_HPP_INCLUDED
+
+#pragma once
 
 #include <boost/intrusive_ptr.hpp>
 
@@ -24,48 +30,45 @@
 
 namespace game_logic
 {
+	class FormulaVariableStorage : public FormulaCallable
+	{
+	public:
+		FormulaVariableStorage();
+		explicit FormulaVariableStorage(const std::map<std::string, variant>& m);
 
-class formula_variable_storage : public FormulaCallable
-{
-public:
-	formula_variable_storage();
-	explicit formula_variable_storage(const std::map<std::string, variant>& m);
+		void setObjectName(const std::string& name);
 
-	void set_object_name(const std::string& name);
+		bool isEqualTo(const std::map<std::string, variant>& m) const;
 
-	bool equal_to(const std::map<std::string, variant>& m) const;
+		void read(variant node);
+		variant write() const;
+		void add(const std::string& key, const variant& value);
+		void add(const FormulaVariableStorage& value);
 
-	void read(variant node);
-	variant write() const;
-	void add(const std::string& key, const variant& value);
-	void add(const formula_variable_storage& value);
+		std::vector<variant>& values() { return values_; }
+		const std::vector<variant>& values() const { return values_; }
 
-	std::vector<variant>& values() { return values_; }
-	const std::vector<variant>& values() const { return values_; }
+		std::vector<std::string> keys() const;
 
-	std::vector<std::string> keys() const;
+		void disallowNewKeys(bool value=true) { disallow_new_keys_ = value; }
 
-	void disallow_new_keys(bool value=true) { disallow_new_keys_ = value; }
+	private:
+		variant getValue(const std::string& key) const;
+		variant getValueBySlot(int slot) const;
+		void setValue(const std::string& key, const variant& value);
+		void setValueBySlot(int slot, const variant& value);
 
-private:
-	variant getValue(const std::string& key) const;
-	variant getValueBySlot(int slot) const;
-	void setValue(const std::string& key, const variant& value);
-	void setValueBySlot(int slot, const variant& value);
+		void getInputs(std::vector<FormulaInput>* inputs) const;
 
-	void getInputs(std::vector<FormulaInput>* inputs) const;
-
-	std::string debug_object_name_;
+		std::string debug_object_name_;
 	
-	std::vector<variant> values_;
-	std::map<std::string, int> strings_to_values_;
+		std::vector<variant> values_;
+		std::map<std::string, int> strings_to_values_;
 
-	bool disallow_new_keys_;
-};
+		bool disallow_new_keys_;
+	};
 
-typedef boost::intrusive_ptr<formula_variable_storage> formula_variable_storage_ptr;
-typedef boost::intrusive_ptr<const formula_variable_storage> const_formula_variable_storage_ptr;
+	typedef boost::intrusive_ptr<FormulaVariableStorage> FormulaVariableStoragePtr;
+	typedef boost::intrusive_ptr<const FormulaVariableStorage> ConstFormulaVariableStoragePtr;
 
 }
-
-#endif

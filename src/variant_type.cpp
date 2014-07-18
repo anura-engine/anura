@@ -137,7 +137,7 @@ namespace {
 class variant_type_simple : public variant_type
 {
 public:
-	variant_type_simple(const variant& original_str, const formula_tokenizer::token& tok)
+	variant_type_simple(const variant& original_str, const formula_tokenizer::Token& tok)
 	  : type_(variant::string_to_type(std::string(tok.begin, tok.end)))
 	{
 		ASSERT_LOG(type_ != variant::VARIANT_TYPE_INVALID, "INVALID TYPE: " << std::string(tok.begin, tok.end) << " AT:\n" << game_logic::pinpoint_location(original_str, tok.begin, tok.end));
@@ -389,7 +389,7 @@ public:
 			return false;
 		}
 
-		return obj->is_a(type_);
+		return obj->isA(type_);
 	}
 
 	bool is_class(std::string* class_name) const {
@@ -445,7 +445,7 @@ public:
 			return false;
 		}
 
-		return type_ == "" || obj->is_a(type_);
+		return type_ == "" || obj->isA(type_);
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -504,7 +504,7 @@ public:
 			return false;
 		}
 
-		return type_ == "" || obj->is_a(type_);
+		return type_ == "" || obj->isA(type_);
 	}
 
 	bool is_equal(const variant_type& o) const {
@@ -1682,7 +1682,7 @@ bool variant_type::may_be_null(variant_type_ptr type)
 variant_type_ptr get_variant_type_from_value(const variant& value) {
 	using namespace game_logic;
 	if(value.try_convert<formula_object>()) {
-		return variant_type::get_class(value.try_convert<formula_object>()->get_class_name());
+		return variant_type::get_class(value.try_convert<formula_object>()->getClassName());
 	} else if(value.try_convert<custom_object>()) {
 		const custom_object* obj = value.try_convert<custom_object>();
 		return variant_type::get_custom_object(obj->queryValue("type").as_string());
@@ -1856,8 +1856,8 @@ bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from)
 }
 
 bool parse_variant_constant(const variant& original_str,
-                               const formula_tokenizer::token*& i1,
-                               const formula_tokenizer::token* i2,
+                               const formula_tokenizer::Token*& i1,
+                               const formula_tokenizer::Token* i2,
 							   bool allow_failure, variant& result)
 {
 #define ASSERT_COND(cond, msg) if(cond) {} else if(allow_failure) { return false; } else { ASSERT_LOG(cond, msg); }
@@ -1865,7 +1865,7 @@ bool parse_variant_constant(const variant& original_str,
 	using namespace formula_tokenizer;
 
 	const token* begin = i1;
-	const bool res = token_matcher().add(TOKEN_COMMA).add(TOKEN_RBRACKET).add(TOKEN_ELLIPSIS).find_match(i1, i2);
+	const bool res = token_matcher().add(FFL_TOKEN_TYPE::COMMA).add(FFL_TOKEN_TYPE::RBRACKET).add(FFL_TOKEN_TYPE::ELLIPSIS).find_match(i1, i2);
 
 	ASSERT_COND(res, "Unexpected end of input while parsing value: " << game_logic::pinpoint_location(original_str, begin->begin));
 
@@ -1885,8 +1885,8 @@ bool parse_variant_constant(const variant& original_str,
 }
 
 variant_type_ptr parse_variant_type(const variant& original_str,
-                                    const formula_tokenizer::token*& i1,
-                                    const formula_tokenizer::token* i2,
+                                    const formula_tokenizer::Token*& i1,
+                                    const formula_tokenizer::Token* i2,
 									bool allow_failure)
 {
 #define ASSERT_COND(cond, msg) if(cond) {} else if(allow_failure) { return variant_type_ptr(); } else { ASSERT_LOG(cond, msg); }
@@ -1899,19 +1899,19 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 	for(;;) {
 		ASSERT_COND(i1 != i2, "EXPECTED TYPE BUT FOUND EMPTY EXPRESSION:" << original_str.debug_location());
-		if(i1->type == TOKEN_CONST_IDENTIFIER || i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
+		if(i1->type == FFL_TOKEN_TYPE::CONST_IDENTIFIER || i1->type == FFL_TOKEN_TYPE::IDENTIFIER && util::c_isupper(*i1->begin) && g_generic_variant_names.count(std::string(i1->begin, i1->end))) {
 			v.push_back(variant_type::get_generic_type(std::string(i1->begin, i1->end)));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && util::c_isupper(*i1->begin) && get_named_variant_type(std::string(i1->begin, i1->end))) {
 			v.push_back(get_named_variant_type(std::string(i1->begin, i1->end)));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("interface") && i1+1 != i2 && (i1+1)->equals("{")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("interface") && i1+1 != i2 && (i1+1)->equals("{")) {
 			i1 += 2;
 
 			std::map<std::string, variant_type_ptr> types;
 
 			while(i1 != i2 && !i1->equals("}")) {
-				if(i1->type == TOKEN_IDENTIFIER) {
+				if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 					std::string id(i1->begin, i1->end);
 					++i1;
 
@@ -1939,7 +1939,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			v.push_back(variant_type_ptr(new variant_type_interface(
 			    const_formula_interface_ptr(new game_logic::Formula_interface(types)))));
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("enum") && i1+1 != i2 && (i1+1)->equals("{")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("enum") && i1+1 != i2 && (i1+1)->equals("{")) {
 			i1 += 2;
 
 			std::vector<variant_range> ranges;
@@ -1950,7 +1950,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					return variant_type_ptr();
 				}
 
-				if(i1 != i2 && i1->type == formula_tokenizer::TOKEN_ELLIPSIS && i1+1 != i2) {
+				if(i1 != i2 && i1->type == formula_tokenizer::FFL_TOKEN_TYPE::ELLIPSIS && i1+1 != i2) {
 					++i1;
 					bool result = parse_variant_constant(original_str, i1, i2, allow_failure, range.second);
 					if(!result) {
@@ -1978,7 +1978,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 			v.push_back(variant_type_ptr(new variant_type_enum(ranges)));
 
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("function") && i1+1 != i2 && (i1+1)->equals("(")) {
 			i1 += 2;
 
 			int min_args = -1;
@@ -2027,13 +2027,13 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 
 			v.push_back(variant_type::get_function_type(arg_types, return_type, min_args));
-		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("custom_obj") || i1->equals("object_type"))) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && (i1->equals("custom_obj") || i1->equals("object_type"))) {
 			++i1;
 			v.push_back(variant_type_ptr(new variant_type_custom_object("")));
-		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("voxel_obj"))) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && (i1->equals("voxel_obj"))) {
 			++i1;
 			v.push_back(variant_type::get_builtin("voxel_object"));
-		} else if(i1->type == TOKEN_IDENTIFIER && (i1->equals("class") || i1->equals("obj") || i1->equals("vox"))) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && (i1->equals("class") || i1->equals("obj") || i1->equals("vox"))) {
 			const bool is_class = i1->equals("class");
 			const bool is_vox = i1->equals("vox");
 			++i1;
@@ -2057,42 +2057,42 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			}
 
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("any")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("any")) {
 			v.push_back(variant_type_ptr(new variant_type_any));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("commands")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("commands")) {
 			v.push_back(variant_type_ptr(new variant_type_commands));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("cairo_commands")) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("cairo_commands")) {
 			v.push_back(variant_type_ptr(new variant_type_cairo_commands));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && i1->equals("builtin") && i1+1 != i2) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1->equals("builtin") && i1+1 != i2) {
 			++i1;
 
 			v.push_back(variant_type_ptr(new variant_type_builtin(std::string(i1->begin, i1->end), game_logic::ConstFormulaCallableDefinitionPtr())));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER && game_logic::get_formula_callable_definition(std::string(i1->begin, i1->end)).get()) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && game_logic::get_formula_callable_definition(std::string(i1->begin, i1->end)).get()) {
 			v.push_back(variant_type::get_builtin(std::string(i1->begin, i1->end)));
 			++i1;
-		} else if(i1->type == TOKEN_IDENTIFIER || (i1->type == TOKEN_KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
+		} else if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER || (i1->type == FFL_TOKEN_TYPE::KEYWORD && std::equal(i1->begin, i1->end, "null"))) {
 			ASSERT_COND(variant::string_to_type(std::string(i1->begin, i1->end)) != variant::VARIANT_TYPE_INVALID,
 			  "INVALID TOKEN WHEN PARSING TYPE: " << std::string(i1->begin, i1->end) << " AT:\n" << game_logic::pinpoint_location(original_str, i1->begin, i1->end));
 			v.push_back(variant_type_ptr(new variant_type_simple(original_str, *i1)));
 			++i1;
-		} else if(i1->type == TOKEN_LBRACKET) {
+		} else if(i1->type == FFL_TOKEN_TYPE::LBRACKET) {
 			const token* end = i1+1;
-			const bool res = token_matcher().add(TOKEN_RBRACKET).find_match(end, i2);
+			const bool res = token_matcher().add(FFL_TOKEN_TYPE::RBRACKET).find_match(end, i2);
 			ASSERT_COND(res, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
 			++i1;
 			ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 
-			if(i1->type == TOKEN_IDENTIFIER && i1 != end && (i1+1)->equals(":")) {
+			if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1 != end && (i1+1)->equals(":")) {
 				//a specific map type.
 				std::map<variant, variant_type_ptr> types;
 
 				for(;;) {
-					ASSERT_COND(i1->type == TOKEN_IDENTIFIER && i1+1 != end && i1+2 != end && (i1+1)->equals(":"), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
+					ASSERT_COND(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1+1 != end && i1+2 != end && (i1+1)->equals(":"), "ERROR PARSING MAP TYPE: " << original_str.debug_location());
 					variant key(std::string(i1->begin, i1->end));
 					i1 += 2;
 					variant_type_ptr value_type = parse_variant_type(original_str, i1, end, allow_failure);
@@ -2128,7 +2128,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 				const variant_type_ptr key_type = parse_variant_type(original_str, i1, end, allow_failure);
 				ASSERT_COND(key_type, "");
-				ASSERT_COND(i1->type == TOKEN_POINTER, "ERROR PARSING MAP TYPE, NO ARROW FOUND: " << original_str.debug_location());
+				ASSERT_COND(i1->type == FFL_TOKEN_TYPE::POINTER, "ERROR PARSING MAP TYPE, NO ARROW FOUND: " << original_str.debug_location());
 		
 				++i1;
 				ASSERT_COND(i1 != end, "ERROR PARSING MAP TYPE: " << original_str.debug_location());
@@ -2142,9 +2142,9 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 				++i1;
 			}
 
-		} else if(i1->type == TOKEN_LSQUARE) {
+		} else if(i1->type == FFL_TOKEN_TYPE::LSQUARE) {
 			const token* end = i1+1;
-			const bool res = token_matcher().add(TOKEN_RSQUARE).find_match(end, i2);
+			const bool res = token_matcher().add(FFL_TOKEN_TYPE::RSQUARE).find_match(end, i2);
 			ASSERT_COND(res, "ERROR PARSING ARRAY TYPE: " << original_str.debug_location());
 	
 			++i1;
@@ -2154,7 +2154,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			if(!value_type) {
 				return value_type;
 			}
-			if(i1 != end && i1->type == TOKEN_COMMA) {
+			if(i1 != end && i1->type == FFL_TOKEN_TYPE::COMMA) {
 				std::vector<variant_type_ptr> types;
 				types.push_back(value_type);
 				++i1;
@@ -2166,8 +2166,8 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 
 					types.push_back(value_type);
 
-					ASSERT_COND(i1 == end || i1->type == TOKEN_COMMA, "Error parsing array type: " << original_str.debug_location());
-					if(i1->type == TOKEN_COMMA) {
+					ASSERT_COND(i1 == end || i1->type == FFL_TOKEN_TYPE::COMMA, "Error parsing array type: " << original_str.debug_location());
+					if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 						++i1;
 					}
 				}
@@ -2183,7 +2183,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 			ASSERT_COND(false, "UNEXPECTED TOKENS WHEN PARSING TYPE: " << std::string(i1->begin, (i2-1)->end) << " AT " << original_str.debug_location());
 		}
 
-		if(i1 != i2 && i1->type == TOKEN_PIPE) {
+		if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::PIPE) {
 			++i1;
 		} else {
 			break;
@@ -2211,7 +2211,7 @@ variant_type_ptr parse_variant_type(const variant& type)
 	while(i1 != i2) {
 		try {
 			token tok = get_token(i1, i2);
-			if(tok.type != TOKEN_WHITESPACE && tok.type != TOKEN_COMMENT) {
+			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
 		} catch(token_error& e) {
@@ -2227,8 +2227,8 @@ variant_type_ptr parse_variant_type(const variant& type)
 
 variant_type_ptr
 parse_optional_function_type(const variant& original_str,
-                             const formula_tokenizer::token*& i1,
-                             const formula_tokenizer::token* i2)
+                             const formula_tokenizer::Token*& i1,
+                             const formula_tokenizer::Token* i2)
 {
 	using namespace formula_tokenizer;
 
@@ -2237,7 +2237,7 @@ parse_optional_function_type(const variant& original_str,
 	}
 
 	++i1;
-	if(i1 == i2 || i1->type != TOKEN_LPARENS) {
+	if(i1 == i2 || i1->type != FFL_TOKEN_TYPE::LPARENS) {
 		return variant_type_ptr();
 	}
 
@@ -2246,14 +2246,14 @@ parse_optional_function_type(const variant& original_str,
 	std::vector<variant_type_ptr> args;
 
 	++i1;
-	while(i1 != i2 && i1->type != TOKEN_RPARENS) {
-		if(i1->type == TOKEN_IDENTIFIER && i1+1 != i2 &&
-		   ((i1+1)->type == TOKEN_COMMA ||
-		    (i1+1)->type == TOKEN_RPARENS ||
+	while(i1 != i2 && i1->type != FFL_TOKEN_TYPE::RPARENS) {
+		if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER && i1+1 != i2 &&
+		   ((i1+1)->type == FFL_TOKEN_TYPE::COMMA ||
+		    (i1+1)->type == FFL_TOKEN_TYPE::RPARENS ||
 			(i1+1)->equals("="))) {
 			args.push_back(variant_type::get_any());
 			++i1;
-			if(i1->type == TOKEN_COMMA) {
+			if(i1->type == FFL_TOKEN_TYPE::COMMA) {
 				++i1;
 			} else if(i1->equals("=")) {
 				++optional_args;
@@ -2261,7 +2261,7 @@ parse_optional_function_type(const variant& original_str,
 					++i1;
 				}
 
-				if(i1 != i2 && i1->type == TOKEN_COMMA) {
+				if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::COMMA) {
 					++i1;
 				}
 			}
@@ -2271,7 +2271,7 @@ parse_optional_function_type(const variant& original_str,
 		variant_type_ptr arg_type = parse_variant_type(original_str, i1, i2);
 		args.push_back(arg_type);
 		ASSERT_LOG(i1 != i2, "UNEXPECTED END OF EXPRESSION: " << original_str.debug_location());
-		if(i1->type == TOKEN_IDENTIFIER) {
+		if(i1->type == FFL_TOKEN_TYPE::IDENTIFIER) {
 			++i1;
 
 			if(i1 != i2 && i1->equals("=")) {
@@ -2283,21 +2283,21 @@ parse_optional_function_type(const variant& original_str,
 			}
 		}
 
-		if(i1 != i2 && i1->type == TOKEN_RPARENS) {
+		if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::RPARENS) {
 			break;
 		}
 
-		ASSERT_LOG(i1 != i2 && i1->type == TOKEN_COMMA, "ERROR PARSING FUNCTION SIGNATURE: " << original_str.debug_location());
+		ASSERT_LOG(i1 != i2 && i1->type == FFL_TOKEN_TYPE::COMMA, "ERROR PARSING FUNCTION SIGNATURE: " << original_str.debug_location());
 
 		++i1;
 	}
 
-	ASSERT_LOG(i1 != i2 && i1->type == TOKEN_RPARENS, "UNEXPECTED END OF FUNCTION SIGNATURE: " << original_str.debug_location());
+	ASSERT_LOG(i1 != i2 && i1->type == FFL_TOKEN_TYPE::RPARENS, "UNEXPECTED END OF FUNCTION SIGNATURE: " << original_str.debug_location());
 
 	variant_type_ptr return_type;
 
 	++i1;
-	if(i1 != i2 && i1->type == TOKEN_POINTER) {
+	if(i1 != i2 && i1->type == FFL_TOKEN_TYPE::POINTER) {
 		++i1;
 		return_type = parse_variant_type(original_str, i1, i2);
 	}
@@ -2315,7 +2315,7 @@ variant_type_ptr parse_optional_function_type(const variant& type)
 	while(i1 != i2) {
 		try {
 			token tok = get_token(i1, i2);
-			if(tok.type != TOKEN_WHITESPACE && tok.type != TOKEN_COMMENT) {
+			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
 		} catch(token_error& e) {
@@ -2331,8 +2331,8 @@ variant_type_ptr parse_optional_function_type(const variant& type)
 
 variant_type_ptr
 parse_optional_formula_type(const variant& original_str,
-                            const formula_tokenizer::token*& i1,
-                            const formula_tokenizer::token* i2)
+                            const formula_tokenizer::Token*& i1,
+                            const formula_tokenizer::Token* i2)
 {
 	variant_type_ptr result = parse_variant_type(original_str, i1, i2, true);
 	if(i1 != i2 && (i1->equals("<-") || i1->equals("::"))) {
@@ -2352,7 +2352,7 @@ variant_type_ptr parse_optional_formula_type(const variant& type)
 	while(i1 != i2) {
 		try {
 			token tok = get_token(i1, i2);
-			if(tok.type != TOKEN_WHITESPACE && tok.type != TOKEN_COMMENT) {
+			if(tok.type != FFL_TOKEN_TYPE::WHITESPACE && tok.type != FFL_TOKEN_TYPE::COMMENT) {
 				tokens.push_back(tok);
 			}
 		} catch(token_error& e) {

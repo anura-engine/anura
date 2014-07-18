@@ -68,7 +68,7 @@ public:
 
 	void validate_properties();
 
-	bool is_a(const std::string& type) const;
+	bool isA(const std::string& type) const;
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.

@@ -153,7 +153,7 @@ struct TilePattern
 	    tile(new LevelObject(node, id.c_str())), 
 		reverse(node["reverse"].as_bool(true)),
 	    empty(node["empty"].as_bool(false)),
-		filter_formula(game_logic::Formula::create_optional_formula(node["filter"]))
+		filter_formula(game_logic::Formula::createOptionalFormula(node["filter"]))
 	{
 		variations.push_back(tile);
 
@@ -1025,7 +1025,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			}
 		}
 	}
-	//std::cerr << "done build tiles: " << ntiles << " " << (SDL_GetTicks() - begin_time) << "\n";
+	//std::cerr << "done build tiles: " << ntiles << " " << (profile::get_tick_time() - begin_time) << "\n";
 }
 
 const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& cache, bool* face_right) const

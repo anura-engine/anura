@@ -63,7 +63,7 @@ web_server::~web_server()
 	web_server_instance = NULL;
 }
 
-void web_server::handle_post(socket_ptr socket, variant doc, const http::environment& env)
+void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
 {
 	int session_id = -1;
 	std::map<std::string, std::string>::const_iterator i = env.find("cookie");
@@ -142,7 +142,7 @@ void web_server::heartbeat(const boost::system::error_code& error)
 	timer_.async_wait(std::bind(&web_server::heartbeat, this, boost::asio::placeholders::error));
 }
 
-void web_server::handle_get(socket_ptr socket, 
+void web_server::handleGet(socket_ptr socket, 
 	const std::string& url, 
 	const std::map<std::string, std::string>& args)
 {
@@ -182,7 +182,7 @@ void on_code_modified()
 {
 	fprintf(stderr, "code modified\n");
 	tbs::game::reload_game_types();
-	game_logic::Formula_object::reload_classes();
+	game_logic::Formula_object::reloadClasses();
 	throw code_modified_exception();
 }
 }

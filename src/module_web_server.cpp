@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
 #include <deque>
@@ -26,7 +33,6 @@
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "md5.hpp"
@@ -39,16 +45,19 @@
 
 using boost::asio::ip::tcp;
 
-module_web_server::module_web_server(const std::string& data_path, boost::asio::io_service& io_service, int port)
-	: http::web_server(io_service, port), timer_(io_service), 
-	nheartbeat_(0), data_path_(data_path), next_lock_id_(1)
+ModuleWebServer::ModuleWebServer(const std::string& data_path, boost::asio::io_service& io_service, int port)
+	: http::web_server(io_service, port), 
+	timer_(io_service), 
+	nheartbeat_(0), 
+	data_path_(data_path), 
+	next_lock_id_(1)
 {
 	if(data_path_.empty() || data_path_[data_path_.size()-1] != '/') {
 		data_path_ += "/";
 	}
 
-	if(sys::file_exists(data_file_path())) {
-		data_ = json::parse_from_file(data_file_path());
+	if(sys::file_exists(getDataFilePath())) {
+		data_ = json::parse_from_file(getDataFilePath());
 	} else {
 		std::map<variant, variant> m;
 		data_ = variant(&m);
@@ -57,13 +66,13 @@ module_web_server::module_web_server(const std::string& data_path, boost::asio::
 	heartbeat();
 }
 
-void module_web_server::heartbeat()
+void ModuleWebServer::heartbeat()
 {
 	timer_.expires_from_now(boost::posix_time::seconds(1));
-	timer_.async_wait(std::bind(&module_web_server::heartbeat, this));
+	timer_.async_wait(std::bind(&ModuleWebServer::heartbeat, this));
 }
 
-void module_web_server::handle_post(socket_ptr socket, variant doc, const http::environment& env)
+void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::environment& env)
 {
 	std::map<variant,variant> response;
 	try {
@@ -229,7 +238,7 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 				}
 
 				data_.add_attr_mutation(variant(module_id), variant(&summary));
-				write_data();
+				writeData();
 			}
 
 		} else if(msg_type == "replicate_module") {
@@ -294,13 +303,13 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 				}
 
 				data_.add_attr_mutation(variant(dst_id), variant(&summary));
-				write_data();
+				writeData();
 			}
 
 
 		} else if(msg_type == "query_globs") {
 			response[variant("status")] = variant("ok");
-			foreach(const std::string& k, doc["keys"].as_list_string()) {
+			for(const std::string& k : doc["keys"].as_list_string()) {
 				const std::string data = sys::read_file(data_path_ + "/.glob/" + k);
 				response[variant(k)] = variant(base64::b64encode(data));
 			}
@@ -332,11 +341,11 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 	send_msg(socket, "text/json", variant(&response).write_json(), "");
 }
 
-void module_web_server::handle_get(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
+void ModuleWebServer::handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args)
 {
 	std::map<variant,variant> response;
 	try {
-		std::cerr << "URL: (" << url << ")\n";
+		LOG_INFO("URL: (" << url << ")");
 		response[variant("status")] = variant("error");
 		 if(url == "/get_summary") {
 			response[variant("status")] = variant("ok");
@@ -367,16 +376,16 @@ void module_web_server::handle_get(socket_ptr socket, const std::string& url, co
 	send_msg(socket, "text/json", variant(&response).write_json(), "");
 }
 
-std::string module_web_server::data_file_path() const
+std::string ModuleWebServer::getDataFilePath() const
 {
 	return data_path_ + "/module-data.json";
 }
 
-void module_web_server::write_data()
+void ModuleWebServer::writeData()
 {
-	const std::string tmp_path = data_file_path() + ".tmp";
+	const std::string tmp_path = getDataFilePath() + ".tmp";
 	sys::write_file(tmp_path, data_.write_json());
-	const int rename_result = rename(tmp_path.c_str(), data_file_path().c_str());
+	const int rename_result = rename(tmp_path.c_str(), getDataFilePath().c_str());
 		ASSERT_LOG(rename_result == 0, "FAILED TO RENAME FILE: " << errno);
 }
 
@@ -404,6 +413,6 @@ COMMAND_LINE_UTILITY(module_server)
 
 	const assert_recover_scope recovery;
 	boost::asio::io_service io_service;
-	module_web_server server(path, io_service, port);
+	ModuleWebServer server(path, io_service, port);
 	io_service.run();
 }

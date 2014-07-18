@@ -41,7 +41,7 @@ EditorVariableInfo::EditorVariableInfo(const variant& node)
     type_(VARIABLE_TYPE::INTEGER), 
 	info_(node["info"].as_string_default()),
     help_(node["help"].as_string_default()),
-    formula_(game_logic::Formula::create_optional_formula(node["value"])),
+    formula_(game_logic::Formula::createOptionalFormula(node["value"])),
 	numeric_decimal_(false),
 	numeric_min_(node["min_value"].as_decimal(DefaultMinValue)),
 	numeric_max_(node["max_value"].as_decimal(DefaultMaxValue))

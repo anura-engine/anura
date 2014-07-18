@@ -70,7 +70,7 @@ void merge_variant_over(variant* aptr, variant b);
 //If dst and src contain 'incompatible' types this function will assert.
 void smart_merge_variants(variant* dst, const variant& src);
 
-void visit_variants(variant v, std::function<void (variant)> fn);
+void visitVariants(variant v, std::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);
 

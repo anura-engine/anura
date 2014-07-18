@@ -428,7 +428,7 @@ void CodeEditorDialog::process()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	if(invalidated_ && SDL_GetTicks() > static_cast<unsigned>(invalidated_ + 200)) {
+	if(invalidated_ && profile::get_tick_time() > static_cast<unsigned>(invalidated_ + 200)) {
 		try {
 			CustomObject::reset_current_debug_error();
 
@@ -505,7 +505,7 @@ void CodeEditorDialog::process()
 				json::parse(editor_->text());
 				json::setFileContents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
-				game_logic::Formula_object::try_load_class(class_name);
+				game_logic::Formula_object::tryLoadClass(class_name);
 			} else { 
 				std::cerr << "SET FILE: " << fname_ << "\n";
 				CustomObjectType::setFileContents(fname_, editor_->text());
@@ -607,13 +607,13 @@ void CodeEditorDialog::process()
 			}
 
 			suggestions_prefix_ = str.size();
-		} else if(selected_token->type == json::Token::TYPE_STRING) {
+		} else if(selected_token->type == json::Token::TYPE::STRING) {
 			try {
 				const std::string formula_str(selected_token->begin, selected_token->end);
-				std::vector<formula_tokenizer::token> tokens;
+				std::vector<formula_tokenizer::Token> tokens;
 				std::string::const_iterator i1 = formula_str.begin();
-				formula_tokenizer::token t = formula_tokenizer::get_token(i1, formula_str.end());
-				while(t.type != formula_tokenizer::TOKEN_INVALID) {
+				formula_tokenizer::Token t = formula_tokenizer::get_token(i1, formula_str.end());
+				while(t.type != formula_tokenizer::FFL_TOKEN_TYPE::INVALID) {
 					tokens.push_back(t);
 					if(i1 == formula_str.end()) {
 						break;
@@ -622,17 +622,17 @@ void CodeEditorDialog::process()
 					t = formula_tokenizer::get_token(i1, formula_str.end());
 				}
 
-				const formula_tokenizer::token* selected = NULL;
+				const formula_tokenizer::Token* selected = NULL;
 				const std::string::const_iterator itor = formula_str.begin() + token_pos;
 
-				for(const formula_tokenizer::token& tok : tokens) {
+				for(const formula_tokenizer::Token& tok : tokens) {
 					if(tok.end == itor) {
 						selected = &tok;
 						break;
 					}
 				}
 
-				if(selected && selected->type == formula_tokenizer::TOKEN_IDENTIFIER) {
+				if(selected && selected->type == formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER) {
 					const std::string identifier(selected->begin, selected->end);
 
 					static const boost::intrusive_ptr<CustomObjectCallable> obj_definition(new CustomObjectCallable);
@@ -669,7 +669,7 @@ void CodeEditorDialog::process()
 
 					suggestions_prefix_ = identifier.size();
 				}
-			} catch(formula_tokenizer::token_error&) {
+			} catch(formula_tokenizer::TokenError&) {
 			}
 		}
 
@@ -885,7 +885,7 @@ void CodeEditorDialog::onMoveCursor()
 			variant v = json::parse_from_file(fname_);
 			variant formula_str;
 			assert(v.is_map());
-			visit_variants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
+			visitVariants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
 
 			if(formula_str.is_string()) {
 

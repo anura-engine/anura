@@ -234,7 +234,6 @@
     <ClInclude Include="..\..\src\frame.hpp" />
     <ClInclude Include="..\..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\..\src\ft_iface.hpp" />
-    <ClInclude Include="..\..\src\functional.hpp" />
     <ClInclude Include="..\..\src\game_registry.hpp" />
     <ClInclude Include="..\..\src\globals.h" />
     <ClInclude Include="..\..\src\graphical_font.hpp" />
@@ -449,7 +448,6 @@
     <ClInclude Include="..\..\src\formula_callable_visitor.hpp" />
     <ClInclude Include="..\..\src\formula_interface.hpp" />
     <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
-    <ClInclude Include="..\..\src\frustum.hpp" />
     <ClInclude Include="..\..\src\haptic.hpp" />
     <ClInclude Include="..\..\src\input.hpp" />
     <ClInclude Include="..\..\src\isochunk.hpp" />
@@ -772,7 +770,6 @@
     <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
     <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
-    <ClCompile Include="..\..\src\frustum.cpp" />
     <ClCompile Include="..\..\src\input.cpp" />
     <ClCompile Include="..\..\src\isochunk.cpp" />
     <ClCompile Include="..\..\src\isoworld.cpp" />

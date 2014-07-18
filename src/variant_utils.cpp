@@ -189,17 +189,17 @@ void smart_merge_variants(variant* dst_ptr, const variant& src)
 	}
 }
 
-void visit_variants(variant v, std::function<void (variant)> fn)
+void visitVariants(variant v, std::function<void (variant)> fn)
 {
 	fn(v);
 
 	if(v.is_list()) {
 		foreach(const variant& item, v.as_list()) {
-			visit_variants(item, fn);
+			visitVariants(item, fn);
 		}
 	} else if(v.is_map()) {
 		foreach(const variant_pair& item, v.as_map()) {
-			visit_variants(item.second, fn);
+			visitVariants(item.second, fn);
 		}
 	}
 }

@@ -168,7 +168,7 @@ namespace hex
 					ASSERT_LOG(handlers_var.is_map() == true, "\"handlers\" must be specified by a map.");
 					handlers.clear();
 					for(const variant_pair& p : handlers_var.as_map()) {
-						handlers[p.first.as_string()] = game_logic::Formula::create_optional_formula(p.second, functions.get());
+						handlers[p.first.as_string()] = game_logic::Formula::createOptionalFormula(p.second, functions.get());
 					}
 				}
 			}

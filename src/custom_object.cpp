@@ -188,16 +188,16 @@ CustomObject::CustomObject(variant node)
 	paused_(false)
 {
 
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
 	if(!created_) {
 		properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 		properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 	}
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
@@ -482,11 +482,11 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
 		if(i->second.storage_slot < 0) {
@@ -616,11 +616,11 @@ CustomObject::CustomObject(const CustomObject& o)
 	//widgets_(o.widgets_),
 	paused_(o.paused_)
 {
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
@@ -676,7 +676,7 @@ void CustomObject::initProperties()
 	}
 }
 
-bool CustomObject::is_a(const std::string& type) const
+bool CustomObject::isA(const std::string& type) const
 {
 	return CustomObjectType::isDerivedFrom(type, type_->id());
 }
@@ -952,7 +952,7 @@ variant CustomObject::write() const
 		res.add("on_" + get_object_event_str(n), event_handlers_[n]->str());
 	}
 
-	if(!vars_->equal_to(type_->variables())) {
+	if(!vars_->isEqualTo(type_->variables())) {
 		res.add("vars", vars_->write());
 	}
 
@@ -2478,7 +2478,7 @@ void CustomObject::run_garbage_collection()
 		}
 	}
 
-	std::cerr << "RAN GARBAGE COLLECTION IN " << (SDL_GetTicks() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
+	std::cerr << "RAN GARBAGE COLLECTION IN " << (profile::get_tick_time() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
 }
 
 void CustomObject::beingRemoved()
@@ -3501,14 +3501,14 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 			has_feet_ = type_->hasFeet();
 			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(getDebugDescription());
-			tmp_vars_->set_object_name(getDebugDescription());
+			vars_->setObjectName(getDebugDescription());
+			tmp_vars_->setObjectName(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
 
-			vars_->disallow_new_keys(type_->isStrict());
-			tmp_vars_->disallow_new_keys(type_->isStrict());
+			vars_->disallowNewKeys(type_->isStrict());
+			tmp_vars_->disallowNewKeys(type_->isStrict());
 
 			//set the animation to the default animation for the new type.
 			setFrame(type_->defaultFrame().id());
@@ -3568,14 +3568,14 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			has_feet_ = type_->hasFeet();
 			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
 			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(getDebugDescription());
-			tmp_vars_->set_object_name(getDebugDescription());
+			vars_->setObjectName(getDebugDescription());
+			tmp_vars_->setObjectName(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
 
-			vars_->disallow_new_keys(type_->isStrict());
-			tmp_vars_->disallow_new_keys(type_->isStrict());
+			vars_->disallowNewKeys(type_->isStrict());
+			tmp_vars_->disallowNewKeys(type_->isStrict());
 
 			std::vector<variant> props = property_data_;
 			property_data_.clear();
@@ -5503,7 +5503,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	game_logic::Formula_variable_storage_ptr old_vars = vars_;
 
 	vars_.reset(new game_logic::Formula_variable_storage(type_->variables()));
-	vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
@@ -5517,7 +5517,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 	old_vars = tmp_vars_;
 
 	tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables()));
-	tmp_vars_->set_object_name(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
@@ -5528,8 +5528,8 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		}
 	}
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	if(type_->hasFrame(frame_name_)) {
 		frame_.reset(&type_->getFrame(frame_name_));

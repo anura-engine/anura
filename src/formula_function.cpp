@@ -646,7 +646,7 @@ END_FUNCTION_DEF(update_object)
 FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
 	Formula::failIfStaticContext();
 	variant s = args()[0]->evaluate(variables);
-	ConstFormulaPtr f(Formula::create_optional_formula(s));
+	ConstFormulaPtr f(Formula::createOptionalFormula(s));
 	if(!f) {
 		return variant();
 	}
@@ -702,7 +702,7 @@ FUNCTION_DEF(eval_no_recover, 1, 2, "eval_no_recover(str, [arg]): evaluate the g
 	static std::map<std::string, ConstFormulaPtr> cache;
 	ConstFormulaPtr& f = cache[s.as_string()];
 	if(!f) {
-		f = ConstFormulaPtr(Formula::create_optional_formula(s));
+		f = ConstFormulaPtr(Formula::createOptionalFormula(s));
 	}
 
 	ASSERT_LOG(f.get() != NULL, "ILLEGAL FORMULA GIVEN TO eval: " << s.as_string());
@@ -732,7 +732,7 @@ FUNCTION_DEF(eval, 1, 2, "eval(str, [arg]): evaluate the given string as FFL")
 
 		ConstFormulaPtr& f = cache[s.as_string()];
 		if(!f) {
-			f = ConstFormulaPtr(Formula::create_optional_formula(s));
+			f = ConstFormulaPtr(Formula::createOptionalFormula(s));
 		}
 
 		if(!f) {
@@ -2776,7 +2776,7 @@ FUNCTION_DEF(dialog, 2, 2, "dialog(obj, template): Creates a dialog given an obj
 	return variant(new gui::Dialog(v, e));
 END_FUNCTION_DEF(dialog)
 
-FUNCTION_DEF(show_modal, 1, 1, "show_modal(dialog): Displays a modal dialog on the screen.")
+FUNCTION_DEF(show_modal, 1, 1, "showModal(dialog): Displays a modal dialog on the screen.")
 	variant graph = args()[0]->evaluate(variables);
 	gui::DialogPtr dialog = boost::intrusive_ptr<gui::Dialog>(graph.try_convert<gui::Dialog>());
 	ASSERT_LOG(dialog, "Dialog given is not of the correct type.");
@@ -4648,7 +4648,7 @@ END_FUNCTION_DEF(inspect_object)
 FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
 	boost::intrusive_ptr<formula_object> obj(args()[0]->evaluate(variables).convert_to<formula_object>());
 
-	obj = formula_object::deep_clone(variant(obj.get())).convert_to<formula_object>();
+	obj = formula_object::deepClone(variant(obj.get())).convert_to<formula_object>();
 
 	variant commands_fn = args()[1]->evaluate(variables);
 

@@ -228,7 +228,7 @@ namespace http
 			}
 
 			if(!doc.is_null()) {
-				handle_post(socket, doc, env);
+				handlePost(socket, doc, env);
 				return;
 			}
 		} else if(std::equal(msg.begin(), msg.begin()+4, "GET ")) {
@@ -259,7 +259,7 @@ namespace http
 				}
 			}
 
-			handle_get(socket, url_base, args);
+			handleGet(socket, url_base, args);
 
 			return;
 		}

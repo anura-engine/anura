@@ -18,7 +18,6 @@
 #include <algorithm>
 #include <string>
 #include <iomanip>
-#include "graphics.hpp"
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
@@ -957,7 +956,7 @@ namespace preferences {
 	
 	game_logic::FormulaCallable* registry()
 	{
-		return &game_registry::instance();
+		return &GameRegistry::getInstance();
 	}
 	
 	void load_preferences()
@@ -1022,7 +1021,7 @@ namespace preferences {
 		
 		const variant registry_node = node["registry"];
 		if(registry_node.is_null() == false) {
-			game_registry::instance().set_contents(registry_node);
+			GameRegistry::getInstance().setContents(registry_node);
 		}
 		
 		if(node["code_editor"].is_map()) {
@@ -1115,7 +1114,7 @@ namespace preferences {
 			node.add("code_editor", external_code_editor_);
 		}
 		
-		node.add("registry", game_registry::instance().write_contents());
+		node.add("registry", GameRegistry::getInstance().writeContents());
 
 		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			if(i->second.persistent) {

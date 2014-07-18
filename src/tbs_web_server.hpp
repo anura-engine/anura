@@ -42,8 +42,8 @@ public:
 private:
 	web_server(const web_server&);
 
-	virtual void handle_post(socket_ptr socket, variant doc, const http::environment& env);
-	virtual void handle_get(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args);
+	virtual void handlePost(socket_ptr socket, variant doc, const http::environment& env);
+	virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args);
 
 	void heartbeat(const boost::system::error_code& error);
 

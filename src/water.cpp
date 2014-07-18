@@ -51,8 +51,8 @@ Water::Water()
 Water::Water(variant water_node) 
 	: KRE::SceneObject("water"),
 	zorder_(parse_zorder(water_node["zorder"], variant("water"))),
-	current_x_formula_(game_logic::Formula::create_optional_formula(water_node["current_x_formula"])),
-	current_y_formula_(game_logic::Formula::create_optional_formula(water_node["current_y_formula"]))
+	current_x_formula_(game_logic::Formula::createOptionalFormula(water_node["current_x_formula"])),
+	current_y_formula_(game_logic::Formula::createOptionalFormula(water_node["current_y_formula"]))
 {
 	for(variant area_node : water_node["area"].as_list()) {
 		const rect r(area_node["rect"]);

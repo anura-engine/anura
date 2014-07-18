@@ -93,7 +93,7 @@ namespace game_logic
 
 		static const std::set<Formula*>& getAll();
 
-		static FormulaPtr create_optional_formula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=FORMULA_LANGUAGE::FFL);
+		static FormulaPtr createOptionalFormula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=FORMULA_LANGUAGE::FFL);
 		explicit Formula(const variant& val, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
 		Formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 		~Formula();
@@ -134,6 +134,6 @@ namespace game_logic
 
 		WhereVariablesInfoPtr global_where_;
 
-		void checkBracketsMatch(const std::vector<formula_tokenizer::token>& tokens) const;
+		void checkBracketsMatch(const std::vector<formula_tokenizer::Token>& tokens) const;
 	};
 }

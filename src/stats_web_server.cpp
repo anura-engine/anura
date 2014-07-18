@@ -42,7 +42,7 @@ web_server::web_server(boost::asio::io_service& io_service, int port)
 	heartbeat();
 }
 
-void web_server::handle_post(socket_ptr socket, variant doc, const http::environment& env)
+void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
 {
 	static const variant TypeVariant("type");
 	const std::string& type = doc[TypeVariant].as_string();
@@ -70,7 +70,7 @@ void web_server::handle_post(socket_ptr socket, variant doc, const http::environ
 }
 
 
-void web_server::handle_get(socket_ptr socket, 
+void web_server::handleGet(socket_ptr socket, 
 	const std::string& url, 
 	const std::map<std::string, std::string>& args)
 {

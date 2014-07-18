@@ -88,19 +88,19 @@ namespace gui
 					while(i != end) {
 						std::string::const_iterator begin = i;
 						try {
-							formula_tokenizer::token t = formula_tokenizer::get_token(i, end);
+							formula_tokenizer::Token t = formula_tokenizer::get_token(i, end);
 
 							bool error_color = false;
 							switch(t.type) {
-							case formula_tokenizer::TOKEN_LPARENS:
-							case formula_tokenizer::TOKEN_LSQUARE:
-							case formula_tokenizer::TOKEN_LBRACKET:
+							case formula_tokenizer::FFL_TOKEN_TYPE::LPARENS:
+							case formula_tokenizer::FFL_TOKEN_TYPE::LSQUARE:
+							case formula_tokenizer::FFL_TOKEN_TYPE::LBRACKET:
 								opening_brackets.resize(opening_brackets.size()+1);
 								opening_brackets.back().push_back(std::pair<int,int>(colors_.size()-1, colors_.back().size()));
 								break;
-							case formula_tokenizer::TOKEN_RPARENS:
-							case formula_tokenizer::TOKEN_RSQUARE:
-							case formula_tokenizer::TOKEN_RBRACKET:
+							case formula_tokenizer::FFL_TOKEN_TYPE::RPARENS:
+							case formula_tokenizer::FFL_TOKEN_TYPE::RSQUARE:
+							case formula_tokenizer::FFL_TOKEN_TYPE::RBRACKET:
 								if(opening_brackets.empty()) {
 									error_color = true;
 								} else {
@@ -112,7 +112,7 @@ namespace gui
 									opening_brackets.pop_back();
 								}
 								break;
-							case formula_tokenizer::TOKEN_COMMA:
+							case formula_tokenizer::FFL_TOKEN_TYPE::COMMA:
 								if(opening_brackets.empty() == false) {
 									opening_brackets.back().push_back(std::pair<int,int>(colors_.size()-1, colors_.back().size()));
 								}
@@ -121,8 +121,8 @@ namespace gui
 								break;
 							}
 
-							if(t.type == formula_tokenizer::TOKEN_OPERATOR && util::c_isalpha(*t.begin)) {
-								t.type = formula_tokenizer::TOKEN_KEYWORD;
+							if(t.type == formula_tokenizer::FFL_TOKEN_TYPE::OPERATOR && util::c_isalpha(*t.begin)) {
+								t.type = formula_tokenizer::FFL_TOKEN_TYPE::KEYWORD;
 
 							}
 						

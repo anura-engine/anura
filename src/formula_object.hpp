@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef FORMULA_OBJECT_HPP_INCLUDED
-#define FORMULA_OBJECT_HPP_INCLUDED
+
+#pragma once
 
 #include <set>
 #include <string>
@@ -30,86 +36,83 @@
 
 namespace game_logic
 {
+	class FormulaClass;
 
-class formula_class;
+	FormulaCallableDefinitionPtr get_class_definition(const std::string& name);
 
-FormulaCallableDefinitionPtr get_class_definition(const std::string& name);
+	bool is_class_derived_from(const std::string& derived, const std::string& base);
 
-bool is_class_derived_from(const std::string& derived, const std::string& base);
+	class FormulaObject : public game_logic::WmlSerializableFormulaCallable
+	{
+	public:
+		static void visitVariants(variant v, std::function<void (variant)> fn, std::vector<FormulaObject*>* seen=NULL);
+		static void mapObjectIntoDifferentTree(variant& v, const std::map<FormulaObject*, FormulaObject*>& mapping, std::vector<FormulaObject*>* seen=NULL);
 
-class formula_object : public game_logic::WmlSerializableFormulaCallable
-{
-public:
-	static void visit_variants(variant v, std::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
-	static void map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
+		void update(FormulaObject& updated);
 
-	void update(formula_object& updated);
+		static variant deepClone(variant v);
+		static variant deepClone(variant v, std::map<FormulaObject*,FormulaObject*>& mapping);
 
-	static variant deep_clone(variant v);
-	static variant deep_clone(variant v, std::map<formula_object*,formula_object*>& mapping);
+		static void reloadClasses();
+		static void loadAllClasses();
+		static void tryLoadClass(const std::string& name);
 
-	static void reload_classes();
-	static void load_all_classes();
-	static void try_load_class(const std::string& name);
+		static boost::intrusive_ptr<FormulaObject> create(const std::string& type, variant args=variant());
 
-	static boost::intrusive_ptr<formula_object> create(const std::string& type, variant args=variant());
+		bool isA(const std::string& class_name) const;
+		const std::string& getClassName() const;
 
-	bool is_a(const std::string& class_name) const;
-	const std::string& get_class_name() const;
+		//construct with data representing private/internal represenation.
+		explicit FormulaObject(variant data);
+		virtual ~FormulaObject();
 
-	//construct with data representing private/internal represenation.
-	explicit formula_object(variant data);
-	virtual ~formula_object();
+		boost::intrusive_ptr<FormulaObject> clone() const;
 
-	boost::intrusive_ptr<formula_object> clone() const;
+		void validate() const;
+	private:
+		//construct with type and constructor parameters.
+		//Don't call directly, use create() instead.
+		explicit FormulaObject(const std::string& type, variant args=variant());
+		void callConstructors(variant args);
 
-	void validate() const;
-private:
-	//construct with type and constructor parameters.
-	//Don't call directly, use create() instead.
-	explicit formula_object(const std::string& type, variant args=variant());
-	void call_constructors(variant args);
+		variant serializeToWml() const;
 
-	variant serializeToWml() const;
+		variant getValue(const std::string& key) const;
+		variant getValueBySlot(int slot) const;
+		void setValue(const std::string& key, const variant& value);
+		void setValueBySlot(int slot, const variant& value);
 
-	variant getValue(const std::string& key) const;
-	variant getValueBySlot(int slot) const;
-	void setValue(const std::string& key, const variant& value);
-	void setValueBySlot(int slot, const variant& value);
+		void getInputs(std::vector<FormulaInput>* inputs) const;
 
-	void getInputs(std::vector<FormulaInput>* inputs) const;
+		boost::uuids::uuid id_;
 
-	boost::uuids::uuid id_;
+		bool new_in_update_;
+		bool orphaned_;
 
-	bool new_in_update_;
-	bool orphaned_;
+		boost::intrusive_ptr<FormulaObject> previous_;
 
-	boost::intrusive_ptr<formula_object> previous_;
+		//overrides of the class's read-only properties.
+		std::vector<FormulaPtr> property_overrides_;
 
-	//overrides of the class's read-only properties.
-	std::vector<FormulaPtr> property_overrides_;
+		std::vector<variant> variables_;
 
-	std::vector<variant> variables_;
+		boost::intrusive_ptr<const FormulaClass> class_;
 
-	boost::intrusive_ptr<const formula_class> class_;
+		variant tmp_value_;
 
-	variant tmp_value_;
+		//if this is non-zero, then private_data_ will be exposed via getValue.
+		mutable int private_data_;
+	};
 
-	//if this is non-zero, then private_data_ will be exposed via getValue.
-	mutable int private_data_;
-};
+	bool formula_class_valid(const std::string& type);
 
-bool formula_class_valid(const std::string& type);
-
-struct formula_class_manager {
-	formula_class_manager();
-	~formula_class_manager();
-};
+	struct FormulaClassManager 
+	{
+		FormulaClassManager();
+		~FormulaClassManager();
+	};
 
 
-FormulaCallableDefinitionPtr get_library_definition();
-FormulaCallablePtr get_library_object();
-
+	FormulaCallableDefinitionPtr get_library_definition();
+	FormulaCallablePtr get_library_object();
 }
-
-#endif

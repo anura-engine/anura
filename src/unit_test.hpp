@@ -1,52 +1,58 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef UNIT_TEST_HPP_INCLUDED
-#define UNIT_TEST_HPP_INCLUDED
+
+#pragma once
 
 #include <functional>
 #include <iostream>
 #include <string>
 #include <vector>
 
-namespace test {
+namespace test 
+{
+	struct FailureException 
+	{
+	};
 
-struct failure_exception {
-};
+	typedef std::function<void ()> UnitTest;
+	typedef std::function<void (int)> BenchmarkTest;
+	typedef std::function<void (int, const std::string&)> CommandLineBenchmarkTest;
+	typedef std::function<void (const std::vector<std::string>&)> UtilityProgram;
 
-typedef std::function<void ()> UnitTest;
-typedef std::function<void (int)> BenchmarkTest;
-typedef std::function<void (int, const std::string&)> CommandLineBenchmarkTest;
-typedef std::function<void (const std::vector<std::string>&)> UtilityProgram;
+	int register_test(const std::string& name, UnitTest test);
+	int register_benchmark(const std::string& name, BenchmarkTest test);
+	int register_benchmark_cl(const std::string& name, CommandLineBenchmarkTest test);
+	int register_utility(const std::string& name, UtilityProgram utility, bool needs_video);
+	bool utility_needs_video(const std::string& name);
+	bool run_tests(const std::vector<std::string>* tests=NULL);
+	void run_benchmarks(const std::vector<std::string>* benchmarks=NULL);
+	void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg);
+	void run_utility(const std::string& utility_name, const std::vector<std::string>& arg);
 
-int register_test(const std::string& name, UnitTest test);
-int register_benchmark(const std::string& name, BenchmarkTest test);
-int register_benchmark_cl(const std::string& name, CommandLineBenchmarkTest test);
-int register_utility(const std::string& name, UtilityProgram utility, bool needs_video);
-bool utility_needs_video(const std::string& name);
-bool run_tests(const std::vector<std::string>* tests=NULL);
-void run_benchmarks(const std::vector<std::string>* benchmarks=NULL);
-void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg);
-void run_utility(const std::string& utility_name, const std::vector<std::string>& arg);
-
-std::string run_benchmark(const std::string& name, BenchmarkTest fn);
-
+	std::string run_benchmark(const std::string& name, BenchmarkTest fn);
 }
 
-#define CHECK(cond, msg) if(!(cond)) { std::cerr << __FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED: " << #cond << ": " << msg << "\n"; throw test::failure_exception(); }
+#define CHECK(cond, msg) if(!(cond)) { std::cerr << __FILE__ << ":" << __LINE__ << ": TEST CHECK FAILED: " << #cond << ": " << msg << "\n"; throw test::FailureException(); }
 
 #define CHECK_CMP(a, b, cmp) CHECK((a) cmp (b), #a << ": " << (a) << "; " << #b << ": " << (b))
 
@@ -118,7 +124,5 @@ std::string run_benchmark(const std::string& name, BenchmarkTest fn);
     void UTILITY_##name(const std::vector<std::string>& args); \
 	static int UTILITY_VAR_##name = test::register_utility(#name, UTILITY_##name, false); \
 	void UTILITY_##name(const std::vector<std::string>& args)
-
-#endif
 
 #endif

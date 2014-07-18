@@ -465,7 +465,7 @@ namespace gui
 				}
 
 				if(cursor_.row == n && cursor_.col == m &&
-				   (SDL_GetTicks()%500 < 350 || !has_focus_) &&
+				   (profile::get_tick_time()%500 < 350 || !has_focus_) &&
 				   !clear_on_focus_) {
 					RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), graphics::color(255,255,255,255) };
 					rects.push_back(rect_draw);
@@ -476,7 +476,7 @@ namespace gui
 				}
 			}
 
-			if(has_focus_ && cursor_.row == n && cursor_.col >= text_[n].size() && SDL_GetTicks()%500 < 350) {
+			if(has_focus_ && cursor_.row == n && cursor_.col >= text_[n].size() && profile::get_tick_time()%500 < 350) {
 				RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), graphics::color(255,255,255,255) };
 				rects.push_back(rect_draw);
 			}
@@ -676,7 +676,7 @@ namespace gui
 				onMoveCursor();
 			}
 
-			if(last_click_at_ != -1 && SDL_GetTicks() - last_click_at_ < 500) {
+			if(last_click_at_ != -1 && profile::get_tick_time() - last_click_at_ < 500) {
 				++consecutive_clicks_;
 
 				const int nclicks = consecutive_clicks_%3;

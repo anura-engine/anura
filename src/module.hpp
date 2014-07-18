@@ -31,6 +31,8 @@
 #include <string>
 #include <vector>
 
+// XXX split this into the base module and a new translation unit with the module server.
+
 namespace module
 {
 	enum BASE_PATH_TYPE { BASE_PATH_GAME, BASE_PATH_USER, NUM_PATH_TYPES };

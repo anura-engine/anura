@@ -313,7 +313,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	air_resistance_ = node["air_resistance"].as_int(20);
 	water_resistance_ = node["water_resistance"].as_int(100);
 
-	camera_rotation_ = game_logic::Formula::create_optional_formula(node["camera_rotation"]);
+	camera_rotation_ = game_logic::Formula::createOptionalFormula(node["camera_rotation"]);
 
 	preloads_ = util::split(node["preloads"].as_string());
 

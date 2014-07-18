@@ -29,7 +29,7 @@ class Level;
 
 namespace multiplayer 
 {
-	struct error {};
+	struct Error {};
 	int slot();
 	void setup_networked_game(const std::string& server);
 
@@ -38,8 +38,8 @@ namespace multiplayer
 	void send_and_receive();
 	void receive();
 
-	struct manager {
-		manager(bool activate);
-		~manager();
+	struct Manager {
+		Manager(bool activate);
+		~Manager();
 	};
 }

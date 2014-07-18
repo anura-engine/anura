@@ -28,8 +28,8 @@ PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
 
 bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   : service_(service), timer_(service), host_(host), port_(port), script_(v["script"].as_list()),
-    on_create_(game_logic::Formula::create_optional_formula(v["on_create"])),
-    on_message_(game_logic::Formula::create_optional_formula(v["on_message"]))
+    on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
+    on_message_(game_logic::Formula::createOptionalFormula(v["on_message"]))
 
 {
 	std::cerr << "CREATE BOT\n";

@@ -53,8 +53,8 @@ namespace http
 
 		virtual void disconnect(socket_ptr socket);
 
-		virtual void handle_post(socket_ptr socket, variant doc, const environment& env) = 0;
-		virtual void handle_get(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) = 0;
+		virtual void handlePost(socket_ptr socket, variant doc, const environment& env) = 0;
+		virtual void handleGet(socket_ptr socket, const std::string& url, const std::map<std::string, std::string>& args) = 0;
 
 	private:
 		struct receive_buf {

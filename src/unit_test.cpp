@@ -115,7 +115,7 @@ bool run_tests(const std::vector<std::string>* tests)
 		std::cerr << npass << " TESTS PASSED, " << nfail << " TESTS FAILED\n";
 		return false;
 	} else {
-		std::cerr << "ALL " << npass << " TESTS PASSED IN " << (SDL_GetTicks() - start_time) << "ms\n";
+		std::cerr << "ALL " << npass << " TESTS PASSED IN " << (profile::get_tick_time() - start_time) << "ms\n";
 		return true;
 	}
 }
@@ -142,7 +142,7 @@ std::string run_benchmark(const std::string& name, BenchmarkTest fn)
 	for(int64_t nruns = 10; ; nruns *= 10) {
 		const int start_time = profile::get_tick_time();
 		fn(nruns);
-		const int64_t time_taken_ms = SDL_GetTicks() - start_time;
+		const int64_t time_taken_ms = profile::get_tick_time() - start_time;
 		if(time_taken_ms >= MinTicks || nruns > 1000000000) {
 			int64_t time_taken = time_taken_ms*1000000LL;
 			int time_taken_units = 0;

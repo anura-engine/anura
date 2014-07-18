@@ -145,21 +145,21 @@ bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::o
 bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from);
 
 variant_type_ptr parse_variant_type(const variant& original_str,
-                                    const formula_tokenizer::token*& i1,
-                                    const formula_tokenizer::token* i2,
+                                    const formula_tokenizer::Token*& i1,
+                                    const formula_tokenizer::Token* i2,
 									bool allow_failure=false);
 variant_type_ptr parse_variant_type(const variant& v);
 
 variant_type_ptr
 parse_optional_function_type(const variant& original_str,
-                             const formula_tokenizer::token*& i1,
-                             const formula_tokenizer::token* i2);
+                             const formula_tokenizer::Token*& i1,
+                             const formula_tokenizer::Token* i2);
 variant_type_ptr parse_optional_function_type(const variant& v);
 
 variant_type_ptr
 parse_optional_formula_type(const variant& original_str,
-                            const formula_tokenizer::token*& i1,
-                            const formula_tokenizer::token* i2);
+                            const formula_tokenizer::Token*& i1,
+                            const formula_tokenizer::Token* i2);
 variant_type_ptr parse_optional_formula_type(const variant& v);
 
 class generic_variant_type_scope

@@ -49,8 +49,8 @@ private:
 table_info::table_info(const variant& v)
   : name_(v["name"].as_string()),
     is_global_(v["global_scope"].as_bool()),
-    key_(formula::create_optional_formula(v["key"])),
-	value_(formula::create_optional_formula(v["value"])),
+    key_(formula::createOptionalFormula(v["key"])),
+	value_(formula::createOptionalFormula(v["value"])),
 	init_value_(v["init_value"])
 {
 }

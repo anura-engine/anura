@@ -43,7 +43,7 @@ namespace voxel
 		virtual ~voxel_object();
 
 		const std::string& type() const { return type_; }
-		bool is_a(const std::string& type) const { return type_ == type; }
+		bool isA(const std::string& type) const { return type_ == type; }
 
 		void draw() const;
 		virtual void process(Level& lvl);
