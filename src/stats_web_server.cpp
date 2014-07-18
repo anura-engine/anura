@@ -1,31 +1,37 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
 #include <iostream>
 
-#if !defined(_WINDOWS)
+#if !defined(_MSC_VER)
 #include <sys/time.h>
 #endif
 
 #include "asserts.hpp"
 #include "base64.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "stats_server.hpp"
@@ -101,7 +107,7 @@ void web_server::handleGet(socket_ptr socket,
 void web_server::heartbeat()
 {
 	if(++nheartbeat_%3600 == 0) {
-		std::cerr << "WRITING DATA...\n";
+		LOG_INFO("WRITING DATA...");
 		timeval start_time, end_time;
 		gettimeofday(&start_time, NULL);
 		variant v = write_stats();
@@ -123,7 +129,7 @@ void web_server::heartbeat()
 		gettimeofday(&end_time, NULL);
 
 		const int time_us = (end_time.tv_sec - start_time.tv_sec)*1000000 + (end_time.tv_usec - start_time.tv_usec);
-		std::cerr << "WROTE STATS IN " << time_us << "us\n";
+		LOG_INFO("WROTE STATS IN " << time_us << "us");
 	}
 
 	timer_.expires_from_now(boost::posix_time::seconds(1));

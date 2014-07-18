@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
-
 #include <cstdint>
 #include <functional>
 #include <map>

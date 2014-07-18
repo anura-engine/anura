@@ -399,7 +399,7 @@ private:
 
 	game_logic::ConstFormulaPtr next_animation_formula_;
 
-	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
+	game_logic::FormulaVariableStoragePtr vars_, tmp_vars_;
 	game_logic::MapFormulaCallablePtr tags_;
 
 	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }

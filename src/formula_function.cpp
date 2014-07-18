@@ -582,12 +582,12 @@ END_FUNCTION_DEF(bind_closure)
 FUNCTION_DEF(singleton, 1, 1, "singleton(string typename): create a singleton object with the given typename")
 	variant type = args()[0]->evaluate(variables);
 
-	static std::map<variant, boost::intrusive_ptr<formula_object> > cache;
+	static std::map<variant, boost::intrusive_ptr<FormulaObject> > cache;
 	if(cache.count(type)) {
 		return variant(cache[type].get());
 	}
 
-	boost::intrusive_ptr<formula_object> obj(formula_object::create(type.as_string(), variant()));
+	boost::intrusive_ptr<FormulaObject> obj(FormulaObject::create(type.as_string(), variant()));
 	cache[type] = obj;
 	return variant(obj.get());
 FUNCTION_TYPE_DEF
@@ -608,7 +608,7 @@ FUNCTION_DEF(construct, 1, 2, "construct(string typename, arg): construct an obj
 		arg = args()[1]->evaluate(variables);
 	}
 
-	boost::intrusive_ptr<formula_object> obj(formula_object::create(type.as_string(), arg));
+	boost::intrusive_ptr<FormulaObject> obj(FormulaObject::create(type.as_string(), arg));
 	return variant(obj.get());
 FUNCTION_TYPE_DEF
 	variant literal;
@@ -622,10 +622,10 @@ END_FUNCTION_DEF(construct)
 
 class update_object_command : public game_logic::CommandCallable
 {
-	boost::intrusive_ptr<formula_object> target_, src_;
+	boost::intrusive_ptr<FormulaObject> target_, src_;
 public:
-	update_object_command(boost::intrusive_ptr<formula_object> target,
-	                      boost::intrusive_ptr<formula_object> src)
+	update_object_command(boost::intrusive_ptr<FormulaObject> target,
+	                      boost::intrusive_ptr<FormulaObject> src)
 	  : target_(target), src_(src)
 	{}
 	virtual void execute(game_logic::FormulaCallable& ob) const {
@@ -635,8 +635,8 @@ public:
 
 FUNCTION_DEF(update_object, 2, 2, "update_object(target_instance, src_instance)")
 
-	boost::intrusive_ptr<formula_object> target = args()[0]->evaluate(variables).convert_to<formula_object>();
-	boost::intrusive_ptr<formula_object> src = args()[1]->evaluate(variables).convert_to<formula_object>();
+	boost::intrusive_ptr<FormulaObject> target = args()[0]->evaluate(variables).convert_to<FormulaObject>();
+	boost::intrusive_ptr<FormulaObject> src = args()[1]->evaluate(variables).convert_to<FormulaObject>();
 	return variant(new update_object_command(target, src));
 
 FUNCTION_TYPE_DEF
@@ -1663,7 +1663,7 @@ FUNCTION_DEF(directed_graph, 2, 2, "directed_graph(list_of_vertexes, adjacent_ex
 		edges[v] = args()[1]->evaluate(*callable).as_list();
 		vertex_list.push_back(v);
 	}
-	pathfinding::directed_graph* dg = new pathfinding::directed_graph(&vertex_list, &edges);
+	pathfinding::DirectedGraph* dg = new pathfinding::DirectedGraph(&vertex_list, &edges);
 	return variant(dg);
 FUNCTION_ARGS_DEF
 	ARG_TYPE("list")
@@ -1673,14 +1673,14 @@ END_FUNCTION_DEF(directed_graph)
 
 FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
         variant graph = args()[0]->evaluate(variables);		
-        pathfinding::directed_graph_ptr dg = boost::intrusive_ptr<pathfinding::directed_graph>(graph.try_convert<pathfinding::directed_graph>());
+        pathfinding::DirectedGraphPtr dg = boost::intrusive_ptr<pathfinding::DirectedGraph>(graph.try_convert<pathfinding::DirectedGraph>());
         ASSERT_LOG(dg, "Directed graph given is not of the correct type. " /*<< variant::variant_type_to_string(graph.type())*/);
         pathfinding::edge_weights w;
  
         boost::intrusive_ptr<variant_comparator> callable(new variant_comparator(args()[1], variables));
  
-        for(auto edges = dg->get_edges()->begin();
-                edges != dg->get_edges()->end();
+        for(auto edges = dg->getEdges()->begin();
+                edges != dg->getEdges()->end();
                 edges++) {
                 for(auto e2 : edges->second) {
                         variant v = callable->eval(edges->first, e2);
@@ -1689,7 +1689,7 @@ FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expres
                         }
                 }
         }
-        return variant(new pathfinding::weighted_directed_graph(dg, &w));
+        return variant(new pathfinding::WeightedDirectedGraph(dg, &w));
 FUNCTION_ARGS_DEF
         ARG_TYPE("builtin directed_graph")
         RETURN_TYPE("builtin weighted_directed_graph")
@@ -1697,7 +1697,7 @@ END_FUNCTION_DEF(weighted_graph)
 
 FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_node, dst_node, heuristic) -> A list of nodes which represents the 'best' path from src_node to dst_node.")
 	variant graph = args()[0]->evaluate(variables);
-	pathfinding::weighted_directed_graph_ptr wg = graph.try_convert<pathfinding::weighted_directed_graph>();
+	pathfinding::WeightedDirectedGraphPtr wg = graph.try_convert<pathfinding::WeightedDirectedGraph>();
 	ASSERT_LOG(wg, "Weighted graph given is not of the correct type.");
 	variant src_node = args()[1]->evaluate(variables);
 	variant dst_node = args()[2]->evaluate(variables);
@@ -1714,7 +1714,7 @@ END_FUNCTION_DEF(a_star_search)
 
 FUNCTION_DEF(path_cost_search, 3, 3, "path_cost_search(weighted_directed_graph, src_node, max_cost) -> A list of all possible points reachable from src_node within max_cost.")
 	variant graph = args()[0]->evaluate(variables);
-	pathfinding::weighted_directed_graph_ptr wg = graph.try_convert<pathfinding::weighted_directed_graph>();
+	pathfinding::WeightedDirectedGraphPtr wg = graph.try_convert<pathfinding::WeightedDirectedGraph>();
 	ASSERT_LOG(wg, "Weighted graph given is not of the correct type.");
 	variant src_node = args()[1]->evaluate(variables);
 	decimal max_cost(args()[2]->evaluate(variables).as_decimal());
@@ -1765,7 +1765,7 @@ FUNCTION_DEF(create_graph_from_level, 1, 3, "create_graph_from_level(level, (opt
 			}
 		}
 	}
-	return variant(new pathfinding::directed_graph(&vertex_list, &edges));
+	return variant(new pathfinding::DirectedGraph(&vertex_list, &edges));
 END_FUNCTION_DEF(create_graph_from_level)
 
 FUNCTION_DEF(plot_path, 6, 9, "plot_path(level, from_x, from_y, to_x, to_y, heuristic, (optional) weight_expr, (optional) tile_size_x, (optional) tile_size_y) -> list : Returns a list of points to get from (from_x, from_y) to (to_x, to_y)")
@@ -4582,7 +4582,7 @@ END_FUNCTION_DEF(debug_dump_textures)
 
 class mod_object_callable : public FormulaCallable {
 public:
-	explicit mod_object_callable(boost::intrusive_ptr<formula_object> obj) : obj_(obj), v_(obj.get())
+	explicit mod_object_callable(boost::intrusive_ptr<FormulaObject> obj) : obj_(obj), v_(obj.get())
 	{}
 
 private:
@@ -4605,7 +4605,7 @@ private:
 		return variant();
 	}
 
-	boost::intrusive_ptr<formula_object> obj_;
+	boost::intrusive_ptr<FormulaObject> obj_;
 	variant v_;
 };
 
@@ -4646,9 +4646,9 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(inspect_object)
 
 FUNCTION_DEF(get_modified_object, 2, 2, "get_modified_object(obj, commands) -> obj: yields a copy of the given object modified by the given commands")
-	boost::intrusive_ptr<formula_object> obj(args()[0]->evaluate(variables).convert_to<formula_object>());
+	boost::intrusive_ptr<FormulaObject> obj(args()[0]->evaluate(variables).convert_to<FormulaObject>());
 
-	obj = formula_object::deepClone(variant(obj.get())).convert_to<formula_object>();
+	obj = FormulaObject::deepClone(variant(obj.get())).convert_to<FormulaObject>();
 
 	variant commands_fn = args()[1]->evaluate(variables);
 

@@ -117,7 +117,7 @@ private:
 	assert_recover_scope assert_recovery_;
 
 	gui::AnimationPreviewWidgetPtr animation_preview_;
-	gui::formula_visualize_WidgetPtr visualize_widget_;
+	gui::FormulaVisualizeWidgetPtr visualize_widget_;
 
 	struct KnownFile {
 		std::string fname;
