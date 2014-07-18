@@ -168,9 +168,12 @@ public:
 
 		time_ms_ += 1000;
 
+		const int nqueue_size = check_matchmaking_queue();
+
 		variant_builder heartbeat_message;
 		heartbeat_message.add("type", "heartbeat");
 		heartbeat_message.add("users", sessions_.size());
+		heartbeat_message.add("users_queued", nqueue_size);
 		heartbeat_message.add("games", servers_.size());
 
 		std::vector<variant> servers;
@@ -193,7 +196,7 @@ public:
 		std::string heartbeat_msg = heartbeat_message.build().write_json();
 
 		for(auto& p : sessions_) {
-			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 5000)) {
+			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000)) {
 
 				send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
 				p.second.last_contact = time_ms_;
@@ -448,106 +451,8 @@ public:
 				info.session_id = session_id;
 				info.last_contact = time_ms_;
 				info.queued_for_game = true;
-				
-				std::vector<int> match_sessions;
-				for(auto p : sessions_) {
-					if(p.second.queued_for_game && p.second.game_details == "" && !session_timed_out(p.second.last_contact) && !p.second.game_pending) {
-						match_sessions.push_back(p.first);
-						if(match_sessions.size() == 2) {
-							break;
-						}
-					}
-				}
 
-				if(match_sessions.size() == 2 && !available_ports_.empty()) {
-					//spawn off a server to play this game.
-					std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
-					std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
-
-					variant_builder game;
-					game.add("game_type", "citadel");
-					
-					std::vector<variant> users;
-					for(int i : match_sessions) {
-						SessionInfo& session_info = sessions_[i];
-						session_info.game_pending = time_ms_;
-						session_info.queued_for_game = false;
-
-						variant_builder user;
-						user.add("user", session_info.user_id);
-						user.add("session_id", session_info.session_id);
-						users.push_back(user.build());
-					}
-
-					variant users_info(&users);
-
-					game.add("users", users_info);
-
-					variant_builder server_config;
-					server_config.add("game", game.build());
-
-					server_config.add("matchmaking_host", "localhost");
-					server_config.add("matchmaking_port", port_);
-
-					sys::write_file(fname, server_config.build().write_json());
-
-					int new_port = available_ports_.front();
-					available_ports_.pop_front();
-
-					assert(!preferences::argv().empty());
-
-					const char* cmd = preferences::argv().front().c_str();
-
-					std::vector<std::string> args;
-					args.push_back(cmd);
-					args.push_back("--module=" + module::get_module_name());
-					args.push_back("--utility=tbs_server");
-					args.push_back("--port");
-					args.push_back(formatter() << new_port);
-					args.push_back("--config");
-					args.push_back(fname);
-
-					fprintf(stderr, "EXECUTING:");
-
-					std::vector<char*> cstr_argv;
-					for(std::string& s : args) {
-						s.push_back('\0');
-						cstr_argv.push_back(&s[0]);
-						fprintf(stderr, " %s", cstr_argv.back());
-					}
-
-					fprintf(stderr, "\n");
-
-					cstr_argv.push_back(NULL);
-
-					const pid_t pid = fork();
-					if(pid < 0) {
-						fprintf(stderr, "FATAL ERROR: FAILED TO FORK\n");
-						assert(!"failed to fork");
-					} else if(pid == 0) {
-
-						int fd = open(fname_out.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
-						dup2(fd, STDERR_FILENO);
-						fprintf(stderr, "Execing server...\n");
-
-						//child
-						execv(cmd, &cstr_argv[0]);
-						fprintf(stderr, "EXEC FAILED!\n");
-						_exit(0);
-					} else {
-						//parent
-						fprintf(stderr, "Forked process %d\n", static_cast<int>(pid));
-
-						ProcessInfo& info = servers_[pid];
-						info.port = new_port;
-						info.sessions = match_sessions;
-						info.users = users_info;
-					}
-
-
-				} else if(match_sessions.size() == 2 && available_ports_.empty()) {
-					fprintf(stderr, "ERROR: AVAILABLE PORTS EXHAUSTED\n");
-				}
+				check_matchmaking_queue();
 
 			} else if(request_type == "request_updates") {
 
@@ -555,6 +460,7 @@ public:
 
 				auto itor = sessions_.find(session_id);
 				if(itor == sessions_.end()) {
+					fprintf(stderr, "Error: Unknown session: %d\n", session_id);
 					send_msg(socket, "text/json", "{ type: \"error\", message: \"unknown session\" }", "");
 				} else {
 					itor->second.last_contact = time_ms_;
@@ -632,6 +538,114 @@ public:
 	}
 
 private:
+
+	int check_matchmaking_queue()
+	{
+		std::vector<int> match_sessions;
+		int queue_size = 0;
+		for(auto p : sessions_) {
+			if(p.second.queued_for_game && p.second.game_details == "" && !session_timed_out(p.second.last_contact)) {
+				if(match_sessions.size() < 2 && !p.second.game_pending && p.second.current_socket) {
+					match_sessions.push_back(p.first);
+				}
+
+				++queue_size;
+			}
+		}
+
+		if(match_sessions.size() == 2 && !available_ports_.empty()) {
+			//spawn off a server to play this game.
+			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
+			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
+
+			variant_builder game;
+			game.add("game_type", "citadel");
+			
+			std::vector<variant> users;
+			for(int i : match_sessions) {
+				SessionInfo& session_info = sessions_[i];
+				session_info.game_pending = time_ms_;
+				session_info.queued_for_game = false;
+
+				variant_builder user;
+				user.add("user", session_info.user_id);
+				user.add("session_id", session_info.session_id);
+				users.push_back(user.build());
+			}
+
+			variant users_info(&users);
+
+			game.add("users", users_info);
+
+			variant_builder server_config;
+			server_config.add("game", game.build());
+
+			server_config.add("matchmaking_host", "localhost");
+			server_config.add("matchmaking_port", port_);
+
+			sys::write_file(fname, server_config.build().write_json());
+
+			int new_port = available_ports_.front();
+			available_ports_.pop_front();
+
+			assert(!preferences::argv().empty());
+
+			const char* cmd = preferences::argv().front().c_str();
+
+			std::vector<std::string> args;
+			args.push_back(cmd);
+			args.push_back("--module=" + module::get_module_name());
+			args.push_back("--utility=tbs_server");
+			args.push_back("--port");
+			args.push_back(formatter() << new_port);
+			args.push_back("--config");
+			args.push_back(fname);
+
+			fprintf(stderr, "EXECUTING:");
+
+			std::vector<char*> cstr_argv;
+			for(std::string& s : args) {
+				s.push_back('\0');
+				cstr_argv.push_back(&s[0]);
+				fprintf(stderr, " %s", cstr_argv.back());
+			}
+
+			fprintf(stderr, "\n");
+
+			cstr_argv.push_back(NULL);
+
+			const pid_t pid = fork();
+			if(pid < 0) {
+				fprintf(stderr, "FATAL ERROR: FAILED TO FORK\n");
+				assert(!"failed to fork");
+			} else if(pid == 0) {
+
+				int fd = open(fname_out.c_str(), O_WRONLY | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR);
+				dup2(fd, STDERR_FILENO);
+				fprintf(stderr, "Execing server...\n");
+
+				//child
+				execv(cmd, &cstr_argv[0]);
+				fprintf(stderr, "EXEC FAILED!\n");
+				_exit(0);
+			} else {
+				//parent
+				fprintf(stderr, "Forked process %d\n", static_cast<int>(pid));
+
+				ProcessInfo& info = servers_[pid];
+				info.port = new_port;
+				info.sessions = match_sessions;
+				info.users = users_info;
+			}
+
+
+		} else if(match_sessions.size() == 2 && available_ports_.empty()) {
+			fprintf(stderr, "ERROR: AVAILABLE PORTS EXHAUSTED\n");
+		}
+
+		return queue_size;
+	}
+
 	variant build_status() const {
 
 		variant_builder doc;

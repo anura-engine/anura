@@ -28,6 +28,7 @@
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "random.hpp"
 #include "tbs_ai_player.hpp"
 #include "tbs_internal_server.hpp"
@@ -213,7 +214,7 @@ game::~game()
 	std::cerr << "DESTROY GAME\n";
 }
 
-variant game::write(int nplayer) const
+variant game::write(int nplayer, int processing_ms) const
 {
 	game_logic::wmlFormulaCallableSerializationScope serialization_scope;
 
@@ -224,6 +225,11 @@ variant game::write(int nplayer) const
 	result.add("started", started_);
 	result.add("state_id", state_id_);
 	result.add("rng_seed", rng_seed_);
+
+	if(processing_ms != -1) {
+		fprintf(stderr, "ZZZ: server_time: %d\n", processing_ms);
+		result.add("server_time", processing_ms);
+	}
 
 	//observers see the perspective of the first player for now
 	result.add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
@@ -326,7 +332,7 @@ void game::send_notify(const std::string& msg, int nplayer)
 	queue_message(result.build(), nplayer);
 }
 
-game::player::player()
+game::player::player() : confirmed_state_id(-1)
 {
 }
 
@@ -398,11 +404,11 @@ int game::get_player_index(const std::string& nick) const
 	return -1;
 }
 
-void game::send_game_state(int nplayer)
+void game::send_game_state(int nplayer, int processing_ms)
 {
 	if(nplayer == -1) {
 		for(int n = 0; n != players().size(); ++n) {
-			send_game_state(n);
+			send_game_state(n, processing_ms);
 		}
 
 		//Send to observers.
@@ -411,7 +417,7 @@ void game::send_game_state(int nplayer)
 
 		current_message_ = "";
 	} else if(nplayer >= 0 && nplayer < players().size()) {
-		queue_message(write(nplayer), nplayer);
+		queue_message(write(nplayer, processing_ms), nplayer);
 	}
 }
 
@@ -441,9 +447,14 @@ void game::process()
 	}
 
 	if(started_) {
+		const int starting_state_id = state_id_;
 		static const std::string ProcessStr = "process";
 		handleEvent(ProcessStr);
 		++cycle_;
+
+		if(state_id_ != starting_state_id) {
+			send_game_state();
+		}
 	}
 }
 
@@ -455,6 +466,8 @@ variant game::getValue(const std::string& key) const
 		return doc_;
 	} else if(key == "state_id") {
 		return variant(state_id_);
+	} else if(key == "cycle") {
+		return variant(cycle_);
 	} else if(key == "bots") {
 		std::vector<variant> v;
 		for(int n = 0; n != bots_.size(); ++n) {
@@ -533,8 +546,19 @@ void game::handle_message(int nplayer, const variant& msg)
 	} else if(type == "request_updates") {
 		if(msg.has_key("state_id") && !doc_.is_null()) {
 			const variant state_id = msg["state_id"];
-			if(state_id.as_int() != state_id_) {
+			if(state_id.as_int() != state_id_ && nplayer >= 0) {
 				send_game_state(nplayer);
+			} else if(state_id.as_int() == state_id_ && nplayer >= 0 && nplayer < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
+				players_[nplayer].confirmed_state_id = state_id_;
+
+				std::ostringstream s;
+				s << "{ type: \"confirm_sync\", player: " << nplayer << ", state_id: " << state_id_ << " }";
+				std::string msg = s.str();
+				for(int n = 0; n != players_.size(); ++n) {
+					if(n != nplayer && players_[n].is_human) {
+						queue_message(msg, nplayer);
+					}
+				}
 			}
 		}
 		return;
@@ -556,12 +580,16 @@ void game::handle_message(int nplayer, const variant& msg)
 	}
 
 	game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
+	auto start_time = profile::get_timer_ticks();
 	vars->add("message", msg);
 	vars->add("player", variant(nplayer));
 	rng::set_seed(rng_seed_);
 	handleEvent("message", vars.get());
 	rng_seed_ = rng::get_seed();
-	send_game_state();
+
+	const auto time_taken = profile::get_timer_ticks() - start_time;
+
+	send_game_state(-1, time_taken);
 }
 
 void game::setup_game()

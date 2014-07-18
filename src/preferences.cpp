@@ -640,7 +640,7 @@ namespace preferences {
 	}
 	
 	std::string dlc_path() {
-		std::string result(std::string(PREFERENCES_PATH) + "/dlc");
+		std::string result(preferences_path_ + "/dlc");
 		expand_path(result);
 		return result;
 	}
