@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <cmath>
 #include <set>
 #include <stdlib.h>
@@ -26,7 +33,6 @@
 #include "boost/lexical_cast.hpp"
 
 #include "asserts.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
@@ -40,8 +46,9 @@
 #include "variant_type.hpp"
 #include "wml_formula_callable.hpp"
 
-namespace {
-static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed"};
+namespace 
+{
+	static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed"};
 }
 
 std::string variant::variant_type_to_string(variant::TYPE type) {
@@ -155,8 +162,8 @@ type_error::type_error(const std::string& str) : message(str) {
 		message += "\n" + call_stack.back().expression->debugPinpointLocation();
 	}
 
-	std::cerr << "ERROR: " << message << "\n" << get_call_stack();
-	std::cerr << output_formula_error_info();
+	LOG_ERROR(message << "\n" << get_call_stack());
+	LOG_ERROR(output_formula_error_info());
 }
 
 VariantFunctionTypeInfo::VariantFunctionTypeInfo() : num_unneeded_args(0)
@@ -485,7 +492,7 @@ variant variant::create_delayed(game_logic::ConstFormulaPtr f, game_logic::Const
 void variant::resolve_delayed()
 {
 	std::set<variant*> items = delayed_variants_loading;
-	foreach(variant* v, items) {
+	for(variant* v : items) {
 		v->delayed_->calculate_result();
 		variant res = v->delayed_->result;
 		*v = res;
@@ -562,7 +569,7 @@ variant::variant(std::map<variant,variant>* map)
 {
 	for(std::map<variant, variant>::const_iterator i = map->begin(); i != map->end(); ++i) {
 		if(i->first.is_bool()) {
-			std::cerr << "VALUE: " << i->second.to_debug_string() << "\n";
+			LOG_ERROR("VALUE: " << i->second.to_debug_string());
 			assert(false);
 		}
 	}
@@ -792,7 +799,7 @@ variant variant::get_list_slice(int begin, int end) const
 
 	must_be(VARIANT_TYPE_LIST);
 
-	if(begin < 0 || end > list_->size()) {
+	if(begin < 0 || static_cast<unsigned>(end) > list_->size()) {
 		generate_error(formatter() << "ILLEGAL INDEX INTO LIST WHEN SLICING: " << begin << ", " << end << " / " << list_->size());
 	}
 
@@ -807,7 +814,7 @@ variant variant::get_list_slice(int begin, int end) const
 bool variant::function_call_valid(const std::vector<variant>& passed_args, std::string* message, bool allow_partial) const
 {
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
-		foreach(const variant& v, multi_fn_->functions) {
+		for(const variant& v : multi_fn_->functions) {
 			if(v.function_call_valid(passed_args)) {
 				return true;
 			}
@@ -839,14 +846,14 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 	const int max_args = fn_->type->arg_names.size();
 	const int min_args = max_args - fn_->type->num_default_args();
 
-	if(args.size() > max_args || (args.size() < min_args && !allow_partial)) {
+	if(args.size() > static_cast<unsigned>(max_args) || (args.size() < static_cast<unsigned>(min_args) && !allow_partial)) {
 		if(message) {
 			*message = "Incorrect number of arguments to function";
 		}
 		return false;
 	}
 
-	for(int n = 0; n != args.size(); ++n) {
+	for(unsigned n = 0; n != args.size(); ++n) {
 		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
 			if(fn_->type->variant_types[n]->match(args[n]) == false) {
 				if(message) {
@@ -863,7 +870,7 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 variant variant::operator()(const std::vector<variant>& passed_args) const
 {
 	if(type_ == VARIANT_TYPE_MULTI_FUNCTION) {
-		foreach(const variant& v, multi_fn_->functions) {
+		for(const variant& v : multi_fn_->functions) {
 			if(v.function_call_valid(passed_args)) {
 				return v(passed_args);
 			}
@@ -878,7 +885,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 		msg << "\nPossible functions:\n";
 
-		foreach(const variant& v, multi_fn_->functions) {
+		for(const variant& v : multi_fn_->functions) {
 			msg << "  args: ";
 			for(variant_type_ptr type : v.fn_->type->variant_types) {
 				msg << type->to_string() << ", ";
@@ -912,7 +919,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 	const int max_args = fn_->type->arg_names.size();
 	const int min_args = max_args - fn_->type->num_default_args();
 
-	if(args->size() < min_args || args->size() > max_args) {
+	if(args->size() < static_cast<unsigned>(min_args) || args->size() > static_cast<unsigned>(max_args)) {
 		std::ostringstream str;
 		for(std::vector<std::string>::const_iterator a = fn_->type->arg_names.begin(); a != fn_->type->arg_names.end(); ++a) {
 			if(a != fn_->type->arg_names.begin()) {
@@ -933,19 +940,19 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 					//auto-construct an object from a map in a function argument
 					game_logic::Formula::failIfStaticContext();
 
-					boost::intrusive_ptr<game_logic::Formula_object> obj(game_logic::Formula_object::create(class_name, (*args)[n]));
+					boost::intrusive_ptr<game_logic::FormulaObject> obj(game_logic::FormulaObject::create(class_name, (*args)[n]));
 
 					args_buf = *args;
 					args = &args_buf;
 
 					args_buf[n] = variant(obj.get());
 
-				} else if(const game_logic::Formula_interface* interface = fn_->type->variant_types[n]->is_interface()) {
+				} else if(const game_logic::FormulaInterface* interface = fn_->type->variant_types[n]->is_interface()) {
 					if((*args)[n].is_map() == false && (*args)[n].is_callable() == false) {
 						generate_error((formatter() << "FUNCTION ARGUMENT " << (n+1) << " EXPECTED INTERFACE " << fn_->type->variant_types[n]->str() << " BUT FOUND " << (*args)[n].write_json()).str());
 					}
 
-					variant obj = interface->get_dynamic_factory()->create((*args)[n]);
+					variant obj = interface->getDynamicFactory()->create((*args)[n]);
 
 					args_buf = *args;
 					args = &args_buf;
@@ -962,14 +969,14 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 		callable->add((*args)[n]);
 	}
 
-	for(size_t n = args->size(); n < max_args && (n - min_args) < fn_->type->default_args.size(); ++n) {
+	for(unsigned n = args->size(); n < static_cast<unsigned>(max_args) && (n - min_args) < fn_->type->default_args.size(); ++n) {
 		callable->add(fn_->type->default_args[n - min_args]);
 	}
 
 	if(fn_->fn) {
 		const variant result = fn_->fn->execute(*callable);
 		if(fn_->type->return_type && !fn_->type->return_type->match(result)) {
-			call_stack_manager scope(fn_->fn->expr().get(), callable.get());
+			CallStackManager scope(fn_->fn->expr().get(), callable.get());
 			generate_error(formatter() << "Function returned incorrect type, expecting " << fn_->type->return_type->to_string() << " but found " << result.write_json() << " (type: " << get_variant_type_from_value(result)->to_string() << ") FOR " << fn_->fn->str());
 		}
 		return result;
@@ -1258,7 +1265,7 @@ variant* variant::get_attr_mutable(variant key)
 variant* variant::get_index_mutable(int index)
 {
 	if(is_list()) {
-		if(index >= 0 && index < list_->size()) {
+		if(index >= 0 && static_cast<unsigned>(index) < list_->size()) {
 			return &list_->begin[index];
 		}
 	}
@@ -1373,7 +1380,7 @@ std::vector<variant_type_ptr> variant::function_arg_types() const
 		std::vector<std::vector<variant_type_ptr> > result;
 		for(int n = 0; n != multi_fn_->functions.size(); ++n) {
 			std::vector<variant_type_ptr> types = multi_fn_->functions[n].function_arg_types();
-			for(int m = 0; m != types.size(); ++m) {
+			for(unsigned m = 0; m != types.size(); ++m) {
 				if(result.size() <= m) {
 					result.resize(m+1);
 				}
@@ -1516,9 +1523,9 @@ variant variant::operator+(const variant& v) const
 	}
 
 	if(is_callable()) {
-		game_logic::Formula_object* obj = try_convert<game_logic::Formula_object>();
+		game_logic::FormulaObject* obj = try_convert<game_logic::FormulaObject>();
 		if(obj && v.is_map()) {
-			boost::intrusive_ptr<game_logic::Formula_object> new_obj(obj->clone());
+			boost::intrusive_ptr<game_logic::FormulaObject> new_obj(obj->clone());
 			const std::map<variant,variant>& m = v.as_map();
 			for(std::map<variant,variant>::const_iterator i = m.begin();
 			    i != m.end(); ++i) {
@@ -1995,7 +2002,7 @@ void variant::make_unique()
 	case VARIANT_TYPE_LIST: {
 		list_->refcount--;
 		list_ = new variant_list(*list_);
-		foreach(variant& v, list_->elements) {
+		for(variant& v : list_->elements) {
 			v.make_unique();
 		}
 		break;
@@ -2195,7 +2202,7 @@ std::string variant::to_debug_string(std::vector<const game_logic::FormulaCallab
 	}
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		s << "overload(";
-		foreach(const variant& v, multi_fn_->functions) {
+		for(const variant& v : multi_fn_->functions) {
 			s << v.to_debug_string() << ", ";
 		}
 		s << ")";
@@ -2511,15 +2518,6 @@ std::ostream& operator<<(std::ostream& os, const variant& v)
 	return os;
 }
 
-std::pair<variant*,variant*> variant::range() const
-{
-	if(type_ == VARIANT_TYPE_LIST) {
-		return std::pair<variant*,variant*>(&(*list_->begin), &(*list_->end));
-	}
-	variant v;
-	return std::pair<variant*,variant*>(&v,&v);
-}
-
 UNIT_TEST(variant_decimal)
 {
 	variant d(9876000, variant::DECIMAL_VARIANT);
@@ -2538,23 +2536,5 @@ BENCHMARK(variant_assign)
 		for(int n = 0; n != vec.size(); ++n) {
 			vec[n] = v;
 		}
-	}
-}
-
-UNIT_TEST(variant_foreach)
-{
-	std::vector<variant> l1;
-	l1.push_back(variant(1));
-	l1.push_back(variant(2));
-	l1.push_back(variant(3));
-	variant vl1(&l1);
-	int n = 1;
-	foreach(const variant& v, vl1.range()) {
-		CHECK_EQ(v.as_int(), n);
-		n++;
-	}
-
-	foreach(const variant& v, variant().range()) {
-		CHECK(false, "foreach null variant operator failed");
 	}
 }

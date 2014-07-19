@@ -1,3 +1,27 @@
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+/* XXX -- needs a re-write
 #include <boost/array.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -38,8 +62,6 @@
 #else
 #define bmround	round
 #endif
-
-#if defined(USE_ISOMAP)
 
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
@@ -512,10 +534,6 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 	if(facing->z > 0) {
 		--voxel_coord.z; 
 	}
-	/*std::cerr << "xp,yp:"  << xp << "," << yp
-		<< " : wc:" << world_coords.x << "," << world_coords.y << "," << world_coords.z
-		<< " : vc:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z
-		<< " : face:" << facing_name(*facing) << std::endl;*/
 	return voxel_coord;
 }
 
@@ -2358,4 +2376,4 @@ UTILITY(voxel_editor)
 	editor->showModal();
 }
 
-#endif //USE_SHADERS
+*/

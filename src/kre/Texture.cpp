@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -196,8 +196,8 @@ namespace KRE
 		mipmaps_(0), 
 		max_anisotropy_(1),
 		lod_bias_(0.0f),
-		surface_width_(0),
-		surface_height_(0),
+		surface_width_(width),
+		surface_height_(height),
 		width_(width),
 		height_(height),
 		depth_(depth),
@@ -225,7 +225,7 @@ namespace KRE
 		// XXX For reasons (i.e. some video cards are problematic either hardware/drivers)
 		// we are forced to use power-of-two textures anyway if we want mip-mapping and
 		// address modes other than CLAMP.
-		if(!DisplayDevice::CheckForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
+		if(!DisplayDevice::checkForFeature(DisplayDeviceCapabilties::NPOT_TEXTURES)) {
 			width_ = next_power_of_two(surface_width_);
 			height_ = next_power_of_two(surface_height_);
 			depth_ = 0;
@@ -234,6 +234,40 @@ namespace KRE
 			height_ = surface_height_;
 			depth_ = 0;
 		}
+
+		const int npixels = width_ * height_;
+		alpha_map_.resize(npixels);
+		// surfaces with zero for the alpha mask have no alpha channel
+		if(surface_ && surface_->getPixelFormat()->hasAlphaChannel()) {
+			auto fmt = surface_->getPixelFormat();
+			const unsigned char* pixels = reinterpret_cast<const unsigned char*>(surface_->pixels());
+			for(int y = 0; y != height_; ++y) {
+				const unsigned char* pix = pixels;
+				for(int x = 0; x != width_; ++x) {
+					bool alpha = false;
+					uint32_t pixel_value;
+					switch(fmt->bytesPerPixel()) {
+					// XXX - these probably need an endian-ness test. 
+					// Or moved to Surface.
+					case 1: pixel_value = pix[0]; break;						
+					case 2: pixel_value = (pix[1] << 8) | pix[0]; break;
+					case 4: pixel_value = (pix[3] << 24) | (pix[2] << 16) | (pix[1] << 8) | pix[0]; break;
+					}
+					auto alpha_value = (((pixel_value & fmt->getAlphaMask()) >> fmt->getAlphaShift()) << fmt->getAlphaLoss());
+					alpha_map_[x+y*width_] = alpha_value == 0;
+					pix += fmt->bytesPerPixel();
+				}
+				pixels += surface_->rowPitch();
+			}
+
+		} else {
+			for(int y = 0; y != height_; ++y) {
+				for(int x = 0; x != width_; ++x) {
+					alpha_map_[x + y*width_] = false;
+				}
+			}
+		}
+
 	}
 
 	void Texture::SetAddressModes(AddressMode u, AddressMode v, AddressMode w, const Color& bc)
@@ -277,7 +311,7 @@ namespace KRE
 		}
 	}
 
-	void Texture::SetTextureDimensions(unsigned w, unsigned h, unsigned d)
+	void Texture::setTextureDimensions(unsigned w, unsigned h, unsigned d)
 	{
 		width_ = w;
 		height_ = h;
@@ -299,16 +333,16 @@ namespace KRE
 
 	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)
 	{
-		return DisplayDevice::CreateTexture(filename, type, mipmap_levels);
+		return DisplayDevice::createTexture(filename, type, mipmap_levels);
 	}
 
 	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache)
 	{
-		return DisplayDevice::CreateTexture(surface, cache);
+		return DisplayDevice::createTexture(surface, cache);
 	}
 
 	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
 	{
-		return DisplayDevice::CreateTexture(surface, cache, node);
+		return DisplayDevice::createTexture(surface, cache, node);
 	}
 }

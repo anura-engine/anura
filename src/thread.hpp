@@ -24,6 +24,7 @@
 // XXX abstract SDL from this
 #pragma once
 
+#include <functional>
 #include <list>
 
 #include "SDL.h"
@@ -161,7 +162,7 @@ namespace threading
 		//
 		bool wait(const mutex& m);
 
-		enum WAIT_TIMEOUT_RESULT { THREAD_WAIT_OK, THREAD_WAIT_TIMEOUT, THREAD_WAIT_ERROR };
+		enum class WAIT_TIMEOUT_RESULT { OK, TIMEOUT, ERROR };
 
 		// wait on the condition with a timeout. Basically the same as the
 		// wait() function, but if the lock is not aquired before the
@@ -195,7 +196,7 @@ namespace threading
 	class waiter 
 	{
 	public:
-		enum ACTION { WAIT, ABORT };
+		enum class ACTION { WAIT, ABORT };
 
 		virtual ~waiter() {}
 		virtual ACTION process() = 0;

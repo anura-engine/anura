@@ -116,7 +116,7 @@ void tileset_editor_dialog::show_category_menu()
 {
 	using namespace gui;
 	gui::grid* grid = new gui::grid(2);
-	grid->swallow_clicks();
+	grid->swallowClicks();
 	grid->setShowBackground(true);
 	grid->setHpad(10);
 	grid->allowSelection();

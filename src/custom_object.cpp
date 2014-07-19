@@ -1293,11 +1293,11 @@ void CustomObject::draw(int xx, int yy) const
 void CustomObject::drawGroup() const
 {
 	if(label().empty() == false && label()[0] != '_') {
-		blit_texture(font::render_text(label(), graphics::color_yellow(), 32), x(), y() + 26);
+		blit_texture(font::render_text(label(), KRE::Color::colorYellow(), 32), x(), y() + 26);
 	}
 
 	if(group() >= 0) {
-		blit_texture(font::render_text(formatter() << group(), graphics::color_yellow(), 24), x(), y());
+		blit_texture(font::render_text(formatter() << group(), KRE::Color::colorYellow(), 24), x(), y());
 	}
 }
 

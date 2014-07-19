@@ -344,8 +344,6 @@ public:
 	void remove_formula_using_this(const game_logic::Formula* f);
 	const std::vector<const game_logic::Formula*>* formulae_using_this() const;
 
-	std::pair<variant*,variant*> range() const;
-
 	void must_be(TYPE t) const {
 #if !TARGET_OS_IPHONE
 		if(type_ != t) {

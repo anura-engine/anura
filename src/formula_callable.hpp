@@ -116,6 +116,9 @@ namespace game_logic
 	protected:
 		virtual ~FormulaCallable() {}
 
+		virtual variant getValueDefault(const std::string& key) const { return variant(); }
+		virtual void setValueDefault(const std::string& key, const variant& value) {}
+
 		virtual void setValue(const std::string& key, const variant& value);
 		virtual void setValueBySlot(int slot, const variant& value);
 		virtual int doCompare(const FormulaCallable* callable) const {

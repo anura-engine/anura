@@ -40,7 +40,7 @@ namespace gui
 
 		key_type get_key();
 
-		static std::string get_key_name(key_type key);
+		static std::string getKeyName(key_type key);
 	private:
 		DECLARE_CALLABLE(KeyButton);
 

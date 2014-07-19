@@ -125,13 +125,13 @@ namespace gui
 			dropdown_menu_ = new grid(1);
 		}
 		dropdown_menu_->setLoc(0, height()+2);
-		dropdown_menu_->allow_selection(true);
+		dropdown_menu_->allowSelection(true);
 		dropdown_menu_->setShowBackground(true);
-		dropdown_menu_->swallow_clicks(true);
+		dropdown_menu_->swallowClicks(true);
 		dropdown_menu_->set_col_width(0, width());
 		dropdown_menu_->set_max_height(dropdown_height_);
 		dropdown_menu_->setDim(width(), dropdown_height_);
-		dropdown_menu_->must_select();
+		dropdown_menu_->mustSelect();
 		for(const std::string& s : list_) {
 			dropdown_menu_->add_col(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}

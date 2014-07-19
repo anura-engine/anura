@@ -23,12 +23,8 @@
 
 #pragma once
 
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
 #include "kre/Geometry.hpp"
-#include "variant.hpp"
-
-#include <boost/intrusive_ptr.hpp>
+#include "SceneObjectCallable.hpp"
 
 class CustomObject;
 class Light;
@@ -36,18 +32,17 @@ class Light;
 typedef boost::intrusive_ptr<Light> LightPtr;
 typedef boost::intrusive_ptr<const Light> ConstLightPtr;
 
-class Light : public game_logic::FormulaCallable
+class Light : public graphics::SceneObjectCallable
 {
 public:
-	static LightPtr create_light(const CustomObject& obj, variant node);
+	static LightPtr createLight(const CustomObject& obj, variant node);
 
 	virtual variant write() const = 0;
 
-	explicit Light(const CustomObject& obj);
+	explicit Light(const CustomObject& obj, variant node);
 	virtual ~Light();
 	virtual void process() = 0;
 	virtual bool onScreen(const rect& screen_area) const = 0;
-	virtual void draw(const rect& screen_area, const unsigned char* color) const = 0;
 protected:
 	const CustomObject& object() const { return obj_; }
 private:
@@ -63,11 +58,19 @@ public:
 	variant write() const;
 	void process();
 	bool onScreen(const rect& screen_area) const;
-	void draw(const rect& screen_area, const unsigned char* color) const;
+	void preRender(const KRE::WindowManagerPtr& wnd) override;
 private:
 	DECLARE_CALLABLE(CircleLight);
+	void init();
+	void updateVertices();
+
+	std::shared_ptr<KRE::Attribute<glm::vec2>> fan_;
+	std::shared_ptr<KRE::Attribute<KRE::vertex_color>> sq_;
+
 	point center_;
 	int radius_;
+
+	KRE::Color last_color_;
 };
 
 class LightFadeLengthSetter

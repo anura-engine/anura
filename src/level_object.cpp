@@ -816,15 +816,7 @@ int hash_level_object(int x, int y) {
 }
 }
 
-void level_object::queue_draw(graphics::blit_queue& q, const level_tile& t)
-{
-	const int random_index = hash_level_object(t.x,t.y);
-	const int tile = t.object->tiles_[random_index%t.object->tiles_.size()];
-
-	queue_draw_from_tilesheet(q, t.object->t_, t.object->draw_area_, tile, t.x, t.y, t.face_right);
-}
-
-int level_object::calculateTileCorners(KRE::ImageLoadError* result, const level_tile& t)
+int level_object::calculateTileCorners(KRE::ImageLoadError* result, const LevelTile& t)
 {
 	const int random_index = hash_level_object(t.x,t.y);
 	const int tile = t.object->tiles_[random_index%t.object->tiles_.size()];

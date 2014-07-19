@@ -23,6 +23,8 @@
 
 #pragma once
 
+/* XXX -- needs re-write
+
 #include <string>
 
 #include "formula.hpp"
@@ -62,3 +64,5 @@ private:
 	const game_logic::FormulaExpression* expr_;
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 };
+
+*/

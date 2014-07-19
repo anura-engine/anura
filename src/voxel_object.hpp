@@ -23,6 +23,8 @@
 
 #pragma once
 
+/* XXX This needs re-written.
+
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "variant.hpp"
@@ -30,8 +32,6 @@
 #include "widget_factory.hpp"
 
 class Level;
-
-// XXX This needs re-written.
 
 namespace voxel
 {
@@ -128,3 +128,4 @@ namespace voxel_object_factory
 {
 	voxel::voxel_object_ptr create(const variant& node);
 }
+*/

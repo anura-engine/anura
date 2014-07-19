@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -137,8 +137,19 @@ namespace KRE
 		bool hasBlendMode() const { return blend_mode_ != NULL; }
 		const BlendMode getBlendMode() const;
 		void setBlendMode(const BlendMode& bm) { blend_mode_.reset(new BlendMode(bm)); }
+
+		template<typename N, typename T>
+		const Geometry::Rect<N> getNormalisedTextureCoords(const Geometry::Rect<T>& r) {
+			float w = static_cast<float>(surface_width_);
+			float h = static_cast<float>(surface_height_);
+			return Geometry::Rect<N>(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
+		}
+
+		// Can return NULL if not-implemented, invalid underlying surface.
+		virtual const unsigned char* colorAt(int x, int y) const = 0;
+		bool isAlpha(unsigned x, unsigned y) { return alpha_map_[y*width_+x]; }
 	protected:
-		void SetTextureDimensions(unsigned w, unsigned h, unsigned d=0);
+		void setTextureDimensions(unsigned w, unsigned h, unsigned d=0);
 	private:
 		virtual void Rebuild() = 0;
 
@@ -153,6 +164,8 @@ namespace KRE
 		SurfacePtr surface_;
 
 		std::unique_ptr<BlendMode> blend_mode_;
+
+		std::vector<bool> alpha_map_;
 		
 		unsigned surface_width_;
 		unsigned surface_height_;

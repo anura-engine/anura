@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -559,7 +559,7 @@ namespace KRE
 			default: break;
 			}
 
-			ASSERT_LOG("Unrecognised ReadFormat: " << static_cast<int>(fmt));
+			ASSERT_LOG(false, "Unrecognised ReadFormat: " << static_cast<int>(fmt));
 			return GL_NONE;
 		}
 
@@ -583,7 +583,7 @@ namespace KRE
 			case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
 			default: break;
 			}
-			ASSERT_LOG("Unrecognised AttrFormat: " << static_cast<int>(type));
+			ASSERT_LOG(false, "Unrecognised AttrFormat: " << static_cast<int>(type));
 			return GL_NONE;
 		}
 	}

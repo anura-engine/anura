@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,7 @@
 #include "../Color.hpp"
 #include "DisplayDevice.hpp"
 #include "Material.hpp"
+#include "PixelFormat.hpp"
 #include "Renderable.hpp"
 #include "WindowManagerFwd.hpp"
 
@@ -37,6 +38,19 @@ namespace KRE
 		WINDOWED,
 		FULLSCREEN_WINDOWED,
 	};
+
+	struct WindowMode
+	{
+		unsigned width;
+		unsigned height;
+		PixelFormatPtr pf;
+		int refresh;
+	};
+
+	inline bool operator==(const WindowMode& lhs, const WindowMode& rhs) {
+		return lhs.width == rhs.width && lhs.height == rhs.height;
+	}
+
 	class WindowManager
 	{
 	public:
@@ -93,6 +107,8 @@ namespace KRE
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
 
 		void saveFrameBuffer(const std::string& filename);
+
+		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) = 0;
 
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();

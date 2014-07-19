@@ -161,8 +161,10 @@ namespace gui
 		virtual void handleDraw() const = 0;
 
 	private:
-		DISALLOW_COPY_AND_ASSIGN(Widget);
 		DECLARE_CALLABLE(Widget);
+		
+		void operator=(const Widget&);
+
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) {}
 
 		int x_, y_;

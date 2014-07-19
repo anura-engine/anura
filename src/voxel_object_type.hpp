@@ -23,6 +23,7 @@
 
 #pragma once
 
+/* XXX - needs re-write
 #include <string>
 
 #include <boost/intrusive_ptr.hpp>
@@ -99,3 +100,4 @@ namespace voxel
 	};
 
 }
+*/

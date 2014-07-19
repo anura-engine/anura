@@ -71,7 +71,7 @@ namespace gui
 			init();
 		}
 		virtual ~ItemEditDialog() {}
-		variant getItems() const { return item_grid_->get_tree(); }
+		variant getItems() const { return item_grid_->getTree(); }
 		void allowFunctions(bool val=true) { allow_functions_ = val; }
 	protected:
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
@@ -534,7 +534,7 @@ namespace editor_dialogs
 		grid->setHpad(10);
 		grid->setShowBackground(true);
 		grid->allowSelection();
-		grid->swallow_clicks();
+		grid->swallowClicks();
 		for(const std::string& s : choices) {
 			grid->add_col(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}
@@ -685,10 +685,10 @@ namespace gui
 			string_entry_->set_formula();
 		}
 
-		item_grid_.reset(new tree_editor_widget(width()/3 - border_offset, height() - current_height - border_offset, items_));
+		item_grid_.reset(new TreeEditorWidget(width()/3 - border_offset, height() - current_height - border_offset, items_));
 		item_grid_->allowSelection();
-		item_grid_->allow_persistent_highlight();
-		item_grid_->set_editor_handler(variant::VARIANT_TYPE_STRING, string_entry_, std::bind(&ItemEditDialog::editorSelect, this, _1, _2));
+		item_grid_->allowPersistentHighlight();
+		item_grid_->setEditorHandler(variant::VARIANT_TYPE_STRING, string_entry_, std::bind(&ItemEditDialog::editorSelect, this, _1, _2));
 		addWidget(item_grid_, border_offset, current_height);
 
 		current_height += item_grid_->height() + hpad;

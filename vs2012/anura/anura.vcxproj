@@ -289,6 +289,7 @@
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\PixelFormat.hpp" />
     <ClInclude Include="..\..\src\kre\Renderable.hpp" />
     <ClInclude Include="..\..\src\kre\RenderFwd.hpp" />
     <ClInclude Include="..\..\src\kre\RenderManager.hpp" />
@@ -460,7 +461,6 @@
     <ClInclude Include="..\..\src\video_selections.hpp" />
     <ClInclude Include="..\..\src\view3d_widget.hpp" />
     <ClInclude Include="..\..\src\VoronoiDiagramGenerator.h" />
-    <ClInclude Include="..\..\src\voxel_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\voxel_model.hpp" />
     <ClInclude Include="..\..\src\voxel_object.hpp" />
     <ClInclude Include="..\..\src\voxel_object_functions.hpp" />
@@ -691,8 +691,6 @@
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
-    <ClCompile Include="..\..\src\raster.cpp" />
-    <ClCompile Include="..\..\src\raster_distortion.cpp" />
     <ClCompile Include="..\..\src\rectangle_rotator.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
     <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
@@ -781,7 +779,6 @@
     <ClCompile Include="..\..\src\VoronoiDiagramGenerator.cpp" />
     <ClCompile Include="..\..\src\voxel_animation.cpp" />
     <ClCompile Include="..\..\src\voxel_editor.cpp" />
-    <ClCompile Include="..\..\src\voxel_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\voxel_model.cpp" />
     <ClCompile Include="..\..\src\voxel_object.cpp" />
     <ClCompile Include="..\..\src\voxel_object_functions.cpp" />

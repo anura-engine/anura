@@ -354,7 +354,7 @@ namespace gui
 			w += width;
 		}
 
-		int desired_height = row_height_*nrows();
+		int desired_height = row_height_*getNRows();
 		setVirtualHeight(desired_height);
 		setScrollStep(1);
 		setArrowScrollStep(row_height_);
@@ -373,7 +373,7 @@ namespace gui
 		}
 
 		int y = 0;
-		for(int n = 0; n != nrows(); ++n) {
+		for(int n = 0; n != getNRows(); ++n) {
 			int x = 0;
 			for(int m = 0; m != ncols_; ++m) {
 				int align = 0;
@@ -433,14 +433,14 @@ namespace gui
 				canvas->drawSolidRect(rect(0, 0, width(), height()), KRE::Color(50, 50, 50));
 			}
 
-			if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < nrows()) {
+			if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), default_selection_) == header_rows_.end()) {
 					canvas->drawSolidRect(rect(0,row_height_*default_selection_ - getYscroll(),width(),row_height_),
 						KRE::Color(0,0,255,128));
 				}
 			}
 
-			if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < nrows()) {
+			if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
 					canvas->drawSolidRect(rect(0,row_height_*selected_row_ - getYscroll(),width(),row_height_), 
 						KRE::Color(255,0,0,128));
@@ -491,8 +491,8 @@ namespace gui
 						: y3);
 					if(allow_selection_) {
 						selected_row_ += 3;
-						if(selected_row_ >= nrows()) {
-							selected_row_ = nrows() - 1;
+						if(selected_row_ >= getNRows()) {
+							selected_row_ = getNRows() - 1;
 						}
 					}
 				}
@@ -540,16 +540,16 @@ namespace gui
 				if(event.key.keysym.sym == SDLK_UP) {
 					setYscroll(getYscroll() - row_height_ < 0 ? 0 : getYscroll() - row_height_);
 					if(selected_row_-- == 0) {
-						selected_row_ = nrows()-1;
-						setYscroll(std::min(getVirtualHeight(),row_height_*nrows()) - height());
+						selected_row_ = getNRows()-1;
+						setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - height());
 					}
 					claimed = true;
 				} else if(event.key.keysym.sym == SDLK_DOWN) {
 					int y1 = getYscroll() + row_height_;
-					setYscroll(std::min(getVirtualHeight(),row_height_*nrows()) - y1 < height() 
-						? std::min(getVirtualHeight(),row_height_*nrows()) - height()
+					setYscroll(std::min(getVirtualHeight(),row_height_*getNRows()) - y1 < height() 
+						? std::min(getVirtualHeight(),row_height_*getNRows()) - height()
 						: y1);
-					if(++selected_row_ == nrows()) {
+					if(++selected_row_ == getNRows()) {
 						setYscroll(0);
 						selected_row_ = 0;
 					}

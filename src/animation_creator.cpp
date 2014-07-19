@@ -203,7 +203,7 @@ namespace gui
 		g->setShowBackground(true);
 		g->setHpad(10);
 		g->set_header_row(0);
-		g->allow_selection(true);
+		g->allowSelection(true);
 		g->add_col(LabelPtr(new Label("Identifier", 14)))
 			.add_col(LabelPtr(new Label("Image Path", 14)))
 			.add_col(LabelPtr(new Label("Area in Image", 14)));

@@ -1,55 +1,157 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <math.h>
+
+#include "kre/DisplayDevice.hpp"
 
 #include "custom_object.hpp"
 #include "formatter.hpp"
 #include "light.hpp"
-#include "raster.hpp"
 #include "variant_utils.hpp"
 
-light_ptr light::create_light(const custom_object& obj, variant node)
+namespace 
+{
+	int fade_length = 64;
+}
+
+LightPtr Light::createLight(const CustomObject& obj, variant node)
 {
 	if(node["type"].as_string() == "circle") {
-		return light_ptr(new circle_light(obj, node));
+		return LightPtr(new CircleLight(obj, node));
 	} else {
-		return light_ptr();
+		return LightPtr();
 	}
 }
 
-light::light(const custom_object& obj) : obj_(obj)
-{}
-
-light::~light() {}
-
-circle_light::circle_light(const custom_object& obj, variant node)
-  : light(obj), center_(obj.getMidpoint()), radius_(node["radius"].as_int())
-{}
-
-circle_light::circle_light(const custom_object& obj, int radius)
-  : light(obj), center_(obj.getMidpoint()), radius_(radius)
-{}
-
-variant light::getValue(const std::string& key) const
+Light::Light(const CustomObject& obj, variant node) 
+	: SceneObjectCallable(node), 
+	obj_(obj)
 {
-	return variant();
 }
 
-variant circle_light::write() const
+Light::~Light() 
+{
+}
+
+BEGIN_DEFINE_CALLABLE(Light, SceneObjectCallable)
+	DEFINE_FIELD(dummy, "null")
+		return variant();
+END_DEFINE_CALLABLE(Light)
+
+CircleLight::CircleLight(const CustomObject& obj, variant node)
+  : Light(obj, node), 
+  center_(obj.getMidpoint()), 
+  radius_(node["radius"].as_int())
+{
+	init();
+}
+
+CircleLight::CircleLight(const CustomObject& obj, int radius)
+  : Light(obj, variant()), 
+  center_(obj.getMidpoint()), 
+  radius_(radius)
+{
+	init();
+}
+
+void CircleLight::init()
+{
+	using namespace KRE;
+	clearAttributeSets();
+
+	auto as_fan = DisplayDevice::createAttributeSet(false, false, false);
+	fan_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+	fan_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
+	as_fan->addAttribute(AttributeBasePtr(fan_));
+	as_fan->setDrawMode(DrawMode::TRIANGLE_FAN);
+	addAttributeSet(as_fan);
+
+	auto as_sq = DisplayDevice::createAttributeSet(false, false, false);
+	sq_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+	sq_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color,vertex)));
+	sq_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color,color)));
+	as_sq->addAttribute(AttributeBasePtr(sq_));
+	as_sq->setDrawMode(DrawMode::TRIANGLE_STRIP);
+	addAttributeSet(as_sq);
+
+	updateVertices();
+}
+
+void CircleLight::preRender(const KRE::WindowManagerPtr& wnd)
+{
+	if(getColor() != last_color_) {
+		updateVertices();
+	}
+}
+
+void CircleLight::updateVertices()
+{
+	std::vector<glm::vec2> varray;
+
+	static std::vector<float> x_angles;
+	static std::vector<float> y_angles;
+
+	if(x_angles.empty()) {
+		for(float angle = 0.0f; angle < 3.145926535f*2.0f; angle += 0.2f) {
+			x_angles.push_back(cos(angle));
+			y_angles.push_back(sin(angle));
+		}
+	}
+
+	const float x = static_cast<float>(center_.x);
+	const float y = static_cast<float>(center_.y);
+
+	varray.emplace_back(x,y);
+	for(unsigned n = 0; n != x_angles.size(); ++n) {
+		const float xpos = x + radius_*x_angles[n];
+		const float ypos = y + radius_*y_angles[n];
+		varray.emplace_back(xpos,ypos);
+	}
+	varray.emplace_back(varray[1]);
+	fan_->update(&varray);
+
+	std::vector<KRE::vertex_color> vc_array;
+	KRE::Color c1 = getColor(); c1.setAlpha(255);
+	KRE::Color c2 = getColor(); c2.setAlpha(0);
+	glm::u8vec4 col1 = c1.as_u8vec4();
+	glm::u8vec4 col2 = c2.as_u8vec4();
+	for(int n = 0; n != x_angles.size(); ++n) {
+		const float xpos = x + radius_*x_angles[n];
+		const float ypos = y + radius_*y_angles[n];
+		const float xpos2 = x + (radius_+fade_length)*x_angles[n];
+		const float ypos2 = y + (radius_+fade_length)*y_angles[n];
+		vc_array.emplace_back(glm::vec2(xpos, ypos), col1);
+		vc_array.emplace_back(glm::vec2(xpos2, ypos2), col2);
+	}
+	vc_array.emplace_back(vc_array[1]);
+	vc_array.emplace_back(vc_array[2]);
+	sq_->update(&vc_array);
+
+	last_color_ = getColor();
+}
+
+variant CircleLight::write() const
 {
 	variant_builder res;
 	res.add("type", "circle");
@@ -58,126 +160,42 @@ variant circle_light::write() const
 	return res.build();
 }
 
-void circle_light::process()
+void CircleLight::process()
 {
 	center_ = object().getMidpoint();
 }
 
-bool circle_light::on_screen(const rect& screen_area) const
+bool CircleLight::onScreen(const rect& screen_area) const
 {
 	return true;
 }
 
-namespace {
-	int fade_length = 64;
-}
+BEGIN_DEFINE_CALLABLE(CircleLight, Light)
+	DEFINE_FIELD(center, "[int,int]")
+		std::vector<variant> v;
+		v.emplace_back(obj.center_.x);
+		v.emplace_back(obj.center_.y);
+		return variant(&v);
+	DEFINE_SET_FIELD
+		obj.center_.x = value[0].as_int();
+		obj.center_.y = value[0].as_int();
+		obj.updateVertices();
 
-void circle_light::draw(const rect& screen_area, const unsigned char* color) const
-{
-	static std::vector<float> x_angles;
-	static std::vector<float> y_angles;
+	DEFINE_FIELD(radius, "int")
+		return variant(obj.radius_);
+	DEFINE_SET_FIELD
+		obj.radius_ = value.as_int();
+		obj.updateVertices();
+END_DEFINE_CALLABLE(CircleLight)
 
-	if(x_angles.empty()) {
-		for(float angle = 0.0f; angle < 3.1459f*2.0f; angle += 0.2f) {
-			x_angles.push_back(cos(angle));
-			y_angles.push_back(sin(angle));
-		}
-	}
 
-	static std::vector<GLfloat> varray;
-
-	const int x = center_.x;
-	const int y = center_.y;
-
-	varray.clear();
-	varray.push_back(x);
-	varray.push_back(y);
-	for(int n = 0; n != x_angles.size(); ++n) {
-		const float xpos = x + radius_*x_angles[n];
-		const float ypos = y + radius_*y_angles[n];
-		varray.push_back(xpos);
-		varray.push_back(ypos);
-	}
-
-	//repeat the first coordinate to complete the circle
-	varray.push_back(varray[2]);
-	varray.push_back(varray[3]);
-
-	glColor4ub(color[0], color[1], color[2], 255);
-
-#if defined(USE_SHADERS)
-	gles2::manager gles2_manager(gles2::get_simple_shader());
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-#else
-	glDisable(GL_TEXTURE_2D);
-	glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-	glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-#endif
-	glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size()/2);
-
-	varray.clear();
-	for(int n = 0; n != x_angles.size(); ++n) {
-		const float xpos = x + radius_*x_angles[n];
-		const float ypos = y + radius_*y_angles[n];
-		const float xpos2 = x + (radius_+fade_length)*x_angles[n];
-		const float ypos2 = y + (radius_+fade_length)*y_angles[n];
-		varray.push_back(xpos);
-		varray.push_back(ypos);
-		varray.push_back(xpos2);
-		varray.push_back(ypos2);
-	}
-
-	varray.push_back(varray[0]);
-	varray.push_back(varray[1]);
-	varray.push_back(varray[2]);
-	varray.push_back(varray[3]);
-
-	//the color array always just alternates between full-alpha and no-alpha,
-	//always white. So just expand it until it's as big as needed.
-	static std::vector<GLbyte> carray;
-	carray.clear();
-	while(carray.size() < (x_angles.size()+1)*8) {
-		carray.push_back(color[0]);
-		carray.push_back(color[1]);
-		carray.push_back(color[2]);
-		carray.push_back(255);
-		carray.push_back(color[0]);
-		carray.push_back(color[1]);
-		carray.push_back(color[2]);
-		carray.push_back(0);
-	}
-#if defined(USE_SHADERS)
-	{
-		gles2::manager gles2_manager(gles2::get_simple_col_shader());
-		// May need to use a frgament shader implementing phong shading here.
-		gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &varray.front());
-		gles2::active_shader()->shader()->color_array(4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray.front());
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, varray.size()/2);
-	}
-#else
-	glEnableClientState(GL_COLOR_ARRAY);
-	glShadeModel(GL_SMOOTH);
-
-	glVertexPointer(2, GL_FLOAT, 0, &varray.front());
-	glColorPointer(4, GL_UNSIGNED_BYTE, 0, &carray.front());
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, varray.size()/2);
-
-	glDisableClientState(GL_COLOR_ARRAY);
-	glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-	glEnable(GL_TEXTURE_2D);
-	glShadeModel(GL_FLAT);
-#endif
-
-	glColor4ub(255, 255, 255, 255);
-}
-
-light_fade_length_setter::light_fade_length_setter(int value)
+LightFadeLengthSetter::LightFadeLengthSetter(int value)
   : old_value_(fade_length)
 {
 	fade_length = value;
 }
 
-light_fade_length_setter::~light_fade_length_setter()
+LightFadeLengthSetter::~LightFadeLengthSetter()
 {
 	fade_length = old_value_;
 }

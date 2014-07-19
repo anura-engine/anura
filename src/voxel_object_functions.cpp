@@ -1,21 +1,28 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
-#if defined(USE_SHADERS)
+/* XXX -- needs re-write
+
 #include "formula_callable_definition.hpp"
 #include "formula_function_registry.hpp"
 #include "isoworld.hpp"
@@ -162,82 +169,80 @@ RETURN_TYPE("commands")
 END_FUNCTION_DEF(fire_event)
 
 
-/*class spawn_voxel_command : public voxel_object_command_callable
-{
-public:
-	spawn_voxel_command(voxel::UserVoxelObjectPtr obj, variant instantiation_commands)
-	  : obj_(obj), instantiation_commands_(instantiation_commands)
-	{}
-	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const {
-
-		lvl.add_object(obj_);
-
-		obj_->executeCommand(instantiation_commands_);
-	}
-private:
-	voxel::UserVoxelObjectPtr obj_;
-	variant instantiation_commands_;
-};
-
-FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal y, decimal z, (optional) properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
-
-	formula::failIfStaticContext();
-
-	const std::string type = EVAL_ARG(0).as_string();
-	const float x = float(EVAL_ARG(1).as_decimal().as_float());
-	const float y = float(EVAL_ARG(2).as_decimal().as_float());
-	const float z = float(EVAL_ARG(3).as_decimal().as_float());
-
-	variant arg4 = EVAL_ARG(4);
-
-	voxel::UserVoxelObjectPtr obj(new voxel::user_voxel_object(type, x, y, z));
-
-	variant commands;
-	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
-	cmd->setExpression(this);
-	return variant(cmd);
-FUNCTION_ARGS_DEF
-	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debugPinpointLocation());
-	ARG_TYPE("string")
-	ARG_TYPE("decimal")
-	ARG_TYPE("decimal")
-	ARG_TYPE("decimal")
-	ARG_TYPE("map")
-	ARG_TYPE("commands")
-
-	variant v;
-	if(args()[0]->canReduceToVariant(v) && v.is_string()) {
-		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
-		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
-		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debugPinpointLocation());
-
-		if(args().size() > 3) {
-			variant_type_ptr map_type = args()[3]->queryVariantType();
-			assert(map_type);
-
-			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
-			if(props) {
-				foreach(int slot, type->slots_requiring_initialization()) {
-					const std::string& prop_id = type->getEntry(slot)->id;
-					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debugPinpointLocation());
-				}
-
-				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
-					const int slot = type->getSlot(itor->first.as_string());
-					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debugPinpointLocation());
-
-					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
-					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
-				}
-			}
-		}
-
-		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
-	}
-RETURN_TYPE("commands")
-END_FUNCTION_DEF(spawn_voxel)
-*/
-
+//class spawn_voxel_command : public voxel_object_command_callable
+//{
+//public:
+//	spawn_voxel_command(voxel::UserVoxelObjectPtr obj, variant instantiation_commands)
+//	  : obj_(obj), instantiation_commands_(instantiation_commands)
+//	{}
+//	virtual void execute(voxel::world& lvl, voxel::voxel_object& ob) const {
+//
+//		lvl.add_object(obj_);
+//
+//		obj_->executeCommand(instantiation_commands_);
+//	}
+//private:
+//	voxel::UserVoxelObjectPtr obj_;
+//	variant instantiation_commands_;
+//};
+//
+//FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal y, decimal z, (optional) properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
+//
+//	formula::failIfStaticContext();
+//
+//	const std::string type = EVAL_ARG(0).as_string();
+//	const float x = float(EVAL_ARG(1).as_decimal().as_float());
+//	const float y = float(EVAL_ARG(2).as_decimal().as_float());
+//	const float z = float(EVAL_ARG(3).as_decimal().as_float());
+//
+//	variant arg4 = EVAL_ARG(4);
+//
+//	voxel::UserVoxelObjectPtr obj(new voxel::user_voxel_object(type, x, y, z));
+//
+//	variant commands;
+//	spawn_voxel_command* cmd = (new spawn_voxel_command(obj, commands));
+//	cmd->setExpression(this);
+//	return variant(cmd);
+//FUNCTION_ARGS_DEF
+//	//ASSERT_LOG(false, "spawn() not supported in strict mode " << debugPinpointLocation());
+//	ARG_TYPE("string")
+//	ARG_TYPE("decimal")
+//	ARG_TYPE("decimal")
+//	ARG_TYPE("decimal")
+//	ARG_TYPE("map")
+//	ARG_TYPE("commands")
+//
+//	variant v;
+//	if(args()[0]->canReduceToVariant(v) && v.is_string()) {
+//		game_logic::FormulaCallableDefinitionPtr type_def = CustomObjectType::getDefinition(v.as_string());
+//		const CustomObjectCallable* type = dynamic_cast<const CustomObjectCallable*>(type_def.get());
+//		ASSERT_LOG(type, "Illegal object type: " << v.as_string() << " " << debugPinpointLocation());
+//
+//		if(args().size() > 3) {
+//			variant_type_ptr map_type = args()[3]->queryVariantType();
+//			assert(map_type);
+//
+//			const std::map<variant, variant_type_ptr>* props = map_type->is_specific_map();
+//			if(props) {
+//				foreach(int slot, type->slots_requiring_initialization()) {
+//					const std::string& prop_id = type->getEntry(slot)->id;
+//					ASSERT_LOG(props->count(variant(prop_id)), "Must initialize " << v.as_string() << "." << prop_id << " " << debugPinpointLocation());
+//				}
+//
+//				for(std::map<variant,variant_type_ptr>::const_iterator itor = props->begin(); itor != props->end(); ++itor) {
+//					const int slot = type->getSlot(itor->first.as_string());
+//					ASSERT_LOG(slot >= 0, "Unknown property " << v.as_string() << "." << itor->first.as_string() << " " << debugPinpointLocation());
+//
+//					const FormulaCallableDefinition::Entry& entry = *type->getEntry(slot);
+//					ASSERT_LOG(variant_types_compatible(entry.getWriteType(), itor->second), "Initializing property " << v.as_string() << "." << itor->first.as_string() << " with type " << itor->second->to_string() << " when " << entry.getWriteType()->to_string() << " is expected " << debugPinpointLocation());
+//				}
+//			}
+//		}
+//
+//		ASSERT_LOG(type->slots_requiring_initialization().empty() || args().size() > 3 && args()[3]->queryVariantType()->is_map_of().first, "Illegal spawn of " << v.as_string() << " property " << type->getEntry(type->slots_requiring_initialization()[0])->id << " requires initialization " << debugPinpointLocation());
+//	}
+//RETURN_TYPE("commands")
+//END_FUNCTION_DEF(spawn_voxel)
 
 class voxel_object_FunctionSymbolTable : public FunctionSymbolTable
 {
@@ -264,5 +269,4 @@ FunctionSymbolTable& get_voxel_object_functions_symbol_table()
 	static voxel_object_FunctionSymbolTable table;
 	return table;
 }
-
-#endif // USE_SHADERS
+*/

@@ -23,6 +23,7 @@
 
 #pragma once
 
+/* XXX -- needs re-write
 #include <map>
 #include <vector>
 
@@ -235,3 +236,4 @@ namespace voxel
 		glm::vec3 feet_;
 	};
 }
+*/

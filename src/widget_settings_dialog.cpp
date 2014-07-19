@@ -153,9 +153,9 @@ namespace gui
 
 				grid_ptr gg = new grid(1);
 				gg->allowSelection();
-				gg->swallow_clicks();
+				gg->swallowClicks();
 				gg->setShowBackground(true);
-				gg->allow_draw_highlight(false);
+				gg->allowDrawHighlight(false);
 				gg->registerSelectionCallback([=](int n){std::cerr << "n = " << n << std::endl; if(n != 0){removeWidget(gg); init();}});
 				gg->setZOrder(100);
 				gg->add_col(cp);

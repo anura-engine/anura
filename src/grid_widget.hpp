@@ -95,7 +95,7 @@ namespace gui
 
 		void visitValues(game_logic::FormulaCallableVisitor& visitor);
 
-		int nrows() const { return cells_.size()/ncols_; }
+		int getNRows() const { return cells_.size()/ncols_; }
 		int ncols_;
 		std::vector<WidgetPtr> cells_;
 		std::vector<WidgetPtr> visible_cells_;

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@ namespace KRE
 	class SDLPixelFormat : public PixelFormat
 	{
 	public:
-		SDLPixelFormat(const SDL_PixelFormat* pf);
+		SDLPixelFormat(Uint32 pf);
 		virtual ~SDLPixelFormat();
 
 		uint8_t bitsPerPixel() const override;
@@ -69,6 +69,12 @@ namespace KRE
 		uint32_t getAlphaShift() const override;
 		uint32_t getLuminanceShift() const override;
 
+		uint32_t getRedLoss() const override;
+		uint32_t getGreenLoss() const override;
+		uint32_t getBlueLoss() const override;
+		uint32_t getAlphaLoss() const override;
+		uint32_t getLuminanceLoss() const override;
+
 		PixelFormat::PF getFormat() const override;
 
 		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
@@ -76,7 +82,7 @@ namespace KRE
 
 		bool hasPalette() const override;
 	private:
-		const SDL_PixelFormat* pf_;
+		SDL_PixelFormat* pf_;
 	};
 
 

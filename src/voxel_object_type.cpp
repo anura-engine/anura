@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+/* XXX -- needs re-write
+
 #include <map>
 
 #include "formula.hpp"
@@ -373,3 +375,4 @@ namespace voxel
 		return event_handlers_[event_id].get();
 	}
 }
+*/

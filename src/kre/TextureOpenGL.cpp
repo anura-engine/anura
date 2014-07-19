@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,6 @@
 */
 
 #include "../asserts.hpp"
-#include "../logger.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -88,7 +87,7 @@ namespace KRE
 		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		is_yuv_planar_(false)
 	{
-		SetTextureDimensions(width, height, depth);
+		setTextureDimensions(width, height, depth);
 		CreateTexture(fmt);
 		Init();
 	}
@@ -478,5 +477,16 @@ namespace KRE
 		// Re-create the texture
 		CreateTexture(pixel_format_);
 		Init();
+	}
+
+	const unsigned char* OpenGLTexture::colorAt(int x, int y) const 
+	{
+		if(getSurface() == NULL) {
+			// We could probably try a glTexImage fall-back here. But ugh, slow.
+			return NULL;
+		}
+		auto s = getSurface();
+		const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
+		return (pixels + (y*s->width() + x)*s->getPixelFormat()->bytesPerPixel());
 	}
 }

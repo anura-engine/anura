@@ -378,16 +378,16 @@ bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 				save();
 				return true;
 			} else if(event.key.keysym.sym == SDLK_TAB && (event.key.keysym.mod&KMOD_CTRL) && files_grid_) {
-				if(!files_grid_->has_must_select()) {
-					files_grid_->must_select(true, 1);
+				if(!files_grid_->hasMustSelect()) {
+					files_grid_->mustSelect(true, 1);
 				} else {
-					files_grid_->must_select(true, (files_grid_->selection()+1)%files_.size());
+					files_grid_->mustSelect(true, (files_grid_->selection()+1)%files_.size());
 				}
 			}
 			break;
 		}
 		case SDL_KEYUP: {
-			if(files_grid_ && files_grid_->has_must_select() && (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)) {
+			if(files_grid_ && files_grid_->hasMustSelect() && (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)) {
 				select_file(files_grid_->selection());
 			}
 			break;
@@ -684,8 +684,8 @@ void CodeEditorDialog::process()
 		if(suggestions_.empty() == false) {
 			grid_ptr suggestions_grid(new grid(1));
 			suggestions_grid->registerSelectionCallback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
-			suggestions_grid->swallow_clicks();
-			suggestions_grid->allow_selection(true);
+			suggestions_grid->swallowClicks();
+			suggestions_grid->allowSelection(true);
 			suggestions_grid->setShowBackground(true);
 			suggestions_grid->set_max_height(160);
 			for(const Suggestion& s : suggestions_) {
@@ -1101,7 +1101,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	grid_ptr call_grid(new grid(1));
 	call_grid->set_max_height(wnd->height() - console->y());
 	call_grid->allowSelection();
-	call_grid->must_select();
+	call_grid->mustSelect();
 	for(const CallStackEntry& entry : reverse_stack) {
 		std::string str = entry.expression->str();
 		std::string::iterator i = std::find(str.begin(), str.end(), '\n');

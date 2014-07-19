@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <algorithm>
 #include <iostream>
 #include <string>
@@ -21,7 +28,6 @@
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "module.hpp"
 #include "json_parser.hpp"
@@ -30,206 +36,208 @@
 #include "utils.hpp"
 #include "variant_utils.hpp"
 
-
-namespace tbs {
-
-namespace {
-bool g_exit_server = false;
-}
-
-server::game_info::game_info(const variant& value) : nlast_touch(-1), quit_server_on_exit(false)
+namespace tbs 
 {
-	game_state = game::create(value);
-}
+	using std::placeholders::_1;
+	using std::placeholders::_2;
 
-server::game_info::~game_info()
-{
-	if(quit_server_on_exit) {
-		g_exit_server = true;
+	namespace 
+	{
+		bool g_exit_server = false;
 	}
-}
 
-server::client_info::client_info() : nplayer(0), last_contact(0)
-{}
+	server::game_info::game_info(const variant& value) : nlast_touch(-1), quit_server_on_exit(false)
+	{
+		game_state = game::create(value);
+	}
 
-server::server(boost::asio::io_service& io_service)
-  : server_base(io_service)
-{
-}
-
-server::~server()
-{
-}
-
-void server::adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg)
-{
-	handle_message(
-		std::bind(static_cast<void(server::*)(socket_ptr,const variant&)>(&server::send_msg), this, socket, _1), 
-		std::bind(&server::close_ajax, this, socket, _1),
-		std::bind(&server::get_socket_info, this, socket),
-		session_id, 
-		msg);
-}
-
-server_base::socket_info& server::get_socket_info(socket_ptr socket)
-{
-	return connections_[socket];
-}
-
-void server::close_ajax(socket_ptr socket, client_info& cli_info)
-{
-	socket_info& info = connections_[socket];
-	ASSERT_LOG(info.session_id != -1, "UNKNOWN SOCKET");
-
-	if(cli_info.msg_queue.empty() == false) {
-		std::vector<socket_ptr> keepalive_sockets;
-
-		for(std::map<socket_ptr,std::string>::iterator s = waiting_connections_.begin();
-		    s != waiting_connections_.end(); ) {
-			if(s->second == info.nick && s->first != socket) {
-				keepalive_sockets.push_back(s->first);
-				sessions_to_waiting_connections_.erase(cli_info.session_id);
-				waiting_connections_.erase(s++);
-			} else {
-				++s;
-			}
+	server::game_info::~game_info()
+	{
+		if(quit_server_on_exit) {
+			g_exit_server = true;
 		}
-
-		const std::string msg = cli_info.msg_queue.front();
-		cli_info.msg_queue.pop_front();
-		send_msg(socket, msg);
-
-		foreach(socket_ptr socket, keepalive_sockets) {
-			send_msg(socket, "{ \"type\": \"keepalive\" }");
-		}
-	} else {
-		waiting_connections_[socket] = info.nick;
-		sessions_to_waiting_connections_[cli_info.session_id] = socket;
-	}
-}
-
-void server::queue_msg(int session_id, const std::string& msg, bool has_priority)
-{
-	if(session_id == -1) {
-		return;
 	}
 
-	std::map<int, socket_ptr>::iterator itor = sessions_to_waiting_connections_.find(session_id);
-	if(itor != sessions_to_waiting_connections_.end()) {
-		const int session_id = itor->first;
-		const socket_ptr sock = itor->second;
-		waiting_connections_.erase(sock);
-		sessions_to_waiting_connections_.erase(session_id);
-		send_msg(sock, msg);
-		return;
+	server::client_info::client_info() : nplayer(0), last_contact(0)
+	{}
+
+	server::server(boost::asio::io_service& io_service)
+	  : server_base(io_service)
+	{
 	}
 
-	server_base::queue_msg(session_id, msg, has_priority);
-}
-
-void server::send_msg(socket_ptr socket, const variant& msg)
-{
-	send_msg(socket, msg.write_json(true, variant::JSON_COMPLIANT));
-}
-
-void server::send_msg(socket_ptr socket, const char* msg)
-{
-	send_msg(socket, std::string(msg));
-}
-
-void server::send_msg(socket_ptr socket, const std::string& msg)
-{
-	std::map<socket_ptr, socket_info>::const_iterator connections_itor = connections_.find(socket);
-	const int session_id = connections_itor == connections_.end() ? -1 : connections_itor->second.session_id;
-
-	std::stringstream buf;
-	buf <<
-		"HTTP/1.1 200 OK\r\n"
-		"Date: " << get_http_datetime() << "\r\n"
-		"Connection: close\r\n"
-		"Server: Wizard/1.0\r\n"
-		"Accept-Ranges: bytes\r\n"
-		"Access-Control-Allow-Origin: *\r\n"
-		"Content-Type: application/json\r\n"
-		"Content-Length: " << std::dec << (int)msg.size() << "\r\n"
-		"Last-Modified: " << get_http_datetime() << "\r\n\r\n";
-	std::string header = buf.str();
-
-	std::shared_ptr<std::string> str_buf(new std::string(header.empty() ? msg : (header + msg)));
-	boost::asio::async_write(*socket, boost::asio::buffer(*str_buf),
-			                         std::bind(&server::handle_send, this, socket, _1, _2, str_buf, session_id));
-}
-
-void server::handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf, int session_id)
-{
-	if(e) {
-		std::cerr << "ERROR SENDING DATA: " << e.message() << std::endl;
-		queue_msg(session_id, *buf, true); //re-queue the message.
+	server::~server()
+	{
 	}
 
-	disconnect(socket);
-}
-
-std::vector<socket_ptr> debug_disconnected_store;
-
-void server::disconnect(socket_ptr socket)
-{
-	debug_disconnected_store.push_back(socket);
-
-	std::map<socket_ptr, socket_info>::iterator itor = connections_.find(socket);
-	if(itor != connections_.end()) {
-		std::map<int, socket_ptr>::iterator sessions_itor = sessions_to_waiting_connections_.find(itor->second.session_id);
-		if(sessions_itor != sessions_to_waiting_connections_.end() && sessions_itor->second == socket) {
-			sessions_to_waiting_connections_.erase(sessions_itor);
-		}
-
-		connections_.erase(itor);
+	void server::adopt_ajax_socket(socket_ptr socket, int session_id, const variant& msg)
+	{
+		handle_message(
+			std::bind(static_cast<void(server::*)(socket_ptr,const variant&)>(&server::send_msg), this, socket, _1), 
+			std::bind(&server::close_ajax, this, socket, _1),
+			std::bind(&server::get_socket_info, this, socket),
+			session_id, 
+			msg);
 	}
 
-	waiting_connections_.erase(socket);
-
-	socket->close();
-}
-
-void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
-{
-	if(g_exit_server) {
-		throw tbs::exit_exception();
+	server_base::socket_info& server::get_socket_info(socket_ptr socket)
+	{
+		return connections_[socket];
 	}
 
-	std::vector<std::pair<socket_ptr, std::string> > messages;
-
-	for(std::map<socket_ptr, std::string>::iterator i = waiting_connections_.begin(); i != waiting_connections_.end(); ++i) {
-		socket_ptr socket = i->first;
-
+	void server::close_ajax(socket_ptr socket, client_info& cli_info)
+	{
 		socket_info& info = connections_[socket];
 		ASSERT_LOG(info.session_id != -1, "UNKNOWN SOCKET");
 
-		client_info& cli_info = clients[info.session_id];
 		if(cli_info.msg_queue.empty() == false) {
-			messages.push_back(std::pair<socket_ptr,std::string>(socket, cli_info.msg_queue.front()));
-			cli_info.msg_queue.pop_front();
+			std::vector<socket_ptr> keepalive_sockets;
 
-		sessions_to_waiting_connections_.erase(info.session_id);
-		} else if(send_heartbeat) {
-			if(!cli_info.game) {
-				messages.push_back(std::pair<socket_ptr,std::string>(socket, "{ \"type\": \"heartbeat\" }"));
-			} else {
-				variant v = create_heartbeat_packet(cli_info);
-				messages.push_back(std::pair<socket_ptr,std::string>(socket, v.write_json()));
+			for(std::map<socket_ptr,std::string>::iterator s = waiting_connections_.begin();
+				s != waiting_connections_.end(); ) {
+				if(s->second == info.nick && s->first != socket) {
+					keepalive_sockets.push_back(s->first);
+					sessions_to_waiting_connections_.erase(cli_info.session_id);
+					waiting_connections_.erase(s++);
+				} else {
+					++s;
+				}
 			}
 
-			sessions_to_waiting_connections_.erase(info.session_id);
+			const std::string msg = cli_info.msg_queue.front();
+			cli_info.msg_queue.pop_front();
+			send_msg(socket, msg);
+
+			for(socket_ptr socket : keepalive_sockets) {
+				send_msg(socket, "{ \"type\": \"keepalive\" }");
+			}
+		} else {
+			waiting_connections_[socket] = info.nick;
+			sessions_to_waiting_connections_[cli_info.session_id] = socket;
 		}
 	}
 
-	for(int i = 0; i != messages.size(); ++i) {
-		waiting_connections_.erase(messages[i].first);
+	void server::queue_msg(int session_id, const std::string& msg, bool has_priority)
+	{
+		if(session_id == -1) {
+			return;
+		}
+
+		std::map<int, socket_ptr>::iterator itor = sessions_to_waiting_connections_.find(session_id);
+		if(itor != sessions_to_waiting_connections_.end()) {
+			const int session_id = itor->first;
+			const socket_ptr sock = itor->second;
+			waiting_connections_.erase(sock);
+			sessions_to_waiting_connections_.erase(session_id);
+			send_msg(sock, msg);
+			return;
+		}
+
+		server_base::queue_msg(session_id, msg, has_priority);
 	}
 
-	for(int i = 0; i != messages.size(); ++i) {
-		send_msg(messages[i].first, messages[i].second);
+	void server::send_msg(socket_ptr socket, const variant& msg)
+	{
+		send_msg(socket, msg.write_json(true, variant::JSON_COMPLIANT));
 	}
-}
 
+	void server::send_msg(socket_ptr socket, const char* msg)
+	{
+		send_msg(socket, std::string(msg));
+	}
+
+	void server::send_msg(socket_ptr socket, const std::string& msg)
+	{
+		std::map<socket_ptr, socket_info>::const_iterator connections_itor = connections_.find(socket);
+		const int session_id = connections_itor == connections_.end() ? -1 : connections_itor->second.session_id;
+
+		std::stringstream buf;
+		buf <<
+			"HTTP/1.1 200 OK\r\n"
+			"Date: " << get_http_datetime() << "\r\n"
+			"Connection: close\r\n"
+			"Server: Wizard/1.0\r\n"
+			"Accept-Ranges: bytes\r\n"
+			"Access-Control-Allow-Origin: *\r\n"
+			"Content-Type: application/json\r\n"
+			"Content-Length: " << std::dec << (int)msg.size() << "\r\n"
+			"Last-Modified: " << get_http_datetime() << "\r\n\r\n";
+		std::string header = buf.str();
+
+		std::shared_ptr<std::string> str_buf(new std::string(header.empty() ? msg : (header + msg)));
+		boost::asio::async_write(*socket, boost::asio::buffer(*str_buf),
+										 std::bind(&server::handle_send, this, socket, _1, _2, str_buf, session_id));
+	}
+
+	void server::handle_send(socket_ptr socket, const boost::system::error_code& e, size_t nbytes, std::shared_ptr<std::string> buf, int session_id)
+	{
+		if(e) {
+			LOG_ERROR("ERROR SENDING DATA: " << e.message());
+			queue_msg(session_id, *buf, true); //re-queue the message.
+		}
+
+		disconnect(socket);
+	}
+
+	std::vector<socket_ptr> debug_disconnected_store;
+
+	void server::disconnect(socket_ptr socket)
+	{
+		debug_disconnected_store.push_back(socket);
+
+		std::map<socket_ptr, socket_info>::iterator itor = connections_.find(socket);
+		if(itor != connections_.end()) {
+			std::map<int, socket_ptr>::iterator sessions_itor = sessions_to_waiting_connections_.find(itor->second.session_id);
+			if(sessions_itor != sessions_to_waiting_connections_.end() && sessions_itor->second == socket) {
+				sessions_to_waiting_connections_.erase(sessions_itor);
+			}
+
+			connections_.erase(itor);
+		}
+
+		waiting_connections_.erase(socket);
+
+		socket->close();
+	}
+
+	void server::heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients)
+	{
+		if(g_exit_server) {
+			throw tbs::exit_exception();
+		}
+
+		std::vector<std::pair<socket_ptr, std::string> > messages;
+
+		for(std::map<socket_ptr, std::string>::iterator i = waiting_connections_.begin(); i != waiting_connections_.end(); ++i) {
+			socket_ptr socket = i->first;
+
+			socket_info& info = connections_[socket];
+			ASSERT_LOG(info.session_id != -1, "UNKNOWN SOCKET");
+
+			client_info& cli_info = clients[info.session_id];
+			if(cli_info.msg_queue.empty() == false) {
+				messages.push_back(std::pair<socket_ptr,std::string>(socket, cli_info.msg_queue.front()));
+				cli_info.msg_queue.pop_front();
+
+			sessions_to_waiting_connections_.erase(info.session_id);
+			} else if(send_heartbeat) {
+				if(!cli_info.game) {
+					messages.push_back(std::pair<socket_ptr,std::string>(socket, "{ \"type\": \"heartbeat\" }"));
+				} else {
+					variant v = create_heartbeat_packet(cli_info);
+					messages.push_back(std::pair<socket_ptr,std::string>(socket, v.write_json()));
+				}
+
+				sessions_to_waiting_connections_.erase(info.session_id);
+			}
+		}
+
+		for(int i = 0; i != messages.size(); ++i) {
+			waiting_connections_.erase(messages[i].first);
+		}
+
+		for(int i = 0; i != messages.size(); ++i) {
+			send_msg(messages[i].first, messages[i].second);
+		}
+	}
 }

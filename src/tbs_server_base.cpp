@@ -1,24 +1,29 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
 #include <boost/asio.hpp>
 
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "formatter.hpp"
 #include "json_parser.hpp"
 #include "preferences.hpp"
@@ -65,7 +70,7 @@ namespace tbs
 	{
 		game_info_ptr g(new game_info(msg));
 		if(!g->game_state) {
-			std::cerr << "COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << ": " << msg.write_json() << "\n";
+			LOG_INFO("COULD NOT CREATE GAME TYPE: " << msg["game_type"].as_string() << ": " << msg.write_json());
 			return game_info_ptr();
 		}
 
@@ -75,7 +80,7 @@ namespace tbs
 			const int session_id = users[i]["session_id"].as_int();
 
 			if(clients_.count(session_id) && session_id != -1) {
-				std::cerr << "ERROR: REUSED SESSION ID WHEN CREATING GAME: " << session_id << "\n";
+				LOG_INFO("ERROR: REUSED SESSION ID WHEN CREATING GAME: " << session_id);
 				return game_info_ptr();
 			}
 
@@ -152,7 +157,7 @@ namespace tbs
 			const std::string user = msg["user"].as_string();
 
 			game_info_ptr g;
-			foreach(const game_info_ptr& gm, games_) {
+			for(const game_info_ptr& gm : games_) {
 				if(id == -1 || gm->game_state->game_id() == id) {
 					g = gm;
 					break;
@@ -188,7 +193,7 @@ namespace tbs
 
 		std::map<int, client_info>::iterator client_itor = clients_.find(session_id);
 		if(client_itor == clients_.end()) {
-			std::cerr << "BAD SESSION ID: " << session_id << ": " << type << "\n";
+			LOG_INFO("BAD SESSION ID: " << session_id << ": " << type);
 			send_fn(json::parse("{ \"type\": \"invalid_session\" }"));
 			return;
 		}
@@ -213,7 +218,7 @@ namespace tbs
 		++status_id_;
 		if(!status_fns_.empty()) {
 			variant msg = create_lobby_msg();
-			foreach(send_function send_fn, status_fns_) {
+			for(send_function send_fn : status_fns_) {
 				send_fn(msg);
 			}
 
@@ -228,7 +233,7 @@ namespace tbs
 		value.add("status_id", status_id_);
 
 		std::vector<variant> games;
-		foreach(game_info_ptr g, games_) {
+		for(game_info_ptr g : games_) {
 			games.push_back(create_game_info_msg(g));
 		}
 
@@ -246,7 +251,7 @@ namespace tbs
 
 		size_t index = 0;
 		std::vector<variant> clients;
-		foreach(int cid, g->clients) {
+		for(int cid : g->clients) {
 			ASSERT_LOG(index < g->game_state->players().size(), "MIS-MATCHED INDEX: " << index << ", " << g->game_state->players().size());
 			std::map<variant, variant> m;
 			std::map<int, client_info>::const_iterator cinfo = clients_.find(cid);
@@ -267,7 +272,7 @@ namespace tbs
 	void server_base::quit_games(int session_id)
 	{
 		client_info& cli_info = clients_[session_id];
-		foreach(game_info_ptr& g, games_) {
+		for(game_info_ptr& g : games_) {
 			if(std::count(g->clients.begin(), g->clients.end(), session_id)) {
 				const bool is_first_client = g->clients.front() == session_id;
 				g->clients.erase(std::remove(g->clients.begin(), g->clients.end(), session_id), g->clients.end());
@@ -279,12 +284,12 @@ namespace tbs
 						//TODO: remove joining clients from the game nicely.
 					} else {
 						const std::string msg = create_game_info_msg(g).write_json(true, variant::JSON_COMPLIANT);
-						foreach(int client, g->clients) {
+						for(int client : g->clients) {
 							queue_msg(client, msg);
 						}
 					}
 				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
-					std::cerr << "sending quit message...\n";
+					LOG_INFO("sending quit message...");
 					g->game_state->queue_message(formatter() << "<message text=\"" << cli_info.user << " has quit\"/>");
 					flush_game_messages(*g);
 				}
@@ -311,15 +316,15 @@ namespace tbs
 	{
 		std::vector<game::message> game_response;
 		info.game_state->swap_outgoing_messages(game_response);
-		foreach(game::message& msg, game_response) {
+		for(game::message& msg : game_response) {
 			if(msg.recipients.empty()) {
-				foreach(int session_id, info.clients) {
+				for(int session_id : info.clients) {
 					if(session_id != -1) {
 						queue_msg(session_id, msg.contents);
 					}
 				}
 			} else {
-				foreach(int player, msg.recipients) {
+				for(int player : msg.recipients) {
 					if(player >= static_cast<int>(info.clients.size())) {
 						//Might be an observer who since disconnected.
 						continue;
@@ -390,14 +395,13 @@ namespace tbs
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
 		if(error == boost::asio::error::operation_aborted) {
-			std::cerr << "tbs_server::heartbeat cancelled" << std::endl;
+			LOG_INFO("tbs_server::heartbeat cancelled");
 			return;
 		}
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_server_delay_ms));
-		timer_.async_wait(std::bind(&server_base::heartbeat, this, 
-			boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&server_base::heartbeat, this, std::placeholders::_1));
 
-		foreach(game_info_ptr g, games_) {
+		for(game_info_ptr g : games_) {
 			g->game_state->process();
 		}
 
@@ -406,7 +410,7 @@ namespace tbs
 			return;
 		}
 
-		foreach(game_info_ptr& g, games_) {
+		for(game_info_ptr& g : games_) {
 			if(nheartbeat_ - g->nlast_touch > 300) {
 				g = game_info_ptr();
 			}
@@ -448,7 +452,7 @@ namespace tbs
 		if(cli_info.game) {
 			std::vector<variant> items;
 
-			foreach(int client_session, cli_info.game->clients) {
+			for(int client_session : cli_info.game->clients) {
 				const client_info& info = clients_[client_session];
 				variant_builder value;
 	
@@ -459,7 +463,7 @@ namespace tbs
 				items.push_back(value.build());
 			}
 
-			foreach(const std::string& ai, cli_info.game->game_state->get_ai_players()) {
+			for(const std::string& ai : cli_info.game->game_state->get_ai_players()) {
 				variant_builder value;
 
 				value.add("nick", ai);

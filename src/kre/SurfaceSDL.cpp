@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -99,7 +99,8 @@ namespace KRE
 	{
 		surface_ = SDL_CreateRGBSurface(0, width, height, bpp, rmask, gmask, bmask, amask);
 		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
-		auto pf = std::make_shared<SDLPixelFormat>(surface_->format);
+		
+		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
@@ -116,7 +117,7 @@ namespace KRE
 		ASSERT_LOG(pixels != NULL, "NULL value for pixels while creating surface.");
 		surface_ = SDL_CreateRGBSurfaceFrom(const_cast<void*>(pixels), width, height, bpp, row_pitch, rmask, gmask, bmask, amask);
 		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
-		auto pf = std::make_shared<SDLPixelFormat>(surface_->format);
+		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
@@ -127,7 +128,7 @@ namespace KRE
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
 		}
-		auto pf = std::make_shared<SDLPixelFormat>(surface_->format);
+		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
@@ -135,7 +136,7 @@ namespace KRE
 		: surface_(surface)
 	{
 		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
-		auto pf = std::make_shared<SDLPixelFormat>(surface_->format);
+		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
@@ -148,7 +149,7 @@ namespace KRE
 
 		surface_ = SDL_CreateRGBSurface(0, width, height, bpp, rmask, gmask, bmask, amask);
 		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
-		auto pf = std::make_shared<SDLPixelFormat>(surface_->format);
+		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
@@ -312,14 +313,15 @@ namespace KRE
 		}
 	}
 
-	SDLPixelFormat::SDLPixelFormat(const SDL_PixelFormat* pf)
-		: pf_(pf)
+	SDLPixelFormat::SDLPixelFormat(Uint32 pf)
 	{
-		ASSERT_LOG(pf != NULL, "SDLPixelFormat constructor passeda null pixel format.");
+		pf_ = SDL_AllocFormat(pf);
+		ASSERT_LOG(pf_ != NULL, "SDLPixelFormat constructor passed a null pixel format: " << SDL_GetError());
 	}
 
 	SDLPixelFormat::~SDLPixelFormat()
 	{
+		SDL_FreeFormat(pf_);
 	}
 
 	uint8_t SDLPixelFormat::bitsPerPixel() const 
@@ -471,6 +473,36 @@ namespace KRE
 	{
 		ASSERT_LOG(isRGB(), "Asked for LuminanceShift() of non-RGB surface.");
 		return pf_->Rshift;
+	}
+
+	uint32_t SDLPixelFormat::getRedLoss() const 
+	{
+		ASSERT_LOG(isRGB(), "Asked for RedLoss() of non-RGB surface.");
+		return pf_->Rloss;
+	}
+
+	uint32_t SDLPixelFormat::getGreenLoss() const 
+	{
+		ASSERT_LOG(isRGB(), "Asked for GreenLoss() of non-RGB surface.");
+		return pf_->Gloss;
+	}
+
+	uint32_t SDLPixelFormat::getBlueLoss() const 
+	{
+		ASSERT_LOG(isRGB(), "Asked for BlueLoss() of non-RGB surface.");
+		return pf_->Bloss;
+	}
+
+	uint32_t SDLPixelFormat::getAlphaLoss() const 
+	{
+		ASSERT_LOG(isRGB(), "Asked for AlphaLoss() of non-RGB surface.");
+		return pf_->Aloss;
+	}
+
+	uint32_t SDLPixelFormat::getLuminanceLoss() const 
+	{
+		ASSERT_LOG(isRGB(), "Asked for LuminanceLoss() of non-RGB surface.");
+		return pf_->Rloss;
 	}
 
 	bool SDLPixelFormat::hasPalette() const 
@@ -747,10 +779,10 @@ namespace KRE
 	{
 		ASSERT_LOG(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN, "unknown pixel format to convert to.");
 		if(convert == nullptr) {
-			std::shared_ptr<SDL_PixelFormat> pf = std::shared_ptr<SDL_PixelFormat>(SDL_AllocFormat(get_sdl_pixel_format(fmt)), [](SDL_PixelFormat* fmt) {
-				SDL_FreeFormat(fmt);
-			});
-			auto surface = new SurfaceSDL(SDL_ConvertSurface(surface_, pf.get(), 0));
+			SDL_PixelFormat* pf = SDL_AllocFormat(get_sdl_pixel_format(fmt));
+			ASSERT_LOG(pf != NULL, "error allocating pixel format: " << SDL_GetError());
+			auto surface = new SurfaceSDL(SDL_ConvertSurface(surface_, pf, 0));
+			SDL_FreeFormat(pf);
 			return SurfacePtr(surface);
 		}
 

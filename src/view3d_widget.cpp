@@ -22,7 +22,7 @@
 */
 
 #include "asserts.hpp"
-#include "view3D_widget.hpp"
+#include "view3d_widget.hpp"
 #include "widget_factory.hpp"
 
 namespace gui

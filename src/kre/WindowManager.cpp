@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -218,6 +218,26 @@ namespace KRE
 		virtual void render(const Renderable* r) const override {
 			ASSERT_LOG(display_ != NULL, "No display to render to.");
 			display_->render(r);
+		}
+
+		std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) override {
+			std::vector<WindowMode> res;
+			const int display_index = SDL_GetWindowDisplayIndex(window_.get());
+			const int nmodes = SDL_GetNumDisplayModes(display_index);
+			for(int n = 0; n != nmodes; ++n) {
+				SDL_DisplayMode new_mode;
+				const int nvalue = SDL_GetDisplayMode(display_index, n, &new_mode);
+				if(nvalue != 0) {
+					LOG_ERROR("QUERYING DISPLAY INFO: " << SDL_GetError());
+					continue;
+				}
+				WindowMode mode = { new_mode.w, new_mode.h, std::make_shared<PixelFormat>(SDLPixelFormat(new_mode.format)), new_mode.refresh_rate };
+				// filter modes based on pixel format here
+				if(mode_filter(mode)) {
+					res.push_back(mode);
+				}
+			}
+			return res;
 		}
 	protected:
 	private:

@@ -34,6 +34,11 @@ namespace graphics
 	{
 	}
 
+	SceneObjectCallable::SceneObjectCallable()
+		: SceneObject("SceneObjectCallable")
+	{
+	}
+
 	BEGIN_DEFINE_CALLABLE_NOBASE(SceneObjectCallable)
 		DEFINE_FIELD(name, "string")
 			return variant(obj.objectName());
