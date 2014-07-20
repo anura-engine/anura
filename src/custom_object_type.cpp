@@ -1141,7 +1141,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	reverse_global_vertical_zordering_(node["reverse_global_vertical_zordering"].as_bool(false)),
 	serializable_(node["serializable"].as_bool(true)),
 	solid_(SolidInfo::create(node)),
-	platform_(SolidInfo::create_platform(node)),
+	platform_(SolidInfo::createPlatform(node)),
 	solid_platform_(node["solid_platform"].as_bool(false)),
 	has_solid_(solid_ || use_image_for_collisions_),
 	solid_dimensions_(has_solid_ || platform_ ? 0xFFFFFFFF : 0),

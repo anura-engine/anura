@@ -258,11 +258,11 @@ namespace gui
 			tab_widgets_.insert(TabSortedWidgetList::value_type(w->tabStop(), w));
 		}
 		switch(dir) {
-		case MOVE_DOWN:
+		case MOVE_DIRECTION::DOWN:
 			add_x_ = x;
 			add_y_ = y + w->height() + padding_;
 			break;
-		case MOVE_RIGHT:
+		case MOVE_DIRECTION::RIGHT:
 			add_x_ = x + w->width() + padding_;
 			add_y_ = y;
 			break;

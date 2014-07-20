@@ -1049,11 +1049,11 @@ void editor::setup_for_editing()
 
 	for(LevelPtr lvl : levels_) {
 		for(EntityPtr c : lvl->get_chars()) {
-			if(entity_collides_with_level(*lvl, *c, MOVE_NONE)) {
+			if(entity_collides_with_level(*lvl, *c, MOVE_DIRECTION::NONE)) {
 				const int x = c->x();
 				const int y = c->y();
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
-					assert(c->allowLevelCollisions() || !entity_collides_with_level(*lvl, *c, MOVE_NONE));
+					assert(c->allowLevelCollisions() || !entity_collides_with_level(*lvl, *c, MOVE_DIRECTION::NONE));
 					if(lvl == lvl_) {
 						debug_console::addMessage(formatter() << "Adjusted position of " << c->getDebugDescription() << " to fit: (" << x << "," << y << ") -> (" << c->x() << "," << c->y() << ")");
 					}
@@ -1304,7 +1304,7 @@ void editor::process()
 			//we have an object but no ghost for it, make the
 			//object's ghost and deploy it.
 			EntityPtr clone = c->clone();
-			if(clone && !entity_collides_with_level(*lvl_, *clone, MOVE_NONE)) {
+			if(clone && !entity_collides_with_level(*lvl_, *clone, MOVE_DIRECTION::NONE)) {
 				ghost_objects_.push_back(clone);
 				lvl_->add_character(clone);
 
@@ -1691,7 +1691,7 @@ void editor::handleKeyPress(const SDL_KeyboardEvent& key)
 
 	if(key.keysym.sym == SDLK_c) {
 		for(const EntityPtr& obj : lvl_->get_chars()) {
-			if(entity_collides_with_level(*lvl_, *obj, MOVE_NONE)) {
+			if(entity_collides_with_level(*lvl_, *obj, MOVE_DIRECTION::NONE)) {
 				xpos_ = obj->x() - KRE::WindowManager::getMainWindow()->width()/2;
 				ypos_ = obj->y() - KRE::WindowManager::getMainWindow()->height()/2;
 				break;
@@ -2972,7 +2972,7 @@ bool editor::confirm_quit(bool allow_cancel)
 	using namespace gui;
 	Dialog d(center_x - 140, center_y - 100, center_x + 140, center_y + 100);
 
-	d.addWidget(WidgetPtr(new Label("Do you want to save the level?", KRE::Color::colorWhite())), Dialog::MOVE_DOWN);
+	d.addWidget(WidgetPtr(new Label("Do you want to save the level?", KRE::Color::colorWhite())), Dialog::MOVE_DIRECTION::DOWN);
 
 	Grid* grid = new Grid(allow_cancel ? 3 : 2);
 

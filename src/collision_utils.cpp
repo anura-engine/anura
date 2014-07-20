@@ -121,7 +121,7 @@ bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionI
 
 		const SolidInfo* solid = obj->solid();
 
-		if(solid && solid->solid_at(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : NULL)) {
+		if(solid && solid->isSolidAt(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : NULL)) {
 			if(info) {
 				info->collide_with = obj;
 				info->friction = obj->getSurfaceFriction();
@@ -160,7 +160,7 @@ bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionI
 
 void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 {
-	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_NONE, NULL)) {
+	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_DIRECTION::NONE, NULL)) {
 		const SolidInfo* s = e.solid();
 		ASSERT_LOG(s, "ENTITY COLLIDES BUT DOES NOT HAVE SOLID");
 		const Frame& f = e.getCurrentFrame();
@@ -170,7 +170,7 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 		std::set<point> solid_points;
 
 		for(const ConstSolidMapPtr& m : s->solid()) {
-			const std::vector<point>& points = m->dir(MOVE_NONE);
+			const std::vector<point>& points = m->dir(MOVE_DIRECTION::NONE);
 			for(const point& p : points) {
 				const int x = e.x() + (e.isFacingRight() ? p.x : (f.width() - 1 - p.x));
 				const int y = e.y() + p.y;
@@ -250,10 +250,10 @@ bool entity_collides_with_entity(const Entity& e, const Entity& other, Collision
 		for(int x = area.x(); x < area.x2(); ++x) {
 			const int our_x = e.isFacingRight() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
 			const int our_y = y - e.y();
-			if(our_solid->solid_at(our_x, our_y, info ? &info->area_id : NULL)) {
+			if(our_solid->isSolidAt(our_x, our_y, info ? &info->area_id : NULL)) {
 				const int other_x = other.isFacingRight() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
 				const int other_y = y - other.y();
-				if(other_solid->solid_at(other_x, other_y, info ? &info->collide_with_area_id : NULL)) {
+				if(other_solid->isSolidAt(other_x, other_y, info ? &info->collide_with_area_id : NULL)) {
 					return true;
 				}
 			}
@@ -271,10 +271,10 @@ bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTIO
 	}
 
 	if(e.isFacingRight() == false) {
-		if(dir == MOVE_RIGHT) {
-			dir = MOVE_LEFT;
-		} else if(dir == MOVE_LEFT) {
-			dir = MOVE_RIGHT;
+		if(dir == MOVE_DIRECTION::RIGHT) {
+			dir = MOVE_DIRECTION::LEFT;
+		} else if(dir == MOVE_DIRECTION::LEFT) {
+			dir = MOVE_DIRECTION::RIGHT;
 		}
 	}
 
@@ -361,14 +361,14 @@ bool place_entity_in_level(Level& lvl, Entity& e)
 		}
 	}
 
-	if(!entity_collides(lvl, e, MOVE_NONE)) {
+	if(!entity_collides(lvl, e, MOVE_DIRECTION::NONE)) {
 		return true;
 	}
 
-	if(!entity_collides(lvl, e, MOVE_UP)) {
-		while(entity_collides(lvl, e, MOVE_NONE)) {
+	if(!entity_collides(lvl, e, MOVE_DIRECTION::UP)) {
+		while(entity_collides(lvl, e, MOVE_DIRECTION::NONE)) {
 			e.setPos(e.x(), e.y()-1);
-			if(entity_collides(lvl, e, MOVE_UP)) {
+			if(entity_collides(lvl, e, MOVE_DIRECTION::UP)) {
 				return false;
 			}
 		}
@@ -376,10 +376,10 @@ bool place_entity_in_level(Level& lvl, Entity& e)
 		return true;
 	}
 
-	if(!entity_collides(lvl, e, MOVE_DOWN)) {
-		while(entity_collides(lvl, e, MOVE_NONE)) {
+	if(!entity_collides(lvl, e, MOVE_DIRECTION::DOWN)) {
+		while(entity_collides(lvl, e, MOVE_DIRECTION::NONE)) {
 			e.setPos(e.x(), e.y()+1);
-			if(entity_collides(lvl, e, MOVE_DOWN)) {
+			if(entity_collides(lvl, e, MOVE_DIRECTION::DOWN)) {
 				return false;
 			}
 		}
@@ -387,10 +387,10 @@ bool place_entity_in_level(Level& lvl, Entity& e)
 		return true;
 	}
 
-	if(!entity_collides(lvl, e, MOVE_LEFT)) {
-		while(entity_collides(lvl, e, MOVE_NONE)) {
+	if(!entity_collides(lvl, e, MOVE_DIRECTION::LEFT)) {
+		while(entity_collides(lvl, e, MOVE_DIRECTION::NONE)) {
 			e.setPos(e.x()-1, e.y());
-			if(entity_collides(lvl, e, MOVE_LEFT)) {
+			if(entity_collides(lvl, e, MOVE_DIRECTION::LEFT)) {
 				return false;
 			}
 		}
@@ -398,10 +398,10 @@ bool place_entity_in_level(Level& lvl, Entity& e)
 		return true;
 	}
 
-	if(!entity_collides(lvl, e, MOVE_RIGHT)) {
-		while(entity_collides(lvl, e, MOVE_NONE)) {
+	if(!entity_collides(lvl, e, MOVE_DIRECTION::RIGHT)) {
+		while(entity_collides(lvl, e, MOVE_DIRECTION::NONE)) {
 			e.setPos(e.x()+1, e.y());
-			if(entity_collides(lvl, e, MOVE_RIGHT)) {
+			if(entity_collides(lvl, e, MOVE_DIRECTION::RIGHT)) {
 				return false;
 			}
 		}

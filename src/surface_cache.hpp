@@ -26,17 +26,18 @@
 #include <string>
 #include <vector>
 
-#include "kre/Geometry.hpp"
-#include "dialog.hpp"
+#include "kre/Surface.hpp"
 
-
-class OptionsDialog : public gui::Dialog
+namespace graphics
 {
-public:	
-	explicit OptionsDialog(int x, int y, int w, int h);
-	void draw() const;
-protected:
-	virtual void handleDraw() const override;
-};
+	struct LoadImageError
+	{
+	};
 
-typedef boost::intrusive_ptr<OptionsDialog> OptionsDialogPtr;
+	struct SurfaceCache
+	{
+		static KRE::SurfacePtr get(const std::string& key, bool cache=true, std::string* full_filename=nullptr);
+		static void invalidateModified(std::vector<std::string>* keys);
+		static void clear();
+	};
+}

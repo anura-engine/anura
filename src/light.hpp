@@ -25,6 +25,7 @@
 
 #include "kre/Geometry.hpp"
 #include "SceneObjectCallable.hpp"
+#include "kre/SceneUtil.hpp"
 
 class CustomObject;
 class Light;

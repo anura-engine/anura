@@ -105,21 +105,21 @@ void CodeEditorDialog::init()
 	replace_label_ = Label::create("Replace: ", col);
 	status_label_ = Label::create("Ok", col);
 	error_label_ = Label::create("", col);
-	addWidget(find_label, 42, 12, MOVE_RIGHT);
-	addWidget(WidgetPtr(search_), MOVE_RIGHT);
-	addWidget(replace_label_, MOVE_RIGHT);
-	addWidget(WidgetPtr(replace_), MOVE_RIGHT);
-	addWidget(WidgetPtr(save_button), MOVE_RIGHT);
+	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
+	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
 		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
 		Button* abort_button = new Button("Abort", std::bind(&Dialog::cancel, this));
-		addWidget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
-		addWidget(WidgetPtr(abort_button), MOVE_RIGHT);
+		addWidget(WidgetPtr(save_and_close_button), MOVE_DIRECTION::RIGHT);
+		addWidget(WidgetPtr(abort_button), MOVE_DIRECTION::RIGHT);
 	}
 
-	addWidget(WidgetPtr(increase_font), MOVE_RIGHT);
-	addWidget(WidgetPtr(decrease_font), MOVE_RIGHT);
+	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
 	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);

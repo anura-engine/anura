@@ -21,21 +21,19 @@
 	   distribution.
 */
 
-#pragma once
+#include "kre/Surface.hpp"
 
-#include "gui_section.hpp"
-
-class SettingsDialog
+namespace graphics
 {
-public:
-	SettingsDialog();
-	~SettingsDialog();
-	
-	bool handleEvent (const SDL_Event& event); //returns whether the game should be paused
-	void draw(bool in_speech_dialog) const;
-	void reset();
-	
-private:
-	bool show_window_;
-	bool menu_button_state_;
-};
+	enum class SpritesheetOptions {
+		DEFAULT					= 0,
+		NO_STRIP_ANNOTATIONS	= 1
+	};
+
+	inline bool operator&(SpritesheetOptions lhs, SpritesheetOptions rhs) {
+		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
+	}
+
+	void set_alpha_for_transparent_colors_in_rgba_surface(KRE::SurfacePtr s, SpritesheetOptions options=SpritesheetOptions::DEFAULT);
+	const unsigned char* get_alpha_pixel_colors();
+}

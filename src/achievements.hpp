@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
-
 #include <string>
 
 #include "variant.hpp"

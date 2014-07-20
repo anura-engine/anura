@@ -26,38 +26,38 @@
 #include <string>
 #include <vector>
 
-#include "SDL.h"
+#include "SDL_Events.h"
 
 #include "Color.hpp"
-#include "entity.hpp"
+#include "entity_fwd.hpp"
 #include "gui_section.hpp"
 
-class speech_dialog
+class SpeechDialog
 {
 public:
 
-	speech_dialog();
-	~speech_dialog();
+	SpeechDialog();
+	~SpeechDialog();
 
-	bool detect_joystick_press();
-	bool key_press(const SDL_Event& e);
+	bool detectJoystickPress();
+	bool keyPress(const SDL_Event& e);
 	bool process();
 	void draw() const;
-	void set_speaker_and_flip_side(ConstEntityPtr e);
-	void set_speaker(ConstEntityPtr e, bool left_side=false);
-	void set_side(bool left_side);
+	void setSpeakerAndFlipSide(ConstEntityPtr e);
+	void setSpeaker(ConstEntityPtr e, bool left_side=false);
+	void setSide(bool left_side);
 	void setText(const std::vector<std::string>& text);
-	void set_options(const std::vector<std::string>& options);
-	void set_expiration(int time) { expiration_ = time; }
+	void setOptions(const std::vector<std::string>& options);
+	void setExpiration(int time) { expiration_ = time; }
 
-	int option_selected() const { return option_selected_; }
-	void set_option_selected(int n) { option_selected_ = n; }
+	int getOptionSelected() const { return option_selected_; }
+	void setOptionSelected(int n) { option_selected_ = n; }
 private:
-	bool handle_mouse_move(int x, int y);
-	void move_up();
-	void move_down();
+	bool handleMouseMove(int x, int y);
+	void moveUp();
+	void moveDown();
 
-	bool scroll_text();
+	bool scrollText();
 
 	int cycle_;
 	ConstEntityPtr left_, right_;
@@ -86,6 +86,6 @@ private:
 
 	int num_chars() const;
 
-	speech_dialog(const speech_dialog&);
-	void operator=(const speech_dialog&);
+	SpeechDialog(const SpeechDialog&);
+	void operator=(const SpeechDialog&);
 };

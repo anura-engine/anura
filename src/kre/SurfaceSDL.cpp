@@ -204,6 +204,17 @@ namespace KRE
 		return surface_->pixels;
 	}
 
+	void* SurfaceSDL::pixelsWriteable()
+	{
+		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		// technically surface_->locked is an internal implementation detail.
+		// but we'll live with using it.
+		if(SDL_MUSTLOCK(surface_) && !surface_->locked) {
+			ASSERT_LOG(false, "Surface is marked as needing to be locked but is not locked on Pixels access.");
+		}
+		return surface_->pixels;
+	}
+
 	bool SurfaceSDL::setClipRect(int x, int y, unsigned width, unsigned height)
 	{
 		ASSERT_LOG(surface_ != NULL, "surface_ is null");
@@ -299,6 +310,12 @@ namespace KRE
 		}
 		ASSERT_LOG(false, "Unrecognised SDL blend mode: " << sdl_bm);
 		return BLEND_MODE_NONE;
+	}
+
+	void SurfaceSDL::fillRect(const rect& dst_rect, const Color& color)
+	{
+		SDL_Rect r = {dst_rect.x(), dst_rect.y(), dst_rect.w(), dst_rect.h() };
+		SDL_FillRect(surface_, &r, color.asARGB());
 	}
 
 	//////////////////////////////////////////////////////////////////////////
@@ -509,6 +526,27 @@ namespace KRE
 	{
 		return pf_->palette != NULL;
 	}
+
+	Color SDLPixelFormat::mapRGB(int r, int g, int b)
+	{
+		return Color(SDL_MapRGB(pf_, r, g, b));
+	}
+
+	Color SDLPixelFormat::mapRGB(double r, double g, double b)
+	{
+		return Color(SDL_MapRGB(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0)));
+	}
+
+	Color SDLPixelFormat::mapRGBA(int r, int g, int b, int a)
+	{
+		return Color(SDL_MapRGBA(pf_, r, g, b, a));
+	}
+
+	Color SDLPixelFormat::mapRGBA(double r, double g, double b, double a)
+	{
+		return Color(SDL_MapRGB(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0), static_cast<uint8_t>(a*255.0)));
+	}
+
 
 	PixelFormat::PF SDLPixelFormat::getFormat() const
 	{

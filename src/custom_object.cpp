@@ -1357,7 +1357,7 @@ void CustomObject::process(level& lvl)
 	}
 
 	if(lvl.in_editor()) {
-		if(!type_->isStaticObject() && entity_collides(level::current(), *this, MOVE_NONE)) {
+		if(!type_->isStaticObject() && entity_collides(level::current(), *this, MOVE_DIRECTION::NONE)) {
 			//The object collides illegally, but we're in the editor. Freeze
 			//the object by returning, since we can't process it.
 			return;
@@ -1370,7 +1370,7 @@ void CustomObject::process(level& lvl)
 	}
 
 	collision_info debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
+	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
 
 	if(parent_.get() != NULL) {
 		const point pos = parent_position();
@@ -1396,8 +1396,8 @@ void CustomObject::process(level& lvl)
 	entity::process(lvl);
 
 	//the object should never be colliding with the level at the start of processing.
-//	assert(!entity_collides_with_level(lvl, *this, MOVE_NONE));
-//	assert(!entity_collides(lvl, *this, MOVE_NONE));
+//	assert(!entity_collides_with_level(lvl, *this, MOVE_DIRECTION::NONE));
+//	assert(!entity_collides(lvl, *this, MOVE_DIRECTION::NONE));
 
 	//this is a flag which tracks whether we've fired a collide_feet
 	//event. If we don't fire a collide_feet event through normal collision
@@ -1724,14 +1724,14 @@ void CustomObject::process(level& lvl)
 		}
 
 		if(effective_velocity_y > 0) {
-			if(entity_collides(lvl, *this, MOVE_DOWN, &collide_info)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN, &collide_info)) {
 				//our 'legs' but not our feet collide with the level. Try to
 				//move one pixel to the left or right and see if either
 				//direction makes us no longer colliding.
 				setX(x() + 1);
-				if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_RIGHT)) {
+				if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN) || entity_collides(lvl, *this, MOVE_DIRECTION::RIGHT)) {
 					setX(x() - 2);
-					if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_LEFT)) {
+					if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN) || entity_collides(lvl, *this, MOVE_DIRECTION::LEFT)) {
 						//moving in either direction fails to resolve the collision.
 						//This effectively means the object is 'stuck' in a small
 						//pit.
@@ -1747,7 +1747,7 @@ void CustomObject::process(level& lvl)
 			}
 		} else {
 			//effective_velocity_y < 0 -- going up
-			if(entity_collides(lvl, *this, MOVE_UP, &collide_info)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::UP, &collide_info)) {
 				collide = true;
 				moveCentipixels(0, -move_amount*dir);
 				break;
@@ -1836,7 +1836,7 @@ void CustomObject::process(level& lvl)
 			for(int n = 0; n != delta; n += dir) {
 				setY(y()+dir);
 				++nmoves;
-				if(entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+				if(entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 					setY(y()-dir);
 					break;
 				}
@@ -1912,7 +1912,7 @@ void CustomObject::process(level& lvl)
 				const int dir = delta > 0 ? 1 : -1;
 				for(int n = 0; n != delta; n += dir) {
 					setY(y()+dir);
-					if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+					if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 						setY(y()-dir);
 						break;
 					}
@@ -1931,7 +1931,7 @@ void CustomObject::process(level& lvl)
 					const int SearchRange = 2;
 					for(int n = 0; n != SearchRange; ++n) {
 						setY(y()+dir);
-						if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+						if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 							break;
 						}
 
@@ -1972,7 +1972,7 @@ void CustomObject::process(level& lvl)
 							//we always move at least one pixel up, if there is
 							//solid, otherwise we'll fall through.
 							setY(y()-1);
-							if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
+							if(detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::UP)) {
 								collide_head = true;
 								break;
 							}
@@ -1981,7 +1981,7 @@ void CustomObject::process(level& lvl)
 					}
 	
 					setY(y()-1);
-					if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
+					if(detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::UP)) {
 						collide_head = true;
 						break;
 					}
@@ -2000,14 +2000,14 @@ void CustomObject::process(level& lvl)
 					isStanding(lvl, &slope_standing_info);
 					if(slope_standing_info.platform) {
 						setY(y()+1);
-						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DOWN)) {
+						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN)) {
 							setY(y()-1);
 						}
 					}
 				}
 			}
 
-			if(detect_collisions && entity_collides(lvl, *this, centiY() != original_centi_y ? MOVE_NONE : (dir > 0 ? MOVE_RIGHT : MOVE_LEFT), &collide_info)) {
+			if(detect_collisions && entity_collides(lvl, *this, centiY() != original_centi_y ? MOVE_DIRECTION::NONE : (dir > 0 ? MOVE_DIRECTION::RIGHT : MOVE_DIRECTION::LEFT), &collide_info)) {
 				collide = true;
 			}
 
@@ -2020,7 +2020,7 @@ void CustomObject::process(level& lvl)
 		}
 
 		if(!detect_collisions) {
-			if(entity_collides(lvl, *this, MOVE_NONE)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::NONE)) {
 				setCentiX(backup_centi_x);
 				setCentiY(backup_centi_y);
 			} else {
@@ -2471,7 +2471,7 @@ void CustomObject::run_garbage_collection()
 			continue;
 		}
 
-		foreach(game_logic::FormulaCallable_suspended_ptr ptr, ref.visitor->pointers()) {
+		foreach(game_logic::FormulaCallableSuspendedPtr ptr, ref.visitor->pointers()) {
 			if(safe.count(ptr->value())) {
 				ptr->restore_ref();
 			}
@@ -3273,13 +3273,13 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "x") {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 	} else if(key == "y") {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 	} else if(key == "xy") {
@@ -3287,7 +3287,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3461,9 +3461,9 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
 		CollisionInfo collide_info;
-		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -3632,7 +3632,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_X: {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 
@@ -3643,7 +3643,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_Y: {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 
@@ -3656,7 +3656,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         x() + getCurrentFrame().width();
 		const int delta_x = value.as_int() - current_x;
 		setX(x() + delta_x);
-		if(entity_collides(level::current(), *this, MOVE_NONE) &&
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
@@ -3669,7 +3669,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         y() + getCurrentFrame().height();
 		const int delta_y = value.as_int() - current_y;
 		setY(y() + delta_y);
-		if(entity_collides(level::current(), *this, MOVE_NONE) &&
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
@@ -3682,7 +3682,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3730,7 +3730,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3745,7 +3745,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3765,7 +3765,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int ydiff = current_y - y();
 
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3778,7 +3778,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + solid_diff + solidRect().w()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3790,7 +3790,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3806,7 +3806,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff_y + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3818,7 +3818,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3829,7 +3829,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3844,7 +3844,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -4150,9 +4150,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
 		CollisionInfo collide_info;
-		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -4507,7 +4507,7 @@ void CustomObject::setFrame(const Frame& new_frame)
 
 	frame_->playSound(this);
 
-	if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+	if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
 		callable->add("previous_animation", variant(previous_animation));
 		game_logic::FormulaCallablePtr callable_ptr(callable);
@@ -4517,7 +4517,7 @@ void CustomObject::setFrame(const Frame& new_frame)
 		handleEvent(OBJECT_EVENT_CHANGE_ANIMATION_FAILURE, callable);
 		handleEvent("change_animation_failure_" + frame_name_, callable);
 		--change_animation_failure_recurse;
-		ASSERT_LOG(destroyed() || !entity_collides(Level::current(), *this, MOVE_NONE),
+		ASSERT_LOG(destroyed() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE),
 		  "Object '" << type_->id() << "' has different solid areas when changing from frame " << previous_animation << " to " << frame_name_ << " and doesn't handle it properly");
 	}
 
@@ -4647,7 +4647,7 @@ bool CustomObject::moveToStanding(Level& lvl, int max_displace)
 {
 	int start_y = y();
 	const bool result = moveToStandingInternal(lvl, max_displace);
-	if(!result || entity_collides(Level::current(), *this, MOVE_NONE)) {
+	if(!result || entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE)) {
 		setPos(x(), start_y);
 		return false;
 	}
@@ -5163,7 +5163,7 @@ void CustomObject::extractGcObjectReferences(std::vector<gc_object_reference>& v
 		w->performVisitValues(*visitor.visitor);
 	}
 
-	for(game_logic::FormulaCallable_suspended_ptr ptr : visitor.visitor->pointers()) {
+	for(game_logic::FormulaCallableSuspendedPtr ptr : visitor.visitor->pointers()) {
 		if(dynamic_cast<const CustomObject*>(ptr->value())) {
 			ptr->destroy_ref();
 		}
@@ -5215,7 +5215,7 @@ void CustomObject::extractGcObjectReferences(variant& var, std::vector<gc_object
 void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 {
 	if(ref.visitor) {
-		for(game_logic::FormulaCallable_suspended_ptr ptr : ref.visitor->pointers()) {
+		for(game_logic::FormulaCallableSuspendedPtr ptr : ref.visitor->pointers()) {
 			ptr->restore_ref();
 		}
 	} else if(ref.from_variant) {
@@ -5341,7 +5341,7 @@ void CustomObject::set_platform_area(const rect& area)
 		platform_solid_info_ = ConstSolidInfoPtr();
 	} else {
 		platform_area_.reset(new rect(area));
-		platform_solid_info_ = SolidInfo::create_platform(area);
+		platform_solid_info_ = SolidInfo::createPlatform(area);
 	}
 
 	calculateSolidRect();

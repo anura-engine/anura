@@ -23,11 +23,6 @@
 
 #pragma once
 
-#include <string>
-#include <vector>
-
-#include <boost/intrusive_ptr.hpp>
-
 #include "variant.hpp"
 
 class Level;

@@ -21,8 +21,6 @@
 	   distribution.
 */
 
-#include <boost/bind.hpp>
-
 #include "asserts.hpp"
 #include "formula.hpp"
 #include "preferences.hpp"
@@ -45,7 +43,7 @@ namespace tbs
 	{
 		LOG_INFO("CREATE BOT");
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-		timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&bot::process, this, std::placeholders::_1));
 	}
 
 	bot::~bot()
@@ -81,16 +79,16 @@ namespace tbs
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable(this));
 			if(preferences::internal_tbs_server()) {
 				internal_client_.reset(new internal_client(session_id));
-				internal_client_->send_request(send, session_id, callable, boost::bind(&bot::handle_response, this, _1, callable));
+				internal_client_->send_request(send, session_id, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			} else {
 				client_.reset(new client(host_, port_, session_id, &service_));
 				client_->set_use_local_cache(false);
-				client_->send_request(send, callable, boost::bind(&bot::handle_response, this, _1, callable));
+				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			}
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-		timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+		timer_.async_wait(std::bind(&bot::process, this, std::placeholders::_1));
 	}
 
 	void bot::handle_response(const std::string& type, game_logic::FormulaCallablePtr callable)

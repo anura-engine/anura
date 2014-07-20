@@ -332,9 +332,9 @@ public:
 
 	decimal zoom_level() const;
 
-	void add_speech_dialog(std::shared_ptr<speech_dialog> d);
+	void add_speech_dialog(std::shared_ptr<SpeechDialog> d);
 	void remove_speech_dialog();
-	std::shared_ptr<const speech_dialog> current_speech_dialog() const;
+	std::shared_ptr<const SpeechDialog> current_speech_dialog() const;
 
 	const std::vector<EntityPtr>& focus_override() const { return focus_override_; }
 
@@ -444,7 +444,7 @@ private:
 	bool isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** surf_info) const;
 	bool isSolid(const LevelSolidMap& map, const Entity& e, const std::vector<point>& points, const SurfaceInfo** surf_info) const;
 
-	void set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
+	void setSolid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
 
 	std::string title_;
 
@@ -572,7 +572,7 @@ private:
 	decimal zoom_level_;
 	std::vector<EntityPtr> focus_override_;
 
-	std::stack<std::shared_ptr<speech_dialog> > speech_dialogs_;
+	std::stack<std::shared_ptr<SpeechDialog> > speech_dialogs_;
 
 	std::set<std::string> hidden_classifications_;
 

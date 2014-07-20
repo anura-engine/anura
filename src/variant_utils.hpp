@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <map>
-
 #include "formula_callable.hpp"
 #include "variant.hpp"
 

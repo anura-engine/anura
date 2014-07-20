@@ -114,7 +114,7 @@ KRE::TexturePtr render_fbo(const rect& area, const std::vector<EntityPtr> object
 	pos.x = area.x()*100;
 	pos.y = area.y()*100;
 	{
-	preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
+	preferences::ScreenDimensionOverrideScope dim_scope(area.w(), area.h(), area.w(), area.h());
 	lvl->process();
 	lvl->process_draw();
 	foreach(const entity_ptr& e, objects) {

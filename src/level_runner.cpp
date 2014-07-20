@@ -60,7 +60,6 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
-#include "settings_dialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "tbs_internal_server.hpp"
@@ -790,7 +789,7 @@ namespace
 bool LevelRunner::play_cycle()
 {
 	auto& mwnd = KRE::WindowManager::getMainWindow();
-	static settingsDialog settingsDialog;
+	static SettingsDialog settingsDialog;
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
@@ -1154,9 +1153,6 @@ bool LevelRunner::play_cycle()
 	if(MessageDialog::get() == NULL) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
-			should_pause = settingsDialog.handleEvent(event);
-#endif
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {

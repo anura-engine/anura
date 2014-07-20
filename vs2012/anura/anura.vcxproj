@@ -181,6 +181,7 @@
     <ClInclude Include="..\..\src\collision_utils.hpp" />
     <ClInclude Include="..\..\src\Color.hpp" />
     <ClInclude Include="..\..\src\ColorTransform.hpp" />
+    <ClInclude Include="..\..\src\ConcurrentCache.hpp" />
     <ClInclude Include="..\..\src\concurrent_cache.hpp" />
     <ClInclude Include="..\..\src\controls.hpp" />
     <ClInclude Include="..\..\src\controls_dialog.hpp" />
@@ -345,7 +346,6 @@
     <ClInclude Include="..\..\src\multi_tile_pattern.hpp" />
     <ClInclude Include="..\..\src\nocopy.hpp" />
     <ClInclude Include="..\..\src\object_events.hpp" />
-    <ClInclude Include="..\..\src\options_dialog.hpp" />
     <ClInclude Include="..\..\src\particle_system.hpp" />
     <ClInclude Include="..\..\src\pathfinding.hpp" />
     <ClInclude Include="..\..\src\pause_game_dialog.hpp" />
@@ -373,7 +373,6 @@
     <ClInclude Include="..\..\src\SDLMain.h" />
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\selector_widget.hpp" />
-    <ClInclude Include="..\..\src\settings_dialog.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
     <ClInclude Include="..\..\src\solid_map.hpp" />
     <ClInclude Include="..\..\src\solid_map_fwd.hpp" />
@@ -384,6 +383,8 @@
     <ClInclude Include="..\..\src\stats_server.hpp" />
     <ClInclude Include="..\..\src\stats_web_server.hpp" />
     <ClInclude Include="..\..\src\string_utils.hpp" />
+    <ClInclude Include="..\..\src\surface_cache.hpp" />
+    <ClInclude Include="..\..\src\surface_utils.hpp" />
     <ClInclude Include="..\..\src\svg\color.hpp" />
     <ClInclude Include="..\..\src\svg\geometry.hpp" />
     <ClInclude Include="..\..\src\svg\logger.hpp" />
@@ -422,6 +423,7 @@
     <ClInclude Include="..\..\src\translate.hpp" />
     <ClInclude Include="..\..\src\tree_view_widget.hpp" />
     <ClInclude Include="..\..\src\unit_test.hpp" />
+    <ClInclude Include="..\..\src\uri.hpp" />
     <ClInclude Include="..\..\src\userevents.h" />
     <ClInclude Include="..\..\src\utility_query.hpp" />
     <ClInclude Include="..\..\src\utils.hpp" />
@@ -646,6 +648,7 @@
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceCache.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />
     <ClCompile Include="..\..\src\kre\TextureOpenGL.cpp" />
@@ -676,7 +679,6 @@
     <ClCompile Include="..\..\src\multiplayer.cpp" />
     <ClCompile Include="..\..\src\multi_tile_pattern.cpp" />
     <ClCompile Include="..\..\src\object_events.cpp" />
-    <ClCompile Include="..\..\src\options_dialog.cpp" />
     <ClCompile Include="..\..\src\particle_system.cpp" />
     <ClCompile Include="..\..\src\pathfinding.cpp" />
     <ClCompile Include="..\..\src\pause_game_dialog.cpp" />
@@ -698,7 +700,6 @@
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\selector_widget.cpp" />
-    <ClCompile Include="..\..\src\settings_dialog.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
     <ClCompile Include="..\..\src\solid_map.cpp" />
     <ClCompile Include="..\..\src\sound.cpp" />
@@ -708,6 +709,8 @@
     <ClCompile Include="..\..\src\stats_server_main.cpp" />
     <ClCompile Include="..\..\src\stats_web_server.cpp" />
     <ClCompile Include="..\..\src\string_utils.cpp" />
+    <ClCompile Include="..\..\src\surface_cache.cpp" />
+    <ClCompile Include="..\..\src\surface_utils.cpp" />
     <ClCompile Include="..\..\src\svg\logger.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
     <ClCompile Include="..\..\src\svg\svg_container.cpp" />

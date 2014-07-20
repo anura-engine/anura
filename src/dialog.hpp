@@ -42,10 +42,10 @@ namespace gui
 		virtual void showModal();
 		void show();
 
-		enum MOVE_DIRECTION { MOVE_DOWN, MOVE_RIGHT };
-		Dialog& addWidget(WidgetPtr w, MOVE_DIRECTION dir=MOVE_DOWN);
+		enum class MOVE_DIRECTION { DOWN, RIGHT };
+		Dialog& addWidget(WidgetPtr w, MOVE_DIRECTION dir=MOVE_DIRECTION::DOWN);
 		Dialog& addWidget(WidgetPtr w, int x, int y,
-						MOVE_DIRECTION dir=MOVE_DOWN);
+						MOVE_DIRECTION dir=MOVE_DIRECTION::DOWN);
 		void removeWidget(WidgetPtr w);
 		void replaceWidget(WidgetPtr w_old, WidgetPtr w_new);
 		void clear();

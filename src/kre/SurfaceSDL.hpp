@@ -77,6 +77,11 @@ namespace KRE
 
 		PixelFormat::PF getFormat() const override;
 
+		Color mapRGB(int r, int g, int b) override;
+		Color mapRGB(double r, double g, double b) override;
+		Color mapRGBA(int r, int g, int b, int a) override;
+		Color mapRGBA(double r, double g, double b, double a) override;
+
 		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
 		void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
 
@@ -110,6 +115,7 @@ namespace KRE
 		SurfaceSDL(unsigned width, unsigned height, PixelFormat::PF format);
 		virtual ~SurfaceSDL();
 		const void* pixels() const override;
+		void* pixelsWriteable() override;
 		void writePixels(unsigned bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
@@ -117,6 +123,7 @@ namespace KRE
 			uint32_t amask,
 			const void* pixels) override;
 		void writePixels(const void* pixels) override;
+		void fillRect(const rect& dst_rect, const Color& color) override;
 		unsigned width() override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->w;

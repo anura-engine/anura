@@ -1,4 +1,4 @@
-/*	/*
+/*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
@@ -2081,7 +2081,7 @@ void Level::draw(int x, int y, int w, int h) const
 
 		if(editor_) {
 			for(const EntityPtr& obj : chars_) {
-				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_NONE)) {
+				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_DIRECTION::NONE)) {
 					//if the entity is colliding with the level, then draw
 					//it in red to mark as 'bad'.
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -2837,7 +2837,7 @@ void Level::set_solid_area(const rect& r, bool solid)
 	std::string empty_info;
 	for(int y = r.y(); y < r.y2(); ++y) {
 		for(int x = r.x(); x < r.x2(); ++x) {
-			set_solid(solid_, x, y, 100, 100, 0, empty_info, solid);
+			setSolid(solid_, x, y, 100, 100, 0, empty_info, solid);
 		}
 	}
 }
@@ -3372,15 +3372,15 @@ void Level::add_solid_rect(int x1, int y1, int x2, int y2, int friction, int tra
 
 void Level::add_solid(int x, int y, int friction, int traction, int damage, const std::string& info)
 {
-	set_solid(solid_, x, y, friction, traction, damage, info);
+	setSolid(solid_, x, y, friction, traction, damage, info);
 }
 
 void Level::add_standable(int x, int y, int friction, int traction, int damage, const std::string& info)
 {
-	set_solid(standable_, x, y, friction, traction, damage, info);
+	setSolid(standable_, x, y, friction, traction, damage, info);
 }
 
-void Level::set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
+void Level::setSolid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
 {
 	tile_pos pos(x/TileSize, y/TileSize);
 	x = x%TileSize;
@@ -4323,7 +4323,7 @@ decimal Level::zoom_level() const
 	return zoom_level_;
 }
 
-void Level::add_speech_dialog(std::shared_ptr<speech_dialog> d)
+void Level::add_speech_dialog(std::shared_ptr<SpeechDialog> d)
 {
 	speech_dialogs_.push(d);
 }
@@ -4335,10 +4335,10 @@ void Level::remove_speech_dialog()
 	}
 }
 
-std::shared_ptr<const speech_dialog> Level::current_speech_dialog() const
+std::shared_ptr<const SpeechDialog> Level::current_speech_dialog() const
 {
 	if(speech_dialogs_.empty()) {
-		return std::shared_ptr<const speech_dialog>();
+		return std::shared_ptr<const SpeechDialog>();
 	}
 
 	return speech_dialogs_.top();
@@ -4655,7 +4655,7 @@ UTILITY(correct_solidity)
 		lvl->setAsCurrentLevel();
 
 		for(EntityPtr c : lvl->get_chars()) {
-			if(entity_collides_with_level(*lvl, *c, MOVE_NONE)) {
+			if(entity_collides_with_level(*lvl, *c, MOVE_DIRECTION::NONE)) {
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
 					LOG_INFO("LEVEL: " << lvl->id() << " CORRECTED " << c->getDebugDescription());
 				} else {
@@ -4673,13 +4673,6 @@ UTILITY(correct_solidity)
 
 UTILITY(compile_levels)
 {
-#ifndef IMPLEMENT_SAVE_PNG
-	LOG_ERROR(
-		<< "This build wasn't done with IMPLEMENT_SAVE_PNG defined. "
-		<< "Consquently image files will not be written, aborting requested operation.");
-	return;
-#endif
-
 	preferences::compiling_tiles = true;
 
 	LOG_INFO("COMPILING LEVELS...");

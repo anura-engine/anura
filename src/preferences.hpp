@@ -34,10 +34,6 @@ namespace game_logic
 	class FormulaCallable;
 }
 
-#ifdef _WINDOWS
-std::string GetAppDataPath();
-#endif
-
 namespace preferences 
 {
 	enum FullscreenMode {
@@ -145,11 +141,11 @@ namespace preferences
 
 	void set_actual_screen_dimensions_persistent(int width, int height);
 
-	class screen_dimension_override_scope {
+	class ScreenDimensionOverrideScope {
 		int old_width, old_height, vold_width, vold_height;
 	public:
-		screen_dimension_override_scope(int width, int height, int vwidth, int vheight);
-		~screen_dimension_override_scope();
+		ScreenDimensionOverrideScope(int width, int height, int vwidth, int vheight);
+		~ScreenDimensionOverrideScope();
 	};
 
 	//whether we are debugging

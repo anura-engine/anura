@@ -24,6 +24,7 @@
 #pragma once
 
 #include <cstdint>
+#include "../Color.hpp"
 
 namespace KRE
 {
@@ -115,6 +116,11 @@ namespace KRE
 			PIXELFORMAT_YVYU,
 		};
 		virtual PF getFormat() const = 0;
+
+		virtual Color mapRGB(int r, int g, int b) = 0;
+		virtual Color mapRGB(double r, double g, double b) = 0;
+		virtual Color mapRGBA(int r, int g, int b, int a) = 0;
+		virtual Color mapRGBA(double r, double g, double b, double a) = 0;
 
 		virtual std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) = 0;
 		virtual void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) = 0;

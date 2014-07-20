@@ -57,7 +57,7 @@ public:
 	int difficulty() const { return difficulty_; }
 
 private:
-	bool on_platform() const;
+	bool onPlatform() const;
 
 	int walkUpOrDownStairs() const;
 

@@ -33,7 +33,9 @@ class ConcurrentCache
 {
 public:
 	typedef std::map<Key, Value> map_type;
+
 	size_t size() const { threading::lock l(mutex_); return map_.size(); }
+
 	const Value& get(const Key& key) {
 		threading::lock l(mutex_);
 		typename map_type::const_iterator itor = map_.find(key);
@@ -68,8 +70,8 @@ public:
 	std::vector<Key> getKeys() {
 		std::vector<Key> result;
 		threading::lock l(mutex_);
-		for(typename map_type::const_iterator i = map_.begin(); i != map_.end(); ++i) {
-			result.push_back(i->first);
+		for(const auto& i : map_) {
+			result.push_back(i.first);
 		}
 
 		return result;

@@ -43,6 +43,7 @@ namespace KRE
 		explicit Color(const int r, const int g, const int b, const int a=255);
 		explicit Color(const std::string& s);
 		explicit Color(const variant& node);
+		explicit Color(unsigned long n);
 
 		double r() const { return color_[0]; }
 		double g() const { return color_[1]; }

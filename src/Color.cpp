@@ -337,6 +337,15 @@ namespace KRE
 		}
 	}
 
+	Color::Color(unsigned long n)
+	{
+		// assume RGBA format
+		color_[0] = ((n >> 24) & 0xff)/255.0f;
+		color_[1] = ((n >> 16) & 0xff)/255.0f;
+		color_[2] = ((n >> 8) & 0xff)/255.0f;
+		color_[3] = (n & 0xff)/255.0f;
+	}
+
 	Color::Color(const std::string& colstr)
 	{
 		auto it = get_color_table().find(colstr);

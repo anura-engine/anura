@@ -100,11 +100,6 @@ private:
 	point last_stats_point_;
 	std::string last_stats_point_level_;
 	bool handle_mouse_events(const SDL_Event &event);
-	void handle_mouse_over_voxel_objects(const SDL_Event &event,
-		const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
-		game_logic::MapFormulaCallablePtr callable, 
-		const int basic_evt, 
-		const int catch_all_event);
 
 	//mouse event handling state
 	bool mouse_clicking_;

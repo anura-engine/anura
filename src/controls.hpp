@@ -24,7 +24,7 @@
 #pragma once
 
 #include <vector>
-#include <cstddef>
+#include <memory>
 
 typedef unsigned long key_type;
 

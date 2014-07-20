@@ -25,6 +25,8 @@
 
 #include <vector>
 
+#include "SDL_events.h"
+
 namespace joystick
 {
 	struct Manager 

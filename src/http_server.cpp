@@ -23,7 +23,6 @@
 
 #include <algorithm>
 #include <boost/algorithm/string/replace.hpp>
-#include <boost/bind.hpp>
 #include <deque>
 #include <iostream>
 
@@ -59,7 +58,7 @@ namespace http
 	void web_server::start_accept()
 	{
 		socket_ptr socket(new tcp::socket(acceptor_.get_io_service()));
-		acceptor_.async_accept(*socket, boost::bind(&web_server::handle_accept, this, socket, boost::asio::placeholders::error));
+		acceptor_.async_accept(*socket, std::bind(&web_server::handle_accept, this, socket, std::placeholders::_1));
 	}
 
 	namespace {
@@ -84,7 +83,7 @@ namespace http
 		}
 
 		buffer_ptr buf(new boost::array<char, 64*1024>);
-		socket->async_read_some(boost::asio::buffer(*buf), boost::bind(&web_server::handle_receive, this, socket, buf, _1, _2, recv_buf));
+		socket->async_read_some(boost::asio::buffer(*buf), std::bind(&web_server::handle_receive, this, socket, buf, std::placeholders::_1, std::placeholders::_2, recv_buf));
 	}
 
 	void web_server::handle_receive(socket_ptr socket, buffer_ptr buf, 
@@ -305,7 +304,7 @@ namespace http
 		*str += msg;
 
 		boost::asio::async_write(*socket, boost::asio::buffer(*str),
-								 boost::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
+								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
 
 	void web_server::send_404(socket_ptr socket)
@@ -320,11 +319,11 @@ namespace http
 			"\r\n";
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
 		boost::asio::async_write(*socket, boost::asio::buffer(*str),
-					boost::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
+					std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
 
 	variant web_server::parse_message(const std::string& msg) const
 	{
-		return json::parse(msg, json::JSON_NO_PREPROCESSOR);
+		return json::parse(msg, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 	}
 }

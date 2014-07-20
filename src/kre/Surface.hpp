@@ -50,6 +50,10 @@ namespace KRE
 	public:
 		virtual ~Surface();
 		virtual const void* pixels() const = 0;
+		// This is a potentially dangerous function and significant care must
+		// be taken when processing the pixel data to respect correct row pitch
+		// and pixel format.
+		virtual void* pixelsWriteable() = 0;
 		virtual unsigned width() = 0;
 		virtual unsigned height() = 0;
 		virtual unsigned rowPitch() = 0;
@@ -66,6 +70,8 @@ namespace KRE
 			uint32_t amask,
 			const void* pixels) = 0;
 		virtual void writePixels(const void* pixels) = 0;
+
+		virtual void fillRect(const rect& dst_rect, const Color& color);
 
 		PixelFormatPtr getPixelFormat();
 

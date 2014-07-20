@@ -26,7 +26,6 @@
 #ifdef USE_BOX2D
 
 #include <Box2D/Box2D.h>
-#include <boost/shared_ptr.hpp>
 #include <boost/intrusive_ptr.hpp>
 
 #include <vector>

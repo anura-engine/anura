@@ -65,7 +65,6 @@
 #include "tbs_client.hpp"
 #include "tbs_internal_client.hpp"
 #include "message_dialog.hpp"
-#include "options_dialog.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
@@ -77,7 +76,6 @@
 #include "thread.hpp"
 #include "unit_test.hpp"
 #include "preferences.hpp"
-#include "settings_dialog.hpp"
 #include "module.hpp"
 #include "variant_utils.hpp"
 #include "widget_factory.hpp"
@@ -407,9 +405,9 @@ namespace
 		{
 			std::vector<std::string> txt;
 			txt.push_back(text);
-			std::shared_ptr<speech_dialog> d(new speech_dialog);
+			std::shared_ptr<SpeechDialog> d(new SpeechDialog);
 			d->setText(txt);
-			d->set_options(options);
+			d->setOptions(options);
 
 			lvl.add_speech_dialog(d);
 
@@ -417,12 +415,12 @@ namespace
 			while(!done) {
 				SDL_Event event;
 				while(input::sdl_poll_event(&event)) {
-					if(d->key_press(event)) {
+					if(d->keyPress(event)) {
 						done = true;
 					}
 				}
 		
-				if(d->process() || d->detect_joystick_press()) {
+				if(d->process() || d->detectJoystickPress()) {
 					done = true;
 				}
 
@@ -434,7 +432,7 @@ namespace
 
 			lvl.remove_speech_dialog();
 
-			return d->option_selected();
+			return d->getOptionSelected();
 		}
 	}
 
@@ -1144,7 +1142,7 @@ namespace
 
 			obj_->executeCommand(instantiation_commands_);
 
-			if(entity_collides(lvl, *obj_, MOVE_NONE)) {
+			if(entity_collides(lvl, *obj_, MOVE_DIRECTION::NONE)) {
 				lvl.remove_character(obj_);
 			} else {
 				obj_->check_initialized();
@@ -1747,7 +1745,7 @@ namespace
 		}
 	};
 
-	FUNCTION_DEF(set_solid, 4, 5, "set_solid(x1, y1, x2, y2, boolean is_solid=false): modifies the solidity of the Level such that the rectangle given by (x1, y1, x2, y2) will have its solidity set to the value of is_solid")
+	FUNCTION_DEF(set_solid, 4, 5, "setSolid(x1, y1, x2, y2, boolean is_solid=false): modifies the solidity of the Level such that the rectangle given by (x1, y1, x2, y2) will have its solidity set to the value of is_solid")
 		set_solid_command* cmd = (new set_solid_command(
 		  rect::from_coordinates(
 			args()[0]->evaluate(variables).as_int(),
@@ -1914,15 +1912,15 @@ namespace
 		transient_speech_dialog_command(EntityPtr speaker, const std::vector<std::string>& text, int duration) : speaker_(speaker), text_(text), duration_(duration)
 		{}
 		virtual void execute(Level& lvl, CustomObject& ob) const {
-			std::shared_ptr<speech_dialog> d(new speech_dialog);
+			std::shared_ptr<SpeechDialog> d(new SpeechDialog);
 			if(speaker_) {
-				d->set_speaker(speaker_);
+				d->setSpeaker(speaker_);
 			} else {
-				d->set_speaker(EntityPtr(&ob));
+				d->setSpeaker(EntityPtr(&ob));
 			}
 
 			d->setText(text_);
-			d->set_expiration(duration_);
+			d->setExpiration(duration_);
 			lvl.add_speech_dialog(d);
 		}
 	};
@@ -1984,9 +1982,9 @@ namespace
 
 	struct speech_dialog_scope {
 		Level& lvl_;
-		std::shared_ptr<speech_dialog> dialog_;
+		std::shared_ptr<SpeechDialog> dialog_;
 
-		speech_dialog_scope(Level& lvl, std::shared_ptr<speech_dialog> dialog)
+		speech_dialog_scope(Level& lvl, std::shared_ptr<SpeechDialog> dialog)
 		  : lvl_(lvl), dialog_(dialog)
 		{
 			lvl_.add_speech_dialog(dialog_);
@@ -2044,7 +2042,7 @@ namespace
 				}
 			}
 
-			formula_profiler::suspend_scope profiler_suspend;
+			formula_profiler::SuspendScope profiler_suspend;
 			in_dialog_setter dialog_setter(lvl);
 
 			//make it so the player's controls become locked for the duration of the dialog.
@@ -2054,13 +2052,10 @@ namespace
 		}
 
 	private:
-		static SettingsDialog menu_button_;
-	
 		void executeCommands(Level& lvl, CustomObject& ob, const std::vector<variant>& commands) const {
-			menu_button_.reset();
 			in_speech_dialog_tracker dialog_tracker;
 
-			std::shared_ptr<speech_dialog> d(new speech_dialog());
+			std::shared_ptr<SpeechDialog> d(new SpeechDialog());
 			speech_dialog_scope dialog_scope(lvl, d);
 
 			for(variant var : commands) {
@@ -2068,7 +2063,7 @@ namespace
 					ConstEntityPtr e = var.try_convert<Entity>();
 					if(e) {
 						//std::cerr << "set speaker...\n";
-						d->set_speaker_and_flip_side(e);
+						d->setSpeakerAndFlipSide(e);
 					}
 
 					const EntityCommandCallable* Entity_cmd = var.try_convert<const EntityCommandCallable>();
@@ -2123,7 +2118,7 @@ namespace
 					}
 
 					d->setText(message);
-					d->set_options(options);
+					d->setOptions(options);
 
 					bool done = false;
 					while(!done) {
@@ -2135,49 +2130,15 @@ namespace
 
 						SDL_Event event;
 						while(input::sdl_poll_event(&event)) {
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
-							// the user event gets handled the same as pressing escape
-							if (menu_button_.handleEvent(event))
-							{
-								event.type = SDL_USEREVENT;
-							}
-	#endif
 							switch(event.type) {
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-							// make sure nothing happens while the app is supposed to be "inactive"
-							case SDL_WINDOWEVENT:
-							if (event.window.event == SDL_WINDOWEVENT_MINIMIZED)
-							{
-								SDL_Event e;
-								while (SDL_WaitEvent(&e))
-								{
-									if (e.type == SDL_WINDOWEVENT && e.window.event == SDL_WINDOWEVENT_RESTORED)
-										break;
-								}
-							}
-							break;
-	#elif TARGET_OS_HARMATTAN
-							// make sure nothing happens while the app is supposed to be "inactive"
-							case SDL_ACTIVEEVENT:
-							if (event.active.state & SDL_APPINPUTFOCUS && event.active.gain == 0)
-							{
-								SDL_Event e;
-								while (SDL_WaitEvent(&e))
-								{
-									if (e.type == SDL_ACTIVEEVENT && e.active.gain == 1)
-										break;
-								}
-							}
-							break;
-	#endif
 							case SDL_QUIT:
-								throw interrupt_game_exception();
+								throw InterruptGameException();
 							case SDL_USEREVENT:
 							case SDL_KEYDOWN:
 								if(event.key.keysym.sym == SDLK_ESCAPE || event.type == SDL_USEREVENT) {
 									begin_skipping_game();
 									if(default_option != -1) {
-										d->set_option_selected(default_option);
+										d->setOptionSelected(default_option);
 									}
 									break;
 								}
@@ -2185,12 +2146,12 @@ namespace
 							case SDL_MOUSEBUTTONDOWN:
 							case SDL_MOUSEBUTTONUP:
 							case SDL_MOUSEMOTION:
-								done = done || d->key_press(event);
+								done = done || d->keyPress(event);
 								break;
 							}
 						}
 
-						done = done || d->detect_joystick_press();
+						done = done || d->detectJoystickPress();
 
 						if(paused_)
 							done = done || d->process();
@@ -2200,23 +2161,20 @@ namespace
 					}
 
 					if(options.empty() == false) {
-						const int index = d->option_selected();
+						const int index = d->getOptionSelected();
 						if(index >= 0 && index < option_commands.size()) {
 							dialog_tracker.cancel();
 							ob.executeCommand(option_commands[index]);
 						}
 					}
 
-					d->set_options(std::vector<std::string>());
+					d->setOptions(std::vector<std::string>());
 				}
 			}
 		}
 
 		void draw(const Level& lvl) const {
 			draw_scene(lvl, last_draw_position(), &lvl.player()->getEntity());
-	#if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
-			menu_button_.draw(in_speech_dialog());
-	#endif
 
 			// XXX If the frame rate is made configurable this should be changed.
 			KRE::WindowManager::getMainWindow()->swap();
@@ -2227,8 +2185,6 @@ namespace
 
 		bool paused_;
 	};
-
-	SettingsDialog speech_dialog_command::menu_button_ = SettingsDialog();
 
 	FUNCTION_DEF(speech_dialog, 1, -1, "speech_dialog(...): schedules a sequence of speech dialogs to be shown modally. Arguments may include a list of strings, which contain text. An integer which sets the duration of the dialog. An object which sets the speaker. A string by itself indicates an option that should be shown for the player to select from. A string should be followed by a list of commands that will be executed should the player choose that option.")
 		std::vector<variant> v;
@@ -2242,7 +2198,7 @@ namespace
 	RETURN_TYPE("commands")
 	END_FUNCTION_DEF(speech_dialog)
 
-	FUNCTION_DEF(paused_speech_dialog, 1, -1, "paused_speech_dialog(...): like speech_dialog(), except the game is paused while the dialog is displayed.")
+	FUNCTION_DEF(paused_speech_dialog, 1, -1, "paused_speech_dialog(...): like SpeechDialog(), except the game is paused while the dialog is displayed.")
 		std::vector<variant> v;
 		for(int n = 0; n != args().size(); ++n) {
 			v.push_back(args()[n]->evaluate(variables));
@@ -2458,7 +2414,7 @@ namespace
 			const int start_y = e_->y();
 
 			int max_cycles = max_cycles_;
-			while(entity_collides(lvl, *e_, MOVE_NONE) && max_cycles > 0) {
+			while(entity_collides(lvl, *e_, MOVE_DIRECTION::NONE) && max_cycles > 0) {
 				e_->setPos(e_->x() + xdir_, e_->y() + ydir_);
 				--max_cycles;
 			}
@@ -2512,7 +2468,7 @@ namespace
 				lvl.add_character(e_);
 			} else {
 				CollisionInfo collide_info;
-				entity_collides(Level::current(), *e_, MOVE_NONE, &collide_info);
+				entity_collides(Level::current(), *e_, MOVE_DIRECTION::NONE, &collide_info);
 				game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 				callable->add("collide_with", variant(collide_info.collide_with.get()));
 
@@ -3377,7 +3333,7 @@ namespace
 
 			obj_->executeCommand(instantiation_commands_);
 
-			if(Entity_collides(lvl, *obj_, MOVE_NONE)) {
+			if(Entity_collides(lvl, *obj_, MOVE_DIRECTION::NONE)) {
 				lvl.remove_character(obj_);
 			} else {
 				obj_->check_initialized();

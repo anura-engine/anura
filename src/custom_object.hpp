@@ -300,7 +300,7 @@ protected:
 
 	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
-	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
+	enum class STANDING_STATUS { NOT_STANDING, BACK_FOOT, FRONT_FOOT };
 	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=NULL) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);

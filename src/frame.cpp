@@ -407,7 +407,7 @@ void Frame::setColorPalette(unsigned int palettes)
 
 void Frame::setImageAsSolid()
 {
-	solid_ = solid_info::create_from_texture(texture_, img_rect_);
+	solid_ = solid_info::createFromTexture(texture_, img_rect_);
 }
 
 void Frame::playSound(const void* object) const
