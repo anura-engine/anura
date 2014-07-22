@@ -23,7 +23,42 @@
 
 #pragma once
 
+#include <boost/math/special_functions/round.hpp>
+
 #include "kre/Geometry.hpp"
+
+template<typename T>
+Geometry::Point<T> rotate_point_around_origin(T x1, T y1, float alpha, bool round)
+{
+	Geometry::Point<T> beta;
+
+	/*   //we actually don't need the initial theta and radius.  This is why:
+	x2 = R * (cos(theta) * cos(alpha) + sin(theta) * sin(alpha))
+	y2 = R * (sin(theta) * cos(alpha) + cos(theta) * sin(alpha));
+	but
+	R * (cos(theta)) = x1
+	R * (sin(theta)) = x2
+	this collapses the above to:  */
+
+	float c1 = x1 * cos(alpha) - y1 * sin(alpha);
+	float c2 = y1 * cos(alpha) + x1 * sin(alpha);
+
+	beta.x = static_cast<T>(round ? boost::math::round(c1) : c1);
+	beta.y = static_cast<T>(round ? boost::math::round(c2) : c2);
+
+	return beta;
+}
+
+template<typename T>
+Geometry::Point<T> rotate_point_around_origin_with_offset(T x1, T y1, float alpha, T u1, T v1, bool round=true)
+{
+	Geometry::Point<T> beta = rotate_point_around_origin(x1 - u1, y1 - v1, alpha, round);
+
+	beta.x += u1;
+	beta.y += v1;
+
+	return beta;
+}
 
 void rotate_rect(short center_x, short center_y, float rotation, short* rect_vertexes);
 void rotate_rect(float center_x, float center_y, float rotation, float* rect_vertexes);
