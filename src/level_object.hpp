@@ -132,12 +132,12 @@ public:
 	int damage() const { return damage_; }
 	const KRE::TexturePtr& texture() const { return t_; }
 	static void queueDraw(KRE::CanvasPtr canvas, const LevelTile& t);
-	static int calculateTileCorners(KRE::ImageLoadError* result, const LevelTile& t);
+	static int calculateTileCorners(tile_corner* result, const LevelTile& t);
 
 	bool isOpaque() const { return opaque_; }
 	bool calculateOpaque() const;
 	bool calculateUsesAlphaChannel() const;
-	bool calculateIsSolidColor(const KRE::Color& col) const;
+	bool calculateIsSolidColor(KRE::Color& col) const;
 
 	bool calculateDrawArea();
 

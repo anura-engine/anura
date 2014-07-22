@@ -134,7 +134,7 @@ namespace
 	END_FUNCTION_DEF(set_language)
 
 	FUNCTION_DEF(time, 0, 0, "time() -> timestamp: returns the current real time")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		game_logic::MapFormulaCallable* time_(new game_logic::MapFormulaCallable);
 	
 			time_t t1;
@@ -175,7 +175,7 @@ namespace
 	END_FUNCTION_DEF(translate)
 
 	FUNCTION_DEF(performance, 0, 0, "performance(): returns an object with current performance stats")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		return variant(performance_data::current());
 
 	RETURN_TYPE("object")
@@ -235,7 +235,7 @@ namespace
 	#endif
 
 	FUNCTION_DEF(get_clipboard_text, 0, 0, "get_clipboard_text(): returns the text currentl in the windowing clipboard")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		return variant(copy_from_clipboard(false));
 	RETURN_TYPE("string")
 	END_FUNCTION_DEF(get_clipboard_text)
@@ -517,7 +517,7 @@ namespace
 	END_FUNCTION_DEF(checkpoint_game)
 
 	FUNCTION_DEF(get_save_document, 1, 1, "get_save_document(int slot): gets the FFL document for the save in the given slot")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 
 		const int slot = args()[0]->evaluate(variables).as_int();
 		std::string fname = "save.cfg";
@@ -527,7 +527,7 @@ namespace
 		const std::string path = std::string(preferences::user_data_path()) + "/" + fname;
 
 		try {
-			const variant v = json::parse_from_file(path, json::JSON_NO_PREPROCESSOR);
+			const variant v = json::parse_from_file(path, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			return v;
 		} catch(json::ParseError&) {
 			return variant();
@@ -752,15 +752,15 @@ namespace
 		float stereo_left = 1.0, stereo_right = 1.0;
 		if(args().size() > 3) {
 			variant stereo_var = args()[3]->evaluate(variables);
-			stereo_left = stereo_var[0].as_decimal().as_float();
-			stereo_right = stereo_var[1].as_decimal().as_float();
+			stereo_left = stereo_var[0].as_float();
+			stereo_right = stereo_var[1].as_float();
 		}
 
 		sound_command* cmd = new sound_command(
 										 args()[0]->evaluate(variables).as_string(),
 										 false,
-										 args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 1.0f,
-										 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f,
+										 args().size() > 1 ? args()[1]->evaluate(variables).as_float() : 1.0f,
+										 args().size() > 2 ? args()[2]->evaluate(variables).as_float() : 0.0f,
 										 stereo_left, stereo_right);
 		cmd->setExpression(this);
 		return variant(cmd);
@@ -773,18 +773,18 @@ namespace
 	END_FUNCTION_DEF(sound)
 
 	FUNCTION_DEF(sound_loop, 1, 4, "sound_loop(string id, decimal volume, decimal fade_in_time, [decimal,decimal] stereo): plays the sound file given by 'id' in a loop, if fade_in_time is given it will reach full volume after this time.")
-		float stereo_left = 1.0, stereo_right = 1.0;
+		float stereo_left = 1.0f, stereo_right = 1.0f;
 		if(args().size() > 3) {
 			variant stereo_var = args()[3]->evaluate(variables);
-			stereo_left = stereo_var[0].as_decimal().as_float();
-			stereo_right = stereo_var[1].as_decimal().as_float();
+			stereo_left = stereo_var[0].as_float();
+			stereo_right = stereo_var[1].as_float();
 		}
 
 		sound_command* cmd = new sound_command(
 										 args()[0]->evaluate(variables).as_string(),
 										 true,
-										 args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 1.0f,
-										 args().size() > 2 ? args()[2]->evaluate(variables).as_decimal().as_float() : 0.0f,
+										 args().size() > 1 ? args()[1]->evaluate(variables).as_float() : 1.0f,
+										 args().size() > 2 ? args()[2]->evaluate(variables).as_float() : 0.0f,
 										 stereo_left, stereo_right);
 		cmd->setExpression(this);
 		return variant(cmd);
@@ -814,8 +814,8 @@ namespace
 		const std::string id = args()[0]->evaluate(variables).as_string();
 
 		variant stereo_var = args()[1]->evaluate(variables);
-		float stereo_left = stereo_var[0].as_decimal().as_float();
-		float stereo_right = stereo_var[1].as_decimal().as_float();
+		float stereo_left = stereo_var[0].as_float();
+		float stereo_right = stereo_var[1].as_float();
 
 		return variant(new sound_pan_command(id, stereo_left, stereo_right));
 
@@ -867,7 +867,7 @@ namespace
 	FUNCTION_DEF(stop_sound, 1, 2, "stop_sound(string id, (opt) decimal fade_out_time): stops the sound that the current object is playing with the given id, if fade_out_time is given the sound fades out over this time before stopping")
 		stop_sound_command* cmd = (new stop_sound_command(
 						args()[0]->evaluate(variables).as_string(),
-						args().size() > 1 ? args()[1]->evaluate(variables).as_decimal().as_float() : 0.0f));
+						args().size() > 1 ? args()[1]->evaluate(variables).as_float() : 0.0f));
 		cmd->setExpression(this);
 		return variant(cmd);
 	FUNCTION_ARGS_DEF
@@ -1157,7 +1157,7 @@ namespace
 
 	FUNCTION_DEF(spawn, 4, 6, "spawn(string type_id, int midpoint_x, int midpoint_y, (optional) properties map, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 
 		const std::string type = EVAL_ARG(0).as_string();
 		const int x = EVAL_ARG(1).as_int();
@@ -1257,7 +1257,7 @@ namespace
 
 	FUNCTION_DEF(spawn_player, 4, 5, "spawn_player(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) list of commands cmd): identical to spawn except that the new object is playable.")
 
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 
 		const std::string type = EVAL_ARG(0).as_string();
 		const int x = EVAL_ARG(1).as_int();
@@ -1296,7 +1296,7 @@ namespace
 
 	FUNCTION_DEF(object, 1, 5, "object(string type_id, int midpoint_x, int midpoint_y, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object only creates the object and returns it. It may be stored for later use.")
 
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		const std::string type = args()[0]->evaluate(variables).as_string();
 		boost::intrusive_ptr<CustomObject> obj;
 
@@ -1396,7 +1396,7 @@ namespace
 	END_FUNCTION_DEF(object)
 
 	FUNCTION_DEF(object_playable, 1, 5, "object_playable(string type_id, int midpoint_x, int midpoint_y, int facing, (optional) map properties) -> object: constructs and returns a new object. Note that the difference between this and spawn is that spawn returns a command to actually place the object in the Level. object_playable only creates the playble object and returns it. It may be stored for later use.")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		const std::string type = args()[0]->evaluate(variables).as_string();
 		boost::intrusive_ptr<CustomObject> obj;
 	
@@ -1827,7 +1827,7 @@ namespace
 	};
 
 	FUNCTION_DEF(tiles_at, 2, 2, "tiles_at(x, y): gives a list of the tiles at the given x, y position")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 
 		std::vector<variant> v;
 
@@ -2162,7 +2162,7 @@ namespace
 
 					if(options.empty() == false) {
 						const int index = d->getOptionSelected();
-						if(index >= 0 && index < option_commands.size()) {
+						if(index >= 0 && static_cast<int>(index) < option_commands.size()) {
 							dialog_tracker.cancel();
 							ob.executeCommand(option_commands[index]);
 						}
@@ -2235,7 +2235,7 @@ namespace
 			if(Achievement::attain(str_)) {
 				AchievementPtr a = Achievement::get(str_);
 				if(a) {
-					stats::entry("achievement").add_player_pos().set("achievement", variant(str_));
+					stats::Entry("achievement").addPlayerPos().set("achievement", variant(str_));
 					sound::play("achievement-attained.wav");
 					set_displayed_Achievement(a);
 				}
@@ -2997,10 +2997,10 @@ namespace
 		EntityPtr target = args()[0]->evaluate(variables).try_convert<Entity>();
 		int arg_start = (target == NULL) ? 0 : 1;
 		std::vector<variant> widgetsv;
-		for(int i = arg_start; i < args().size(); i++) {
+		for(unsigned i = arg_start; i < args().size(); i++) {
 			variant items = args()[i]->evaluate(variables);
 			if(items.is_list()) {
-				for(int n = 0; n != items.num_elements(); ++n) {
+				for(unsigned n = 0; n != items.num_elements(); ++n) {
 					widgetsv.push_back(items[n]);
 				}
 			} else {
@@ -3049,7 +3049,7 @@ namespace
 	END_FUNCTION_DEF(get_widget)
 
 	FUNCTION_DEF(widget, 2, 2, "widget(callable, map w): Constructs a widget defined by w and returns it for later use")
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 		game_logic::FormulaCallablePtr callable = map_into_callable(args()[0]->evaluate(variables));
 		gui::WidgetPtr w = widget_factory::create(args()[1]->evaluate(variables), callable.get());
 		return variant(w.get());
@@ -3298,7 +3298,7 @@ namespace
 
 	#endif // NO_MODULES
 
-	#if defined(USE_ISOMAP)
+	#if 0 // XXX needs re-work
 	class spawn_voxel_object_command : public EntityCommandCallable
 	{
 	public:
@@ -3349,7 +3349,7 @@ namespace
 
 	FUNCTION_DEF(spawn_voxel_object, 1, 2, "spawn_voxel(properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 
-		formula::failIfStaticContext();
+		Formula::failIfStaticContext();
 
 		variant doc = EVAL_ARG(0);
 
@@ -3369,7 +3369,8 @@ namespace
 	END_FUNCTION_DEF(spawn_voxel_object)
 	#endif
 
-	class custom_object_FunctionSymbolTable : public FunctionSymbolTable
+
+	class CustomObjectFunctionSymbolTable : public FunctionSymbolTable
 	{
 	public:
 		virtual ExpressionPtr createFunction(
@@ -3378,13 +3379,13 @@ namespace
 								   ConstFormulaCallableDefinitionPtr callable_def) const;
 	};
 
-	ExpressionPtr custom_object_FunctionSymbolTable::createFunction(
+	ExpressionPtr CustomObjectFunctionSymbolTable::createFunction(
 							   const std::string& fn,
 							   const std::vector<ExpressionPtr>& args,
 							   ConstFormulaCallableDefinitionPtr callable_def) const
 	{
-		const std::map<std::string, function_creator*>& creators = get_function_creators(FunctionModule);
-		std::map<std::string, function_creator*>::const_iterator i = creators.find(fn);
+		const std::map<std::string, FunctionCreator*>& creators = get_function_creators(FunctionModule);
+		std::map<std::string, FunctionCreator*>::const_iterator i = creators.find(fn);
 		if(i != creators.end()) {
 			return ExpressionPtr(i->second->create(args));
 		}
@@ -3400,6 +3401,6 @@ bool in_speech_dialog ()
 
 FunctionSymbolTable& get_custom_object_functions_symbol_table()
 {
-	static custom_object_FunctionSymbolTable table;
+	static CustomObjectFunctionSymbolTable table;
 	return table;
 }

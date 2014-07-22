@@ -335,7 +335,7 @@ UTILITY(compile_objects)
 
 	std::vector<SurfacePtr> surfaces;
 	for(int n = 0; n != num_output_images; ++n) {
-		surfaces.emplace_back(Surface::create(TextureImageSize, TextureImageSize, PixelFormat::PF::PIXELFORMAT_RGBA8888));
+		surfaces.emplace_back(Surface::create(TextureImageSize, TextureImageSize, PixelFormat::PF::PIXELFORMAT_ARGB8888));
 	}
 
 	for(animation_area_ptr anim : animation_areas) {
@@ -1098,7 +1098,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 			LOG_INFO("FIT ANIM: " << new_anim.targetArea.x() << ", " << new_anim.targetArea.y() << ", " << new_anim.targetArea.w() << ", " << new_anim.targetArea.h());
 		}
 
-		auto target_surf = KRE::Surface::create(TargetTextureSize, TargetTextureSize, KRE::PixelFormat::PF::PIXELFORMAT_RGBA8888);
+		auto target_surf = KRE::Surface::create(TargetTextureSize, TargetTextureSize, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
 		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
 		unsigned char* target_pixels = reinterpret_cast<unsigned char*>(target_surf->pixelsWriteable());
 		for(unsigned n = 0; n < target_surf->width() * target_surf->height(); ++n) {
@@ -1178,7 +1178,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		}
 	}
 
-	SurfacePtr sheet = Surface::create(sheet_width, sheet_height, PixelFormat::PF::PIXELFORMAT_RGBA8888);
+	SurfacePtr sheet = Surface::create(sheet_width, sheet_height, PixelFormat::PF::PIXELFORMAT_ARGB8888);
 
 	int ypos = 2;
 

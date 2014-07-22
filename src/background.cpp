@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#if 0 // needs fixing
+
 #include <cmath>
 
 #include <iostream>
@@ -36,7 +38,6 @@
 #include "level.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "surface_palette.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 
@@ -559,3 +560,4 @@ void background::draw_layer(int x, int y, const rect& area, int rotation, const 
 #endif
 }
 
+#endif

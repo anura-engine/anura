@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
-
 #include "decimal.hpp"
 #include "dialog.hpp"
 #include "entity.hpp"

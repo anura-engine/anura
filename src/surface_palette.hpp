@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,37 +21,18 @@
 	   distribution.
 */
 
-/* XXX - rework
 #pragma once
 
-#include <vector>
+#include <string>
 
-#include "variant.hpp"
-#include "voxel_object.hpp"
-#include "voxel_object_type.hpp"
+#include "kre/Surface.hpp"
 
-namespace voxel
+namespace graphics
 {
-	class user_voxel_object : public voxel_object
-	{
-	public:
-		explicit user_voxel_object(const variant& node);
-		void handleEvent(int nevent, const FormulaCallable* context=NULL);
-		void handleEvent(const std::string& event, const FormulaCallable* context=NULL);
 
-		virtual void process(Level& lvl);
+	int get_palette_id(const std::string& name);
+	const std::string& get_palette_name(int id);
 
-		virtual bool executeCommand(const variant& b);
-	private:
-		DECLARE_CALLABLE(user_voxel_object);
-
-		const_voxel_object_type_ptr type_;
-		std::vector<variant> data_;
-		int data_target_;
-
-		bool created_;
-	};
-
-	typedef boost::intrusive_ptr<user_voxel_object> UserVoxelObjectPtr;
+	KRE::SurfacePtr map_palette(KRE::SurfacePtr s, int palette);
+	KRE::Color map_palette(const KRE::Color& c, int palette);
 }
-*/

@@ -70,11 +70,11 @@ namespace editor_script
 			}
 		};
 
-		class AddObjectFunction : public function_expression 
+		class AddObjectFunction : public FunctionExpression 
 		{
 		public:
 			explicit AddObjectFunction(const args_list& args)
-			  : function_expression("add_object", args, 4, 4)
+			  : FunctionExpression("add_object", args, 4, 4)
 			{}
 		private:
 			variant execute(const FormulaCallable& variables) const {
@@ -100,11 +100,11 @@ namespace editor_script
 			}
 		};
 
-		class RemoveTilesFunction : public function_expression 
+		class RemoveTilesFunction : public FunctionExpression 
 		{
 		public:
 			explicit RemoveTilesFunction(const args_list& args)
-			  : function_expression("remove_tiles", args, 3, 5)
+			  : FunctionExpression("remove_tiles", args, 3, 5)
 			{}
 		private:
 			variant execute(const FormulaCallable& variables) const {
@@ -131,10 +131,10 @@ namespace editor_script
 			}
 		};
 
-		class AddTilesFunction : public function_expression {
+		class AddTilesFunction : public FunctionExpression {
 		public:
 			explicit AddTilesFunction(const args_list& args)
-			  : function_expression("add_tiles", args, 3, 5)
+			  : FunctionExpression("add_tiles", args, 3, 5)
 			{}
 		private:
 			variant execute(const FormulaCallable& variables) const {
@@ -159,11 +159,11 @@ namespace editor_script
 			std::string str_;
 		};
 
-		class DebugFunction : public function_expression 
+		class DebugFunction : public FunctionExpression 
 		{
 		public:
 			explicit DebugFunction(const args_list& args)
-			  : function_expression("debug", args, 1, -1) {
+			  : FunctionExpression("debug", args, 1, -1) {
 			}
 		private:
 			variant execute(const FormulaCallable& variables) const {
@@ -322,7 +322,7 @@ namespace editor_script
 				const std::string& id = script_node["id"].as_string();
 				info script = { id };
 				scripts_info.push_back(script);
-				scripts[id].reset(new formula(script_node["script"], &EditorCommandFunctionSymbolTable::instance()));
+				scripts[id].reset(new Formula(script_node["script"], &EditorCommandFunctionSymbolTable::instance()));
 			}
 		}
 	}

@@ -82,6 +82,8 @@ namespace KRE
 		Color mapRGBA(int r, int g, int b, int a) override;
 		Color mapRGBA(double r, double g, double b, double a) override;
 
+		void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) override;
+
 		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
 		void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
 

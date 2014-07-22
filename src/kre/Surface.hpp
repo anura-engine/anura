@@ -45,6 +45,16 @@ namespace KRE
 	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
 	typedef std::function<SurfacePtr(unsigned, unsigned, PixelFormat::PF)> SurfaceCreatorFormatFn;
 
+	enum class ColorCountFlags {
+		NONE						= 0,
+		IGNORE_ALPHA_VARIATIONS		= 1,
+	};
+
+	inline bool operator&(ColorCountFlags lhs, ColorCountFlags rhs)
+	{
+		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
+	}
+
 	class Surface
 	{
 	public:
@@ -98,6 +108,8 @@ namespace KRE
 		virtual bool setClipRect(const rect& r) = 0;
 		virtual const rect getClipRect() = 0;
 		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
+
+		unsigned getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
 
 		static bool registerSurfaceCreator(const std::string& name, 
 			SurfaceCreatorFileFn file_fn, 

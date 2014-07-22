@@ -120,20 +120,20 @@ namespace gui
 		editor_->setLoc(-2, -2);
 
 		if(dropdown_menu_) {
-			dropdown_menu_.reset(new grid(1));
+			dropdown_menu_.reset(new Grid(1));
 		} else {
-			dropdown_menu_ = new grid(1);
+			dropdown_menu_ = new Grid(1);
 		}
 		dropdown_menu_->setLoc(0, height()+2);
 		dropdown_menu_->allowSelection(true);
 		dropdown_menu_->setShowBackground(true);
 		dropdown_menu_->swallowClicks(true);
-		dropdown_menu_->set_col_width(0, width());
-		dropdown_menu_->set_max_height(dropdown_height_);
+		dropdown_menu_->setColWidth(0, width());
+		dropdown_menu_->setMaxHeight(dropdown_height_);
 		dropdown_menu_->setDim(width(), dropdown_height_);
 		dropdown_menu_->mustSelect();
 		for(const std::string& s : list_) {
-			dropdown_menu_->add_col(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
+			dropdown_menu_->addCol(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}
 		dropdown_menu_->registerSelectionCallback(std::bind(&DropdownWidget::executeSelection, this, _1));
 		dropdown_menu_->setVisible(false);
@@ -308,7 +308,7 @@ namespace gui
 	{
 		dropdown_height_ = h;
 		if(dropdown_menu_) {
-			dropdown_menu_->set_max_height(dropdown_height_);
+			dropdown_menu_->setMaxHeight(dropdown_height_);
 		}
 	}
 

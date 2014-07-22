@@ -97,8 +97,6 @@ namespace gui
 		bool highlight_on_mouseover_;
 		bool draw_highlight_;
 		bool down_;
-
-		friend class dropdown_widget;
 	};
 
 	class DialogLabel : public Label

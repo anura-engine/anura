@@ -119,11 +119,11 @@ namespace threading
 	{
 		const int res = SDL_CondWaitTimeout(cond_,m.m_,timeout);
 		switch(res) {
-		case 0: return WAIT_TIMEOUT_RESULT::OK;
-			case SDL_MUTEX_TIMEDOUT: return WAIT_TIMEOUT_RESULT::TIMEOUT;
+		case 0: return WAIT_TIMEOUT_RESULT::RES_OK;
+			case SDL_MUTEX_TIMEDOUT: return WAIT_TIMEOUT_RESULT::RES_TIMEOUT;
 			default:
 				 LOG_INFO("SDL_CondWaitTimeout: " << SDL_GetError());
-				return WAIT_TIMEOUT_RESULT::ERROR;
+				return WAIT_TIMEOUT_RESULT::RES_ERROR;
 		}
 	}
 

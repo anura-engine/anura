@@ -71,7 +71,7 @@ namespace util
 	std::vector<To> vector_lexical_cast(const std::vector<From>& v) {
 		std::vector<To> result;
 		result.resize(v.size());
-		foreach(const From& from, v) {
+		for(const From& from : v) {
 			result.push_back(boost::lexical_cast<To>(from));
 		}
 

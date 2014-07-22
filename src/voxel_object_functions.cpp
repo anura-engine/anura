@@ -188,7 +188,7 @@ END_FUNCTION_DEF(fire_event)
 //
 //FUNCTION_DEF(spawn_voxel, 4, 6, "spawn_voxel(string type_id, decimal x, decimal y, decimal z, (optional) properties, (optional) list of commands cmd): will create a new object of type given by type_id with the given midpoint and facing. Immediately after creation the object will have any commands given by cmd executed on it. The child object will have the spawned event sent to it, and the parent object will have the child_spawned event sent to it.")
 //
-//	formula::failIfStaticContext();
+//	Formula::failIfStaticContext();
 //
 //	const std::string type = EVAL_ARG(0).as_string();
 //	const float x = float(EVAL_ARG(1).as_decimal().as_float());

@@ -601,7 +601,7 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			SDL_Delay(20);
+			profile::delay(20);
 
 			if(cl && !cl->process()) {
 				if(cl->error().empty() == false) {

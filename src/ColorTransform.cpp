@@ -41,6 +41,15 @@ namespace KRE
 		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
 	}
 
+	ColorTransform::ColorTransform(const Color& color)
+	{
+		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
+		add_rgba_[0] = color.r();
+		add_rgba_[1] = color.g();
+		add_rgba_[2] = color.b();
+		add_rgba_[3] = color.a();
+	}
+
 	ColorTransform::ColorTransform(const variant& v)
 	{
 		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
@@ -179,6 +188,15 @@ namespace KRE
 		return res.build();
 	}
 
+	// legacy function
+	std::string ColorTransform::toString() const
+	{
+		std::stringstream s;
+		s << add_rgba_[0] << "," << add_rgba_[1] << "," << add_rgba_[2] << "," << add_rgba_[3];
+		return s.str();
+	}
+
+	// legacy function
 	bool ColorTransform::fits_in_color() const
 	{
 		for(int n = 0; n != 4; ++n) {
@@ -189,6 +207,7 @@ namespace KRE
 		return true;
 	}
 
+	// legacy function
 	Color ColorTransform::toColor() const
 	{
 		return applyBlack();

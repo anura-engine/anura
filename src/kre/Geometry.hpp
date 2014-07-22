@@ -98,7 +98,7 @@ namespace Geometry
 
 		std::string toString() const {
 			std::stringstream ss;
-			ss << x() << "," << y() << "," (x2()-1) << "," << (y2()-1);
+			ss << x() << "," << y() << "," << (x2()-1) << "," << (y2()-1);
 			return ss.str();
 		}
 

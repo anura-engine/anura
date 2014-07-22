@@ -79,8 +79,8 @@ namespace gui
 		bool simple_options_;			// simplified list of options.
 
 		std::vector<std::string> commonAnimationList();
-		void onIdChange(dropdown_WidgetPtr editor, const std::string& s);
-		void onIdSet(dropdown_WidgetPtr editor, int selection, const std::string& s);
+		void onIdChange(DropdownWidgetPtr editor, const std::string& s);
+		void onIdSet(DropdownWidgetPtr editor, int selection, const std::string& s);
 		void setImageFile();
 		void changeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr Slider);
 		void executeChangeText(const std::string& s, TextEditorWidgetPtr editor, SliderPtr Slider);

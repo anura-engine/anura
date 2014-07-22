@@ -309,7 +309,7 @@ namespace gui
 				finishRow();
 			} else {
 				addCol(widget_factory::create(row,getEnvironment()));
-					//.finish_row();
+					//.finishRow();
 				check_end = true;
 			}
 		}

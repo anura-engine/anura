@@ -187,26 +187,26 @@ namespace gui
 		clear();
 
 		// Add copy desintation box
-		grid_ptr g(new grid(2));
+		GridPtr g(new Grid(2));
 		g->setHpad(20);
-		g->add_col(ButtonPtr(new Button(new Label("Set Destination", 14), std::bind(&AnimationCreatorDialog::setDestination, this))))
-			.add_col(LabelPtr(new Label(copy_path_, KRE::Color::colorGreen(), 14)));
-		g->add_col(WidgetPtr(new Label("", KRE::Color::colorYellow(), 12)))
-			.add_col(WidgetPtr(new Label("Images will be copied to the destination directory", KRE::Color::colorYellow(), 12)));
+		g->addCol(ButtonPtr(new Button(new Label("Set Destination", 14), std::bind(&AnimationCreatorDialog::setDestination, this))))
+			.addCol(LabelPtr(new Label(copy_path_, KRE::Color::colorGreen(), 14)));
+		g->addCol(WidgetPtr(new Label("", KRE::Color::colorYellow(), 12)))
+			.addCol(WidgetPtr(new Label("Images will be copied to the destination directory", KRE::Color::colorYellow(), 12)));
 		addWidget(g, border_offset, current_height);
 		current_height += g->height() + hpad;
 
 		// Add current list of animations
-		g.reset(new grid(3));
+		g.reset(new Grid(3));
 		g->setDim(width()/2, height()/5);
-		g->set_max_height(height()/5);
+		g->setMaxHeight(height()/5);
 		g->setShowBackground(true);
 		g->setHpad(10);
-		g->set_header_row(0);
+		g->setHeaderRow(0);
 		g->allowSelection(true);
-		g->add_col(LabelPtr(new Label("Identifier", 14)))
-			.add_col(LabelPtr(new Label("Image Path", 14)))
-			.add_col(LabelPtr(new Label("Area in Image", 14)));
+		g->addCol(LabelPtr(new Label("Identifier", 14)))
+			.addCol(LabelPtr(new Label("Image Path", 14)))
+			.addCol(LabelPtr(new Label("Area in Image", 14)));
 		for(const variant& v : anims_) {
 			std::stringstream ss;
 			rect r;
@@ -219,31 +219,31 @@ namespace gui
 						v["h"].as_int());
 			}
 			ss << r;
-			g->add_col(LabelPtr(new Label(v.has_key("id") ? v["id"].as_string() : "<missing>", 12)))
-				.add_col(LabelPtr(new Label(v.has_key("image") ? v["image"].as_string() : "", 12)))
-				.add_col(LabelPtr(new Label(ss.str(), 12)));
+			g->addCol(LabelPtr(new Label(v.has_key("id") ? v["id"].as_string() : "<missing>", 12)))
+				.addCol(LabelPtr(new Label(v.has_key("image") ? v["image"].as_string() : "", 12)))
+				.addCol(LabelPtr(new Label(ss.str(), 12)));
 		}
 		g->registerSelectionCallback(std::bind(&AnimationCreatorDialog::selectAnimation, this, _1));
 		addWidget(g, border_offset, current_height);
 		current_height += g->height() + hpad;
 
-		g.reset(new grid(3));
-		g->set_max_height(int(height()/2 - 50));
+		g.reset(new Grid(3));
+		g->setMaxHeight(int(height()/2 - 50));
 		g->setZOrder(1);
 
-		dropdown_WidgetPtr id_entry(new dropdown_widget(commonAnimationList(), 150, 28, dropdown_widget::DROPDOWN_COMBOBOX));
+		DropdownWidgetPtr id_entry(new DropdownWidget(commonAnimationList(), 150, 28, DropdownType::COMBOBOX));
 		id_entry->setFontSize(14);
 		id_entry->setText(current_.has_key("id") ? current_["id"].as_string() : "normal");
-		id_entry->set_dropdown_height(height() - current_height - border_offset);
+		id_entry->setDropdownHeight(height() - current_height - border_offset);
 		id_entry->setOnChangeHandler(std::bind(&AnimationCreatorDialog::onIdChange, this, id_entry, _1));
 		id_entry->setOnSelectHandler(std::bind(&AnimationCreatorDialog::onIdSet, this, id_entry, _1, _2));
-		g->add_col(WidgetPtr(new Label("Identifier: ", KRE::Color::colorWhite(), 14)))
-			.add_col(WidgetPtr(id_entry))
-			.finish_row();
+		g->addCol(WidgetPtr(new Label("Identifier: ", KRE::Color::colorWhite(), 14)))
+			.addCol(WidgetPtr(id_entry))
+			.finishRow();
 
-		g->add_col(ButtonPtr(new Button(new Label("Choose Image File", 14), std::bind(&AnimationCreatorDialog::setImageFile, this))))
-			.add_col(WidgetPtr(new Label(rel_path_, KRE::Color::colorGreen(), 14)))
-			.finish_row();
+		g->addCol(ButtonPtr(new Button(new Label("Choose Image File", 14), std::bind(&AnimationCreatorDialog::setImageFile, this))))
+			.addCol(WidgetPtr(new Label(rel_path_, KRE::Color::colorGreen(), 14)))
+			.finishRow();
 
 		for(auto& p : current_.as_map()) {
 			if(p.second.is_int() && showAttribute(p.first)) {
@@ -256,21 +256,21 @@ namespace gui
 				entry->setOnChangeHandler(std::bind(&AnimationCreatorDialog::changeText, this, p.first.as_string(), entry, slide));
 				entry->setOnEnterHandler(std::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
 				entry->setOnTabHandler(std::bind(&AnimationCreatorDialog::executeChangeText, this, p.first.as_string(), entry, slide));
-				g->add_col(WidgetPtr(new Label(p.first.as_string(), KRE::Color::colorWhite(), 12)))
-					.add_col(entry)
-					.add_col(slide);
+				g->addCol(WidgetPtr(new Label(p.first.as_string(), KRE::Color::colorWhite(), 12)))
+					.addCol(entry)
+					.addCol(slide);
 			}
 		}
 		addWidget(g, border_offset, current_height);
 		current_height += g->height() + hpad;
 
 		// Add/Delete animation buttons
-		g.reset(new grid(4));
+		g.reset(new Grid(4));
 		g->setHpad(50);
-		g->add_col(ButtonPtr(new Button(new Label("New", 14), std::bind(&AnimationCreatorDialog::animNew, this))))
-			.add_col(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
-			.add_col(ButtonPtr(new Button(new Label("Delete", 14), std::bind(&AnimationCreatorDialog::animDel, this))))
-			.add_col(ButtonPtr(new Button(new Label("Finish", 14), std::bind(&AnimationCreatorDialog::finish, this))));
+		g->addCol(ButtonPtr(new Button(new Label("New", 14), std::bind(&AnimationCreatorDialog::animNew, this))))
+			.addCol(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
+			.addCol(ButtonPtr(new Button(new Label("Delete", 14), std::bind(&AnimationCreatorDialog::animDel, this))))
+			.addCol(ButtonPtr(new Button(new Label("Finish", 14), std::bind(&AnimationCreatorDialog::finish, this))));
 		addWidget(g, border_offset, height() - border_offset - g->height());
 		current_height = height() - border_offset - g->height();
 
@@ -381,7 +381,7 @@ namespace gui
 		init();
 	}
 
-	void AnimationCreatorDialog::onIdChange(dropdown_WidgetPtr editor, const std::string& s)
+	void AnimationCreatorDialog::onIdChange(DropdownWidgetPtr editor, const std::string& s)
 	{
 		if(current_.is_null() == false) {
 			current_.add_attr(variant("id"), variant(s));
@@ -389,7 +389,7 @@ namespace gui
 		}
 	}
 
-	void AnimationCreatorDialog::onIdSet(dropdown_WidgetPtr editor, int selection, const std::string& s)
+	void AnimationCreatorDialog::onIdSet(DropdownWidgetPtr editor, int selection, const std::string& s)
 	{
 		if(current_.is_null() == false) {
 			current_.add_attr(variant("id"), variant(s));
@@ -570,10 +570,10 @@ namespace gui
 		
 			LabelPtr title = new Label("Animation has changed.", KRE::Color::colorWhite(), 24);
 			d.addWidget(title, (d.width()-title->width())/2, 50);
-			grid_ptr g = new grid(2);
-			g->set_header_row(40);
-			g->add_col(WidgetPtr(new Button("Save", std::bind(&AnimationCreatorDialog::animSave, this, &d))))
-				.add_col(WidgetPtr(new Button("Discard", std::bind(&Dialog::cancel, &d))));
+			GridPtr g = new Grid(2);
+			g->setHeaderRow(40);
+			g->addCol(WidgetPtr(new Button("Save", std::bind(&AnimationCreatorDialog::animSave, this, &d))))
+				.addCol(WidgetPtr(new Button("Discard", std::bind(&Dialog::cancel, &d))));
 			d.addWidget(g, (d.width()-g->width())/2, 30+70+title->height());
 			d.showModal();
 			changed_ = false;
@@ -597,20 +597,20 @@ namespace gui
 
 	void AnimationCreatorDialog::setDestination()
 	{
-		file_chooser_dialog dir_dlg(
-			int(preferences::virtual_screen_width()*0.2), 
-			int(preferences::virtual_screen_height()*0.2), 
-			int(preferences::virtual_screen_width()*0.6), 
-			int(preferences::virtual_screen_height()*0.6),
+		FileChooserDialog dir_dlg(
+			static_cast<int>(preferences::virtual_screen_width()*0.2), 
+			static_cast<int>(preferences::virtual_screen_height()*0.2), 
+			static_cast<int>(preferences::virtual_screen_width()*0.6), 
+			static_cast<int>(preferences::virtual_screen_height()*0.6),
 			gui::filter_list(), 
 			true, module::get_module_path("") + "images");
 		dir_dlg.setBackgroundFrame("empty_window");
 		dir_dlg.setDrawBackgroundFn(draw_last_scene);
-		dir_dlg.use_relative_paths(true);
+		dir_dlg.useRelativePaths(true);
 		dir_dlg.showModal();
 
 		if(dir_dlg.cancelled() == false) {
-			copy_path_ = dir_dlg.get_path();
+			copy_path_ = dir_dlg.getPath();
 			rel_path_ = sys::compute_relative_path(module::get_module_path("") + "images", copy_path_ + "/" + image_file_name_);
 		}
 		init();

@@ -22,6 +22,7 @@
 */
 
 #include <tuple>
+#include <unordered_map>
 
 #include "Surface.hpp"
 
@@ -150,6 +151,36 @@ namespace KRE
 	void Surface::resetSurfaceCache()
 	{
 		get_surface_cache().clear();
+	}
+
+	// Actually creates a histogram of colors.
+	// Could be used for other things.
+	unsigned Surface::getColorCount(ColorCountFlags flags)
+	{
+		const unsigned char* pix = reinterpret_cast<const unsigned char*>(pixels());
+		const int bpp = pf_->bytesPerPixel();
+		std::unordered_map<uint32_t,uint32_t> color_list;
+		for(unsigned y = 0; y < height(); ++y) {
+			for(unsigned x = 0; x < width(); ++x) {
+				const unsigned char* p = pix;
+				uint8_t r, g, b, a;
+				switch(bpp) {
+					case 1: pf_->getRGBA(*p, r, g, b, a); break;
+					case 2: pf_->getRGBA(*reinterpret_cast<const unsigned short*>(p), r, g, b, a); break;
+					case 3: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
+					case 4: pf_->getRGBA(*reinterpret_cast<const unsigned long*>(p), r, g, b, a); break;
+				}
+				uint32_t col = (r << 24) | (g << 16) | (b << 8) | (flags & ColorCountFlags::IGNORE_ALPHA_VARIATIONS ? 255 : a);
+				if(color_list.find(col) == color_list.end()) {
+					color_list[col] = 0;
+				} else {
+					color_list[col]++;
+				}
+				p += bpp;
+			}
+			pix += rowPitch();
+		}
+		return color_list.size();
 	}
 
 	PixelFormat::PixelFormat()

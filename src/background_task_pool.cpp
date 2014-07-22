@@ -40,7 +40,12 @@ namespace background_task_pool
 			std::shared_ptr<threading::thread> thread;
 		};
 
-		threading::mutex* completed_tasks_mutex = NULL;
+		const threading::mutex& get_completed_tasks_mutex()
+		{
+			static std::shared_ptr<threading::mutex> res = std::make_shared<threading::mutex>();
+			return *res;
+		}
+
 		std::vector<int> completed_tasks;
 
 		std::map<int, task> task_map;
@@ -48,14 +53,14 @@ namespace background_task_pool
 		void run_task(std::function<void()> job, int task_id)
 		{
 			job();
-			threading::lock(*completed_tasks_mutex);
+			threading::lock lck(get_completed_tasks_mutex());
 			completed_tasks.push_back(task_id);
 		}
 	}
 
 	manager::manager()
 	{
-		completed_tasks_mutex = new threading::mutex;
+		get_completed_tasks_mutex();
 	}
 
 	manager::~manager()
@@ -76,7 +81,7 @@ namespace background_task_pool
 	{
 		std::vector<int> completed;
 		{
-			threading::lock(*completed_tasks_mutex);
+			threading::lock lck(get_completed_tasks_mutex());
 			completed.swap(completed_tasks);
 		}
 

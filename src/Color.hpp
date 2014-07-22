@@ -34,6 +34,14 @@ namespace KRE
 	class Color;
 	typedef std::shared_ptr<Color> ColorPtr;
 
+	enum class ColorByteOrder
+	{
+		RGBA,
+		ARGB,
+		BGRA,
+		ABGR,
+	};
+
 	class Color
 	{
 	public:
@@ -43,7 +51,7 @@ namespace KRE
 		explicit Color(const int r, const int g, const int b, const int a=255);
 		explicit Color(const std::string& s);
 		explicit Color(const variant& node);
-		explicit Color(unsigned long n);
+		explicit Color(unsigned long n, ColorByteOrder order=ColorByteOrder::RGBA);
 
 		double r() const { return color_[0]; }
 		double g() const { return color_[1]; }
@@ -79,6 +87,10 @@ namespace KRE
 
 		unsigned long asARGB() const {
 			return (a_int() << 24) | (r_int() << 16) | (g_int() << 8) | b_int();
+		}
+
+		unsigned long asRGBA() const {
+			return (r_int() << 24) | (b_int() << 16) | (b_int() << 8) | a_int();
 		}
 
 		glm::u8vec4 as_u8vec4() const {

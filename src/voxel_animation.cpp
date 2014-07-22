@@ -381,7 +381,7 @@ void voxel_animation_editor::init()
 	grid_ptr anim_grid(new grid(1));
 
 	for(auto p : renderer_->model().animations()) {
-		anim_grid->add_col(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
+		anim_grid->addCol(new button(new label(p.first, graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&animation_renderer::set_animation, renderer_.get(), p.first)));
 	}
 
 	addWidget(anim_grid, renderer_->x() + renderer_->width() + 10, renderer_->y());

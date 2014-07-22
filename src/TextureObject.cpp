@@ -45,7 +45,7 @@ DEFINE_FIELD(id, "int")
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;
 	using namespace KRE;
-	formula::failIfStaticContext();
+	Formula::failIfStaticContext();
 
 	std::string fname = FN_ARG(0).as_string();
 

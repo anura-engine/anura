@@ -61,9 +61,9 @@ namespace editor_dialogs
 			find_edit_->setOnChangeHandler(std::bind(&CharacterEditorDialog::init, this));
 		}
 
-		grid_ptr find_grid(new gui::grid(2));
-		find_grid->add_col(WidgetPtr(new Label("Search: ", KRE::Color::colorWhite())));
-		find_grid->add_col(WidgetPtr(find_edit_));
+		GridPtr find_grid(new Grid(2));
+		find_grid->addCol(WidgetPtr(new Label("Search: ", KRE::Color::colorWhite())));
+		find_grid->addCol(WidgetPtr(find_edit_));
 		addWidget(find_grid, 10, 10);
 
 		const Frame& frame = *editor_.all_characters()[editor_.get_object()].preview_frame();
@@ -95,8 +95,8 @@ namespace editor_dialogs
 		if(!result || category == "") {
 			const std::string search_string = find_edit_->text();
 
-			grid_ptr grid(new gui::grid(3));
-			grid->set_max_height(height() - 50);
+			GridPtr grid(new Grid(3));
+			grid->setMaxHeight(height() - 50);
 			int index = 0;
 			for(const editor::enemy_type& c : editor_.all_characters()) {
 				bool matches = c.category == category;
@@ -124,7 +124,7 @@ namespace editor_dialogs
 					char_button->setTooltip(tooltip_str);
 					char_button->setDim(40, 40);
 					borders.push_back(new gui::BorderWidget(char_button, KRE::Color(0,0,0,0)));
-					grid->add_col(gui::WidgetPtr(borders.back()));
+					grid->addCol(gui::WidgetPtr(borders.back()));
 				} else {
 					borders.push_back(NULL);
 				}
@@ -132,7 +132,7 @@ namespace editor_dialogs
 				++index;
 			}
 
-			grid->finish_row();
+			grid->finishRow();
 
 			result = grid;
 		}
@@ -152,9 +152,9 @@ namespace editor_dialogs
 	{
 		using namespace gui;
 		using std::placeholders::_1;
-		gui::grid* grid = new gui::grid(2);
+		Grid* Grid = new Grid(2);
 		grid->setZOrder(100);
-		grid->set_max_height(height());
+		grid->setMaxHeight(height());
 		grid->setShowBackground(true);
 		grid->setHpad(10);
 		grid->allowSelection();
@@ -181,8 +181,8 @@ namespace editor_dialogs
 			ImageWidget* preview = new ImageWidget(c.preview_frame()->img());
 			preview->setDim(28, 28);
 			preview->setArea(c.preview_frame()->area());
-			grid->add_col(WidgetPtr(preview))
-				 .add_col(WidgetPtr(new Label(c.category, KRE::Color::colorWhite())));
+			grid->addCol(WidgetPtr(preview))
+				 .addCol(WidgetPtr(new Label(c.category, KRE::Color::colorWhite())));
 			grid->register_row_selection_callback(std::bind(&CharacterEditorDialog::select_category, this, c.category));
 		}
 

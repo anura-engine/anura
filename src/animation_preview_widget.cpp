@@ -116,8 +116,8 @@ namespace
 			return rect::from_coordinates(ox,oy,ox+1,oy+1);
 		}
 
-		typedef pathfinding::graph_node<point, int> graph_node;
-		typedef graph_node::graph_node_ptr graph_node_ptr;
+		typedef pathfinding::GraphNode<point, int> graph_node;
+		typedef graph_node::GraphNodePtr graph_node_ptr;
 		typedef std::map<point, graph_node_ptr> graph_node_list;
 		graph_node_list node_list;
 		std::deque<graph_node_ptr> open_list;
@@ -127,35 +127,35 @@ namespace
 		bool searching = true;
 		try {
 			graph_node_ptr current = graph_node_ptr(new graph_node(point(ox, oy)));
-			current->set_cost(0, 0);
-			current->set_on_open_list(true);
+			current->setCost(0, 0);
+			current->setOnOpenList(true);
 			open_list.push_back(current);
 			node_list[point(ox, oy)] = current;
 
 			while(searching && !open_list.empty()) {
 				current = open_list.front(); open_list.pop_front();
-				current->set_on_open_list(false);
-				current->set_on_closed_list(true);
+				current->setOnOpenList(false);
+				current->setOnClosedList(true);
 				if(current->G() <= max_cost) {
-					reachable.push_back(reachable_node(current->get_node_value(), 
-						is_pixel_alpha(s, current->get_node_value())));
+					reachable.push_back(reachable_node(current->getNodeValue(), 
+						is_pixel_alpha(s, current->getNodeValue())));
 				}
-				for(auto& p : pathfinding::get_neighbours_from_rect(current->get_node_value(), 1, 1, r)) {
+				for(auto& p : pathfinding::get_neighbours_from_rect(current->getNodeValue(), 1, 1, r)) {
 					graph_node_list::const_iterator neighbour_node = node_list.find(p);
-					int g_cost = path_cost_fn(s, p, current->get_node_value()) + current->G();
+					int g_cost = path_cost_fn(s, p, current->getNodeValue()) + current->G();
 					if(neighbour_node == node_list.end()) {
 						graph_node_ptr new_node = graph_node_ptr(new graph_node(point(p.x, p.y)));
 							new_node->setParent(current);
-							new_node->set_cost(g_cost, 0);
-							new_node->set_on_open_list(true);
+							new_node->setCost(g_cost, 0);
+							new_node->setOnOpenList(true);
 							node_list[p] = new_node;
 							if(g_cost > max_cost) {
-								new_node->set_on_closed_list(true);
+								new_node->setOnClosedList(true);
 							} else {
-								new_node->set_on_open_list(true);
+								new_node->setOnOpenList(true);
 								open_list.push_back(new_node);
 							}
-					} else if(neighbour_node->second->on_closed_list() || neighbour_node->second->on_open_list()) {
+					} else if(neighbour_node->second->isOnClosedList() || neighbour_node->second->isOnOpenList()) {
 						if(g_cost < neighbour_node->second->G()) {
 							neighbour_node->second->G(g_cost);
 							neighbour_node->second->setParent(current);

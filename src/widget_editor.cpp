@@ -215,9 +215,9 @@ private:
 			  new gui::button(gui::WidgetPtr(new gui::GuiSectionWidget(ToolIcons[n], 26, 26)),
 				  std::bind(&widget_editor::select_tool, this, static_cast<WIDGET_TOOL>(n))));
 			tool_borders_.push_back(new gui::BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
-			tools_grid->add_col(gui::WidgetPtr(tool_borders_.back()));
+			tools_grid->addCol(gui::WidgetPtr(tool_borders_.back()));
 		}
-		tools_grid->finish_row();
+		tools_grid->finishRow();
 
 		addWidget(tools_grid, area_.x2() - sidebar_width, save_button->y() + save_button->height() + 4);
 

@@ -36,4 +36,5 @@ namespace graphics
 
 	void set_alpha_for_transparent_colors_in_rgba_surface(KRE::SurfacePtr s, SpritesheetOptions options=SpritesheetOptions::DEFAULT);
 	const unsigned char* get_alpha_pixel_colors();
+	unsigned long map_color_to_16bpp(unsigned long color);
 }

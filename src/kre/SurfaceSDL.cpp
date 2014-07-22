@@ -544,9 +544,13 @@ namespace KRE
 
 	Color SDLPixelFormat::mapRGBA(double r, double g, double b, double a)
 	{
-		return Color(SDL_MapRGB(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0), static_cast<uint8_t>(a*255.0)));
+		return Color(SDL_MapRGBA(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0), static_cast<uint8_t>(a*255.0)));
 	}
 
+	void SDLPixelFormat::getRGBA(unsigned long pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)
+	{
+		SDL_GetRGBA(pix, pf_, &r, &g, &b, &a);
+	}
 
 	PixelFormat::PF SDLPixelFormat::getFormat() const
 	{

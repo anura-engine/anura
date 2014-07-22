@@ -122,6 +122,8 @@ namespace KRE
 		virtual Color mapRGBA(int r, int g, int b, int a) = 0;
 		virtual Color mapRGBA(double r, double g, double b, double a) = 0;
 
+		virtual void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) = 0; 
+
 		virtual std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) = 0;
 		virtual void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) = 0;
 	private:

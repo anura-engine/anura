@@ -176,8 +176,8 @@ namespace editor_dialogs
 		all_classifications_.clear();
 		for(LevelPtr lvl : editor_.get_level_list()) {
 			for(EntityPtr e : lvl->get_chars()) {
-				if(e->getEditorInfo() && !e->getEditorInfo()->classification().empty()) {
-					all_classifications_.insert(e->getEditorInfo()->classification());
+				if(e->getEditorInfo() && !e->getEditorInfo()->getClassification().empty()) {
+					all_classifications_.insert(e->getEditorInfo()->getClassification());
 				}
 			}
 		}

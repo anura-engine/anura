@@ -1921,10 +1921,10 @@ void perspective_widget::init()
 	else if(zdir_) { description = flipped_ ? "Back" : "Front"; }
 
 	description_label_.reset(new label(description, 12));
-	toolbar->add_col(description_label_);
-	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_widget::flip, this)));
-	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomIn, renderer_.get())));
-	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomOut, renderer_.get())));
+	toolbar->addCol(description_label_);
+	toolbar->addCol(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_widget::flip, this)));
+	toolbar->addCol(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomIn, renderer_.get())));
+	toolbar->addCol(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomOut, renderer_.get())));
 	addWidget(toolbar);
 
 	addWidget(renderer_);
@@ -2029,9 +2029,9 @@ void voxel_editor::init()
 
 	grid_ptr toolbar(new grid(3));
 
-	toolbar->add_col(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::on_save, this))));
-	toolbar->add_col(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::undo, this))));
-	toolbar->add_col(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::redo, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::on_save, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::undo, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::redo, this))));
 	addWidget(toolbar, area_.x2() - 190, area_.y() + 4);
 
 	tool_borders_.clear();
@@ -2043,10 +2043,10 @@ void voxel_editor::init()
 		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 		      std::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
 		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
-		tools_grid->add_col(WidgetPtr(tool_borders_.back()));
+		tools_grid->addCol(WidgetPtr(tool_borders_.back()));
 	}
 
-	tools_grid->finish_row();
+	tools_grid->finishRow();
 
 	addWidget(tools_grid);
 
@@ -2057,8 +2057,8 @@ void voxel_editor::init()
 		grid_ptr layers_grid(new grid(2));
 
 		for(int n = 0; n != layers_.size(); ++n) {
-			layers_grid->add_col(WidgetPtr(new label(model_.layer_types[n].name)));
-			layers_grid->add_col(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
+			layers_grid->addCol(WidgetPtr(new label(model_.layer_types[n].name)));
+			layers_grid->addCol(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
 		}
 
 		layers_grid->allowSelection();
@@ -2182,13 +2182,13 @@ void voxel_editor::on_change_layer_button_clicked(int nlayer)
 	context_menu->setHpad(10);
 
 	for(const std::pair<std::string,Layer>& p : variations) {
-		context_menu->add_col(p.first);
-		context_menu->add_col("");
+		context_menu->addCol(p.first);
+		context_menu->addCol("");
 	}
 
 	boost::intrusive_ptr<TextEditorWidget> editor(new TextEditorWidget(100));
-	context_menu->add_col(editor);
-	context_menu->add_col("add");
+	context_menu->addCol(editor);
+	context_menu->addCol("add");
 
 	int result = show_grid_as_context_menu(context_menu, WidgetPtr(this));
 	if(result < 0) {

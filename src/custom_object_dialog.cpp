@@ -89,11 +89,11 @@ namespace gui
 		bool allow_functions_;
 		WidgetPtr context_menu_;
 
-		tree_editor_WidgetPtr item_grid_;
-		code_editor_WidgetPtr string_entry_;
+		TreeEditorWidgetPtr item_grid_;
+		CodeEditorWidgetPtr string_entry_;
 		ButtonPtr save_text_button_;
 		ButtonPtr discard_text_button_;
-		grid_ptr text_button_grid;
+		GridPtr text_button_grid;
 		std::function<void(const variant&)> save_fn_;
 		int row_count_;
 		std::string saved_text_;
@@ -202,8 +202,8 @@ namespace editor_dialogs
 
 		addWidget(WidgetPtr(new Label("Object Properties", KRE::Color::colorWhite(), 20)), border_offset, border_offset);
 
-		grid_ptr container(new grid(1));
-		container->set_col_width(0, width() - border_offset);
+		GridPtr container(new Grid(1));
+		container->setColWidth(0, width() - border_offset);
 
 		// Get choices for dropdown list.
 		std::vector<std::string> template_choices;
@@ -212,16 +212,16 @@ namespace editor_dialogs
 		std::sort(template_choices.begin(), template_choices.end());
 		template_choices.insert(template_choices.begin(), "Blank");
 
-		dropdown_WidgetPtr template_dropdown(new dropdown_widget(template_choices, 200, 30, dropdown_widget::DROPDOWN_LIST));
-		template_dropdown->set_dropdown_height(100);
+		DropdownWidgetPtr template_dropdown(new DropdownWidget(template_choices, 200, 30, DropdownType::LIST));
+		template_dropdown->setDropdownHeight(100);
 		template_dropdown->setOnSelectHandler(std::bind(&CustomObjectDialog::changeTemplate, this, _1, _2));
 		template_dropdown->setSelection(selected_template_);
 
-		grid_ptr g(new grid(4));
+		GridPtr g(new Grid(4));
 		g->setHpad(20);
 		g->setZOrder(1);
-		g->add_col(WidgetPtr(new Label("Template  ", KRE::Color::colorWhite(), 14)))
-			.add_col(template_dropdown);
+		g->addCol(WidgetPtr(new Label("Template  ", KRE::Color::colorWhite(), 14)))
+			.addCol(template_dropdown);
 		TextEditorWidgetPtr change_entry(new TextEditorWidget(200, 28));
 		change_entry->setFontSize(14);
 		if(object_template_.has_key("id")) {
@@ -232,23 +232,23 @@ namespace editor_dialogs
 		change_entry->setOnTabHandler(std::bind(&CustomObjectDialog::init, this));
 		change_entry->setOnEscHandler(std::bind(&CustomObjectDialog::init, this));
 		change_entry->setOnChangeFocusHandler(std::bind(&CustomObjectDialog::idChangeFocus, this, _1));
-		g->add_col(WidgetPtr(new Label("id: ", KRE::Color::colorWhite(), 14)))
-			.add_col(WidgetPtr(change_entry));
-		container->add_col(g);
+		g->addCol(WidgetPtr(new Label("id: ", KRE::Color::colorWhite(), 14)))
+			.addCol(WidgetPtr(change_entry));
+		container->addCol(g);
 
-		g.reset(new grid(4));
-		g->add_col(WidgetPtr(new Button(new Label("Animations", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditAnimations, this))));
-		g->add_col(WidgetPtr(new Button(new Label("Variables", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Variables Editor", "vars", false))));
-		g->add_col(WidgetPtr(new Button(new Label("Properties", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Properties Editor", "properties", true))));
-		g->add_col(WidgetPtr(new Button(new Label("Editor Info", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Editor Info", "editor_info", false))));
-		container->add_col(g);
+		g.reset(new Grid(4));
+		g->addCol(WidgetPtr(new Button(new Label("Animations", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditAnimations, this))));
+		g->addCol(WidgetPtr(new Button(new Label("Variables", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Variables Editor", "vars", false))));
+		g->addCol(WidgetPtr(new Button(new Label("Properties", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Properties Editor", "properties", true))));
+		g->addCol(WidgetPtr(new Button(new Label("Editor Info", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onEditItems, this, "Editor Info", "editor_info", false))));
+		container->addCol(g);
 
 		if(template_file_.first.empty()) {
 			for(const std::string& attr : get_default_attribute_list()) {
 				std::vector<WidgetPtr> widget_list = getWidgetForAttribute(attr);
 				for(const WidgetPtr& w : widget_list) {
 					if(w) {
-						container->add_col(w);
+						container->addCol(w);
 					}
 				}
 			}
@@ -258,7 +258,7 @@ namespace editor_dialogs
 				std::vector<WidgetPtr> widget_list = getWidgetForAttribute(v.as_string());
 				for(const WidgetPtr& w : widget_list) {
 					if(w) {
-						container->add_col(w);
+						container->addCol(w);
 					}
 				}
 			}
@@ -288,20 +288,20 @@ namespace editor_dialogs
 		LabelPtr error_text(new Label(err_text, KRE::Color::colorRed(), 14));
 		addWidget(error_text, border_offset, height() - g->height() - border_offset - error_text->height() - 5);
 
-		g.reset(new grid(3));
+		g.reset(new Grid(3));
 		g->setHpad(20);
-		g->add_col(ButtonPtr(new Button(new Label("Create", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onCreate, this))));
-		g->add_col(ButtonPtr(new Button(new Label("Set Path...", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onSetPath, this))));
+		g->addCol(ButtonPtr(new Button(new Label("Create", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onCreate, this))));
+		g->addCol(ButtonPtr(new Button(new Label("Set Path...", KRE::Color::colorWhite(), 20), std::bind(&CustomObjectDialog::onSetPath, this))));
 		std::string path = current_object_save_path_;
 		if(object_template_.has_key("id")) {
 			path += object_template_["id"].as_string() + ".cfg";
 		} else {
 			path += "<no id>.cfg";
 		}
-		g->add_col(LabelPtr(new Label(path, KRE::Color::colorGreen())));
+		g->addCol(LabelPtr(new Label(path, KRE::Color::colorGreen())));
 		addWidget(g, border_offset, height() - g->height() - border_offset);
 
-		container->set_max_height(height() - g->height() - border_offset - error_text->height() - 10);
+		container->setMaxHeight(height() - g->height() - border_offset - error_text->height() - 10);
 		addWidget(container, border_offset, border_offset*2);
 	}
 
@@ -316,7 +316,7 @@ namespace editor_dialogs
 			true, current_object_save_path_);
 		dir_dlg.setBackgroundFrame("empty_window");
 		dir_dlg.setDrawBackgroundFn(draw_last_scene);
-		dir_dlg.use_relative_paths(true);
+		dir_dlg.useRelativePaths(true);
 		dir_dlg.showModal();
 
 		if(dir_dlg.cancelled() == false) {
@@ -344,11 +344,11 @@ namespace editor_dialogs
 			//}
 			//change_entry->setOnChangeHandler(std::bind(&custom_object_dialog::change_text_attribute, this, change_entry, attr));
 			//change_entry->setOnEnterHandler([](){});
-			//g->add_col(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14))).add_col(WidgetPtr(change_entry));
+			//g->addCol(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14))).addCol(WidgetPtr(change_entry));
 			//return g;
 		} else if(attr == "hitpoints" || attr == "mass" || attr == "friction" 
 			|| attr == "traction" || attr == "traction_in_air") {
-			grid_ptr g(new grid(3));
+			GridPtr g(new Grid(3));
 			int value = 0;
 			TextEditorWidgetPtr change_entry(new TextEditorWidget(100, 28));
 			change_entry->setFontSize(14);
@@ -373,11 +373,11 @@ namespace editor_dialogs
 			attr_label->setDim(200, attr_label->height());
 			change_entry->setDim(100, change_entry->height());
 			slide->setDim(200, slide->height());
-			g->add_col(attr_label).add_col(WidgetPtr(change_entry)).add_col(slide);
+			g->addCol(attr_label).addCol(WidgetPtr(change_entry)).addCol(slide);
 
-			g->set_col_width(0, 200);
-			g->set_col_width(1, 100);
-			g->set_col_width(2, 200);
+			g->setColWidth(0, 200);
+			g->setColWidth(1, 100);
+			g->setColWidth(2, 200);
 
 			return std::vector<gui::WidgetPtr>(1, g);
 		} else if(attr == "animation") {
@@ -385,11 +385,11 @@ namespace editor_dialogs
 			//return bb;
 		} else if(attr == "vars") {
 			//grid_ptr g(new grid(1));
-			//g->add_col(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14)));
+			//g->addCol(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14)));
 			//return std::vector<gui::WidgetPtr>(1, g);
 		} else if(attr == "editor_info") {
 			//grid_ptr g(new grid(1));
-			//g->add_col(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14)));
+			//g->addCol(WidgetPtr(new label(attr + ": ", KRE::Color::colorWhite(), 14)));
 			//return std::vector<gui::WidgetPtr>(1, g);
 		} else if(attr == "prototype") {
 			//int count = 0;
@@ -397,8 +397,8 @@ namespace editor_dialogs
 			// Estimate the maximum number of columns needed (take the minimum size button 
 			// divided into screen width being used.  Then we start adding buttons to the 
 			// grid, if we are about to add a button that would go over the maximum
-			// width then we do a .finish_row() (if needed) and start continue
-			// adding the column to the next row (with .add_col()).
+			// width then we do a .finishRow() (if needed) and start continue
+			// adding the column to the next row (with .addCol()).
 			std::vector<ButtonPtr> buttons;
 			int min_size_button = std::numeric_limits<int>::max();
 			if(object_template_.has_key("prototype")) {
@@ -413,32 +413,32 @@ namespace editor_dialogs
 			std::vector<gui::WidgetPtr> rows;
 			// conservative
 			int column_estimate = (width() - 100) / min_size_button + 2;
-			grid_ptr g(new grid(column_estimate));
+			GridPtr g(new Grid(column_estimate));
 			LabelPtr attr_label  = new Label(attr + ": ", KRE::Color::colorWhite(), 14);
 			ButtonPtr add_button = new Button(WidgetPtr(new Label("Add...", KRE::Color::colorWhite())), 
 				std::bind(&CustomObjectDialog::changePrototype, this));
-			g->add_col(attr_label).add_col(add_button);
+			g->addCol(attr_label).addCol(add_button);
 
 			int current_row_size = attr_label->width() + add_button->width();
 			int buttons_on_current_row = 2;
 			for(const ButtonPtr& b : buttons) {
 				if(b->width() + current_row_size >= width()-100 ) {
 					if(buttons_on_current_row < column_estimate) {
-						g->finish_row();
+						g->finishRow();
 					}
 					rows.push_back(g);
-					g.reset(new grid(column_estimate));
+					g.reset(new Grid(column_estimate));
 				
 					current_row_size = 0;
 					buttons_on_current_row = 0;
 				}
-				g->add_col(b);
+				g->addCol(b);
 				current_row_size += b->width();
 				buttons_on_current_row++;
 			}
 			if(buttons_on_current_row != 0) {
 				if(buttons_on_current_row < column_estimate) {
-					g->finish_row();
+					g->finishRow();
 				}
 				rows.push_back(g);
 			}
@@ -529,14 +529,14 @@ namespace editor_dialogs
 		mousex -= this->x();
 		mousey = my - this->y();
 
-		gui::grid* grid = new gui::grid(1);
-		grid->set_max_height(height() - my);
+		Grid* grid = new Grid(1);
+		grid->setMaxHeight(height() - my);
 		grid->setHpad(10);
 		grid->setShowBackground(true);
 		grid->allowSelection();
 		grid->swallowClicks();
 		for(const std::string& s : choices) {
-			grid->add_col(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
+			grid->addCol(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}
 		grid->registerSelectionCallback(std::bind(&CustomObjectDialog::executeChangePrototype, this, choices, _1));
 
@@ -618,18 +618,18 @@ namespace editor_dialogs
 		gui::filter_list f;
 		f.push_back(gui::filter_pair("Image Files", ".*?\\.(png|jpg|gif|bmp|tif|tiff|tga|webp|xpm|xv|pcx)"));
 		f.push_back(gui::filter_pair("All Files", ".*"));
-		gui::file_chooser_dialog open_dlg(
-			int(preferences::virtual_screen_width()*0.1), 
-			int(preferences::virtual_screen_height()*0.1), 
-			int(preferences::virtual_screen_width()*0.8), 
-			int(preferences::virtual_screen_height()*0.8),
+		gui::FileChooserDialog open_dlg(
+			static_cast<int>(preferences::virtual_screen_width()*0.1), 
+			static_cast<int>(preferences::virtual_screen_height()*0.1), 
+			static_cast<int>(preferences::virtual_screen_width()*0.8), 
+			static_cast<int>(preferences::virtual_screen_height()*0.8),
 			f, false, module::map_file("images/"));
 		open_dlg.setBackgroundFrame("empty_window");
 		open_dlg.setDrawBackgroundFn(draw_last_scene);
 		open_dlg.showModal();
 
 		if(open_dlg.cancelled() == false) {
-			image_file_ = open_dlg.get_file_name();
+			image_file_ = open_dlg.getFileName();
 			int offs = image_file_.rfind("/");
 			image_file_name_ = image_file_.substr(offs+1);
 
@@ -656,20 +656,20 @@ namespace gui
 		addWidget(title, border_offset, current_height);
 		current_height += title->height() + hpad;
 
-		grid_ptr g(new grid(2));
+		GridPtr g(new Grid(2));
 		g->setHpad(100);
 		ButtonPtr mod_button(new Button(new Label("Save&Close", KRE::Color::colorWhite(), 16), std::bind(&ItemEditDialog::onSave, this)));
 		ButtonPtr del_button(new Button(new Label("Cancel", KRE::Color::colorWhite(), 16), std::bind(&ItemEditDialog::cancel, this)));
-		g->add_col(mod_button).add_col(del_button);
+		g->addCol(mod_button).addCol(del_button);
 		addWidget(g, (width() - g->width())/2, current_height);
 		current_height += g->height() + hpad;
 
 
-		text_button_grid.reset(new grid(2));
+		text_button_grid.reset(new Grid(2));
 		text_button_grid->setHpad(30);
 		save_text_button_.reset(new Button(new Label("Save Text", KRE::Color::colorWhite(), 14), std::bind(&ItemEditDialog::stringEntrySave, this)));
 		discard_text_button_.reset(new Button(new Label("Discard Text", KRE::Color::colorWhite(), 14), std::bind(&ItemEditDialog::stringEntryDiscard, this)));
-		text_button_grid->add_col(save_text_button_).add_col(discard_text_button_);
+		text_button_grid->addCol(save_text_button_).addCol(discard_text_button_);
 		text_button_grid->setVisible(false);
 
 		const int string_entry_height = height() - current_height - border_offset - text_button_grid->height() - 5;

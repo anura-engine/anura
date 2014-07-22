@@ -278,25 +278,25 @@ namespace gui
 		TextEditorWidgetPtr text_edit = new TextEditorWidget(150, 30);
 		text_edit->setText(text());
 		text_edit->setOnUserChangeHandler([=](){setText(text_edit->text());});
-		g->add_col(new Label("Text:", d->getTextSize(), d->font()))
-			.add_col(text_edit);
+		g->addCol(new Label("Text:", d->getTextSize(), d->font()))
+			.addCol(text_edit);
 
-		g->add_col(new Label("Size:", d->getTextSize(), d->font())).
-			add_col(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
+		g->addCol(new Label("Size:", d->getTextSize(), d->font())).
+			addCol(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
 
 		std::vector<std::string> fonts = font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
-		dropdown_WidgetPtr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
+		DropdownWidgetPtr font_list(new DropdownWidget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		font_list->setFontSize(14);
-		font_list->set_dropdown_height(height());
+		font_list->setDropdownHeight(height());
 		auto fit = std::find(fonts.begin(), fonts.end(), font());
 		font_list->setSelection(fit == fonts.end() ? 0 : fit-fonts.begin());
 		font_list->setOnSelectHandler([&](int n, const std::string& s){setFont(s);});
 		font_list->setZOrder(19);
-		g->add_col(new Label("Font:", d->getTextSize(), d->font()))
-			.add_col(font_list);
-		g->add_col(new Label("Color:", d->getTextSize(), d->font()))
-			.add_col(new button(new Label("Choose...", d->getTextSize(), d->font()), [&](){
+		g->addCol(new Label("Font:", d->getTextSize(), d->font()))
+			.addCol(font_list);
+		g->addCol(new Label("Color:", d->getTextSize(), d->font()))
+			.addCol(new button(new Label("Choose...", d->getTextSize(), d->font()), [&](){
 				int mx, my;
 				input::sdl_get_mouse_state(&mx, &my);
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
@@ -312,7 +312,7 @@ namespace gui
 				gg->allowDrawHighlight(false);
 				gg->registerSelectionCallback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
 				gg->setZOrder(100);
-				gg->add_col(cp);
+				gg->addCol(cp);
 				d->addWidget(gg, d->x()-mx-100, my);
 		}));
 

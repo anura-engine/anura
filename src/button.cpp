@@ -338,41 +338,41 @@ namespace gui
 	{
 		WidgetSettingsDialog* d = Widget::settingsDialog(x,y,w,h);
 	/*
-		grid_ptr g(new grid(2));
-		g->add_col(new label("H Pad:", d->getTextSize(), d->font()));
-		g->add_col(new Slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
-		g->add_col(new label("V Pad:", d->getTextSize(), d->font()));
-		g->add_col(new Slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
+		GridPtr g(new Grid(2));
+		g->addCol(new label("H Pad:", d->getTextSize(), d->font()));
+		g->addCol(new Slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
+		g->addCol(new label("V Pad:", d->getTextSize(), d->font()));
+		g->addCol(new Slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
 
 		std::vector<std::string> v;
 		v.push_back("normal");
 		v.push_back("double");
-		dropdown_WidgetPtr resolution(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+		DropdownWidgetPtr resolution(new DropdownWidget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		resolution->setFontSize(14);
-		resolution->set_dropdown_height(h);
+		resolution->setDropdownHeight(h);
 		resolution->setSelection(button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? 0 : 1);
 		resolution->setOnSelectHandler([&](int n, const std::string& s){
 			this->button_resolution_ = s == "normal" ? BUTTON_SIZE_NORMAL_RESOLUTION : BUTTON_SIZE_DOUBLE_RESOLUTION;
 			this->setup();
 		});
 		resolution->setZOrder(11);
-		g->add_col(new label("Resolution:", d->getTextSize(), d->font()));
-		g->add_col(resolution);
+		g->addCol(new label("Resolution:", d->getTextSize(), d->font()));
+		g->addCol(resolution);
 
 		v.clear();
 		v.push_back("default");
 		v.push_back("normal");
-		dropdown_WidgetPtr style(new dropdown_widget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
+		DropdownWidgetPtr style(new DropdownWidget(v, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		style->setFontSize(14);
-		style->set_dropdown_height(h);
+		style->setDropdownHeight(h);
 		style->setSelection(button_style_ == BUTTON_STYLE_DEFAULT ? 0 : 1);
 		style->setOnSelectHandler([&](int n, const std::string& s){
 			this->button_style_ = s == "normal" ? BUTTON_STYLE_NORMAL : BUTTON_STYLE_DEFAULT;
 			this->setup();
 		});
 		style->setZOrder(10);
-		g->add_col(new label("Style:", d->getTextSize(), d->font()));
-		g->add_col(style);
+		g->addCol(new label("Style:", d->getTextSize(), d->font()));
+		g->addCol(style);
 
 		// label: widget
 		// onClick: function

@@ -306,7 +306,7 @@ namespace voxel
 
 				if(entry.getter) {
 					variant v;
-					if(entry.getter->evaluatesToConstantv)) {
+					if(entry.getter->evaluatesToConstant(v)) {
 						entry.getter.reset();
 						entry.const_value.reset(new variant(v));
 					}

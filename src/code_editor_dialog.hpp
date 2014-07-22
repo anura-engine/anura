@@ -88,7 +88,7 @@ private:
 
 	bool file_contents_set_;
 
-	gui::code_editor_WidgetPtr editor_;
+	gui::CodeEditorWidgetPtr editor_;
 	gui::TextEditorWidgetPtr search_;
 	gui::TextEditorWidgetPtr replace_;
 
@@ -122,7 +122,7 @@ private:
 	struct KnownFile {
 		std::string fname;
 		boost::intrusive_ptr<Frame> anim;
-		gui::code_editor_WidgetPtr editor;
+		gui::CodeEditorWidgetPtr editor;
 		std::function<void()> op_fn;
 	};
 

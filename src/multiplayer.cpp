@@ -356,7 +356,7 @@ namespace multiplayer
 				}
 			}
 
-			SDL_Delay(10);
+			profile::delay(10);
 		}
 
 		if(confirmed_players.size() < static_cast<unsigned>(nplayers)) {
@@ -464,7 +464,7 @@ namespace multiplayer
 					}
 				}
 
-				SDL_Delay(1);
+				profile::delay(1);
 			}
 		} else {
 			std::vector<unsigned> start_time;
@@ -512,7 +512,7 @@ namespace multiplayer
 					}
 				}
 
-				SDL_Delay(1);
+				profile::delay(1);
 			}
 		}
 
@@ -661,7 +661,7 @@ COMMAND_LINE_UTILITY(hole_punch_test) {
 				udp_socket.send_to(boost::asio::buffer("peer"), peer_endpoint);
 			}
 
-			SDL_Delay(1000);
+			profile::delay(1000);
 		}
 	}
 

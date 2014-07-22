@@ -126,7 +126,7 @@ namespace
 		try {
 			if(info->error == false) {
 				LOG_INFO("DONE UPLOAD SCREENSHOT (" << info->result << ")");
-				variant v = json::parse(info->result, json::JSON_NO_PREPROCESSOR);
+				variant v = json::parse(info->result, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 				debug_console::addMessage(formatter() << "Uploaded screenshot to " << v["url"].as_string() << " (set url in clipboard)");;
 				copy_to_clipboard(v["url"].as_string(), true);
 			}

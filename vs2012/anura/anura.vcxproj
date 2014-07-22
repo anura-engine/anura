@@ -384,6 +384,7 @@
     <ClInclude Include="..\..\src\stats_web_server.hpp" />
     <ClInclude Include="..\..\src\string_utils.hpp" />
     <ClInclude Include="..\..\src\surface_cache.hpp" />
+    <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_utils.hpp" />
     <ClInclude Include="..\..\src\svg\color.hpp" />
     <ClInclude Include="..\..\src\svg\geometry.hpp" />
@@ -710,6 +711,7 @@
     <ClCompile Include="..\..\src\stats_web_server.cpp" />
     <ClCompile Include="..\..\src\string_utils.cpp" />
     <ClCompile Include="..\..\src\surface_cache.cpp" />
+    <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_utils.cpp" />
     <ClCompile Include="..\..\src\svg\logger.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />

@@ -112,7 +112,7 @@ namespace gui
 			setCursor(vi[0], vi[1]);
 		}
 		if(v.has_key("on_quit")) {
-			on_quit_ = std::bind(&Dialog::quit_delegate, this);
+			on_quit_ = std::bind(&Dialog::quitDelegate, this);
 			ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 			const variant on_quit_value = v["on_quit"];
 			if(on_quit_value.is_function()) {
@@ -129,7 +129,7 @@ namespace gui
 			}
 		}
 		if(v.has_key("on_close")) {
-			on_close_ = std::bind(&Dialog::close_delegate, this, _1);
+			on_close_ = std::bind(&Dialog::closeDelegate, this, _1);
 			ASSERT_LOG(getEnvironment() != NULL, "environment not set");
 			const variant on_close_value = v["on_close"];
 			if(on_close_value.is_function()) {
@@ -381,10 +381,10 @@ namespace gui
 		while(opened_ && pumpEvents()) {
 			Uint32 t = profile::get_tick_time();
 			process();
-			prepare_draw();
+			prepareDraw();
 			draw();
 			gui::draw_tooltip();
-			complete_draw();
+			completeDraw();
 
 			if(joystick_lockout) {
 				--joystick_lockout;
@@ -396,27 +396,27 @@ namespace gui
 
 			t = t - profile::get_tick_time();
 			if(t < 20) {
-				SDL_Delay(20 - t);
+				profile::delay(20 - t);
 			}
 		}
 	}
 
-	void Dialog::prepare_draw()
+	void Dialog::prepareDraw()
 	{
 		if(clearBg()) {
 			KRE::WindowManager::getMainWindow()->setClearColor(KRE::Color::colorBlack());
-			KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR | KRE::ClearFlags::DISPLAY_CLEAR_DEPTH);
+			KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::COLOR | KRE::ClearFlags::DEPTH);
 		}
 	}
 
-	void Dialog::complete_draw()
+	void Dialog::completeDraw()
 	{
 		KRE::WindowManager::getMainWindow()->swap();
 
 		const int end_draw = last_draw_ + 20;
 		const int delay_time = std::max<int>(1, end_draw - profile::get_tick_time());
 
-		SDL_Delay(delay_time);
+		profile::delay(delay_time);
 
 		last_draw_ = profile::get_tick_time();
 	}
@@ -428,7 +428,7 @@ namespace gui
 		return widget_list;
 	}
 
-	void Dialog::add_ok_and_cancel_buttons()
+	void Dialog::addOkAndCancelButtons()
 	{
 		WidgetPtr ok(new Button("Ok", std::bind(&Dialog::close, this)));
 		WidgetPtr cancel(new Button("Cancel", std::bind(&Dialog::cancel, this)));

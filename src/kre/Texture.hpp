@@ -75,27 +75,27 @@ namespace KRE
 		Texture(const variant& node);
 		virtual ~Texture();
 
-		void SetAddressModes(AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));
-		void SetAddressModes(const AddressMode uvw[3], const Color& bc=Color(0.0f,0.0f,0.0f));
+		void setAddressModes(AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));
+		void setAddressModes(const AddressMode uvw[3], const Color& bc=Color(0.0f,0.0f,0.0f));
 
-		void SetFiltering(Filtering min, Filtering max, Filtering mip);
-		void SetFiltering(const Filtering f[3]);
+		void setFiltering(Filtering min, Filtering max, Filtering mip);
+		void setFiltering(const Filtering f[3]);
 
-		void SetBorderColor(const Color& bc);
+		void setBorderColor(const Color& bc);
 
-		Type GetType() const { return type_; }
-		int GetMipMapLevels() const { return mipmaps_; }
-		int GetMaxAnisotropy() const { return max_anisotropy_; }
-		AddressMode GetAddressModeU() const { return address_mode_[0]; }
-		AddressMode GetAddressModeV() const { return address_mode_[1]; }
-		AddressMode GetAddressModeW() const { return address_mode_[2]; }
-		Filtering GetFilteringMin() const { return filtering_[0]; }
-		Filtering GetFilteringMax() const { return filtering_[1]; }
-		Filtering GetFilteringMip() const { return filtering_[2]; }
-		const Color& GetBorderColor() const { return border_color_; }
-		float GetLodBias() const { return lod_bias_; }
+		Type getType() const { return type_; }
+		int getMipMapLevels() const { return mipmaps_; }
+		int getMaxAnisotropy() const { return max_anisotropy_; }
+		AddressMode getAddressModeU() const { return address_mode_[0]; }
+		AddressMode getAddressModeV() const { return address_mode_[1]; }
+		AddressMode getAddressModeW() const { return address_mode_[2]; }
+		Filtering getFilteringMin() const { return filtering_[0]; }
+		Filtering getFilteringMax() const { return filtering_[1]; }
+		Filtering getFilteringMip() const { return filtering_[2]; }
+		const Color& getBorderColor() const { return border_color_; }
+		float getLodBias() const { return lod_bias_; }
 
-		void InternalInit();
+		void internalInit();
 
 		unsigned width() const { return width_; }
 		unsigned height() const { return height_; }
@@ -104,16 +104,15 @@ namespace KRE
 		unsigned surfaceWidth() const { return surface_width_; }
 		unsigned surfacehHeight() const { return surface_height_; }
 
-		virtual void Init() = 0;
-		virtual void Bind() = 0;
-		virtual unsigned ID() = 0;
+		virtual void init() = 0;
+		virtual void iind() = 0;
+		virtual unsigned id() = 0;
 
-		virtual void Update(int x, unsigned width, void* pixels) = 0;
-		virtual void Update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, void* pixels) = 0;
-		virtual void Update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) = 0;
+		virtual void update(int x, unsigned width, void* pixels) = 0;
+		virtual void update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, void* pixels) = 0;
+		virtual void update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) = 0;
 
-		static void RebuildAll();
-
+		static void rebuildAll();
 		static void clearTextures();
 
 		// XXX Need to add a pixel filter function, so when we load the surface we apply the filter.
@@ -129,6 +128,15 @@ namespace KRE
 		static TexturePtr CreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
 
 		*/
+		
+		/* Functions for creating a texture that only has a single channel and an associated
+			secondary texture that is used for doing palette look-ups to get the actual color.
+		*/
+		static TexturePtr createPalettizedTexture(const std::string& filename);
+		static TexturePtr createPalettizedTexture(const std::string& filename, const SurfacePtr& palette);
+		static TexturePtr createPalettizedTexture(const SurfacePtr& filename);
+		static TexturePtr createPalettizedTexture(const SurfacePtr& filename, const SurfacePtr& palette);
+
 		const SurfacePtr& getSurface() const { return surface_; }
 
 		int getUnpackAlignment() const { return unpack_alignment_; }

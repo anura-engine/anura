@@ -835,7 +835,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 	variant cache, proto_cache;
 	if(sys::file_exists(path)) {
 		try {
-			cache = json::parse(sys::read_file(path), json::JSON_NO_PREPROCESSOR);
+			cache = json::parse(sys::read_file(path), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			proto_cache = cache["prototype_info"];
 		} catch(...) {
 		}
@@ -985,7 +985,7 @@ int CustomObjectType::reloadModifiedCode()
 
 void CustomObjectType::setFileContents(const std::string& file_path, const std::string& contents)
 {
-	json::setFileContents(file_path, contents);
+	json::set_file_contents(file_path, contents);
 	for(auto i : cache()) {
 		const std::vector<std::string>& proto_paths = object_prototype_paths[i.first];
 		const std::string* path = getObjectPath(i.first + ".cfg");
@@ -1187,11 +1187,11 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	CustomObjectCallable::instance();
 
-	editor_entity_info* EditorInfo = NULL;
+	EditorEntityInfo* EditorInfo = NULL;
 
 #ifndef NO_EDITOR
 	if(node.has_key("editor_info")) {
-		EditorInfo = new editor_entity_info(node["editor_info"]);
+		EditorInfo = new EditorEntityInfo(node["editor_info"]);
 		editor_info_.reset(EditorInfo);
 	}
 #endif // !NO_EDITOR
@@ -1467,8 +1467,8 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 					variant editor_info_var = value["editor_info"];
 					static const variant name_key("name");
 					editor_info_var = editor_info_var.add_attr(name_key, variant(k));
-					editor_variable_info info(editor_info_var);
-					info.set_is_property();
+					EditorVariableInfo info(editor_info_var);
+					info.setIsProperty();
 
 					ASSERT_LOG(EditorInfo, "Object type " << id_ << " must have EditorInfo section since some of its properties have EditorInfo sections");
 
@@ -1492,7 +1492,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 			if(entry.getter) {
 				variant v;
-				if(entry.getter->evaluatesToConstantv)) {
+				if(entry.getter->evaluatesToConstant(v)) {
 					entry.getter.reset();
 					entry.const_value.reset(new variant(v));
 				}

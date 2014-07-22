@@ -93,8 +93,8 @@ void CodeEditorDialog::init()
 	using std::placeholders::_2;
 
 	//std::cerr << "CED: " << x() << "," << y() << "; " << width() << "," << height() << std::endl;
-	drag_widget* dragger = new drag_widget(x(), y(), width(), height(),
-		drag_widget::DRAG_HORIZONTAL, NULL, 
+	DragWidget* dragger = new DragWidget(x(), y(), width(), height(),
+		DragWidget::Direction::HORIZONTAL, [](int,int){}, 
 		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2), 
 		std::bind(&CodeEditorDialog::on_drag, this, _1, _2));
 
@@ -195,7 +195,7 @@ void CodeEditorDialog::init_files_grid()
 	using namespace gui;
 	using std::placeholders::_1;
 
-	files_grid_.reset(new grid(1));
+	files_grid_.reset(new Grid(1));
 	files_grid_->allowSelection();
 	files_grid_->registerSelectionCallback(std::bind(&CodeEditorDialog::select_file, this, _1));
 	for(const KnownFile& f : files_) {
@@ -204,7 +204,7 @@ void CodeEditorDialog::init_files_grid()
 			img->setDim(42, 42);
 			img->setArea(f.anim->area());
 
-			files_grid_->add_col(WidgetPtr(img));
+			files_grid_->addCol(WidgetPtr(img));
 		} else {
 			std::string fname = f.fname;
 			while(std::find(fname.begin(), fname.end(), '/') != fname.end()) {
@@ -214,7 +214,7 @@ void CodeEditorDialog::init_files_grid()
 				fname.resize(6);
 			}
 
-			files_grid_->add_col(Label::create(fname, KRE::Color::colorWhite()));
+			files_grid_->addCol(Label::create(fname, KRE::Color::colorWhite()));
 		}
 	}
 
@@ -248,8 +248,8 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
-			variant doc = json::parse(text, json::JSON_NO_PREPROCESSOR);
-			std::cerr << "CHECKING FOR PROTOTYPES: " << doc["prototype"].write_json() << "\n";
+			variant doc = json::parse(text, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			LOG_INFO("CHECKING FOR PROTOTYPES: " << doc["prototype"].write_json());
 			if(doc["prototype"].is_list()) {
 				std::map<std::string,std::string> paths;
 				module::get_unique_filenames_under_dir("data/object_prototypes", &paths);
@@ -323,7 +323,7 @@ void CodeEditorDialog::select_file(int index)
 		return;
 	}
 
-	std::cerr << "select file " << index << " -> " << files_[index].fname << "\n";
+	LOG_INFO("select file " << index << " -> " << files_[index].fname);
 
 	load_file(files_[index].fname);
 }
@@ -440,7 +440,7 @@ void CodeEditorDialog::process()
 			file_contents_set_ = true;
 			if(op_fn_) {
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 
 				if(strstr(fname_.c_str(), "/objects/")) {
 					CustomObjectType::setFileContents(fname_, editor_->text());
@@ -449,53 +449,51 @@ void CodeEditorDialog::process()
 				op_fn_();
 			} else if(strstr(fname_.c_str(), "/level/")) {
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 
 				LevelRunner::getCurrent()->replay_level_from_start();
 				
 			} else if(strstr(fname_.c_str(), "/tiles/")) {
-				std::cerr << "INIT TILE MAP\n";
+				LOG_INFO("INIT TILE MAP");
 
 				const std::string old_contents = json::get_file_contents(fname_);
 
 				//verify the text is parseable before we bother setting it.
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 				const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 				TileMap::prepareRebuildAll();
 				try {
-					std::cerr << "tile_map::init()\n";
+					LOG_INFO("tile_map::init()");
 					TileMap::init(tiles_data);
 					TileMap::rebuildAll();
-					std::cerr << "done tile_map::init()\n";
-					editor_dialogs::tileset_editor_dialog::global_tile_update();
+					LOG_INFO("done tile_map::init()");
+					editor_dialogs::TilesetEditorDialog::globalTileUpdate();
 					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 				} catch(...) {
-					json::setFileContents(fname_, old_contents);
+					json::set_file_contents(fname_, old_contents);
 					const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 					TileMap::init(tiles_data);
 					TileMap::rebuildAll();
-					editor_dialogs::tileset_editor_dialog::global_tile_update();
+					editor_dialogs::TilesetEditorDialog::globalTileUpdate();
 					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 					throw;
 				}
-				std::cerr << "INIT TILE MAP OK\n";
-#if defined(USE_SHADERS)
+				LOG_INFO("INIT TILE MAP OK");
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
-				std::cerr << "CODE_EDIT_DIALOG FILE: " << fname_ << std::endl;
-				gles2::program::load_shaders(editor_->text());
-				foreach(level* lvl, get_all_levels_set()) {
-					lvl->shaders_updated();
-				}
-#endif
+				LOG_INFO("CODE_EDIT_DIALOG FILE: " << fname_);
+				ASSERT_LOG(false, "XXX edited shaders file fixme");
+				//for(Level* lvl : get_all_levels_set()) {
+				//	lvl->shadersUpdated();
+				//}
 			} else if(strstr(fname_.c_str(), "classes/") &&
 			          std::equal(fname_.end()-4,fname_.end(),".cfg")) {
 
-				std::cerr << "RELOAD FNAME: " << fname_ << "\n";
+				LOG_INFO("RELOAD FNAME: " << fname_);
 				std::string::const_iterator slash = fname_.end()-1;
 				while(*slash != '/') {
 					--slash;
@@ -503,11 +501,11 @@ void CodeEditorDialog::process()
 				std::string::const_iterator end = fname_.end()-4;
 				const std::string class_name(slash+1, end);;
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
-				game_logic::Formula_object::tryLoadClass(class_name);
+				game_logic::FormulaObject::tryLoadClass(class_name);
 			} else { 
-				std::cerr << "SET FILE: " << fname_ << "\n";
+				LOG_INFO("SET FILE: " << fname_);
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
@@ -682,21 +680,21 @@ void CodeEditorDialog::process()
 		suggestions_grid_.reset();
 
 		if(suggestions_.empty() == false) {
-			grid_ptr suggestions_grid(new grid(1));
+			GridPtr suggestions_grid(new Grid(1));
 			suggestions_grid->registerSelectionCallback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
 			suggestions_grid->swallowClicks();
 			suggestions_grid->allowSelection(true);
 			suggestions_grid->setShowBackground(true);
-			suggestions_grid->set_max_height(160);
+			suggestions_grid->setMaxHeight(160);
 			for(const Suggestion& s : suggestions_) {
-				suggestions_grid->add_col(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
+				suggestions_grid->addCol(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
 			}
 
 			suggestions_grid_.reset(new BorderWidget(suggestions_grid, KRE::Color::colorWhite()));
 		}
-		std::cerr << "SUGGESTIONS: " << suggestions_.size() << ":\n";
+		LOG_INFO("SUGGESTIONS: " << suggestions_.size() << ":");
 		for(const Suggestion& suggestion : suggestions_) {
-			std::cerr << " - " << suggestion.suggestion << "\n";
+			LOG_INFO(" - " << suggestion.suggestion);
 		}
 	}
 
@@ -788,7 +786,7 @@ void CodeEditorDialog::on_drag(int dx, int dy)
 	int new_width = width() + dx;
 	int min_width = int(wnd_w * 0.17);
 	int max_width = int(wnd_w * 0.83);
-	//std::cerr << "ON_DRAG: " << dx << ", " << min_width << ", " << max_width << std::endl;
+	//LOG_INFO("ON_DRAG: " << dx << ", " << min_width << ", " << max_width);
 	if(new_width < min_width) { 
 		new_width = min_width;
 	}
@@ -923,10 +921,10 @@ void CodeEditorDialog::onMoveCursor()
 			}
 
 		} catch(...) {
-			std::cerr << "ERROR PARSING FORMULA SET\n";
+			LOG_INFO("ERROR PARSING FORMULA SET");
 		}
 	} else {
-		std::cerr << "NO FORMULA SET\n";
+		LOG_INFO("NO FORMULA SET");
 	}
 }
 
@@ -939,7 +937,7 @@ void CodeEditorDialog::setAnimationRect(rect r)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -966,7 +964,7 @@ void CodeEditorDialog::moveSolidRect(int dx, int dy)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -980,7 +978,7 @@ void CodeEditorDialog::setIntegerAttr(const char* attr, int value)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -1001,7 +999,7 @@ void CodeEditorDialog::save_and_close()
 void CodeEditorDialog::select_suggestion(int index)
 {
 	if(index >= 0 && static_cast<unsigned>(index) < suggestions_.size()) {
-		std::cerr << "SELECT " << suggestions_[index].suggestion << "\n";
+		LOG_INFO("SELECT " << suggestions_[index].suggestion);
 		const std::string& str = suggestions_[index].suggestion;
 		if(suggestions_prefix_ >= 0 && static_cast<unsigned>(suggestions_prefix_) < str.size()) {
 			const int col = editor_->cursorCol();
@@ -1071,10 +1069,11 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	}
 }
 
-namespace {
-void try_fix_assert()
+namespace 
 {
-}
+	void try_fix_assert()
+	{
+	}
 }
 
 void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
@@ -1098,8 +1097,8 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(Level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
 
-	grid_ptr call_grid(new grid(1));
-	call_grid->set_max_height(wnd->height() - console->y());
+	GridPtr call_grid(new Grid(1));
+	call_grid->setMaxHeight(wnd->height() - console->y());
 	call_grid->allowSelection();
 	call_grid->mustSelect();
 	for(const CallStackEntry& entry : reverse_stack) {
@@ -1108,7 +1107,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 		if(i != str.end()) {
 			str.erase(i, str.end());
 		}
-		call_grid->add_col(WidgetPtr(new Label(str)));
+		call_grid->addCol(WidgetPtr(new Label(str)));
 	}
 
 	call_grid->setLoc(console->x() + console->width() + 6, console->y());
@@ -1156,11 +1155,11 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 		d->process();
 
-		console->prepare_draw();
+		console->prepareDraw();
 		for(WidgetPtr w : widgets) {
 			w->draw();
 		}
-		console->complete_draw();
+		console->completeDraw();
 	}
 
 	if(quit || d->cancelled() || d->has_error()) {
@@ -1181,7 +1180,7 @@ COMMAND_LINE_UTILITY(codeedit)
 	FramedGuiElement::init(gui_node);
 
 	CodeEditorDialog d(rect(0,0,600,600));
-	std::cerr << "CREATE DIALOG\n";
+	LOG_INFO("CREATE DIALOG");
 	if(args.empty() == false) {
 		d.load_file(args[0]);
 	}

@@ -119,14 +119,14 @@ namespace graphics
 	KRE::MaterialPtr cairo_context::write() const
 	{
 		std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
-		auto tex = KRE::DisplayDevice::CreateTexture(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
+		auto tex = KRE::DisplayDevice::createTexture(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
 		tex->Update(0, 0, width_, height_, stride, cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
 		// might be a better option. 
 		// Naturally if you had the luxury a shader that just ignored the texture alpha would work
 		// just as well.
-		return KRE::DisplayDevice::CreateMaterial("cairo_surface", tex, KRE::BlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA));
+		return KRE::DisplayDevice::createMaterial("cairo_surface", tex, KRE::BlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA));
 	}
 
 	void cairo_context::render_svg(const std::string& fname)
@@ -211,7 +211,7 @@ namespace graphics
 	namespace {
 	struct MarkupEntry {
 		const char* tag;
-		char values[4];
+		uint8_t values[4];
 	};
 
 	MarkupEntry MarkupMap[] = {
@@ -265,10 +265,10 @@ namespace graphics
 	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(scale, "(decimal,decimal|null=null)")
-		float x = args[0].as_decimal().as_float();
+		float x = args[0].as_float();
 		float y = x;
 		if(args.size() > 1 && args[1].is_null() == false) {
-			y = args[1].as_decimal().as_float();
+			y = args[1].as_float();
 		}
 		cairo_scale(context.get(), x, y);
 	END_CAIRO_FN
@@ -393,7 +393,7 @@ namespace graphics
 			float alpha = 1.0;
 			variant a = v["alpha"];
 			if(a.is_numeric()) {
-				alpha = a.as_decimal().as_float();
+				alpha = a.as_float();
 			}
 
 			cairo_pattern_add_color_stop_rgba(pattern,
@@ -421,7 +421,7 @@ namespace graphics
 			float alpha = 1.0;
 			variant a = v["alpha"];
 			if(a.is_decimal()) {
-				alpha = a.as_decimal().as_float();
+				alpha = a.as_float();
 			}
 
 			cairo_pattern_add_color_stop_rgba(pattern,
@@ -451,11 +451,11 @@ namespace graphics
 
 	BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {scaling: decimal|null, svg_scale: decimal, svg_width: decimal})")
 		std::string all_text = args[0].as_string();
-		float svg_width = args[3]["svg_width"].as_decimal().as_float();
-		float svg_scale = args[3]["svg_scale"].as_decimal().as_float();
-		float scaling = 1.0;
+		float svg_width = args[3]["svg_width"].as_float();
+		float svg_scale = args[3]["svg_scale"].as_float();
+		float scaling = 1.0f;
 		if(args[3]["scaling"].is_decimal()) {
-			scaling = args[3]["scaling"].as_decimal().as_float();
+			scaling = args[3]["scaling"].as_float();
 		}
 
 		float line_height = 0;
@@ -467,8 +467,8 @@ namespace graphics
 		for(std::string text : split_text) {
 			lines.push_back(std::vector<std::string>());
 
-			float width = args[1].as_decimal().as_float();
-			float height = args[2].as_decimal().as_float();
+			float width  = args[1].as_float();
+			float height = args[2].as_float();
 
 			for(auto itor = std::find(text.begin(), text.end(), '&'); itor != text.end();
 					 itor = std::find(text.begin(), text.end(), '&')) {
@@ -499,9 +499,9 @@ namespace graphics
 					} else {
 						cairo_text_extents_t extents;
 						cairo_text_extents(context.get(), s.c_str(), &extents);
-						lengths.push_back(extents.x_advance);
+						lengths.push_back(static_cast<float>(extents.x_advance));
 						if(extents.height > line_height) {
-							line_height = extents.height;
+							line_height = static_cast<float>(extents.height);
 						}
 					}
 
@@ -580,7 +580,7 @@ namespace graphics
 			}
 
 			cairo_restore(context.get());
-			ypos += line_height*1.1;
+			ypos += line_height*1.1f;
 		}
 
 		cairo_restore(context.get());
@@ -589,7 +589,7 @@ namespace graphics
 
 	BEGIN_CAIRO_FN(text_path_in_bounds, "(string, decimal, [string])")
 		std::string text = args[0].as_string();
-		float size = args[1].as_decimal().as_float();
+		float size = args[1].as_float();
 
 		bool right = false, center = false, top = false;
 		bool shrink = true;
@@ -617,10 +617,10 @@ namespace graphics
 
 		if(extents.width > size) {
 			if(shrink) {
-				size *= float(size)/float(extents.width);
+				size *= static_cast<float>(size)/static_cast<float>(extents.width);
 			} else {
-				const int forced_len = text.size()*float(size)/float(extents.width);
-				if(forced_len < text.size()) {
+				const int forced_len = static_cast<int>(text.size()*static_cast<float>(size)/static_cast<float>(extents.width));
+				if(static_cast<unsigned>(forced_len) < text.size()) {
 					text.resize(forced_len);
 					for(int i = 0; i < 3 && i < forced_len; ++i) {
 						text[text.size()-i-1] = '.';
@@ -803,7 +803,7 @@ namespace graphics
 			std::string tag(itor+1, semi);
 			for(const MarkupEntry& e : MarkupMap) {
 				if(tag == e.tag) {
-					result += e.values;
+					result += static_cast<char>(e.values);
 					found = true;
 					break;
 				}

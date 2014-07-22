@@ -22,6 +22,7 @@
 */
 
 #include <boost/lexical_cast.hpp>
+#include <boost/regex.hpp>
 
 #include <algorithm>
 #include <map>
@@ -200,6 +201,27 @@ namespace KRE
 			return res;
 		}
 
+		double convert_string_to_number(const std::string& str)
+		{
+			try {
+				double value = boost::lexical_cast<double>(str);
+				if(value > 1.0) {
+					// Assume it's an integer value.
+					return static_cast<float>(value / 255.0);
+				} else if(value < 1.0) {
+					return static_cast<float>(value);
+				} else {
+					// value = 1.0 -- check the string to try and disambiguate
+					if(str == "1" || str.find('.') == std::string::npos) {
+						return 1.0 / 255.0;
+					}
+					return 1.0;
+				}
+			} catch(boost::bad_lexical_cast&) {
+				ASSERT_LOG(false, "unable to convert value to number: " << str);
+			}
+		}
+
 		float convert_numeric(const variant& node)
 		{
 			if(node.is_int()) {
@@ -207,24 +229,7 @@ namespace KRE
 			} else if(node.is_float()) {
 				return clamp<float>(node.as_float(), 0.0f, 1.0f);
 			} else if(node.is_string()) {
-				try {
-					double value = boost::lexical_cast<double>(node.as_string());
-					if(value > 1.0) {
-						// Assume it's an integer value.
-						return static_cast<float>(value / 255.0);
-					} else if(value < 1.0) {
-						return static_cast<float>(value);
-					} else {
-						// value = 1.0 -- check the string to try and disambiguate
-						const std::string& s = node.as_string();
-						if(s == "1" || s.find('.') == std::string::npos) {
-							return 1.0f / 255.0f;
-						}
-						return 1.0f;
-					}
-				} catch(boost::bad_lexical_cast&) {
-					ASSERT_LOG(false, "unable to convert value to number: " << node.to_debug_string());
-				}
+				return static_cast<float>(convert_string_to_number(node.as_string()));
 			}
 			ASSERT_LOG(false, "attribute of Color value was expected to be numeric type.");
 			return 1.0f;
@@ -263,6 +268,13 @@ namespace KRE
 				(convert_hex_digit(s[3]) << 4) | convert_hex_digit(s[4]),
 				(convert_hex_digit(s[5]) << 4) | convert_hex_digit(s[6]));
 		}
+
+		std::vector<std::string> split(const std::string& input, const std::string& re) {
+			// passing -1 as the submatch index parameter performs splitting
+			boost::regex regex(re);
+			boost::sregex_token_iterator first(input.begin(), input.end(), regex, -1), last;
+			return std::vector<std::string>(first, last);
+		}	
 	}
 
 	Color::Color()
@@ -337,19 +349,65 @@ namespace KRE
 		}
 	}
 
-	Color::Color(unsigned long n)
+	Color::Color(unsigned long n, ColorByteOrder order)
 	{
-		// assume RGBA format
-		color_[0] = ((n >> 24) & 0xff)/255.0f;
-		color_[1] = ((n >> 16) & 0xff)/255.0f;
-		color_[2] = ((n >> 8) & 0xff)/255.0f;
-		color_[3] = (n & 0xff)/255.0f;
+		float b0 = (n & 0xff)/255.0f;
+		float b1 = ((n >> 8) & 0xff)/255.0f;
+		float b2 = ((n >> 16) & 0xff)/255.0f;
+		float b3 = ((n >> 24) & 0xff)/255.0f;
+		switch (order)
+		{
+			case ColorByteOrder::RGBA:
+				color_[0] = b3;
+				color_[1] = b2;
+				color_[2] = b1;
+				color_[3] = b0;
+				break;
+			case ColorByteOrder::ARGB:
+				color_[0] = b2;
+				color_[1] = b1;
+				color_[2] = b0;
+				color_[3] = b3;
+				break;
+			case ColorByteOrder::BGRA:
+				color_[0] = b1;
+				color_[1] = b2;
+				color_[2] = b3;
+				color_[3] = b0;
+				break;
+			case ColorByteOrder::ABGR:
+				color_[0] = b0;
+				color_[1] = b1;
+				color_[2] = b2;
+				color_[3] = b3;
+				break;
+			default: 
+				ASSERT_LOG(false, "Unknown ColorByteOrder value: " << static_cast<int>(order));
+				break;
+		}
 	}
 
 	Color::Color(const std::string& colstr)
 	{
+		ASSERT_LOG(!colstr.empty(), "Empty string passed to Color constructor.");
 		auto it = get_color_table().find(colstr);
-		ASSERT_LOG(it != get_color_table().end(), "Couldn't find color '" << colstr << "' in known color list");
+		if(it == get_color_table().end()) {
+			if(colstr[0] == '#') {
+				*this = color_from_hex_string(colstr);
+			} else if(colstr.find(',') != std::string::npos) {
+				std::fill(color_, color_+3, 1.0f);
+				auto buf = split(colstr, ",| |;");
+				unsigned n = 0;
+				for(auto& s : buf) {
+					color_[n] = static_cast<float>(convert_string_to_number(s));
+					if(++n >= 4) {
+						break;
+					}
+				}
+			} else {
+				ASSERT_LOG(false, "Couldn't parse color '" << colstr << "' in known color list");
+			}
+		}
 		*this = it->second;
 	}
 

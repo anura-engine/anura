@@ -162,7 +162,7 @@ namespace threading
 		//
 		bool wait(const mutex& m);
 
-		enum class WAIT_TIMEOUT_RESULT { OK, TIMEOUT, ERROR };
+		enum class WAIT_TIMEOUT_RESULT { RES_OK, RES_TIMEOUT, RES_ERROR };
 
 		// wait on the condition with a timeout. Basically the same as the
 		// wait() function, but if the lock is not aquired before the
