@@ -450,13 +450,9 @@ int entity_user_collision(const entity& a, const entity& b, collision_pair* area
 	int result = 0;
 
 	foreach(const frame::collision_area& area_a, fa.collision_areas()) {
-		rect rect_a(a.face_right() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
-		            a.y() + area_a.area.y(),
-					area_a.area.w(), area_a.area.h());
+		rect rect_a = a.calculate_collision_rect(fa, area_a);
 		foreach(const frame::collision_area& area_b, fb.collision_areas()) {
-			rect rect_b(b.face_right() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
-			            b.y() + area_b.area.y(),
-						area_b.area.w(), area_b.area.h());
+			rect rect_b = b.calculate_collision_rect(fb, area_b);
 			if(rects_intersect(rect_a, rect_b)) {
 				const int time_a = a.time_in_frame();
 				const int time_b = b.time_in_frame();

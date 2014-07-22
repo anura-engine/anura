@@ -24,6 +24,7 @@
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
+#include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 #include "variant_utils.hpp"
 
@@ -223,12 +224,31 @@ rect entity::hit_rect() const
 	const std::vector<frame::collision_area>& areas = f.collision_areas();
 	foreach(const frame::collision_area& a, areas) {
 		if(a.name == "attack") {
-			const rect& r = a.area;
-			return rect(face_right() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
+			return calculate_collision_rect(f, a);
 		}
 	}
 
 	return rect();
+}
+
+rect entity::calculate_collision_rect(const frame& f, const frame::collision_area& a) const
+{
+	const rect& r = a.area;
+	rect result(face_right() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
+
+	const int rotation = current_rotation();
+	if(rotation != 0) {
+		const int r_center_x = result.x() + result.w()/2;
+		const int r_center_y = result.y() + result.h()/2;
+
+		const int center_x = x() + f.width()/2;
+		const int center_y = y() + f.height()/2;
+
+		point p = rotate_point_around_origin_with_offset(r_center_x, r_center_y, (rotation*3.14159)/180.0, center_x, center_y);
+		result = rect(result.x() + p.x - r_center_x, result.y() + p.y - r_center_y, result.w(), result.h());
+	}
+
+	return result;
 }
 
 point entity::midpoint() const
