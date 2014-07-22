@@ -31,6 +31,7 @@
 #include "level.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
+#include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 #include "variant_utils.hpp"
 
@@ -227,15 +228,34 @@ rect Entity::getBodyRect() const
 rect Entity::getHitRect() const
 {
 	const frame& f = getCurrentFrame();
-	const std::vector<frame::collision_area>& areas = f.getCollisionAreas();
+	const std::vector<Frame::collision_area>& areas = f.getCollisionAreas();
 	for(const frame::collision_area& a : areas) {
 		if(a.name == "attack") {
-			const rect& r = a.area;
-			return rect(isFacingRight() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
+			return calculateCollisionRect(f, a);
 		}
 	}
 
 	return rect();
+}
+
+rect entity::calculateCollisionRect(const Frame& f, const frame::collision_area& a) const
+{
+	const rect& r = a.area;
+	rect result(isFacingRight() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
+
+	const int rotation = currentRotation();
+	if(rotation != 0) {
+		const int r_center_x = result.x() + result.w()/2;
+		const int r_center_y = result.y() + result.h()/2;
+
+		const int center_x = x() + f.width()/2;
+		const int center_y = y() + f.height()/2;
+
+		point p = rotate_point_around_origin_with_offset(r_center_x, r_center_y, (rotation*3.14159f)/180.0f, center_x, center_y);
+		result = rect(result.x() + p.x - r_center_x, result.y() + p.y - r_center_y, result.w(), result.h());
+	}
+
+	return result;
 }
 
 point Entity::getMidpoint() const

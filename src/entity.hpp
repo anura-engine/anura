@@ -37,6 +37,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
+#include "frame.hpp"
 #include "light.hpp"
 #include "solid_map_fwd.hpp"
 #include "wml_formula_callable.hpp"
@@ -311,6 +312,8 @@ public:
 	unsigned getMouseoverTriggerCycle() const { return mouseover_trigger_cycle_; }
 	void setMouseoverTriggerCycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
 
+	rect calculateCollisionRect(const Frame& f, const Frame::CollisionArea& a) const;
+
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;
 	virtual ConstSolidInfoPtr calculatePlatform() const = 0;
@@ -341,6 +344,8 @@ protected:
 	int getPrevFeetY() const { return prev_feet_y_; }
 
 private:
+	virtual int current_rotation() const = 0;
+
 	std::string label_;
 
 	int x_, y_;

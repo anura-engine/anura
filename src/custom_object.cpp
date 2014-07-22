@@ -5658,6 +5658,11 @@ void CustomObject::addToLevel()
 #endif
 }
 
+int custom_object::current_rotation() const
+{
+	return rotate_z_.as_int();
+}
+
 BENCHMARK(custom_object_spike) {
 	static Level* lvl = NULL;
 	if(!lvl) {	

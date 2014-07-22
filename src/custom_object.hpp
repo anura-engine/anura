@@ -368,6 +368,9 @@ private:
 	int velocity_x_, velocity_y_;
 	int accel_x_, accel_y_;
 	int gravity_shift_;
+
+	virtual int currentRotation() const override;
+
 	decimal rotate_z_;
 
     void setMidX(int new_mid_x) {

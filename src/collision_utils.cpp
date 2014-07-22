@@ -459,13 +459,9 @@ int entity_user_collision(const Entity& a, const Entity& b, CollisionPair* areas
 	int result = 0;
 
 	for(const auto& area_a : fa.getCollisionAreas()) {
-		rect rect_a(a.isFacingRight() ? a.x() + area_a.area.x() : a.x() + fa.width() - area_a.area.x() - area_a.area.w(),
-		            a.y() + area_a.area.y(),
-					area_a.area.w(), area_a.area.h());
+		rect rect_a = a.calculateCollisionRect(fa, area_a);
 		for(const auto& area_b : fb.getCollisionAreas()) {
-			rect rect_b(b.isFacingRight() ? b.x() + area_b.area.x() : b.x() + fb.width() - area_b.area.x() - area_b.area.w(),
-			            b.y() + area_b.area.y(),
-						area_b.area.w(), area_b.area.h());
+			rect rect_b = b.calculateCollisionRect(fb, area_b);
 			if(rects_intersect(rect_a, rect_b)) {
 				const int time_a = a.getTimeInFrame();
 				const int time_b = b.getTimeInFrame();
