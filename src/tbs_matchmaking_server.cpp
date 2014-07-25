@@ -193,12 +193,19 @@ public:
 		}
 
 		heartbeat_message.add("servers", variant(&servers));
-		std::string heartbeat_msg = heartbeat_message.build().write_json();
+		variant heartbeat_message_value = heartbeat_message.build();
+		std::string heartbeat_msg = heartbeat_message_value.write_json();
 
 		for(auto& p : sessions_) {
-			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000)) {
+			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.chat_messages.empty() == false)) {
 
-				send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
+				if(p.second.chat_messages.empty() == false) {
+					heartbeat_message_value.add_attr_mutation(variant("chat_messages"), variant(&p.second.chat_messages));
+					send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
+					p.second.chat_messages.clear();
+				} else {
+					send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
+				}
 				p.second.last_contact = time_ms_;
 				p.second.current_socket = socket_ptr();
 				p.second.sent_heartbeat = true;
@@ -454,6 +461,40 @@ public:
 
 				check_matchmaking_queue();
 
+			} else if(request_type == "global_chat") {
+				SessionInfo& info = sessions_[request_session_id];
+				if(info.user_id.empty() == false && info.flood_mute_expires < time_ms_) {
+					int time_segment = time_ms_/10000;
+
+					if(info.time_segment != time_segment) {
+						info.time_segment = time_segment;
+						info.messages_this_time_segment = 0;
+					}
+
+					if(++info.messages_this_time_segment > 8) {
+						//the user has sent too many messages.
+						//Mute them for flooding.
+						info.flood_mute_expires = time_ms_ + 20000;
+					}
+
+					std::string message = doc["message"].as_string();
+					if(message.size() > 240) {
+						message.resize(240);
+					}
+
+					variant_builder msg;
+					msg.add("nick", variant(info.user_id));
+					msg.add("message", message);
+
+					variant v = msg.build();
+
+					for(auto i = sessions_.begin(); i != sessions_.end(); ++i) {
+						i->second.chat_messages.push_back(v);
+					}
+
+					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
+				}
+
 			} else if(request_type == "request_updates") {
 
 				int session_id = doc["session_id"].as_int(request_session_id);
@@ -701,7 +742,7 @@ private:
 	db_client_ptr db_client_;
 
 	struct SessionInfo {
-		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false) {}
+		SessionInfo() : game_pending(0), game_port(0), queued_for_game(false), sent_heartbeat(false), messages_this_time_segment(0), time_segment(0), flood_mute_expires(0) {}
 		int session_id;
 		std::string user_id;
 		std::string game_details;
@@ -711,6 +752,14 @@ private:
 		socket_ptr current_socket;
 		bool queued_for_game;
 		bool sent_heartbeat;
+
+		std::vector<variant> chat_messages;
+
+		//record number of messages from this session so we can
+		//disconnect for flooding if necessary.
+		int messages_this_time_segment;
+		int time_segment;
+		int flood_mute_expires;
 	};
 
 	std::map<int, SessionInfo> sessions_;
