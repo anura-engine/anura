@@ -16,6 +16,8 @@
 */
 #include <boost/bind.hpp>
 
+#include <SDL.h>
+
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "formula.hpp"
@@ -46,6 +48,7 @@ bot::~bot()
 
 void bot::process(const boost::system::error_code& error)
 {
+	//fprintf(stderr, "BOT: PROCESS @%d %d/%d\n", SDL_GetTicks(), (int)response_.size(), (int)script_.size());
 	if(error == boost::asio::error::operation_aborted) {
 		std::cerr << "tbs::bot::process cancelled" << std::endl;
 		return;
@@ -57,6 +60,7 @@ void bot::process(const boost::system::error_code& error)
 
 	if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server()))
 		&& response_.size() < script_.size()) {
+		fprintf(stderr, "BOT: SEND @%d Sending response\n", SDL_GetTicks());
 		variant script = script_[response_.size()];
 		variant send = script["send"];
 		if(send.is_string()) {
@@ -78,6 +82,8 @@ void bot::process(const boost::system::error_code& error)
 			client_->set_use_local_cache(false);
 			client_->send_request(send, callable, boost::bind(&bot::handle_response, this, _1, callable));
 		}
+	} else if(response_.size() >= script_.size()) {
+		fprintf(stderr, "BOT: NO PROCESS DUE TO %p, %d < %d\n", internal_client_.get(), (int)response_.size(), (int)script_.size());
 	}
 
 	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
@@ -86,6 +92,7 @@ void bot::process(const boost::system::error_code& error)
 
 void bot::handle_response(const std::string& type, game_logic::formula_callable_ptr callable)
 {
+	fprintf(stderr, "BOT: @%d GOT RESPONSE: %s\n", SDL_GetTicks(), type.c_str());
 	if(on_create_) {
 		execute_command(on_create_->execute(*this));
 		on_create_.reset();
@@ -94,7 +101,11 @@ void bot::handle_response(const std::string& type, game_logic::formula_callable_
 	if(on_message_) {
 		message_type_ = type;
 		message_callable_ = callable;
+		const int ms = SDL_GetTicks();
+		fprintf(stderr, "BOT: handle message @ %d : %s...\n", ms, type.c_str());
 		execute_command(on_message_->execute(*this));
+		const int time_taken = SDL_GetTicks() - ms;
+		fprintf(stderr, "BOT: handled message in %d\n", time_taken);
 	}
 
 	ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->query_value("message").write_json());
