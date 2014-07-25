@@ -100,7 +100,7 @@ endif
 
 # flags for SVG/cairo.
 BASE_CXXFLAGS += -DUSE_SVG
-INC += $(shell pkg-config --cflags cairo)
+INC += $(shell pkg-config --cflags cairo freetype2)
 LIBS += $(shell pkg-config --libs cairo freetype2)
 
 TARBALL := /var/www/anura/anura-$(shell date +"%Y%m%d-%H%M").tar.bz2

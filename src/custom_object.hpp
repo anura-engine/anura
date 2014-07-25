@@ -377,6 +377,9 @@ private:
 	int velocity_x_, velocity_y_;
 	int accel_x_, accel_y_;
 	int gravity_shift_;
+
+	virtual int current_rotation() const;
+
 	decimal rotate_x_;
 	decimal rotate_y_;
 	decimal rotate_z_;

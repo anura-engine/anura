@@ -61,6 +61,10 @@ namespace graphics
 			const int display_index = 0; //SDL_GetWindowDisplayIndex(graphics::get_window());
 			SDL_GetDesktopDisplayMode(display_index, &mode);
 
+			if(preferences::fullscreen()) {
+				return mode;
+			}
+
 			std::cerr << "CURRENT MODE IS " << mode.w << "x" << mode.h << "\n";
 
 			SDL_DisplayMode best_mode = mode;
@@ -133,8 +137,8 @@ namespace graphics
 	{
 		if(preferences::auto_size_window()) {
 			const SDL_DisplayMode mode = mode_auto_select();
-			width_ = mode.w;
-			height_ = mode.h;
+			width = width_ = mode.w;
+			height = height_ = mode.h;
 		} else {
 			width_ = width;
 			height_ = height;
@@ -181,13 +185,17 @@ namespace graphics
 
 		switch(preferences::fullscreen()) {
 			case preferences::FULLSCREEN_WINDOWED: {
-				x = y = SDL_WINDOWPOS_UNDEFINED;
-				w = h = 0;
+				if(!preferences::auto_size_window()) {
+					x = y = SDL_WINDOWPOS_UNDEFINED;
+					w = h = 0;
+				}
 				flags |= SDL_WINDOW_FULLSCREEN_DESKTOP;
 				break;
 			}
 			case preferences::FULLSCREEN: {
-				x = y = SDL_WINDOWPOS_UNDEFINED;
+				if(!preferences::auto_size_window()) {
+					x = y = SDL_WINDOWPOS_UNDEFINED;
+				}
 				flags |= SDL_WINDOW_FULLSCREEN;
 				break;
 			}
@@ -225,7 +233,8 @@ namespace graphics
 		std::cerr << "INFO: real window size: " << width << "," << height << std::endl;
 		std::cerr << "INFO: actual screen size: " << width_ << "," << height_ << std::endl;
 
-		if(preferences::fullscreen() == preferences::FULLSCREEN_NONE) {
+		if(preferences::fullscreen() == preferences::FULLSCREEN_NONE
+			|| preferences::auto_size_window()) {
 			preferences::set_actual_screen_width(width_);
 			preferences::set_actual_screen_height(height_);
 			if(preferences::auto_size_window()) {

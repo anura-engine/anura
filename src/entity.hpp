@@ -28,6 +28,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
+#include "frame.hpp"
 #include "geometry.hpp"
 #include "light.hpp"
 #include "solid_map_fwd.hpp"
@@ -312,6 +313,8 @@ public:
 	void set_ty(double y) { ty_ = y; }
 	void set_tz(double z) { tz_ = z; }
 
+	rect calculate_collision_rect(const frame& f, const frame::collision_area& a) const;
+
 protected:
 	virtual const_solid_info_ptr calculate_solid() const = 0;
 	virtual const_solid_info_ptr calculate_platform() const = 0;
@@ -342,6 +345,8 @@ protected:
 	int prev_feet_y() const { return prev_feet_y_; }
 
 private:
+	virtual int current_rotation() const = 0;
+
 	std::string label_;
 
 	int x_, y_;
