@@ -728,6 +728,7 @@ extern "C" int main(int argcount, char* argvec[])
 		bool timeout = false;
 		bool require_restart = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
+		int nupdate_cycle = 0;
 		while(cl || anura_cl) {
 			if(update_window == NULL && SDL_GetTicks() - original_start_time > 2000) {
 				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
@@ -736,12 +737,16 @@ extern "C" int main(int argcount, char* argvec[])
 			int nbytes_obtained = 0;
 			int nbytes_needed = 0;
 
+			++nupdate_cycle;
+
 			if(cl) {
 				const int transferred = cl->nbytes_transferred();
 				nbytes_obtained += transferred;
 				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
-					fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+					if(nupdate_cycle%10 == 0) {
+						fprintf(stderr, "Transferred %d/%dKB\n", transferred/1024, cl->nbytes_total()/1024);
+					}
 					start_time = SDL_GetTicks();
 					nbytes_transferred = transferred;
 				}
@@ -752,7 +757,9 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_obtained += transferred;
 				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
-					fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
+					if(nupdate_cycle%10 == 0) {
+						fprintf(stderr, "Transferred (anura) %d/%dKB\n", transferred/1024, anura_cl->nbytes_total()/1024);
+					}
 					start_time = SDL_GetTicks();
 					nbytes_anura_transferred = transferred;
 				}
