@@ -1,86 +1,87 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 
-#include "graphics.hpp"
-#include "foreach.hpp"
+#include "kre/Canvas.hpp"
+
 #include "preview_tileset_widget.hpp"
 #include "tile_map.hpp"
 
-namespace gui {
-
-preview_tileset_widget::preview_tileset_widget(const tile_map& tiles)
-  : width_(0), height_(0)
+namespace gui 
 {
-	setEnvironment();
-	tiles.buildTiles(&tiles_);
-	init();
-}
-
-preview_tileset_widget::preview_tileset_widget(const variant& v, game_logic::FormulaCallable* e)
-	: widget(v,e)
-{
-	tile_map(v["tile_map"]).buildTiles(&tiles_);
-	init();
-}
-
-void preview_tileset_widget::init()
-{
-	foreach(const level_tile& t, tiles_) {
-		const int w = t.x + t.object->width();
-		const int h = t.y + t.object->height();
-
-		width_ = std::max(width_, w);
-		height_ = std::max(height_, h);
-	}
-
-	setDim(width_, height_);
-}
-
-void preview_tileset_widget::handleDraw() const
-{
-	if(width_ == 0 || height_ == 0) {
-		return;
-	}
-
-	const GLfloat scale = std::min(GLfloat(width())/width_, GLfloat(height())/height_);
-	glPushMatrix();
-	glTranslatef(GLfloat(x()), GLfloat(y()), 0);
-	glScalef(scale, scale, 0.0);
-	foreach(const level_tile& t, tiles_) {
-		graphics::blit_queue q;
-		level_object::queue_draw(q, t);
-		q.do_blit();
-	}
-	glPopMatrix();
-}
-
-void preview_tileset_widget::setValue(const std::string& key, const variant& v)
-{
-	if(key == "tile_map") {
-		tile_map(v).buildTiles(&tiles_);
+	PreviewTilesetWidget::PreviewTilesetWidget(const TileMap& tiles)
+	  : width_(0), 
+	  height_(0)
+	{
+		setEnvironment();
+		tiles.buildTiles(&tiles_);
 		init();
 	}
-	widget::setValue(key, v);
-}
 
-variant preview_tileset_widget::getValue(const std::string& key) const
-{
-	return widget::getValue(key);
-}
+	PreviewTilesetWidget::PreviewTilesetWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v,e)
+	{
+		build(v["tile_map"]);
+	}
 
+	void PreviewTilesetWidget::init()
+	{
+		for(const LevelTile& t : tiles_) {
+			const int w = t.x + t.object->width();
+			const int h = t.y + t.object->height();
+
+			width_ = std::max(width_, w);
+			height_ = std::max(height_, h);
+		}
+
+		setDim(width_, height_);
+	}
+
+	void PreviewTilesetWidget::handleDraw() const
+	{
+		if(width_ == 0 || height_ == 0) {
+			return;
+		}
+
+		const float scale = std::min(static_cast<float>(width())/width_, static_cast<float>(height())/height_);
+		KRE::Canvas::ModelManager mm(x(), y(), 0, scale);
+		auto canvas = KRE::Canvas::getInstance();
+		for(auto& t : tiles_) {
+			LevelObject::queueDraw(canvas, t);
+		}
+	}
+
+	void PreviewTilesetWidget::build(const variant& value)
+	{
+		TileMap(value).buildTiles(&tiles_);
+		init();
+	}
+
+	BEGIN_DEFINE_CALLABLE(PreviewTilesetWidget, Widget)
+		DEFINE_FIELD(tile_map, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("any")
+			obj.build(value);
+	END_DEFINE_CALLABLE(PreviewTilesetWidget)
 }

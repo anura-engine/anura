@@ -37,6 +37,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "formula_fwd.hpp"
+#include "frame.hpp"
 #include "light.hpp"
 #include "solid_map_fwd.hpp"
 #include "wml_formula_callable.hpp"
@@ -201,7 +202,7 @@ public:
 	void drawDebugRects() const;
 
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr getEditorInfo() const { return const_editor_entity_info_ptr(); }
+	virtual ConstEditorEntityInfoPtr getEditorInfo() const { return ConstEditorEntityInfoPtr(); }
 #endif // !NO_EDITOR
 
 	virtual EntityPtr clone() const { return EntityPtr(); }
@@ -209,8 +210,8 @@ public:
 
 	virtual void generateCurrent(const Entity& target, int* velocity_x, int* velocity_y) const;
 
-	virtual game_logic::const_formula_ptr getEventHandler(int key) const { return game_logic::const_formula_ptr(); }
-	virtual void setEventHandler(int, game_logic::const_formula_ptr f) { return; }
+	virtual game_logic::ConstFormulaPtr getEventHandler(int key) const { return game_logic::ConstFormulaPtr(); }
+	virtual void setEventHandler(int, game_logic::ConstFormulaPtr f) { return; }
 
 	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
 	virtual bool handleEvent(int id, const FormulaCallable* context=NULL) { return false; }
@@ -271,8 +272,8 @@ public:
 
 	virtual bool allowLevelCollisions() const { return false; }
 
-	virtual const std::vector<light_ptr>& lights() const = 0;
-	virtual void swapLights(std::vector<light_ptr>& lights) = 0;
+	virtual const std::vector<LightPtr>& lights() const = 0;
+	virtual void swapLights(std::vector<LightPtr>& lights) = 0;
 
 	point pivot(const std::string& name, bool reverse_facing=false) const;
 
@@ -311,6 +312,8 @@ public:
 	unsigned getMouseoverTriggerCycle() const { return mouseover_trigger_cycle_; }
 	void setMouseoverTriggerCycle(unsigned cyc) { mouseover_trigger_cycle_ = cyc; }
 
+	rect calculateCollisionRect(const Frame& f, const Frame::CollisionArea& a) const;
+
 protected:
 	virtual ConstSolidInfoPtr calculateSolid() const = 0;
 	virtual ConstSolidInfoPtr calculatePlatform() const = 0;
@@ -341,6 +344,8 @@ protected:
 	int getPrevFeetY() const { return prev_feet_y_; }
 
 private:
+	virtual int current_rotation() const = 0;
+
 	std::string label_;
 
 	int x_, y_;

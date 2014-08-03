@@ -1,4 +1,25 @@
-#if defined(USE_ISOMAP)
+/*
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
 
 #if defined(_MSC_VER)
 #include <boost/math/special_functions/round.hpp>
@@ -6,7 +27,7 @@
 #else
 #define bmround	round
 #endif
-
+/*
 #include <vector>
 #include "asserts.hpp"
 #include "isoworld.hpp"
@@ -42,7 +63,7 @@ namespace voxel
 			const int wpy = node["chunks"][n]["getWorldspacePosition"][1].as_int();
 			const int wpz = node["chunks"][n]["getWorldspacePosition"][2].as_int();
 
-			foreach(const variant_pair& p, node["chunks"][n]["voxels"].as_map()) {
+			for(auto& p : node["chunks"][n]["voxels"].as_map()) {
 				const int gpx = p.first.as_list()[0].as_int() + wpx;
 				const int gpy = p.first.as_list()[1].as_int() + wpy;
 				const int gpz = p.first.as_list()[2].as_int() + wpz;
@@ -67,12 +88,12 @@ namespace voxel
 
 	glm::ivec3 LogicalWorld::worldspaceToLogical(const glm::vec3& wsp) const
 	{
+		// XXX fixme
 		glm::ivec3 voxel_coord = glm::ivec3(
 			abs(wsp[0]-bmround(wsp[0])) < 0.05f ? int(bmround(wsp[0])) : int(floor(wsp[0])),
 			abs(wsp[1]-bmround(wsp[1])) < 0.05f ? int(bmround(wsp[1])) : int(floor(wsp[1])),
 			abs(wsp[2]-bmround(wsp[2])) < 0.05f ? int(bmround(wsp[2])) : int(floor(wsp[2])));
-		glm::ivec3 facing = level::current().camera()->get_facing(wsp);
-		//std::cerr << "WSP:" << wsp.x << "," << wsp.y << "," << wsp.z << " : VC:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << " FACING:" << facing.x << "," << facing.y << "," << facing.z;
+		glm::ivec3 facing = Level::current().camera()->get_facing(wsp);
 		if(facing.x > 0) {
 			--voxel_coord.x; 
 		}
@@ -83,23 +104,15 @@ namespace voxel
 			--voxel_coord.z; 
 		}
 		voxel_coord /= glm::ivec3(scale_x_, scale_y_, scale_z_);
-		//std::cerr << " : SCALED:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z << std::endl;
 		return voxel_coord;
+		return glm::ivec3();
 	}
 
 
-	world::world(const variant& node)
+	World::World(const variant& node)
 		: view_distance_(node["view_distance"].as_int(default_view_distance)), 
 		seed_(node["seed"].as_int(0))
 	{
-		ASSERT_LOG(node.has_key("shader"), "Must have 'shader' attribute");
-		ASSERT_LOG(node["shader"].is_string(), "'shader' attribute must be a string");
-		shader_ = gles2::shader_program::get_global(node["shader"].as_string())->shader();
-
-		if(node.has_key("lighting")) {
-			lighting_.reset(new graphics::lighting(shader_, node["lighting"]));
-		}
-
 		if(node.has_key("objects")) {
 			for(int n = 0; n != node["objects"].num_elements(); ++n) {
 				add_object(new user_voxel_object(node["objects"][n]));
@@ -564,5 +577,4 @@ namespace voxel
 		}
 	END_DEFINE_CALLABLE(world)
 }
-
-#endif
+*/

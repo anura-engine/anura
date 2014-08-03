@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include "asserts.hpp"
-#include "concurrent_cache.hpp"
 #include "filesystem.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -26,12 +32,12 @@
 #include "string_utils.hpp"
 #include "variant.hpp"
 
-namespace {
-
-std::map<std::string,std::string>& get_level_paths() {
-	static std::map<std::string,std::string> res;
-	return res;
-}
+namespace 
+{
+	std::map<std::string,std::string>& get_level_paths() {
+		static std::map<std::string,std::string> res;
+		return res;
+	}
 }
 
 void reload_level_paths() 
@@ -39,6 +45,7 @@ void reload_level_paths()
 	get_level_paths().clear();
 	load_level_paths();
 }
+
 void load_level_paths() 
 {
 	module::get_unique_filenames_under_dir(preferences::load_compiled() ? "data/compiled/level/" : "data/level/", &get_level_paths());
@@ -92,17 +99,19 @@ void preload_level(const std::string& lvl)
 {
 }
 
-boost::intrusive_ptr<level> load_level(const std::string& lvl)
+boost::intrusive_ptr<Level> load_level(const std::string& lvl)
 {
-	boost::intrusive_ptr<level> res(new level(lvl));
+	boost::intrusive_ptr<Level> res(new Level(lvl));
 	res->finishLoading();
 	return res;
 }
 
-namespace {
-bool not_cfg_file(const std::string& filename) {
-	return filename.size() < 4 || !std::equal(filename.end() - 4, filename.end(), ".cfg");
-}
+namespace 
+{
+	bool not_cfg_file(const std::string& filename) 
+	{
+		return filename.size() < 4 || !std::equal(filename.end() - 4, filename.end(), ".cfg");
+	}
 }
 
 std::vector<std::string> get_known_levels()
@@ -123,8 +132,7 @@ std::vector<std::string> get_known_levels()
 		}
 	}
 
-	std::pair<std::string, std::string> file;
-	foreach(file, file_map) {
+	for(auto& file : file_map) {
 		files.push_back(file.first);
 	}
 	std::sort(files.begin(), files.end());

@@ -210,7 +210,7 @@ namespace gui
 
 	void Widget::handleProcess()
 	{
-		if(!tooltip_displayed_ && SDL_GetTicks() > tooltip_ticks_ && tooltip_ != NULL) {
+		if(!tooltip_displayed_ && profile::get_tick_time() > tooltip_ticks_ && tooltip_ != NULL) {
 			gui::setTooltip(tooltip_);
 			tooltip_displayed_ = true;
 		}
@@ -293,11 +293,11 @@ namespace gui
 				if(event.motion.x >= x() && event.motion.x <= x()+width() &&
 					event.motion.y >= y() && event.motion.y <= y()+height()) {
 					if(!tooltip_displayed_) {
-						if(tooltip_display_delay_ == 0 || SDL_GetTicks() > tooltip_ticks_) {
+						if(tooltip_display_delay_ == 0 || profile::get_tick_time() > tooltip_ticks_) {
 							gui::setTooltip(tooltip_);
 							tooltip_displayed_ = true;
 						} else if(tooltip_ticks_ == std::numeric_limits<int>::max()) {
-							tooltip_ticks_ = SDL_GetTicks() + tooltip_display_delay_;
+							tooltip_ticks_ = profile::get_tick_time() + tooltip_display_delay_;
 						}
 					}
 				} else {
@@ -502,7 +502,7 @@ namespace gui
 		v.push_back(variant(obj.getPadHeight()));
 		return variant(&v);
 
-	DEFINE_FIELD(children, "[builtin widget]")
+	DEFINE_FIELD(children, "[builtin Widget]")
 		std::vector<variant> v;
 		std::vector<WidgetPtr> w = obj.getChildren();
 		for(auto item : w) {

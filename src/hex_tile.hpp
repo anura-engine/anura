@@ -23,16 +23,17 @@
 #pragma once
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/scoped_ptr.hpp>
 #include <vector>
 #include <map>
 
 #include "kre/Material.hpp"
+#include "kre/SceneObject.hpp"
 
 #include "decimal.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 #include "hex_object_fwd.hpp"
+#include "SceneObjectCallable.hpp"
 #include "variant.hpp"
 
 namespace hex 
@@ -41,15 +42,15 @@ namespace hex
 	{
 	public:
 		explicit TileSheet(variant node);
-		const KRE::MaterialPtr& getTexture() const { return texture_; }
+		const KRE::TexturePtr& getTexture() const { return texture_; }
 		rect getArea(int index) const;
 	private:
-		KRE::MaterialPtr texture_;
+		KRE::TexturePtr texture_;
 		rect area_;
 		int nrows_, ncols_, pad_;
 	};
 
-	class TileType : public game_logic::FormulaCallable
+	class TileType : public graphics::SceneObjectCallable
 	{
 	public:
 		TileType(const std::string& id, variant node);
@@ -77,7 +78,9 @@ namespace hex
 
 		decimal height() const { return height_; }
 
+		void preRender(const KRE::WindowManagerPtr& wnd);
 		variant write() const;
+		void calculateAdjacencyPattern(unsigned char adjmap);
 	private:
 		DECLARE_CALLABLE(TileType);
 		std::string id_;
@@ -94,8 +97,7 @@ namespace hex
 			std::vector<int> sheet_indexes;
 		};
 
-		mutable AdjacencyPattern adjacency_patterns_[64];
-		void calculateAdjacencyPattern(unsigned char adjmap) const;
+		AdjacencyPattern adjacency_patterns_[64];
 
 		EditorInfo editor_info_;
 	};

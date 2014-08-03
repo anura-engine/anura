@@ -95,9 +95,9 @@ namespace
 {
 	const int widget_zorder_draw_later_threshold = 1000;
 
-	const game_logic::formula_variable_storage_ptr& global_vars()
+	const game_logic::Formula_variable_storage_ptr& global_vars()
 	{
-		static game_logic::formula_variable_storage_ptr obj(new game_logic::formula_variable_storage);
+		static game_logic::Formula_variable_storage_ptr obj(new game_logic::Formula_variable_storage);
 		return obj;
 	}
 }
@@ -167,8 +167,8 @@ CustomObject::CustomObject(variant node)
 	has_feet_(node["has_feet"].as_bool(type_->hasFeet())),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::Formula_variable_storage(type_->variables())),
+	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
 	current_animation_id_(0),
@@ -188,16 +188,16 @@ CustomObject::CustomObject(variant node)
 	paused_(false)
 {
 
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
 	if(!created_) {
 		properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 		properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 	}
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
@@ -461,8 +461,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	has_feet_(type_->hasFeet()),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::Formula_variable_storage(type_->variables())),
+	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
 	tags_(new game_logic::MapFormulaCallable(type_->tags())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
@@ -482,11 +482,11 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	properties_requiring_dynamic_initialization_ = type_->getPropertiesRequiringDynamicInitialization();
 	properties_requiring_dynamic_initialization_.insert(properties_requiring_dynamic_initialization_.end(), type_->getPropertiesRequiringInitialization().begin(), type_->getPropertiesRequiringInitialization().end());
 
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
 		if(i->second.storage_slot < 0) {
@@ -566,8 +566,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	sound_volume_(o.sound_volume_),
 	next_animation_formula_(o.next_animation_formula_),
 
-	vars_(new game_logic::formula_variable_storage(*o.vars_)),
-	tmp_vars_(new game_logic::formula_variable_storage(*o.tmp_vars_)),
+	vars_(new game_logic::Formula_variable_storage(*o.vars_)),
+	tmp_vars_(new game_logic::Formula_variable_storage(*o.tmp_vars_)),
 	tags_(new game_logic::MapFormulaCallable(*o.tags_)),
 
 	property_data_(deep_copy_property_data(o.property_data_)),
@@ -616,11 +616,11 @@ CustomObject::CustomObject(const CustomObject& o)
 	//widgets_(o.widgets_),
 	paused_(o.paused_)
 {
-	vars_->set_object_name(getDebugDescription());
-	tmp_vars_->set_object_name(getDebugDescription());
+	vars_->setObjectName(getDebugDescription());
+	tmp_vars_->setObjectName(getDebugDescription());
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	getAll().insert(this);
 	getAll(base_type_->id()).insert(this);
@@ -676,7 +676,7 @@ void CustomObject::initProperties()
 	}
 }
 
-bool CustomObject::is_a(const std::string& type) const
+bool CustomObject::isA(const std::string& type) const
 {
 	return CustomObjectType::isDerivedFrom(type, type_->id());
 }
@@ -709,9 +709,9 @@ void CustomObject::finishLoading(Level* lvl)
 void CustomObject::init_lua()
 {
 	if(lua_ptr_) {
-		lua_ptr_->set_self_callable(*this);
-		lua_chunk_.reset(lua_ptr_->compile_chunk(type_->id(), type_->getLuaSource()));
-		lua_chunk_->run(lua_ptr_->context_ptr());
+		lua_ptr_->setSelfCallable(*this);
+		lua_chunk_.reset(lua_ptr_->compileChunk(type_->id(), type_->getLuaSource()));
+		lua_chunk_->run(lua_ptr_->getContextPtr());
 	}
 }
 #endif
@@ -952,7 +952,7 @@ variant CustomObject::write() const
 		res.add("on_" + get_object_event_str(n), event_handlers_[n]->str());
 	}
 
-	if(!vars_->equal_to(type_->variables())) {
+	if(!vars_->isEqualTo(type_->variables())) {
 		res.add("vars", vars_->write());
 	}
 
@@ -1038,7 +1038,7 @@ variant CustomObject::write() const
 
 	if(parent_.get() != NULL) {
 		std::string str;
-		variant(parent_.get()).serialize_to_string(str);
+		variant(parent_.get()).serializeToString(str);
 		res.add("parent", str);
         
         res.add("relative_x", relative_x_);
@@ -1226,7 +1226,7 @@ void CustomObject::draw(int xx, int yy) const
 		for(const std::string& s : Level::current().debug_properties()) {
 			try {
 				const assert_recover_scope scope;
-				variant result = game_logic::formula(variant(s)).execute(*this);
+				variant result = game_logic::Formula(variant(s)).execute(*this);
 				const std::string result_str = result.write_json();
 				auto key_texture = KRE::Font::getInstance()->renderText(s, KRE::Color::colorWhite(), 16);
 				auto value_texture = KRE::Font::getInstance()->renderText(result_str, KRE::Color::colorWhite(), 16);
@@ -1293,11 +1293,11 @@ void CustomObject::draw(int xx, int yy) const
 void CustomObject::drawGroup() const
 {
 	if(label().empty() == false && label()[0] != '_') {
-		blit_texture(font::render_text(label(), graphics::color_yellow(), 32), x(), y() + 26);
+		blit_texture(font::render_text(label(), KRE::Color::colorYellow(), 32), x(), y() + 26);
 	}
 
 	if(group() >= 0) {
-		blit_texture(font::render_text(formatter() << group(), graphics::color_yellow(), 24), x(), y());
+		blit_texture(font::render_text(formatter() << group(), KRE::Color::colorYellow(), 24), x(), y());
 	}
 }
 
@@ -1357,7 +1357,7 @@ void CustomObject::process(level& lvl)
 	}
 
 	if(lvl.in_editor()) {
-		if(!type_->isStaticObject() && entity_collides(level::current(), *this, MOVE_NONE)) {
+		if(!type_->isStaticObject() && entity_collides(level::current(), *this, MOVE_DIRECTION::NONE)) {
 			//The object collides illegally, but we're in the editor. Freeze
 			//the object by returning, since we can't process it.
 			return;
@@ -1370,7 +1370,7 @@ void CustomObject::process(level& lvl)
 	}
 
 	collision_info debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
+	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
 
 	if(parent_.get() != NULL) {
 		const point pos = parent_position();
@@ -1396,8 +1396,8 @@ void CustomObject::process(level& lvl)
 	entity::process(lvl);
 
 	//the object should never be colliding with the level at the start of processing.
-//	assert(!entity_collides_with_level(lvl, *this, MOVE_NONE));
-//	assert(!entity_collides(lvl, *this, MOVE_NONE));
+//	assert(!entity_collides_with_level(lvl, *this, MOVE_DIRECTION::NONE));
+//	assert(!entity_collides(lvl, *this, MOVE_DIRECTION::NONE));
 
 	//this is a flag which tracks whether we've fired a collide_feet
 	//event. If we don't fire a collide_feet event through normal collision
@@ -1493,7 +1493,7 @@ void CustomObject::process(level& lvl)
 				variant* v = &move->animation_values[0] + move->pos*move->animation_slots.size();
 	
 				for(int n = 0; n != move->animation_slots.size(); ++n) {
-					mutate_value_by_slot(move->animation_slots[n], v[n]);
+					mutateValueBySlot(move->animation_slots[n], v[n]);
 				}
 
 				if(move->on_process.is_null() == false) {
@@ -1724,14 +1724,14 @@ void CustomObject::process(level& lvl)
 		}
 
 		if(effective_velocity_y > 0) {
-			if(entity_collides(lvl, *this, MOVE_DOWN, &collide_info)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN, &collide_info)) {
 				//our 'legs' but not our feet collide with the level. Try to
 				//move one pixel to the left or right and see if either
 				//direction makes us no longer colliding.
 				setX(x() + 1);
-				if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_RIGHT)) {
+				if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN) || entity_collides(lvl, *this, MOVE_DIRECTION::RIGHT)) {
 					setX(x() - 2);
-					if(entity_collides(lvl, *this, MOVE_DOWN) || entity_collides(lvl, *this, MOVE_LEFT)) {
+					if(entity_collides(lvl, *this, MOVE_DIRECTION::DOWN) || entity_collides(lvl, *this, MOVE_DIRECTION::LEFT)) {
 						//moving in either direction fails to resolve the collision.
 						//This effectively means the object is 'stuck' in a small
 						//pit.
@@ -1747,7 +1747,7 @@ void CustomObject::process(level& lvl)
 			}
 		} else {
 			//effective_velocity_y < 0 -- going up
-			if(entity_collides(lvl, *this, MOVE_UP, &collide_info)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::UP, &collide_info)) {
 				collide = true;
 				moveCentipixels(0, -move_amount*dir);
 				break;
@@ -1836,7 +1836,7 @@ void CustomObject::process(level& lvl)
 			for(int n = 0; n != delta; n += dir) {
 				setY(y()+dir);
 				++nmoves;
-				if(entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+				if(entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 					setY(y()-dir);
 					break;
 				}
@@ -1912,7 +1912,7 @@ void CustomObject::process(level& lvl)
 				const int dir = delta > 0 ? 1 : -1;
 				for(int n = 0; n != delta; n += dir) {
 					setY(y()+dir);
-					if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+					if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 						setY(y()-dir);
 						break;
 					}
@@ -1931,7 +1931,7 @@ void CustomObject::process(level& lvl)
 					const int SearchRange = 2;
 					for(int n = 0; n != SearchRange; ++n) {
 						setY(y()+dir);
-						if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_UP : MOVE_DOWN)) {
+						if(detect_collisions && entity_collides(lvl, *this, dir < 0 ? MOVE_DIRECTION::UP : MOVE_DIRECTION::DOWN)) {
 							break;
 						}
 
@@ -1972,7 +1972,7 @@ void CustomObject::process(level& lvl)
 							//we always move at least one pixel up, if there is
 							//solid, otherwise we'll fall through.
 							setY(y()-1);
-							if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
+							if(detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::UP)) {
 								collide_head = true;
 								break;
 							}
@@ -1981,7 +1981,7 @@ void CustomObject::process(level& lvl)
 					}
 	
 					setY(y()-1);
-					if(detect_collisions && entity_collides(lvl, *this, MOVE_UP)) {
+					if(detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::UP)) {
 						collide_head = true;
 						break;
 					}
@@ -2000,14 +2000,14 @@ void CustomObject::process(level& lvl)
 					isStanding(lvl, &slope_standing_info);
 					if(slope_standing_info.platform) {
 						setY(y()+1);
-						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DOWN)) {
+						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN)) {
 							setY(y()-1);
 						}
 					}
 				}
 			}
 
-			if(detect_collisions && entity_collides(lvl, *this, centiY() != original_centi_y ? MOVE_NONE : (dir > 0 ? MOVE_RIGHT : MOVE_LEFT), &collide_info)) {
+			if(detect_collisions && entity_collides(lvl, *this, centiY() != original_centi_y ? MOVE_DIRECTION::NONE : (dir > 0 ? MOVE_DIRECTION::RIGHT : MOVE_DIRECTION::LEFT), &collide_info)) {
 				collide = true;
 			}
 
@@ -2020,7 +2020,7 @@ void CustomObject::process(level& lvl)
 		}
 
 		if(!detect_collisions) {
-			if(entity_collides(lvl, *this, MOVE_NONE)) {
+			if(entity_collides(lvl, *this, MOVE_DIRECTION::NONE)) {
 				setCentiX(backup_centi_x);
 				setCentiY(backup_centi_y);
 			} else {
@@ -2471,14 +2471,14 @@ void CustomObject::run_garbage_collection()
 			continue;
 		}
 
-		foreach(game_logic::FormulaCallable_suspended_ptr ptr, ref.visitor->pointers()) {
+		foreach(game_logic::FormulaCallableSuspendedPtr ptr, ref.visitor->pointers()) {
 			if(safe.count(ptr->value())) {
 				ptr->restore_ref();
 			}
 		}
 	}
 
-	std::cerr << "RAN GARBAGE COLLECTION IN " << (SDL_GetTicks() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
+	std::cerr << "RAN GARBAGE COLLECTION IN " << (profile::get_tick_time() - starting_ticks) << "ms. Releasing " << (getAll().size() - safe.size()) << "/" << getAll().size() << " OBJECTS\n";
 }
 
 void CustomObject::beingRemoved()
@@ -2521,7 +2521,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		}
 	}
 
-	const std::string type = query_value_by_slot(CUSTOM_OBJECT_TYPE).as_string();
+	const std::string type = queryValueBySlot(CUSTOM_OBJECT_TYPE).as_string();
 	game_logic::FormulaCallableDefinitionPtr def = CustomObjectType::getDefinition(type);
 	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
 
@@ -2534,7 +2534,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		slots.push_back(def->getSlot(p.first.as_string()));
 		ASSERT_LOG(slots.back() >= 0, "Unknown attribute in object: " << p.first.as_string());
 		end_values.push_back(p.second);
-		begin_values.push_back(query_value_by_slot(slots.back()));
+		begin_values.push_back(queryValueBySlot(slots.back()));
 	}
 
 	const int ncycles = options["duration"].as_int(10);
@@ -2605,7 +2605,7 @@ namespace
 		boost::intrusive_ptr<CustomObject> obj_;
 
 		variant getValue(const std::string& key) const {
-			game_logic::const_formula_ptr f = obj_->getEventHandler(get_object_event_id(key));
+			game_logic::ConstFormulaPtr f = obj_->getEventHandler(get_object_event_id(key));
 			if(!f) {
 				return variant();
 			} else {
@@ -2615,7 +2615,7 @@ namespace
 		void setValue(const std::string& key, const variant& value) {
 			static boost::intrusive_ptr<CustomObjectCallable> custom_object_definition(new CustomObjectCallable);
 
-			game_logic::formula_ptr f(new game_logic::formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
+			game_logic::FormulaPtr f(new game_logic::Formula(value, &get_custom_object_functions_symbol_table(), custom_object_definition.get()));
 			obj_->setEventHandler(get_object_event_id(key), f);
 		}
 	public:
@@ -3205,12 +3205,12 @@ variant CustomObject::getValue(const std::string& key) const
 	}
 
 	if(!type_->isStrict()) {
-		variant var_result = tmp_vars_->query_value(key);
+		variant var_result = tmp_vars_->queryValue(key);
 		if(!var_result.is_null()) {
 			return var_result;
 		}
 
-		var_result = vars_->query_value(key);
+		var_result = vars_->queryValue(key);
 		if(!var_result.is_null()) {
 			return var_result;
 		}
@@ -3230,7 +3230,7 @@ variant CustomObject::getValue(const std::string& key) const
 		if(backup_callable_stack_.top() != this) {
 			const FormulaCallable* callable = backup_callable_stack_.top();
 			BackupCallableStackScope callable_scope(&backup_callable_stack_, NULL);
-			return callable->query_value(key);
+			return callable->queryValue(key);
 		}
 	}
 
@@ -3239,7 +3239,7 @@ variant CustomObject::getValue(const std::string& key) const
 	return variant();
 }
 
-void CustomObject::getInputs(std::vector<game_logic::formula_input>* inputs) const
+void CustomObject::getInputs(std::vector<game_logic::FormulaInput>* inputs) const
 {
 	for(int n = CUSTOM_OBJECT_ARG+1; n != NUM_CUSTOM_OBJECT_PROPERTIES; ++n) {
 		auto entry = CustomObjectCallable::instance().getEntry(n);
@@ -3273,13 +3273,13 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "x") {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 	} else if(key == "y") {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 	} else if(key == "xy") {
@@ -3287,7 +3287,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3461,9 +3461,9 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
 		CollisionInfo collide_info;
-		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -3493,22 +3493,22 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "type") {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			getAll(base_type_->id()).erase(this);
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(getDebugDescription());
-			tmp_vars_->set_object_name(getDebugDescription());
+			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
+			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+			vars_->setObjectName(getDebugDescription());
+			tmp_vars_->setObjectName(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
 
-			vars_->disallow_new_keys(type_->isStrict());
-			tmp_vars_->disallow_new_keys(type_->isStrict());
+			vars_->disallowNewKeys(type_->isStrict());
+			tmp_vars_->disallowNewKeys(type_->isStrict());
 
 			//set the animation to the default animation for the new type.
 			setFrame(type_->defaultFrame().id());
@@ -3558,7 +3558,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_TYPE: {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			ConstCustomObjectTypePtr old_type = type_;
 
@@ -3566,16 +3566,16 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables())),
-			vars_->set_object_name(getDebugDescription());
-			tmp_vars_->set_object_name(getDebugDescription());
+			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
+			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+			vars_->setObjectName(getDebugDescription());
+			tmp_vars_->setObjectName(getDebugDescription());
 
 			vars_->add(*old_vars);
 			tmp_vars_->add(*old_tmp_vars_);
 
-			vars_->disallow_new_keys(type_->isStrict());
-			tmp_vars_->disallow_new_keys(type_->isStrict());
+			vars_->disallowNewKeys(type_->isStrict());
+			tmp_vars_->disallowNewKeys(type_->isStrict());
 
 			std::vector<variant> props = property_data_;
 			property_data_.clear();
@@ -3632,7 +3632,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_X: {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 
@@ -3643,7 +3643,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_Y: {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 
@@ -3656,7 +3656,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         x() + getCurrentFrame().width();
 		const int delta_x = value.as_int() - current_x;
 		setX(x() + delta_x);
-		if(entity_collides(level::current(), *this, MOVE_NONE) &&
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
@@ -3669,7 +3669,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         y() + getCurrentFrame().height();
 		const int delta_y = value.as_int() - current_y;
 		setY(y() + delta_y);
-		if(entity_collides(level::current(), *this, MOVE_NONE) &&
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
@@ -3682,7 +3682,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3730,7 +3730,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3745,7 +3745,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3765,7 +3765,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int ydiff = current_y - y();
 
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3778,7 +3778,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + solid_diff + solidRect().w()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3790,7 +3790,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3806,7 +3806,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff_y + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3818,7 +3818,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3829,7 +3829,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3844,7 +3844,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -4150,9 +4150,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const unsigned int old_weak = getWeakSolidDimensions();
 		setSolidDimensions(solid, weak);
 		CollisionInfo collide_info;
-		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_NONE, &collide_info)) {
+		if(entity_in_current_level(this) && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &collide_info)) {
 			setSolidDimensions(old_solid, old_weak);
-			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_NONE), false);
+			ASSERT_EQ(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE), false);
 
 			game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable(this));
 			callable->add("collide_with", variant(collide_info.collide_with.get()));
@@ -4507,7 +4507,7 @@ void CustomObject::setFrame(const Frame& new_frame)
 
 	frame_->playSound(this);
 
-	if(entity_collides(Level::current(), *this, MOVE_NONE) && entity_in_current_level(this)) {
+	if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 		game_logic::MapFormulaCallable* callable(new game_logic::MapFormulaCallable);
 		callable->add("previous_animation", variant(previous_animation));
 		game_logic::FormulaCallablePtr callable_ptr(callable);
@@ -4517,7 +4517,7 @@ void CustomObject::setFrame(const Frame& new_frame)
 		handleEvent(OBJECT_EVENT_CHANGE_ANIMATION_FAILURE, callable);
 		handleEvent("change_animation_failure_" + frame_name_, callable);
 		--change_animation_failure_recurse;
-		ASSERT_LOG(destroyed() || !entity_collides(Level::current(), *this, MOVE_NONE),
+		ASSERT_LOG(destroyed() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE),
 		  "Object '" << type_->id() << "' has different solid areas when changing from frame " << previous_animation << " to " << frame_name_ << " and doesn't handle it properly");
 	}
 
@@ -4647,7 +4647,7 @@ bool CustomObject::moveToStanding(Level& lvl, int max_displace)
 {
 	int start_y = y();
 	const bool result = moveToStandingInternal(lvl, max_displace);
-	if(!result || entity_collides(Level::current(), *this, MOVE_NONE)) {
+	if(!result || entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE)) {
 		setPos(x(), start_y);
 		return false;
 	}
@@ -4827,14 +4827,14 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 	}
 #endif
 
-	const game_logic::formula* handlers[2];
+	const game_logic::Formula* handlers[2];
 	int nhandlers = 0;
 
 	if(size_t(event) < event_handlers_.size() && event_handlers_[event]) {
 		handlers[nhandlers++] = event_handlers_[event].get();
 	}
 
-	const game_logic::formula* type_handler = type_->getEventHandler(event).get();
+	const game_logic::Formula* type_handler = type_->getEventHandler(event).get();
 	if(type_handler != NULL) {
 		handlers[nhandlers++] = type_handler;
 	}
@@ -4847,7 +4847,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 	BackupCallableStackScope callable_scope(&backup_callable_stack_, context);
 
 	for(int n = 0; n != nhandlers; ++n) {
-		const game_logic::formula* handler = handlers[n];
+		const game_logic::Formula* handler = handlers[n];
 
 #ifndef DISABLE_FORMULA_PROFILER
 		formula_profiler::custom_object_event_frame event_frame = { type_.get(), event, false };
@@ -4923,7 +4923,7 @@ bool CustomObject::executeCommand(const variant& var)
 			result = executeCommand(var[n]) && result;
 		}
 	} else {
-		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
+		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
 		if(cmd != NULL) {
 			cmd->runCommand(*this);
 		} else {
@@ -5021,16 +5021,16 @@ const KRE::ColorTransform& CustomObject::draw_color() const
 	return white;
 }
 
-game_logic::const_formula_ptr CustomObject::getEventHandler(int key) const
+game_logic::ConstFormulaPtr CustomObject::getEventHandler(int key) const
 {
 	if(size_t(key) < event_handlers_.size()) {
 		return event_handlers_[key];
 	} else {
-		return game_logic::const_formula_ptr();
+		return game_logic::ConstFormulaPtr();
 	}
 }
 
-void CustomObject::setEventHandler(int key, game_logic::const_formula_ptr f)
+void CustomObject::setEventHandler(int key, game_logic::ConstFormulaPtr f)
 {
 	if(size_t(key) >= event_handlers_.size()) {
 		event_handlers_.resize(key+1);
@@ -5163,7 +5163,7 @@ void CustomObject::extractGcObjectReferences(std::vector<gc_object_reference>& v
 		w->performVisitValues(*visitor.visitor);
 	}
 
-	for(game_logic::FormulaCallable_suspended_ptr ptr : visitor.visitor->pointers()) {
+	for(game_logic::FormulaCallableSuspendedPtr ptr : visitor.visitor->pointers()) {
 		if(dynamic_cast<const CustomObject*>(ptr->value())) {
 			ptr->destroy_ref();
 		}
@@ -5215,7 +5215,7 @@ void CustomObject::extractGcObjectReferences(variant& var, std::vector<gc_object
 void CustomObject::restoreGcObjectReference(gc_object_reference ref)
 {
 	if(ref.visitor) {
-		for(game_logic::FormulaCallable_suspended_ptr ptr : ref.visitor->pointers()) {
+		for(game_logic::FormulaCallableSuspendedPtr ptr : ref.visitor->pointers()) {
 			ptr->restore_ref();
 		}
 	} else if(ref.from_variant) {
@@ -5341,7 +5341,7 @@ void CustomObject::set_platform_area(const rect& area)
 		platform_solid_info_ = ConstSolidInfoPtr();
 	} else {
 		platform_area_.reset(new rect(area));
-		platform_solid_info_ = SolidInfo::create_platform(area);
+		platform_solid_info_ = SolidInfo::createPlatform(area);
 	}
 
 	calculateSolidRect();
@@ -5500,36 +5500,36 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		type_ = base_type_->getVariation(current_variation_);
 	}
 
-	game_logic::formula_variable_storage_ptr old_vars = vars_;
+	game_logic::Formula_variable_storage_ptr old_vars = vars_;
 
-	vars_.reset(new game_logic::formula_variable_storage(type_->variables()));
-	vars_->set_object_name(getDebugDescription());
+	vars_.reset(new game_logic::Formula_variable_storage(type_->variables()));
+	vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
-		const variant old_value = old_vars->query_value(key);
+		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->variables().find(key);
 		if(old_type_value == old_type->variables().end() ||
 		   old_type_value->second != old_value) {
-			vars_->mutate_value(key, old_value);
+			vars_->mutateValue(key, old_value);
 		}
 	}
 
 	old_vars = tmp_vars_;
 
-	tmp_vars_.reset(new game_logic::formula_variable_storage(type_->tmpVariables()));
-	tmp_vars_->set_object_name(getDebugDescription());
+	tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables()));
+	tmp_vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
-		const variant old_value = old_vars->query_value(key);
+		const variant old_value = old_vars->queryValue(key);
 		std::map<std::string, variant>::const_iterator old_type_value =
 		    old_type->tmpVariables().find(key);
 		if(old_type_value == old_type->tmpVariables().end() ||
 		   old_type_value->second != old_value) {
-			tmp_vars_->mutate_value(key, old_value);
+			tmp_vars_->mutateValue(key, old_value);
 		}
 	}
 
-	vars_->disallow_new_keys(type_->isStrict());
-	tmp_vars_->disallow_new_keys(type_->isStrict());
+	vars_->disallowNewKeys(type_->isStrict());
+	tmp_vars_->disallowNewKeys(type_->isStrict());
 
 	if(type_->hasFrame(frame_name_)) {
 		frame_.reset(&type_->getFrame(frame_name_));
@@ -5612,9 +5612,9 @@ bool CustomObject::handle_sdl_event(const SDL_Event& event, bool claimed)
 	return claimed;
 }
 
-game_logic::formula_ptr CustomObject::createFormula(const variant& v)
+game_logic::FormulaPtr CustomObject::createFormula(const variant& v)
 {
-	return game_logic::formula_ptr(new game_logic::formula(v, &get_custom_object_functions_symbol_table()));
+	return game_logic::FormulaPtr(new game_logic::Formula(v, &get_custom_object_functions_symbol_table()));
 }
 
 gui::ConstWidgetPtr CustomObject::getWidgetById(const std::string& id) const
@@ -5658,6 +5658,11 @@ void CustomObject::addToLevel()
 #endif
 }
 
+int custom_object::current_rotation() const
+{
+	return rotate_z_.as_int();
+}
+
 BENCHMARK(custom_object_spike) {
 	static Level* lvl = NULL;
 	if(!lvl) {	
@@ -5679,7 +5684,7 @@ BENCHMARK_ARG(custom_object_get_attr, const std::string& attr)
 {
 	static CustomObject* obj = new CustomObject("ant_black", 0, 0, false);
 	BENCHMARK_LOOP {
-		obj->query_value(attr);
+		obj->queryValue(attr);
 	}
 }
 

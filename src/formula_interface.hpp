@@ -1,5 +1,27 @@
-#ifndef FORMULA_INTERFACE_HPP_INCLUDED
-#define FORMULA_INTERFACE_HPP_INCLUDED
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+#pragma once
 
 #include <map>
 #include <vector>
@@ -14,49 +36,45 @@
 
 namespace game_logic
 {
+	struct FormulaInterfaceImpl;
 
-struct formula_interface_impl;
+	class FormulaInterfaceInstanceFactory : public reference_counted_object
+	{
+	public:
+		virtual ~FormulaInterfaceInstanceFactory();
 
-class formula_interface_instance_factory : public reference_counted_object
-{
-public:
-	virtual ~formula_interface_instance_factory();
-
-	virtual bool all_static_lookups() const = 0;
-	virtual variant create(const variant& v) const = 0;
-	virtual int getId() const = 0;
-};
-
-class formula_interface : public FormulaCallable
-{
-public:
-	struct interface_mismatch_error {
-		explicit interface_mismatch_error(const std::string& msg) : msg(msg) {}
-		std::string msg;
+		virtual bool all_static_lookups() const = 0;
+		virtual variant create(const variant& v) const = 0;
+		virtual int getId() const = 0;
 	};
 
-	explicit formula_interface(const std::map<std::string, variant_type_ptr>& types);
-	const std::map<std::string, variant_type_ptr>& get_types() const { return types_; }
+	class FormulaInterface : public FormulaCallable
+	{
+	public:
+		struct interface_mismatch_error {
+			explicit interface_mismatch_error(const std::string& msg) : msg(msg) {}
+			std::string msg;
+		};
 
-	formula_interface_instance_factory* create_factory(variant_type_ptr type) const; //throw interface_mismatch_error
-	formula_interface_instance_factory* get_dynamic_factory() const;
+		explicit FormulaInterface(const std::map<std::string, variant_type_ptr>& types);
+		const std::map<std::string, variant_type_ptr>& get_types() const { return types_; }
 
-	ConstFormulaCallableDefinitionPtr getDefinition() const;
+		FormulaInterfaceInstanceFactory* createFactory(variant_type_ptr type) const; //throw interface_mismatch_error
+		FormulaInterfaceInstanceFactory* getDynamicFactory() const;
 
-	bool match(const variant& v) const;
+		ConstFormulaCallableDefinitionPtr getDefinition() const;
 
-	std::string to_string() const;
+		bool match(const variant& v) const;
 
-private:
-	variant getValue(const std::string& key) const;
+		std::string to_string() const;
 
-	std::map<std::string, variant_type_ptr> types_;
-	std::unique_ptr<formula_interface_impl> impl_;
-};
+	private:
+		variant getValue(const std::string& key) const;
 
+		std::map<std::string, variant_type_ptr> types_;
+		std::unique_ptr<FormulaInterfaceImpl> impl_;
+	};
 }
 
-typedef boost::intrusive_ptr<game_logic::formula_interface> formula_interface_ptr;
-typedef boost::intrusive_ptr<const game_logic::formula_interface> const_formula_interface_ptr;
-
-#endif
+typedef boost::intrusive_ptr<game_logic::FormulaInterface> FormulaInterfacePtr;
+typedef boost::intrusive_ptr<const game_logic::FormulaInterface> ConstFormulaInterfacePtr;

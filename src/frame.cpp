@@ -407,7 +407,7 @@ void Frame::setColorPalette(unsigned int palettes)
 
 void Frame::setImageAsSolid()
 {
-	solid_ = solid_info::create_from_texture(texture_, img_rect_);
+	solid_ = solid_info::createFromTexture(texture_, img_rect_);
 }
 
 void Frame::playSound(const void* object) const
@@ -1034,13 +1034,6 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 	}
 
 	return point(getFeetX(),getFeetY()); //default is to pivot around feet.
-}
-
-KRE::DisplayDeviceDef Frame::doAttach(const KRE::DisplayDevicePtr& dd)
-{
-	KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-	// XXX
-	return def;
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(Frame)

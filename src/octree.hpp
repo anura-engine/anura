@@ -1,43 +1,49 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
-#include "reference_counted_object.hpp"
 
 namespace graphics
 {
-	template <typename T1, typename T2> class octree;
-	template <typename T1, typename T2> typedef boost::intrusive_ptr<octree<T1,T2> > octree_ptr<T1,T2>;
+	template <typename T1, typename T2> class Octree;
+	template <typename T1, typename T2> typedef boost::intrusive_ptr<Octree<T1,T2>> OctreePtr<T1,T2>;
 	
 	template <typename T1, typename T2>
-	class octree : public reference_counted_object
+	class Octree : public reference_counted_object
 	{
 	public:
-		explicit octree(const glm::vec3& origin, float radius)
-			: origin_(origin), radius_(radius)
+		explicit Octree(const glm::vec3& origin, float radius)
+			: origin_(origin), 
+			radius_(radius)
 		{
 		}
 
-		virtual ~octree() 
+		virtual ~Octree() 
 		{}
 
-		int octant_from_point(const glm::vec3& pt) 
+		int octantFromPoint(const glm::vec3& pt) 
 		{
 			int octant = 0;
 			if(pt.x >= origin_.x) {
@@ -52,14 +58,14 @@ namespace graphics
 			return octant;
 		}
 
-		bool is_leaf const() 
+		bool isLeaf() const
 		{
 			return children_.empty();
 		}
 
 		void insert(const glm::vec3& pt, const T2& data) 
 		{
-			if(is_leaf()) {
+			if(isLeaf()) {
 				is(data_ == NULL) {
 					data_.reset(new std::make_pair(pt, data));
 				} else {
@@ -72,17 +78,17 @@ namespace graphics
 							origin_.z+radius/(i&1 ? 2.0f : -2.0f));
 						children_.push_back(new octree(child_origin, radius/2.0f));
 					}
-					children_[octant_from_point(old_pt)].insert(old_pt, old_data);
-					children_[octant_from_point(pt)].insert(pt, data);
+					children_[octantFromPoint(old_pt)].insert(old_pt, old_data);
+					children_[octantFromPoint(pt)].insert(pt, data);
 				}
 			} else {
-				children_[octant_from_point(pt)].insert(pt, data);
+				children_[octantFromPoint(pt)].insert(pt, data);
 			}
 		}
 
-		void points_in_box(const glm::vec3& b1, const glm::vec3& b2, std::vector<T2>& results)
+		void pointsInBox(const glm::vec3& b1, const glm::vec3& b2, std::vector<T2>& results)
 		{
-			if(is_leaf()) {
+			if(isLeaf()) {
 				if(data_ != NULL) {
 					if(data_->first.x > b1.x || data_->first.y > b1.y || data_->first.z > b1.z
 						|| data_->first.x < b2.x || data_->first.y < b2.y || data_->first.z < b2.z) {
@@ -99,19 +105,20 @@ namespace graphics
 						|| c2.x > b2.x || c2.y > b2.y || c2.z > b2.z) {
 						continue;
 					}
-					child.points_in_box(b1, b2, results);
+					child.pointsInBox(b1, b2, results);
 				}
 			}
 		}
 
 	private:
+		Octree();
+		Octree(const Octree&);
+		void operator=(const Octree&);
+
 		glm::vec3 origin_;
 		float radius_;
 
-		std::vector<octree_ptr<T1> > children_;
-		std::shared_ptr<std::pair<glm::vec3, T2> > data_;
-
-		octree();
-		octree(const octree&);
+		std::vector<OctreePtr<T1>> children_;
+		std::shared_ptr<std::pair<glm::vec3, T2>> data_;
 	};
 }

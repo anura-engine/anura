@@ -28,20 +28,20 @@
 
 namespace json 
 {
-	void setFileContents(const std::string& path, const std::string& contents);
+	void set_file_contents(const std::string& path, const std::string& contents);
 	std::string get_file_contents(const std::string& path);
 
-	enum JSON_PARSE_OPTIONS { JSON_NO_PREPROCESSOR = 0, JSON_USE_PREPROCESSOR };
-	variant parse(const std::string& doc, JSON_PARSE_OPTIONS options=JSON_USE_PREPROCESSOR);
-	variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_USE_PREPROCESSOR);
+	enum class JSON_PARSE_OPTIONS { NO_PREPROCESSOR, USE_PREPROCESSOR };
+	variant parse(const std::string& doc, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
+	variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options=JSON_PARSE_OPTIONS::USE_PREPROCESSOR);
 	bool file_exists_and_is_valid(const std::string& fname);
 
-	struct parse_error 
+	struct ParseError 
 	{
-		explicit parse_error(const std::string& msg);
-		parse_error(const std::string& msg, const std::string& filename, int line, int col);
+		explicit ParseError(const std::string& msg);
+		ParseError(const std::string& msg, const std::string& filename, int line, int col);
 
-		std::string error_message() const;
+		std::string errorMessage() const;
 
 		std::string message;
 		std::string fname;

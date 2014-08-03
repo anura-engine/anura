@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 
 #include "kre/Canvas.hpp"
@@ -168,7 +175,7 @@ namespace gui
 	void Label::recalculateTexture()
 	{
 		texture_ = KRE::Font::getInstance()->renderText(currentText(), *color_, size_, true, font_);
-		innerSetDim(texture_->Width(),texture_->Height());
+		innerSetDim(texture_->width(),texture_->height());
 
 		if(border_color_) {
 			border_texture_ = KRE::Font::getInstance()->renderText(currentText(), *border_color_, size_, true, font_);
@@ -178,7 +185,7 @@ namespace gui
 	void Label::handleDraw() const
 	{
 		if(draw_highlight_ && highlight_color_) {
-			KRE::Canvas::getInstance()->drawRect(rect(x(), y(), width(), height()), highlight_color_);
+			KRE::Canvas::getInstance()->drawSolidRect(rect(x(), y(), width(), height()), *highlight_color_);
 		}
 
 		if(border_texture_) {
@@ -271,25 +278,25 @@ namespace gui
 		TextEditorWidgetPtr text_edit = new TextEditorWidget(150, 30);
 		text_edit->setText(text());
 		text_edit->setOnUserChangeHandler([=](){setText(text_edit->text());});
-		g->add_col(new Label("Text:", d->getTextSize(), d->font()))
-			.add_col(text_edit);
+		g->addCol(new Label("Text:", d->getTextSize(), d->font()))
+			.addCol(text_edit);
 
-		g->add_col(new Label("Size:", d->getTextSize(), d->font())).
-			add_col(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
+		g->addCol(new Label("Size:", d->getTextSize(), d->font())).
+			addCol(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
 
 		std::vector<std::string> fonts = font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
-		dropdown_WidgetPtr font_list(new dropdown_widget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
+		DropdownWidgetPtr font_list(new DropdownWidget(fonts, 150, 28, dropdown_widget::DROPDOWN_LIST));
 		font_list->setFontSize(14);
-		font_list->set_dropdown_height(height());
+		font_list->setDropdownHeight(height());
 		auto fit = std::find(fonts.begin(), fonts.end(), font());
 		font_list->setSelection(fit == fonts.end() ? 0 : fit-fonts.begin());
 		font_list->setOnSelectHandler([&](int n, const std::string& s){setFont(s);});
 		font_list->setZOrder(19);
-		g->add_col(new Label("Font:", d->getTextSize(), d->font()))
-			.add_col(font_list);
-		g->add_col(new Label("Color:", d->getTextSize(), d->font()))
-			.add_col(new button(new Label("Choose...", d->getTextSize(), d->font()), [&](){
+		g->addCol(new Label("Font:", d->getTextSize(), d->font()))
+			.addCol(font_list);
+		g->addCol(new Label("Color:", d->getTextSize(), d->font()))
+			.addCol(new button(new Label("Choose...", d->getTextSize(), d->font()), [&](){
 				int mx, my;
 				input::sdl_get_mouse_state(&mx, &my);
 				mx = mx + 200 > preferences::actual_screen_width() ? preferences::actual_screen_width()-200 : mx;
@@ -299,13 +306,13 @@ namespace gui
 				cp->setPrimaryColor(graphics::color(color_));
 
 				grid_ptr gg = new grid(1);
-				gg->allow_selection();
-				gg->swallow_clicks();
-				gg->set_show_background(true);
-				gg->allow_draw_highlight(false);
-				gg->register_selection_callback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
+				gg->allowSelection();
+				gg->swallowClicks();
+				gg->setShowBackground(true);
+				gg->allowDrawHighlight(false);
+				gg->registerSelectionCallback([=](int n){if(n != 0){d->removeWidget(gg); d->init();}});
 				gg->setZOrder(100);
-				gg->add_col(cp);
+				gg->addCol(cp);
 				d->addWidget(gg, d->x()-mx-100, my);
 		}));
 
@@ -365,7 +372,7 @@ namespace gui
 		std::string txt = currentText().substr(0, prog);
 
 		if(prog > 0) {
-			setTexture(font::render_text(txt, color(), size(), font()));
+			setTexture(KRE::Font::getInstance()->renderText(txt, color(), size(), false, font()));
 		} else {
 			setTexture(KRE::TexturePtr());
 		}

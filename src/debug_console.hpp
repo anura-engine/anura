@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
-
 #include "decimal.hpp"
 #include "dialog.hpp"
 #include "entity.hpp"
@@ -64,7 +62,7 @@ namespace debug_console
 
 		gui::TextEditorWidget* text_editor_;
 
-		boost::intrusive_ptr<level> lvl_;
+		boost::intrusive_ptr<Level> lvl_;
 		game_logic::FormulaCallablePtr focus_;
 
 		void onMoveCursor();

@@ -23,6 +23,7 @@
 
 #pragma once
 
+/* XXX - needs re-write
 #include <string>
 
 #include <boost/intrusive_ptr.hpp>
@@ -58,7 +59,7 @@ namespace voxel
 		struct PropertyEntry {
 			PropertyEntry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false) {}
 			std::string id;
-			game_logic::const_formula_ptr getter, setter, init;
+			game_logic::ConstFormulaPtr getter, setter, init;
 			std::shared_ptr<variant> const_value;
 			variant default_value;
 			variant_type_ptr type, set_type;
@@ -72,7 +73,7 @@ namespace voxel
 		const std::vector<PropertyEntry>& getSlotProperties() const { return slot_properties_; }
 		const std::vector<int>& getPropertiesWithInit() const { return properties_with_init_; }
 		const std::vector<int>& getPropertiesRequiringInitialization() const { return properties_requiring_initialization_; }
-		const game_logic::formula* event_handler(int event_id) const;
+		const game_logic::Formula* event_handler(int event_id) const;
 	
 		const std::string& getLastInitializationProperty() const { return last_initialization_property_; }
 
@@ -93,9 +94,10 @@ namespace voxel
 
 		std::string last_initialization_property_;
 
-		std::vector<game_logic::const_formula_ptr> event_handlers_;
+		std::vector<game_logic::ConstFormulaPtr> event_handlers_;
 
 		boost::intrusive_ptr<voxel_object> prototype_;
 	};
 
 }
+*/

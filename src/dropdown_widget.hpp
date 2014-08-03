@@ -1,22 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef DROPDOWN_WIDGET_HPP_INCLUDED
-#define DROPDOWN_WIDGET_HPP_INCLUDED
 #ifndef NO_EDITOR
 
 #include <vector>
@@ -27,67 +32,64 @@
 #include "text_editor_widget.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-typedef std::vector<std::string> dropdown_list;
-
-class dropdown_widget : public Widget
+namespace gui 
 {
-public:
-	enum dropdown_type {
-		DROPDOWN_LIST,
-		DROPDOWN_COMBOBOX,
+	typedef std::vector<std::string> DropdownList;
+
+	enum class DropdownType {
+		LIST,
+		COMBOBOX,
 	};
-	dropdown_widget(const dropdown_list& list, int width, int height=0, dropdown_type type=DROPDOWN_LIST);
-	dropdown_widget(const variant& v, game_logic::FormulaCallable* e);
-	virtual ~dropdown_widget() {}
 
-	void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
-	void setOnSelectHandler(std::function<void(int,const std::string&)> fn) { on_select_ = fn; }
-	void setSelection(int selection);
-	int get_max_height() const;
-	void set_dropdown_height(int h);
-	void setFontSize(int size) { editor_->setFontSize(size); }
-	void setText(const std::string& s) { editor_->setText(s); }
-protected:
-	virtual void handleDraw() const override;
-	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-	virtual void handleProcess() override;
+	class DropdownWidget : public Widget
+	{
+	public:
+		DropdownWidget(const DropdownList& list, int width, int height=0, DropdownType type=DropdownType::LIST);
+		DropdownWidget(const variant& v, game_logic::FormulaCallable* e);
 
-	virtual void setValue(const std::string& key, const variant& v);
-	virtual variant getValue(const std::string& key) const;
-	void init();
-	void text_enter();
-	void textChange();
-private:
-	bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
-	bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
-	void execute_selection(int selection);
+		void setOnChangeHandler(std::function<void(const std::string&)> fn) { on_change_ = fn; }
+		void setOnSelectHandler(std::function<void(int,const std::string&)> fn) { on_select_ = fn; }
+		void setSelection(int selection);
+		int getMaxHeight() const;
+		void setDropdownHeight(int h);
+		void setFontSize(int size) { editor_->setFontSize(size); }
+		void setText(const std::string& s) { editor_->setText(s); }
+	protected:
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleProcess() override;
 
-	int dropdown_height_;
-	dropdown_list list_;
-	int current_selection_;
-	dropdown_type type_;
-	TextEditorWidgetPtr editor_;
-	grid_ptr dropdown_menu_;
-	LabelPtr label_;
-	WidgetPtr dropdown_image_;
-	std::function<void(const std::string&)> on_change_;
-	std::function<void(int, const std::string&)> on_select_;
+		void init();
+		void textEnter();
+		void textChange();
+	private:
+		DECLARE_CALLABLE(DropdownWidget)
+		bool handleMousedown(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
+		bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
+		void executeSelection(int selection);
 
-	// delgate 
-	void changeDelegate(const std::string& s);
-	void selectDelegate(int selection, const std::string& s);
-	// FFL formula
-	game_logic::formula_ptr change_handler_;
-	game_logic::formula_ptr select_handler_;
-};
+		int dropdown_height_;
+		DropdownList list_;
+		int current_selection_;
+		DropdownType type_;
+		TextEditorWidgetPtr editor_;
+		GridPtr dropdown_menu_;
+		LabelPtr label_;
+		WidgetPtr dropdown_image_;
+		std::function<void(const std::string&)> on_change_;
+		std::function<void(int, const std::string&)> on_select_;
 
-typedef boost::intrusive_ptr<dropdown_widget> dropdown_WidgetPtr;
-typedef boost::intrusive_ptr<const dropdown_widget> const_dropdown_WidgetPtr;
+		// delgate 
+		void changeDelegate(const std::string& s);
+		void selectDelegate(int selection, const std::string& s);
+		// FFL formula
+		game_logic::FormulaPtr change_handler_;
+		game_logic::FormulaPtr select_handler_;
+	};
 
+	typedef boost::intrusive_ptr<DropdownWidget> DropdownWidgetPtr;
+	typedef boost::intrusive_ptr<const DropdownWidget> ConstDropdownWidgetPtr;
 }
 
 #endif // NO_EDITOR
-#endif // DROPDOWN_WIDGET_HPP_INCLUDED

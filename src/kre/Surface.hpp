@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -29,6 +29,7 @@
 #include <tuple>
 
 #include "Geometry.hpp"
+#include "PixelFormat.hpp"
 #include "WindowManagerFwd.hpp"
 
 namespace KRE
@@ -37,107 +38,32 @@ namespace KRE
 	{
 	};
 
-	class PixelFormat
-	{
-	public:
-		PixelFormat();
-		virtual ~PixelFormat();
-
-		virtual uint8_t bitsPerPixel() const = 0;
-		virtual uint8_t bytesPerPixel() const = 0;
-
-		virtual bool isYuvPlanar() const = 0;
-		virtual bool isYuvPacked() const = 0;
-		virtual bool isYuvHeightReversed() const = 0;
-		virtual bool isInterlaced() const = 0;
-		
-		virtual bool isRGB() const = 0;
-		virtual bool hasRedChannel() const = 0;
-		virtual bool hasGreenChannel() const = 0;
-		virtual bool hasBlueChannel() const = 0;
-		virtual bool hasAlphaChannel() const = 0;
-		virtual bool hasLuminance() const = 0;
-
-		virtual uint32_t getRedMask() const = 0;
-		virtual uint32_t getGreenMask() const = 0;
-		virtual uint32_t getBlueMask() const = 0;
-		virtual uint32_t getAlphaMask() const = 0;
-		virtual uint32_t getLuminanceMask() const = 0;
-
-		virtual uint32_t getRedShift() const = 0;
-		virtual uint32_t getGreenShift() const = 0;
-		virtual uint32_t getBlueShift() const = 0;
-		virtual uint32_t getAlphaShift() const = 0;
-		virtual uint32_t getLuminanceShift() const = 0;
-
-		virtual uint8_t getRedBits() const = 0;
-		virtual uint8_t getGreenBits() const = 0;
-		virtual uint8_t getBlueBits() const = 0;
-		virtual uint8_t getAlphaBits() const = 0;
-		virtual uint8_t getLuminanceBits() const = 0;
-
-		virtual bool hasPalette() const = 0;
-
-		enum class PF {
-			PIXELFORMAT_UNKNOWN,
-			PIXELFORMAT_INDEX1LSB,
-			PIXELFORMAT_INDEX1MSB,
-			PIXELFORMAT_INDEX4LSB,
-			PIXELFORMAT_INDEX4MSB,
-			PIXELFORMAT_INDEX8,
-			PIXELFORMAT_RGB332,
-			PIXELFORMAT_RGB444,
-			PIXELFORMAT_RGB555,
-			PIXELFORMAT_BGR555,
-			PIXELFORMAT_ARGB4444,
-			PIXELFORMAT_RGBA4444,
-			PIXELFORMAT_ABGR4444,
-			PIXELFORMAT_BGRA4444,
-			PIXELFORMAT_ARGB1555,
-			PIXELFORMAT_RGBA5551,
-			PIXELFORMAT_ABGR1555,
-			PIXELFORMAT_BGRA5551,
-			PIXELFORMAT_RGB565,
-			PIXELFORMAT_BGR565,
-			PIXELFORMAT_RGB24,
-			PIXELFORMAT_BGR24,
-			PIXELFORMAT_RGB888,
-			PIXELFORMAT_RGBX8888,
-			PIXELFORMAT_BGR888,
-			PIXELFORMAT_BGRX8888,
-			PIXELFORMAT_ARGB8888,
-			PIXELFORMAT_RGBA8888,
-			PIXELFORMAT_ABGR8888,
-			PIXELFORMAT_BGRA8888,
-			PIXELFORMAT_RGB101010,
-			PIXELFORMAT_ARGB2101010,
-			PIXELFORMAT_YV12,
-			PIXELFORMAT_IYUV,
-			PIXELFORMAT_YUY2,
-			PIXELFORMAT_UYVY,
-			PIXELFORMAT_YVYU,
-		};
-		virtual PF getFormat() const = 0;
-
-		virtual std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) = 0;
-		virtual void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) = 0;
-	private:
-		PixelFormat(const PixelFormat&);
-	};
-
-	typedef std::shared_ptr<PixelFormat> PixelFormatPtr;
-
 	typedef std::function<void(uint32_t&,uint32_t&,uint32_t&,uint32_t&)> SurfaceConvertFn;
 
 	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFileFn;
 	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
 	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
+	typedef std::function<SurfacePtr(unsigned, unsigned, PixelFormat::PF)> SurfaceCreatorFormatFn;
+
+	enum class ColorCountFlags {
+		NONE						= 0,
+		IGNORE_ALPHA_VARIATIONS		= 1,
+	};
+
+	inline bool operator&(ColorCountFlags lhs, ColorCountFlags rhs)
+	{
+		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
+	}
 
 	class Surface
 	{
 	public:
 		virtual ~Surface();
 		virtual const void* pixels() const = 0;
+		// This is a potentially dangerous function and significant care must
+		// be taken when processing the pixel data to respect correct row pitch
+		// and pixel format.
+		virtual void* pixelsWriteable() = 0;
 		virtual unsigned width() = 0;
 		virtual unsigned height() = 0;
 		virtual unsigned rowPitch() = 0;
@@ -145,6 +71,7 @@ namespace KRE
 		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& dst_rect) = 0;
+		virtual void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 
 		virtual void writePixels(unsigned bpp, 
 			uint32_t rmask, 
@@ -153,6 +80,8 @@ namespace KRE
 			uint32_t amask,
 			const void* pixels) = 0;
 		virtual void writePixels(const void* pixels) = 0;
+
+		virtual void fillRect(const rect& dst_rect, const Color& color);
 
 		PixelFormatPtr getPixelFormat();
 
@@ -180,7 +109,13 @@ namespace KRE
 		virtual const rect getClipRect() = 0;
 		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
-		static bool registerSurfaceCreator(const std::string& name, SurfaceCreatorFileFn file_fn, SurfaceCreatorPixelsFn pixels_fn, SurfaceCreatorMaskFn mask_fn);
+		unsigned getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
+
+		static bool registerSurfaceCreator(const std::string& name, 
+			SurfaceCreatorFileFn file_fn, 
+			SurfaceCreatorPixelsFn pixels_fn, 
+			SurfaceCreatorMaskFn mask_fn,
+			SurfaceCreatorFormatFn format_fn);
 		static void unRegisterSurfaceCreator(const std::string& name);
 		static SurfacePtr create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
 		static SurfacePtr create(unsigned width, 
@@ -199,6 +134,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		static SurfacePtr create(unsigned width, unsigned height, PixelFormat::PF fmt);
 
 		static void resetSurfaceCache();
 	protected:

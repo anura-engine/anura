@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <boost/algorithm/string/replace.hpp>
 
 #include "asserts.hpp"
@@ -27,117 +34,110 @@
 #define strtoll _strtoi64
 #endif
 
-namespace tbs {
-
-PREF_BOOL(tbs_client_prediction, false, "Use client-side prediction for tbs games");
-
-client::client(const std::string& host, const std::string& port,
-               int session, boost::asio::io_service* service)
-  : http_client(host, port, session, service), use_local_cache_(g_tbs_client_prediction),
-    local_game_cache_(NULL), local_nplayer_(-1)
+namespace tbs 
 {
-}
+	PREF_BOOL(tbs_client_prediction, false, "Use client-side prediction for tbs games");
 
-void client::send_request(variant request, game_logic::MapFormulaCallablePtr callable, std::function<void(std::string)> handler)
-{
-	handler_ = handler;
-	callable_ = callable;
-
-	std::string request_str = game_logic::serialize_doc_with_objects(request);
-	//fprintf(stderr, "SEND ((%s))\n", request_str.c_str());
-
-	http_client::send_request("POST /tbs", 
-		request_str,
-		std::bind(&client::recv_handler, this, _1), 
-		std::bind(&client::error_handler, this, _1), 
-		0);
-
-	if(local_game_cache_ && request["type"].as_string() == "moves" && request["state_id"].as_int() == local_game_cache_->state_id()) {
-
-		variant request_clone = game_logic::deserialize_doc_with_objects(request_str);
-
-		local_game_cache_->handle_message(local_nplayer_, request_clone);
-		std::vector<game::message> messages;
-		local_game_cache_->swap_outgoing_messages(messages);
-		foreach(const game::message& msg, messages) {
-			std::cerr << "LOCAL: RECIPIENTS: ";
-			for(int i = 0; i != msg.recipients.size(); ++i) {
-				std::cerr << msg.recipients[i] << " ";
-			}
-			std::cerr << "\n";
-			if(std::count(msg.recipients.begin(), msg.recipients.end(), local_nplayer_)) {
-				local_responses_.push_back(msg.contents);
-			}
-		}
-		std::cerr << "LOCAL: HANDLE MESSAGE LOCALLY: " << local_responses_.size() << "/" << messages.size() << "\n";
+	client::client(const std::string& host, const std::string& port,
+				   int session, boost::asio::io_service* service)
+	  : http_client(host, port, session, service), use_local_cache_(g_tbs_client_prediction),
+		local_game_cache_(NULL), local_nplayer_(-1)
+	{
 	}
-}
 
-void client::recv_handler(const std::string& msg)
-{
-	if(handler_) {
-		variant v = game_logic::deserialize_doc_with_objects(msg);
+	void client::send_request(variant request, game_logic::MapFormulaCallablePtr callable, std::function<void(std::string)> handler)
+	{
+		using std::placeholders::_1;
 
-		if(use_local_cache_ && v["type"].as_string() == "game") {
-			local_game_cache_ = new tbs::game(v["game_type"].as_string(), v);
-			local_game_cache_holder_.reset(local_game_cache_);
+		handler_ = handler;
+		callable_ = callable;
 
-			local_nplayer_= v["nplayer"].as_int();
-			std::cerr << "LOCAL: UPDATE CACHE: " << local_game_cache_->state_id() << "\n";
-			v = game_logic::deserialize_doc_with_objects(msg);
+		std::string request_str = game_logic::serialize_doc_with_objects(request);
+
+		http_client::send_request("POST /tbs", 
+			request_str,
+			std::bind(&client::recv_handler, this, _1), 
+			std::bind(&client::error_handler, this, _1), 
+			[](int,int,bool){});
+
+		if(local_game_cache_ && request["type"].as_string() == "moves" && request["state_id"].as_int() == local_game_cache_->state_id()) {
+
+			variant request_clone = game_logic::deserialize_doc_with_objects(request_str);
+
+			local_game_cache_->handle_message(local_nplayer_, request_clone);
+			std::vector<game::message> messages;
+			local_game_cache_->swap_outgoing_messages(messages);
+			for(const game::message& msg : messages) {
+				LOG_INFO_NOLF("LOCAL: RECIPIENTS:");
+				for(int i = 0; i != msg.recipients.size(); ++i) {
+					LOG_INFO_NOLF(" " << msg.recipients[i]);
+				}
+				LOG_INFO("");
+				if(std::count(msg.recipients.begin(), msg.recipients.end(), local_nplayer_)) {
+					local_responses_.push_back(msg.contents);
+				}
+			}
+			LOG_INFO("LOCAL: HANDLE MESSAGE LOCALLY: " << local_responses_.size() << "/" << messages.size());
 		}
+	}
 
-		//fprintf(stderr, "RECV: (((%s)))\n", msg.c_str());
-		//fprintf(stderr, "SERIALIZE: (((%s)))\n", v.write_json().c_str());
-		callable_->add("message", v);
+	void client::recv_handler(const std::string& msg)
+	{
+		if(handler_) {
+			variant v = game_logic::deserialize_doc_with_objects(msg);
 
-//		try {
+			if(use_local_cache_ && v["type"].as_string() == "game") {
+				local_game_cache_ = new tbs::game(v["game_type"].as_string(), v);
+				local_game_cache_holder_.reset(local_game_cache_);
+
+				local_nplayer_= v["nplayer"].as_int();
+				LOG_INFO("LOCAL: UPDATE CACHE: " << local_game_cache_->state_id());
+				v = game_logic::deserialize_doc_with_objects(msg);
+			}
+
+			callable_->add("message", v);
+
 			handler_(connection_id_ + "message_received");
-//		} catch(...) {
-//			std::cerr << "ERROR PROCESSING TBS MESSAGE\n";
-//			throw;
-//		}
-	}
-}
-
-void client::error_handler(const std::string& err)
-{
-	std::cerr << "ERROR IN TBS CLIENT: " << err << (handler_ ? " SENDING TO HANDLER...\n" : " NO HANDLER\n");
-	if(handler_) {
-		variant v;
-		try {
-			v = json::parse(err, json::JSON_NO_PREPROCESSOR);
-		} catch(const json::parse_error&) {
-			std::cerr << "Unable to parse message \"" << err << "\" assuming it is a string." << std::endl;
 		}
-		callable_->add("error", v.is_null() ? variant(err) : v);
-		handler_(connection_id_ + "connection_error");
-	}
-}
-
-variant client::getValue(const std::string& key) const
-{
-	return http_client::getValue(key);
-}
-
-void client::process()
-{
-	std::vector<std::string> local_responses;
-	local_responses.swap(local_responses_);
-	foreach(const std::string& response, local_responses) {
-		std::cerr << "LOCAL: PROCESS LOCAL RESPONSE: " << response.size() << "\n";
-		recv_handler(response);
 	}
 
-	http_client::process();
-}
-
-void client::setId(const std::string& id)
-{
-	connection_id_ = id;
-	if(id != "") {
-		connection_id_ += "_";
+	void client::error_handler(const std::string& err)
+	{
+		LOG_ERROR("ERROR IN TBS CLIENT: " << err << (handler_ ? " SENDING TO HANDLER..." : " NO HANDLER"));
+		if(handler_) {
+			variant v;
+			try {
+				v = json::parse(err, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			} catch(const json::ParseError&) {
+				LOG_ERROR("Unable to parse message \"" << err << "\" assuming it is a string.");
+			}
+			callable_->add("error", v.is_null() ? variant(err) : v);
+			handler_(connection_id_ + "connection_error");
+		}
 	}
-}
 
+	variant client::getValue(const std::string& key) const
+	{
+		return http_client::getValue(key);
+	}
+
+	void client::process()
+	{
+		std::vector<std::string> local_responses;
+		local_responses.swap(local_responses_);
+		for(const std::string& response : local_responses) {
+			LOG_INFO("LOCAL: PROCESS LOCAL RESPONSE: " << response.size());
+			recv_handler(response);
+		}
+
+		http_client::process();
+	}
+
+	void client::setId(const std::string& id)
+	{
+		connection_id_ = id;
+		if(id != "") {
+			connection_id_ += "_";
+		}
+	}
 }

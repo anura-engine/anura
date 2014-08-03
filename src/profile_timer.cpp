@@ -47,6 +47,6 @@ namespace profile
 
 	void delay(unsigned ticks)
 	{
-		SDL_Delay(ticks);
+		profile::delay(ticks);
 	}
 }

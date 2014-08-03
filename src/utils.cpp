@@ -1,35 +1,51 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
+#if defined(_MSC_VER)
+#define WIN32_LEAN_AND_MEAN
+#include <WinSock2.h>
+#endif
+
 #include <algorithm>
 #include <ctime>
 #include "utils.hpp"
 
+#include "kre/WindowManager.hpp"
+
 #include "level.hpp"
 #include "filesystem.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "sound.hpp"
 #include "variant.hpp"
 
-int truncate_to_char(int value) { return std::min(std::max(value, 0), 255); }
+int truncate_to_char(int value) 
+{ 
+	return std::min(std::max(value, 0), 255);
+}
 
 void write_autosave()
 {
-	variant node = level::current().write();
+	variant node = Level::current().write();
 	if(sound::current_music().empty() == false) {
 		node.add_attr(variant("music"), variant(sound::current_music()));
 	}
@@ -40,10 +56,8 @@ void write_autosave()
 
 void toggle_fullscreen()
 {
-	preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
-		? preferences::FULLSCREEN_WINDOWED 
-		: preferences::FULLSCREEN_NONE);
-	get_main_window()->set_window_size(graphics::screen_width(), graphics::screen_height());
+	auto wnd = KRE::WindowManager::getMainWindow();
+	wnd->setFullscreenMode(wnd->fullscreenMode() == KRE::FullScreenMode::WINDOWED ? KRE::FullScreenMode::FULLSCREEN_WINDOWED : KRE::FullScreenMode::WINDOWED);
 }
 
 std::string get_http_datetime() 
@@ -51,7 +65,7 @@ std::string get_http_datetime()
 	time_t rawtime;
 	char buffer[128];
 	time(&rawtime);
-#if defined(_WINDOWS)
+#if defined(_MSC_VER)
 	struct tm timeinfo;
 	gmtime_s(&timeinfo, &rawtime);
 	// RFC 8022 format

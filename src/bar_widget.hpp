@@ -49,7 +49,7 @@ namespace gui
 			rect area;
 		};
 
-		void init_bar_section(const variant&v, bar_section* b);
+		void initBarSection(const variant&v, bar_section* b);
 
 		bar_section bar_;
 		bar_section left_cap_;

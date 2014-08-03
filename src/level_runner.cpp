@@ -60,7 +60,6 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
-#include "settings_dialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "tbs_internal_server.hpp"
@@ -127,7 +126,7 @@ namespace
 		try {
 			if(info->error == false) {
 				LOG_INFO("DONE UPLOAD SCREENSHOT (" << info->result << ")");
-				variant v = json::parse(info->result, json::JSON_NO_PREPROCESSOR);
+				variant v = json::parse(info->result, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 				debug_console::addMessage(formatter() << "Uploaded screenshot to " << v["url"].as_string() << " (set url in clipboard)");;
 				copy_to_clipboard(v["url"].as_string(), true);
 			}
@@ -722,7 +721,7 @@ void LevelRunner::close_editor()
 	history_button_.reset();
 	history_trails_.clear();
 	editor_resolution_manager_.reset();
-	lvl_->mutate_value("zoom", variant(1));
+	lvl_->mutateValue("zoom", variant(1));
 	lvl_->set_editor(false);
 	paused = false;
 	show_pause_title();
@@ -790,7 +789,7 @@ namespace
 bool LevelRunner::play_cycle()
 {
 	auto& mwnd = KRE::WindowManager::getMainWindow();
-	static settingsDialog settingsDialog;
+	static SettingsDialog settingsDialog;
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
 	if(controls::first_invalid_cycle() >= 0) {
@@ -846,7 +845,7 @@ bool LevelRunner::play_cycle()
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
 
-		lvl_->mutate_value("zoom", variant(decimal(1.0/editor_->zoom())));
+		lvl_->mutateValue("zoom", variant(decimal(1.0/editor_->zoom())));
 
 		CustomObjectType::reloadModifiedCode();
 		// XXX graphics::texture::clear_modified_files_from_cache();
@@ -1151,12 +1150,9 @@ bool LevelRunner::play_cycle()
 
 
 	SDL_StartTextInput();
-	if(message_dialog::get() == NULL) {
+	if(MessageDialog::get() == NULL) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
-#if TARGET_IPHONE_SIMULATOR || TARGET_OS_HARMATTAN || TARGET_OS_IPHONE
-			should_pause = settingsDialog.handleEvent(event);
-#endif
 			bool swallowed = false;
 #ifndef NO_EDITOR
 			if(console_) {
@@ -1469,11 +1465,11 @@ bool LevelRunner::play_cycle()
 		}
 	}
 
-	if(message_dialog::get()) {
-		message_dialog::get()->process();
+	if(MessageDialog::get()) {
+		MessageDialog::get()->process();
 		pause_time_ += preferences::frame_time_millis();
 	} else {
-		if (!paused && pause_stack == 0) {
+		if (!paused && g_pause_stack == 0) {
 			const int start_process = profile::get_tick_time();
 
 			try {
@@ -1483,7 +1479,7 @@ bool LevelRunner::play_cycle()
 				handle_pause_game_result(e.result);
 			}
 
-			const int process_time = SDL_GetTicks() - start_process;
+			const int process_time = profile::get_tick_time() - start_process;
 			next_process_ += process_time;
 			current_perf.process = process_time;
 		} else {
@@ -1569,8 +1565,8 @@ bool LevelRunner::play_cycle()
 				std::vector<variant> alpha_values;
 				if(!history_trails_.empty()) {
 					for(EntityPtr e : history_trails_) {
-						alpha_values.push_back(e->query_value("alpha"));
-						e->mutate_value("alpha", variant(32));
+						alpha_values.push_back(e->queryValue("alpha"));
+						e->mutateValue("alpha", variant(32));
 						lvl_->add_draw_character(e);
 					}
 				}
@@ -1579,7 +1575,7 @@ bool LevelRunner::play_cycle()
 				int index = 0;
 				if(!history_trails_.empty()) {
 					for(EntityPtr e : history_trails_) {
-						e->mutate_value("alpha", alpha_values[index++]);
+						e->mutateValue("alpha", alpha_values[index++]);
 					}
 
 					lvl_->set_active_chars();
@@ -1622,7 +1618,7 @@ bool LevelRunner::play_cycle()
 			draw_fps(*lvl_, perf);
 		}
 
-		const int draw_time = SDL_GetTicks() - start_draw;
+		const int draw_time = profile::get_tick_time() - start_draw;
 		next_draw_ += draw_time;
 		current_perf.draw = draw_time;
 
@@ -1631,7 +1627,7 @@ bool LevelRunner::play_cycle()
 			KRE::WindowManager::getMainWindow()->swap();
 		}
 
-		const int flip_time = SDL_GetTicks() - start_flip;
+		const int flip_time = profile::get_tick_time() - start_flip;
 		next_flip_ += flip_time;
 		current_perf.flip = flip_time;
 		++next_fps_;
@@ -1671,7 +1667,7 @@ bool LevelRunner::play_cycle()
 	formula_profiler::pump();
 
 	const int raw_wait_time = desired_end_time - profile::get_tick_time();
-	const int wait_time = std::max<int>(1, desired_end_time - SDL_GetTicks());
+	const int wait_time = std::max<int>(1, desired_end_time - profile::get_tick_time());
 	next_delay_ += wait_time;
 	current_perf.delay = wait_time;
 	if (wait_time != 1 && !is_skipping_game()) {
@@ -1687,7 +1683,7 @@ bool LevelRunner::play_cycle()
 		}
 	}
 
-	if (!paused && pause_stack == 0) ++cycle;
+	if (!paused && g_pause_stack == 0) ++cycle;
 
 	
 #if TARGET_IPHONE_SIMULATOR || TARGET_OS_IPHONE
@@ -1743,7 +1739,7 @@ namespace {
 bool pause_scope_active = false;
 }
 
-pause_scope::pause_scope() : ticks_(SDL_GetTicks()), active_(!pause_scope_active)
+pause_scope::pause_scope() : ticks_(profile::get_tick_time()), active_(!pause_scope_active)
 {
 	pause_scope_active = true;
 }
@@ -1751,7 +1747,7 @@ pause_scope::pause_scope() : ticks_(SDL_GetTicks()), active_(!pause_scope_active
 pause_scope::~pause_scope()
 {
 	if(active_) {
-		const int t = SDL_GetTicks() - ticks_;
+		const int t = profile::get_tick_time() - ticks_;
 		global_pause_time += t;
 		pause_scope_active = false;
 	}
@@ -1759,7 +1755,7 @@ pause_scope::~pause_scope()
 
 void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 {
-	if(result == PAUSE_GAME_QUIT) {
+	if(result == PAUSE_GAME_RESULT::QUIT) {
 		//record a quit event in stats
 		if(lvl_->player()) {
 			lvl_->player()->getEntity().recordStatsMovement();
@@ -1768,10 +1764,10 @@ void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 		
 		done = true;
 		quit_ = true;
-	} else if(result == PAUSE_GAME_GO_TO_TITLESCREEN) {
+	} else if(result == PAUSE_GAME_RESULT::GO_TO_TITLESCREEN) {
 		done = true;
 		original_level_cfg_ = "titlescreen.cfg";
-	} else if(result == PAUSE_GAME_GO_TO_LOBBY) {
+	} else if(result == PAUSE_GAME_RESULT::GO_TO_LOBBY) {
 		done = true;
 		lvl_->launch_new_module("lobby");
 	}

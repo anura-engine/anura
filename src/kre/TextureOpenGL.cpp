@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -22,7 +22,6 @@
 */
 
 #include "../asserts.hpp"
-#include "../logger.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -60,7 +59,7 @@ namespace KRE
 		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		is_yuv_planar_(false)
 	{
-		CreateTexture(GetSurface()->GetPixelFormat()->GetFormat());
+		CreateTexture(getSurface()->getPixelFormat()->getFormat());
 		Init();
 	}
 
@@ -72,7 +71,7 @@ namespace KRE
 		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		is_yuv_planar_(false)
 	{
-		CreateTexture(GetSurface()->GetPixelFormat()->GetFormat());
+		CreateTexture(getSurface()->getPixelFormat()->getFormat());
 		Init();
 	}
 
@@ -88,7 +87,7 @@ namespace KRE
 		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		is_yuv_planar_(false)
 	{
-		SetTextureDimensions(width, height, depth);
+		setTextureDimensions(width, height, depth);
 		CreateTexture(fmt);
 		Init();
 	}
@@ -103,6 +102,9 @@ namespace KRE
 		ASSERT_LOG(is_yuv_planar_ == false, "1D Texture Update function called on YUV planar format.");
 		glBindTexture(GetGLTextureType(GetType()), texture_id_[0]);
 		ASSERT_LOG(GetType() == Type::TEXTURE_1D, "Tried to do 1D texture update on non-1D texture");
+		if(getUnpackAlignment() != 4) {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
+		}
 		glTexSubImage1D(GetGLTextureType(GetType()), 0, x, width, format_, type_, pixels);
 	}
 
@@ -116,6 +118,9 @@ namespace KRE
 			glBindTexture(GetGLTextureType(GetType()), texture_id_[n]);
 			if(stride.size() > size_t(n)) {
 				glPixelStorei(GL_UNPACK_ROW_LENGTH, stride[n]);
+			}
+			if(getUnpackAlignment() != 4) {
+				glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 			}
 			switch(GetType()) {
 				case Type::TEXTURE_1D:
@@ -139,12 +144,16 @@ namespace KRE
 		if(!stride.empty()) {
 			glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
 		}
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	}
 
 	void OpenGLTexture::Update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels)
 	{
 		ASSERT_LOG(is_yuv_planar_ == false, "3D Texture Update function called on YUV planar format.");
 		glBindTexture(GetGLTextureType(GetType()), texture_id_[0]);
+		if(getUnpackAlignment() != 4) {
+			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
+		}
 		switch(GetType()) {
 			case Type::TEXTURE_1D:
 				LOG_WARN("Running 2D texture update on 1D texture. You may get unexpected results.");
@@ -162,6 +171,7 @@ namespace KRE
 		if(GetMipMapLevels() > 0 && GetType() > Type::TEXTURE_1D) {
 			glGenerateMipmap(GetGLTextureType(GetType()));
 		}
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	}
 
 	void OpenGLTexture::CreateTexture(const PixelFormat::PF& fmt)
@@ -276,13 +286,19 @@ namespace KRE
 				type_ =  GL_UNSIGNED_BYTE;
 				break;
 			case PixelFormat::PF::PIXELFORMAT_BGRX8888:
-				format_ = GL_RGB;
+				format_ = GL_BGRA;
 				internal_format_ = GL_RGB8;
-				type_ =  GL_UNSIGNED_INT_8_8_8_8_REV;
+				type_ =  GL_UNSIGNED_INT_8_8_8_8;
 				break;
 			case PixelFormat::PF::PIXELFORMAT_ARGB8888:
 				format_ = GL_BGRA;
 				internal_format_ = GL_RGBA8;
+				type_ = GL_UNSIGNED_INT_8_8_8_8_REV;
+				break;
+			case PixelFormat::PF::PIXELFORMAT_XRGB8888:
+				// XX not sure these are correct or not
+				format_ = GL_BGRA;
+				internal_format_ = GL_RGB8;
 				type_ = GL_UNSIGNED_INT_8_8_8_8_REV;
 				break;
 			case PixelFormat::PF::PIXELFORMAT_RGBA8888:
@@ -306,9 +322,9 @@ namespace KRE
 				type_ = GL_UNSIGNED_INT_2_10_10_10_REV;
 				break;
 			case PixelFormat::PF::PIXELFORMAT_RGB101010:
-				format_ = GL_RGB;
+				format_ = GL_BGRA;
 				internal_format_ = GL_RGB10;
-				type_ = GL_UNSIGNED_INT;
+				type_ = GL_UNSIGNED_INT_2_10_10_10_REV;
 				break;
 			case PixelFormat::PF::PIXELFORMAT_YV12:
 			case PixelFormat::PF::PIXELFORMAT_IYUV:
@@ -332,11 +348,15 @@ namespace KRE
 		for(int n = 0; n != num_textures; ++n) {
 			glBindTexture(GetGLTextureType(GetType()), texture_id_[n]);
 
-			unsigned w = n>0 ? Width()/2 : Width();
-			unsigned h = n>0 ? Height()/2 : Height();
-			unsigned d = n>0 ? Depth()/2 : Depth();
+			unsigned w = n>0 ? width()/2 : width();
+			unsigned h = n>0 ? height()/2 : height();
+			unsigned d = n>0 ? depth()/2 : depth();
 
-			const void* pixels = GetSurface() ? GetSurface()->Pixels() : 0;
+			if(getUnpackAlignment() != 4) {
+				glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
+			}
+
+			const void* pixels = getSurface() ? getSurface()->pixels() : 0;
 			switch(GetType()) {
 				case Type::TEXTURE_1D:
 					glTexImage1D(GetGLTextureType(GetType()), 0, internal_format_, w, 0, format_, type_, pixels);
@@ -352,6 +372,7 @@ namespace KRE
 					ASSERT_LOG(false, "Implement texturing of cubic texture target");
 			}
 		}
+		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
 	}
 
 	void OpenGLTexture::Init()
@@ -364,18 +385,18 @@ namespace KRE
 
 			glTexParameteri(type, GL_TEXTURE_WRAP_S, GetGLAddressMode(GetAddressModeU()));
 			if(GetAddressModeU() == AddressMode::BORDER) {
-				glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().AsFloatVector());
+				glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().asFloatVector());
 			}
 			if(GetType() > Type::TEXTURE_1D) {
 				glTexParameteri(type, GL_TEXTURE_WRAP_T, GetGLAddressMode(GetAddressModeV()));
 				if(GetAddressModeV() == AddressMode::BORDER) {
-					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().AsFloatVector());
+					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().asFloatVector());
 				}
 			}
 			if(GetType() > Type::TEXTURE_2D) {
 				glTexParameteri(type, GL_TEXTURE_WRAP_R, GetGLAddressMode(GetAddressModeW()));
 				if(GetAddressModeW() == AddressMode::BORDER) {
-					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().AsFloatVector());
+					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, GetBorderColor().asFloatVector());
 				}
 			}
 
@@ -456,5 +477,16 @@ namespace KRE
 		// Re-create the texture
 		CreateTexture(pixel_format_);
 		Init();
+	}
+
+	const unsigned char* OpenGLTexture::colorAt(int x, int y) const 
+	{
+		if(getSurface() == NULL) {
+			// We could probably try a glTexImage fall-back here. But ugh, slow.
+			return NULL;
+		}
+		auto s = getSurface();
+		const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
+		return (pixels + (y*s->width() + x)*s->getPixelFormat()->bytesPerPixel());
 	}
 }

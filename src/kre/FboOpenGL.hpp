@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -26,6 +26,7 @@
 #include <vector>
 #include "AttributeSet.hpp"
 #include "RenderTarget.hpp"
+#include "Util.hpp"
 #include "../variant.hpp"
 
 namespace KRE
@@ -38,17 +39,19 @@ namespace KRE
 			bool depth=false, 
 			bool stencil=false, 
 			bool use_multi_sampling=false, 
-			unsigned multi_samples=0);
+			unsigned multi_samples=0);		
 		explicit FboOpenGL(const variant& node);
+		FboOpenGL(const FboOpenGL& op);
 		virtual ~FboOpenGL();
 		virtual void preRender(const WindowManagerPtr&) override;
 	private:
-		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd) override;
-		void HandleCreate() override;
-		void HandleApply() override;
-		void HandleUnapply() override;
-		void HandleClear() override;
-		void GetDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format);
+		DISALLOW_DEFAULT_AND_ASSIGN(FboOpenGL);
+		void handleCreate() override;
+		void handleApply() override;
+		void handleUnapply() override;
+		void handleClear() override;
+		RenderTargetPtr handleClone() override;
+		void getDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format);
 		bool uses_ext_;
 		std::shared_ptr<GLuint> depth_stencil_buffer_id_;
 		std::shared_ptr<GLuint> framebuffer_id_;
@@ -57,7 +60,6 @@ namespace KRE
 
 		unsigned tex_width_;
 		unsigned tex_height_;
-		std::string shader_hint_;
 		GLint viewport_[4];
 	};
 }

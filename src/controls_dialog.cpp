@@ -54,8 +54,8 @@ void show_controls_dialog()
 	if (preferences::virtual_screen_height() > 480)
 		height -= 100;
 	Dialog d(200, (preferences::virtual_screen_height() > 480) ? 60 : 10, preferences::virtual_screen_width()-400, height);
-	d.set_background_frame("empty_window");
-	d.set_draw_background_fn(draw_last_scene);
+	d.setBackgroundFrame("empty_window");
+	d.setDrawBackgroundFn(draw_last_scene);
 
 
 	for(int n = 0; n < NUM_CONTROLS; ++n) {
@@ -81,8 +81,8 @@ void show_controls_dialog()
 	int start_y = static_cast<int>((d.height() - 4.0*b1->height() - 2.0*t1->height() - 7.0*d.padding())/2.0);
 	d.addWidget(t1, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), start_y);
 	d.addWidget(b1, static_cast<int>(d.width()/2.0 - b1->width()/2.0), start_y + t1->height() + d.padding());
-	d.addWidget(b3, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), static_cast<int>(start_y + t1->height() + b1->height() + 2.0*d.padding()), Dialog::MOVE_RIGHT);
-	d.addWidget(b2, Dialog::MOVE_RIGHT);
+	d.addWidget(b3, static_cast<int>(d.width()/2.0 - b1->width()*1.5 - d.padding()), static_cast<int>(start_y + t1->height() + b1->height() + 2.0*d.padding()), Dialog::MOVE_DIRECTION::RIGHT);
+	d.addWidget(b2, Dialog::MOVE_DIRECTION::RIGHT);
 	d.addWidget(b4);
 
 	start_y += t1->height() + 5*d.padding() + 2*b1->height();
@@ -94,5 +94,5 @@ void show_controls_dialog()
 	d.addWidget(b7);
 	d.addWidget(b8, d.width()/2 - b8->width()/2, start_y + t2->height() + b5->height() + 3*d.padding());
 
-	d.show_modal();
+	d.showModal();
 }

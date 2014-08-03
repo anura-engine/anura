@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <sstream>
 #include <fstream>
@@ -31,8 +38,8 @@
 
 #include "asserts.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "thread.hpp"
 #include "unit_test.hpp"
 
@@ -222,7 +229,7 @@ namespace sys
 			std::vector<std::string> cur_path;
 			std::string norm_path;
 			boost::split(cur_path, path, std::bind2nd(std::equal_to<char>(), '/'));
-			foreach(const std::string& s, cur_path) {
+			for(const std::string& s : cur_path) {
 				if(s != ".") {
 					norm_path += s + "/";
 				}
@@ -234,7 +241,6 @@ namespace sys
 	// Calculates the path of target relative to source.
 	std::string compute_relative_path(const std::string& source, const std::string& target)
 	{
-		//std::cerr << "compute_relative_path(a): " << source << " : " << target << std::endl;
 		std::string common_part = normalise_path(source);
 		std::string back;
 		if(common_part.length() > 1 && common_part[common_part.length()-1] == '/') {
@@ -242,7 +248,6 @@ namespace sys
 		}
 		while(boost::iequals(del_substring_front(target, common_part), target)) {
 			size_t offs = common_part.rfind('/');
-			//std::cerr << "compute_relative_path(b2): " << back << " : " << common_part << std::endl;
 			if(common_part.length() > 1 && offs != std::string::npos) {
 				common_part.erase(offs);
 				back = "../" + back;
@@ -263,14 +268,8 @@ namespace sys
 				back.erase(back.length()-1);
 			}
 		}
-		//std::cerr << "compute_relative_path(b): " << back << " : " << common_part << std::endl;
 		return back + common_part;
 	}
-
-
-
-
-
 
 	namespace 
 	{
@@ -326,7 +325,7 @@ namespace sys
 				if(fd > 0) {
 					fd_to_path[fd] = new_files[n];
 				} else {
-					std::cerr << "COULD NOT LISTEN ON FILE " << new_files[n] << "\n";
+					LOG_WARN("COULD NOT LISTEN ON FILE " << new_files[n]);
 				}
 			}
 
@@ -340,7 +339,7 @@ namespace sys
 				if(nbytes == sizeof(ev)) {
 
 					const std::string path = fd_to_path[ev.wd];
-					std::cerr << "LINUX FILE MOD: " << path << "\n";
+					LOG_INFO("LINUX FILE MOD: " << path);
 					if(ev.mask&IN_IGNORED) {
 						fd_to_path.erase(ev.wd);
 						const int fd = inotify_add_watch(inotify_fd, path.c_str(), IN_MODIFY);
@@ -349,12 +348,12 @@ namespace sys
 						}
 					}
 					std::vector<std::function<void()> >& handlers = m[path];
-					std::cerr << "FILE HANDLERS: " << handlers.size() << "\n";
+					LOG_INFO("FILE HANDLERS: " << handlers.size());
 
 					threading::lock lck(get_mod_queue_mutex());
 					file_mod_notification_queue.insert(file_mod_notification_queue.end(), handlers.begin(), handlers.end());
 				} else {
-					std::cerr << "READ FAILURE IN FILE NOTIFY\n";
+					LOG_ERROR("READ FAILURE IN FILE NOTIFY");
 				}
 			}
 
@@ -368,7 +367,7 @@ namespace sys
 				if(mod_itor == mod_times.end()) {
 					mod_times[i->first] = mod_time;
 				} else if(mod_time != mod_itor->second) {
-					std::cerr << "MODIFY: " << mod_itor->first << "\n";
+					LOG_INFO("MODIFY: " << mod_itor->first);
 					mod_itor->second = mod_time;
 
 					threading::lock lck(get_mod_queue_mutex());
@@ -376,9 +375,7 @@ namespace sys
 				}
 			}
 
-			//std::cerr << "CHECKED " << m.size() << " FILES IN " << (SDL_GetTicks() - begin) << "\n";
-
-			SDL_Delay(100);
+			profile::delay(100);
 #endif
 		}
 	}
@@ -387,11 +384,11 @@ namespace sys
 
 	}
 
-	filesystem_manager::filesystem_manager()
+	FilesystemManager::FilesystemManager()
 	{
 	}
 
-	filesystem_manager::~filesystem_manager()
+	FilesystemManager::~FilesystemManager()
 	{
 		{
 			threading::lock lck(get_mod_map_mutex());
@@ -451,8 +448,8 @@ namespace sys
 			v.swap(file_mod_notification_queue);
 		}
 
-		foreach(std::function<void()> f, v) {
-			std::cerr << "CALLING FILE MOD HANDLER\n";
+		for(std::function<void()> f : v) {
+			LOG_INFO("CALLING FILE MOD HANDLER");
 			f();
 		}
 	}

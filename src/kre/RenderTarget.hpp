@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -41,28 +41,33 @@ namespace KRE
 		explicit RenderTarget(const variant& node);
 		virtual ~RenderTarget();
 
-		void Create();
-		void Apply();
-		void Unapply();
-		void Clear();
+		variant write();
 
-		unsigned Width() const { return width_; }
-		unsigned Height() const { return height_; }
-		unsigned ColorPlanes() const { return color_attachments_; }
-		bool DepthPlane() const { return depth_attachment_; }
-		bool StencilPlane() const { return stencil_attachment_; }
-		bool UsesMultiSampling() const { return multi_sampling_; }
-		unsigned MultiSamples() const { return multi_samples_; }
+		void create();
+		void apply();
+		void unapply();
+		void clear();
 
-		void SetClearColor(int r, int g, int b, int a=255);
-		void SetClearColor(float r, float g, float b, float a=1.0f);
-		void SetClearColor(const Color& color);
-		const Color& GetClearColor() const { return clear_color_; }
+		unsigned width() const { return width_; }
+		unsigned height() const { return height_; }
+		unsigned getColorPlanes() const { return color_attachments_; }
+		bool getDepthPlane() const { return depth_attachment_; }
+		bool getStencilPlane() const { return stencil_attachment_; }
+		bool usesMultiSampling() const { return multi_sampling_; }
+		unsigned getMultiSamples() const { return multi_samples_; }
+
+		void setClearColor(int r, int g, int b, int a=255);
+		void setClearColor(float r, float g, float b, float a=1.0f);
+		void setClearColor(const Color& color);
+		const Color& getClearColor() const { return clear_color_; }
+
+		RenderTargetPtr clone();
 	private:
-		virtual void HandleCreate() = 0;
-		virtual void HandleApply() = 0;
-		virtual void HandleUnapply() = 0;
-		virtual void HandleClear() = 0;
+		virtual void handleCreate() = 0;
+		virtual void handleApply() = 0;
+		virtual void handleUnapply() = 0;
+		virtual void handleClear() = 0;
+		virtual RenderTargetPtr handleClone() = 0;
 
 		unsigned width_;
 		unsigned height_;
@@ -75,7 +80,6 @@ namespace KRE
 		Color clear_color_;
 
 		RenderTarget();
-		RenderTarget(const RenderTarget&);
 	};
 
 	typedef std::shared_ptr<RenderTarget> RenderTargetPtr;

@@ -87,7 +87,7 @@ public:
 
 	static int numObjectReloads();
 
-	typedef std::vector<game_logic::const_formula_ptr> event_handler_map;
+	typedef std::vector<game_logic::ConstFormulaPtr> event_handler_map;
 
 	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
@@ -110,9 +110,9 @@ public:
 	const Frame& getFrame(const std::string& key) const;
 	bool hasFrame(const std::string& key) const;
 
-	const game_logic::const_formula_ptr& nextAnimationFormula() const { return next_animation_formula_; }
+	const game_logic::ConstFormulaPtr& nextAnimationFormula() const { return next_animation_formula_; }
 
-	game_logic::const_formula_ptr getEventHandler(int event) const;
+	game_logic::ConstFormulaPtr getEventHandler(int event) const;
 	int parallaxScaleMillisX() const {
 		if(parallax_scale_millis_.get() == NULL){
 			return 1000;
@@ -201,7 +201,7 @@ public:
 	struct PropertyEntry {
 		PropertyEntry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
 		std::string id;
-		game_logic::const_formula_ptr getter, setter, init;
+		game_logic::ConstFormulaPtr getter, setter, init;
 		std::shared_ptr<variant> const_value;
 		variant default_value;
 		variant_type_ptr type, set_type;
@@ -244,7 +244,7 @@ public:
 	void loadVariations() const;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr getEditorInfo() const { return editor_info_; }
+	ConstEditorEntityInfoPtr getEditorInfo() const { return editor_info_; }
 #endif // !NO_EDITOR
 
 	variant node() const { return node_; }
@@ -287,7 +287,7 @@ private:
 
 	FramePtr defaultFrame_;
 
-	game_logic::const_formula_ptr next_animation_formula_;
+	game_logic::ConstFormulaPtr next_animation_formula_;
 
 	event_handler_map event_handlers_;
 	std::shared_ptr<game_logic::FunctionSymbolTable> object_functions_;
@@ -364,11 +364,11 @@ private:
 
 	int activation_border_;
 
-	std::map<std::string, game_logic::const_formula_ptr> variations_;
+	std::map<std::string, game_logic::ConstFormulaPtr> variations_;
 	mutable std::map<std::vector<std::string>, ConstCustomObjectTypePtr> variations_cache_;
 
 #ifndef NO_EDITOR
-	const_editor_entity_info_ptr editor_info_;
+	ConstEditorEntityInfoPtr editor_info_;
 #endif // !NO_EDITOR
 
 	std::map<std::string, ConstCustomObjectTypePtr> sub_objects_;

@@ -620,7 +620,7 @@ namespace
 			}
 
 			if(node.has_key("colors_expression")) {
-				const variant v = game_logic::formula(node["colors_expression"]).execute();
+				const variant v = game_logic::Formula(node["colors_expression"]).execute();
 				for(int n = 0; n != v.num_elements(); ++n) {
 					const variant u = v[n];
 					colors.emplace_back(u);

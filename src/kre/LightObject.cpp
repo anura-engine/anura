@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,14 +23,15 @@
 
 #include "DisplayDevice.hpp"
 #include "LightObject.hpp"
+#include "../variant_utils.hpp"
 
 namespace KRE
 {
 	namespace
 	{
-		const glm::vec4 default_ambient_color(0.0f);
-		const glm::vec4 default_diffuse_color(1.0f);
-		const glm::vec4 default_specular_color(1.0f);
+		const Color default_ambient_color = Color::colorBlack();
+		const Color default_diffuse_color = Color::colorWhite();
+		const Color default_specular_color = Color::colorWhite();
 		const glm::vec3 default_spot_direction(0.0f,0.0f,-1.0f);
 		const float default_spot_exponent = 0.0f;
 		const float default_spot_cutoff = 180.0f;
@@ -41,7 +42,7 @@ namespace KRE
 
 	Light::Light(const std::string& name, const glm::vec3& position)
 		: SceneObject(name),
-		type_(LT_POINT),
+		type_(LightType::POINT),
 		position_(position),
 		ambient_color_(default_ambient_color),
 		diffuse_color_(default_diffuse_color),
@@ -55,98 +56,144 @@ namespace KRE
 	{
 	}
 
+	Light::Light(const variant& node)
+		: SceneObject(node["name"].as_string_default("light")),
+		type_(LightType::POINT),
+		position_(),
+		ambient_color_(default_ambient_color),
+		diffuse_color_(default_diffuse_color),
+		specular_color_(default_specular_color),
+		spot_direction_(default_spot_direction),
+		spot_exponent_(default_spot_exponent),
+		spot_cutoff_(default_spot_cutoff),
+		constant_attenuation_(default_constant_attenuation),
+		linear_attenuation_(default_linear_attenuation),
+		quadratic_attenuation_(default_quadratic_attenuation)
+	{
+		if(node.has_key("type")) {
+			const std::string& type = node["type"].as_string();
+			if(type == "point") {
+				type_ = LightType::POINT;
+			} else if(type == "directional") {
+				type_ = LightType::DIRECTIONAL;
+			} else if(type == "spot") {
+				type_ = LightType::SPOT;
+			}
+		}
+		if(node.has_key("position")) {
+			position_ = variant_to_vec3(node["position"]);
+		} else if(node.has_key("translation")) {
+			position_ = variant_to_vec3(node["translation"]);
+		}
+		if(node.has_key("ambient_color")) {
+			ambient_color_ = Color(node["ambient_color"]);
+		}
+		if(node.has_key("diffuse_color")) {
+			diffuse_color_ = Color(node["diffuse_color"]);
+		}
+		if(node.has_key("specular_color")) {
+			specular_color_ = Color(node["specular_color"]);
+		}
+		if(node.has_key("spot_direction")) {
+			spot_direction_ = variant_to_vec3(node["spot_direction"]);
+		}
+		if(node.has_key("spot_exponent")) {
+			spot_exponent_ = node["spot_exponent"].as_float();
+		}
+		if(node.has_key("spot_cutoff")) {
+			spot_cutoff_ = node["spot_cutoff"].as_float();
+		}
+		if(node.has_key("constant_attenuation")) {
+			constant_attenuation_ = node["constant_attenuation_"].as_float();
+		}
+		if(node.has_key("linear_attenuation")) {
+			linear_attenuation_ = node["linear_attenuation"].as_float();
+		}
+		if(node.has_key("quadratic_attenuation")) {
+			quadratic_attenuation_ = node["quadratic_attenuation"].as_float();
+		}
+	}
+
 	Light::~Light()
 	{
 	}
 
-	DisplayDeviceDef Light::Attach(const DisplayDevicePtr& dd)
-	{
-		DisplayDeviceDef def(GetAttributeSet());
-		// XXX
-		return def;
-	}
-
-	void Light::SetType(LightType type)
+	void Light::setType(LightType type)
 	{
 		type_ = type;
 	}
 
-	void Light::SetPosition(const glm::vec3& position)
+	void Light::setPosition(const glm::vec3& position)
 	{
 		position_ = position;
 	}
 
-	void Light::SetAmbientColor(const glm::vec4& color)
+	void Light::setAmbientColor(const Color& color)
 	{
 		ambient_color_ = color;
 	}
 
-	void Light::SetDiffuseColor(const glm::vec4& color)
+	void Light::setDiffuseColor(const Color& color)
 	{
 		diffuse_color_ = color;
 	}
 
-	void Light::SetSpecularColor(const glm::vec4& color)
+	void Light::setSpecularColor(const Color& color)
 	{
 		specular_color_ = color;
 	}
 
-	void Light::SetSpotDirection(const glm::vec3& direction)
+	void Light::setSpotDirection(const glm::vec3& direction)
 	{
 		spot_direction_ = direction;
 	}
 
-	void Light::SetSpotExponent(float sexp)
+	void Light::setSpotExponent(float sexp)
 	{
 		spot_exponent_ = sexp;
 	}
 
-	void Light::SetSpotCutoff(float cutoff)
+	void Light::setSpotCutoff(float cutoff)
 	{
 		spot_cutoff_ = cutoff;
 	}
 
-	void Light::SetAttenuation(float constant, float linear, float quadratic)
+	void Light::setAttenuation(float constant, float linear, float quadratic)
 	{
 		constant_attenuation_ = constant;
 		linear_attenuation_ = linear;
 		quadratic_attenuation_ = quadratic;
 	}
 
-	/*variant Light::write() const
+	LightPtr Light::clone()
+	{
+		auto lp = std::make_shared<Light>(*this);
+		return lp;
+	}
+
+	variant Light::write() const
 	{
 		variant_builder res;
-		res.add("name", name());
+		res.add("name", objectName());
 		res.add("position", position_.x);
 		res.add("position", position_.y);
 		res.add("position", position_.z);
 		switch(type_) {
-			case LT_POINT:			res.add("type", "point"); break;
-			case LT_DIRECTIONAL:	res.add("type", "directional"); break;
-			case LT_SPOT:			res.add("type", "spot"); break;
+			case LightType::POINT:			res.add("type", "point"); break;
+			case LightType::DIRECTIONAL:	res.add("type", "directional"); break;
+			case LightType::SPOT:			res.add("type", "spot"); break;
 		}
 		if(ambient_color_ != default_ambient_color) {
-			res.add("ambient_color", ambient_color_.r);
-			res.add("ambient_color", ambient_color_.g);
-			res.add("ambient_color", ambient_color_.b);
-			res.add("ambient_color", ambient_color_.a);
+			res.add("ambient_color", ambient_color_.write());
 		}
 		if(diffuse_color_ != default_diffuse_color) {
-			res.add("diffuse_color", diffuse_color_.r);
-			res.add("diffuse_color", diffuse_color_.g);
-			res.add("diffuse_color", diffuse_color_.b);
-			res.add("diffuse_color", diffuse_color_.a);
+			res.add("diffuse_color", diffuse_color_.write());
 		}
 		if(specular_color_ != default_specular_color) {
-			res.add("specular_color", specular_color_.r);
-			res.add("specular_color", specular_color_.g);
-			res.add("specular_color", specular_color_.b);
-			res.add("specular_color", specular_color_.a);
+			res.add("specular_color", specular_color_.write());
 		}
 		if(spot_direction_ != default_spot_direction) {
-			res.add("spot_direction", spot_direction_.x);
-			res.add("spot_direction", spot_direction_.y);
-			res.add("spot_direction", spot_direction_.z);
+			res.add("spot_direction", vec3_to_variant(spot_direction_));
 		}
 		if(spot_exponent_ != default_spot_exponent) {
 			res.add("spot_exponent", spot_exponent_);
@@ -163,5 +210,6 @@ namespace KRE
 		if(quadratic_attenuation_ != default_quadratic_attenuation) {
 			res.add("quadratic_attenuation", quadratic_attenuation_);
 		}
-	}*/
+		return res.build();
+	}
 }

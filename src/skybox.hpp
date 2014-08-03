@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,37 +21,30 @@
 	   distribution.
 */
 
+/* XXX -- needs fixed and support for cubic textures added.
 #pragma once
-#if defined(USE_ISOMAP)
 
-#include <boost/shared_ptr.hpp>
-#include <boost/intrusive_ptr.hpp>
-
+#include "kre/Material.hpp"
 #include "Color.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-#include "variant.hpp"
+#include "SceneObjectCallable.hpp"
 
 namespace graphics
 {
-	class skybox : public game_logic::FormulaCallable
+	class Skybox : public SceneObjectCallable
 	{
 	public:
-		explicit skybox(const variant& node);
-		virtual ~skybox();
-		void draw() const;
+		explicit Skybox(const variant& node);
+		virtual ~Skybox();
 	private:
-		DECLARE_CALLABLE(skybox);
+		DECLARE_CALLABLE(Skybox);
 
 		KRE::TexturePtr tex_;
 		
 		KRE::Color color_;
 
-		skybox();
-		skybox(const skybox&);
+		Skybox();
+		Skybox(const Skybox&);
+		void operator=(const Skybox&);
 	};
-
-	typedef boost::intrusive_ptr<skybox> skybox_ptr;
 }
-
-#endif
+*/

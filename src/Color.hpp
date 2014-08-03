@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -34,6 +34,14 @@ namespace KRE
 	class Color;
 	typedef std::shared_ptr<Color> ColorPtr;
 
+	enum class ColorByteOrder
+	{
+		RGBA,
+		ARGB,
+		BGRA,
+		ABGR,
+	};
+
 	class Color
 	{
 	public:
@@ -43,6 +51,7 @@ namespace KRE
 		explicit Color(const int r, const int g, const int b, const int a=255);
 		explicit Color(const std::string& s);
 		explicit Color(const variant& node);
+		explicit Color(unsigned long n, ColorByteOrder order=ColorByteOrder::RGBA);
 
 		double r() const { return color_[0]; }
 		double g() const { return color_[1]; }
@@ -53,6 +62,11 @@ namespace KRE
 		double green() const { return color_[1]; }
 		double blue() const { return color_[2]; }
 		double alpha() const { return color_[3]; }
+
+		float rf() const { return static_cast<float>(color_[0]); }
+		float gf() const { return static_cast<float>(color_[1]); }
+		float bf() const { return static_cast<float>(color_[2]); }
+		float af() const { return static_cast<float>(color_[3]); }
 
 		int r_int() const { return static_cast<int>(255*color_[0]); }
 		int g_int() const { return static_cast<int>(255*color_[1]); }
@@ -73,6 +87,10 @@ namespace KRE
 
 		unsigned long asARGB() const {
 			return (a_int() << 24) | (r_int() << 16) | (g_int() << 8) | b_int();
+		}
+
+		unsigned long asRGBA() const {
+			return (r_int() << 24) | (b_int() << 16) | (b_int() << 8) | a_int();
 		}
 
 		glm::u8vec4 as_u8vec4() const {
@@ -235,6 +253,13 @@ namespace KRE
 		static Color colorYellow() { return Color(255, 255, 0); }
 		static Color colorYellowgreen() { return Color(154, 205, 50); }		
 
+		// XXX We should have a ColorCallable, in a seperate file, then move these two into the ColorCallable.
+		static std::string getSetFieldType() { return "string"
+			"|[int,int,int,int]"
+			"|[int,int,int]"
+			"|{red:int|decimal,green:int|decimal,blue:int|decimal,alpha:int|decimal|null}"
+			"|{r:int|decimal,g:int|decimal,b:int|decimal,a:int|decimal|null}"; }
+		static std::string getDefineFieldType() { return "[int,int,int,int]"; }
 	private:
 		float color_[4];
 	};

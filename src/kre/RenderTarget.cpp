@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,7 @@
 
 #include "../asserts.hpp"
 #include "RenderTarget.hpp"
+#include "../variant_utils.hpp"
 
 namespace KRE
 {
@@ -53,12 +54,14 @@ namespace KRE
 		multi_samples_(0),
 		clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
 	{
+		ASSERT_LOG(node.is_map(), "RenderTarget definitions must be maps: " << node.to_debug_string());
 		ASSERT_LOG(node.has_key("width"), "Render target must have a 'width' attribute.");
 		ASSERT_LOG(node.has_key("height"), "Render target must have a 'height' attribute.");
 		width_ = node["width"].as_int();
 		height_ = node["height"].as_int();
 		if(node.has_key("color_planes")) {
 			color_attachments_ = node["color_planes"].as_int();
+			ASSERT_LOG(color_attachments_ >= 0, "Number of 'color_planes' must be zero or greater: " << color_attachments_);
 		}
 		if(node.has_key("depth_buffer")) {
 			depth_attachment_ = node["depth_buffer"].as_bool();
@@ -72,44 +75,71 @@ namespace KRE
 				multi_samples_ = node["samples"].as_int();
 			}
 		}
+		// XXX Maybe we need to add some extra filtering from min to max values based on order ?
 	}
 
 	RenderTarget::~RenderTarget()
 	{
 	}
 
-	void RenderTarget::Create()
+	void RenderTarget::create()
 	{
-		HandleCreate();
+		handleCreate();
 	}
 	
-	void RenderTarget::Apply()
+	void RenderTarget::apply()
 	{
-		HandleApply();
+		handleApply();
 	}
 
-	void RenderTarget::Unapply()
+	void RenderTarget::unapply()
 	{
-		HandleUnapply();
+		handleUnapply();
 	}
 
-	void RenderTarget::Clear()
+	void RenderTarget::clear()
 	{
-		HandleClear();
+		handleClear();
 	}
 
-	void RenderTarget::SetClearColor(int r, int g, int b, int a)
-	{
-		clear_color_ = Color(r,g,b,a);
-	}
-
-	void RenderTarget::SetClearColor(float r, float g, float b, float a)
+	void RenderTarget::setClearColor(int r, int g, int b, int a)
 	{
 		clear_color_ = Color(r,g,b,a);
 	}
 
-	void RenderTarget::SetClearColor(const Color& color)
+	void RenderTarget::setClearColor(float r, float g, float b, float a)
+	{
+		clear_color_ = Color(r,g,b,a);
+	}
+
+	void RenderTarget::setClearColor(const Color& color)
 	{
 		clear_color_ = color;
+	}
+
+	RenderTargetPtr RenderTarget::clone()
+	{
+		return handleClone();
+	}
+
+	variant RenderTarget::write()
+	{
+		variant_builder res;
+		res.add("width", width_);
+		res.add("height", height_);
+		if(color_attachments_ != 1) {
+			res.add("color_planes", color_attachments_);
+		}
+		if(depth_attachment_) {
+			res.add("depth_buffer", variant::from_bool(depth_attachment_));
+		}
+		if(stencil_attachment_) {
+			res.add("stencil_buffer", variant::from_bool(stencil_attachment_));
+		}
+		if(multi_sampling_) {
+			res.add("use_multisampling", variant::from_bool(multi_sampling_));
+			res.add("samples", multi_samples_);
+		}
+		return res.build();
 	}
 }

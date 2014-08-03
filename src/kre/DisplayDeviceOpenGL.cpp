@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -30,6 +30,7 @@
 #include "CanvasOGL.hpp"
 #include "ClipScopeOGL.hpp"
 #include "DisplayDeviceOpenGL.hpp"
+#include "EffectsOpenGL.hpp"
 #include "FboOpenGL.hpp"
 #include "LightObject.hpp"
 #include "MaterialOpenGL.hpp"
@@ -53,12 +54,12 @@ namespace KRE
 		}
 		~OpenGLDeviceData() { 
 		}
-		void SetShader(Shader::ShaderProgramPtr shader) {
+		void setShader(OpenGL::ShaderProgramPtr shader) {
 			shader_ = shader;
 		}
-		Shader::ShaderProgramPtr GetShader() const { return shader_; }
+		OpenGL::ShaderProgramPtr getShader() const { return shader_; }
 	private:
-		Shader::ShaderProgramPtr shader_;
+		OpenGL::ShaderProgramPtr shader_;
 		OpenGLDeviceData(const OpenGLDeviceData&);
 	};
 
@@ -69,67 +70,67 @@ namespace KRE
 		}
 		~RenderVariableDeviceData() {
 		}
-		RenderVariableDeviceData(const Shader::ConstActivesMapIterator& it)
+		RenderVariableDeviceData(const OpenGL::ConstActivesMapIterator& it)
 			: active_iterator_(it) {
 		}
 
-		void SetActiveMapIterator(const Shader::ConstActivesMapIterator& it) {
+		void setActiveMapIterator(const OpenGL::ConstActivesMapIterator& it) {
 			active_iterator_ = it;
 		}
-		Shader::ConstActivesMapIterator GetActiveMapIterator() const { return active_iterator_; }
+		OpenGL::ConstActivesMapIterator getActiveMapIterator() const { return active_iterator_; }
 	private:
-		Shader::ConstActivesMapIterator active_iterator_;
+		OpenGL::ConstActivesMapIterator active_iterator_;
 	};
 
 	namespace 
 	{
-		GLenum ConvertRenderVariableType(AttributeDesc::VariableType type)
+		GLenum convert_render_variable_type(AttrFormat type)
 		{
 			switch(type) {
-				case AttributeDesc::VariableType::BOOL:							return GL_BYTE;
-				case AttributeDesc::VariableType::HALF_FLOAT:					return GL_HALF_FLOAT;
-				case AttributeDesc::VariableType::FLOAT:						return GL_FLOAT;
-				case AttributeDesc::VariableType::DOUBLE:						return GL_DOUBLE;
-				case AttributeDesc::VariableType::FIXED:						return GL_FIXED;
-				case AttributeDesc::VariableType::SHORT:						return GL_SHORT;
-				case AttributeDesc::VariableType::UNSIGNED_SHORT:				return GL_UNSIGNED_SHORT;
-				case AttributeDesc::VariableType::BYTE:							return GL_BYTE;
-				case AttributeDesc::VariableType::UNSIGNED_BYTE:				return GL_UNSIGNED_BYTE;
-				case AttributeDesc::VariableType::INT:							return GL_INT;
-				case AttributeDesc::VariableType::UNSIGNED_INT:					return GL_UNSIGNED_INT;
-				case AttributeDesc::VariableType::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
-				case AttributeDesc::VariableType::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
-				case AttributeDesc::VariableType::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
+				case AttrFormat::BOOL:							return GL_BYTE;
+				case AttrFormat::HALF_FLOAT:					return GL_HALF_FLOAT;
+				case AttrFormat::FLOAT:							return GL_FLOAT;
+				case AttrFormat::DOUBLE:						return GL_DOUBLE;
+				case AttrFormat::FIXED:							return GL_FIXED;
+				case AttrFormat::SHORT:							return GL_SHORT;
+				case AttrFormat::UNSIGNED_SHORT:				return GL_UNSIGNED_SHORT;
+				case AttrFormat::BYTE:							return GL_BYTE;
+				case AttrFormat::UNSIGNED_BYTE:					return GL_UNSIGNED_BYTE;
+				case AttrFormat::INT:							return GL_INT;
+				case AttrFormat::UNSIGNED_INT:					return GL_UNSIGNED_INT;
+				case AttrFormat::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
+				case AttrFormat::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
+				case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
 			}
 			ASSERT_LOG(false, "Unrecognised value for variable type.");
 			return GL_NONE;
 		}
 
-		GLenum ConvertDrawingMode(AttributeSet::DrawMode dm)
+		GLenum convert_drawing_mode(DrawMode dm)
 		{
 			switch(dm) {
-				case AttributeSet::DrawMode::POINTS:			return GL_POINTS;
-				case AttributeSet::DrawMode::LINE_STRIP:		return GL_LINE_STRIP;
-				case AttributeSet::DrawMode::LINE_LOOP:			return GL_LINE_LOOP;
-				case AttributeSet::DrawMode::LINES:				return GL_LINES;
-				case AttributeSet::DrawMode::TRIANGLE_STRIP:	return GL_TRIANGLE_STRIP;
-				case AttributeSet::DrawMode::TRIANGLE_FAN:		return GL_TRIANGLE_FAN;
-				case AttributeSet::DrawMode::TRIANGLES:			return GL_TRIANGLES;
-				case AttributeSet::DrawMode::QUAD_STRIP:		return GL_QUAD_STRIP;
-				case AttributeSet::DrawMode::QUADS:				return GL_QUADS;
-				case AttributeSet::DrawMode::POLYGON:			return GL_POLYGON;
+				case DrawMode::POINTS:			return GL_POINTS;
+				case DrawMode::LINE_STRIP:		return GL_LINE_STRIP;
+				case DrawMode::LINE_LOOP:			return GL_LINE_LOOP;
+				case DrawMode::LINES:				return GL_LINES;
+				case DrawMode::TRIANGLE_STRIP:	return GL_TRIANGLE_STRIP;
+				case DrawMode::TRIANGLE_FAN:		return GL_TRIANGLE_FAN;
+				case DrawMode::TRIANGLES:			return GL_TRIANGLES;
+				case DrawMode::QUAD_STRIP:		return GL_QUAD_STRIP;
+				case DrawMode::QUADS:				return GL_QUADS;
+				case DrawMode::POLYGON:			return GL_POLYGON;
 			}
 			ASSERT_LOG(false, "Unrecognised value for drawing mode.");
 			return GL_NONE;
 		}
 
-		GLenum ConvertIndexType(AttributeSet::IndexType it) 
+		GLenum convert_index_type(IndexType it) 
 		{
 			switch(it) {
-				case AttributeSet::IndexType::INDEX_NONE:		break;
-				case AttributeSet::IndexType::INDEX_UCHAR:		return GL_UNSIGNED_BYTE;
-				case AttributeSet::IndexType::INDEX_USHORT:		return GL_UNSIGNED_SHORT;
-				case AttributeSet::IndexType::INDEX_ULONG:		return GL_UNSIGNED_INT;
+				case IndexType::INDEX_NONE:		break;
+				case IndexType::INDEX_UCHAR:		return GL_UNSIGNED_BYTE;
+				case IndexType::INDEX_USHORT:		return GL_UNSIGNED_SHORT;
+				case IndexType::INDEX_ULONG:		return GL_UNSIGNED_INT;
 			}
 			ASSERT_LOG(false, "Unrecognised value for index type.");
 			return GL_NONE;
@@ -144,7 +145,7 @@ namespace KRE
 	{
 	}
 
-	void DisplayDeviceOpenGL::Init(size_t width, size_t height)
+	void DisplayDeviceOpenGL::init(size_t width, size_t height)
 	{
 		GLenum err = glewInit();
 		ASSERT_LOG(err == GLEW_OK, "Could not initialise GLEW: " << glewGetErrorString(err));
@@ -158,7 +159,7 @@ namespace KRE
 		// VBO backed render variables.
 	}
 
-	void DisplayDeviceOpenGL::PrintDeviceInfo()
+	void DisplayDeviceOpenGL::printDeviceInfo()
 	{
 		GLint minor_version;
 		GLint major_version;
@@ -173,36 +174,36 @@ namespace KRE
 		}
 	}
 
-	void DisplayDeviceOpenGL::Clear(uint32_t clr)
+	void DisplayDeviceOpenGL::clear(ClearFlags clr)
 	{
-		glClear(clr & DISPLAY_CLEAR_COLOR ? GL_COLOR_BUFFER_BIT : 0 
-			| clr & DISPLAY_CLEAR_DEPTH ? GL_DEPTH_BUFFER_BIT : 0 
-			| clr & DISPLAY_CLEAR_STENCIL ? GL_STENCIL_BUFFER_BIT : 0);
+		glClear(clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0 
+			| clr & ClearFlags::DEPTH ? GL_DEPTH_BUFFER_BIT : 0 
+			| clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0);
 	}
 
-	void DisplayDeviceOpenGL::SetClearColor(float r, float g, float b, float a)
+	void DisplayDeviceOpenGL::setClearColor(float r, float g, float b, float a)
 	{
 		glClearColor(r, g, b, a);
 	}
 
-	void DisplayDeviceOpenGL::SetClearColor(const Color& color)
+	void DisplayDeviceOpenGL::setClearColor(const Color& color)
 	{
 		glClearColor(float(color.r()), float(color.g()), float(color.b()), float(color.a()));
 	}
 
-	void DisplayDeviceOpenGL::Swap()
+	void DisplayDeviceOpenGL::swap()
 	{
 		// This is a no-action.
 	}
 
-	DisplayDeviceDataPtr DisplayDeviceOpenGL::CreateDisplayDeviceData(const DisplayDeviceDef& def)
+	DisplayDeviceDataPtr DisplayDeviceOpenGL::createDisplayDeviceData(const DisplayDeviceDef& def)
 	{
 		OpenGLDeviceData* dd = new OpenGLDeviceData();
 		bool use_default_shader = true;
-		for(auto& hints : def.GetHints()) {
+		for(auto& hints : def.getHints()) {
 			if(hints.first == "shader") {
 				// Need to have retrieved more shader data here.
-				dd->SetShader(OpenGL::ShaderProgramOGL::factory(hints.second[0]));
+				dd->setShader(OpenGL::ShaderProgram::factory(hints.second[0]));
 				use_default_shader = false;
 			}
 			// ...
@@ -210,16 +211,16 @@ namespace KRE
 		}
 		// If there is no shader hint, we will assume the default system shader.
 		if(use_default_shader) {
-			dd->SetShader(OpenGL::ShaderProgramOGL::defaultSystemShader());
+			dd->setShader(OpenGL::ShaderProgram::defaultSystemShader());
 		}
 		
 		// XXX Set uniforms from block here.
 
-		for(auto& as : def.GetAttributeSet()) {
-			for(auto& attr : as->GetAttributes()) {
-				for(auto& desc : attr->GetAttrDesc()) {
-					auto ddp = DisplayDeviceDataPtr(new RenderVariableDeviceData(dd->GetShader()->GetAttributeIterator(desc.AttrName())));
-					desc.SetDisplayData(ddp);
+		for(auto& as : def.getAttributeSet()) {
+			for(auto& attr : as->getAttributes()) {
+				for(auto& desc : attr->getAttrDesc()) {
+					auto ddp = DisplayDeviceDataPtr(new RenderVariableDeviceData(dd->getShader()->getAttributeIterator(desc.getAttrName())));
+					desc.setDisplayData(ddp);
 				}
 			}
 		}
@@ -229,10 +230,10 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
-		auto dd = std::dynamic_pointer_cast<OpenGLDeviceData>(r->GetDisplayData());
+		auto dd = std::dynamic_pointer_cast<OpenGLDeviceData>(r->getDisplayData());
 		ASSERT_LOG(dd != NULL, "Failed to cast display data to the type required(OpenGLDeviceData).");
-		auto shader = dd->GetShader();
-		shader->MakeActive();
+		auto shader = dd->getShader();
+		shader->makeActive();
 
 		BlendEquation::Manager blend(r->getBlendEquation());
 		BlendModeManagerOGL blend_mode(r->getBlendMode());
@@ -241,37 +242,39 @@ namespace KRE
 		// so we grab the return of the Material::Apply() function
 		// to find whether to apply it or not.
 		bool use_lighting = true;
-		if(r->Material()) {
-			use_lighting = r->Material()->Apply();
+		if(r->getMaterial()) {
+			use_lighting = r->getMaterial()->apply();
 		}
 
 		glm::mat4 pmat(1.0f);
-		if(r->Camera()) {
+		if(r->getCamera()) {
 			// set camera here.
-			pmat = r->Camera()->ProjectionMat() * r->Camera()->ViewMat();
+			pmat = r->getCamera()->getProjectionMat() * r->getCamera()->getViewMat();
 		}
 
 		if(use_lighting) {
-			for(auto lp : r->Lights()) {
+			for(auto lp : r->getLights()) {
 				/// xxx need to set lights here.
 			}
 		}
 
-		if(r->GetRenderTarget()) {
-			r->GetRenderTarget()->Apply();
+		if(r->getRenderTarget()) {
+			r->getRenderTarget()->apply();
 		}
 
-		if(shader->GetMvpUniform() != shader->UniformsIteratorEnd()) {
-			pmat *= r->ModelMatrix();
-			shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(pmat));
+		if(shader->getMvpUniform() != shader->uniformsIteratorEnd()) {
+			pmat *= r->getModelMatrix();
+			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pmat));
 		}
 
-		if(shader->GetColorUniform() != shader->UniformsIteratorEnd() && r->IsColorSet()) {
-			shader->SetUniformValue(shader->GetColorUniform(), r->GetColor().asFloatVector());
+		if(shader->getColorUniform() != shader->uniformsIteratorEnd() && r->isColorSet()) {
+			shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
 		}
 
-		if(shader->GetTexMapUniform() != shader->UniformsIteratorEnd()) {
-			shader->SetUniformValue(shader->GetTexMapUniform(), 0);
+		// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
+		// Or maybe it should be done through the uniform block and override this somehow.
+		if(shader->getTexMapUniform() != shader->uniformsIteratorEnd()) {
+			shader->setUniformValue(shader->getTexMapUniform(), 0);
 		}
 
 		// Loop through uniform render variables and set them.
@@ -285,54 +288,54 @@ namespace KRE
 
 		// Need to figure the interaction with shaders.
 		/// XXX Need to create a mapping between attributes and the index value below.
-		for(auto as : r->GetAttributeSet()) {
-			GLenum draw_mode = ConvertDrawingMode(as->GetDrawMode());
+		for(auto as : r->getAttributeSet()) {
+			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());
 			std::vector<GLuint> enabled_attribs;
 
 			// apply blend, if any, from attribute set.
 			BlendEquation::Manager attrset_eq(r->getBlendEquation());
 			BlendModeManagerOGL attrset_mode(r->getBlendMode());
 
-			if(shader->GetColorUniform() != shader->UniformsIteratorEnd() && as->getColor()) {
-				shader->SetUniformValue(shader->GetColorUniform(), as->getColor()->asFloatVector());
+			if(shader->getColorUniform() != shader->uniformsIteratorEnd() && as->getColor()) {
+				shader->setUniformValue(shader->getColorUniform(), as->getColor()->asFloatVector());
 			}
 
-			for(auto& attr : as->GetAttributes()) {
-				auto attr_hw = attr->GetDeviceBufferData();
+			for(auto& attr : as->getAttributes()) {
+				auto attr_hw = attr->getDeviceBufferData();
 				//auto attrogl = std::dynamic_pointer_cast<AttributeOGL>(attr);
-				attr_hw->Bind();
-				for(auto& attrdesc : attr->GetAttrDesc()) {
-					auto ddp = std::dynamic_pointer_cast<RenderVariableDeviceData>(attrdesc.GetDisplayData());
+				attr_hw->bind();
+				for(auto& attrdesc : attr->getAttrDesc()) {
+					auto ddp = std::dynamic_pointer_cast<RenderVariableDeviceData>(attrdesc.getDisplayData());
 					ASSERT_LOG(ddp != NULL, "Converting attribute device data was NULL.");
-					glEnableVertexAttribArray(ddp->GetActiveMapIterator()->second.location);
+					glEnableVertexAttribArray(ddp->getActiveMapIterator()->second.location);
 					
-					glVertexAttribPointer(ddp->GetActiveMapIterator()->second.location, 
-						attrdesc.NumElements(), 
-						ConvertRenderVariableType(attrdesc.VarType()), 
-						attrdesc.Normalise(), 
-						attrdesc.Stride(), 
-						reinterpret_cast<const GLvoid*>(attr_hw->Value() + attr->GetOffset() + attrdesc.Offset()));
-					enabled_attribs.emplace_back(ddp->GetActiveMapIterator()->second.location);
+					glVertexAttribPointer(ddp->getActiveMapIterator()->second.location, 
+						attrdesc.getNumElements(), 
+						convert_render_variable_type(attrdesc.getVarType()), 
+						attrdesc.normalise(), 
+						attrdesc.getStride(), 
+						reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
+					enabled_attribs.emplace_back(ddp->getActiveMapIterator()->second.location);
 				}
 			}
 
-			if(as->IsInstanced()) {
-				if(as->IsIndexed()) {
-					as->BindIndex();
+			if(as->isInstanced()) {
+				if(as->isIndexed()) {
+					as->bindIndex();
 					// XXX as->GetIndexArray() should be as->GetIndexArray()+as->GetOffset()
-					glDrawElementsInstanced(draw_mode, as->GetCount(), ConvertIndexType(as->GetIndexType()), as->GetIndexArray(), as->GetInstanceCount());
-					as->UnbindIndex();
+					glDrawElementsInstanced(draw_mode, as->getCount(), convert_index_type(as->getIndexType()), as->getIndexArray(), as->getInstanceCount());
+					as->unbindIndex();
 				} else {
-					glDrawArraysInstanced(draw_mode, as->GetOffset(), as->GetCount(), as->GetInstanceCount());
+					glDrawArraysInstanced(draw_mode, as->getOffset(), as->getCount(), as->getInstanceCount());
 				}
 			} else {
-				if(as->IsIndexed()) {
-					as->BindIndex();
+				if(as->isIndexed()) {
+					as->bindIndex();
 					// XXX as->GetIndexArray() should be as->GetIndexArray()+as->GetOffset()
-					glDrawElements(draw_mode, as->GetCount(), ConvertIndexType(as->GetIndexType()), as->GetIndexArray());
-					as->UnbindIndex();
+					glDrawElements(draw_mode, as->getCount(), convert_index_type(as->getIndexType()), as->getIndexArray());
+					as->unbindIndex();
 				} else {
-					glDrawArrays(draw_mode, as->GetOffset(), as->GetCount());
+					glDrawArrays(draw_mode, as->getOffset(), as->getCount());
 				}
 			}
 
@@ -341,11 +344,11 @@ namespace KRE
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
-		if(r->Material()) {
-			r->Material()->Unapply();
+		if(r->getMaterial()) {
+			r->getMaterial()->unApply();
 		}
-		if(r->GetRenderTarget()) {
-			r->GetRenderTarget()->Unapply();
+		if(r->getRenderTarget()) {
+			r->getRenderTarget()->unapply();
 		}
 	}
 
@@ -355,43 +358,43 @@ namespace KRE
 		return ScissorPtr(scissor);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(const SurfacePtr& surface, const variant& node)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
 	{
 		return TexturePtr(new OpenGLTexture(surface, node));
 	}
 
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
 	{
 		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
 	}
 
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(unsigned width, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, PixelFormat::PF fmt)
 	{
 		return TexturePtr(new OpenGLTexture(width, 0, fmt, Texture::Type::TEXTURE_1D));
 	}
 
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
 	{
 		return TexturePtr(new OpenGLTexture(width, height, fmt, Texture::Type::TEXTURE_2D));
 	}
 	
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
 		return TexturePtr(new OpenGLTexture(width, height, fmt, Texture::Type::TEXTURE_3D, depth));
 	}
 
-	TexturePtr DisplayDeviceOpenGL::HandleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
 	{
 		auto surface = Surface::create(filename);
 		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
 	}
 
-	MaterialPtr DisplayDeviceOpenGL::HandleCreateMaterial(const variant& node)
+	MaterialPtr DisplayDeviceOpenGL::handleCreateMaterial(const variant& node)
 	{
 		return MaterialPtr(new OpenGLMaterial(node));
 	}
 
-	MaterialPtr DisplayDeviceOpenGL::HandleCreateMaterial(const std::string& name, 
+	MaterialPtr DisplayDeviceOpenGL::handleCreateMaterial(const std::string& name, 
 		const std::vector<TexturePtr>& textures, 
 		const BlendMode& blend, 
 		bool fog, 
@@ -402,7 +405,7 @@ namespace KRE
 		return MaterialPtr(new OpenGLMaterial(name, textures, blend, fog, lighting, depth_write, depth_check));
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::HandleCreateRenderTarget(size_t width, size_t height, 
+	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(size_t width, size_t height, 
 			size_t color_plane_count, 
 			bool depth, 
 			bool stencil, 
@@ -412,22 +415,22 @@ namespace KRE
 		return RenderTargetPtr(new FboOpenGL(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples));
 	}
 
-	RenderTargetPtr DisplayDeviceOpenGL::HandleCreateRenderTarget(const variant& node)
+	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(const variant& node)
 	{
 		return RenderTargetPtr(new FboOpenGL(node));
 	}
 
-	AttributeSetPtr DisplayDeviceOpenGL::HandleCreateAttributeSet(bool indexed, bool instanced)
+	AttributeSetPtr DisplayDeviceOpenGL::handleCreateAttributeSet(bool indexed, bool instanced)
 	{
 		return AttributeSetPtr(new AttributeSetOGL(indexed, instanced));
 	}
 
-	HardwareAttributePtr DisplayDeviceOpenGL::HandleCreateAttribute(AttributeBase* parent)
+	HardwareAttributePtr DisplayDeviceOpenGL::handleCreateAttribute(AttributeBase* parent)
 	{
 		return HardwareAttributePtr(new HardwareAttributeOGL(parent));
 	}
 
-	CanvasPtr DisplayDeviceOpenGL::GetCanvas()
+	CanvasPtr DisplayDeviceOpenGL::getCanvas()
 	{
 		return CanvasOGL::getInstance();
 	}
@@ -447,7 +450,7 @@ namespace KRE
 		glViewport(x, y, width, height);
 	}
 	
-	bool DisplayDeviceOpenGL::DoCheckForFeature(DisplayDeviceCapabilties cap)
+	bool DisplayDeviceOpenGL::doCheckForFeature(DisplayDeviceCapabilties cap)
 	{
 		bool ret_val = false;
 		switch(cap) {
@@ -474,7 +477,7 @@ namespace KRE
 	}
 
 	// XXX Need a way to deal with blits with Camera/Lighting.
-	void DisplayDeviceOpenGL::DoBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
+	void DisplayDeviceOpenGL::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
 		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
 		ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
@@ -501,6 +504,12 @@ namespace KRE
 			vx2, vy2,
 		};
 
+		// Apply blend mode from texture if there is any.
+		std::unique_ptr<BlendModeManagerOGL> bmm;
+		if(tex->hasBlendMode()) {
+			bmm.reset(new BlendModeManagerOGL(tex->getBlendMode()));
+		}
+
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
 		auto shader = OpenGL::ShaderProgramOGL::defaultSystemShader();
@@ -520,5 +529,84 @@ namespace KRE
 
 		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	namespace
+	{
+		GLenum convert_read_format(ReadFormat fmt)
+		{
+			switch(fmt)
+			{
+			case ReadFormat::DEPTH:			return GL_DEPTH_COMPONENT;
+			case ReadFormat::STENCIL:		return GL_STENCIL_INDEX;
+			case ReadFormat::DEPTH_STENCIL:	return GL_DEPTH_STENCIL;
+			case ReadFormat::RED:			return GL_RED;
+			case ReadFormat::GREEN:			return GL_GREEN;
+			case ReadFormat::BLUE:			return GL_BLUE;
+			case ReadFormat::RG:			return GL_RG;
+			case ReadFormat::RGB:			return GL_RGB;
+			case ReadFormat::BGR:			return GL_BGR;
+			case ReadFormat::RGBA:			return GL_RGBA;
+			case ReadFormat::BGRA:			return GL_BGRA;
+			case ReadFormat::RED_INT:		return GL_RED_INTEGER;
+			case ReadFormat::GREEN_INT:		return GL_GREEN_INTEGER;
+			case ReadFormat::BLUE_INT:		return GL_BLUE_INTEGER;
+			case ReadFormat::RG_INT:		return GL_RG_INTEGER;
+			case ReadFormat::RGB_INT:		return GL_RGB_INTEGER;
+			case ReadFormat::BGR_INT:		return GL_BGR_INTEGER;
+			case ReadFormat::RGBA_INT:		return GL_RGBA_INTEGER;
+			case ReadFormat::BGRA_INT:		return GL_BGRA_INTEGER;
+			default: break;
+			}
+
+			ASSERT_LOG(false, "Unrecognised ReadFormat: " << static_cast<int>(fmt));
+			return GL_NONE;
+		}
+
+		GLenum convert_attr_format(AttrFormat type)
+		{
+			switch (type)
+			{
+			case AttrFormat::BOOL:				return GL_BOOL;
+			case AttrFormat::HALF_FLOAT:		return GL_HALF_FLOAT;
+			case AttrFormat::FLOAT:				return GL_FLOAT;
+			case AttrFormat::DOUBLE:			return GL_DOUBLE;
+			case AttrFormat::FIXED:				return GL_FIXED;
+			case AttrFormat::SHORT:				return GL_SHORT;
+			case AttrFormat::UNSIGNED_SHORT:	return GL_UNSIGNED_SHORT;
+			case AttrFormat::BYTE:				return GL_BYTE;
+			case AttrFormat::UNSIGNED_BYTE:		return GL_UNSIGNED_BYTE;
+			case AttrFormat::INT:				return GL_INT;
+			case AttrFormat::UNSIGNED_INT:		return GL_UNSIGNED_INT;
+			case AttrFormat::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
+			case AttrFormat::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
+			case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
+			default: break;
+			}
+			ASSERT_LOG(false, "Unrecognised AttrFormat: " << static_cast<int>(type));
+			return GL_NONE;
+		}
+	}
+
+	bool DisplayDeviceOpenGL::handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data)
+	{
+		glReadPixels(x, y, width, height, convert_read_format(fmt), convert_attr_format(type), data);
+		GLenum ok = glGetError();
+		if(ok != GL_NONE) {
+			LOG_ERROR("Unable to read pixels error was: " << ok);
+			return false;
+		}
+		return true;
+	}
+
+	EffectPtr DisplayDeviceOpenGL::createEffect(const variant& node)
+	{
+		ASSERT_LOG(node.has_key("type") && node["type"].is_string(), "Effects must have 'type' attribute as string: " << node.to_debug_string());
+		const std::string& type = node["type"].as_string();
+		if(type == "stipple") {
+			return std::make_shared<OpenGL::StippleEffect>(node);
+		}
+		// XXX Add more effects here as and if needed.
+		return EffectPtr();
 	}
 }

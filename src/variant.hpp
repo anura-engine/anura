@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/intrusive_ptr.hpp>
-
 #include <cstdint>
 #include <functional>
 #include <map>
@@ -40,7 +38,7 @@
 namespace game_logic 
 {
 	class FormulaCallable;
-	class formula_expression;
+	class FormulaExpression;
 }
 
 class variant_type;
@@ -49,26 +47,26 @@ typedef boost::intrusive_ptr<const variant_type> const_variant_type_ptr;
 
 struct CallStackEntry 
 {
-	const game_logic::formula_expression* expression;
+	const game_logic::FormulaExpression* expression;
 	const game_logic::FormulaCallable* callable;
 	bool operator<(const CallStackEntry& o) const { return expression < o.expression || expression == o.expression && callable < o.callable; }
 };
 
-void push_call_stack(const game_logic::formula_expression* frame, const game_logic::FormulaCallable* callable);
+void push_call_stack(const game_logic::FormulaExpression* frame, const game_logic::FormulaCallable* callable);
 void pop_call_stack();
 std::string get_call_stack();
 std::string get_full_call_stack();
 
 const std::vector<CallStackEntry>& get_expression_call_stack();
 
-struct call_stack_manager 
+struct CallStackManager 
 {
-	explicit call_stack_manager(const game_logic::formula_expression* str, const game_logic::FormulaCallable* callable) 
+	explicit CallStackManager(const game_logic::FormulaExpression* str, const game_logic::FormulaCallable* callable) 
 	{
 		push_call_stack(str, callable);
 	}
 
-	~call_stack_manager() {
+	~CallStackManager() {
 		pop_call_stack();
 	}
 };
@@ -114,7 +112,7 @@ public:
 
 	static variant from_bool(bool b) { variant v; v.type_ = VARIANT_TYPE_BOOL; v.bool_value_ = b; return v; }
 
-	static variant create_delayed(game_logic::const_formula_ptr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
+	static variant create_delayed(game_logic::ConstFormulaPtr f, boost::intrusive_ptr<const game_logic::FormulaCallable> callable);
 	static void resolve_delayed();
 
 	static variant create_function_overload(const std::vector<variant>& fn);
@@ -133,10 +131,10 @@ public:
 	static variant create_translated_string(const std::string& str);
 	static variant create_translated_string(const std::string& str, const std::string& translation);
 	explicit variant(std::map<variant,variant>* map);
-	variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& types, std::function<game_logic::const_formula_ptr(const std::vector<variant_type_ptr>&)> factory);
-	variant(const game_logic::const_formula_ptr& formula, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
+	variant(const variant& formula_var, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info, const std::vector<std::string>& types, std::function<game_logic::ConstFormulaPtr(const std::vector<variant_type_ptr>&)> factory);
+	variant(const game_logic::ConstFormulaPtr& formula, const game_logic::FormulaCallable& callable, int base_slot, const VariantFunctionTypeInfoPtr& type_info);
 	variant(std::function<variant(const game_logic::FormulaCallable&)> fn, const VariantFunctionTypeInfoPtr& type_info);
-	//variant(game_logic::const_formula_ptr, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
+	//variant(game_logic::ConstFormulaPtr, const std::vector<std::string>& args, const game_logic::FormulaCallable& callable, int base_slot, const std::vector<variant>& default_args, const std::vector<variant_type_ptr>& variant_types, const variant_type_ptr& return_type);
 
 	static variant create_variant_under_construction(intptr_t id);
 
@@ -297,7 +295,7 @@ public:
 	variant getKeys() const;
 	variant getValues() const;
 
-	void serialize_to_string(std::string& str) const;
+	void serializeToString(std::string& str) const;
 	void serialize_from_string(const std::string& str);
 
 	int refcount() const;
@@ -334,19 +332,17 @@ public:
 		int end_line, end_column;
 	};
 
-	const game_logic::formula_expression* get_source_expression() const;
-	void set_source_expression(const game_logic::formula_expression* expr);
-	void set_debug_info(const debug_info& info);
+	const game_logic::FormulaExpression* get_source_expression() const;
+	void set_source_expression(const game_logic::FormulaExpression* expr);
+	void setDebugInfo(const debug_info& info);
 	const debug_info* get_debug_info() const;
 	std::string debug_location() const;
 
 	//API for accessing formulas that are defined by this variant. The variant
 	//must be a string.
-	void add_formula_using_this(const game_logic::formula* f);
-	void remove_formula_using_this(const game_logic::formula* f);
-	const std::vector<const game_logic::formula*>* formulae_using_this() const;
-
-	std::pair<variant*,variant*> range() const;
+	void add_formula_using_this(const game_logic::Formula* f);
+	void remove_formula_using_this(const game_logic::Formula* f);
+	const std::vector<const game_logic::Formula*>* formulae_using_this() const;
 
 	void must_be(TYPE t) const {
 #if !TARGET_OS_IPHONE

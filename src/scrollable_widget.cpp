@@ -1,148 +1,154 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
 
 #include "scrollable_widget.hpp"
 
-namespace gui {
-
-ScrollableWidget::ScrollableWidget() : yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0), auto_scroll_bottom_(false)
+namespace gui 
 {
-	setEnvironment();
-}
-
-ScrollableWidget::ScrollableWidget(const variant& v, game_logic::FormulaCallable* e)
-	: widget(v,e), yscroll_(0), virtual_height_(0), step_(0), arrow_step_(0),
-	  auto_scroll_bottom_(v["auto_scroll_bottom"].as_bool())
-{
-	if(v.has_key("yscroll")) {
-		yscroll_ = v["yscroll"].as_int();
+	ScrollableWidget::ScrollableWidget() 
+		: yscroll_(0), 
+		  virtual_height_(0), 
+		  step_(0), 
+		  arrow_step_(0), 
+		  auto_scroll_bottom_(false)
+	{
+		setEnvironment();
 	}
-	if(v.has_key("virtual_height")) {
-		virtual_height_ = v["virtual_height"].as_int();
-	}
-	if(v.has_key("step")) {
-		arrow_step_ = step_ = v["step"].as_int();
-	}
-}
 
-ScrollableWidget::~ScrollableWidget()
-{}
-
-void ScrollableWidget::set_yscroll(int yscroll)
-{
-	const int old = yscroll_;
-	yscroll_ = yscroll;
-	onSetYscroll(old, yscroll);
-}
-
-void ScrollableWidget::setDim(int w, int h)
-{
-	widget::setDim(w, h);
-	update_scrollbar();
-}
-
-void ScrollableWidget::onSetYscroll(int old_yscroll, int new_yscroll)
-{}
-
-void ScrollableWidget::set_virtual_height(int height)
-{
-	virtual_height_ = height;
-	if(auto_scroll_bottom_) {
-		set_yscroll(height - this->height());
-	}
-	update_scrollbar();
-}
-
-void ScrollableWidget::set_scroll_step(int step)
-{
-	step_ = step;
-}
-
-void ScrollableWidget::set_arrow_scroll_step(int step)
-{
-	arrow_step_ = step;
-}
-
-void ScrollableWidget::update_scrollbar()
-{
-	if(height() < virtual_height_) {
-		if(!scrollbar_) {
-			scrollbar_.reset(new ScrollBarWidget(std::bind(&ScrollableWidget::set_yscroll, this, _1)));
+	ScrollableWidget::ScrollableWidget(const variant& v, game_logic::FormulaCallable* e)
+		: Widget(v,e), 
+		  yscroll_(0), 
+		  virtual_height_(0), 
+		  step_(0), 
+		  arrow_step_(0),
+		  auto_scroll_bottom_(v["auto_scroll_bottom"].as_bool())
+	{
+		if(v.has_key("yscroll")) {
+			yscroll_ = v["yscroll"].as_int();
 		}
-		scrollbar_->set_step(step_);
-//		if(step_ != arrow_step_) {
-			scrollbar_->set_arrow_step(arrow_step_);
-//		}
-		scrollbar_->set_range(virtual_height_, height());
-		scrollbar_->set_window_pos(yscroll_);
-		scrollbar_->setLoc(x() + width(), y());
-		scrollbar_->setDim(10, height());
-	} else {
-		scrollbar_.reset();
+		if(v.has_key("virtual_height")) {
+			virtual_height_ = v["virtual_height"].as_int();
+		}
+		if(v.has_key("step")) {
+			arrow_step_ = step_ = v["step"].as_int();
+		}
 	}
 
-}
+	ScrollableWidget::~ScrollableWidget()
+	{}
 
-void ScrollableWidget::handleDraw() const
-{
-	if(scrollbar_) {
-		scrollbar_->draw();
-	}
-}
-
-bool ScrollableWidget::handleEvent(const SDL_Event& event, bool claimed)
-{
-	if(scrollbar_) {
-		return scrollbar_->processEvent(event, claimed);
+	void ScrollableWidget::setYscroll(int yscroll)
+	{
+		const int old = yscroll_;
+		yscroll_ = yscroll;
+		onSetYscroll(old, yscroll);
 	}
 
-	return claimed;
-}
-
-void ScrollableWidget::setLoc(int x, int y)
-{
-	widget::setLoc(x, y);
-	if(scrollbar_) {
-		scrollbar_->setLoc(x + width(), y);
+	void ScrollableWidget::setDim(int w, int h)
+	{
+		Widget::setDim(w, h);
+		updateScrollbar();
 	}
-}
 
-void ScrollableWidget::setValue(const std::string& key, const variant& v)
-{
-	if(key == "yscroll") {
-		set_yscroll(v.as_int());
-	} else if(key == "virtual_height") {
-		set_virtual_height(v.as_int());
-	} else if(key == "step") {
-		set_scroll_step(v.as_int());
+	void ScrollableWidget::onSetYscroll(int old_yscroll, int new_yscroll)
+	{
 	}
-	widget::setValue(key, v);
-}
 
-variant ScrollableWidget::getValue(const std::string& key) const
-{
-	if(key == "yscroll") {
-		return variant(yscroll_);
-	} else if(key == "virtual_height") {
-		return variant(virtual_height_);
-	} else if(key == "step") {
-		return variant(step_);
+	void ScrollableWidget::setVirtualHeight(int height)
+	{
+		virtual_height_ = height;
+		if(auto_scroll_bottom_) {
+			setYscroll(height - this->height());
+		}
+		updateScrollbar();
 	}
-	return widget::getValue(key);
-}
 
+	void ScrollableWidget::setScrollStep(int step)
+	{
+		step_ = step;
+	}
+
+	void ScrollableWidget::setArrowScrollStep(int step)
+	{
+		arrow_step_ = step;
+	}
+
+	void ScrollableWidget::updateScrollbar()
+	{
+		if(height() < virtual_height_) {
+			if(!scrollbar_) {
+				scrollbar_.reset(new ScrollBarWidget(std::bind(&ScrollableWidget::setYscroll, this, std::placeholders::_1)));
+			}
+			scrollbar_->setStep(step_);
+			scrollbar_->setArrowStep(arrow_step_);
+			scrollbar_->setRange(virtual_height_, height());
+			scrollbar_->setWindowPos(yscroll_);
+			scrollbar_->setLoc(x() + width(), y());
+			scrollbar_->setDim(10, height());
+		} else {
+			scrollbar_.reset();
+		}
+
+	}
+
+	void ScrollableWidget::handleDraw() const
+	{
+		if(scrollbar_) {
+			scrollbar_->draw();
+		}
+	}
+
+	bool ScrollableWidget::handleEvent(const SDL_Event& event, bool claimed)
+	{
+		if(scrollbar_) {
+			return scrollbar_->processEvent(event, claimed);
+		}
+
+		return claimed;
+	}
+
+	void ScrollableWidget::setLoc(int x, int y)
+	{
+		Widget::setLoc(x, y);
+		if(scrollbar_) {
+			scrollbar_->setLoc(x + width(), y);
+		}
+	}
+
+	BEGIN_DEFINE_CALLABLE(ScrollableWidget, Widget)
+		DEFINE_FIELD(yscroll, "int")
+			return variant(obj.yscroll_);
+		DEFINE_SET_FIELD
+			obj.setYscroll(value.as_int());
+
+		DEFINE_FIELD(virtual_height, "int")
+			return variant(obj.virtual_height_);
+		DEFINE_SET_FIELD
+			obj.setVirtualHeight(value.as_int());
+
+		DEFINE_FIELD(step, "int")
+			return variant(obj.step_);
+		DEFINE_SET_FIELD
+			obj.setScrollStep(value.as_int());
+	END_DEFINE_CALLABLE(ScrollableWidget)
 }

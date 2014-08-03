@@ -45,7 +45,7 @@ DEFINE_FIELD(id, "int")
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;
 	using namespace KRE;
-	formula::fail_if_static_context();
+	Formula::failIfStaticContext();
 
 	std::string fname = FN_ARG(0).as_string();
 
@@ -56,7 +56,7 @@ BEGIN_DEFINE_FN(save, "(string) ->commands")
 
 	boost::intrusive_ptr<const TextureObject> ptr(&obj);
 
-	return variant(new fn_command_callable([=]() {
+	return variant(new FnCommandCallable([=]() {
 		auto t = ptr->texture();
 		ASSERT_LOG(t != NULL, "Could not get texture");
 		auto s = t->getSurface();
@@ -114,7 +114,7 @@ KRE::TexturePtr render_fbo(const rect& area, const std::vector<EntityPtr> object
 	pos.x = area.x()*100;
 	pos.y = area.y()*100;
 	{
-	preferences::screen_dimension_override_scope dim_scope(area.w(), area.h(), area.w(), area.h());
+	preferences::ScreenDimensionOverrideScope dim_scope(area.w(), area.h(), area.w(), area.h());
 	lvl->process();
 	lvl->process_draw();
 	foreach(const entity_ptr& e, objects) {

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,19 +28,32 @@
 #include "../Color.hpp"
 #include "DisplayDevice.hpp"
 #include "Material.hpp"
+#include "PixelFormat.hpp"
 #include "Renderable.hpp"
 #include "WindowManagerFwd.hpp"
 
 namespace KRE
 {
+	enum class FullScreenMode {
+		WINDOWED,
+		FULLSCREEN_WINDOWED,
+	};
+
+	struct WindowMode
+	{
+		unsigned width;
+		unsigned height;
+		PixelFormatPtr pf;
+		int refresh;
+	};
+
+	inline bool operator==(const WindowMode& lhs, const WindowMode& rhs) {
+		return lhs.width == rhs.width && lhs.height == rhs.height;
+	}
+
 	class WindowManager
 	{
 	public:
-		enum FullScreenMode {
-			WINDOWED_MODE,
-			FULLSCREEN_WINDOWED_MODE,
-			FULLSCREEN_MODE,
-		};
 		explicit WindowManager(const std::string& title);
 		virtual ~WindowManager();
 		void createWindow(unsigned width, unsigned height);
@@ -48,7 +61,8 @@ namespace KRE
 		
 		virtual bool setWindowSize(unsigned width, unsigned height) = 0;
 		virtual bool autoWindowSize(unsigned& width, unsigned& height) = 0;
-		virtual bool setLogicalWindowSize(unsigned width, unsigned height) = 0;
+		
+		bool setLogicalWindowSize(unsigned width, unsigned height);
 
 		virtual void setWindowTitle(const std::string& title) = 0;
 		virtual void setWindowIcon(const std::string& name) = 0;
@@ -88,9 +102,13 @@ namespace KRE
 		
 		Color getClearColor() const { return clear_color_; }
 
-		virtual void clear(DisplayDevice::ClearFlags f) = 0;
+		virtual void clear(ClearFlags f) = 0;
 
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
+
+		void saveFrameBuffer(const std::string& filename);
+
+		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) = 0;
 
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();

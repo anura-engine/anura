@@ -22,10 +22,9 @@
 */
 
 #pragma once
-#include <boost/scoped_ptr.hpp>
 
 #include <vector>
-#include <cstddef>
+#include <memory>
 
 typedef unsigned long key_type;
 

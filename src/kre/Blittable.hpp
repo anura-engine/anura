@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -48,26 +48,24 @@ namespace KRE
 		explicit Blittable(const TexturePtr& tex);
 		explicit Blittable(const MaterialPtr& mat);
 		virtual ~Blittable();
-		void SetTexture(const TexturePtr& tex);
+		void setTexture(const TexturePtr& tex);
 
 		template<typename T>
-		void SetDrawRect(const Geometry::Rect<T>& r) {
+		void setDrawRect(const Geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
 		virtual void preRender(const KRE::WindowManagerPtr& wm) override;
 
-		Centre GetCentre() const { return centre_; }
-		void SetCentre(Centre c);
-		const pointf& GetCentreCoords() const { return centre_offset_; }
+		Centre getCentre() const { return centre_; }
+		void setCentre(Centre c);
+		const pointf& getCentreCoords() const { return centre_offset_; }
 		template<typename T>
-		void SetCentreCoords(const Geometry::Point<T>& p) {
+		void setCentreCoords(const Geometry::Point<T>& p) {
 			centre_offset_ = p;
 			centre_ = Centre::MANUAL;
 		}
-
-		virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd);
 	private:
-		void Init();
+		void init();
 		std::shared_ptr<Attribute<vertex_texcoord>> attribs_;
 		rectf draw_rect_;
 		pointf centre_offset_;

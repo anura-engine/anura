@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef GRID_WIDGET_HPP_INCLUDED
-#define GRID_WIDGET_HPP_INCLUDED
+
+#pragma once
 
 #include <vector>
 
@@ -23,119 +29,113 @@
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-class dropdown_widget;
-
-class grid : public ScrollableWidget
+namespace gui 
 {
-public:
-	typedef std::function<void (int)> callback_type;
-	enum COLUMN_ALIGN { ALIGN_LEFT, ALIGN_CENTER, ALIGN_RIGHT };
+	enum class ColumnAlign {LEFT, CENTER, RIGHT };
 
-	explicit grid(int ncols);
-	explicit grid(const variant& v, game_logic::FormulaCallable* e);
-	virtual ~grid() {}
-	grid& set_show_background(bool val) {
-		show_background_ = val;
-		return *this;
-	}
-	virtual void setDim(int w, int h);
-	void add_row(const std::vector<WidgetPtr>& widgets);
+	class Grid : public ScrollableWidget
+	{
+	public:
+		typedef std::function<void (int)> callback_type;
 
-	grid& add_col(const std::string& str);
-	grid& add_col(const WidgetPtr& widget=WidgetPtr());
+		explicit Grid(int ncols);
+		explicit Grid(const variant& v, game_logic::FormulaCallable* e);
+		virtual ~Grid() {}
+		Grid& setShowBackground(bool val) {
+			show_background_ = val;
+			return *this;
+		}
+		virtual void setDim(int w, int h);
+		void addRow(const std::vector<WidgetPtr>& widgets);
 
-	grid& finish_row();
+		Grid& addCol(const std::string& str);
+		Grid& addCol(const WidgetPtr& widget=WidgetPtr());
 
-	grid& set_col_width(int col, int width);
-	grid& set_align(int col, COLUMN_ALIGN align);
-	grid& set_hpad(int pad);
-	void resetContents(const variant&);
-	void set_header_row(int row) { header_rows_.push_back(row); }
+		Grid& finishRow();
 
-	void set_draw_selection_highlight(bool val=true) { draw_selection_highlight_ = val; }
-	void set_default_selection(int value) { default_selection_ = value; }
-	int get_default_selection() const { return default_selection_; }
-	void allow_selection(bool val=true) { allow_selection_ = val; }
-	void must_select(bool val=true, int nrow=0) { must_select_ = val; selected_row_ = nrow; }
-	bool has_must_select() const { return must_select_; }
-	void swallow_clicks(bool val=true) { swallow_clicks_ = val; }
-	int selection() const { return selected_row_; }
-	void register_mouseover_callback(callback_type cb);
-	void register_selection_callback(callback_type cb);
-	void register_row_selection_callback(std::function<void()> cb);
+		Grid& setColWidth(int col, int width);
+		Grid& setAlign(int col, ColumnAlign align);
+		Grid& setHpad(int pad);
+		void resetContents(const variant&);
+		void setHeaderRow(int row) { header_rows_.push_back(row); }
 
-	void set_max_height(int amount) { max_height_ = amount; }
+		void setDrawSelectionHighlight(bool val=true) { draw_selection_highlight_ = val; }
+		void setDefaultSelection(int value) { default_selection_ = value; }
+		int getDefaultSelection() const { return default_selection_; }
+		void allowSelection(bool val=true) { allow_selection_ = val; }
+		void mustSelect(bool val=true, int nrow=0) { must_select_ = val; selected_row_ = nrow; }
+		bool hasMustSelect() const { return must_select_; }
+		void swallowClicks(bool val=true) { swallow_clicks_ = val; }
+		int selection() const { return selected_row_; }
+		void registerMouseoverCallback(callback_type cb);
+		void registerSelectionCallback(callback_type cb);
+		void registerRowSelectionCallback(std::function<void()> cb);
 
-	void onSetYscroll(int old_value, int value);
+		void setMaxHeight(int amount) { max_height_ = amount; }
 
-	void allow_draw_highlight(bool val=true) { allow_highlight_ = val; }
+		void onSetYscroll(int old_value, int value);
 
-	bool hasFocus() const;
-	virtual WidgetPtr getWidgetById(const std::string& id);
-	virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
+		void allowDrawHighlight(bool val=true) { allow_highlight_ = val; }
 
-	virtual std::vector<WidgetPtr> getChildren() const;
-protected:
-	virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-	virtual void handleDraw() const override;
-	virtual void handleProcess() override;
+		bool hasFocus() const;
+		virtual WidgetPtr getWidgetById(const std::string& id);
+		virtual ConstWidgetPtr getWidgetById(const std::string& id) const;
 
-private:
-	DECLARE_CALLABLE(grid);
+		virtual std::vector<WidgetPtr> getChildren() const;
+	protected:
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
+		virtual void handleDraw() const override;
+		virtual void handleProcess() override;
 
-	int row_at(int x, int y) const;
-	void recalculate_dimensions();
+	private:
+		DECLARE_CALLABLE(grid);
 
-	void visitValues(game_logic::FormulaCallableVisitor& visitor);
+		int getRowAt(int x, int y) const;
+		void recalculateDimensions();
 
-	int nrows() const { return cells_.size()/ncols_; }
-	int ncols_;
-	std::vector<WidgetPtr> cells_;
-	std::vector<WidgetPtr> visible_cells_;
-	std::vector<int> col_widths_;
-	std::vector<COLUMN_ALIGN> col_aligns_;
-	std::vector<int> header_rows_;
-	int row_height_;
-	int selected_row_;
-	bool allow_selection_;
-	bool must_select_;
-	bool swallow_clicks_;
-	bool allow_highlight_;
-	int default_selection_;
-	bool draw_selection_highlight_;
+		void visitValues(game_logic::FormulaCallableVisitor& visitor);
 
-	// Explicitly set dimensions
-	int set_w_;
-	int set_h_;
+		int getNRows() const { return cells_.size()/ncols_; }
+		int ncols_;
+		std::vector<WidgetPtr> cells_;
+		std::vector<WidgetPtr> visible_cells_;
+		std::vector<int> col_widths_;
+		std::vector<ColumnAlign> col_aligns_;
+		std::vector<int> header_rows_;
+		int row_height_;
+		int selected_row_;
+		bool allow_selection_;
+		bool must_select_;
+		bool swallow_clicks_;
+		bool allow_highlight_;
+		int default_selection_;
+		bool draw_selection_highlight_;
 
-	std::vector<WidgetPtr> new_row_;
-	std::vector<std::function<void()> > row_callbacks_;
-	callback_type on_mouseover_;
-	callback_type on_select_;
-	int hpad_, vpad_;
-	bool show_background_;
+		// Explicitly set dimensions
+		int set_w_;
+		int set_h_;
 
-	int max_height_;
+		std::vector<WidgetPtr> new_row_;
+		std::vector<std::function<void()> > row_callbacks_;
+		callback_type on_mouseover_;
+		callback_type on_select_;
+		int hpad_, vpad_;
+		bool show_background_;
 
-	void selectDelegate(int selection);
-	void mouseover_delegate(int selection);
+		int max_height_;
 
-	game_logic::formula_ptr ffl_on_select_;
-	game_logic::formula_ptr ffl_on_mouseover_;
-	game_logic::FormulaCallablePtr select_arg_;
-	game_logic::FormulaCallablePtr mouseover_arg_;
+		void selectDelegate(int selection);
+		void mouseoverDelegate(int selection);
 
-	friend class dropdown_widget;
-};
+		game_logic::FormulaPtr ffl_on_select_;
+		game_logic::FormulaPtr ffl_on_mouseover_;
+		game_logic::FormulaCallablePtr select_arg_;
+		game_logic::FormulaCallablePtr mouseover_arg_;
+	};
 
-typedef boost::intrusive_ptr<grid> grid_ptr;
-typedef boost::intrusive_ptr<const grid> const_grid_ptr;
+	typedef boost::intrusive_ptr<Grid> GridPtr;
+	typedef boost::intrusive_ptr<const Grid> ConstGridPtr;
 
-int show_grid_as_context_menu(grid_ptr grid, WidgetPtr draw_widget);
-int show_grid_as_context_menu(grid_ptr grid, const std::vector<WidgetPtr> draw_widgets);
-
+	int show_grid_as_context_menu(GridPtr grid, WidgetPtr draw_widget);
+	int show_grid_as_context_menu(GridPtr grid, const std::vector<WidgetPtr> draw_widgets);
 }
-
-#endif

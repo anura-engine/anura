@@ -120,7 +120,7 @@
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
@@ -163,6 +163,7 @@
     <ClInclude Include="..\..\src\animation_creator.hpp" />
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
     <ClInclude Include="..\..\src\animation_widget.hpp" />
+    <ClInclude Include="..\..\src\array_callable.hpp" />
     <ClInclude Include="..\..\src\asserts.hpp" />
     <ClInclude Include="..\..\src\b2d_ffl.hpp" />
     <ClInclude Include="..\..\src\background.hpp" />
@@ -180,6 +181,7 @@
     <ClInclude Include="..\..\src\collision_utils.hpp" />
     <ClInclude Include="..\..\src\Color.hpp" />
     <ClInclude Include="..\..\src\ColorTransform.hpp" />
+    <ClInclude Include="..\..\src\ConcurrentCache.hpp" />
     <ClInclude Include="..\..\src\concurrent_cache.hpp" />
     <ClInclude Include="..\..\src\controls.hpp" />
     <ClInclude Include="..\..\src\controls_dialog.hpp" />
@@ -197,7 +199,6 @@
     <ClInclude Include="..\..\src\difficulty.hpp" />
     <ClInclude Include="..\..\src\distortion.hpp" />
     <ClInclude Include="..\..\src\drag_widget.hpp" />
-    <ClInclude Include="..\..\src\draw_number.hpp" />
     <ClInclude Include="..\..\src\draw_primitive.hpp" />
     <ClInclude Include="..\..\src\draw_scene.hpp" />
     <ClInclude Include="..\..\src\draw_tile.hpp" />
@@ -234,7 +235,6 @@
     <ClInclude Include="..\..\src\frame.hpp" />
     <ClInclude Include="..\..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\..\src\ft_iface.hpp" />
-    <ClInclude Include="..\..\src\functional.hpp" />
     <ClInclude Include="..\..\src\game_registry.hpp" />
     <ClInclude Include="..\..\src\globals.h" />
     <ClInclude Include="..\..\src\graphical_font.hpp" />
@@ -248,7 +248,6 @@
     <ClInclude Include="..\..\src\hex_object_fwd.hpp" />
     <ClInclude Include="..\..\src\hex_tile.hpp" />
     <ClInclude Include="..\..\src\hex_tileset_editor_dialog.hpp" />
-    <ClInclude Include="..\..\src\hi_res_timer.hpp" />
     <ClInclude Include="..\..\src\http_client.hpp" />
     <ClInclude Include="..\..\src\http_server.hpp" />
     <ClInclude Include="..\..\src\i18n.hpp" />
@@ -274,6 +273,8 @@
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGLFixed.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceSDL.hpp" />
+    <ClInclude Include="..\..\src\kre\Effects.hpp" />
+    <ClInclude Include="..\..\src\kre\EffectsOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\FboOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\Font.hpp" />
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
@@ -291,6 +292,7 @@
     <ClInclude Include="..\..\src\kre\ParticleSystemFwd.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemObservers.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystemParameters.hpp" />
+    <ClInclude Include="..\..\src\kre\PixelFormat.hpp" />
     <ClInclude Include="..\..\src\kre\Renderable.hpp" />
     <ClInclude Include="..\..\src\kre\RenderFwd.hpp" />
     <ClInclude Include="..\..\src\kre\RenderManager.hpp" />
@@ -338,7 +340,6 @@
     <ClInclude Include="..\..\src\drawable_level_tiles.hpp" />
     <ClInclude Include="..\..\src\light.hpp" />
     <ClInclude Include="..\..\src\loading_screen.hpp" />
-    <ClInclude Include="..\..\src\map_utils.hpp" />
     <ClInclude Include="..\..\src\md5.hpp" />
     <ClInclude Include="..\..\src\message_dialog.hpp" />
     <ClInclude Include="..\..\src\module.hpp" />
@@ -347,7 +348,6 @@
     <ClInclude Include="..\..\src\multi_tile_pattern.hpp" />
     <ClInclude Include="..\..\src\nocopy.hpp" />
     <ClInclude Include="..\..\src\object_events.hpp" />
-    <ClInclude Include="..\..\src\options_dialog.hpp" />
     <ClInclude Include="..\..\src\particle_system.hpp" />
     <ClInclude Include="..\..\src\pathfinding.hpp" />
     <ClInclude Include="..\..\src\pause_game_dialog.hpp" />
@@ -368,13 +368,13 @@
     <ClInclude Include="..\..\src\reference_counted_object.hpp" />
     <ClInclude Include="..\..\src\regex_utils.hpp" />
     <ClInclude Include="..\..\src\rich_text_label.hpp" />
+    <ClInclude Include="..\..\src\SceneObjectCallable.hpp" />
     <ClInclude Include="..\..\src\scoped_resource.hpp" />
     <ClInclude Include="..\..\src\scrollable_widget.hpp" />
     <ClInclude Include="..\..\src\scrollbar_widget.hpp" />
     <ClInclude Include="..\..\src\SDLMain.h" />
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\selector_widget.hpp" />
-    <ClInclude Include="..\..\src\settings_dialog.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
     <ClInclude Include="..\..\src\solid_map.hpp" />
     <ClInclude Include="..\..\src\solid_map_fwd.hpp" />
@@ -385,9 +385,9 @@
     <ClInclude Include="..\..\src\stats_server.hpp" />
     <ClInclude Include="..\..\src\stats_web_server.hpp" />
     <ClInclude Include="..\..\src\string_utils.hpp" />
-    <ClInclude Include="..\..\src\surface_formula.hpp" />
+    <ClInclude Include="..\..\src\surface_cache.hpp" />
     <ClInclude Include="..\..\src\surface_palette.hpp" />
-    <ClInclude Include="..\..\src\surface_scaling_generated.hpp" />
+    <ClInclude Include="..\..\src\surface_utils.hpp" />
     <ClInclude Include="..\..\src\svg\color.hpp" />
     <ClInclude Include="..\..\src\svg\geometry.hpp" />
     <ClInclude Include="..\..\src\svg\logger.hpp" />
@@ -426,6 +426,7 @@
     <ClInclude Include="..\..\src\translate.hpp" />
     <ClInclude Include="..\..\src\tree_view_widget.hpp" />
     <ClInclude Include="..\..\src\unit_test.hpp" />
+    <ClInclude Include="..\..\src\uri.hpp" />
     <ClInclude Include="..\..\src\userevents.h" />
     <ClInclude Include="..\..\src\utility_query.hpp" />
     <ClInclude Include="..\..\src\utils.hpp" />
@@ -448,7 +449,6 @@
     <ClInclude Include="..\..\src\formula_callable_visitor.hpp" />
     <ClInclude Include="..\..\src\formula_interface.hpp" />
     <ClInclude Include="..\..\src\formula_visualize_widget.hpp" />
-    <ClInclude Include="..\..\src\frustum.hpp" />
     <ClInclude Include="..\..\src\haptic.hpp" />
     <ClInclude Include="..\..\src\input.hpp" />
     <ClInclude Include="..\..\src\isochunk.hpp" />
@@ -466,7 +466,6 @@
     <ClInclude Include="..\..\src\video_selections.hpp" />
     <ClInclude Include="..\..\src\view3d_widget.hpp" />
     <ClInclude Include="..\..\src\VoronoiDiagramGenerator.h" />
-    <ClInclude Include="..\..\src\voxel_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\voxel_model.hpp" />
     <ClInclude Include="..\..\src\voxel_object.hpp" />
     <ClInclude Include="..\..\src\voxel_object_functions.hpp" />
@@ -559,7 +558,6 @@
     <ClCompile Include="..\..\src\difficulty.cpp" />
     <ClCompile Include="..\..\src\distortion.cpp" />
     <ClCompile Include="..\..\src\drag_widget.cpp" />
-    <ClCompile Include="..\..\src\draw_number.cpp" />
     <ClCompile Include="..\..\src\draw_primitive.cpp" />
     <ClCompile Include="..\..\src\draw_scene.cpp" />
     <ClCompile Include="..\..\src\draw_tile.cpp" />
@@ -574,11 +572,9 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
-    <ClCompile Include="..\..\src\filecache.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
-    <ClCompile Include="..\..\src\font.cpp" />
     <ClCompile Include="..\..\src\formula.cpp" />
     <ClCompile Include="..\..\src\formula_callable_definition.cpp" />
     <ClCompile Include="..\..\src\formula_constants.cpp" />
@@ -598,7 +594,6 @@
     <ClCompile Include="..\..\src\graphical_font_label.cpp" />
     <ClCompile Include="..\..\src\grid_widget.cpp" />
     <ClCompile Include="..\..\src\group_property_editor_dialog.cpp" />
-    <ClCompile Include="..\..\src\gui_formula_functions.cpp" />
     <ClCompile Include="..\..\src\gui_section.cpp" />
     <ClCompile Include="..\..\src\hex_map.cpp" />
     <ClCompile Include="..\..\src\hex_object.cpp" />
@@ -608,7 +603,6 @@
     <ClCompile Include="..\..\src\http_server.cpp" />
     <ClCompile Include="..\..\src\i18n.cpp" />
     <ClCompile Include="..\..\src\image_widget.cpp" />
-    <ClCompile Include="..\..\src\iphone_controls.cpp" />
     <ClCompile Include="..\..\src\joystick.cpp" />
     <ClCompile Include="..\..\src\json_parser.cpp" />
     <ClCompile Include="..\..\src\json_tokenizer.cpp" />
@@ -627,6 +621,7 @@
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp" />
+    <ClCompile Include="..\..\src\kre\EffectsOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\filesystem.cpp" />
     <ClCompile Include="..\..\src\kre\Font.cpp" />
@@ -657,6 +652,7 @@
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
+    <ClCompile Include="..\..\src\kre\SurfaceCache.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />
     <ClCompile Include="..\..\src\kre\TextureOpenGL.cpp" />
@@ -687,7 +683,6 @@
     <ClCompile Include="..\..\src\multiplayer.cpp" />
     <ClCompile Include="..\..\src\multi_tile_pattern.cpp" />
     <ClCompile Include="..\..\src\object_events.cpp" />
-    <ClCompile Include="..\..\src\options_dialog.cpp" />
     <ClCompile Include="..\..\src\particle_system.cpp" />
     <ClCompile Include="..\..\src\pathfinding.cpp" />
     <ClCompile Include="..\..\src\pause_game_dialog.cpp" />
@@ -702,15 +697,13 @@
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
-    <ClCompile Include="..\..\src\raster.cpp" />
-    <ClCompile Include="..\..\src\raster_distortion.cpp" />
     <ClCompile Include="..\..\src\rectangle_rotator.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
+    <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
     <ClCompile Include="..\..\src\scrollable_widget.cpp" />
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\selector_widget.cpp" />
-    <ClCompile Include="..\..\src\settings_dialog.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
     <ClCompile Include="..\..\src\solid_map.cpp" />
     <ClCompile Include="..\..\src\sound.cpp" />
@@ -720,8 +713,9 @@
     <ClCompile Include="..\..\src\stats_server_main.cpp" />
     <ClCompile Include="..\..\src\stats_web_server.cpp" />
     <ClCompile Include="..\..\src\string_utils.cpp" />
+    <ClCompile Include="..\..\src\surface_cache.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
-    <ClCompile Include="..\..\src\surface_scaling.cpp" />
+    <ClCompile Include="..\..\src\surface_utils.cpp" />
     <ClCompile Include="..\..\src\svg\logger.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
     <ClCompile Include="..\..\src\svg\svg_container.cpp" />
@@ -771,12 +765,10 @@
     <ClCompile Include="..\..\src\wml_formula_callable.cpp" />
     <ClCompile Include="..\..\src\bar_widget.cpp" />
     <ClCompile Include="..\..\src\color_picker.cpp" />
-    <ClCompile Include="..\..\src\fbo_scene.cpp" />
     <ClCompile Include="..\..\src\formula_callable.cpp" />
     <ClCompile Include="..\..\src\formula_callable_visitor.cpp" />
     <ClCompile Include="..\..\src\formula_interface.cpp" />
     <ClCompile Include="..\..\src\formula_visualize_widget.cpp" />
-    <ClCompile Include="..\..\src\frustum.cpp" />
     <ClCompile Include="..\..\src\input.cpp" />
     <ClCompile Include="..\..\src\isochunk.cpp" />
     <ClCompile Include="..\..\src\isoworld.cpp" />
@@ -795,7 +787,6 @@
     <ClCompile Include="..\..\src\VoronoiDiagramGenerator.cpp" />
     <ClCompile Include="..\..\src\voxel_animation.cpp" />
     <ClCompile Include="..\..\src\voxel_editor.cpp" />
-    <ClCompile Include="..\..\src\voxel_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\voxel_model.cpp" />
     <ClCompile Include="..\..\src\voxel_object.cpp" />
     <ClCompile Include="..\..\src\voxel_object_functions.cpp" />

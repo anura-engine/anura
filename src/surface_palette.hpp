@@ -26,10 +26,10 @@
 #include <string>
 
 #include "kre/Surface.hpp"
-#include "Color.hpp"
 
 namespace graphics
 {
+
 	int get_palette_id(const std::string& name);
 	const std::string& get_palette_name(int id);
 

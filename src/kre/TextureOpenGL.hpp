@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -51,6 +51,8 @@ namespace KRE
 		void Update(int x, unsigned width, void* pixels) override;
 		void Update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, void* pixels) override;
 		void Update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) override;
+
+		const unsigned char* colorAt(int x, int y) const override;
 	private:
 		void CreateTexture(const PixelFormat::PF& fmt);
 		void Rebuild() override;

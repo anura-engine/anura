@@ -1,3 +1,27 @@
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
+
+/* XXX -- needs a re-write
 #include <boost/array.hpp>
 #include <boost/shared_array.hpp>
 #include <boost/intrusive_ptr.hpp>
@@ -38,8 +62,6 @@
 #else
 #define bmround	round
 #endif
-
-#if defined(USE_ISOMAP)
 
 #define EXT_CALL(call) call
 #define EXT_MACRO(macro) macro
@@ -136,7 +158,7 @@ private:
 	void mouseover_layer(int nlayer);
 	void select_layer(int nlayer, gui::grid* layer_grid);
 
-	void on_save();
+	void onSave();
 	void undo();
 	void redo();
 
@@ -512,10 +534,6 @@ glm::ivec3 iso_renderer::position_to_cube(int xp, int yp, glm::ivec3* facing)
 	if(facing->z > 0) {
 		--voxel_coord.z; 
 	}
-	/*std::cerr << "xp,yp:"  << xp << "," << yp
-		<< " : wc:" << world_coords.x << "," << world_coords.y << "," << world_coords.z
-		<< " : vc:" << voxel_coord.x << "," << voxel_coord.y << "," << voxel_coord.z
-		<< " : face:" << facing_name(*facing) << std::endl;*/
 	return voxel_coord;
 }
 
@@ -956,7 +974,7 @@ void iso_renderer::render_fbo()
 		graphics::color color = p.second.color;
 		const bool is_selected = get_editor().get_cursor() && *get_editor().get_cursor() == pos || get_editor().nhighlight_layer() >= 0 && p.second.nlayer == get_editor().nhighlight_layer();
 		if(is_selected) {
-			const int delta = sin(SDL_GetTicks()*0.01)*64;
+			const int delta = sin(profile::get_tick_time()*0.01)*64;
 			graphics::color_transform transform(delta, delta, delta, 0);
 			graphics::color_transform new_color = graphics::color_transform(color) + transform;
 			color = new_color.to_color();
@@ -1707,7 +1725,7 @@ void perspective_renderer::handleDraw() const
 
 		graphics::color color = p.second.color;
 		if(is_selected) {
-			const int delta = sin(SDL_GetTicks()*0.01)*64;
+			const int delta = sin(profile::get_tick_time()*0.01)*64;
 			graphics::color_transform transform(delta, delta, delta, 0);
 			graphics::color_transform new_color = graphics::color_transform(color) + transform;
 			color = new_color.to_color();
@@ -1903,10 +1921,10 @@ void perspective_widget::init()
 	else if(zdir_) { description = flipped_ ? "Back" : "Front"; }
 
 	description_label_.reset(new label(description, 12));
-	toolbar->add_col(description_label_);
-	toolbar->add_col(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_widget::flip, this)));
-	toolbar->add_col(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomIn, renderer_.get())));
-	toolbar->add_col(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomOut, renderer_.get())));
+	toolbar->addCol(description_label_);
+	toolbar->addCol(new button(new label("Flip", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_widget::flip, this)));
+	toolbar->addCol(new button(new label("+", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomIn, renderer_.get())));
+	toolbar->addCol(new button(new label("-", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&perspective_renderer::zoomOut, renderer_.get())));
 	addWidget(toolbar);
 
 	addWidget(renderer_);
@@ -2011,9 +2029,9 @@ void voxel_editor::init()
 
 	grid_ptr toolbar(new grid(3));
 
-	toolbar->add_col(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::on_save, this))));
-	toolbar->add_col(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::undo, this))));
-	toolbar->add_col(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::redo, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Save", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::on_save, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Undo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::undo, this))));
+	toolbar->addCol(WidgetPtr(new button(new label("Redo", graphics::color("antique_white").as_sdl_color(), 14, "Montaga-Regular"), std::bind(&voxel_editor::redo, this))));
 	addWidget(toolbar, area_.x2() - 190, area_.y() + 4);
 
 	tool_borders_.clear();
@@ -2024,11 +2042,11 @@ void voxel_editor::init()
 		ButtonPtr tool_button(
 		  new button(WidgetPtr(new GuiSectionWidget(ToolIcons[n], 26, 26)),
 		      std::bind(&voxel_editor::select_tool, this, static_cast<VOXEL_TOOL>(n))));
-		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? graphics::color_white() : graphics::color_black()));
-		tools_grid->add_col(WidgetPtr(tool_borders_.back()));
+		tool_borders_.push_back(new BorderWidget(tool_button, tool_ == n ? KRE::Color::colorWhite() : graphics::color_black()));
+		tools_grid->addCol(WidgetPtr(tool_borders_.back()));
 	}
 
-	tools_grid->finish_row();
+	tools_grid->finishRow();
 
 	addWidget(tools_grid);
 
@@ -2039,15 +2057,15 @@ void voxel_editor::init()
 		grid_ptr layers_grid(new grid(2));
 
 		for(int n = 0; n != layers_.size(); ++n) {
-			layers_grid->add_col(WidgetPtr(new label(model_.layer_types[n].name)));
-			layers_grid->add_col(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
+			layers_grid->addCol(WidgetPtr(new label(model_.layer_types[n].name)));
+			layers_grid->addCol(WidgetPtr(new button(layers_[n].name, std::bind(&voxel_editor::on_change_layer_button_clicked, this, n))));
 		}
 
-		layers_grid->allow_selection();
+		layers_grid->allowSelection();
 		layers_grid->set_draw_selection_highlight();
 		layers_grid->set_default_selection(current_layer_);
 		layers_grid->register_mouseover_callback(std::bind(&voxel_editor::mouseover_layer, this, _1));
-		layers_grid->register_selection_callback(std::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
+		layers_grid->registerSelectionCallback(std::bind(&voxel_editor::select_layer, this, _1, layers_grid.get()));
 
 		addWidget(layers_grid);
 	}
@@ -2161,16 +2179,16 @@ void voxel_editor::on_change_layer_button_clicked(int nlayer)
 	std::vector<std::pair<std::string,Layer> > variations(layer.variations.begin(), layer.variations.end());
 
 	grid_ptr context_menu(new grid(2));
-	context_menu->set_hpad(10);
+	context_menu->setHpad(10);
 
 	for(const std::pair<std::string,Layer>& p : variations) {
-		context_menu->add_col(p.first);
-		context_menu->add_col("");
+		context_menu->addCol(p.first);
+		context_menu->addCol("");
 	}
 
 	boost::intrusive_ptr<TextEditorWidget> editor(new TextEditorWidget(100));
-	context_menu->add_col(editor);
-	context_menu->add_col("add");
+	context_menu->addCol(editor);
+	context_menu->addCol("add");
 
 	int result = show_grid_as_context_menu(context_menu, WidgetPtr(this));
 	if(result < 0) {
@@ -2249,7 +2267,7 @@ void voxel_editor::select_layer(int nlayer, grid* layer_grid)
 	}
 }
 
-void voxel_editor::on_save()
+void voxel_editor::onSave()
 {
 	if(fname_.empty()) {
 		std::cerr << "NO FILENAME. CANNOT SAVE\n";
@@ -2293,7 +2311,7 @@ void voxel_editor::handleProcess()
 {
 	VOXEL_TOOL current_tool = tool();
 	for(int n = 0; n != tool_borders_.size(); ++n) {
-		tool_borders_[n]->setColor(n == current_tool ? graphics::color_white() : graphics::color_black());
+		tool_borders_[n]->setColor(n == current_tool ? KRE::Color::colorWhite() : graphics::color_black());
 	}
 
 	dialog::handleProcess();
@@ -2355,7 +2373,7 @@ UTILITY(voxel_editor)
 	}
 	
 	boost::intrusive_ptr<voxel_editor> editor(new voxel_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
-	editor->show_modal();
+	editor->showModal();
 }
 
-#endif //USE_SHADERS
+*/

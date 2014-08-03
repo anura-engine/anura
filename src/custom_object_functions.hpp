@@ -46,18 +46,18 @@ public:
 	EntityCommandCallable() : expr_(NULL) {}
 	void runCommand(Level& lvl, Entity& obj) const;
 
-	void setExpression(const game_logic::formula_expression* expr);
+	void setExpression(const game_logic::FormulaExpression* expr);
 
 	bool isCommand() const { return true; }
 
 private:
 	virtual void execute(Level& lvl, Entity& ob) const = 0;
 	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 
 	//these two members are used as a more compiler-friendly version of a
-	//intrusive_ptr<formula_expression>
-	const game_logic::formula_expression* expr_;
+	//intrusive_ptr<FormulaExpression>
+	const game_logic::FormulaExpression* expr_;
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 };
 
@@ -67,18 +67,18 @@ public:
 	CustomObjectCommandCallable() : expr_(NULL) {}
 	void runCommand(Level& lvl, CustomObject& ob) const;
 
-	void setExpression(const game_logic::formula_expression* expr);
+	void setExpression(const game_logic::FormulaExpression* expr);
 
 	bool isCommand() const { return true; }
 
 private:
 	virtual void execute(Level& lvl, CustomObject& ob) const = 0;
 	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 	
 	//these two members are used as a more compiler-friendly version of a
-	//intrusive_ptr<formula_expression>
-	const game_logic::formula_expression* expr_;
+	//intrusive_ptr<FormulaExpression>
+	const game_logic::FormulaExpression* expr_;
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 };
 
@@ -88,7 +88,7 @@ public:
 	bool isCommand() const { return true; }
 private:
 	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 };
 
 class SwallowMouseCommandCallable : public game_logic::FormulaCallable 
@@ -97,5 +97,5 @@ public:
 	bool isCommand() const { return true; }
 private:
 	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 };

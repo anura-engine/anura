@@ -44,7 +44,7 @@ namespace gui
 		WidgetPtr label_widget_;
 		std::function<void(bool)> onclick_;
 		bool checked_;
-		game_logic::formula_ptr click_handler_;
+		game_logic::FormulaPtr click_handler_;
 		void click(bool checked);
 		int hpadding_;
 	};

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,19 +21,23 @@
 	   distribution.
 */
 
-#include "module.hpp"
+#pragma once
 
-namespace sys
+#include "Effects.hpp"
+
+namespace KRE
 {
-	namespace
+	namespace OpenGL
 	{
-		typedef std::map<std::string,std::string> FilesUnderFolder;
-		typedef std::map<std::string, FilesUnderFolder> FileMap;
-		FileMap& get_filepath_cache()
+		class StippleEffect : public Effect
 		{
-			static FileMap res;
-			return res;
-		}
+		public:
+			explicit StippleEffect(const variant& node);
+			void apply() override;
+			void clear() override;
+		private:
+			int factor_;
+			unsigned pattern_;
+		};
 	}
-
 }

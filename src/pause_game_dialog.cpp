@@ -1,19 +1,26 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include "button.hpp"
 #include "controls_dialog.hpp"
 #include "slider.hpp"
@@ -42,7 +49,7 @@ namespace
 
 PAUSE_GAME_RESULT show_pause_game_dialog()
 {
-	PAUSE_GAME_RESULT result = PAUSE_GAME_QUIT;
+	PAUSE_GAME_RESULT result = PAUSE_GAME_RESULT::QUIT;
 	
 	int button_width = 220;//232;
 	int button_height = 45;//50;
@@ -67,6 +74,8 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 #endif
 
 	using namespace gui;
+	using std::placeholders::_1;
+
 	WidgetPtr t1;
 	WidgetPtr t2;
 	WidgetPtr resume_label;
@@ -169,7 +178,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		button_swap_label = WidgetPtr(new GraphicalFontLabel(_("Reverse A and B"), "door_label", 2));
 	}
 	if(module::get_module_args() != NULL) {
-		variant mod_args = module::get_module_args()->query_value("from_lobby");
+		variant mod_args = module::get_module_args()->queryValue("from_lobby");
 		if(mod_args.is_bool() && mod_args.as_bool() == true && module::get_module_name() != "lobby") {
 			return_label->setValue("text", variant(_("Return to Lobby")));
 		}
@@ -191,7 +200,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 
 	using namespace std::placeholders;
 	WidgetPtr s1(new Slider(slider_width, std::bind(sound::set_music_volume, _1), sound::get_music_volume()));
-	WidgetPtr s2(new Slider(slider_width, std::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
+	WidgetPtr s2(new Slider(slider_width, std::bind(sound::setSoundVolume, _1), sound::get_sound_volume()));
 
 	// Prevents them from being selectable as tab items when using a controller, keys.
 	t1->setTabStop(-1);
@@ -208,16 +217,16 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 	}
 	Dialog d((preferences::virtual_screen_width()/2 - window_w/2) & ~1, (preferences::virtual_screen_height()/2 - window_h/2) & ~1, window_w, window_h);
 	d.setPadding(padding);
-	d.set_background_frame("empty_window");
-	d.set_upscale_frame(upscale_dialog_frame);
+	d.setBackgroundFrame("empty_window");
+	d.setUpscaleFrame(upscale_dialog_frame);
 
-	d.set_draw_background_fn(draw_last_scene);
+	d.setDrawBackgroundFn(draw_last_scene);
 
-	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b1(new Button(resume_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::CONTINUE), BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr b2(new Button(controls_label, show_controls_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 	ButtonPtr language_button(new Button(language_label, show_language_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
-	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
+	ButtonPtr b3(new Button(return_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::GO_TO_TITLESCREEN), BUTTON_STYLE_NORMAL, buttonResolution));
+	ButtonPtr b4(new Button(exit_label, std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::QUIT), BUTTON_STYLE_DEFAULT, buttonResolution));
 	ButtonPtr b5(new Checkbox(button_swap_label, preferences::reverse_ab(), std::bind(preferences::set_reverse_ab, _1), buttonResolution));
 	ButtonPtr b_video(new Button(video_select_label, show_video_selection_dialog, BUTTON_STYLE_NORMAL, buttonResolution));
 
@@ -263,10 +272,10 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		if(show_exit) { d.addWidget(b4); }
 	}
 
-	d.set_on_quit(std::bind(end_dialog, &d, &result, PAUSE_GAME_QUIT));
-	d.show_modal();
-	if(d.cancelled() && result == PAUSE_GAME_QUIT) {
-		result = PAUSE_GAME_CONTINUE;
+	d.setOnQuit(std::bind(end_dialog, &d, &result, PAUSE_GAME_RESULT::QUIT));
+	d.showModal();
+	if(d.cancelled() && result == PAUSE_GAME_RESULT::QUIT) {
+		result = PAUSE_GAME_RESULT::CONTINUE;
 	}
 
 	return result;

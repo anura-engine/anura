@@ -23,6 +23,8 @@
 
 #pragma once
 
+/* XXX -- needs re-write
+
 #include <string>
 
 #include "formula.hpp"
@@ -48,17 +50,19 @@ public:
 	voxel_object_command_callable() : expr_(NULL) {}
 	void runCommand(voxel::world& world, voxel::user_voxel_object& obj) const;
 
-	void setExpression(const game_logic::formula_expression* expr);
+	void setExpression(const game_logic::FormulaExpression* expr);
 
 	bool isCommand() const { return true; }
 
 private:
 	virtual void execute(voxel::world& world, voxel::user_voxel_object& ob) const = 0;
 	variant getValue(const std::string& key) const { return variant(); }
-	void getInputs(std::vector<game_logic::formula_input>* inputs) const {}
+	void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {}
 
 	//these two members are used as a more compiler-friendly version of a
-	//intrusive_ptr<formula_expression>
-	const game_logic::formula_expression* expr_;
+	//intrusive_ptr<FormulaExpression>
+	const game_logic::FormulaExpression* expr_;
 	boost::intrusive_ptr<const reference_counted_object> expr_holder_;
 };
+
+*/

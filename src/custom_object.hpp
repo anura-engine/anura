@@ -68,7 +68,7 @@ public:
 
 	void validate_properties();
 
-	bool is_a(const std::string& type) const;
+	bool isA(const std::string& type) const;
 
 	//finishLoading(): called when a level finishes loading all objects,
 	//and allows us to do any final setup such as finding our parent.
@@ -161,8 +161,8 @@ public:
 	virtual EntityPtr clone() const;
 	virtual EntityPtr backup() const;
 
-	game_logic::const_formula_ptr getEventHandler(int key) const;
-	void setEventHandler(int, game_logic::const_formula_ptr f);
+	game_logic::ConstFormulaPtr getEventHandler(int key) const;
+	void setEventHandler(int, game_logic::ConstFormulaPtr f);
 
 	bool canInteractWith() const;
 
@@ -194,7 +194,7 @@ public:
 
 	virtual bool handle_sdl_event(const SDL_Event& event, bool claimed);
 #ifndef NO_EDITOR
-	virtual const_editor_entity_info_ptr getEditorInfo() const;
+	virtual ConstEditorEntityInfoPtr getEditorInfo() const override;
 #endif // !NO_EDITOR
 
 	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);
@@ -211,15 +211,15 @@ public:
 	
 	bool executeCommand(const variant& var);
 
-	virtual game_logic::formula_ptr createFormula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v);
 
 	bool allowLevelCollisions() const;
 
 	//statistic on how many FFL events are handled every second.
 	static int events_handled_per_second;
 
-	const std::vector<light_ptr>& lights() const { return lights_; }
-	void swapLights(std::vector<light_ptr>& lights) { lights_.swap(lights); }
+	const std::vector<LightPtr>& lights() const { return lights_; }
+	void swapLights(std::vector<LightPtr>& lights) { lights_.swap(lights); }
 
 	void shiftPosition(int x, int y);
 
@@ -300,7 +300,7 @@ protected:
 
 	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
-	enum STANDING_STATUS { NOT_STANDING, STANDING_BACK_FOOT, STANDING_FRONT_FOOT };
+	enum class STANDING_STATUS { NOT_STANDING, BACK_FOOT, FRONT_FOOT };
 	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=NULL) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);
@@ -350,7 +350,7 @@ private:
 	ConstSolidInfoPtr calculateSolid() const;
 	ConstSolidInfoPtr calculatePlatform() const;
 
-	virtual void getInputs(std::vector<game_logic::formula_input>* inputs) const;
+	virtual void getInputs(std::vector<game_logic::FormulaInput>* inputs) const;
 
 	int slopeStandingOn(int range) const;
 
@@ -368,6 +368,9 @@ private:
 	int velocity_x_, velocity_y_;
 	int accel_x_, accel_y_;
 	int gravity_shift_;
+
+	virtual int currentRotation() const override;
+
 	decimal rotate_z_;
 
     void setMidX(int new_mid_x) {
@@ -397,9 +400,9 @@ private:
 	
 	int sound_volume_;	//see sound.cpp; valid values are 0-128, note that this affects all sounds spawned by this object
 
-	game_logic::const_formula_ptr next_animation_formula_;
+	game_logic::ConstFormulaPtr next_animation_formula_;
 
-	game_logic::formula_variable_storage_ptr vars_, tmp_vars_;
+	game_logic::FormulaVariableStoragePtr vars_, tmp_vars_;
 	game_logic::MapFormulaCallablePtr tags_;
 
 	variant& get_property_data(int slot) { if(property_data_.size() <= size_t(slot)) { property_data_.resize(slot+1); } return property_data_[slot]; }
@@ -425,7 +428,7 @@ private:
 	//first time process is called will fire the on_load event and set to false
 	bool loaded_;
 
-	std::vector<game_logic::const_formula_ptr> event_handlers_;
+	std::vector<game_logic::ConstFormulaPtr> event_handlers_;
 
 	EntityPtr standing_on_;
 
@@ -477,7 +480,7 @@ private:
 
 	std::vector<std::shared_ptr<AnimatedMovement> > animated_movement_;
 
-	std::vector<light_ptr> lights_;
+	std::vector<LightPtr> lights_;
 
 	std::unique_ptr<rect> platform_area_;
 	ConstSolidInfoPtr platform_solid_info_;
@@ -527,7 +530,7 @@ private:
 	// for lua integration
 #if defined(USE_LUA)
 	void init_lua();
-	std::unique_ptr<lua::lua_context> lua_ptr_;
-	std::unique_ptr<lua::compiled_chunk> lua_chunk_;
+	std::unique_ptr<lua::LuaContext> lua_ptr_;
+	std::unique_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
 };

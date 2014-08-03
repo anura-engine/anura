@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -38,6 +38,8 @@
 #include "DisplayDevice.hpp"
 #include "WindowManager.hpp"
 
+#include "../variant_utils.hpp"
+
 namespace KRE
 {
 	namespace 
@@ -63,20 +65,20 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->LogicalHeight()), 
-		ortho_right_(wnd->LogicalWidth()),
+		ortho_top_(wnd->logicalHeight()), 
+		ortho_right_(wnd->logicalWidth()),
 		clip_planes_set_(false),
 		view_mode_(VIEW_MODE_AUTO)
 	{
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 		position_ = glm::vec3(0.0f, 0.0f, 0.7f); 
-		aspect_ = float(wnd->LogicalWidth())/float(wnd->LogicalHeight());
+		aspect_ = float(wnd->logicalWidth())/float(wnd->logicalHeight());
 	
-		ComputeView();
-		ComputeProjection();
+		computeView();
+		computeProjection();
 	}
 
-	/*Camera::Camera(const variant& node, const WindowManagerPtr& wnd)
+	Camera::Camera(const variant& node, const WindowManagerPtr& wnd)
 		: SceneObject(node["name"].as_string()), 
 		fov_(default_fov), 
 		horizontal_angle_(default_horizontal_angle), 
@@ -88,30 +90,30 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->logical_height()), 
-		ortho_right_(wnd->logical_width()),
+		ortho_top_(wnd->logicalHeight()), 
+		ortho_right_(wnd->logicalWidth()),
 		clip_planes_set_(false)
 	{
 		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 		if(node.has_key("fov")) {
-			fov_ = std::min(90.0f, std::max(15.0f, float(node["fov"].as_decimal().as_float())));
+			fov_ = std::min(90.0f, std::max(15.0f, float(node["fov"].as_float())));
 		}
 		if(node.has_key("horizontal_angle")) {
-			horizontal_angle_ = float(node["horizontal_angle"].as_decimal().as_float());
+			horizontal_angle_ = float(node["horizontal_angle"].as_float());
 		}
 		if(node.has_key("vertical_angle")) {
-			vertical_angle_ = float(node["vertical_angle"].as_decimal().as_float());
+			vertical_angle_ = float(node["vertical_angle"].as_float());
 		}
 		if(node.has_key("speed")) {
-			speed_ = float(node["speed"].as_decimal().as_float());
+			speed_ = float(node["speed"].as_float());
 		}
 		if(node.has_key("mouse_speed")) {
-			mouse_speed_ = float(node["mouse_speed"].as_decimal().as_float());
+			mouse_speed_ = float(node["mouse_speed"].as_float());
 		}
 		if(node.has_key("aspect")) {
-			aspect_ = float(node["aspect"].as_decimal().as_float());
+			aspect_ = float(node["aspect"].as_float());
 		} else {
-			aspect_ = float(preferences::actual_screen_width())/float(preferences::actual_screen_height());
+			aspect_ = float(wnd->logicalWidth())/float(wnd->logicalHeight());
 		}
 
 		if(node.has_key("position")) {
@@ -149,13 +151,13 @@ namespace KRE
 			glm::vec3 up(la["up"][0].as_decimal().as_float(), 
 				la["up"][1].as_decimal().as_float(), 
 				la["up"][2].as_decimal().as_float());
-			look_at(position, target, up);
+			lookAt(position, target, up);
 			view_mode_ = VIEW_MODE_MANUAL;
 		} else {
-			ComputeView();
+			computeView();
 		}
-		ComputeProjection();
-	}*/
+		computeProjection();
+	}
 
 	Camera::Camera(const std::string& name, int left, int right, int top, int bottom)
 		: SceneObject(name), 
@@ -179,7 +181,7 @@ namespace KRE
 		position_ = glm::vec3(0.0f, 0.0f, 0.70f); 
 		aspect_ = float(right - left)/float(top - bottom);
 	
-		ComputeProjection();
+		computeProjection();
 	}
 
 	Camera::Camera(const std::string& name, const WindowManagerPtr& wnd, float fov, float aspect, float near_clip, float far_clip)
@@ -195,16 +197,16 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->LogicalHeight()), 
-		ortho_right_(wnd->LogicalWidth()),
+		ortho_top_(wnd->logicalHeight()), 
+		ortho_right_(wnd->logicalWidth()),
 		clip_planes_set_(true),
 		view_mode_(VIEW_MODE_AUTO)
 	{
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 
-		ComputeView();
-		ComputeProjection();
+		computeView();
+		computeProjection();
 	}
 
 
@@ -212,7 +214,7 @@ namespace KRE
 	{
 	}
 
-	/*variant Camera::write()
+	variant Camera::write()
 	{
 		variant_builder res;
 		if(type_ == CAMERA_PERSPECTIVE) {
@@ -255,9 +257,9 @@ namespace KRE
 			res.add("lookat", la_map.build());
 		}
 		return res.build();
-	}*/
+	}
 
-	void Camera::ComputeView()
+	void Camera::computeView()
 	{
 		view_mode_ = VIEW_MODE_AUTO;
 		direction_ = glm::vec3(
@@ -277,17 +279,17 @@ namespace KRE
 
 		view_ = glm::lookAt(position_, target_, up_);
 		if(frustum_) {
-			frustum_->UpdateMatrices(projection_, view_);
+			frustum_->updateMatrices(projection_, view_);
 		}
 	}
 
-	void Camera::SetType(CameraType type)
+	void Camera::setType(CameraType type)
 	{
 		type_ = type;
-		ComputeProjection();
+		computeProjection();
 	}
 
-	void Camera::SetOrthoWindow(int left, int right, int top, int bottom)
+	void Camera::setOrthoWindow(int left, int right, int top, int bottom)
 	{
 		ortho_left_ = left;
 		ortho_right_ = right;
@@ -295,7 +297,7 @@ namespace KRE
 		ortho_bottom_ = bottom;
 	
 		if(type_ == CAMERA_ORTHOGONAL) {
-			ComputeProjection();
+			computeProjection();
 		}
 	}
 
@@ -437,7 +439,7 @@ namespace KRE
 	END_DEFINE_CALLABLE(Camera)
 	*/
 
-	void Camera::LookAt(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up)
+	void Camera::lookAt(const glm::vec3& position, const glm::vec3& target, const glm::vec3& up)
 	{
 		view_mode_ = VIEW_MODE_MANUAL;
 		position_ = position;
@@ -446,75 +448,75 @@ namespace KRE
 		direction_ = target_ - position_;
 		view_ = glm::lookAt(position_, target_, up_);
 		if(frustum_) {
-			frustum_->UpdateMatrices(projection_, view_);
+			frustum_->updateMatrices(projection_, view_);
 		}
 	}
 
 
-	void Camera::SetFov(float fov)
+	void Camera::setFov(float fov)
 	{
 		fov_ = fov;
-		ComputeProjection();
+		computeProjection();
 	}
 
-	void Camera::SetClipPlanes(float z_near, float z_far)
+	void Camera::setClipPlanes(float z_near, float z_far)
 	{
 		near_clip_ = z_near;
 		far_clip_ = z_far;
 		clip_planes_set_ = true;
-		ComputeProjection();
+		computeProjection();
 	}
 
-	void Camera::SetAspect(float aspect)
+	void Camera::setAspect(float aspect)
 	{
 		aspect_ = aspect;
-		ComputeProjection();
+		computeProjection();
 	}
 
-	void Camera::AttachFrustum(const FrustumPtr& frustum)
+	void Camera::attachFrustum(const FrustumPtr& frustum)
 	{
 		frustum_ = frustum;
 		if(frustum_) {
-			frustum_->UpdateMatrices(projection_, view_);
+			frustum_->updateMatrices(projection_, view_);
 		}
 	}
 
-	void Camera::ComputeProjection()
+	void Camera::computeProjection()
 	{
 		if(type_ == CAMERA_ORTHOGONAL) {
 			if(clip_planes_set_) {
-				projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), NearClip(), FarClip());
+				projection_ = glm::frustum(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_), getNearClip(), getFarClip());
 			} else {
 				projection_ = glm::ortho(float(ortho_left_), float(ortho_right_), float(ortho_bottom_), float(ortho_top_));
 			}
 		} else {
-			projection_ = glm::perspective(Fov(), aspect_, NearClip(), FarClip());
+			projection_ = glm::perspective(getFov(), aspect_, getNearClip(), getFarClip());
 		}
 		if(frustum_) {
-			frustum_->UpdateMatrices(projection_, view_);
+			frustum_->updateMatrices(projection_, view_);
 		}
 	}
 
-	DisplayDeviceDef Camera::Attach(const DisplayDevicePtr& dd)
+	CameraPtr Camera::clone()
 	{
-		DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-		// XXX
-		return def;
+		auto cam = std::make_shared<Camera>(*this);
+		// If we have the frustum we make a new version of that as well.
+		if(frustum_) {
+			cam->frustum_ = std::make_shared<Frustum>(*frustum_);
+		}
+		return cam;
 	}
 
 	// Convert from a screen position (assume +ve x to right, +ve y down) to world space.
 	// Assumes the depth buffer was enabled.
-	glm::vec3 Camera::ScreenToWorld(int x, int y, int wx, int wy) const
+	glm::vec3 Camera::screenToWorld(int x, int y, int wx, int wy) const
 	{
+		// XXX I tend to think this might be better abstracted into DisplayDevice.
 		glm::vec4 view_port(0, 0, wx, wy);
-
-		//GLfloat depth;
-		//glReadPixels(x, wy - y, 1, 1, GL_DEPTH_COMPONENT, GL_FLOAT, &depth);
-		//glm::vec3 screen(x, wy - y, depth);
-
-		//return glm::unProject(screen, view_, projection_, view_port);
-		ASSERT_LOG(false, "Camera::ScreenToWorld: fixme");
-		return glm::vec3();
+		std::vector<float> depth;
+		DisplayDevice::getCurrent()->readPixels(x, wy - y, 1, 1, ReadFormat::DEPTH, AttrFormat::FLOAT, depth);
+		glm::vec3 screen(x, wy - y, depth[0]);
+		return glm::unProject(screen, view_, projection_, view_port);
 	}
 
 
@@ -526,7 +528,7 @@ namespace KRE
 		}
 	}
 
-	glm::ivec3 Camera::GetFacing(const glm::vec3& coords) const
+	glm::ivec3 Camera::getFacing(const glm::vec3& coords) const
 	{
 		if(dti(coords.x) < dti(coords.y)) {
 			if(dti(coords.x) < dti(coords.z)) {

@@ -41,21 +41,18 @@ static const int EDITOR_SIDEBAR_WIDTH = 220;
 
 namespace gui 
 {
-	class dialog;
+	class Dialog;
 }
 
 namespace editor_dialogs 
 {
 	class CharacterEditorDialog;
-	class editor_layers_dialog;
-	class property_editor_dialog;
-	class segment_editor_dialog;
-	class tileset_editor_dialog;
-	class custom_object_dialog;
-	class hex_tileset_editor_dialog;
-#if defined(USE_ISOMAP)
-	class voxel_editor_dialog;
-#endif
+	class EditorLayersDialog;
+	class PropertyEditorDialog;
+	class SegmentEditorDialog;
+	class TilesetEditorDialog;
+	class CustomObjectDialog;
+	class HexTilesetEditorDialog;
 }
 
 class CodeEditorDialog;
@@ -146,11 +143,6 @@ public:
 	int get_hex_tileset() const { return cur_hex_tileset_; }
 	void set_hex_tileset(int index);
 
-#if defined(USE_ISOMAP)
-	int get_voxel_tileset() const { return cur_voxel_tileset_; }
-	void set_voxel_tileset(int index);
-#endif
-
 	std::vector<enemy_type>& all_characters() const;
 
 	int get_object() const { return cur_object_; }
@@ -166,9 +158,7 @@ public:
 		TOOL_SELECT_OBJECT, 
 		TOOL_EDIT_SEGMENTS, 
 		TOOL_EDIT_HEXES, 
-#if defined(USE_ISOMAP)
 		TOOL_EDIT_VOXELS, 
-#endif
 		NUM_TOOLS };
 	EDIT_TOOL tool() const;
 	void change_tool(EDIT_TOOL tool);
@@ -337,9 +327,6 @@ private:
 	bool upside_down_;
 	int cur_tileset_;
 	int cur_hex_tileset_;
-#if defined(USE_ISOMAP)
-	int cur_voxel_tileset_;
-#endif
 
 	int cur_object_;
 
@@ -348,23 +335,19 @@ private:
 	std::unique_ptr<editor_menu_dialog> editor_menu_dialog_;
 	std::unique_ptr<editor_mode_dialog> editor_mode_dialog_;
 	std::unique_ptr<editor_dialogs::CharacterEditorDialog> character_dialog_;
-	std::unique_ptr<editor_dialogs::editor_layers_dialog> layers_dialog_;
-	std::unique_ptr<editor_dialogs::property_editor_dialog> property_dialog_;
-	std::unique_ptr<editor_dialogs::tileset_editor_dialog> tileset_dialog_;
-	std::unique_ptr<editor_dialogs::hex_tileset_editor_dialog> hex_tileset_dialog_;
-#if defined(USE_ISOMAP)
-	std::unique_ptr<editor_dialogs::voxel_editor_dialog> voxel_dialog_;
-#endif
-
-	std::unique_ptr<editor_dialogs::segment_editor_dialog> segment_dialog_;
+	std::unique_ptr<editor_dialogs::EditorLayersDialog> layers_dialog_;
+	std::unique_ptr<editor_dialogs::PropertyEditorDialog> property_dialog_;
+	std::unique_ptr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
+	std::unique_ptr<editor_dialogs::HexTilesetEditorDialog> hex_tileset_dialog_;
+	std::unique_ptr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
 
 	std::unique_ptr<CodeEditorDialog> code_dialog_;
 
-	external_text_editor_ptr external_code_editor_;
+	ExternalTextEditorPtr external_code_editor_;
 
 	void set_code_file();
 
-	gui::dialog* current_dialog_;
+	gui::Dialog* current_dialog_;
 
 	//if the mouse is currently down, drawing a rect.
 	bool drawing_rect_, dragging_;

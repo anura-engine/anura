@@ -27,6 +27,7 @@
 #include "Color.hpp"
 #include "kre/Canvas.hpp"
 #include "kre/Font.hpp"
+#include "kre/WindowManager.hpp"
 
 #include "input.hpp"
 #include "message_dialog.hpp"
@@ -68,33 +69,34 @@ namespace
 		return i1;
 	}
 
-	message_dialog* current_dialog = NULL;
+	MessageDialog* current_dialog = NULL;
 }
 
-void message_dialog::show_modal(const std::string& text, const std::vector<std::string>* options)
+void MessageDialog::showModal(const std::string& text, const std::vector<std::string>* options)
 {
 	if(current_dialog) {
-		clear_modal();
+		clearModal();
 	}
 
 	const int Width = 650;
 	const int Height = KRE::Font::charHeight(FontSize)*3;
-	current_dialog = new message_dialog(text, rect(graphics::screen_width()/2 - Width/2, graphics::screen_height()/2 - Height/2, Width, Height), options);
+	auto wnd = KRE::WindowManager::getMainWindow();
+	current_dialog = new MessageDialog(text, rect(wnd->width()/2 - Width/2, wnd->height()/2 - Height/2, Width, Height), options);
 }
 
-void message_dialog::clear_modal()
+void MessageDialog::clearModal()
 {
 	delete current_dialog;
 	current_dialog = NULL;
 }
 
-message_dialog* message_dialog::get()
+MessageDialog* MessageDialog::get()
 {
 	return current_dialog;
 }
 
-message_dialog::message_dialog(const std::string& text, const rect& pos,
-                               const std::vector<std::string>* options)
+MessageDialog::MessageDialog(const std::string& text, const rect& pos,
+                             const std::vector<std::string>* options)
   : text_(text), pos_(pos), line_height_(0),
     cur_row_(0), cur_char_(0), cur_wait_(0),
 	selected_option_(0)
@@ -146,7 +148,7 @@ namespace
 	}
 }
 
-void message_dialog::draw() const
+void MessageDialog::draw() const
 {
 	auto canvas = KRE::Canvas::getInstance();
 	draw_frame(pos_);
@@ -194,7 +196,7 @@ void message_dialog::draw() const
 	}
 }
 
-void message_dialog::process()
+void MessageDialog::process()
 {
 	SDL_Event event;
 	while(input::sdl_poll_event(&event)) {
@@ -217,7 +219,7 @@ void message_dialog::process()
 					}
 				}
 				if(cur_row_ >= lines_.size()) {
-					clear_modal();
+					clearModal();
 					return;
 				}
 

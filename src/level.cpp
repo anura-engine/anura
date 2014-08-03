@@ -1,4 +1,4 @@
-/*	/*
+/*
 	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
@@ -313,7 +313,7 @@ Level::Level(const std::string& level_cfg, variant node)
 	air_resistance_ = node["air_resistance"].as_int(20);
 	water_resistance_ = node["water_resistance"].as_int(100);
 
-	camera_rotation_ = game_logic::formula::create_optional_formula(node["camera_rotation"]);
+	camera_rotation_ = game_logic::Formula::createOptionalFormula(node["camera_rotation"]);
 
 	preloads_ = util::split(node["preloads"].as_string());
 
@@ -1679,11 +1679,11 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	if(!opaque_indexes.empty()) {
 #if defined(USE_SHADERS)
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #else
-		glVertexPointer(2, GL_SHORT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
+		glVertexPointer(2, GL_SHORT, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #endif
 		glDrawElements(GL_TRIANGLES, opaque_indexes.size(), TILE_INDEX_TYPE, &opaque_indexes[0]);
 	}
@@ -1691,11 +1691,11 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	if(!translucent_indexes.empty()) {
 #if defined(USE_SHADERS)
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
+		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
+		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #else
-		glVertexPointer(2, GL_SHORT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].vertex[0]);
-		glTexCoordPointer(2, GL_FLOAT, sizeof(KRE::ImageLoadError), &blit_info.blit_vertexes[0].uv[0]);
+		glVertexPointer(2, GL_SHORT, sizeof(tile_corner), &blit_info.blit_vertexes[0].vertex[0]);
+		glTexCoordPointer(2, GL_FLOAT, sizeof(tile_corner), &blit_info.blit_vertexes[0].uv[0]);
 #endif
 		if(blit_info.texture_id == GLuint(-1)) {
 			//we have multiple different texture ID's in this layer. This means
@@ -2081,7 +2081,7 @@ void Level::draw(int x, int y, int w, int h) const
 
 		if(editor_) {
 			for(const EntityPtr& obj : chars_) {
-				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_NONE)) {
+				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_DIRECTION::NONE)) {
 					//if the entity is colliding with the level, then draw
 					//it in red to mark as 'bad'.
 					glBlendFunc(GL_SRC_ALPHA, GL_ONE);
@@ -2424,7 +2424,7 @@ void Level::draw_background(int x, int y, int rotation) const
 		background_->draw(x, y, screen_area, opaque_areas, rotation, cycle());
 	} else {
 		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
-		wnd->clear(KRE::DisplayDevice::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
 	}
 }
 
@@ -2837,7 +2837,7 @@ void Level::set_solid_area(const rect& r, bool solid)
 	std::string empty_info;
 	for(int y = r.y(); y < r.y2(); ++y) {
 		for(int x = r.x(); x < r.x2(); ++x) {
-			set_solid(solid_, x, y, 100, 100, 0, empty_info, solid);
+			setSolid(solid_, x, y, 100, 100, 0, empty_info, solid);
 		}
 	}
 }
@@ -3372,15 +3372,15 @@ void Level::add_solid_rect(int x1, int y1, int x2, int y2, int friction, int tra
 
 void Level::add_solid(int x, int y, int friction, int traction, int damage, const std::string& info)
 {
-	set_solid(solid_, x, y, friction, traction, damage, info);
+	setSolid(solid_, x, y, friction, traction, damage, info);
 }
 
 void Level::add_standable(int x, int y, int friction, int traction, int damage, const std::string& info)
 {
-	set_solid(standable_, x, y, friction, traction, damage, info);
+	setSolid(standable_, x, y, friction, traction, damage, info);
 }
 
-void Level::set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
+void Level::setSolid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info_str, bool solid)
 {
 	tile_pos pos(x/TileSize, y/TileSize);
 	x = x%TileSize;
@@ -3725,7 +3725,7 @@ DEFINE_SET_FIELD
 			obj.before_pause_controls_backup_.reset();
 		}
 		for(EntityPtr e : obj.chars_) {
-			e->mutate_value("paused", value);
+			e->mutateValue("paused", value);
 		}
 	}
 
@@ -4323,7 +4323,7 @@ decimal Level::zoom_level() const
 	return zoom_level_;
 }
 
-void Level::add_speech_dialog(std::shared_ptr<speech_dialog> d)
+void Level::add_speech_dialog(std::shared_ptr<SpeechDialog> d)
 {
 	speech_dialogs_.push(d);
 }
@@ -4335,10 +4335,10 @@ void Level::remove_speech_dialog()
 	}
 }
 
-std::shared_ptr<const speech_dialog> Level::current_speech_dialog() const
+std::shared_ptr<const SpeechDialog> Level::current_speech_dialog() const
 {
 	if(speech_dialogs_.empty()) {
-		return std::shared_ptr<const speech_dialog>();
+		return std::shared_ptr<const SpeechDialog>();
 	}
 
 	return speech_dialogs_.top();
@@ -4486,19 +4486,19 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 	//new position.
 	if(e->getEditorInfo()) {
 		for(const editor_variable_info& var : e->getEditorInfo()->vars_and_properties()) {
-			const variant value = e->query_value(var.variable_name());
+			const variant value = e->queryValue(var.variable_name());
 			switch(var.type()) {
 			case editor_variable_info::XPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_x));
+					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_x));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
 			case editor_variable_info::YPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(value.as_int() + delta_y));
+					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_y));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
@@ -4514,7 +4514,7 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 						}
 					}
 					e->handleEvent("editor_changing_variable");
-					e->mutate_value(var.variable_name(), variant(&new_value));
+					e->mutateValue(var.variable_name(), variant(&new_value));
 					e->handleEvent("editor_changed_variable");
 				}
 			default:
@@ -4612,10 +4612,10 @@ std::pair<std::vector<LevelTile>::const_iterator, std::vector<LevelTile>::const_
 	return std::equal_range(tiles_by_position_.begin(), tiles_by_position_.end(), loc, level_tile_pos_comparer());
 }
 
-game_logic::formula_ptr Level::createFormula(const variant& v)
+game_logic::FormulaPtr Level::createFormula(const variant& v)
 {
 	// XXX Add symbol table here?
-	return game_logic::formula_ptr(new game_logic::formula(v));
+	return game_logic::FormulaPtr(new game_logic::Formula(v));
 }
 
 bool Level::executeCommand(const variant& var)
@@ -4633,7 +4633,7 @@ bool Level::executeCommand(const variant& var)
 			}
 		}
 	} else {
-		game_logic::command_callable* cmd = var.try_convert<game_logic::command_callable>();
+		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
 		if(cmd != NULL) {
 			cmd->runCommand(*this);
 		}
@@ -4655,7 +4655,7 @@ UTILITY(correct_solidity)
 		lvl->setAsCurrentLevel();
 
 		for(EntityPtr c : lvl->get_chars()) {
-			if(entity_collides_with_level(*lvl, *c, MOVE_NONE)) {
+			if(entity_collides_with_level(*lvl, *c, MOVE_DIRECTION::NONE)) {
 				if(place_entity_in_level_with_large_displacement(*lvl, *c)) {
 					LOG_INFO("LEVEL: " << lvl->id() << " CORRECTED " << c->getDebugDescription());
 				} else {
@@ -4673,13 +4673,6 @@ UTILITY(correct_solidity)
 
 UTILITY(compile_levels)
 {
-#ifndef IMPLEMENT_SAVE_PNG
-	LOG_ERROR(
-		<< "This build wasn't done with IMPLEMENT_SAVE_PNG defined. "
-		<< "Consquently image files will not be written, aborting requested operation.");
-	return;
-#endif
-
 	preferences::compiling_tiles = true;
 
 	LOG_INFO("COMPILING LEVELS...");

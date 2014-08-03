@@ -1,4 +1,25 @@
-#if defined(USE_ISOMAP)
+/*
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
+
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
+
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
+*/
 
 #include <assert.h>
 
@@ -66,7 +87,7 @@ bool user_voxel_object::executeCommand(const variant& b)
 void user_voxel_object::handleEvent(int nevent, const FormulaCallable* context)
 {
 	set_event_arg(variant(context));
-	const game_logic::formula* handler = type_->event_handler(nevent);
+	const game_logic::Formula* handler = type_->event_handler(nevent);
 	if(handler) {
 		variant result = handler->execute(*this);
 		executeCommand(result);
@@ -190,5 +211,3 @@ void user_voxel_object::setValue(const std::string& key, const variant& value)
 }
 
 }
-
-#endif

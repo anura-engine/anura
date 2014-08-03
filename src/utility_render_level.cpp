@@ -1,29 +1,34 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include <boost/intrusive_ptr.hpp>
 
 #include <string>
 #include <vector>
 
-#include "foreach.hpp"
-#include "IMG_savepng.h"
+#include "kre/DisplayDevice.hpp"
+#include "kre/WindowManager.hpp"
+
 #include "level.hpp"
 #include "string_utils.hpp"
-#include "texture_frame_buffer.hpp"
 #include "unit_test.hpp"
 
 UTILITY(render_level)
@@ -39,12 +44,12 @@ UTILITY(render_level)
 	std::vector<std::string> files = util::split(args[0]);
 	std::vector<std::string> outputs = util::split(args[1]);
 
-	foreach(const std::string& f, files) {
-		std::cerr << "FILENAME (" << f << ")\n";
+	for(const std::string& f : files) {
+		LOG_INFO("FILENAME (" << f << ")");
 	}
 	
 	if(files.size() != outputs.size()) {
-		std::cerr << "ERROR: " << files.size() << " FILES " << outputs.size() << "outputs\n";
+		LOG_INFO("ERROR: " << files.size() << " FILES " << outputs.size() << "outputs");
 	}
 
 	std::cout << "[";
@@ -53,7 +58,7 @@ UTILITY(render_level)
 		const std::string file = files[n];
 		const std::string output = outputs[n];
 		
-		boost::intrusive_ptr<level> lvl(new level(file));
+		boost::intrusive_ptr<Level> lvl(new Level(file));
 		lvl->set_editor();
 		lvl->finishLoading();
 		lvl->setAsCurrentLevel();
@@ -68,10 +73,12 @@ UTILITY(render_level)
 		std::cout << "\n  {\n  \"name\": \"" << lvl->id() << "\","
 		             << "\n  \"dimensions\": [" << lvl->boundaries().x() << "," << lvl->boundaries().y() << "," << lvl->boundaries().w() << "," << lvl->boundaries().h() << "]\n  }";
 
-		const int seg_width = graphics::screen_width();
-		const int seg_height = graphics::screen_height();
+		auto wnd = KRE::WindowManager::getMainWindow();
 
-		graphics::surface level_surface(SDL_CreateRGBSurface(0, lvl_width, lvl_height, 24, SURFACE_MASK_RGB));
+		const int seg_width = wnd->width();
+		const int seg_height = wnd->height();
+
+		KRE::SurfacePtr level_surface = KRE::Surface::create(lvl_width, lvl_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
 
 		texture_frame_buffer::init(seg_width, seg_height);
 
@@ -87,9 +94,10 @@ UTILITY(render_level)
 				lvl->draw(x, y, seg_width, seg_height);
 				glPopMatrix();
 
-				get_main_window()->swap();
+				wnd->swap();
 
-				graphics::surface s(SDL_CreateRGBSurface(0, seg_width, seg_height, 24, SURFACE_MASK_RGB));
+				auto s = KRE::Surface::create(seg_width, seg_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
+
 				glReadPixels(0, 0, seg_width, seg_height, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
 
 				unsigned char* pixels = (unsigned char*)s->pixels;
@@ -102,14 +110,14 @@ UTILITY(render_level)
 					}
 				}
 
-				SDL_Rect src_rect = {0, 0, seg_width, seg_height};
-				SDL_Rect dst_rect = {x - lvl->boundaries().x(), y - lvl->boundaries().y(), 0, 0};
-				SDL_SetSurfaceBlendMode(s.get(), SDL_BLENDMODE_NONE);
-				SDL_BlitSurface(s.get(), &src_rect, level_surface.get(), &dst_rect);
+				rect src_rect(0, 0, seg_width, seg_height);
+				rect dst_rect(x - lvl->boundaries().x(), y - lvl->boundaries().y(), 0, 0);
+				s->setBlendMode(KRE::Surface::BlendMode::BLEND_MODE_NONE);
+				level_surface->blitTo(s, src_rect, dst_rect);
 			}
 		}
 
-		IMG_SavePNG(output.c_str(), level_surface.get());
+		level_surface->savePng(output);
 	}
 
 	std::cout << "]";

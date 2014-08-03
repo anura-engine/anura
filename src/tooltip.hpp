@@ -39,7 +39,9 @@ namespace gui
 		std::string font_name;
 	};
 
-	void setTooltip(const std::shared_ptr<TooltipItem>& str);
-	void remove_tooltip(const std::shared_ptr<TooltipItem>& str);
+	typedef std::shared_ptr<struct TooltipItem> TooltipItemPtr;
+
+	void set_tooltip(const TooltipItemPtr& str);
+	void remove_tooltip(const TooltipItemPtr& str);
 	void draw_tooltip();
 }

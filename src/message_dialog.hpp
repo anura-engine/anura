@@ -29,19 +29,19 @@
 #include "kre/Geometry.hpp"
 #include "kre/Texture.hpp"
 
-class message_dialog
+class MessageDialog
 {
 public:
-	static void show_modal(const std::string& text, const std::vector<std::string>* options=NULL);
-	static void clear_modal();
-	static message_dialog* get();
+	static void showModal(const std::string& text, const std::vector<std::string>* options=NULL);
+	static void clearModal();
+	static MessageDialog* get();
 	void draw() const;
 	void process();
 
-	int selected_option() const { return selected_option_; }
+	int selectedOption() const { return selected_option_; }
 private:
-	message_dialog(const std::string& text, const rect& pos,
-	               const std::vector<std::string>* options=NULL);
+	MessageDialog(const std::string& text, const rect& pos,
+	              const std::vector<std::string>* options=NULL);
 	std::string text_;
 	rect pos_;
 	int viewable_lines_;
@@ -54,4 +54,4 @@ private:
 	int selected_option_;
 };
 
-typedef boost::intrusive_ptr<message_dialog> message_DialogPtr;
+typedef boost::intrusive_ptr<MessageDialog> MessageDialogPtr;

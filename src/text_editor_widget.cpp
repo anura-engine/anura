@@ -25,12 +25,16 @@
 
 #include <algorithm>
 
-#include "kre/Font.hpp"
 #include "kre/Canvas.hpp"
+#include "kre/DisplayDevice.hpp"
+#include "kre/Font.hpp"
+#include "kre/WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "clipboard.hpp"
 #include "input.hpp"
+#include "profile_timer.hpp"
+#include "scoped_resource.hpp"
 #include "string_utils.hpp"
 #include "text_editor_widget.hpp"
 #include "unit_test.hpp"
@@ -46,26 +50,22 @@ namespace gui
 		typedef KRE::TexturePtr char_texture_ptr;
 		std::vector<char_texture_ptr> char_textures;
 
-		struct CharArea {
-			float x1, y1, x2, y2;
-		};
-
-		std::map<int, std::map<char, CharArea> > all_char_to_area;
+		std::map<int, std::map<char, rect>> all_char_to_area;
 
 		std::string monofont()
 		{
 			return KRE::Font::get_default_monospace_font();
 		}
 
-		const CharArea& get_char_area(int font_size, char c)
+		const rect& get_char_area(int font_size, char c)
 		{
-			std::map<char, CharArea>& char_to_area = all_char_to_area[font_size];
-			std::map<char, CharArea>::const_iterator i = char_to_area.find(c);
+			std::map<char, rect>& char_to_area = all_char_to_area[font_size];
+			std::map<char, rect>::const_iterator i = char_to_area.find(c);
 			if(i != char_to_area.end()) {
 				return i->second;
 			}
 
-			const CharArea& result = char_to_area[c];
+			const rect& result = char_to_area[c];
 
 			const int char_width = KRE::Font::charWidth(font_size, monofont());
 			const int char_height = KRE::Font::charHeight(font_size, monofont());
@@ -73,11 +73,11 @@ namespace gui
 			std::string str;
 			int row = 0, col = 0;
 			int nchars = 0;
-			for(std::map<char, CharArea>::iterator i = char_to_area.begin();
+			for(std::map<char, rect>::iterator i = char_to_area.begin();
 				i != char_to_area.end(); ++i) {
 				str.push_back(i->first);
 	
-				CharArea area = {(GLfloat)col*char_width, (GLfloat)row*char_height, (GLfloat)(col+1)*char_width, (GLfloat)(row+1)*char_height};
+				rect area(col*char_width, row*char_height, (col+1)*char_width, (row+1)*char_height);
 
 				char_to_area[i->first] = area;
 
@@ -90,16 +90,7 @@ namespace gui
 			}
 
 			char_texture_ptr& char_texture = char_textures[font_size];
-			char_texture.reset(new graphics::texture(font::render_text(str, graphics::color_white(), font_size, monofont())));
-
-			for(std::map<char, CharArea>::iterator i = char_to_area.begin();
-				i != char_to_area.end(); ++i) {
-				CharArea& area = i->second;
-				area.x1 = char_texture->translate_coord_x(area.x1/GLfloat(char_texture->width()));
-				area.x2 = char_texture->translate_coord_x(area.x2/GLfloat(char_texture->width()));
-				area.y1 = char_texture->translate_coord_y(area.y1/GLfloat(char_texture->height()));
-				area.y2 = char_texture->translate_coord_y(area.y2/GLfloat(char_texture->height()));
-			}
+			char_texture = KRE::Font::getInstance()->renderText(str, KRE::Color::colorWhite(),font_size, true, monofont());
 
 			return result;
 		}
@@ -114,10 +105,10 @@ namespace gui
 				return;
 			}
 
-			std::map<char, CharArea>& char_to_area = all_char_to_area[font_size];
+			std::map<char, rect>& char_to_area = all_char_to_area[font_size];
 			for(char c = 1; c < 127; ++c) {
 				if(util::c_isprint(c) && c != 'a') {
-					char_to_area[c] = CharArea();
+					char_to_area[c] = rect();
 				}
 			}
 
@@ -219,7 +210,7 @@ namespace gui
 			ffl_onBeginEnter_ = getEnvironment()->createFormula(v["onBeginEnter"]);
 		}
 		if(v.has_key("on_change_focus")) {
-			on_change_focus_ = std::bind(&TextEditorWidget::changeFocusDelgate, this, _1);
+			on_change_focus_ = std::bind(&TextEditorWidget::changeFocusDelgate, this, std::placeholders::_1);
 			ffl_on_change_focus_ = getEnvironment()->createFormula(v["on_change_focus"]);
 		}
 
@@ -277,7 +268,7 @@ namespace gui
 	{
 		search_matches_.clear();
 
-		for(int n = begin.row; n <= end.row && n < text_.size(); ++n) {
+		for(int n = begin.row; n <= end.row && static_cast<unsigned>(n) < text_.size(); ++n) {
 			int begin_col = 0;
 			if(n == begin.row) {
 				begin_col = begin.col;
@@ -314,11 +305,11 @@ namespace gui
 			select_ = cursor_ = Loc(0,0);
 			xscroll_pos_ = scroll_pos_ = 0;
 		} else {
-			if(select_.row >= text_.size()) {
+			if(static_cast<unsigned>(select_.row) >= text_.size()) {
 				select_.row = text_.size() - 1;
 			}
 
-			if(cursor_.row >= text_.size()) {
+			if(static_cast<unsigned>(cursor_.row) >= text_.size()) {
 				cursor_.row = text_.size() - 1;
 			}
 		}
@@ -388,15 +379,25 @@ namespace gui
 		init_char_area(font_size_);
 
 		std::vector<RectDraw> rects;
-		std::map<uint32_t, graphics::blit_queue> chars;
 
 		int begin_build = profile::get_tick_time();
 
 		const int xpos = x() + BorderSize;
 		const int ypos = y() + BorderSize;
 
+		const int begin_draw = profile::get_tick_time();
+
+		if(bg_color_.get() != NULL) {
+			canvas->drawSolidRect(rect(x(), y(), width(), height()), *bg_color_);
+
+		}
+
+		for(const RectDraw& r : rects) {
+			canvas->drawSolidRect(r.area, r.col);
+		}
+
 		int r = 0;
-		for(int n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
+		for(int n = scroll_pos_; static_cast<unsigned>(n) < text_.size() && r < nrows_; ++n, ++r) {
 			if(n >= begin_highlight_line_ && n <= end_highlight_line_) {
 				RectDraw rect_draw = { rect(xpos, ypos + r*char_height_, width(), char_height_), KRE::Color(255, 255, 255, 32) };
 				rects.push_back(rect_draw);
@@ -404,7 +405,7 @@ namespace gui
 
 			int c = 0;
 			std::vector<std::pair<Loc, Loc> >::const_iterator search_itor = std::lower_bound(search_matches_.begin(), search_matches_.end(), std::pair<Loc,Loc>(Loc(n,0),Loc(n,0)));
-			for(int m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
+			for(int m = xscroll_pos_; static_cast<unsigned>(m) < text_[n].size(); ++m, ++c) {
 				if(c >= ncols_) {
 					++r;
 					c -= ncols_;
@@ -425,6 +426,7 @@ namespace gui
 
 				KRE::Color col = getCharacterColor(n, m);
 
+
 				if(pos >= begin_select && pos < end_select) {
 					RectDraw rect_draw = { rect(xpos + c*char_width_, ypos + r*char_height_, char_width_*char_size, char_height_), col };
 
@@ -436,7 +438,7 @@ namespace gui
 				} else {
 					for(std::vector<std::pair<Loc,Loc> >::const_iterator i = search_itor; i != search_matches_.end() && i->first <= pos; ++i) {
 						if(pos >= i->first && pos < i->second) {
-							RectDraw rect_draw = { rect(xpos + c*char_width_, ypos + r*char_height_, char_width_*char_size, char_height_), graphics::color(255,255,0,128) };
+							RectDraw rect_draw = { rect(xpos + c*char_width_, ypos + r*char_height_, char_width_*char_size, char_height_), KRE::Color(255,255,0,128) };
 							if(rects.empty() || !rects.back().merge(rect_draw)) {
 								rects.push_back(rect_draw);
 							}
@@ -447,27 +449,20 @@ namespace gui
 				}
 
 				if(!util::c_isspace(ch) && util::c_isprint(ch)) {
-					const CharArea& area = get_char_area(font_size_, ch);
+					const rect& area = get_char_area(font_size_, ch);
 
 					const int x1 = xpos + c*char_width_;
 					const int y1 = ypos + r*char_height_;
 					const int x2 = x1 + char_width_;
 					const int y2 = y1 + char_height_;
 
-					graphics::blit_queue& q = chars[col.rgba()];
-
-					q.repeat_last();
-					q.add(x1, y1, area.x1, area.y1);
-					q.repeat_last();
-					q.add(x2, y1, area.x2, area.y1);
-					q.add(x1, y2, area.x1, area.y2);
-					q.add(x2, y2, area.x2, area.y2);
+					canvas->blitTexture(char_textures[font_size_], area, 0, rect::from_coordinates(x1,y1,x2,y2), col);
 				}
 
 				if(cursor_.row == n && cursor_.col == m &&
-				   (SDL_GetTicks()%500 < 350 || !has_focus_) &&
+				   (profile::get_tick_time()%500 < 350 || !has_focus_) &&
 				   !clear_on_focus_) {
-					RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), graphics::color(255,255,255,255) };
+					RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), KRE::Color::colorWhite() };
 					rects.push_back(rect_draw);
 				}
 
@@ -476,44 +471,17 @@ namespace gui
 				}
 			}
 
-			if(has_focus_ && cursor_.row == n && cursor_.col >= text_[n].size() && SDL_GetTicks()%500 < 350) {
-				RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), graphics::color(255,255,255,255) };
+			if(has_focus_ && cursor_.row == n && static_cast<unsigned>(cursor_.col) >= text_[n].size() && profile::get_tick_time()%500 < 350) {
+				RectDraw rect_draw = { rect(xpos + c*char_width_+1, ypos + r*char_height_, 1, char_height_), KRE::Color::colorWhite() };
 				rects.push_back(rect_draw);
 			}
 		}
 
-		const int begin_draw = profile::get_tick_time();
-
-		if(bg_color_.get() != NULL) {
-			SDL_Rect area = {x(), y(), width(), height()};
-			graphics::draw_rect(area, bg_color_->as_sdl_color());
-
-		}
-
-		for(const RectDraw& r : rects) {
-			graphics::draw_rect(r.area, r.col);
-		}
-
-		for(std::map<uint32_t, graphics::blit_queue>::iterator i = chars.begin(); i != chars.end(); ++i) {
-			graphics::color(i->first).set_as_current_color();
-			i->second.setTexture(char_textures[font_size_]->getId());
-			i->second.do_blit();
-		}
-
-		SDL_Color border_color = graphics::color_white();
-		if(!has_focus_) {
-			border_color.r = 128;
-			border_color.g = 128;
-			border_color.b = 128;
-		}
-
-		SDL_Rect border = {x()+1, y()+1, width()-2, height()-2};
-
 		if(no_border_ == false) {
-			graphics::draw_hollow_rect(border, border_color);
+			canvas->drawHollowRect(rect(x()+1, y()+1, width()-2, height()-2), has_focus_ ? KRE::Color::colorWhite() : KRE::Color::colorGray());
 		}
 
-		ScrollableWidget::handleDraw();
+		ScrollableWidget::draw();
 	}
 
 	bool TextEditorWidget::handleEvent(const SDL_Event& event, bool claimed)
@@ -527,7 +495,7 @@ namespace gui
 			claimed = clipboard_handleEvent(event);
 		}
 
-		claimed = ScrollableWidget::handleEvent(event, claimed) || claimed;
+		claimed = ScrollableWidget::processEvent(event, claimed) || claimed;
 
 		switch(event.type) {
 		case SDL_KEYDOWN:
@@ -566,10 +534,10 @@ namespace gui
 				}
 				return true;
 			} else {
-				if(text_.size() > 2 && cursor_.row < text_.size()-3) {
+				if(text_.size() > 2 && static_cast<unsigned>(cursor_.row) < text_.size()-3) {
 					cursor_.row += 3;
 					scroll_pos_ += 3;
-					if( scroll_pos_ > text_.size() ){ 
+					if(static_cast<unsigned>(scroll_pos_) > text_.size()){ 
 						scroll_pos_ = text_.size(); 
 					}
 					cursor_.col = findEquivalentCol(cursor_.col, cursor_.row-3, cursor_.row);
@@ -610,11 +578,11 @@ namespace gui
 			col = 0;
 		}
 
-		if(row >= text_.size()) {
+		if(static_cast<unsigned>(row) >= text_.size()) {
 			row = text_.size() - 1;
 		}
 
-		if(col > text_[row].size()) {
+		if(static_cast<unsigned>(col) > text_[row].size()) {
 			col = text_[row].size();
 		}
 
@@ -629,12 +597,12 @@ namespace gui
 
 	int TextEditorWidget::rowColToTextPos(int row, int col) const
 	{
-		if(col > text_[row].size()) {
+		if(static_cast<unsigned>(col) > text_[row].size()) {
 			col = text_[row].size();
 		}
 
 		int result = 0;
-		for(int n = 0; n != row; ++n) {
+		for(unsigned n = 0; n != row; ++n) {
 			result += text_[n].size() + 1;
 		}
 
@@ -644,7 +612,7 @@ namespace gui
 	std::pair<int,int> TextEditorWidget::text_pos_to_row_col(int pos) const
 	{
 		int nrow = 0;
-		while(pos > text_[nrow].size()+1) {
+		while(static_cast<unsigned>(pos) > text_[nrow].size()+1) {
 			pos -= text_[nrow].size()+1;
 			++nrow;
 		}
@@ -676,7 +644,7 @@ namespace gui
 				onMoveCursor();
 			}
 
-			if(last_click_at_ != -1 && SDL_GetTicks() - last_click_at_ < 500) {
+			if(last_click_at_ != -1 && profile::get_tick_time() - last_click_at_ < 500) {
 				++consecutive_clicks_;
 
 				const int nclicks = consecutive_clicks_%3;
@@ -740,7 +708,7 @@ namespace gui
 			if(mousey >= y() + height() && scroll_pos_ < int(text_.size())-2) {
 				++scroll_pos_;
 				int end = scroll_pos_ + nrows_ - 1;
-				if(end >= text_.size()) {
+				if(static_cast<unsigned>(end) >= text_.size()) {
 					end = text_.size() - 1;
 				}
 
@@ -838,7 +806,7 @@ namespace gui
 					//We delete until end of line.
 					truncateColPosition();
 
-					if(cursor_.col < text_[select_.row].size()) {
+					if(static_cast<unsigned>(cursor_.col) < text_[select_.row].size()) {
 						saveUndoState();
 					}
 
@@ -871,7 +839,7 @@ namespace gui
 				}
 			} else {
 
-				if(cursor_.col > text_[cursor_.row].size()) {
+				if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 					cursor_.col = text_[cursor_.row].size();
 				}
 
@@ -900,10 +868,10 @@ namespace gui
 				}
 			} else {
 				++cursor_.col;
-				if(cursor_.col > text_[cursor_.row].size()) {
+				if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 					if(cursor_.row == text_.size()-1) {
 						--cursor_.col;
-					} else if(cursor_.row < text_.size()-1) {
+					} else if(static_cast<unsigned>(cursor_.row) < text_.size()-1) {
 						++cursor_.row;
 						cursor_.col = 0;
 					} else {
@@ -924,7 +892,7 @@ namespace gui
 			break;
 		case SDLK_DOWN:
 			recordOp();
-			if(cursor_.row < text_.size()-1) {
+			if(static_cast<unsigned>(cursor_.row) < text_.size()-1) {
 				++cursor_.row;
 				cursor_.col = findEquivalentCol(cursor_.col, cursor_.row-1, cursor_.row);
 			}
@@ -1003,7 +971,7 @@ namespace gui
 
 				if(event.keysym.sym == SDLK_BACKSPACE) {
 					//backspace is like delete but we move to the left first.
-					if(cursor_.col > text_[cursor_.row].size()) {
+					if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 						cursor_.col = text_[cursor_.row].size();
 					}
 
@@ -1020,8 +988,8 @@ namespace gui
 					onMoveCursor();
 				}
 
-				if(cursor_.col >= text_[cursor_.row].size()) {
-					if(text_.size() > cursor_.row+1) {
+				if(static_cast<unsigned>(cursor_.col) >= text_[cursor_.row].size()) {
+					if(text_.size() > static_cast<unsigned>(cursor_.row+1)) {
 						cursor_.col = text_[cursor_.row].size();
 						text_[cursor_.row] += text_[cursor_.row+1];
 						text_.erase(text_.begin() + cursor_.row + 1);
@@ -1113,7 +1081,7 @@ namespace gui
 			saveUndoState();
 		}
 		deleteSelection();
-		if(cursor_.col > text_[cursor_.row].size()) {
+		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 			cursor_.col = text_[cursor_.row].size();
 		}
 		for(const char* c = text; *c != 0; ++c) {
@@ -1166,7 +1134,7 @@ namespace gui
 
 	void TextEditorWidget::handleCopy(bool mouse_based)
 	{
-		std::cerr << "HANDLE COPY...\n";
+		LOG_INFO("HANDLE COPY...");
 		if(mouse_based && !clipboard_has_mouse_area()) {
 			return;
 		}
@@ -1174,11 +1142,11 @@ namespace gui
 		Loc begin = cursor_;
 		Loc end = select_;
 
-		if(begin.col > text_[begin.row].size()) {
+		if(static_cast<unsigned>(begin.col) > text_[begin.row].size()) {
 			begin.col = text_[begin.row].size();
 		}
 
-		if(end.col > text_[end.row].size()) {
+		if(static_cast<unsigned>(end.col) > text_[end.row].size()) {
 			end.col = text_[end.row].size();
 		}
 
@@ -1199,7 +1167,7 @@ namespace gui
 			str += "\n" + std::string(text_[end.row].begin(), text_[end.row].begin() + end.col);
 		}
 
-		std::cerr << "COPY TO CLIPBOARD: " << str << " " << mouse_based << "\n";
+		LOG_INFO("COPY TO CLIPBOARD: " << str << " " << mouse_based);
 
 		copy_to_clipboard(str, mouse_based);
 	}
@@ -1210,11 +1178,11 @@ namespace gui
 			return;
 		}
 
-		if(cursor_.col > text_[cursor_.row].size()) {
+		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 			cursor_.col = text_[cursor_.row].size();
 		}
 
-		if(select_.col > text_[select_.row].size()) {
+		if(static_cast<unsigned>(select_.col) > text_[select_.row].size()) {
 			select_.col = text_[select_.row].size();
 		}
 
@@ -1246,7 +1214,7 @@ namespace gui
 		const int yloc = y() + BorderSize;
 
 		int r = 0;
-		for(int n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
+		for(unsigned n = scroll_pos_; n < text_.size() && r < nrows_; ++n, ++r) {
 			int c = 0;
 			bool matches_row = ypos >= yloc + r*char_height_ && ypos < yloc + (r+1)*char_height_;
 			for(size_t m = xscroll_pos_; m < text_[n].size(); ++m, ++c) {
@@ -1376,7 +1344,7 @@ namespace gui
 			select_ = cursor_;
 		}
 
-		ScrollableWidget::set_yscroll(scroll_pos_*char_height_);
+		ScrollableWidget::setYscroll(scroll_pos_*char_height_);
 
 		if(select_ != cursor_) {
 			//a mouse-based copy for X-style copy/paste
@@ -1390,8 +1358,8 @@ namespace gui
 
 	int TextEditorWidget::findEquivalentCol(int old_col, int old_row, int new_row) const
 	{
-		int actual_pos = old_col + std::count(text_[old_row].begin(), text_[old_row].end(), '\t')*TabAdjust;
-		for(int n = 0; n < actual_pos; ++n) {
+		unsigned actual_pos = old_col + std::count(text_[old_row].begin(), text_[old_row].end(), '\t')*TabAdjust;
+		for(unsigned n = 0; n < actual_pos; ++n) {
 			if(n < text_[new_row].size() && text_[new_row][n] == '\t') {
 				actual_pos -= TabAdjust;
 			}
@@ -1419,23 +1387,23 @@ namespace gui
 
 		if(total_rows <= nrows_ || nrows_ == 1) {
 			//no scrollbar needed.
-			set_virtual_height(height());
-			update_scrollbar();
+			setVirtualHeight(height());
+			updateScrollbar();
 			return;
 		}
 
-		set_virtual_height(text_.size()*char_height_ + height() - char_height_);
-		set_scroll_step(char_height_);
-		set_arrow_scroll_step(char_height_);
+		setVirtualHeight(text_.size()*char_height_ + height() - char_height_);
+		setScrollStep(char_height_);
+		setArrowScrollStep(char_height_);
 
-		set_yscroll(scroll_pos_*char_height_);
+		setYscroll(scroll_pos_*char_height_);
 
-		update_scrollbar();
+		updateScrollbar();
 	}
 
 	void TextEditorWidget::selectToken(const std::string& row, int& begin_row, int& end_row, int& begin_col, int& end_col)
 	{
-		if(util::c_isdigit(row[begin_col]) || row[begin_col] == '.' && begin_col+1 < row.size() && util::c_isdigit(row[begin_col+1])) {
+		if(util::c_isdigit(row[begin_col]) || row[begin_col] == '.' && static_cast<unsigned>(begin_col+1) < row.size() && util::c_isdigit(row[begin_col+1])) {
 			while(begin_col >= 0 && (util::c_isdigit(row[begin_col]) || row[begin_col] == '.')) {
 				--begin_col;
 			}
@@ -1444,7 +1412,7 @@ namespace gui
 				++begin_col;
 			}
 
-			while(end_col < row.size() && (util::c_isdigit(row[end_col]) || row[end_col] == '.')) {
+			while(static_cast<unsigned>(end_col) < row.size() && (util::c_isdigit(row[end_col]) || row[end_col] == '.')) {
 				++end_col;
 			}
 		} else if(util::c_isalnum(row[begin_col]) || row[begin_col] == '_') {
@@ -1454,10 +1422,10 @@ namespace gui
 
 			++begin_col;
 
-			while(end_col < row.size() && (util::c_isalnum(row[end_col]) || row[end_col] == '_')) {
+			while(static_cast<unsigned>(end_col) < row.size() && (util::c_isalnum(row[end_col]) || row[end_col] == '_')) {
 				++end_col;
 			}
-		} else if(end_col < row.size()) {
+		} else if(static_cast<unsigned>(end_col) < row.size()) {
 			++end_col;
 		}
 	}
@@ -1532,11 +1500,11 @@ namespace gui
 
 	void TextEditorWidget::truncateColPosition()
 	{
-		if(cursor_.col > text_[cursor_.row].size()) {
+		if(static_cast<unsigned>(cursor_.col) > text_[cursor_.row].size()) {
 			cursor_.col = text_[cursor_.row].size();
 		}
 
-		if(select_.col > text_[select_.row].size()) {
+		if(static_cast<unsigned>(select_.col) > text_[select_.row].size()) {
 			select_.col = text_[select_.row].size();
 		}
 	}
@@ -1669,7 +1637,7 @@ namespace gui
 			variant value = ffl_on_change_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::changeDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::changeDelegate() called without environment!");
 		}
 	}
 
@@ -1679,7 +1647,7 @@ namespace gui
 			variant value = ffl_onMoveCursor_->execute(*getEnvironment());
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::moveCursorDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::moveCursorDelegate() called without environment!");
 		}
 	}
 
@@ -1692,7 +1660,7 @@ namespace gui
 			variant value = ffl_on_enter_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::enterDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::enterDelegate() called without environment!");
 		}
 	}
 
@@ -1705,7 +1673,7 @@ namespace gui
 			variant value = ffl_on_escape_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::escapeDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::escapeDelegate() called without environment!");
 		}
 	}
 
@@ -1718,7 +1686,7 @@ namespace gui
 			variant value = ffl_on_tab_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::tabDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::tabDelegate() called without environment!");
 		}
 	}
 
@@ -1728,7 +1696,7 @@ namespace gui
 			variant value = ffl_onBeginEnter_->execute(*getEnvironment());
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::beginEnterDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::beginEnterDelegate() called without environment!");
 		}
 		// XXX Need some way of doing the return value here.
 		return begin_enter_return_;
@@ -1744,7 +1712,7 @@ namespace gui
 			variant value = ffl_on_change_focus_->execute(*callable);
 			getEnvironment()->createFormula(value);
 		} else {
-			std::cerr << "TextEditorWidget::tabDelegate() called without environment!" << std::endl;
+			LOG_ERROR("TextEditorWidget::tabDelegate() called without environment!");
 		}
 	}
 
@@ -1766,14 +1734,14 @@ UTILITY(textedit)
 {
 	using namespace gui;
 	if(args.size() != 1) {
-		std::cerr << "textedit usage: <filename>\n";
+		LOG_INFO("textedit usage: <filename>");
 		return;
 	}
 
 	std::string file = args[0];
 	std::string contents = sys::read_file(file);
 	if(contents.empty()) {
-		std::cerr << "Could not read file (" << file << ")\n";
+		LOG_INFO("Could not read file (" << file << ")");
 		return;
 	}
 
@@ -1785,10 +1753,11 @@ UTILITY(textedit)
 	entry->setOnChangeHandler(std::bind(on_change_search, entry, editor));
 	entry->setOnEnterHandler(std::bind(&TextEditorWidget::nextSearchMatch, editor));
 
-	Dialog d(0, 0, graphics::screen_width(), graphics::screen_height());
+	auto wnd = KRE::WindowManager::getMainWindow();
+	Dialog d(0, 0, wnd->width(), wnd->height());
 	d.addWidget(WidgetPtr(entry), 10, 10);
 	d.addWidget(WidgetPtr(editor), 10, 30);
-	d.show_modal();
+	d.showModal();
 }
 
 UNIT_TEST(test_regex)

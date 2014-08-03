@@ -38,6 +38,8 @@ namespace KRE
 	public:
 		ColorTransform();
 		explicit ColorTransform(const variant& node);
+		explicit ColorTransform(const Color& color);
+		explicit ColorTransform(int ar, int ag, int ab, int aa);
 		explicit ColorTransform(double mr, double mg, double mb, double ma, double ar, double ag, double ab, double aa);
 		explicit ColorTransform(int mr, int mg, int mb, int ma, int ar, int ag, int ab, int aa);
 		~ColorTransform();
@@ -61,6 +63,7 @@ namespace KRE
 		// compatibility functions
 		bool fits_in_color() const;
 		Color toColor() const;
+		std::string toString() const;
 	private:
 		DECLARE_CALLABLE(ColorTransform);
 		double mul_rgba_[4];

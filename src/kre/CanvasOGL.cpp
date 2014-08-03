@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -31,7 +31,7 @@ namespace KRE
 {
 	namespace
 	{
-		CanvasPtr& get_instance()
+		CanvasPtr& getInstance()
 		{
 			static CanvasPtr res = CanvasPtr(new CanvasOGL());
 			return res;
@@ -267,6 +267,6 @@ namespace KRE
 
 	CanvasPtr CanvasOGL::getInstance()
 	{
-		return get_instance();
+		return getInstance();
 	}
 }

@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -34,10 +34,10 @@ namespace KRE
 	public:
 		HardwareAttributeOGL(AttributeBase* parent);
 		virtual ~HardwareAttributeOGL();
-		void Update(const void* value, ptrdiff_t offset, size_t size) override;
-		void Bind() override;
-		void Unbind() override;
-		intptr_t Value() override { return 0; }
+		void update(const void* value, ptrdiff_t offset, size_t size) override;
+		void bind() override;
+		void unbind() override;
+		intptr_t value() override { return 0; }
 	private:
 		GLuint buffer_id_;
 		GLenum access_pattern_;
@@ -63,13 +63,13 @@ namespace KRE
 	
 		explicit AttributeSetOGL(bool indexed, bool instanced);
 		virtual ~AttributeSetOGL();	
-		const void* GetIndexArray() const override { return NULL; }
-		void BindIndex() override;
-		void UnbindIndex() override;
-		bool IsHardwareBacked() const override { return true; }
+		const void* getIndexArray() const override { return NULL; }
+		void bindIndex() override;
+		void unbindIndex() override;
+		bool isHardwareBacked() const override { return true; }
 	private:
 		DISALLOW_COPY_ASSIGN_AND_DEFAULT(AttributeSetOGL);
-		void HandleIndexUpdate() override;
+		void handleIndexUpdate() override;
 		GLuint index_buffer_id_;
 	};
 	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;

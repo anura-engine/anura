@@ -31,19 +31,19 @@
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
 
-enum MOVE_DIRECTION { MOVE_LEFT, MOVE_RIGHT, MOVE_UP, MOVE_DOWN, MOVE_NONE };
+enum class MOVE_DIRECTION { LEFT, RIGHT, UP, DOWN, NONE };
 
-class solid_map
+class SolidMap
 {
 public:
-	static void create_object_solid_maps(variant node, std::vector<ConstSolidMapPtr>& v);
-	static void create_object_platform_maps(const rect& area, std::vector<ConstSolidMapPtr>& v);
-	static SolidMapPtr create_from_texture(const KRE::TexturePtr& t, const rect& area);
+	static void createObjectSolidMaps(variant node, std::vector<ConstSolidMapPtr>& v);
+	static void createObjectPlatformMaps(const rect& area, std::vector<ConstSolidMapPtr>& v);
+	static SolidMapPtr createFromTexture(const KRE::TexturePtr& t, const rect& area);
 
 	const std::string& id() const { return id_; }
 	const rect& area() const { return area_; }
 
-	bool solid_at(int x, int y) const;
+	bool isSolidAt(int x, int y) const;
 
 	const std::vector<point>& dir(MOVE_DIRECTION d) const;
 	const std::vector<point>& left() const { return left_; }
@@ -52,15 +52,15 @@ public:
 	const std::vector<point>& bottom() const { return bottom_; }
 	const std::vector<point>& all() const { return all_; }
 private:
-	static ConstSolidMapPtr create_object_solid_map_from_solid_node(variant node);
+	static ConstSolidMapPtr createObjectSolidMapFromSolidNode(variant node);
 
-	solid_map() {}
+	SolidMap() {}
 
-	void set_solid(int x, int y, bool value=true);
+	void setSolid(int x, int y, bool value=true);
 
-	void calculate_side(int xdir, int ydir, std::vector<point>& points) const;
+	void calculateSide(int xdir, int ydir, std::vector<point>& points) const;
 
-	void apply_offsets(const std::vector<int>& offsets);
+	void applyOffsets(const std::vector<int>& offsets);
 
 	std::string id_;
 	rect area_;
@@ -75,14 +75,14 @@ class SolidInfo
 {
 public:
 	static ConstSolidInfoPtr create(variant node);
-	static ConstSolidInfoPtr create_platform(variant node);
-	static ConstSolidInfoPtr create_platform(const rect& area);
-	static ConstSolidInfoPtr create_from_texture(const KRE::TexturePtr& t, const rect& area);
+	static ConstSolidInfoPtr createPlatform(variant node);
+	static ConstSolidInfoPtr createPlatform(const rect& area);
+	static ConstSolidInfoPtr createFromTexture(const KRE::TexturePtr& t, const rect& area);
 	const std::vector<ConstSolidMapPtr>& solid() const { return solid_; }
 	const rect& area() const { return area_; }
-	bool solid_at(int x, int y, const std::string** area_id=NULL) const;
+	bool isSolidAt(int x, int y, const std::string** area_id=NULL) const;
 private:
-	static ConstSolidInfoPtr create_from_solid_maps(const std::vector<ConstSolidMapPtr>& v);
+	static ConstSolidInfoPtr createFromSolidMaps(const std::vector<ConstSolidMapPtr>& v);
 
 	std::vector<ConstSolidMapPtr> solid_;
 	rect area_;

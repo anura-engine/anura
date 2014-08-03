@@ -93,8 +93,8 @@ void CodeEditorDialog::init()
 	using std::placeholders::_2;
 
 	//std::cerr << "CED: " << x() << "," << y() << "; " << width() << "," << height() << std::endl;
-	drag_widget* dragger = new drag_widget(x(), y(), width(), height(),
-		drag_widget::DRAG_HORIZONTAL, NULL, 
+	DragWidget* dragger = new DragWidget(x(), y(), width(), height(),
+		DragWidget::Direction::HORIZONTAL, [](int,int){}, 
 		std::bind(&CodeEditorDialog::on_drag_end, this, _1, _2), 
 		std::bind(&CodeEditorDialog::on_drag, this, _1, _2));
 
@@ -105,21 +105,21 @@ void CodeEditorDialog::init()
 	replace_label_ = Label::create("Replace: ", col);
 	status_label_ = Label::create("Ok", col);
 	error_label_ = Label::create("", col);
-	addWidget(find_label, 42, 12, MOVE_RIGHT);
-	addWidget(WidgetPtr(search_), MOVE_RIGHT);
-	addWidget(replace_label_, MOVE_RIGHT);
-	addWidget(WidgetPtr(replace_), MOVE_RIGHT);
-	addWidget(WidgetPtr(save_button), MOVE_RIGHT);
+	addWidget(find_label, 42, 12, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(search_), MOVE_DIRECTION::RIGHT);
+	addWidget(replace_label_, MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(replace_), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(save_button), MOVE_DIRECTION::RIGHT);
 
 	if(have_close_buttons_) {
 		Button* save_and_close_button = new Button("Save+Close", std::bind(&CodeEditorDialog::save_and_close, this));
 		Button* abort_button = new Button("Abort", std::bind(&Dialog::cancel, this));
-		addWidget(WidgetPtr(save_and_close_button), MOVE_RIGHT);
-		addWidget(WidgetPtr(abort_button), MOVE_RIGHT);
+		addWidget(WidgetPtr(save_and_close_button), MOVE_DIRECTION::RIGHT);
+		addWidget(WidgetPtr(abort_button), MOVE_DIRECTION::RIGHT);
 	}
 
-	addWidget(WidgetPtr(increase_font), MOVE_RIGHT);
-	addWidget(WidgetPtr(decrease_font), MOVE_RIGHT);
+	addWidget(WidgetPtr(increase_font), MOVE_DIRECTION::RIGHT);
+	addWidget(WidgetPtr(decrease_font), MOVE_DIRECTION::RIGHT);
 	addWidget(editor_, find_label->x(), find_label->y() + save_button->height() + 2);
 	if(optional_error_text_area_) {
 		addWidget(optional_error_text_area_);
@@ -195,16 +195,16 @@ void CodeEditorDialog::init_files_grid()
 	using namespace gui;
 	using std::placeholders::_1;
 
-	files_grid_.reset(new grid(1));
-	files_grid_->allow_selection();
-	files_grid_->register_selection_callback(std::bind(&CodeEditorDialog::select_file, this, _1));
+	files_grid_.reset(new Grid(1));
+	files_grid_->allowSelection();
+	files_grid_->registerSelectionCallback(std::bind(&CodeEditorDialog::select_file, this, _1));
 	for(const KnownFile& f : files_) {
 		if(f.anim) {
 			ImageWidget* img = new ImageWidget(f.anim->img());
 			img->setDim(42, 42);
 			img->setArea(f.anim->area());
 
-			files_grid_->add_col(WidgetPtr(img));
+			files_grid_->addCol(WidgetPtr(img));
 		} else {
 			std::string fname = f.fname;
 			while(std::find(fname.begin(), fname.end(), '/') != fname.end()) {
@@ -214,7 +214,7 @@ void CodeEditorDialog::init_files_grid()
 				fname.resize(6);
 			}
 
-			files_grid_->add_col(Label::create(fname, KRE::Color::colorWhite()));
+			files_grid_->addCol(Label::create(fname, KRE::Color::colorWhite()));
 		}
 	}
 
@@ -248,8 +248,8 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 		std::string text = json::get_file_contents(fname);
 		try {
 			file_contents_set_ = true;
-			variant doc = json::parse(text, json::JSON_NO_PREPROCESSOR);
-			std::cerr << "CHECKING FOR PROTOTYPES: " << doc["prototype"].write_json() << "\n";
+			variant doc = json::parse(text, json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
+			LOG_INFO("CHECKING FOR PROTOTYPES: " << doc["prototype"].write_json());
 			if(doc["prototype"].is_list()) {
 				std::map<std::string,std::string> paths;
 				module::get_unique_filenames_under_dir("data/object_prototypes", &paths);
@@ -319,11 +319,11 @@ void CodeEditorDialog::load_file(std::string fname, bool focus, std::function<vo
 
 void CodeEditorDialog::select_file(int index)
 {
-	if(index < 0 || index >= files_.size()) {
+	if(index < 0 || static_cast<unsigned>(index) >= files_.size()) {
 		return;
 	}
 
-	std::cerr << "select file " << index << " -> " << files_[index].fname << "\n";
+	LOG_INFO("select file " << index << " -> " << files_[index].fname);
 
 	load_file(files_[index].fname);
 }
@@ -378,16 +378,16 @@ bool CodeEditorDialog::handleEvent(const SDL_Event& event, bool claimed)
 				save();
 				return true;
 			} else if(event.key.keysym.sym == SDLK_TAB && (event.key.keysym.mod&KMOD_CTRL) && files_grid_) {
-				if(!files_grid_->has_must_select()) {
-					files_grid_->must_select(true, 1);
+				if(!files_grid_->hasMustSelect()) {
+					files_grid_->mustSelect(true, 1);
 				} else {
-					files_grid_->must_select(true, (files_grid_->selection()+1)%files_.size());
+					files_grid_->mustSelect(true, (files_grid_->selection()+1)%files_.size());
 				}
 			}
 			break;
 		}
 		case SDL_KEYUP: {
-			if(files_grid_ && files_grid_->has_must_select() && (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)) {
+			if(files_grid_ && files_grid_->hasMustSelect() && (event.key.keysym.sym == SDLK_LCTRL || event.key.keysym.sym == SDLK_RCTRL)) {
 				select_file(files_grid_->selection());
 			}
 			break;
@@ -428,7 +428,7 @@ void CodeEditorDialog::process()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	if(invalidated_ && SDL_GetTicks() > invalidated_ + 200) {
+	if(invalidated_ && profile::get_tick_time() > static_cast<unsigned>(invalidated_ + 200)) {
 		try {
 			CustomObject::reset_current_debug_error();
 
@@ -440,7 +440,7 @@ void CodeEditorDialog::process()
 			file_contents_set_ = true;
 			if(op_fn_) {
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 
 				if(strstr(fname_.c_str(), "/objects/")) {
 					CustomObjectType::setFileContents(fname_, editor_->text());
@@ -449,53 +449,51 @@ void CodeEditorDialog::process()
 				op_fn_();
 			} else if(strstr(fname_.c_str(), "/level/")) {
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 
 				LevelRunner::getCurrent()->replay_level_from_start();
 				
 			} else if(strstr(fname_.c_str(), "/tiles/")) {
-				std::cerr << "INIT TILE MAP\n";
+				LOG_INFO("INIT TILE MAP");
 
 				const std::string old_contents = json::get_file_contents(fname_);
 
 				//verify the text is parseable before we bother setting it.
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 				const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 				TileMap::prepareRebuildAll();
 				try {
-					std::cerr << "tile_map::init()\n";
+					LOG_INFO("tile_map::init()");
 					TileMap::init(tiles_data);
 					TileMap::rebuildAll();
-					std::cerr << "done tile_map::init()\n";
-					editor_dialogs::tileset_editor_dialog::global_tile_update();
+					LOG_INFO("done tile_map::init()");
+					editor_dialogs::TilesetEditorDialog::globalTileUpdate();
 					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 				} catch(...) {
-					json::setFileContents(fname_, old_contents);
+					json::set_file_contents(fname_, old_contents);
 					const variant tiles_data = json::parse_from_file("data/tiles.cfg");
 					TileMap::init(tiles_data);
 					TileMap::rebuildAll();
-					editor_dialogs::tileset_editor_dialog::global_tile_update();
+					editor_dialogs::TilesetEditorDialog::globalTileUpdate();
 					for(Level* lvl : get_all_levels_set()) {
 						lvl->rebuildTiles();
 					}
 					throw;
 				}
-				std::cerr << "INIT TILE MAP OK\n";
-#if defined(USE_SHADERS)
+				LOG_INFO("INIT TILE MAP OK");
 			} else if(strstr(fname_.c_str(), "data/shaders.cfg")) {
-				std::cerr << "CODE_EDIT_DIALOG FILE: " << fname_ << std::endl;
-				gles2::program::load_shaders(editor_->text());
-				foreach(level* lvl, get_all_levels_set()) {
-					lvl->shaders_updated();
-				}
-#endif
+				LOG_INFO("CODE_EDIT_DIALOG FILE: " << fname_);
+				ASSERT_LOG(false, "XXX edited shaders file fixme");
+				//for(Level* lvl : get_all_levels_set()) {
+				//	lvl->shadersUpdated();
+				//}
 			} else if(strstr(fname_.c_str(), "classes/") &&
 			          std::equal(fname_.end()-4,fname_.end(),".cfg")) {
 
-				std::cerr << "RELOAD FNAME: " << fname_ << "\n";
+				LOG_INFO("RELOAD FNAME: " << fname_);
 				std::string::const_iterator slash = fname_.end()-1;
 				while(*slash != '/') {
 					--slash;
@@ -503,11 +501,11 @@ void CodeEditorDialog::process()
 				std::string::const_iterator end = fname_.end()-4;
 				const std::string class_name(slash+1, end);;
 				json::parse(editor_->text());
-				json::setFileContents(fname_, editor_->text());
+				json::set_file_contents(fname_, editor_->text());
 				game_logic::invalidate_class_definition(class_name);
-				game_logic::formula_object::try_load_class(class_name);
+				game_logic::FormulaObject::tryLoadClass(class_name);
 			} else { 
-				std::cerr << "SET FILE: " << fname_ << "\n";
+				LOG_INFO("SET FILE: " << fname_);
 				CustomObjectType::setFileContents(fname_, editor_->text());
 			}
 			error_label_->setText("Ok");
@@ -526,12 +524,12 @@ void CodeEditorDialog::process()
 			if(optional_error_text_area_) {
 				optional_error_text_area_->setText(e.msg);
 			}
-		} catch(json::parse_error& e) {
+		} catch(json::ParseError& e) {
 			file_contents_set_ = false;
 			error_label_->setText("Error");
-			error_label_->setTooltip(e.error_message());
+			error_label_->setTooltip(e.errorMessage());
 			if(optional_error_text_area_) {
-				optional_error_text_area_->setText(e.error_message());
+				optional_error_text_area_->setText(e.errorMessage());
 			}
 		} catch(...) {
 			file_contents_set_ = false;
@@ -607,13 +605,13 @@ void CodeEditorDialog::process()
 			}
 
 			suggestions_prefix_ = str.size();
-		} else if(selected_token->type == json::Token::TYPE_STRING) {
+		} else if(selected_token->type == json::Token::TYPE::STRING) {
 			try {
 				const std::string formula_str(selected_token->begin, selected_token->end);
-				std::vector<formula_tokenizer::token> tokens;
+				std::vector<formula_tokenizer::Token> tokens;
 				std::string::const_iterator i1 = formula_str.begin();
-				formula_tokenizer::token t = formula_tokenizer::get_token(i1, formula_str.end());
-				while(t.type != formula_tokenizer::TOKEN_INVALID) {
+				formula_tokenizer::Token t = formula_tokenizer::get_token(i1, formula_str.end());
+				while(t.type != formula_tokenizer::FFL_TOKEN_TYPE::INVALID) {
 					tokens.push_back(t);
 					if(i1 == formula_str.end()) {
 						break;
@@ -622,17 +620,17 @@ void CodeEditorDialog::process()
 					t = formula_tokenizer::get_token(i1, formula_str.end());
 				}
 
-				const formula_tokenizer::token* selected = NULL;
+				const formula_tokenizer::Token* selected = NULL;
 				const std::string::const_iterator itor = formula_str.begin() + token_pos;
 
-				for(const formula_tokenizer::token& tok : tokens) {
+				for(const formula_tokenizer::Token& tok : tokens) {
 					if(tok.end == itor) {
 						selected = &tok;
 						break;
 					}
 				}
 
-				if(selected && selected->type == formula_tokenizer::TOKEN_IDENTIFIER) {
+				if(selected && selected->type == formula_tokenizer::FFL_TOKEN_TYPE::IDENTIFIER) {
 					const std::string identifier(selected->begin, selected->end);
 
 					static const boost::intrusive_ptr<CustomObjectCallable> obj_definition(new CustomObjectCallable);
@@ -669,7 +667,7 @@ void CodeEditorDialog::process()
 
 					suggestions_prefix_ = identifier.size();
 				}
-			} catch(formula_tokenizer::token_error&) {
+			} catch(formula_tokenizer::TokenError&) {
 			}
 		}
 
@@ -682,21 +680,21 @@ void CodeEditorDialog::process()
 		suggestions_grid_.reset();
 
 		if(suggestions_.empty() == false) {
-			grid_ptr suggestions_grid(new grid(1));
-			suggestions_grid->register_selection_callback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
-			suggestions_grid->swallow_clicks();
-			suggestions_grid->allow_selection(true);
-			suggestions_grid->set_show_background(true);
-			suggestions_grid->set_max_height(160);
+			GridPtr suggestions_grid(new Grid(1));
+			suggestions_grid->registerSelectionCallback(std::bind(&CodeEditorDialog::select_suggestion, this, _1));
+			suggestions_grid->swallowClicks();
+			suggestions_grid->allowSelection(true);
+			suggestions_grid->setShowBackground(true);
+			suggestions_grid->setMaxHeight(160);
 			for(const Suggestion& s : suggestions_) {
-				suggestions_grid->add_col(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
+				suggestions_grid->addCol(WidgetPtr(new Label(s.suggestion_text.empty() ? s.suggestion : s.suggestion_text)));
 			}
 
 			suggestions_grid_.reset(new BorderWidget(suggestions_grid, KRE::Color::colorWhite()));
 		}
-		std::cerr << "SUGGESTIONS: " << suggestions_.size() << ":\n";
+		LOG_INFO("SUGGESTIONS: " << suggestions_.size() << ":");
 		for(const Suggestion& suggestion : suggestions_) {
-			std::cerr << " - " << suggestion.suggestion << "\n";
+			LOG_INFO(" - " << suggestion.suggestion);
 		}
 	}
 
@@ -709,7 +707,7 @@ void CodeEditorDialog::process()
 		}
 
 		auto wnd_w = KRE::WindowManager::getMainWindow()->width();
-		if(suggestions_grid_->x() + suggestions_grid_->width() + 20 > wnd_w) {
+		if(static_cast<unsigned>(suggestions_grid_->x() + suggestions_grid_->width() + 20) > wnd_w) {
 			suggestions_grid_->setLoc(wnd_w - suggestions_grid_->width() - 20, suggestions_grid_->y());
 		}
 	}
@@ -788,7 +786,7 @@ void CodeEditorDialog::on_drag(int dx, int dy)
 	int new_width = width() + dx;
 	int min_width = int(wnd_w * 0.17);
 	int max_width = int(wnd_w * 0.83);
-	//std::cerr << "ON_DRAG: " << dx << ", " << min_width << ", " << max_width << std::endl;
+	//LOG_INFO("ON_DRAG: " << dx << ", " << min_width << ", " << max_width);
 	if(new_width < min_width) { 
 		new_width = min_width;
 	}
@@ -885,23 +883,23 @@ void CodeEditorDialog::onMoveCursor()
 			variant v = json::parse_from_file(fname_);
 			variant formula_str;
 			assert(v.is_map());
-			visit_variants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
+			visitVariants(v, std::bind(visit_potential_formula_str, _1, &formula_str, editor_->cursorRow()+1, editor_->cursorCol()+1));
 
 			if(formula_str.is_string()) {
 
 				const variant::debug_info& str_info = *formula_str.get_debug_info();
-				const std::set<game_logic::formula*>& formulae = game_logic::formula::getAll();
+				const std::set<game_logic::Formula*>& formulae = game_logic::Formula::getAll();
 				int best_result = -1;
 				variant result_variant;
-				const game_logic::formula* best_formula = NULL;
-				for(const game_logic::formula* f : formulae) {
-					const variant::debug_info* info = f->str_var().get_debug_info();
+				const game_logic::Formula* best_formula = NULL;
+				for(const game_logic::Formula* f : formulae) {
+					const variant::debug_info* info = f->strVal().get_debug_info();
 					if(!info || !info->filename || *info->filename != *str_info.filename) {
 						continue;
 					}
 
 					variant result;
-					visit_potential_formula_str(f->str_var(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
+					visit_potential_formula_str(f->strVal(), &result, editor_->cursorRow()+1, editor_->cursorCol()+1);
 					if(result.is_null()) {
 						continue;
 					}
@@ -923,10 +921,10 @@ void CodeEditorDialog::onMoveCursor()
 			}
 
 		} catch(...) {
-			std::cerr << "ERROR PARSING FORMULA SET\n";
+			LOG_INFO("ERROR PARSING FORMULA SET");
 		}
 	} else {
-		std::cerr << "NO FORMULA SET\n";
+		LOG_INFO("NO FORMULA SET");
 	}
 }
 
@@ -939,7 +937,7 @@ void CodeEditorDialog::setAnimationRect(rect r)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -966,7 +964,7 @@ void CodeEditorDialog::moveSolidRect(int dx, int dy)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -980,7 +978,7 @@ void CodeEditorDialog::setIntegerAttr(const char* attr, int value)
 		editor_->modify_current_object(v);
 		try {
 			animation_preview_->setObject(v);
-		} catch(Frame::Error& e) {
+		} catch(Frame::Error&) {
 		}
 	}
 }
@@ -1000,10 +998,10 @@ void CodeEditorDialog::save_and_close()
 
 void CodeEditorDialog::select_suggestion(int index)
 {
-	if(index >= 0 && index < suggestions_.size()) {
-		std::cerr << "SELECT " << suggestions_[index].suggestion << "\n";
+	if(index >= 0 && static_cast<unsigned>(index) < suggestions_.size()) {
+		LOG_INFO("SELECT " << suggestions_[index].suggestion);
 		const std::string& str = suggestions_[index].suggestion;
-		if(suggestions_prefix_ >= 0 && suggestions_prefix_ < str.size()) {
+		if(suggestions_prefix_ >= 0 && static_cast<unsigned>(suggestions_prefix_) < str.size()) {
 			const int col = editor_->cursorCol();
 			const std::string insert(str.begin() + suggestions_prefix_, str.end());
 			const std::string postfix = suggestions_[index].postfix;
@@ -1026,14 +1024,14 @@ void edit_and_continue_class(const std::string& class_name, const std::string& e
 	const std::string::const_iterator end_itor = std::find(class_name.begin(), class_name.end(), '.');
 	const std::string filename = "data/classes/" + std::string(class_name.begin(), end_itor) + ".cfg";
 
-	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
+	d->setProcessHook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
 	d->load_file(filename);
 	d->jump_to_error(error);
-	d->set_on_quit(std::bind(&gui::Dialog::cancel, d.get()));
-	d->show_modal();
+	d->setOnQuit(std::bind(&gui::Dialog::cancel, d.get()));
+	d->showModal();
 
 	if(d->cancelled()) {
 		_exit(0);
@@ -1046,7 +1044,7 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 	auto wnd_h = KRE::WindowManager::getMainWindow()->height();
 	boost::intrusive_ptr<CodeEditorDialog> d(new CodeEditorDialog(rect(0,0,wnd_w,wnd_h)));
 
-	d->set_process_hook(std::bind(&CodeEditorDialog::process, d.get()));
+	d->setProcessHook(std::bind(&CodeEditorDialog::process, d.get()));
 	d->add_optional_error_text_area(error);
 	d->set_close_buttons();
 	d->init();
@@ -1064,17 +1062,18 @@ void edit_and_continue_fn(const std::string& filename, const std::string& error,
 			}
 		}
 	}
-	d->show_modal();
+	d->showModal();
 
 	if(d->cancelled() || d->has_error()) {
 		_exit(0);
 	}
 }
 
-namespace {
-void try_fix_assert()
+namespace 
 {
-}
+	void try_fix_assert()
+	{
+	}
 }
 
 void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
@@ -1098,17 +1097,17 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 	boost::intrusive_ptr<ConsoleDialog> console(new ConsoleDialog(Level::current(), *const_cast<game_logic::FormulaCallable*>(stack.back().callable)));
 
-	grid_ptr call_grid(new grid(1));
-	call_grid->set_max_height(wnd->height() - console->y());
-	call_grid->allow_selection();
-	call_grid->must_select();
+	GridPtr call_grid(new Grid(1));
+	call_grid->setMaxHeight(wnd->height() - console->y());
+	call_grid->allowSelection();
+	call_grid->mustSelect();
 	for(const CallStackEntry& entry : reverse_stack) {
 		std::string str = entry.expression->str();
 		std::string::iterator i = std::find(str.begin(), str.end(), '\n');
 		if(i != str.end()) {
 			str.erase(i, str.end());
 		}
-		call_grid->add_col(WidgetPtr(new Label(str)));
+		call_grid->addCol(WidgetPtr(new Label(str)));
 	}
 
 	call_grid->setLoc(console->x() + console->width() + 6, console->y());
@@ -1120,7 +1119,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 	d->show();
 	d->init();
 
-	const variant::debug_info* debug_info = stack.back().expression->parent_formula().get_debug_info();
+	const variant::debug_info* debug_info = stack.back().expression->getParentFormula().get_debug_info();
 	if(debug_info && debug_info->filename) {
 		if(!fn) {
 			fn = std::function<void()>(try_fix_assert);
@@ -1156,11 +1155,11 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 		d->process();
 
-		console->prepare_draw();
+		console->prepareDraw();
 		for(WidgetPtr w : widgets) {
 			w->draw();
 		}
-		console->complete_draw();
+		console->completeDraw();
 	}
 
 	if(quit || d->cancelled() || d->has_error()) {
@@ -1181,12 +1180,12 @@ COMMAND_LINE_UTILITY(codeedit)
 	FramedGuiElement::init(gui_node);
 
 	CodeEditorDialog d(rect(0,0,600,600));
-	std::cerr << "CREATE DIALOG\n";
+	LOG_INFO("CREATE DIALOG");
 	if(args.empty() == false) {
 		d.load_file(args[0]);
 	}
 
-	d.show_modal();
+	d.showModal();
 }
 
 #endif // NO_EDITOR

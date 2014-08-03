@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -33,7 +33,7 @@ namespace KRE
 	class SDLPixelFormat : public PixelFormat
 	{
 	public:
-		SDLPixelFormat(const SDL_PixelFormat* pf);
+		SDLPixelFormat(Uint32 pf);
 		virtual ~SDLPixelFormat();
 
 		uint8_t bitsPerPixel() const override;
@@ -69,14 +69,27 @@ namespace KRE
 		uint32_t getAlphaShift() const override;
 		uint32_t getLuminanceShift() const override;
 
+		uint32_t getRedLoss() const override;
+		uint32_t getGreenLoss() const override;
+		uint32_t getBlueLoss() const override;
+		uint32_t getAlphaLoss() const override;
+		uint32_t getLuminanceLoss() const override;
+
 		PixelFormat::PF getFormat() const override;
+
+		Color mapRGB(int r, int g, int b) override;
+		Color mapRGB(double r, double g, double b) override;
+		Color mapRGBA(int r, int g, int b, int a) override;
+		Color mapRGBA(double r, double g, double b, double a) override;
+
+		void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) override;
 
 		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
 		void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
 
 		bool hasPalette() const override;
 	private:
-		const SDL_PixelFormat* pf_;
+		SDL_PixelFormat* pf_;
 	};
 
 
@@ -91,7 +104,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
-			void* pixels);
+			const void* pixels);
 		SurfaceSDL(unsigned width, 
 			unsigned height, 
 			unsigned bpp, 
@@ -99,10 +112,12 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		SurfaceSDL(const std::string& filename);
 		SurfaceSDL(SDL_Surface* surface);
 		SurfaceSDL(unsigned width, unsigned height, PixelFormat::PF format);
 		virtual ~SurfaceSDL();
 		const void* pixels() const override;
+		void* pixelsWriteable() override;
 		void writePixels(unsigned bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
@@ -110,6 +125,7 @@ namespace KRE
 			uint32_t amask,
 			const void* pixels) override;
 		void writePixels(const void* pixels) override;
+		void fillRect(const rect& dst_rect, const Color& color) override;
 		unsigned width() override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->w;
@@ -130,6 +146,11 @@ namespace KRE
 			return has_data_;
 		}
 
+		void blit(SurfacePtr src, const rect& src_rect) override;
+		void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
+		void blitTo(SurfacePtr src, const rect& dst_rect) override;
+		void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) override;
+
 		void setBlendMode(BlendMode bm) override;
 		BlendMode getBlendMode() const override;
 
@@ -147,7 +168,7 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
-			void* pixels);
+			const void* pixels);
 		static SurfacePtr createFromMask(unsigned width, 
 			unsigned height, 
 			unsigned bpp, 
@@ -155,6 +176,9 @@ namespace KRE
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
+		static SurfacePtr SurfaceSDL::createFromFormat(unsigned width,
+			unsigned height,
+			PixelFormat::PF fmt);
 
 		void lock() override;
 		void unlock() override;

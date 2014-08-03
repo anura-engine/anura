@@ -1,67 +1,64 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef TBS_CLIENT_HPP_INCLUDED
-#define TBS_CLIENT_HPP_INCLUDED
 
-#include <boost/array.hpp>
-#include <boost/asio.hpp>
+#pragma once
 
-#include <string>
-#include <vector>
-
-#include "formula_callable.hpp"
 #include "http_client.hpp"
 
-namespace tbs {
-using boost::asio::ip::tcp;
-
-class game;
-
-class client : public http_client
+namespace tbs 
 {
-public:
-	client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
+	using boost::asio::ip::tcp;
 
-	void send_request(variant request, 
-		game_logic::MapFormulaCallablePtr callable, 
-		std::function<void(std::string)> handler);
+	class game;
 
-	virtual void process();
-	void setId(const std::string& id);
+	class client : public http_client
+	{
+	public:
+		client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
 
-	void set_use_local_cache(bool value) { use_local_cache_ = value; }
-private:
-	std::function<void(std::string)> handler_;
-	game_logic::MapFormulaCallablePtr callable_;
+		void send_request(variant request, 
+			game_logic::MapFormulaCallablePtr callable, 
+			std::function<void(std::string)> handler);
 
-	void recv_handler(const std::string& msg);
-	void error_handler(const std::string& err);
-	variant getValue(const std::string& key) const;
+		virtual void process();
+		void setId(const std::string& id);
 
-	std::string connection_id_;
+		void set_use_local_cache(bool value) { use_local_cache_ = value; }
+	private:
+		std::function<void(std::string)> handler_;
+		game_logic::MapFormulaCallablePtr callable_;
 
-	bool use_local_cache_;
-	tbs::game* local_game_cache_;
-	boost::intrusive_ptr<game_logic::FormulaCallable> local_game_cache_holder_;
-	int local_nplayer_;
+		void recv_handler(const std::string& msg);
+		void error_handler(const std::string& err);
+		variant getValue(const std::string& key) const;
 
-	std::vector<std::string> local_responses_;
-};
+		std::string connection_id_;
 
+		bool use_local_cache_;
+		tbs::game* local_game_cache_;
+		boost::intrusive_ptr<game_logic::FormulaCallable> local_game_cache_holder_;
+		int local_nplayer_;
+
+		std::vector<std::string> local_responses_;
+	};
 }
-
-#endif

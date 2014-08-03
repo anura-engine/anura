@@ -1,23 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef VARIANT_UTILS_HPP_INCLUDED
-#define VARIANT_UTILS_HPP_INCLUDED
 
-#include <map>
+#pragma once
 
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -64,7 +68,7 @@ void merge_variant_over(variant* aptr, variant b);
 //If dst and src contain 'incompatible' types this function will assert.
 void smart_merge_variants(variant* dst, const variant& src);
 
-void visit_variants(variant v, std::function<void (variant)> fn);
+void visitVariants(variant v, std::function<void (variant)> fn);
 
 variant deep_copy_variant(variant v);
 
@@ -76,7 +80,7 @@ variant interpolate_variants(variant a, variant b, float ratio);
 template<typename Seq>
 variant vector_to_variant(const Seq& seq) {
 	std::vector<variant> v;
-	foreach(const typename Seq::value_type& value, seq) {
+	for(const typename Seq::value_type& value : seq) {
 		v.push_back(variant(value));
 	}
 
@@ -112,4 +116,3 @@ public:
 private:
 	std::map<variant, std::vector<variant> > attr_;
 };
-#endif

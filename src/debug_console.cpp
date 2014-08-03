@@ -28,6 +28,7 @@
 
 #include "kre/Canvas.hpp"
 #include "kre/Font.hpp"
+#include "kre/WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "logger.hpp"
@@ -179,12 +180,12 @@ namespace debug_console
 
 			std::vector<glm::vec2> points;
 
-			while(index < p.second.samples.size()) {
+			while(static_cast<unsigned>(index) < p.second.samples.size()) {
 				decimal value = p.second.samples[index];
 
 				const float xpos = graph_area.x() + (static_cast<float>(pos)*graph_area.w())/1000.0f;
 
-				const float value_ratio = ((value - min_value)/(max_value - min_value)).as_float();
+				const float value_ratio = static_cast<float>(((value - min_value)/(max_value - min_value)).as_float());
 				const float ypos = graph_area.y2() - graph_area.h()*value_ratio;
 				points.emplace_back(xpos, ypos);
 				y_samples.push_back(ypos);
@@ -203,7 +204,7 @@ namespace debug_console
 			const float mean_ypos = std::accumulate(y_samples.begin(), y_samples.end(), 0.0f)/y_samples.size();
 
 			canvas->drawLineStrip(points, 1.0f, graph_color);
-			canvas->blitTexture(KRE::Font::getInstance()->renderText(p.first, graph_color, 14), 0, rect(points[points.size()-1][0] + 4, mean_ypos - 6));
+			canvas->blitTexture(KRE::Font::getInstance()->renderText(p.first, graph_color, 14), 0, rect(static_cast<int>(points[points.size()-1][0] + 4), static_cast<int>(mean_ypos - 6)));
 
 			++colors_index;
 		}
@@ -250,7 +251,7 @@ namespace debug_console
 
 		try {
 			messages().push_back(KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 14));
-		} catch(KRE::FontError& e) {
+		} catch(KRE::FontError&) {
 			LOG_ERROR("FAILED TO ADD MESSAGE DUE TO FONT RENDERING FAILURE");
 			return;
 		}
@@ -286,8 +287,8 @@ namespace debug_console
 		}
 	}
 
-	ConsoleDialog::ConsoleDialog(level& lvl, game_logic::FormulaCallable& obj)
-	   : Dialog(0, graphics::screen_height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
+	ConsoleDialog::ConsoleDialog(Level& lvl, game_logic::FormulaCallable& obj)
+	   : Dialog(0, KRE::WindowManager::getMainWindow()->height() - 200, 600, 200), lvl_(&lvl), focus_(&obj),
 		 history_pos_(0)
 	{
 		if(sys::file_exists(console_history_path())) {
@@ -326,11 +327,11 @@ namespace debug_console
 
 	void ConsoleDialog::onMoveCursor()
 	{
-		if(text_editor_->cursorRow() < text_editor_->getData().size()-1) {
+		if(static_cast<unsigned>(text_editor_->cursorRow()) < text_editor_->getData().size()-1) {
 			text_editor_->setCursor(text_editor_->getData().size()-1, text_editor_->cursorCol());
 		}
 
-		if(text_editor_->cursorCol() < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
+		if(static_cast<unsigned>(text_editor_->cursorCol()) < Prompt.size() && text_editor_->getData().back().size() >= Prompt.size()) {
 			text_editor_->setCursor(text_editor_->getData().size()-1, Prompt.size());
 		}
 	}
@@ -369,11 +370,11 @@ namespace debug_console
 				variant::debug_info info;
 				info.filename = &filename;
 				info.line = info.column = 0;
-				ffl_variant.set_debug_info(info);
+				ffl_variant.setDebugInfo(info);
 
-				entity* ent = dynamic_cast<entity*>(focus_.get());
+				Entity* ent = dynamic_cast<Entity*>(focus_.get());
 
-				game_logic::formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->getDefinition() : NULL);
+				game_logic::Formula f(ffl_variant, &get_custom_object_functions_symbol_table(), ent ? ent->getDefinition() : NULL);
 				variant v = f.execute(*focus_);
 				if(ent) {
 					try {
@@ -439,7 +440,7 @@ namespace debug_console
 
 					if(history_pos_ < 0) {
 						history_pos_ = history_.size();
-					} else if(history_pos_ > history_.size()) {
+					} else if(static_cast<unsigned>(history_pos_) > history_.size()) {
 						history_pos_ = history_.size();
 					}
 
@@ -456,7 +457,7 @@ namespace debug_console
 	void ConsoleDialog::loadHistory()
 	{
 		std::string str;
-		if(history_pos_ < history_.size()) {
+		if(static_cast<unsigned>(history_pos_) < history_.size()) {
 			str = history_[history_pos_];
 		}
 
@@ -475,7 +476,7 @@ namespace debug_console
 	{
 		focus_ = e;
 		text_editor_->setFocus(true);
-		entity* ent = dynamic_cast<entity*>(focus_.get());
+		Entity* ent = dynamic_cast<Entity*>(focus_.get());
 		if(ent) {
 			addMessage(formatter() << "Selected object: " << ent->getDebugDescription());
 		}

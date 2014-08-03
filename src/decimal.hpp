@@ -1,21 +1,27 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#ifndef DECIMAL_HPP_INCLUDED
-#define DECIMAL_HPP_INCLUDED
+
+#pragma once
 
 #include <string>
 
@@ -36,16 +42,16 @@ public:
 	static decimal from_raw_value(int64_t v) { decimal d; d.value_ = v; return d; }
 	static decimal epsilon() { return decimal::from_raw_value(static_cast<int64_t>(1)); }
 	decimal() : value_(0) {}
-	explicit decimal(int value) : value_(int64_t(value)*DECIMAL_PRECISION) {}
+	explicit decimal(int value) : value_(static_cast<int64_t>(value)*DECIMAL_PRECISION) {}
 #if defined(TARGET_BLACKBERRY)
 	explicit decimal(double value) : value_(llround(value*DECIMAL_PRECISION)) {}
 #else
-	explicit decimal(double value) : value_(int64_t(value*DECIMAL_PRECISION)) {}
+	explicit decimal(double value) : value_(static_cast<int64_t>(value*DECIMAL_PRECISION)) {}
 #endif
 
 	int64_t value() const { return value_; }
 	int as_int() const { return int( value_/DECIMAL_PRECISION ); }
-	double as_float() const { return value_/double(DECIMAL_PRECISION); }
+	double as_float() const { return value_/static_cast<double>(DECIMAL_PRECISION); }
 	int64_t fractional() const { return value_%DECIMAL_PRECISION; }
 
 	decimal operator-() const {
@@ -125,5 +131,3 @@ inline bool operator<=(int a, decimal b) { return operator<=(decimal::from_int(a
 inline bool operator>=(int a, decimal b) { return operator>=(decimal::from_int(a), b); }
 
 std::ostream& operator<<(std::ostream& s, decimal d);
-
-#endif

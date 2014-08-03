@@ -80,7 +80,7 @@ bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionI
 
 //function which finds if an Entity's solid area collides with anything, when
 //the object has just moved one pixel in the direction given by 'dir'. If
-//'dir' is MOVE_NONE, then all pixels will be checked.
+//'dir' is MOVE_DIRECTION::NONE, then all pixels will be checked.
 bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=NULL);
 
 void debug_check_entity_solidity(const Level& lvl, const Entity& e);

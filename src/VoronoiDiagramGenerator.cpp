@@ -28,7 +28,7 @@
 */
 
 #include "VoronoiDiagramGenerator.h"
-#include <stdio.h>
+#include "asserts.hpp"
 
 VoronoiDiagramGenerator::VoronoiDiagramGenerator()
 {
@@ -73,15 +73,15 @@ bool VoronoiDiagramGenerator::generateVoronoi(struct SourcePoint* srcPoints, int
 
 	if(sites == 0) return false;
 
-        xmin = srcPoints[0].x;
-        ymin = srcPoints[0].y;
-        xmax = srcPoints[0].x;
-        ymax = srcPoints[0].y;
+        xmin = static_cast<float>(srcPoints[0].x);
+        ymin = static_cast<float>(srcPoints[0].y);
+        xmax = static_cast<float>(srcPoints[0].x);
+        ymax = static_cast<float>(srcPoints[0].y);
 
         for(i = 0; i < nsites; i++)
         {
-                sites[i].coord.x = srcPoints[i].x;
-                sites[i].coord.y = srcPoints[i].y;
+                sites[i].coord.x = static_cast<float>(srcPoints[i].x);
+                sites[i].coord.y = static_cast<float>(srcPoints[i].y);
                 sites[i].weight = srcPoints[i].weight;
                 sites[i].sitenbr = i;
                 sites[i].refcnt = 0; // prevent reuse?
@@ -800,22 +800,16 @@ void VoronoiDiagramGenerator::pushpoint(int sitenbr, double x, double y, int bou
         if (s->numpoints == 0)
         {
                 s->pointlist = (PolygonPoint *)malloc(sizeof(struct PolygonPoint)*(s->numpoints+10));
-                if (!s->pointlist)
-                {
-                        printf("Out of mem\n");
-                }
+                ASSERT_LOG(s->pointlist != NULL, "Out of mem");
         }
         else if (s->numpoints % 10 == 0)
         {
                 s->pointlist = (PolygonPoint *)realloc(s->pointlist, sizeof(struct PolygonPoint)*(s->numpoints+10));
-                if (!s->pointlist)
-                {
-                        printf("Out of remem\n");
-                }
+				ASSERT_LOG(s->pointlist != NULL, "Out of remem");
         }
-        s->pointlist[s->numpoints].coord.x = x;
-        s->pointlist[s->numpoints].coord.y = y;
-        s->pointlist[s->numpoints].angle = atan2f(x-s->coord.x, y-s->coord.y);
+        s->pointlist[s->numpoints].coord.x = static_cast<float>(x);
+        s->pointlist[s->numpoints].coord.y = static_cast<float>(y);
+        s->pointlist[s->numpoints].angle = atan2(x-s->coord.x, y-s->coord.y);
 	s->pointlist[s->numpoints].boundary = boundary;
 
 	if (boundary) s->boundary = 1;

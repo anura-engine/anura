@@ -22,9 +22,7 @@
 */
 
 #pragma once
-
-#if defined(USE_ISOMAP)
-
+/*
 #include <unordered_map>
 
 #include <vector>
@@ -158,5 +156,4 @@ namespace voxel
 
 	typedef boost::intrusive_ptr<World> WorldPtr;
 }
-
-#endif
+*/

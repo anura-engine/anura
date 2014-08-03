@@ -44,7 +44,6 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "hex_map.hpp"
-#include "isoworld.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "speech_dialog.hpp"
@@ -88,7 +87,7 @@ public:
 	//in the main thread.
 	void finishLoading();
 
-	virtual game_logic::formula_ptr createFormula(const variant& v);
+	virtual game_logic::FormulaPtr createFormula(const variant& v);
 	bool executeCommand(const variant& var);
 
 	//function which sets which player we're controlling on this machine.
@@ -146,9 +145,6 @@ public:
 	bool is_mouselook_inverted() const { return mouselook_inverted_; }
 	void set_mouselook_inverted(bool mli=true) { mouselook_inverted_ = true; }
 	std::vector<EntityPtr> get_characters_at_world_point(const glm::vec3& pt);
-
-	voxel::WorldPtr& iso_world() { return iso_world_; }
-
 
 	//function to do 'magic wand' selection -- given an x/y pixel position,
 	//will return all the solid tiles connected
@@ -224,10 +220,10 @@ public:
 	const std::vector<EntityPtr>& editor_selection() const { return editor_selection_; }
 
 	bool show_foreground() const { return show_foreground_; }
-	void set_show_foreground(bool value) { show_foreground_ = value; }
+	void setShowForeground(bool value) { show_foreground_ = value; }
 
 	bool show_background() const { return show_background_; }
-	void set_show_background(bool value) { show_background_ = value; }
+	void setShowBackground(bool value) { show_background_ = value; }
 
 	const std::string& get_background_id() const;
 	void set_background_by_id(const std::string& id);
@@ -336,9 +332,9 @@ public:
 
 	decimal zoom_level() const;
 
-	void add_speech_dialog(std::shared_ptr<speech_dialog> d);
+	void add_speech_dialog(std::shared_ptr<SpeechDialog> d);
 	void remove_speech_dialog();
-	std::shared_ptr<const speech_dialog> current_speech_dialog() const;
+	std::shared_ptr<const SpeechDialog> current_speech_dialog() const;
 
 	const std::vector<EntityPtr>& focus_override() const { return focus_override_; }
 
@@ -448,7 +444,7 @@ private:
 	bool isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** surf_info) const;
 	bool isSolid(const LevelSolidMap& map, const Entity& e, const std::vector<point>& points, const SurfaceInfo** surf_info) const;
 
-	void set_solid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
+	void setSolid(LevelSolidMap& map, int x, int y, int friction, int traction, int damage, const std::string& info, bool solid=true);
 
 	std::string title_;
 
@@ -546,7 +542,7 @@ private:
 	int air_resistance_;
 	int water_resistance_;
 
-	game_logic::const_formula_ptr camera_rotation_;
+	game_logic::ConstFormulaPtr camera_rotation_;
 	bool end_game_;
 
 	std::vector<std::string> preloads_; //future levels to preload
@@ -576,7 +572,7 @@ private:
 	decimal zoom_level_;
 	std::vector<EntityPtr> focus_override_;
 
-	std::stack<std::shared_ptr<speech_dialog> > speech_dialogs_;
+	std::stack<std::shared_ptr<SpeechDialog> > speech_dialogs_;
 
 	std::set<std::string> hidden_classifications_;
 
@@ -609,7 +605,6 @@ private:
 	std::vector<box2d::body_ptr> bodies_;
 #endif
 
-	voxel::WorldPtr iso_world_;
 	bool mouselook_enabled_;
 	bool mouselook_inverted_;
 

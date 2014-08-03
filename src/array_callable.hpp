@@ -1,51 +1,55 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #pragma once
-#ifndef ARRAY_CALLABLE_HPP_INCLUDED
-#define ARRAY_CALLABLE_HPP_INCLUDED
 
 #include <vector>
 
 #include "asserts.hpp"
 #include "formula_callable.hpp"
-#include "graphics.hpp"
 #include "variant.hpp"
 
-namespace game_logic {
-
-	class float_array_callable : public formula_callable
+namespace game_logic 
+{
+	class FloatArrayCallable : public FormulaCallable
 	{
 	public:
-		explicit float_array_callable(std::vector<GLfloat>* f, int ne = 1)
+		explicit FloatArrayCallable(std::vector<float>* f, int ne = 1)
 			: ne_(ne)
 		{
 			f_.swap(*f);
 		}
-		virtual void set_value(const std::string& key, const variant& value) 
+		virtual void setValue(const std::string& key, const variant& value) 
 		{
 			if(key == "floats" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
 				f_.resize(value.num_elements());
 				for(size_t n = 0; n < value.num_elements(); ++n) {
-					f_[n] = GLfloat(value[n].as_decimal().as_float());
+					f_[n] = float(value[n].as_decimal().as_float());
 				}
 			}
 		}
-		virtual variant get_value(const std::string& key) const
+		virtual variant getValue(const std::string& key) const
 		{
 			if(key == "floats" || key == "value") {
 				std::vector<variant> v;
@@ -58,32 +62,32 @@ namespace game_logic {
 			}
 			return variant();
 		}
-		const std::vector<GLfloat>& floats() { return f_; }
+		const std::vector<float>& floats() { return f_; }
 		int num_elements() const { return ne_; }
 	private:
 		int ne_;
-		std::vector<GLfloat> f_;
+		std::vector<float> f_;
 	};
 
-	class short_array_callable : public formula_callable
+	class ShortArrayCallable : public FormulaCallable
 	{
 	public:
-		explicit short_array_callable(std::vector<GLshort>* s, int ne = 1)
+		explicit ShortArrayCallable(std::vector<short>* s, int ne = 1)
 			: ne_(ne)
 		{
 			s_.swap(*s);
 		}
-		virtual void set_value(const std::string& key, const variant& value) 
+		virtual void setValue(const std::string& key, const variant& value) 
 		{
 			if(key == "shorts" || key == "value") {
 				ASSERT_LOG(value.is_list(), "Must be a list type");
 				s_.resize(value.num_elements());
 				for(size_t n = 0; n < value.num_elements(); ++n) {
-					s_[n] = GLshort(value[n].as_int());
+					s_[n] = short(value[n].as_int());
 				}
 			}
 		}
-		variant get_value(const std::string& key) const
+		variant getValue(const std::string& key) const
 		{
 			if(key == "shorts" || key == "value") {
 				std::vector<variant> v;
@@ -96,13 +100,11 @@ namespace game_logic {
 			}
 			return variant();
 		}
-		const std::vector<GLshort>& shorts() { return s_; }
+		const std::vector<short>& shorts() { return s_; }
 		int num_elements() const { return ne_; }
 	private:
 		int ne_;
-		std::vector<GLshort> s_;
+		std::vector<short> s_;
 	};
 
 }
-
-#endif

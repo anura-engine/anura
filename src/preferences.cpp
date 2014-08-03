@@ -1,24 +1,30 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
+
 #include <iostream>
 #include <algorithm>
 #include <string>
 #include <iomanip>
-#include "graphics.hpp"
 
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
@@ -44,184 +50,179 @@
 #define SAVE_FILENAME					"save.cfg"
 #define AUTOSAVE_FILENAME				"autosave.cfg"
 
-#ifdef _WINDOWS
+#if defined(_MSC_VER)
+
 #define WIN32_LEAN_AND_MEAN
 #include <windows.h>
 #include <shlobj.h>
 #include <shlwapi.h>
 
+std::string multi_byte_from_wide_string(LPCWSTR pwsz, UINT cp) 
+{
+    int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, NULL, NULL);
+    char* psz = new char[cch];
+    WideCharToMultiByte(cp, 0, pwsz, -1, psz, cch, NULL, NULL);
+    std::string st(psz);
+    delete[] psz;
+	return st;
+}
+
+std::string get_windows_error_as_string()
+{
+	LPVOID lpMsgBuf;
+	FormatMessage( 
+		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
+		FORMAT_MESSAGE_FROM_SYSTEM | 
+		FORMAT_MESSAGE_IGNORE_INSERTS,
+		NULL,
+		GetLastError(),
+		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
+		(LPTSTR) &lpMsgBuf,
+		0,
+		NULL 
+	);
+
+#if defined(_UNICODE)
+	std::string res = multi_byte_from_wide_string((LPCTSTR)lpMsgBuf, CP_UTF8);
+#else
+	std::string res((LPCSTR)lpMsgBuf);
+#endif
+	// Free the buffer.
+	::LocalFree(lpMsgBuf);
+	return res;
+}
+
 class WindowsPrefs
+{
+public:
+	const std::string& getPreferencePath() const   { return preferences_path_; }
+	const std::string& getSaveFilePath() const     { return save_file_path_; }
+	const std::string& getAutoSaveFilePath() const { return auto_save_file_path_; }
+	const std::string& getAppDataPath() const      { return app_data_path_; }
+	static WindowsPrefs& getInstance() {
+		static WindowsPrefs res;
+		return res;
+	}
+private:
+	WindowsPrefs() {
+		char szPath[MAX_PATH];
+		if(SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath))) {
+			app_data_path_ = std::string(szPath);
+		} else {
+			ASSERT_LOG(false, "Failed to read the application data path: " << get_windows_error_as_string());
+		}
+
+		preferences_path_ = app_data_path_ + "/" + module::get_module_name() + "/";
+		save_file_path_ = preferences_path_ + SAVE_FILENAME;
+		auto_save_file_path_ = preferences_path_ + AUTOSAVE_FILENAME;
+	}
+	std::string preferences_path_;
+	std::string save_file_path_;
+	std::string auto_save_file_path_;
+	std::string app_data_path_;
+};
+
+#endif // _MSC_VER
+
+
+namespace preferences 
+{
+	namespace 
 	{
-	public:
-		std::string GetPreferencePath()   { if (State* i = Instance()) return i->GetPreferencePath(); }
-		std::string GetSaveFilePath()     { if (State* i = Instance()) return i->GetSaveFilePath(); }
-		std::string GetAutoSaveFilePath() { if (State* i = Instance()) return i->GetAutoSaveFilePath(); }
-		
-	private:
-		struct State 
+		struct RegisteredSetting 
+		{
+			RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), double_value(NULL), string_value(NULL), helpstring(NULL)
+			{}
+			variant write() const {
+				if(int_value) {
+					return variant(*int_value);
+				} else if(string_value) {
+					return variant(*string_value);
+				} else if(bool_value) {
+					return variant::from_bool(*bool_value);
+				} else if(double_value) {
+					return variant(*double_value);
+				} else {
+					return variant();
+				}
+			}
+
+			void read(variant value) {
+				if(int_value && value.is_int()) {
+					*int_value = value.as_int();
+				} else if(string_value && value.is_string()) {
+					*string_value = value.as_string();
+				} else if(bool_value && (value.is_bool() || value.is_int())) {
+					*bool_value = value.as_bool();
+				} else if(double_value && (value.is_decimal() || value.is_int())) {
+					*double_value = value.as_decimal().as_float();
+				}
+			}
+			bool persistent;
+			int* int_value;
+			bool* bool_value;
+			double* double_value;
+			std::string* string_value;
+			const char* helpstring;
+		};
+
+		std::map<std::string, RegisteredSetting>& g_registered_settings() {
+			static std::map<std::string, RegisteredSetting> instance;
+			return instance;
+		}
+
+		class SettingsObject : public game_logic::FormulaCallable
 		{
 		private:
-			std::string preferences_path;
-			std::string save_file_path;
-			std::string auto_save_file_path;
-		public:
-			State::State()
-			{
-				this->preferences_path = GetAppDataPath() + "/" + module::get_module_name() + "/";
-				this->save_file_path = this->preferences_path + SAVE_FILENAME;
-				this->auto_save_file_path = this->preferences_path + AUTOSAVE_FILENAME;
-			}
-			std::string GetPreferencePath()
-			{
-				return this->preferences_path;
-			};
-			
-			std::string GetSaveFilePath()
-			{
-				return this->save_file_path;
-			}
-			
-			std::string GetAutoSaveFilePath()
-			{
-				return this->auto_save_file_path;
-			}
-		};
-		
-		static State* Instance();
-		static void CleanUp();
-		
-		static bool MDestroyed;
-		static State* MInstance;
-	};
+			variant getValue(const std::string& key) const {
+				if(key == "dir") {
+					std::vector<variant> result;
+					for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+						result.push_back(variant(itor->first));
+					}
 
-std::string GetAppDataPath() {
-	char szPath[ MAX_PATH ];
-	if(SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath))) 
-	{
-		return std::string(szPath);
-	}
-	return std::string();
-}
-
-bool WindowsPrefs::MDestroyed = false;
-WindowsPrefs::State* WindowsPrefs::MInstance = 0;
-
-WindowsPrefs::State* WindowsPrefs::Instance()
-{
-	if( !MDestroyed && !MInstance ) {
-		MInstance = new State();
-		atexit( &CleanUp );
-	}
-	return MInstance;
-}
-
-void WindowsPrefs::CleanUp()
-{
-	delete MInstance;
-	MInstance = 0;
-	MDestroyed = true;
-}
-
-WindowsPrefs winPrefs;
-#endif // _WINDOWS
-
-
-namespace preferences {
-	namespace {
-	struct RegisteredSetting {
-		RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), double_value(NULL), string_value(NULL), helpstring(NULL)
-		{}
-		variant write() const {
-			if(int_value) {
-				return variant(*int_value);
-			} else if(string_value) {
-				return variant(*string_value);
-			} else if(bool_value) {
-				return variant::from_bool(*bool_value);
-			} else if(double_value) {
-				return variant(*double_value);
-			} else {
-				return variant();
-			}
-		}
-
-		void read(variant value) {
-			if(int_value && value.is_int()) {
-				*int_value = value.as_int();
-			} else if(string_value && value.is_string()) {
-				*string_value = value.as_string();
-			} else if(bool_value && (value.is_bool() || value.is_int())) {
-				*bool_value = value.as_bool();
-			} else if(double_value && (value.is_decimal() || value.is_int())) {
-				*double_value = value.as_decimal().as_float();
-			}
-		}
-		bool persistent;
-		int* int_value;
-		bool* bool_value;
-		double* double_value;
-		std::string* string_value;
-		const char* helpstring;
-	};
-
-	std::map<std::string, RegisteredSetting>& g_registered_settings() {
-		static std::map<std::string, RegisteredSetting> instance;
-		return instance;
-	}
-
-	class SettingsObject : public game_logic::FormulaCallable
-	{
-	public:
-	private:
-		variant getValue(const std::string& key) const {
-			if(key == "dir") {
-				std::vector<variant> result;
-				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-					result.push_back(variant(itor->first));
+					return variant(&result);
 				}
 
-				return variant(&result);
+				std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
+				if(itor == g_registered_settings().end()) {
+					return variant();
+				}
+
+				if(itor->second.int_value) {
+					return variant(*itor->second.int_value);
+				} else if(itor->second.string_value) {
+					return variant(*itor->second.string_value);
+				} else if(itor->second.bool_value) {
+					return variant::from_bool(*itor->second.bool_value);
+				} else if(itor->second.double_value) {
+					return variant(*itor->second.double_value);
+				} else {
+					return variant();
+				}
 			}
 
-			std::map<std::string, RegisteredSetting>::const_iterator itor = g_registered_settings().find(key);
-			if(itor == g_registered_settings().end()) {
-				return variant();
+			void setValue(const std::string& key, const variant& value) {
+				std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
+				if(itor == g_registered_settings().end()) {
+					return;
+				}
+
+				if(itor->second.int_value) {
+					*itor->second.int_value = value.as_int();
+				} else if(itor->second.string_value) {
+					*itor->second.string_value = value.as_string();
+				} else if(itor->second.double_value) {
+					*itor->second.double_value = value.as_decimal().as_float();
+				}
 			}
 
-			if(itor->second.int_value) {
-				return variant(*itor->second.int_value);
-			} else if(itor->second.string_value) {
-				return variant(*itor->second.string_value);
-			} else if(itor->second.bool_value) {
-				return variant::from_bool(*itor->second.bool_value);
-			} else if(itor->second.double_value) {
-				return variant(*itor->second.double_value);
-			} else {
-				return variant();
+			void getInputs(std::vector<game_logic::FormulaInput>* inputs) const {
+				for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
+					inputs->push_back(game_logic::FormulaInput(itor->first, game_logic::FORMULA_ACCESS_TYPE::READ_WRITE));
+				}
 			}
-		}
-
-		void setValue(const std::string& key, const variant& value) {
-			std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().find(key);
-			if(itor == g_registered_settings().end()) {
-				return;
-			}
-
-			if(itor->second.int_value) {
-				*itor->second.int_value = value.as_int();
-			} else if(itor->second.string_value) {
-				*itor->second.string_value = value.as_string();
-			} else if(itor->second.double_value) {
-				*itor->second.double_value = value.as_decimal().as_float();
-			}
-		}
-
-		void getInputs(std::vector<game_logic::formula_input>* inputs) const {
-			for(std::map<std::string, RegisteredSetting>::iterator itor = g_registered_settings().begin(); itor != g_registered_settings().end(); ++itor) {
-				inputs->push_back(game_logic::formula_input(itor->first, game_logic::FORMULA_READ_WRITE));
-			}
-		}
-	};
+		};
 	}
 
 	game_logic::FormulaCallable* get_settings_obj()
@@ -539,7 +540,7 @@ namespace preferences {
 		if(unique_user_id == 0) {
 			time_t t1;
 			time(&t1);
-			int tm = t1;
+			int tm = static_cast<int>(t1);
 			unique_user_id = tm^rand();
 		}
 		
@@ -574,7 +575,7 @@ namespace preferences {
 	void set_preferences_path_from_module( const std::string& name)
 	{
 #ifdef _WINDOWS
-		preferences::set_preferences_path(GetAppDataPath() + "/" + name + "/"); 
+		preferences::set_preferences_path(WindowsPrefs::getInstance().getAppDataPath() + "/" + name + "/"); 
 #elif defined(__ANDROID__)
 		preferences::set_preferences_path("." + name + "/");
 #elif __APPLE__
@@ -592,7 +593,7 @@ namespace preferences {
 	
 	void set_preferences_path(const std::string& path)
 	{
-		std::cerr << "SET PREFERENCES PATH: " << path << "\n";
+		LOG_INFO("SET PREFERENCES PATH: " << path);
 		preferences_path_ = path;
 		if(preferences_path_[preferences_path_.length()-1] != '/') {
 			preferences_path_ += '/';
@@ -611,12 +612,12 @@ namespace preferences {
 	}
 	
 	const char *save_file_path() {
-		std::cerr << "GET SAVE FILE PATH: " << save_file_path_ << std::endl;
+		LOG_INFO("GET SAVE FILE PATH: " << save_file_path_);
 		return save_file_path_.c_str();
 	}
 	
 	const char *auto_save_file_path() {
-		std::cerr << "GET AUTOSAVE FILE PATH: " << auto_save_file_path_ << std::endl;
+		LOG_INFO("GET AUTOSAVE FILE PATH: " << auto_save_file_path_);
 		return auto_save_file_path_.c_str();
 	}
 	
@@ -641,7 +642,7 @@ namespace preferences {
 	}
 	
 	std::string dlc_path() {
-		std::string result(std::string(PREFERENCES_PATH) + "/dlc");
+		std::string result(preferences_path_ + "/dlc");
 		expand_path(result);
 		return result;
 	}
@@ -651,12 +652,12 @@ namespace preferences {
 		expand_path(save_file_path_);
 		expand_path(auto_save_file_path_);
 		expand_path(preferences_path_);
-		std::cerr << "EXPAND DATA PATHS\n";
+		LOG_INFO("EXPAND DATA PATHS");
 	}
 	
 	void set_save_slot(const std::string& fname) {
 		save_file_path_ = std::string(user_data_path()) + fname;
-		std::cerr << "SET SAVE FILE PATH TO " << save_file_path_ << "\n";
+		LOG_INFO("SET SAVE FILE PATH TO " << save_file_path_);
 	}
 	
 	bool show_debug_hitboxes() {
@@ -957,21 +958,22 @@ namespace preferences {
 	
 	game_logic::FormulaCallable* registry()
 	{
-		return &game_registry::instance();
+		return &GameRegistry::getInstance();
 	}
 	
 	void load_preferences()
 	{
 		std::string path;
 		if(preferences_path_.empty()) {
-#if defined( _WINDOWS )
-			preferences_path_ = winPrefs.GetPreferencePath();
-			save_file_path_ = winPrefs.GetSaveFilePath();
-			auto_save_file_path_ = winPrefs.GetAutoSaveFilePath();
+#if defined(_MSC_VER)
+			
+			preferences_path_ = WindowsPrefs::getInstance().getPreferencePath();
+			save_file_path_ = WindowsPrefs::getInstance().getSaveFilePath();
+			auto_save_file_path_ = WindowsPrefs::getInstance().getAutoSaveFilePath();
 			path = preferences_path_;
 #else
 			path = PREFERENCES_PATH;
-#endif // defined( _WINDOWS )
+#endif
 		} else {
 			path = preferences_path_;
 		}
@@ -991,7 +993,7 @@ namespace preferences {
 		if(node.is_null()) {
 			try {
 				node = json::parse_from_file(path + "preferences.cfg");
-			} catch(json::parse_error&) {
+			} catch(json::ParseError&) {
 				return;
 			}
 		}
@@ -1015,14 +1017,14 @@ namespace preferences {
 		reverse_ab_ = node["reverse_ab"].as_bool(reverse_ab_);
 		allow_autopause_ = node["allow_autopause"].as_bool(allow_autopause_);
 		
-		sound::set_music_volume(node["music_volume"].as_int(1000)/1000.0);
-		sound::setSoundVolume(node["sound_volume"].as_int(1000)/1000.0);
+		sound::set_music_volume(node["music_volume"].as_int(1000)/1000.0f);
+		sound::set_sound_volume(node["sound_volume"].as_int(1000)/1000.0f);
 
 		locale_ = node["locale"].as_string_default("system");
 		
 		const variant registry_node = node["registry"];
 		if(registry_node.is_null() == false) {
-			game_registry::instance().set_contents(registry_node);
+			GameRegistry::getInstance().setContents(registry_node);
 		}
 		
 		if(node["code_editor"].is_map()) {
@@ -1115,7 +1117,7 @@ namespace preferences {
 			node.add("code_editor", external_code_editor_);
 		}
 		
-		node.add("registry", game_registry::instance().write_contents());
+		node.add("registry", GameRegistry::getInstance().writeContents());
 
 		for(std::map<std::string, RegisteredSetting>::const_iterator i = g_registered_settings().begin(); i != g_registered_settings().end(); ++i) {
 			if(i->second.persistent) {
@@ -1123,7 +1125,7 @@ namespace preferences {
 			}
 		}
 		
-		std::cerr << "WRITE PREFS: " << (preferences_path_ + "preferences.cfg") << std::endl;
+		LOG_INFO("WRITE PREFS: " << (preferences_path_ + "preferences.cfg"));
 		sys::write_file(preferences_path_ + "preferences.cfg", node.build().write_json());
 	}
 	
@@ -1240,10 +1242,10 @@ namespace preferences {
 			show_fps_ = false;
 		} else if(arg_name == "--set-fps" && !arg_value.empty()) {
 			frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
-			std::cerr << "FPS: " << arg_value << " = " << frame_time_millis_ << "ms/frame\n";
+			LOG_INFO("FPS: " << arg_value << " = " << frame_time_millis_ << "ms/frame");
 		} else if(arg_name == "--alt-fps" && !arg_value.empty()) {
 			alt_frame_time_millis_ = 1000/boost::lexical_cast<int, std::string>(arg_value);
-			std::cerr << "FPS: " << arg_value << " = " << alt_frame_time_millis_ << "ms/frame\n";
+			LOG_INFO("FPS: " << arg_value << " = " << alt_frame_time_millis_ << "ms/frame");
 		} else if(arg_name == "--config-path" && !arg_value.empty()) {
 			set_preferences_path(arg_value);
 		} else if(s == "--send-stats") {
@@ -1351,11 +1353,11 @@ namespace preferences {
 	}
 
 	void set_32bpp_textures_if_kb_memory_at_least( int memory_required ) {
-        sys::available_memory_info mem_info;
+        sys::AvailableMemoryInfo mem_info;
         const bool result = sys::get_available_memory(&mem_info);
         if(result) {
             use_16bpp_textures_ = mem_info.mem_total_kb < memory_required;
-            std::cerr << "USING " << (use_16bpp_textures_ ? 16 : 32) << "bpp TEXTURES BECAUSE SYSTEM HAS " << mem_info.mem_total_kb << "KB AND " << memory_required << "KB REQUIRED FOR 32bpp TEXTURES\n";
+            LOG_INFO("USING " << (use_16bpp_textures_ ? 16 : 32) << "bpp TEXTURES BECAUSE SYSTEM HAS " << mem_info.mem_total_kb << "KB AND " << memory_required << "KB REQUIRED FOR 32bpp TEXTURES");
         }
     }
     
@@ -1419,32 +1421,19 @@ namespace preferences {
 	{
 		static std::set<std::string> res;
 		if(res.empty()) {
-#if defined(USE_ISOMAP)
 			res.insert("isomap");
-#endif
-#if defined(USE_SHADERS)
-			res.insert("shaders");
-#endif
+			res.insert("sdl2");
+			res.insert("save_png");
+			res.insert("svg");
 #if defined(USE_BOX2D)
 			res.insert("box2d");
 #endif
 #if defined(USE_BULLET)
 			res.insert("bullet");
 #endif
-			res.insert("sdl2");
-#if defined(GL_ES_VERSION_2_0)
-			res.insert("gles2");
-#endif
-#if defined(IMPLEMENT_SAVE_PNG)
-			res.insert("save_png");
-#endif
 #if defined(USE_LUA)
 			res.insert("lua");
 #endif
-#if defined(USE_SVG)
-			res.insert("svg");
-#endif
-
 		}
 		return res;
 	}
@@ -1452,144 +1441,25 @@ namespace preferences {
 	void setLocale(const std::string& value) {
 		locale_ = value;
 	}
-#if defined(TARGET_OS_HARMATTAN) || defined(TARGET_PANDORA) || defined(TARGET_TEGRA) || defined(TARGET_BLACKBERRY)
-	PFNGLBLENDEQUATIONOESPROC           glBlendEquationOES;
-	PFNGLGENFRAMEBUFFERSOESPROC         glGenFramebuffersOES;
-	PFNGLBINDFRAMEBUFFEROESPROC         glBindFramebufferOES;
-	PFNGLFRAMEBUFFERTEXTURE2DOESPROC    glFramebufferTexture2DOES;
-	PFNGLCHECKFRAMEBUFFERSTATUSOESPROC  glCheckFramebufferStatusOES;
-	
-	void init_oes( void )
+
+	ScreenDimensionOverrideScope::ScreenDimensionOverrideScope(int width, int height, int vwidth, int vheight) 
+		: vold_width(virtual_screen_width_), 
+		vold_height(virtual_screen_height_), 
+		old_width(actual_screen_width_), 
+		old_height(actual_screen_height_)
 	{
-		int retry;
-		const GLubyte* pszGLExtensions = NULL;
-		
-		glBlendEquationOES          = NULL;
-		glGenFramebuffersOES        = NULL;
-		glBindFramebufferOES        = NULL;
-		glFramebufferTexture2DOES   = NULL;
-		glCheckFramebufferStatusOES = NULL;
-		
-		/* Retrieve GL extension string */
-		pszGLExtensions = glGetString(GL_EXTENSIONS);
-		
-		// Blend subtract Functions
-		if(preferences::use_bequ())
-		{
-			/* GL_OES_framebuffer_object */
-			if (strstr((char *)pszGLExtensions, "GL_OES_blend_subtract"))
-			{
-				for (retry=1; retry<4; retry++)
-				{
-					glBlendEquationOES = (PFNGLBLENDEQUATIONOESPROC)eglGetProcAddress("glBlendEquationOES");
-					if (glBlendEquationOES!=NULL) {
-						std::cerr << "glBlendEquationOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glBlendEquationOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-			}
-			else
-			{
-				glBlendEquationOES = NULL;
-			}
-		}
-		else
-		{
-			glBlendEquationOES = NULL;
-		}
-		
-		// FBO Functions
-		if(preferences::use_fbo())
-		{
-			/* GL_OES_framebuffer_object */
-			if (strstr((char *)pszGLExtensions, "GL_OES_framebuffer_object"))
-			{
-				for (retry=1; retry<4; retry++)
-				{
-					glGenFramebuffersOES        = (PFNGLGENFRAMEBUFFERSOESPROC)eglGetProcAddress("glGenFramebuffersOES");
-					if (glGenFramebuffersOES!=NULL) {
-						std::cerr << "glGenFramebuffersOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glGenFramebuffersOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glBindFramebufferOES        = (PFNGLBINDFRAMEBUFFEROESPROC)eglGetProcAddress("glBindFramebufferOES");
-					if (glBindFramebufferOES!=NULL) {
-						std::cerr << "glBindFramebufferOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glBindFramebufferOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glFramebufferTexture2DOES   = (PFNGLFRAMEBUFFERTEXTURE2DOESPROC)eglGetProcAddress("glFramebufferTexture2DOES");
-					if (glFramebufferTexture2DOES!=NULL) {
-						std::cerr << "glFramebufferTexture2DOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glFramebufferTexture2DOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-				for (retry=1; retry<4; retry++)
-				{
-					glCheckFramebufferStatusOES = (PFNGLCHECKFRAMEBUFFERSTATUSOESPROC)eglGetProcAddress("glCheckFramebufferStatusOES");
-					if (glCheckFramebufferStatusOES!=NULL) {
-						std::cerr << "glCheckFramebufferStatusOES was set correctly\n";
-						break;
-					}
-					else
-					{
-						std::cerr << "glCheckFramebufferStatusOES was set to NULL by eglGetProcAddress retry #" << retry << "\n";
-					}
-				}
-			}
-			else
-			{
-				glGenFramebuffersOES        = NULL;
-				glBindFramebufferOES        = NULL;
-				glFramebufferTexture2DOES   = NULL;
-				glCheckFramebufferStatusOES = NULL;
-			}
-		}
-		else
-		{
-			glGenFramebuffersOES        = NULL;
-			glBindFramebufferOES        = NULL;
-			glFramebufferTexture2DOES   = NULL;
-			glCheckFramebufferStatusOES = NULL;
-		}
+		actual_screen_width_ = width;
+		actual_screen_height_ = height;
+		virtual_screen_width_ = vwidth;
+		virtual_screen_height_ = vheight;
 	}
-#endif
 
-screen_dimension_override_scope::screen_dimension_override_scope(int width, int height, int vwidth, int vheight) : vold_width(virtual_screen_width_), vold_height(virtual_screen_height_), old_width(actual_screen_width_), old_height(actual_screen_height_)
-{
-	actual_screen_width_ = width;
-	actual_screen_height_ = height;
-	virtual_screen_width_ = vwidth;
-	virtual_screen_height_ = vheight;
-}
-
-screen_dimension_override_scope::~screen_dimension_override_scope()
-{
-	actual_screen_width_ = old_width;
-	actual_screen_height_ = old_height;
-	virtual_screen_width_ = vold_width;
-	virtual_screen_height_ = vold_height;
+	ScreenDimensionOverrideScope::~ScreenDimensionOverrideScope()
+	{
+		actual_screen_width_ = old_width;
+		actual_screen_height_ = old_height;
+		virtual_screen_width_ = vold_width;
+		virtual_screen_height_ = vold_height;
 	
-}
-
+	}
 }

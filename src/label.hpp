@@ -92,13 +92,11 @@ namespace gui
 		bool fixed_width_;
 
 		std::function<void()> on_click_;
-		game_logic::formula_ptr ffl_click_handler_;
+		game_logic::FormulaPtr ffl_click_handler_;
 		void click_delegate();
 		bool highlight_on_mouseover_;
 		bool draw_highlight_;
 		bool down_;
-
-		friend class dropdown_widget;
 	};
 
 	class DialogLabel : public Label

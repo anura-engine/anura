@@ -51,8 +51,8 @@ Water::Water()
 Water::Water(variant water_node) 
 	: KRE::SceneObject("water"),
 	zorder_(parse_zorder(water_node["zorder"], variant("water"))),
-	current_x_formula_(game_logic::formula::create_optional_formula(water_node["current_x_formula"])),
-	current_y_formula_(game_logic::formula::create_optional_formula(water_node["current_y_formula"]))
+	current_x_formula_(game_logic::Formula::createOptionalFormula(water_node["current_x_formula"])),
+	current_y_formula_(game_logic::Formula::createOptionalFormula(water_node["current_y_formula"]))
 {
 	for(variant area_node : water_node["area"].as_list()) {
 		const rect r(area_node["rect"]);
@@ -71,18 +71,18 @@ void Water::init()
 {
 	using namespace KRE;
 
-	/// XXX Need to set appropriate blend equation/functions on each of these attribute sets
 	auto ab = DisplayDevice::CreateAttributeSet(true);
 	waterline_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
 	waterline_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
 	waterline_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 	ab->AddAttribute(AttributeBasePtr(waterline_));
 	ab->SetDrawMode(AttributeSet::DrawMode::TRIANGLE_STRIP);
+	/// Set appropriate blend equation/functions on each of these attribute sets
 	if(DisplayDevice::CheckForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
 		ab->setBlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT);
 	}
 	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
-	AddAttributeSet(ab);
+	addAttributeSet(ab);
 
 	auto seg1 = DisplayDevice::CreateAttributeSet(true);
 	line1_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));

@@ -67,11 +67,11 @@ namespace gui
 		}
 
 		ASSERT_LOG(v.has_key("bar"), "Missing 'bar' attribute");
-		init_bar_section(v["bar"], &bar_);
+		initBarSection(v["bar"], &bar_);
 		ASSERT_LOG(v.has_key("left_cap"), "Missing 'left_cap' attribute");
-		init_bar_section(v["left_cap"], &left_cap_);
+		initBarSection(v["left_cap"], &left_cap_);
 		ASSERT_LOG(v.has_key("right_cap"), "Missing 'right_cap' attribute");
-		init_bar_section(v["right_cap"], &right_cap_);
+		initBarSection(v["right_cap"], &right_cap_);
 
 		ASSERT_GT(segments_, 0);
 		ASSERT_GT(segment_length_, 0);
@@ -89,7 +89,7 @@ namespace gui
 	{
 	}
 
-	void BarWidget::init_bar_section(const variant&v, bar_section* b)
+	void BarWidget::initBarSection(const variant&v, bar_section* b)
 	{
 		b->texture = KRE::Texture::createTexture(v["image"].as_string());
 		if(v.has_key("area")) {
@@ -225,14 +225,12 @@ END_DEFINE_CALLABLE(BarWidget)
 	{
 		// tick marks
 		if(segments > 1) {
-			std::vector<float> varray;
+			std::vector<glm::vec2> varray;
 			varray.reserve(segments-1);
 			for(int n = 1; n < segments; ++n) {
 				const float lx = static_cast<float>(x_offset + tick_distance_ * n);
-				varray.push_back(lx);
-				varray.push_back(static_cast<float>(y()));
-				varray.push_back(lx);
-				varray.push_back(static_cast<float>(y()+height()));
+				varray.emplace_back(lx, static_cast<float>(y()));
+				varray.emplace_back(lx, static_cast<float>(y()+height()));
 			}
 			KRE::Canvas::getInstance()->drawLines(varray, static_cast<float>(tick_width_)*scale_, color);
 		}

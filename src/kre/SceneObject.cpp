@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,7 +28,29 @@
 namespace KRE
 {
 	SceneObject::SceneObject(const std::string& name)
-		: name_(name), queue_(0)
+		: name_(name), 
+		queue_(0)
+	{
+	}
+
+	SceneObject::SceneObject(const variant& node)
+		: Renderable(node),
+		queue_(0)
+	{
+		if(node.has_key("name")) {
+			name_ = node["name"].as_string();
+		}
+		if(node.has_key("queue_value")) {
+			queue_ = static_cast<size_t>(node["queue_value"].as_int());
+		}
+		if(node.has_key("shader")) {
+			shader_name_ = node["shader"].as_string();
+		}
+	}
+
+	SceneObject::SceneObject(const SceneObject& op)
+		: name_(op.name_),
+		queue_(op.queue_)
 	{
 	}
 
@@ -36,8 +58,20 @@ namespace KRE
 	{
 	}
 
+	void SceneObject::setShaderName(const std::string& shader)
+	{
+		// XXX hmm hmm there is no way to update hints currently -- this is a must fix item.
+		// since we can't dynamically change shaders otherwise.
+		shader_name_ = shader;
+	}
+
 	DisplayDeviceDef SceneObject::attach(const DisplayDevicePtr& dd)
 	{
-		return doAttach(dd);
+		DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
+		if(!shader_name_.empty()) {
+			def.setHint("shader", shader_name_);
+		}
+		doAttach(dd, &def);
+		return def;
 	}
 }

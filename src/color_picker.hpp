@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -75,7 +75,7 @@ namespace gui
 		uint8_t green_;
 		uint8_t blue_;
 
-		grid_ptr g_;
+		GridPtr g_;
 		std::vector<SliderPtr> s_;
 		std::vector<TextEditorWidgetPtr> t_;
 		ButtonPtr copy_to_palette_;
@@ -103,7 +103,7 @@ namespace gui
 
 		void change();
 		std::function<void (const KRE::Color&)> onchange_;
-		game_logic::formula_ptr change_handler_;
+		game_logic::FormulaPtr change_handler_;
 		game_logic::FormulaCallablePtr handler_arg_;
 	};
 

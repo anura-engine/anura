@@ -153,7 +153,7 @@ struct TilePattern
 	    tile(new LevelObject(node, id.c_str())), 
 		reverse(node["reverse"].as_bool(true)),
 	    empty(node["empty"].as_bool(false)),
-		filter_formula(game_logic::formula::create_optional_formula(node["filter"]))
+		filter_formula(game_logic::Formula::createOptionalFormula(node["filter"]))
 	{
 		variations.push_back(tile);
 
@@ -240,7 +240,7 @@ struct TilePattern
 
 	std::vector<added_tile> added_tiles;
 
-	game_logic::const_formula_ptr filter_formula;
+	game_logic::ConstFormulaPtr filter_formula;
 };
 
 namespace 
@@ -289,14 +289,14 @@ namespace
 	class TileMapFunctionSymbolTable : public FunctionSymbolTable
 	{
 	public:
-		expression_ptr create_function(const std::string& fn, 
-			const std::vector<expression_ptr>& args, 
+		ExpressionPtr createFunction(const std::string& fn, 
+			const std::vector<ExpressionPtr>& args, 
 			ConstFormulaCallableDefinitionPtr callable_def) const 
 		{
 			if(fn == "tile_at") {
-				return expression_ptr(new TileAtFunction(args));
+				return ExpressionPtr(new TileAtFunction(args));
 			} else {
-				return FunctionSymbolTable::create_function(fn, args, callable_def);
+				return FunctionSymbolTable::createFunction(fn, args, callable_def);
 			}
 		}
 	};
@@ -1025,7 +1025,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 			}
 		}
 	}
-	//std::cerr << "done build tiles: " << ntiles << " " << (SDL_GetTicks() - begin_time) << "\n";
+	//std::cerr << "done build tiles: " << ntiles << " " << (profile::get_tick_time() - begin_time) << "\n";
 }
 
 const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& cache, bool* face_right) const

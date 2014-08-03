@@ -144,7 +144,6 @@ public:
 	int frameNumber(int time_in_frame) const;
 private:
 	DECLARE_CALLABLE(Frame);
-	KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 
 	void getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const;
 	void getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info) const;

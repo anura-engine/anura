@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -25,23 +25,29 @@
 
 #include "Renderable.hpp"
 #include "SceneFwd.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
 	class SceneObject : public Renderable
 	{
 	public:
-		SceneObject(const std::string& name);
+		explicit SceneObject(const std::string& name);
+		explicit SceneObject(const variant& node);
+		SceneObject(const SceneObject& op);
 		virtual ~SceneObject();
 		size_t getQueue() const { return queue_; }
 		void setQueue(size_t q) { queue_ = q; }
 		const std::string& objectName() const { return name_; }
+		void setObjectName(const std::string name) { name_ = name; }
+		const std::string& getShaderName() const { return shader_name_; }
+		void setShaderName(const std::string& shader);
 		DisplayDeviceDef attach(const DisplayDevicePtr& dd);
 	private:
-		virtual DisplayDeviceDef doAttach(const DisplayDevicePtr& dd) = 0;
+		DISALLOW_DEFAULT_AND_ASSIGN(SceneObject);
+		virtual void doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) {}
 		size_t queue_;
 		std::string name_;
-		SceneObject();
-		SceneObject(const SceneObject&);
+		std::string shader_name_;
 	};
 }

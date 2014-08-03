@@ -1,177 +1,171 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#include "graphics.hpp"
 
-#include <boost/shared_ptr.hpp>
-
+#include <deque>
 #include <map>
 #include <vector>
 #include <sstream>
 
+#include "kre/Surface.hpp"
+
 #include "asserts.hpp"
 #include "custom_object_type.hpp"
 #include "filesystem.hpp"
-#include "foreach.hpp"
-#include "formatter.hpp"
 #include "frame.hpp"
-#include "kre/Geometry.hpp"
 #include "json_parser.hpp"
 #include "module.hpp"
 #include "string_utils.hpp"
-#include "surface.hpp"
 #include "surface_cache.hpp"
+#include "surface_utils.hpp"
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
-#include "IMG_savepng.h"
 
 void UTILITY_query(const std::vector<std::string>& args);
 
-namespace {
-const int TextureImageSize = 1024;
+namespace 
+{
+	const int TextureImageSize = 1024;
 
-struct animation_area {
-	explicit animation_area(variant node) : anim(new frame(node)), is_particle(false)
+	struct animation_area 
 	{
-		width = 0;
-		height = 0;
-		foreach(const frame::frame_info& f, anim->frameLayout()) {
-			width += f.area.w();
-			if(f.area.h() > height) {
-				height = f.area.h();
+		explicit animation_area(variant node) 
+			: anim(new Frame(node)), 
+			  is_particle(false)
+		{
+			width = 0;
+			height = 0;
+			for(const auto& f : anim->frameLayout()) {
+				width += f.area.w();
+				if(f.area.h() > height) {
+					height = f.area.h();
+				}
 			}
+
+			src_image = node["image"].as_string();
+			dst_image = -1;
+		}
+	    
+		boost::intrusive_ptr<Frame> anim;
+		int width, height;
+
+		std::string src_image;
+
+		int dst_image;
+		rect dst_area;
+		bool is_particle;
+	};
+
+	typedef std::shared_ptr<animation_area> animation_area_ptr;
+
+	bool operator==(const animation_area& a, const animation_area& b)
+	{
+		return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->numFrames() == b.anim->numFrames() && a.anim->numFramesPerRow() == b.anim->numFramesPerRow();
+	}
+
+	std::set<animation_area_ptr> animation_areas_with_alpha;
+	bool animation_area_height_compare(animation_area_ptr a, animation_area_ptr b)
+	{
+		if(a->is_particle != b->is_particle) {
+			return a->is_particle;
 		}
 
-		src_image = node["image"].as_string();
-		dst_image = -1;
-	}
-	    
-	boost::intrusive_ptr<frame> anim;
-	int width, height;
+		if(animation_areas_with_alpha.count(a) != animation_areas_with_alpha.count(b)) {
+			return animation_areas_with_alpha.count(a) != 0;
+		}
 
-	std::string src_image;
-
-	int dst_image;
-	rect dst_area;
-	bool is_particle;
-};
-
-typedef std::shared_ptr<animation_area> animation_area_ptr;
-
-bool operator==(const animation_area& a, const animation_area& b)
-{
-	return a.src_image == b.src_image && a.anim->area() == b.anim->area() && a.anim->pad() == b.anim->pad() && a.anim->numFrames() == b.anim->numFrames() && a.anim->numFramesPerRow() == b.anim->numFramesPerRow();
-}
-
-std::set<animation_area_ptr> animation_areas_with_alpha;
-bool animation_area_height_compare(animation_area_ptr a, animation_area_ptr b)
-{
-	if(a->is_particle != b->is_particle) {
-		return a->is_particle;
+		return a->height > b->height;
 	}
 
-	if(animation_areas_with_alpha.count(a) != animation_areas_with_alpha.count(b)) {
-		return animation_areas_with_alpha.count(a) != 0;
-	}
+	struct output_area {
+		explicit output_area(int n) : image_id(n)
+		{
+			area = rect(0, 0, TextureImageSize, TextureImageSize);
+		}
+		int image_id;
+		rect area;
+	};
 
-	return a->height > b->height;
-}
-
-struct output_area {
-	explicit output_area(int n) : image_id(n)
+	rect use_output_area(const output_area& input, int width, int height, std::vector<output_area>& areas)
 	{
-		area = rect(0, 0, TextureImageSize, TextureImageSize);
-	}
-	int image_id;
-	rect area;
-};
+		ASSERT_LE(width, input.area.w());
+		ASSERT_LE(height, input.area.h());
+		rect result(input.area.x(), input.area.y(), width, height);
+		if(input.area.h() > height) {
+			areas.push_back(output_area(input.image_id));
+			areas.back().area = rect(input.area.x(), input.area.y() + height, input.area.w(), input.area.h() - height);
+		}
 
-rect use_output_area(const output_area& input, int width, int height, std::vector<output_area>& areas)
+		if(input.area.w() > width) {
+			areas.push_back(output_area(input.image_id));
+			areas.back().area = rect(input.area.x() + width, input.area.y(), input.area.w() - width, height);
+		}
+
+		return result;
+	}
+}
+
+namespace 
 {
-	ASSERT_LE(width, input.area.w());
-	ASSERT_LE(height, input.area.h());
-	rect result(input.area.x(), input.area.y(), width, height);
-	if(input.area.h() > height) {
-		areas.push_back(output_area(input.image_id));
-		areas.back().area = rect(input.area.x(), input.area.y() + height, input.area.w(), input.area.h() - height);
-	}
+	bool animation_area_has_alpha_channel(animation_area_ptr anim)
+	{
+		using namespace KRE;
+		auto surf = graphics::SurfaceCache::get(anim->src_image);
+		if(!surf || surf->getPixelFormat()->bytesPerPixel() != 4) {
+			return false;
+		}
 
-	if(input.area.w() > width) {
-		areas.push_back(output_area(input.image_id));
-		areas.back().area = rect(input.area.x() + width, input.area.y(), input.area.w() - width, height);
-	}
+		const uint32_t* pixels = reinterpret_cast<const uint32_t*>(surf->pixels());
 
-	return result;
-}
+		for(int f = 0; f != anim->anim->numFrames(); ++f) {
+			const auto& info = anim->anim->frameLayout()[f];
 
-}
+			const int x = f%anim->anim->numFramesPerRow();
+			const int y = f/anim->anim->numFramesPerRow();
 
-namespace graphics {
-void setAlpha_for_transparent_colors_in_rgba_surface(SDL_Surface* s, int options=0);
-}
+			const rect& base_area = anim->anim->area();
+			const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
+			const int ypos = base_area.y() + (base_area.h()+anim->anim->pad())*y;
+			rect blit_src(xpos + info.x_adjust, ypos + info.y_adjust, info.area.w(), info.area.h());
 
-namespace {
-bool animation_area_has_alpha_channel(animation_area_ptr anim)
-{
-	using namespace graphics;
-	surface surf = graphics::surface_cache::get(anim->src_image);
-	if(!surf || surf->format->BytesPerPixel != 4) {
-		return false;
-	}
-
-	const uint32_t* pixels = reinterpret_cast<const uint32_t*>(surf->pixels);
-
-	for(int f = 0; f != anim->anim->numFrames(); ++f) {
-		const frame::frame_info& info = anim->anim->frameLayout()[f];
-
-		const int x = f%anim->anim->numFramesPerRow();
-		const int y = f/anim->anim->numFramesPerRow();
-
-		const rect& base_area = anim->anim->area();
-		const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
-		const int ypos = base_area.y() + (base_area.h()+anim->anim->pad())*y;
-		SDL_Rect blit_src = {xpos + info.x_adjust, ypos + info.y_adjust, info.area.w(), info.area.h()};
-
-		for(int x = 0; x != blit_src.w; ++x) {
-			for(int y = 0; y != blit_src.h; ++y) {
-				const int index = (blit_src.y + y)*surf->w + (blit_src.x + x);
-				const uint32_t pixel = pixels[index];
-				const uint32_t mask = (pixels[index]&surf->format->Amask);
-				if(mask != 0 && mask != surf->format->Amask) {
-					return true;
+			for(int x = 0; x != blit_src.w(); ++x) {
+				for(int y = 0; y != blit_src.h(); ++y) {
+					const int index = (blit_src.y() + y)*surf->width() + (blit_src.x() + x);
+					const uint32_t pixel = pixels[index];
+					const uint32_t mask = (pixels[index]&surf->getPixelFormat()->getAlphaMask());
+					if(mask != 0 && mask != surf->getPixelFormat()->getAlphaMask()) {
+						return true;
+					}
 				}
 			}
 		}
-	}
 	
-	return false;
-}
+		return false;
+	}
 }
 
 UTILITY(compile_objects)
 {
-#ifndef IMPLEMENT_SAVE_PNG
-	std::cerr
-		<< "This build wasn't done with IMPLEMENT_SAVE_PNG defined. "
-		<< "Consquently image files will not be written, aborting requested operation."
-		<< std::endl;
-	return;
-#endif
-
-	using graphics::surface;
+	using namespace KRE;
 
 	int num_output_images = 0;
 	std::vector<output_area> output_areas;
@@ -192,7 +186,7 @@ UTILITY(compile_objects)
 	std::map<std::string, variant> gui_nodes;
 	std::vector<std::string> gui_files;
 	module::get_files_in_dir("data/gui", &gui_files);
-	foreach(const std::string& gui, gui_files) {
+	for(const std::string& gui : gui_files) {
 		if(gui[0] == '.') {
 			continue;
 		}
@@ -206,7 +200,7 @@ UTILITY(compile_objects)
 	}
 
 	std::vector<ConstCustomObjectTypePtr> types = CustomObjectType::getAll();
-	foreach(ConstCustomObjectTypePtr type, types) {
+	for(ConstCustomObjectTypePtr type : types) {
 		const std::string* path = CustomObjectType::getObjectPath(type->id() + ".cfg");
 
 		//skip any experimental stuff so it isn't compiled
@@ -215,14 +209,14 @@ UTILITY(compile_objects)
 			continue;
 		}
 
-		std::cerr << "OBJECT: " << type->id() << " -> " << *path << "\n";
+		LOG_INFO("OBJECT: " << type->id() << " -> " << *path);
 		variant obj_node =  json::parse_from_file(*path);
 		obj_node = CustomObjectType::mergePrototype(obj_node);
 		obj_node.remove_attr(variant("prototype"));
 
 		if(obj_node["editor_info"].is_map() && obj_node["editor_info"]["var"].is_list()) {
 			std::vector<std::string> names;
-			foreach(variant entry, obj_node["editor_info"]["var"].as_list()) {
+			for(variant entry : obj_node["editor_info"]["var"].as_list()) {
 				names.push_back(entry["name"].as_string());
 			}
 
@@ -232,7 +226,7 @@ UTILITY(compile_objects)
 					m = obj_node["vars"].as_map();
 				}
 
-				foreach(const std::string& name, names) {
+				for(const std::string& name : names) {
 					variant v(name);
 					if(m.count(v) == 0) {
 						m[v] = variant();
@@ -254,7 +248,7 @@ UTILITY(compile_objects)
 
 		animation_containing_nodes.push_back(obj_node);
 
-		foreach(variant v, obj_node["particle_system"].as_list()) {
+		for(variant v : obj_node["particle_system"].as_list()) {
 			animation_containing_nodes.push_back(v);
 		}
 
@@ -266,14 +260,14 @@ UTILITY(compile_objects)
 		*/
 	}
 
-	foreach(variant node, animation_containing_nodes) {
-		foreach(const variant_pair& p, node.as_map()) {
+	for(variant node : animation_containing_nodes) {
+		for(const variant_pair& p : node.as_map()) {
 			std::string attr_name = p.first.as_string();
 			if(attr_name != "animation" && attr_name != "FramedGuiElement" && attr_name != "section") {
 				continue;
 			}
 
-			foreach(const variant& v, p.second.as_list()) {
+			for(const variant& v : p.second.as_list()) {
 
 				animation_area_ptr anim(new animation_area(v));
 				if(anim->src_image.empty() || v.has_key(variant("palettes")) || std::find(no_compile_images.begin(), no_compile_images.end(), anim->src_image) != no_compile_images.end()) {
@@ -282,7 +276,7 @@ UTILITY(compile_objects)
 
 				animation_areas.push_back(anim);
 
-				foreach(animation_area_ptr area, animation_areas) {
+				for(animation_area_ptr area : animation_areas) {
 					if(*area == *anim) {
 						anim = area;
 						break;
@@ -312,7 +306,7 @@ UTILITY(compile_objects)
 
 	}
 
-	foreach(animation_area_ptr anim, animation_areas) {
+	for(animation_area_ptr anim : animation_areas) {
 		ASSERT_LOG(anim->width <= 1024 && anim->height <= 1024,
 		           "Bad animation area " << anim->width << "x" << anim->height << " for " << anim->src_image << ". Must be 1024x1024 or less.");
 		int match = -1;
@@ -339,13 +333,13 @@ UTILITY(compile_objects)
 		anim->dst_area = area;
 	}
 
-	std::vector<surface> surfaces;
+	std::vector<SurfacePtr> surfaces;
 	for(int n = 0; n != num_output_images; ++n) {
-		surfaces.push_back(surface(SDL_CreateRGBSurface(0,TextureImageSize,TextureImageSize,32,SURFACE_MASK)));
+		surfaces.emplace_back(Surface::create(TextureImageSize, TextureImageSize, PixelFormat::PF::PIXELFORMAT_ARGB8888));
 	}
 
-	foreach(animation_area_ptr anim, animation_areas) {
-		foreach(animation_area_ptr other, animation_areas) {
+	for(animation_area_ptr anim : animation_areas) {
+		for(animation_area_ptr other : animation_areas) {
 			if(anim == other || anim->dst_image != other->dst_image) {
 				continue;
 			}
@@ -354,12 +348,12 @@ UTILITY(compile_objects)
 		}
 
 		ASSERT_INDEX_INTO_VECTOR(anim->dst_image, surfaces);
-		surface dst = surfaces[anim->dst_image];
-		surface src = graphics::surface_cache::get(anim->src_image);
+		SurfacePtr dst = surfaces[anim->dst_image];
+		SurfacePtr src = graphics::SurfaceCache::get(anim->src_image);
 		ASSERT_LOG(src.get() != NULL, "COULD NOT LOAD IMAGE: '" << anim->src_image << "'");
 		int xdst = 0;
 		for(int f = 0; f != anim->anim->numFrames(); ++f) {
-			const frame::frame_info& info = anim->anim->frameLayout()[f];
+			const auto& info = anim->anim->frameLayout()[f];
 
 			const int x = f%anim->anim->numFramesPerRow();
 			const int y = f/anim->anim->numFramesPerRow();
@@ -367,17 +361,15 @@ UTILITY(compile_objects)
 			const rect& base_area = anim->anim->area();
 			const int xpos = base_area.x() + (base_area.w()+anim->anim->pad())*x;
 			const int ypos = base_area.y() + (base_area.h()+anim->anim->pad())*y;
-			SDL_Rect blit_src = {xpos + info.x_adjust, ypos + info.y_adjust, info.area.w(), info.area.h()};
-			SDL_Rect blit_dst = {anim->dst_area.x() + xdst,
-			                     anim->dst_area.y(),
-								 info.area.w(), info.area.h()};
+			rect blit_src(xpos + info.x_adjust, ypos + info.y_adjust, info.area.w(), info.area.h());
+			rect blit_dst(anim->dst_area.x() + xdst, anim->dst_area.y(), info.area.w(), info.area.h());
 			xdst += info.area.w();
-			ASSERT_GE(blit_dst.x, anim->dst_area.x());
-			ASSERT_GE(blit_dst.y, anim->dst_area.y());
-			ASSERT_LE(blit_dst.x + blit_dst.w, anim->dst_area.x() + anim->dst_area.w());
-			ASSERT_LE(blit_dst.y + blit_dst.h, anim->dst_area.y() + anim->dst_area.h());
-			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
-			SDL_BlitSurface(src.get(), &blit_src, dst.get(), &blit_dst);
+			ASSERT_GE(blit_dst.x(), anim->dst_area.x());
+			ASSERT_GE(blit_dst.y(), anim->dst_area.y());
+			ASSERT_LE(blit_dst.x2(), anim->dst_area.x() + anim->dst_area.w());
+			ASSERT_LE(blit_dst.y2(), anim->dst_area.y() + anim->dst_area.h());
+			src->setBlendMode(Surface::BlendMode::BLEND_MODE_NONE);
+			dst->blitTo(src, blit_src, blit_dst);
 		}
 	}
 
@@ -385,13 +377,13 @@ UTILITY(compile_objects)
 		std::ostringstream fname;
 		fname << "images/compiled-" << n << ".png";
 
-		graphics::setAlpha_for_transparent_colors_in_rgba_surface(surfaces[n].get());
+		graphics::set_alpha_for_transparent_colors_in_rgba_surface(surfaces[n]);
 
-		IMG_SavePNG((module::get_module_path() + fname.str()).c_str(), surfaces[n].get(), -1);
+		surfaces[n]->savePng(module::get_module_path() + fname.str());
 	}
 
 	typedef std::pair<variant, animation_area_ptr> anim_pair;
-	foreach(const anim_pair& a, nodes_to_animation_areas) {
+	for(const anim_pair& a : nodes_to_animation_areas) {
 		variant node = a.first;
 		animation_area_ptr anim = a.second;
 		std::ostringstream fname;
@@ -403,7 +395,7 @@ UTILITY(compile_objects)
 		node.remove_attr_mutation(variant("h"));
 		node.remove_attr_mutation(variant("pad"));
 
-		const frame::frame_info& first_frame = anim->anim->frameLayout().front();
+		const auto& first_frame = anim->anim->frameLayout().front();
 		
 		rect r(anim->dst_area.x() - first_frame.x_adjust, anim->dst_area.y() - first_frame.y_adjust, anim->anim->area().w(), anim->anim->area().h());
 		node.add_attr_mutation(variant("rect"), r.write());
@@ -411,7 +403,7 @@ UTILITY(compile_objects)
 		int xpos = anim->dst_area.x();
 
 		std::vector<int> v;
-		foreach(const frame::frame_info& f, anim->anim->frameLayout()) {
+		for(const auto& f : anim->anim->frameLayout()) {
 			ASSERT_EQ(f.area.w() + f.x_adjust + f.x2_adjust, anim->anim->area().w());
 			ASSERT_EQ(f.area.h() + f.y_adjust + f.y2_adjust, anim->anim->area().h());
 			v.push_back(f.x_adjust);
@@ -427,7 +419,7 @@ UTILITY(compile_objects)
 		}
 
 		std::vector<variant> vs;
-		foreach(int n, v) {
+		for(int n : v) {
 			vs.push_back(variant(n));
 		}
 
@@ -449,9 +441,9 @@ UTILITY(compile_objects)
 	if(sys::file_exists("./compile-objects.cfg")) {
 		variant script = json::parse(sys::read_file("./compile-objects.cfg"));
 		if(script["query"].is_list()) {
-			foreach(variant query, script["query"].as_list()) {
+			for(variant query : script["query"].as_list()) {
 				std::vector<std::string> args;
-				foreach(variant arg, query.as_list()) {
+				for(variant arg : query.as_list()) {
 					args.push_back(arg.as_string());
 				}
 
@@ -505,9 +497,9 @@ struct SpritesheetAnimation {
 	}
 };
 
-bool is_row_blank(graphics::surface surf, const unsigned char* pixels)
+bool is_row_blank(KRE::SurfacePtr surf, const unsigned char* pixels)
 {
-	for(int x = 0; x < surf->w; ++x) {
+	for(unsigned x = 0; x < surf->width(); ++x) {
 		if(pixels[3] > 64) {
 			return false;
 		}
@@ -517,35 +509,35 @@ bool is_row_blank(graphics::surface surf, const unsigned char* pixels)
 	return true;
 }
 
-bool is_col_blank(graphics::surface surf, const SpritesheetRow& row, int col)
+bool is_col_blank(KRE::SurfacePtr surf, const SpritesheetRow& row, unsigned col)
 {
-	if(col >= surf->w) {
+	if(col >= surf->width()) {
 		return true;
 	}
 
-	const unsigned char* pixels = (const unsigned char*)surf->pixels;
-	pixels += row.begin_row*surf->w*4 + col*4;
+	const unsigned char* pixels = reinterpret_cast<const unsigned char*>(surf->pixels());
+	pixels += row.begin_row*surf->width() * 4 + col * 4;
 
 	for(int y = row.begin_row; y < row.end_row; ++y) {
 		if(pixels[3] > 64) {
 			return false;
 		}
 
-		pixels += surf->w*4;
+		pixels += surf->width() * 4;
 	}
 
 	return true;
 }
 
-std::vector<SpritesheetRow> get_cells(graphics::surface surf)
+std::vector<SpritesheetRow> get_cells(KRE::SurfacePtr surf)
 {
 	std::vector<SpritesheetRow> rows;
 
-	const unsigned char* pixels = (const unsigned char*)surf->pixels;
+	const unsigned char* pixels = reinterpret_cast<const unsigned char*>(surf->pixels());
 
 	int start_row = -1;
-	for(int row = 0; row <= surf->h; ++row) {
-		const bool blank = row == surf->h || is_row_blank(surf, pixels);
+	for(unsigned row = 0; row <= surf->height(); ++row) {
+		const bool blank = row == surf->height() || is_row_blank(surf, pixels);
 		if(blank) {
 			if(start_row != -1) {
 				SpritesheetRow new_row;
@@ -561,12 +553,12 @@ std::vector<SpritesheetRow> get_cells(graphics::surface surf)
 			}
 		}
 
-		pixels += surf->w*4;
+		pixels += surf->rowPitch();
 	}
 
 	for(SpritesheetRow& sprite_row : rows) {
 		int start_col = -1;
-		for(int col = 0; col <= surf->w; ++col) {
+		for(unsigned col = 0; col <= surf->width(); ++col) {
 			const bool blank = is_col_blank(surf, sprite_row, col);
 			if(blank) {
 				if(start_col != -1) {
@@ -582,41 +574,42 @@ std::vector<SpritesheetRow> get_cells(graphics::surface surf)
 			}
 		}
 
-		std::cerr << "ROW: " << sprite_row.begin_row << ", " << sprite_row.end_row << " -> " << sprite_row.cells.size() << "\n";
+		LOG_INFO("ROW: " << sprite_row.begin_row << ", " << sprite_row.end_row << " -> " << sprite_row.cells.size());
 	}
 
 	return rows;
 }
 
-void write_pixel_surface(graphics::surface surf, int x, int y, int r, int g, int b, int a)
+void write_pixel_surface(KRE::SurfacePtr surf, int x, int y, int r, int g, int b, int a)
 {
-	if(x < 0 || y < 0 || x >= surf->w || y >= surf->h) {
+	if(x < 0 || y < 0 || static_cast<unsigned>(x) >= surf->width() || static_cast<unsigned>(y) >= surf->height()) {
 		return;
 	}
 
-	unsigned char* pixels = (unsigned char*)surf->pixels;
-	pixels += y * surf->w * 4 + x * 4;
+	KRE::SurfaceLock lck(surf);
+	unsigned char* pixels = reinterpret_cast<unsigned char*>(surf->pixelsWriteable());
+	pixels += y * surf->width() * 4 + x * 4;
 	*pixels++ = r;
 	*pixels++ = g;
 	*pixels++ = b;
 	*pixels++ = a;
 }
 
-void write_spritesheet_frame(graphics::surface src, const rect& src_area, graphics::surface dst, int target_x, int target_y)
+void write_spritesheet_frame(KRE::SurfacePtr src, const rect& src_area, KRE::SurfacePtr dst, int target_x, int target_y)
 {
-	const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
+	const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
 
 	std::vector<unsigned char*> border_pixels;
 
 	for(int xpos = target_x; xpos < target_x + src_area.w() + 2; ++xpos) {
-		unsigned char* p = (unsigned char*)dst->pixels + (target_y*dst->w + xpos)*4;
+		unsigned char* p = reinterpret_cast<unsigned char*>(dst->pixelsWriteable()) + (target_y*dst->width() + xpos)*4;
 		border_pixels.push_back(p);
-		p += (src_area.h()+1)*dst->w*4;
+		p += (src_area.h()+1)*dst->width()*4;
 		border_pixels.push_back(p);
 	}
 
 	for(int ypos = target_y; ypos < target_y + src_area.h() + 2; ++ypos) {
-		unsigned char* p = (unsigned char*)dst->pixels + (ypos*dst->w + target_x)*4;
+		unsigned char* p = reinterpret_cast<unsigned char*>(dst->pixelsWriteable()) + (ypos*dst->width() + target_x)*4;
 		border_pixels.push_back(p);
 		p += (src_area.w()+1)*4;
 		border_pixels.push_back(p);
@@ -628,10 +621,10 @@ void write_spritesheet_frame(graphics::surface src, const rect& src_area, graphi
 	}
 }
 
-bool rect_in_surf_empty(graphics::surface surf, rect area)
+bool rect_in_surf_empty(KRE::SurfacePtr surf, rect area)
 {
-	const unsigned char* p = (const unsigned char*)surf->pixels;
-	p += (area.y()*surf->w + area.x())*4;
+	const unsigned char* p = reinterpret_cast<const unsigned char*>(surf->pixels());
+	p += (area.y()*surf->width() + area.x())*4;
 
 	for(int y = 0; y < area.h(); ++y) {
 		for(int x = 0; x < area.w(); ++x) {
@@ -640,13 +633,13 @@ bool rect_in_surf_empty(graphics::surface surf, rect area)
 			}
 		}
 
-		p += surf->w*4;
+		p += surf->width() * 4;
 	}
 
 	return true;
 }
 
-int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
+int goodness_of_fit(KRE::SurfacePtr surf, rect areaa, rect areab)
 {
 	if(areaa.h() > areab.h()) {
 		std::swap(areaa, areab);
@@ -656,21 +649,21 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 	while(areaa.h() < areab.h() && can_slice) {
 		can_slice = false;
 		if(rect_in_surf_empty(surf, rect(areab.x(), areab.y(), areab.w(), 1))) {
-			std::cerr << "SLICE: " << areab << " -> ";
+			LOG_INFO_NOLF("SLICE: " << areab << " -> ");
 			areab = rect(areab.x(), areab.y()+1, areab.w(), areab.h()-1);
-			std::cerr << areab << "\n";
+			LOG_INFO(areab);
 			can_slice = true;
 		}
 
 		if(areaa.h() < areab.h() && rect_in_surf_empty(surf, rect(areab.x(), areab.y()+areab.h()-1, areab.w(), 1))) {
-			std::cerr << "SLICE: " << areab << " -> ";
+			LOG_INFO_NOLF("SLICE: " << areab << " -> ");
 			areab = rect(areab.x(), areab.y(), areab.w(), areab.h()-1);
-			std::cerr << areab << "\n";
+			LOG_INFO(areab);
 			can_slice = true;
 		}
 
 		if(areaa.h() == areab.h()) {
-			std::cerr << "SLICED DOWN: " << areab << "\n";
+			LOG_INFO("SLICED DOWN: " << areab);
 		}
 	}
 
@@ -710,8 +703,8 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 		for(int x = 0; x < areaa.w(); ++x) {
 			const int xa = areaa.x() + x;
 			const int xb = areab.x() + x;
-			const unsigned char* pa = (const unsigned char*)surf->pixels + (ya*surf->w + xa)*4;
-			const unsigned char* pb = (const unsigned char*)surf->pixels + (yb*surf->w + xb)*4;
+			const unsigned char* pa = reinterpret_cast<const unsigned char*>(surf->pixels()) + (ya*surf->width() + xa)*4;
+			const unsigned char* pb = reinterpret_cast<const unsigned char*>(surf->pixels()) + (yb*surf->width() + xb)*4;
 			if((pa[3] > 32) != (pb[3] > 32)) {
 				++errors;
 			}
@@ -721,12 +714,12 @@ int goodness_of_fit(graphics::surface surf, rect areaa, rect areab)
 	return errors;
 }
 
-int score_offset_fit(graphics::surface surf, const rect& big_area, const rect& lit_area, int offsetx, int offsety)
+int score_offset_fit(KRE::SurfacePtr surf, const rect& big_area, const rect& lit_area, int offsetx, int offsety)
 {
 	int score = 0;
 	for(int y = 0; y < big_area.h(); ++y) {
 		for(int x = 0; x < big_area.w(); ++x) {
-			const unsigned char* big_p = (const unsigned char*)surf->pixels + ((big_area.y() + y)*surf->w + (big_area.x() + x))*4;
+			const unsigned char* big_p = reinterpret_cast<const unsigned char*>(surf->pixels()) + ((big_area.y() + y)*surf->width() + (big_area.x() + x))*4;
 
 			const int xadj = x - offsetx;
 			const int yadj = y - offsety;
@@ -738,7 +731,7 @@ int score_offset_fit(graphics::surface surf, const rect& big_area, const rect& l
 				continue;
 			}
 
-			const unsigned char* lit_p = (const unsigned char*)surf->pixels + ((lit_area.y() + yadj)*surf->w + (lit_area.x() + xadj))*4;
+			const unsigned char* lit_p = reinterpret_cast<const unsigned char*>(surf->pixels()) + ((lit_area.y() + yadj)*surf->width() + (lit_area.x() + xadj))*4;
 			if((big_p[3] >= 32) != (lit_p[3] >= 32)) {
 				++score;
 			}
@@ -748,15 +741,15 @@ int score_offset_fit(graphics::surface surf, const rect& big_area, const rect& l
 	return score;
 }
 
-void get_best_offset(graphics::surface surf, const rect& big_area, const rect& lit_area, int* xoff, int* yoff)
+void get_best_offset(KRE::SurfacePtr surf, const rect& big_area, const rect& lit_area, int* xoff, int* yoff)
 {
-	std::cerr << "CALC BEST OFFSET...\n";
+	LOG_INFO("CALC BEST OFFSET...");
 	*xoff = *yoff = 0;
 	int best_score = -1;
 	for(int y = 0; y <= (big_area.h() - lit_area.h()); ++y) {
 		for(int x = 0; x <= (big_area.w() - lit_area.w()); ++x) {
 			const int score = score_offset_fit(surf, big_area, lit_area, x, y);
-			std::cerr << "OFFSET " << x << ", " << y << " SCORES " << score << "\n";
+			LOG_INFO("OFFSET " << x << ", " << y << " SCORES " << score);
 			if(best_score == -1 || score < best_score) {
 				*xoff = x;
 				*yoff = y;
@@ -765,10 +758,10 @@ void get_best_offset(graphics::surface surf, const rect& big_area, const rect& l
 		}
 	}
 
-	std::cerr << "BEST OFFSET: " << *xoff << ", " << *yoff << "\n";
+	LOG_INFO("BEST OFFSET: " << *xoff << ", " << *yoff);
 }
 
-int find_distance_to_pixel(graphics::surface surf, const rect& area, int xoffset, int yoffset)
+int find_distance_to_pixel(KRE::SurfacePtr surf, const rect& area, int xoffset, int yoffset)
 {
 	const int SearchDistance = 4;
 	int best_distance = SearchDistance+1;
@@ -783,7 +776,7 @@ int find_distance_to_pixel(graphics::surface surf, const rect& area, int xoffset
 			int ypos = yoffset + y;
 
 			if(xpos >= 0 && ypos >= 0 && xpos < area.w() && ypos < area.h()) {
-				const unsigned char* p = (const unsigned char*)surf->pixels + ((area.y() + ypos)*surf->w + (area.x() + xpos))*4;
+				const unsigned char* p = reinterpret_cast<const unsigned char*>(surf->pixels()) + ((area.y() + ypos)*surf->width() + (area.x() + xpos))*4;
 				if(p[3] >= 32) {
 					best_distance = distance;
 				}
@@ -794,7 +787,7 @@ int find_distance_to_pixel(graphics::surface surf, const rect& area, int xoffset
 	return best_distance;
 }
 
-int score_spritesheet_area(graphics::surface surf, const rect& area_a, int xoff_a, int yoff_a, const rect& area_b, int xoff_b, int yoff_b, const rect& big_area)
+int score_spritesheet_area(KRE::SurfacePtr surf, const rect& area_a, int xoff_a, int yoff_a, const rect& area_b, int xoff_b, int yoff_b, const rect& big_area)
 {
 	unsigned char default_color[4] = {0,0,0,0};
 	int score = 0;
@@ -810,11 +803,11 @@ int score_spritesheet_area(graphics::surface surf, const rect& area_a, int xoff_
 			const unsigned char* pb = default_color;
 
 			if(xadj_a >= 0 && xadj_a < area_a.w() && yadj_a >= 0 && yadj_a < area_a.h()) {
-				pa = (const unsigned char*)surf->pixels + ((area_a.y() + yadj_a)*surf->w + (area_a.x() + xadj_a))*4;
+				pa = reinterpret_cast<const unsigned char*>(surf->pixels()) + ((area_a.y() + yadj_a)*surf->width() + (area_a.x() + xadj_a))*4;
 			}
 
 			if(xadj_a >= 0 && xadj_a < area_a.w() && yadj_a >= 0 && yadj_a < area_a.h()) {
-				pb = (const unsigned char*)surf->pixels + ((area_b.y() + yadj_b)*surf->w + (area_b.x() + xadj_b))*4;
+				pb = reinterpret_cast<const unsigned char*>(surf->pixels()) + ((area_b.y() + yadj_b)*surf->width() + (area_b.x() + xadj_b))*4;
 			}
 
 			if((pa[3] >= 32) != (pb[3] >= 32)) {
@@ -831,15 +824,15 @@ int score_spritesheet_area(graphics::surface surf, const rect& area_a, int xoff_
 	return score;
 }
 
-void flip_surface_area(graphics::surface surf, const rect& area)
+void flip_surface_area(KRE::SurfacePtr surf, const rect& area)
 {
 	for(int y = area.y(); y < area.y() + area.h(); ++y) {
-		unsigned int* pixels = (unsigned int*)surf->pixels + y*surf->w + area.x();
+		unsigned int* pixels = reinterpret_cast<unsigned int*>(surf->pixelsWriteable()) + y*surf->width() + area.x();
 		std::reverse(pixels, pixels + area.w());
 	}
 }
 
-void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimation& anim, graphics::surface dst, bool reorder)
+void write_spritesheet_animation(KRE::SurfacePtr src, const SpritesheetAnimation& anim, KRE::SurfacePtr dst, bool reorder)
 {
 	int target_x = anim.targetArea.x()+1;
 	int target_y = anim.targetArea.y()+1;
@@ -850,7 +843,7 @@ void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimati
 	rect biggest_rect = anim.frames.front();
 
 	for(const rect& f : anim.frames) {
-		std::cerr << "RECT SIZE: " << f.w() << "," << f.h() << "\n";
+		LOG_INFO("RECT SIZE: " << f.w() << "," << f.h());
 		if(f.w()*f.h() > biggest_rect.w()*biggest_rect.h()) {
 			biggest_rect = f;
 		}
@@ -872,20 +865,20 @@ void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimati
 		while(frames.size() < anim.frames.size()) {
 			int best_frame = -1;
 			int best_score = std::numeric_limits<int>::max();
-			for(int n = 0; n < anim.frames.size(); ++n) {
+			for(unsigned n = 0; n < anim.frames.size(); ++n) {
 				if(std::count(frames.begin(), frames.end(), anim.frames[n])) {
 					continue;
 				}
 
 				const int score = score_spritesheet_area(src, frames.back(), new_xoffsets.back(), new_yoffsets.back(), anim.frames[n], xoffsets[n], yoffsets[n], biggest_rect);
-				std::cerr << "SCORE: " << anim.frames[n] << " vs " << frames.back() << ": " << n << " -> " << score << "\n";
+				LOG_INFO("SCORE: " << anim.frames[n] << " vs " << frames.back() << ": " << n << " -> " << score);
 				if(score < best_score || best_frame == -1) {
 					best_score = score;
 					best_frame = n;
 				}
 			}
 
-			std::cerr << "BEST : " << best_frame << ": " << best_score << "\n";
+			LOG_INFO("BEST : " << best_frame << ": " << best_score);
 
 			frames.push_back(anim.frames[best_frame]);
 			new_xoffsets.push_back(xoffsets[best_frame]);
@@ -899,11 +892,11 @@ void write_spritesheet_animation(graphics::surface src, const SpritesheetAnimati
 
 		write_spritesheet_frame(src, f, dst, target_x, target_y);
 
-		SDL_Rect src_rect = { f.x(), f.y(), f.w(), f.h() };
-		SDL_Rect dst_rect = { target_x+1 + xoff, target_y+1 + yoff, f.w(), f.h() };
+		rect src_rect(f.x(), f.y(), f.w(), f.h());
+		rect dst_rect(target_x+1 + xoff, target_y+1 + yoff, f.w(), f.h());
 
-		SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
-		SDL_BlitSurface(src.get(), &src_rect, dst.get(), &dst_rect);
+		src->setBlendMode(KRE::Surface::BlendMode::BLEND_MODE_NONE);
+		dst->blitTo(src, src_rect, dst_rect);
 
 		flip_surface_area(dst, rect(target_x, target_y, cell_width, cell_height));
 
@@ -923,24 +916,24 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 		variant node;
 		try {
 			node = json::parse(sys::read_file(cfg_fname));
-		} catch(json::parse_error& e) {
-			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.error_message());
+		} catch(json::ParseError& e) {
+			ASSERT_LOG(false, "Parse error parsing " << arg << " -> " << cfg_fname << ": " << e.errorMessage());
 		}
 
 		variant baking_info = node["animation_baking"];
 		ASSERT_LOG(baking_info.is_map(), "baking info not found");
 
-		graphics::surface surf = graphics::surface_cache::get(baking_info["source_image"].as_string());
+		KRE::SurfacePtr surf = graphics::SurfaceCache::get(baking_info["source_image"].as_string());
 		ASSERT_LOG(surf.get(), "No surface found");
 
-		std::cerr << "SURFACE SIZE: " << surf->w << "x" << surf->h << "\n";
+		LOG_INFO("SURFACE SIZE: " << surf->width() << "x" << surf->height());
 
-		std::cerr << "DEST SURFACE: " << module::map_file("images/" + baking_info["dest_image"].as_string()) << "\n";
+		LOG_INFO("DEST SURFACE: " << module::map_file("images/" + baking_info["dest_image"].as_string()));
 
-		ASSERT_LOG(surf->format->BytesPerPixel == 4, "Incorrect bpp: " << surf->format->BytesPerPixel);
+		ASSERT_LOG(surf->getPixelFormat()->bytesPerPixel() == 4, "Incorrect bpp: " << surf->getPixelFormat()->bytesPerPixel());
 
 		std::vector<SpritesheetRow> rows = get_cells(surf);
-		unsigned char* pixels = (unsigned char*)surf->pixels;
+		unsigned char* pixels = reinterpret_cast<unsigned char*>(surf->pixelsWriteable());
 		for(const SpritesheetRow& row : rows) {
 			for(const SpritesheetCell& cell : row.cells) {
 				const int x1 = cell.begin_col - 1;
@@ -981,7 +974,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 						const rect areaa(cell.begin_col, row.begin_row, cell.end_col - cell.begin_col, row.end_row - row.begin_row);
 						const rect areab(c.begin_col, r.begin_row, c.end_col - c.begin_col, r.end_row - r.begin_row);
 						const int score = goodness_of_fit(surf, areaa, areab);
-						std::cerr << "SCORE: [" << y << "," << x << "] -> [" << yy << "," << xx << "]: " << score << "\n";
+						LOG_INFO("SCORE: [" << y << "," << x << "] -> [" << yy << "," << xx << "]: " << score);
 						scores[score].resize(scores[score].size()+1);
 						scores[score].back().first = yy;
 						scores[score].back().second = xx;
@@ -996,7 +989,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 					v.push_back(itor->second.front());
 				}
 
-				std::cerr << "BEST SCORES FOR [" << y << "," << x << "] " << (cell.end_col - cell.begin_col) << "x" << (row.end_row - row.begin_row) << ": [" << v[0].first << "," << v[0].second << "], [" << v[1].first << "," << v[1].second << "]\n";
+				LOG_INFO("BEST SCORES FOR [" << y << "," << x << "] " << (cell.end_col - cell.begin_col) << "x" << (row.end_row - row.begin_row) << ": [" << v[0].first << "," << v[0].second << "], [" << v[1].first << "," << v[1].second << "]");
 
 				all_scores[std::pair<int,int>(y, x)] = scores;
 			}
@@ -1041,12 +1034,12 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 					sequence.push_back(value);
 				}
 
-				std::cerr << "RECOMMENDED SEQUENCE: ";
+				LOG_INFO_NOLF("RECOMMENDED SEQUENCE: ");
 				for(auto p : sequence) {
-					std::cerr << "[" << p.first << "," << p.second << "], ";
+					LOG_INFO_NOLF("[" << p.first << "," << p.second << "], ");
 				}
 
-				std::cerr << "\n";
+				LOG_INFO("");
 			}
 		}
 */
@@ -1062,8 +1055,8 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 			for(const variant& fr : frames) {
 				std::vector<int> loc = fr.as_list_int();
 				assert(loc.size() == 2);
-				ASSERT_LOG(loc[0] < rows.size(), "Invalid animation cell: " << loc[0] << "/" << rows.size());
-				ASSERT_LOG(loc[1] < rows[loc[0]].cells.size(), "Invalid animation cell: " << loc[1] << "/" << rows[loc[0]].cells.size());
+				ASSERT_LOG(static_cast<unsigned>(loc[0]) < rows.size(), "Invalid animation cell: " << loc[0] << "/" << rows.size());
+				ASSERT_LOG(static_cast<unsigned>(loc[1]) < rows[loc[0]].cells.size(), "Invalid animation cell: " << loc[1] << "/" << rows[loc[0]].cells.size());
 
 				const SpritesheetRow& r = rows[loc[0]];
 				const SpritesheetCell& c = r.cells[loc[1]];
@@ -1078,7 +1071,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 				const rect& area = available_space[n];
 				if(new_anim.width() <= area.w() && new_anim.height() <= area.h()) {
 					int score = area.w()*area.h();
-					fprintf(stderr, "MATCH: %dx%d %d\n", area.w(), area.h(), score);
+					LOG_INFO("MATCH: " << area.w() << "x" << area.h() << " " << score);
 					if(best == -1 || score < best_score) {
 						best = n;
 						best_score = score;
@@ -1096,19 +1089,19 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 			available_space.push_back(right_area);
 			available_space.push_back(bottom_area);
-			fprintf(stderr, "DIVIDE: %dx%d %dx%d\n", right_area.w(), right_area.h(), bottom_area.w(), bottom_area.h());
+			LOG_INFO("DIVIDE: " << right_area.w() << "x" << right_area.h() << " " << bottom_area.w() << "x" << bottom_area.h());
 
 			available_space.erase(available_space.begin() + best);
 
 			animations.push_back(new_anim);
 
-			fprintf(stderr, "FIT ANIM: %d, %d, %d, %d\n", new_anim.targetArea.x(), new_anim.targetArea.y(), new_anim.targetArea.w(), new_anim.targetArea.h());
+			LOG_INFO("FIT ANIM: " << new_anim.targetArea.x() << ", " << new_anim.targetArea.y() << ", " << new_anim.targetArea.w() << ", " << new_anim.targetArea.h());
 		}
 
-		graphics::surface target_surf(SDL_CreateRGBSurface(0,TargetTextureSize,TargetTextureSize,32,SURFACE_MASK));
-		const unsigned char* alpha_colors = graphics::getAlpha_pixel_colors();
-		unsigned char* target_pixels = (unsigned char*)target_surf->pixels;
-		for(int n = 0; n < target_surf->w*target_surf->h; ++n) {
+		auto target_surf = KRE::Surface::create(TargetTextureSize, TargetTextureSize, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
+		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
+		unsigned char* target_pixels = reinterpret_cast<unsigned char*>(target_surf->pixelsWriteable());
+		for(unsigned n = 0; n < target_surf->width() * target_surf->height(); ++n) {
 			memcpy(target_pixels, alpha_colors, 3);
 			target_pixels[3] = 255;
 			target_pixels += 4;
@@ -1131,17 +1124,16 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 
 		node.add_attr(variant("animation"), variant(&anim_nodes));
 
-		IMG_SavePNG((module::get_module_path() + "/images/" + baking_info["dest_image"].as_string()).c_str(), target_surf.get(), -1);
-
+		target_surf->savePng(module::get_module_path() + "/images/" + baking_info["dest_image"].as_string());
 		sys::write_file(cfg_fname, node.write_json());
 	}
 }
 
 COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 {
-	using namespace graphics;
+	using namespace KRE;
 
-	std::vector<std::vector<surface> > surfaces;
+	std::vector<std::vector<SurfacePtr>> surfaces;
 	surfaces.resize(surfaces.size()+1);
 
 	int row_width = 3;
@@ -1152,7 +1144,6 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 	cell_widths.push_back(0);
 	row_heights.push_back(0);
 
-	using namespace graphics;
 	for(auto img : args) {
 		if(img == "--newrow") {
 			surfaces.resize(surfaces.size()+1);
@@ -1163,19 +1154,19 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 			continue;
 		}
 
-		surface s = surface_cache::get(img);
-		ASSERT_LOG(s.get(), "No image: " << img);
+		SurfacePtr s = graphics::SurfaceCache::get(img);
+		ASSERT_LOG(s != nullptr, "No image: " << img);
 		surfaces.back().push_back(s);
 
-		row_width += s->w + 3;
+		row_width += s->width() + 3;
 
-		if(s->w > cell_widths.back()) {
-			cell_widths.back() = s->w;
+		if(s->width() > static_cast<unsigned>(cell_widths.back())) {
+			cell_widths.back() = s->width();
 		}
 
-		if(s->h > row_heights.back()) {
-			sheet_height += s->h - row_heights.back();
-			row_heights.back() = s->h;
+		if(s->height() > static_cast<unsigned>(row_heights.back())) {
+			sheet_height += s->height() - row_heights.back();
+			row_heights.back() = s->height();
 		}
 	}
 
@@ -1187,7 +1178,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		}
 	}
 
-	surface sheet = surface(SDL_CreateRGBSurface(0,sheet_width,sheet_height,32,SURFACE_MASK));
+	SurfacePtr sheet = Surface::create(sheet_width, sheet_height, PixelFormat::PF::PIXELFORMAT_ARGB8888);
 
 	int ypos = 2;
 
@@ -1196,25 +1187,26 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		int xpos = 2;
 		int max_height = 0;
 		for(auto src : row) {
-			SDL_Rect blit_src = {0, 0, src->w, src->h};
-			SDL_Rect blit_dst = {xpos, ypos, src->w, src->h};
+			rect blit_src(0, 0, src->width(), src->height());
+			rect blit_dst(xpos, ypos, src->width(), src->height());
 
-			SDL_Rect rect_top = {xpos-1, ypos-1, src->w+2, 1};
-			SDL_Rect rect_bot = {xpos-1, ypos + src->h, src->w+2, 1};
-			SDL_Rect rect_left = {xpos-1, ypos, 1, src->h};
-			SDL_Rect rect_right = {xpos + src->w, ypos, 1, src->h};
+			rect rect_top(xpos-1, ypos-1, src->width()+2, 1);
+			rect rect_bot(xpos-1, ypos + src->height(), src->width()+2, 1);
+			rect rect_left(xpos-1, ypos, 1, src->height());
+			rect rect_right(xpos + src->width(), ypos, 1, src->height());
 
-			SDL_SetSurfaceBlendMode(src.get(), SDL_BLENDMODE_NONE);
-			SDL_BlitSurface(src.get(), &blit_src, sheet.get(), &blit_dst);
-			if(blit_src.h > max_height) {
-				max_height = blit_src.h;
+			src->setBlendMode(Surface::BlendMode::BLEND_MODE_NONE);
+			sheet->blitTo(src, blit_src, blit_dst);
+
+			if(blit_src.h() > max_height) {
+				max_height = blit_src.h();
 			}
 
-			Uint32 transparent = SDL_MapRGB(sheet->format, 0xf9, 0x30, 0x3d);
-			SDL_FillRect(sheet.get(), &rect_top, transparent);
-			SDL_FillRect(sheet.get(), &rect_bot, transparent);
-			SDL_FillRect(sheet.get(), &rect_left, transparent);
-			SDL_FillRect(sheet.get(), &rect_right, transparent);
+			Color transparent = sheet->getPixelFormat()->mapRGB(0xf9, 0x30, 0x3d);
+			sheet->fillRect(rect_top, transparent);
+			sheet->fillRect(rect_bot, transparent);
+			sheet->fillRect(rect_left, transparent);
+			sheet->fillRect(rect_right, transparent);
 
 			xpos += cell_widths[row_index] + 3;
 		}
@@ -1222,8 +1214,7 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 		ypos += max_height + 3;
 		++row_index;
 	}
-
-	IMG_SavePNG("sheet.png", sheet.get(), -1);
+	sheet->savePng("sheet.png");
 }
 
 //this is a template utility that can be modified to provide a nice utility
@@ -1232,15 +1223,27 @@ COMMAND_LINE_UTILITY(manipulate_image_template)
 {
 	using namespace graphics;
 	for(auto img : args) {
-		surface s = surface_cache::get(img);
-		uint8_t* p = (uint8_t*)s->pixels;
-		for(int i = 0; i != s->w*s->h; ++i) {
-			p[3] = p[0];
-			p[0] = p[1] = p[2] = 255;
-			p += 4;
+		auto s = SurfaceCache::get(img);
+		{
+			// It's good practice to lock the surface before modifying pixels.
+			// Plus we assert if the surface requires locking and we don't do it.
+			KRE::SurfaceLock lck(s);
+			uint8_t* p = reinterpret_cast<uint8_t*>(s->pixelsWriteable());
+			if(s->getPixelFormat()->bytesPerPixel() != 4) {
+				LOG_INFO("File '" << img << "' is not in a 32-bit format");
+				continue;
+			}
+			if(s->width() * s->getPixelFormat()->bytesPerPixel() != s->rowPitch()) {
+				LOG_INFO("File '" << img << "' row pitch won't work with a simple loop, skipping.");
+				continue;
+			}
+			for(int i = 0; i != s->width()*s->height(); ++i) {
+				p[3] = p[0];
+				p[0] = p[1] = p[2] = 255;
+				p += 4;
+			}
 		}
-
-		IMG_SavePNG((module::get_module_path() + "/images/" + img).c_str(), s.get(), -1);
+		s->savePng(module::get_module_path() + "/images/" + img);
 	}
 }
 

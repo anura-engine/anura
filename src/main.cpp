@@ -540,7 +540,7 @@ extern "C" int main(int argcount, char* argvec[])
 		bool require_restart = false;
 		LOG_INFO("Requesting update to module from server...");
 		while(cl || anura_cl) {
-			if(update_window == NULL && SDL_GetTicks() - original_start_time > 2000) {
+			if(update_window == NULL && profile::get_tick_time() - original_start_time > 2000) {
 				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
 			}
 
@@ -569,7 +569,7 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			const int time_taken = SDL_GetTicks() - start_time;
+			const int time_taken = profile::get_tick_time() - start_time;
 			if(time_taken > g_auto_update_timeout) {
 				LOG_ERROR("Timed out updating module. Canceling. " << time_taken << "ms vs " << g_auto_update_timeout << "ms");
 				break;
@@ -601,7 +601,7 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			SDL_Delay(20);
+			profile::delay(20);
 
 			if(cl && !cl->process()) {
 				if(cl->error().empty() == false) {
@@ -742,10 +742,10 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.drawAndIncrement(_("Initializing tiles"));
 		TileMap::init(json::parse_from_file("data/tiles.cfg"));
 
-		game_logic::formula_object::load_all_classes();
+		game_logic::Formula_object::loadAllClasses();
 
-	} catch(const json::parse_error& e) {
-		LOG_ERROR("ERROR PARSING: " << e.error_message());
+	} catch(const json::ParseError& e) {
+		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
 		return 0;
 	}
 	loader.draw(_("Loading level"));

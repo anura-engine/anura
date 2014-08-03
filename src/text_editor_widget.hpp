@@ -24,7 +24,6 @@
 #pragma once
 
 #include <boost/intrusive_ptr.hpp>
-#include <boost/shared_ptr.hpp>
 
 #include "scrollable_widget.hpp"
 
@@ -32,8 +31,6 @@ namespace gui
 {
 	class TextEditorWidget;
 	typedef boost::intrusive_ptr<TextEditorWidget> TextEditorWidgetPtr;
-
-	class dropdown_widget;
 
 	class TextEditorWidget : public ScrollableWidget
 	{
@@ -123,6 +120,9 @@ namespace gui
 
 	private:
 		DECLARE_CALLABLE(TextEditorWidget);
+
+		void operator=(const TextEditorWidget&);
+
 		bool handleMouseButtonDown(const SDL_MouseButtonEvent& event);
 		bool handleMouseButtonUp(const SDL_MouseButtonEvent& event);
 		bool handleMouseMotion(const SDL_MouseMotionEvent& event);
@@ -195,13 +195,13 @@ namespace gui
 		void changeFocusDelgate(bool new_focus_value);
 		bool beginEnterDelegate();
 
-		game_logic::formula_ptr ffl_on_change_;
-		game_logic::formula_ptr ffl_onMoveCursor_;
-		game_logic::formula_ptr ffl_on_enter_;
-		game_logic::formula_ptr ffl_on_tab_;
-		game_logic::formula_ptr ffl_on_escape_;
-		game_logic::formula_ptr ffl_on_change_focus_;
-		game_logic::formula_ptr ffl_onBeginEnter_;
+		game_logic::FormulaPtr ffl_on_change_;
+		game_logic::FormulaPtr ffl_onMoveCursor_;
+		game_logic::FormulaPtr ffl_on_enter_;
+		game_logic::FormulaPtr ffl_on_tab_;
+		game_logic::FormulaPtr ffl_on_escape_;
+		game_logic::FormulaPtr ffl_on_change_focus_;
+		game_logic::FormulaPtr ffl_onBeginEnter_;
 
 		bool begin_enter_return_;
 
@@ -212,8 +212,6 @@ namespace gui
 		bool clear_on_focus_;
 
 		KRE::ColorPtr bg_color_;
-
-		friend class dropdown_widget;
 	};
 
 }

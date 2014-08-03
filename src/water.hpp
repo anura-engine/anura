@@ -71,7 +71,6 @@ public:
 	
 	void preRender(const KRE::WindowManagerPtr& wm) override;
 private:
-	KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 	void init();
 
 	struct area {
@@ -103,5 +102,5 @@ private:
 
 	enum { BadOffset = -100000 };
 
-	game_logic::const_formula_ptr current_x_formula_, current_y_formula_;
+	game_logic::ConstFormulaPtr current_x_formula_, current_y_formula_;
 };

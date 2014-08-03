@@ -30,10 +30,10 @@
 
 class Level;
 
-class PlayableCustomObject : public custom_object
+class PlayableCustomObject : public CustomObject
 {
 public:
-	PlayableCustomObject(const custom_object& obj);
+	PlayableCustomObject(const CustomObject& obj);
 	PlayableCustomObject(const PlayableCustomObject& obj);
 	PlayableCustomObject(variant node);
 
@@ -57,7 +57,7 @@ public:
 	int difficulty() const { return difficulty_; }
 
 private:
-	bool on_platform() const;
+	bool onPlatform() const;
 
 	int walkUpOrDownStairs() const;
 

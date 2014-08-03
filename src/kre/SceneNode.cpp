@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -40,26 +40,92 @@ namespace KRE
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
 	}
 
+	SceneNode::SceneNode(SceneGraph* sg, const variant& node)
+		: scene_graph_(sg),
+		parent_(nullptr),
+		position_(0.0f),
+		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
+		scale_(1.0f)
+	{
+		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
+		if(node.has_key("camera")) {
+			// XXX WindowManager::getMainWindow() is a little hack since this scene node might
+			// not be attached to the main window. But the camera needs to know the window size
+			// for an orthogonal camera. Maybe we need to attach a window id to the SceneGraph.
+			// Then we could get the information from there. -- is kind of an ugh situation.
+			auto cam = std::make_shared<Camera>(node["camera"], WindowManager::getMainWindow());
+			attachCamera(cam);
+		}
+		if(node.has_key("lights")) {
+			auto& lights = node["lights"];
+			if(lights.is_map()) {
+				for(auto& pair : lights.as_map()) {
+					ASSERT_LOG(pair.first.is_int() && pair.second.is_map(), 
+						"'lights' map should be int:light_map pairs. " 
+						<< pair.first.to_debug_string() << " : " << pair.second.to_debug_string());
+					size_t ref = pair.first.as_int();
+					auto light_obj = std::make_shared<Light>(pair.second);
+					attachLight(ref, light_obj);
+				}
+			} else if(lights.is_list()) {
+				size_t ref = 0;
+				for(auto& light : lights.as_list()) {
+					auto light_obj = std::make_shared<Light>(light);
+					attachLight(ref, light_obj);
+					++ref;
+				}
+			} else {
+				ASSERT_LOG(false, "Attribute 'lights' should be a list or map, found: " << lights.to_debug_string());
+			}
+		}
+		if(node.has_key("render_target")) {
+			auto rt = std::make_shared<RenderTarget>(node["render_target"]);
+			attachRenderTarget(rt);
+		}
+	}
+
+	SceneNode::SceneNode(const SceneNode& op)
+		: name_(op.name_),
+		scene_graph_(op.scene_graph_),
+		parent_(nullptr),
+		position_(op.position_),
+		rotation_(op.rotation_),
+		scale_(op.scale_),
+		// Should we copy the pointers or create new instances ?
+		objects_(op.objects_)
+	{
+		scene_graph_->attachNode(op.parent_, shared_from_this());
+		if(op.camera_) {
+			camera_ = op.camera_->clone();
+		}
+		if(op.render_target_) {
+			render_target_ = op.render_target_->clone();
+		}
+		for(auto light : op.lights_) {
+			lights_.emplace(light.first, light.second->clone());
+		}
+	}
+
 	SceneNode::~SceneNode()
 	{
 	}
 
-	void SceneNode::AttachNode(const SceneNodePtr& node)
+	void SceneNode::attachNode(const SceneNodePtr& node)
 	{
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
-		scene_graph_->AttachNode(this, node);
+		scene_graph_->attachNode(this, node);
 	}
 
-	void SceneNode::AttachObject(const SceneObjectPtr& obj)
+	void SceneNode::attachObject(const SceneObjectPtr& obj)
 	{
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
 		auto dd = DisplayDevice::getCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
 		objects_.emplace_back(obj);
-		obj->SetDisplayData(dd, obj->attach(dd));
+		obj->setDisplayData(dd, obj->attach(dd));
 	}
 
-	void SceneNode::AttachLight(size_t ref, const LightPtr& obj)
+	void SceneNode::attachLight(size_t ref, const LightPtr& obj)
 	{
 		auto it = lights_.find(ref);
 		if(it != lights_.end()) {
@@ -68,26 +134,26 @@ namespace KRE
 		lights_.emplace(ref,obj);
 		auto dd = DisplayDevice::getCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->attach(dd));		
+		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 
-	void SceneNode::AttachCamera(const CameraPtr& obj)
+	void SceneNode::attachCamera(const CameraPtr& obj)
 	{
 		camera_ = obj;
 		auto dd = DisplayDevice::getCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->attach(dd));		
+		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 
-	void SceneNode::AttachRenderTarget(const RenderTargetPtr& obj)
+	void SceneNode::attachRenderTarget(const RenderTargetPtr& obj)
 	{
 		render_target_ = obj;
 		auto dd = DisplayDevice::getCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		obj->SetDisplayData(dd, obj->attach(dd));		
+		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 
-	void SceneNode::RenderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp)
+	void SceneNode::renderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp)
 	{
 		if(camera_) {
 			rp->camera = camera_;
@@ -97,14 +163,14 @@ namespace KRE
 		}
 		if(render_target_) {
 			rp->render_target = render_target_;
-			render_target_->Clear();
+			render_target_->clear();
 		}
 		
 		for(auto o : objects_) {
-			o->SetCamera(rp->camera);
-			o->SetLights(rp->lights);
-			o->SetRenderTarget(rp->render_target);
-			renderer->AddRenderableToQueue(o->getQueue(), o->Order(), o);
+			o->setCamera(rp->camera);
+			o->setLights(rp->lights);
+			o->setRenderTarget(rp->render_target);
+			renderer->AddRenderableToQueue(o->getQueue(), o->getOrder(), o);
 		}
 	}
 
@@ -143,17 +209,17 @@ namespace KRE
 		scale_ = scale;
 	}
 
-	glm::mat4 SceneNode::ModelMatrix() const 
+	glm::mat4 SceneNode::getModelMatrix() const 
 	{
 		return glm::translate(glm::mat4(1.0f), position_) * glm::toMat4(rotation_) * glm::scale(glm::mat4(1.0f), scale_);
 	}
 
-	void SceneNode::NodeAttached()
+	void SceneNode::notifyNodeAttached(SceneNode* parent)
 	{
-		// nothing need be done as default
+		parent_ = parent;
 	}
 
-	void SceneNode::Process(double)
+	void SceneNode::process(double)
 	{
 		// nothing need be done as default
 	}
@@ -161,7 +227,7 @@ namespace KRE
 	std::ostream& operator<<(std::ostream& os, const SceneNode& node)
 	{
 		os  << "NODE(" 
-			<< node.NodeName() << " : "
+			<< node.getNodeName() << " : "
 			<< (node.camera_ ? "1 camera, " : "") 
 			<< node.lights_.size() << " light" << (node.lights_.size() != 1 ? "s" : "") << ", "
 			<< node.objects_.size() << " object" << (node.objects_.size() != 1 ? "s (" : " (");

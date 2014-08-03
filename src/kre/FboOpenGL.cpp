@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -28,6 +28,7 @@
 #include "../asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "FboOpenGL.hpp"
+#include "TextureUtils.hpp"
 #include "WindowManager.hpp"
 
 namespace KRE
@@ -53,24 +54,33 @@ namespace KRE
 		tex_width_(0),
 		tex_height_(0)
 	{
-		if(node.has_key("shader_hint")) {
-			shader_hint_ = node["shader_hint"].as_string();
+	}
+
+	FboOpenGL::FboOpenGL(const FboOpenGL& op)
+		: RenderTarget(op),
+		uses_ext_(false),
+		depth_stencil_buffer_id_(0),
+		tex_width_(0),
+		tex_height_(0)
+	{
+		if(op.tex_height_ != 0 && op.tex_width_ != 0) {
+			create();
 		}
 	}
 
-	void FboOpenGL::HandleCreate()
+	void FboOpenGL::handleCreate()
 	{
 		GLenum depth_stencil_internal_format;
 		GLenum ds_attachment;
-		GetDSInfo(ds_attachment, depth_stencil_internal_format);
+		getDSInfo(ds_attachment, depth_stencil_internal_format);
 
-		tex_width_ = next_power_of_2(Width());
-		tex_height_ = next_power_of_2(Height());
+		tex_width_ = next_power_of_two(width());
+		tex_height_ = next_power_of_two(height());
 
 		// check for fbo support
 		if(GLEW_ARB_framebuffer_object) {
 			// XXX we need to add some hints about what size depth and stencil buffers to use.
-			if(UsesMultiSampling()) {
+			if(usesMultiSampling()) {
 				ASSERT_LOG(false, "skipped creation of multi-sample render buffers with multiple color planes, for now, as it was hurting my head to think about.");
 				/*int render_buffer_count = 1;
 				if(DepthPlane() || StencilPlane()) {
@@ -136,7 +146,7 @@ namespace KRE
 				glBindFramebuffer(GL_FRAMEBUFFER, 0);*/
 
 			} else {
-				if(DepthPlane() || StencilPlane()) {
+				if(getDepthPlane() || getStencilPlane()) {
 					depth_stencil_buffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id){ 
 						glBindRenderbuffer(GL_RENDERBUFFER, 0); 
 						glDeleteRenderbuffers(1, id); 
@@ -151,14 +161,14 @@ namespace KRE
 				// Use CreateMaterial.
 				auto dd = DisplayDevice::getCurrent();
 				std::vector<TexturePtr> textures;
-				unsigned color_planes = ColorPlanes();
+				unsigned color_planes = getColorPlanes();
 				textures.reserve(color_planes);
 				for(unsigned n = 0; n != color_planes; ++n) {
-					textures.emplace_back(dd->CreateTexture(tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888));
+					textures.emplace_back(dd->createTexture(tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888));
 				}
-				auto mat = dd->CreateMaterial("fbo_mat", textures);
-				mat->SetCoords(rect(0, 0, Width(), Height()));
-				SetMaterial(mat);
+				auto mat = dd->createMaterial("fbo_mat", textures);
+				mat->SetCoords(rect(0, 0, width(), height()));
+				setMaterial(mat);
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
 					glDeleteFramebuffers(1, id); 
@@ -180,30 +190,21 @@ namespace KRE
 				ASSERT_LOG(status == GL_FRAMEBUFFER_COMPLETE, "Framebuffer completion status not indicated: " << status);
 			}
 		} else if(GLEW_EXT_framebuffer_object) {
-			ASSERT_LOG(!(UsesMultiSampling() && !GLEW_EXT_framebuffer_multisample), "Multi-sample texture requested but hardware doesn't support multi-sampling.");
-			ASSERT_LOG(!(DepthPlane() || StencilPlane() && !GLEW_EXT_packed_depth_stencil), "Depth or Stencil plane required but hardware doesn't support it.");
+			ASSERT_LOG(!(usesMultiSampling() && !GLEW_EXT_framebuffer_multisample), "Multi-sample texture requested but hardware doesn't support multi-sampling.");
+			ASSERT_LOG(!(getDepthPlane() || getStencilPlane() && !GLEW_EXT_packed_depth_stencil), "Depth or Stencil plane required but hardware doesn't support it.");
 			uses_ext_ = true;
 			// XXX wip
 		}
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 
-		SetOrder(999999);
+		setOrder(999999);
 	}
 
 	FboOpenGL::~FboOpenGL()
 	{
 	}
 
-	DisplayDeviceDef FboOpenGL::Attach(const DisplayDevicePtr& dd)
-	{
-		DisplayDeviceDef def(GetAttributeSet());
-		if(!shader_hint_.empty()) {
-			def.SetHint("shader", shader_hint_);
-		}
-		return def;
-	}
-
-	void FboOpenGL::preRender()
+	void FboOpenGL::preRender(const WindowManagerPtr& wnd)
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		// XXX wip
@@ -217,39 +218,44 @@ namespace KRE
 			//glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0);
 		}
 
-		Blittable::preRender();
+		Blittable::preRender(wnd);
 	}
 
-	void FboOpenGL::HandleApply()
+	void FboOpenGL::handleApply()
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 
 		glGetIntegerv(GL_VIEWPORT, viewport_);
-		glViewport(0, 0, Width(), Height());
+		glViewport(0, 0, width(), height());
 	}
 
-	void FboOpenGL::HandleUnapply()
+	void FboOpenGL::handleUnapply()
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(viewport_[0], viewport_[1], viewport_[2], viewport_[3]);
 	}
 
-	void FboOpenGL::HandleClear()
+	void FboOpenGL::handleClear()
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
-		auto& color = GetClearColor();
-		glClearColor(color.r(), color.g(), color.b(), color.a());
+		auto& color = getClearColor();
+		glClearColor(color.rf(), color.gf(), color.bf(), color.af());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}
 
-	void FboOpenGL::GetDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format)
+	RenderTargetPtr FboOpenGL::handleClone()
 	{
-		if(DepthPlane() || StencilPlane()) {
-			if(DepthPlane()) {
-				if(StencilPlane()) {
+		return std::make_shared<FboOpenGL>(*this);
+	}
+
+	void FboOpenGL::getDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format)
+	{
+		if(getDepthPlane() || getStencilPlane()) {
+			if(getDepthPlane()) {
+				if(getStencilPlane()) {
 					depth_stencil_internal_format = GL_DEPTH24_STENCIL8;
 					ds_attachment = GL_DEPTH_STENCIL_ATTACHMENT;
 				} else {

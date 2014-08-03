@@ -88,7 +88,7 @@ private:
 
 	bool file_contents_set_;
 
-	gui::code_editor_WidgetPtr editor_;
+	gui::CodeEditorWidgetPtr editor_;
 	gui::TextEditorWidgetPtr search_;
 	gui::TextEditorWidgetPtr replace_;
 
@@ -96,7 +96,7 @@ private:
 
 	gui::LabelPtr replace_label_, status_label_, error_label_;
 
-	gui::grid_ptr files_grid_;
+	gui::GridPtr files_grid_;
 
 	gui::WidgetPtr save_button_;
 
@@ -117,12 +117,12 @@ private:
 	assert_recover_scope assert_recovery_;
 
 	gui::AnimationPreviewWidgetPtr animation_preview_;
-	gui::formula_visualize_WidgetPtr visualize_widget_;
+	gui::FormulaVisualizeWidgetPtr visualize_widget_;
 
 	struct KnownFile {
 		std::string fname;
 		boost::intrusive_ptr<Frame> anim;
-		gui::code_editor_WidgetPtr editor;
+		gui::CodeEditorWidgetPtr editor;
 		std::function<void()> op_fn;
 	};
 

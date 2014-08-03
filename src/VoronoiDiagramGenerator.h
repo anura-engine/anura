@@ -27,12 +27,11 @@
 * OF THIS SOFTWARE OR ITS FITNESS FOR ANY PARTICULAR PURPOSE.
 */
 
-#ifndef VORONOI_DIAGRAM_GENERATOR
-#define VORONOI_DIAGRAM_GENERATOR
+#pragma once
 
-#include <math.h>
-#include <stdlib.h>
-#include <string.h>
+#include <cmath>
+#include <cstdlib>
+#include <cstring>
 
 
 #ifndef NULL
@@ -274,8 +273,3 @@ private:
 int scomp(const void *p1,const void *p2);
 int spcomp(const void *p1,const void *p2);
 int anglecomp(const void * p1, const void * p2);
-
-
-#endif
-
-

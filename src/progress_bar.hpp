@@ -1,67 +1,67 @@
 /*
-	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
-    This program is free software: you can redistribute it and/or modify
-    it under the terms of the GNU General Public License as published by
-    the Free Software Foundation, either version 2 of the License, or
-    (at your option) any later version.
+	This software is provided 'as-is', without any express or implied
+	warranty. In no event will the authors be held liable for any damages
+	arising from the use of this software.
 
-    This program is distributed in the hope that it will be useful,
-    but WITHOUT ANY WARRANTY; without even the implied warranty of
-    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-    GNU General Public License for more details.
+	Permission is granted to anyone to use this software for any purpose,
+	including commercial applications, and to alter it and redistribute it
+	freely, subject to the following restrictions:
 
-    You should have received a copy of the GNU General Public License
-    along with this program.  If not, see <http://www.gnu.org/licenses/>.
+	   1. The origin of this software must not be misrepresented; you must not
+	   claim that you wrote the original software. If you use this software
+	   in a product, an acknowledgement in the product documentation would be
+	   appreciated but is not required.
+
+	   2. Altered source versions must be plainly marked as such, and must not be
+	   misrepresented as being the original software.
+
+	   3. This notice may not be removed or altered from any source
+	   distribution.
 */
-#pragma once
-#ifndef PROGRESS_BAR_HPP_INCLUDED
-#define PROGRESS_BAR_HPP_INCLUDED
 
-#include "color_utils.hpp"
+#pragma once
+
 #include "framed_gui_element.hpp"
-#include "texture.hpp"
 #include "widget.hpp"
 
-namespace gui {
-
-class progress_bar : public widget
+namespace gui 
 {
-public:
-	progress_bar(int progress=0, int minv=0, int maxv=100, const std::string& gui_set="default_button");
-	explicit progress_bar(const variant& v, game_logic::FormulaCallable* e);
+	class ProgressBar : public Widget
+	{
+	public:
+		ProgressBar(int progress=0, int minv=0, int maxv=100, const std::string& gui_set="default_button");
+		explicit ProgressBar(const variant& v, game_logic::FormulaCallable* e);
 
-	int min_value() const { return min_; }
-	int max_value() const { return max_; }
-	int progress() const { return progress_; }
-	void setProgress(int value);
-	void update_progress(int delta);
-	void set_completion_handler(std::function<void ()> oncompletion);
-	void reset();
-protected:
-	virtual variant getValue(const std::string& key) const;
-	virtual void setValue(const std::string& key, const variant& value);
-	void handleDraw() const override;
-private:
-	void complete();
+		int getMinValue() const { return min_; }
+		int getMaxValue() const { return max_; }
+		void setMinValue(int min_val);
+		void setMaxValue(int max_val);
+		int progress() const { return progress_; }
+		void setProgress(int value);
+		void updateProgress(int delta);
+		void setCompletionHandler(std::function<void ()> oncompletion);
+		void reset();
+	private:
+		DECLARE_CALLABLE(ProgressBar)
+		void complete();
+		void handleDraw() const override;
 
-	graphics::color color_;
-	int hpad_;
-	int vpad_;
-	int min_;
-	int max_;
-	int progress_;
-	bool completion_called_;
-	std::function<void ()> oncompletion_;
-	game_logic::formula_ptr completion_handler_;
+		KRE::Color color_;
+		int hpad_;
+		int vpad_;
+		int min_;
+		int max_;
+		int progress_;
+		bool completion_called_;
+		std::function<void ()> oncompletion_;
+		game_logic::FormulaPtr completion_handler_;
 
-	bool upscale_;
-	ConstFramedGuiElementPtr frame_image_set_;
-};
+		bool upscale_;
+		ConstFramedGuiElementPtr frame_image_set_;
+	};
 
-typedef boost::intrusive_ptr<progress_bar> progress_bar_ptr;
-typedef boost::intrusive_ptr<const progress_bar> const_progress_bar_ptr;
-
+	typedef boost::intrusive_ptr<ProgressBar> ProgressBarPtr;
+	typedef boost::intrusive_ptr<const ProgressBar> ConstProgressBarPtr;
 }
-
-#endif

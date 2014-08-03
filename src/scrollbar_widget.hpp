@@ -33,24 +33,23 @@ namespace gui
 		explicit ScrollBarWidget(std::function<void(int)> handler);
 		explicit ScrollBarWidget(const variant& v, game_logic::FormulaCallable* e);
 
-		void set_range(int total_height, int window_height);
+		void setRange(int total_height, int window_height);
 		void setLoc(int x, int y);
 		void setDim(int w, int h);
-		void set_window_pos(int pos) { window_pos_ = pos; }
-		void set_step(int step) { step_ = step; }
-		void set_arrow_step(int step) { arrow_step_ = step; }
-		int window_pos() const { return window_pos_; }
-	protected:
-		virtual void setValue(const std::string& key, const variant& v);
-		virtual variant getValue(const std::string& key) const;
+		void setWindowPos(int pos) { window_pos_ = pos; }
+		void setStep(int step) { step_ = step; }
+		void setArrowStep(int step) { arrow_step_ = step; }
+		int getWindowPos() const { return window_pos_; }
 	private:
+		DECLARE_CALLABLE(ScrollBarWidget)
+
 		void handleDraw() const override;
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
-		void down_button_pressed();
-		void up_button_pressed();
+		void downButtonPressed();
+		void upButtonPressed();
 
-		void clip_window_position();
+		void clipWindowPosition();
 
 		std::function<void(int)> handler_;
 		WidgetPtr up_arrow_, down_arrow_, handle_, handle_bot_, handle_top_, background_;
@@ -60,8 +59,8 @@ namespace gui
 		int drag_start_;
 		int drag_anchor_y_;
 
-		game_logic::formula_ptr ffl_handler_;
-		void handler_delegate(int);
+		game_logic::FormulaPtr ffl_handler_;
+		void handlerDelegate(int);
 	};
 
 	typedef boost::intrusive_ptr<ScrollBarWidget> ScrollbarWidgetPtr;

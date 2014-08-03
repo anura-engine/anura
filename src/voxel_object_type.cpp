@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+/* XXX -- needs re-write
+
 #include <map>
 
 #include "formula.hpp"
@@ -97,7 +99,7 @@ namespace voxel
 	{
 		prototype_.reset(new voxel_object(node));
 
-		const formula::strict_check_scope strict_checking(true);
+		const formula::StrictCheckScope strict_checking(true);
 
 		variant properties_node = node["properties"];
 		if(properties_node.is_null() == false) {
@@ -247,7 +249,7 @@ namespace voxel
 				entry.slot = slot_properties_.size();
 				entry.id = k;
 				if(value.is_string()) {
-					entry.getter = formula::create_optional_formula(value, getFunctionSymbols(), callable_definition_);
+					entry.getter = formula::createOptionalFormula(value, getFunctionSymbols(), callable_definition_);
 				} else if(value.is_map()) {
 					if(value.has_key("type")) {
 						entry.type = parse_variant_type(value["type"]);
@@ -268,13 +270,13 @@ namespace voxel
 						setter_def = modify_formula_callable_definition(setter_def, num_base_slots() + ENTRY_VALUE, entry.set_type);
 					}
 
-					entry.getter = formula::create_optional_formula(value["get"], getFunctionSymbols(), property_def);
-					entry.setter = formula::create_optional_formula(value["set"], getFunctionSymbols(), setter_def);
+					entry.getter = formula::createOptionalFormula(value["get"], getFunctionSymbols(), property_def);
+					entry.setter = formula::createOptionalFormula(value["set"], getFunctionSymbols(), setter_def);
 					if(value["init"].is_null() == false) {
-						entry.init = formula::create_optional_formula(value["init"], getFunctionSymbols(), ConstFormulaCallableDefinitionPtr(vox_object_type->getDefinition()));
+						entry.init = formula::createOptionalFormula(value["init"], getFunctionSymbols(), ConstFormulaCallableDefinitionPtr(vox_object_type->getDefinition()));
 						assert(entry.init);
 						assert(entry.type);
-						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->query_variant_type()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->query_variant_type()->to_string() << " expected " << entry.type->to_string());
+						ASSERT_LOG(variant_types_compatible(entry.type, entry.init->queryVariantType()), "Initializer for " << id_ << "." << k << " does not have a matching type. Evaluates to " << entry.init->queryVariantType()->to_string() << " expected " << entry.type->to_string());
 					}
 					entry.default_value = value["default"];
 
@@ -304,7 +306,7 @@ namespace voxel
 
 				if(entry.getter) {
 					variant v;
-					if(entry.getter->evaluates_to_constant(v)) {
+					if(entry.getter->evaluatesToConstant(v)) {
 						entry.getter.reset();
 						entry.const_value.reset(new variant(v));
 					}
@@ -354,7 +356,7 @@ namespace voxel
 					event_handlers_.resize(event_id+1);
 				}
 
-				event_handlers_[event_id] = formula::create_optional_formula(p.second, symbols, callable_definition_);
+				event_handlers_[event_id] = formula::createOptionalFormula(p.second, symbols, callable_definition_);
 			}
 		}
 	}
@@ -373,3 +375,4 @@ namespace voxel
 		return event_handlers_[event_id].get();
 	}
 }
+*/

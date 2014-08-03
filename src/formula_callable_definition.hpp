@@ -121,11 +121,11 @@ struct callable_PropertyEntry {
 
 #define DECLARE_CALLABLE(classname) \
 public: \
-	virtual variant getValue(const std::string& key) const; \
-	virtual variant getValueBySlot(int slot) const; \
-	virtual void setValue(const std::string& key, const variant& value); \
-	virtual void setValueBySlot(int slot, const variant& value); \
-	virtual std::string getObjectId() const { return #classname; } \
+	virtual variant getValue(const std::string& key) const override; \
+	virtual variant getValueBySlot(int slot) const override;  \
+	virtual void setValue(const std::string& key, const variant& value) override; \
+	virtual void setValueBySlot(int slot, const variant& value) override; \
+	virtual std::string getObjectId() const override { return #classname; } \
 public: \
 	static void init_callable_type(std::vector<callable_PropertyEntry>& v, std::map<std::string, int>& properties); \
 private:
@@ -189,8 +189,8 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 		return variant([=](const game_logic::FormulaCallable& args) ->variant { \
 			const this_type& obj = *dynamic_cast<const this_type*>(ref.get());
 
-#define FN_ARG(n) args.query_value_by_slot(n)
-#define NUM_FN_ARGS reinterpret_cast<const game_logic::slot_FormulaCallable*>(&args)->num_args()
+#define FN_ARG(n) args.queryValueBySlot(n)
+#define NUM_FN_ARGS reinterpret_cast<const game_logic::SlotFormulaCallable*>(&args)->getNumArgs()
 
 #define END_DEFINE_FN }, type_info);
 
@@ -234,13 +234,15 @@ variant classname::getValue(const std::string& key) const { \
 	if(itor != classname##_properties.end()) { \
 		return getValueBySlot(itor->second); \
 	} else { \
-		return variant(); \
+		return getValueDefault(key); \
 	} \
 } \
 void classname::setValue(const std::string& key, const variant& value) { \
 	std::map<std::string, int>::const_iterator itor = classname##_properties.find(key); \
 	if(itor != classname##_properties.end()) { \
 		setValueBySlot(itor->second, value); \
+	} else {\
+		setValueDefault(key, value); \
 	} \
 } \
 variant classname::getValueBySlot(int slot) const { \

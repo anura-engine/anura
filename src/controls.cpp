@@ -21,20 +21,8 @@
 	   distribution.
 */
 
-#ifdef _WIN32
+#ifdef _MSC_VER
 #include <winsock2.h>
-#elif defined(__native_client__)
-#include <stdint.h>
-uint32_t ntohl(uint32_t hl)
-{
-   return (((hl&0x000000FF)<<24)+((hl&0x0000FF00)<<8)+
-   ((hl&0x00FF0000)>>8)+((hl&0xFF000000)>>24));
-}
-uint32_t htonl(uint32_t nl)
-{
-   return (((nl&0x000000FF)<<24)+((nl&0x0000FF00)<<8)+
-   ((nl&0x00FF0000)>>8)+((nl&0xFF000000)>>24));
-}
 #else
 #include <netinet/in.h>
 #endif

@@ -161,8 +161,10 @@ namespace gui
 		virtual void handleDraw() const = 0;
 
 	private:
-		DISALLOW_COPY_AND_ASSIGN(Widget);
 		DECLARE_CALLABLE(Widget);
+		
+		void operator=(const Widget&);
+
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) {}
 
 		int x_, y_;
@@ -178,7 +180,7 @@ namespace gui
 		bool visible_;
 		game_logic::FormulaCallable* environ_;
 		void processDelegate();
-		game_logic::formula_ptr ffl_on_process_;
+		game_logic::FormulaPtr ffl_on_process_;
 		// default zorder_ is 0.  A widget *must* have a good reason for wanting
 		// higher priority in the draw order.
 		int zorder_;

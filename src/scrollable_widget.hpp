@@ -23,8 +23,6 @@
 
 #pragma once
 
-#include <boost/shared_ptr.hpp>
-
 #include "scrollbar_widget.hpp"
 #include "widget.hpp"
 
@@ -35,27 +33,24 @@ namespace gui
 	public:
 		ScrollableWidget();
 		ScrollableWidget(const variant& v, game_logic::FormulaCallable* e);
-		void set_yscroll(int yscroll);
+		void setYscroll(int yscroll);
 		virtual void setDim(int w, int h);
-
-		virtual void handleDraw() const override;
-		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
-
 		virtual void setLoc(int x, int y);
 	protected:
 		~ScrollableWidget();
-		void set_virtual_height(int height);
-		void set_scroll_step(int step);
-		void set_arrow_scroll_step(int step);
-		void update_scrollbar();
+		void setVirtualHeight(int height);
+		void setScrollStep(int step);
+		void setArrowScrollStep(int step);
+		void updateScrollbar();
 
-		int yscroll() const { return yscroll_; }
-		int virtual_height() const { return virtual_height_; }
-
-		virtual void setValue(const std::string& key, const variant& v);
-		virtual variant getValue(const std::string& key) const;
+		int getYscroll() const { return yscroll_; }
+		int getVirtualHeight() const { return virtual_height_; }
 	private:
+		DECLARE_CALLABLE(ScrollableWidget)
+		void operator=(const ScrollableWidget&);
 		virtual void onSetYscroll(int old_yscroll, int new_yscroll);
+		virtual void handleDraw() const override;
+		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		int yscroll_;
 		int virtual_height_;
@@ -69,5 +64,4 @@ namespace gui
 
 	typedef boost::intrusive_ptr<ScrollableWidget> ScrollableWidgetPtr;
 	typedef boost::intrusive_ptr<const ScrollableWidget> ConstScrollableWidgetPtr;
-
 }
