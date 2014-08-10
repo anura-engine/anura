@@ -81,12 +81,12 @@ WaterParticleSystem::WaterParticleSystem(const Entity& e, const WaterParticleSys
 		particles_.push_back(new_p);
 	}
 
-	auto as = KRE::DisplayDevice::CreateAttributeSet(true, false, true);
-	as->SetDrawMode(KRE::AttributeSet::DrawMode::POINTS);
-	AddAttributeSet(as);
+	auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
+	as->setDrawMode(KRE::DrawMode::POINTS);
+	addAttributeSet(as);
 	attribs_ = std::make_shared<KRE::Attribute<glm::u16vec2>>(KRE::AccessFreqHint::DYNAMIC);
-	attribs_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::POSITION, 2, KRE::AttributeDesc::VariableType::UNSIGNED_SHORT, false));
-	as->AddAttribute(attribs_);
+	attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::UNSIGNED_SHORT, false));
+	as->addAttribute(attribs_);
 }
 
 void WaterParticleSystem::process(const Entity& e)
@@ -102,14 +102,12 @@ void WaterParticleSystem::process(const Entity& e)
 
 	// XXX set point size (radius) uniform from "info_.dot_size" here
 	// XXX set is_circlular uniform to false/true
-	SetColor(info_.color);
+	setColor(info_.color);
 
 }
 
-KRE::DisplayDeviceDef WaterParticleSystem::Attach(const KRE::DisplayDevicePtr& dd) {
-	KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-	def.SetHint("shader", "point_shader");
-	return def;
+void WaterParticleSystem::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) {
+	def->setHint("shader", "point_shader");
 }
 
 
@@ -151,7 +149,7 @@ void WaterParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& scre
 			my_y += info_.repeat_period;
 		}
 	}
-	attribs_->Update(&vertices);
+	attribs_->update(&vertices);
 
 	wm->render(this);
 }

@@ -84,13 +84,13 @@ EntityPtr Entity::build(variant node)
 	if(node["is_human"].as_bool()) {
 		return EntityPtr(new PlayableCustomObject(node));
 	} else {
-		return EntityPtr(new custom_object(node));
+		return EntityPtr(new CustomObject(node));
 	}
 }
 
 bool Entity::hasFeet() const
 {
-	return solid();
+	return solid() != nullptr;
 }
 
 int Entity::getFeetX() const
@@ -148,7 +148,7 @@ int Entity::getPlatformMotionX() const
 	return platform_motion_x_;
 }
 
-void Entity::process(level& lvl)
+void Entity::process(Level& lvl)
 {
 	if(prev_feet_x_ != std::numeric_limits<int>::min()) {
 		last_move_x_ = getFeetX() - prev_feet_x_;
@@ -180,7 +180,7 @@ void Entity::setUpsideDown(bool facing)
 
 void Entity::calculateSolidRect()
 {
-	const frame& f = getCurrentFrame();
+	const Frame& f = getCurrentFrame();
 
 	frame_rect_ = rect(x(), y(), f.width(), f.height());
 	
@@ -218,7 +218,7 @@ void Entity::calculateSolidRect()
 
 rect Entity::getBodyRect() const
 {
-	const frame& f = getCurrentFrame();
+	const Frame& f = getCurrentFrame();
 
 	const int ypos = y() + (isUpsideDown() ? (f.height() - (f.collideY() + f.collideH())) : f.collideY());
 	return rect(isFacingRight() ? x() + f.collideX() : x() + f.width() - f.collideX() - f.collideW(),
@@ -227,9 +227,9 @@ rect Entity::getBodyRect() const
 
 rect Entity::getHitRect() const
 {
-	const frame& f = getCurrentFrame();
-	const std::vector<Frame::collision_area>& areas = f.getCollisionAreas();
-	for(const frame::collision_area& a : areas) {
+	const Frame& f = getCurrentFrame();
+	const std::vector<Frame::CollisionArea>& areas = f.getCollisionAreas();
+	for(const Frame::CollisionArea& a : areas) {
 		if(a.name == "attack") {
 			return calculateCollisionRect(f, a);
 		}
@@ -238,7 +238,7 @@ rect Entity::getHitRect() const
 	return rect();
 }
 
-rect entity::calculateCollisionRect(const Frame& f, const frame::collision_area& a) const
+rect Entity::calculateCollisionRect(const Frame& f, const Frame::CollisionArea& a) const
 {
 	const rect& r = a.area;
 	rect result(isFacingRight() ? x() + r.x() : x() + f.width() - r.x() - r.w(), y() + r.y(), r.w(), r.h());
@@ -265,7 +265,7 @@ point Entity::getMidpoint() const
 		return point(r.x() + r.w()/2, r.y() + r.h()/2);
 	}
 
-	const frame& f = getCurrentFrame();
+	const Frame& f = getCurrentFrame();
 	return point(x() + f.width()/2, y() + f.height()/2);
 }
 
@@ -383,7 +383,7 @@ void Entity::readControls(int cycle)
 
 point Entity::pivot(const std::string& name, bool reverse_facing) const
 {
-	const frame& f = getCurrentFrame();
+	const Frame& f = getCurrentFrame();
 	if(name == "") {
 		return getMidpoint();
 	}
@@ -424,7 +424,7 @@ const rect& Entity::getMouseOverArea() const
 bool zorder_compare(const EntityPtr& a, const EntityPtr& b)
 {
 	//the reverse_global_vertical_zordering flag is set in the player object (our general repository for all major game rules et al).  It's meant to reverse vertical sorting of objects in the same zorder, depending on whether objects are being viewed from above, or below.  In frogatto proper, objects at a higher vertical position should overlap those below.  In a top-down game, the reverse is desirable.
-	if(level::current().player() && level::current().player()->hasReverseGlobalVerticalZordering()){
+	if(Level::current().player() && Level::current().player()->hasReverseGlobalVerticalZordering()){
 		return a->zorder() < b->zorder() ||
 			a->zorder() == b->zorder() && a->zSubOrder() < b->zSubOrder() ||
 			a->zorder() == b->zorder() && a->zSubOrder() == b->zSubOrder() && a->getMidpoint().y < b->getMidpoint().y ||

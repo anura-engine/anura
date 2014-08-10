@@ -344,7 +344,7 @@ protected:
 	int getPrevFeetY() const { return prev_feet_y_; }
 
 private:
-	virtual int current_rotation() const = 0;
+	virtual int currentRotation() const = 0;
 
 	std::string label_;
 

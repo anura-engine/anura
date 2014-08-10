@@ -648,12 +648,6 @@
     <ClInclude Include="..\..\src\svg\color.hpp">
       <Filter>Header Files\svg</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\svg\geometry.hpp">
-      <Filter>Header Files\svg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\svg\logger.hpp">
-      <Filter>Header Files\svg</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\svg\svg_attribs.hpp">
       <Filter>Header Files\svg</Filter>
     </ClInclude>
@@ -691,9 +685,6 @@
       <Filter>Header Files\svg</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\svg\svg_transform.hpp">
-      <Filter>Header Files\svg</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\svg\uri.hpp">
       <Filter>Header Files\svg</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\svg\utils.hpp">
@@ -958,6 +949,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\surface_palette.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rect_callable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1508,9 +1502,6 @@
     <ClCompile Include="..\..\src\variant_utils.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\vector_text.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\water.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1907,9 +1898,6 @@
     <ClCompile Include="..\..\src\SceneObjectCallable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\kre\SurfaceCache.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\surface_cache.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -1917,6 +1905,9 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\surface_palette.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rect_callable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

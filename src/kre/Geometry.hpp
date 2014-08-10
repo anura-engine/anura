@@ -104,13 +104,15 @@ namespace Geometry
 
 		T x() const { return top_left_.x; }
 		T y() const { return top_left_.y; }
+		T x1() const { return top_left_.x; }
+		T y1() const { return top_left_.y; }
 		T x2() const { return bottom_right_.x; }
 		T y2() const { return bottom_right_.y; }
 		T w() const { return bottom_right_.x - top_left_.x; }
 		T h() const { return bottom_right_.y - top_left_.y; }
 
-		T mid_x() const { return (x() + x2())/2; }
-		T mid_y() const { return (y() + y2())/2; }
+		T mid_x() const { return (x1() + x2())/2; }
+		T mid_y() const { return (y1() + y2())/2; }
 
 		bool empty() const { return w() == 0 || h() == 0; }
 

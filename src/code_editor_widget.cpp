@@ -152,8 +152,8 @@ namespace gui
 		KRE::Color(255, 255, 255), //pointer
 	};
 									KRE::Color col(255, 255, 255);
-									if(t.type >= 0 && t.type < sizeof(TokenColors)/sizeof(TokenColors[0])) {
-										col = TokenColors[t.type];
+									if(static_cast<int>(t.type) >= 0 && static_cast<int>(t.type) < sizeof(TokenColors)/sizeof(TokenColors[0])) {
+										col = TokenColors[static_cast<int>(t.type)];
 									}
 
 									if(error_color) {
@@ -165,7 +165,7 @@ namespace gui
 								++begin;
 							}
 
-						} catch(formula_tokenizer::token_error&) {
+						} catch(formula_tokenizer::TokenError&) {
 							i = begin;
 							break;
 						}
@@ -389,7 +389,7 @@ namespace gui
 
 		try {
 			json::Token token = json::get_token(begin, end);
-			while(token.type != json::Token::NUM_TYPES) {
+			while(token.type != json::Token::TYPE::NUM_TYPES) {
 				tokens_.push_back(token);
 				token = json::get_token(begin, end);
 			}
@@ -450,11 +450,11 @@ namespace gui
 		std::stack<const json::Token*> begin_stack;
 		int nbracket = 0;
 		for(const json::Token& token : tokens_) {
-			if(token.type == json::Token::TYPE_LCURLY) {
+			if(token.type == json::Token::TYPE::LCURLY) {
 				begin_stack.push(&token);
 			}
 
-			if(token.type == json::Token::TYPE_RCURLY) {
+			if(token.type == json::Token::TYPE::RCURLY) {
 				if(begin_stack.empty()) {
 					return ObjectInfo();
 				}

@@ -36,9 +36,10 @@ namespace KRE
 	}
 
 	ColorTransform::ColorTransform()
-		: add_rgba_()
+//		: add_rgba_()
 	{
 		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
+		add_rgba_[0] = add_rgba_[2] = add_rgba_[2] = add_rgba_[3] = 0.0;
 	}
 
 	ColorTransform::ColorTransform(const Color& color)
@@ -212,6 +213,27 @@ namespace KRE
 	{
 		return applyBlack();
 	}
+
+	void ColorTransform::setAddRed(int ar)
+	{
+		add_rgba_[0] = clamp(ar/255.0f, 0.0f, 1.0f);
+	}
+
+	void ColorTransform::setAddGreen(int ag)
+	{
+		add_rgba_[1] = clamp(ag/255.0f, 0.0f, 1.0f);
+	}
+
+	void ColorTransform::setAddBlue(int ab)
+	{
+		add_rgba_[2] = clamp(ab/255.0f, 0.0f, 1.0f);
+	}
+
+	void ColorTransform::setAddAlpha(int aa)
+	{
+		add_rgba_[3] = clamp(aa/255.0f, 0.0f, 1.0f);
+	}
+
 
 	bool operator==(const ColorTransform& a, const ColorTransform& b)
 	{

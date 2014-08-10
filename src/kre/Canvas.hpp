@@ -73,6 +73,7 @@ namespace KRE
 		virtual void drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const = 0;
 		virtual void drawLine(const pointf& p1, const pointf& p2, const Color& color) const = 0;
 		// Draw filled polygon (i.e. triangle fan) using given color	
+		// Should add a version taking fill and stroke color.
 		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const = 0;
@@ -80,6 +81,7 @@ namespace KRE
 		virtual void drawSolidCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawSolidCircle(const pointf& centre, double radius, const std::vector<uint8_t>& color) const = 0;
 		virtual void drawHollowCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawPoints(const std::vector<glm::vec2>& points, float radius, const Color& color=Color::colorWhite()) const = 0;
 
 		void drawVectorContext(const Vector::ContextPtr& context);
 

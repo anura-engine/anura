@@ -48,46 +48,46 @@ namespace KRE
 	{
 	}
 
-	void OpenGLMaterial::HandleApply() 
+	void OpenGLMaterial::handleApply() 
 	{
-		auto textures = GetTexture();
+		auto textures = getTexture();
 		auto n = textures.size()-1;
 		for(auto it = textures.rbegin(); it != textures.rend(); ++it) {
 			if(n > 0) {
 				glActiveTexture(GL_TEXTURE0 + n);
 			}
-			(*it)->Bind();
+			(*it)->bind();
 		}
 
-		blend_mode_manager_.reset(new BlendModeManagerOGL(GetBlendMode()));
+		blend_mode_manager_.reset(new BlendModeManagerOGL(getBlendMode()));
 
-		if(DoDepthCheck()) {
+		if(doDepthCheck()) {
 			glEnable(GL_DEPTH_TEST);
 		} else {
-			if(DoDepthWrite()) {
+			if(doDepthWrite()) {
 				glEnable(GL_DEPTH_TEST);
 				glDepthFunc(GL_ALWAYS);
 			}
 		}
 
-		if(UseFog()) {
+		if(useFog()) {
 			// XXXX: todo.
 		}
 	}
 
-	void OpenGLMaterial::HandleUnapply() 
+	void OpenGLMaterial::handleUnapply() 
 	{
 		blend_mode_manager_.reset();
 
-		if(DoDepthCheck() || DoDepthWrite()) {
+		if(doDepthCheck() || doDepthWrite()) {
 			glDisable(GL_DEPTH_TEST);
-			if(DoDepthWrite()) {
+			if(doDepthWrite()) {
 				glDepthFunc(GL_LESS);
 			}
 		}
 	}
 
-	TexturePtr OpenGLMaterial::CreateTexture(const variant& node)
+	TexturePtr OpenGLMaterial::createTexture(const variant& node)
 	{
 		ASSERT_LOG(node.has_key("image") || node.has_key("texture"), "Must have either 'image' or 'texture' attribute.");
 		const std::string image_name = node.has_key("image") ? node["image"].as_string() : node["texture"].as_string();

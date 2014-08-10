@@ -29,70 +29,69 @@ namespace KRE
 {
 	namespace Particles
 	{
+		enum class EmitsType {
+			VISUAL,
+			EMITTER,
+			AFFECTOR,
+			TECHNIQUE,
+			SYSTEM,
+		};
 
-		class emitter : public emit_object
+		class Emitter : public EmitObject
 		{
 		public:
-			explicit emitter(ParticleSystemContainer* parent, const variant& node);
-			virtual ~emitter();
-			emitter(const emitter&);
+			explicit Emitter(ParticleSystemContainer* parent, const variant& node);
+			virtual ~Emitter();
+			Emitter(const Emitter&);
 
-			int get_emitted_particle_count_per_cycle(float t);
-			color_vector get_color() const;
-			technique* get_technique() { return technique_; }
-			void set_parent_technique(technique* tq) {
+			int getEmittedParticleCountPerCycle(float t);
+			color_vector getColor() const;
+			Technique* getTechnique() { return technique_; }
+			void setParentTechnique(Technique* tq) {
 				technique_ = tq;
 			}
 
-			virtual emitter* clone() = 0;
-			static emitter* factory(ParticleSystemContainer* parent, const variant& node);
+			virtual Emitter* clone() = 0;
+			static Emitter* factory(ParticleSystemContainer* parent, const variant& node);
 		protected:
-			virtual void internal_create(particle& p, float t) = 0;
-			virtual void handleProcess(float t);
-			virtual void handleDraw() const override;
-			virtual bool duration_expired() { return can_be_deleted_; }
-
-			enum EMITS_TYPE {
-				EMITS_VISUAL,
-				EMITS_EMITTER,
-				EMITS_AFFECTOR,
-				EMITS_TECHNIQUE,
-				EMITS_SYSTEM,
-			};
+			virtual void internalCreate(Particle& p, float t) = 0;
+			virtual bool durationExpired() { return can_be_deleted_; }
 		private:
-			technique* technique_;
+			virtual void handleEmitProcess(float t) override;
+			virtual void handleDraw() const override;
+			Technique* technique_;
 
 			// These are generation parameters.
-			parameter_ptr emission_rate_;
-			parameter_ptr time_to_live_;
-			parameter_ptr velocity_;
-			parameter_ptr angle_;
-			parameter_ptr mass_;
+			ParameterPtr emission_rate_;
+			ParameterPtr time_to_live_;
+			ParameterPtr velocity_;
+			ParameterPtr angle_;
+			ParameterPtr mass_;
 			// This is the duration that the emitter lives for
-			parameter_ptr duration_;
+			ParameterPtr duration_;
 			// this is the delay till the emitter repeats.
-			parameter_ptr repeat_delay_;
+			ParameterPtr repeat_delay_;
 			std::unique_ptr<std::pair<glm::quat, glm::quat>> orientation_range_;
 			typedef std::pair<color_vector,color_vector> color_range;
 			std::shared_ptr<color_range> color_range_;
 			glm::vec4 color_;
-			parameter_ptr particle_width_;
-			parameter_ptr particle_height_;
-			parameter_ptr particle_depth_;
+			ParameterPtr particle_width_;
+			ParameterPtr particle_height_;
+			ParameterPtr particle_depth_;
 			bool force_emission_;
 			bool force_emission_processed_;
 			bool can_be_deleted_;
 
-			EMITS_TYPE emits_type_;
+			EmitsType emits_type_;
 			std::string emits_name_;
 
-			void init_particle(particle& p, float t);
-			void set_particle_starting_values(const std::vector<particle>::iterator& start, const std::vector<particle>::iterator& end);
-			void create_particles(std::vector<particle>& particles, std::vector<particle>::iterator& start, std::vector<particle>::iterator& end, float t);
-			size_t calculate_particles_to_emit(float t, size_t quota, size_t current_size);
+			void initParticle(Particle& p, float t);
+			void setParticleStartingValues(const std::vector<Particle>::iterator& start, const std::vector<Particle>::iterator& end);
+			void createParticles(std::vector<Particle>& particles, std::vector<Particle>::iterator& start, std::vector<Particle>::iterator& end, float t);
+			size_t calculateParticlesToEmit(float t, size_t quota, size_t current_size);
 
-			float generate_angle() const;
-			glm::vec3 get_initial_direction() const;
+			float generateAngle() const;
+			glm::vec3 getInitialDirection() const;
 
 			//BoxOutlinePtr debug_draw_outline_;
 
@@ -104,7 +103,7 @@ namespace KRE
 			// time remaining till a stopped emitter restarts.
 			float repeat_delay_remaining_;
 
-			emitter();
+			Emitter();
 		};
 	}
 }

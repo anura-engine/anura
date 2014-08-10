@@ -47,7 +47,7 @@ namespace gui
 
 	}
 
-	std::string KeyButton::get_key_name(key_type key) 
+	std::string KeyButton::getKeyName(key_type key) 
 	{
 		switch(key) {
 		case SDLK_LEFT:
@@ -80,7 +80,7 @@ namespace gui
 	}
 
 	KeyButton::KeyButton(key_type key, BUTTON_RESOLUTION buttonResolution)
-	  : label_(WidgetPtr(new GraphicalFontLabel(get_key_name(key), "door_label", 2))),
+	  : label_(WidgetPtr(new GraphicalFontLabel(getKeyName(key), "door_label", 2))),
 		key_(key), button_resolution_(buttonResolution),
 		normal_button_image_set_(FramedGuiElement::get("regular_button")),
 		depressed_button_image_set_(FramedGuiElement::get("regular_button_pressed")),
@@ -145,7 +145,7 @@ namespace gui
 					current_button_image_set_ = normal_button_image_set_;
 				}
 			} else if (grab_keys_) {
-				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(get_key_name(key_));
+				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(getKeyName(key_));
 				current_button_image_set_ = normal_button_image_set_;
 				grab_keys_ = false;
 			}
@@ -154,7 +154,7 @@ namespace gui
 		if(event.type == SDL_KEYDOWN && grab_keys_) {
 			key_ = event.key.keysym.sym;
 			if(key_ != SDLK_RETURN && key_ != SDLK_ESCAPE) {
-				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(get_key_name(key_));
+				dynamic_cast<GraphicalFontLabel*>(label_.get())->setText(getKeyName(key_));
 				claimed = true;
 				current_button_image_set_ = normal_button_image_set_;
 				grab_keys_ = false;

@@ -152,7 +152,7 @@ namespace editor_dialogs
 	{
 		using namespace gui;
 		using std::placeholders::_1;
-		Grid* Grid = new Grid(2);
+		Grid* grid = new Grid(2);
 		grid->setZOrder(100);
 		grid->setMaxHeight(height());
 		grid->setShowBackground(true);
@@ -183,7 +183,7 @@ namespace editor_dialogs
 			preview->setArea(c.preview_frame()->area());
 			grid->addCol(WidgetPtr(preview))
 				 .addCol(WidgetPtr(new Label(c.category, KRE::Color::colorWhite())));
-			grid->register_row_selection_callback(std::bind(&CharacterEditorDialog::select_category, this, c.category));
+			grid->registerRowSelectionCallback(std::bind(&CharacterEditorDialog::select_category, this, c.category));
 		}
 
 		int mousex, mousey;

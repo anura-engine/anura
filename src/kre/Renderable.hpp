@@ -79,7 +79,7 @@ namespace KRE
 
 		const BlendMode& getBlendMode() const { return blend_mode_; }
 		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
-		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.Set(src, dst); }
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); }
 
 		const RenderTargetPtr& getRenderTarget() const { return render_target_; }
 		void setRenderTarget(const RenderTargetPtr& rt);

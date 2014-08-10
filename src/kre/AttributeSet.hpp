@@ -359,7 +359,7 @@ namespace KRE
 
 		const BlendMode& getBlendMode() const { return blend_mode_; }
 		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
-		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.Set(src, dst); }
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); }
 
 		ColorPtr getColor() const { return color_; }
 		void setColor(const Color& color) { color_.reset(new Color(color)); }

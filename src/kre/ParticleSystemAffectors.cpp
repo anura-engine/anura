@@ -22,24 +22,25 @@
 */
 
 #include "../asserts.hpp"
-#include "particle_system.hpp"
+#include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "ParticleSystemParameters.hpp"
+#include "../variant_utils.hpp"
 
 namespace KRE
 {
 	namespace Particles
 	{
-		class time_color_affector : public affector
+		class TimeColorAffector : public Affector
 		{
 		public:
-			explicit time_color_affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~time_color_affector() {}
+			explicit TimeColorAffector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~TimeColorAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t);
-			virtual affector* clone() {
-				return new time_color_affector(*this);
+			virtual void internalApply(Particle& p, float t);
+			virtual Affector* clone() {
+				return new TimeColorAffector(*this);
 			}
 		private:
 			enum ColourOperation {
@@ -52,22 +53,22 @@ namespace KRE
 
 			std::vector<tc_pair>::iterator find_nearest_color(float dt);
 
-			time_color_affector();
+			TimeColorAffector();
 		};
 
-		class jet_affector : public affector
+		class JetAffector : public Affector
 		{
 		public:
-			explicit jet_affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~jet_affector() {}
+			explicit JetAffector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~JetAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t);
-			virtual affector* clone() {
-				return new jet_affector(*this);
+			virtual void internalApply(Particle& p, float t);
+			virtual Affector* clone() {
+				return new JetAffector(*this);
 			}
 		private:
-			parameter_ptr acceleration_;
-			jet_affector();
+			ParameterPtr acceleration_;
+			JetAffector();
 		};
 		// affectors to add: box_collider (width,height,depth, inner or outer collide, friction)
 		// flock_centering.
@@ -85,104 +86,104 @@ namespace KRE
 		// texture_rotator
 		// velocity matching
 
-		class scale_affector : public affector
+		class ScaleAffector : public Affector
 		{
 		public:
-			explicit scale_affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~scale_affector() {}
+			explicit ScaleAffector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~ScaleAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t);
-			virtual affector* clone() {
-				return new scale_affector(*this);
+			virtual void internalApply(Particle& p, float t);
+			virtual Affector* clone() {
+				return new ScaleAffector(*this);
 			}
 		private:
-			parameter_ptr scale_x_;
-			parameter_ptr scale_y_;
-			parameter_ptr scale_z_;
-			parameter_ptr scale_xyz_;
+			ParameterPtr scale_x_;
+			ParameterPtr scale_y_;
+			ParameterPtr scale_z_;
+			ParameterPtr scale_xyz_;
 			bool since_system_start_;
-			float calculate_scale(parameter_ptr s, const particle& p);
-			scale_affector();
+			float calculateScale(ParameterPtr s, const Particle& p);
+			ScaleAffector();
 		};
 
-		class vortex_affector : public affector
+		class VortexAffector : public Affector
 		{
 		public:
-			explicit vortex_affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~vortex_affector() {}
+			explicit VortexAffector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~VortexAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t);
-			virtual affector* clone() {
-				return new vortex_affector(*this);
+			virtual void internalApply(Particle& p, float t);
+			virtual Affector* clone() {
+				return new VortexAffector(*this);
 			}
 		private:
 			glm::quat rotation_axis_;
-			parameter_ptr rotation_speed_;
-			vortex_affector();
+			ParameterPtr rotation_speed_;
+			VortexAffector();
 		};
 
-		class gravity_affector : public affector
+		class GravityAffector : public Affector
 		{
 		public:
-			explicit gravity_affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~gravity_affector()  {}
+			explicit GravityAffector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~GravityAffector()  {}
 		protected:
-			virtual void internal_apply(particle& p, float t);
-			virtual affector* clone() {
-				return new gravity_affector(*this);
+			virtual void internalApply(Particle& p, float t);
+			virtual Affector* clone() {
+				return new GravityAffector(*this);
 			}
 		private:
 			float gravity_;
-			gravity_affector();
+			GravityAffector();
 		};
 
-		class particle_follower_affector : public affector
+		class ParticleFollowerAffector : public Affector
 		{
 		public:
-			explicit particle_follower_affector(ParticleSystemContainer* parent, const variant& node)
-				: affector(parent, node),
-				min_distance_(node["min_distance"].as_float(1.0f)),
-				max_distance_(node["max_distance"].as_float(std::numeric_limits<float>::max())) {
+			explicit ParticleFollowerAffector(ParticleSystemContainer* parent, const variant& node)
+				: Affector(parent, node),
+				  min_distance_(node["min_distance"].as_float(1.0f)),
+				  max_distance_(node["max_distance"].as_float(std::numeric_limits<float>::max())) {
 			}
-			virtual ~particle_follower_affector() {}
+			virtual ~ParticleFollowerAffector() {}
 		protected:
-			virtual void handleProcess(float t) {
-				std::vector<particle>& particles = get_technique()->active_particles();
+			virtual void handleEmitProcess(float t) {
+				std::vector<Particle>& particles = getTechnique()->getActiveParticles();
 				// keeps particles following wihin [min_distance, max_distance]
 				if(particles.size() < 1) {
 					return;
 				}
 				prev_particle_ = particles.begin();
 				for(auto p = particles.begin(); p != particles.end(); ++p) {
-					internal_apply(*p, t);
+					internalApply(*p, t);
 					prev_particle_ = p;
 				}
 			}
-			virtual void internal_apply(particle& p, float t) {
+			virtual void internalApply(Particle& p, float t) {
 				auto distance = glm::length(p.current.position - prev_particle_->current.position);
 				if(distance > min_distance_ && distance < max_distance_) {
 					p.current.position = prev_particle_->current.position + (min_distance_/distance)*(p.current.position-prev_particle_->current.position);
 				}
 			}
-			virtual affector* clone() {
-				return new particle_follower_affector(*this);
+			virtual Affector* clone() {
+				return new ParticleFollowerAffector(*this);
 			}
 		private:
 			float min_distance_;
 			float max_distance_;
-			std::vector<particle>::iterator prev_particle_;
-			particle_follower_affector();
+			std::vector<Particle>::iterator prev_particle_;
+			ParticleFollowerAffector();
 		};
 
-		class align_affector : public affector
+		class AlignAffector : public Affector
 		{
 		public:
-			explicit align_affector(ParticleSystemContainer* parent, const variant& node) 
-				: affector(parent, node), resize_(node["resize"].as_bool(false)) {
+			explicit AlignAffector(ParticleSystemContainer* parent, const variant& node) 
+				: Affector(parent, node), resize_(node["resize"].as_bool(false)) {
 			}
-			virtual ~align_affector() {}
+			virtual ~AlignAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t) {
+			virtual void internalApply(Particle& p, float t) {
 				glm::vec3 distance = prev_particle_->current.position - p.current.position;
 				if(resize_) {
 					p.current.dimensions.y = glm::length(distance);
@@ -195,32 +196,34 @@ namespace KRE
 				p.current.orientation.z = distance.z;
 			}
 			virtual void handleProcess(float t) {
-				std::vector<particle>& particles = get_technique()->active_particles();
+				std::vector<Particle>& particles = getTechnique()->getActiveParticles();
 				if(particles.size() < 1) {
 					return;
 				}
 				prev_particle_ = particles.begin();				
 				for(auto p = particles.begin(); p != particles.end(); ++p) {
-					internal_apply(*p, t);
+					internalApply(*p, t);
 					prev_particle_ = p;
 				}
 			}
-			virtual affector* clone() {
-				return new align_affector(*this);
+			virtual Affector* clone() {
+				return new AlignAffector(*this);
 			}
 		private:
 			bool resize_;			
-			std::vector<particle>::iterator prev_particle_;
-			align_affector();
+			std::vector<Particle>::iterator prev_particle_;
+			AlignAffector();
 		};
 
-		class randomiser_affector : public affector
+		class RandomiserAffector : public Affector
 		{
 		public:
-			explicit randomiser_affector(ParticleSystemContainer* parent, const variant& node) 
-				: affector(parent, node), max_deviation_(0.0f), 
-				time_step_(float(node["time_step"].as_float(0))), 
-				random_direction_(node["use_direction"].as_bool(true)) {
+			explicit RandomiserAffector(ParticleSystemContainer* parent, const variant& node) 
+				: Affector(parent, node), 
+				  max_deviation_(0.0f), 
+				  time_step_(float(node["time_step"].as_float(0))), 
+				  random_direction_(node["use_direction"].as_bool(true)) 
+			{
 				if(node.has_key("max_deviation_x")) {
 					max_deviation_.x = float(node["max_deviation_x"].as_float());
 				}
@@ -232,9 +235,9 @@ namespace KRE
 				}
 				last_update_time_[0] = last_update_time_[1] = 0.0f;
 			}
-			virtual ~randomiser_affector() {}
+			virtual ~RandomiserAffector() {}
 		protected:
-			virtual void internal_apply(particle& p, float t) {
+			virtual void internalApply(Particle& p, float t) {
 				if(random_direction_) {
 					// change direction per update
 					p.current.direction += glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
@@ -242,35 +245,35 @@ namespace KRE
 						get_random_float(-max_deviation_.z, max_deviation_.z));
 				} else {
 					// change position per update.
-					p.current.position += scale() * glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
+					p.current.position += getScale() * glm::vec3(get_random_float(-max_deviation_.x, max_deviation_.x),
 						get_random_float(-max_deviation_.y, max_deviation_.y),
 						get_random_float(-max_deviation_.z, max_deviation_.z));
 				}
 			}
-			void handle_apply(std::vector<particle>& particles, float t) {
+			void handle_apply(std::vector<Particle>& particles, float t) {
 				last_update_time_[0] += t;
 				if(last_update_time_[0] > time_step_) {
 					last_update_time_[0] -= time_step_;
 					for(auto& p : particles) {
-						internal_apply(p, t);
+						internalApply(p, t);
 					}
 				}
 			}
-			void handle_apply(std::vector<emitter_ptr>& objs, float t) {
+			void handle_apply(std::vector<EmitterPtr>& objs, float t) {
 				last_update_time_[1] += t;
 				if(last_update_time_[1] > time_step_) {
 					last_update_time_[1] -= time_step_;
 					for(auto e : objs) {
-						internal_apply(*e, t);
+						internalApply(*e, t);
 					}
 				}
 			}
 			virtual void handleProcess(float t) {
-				handle_apply(get_technique()->active_particles(), t);
-				handle_apply(get_technique()->active_emitters(), t);
+				handle_apply(getTechnique()->getActiveParticles(), t);
+				handle_apply(getTechnique()->getActiveEmitters(), t);
 			}
-			virtual affector* clone() {
-				return new randomiser_affector(*this);
+			virtual Affector* clone() {
+				return new RandomiserAffector(*this);
 			}
 		private:
 			// randomiser (bool random_direction_, float time_step_ glm::vec3 max_deviation_)
@@ -278,21 +281,21 @@ namespace KRE
 			float time_step_;
 			glm::vec3 max_deviation_;
 			float last_update_time_[2];
-			randomiser_affector();
+			RandomiserAffector();
 		};
 
-		class sine_force_affector : public affector
+		class SineForceAffector : public Affector
 		{
 		public:
-			explicit sine_force_affector(ParticleSystemContainer* parent, const variant& node) 
-				: affector(parent, node),
-				min_frequency_(1.0f),
-				max_frequency_(1.0f),
-				angle_(0.0f),
-				frequency_(1.0f),
-				force_vector_(0.0f),
-				scale_vector_(0.0f),
-				fa_(FA_ADD)
+			explicit SineForceAffector(ParticleSystemContainer* parent, const variant& node) 
+				: Affector(parent, node),
+				  min_frequency_(1.0f),
+				  max_frequency_(1.0f),
+				  angle_(0.0f),
+				  frequency_(1.0f),
+				  force_vector_(0.0f),
+				  scale_vector_(0.0f),
+				  fa_(FA_ADD)
 			{
 				if(node.has_key("max_frequency")) {
 					max_frequency_ = float(node["max_frequency"].as_float());
@@ -318,7 +321,7 @@ namespace KRE
 					}
 				}
 			}
-			virtual ~sine_force_affector() {}
+			virtual ~SineForceAffector() {}
 		protected:
 			virtual void handleProcess(float t) {
 				angle_ += /*2.0f * M_PI **/ frequency_ * t;
@@ -331,17 +334,17 @@ namespace KRE
 						frequency_ = get_random_float(min_frequency_, max_frequency_);
 					}
 				}
-				affector::handleProcess(t);
+				Affector::handleEmitProcess(t);
 			}
-			virtual void internal_apply(particle& p, float t) {
+			virtual void internalApply(Particle& p, float t) {
 				if(fa_ == FA_ADD) {
 					p.current.direction += scale_vector_;
 				} else {
 					p.current.direction = (p.current.direction + force_vector_)/2.0f;
 				}
 			}
-			virtual affector* clone() {
-				return new sine_force_affector(*this);
+			virtual Affector* clone() {
+				return new SineForceAffector(*this);
 			}
 		private:
 			enum ForceApplication {
@@ -355,13 +358,15 @@ namespace KRE
 			float angle_;
 			float frequency_;
 			ForceApplication fa_;
-			sine_force_affector();
+			SineForceAffector();
 		};
 
-		affector::affector(ParticleSystemContainer* parent, const variant& node)
-			: emit_object(parent, node), enabled_(node["enabled"].as_bool(true)), 
-			mass_(float(node["mass_affector"].as_float(1.0f))),
-			position_(0.0f), scale_(1.0f)
+		Affector::Affector(ParticleSystemContainer* parent, const variant& node)
+			: EmitObject(parent, node), 
+			  enabled_(node["enabled"].as_bool(true)), 
+			  mass_(float(node["mass_affector"].as_float(1.0f))),
+			  position_(0.0f), 
+			  scale_(1.0f)
 		{
 			if(node.has_key("position")) {
 				position_ = variant_to_vec3(node["position"]);
@@ -375,62 +380,63 @@ namespace KRE
 			}
 		}
 		
-		affector::~affector()
+		Affector::~Affector()
 		{
 		}
 
-		void affector::handleProcess(float t) 
+		void Affector::handleEmitProcess(float t) 
 		{
 			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
-			for(auto& e : technique_->active_emitters()) {
+			for(auto& e : technique_->getActiveEmitters()) {
 				ASSERT_LOG(e->emitted_by != NULL, "PSYSTEM2: e->emitted_by is null");
-				if(!is_emitter_excluded(e->emitted_by->name())) {
-					internal_apply(*e,t);
+				if(!isEmitterExcluded(e->emitted_by->name())) {
+					internalApply(*e,t);
 				}
 			}
-			for(auto& p : technique_->active_particles()) {
+			for(auto& p : technique_->getActiveParticles()) {
 				ASSERT_LOG(p.emitted_by != NULL, "PSYSTEM2: p.emitted_by is null");
-				if(!is_emitter_excluded(p.emitted_by->name())) {
-					internal_apply(p,t);
+				if(!isEmitterExcluded(p.emitted_by->name())) {
+					internalApply(p,t);
 				}
 			}
 		}
 
-		bool affector::is_emitter_excluded(const std::string& name)
+		bool Affector::isEmitterExcluded(const std::string& name)
 		{
 			return std::find(excluded_emitters_.begin(), excluded_emitters_.end(), name) != excluded_emitters_.end();
 		}
 
-		affector* affector::factory(ParticleSystemContainer* parent, const variant& node)
+		Affector* Affector::factory(ParticleSystemContainer* parent, const variant& node)
 		{
 			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: affector must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "color" || ntype == "colour") {
-				return new time_color_affector(parent, node);
+				return new TimeColorAffector(parent, node);
 			} else if(ntype == "jet") {
-				return new jet_affector(parent, node);
+				return new JetAffector(parent, node);
 			} else if(ntype == "vortex") {
-				return new vortex_affector(parent, node);
+				return new VortexAffector(parent, node);
 			} else if(ntype == "gravity") {
-				return new gravity_affector(parent, node);
+				return new GravityAffector(parent, node);
 			} else if(ntype == "scale") {
-				return new scale_affector(parent, node);
+				return new ScaleAffector(parent, node);
 			} else if(ntype == "particle_follower") {
-				return new particle_follower_affector(parent, node);
+				return new ParticleFollowerAffector(parent, node);
 			} else if(ntype == "align") {
-				return new align_affector(parent, node);
+				return new AlignAffector(parent, node);
 			} else if(ntype == "randomiser" || ntype == "randomizer") {
-				return new randomiser_affector(parent, node);
+				return new RandomiserAffector(parent, node);
 			} else if(ntype == "sine_force") {
-				return new sine_force_affector(parent, node);
+				return new SineForceAffector(parent, node);
 			} else {
 				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
 			return NULL;
 		}
 
-		time_color_affector::time_color_affector(ParticleSystemContainer* parent, const variant& node)
-			: affector(parent, node), operation_(time_color_affector::COLOR_OP_SET)
+		TimeColorAffector::TimeColorAffector(ParticleSystemContainer* parent, const variant& node)
+			: Affector(parent, node), 
+			  operation_(TimeColorAffector::COLOR_OP_SET)
 		{
 			if(node.has_key("colour_operation")) {
 				const std::string& op = node["colour_operation"].as_string();
@@ -490,7 +496,7 @@ namespace KRE
 			}
 		}
 
-		void time_color_affector::internal_apply(particle& p, float t)
+		void TimeColorAffector::internalApply(Particle& p, float t)
 		{
 			glm::vec4 c;
 			float ttl_percentage = 1.0f - p.current.time_to_live / p.initial.time_to_live;
@@ -515,7 +521,7 @@ namespace KRE
 		}
 
 		// Find nearest iterator to the time fraction "dt"
-		std::vector<time_color_affector::tc_pair>::iterator time_color_affector::find_nearest_color(float dt)
+		std::vector<TimeColorAffector::tc_pair>::iterator TimeColorAffector::find_nearest_color(float dt)
 		{
 			auto it = tc_data_.begin();
 			for(; it != tc_data_.end(); ++it) {
@@ -530,17 +536,17 @@ namespace KRE
 			return --it;
 		}
 
-		jet_affector::jet_affector(ParticleSystemContainer* parent, const variant& node)
-			: affector(parent, node)
+		JetAffector::JetAffector(ParticleSystemContainer* parent, const variant& node)
+			: Affector(parent, node)
 		{
 			if(node.has_key("acceleration")) {
-				acceleration_ = parameter::factory(node["acceleration"]);
+				acceleration_ = Parameter::factory(node["acceleration"]);
 			} else {
-				acceleration_.reset(new fixed_parameter(1.0f));
+				acceleration_.reset(new FixedParameter(1.0f));
 			}
 		}
 
-		void jet_affector::internal_apply(particle& p, float t)
+		void JetAffector::internalApply(Particle& p, float t)
 		{
 			float scale = t * acceleration_->getValue(1.0f - p.current.time_to_live/p.initial.time_to_live);
 			if(p.current.direction.x == 0 && p.current.direction.y == 0 && p.current.direction.z == 0) {
@@ -550,36 +556,38 @@ namespace KRE
 			}
 		}
 
-		vortex_affector::vortex_affector(ParticleSystemContainer* parent, const variant& node)
-			: affector(parent, node), rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
+		VortexAffector::VortexAffector(ParticleSystemContainer* parent, const variant& node)
+			: Affector(parent, node), 
+			  rotation_axis_(1.0f, 0.0f, 0.0f, 0.0f)
 		{
 			if(node.has_key("rotation_speed")) {
-				rotation_speed_ = parameter::factory(node["rotation_speed"]);
+				rotation_speed_ = Parameter::factory(node["rotation_speed"]);
 			} else {
-				rotation_speed_.reset(new fixed_parameter(1.0f));
+				rotation_speed_.reset(new FixedParameter(1.0f));
 			}
 			if(node.has_key("rotation_axis")) {
 				rotation_axis_ = variant_to_quat(node["rotation_axis"]);
 			}
 		}
 
-		void vortex_affector::internal_apply(particle& p, float t)
+		void VortexAffector::internalApply(Particle& p, float t)
 		{
-			glm::vec3 local = p.current.position - position();
+			glm::vec3 local = p.current.position - getPosition();
 			//p.current.position = position() + glm::rotate(rotation_axis_, local);
-			p.current.position = position() + rotation_axis_ * local;
+			p.current.position = getPosition() + rotation_axis_ * local;
 			//p.current.direction = glm::rotate(rotation_axis_, p.current.direction);
 			p.current.direction = rotation_axis_ * p.current.direction;
 		}
 
-		gravity_affector::gravity_affector(ParticleSystemContainer* parent, const variant& node)
-			: affector(parent, node), gravity_(float(node["gravity"].as_float(1.0f)))
+		GravityAffector::GravityAffector(ParticleSystemContainer* parent, const variant& node)
+			: Affector(parent, node), 
+			  gravity_(float(node["gravity"].as_float(1.0f)))
 		{
 		}
 
-		void gravity_affector::internal_apply(particle& p, float t)
+		void GravityAffector::internalApply(Particle& p, float t)
 		{
-			glm::vec3 d = position() - p.current.position;
+			glm::vec3 d = getPosition() - p.current.position;
 			float len_sqr = d.x*d.x + d.y*d.y + d.z*d.z;
 			if(len_sqr > 0) {
 				float force = (gravity_ * p.current.mass * mass()) / len_sqr;
@@ -587,38 +595,39 @@ namespace KRE
 			}
 		}
 
-		scale_affector::scale_affector(ParticleSystemContainer* parent, const variant& node)
-			: affector(parent, node), since_system_start_(node["since_system_start"].as_bool(false))
+		ScaleAffector::ScaleAffector(ParticleSystemContainer* parent, const variant& node)
+			: Affector(parent, node), 
+			  since_system_start_(node["since_system_start"].as_bool(false))
 		{
 			if(node.has_key("scale_x")) {
-				scale_x_ = parameter::factory(node["scale_x"]);
+				scale_x_ = Parameter::factory(node["scale_x"]);
 			}
 			if(node.has_key("scale_y")) {
-				scale_y_ = parameter::factory(node["scale_y"]);
+				scale_y_ = Parameter::factory(node["scale_y"]);
 			}
 			if(node.has_key("scale_z")) {
-				scale_z_ = parameter::factory(node["scale_z"]);
+				scale_z_ = Parameter::factory(node["scale_z"]);
 			}
 			if(node.has_key("scale_xyz")) {
-				scale_xyz_ = parameter::factory(node["scale_xyz"]);
+				scale_xyz_ = Parameter::factory(node["scale_xyz"]);
 			}
 		}
 
-		float scale_affector::calculate_scale(parameter_ptr s, const particle& p)
+		float ScaleAffector::calculateScale(ParameterPtr s, const Particle& p)
 		{
 			float scale;
 			if(since_system_start_) {
-				scale = s->getValue(get_technique()->get_ParticleSystem()->elapsed_time());
+				scale = s->getValue(getTechnique()->getParticleSystem()->getElapsedTime());
 			} else {
 				scale = s->getValue(1.0f - p.current.time_to_live / p.initial.time_to_live);
 			}
 			return scale;
 		}
 
-		void scale_affector::internal_apply(particle& p, float t)
+		void ScaleAffector::internalApply(Particle& p, float t)
 		{
 			if(scale_xyz_) {
-				float calc_scale = calculate_scale(scale_xyz_, p);
+				float calc_scale = calculateScale(scale_xyz_, p);
 				float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
 				if(value > 0) {
 					p.current.dimensions.x = value;
@@ -633,21 +642,21 @@ namespace KRE
 				}
 			} else {
 				if(scale_x_) {
-					float calc_scale = calculate_scale(scale_x_, p);
+					float calc_scale = calculateScale(scale_x_, p);
 					float value = p.current.dimensions.x + calc_scale /** affector_scale.x*/;
 					if(value > 0) {
 						p.current.dimensions.x = value;
 					}
 				}
 				if(scale_y_) {
-					float calc_scale = calculate_scale(scale_y_, p);
+					float calc_scale = calculateScale(scale_y_, p);
 					float value = p.current.dimensions.x + calc_scale /** affector_scale.y*/;
 					if(value > 0) {
 						p.current.dimensions.y = value;
 					}
 				}
 				if(scale_z_) {
-					float calc_scale = calculate_scale(scale_z_, p);
+					float calc_scale = calculateScale(scale_z_, p);
 					float value = p.current.dimensions.z + calc_scale /** affector_scale.z*/;
 					if(value > 0) {
 						p.current.dimensions.z = value;

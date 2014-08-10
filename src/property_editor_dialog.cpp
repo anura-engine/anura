@@ -170,7 +170,7 @@ namespace editor_dialogs
 			}
 
 			//output an editing area for each editable event.
-			for(const std::string& handler : getEntity()->getEditorInfo()->editable_events()) {
+			for(const std::string& handler : getEntity()->getEditorInfo()->getEditableEvents()) {
 				LabelPtr lb = Label::create(handler + " event handler", KRE::Color::colorWhite());
 				addWidget(lb);
 
@@ -185,18 +185,18 @@ namespace editor_dialogs
 
 			}
 
-			for(const editor_variable_info& info : getEntity()->getEditorInfo()->vars_and_properties()) {
+			for(const EditorVariableInfo& info : getEntity()->getEditorInfo()->getVarsAndProperties()) {
 
-				if(info.type() == editor_variable_info::XPOSITION ||
-				   info.type() == editor_variable_info::YPOSITION) {
+				if(info.getType() == VARIABLE_TYPE::XPOSITION ||
+				   info.getType() == VARIABLE_TYPE::YPOSITION) {
 					//don't show x/y position as they are directly editable on
 					//the map.
 					continue;
 				}
 
-				variant val = info.is_property() ? getStaticEntity()->queryValue(info.variable_name()) : vars->queryValue(info.variable_name());
+				variant val = info.isProperty() ? getStaticEntity()->queryValue(info.getVariableName()) : vars->queryValue(info.getVariableName());
 				std::string current_val_str;
-				if(info.type() == editor_variable_info::TYPE_POINTS) {
+				if(info.getType() == VARIABLE_TYPE::POINTS) {
 					if(!val.is_list()) {
 						current_val_str = "null";
 					} else {
@@ -206,100 +206,100 @@ namespace editor_dialogs
 					current_val_str = val.to_debug_string();
 				}
 
-				if(info.type() != editor_variable_info::TYPE_TEXT &&
-				   info.type() != editor_variable_info::TYPE_INTEGER &&
-				   info.type() != editor_variable_info::TYPE_ENUM &&
-				   info.type() != editor_variable_info::TYPE_BOOLEAN) {
+				if(info.getType() != VARIABLE_TYPE::TEXT &&
+				   info.getType() != VARIABLE_TYPE::INTEGER &&
+				   info.getType() != VARIABLE_TYPE::ENUM &&
+				   info.getType() != VARIABLE_TYPE::BOOLEAN) {
 					std::ostringstream s;
-					s << info.variable_name() << ": " << current_val_str;
+					s << info.getVariableName() << ": " << current_val_str;
 					LabelPtr lb = Label::create(s.str(), KRE::Color::colorWhite());
 					addWidget(WidgetPtr(lb));
 				}
 
-				if(info.type() == editor_variable_info::TYPE_TEXT) {
+				if(info.getType() == VARIABLE_TYPE::TEXT) {
 
 					GridPtr text_grid(new Grid(2));
 
-					LabelPtr lb = Label::create(info.variable_name() + ":", KRE::Color::colorWhite());
+					LabelPtr lb = Label::create(info.getVariableName() + ":", KRE::Color::colorWhite());
 					text_grid->addCol(lb);
 
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.getVariableName());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
 
 					TextEditorWidget* e = new TextEditorWidget(200 - lb->width());
 					e->setText(current_value);
-					e->setOnChangeHandler(std::bind(&PropertyEditorDialog::changeTextProperty, this, info.variable_name(), e));
+					e->setOnChangeHandler(std::bind(&PropertyEditorDialog::changeTextProperty, this, info.getVariableName(), e));
 
 					text_grid->addCol(WidgetPtr(e));
 
 					addWidget(WidgetPtr(text_grid));
 
-				} else if(info.type() == editor_variable_info::TYPE_ENUM) {
+				} else if(info.getType() == VARIABLE_TYPE::ENUM) {
 					GridPtr enum_grid(new Grid(2));
-					LabelPtr lb = Label::create(info.variable_name() + ":", KRE::Color::colorWhite());
+					LabelPtr lb = Label::create(info.getVariableName() + ":", KRE::Color::colorWhite());
 					enum_grid->addCol(lb);
 
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.getVariableName());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
 
-					if(std::count(info.enum_values().begin(), info.enum_values().end(), current_value) == 0) {
-						current_value = info.enum_values().front();
+					if(std::count(info.getEnumValues().begin(), info.getEnumValues().end(), current_value) == 0) {
+						current_value = info.getEnumValues().front();
 					}
 
 					enum_grid->addCol(WidgetPtr(new Button(
 						 WidgetPtr(new Label(current_value, KRE::Color::colorWhite())),
-						 std::bind(&PropertyEditorDialog::changeEnumProperty, this, info.variable_name()))));
+						 std::bind(&PropertyEditorDialog::changeEnumProperty, this, info.getVariableName()))));
 					addWidget(WidgetPtr(enum_grid));
-				} else if(info.type() == editor_variable_info::TYPE_LEVEL) {
+				} else if(info.getType() == VARIABLE_TYPE::LEVEL) {
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.getVariableName());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
 
 					addWidget(WidgetPtr(new Button(
 							 WidgetPtr(new Label(current_value.empty() ? "(set level)" : current_value, KRE::Color::colorWhite())),
-							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.variable_name()))));
-				} else if(info.type() == editor_variable_info::TYPE_LABEL) {
+							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.getVariableName()))));
+				} else if(info.getType() == VARIABLE_TYPE::LABEL) {
 					std::string current_value;
-					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.getVariableName());
 					if(current_value_var.is_string()) {
 						current_value = current_value_var.as_string();
 					}
 
 					addWidget(WidgetPtr(new Button(
 							 WidgetPtr(new Label(current_value.empty() ? "(set label)" : current_value, KRE::Color::colorWhite())),
-							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.variable_name()))));
+							 std::bind(&PropertyEditorDialog::changeLevelProperty, this, info.getVariableName()))));
 				
-				} else if(info.type() == editor_variable_info::TYPE_BOOLEAN) {
-					variant current_value = getStaticEntity()->queryValue(info.variable_name());
+				} else if(info.getType() == VARIABLE_TYPE::BOOLEAN) {
+					variant current_value = getStaticEntity()->queryValue(info.getVariableName());
 
-					addWidget(WidgetPtr(new Checkbox(WidgetPtr(new Label(info.variable_name(), KRE::Color::colorWhite())),
+					addWidget(WidgetPtr(new Checkbox(WidgetPtr(new Label(info.getVariableName(), KRE::Color::colorWhite())),
 								   current_value.as_bool(),
-								   std::bind(&PropertyEditorDialog::toggleProperty, this, info.variable_name()))));
-				} else if(info.type() == editor_variable_info::TYPE_POINTS) {
-					variant current_value = getStaticEntity()->queryValue(info.variable_name());
+								   std::bind(&PropertyEditorDialog::toggleProperty, this, info.getVariableName()))));
+				} else if(info.getType() == VARIABLE_TYPE::POINTS) {
+					variant current_value = getStaticEntity()->queryValue(info.getVariableName());
 					const int npoints = current_value.is_list() ? current_value.num_elements() : 0;
 
-					const bool already_adding = editor_.adding_points() == info.variable_name();
+					const bool already_adding = editor_.adding_points() == info.getVariableName();
 					addWidget(WidgetPtr(new Button(already_adding ? "Done Adding" : "Add Points",
-							 std::bind(&PropertyEditorDialog::changePointsProperty, this, info.variable_name()))));
+							 std::bind(&PropertyEditorDialog::changePointsProperty, this, info.getVariableName()))));
 
 				} else {
 					GridPtr text_grid(new Grid(2));
 
-					LabelPtr lb = Label::create(info.variable_name() + ":", KRE::Color::colorWhite());
+					LabelPtr lb = Label::create(info.getVariableName() + ":", KRE::Color::colorWhite());
 					text_grid->addCol(lb);
 
 					decimal value;
 					std::string current_value = "0";
-					variant current_value_var = getStaticEntity()->queryValue(info.variable_name());
+					variant current_value_var = getStaticEntity()->queryValue(info.getVariableName());
 					if(current_value_var.is_int()) {
 						current_value = formatter() << current_value_var.as_int();
 						value = current_value_var.as_decimal();
@@ -312,13 +312,13 @@ namespace editor_dialogs
 
 					TextEditorWidget* e = new TextEditorWidget(80);
 					e->setText(current_value);
-					e->setOnChangeHandler(std::bind(&PropertyEditorDialog::changeNumericProperty, this, info.variable_name(), widgets));
+					e->setOnChangeHandler(std::bind(&PropertyEditorDialog::changeNumericProperty, this, info.getVariableName(), widgets));
 
 					text_grid->addCol(WidgetPtr(e));
 
 					addWidget(WidgetPtr(text_grid));
 
-					float pos = static_cast<float>(((value - info.numeric_min())/(info.numeric_max() - info.numeric_min())).as_float());
+					float pos = static_cast<float>(((value - info.numericMin())/(info.numericMax() - info.numericMin())).as_float());
 					if(pos < 0.0f) {
 						pos = 0.0f;
 					}
@@ -327,12 +327,12 @@ namespace editor_dialogs
 						pos = 1.0f;
 					}
 
-					lb.reset(new Label(formatter() << info.numeric_min().as_int(), 10));
+					lb.reset(new Label(formatter() << info.numericMin().as_int(), 10));
 					addWidget(lb, text_grid->x(), text_grid->y() + text_grid->height() + 6);
-					lb.reset(new Label(formatter() << info.numeric_max().as_int(), 10));
+					lb.reset(new Label(formatter() << info.numericMax().as_int(), 10));
 					addWidget(lb, text_grid->x() + 170, text_grid->y() + text_grid->height() + 6);
 
-					gui::Slider* Slider = new gui::Slider(160, std::bind(&PropertyEditorDialog::changeNumericPropertySlider, this, info.variable_name(), widgets, _1), pos);
+					gui::Slider* Slider = new gui::Slider(160, std::bind(&PropertyEditorDialog::changeNumericPropertySlider, this, info.getVariableName(), widgets, _1), pos);
 
 					addWidget(WidgetPtr(Slider), text_grid->x(), text_grid->y() + text_grid->height() + 8);
 
@@ -466,19 +466,19 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeNumericProperty(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w)
 	{
-		const editor_variable_info* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
 		if(!var_info) {
 			return;
 		}
 
 		variant v(0);
-		if(var_info->numeric_decimal()) {
+		if(var_info->numericDecimal()) {
 			v = variant(decimal::from_string(w->first->text()));
 		} else {
 			v = variant(atoi(w->first->text().c_str()));
 		}
 
-		float pos = static_cast<float>(((v.as_decimal() - var_info->numeric_min())/(var_info->numeric_max() - var_info->numeric_min())).as_float());
+		float pos = static_cast<float>(((v.as_decimal() - var_info->numericMin())/(var_info->numericMax() - var_info->numericMin())).as_float());
 		if(pos < 0.0f) {
 			pos = 0.0f;
 		}
@@ -493,15 +493,15 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeNumericPropertySlider(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w, float value)
 	{
-		const editor_variable_info* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
 		if(!var_info) {
 			return;
 		}
 
-		const float v = static_cast<float>(var_info->numeric_min().as_float() + value*(var_info->numeric_max() - var_info->numeric_min()).as_float());
+		const float v = static_cast<float>(var_info->numericMin().as_float() + value*(var_info->numericMax() - var_info->numericMin()).as_float());
 
 		variant new_value;
-		if(var_info->numeric_decimal()) {
+		if(var_info->numericDecimal()) {
 			new_value = variant(decimal(v));
 		} else {
 			new_value = variant(static_cast<int>(v));
@@ -514,7 +514,7 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeEnumProperty(const std::string& id)
 	{
-		const editor_variable_info* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
 		if(!var_info) {
 			return;
 		}
@@ -526,8 +526,8 @@ namespace editor_dialogs
 		grid->setShowBackground(true);
 		grid->allowSelection();
 
-		grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, var_info->enum_values(), _1));
-		for(const std::string& s : var_info->enum_values()) {
+		grid->registerSelectionCallback(std::bind(&PropertyEditorDialog::setEnumProperty, this, id, var_info->getEnumValues(), _1));
+		for(const std::string& s : var_info->getEnumValues()) {
 			grid->addCol(gui::WidgetPtr(new Label(s, KRE::Color::colorWhite())));
 		}
 
@@ -561,15 +561,15 @@ namespace editor_dialogs
 	{
 		const controls::control_backup_scope ctrl_scope;
 
-		const editor_variable_info* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->get_var_or_property_info(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
 		if(!var_info) {
 			return;
 		}
 	
 		bool loaded_level = false;
 		std::vector<std::string> labels;
-		if(var_info->info().empty() == false && var_info->info() != editor_.get_level().id()) {
-			variant level_id = getStaticEntity()->queryValue(var_info->info());
+		if(var_info->getInfo().empty() == false && var_info->getInfo() != editor_.get_level().id()) {
+			variant level_id = getStaticEntity()->queryValue(var_info->getInfo());
 			if(level_id.is_string() && level_id.as_string().empty() == false && level_id.as_string() != editor_.get_level().id()) {
 				Level lvl(level_id.as_string());
 				lvl.finishLoading();

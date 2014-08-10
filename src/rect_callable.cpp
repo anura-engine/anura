@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,32 +21,27 @@
 	   distribution.
 */
 
-#include "Shaders.hpp"
-#include "DisplayDevice.hpp"
+#include "rect_callable.hpp"
 
-namespace KRE
+namespace Geometry
 {
-	ShaderProgram::ShaderProgram(const variant& node)
+	RectCallable* RectCallable::create(const rect& r)
 	{
-		if(node.has_key("draw")) {
-			draw_ = node["draw"].as_string();
-		}
-		if(node.has_key("create")) {
-			create_ = node["create"].as_string();
-		}
+		return new RectCallable(r);
 	}
 
-	ShaderProgram::~ShaderProgram()
-	{
-	}
-
-	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
-	{
-		return DisplayDevice::getCurrent()->getShaderProgram(name);
-	}
-
-	void ShaderProgram::loadFromFile(const variant& node)
-	{
-		DisplayDevice::getCurrent()->loadShadersFromFile(node);
-	}
+	BEGIN_DEFINE_CALLABLE_NOBASE(RectCallable)
+	DEFINE_FIELD(x, "int")
+		return variant(obj.rect_.x());
+	DEFINE_FIELD(y, "int")
+		return variant(obj.rect_.y());
+	DEFINE_FIELD(x2, "int")
+		return variant(obj.rect_.x2());
+	DEFINE_FIELD(y2, "int")
+		return variant(obj.rect_.y2());
+	DEFINE_FIELD(w, "int")
+		return variant(obj.rect_.w());
+	DEFINE_FIELD(h, "int")
+		return variant(obj.rect_.h());
+	END_DEFINE_CALLABLE(RectCallable)
 }

@@ -46,7 +46,7 @@ public:
 private:
 	void blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const;
 
-	KRE::MaterialPtr texture_;
+	KRE::TexturePtr texture_;
 
 	const rect area_;
 	const int cornerHeight_;

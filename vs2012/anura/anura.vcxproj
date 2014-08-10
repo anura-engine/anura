@@ -363,6 +363,7 @@
     <ClInclude Include="..\..\src\raster.hpp" />
     <ClInclude Include="..\..\src\raster_distortion.hpp" />
     <ClInclude Include="..\..\src\rectangle_rotator.hpp" />
+    <ClInclude Include="..\..\src\rect_callable.hpp" />
     <ClInclude Include="..\..\src\reference_counted_object.hpp" />
     <ClInclude Include="..\..\src\regex_utils.hpp" />
     <ClInclude Include="..\..\src\rich_text_label.hpp" />
@@ -387,8 +388,6 @@
     <ClInclude Include="..\..\src\surface_palette.hpp" />
     <ClInclude Include="..\..\src\surface_utils.hpp" />
     <ClInclude Include="..\..\src\svg\color.hpp" />
-    <ClInclude Include="..\..\src\svg\geometry.hpp" />
-    <ClInclude Include="..\..\src\svg\logger.hpp" />
     <ClInclude Include="..\..\src\svg\svg_attribs.hpp" />
     <ClInclude Include="..\..\src\svg\svg_container.hpp" />
     <ClInclude Include="..\..\src\svg\svg_element.hpp" />
@@ -402,7 +401,6 @@
     <ClInclude Include="..\..\src\svg\svg_shapes.hpp" />
     <ClInclude Include="..\..\src\svg\svg_style.hpp" />
     <ClInclude Include="..\..\src\svg\svg_transform.hpp" />
-    <ClInclude Include="..\..\src\svg\uri.hpp" />
     <ClInclude Include="..\..\src\svg\utils.hpp" />
     <ClInclude Include="..\..\src\sys.hpp" />
     <ClInclude Include="..\..\src\tbs_ai_player.hpp" />
@@ -649,7 +647,6 @@
     <ClCompile Include="..\..\src\kre\StencilScope.cpp" />
     <ClCompile Include="..\..\src\kre\StencilScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Surface.cpp" />
-    <ClCompile Include="..\..\src\kre\SurfaceCache.cpp" />
     <ClCompile Include="..\..\src\kre\SurfaceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Texture.cpp" />
     <ClCompile Include="..\..\src\kre\TextureOpenGL.cpp" />
@@ -695,6 +692,7 @@
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
     <ClCompile Include="..\..\src\rectangle_rotator.cpp" />
+    <ClCompile Include="..\..\src\rect_callable.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
     <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
     <ClCompile Include="..\..\src\scrollable_widget.cpp" />
@@ -753,7 +751,6 @@
     <ClCompile Include="..\..\src\variant.cpp" />
     <ClCompile Include="..\..\src\variant_callable.cpp" />
     <ClCompile Include="..\..\src\variant_utils.cpp" />
-    <ClCompile Include="..\..\src\vector_text.cpp" />
     <ClCompile Include="..\..\src\water.cpp" />
     <ClCompile Include="..\..\src\water_particle_system.cpp" />
     <ClCompile Include="..\..\src\weather_particle_system.cpp" />

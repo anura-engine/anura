@@ -54,6 +54,11 @@ namespace KRE
 		double addBlue() const { return add_rgba_[2]; }
 		double addAlpha() const { return add_rgba_[3]; }
 
+		void setAddRed(int ar);
+		void setAddGreen(int ag);
+		void setAddBlue(int ab);
+		void setAddAlpha(int aa);
+
 		Color applyWhite() const;
 		Color applyBlack() const;
 

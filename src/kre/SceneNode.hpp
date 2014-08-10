@@ -24,6 +24,7 @@
 #pragma once
 
 #include <unordered_map>
+#include <set>
 #include <vector>
 
 #include "RenderFwd.hpp"
@@ -43,6 +44,7 @@ namespace KRE
 		void attachLight(size_t ref, const LightPtr& obj);
 		void attachCamera(const CameraPtr& obj);
 		void attachObject(const SceneObjectPtr& obj);
+		void removeObject(const SceneObjectPtr& obj);
 		void attachRenderTarget(const RenderTargetPtr& obj);
 		const CameraPtr& getCamera() const { return camera_; }
 		const LightPtrList& getLights() const { return lights_; }
@@ -77,7 +79,7 @@ namespace KRE
 		std::string name_;
 		SceneGraph* scene_graph_;
 		SceneNode* parent_;
-		std::vector<SceneObjectPtr> objects_;
+		std::set<SceneObjectPtr> objects_;
 		LightPtrList lights_;
 		CameraPtr camera_;
 		RenderTargetPtr render_target_;

@@ -41,67 +41,67 @@ namespace KRE
 	{
 	}
 
-	void AttributeSet::SetDrawMode(DrawMode dm)
+	void AttributeSet::setDrawMode(DrawMode dm)
 	{
 		draw_mode_ = dm;
 	}
 
-	void AttributeSet::UpdateIndicies(const std::vector<uint8_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint8_t>& value) 
 	{
 		index_type_ = IndexType::INDEX_UCHAR;
 		index8_ = value;
 		count_ = index8_.size();
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::UpdateIndicies(const std::vector<uint16_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint16_t>& value) 
 	{
 		index_type_ = IndexType::INDEX_USHORT;
 		index16_ = value;
 		count_ = index16_.size();
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::UpdateIndicies(const std::vector<uint32_t>& value) 
+	void AttributeSet::updateIndicies(const std::vector<uint32_t>& value) 
 	{
 		index_type_ = IndexType::INDEX_ULONG;
 		index32_ = value;
 		count_ = index32_.size();
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::UpdateIndicies(std::vector<uint8_t>* value)
+	void AttributeSet::updateIndicies(std::vector<uint8_t>* value)
 	{
 		index_type_ = IndexType::INDEX_UCHAR;
 		index8_.swap(*value);
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::UpdateIndicies(std::vector<uint16_t>* value)
+	void AttributeSet::updateIndicies(std::vector<uint16_t>* value)
 	{
 		index_type_ = IndexType::INDEX_USHORT;
 		index16_.swap(*value);
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::UpdateIndicies(std::vector<uint32_t>* value)
+	void AttributeSet::updateIndicies(std::vector<uint32_t>* value)
 	{
 		index_type_ = IndexType::INDEX_ULONG;
 		index32_.swap(*value);
-		HandleIndexUpdate();
+		handleIndexUpdate();
 	}
 
-	void AttributeSet::AddAttribute(const AttributeBasePtr& attrib) 
+	void AttributeSet::addAttribute(const AttributeBasePtr& attrib) 
 	{
 		attributes_.emplace_back(attrib);
-		auto hwbuffer = DisplayDevice::CreateAttributeBuffer(IsHardwareBacked(), attrib.get());
-		attrib->SetDeviceBufferData(hwbuffer);
+		auto hwbuffer = DisplayDevice::createAttributeBuffer(isHardwareBacked(), attrib.get());
+		attrib->setDeviceBufferData(hwbuffer);
 	}
 
 
-	AttributeDesc::AttributeDesc(Type type, 
+	AttributeDesc::AttributeDesc(AttrType type, 
 		unsigned num_elements,
-		VariableType var_type,
+		AttrFormat var_type,
 		bool normalise,
 		ptrdiff_t stride,
 		ptrdiff_t offset,
@@ -115,10 +115,10 @@ namespace KRE
 		divisor_(divisor)
 	{
 		switch(type_) {
-		case Type::POSITION:	type_name_ = "position"; break;
-		case Type::COLOR:		type_name_ = "color"; break;
-		case Type::TEXTURE:		type_name_ = "texcoord"; break;
-		case Type::NORMAL:		type_name_ = "normal"; break;
+		case AttrType::POSITION:	type_name_ = "position"; break;
+		case AttrType::COLOR:		type_name_ = "color"; break;
+		case AttrType::TEXTURE:		type_name_ = "texcoord"; break;
+		case AttrType::NORMAL:		type_name_ = "normal"; break;
 		default:
 			ASSERT_LOG(false, "Unknown type used.");
 		}
@@ -126,7 +126,7 @@ namespace KRE
 
 	AttributeDesc::AttributeDesc(const std::string& type_name, 
 		unsigned num_elements,
-		VariableType var_type,
+		AttrFormat var_type,
 		bool normalise,
 		ptrdiff_t stride,
 		ptrdiff_t offset,

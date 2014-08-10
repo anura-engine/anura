@@ -33,7 +33,6 @@
 
 #include "ColorTransform.hpp"
 #include "kre/Geometry.hpp"
-#include "kre/SceneNode.hpp"
 
 #if defined(USE_BOX2D)
 #include "b2d_ffl.hpp"
@@ -62,7 +61,7 @@ public:
 	~CurrentLevelScope();
 };
 
-class Level : public game_logic::FormulaCallable, public KRE::SceneNode
+class Level : public game_logic::FormulaCallable
 {
 public:
 	struct Summary {

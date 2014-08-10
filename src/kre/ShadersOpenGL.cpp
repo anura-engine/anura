@@ -277,14 +277,14 @@ namespace KRE
 			return true;
 		}
 
-		ShaderProgramOGL::ShaderProgramOGL(const std::string& name, const ShaderDef& vs, const ShaderDef& fs, const variant& node)
-			: ShaderProgram(node),
+		ShaderProgram::ShaderProgram(const std::string& name, const ShaderDef& vs, const ShaderDef& fs, const variant& node)
+			: KRE::ShaderProgram(node),
 			object_(0)
 		{
 			init(name, vs, fs);
 		}
 
-		ShaderProgramOGL::~ShaderProgramOGL()
+		ShaderProgram::~ShaderProgram()
 		{
 			if(object_ != 0) {
 				glDeleteShader(object_);
@@ -292,7 +292,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgramOGL::init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs)
+		void ShaderProgram::init(const std::string& name, const ShaderDef& vs, const ShaderDef& fs)
 		{
 			name_ = name;
 			vs_.reset(new Shader(GL_VERTEX_SHADER, vs.first, vs.second));
@@ -301,17 +301,17 @@ namespace KRE
 			ASSERT_LOG(linked_ok == true, "Error linking program: " << name_);
 		}
 
-		GLint ShaderProgramOGL::getAttributeOrDie(const std::string& attr) const
+		GLint ShaderProgram::getAttributeOrDie(const std::string& attr) const
 		{
 			return getAttributeIterator(attr)->second.location;
 		}
 
-		GLint ShaderProgramOGL::getUniformOrDie(const std::string& attr) const
+		GLint ShaderProgram::getUniformOrDie(const std::string& attr) const
 		{
 			return getUniformIterator(attr)->second.location;
 		}
 
-		GLint ShaderProgramOGL::getAttribute(const std::string& attr) const
+		GLint ShaderProgram::getAttribute(const std::string& attr) const
 		{
 			auto it = attribs_.find(attr);
 			if(it != attribs_.end()) {
@@ -330,7 +330,7 @@ namespace KRE
 			return it->second.location;
 		}
 
-		GLint ShaderProgramOGL::getUniform(const std::string& attr) const
+		GLint ShaderProgram::getUniform(const std::string& attr) const
 		{
 			auto it = uniforms_.find(attr);
 			if(it != uniforms_.end()) {
@@ -349,7 +349,7 @@ namespace KRE
 			return it->second.location;
 		}
 
-		ConstActivesMapIterator ShaderProgramOGL::getAttributeIterator(const std::string& attr) const
+		ConstActivesMapIterator ShaderProgram::getAttributeIterator(const std::string& attr) const
 		{
 			auto it = attribs_.find(attr);
 			if(it == attribs_.end()) {
@@ -363,7 +363,7 @@ namespace KRE
 			return it;
 		}
 
-		ConstActivesMapIterator ShaderProgramOGL::getUniformIterator(const std::string& attr) const
+		ConstActivesMapIterator ShaderProgram::getUniformIterator(const std::string& attr) const
 		{
 			auto it = uniforms_.find(attr);
 			if(it == uniforms_.end()) {
@@ -377,7 +377,7 @@ namespace KRE
 			return it;
 		}
 
-		bool ShaderProgramOGL::link()
+		bool ShaderProgram::link()
 		{
 			if(object_) {
 				glDeleteProgram(object_);
@@ -407,7 +407,7 @@ namespace KRE
 			return queryUniforms() && queryAttributes();
 		}
 
-		bool ShaderProgramOGL::queryUniforms()
+		bool ShaderProgram::queryUniforms()
 		{
 			GLint active_uniforms;
 			glGetProgramiv(object_, GL_ACTIVE_UNIFORMS, &active_uniforms);
@@ -427,7 +427,7 @@ namespace KRE
 			return true;
 		}
 
-		bool ShaderProgramOGL::queryAttributes()
+		bool ShaderProgram::queryAttributes()
 		{
 			GLint active_attribs;
 			glGetProgramiv(object_, GL_ACTIVE_ATTRIBUTES, &active_attribs);
@@ -448,12 +448,12 @@ namespace KRE
 			return true;
 		}
 
-		void ShaderProgramOGL::makeActive()
+		void ShaderProgram::makeActive()
 		{
 			glUseProgram(object_);
 		}
 
-		void ShaderProgramOGL::setUniformValue(ConstActivesMapIterator it, const void* value)
+		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const void* value)
 		{
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
@@ -510,7 +510,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgramOGL::setUniformValue(ConstActivesMapIterator it, const GLint value)
+		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint value)
 		{
 			const Actives& u = it->second;
 			switch(u.type) {
@@ -525,7 +525,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgramOGL::setUniformValue(ConstActivesMapIterator it, const GLfloat value)
+		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat value)
 		{
 			const Actives& u = it->second;
 			switch(u.type) {
@@ -538,7 +538,7 @@ namespace KRE
 			}	
 		}
 
-		void ShaderProgramOGL::setUniformValue(ConstActivesMapIterator it, const GLint* value)
+		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint* value)
 		{
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "set_uniform(): value is NULL");
@@ -566,7 +566,7 @@ namespace KRE
 			}
 		}
 
-		void ShaderProgramOGL::setUniformValue(ConstActivesMapIterator it, const GLfloat* value)
+		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat* value)
 		{
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
@@ -604,21 +604,21 @@ namespace KRE
 			}	
 		}
 
-		void ShaderProgramOGL::setAlternateUniformName(const std::string& name, const std::string& alt_name)
+		void ShaderProgram::setAlternateUniformName(const std::string& name, const std::string& alt_name)
 		{
 			ASSERT_LOG(uniform_alternate_name_map_.find(alt_name) == uniform_alternate_name_map_.end(),
 				"Trying to replace alternative uniform name: " << alt_name << " " << name);
 			uniform_alternate_name_map_[alt_name] = name;
 		}
 
-		void ShaderProgramOGL::setAlternateAttributeName(const std::string& name, const std::string& alt_name)
+		void ShaderProgram::setAlternateAttributeName(const std::string& name, const std::string& alt_name)
 		{
 			ASSERT_LOG(attribute_alternate_name_map_.find(alt_name) == attribute_alternate_name_map_.end(),
 				"Trying to replace alternative attribute name: " << alt_name << " " << name);
 			attribute_alternate_name_map_[alt_name] = name;
 		}
 
-		void ShaderProgramOGL::setActives()
+		void ShaderProgram::setActives()
 		{
 			glUseProgram(object_);
 			// Cache some frequently used uniforms.
@@ -655,55 +655,55 @@ namespace KRE
 			}
 		}
 
-		ActivesHandlePtr ShaderProgramOGL::getHandle(const std::string& aname) 
+		ActivesHandleBasePtr ShaderProgram::getHandle(const std::string& aname) 
 		{
 			auto it = uniforms_.find(aname);
 			if(it != uniforms_.end()) {
-				return std::make_shared<ActivesHandle>(ActivesHandleOGL(it));
+				return std::make_shared<ActivesHandleBase>(ActivesHandle(it));
 			}
 			auto alt_name_it = uniform_alternate_name_map_.find(aname);
 			if(alt_name_it != uniform_alternate_name_map_.end()) {
 				it = uniforms_.find(alt_name_it->second);
 				if(it != uniforms_.end()) {
-					return std::make_shared<ActivesHandle>(ActivesHandleOGL(it));
+					return std::make_shared<ActivesHandleBase>(ActivesHandle(it));
 				}
 			}
 
 			auto ait = attribs_.find(aname);
 			if(ait != attribs_.end()) {
-				return std::make_shared<ActivesHandle>(ActivesHandleOGL(ait));
+				return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
 			}
 			auto alt_name_it = attribute_alternate_name_map_.find(aname);
 			if(alt_name_it != attribute_alternate_name_map_.end()) {
 				it = attribs_.find(alt_name_it->second);
 				if(it != attribs_.end()) {
-					return std::make_shared<ActivesHandle>(ActivesHandleOGL(ait));
+					return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
 				}
 			}
 
 			ASSERT_LOG(false, "Couldn't find named active in shader(" << name() << "): " << aname);
-			return ActivesHandlePtr();
+			return ActivesHandleBasePtr();
 		}
 
-		void ShaderProgramOGL::setUniform(ActivesHandlePtr active, const void* value) 
+		void ShaderProgram::setUniform(ActivesHandleBasePtr active, const void* value) 
 		{
-			auto ptr = std::dynamic_pointer_cast<ActivesHandleOGL>(active);
+			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
 			ASSERT_LOG(ptr != NULL, "Unable to convert active to correct type.");
 			setUniformValue(ptr->getIterator(), value);
 		}
 
-		void ShaderProgramOGL::setAttribute(ActivesHandlePtr active, const void* value) 
+		/*void ShaderProgram::setAttribute(ActivesHandleBasePtr active, const void* value) 
 		{
-			auto ptr = std::dynamic_pointer_cast<ActivesHandleOGL>(active);
+			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
 			ASSERT_LOG(ptr != NULL, "Unable to convert active to correct type.");
 			setAttributeValue(ptr->getIterator(), value);
-		}
+		}*/
 
-		void ShaderProgramOGL::applyActives() 
+		void ShaderProgram::applyActives() 
 		{
 		}
 
-		ShaderProgramPtr ShaderProgramOGL::factory(const std::string& name)
+		ShaderProgramPtr ShaderProgram::factory(const std::string& name)
 		{
 			auto& sf = get_shader_factory();
 			auto it = sf.find(name);
@@ -711,7 +711,7 @@ namespace KRE
 			return it->second;
 		}
 
-		ShaderProgramOGLPtr ShaderProgramOGL::defaultSystemShader()
+		ShaderProgramPtr ShaderProgram::defaultSystemShader()
 		{
 			auto& sf = get_shader_factory();
 			auto it = sf.find("default");
@@ -719,7 +719,7 @@ namespace KRE
 			return it->second;
 		}
 
-		void ShaderProgramOGL::loadFromFile(const variant& node)
+		void ShaderProgram::loadFromFile(const variant& node)
 		{
 			auto& sf = get_shader_factory();
 
@@ -735,7 +735,7 @@ namespace KRE
 				const std::string& vert_data = instance["vertex"].as_string();
 				const std::string& frag_data = instance["fragment"].as_string();
 
-				auto spp = new ShaderProgramOGL(name, 
+				auto spp = new ShaderProgram(name, 
 					ShaderDef(name + "_vs", vert_data),
 					ShaderDef(name + "_fs", frag_data),
 					instance);

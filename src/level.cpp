@@ -231,12 +231,6 @@ Level::Level(const std::string& level_cfg, variant node)
 		id_ = node["id"].as_string();
 	}
 
-	if(node.has_key("isoworld")) {
-		iso_world_.reset(new voxel::World(node["isoworld"]));
-	} else {
-		iso_world_.reset();
-	}
-
 	if(preferences::load_compiled() && (level_cfg == "save.cfg" || level_cfg == "autosave.cfg")) {
 		if(preferences::version() != node["version"].as_string()) {
 			LOG_INFO("DIFFERENT VERSION LEVEL");
@@ -499,7 +493,7 @@ Level::Level(const std::string& level_cfg, variant node)
 #endif
 
 	const int time_taken_ms = (profile::get_tick_time() - start_time);
-	stats::entry("load", id()).set("time", variant(time_taken_ms));
+	stats::Entry("load", id()).set("time", variant(time_taken_ms));
 	LOG_INFO("done level constructor: " << time_taken_ms);
 }
 
@@ -617,7 +611,7 @@ void Level::finishLoading()
 				const rect bounds(x, y, seg_width, seg_height);
 
 				sub_level->boundaries_ = bounds;
-				sub_level->tiles_.erase(std::remove_if(sub_level->tiles_.begin(), sub_level->tiles_.end(), std::bind(level_tile_not_in_rect, bounds, _1)), sub_level->tiles_.end());
+				sub_level->tiles_.erase(std::remove_if(sub_level->tiles_.begin(), sub_level->tiles_.end(), std::bind(level_tile_not_in_rect, bounds, std::placeholders::_1)), sub_level->tiles_.end());
 				sub_level->solid_.clear();
 				sub_level->standable_.clear();
 				for(const LevelTile& t : sub_level->tiles_) {
@@ -1491,10 +1485,6 @@ variant Level::write() const
 	}
 
 	res.add("vars", vars_);
-
-	if(iso_world_) {
-		res.add("isoworld", iso_world_->write());
-	}
 
 #if defined(USE_BOX2D)
 	for(std::vector<box2d::body_ptr>::const_iterator it = bodies_.begin(); 

@@ -121,8 +121,15 @@ namespace KRE
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
 		auto dd = DisplayDevice::getCurrent();
 		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
-		objects_.emplace_back(obj);
+		objects_.emplace(obj);
 		obj->setDisplayData(dd, obj->attach(dd));
+	}
+
+	void SceneNode::removeObject(const SceneObjectPtr& obj)
+	{
+		auto it = objects_.find(obj);
+		ASSERT_LOG(it != objects_.end(), "Object is not in list: " << obj);
+		objects_.erase(it);
 	}
 
 	void SceneNode::attachLight(size_t ref, const LightPtr& obj)

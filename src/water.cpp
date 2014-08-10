@@ -71,35 +71,35 @@ void Water::init()
 {
 	using namespace KRE;
 
-	auto ab = DisplayDevice::CreateAttributeSet(true);
+	auto ab = DisplayDevice::createAttributeSet(true);
 	waterline_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-	waterline_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
-	waterline_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
-	ab->AddAttribute(AttributeBasePtr(waterline_));
-	ab->SetDrawMode(AttributeSet::DrawMode::TRIANGLE_STRIP);
+	waterline_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	waterline_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	ab->addAttribute(AttributeBasePtr(waterline_));
+	ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 	/// Set appropriate blend equation/functions on each of these attribute sets
-	if(DisplayDevice::CheckForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
-		ab->setBlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT);
+	if(DisplayDevice::checkForFeature(DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+		ab->setBlendEquation(BlendEquation(BlendEquationConstants::BE_REVERSE_SUBTRACT));
 	}
 	ab->setBlendMode(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
 	addAttributeSet(ab);
 
-	auto seg1 = DisplayDevice::CreateAttributeSet(true);
+	auto seg1 = DisplayDevice::createAttributeSet(true);
 	line1_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-	line1_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
-	line1_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
-	seg1->AddAttribute(AttributeBasePtr(line1_));
-	seg1->SetDrawMode(AttributeSet::DrawMode::LINE_STRIP);
-	AddAttributeSet(seg1);
+	line1_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	line1_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	seg1->addAttribute(AttributeBasePtr(line1_));
+	seg1->setDrawMode(DrawMode::LINE_STRIP);
+	addAttributeSet(seg1);
 
-	auto seg2 = DisplayDevice::CreateAttributeSet(true);
+	auto seg2 = DisplayDevice::createAttributeSet(true);
 	line2_.reset(new Attribute<vertex_color>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-	line2_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
-	line2_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::COLOR, 4, AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
-	seg2->AddAttribute(AttributeBasePtr(line2_));
-	seg2->SetDrawMode(AttributeSet::DrawMode::LINE_STRIP);
+	line2_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_color), offsetof(vertex_color, vertex)));
+	line2_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
+	seg2->addAttribute(AttributeBasePtr(line2_));
+	seg2->setDrawMode(DrawMode::LINE_STRIP);
 	seg2->setColor(Color(0.0, 0.9, 0.75, 0.5));
-	AddAttributeSet(seg2);
+	addAttributeSet(seg2);
 }
 
 variant Water::write() const
@@ -159,13 +159,6 @@ void Water::addWave(const point& p, double xvelocity, double height, double leng
 	}
 }
 
-KRE::DisplayDeviceDef Water::doAttach(const KRE::DisplayDevicePtr& dd)
-{
-	KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-	// XXX
-	return def;
-}
-
 void Water::preRender(const KRE::WindowManagerPtr& wm)
 {
 	for(const area& a : areas_) {
@@ -183,7 +176,7 @@ bool Water::drawArea(const Water::area& a) const
 
 	KRE::Color water_color = a.color_;
 
-	if(KRE::DisplayDevice::CheckForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
 		const double max_color = std::max(water_color.r(), std::max(water_color.g(), water_color.b()));
 		water_color.setRed((max_color - water_color.r())/8.0);
 		water_color.setGreen((max_color - water_color.g())/8.0);
@@ -208,7 +201,7 @@ bool Water::drawArea(const Water::area& a) const
 	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), waterline_rect.y() + std::min(100.0f, underwater_rect.h())), col);
 	water_rect.emplace_back(glm::vec2(waterline_rect.x(), underwater_rect.y() + underwater_rect.h()), col);
 	water_rect.emplace_back(glm::vec2(waterline_rect.x() + waterline_rect.w(), underwater_rect.y() + underwater_rect.h()), col);
-	waterline_->Update(&water_rect);
+	waterline_->update(&water_rect);
 
 	// XXX set line width uniform to 2.0
 
@@ -219,17 +212,18 @@ bool Water::drawArea(const Water::area& a) const
 	for(const Segment& seg : a.surface_segments_) {
 
 		std::vector<KRE::vertex_color> line1;
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y), glm::u8vec4(255, 255, 255, 0));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y), glm::u8vec4(255, 255, 255, 255));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y), glm::u8vec4(255, 255, 255, 255));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y), glm::u8vec4(255, 255, 255, 0));
-		line1_->Update(&line1);
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()), glm::u8vec4(255, 255, 255, 255));
+		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()), glm::u8vec4(255, 255, 255, 0));
+		line1_->update(&line1);
 
 		std::vector<KRE::vertex_color> line2;
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 0));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 128));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 128));
-		line1.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.first - EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.first), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.second), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 128));
+		line2.emplace_back(glm::vec2(static_cast<float>(seg.second + EndSegmentSize), waterline_rect.y()+2.0f), glm::u8vec4(0, 230, 200, 0));
+		line2_->update(&line2);
 	}
 
 	return true;

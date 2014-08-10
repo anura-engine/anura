@@ -24,9 +24,11 @@
 #include <boost/math/special_functions/round.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "kre/Canvas.hpp"
 #include "kre/ClipScope.hpp"
 #include "kre/Font.hpp"
 #include "kre/StencilScope.hpp"
+#include "kre/WindowManager.hpp"
 
 #include <stdio.h>
 
@@ -36,6 +38,7 @@
 #include "asserts.hpp"
 #include "code_editor_dialog.hpp"
 #include "collision_utils.hpp"
+#include "ColorTransform.hpp"
 #include "custom_object.hpp"
 #include "custom_object_callable.hpp"
 #include "custom_object_functions.hpp"
@@ -56,8 +59,10 @@
 #include "object_events.hpp"
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
+#include "rect_callable.hpp"
 #include "string_utils.hpp"
-#include "surface_formula.hpp"
+//#include "surface_formula.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
 #include "unit_test.hpp"
@@ -95,9 +100,9 @@ namespace
 {
 	const int widget_zorder_draw_later_threshold = 1000;
 
-	const game_logic::Formula_variable_storage_ptr& global_vars()
+	const game_logic::FormulaVariableStoragePtr& global_vars()
 	{
-		static game_logic::Formula_variable_storage_ptr obj(new game_logic::Formula_variable_storage);
+		static game_logic::FormulaVariableStoragePtr obj(new game_logic::FormulaVariableStorage());
 		return obj;
 	}
 }
@@ -128,7 +133,7 @@ namespace
 	}
 }
 
-const std::string* CustomObject::current_debug_error()
+const std::string* CustomObject::currentDebugError()
 {
 	if(current_error_msg == "") {
 		return NULL;
@@ -137,7 +142,7 @@ const std::string* CustomObject::current_debug_error()
 	return &current_error_msg;
 }
 
-void CustomObject::reset_current_debug_error()
+void CustomObject::resetCurrentDebugError()
 {
 	current_error_msg = "";
 }
@@ -167,8 +172,8 @@ CustomObject::CustomObject(variant node)
 	has_feet_(node["has_feet"].as_bool(type_->hasFeet())),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::Formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::FormulaVariableStorage(type_->variables())),
+	tmp_vars_(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
 	current_animation_id_(0),
@@ -292,7 +297,7 @@ CustomObject::CustomObject(variant node)
 	if(node.has_key("solid_dimensions")) {
 		weak_solid_dim = solid_dim = 0;
 		std::vector<std::string> solid_dim_str = util::split(node["solid_dimensions"].as_string());
-		foreach(const std::string& str, solid_dim_str) {
+		for(const std::string& str : solid_dim_str) {
 			if(str.empty() || str == "level_only") {
 				continue;
 			}
@@ -310,7 +315,7 @@ CustomObject::CustomObject(variant node)
 	if(node.has_key("collide_dimensions")) {
 		weak_collide_dim = collide_dim = 0;
 		std::vector<std::string> collide_dim_str = util::split(node["collide_dimensions"].as_string());
-		foreach(const std::string& str, collide_dim_str) {
+		for(const std::string& str : collide_dim_str) {
 			if(str.empty() || str == "level_only") {
 				continue;
 			}
@@ -336,7 +341,7 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("draw_color")) {
-		draw_color_.reset(new graphics::color_transform(node["draw_color"]));
+		draw_color_.reset(new KRE::ColorTransform(node["draw_color"]));
 	}
 
 	if(node.has_key("label")) {
@@ -367,14 +372,14 @@ CustomObject::CustomObject(variant node)
 
 	if(node.has_key("particles")) {
 		std::vector<std::string> particles = util::split(node["particles"].as_string());
-		foreach(const std::string& p, particles) {
+		for(const std::string& p : particles) {
 			addParticleSystem(p, p);
 		}
 	}
 
 	if(node.has_key("lights")) {
-		foreach(variant light_node, node["lights"].as_list()) {
-			light_ptr new_light(light::create_light(*this, light_node));
+		for(variant light_node : node["lights"].as_list()) {
+			LightPtr new_light(Light::createLight(*this, light_node));
 			if(new_light) {
 				lights_.push_back(new_light);
 			}
@@ -407,7 +412,7 @@ CustomObject::CustomObject(variant node)
 
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
-		lua_ptr_.reset(new lua::lua_context());
+		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
 
@@ -461,8 +466,8 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 	has_feet_(type_->hasFeet()),
 	invincible_(0),
 	sound_volume_(128),
-	vars_(new game_logic::Formula_variable_storage(type_->variables())),
-	tmp_vars_(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+	vars_(new game_logic::FormulaVariableStorage(type_->variables())),
+	tmp_vars_(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 	tags_(new game_logic::MapFormulaCallable(type_->tags())),
 	active_property_(-1),
 	last_hit_by_anim_(0),
@@ -528,7 +533,7 @@ CustomObject::CustomObject(const std::string& type, int x, int y, bool face_righ
 
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
-		lua_ptr_.reset(new lua::lua_context());
+		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
 
@@ -566,8 +571,8 @@ CustomObject::CustomObject(const CustomObject& o)
 	sound_volume_(o.sound_volume_),
 	next_animation_formula_(o.next_animation_formula_),
 
-	vars_(new game_logic::Formula_variable_storage(*o.vars_)),
-	tmp_vars_(new game_logic::Formula_variable_storage(*o.tmp_vars_)),
+	vars_(new game_logic::FormulaVariableStorage(*o.vars_)),
+	tmp_vars_(new game_logic::FormulaVariableStorage(*o.tmp_vars_)),
 	tags_(new game_logic::MapFormulaCallable(*o.tags_)),
 
 	property_data_(deep_copy_property_data(o.property_data_)),
@@ -636,7 +641,7 @@ CustomObject::CustomObject(const CustomObject& o)
 	
 #if defined(USE_LUA)
 	if(!type_->getLuaSource().empty()) {
-		lua_ptr_.reset(new lua::lua_context());
+		lua_ptr_.reset(new lua::LuaContext());
 	}
 #endif
 }
@@ -656,7 +661,7 @@ void CustomObject::validate_properties()
 	for(int n = 0; n != type_->getSlotProperties().size(); ++n) {
 		const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[n];
 		if(e.storage_slot >= 0 && e.type && std::count(properties_requiring_dynamic_initialization_.begin(), properties_requiring_dynamic_initialization_.end(), n) == 0) {
-			assert(e.storage_slot < property_data_.size());
+			assert(static_cast<unsigned>(e.storage_slot) < property_data_.size());
 			variant result = property_data_[e.storage_slot];
 			ASSERT_LOG(e.type->match(result), "Object " << getDebugDescription() << " is invalid, property " << e.id << " expected to be " << e.type->to_string() << " but found " << result.write_json() << " which is of type " << get_variant_type_from_value(result)->to_string() << " " << properties_requiring_dynamic_initialization_.size());
 			
@@ -962,7 +967,7 @@ variant CustomObject::write() const
 
 	std::map<variant, variant> property_map;
 	for(std::map<std::string, CustomObjectType::PropertyEntry>::const_iterator i = type_->properties().begin(); i != type_->properties().end(); ++i) {
-		if(i->second.storage_slot == -1 || i->second.storage_slot >= property_data_.size() || i->second.persistent == false || i->second.const_value || property_data_[i->second.storage_slot] == i->second.default_value) {
+		if(i->second.storage_slot == -1 || static_cast<unsigned>(i->second.storage_slot) >= property_data_.size() || i->second.persistent == false || i->second.const_value || property_data_[i->second.storage_slot] == i->second.default_value) {
 			continue;
 		}
 
@@ -1032,7 +1037,7 @@ variant CustomObject::write() const
 		}
 	}
 
-	for(const light_ptr& p : lights_) {
+	for(const LightPtr& p : lights_) {
 		res.add("lights", p->write());
 	}
 
@@ -1093,7 +1098,7 @@ void CustomObject::drawLater(int xx, int yy) const
 	}
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() >= widget_zorder_draw_later_threshold) {
-			w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
+			w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
 		}
 	}
 }
@@ -1141,8 +1146,10 @@ void CustomObject::draw(int xx, int yy) const
 		driver_->draw(xx, yy);
 	}
 
+	KRE::Color current_color = KRE::Color::colorWhite();
+
 	if(draw_color_) {
-		SetColor(draw_color_->toColor());
+		current_color = draw_color_->toColor();
 	}
 
 	const int draw_x = x();
@@ -1152,15 +1159,15 @@ void CustomObject::draw(int xx, int yy) const
 		//pass
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), cycle_);
+		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
-		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	} else if(draw_scale_) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()), GLfloat(draw_scale_->as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), static_cast<float>(draw_scale_->as_float()));
 	} else if(!draw_area_.get()) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	} else {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	}
 
 	if(blur_) {
@@ -1168,19 +1175,21 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(draw_color_) {
+#if 0
 		if(!draw_color_->fits_in_color()) {
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			graphics::color_transform transform = *draw_color_;
+			KRE::ColorTransform transform = *draw_color_;
 			while(!transform.fits_in_color()) {
-				transform = transform - transform.to_color();
-				transform.to_color().set_as_current_color();
-				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, GLfloat(rotate_z_.as_float()));
+				transform = transform - transform.toColor();
+				transform.toColor().set_as_current_color();
+				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 			}
 
 			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 
 		glColor4ub(255, 255, 255, 255);
+#endif
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -1190,7 +1199,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	for(const graphics::DrawPrimitivePtr& p : DrawPrimitives_) {
-		p->draw();
+		KRE::WindowManager::getMainWindow()->render(p.get());
 	}
 
 	drawDebugRects();
@@ -1198,13 +1207,14 @@ void CustomObject::draw(int xx, int yy) const
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader()) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
+				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
 			}
 		}
 	}
 
 	for(auto& ps : ParticleSystems_) {
-		ps.second->draw(rect(last_draw_position().x/100, last_draw_position().y/100, graphics::screen_width(), graphics::screen_height()), *this);
+		auto wnd = KRE::WindowManager::getMainWindow();
+		ps.second->draw(wnd, rect(last_draw_position().x/100, last_draw_position().y/100, wnd->width(), wnd->height()), *this);
 	}
 
 	if(text_ && text_->font && text_->alpha) {
@@ -1215,7 +1225,7 @@ void CustomObject::draw(int xx, int yy) const
 		} else if(text_->align > 0) {
 			xpos += half_width*2 - text_->dimensions.w();
 		}
-		text_->font->draw(xpos, draw_y, text_->text, text_->size, text_->alpha);
+		text_->font->draw(xpos, draw_y, text_->text, text_->size, KRE::Color(255,255,255,text_->alpha));
 	}
 	
 	clip_scope.reset();
@@ -1243,48 +1253,28 @@ void CustomObject::draw(int xx, int yy) const
 		int pos = y();
 		for(int n = 0; n != left.size(); ++n) {
 			const int xpos = getMidpoint().x + 10;
-			graphics::blit_texture(left[n], xpos, pos);
-			graphics::blit_texture(right[n], xpos + max_property_width + 10, pos);
-			pos += std::max(left[n].height(), right[n].height());
+			KRE::Canvas::getInstance()->blitTexture(left[n], 0, xpos, pos, KRE::Color::colorWhite());
+			KRE::Canvas::getInstance()->blitTexture(right[n], 0, xpos + max_property_width + 10, pos, KRE::Color::colorWhite());
+			pos += std::max(left[n]->height(), right[n]->height());
 		}
 	}
 
 	if(platform_area_ && (preferences::show_debug_hitboxes() || !platform_offsets_.empty() && Level::current().in_editor())) {
-		std::vector<GLfloat> v;
+		std::vector<glm::vec2> v;
 		const rect& r = platformRect();
 		for(int x = 0; x < r.w(); x += 2) {
-			v.push_back(GLfloat(r.x() + x));
-			v.push_back(GLfloat(platformRectAt(r.x() + x).y()));
+			v.emplace_back(static_cast<float>(r.x() + x), static_cast<float>(platformRectAt(r.x() + x).y()));
 		}
 
 		if(!v.empty()) {
-#if defined(USE_SHADERS)
-			glColor4f(1.0f, 0.0f, 0.0f, 1.0f);
-			glPointSize(2.0f);
-			gles2::manager gles2_manager(gles2::get_simple_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, &v[0]);
-			glDrawArrays(GL_POINTS, 0, v.size()/2);
-			glColor4f(1.0f, 1.0f, 1.0f, 1.0f);
-#else
-			glPointSize(2);
-			glDisable(GL_TEXTURE_2D);
-			glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-			glColor4ub(255, 0, 0, 255);
-
-			glVertexPointer(2, GL_FLOAT, 0, &v[0]);
-			glDrawArrays(GL_POINTS, 0, v.size()/2);
-
-			glColor4ub(255, 255, 255, 255);
-			glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-			glEnable(GL_TEXTURE_2D);
-#endif
+			KRE::Canvas::getInstance()->drawPoints(v, 2.0f, KRE::Color(1.0, 0.0, 0.0));
 		}
 	}
 
 	for(const gui::WidgetPtr& w : widgets_) {
 		if(w->zorder() < widget_zorder_draw_later_threshold) {
 			if(w->drawWithObjectShader() == false) {
-				w->draw(offs_x, offs_y, rotate_z_.as_float(), draw_scale_ ? draw_scale_->as_float() : 0);
+				w->draw(offs_x, offs_y, static_cast<float>(rotate_z_.as_float()), draw_scale_ ? static_cast<float>(draw_scale_->as_float()) : 0);
 			}
 		}
 	}
@@ -1292,12 +1282,13 @@ void CustomObject::draw(int xx, int yy) const
 
 void CustomObject::drawGroup() const
 {
+	auto canvas = KRE::Canvas::getInstance();
 	if(label().empty() == false && label()[0] != '_') {
-		blit_texture(font::render_text(label(), KRE::Color::colorYellow(), 32), x(), y() + 26);
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(label(), KRE::Color::colorYellow(), 32), 0, x(), y() + 26);
 	}
 
 	if(group() >= 0) {
-		blit_texture(font::render_text(formatter() << group(), KRE::Color::colorYellow(), 24), x(), y());
+		canvas->blitTexture(KRE::Font::getInstance()->renderText(formatter() << group(), KRE::Color::colorYellow(), 24), 0, x(), y());
 	}
 }
 
@@ -1319,14 +1310,14 @@ bool CustomObject::createObject()
 	return false;
 }
 
-void CustomObject::check_initialized()
+void CustomObject::checkInitialized()
 {
 	ASSERT_LOG(properties_requiring_dynamic_initialization_.empty(), "Object property " << getDebugDescription() << "." << type_->getSlotProperties()[properties_requiring_dynamic_initialization_.front()].id << " not initialized");
 
 	validate_properties();
 }
 
-void CustomObject::process(level& lvl)
+void CustomObject::process(Level& lvl)
 {
 	if(paused_) {
 		return;
@@ -1357,20 +1348,20 @@ void CustomObject::process(level& lvl)
 	}
 
 	if(lvl.in_editor()) {
-		if(!type_->isStaticObject() && entity_collides(level::current(), *this, MOVE_DIRECTION::NONE)) {
+		if(!type_->isStaticObject() && entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE)) {
 			//The object collides illegally, but we're in the editor. Freeze
 			//the object by returning, since we can't process it.
 			return;
 		}
 
-		if(level::current().is_editor_dragging_objects() && std::count(level::current().editor_selection().begin(), level::current().editor_selection().end(), EntityPtr(this))) {
+		if(Level::current().is_editor_dragging_objects() && std::count(Level::current().editor_selection().begin(), Level::current().editor_selection().end(), EntityPtr(this))) {
 			//this object is being dragged and so gets frozen.
 			return;
 		}
 	}
 
-	collision_info debug_collide_info;
-	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
+	CollisionInfo debug_collide_info;
+	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
 
 	if(parent_.get() != NULL) {
 		const point pos = parent_position();
@@ -1393,7 +1384,7 @@ void CustomObject::process(level& lvl)
 
 	last_cycle_active_ = lvl.cycle();
 
-	entity::process(lvl);
+	Entity::process(lvl);
 
 	//the object should never be colliding with the level at the start of processing.
 //	assert(!entity_collides_with_level(lvl, *this, MOVE_DIRECTION::NONE));
@@ -1405,8 +1396,8 @@ void CustomObject::process(level& lvl)
 	//still fire a collide_feet event.
 	bool fired_collide_feet = false;
 
-	collision_info stand_info;
-	const bool started_standing = isStanding(lvl, &stand_info) != NOT_STANDING;
+	CollisionInfo stand_info;
+	const bool started_standing = isStanding(lvl, &stand_info) != STANDING_STATUS::NOT_STANDING;
 	if(!started_standing && standing_on_) {
 		//if we were standing on something the previous frame, but aren't
 		//standing any longer, we use the value of what we were previously
@@ -1469,7 +1460,7 @@ void CustomObject::process(level& lvl)
 	}
 
 	std::vector<variant> scheduled_commands = popScheduledCommands();
-	foreach(const variant& cmd, scheduled_commands) {
+	for(const variant& cmd : scheduled_commands) {
 		executeCommand(cmd);
 	}
 
@@ -1698,8 +1689,8 @@ void CustomObject::process(level& lvl)
 	}
 
 
-	collision_info collide_info;
-	collision_info jump_on_info;
+	CollisionInfo collide_info;
+	CollisionInfo jump_on_info;
 
 	bool is_stuck = false;
 
@@ -1754,7 +1745,7 @@ void CustomObject::process(level& lvl)
 			}
 		}
 
-		if(!collide && !type_->hasIgnoreCollide() && effective_velocity_y > 0 && isStanding(lvl, &jump_on_info)) {
+		if(!collide && !type_->hasIgnoreCollide() && effective_velocity_y > 0 && isStanding(lvl, &jump_on_info) != STANDING_STATUS::NOT_STANDING) {
 			if(!jump_on_info.collide_with || jump_on_info.collide_with != standing_on_) {
 				collide = true;
 				collide_info = jump_on_info;
@@ -1917,7 +1908,7 @@ void CustomObject::process(level& lvl)
 						break;
 					}
 				}
-			} else if(previous_standing && standing < previous_standing) {
+			} else if(previous_standing != STANDING_STATUS::NOT_STANDING && standing < previous_standing) {
 
 				//we were standing, but we're not now. We want to look for
 				//slopes that will enable us to still be standing. We see
@@ -1948,12 +1939,12 @@ void CustomObject::process(level& lvl)
 					dir *= -1;
 					setCentiY(original_centi_y);
 				}
-			} else if(standing) {
+			} else if(standing != STANDING_STATUS::NOT_STANDING) {
 				if(!vertical_landed && !started_standing && !standing_on_) {
 					horizontal_landed = true;
 				}
 
-				collision_info slope_standing_info;
+				CollisionInfo slope_standing_info;
 
 				bool collide_head = false;
 
@@ -1966,7 +1957,7 @@ void CustomObject::process(level& lvl)
 				//stairs, normally by the player pressing up while walking.
 				const int begin_y = getFeetY();
 				int max_slope = 5;
-				while(--max_slope && isStanding(lvl, &slope_standing_info)) {
+				while(--max_slope && isStanding(lvl, &slope_standing_info) != STANDING_STATUS::NOT_STANDING) {
 					if(slope_standing_info.platform && walkUpOrDownStairs() >= 0) {
 						if(max_slope == 4) {
 							//we always move at least one pixel up, if there is
@@ -2000,7 +1991,7 @@ void CustomObject::process(level& lvl)
 					isStanding(lvl, &slope_standing_info);
 					if(slope_standing_info.platform) {
 						setY(y()+1);
-						if(!isStanding(lvl) || detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN)) {
+						if(isStanding(lvl) == STANDING_STATUS::NOT_STANDING || detect_collisions && entity_collides(lvl, *this, MOVE_DIRECTION::DOWN)) {
 							setY(y()-1);
 						}
 					}
@@ -2055,7 +2046,7 @@ void CustomObject::process(level& lvl)
 		}
 	}
 
-	stand_info = collision_info();
+	stand_info = CollisionInfo();
 	if(velocity_y_ >= 0) {
 		isStanding(lvl, &stand_info);
 	}
@@ -2129,7 +2120,7 @@ void CustomObject::process(level& lvl)
 	}
 #endif
 
-	if(level::current().cycle() > int(getMouseoverTriggerCycle())) {
+	if(Level::current().cycle() > int(getMouseoverTriggerCycle())) {
 		if(isMouseOverEntity() == false) {
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			int mx, my;
@@ -2142,14 +2133,14 @@ void CustomObject::process(level& lvl)
 		}
 	}
 
-	foreach(const gui::WidgetPtr& w, widgets_) {
+	for(const gui::WidgetPtr& w : widgets_) {
 		w->process();
 	}
 
 	staticProcess(lvl);
 }
 
-void CustomObject::staticProcess(level& lvl)
+void CustomObject::staticProcess(Level& lvl)
 {
 	handleEvent(OBJECT_EVENT_PROCESS);
 	handleEvent(frame_->processEventId());
@@ -2170,7 +2161,7 @@ void CustomObject::staticProcess(level& lvl)
 
 	set_driver_position();
 
-	foreach(const light_ptr& p, lights_) {
+	for(const LightPtr& p : lights_) {
 		p->process();
 	}
 }
@@ -2187,7 +2178,7 @@ void CustomObject::set_driver_position()
 }
 
 #ifndef NO_EDITOR
-const_editor_entity_info_ptr CustomObject::getEditorInfo() const
+ConstEditorEntityInfoPtr CustomObject::getEditorInfo() const
 {
 	return type_->getEditorInfo();
 }
@@ -2252,7 +2243,7 @@ bool CustomObject::isStandable(int xpos, int ypos, int* friction, int* traction,
 	}
 
 	if(frame_->hasPlatform()) {
-		const frame& f = *frame_;
+		const Frame& f = *frame_;
 		int y1 = y() + f.platformY();
 		int y2 = previous_y_ + f.platformY();
 
@@ -2330,7 +2321,7 @@ ConstSolidInfoPtr CustomObject::calculateSolid() const
 		return ConstSolidInfoPtr();
 	}
 
-	const frame& f = getCurrentFrame();
+	const Frame& f = getCurrentFrame();
 	if(f.solid()) {
 		return f.solid();
 	}
@@ -2352,14 +2343,14 @@ ConstSolidInfoPtr CustomObject::calculatePlatform() const
 	return type_->platform();
 }
 
-void CustomObject::control(const level& lvl)
+void CustomObject::control(const Level& lvl)
 {
 }
 
-CustomObject::STANDING_STATUS CustomObject::isStanding(const level& lvl, collision_info* info) const
+CustomObject::STANDING_STATUS CustomObject::isStanding(const Level& lvl, CollisionInfo* info) const
 {
 	if(!hasFeet()) {
-		return NOT_STANDING;
+		return STANDING_STATUS::NOT_STANDING;
 	}
 
 	const int width = type_->getFeetWidth();
@@ -2367,20 +2358,20 @@ CustomObject::STANDING_STATUS CustomObject::isStanding(const level& lvl, collisi
 	if(width >= 1) {
 		const int facing = isFacingRight() ? 1 : -1;
 		if(point_standable(lvl, *this, getFeetX() + width*facing, getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
-			return STANDING_FRONT_FOOT;
+			return STANDING_STATUS::FRONT_FOOT;
 		}
 
 		if(point_standable(lvl, *this, getFeetX() - width*facing, getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
-			return STANDING_BACK_FOOT;
+			return STANDING_STATUS::BACK_FOOT;
 		}
 
-		return NOT_STANDING;
+		return STANDING_STATUS::NOT_STANDING;
 	}
 
 	if(point_standable(lvl, *this, getFeetX(), getFeetY(), info, fall_through_platforms_ ? SOLID_ONLY : SOLID_AND_PLATFORMS)) {
-		return STANDING_FRONT_FOOT;
+		return STANDING_STATUS::FRONT_FOOT;
 	} else {
-		return NOT_STANDING;
+		return STANDING_STATUS::NOT_STANDING;
 	}
 }
 
@@ -2442,7 +2433,7 @@ void CustomObject::run_garbage_collection()
 	
 	for(int pass = 1;; ++pass) {
 		const int starting_safe = safe.size();
-		foreach(custom_object* obj, getAll()) {
+		for(auto* obj : getAll()) {
 			if(obj->refcount() > 1) {
 				safe.insert(obj);
 			}
@@ -2454,7 +2445,7 @@ void CustomObject::run_garbage_collection()
 
 		std::cerr << "PASS " << pass << ": " << safe.size() << " OBJECTS SAFE\n";
 
-		foreach(gc_object_reference& ref, refs) {
+		for(gc_object_reference& ref : refs) {
 			if(ref.owner == NULL) {
 				continue;
 			}
@@ -2466,12 +2457,12 @@ void CustomObject::run_garbage_collection()
 		}
 	}
 
-	foreach(gc_object_reference& ref, refs) {
+	for(gc_object_reference& ref : refs) {
 		if(ref.owner == NULL || !ref.visitor) {
 			continue;
 		}
 
-		foreach(game_logic::FormulaCallableSuspendedPtr ptr, ref.visitor->pointers()) {
+		for(game_logic::FormulaCallableSuspendedPtr ptr : ref.visitor->pointers()) {
 			if(safe.count(ptr->value())) {
 				ptr->restore_ref();
 			}
@@ -2561,7 +2552,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 		float ratio = 1.0;
 		if(cycle < ncycles-1) {
 			ratio = static_cast<float>(cycle)/static_cast<float>(ncycles-1);
-			ratio = easing_fn(ratio);
+			ratio = static_cast<float>(easing_fn(ratio));
 		}
 		for(int n = 0; n != slots.size(); ++n) {
 			values.push_back(interpolate_variants(begin_values[n], end_values[n], ratio));
@@ -2709,7 +2700,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Access of 'data' outside of an object property which has data");
-		if(active_property_ < property_data_.size()) {
+		if(static_cast<unsigned>(active_property_) < property_data_.size()) {
 			return property_data_[active_property_];
 		} else {
 			return variant();
@@ -2755,7 +2746,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_SPAWNED_BY:        if(wasSpawnedBy().empty()) return variant(); else return variant(Level::current().get_entity_by_label(wasSpawnedBy()).get());
 	case CUSTOM_OBJECT_SPAWNED_CHILDREN: {
 		std::vector<variant> children;
-		for(const EntityPtr& e : |Level::current().get_chars()) {
+		for(const EntityPtr& e : Level::current().get_chars()) {
 			if(e->wasSpawnedBy() == label()) {
 				children.push_back(variant(e.get()));
 			}
@@ -2785,7 +2776,7 @@ variant CustomObject::getValueBySlot(int slot) const
 			variant(solidRect().h() ? solidRect().y() + solidRect().h()/2 : y() + getCurrentFrame().height()/2));
 	}
 
-	case CUSTOM_OBJECT_SOLID_RECT:        return variant(solidRect().callable());
+	case CUSTOM_OBJECT_SOLID_RECT:        return variant(Geometry::RectCallable::create(solidRect()));
 	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solidRect().x() + solidRect().w()/2);
 	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solidRect().y() + solidRect().h()/2);
 	case CUSTOM_OBJECT_SOLID_MID_XY: {
@@ -2850,7 +2841,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_TEXT_ALPHA:        return variant(text_ ? text_->alpha : 255);
 	case CUSTOM_OBJECT_DAMAGE:            return variant(getCurrentFrame().damage());
 	case CUSTOM_OBJECT_HIT_BY:            return variant(last_hit_by_.get());
-	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(Level::current()));
+	case CUSTOM_OBJECT_IS_STANDING:       return variant(standing_on_.get() || isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING);
 	case CUSTOM_OBJECT_STANDING_INFO:     {
 		CollisionInfo info;
 		isStanding(Level::current(), &info);
@@ -2860,7 +2851,7 @@ variant CustomObject::getValueBySlot(int slot) const
 			return variant();
 		}
 	}
-	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(Level::current()) && cliff_edge_within(Level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
+	case CUSTOM_OBJECT_NEAR_CLIFF_EDGE:   return variant::from_bool(isStanding(Level::current()) != STANDING_STATUS::NOT_STANDING && cliff_edge_within(Level::current(), getFeetX(), getFeetY(), getFaceDir()*15));
 	case CUSTOM_OBJECT_DISTANCE_TO_CLIFF: return variant(::distance_to_cliff(Level::current(), getFeetX(), getFeetY(), getFaceDir()));
 	case CUSTOM_OBJECT_SLOPE_STANDING_ON: {
 		if(standing_on_ && standing_on_->platform() && !standing_on_->isSolidPlatform()) {
@@ -2983,7 +2974,7 @@ variant CustomObject::getValueBySlot(int slot) const
 
 	case CUSTOM_OBJECT_LIGHTS: {
 		std::vector<variant> result;
-		for(const light_ptr& p : lights_) {
+		for(const LightPtr& p : lights_) {
 			result.push_back(variant(p.get()));
 		}
 
@@ -3326,21 +3317,21 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		rotate_z_ = value.as_decimal();
 	} else if(key == "red") {
 		make_draw_color();
-		draw_color_->buf()[0] = truncate_to_char(value.as_int());
+		draw_color_->setAddRed(value.as_int());
 	} else if(key == "green") {
 		make_draw_color();
-		draw_color_->buf()[1] = truncate_to_char(value.as_int());
+		draw_color_->setAddGreen(value.as_int());
 	} else if(key == "blue") {
 		make_draw_color();
-		draw_color_->buf()[2] = truncate_to_char(value.as_int());
+		draw_color_->setAddBlue(value.as_int());
 	} else if(key == "alpha") {
 		make_draw_color();
-		draw_color_->buf()[3] = truncate_to_char(value.as_int());
+		draw_color_->setAddAlpha(value.as_int());
 	} else if(key == "brightness"){
 		make_draw_color();
-		draw_color_->buf()[0] = value.as_int();
-		draw_color_->buf()[1] = value.as_int();
-		draw_color_->buf()[2] = value.as_int();
+		draw_color_->setAddRed(value.as_int());
+		draw_color_->setAddGreen(value.as_int());
+		draw_color_->setAddBlue(value.as_int());
 	} else if(key == "current_generator") {
 		setCurrentGenerator(value.try_convert<CurrentGenerator>());
 	} else if(key == "invincible") {
@@ -3493,14 +3484,14 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 	} else if(key == "type") {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::FormulaVariableStoragePtr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			getAll(base_type_->id()).erase(this);
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+			vars_.reset(new game_logic::FormulaVariableStorage(type_->variables())),
+			tmp_vars_.reset(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 			vars_->setObjectName(getDebugDescription());
 			tmp_vars_->setObjectName(getDebugDescription());
 
@@ -3558,7 +3549,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_TYPE: {
 		ConstCustomObjectTypePtr p = CustomObjectType::get(value.as_string());
 		if(p) {
-			game_logic::Formula_variable_storage_ptr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
+			game_logic::FormulaVariableStoragePtr old_vars = vars_, old_tmp_vars_ = tmp_vars_;
 
 			ConstCustomObjectTypePtr old_type = type_;
 
@@ -3566,8 +3557,8 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			base_type_ = type_ = p;
 			getAll(base_type_->id()).insert(this);
 			has_feet_ = type_->hasFeet();
-			vars_.reset(new game_logic::Formula_variable_storage(type_->variables())),
-			tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables())),
+			vars_.reset(new game_logic::FormulaVariableStorage(type_->variables())),
+			tmp_vars_.reset(new game_logic::FormulaVariableStorage(type_->tmpVariables())),
 			vars_->setObjectName(getDebugDescription());
 			tmp_vars_->setObjectName(getDebugDescription());
 
@@ -3589,7 +3580,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			}
 
 			for(auto i = old_type->properties().begin(); i != old_type->properties().end(); ++i) {
-				if(i->second.storage_slot < 0 || i->second.storage_slot >= props.size() || props[i->second.storage_slot] == i->second.default_value) {
+				if(i->second.storage_slot < 0 || static_cast<unsigned>(i->second.storage_slot) >= props.size() || props[i->second.storage_slot] == i->second.default_value) {
 					continue;
 				}
 
@@ -3632,7 +3623,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_X: {
 		const int start_x = centiX();
 		setX(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 
@@ -3643,7 +3634,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_Y: {
 		const int start_y = centiY();
 		setY(value.as_int());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 
@@ -3656,7 +3647,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         x() + getCurrentFrame().width();
 		const int delta_x = value.as_int() - current_x;
 		setX(x() + delta_x);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
@@ -3669,7 +3660,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		                                         y() + getCurrentFrame().height();
 		const int delta_y = value.as_int() - current_y;
 		setY(y() + delta_y);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) &&
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) &&
 		   entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
@@ -3682,7 +3673,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int start_y = centiY();
 		setX(value[0].as_int());
 		setY(value[1].as_int());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3710,7 +3701,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_PARENT: {
-		EntityPtr e(value.try_convert<entity>());
+		EntityPtr e(value.try_convert<Entity>());
 		setParent(e, parent_pivot_);
 		break;
 	}
@@ -3730,7 +3721,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3745,7 +3736,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3765,7 +3756,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int ydiff = current_y - y();
 
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3778,7 +3769,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + solid_diff + solidRect().w()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3790,7 +3781,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3806,7 +3797,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + solid_diff_y + solidRect().h()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3818,7 +3809,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_x = x() + getCurrentFrame().width()/2;
 		const int xdiff = current_x - x();
 		setPos(value.as_int() - xdiff, y());
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 		}
 		break;
@@ -3829,7 +3820,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(x(), value.as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiY(start_y);
 		}
 		break;
@@ -3844,7 +3835,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		const int current_y = y() + getCurrentFrame().height()/2;
 		const int ydiff = current_y - y();
 		setPos(value[0].as_int() - xdiff, value[1].as_int() - ydiff);
-		if(entity_collides(level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
+		if(entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE) && entity_in_current_level(this)) {
 			setCentiX(start_x);
 			setCentiY(start_y);
 		}
@@ -3934,22 +3925,22 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_RED:
 		make_draw_color();
-		draw_color_->buf()[0] = truncate_to_char(value.as_int());
+		draw_color_->setAddRed(value.as_int());
 		break;
 	
 	case CUSTOM_OBJECT_GREEN:
 		make_draw_color();
-		draw_color_->buf()[1] = truncate_to_char(value.as_int());
+		draw_color_->setAddGreen(value.as_int());
 		break;
 	
 	case CUSTOM_OBJECT_BLUE:
 		make_draw_color();
-		draw_color_->buf()[2] = truncate_to_char(value.as_int());
+		draw_color_->setAddBlue(value.as_int());
 		break;
 
 	case CUSTOM_OBJECT_ALPHA:
 		make_draw_color();
-		draw_color_->buf()[3] = truncate_to_char(value.as_int());
+		draw_color_->setAddAlpha(value.as_int());
 		break;
 
 	case CUSTOM_OBJECT_TEXT_ALPHA:
@@ -3962,9 +3953,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_BRIGHTNESS:
 		make_draw_color();
-		draw_color_->buf()[0] = value.as_int();
-		draw_color_->buf()[1] = value.as_int();
-		draw_color_->buf()[2] = value.as_int();
+		draw_color_->setAddRed(value.as_int());
+		draw_color_->setAddGreen(value.as_int());
+		draw_color_->setAddBlue(value.as_int());
 		break;
 	
 	case CUSTOM_OBJECT_CURRENTGENERATOR:
@@ -4116,9 +4107,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_LIGHTS: {
 		lights_.clear();
 		for(int n = 0; n != value.num_elements(); ++n) {
-			light* p = value[n].try_convert<light>();
+			Light* p = value[n].try_convert<Light>();
 			if(p) {
-				lights_.push_back(light_ptr(p));
+				lights_.push_back(LightPtr(p));
 			}
 		}
 		break;
@@ -4599,7 +4590,7 @@ bool CustomObject::isActive(const rect& screen_area) const
 		return true;
 	}
 
-	if(type_->goesInactiveOnlyWhenStanding() && !isStanding(Level::current())) {
+	if(type_->goesInactiveOnlyWhenStanding() && isStanding(Level::current()) == STANDING_STATUS::NOT_STANDING) {
 		return true;
 	}
 
@@ -4660,12 +4651,12 @@ bool CustomObject::moveToStandingInternal(Level& lvl, int max_displace)
 	int start_y = y();
 	//descend from the initial-position (what the player was at in the prev level) until we're standing
 	for(int n = 0; n != max_displace; ++n) {
-		if(isStanding(lvl)) {
+		if(isStanding(lvl) != STANDING_STATUS::NOT_STANDING) {
 			
 			if(n == 0) {  //if we've somehow managed to be standing on the very first frame, try to avoid the possibility that this is actually some open space underground on a cave level by scanning up till we reach the surface.
 				for(int n = 0; n != max_displace; ++n) {
 					setPos(x(), y() - 1);
-					if(!isStanding(lvl)) {
+					if(isStanding(lvl) == STANDING_STATUS::NOT_STANDING) {
 						setPos(x(), y() + 1);
 						
 						if(y() < lvl.boundaries().y()) {
@@ -4675,7 +4666,7 @@ bool CustomObject::moveToStandingInternal(Level& lvl, int max_displace)
 							//to standing on the solid below.
 							for(int n = 0; n != max_displace; ++n) {
 								setPos(x(), y() + 1);
-								if(!isStanding(lvl)) {
+								if(isStanding(lvl) == STANDING_STATUS::NOT_STANDING) {
 									return moveToStandingInternal(lvl, max_displace);
 								}
 							}
@@ -4746,7 +4737,7 @@ bool CustomObject::handleEvent(const std::string& event, const FormulaCallable* 
 
 bool CustomObject::handleEventDelay(int event, const FormulaCallable* context)
 {
-	return handleEvent_internal(event, context, false);
+	return handleEventInternal(event, context, false);
 }
 
 namespace 
@@ -4765,14 +4756,14 @@ bool CustomObject::handleEvent(int event, const FormulaCallable* context)
 		try {
 			ConstCustomObjectTypePtr type_back = type_;
 			ConstCustomObjectTypePtr base_type_back = base_type_;
-			assert_edit_and_continue_fn_scope scope(std::function<void()>(std::bind(&CustomObject::handleEvent_internal, this, event, context, true)));
-			return handleEvent_internal(event, context);
-		} catch(validation_failure_exception& e) {
+			assert_edit_and_continue_fn_scope scope([&](){ this->handleEventInternal(event, context, true); });
+			return handleEventInternal(event, context);
+		} catch(validation_failure_exception&) {
 			return true;
 		}
 	} else {
 		try {
-			return handleEvent_internal(event, context);
+			return handleEventInternal(event, context);
 		} catch(validation_failure_exception& e) {
 			if(Level::current().in_editor()) {
 				return true;
@@ -4805,7 +4796,7 @@ namespace
 	};
 }
 
-bool CustomObject::handleEvent_internal(int event, const FormulaCallable* context, bool executeCommands_now)
+bool CustomObject::handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now)
 {
 	if(paused_) {
 		return false;
@@ -4823,7 +4814,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 
 		callable->add("event", variant(get_object_event_str(event)));
 
-		handleEvent_internal(OBJECT_EVENT_ANY, callable, true);
+		handleEventInternal(OBJECT_EVENT_ANY, callable, true);
 	}
 #endif
 
@@ -4850,7 +4841,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 		const game_logic::Formula* handler = handlers[n];
 
 #ifndef DISABLE_FORMULA_PROFILER
-		formula_profiler::custom_object_event_frame event_frame = { type_.get(), event, false };
+		formula_profiler::CustomObjectEventFrame event_frame = { type_.get(), event, false };
 		event_call_stack.push_back(event_frame);
 #endif
 
@@ -4859,7 +4850,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 		variant var;
 		
 		try {
-			formula_profiler::instrument instrumentation("FFL");
+			formula_profiler::Instrument instrumentation("FFL");
 			var = handler->execute(*this);
 		} catch(validation_failure_exception& e) {
 #ifndef DISABLE_FORMULA_PROFILER
@@ -4877,7 +4868,7 @@ bool CustomObject::handleEvent_internal(int event, const FormulaCallable* contex
 		
 		try {
 			if(executeCommands_now) {
-				formula_profiler::instrument instrumentation("COMMANDS");
+				formula_profiler::Instrument instrumentation("COMMANDS");
 				result = executeCommand(var);
 			} else {
 				delayed_commands_.push_back(var);
@@ -4956,7 +4947,7 @@ bool CustomObject::executeCommand(const variant& var)
 
 int CustomObject::slopeStandingOn(int range) const
 {
-	if(!isStanding(Level::current())) {
+	if(isStanding(Level::current()) == STANDING_STATUS::NOT_STANDING) {
 		return 0;
 	}
 
@@ -4982,7 +4973,7 @@ int CustomObject::slopeStandingOn(int range) const
 
 		return 0;
 	} else {
-		if(!isStanding(Level::current())) {
+		if(isStanding(Level::current()) == STANDING_STATUS::NOT_STANDING) {
 			return 0;
 		}
 
@@ -5500,9 +5491,9 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 		type_ = base_type_->getVariation(current_variation_);
 	}
 
-	game_logic::Formula_variable_storage_ptr old_vars = vars_;
+	game_logic::FormulaVariableStoragePtr old_vars = vars_;
 
-	vars_.reset(new game_logic::Formula_variable_storage(type_->variables()));
+	vars_.reset(new game_logic::FormulaVariableStorage(type_->variables()));
 	vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->queryValue(key);
@@ -5516,7 +5507,7 @@ void CustomObject::updateType(ConstCustomObjectTypePtr old_type,
 
 	old_vars = tmp_vars_;
 
-	tmp_vars_.reset(new game_logic::Formula_variable_storage(type_->tmpVariables()));
+	tmp_vars_.reset(new game_logic::FormulaVariableStorage(type_->tmpVariables()));
 	tmp_vars_->setObjectName(getDebugDescription());
 	for(const std::string& key : old_vars->keys()) {
 		const variant old_value = old_vars->queryValue(key);
@@ -5658,7 +5649,7 @@ void CustomObject::addToLevel()
 #endif
 }
 
-int custom_object::current_rotation() const
+int CustomObject::currentRotation() const
 {
 	return rotate_z_.as_int();
 }

@@ -47,121 +47,125 @@ namespace KRE
 			}
 		}
 
-		class random_parameter : public parameter
+		class RandomParameter : public Parameter
 		{
 		public:
-			random_parameter(const variant& node);
-			virtual ~random_parameter();
+			RandomParameter(const variant& node);
+			virtual ~RandomParameter();
 			virtual float getValue(float t);
 		private:
 			float min_value_;
 			float max_value_;
-			random_parameter(const random_parameter&);
+			RandomParameter(const RandomParameter&);
 		};
 
-		class oscillate_parameter : public parameter
+		class OscillateParameter : public Parameter
 		{
 		public:
-			oscillate_parameter(const variant& node);
-			virtual ~oscillate_parameter();
+			OscillateParameter(const variant& node);
+			virtual ~OscillateParameter();
 			virtual float getValue(float t);
 		private:
-			enum WaveType {
-				TYPE_SINE,
-				TYPE_SQUARE,
+			enum class WaveType {
+				SINE,
+				SQUARE,
 			};
 			WaveType osc_type_;
 			float frequency_;
 			float phase_;
 			float base_;
 			float amplitude_;
-			oscillate_parameter(const oscillate_parameter&);
+			OscillateParameter(const OscillateParameter&);
 		};
 
-		class curved_parameter : public parameter
+		class CurvedParameter : public Parameter
 		{
 		public:
-			enum InterpolationType {
-				INTERPOLATE_LINEAR,
-				INTERPOLATE_SPLINE,
+			enum class InterpolationType {
+				LINEAR,
+				SPLINE,
 			};
-			curved_parameter(InterpolationType type, const variant& node);
-			virtual ~curved_parameter();
+			CurvedParameter(InterpolationType type, const variant& node);
+			virtual ~CurvedParameter();
 			virtual float getValue(float t);
 		private:
 			InterpolationType curve_type_;
 			geometry::control_point_vector control_points_;
 
-			geometry::control_point_vector::iterator find_closest_point(float t);
-			curved_parameter(const curved_parameter&);
+			geometry::control_point_vector::iterator findClosestPoint(float t);
+			CurvedParameter(const CurvedParameter&);
 		};
 
-		parameter_ptr parameter::factory(const variant& node)
+		ParameterPtr Parameter::factory(const variant& node)
 		{
 			if(node.is_float() || node.is_int()) {
 				// single fixed attribute
-				return parameter_ptr(new fixed_parameter(float(node.as_float())));
+				return ParameterPtr(new FixedParameter(float(node.as_float())));
 			}
 			ASSERT_LOG(node.has_key("type"), "PSYSTEM2: parameter must have 'type' attribute");
 			const std::string& ntype = node["type"].as_string();
 			if(ntype == "fixed") {
-				return parameter_ptr(new fixed_parameter(node));
+				return ParameterPtr(new FixedParameter(node));
 			} else if(ntype == "dyn_random") {
-				return parameter_ptr(new random_parameter(node));
+				return ParameterPtr(new RandomParameter(node));
 			} else if(ntype == "dyn_curved_linear") {
-				return parameter_ptr(new curved_parameter(curved_parameter::INTERPOLATE_LINEAR, node));
+				return ParameterPtr(new CurvedParameter(CurvedParameter::InterpolationType::LINEAR, node));
 			} else if(ntype == "dyn_curved_spline") {
-				return parameter_ptr(new curved_parameter(curved_parameter::INTERPOLATE_SPLINE, node));
+				return ParameterPtr(new CurvedParameter(CurvedParameter::InterpolationType::SPLINE, node));
 			} else if(ntype == "dyn_oscillate") {
-				return parameter_ptr(new oscillate_parameter(node));
+				return ParameterPtr(new OscillateParameter(node));
 			} else {
 				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
-			return parameter_ptr();
+			return ParameterPtr();
 		}
 
-		parameter::parameter()
+		Parameter::Parameter()
 		{
 		}
 
-		parameter::~parameter()
+		Parameter::~Parameter()
 		{
 		}
 
-		fixed_parameter::fixed_parameter(float value)
-			: parameter(PARAMETER_FIXED), value_(value)
+		FixedParameter::FixedParameter(float value)
+			: Parameter(ParameterType::FIXED), 
+			  value_(value)
 		{
 		}
 
-		fixed_parameter::fixed_parameter(const variant& node)
+		FixedParameter::FixedParameter(const variant& node)
 		{
 			value_ = node["value"].as_float();
 		}
 
-		fixed_parameter::~fixed_parameter()
+		FixedParameter::~FixedParameter()
 		{
 		}
 
-		random_parameter::random_parameter(const variant& node)
-			: parameter(PARAMETER_RANDOM), 
+		RandomParameter::RandomParameter(const variant& node)
+			: Parameter(ParameterType::RANDOM), 
 			min_value_(node["min"].as_float(0.1f)),
 			max_value_(node["max"].as_float(1.0f))
 		{
 		}
 
-		random_parameter::~random_parameter()
+		RandomParameter::~RandomParameter()
 		{
 		}
 
-		float random_parameter::getValue(float t)
+		float RandomParameter::getValue(float t)
 		{
 			return get_random_float(min_value_, max_value_);
 		}
 
-		oscillate_parameter::oscillate_parameter(const variant& node)
-			: parameter(PARAMETER_OSCILLATE), 
-			frequency_(1.0f), phase_(0.0f), base_(0.0f), amplitude_(1.0f),
-			osc_type_(TYPE_SINE)
+		OscillateParameter::OscillateParameter(const variant& node)
+			: Parameter(ParameterType::OSCILLATE), 
+			  frequency_(1.0f), 
+			  phase_(0.0f), 
+			  base_(0.0f), 
+			  amplitude_(1.0f),
+			  osc_type_(WaveType::SINE)
 		{
 			if(node.has_key("oscillate_frequency")) {
 				frequency_ = node["oscillate_frequency"].as_float();
@@ -178,31 +182,32 @@ namespace KRE
 			if(node.has_key("oscillate_type")) {
 				const std::string& type = node["oscillate_type"].as_string();
 				if(type == "sine") {
-					osc_type_ = TYPE_SINE;
+					osc_type_ = WaveType::SINE;
 				} else if(type == "square") {
-					osc_type_ = TYPE_SQUARE;
+					osc_type_ = WaveType::SQUARE;
 				} else {
 					ASSERT_LOG(false, "PSYSTEM2: unrecognised oscillate type: " << type);
 				}
 			}             
 		}
 
-		oscillate_parameter::~oscillate_parameter()
+		OscillateParameter::~OscillateParameter()
 		{
 		}
 
-		float oscillate_parameter::getValue(float t)
+		float OscillateParameter::getValue(float t)
 		{
-			if(osc_type_ == TYPE_SINE) {
+			if(osc_type_ == WaveType::SINE) {
 				return float(base_ + amplitude_ * sin(2*M_PI*frequency_*t + phase_));
-			} else if(osc_type_ == TYPE_SQUARE) {
+			} else if(osc_type_ == WaveType::SQUARE) {
 				return float(base_ + amplitude_ * sign(sin(2*M_PI*frequency_*t + phase_)));
 			}
 			return 0;
 		}
 
-		curved_parameter::curved_parameter(InterpolationType type, const variant& node)
-			: parameter(PARAMETER_OSCILLATE), curve_type_(type)
+		CurvedParameter::CurvedParameter(InterpolationType type, const variant& node)
+			: Parameter(ParameterType::OSCILLATE), 
+			  curve_type_(type)
 		{
 			ASSERT_LOG(node.has_key("control_point") 
 				&& node["control_point"].is_list()
@@ -218,11 +223,11 @@ namespace KRE
 			}
 		}
 
-		curved_parameter::~curved_parameter()
+		CurvedParameter::~CurvedParameter()
 		{
 		}
 
-		geometry::control_point_vector::iterator curved_parameter::find_closest_point(float t)
+		geometry::control_point_vector::iterator CurvedParameter::findClosestPoint(float t)
 		{
 			// find nearest control point to t
 			auto it = control_points_.begin();
@@ -238,10 +243,10 @@ namespace KRE
 			return --it;
 		}
 
-		float curved_parameter::getValue(float t)
+		float CurvedParameter::getValue(float t)
 		{
-			if(curve_type_ == INTERPOLATE_LINEAR) {
-				auto it = find_closest_point(t);
+			if(curve_type_ == InterpolationType::LINEAR) {
+				auto it = findClosestPoint(t);
 				auto it2 = it + 1;
 				if(it2 == control_points_.end()) {
 					return float(it2->second);
@@ -249,7 +254,7 @@ namespace KRE
 					// linear interpolate, see http://en.wikipedia.org/wiki/Linear_interpolation
 					return float(it->second + (it2->second - it->second) * (t - it->first) / (it2->first - it->first));
 				}
-			} else if(curve_type_ == INTERPOLATE_SPLINE) {
+			} else if(curve_type_ == InterpolationType::SPLINE) {
 				// http://en.wikipedia.org/wiki/Spline_interpolation
 				geometry::spline spl(control_points_);
 				return float(spl.interpolate(t));

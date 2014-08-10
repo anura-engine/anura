@@ -69,7 +69,7 @@ namespace KRE
 		typedef ActivesMap::iterator ActivesMapIterator;
 		typedef ActivesMap::const_iterator ConstActivesMapIterator;
 
-		class ActivesHandle : public ActivesHandle
+		class ActivesHandle : public ActivesHandleBase
 		{
 		public:
 			ActivesHandle(ConstActivesMapIterator a) : active_(a) {}
@@ -125,9 +125,9 @@ namespace KRE
 			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
 			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
 
-			ActivesHandlePtr getHandle(const std::string& name) override;
+			ActivesHandleBasePtr getHandle(const std::string& name) override;
 
-			void setUniform(ActivesHandlePtr active, const void*) override;
+			void setUniform(ActivesHandleBasePtr active, const void*) override;
 
 			void applyActives() override;
 

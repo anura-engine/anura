@@ -647,7 +647,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	checksum::manager checksum_manager;
 #ifndef NO_EDITOR
-	sys::filesystem_manager fs_manager;
+	sys::FilesystemManager fs_manager;
 #endif // NO_EDITOR
 
 	const tbs::internal_server_manager internal_server_manager_scope(preferences::internal_tbs_server());
@@ -676,11 +676,11 @@ extern "C" int main(int argcount, char* argvec[])
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
 
-	SceneGraphPtr scene = SceneGraph::Create("root");
-	SceneNodePtr root = scene->RootNode();
-	root->SetNodeName("root_node");
+	SceneGraphPtr scene = SceneGraph::create("root");
+	SceneNodePtr root = scene->getRootNode();
+	root->setNodeName("root_node");
 	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->logicalWidth(), 0, main_wnd->logicalHeight());
-	root->AttachCamera(orthocam);
+	root->attachCamera(orthocam);
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
@@ -703,9 +703,9 @@ extern "C" int main(int argcount, char* argvec[])
 		orig_level_cfg = level_cfg;
 	}
 
-	const stats::manager stats_manager;
+	const stats::Manager stats_manager;
 #ifndef NO_EDITOR
-	const external_text_editor::manager editor_manager;
+	const ExternalTextEditor::Manager editor_manager;
 #endif // NO_EDITOR
 
 #if defined(USE_BOX2D)
@@ -715,8 +715,8 @@ extern "C" int main(int argcount, char* argvec[])
 	const load_level_manager load_manager;
 
 	{ //manager scope
-	const sound::manager sound_manager;
-	const joystick::manager joystick_manager;
+	const sound::Manager sound_manager;
+	const joystick::Manager joystick_manager;
 	
 #ifndef NO_EDITOR
 	editor::manager editor_manager;
@@ -742,7 +742,7 @@ extern "C" int main(int argcount, char* argvec[])
 		loader.drawAndIncrement(_("Initializing tiles"));
 		TileMap::init(json::parse_from_file("data/tiles.cfg"));
 
-		game_logic::Formula_object::loadAllClasses();
+		game_logic::FormulaObject::loadAllClasses();
 
 	} catch(const json::ParseError& e) {
 		LOG_ERROR("ERROR PARSING: " << e.errorMessage());
@@ -766,7 +766,7 @@ extern "C" int main(int argcount, char* argvec[])
 		}
 	}
 
-	formula_profiler::manager profiler(profile_output);
+	formula_profiler::Manager profiler(profile_output);
 
 	if(run_benchmarks) {
 		if(benchmarks_list.empty() == false) {
@@ -787,7 +787,7 @@ extern "C" int main(int argcount, char* argvec[])
 		
 		//see if we're loading a multiplayer level, in which case we
 		//connect to the server.
-		multiplayer::manager mp_manager(lvl->is_multiplayer());
+		multiplayer::Manager mp_manager(lvl->is_multiplayer());
 		if(lvl->is_multiplayer()) {
 			multiplayer::setup_networked_game(server);
 		}

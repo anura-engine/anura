@@ -56,11 +56,11 @@ namespace KRE
 
 	void Material::Init(const variant& node)
 	{
-		blend_.Set(BlendMode::BlendModeConstants::BM_SRC_ALPHA, BlendMode::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+		blend_.set(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 
 		if(node.is_string()) {
 			name_ = node.as_string();
-			tex_.emplace_back(DisplayDevice::CreateTexture(name_));
+			tex_.emplace_back(DisplayDevice::createTexture(name_));
 		} else if(node.is_map()) {
 			name_ = node["name"].as_string();
 		
@@ -73,14 +73,14 @@ namespace KRE
 			do_depth_write_ = pass["depth_write"].as_bool(true);
 			do_depth_check_ = pass["depth_check"].as_bool(true);
 			if(pass.has_key("scene_blend")) {
-				blend_.Set(pass["scene_blend"]);
+				blend_.set(pass["scene_blend"]);
 			}
 			if(pass.has_key("texture_unit")) {
 				if(pass["texture_unit"].is_map()) {
-					tex_.emplace_back(CreateTexture(pass["texture_unit"]));
+					tex_.emplace_back(createTexture(pass["texture_unit"]));
 				} else if(pass["texture_unit"].is_list()) {
 					for(size_t n = 0; n != pass["texture_unit"].num_elements(); ++n) {
-						tex_.emplace_back(CreateTexture(pass["texture_unit"][n]));
+						tex_.emplace_back(createTexture(pass["texture_unit"][n]));
 					}
 				} else {
 					ASSERT_LOG(false, "'texture_unit' attribute must be map or list ");
@@ -98,58 +98,58 @@ namespace KRE
 	{
 	}
 
-	void Material::SetTexture(const TexturePtr& tex)
+	void Material::setTexture(const TexturePtr& tex)
 	{
 		tex_.emplace_back(tex);
 	}
 
-	void Material::EnableLighting(bool en)
+	void Material::enableLighting(bool en)
 	{
 		use_lighting_ = en;
 	}
 
-	void Material::EnableFog(bool en)
+	void Material::enableFog(bool en)
 	{
 		use_fog_ = en;
 	}
 
-	void Material::EnableDepthWrite(bool en)
+	void Material::enableDepthWrite(bool en)
 	{
 		do_depth_write_ = en;
 	}
 
-	void Material::EnableDepthCheck(bool en)
+	void Material::enableDepthCheck(bool en)
 	{
 		do_depth_check_ = en;
 	}
 
-	void Material::SetBlendMode(const BlendMode& bm)
+	void Material::setBlendMode(const BlendMode& bm)
 	{
 		blend_ = bm;
 	}
 
-	void Material::SetBlendMode(BlendMode::BlendModeConstants src, BlendMode::BlendModeConstants dst)
+	void Material::setBlendMode(BlendModeConstants src, BlendModeConstants dst)
 	{
-		blend_.Set(src, dst);
+		blend_.set(src, dst);
 	}
 
-	bool Material::Apply()
+	bool Material::apply()
 	{
-		HandleApply();
-		return UseLighting();
+		handleApply();
+		return useLighting();
 	}
 
-	void Material::unApply()
+	void Material::unapply()
 	{
-		HandleUnapply();
+		handleUnapply();
 	}
 
 	MaterialPtr Material::createMaterial(const variant& node)
 	{
-		return DisplayDevice::getCurrent()->CreateMaterial(node);
+		return DisplayDevice::getCurrent()->createMaterial(node);
 	}
 
-	const rectf Material::GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it)
+	const rectf Material::getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it)
 	{
 		float w = (*it)->width();
 		float h = (*it)->height();

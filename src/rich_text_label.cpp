@@ -209,7 +209,7 @@ namespace gui
 
 	void RichTextLabel::handleDraw() const
 	{
-		ScrollableWidget::handleDraw();
+		ScrollableWidget::draw();
 
 		using namespace KRE;
 		ClipScope::Manager clip_scope(rect(x(),y(),width(),height()));
@@ -228,7 +228,7 @@ namespace gui
 
 	bool RichTextLabel::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		claimed = ScrollableWidget::handleEvent(event, claimed);
+		claimed = ScrollableWidget::processEvent(event, claimed);
 
 		SDL_Event ev = event;
 		normalizeEvent(&ev);

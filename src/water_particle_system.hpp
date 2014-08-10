@@ -61,7 +61,7 @@ public:
 private:
 	DECLARE_CALLABLE(WaterParticleSystem);
 
-	KRE::DisplayDeviceDef Attach(const KRE::DisplayDevicePtr& dd) override;
+	void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
 
 	const WaterParticleSystemFactory& factory_;
 	const WaterParticleSystemInfo& info_;

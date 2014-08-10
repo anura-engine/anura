@@ -36,9 +36,9 @@ namespace KRE
 		OpenGLMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
 		virtual ~OpenGLMaterial();
 	private:
-		void HandleApply() override;
-		void HandleUnapply() override;
-		TexturePtr CreateTexture(const variant& node) override;
+		void handleApply() override;
+		void handleUnapply() override;
+		TexturePtr createTexture(const variant& node) override;
 		std::unique_ptr<BlendModeManagerOGL> blend_mode_manager_;
 	};
 }

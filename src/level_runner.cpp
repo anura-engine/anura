@@ -26,6 +26,7 @@
 
 #include "kre/Canvas.hpp"
 #include "kre/Font.hpp"
+#include "kre/DisplayDevice.hpp"
 #include "kre/WindowManager.hpp"
 
 #include "background_task_pool.hpp"
@@ -62,6 +63,7 @@
 #include "profile_timer.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
+#include "surface_cache.hpp"
 #include "tbs_internal_server.hpp"
 #include "user_voxel_object.hpp"
 #include "utils.hpp"
@@ -456,6 +458,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 			std::vector<EntityPtr> wcs;
 
+// XXX needs re-work
+#if 0
 			if(lvl_->iso_world()) {
 				// XXX need to get camera position.
 				glm::vec3 v3 = lvl_->camera()->screen_to_world(mx, my, wnd->width(), wnd->height());
@@ -470,6 +474,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 				wcs = lvl_->get_characters_at_world_point(v3);
 			}
+#endif
 
 			std::vector<variant> items;
 			// Grab characters around point, z-order sort them, so that when
@@ -907,7 +912,7 @@ bool LevelRunner::play_cycle()
 		point p = lvl_->player()->getEntity().getMidpoint();
 
 		if(last_stats_point_level_ == lvl_->id()) {
-			stats::entry("move").add_player_pos();
+			stats::Entry("move").add_player_pos();
 		}
 
 		last_stats_point_ = p;
@@ -1090,7 +1095,7 @@ bool LevelRunner::play_cycle()
 			if(player && portal->saved_game == false) {
 				if(portal->new_playable) {
 					player = portal->new_playable->getPlayerInfo();
-					ASSERT_LOG(player != NULL, "Object is not playable: " << portal->new_playable->debug_description().c_str());
+					ASSERT_LOG(player != NULL, "Object is not playable: " << portal->new_playable->getDebugDescription());
 				}
 				player->getEntity().setPos(dest);
 				new_level->add_player(&player->getEntity());
@@ -1222,7 +1227,7 @@ bool LevelRunner::play_cycle()
 
 			switch(event.type) {
 			case SDL_QUIT: {
-				stats::entry("quit").add_player_pos();
+				stats::Entry("quit").add_player_pos();
 				done = true;
 				quit_ = true;
 				break;
@@ -1344,7 +1349,7 @@ bool LevelRunner::play_cycle()
 				} else if(key == SDLK_s && (mod&KMOD_ALT)) {
 #if !defined(__native_client__)
 					const std::string fname = std::string(preferences::user_data_path()) + "screenshot.png";
-					IMG_SaveFrameBuffer(fname.c_str(), 5);
+					KRE::WindowManager::getMainWindow()->saveFrameBuffer(fname);
 					std::shared_ptr<upload_screenshot_info> info(new upload_screenshot_info);
 					background_task_pool::submit(
 					  std::bind(upload_screenshot, fname, info),
@@ -1352,8 +1357,8 @@ bool LevelRunner::play_cycle()
 #endif
 				} else if(key == SDLK_l && (mod&KMOD_CTRL)) {
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
-					graphics::surface_cache::clear();
-					graphics::texture::clear_cache();
+					graphics::SurfaceCache::clear();
+					KRE::Texture::clearCache();
 				} else if(key == SDLK_i && lvl_->player()) {
 // INVENTORY CURRENTLY DISABLED
 //					pause_scope pauser;
@@ -1371,14 +1376,14 @@ bool LevelRunner::play_cycle()
 					}
 				} else if(key == SDLK_p && mod & KMOD_ALT) {
 					preferences::set_use_pretty_scaling(!preferences::use_pretty_scaling());
-					graphics::texture::clear_textures();
+					KRE::Texture::clearTextures();
 				} else if(key == SDLK_f && mod & KMOD_CTRL && !preferences::no_fullscreen_ever()) {
 					preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
 						? preferences::FULLSCREEN_WINDOWED 
 						: preferences::FULLSCREEN_NONE);
 					mwnd->setFullscreenMode(preferences::fullscreen() == preferences::FULLSCREEN_NONE
-						? KRE::WindowManager::FullScreenMode::FULLSCREEN_WINDOWED_MODE
-						: KRE::WindowManager::FullScreenMode::WINDOWED_MODE);
+						? KRE::FullScreenMode::FULLSCREEN_WINDOWED
+						: KRE::FullScreenMode::WINDOWED);
 					mwnd->setWindowSize(preferences::actual_screen_width(), preferences::actual_screen_height());
 				} else if(key == SDLK_F3) {
 					preferences::set_show_fps(!preferences::show_fps());
@@ -1437,7 +1442,7 @@ bool LevelRunner::play_cycle()
 
 		if(should_pause) {
 			lvl_->set_show_builtin_settingsDialog(true);
-			std::vector<entity_ptr> active_chars = lvl_->get_active_chars();
+			std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
 			for(const auto& c : active_chars) {
 				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
 			}
@@ -1475,7 +1480,7 @@ bool LevelRunner::play_cycle()
 			try {
 				debug_console::process_graph();
 				lvl_->process();
-			} catch(interrupt_game_exception& e) {
+			} catch(InterruptGameException& e) {
 				handle_pause_game_result(e.result);
 			}
 
@@ -1508,12 +1513,12 @@ bool LevelRunner::play_cycle()
 			last_draw_position().x += (editor_->xpos() - xpos)*100;
 			last_draw_position().y += (editor_->ypos() - ypos)*100;
 
-			float target_zoom = 1.0/editor_->zoom();
+			float target_zoom = 1.0f/editor_->zoom();
 			float diff = target_zoom - last_draw_position().zoom;
-			float amount = diff/10.0;
-			float dir = amount > 0.0 ? 1.0 : -1.0;
-			if(amount*dir < 0.02) {
-				amount = 0.02*dir;
+			float amount = diff/10.0f;
+			float dir = amount > 0.0f ? 1.0f : -1.0f;
+			if(amount*dir < 0.02f) {
+				amount = 0.02f*dir;
 			}
 
 			if(amount*dir > diff*dir) {
@@ -1525,7 +1530,8 @@ bool LevelRunner::play_cycle()
 			should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());
 		}
 
-#if defined(USE_ISOMAP)
+// XXX Needs rework
+#if 0
 		bool editor_mouselook = false;
 #ifndef NO_EDITOR
 		if(editor_) {
@@ -1759,7 +1765,7 @@ void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 		//record a quit event in stats
 		if(lvl_->player()) {
 			lvl_->player()->getEntity().recordStatsMovement();
-			stats::entry("quit").add_player_pos();
+			stats::Entry("quit").add_player_pos();
 		}
 		
 		done = true;

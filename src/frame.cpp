@@ -31,18 +31,16 @@
 #include "kre/TextureUtils.hpp"
 
 #include "asserts.hpp"
-#include "fbo_scene.hpp"
 #include "frame.hpp"
 #include "level.hpp"
 #include "module.hpp"
 #include "object_events.hpp"
-#include "obj_reader.hpp"
 #include "preferences.hpp"
 #include "rectangle_rotator.hpp"
 #include "solid_map.hpp"
 #include "sound.hpp"
 #include "string_utils.hpp"
-#include "surface_formula.hpp"
+#include "surface_cache.hpp"
 #include "surface_palette.hpp"
 #include "TextureObject.hpp"
 #include "variant_utils.hpp"
@@ -145,13 +143,14 @@ void Frame::buildPatterns(variant obj_variant)
 }
 
 Frame::Frame(variant node)
-   : id_(node["id"].as_string()),
+   : SceneObject("Frame"), 
+	id_(node["id"].as_string()),
      variant_id_(id_),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
 	 end_event_id_(get_object_event_id("end_" + id_ + "_anim")),
 	 leave_event_id_(get_object_event_id("leave_" + id_ + "_anim")),
 	 processEvent_id_(get_object_event_id("process_" + id_)),
-	 solid_(solid_info::create(node)),
+	 solid_(SolidInfo::create(node)),
      collide_rect_(node.has_key("collide") ? rect(node["collide"]) :
 	               rect(node["collide_x"].as_int(),
                         node["collide_y"].as_int(),
@@ -182,7 +181,7 @@ Frame::Frame(variant node)
 	 frame_time_(node["duration"].as_int(-1)),
 	 reverse_frame_(node["reverse"].as_bool()),
 	 play_backwards_(node["play_backwards"].as_bool()),
-	 scale_(node["scale"].as_decimal(decimal(g_global_frame_scale)).as_float()),
+	 scale_(node["scale"].as_float(static_cast<float>(g_global_frame_scale))),
 	 pad_(node["pad"].as_int()),
 	 rotate_(node["rotate"].as_int()),
 	 blur_(node["blur"].as_int()),
@@ -267,7 +266,7 @@ Frame::Frame(variant node)
 
 			if(v.empty() == false) {
 				r = rect(v);
-				r = rect(r.x()*scale_, r.y()*scale_, r.w()*scale_, r.h()*scale_);
+				r = rectf(r.x()*scale_, r.y()*scale_, r.w()*scale_, r.h()*scale_).as_type<int>();
 			}
 		}
 
@@ -301,7 +300,7 @@ Frame::Frame(variant node)
 			const int h = *i++;
 			info.area = rect(x, y, w, h);
 			frames_.push_back(info);
-			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, texture_.width(), texture_.height())), info.area);
+			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, texture_->width(), texture_->height())), info.area);
 			ASSERT_EQ(w + (info.x_adjust + info.x2_adjust), img_rect_.w());
 			ASSERT_EQ(h + (info.y_adjust + info.y2_adjust), img_rect_.h());
 
@@ -391,10 +390,15 @@ void Frame::setPalettes(unsigned int palettes)
 		return;
 	}
 
-	auto texture_ = KRE::Texture::createTexture(image_);
-	// XXX Need to add this.
-	texture_ = graphics::texture::get_palette_mapped(image_, npalette);
-	current_palette_ = npalette;
+	const std::string& str = graphics::get_palette_name(npalette);
+	if(str.empty()) {
+		LOG_WARN("No palette from id: " << npalette);
+		texture_ = KRE::Texture::createTexture(image_);
+	} else {
+		auto surf = graphics::SurfaceCache::get(str);
+		texture_ = KRE::Texture::createPalettizedTexture(image_, surf);
+		current_palette_ = npalette;
+	}
 }
 
 void Frame::setColorPalette(unsigned int palettes)
@@ -407,7 +411,7 @@ void Frame::setColorPalette(unsigned int palettes)
 
 void Frame::setImageAsSolid()
 {
-	solid_ = solid_info::createFromTexture(texture_, img_rect_);
+	solid_ = SolidInfo::createFromTexture(texture_, img_rect_);
 }
 
 void Frame::playSound(const void* object) const
@@ -434,10 +438,10 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			ASSERT_LT(area.x(), texture_.width());
-			ASSERT_LE(area.x() + area.w(), texture_.width());
-			ASSERT_LT(area.y() + y, texture_.height());
-			std::vector<bool>::const_iterator src = texture_->getAlpha_row(area.x(), area.y() + y);
+			ASSERT_LT(area.x(), texture_->width());
+			ASSERT_LE(area.x() + area.w(), texture_->width());
+			ASSERT_LT(area.y() + y, texture_->height());
+			std::vector<bool>::const_iterator src = texture_->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
 			
@@ -470,7 +474,7 @@ void Frame::buildAlpha()
 
 		if(xbase < 0 || ybase < 0 || xbase + img_rect_.w() > texture_->width() ||
 		   ybase + img_rect_.h() > texture_->height()) {
-			std::cerr << "IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_.width() << "," << texture_.height() << "\n";
+			std::cerr << "IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_->width() << "," << texture_->height() << "\n";
 			throw Error();
 		}
 
@@ -480,7 +484,7 @@ void Frame::buildAlpha()
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = texture_.getAlpha_row(xbase, ybase + y);
+			std::vector<bool>::const_iterator src = texture_->getAlphaRow(xbase, ybase + y);
 			std::copy(src, src + img_rect_.w(), dst);
 		}
 
@@ -495,7 +499,7 @@ void Frame::buildAlpha()
 		
 		int top;
 		for(top = 0; top != img_rect_.h(); ++top) {
-			const std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase, ybase + top);
+			const std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase, ybase + top);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -503,7 +507,7 @@ void Frame::buildAlpha()
 
 		int bot;
 		for(bot = img_rect_.h(); bot > 0; --bot) {
-			const std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase, ybase + bot-1);
+			const std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase, ybase + bot-1);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -511,7 +515,7 @@ void Frame::buildAlpha()
 
 		int left;
 		for(left = 0; left < img_rect_.w(); ++left) {
-			std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase + left, ybase);
+			std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase + left, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -530,7 +534,7 @@ void Frame::buildAlpha()
 
 		int right;
 		for(right = img_rect_.w(); right > 0; --right) {
-			std::vector<bool>::const_iterator a = texture_.getAlpha_row(xbase + right-1, ybase);
+			std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase + right-1, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -608,6 +612,8 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 	return alpha_.begin() + index;
 }
 
+// XXX Need to fix these up
+#if 0
 void Frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right, bool upside_down, int time) const
 {
 	const frame_info* info = NULL;
@@ -920,6 +926,7 @@ void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelem
 
 	glPopMatrix();
 }
+#endif
 
 void Frame::getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const
 {
@@ -940,7 +947,7 @@ void Frame::getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
-	output_rect = texture_->GetNormalisedTextureCoords(info.area);
+	output_rect = texture_->getNormalisedTextureCoords(info.area);
 
 	info.draw_rect = output_rect;
 	info.draw_rect_init = true;

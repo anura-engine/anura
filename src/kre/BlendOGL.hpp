@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#pragma once
+
 #include "Blend.hpp"
 
 namespace KRE

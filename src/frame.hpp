@@ -207,3 +207,5 @@ private:
 
 	void setPalettes(unsigned int palettes);
 };
+
+typedef boost::intrusive_ptr<Frame> FramePtr;

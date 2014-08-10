@@ -179,7 +179,7 @@ namespace KRE
 				// attach the texture to FBO color attachment point
 				unsigned n = 0;
 				for(auto t : textures) {
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+n, GL_TEXTURE_2D, t->ID(), 0);
+					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+n, GL_TEXTURE_2D, t->id(), 0);
 					++n;
 				}
 				if(depth_stencil_buffer_id_) {

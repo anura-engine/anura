@@ -32,30 +32,33 @@ namespace KRE
 	class OpenGLTexture : public Texture
 	{
 	public:
-		OpenGLTexture(const SurfacePtr& surface, const variant& node);
-		OpenGLTexture(const SurfacePtr& surface, 
+		explicit OpenGLTexture(const variant& node);
+		explicit OpenGLTexture(const SurfacePtr& surface, const variant& node);
+		explicit OpenGLTexture(const SurfacePtr& surface, 
 			Type type=Type::TEXTURE_2D, 
 			int mipmap_levels=0);
-		OpenGLTexture(unsigned width, 
+		explicit OpenGLTexture(unsigned width, 
 			unsigned height, 			
 			PixelFormat::PF fmt, 
 			Texture::Type type=Type::TEXTURE_2D,
 			unsigned depth=0);
+		explicit OpenGLTexture(const SurfacePtr& surf, SurfacePtr palette);
 		virtual ~OpenGLTexture();
 
-		void Bind() override;
+		void bind() override;
 
-		void Init() override;
-		unsigned ID() override;
+		void init() override;
+		unsigned id() override;
 
-		void Update(int x, unsigned width, void* pixels) override;
-		void Update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, void* pixels) override;
-		void Update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) override;
+		void update(int x, unsigned width, void* pixels) override;
+		void update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels) override;
+		void update(int x, int y, unsigned width, unsigned height, const std::vector<unsigned>& stride, const void* pixels) override;
+		void update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) override;
 
 		const unsigned char* colorAt(int x, int y) const override;
 	private:
-		void CreateTexture(const PixelFormat::PF& fmt);
-		void Rebuild() override;
+		void createTexture(const PixelFormat::PF& fmt);
+		void rebuild() override;
 
 		// For YUV family textures we need two more texture id's
 		// since we hold them in seperate textures, for everything

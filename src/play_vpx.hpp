@@ -25,7 +25,6 @@
 
 #if defined(USE_LIBVPX)
 
-#include <boost/shared_array.hpp>
 #include <cstdint>
 #include <iostream>
 #include <fstream>
@@ -35,11 +34,14 @@
 
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
+
+#include "kre/Texture.hpp"
+
 #include "widget.hpp"
 
 namespace movie
 {
-	class vpx : public gui::widget, private boost::noncopyable
+	class vpx : public gui::Widget, private boost::noncopyable
 	{
 	public:
 		vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress);
@@ -48,12 +50,13 @@ namespace movie
 	protected:
 		void init();
 		void stop();
-		void gen_textures();
-		void decode_frame();
+		void genTextures();
+		void decodeFrame();
+	private:
 		virtual void handleProcess() override;
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;
 		virtual void handleDraw() const override;
-	private:
+
 		std::ifstream file_;
 		std::string file_name_;
 		bool loop_;
@@ -72,16 +75,7 @@ namespace movie
 
 		bool playing_;
 
-		boost::shared_array<GLuint> texture_id_;
-		GLint u_tex_[3];
-		GLint u_color_;
-		GLint a_vertex_;
-		GLint a_texcoord_;
-
-		size_t texture_width_;
-		size_t texture_height_;
-
-		gles2::shader_program_ptr shader_;
+		KRE::TexturePtr texture_;
 	};
 	typedef boost::intrusive_ptr<vpx> vpx_ptr;
 }

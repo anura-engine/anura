@@ -29,39 +29,37 @@ namespace KRE
 {
 	namespace Particles
 	{
-		class affector : public emit_object
+		class Affector : public EmitObject
 		{
 		public:
-			explicit affector(ParticleSystemContainer* parent, const variant& node);
-			virtual ~affector();
-			virtual affector* clone() = 0;
+			explicit Affector(ParticleSystemContainer* parent, const variant& node);
+			virtual ~Affector();
+			virtual Affector* clone() = 0;
 
-			bool enabled() const { return enabled_; }
+			bool isEnabled() const { return enabled_; }
 			void enable(bool en) { enabled_ = en; }
-			technique* get_technique() { return technique_; }
-			void set_parent_technique(technique* tq) {
+			Technique* getTechnique() { return technique_; }
+			void setParentTechnique(Technique* tq) {
 				technique_ = tq;
 			}
 
-			static affector* factory(ParticleSystemContainer* parent, const variant& node);
+			static Affector* factory(ParticleSystemContainer* parent, const variant& node);
 		protected:
-			//virtual void handle_apply(std::vector<particle>& particles, float t) = 0;
-			//virtual void handle_apply(std::vector<emit_object_ptr>& objs, float t) = 0;
-			virtual void handleProcess(float t);
-			virtual void internal_apply(particle& p, float t) = 0;
+			virtual void handleEmitProcess(float t);
+			virtual void internalApply(Particle& p, float t) = 0;
 
 			float mass() const { return mass_; }
-			const glm::vec3& position() const { return position_; }
-			const glm::vec3& scale() const { return scale_; }
-			bool is_emitter_excluded(const std::string& name);
+			const glm::vec3& getPosition() const { return position_; }
+			const glm::vec3& getScale() const { return scale_; }
+			bool isEmitterExcluded(const std::string& name);
 		private:
 			bool enabled_;
 			float mass_;
 			glm::vec3 position_;
 			std::vector<std::string> excluded_emitters_;
 			glm::vec3 scale_;
-			technique* technique_;
-			affector();
+			Technique* technique_;
+			Affector();
 		};
 	}
 }

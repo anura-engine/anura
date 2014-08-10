@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
+#include "../kre/Geometry.hpp"
 #include "svg_fwd.hpp"
 #include "svg_render.hpp"
 #include "svg_style.hpp"
@@ -33,7 +33,7 @@ namespace KRE
 {
 	namespace SVG
 	{
-		typedef geometry::Rect<double> view_box_rect;
+		typedef Geometry::Rect<double> view_box_rect;
 
 		// container elements are as follows.
 		//  'g', 'svg', 'defs', 'a', 'glyph', 'marker', 'mask', 'missing-glyph', 'pattern', 'switch', 'symbol'

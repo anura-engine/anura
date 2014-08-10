@@ -28,8 +28,6 @@
 #include <set>
 #include <stack>
 
-#include "kre/SceneNode.hpp"
-
 #include "blur.hpp"
 #include "custom_object_type.hpp"
 #include "draw_primitive.hpp"
@@ -42,18 +40,18 @@
 #include "frame.hpp"
 #include "light.hpp"
 #include "particle_system.hpp"
-#include "variant.hpp"
 #include "widget.hpp"
 
 struct CollisionInfo;
 class Level;
 struct CustomObjectText;
 
-class CustomObject : public Entity, public KRE::SceneNode
+
+class CustomObject : public Entity
 {
 public:
-	static const std::string* current_debug_error();
-	static void reset_current_debug_error();
+	static const std::string* currentDebugError();
+	static void resetCurrentDebugError();
 
 	static std::set<CustomObject*>& getAll();
 	static std::set<CustomObject*>& getAll(const std::string& type);
@@ -74,7 +72,7 @@ public:
 	//and allows us to do any final setup such as finding our parent.
 	void finishLoading(Level* lvl);
 	virtual variant write() const;
-	virtual void draw(int x, int y) const;
+	virtual void draw(int xx, int yy) const;
 	virtual void drawLater(int x, int y) const;
 	virtual void drawGroup() const;
 	virtual void process(Level& lvl);
@@ -82,23 +80,22 @@ public:
 	virtual bool createObject();
 	void setLevel(Level& lvl) { }
 
-	void check_initialized();
+	void checkInitialized();
 
 	int parallaxScaleMillisX() const {
-		if(parallax_scale_millis_.get() == NULL){
+		if(parallax_scale_millis_ == NULL){
 			return type_->parallaxScaleMillisX();
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
 	int parallaxScaleMillisY() const {
-		if(parallax_scale_millis_.get() == NULL){
+		if(parallax_scale_millis_ == NULL){
 			return type_->parallaxScaleMillisY();
 		}else{
 			return parallax_scale_millis_->second;
 		}
 	}
-
 	
 	virtual int zorder() const;
 	virtual int zSubOrder() const;
@@ -113,7 +110,6 @@ public:
 	bool hasReverseGlobalVerticalZordering() const { return type_->hasReverseGlobalVerticalZordering(); };
 
 	bool hasFeet() const;
-
 	
 	virtual bool isStandable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
 
@@ -276,6 +272,8 @@ public:
 	void setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement);
 	void cancelAnimatedSchedule(const std::string& name);
 
+	bool hasOwnDraw() const { return true; }
+
 protected:
 	//components of per-cycle process() that can be done even on
 	//static objects.
@@ -384,7 +382,7 @@ private:
 		setPos(x(), new_mid_y - ydiff);
     }
     
-	std::unique_ptr<std::pair<int, int> > parallax_scale_millis_;
+	std::unique_ptr<std::pair<int, int>> parallax_scale_millis_;
 
 	int zorder_;
 	int zsub_order_;
@@ -478,7 +476,7 @@ private:
 
 	std::unique_ptr<PositionSchedule> position_schedule_;
 
-	std::vector<std::shared_ptr<AnimatedMovement> > animated_movement_;
+	std::vector<std::shared_ptr<AnimatedMovement>> animated_movement_;
 
 	std::vector<LightPtr> lights_;
 
@@ -498,7 +496,7 @@ private:
 
 	int min_difficulty_, max_difficulty_;
 
-	std::shared_ptr<const std::vector<Frame::CustomPoint> > custom_draw_;
+	std::shared_ptr<const std::vector<Frame::CustomPoint>> custom_draw_;
 
 	std::vector<float> custom_draw_xy_;
 	std::vector<float> custom_draw_uv_;
@@ -509,7 +507,7 @@ private:
 
 	bool swallow_mouse_event_;
 
-	bool handleEvent_internal(int event, const FormulaCallable* context, bool executeCommands_now=true);
+	bool handleEventInternal(int event, const FormulaCallable* context, bool executeCommands_now=true);
 	std::vector<variant> delayed_commands_;
 
 	int currently_handling_die_event_;

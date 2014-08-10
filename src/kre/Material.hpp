@@ -42,55 +42,55 @@ namespace KRE
 
 		const std::vector<TexturePtr>& GetTexture() const { return tex_; }
 		const std::string& Name() const { return name_; }
-		bool UseFog() const { return use_fog_; }
-		bool UseLighting() const { return use_lighting_; }
-		bool DoDepthWrite() const { return do_depth_write_; }
-		bool DoDepthCheck() const { return do_depth_check_; }
-		const BlendMode& GetBlendMode() const { return blend_; }
+		bool useFog() const { return use_fog_; }
+		bool useLighting() const { return use_lighting_; }
+		bool doDepthWrite() const { return do_depth_write_; }
+		bool doDepthCheck() const { return do_depth_check_; }
+		const BlendMode& getBlendMode() const { return blend_; }
 
-		void SetTexture(const TexturePtr& tex);
-		void EnableLighting(bool en=true);
-		void EnableFog(bool en=true);
-		void EnableDepthWrite(bool en=true);
-		void EnableDepthCheck(bool en=true);
-		void SetBlendMode(const BlendMode& bm);
-		void SetBlendMode(BlendModeConstants src, BlendModeConstants dst);
+		void setTexture(const TexturePtr& tex);
+		void enableLighting(bool en=true);
+		void enableFog(bool en=true);
+		void enableDepthWrite(bool en=true);
+		void enableDepthCheck(bool en=true);
+		void setBlendMode(const BlendMode& bm);
+		void setBlendMode(BlendModeConstants src, BlendModeConstants dst);
 
 		float width() const;
 		float height() const;
 
-		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
+		const rectf getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
 		template<typename T>
-		const rectf GetNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
+		const rectf getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
 			float w = static_cast<float>((*it)->width());
 			float h = static_cast<float>((*it)->height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 		template<typename T>
-		const rectf GetNormalisedTextureCoords(const Geometry::Rect<T>& r) {
+		const rectf getNormalisedTextureCoords(const Geometry::Rect<T>& r) {
 			float w = static_cast<float>(width());
 			float h = static_cast<float>(height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 
-		template<typename T> void SetCoords(const Geometry::Rect<T>& r) {
+		template<typename T> void setCoords(const Geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
-		const rectf& GetCoords() const { return draw_rect_; }
+		const rectf& getCoords() const { return draw_rect_; }
 		
 		// Performs the actions to apply the current material to the renderable object.
 		// Returns a boolean indicating whether to use lighting or not for this
 		// material.
 		bool apply();
-		void unApply();
+		void unapply();
 
 		static MaterialPtr createMaterial(const variant& node);
 	protected:
 		void Init(const variant& node);
 	private:
-		virtual TexturePtr CreateTexture(const variant& node) = 0;
-		virtual void HandleApply() = 0;
-		virtual void HandleUnapply() = 0;
+		virtual TexturePtr createTexture(const variant& node) = 0;
+		virtual void handleApply() = 0;
+		virtual void handleUnapply() = 0;
 
 		std::string name_;
 		std::vector<TexturePtr> tex_;

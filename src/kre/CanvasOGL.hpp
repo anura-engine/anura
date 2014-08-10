@@ -33,13 +33,34 @@ namespace KRE
 		CanvasOGL();
 		virtual ~CanvasOGL();
 
-		void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const override;
-		void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color) const override;
-		void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const override;
+		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
+		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color) const override;
+		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color);
+		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
+		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color) const;
+		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color) const;
 
-		void drawRect(const rect& r, const ColorPtr& fill_color, const ColorPtr& stroke_color=nullptr, float rotate=0) const override;
-		void drawLine(const point& p1, const point& p2, const Color& color) const override;
-		void drawCircle(const point& centre, double radius, const Color& color) const override;
+		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
+		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) const override;
+		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const Color& color) const override;
+
+		virtual void drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotate=0) const override;
+		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const override;
+		virtual void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const override;
+		virtual void drawLine(const point& p1, const point& p2, const Color& color) const override;
+		virtual void drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const override;
+		virtual void drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const override;
+		virtual void drawLineStrip(const std::vector<glm::vec2>& points, float line_width, const Color& color) const override;
+		virtual void drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const override;
+		virtual void drawLine(const pointf& p1, const pointf& p2, const Color& color) const override;
+		// Draw filled polygon (i.e. triangle fan) using given color	
+		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color) const override;
+		virtual void drawSolidCircle(const point& centre, double radius, const Color& color) const override;
+		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const override;
+		virtual void drawHollowCircle(const point& centre, double radius, const Color& color) const override;
+		virtual void drawSolidCircle(const pointf& centre, double radius, const Color& color) const override;
+		virtual void drawSolidCircle(const pointf& centre, double radius, const std::vector<uint8_t>& color) const override;
+		virtual void drawHollowCircle(const pointf& centre, double radius, const Color& color) const override;
 
 		static CanvasPtr getInstance();
 	private:

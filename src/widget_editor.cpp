@@ -1,3 +1,5 @@
+// XXX needs fixing
+#if 0
 /*
 	Copyright (C) 2003-2013 by David White <davewx7@gmail.com>
 	
@@ -28,11 +30,8 @@
 #include "border_widget.hpp"
 #include "button.hpp"
 #include "checkbox.hpp"
-#include "color_utils.hpp"
 #include "dialog.hpp"
-#include "font.hpp"
 #include "framed_gui_element.hpp"
-#include "graphics.hpp"
 #include "grid_widget.hpp"
 #include "gui_section.hpp"
 #include "image_widget.hpp"
@@ -41,7 +40,6 @@
 #include "label.hpp"
 #include "module.hpp"
 #include "preferences.hpp"
-#include "raster.hpp"
 #include "unit_test.hpp"
 #include "scrollbar_widget.hpp"
 #include "slider.hpp"
@@ -413,3 +411,4 @@ UTILITY(widget_editor)
 	boost::intrusive_ptr<widget_editor> editor(new widget_editor(rect(0, 0, preferences::actual_screen_width(), preferences::actual_screen_height()), fname));
 	editor->showModal();
 }
+#endif
