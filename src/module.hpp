@@ -27,6 +27,10 @@
 #include <string>
 #include <vector>
 
+namespace graphics {
+	class color;
+}
+
 namespace module {
 
 enum BASE_PATH_TYPE { BASE_PATH_GAME, BASE_PATH_USER, NUM_PATH_TYPES };
@@ -42,6 +46,8 @@ struct modules {
 
 	std::string default_font;
 	std::string default_font_cjk;
+
+	boost::intrusive_ptr<graphics::color> speech_dialog_bg_color;
 
 	std::vector<int> version_;
 	std::vector<std::string> included_modules_;
@@ -59,6 +65,7 @@ std::string get_module_version();
 std::string map_file(const std::string& fname);
 
 std::string get_default_font();
+const boost::intrusive_ptr<graphics::color>& get_speech_dialog_bg_color();
 
 variant get_default_preferences();
 
