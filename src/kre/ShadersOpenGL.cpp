@@ -206,14 +206,14 @@ namespace KRE
 				{ "vtc_shader", "vtc_vs", vtc_vs, "vtc_fs", vtc_fs, vtc_uniform_mapping, vtc_attribue_mapping },
 			};
 
-			typedef std::map<std::string, ShaderProgramOGLPtr> shader_factory_map;
+			typedef std::map<std::string, ShaderProgramPtr> shader_factory_map;
 			shader_factory_map& get_shader_factory()
 			{
 				static shader_factory_map res;
 				if(res.empty()) {
 					// XXX load some default shaders here.
 					for(auto& def : shader_defs) {
-						auto spp = new ShaderProgramOGL(def.shader_name, 
+						auto spp = new OpenGL::ShaderProgram(def.shader_name, 
 							ShaderDef(def.vertex_shader_name, def.vertex_shader_data),
 							ShaderDef(def.fragment_shader_name, def.fragment_shader_data),
 							variant());
@@ -673,10 +673,10 @@ namespace KRE
 			if(ait != attribs_.end()) {
 				return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
 			}
-			auto alt_name_it = attribute_alternate_name_map_.find(aname);
-			if(alt_name_it != attribute_alternate_name_map_.end()) {
-				it = attribs_.find(alt_name_it->second);
-				if(it != attribs_.end()) {
+			auto aalt_name_it = attribute_alternate_name_map_.find(aname);
+			if(aalt_name_it != attribute_alternate_name_map_.end()) {
+				ait = attribs_.find(aalt_name_it->second);
+				if(ait != attribs_.end()) {
 					return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
 				}
 			}

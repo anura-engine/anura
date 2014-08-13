@@ -77,7 +77,7 @@ namespace
 				const rect& area = info.area;
 
 				frame_area a;
-				rectf ra = texture_->getNormalisedTextureCoords(texture_->GetTexture().begin(), area);
+				rectf ra = texture_->getNormalisedTextureCoords(texture_->getTexture().begin(), area);
 				a.u1 = ra.x();
 				a.u2 = ra.x2();
 				a.v1 = ra.y();

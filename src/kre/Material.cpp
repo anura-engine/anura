@@ -54,7 +54,7 @@ namespace KRE
 	{
 	}
 
-	void Material::Init(const variant& node)
+	void Material::init(const variant& node)
 	{
 		blend_.set(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 
@@ -151,8 +151,8 @@ namespace KRE
 
 	const rectf Material::getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it)
 	{
-		float w = (*it)->width();
-		float h = (*it)->height();
+		float w = static_cast<float>((*it)->width());
+		float h = static_cast<float>((*it)->height());
 		if(draw_rect_.x() == 0.0f && draw_rect_.y() == 0.0f && draw_rect_.x2() == 0.0f && draw_rect_.y2() == 0.0f) {
 			return rectf(0.0f, 0.0f, 1.0f, 1.0f);
 		}

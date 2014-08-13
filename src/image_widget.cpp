@@ -49,7 +49,7 @@ namespace gui
 	ImageWidget::ImageWidget(KRE::MaterialPtr mat, int w, int h)
 	{
 		// Kind of a fudge if passed a material, we just grab the first texture.
-		texture_ = mat->GetTexture().front();
+		texture_ = mat->getTexture().front();
 		setEnvironment();
 		init(w, h);
 	}

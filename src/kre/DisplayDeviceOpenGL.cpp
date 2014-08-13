@@ -36,6 +36,7 @@
 #include "MaterialOpenGL.hpp"
 #include "ScissorOGL.hpp"
 #include "ShadersOpenGL.hpp"
+#include "StencilScopeOGL.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -345,7 +346,7 @@ namespace KRE
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 		if(r->getMaterial()) {
-			r->getMaterial()->unApply();
+			r->getMaterial()->unapply();
 		}
 		if(r->getRenderTarget()) {
 			r->getRenderTarget()->unapply();
@@ -356,6 +357,11 @@ namespace KRE
 	{
 		auto scissor = new ScissorOGL(r);
 		return ScissorPtr(scissor);
+	}
+
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const variant& node) 
+	{
+		return TexturePtr(new OpenGLTexture(node));
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
@@ -438,6 +444,12 @@ namespace KRE
 	ClipScopePtr DisplayDeviceOpenGL::createClipScope(const rect& r)
 	{
 		return ClipScopePtr(new ClipScopeOGL(r));
+	}
+
+	StencilScopePtr DisplayDeviceOpenGL::createStencilScope(const StencilSettings& settings)
+	{
+		auto ss = new StencilScopeOGL(settings);
+		return StencilScopePtr(ss);
 	}
 
 	BlendEquationImplBasePtr DisplayDeviceOpenGL::getBlendEquationImpl()

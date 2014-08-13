@@ -131,7 +131,7 @@ namespace KRE
 		ptrdiff_t stride,
 		ptrdiff_t offset,
 		size_t divisor)
-		: type_(Type::UNKOWN),
+		: type_(AttrType::UNKOWN),
 		type_name_(type_name),
 		num_elements_(num_elements),
 		var_type_(var_type),

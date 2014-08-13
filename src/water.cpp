@@ -109,12 +109,7 @@ variant Water::write() const
 	for(const area& a : areas_) {
 		variant_builder area_node;
 		area_node.add("rect", a.rect_.write());
-		std::vector<variant> color_vec;
-		color_vec.reserve(4);
-		for(int n = 0; n != 4; ++n) {
-			color_vec.push_back(variant(static_cast<int>(a.color_[n])));
-		}
-		area_node.add("color", variant(&color_vec));
+		area_node.add("color", a.color_.write());
 		area_node.add("object", a.obj_);
 
 		result.add("area", area_node.build());
@@ -171,8 +166,8 @@ bool Water::drawArea(const Water::area& a) const
 	const KRE::Color waterline_color(250, 240, 205, 255);
 	const KRE::Color shallowwater_color(0, 51, 61, 140);
 	const KRE::Color deepwater_color(0, 51, 61, 153);
-	const rectf waterline_rect(a.rect_.x(), a.rect_.y(), a.rect_.w(), 2.0f);
 	const rectf underwater_rect = a.rect_.as_type<float>();
+	const rectf waterline_rect(underwater_rect.x(), underwater_rect.y(), underwater_rect.w(), 2.0f);
 
 	KRE::Color water_color = a.color_;
 

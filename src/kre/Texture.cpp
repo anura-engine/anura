@@ -344,7 +344,7 @@ namespace KRE
 
 	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache)
 	{
-		return DisplayDevice::createTexture(surface, cache);
+		return DisplayDevice::createTexture(surface, cache, variant());
 	}
 
 	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache, const variant& node)

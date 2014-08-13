@@ -277,7 +277,7 @@ namespace KRE
 		ASSERT_LOG(pixels != NULL, "NULL value for pixels while creating surface.");
 		surface_ = SDL_CreateRGBSurfaceFrom(const_cast<void*>(pixels), width(), height(), bpp, rowPitch(), rmask, gmask, bmask, amask);
 		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
-		setPixelFormat(PixelFormatPtr(new SDLPixelFormat(surface_->format)));
+		setPixelFormat(PixelFormatPtr(new SDLPixelFormat(surface_->format->format)));
 	}
 
 	void SurfaceSDL::writePixels(const void* pixels) 

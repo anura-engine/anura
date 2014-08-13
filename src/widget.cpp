@@ -26,9 +26,10 @@
 #include "kre/ClipScope.hpp"
 
 #include "asserts.hpp"
+#include "i18n.hpp"
+#include "profile_timer.hpp"
 #include "preferences.hpp"
 #include "tooltip.hpp"
-#include "i18n.hpp"
 #include "widget.hpp"
 #include "widget_settings_dialog.hpp"
 
@@ -211,7 +212,7 @@ namespace gui
 	void Widget::handleProcess()
 	{
 		if(!tooltip_displayed_ && profile::get_tick_time() > tooltip_ticks_ && tooltip_ != NULL) {
-			gui::setTooltip(tooltip_);
+			gui::set_tooltip(tooltip_);
 			tooltip_displayed_ = true;
 		}
 
@@ -294,7 +295,7 @@ namespace gui
 					event.motion.y >= y() && event.motion.y <= y()+height()) {
 					if(!tooltip_displayed_) {
 						if(tooltip_display_delay_ == 0 || profile::get_tick_time() > tooltip_ticks_) {
-							gui::setTooltip(tooltip_);
+							gui::set_tooltip(tooltip_);
 							tooltip_displayed_ = true;
 						} else if(tooltip_ticks_ == std::numeric_limits<int>::max()) {
 							tooltip_ticks_ = profile::get_tick_time() + tooltip_display_delay_;

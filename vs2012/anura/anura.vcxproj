@@ -281,7 +281,6 @@
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
     <ClInclude Include="..\..\src\kre\Geometry.hpp" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
-    <ClInclude Include="..\..\src\kre\logger.hpp" />
     <ClInclude Include="..\..\src\kre\Material.hpp" />
     <ClInclude Include="..\..\src\kre\MaterialOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\ParticleSystem.hpp" />
@@ -338,6 +337,7 @@
     <ClInclude Include="..\..\src\drawable_level_tiles.hpp" />
     <ClInclude Include="..\..\src\light.hpp" />
     <ClInclude Include="..\..\src\loading_screen.hpp" />
+    <ClInclude Include="..\..\src\logger.hpp" />
     <ClInclude Include="..\..\src\md5.hpp" />
     <ClInclude Include="..\..\src\message_dialog.hpp" />
     <ClInclude Include="..\..\src\module.hpp" />
@@ -374,6 +374,7 @@
     <ClInclude Include="..\..\src\SDLMain.h" />
     <ClInclude Include="..\..\src\segment_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\selector_widget.hpp" />
+    <ClInclude Include="..\..\src\settings_dialog.hpp" />
     <ClInclude Include="..\..\src\slider.hpp" />
     <ClInclude Include="..\..\src\solid_map.hpp" />
     <ClInclude Include="..\..\src\solid_map_fwd.hpp" />
@@ -624,7 +625,6 @@
     <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
     <ClCompile Include="..\..\src\kre\LightObject.cpp" />
-    <ClCompile Include="..\..\src\kre\logger.cpp" />
     <ClCompile Include="..\..\src\kre\Material.cpp" />
     <ClCompile Include="..\..\src\kre\MaterialOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\ParticleSystem.cpp" />
@@ -669,6 +669,7 @@
     <ClCompile Include="..\..\src\light.cpp" />
     <ClCompile Include="..\..\src\loading_screen.cpp" />
     <ClCompile Include="..\..\src\load_level_nothread.cpp" />
+    <ClCompile Include="..\..\src\logger.cpp" />
     <ClCompile Include="..\..\src\main.cpp" />
     <ClCompile Include="..\..\src\md5.cpp" />
     <ClCompile Include="..\..\src\message_dialog.cpp" />
@@ -699,6 +700,7 @@
     <ClCompile Include="..\..\src\scrollbar_widget.cpp" />
     <ClCompile Include="..\..\src\segment_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\selector_widget.cpp" />
+    <ClCompile Include="..\..\src\settings_dialog.cpp" />
     <ClCompile Include="..\..\src\slider.cpp" />
     <ClCompile Include="..\..\src\solid_map.cpp" />
     <ClCompile Include="..\..\src\sound.cpp" />
@@ -711,7 +713,6 @@
     <ClCompile Include="..\..\src\surface_cache.cpp" />
     <ClCompile Include="..\..\src\surface_palette.cpp" />
     <ClCompile Include="..\..\src\surface_utils.cpp" />
-    <ClCompile Include="..\..\src\svg\logger.cpp" />
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp" />
     <ClCompile Include="..\..\src\svg\svg_container.cpp" />
     <ClCompile Include="..\..\src\svg\svg_element.cpp" />

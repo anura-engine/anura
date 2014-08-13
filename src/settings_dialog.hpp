@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,22 +21,23 @@
 	   distribution.
 */
 
-#include "asserts.hpp"
-#include "logger.hpp"
+#pragma once
 
-const char* log_level_names[] = {
-	"DEBUG",
-	"INFO",
-	"WARN",
-	"ERROR",
-	"FATAL",
-};
+#include "SDL.h"
 
-const char* get_log_level_as_string(LogLevel l)
+#include "gui_section.hpp"
+
+class SettingsDialog
 {
-	if(l <= LOG_LEVEL_FATAL && l >= LOG_LEVEL_DEBUG) {
-		return log_level_names[l];
-	}
-	ASSERT_LOG(false, "Log level " << l << " is outside valid range");
-	return NULL;
-}
+public:
+	SettingsDialog();
+	~SettingsDialog();
+	
+	bool handleEvent(const SDL_Event& event); //returns whether the game should be paused
+	void draw(bool in_speech_dialog) const;
+	void reset();
+	
+private:
+	bool show_window_;
+	bool menu_button_state_;
+};

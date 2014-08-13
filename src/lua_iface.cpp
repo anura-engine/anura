@@ -297,7 +297,7 @@ namespace lua
 			using namespace game_logic;
 			std::string res;
 			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 1, callable_str));	// (-0,+0,-)
-			std::vector<formula_input> inputs = callable->inputs();
+			std::vector<FormulaInput> inputs = callable->inputs();
 			for(auto inp : inputs) {
 				std::stringstream ss;
 				static const char* const access[] = {
@@ -310,7 +310,7 @@ namespace lua
 					&& inp.access != FORMULA_ACCESS_TYPE::READ_WRITE) {
 					luaL_error(L, "Unrecognised access mode: ", inp.access);
 				}
-				ss << inp.name << "(" << access[inp.access] << ") : " << callable->queryValue(inp.name) << std::endl;
+				ss << inp.name << "(" << access[static_cast<int>(inp.access)] << ") : " << callable->queryValue(inp.name) << std::endl;
 				res += ss.str();
 			}
 			lua_pushstring(L, res.c_str());			// (-0,+1,-)

@@ -75,9 +75,11 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
+#include "kre/CameraObject.hpp"
 #include "kre/SDLWrapper.hpp"
 #include "kre/Font.hpp"
 #include "kre/SceneGraph.hpp"
+#include "kre/SceneNode.hpp"
 #include "kre/WindowManager.hpp"
 
 #if defined(__APPLE__)

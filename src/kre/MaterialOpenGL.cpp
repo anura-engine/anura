@@ -30,7 +30,7 @@ namespace KRE
 {
 	OpenGLMaterial::OpenGLMaterial(const variant& node) 
 	{
-		Init(node);
+		init(node);
 	}
 
 	OpenGLMaterial::OpenGLMaterial(const std::string& name, 

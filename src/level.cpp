@@ -195,8 +195,7 @@ namespace
 }
 
 Level::Level(const std::string& level_cfg, variant node)
-	: SceneNode(main::get_root_graph()),
-		id_(level_cfg),
+	: id_(level_cfg),
 	  x_resolution_(0), y_resolution_(0),
 	  set_screen_resolution_on_entry_(false),
 	  highlight_layer_(std::numeric_limits<int>::min()),
@@ -465,7 +464,6 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	if(node.has_key("water")) {
 		water_.reset(new Water(node["water"]));
-		AttachObject(water_);
 	}
 
 	sub_level_str_ = node["sub_levels"].as_string_default();
@@ -578,7 +576,7 @@ void Level::load_character(variant c)
 
 	const int group = chars_.back()->group();
 	if(group >= 0) {
-		if(group >= groups_.size()) {
+		if(static_cast<unsigned>(group) >= groups_.size()) {
 			groups_.resize(group + 1);
 		}
 
@@ -679,7 +677,7 @@ void Level::finishLoading()
 				obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 				addr_str = obj->addr();
 			}
-			const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
+			const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
 			game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 		}
@@ -688,7 +686,7 @@ void Level::finishLoading()
 	for(variant node : wml_chars_) {
 		load_character(node);
 
-		const intptr_t addr_id = strtoll(node["_addr"].as_string().c_str(), NULL, 16);
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(node["_addr"].as_string().c_str(), NULL, 16));
 		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, chars_.back());
 
 		if(node.has_key("attached_objects")) {
@@ -697,7 +695,7 @@ void Level::finishLoading()
 			std::vector<std::string> v = util::split(node["attached_objects"].as_string());
 			for(const std::string& s : v) {
 				LOG_INFO("ATTACHED: " << s);
-				const intptr_t addr_id = strtoll(s.c_str(), NULL, 16);
+				const intptr_t addr_id = static_cast<intptr_t>(strtoll(s.c_str(), NULL, 16));
 				game_logic::WmlSerializableFormulaCallablePtr obj = game_logic::wmlFormulaCallableReadScope::getSerializedObject(addr_id);
 				Entity* e = dynamic_cast<Entity*>(obj.get());
 				if(e) {
@@ -1227,7 +1225,7 @@ variant Level::write() const
 		int basex = 0, basey = 0;
 		int last_x = 0, last_y = 0;
 		std::string tiles_str;
-		for(int n = 0; n <= tiles_.size(); ++n) {
+		for(unsigned n = 0; n <= tiles_.size(); ++n) {
 			if(n != tiles_.size() && tiles_[n].draw_disabled && tiles_[n].object->hasSolid() == false) {
 				continue;
 			}
@@ -1554,15 +1552,13 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	for(auto& i : sub_levels_) {
 		if(i.second.active) {
-			glPushMatrix();
-			glTranslatef(i.second.xoffset, GLfloat(i.second.yoffset), 0.0);
+			i.second.lvl->setPosition(static_cast<float>(i.second.xoffset), static_cast<float>(i.second.yoffset));
 			i.second.lvl->draw_layer(layer, x - i.second.xoffset, y - i.second.yoffset - TileSize, w, h + TileSize);
-			glPopMatrix();
 		}
 	}
 
 	if(editor_ && layer == highlight_layer_) {
-		const GLfloat alpha = GLfloat(0.3 + (1.0+sin(draw_count/5.0))*0.35);
+		const float alpha = static_cast<float>(0.3f + (1.0f+sin(draw_count/5.0f))*0.35f);
 		glColor4f(1.0, 1.0, 1.0, alpha);
 
 	} else if(editor_ && hidden_layers_.count(layer)) {

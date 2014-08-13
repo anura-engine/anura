@@ -22,6 +22,7 @@
 */
 
 #include "../asserts.hpp"
+#include "DisplayDevice.hpp"
 #include "RenderTarget.hpp"
 #include "../variant_utils.hpp"
 
@@ -141,5 +142,10 @@ namespace KRE
 			res.add("samples", multi_samples_);
 		}
 		return res.build();
+	}
+
+	RenderTargetPtr RenderTarget::factory(const variant& node)
+	{
+		return DisplayDevice::renderTargetInstance(node);
 	}
 }

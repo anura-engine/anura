@@ -300,7 +300,7 @@ Frame::Frame(variant node)
 			const int h = *i++;
 			info.area = rect(x, y, w, h);
 			frames_.push_back(info);
-			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, texture_->width(), texture_->height())), info.area);
+			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(texture_->width()), static_cast<int>(texture_->height()))), info.area);
 			ASSERT_EQ(w + (info.x_adjust + info.x2_adjust), img_rect_.w());
 			ASSERT_EQ(h + (info.y_adjust + info.y2_adjust), img_rect_.h());
 
@@ -438,9 +438,9 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			ASSERT_LT(area.x(), texture_->width());
-			ASSERT_LE(area.x() + area.w(), texture_->width());
-			ASSERT_LT(area.y() + y, texture_->height());
+			ASSERT_LT(area.x(), static_cast<int>(texture_->width()));
+			ASSERT_LE(area.x() + area.w(), static_cast<int>(texture_->width()));
+			ASSERT_LT(area.y() + y, static_cast<int>(texture_->height()));
 			std::vector<bool>::const_iterator src = texture_->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
@@ -472,9 +472,10 @@ void Frame::buildAlpha()
 		const int xbase = img_rect_.x() + current_col*(img_rect_.w()+pad_);
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
-		if(xbase < 0 || ybase < 0 || xbase + img_rect_.w() > texture_->width() ||
-		   ybase + img_rect_.h() > texture_->height()) {
-			std::cerr << "IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_->width() << "," << texture_->height() << "\n";
+		if(xbase < 0 || ybase < 0 
+			|| xbase + img_rect_.w() > static_cast<int>(texture_->width())
+			|| ybase + img_rect_.h() > static_cast<int>(texture_->height())) {
+			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_->width() << "," << texture_->height());
 			throw Error();
 		}
 
@@ -601,8 +602,8 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 		return alpha_.end();
 	}
 
-	x /= scale_;
-	y /= scale_;
+	x = static_cast<int>(x / scale_);
+	y = static_cast<int>(y / scale_);
 
 	const int nframe = frameNumber(time);
 	x += nframe*img_rect_.w();
@@ -947,7 +948,7 @@ void Frame::getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
-	output_rect = texture_->getNormalisedTextureCoords(info.area);
+	output_rect = texture_->getNormalisedTextureCoords<float>(info.area);
 
 	info.draw_rect = output_rect;
 	info.draw_rect_init = true;
@@ -1033,7 +1034,7 @@ point Frame::pivot(const std::string& name, int time_in_frame) const
 			continue;
 		}
 
-		if(time_in_frame >= s.points.size()) {
+		if(static_cast<unsigned>(time_in_frame) >= s.points.size()) {
 			return s.points.back();
 		}
 

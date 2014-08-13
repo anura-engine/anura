@@ -92,7 +92,7 @@ namespace widget_factory
 		} else if(wtype == "graphical_font_label") {
 			return WidgetPtr(new GraphicalFontLabel(v,e));
 		} else if(wtype == "grid") {
-			return WidgetPtr(new grid(v,e));
+			return WidgetPtr(new Grid(v,e));
 		} else if(wtype == "image") {
 			return WidgetPtr(new ImageWidget(v,e));
 		} else if(wtype == "section") {
@@ -104,9 +104,9 @@ namespace widget_factory
 		} else if(wtype == "poly_line_widget") {
 			return WidgetPtr(new PolyLineWidget(v,e));
 		} else if(wtype == "rich_text_label") {
-			return WidgetPtr(new rich_text_label(v,e));
+			return WidgetPtr(new RichTextLabel(v,e));
 		} else if(wtype == "tileset_preview") {
-			return WidgetPtr(new preview_tileset_widget(v,e));
+			return WidgetPtr(new PreviewTilesetWidget(v,e));
 		} else if(wtype == "scrollbar") {
 			return WidgetPtr(new ScrollBarWidget(v,e));
 		} else if(wtype == "slider") {
@@ -114,7 +114,7 @@ namespace widget_factory
 		} else if(wtype == "text_editor") {
 			return WidgetPtr(new TextEditorWidget(v,e));
 		} else if(wtype == "progress") {
-			return WidgetPtr(new progress_bar(v, e));
+			return WidgetPtr(new ProgressBar(v, e));
 		} else if(wtype == "selector") {
 			return WidgetPtr(new SelectorWidget(v, e));
 		} else if(wtype == "object") {
@@ -126,11 +126,11 @@ namespace widget_factory
 		} else if(wtype == "layout") {
 			return WidgetPtr(new LayoutWidget(v, e));
 		} else if(wtype == "file_chooser") {
-			return WidgetPtr(new file_chooser_dialog(v, e));
+			return WidgetPtr(new FileChooserDialog(v, e));
 		} else if(wtype == "view3d") {
 			return WidgetPtr(new View3DWidget(v, e));
 		} else if(wtype == "poly_map") {
-			return WidgetPtr(new geometry::poly_map(v, e));
+			return WidgetPtr(new geometry::PolyMap(v, e));
 	#if defined(USE_LIBVPX)
 		} else if(wtype == "movie") {
 			return WidgetPtr(new movie::vpx(v, e));
@@ -138,7 +138,7 @@ namespace widget_factory
 		//} else if(wtype == "scrollable") {
 		//} else if(wtype == "widget") {
 		} else if(wtype == "tree") {
-			return WidgetPtr(new tree_view_Widget(v, e));
+			return WidgetPtr(new TreeViewWidget(v, e));
 		} else {
 			ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
 			return WidgetPtr();

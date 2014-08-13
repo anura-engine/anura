@@ -108,7 +108,7 @@ namespace KRE
 		const float vx2 = draw_rect_.x2() + offs_x;
 		const float vy2 = draw_rect_.y2() + offs_y;
 
-		rectf r = getMaterial()->GetNormalisedTextureCoords(getMaterial()->GetTexture().begin());
+		rectf r = getMaterial()->getNormalisedTextureCoords(getMaterial()->getTexture().begin());
 
 		std::vector<vertex_texcoord> vertices;
 		vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));

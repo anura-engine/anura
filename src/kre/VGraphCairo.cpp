@@ -367,7 +367,7 @@ namespace KRE
 			const float vx2 = draw_rect_.x2() + offs_x;
 			const float vy2 = draw_rect_.y2() + offs_y;
 
-			rectf r = getMaterial()->GetNormalisedTextureCoords(getMaterial()->GetTexture().begin());
+			rectf r = getMaterial()->getNormalisedTextureCoords(getMaterial()->getTexture().begin());
 
 			std::vector<vertex_texcoord> vertices;
 			vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
@@ -420,7 +420,7 @@ namespace KRE
 			cairo_set_source_rgba(context_, r/255.0, g/255.0, b/255.0, a/255.0);
 		}
 
-		void CairoContext::SetSourceColor(const double r, const Color& color)
+		void CairoContext::SetSourceColor(const Color& color)
 		{
 			cairo_set_source_rgba(context_, color.r(), color.g(), color.b(), color.a());
 		}

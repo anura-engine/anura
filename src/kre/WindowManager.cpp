@@ -231,7 +231,7 @@ namespace KRE
 					LOG_ERROR("QUERYING DISPLAY INFO: " << SDL_GetError());
 					continue;
 				}
-				WindowMode mode = { new_mode.w, new_mode.h, std::make_shared<PixelFormat>(SDLPixelFormat(new_mode.format)), new_mode.refresh_rate };
+				WindowMode mode = { new_mode.w, new_mode.h, std::make_shared<SDLPixelFormat>(new_mode.format), new_mode.refresh_rate };
 				// filter modes based on pixel format here
 				if(mode_filter(mode)) {
 					res.push_back(mode);
@@ -250,7 +250,12 @@ namespace KRE
 			// XXX
 		}
 		bool handleLogicalWindowSizeChange() override {
-			// do nothing for now
+			// XXX do nothing for now
+			return true;
+		}
+
+		bool handlePhysicalWindowSizeChange() override {
+			// XXX do nothing for now
 			return true;
 		}
 
@@ -361,6 +366,13 @@ namespace KRE
 			}
 		}
 		doDestroyWindow();
+	}
+
+	void WindowManager::notifyNewWindowSize(unsigned new_width, unsigned new_height)
+	{
+		width_ = new_width;
+		height_ = new_height;
+		handlePhysicalWindowSizeChange();
 	}
 
 	//! Save the current window display to a file

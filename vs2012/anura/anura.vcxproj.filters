@@ -735,9 +735,6 @@
     <ClInclude Include="..\..\src\kre\LightObject.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\logger.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\Material.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
@@ -952,6 +949,12 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\rect_callable.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\settings_dialog.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\logger.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1670,9 +1673,6 @@
     <ClCompile Include="..\..\src\db_client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\svg\logger.cpp">
-      <Filter>Source Files\svg</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\svg\svg_attribs.cpp">
       <Filter>Source Files\svg</Filter>
     </ClCompile>
@@ -1749,9 +1749,6 @@
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\LightObject.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\kre\logger.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\Material.cpp">
@@ -1908,6 +1905,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\rect_callable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\settings_dialog.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

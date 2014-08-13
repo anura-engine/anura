@@ -430,7 +430,7 @@ void CodeEditorDialog::process()
 
 	if(invalidated_ && profile::get_tick_time() > static_cast<unsigned>(invalidated_ + 200)) {
 		try {
-			CustomObject::reset_current_debug_error();
+			CustomObject::resetCurrentDebugError();
 
 #if defined(USE_SHADERS)
 			gles2::shader::get_and_clear_runtime_error();
