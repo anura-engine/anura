@@ -29,6 +29,7 @@
 #include "graphical_font.hpp"
 #include "gui_section.hpp"
 #include "joystick.hpp"
+#include "module.hpp"
 #include "preferences.hpp"
 #include "raster.hpp"
 #include "speech_dialog.hpp"
@@ -279,7 +280,11 @@ void speech_dialog::draw() const
 
 	const rect text_area(pane_area_.x()-30, pane_area_.y()-30, pane_area_.w()+60, pane_area_.h()+60);
 
-	graphics::draw_rect(pane_area_, graphics::color(85, 53, 53, 255));
+	if(module::get_speech_dialog_bg_color()) {
+		graphics::draw_rect(pane_area_, *module::get_speech_dialog_bg_color());
+	} else {
+		graphics::draw_rect(pane_area_, graphics::color(85,53,53,255));
+	}
 	top_corner->blit(pane_area_.x() - top_corner->width(), pane_area_.y() - top_corner->height());
 	top_corner->blit(pane_area_.x2()-1, pane_area_.y() - top_corner->height(), -top_corner->width(), top_corner->height());
 
