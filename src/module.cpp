@@ -329,6 +329,7 @@ void load(const std::string& mod_file_name, bool initial)
 	variant v = json::parse_from_file(fname);
 	std::string def_font = "FreeSans";
 	std::string def_font_cjk = "unifont";
+	boost::intrusive_ptr<graphics::color> speech_dialog_bg_color(new graphics::color(85, 53, 53, 255));
 	variant player_type;
 
 	const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
@@ -376,6 +377,9 @@ void load(const std::string& mod_file_name, bool initial)
 				ASSERT_LOG(false, "font tag must be either string or list of strings");
 			}
 		}
+		if(v.has_key("speech_dialog_background_color")) {
+			speech_dialog_bg_color.reset(new graphics::color(v["speech_dialog_background_color"]));
+		}
 		if(v.has_key("build_requirements")) {
 			const variant& br = v["build_requirements"];
 			if(br.is_string()) {
@@ -408,7 +412,7 @@ void load(const std::string& mod_file_name, bool initial)
 	}
 	modules m = {name, pretty_name, abbrev,
 	             {make_base_module_path(name), make_user_module_path(name)},
-				def_font, def_font_cjk};
+				def_font, def_font_cjk, speech_dialog_bg_color};
 	m.default_preferences = v["default_preferences"];
 	loaded_paths().insert(loaded_paths().begin(), m);
 
@@ -420,6 +424,11 @@ void load(const std::string& mod_file_name, bool initial)
 std::string get_default_font()
 {
 	return i18n::is_locale_cjk() ? loaded_paths().front().default_font_cjk : loaded_paths().front().default_font;
+}
+
+const boost::intrusive_ptr<graphics::color>& get_speech_dialog_bg_color()
+{
+	return loaded_paths().front().speech_dialog_bg_color;
 }
 
 variant get_default_preferences()
