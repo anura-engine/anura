@@ -285,7 +285,7 @@ namespace tbs
 					}
 				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
 					std::cerr << "sending quit message...\n";
-					g->game_state->queue_message(formatter() << "<message text=\"" << cli_info.user << " has quit\"/>");
+					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
 					flush_game_messages(*g);
 				}
 
