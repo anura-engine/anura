@@ -565,7 +565,10 @@ BEGIN_CAIRO_FN(show_rich_text_multiline, "(string, decimal, decimal, {scaling: d
 				cairo_save(context.get());
 				cairo_translate(context.get(), 0.0, -line_height);
 				cairo_scale(context.get(), svg_scale, svg_scale);
-				context.render_svg(std::string(str.begin()+1, str.end()-1));
+				std::string svg_name(str.begin()+1, str.end()-1);
+				ASSERT_LOG(svg_name.size() > 4 && std::equal(svg_name.end()-4, svg_name.end(), ".svg"), "Unknown markup found: " << all_text);
+
+				context.render_svg(svg_name);
 				cairo_restore(context.get());
 				cairo_translate(context.get(), svg_width, 0.0);
 			} else {
@@ -651,17 +654,20 @@ END_CAIRO_FN
 BEGIN_CAIRO_FN(text_path, "(string)")
 	std::string text = args[0].as_string();
 	std::vector<std::string> lines = util::split(text, '\n');
+
+	cairo_text_extents_t basic_extents;
+	cairo_text_extents(context.get(), "a", &basic_extents);
+
+	double xpos = 0.0;
+	cairo_get_current_point(context.get(), &xpos, NULL);
 	for(int n = 0; n != lines.size(); ++n) {
 		cairo_text_path(context.get(), lines[n].c_str());
 		if(n+1 != lines.size()) {
-			cairo_text_extents_t extents;
-			cairo_text_extents(context.get(), lines[n].c_str(), &extents);
 
-			double xpos = 0.0, ypos = 0.0;
-			cairo_get_current_point(context.get(), &xpos, &ypos);
+			double ypos = 0.0;
+			cairo_get_current_point(context.get(), NULL, &ypos);
 
-			xpos -= extents.width;
-			ypos += extents.height;
+			ypos += basic_extents.height*2;
 			cairo_move_to(context.get(), xpos, ypos);
 		}
 	}
@@ -694,6 +700,11 @@ END_CAIRO_FN
 
 BEGIN_CAIRO_FN(paint, "()")
 	cairo_paint(context.get());
+END_CAIRO_FN
+
+BEGIN_CAIRO_FN(paint_with_alpha, "(decimal)")
+	double alpha = args[0].as_decimal().as_float();
+	cairo_paint_with_alpha(context.get(), alpha);
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(set_operator, "(string)")
