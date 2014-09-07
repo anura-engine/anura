@@ -541,9 +541,9 @@ void CodeEditorDialog::process()
 			}
 		}
 		invalidated_ = 0;
-	} else if(CustomObject::current_debug_error()) {
+	} else if(CustomObject::currentDebugError()) {
 		error_label_->setText("Runtime Error");
-		error_label_->setTooltip(*CustomObject::current_debug_error());
+		error_label_->setTooltip(*CustomObject::currentDebugError());
 	}
 
 	const bool show_replace = editor_->hasSearchMatches();

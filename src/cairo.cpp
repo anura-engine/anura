@@ -120,7 +120,7 @@ namespace graphics
 	{
 		std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
 		auto tex = KRE::DisplayDevice::createTexture(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		tex->Update(0, 0, width_, height_, stride, cairo_image_surface_get_data(surface_));
+		tex->update(0, 0, width_, height_, stride, cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
 		// might be a better option. 
@@ -803,7 +803,9 @@ namespace graphics
 			std::string tag(itor+1, semi);
 			for(const MarkupEntry& e : MarkupMap) {
 				if(tag == e.tag) {
-					result += static_cast<char>(e.values);
+					for(auto c : e.values) {
+						result += static_cast<const char>(c);
+					}
 					found = true;
 					break;
 				}

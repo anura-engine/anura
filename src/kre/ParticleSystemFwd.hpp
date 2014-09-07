@@ -30,25 +30,25 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/perpendicular.hpp>
 
-#include "variant.hpp"
+#include "../variant.hpp"
 
 namespace KRE
 {
 	namespace Particles
 	{
-		class emit_object;
-		typedef std::shared_ptr<emit_object> emit_object_ptr;
+		class EmitObject;
+		typedef std::shared_ptr<EmitObject> EmitObjectPtr;
 		class ParticleSystemContainer;
 		class ParticleSystem;
 		typedef std::shared_ptr<ParticleSystem> ParticleSystemPtr;
-		class technique;
-		typedef std::shared_ptr<technique> technique_ptr;
-		class parameter;
-		typedef std::shared_ptr<parameter> parameter_ptr;
-		class emitter;
-		typedef std::shared_ptr<emitter> emitter_ptr;
-		class affector;
-		typedef std::shared_ptr<affector> affector_ptr;
+		class Technique;
+		typedef std::shared_ptr<Technique> TechniquePtr;
+		class Parameter;
+		typedef std::shared_ptr<Parameter> ParameterPtr;
+		class Emitter;
+		typedef std::shared_ptr<Emitter> EmitterPtr;
+		class Affector;
+		typedef std::shared_ptr<Affector> AffectorPtr;
 
 		float get_random_float(float min = 0.0f, float max = 1.0f);
 	}

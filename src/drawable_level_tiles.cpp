@@ -23,9 +23,9 @@
 
 #include "kre/DisplayDevice.hpp"
 
-#include "level_tile_object.hpp"
+#include "drawable_level_tiles.hpp"
 
-namespace level_objects
+namespace graphics
 {
 	LevelTileObject::LevelTileObject()
 		: SceneObject("LevelTileObject")
@@ -33,10 +33,6 @@ namespace level_objects
 	}
 
 	LevelTileObject::~LevelTileObject()
-	{
-	}
-
-	KRE::DisplayDeviceDef LevelTileObject::doAttach(const KRE::DisplayDevicePtr& dd)
 	{
 	}
 }

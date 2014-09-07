@@ -23,11 +23,11 @@
 
 #if defined(USE_LIBVPX)
 
-#include "graphics.hpp"
+#include "kre/Canvas.hpp"
+
 #include "module.hpp"
 #include "play_vpx.hpp"
 #include "preferences.hpp"
-#include "texture.hpp"
 
 #define IVF_FILE_HDR_SZ  (32)
 #define IVF_FRAME_HDR_SZ (12)
@@ -39,40 +39,29 @@ namespace movie
 		size_t mem_get_le32(const std::vector<uint8_t>& mem) {
 			return (size_t(mem[3]) << 24)|(size_t(mem[2]) << 16)|(size_t(mem[1]) << 8)|size_t(mem[0]);
 		}
-
-		struct manager
-		{
-			manager(const gles2::program_ptr& shader) 
-			{
-				glGetIntegerv(GL_CURRENT_PROGRAM, &old_program);
-				glUseProgram(shader->get());
-			}
-			~manager()
-			{
-				glUseProgram(old_program);
-			}
-			GLint old_program;
-		};
 	}
 
 	vpx::vpx(const std::string& file, int x, int y, int width, int height, bool loop, bool cancel_on_keypress)
-		: loop_(loop), cancel_on_keypress_(cancel_on_keypress), playing_(false), flags_(0), img_(NULL)
+		: loop_(loop), 
+		  cancel_on_keypress_(cancel_on_keypress), 
+		  playing_(false), 
+		  flags_(0), 
+		  img_(NULL)
 	{
 		file_name_ = module::map_file(file);
 		setLoc(x, y);
 		setDim(width, height);
 		init();
-		for(auto& ut : u_tex_) {
-			ut = -1;
-		}
 	}
 
 	vpx::vpx(const variant& v, game_logic::FormulaCallable* e)
-		: Widget(v, e), loop_(false), cancel_on_keypress_(false), playing_(false), flags_(0), img_(NULL)
+		: Widget(v, e), 
+		  loop_(false), 
+		  cancel_on_keypress_(false), 
+		  playing_(false), 
+		  flags_(0), 
+		  img_(NULL)
 	{
-		for(auto& ut : u_tex_) {
-			ut = -1;
-		}
 		ASSERT_LOG(v.has_key("filename") && v["filename"].is_string(), "Must have at least a 'filename' key or type string");
 		file_name_ = module::map_file(v["filename"].as_string());
 		if(v.has_key("loop")) {
@@ -86,15 +75,6 @@ namespace movie
 
 	void vpx::init()
 	{
-		shader_ = gles2::shader_program::get_global("yuv12");
-		u_tex_[0] = shader_->shader()->get_fixed_uniform("tex0");
-		u_tex_[1] = shader_->shader()->get_fixed_uniform("tex1");
-		u_tex_[2] = shader_->shader()->get_fixed_uniform("tex2");
-
-		u_color_ = shader_->shader()->get_fixed_uniform("color");
-		a_vertex_ = shader_->shader()->get_fixed_attribute("vertex");
-		a_texcoord_ = shader_->shader()->get_fixed_attribute("texcoord");
-
 		file_.open(file_name_, std::ios::in | std::ios::binary);
 		ASSERT_LOG(file_.is_open(), "Unable to open file: " << file_name_);
 		file_hdr_.resize(IVF_FILE_HDR_SZ);
@@ -115,34 +95,10 @@ namespace movie
 	{
 	}
 
-	void vpx::gen_textures()
+	void vpx::genTextures()
 	{
 		ASSERT_LOG(img_ != NULL, "img_ is null");
-
-		texture_id_ = boost::shared_array<GLuint>(new GLuint[3], [](GLuint* ids){glDeleteTextures(3,ids); delete[] ids;});
-		glGenTextures(3, &texture_id_[0]);
-
-		if(graphics::texture::allows_npot()) {
-			texture_width_ = img_->d_w;
-			texture_height_ = img_->d_h;
-		} else {
-			texture_width_ = graphics::texture::next_power_of_2(img_->d_w);
-			texture_height_ = graphics::texture::next_power_of_2(img_->d_h);
-		}
-
-		for(size_t i = 0; i != 3; ++i) {
-			glBindTexture(GL_TEXTURE_2D, texture_id_[i]);
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, img_->stride[i]);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-			glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-			unsigned width = i==0?texture_width_:texture_width_/2;
-			unsigned height = i==0?texture_height_:texture_height_/2;
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_LUMINANCE, width, height, 0, GL_LUMINANCE, GL_UNSIGNED_BYTE, NULL);
-		}
-		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_currentTexture());
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
+		texture_ = KRE::Texture::createTexture(img_->d_w, img_->d_h, KRE::PixelFormat::PF::PIXELFORMAT_YV12);
 	}
 
 	void vpx::stop()
@@ -150,7 +106,7 @@ namespace movie
 		playing_ = false;
 	}
 
-	void vpx::decode_frame()
+	void vpx::decodeFrame()
 	{
 		if(file_.eof()) {
 			// when file_ has been read call vpx_codec_decode with data as NULL and sz as 0
@@ -202,18 +158,17 @@ namespace movie
 		bool done = false;
 		while(playing_ && !done) {
 			if(img_ == NULL) {
-				decode_frame();
+				decodeFrame();
 				iter_ = NULL;
 			}
-
-			img_ = vpx_codec_getFrame(&codec_, &iter_);
+			img_ = vpx_codec_get_frame(&codec_, &iter_);
 			if(img_ != NULL) {
 				done = true;
 			}
 		}
 
-		if(!texture_id_) {
-			gen_textures();
+		if(texture_ == nullptr) {
+			genTextures();
 		}
 	}
 
@@ -250,68 +205,10 @@ namespace movie
 			return;
 		}
 
-		manager m(shader_->shader());
+		//KRE::Canvas::ShaderManger sm("");
+		texture_->update(0, 0, img_->d_w, img_->d_h, img_->stride, static_cast<const void*>(img_->planes));
 
-		glUniform4f(u_color_, 1.0f, 1.0f, 1.0f, 1.0f);
-
-		glDisable(GL_BLEND);
-
-		for(int i = 2; i >= 0; --i) {
-			glActiveTexture(GL_TEXTURE0 + i);
-			glBindTexture(GL_TEXTURE_2D, texture_id_[i]);
-			void* pixels = img_->planes[i];
-			glPixelStorei(GL_UNPACK_ROW_LENGTH, img_->stride[i]);
-			glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, i>0?img_->d_w/2:img_->d_w, i>0?img_->d_h/2:img_->d_h, GL_LUMINANCE, GL_UNSIGNED_BYTE, pixels);
-			glUniform1i(u_tex_[i], i);
-		}
-
-		const int w_odd = width() % 2;
-		const int h_odd = height() % 2;
-		const int w = width() / 2;
-		const int h = height() / 2;
-
-		glPushMatrix();
-		glTranslatef((x()+w)&preferences::xypos_draw_mask, (y()+h)&preferences::xypos_draw_mask, 0.0f);
-		glUniformMatrix4fv(shader_->shader()->mvp_matrix_uniform(), 1, GL_FALSE, glm::value_ptr(gles2::get_mvp_matrix()));
-
-		const GLfloat varray[8] = {
-			(GLfloat)-w, (GLfloat)-h,
-			(GLfloat)-w, (GLfloat)h+h_odd,
-			(GLfloat)w+w_odd, (GLfloat)-h,
-			(GLfloat)w+w_odd, (GLfloat)h+h_odd
-		};
-
-		const GLfloat tcx = 0.0f;
-		const GLfloat tcy = 0.0f;
-		const GLfloat tcx2 = GLfloat(img_->d_w)/texture_width_;
-		const GLfloat tcy2 = GLfloat(img_->d_h)/texture_height_;
-
-		const GLfloat tcarray[8] = {
-			tcx, tcy,
-			tcx, tcy2,
-			tcx2, tcy,
-			tcx2, tcy2,
-		};
-		glEnableVertexAttribArray(a_vertex_);
-		glEnableVertexAttribArray(a_texcoord_);
-		glVertexAttribPointer(a_vertex_, 2, GL_FLOAT, 0, 0, varray);
-		glVertexAttribPointer(a_texcoord_, 2, GL_FLOAT, 0, 0, tcarray);
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		glDisableVertexAttribArray(a_vertex_);
-		glDisableVertexAttribArray(a_texcoord_);
-
-		glPopMatrix();
-
-		glActiveTexture(GL_TEXTURE2);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		glActiveTexture(GL_TEXTURE1);
-		glBindTexture(GL_TEXTURE_2D, 0);
-
-		glActiveTexture(GL_TEXTURE0);
-		glBindTexture(GL_TEXTURE_2D, graphics::texture::get_currentTexture());
-		glPixelStorei(GL_UNPACK_ROW_LENGTH, 0);
-
-		glEnable(GL_BLEND);
+		KRE::Canvas::getInstance()->blitTexture(texture_, 0, rect(0, 0, width(), height()));
 	}
 }
 

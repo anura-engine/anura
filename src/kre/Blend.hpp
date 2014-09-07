@@ -97,28 +97,28 @@ namespace KRE
 		BlendMode() : src_(BlendModeConstants::BM_SRC_ALPHA), dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {}
 		explicit BlendMode(BlendModeConstants src, BlendModeConstants dst) : src_(src), dst_(dst) {}
 		explicit BlendMode(const variant& node);
-		BlendModeConstants Source() const { return src_; }
-		BlendModeConstants Destination() const { return dst_; }
-		BlendModeConstants Src() const { return src_; }
-		BlendModeConstants Dst() const { return dst_; }
+		BlendModeConstants source() const { return src_; }
+		BlendModeConstants destination() const { return dst_; }
+		BlendModeConstants src() const { return src_; }
+		BlendModeConstants dst() const { return dst_; }
 		variant write() const;
-		void Set(BlendModeConstants src, BlendModeConstants dst) {
+		void set(BlendModeConstants src, BlendModeConstants dst) {
 			src_ = src;
 			dst_ = dst;
 		}
-		void SetSource(BlendModeConstants src) {
+		void setSource(BlendModeConstants src) {
 			src_ = src;
 		}
-		void SetDestination(BlendModeConstants dst) {
+		void setDestination(BlendModeConstants dst) {
 			dst_ = dst;
 		}
-		void SetSrc(BlendModeConstants src) {
+		void setSrc(BlendModeConstants src) {
 			src_ = src;
 		}
-		void SetDst(BlendModeConstants dst) {
+		void setDst(BlendModeConstants dst) {
 			dst_ = dst;
 		}
-		void Set(const variant& node);
+		void set(const variant& node);
 	private:
 		BlendModeConstants src_;
 		BlendModeConstants dst_;

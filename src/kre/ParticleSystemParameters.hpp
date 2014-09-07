@@ -29,44 +29,44 @@ namespace KRE
 {
 	namespace Particles
 	{
+		enum class ParameterType {
+			FIXED,
+			RANDOM,
+			CURVED,
+			OSCILLATE,
+		};
+
 		// Multi-valued parameter.
-		class parameter
+		class Parameter
 		{
 		public:
-			enum ParameterType {
-				PARAMETER_FIXED,
-				PARAMETER_RANDOM,
-				PARAMETER_CURVED,
-				PARAMETER_OSCILLATE,
-			};
-
-			explicit parameter(ParameterType t) : type_(t) {}
+			explicit Parameter(ParameterType t) : type_(t) {}
 
 			virtual float getValue(float t) = 0;
-			static parameter_ptr factory(const variant& node);
+			static ParameterPtr factory(const variant& node);
 
 			ParameterType type() { return type_; }
 		protected:
-			parameter();
-			virtual ~parameter();
+			Parameter();
+			virtual ~Parameter();
 		private:
 			ParameterType type_;
-			parameter(const parameter&);
+			Parameter(const Parameter&);
 		};
 
-		class fixed_parameter : public parameter
+		class FixedParameter : public Parameter
 		{
 		public:
-			fixed_parameter(float value);
-			fixed_parameter(const variant& node);
-			virtual ~fixed_parameter();
+			FixedParameter(float value);
+			FixedParameter(const variant& node);
+			virtual ~FixedParameter();
 
 			virtual float getValue(float t) {
 				return value_;
 			}
 		private:
 			float value_;
-			fixed_parameter(const fixed_parameter&);
+			FixedParameter(const FixedParameter&);
 		};
 	}
 }

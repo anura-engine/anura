@@ -279,8 +279,6 @@ private:
 
 	int timerFrequency_;
 
-	typedef boost::intrusive_ptr<Frame> FramePtr;
-
 	typedef std::map<std::string, std::vector<FramePtr>> frame_map;
 	frame_map frames_;
 	variant available_frames_;

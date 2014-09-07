@@ -42,7 +42,16 @@ namespace KRE
 	{
 		typedef glm::detail::tvec4<unsigned char> color_vector;
 
-		struct physics_parameters
+		struct vertex_texture_color3
+		{
+			vertex_texture_color3(const glm::vec3& v, const glm::vec2& t, const glm::u8vec4& c)
+				: vertex(v), texcoord(t), color(c) {}
+			glm::vec3 vertex;
+			glm::vec2 texcoord;
+			glm::u8vec4 color;
+		};
+
+		struct PhysicsParameters
 		{
 			glm::vec3 position;
 			color_vector color;
@@ -54,22 +63,22 @@ namespace KRE
 			glm::quat orientation;
 		};
 
-		void init_physics_parameters(physics_parameters& pp); 
+		void init_physics_parameters(PhysicsParameters& pp); 
 
 		// This structure should be POD (i.e. plain old data)
-		struct particle
+		struct Particle
 		{
-			physics_parameters current;
-			physics_parameters initial;
-			emitter* emitted_by;
+			PhysicsParameters current;
+			PhysicsParameters initial;
+			Emitter* emitted_by;
 		};
 
 		// General class for emitter objects which encapsulate and exposes physical parameters
 		// Used as a base class for everything that is not 
-		class emit_object : public particle
+		class EmitObject : public Particle
 		{
 		public:
-			explicit emit_object(ParticleSystemContainer* parent, const variant& node) 
+			explicit EmitObject(ParticleSystemContainer* parent, const variant& node) 
 				: parent_container_(parent) {
 				ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
 				if(node.has_key("name")) {
@@ -80,61 +89,59 @@ namespace KRE
 					name_ = ss.str();
 				}
 			}
-			virtual ~emit_object() {}
+			virtual ~EmitObject() {}
 			const std::string& name() const { return name_; }
-			void process(float t) {
-				handleProcess(t);
+			void emitProcess(float t) {
+				handleEmitProcess(t);
 			}
 			void draw() const {
 				handleDraw();
 			}
-			ParticleSystemContainer* parent_container() { 
+			ParticleSystemContainer* getParentContainer() { 
 				ASSERT_LOG(parent_container_ != NULL, "PSYSTEM2: parent container is NULL");
 				return parent_container_; 
 			}
 		protected:
-			virtual void handleProcess(float t) = 0;
-			virtual void handleDraw() const {}
-			virtual bool duration_expired() { return false; }
+			virtual bool durationExpired() { return false; }
 		private:
+			virtual void handleEmitProcess(float t) = 0;
+			virtual void handleDraw() const {}
 			std::string name_;
 			ParticleSystemContainer* parent_container_;
-			emit_object();
-			//emit_object(const emit_object&);
+			EmitObject();
+			//EmitObject(const EmitObject&);
 		};
 
-		class technique  : public emit_object, public SceneObject
+		class Technique  : public EmitObject, public SceneObject
 		{
 		public:
-			explicit technique(ParticleSystemContainer* parent, const variant& node);
-			technique(const technique& tq);
-			virtual ~technique();
+			explicit Technique(ParticleSystemContainer* parent, const variant& node);
+			Technique(const Technique& tq);
+			virtual ~Technique();
 
-			size_t particle_count() const { return active_particles_.size(); };
-			size_t quota() const { return particle_quota_; }
-			size_t emitter_quota() const { return emitter_quota_; }
-			size_t system_quota() const { return system_quota_; }
-			size_t technique_quota() const { return technique_quota_; }
-			size_t affector_quota() const { return affector_quota_; }
-			glm::vec3 default_dimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
-			ParticleSystem* get_ParticleSystem() { return ParticleSystem_; }
-			emit_object_ptr get_object(const std::string& name);
+			size_t getParticleCount() const { return active_particles_.size(); };
+			size_t getQuota() const { return particle_quota_; }
+			size_t getEmitterQuota() const { return emitter_quota_; }
+			size_t getSystemQuota() const { return system_quota_; }
+			size_t getTechniqueQuota() const { return technique_quota_; }
+			size_t getAffectorQuota() const { return affector_quota_; }
+			glm::vec3 getDefaultDimensions() const { return glm::vec3(default_particle_width_, default_particle_height_, default_particle_depth_); }
+			ParticleSystem* getParticleSystem() { return particle_system_; }
+			EmitObjectPtr getEmitObject(const std::string& name);
 			void setParent(ParticleSystem* parent);
 			// Direct access here for *speed* reasons.
-			std::vector<particle>& active_particles() { return active_particles_; }
-			std::vector<emitter_ptr>& active_emitters() { return instanced_emitters_; }
-			std::vector<affector_ptr>& active_affectors() { return instanced_affectors_; }
-			void add_emitter(emitter_ptr e);
-			void add_affector(affector_ptr a);
-			void preRender() override;
-		protected:
-			DisplayDeviceDef Attach(const DisplayDevicePtr& dd);
-
-			virtual void handleProcess(float t);
+			std::vector<Particle>& getActiveParticles() { return active_particles_; }
+			std::vector<EmitterPtr>& getActiveEmitters() { return instanced_emitters_; }
+			std::vector<AffectorPtr>& getActiveAffectors() { return instanced_affectors_; }
+			void addEmitter(EmitterPtr e);
+			void addAffector(AffectorPtr a);
+			void preRender(const WindowManagerPtr& wnd) override;
 		private:
-			void Init();
+			void init();
+			void handleEmitProcess(float t) override;
+			void doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) override;
 
-			std::shared_ptr<Attribute<vertex_texture_color>> arv_;
+			std::shared_ptr<Attribute<vertex_texture_color3>> arv_;
 
 			float default_particle_width_;
 			float default_particle_height_;
@@ -149,42 +156,41 @@ namespace KRE
 			std::unique_ptr<float> max_velocity_;
 
 			//renderer_ptr renderer_;
-			std::vector<emitter_ptr> active_emitters_;
-			std::vector<affector_ptr> active_affectors_;
+			std::vector<EmitterPtr> active_emitters_;
+			std::vector<AffectorPtr> active_affectors_;
 
-			std::vector<emitter_ptr> instanced_emitters_;
-			std::vector<affector_ptr> instanced_affectors_;
+			std::vector<EmitterPtr> instanced_emitters_;
+			std::vector<AffectorPtr> instanced_affectors_;
 
 			// Parent particle system
-			ParticleSystem* ParticleSystem_;
+			ParticleSystem* particle_system_;
 
 			// List of particles currently active.
-			std::vector<particle> active_particles_;
+			std::vector<Particle> active_particles_;
 
-			technique();
+			Technique();
 		};
 
-		class ParticleSystem : public emit_object, public SceneNode
+		class ParticleSystem : public EmitObject, public SceneNode
 		{
 		public:
 			explicit ParticleSystem(SceneGraph* sg, ParticleSystemContainer* parent, const variant& node);
 			ParticleSystem(const ParticleSystem& ps);
 			virtual ~ParticleSystem();
 
-			float elapsed_time() const { return elapsed_time_; }
-			float scale_velocity() const { return scale_velocity_; }
-			float scale_time() const { return scale_time_; }
-			const glm::vec3& scale_dimensions() const { return scale_dimensions_; }
+			float getElapsedTime() const { return elapsed_time_; }
+			float getScaleVelocity() const { return scale_velocity_; }
+			float getScaleTime() const { return scale_time_; }
+			const glm::vec3& getScaleDimensions() const { return scale_dimensions_; }
 
 			static ParticleSystem* factory(ParticleSystemContainer* parent, const variant& node);
 
-			void add_technique(technique_ptr tq);
-			std::vector<technique_ptr>& active_techniques() { return active_techniques_; }
+			void addTechnique(TechniquePtr tq);
+			std::vector<TechniquePtr>& getActiveTechniques() { return active_techniques_; }
 
-			void NodeAttached() override;
 		protected:
-			virtual void handleProcess(float t);
-		private:
+			virtual void handleEmitProcess(float t) override;
+			void notifyNodeAttached(SceneNode* parent) override;
 			void update(float t);
 
 			float elapsed_time_;
@@ -195,7 +201,7 @@ namespace KRE
 			std::unique_ptr<std::pair<float,float>> fast_forward_;
 
 			// List of how to create and manipulate particles.
-			std::vector<technique_ptr> active_techniques_;
+			std::vector<TechniquePtr> active_techniques_;
 
 			ParticleSystem();
 		};
@@ -206,33 +212,33 @@ namespace KRE
 			explicit ParticleSystemContainer(SceneGraph* sg, const variant& node);
 			virtual ~ParticleSystemContainer();
 
-			void activate_ParticleSystem(const std::string& name);
-			std::vector<ParticleSystemPtr>& active_ParticleSystems() { return active_ParticleSystems_; }
+			void getActivateParticleSystem(const std::string& name);
+			std::vector<ParticleSystemPtr>& getActiveParticleSystems() { return active_particle_systems_; }
 
-			ParticleSystemPtr clone_ParticleSystem(const std::string& name);
-			technique_ptr clone_technique(const std::string& name);
-			emitter_ptr clone_emitter(const std::string& name);
-			affector_ptr clone_affector(const std::string& name);
+			ParticleSystemPtr cloneParticleSystem(const std::string& name);
+			TechniquePtr cloneTechnique(const std::string& name);
+			EmitterPtr cloneEmitter(const std::string& name);
+			AffectorPtr cloneAffector(const std::string& name);
 
 			void addParticleSystem(ParticleSystem* obj);
-			void add_technique(technique* obj);
-			void add_emitter(emitter* obj);
-			void add_affector(affector* obj);
+			void addTechnique(Technique* obj);
+			void addEmitter(Emitter* obj);
+			void addAffector(Affector* obj);
 
-			std::vector<ParticleSystemPtr> clone_ParticleSystems();
-			std::vector<technique_ptr> clone_techniques();
-			std::vector<emitter_ptr> clone_emitters();
-			std::vector<affector_ptr> clone_affectors();
+			std::vector<ParticleSystemPtr> cloneParticleSystems();
+			std::vector<TechniquePtr> cloneTechniques();
+			std::vector<EmitterPtr> cloneEmitters();
+			std::vector<AffectorPtr> cloneAffectors();
 
-			void Process(double current_time) override;
-			void NodeAttached() override;
+			void process(double current_time) override;
 		private:
-			std::vector<ParticleSystemPtr> active_ParticleSystems_;
+			void notifyNodeAttached(SceneNode* parent) override;
+			std::vector<ParticleSystemPtr> active_particle_systems_;
 
-			std::vector<ParticleSystemPtr> ParticleSystems_;
-			std::vector<technique_ptr> techniques_;
-			std::vector<emitter_ptr> emitters_;
-			std::vector<affector_ptr> affectors_;
+			std::vector<ParticleSystemPtr> particle_systems_;
+			std::vector<TechniquePtr> techniques_;
+			std::vector<EmitterPtr> emitters_;
+			std::vector<AffectorPtr> affectors_;
 			
 			ParticleSystemContainer();
 			ParticleSystemContainer(const ParticleSystemContainer&);

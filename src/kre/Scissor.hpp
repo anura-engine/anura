@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#pragma once
+
 #include "Geometry.hpp"
 #include <memory>
 

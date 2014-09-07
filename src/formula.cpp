@@ -43,7 +43,6 @@
 #include "formula_tokenizer.hpp"
 #include "i18n.hpp"
 #include "lua_iface.hpp"
-#include "map_utils.hpp"
 #include "preferences.hpp"
 #include "random.hpp"
 #include "string_utils.hpp"

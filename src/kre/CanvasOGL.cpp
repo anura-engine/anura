@@ -52,7 +52,7 @@ namespace KRE
 		mvp_ = glm::ortho(0.0f, float(width()), float(height()), 0.0f);
 	}
 
-	void CanvasOGL::blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const
+	void CanvasOGL::blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color) const
 	{
 		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
 		ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
@@ -81,30 +81,30 @@ namespace KRE
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vx2)/2.0f,-(vy1+vy2)/2.0f,0.0f));
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
-		auto shader = Shader::ShaderProgram::DefaultSystemShader();
-		shader->MakeActive();
-		texture->Bind();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
-		if(color) {
-			shader->SetUniformValue(shader->GetColorUniform(), (*color*getColor()).asFloatVector());
+		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		shader->makeActive();
+		texture->bind();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		if(color != KRE::Color::colorWhite()) {
+			shader->setUniformValue(shader->getColorUniform(), (color*getColor()).asFloatVector());
 		} else {
-			shader->SetUniformValue(shader->GetColorUniform(), getColor().asFloatVector());
+			shader->setUniformValue(shader->getColorUniform(), getColor().asFloatVector());
 		}
-		shader->SetUniformValue(shader->GetTexMapUniform(), 0);
+		shader->setUniformValue(shader->getTexMapUniform(), 0);
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-		glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-		glEnableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->GetTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, uv_coords);
 
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-		glDisableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-		glDisableVertexAttribArray(shader->GetVertexAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 
-	void CanvasOGL::blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const ColorPtr& color) const
+	void CanvasOGL::blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) const
 	{
 		ASSERT_LOG(mat != NULL, "Material was null");
 		const float vx1 = float(dst.x());
@@ -120,39 +120,39 @@ namespace KRE
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
-		auto shader = Shader::ShaderProgram::DefaultSystemShader();
-		shader->MakeActive();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
-		if(color) {
-			shader->SetUniformValue(shader->GetColorUniform(), color->asFloatVector());
-		}
-		shader->SetUniformValue(shader->GetTexMapUniform(), 0);
+		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		//if(color != KRE::Color::colorWhite()) {
+			shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		//}
+		shader->setUniformValue(shader->getTexMapUniform(), 0);
 
-		mat->Apply();
+		mat->apply();
 
 		for(auto it = mat->GetTexture().begin(); it != mat->GetTexture().end(); ++it) {
 			auto texture = std::dynamic_pointer_cast<OpenGLTexture>(*it);
 			ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
-			auto uv_coords = mat->GetNormalisedTextureCoords(it);
+			auto uv_coords = mat->getNormalisedTextureCoords(it);
 
 			texture->Bind();
 			// XXX the following line are only temporary, obviously.
 			//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-			glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-			glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-			glEnableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-			glVertexAttribPointer(shader->GetTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &uv_coords);
+			glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+			glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+			glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+			glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &uv_coords);
 
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-			glDisableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-			glDisableVertexAttribArray(shader->GetVertexAttribute()->second.location);
+			glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+			glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 		}
-		mat->Unapply();
+		mat->unapply();
 	}
 
-	void CanvasOGL::blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const ColorPtr& color) const
+	void CanvasOGL::blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const Color& color) const
 	{
 		ASSERT_LOG(mat != NULL, "Material was null");
 		const float vx1 = float(dst.x());
@@ -168,24 +168,24 @@ namespace KRE
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
-		auto shader = Shader::ShaderProgram::DefaultSystemShader();
-		shader->MakeActive();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
-		if(color) {
-			shader->SetUniformValue(shader->GetColorUniform(), color->asFloatVector());
-		}
-		shader->SetUniformValue(shader->GetTexMapUniform(), 0);
+		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		//if(color) {
+			shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		//}
+		shader->setUniformValue(shader->getTexMapUniform(), 0);
 
-		mat->Apply();
+		mat->apply();
 
 		for(auto it = mat->GetTexture().begin(); it != mat->GetTexture().end(); ++it) {
 			auto texture = std::dynamic_pointer_cast<OpenGLTexture>(*it);
 			ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
-			const float tx1 = float(src.x()) / texture->Width();
-			const float ty1 = float(src.y()) / texture->Height();
-			const float tx2 = src.w() == 0 ? 1.0f : float(src.x2()) / texture->Width();
-			const float ty2 = src.h() == 0 ? 1.0f : float(src.y2()) / texture->Height();
+			const float tx1 = float(src.x()) / texture->width();
+			const float ty1 = float(src.y()) / texture->height();
+			const float tx2 = src.w() == 0 ? 1.0f : float(src.x2()) / texture->width();
+			const float ty2 = src.h() == 0 ? 1.0f : float(src.y2()) / texture->height();
 			const float uv_coords[] = {
 				tx1, ty1,
 				tx2, ty1,
@@ -193,66 +193,59 @@ namespace KRE
 				tx2, ty2,
 			};
 
-			texture->Bind();
+			texture->bind();
 			// XXX the following line are only temporary, obviously.
 			//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
-			glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-			glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-			glEnableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-			glVertexAttribPointer(shader->GetTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &uv_coords);
+			glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+			glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+			glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+			glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &uv_coords);
 
 			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
-			glDisableVertexAttribArray(shader->GetTexcoordAttribute()->second.location);
-			glDisableVertexAttribArray(shader->GetVertexAttribute()->second.location);
+			glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
+			glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 		}
 
-		mat->Unapply();
+		mat->unapply();
 	}
 
-	void CanvasOGL::drawRect(const rect& r, const ColorPtr& fill_color, const ColorPtr& stroke_color, float rotation) const
+	void CanvasOGL::drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotation) const
 	{
-		const float vx1 = float(r.x());
-		const float vy1 = float(r.y());
-		const float vx2 = float(r.x2());
-		const float vy2 = float(r.y2());
+		rectf vtx = r.as_type<float>();
 		const float vtx_coords[] = {
-			vx1, vy1,
-			vx2, vy1,
-			vx1, vy2,
-			vx2, vy2,
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x1(), vtx.y2(),
+			vtx.x2(), vtx.y2(),
 		};
 
-		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(vtx.mid_x(),vtx.mid_y(),0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-vtx.mid_x(),-vtx.mid_y(),0.0f));
 		glm::mat4 mvp = mvp_ * model * getModelMatrix();
-		static Shader::ShaderProgramPtr shader = Shader::ShaderProgram::Factory("simple");
-		shader->MakeActive();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		// Draw a filled rect if fill_color is specified
-		if(fill_color) {
-			shader->SetUniformValue(shader->GetColorUniform(), fill_color->asFloatVector());
-			glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-			glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-		}
+		// Draw a filled rect
+		shader->setUniformValue(shader->getColorUniform(), fill_color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+
 		// Draw stroke if stroke_color is specified.
-		if(stroke_color) {
-			// XXX I think there is an easier way of doing this, with modern GL
-			const float vtx_coords[] = {
-				vx1, vy1,
-				vx2, vy1,
-				vx2, vy2,
-				vx1, vy2,
-				vx1, vy1,
-			};
-			shader->SetUniformValue(shader->GetColorUniform(), stroke_color->asFloatVector());
-			glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-			glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
-			// XXX this may not be right.
-			glDrawArrays(GL_LINE_STRIP, 0, 5);
-		}
-
+		// XXX I think there is an easier way of doing this, with modern GL
+		const float vtx_coords[] = {
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x2(), vtx.y2(),
+			vtx.x1(), vtx.y2(),
+			vtx.x1(), vtx.y1(),
+		};
+		shader->setUniformValue(shader->getColorUniform(), stroke_color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		// XXX this may not be right.
+		glDrawArrays(GL_LINE_STRIP, 0, 5);
 	}
 
 	void CanvasOGL::drawLine(const point& p1, const point& p2, const Color& color) const
@@ -260,10 +253,12 @@ namespace KRE
 		// XXX
 	}
 
-	void CanvasOGL::drawCircle(const point& centre, double radius, const Color& color) const
+	void CanvasOGL::drawSolidCircle(const point& centre, double radius, const Color& color) const
 	{
 		// XXX
 	}
+
+	// XXX Add in the other hundred additions.
 
 	CanvasPtr CanvasOGL::getInstance()
 	{

@@ -1145,7 +1145,7 @@ namespace
 			if(entity_collides(lvl, *obj_, MOVE_DIRECTION::NONE)) {
 				lvl.remove_character(obj_);
 			} else {
-				obj_->check_initialized();
+				obj_->checkInitialized();
 			}
 
 			obj_->createObject();
@@ -2162,7 +2162,7 @@ namespace
 
 					if(options.empty() == false) {
 						const int index = d->getOptionSelected();
-						if(index >= 0 && static_cast<int>(index) < option_commands.size()) {
+						if(index >= 0 && static_cast<unsigned>(index) < option_commands.size()) {
 							dialog_tracker.cancel();
 							ob.executeCommand(option_commands[index]);
 						}
@@ -3336,7 +3336,7 @@ namespace
 			if(Entity_collides(lvl, *obj_, MOVE_DIRECTION::NONE)) {
 				lvl.remove_character(obj_);
 			} else {
-				obj_->check_initialized();
+				obj_->checkInitialized();
 			}
 
 			obj_->createObject();

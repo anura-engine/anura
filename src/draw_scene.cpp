@@ -365,7 +365,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 {
 	auto& wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
-	formula_profiler::instrument instrumentation("DRAW");
+	formula_profiler::Instrument instrumentation("DRAW");
 
 #ifndef NO_EDITOR
 	const int sidebar_width = editor::sidebar_width();

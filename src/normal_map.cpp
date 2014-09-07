@@ -1,3 +1,5 @@
+// XXX needs fixing
+#if 0
 /*
 	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
@@ -737,3 +739,4 @@ UTILITY(calculate_normal_map)
 	editor->showModal();
 }
 
+#endif

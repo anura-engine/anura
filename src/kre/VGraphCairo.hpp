@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include <cairo/cairo.h>
+#include <cairo.h>
 
 #include "Geometry.hpp"
 #include "VGraph.hpp"
@@ -48,7 +48,6 @@ namespace KRE
 
 			virtual void SetSourceColor(const double r, const double g, const double b, const double a=1.0) override;
 			virtual void SetSourceColor(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a=255) override;
-			virtual void SetSourceColor(const double r, const Color& color) override;
 			virtual void SetSource(const PatternPtr& p) override;
 			virtual PatternPtr GetSource() const override;
 
@@ -99,9 +98,7 @@ namespace KRE
 			virtual void AddPath(const PathPtr& path) override;
 			virtual void AddSubPath(const PathPtr& path) override;
 		
-			virtual void preRender() override;
-
-			virtual DisplayDeviceDef Attach(const DisplayDevicePtr& dd);
+			virtual void preRender(const WindowManagerPtr& wnd) override;
 		protected:
 			cairo_t* GetContext() { return context_; }
 			cairo_surface_t* GetSurface() { return surface_; }

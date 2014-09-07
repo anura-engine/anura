@@ -40,7 +40,7 @@ TextureObject::~TextureObject()
 BEGIN_DEFINE_CALLABLE_NOBASE(TextureObject)
 
 DEFINE_FIELD(id, "int")
-	return variant(obj.texture()->ID());
+	return variant(obj.texture()->id());
 
 BEGIN_DEFINE_FN(save, "(string) ->commands")
 	using namespace game_logic;

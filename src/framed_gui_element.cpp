@@ -40,7 +40,7 @@ using namespace KRE;
 FramedGuiElement::FramedGuiElement(variant node)
 	: area_(node["rect"]),
 	cornerHeight_(node["cornerHeight"].as_int()),
-	texture_(DisplayDevice::CreateMaterial(node["image"]))
+	texture_(Texture::createTexture(node["image"]))
 {
 	top_left_corner_ = rect(area_.x(),area_.y(),cornerHeight_,cornerHeight_);
 	top_right_corner_ = rect(area_.x2() - cornerHeight_,area_.y(),cornerHeight_,cornerHeight_);
@@ -118,5 +118,5 @@ void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled, const KRE
 void FramedGuiElement::blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const
 {
 	// I can't but help feel the ColorPtr code here is evil. Note that it is a null-deleter.
-	Canvas::getInstance()->blitTexture(texture_, subsection, 0, rect(x,y,w,h), ColorPtr(&color,[](){}));
+	Canvas::getInstance()->blitTexture(texture_, subsection, 0, rect(x,y,w,h), color);
 }

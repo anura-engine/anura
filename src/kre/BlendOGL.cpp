@@ -112,24 +112,24 @@ namespace KRE
 	BlendModeManagerOGL::BlendModeManagerOGL(const BlendMode& bm)
 		: blend_mode_(bm)
 	{
-		if(blend_mode_.Src() != BlendModeConstants::BM_SRC_ALPHA 
-			|| blend_mode_.Dst() != BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
+		if(blend_mode_.src() != BlendModeConstants::BM_SRC_ALPHA 
+			|| blend_mode_.dst() != BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
 			if(get_mode_stack().empty()) {
 				get_mode_stack().emplace(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 			}
 			get_mode_stack().emplace(bm);
-			glBlendFunc(convert_blend_mode(blend_mode_.Src()), convert_blend_mode(blend_mode_.Dst()));
+			glBlendFunc(convert_blend_mode(blend_mode_.src()), convert_blend_mode(blend_mode_.dst()));
 		}
 	}
 
 	BlendModeManagerOGL::~BlendModeManagerOGL()
 	{
-		if(blend_mode_.Src() != BlendModeConstants::BM_SRC_ALPHA 
-			|| blend_mode_.Dst() != BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
+		if(blend_mode_.src() != BlendModeConstants::BM_SRC_ALPHA 
+			|| blend_mode_.dst() != BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA) {
 			ASSERT_LOG(!get_mode_stack().empty(), "Something went badly wrong blend mode stack was empty.");
 			get_mode_stack().pop();
 			BlendMode& bm = get_mode_stack().top();
-			glBlendFunc(convert_blend_mode(bm.Src()), convert_blend_mode(bm.Dst()));
+			glBlendFunc(convert_blend_mode(bm.src()), convert_blend_mode(bm.dst()));
 		}
 	}
 }

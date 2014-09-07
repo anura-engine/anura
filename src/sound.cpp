@@ -126,7 +126,7 @@ namespace sound
 
 		void on_sound_finished(int channel)
 		{
-			if(channel >= 0 && channel < channels_to_sounds_playing.size()) {
+			if(channel >= 0 && static_cast<unsigned>(channel) < channels_to_sounds_playing.size()) {
 				channels_to_sounds_playing[channel].object = NULL;
 			}
 		}
@@ -413,9 +413,9 @@ namespace sound
 
 	void init_music(variant node)
 	{
-		foreach(variant music_node, node["music"].as_list()) {
+		for(variant music_node : node["music"].as_list()) {
 			const std::string name = music_node["name"].as_string();
-			music_index[name].volume = music_node["volume"].as_decimal(decimal(1.0)).as_float();
+			music_index[name].volume = music_node["volume"].as_float(1.0f);
 		}
 	}
 
@@ -473,7 +473,7 @@ namespace sound
 
 		int result = Mix_PlayChannel(-1, chunk, loops);
 		if(result >= 0) {
-			Mix_SetPanning(result, 255*g_stereo_left, 255*g_stereo_right);
+			Mix_SetPanning(result, static_cast<uint8_t>(255*g_stereo_left), static_cast<uint8_t>(255*g_stereo_right));
 		}
 
 	#else
@@ -487,12 +487,12 @@ namespace sound
 
 		//record which channel the sound is playing on.
 		if(result >= 0) {
-			if(channels_to_sounds_playing.size() <= result) {
+			if(static_cast<unsigned>(channels_to_sounds_playing.size()) <= result) {
 				channels_to_sounds_playing.resize(result + 1);
 			}
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 			if(fade_in_time == 0.0f) {
-				Mix_Volume(result, volume*sfx_volume*MIX_MAX_VOLUME); //start sound at full volume
+				Mix_Volume(result, static_cast<int>(volume*sfx_volume*MIX_MAX_VOLUME)); //start sound at full volume
 			} else {
 				Mix_Volume(result, 0); 
 			}
@@ -529,7 +529,7 @@ namespace sound
 		if(has_items) {
 			std::vector<sound_playing> sounds;
 			sounds.swap(queued_sounds);
-			foreach(const sound_playing& sfx, sounds) {
+			for(const sound_playing& sfx : sounds) {
 				play_internal(sfx.file, sfx.loops, sfx.object, sfx.volume, sfx.fade_in_time);
 			}
 		}
@@ -537,7 +537,7 @@ namespace sound
 		for(int n = 0; n != channels_to_sounds_playing.size(); ++n) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 			sound_playing& snd = channels_to_sounds_playing[n];
-			snd.time_cnt += 0.02;
+			snd.time_cnt += 0.02f;
 			if(snd.fade_in_time > 0.0f) {
 				float volume = snd.volume;
 				if(snd.time_cnt > snd.fade_in_time) {
@@ -547,7 +547,7 @@ namespace sound
 					volume *= snd.time_cnt / snd.fade_in_time;
 				}
 				//std::cerr << "Sound: " << snd.file << ", " << snd.fade_in_time << " : " << snd.time_cnt << "  " << (volume * sfx_volume) << std::endl;
-				Mix_Volume(n, volume * sfx_volume * MIX_MAX_VOLUME);
+				Mix_Volume(n, static_cast<int>(volume * sfx_volume * MIX_MAX_VOLUME));
 			}
 			if(snd.fade_out_time > 0.0f) {
 				if(snd.time_cnt > snd.fade_out_time) {
@@ -556,8 +556,8 @@ namespace sound
 					Mix_HaltChannel(n);
 				} else {
 					float volume = snd.volume;
-					volume *= (1.0 - snd.time_cnt / snd.fade_out_time);
-					Mix_Volume(n, volume * sfx_volume * MIX_MAX_VOLUME);
+					volume *= (1.0f - snd.time_cnt / snd.fade_out_time);
+					Mix_Volume(n, static_cast<int>(volume * sfx_volume * MIX_MAX_VOLUME));
 				}
 			}
 		}
@@ -666,7 +666,7 @@ namespace sound
 					channels_to_sounds_playing[n].fade_in_time = 0.0f;
 					channels_to_sounds_playing[n].time_cnt = 0.0f;
 				}
-				Mix_Volume(n, sfx_volume*volume);
+				Mix_Volume(n, static_cast<int>(sfx_volume*volume));
 	#else
 				mixer.channels[n].volume = sfx_volume*volume;
 	#endif
@@ -694,7 +694,7 @@ namespace sound
 	{
 		if(sound_init) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-			Mix_VolumeMusic(track_music_volume*user_music_volume*engine_music_volume*MIX_MAX_VOLUME);
+			Mix_VolumeMusic(static_cast<int>(track_music_volume*user_music_volume*engine_music_volume*MIX_MAX_VOLUME));
 	#else
 			iphone_set_music_volume(track_music_volume*user_music_volume*engine_music_volume);
 	#endif
@@ -730,7 +730,7 @@ namespace sound
 		for(int n = 0; n != channels_to_sounds_playing.size(); ++n) {
 			const sound_playing& s = channels_to_sounds_playing[n];
 			if(s.object == obj && s.file == id) {
-				Mix_SetPanning(n, 255*left, 255*right);
+				Mix_SetPanning(n, static_cast<uint8_t>(255*left), static_cast<uint8_t>(255*right));
 			}
 		}
 	}

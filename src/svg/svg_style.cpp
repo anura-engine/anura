@@ -27,7 +27,7 @@
 
 #include <cairo-ft.h>
 
-#include "logger.hpp"
+#include "./asserts.hpp"
 #include "svg_element.hpp"
 #include "svg_style.hpp"
 

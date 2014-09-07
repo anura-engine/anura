@@ -468,12 +468,12 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::loadShadersFromFile(const variant& node) 
 	{
-		OpenGL::ShaderProgramOGL::loadFromFile(node);
+		OpenGL::ShaderProgram::loadFromFile(node);
 	}
 
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
 	{
-		return OpenGL::ShaderProgramOGL::factory(name);
+		return OpenGL::ShaderProgram::factory(name);
 	}
 
 	// XXX Need a way to deal with blits with Camera/Lighting.
@@ -512,9 +512,9 @@ namespace KRE
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
-		auto shader = OpenGL::ShaderProgramOGL::defaultSystemShader();
+		auto shader = OpenGL::ShaderProgram::defaultSystemShader();
 		shader->makeActive();
-		texture->Bind();
+		texture->bind();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f,1.0f,1.0f,1.0f)));
 		shader->setUniformValue(shader->getTexMapUniform(), 0);

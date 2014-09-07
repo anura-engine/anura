@@ -64,7 +64,7 @@ namespace KRE
 		depth_(0),
 		unpack_alignment_(4)
 	{
-		InternalInit();
+		internalInit();
 		if(node.has_key("type")) {
 			const std::string& type = node["type"].as_string();
 			if(type == "1d") {
@@ -184,7 +184,7 @@ namespace KRE
 		depth_(0),
 		unpack_alignment_(4)
 	{
-		InternalInit();
+		internalInit();
 	}
 
 	Texture::Texture(unsigned width, 
@@ -203,7 +203,13 @@ namespace KRE
 		depth_(depth),
 		unpack_alignment_(4)
 	{
-		InternalInit();
+		internalInit();
+	}
+
+	Texture::Texture(const SurfacePtr& surf, const SurfacePtr& palette)
+	{
+		ASSERT_LOG(false, "Write the texture palette code");
+		internalInit();	
 	}
 	
 	Texture::~Texture()
@@ -211,7 +217,7 @@ namespace KRE
 		remove_from_texture_registery(this);
 	}
 
-	void Texture::InternalInit()
+	void Texture::internalInit()
 	{
 		add_to_texture_registry(this);
 
@@ -270,44 +276,44 @@ namespace KRE
 
 	}
 
-	void Texture::SetAddressModes(AddressMode u, AddressMode v, AddressMode w, const Color& bc)
+	void Texture::setAddressModes(AddressMode u, AddressMode v, AddressMode w, const Color& bc)
 	{
 		address_mode_[0] = u;
 		address_mode_[1] = v;
 		address_mode_[2] = w;
 		border_color_ = bc;
-		Init();
+		init();
 	}
 
-	void Texture::SetAddressModes(const AddressMode uvw[3], const Color& bc)
+	void Texture::setAddressModes(const AddressMode uvw[3], const Color& bc)
 	{
 		for(int n = 0; n < 3; ++n) {
 			address_mode_[n] = uvw[n];
 		}
 		border_color_ = bc;
-		Init();
+		init();
 	}
 
-	void Texture::SetFiltering(Filtering min, Filtering max, Filtering mip)
+	void Texture::setFiltering(Filtering min, Filtering max, Filtering mip)
 	{
 		filtering_[0] = min;
 		filtering_[1] = max;
 		filtering_[2] = mip;
-		Init();
+		init();
 	}
 
-	void Texture::SetFiltering(const Filtering f[3])
+	void Texture::setFiltering(const Filtering f[3])
 	{
 		for(int n = 0; n < 3; ++n) {
 			filtering_[n] = f[n];
 		}
-		Init();
+		init();
 	}
 
-	void Texture::RebuildAll()
+	void Texture::rebuildAll()
 	{
 		for(auto tex : texture_registry()) {
-			tex->Rebuild();
+			tex->rebuild();
 		}
 	}
 
@@ -344,5 +350,25 @@ namespace KRE
 	TexturePtr Texture::createTexture(const SurfacePtr& surface, bool cache, const variant& node)
 	{
 		return DisplayDevice::createTexture(surface, cache, node);
+	}
+
+	TexturePtr Texture::createPalettizedTexture(const std::string& filename)
+	{
+		return DisplayDevice::createTexture(Surface::create(filename), SurfacePtr());
+	}
+
+	TexturePtr Texture::createPalettizedTexture(const std::string& filename, const SurfacePtr& palette)
+	{
+		return DisplayDevice::createTexture(Surface::create(filename), palette);
+	}
+
+	TexturePtr Texture::createPalettizedTexture(const SurfacePtr& surf)
+	{
+		return DisplayDevice::createTexture(surf, SurfacePtr());
+	}
+
+	TexturePtr Texture::createPalettizedTexture(const SurfacePtr& surf, const SurfacePtr& palette)
+	{
+		return DisplayDevice::createTexture(surf, palette);
 	}
 }

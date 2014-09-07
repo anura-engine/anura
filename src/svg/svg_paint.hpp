@@ -29,7 +29,7 @@
 
 #include "color.hpp"
 #include "svg_render.hpp"
-#include "uri.hpp"
+#include "../uri.hpp"
 
 namespace KRE
 {

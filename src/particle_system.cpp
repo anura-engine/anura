@@ -69,15 +69,15 @@ namespace
 			const int nframes_per_row = node["frames_per_row"].as_int(-1);
 			const int pad = node["pad"].as_int();
 
-			frame frame_obj(node);
+			Frame frame_obj(node);
 
 			int row = 0, col = 0;
 			for(int n = 0; n != nframes; ++n) {
-				const frame::frame_info& info = frame_obj.frameLayout()[n];
+				const Frame::FrameInfo& info = frame_obj.frameLayout()[n];
 				const rect& area = info.area;
 
 				frame_area a;
-				rectf ra = texture_->GetNormalisedTextureCoords(texture_->GetTexture().begin(), area);
+				rectf ra = texture_->getNormalisedTextureCoords(texture_->GetTexture().begin(), area);
 				a.u1 = ra.x();
 				a.u2 = ra.x2();
 				a.v1 = ra.y();
@@ -231,10 +231,8 @@ namespace
 	private:
 		DECLARE_CALLABLE(SimpleParticleSystem);
 
-		KRE::DisplayDeviceDef Attach(const KRE::DisplayDevicePtr& dd) {
-			KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-			def.SetHint("shader", "vtc_shader");
-			return def;
+		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override {
+			def->setHint("shader", "vtc_shader");
 		}
 
 		void prepump(const Entity& e);
@@ -270,15 +268,15 @@ namespace
 	  cycle_(0), 
 	  spawn_buildup_(0)
 	{
-		auto as = KRE::DisplayDevice::CreateAttributeSet();
+		auto as = KRE::DisplayDevice::createAttributeSet();
 		attrib_.reset(new KRE::Attribute<KRE::vertex_texture_color>(KRE::AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
-		attrib_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::POSITION, 2, KRE::AttributeDesc::VariableType::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, vertex)));
-		attrib_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::TEXTURE,  2, KRE::AttributeDesc::VariableType::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, texcoord)));
-		attrib_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::COLOR,    4, KRE::AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, color)));
-		as->AddAttribute(KRE::AttributeBasePtr(attrib_));
-		as->SetDrawMode(KRE::AttributeSet::DrawMode::TRIANGLE_STRIP);
+		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, vertex)));
+		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::TEXTURE,  2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, texcoord)));
+		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::COLOR,    4, KRE::AttrFormat::UNSIGNED_BYTE, true, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, color)));
+		as->addAttribute(KRE::AttributeBasePtr(attrib_));
+		as->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
 		
-		AddAttributeSet(as);
+		addAttributeSet(as);
 	}
 
 	void SimpleParticleSystem::prepump(const Entity& e)
@@ -440,7 +438,7 @@ namespace
 			return;
 		}
 		auto pp = particles_.begin();
-		SetMaterial(pp->anim->getTexture());
+		setMaterial(pp->anim->getTexture());
 		std::vector<KRE::vertex_texture_color> vtc;
 		const int facing = e.isFacingRight() ? 1 : -1;
 
@@ -461,8 +459,8 @@ namespace
 				++pp;
 			}
 		}
-		attrib_->Update(&vtc);
-		GetAttributeSet().back()->SetCount(particles_.size());
+		attrib_->update(&vtc);
+		getAttributeSet().back()->setCount(particles_.size());
 	}
 
 	void SimpleParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const
@@ -674,13 +672,13 @@ namespace
 			pos_y_rand_(info.pos_y_rand) 
 		{
 			// turn on hardware-backed, not indexed and instanced draw if available.
-			auto as = KRE::DisplayDevice::CreateAttributeSet(true, false, true);
-			as->SetDrawMode(KRE::AttributeSet::DrawMode::POINTS);
-			AddAttributeSet(as);
+			auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
+			as->setDrawMode(KRE::DrawMode::POINTS);
+			addAttributeSet(as);
 			attribs_ = std::make_shared<KRE::Attribute<Coord>>(KRE::AccessFreqHint::DYNAMIC);
-			attribs_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::POSITION, 2, KRE::AttributeDesc::VariableType::FLOAT, false, sizeof(Coord), offsetof(Coord, vertex)));
-			attribs_->AddAttributeDescription(KRE::AttributeDesc(KRE::AttributeDesc::Type::COLOR, 4, KRE::AttributeDesc::VariableType::UNSIGNED_BYTE, true, sizeof(Coord), offsetof(Coord, color)));
-			as->AddAttribute(attribs_);
+			attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false, sizeof(Coord), offsetof(Coord, vertex)));
+			attribs_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::COLOR, 4, KRE::AttrFormat::UNSIGNED_BYTE, true, sizeof(Coord), offsetof(Coord, color)));
+			as->addAttribute(attribs_);
 		}
 		
 		void process(const Entity& e) {
@@ -764,8 +762,8 @@ namespace
 				}
 				coords.emplace_back(Coord(glm::vec2(p.pos_x/1024, p.pos_y/1024), col));
 			}
-			attribs_->Update(&coords);
-			GetAttributeSet().back()->SetCount(particles_.size());
+			attribs_->update(&coords);
+			getAttributeSet().back()->setCount(particles_.size());
 			// XXX we need to set a uniform to indicate we draw a point as a sphere.
 			// uniform bool is_circlular;
 			// uniform float radius;
@@ -786,10 +784,8 @@ namespace
 		}
 	private:
 		DECLARE_CALLABLE(PointParticleSystem);
-		KRE::DisplayDeviceDef Attach(const KRE::DisplayDevicePtr& dd) {
-			KRE::DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-			def.SetHint("shader", "point_shader");
-			return def;
+		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override {
+			def->setHint("shader", "point_shader");
 		}
 
 		struct Coord {

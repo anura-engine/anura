@@ -35,13 +35,13 @@ namespace KRE
 	class ShaderProgram;
 	typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
 
-	class ActivesHandle
+	class ActivesHandleBase
 	{
 	public:
-		ActivesHandle() {}
-		virtual ~ActivesHandle() {}
+		ActivesHandleBase() {}
+		virtual ~ActivesHandleBase() {}
 	};
-	typedef std::shared_ptr<ActivesHandle> ActivesHandlePtr;
+	typedef std::shared_ptr<ActivesHandleBase> ActivesHandleBasePtr;
 
 	/*
 	class DrawCommand
@@ -69,9 +69,9 @@ namespace KRE
 		ShaderProgram(const variant& node);
 		virtual ~ShaderProgram();
 
-		virtual ActivesHandlePtr getHandle(const std::string& name) = 0;
+		virtual ActivesHandleBasePtr getHandle(const std::string& name) = 0;
 
-		virtual void setUniform(ActivesHandlePtr active, const void*) = 0;
+		virtual void setUniform(ActivesHandleBasePtr active, const void*) = 0;
 
 		virtual void makeActive() = 0;
 

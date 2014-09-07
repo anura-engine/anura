@@ -110,7 +110,7 @@ namespace KRE
 		Set(node);
 	}	
 
-	void BlendMode::Set(const variant& node) 
+	void BlendMode::set(const variant& node) 
 	{
 		if(node.is_string()) {
 			const std::string& blend = node.as_string();

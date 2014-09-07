@@ -25,7 +25,6 @@
 */
 
 #include "../asserts.hpp"
-#include "logger.hpp"
 #include "VGraphCairo.hpp"
 #include "DisplayDevice.hpp"
 
@@ -345,18 +344,18 @@ namespace KRE
 				default:
 					ASSERT_LOG(false, "Unrecognised cairo surface format: " << fmt);
 			}
-			tex_ = DisplayDevice::CreateTexture(w, h, pffmt);
-			tex_->SetAddressModes(Texture::AddressMode::CLAMP, Texture::AddressMode::CLAMP);
-			auto mat = DisplayDevice::CreateMaterial("CairoContext", std::vector<TexturePtr>(1,tex_));
-			SetMaterial(mat);
+			tex_ = DisplayDevice::createTexture(w, h, pffmt);
+			tex_->setAddressModes(Texture::AddressMode::CLAMP, Texture::AddressMode::CLAMP);
+			auto mat = DisplayDevice::createMaterial("CairoContext", std::vector<TexturePtr>(1,tex_));
+			setMaterial(mat);
 
-			auto as = DisplayDevice::CreateAttributeSet();
+			auto as = DisplayDevice::createAttributeSet();
 			attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
-			attribs_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::POSITION, 2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-			attribs_->AddAttributeDescription(AttributeDesc(AttributeDesc::Type::TEXTURE,  2, AttributeDesc::VariableType::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-			as->AddAttribute(AttributeBasePtr(attribs_));
-			as->SetDrawMode(AttributeSet::DrawMode::TRIANGLE_STRIP);
-			AddAttributeSet(as);
+			attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+			attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+			as->addAttribute(AttributeBasePtr(attribs_));
+			as->setDrawMode(DrawMode::TRIANGLE_STRIP);
+			addAttributeSet(as);
 
 			float offs_x = 0.0f;
 			float offs_y = 0.0f;
@@ -368,15 +367,15 @@ namespace KRE
 			const float vx2 = draw_rect_.x2() + offs_x;
 			const float vy2 = draw_rect_.y2() + offs_y;
 
-			rectf r = Material()->GetNormalisedTextureCoords(Material()->GetTexture().begin());
+			rectf r = getMaterial()->GetNormalisedTextureCoords(getMaterial()->GetTexture().begin());
 
 			std::vector<vertex_texcoord> vertices;
 			vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
 			vertices.emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
 			vertices.emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
 			vertices.emplace_back(glm::vec2(vx2,vy2), glm::vec2(r.x2(),r.y2()));
-			GetAttributeSet().back()->SetCount(vertices.size());
-			attribs_->Update(&vertices);
+			getAttributeSet().back()->setCount(vertices.size());
+			attribs_->update(&vertices);
 		}
 
 		CairoContext::~CairoContext()
@@ -631,21 +630,15 @@ namespace KRE
 			cpath->Execute(context_);
 		}
 
-		void CairoContext::preRender() 
+		void CairoContext::preRender(const WindowManagerPtr& wnd) 
 		{
 			std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
-			tex_->Update(0, 0, width(), height(), stride, cairo_image_surface_get_data(surface_));
+			tex_->update(0, 0, width(), height(), stride, cairo_image_surface_get_data(surface_));
 		}
 
 		void CairoContext::PathExtents(double& x1, double& y1, double& x2, double& y2) 
 		{
 			cairo_path_extents(context_, &x1, &y1, &x2, &y2);
-		}
-
-		DisplayDeviceDef CairoContext::Attach(const DisplayDevicePtr& dd)
-		{
-			DisplayDeviceDef def(GetAttributeSet()/*, GetUniformSet()*/);
-			return def;
 		}
 	}
 }

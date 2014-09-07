@@ -48,10 +48,10 @@ namespace gui
 		: Widget(v,e), dragging_(false)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
-		onchange_ = std::bind(&Slider::changeDelegate, this, _1);
+		onchange_ = std::bind(&Slider::changeDelegate, this, std::placeholders::_1);
 		ffl_handler_ = getEnvironment()->createFormula(v["on_change"]);
 		if(v.has_key("on_drag_end")) {
-			ondragend_ = std::bind(&Slider::dragEndDelegate, this, _1);
+			ondragend_ = std::bind(&Slider::dragEndDelegate, this, std::placeholders::_1);
 			ffl_end_handler_ = getEnvironment()->createFormula(v["on_drag_end"]);
 		}
 

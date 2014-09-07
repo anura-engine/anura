@@ -25,6 +25,10 @@
 
 #include <string>
 
+#if defined(_MSC_VER)
+#include "winsock2.h"
+#endif
+
 std::string get_http_datetime();
 int truncate_to_char(int value);
 void write_autosave();

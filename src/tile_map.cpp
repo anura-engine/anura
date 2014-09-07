@@ -270,11 +270,11 @@ namespace
 			return variant(obj.y_);
 	END_DEFINE_CALLABLE(FilterCallable)
 
-	class TileAtFunction : public function_expression 
+	class TileAtFunction : public FunctionExpression 
 	{
 	public:
 		explicit TileAtFunction(const args_list& args)
-		  : function_expression("tile_at", args, 2)
+		  : FunctionExpression("tile_at", args, 2)
 		{}
 
 	private:

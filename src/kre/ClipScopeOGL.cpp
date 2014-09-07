@@ -64,13 +64,13 @@ namespace KRE
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((area().x()+area().x2())/2.0f,(area().y()+area().y2())/2.0f,0.0f)) 
 			* glm::translate(glm::mat4(1.0f), glm::vec3(-(area().x()+area().y())/2.0f,-(area().y()+area().y())/2.0f,0.0f));
 		glm::mat4 mvp = /*mvp_ **/ model;
-		static Shader::ShaderProgramPtr shader = Shader::ShaderProgram::Factory("simple");
-		shader->MakeActive();
-		shader->SetUniformValue(shader->GetMvpUniform(), glm::value_ptr(mvp));
-		shader->SetUniformValue(shader->GetColorUniform(), Color::colorWhite().asFloatVector());
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		shader->setUniformValue(shader->getColorUniform(), Color::colorWhite().asFloatVector());
 
-		glEnableVertexAttribArray(shader->GetVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->GetVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, varray);
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, varray);
 		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 
 		glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);

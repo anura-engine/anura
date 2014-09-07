@@ -200,7 +200,7 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 
 	using namespace std::placeholders;
 	WidgetPtr s1(new Slider(slider_width, std::bind(sound::set_music_volume, _1), sound::get_music_volume()));
-	WidgetPtr s2(new Slider(slider_width, std::bind(sound::setSoundVolume, _1), sound::get_sound_volume()));
+	WidgetPtr s2(new Slider(slider_width, std::bind(sound::set_sound_volume, _1), sound::get_sound_volume()));
 
 	// Prevents them from being selectable as tab items when using a controller, keys.
 	t1->setTabStop(-1);

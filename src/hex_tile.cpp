@@ -128,6 +128,8 @@ namespace hex
 	{
 	}
 
+// XXX needs fixed.
+#if 0
 	void TileType::draw(int x, int y) const
 	{
 		if(sheet_indexes_.empty()) {
@@ -150,6 +152,7 @@ namespace hex
 			GLfloat(area.x2())/GLfloat(sheet_->getTexture().width()),
 			GLfloat(area.y2())/GLfloat(sheet_->getTexture().height()));
 	}
+#endif
 
 	/*void TileType::drawAdjacent(int x, int y, unsigned char adjmap) const
 	{

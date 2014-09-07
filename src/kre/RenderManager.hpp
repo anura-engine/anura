@@ -36,11 +36,11 @@ namespace KRE
 		RenderManager();
 		~RenderManager();
 
-		void AddQueue(int priority, RenderQueuePtr queue);
-		void RemoveQueue(int priority);
+		void addQueue(int priority, RenderQueuePtr queue);
+		void removeQueue(int priority);
 
-		void Render(const WindowManagerPtr& wm) const;
-		void AddRenderableToQueue(size_t q, size_t order, const RenderablePtr& r);
+		void render(const WindowManagerPtr& wm) const;
+		void addRenderableToQueue(size_t q, size_t order, const RenderablePtr& r);
 	private:
 		typedef std::map<size_t,RenderQueuePtr> RenderQueueList;
 		RenderQueueList render_queues_;

@@ -99,11 +99,11 @@ namespace hex
 			load_hex_editor_tiles();
 		}
 
-		class GetTileFunction : public game_logic::function_expression 
+		class GetTileFunction : public game_logic::FunctionExpression 
 		{
 		public:
 			explicit GetTileFunction(const args_list& args)
-			 : function_expression("get_tile", args, 1, 1)
+			 : FunctionExpression("get_tile", args, 1, 1)
 			{}
 		private:
 			variant execute(const game_logic::FormulaCallable& variables) const {

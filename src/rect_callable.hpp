@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,32 +21,21 @@
 	   distribution.
 */
 
-#include "Shaders.hpp"
-#include "DisplayDevice.hpp"
+#pragma once
 
-namespace KRE
+#include "kre/Geometry.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
+
+namespace Geometry
 {
-	ShaderProgram::ShaderProgram(const variant& node)
+	class RectCallable : public game_logic::FormulaCallable
 	{
-		if(node.has_key("draw")) {
-			draw_ = node["draw"].as_string();
-		}
-		if(node.has_key("create")) {
-			create_ = node["create"].as_string();
-		}
-	}
-
-	ShaderProgram::~ShaderProgram()
-	{
-	}
-
-	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
-	{
-		return DisplayDevice::getCurrent()->getShaderProgram(name);
-	}
-
-	void ShaderProgram::loadFromFile(const variant& node)
-	{
-		DisplayDevice::getCurrent()->loadShadersFromFile(node);
-	}
+	public:
+		static RectCallable* create(const rect& r);
+	private:
+		RectCallable(const rect& r) : r_(r) {}
+		DECLARE_CALLABLE(RectCallable)
+		rect r_;
+	};
 }

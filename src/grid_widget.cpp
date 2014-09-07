@@ -454,12 +454,12 @@ namespace gui
 			}
 		} //end of scope so clip_scope goes away.
 
-		ScrollableWidget::handleDraw();
+		ScrollableWidget::draw(x(), y(), getRotation(), getScale());
 	}
 
 	bool Grid::handleEvent(const SDL_Event& event, bool claimed)
 	{
-		claimed = ScrollableWidget::handleEvent(event, claimed);
+		claimed = ScrollableWidget::processEvent(event, claimed);
 
 		SDL_Event ev = event;
 		normalizeEvent(&ev);

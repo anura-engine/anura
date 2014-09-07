@@ -26,7 +26,7 @@
 #include <sstream>
 
 #include "../asserts.hpp"
-#include "kre/Geometry.hpp"
+#include "../kre/Geometry.hpp"
 
 #include "svg_element.hpp"
 #include "svg_paint.hpp"

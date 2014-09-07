@@ -46,7 +46,7 @@ namespace KRE
 
 	CanvasPtr Canvas::getInstance()
 	{
-		return DisplayDevice::getCurrent()->GetCanvas();
+		return DisplayDevice::getCurrent()->getCanvas();
 	}
 
 	void Canvas::drawVectorContext(const Vector::ContextPtr& context)
@@ -57,10 +57,10 @@ namespace KRE
 		// Since we may have a more efficient path using opengl to draw stuff, rather than blitting a cairo texture.
 		// Maybe renderable should have an overridable draw function that can be called?
 		// then in DisplayDevice::Render() we check it and run it.
-		DisplayDevice::getCurrent()->Render(context);
+		DisplayDevice::getCurrent()->render(context);
 	}
 
-	void Canvas::blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const ColorPtr& color) const
+	void Canvas::blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color) const
 	{
 		blitTexture(tex, rect(0,0,0,0), rotation, dst, color);
 	}

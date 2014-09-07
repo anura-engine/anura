@@ -25,7 +25,7 @@
 
 #include "kre/SceneObject.hpp"
 
-namespace drawable
+namespace graphics
 {
 	class LevelTileObject : public KRE::SceneObject
 	{
@@ -34,6 +34,5 @@ namespace drawable
 		virtual ~LevelTileObject();
 
 	private:
-		KRE::DisplayDeviceDef doAttach(const KRE::DisplayDevicePtr& dd) override;
 	};
 }
