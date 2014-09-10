@@ -797,27 +797,28 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			SDL_Delay(20);
-
-			if(cl && !cl->process()) {
-				if(cl->error().empty() == false) {
-					fprintf(stderr, "Error while updating module: %s\n", cl->error().c_str());
-					update_info.add("module_error", variant(cl->error()));
-				} else {
-					update_info.add("complete_module", true);
+			const int target_end = SDL_GetTicks() + 50;
+			while(SDL_GetTicks() < target_end && (cl || anura_cl)) {
+				if(cl && !cl->process()) {
+					if(cl->error().empty() == false) {
+						fprintf(stderr, "Error while updating module: %s\n", cl->error().c_str());
+						update_info.add("module_error", variant(cl->error()));
+					} else {
+						update_info.add("complete_module", true);
+					}
+					cl.reset();
 				}
-				cl.reset();
-			}
 
-			if(anura_cl && !anura_cl->process()) {
-				if(anura_cl->error().empty() == false) {
-					fprintf(stderr, "Error while updating anura: %s\n", anura_cl->error().c_str());
-					update_info.add("anura_error", variant(anura_cl->error()));
-				} else {
-					update_info.add("complete_anura", true);
-					require_restart = anura_cl->nfiles_written() != 0;
+				if(anura_cl && !anura_cl->process()) {
+					if(anura_cl->error().empty() == false) {
+						fprintf(stderr, "Error while updating anura: %s\n", anura_cl->error().c_str());
+						update_info.add("anura_error", variant(anura_cl->error()));
+					} else {
+						update_info.add("complete_anura", true);
+						require_restart = anura_cl->nfiles_written() != 0;
+					}
+					anura_cl.reset();
 				}
-				anura_cl.reset();
 			}
 		}
 
