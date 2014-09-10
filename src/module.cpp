@@ -60,10 +60,18 @@ const std::vector<std::string>& module_dirs() {
 }
 
 game_logic::const_formula_callable_ptr module_args;
+
+std::string core_module_name;
+}
+
+void set_core_module_name(const std::string& module_name)
+{
+	core_module_name = module_name;
 }
 
 const std::string get_module_name(){
-	return loaded_paths().empty() ? "frogatto" : loaded_paths()[0].name_;
+	ASSERT_LOG(core_module_name.empty() == false, "Do not have a module name set");
+	return core_module_name;
 }
 
 const std::string get_module_pretty_name() {

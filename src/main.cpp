@@ -343,6 +343,8 @@ void register_file_and_data(const char* filename, const char* mode, char* buffer
 
 int load_module(const std::string& mod, std::vector<std::string>* argv)
 {
+	module::set_core_module_name(mod);
+
 	variant mod_info = module::get(mod);
 	if(mod_info.is_null()) {
 		return -1;
@@ -539,6 +541,8 @@ extern "C" int main(int argcount, char* argvec[])
 			std::cerr << "FAILED TO LOAD MODULE: " << DEFAULT_MODULE << "\n";
 			return -1;
 		}
+	} else if(unit_tests_only) {
+		module::set_core_module_name(DEFAULT_MODULE);
 	}
 
 	preferences::load_preferences();
