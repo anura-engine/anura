@@ -981,6 +981,13 @@ void client::install_module(const std::string& module_id, bool force)
 
 	std::string version_str;
 	std::string current_path = install_image_ ? "." : make_base_module_path(module_id);
+
+#ifdef __APPLE__
+	if(install_image_) {
+		current_path = "../../";
+	}
+#endif
+
 	fprintf(stderr, "ZZZ: install_module %s -> %s\n", module_id.c_str(), current_path.c_str());
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
