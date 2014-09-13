@@ -969,6 +969,14 @@ bool client::module_prepared() const
 	return operation_ == OPERATION_PREPARE_INSTALL && pending_response_.empty() == false;
 }
 
+namespace {
+#ifdef __APPLE__
+const char* InstallImagePath = "../../";
+#else
+const char* InstallImagePath = ".";
+#endif
+}
+
 void client::install_module(const std::string& module_id, bool force)
 {
 	data_.clear();
@@ -980,13 +988,7 @@ void client::install_module(const std::string& module_id, bool force)
 	request.add("module_id", module_id);
 
 	std::string version_str;
-	std::string current_path = install_image_ ? "." : make_base_module_path(module_id);
-
-#ifdef __APPLE__
-	if(install_image_) {
-		current_path = "../../";
-	}
-#endif
+	std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
 
 	fprintf(stderr, "ZZZ: install_module %s -> %s\n", module_id.c_str(), current_path.c_str());
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
@@ -1184,7 +1186,7 @@ void client::perform_install(const std::string& response)
 
 	foreach(variant path, manifest.get_keys().as_list()) {
 		variant info = manifest[path];
-		std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+		std::string path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
 		if(install_image_ && sys::file_exists(path_str)) {
 			//try removing the file, and failing that, move it.
@@ -1203,7 +1205,7 @@ void client::perform_install(const std::string& response)
 						for(int i = 0; i != 10; ++i) {
 							std::ostringstream s;
 							s << "anura" << i << ".exe";
-							const std::string candidate_path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
+							const std::string candidate_path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
 							try {
 								if(sys::file_exists(candidate_path_str)) {
 									sys::remove_file(candidate_path_str);
