@@ -40,6 +40,7 @@
 #include "string_utils.hpp"
 #include "TextureObject.hpp"
 #include "unit_test.hpp"
+#include "utf8_to_codepoint.hpp"
 
 namespace graphics
 {
@@ -823,8 +824,7 @@ namespace graphics
 
 	//a string representing an emdash in utf-8.
 	DEFINE_FIELD(emdash, "string")
-		const char em[] = { 0xE2, 0x80, 0x94, 0x00 };
-		const std::string str = em;
+		const std::string str = utils::codepoint_to_utf8(8212);
 		return variant(str);
 
 	END_DEFINE_CALLABLE(cairo_callable)
