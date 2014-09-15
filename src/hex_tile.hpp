@@ -58,7 +58,7 @@ namespace hex
 		struct EditorInfo {
 			std::string name;
 			std::string type;
-			mutable KRE::MaterialPtr texture;
+			mutable KRE::TexturePtr texture;
 			std::string group;
 			rect image_rect;
 			void draw(int tx, int ty) const;

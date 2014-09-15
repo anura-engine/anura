@@ -161,8 +161,8 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	ASSERT_LOG(focus || lvl.in_editor(), "No player found in level. Must have a player object. (An object with is_human: true marked");
 
 	if(focus) {
-		const float target_zoom = lvl.zoom_level().as_float();
-		const float ZoomSpeed = 0.03;
+		const float target_zoom = static_cast<float>(lvl.zoom_level().as_float());
+		const float ZoomSpeed = 0.03f;
 		const float prev_zoom = pos.zoom;
 		if(std::abs(target_zoom - pos.zoom) < ZoomSpeed) {
 			pos.zoom = target_zoom;
@@ -195,7 +195,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 		//of the level. These boundaries keep the camera from ever going out
 		//of the bounds of the level.
 		
-		const float inverse_zoom_level = 1.0/pos.zoom;
+		const float inverse_zoom_level = 1.0f/pos.zoom;
 
 		//we look a certain number of frames ahead -- assuming the focus
 		//keeps moving at the current velocity, we converge toward the point
@@ -336,13 +336,13 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 			}
 		}
 
-		const int minmax_x_adjust = screen_width*(1.0 - inverse_zoom_level)*0.5;
-		const int minmax_y_adjust = screen_height*(1.0 - inverse_zoom_level)*0.5;
+		const int minmax_x_adjust = static_cast<int>(screen_width*(1.0 - inverse_zoom_level)*0.5);
+		const int minmax_y_adjust = static_cast<int>(screen_height*(1.0 - inverse_zoom_level)*0.5);
 	
 		int min_x = (lvl.boundaries().x() - minmax_x_adjust)*100;
 		int min_y = (lvl.boundaries().y() - minmax_y_adjust)*100;
-		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - screen_width*inverse_zoom_level)*100;
-		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - screen_height*inverse_zoom_level)*100;
+		int max_x = (lvl.boundaries().x2() - minmax_x_adjust - static_cast<int>(screen_width*inverse_zoom_level))*100;
+		int max_y = (lvl.boundaries().y2() - minmax_y_adjust - static_cast<int>(screen_height*inverse_zoom_level))*100;
 
 		if(min_x > max_x) {
 			min_x = max_x = (min_x + max_x)/2;
@@ -385,7 +385,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 		wnd->clear(KRE::ClearFlags::COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
-		const int pixels = (preferences::actual_screen_width()/2)*angle;
+		const int pixels = static_cast<int>((preferences::actual_screen_width()/2)*angle);
 		
 		//then squish all future drawing inwards
 		wnd->setViewPort(pixels, 0, preferences::actual_screen_width() - pixels*2, preferences::actual_screen_height());
@@ -397,23 +397,23 @@ void render_scene(Level& lvl, const screen_position& pos)
 	int bg_xscroll = xscroll;
 	int bg_yscroll = yscroll;
 
-	lvl.setScale(pos.zoom, pos.zoom, 0);
-	xscroll += (screen_width/2)*(-1.0/pos.zoom + 1.0);
-	yscroll += (wnd->height()/2)*(-1.0/pos.zoom + 1.0);
+	lvl.setScale(pos.zoom, pos.zoom);
+	xscroll += static_cast<int>((screen_width/2)*(-1.0/pos.zoom + 1.0));
+	yscroll += static_cast<int>((wnd->height()/2)*(-1.0/pos.zoom + 1.0));
 
 	if(pos.zoom < 1.0) {
 		bg_xscroll = xscroll;
 		bg_yscroll = yscroll;
 	}
 
-	lvl.setPosition(-xscroll, -yscroll);
+	lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;
 	int draw_height = wnd->height();
-	if(pos.zoom < 1.0) {
-		draw_width /= pos.zoom;
-		draw_height /= pos.zoom;
+	if(pos.zoom < 1.0f) {
+		draw_width = static_cast<int>(draw_width/pos.zoom);
+		draw_height = static_cast<int>(draw_height/pos.zoom);
 	}
 	lvl.draw(xscroll, yscroll, draw_width, draw_height);
 

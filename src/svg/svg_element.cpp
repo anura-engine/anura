@@ -85,7 +85,7 @@ namespace KRE
 				}
 				auto vbox = attributes->get_child_optional("viewBox");
 				if(vbox) {
-					std::vector<std::string> buf = geometry::split(vbox->data(), ",| |;");
+					std::vector<std::string> buf = Geometry::split(vbox->data(), ",| |;");
 					ASSERT_LOG(buf.size() == 4, "viewBox should have four elements.");
 					view_box_ = view_box_rect(boost::lexical_cast<double>(buf[0]),
 						boost::lexical_cast<double>(buf[1]),

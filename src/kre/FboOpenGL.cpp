@@ -167,7 +167,7 @@ namespace KRE
 					textures.emplace_back(dd->createTexture(tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888));
 				}
 				auto mat = dd->createMaterial("fbo_mat", textures);
-				mat->SetCoords(rect(0, 0, width(), height()));
+				mat->setCoords(rect(0, 0, width(), height()));
 				setMaterial(mat);
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {

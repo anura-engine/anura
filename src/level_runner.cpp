@@ -61,6 +61,7 @@
 #include "player_info.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
+#include "settings_dialog.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "surface_cache.hpp"
@@ -117,7 +118,7 @@ namespace
 			base64::b64encode(sys::read_file(file)), 
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
-			0);
+			[](int,int,bool){});
 		while(!info->done) {
 			client.process();
 		}
@@ -166,7 +167,7 @@ namespace
 		const int start_time = profile::get_tick_time();
 
 		for(int n = 0; n <= 20; ++n) {
-			draw_fn(lvl, screen_pos, transition_out ? (n/20.0) : (1 - n/20.0));
+			draw_fn(lvl, screen_pos, transition_out ? (n/20.0f) : (1 - n/20.0f));
 
 			KRE::WindowManager::getMainWindow()->swap();
 
@@ -191,7 +192,7 @@ namespace
 
 	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount) 
 	{
-		screen_pos.flip_rotate = amount*1000;
+		screen_pos.flip_rotate = static_cast<int>(amount*1000);
 		draw_scene(lvl, screen_pos);
 	}
 
@@ -214,26 +215,26 @@ namespace
 			const int screen_x = screen_pos.x/100;
 			const int screen_y = screen_pos.y/100;
 
-			float radius_scale = 1.0 - amount;
-			const int radius = radius_scale*radius_scale*500;
+			float radius_scale = 1.0f - amount;
+			const int radius = static_cast<int>(radius_scale*radius_scale*500);
 			const int center_x = -screen_x + light_pos.x;
 			const int center_y = -screen_y + light_pos.y;
 			rect center_rect(center_x - radius, center_y - radius, radius*2, radius*2);
 
-			if(center_rect.y > 0) {
-				canvas->drawSolidRect(rect(0, 0, wnd->width(), center_rect.y), KRE::Color::colorBlack());
+			if(center_rect.y() > 0) {
+				canvas->drawSolidRect(rect(0, 0, wnd->width(), center_rect.y()), KRE::Color::colorBlack());
 			}
 
-			const int bot_rect_height = wnd->height() - (center_rect.y + center_rect.h);
+			const int bot_rect_height = wnd->height() - (center_rect.y() + center_rect.h());
 			if(bot_rect_height > 0) {
 				canvas->drawSolidRect(rect(0, wnd->height() - bot_rect_height, wnd->width(), bot_rect_height), KRE::Color::colorBlack());
 			}
 
-			if(center_rect.x > 0) {
-				canvas->drawSolidRect(rect(0, 0, center_rect.x, wnd->height()), KRE::Color::colorBlack());
+			if(center_rect.x() > 0) {
+				canvas->drawSolidRect(rect(0, 0, center_rect.x(), wnd->height()), KRE::Color::colorBlack());
 			}
 
-			const int right_rect_width = wnd->width() - (center_rect.x + center_rect.w);
+			const int right_rect_width = wnd->width() - (center_rect.x() + center_rect.w());
 			if(right_rect_width > 0) {
 				canvas->drawSolidRect(rect(wnd->width() - right_rect_width, 0, right_rect_width, wnd->height()), KRE::Color::colorBlack());
 			}
@@ -250,7 +251,7 @@ namespace
 		auto& canvas = KRE::Canvas::getInstance();
 		const int xpos = wnd->width()/2 - t->width()/2;
 		const int ypos = wnd->height()/2 - t->height()/2;
-		for(int n = 0; n <= msg.size(); ++n) {
+		for(unsigned n = 0; n <= msg.size(); ++n) {
 			const float percent = static_cast<float>(n)/static_cast<float>(msg.size());
 			canvas->drawSolidRect(rect(0, 0, wnd->width(), wnd->height()), KRE::Color::colorBlack());
 			canvas->blitTexture(t, rect(0,0,static_cast<int>(percent*wnd->width()),0), 0, 
@@ -295,6 +296,7 @@ bool is_skipping_game()
 	return skipping_game > 0;
 }
 
+// XXX We should handle the window resize event in the WindowManager code
 void video_resize(const SDL_Event &event) 
 {
 	if(preferences::fullscreen() == preferences::FULLSCREEN_NONE) {
@@ -333,7 +335,7 @@ void video_resize(const SDL_Event &event)
 		preferences::set_actual_screen_width(width);
 		preferences::set_actual_screen_height(height);
 
-		get_main_window()->notify_new_window_size();
+		KRE::WindowManager::getMainWindow()->notifyNewWindowSize(width, height);
 	}
 }
 
@@ -346,6 +348,7 @@ void LevelRunner::video_resize_event(const SDL_Event &event)
 	lvl_->player()->getEntity().handleEvent(WindowResizeEventID, callable.get());
 }
 
+#if 0
 void LevelRunner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 	const std::vector<voxel::UserVoxelObjectPtr>& voxel_objs, 
 	game_logic::MapFormulaCallablePtr callable, 
@@ -384,7 +387,7 @@ void LevelRunner::handle_mouse_over_voxel_objects(const SDL_Event &event,
 		}
 	}
 }
-
+#endif
 
 bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 {
@@ -912,7 +915,7 @@ bool LevelRunner::play_cycle()
 		point p = lvl_->player()->getEntity().getMidpoint();
 
 		if(last_stats_point_level_ == lvl_->id()) {
-			stats::Entry("move").add_player_pos();
+			stats::Entry("move").addPlayerPos();
 		}
 
 		last_stats_point_ = p;
@@ -943,7 +946,7 @@ bool LevelRunner::play_cycle()
 
 		//record stats of the player's death
 		lvl_->player()->getEntity().recordStatsMovement();
-		stats::entry("die").add_player_pos();
+		stats::Entry("die").addPlayerPos();
 		last_stats_point_level_ = "";
 
 		EntityPtr save = lvl_->player()->getEntity().saveCondition();
@@ -1227,7 +1230,7 @@ bool LevelRunner::play_cycle()
 
 			switch(event.type) {
 			case SDL_QUIT: {
-				stats::Entry("quit").add_player_pos();
+				stats::Entry("quit").addPlayerPos();
 				done = true;
 				quit_ = true;
 				break;
@@ -1329,7 +1332,7 @@ bool LevelRunner::play_cycle()
 					//We're in the editor and we want to refresh the level
 					//to its original state. If alt is held, we also
 					//reset the player.
-					const bool reset_pos = mod&KMOD_ALT;
+					const bool reset_pos = mod & KMOD_ALT ? true : false;
 					editor_->reset_playing_level(!reset_pos);
 
 					if(reset_pos) {
@@ -1444,7 +1447,7 @@ bool LevelRunner::play_cycle()
 			lvl_->set_show_builtin_settingsDialog(true);
 			std::vector<EntityPtr> active_chars = lvl_->get_active_chars();
 			for(const auto& c : active_chars) {
-				c->handle_event(OBJECT_EVENT_SETTINGS_MENU);
+				c->handleEvent(OBJECT_EVENT_SETTINGS_MENU);
 			}
 		}
 		
@@ -1765,7 +1768,7 @@ void LevelRunner::handle_pause_game_result(PAUSE_GAME_RESULT result)
 		//record a quit event in stats
 		if(lvl_->player()) {
 			lvl_->player()->getEntity().recordStatsMovement();
-			stats::Entry("quit").add_player_pos();
+			stats::Entry("quit").addPlayerPos();
 		}
 		
 		done = true;

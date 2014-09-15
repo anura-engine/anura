@@ -32,16 +32,16 @@ namespace Geometry
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(RectCallable)
 	DEFINE_FIELD(x, "int")
-		return variant(obj.rect_.x());
+		return variant(obj.r_.x());
 	DEFINE_FIELD(y, "int")
-		return variant(obj.rect_.y());
+		return variant(obj.r_.y());
 	DEFINE_FIELD(x2, "int")
-		return variant(obj.rect_.x2());
+		return variant(obj.r_.x2());
 	DEFINE_FIELD(y2, "int")
-		return variant(obj.rect_.y2());
+		return variant(obj.r_.y2());
 	DEFINE_FIELD(w, "int")
-		return variant(obj.rect_.w());
+		return variant(obj.r_.w());
 	DEFINE_FIELD(h, "int")
-		return variant(obj.rect_.h());
+		return variant(obj.r_.h());
 	END_DEFINE_CALLABLE(RectCallable)
 }

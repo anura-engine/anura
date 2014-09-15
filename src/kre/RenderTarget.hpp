@@ -62,6 +62,8 @@ namespace KRE
 		const Color& getClearColor() const { return clear_color_; }
 
 		RenderTargetPtr clone();
+
+		static RenderTargetPtr factory(const variant& node);
 	private:
 		virtual void handleCreate() = 0;
 		virtual void handleApply() = 0;

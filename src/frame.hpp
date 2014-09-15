@@ -109,7 +109,7 @@ public:
 	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;
 	bool hit(int time_in_frame) const;
-	const KRE::MaterialPtr& img() const { return texture_; }
+	const KRE::TexturePtr& img() const { return texture_; }
 	const rect& area() const { return img_rect_; }
 	int numFrames() const { return nframes_; }
 	int numFramesPerRow() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }
@@ -155,7 +155,7 @@ private:
 
 	//ID's used to signal events that occur on this animation.
 	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;
-	KRE::MaterialPtr texture_;
+	KRE::TexturePtr texture_;
 	ConstSolidInfoPtr solid_;
 	rect collide_rect_;
 	rect hit_rect_;

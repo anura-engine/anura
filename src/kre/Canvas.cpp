@@ -57,7 +57,8 @@ namespace KRE
 		// Since we may have a more efficient path using opengl to draw stuff, rather than blitting a cairo texture.
 		// Maybe renderable should have an overridable draw function that can be called?
 		// then in DisplayDevice::Render() we check it and run it.
-		DisplayDevice::getCurrent()->render(context);
+		//DisplayDevice::getCurrent()->render(context);
+		ASSERT_LOG(false, "drawVectorContext fixme");
 	}
 
 	void Canvas::blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color) const

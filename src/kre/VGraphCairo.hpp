@@ -26,6 +26,7 @@
 #include <cairo.h>
 
 #include "Geometry.hpp"
+#include "SceneUtil.hpp"
 #include "VGraph.hpp"
 
 namespace KRE
@@ -48,6 +49,7 @@ namespace KRE
 
 			virtual void SetSourceColor(const double r, const double g, const double b, const double a=1.0) override;
 			virtual void SetSourceColor(const uint8_t r, const uint8_t g, const uint8_t b, const uint8_t a=255) override;
+			virtual void SetSourceColor(const Color& color) override;
 			virtual void SetSource(const PatternPtr& p) override;
 			virtual PatternPtr GetSource() const override;
 

@@ -159,6 +159,8 @@ namespace KRE
 		// Can return NULL if not-implemented, invalid underlying surface.
 		virtual const unsigned char* colorAt(int x, int y) const = 0;
 		bool isAlpha(unsigned x, unsigned y) { return alpha_map_[y*width_+x]; }
+		std::vector<bool>::const_iterator getAlphaRow(int x, int y) const { return alpha_map_.begin() + y*width_ + x; }
+		std::vector<bool>::const_iterator endAlpha() const { return alpha_map_.end(); }
 
 		static void clearCache();
 	protected:

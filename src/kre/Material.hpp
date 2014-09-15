@@ -40,8 +40,8 @@ namespace KRE
 		Material(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
 		virtual ~Material();
 
-		const std::vector<TexturePtr>& GetTexture() const { return tex_; }
-		const std::string& Name() const { return name_; }
+		const std::vector<TexturePtr>& getTexture() const { return tex_; }
+		const std::string& name() const { return name_; }
 		bool useFog() const { return use_fog_; }
 		bool useLighting() const { return use_lighting_; }
 		bool doDepthWrite() const { return do_depth_write_; }
@@ -86,7 +86,7 @@ namespace KRE
 
 		static MaterialPtr createMaterial(const variant& node);
 	protected:
-		void Init(const variant& node);
+		void init(const variant& node);
 	private:
 		virtual TexturePtr createTexture(const variant& node) = 0;
 		virtual void handleApply() = 0;

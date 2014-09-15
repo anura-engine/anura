@@ -107,7 +107,7 @@ namespace KRE
 		: src_(BlendModeConstants::BM_SRC_ALPHA), 
 		dst_(BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA)
 	{
-		Set(node);
+		set(node);
 	}	
 
 	void BlendMode::set(const variant& node) 
@@ -115,30 +115,30 @@ namespace KRE
 		if(node.is_string()) {
 			const std::string& blend = node.as_string();
 			if(blend == "add") {
-				Set(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
+				set(BlendModeConstants::BM_ONE, BlendModeConstants::BM_ONE);
 			} else if(blend == "alpha_blend") {
-				Set(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
+				set(BlendModeConstants::BM_SRC_ALPHA, BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA);
 			} else if(blend == "colour_blend" || blend == "color_blend") {
-				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE_MINUS_SRC_COLOR);
+				set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE_MINUS_SRC_COLOR);
 			} else if(blend == "modulate") {
-				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ZERO);
+				set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ZERO);
 			} else if(blend == "src_colour one" || blend == "src_color one") {
-				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE);
+				set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ONE);
 			} else if(blend == "src_colour zero" || blend == "src_color zero") {
-				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ZERO);
+				set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_ZERO);
 			} else if(blend == "src_colour dest_colour" || blend == "src_color dest_color") {
-				Set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_DST_COLOR);
+				set(BlendModeConstants::BM_SRC_COLOR, BlendModeConstants::BM_DST_COLOR);
 			} else if(blend == "dest_colour one" || blend == "dest_color one") {
-				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ONE);
+				set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_ONE);
 			} else if(blend == "dest_colour src_colour" || blend == "dest_color src_color") {
-				Set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_SRC_COLOR);
+				set(BlendModeConstants::BM_DST_COLOR, BlendModeConstants::BM_SRC_COLOR);
 			} else {
 				ASSERT_LOG(false, "BlendMode: Unrecognised scene_blend mode " << blend);
 			}
 		} else if(node.is_list() && node.num_elements() >= 2) {
 			ASSERT_LOG(node[0].is_string() && node[1].is_string(), 
 				"BlendMode: Blend mode must be specified by a list of two strings.");
-			Set(parse_blend_string(node[0].as_string()), parse_blend_string(node[1].as_string()));
+			set(parse_blend_string(node[0].as_string()), parse_blend_string(node[1].as_string()));
 		} else {
 			ASSERT_LOG(false, "BlendMode: Setting blend requires either a string or a list of greater than two elements." << node.to_debug_string());
 		}

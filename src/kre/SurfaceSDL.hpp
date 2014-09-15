@@ -90,6 +90,7 @@ namespace KRE
 		bool hasPalette() const override;
 	private:
 		SDL_PixelFormat* pf_;
+		SDLPixelFormat(const SDLPixelFormat&);
 	};
 
 

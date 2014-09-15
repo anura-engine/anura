@@ -25,6 +25,7 @@
 #include "CameraObject.hpp"
 #include "LightObject.hpp"
 #include "RenderManager.hpp"
+#include "RenderTarget.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
@@ -79,7 +80,7 @@ namespace KRE
 			}
 		}
 		if(node.has_key("render_target")) {
-			auto rt = std::make_shared<RenderTarget>(node["render_target"]);
+			auto rt = RenderTarget::factory(node["render_target"]);
 			attachRenderTarget(rt);
 		}
 	}
@@ -177,7 +178,7 @@ namespace KRE
 			o->setCamera(rp->camera);
 			o->setLights(rp->lights);
 			o->setRenderTarget(rp->render_target);
-			renderer->AddRenderableToQueue(o->getQueue(), o->getOrder(), o);
+			renderer->addRenderableToQueue(o->getQueue(), o->getOrder(), o);
 		}
 	}
 

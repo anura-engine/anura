@@ -110,6 +110,8 @@ namespace KRE
 
 		virtual std::vector<WindowMode> getWindowModes(std::function<bool(const WindowMode&)> mode_filter) = 0;
 
+		void notifyNewWindowSize(unsigned new_width, unsigned new_height);
+
 		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();
 		static WindowManagerPtr getWindowFromID(unsigned id);
@@ -126,6 +128,7 @@ namespace KRE
 		virtual void changeFullscreenMode() = 0;
 		virtual void handleSetClearColor() = 0;
 		virtual bool handleLogicalWindowSizeChange() = 0;
+		virtual bool handlePhysicalWindowSizeChange() = 0;
 		virtual void doCreateWindow(unsigned width, unsigned height) = 0;
 		virtual void doDestroyWindow() = 0;
 

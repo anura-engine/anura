@@ -31,7 +31,7 @@ namespace KRE
 {
 	namespace
 	{
-		CanvasPtr& getInstance()
+		CanvasPtr& get_instance()
 		{
 			static CanvasPtr res = CanvasPtr(new CanvasOGL());
 			return res;
@@ -130,13 +130,13 @@ namespace KRE
 
 		mat->apply();
 
-		for(auto it = mat->GetTexture().begin(); it != mat->GetTexture().end(); ++it) {
+		for(auto it = mat->getTexture().begin(); it != mat->getTexture().end(); ++it) {
 			auto texture = std::dynamic_pointer_cast<OpenGLTexture>(*it);
 			ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
 			auto uv_coords = mat->getNormalisedTextureCoords(it);
 
-			texture->Bind();
+			texture->bind();
 			// XXX the following line are only temporary, obviously.
 			//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
 			glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
@@ -178,7 +178,7 @@ namespace KRE
 
 		mat->apply();
 
-		for(auto it = mat->GetTexture().begin(); it != mat->GetTexture().end(); ++it) {
+		for(auto it = mat->getTexture().begin(); it != mat->getTexture().end(); ++it) {
 			auto texture = std::dynamic_pointer_cast<OpenGLTexture>(*it);
 			ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
 
@@ -234,7 +234,7 @@ namespace KRE
 
 		// Draw stroke if stroke_color is specified.
 		// XXX I think there is an easier way of doing this, with modern GL
-		const float vtx_coords[] = {
+		const float vtx_coords_line[] = {
 			vtx.x1(), vtx.y1(),
 			vtx.x2(), vtx.y1(),
 			vtx.x2(), vtx.y2(),
@@ -243,7 +243,7 @@ namespace KRE
 		};
 		shader->setUniformValue(shader->getColorUniform(), stroke_color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		// XXX this may not be right.
 		glDrawArrays(GL_LINE_STRIP, 0, 5);
 	}
@@ -262,6 +262,6 @@ namespace KRE
 
 	CanvasPtr CanvasOGL::getInstance()
 	{
-		return getInstance();
+		return get_instance();
 	}
 }

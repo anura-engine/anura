@@ -47,6 +47,7 @@ namespace KRE
 
 		CanvasPtr getCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
+		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
 		ScissorPtr getScissor(const rect& r) override;
 
 		EffectPtr createEffect(const variant& node) override;
@@ -80,6 +81,7 @@ namespace KRE
 
 		bool doCheckForFeature(DisplayDeviceCapabilties cap) override;
 
+		TexturePtr handleCreateTexture(const variant& node) override;
 		TexturePtr handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) override;
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) override;
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) override;
