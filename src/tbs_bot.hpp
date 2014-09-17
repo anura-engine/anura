@@ -46,6 +46,8 @@ private:
 
 	variant generate_report() const;
 
+	int session_id_;
+
 	std::string host_, port_;
 	std::vector<variant> script_;
 	std::vector<variant> response_;
@@ -61,6 +63,8 @@ private:
 
 	std::string message_type_;
 	game_logic::formula_callable_ptr message_callable_;
+
+	bool has_quit_;
 };
 
 }

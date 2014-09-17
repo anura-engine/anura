@@ -285,6 +285,7 @@ namespace tbs
 					}
 				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
 					std::cerr << "sending quit message...\n";
+					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
 					flush_game_messages(*g);
 				}
@@ -300,6 +301,7 @@ namespace tbs
 
 		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
 
+		std::cerr << "USE_COUNT RESET cli_info.game: " << cli_info.game.use_count() << " / " << clients_.size() << "\n";
 		cli_info.game.reset();
 
 		if(games_size != games_.size()) {
@@ -356,6 +358,7 @@ namespace tbs
 
 		if(cli_info.game) {
 			if(type == "quit") {
+				std::cerr << "GOT_QUIT: " << cli_info.session_id << "\n";
 				quit_games(cli_info.session_id);
 				queue_msg(cli_info.session_id, "{ \"type\": \"bye\" }");
 
