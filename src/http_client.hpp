@@ -61,7 +61,7 @@ private:
 		boost::function<void(std::string)> handler, error_handler;
 		game_logic::map_formula_callable_ptr callable;
 
-		boost::array<char, 1024> buf;
+		boost::array<char, 65536> buf;
 		
 		int expected_len;
 	};

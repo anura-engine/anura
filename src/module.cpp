@@ -60,10 +60,18 @@ const std::vector<std::string>& module_dirs() {
 }
 
 game_logic::const_formula_callable_ptr module_args;
+
+std::string core_module_name;
+}
+
+void set_core_module_name(const std::string& module_name)
+{
+	core_module_name = module_name;
 }
 
 const std::string get_module_name(){
-	return loaded_paths().empty() ? "frogatto" : loaded_paths()[0].name_;
+	ASSERT_LOG(core_module_name.empty() == false, "Do not have a module name set");
+	return core_module_name;
 }
 
 const std::string get_module_pretty_name() {
@@ -286,14 +294,17 @@ const std::string& get_module_path(const std::string& abbrev, BASE_PATH_TYPE typ
 }
 
 const std::string make_base_module_path(const std::string& name) {
+	fprintf(stderr, "ZZZ: FINDING BASE MODULE PATH FOR %s\n", name.c_str());
 	std::string result;
 	variant best_version;
 	for(int i = 0; i != module_dirs().size(); ++i) {
 		const std::string& path = module_dirs()[i];
+		fprintf(stderr, "ZZZ: CANDIDATE: %s\n", path.c_str());
 		std::string full_path = path + "/" + name + "/";
 		if(sys::file_exists(full_path + "module.cfg")) {
 			variant config = json::parse(sys::read_file(full_path + "module.cfg"));
 			variant version = config["version"];
+		fprintf(stderr, "ZZZ: CANDIDATE VERSION %s\n", version.write_json().c_str());
 			if(best_version.is_null() || version > best_version) {
 				best_version = version;
 				result = full_path;
@@ -301,6 +312,8 @@ const std::string make_base_module_path(const std::string& name) {
 
 		}
 	}
+
+	fprintf(stderr, "ZZZ: MODULE PATH FOR %s -> %s\n", name.c_str(), result.c_str());
 
 	if(result.empty() == false) {
 		return result;
@@ -956,6 +969,14 @@ bool client::module_prepared() const
 	return operation_ == OPERATION_PREPARE_INSTALL && pending_response_.empty() == false;
 }
 
+namespace {
+#ifdef __APPLE__
+const char* InstallImagePath = "../../";
+#else
+const char* InstallImagePath = ".";
+#endif
+}
+
 void client::install_module(const std::string& module_id, bool force)
 {
 	data_.clear();
@@ -967,10 +988,13 @@ void client::install_module(const std::string& module_id, bool force)
 	request.add("module_id", module_id);
 
 	std::string version_str;
-	std::string current_path = install_image_ ? "." : make_base_module_path(module_id);
+	std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
+
+	fprintf(stderr, "ZZZ: install_module %s -> %s\n", module_id.c_str(), current_path.c_str());
 	if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 		variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 		request.add("current_version", config["version"]);
+		fprintf(stderr, "ZZZ: current version: %s\n", config["version"].write_json().c_str());
 
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
 			request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
@@ -1162,7 +1186,7 @@ void client::perform_install(const std::string& response)
 
 	foreach(variant path, manifest.get_keys().as_list()) {
 		variant info = manifest[path];
-		std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+		std::string path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
 		if(install_image_ && sys::file_exists(path_str)) {
 			//try removing the file, and failing that, move it.
@@ -1181,7 +1205,7 @@ void client::perform_install(const std::string& response)
 						for(int i = 0; i != 10; ++i) {
 							std::ostringstream s;
 							s << "anura" << i << ".exe";
-							const std::string candidate_path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
+							const std::string candidate_path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
 							try {
 								if(sys::file_exists(candidate_path_str)) {
 									sys::remove_file(candidate_path_str);

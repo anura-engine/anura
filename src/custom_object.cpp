@@ -4357,6 +4357,7 @@ void custom_object::set_value_by_slot(int slot, const variant& value)
 			//this will initialize shaders and such, which is
 			//desired for attached objects
 			e->add_to_level();
+			e->create_object();
 		}
 
 		set_attached_objects(v);

@@ -59,6 +59,10 @@ typedef std::map<std::string, std::string> module_file_map;
 typedef std::pair<std::string, std::string> module_file_pair;
 typedef std::map<std::string, std::string>::const_iterator module_file_map_iterator;
 
+//sets the core module name we are using. This MUST be called before
+//using any other module functions to establish the dlc path we use.
+void set_core_module_name(const std::string& module_name);
+
 const std::string get_module_name();
 const std::string get_module_pretty_name();
 std::string get_module_version();
