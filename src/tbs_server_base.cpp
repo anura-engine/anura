@@ -267,7 +267,9 @@ namespace tbs
 	void server_base::quit_games(int session_id)
 	{
 		client_info& cli_info = clients_[session_id];
-		foreach(game_info_ptr& g, games_) {
+		std::vector<game_info_ptr> games = games_;
+		std::set<game_info_ptr> deletes;
+		foreach(game_info_ptr& g, games) {
 			if(std::count(g->clients.begin(), g->clients.end(), session_id)) {
 				const bool is_first_client = g->clients.front() == session_id;
 				g->clients.erase(std::remove(g->clients.begin(), g->clients.end(), session_id), g->clients.end());
@@ -291,13 +293,18 @@ namespace tbs
 				}
 
 				if(g->clients.empty()) {
-					//game has no more clients left, so kill it.
-					g.reset();
+					deletes.insert(g);
 				}
 			}
 		}
 
 		int games_size = games_.size();
+
+		foreach(game_info_ptr& g, games_) {
+			if(deletes.count(g)) {
+				g.reset();
+			}
+		}
 
 		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
 
