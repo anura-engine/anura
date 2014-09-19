@@ -394,7 +394,7 @@ namespace tbs
 		}
 	}
 
-	PREF_INT(tbs_server_delay_ms, 100, "");
+	PREF_INT(tbs_server_delay_ms, 50, "");
 	PREF_INT(tbs_server_heartbeat_freq, 10, "");
 
 	void server_base::heartbeat(const boost::system::error_code& error)
@@ -409,6 +409,10 @@ namespace tbs
 
 		foreach(game_info_ptr g, games_) {
 			g->game_state->process();
+		}
+
+		foreach(game_info_ptr g, games_) {
+			flush_game_messages(*g);
 		}
 
 		nheartbeat_++;
