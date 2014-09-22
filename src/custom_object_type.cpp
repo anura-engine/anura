@@ -867,10 +867,12 @@ std::map<std::string,custom_object_type::EditorSummary> custom_object_type::get_
 
 			summary[variant("prototype_paths")] = variant(&proto_paths_v);
 
-			if(node["animation"].is_list()) {
-				summary[variant("animation")] = node["animation"][0];
-			} else if(node["animation"].is_map()) {
-				summary[variant("animation")] = node["animation"];
+			variant anim_var = node["animation"];
+
+			if(anim_var.is_list() && anim_var.num_elements() > 0) {
+				summary[variant("animation")] = anim_var[0];
+			} else if(anim_var.is_map()) {
+				summary[variant("animation")] = anim_var;
 			} else {
 				summary[variant("animation")] = json::parse_from_file("data/default-animation.cfg");
 			}
