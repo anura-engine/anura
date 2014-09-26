@@ -267,7 +267,9 @@ namespace tbs
 	void server_base::quit_games(int session_id)
 	{
 		client_info& cli_info = clients_[session_id];
-		foreach(game_info_ptr& g, games_) {
+		std::vector<game_info_ptr> games = games_;
+		std::set<game_info_ptr> deletes;
+		foreach(game_info_ptr& g, games) {
 			if(std::count(g->clients.begin(), g->clients.end(), session_id)) {
 				const bool is_first_client = g->clients.front() == session_id;
 				g->clients.erase(std::remove(g->clients.begin(), g->clients.end(), session_id), g->clients.end());
@@ -285,21 +287,28 @@ namespace tbs
 					}
 				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
 					std::cerr << "sending quit message...\n";
+					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
 					flush_game_messages(*g);
 				}
 
 				if(g->clients.empty()) {
-					//game has no more clients left, so kill it.
-					g.reset();
+					deletes.insert(g);
 				}
 			}
 		}
 
 		int games_size = games_.size();
 
+		foreach(game_info_ptr& g, games_) {
+			if(deletes.count(g)) {
+				g.reset();
+			}
+		}
+
 		games_.erase(std::remove(games_.begin(), games_.end(), game_info_ptr()), games_.end());
 
+		std::cerr << "USE_COUNT RESET cli_info.game: " << cli_info.game.use_count() << " / " << clients_.size() << "\n";
 		cli_info.game.reset();
 
 		if(games_size != games_.size()) {
@@ -356,6 +365,7 @@ namespace tbs
 
 		if(cli_info.game) {
 			if(type == "quit") {
+				std::cerr << "GOT_QUIT: " << cli_info.session_id << "\n";
 				quit_games(cli_info.session_id);
 				queue_msg(cli_info.session_id, "{ \"type\": \"bye\" }");
 
@@ -384,7 +394,7 @@ namespace tbs
 		}
 	}
 
-	PREF_INT(tbs_server_delay_ms, 100, "");
+	PREF_INT(tbs_server_delay_ms, 50, "");
 	PREF_INT(tbs_server_heartbeat_freq, 10, "");
 
 	void server_base::heartbeat(const boost::system::error_code& error)
@@ -399,6 +409,10 @@ namespace tbs
 
 		foreach(game_info_ptr g, games_) {
 			g->game_state->process();
+		}
+
+		foreach(game_info_ptr g, games_) {
+			flush_game_messages(*g);
 		}
 
 		nheartbeat_++;

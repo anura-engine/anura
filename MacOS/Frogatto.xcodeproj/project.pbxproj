@@ -1546,7 +1546,7 @@
 		C010C564160AFAD9006E7D90 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0600;
 				ORGANIZATIONNAME = "Richard Kettering";
 			};
 			buildConfigurationList = C010C567160AFAD9006E7D90 /* Build configuration list for PBXProject "Frogatto" */;
@@ -1978,6 +1978,8 @@
 					"-Wno-deprecated-register",
 					"-Wno-redeclared-class-member",
 					"-Wno-constexpr-not-const",
+					"-Wno-backslash-newline-escape",
+					"-Wno-extern-c-compat",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -2044,6 +2046,8 @@
 					"-Wno-deprecated-register",
 					"-Wno-redeclared-class-member",
 					"-Wno-constexpr-not-const",
+					"-Wno-backslash-newline-escape",
+					"-Wno-extern-c-compat",
 				);
 				WRAPPER_EXTENSION = app;
 			};

@@ -213,6 +213,17 @@ game::~game()
 	std::cerr << "DESTROY GAME\n";
 }
 
+void game::cancel_game()
+{
+	players_.clear();
+	outgoing_messages_.clear();
+	doc_ = variant();
+	ai_.clear();
+	bots_.clear();
+	backup_callable_ = NULL;
+	std::cerr << "CANCEL GAME: " << refcount() << "\n";
+}
+
 variant game::write(int nplayer, int processing_ms) const
 {
 	game_logic::wml_formula_callable_serialization_scope serialization_scope;

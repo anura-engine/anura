@@ -20,6 +20,7 @@
 
 #include <boost/function.hpp>
 #include <boost/intrusive_ptr.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include "formula_callable.hpp"
 #include "variant.hpp"
@@ -41,8 +42,8 @@ namespace tbs
 		variant get_value(const std::string& key) const;
 	private:
 		int session_id_;
-		boost::function<void(variant)> handler_;
-		game_logic::map_formula_callable_ptr callable_;
+
+		boost::shared_ptr<boost::function<void(const std::string&)> > handler_;
 	};
 
 	typedef boost::intrusive_ptr<internal_client> internal_client_ptr;
