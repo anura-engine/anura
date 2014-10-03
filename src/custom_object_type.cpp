@@ -1060,7 +1060,7 @@ void custom_object_type::init_event_handlers(variant node,
 				handlers[event_id] = (*base_handlers)[event_id];
 			} else {
 				boost::scoped_ptr<custom_object_callable_modify_scope> modify_scope;
-				const variant_type_ptr arg_type = get_object_event_arg_type(event_id);
+				const variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id_maybe_proto(event));
 				if(arg_type) {
 					modify_scope.reset(new custom_object_callable_modify_scope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
 				}

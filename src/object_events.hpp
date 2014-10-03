@@ -72,11 +72,16 @@ enum OBJECT_EVENT_ID {
 	OBJECT_EVENT_MOUSE_DRAG,
 	OBJECT_EVENT_MOUSE_DRAG_START,
 	OBJECT_EVENT_MOUSE_DRAG_END,
+	OBJECT_EVENT_MOUSE_WHEEL,
 	NUM_OBJECT_BUILTIN_EVENT_IDS,
 };
 
 const std::string& get_object_event_str(int id);
 int get_object_event_id(const std::string& str);
+
+//like get_object_event_id but will collapse event ID's for
+//prototypes into their base events.
+int get_object_event_id_maybe_proto(const std::string& str);
 
 variant_type_ptr get_object_event_arg_type(int id);
 
