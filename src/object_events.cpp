@@ -77,6 +77,7 @@ std::vector<std::string> create_object_event_names()
 	res.push_back("drag");
 	res.push_back("drag_start");
 	res.push_back("drag_end");
+	res.push_back("mouse_wheel");
 
 	ASSERT_EQ(res.size(), NUM_OBJECT_BUILTIN_EVENT_IDS);
 	return res;
@@ -123,6 +124,17 @@ int get_object_event_id(const std::string& str)
 	return object_event_names().size()-1;
 }
 
+int get_object_event_id_maybe_proto(const std::string& str)
+{
+	const char* proto_str = strstr(str.c_str(), "_PROTO_");
+	if(proto_str != NULL) {
+		proto_str += 7;
+		return get_object_event_id(std::string(proto_str));
+	}
+
+	return get_object_event_id(str);
+}
+
 variant_type_ptr get_object_event_arg_type(int id)
 {
 #define EVENT_ARG(event_id, arg_string) \
@@ -144,6 +156,7 @@ variant_type_ptr get_object_event_arg_type(int id)
 		EVENT_ARG(MOUSE_DRAG, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_DRAG_START, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
 		EVENT_ARG(MOUSE_DRAG_END, "{mouse_x: int, mouse_y: int, mouse_button: int, world_point: [decimal, decimal, decimal]}")
+		EVENT_ARG(MOUSE_WHEEL, "{yscroll: int}")
 		EVENT_ARG(SPAWNED, "{spawner: custom_obj, child: custom_obj}")
 		EVENT_ARG(CHILD_SPAWNED, "{spawner: custom_obj, child: custom_obj}")
 		EVENT_ARG(ADD_OBJECT_FAIL, "{collide_with: custom_obj|null, object: custom_obj|null}")
