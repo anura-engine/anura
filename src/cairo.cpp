@@ -779,8 +779,8 @@ BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, he
 		cairo_text_extents_t extents;
 		cairo_text_extents(context.get(), line.c_str(), &extents);
 		height += extents.height;
-		if(extents.width > width) {
-			width = extents.width;
+		if(extents.x_advance > width) {
+			width = extents.x_advance;
 		}
 	}
 
