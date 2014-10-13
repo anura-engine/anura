@@ -153,6 +153,7 @@ namespace graphics
 
 		void particle_system_widget::handle_draw() const
 		{
+			glTranslatef(x(), y(), 0.0f);
 			particle_systems_.draw();
 		}
 
@@ -494,8 +495,10 @@ namespace graphics
 				mvp_uniform = gles2::active_shader()->shader()->get_fixed_uniform("mvp_matrix");
 			}
 			//glm::mat4 mvp = level::current().camera()->projection_mat() * level::current().camera()->view_mat();
-			glm::mat4 mvp = get_main_window()->camera()->projection_mat() * get_main_window()->camera()->view_mat();
+			//glm::mat4 mvp = get_main_window()->camera()->projection_mat() * get_main_window()->camera()->view_mat();
+			glm::mat4 mvp = gles2::get_mvp_matrix();
 			glUniformMatrix4fv(mvp_uniform, 1, GL_FALSE, glm::value_ptr(mvp));
+			
 
 			for(auto e :  active_emitters_) {
 				e->draw();
