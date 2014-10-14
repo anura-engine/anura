@@ -24,6 +24,7 @@
 #pragma once
 
 #include "psystem2_fwd.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace graphics
 {
@@ -63,6 +64,7 @@ namespace graphics
 				EMITS_SYSTEM,
 			};
 		private:
+			DECLARE_CALLABLE(emitter);
 			technique* technique_;
 
 			// These are generation parameters.

@@ -655,5 +655,10 @@ namespace graphics
 				}
 			}
 		}
+
+		BEGIN_DEFINE_CALLABLE(affector, emit_object)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(affector)
 	}
 }

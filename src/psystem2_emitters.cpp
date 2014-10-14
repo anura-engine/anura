@@ -645,5 +645,10 @@ namespace graphics
 			ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised emitter type: " << ntype);
 			return NULL;
 		}
+
+		BEGIN_DEFINE_CALLABLE(emitter, emit_object)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(emitter)
 	}
 }

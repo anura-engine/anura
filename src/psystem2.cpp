@@ -143,7 +143,7 @@ namespace graphics
 		}
 
 		particle_system_widget::particle_system_widget(const variant& node, game_logic::formula_callable* environment)
-			: widget(node, environment), particle_systems_(node)
+			: widget(node, environment), particle_systems_(new particle_system_container(node))
 		{
 		}
 
@@ -154,12 +154,12 @@ namespace graphics
 		void particle_system_widget::handle_draw() const
 		{
 			glTranslatef(x(), y(), 0.0f);
-			particle_systems_.draw();
+			particle_systems_->draw();
 		}
 
 		void particle_system_widget::handle_process()
 		{
-			particle_systems_.process();
+			particle_systems_->process();
 		}
 
 		particle_system::particle_system(particle_system_container* parent, const variant& node)
@@ -645,6 +645,92 @@ namespace graphics
 		{
 		}
 
+		variant particle_system_container::get_ffl_particle_systems() const
+		{
+			std::vector<variant> res;
+			res.reserve(particle_systems_.size());
+			for(auto p : particle_systems_) {
+				res.push_back(variant(p.get()));
+			}
+
+			return variant(&res);
+		}
+
+		variant particle_system_container::get_ffl_techniques() const
+		{
+			std::vector<variant> res;
+			res.reserve(techniques_.size());
+			for(auto p : techniques_) {
+				res.push_back(variant(p.get()));
+			}
+
+			return variant(&res);
+		}
+
+		variant particle_system_container::get_ffl_emitters() const
+		{
+			std::vector<variant> res;
+			res.reserve(emitters_.size());
+			for(auto p : emitters_) {
+				res.push_back(variant(p.get()));
+			}
+
+			return variant(&res);
+		}
+
+		variant particle_system_container::get_ffl_affectors() const
+		{
+			std::vector<variant> res;
+			res.reserve(affectors_.size());
+			for(auto p : affectors_) {
+				res.push_back(variant(p.get()));
+			}
+
+			return variant(&res);
+		}
+
+		void particle_system_container::set_ffl_particle_systems(variant value)
+		{
+			particle_systems_.clear();
+			active_particle_systems_.clear();
+
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				add_particle_system(a.try_convert<particle_system>());
+			}
+
+			//if we set the ffl particle systems by default just make
+			//them all active. Figure out a way to deactivate some later.
+			active_particle_systems_ = particle_systems_;
+		}
+
+		void particle_system_container::set_ffl_techniques(variant value)
+		{
+			techniques_.clear();
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				add_technique(a.try_convert<technique>());
+			}
+		}
+
+		void particle_system_container::set_ffl_emitters(variant value)
+		{
+			emitters_.clear();
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				add_emitter(a.try_convert<emitter>());
+			}
+		}
+
+		void particle_system_container::set_ffl_affectors(variant value)
+		{
+			affectors_.clear();
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				add_affector(a.try_convert<affector>());
+			}
+		}
+
 		void particle_system_container::draw() const
 		{
 			for(auto ps : active_particle_systems_) {
@@ -764,14 +850,57 @@ namespace graphics
 			return res;
 		}
 
+		BEGIN_DEFINE_CALLABLE_NOBASE(emit_object)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(emit_object)
+
 		BEGIN_DEFINE_CALLABLE_NOBASE(particle_system_container)
 		DEFINE_FIELD(dummy, "null")
 			return variant();
 		END_DEFINE_CALLABLE(particle_system_container)
 
 		BEGIN_DEFINE_CALLABLE(particle_system_widget, widget)
+		DEFINE_FIELD(particle_systems, "[builtin particle_system]")
+			return obj.particle_systems_->get_ffl_particle_systems();
+		DEFINE_SET_FIELD
+			obj.particle_systems_->set_ffl_particle_systems(value);
+		DEFINE_FIELD(techniques, "[builtin technique]")
+			return obj.particle_systems_->get_ffl_techniques();
+		DEFINE_SET_FIELD
+			obj.particle_systems_->set_ffl_techniques(value);
+		DEFINE_FIELD(emitters, "[builtin emitter]")
+			return obj.particle_systems_->get_ffl_emitters();
+		DEFINE_SET_FIELD
+			obj.particle_systems_->set_ffl_emitters(value);
+		DEFINE_FIELD(affectors, "[builtin affector]")
+			return obj.particle_systems_->get_ffl_affectors();
+		DEFINE_SET_FIELD
+			obj.particle_systems_->set_ffl_affectors(value);
+
+		//from FFL users can use these to construct particle system objects.
+		BEGIN_DEFINE_FN(create_particle_system, "(map) -> builtin particle_system")
+			return variant(particle_system::factory(obj.particle_systems_.get(), FN_ARG(0)));
+		END_DEFINE_FN
+		BEGIN_DEFINE_FN(create_technique, "(map) -> builtin technique")
+			return variant(new technique(obj.particle_systems_.get(), FN_ARG(0)));
+		END_DEFINE_FN
+		BEGIN_DEFINE_FN(create_emitter, "(map) -> builtin emitter")
+			return variant(emitter::factory(obj.particle_systems_.get(), FN_ARG(0)));
+		END_DEFINE_FN
+		BEGIN_DEFINE_FN(create_affector, "(map) -> builtin affector")
+			return variant(affector::factory(obj.particle_systems_.get(), FN_ARG(0)));
+		END_DEFINE_FN
+		END_DEFINE_CALLABLE(particle_system_widget)
+
+		BEGIN_DEFINE_CALLABLE(particle_system, emit_object)
 		DEFINE_FIELD(dummy, "null")
 			return variant();
-		END_DEFINE_CALLABLE(particle_system_widget)
+		END_DEFINE_CALLABLE(particle_system)
+
+		BEGIN_DEFINE_CALLABLE(technique, emit_object)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(technique)
 	}
 }
