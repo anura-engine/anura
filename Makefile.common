@@ -66,6 +66,7 @@ objects = \
 	src/entity.o \
 	src/fbo.o \
 	src/fbo_scene.o \
+	src/ffl_weak_ptr.o \
 	src/file_chooser_dialog.o \
 	src/filesystem.o \
 	src/font.o \
