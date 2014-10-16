@@ -21,15 +21,37 @@
 
 #include "boost/intrusive_ptr.hpp"
 
+class reference_counted_object;
+
+class weak_ptr_base
+{
+public:
+	explicit weak_ptr_base(const reference_counted_object* obj=NULL);
+	~weak_ptr_base();
+	void release();
+
+protected:
+	reference_counted_object* get_obj() { return const_cast<reference_counted_object*>(obj_); }
+	void init(const reference_counted_object* obj=NULL);
+	void remove();
+private:
+	const reference_counted_object* obj_;
+	weak_ptr_base* next_;
+	weak_ptr_base* prev_;
+
+	weak_ptr_base(const weak_ptr_base&);
+	void operator=(const weak_ptr_base&);
+};
+
 class reference_counted_object
 {
 public:
-	reference_counted_object() : count_(0) {}
-	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0) {}
+	reference_counted_object() : count_(0), weak_(NULL) {}
+	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0), weak_(NULL) {}
 	reference_counted_object& operator=(const reference_counted_object& /*obj*/) {
 		return *this;
 	}
-	virtual ~reference_counted_object() { }
+	virtual ~reference_counted_object() { if(weak_ != NULL) { weak_->release(); } }
 
 	void add_ref() const { ++count_; }
 	void dec_ref() const { if(--count_ == 0) { delete this; } }
@@ -37,10 +59,13 @@ public:
 
 	int refcount() const { return count_; }
 
+	friend class weak_ptr_base;
+
 protected:
 	void turn_reference_counting_off() { count_ = 1000000; }
 private:
 	mutable int count_;
+	mutable weak_ptr_base* weak_;
 };
 
 struct reference_counted_object_pin_norelease
