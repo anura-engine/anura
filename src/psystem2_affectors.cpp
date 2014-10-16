@@ -70,7 +70,6 @@ namespace graphics
 			jet_affector();
 		};
 		// affectors to add: box_collider (width,height,depth, inner or outer collide, friction)
-		// flock_centering.
 		// forcefield (delta, force, octaves, frequency, amplitude, persistence, size, worldsize(w,h,d), movement(x,y,z),movement_frequency)
 		// geometry_rotator (use own rotation, speed(parameter), axis(x,y,z))
 		// inter_particle_collider (sounds like a lot of calculations)
@@ -212,6 +211,46 @@ namespace graphics
 			bool resize_;			
 			std::vector<particle>::iterator prev_particle_;
 			align_affector();
+		};
+
+		class flock_centering_affector : public affector
+		{
+		public:
+			explicit flock_centering_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), average_(0.0f)
+			{
+			}
+			virtual ~flock_centering_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				p.current.direction = (average_ - p.current.position) * t;
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+				int count = particles.size();
+				glm::vec3 sum(0.0f);
+				for(const auto& p : particles) {
+					sum += p.current.position;
+				}
+				average_ /= static_cast<float>(count);
+
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual affector* clone() {
+				return new flock_centering_affector(*this);
+			}
+		private:
+			int count_;
+			glm::vec3 average_;
+			std::vector<particle>::iterator prev_particle_;
+			flock_centering_affector();
 		};
 
 		class randomiser_affector : public affector
@@ -423,6 +462,8 @@ namespace graphics
 				return new randomiser_affector(parent, node);
 			} else if(ntype == "sine_force") {
 				return new sine_force_affector(parent, node);
+			} else if(ntype == "flock_centering") {
+				return new flock_centering_affector(parent, node);
 			} else {
 				ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
