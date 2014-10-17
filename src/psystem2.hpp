@@ -102,6 +102,10 @@ namespace graphics
 			void draw() const {
 				handle_draw();
 			}
+			const particle_system_container* parent_container() const { 
+				return parent_container_; 
+			}
+
 			particle_system_container* parent_container() { 
 				ASSERT_LOG(parent_container_ != NULL, "FATAL: PSYSTEM2: parent container is NULL");
 				return parent_container_; 
@@ -160,7 +164,7 @@ namespace graphics
 			void set_shader(gles2::program_ptr shader);
 			// Direct access here for *speed* reasons.
 			std::vector<particle>& active_particles() { return active_particles_; }
-			std::vector<emitter_ptr>& active_emitters() { return instanced_emitters_; }
+			std::vector<emitter_ptr>& instanced_emitters() { return instanced_emitters_; }
 			std::vector<affector_ptr>& active_affectors() { return instanced_affectors_; }
 			void add_emitter(emitter_ptr e);
 			void add_affector(affector_ptr a);
@@ -250,6 +254,10 @@ namespace graphics
 
 			void activate_particle_system(const std::string& name);
 			std::vector<particle_system_ptr>& active_particle_systems() { return active_particle_systems_; }
+			const std::vector<particle_system_ptr>& active_particle_systems() const { return active_particle_systems_; }
+
+			std::vector<particle_system_ptr>& particle_systems() { return particle_systems_; }
+			const std::vector<particle_system_ptr>& particle_systems() const { return particle_systems_; }
 
 			particle_system_ptr clone_particle_system(const std::string& name);
 			technique_ptr clone_technique(const std::string& name);

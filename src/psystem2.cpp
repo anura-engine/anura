@@ -303,9 +303,7 @@ namespace graphics
 				if(node["emitter"].is_map()) {
 					parent_container()->add_emitter(emitter::factory(parent, node["emitter"]));
 				} else if(node["emitter"].is_list()) {
-					for(size_t n = 0; n != node["emitter"].num_elements(); ++n) {
-						parent_container()->add_emitter(emitter::factory(parent, node["emitter"][n]));
-					}
+					parent_container()->set_ffl_emitters(node["emitter"]);
 				} else {
 					ASSERT_LOG(false, "FATAL: PSYSTEM2: 'emitter' attribute must be a list or map.");
 				}
@@ -648,8 +646,8 @@ namespace graphics
 		variant particle_system_container::get_ffl_particle_systems() const
 		{
 			std::vector<variant> res;
-			res.reserve(particle_systems_.size());
-			for(auto p : particle_systems_) {
+			res.reserve(active_particle_systems_.size());
+			for(auto p : active_particle_systems_) {
 				res.push_back(variant(p.get()));
 			}
 
@@ -718,7 +716,11 @@ namespace graphics
 			emitters_.clear();
 			std::vector<variant> v = value.as_list();
 			for(variant a : v) {
-				add_emitter(a.try_convert<emitter>());
+				if(a.is_map()) {
+					add_emitter(emitter::factory(this, a));
+				} else {
+					add_emitter(a.try_convert<emitter>());
+				}
 			}
 		}
 
@@ -851,8 +853,10 @@ namespace graphics
 		}
 
 		BEGIN_DEFINE_CALLABLE_NOBASE(emit_object)
-		DEFINE_FIELD(dummy, "null")
-			return variant();
+		DEFINE_FIELD(position, "[decimal,decimal,decimal]")
+			return vec3_to_variant(obj.current.position);
+		DEFINE_SET_FIELD
+			obj.current.position = variant_to_vec3(value);
 		END_DEFINE_CALLABLE(emit_object)
 
 		BEGIN_DEFINE_CALLABLE_NOBASE(particle_system_container)
@@ -871,7 +875,7 @@ namespace graphics
 			obj.particle_systems_->set_ffl_techniques(value);
 		DEFINE_FIELD(emitters, "[builtin emitter]")
 			return obj.particle_systems_->get_ffl_emitters();
-		DEFINE_SET_FIELD
+		DEFINE_SET_FIELD_TYPE("[builtin emitter|map]")
 			obj.particle_systems_->set_ffl_emitters(value);
 		DEFINE_FIELD(affectors, "[builtin affector]")
 			return obj.particle_systems_->get_ffl_affectors();
@@ -894,13 +898,69 @@ namespace graphics
 		END_DEFINE_CALLABLE(particle_system_widget)
 
 		BEGIN_DEFINE_CALLABLE(particle_system, emit_object)
-		DEFINE_FIELD(dummy, "null")
-			return variant();
+		DEFINE_FIELD(techniques, "[builtin technique]")
+			std::vector<variant> result;
+			for(auto t : obj.active_techniques_) {
+				result.push_back(variant(t.get()));
+			}
+
+			return variant(&result);
 		END_DEFINE_CALLABLE(particle_system)
 
 		BEGIN_DEFINE_CALLABLE(technique, emit_object)
-		DEFINE_FIELD(dummy, "null")
-			return variant();
+
+		DEFINE_FIELD(default_particle_width, "decimal")
+			return variant(obj.default_particle_width_);
+		DEFINE_SET_FIELD
+			obj.default_particle_width_ = value.as_float();
+
+		DEFINE_FIELD(default_particle_height, "decimal")
+			return variant(obj.default_particle_height_);
+		DEFINE_SET_FIELD
+			obj.default_particle_height_ = value.as_float();
+
+		DEFINE_FIELD(default_particle_depth, "decimal")
+			return variant(obj.default_particle_depth_);
+		DEFINE_SET_FIELD
+			obj.default_particle_depth_ = value.as_float();
+
+		DEFINE_FIELD(emitters, "[builtin emitter]")
+			std::vector<variant> result;
+			for(auto a : obj.active_emitters_) {
+				result.push_back(variant(a.get()));
+			}
+
+			return variant(&result);
+		DEFINE_SET_FIELD_TYPE("[builtin emitters|map]")
+			//obj.parent_container()->set_ffl_emitters(value);
+			obj.active_emitters_.clear();
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				if(a.is_map()) {
+					obj.active_emitters_.push_back(emitter::factory(obj.parent_container(), a));
+				} else {
+					obj.active_emitters_.push_back(a.try_convert<emitter>());
+				}
+
+				obj.active_emitters_.back()->set_parent_technique(&obj);
+			}
+
+		DEFINE_FIELD(affectors, "[builtin affector]")
+			std::vector<variant> result;
+			for(auto a : obj.active_affectors_) {
+				result.push_back(variant(a.get()));
+			}
+
+			return variant(&result);
+		DEFINE_SET_FIELD
+			obj.instanced_affectors_.clear();
+			std::vector<variant> v = value.as_list();
+			for(variant a : v) {
+				obj.add_affector(a.try_convert<affector>());
+			}
+
+			obj.active_affectors_ = obj.instanced_affectors_;
+
 		END_DEFINE_CALLABLE(technique)
 	}
 }

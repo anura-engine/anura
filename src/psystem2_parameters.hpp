@@ -42,7 +42,7 @@ namespace graphics
 
 			explicit parameter(ParameterType t) : type_(t) {}
 
-			virtual float get_value(float t) = 0;
+			virtual float get_value(float t=1.0) = 0;
 			static parameter_ptr factory(const variant& node);
 
 			ParameterType type() { return type_; }

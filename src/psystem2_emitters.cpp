@@ -131,7 +131,7 @@ namespace graphics
 		public:
 			circle_emitter(particle_system_container* parent, const variant& node) 			
 				: emitter(parent, node), 
-				circle_radius_(node["circle_radius"].as_decimal(decimal(0)).as_float()), 
+				circle_radius_(parameter::factory(node["circle_radius"])),
 				circle_step_(node["circle_step"].as_decimal(decimal(0.1)).as_float()), 
 				circle_angle_(node["circle_angle"].as_decimal(decimal(0)).as_float()), 
 				circle_random_(node["emit_random"].as_bool(true)) {
@@ -145,14 +145,16 @@ namespace graphics
 				} else {
 					angle = t * circle_step_;
 				}
-				p.initial.position.x += circle_radius_ * sin(angle + circle_angle_);
-				p.initial.position.z += circle_radius_ * cos(angle + circle_angle_);
+
+				const float r = circle_radius_->get_value();
+				p.initial.position.x += r * sin(angle + circle_angle_);
+				p.initial.position.y += r * cos(angle + circle_angle_);
 			}
 			virtual emitter* clone() {
 				return new circle_emitter(*this);
 			}
 		private:
-			float circle_radius_;
+			parameter_ptr circle_radius_;
 			float circle_step_;
 			float circle_angle_;
 			bool circle_random_;
@@ -444,7 +446,7 @@ namespace graphics
 					set_particle_starting_values(start, end);
 				} else {
 					if(emits_type_ == EMITS_EMITTER) {
-						size_t cnt = calculate_particles_to_emit(t, technique_->emitter_quota(), technique_->active_emitters().size());
+						size_t cnt = calculate_particles_to_emit(t, technique_->emitter_quota(), technique_->instanced_emitters().size());
 						//std::cerr << "XXX: Emitting " << cnt << " emitters" << std::endl;
 						for(int n = 0; n != cnt; ++n) {
 							emitter_ptr e = parent_container()->clone_emitter(emits_name_);

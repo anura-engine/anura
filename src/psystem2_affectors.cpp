@@ -116,6 +116,7 @@ namespace graphics
 				return new vortex_affector(*this);
 			}
 		private:
+			DECLARE_CALLABLE(vortex_affector);
 			glm::quat rotation_axis_;
 			parameter_ptr rotation_speed_;
 			vortex_affector();
@@ -132,6 +133,7 @@ namespace graphics
 				return new gravity_affector(*this);
 			}
 		private:
+			DECLARE_CALLABLE(gravity_affector);
 			float gravity_;
 			gravity_affector();
 		};
@@ -267,7 +269,7 @@ namespace graphics
 			}
 			virtual void handle_process(float t) {
 				handle_apply(get_technique()->active_particles(), t);
-				handle_apply(get_technique()->active_emitters(), t);
+				handle_apply(get_technique()->instanced_emitters(), t);
 			}
 			virtual affector* clone() {
 				return new randomiser_affector(*this);
@@ -382,7 +384,7 @@ namespace graphics
 		void affector::handle_process(float t) 
 		{
 			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique_ is null");
-			for(auto& e : technique_->active_emitters()) {
+			for(auto& e : technique_->instanced_emitters()) {
 				ASSERT_LOG(e->emitted_by != NULL, "FATAL: PSYSTEM2: e->emitted_by is null");
 				if(!is_emitter_excluded(e->emitted_by->name())) {
 					internal_apply(*e,t);
@@ -580,7 +582,7 @@ namespace graphics
 		void gravity_affector::internal_apply(particle& p, float t)
 		{
 			glm::vec3 d = position() - p.current.position;
-			float len_sqr = d.x*d.x + d.y*d.y + d.z*d.z;
+			float len_sqr = sqrt(d.x*d.x + d.y*d.y + d.z*d.z);
 			if(len_sqr > 0) {
 				float force = (gravity_ * p.current.mass * mass()) / len_sqr;
 				p.current.direction += (force * t) * d;
@@ -657,8 +659,21 @@ namespace graphics
 		}
 
 		BEGIN_DEFINE_CALLABLE(affector, emit_object)
+		DEFINE_FIELD(position, "[decimal,decimal,decimal]")
+			return vec3_to_variant(obj.position());
+		DEFINE_SET_FIELD
+			obj.set_position(variant_to_vec3(value));
+		END_DEFINE_CALLABLE(affector)
+
+		BEGIN_DEFINE_CALLABLE(gravity_affector, affector)
 		DEFINE_FIELD(dummy, "null")
 			return variant();
-		END_DEFINE_CALLABLE(affector)
+		END_DEFINE_CALLABLE(gravity_affector)
+
+		BEGIN_DEFINE_CALLABLE(vortex_affector, affector)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(vortex_affector)
+
 	}
 }
