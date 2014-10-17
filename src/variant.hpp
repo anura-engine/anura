@@ -179,6 +179,7 @@ public:
 	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	decimal as_decimal(decimal default_value=decimal()) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_INT) { return decimal::from_raw_value(int64_t(int_value_)*VARIANT_DECIMAL_PRECISION); } must_be(VARIANT_TYPE_DECIMAL); return decimal::from_raw_value(decimal_value_); }
+	double as_float() const { return as_decimal().as_float(); }
 	bool as_bool(bool default_value) const;
 	bool as_bool() const;
 
