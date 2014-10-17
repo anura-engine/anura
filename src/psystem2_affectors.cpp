@@ -26,6 +26,7 @@
 #include "psystem2_affectors.hpp"
 #include "psystem2_emitters.hpp"
 #include "psystem2_parameters.hpp"
+#include "spline3d.hpp"
 
 namespace graphics
 {
@@ -70,7 +71,6 @@ namespace graphics
 			jet_affector();
 		};
 		// affectors to add: box_collider (width,height,depth, inner or outer collide, friction)
-		// flock_centering.
 		// forcefield (delta, force, octaves, frequency, amplitude, persistence, size, worldsize(w,h,d), movement(x,y,z),movement_frequency)
 		// geometry_rotator (use own rotation, speed(parameter), axis(x,y,z))
 		// inter_particle_collider (sounds like a lot of calculations)
@@ -79,7 +79,6 @@ namespace graphics
 		// path_follower
 		// plane_collider
 		// scale_velocity (parameter_ptr scale; bool since_system_start, bool stop_at_flip)
-		// sine_force
 		// sphere_collider
 		// texture_animator
 		// texture_rotator
@@ -214,6 +213,96 @@ namespace graphics
 			bool resize_;			
 			std::vector<particle>::iterator prev_particle_;
 			align_affector();
+		};
+
+		class flock_centering_affector : public affector
+		{
+		public:
+			explicit flock_centering_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), average_(0.0f)
+			{
+			}
+			virtual ~flock_centering_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				p.current.direction = (average_ - p.current.position) * t;
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+				int count = particles.size();
+				glm::vec3 sum(0.0f);
+				for(const auto& p : particles) {
+					sum += p.current.position;
+				}
+				average_ /= static_cast<float>(count);
+
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual affector* clone() {
+				return new flock_centering_affector(*this);
+			}
+		private:
+			int count_;
+			glm::vec3 average_;
+			std::vector<particle>::iterator prev_particle_;
+			flock_centering_affector();
+		};
+
+		class path_follower_affector : public affector
+		{
+		public:
+			explicit path_follower_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node)
+			{
+				ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
+					"path_follower must have a 'path' attribute.");
+				for(unsigned n = 0; n != node["path"].num_elements(); ++n) {
+					const auto& pt = node["path"][n];
+					ASSERT_LOG(pt.is_list() && pt.num_elements() > 0, "points in path must be lists of more than one element.");
+					const double x = pt[0].as_decimal().as_float();
+					const double y = pt.num_elements() > 1 ? pt[0].as_decimal().as_float() : 0.0;
+					const double z = pt.num_elements() > 2 ? pt[0].as_decimal().as_float() : 0.0;
+					points_.emplace_back(x,y,z);
+				}
+				spl_ = std::make_shared<geometry::spline3d<float>>(points_);
+			}
+			virtual ~path_follower_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				const float time_fraction = p.current.time_to_live / p.initial.time_to_live;
+				const float time_fraction_next = (p.current.time_to_live + t) > p.initial.time_to_live 
+					? 1.0f 
+					: (p.current.time_to_live + t) / p.initial.time_to_live;
+				p.current.position += spl_->interpolate(time_fraction_next) - spl_->interpolate(time_fraction);
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual affector* clone() {
+				return new path_follower_affector(*this);
+			}
+		private:
+			int count_;
+			std::shared_ptr<geometry::spline3d<float>> spl_;
+			std::vector<glm::vec3> points_;
+			std::vector<particle>::iterator prev_particle_;
+			path_follower_affector();
 		};
 
 		class randomiser_affector : public affector
@@ -425,6 +514,10 @@ namespace graphics
 				return new randomiser_affector(parent, node);
 			} else if(ntype == "sine_force") {
 				return new sine_force_affector(parent, node);
+			} else if(ntype == "path_follower") {
+				return new path_follower_affector(parent, node);
+			} else if(ntype == "flock_centering") {
+				return new flock_centering_affector(parent, node);
 			} else {
 				ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
