@@ -212,7 +212,7 @@ namespace graphics
 				ASSERT_LOG(node["control_point"][n].is_list() 
 					&& node["control_point"][n].num_elements() == 2,
 					"FATAL: PSYSTEM2: Control points should be list of two elements.");
-				auto p = std::make_pair(node["control_point"][n][0].as_decimal().as_float(), 
+				auto p = geometry::control_point(node["control_point"][n][0].as_decimal().as_float(), 
 					node["control_point"][n][1].as_decimal().as_float());
 				control_points_.push_back(p);
 			}
@@ -227,7 +227,7 @@ namespace graphics
 			// find nearest control point to t
 			auto it = control_points_.begin();
 			for(; it != control_points_.end(); ++it) {
-				if(t < it->first) {
+				if(t < it->x) {
 					if(it == control_points_.begin()) {
 						return it;
 					} else {
@@ -244,10 +244,10 @@ namespace graphics
 				auto it = find_closest_point(t);
 				auto it2 = it + 1;
 				if(it2 == control_points_.end()) {
-					return it2->second;
+					return it2->y;
 				} else {
 					// linear interpolate, see http://en.wikipedia.org/wiki/Linear_interpolation
-					return it->second + (it2->second - it->second) * (t - it->first) / (it2->first - it->first);
+					return it->y + (it2->y - it->y) * (t - it->x) / (it2->x - it->y);
 				}
 			} else if(curve_type_ == INTERPOLATE_SPLINE) {
 				// http://en.wikipedia.org/wiki/Spline_interpolation
