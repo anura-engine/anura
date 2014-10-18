@@ -825,6 +825,9 @@
     <ClInclude Include="..\..\src\ft_iface.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\ffl_weak_ptr.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1695,6 +1698,9 @@
       <Filter>Source Files\svg</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\ft_iface.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\ffl_weak_ptr.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

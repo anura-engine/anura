@@ -214,6 +214,7 @@
     <ClInclude Include="..\..\src\entity.hpp" />
     <ClInclude Include="..\..\src\entity_fwd.hpp" />
     <ClInclude Include="..\..\src\external_text_editor.hpp" />
+    <ClInclude Include="..\..\src\ffl_weak_ptr.hpp" />
     <ClInclude Include="..\..\src\filesystem.hpp" />
     <ClInclude Include="..\..\src\file_chooser_dialog.hpp" />
     <ClInclude Include="..\..\src\font.hpp" />
@@ -527,6 +528,7 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\src\ffl_weak_ptr.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
