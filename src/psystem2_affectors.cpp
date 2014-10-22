@@ -267,8 +267,8 @@ namespace graphics
 					const auto& pt = node["path"][n];
 					ASSERT_LOG(pt.is_list() && pt.num_elements() > 0, "points in path must be lists of more than one element.");
 					const double x = pt[0].as_decimal().as_float();
-					const double y = pt.num_elements() > 1 ? pt[0].as_decimal().as_float() : 0.0;
-					const double z = pt.num_elements() > 2 ? pt[0].as_decimal().as_float() : 0.0;
+					const double y = pt.num_elements() > 1 ? pt[1].as_decimal().as_float() : 0.0;
+					const double z = pt.num_elements() > 2 ? pt[2].as_decimal().as_float() : 0.0;
 					points_.emplace_back(x,y,z);
 				}
 				spl_ = std::make_shared<geometry::spline3d<float>>(points_);

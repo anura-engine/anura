@@ -13,7 +13,7 @@ namespace geometry
         spline3d(const std::vector<glm::detail::tvec3<T>>& cps) 
             : points_(cps), 
               recalc_(false), 
-              coeffs_(T(2), T(-2), T(1), T(1), T(-3), T(3), T(-2), T(-1), T(0), T(0), T(1), T(0), T(1), T(0), T(0), T(0))
+			  coeffs_(T(2), T(-3), T(0), T(1), T(-2), T(3), T(0), T(0), T(1), T(-2), T(1), T(0), T(1), T(-1), T(0), T(0))
         {
             recalculate_tangents();
         }
@@ -35,7 +35,7 @@ namespace geometry
             for(size_t n = 0; n != points_.size(); ++n) {
                 // Catmull-Rom approach
                 if(n == 0) {
-                    if(points_[0] == points_[n-1]) {
+                    if(points_[0] == points_[points_.size()-1]) {
                         tangents_[n] = static_cast<T>(0.5) * points_[1] - points_[n-2];
                     } else {
                         tangents_[n] = static_cast<T>(0.5) * points_[1] - points_[0];
@@ -53,6 +53,7 @@ namespace geometry
         }
         glm::detail::tvec3<T> interpolate(T x)
         {
+			assert(!points_.empty());
             const T seg = x * (points_.size()-1);
             const unsigned useg = static_cast<unsigned>(seg);
             return interpolate(useg, seg - useg);
@@ -75,10 +76,11 @@ namespace geometry
                 return points_[seg+1];
             }
             glm::detail::tvec4<T> powers(x*x*x, x*x, x, T(1));
-            auto ret = powers * coeffs_ * glm::detail::tmat4x4<T>(glm::detail::tvec4<T>(points_[seg],T(1)), 
-                glm::detail::tvec4<T>(points_[seg+1],T(1)),
-                glm::detail::tvec4<T>(tangents_[seg],T(1)),
-                glm::detail::tvec4<T>(tangents_[seg+1],T(1)));
+			glm::detail::tmat4x4<T> m(points_[seg].x, points_[seg+1].x, tangents_[seg].x, tangents_[seg+1].x,
+				points_[seg].y, points_[seg+1].y, tangents_[seg].y, tangents_[seg+1].y,
+				points_[seg].z, points_[seg+1].z, tangents_[seg].z, tangents_[seg+1].z,
+				T(1), T(1), T(1), T(1));
+			auto ret = powers * coeffs_ * m;
             return glm::detail::tvec3<T>(ret.x, ret.y, ret.z);
         }
         
