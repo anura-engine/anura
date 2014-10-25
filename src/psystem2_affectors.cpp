@@ -255,6 +255,38 @@ namespace graphics
 			flock_centering_affector();
 		};
 
+		class black_hole_affector : public affector
+		{
+		public:
+			explicit black_hole_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), velocity_(node["velocity"].as_float()), acceleration_(node["acceleration"].as_float())
+			{
+			}
+		private:
+			virtual void handle_process(float t) {
+				velocity_ += acceleration_;
+				affector::handle_process(t);
+			}
+
+			virtual void internal_apply(particle& p, float t) {
+				glm::vec3 diff = position() - p.current.position;
+				float len = glm::length(diff);
+				if(len > velocity_) {
+					diff *= velocity_/len;
+				} else {
+					p.current.time_to_live = 0;
+				}
+
+				p.current.position += diff;
+			}
+
+			virtual affector* clone() {
+				return new black_hole_affector(*this);
+			}
+
+			float velocity_, acceleration_;
+		};
+
 		class path_follower_affector : public affector
 		{
 		public:
@@ -516,6 +548,8 @@ namespace graphics
 				return new sine_force_affector(parent, node);
 			} else if(ntype == "path_follower") {
 				return new path_follower_affector(parent, node);
+			} else if(ntype == "black_hole") {
+				return new black_hole_affector(parent, node);
 			} else if(ntype == "flock_centering") {
 				return new flock_centering_affector(parent, node);
 			} else {
