@@ -16,6 +16,7 @@ public:
 
 	const weak_ptr<T>& operator=(const weak_ptr<T>& p) {
 		init(p.get());
+		return *this;
 	}
 };
 }

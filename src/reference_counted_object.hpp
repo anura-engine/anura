@@ -31,7 +31,7 @@ public:
 	void release();
 
 protected:
-	reference_counted_object* get_obj() { return const_cast<reference_counted_object*>(obj_); }
+	reference_counted_object* get_obj() const { return const_cast<reference_counted_object*>(obj_); }
 	void init(const reference_counted_object* obj=NULL);
 	void remove();
 private:
