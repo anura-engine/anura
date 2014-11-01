@@ -26,6 +26,7 @@
 #include "psystem2_affectors.hpp"
 #include "psystem2_emitters.hpp"
 #include "psystem2_parameters.hpp"
+#include "spline3d.hpp"
 
 namespace graphics
 {
@@ -70,7 +71,6 @@ namespace graphics
 			jet_affector();
 		};
 		// affectors to add: box_collider (width,height,depth, inner or outer collide, friction)
-		// flock_centering.
 		// forcefield (delta, force, octaves, frequency, amplitude, persistence, size, worldsize(w,h,d), movement(x,y,z),movement_frequency)
 		// geometry_rotator (use own rotation, speed(parameter), axis(x,y,z))
 		// inter_particle_collider (sounds like a lot of calculations)
@@ -79,7 +79,6 @@ namespace graphics
 		// path_follower
 		// plane_collider
 		// scale_velocity (parameter_ptr scale; bool since_system_start, bool stop_at_flip)
-		// sine_force
 		// sphere_collider
 		// texture_animator
 		// texture_rotator
@@ -116,6 +115,7 @@ namespace graphics
 				return new vortex_affector(*this);
 			}
 		private:
+			DECLARE_CALLABLE(vortex_affector);
 			glm::quat rotation_axis_;
 			parameter_ptr rotation_speed_;
 			vortex_affector();
@@ -132,6 +132,7 @@ namespace graphics
 				return new gravity_affector(*this);
 			}
 		private:
+			DECLARE_CALLABLE(gravity_affector);
 			float gravity_;
 			gravity_affector();
 		};
@@ -214,6 +215,128 @@ namespace graphics
 			align_affector();
 		};
 
+		class flock_centering_affector : public affector
+		{
+		public:
+			explicit flock_centering_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), average_(0.0f)
+			{
+			}
+			virtual ~flock_centering_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				p.current.direction = (average_ - p.current.position) * t;
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+				int count = particles.size();
+				glm::vec3 sum(0.0f);
+				for(const auto& p : particles) {
+					sum += p.current.position;
+				}
+				average_ /= static_cast<float>(count);
+
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual affector* clone() {
+				return new flock_centering_affector(*this);
+			}
+		private:
+			int count_;
+			glm::vec3 average_;
+			std::vector<particle>::iterator prev_particle_;
+			flock_centering_affector();
+		};
+
+		class black_hole_affector : public affector
+		{
+		public:
+			explicit black_hole_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node), velocity_(node["velocity"].as_float()), acceleration_(node["acceleration"].as_float())
+			{
+			}
+		private:
+			virtual void handle_process(float t) {
+				velocity_ += acceleration_;
+				affector::handle_process(t);
+			}
+
+			virtual void internal_apply(particle& p, float t) {
+				glm::vec3 diff = position() - p.current.position;
+				float len = glm::length(diff);
+				if(len > velocity_) {
+					diff *= velocity_/len;
+				} else {
+					p.current.time_to_live = 0;
+				}
+
+				p.current.position += diff;
+			}
+
+			virtual affector* clone() {
+				return new black_hole_affector(*this);
+			}
+
+			float velocity_, acceleration_;
+		};
+
+		class path_follower_affector : public affector
+		{
+		public:
+			explicit path_follower_affector(particle_system_container* parent, const variant& node) 
+				: affector(parent, node)
+			{
+				ASSERT_LOG(node.has_key("path") && node["path"].is_list(),
+					"path_follower must have a 'path' attribute.");
+				for(unsigned n = 0; n != node["path"].num_elements(); ++n) {
+					const auto& pt = node["path"][n];
+					ASSERT_LOG(pt.is_list() && pt.num_elements() > 0, "points in path must be lists of more than one element.");
+					const double x = pt[0].as_decimal().as_float();
+					const double y = pt.num_elements() > 1 ? pt[1].as_decimal().as_float() : 0.0;
+					const double z = pt.num_elements() > 2 ? pt[2].as_decimal().as_float() : 0.0;
+					points_.emplace_back(x,y,z);
+				}
+				spl_ = std::make_shared<geometry::spline3d<float>>(points_);
+			}
+			virtual ~path_follower_affector() {}
+		protected:
+			virtual void internal_apply(particle& p, float t) {
+				const float time_fraction = p.current.time_to_live / p.initial.time_to_live;
+				const float time_fraction_next = (p.current.time_to_live + t) > p.initial.time_to_live 
+					? 1.0f 
+					: (p.current.time_to_live + t) / p.initial.time_to_live;
+				p.current.position += spl_->interpolate(time_fraction_next) - spl_->interpolate(time_fraction);
+			}
+			virtual void handle_process(float t) {
+				std::vector<particle>& particles = get_technique()->active_particles();
+				if(particles.size() < 1) {
+					return;
+				}
+
+				prev_particle_ = particles.begin();				
+				for(auto p = particles.begin(); p != particles.end(); ++p) {
+					internal_apply(*p, t);
+					prev_particle_ = p;
+				}
+			}
+			virtual affector* clone() {
+				return new path_follower_affector(*this);
+			}
+		private:
+			int count_;
+			std::shared_ptr<geometry::spline3d<float>> spl_;
+			std::vector<glm::vec3> points_;
+			std::vector<particle>::iterator prev_particle_;
+			path_follower_affector();
+		};
+
 		class randomiser_affector : public affector
 		{
 		public:
@@ -267,7 +390,7 @@ namespace graphics
 			}
 			virtual void handle_process(float t) {
 				handle_apply(get_technique()->active_particles(), t);
-				handle_apply(get_technique()->active_emitters(), t);
+				handle_apply(get_technique()->instanced_emitters(), t);
 			}
 			virtual affector* clone() {
 				return new randomiser_affector(*this);
@@ -382,7 +505,7 @@ namespace graphics
 		void affector::handle_process(float t) 
 		{
 			ASSERT_LOG(technique_ != NULL, "FATAL: PSYSTEM2: technique_ is null");
-			for(auto& e : technique_->active_emitters()) {
+			for(auto& e : technique_->instanced_emitters()) {
 				ASSERT_LOG(e->emitted_by != NULL, "FATAL: PSYSTEM2: e->emitted_by is null");
 				if(!is_emitter_excluded(e->emitted_by->name())) {
 					internal_apply(*e,t);
@@ -423,6 +546,12 @@ namespace graphics
 				return new randomiser_affector(parent, node);
 			} else if(ntype == "sine_force") {
 				return new sine_force_affector(parent, node);
+			} else if(ntype == "path_follower") {
+				return new path_follower_affector(parent, node);
+			} else if(ntype == "black_hole") {
+				return new black_hole_affector(parent, node);
+			} else if(ntype == "flock_centering") {
+				return new flock_centering_affector(parent, node);
 			} else {
 				ASSERT_LOG(false, "FATAL: PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
@@ -580,7 +709,7 @@ namespace graphics
 		void gravity_affector::internal_apply(particle& p, float t)
 		{
 			glm::vec3 d = position() - p.current.position;
-			float len_sqr = d.x*d.x + d.y*d.y + d.z*d.z;
+			float len_sqr = sqrt(d.x*d.x + d.y*d.y + d.z*d.z);
 			if(len_sqr > 0) {
 				float force = (gravity_ * p.current.mass * mass()) / len_sqr;
 				p.current.direction += (force * t) * d;
@@ -655,5 +784,23 @@ namespace graphics
 				}
 			}
 		}
+
+		BEGIN_DEFINE_CALLABLE(affector, emit_object)
+		DEFINE_FIELD(position, "[decimal,decimal,decimal]")
+			return vec3_to_variant(obj.position());
+		DEFINE_SET_FIELD
+			obj.set_position(variant_to_vec3(value));
+		END_DEFINE_CALLABLE(affector)
+
+		BEGIN_DEFINE_CALLABLE(gravity_affector, affector)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(gravity_affector)
+
+		BEGIN_DEFINE_CALLABLE(vortex_affector, affector)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
+		END_DEFINE_CALLABLE(vortex_affector)
+
 	}
 }

@@ -28,30 +28,57 @@
 namespace tbs
 {
 
+class tbs_bot_timer_proxy {
+public:
+	explicit tbs_bot_timer_proxy(tbs::bot* bot) : bot_(bot)
+	{}
+
+	void cancel()
+	{
+		bot_ = NULL;
+	}
+
+	void signal(const boost::system::error_code& error)
+	{
+		if(bot_) {
+			bot_->process(error);
+		}
+		delete this;
+	}
+private:
+	tbs::bot* bot_;
+};
+
 PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
 
 bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   : session_id_(v["session_id"].as_int()), service_(service), timer_(service), host_(host), port_(port), script_(v["script"].as_list()),
     on_create_(game_logic::formula::create_optional_formula(v["on_create"])),
     on_message_(game_logic::formula::create_optional_formula(v["on_message"])),
-	has_quit_(false)
+	has_quit_(false), timer_proxy_(NULL)
 
 {
 	fprintf(stderr, "YYY: create bot: %p, (%s) -> %p\n", this, v["on_create"].write_json().c_str(), on_create_.get());
 	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+
+	timer_proxy_ = new tbs_bot_timer_proxy(this);
+	timer_.async_wait(boost::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, boost::asio::placeholders::error));
 }
 
 bot::~bot()
 {
 	fprintf(stderr, "YYY: destroy bot: %p\n", this);
+//	has_quit_ = true;
 	timer_.cancel();
-	timer_.wait();
+	if(timer_proxy_ != NULL) {
+		timer_proxy_->cancel();
+	}
 	fprintf(stderr, "YYY: done destroy bot: %p\n", this);
 }
 
 void bot::process(const boost::system::error_code& error)
 {
+	timer_proxy_ = NULL;
 	if(has_quit_) {
 		return;
 	}
@@ -95,7 +122,8 @@ void bot::process(const boost::system::error_code& error)
 	}
 
 	timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-	timer_.async_wait(boost::bind(&bot::process, this, boost::asio::placeholders::error));
+	timer_proxy_ = new tbs_bot_timer_proxy(this);
+	timer_.async_wait(boost::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, boost::asio::placeholders::error));
 }
 
 void bot::handle_response(const std::string& type, game_logic::formula_callable_ptr callable)

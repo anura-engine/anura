@@ -26,6 +26,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "asserts.hpp"
+#include "ffl_weak_ptr.hpp"
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "formula.hpp"
@@ -41,7 +42,7 @@
 #include "wml_formula_callable.hpp"
 
 namespace {
-static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed"};
+static const std::string variant_type_str[] = {"null", "bool", "int", "decimal", "object", "object_loading", "list", "string", "map", "function", "generic_function", "multi_function", "delayed", "weak"};
 }
 
 std::string variant::variant_type_to_string(variant::TYPE type) {
@@ -304,6 +305,16 @@ variant result;
 int refcount;
 };
 
+struct variant_weak {
+
+variant_weak() : refcount(0)
+{}
+
+int refcount;
+ffl::weak_ptr<game_logic::formula_callable> ptr;
+
+};
+
 void variant::increment_refcount()
 {
 switch(type_) {
@@ -334,6 +345,9 @@ break;
 case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.insert(this);
 ++delayed_->refcount;
+break;
+case VARIANT_TYPE_WEAK:
+++weak_->refcount;
 break;
 
 // These are not used here, add them to silence a compiler warning.
@@ -389,6 +403,11 @@ case VARIANT_TYPE_DELAYED:
 delayed_variants_loading.erase(this);
 if(--delayed_->refcount == 0) {
 	delete delayed_;
+}
+break;
+case VARIANT_TYPE_WEAK:
+if(--weak_->refcount == 0) {
+	delete weak_;
 }
 break;
 
@@ -1266,6 +1285,29 @@ variant* variant::get_index_mutable(int index)
 	return NULL;
 }
 
+variant variant::weaken() const
+{
+	if(type_ == VARIANT_TYPE_CALLABLE) {
+		variant result;
+		result.type_ = VARIANT_TYPE_WEAK;
+		result.weak_ = new variant_weak;
+		result.weak_->refcount++;
+		result.weak_->ptr = ffl::weak_ptr<game_logic::formula_callable>(mutable_callable_);
+		return result;
+	}
+
+	return *this;
+}
+
+variant variant::strengthen() const
+{
+	if(is_weak()) {
+		return variant(weak_->ptr.get());
+	}
+
+	return *this;
+}
+
 variant variant::bind_closure(const game_logic::formula_callable* callable)
 {
 	must_be(VARIANT_TYPE_FUNCTION);
@@ -1693,6 +1735,7 @@ bool variant::operator==(const variant& v) const
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		return multi_fn_ == v.multi_fn_;
 	}
+	case VARIANT_TYPE_WEAK:
 	case VARIANT_TYPE_DELAYED:
 	case VARIANT_TYPE_INVALID:
 		assert(false);
@@ -1771,6 +1814,7 @@ bool variant::operator<=(const variant& v) const
 	case VARIANT_TYPE_MULTI_FUNCTION: {
 		return multi_fn_ <= v.multi_fn_;
 	}
+	case VARIANT_TYPE_WEAK:
 	case VARIANT_TYPE_DELAYED:
 	case VARIANT_TYPE_INVALID:
 		assert(false);
@@ -2199,6 +2243,12 @@ std::string variant::to_debug_string(std::vector<const game_logic::formula_calla
 			s << v.to_debug_string() << ", ";
 		}
 		s << ")";
+		break;
+	}
+	case VARIANT_TYPE_WEAK: {
+		char buf[64];
+		sprintf(buf, "(weak %p)", delayed_);
+		s << buf;
 		break;
 	}
 	case VARIANT_TYPE_DELAYED: {

@@ -34,6 +34,7 @@
 #endif
 
 #include "asserts.hpp"
+#include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
 #include "checksum.hpp"
 #include "controls.hpp"
@@ -724,7 +725,6 @@ extern "C" int main(int argcount, char* argvec[])
 			update_info.add("attempt_anura", true);
 		}
 
-		SDL_Window* update_window = NULL;
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = SDL_GetTicks();
@@ -733,10 +733,11 @@ extern "C" int main(int argcount, char* argvec[])
 		bool require_restart = false;
 		fprintf(stderr, "Requesting update to module from server...\n");
 		int nupdate_cycle = 0;
+
+		{
+		auto_update_window update_window;
 		while(cl || anura_cl) {
-			if(update_window == NULL && SDL_GetTicks() - original_start_time > 2000) {
-				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
-			}
+			update_window.process();
 
 			int nbytes_obtained = 0;
 			int nbytes_needed = 0;
@@ -775,22 +776,14 @@ extern "C" int main(int argcount, char* argvec[])
 				break;
 			}
 
-			if(update_window) {
-				SDL_Surface* fb= SDL_GetWindowSurface(update_window);
-				SDL_Rect area = {300, 290, 200, 20};
-				SDL_FillRect(fb, &area, 0xFFFFFFFF);
+			char msg[1024];
+			sprintf(msg, "Updating Game. Transferred %.02f/%.02fMB", float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)));
 
-				SDL_Rect inner_area = {303, 292, 194, 16};
-				SDL_FillRect(fb, &inner_area, 0xFF000000);
+			update_window.set_message(msg);
 
-				if(nbytes_needed != 0) {
-					const float ratio = float(nbytes_obtained)/float(nbytes_needed);
-					SDL_Rect area = {303, 292, int(194.0*ratio), 16};
-					SDL_FillRect(fb, &area, 0xFFFFFFFF);
-				}
-
-				SDL_UpdateWindowSurface(update_window);
-			}
+			const float ratio = nbytes_needed <= 0 ? 0.0 : float(nbytes_obtained)/float(nbytes_needed);
+			update_window.set_progress(ratio);
+			update_window.draw();
 
 			SDL_Event event;
 			while(SDL_PollEvent(&event)) {
@@ -826,9 +819,7 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 		}
 
-		if(update_window) {
-			SDL_DestroyWindow(update_window);
-		}
+		} //dispose update_window
 
 		if(require_restart) {
 			std::vector<char*> args;

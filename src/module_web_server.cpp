@@ -72,9 +72,11 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 		if(msg_type == "download_module") {
 			const std::string module_id = doc["module_id"].as_string();
 
+			variant server_version = data_[module_id]["version"];
+
 			if(doc.has_key("current_version")) {
 				variant current_version = doc["current_version"];
-				if(data_[module_id]["version"] <= current_version) {
+				if(server_version <= current_version) {
 					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
 					return;
 				}
@@ -82,7 +84,7 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 
 			const std::string module_path = data_path_ + module_id + ".cfg";
 			if(sys::file_exists(module_path)) {
-				std::string response = "{\nstatus: \"ok\",\nmodule: ";
+				std::string response = "{\nstatus: \"ok\",\nversion: " + server_version.write_json() + ",\nmodule: ";
 				{
 					std::string contents = sys::read_file(module_path);
 					fprintf(stderr, "MANIFEST: %d\n", (int)doc.has_key("manifest"));

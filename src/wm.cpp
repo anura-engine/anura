@@ -38,6 +38,7 @@ namespace graphics
 {
 	namespace
 	{
+		PREF_BOOL(allow_retina, false, "Allow use of retina display resolutions");
 		PREF_INT(msaa, 0, "Amount of multi-sampled AA to use in rendering");
 		PREF_INT(min_window_width, 1024, "Minimum window width when auto-determining window size");
 		PREF_INT(min_window_height, 768, "Minimum window height when auto-determining window size");
@@ -135,6 +136,11 @@ namespace graphics
 
 	void window_manager::create_window(int width, int height)
 	{
+		if(g_allow_retina) {
+			//TODO: add this back in once we deploy a new SDL everywhere
+			//SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
+		}
+
 		if(preferences::auto_size_window()) {
 			const SDL_DisplayMode mode = mode_auto_select();
 			width = width_ = mode.w;
@@ -182,6 +188,11 @@ namespace graphics
 		int w = width_;
 		int h = height_;
 		Uint32 flags = SDL_WINDOW_OPENGL | (preferences::resizable() ? SDL_WINDOW_RESIZABLE : 0);
+
+		if(g_allow_retina) {
+			//TODO: add this back in once we deploy a new SDL everywhere
+			//flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
+		}
 
 		switch(preferences::fullscreen()) {
 			case preferences::FULLSCREEN_WINDOWED: {

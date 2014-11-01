@@ -164,6 +164,7 @@
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
     <ClInclude Include="..\..\src\animation_widget.hpp" />
     <ClInclude Include="..\..\src\asserts.hpp" />
+    <ClInclude Include="..\..\src\auto_update_window.hpp" />
     <ClInclude Include="..\..\src\b2d_ffl.hpp" />
     <ClInclude Include="..\..\src\background.hpp" />
     <ClInclude Include="..\..\src\background_task_pool.hpp" />
@@ -214,6 +215,7 @@
     <ClInclude Include="..\..\src\entity.hpp" />
     <ClInclude Include="..\..\src\entity_fwd.hpp" />
     <ClInclude Include="..\..\src\external_text_editor.hpp" />
+    <ClInclude Include="..\..\src\ffl_weak_ptr.hpp" />
     <ClInclude Include="..\..\src\filesystem.hpp" />
     <ClInclude Include="..\..\src\file_chooser_dialog.hpp" />
     <ClInclude Include="..\..\src\font.hpp" />
@@ -433,6 +435,7 @@
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
     <ClCompile Include="..\..\src\animation_widget.cpp" />
     <ClCompile Include="..\..\src\asserts.cpp" />
+    <ClCompile Include="..\..\src\auto_update_window.cpp" />
     <ClCompile Include="..\..\src\b2d_ffl.cpp" />
     <ClCompile Include="..\..\src\background.cpp" />
     <ClCompile Include="..\..\src\background_task_pool.cpp" />
@@ -527,6 +530,7 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\src\ffl_weak_ptr.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />

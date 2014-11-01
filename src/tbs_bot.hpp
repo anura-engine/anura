@@ -31,6 +31,8 @@
 
 namespace tbs {
 
+class tbs_bot_timer_proxy;
+
 class bot : public game_logic::formula_callable
 {
 public:
@@ -65,6 +67,8 @@ private:
 	game_logic::formula_callable_ptr message_callable_;
 
 	bool has_quit_;
+
+	tbs_bot_timer_proxy* timer_proxy_;
 };
 
 }

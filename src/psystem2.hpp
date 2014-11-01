@@ -80,7 +80,7 @@ namespace graphics
 
 		// General class for emitter objects which encapsulate and exposes physical parameters
 		// Used as a base class for everything that is not 
-		class emit_object : public particle
+		class emit_object : public game_logic::formula_callable, public particle
 		{
 		public:
 			explicit emit_object(particle_system_container* parent, const variant& node) 
@@ -102,6 +102,10 @@ namespace graphics
 			void draw() const {
 				handle_draw();
 			}
+			const particle_system_container* parent_container() const { 
+				return parent_container_; 
+			}
+
 			particle_system_container* parent_container() { 
 				ASSERT_LOG(parent_container_ != NULL, "FATAL: PSYSTEM2: parent container is NULL");
 				return parent_container_; 
@@ -111,6 +115,7 @@ namespace graphics
 			virtual void handle_draw() const {}
 			virtual bool duration_expired() { return false; }
 		private:
+			DECLARE_CALLABLE(emit_object);
 			std::string name_;
 			particle_system_container* parent_container_;
 			emit_object();
@@ -139,7 +144,7 @@ namespace graphics
 		};
 		typedef std::shared_ptr<material> material_ptr;
 
-		class technique  : public emit_object
+		class technique : public emit_object
 		{
 		public:
 			explicit technique(particle_system_container* parent, const variant& node);
@@ -159,7 +164,7 @@ namespace graphics
 			void set_shader(gles2::program_ptr shader);
 			// Direct access here for *speed* reasons.
 			std::vector<particle>& active_particles() { return active_particles_; }
-			std::vector<emitter_ptr>& active_emitters() { return instanced_emitters_; }
+			std::vector<emitter_ptr>& instanced_emitters() { return instanced_emitters_; }
 			std::vector<affector_ptr>& active_affectors() { return instanced_affectors_; }
 			void add_emitter(emitter_ptr e);
 			void add_affector(affector_ptr a);
@@ -167,6 +172,8 @@ namespace graphics
 			virtual void handle_process(float t);
 			virtual void handle_draw() const;
 		private:
+			DECLARE_CALLABLE(technique);
+
 			float default_particle_width_;
 			float default_particle_height_;
 			float default_particle_depth_;
@@ -220,6 +227,8 @@ namespace graphics
 			virtual void handle_draw() const;
 			virtual void handle_process(float t);
 		private:
+			DECLARE_CALLABLE(particle_system);
+
 			void update(float t);
 
 			float elapsed_time_;
@@ -245,6 +254,10 @@ namespace graphics
 
 			void activate_particle_system(const std::string& name);
 			std::vector<particle_system_ptr>& active_particle_systems() { return active_particle_systems_; }
+			const std::vector<particle_system_ptr>& active_particle_systems() const { return active_particle_systems_; }
+
+			std::vector<particle_system_ptr>& particle_systems() { return particle_systems_; }
+			const std::vector<particle_system_ptr>& particle_systems() const { return particle_systems_; }
 
 			particle_system_ptr clone_particle_system(const std::string& name);
 			technique_ptr clone_technique(const std::string& name);
@@ -260,6 +273,16 @@ namespace graphics
 			std::vector<technique_ptr> clone_techniques();
 			std::vector<emitter_ptr> clone_emitters();
 			std::vector<affector_ptr> clone_affectors();
+
+			variant get_ffl_particle_systems() const;
+			variant get_ffl_techniques() const;
+			variant get_ffl_emitters() const;
+			variant get_ffl_affectors() const;
+
+			void set_ffl_particle_systems(variant value);
+			void set_ffl_techniques(variant value);
+			void set_ffl_emitters(variant value);
+			void set_ffl_affectors(variant value);
 
 			void draw() const;
 			void process();
@@ -286,7 +309,7 @@ namespace graphics
 			virtual void handle_process();
 		private:
 			DECLARE_CALLABLE(particle_system_widget);
-			particle_system_container particle_systems_;
+			boost::intrusive_ptr<particle_system_container> particle_systems_;
 			particle_system_widget();
 			particle_system_widget(const particle_system_widget&);
 		};

@@ -24,6 +24,7 @@
 #pragma once
 
 #include "psystem2_fwd.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace graphics
 {
@@ -54,7 +55,10 @@ namespace graphics
 			const glm::vec3& position() const { return position_; }
 			const glm::vec3& scale() const { return scale_; }
 			bool is_emitter_excluded(const std::string& name);
+
+			void set_position(const glm::vec3& pos) { position_ = pos; }
 		private:
+			DECLARE_CALLABLE(affector);
 			bool enabled_;
 			float mass_;
 			glm::vec3 position_;
