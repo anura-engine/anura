@@ -189,7 +189,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "standing_on", "null|custom_obj" },
 	
 	{ "shader", "null|shader_program" },
-	{ "effects", "[object]" },
+	{ "effects", "[shader_program]" },
 	{ "variations", "[string]" },
 	
 	{ "attached_objects", "[custom_obj]" },
