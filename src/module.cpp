@@ -1274,6 +1274,29 @@ void client::perform_install(const std::string& response)
 			ASSERT_LOG(found, "Could not find file locally even though it's in the manifest: " << path.as_string());
 		}
 	}
+
+	//update the module.cfg version to be equal to the version of the module we now have.
+	variant new_module_version = doc["version"];
+
+	const std::string module_cfg_path = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/module.cfg";
+
+	bool wrote_version = false;
+	if(sys::file_exists(module_cfg_path)) {
+		try {
+			variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_NO_PREPROCESSOR);
+			node.add_attr_mutation(variant("version"), new_module_version);
+			sys::write_file(module_cfg_path, node.write_json());
+			wrote_version = true;
+		} catch(...) {
+		}
+	}
+
+	if(!wrote_version) {
+		std::map<variant,variant> m;
+		m[variant("version")] = new_module_version;
+		variant node(&m);
+		sys::write_file(module_cfg_path, node.write_json());
+	}
 }
 
 void client::on_error(std::string response)

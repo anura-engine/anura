@@ -781,7 +781,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			update_window.set_message(msg);
 
-			const float ratio = float(nbytes_obtained)/float(nbytes_needed);
+			const float ratio = nbytes_needed <= 0 ? 0.0 : float(nbytes_obtained)/float(nbytes_needed);
 			update_window.set_progress(ratio);
 			update_window.draw();
 
