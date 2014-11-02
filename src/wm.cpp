@@ -137,8 +137,7 @@ namespace graphics
 	void window_manager::create_window(int width, int height)
 	{
 		if(g_allow_retina) {
-			//TODO: add this back in once we deploy a new SDL everywhere
-			//SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
+			SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
 		}
 
 		if(preferences::auto_size_window()) {
@@ -190,8 +189,7 @@ namespace graphics
 		Uint32 flags = SDL_WINDOW_OPENGL | (preferences::resizable() ? SDL_WINDOW_RESIZABLE : 0);
 
 		if(g_allow_retina) {
-			//TODO: add this back in once we deploy a new SDL everywhere
-			//flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
+			flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
 		}
 
 		switch(preferences::fullscreen()) {
