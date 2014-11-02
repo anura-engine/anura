@@ -1,6 +1,6 @@
 /*
   Simple DirectMedia Layer
-  Copyright (C) 1997-2013 Sam Lantinga <slouken@libsdl.org>
+  Copyright (C) 1997-2014 Sam Lantinga <slouken@libsdl.org>
 
   This software is provided 'as-is', without any express or implied
   warranty.  In no event will the authors be held liable for any damages
@@ -28,6 +28,8 @@
 #ifndef _SDL_pixels_h
 #define _SDL_pixels_h
 
+#include "SDL_stdinc.h"
+
 #include "begin_code.h"
 /* Set up for C function definitions, even when using C++ */
 #ifdef __cplusplus
@@ -39,10 +41,10 @@ extern "C" {
  *
  *  These define alpha as the opacity of a surface.
  */
-/*@{*/
+/* @{ */
 #define SDL_ALPHA_OPAQUE 255
 #define SDL_ALPHA_TRANSPARENT 0
-/*@}*/
+/* @} */
 
 /** Pixel type. */
 enum
@@ -246,7 +248,11 @@ enum
     SDL_PIXELFORMAT_UYVY =      /**< Packed mode: U0+Y0+V0+Y1 (1 plane) */
         SDL_DEFINE_PIXELFOURCC('U', 'Y', 'V', 'Y'),
     SDL_PIXELFORMAT_YVYU =      /**< Packed mode: Y0+V0+Y1+U0 (1 plane) */
-        SDL_DEFINE_PIXELFOURCC('Y', 'V', 'Y', 'U')
+        SDL_DEFINE_PIXELFOURCC('Y', 'V', 'Y', 'U'),
+    SDL_PIXELFORMAT_NV12 =      /**< Planar mode: Y + U/V interleaved  (2 planes) */
+        SDL_DEFINE_PIXELFOURCC('N', 'V', '1', '2'),
+    SDL_PIXELFORMAT_NV21 =      /**< Planar mode: Y + V/U interleaved  (2 planes) */
+        SDL_DEFINE_PIXELFOURCC('N', 'V', '2', '1')
 };
 
 typedef struct SDL_Color
