@@ -389,8 +389,8 @@ void dialog::show_modal()
 		}
 
 		t = t - SDL_GetTicks();
-		if(t < 20) {
-			SDL_Delay(20 - t);
+		if(t < preferences::frame_time_millis()) {
+			SDL_Delay(preferences::frame_time_millis() - t);
 		}
 	}
 }
