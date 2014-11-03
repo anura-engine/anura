@@ -250,6 +250,8 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "ty", "decimal" },
 	{ "tz", "decimal" },
 
+	{ "animated_movements", "[string]" },
+
 	{ "ctrl_user_output", "any" },
 	
 	{ "ctrl_up", "bool" },

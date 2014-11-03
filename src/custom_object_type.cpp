@@ -1460,6 +1460,11 @@ custom_object_type::custom_object_type(const std::string& id, variant node, cons
 					editor_info->add_property(info);
 				}
 
+				if(value["weak"].as_bool(false)) {
+					entry.is_weak = true;
+					ASSERT_LOG(entry.type && variant_type::may_be_null(entry.type), "Object " << id_ << " property " << entry.id << " is marked as weak but has a type which is not compatible with null");
+				}
+
 			} else {
 				if(is_strict_) {
 					entry.set_type = entry.type = get_variant_type_from_value(value);
