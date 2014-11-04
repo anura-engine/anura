@@ -230,12 +230,13 @@ namespace graphics
 			SDL_SetWindowIcon(sdl_window_.get(), wm_icon.get());
 		}
 
+		SDL_GL_GetDrawableSize(sdl_window_.get(), &width_, &height_);
+
 		if(preferences::fullscreen() == preferences::FULLSCREEN_WINDOWED
 			|| preferences::fullscreen() == preferences::FULLSCREEN) {
-			SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
 
-			preferences::set_actual_screen_width(width);
-			preferences::set_actual_screen_height(height);
+			preferences::set_actual_screen_width(width_);
+			preferences::set_actual_screen_height(height_);
 			//preferences::set_virtual_screen_width(800);
 			//preferences::set_virtual_screen_height(600);
 		}
