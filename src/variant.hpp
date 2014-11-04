@@ -230,8 +230,8 @@ public:
 	//strengthen returns a strong reference to the variant if it's
 	//a weak reference (is_weak() is true), otherwise it returns
 	//the variant without modifying.
-	variant weaken() const;
-	variant strengthen() const;
+	void weaken();
+	void strengthen();
 
 	//binds a closure to a lambda function.
 	variant bind_closure(const game_logic::formula_callable* callable);

@@ -1285,27 +1285,24 @@ variant* variant::get_index_mutable(int index)
 	return NULL;
 }
 
-variant variant::weaken() const
+void variant::weaken()
 {
 	if(type_ == VARIANT_TYPE_CALLABLE) {
-		variant result;
-		result.type_ = VARIANT_TYPE_WEAK;
-		result.weak_ = new variant_weak;
-		result.weak_->refcount++;
-		result.weak_->ptr = ffl::weak_ptr<game_logic::formula_callable>(mutable_callable_);
-		return result;
-	}
+		variant_weak* weak = new variant_weak;
+		weak->refcount++;
+		weak->ptr = ffl::weak_ptr<game_logic::formula_callable>(mutable_callable_);
 
-	return *this;
+		release();
+		type_ = VARIANT_TYPE_WEAK;
+		weak_ = weak;
+	}
 }
 
-variant variant::strengthen() const
+void variant::strengthen()
 {
 	if(is_weak()) {
-		return variant(weak_->ptr.get());
+		*this = variant(weak_->ptr.get());
 	}
-
-	return *this;
 }
 
 variant variant::bind_closure(const game_logic::formula_callable* callable)

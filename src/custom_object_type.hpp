@@ -196,7 +196,7 @@ public:
 	const std::map<std::string, variant>& tags() const { return tags_; }
 
 	struct property_entry {
-		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false) {}
+		property_entry() : slot(-1), storage_slot(-1), persistent(true), requires_initialization(false), has_editor_info(false), is_weak(false) {}
 		std::string id;
 		game_logic::const_formula_ptr getter, setter, init;
 		boost::shared_ptr<variant> const_value;
@@ -206,6 +206,7 @@ public:
 		bool persistent;
 		bool requires_initialization;
 		bool has_editor_info;
+		bool is_weak;
 	};
 
 	const std::map<std::string, property_entry>& properties() const { return properties_; }

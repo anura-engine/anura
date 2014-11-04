@@ -129,7 +129,7 @@ namespace graphics
 
 	void window_manager::notify_new_window_size()
 	{
-		SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
+		SDL_GL_GetDrawableSize(sdl_window_.get(), &width_, &height_);
 		screen_fbo_.reset(new fbo(0, 0, width_, height_, preferences::virtual_screen_width(), preferences::virtual_screen_height(), gles2::get_tex_shader()));
 		texture_frame_buffer::rebuild();
 	}
@@ -137,8 +137,7 @@ namespace graphics
 	void window_manager::create_window(int width, int height)
 	{
 		if(g_allow_retina) {
-			//TODO: add this back in once we deploy a new SDL everywhere
-			//SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
+			SDL_SetHint(SDL_HINT_VIDEO_HIGHDPI_DISABLED, "0");
 		}
 
 		if(preferences::auto_size_window()) {
@@ -190,8 +189,7 @@ namespace graphics
 		Uint32 flags = SDL_WINDOW_OPENGL | (preferences::resizable() ? SDL_WINDOW_RESIZABLE : 0);
 
 		if(g_allow_retina) {
-			//TODO: add this back in once we deploy a new SDL everywhere
-			//flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
+			flags = flags | SDL_WINDOW_ALLOW_HIGHDPI;
 		}
 
 		switch(preferences::fullscreen()) {
@@ -232,12 +230,13 @@ namespace graphics
 			SDL_SetWindowIcon(sdl_window_.get(), wm_icon.get());
 		}
 
+		SDL_GL_GetDrawableSize(sdl_window_.get(), &width_, &height_);
+
 		if(preferences::fullscreen() == preferences::FULLSCREEN_WINDOWED
 			|| preferences::fullscreen() == preferences::FULLSCREEN) {
-			SDL_GetWindowSize(sdl_window_.get(), &width_, &height_);
 
-			preferences::set_actual_screen_width(width);
-			preferences::set_actual_screen_height(height);
+			preferences::set_actual_screen_width(width_);
+			preferences::set_actual_screen_height(height_);
 			//preferences::set_virtual_screen_width(800);
 			//preferences::set_virtual_screen_height(600);
 		}
@@ -455,7 +454,7 @@ namespace graphics
 				SDL_SetWindowSize(sdl_window_.get(), width, height);
 				SDL_SetWindowPosition(sdl_window_.get(), SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED);
 
-				std::cerr << "set_window_size: SDL_GetWindowSize = " << width << "," << height << " (" << width << "," << height << ")" << std::endl;
+				std::cerr << "set_window_size: SDL_GL_GetDrawableSize = " << width << "," << height << " (" << width << "," << height << ")" << std::endl;
 				preferences::set_actual_screen_width(width);
 				preferences::set_actual_screen_height(height);
 				preferences::set_virtual_screen_width(width);
@@ -472,8 +471,8 @@ namespace graphics
 				SDL_SetWindowPosition(sdl_window_.get(), 0, 0);
 
 				int w, h;
-				SDL_GetWindowSize(sdl_window_.get(), &w, &h);
-				std::cerr << "set_window_size: SDL_GetWindowSize = " << w << "," << h << " (" << width << "," << height << ")" << std::endl;
+				SDL_GL_GetDrawableSize(sdl_window_.get(), &w, &h);
+				std::cerr << "set_window_size: SDL_GL_GetDrawableSize = " << w << "," << h << " (" << width << "," << height << ")" << std::endl;
 				preferences::set_actual_screen_width(width);
 				preferences::set_actual_screen_height(height);
 				preferences::set_virtual_screen_width(width);
@@ -524,6 +523,22 @@ namespace graphics
 	// present a fake framebuffer.
 	void window_manager::map_mouse_position(int* x, int* y)
 	{
+		if(sdl_window_) {
+			int window_w = 0, window_h = 0, drawable_w = 0, drawable_h = 0;
+			SDL_GetWindowSize(sdl_window_.get(), &window_w, &window_h);
+			SDL_GL_GetDrawableSize(sdl_window_.get(), &drawable_w, &drawable_h);
+
+			if(x) {
+				*x *= drawable_w;
+				*x /= window_w;
+			}
+
+			if(y) {
+				*y *= drawable_h;
+				*y /= window_h;
+			}
+		}
+
 		if(screen_fbo_ == NULL) {
 			return;
 		}
@@ -550,7 +565,7 @@ namespace graphics
 
 /*
 		int width = 0, height = 0;
-		SDL_GetWindowSize(global_main_window, &width, &height);
+		SDL_GL_GetDrawableSize(global_main_window, &width, &height);
 
 		if((framebuffer_fbo->width()*1000)/framebuffer_fbo->height() < (width*1000)/height) {
 			//actual screen wider than the framebuffer, letterboxing

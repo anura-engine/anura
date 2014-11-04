@@ -438,7 +438,7 @@ int show_simple_option_dialog(level& lvl, const std::string& text, const std::ve
 
 		draw_scene(lvl, last_draw_position(), &lvl.player()->get_entity());
 		get_main_window()->swap();
-		SDL_Delay(20);
+		SDL_Delay(preferences::frame_time_millis());
 	}
 
 	lvl.remove_speech_dialog();
@@ -1841,7 +1841,7 @@ public:
 		for(int n = 0; n != 50; ++n) {
 			draw_scene(lvl, pos, focus_.get());
 			get_main_window()->swap();
-			SDL_Delay(20);
+			SDL_Delay(preferences::frame_time_millis());
 		}
 	}
 private:
@@ -2239,7 +2239,7 @@ private:
 #endif
 
 		get_main_window()->swap();
-		SDL_Delay(20);
+		SDL_Delay(preferences::frame_time_millis());
 	}
 
 	std::vector<variant> args_;
