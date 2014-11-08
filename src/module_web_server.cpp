@@ -72,7 +72,13 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 		if(msg_type == "download_module") {
 			const std::string module_id = doc["module_id"].as_string();
 
+			if(data_.has_key(module_id) == false) {
+				send_msg(socket, "text/json", "{ status: \"no_such_module\" }", "");
+				return;
+			}
+
 			variant server_version = data_[module_id]["version"];
+			ASSERT_LOG(server_version.is_list(), "Invalid version for module " << module_id << ": " << server_version.write_json());
 
 			if(doc.has_key("current_version")) {
 				variant current_version = doc["current_version"];
@@ -276,6 +282,8 @@ void module_web_server::handle_post(socket_ptr socket, variant doc, const http::
 			{
 				std::map<variant, variant> summary;
 				summary[variant("version")] = module_node[variant("version")];
+				ASSERT_LOG(summary[variant("version")].is_list(), "Invalid version in replicate: " << summary[variant("version")].write_json());
+
 				summary[variant("name")] = module_node[variant("name")];
 				summary[variant("description")] = module_node[variant("description")];
 				summary[variant("author")] = module_node[variant("author")];
