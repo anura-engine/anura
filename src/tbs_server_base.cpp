@@ -69,6 +69,8 @@ namespace tbs
 			return game_info_ptr();
 		}
 
+		g->nlast_touch = nheartbeat_;
+
 		std::vector<variant> users = msg["users"].as_list();
 		for(int i = 0; i != users.size(); ++i) {
 			const std::string user = users[i]["user"].as_string();
