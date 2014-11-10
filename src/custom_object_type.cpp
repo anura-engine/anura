@@ -880,10 +880,12 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 
 			summary[variant("prototype_paths")] = variant(&proto_paths_v);
 
-			if(node["animation"].is_list()) {
-				summary[variant("animation")] = node["animation"][0];
-			} else if(node["animation"].is_map()) {
-				summary[variant("animation")] = node["animation"];
+			variant anim_var = node["animation"];
+
+			if(anim_var.is_list() && anim_var.num_elements() > 0) {
+				summary[variant("animation")] = anim_var[0];
+			} else if(anim_var.is_map()) {
+				summary[variant("animation")] = anim_var;
 			} else {
 				summary[variant("animation")] = json::parse_from_file("data/default-animation.cfg");
 			}
@@ -1072,7 +1074,7 @@ void CustomObjectType::initEventHandlers(variant node,
 				handlers[event_id] = (*base_handlers)[event_id];
 			} else {
 				std::unique_ptr<CustomObjectCallableModifyScope> modify_scope;
-				const variant_type_ptr arg_type = get_object_event_arg_type(event_id);
+				const variant_type_ptr arg_type = get_object_event_arg_type(get_object_event_id_maybe_proto(event));
 				if(arg_type) {
 					modify_scope.reset(new CustomObjectCallableModifyScope(*callable_definition_, CUSTOM_OBJECT_ARG, arg_type));
 				}
@@ -1473,6 +1475,11 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 					ASSERT_LOG(EditorInfo, "Object type " << id_ << " must have EditorInfo section since some of its properties have EditorInfo sections");
 
 					EditorInfo->addProperty(info);
+				}
+
+				if(value["weak"].as_bool(false)) {
+					entry.is_weak = true;
+					ASSERT_LOG(entry.type && variant_type::may_be_null(entry.type), "Object " << id_ << " property " << entry.id << " is marked as weak but has a type which is not compatible with null");
 				}
 
 			} else {

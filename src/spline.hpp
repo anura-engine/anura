@@ -26,10 +26,11 @@
 #pragma once
 
 #include <vector>
+#include <glm/glm.hpp>
 
 namespace geometry 
 {
-	typedef std::pair<double,double> control_point;
+	typedef glm::dvec2 control_point;
 	typedef std::vector<control_point> control_point_vector;
 
 	struct vec4
@@ -60,11 +61,11 @@ namespace geometry
  
 				// decomposition loop
 				for(i = 1; i < n-1; i++) {
-					double sig = (cps[i].first-cps[i-1].first)/(cps[i+1].first-cps[i-1].first);
+					const double sig = (cps[i].x-cps[i-1].x)/(cps[i+1].x-cps[i-1].x);
 					p = sig * z_prime_prime_[i-1] + 2.0;
 					z_prime_prime_[i] = (sig-1.0)/p;
-					u[i] = (cps[i+1].second-cps[i].second)/(cps[i+1].first-cps[i].first) - (cps[i].second-cps[i-1].second)/(cps[i].first-cps[i-1].first);
-					u[i] = (6.0*u[i]/(cps[i+1].first-cps[i-1].first)-sig*u[i-1])/p;
+					u[i] = (cps[i+1].y-cps[i].y)/(cps[i+1].x-cps[i].x) - (cps[i].y-cps[i-1].y)/(cps[i].x-cps[i-1].x);
+					u[i] = (6.0*u[i]/(cps[i+1].x-cps[i-1].x)-sig*u[i-1])/p;
 				}
  
 				// back-substitution loop
@@ -81,24 +82,23 @@ namespace geometry
 
 				while(hi - lo > 1) {
 						k = (hi + lo) >> 1;
-						if(control_points_[k].first > x) {
+						if(control_points_[k].x > x) {
 								hi = k;
 						} else {
 								lo = k;
 						}
 				}
-				h = control_points_[hi].first - control_points_[lo].first;
+				h = control_points_[hi].x - control_points_[lo].x;
 				ASSERT_LOG(h != 0.0, "FATAL: SPLINE: bad value in call to spline::interpolate.")
-				a = (control_points_[hi].first - x)/h;
-				b = (x - control_points_[lo].first)/h;
-				return a*control_points_[lo].second + b*control_points_[hi].second + ((a*a*a-a)*z_prime_prime_[lo] + (b*b*b-b)*z_prime_prime_[hi])*(h*h)/6.0;
+				a = (control_points_[hi].x - x)/h;
+				b = (x - control_points_[lo].x)/h;
+				return a*control_points_[lo].y + b*control_points_[hi].y + ((a*a*a-a)*z_prime_prime_[lo] + (b*b*b-b)*z_prime_prime_[hi])*(h*h)/6.0;
 			}
 		private:
 			control_point_vector control_points_;
 			// array of second derivatives
 			std::vector<double> z_prime_prime_;
 		
-			spline();
 			spline(const spline&);
 	};
 }

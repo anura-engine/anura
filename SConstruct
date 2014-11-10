@@ -35,10 +35,11 @@ env = Environment(options = opts, CPPPATH = [".","../../include"])
 if use_lua:
     env.Append(CXXFLAGS=["-DUSE_LUA"])
     env.ParseConfig("pkg-config --libs --cflags lua5.2")
+env.ParseConfig("pkg-config --libs --cflags cairo freetype2")
 env.ParseConfig("sdl2-config --libs --cflags")
 env.Append(LIBS = ["SDL2_mixer", "SDL2_image", "SDL2_ttf"])
 env.Append(LIBS = ["GL", "GLEW", "boost_filesystem", "boost_regex", "boost_system", "boost_iostreams", "png", "z"])
-env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP"], LINKFLAGS = ["-pthread"])
+env.Append(CXXFLAGS= ["-pthread", "-DIMPLEMENT_SAVE_PNG", "-DUSE_ISOMAP", "-DUSE_BOX2D"], LINKFLAGS = ["-pthread"])
 if sys.platform.startswith('linux'):
     env.Append(LIBS = ["X11"])
 

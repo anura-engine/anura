@@ -195,17 +195,17 @@
 		C06495251713620E00D8F372 /* gles2.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06495231713620E00D8F372 /* gles2.cpp */; };
 		C06FF3F11740B9F000377772 /* formula_visualize_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C06FF3EF1740B9F000377772 /* formula_visualize_widget.cpp */; };
 		C06FF3F31741751800377772 /* libboost_filesystem.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
-		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; };
+		C06FF3F41741753F00377772 /* libboost_filesystem.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C06FF3F21741751800377772 /* libboost_filesystem.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47A119443FC000F1190E /* libfontconfig.1.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
 		C07A47A219443FC000F1190E /* libglib-2.0.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
 		C07A47A319443FC000F1190E /* libpixman-1.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; };
-		C07A47A419443FC900F1190E /* libfontconfig.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; };
-		C07A47A519443FCB00F1190E /* libglib-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; };
-		C07A47A619443FCE00F1190E /* libpixman-1.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; };
+		C07A47A419443FC900F1190E /* libfontconfig.1.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479E19443FC000F1190E /* libfontconfig.1.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C07A47A519443FCB00F1190E /* libglib-2.0.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A479F19443FC000F1190E /* libglib-2.0.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C07A47A619443FCE00F1190E /* libpixman-1.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A019443FC000F1190E /* libpixman-1.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47A8194440A400F1190E /* libcairo.2.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; };
-		C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; };
+		C07A47A9194440B500F1190E /* libcairo.2.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47A7194440A400F1190E /* libcairo.2.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47AB1944487300F1190E /* libfreetype.6.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; };
-		C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; };
+		C07A47AC1944487C00F1190E /* libfreetype.6.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47AA1944487300F1190E /* libfreetype.6.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C07A47CE19444C2000F1190E /* color.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47AE19444C2000F1190E /* color.cpp */; };
 		C07A47CF19444C2000F1190E /* geometry.inl in Resources */ = {isa = PBXBuildFile; fileRef = C07A47B119444C2000F1190E /* geometry.inl */; };
 		C07A47D019444C2000F1190E /* logger.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47B219444C2000F1190E /* logger.cpp */; };
@@ -222,9 +222,10 @@
 		C07A47DB19444C2000F1190E /* svg_utils.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47CB19444C2000F1190E /* svg_utils.cpp */; };
 		C07A47DE1944595400F1190E /* ft_iface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C07A47DC1944595400F1190E /* ft_iface.cpp */; };
 		C07A47E01944696C00F1190E /* libintl.8.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C07A47DF1944696C00F1190E /* libintl.8.dylib */; };
-		C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47DF1944696C00F1190E /* libintl.8.dylib */; };
+		C07A47E21944699300F1190E /* libintl.8.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C07A47DF1944696C00F1190E /* libintl.8.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C08047DE1944884300AA7C82 /* libpng16.16.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C08047DD1944884300AA7C82 /* libpng16.16.dylib */; };
-		C08047DF1944888E00AA7C82 /* libpng16.16.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08047DD1944884300AA7C82 /* libpng16.16.dylib */; };
+		C08047DF1944888E00AA7C82 /* libpng16.16.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08047DD1944884300AA7C82 /* libpng16.16.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C08602481A06E51A00B860FA /* auto_update_window.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08602461A06E51A00B860FA /* auto_update_window.cpp */; };
 		C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */; };
 		C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08C43EE174C6D8900A46B15 /* formula_callable.cpp */; };
 		C08DF5AA178A5511006E061D /* frustum.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08DF5A8178A5510006E061D /* frustum.cpp */; };
@@ -235,10 +236,10 @@
 		C08E628117B5EC3B0097B642 /* SDL2_mixer.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */; };
 		C08E628217B5EC3B0097B642 /* SDL2_ttf.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */; };
 		C08E628317B5EC3B0097B642 /* SDL2.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = C08E627F17B5EC3B0097B642 /* SDL2.framework */; };
-		C08E628417B5EC500097B642 /* SDL2_image.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627C17B5EC3B0097B642 /* SDL2_image.framework */; };
-		C08E628517B5EC500097B642 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */; };
-		C08E628617B5EC500097B642 /* SDL2_ttf.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */; };
-		C08E628717B5EC500097B642 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627F17B5EC3B0097B642 /* SDL2.framework */; };
+		C08E628417B5EC500097B642 /* SDL2_image.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627C17B5EC3B0097B642 /* SDL2_image.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C08E628517B5EC500097B642 /* SDL2_mixer.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627D17B5EC3B0097B642 /* SDL2_mixer.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C08E628617B5EC500097B642 /* SDL2_ttf.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627E17B5EC3B0097B642 /* SDL2_ttf.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C08E628717B5EC500097B642 /* SDL2.framework in CopyFiles */ = {isa = PBXBuildFile; fileRef = C08E627F17B5EC3B0097B642 /* SDL2.framework */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C08F30571818E80B005BDCDB /* lua_iface.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C08F30551818E80B005BDCDB /* lua_iface.cpp */; };
 		C090AAAF177C14200046CC87 /* obj_reader.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAAD177C14200046CC87 /* obj_reader.cpp */; };
 		C090AAB2177C14470046CC87 /* data_blob.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C090AAB0177C14470046CC87 /* data_blob.cpp */; };
@@ -259,6 +260,7 @@
 		C092656017D48CF50035C0CB /* layout_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C092655E17D48CF50035C0CB /* layout_widget.cpp */; };
 		C093F3AB17A470F600D433AA /* user_voxel_object.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3A917A470F600D433AA /* user_voxel_object.cpp */; };
 		C093F3AE17A4711300D433AA /* skybox.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C093F3AC17A4711300D433AA /* skybox.cpp */; };
+		C0A1595A19F0F888009C25B3 /* ffl_weak_ptr.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A1595819F0F888009C25B3 /* ffl_weak_ptr.cpp */; };
 		C0A29484184B1303002B757E /* psystem2_affectors.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A2947B184B1303002B757E /* psystem2_affectors.cpp */; };
 		C0A29485184B1303002B757E /* psystem2_emitters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A2947D184B1303002B757E /* psystem2_emitters.cpp */; };
 		C0A29486184B1303002B757E /* psystem2_parameters.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0A29480184B1303002B757E /* psystem2_parameters.cpp */; };
@@ -279,16 +281,16 @@
 		C0D6EB7116DB25D700B5ABCA /* bar_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB6F16DB25D700B5ABCA /* bar_widget.cpp */; };
 		C0D6EB7416DB285D00B5ABCA /* custom_object_widget.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0D6EB7216DB25EA00B5ABCA /* custom_object_widget.cpp */; };
 		C0D78B5F171F215D00980007 /* libpng15.15.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; };
-		C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; };
+		C0D78B60171F239D00980007 /* libpng15.15.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0D78B5E171F215D00980007 /* libpng15.15.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0406533163F790000F84F94 /* sys.cpp */; };
 		C0EF2A5616215F78004CD227 /* libboost_iostreams.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5316215F78004CD227 /* libboost_iostreams.dylib */; };
 		C0EF2A5716215F78004CD227 /* libboost_regex.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5416215F78004CD227 /* libboost_regex.dylib */; };
 		C0EF2A5816215F78004CD227 /* libboost_system.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5516215F78004CD227 /* libboost_system.dylib */; };
-		C0EF2A5A1622296E004CD227 /* libboost_iostreams.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5316215F78004CD227 /* libboost_iostreams.dylib */; };
-		C0EF2A5B16222973004CD227 /* libboost_regex.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5416215F78004CD227 /* libboost_regex.dylib */; };
-		C0EF2A5C16222978004CD227 /* libboost_system.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5516215F78004CD227 /* libboost_system.dylib */; };
+		C0EF2A5A1622296E004CD227 /* libboost_iostreams.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5316215F78004CD227 /* libboost_iostreams.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0EF2A5B16222973004CD227 /* libboost_regex.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5416215F78004CD227 /* libboost_regex.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
+		C0EF2A5C16222978004CD227 /* libboost_system.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5516215F78004CD227 /* libboost_system.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0EF2A5E16229160004CD227 /* libGLEW.1.9.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; };
-		C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; };
+		C0EF2A5F1622918D004CD227 /* libGLEW.1.9.0.dylib in CopyFiles */ = {isa = PBXBuildFile; fileRef = C0EF2A5D16229160004CD227 /* libGLEW.1.9.0.dylib */; settings = {ATTRIBUTES = (CodeSignOnCopy, ); }; };
 		C0F5E46B169AACF4005ADCF5 /* language_dialog.cpp in Sources */ = {isa = PBXBuildFile; fileRef = C0F5E468169AAC97005ADCF5 /* language_dialog.cpp */; };
 /* End PBXBuildFile section */
 
@@ -763,6 +765,8 @@
 		C07A47DF1944696C00F1190E /* libintl.8.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libintl.8.dylib; sourceTree = "<group>"; };
 		C08047DD1944884300AA7C82 /* libpng16.16.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; path = libpng16.16.dylib; sourceTree = "<group>"; };
 		C0812FCC17EED7C400ADDA70 /* modules */ = {isa = PBXFileReference; lastKnownFileType = folder; name = modules; path = ../modules; sourceTree = "<group>"; };
+		C08602461A06E51A00B860FA /* auto_update_window.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = auto_update_window.cpp; sourceTree = "<group>"; };
+		C08602471A06E51A00B860FA /* auto_update_window.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = auto_update_window.hpp; sourceTree = "<group>"; };
 		C089D451162BDF7B009D2878 /* master-config.cfg */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text; name = "master-config.cfg"; path = "../master-config.cfg"; sourceTree = "<group>"; };
 		C08C43EB174C6BF300A46B15 /* formula_callable_visitor.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = formula_callable_visitor.cpp; sourceTree = "<group>"; };
 		C08C43EC174C6BF300A46B15 /* formula_callable_visitor.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = formula_callable_visitor.hpp; sourceTree = "<group>"; };
@@ -818,6 +822,8 @@
 		C093F3AA17A470F600D433AA /* user_voxel_object.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = user_voxel_object.hpp; sourceTree = "<group>"; };
 		C093F3AC17A4711300D433AA /* skybox.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = skybox.cpp; sourceTree = "<group>"; };
 		C093F3AD17A4711300D433AA /* skybox.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = skybox.hpp; sourceTree = "<group>"; };
+		C0A1595819F0F888009C25B3 /* ffl_weak_ptr.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = ffl_weak_ptr.cpp; sourceTree = "<group>"; };
+		C0A1595919F0F888009C25B3 /* ffl_weak_ptr.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = ffl_weak_ptr.hpp; sourceTree = "<group>"; };
 		C0A2947A184B126F002B757E /* spline.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = spline.hpp; sourceTree = "<group>"; };
 		C0A2947B184B1303002B757E /* psystem2_affectors.cpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.cpp; path = psystem2_affectors.cpp; sourceTree = "<group>"; };
 		C0A2947C184B1303002B757E /* psystem2_affectors.hpp */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.cpp.h; path = psystem2_affectors.hpp; sourceTree = "<group>"; };
@@ -982,6 +988,10 @@
 		C010C5BC160AFD4C006E7D90 /* src */ = {
 			isa = PBXGroup;
 			children = (
+				C08602461A06E51A00B860FA /* auto_update_window.cpp */,
+				C08602471A06E51A00B860FA /* auto_update_window.hpp */,
+				C0A1595819F0F888009C25B3 /* ffl_weak_ptr.cpp */,
+				C0A1595919F0F888009C25B3 /* ffl_weak_ptr.hpp */,
 				C07A47AD19444C1000F1190E /* svg */,
 				C0CB6CF91933E62C004A6450 /* cairo.cpp */,
 				C0CB6CFB1933E631004A6450 /* cairo.hpp */,
@@ -1546,7 +1556,7 @@
 		C010C564160AFAD9006E7D90 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
-				LastUpgradeCheck = 0510;
+				LastUpgradeCheck = 0610;
 				ORGANIZATIONNAME = "Richard Kettering";
 			};
 			buildConfigurationList = C010C567160AFAD9006E7D90 /* Build configuration list for PBXProject "Frogatto" */;
@@ -1613,6 +1623,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				C08602481A06E51A00B860FA /* auto_update_window.cpp in Sources */,
 				C00160CF16A2A8A7001DAEB9 /* http_server.cpp in Sources */,
 				C0DDFDC6163F7FF800F727DD /* sys.cpp in Sources */,
 				C0AECE0A18E541BD00CD3161 /* uuid.cpp in Sources */,
@@ -1822,6 +1833,7 @@
 				C0AD75141834707D00FAFA3D /* VoronoiDiagramGenerator.cpp in Sources */,
 				C08C43ED174C6BF300A46B15 /* formula_callable_visitor.cpp in Sources */,
 				C08C43EF174C6D8900A46B15 /* formula_callable.cpp in Sources */,
+				C0A1595A19F0F888009C25B3 /* ffl_weak_ptr.cpp in Sources */,
 				C0917B1117533AA7004307B0 /* formula_interface.cpp in Sources */,
 				C0917B1617670039004307B0 /* camera.cpp in Sources */,
 				C07A47D719444C2000F1190E /* svg_path_parse.cpp in Sources */,
@@ -1978,6 +1990,8 @@
 					"-Wno-deprecated-register",
 					"-Wno-redeclared-class-member",
 					"-Wno-constexpr-not-const",
+					"-Wno-backslash-newline-escape",
+					"-Wno-extern-c-compat",
 				);
 				WRAPPER_EXTENSION = app;
 			};
@@ -2044,6 +2058,8 @@
 					"-Wno-deprecated-register",
 					"-Wno-redeclared-class-member",
 					"-Wno-constexpr-not-const",
+					"-Wno-backslash-newline-escape",
+					"-Wno-extern-c-compat",
 				);
 				WRAPPER_EXTENSION = app;
 			};

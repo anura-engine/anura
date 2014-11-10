@@ -56,6 +56,7 @@
 #include "light.hpp"
 #include "load_level.hpp"
 #include "message_dialog.hpp"
+#include "module.hpp"
 #include "object_events.hpp"
 #include "pause_game_dialog.hpp"
 #include "player_info.hpp"
@@ -114,7 +115,7 @@ namespace
 		// XXX we should read the server address from some sort of configuration file.
 		using std::placeholders::_1;
 		http_client client("www.theargentlark.com", "80");
-		client.send_request("POST /cgi-bin/upload-screenshot.pl", 
+		client.send_request("POST /cgi-bin/upload-screenshot.pl?module=" + module::get_module_name(), 
 			base64::b64encode(sys::read_file(file)), 
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, false),
 			std::bind(&upload_screenshot_info::finished, info.get(), _1, true),
@@ -408,6 +409,8 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 	static const int MouseDragStartID = get_object_event_id("drag_start");
 	static const int MouseDragEndID = get_object_event_id("drag_end");
 
+	static const int MouseWheelID = get_object_event_id("mouse_wheel");
+
 	if(paused) {
 		// skip mouse event handling when paused.
 		// XXX: when we become unpaused we need to reset the state of drag operations
@@ -422,6 +425,16 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 	switch(event.type)
 	{
+		case SDL_MOUSEWHEEL: {
+			game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+			callable->add("yscroll", variant(event.wheel.y));
+			std::vector<entity_ptr> chars = lvl_->get_active_chars();
+			for(auto e : chars) {
+				e->handle_event(MouseWheelID, callable.get());
+			}
+			break;
+		}
+
 		case SDL_MOUSEBUTTONDOWN:
 		case SDL_MOUSEBUTTONUP:
 		mouse_drag_count_ = 0;
@@ -1393,6 +1406,10 @@ bool LevelRunner::play_cycle()
 				}
 				break;
 			}
+			case SDL_MOUSEWHEEL:
+				handle_mouse_events(event);
+				break;
+
 #if defined(__ANDROID__)
             case SDL_JOYBUTTONUP:
             case SDL_JOYBUTTONDOWN:

@@ -11,6 +11,7 @@ objects = \
 	src/animation_preview_widget.o \
 	src/animation_widget.o \
 	src/asserts.o \
+	src/auto_update_window.o \
 	src/b2d_ffl.o \
 	src/background.o \
 	src/background_task_pool.o \
@@ -66,6 +67,7 @@ objects = \
 	src/entity.o \
 	src/fbo.o \
 	src/fbo_scene.o \
+	src/ffl_weak_ptr.o \
 	src/file_chooser_dialog.o \
 	src/filesystem.o \
 	src/font.o \

@@ -165,6 +165,7 @@
     <ClInclude Include="..\..\src\animation_widget.hpp" />
     <ClInclude Include="..\..\src\array_callable.hpp" />
     <ClInclude Include="..\..\src\asserts.hpp" />
+    <ClInclude Include="..\..\src\auto_update_window.hpp" />
     <ClInclude Include="..\..\src\b2d_ffl.hpp" />
     <ClInclude Include="..\..\src\background.hpp" />
     <ClInclude Include="..\..\src\background_task_pool.hpp" />
@@ -477,6 +478,7 @@
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
     <ClCompile Include="..\..\src\animation_widget.cpp" />
     <ClCompile Include="..\..\src\asserts.cpp" />
+    <ClCompile Include="..\..\src\auto_update_window.cpp" />
     <ClCompile Include="..\..\src\b2d_ffl.cpp" />
     <ClCompile Include="..\..\src\background.cpp" />
     <ClCompile Include="..\..\src\background_task_pool.cpp" />
@@ -571,6 +573,7 @@
     <ClCompile Include="..\..\src\editor_variable_info.cpp" />
     <ClCompile Include="..\..\src\entity.cpp" />
     <ClCompile Include="..\..\src\external_text_editor.cpp" />
+    <ClCompile Include="..\..\src\ffl_weak_ptr.cpp" />
     <ClCompile Include="..\..\src\filesystem-android.cpp" />
     <ClCompile Include="..\..\src\filesystem.cpp" />
     <ClCompile Include="..\..\src\file_chooser_dialog.cpp" />
@@ -801,8 +804,8 @@
     <Library Include="..\..\external\lib\cairo.lib" />
     <Library Include="..\..\external\lib\freetype253.lib" />
     <Library Include="..\..\external\lib\libpng16.lib" />
-    <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
-    <Library Include="c:\projects\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
+    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2main.lib" />
+    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2.lib" />
     <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />

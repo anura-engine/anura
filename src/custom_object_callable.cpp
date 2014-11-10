@@ -194,7 +194,7 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "standing_on", "null|custom_obj" },
 	
 		{ "shader", "null|shader_program" },
-		{ "effects", "[object]" },
+	{ "effects", "[shader_program]" },
 		{ "variations", "[string]" },
 	
 		{ "attached_objects", "[custom_obj]" },
@@ -253,6 +253,8 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "tx", "decimal" },
 		{ "ty", "decimal" },
 		{ "tz", "decimal" },
+
+	{ "animated_movements", "[string]" },
 
 		{ "ctrl_user_output", "any" },
 	

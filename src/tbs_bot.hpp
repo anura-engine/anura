@@ -36,7 +36,9 @@
 
 namespace tbs 
 {
-	class bot : public game_logic::FormulaCallable
+class tbs_bot_timer_proxy;
+
+class bot : public game_logic::FormulaCallable
 	{
 	public:
 		bot(boost::asio::io_service& io_service, const std::string& host, const std::string& port, variant v);
@@ -50,6 +52,8 @@ namespace tbs
 		void handle_response(const std::string& type, game_logic::FormulaCallablePtr callable);
 
 		variant generate_report() const;
+
+	int session_id_;
 
 		std::string host_, port_;
 		std::vector<variant> script_;
@@ -66,5 +70,9 @@ namespace tbs
 
 		std::string message_type_;
 		game_logic::FormulaCallablePtr message_callable_;
+
+	bool has_quit_;
+
+	tbs_bot_timer_proxy* timer_proxy_;
 	};
 }

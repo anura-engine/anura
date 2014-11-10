@@ -642,7 +642,11 @@ namespace preferences
 	}
 	
 	std::string dlc_path() {
+#if defined(_MSC_VER)
+		std::string result(GetAppDataPath() + "/" + module::get_module_name() + "/dlc");
+#else
 		std::string result(preferences_path_ + "/dlc");
+#endif
 		expand_path(result);
 		return result;
 	}

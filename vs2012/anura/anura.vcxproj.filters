@@ -1709,6 +1709,12 @@
     <ClCompile Include="..\..\src\ft_iface.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\ffl_weak_ptr.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\auto_update_window.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\kre\AttributeSet.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>

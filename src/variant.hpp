@@ -81,6 +81,7 @@ struct variant_fn;
 struct variant_generic_fn;
 struct variant_multi_fn;
 struct variant_delayed;
+struct variant_weak;
 
 struct type_error 
 {
@@ -187,12 +188,13 @@ public:
 	bool is_generic_function() const { return type_ == VARIANT_TYPE_GENERIC_FUNCTION; }
 	int as_int(int default_value=0) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_DECIMAL) { return int( decimal_value_/VARIANT_DECIMAL_PRECISION ); } if(type_ == VARIANT_TYPE_BOOL) { return bool_value_ ? 1 : 0; } must_be(VARIANT_TYPE_INT); return int_value_; }
 	decimal as_decimal(decimal default_value=decimal()) const { if(type_ == VARIANT_TYPE_NULL) { return default_value; } if(type_ == VARIANT_TYPE_INT) { return decimal::from_raw_value(int64_t(int_value_)*VARIANT_DECIMAL_PRECISION); } must_be(VARIANT_TYPE_DECIMAL); return decimal::from_raw_value(decimal_value_); }
-	float as_float(float value=0) const { return float(as_decimal(decimal(value)).as_float()); }
+	float as_float(float value=0) const { return static_cast<float>(as_decimal(decimal(value)).as_float()); }
 	double as_double(double value=0) const { return as_decimal(decimal(value)).as_float(); }
 	bool as_bool(bool default_value) const;
 	bool as_bool() const;
 
 	bool is_list() const { return type_ == VARIANT_TYPE_LIST; }
+	bool is_weak() const { return type_ == VARIANT_TYPE_WEAK; }
 
 	std::vector<variant> as_list() const;
 	const std::map<variant,variant>& as_map() const;
@@ -227,10 +229,18 @@ public:
 	//functions which look up maps and lists and gets direct access by address
 	//to the member values. These are dangerous functions which should be
 	//used judiciously!
-	variant* get_attr_mutable(variant key);
-	variant* get_index_mutable(int index);
+	variant *get_attr_mutable(variant key);
+	variant *get_index_mutable(int index);
 
 	const void* get_addr() const { return list_; }
+
+	//weaken returns a weak reference to the variant if it's some kind
+	//of reference. Otherwise it returns the variant without modifying.
+	//strengthen returns a strong reference to the variant if it's
+	//a weak reference (is_weak() is true), otherwise it returns
+	//the variant without modifying.
+	void weaken();
+	void strengthen();
 
 	//binds a closure to a lambda function.
 	variant bind_closure(const game_logic::FormulaCallable* callable);
@@ -314,7 +324,7 @@ public:
 	void write_json(std::ostream& s, write_flags flags=FSON_MODE) const;
 	void write_json_pretty(std::ostream& s, std::string indent, write_flags flags=FSON_MODE) const;
 
-	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_INVALID };
+	enum TYPE { VARIANT_TYPE_NULL, VARIANT_TYPE_BOOL, VARIANT_TYPE_INT, VARIANT_TYPE_DECIMAL, VARIANT_TYPE_CALLABLE, VARIANT_TYPE_CALLABLE_LOADING, VARIANT_TYPE_LIST, VARIANT_TYPE_STRING, VARIANT_TYPE_MAP, VARIANT_TYPE_FUNCTION, VARIANT_TYPE_GENERIC_FUNCTION, VARIANT_TYPE_MULTI_FUNCTION, VARIANT_TYPE_DELAYED, VARIANT_TYPE_WEAK, VARIANT_TYPE_INVALID };
 	TYPE type() const { return type_; }
 
 	void write_function(std::ostream& s) const;
@@ -370,6 +380,7 @@ private:
 		variant_generic_fn* generic_fn_;
 		variant_multi_fn* multi_fn_;
 		variant_delayed* delayed_;
+		variant_weak* weak_;
 		debug_info* debug_info_;
 
 		int64_t value_;

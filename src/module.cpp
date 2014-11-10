@@ -66,10 +66,18 @@ namespace module
 		}
 
 		game_logic::ConstFormulaCallablePtr module_args;
+
+std::string core_module_name;
+}
+
+void set_core_module_name(const std::string& module_name)
+{
+	core_module_name = module_name;
 	}
 
 	const std::string get_module_name(){
-		return loaded_paths().empty() ? "frogatto" : loaded_paths()[0].name_;
+	ASSERT_LOG(core_module_name.empty() == false, "Do not have a module name set");
+	return core_module_name;
 	}
 
 	const std::string get_module_pretty_name() {
@@ -292,14 +300,17 @@ namespace module
 	}
 
 	const std::string make_base_module_path(const std::string& name) {
+	fprintf(stderr, "ZZZ: FINDING BASE MODULE PATH FOR %s\n", name.c_str());
 		std::string result;
 		variant best_version;
 		for(int i = 0; i != module_dirs().size(); ++i) {
 			const std::string& path = module_dirs()[i];
+		fprintf(stderr, "ZZZ: CANDIDATE: %s\n", path.c_str());
 			std::string full_path = path + "/" + name + "/";
 			if(sys::file_exists(full_path + "module.cfg")) {
 				variant config = json::parse(sys::read_file(full_path + "module.cfg"));
 				variant version = config["version"];
+		fprintf(stderr, "ZZZ: CANDIDATE VERSION %s\n", version.write_json().c_str());
 				if(best_version.is_null() || version > best_version) {
 					best_version = version;
 					result = full_path;
@@ -307,6 +318,8 @@ namespace module
 
 			}
 		}
+
+	fprintf(stderr, "ZZZ: MODULE PATH FOR %s -> %s\n", name.c_str(), result.c_str());
 
 		if(result.empty() == false) {
 			return result;
@@ -335,6 +348,7 @@ namespace module
 		variant v = json::parse_from_file(fname);
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
+	boost::intrusive_ptr<graphics::color> speech_dialog_bg_color(new graphics::color(85, 53, 53, 255));
 		variant player_type;
 
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
@@ -382,6 +396,9 @@ namespace module
 					ASSERT_LOG(false, "font tag must be either string or list of strings");
 				}
 			}
+		if(v.has_key("speech_dialog_background_color")) {
+			speech_dialog_bg_color.reset(new graphics::color(v["speech_dialog_background_color"]));
+		}
 			if(v.has_key("build_requirements")) {
 				const variant& br = v["build_requirements"];
 				if(br.is_string()) {
@@ -414,7 +431,7 @@ namespace module
 		}
 		modules m = {name, pretty_name, abbrev,
 					 {make_base_module_path(name), make_user_module_path(name)},
-					def_font, def_font_cjk};
+				def_font, def_font_cjk, speech_dialog_bg_color};
 		m.default_preferences = v["default_preferences"];
 		loaded_paths().insert(loaded_paths().begin(), m);
 
@@ -427,6 +444,11 @@ namespace module
 	{
 		return i18n::is_locale_cjk() ? loaded_paths().front().default_font_cjk : loaded_paths().front().default_font;
 	}
+
+const boost::intrusive_ptr<graphics::color>& get_speech_dialog_bg_color()
+{
+	return loaded_paths().front().speech_dialog_bg_color;
+}
 
 	variant get_default_preferences()
 	{
@@ -952,6 +974,14 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		return operation_ == OPERATION_PREPARE_INSTALL && pending_response_.empty() == false;
 	}
 
+namespace {
+#ifdef __APPLE__
+const char* InstallImagePath = "../../";
+#else
+const char* InstallImagePath = ".";
+#endif
+}
+
 	void client::install_module(const std::string& module_id, bool force)
 	{
 		data_.clear();
@@ -963,10 +993,13 @@ COMMAND_LINE_UTILITY(generate_manifest)
 		request.add("module_id", module_id);
 
 		std::string version_str;
-		std::string current_path = install_image_ ? "." : make_base_module_path(module_id);
+	std::string current_path = install_image_ ? InstallImagePath : make_base_module_path(module_id);
+
+	fprintf(stderr, "ZZZ: install_module %s -> %s\n", module_id.c_str(), current_path.c_str());
 		if(!current_path.empty() && !force && sys::file_exists(current_path + "/module.cfg")) {
 			variant config = json::parse(sys::read_file(current_path + "/module.cfg"));
 			request.add("current_version", config["version"]);
+		fprintf(stderr, "ZZZ: current version: %s\n", config["version"].write_json().c_str());
 
 			if(!current_path.empty() && !force && sys::file_exists(current_path + "/manifest.cfg")) {
 				request.add("manifest", json::parse(sys::read_file(current_path + "/manifest.cfg")));
@@ -1158,7 +1191,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		for(variant path : manifest.getKeys().as_list()) {
 			variant info = manifest[path];
-			std::string path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
+		std::string path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + path.as_string();
 
 			if(install_image_ && sys::file_exists(path_str)) {
 				//try removing the file, and failing that, move it.
@@ -1177,7 +1210,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 							for(int i = 0; i != 10; ++i) {
 								std::ostringstream s;
 								s << "anura" << i << ".exe";
-								const std::string candidate_path_str = (install_image_ ? "." : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
+								const std::string candidate_path_str = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/" + s.str();
 								try {
 									if(sys::file_exists(candidate_path_str)) {
 										sys::remove_file(candidate_path_str);
@@ -1245,6 +1278,29 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 				ASSERT_LOG(found, "Could not find file locally even though it's in the manifest: " << path.as_string());
 			}
+	}
+
+	//update the module.cfg version to be equal to the version of the module we now have.
+	variant new_module_version = doc["version"];
+
+	const std::string module_cfg_path = (install_image_ ? InstallImagePath : preferences::dlc_path() + "/" + module_id_) + "/module.cfg";
+
+	bool wrote_version = false;
+	if(sys::file_exists(module_cfg_path)) {
+		try {
+			variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_NO_PREPROCESSOR);
+			node.add_attr_mutation(variant("version"), new_module_version);
+			sys::write_file(module_cfg_path, node.write_json());
+			wrote_version = true;
+		} catch(...) {
+		}
+	}
+
+	if(!wrote_version) {
+		std::map<variant,variant> m;
+		m[variant("version")] = new_module_version;
+		variant node(&m);
+		sys::write_file(module_cfg_path, node.write_json());
 		}
 	}
 

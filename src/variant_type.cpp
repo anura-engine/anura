@@ -756,6 +756,9 @@ public:
 
 	std::string to_string_impl() const {
 		std::string result;
+		if(types_.empty()) {
+			result = "(empty union)";
+		}
 		for(int n = 0; n != types_.size(); ++n) {
 			if(n != 0) {
 				result += "|";

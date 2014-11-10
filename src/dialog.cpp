@@ -395,8 +395,8 @@ namespace gui
 			}
 
 			t = t - profile::get_tick_time();
-			if(t < 20) {
-				profile::delay(20 - t);
+			if(t <  preferences::frame_time_millis()) {
+				profile::delay(preferences::frame_time_millis() - t);
 			}
 		}
 	}

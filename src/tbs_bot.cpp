@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <SDL.h>
+
 #include "asserts.hpp"
 #include "formula.hpp"
 #include "preferences.hpp"
@@ -29,35 +31,74 @@
 
 namespace tbs
 {
+class tbs_bot_timer_proxy {
+public:
+	explicit tbs_bot_timer_proxy(tbs::bot* bot) : bot_(bot)
+	{}
+
+	void cancel()
+	{
+		bot_ = NULL;
+	}
+
+	void signal(const boost::system::error_code& error)
+	{
+		if(bot_) {
+			bot_->process(error);
+		}
+		delete this;
+	}
+private:
+	tbs::bot* bot_;
+};
+
 	PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
 
 	bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
-	  : service_(service), 
-		timer_(service), 
-		host_(host), 
-		port_(port), 
-		script_(v["script"].as_list()),
-		on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
-		on_message_(game_logic::Formula::createOptionalFormula(v["on_message"]))
+  		: session_id_(v["session_id"].as_int()), 
+  		  service_(service), 
+  		  timer_(service), 
+  		  host_(host), 
+  		  port_(port), 
+  		  script_(v["script"].as_list()),
+		  timer_(service), 
+  		  has_quit_(false), 
+  		  timer_proxy_(nullptr)
+		  script_(v["script"].as_list()),
+		  on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
+		  on_message_(game_logic::Formula::createOptionalFormula(v["on_message"]))
 
 	{
-		LOG_INFO("CREATE BOT");
-		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-		timer_.async_wait(std::bind(&bot::process, this, std::placeholders::_1));
+		LOG_DEBUG("YYY: create_bot: " << intptr_t(this) << ", (" << v["on_create"].write_json() << ") -> " << intptr_t(on_create_.get()));
+
+		timer_proxy_ = new tbs_bot_timer_proxy(this);
+		timer_.async_wait(boost::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, boost::asio::placeholders::error));
 	}
 
 	bot::~bot()
 	{
+	fprintf(stderr, "YYY: destroy bot: %p\n", this);
+//	has_quit_ = true;
 		timer_.cancel();
+	if(timer_proxy_ != NULL) {
+		timer_proxy_->cancel();
+	}
+	fprintf(stderr, "YYY: done destroy bot: %p\n", this);
 	}
 
 	void bot::process(const boost::system::error_code& error)
 	{
+	timer_proxy_ = NULL;
+	if(has_quit_) {
+		return;
+	}
+	//fprintf(stderr, "BOT: PROCESS @%d %d/%d\n", SDL_GetTicks(), (int)response_.size(), (int)script_.size());
 		if(error == boost::asio::error::operation_aborted) {
 			LOG_INFO("tbs::bot::process cancelled");
 			return;
 		}
 		if(on_create_) {
+			LOG_DEBUG("YYY: call on_create: " << inptr_t(this) << " -> " << intptr_t(on_create_.get()));
 			executeCommand(on_create_->execute(*this));
 			on_create_.reset();
 		}
@@ -65,6 +106,7 @@ namespace tbs
 		if(((!client_ && !preferences::internal_tbs_server()) || (!internal_client_ && preferences::internal_tbs_server()))
 			&& response_.size() < script_.size()) {
 			variant script = script_[response_.size()];
+		fprintf(stderr, "BOT: SEND @%d Sending response %d/%d: %p %s\n", SDL_GetTicks(), (int)response_.size(), (int)script_.size(), internal_client_.get(), script.write_json().c_str());
 			variant send = script["send"];
 			if(send.is_string()) {
 				send = game_logic::Formula(send).execute(*this);
@@ -85,14 +127,21 @@ namespace tbs
 				client_->set_use_local_cache(false);
 				client_->send_request(send, callable, std::bind(&bot::handle_response, this, std::placeholders::_1, callable));
 			}
+	} else if(response_.size() >= script_.size()) {
+		fprintf(stderr, "BOT: NO PROCESS DUE TO %p, %d < %d\n", internal_client_.get(), (int)response_.size(), (int)script_.size());
 		}
 
 		timer_.expires_from_now(boost::posix_time::milliseconds(g_tbs_bot_delay_ms));
-		timer_.async_wait(std::bind(&bot::process, this, std::placeholders::_1));
+		timer_proxy_ = new tbs_bot_timer_proxy(this);
+		timer_.async_wait(std::bind(&tbs_bot_timer_proxy::signal, timer_proxy_, std::placeholders::_1));
 	}
 
 	void bot::handle_response(const std::string& type, game_logic::FormulaCallablePtr callable)
 	{
+	if(has_quit_) {
+		return;
+	}
+		LOG_INFO("BOT: @" << profile::get_tick_time() << " GOT RESPONSE: " << type);
 		if(on_create_) {
 			executeCommand(on_create_->execute(*this));
 			on_create_.reset();
@@ -101,7 +150,29 @@ namespace tbs
 		if(on_message_) {
 			message_type_ = type;
 			message_callable_ = callable;
+
+		variant msg = callable->query_value("message");
+		if(msg.is_map() && msg["type"] == variant("player_quit")) {
+			std::map<variant,variant> quit_msg;
+			quit_msg[variant("session_id")] = variant(session_id_);
+			std::map<variant,variant> msg;
+			msg[variant("type")] = variant("quit");
+			quit_msg[variant("send")] = variant(&msg);
+
+			script_.push_back(variant(&quit_msg));
+
+		} else if(msg.is_map() && msg["type"] == variant("bye")) {
+			has_quit_ = true;
+			client_.reset();
+			internal_client_.reset();
+			return;
+		} else {
+			const int ms = profile::get_tick_time();
+			LOG_INFO("BOT: handle_message @ " << ms << " : " << type << "... ( " << callable->query_value("message").write_json() << " )");
 			executeCommand(on_message_->execute(*this));
+			const int time_taken = profile::get_tick_time() - ms;
+			LOG_INFO("BOT: handled message in " << time_taken << "ms");
+		}
 		}
 
 		ASSERT_LOG(type != "connection_error", "GOT ERROR BACK WHEN SENDING REQUEST: " << callable->queryValue("message").write_json());

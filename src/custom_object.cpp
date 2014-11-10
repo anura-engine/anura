@@ -429,6 +429,7 @@ CustomObject::CustomObject(variant node)
 			const variant key(e.id);
 			if(property_data_node.has_key(key)) {
 				get_property_data(e.storage_slot) = property_data_node[key];
+				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 				set = true;
 			}
 		}
@@ -437,8 +438,10 @@ CustomObject::CustomObject(variant node)
 			if(e.init) {
 				reference_counted_object_pin_norelease pin(this);
 				get_property_data(e.storage_slot) = e.init->execute(*this);
+				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 			} else {
 				get_property_data(e.storage_slot) = deep_copy_variant(e.default_value);
+				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 			}
 		}
 
@@ -678,6 +681,7 @@ void CustomObject::initProperties()
 
 		reference_counted_object_pin_norelease pin(this);
 		get_property_data(i->second.storage_slot) = i->second.init->execute(*this);
+		if(i->second.is_weak) { get_property_data(i->second.storage_slot).weaken(); }
 	}
 }
 
@@ -2701,7 +2705,9 @@ variant CustomObject::getValueBySlot(int slot) const
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Access of 'data' outside of an object property which has data");
 		if(static_cast<unsigned>(active_property_) < property_data_.size()) {
-			return property_data_[active_property_];
+			variant result = property_data_[active_property_];
+			result.strengthen();
+			return result;
 		} else {
 			return variant();
 		}
@@ -3074,6 +3080,15 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(&v);
 	}
 
+	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
+		std::vector<variant> result;
+		for(auto p : animated_movement_) {
+			result.push_back(variant(p->name));
+		}
+
+		return variant(&result);
+	}
+
 	case CUSTOM_OBJECT_CTRL_USER_OUTPUT: {
 		return controls::user_ctrl_output();
 	}
@@ -3125,7 +3140,9 @@ variant CustomObject::getValueBySlot(int slot) const
 			} else if(e.const_value) {
 				return *e.const_value;
 			} else if(e.storage_slot >= 0) {
-				return get_property_data(e.storage_slot);
+				variant result = get_property_data(e.storage_slot);
+				result.strengthen();
+				return result;
 			} else {
 				ASSERT_LOG(false, "PROPERTY HAS NO GETTER OR CONST VALUE");
 			}
@@ -3191,7 +3208,9 @@ variant CustomObject::getValue(const std::string& key) const
 		} else if(property_itor->second.const_value) {
 			return *property_itor->second.const_value;
 		} else if(property_itor->second.storage_slot >= 0) {
-			return get_property_data(property_itor->second.storage_slot);
+			variant result = get_property_data(property_itor->second.storage_slot);
+			result.strengthen();
+			return result;
 		}
 	}
 
@@ -3534,6 +3553,9 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Illegal access of 'data' in object when not in writable property");
 		get_property_data(active_property_) = value;
+		if(type_->slot_properties()[active_property_].is_weak) {
+			get_property_data(active_property_).weaken();
+		}
 
 		//see if this initializes a property that requires dynamic
 		//initialization and if so mark is as now initialized.
@@ -3590,6 +3612,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				}
 
 				get_property_data(j->second.storage_slot) = props[i->second.storage_slot];
+				if(j->second.is_weak) { get_property_data(j->second.storage_slot).weaken(); }
 			}
 
 			//set the animation to the default animation for the new type.
@@ -4072,6 +4095,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			//this will initialize shaders and such, which is
 			//desired for attached objects
 			e->addToLevel();
+			e->create_object();
 		}
 
 		setAttachedObjects(v);
@@ -4269,6 +4293,10 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 
+	case CUSTOM_OBJECT_ANIMATED_MOVEMENTS: {
+		break;
+	}
+
 	case CUSTOM_OBJECT_CTRL_USER_OUTPUT: {
 		controls::set_user_ctrl_output(value);
 		break;
@@ -4432,6 +4460,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 				executeCommand(value);
 			} else if(e.storage_slot >= 0) {
 				get_property_data(e.storage_slot) = value;
+				if(e.is_weak) { get_property_data(e.storage_slot).weaken(); }
 			} else {
 				ASSERT_LOG(false, "Attempt to set const property: " << getDebugDescription() << "." << e.id);
 			}

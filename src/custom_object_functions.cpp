@@ -426,8 +426,7 @@ namespace
 
 				draw_scene(lvl, last_draw_position(), &lvl.player()->getEntity());
 				KRE::WindowManager::getMainWindow()->swap();
-				// XXX If we are not running at 50fps we need to change this value
-				profile::delay(20);
+				profile::delay(preferences::frame_time_millis());
 			}
 
 			lvl.remove_speech_dialog();
@@ -1818,8 +1817,7 @@ namespace
 			for(int n = 0; n != 50; ++n) {
 				draw_scene(lvl, pos, focus_.get());
 				KRE::WindowManager::getMainWindow()->swap();
-				// XXX If the framerate is configurable this needs changed.
-				profile::delay(20);
+				profile::delay(preferences::frame_time_millis());
 			}
 		}
 	private:
@@ -2177,8 +2175,7 @@ namespace
 			draw_scene(lvl, last_draw_position(), &lvl.player()->getEntity());
 
 			// XXX If the frame rate is made configurable this should be changed.
-			KRE::WindowManager::getMainWindow()->swap();
-			profile::delay(20);
+			profile::delay(preferences::frame_time_millis());
 		}
 
 		std::vector<variant> args_;

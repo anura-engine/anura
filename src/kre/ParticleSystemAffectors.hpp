@@ -24,6 +24,7 @@
 #pragma once
 
 #include "ParticleSystemFwd.hpp"
+#include "formula_callable_definition.hpp"
 
 namespace KRE
 {
@@ -52,7 +53,10 @@ namespace KRE
 			const glm::vec3& getPosition() const { return position_; }
 			const glm::vec3& getScale() const { return scale_; }
 			bool isEmitterExcluded(const std::string& name);
+
+			void set_position(const glm::vec3& pos) { position_ = pos; }
 		private:
+			DECLARE_CALLABLE(affector);
 			bool enabled_;
 			float mass_;
 			glm::vec3 position_;

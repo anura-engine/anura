@@ -56,6 +56,8 @@ namespace tbs
 		game(const std::string& game_type, const variant& doc);
 		virtual ~game();
 
+	void cancel_game();
+
 		virtual variant write(int nplayer=-1, int processing_ms=-1) const;
 		virtual void handle_message(int nplayer, const variant& msg);
 

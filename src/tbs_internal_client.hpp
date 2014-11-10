@@ -22,6 +22,7 @@
 */
 
 #pragma once
+#include <boost/shared_ptr.hpp>
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
@@ -43,10 +44,11 @@ namespace tbs
 	private:
 		DECLARE_CALLABLE(internal_client)
 		int session_id_;
-		std::function<void(variant)> handler_;
-		game_logic::MapFormulaCallablePtr callable_;
+
+		std::shared_ptr<boost::function<void(const std::string&)>> handler_;
 	};
 
 	typedef boost::intrusive_ptr<internal_client> internal_client_ptr;
 	typedef boost::intrusive_ptr<const internal_client> const_internal_client_ptr;
 }
+

@@ -42,7 +42,7 @@ namespace KRE
 		public:
 			explicit Parameter(ParameterType t) : type_(t) {}
 
-			virtual float getValue(float t) = 0;
+			virtual float getValue(float t=1.0f) = 0;
 			static ParameterPtr factory(const variant& node);
 
 			ParameterType type() { return type_; }

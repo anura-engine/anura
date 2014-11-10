@@ -155,7 +155,7 @@ namespace tbs
 		send_function send_fn;
 		variant request;
 		int session_id;
-		if(read_queue(&send_fn, &request, &session_id)) {
+		while(read_queue(&send_fn, &request, &session_id)) {
 			server_ptr->handle_message(
 				send_fn,
 				std::bind(&internal_server::finish_socket, this, send_fn, _1),

@@ -33,6 +33,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include "asserts.hpp"
+#include "auto_update_window.hpp"
 #include "background_task_pool.hpp"
 #include "checksum.hpp"
 #include "controls.hpp"
@@ -210,6 +211,8 @@ namespace
 
 int load_module(const std::string& mod, std::vector<std::string>* argv)
 {
+	module::set_core_module_name(mod);
+
 	variant mod_info = module::get(mod);
 	if(mod_info.is_null()) {
 		return -1;
@@ -357,6 +360,8 @@ extern "C" int main(int argcount, char* argvec[])
 			LOG_INFO("FAILED TO LOAD MODULE: " << DEFAULT_MODULE);
 			return -1;
 		}
+	} else if(unit_tests_only) {
+		module::set_core_module_name(DEFAULT_MODULE);
 	}
 
 	preferences::load_preferences();
@@ -533,7 +538,6 @@ extern "C" int main(int argcount, char* argvec[])
 			update_info.add("attempt_anura", true);
 		}
 
-		SDL_Window* update_window = NULL;
 
 		int nbytes_transferred = 0, nbytes_anura_transferred = 0;
 		int start_time = profile::get_tick_time();
@@ -541,20 +545,26 @@ extern "C" int main(int argcount, char* argvec[])
 		bool timeout = false;
 		bool require_restart = false;
 		LOG_INFO("Requesting update to module from server...");
+		int nupdate_cycle = 0;
+
+		{
+		auto_update_window update_window;
 		while(cl || anura_cl) {
-			if(update_window == NULL && profile::get_tick_time() - original_start_time > 2000) {
-				update_window = SDL_CreateWindow("Updating Anura...", 0, 0, 800, 600, SDL_WINDOW_SHOWN);
-			}
+			update_window.process();
 
 			int nbytes_obtained = 0;
 			int nbytes_needed = 0;
+
+			++nupdate_cycle;
 
 			if(cl) {
 				const int transferred = cl->nbytes_transferred();
 				nbytes_obtained += transferred;
 				nbytes_needed += cl->nbytes_total();
 				if(transferred != nbytes_transferred) {
-					LOG_INFO("Transferred " << (transferred/1024) << "/" << (cl->nbytes_total()/1024) << "KB");
+					if(nupdate_cycle%10 == 0) {
+						LOG_INFO("Transferred " << (transferred/1024) << "/" << (cl->nbytes_total()/1024) << "KB");
+					}
 					start_time = profile::get_tick_time();
 					nbytes_transferred = transferred;
 				}
@@ -565,7 +575,9 @@ extern "C" int main(int argcount, char* argvec[])
 				nbytes_obtained += transferred;
 				nbytes_needed += anura_cl->nbytes_total();
 				if(transferred != nbytes_anura_transferred) {
-					LOG_INFO("Transferred " << (transferred/1024) << "/" << (anura_cl->nbytes_total()/1024) << "KB");
+					if(nupdate_cycle%10 == 0) {
+						LOG_INFO("Transferred " << (transferred/1024) << "/" << (anura_cl->nbytes_total()/1024) << "KB");
+					}
 					start_time = profile::get_tick_time();
 					nbytes_anura_transferred = transferred;
 				}
@@ -577,22 +589,14 @@ extern "C" int main(int argcount, char* argvec[])
 				break;
 			}
 
-			if(update_window) {
-				SDL_Surface* fb= SDL_GetWindowSurface(update_window);
-				SDL_Rect area = {300, 290, 200, 20};
-				SDL_FillRect(fb, &area, 0xFFFFFFFF);
+			char msg[1024];
+			sprintf(msg, "Updating Game. Transferred %.02f/%.02fMB", float(nbytes_obtained/(1024.0*1024.0)), float(nbytes_needed/(1024.0*1024.0)));
 
-				SDL_Rect inner_area = {303, 292, 194, 16};
-				SDL_FillRect(fb, &inner_area, 0xFF000000);
+			update_window.set_message(msg);
 
-				if(nbytes_needed != 0) {
-					const float ratio = float(nbytes_obtained)/float(nbytes_needed);
-					SDL_Rect area = {303, 292, int(194.0*ratio), 16};
-					SDL_FillRect(fb, &area, 0xFFFFFFFF);
-				}
-
-				SDL_UpdateWindowSurface(update_window);
-			}
+			const float ratio = nbytes_needed <= 0 ? 0.0 : float(nbytes_obtained)/float(nbytes_needed);
+			update_window.set_progress(ratio);
+			update_window.draw();
 
 			SDL_Event event;
 			while(SDL_PollEvent(&event)) {
@@ -603,33 +607,32 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 
-			profile::delay(20);
-
-			if(cl && !cl->process()) {
-				if(cl->error().empty() == false) {
-					LOG_ERROR("Error while updating module: " << cl->error().c_str());
-					update_info.add("module_error", variant(cl->error()));
-				} else {
-					update_info.add("complete_module", true);
+			const int target_end = profile::get_tick_time() + 50;
+			while(profile::get_tick_time() < target_end && (cl || anura_cl)) {
+				if(cl && !cl->process()) {
+					if(cl->error().empty() == false) {
+						LOG_ERROR("Error while updating module: " << cl->error().c_str());
+						update_info.add("module_error", variant(cl->error()));
+					} else {
+						update_info.add("complete_module", true);
+					}
+					cl.reset();
 				}
-				cl.reset();
-			}
 
-			if(anura_cl && !anura_cl->process()) {
-				if(anura_cl->error().empty() == false) {
-					LOG_ERROR("Error while updating anura: " << anura_cl->error().c_str());
-					update_info.add("anura_error", variant(anura_cl->error()));
-				} else {
-					update_info.add("complete_anura", true);
-					require_restart = anura_cl->nfiles_written() != 0;
+				if(anura_cl && !anura_cl->process()) {
+					if(anura_cl->error().empty() == false) {
+						LOG_ERROR("Error while updating anura: " << anura_cl->error().c_str());
+						update_info.add("anura_error", variant(anura_cl->error()));
+					} else {
+						update_info.add("complete_anura", true);
+						require_restart = anura_cl->nfiles_written() != 0;
+					}
+					anura_cl.reset();
 				}
-				anura_cl.reset();
 			}
 		}
 
-		if(update_window) {
-			SDL_DestroyWindow(update_window);
-		}
+		} //dispose update_window
 
 		if(require_restart) {
 			std::vector<char*> args;

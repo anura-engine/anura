@@ -80,9 +80,17 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 		if(msg_type == "download_module") {
 			const std::string module_id = doc["module_id"].as_string();
 
+			if(data_.has_key(module_id) == false) {
+				send_msg(socket, "text/json", "{ status: \"no_such_module\" }", "");
+				return;
+			}
+
+			variant server_version = data_[module_id]["version"];
+			ASSERT_LOG(server_version.is_list(), "Invalid version for module " << module_id << ": " << server_version.write_json());
+
 			if(doc.has_key("current_version")) {
 				variant current_version = doc["current_version"];
-				if(data_[module_id]["version"] <= current_version) {
+				if(server_version <= current_version) {
 					send_msg(socket, "text/json", "{ status: \"no_newer_module\" }", "");
 					return;
 				}
@@ -90,7 +98,7 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 
 			const std::string module_path = data_path_ + module_id + ".cfg";
 			if(sys::file_exists(module_path)) {
-				std::string response = "{\nstatus: \"ok\",\nmodule: ";
+				std::string response = "{\nstatus: \"ok\",\nversion: " + server_version.write_json() + ",\nmodule: ";
 				{
 					std::string contents = sys::read_file(module_path);
 					fprintf(stderr, "MANIFEST: %d\n", (int)doc.has_key("manifest"));
@@ -282,6 +290,8 @@ void ModuleWebServer::handlePost(socket_ptr socket, variant doc, const http::env
 			{
 				std::map<variant, variant> summary;
 				summary[variant("version")] = module_node[variant("version")];
+				ASSERT_LOG(summary[variant("version")].is_list(), "Invalid version in replicate: " << summary[variant("version")].write_json());
+
 				summary[variant("name")] = module_node[variant("name")];
 				summary[variant("description")] = module_node[variant("description")];
 				summary[variant("author")] = module_node[variant("author")];
