@@ -75,6 +75,7 @@
 #include "texture.hpp"
 
 namespace {
+PREF_BOOL(allow_debug_console_clicking, true, "Allow clicking on objects in the debug console to select them");
 PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
 PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
 
@@ -1486,8 +1487,10 @@ bool level_runner::play_cycle()
                     break;
 #else
 #ifndef NO_EDITOR
-			case SDL_MOUSEBUTTONDOWN:
-				if(console_.get()) {
+			case SDL_MOUSEBUTTONDOWN: {
+				const SDL_Keymod mod = SDL_GetModState();
+				const bool ctrl_pressed = (mod&KMOD_CTRL) != 0;
+				if(console_.get() && (g_allow_debug_console_clicking || ctrl_pressed)) {
 					int mousex, mousey;
 					input::sdl_get_mouse_state(&mousex, &mousey);
 					entity_ptr selected = lvl_->get_next_character_at_point(last_draw_position().x/100 + mousex, last_draw_position().y/100 + mousey, last_draw_position().x/100, last_draw_position().y/100);
@@ -1499,6 +1502,7 @@ bool level_runner::play_cycle()
 					handle_mouse_events(event);
 				}
 				break;
+			}
 
 			case SDL_MOUSEMOTION:
 				handle_mouse_events(event);
