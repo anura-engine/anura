@@ -90,10 +90,9 @@ PREF_STRING(couchbase_user, "", "");
 PREF_STRING(couchbase_bucket, "default", "");
 PREF_STRING(couchbase_passwd, "", "");
 
-void couchbase_error_handler(lcb_t instance, lcb_error_t error, const char* errinfo)
+void couchbase_error_handler(lcb_st* instance, lcb_error_t error)
 {
-	fprintf(stderr, "Database error: %s\n", errinfo);
-	ASSERT_LOG(false, "DB Error");
+	ASSERT_LOG(error == LCB_SUCCESS, "DB Error: " << lcb_strerror(NULL, error));
 }
 
 void store_callback(lcb_t instance, const void *cookie,
@@ -138,7 +137,7 @@ public:
 		lcb_error_t err = lcb_create(&instance_, &create_options);
 		ASSERT_LOG(err == LCB_SUCCESS, "Could not connect to couchbase server: " << lcb_strerror(NULL, err));
 
-		lcb_set_error_callback(instance_, couchbase_error_handler);
+		lcb_set_bootstrap_callback(instance_, couchbase_error_handler);
 
 		err = lcb_connect(instance_);
 		ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(NULL, err));
@@ -239,9 +238,11 @@ public:
 	bool process(int timeout_us)
 	{
 		if(timeout_us > 0) {
+				/*
 			lcb_error_t error = LCB_SUCCESS;
 			lcb_timer_t timer = lcb_timer_create(instance_, NULL, timeout_us, 0, timer_callback, &error);
 			ASSERT_LOG(error == LCB_SUCCESS, "Failed to create lcb timer");
+			*/
 		}
 		lcb_wait(instance_);
 

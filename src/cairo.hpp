@@ -5,6 +5,7 @@
 #include <cairo.h>
 
 #include "formula_callable.hpp"
+#include "graphics.hpp"
 #include "surface.hpp"
 #include "texture.hpp"
 
@@ -56,6 +57,18 @@ public:
 private:
 	DECLARE_CALLABLE(cairo_callable);
 };
+
+namespace cairo_font
+{
+
+graphics::texture render_text_uncached(const std::string& text,
+                                       const SDL_Color& color, int size, const std::string& font_name="");
+
+int char_width(int size, const std::string& fn="");
+int char_height(int size, const std::string& fn="");
+
+
+}
 
 }
 

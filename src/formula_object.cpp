@@ -157,6 +157,34 @@ struct property_entry {
 	variant default_value;
 };
 
+std::map<std::string, std::string>& class_path_map()
+{
+	static std::map<std::string, std::string> mapping;
+	static bool init = false;
+	if(!init) {
+		init = true;
+		std::map<std::string, std::string> items;
+		module::get_unique_filenames_under_dir("data/classes/", &items);
+		for(auto p : items) {
+			std::string key = p.first;
+			if(key.size() > 4 && std::equal(key.end()-4, key.end(), ".cfg")) {
+				key.resize(key.size()-4);
+			} else {
+				continue;
+			}
+
+			auto colon = std::find(key.begin(), key.end(), ':');
+			if(colon != key.end()) {
+				key.erase(key.begin(), colon+1);
+			}
+
+			mapping[key] = p.second;
+		}
+	}
+
+	return mapping;
+}
+
 std::map<std::string, variant> class_node_map;
 
 void load_class_node(const std::string& type, const variant& node)
@@ -173,13 +201,15 @@ void load_class_node(const std::string& type, const variant& node)
 
 void load_class_nodes(const std::string& type)
 {
-	const std::string path = "data/classes/" + type + ".cfg";
+	auto itor = class_path_map().find(type);
+	ASSERT_LOG(itor != class_path_map().end(), "Could not find FFL class '" << type << "'");
+	const std::string& path = itor->second;
 	const std::string real_path = module::map_file(path);
 
 	sys::notify_on_file_modification(real_path, boost::bind(invalidate_class_definition, type));
 
 	const variant v = json::parse_from_file(path);
-	ASSERT_LOG(v.is_map(), "COULD NOT FIND FFL CLASS: " << type);
+	ASSERT_LOG(v.is_map(), "COULD NOT PARSE FFL CLASS: " << type);
 
 	load_class_node(type, v);
 }
@@ -945,15 +975,10 @@ void formula_object::reload_classes()
 
 void formula_object::load_all_classes()
 {
-	std::vector<std::string> files;
-	module::get_files_in_dir("data/classes/", &files, NULL);
-	foreach(std::string f, files) {
-		if(f.size() > 4 && std::equal(f.end()-4,f.end(),".cfg")) {
-			variant node = json::parse_from_file("data/classes/" + f);
-			if(node["server_only"].as_bool(false) == false) {
-				f.resize(f.size()-4);
-				get_class(f);
-			}
+	for(auto p : class_path_map()) {
+		variant node = json::parse_from_file(p.second);
+		if(node["server_only"].as_bool(false) == false) {
+			get_class(p.first);
 		}
 	}
 }
@@ -1383,21 +1408,15 @@ formula_class_manager::~formula_class_manager()
 formula_callable_definition_ptr get_library_definition()
 {
 	if(!g_library_definition) {
-		std::vector<std::string> files;
-
-		const std::string path = "data/classes/";
-		module::get_files_in_dir("data/classes/", &files, NULL);
 
 		std::vector<std::string> classes;
 
-		foreach(const std::string& fname, files) {
-			if(fname.size() > 4 && std::equal(fname.end() - 4, fname.end(), ".cfg")) {
-				const std::string class_name(fname.begin(), fname.end()-4);
-				if(std::count(classes.begin(), classes.end(), class_name) == 0) {
-					variant node = json::parse_from_file("data/classes/" + fname);
-					if(node["server_only"].as_bool(false) == false) {
-						classes.push_back(class_name);
-					}
+		for(auto p : class_path_map()) {
+			const std::string& class_name = p.first;
+			if(std::count(classes.begin(), classes.end(), class_name) == 0) {
+				variant node = json::parse_from_file(p.second);
+				if(node["server_only"].as_bool(false) == false) {
+					classes.push_back(class_name);
 				}
 			}
 		}
@@ -1411,6 +1430,15 @@ formula_callable_definition_ptr get_library_definition()
 			g_library_definition = game_logic::create_formula_callable_definition(&classes[0], &classes[0] + classes.size(), NULL);
 			game_logic::register_formula_callable_definition("library", g_library_definition);
 
+			//first pass we have to just set the basic variant type
+			//without any definitions.
+			for(int n = 0; n != g_library_definition->num_slots(); ++n) {
+				g_library_definition->get_entry(n)->variant_type = types[n];
+			}
+
+			//this time we do a full set_variant_type() which looks up the
+			//definitions of the type. We can only do this after we have
+			//the first pass done though so lib types can be looked up.
 			for(int n = 0; n != g_library_definition->num_slots(); ++n) {
 				g_library_definition->get_entry(n)->set_variant_type(types[n]);
 			}

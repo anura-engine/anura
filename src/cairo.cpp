@@ -30,8 +30,35 @@ FT_Library& init_freetype_library()
 	return library;
 }
 
-FT_Face get_ft_font(const std::string& ttf_file, int index=0)
+const std::string& get_font_path_from_name(const std::string& name)
 {
+	static std::map<std::string, std::string> paths;
+	if(paths.empty()) {
+		std::map<std::string, std::string> full_paths;
+		module::get_unique_filenames_under_dir("data/fonts/", &full_paths);
+		for(auto p : full_paths) {
+			auto colon_itor = std::find(p.first.begin(), p.first.end(), ':');
+			std::string key(colon_itor == p.first.end() ? p.first.begin() : colon_itor+1, p.first.end());
+			if(key.size() > 4 &&
+			   (std::equal(key.end()-4, key.end(), ".ttf") ||
+			    std::equal(key.end()-4, key.end(), ".otf"))) {
+				fprintf(stderr, "BBB: FONT PATH: %s -> %s\n", std::string(key.begin(), key.end()-4).c_str(), p.second.c_str());
+				paths[std::string(key.begin(), key.end()-4)] = p.second;
+			}
+		}
+	}
+
+	auto itor = paths.find(name);
+	ASSERT_LOG(itor != paths.end(), "Could not find font: " << name);
+	return itor->second;
+}
+
+FT_Face get_ft_font(const std::string& ttf_name, int index=0)
+{
+	if(ttf_name.size() > 4 && std::equal(ttf_name.end()-4, ttf_name.end(), ".otf")) {
+		return get_ft_font(std::string(ttf_name.begin(), ttf_name.end()-4), index);
+	}
+	const std::string& ttf_file = get_font_path_from_name(ttf_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font() : ttf_name);
 	static FT_Library& library = init_freetype_library();
 
 	static std::map<std::string, FT_Face> cache;
@@ -60,6 +87,11 @@ cairo_surface_t* get_cairo_image(const std::string& image)
 	}
 
 	return result;
+}
+
+cairo_context& dummy_context() {
+	static cairo_context* res = new cairo_context(8, 8);
+	return *res;
 }
 
 }
@@ -435,7 +467,7 @@ BEGIN_CAIRO_FN(set_radial_pattern, "(decimal, decimal, decimal, decimal, decimal
 END_CAIRO_FN
 
 BEGIN_CAIRO_FN(set_font, "(string)")
-	FT_Face face = get_ft_font(module::map_file("data/fonts/" + args[0].as_string()));
+	FT_Face face = get_ft_font(args[0].as_string());
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 	cairo_set_font_face(context.get(), cairo_face);
 END_CAIRO_FN
@@ -764,7 +796,7 @@ END_DEFINE_FN
 BEGIN_DEFINE_FN(text_extents, "(string, decimal, string) -> { width: decimal, height: decimal }")
 	static cairo_context& context = *new cairo_context(8,8);
 
-	FT_Face face = get_ft_font(module::map_file("data/fonts/" + FN_ARG(0).as_string()));
+	FT_Face face = get_ft_font(FN_ARG(0).as_string());
 	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
 	cairo_set_font_face(context.get(), cairo_face);
 
@@ -900,6 +932,58 @@ COMMAND_LINE_UTILITY(fix_svg)
 		output += std::string(begin, contents.c_str() + contents.size());
 		sys::write_file(fname, output);
 	}
+}
+
+namespace cairo_font
+{
+
+graphics::texture render_text_uncached(const std::string& text,
+                                       const SDL_Color& color, int size, const std::string& font_name)
+{
+	FT_Face face = get_ft_font(font_name);
+	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+	cairo_set_font_face(dummy_context().get(), cairo_face);
+	cairo_set_font_size(dummy_context().get(), size);
+
+	std::vector<float> lengths, heights;
+	float width = 0.0, height = 0.0;
+	std::vector<std::string> lines = util::split(text, '\n');
+	for(auto s : lines) {
+		cairo_text_extents_t extents;
+		cairo_text_extents(dummy_context().get(), s.c_str(), &extents);
+		lengths.push_back(extents.width);
+		heights.push_back(extents.height);
+		if(extents.width > width) {
+			width = extents.width;
+		}
+
+		height += extents.height;
+	}
+
+	cairo_context context(int(width+1), int(height+1));
+
+	fprintf(stderr, "RENDER: %s -> %fx%f\n", text.c_str(), width, height);
+
+	{
+	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+	cairo_set_font_face(context.get(), cairo_face);
+	cairo_set_font_size(context.get(), size);
+	}
+
+	for(int n = 0; n != lines.size(); ++n) {
+		const std::string& line = lines[n];
+		cairo_translate(context.get(), /*lengths[n]/2*/ 0, heights[n]);
+
+		cairo_new_path(context.get());
+		cairo_show_text(context.get(), line.c_str());
+
+		cairo_translate(context.get(), 0.0, heights[n]);
+	}
+
+
+	return context.write();
+}
+
 }
 
 }

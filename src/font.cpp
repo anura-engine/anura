@@ -27,6 +27,7 @@
 #include "foreach.hpp"
 #include "formatter.hpp"
 #include "module.hpp"
+#include "preferences.hpp"
 #include "string_utils.hpp"
 #include "surface.hpp"
 
@@ -63,10 +64,20 @@ const std::string& get_font_path(const std::string& name)
 	return itor->second;
 }
 
+std::string make_font_filename(const std::string& fontname)
+{
+	auto itor = std::find(fontname.begin(), fontname.end(), '.');
+	if(itor == fontname.end()) {
+		return fontname + ".ttf";
+	} else {
+		return fontname;
+	}
+}
+
 TTF_Font* get_font(int size, const std::string& font_name="")
 {
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_HARMATTAN && !TARGET_OS_IPHONE
-	std::string fontn = get_font_path((font_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font()  : font_name) + ".ttf");
+	std::string fontn = get_font_path(make_font_filename(font_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font()  : font_name));
 	TTF_Font* font = NULL;
 	font_map::const_iterator it = font_table.find(std::pair<std::string,int>(fontn,size));
 	if(it == font_table.end()) {
