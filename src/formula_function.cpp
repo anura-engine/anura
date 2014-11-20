@@ -4808,6 +4808,33 @@ RETURN_TYPE("[int]")
 
 END_FUNCTION_DEF(rotate_rect)
 
+FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	const int x = args()[1]->evaluate(variables).as_int();
+	const int y = args()[2]->evaluate(variables).as_int();
+
+	int w = args().size() >= 4 ? args()[3]->evaluate(variables).as_int() : 1;
+	int h = args().size() >= 5 ? args()[4]->evaluate(variables).as_int() : 1;
+
+	rect r(x, y, w, h);
+
+	if(args().size() >= 6) {
+		//debugging so set the debug rect
+		add_debug_rect(r);
+	}
+
+	return variant(lvl->solid(r));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("bool")
+RETURN_TYPE("bool")
+END_FUNCTION_DEF(solid)
+
+
 
 UNIT_TEST(modulo_operation) {
 	CHECK(game_logic::formula(variant("mod(-5, 20)")).execute() == game_logic::formula(variant("15")).execute(), "test failed");
