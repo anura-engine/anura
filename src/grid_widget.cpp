@@ -200,6 +200,16 @@ grid::grid(const variant& v, game_logic::formula_callable* e)
 	}
 }
 
+void grid::set_bg_color(const graphics::color& col)
+{
+	bg_color_.reset(new graphics::color(col));
+}
+
+void grid::set_focus_color(const graphics::color& col)
+{
+	focus_color_.reset(new graphics::color(col));
+}
+
 void grid::set_dim(int w, int h)
 {
 	widget::set_dim(w,h);
@@ -428,7 +438,10 @@ void grid::handle_draw() const
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
 
 	if(show_background_) {
-		const SDL_Color bg = {50,50,50};
+		SDL_Color bg = {50,50,50};
+		if(bg_color_) {
+			bg = bg_color_->as_sdl_color();
+		}
 		SDL_Rect rect = {0,0,width(),height()};
 		graphics::draw_rect(rect,bg);
 	}
@@ -444,8 +457,13 @@ void grid::handle_draw() const
 	if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < nrows()) {
 		if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
 			SDL_Rect rect = {0,row_height_*selected_row_ - yscroll(),width(),row_height_};
-			const SDL_Color col = {0xff,0x00,0x00,0x00};
-			graphics::draw_rect(rect,col,128);
+			if(focus_color_) {
+				const SDL_Color col = focus_color_->as_sdl_color();
+				graphics::draw_rect(rect,col,focus_color_->a());
+			} else {
+				const SDL_Color col = {0xff,0x00,0x00,0x00};
+				graphics::draw_rect(rect,col,128);
+			}
 		}
 	}
 	//glColor4f(current_color[0], current_color[1], current_color[2], current_color[3]);

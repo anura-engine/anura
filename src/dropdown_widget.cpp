@@ -19,6 +19,7 @@
 #include <vector>
 
 #include "asserts.hpp"
+#include "button.hpp"
 #include "controls.hpp"
 #include "image_widget.hpp"
 #include "joystick.hpp"
@@ -36,7 +37,7 @@ namespace {
 }
 
 dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int height, dropdown_type type)
-	: list_(list), type_(type), current_selection_(0), dropdown_height_(100)
+	: list_(list), type_(type), current_selection_(0), dropdown_height_(100), in_widget_(false)
 {
 	set_environment();
 	set_dim(width, height);
@@ -44,7 +45,7 @@ dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int heigh
 	editor_->set_on_user_change_handler(boost::bind(&dropdown_widget::text_change, this));
 	editor_->set_on_enter_handler(boost::bind(&dropdown_widget::text_enter, this));
 	editor_->set_on_tab_handler(boost::bind(&dropdown_widget::text_enter, this));
-	dropdown_image_ = widget_ptr(new gui_section_widget(dropdown_button_image));
+	dropdown_image_ = gui_section_widget_ptr(new gui_section_widget(dropdown_button_image));
 	//if(type_ == DROPDOWN_COMBOBOX) {
 	//	editor_->set_focus(true);
 	//}
@@ -54,8 +55,28 @@ dropdown_widget::dropdown_widget(const dropdown_list& list, int width, int heigh
 }
 
 dropdown_widget::dropdown_widget(const variant& v, game_logic::formula_callable* e)
-	: widget(v,e), current_selection_(0), dropdown_height_(100)
+	: widget(v,e), current_selection_(0), dropdown_height_(100), in_widget_(false)
 {
+	if(v.has_key("font")) {
+		font_ = v["font"].as_string();
+	}
+
+	if(v.has_key("color_scheme")) {
+		variant m = v["color_scheme"];
+
+		set_color_scheme(m);
+	}
+	
+	if(v.has_key("button_image")) {
+		dropdown_image_ = gui_section_widget_ptr(new gui_section_widget(v["button_image"].as_string()));
+		if(v.has_key("focus_button_image")) {
+			normal_image_ = v["button_image"].as_string();
+			focus_image_ = v["focus_button_image"].as_string();
+		}
+	} else {
+		dropdown_image_ = gui_section_widget_ptr(new gui_section_widget(dropdown_button_image));
+	}
+
 	ASSERT_LOG(get_environment() != 0, "You must specify a callable environment");
 	if(v.has_key("type")) {
 		std::string s = v["type"].as_string();
@@ -96,8 +117,15 @@ void dropdown_widget::init()
 {
 	const int dropdown_image_size = std::max(height(), dropdown_image_->height());
 	label_ = new label(list_.size() > 0 ? list_[current_selection_] : "No items");
-	label_->set_loc(0, (height() - label_->height()) / 2);
-	dropdown_image_->set_loc(width() - height() + (height() - dropdown_image_->width()) / 2, 
+	if(font_.empty() == false) {
+		label_->set_font(font_);
+	}
+	label_->set_loc((width() - dropdown_image_->width() - 8 - label_->width())/2, (height() - label_->height()) / 2);
+	if(text_normal_color_) {
+		label_->set_color(text_normal_color_->as_sdl_color());
+	}
+
+	dropdown_image_->set_loc(width() - dropdown_image_->width() - 4, 
 		(height() - dropdown_image_->height()) / 2);
 	// go on ask me why there is a +20 in the line below.
 	// because text_editor_widget uses a magic -20 when setting the width!
@@ -111,18 +139,31 @@ void dropdown_widget::init()
 	} else {
 		dropdown_menu_ = new grid(1);
 	}
+
+	if(normal_color_) {
+		dropdown_menu_->set_bg_color(*normal_color_);
+	}
+
+	if(focus_color_) {
+		dropdown_menu_->set_focus_color(*focus_color_);
+	}
+
 	dropdown_menu_->set_loc(0, height()+2);
 	dropdown_menu_->allow_selection(true);
 	dropdown_menu_->set_show_background(true);
 	dropdown_menu_->swallow_clicks(true);
 	dropdown_menu_->set_col_width(0, width());
 	dropdown_menu_->set_max_height(dropdown_height_);
-	dropdown_menu_->set_dim(width(), dropdown_height_);
-	dropdown_menu_->must_select();
+	dropdown_menu_->set_dim(width(), 0);
 	foreach(const std::string& s, list_) {
-		dropdown_menu_->add_col(widget_ptr(new label(s, graphics::color_white())));
+		labels_.push_back(label_ptr(new label(s, text_normal_color_ ? text_normal_color_->as_sdl_color() : graphics::color_white(), 14, font_)));
+	}
+
+	for(auto item : labels_) {
+		dropdown_menu_->add_col(item);
 	}
 	dropdown_menu_->register_selection_callback(boost::bind(&dropdown_widget::execute_selection, this, _1));
+	dropdown_menu_->register_mouseover_callback(boost::bind(&dropdown_widget::mouseover_item, this, _1));
 	dropdown_menu_->set_visible(false);
 
 }
@@ -199,6 +240,16 @@ void dropdown_widget::handle_draw() const
 	graphics::draw_hollow_rect(
 		rect(x()+width()-height(), y()-1, height()+1, height()+2).sdl_rect(), 
 		has_focus() ? graphics::color_white() : graphics::color_grey());
+
+	if(normal_color_) {
+		const graphics::color* col = normal_color_.get();
+		if(in_widget_ && focus_color_) {
+			col = focus_color_.get();
+		}
+		graphics::draw_rect(
+			rect(x(), y(), width()+2, height()+2).sdl_rect(), 
+			col->as_sdl_color());
+	}
 
 	glPushMatrix();
 	glTranslatef(GLfloat(x() & ~1), GLfloat(y() & ~1), 0.0);
@@ -316,6 +367,25 @@ bool dropdown_widget::handle_mousemotion(const SDL_MouseMotionEvent& event, bool
 {
 	point p;
 	int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
+	if(in_widget_ != in_widget(event.x, event.y)) {
+		in_widget_ = !in_widget_;
+		if(!in_widget_ && text_normal_color_) {
+			label_->set_color(text_normal_color_->as_sdl_color());
+		}
+
+		if(in_widget_ && text_focus_color_) {
+			label_->set_color(text_focus_color_->as_sdl_color());
+		}
+
+		if(normal_image_.empty() == false) {
+			if(in_widget_) {
+				dropdown_image_->set_gui_section(focus_image_);
+			} else {
+				dropdown_image_->set_gui_section(normal_image_);
+			}
+		}
+		
+	}
 	return claimed;
 }
 
@@ -343,49 +413,57 @@ void dropdown_widget::execute_selection(int selection)
 	}
 }
 
+void dropdown_widget::mouseover_item(int selection)
+{
+	if(text_normal_color_ && text_focus_color_) {
+		for(int index = 0; index < labels_.size(); ++index) {
+			labels_[index]->set_color(index == selection ? text_focus_color_->as_sdl_color() : text_normal_color_->as_sdl_color());
+		}
+	}
+}
+
 int dropdown_widget::get_max_height() const
 {
 	// Maximum height required, including dropdown and borders.
 	return height() + (dropdown_menu_ ? dropdown_menu_->height() : dropdown_height_) + 2;
 }
 
-void dropdown_widget::set_value(const std::string& key, const variant& v)
-{
-	if(key == "on_change") {
-		on_change_ = boost::bind(&dropdown_widget::change_delegate, this, _1);
-		change_handler_ = get_environment()->create_formula(v);
-	} else if(key == "on_select") {
-		on_select_ = boost::bind(&dropdown_widget::select_delegate, this, _1, _2);
-		select_handler_ = get_environment()->create_formula(v);
-	} else if(key == "item_list") {
-		list_ = v.as_list_string();
-		current_selection_ = 0;
-	} else if(key == "selection") {
-		current_selection_ = v.as_int();
-	} else if(key == "type") {
-		std::string s = v.as_string();
-		if(s == "combo" || s == "combobox") {
-			type_ = DROPDOWN_COMBOBOX;
-		} else if(s == "list" || s == "listbox") {
-			type_ = DROPDOWN_LIST;
-		} else {
-			ASSERT_LOG(false, "Unreognised type: " << s);
-		}
-	}
-	widget::set_value(key, v);
-}
-
-variant dropdown_widget::get_value(const std::string& key) const
-{
-	if(key == "selection") {
-		return variant(current_selection_);
-	} else if(key == "selected_item") {
-		if(current_selection_ < 0 || size_t(current_selection_) > list_.size()) {
+BEGIN_DEFINE_CALLABLE(dropdown_widget, widget)
+	DEFINE_FIELD(selection, "int")
+		return variant(obj.current_selection_);
+	DEFINE_FIELD(selected_item, "string|null")
+		if(obj.current_selection_ < 0 || size_t(obj.current_selection_) > obj.list_.size()) {
 			return variant();
 		}
-		return variant(list_[current_selection_]);
+
+		return variant(obj.list_[obj.current_selection_]);
+END_DEFINE_CALLABLE(dropdown_widget)
+
+void dropdown_widget::set_color_scheme(const variant& m)
+{
+	if(m.is_null()) {
+		return;
 	}
-	return widget::get_value(key);
+
+	if(m.has_key("normal")) {
+		normal_color_.reset(new graphics::color(m["normal"]));
+	}
+	if(m.has_key("depressed")) {
+		depressed_color_.reset(new graphics::color(m["depressed"]));
+	}
+	if(m.has_key("focus")) {
+		focus_color_.reset(new graphics::color(m["focus"]));
+	}
+
+	if(m.has_key("text_normal")) {
+		text_normal_color_.reset(new graphics::color(m["text_normal"]));
+	}
+	if(m.has_key("text_depressed")) {
+		text_depressed_color_.reset(new graphics::color(m["text_depressed"]));
+	}
+	if(m.has_key("text_focus")) {
+		text_focus_color_.reset(new graphics::color(m["text_focus"]));
+	}
 }
 
 }

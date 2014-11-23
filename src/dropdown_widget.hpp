@@ -26,6 +26,7 @@
 #include "border_widget.hpp"
 #include "label.hpp"
 #include "grid_widget.hpp"
+#include "image_widget.hpp"
 #include "text_editor_widget.hpp"
 #include "widget.hpp"
 
@@ -56,16 +57,17 @@ protected:
 	virtual bool handle_event(const SDL_Event& event, bool claimed);
 	virtual void handle_process();
 
-	virtual void set_value(const std::string& key, const variant& v);
-	virtual variant get_value(const std::string& key) const;
 	void init();
 	void text_enter();
 	void text_change();
+
+	DECLARE_CALLABLE(dropdown_widget);
 private:
 	bool handle_mousedown(const SDL_MouseButtonEvent& event, bool claimed);
 	bool handle_mouseup(const SDL_MouseButtonEvent& event, bool claimed);
 	bool handle_mousemotion(const SDL_MouseMotionEvent& event, bool claimed);
 	void execute_selection(int selection);
+	void mouseover_item(int selection);
 
 	int dropdown_height_;
 	dropdown_list list_;
@@ -73,17 +75,28 @@ private:
 	dropdown_type type_;
 	text_editor_widget_ptr editor_;
 	grid_ptr dropdown_menu_;
+	std::vector<label_ptr> labels_;
 	label_ptr label_;
-	widget_ptr dropdown_image_;
+	gui_section_widget_ptr dropdown_image_;
+	std::string normal_image_, focus_image_;
+	std::string font_;
 	boost::function<void(const std::string&)> on_change_;
 	boost::function<void(int, const std::string&)> on_select_;
 
 	// delgate 
 	void change_delegate(const std::string& s);
 	void select_delegate(int selection, const std::string& s);
+
+	void set_color_scheme(const variant& v);
+
 	// FFL formula
 	game_logic::formula_ptr change_handler_;
 	game_logic::formula_ptr select_handler_;
+
+	boost::scoped_ptr<graphics::color> normal_color_, depressed_color_, focus_color_;
+	boost::scoped_ptr<graphics::color> text_normal_color_, text_depressed_color_, text_focus_color_;
+
+	bool in_widget_;
 };
 
 typedef boost::intrusive_ptr<dropdown_widget> dropdown_widget_ptr;

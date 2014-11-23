@@ -39,6 +39,8 @@ public:
 		variant backup;
 	};
 
+	static variant get_color_scheme();
+
 	button(const std::string& label, boost::function<void ()> onclick);
 	button(widget_ptr label, boost::function<void ()> onclick, BUTTON_STYLE button_style = BUTTON_STYLE_NORMAL, BUTTON_RESOLUTION button_resolution = BUTTON_SIZE_NORMAL_RESOLUTION);
 	button(const variant& v, game_logic::formula_callable* e);

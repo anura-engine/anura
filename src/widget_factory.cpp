@@ -31,6 +31,7 @@
 #include "custom_object_widget.hpp"
 #include "dialog.hpp"
 #include "drag_widget.hpp"
+#include "dropdown_widget.hpp"
 #include "file_chooser_dialog.hpp"
 #include "graphical_font_label.hpp"
 #include "grid_widget.hpp"
@@ -79,6 +80,8 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 		return widget_ptr(new gui::button(v,e));
 	} else if(wtype == "checkbox") {
 		return widget_ptr(new gui::checkbox(v,e));
+	} else if(wtype == "combobox" || wtype == "listbox") {
+		return widget_ptr(new gui::dropdown_widget(v,e));
 	} else if(wtype == "dialog") {
 		return widget_ptr(new gui::dialog(v,e));
 #ifndef NO_EDITOR
@@ -140,7 +143,7 @@ widget_ptr create(const variant& v, game_logic::formula_callable* e)
 	} else if(wtype == "tree") {
 		return widget_ptr(new gui::tree_view_widget(v, e));
 	} else {
-		ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
+		ASSERT_LOG(false, "Unable to create a widget of type " << wtype);
 		return widget_ptr();
 	}
 }

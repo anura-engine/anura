@@ -113,6 +113,9 @@ public:
 		handle_request_fn_ = controller_->query_value("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
+		matchmake_fn_ = controller_->query_value("matchmake");
+		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
+
 		db_client_ = db_client::create();
 
 		db_timer_.expires_from_now(boost::posix_time::milliseconds(10));
@@ -458,6 +461,7 @@ public:
 				info.session_id = session_id;
 				info.last_contact = time_ms_;
 				info.queued_for_game = true;
+				info.game_type_info = doc["game_info"];
 
 				check_matchmaking_queue();
 
@@ -582,25 +586,45 @@ private:
 
 	int check_matchmaking_queue()
 	{
-		std::vector<int> match_sessions;
-		int queue_size = 0;
+		//build a list of queued users and then pass to our FFL matchmake() function
+		//to try to make an eligible match.
+		std::vector<int> session_ids;
+		std::vector<variant> info;
 		for(auto p : sessions_) {
 			if(p.second.queued_for_game && p.second.game_details == "" && !session_timed_out(p.second.last_contact)) {
-				if(match_sessions.size() < 2 && !p.second.game_pending && p.second.current_socket) {
-					match_sessions.push_back(p.first);
+				if(!p.second.game_pending && p.second.current_socket) {
+					session_ids.push_back(p.first);
+					info.push_back(p.second.game_type_info);
 				}
-
-				++queue_size;
 			}
 		}
 
-		if(match_sessions.size() == 2 && !available_ports_.empty()) {
+
+		std::vector<variant> args;
+		args.push_back(variant(&info));
+		variant result = matchmake_fn_(args);
+
+		if(result.is_list() == false) {
+			return static_cast<int>(session_ids.size());
+		}
+
+		std::vector<int> indexes = result.as_list_int();
+		std::vector<int> match_sessions;
+		for(int index : indexes) {
+			ASSERT_INDEX_INTO_VECTOR(index, session_ids);
+			match_sessions.push_back(session_ids[index]);
+		}
+
+
+		if(!available_ports_.empty()) {
 			//spawn off a server to play this game.
 			std::string fname = formatter() << "/tmp/anura_tbs_server." << match_sessions.front();
 			std::string fname_out = formatter() << "/tmp/anura.out." << match_sessions.front();
 
 			variant_builder game;
 			game.add("game_type", "citadel");
+
+			variant game_info;
 			
 			std::vector<variant> users;
 			for(int i : match_sessions) {
@@ -612,6 +636,10 @@ private:
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
 				users.push_back(user.build());
+
+				if(session_info.game_type_info.is_map()) {
+					game_info = session_info.game_type_info["info"];
+				}
 			}
 
 			variant users_info(&users);
@@ -619,7 +647,11 @@ private:
 			game.add("users", users_info);
 
 			variant_builder server_config;
-			server_config.add("game", game.build());
+			variant game_config = game.build();
+			if(game_info.is_map()) {
+				game_config = game_config + game_info;
+			}
+			server_config.add("game", game_config);
 
 			server_config.add("matchmaking_host", "localhost");
 			server_config.add("matchmaking_port", port_);
@@ -680,11 +712,11 @@ private:
 			}
 
 
-		} else if(match_sessions.size() == 2 && available_ports_.empty()) {
+		} else {
 			fprintf(stderr, "ERROR: AVAILABLE PORTS EXHAUSTED\n");
 		}
 
-		return queue_size;
+		return static_cast<int>(session_ids.size() - match_sessions.size());
 	}
 
 	variant build_status() const {
@@ -751,6 +783,7 @@ private:
 		int game_port;
 		socket_ptr current_socket;
 		bool queued_for_game;
+		variant game_type_info;
 		bool sent_heartbeat;
 
 		std::vector<variant> chat_messages;
@@ -786,6 +819,7 @@ private:
 	boost::intrusive_ptr<game_logic::formula_object> controller_;
 	variant create_account_fn_;
 	variant handle_request_fn_;
+	variant matchmake_fn_;
 
 	variant current_response_;
 
