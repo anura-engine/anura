@@ -551,7 +551,7 @@ void init_object_definition(variant node, const std::string& id_, custom_object_
 			foreach(const std::string& k, properties_to_infer) {
 				s << k << ", ";
 			}
-			ASSERT_LOG(false, "Could not infer properties in object " << id_ << ": " << s.str());
+			ASSERT_LOG(false, "Could not infer types for properties in object " << id_ << ": " << s.str() << ". Explicitly specify types for these properties.");
 		}
 	}
 

@@ -1283,6 +1283,10 @@ namespace preferences {
 			type_safety_checks_ = false;
 		} else if(s == "--tbs-server") {
 			internal_tbs_server_ = true;
+			fprintf(stderr, "TURN ON internal server\n");
+		} else if(s == "--no-tbs-server") {
+			internal_tbs_server_ = false;
+			fprintf(stderr, "TURN OFF internal server\n");
 		} else if(s == "--no-autopause") {
 			allow_autopause_ = false;
 		} else if(s == "--autopause") {

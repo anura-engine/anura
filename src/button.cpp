@@ -53,6 +53,11 @@ button::SetColorSchemeScope::~SetColorSchemeScope()
 	fprintf(stderr, "ZZZ: DONE SET COLOR SCHEME: %s\n", g_color_scheme.write_json().c_str());
 }
 
+variant button::get_color_scheme()
+{
+	return g_color_scheme;
+}
+
 button::button(const std::string& str, boost::function<void()> onclick)
   : label_(new label(str, graphics::color_white())),
     onclick_(onclick), button_resolution_(BUTTON_SIZE_NORMAL_RESOLUTION),

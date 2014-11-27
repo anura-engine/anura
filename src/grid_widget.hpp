@@ -21,6 +21,7 @@
 #include <boost/shared_ptr.hpp>
 #include <vector>
 
+#include "color_utils.hpp"
 #include "grid_widget_fwd.hpp"
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
@@ -42,6 +43,9 @@ public:
 		show_background_ = val;
 		return *this;
 	}
+
+	void set_bg_color(const graphics::color& col);
+	void set_focus_color(const graphics::color& col);
 	virtual void set_dim(int w, int h);
 	void add_row(const std::vector<widget_ptr>& widgets);
 
@@ -118,6 +122,8 @@ private:
 	callback_type on_select_;
 	int hpad_, vpad_;
 	bool show_background_;
+
+	boost::shared_ptr<graphics::color> bg_color_, focus_color_;
 
 	int max_height_;
 
