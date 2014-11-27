@@ -72,6 +72,7 @@ namespace tbs
 		g->nlast_touch = nheartbeat_;
 
 		std::vector<variant> users = msg["users"].as_list();
+		fprintf(stderr, "ZZZ: Add users: %d\n", (int)users.size());
 		for(int i = 0; i != users.size(); ++i) {
 			const std::string user = users[i]["user"].as_string();
 			const int session_id = users[i]["session_id"].as_int();
@@ -88,9 +89,12 @@ namespace tbs
 			cli_info.last_contact = nheartbeat_;
 			cli_info.session_id = session_id;
 
+			fprintf(stderr, "ZZZ: Add player: %s\n", users[i].write_json().c_str());
+
 			if(users[i]["bot"].as_bool(false) == false) {
 				g->game_state->add_player(user);
 			} else {
+				fprintf(stderr, "ZZZ: Add AI\n");
 				g->game_state->add_ai_player(user, users[i]);
 			}
 

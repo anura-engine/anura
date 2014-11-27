@@ -640,6 +640,17 @@ private:
 				if(session_info.game_type_info.is_map()) {
 					game_info = session_info.game_type_info["info"];
 				}
+
+				if(i == match_sessions.back() && session_info.game_type_info.has_key("bot_users")) {
+					for(variant item : session_info.game_type_info["bot_users"].as_list()) {
+						int index = item["index"].as_int();
+						if(index < 0 || index > users.size()) {
+							index = users.size();
+						}
+
+						users.insert(users.begin() + index, item);
+					}
+				}
 			}
 
 			variant users_info(&users);
@@ -668,6 +679,7 @@ private:
 			std::vector<std::string> args;
 			args.push_back(cmd);
 			args.push_back("--module=" + module::get_module_name());
+			args.push_back("--no-tbs-server");
 			args.push_back("--utility=tbs_server");
 			args.push_back("--port");
 			args.push_back(formatter() << new_port);
