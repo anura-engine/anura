@@ -436,7 +436,8 @@ namespace tbs
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
-			if(i->second.game && nheartbeat_ - i->second.game->nlast_touch > 600) {
+			if(nheartbeat_ - i->second.last_contact > 600) {
+				quit_games(i->first);
 				clients_.erase(i++);
 			} else {
 				++i;

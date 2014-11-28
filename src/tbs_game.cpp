@@ -314,6 +314,8 @@ void game::queue_message(const std::string& msg, int nplayer)
 	if(nplayer >= 0) {
 		outgoing_messages_.back().recipients.push_back(nplayer);
 	}
+
+	fprintf(stderr, "QUEUE MESSAGE %d (((%s)))\n", nplayer, msg.c_str());
 }
 
 void game::queue_message(const char* msg, int nplayer)
@@ -416,6 +418,7 @@ int game::get_player_index(const std::string& nick) const
 
 void game::send_game_state(int nplayer, int processing_ms)
 {
+	fprintf(stderr, "SEND GAME STATE: %d\n", nplayer);
 	if(nplayer == -1) {
 		for(int n = 0; n != players().size(); ++n) {
 			send_game_state(n, processing_ms);
@@ -547,6 +550,7 @@ void game::set_value(const std::string& key, const variant& value)
 
 void game::handle_message(int nplayer, const variant& msg)
 {
+	fprintf(stderr, "HANDLE MESSAGE (((%s)))\n", msg.write_json().c_str());
 	rng::set_seed(rng_seed_);
 	const std::string type = msg["type"].as_string();
 	if(type == "start_game") {
