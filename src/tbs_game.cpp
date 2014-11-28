@@ -595,6 +595,7 @@ void game::handle_message(int nplayer, const variant& msg)
 		variant_builder response;
 		response.add("type", "pong_game");
 		response.add("payload", msg);
+		queue_message(response.build().write_json(), nplayer);
 		return;
 	}
 
