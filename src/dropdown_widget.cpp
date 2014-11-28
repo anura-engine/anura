@@ -336,7 +336,7 @@ bool dropdown_widget::handle_mousedown(const SDL_MouseButtonEvent& event, bool c
 {
 	point p(event.x, event.y);
 	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-	if(point_in_rect(p, rect(x(), y(), width()+height(), height()))) {
+	if(point_in_rect(p, rect(x(), y(), width(), height()))) {
 		claimed = claim_mouse_events();
 		if(dropdown_menu_) {
 			dropdown_menu_->set_visible(!dropdown_menu_->visible());
@@ -357,7 +357,7 @@ bool dropdown_widget::handle_mouseup(const SDL_MouseButtonEvent& event, bool cla
 {
 	point p(event.x, event.y);
 	//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-	if(point_in_rect(p, rect(x(), y(), width()+height(), height()))) {
+	if(point_in_rect(p, rect(x(), y(), width(), height()))) {
 		claimed = claim_mouse_events();
 	}
 	return claimed;
