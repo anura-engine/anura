@@ -587,6 +587,11 @@ void game::handle_message(int nplayer, const variant& msg)
 		}
 		queue_message(m);
 		return;
+	} else if(type == "ping_game") {
+		variant_builder response;
+		response.add("type", "pong_game");
+		response.add("payload", msg);
+		return;
 	}
 
 	int start_time = SDL_GetTicks();
