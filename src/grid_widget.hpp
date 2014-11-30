@@ -57,6 +57,7 @@ public:
 	grid& set_col_width(int col, int width);
 	grid& set_align(int col, COLUMN_ALIGN align);
 	grid& set_hpad(int pad);
+	grid& set_vpad(int pad);
 	void reset_contents(const variant&);
 	void set_header_row(int row) { header_rows_.push_back(row); }
 

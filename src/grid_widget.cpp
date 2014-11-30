@@ -292,6 +292,12 @@ grid& grid::set_hpad(int pad)
 	return *this;
 }
 
+grid& grid::set_vpad(int pad)
+{
+	vpad_ = pad;
+	return *this;
+}
+
 void grid::reset_contents(const variant& v)
 {
 	cells_.clear();

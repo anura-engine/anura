@@ -155,6 +155,7 @@ void dropdown_widget::init()
 	dropdown_menu_->set_col_width(0, width());
 	dropdown_menu_->set_max_height(dropdown_height_);
 	dropdown_menu_->set_dim(width(), 0);
+	dropdown_menu_->set_vpad(8);
 	foreach(const std::string& s, list_) {
 		labels_.push_back(label_ptr(new label(s, text_normal_color_ ? text_normal_color_->as_sdl_color() : graphics::color_white(), 14, font_)));
 	}
