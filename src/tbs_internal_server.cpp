@@ -16,6 +16,8 @@
 */
 #include <boost/bind.hpp>
 
+#include <SDL.h>
+
 #include "asserts.hpp"
 #include "foreach.hpp"
 #include "json_parser.hpp"

@@ -537,6 +537,7 @@ void game::set_value(const std::string& key, const variant& value)
 		}
 	} else if(key == "state_id") {
 		state_id_ = value.as_int();
+		fprintf(stderr, "XXX: @%d state_id = %d\n", SDL_GetTicks(), state_id_);
 	} else if(key == "winner") {
 		std::cout << "WINNER: " << value.write_json() << std::endl;
 		if(g_tbs_game_exit_on_winner) {
@@ -563,6 +564,8 @@ void game::handle_message(int nplayer, const variant& msg)
 			if(state_id.as_int() != state_id_ && nplayer >= 0) {
 				send_game_state(nplayer);
 			} else if(state_id.as_int() == state_id_ && nplayer >= 0 && nplayer < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
+
+				fprintf(stderr, "XXX: @%d player %d confirm sync %d\n", SDL_GetTicks(), nplayer, state_id_);
 				players_[nplayer].confirmed_state_id = state_id_;
 
 				std::ostringstream s;
@@ -609,6 +612,8 @@ void game::handle_message(int nplayer, const variant& msg)
 	rng_seed_ = rng::get_seed();
 
 	const int time_taken = SDL_GetTicks() - start_time;
+
+	fprintf(stderr, "XXX: @%d HANDLED MESSAGE %s\n", SDL_GetTicks(), type.c_str());
 
 	send_game_state(-1, time_taken);
 }
