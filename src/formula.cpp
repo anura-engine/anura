@@ -1394,12 +1394,14 @@ private:
 		
 		if(left.is_list()) {
 			if(left.num_elements() == 0) {
-				return variant();
+				std::vector<variant> empty;
+				return variant(&empty);
 			}
 			if(end_index >= begin_index) {
 				return left.get_list_slice(begin_index, end_index);
 			} else {
-				return variant();
+				std::vector<variant> empty;
+				return variant(&empty);
 			}
 			
 		} else {
