@@ -690,7 +690,7 @@ const variant& variant::operator[](size_t n) const
 	must_be(VARIANT_TYPE_LIST);
 	assert(list_);
 	if(n >= list_->size()) {
-		generate_error(formatter() << "invalid index of " << n << " into " << write_json());
+		generate_error(formatter() << "invalid index of " << static_cast<int>(n) << " into " << write_json());
 	}
 
 	return list_->begin[n];
