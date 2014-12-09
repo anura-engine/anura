@@ -96,6 +96,8 @@ bool username_valid(const std::string& username)
 	return true;
 }
 
+PREF_INT(matchmaking_heartbeat_ms, 50, "Frequency of matchmaking heartbeats");
+
 class matchmaking_server : public game_logic::formula_callable, public http::web_server
 {
 public:
@@ -103,7 +105,7 @@ public:
 	  : http::web_server(io_service, port),
 	    io_service_(io_service), port_(port),
 		timer_(io_service), db_timer_(io_service),
-		time_ms_(0), terminated_servers_(0),
+		time_ms_(0), send_at_time_ms_(1000), terminated_servers_(0),
 		controller_(game_logic::formula_object::create("matchmaking_server"))
 	{
 
@@ -169,63 +171,67 @@ public:
 			}
 		}
 
-		time_ms_ += 1000;
+		time_ms_ += g_matchmaking_heartbeat_ms;
 
-		const int nqueue_size = check_matchmaking_queue();
+		if(time_ms_ >= send_at_time_ms_ && send_at_time_ms_ != -1) {
+			send_at_time_ms_ += 1000;
 
-		variant_builder heartbeat_message;
-		heartbeat_message.add("type", "heartbeat");
-		heartbeat_message.add("users", sessions_.size());
-		heartbeat_message.add("users_queued", nqueue_size);
-		heartbeat_message.add("games", servers_.size());
+			const int nqueue_size = check_matchmaking_queue();
 
-		std::vector<variant> servers;
-		for(auto p : servers_) {
-			variant_builder server;
-			server.add("port", p.second.port);
+			variant_builder heartbeat_message;
+			heartbeat_message.add("type", "heartbeat");
+			heartbeat_message.add("users", sessions_.size());
+			heartbeat_message.add("users_queued", nqueue_size);
+			heartbeat_message.add("games", servers_.size());
 
-			std::vector<variant> users;
-			for(int n = 0; n != p.second.users.num_elements(); ++n) {
-				std::map<variant,variant> m;
-				m[variant("user")] = p.second.users[n]["user"];
-				users.push_back(variant(&m));
-			}
-			server.add("users", variant(&users));
-
-			servers.push_back(server.build());
-		}
-
-		heartbeat_message.add("servers", variant(&servers));
-		variant heartbeat_message_value = heartbeat_message.build();
-		std::string heartbeat_msg = heartbeat_message_value.write_json();
-
-		for(auto& p : sessions_) {
-			if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.chat_messages.empty() == false)) {
-
-				if(p.second.chat_messages.empty() == false) {
-					heartbeat_message_value.add_attr_mutation(variant("chat_messages"), variant(&p.second.chat_messages));
-					send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
-					p.second.chat_messages.clear();
-				} else {
-					send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
+			std::vector<variant> servers;
+			for(auto p : servers_) {
+				variant_builder server;
+				server.add("port", p.second.port);
+	
+				std::vector<variant> users;
+				for(int n = 0; n != p.second.users.num_elements(); ++n) {
+					std::map<variant,variant> m;
+					m[variant("user")] = p.second.users[n]["user"];
+					users.push_back(variant(&m));
 				}
-				p.second.last_contact = time_ms_;
-				p.second.current_socket = socket_ptr();
-				p.second.sent_heartbeat = true;
-			} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
-				p.second.session_id = 0;
+				server.add("users", variant(&users));
+
+				servers.push_back(server.build());
+			}
+
+			heartbeat_message.add("servers", variant(&servers));
+			variant heartbeat_message_value = heartbeat_message.build();
+			std::string heartbeat_msg = heartbeat_message_value.write_json();
+
+			for(auto& p : sessions_) {
+				if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.chat_messages.empty() == false)) {
+	
+					if(p.second.chat_messages.empty() == false) {
+						heartbeat_message_value.add_attr_mutation(variant("chat_messages"), variant(&p.second.chat_messages));
+						send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
+						p.second.chat_messages.clear();
+					} else {
+						send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
+					}
+					p.second.last_contact = time_ms_;
+					p.second.current_socket = socket_ptr();
+					p.second.sent_heartbeat = true;
+				} else if(!p.second.current_socket && time_ms_ - p.second.last_contact >= 10000) {
+					p.second.session_id = 0;
+				}
+			}
+
+			for(auto itor = sessions_.begin(); itor != sessions_.end(); ) {
+				if(itor->second.session_id == 0) {
+					sessions_.erase(itor++);
+				} else {
+					++itor;
+				}
 			}
 		}
 
-		for(auto itor = sessions_.begin(); itor != sessions_.end(); ) {
-			if(itor->second.session_id == 0) {
-				sessions_.erase(itor++);
-			} else {
-				++itor;
-			}
-		}
-
-		timer_.expires_from_now(boost::posix_time::milliseconds(1000));
+		timer_.expires_from_now(boost::posix_time::milliseconds(g_matchmaking_heartbeat_ms));
 		timer_.async_wait(boost::bind(&matchmaking_server::heartbeat, this, boost::asio::placeholders::error));
 	}
 
@@ -497,6 +503,8 @@ public:
 					}
 
 					send_msg(socket, "text/json", "{ type: \"ack\" }", "");
+
+					schedule_send(200);
 				}
 
 			} else if(request_type == "request_updates") {
@@ -810,6 +818,12 @@ private:
 	std::map<int, SessionInfo> sessions_;
 
 	int time_ms_;
+	int send_at_time_ms_;
+	void schedule_send(int ms) {
+		if(send_at_time_ms_ == -1 || send_at_time_ms_ > time_ms_ + ms) {
+			send_at_time_ms_ = time_ms_ + ms;
+		}
+	}
 
 	int session_timed_out(int last_contact) const {
 		return time_ms_ - last_contact > 10000;

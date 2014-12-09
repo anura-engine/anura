@@ -232,7 +232,7 @@ variant game::write(int nplayer, int processing_ms) const
 	result.add("id", game_id_);
 	result.add("type", "game");
 	result.add("game_type", variant(type_.name));
-	result.add("started", started_);
+	result.add("started", variant::from_bool(started_));
 	result.add("state_id", state_id_);
 	result.add("rng_seed", rng_seed_);
 
