@@ -76,6 +76,7 @@ struct property_entry {
 	}
 	property_entry(const std::string& class_name, const std::string& prop_name, variant node, int& state_slot) : variable_slot(-1) {
 		name = prop_name;
+		name_variant = variant(name);
 
 		formula_callable_definition_ptr class_def = get_class_definition(class_name);
 
@@ -149,6 +150,7 @@ struct property_entry {
 	}
 
 	std::string name;
+	variant name_variant;
 	game_logic::const_formula_ptr getter, setter, initializer;
 
 	variant_type_ptr get_type, set_type;
@@ -1060,7 +1062,21 @@ formula_object::formula_object(variant data)
 	variables_.resize(class_->nstate_slots());
 
 	if(data.is_map() && data["state"].is_map()) {
-		variant state = data["state"];
+		const std::map<variant,variant>& state_map = data["state"].as_map();
+
+		for(const property_entry& entry : class_->slots()) {
+			if(entry.variable_slot == -1) {
+				continue;
+			}
+
+			auto itor = state_map.find(entry.name_variant);
+			if(itor != state_map.end()) {
+				variables_[entry.variable_slot] = itor->second;
+			} else {
+				variables_[entry.variable_slot] = entry.default_value;
+			}
+		}
+/*
 		foreach(const variant::map_pair& p, state.as_map()) {
 			std::map<std::string, int>::const_iterator itor = class_->properties().find(p.first.as_string());
 			ASSERT_LOG(itor != class_->properties().end(), "No property " << p.first.as_string() << " in class " << class_->name());
@@ -1070,6 +1086,7 @@ formula_object::formula_object(variant data)
 
 			variables_[entry.variable_slot] = p.second;
 		}
+		*/
 	}
 
 	if(data.is_map() && data["property_overrides"].is_list()) {
@@ -1107,7 +1124,7 @@ variant formula_object::serialize_to_wml() const
 	foreach(const property_entry& slot, class_->slots()) {
 		const int nstate_slot = slot.variable_slot;
 		if(nstate_slot != -1 && nstate_slot < variables_.size() &&
-		   variables_[nstate_slot].is_null() == false) {
+		   variables_[nstate_slot] != slot.default_value) {
 			state[variant(slot.name)] = variables_[nstate_slot];
 		}
 	}
