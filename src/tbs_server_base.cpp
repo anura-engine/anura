@@ -280,18 +280,7 @@ namespace tbs
 				const bool is_first_client = g->clients.front() == session_id;
 				g->clients.erase(std::remove(g->clients.begin(), g->clients.end(), session_id), g->clients.end());
 
-				if(!g->game_state->started()) {
-					g->game_state->remove_player(cli_info.user);
-					if(is_first_client) {
-						g->clients.clear();
-						//TODO: remove joining clients from the game nicely.
-					} else {
-						const std::string msg = create_game_info_msg(g).write_json(true, variant::JSON_COMPLIANT);
-						foreach(int client, g->clients) {
-							queue_msg(client, msg);
-						}
-					}
-				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
+				if(g->game_state->get_player_index(cli_info.user) != -1) {
 					std::cerr << "sending quit message...\n";
 					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
