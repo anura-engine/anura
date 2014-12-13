@@ -298,6 +298,8 @@ void web_server::send_msg(socket_ptr socket, const std::string& type, const std:
 	boost::shared_ptr<std::string> str(new std::string(buf.str()));
 	*str += msg;
 
+	fprintf(stderr, "SEND_MSG(((%s)))\n", str->c_str());
+
 	boost::asio::async_write(*socket, boost::asio::buffer(*str),
 	                         boost::bind(&web_server::handle_send, this, socket, _1, _2, str->size(), str));
 }
