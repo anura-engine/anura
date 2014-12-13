@@ -242,7 +242,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		ASSERT_LOG(conn->expected_len == conn->response.size(), "UNEXPECTED RESPONSE SIZE " << conn->expected_len << " VS " << conn->response << " " << conn->response.size());
 
 		//We have the full response now -- handle it.
-		//fprintf(stderr, "HAVE FULL RESPONSE: %d (((%s)))\n", (int)conn->response.size(), conn->response.c_str());
+		fprintf(stderr, "HAVE FULL RESPONSE: %d (((%s)))\n", (int)conn->response.size(), conn->response.c_str());
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
 		int header_term_len = 2;
 		const char* end_headers2 = strstr(conn->response.c_str(), "\r\n\r\n");
