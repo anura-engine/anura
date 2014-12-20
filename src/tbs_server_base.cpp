@@ -195,6 +195,9 @@ namespace tbs
 		std::map<int, client_info>::iterator client_itor = clients_.find(session_id);
 		if(client_itor == clients_.end()) {
 			std::cerr << "BAD SESSION ID: " << session_id << ": " << type << "\n";
+			for(auto i : clients_) {
+				fprintf(stderr, "VALID SESSION ID: %d\n", i.first);
+			}
 			send_fn(json::parse("{ \"type\": \"invalid_session\" }"));
 			return;
 		}
@@ -392,6 +395,8 @@ namespace tbs
 	PREF_INT(tbs_server_delay_ms, 20, "");
 	PREF_INT(tbs_server_heartbeat_freq, 1, "");
 
+	int server_base::connection_timeout_ticks() const { return 5000; }
+
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
 		if(error == boost::asio::error::operation_aborted) {
@@ -425,7 +430,7 @@ namespace tbs
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
-			if(nheartbeat_ - i->second.last_contact > 600) {
+			if(nheartbeat_ - i->second.last_contact > connection_timeout_ticks() && connection_timeout_ticks() > 0) {
 				quit_games(i->first);
 				clients_.erase(i++);
 			} else {

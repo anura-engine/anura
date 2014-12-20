@@ -202,4 +202,9 @@ namespace tbs
 			send_fn(game_logic::deserialize_doc_with_objects(msg));
 		}
 	}
+
+	int internal_server::connection_timeout_ticks() const
+	{
+		return -1;
+	}
 }

@@ -92,6 +92,7 @@ namespace tbs
 		variant create_heartbeat_packet(const client_info& cli_info);
 
 	private:
+		virtual int connection_timeout_ticks() const;
 		variant create_lobby_msg() const;
 		variant create_game_info_msg(game_info_ptr g) const;
 		void status_change();
