@@ -753,6 +753,49 @@ FUNCTION_ARGS_DEF
 	ARG_TYPE("string");
 END_FUNCTION_DEF(eval)
 
+namespace {
+int g_formula_timeout = -1;
+
+struct timeout_scope {
+	int old_value;
+	explicit timeout_scope(int deadline) : old_value(g_formula_timeout) {
+		if(g_formula_timeout == -1 || deadline > g_formula_timeout) {
+			g_formula_timeout = deadline;
+		}
+	}
+
+	~timeout_scope() {
+		g_formula_timeout = old_value;
+	}
+};
+
+}
+
+FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+
+	const int time_ms = SDL_GetTicks() + args()[0]->evaluate(variables).as_int();
+	const timeout_scope scope(time_ms);
+	return args()[1]->evaluate(variables);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int");
+FUNCTION_TYPE_DEF
+	return args()[1]->query_variant_type();
+END_FUNCTION_DEF(eval_with_timeout)
+
+FUNCTION_DEF(has_timed_out, 0, 0, "has_timed_out(): will evaluate to true iff the timeout specified by an enclosing eval_with_timeout() has elapsed.")
+	game_logic::formula::fail_if_static_context();
+	if(g_formula_timeout == false) {
+		return variant::from_bool(false);
+	}
+
+	const int ticks = SDL_GetTicks();
+
+	return variant::from_bool(ticks >= g_formula_timeout);
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+END_FUNCTION_DEF(has_timed_out)
+
 FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
 	const assert_recover_scope recovery_scope;
 	try {
