@@ -136,6 +136,7 @@ text_editor_widget::text_editor_widget(int width, int height)
 	scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(false), 
+	editable_(true), 
 	is_dragging_(false),
 	begin_enter_return_(true),
 	last_click_at_(-1),
@@ -166,6 +167,7 @@ text_editor_widget::text_editor_widget(const variant& v, game_logic::formula_cal
 	select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 	begin_highlight_line_(-1), end_highlight_line_(-1),
 	has_focus_(v["focus"].as_bool(false)), 
+	editable_(v["editable"].as_bool(true)), 
 	is_dragging_(false),
 	begin_enter_return_(true),
 	last_click_at_(-1),
@@ -774,13 +776,13 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		return true;
 	}
 
-	if(event.keysym.sym == SDLK_z && (event.keysym.mod&KMOD_CTRL)) {
+	if(editable_ && event.keysym.sym == SDLK_z && (event.keysym.mod&KMOD_CTRL)) {
 		record_op();
 		undo();
 		return true;
 	}
 
-	if(event.keysym.sym == SDLK_y && (event.keysym.mod&KMOD_CTRL)) {
+	if(editable_ && event.keysym.sym == SDLK_y && (event.keysym.mod&KMOD_CTRL)) {
 		record_op();
 		redo();
 		return true;
@@ -791,20 +793,20 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		record_op();
 		handle_copy();
 
-		if(event.keysym.sym == SDLK_x) {
+		if(editable_ && event.keysym.sym == SDLK_x) {
 			save_undo_state();
 			delete_selection();
 			on_change();
 		}
 
 		return true;
-	} else if(event.keysym.sym == SDLK_v && (event.keysym.mod&KMOD_CTRL)) {
+	} else if(editable_ && event.keysym.sym == SDLK_v && (event.keysym.mod&KMOD_CTRL)) {
 		handle_paste(copy_from_clipboard(false));
 
 		return true;
 	}
 
-	if(event.keysym.mod&KMOD_CTRL) {
+	if(editable_ && (event.keysym.mod&KMOD_CTRL)) {
 		if(event.keysym.sym == SDLK_BACKSPACE) {
 			if(select_ == cursor_) {
 				//We delete the current word behind us. 
@@ -992,6 +994,10 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		break;
 	case SDLK_DELETE:
 	case SDLK_BACKSPACE:
+		if(!editable_) {
+			break;
+		}
+
 		if(record_op("delete")) {
 			save_undo_state();
 		}
@@ -1034,6 +1040,10 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 		break;
 
 	case SDLK_RETURN: {
+		if(!editable_) {
+			break;
+		}
+
 		if(record_op("enter")) {
 			save_undo_state();
 		}
@@ -1084,7 +1094,7 @@ bool text_editor_widget::handle_key_press(const SDL_KeyboardEvent& event)
 			on_tab_();
 		} else if(nrows_ == 1) {
 			return false;
-		} else {
+		} else if(editable_) {
 			handle_text_input_internal("\t");
 		}
 	}
@@ -1101,7 +1111,7 @@ bool text_editor_widget::handle_text_input(const SDL_TextInputEvent& event)
 
 bool text_editor_widget::handle_text_input_internal(const char* text)
 {
-	if(!has_focus_) {
+	if(!has_focus_ || !editable_) {
 		return false;
 	}
 
@@ -1136,6 +1146,9 @@ bool text_editor_widget::handle_text_editing(const SDL_TextEditingEvent& event)
 
 void text_editor_widget::handle_paste(std::string txt)
 {
+	if(!editable_) {
+		return;
+	}
 	record_op();
 	save_undo_state();
 	delete_selection();
