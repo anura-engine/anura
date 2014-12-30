@@ -1497,14 +1497,34 @@ private:
 };
 }
 
-FUNCTION_DEF(fold, 2, 3, "fold(list, expr, [default]) -> value")
+FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
+	if(args().size() == 2) {
+		variant_type_ptr type = args()[1]->query_variant_type();
+		if(type->is_type(variant::VARIANT_TYPE_INT)) {
+			default_ = variant(0);
+		} else if(type->is_numeric()) {
+			default_ = variant(decimal(0));
+		} else if(type->is_type(variant::VARIANT_TYPE_STRING)) {
+			default_ = variant("");
+		} else if(type->is_type(variant::VARIANT_TYPE_LIST) || type->is_list_of()) {
+			std::vector<variant> v;
+			default_ = variant(&v);
+		} else if(type->is_type(variant::VARIANT_TYPE_MAP) || type->is_map_of().first) {
+			std::map<variant,variant> m;
+			default_ = variant(&m);
+		}
+	}
+
+FUNCTION_DEF_MEMBERS
+	variant default_;
+FUNCTION_DEF_IMPL
 	variant list = args()[0]->evaluate(variables);
 	const int size = list.num_elements();
 	if(size == 0) {
 		if(args().size() >= 3) {
 			return args()[2]->evaluate(variables);
 		} else {
-			return variant();
+			return default_;
 		}
 	} else if(size == 1) {
 		return list[0];
@@ -1525,6 +1545,8 @@ FUNCTION_TYPE_DEF
 	types.push_back(args()[1]->query_variant_type());
 	if(args().size() > 2) {
 		types.push_back(args()[2]->query_variant_type());
+	} else if(default_.is_null()) {
+		types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 	}
 
 	return variant_type::get_union(types);
