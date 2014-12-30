@@ -59,11 +59,7 @@ private:
 	variant execute(const formula_callable& variables) const {
 
 #define FUNCTION_DEF(name, min_args, max_args, helpstring) \
-const int name##_dummy_help_var = register_function_helpstring(FunctionModule, helpstring); \
-class name##_function : public function_expression { \
-public: \
-	explicit name##_function(const args_list& myargs) \
-	  : function_expression(#name, myargs, min_args, max_args) { \
+FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
 FUNCTION_DEF_MEMBERS \
 FUNCTION_DEF_IMPL
 

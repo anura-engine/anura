@@ -81,9 +81,13 @@
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
-#define asinh boost::math::asinh
-#define acosh boost::math::acosh
-#define atanh boost::math::atanh
+#define asinh_call boost::math::asinh
+#define acosh_call boost::math::acosh
+#define atanh_call boost::math::atanh
+#else
+#define asinh_call asinh
+#define acosh_call acosh
+#define atanh_call atanh
 #endif
 
 #include "compat.hpp"
@@ -1193,7 +1197,7 @@ END_FUNCTION_DEF(tanh)
 
 FUNCTION_DEF(asinh, 1, 1, "asinh(x): Standard arc hyperbolic sine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
-	return variant(static_cast<decimal>(asinh(ratio)));
+	return variant(static_cast<decimal>(asinh_call(ratio)));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
@@ -1202,7 +1206,7 @@ END_FUNCTION_DEF(asinh)
 
 FUNCTION_DEF(acosh, 1, 1, "acosh(x): Standard arc hyperbolic cosine function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
-	return variant(static_cast<decimal>(acosh(ratio)));
+	return variant(static_cast<decimal>(acosh_call(ratio)));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
@@ -1211,7 +1215,7 @@ END_FUNCTION_DEF(acosh)
 
 FUNCTION_DEF(atanh, 1, 1, "atanh(x): Standard arc hyperbolic tangent function.")
 	const float ratio = args()[0]->evaluate(variables).as_decimal().as_float();
-	return variant(static_cast<decimal>(atanh(ratio)));
+	return variant(static_cast<decimal>(atanh_call(ratio)));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("int|decimal");
 FUNCTION_TYPE_DEF
