@@ -1164,6 +1164,17 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 END_FUNCTION_DEF(atan)
 
+FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+const float ratio1 = args()[0]->evaluate(variables).as_decimal().as_float();
+const float ratio2 = args()[1]->evaluate(variables).as_decimal().as_float();
+return variant(static_cast<decimal>(atan2(ratio1,ratio2)*radians_to_degrees));
+FUNCTION_ARGS_DEF
+ARG_TYPE("int|decimal");
+ARG_TYPE("int|decimal");
+FUNCTION_TYPE_DEF
+return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+END_FUNCTION_DEF(atan2)
+    
 FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
 	const float angle = args()[0]->evaluate(variables).as_decimal().as_float();
 	return variant(static_cast<decimal>(sinh(angle)));
