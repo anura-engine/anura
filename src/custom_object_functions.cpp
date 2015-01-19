@@ -1167,8 +1167,6 @@ public:
 
 		if(entity_collides(lvl, *obj_, MOVE_NONE)) {
 			lvl.remove_character(obj_);
-		} else {
-			obj_->check_initialized();
 		}
 
 		obj_->create_object();
