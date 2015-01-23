@@ -1800,8 +1800,9 @@ void custom_object::process(level& lvl)
 	}
 
 	rect water_bounds;
-	const bool is_underwater = solid() && lvl.is_underwater(solid_rect(), &water_bounds);
-	
+	const bool is_underwater = (solid() && lvl.is_underwater(solid_rect(), &water_bounds)) ||
+    lvl.is_underwater(rect(x(), y(), current_frame().width(), current_frame().height()), &water_bounds);
+    
 	if( is_underwater && !was_underwater_){
 		//event on_enter_water
 		handle_event(OBJECT_EVENT_ENTER_WATER);
