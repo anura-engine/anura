@@ -111,6 +111,7 @@ custom_object_callable::custom_object_callable(bool is_singleton)
 	{ "midpoint_y", "int/int|decimal" },
 	{ "midpoint_xy", "[int]" },
 
+    { "is_solid", "bool" },
 	{ "solid_rect", "rect_obj" },
 	{ "solid_mid_x", "int" },
 	{ "solid_mid_y", "int" },

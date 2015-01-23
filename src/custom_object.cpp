@@ -2980,6 +2980,7 @@ variant custom_object::get_value_by_slot(int slot) const
 			variant(solid_rect().h() ? solid_rect().y() + solid_rect().h()/2 : y() + current_frame().height()/2));
 	}
 
+    case CUSTOM_OBJECT_IS_SOLID:          return variant::from_bool(solid());
 	case CUSTOM_OBJECT_SOLID_RECT:        return variant(solid_rect().callable());
 	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solid_rect().x() + solid_rect().w()/2);
 	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solid_rect().y() + solid_rect().h()/2);
