@@ -80,6 +80,10 @@ public:
 		int side;
 		bool is_human;
 		int confirmed_state_id;
+
+		mutable variant state_sent;
+		mutable int state_id_sent;
+		bool allow_deltas;
 	};
 
 	int get_player_index(const std::string& nick) const;

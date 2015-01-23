@@ -45,7 +45,7 @@ void client::send_request(variant request, game_logic::map_formula_callable_ptr 
 	handler_ = handler;
 	callable_ = callable;
 
-	std::string request_str = game_logic::serialize_doc_with_objects(request);
+	std::string request_str = game_logic::serialize_doc_with_objects(request).write_json();
 	//fprintf(stderr, "SEND ((%s))\n", request_str.c_str());
 
 	http_client::send_request("POST /tbs", 

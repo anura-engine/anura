@@ -646,6 +646,16 @@ FUNCTION_TYPE_DEF
 	return variant_type::get_commands();
 END_FUNCTION_DEF(update_object)
 
+FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
+	boost::intrusive_ptr<formula_object> target = args()[0]->evaluate(variables).convert_to<formula_object>();
+	variant clone = formula_object::deep_clone(variant(target.get()));
+	formula_object* obj = clone.try_convert<formula_object>();
+	obj->apply_diff(args()[1]->evaluate(variables));
+	return clone;
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type();
+END_FUNCTION_DEF(apply_delta)
+
 FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
 	formula::fail_if_static_context();
 	variant s = args()[0]->evaluate(variables);
@@ -3910,7 +3920,7 @@ FUNCTION_DEF(write_document, 2, 2, "write_document(string filename, doc): writes
 		get_doc_cache()[docname] = doc;
 
 		std::string real_docname = preferences::user_data_path() + docname;
-		sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc));
+		sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
 	}));
 FUNCTION_ARGS_DEF
 	ARG_TYPE("string");

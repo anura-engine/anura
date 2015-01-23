@@ -41,10 +41,14 @@ bool is_class_derived_from(const std::string& derived, const std::string& base);
 class formula_object : public game_logic::wml_serializable_formula_callable
 {
 public:
+
 	static void visit_variants(variant v, boost::function<void (variant)> fn, std::vector<formula_object*>* seen=NULL);
 	static void map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen=NULL);
 
 	void update(formula_object& updated);
+
+	static variant generate_diff(variant a, variant b);
+	void apply_diff(variant delta);
 
 	static variant deep_clone(variant v);
 	static variant deep_clone(variant v, std::map<formula_object*,formula_object*>& mapping);
@@ -65,6 +69,8 @@ public:
 	boost::intrusive_ptr<formula_object> clone() const;
 
 	void validate() const;
+
+	std::string write_id() const;
 private:
 	//construct with type and constructor parameters.
 	//Don't call directly, use create() instead.

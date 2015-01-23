@@ -22,7 +22,9 @@
 #include <string>
 #include <stdio.h>
 
+#include "base64.hpp"
 #include "code_editor_dialog.hpp"
+#include "compress.hpp"
 #include "filesystem.hpp"
 #include "formula.hpp"
 #include "formula_callable.hpp"
@@ -874,6 +876,150 @@ void formula_object::update(formula_object& updated)
 	}
 }
 
+variant formula_object::generate_diff(variant before, variant b)
+{
+	variant a = deep_clone(before);
+
+	std::vector<boost::intrusive_ptr<formula_object> > objects;
+
+	std::map<boost::uuids::uuid, formula_object*> src, dst;
+	visit_variants(b, [&dst,&objects](variant v) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			dst[obj->id_] = obj;
+			obj->previous_.reset();
+			obj->previous_.reset(new formula_object(*obj));
+			objects.push_back(obj);
+		}});
+
+	visit_variants(a, [&src,&objects](variant v) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			src[obj->id_] = obj;
+			objects.push_back(obj);
+		}});
+
+	std::map<formula_object*, formula_object*> mapping;
+
+	for(auto i = src.begin(); i != src.end(); ++i) {
+		auto j = dst.find(i->first);
+		if(j != dst.end()) {
+			mapping[i->second] = j->second;
+		}
+	}
+
+	std::vector<variant> deltas;
+
+	for(auto i = src.begin(); i != src.end(); ++i) {
+		variant v(i->second);
+		map_object_into_different_tree(v, mapping);
+		auto j = dst.find(i->first);
+		if(j != dst.end() && i->second->variables_ != j->second->variables_) {
+			std::map<variant, variant> node_delta;
+			node_delta[variant("_uuid")] = variant(write_uuid(i->second->id_));
+			if(i->second->variables_.size() < j->second->variables_.size()) {
+				i->second->variables_.resize(j->second->variables_.size());
+			}
+
+			if(j->second->variables_.size() < i->second->variables_.size()) {
+				j->second->variables_.resize(i->second->variables_.size());
+			}
+
+			for(int n = 0; n != j->second->variables_.size(); ++n) {
+				if(i->second->variables_[n] != j->second->variables_[n]) {
+					for(const property_entry& e : i->second->class_->slots()) {
+						if(e.variable_slot == n) {
+							node_delta[e.name_variant] = j->second->variables_[n];
+							break;
+						}
+					}
+				}
+			}
+
+			deltas.push_back(variant(&node_delta));
+		}
+	}
+
+	std::vector<variant> new_objects;
+	for(auto i = dst.begin(); i != dst.end(); ++i) {
+		if(src.find(i->first) == src.end()) {
+			new_objects.push_back(i->second->serialize_to_wml());
+		}
+	}
+
+
+	variant_builder builder;
+	builder.add("deltas", variant(&deltas));
+	builder.add("objects", variant(&new_objects));
+
+	std::string res_doc = builder.build().write_json();
+	std::vector<char> data(res_doc.begin(), res_doc.end());
+	std::vector<char> compressed = base64::b64encode(zip::compress(data));
+
+	variant_builder result;
+	result.add("delta", std::string(compressed.begin(), compressed.end()));
+	result.add("size", res_doc.size());
+	return result.build();
+}
+
+void formula_object::apply_diff(variant delta)
+{
+	std::map<boost::uuids::uuid, formula_object*> objects;
+	visit_variants(variant(this), [&objects](variant v) {
+		formula_object* obj = v.try_convert<formula_object>();
+		if(obj) {
+			obj->previous_.reset(new formula_object(*obj));
+			objects[obj->id_] = obj;
+		}});
+
+	const std::string& data_str = delta["delta"].as_string();
+	std::vector<char> data_buf(data_str.begin(), data_str.end());
+	const int data_size = delta["size"].as_int();
+
+	std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
+
+	const game_logic::wml_formula_callable_read_scope read_scope;
+
+	for(auto p : objects) {
+		std::string addr_str = p.second->addr();
+		if(addr_str.size() > 15) {
+			addr_str.resize(15);
+		}
+		const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
+		game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, p.second);
+	}
+
+	variant v = json::parse(std::string(data.begin(), data.end()));
+	for(variant obj_node : v["objects"].as_list()) {
+		game_logic::wml_serializable_formula_callable_ptr obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
+		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
+		std::string addr_str = obj->addr();
+		if(addr_str.size() > 15) {
+			addr_str.resize(15);
+		}
+		const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
+
+		game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, obj);
+	}
+
+	for(variant d : v["deltas"].as_list()) {
+		boost::uuids::uuid id = read_uuid(d["_uuid"].as_string());
+		auto obj_itor = objects.find(id);
+		ASSERT_LOG(obj_itor != objects.end(), "Could not find expected object id when applying delta: " << d.write_json());
+		for(auto p : d.as_map()) {
+			const std::string& attr = p.first.as_string();
+			if(attr == "_uuid") {
+				continue;
+			}
+
+			auto prop_itor = obj_itor->second->class_->properties().find(attr);
+			ASSERT_LOG(prop_itor != obj_itor->second->class_->properties().end(), "Unknown property '" << attr << "' in delta: " << d.write_json());
+
+			obj_itor->second->variables_[obj_itor->second->class_->slots()[prop_itor->second].variable_slot] = p.second;
+		}
+	}
+}
+
 void formula_object::map_object_into_different_tree(variant& v, const std::map<formula_object*, formula_object*>& mapping, std::vector<formula_object*>* seen)
 {
 	std::vector<formula_object*> seen_buf;
@@ -1013,6 +1159,15 @@ formula_object::formula_object(const std::string& type, variant args)
 			}
 		}
 	}
+
+	set_addr(write_id());
+}
+
+std::string formula_object::write_id() const
+{
+	std::string result = write_uuid(id_);
+	result.resize(15);
+	return result;
 }
 
 bool formula_object::is_a(const std::string& class_name) const
@@ -1101,7 +1256,7 @@ formula_object::formula_object(variant data)
 		}
 	}
 
-	set_addr(data["_addr"].as_string());
+	set_addr(write_id());
 }
 
 formula_object::~formula_object()
@@ -1110,7 +1265,9 @@ formula_object::~formula_object()
 boost::intrusive_ptr<formula_object> formula_object::clone() const
 {
 	boost::intrusive_ptr<formula_object> result(new formula_object(*this));
-	result->id_ = generate_uuid();
+	//result->id_ = generate_uuid();
+	//result->set_addr(result->write_id());
+
 	return result;
 }
 

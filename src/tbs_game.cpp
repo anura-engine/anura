@@ -259,16 +259,36 @@ variant game::write(int nplayer, int processing_ms) const
 		result.add("observer", true);
 	}
 
+	bool send_delta = false;
+
+	if(nplayer >= 0 & nplayer < players_.size() && players_[nplayer].state_id_sent != -1 && players_[nplayer].state_id_sent == players_[nplayer].confirmed_state_id && players_[nplayer].allow_deltas) {
+		send_delta = true;
+	}
+
+	variant state_doc;
+
 	if(type_.handlers.count("transform")) {
-		variant msg = deep_copy_variant(doc_);
+		variant msg = formula_object::deep_clone(doc_);
 		game_logic::map_formula_callable_ptr vars(new game_logic::map_formula_callable);
 		vars->add("message", msg);
 		vars->add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
 		const_cast<game*>(this)->handle_event("transform", vars.get());
 
-		result.add("state", msg);
+		state_doc = msg;
 	} else {
-		result.add("state", doc_);
+		state_doc = formula_object::deep_clone(doc_);
+	}
+
+	if(send_delta) {
+		result.add("delta", formula_object::generate_diff(players_[nplayer].state_sent, state_doc));
+		result.add("delta_basis", players_[nplayer].confirmed_state_id);
+	} else {
+		result.add("state", state_doc);
+	}
+
+	if(nplayer >= 0 && nplayer < players_.size() && players_[nplayer].allow_deltas) {
+		players_[nplayer].state_id_sent = state_id_;
+		players_[nplayer].state_sent = state_doc;
 	}
 
 	std::string log_str;
@@ -344,7 +364,7 @@ void game::send_notify(const std::string& msg, int nplayer)
 	queue_message(result.build(), nplayer);
 }
 
-game::player::player() : confirmed_state_id(-1)
+game::player::player() : confirmed_state_id(-1), state_id_sent(-1), allow_deltas(true)
 {
 }
 
@@ -560,6 +580,10 @@ void game::handle_message(int nplayer, const variant& msg)
 		return;
 	} else if(type == "request_updates") {
 		if(msg.has_key("state_id") && !doc_.is_null()) {
+			if(nplayer >= 0 && nplayer < players_.size() && msg.has_key("allow_deltas") && msg["allow_deltas"].as_bool() == false) {
+				players_[nplayer].allow_deltas = false;
+			}
+
 			const variant state_id = msg["state_id"];
 			if(state_id.as_int() != state_id_ && nplayer >= 0) {
 				send_game_state(nplayer);

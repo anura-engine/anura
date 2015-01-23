@@ -225,7 +225,7 @@ bool wml_formula_callable_read_scope::try_load_object(intptr_t id, variant& v)
 	}
 }
 
-std::string serialize_doc_with_objects(variant v)
+variant serialize_doc_with_objects(variant v)
 {
 	variant orig = v;
 	if(!v.is_map()) {
@@ -237,10 +237,10 @@ std::string serialize_doc_with_objects(variant v)
 	int num_objects = 0;
 	variant serialized_objects = serialization_scope.write_objects(v, &num_objects);
 	if(num_objects == 0) {
-		return orig.write_json();
+		return orig;
 	}
 	v.add_attr(variant("serialized_objects"), serialized_objects);
-	return v.write_json();
+	return v;
 }
 
 namespace {
@@ -266,6 +266,9 @@ variant deserialize_doc_with_objects_internal(const std::string& msg, bool fname
 				game_logic::wml_serializable_formula_callable_ptr obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
 				ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
 				std::string addr_str = obj->addr();
+				if(addr_str.size() > 15) {
+					addr_str.resize(15);
+				}
 				const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
 
 				game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, obj);
