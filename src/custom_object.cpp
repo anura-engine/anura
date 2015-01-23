@@ -3087,9 +3087,18 @@ variant custom_object::get_value_by_slot(int slot) const
 			v.push_back(variant(area.x2()));
 			v.push_back(variant(area.y2()));
 			return variant(&v);
-		} else {
+        } else if( level::current().is_underwater(rect(x(), y(), current_frame().width(), current_frame().height()), &area)  ){
+            //N.B:  has a baked-in assumption that the image-rect will always be bigger than the solid-rect; the idea being that this will only fall through if the solid-rect just doesn't exist.  Make an object where the solidity is bigger than the image, and this will break down.
+            std::vector<variant> v;
+            v.push_back(variant(area.x()));
+            v.push_back(variant(area.y()));
+            v.push_back(variant(area.x2()));
+            v.push_back(variant(area.y2()));
+            return variant(&v);
+        } else {
 			return variant();
-		}
+        }
+
 	}
 	case CUSTOM_OBJECT_WATER_OBJECT: {
 		variant v;
