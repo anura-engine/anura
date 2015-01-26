@@ -1800,8 +1800,9 @@ void custom_object::process(level& lvl)
 	}
 
 	rect water_bounds;
-	const bool is_underwater = solid() && lvl.is_underwater(solid_rect(), &water_bounds);
-	
+	const bool is_underwater = (solid() && lvl.is_underwater(solid_rect(), &water_bounds)) ||
+    lvl.is_underwater(rect(x(), y(), current_frame().width(), current_frame().height()), &water_bounds);
+    
 	if( is_underwater && !was_underwater_){
 		//event on_enter_water
 		handle_event(OBJECT_EVENT_ENTER_WATER);
@@ -2980,6 +2981,7 @@ variant custom_object::get_value_by_slot(int slot) const
 			variant(solid_rect().h() ? solid_rect().y() + solid_rect().h()/2 : y() + current_frame().height()/2));
 	}
 
+    case CUSTOM_OBJECT_IS_SOLID:          return variant::from_bool(solid());
 	case CUSTOM_OBJECT_SOLID_RECT:        return variant(solid_rect().callable());
 	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solid_rect().x() + solid_rect().w()/2);
 	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solid_rect().y() + solid_rect().h()/2);
@@ -3086,9 +3088,18 @@ variant custom_object::get_value_by_slot(int slot) const
 			v.push_back(variant(area.x2()));
 			v.push_back(variant(area.y2()));
 			return variant(&v);
-		} else {
+        } else if( level::current().is_underwater(rect(x(), y(), current_frame().width(), current_frame().height()), &area)  ){
+            //N.B:  has a baked-in assumption that the image-rect will always be bigger than the solid-rect; the idea being that this will only fall through if the solid-rect just doesn't exist.  Make an object where the solidity is bigger than the image, and this will break down.
+            std::vector<variant> v;
+            v.push_back(variant(area.x()));
+            v.push_back(variant(area.y()));
+            v.push_back(variant(area.x2()));
+            v.push_back(variant(area.y2()));
+            return variant(&v);
+        } else {
 			return variant();
-		}
+        }
+
 	}
 	case CUSTOM_OBJECT_WATER_OBJECT: {
 		variant v;
