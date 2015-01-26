@@ -40,6 +40,10 @@
 #include "variant_type.hpp"
 #include "variant_utils.hpp"
 
+#if defined(_MSC_VER)
+#define strtoll _strtoi64
+#endif
+
 
 namespace game_logic
 {
