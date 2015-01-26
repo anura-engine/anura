@@ -21,6 +21,7 @@
 #include <map>
 #include <string>
 #include <stdio.h>
+#include <stdlib.h>
 
 #include "base64.hpp"
 #include "code_editor_dialog.hpp"
