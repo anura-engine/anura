@@ -159,15 +159,14 @@ public:
 			}
 		} else if(pid > 0) {
 			auto itor = servers_.find(pid);
-			if(itor == servers_.end()) {
-				fprintf(stderr, "ERROR: unknown pid exited: %d\n", (int)pid);
-			} else {
+			if(itor != servers_.end()) {
+				//This will only happen if a server exited without reporting
+				//a game result.
 				available_ports_.push_back(itor->second.port);
 				servers_.erase(pid);
-
 				++terminated_servers_;
 
-				fprintf(stderr, "Child server exited. %d servers running\n", (int)servers_.size());
+				fprintf(stderr, "Child server exited without a result. %d servers running\n", (int)servers_.size());
 			}
 		}
 
@@ -206,14 +205,41 @@ public:
 
 			for(auto& p : sessions_) {
 				if(p.second.current_socket && (p.second.sent_heartbeat == false || time_ms_ - p.second.last_contact >= 3000 || p.second.chat_messages.empty() == false)) {
+
+					auto user_info_itor = user_info_.find(p.second.user_id);
+					static const variant GamePortVariant("game_port");
+					static const variant GameIdVariant("game_id");
+					static const variant GameSessionVariant("game_session");
+					bool added_game_details = false;
+					fprintf(stderr, "SEARCH FOR USER: %s -> %s\n", p.second.user_id.c_str(), user_info_itor != user_info_.end() ? "FOUND" : "UNFOUND");
+					if(user_info_itor != user_info_.end() && user_info_itor->second.game_pid != -1) {
+						auto game_itor = servers_.find(user_info_itor->second.game_pid);
+					fprintf(stderr, "SEARCH FOR GAME: %d -> %s\n", user_info_itor->second.game_pid, game_itor != servers_.end() ? "FOUND" : "UNFOUND");
+
+						if(game_itor != servers_.end() && std::find(game_itor->second.users_list.begin(), game_itor->second.users_list.end(), p.second.user_id) != game_itor->second.users_list.end() && game_itor->second.game_id != -1) {
+							fprintf(stderr, "SEARCH FOUND SEND\n");
+							heartbeat_message_value.add_attr_mutation(GamePortVariant, variant(game_itor->second.port));
+							heartbeat_message_value.add_attr_mutation(GameIdVariant, variant(game_itor->second.game_id));
+							heartbeat_message_value.add_attr_mutation(GameSessionVariant, variant(user_info_itor->second.game_session));
+							added_game_details = true;
+						}
+					}
 	
 					if(p.second.chat_messages.empty() == false) {
 						heartbeat_message_value.add_attr_mutation(variant("chat_messages"), variant(&p.second.chat_messages));
 						send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
 						p.second.chat_messages.clear();
+
 					} else {
-						send_msg(p.second.current_socket, "text/json", heartbeat_msg, "");
+						heartbeat_message_value.remove_attr_mutation(variant("chat_messages"));
+						send_msg(p.second.current_socket, "text/json", heartbeat_message_value.write_json(), "");
 					}
+
+					if(added_game_details) {
+						heartbeat_message_value.remove_attr_mutation(GamePortVariant);
+						heartbeat_message_value.remove_attr_mutation(GameIdVariant);
+					}
+
 					p.second.last_contact = time_ms_;
 					p.second.current_socket = socket_ptr();
 					p.second.sent_heartbeat = true;
@@ -531,6 +557,11 @@ public:
 			} else if(request_type == "server_created_game") {
 				fprintf(stderr, "Notified of game up on server\n");
 
+				auto itor = servers_.find(doc["pid"].as_int());
+				if(itor != servers_.end()) {
+					itor->second.game_id = doc["game_id"].as_int();
+				}
+
 				variant_builder msg;
 				msg.add("type", "match_made");
 				msg.add("game_id", doc["game_id"].as_int());
@@ -554,6 +585,18 @@ public:
 							itor->second.current_socket.reset();
 						}
 					}
+				}
+
+				send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
+			} else if(request_type == "server_finished_game") {
+				auto itor = servers_.find(doc["pid"].as_int());
+				if(itor != servers_.end()) {
+					available_ports_.push_back(itor->second.port);
+					servers_.erase(itor);
+
+					++terminated_servers_;
+					
+					fprintf(stderr, "Child server reported exit. %d servers running\n", (int)servers_.size());
 				}
 
 				send_msg(socket, "text/json", "{ \"type\": \"ok\" }", "");
@@ -633,6 +676,8 @@ private:
 			game.add("game_type", "citadel");
 
 			variant game_info;
+
+			std::vector<std::string> users_list;
 			
 			std::vector<variant> users;
 			for(int i : match_sessions) {
@@ -644,6 +689,10 @@ private:
 				user.add("user", session_info.user_id);
 				user.add("session_id", session_info.session_id);
 				users.push_back(user.build());
+
+				user_info_[session_info.user_id].game_session = session_info.session_id;
+
+				users_list.push_back(session_info.user_id);
 
 				if(session_info.game_type_info.is_map()) {
 					game_info = session_info.game_type_info["info"];
@@ -729,6 +778,11 @@ private:
 				info.port = new_port;
 				info.sessions = match_sessions;
 				info.users = users_info;
+				info.users_list = users_list;
+
+				for(const std::string& user : users_list) {
+					user_info_[user].game_pid = pid;
+				}
 			}
 
 
@@ -817,6 +871,14 @@ private:
 
 	std::map<int, SessionInfo> sessions_;
 
+	struct UserInfo {
+		UserInfo() : game_pid(-1), game_session(-1) {}
+		int game_pid;
+		int game_session;
+	};
+
+	std::map<std::string, UserInfo> user_info_;
+
 	int time_ms_;
 	int send_at_time_ms_;
 	void schedule_send(int ms) {
@@ -831,9 +893,12 @@ private:
 
 
 	struct ProcessInfo {
+		ProcessInfo() : port(-1), game_id(-1) {}
 		int port;
+		int game_id;
 		std::vector<int> sessions;
 		variant users;
+		std::vector<std::string> users_list;
 	};
 
 	std::deque<int> available_ports_;

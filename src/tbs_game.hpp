@@ -103,6 +103,10 @@ public:
 	
 	int state_id() const { return state_id_; }
 
+	void player_disconnect(int nplayer);
+	void player_reconnect(int nplayer);
+	void player_disconnected_for(int nplayer, int time_ms);
+
 protected:
 	void start_game();
 	virtual void send_game_state(int nplayer=-1, int processing_ms=-1);
@@ -139,6 +143,8 @@ private:
 	std::string current_message_;
 
 	std::vector<player> players_;
+
+	std::vector<int> players_disconnected_;
 
 	std::vector<message> outgoing_messages_;
 

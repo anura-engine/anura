@@ -592,6 +592,7 @@ private:
 	gles2::shader_program_ptr shader_;
 
 	struct FrameBufferShaderEntry {
+		std::string label;
 		int begin_zorder, end_zorder;
 		variant shader_node;
 		mutable gles2::shader_program_ptr shader;

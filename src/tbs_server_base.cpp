@@ -488,4 +488,22 @@ namespace tbs
 		}
 		return doc.build();
 	}
+
+	void server_base::set_last_contact(int session_id)
+	{
+		auto itor = clients_.find(session_id);
+		if(itor != clients_.end()) {
+			itor->second.last_contact = nheartbeat_;
+		}
+	}
+
+	int server_base::get_ms_since_last_contact(int session_id) const
+	{
+		auto itor = clients_.find(session_id);
+		if(itor == clients_.end()) {
+			return 1000000;
+		}
+
+		return (nheartbeat_ - itor->second.last_contact)*g_tbs_server_delay_ms*g_tbs_server_heartbeat_freq;
+	}
 }

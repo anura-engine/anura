@@ -3988,10 +3988,11 @@ DEFINE_FIELD(editor_selection, "[custom_obj]")
 	return variant(&result);
 
 #if defined(USE_SHADERS)
-DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader: object|null, shader_info: map|string}]")
+DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader: object|null, shader_info: map|string, label: string|null}]")
 	std::vector<variant> v;
 	foreach(const FrameBufferShaderEntry& e, obj.fb_shaders_) {
 		std::map<variant,variant> m;
+		m[variant("label")] = variant(e.label);
 		m[variant("begin_zorder")] = variant(e.begin_zorder);
 		m[variant("end_zorder")] = variant(e.end_zorder);
 		m[variant("shader_info")] = e.shader_node;
@@ -4009,6 +4010,10 @@ DEFINE_SET_FIELD
 	obj.fb_shaders_.clear();
 	foreach(const variant& v, value.as_list()) {
 		FrameBufferShaderEntry e;
+		if(v.has_key("label")) {
+			e.label = v["label"].as_string();
+		}
+
 		e.begin_zorder = v["begin_zorder"].as_int();
 		e.end_zorder = v["end_zorder"].as_int();
 		e.shader_node = v["shader_info"];
