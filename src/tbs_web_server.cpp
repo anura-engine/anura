@@ -174,6 +174,8 @@ void web_server::handle_get(socket_ptr socket,
 	disconnect(socket);
 }
 
+http_client* g_game_server_http_client_to_matchmaking_server;
+
 }
 
 namespace {
@@ -249,10 +251,12 @@ COMMAND_LINE_UTILITY(tbs_server) {
 		ASSERT_LOG(result, "Passed in config game is invalid");
 		result->quit_server_on_exit = true;
 
-		http_client client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int());
+		tbs::g_game_server_http_client_to_matchmaking_server = new http_client(config["matchmaking_host"].as_string(), formatter() << config["matchmaking_port"].as_int());
+		http_client& client = *tbs::g_game_server_http_client_to_matchmaking_server;
 
 		variant_builder msg;
 		msg.add("type", "server_created_game");
+		msg.add("pid", static_cast<int>(getpid()));
 		msg.add("game", config["game"]);
 		msg.add("game_id", result->game_state->game_id());
 		msg.add("port", port);

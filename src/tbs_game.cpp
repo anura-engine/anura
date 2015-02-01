@@ -44,6 +44,8 @@ void flush_all_backed_maps();
 
 namespace tbs {
 
+extern http_client* g_game_server_http_client_to_matchmaking_server;
+
 struct game_type {
 	game_type() {
 	}
@@ -518,6 +520,13 @@ variant game::get_value(const std::string& key) const
 #else
 		return variant();
 #endif
+	} else if(key == "players_disconnected") {
+		std::vector<variant> result;
+		for(auto n : players_disconnected_) {
+			result.push_back(variant(n));
+		}
+
+		return variant(&result);
 	} else if(backup_callable_) {
 		return backup_callable_->query_value(key);
 	} else {
@@ -560,6 +569,31 @@ void game::set_value(const std::string& key, const variant& value)
 		fprintf(stderr, "XXX: @%d state_id = %d\n", SDL_GetTicks(), state_id_);
 	} else if(key == "winner") {
 		std::cout << "WINNER: " << value.write_json() << std::endl;
+
+		if(g_game_server_http_client_to_matchmaking_server != NULL) {
+			http_client& client = *g_game_server_http_client_to_matchmaking_server;
+			variant_builder msg;
+			msg.add("type", "server_finished_game");
+			msg.add("pid", static_cast<int>(getpid()));
+
+			bool complete = false;
+
+			client.send_request("POST /server", msg.build().write_json(),
+			  [&complete](std::string response) {
+				complete = true;
+			  },
+			  [&complete](std::string msg) {
+				complete = true;
+				ASSERT_LOG(false, "Could not connect to server: " << msg);
+			  },
+			  [](int a, int b, bool c) {
+			  });
+			
+			while(!complete) {
+				client.process();
+			}
+		}
+
 		if(g_tbs_game_exit_on_winner) {
 			game_logic::flush_all_backed_maps();
 			_exit(0);
@@ -575,7 +609,6 @@ void game::handle_message(int nplayer, const variant& msg)
 	rng::set_seed(rng_seed_);
 	const std::string type = msg["type"].as_string();
 	if(type == "start_game") {
-		std::cerr << "ZZZ: GOT start_game()\n";
 		start_game();
 		return;
 	} else if(type == "request_updates") {
@@ -586,6 +619,7 @@ void game::handle_message(int nplayer, const variant& msg)
 
 			const variant state_id = msg["state_id"];
 			if(state_id.as_int() != state_id_ && nplayer >= 0) {
+				players_[nplayer].confirmed_state_id = state_id.as_int();
 				send_game_state(nplayer);
 			} else if(state_id.as_int() == state_id_ && nplayer >= 0 && nplayer < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
 
@@ -698,6 +732,42 @@ void game::execute_command(variant cmd)
 			variant v = f.execute(*callable);
 			execute_command(v);
 		}
+	}
+}
+
+void game::player_disconnect(int nplayer)
+{
+	variant_builder result;
+	result.add("type", "player_disconnect");
+	result.add("player", players()[nplayer].name);
+	variant msg = result.build();
+	for(int n = 0; n != players().size(); ++n) {
+		if(n != nplayer) {
+			queue_message(msg, n);
+		}
+	}
+	
+}
+
+void game::player_reconnect(int nplayer)
+{
+	variant_builder result;
+	result.add("type", "player_reconnect");
+	result.add("player", players()[nplayer].name);
+	variant msg = result.build();
+	for(int n = 0; n != players().size(); ++n) {
+		if(n != nplayer) {
+			queue_message(msg, n);
+		}
+	}
+}
+
+void game::player_disconnected_for(int nplayer, int time_ms)
+{
+	if(time_ms >= 60000 && std::find(players_disconnected_.begin(), players_disconnected_.end(), nplayer) == players_disconnected_.end()) {
+		players_disconnected_.push_back(nplayer);
+		handle_event("player_disconnected");
+		send_game_state();
 	}
 }
 
