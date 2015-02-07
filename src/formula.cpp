@@ -1424,7 +1424,7 @@ private:
 	expression_ptr left_, start_, end_;
 };
 
-variant_type_ptr get_variant_type_and_or(expression_ptr left, expression_ptr right) {
+variant_type_ptr get_variant_type_and_or(expression_ptr left, expression_ptr right, bool is_or=false) {
 	variant_type_ptr left_type = left->query_variant_type();
 	variant_type_ptr right_type = right->query_variant_type();
 	if(left_type->is_equal(*right_type)) {
@@ -1432,6 +1432,10 @@ variant_type_ptr get_variant_type_and_or(expression_ptr left, expression_ptr rig
 	}
 
 	std::vector<variant_type_ptr> types;
+	if(is_or) {
+		//Make it so e.g. (int|null or int) evaluates to int rather than int|null
+		left_type = variant_type::get_null_excluded(left_type);
+	}
 	types.push_back(left_type);
 	types.push_back(right_type);
 	return variant_type::get_union(types);
@@ -1512,7 +1516,7 @@ private:
 	}
 
 	variant_type_ptr get_variant_type() const {
-		return get_variant_type_and_or(left_, right_);
+		return get_variant_type_and_or(left_, right_, true);
 	}
 
 	const_formula_callable_definition_ptr
@@ -1760,7 +1764,7 @@ private:
 			}
 
 			std::vector<variant_type_ptr> v;
-			v.push_back(left_type);
+			v.push_back(variant_type::get_null_excluded(left_type)); //if the left type is null it can't possibly be returned. e.g. make it so null|int or int will evaluate to int
 			v.push_back(right_type);
 			return variant_type::get_union(v);
 		}
