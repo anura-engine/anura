@@ -220,6 +220,7 @@ void editor_module_properties_dialog::execute_change_module_includes(const std::
 }
 
 const std::string editor_module_properties_dialog::on_exit() {
+	level::set_player_variant_type(variant());
 	save_module_properties();
 	if(new_mod_) {
 		create_new_module();
