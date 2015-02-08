@@ -1693,7 +1693,7 @@ private:
 				return;
 			}
 
-			if(left_type->is_type(variant::VARIANT_TYPE_STRING)) {
+			if(left_type->is_type(variant::VARIANT_TYPE_STRING) && variant_type::may_be_null(right_type) == false) {
 				return;
 			}
 
