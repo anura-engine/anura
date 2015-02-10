@@ -34,10 +34,10 @@
 #define bmround	round
 #endif
 
-#include "kre/Canvas.hpp"
-#include "kre/Effects.hpp"
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Effects.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "border_widget.hpp"

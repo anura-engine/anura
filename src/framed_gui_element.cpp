@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "asserts.hpp"
 #include "framed_gui_element.hpp"

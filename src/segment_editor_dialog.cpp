@@ -23,7 +23,7 @@
 
 #ifndef NO_EDITOR
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "border_widget.hpp"
 #include "button.hpp"

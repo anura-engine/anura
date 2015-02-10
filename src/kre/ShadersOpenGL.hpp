@@ -116,11 +116,15 @@ namespace KRE
 			static void loadFromFile(const variant& node);
 
 			ConstActivesMapIterator getColorUniform() const { return u_color_; }
+			ConstActivesMapIterator getLineWidthUniform() const { return u_line_width_; }
+			ConstActivesMapIterator getMvUniform() const { return u_mv_; }
+			ConstActivesMapIterator getPUniform() const { return u_p_; }
 			ConstActivesMapIterator getMvpUniform() const { return u_mvp_; }
 			ConstActivesMapIterator getTexMapUniform() const { return u_tex_; }
 			ConstActivesMapIterator getColorAttribute() const { return a_color_; }
 			ConstActivesMapIterator getVertexAttribute() const { return a_vertex_; }
 			ConstActivesMapIterator getTexcoordAttribute() const { return a_texcoord_; }
+			ConstActivesMapIterator getNormalAttribute() const { return a_normal_; }
 		
 			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
 			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
@@ -151,11 +155,15 @@ namespace KRE
 
 			// Store for common attributes and uniforms
 			ConstActivesMapIterator u_mvp_;
+			ConstActivesMapIterator u_mv_;
+			ConstActivesMapIterator u_p_;
 			ConstActivesMapIterator u_color_;
+			ConstActivesMapIterator u_line_width_;
 			ConstActivesMapIterator u_tex_;
 			ConstActivesMapIterator a_vertex_;
 			ConstActivesMapIterator a_texcoord_;
 			ConstActivesMapIterator a_color_;
+			ConstActivesMapIterator a_normal_;
 		};
 	}
 }

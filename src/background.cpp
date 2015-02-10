@@ -28,8 +28,8 @@
 #include <iostream>
 #include <map>
 
-#include "kre/Scissor.hpp"
-#include "kre/WindowManager.hpp"
+#include "Scissor.hpp"
+#include "WindowManager.hpp"
 
 #include "background.hpp"
 #include "filesystem.hpp"
@@ -310,7 +310,7 @@ namespace
 
 		rect sub_areas[4];
 		for(; opaque1 != opaque2; ++opaque1) {
-			const int result = Geometry::rect_difference(area, *opaque1, sub_areas);
+			const int result = geometry::rect_difference(area, *opaque1, sub_areas);
 			if(result == -1) {
 				continue;
 			}

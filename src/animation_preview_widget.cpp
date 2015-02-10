@@ -25,9 +25,9 @@
 #include <deque>
 #include <limits>
 
-#include "kre/Canvas.hpp"
-#include "kre/ClipScope.hpp"
-#include "kre/Texture.hpp"
+#include "Canvas.hpp"
+#include "ClipScope.hpp"
+#include "Texture.hpp"
 
 #include "animation_preview_widget.hpp"
 #include "button.hpp"
@@ -43,7 +43,7 @@ namespace
 	const unsigned char RedBorder[] = {0xf9, 0x30, 0x3d};
 	const unsigned char BackgroundColor[] = {0x6f, 0x6d, 0x51};
 
-	bool is_pixel_border(const SurfacePtr& s, unsigned x, unsigned y)
+	bool is_pixel_border(const SurfacePtr& s, int x, int y)
 	{
 		if(x < 0 || y < 0 || x >= s->width() || y >= s->height()) {
 			return false;
@@ -74,7 +74,7 @@ namespace
 		return true;
 	}
 
-	rect get_border_rect(const SurfacePtr& s, unsigned x, unsigned y)
+	rect get_border_rect(const SurfacePtr& s, int x, int y)
 	{
 		int w = 0, h = 0;
 		while(is_pixel_border(s, x + w + 1, y)) {
@@ -101,7 +101,7 @@ namespace
 		return 0;
 	}
 
-	rect get_border_rect_heuristic_search(const SurfacePtr& s, unsigned ox, unsigned oy, int max_cost) 
+	rect get_border_rect_heuristic_search(const SurfacePtr& s, int ox, int oy, int max_cost) 
 	{
 		int x1 = std::numeric_limits<int>::max();
 		int y1 = std::numeric_limits<int>::max();

@@ -33,7 +33,7 @@
 
 #include "entity.hpp"
 #include "formula_callable.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "variant.hpp"
 
 namespace box2d

@@ -23,7 +23,7 @@
 
 #include "DisplayDevice.hpp"
 #include "LightObject.hpp"
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {

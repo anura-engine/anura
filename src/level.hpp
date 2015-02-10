@@ -32,7 +32,7 @@
 #include <vector>
 
 #include "ColorTransform.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #if defined(USE_BOX2D)
 #include "b2d_ffl.hpp"

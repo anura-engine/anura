@@ -264,17 +264,17 @@ namespace KRE
 		float color_[4];
 	};
 
-	bool operator<(const Color& lhs, const Color& rhs)
+	inline bool operator<(const Color& lhs, const Color& rhs)
 	{
 		return lhs.asARGB() < rhs.asARGB();
 	}
 
-	bool operator==(const Color& lhs, const Color& rhs)
+	inline bool operator==(const Color& lhs, const Color& rhs)
 	{
 		return lhs.asARGB() == rhs.asARGB();
 	}
 
-	bool operator!=(const Color& lhs, const Color& rhs)
+	inline bool operator!=(const Color& lhs, const Color& rhs)
 	{
 		return !operator==(lhs, rhs);
 	}

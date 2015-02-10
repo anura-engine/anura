@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "kre/Material.hpp"
-#include "kre/Util.hpp"
+#include "Material.hpp"
+#include "Util.hpp"
 
 #include "entity_fwd.hpp"
 #include "formula_callable.hpp"

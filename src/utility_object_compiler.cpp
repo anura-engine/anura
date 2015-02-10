@@ -26,7 +26,7 @@
 #include <vector>
 #include <sstream>
 
-#include "kre/Surface.hpp"
+#include "Surface.hpp"
 
 #include "asserts.hpp"
 #include "custom_object_type.hpp"
@@ -499,7 +499,7 @@ struct SpritesheetAnimation {
 
 bool is_row_blank(KRE::SurfacePtr surf, const unsigned char* pixels)
 {
-	for(unsigned x = 0; x < surf->width(); ++x) {
+	for(int x = 0; x < surf->width(); ++x) {
 		if(pixels[3] > 64) {
 			return false;
 		}
@@ -511,7 +511,7 @@ bool is_row_blank(KRE::SurfacePtr surf, const unsigned char* pixels)
 
 bool is_col_blank(KRE::SurfacePtr surf, const SpritesheetRow& row, unsigned col)
 {
-	if(col >= surf->width()) {
+	if(static_cast<int>(col) >= surf->width()) {
 		return true;
 	}
 
@@ -536,7 +536,7 @@ std::vector<SpritesheetRow> get_cells(KRE::SurfacePtr surf)
 	const unsigned char* pixels = reinterpret_cast<const unsigned char*>(surf->pixels());
 
 	int start_row = -1;
-	for(unsigned row = 0; row <= surf->height(); ++row) {
+	for(int row = 0; row <= surf->height(); ++row) {
 		const bool blank = row == surf->height() || is_row_blank(surf, pixels);
 		if(blank) {
 			if(start_row != -1) {
@@ -558,7 +558,7 @@ std::vector<SpritesheetRow> get_cells(KRE::SurfacePtr surf)
 
 	for(SpritesheetRow& sprite_row : rows) {
 		int start_col = -1;
-		for(unsigned col = 0; col <= surf->width(); ++col) {
+		for(int col = 0; col <= surf->width(); ++col) {
 			const bool blank = is_col_blank(surf, sprite_row, col);
 			if(blank) {
 				if(start_col != -1) {
@@ -582,7 +582,7 @@ std::vector<SpritesheetRow> get_cells(KRE::SurfacePtr surf)
 
 void write_pixel_surface(KRE::SurfacePtr surf, int x, int y, int r, int g, int b, int a)
 {
-	if(x < 0 || y < 0 || static_cast<unsigned>(x) >= surf->width() || static_cast<unsigned>(y) >= surf->height()) {
+	if(x < 0 || y < 0 || x >= surf->width() || y >= surf->height()) {
 		return;
 	}
 
@@ -1101,7 +1101,7 @@ COMMAND_LINE_UTILITY(bake_spritesheet)
 		auto target_surf = KRE::Surface::create(TargetTextureSize, TargetTextureSize, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
 		const unsigned char* alpha_colors = graphics::get_alpha_pixel_colors();
 		unsigned char* target_pixels = reinterpret_cast<unsigned char*>(target_surf->pixelsWriteable());
-		for(unsigned n = 0; n < target_surf->width() * target_surf->height(); ++n) {
+		for(int n = 0; n < target_surf->width() * target_surf->height(); ++n) {
 			memcpy(target_pixels, alpha_colors, 3);
 			target_pixels[3] = 255;
 			target_pixels += 4;
@@ -1160,11 +1160,11 @@ COMMAND_LINE_UTILITY(build_spritesheet_from_images)
 
 		row_width += s->width() + 3;
 
-		if(s->width() > static_cast<unsigned>(cell_widths.back())) {
+		if(s->width() > cell_widths.back()) {
 			cell_widths.back() = s->width();
 		}
 
-		if(s->height() > static_cast<unsigned>(row_heights.back())) {
+		if(s->height() > row_heights.back()) {
 			sheet_height += s->height() - row_heights.back();
 			row_heights.back() = s->height();
 		}

@@ -26,9 +26,9 @@
 #include <numeric>
 #include <sstream>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "logger.hpp"

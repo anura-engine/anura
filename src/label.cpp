@@ -23,8 +23,8 @@
 
 #include <iostream>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
 
 #include "button.hpp"
 #include "color_picker.hpp"

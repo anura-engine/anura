@@ -26,8 +26,8 @@
 #include <vector>
 #include "AttributeSet.hpp"
 #include "RenderTarget.hpp"
-#include "Util.hpp"
-#include "../variant.hpp"
+#include "util.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {
@@ -45,7 +45,6 @@ namespace KRE
 		virtual ~FboOpenGL();
 		virtual void preRender(const WindowManagerPtr&) override;
 	private:
-		DISALLOW_DEFAULT_AND_ASSIGN(FboOpenGL);
 		void handleCreate() override;
 		void handleApply() override;
 		void handleUnapply() override;
@@ -61,5 +60,8 @@ namespace KRE
 		unsigned tex_width_;
 		unsigned tex_height_;
 		GLint viewport_[4];
+
+		FboOpenGL();
+		void operator=(const FboOpenGL&);
 	};
 }

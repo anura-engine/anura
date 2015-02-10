@@ -24,7 +24,7 @@
 /* XXX -- needs fixed and support for cubic textures added.
 #pragma once
 
-#include "kre/Material.hpp"
+#include "Material.hpp"
 #include "Color.hpp"
 #include "SceneObjectCallable.hpp"
 

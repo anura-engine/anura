@@ -21,9 +21,13 @@
 	   distribution.
 */
 
+#pragma comment(lib, "opengl32")
+#pragma comment(lib, "glu32")
+#pragma comment(lib, "glew32")
+
 #include <GL/glew.h>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "AttributeSetOpenGL.hpp"
 #include "BlendOGL.hpp"
 #include "CameraObject.hpp"
@@ -165,7 +169,7 @@ namespace KRE
 		GLint minor_version;
 		GLint major_version;
 		glGetIntegerv(GL_MINOR_VERSION, &minor_version);
-		glGetIntegerv(GL_MINOR_VERSION, &major_version);
+		glGetIntegerv(GL_MAJOR_VERSION, &major_version);
 		if(glGetError() != GL_NONE) {
 			// fall-back to old glGetStrings method.
 			const char* version_str = reinterpret_cast<const char*>(glGetString(GL_VERSION));
@@ -361,12 +365,12 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const variant& node) 
 	{
-		return TexturePtr(new OpenGLTexture(node));
+		return TexturePtr(new OpenGLTexture(node, nullptr));
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
 	{
-		return TexturePtr(new OpenGLTexture(surface, node));
+		return TexturePtr(new OpenGLTexture(node, surface));
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
@@ -393,6 +397,11 @@ namespace KRE
 	{
 		auto surface = Surface::create(filename);
 		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
+	}
+
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette)
+	{
+		return std::make_shared<OpenGLTexture>(surface, palette);
 	}
 
 	MaterialPtr DisplayDeviceOpenGL::handleCreateMaterial(const variant& node)

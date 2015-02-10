@@ -25,8 +25,8 @@
 #include <sstream>
 #include <boost/lexical_cast.hpp>
 
-#include "kre/Canvas.hpp"
-#include "kre/Geometry.hpp"
+#include "Canvas.hpp"
+#include "geometry.hpp"
 
 #include "asserts.hpp"
 #include "color_picker.hpp"
@@ -270,7 +270,7 @@ namespace gui
 				const rgb cc = hsv_to_rgb(0, 255, 255);
 				carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
 			}
-			canvas->drawSolidCircle(point(x, y), radius, carray);
+			canvas->drawSolidCircle(point(x, y), static_cast<float>(radius), carray);
 		}
 	}
 

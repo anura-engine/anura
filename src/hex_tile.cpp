@@ -21,8 +21,8 @@
 	   distribution.
 */
 
-#include "kre/Canvas.hpp"
-#include "kre/DisplayDevice.hpp"
+#include "Canvas.hpp"
+#include "DisplayDevice.hpp"
 
 #include "asserts.hpp"
 #include "hex_map.hpp"

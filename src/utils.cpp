@@ -26,7 +26,7 @@
 #include <ctime>
 #include "utils.hpp"
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "level.hpp"
 #include "filesystem.hpp"

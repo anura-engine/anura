@@ -25,7 +25,7 @@
 
 #include <cairo.h>
 
-#include "Geometry.hpp"
+#include "geometry.hpp"
 #include "SceneUtil.hpp"
 #include "VGraph.hpp"
 
@@ -34,6 +34,30 @@ namespace KRE
 	namespace Vector
 	{
 		class CairoPath;
+
+		class CairoMatrix : public Matrix
+		{
+		public:
+			CairoMatrix();
+			explicit CairoMatrix(const cairo_matrix_t& mat);
+			virtual void init(double xx, double yx, double xy, double yy, double x0, double y0) override;
+			virtual void initIdentity() override;
+			virtual void initTranslate(double x0, double y0) override;
+			virtual void initScale(double xs, double ys) override;
+			virtual void initRotation(double rad) override;
+			virtual void translate(double tx, double ty) override;
+			virtual void scale(double sx, double sy) override;
+			virtual void rotate(double rad) override;
+			virtual void invert() override;
+			virtual void multiply(const MatrixPtr& a) override;
+			virtual geometry::Point<double> transformDistance(double x, double y) override;
+			virtual geometry::Point<double> transformPoint(double x, double y) override;
+			virtual MatrixPtr clone() override;
+			void set(const cairo_matrix_t& mat) { matrix_ = mat; }
+			const cairo_matrix_t* get() const { return &matrix_; }
+		private:
+			cairo_matrix_t matrix_;
+		};
 
 		class CairoContext : public Context
 		{
@@ -101,6 +125,20 @@ namespace KRE
 			virtual void AddSubPath(const PathPtr& path) override;
 		
 			virtual void preRender(const WindowManagerPtr& wnd) override;
+
+			void translate(double tx, double ty) override;
+			void scale(double sx, double sy) override;
+			void rotate(double rad) override;
+			void setMatrix(const MatrixPtr& m) override;
+			MatrixPtr getMatrix() const override;
+			void transform(const MatrixPtr& m) override;
+			void setIdentityMatrix() override;
+			geometry::Point<double> userToDevice(double x, double y) override;
+			geometry::Point<double> userToDeviceDistance(double x, double y) override;
+			geometry::Point<double> deviceToUser(double x, double y) override;
+			geometry::Point<double> deviceToUserDistance(double x, double y) override;
+
+			MatrixPtr createMatrix() override;
 		protected:
 			cairo_t* GetContext() { return context_; }
 			cairo_surface_t* GetSurface() { return surface_; }

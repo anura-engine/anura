@@ -23,7 +23,7 @@
 
 #include <limits>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 #include "poly_line_widget.hpp"
 
 namespace gui

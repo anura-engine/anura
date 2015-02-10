@@ -23,7 +23,7 @@
 
 #include <math.h>
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "custom_object.hpp"
 #include "formatter.hpp"

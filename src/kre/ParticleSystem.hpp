@@ -28,7 +28,7 @@
 #include <sstream>
 #include <glm/glm.hpp>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "AttributeSet.hpp"
 #include "Material.hpp"
 #include "ParticleSystemFwd.hpp"
@@ -101,6 +101,8 @@ namespace KRE
 				ASSERT_LOG(parent_container_ != NULL, "PSYSTEM2: parent container is NULL");
 				return parent_container_; 
 			}
+			virtual const glm::vec3& getPosition() const;
+			virtual void setPosition(const glm::vec3& pos) {}
 		protected:
 			virtual bool durationExpired() { return false; }
 		private:
@@ -108,8 +110,8 @@ namespace KRE
 			virtual void handleDraw() const {}
 			std::string name_;
 			ParticleSystemContainer* parent_container_;
+
 			EmitObject();
-			//EmitObject(const EmitObject&);
 		};
 
 		class Technique  : public EmitObject, public SceneObject
@@ -131,8 +133,8 @@ namespace KRE
 			void setParent(ParticleSystem* parent);
 			// Direct access here for *speed* reasons.
 			std::vector<Particle>& getActiveParticles() { return active_particles_; }
-			std::vector<EmitterPtr>& getActiveEmitters() { return instanced_emitters_; }
-			std::vector<AffectorPtr>& getActiveAffectors() { return instanced_affectors_; }
+			std::vector<EmitterPtr>& getInstancedEmitters() { return instanced_emitters_; }
+			std::vector<AffectorPtr>& getInstancedAffectors() { return instanced_affectors_; }
 			void addEmitter(EmitterPtr e);
 			void addAffector(AffectorPtr a);
 			void preRender(const WindowManagerPtr& wnd) override;

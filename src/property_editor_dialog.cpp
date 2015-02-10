@@ -25,7 +25,7 @@
 #include <assert.h>
 #include <sstream>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "button.hpp"
 #include "checkbox.hpp"

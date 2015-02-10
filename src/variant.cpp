@@ -312,14 +312,13 @@ variant result;
 int refcount;
 };
 
-struct variant_weak {
+struct variant_weak 
+{
+	variant_weak() : refcount(0)
+	{}
 
-variant_weak() : refcount(0)
-{}
-
-int refcount;
-ffl::weak_ptr<game_logic::formula_callable> ptr;
-
+	int refcount;
+	ffl::weak_ptr<game_logic::FormulaCallable> ptr;
 };
 
 void variant::increment_refcount()
@@ -1297,7 +1296,7 @@ void variant::weaken()
 	if(type_ == VARIANT_TYPE_CALLABLE) {
 		variant_weak* weak = new variant_weak;
 		weak->refcount++;
-		weak->ptr = ffl::weak_ptr<game_logic::formula_callable>(mutable_callable_);
+		weak->ptr = ffl::weak_ptr<game_logic::FormulaCallable>(mutable_callable_);
 
 		release();
 		type_ = VARIANT_TYPE_WEAK;

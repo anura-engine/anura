@@ -426,7 +426,7 @@ namespace sound
 	{
 		mute_ = flag;
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-		Mix_VolumeMusic(user_music_volume*track_music_volume*engine_music_volume*MIX_MAX_VOLUME*(!flag));
+		Mix_VolumeMusic(static_cast<int>(user_music_volume*track_music_volume*engine_music_volume*MIX_MAX_VOLUME*(!flag)));
 	#endif
 	}
 
@@ -487,7 +487,7 @@ namespace sound
 
 		//record which channel the sound is playing on.
 		if(result >= 0) {
-			if(static_cast<unsigned>(channels_to_sounds_playing.size()) <= result) {
+			if(static_cast<int>(channels_to_sounds_playing.size()) <= result) {
 				channels_to_sounds_playing.resize(result + 1);
 			}
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE

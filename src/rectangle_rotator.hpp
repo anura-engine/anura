@@ -25,12 +25,12 @@
 
 #include <boost/math/special_functions/round.hpp>
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 template<typename T>
-Geometry::Point<T> rotate_point_around_origin(T x1, T y1, float alpha, bool round)
+geometry::Point<T> rotate_point_around_origin(T x1, T y1, float alpha, bool round)
 {
-	Geometry::Point<T> beta;
+	geometry::Point<T> beta;
 
 	/*   //we actually don't need the initial theta and radius.  This is why:
 	x2 = R * (cos(theta) * cos(alpha) + sin(theta) * sin(alpha))
@@ -50,9 +50,9 @@ Geometry::Point<T> rotate_point_around_origin(T x1, T y1, float alpha, bool roun
 }
 
 template<typename T>
-Geometry::Point<T> rotate_point_around_origin_with_offset(T x1, T y1, float alpha, T u1, T v1, bool round=true)
+geometry::Point<T> rotate_point_around_origin_with_offset(T x1, T y1, float alpha, T u1, T v1, bool round=true)
 {
-	Geometry::Point<T> beta = rotate_point_around_origin(x1 - u1, y1 - v1, alpha, round);
+	geometry::Point<T> beta = rotate_point_around_origin(x1 - u1, y1 - v1, alpha, round);
 
 	beta.x += u1;
 	beta.y += v1;

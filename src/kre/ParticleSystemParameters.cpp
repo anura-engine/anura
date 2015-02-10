@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "spline.hpp"
 #include "ParticleSystemParameters.hpp"
 

@@ -26,8 +26,8 @@
 #include <algorithm>
 #include <iostream>
 
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
 
 #include "background.hpp"
 #include "button.hpp"

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"

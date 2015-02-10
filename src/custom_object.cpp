@@ -24,11 +24,11 @@
 #include <boost/math/special_functions/round.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "kre/Canvas.hpp"
-#include "kre/ClipScope.hpp"
-#include "kre/Font.hpp"
-#include "kre/StencilScope.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "ClipScope.hpp"
+#include "Font.hpp"
+#include "StencilScope.hpp"
+#include "WindowManager.hpp"
 
 #include <stdio.h>
 
@@ -50,7 +50,7 @@
 #include "formula_callable_visitor.hpp"
 #include "formula_object.hpp"
 #include "formula_profiler.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry_callable.hpp"
 #include "graphical_font.hpp"
 #include "json_parser.hpp"
 #include "level.hpp"
@@ -2782,7 +2782,7 @@ variant CustomObject::getValueBySlot(int slot) const
 			variant(solidRect().h() ? solidRect().y() + solidRect().h()/2 : y() + getCurrentFrame().height()/2));
 	}
 
-	case CUSTOM_OBJECT_SOLID_RECT:        return variant(Geometry::RectCallable::create(solidRect()));
+	case CUSTOM_OBJECT_SOLID_RECT:        return variant(RectCallable::create(solidRect()));
 	case CUSTOM_OBJECT_SOLID_MID_X:       return variant(solidRect().x() + solidRect().w()/2);
 	case CUSTOM_OBJECT_SOLID_MID_Y:       return variant(solidRect().y() + solidRect().h()/2);
 	case CUSTOM_OBJECT_SOLID_MID_XY: {
@@ -3553,7 +3553,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	case CUSTOM_OBJECT_DATA: {
 		ASSERT_LOG(active_property_ >= 0, "Illegal access of 'data' in object when not in writable property");
 		get_property_data(active_property_) = value;
-		if(type_->slot_properties()[active_property_].is_weak) {
+		if(type_->getSlotProperties()[active_property_].is_weak) {
 			get_property_data(active_property_).weaken();
 		}
 
@@ -4095,7 +4095,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 			//this will initialize shaders and such, which is
 			//desired for attached objects
 			e->addToLevel();
-			e->create_object();
+			e->createObject();
 		}
 
 		setAttachedObjects(v);

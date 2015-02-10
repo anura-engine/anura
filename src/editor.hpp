@@ -30,7 +30,7 @@
 #include <vector>
 
 #include "external_text_editor.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "preferences.hpp"

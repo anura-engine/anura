@@ -25,7 +25,7 @@
 
 #include <cstddef>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "FboOpenGL.hpp"
 #include "TextureUtils.hpp"

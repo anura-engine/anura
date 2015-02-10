@@ -33,7 +33,7 @@
 #include "draw_primitive.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "isochunk.hpp"
 #include "nocopy.hpp"
 #include "pathfinding.hpp"

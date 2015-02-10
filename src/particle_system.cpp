@@ -27,9 +27,9 @@
 #include <cmath>
 #include <algorithm>
 
-#include "kre/Material.hpp"
-#include "kre/DisplayDevice.hpp"
-#include "kre/WindowManager.hpp"
+#include "Material.hpp"
+#include "DisplayDevice.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "entity.hpp"

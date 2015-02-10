@@ -24,7 +24,7 @@
 #include <iostream>
 #include <limits.h>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "custom_object.hpp"
 #include "entity.hpp"

@@ -29,10 +29,12 @@
 
 #include "RenderFwd.hpp"
 #include "SceneFwd.hpp"
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {
+	typedef std::function<SceneObjectPtr(const std::string&)> ObjectTypeFunction;
+
 	class SceneNode : public std::enable_shared_from_this<SceneNode>
 	{
 	public:
@@ -71,6 +73,7 @@ namespace KRE
 
 		glm::mat4 getModelMatrix() const;
 
+		static void registerObjectType(const std::string& type, ObjectTypeFunction fn);
 	private:
 		// No default or assignment constructors
 		SceneNode();
@@ -88,6 +91,16 @@ namespace KRE
 		glm::vec3 scale_;
 
 		friend std::ostream& operator<<(std::ostream& os, const SceneNode& node);
+	};
+
+	template<class T>
+	struct SceneObjectRegistrar
+	{
+		SceneObjectRegistrar(const std::string& type)
+		{
+			// register the class factory function 
+			SceneNode::registerObjectType(type, [](const std::string& type) -> std::shared_ptr<T> { return std::make_shared<T>(type); });
+		}
 	};
 
 	std::ostream& operator<<(std::ostream& os, const SceneNode& node);

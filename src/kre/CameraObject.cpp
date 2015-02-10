@@ -27,18 +27,22 @@
 #include <cmath>
 #include <glm/ext.hpp>
 #if defined(_MSC_VER)
-#include <boost/math/special_functions/round.hpp>
-#define bmround	boost::math::round
+#if _MSC_VER >= 1800
+using std::round;
 #else
-#define bmround	round
-#endif
+#include <boost/math/special_functions/round.hpp>
+using boost::math::round;
+#endif // _MSC_VER >= 1800
+#endif // defined(_MSC_VER)
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "CameraObject.hpp"
 #include "DisplayDevice.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
 #include "WindowManager.hpp"
 
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -51,9 +55,11 @@ namespace KRE
 		const float default_mouse_speed			= 0.005f;
 		const float default_near_clip			= 0.1f;
 		const float default_far_clip			= 300.0f;
+
+		//static SceneObjectRegistrar<Camera> camera_registrar("camera");
 	}
 
-	Camera::Camera(const std::string& name, const WindowManagerPtr& wnd)
+	Camera::Camera(const std::string& name)
 		: SceneObject(name), 
 		fov_(default_fov), 
 		horizontal_angle_(default_horizontal_angle), 
@@ -65,11 +71,15 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->logicalHeight()), 
-		ortho_right_(wnd->logicalWidth()),
+		ortho_top_(0), 
+		ortho_right_(0),
 		clip_planes_set_(false),
 		view_mode_(VIEW_MODE_AUTO)
 	{
+		auto wnd = WindowManager::getMainWindow();
+		ortho_top_ = wnd->logicalHeight(); 
+		ortho_right_ = wnd->logicalWidth();
+
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 		position_ = glm::vec3(0.0f, 0.0f, 0.7f); 
 		aspect_ = float(wnd->logicalWidth())/float(wnd->logicalHeight());
@@ -78,7 +88,7 @@ namespace KRE
 		computeProjection();
 	}
 
-	Camera::Camera(const variant& node, const WindowManagerPtr& wnd)
+	Camera::Camera(const variant& node)
 		: SceneObject(node["name"].as_string()), 
 		fov_(default_fov), 
 		horizontal_angle_(default_horizontal_angle), 
@@ -90,10 +100,14 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->logicalHeight()), 
-		ortho_right_(wnd->logicalWidth()),
+		ortho_top_(0), 
+		ortho_right_(0),
 		clip_planes_set_(false)
 	{
+		auto wnd = WindowManager::getMainWindow();
+		ortho_top_ = wnd->logicalHeight(); 
+		ortho_right_ = wnd->logicalWidth();
+
 		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 		if(node.has_key("fov")) {
 			fov_ = std::min(90.0f, std::max(15.0f, float(node["fov"].as_float())));
@@ -119,9 +133,9 @@ namespace KRE
 		if(node.has_key("position")) {
 			ASSERT_LOG(node["position"].is_list() && node["position"].num_elements() == 3, 
 				"position must be a list of 3 decimals.");
-			position_ = glm::vec3(float(node["position"][0].as_decimal().as_float()),
-				float(node["position"][1].as_decimal().as_float()),
-				float(node["position"][2].as_decimal().as_float()));
+			position_ = glm::vec3(float(node["position"][0].as_float()),
+				float(node["position"][1].as_float()),
+				float(node["position"][2].as_float()));
 		}
 
 		if(node.has_key("type")) {
@@ -131,10 +145,10 @@ namespace KRE
 		}
 		if(node.has_key("ortho_window")) {
 			ASSERT_LOG(node["ortho_window"].is_list() && node["ortho_window"].num_elements() == 4, "Attribute 'ortho_window' must be a 4 element list. left,right,top,bottom");
-			ortho_left_ = node["ortho_window"][0].as_int();
-			ortho_right_ = node["ortho_window"][1].as_int();
-			ortho_top_ = node["ortho_window"][2].as_int();
-			ortho_bottom_ = node["ortho_window"][3].as_int();
+			ortho_left_ = node["ortho_window"][0].as_int32();
+			ortho_right_ = node["ortho_window"][1].as_int32();
+			ortho_top_ = node["ortho_window"][2].as_int32();
+			ortho_bottom_ = node["ortho_window"][3].as_int32();
 		}
 
 		// If lookat key is specified it overrides the normal compute.
@@ -142,15 +156,15 @@ namespace KRE
 			const variant& la = node["lookat"];
 			ASSERT_LOG(la.has_key("position") && la.has_key("target") && la.has_key("up"),
 				"lookat must be a map having 'position', 'target' and 'up' as tuples");
-			glm::vec3 position(la["position"][0].as_decimal().as_float(), 
-				la["position"][1].as_decimal().as_float(), 
-				la["position"][2].as_decimal().as_float());
-			glm::vec3 target(la["target"][0].as_decimal().as_float(), 
-				la["target"][1].as_decimal().as_float(), 
-				la["target"][2].as_decimal().as_float());
-			glm::vec3 up(la["up"][0].as_decimal().as_float(), 
-				la["up"][1].as_decimal().as_float(), 
-				la["up"][2].as_decimal().as_float());
+			glm::vec3 position(la["position"][0].as_float(), 
+				la["position"][1].as_float(), 
+				la["position"][2].as_float());
+			glm::vec3 target(la["target"][0].as_float(), 
+				la["target"][1].as_float(), 
+				la["target"][2].as_float());
+			glm::vec3 up(la["up"][0].as_float(), 
+				la["up"][1].as_float(), 
+				la["up"][2].as_float());
 			lookAt(position, target, up);
 			view_mode_ = VIEW_MODE_MANUAL;
 		} else {
@@ -184,7 +198,7 @@ namespace KRE
 		computeProjection();
 	}
 
-	Camera::Camera(const std::string& name, const WindowManagerPtr& wnd, float fov, float aspect, float near_clip, float far_clip)
+	Camera::Camera(const std::string& name, float fov, float aspect, float near_clip, float far_clip)
 		: SceneObject(name), 
 		fov_(fov), 
 		horizontal_angle_(default_horizontal_angle), 
@@ -197,21 +211,20 @@ namespace KRE
 		type_(CAMERA_PERSPECTIVE), 
 		ortho_left_(0), 
 		ortho_bottom_(0),
-		ortho_top_(wnd->logicalHeight()), 
-		ortho_right_(wnd->logicalWidth()),
+		ortho_top_(0), 
+		ortho_right_(0),
 		clip_planes_set_(true),
 		view_mode_(VIEW_MODE_AUTO)
 	{
+		auto wnd = WindowManager::getMainWindow();
+		ortho_top_ = wnd->logicalHeight(); 
+		ortho_right_ = wnd->logicalWidth();
+
 		up_ = glm::vec3(0.0f, 1.0f, 0.0f);
 		position_ = glm::vec3(0.0f, 0.0f, 10.0f); 
 
 		computeView();
 		computeProjection();
-	}
-
-
-	Camera::~Camera()
-	{
 	}
 
 	variant Camera::write()
@@ -299,6 +312,11 @@ namespace KRE
 		if(type_ == CAMERA_ORTHOGONAL) {
 			computeProjection();
 		}
+	}
+
+	void Camera::createFrustum()
+	{
+		attachFrustum(std::make_shared<Frustum>());
 	}
 
 	/*BEGIN_DEFINE_CALLABLE_NOBASE(Camera)
@@ -524,7 +542,7 @@ namespace KRE
 	{
 		float dti(float val) 
 		{
-			return abs(val - bmround(val));
+			return abs(val - round(val));
 		}
 	}
 

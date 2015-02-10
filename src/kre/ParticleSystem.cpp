@@ -31,7 +31,7 @@
 #include "SceneGraph.hpp"
 #include "spline.hpp"
 #include "WindowManager.hpp"
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -43,7 +43,7 @@ namespace KRE
 
 		namespace 
 		{
-			SceneNodeRegistrar<ParticleSystemContainer> psc_register("ParticleSystem_container");
+			SceneNodeRegistrar<ParticleSystemContainer> psc_register("particle_system_container");
 
 			std::default_random_engine& get_rng_engine() 
 			{
@@ -262,14 +262,14 @@ namespace KRE
 			default_particle_width_(node["default_particle_width"].as_float(1.0f)),
 			default_particle_height_(node["default_particle_height"].as_float(1.0f)),
 			default_particle_depth_(node["default_particle_depth"].as_float(1.0f)),
-			lod_index_(node["lod_index"].as_int(0)), velocity_(1.0f),
-			emitter_quota_(node["emitted_emitter_quota"].as_int(50)),
-			affector_quota_(node["emitted_affector_quota"].as_int(10)),
-			technique_quota_(node["emitted_technique_quota"].as_int(10)),
-			system_quota_(node["emitted_system_quota"].as_int(10))
+			lod_index_(node["lod_index"].as_int32(0)), velocity_(1.0f),
+			emitter_quota_(node["emitted_emitter_quota"].as_int32(50)),
+			affector_quota_(node["emitted_affector_quota"].as_int32(10)),
+			technique_quota_(node["emitted_technique_quota"].as_int32(10)),
+			system_quota_(node["emitted_system_quota"].as_int32(10))
 		{
 			ASSERT_LOG(node.has_key("visual_particle_quota"), "PSYSTEM2: 'Technique' must have 'visual_particle_quota' attribute.");
-			particle_quota_ = node["visual_particle_quota"].as_int();
+			particle_quota_ = node["visual_particle_quota"].as_int32();
 			ASSERT_LOG(node.has_key("material"), "PSYSTEM2: 'Technique' must have 'material' attribute.");
 			setMaterial(DisplayDevice::createMaterial(node["material"]));
 			//ASSERT_LOG(node.has_key("renderer"), "PSYSTEM2: 'Technique' must have 'renderer' attribute.");
@@ -375,6 +375,11 @@ namespace KRE
 			init();
 		}
 
+		void Technique::doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def)
+		{
+			def->setHint("shader", "vtc_shader");
+		}
+
 		void Technique::setParent(ParticleSystem* parent)
 		{
 			ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
@@ -474,10 +479,6 @@ namespace KRE
 			as->addAttribute(arv_);
 
 			setOrder(1);
-		}
-
-		void Technique::doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) {
-			def->setHint("shader", "vtc_shader");
 		}
 
 		void Technique::preRender(const WindowManagerPtr& wnd)
@@ -654,6 +655,12 @@ namespace KRE
 				res.push_back(AffectorPtr(a->clone()));
 			}
 			return res;
+		}
+
+		const glm::vec3& EmitObject::getPosition() const 
+		{ 
+			static glm::vec3 res; 
+			return res; 
 		}
 	}
 }

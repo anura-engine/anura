@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -40,7 +40,7 @@ namespace KRE
 
 		explicit Parameter(ParameterType t) : type_(t) {}
 
-		virtual float getValue(float t) = 0;
+		virtual float get_value(float t) = 0;
 		static ParameterPtr factory(float v);
 		static ParameterPtr factory(float mnv, float mxv);
 		static ParameterPtr factory(const std::string&, float freq=1.0f, float phase=0.0f, float base=0.0f, float amplitude=1.0f);
@@ -63,7 +63,7 @@ namespace KRE
 		//FixedParameter(const variant& node);
 		virtual ~FixedParameter();
 
-		float getValue(float t) {
+		float get_value(float t) {
 			return value_;
 		}		
 	private:
@@ -78,7 +78,7 @@ namespace KRE
 		explicit RandomParameter(float mnv=0.0f, float mxv=1.0f);
 		//RandomParameter(const variant& node);
 		virtual ~RandomParameter();
-		virtual float getValue(float t);
+		virtual float get_value(float t);
 	private:
 		float min_value_;
 		float max_value_;
@@ -91,7 +91,7 @@ namespace KRE
 		explicit OscillateParameter(const std::string&, float freq=1.0f, float phase=0.0f, float base=0.0f, float amplitude=1.0f);
 		//OscillateParameter(const variant& node);
 		virtual ~OscillateParameter();
-		virtual float getValue(float t);
+		virtual float get_value(float t);
 	private:
 		enum WaveType {
 			TYPE_SINE,
@@ -116,7 +116,7 @@ namespace KRE
 		explicit CurvedParameter(const std::string&, const geometry::control_point_vector& control_points);
 		//CurvedParameter(InterpolationType type, const variant& node);
 		virtual ~CurvedParameter();
-		virtual float getValue(float t);
+		virtual float get_value(float t);
 	private:
 		InterpolationType curve_type_;
 		geometry::control_point_vector control_points_;

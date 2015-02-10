@@ -1,28 +1,22 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
-	
-	This software is provided 'as-is', without any express or implied
-	warranty. In no event will the authors be held liable for any damages
-	arising from the use of this software.
+   Copyright 2014 Kristina Simpson <sweet.kristas@gmail.com>
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-	   1. The origin of this software must not be misrepresented; you must not
-	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgement in the product documentation would be
-	   appreciated but is not required.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-	   2. Altered source versions must be plainly marked as such, and must not be
-	   misrepresented as being the original software.
-
-	   3. This notice may not be removed or altered from any source
-	   distribution.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 #pragma once
 
+#include "SDL.h"
 #include <iostream>
 #include <string>
 
@@ -30,15 +24,56 @@ namespace profile
 {
 	struct manager
 	{
-		unsigned long long frequency;
-		unsigned long long t1, t2;
+		Uint64 frequency;
+		Uint64 t1, t2;
 		double elapsedTime;
 		const char* name;
 
-		manager(const char* const str);
-		~manager();
+		manager(const char* const str) : name(str)
+		{
+			frequency = SDL_GetPerformanceFrequency();
+			t1 = SDL_GetPerformanceCounter();
+		}
+
+		~manager()
+		{
+			t2 = SDL_GetPerformanceCounter();
+			elapsedTime = (t2 - t1) * 1000.0 / frequency;
+			std::cerr << name << ": " << elapsedTime << " milliseconds" << std::endl;
+		}
 	};
 
-	unsigned get_tick_time();
-	void delay(unsigned);
+	struct timer
+	{
+		Uint64 frequency;
+		Uint64 t1, t2;
+
+		timer()
+		{
+			frequency = SDL_GetPerformanceFrequency();
+			t1 = SDL_GetPerformanceCounter();
+		}
+
+		// Elapsed time in milliseconds
+		double get_time()
+		{
+			t2 = SDL_GetPerformanceCounter();
+			return (t2 - t1) * 1000000.0 / frequency;
+		}
+	};
+
+	inline void sleep(double t) 
+	{
+		SDL_Delay(static_cast<Uint32>(t * 1000.0));
+	}
+
+	inline void delay(double t) 
+	{
+		sleep(t);
+	}
+
+	inline int get_tick_time()
+	{
+		return static_cast<int>(SDL_GetTicks());
+	}
 }

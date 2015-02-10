@@ -25,8 +25,8 @@
 /*
 #include <vector>
 
-#include "kre/Geometry.hpp"
-#include "kre/Material.hpp"
+#include "geometry.hpp"
+#include "Material.hpp"
 
 #include "Color.hpp"
 #include "formula_callable.hpp"

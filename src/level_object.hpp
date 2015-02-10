@@ -25,8 +25,8 @@
 
 #include <vector>
 
-#include "kre/Canvas.hpp"
-#include "kre/Material.hpp"
+#include "Canvas.hpp"
+#include "Material.hpp"
 
 #include "Color.hpp"
 #include "formula_callable.hpp"

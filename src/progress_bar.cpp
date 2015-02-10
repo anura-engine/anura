@@ -23,7 +23,7 @@
 
 #include <algorithm>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "progress_bar.hpp"
 

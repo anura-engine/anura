@@ -24,7 +24,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "preferences.hpp"
 #include "asserts.hpp"

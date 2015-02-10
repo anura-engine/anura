@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "kre/Surface.hpp"
+#include "Surface.hpp"
 
 namespace graphics
 {

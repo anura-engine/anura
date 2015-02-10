@@ -21,11 +21,11 @@
 	   distribution.
 */
 
+#pragma comment(lib, "SDL2_ttf")
+
 #include <boost/filesystem.hpp>
 
-#include "../logger.hpp"
-#include "../module.hpp"
-#include "../string_utils.hpp"
+#include "module.hpp"
 #include "DisplayDevice.hpp"
 #include "FontSDL.hpp"
 #include "SurfaceSDL.hpp"
@@ -45,8 +45,9 @@ namespace KRE
 
 		std::map<std::string,std::string>& get_font_list()
 		{
-			static std::map<std::string,std::string> res;
+			static sys::file_path_map res;
 			if(res.empty()) {
+				//sys::get_unique_files("data/fonts/", res);
 				module::get_unique_filenames_under_dir("data/fonts/", &res);
 			}
 			return res;
@@ -57,7 +58,7 @@ namespace KRE
 		bool get_font_path(const std::string& name, std::string& fontn)
 		{
 			std::map<std::string,std::string>& res = get_font_list();
-			std::map<std::string, std::string>::const_iterator itor = module::find(res, name);
+			std::map<std::string, std::string>::const_iterator itor = res.find(name);
 			if(itor == res.end()) {
 				return false;
 			}
@@ -120,7 +121,7 @@ namespace KRE
 			surf = new SurfaceSDL(TTF_RenderUTF8_Blended(font, text.c_str(), to_SDL_Color(color)));
 		} else {
 			std::vector<SDL_Surface*> parts;
-			std::vector<std::string> lines = util::split(text, '\n');
+			std::vector<std::string> lines = util::split(text, "\n");
 			int height = 0, width = 0;
 			for(auto& line : lines) {
 				parts.emplace_back(TTF_RenderUTF8_Blended(font, line.c_str(), to_SDL_Color(color)));

@@ -846,12 +846,6 @@
     <ClInclude Include="..\..\src\kre\WindowManagerFwd.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\Color.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\kre\Geometry.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\nocopy.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -955,6 +949,24 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\logger.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\auto_update_window.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\PaletteMap.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\PaletteMapOpenGL.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\geometry.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\Color.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\geometry_callable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1748,9 +1760,6 @@
     <ClCompile Include="..\..\src\kre\FboOpenGL.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\kre\filesystem.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\kre\Frustum.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
@@ -1841,9 +1850,6 @@
     <ClCompile Include="..\..\src\kre\WindowManager.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\Color.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\kre\Font.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
@@ -1870,9 +1876,6 @@
     </ClCompile>
     <ClCompile Include="..\..\src\kre\StencilScope.cpp">
       <Filter>Source Files\kre</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\profile_timer.cpp">
-      <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\drawable_level_tiles.cpp">
       <Filter>Source Files</Filter>
@@ -1919,6 +1922,15 @@
     <ClCompile Include="..\..\src\logger.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\kre\PaletteMapOpenGL.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\Color.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\geometry_callable.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">
@@ -1927,8 +1939,6 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="Release\lua.lib" />
-    <Library Include="c:\projects\SDL\VisualC\SDLmain\Win32\Release\SDL2main.lib" />
-    <Library Include="c:\projects\SDL\VisualC\SDL\Win32\Release\SDL2.lib" />
     <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
     <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
     <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
@@ -1938,9 +1948,11 @@
     <Library Include="..\..\external\lib\freetype253.lib" />
     <Library Include="..\..\..\zlib\zlib.lib" />
     <Library Include="..\..\..\glew\lib\glew32.lib" />
+    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2main.lib" />
+    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2.lib" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\kre\Geometry.inl">
+    <None Include="..\..\src\kre\geometry.inl">
       <Filter>Header Files\kre</Filter>
     </None>
   </ItemGroup>

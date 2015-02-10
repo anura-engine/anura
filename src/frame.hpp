@@ -26,8 +26,8 @@
 #include <string>
 #include <vector>
 
-#include "kre/Material.hpp"
-#include "kre/SceneObject.hpp"
+#include "Material.hpp"
+#include "SceneObject.hpp"
 
 #include "formula.hpp"
 #include "solid_map_fwd.hpp"

@@ -23,7 +23,7 @@
 
 #include <map>
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "asserts.hpp"
 #include "gui_section.hpp"

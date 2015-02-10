@@ -30,7 +30,7 @@
 #include "AttributeSet.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
-#include "../Color.hpp"
+#include "Color.hpp"
 #include "DisplayDeviceFwd.hpp"
 #include "Material.hpp"
 #include "Renderable.hpp"
@@ -38,7 +38,7 @@
 #include "Scissor.hpp"
 #include "Shaders.hpp"
 #include "StencilScope.hpp"
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {
@@ -234,6 +234,7 @@ namespace KRE
 		virtual TexturePtr handleCreateTexture(unsigned width, PixelFormat::PF fmt) = 0;
 		virtual TexturePtr handleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) = 0;
 		virtual TexturePtr handleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) = 0;
+		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette) = 0;
 
 		virtual MaterialPtr handleCreateMaterial(const variant& node) = 0;
 		virtual MaterialPtr handleCreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false) = 0;

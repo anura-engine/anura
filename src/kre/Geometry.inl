@@ -1,24 +1,17 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
-	
-	This software is provided 'as-is', without any express or implied
-	warranty. In no event will the authors be held liable for any damages
-	arising from the use of this software.
+   Copyright 2014 Kristina Simpson <sweet.kristas@gmail.com>
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-	   1. The origin of this software must not be misrepresented; you must not
-	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgement in the product documentation would be
-	   appreciated but is not required.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-	   2. Altered source versions must be plainly marked as such, and must not be
-	   misrepresented as being the original software.
-
-	   3. This notice may not be removed or altered from any source
-	   distribution.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 #include <algorithm>
@@ -26,7 +19,7 @@
 #include <boost/regex.hpp>
 #include <boost/lexical_cast.hpp>
 
-namespace Geometry
+namespace geometry
 {
 	namespace
 	{
@@ -50,11 +43,11 @@ namespace Geometry
 		}
 	}
 
-	template<typename T> inline
+	/*template<typename T> inline
 	Point<T>::Point(const variant& v)
 	{
 		ASSERT_LOG(false, "No template specialisation for Parent<T>(const varaint&)");
-	}
+	}*/
 
 	template<typename T> inline
 	Point<T>::Point(const std::string& str)
@@ -93,8 +86,52 @@ namespace Geometry
 	template<typename T> inline
 	bool operator<(const Point<T>& a, const Point<T>& b)
 	{
-		return a.x < b.x || a.x == b.x && a.y < b.y;
+		return (a.x < b.x) || (a.x == b.x && a.y < b.y);
 	}
+
+	template<typename T> inline
+	Point<T> operator+(const Point<T>& lhs, const Point<T>& rhs)
+	{
+		return Point<T>(lhs.x+rhs.x,lhs.y+rhs.y);
+	}
+
+	template<typename T> inline
+	Point<T> operator-(const Point<T>& lhs, const Point<T>& rhs)
+	{
+		return Point<T>(lhs.x-rhs.x,lhs.y-rhs.y);
+	}
+
+	template<typename T> inline
+	std::ostream& operator<<(std::ostream& os, const Point<T>& p)
+	{
+		os << "(" << p.x << "," << p.y << ")";
+		return os;
+	}
+
+	// Assumes that D is a scaling factor for T
+	template<typename T, typename D> inline
+	Point<T> operator*(const Point<T>& lhs, const Point<D>& rhs)
+	{
+		return Point<T>(static_cast<T>(lhs.x * rhs.x), static_cast<T>(lhs.y * rhs.y));
+	}
+	template<typename T> inline
+	Point<T> operator*(const Point<T>& lhs, float scalar)
+	{
+		return Point<T>(static_cast<T>(lhs.x * scalar), static_cast<T>(lhs.y * scalar));
+	}
+	template<typename T> inline
+	Point<T> operator*(const Point<T>& lhs, double scalar)
+	{
+		return Point<T>(static_cast<T>(lhs.x * scalar), static_cast<T>(lhs.y * scalar));
+	}
+
+	template<typename T> inline
+	Point<T> normalize(const Point<T>& p)
+	{
+		T length = std::sqrt(p.x*p.x + p.y*p.y);
+		return Point<T>(p.x/length, p.y/length);
+	}
+
 
 	template<typename T> inline
 	Rect<T> Rect<T>::FromCoordinates(T x1, T y1, T x2, T y2)
@@ -111,8 +148,15 @@ namespace Geometry
 
 	template<typename T> inline
 	Rect<T>::Rect(T x, T y, T w, T h)
-	  : top_left_(std::min(x, x+w), std::min(y, y+h)),
-		bottom_right_(std::max(x, x+w), std::max(y, y+h))
+		: top_left_(std::min<T>(x, x + w), std::min<T>(y, y + h)),
+		  bottom_right_(std::max<T>(x, x + w), std::max<T>(y, y + h))
+	{
+	}
+
+	template<typename T> inline 
+	Rect<T>::Rect(const Point<T>& xy, T w, T h)
+		: top_left_(std::min<T>(xy.x, xy.x + w), std::min<T>(xy.y, xy.y + h)),
+		  bottom_right_(std::max<T>(xy.x, xy.x + w), std::max<T>(xy.y, xy.y + h))
 	{
 	}
 
@@ -123,9 +167,57 @@ namespace Geometry
 	}
 
 	template<typename T> inline
+	bool operator<(const Rect<T>& a, const Rect<T>& b)
+	{
+		return a.top_left() == b.top_left() ? a.w() == b.w() ? a.h() < b.h() : a.w() < b.w() : a.top_left() < b.top_left();
+	}
+
+	template<typename T, typename D> inline
+	Rect<T> operator*(const Rect<T>& lhs, const Rect<D>& rhs)
+	{
+		return Rect<T>::FromCoordinates(static_cast<T>(lhs.x()*rhs.x()), 
+			static_cast<T>(lhs.y()*rhs.y()), 
+			static_cast<T>(lhs.x2()*rhs.x2()), 
+			static_cast<T>(lhs.y2()*rhs.y2()));
+	}
+
+	template<typename T, typename D> inline
+	Rect<D> operator/(const Rect<T>& lhs, D scalar)
+	{
+		return Rect<D>::FromCoordinates(static_cast<D>(lhs.x1()/scalar), 
+			static_cast<D>(lhs.y1()/scalar), 
+			static_cast<D>(lhs.x2()/scalar), 
+			static_cast<D>(lhs.y2()/scalar));
+	}
+
+	template<typename T> inline
+	Rect<T> operator*(const Rect<T>& lhs, const Point<T>& p)
+	{
+		return Rect<T>(lhs.x(), lhs.y(), lhs.w()*p.x, lhs.h()*p.y);
+	}
+
+	template<typename T> inline
+	Rect<T> operator*(const Rect<T>& lhs, float scalar)
+	{
+		return Rect<T>(lhs.x(), lhs.y(), static_cast<T>(lhs.w()*scalar), static_cast<T>(lhs.h()*scalar));
+	}
+
+	template<typename T> inline
+	Rect<T> operator*(const Rect<T>& lhs, double scalar)
+	{
+		return Rect<T>(lhs.x(), lhs.y(), static_cast<T>(lhs.w()*scalar), static_cast<T>(lhs.h()*scalar));
+	}
+
+	/*template<typename T> inline
 	Rect<T>::Rect(const variant& v)
 	{
 		ASSERT_LOG(false, "No template specialisation for Rect<T>(const varaint&)");
+	}*/
+
+	template<typename T> inline
+	Rect<T> operator+(const Rect<T>& r, const Point<T>& p)
+	{
+		return Rect<T>(r.x()+p.x, r.y()+p.y, r.w(), r.h());
 	}
 
 	template<typename T> inline
@@ -251,6 +343,11 @@ namespace Geometry
 	bool pointInRect(const Point<T>& p, const Rect<T>& r)
 	{	
 		return p.x >= r.x() && p.y >= r.y() && p.x < r.x2() && p.y < r.y2();
+	}
+	template<typename T> inline
+	bool pointInRect(const T& x, const T& y, const Rect<T>& r)
+	{	
+		return x >= r.x() && y >= r.y() && x < r.x2() && y < r.y2();
 	}
 
 	template<typename T> inline

@@ -21,11 +21,14 @@
 	   distribution.
 */
 
+#pragma comment(lib, "SDL2")
+#pragma comment(lib, "SDL2main")
+#pragma comment(lib, "SDL2_image")
+
 #include <cctype>
 #include <sstream>
 
-#include "../asserts.hpp"
-#include "../logger.hpp"
+#include "asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "SurfaceSDL.hpp"
 #include "SDL.h"
@@ -68,9 +71,11 @@ namespace KRE
 				renderer_hint_ = "opengl";
 			}
 			current_display_device() = display_ = DisplayDevice::factory(renderer_hint_);
+			// XXX figure out a better way to pass this hint.
+			SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.c_str());
 		}
 		~SDLWindowManager() {
-			destroyWindow();
+			//destroyWindow();
 		}
 
 		void doCreateWindow(unsigned width, unsigned height) override {
@@ -358,11 +363,13 @@ namespace KRE
 
 	void WindowManager::destroyWindow()
 	{
-		for(auto it = get_window_list().begin(); it != get_window_list().end(); ) {
-			if(it->second.get() == this) {
-				get_window_list().erase(it++);
-			} else {
-				++it;
+		if(!get_window_list().empty()) {
+			for(auto it = get_window_list().begin(); it != get_window_list().end(); ) {
+				if(it->second.get() == this) {
+					get_window_list().erase(it++);
+				} else {
+					++it;
+				}
 			}
 		}
 		doDestroyWindow();
@@ -378,39 +385,37 @@ namespace KRE
 	//! Save the current window display to a file
 	void WindowManager::saveFrameBuffer(const std::string& filename)
 	{
-		// XXX
 		auto surface = Surface::create(width_, height_, PixelFormat::PF::PIXELFORMAT_RGB24);
 		std::vector<glm::u8vec3> pixels;
 		if(display_->readPixels(0, 0, width_, height_, ReadFormat::RGB, AttrFormat::UNSIGNED_BYTE, pixels)) {
 			surface->writePixels(&pixels[0]);
 			surface->savePng(filename);
-			LOG_WARN("Saved screenshot to: " << filename);
+			LOG_INFO("Saved screenshot to: " << filename);
 		} else {
-			LOG_WARN("Failed to save screenshot");
+			LOG_ERROR("Failed to save screenshot");
 		}
 	}
 
-	WindowManagerPtr WindowManager::factory(const std::string& title, const std::string& wnd_hint, const std::string& rend_hint)
+	WindowManagerPtr WindowManager::createInstance(const std::string& title, const std::string& wnd_hint, const std::string& rend_hint)
 	{
 		// We really only support one sub-class of the window manager
 		// at the moment, so we just return it. We could use hint in the
 		// future if we had more.
-		WindowManager* wm = new SDLWindowManager(title, rend_hint);
-		get_window_list()[wm->getWindowID()] = WindowManagerPtr(wm);
+		WindowManagerPtr wm = std::make_shared<SDLWindowManager>(title, rend_hint);
+		get_window_list()[wm->getWindowID()] = wm;
 		// We consider the first window created the main one.
 		if(main_window == nullptr) {
-			main_window = get_window_list()[wm->getWindowID()];
+			main_window = wm;
 		}
-		return main_window;
+		return wm;
 	}
 
 	std::vector<WindowManagerPtr> WindowManager::getWindowList()
 	{
 		std::vector<WindowManagerPtr> res;
-		std::map<unsigned,WindowManagerPtr>::iterator& it = get_window_list().begin();
-		while(it != get_window_list().end()) {
-			res.push_back(it->second);
-			++it;
+		auto it = get_window_list().begin();
+		for(auto w : get_window_list()) {
+			res.push_back(w.second);
 		}
 		return res;
 	}

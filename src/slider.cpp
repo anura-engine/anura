@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "gui_section.hpp"
 #include "image_widget.hpp"

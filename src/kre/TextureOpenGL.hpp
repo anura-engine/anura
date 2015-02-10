@@ -32,8 +32,7 @@ namespace KRE
 	class OpenGLTexture : public Texture
 	{
 	public:
-		explicit OpenGLTexture(const variant& node);
-		explicit OpenGLTexture(const SurfacePtr& surface, const variant& node);
+		explicit OpenGLTexture(const variant& node, const SurfacePtr& surface);
 		explicit OpenGLTexture(const SurfacePtr& surface, 
 			Type type=Type::TEXTURE_2D, 
 			int mipmap_levels=0);

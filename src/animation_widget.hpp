@@ -27,7 +27,7 @@
 #include <boost/intrusive_ptr.hpp>
 
 #include "frame.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "label.hpp"
 #include "widget.hpp"
 

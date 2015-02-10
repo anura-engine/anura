@@ -23,7 +23,7 @@
 
 #if defined(USE_LIBVPX)
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "module.hpp"
 #include "play_vpx.hpp"

@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include "ParticleSystemFwd.hpp"
 #include "variant.hpp"
 
 namespace KRE
@@ -41,7 +42,7 @@ namespace KRE
 			explicit action(const variant& node);
 			virtual ~action();
 			const std::string& name() const { return name_; }
-			void execute(technique* tech, float t);
+			void execute(Technique* tech, float t);
 			virtual action* clone() = 0;
 			static action_ptr create(const variant& node);
 		private:
@@ -53,8 +54,8 @@ namespace KRE
 		public:
 			explicit event_handler(const variant& node);
 			virtual ~event_handler();
-			void process(technique* tech, float t);
-			void process_actions(technique* tech, float t);
+			void process(Technique* tech, float t);
+			void process_actions(Technique* tech, float t);
 			void add_action(action_ptr evt);
 			const std::string& name() const { return name_; }
 			bool is_enabled() const { return enabled_; }
@@ -63,7 +64,7 @@ namespace KRE
 			virtual event_handler* clone() = 0;
 			static event_handler_ptr create(const variant& node);
 		private:
-			virtual bool handle_process(technique* tech, float t) = 0;
+			virtual bool handle_process(Technique* tech, float t) = 0;
 			std::string name_;
 			bool enabled_;
 			bool observe_till_event_;

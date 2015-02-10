@@ -30,7 +30,7 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtx/perpendicular.hpp>
 
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {

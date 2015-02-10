@@ -25,7 +25,7 @@
 #include <boost/intrusive_ptr.hpp>
 #include <vector>
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "hex_object_fwd.hpp"
 #include "formula_callable.hpp"

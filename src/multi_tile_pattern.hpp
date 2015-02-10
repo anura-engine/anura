@@ -29,7 +29,7 @@
 #include <string>
 #include <vector>
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "level_object_fwd.hpp"
 #include "variant.hpp"

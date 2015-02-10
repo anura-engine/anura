@@ -28,7 +28,7 @@
 #include <memory>
 #include <tuple>
 
-#include "Geometry.hpp"
+#include "geometry.hpp"
 #include "PixelFormat.hpp"
 #include "WindowManagerFwd.hpp"
 
@@ -41,9 +41,9 @@ namespace KRE
 	typedef std::function<void(uint32_t&,uint32_t&,uint32_t&,uint32_t&)> SurfaceConvertFn;
 
 	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFileFn;
-	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
-	typedef std::function<SurfacePtr(unsigned, unsigned, unsigned, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
-	typedef std::function<SurfacePtr(unsigned, unsigned, PixelFormat::PF)> SurfaceCreatorFormatFn;
+	typedef std::function<SurfacePtr(int, int, int, int, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
+	typedef std::function<SurfacePtr(int, int, int, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
+	typedef std::function<SurfacePtr(int, int, PixelFormat::PF)> SurfaceCreatorFormatFn;
 
 	enum class ColorCountFlags {
 		NONE						= 0,
@@ -64,16 +64,16 @@ namespace KRE
 		// be taken when processing the pixel data to respect correct row pitch
 		// and pixel format.
 		virtual void* pixelsWriteable() = 0;
-		virtual unsigned width() = 0;
-		virtual unsigned height() = 0;
-		virtual unsigned rowPitch() = 0;
+		virtual int width() const = 0;
+		virtual int height() const = 0;
+		virtual int rowPitch() const = 0;
 
 		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& dst_rect) = 0;
 		virtual void blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
 
-		virtual void writePixels(unsigned bpp, 
+		virtual void writePixels(int bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
@@ -118,23 +118,23 @@ namespace KRE
 			SurfaceCreatorFormatFn format_fn);
 		static void unRegisterSurfaceCreator(const std::string& name);
 		static SurfacePtr create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
-		static SurfacePtr create(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
-			unsigned row_pitch, 
+		static SurfacePtr create(int width, 
+			int height, 
+			int bpp, 
+			int row_pitch, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
 			const void* pixels);
-		static SurfacePtr create(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
+		static SurfacePtr create(int width, 
+			int height, 
+			int bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
-		static SurfacePtr create(unsigned width, unsigned height, PixelFormat::PF fmt);
+		static SurfacePtr create(int width, int height, PixelFormat::PF fmt);
 
 		static void resetSurfaceCache();
 	protected:

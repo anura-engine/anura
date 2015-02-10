@@ -25,7 +25,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "collision_utils.hpp"
@@ -2391,7 +2391,7 @@ void Level::draw_background(int x, int y, int rotation) const
 
 				if(intersection.w() == screen_area.w() || intersection.h() == screen_area.h()) {
 					rect result[2];
-					const int nrects = Geometry::rect_difference(screen_area, intersection, result);
+					const int nrects = geometry::rect_difference(screen_area, intersection, result);
 					ASSERT_LOG(nrects <= 2, "TOO MANY RESULTS " << nrects << " IN " << screen_area << " - " << intersection);
 					if(nrects < 1) {
 						//background is completely obscured, so return

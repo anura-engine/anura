@@ -21,10 +21,13 @@
 	   distribution.
 */
 
+#ifndef _USE_MATH_DEFINES
+#	define _USE_MATH_DEFINES	1
+#endif 
+
 #include "SDL_image.h"
 
-#include "../asserts.hpp"
-#include "../logger.hpp"
+#include "asserts.hpp"
 #include "SurfaceSDL.hpp"
 
 enum {
@@ -89,9 +92,9 @@ namespace KRE
 		}
 	}
 
-	SurfaceSDL::SurfaceSDL(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
+	SurfaceSDL::SurfaceSDL(int width, 
+		int height, 
+		int bpp, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -104,10 +107,10 @@ namespace KRE
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
-	SurfaceSDL::SurfaceSDL(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
-		unsigned row_pitch,
+	SurfaceSDL::SurfaceSDL(int width, 
+		int height, 
+		int bpp, 
+		int row_pitch,
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -140,7 +143,7 @@ namespace KRE
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
-	SurfaceSDL::SurfaceSDL(size_t width, size_t height, PixelFormat::PF format)
+	SurfaceSDL::SurfaceSDL(int width, int height, PixelFormat::PF format)
 	{
 		int bpp;
 		uint32_t rmask, gmask, bmask, amask;
@@ -159,10 +162,10 @@ namespace KRE
 		SDL_FreeSurface(surface_);
 	}
 
-	SurfacePtr SurfaceSDL::createFromPixels(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
-		unsigned row_pitch, 
+	SurfacePtr SurfaceSDL::createFromPixels(int width, 
+		int height, 
+		int bpp, 
+		int row_pitch, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -173,9 +176,9 @@ namespace KRE
 		return SurfacePtr(s);
 	}
 
-	SurfacePtr SurfaceSDL::createFromMask(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
+	SurfacePtr SurfaceSDL::createFromMask(int width, 
+		int height, 
+		int bpp, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -185,8 +188,8 @@ namespace KRE
 		return SurfacePtr(s);
 	}
 
-	SurfacePtr SurfaceSDL::createFromFormat(unsigned width,
-		unsigned height,
+	SurfacePtr SurfaceSDL::createFromFormat(int width,
+		int height,
 		PixelFormat::PF fmt)
 	{
 		auto s = std::make_shared<SurfaceSDL>(width, height, fmt);
@@ -266,7 +269,7 @@ namespace KRE
 		}
 	}
 
-	void SurfaceSDL::writePixels(unsigned bpp, 
+	void SurfaceSDL::writePixels(int bpp, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -784,16 +787,16 @@ namespace KRE
             case PixelFormat::PF::PIXELFORMAT_ARGB2101010: {
 				uint32_t pixel = 0;
 				if(hasRedChannel()) {
-					pixel = (red << getRedShift()) & getRedMask();
+					pixel += (red << getRedShift()) & getRedMask();
 				}
 				if(hasGreenChannel()) {
-					pixel = (green << getGreenShift()) & getGreenMask();
+					pixel += (green << getGreenShift()) & getGreenMask();
 				}
 				if(hasBlueChannel()) {
-					pixel = (blue << getBlueShift()) & getBlueMask();
+					pixel += (blue << getBlueShift()) & getBlueMask();
 				}
 				if(hasAlphaChannel()) {
-					pixel = (alpha << getAlphaShift()) & getAlphaMask();
+					pixel += (alpha << getAlphaShift()) & getAlphaMask();
 				}
 				uint32_t* px = static_cast<uint32_t*>(pixels);
 				*px = pixel;
@@ -840,7 +843,7 @@ namespace KRE
 		void* dst_pixels = new uint8_t[dst_size];
 
 		for(size_t h = 0; h != height(); ++h) {
-			unsigned offs = 0;
+			int offs = 0;
 			int ndx = 0;
 			uint8_t* pixel_ptr = static_cast<uint8_t*>(surface_->pixels) + h*rowPitch();
 			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + h*rowPitch();
@@ -851,7 +854,7 @@ namespace KRE
 			}
 		}
 		dst->writePixels(dst_pixels);
-		delete[] dst_pixels;
+		delete[] static_cast<uint8_t*>(dst_pixels);
 		return SurfacePtr(dst);
 	}
 

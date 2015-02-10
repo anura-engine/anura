@@ -25,8 +25,8 @@
 
 #include <vector>
 
-#include "kre/Geometry.hpp"
-#include "kre/Texture.hpp"
+#include "geometry.hpp"
+#include "Texture.hpp"
 
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"

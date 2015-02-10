@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,10 +23,9 @@
 
 #pragma once
 
-#include "Geometry.hpp"
+#include "geometry.hpp"
 #include "Material.hpp"
 #include "SceneObject.hpp"
-#include "SceneUtil.hpp"
 
 namespace KRE
 {
@@ -51,16 +50,17 @@ namespace KRE
 		void setTexture(const TexturePtr& tex);
 
 		template<typename T>
-		void setDrawRect(const Geometry::Rect<T>& r) {
+		void setDrawRect(const geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
-		virtual void preRender(const KRE::WindowManagerPtr& wm) override;
+
+		void preRender(const WindowManagerPtr& wm) override;
 
 		Centre getCentre() const { return centre_; }
 		void setCentre(Centre c);
 		const pointf& getCentreCoords() const { return centre_offset_; }
 		template<typename T>
-		void setCentreCoords(const Geometry::Point<T>& p) {
+		void setCentreCoords(const geometry::Point<T>& p) {
 			centre_offset_ = p;
 			centre_ = Centre::MANUAL;
 		}

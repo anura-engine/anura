@@ -21,47 +21,47 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "RenderTarget.hpp"
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
-	RenderTarget::RenderTarget(unsigned width, unsigned height, 
+	RenderTarget::RenderTarget(int width, int height, 
 		unsigned color_plane_count, 
 		bool depth, 
 		bool stencil, 
 		bool use_multi_sampling, 
 		unsigned multi_samples)
 		: width_(width),
-		height_(height),
-		color_attachments_(color_plane_count),
-		depth_attachment_(depth),
-		stencil_attachment_(stencil),
-		multi_sampling_(use_multi_sampling),
-		multi_samples_(multi_samples),
-		clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  height_(height),
+		  color_attachments_(color_plane_count),
+		  depth_attachment_(depth),
+		  stencil_attachment_(stencil),
+		  multi_sampling_(use_multi_sampling),
+		  multi_samples_(multi_samples),
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
 	{
 	}
 
 	RenderTarget::RenderTarget(const variant& node)
 		: width_(0),
-		height_(0),
-		color_attachments_(1),
-		depth_attachment_(false),
-		stencil_attachment_(false),
-		multi_sampling_(false),
-		multi_samples_(0),
-		clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
+		  height_(0),
+		  color_attachments_(1),
+		  depth_attachment_(false),
+		  stencil_attachment_(false),
+		  multi_sampling_(false),
+		  multi_samples_(0),
+		  clear_color_(0.0f, 0.0f, 0.0f, 1.0f)
 	{
 		ASSERT_LOG(node.is_map(), "RenderTarget definitions must be maps: " << node.to_debug_string());
 		ASSERT_LOG(node.has_key("width"), "Render target must have a 'width' attribute.");
 		ASSERT_LOG(node.has_key("height"), "Render target must have a 'height' attribute.");
-		width_ = node["width"].as_int();
-		height_ = node["height"].as_int();
+		width_ = node["width"].as_int32();
+		height_ = node["height"].as_int32();
 		if(node.has_key("color_planes")) {
-			color_attachments_ = node["color_planes"].as_int();
+			color_attachments_ = node["color_planes"].as_int32();
 			ASSERT_LOG(color_attachments_ >= 0, "Number of 'color_planes' must be zero or greater: " << color_attachments_);
 		}
 		if(node.has_key("depth_buffer")) {
@@ -73,7 +73,7 @@ namespace KRE
 		if(node.has_key("use_multisampling")) {
 			multi_sampling_ = node["use_multisampling"].as_bool();
 			if(node.has_key("samples")) {
-				multi_samples_ = node["samples"].as_int();
+				multi_samples_ = node["samples"].as_int32();
 			}
 		}
 		// XXX Maybe we need to add some extra filtering from min to max values based on order ?

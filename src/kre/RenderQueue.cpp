@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "Renderable.hpp"
 #include "RenderQueue.hpp"
 #include "WindowManager.hpp"
@@ -33,8 +33,9 @@ namespace KRE
 	{
 	}
 
-	RenderQueue::~RenderQueue() 
+	RenderQueuePtr RenderQueue::create(const std::string& name)
 	{
+		return std::make_shared<RenderQueue>(name);
 	}
 
 	void RenderQueue::enQueue(uint64_t order, RenderablePtr p)

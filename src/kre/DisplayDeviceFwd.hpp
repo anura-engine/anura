@@ -40,4 +40,7 @@ namespace KRE
 
 	class Effect;
 	typedef std::shared_ptr<Effect> EffectPtr;
+
+	class BlendEquationImplBase;
+	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
 }

@@ -25,7 +25,7 @@
 
 #include <memory>
 #include "StencilSettings.hpp"
-#include "Util.hpp"
+#include "util.hpp"
 
 namespace KRE
 {

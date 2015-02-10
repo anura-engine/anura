@@ -26,8 +26,8 @@
 #include <vector>
 #include <map>
 
-#include "kre/Material.hpp"
-#include "kre/SceneObject.hpp"
+#include "Material.hpp"
+#include "SceneObject.hpp"
 
 #include "decimal.hpp"
 #include "formula_callable.hpp"

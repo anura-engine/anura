@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "CameraObject.hpp"
 #include "LightObject.hpp"
 #include "RenderManager.hpp"
@@ -32,6 +32,17 @@
 
 namespace KRE
 {
+	namespace
+	{
+		typedef std::map<std::string, ObjectTypeFunction> SceneObjectFactoryLookupTable;
+		SceneObjectFactoryLookupTable& get_object_factory()
+		{
+			static SceneObjectFactoryLookupTable res;
+			return res;
+		}
+
+	}
+
 	SceneNode::SceneNode(SceneGraph* sg)
 		: scene_graph_(sg),
 		position_(0.0f),
@@ -50,12 +61,7 @@ namespace KRE
 	{
 		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
 		if(node.has_key("camera")) {
-			// XXX WindowManager::getMainWindow() is a little hack since this scene node might
-			// not be attached to the main window. But the camera needs to know the window size
-			// for an orthogonal camera. Maybe we need to attach a window id to the SceneGraph.
-			// Then we could get the information from there. -- is kind of an ugh situation.
-			auto cam = std::make_shared<Camera>(node["camera"], WindowManager::getMainWindow());
-			attachCamera(cam);
+			attachCamera(Camera::createInstance(node["camera"]));
 		}
 		if(node.has_key("lights")) {
 			auto& lights = node["lights"];
@@ -64,7 +70,7 @@ namespace KRE
 					ASSERT_LOG(pair.first.is_int() && pair.second.is_map(), 
 						"'lights' map should be int:light_map pairs. " 
 						<< pair.first.to_debug_string() << " : " << pair.second.to_debug_string());
-					size_t ref = pair.first.as_int();
+					size_t ref = pair.first.as_int32();
 					auto light_obj = std::make_shared<Light>(pair.second);
 					attachLight(ref, light_obj);
 				}
@@ -231,6 +237,14 @@ namespace KRE
 	{
 		// nothing need be done as default
 	}
+
+	void SceneNode::registerObjectType(const std::string& type, ObjectTypeFunction fn)
+	{
+		auto it = get_object_factory().find(type);
+		ASSERT_LOG(it != get_object_factory().end(), "Type(" << type << ") already registered");
+		get_object_factory()[type] = fn;
+	}
+
 
 	std::ostream& operator<<(std::ostream& os, const SceneNode& node)
 	{

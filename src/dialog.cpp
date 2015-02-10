@@ -24,10 +24,10 @@
 #include <boost/range/adaptor/reversed.hpp>
 #include <iostream>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
-#include "kre/Texture.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "Texture.hpp"
+#include "WindowManager.hpp"
 
 #include "button.hpp"
 #include "controls.hpp"
@@ -379,7 +379,7 @@ namespace gui
 		int joystick_lockout = 25;
 
 		while(opened_ && pumpEvents()) {
-			Uint32 t = profile::get_tick_time();
+			int t = static_cast<int>(profile::get_tick_time());
 			process();
 			prepareDraw();
 			draw();

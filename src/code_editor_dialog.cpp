@@ -25,9 +25,9 @@
 
 #include <algorithm>
 
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
-#include "kre/SDLWrapper.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
+#include "SDLWrapper.hpp"
 
 #include "border_widget.hpp"
 #include "button.hpp"
@@ -428,7 +428,7 @@ void CodeEditorDialog::process()
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
-	if(invalidated_ && profile::get_tick_time() > static_cast<unsigned>(invalidated_ + 200)) {
+	if(invalidated_ && profile::get_tick_time() > invalidated_ + 200) {
 		try {
 			CustomObject::resetCurrentDebugError();
 
@@ -1170,7 +1170,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 COMMAND_LINE_UTILITY(codeedit)
 {
 	SDL::SDL_ptr manager(new SDL::SDL());
-	KRE::WindowManagerPtr main_wnd = KRE::WindowManager::factory("SDL", "opengl");
+	KRE::WindowManagerPtr main_wnd = KRE::WindowManager::createInstance("SDL", "opengl");
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(600, 600);
 

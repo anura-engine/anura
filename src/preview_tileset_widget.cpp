@@ -23,7 +23,7 @@
 
 #include <iostream>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "preview_tileset_widget.hpp"
 #include "tile_map.hpp"

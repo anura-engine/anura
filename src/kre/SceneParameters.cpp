@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -24,7 +24,7 @@
 #include <chrono>
 #include <random>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "spline.hpp"
 #include "SceneParameters.hpp"
 
@@ -148,7 +148,7 @@ namespace KRE
 	{
 	}
 
-	float RandomParameter::getValue(float t)
+	float RandomParameter::get_value(float t)
 	{
 		return get_random_float(min_value_, max_value_);
 	}
@@ -202,7 +202,7 @@ namespace KRE
 	{
 	}
 
-	float OscillateParameter::getValue(float t)
+	float OscillateParameter::get_value(float t)
 	{
 		if(osc_type_ == TYPE_SINE) {
 			return float(base_ + amplitude_ * sin(2*M_PI*frequency_*t + phase_));
@@ -263,7 +263,7 @@ namespace KRE
 		return --it;
 	}
 
-	float CurvedParameter::getValue(float t)
+	float CurvedParameter::get_value(float t)
 	{
 		if(curve_type_ == INTERPOLATE_LINEAR) {
 			auto it = find_closest_point(t);

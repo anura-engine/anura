@@ -24,10 +24,10 @@
 #include <math.h>
 #include <climits>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
-#include "kre/DisplayDevice.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "DisplayDevice.hpp"
+#include "WindowManager.hpp"
 
 #include "background_task_pool.hpp"
 #include "base64.hpp"
@@ -240,7 +240,7 @@ namespace
 				canvas->drawSolidRect(rect(wnd->width() - right_rect_width, 0, right_rect_width, wnd->height()), KRE::Color::colorBlack());
 			}
 
-			canvas->drawSolidCircle(point(center_x,center_y), radius, KRE::Color::colorBlack());
+			canvas->drawSolidCircle(point(center_x,center_y), static_cast<float>(radius), KRE::Color::colorBlack());
 		}
 	}
 
@@ -426,11 +426,11 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 	switch(event.type)
 	{
 		case SDL_MOUSEWHEEL: {
-			game_logic::map_formula_callable_ptr callable(new game_logic::map_formula_callable);
+			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			callable->add("yscroll", variant(event.wheel.y));
-			std::vector<entity_ptr> chars = lvl_->get_active_chars();
+			std::vector<EntityPtr> chars = lvl_->get_active_chars();
 			for(auto e : chars) {
-				e->handle_event(MouseWheelID, callable.get());
+				e->handleEvent(MouseWheelID, callable.get());
 			}
 			break;
 		}

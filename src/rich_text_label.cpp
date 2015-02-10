@@ -23,7 +23,7 @@
 
 #include <algorithm>
 
-#include "kre/ClipScope.hpp"
+#include "ClipScope.hpp"
 
 #include "label.hpp"
 #include "rich_text_label.hpp"

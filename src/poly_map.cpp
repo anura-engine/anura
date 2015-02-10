@@ -24,7 +24,7 @@
 #include <iostream>
 #include <memory>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "poly_map.hpp"
 #include "simplex_noise.hpp"

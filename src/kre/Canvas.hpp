@@ -27,10 +27,11 @@
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../Color.hpp"
-#include "Geometry.hpp"
+
+#include "Color.hpp"
+#include "geometry.hpp"
 #include "Material.hpp"
-#include "Util.hpp"
+#include "util.hpp"
 #include "VGraph.hpp"
 #include "SceneUtil.hpp"
 
@@ -54,7 +55,7 @@ namespace KRE
 
 		// Blit's a texture from co-ordinates given in src to the screen co-ordinates dst
 		virtual void blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
-		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color=Color::colorWhite());
+		virtual void blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color=Color::colorWhite()) = 0;
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const;
 		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color=Color::colorWhite()) const;
@@ -75,12 +76,12 @@ namespace KRE
 		// Draw filled polygon (i.e. triangle fan) using given color	
 		// Should add a version taking fill and stroke color.
 		virtual void drawPolygon(const std::vector<glm::vec2>& points, const Color& color=Color::colorWhite()) const = 0;
-		virtual void drawSolidCircle(const point& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
-		virtual void drawSolidCircle(const point& centre, double radius, const std::vector<uint8_t>& color) const = 0;
-		virtual void drawHollowCircle(const point& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
-		virtual void drawSolidCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
-		virtual void drawSolidCircle(const pointf& centre, double radius, const std::vector<uint8_t>& color) const = 0;
-		virtual void drawHollowCircle(const pointf& centre, double radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const point& centre, float radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const point& centre, float radius, const std::vector<uint8_t>& color) const = 0;
+		virtual void drawHollowCircle(const point& centre, float radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const pointf& centre, float radius, const Color& color=Color::colorWhite()) const = 0;
+		virtual void drawSolidCircle(const pointf& centre, float radius, const std::vector<uint8_t>& color) const = 0;
+		virtual void drawHollowCircle(const pointf& centre, float radius, const Color& color=Color::colorWhite()) const = 0;
 		virtual void drawPoints(const std::vector<glm::vec2>& points, float radius, const Color& color=Color::colorWhite()) const = 0;
 
 		void drawVectorContext(const Vector::ContextPtr& context);

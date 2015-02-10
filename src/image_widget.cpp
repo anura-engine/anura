@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "image_widget.hpp"
 

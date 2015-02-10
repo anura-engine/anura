@@ -30,7 +30,7 @@
 #include <ft2build.h>
 #include FT_FREETYPE_H
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 #include "svg/svg_parse.hpp"
 
 #include "asserts.hpp"
@@ -662,19 +662,16 @@ namespace graphics
 
 	double xpos = 0.0;
 	cairo_get_current_point(context.get(), &xpos, NULL);
-		for(int n = 0; n != lines.size(); ++n) {
-			cairo_text_path(context.get(), lines[n].c_str());
-			if(n+1 != lines.size()) {
-
-				double xpos = 0.0, ypos = 0.0;
-				cairo_get_current_point(context.get(), &xpos, &ypos);
+	for(int n = 0; n != lines.size(); ++n) {
+		cairo_text_path(context.get(), lines[n].c_str());
+		if(n+1 != lines.size()) {
 			double ypos = 0.0;
 			cairo_get_current_point(context.get(), NULL, &ypos);
 
 			ypos += basic_extents.height*2;
-				cairo_move_to(context.get(), xpos, ypos);
-			}
+			cairo_move_to(context.get(), xpos, ypos);
 		}
+	}
 	END_CAIRO_FN
 
 	BEGIN_CAIRO_FN(paint_image, "(string, [decimal,decimal]|null=null)")

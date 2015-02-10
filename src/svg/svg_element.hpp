@@ -33,7 +33,7 @@ namespace KRE
 {
 	namespace SVG
 	{
-		typedef Geometry::Rect<double> view_box_rect;
+		typedef geometry::Rect<double> view_box_rect;
 
 		// container elements are as follows.
 		//  'g', 'svg', 'defs', 'a', 'glyph', 'marker', 'mask', 'missing-glyph', 'pattern', 'switch', 'symbol'

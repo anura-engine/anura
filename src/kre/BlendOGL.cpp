@@ -25,7 +25,7 @@
 
 #include <stack>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "BlendOGL.hpp"
 
 namespace KRE

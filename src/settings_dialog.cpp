@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "gui_section.hpp"
 #include "preferences.hpp"

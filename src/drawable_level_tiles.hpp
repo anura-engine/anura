@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "kre/SceneObject.hpp"
+#include "SceneObject.hpp"
 
 namespace graphics
 {

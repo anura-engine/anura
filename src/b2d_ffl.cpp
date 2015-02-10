@@ -23,8 +23,8 @@
 
 #include <cstdarg>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
 
 #include "asserts.hpp"
 #include "b2d_ffl.hpp"

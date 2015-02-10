@@ -27,16 +27,13 @@
 #include "formula_callable.hpp"
 #include "variant.hpp"
 
+#include "Color.hpp"
+
 #include <map>
 #include <string>
 #include <vector>
 
 // XXX split this into the base module and a new translation unit with the module server.
-namespace graphics {
-	class color;
-}
-
-
 namespace module
 {
 	enum BASE_PATH_TYPE { BASE_PATH_GAME, BASE_PATH_USER, NUM_PATH_TYPES };
@@ -54,7 +51,7 @@ namespace module
 		std::string default_font;
 		std::string default_font_cjk;
 
-	boost::intrusive_ptr<graphics::color> speech_dialog_bg_color;
+		KRE::ColorPtr speech_dialog_bg_color;
 
 		std::vector<int> version_;
 		std::vector<std::string> included_modules_;
@@ -66,9 +63,9 @@ namespace module
 	typedef std::pair<std::string, std::string> module_file_pair;
 	typedef std::map<std::string, std::string>::const_iterator module_file_map_iterator;
 
-//sets the core module name we are using. This MUST be called before
-//using any other module functions to establish the dlc path we use.
-void set_core_module_name(const std::string& module_name);
+	//sets the core module name we are using. This MUST be called before
+	//using any other module functions to establish the dlc path we use.
+	void set_core_module_name(const std::string& module_name);
 
 	const std::string get_module_name();
 	const std::string get_module_pretty_name();
@@ -76,7 +73,7 @@ void set_core_module_name(const std::string& module_name);
 	std::string map_file(const std::string& fname);
 
 	std::string get_default_font();
-const boost::intrusive_ptr<graphics::color>& get_speech_dialog_bg_color();
+	const KRE::ColorPtr& get_speech_dialog_bg_color();
 
 	variant get_default_preferences();
 

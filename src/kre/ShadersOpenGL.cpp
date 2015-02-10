@@ -24,7 +24,7 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "ShadersOpenGL.hpp"
 
 namespace KRE
@@ -84,7 +84,7 @@ namespace KRE
 				"void main()\n"
 				"{\n"
 				"    gl_PointSize = u_point_size;\n"
-				"    gl_Position = u_mvp_matrix * vec4(a_position,0.0,1.0);\n"
+				"    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);\n"
 				"}\n";
 			const char* const simple_fs =
 				"uniform bool u_discard;\n"
@@ -108,6 +108,56 @@ namespace KRE
 			const attribute_mapping simple_attribue_mapping[] =
 			{
 				{"position", "a_position"},
+				{"", ""},
+			};
+
+			const char* const complex_vs = 
+				"uniform mat4 u_mv_matrix;\n"
+				"uniform mat4 u_p_matrix;\n"
+				"uniform float u_point_size;\n"
+				"uniform float u_line_width;\n"
+				"attribute vec2 a_position;\n"
+				"attribute vec2 a_normal;\n"
+				"varying vec2 v_normal;\n"
+				"void main()\n"
+				"{\n"
+				"    gl_PointSize = u_point_size;\n"
+				"    vec4 delta = vec4(a_normal * u_line_width, 0.0, 0.0);\n"
+				"    vec4 pos = u_mv_matrix * vec4(a_position, 0.0, 1.0);\n"
+				"    gl_Position = u_p_matrix * (pos + delta);\n"
+				"    v_normal = a_normal;\n"
+				"}\n";
+			const char* const complex_fs =
+				"uniform bool u_discard;\n"
+				"uniform vec4 u_color;\n"
+				"uniform float u_line_width;\n"
+				"uniform float u_blur;\n"
+				"varying vec2 v_normal;\n"
+				"void main()\n"
+				"{\n"
+				"    float blur = 2.0;\n"
+				"    float dist = length(v_normal) * u_line_width;\n"
+				"    float alpha = clamp((u_line_width - dist) / u_blur, 0.0, 1.0);\n"
+				"    gl_FragColor = vec4(u_color.rgb, alpha);\n"
+				"    if(u_discard && gl_FragColor[3] == 0.0) {\n"
+				"        discard;\n"
+				"    }\n"
+				"}\n";
+
+			const uniform_mapping complex_uniform_mapping[] =
+			{
+				{"mv_matrix", "u_mv_matrix"},
+				{"p_matrix", "u_p_matrix"},
+				{"color", "u_color"},
+				{"discard", "u_discard"},
+				{"point_size", "u_point_size"},
+				{"line_width", "u_line_width"},
+				{"", ""},
+			};
+			const attribute_mapping complex_attribue_mapping[] =
+			{
+				{"position", "a_position"},
+				{"normal", "a_normal"},
 				{"", ""},
 			};
 
@@ -202,7 +252,8 @@ namespace KRE
 			{
 				{ "default", "default_vs", default_vs, "default_fs", default_fs, default_uniform_mapping, default_attribue_mapping },
 				{ "simple", "simple_vs", simple_vs, "simple_fs", simple_fs, simple_uniform_mapping, simple_attribue_mapping },
-				{ "attr_color_shader", "attr_color_vs", attr_color_fs, "attr_color_fs", simple_fs, attr_color_uniform_mapping, attr_color_attribue_mapping },
+				{ "complex", "complex_vs", complex_vs, "complex_fs", complex_fs, complex_uniform_mapping, complex_attribue_mapping },
+				{ "attr_color_shader", "attr_color_vs", attr_color_vs, "attr_color_fs", attr_color_fs, attr_color_uniform_mapping, attr_color_attribue_mapping },
 				{ "vtc_shader", "vtc_vs", vtc_vs, "vtc_fs", vtc_fs, vtc_uniform_mapping, vtc_attribue_mapping },
 			};
 
@@ -442,7 +493,7 @@ namespace KRE
 				a.name = std::string(&name[0], &name[size]);
 				a.location = glGetAttribLocation(object_, a.name.c_str());
 				ASSERT_LOG(a.location >= 0, "Unable to determine the location of the attribute: " << a.name);
-				ASSERT_LOG(a.num_elements != 1, "More than one element was found for an attribute(" << a.name << ") in shader(" << this->name() << "): " << a.num_elements);
+				ASSERT_LOG(a.num_elements == 1, "More than one element was found for an attribute(" << a.name << ") in shader(" << this->name() << "): " << a.num_elements);
 				attribs_[a.name] = a;
 			}
 			return true;
@@ -455,6 +506,10 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const void* value)
 		{
+			if(it == uniforms_.end()) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
 			switch(u.type) {
@@ -512,6 +567,10 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint value)
 		{
+			if(it == uniforms_.end()) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
 			const Actives& u = it->second;
 			switch(u.type) {
 			case GL_INT:
@@ -527,6 +586,10 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat value)
 		{
+			if(it == uniforms_.end()) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
 			const Actives& u = it->second;
 			switch(u.type) {
 			case GL_FLOAT: {
@@ -540,6 +603,10 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLint* value)
 		{
+			if(it == uniforms_.end()) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "set_uniform(): value is NULL");
 			switch(u.type) {
@@ -568,6 +635,10 @@ namespace KRE
 
 		void ShaderProgram::setUniformValue(ConstActivesMapIterator it, const GLfloat* value)
 		{
+			if(it == uniforms_.end()) {
+				LOG_WARN("Tried to set value for invalid uniform iterator.");
+				return;
+			}
 			const Actives& u = it->second;
 			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
 			switch(u.type) {
@@ -627,11 +698,27 @@ namespace KRE
 			} else {
 				u_mvp_ = uniforms_.end();
 			}
+			if(getUniform("mv_matrix") != -1) {
+				u_mv_ = getUniformIterator("mv_matrix");
+			} else {
+				u_mv_ = uniforms_.end();
+			}
+			if(getUniform("p_matrix") != -1) {
+				u_p_ = getUniformIterator("p_matrix");
+			} else {
+				u_p_ = uniforms_.end();
+			}
 			if(getUniform("color") != -1) {
 				u_color_ = getUniformIterator("color");
 				setUniformValue(u_color_, glm::value_ptr(glm::vec4(1.0f)));
 			} else {
 				u_color_ = uniforms_.end();
+			}
+			if(getUniform("line_width") != -1) {
+				u_line_width_ = getUniformIterator("line_width");
+				setUniformValue(u_line_width_, 1.0f);
+			} else {
+				u_line_width_ = uniforms_.end();
 			}
 			if(getUniform("tex_map") != -1) {
 				u_tex_ = getUniformIterator("tex_map");
@@ -652,6 +739,11 @@ namespace KRE
 				a_color_ = getAttributeIterator("a_color");
 			} else {
 				a_color_ = attribs_.end();
+			}
+			if(getAttribute("normal") != -1) {
+				a_normal_ = getAttributeIterator("normal");
+			} else {
+				a_normal_ = attribs_.end();
 			}
 		}
 

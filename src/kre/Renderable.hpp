@@ -29,7 +29,7 @@
 #include "Material.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {

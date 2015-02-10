@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "asserts.hpp"
 #include "button.hpp"

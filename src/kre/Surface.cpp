@@ -111,10 +111,10 @@ namespace KRE
 		return std::get<0>(create_fn_tuple)(filename, fmt, convert);
 	}
 
-	SurfacePtr Surface::create(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
-		unsigned row_pitch, 
+	SurfacePtr Surface::create(int width, 
+		int height, 
+		int bpp, 
+		int row_pitch, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -127,9 +127,9 @@ namespace KRE
 		return std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
 	}
 
-	SurfacePtr Surface::create(unsigned width, 
-		unsigned height, 
-		unsigned bpp, 
+	SurfacePtr Surface::create(int width, 
+		int height, 
+		int bpp, 
 		uint32_t rmask, 
 		uint32_t gmask, 
 		uint32_t bmask, 
@@ -141,7 +141,7 @@ namespace KRE
 		return std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
 	}
 
-	SurfacePtr Surface::create(unsigned width, unsigned height, PixelFormat::PF fmt)
+	SurfacePtr Surface::create(int width, int height, PixelFormat::PF fmt)
 	{
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixel format.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
@@ -153,6 +153,31 @@ namespace KRE
 		get_surface_cache().clear();
 	}
 
+	void Surface::fillRect(const rect& dst_rect, const Color& color)
+	{
+		// XXX do we need to consider ARGB/RGBA ordering issues here.
+		ASSERT_LOG(dst_rect.x1() >= 0 && dst_rect.x1() <= width(), "destination co-ordinates out of bounds: " << dst_rect.x1() << " : (0," << width() << ")");
+		ASSERT_LOG(dst_rect.x2() >= 0 && dst_rect.x2() <= width(), "destination co-ordinates out of bounds: " << dst_rect.x2() << " : (0," << width() << ")");
+		ASSERT_LOG(dst_rect.y1() >= 0 && dst_rect.y1() <= height(), "destination co-ordinates out of bounds: " << dst_rect.y1() << " : (0," << height() << ")");
+		ASSERT_LOG(dst_rect.y2() >= 0 && dst_rect.y2() <= height(), "destination co-ordinates out of bounds: " << dst_rect.y2() << " : (0," << height() << ")");
+		unsigned char* pix = reinterpret_cast<unsigned char*>(pixelsWriteable());
+		const int bpp = pf_->bytesPerPixel();
+		for(int y = dst_rect.x1(); y < dst_rect.x2(); ++y) {
+			for(int x = dst_rect.y1(); x < dst_rect.y2(); ++x) {
+				unsigned char* p = &pix[(y * width() + x) * bpp];
+				// XXX FIXME
+				//uint32_t pixels;
+				//pf_->encodeRGBA(&pixels, color.r(), color.g(), color.b(), color.a());
+				switch(bpp) {
+					case 1: p[0] = color.r_int(); break;
+					case 2: p[0] = color.r_int(); p[1] = color.g_int(); break;
+					case 3: p[0] = color.r_int(); p[1] = color.g_int(); p[2] = color.b_int(); break;
+					case 4: p[0] = color.r_int(); p[1] = color.g_int(); p[2] = color.b_int(); p[3] = color.a_int(); break;
+				}
+			}
+		}		
+	}
+
 	// Actually creates a histogram of colors.
 	// Could be used for other things.
 	unsigned Surface::getColorCount(ColorCountFlags flags)
@@ -160,8 +185,8 @@ namespace KRE
 		const unsigned char* pix = reinterpret_cast<const unsigned char*>(pixels());
 		const int bpp = pf_->bytesPerPixel();
 		std::unordered_map<uint32_t,uint32_t> color_list;
-		for(unsigned y = 0; y < height(); ++y) {
-			for(unsigned x = 0; x < width(); ++x) {
+		for(int y = 0; y < height(); ++y) {
+			for(int x = 0; x < width(); ++x) {
 				const unsigned char* p = pix;
 				uint8_t r, g, b, a;
 				switch(bpp) {

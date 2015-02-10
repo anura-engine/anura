@@ -34,13 +34,13 @@ namespace KRE
 	{
 	public:
 		RenderManager();
-		~RenderManager();
-
-		void addQueue(int priority, RenderQueuePtr queue);
+		RenderQueuePtr addQueue(int priority, const std::string& queue_name);
 		void removeQueue(int priority);
 
 		void render(const WindowManagerPtr& wm) const;
 		void addRenderableToQueue(size_t q, size_t order, const RenderablePtr& r);
+
+		static RenderManagerPtr getInstance();
 	private:
 		typedef std::map<size_t,RenderQueuePtr> RenderQueueList;
 		RenderQueueList render_queues_;

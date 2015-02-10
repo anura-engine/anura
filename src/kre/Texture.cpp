@@ -22,7 +22,7 @@
 */
 
 #include <set>
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "DisplayDevice.hpp"
 #include "Texture.hpp"
 #include "TextureUtils.hpp"
@@ -51,19 +51,28 @@ namespace KRE
 		}
 	}
 
-	Texture::Texture(const SurfacePtr& surface, const variant& node)
+	Texture::Texture(const variant& node, const SurfacePtr& surface)
 		: type_(Type::TEXTURE_2D), 
 		mipmaps_(0), 
 		max_anisotropy_(1),
 		lod_bias_(0.0f),
 		surface_(surface),
-		surface_width_(surface->width()),
-		surface_height_(surface->height()),
+		surface_width_(-1),
+		surface_height_(-1),
 		width_(0),
 		height_(0),
 		depth_(0),
 		unpack_alignment_(4)
 	{
+		if(surface == nullptr && node.is_string()) {
+			surface_ = Surface::create(node.as_string());
+		} else if(surface == nullptr && node.has_key("image") && node["image"].is_string()) {
+			surface_ = Surface::create(node["image"].as_string());
+		}
+		ASSERT_LOG(surface_ != nullptr, "Error in the surface -- was null.");
+		surface_width_ = surface_->width();
+		surface_height_ = surface_->height();
+
 		internalInit();
 		if(node.has_key("type")) {
 			const std::string& type = node["type"].as_string();

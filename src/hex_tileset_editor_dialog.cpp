@@ -25,7 +25,7 @@
 
 #include <iostream>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "border_widget.hpp"
 #include "button.hpp"

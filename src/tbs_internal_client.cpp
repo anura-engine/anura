@@ -21,7 +21,8 @@
 	   distribution.
 */
 
-#include <boost/bind.hpp>
+#include <functional>
+#include <memory>
 
 #include "tbs_internal_client.hpp"
 #include "tbs_internal_server.hpp"
@@ -34,7 +35,7 @@ namespace {
 //actual function we want to call. That way if the internal_client is destroyed
 //and we want to cancel getting a reply, we can reset the real function so
 //it won't be called.
-void handler_proxy(boost::shared_ptr<boost::function<void(const std::string&)> > fn, const std::string& s) {
+void handler_proxy(std::shared_ptr<std::function<void(const std::string&)> > fn, const std::string& s) {
 	(*fn)(s);
 }
 }
@@ -60,9 +61,9 @@ void handler_proxy(boost::shared_ptr<boost::function<void(const std::string&)> >
 			*handler_ = [](const std::string& s){};
 		}
 
-		handler_.reset(new boost::function<void(const std::string&)>(handler));
+		handler_.reset(new std::function<void(const std::string&)>(handler));
 
-		boost::function<void(const std::string&)> fn = boost::bind(handler_proxy, handler_, _1);
+		std::function<void(const std::string&)> fn = std::bind(handler_proxy, handler_, std::placeholders::_1);
 
 		internal_server::send_request(request, session_id, callable, fn);
 	}

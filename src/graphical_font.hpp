@@ -27,8 +27,8 @@
 #include <vector>
 #include <unordered_map>
 
-#include "kre/Geometry.hpp"
-#include "kre/Texture.hpp"
+#include "geometry.hpp"
+#include "Texture.hpp"
 #include "variant.hpp"
 
 class GraphicalFont;

@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "SceneObjectCallable.hpp"
-#include "kre/SceneUtil.hpp"
+#include "SceneUtil.hpp"
 
 class CustomObject;
 class Light;

@@ -24,7 +24,7 @@
 #include <set>
 #include <sstream>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "dialog.hpp"
 #include "checkbox.hpp"

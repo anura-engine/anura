@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#include "../Color.hpp"
+#include "Color.hpp"
 #include "SceneObject.hpp"
 #include "VGraphFwd.hpp"
 
@@ -93,6 +93,27 @@ namespace KRE
 		private:
 		};
 
+		class Matrix
+		{
+		public:
+			Matrix();
+			virtual ~Matrix() {}
+			virtual void init(double xx, double yx, double xy, double yy, double x0, double y0) = 0;
+			virtual void initIdentity() = 0;
+			virtual void initTranslate(double x0, double y0) = 0;
+			virtual void initScale(double xs, double ys) = 0;
+			virtual void initRotation(double rad) = 0;
+			virtual void translate(double tx, double ty) = 0;
+			virtual void scale(double sx, double sy) = 0;
+			virtual void rotate(double rad) = 0;
+			virtual void invert() = 0;
+			virtual void multiply(const MatrixPtr& a) = 0;
+			virtual geometry::Point<double> transformDistance(double x, double y) = 0;
+			virtual geometry::Point<double> transformPoint(double x, double y) = 0;
+			virtual MatrixPtr clone() = 0;
+		};
+
+		static MatrixPtr multiply(const MatrixPtr& a, const MatrixPtr& b);
 
 		class Context : public SceneObject
 		{
@@ -168,7 +189,21 @@ namespace KRE
 			// between drawing as a SceneObject and Drawing to the Canvas.
 			//virtual void CanvasDraw() const = 0;
 
+			virtual void translate(double tx, double ty) = 0;
+			virtual void scale(double sx, double sy) = 0;
+			virtual void rotate(double rad) = 0;
+			virtual void setMatrix(const MatrixPtr& m) = 0;
+			virtual MatrixPtr getMatrix() const = 0;
+			virtual void transform(const MatrixPtr& m) = 0;
+			virtual void setIdentityMatrix() = 0;
+			virtual geometry::Point<double> userToDevice(double x, double y) = 0;
+			virtual geometry::Point<double> userToDeviceDistance(double x, double y) = 0;
+			virtual geometry::Point<double> deviceToUser(double x, double y) = 0;
+			virtual geometry::Point<double> deviceToUserDistance(double x, double y) = 0;
+
 			static ContextPtr CreateInstance(const std::string& hint, int width, int height);
+
+			virtual MatrixPtr createMatrix() = 0;
 		protected:
 			Context();
 		private:

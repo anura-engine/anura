@@ -88,6 +88,7 @@ namespace KRE
 		TexturePtr handleCreateTexture(unsigned width, PixelFormat::PF fmt) override;
 		TexturePtr handleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) override;
 		TexturePtr handleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) override;
+		TexturePtr handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette) override;
 
 		MaterialPtr handleCreateMaterial(const variant& node) override;
 		MaterialPtr handleCreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false) override;

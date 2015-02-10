@@ -35,8 +35,6 @@ namespace KRE
 	{
 	public:
 		RenderQueue(const std::string& name);
-		~RenderQueue();
-
 		const std::string& name() const { return name_; }
 
 		void enQueue(uint64_t order, RenderablePtr p);	
@@ -45,6 +43,8 @@ namespace KRE
 		void preRender(const WindowManagerPtr& wm);
 		void render(const WindowManagerPtr& wm) const;
 		void postRender(const WindowManagerPtr& wm);
+
+		static RenderQueuePtr create(const std::string& name);
 	private:
 		std::map<uint64_t, RenderablePtr> renderables_;
 		std::string name_;

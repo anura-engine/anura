@@ -23,6 +23,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
+
 #include "CanvasOGL.hpp"
 #include "ShadersOpenGL.hpp"
 #include "TextureOpenGL.hpp"
@@ -102,6 +103,11 @@ namespace KRE
 
 		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::blitTexture(const TexturePtr& tex, const std::vector<vertex_texcoord>& vtc, float rotation, const Color& color)
+	{
+		ASSERT_LOG(false, "XXX CanvasOGL::blitTexture()");
 	}
 
 	void CanvasOGL::blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) const
@@ -246,19 +252,322 @@ namespace KRE
 		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
 		// XXX this may not be right.
 		glDrawArrays(GL_LINE_STRIP, 0, 5);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawSolidRect(const rect& r, const Color& fill_color, float rotation) const
+	{
+		rectf vtx = r.as_type<float>();
+		const float vtx_coords[] = {
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x1(), vtx.y2(),
+			vtx.x2(), vtx.y2(),
+		};
+
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(vtx.mid_x(),vtx.mid_y(),0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-vtx.mid_x(),-vtx.mid_y(),0.0f));
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		// Draw a filled rect
+		shader->setUniformValue(shader->getColorUniform(), fill_color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawHollowRect(const rect& r, const Color& stroke_color, float rotation) const
+	{
+		rectf vtx = r.as_type<float>();
+		const float vtx_coords_line[] = {
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x2(), vtx.y2(),
+			vtx.x1(), vtx.y2(),
+			vtx.x1(), vtx.y1(),
+		};
+
+		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3(vtx.mid_x(),vtx.mid_y(),0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-vtx.mid_x(),-vtx.mid_y(),0.0f));
+		glm::mat4 mvp = mvp_ * model * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		// Draw stroke if stroke_color is specified.
+		// XXX I think there is an easier way of doing this, with modern GL
+		shader->setUniformValue(shader->getColorUniform(), stroke_color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glDrawArrays(GL_LINE_STRIP, 0, 5);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 
 	void CanvasOGL::drawLine(const point& p1, const point& p2, const Color& color) const
 	{
-		// XXX
+		const float vtx_coords_line[] = {
+			static_cast<float>(p1.x), static_cast<float>(p1.y),
+			static_cast<float>(p2.x), static_cast<float>(p2.y),
+		};
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glDrawArrays(GL_LINES, 0, 2);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 
-	void CanvasOGL::drawSolidCircle(const point& centre, double radius, const Color& color) const
+	std::ostream& operator<<(std::ostream& os, const glm::vec2& v)
 	{
-		// XXX
+		os << "(" << v.x << "," << v.y << ")";
+		return os;
 	}
 
-	// XXX Add in the other hundred additions.
+	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	{
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("complex");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvUniform(), glm::value_ptr(getModelMatrix()));
+		shader->setUniformValue(shader->getPUniform(), glm::value_ptr(mvp_));
+
+		if(shader->getNormalAttribute() == shader->attributesIteratorEnd() || shader->getVertexAttribute() == shader->attributesIteratorEnd()) {
+			return;
+		}
+
+		std::vector<glm::vec2> vertices;
+		vertices.reserve(varray.size() * 2);
+		std::vector<glm::vec2> normals;
+		normals.reserve(varray.size() * 2);
+		
+		for(int n = 0; n != varray.size(); n += 2) {
+			const float dx = varray[n+1].x - varray[n+0].x;
+			const float dy = varray[n+1].y - varray[n+0].y;
+			const glm::vec2 d1 = glm::normalize(glm::vec2(dy, -dx));
+			const glm::vec2 d2 = glm::normalize(glm::vec2(-dy, dx));
+
+			vertices.emplace_back(varray[n+0]);
+			vertices.emplace_back(varray[n+0]);
+			vertices.emplace_back(varray[n+1]);
+			vertices.emplace_back(varray[n+1]);
+						
+			normals.emplace_back(d1);
+			normals.emplace_back(d2);
+			normals.emplace_back(d1);
+			normals.emplace_back(d2);
+		}
+
+		static auto blur_uniform = shader->getUniformIterator("u_blur");
+		shader->setUniformValue(blur_uniform, 2.0f);
+		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glEnableVertexAttribArray(shader->getNormalAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &vertices[0]);
+		glVertexAttribPointer(shader->getNormalAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &normals[0]);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, vertices.size());
+		glDisableVertexAttribArray(shader->getNormalAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawLines(const std::vector<glm::vec2>& varray, float line_width, const std::vector<glm::u8vec4>& carray) const 
+	{
+		ASSERT_LOG(varray.size() == carray.size(), "Vertex and color array sizes don't match.");
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		shader->setUniformValue(shader->getColorUniform(), glm::value_ptr(glm::vec4(1.0f)));
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glEnableVertexAttribArray(shader->getColorAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glVertexAttribPointer(shader->getColorAttribute()->second.location, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &carray[0]);
+		glDrawArrays(GL_LINES, 0, varray.size());
+		glDisableVertexAttribArray(shader->getColorAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawLineStrip(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	{
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glDrawArrays(GL_LINE_STRIP, 0, varray.size());
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawLineLoop(const std::vector<glm::vec2>& varray, float line_width, const Color& color) const 
+	{
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getLineWidthUniform(), line_width);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glDrawArrays(GL_LINE_LOOP, 0, varray.size());
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawLine(const pointf& p1, const pointf& p2, const Color& color) const 
+	{
+		const float vtx_coords_line[] = {
+			p1.x, p1.y,
+			p2.x, p2.y,
+		};
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords_line);
+		glDrawArrays(GL_LINES, 0, 2);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawPolygon(const std::vector<glm::vec2>& varray, const Color& color) const 
+	{
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		shader->setUniformValue(shader->getLineWidthUniform(), 1.0f);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glDrawArrays(GL_POLYGON, 0, varray.size());
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const Color& color) const 
+	{
+		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
+	}
+
+	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const std::vector<uint8_t>& color) const 
+	{
+		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
+	}
+
+	void CanvasOGL::drawHollowCircle(const point& centre, float radius, const Color& color) const 
+	{
+		drawHollowCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
+	}
+
+	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const Color& color) const 
+	{
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("circle");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		static auto radius_it = shader->getUniformIterator("outer_radius");
+		shader->setUniformValue(radius_it, radius);
+		static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+		shader->setUniformValue(inner_radius_it, 0.0f);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, glm::value_ptr(glm::vec2(static_cast<float>(centre.x), static_cast<float>(centre.y))));
+		glDrawArrays(GL_POINTS, 0, 1);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<uint8_t>& color) const 
+	{
+		glm::mat4 mvp = mvp_ * glm::translate(glm::mat4(1.0f), glm::vec3(centre.x, centre.y, 0.0f)) * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		// XXX figure out a nice way to do this with shaders.
+		std::vector<glm::vec2> varray;
+		varray.reserve(color.size()/4);
+		varray.emplace_back(0.0f, 0.0f);
+		for(double angle = 0; angle < M_PI * 2.0; angle += (M_PI*2.0*4.0)/color.size()) {
+				varray.emplace_back(radius*cos(angle), radius*sin(angle));
+		}
+		varray.emplace_back(varray[1]);
+
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glEnableVertexAttribArray(shader->getColorAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glVertexAttribPointer(shader->getColorAttribute()->second.location, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &color[0]);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, 1);
+		glDisableVertexAttribArray(shader->getColorAttribute()->second.location);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+
+	}
+
+	void CanvasOGL::drawHollowCircle(const pointf& centre, float radius, const Color& color) const 
+	{
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("circle");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		static auto outer_radius_it = shader->getUniformIterator("outer_radius");
+		shader->setUniformValue(outer_radius_it, radius);
+		static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+		shader->setUniformValue(inner_radius_it, radius-1.0f);	// XXX replace 1.0f with line-width.
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, glm::value_ptr(glm::vec2(static_cast<float>(centre.x), static_cast<float>(centre.y))));
+		glDrawArrays(GL_POINTS, 0, 1);
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
+
+	void CanvasOGL::drawPoints(const std::vector<glm::vec2>& varray, float radius, const Color& color) const 
+	{
+		// This draws an aliased line -- consider making this a nicer unaliased line.
+		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		shader->makeActive();
+		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+
+		static auto it = shader->getUniformIterator("point_size");
+		shader->setUniformValue(it, radius);
+		shader->setUniformValue(shader->getLineWidthUniform(), 1.0f);
+		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
+		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
+		glDrawArrays(GL_POINTS, 0, varray.size());
+		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
+	}
 
 	CanvasPtr CanvasOGL::getInstance()
 	{

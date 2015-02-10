@@ -27,7 +27,7 @@
 #include "CameraObject.hpp"
 #include "DisplayDevice.hpp"
 #include "Renderable.hpp"
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -57,7 +57,7 @@ namespace KRE
 		color_set_(false)
 	{
 		if(node.has_key("order")) {
-			order_ = node["order"].as_int();
+			order_ = node["order"].as_int32();
 		}
 		// XXX set other stuff here, tbd
 		if(node.has_key("blend")) {

@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "TextureOpenGL.hpp"
 
 namespace KRE
@@ -51,13 +51,13 @@ namespace KRE
 		}
 	}
 
-	OpenGLTexture::OpenGLTexture(const SurfacePtr& surface, const variant& node)
-		: Texture(surface, node),
-		format_(GL_RGBA),
-		internal_format_(GL_RGBA),
-		type_(GL_UNSIGNED_BYTE),
-		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		is_yuv_planar_(false)
+	OpenGLTexture::OpenGLTexture(const variant& node, const SurfacePtr& surface)
+		: Texture(node, surface),
+		  format_(GL_RGBA),
+		  internal_format_(GL_RGBA),
+		  type_(GL_UNSIGNED_BYTE),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false)
 	{
 		createTexture(getSurface()->getPixelFormat()->getFormat());
 		init();
@@ -65,11 +65,11 @@ namespace KRE
 
 	OpenGLTexture::OpenGLTexture(const SurfacePtr& surface, Type type,  int mipmap_levels)
 		: Texture(surface, type, mipmap_levels), 
-		format_(GL_RGBA),
-		internal_format_(GL_RGBA),
-		type_(GL_UNSIGNED_BYTE),
-		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		is_yuv_planar_(false)
+		  format_(GL_RGBA),
+		  internal_format_(GL_RGBA),
+		  type_(GL_UNSIGNED_BYTE),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false)
 	{
 		createTexture(getSurface()->getPixelFormat()->getFormat());
 		init();
@@ -81,15 +81,28 @@ namespace KRE
 		Type type, 
 		unsigned depth)
 		: Texture(width, height, depth, fmt, type),
-		format_(GL_RGBA),
-		internal_format_(GL_RGBA),
-		type_(GL_UNSIGNED_BYTE),
-		pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		is_yuv_planar_(false)
+		  format_(GL_RGBA),
+		  internal_format_(GL_RGBA),
+		  type_(GL_UNSIGNED_BYTE),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false)
 	{
 		setTextureDimensions(width, height, depth);
 		createTexture(fmt);
 		init();
+	}
+
+	OpenGLTexture::OpenGLTexture(const SurfacePtr& surf, SurfacePtr palette)
+		: Texture(surf, palette),
+		  format_(GL_RGBA),
+		  internal_format_(GL_RGBA),
+		  type_(GL_UNSIGNED_BYTE),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false)
+	{
+		createTexture(getSurface()->getPixelFormat()->getFormat());
+		init();
+		ASSERT_LOG(false, "OpenGLTexture -- deal with surfaces with palette surface");
 	}
 
 	OpenGLTexture::~OpenGLTexture()

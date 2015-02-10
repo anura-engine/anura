@@ -24,10 +24,10 @@
 #include <string>
 #include <iostream>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
-#include "kre/Geometry.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "geometry.hpp"
+#include "WindowManager.hpp"
 
 #include "loading_screen.hpp"
 #include "custom_object_type.hpp"

@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "thread.hpp"
 #include "variant.hpp"
 

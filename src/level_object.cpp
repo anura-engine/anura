@@ -26,8 +26,8 @@
 #include <map>
 #include <string>
 
-#include "kre/DisplayDevice.hpp"
-#include "kre/Surface.hpp"
+#include "DisplayDevice.hpp"
+#include "Surface.hpp"
 
 #include "asserts.hpp"
 #include "ColorTransform.hpp"
@@ -866,7 +866,7 @@ bool LevelObject::calculateDrawArea()
 {
 	draw_area_ = rect();
 	for(int tile : tiles_) {
-		draw_area_ = Geometry::rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
+		draw_area_ = geometry::rect_union(draw_area_, get_tile_non_alpha_area(t_, tile));
 	}
 
 	return draw_area_ != rect(0, 0, BaseTileSize, BaseTileSize);

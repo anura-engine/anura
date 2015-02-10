@@ -23,7 +23,7 @@
 
 #ifndef NO_EDITOR
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "dialog.hpp"
 #include "editor_dialogs.hpp"

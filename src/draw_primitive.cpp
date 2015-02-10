@@ -26,8 +26,8 @@
 
 #include <glm/gtc/type_precision.hpp>
 
-#include "kre/Geometry.hpp"
-#include "kre/WindowManager.hpp"
+#include "geometry.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "draw_primitive.hpp"

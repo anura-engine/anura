@@ -26,9 +26,9 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "Util.hpp"
+#include "util.hpp"
 
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {

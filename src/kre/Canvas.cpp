@@ -65,4 +65,9 @@ namespace KRE
 	{
 		blitTexture(tex, rect(0,0,0,0), rotation, dst, color);
 	}
+
+	void Canvas::blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color) const
+	{
+		blitTexture(tex, rect(0,0,0,0), rotation, rect(x,y), color);
+	}
 }

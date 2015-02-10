@@ -32,7 +32,7 @@
 #include "formula_callable_definition.hpp"
 #include "formula_callable.hpp"
 #include "formula_function.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "variant.hpp"
 
 // Need to forward declare this rather than including level.hpp

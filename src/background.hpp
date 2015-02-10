@@ -28,8 +28,8 @@
 #include <string>
 #include <vector>
 
-#include "kre/Geometry.hpp"
-#include "kre/Material.hpp"
+#include "geometry.hpp"
+#include "Material.hpp"
 #include "variant.hpp"
 
 //class which represents the background to a level.

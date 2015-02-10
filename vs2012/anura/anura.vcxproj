@@ -125,7 +125,7 @@
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <DisableSpecificWarnings>4250</DisableSpecificWarnings>
       <ExceptionHandling>SyncCThrow</ExceptionHandling>
-      <AdditionalIncludeDirectories>..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\external\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\anura\external\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Projects\anura\src;C:\Projects\anura\src\kre;..\..\..\libvpx;..\..\..\lua\src;..\..\..\bullet\src;..\..\..\zlib;..\..\..\glew\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;..\..\external\include;..\..\include;c:\projects\anura\include;c:\projects\lua\src;c:\projects\bullet\src;c:\projects\zlib;c:\projects\glew\include;c:\projects\boost;c:\projects\SDL\include;c:\projects\SDL_mixer;c:\projects\SDL_image;c:\projects\SDL_ttf;c:\projects\libvpx;C:\Projects\anura\external\include;C:\Projects\SDL_ttf\external\freetype-2.4.12\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <UndefinePreprocessorDefinitions>
       </UndefinePreprocessorDefinitions>
     </ClCompile>
@@ -180,7 +180,6 @@
     <ClInclude Include="..\..\src\code_editor_dialog.hpp" />
     <ClInclude Include="..\..\src\code_editor_widget.hpp" />
     <ClInclude Include="..\..\src\collision_utils.hpp" />
-    <ClInclude Include="..\..\src\Color.hpp" />
     <ClInclude Include="..\..\src\ColorTransform.hpp" />
     <ClInclude Include="..\..\src\ConcurrentCache.hpp" />
     <ClInclude Include="..\..\src\concurrent_cache.hpp" />
@@ -237,6 +236,7 @@
     <ClInclude Include="..\..\src\framed_gui_element.hpp" />
     <ClInclude Include="..\..\src\ft_iface.hpp" />
     <ClInclude Include="..\..\src\game_registry.hpp" />
+    <ClInclude Include="..\..\src\geometry_callable.hpp" />
     <ClInclude Include="..\..\src\globals.h" />
     <ClInclude Include="..\..\src\graphical_font.hpp" />
     <ClInclude Include="..\..\src\graphical_font_label.hpp" />
@@ -269,6 +269,7 @@
     <ClInclude Include="..\..\src\kre\CanvasOGL.hpp" />
     <ClInclude Include="..\..\src\kre\ClipScope.hpp" />
     <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\Color.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
@@ -280,7 +281,7 @@
     <ClInclude Include="..\..\src\kre\Font.hpp" />
     <ClInclude Include="..\..\src\kre\FontSDL.hpp" />
     <ClInclude Include="..\..\src\kre\Frustum.hpp" />
-    <ClInclude Include="..\..\src\kre\Geometry.hpp" />
+    <ClInclude Include="..\..\src\kre\geometry.hpp" />
     <ClInclude Include="..\..\src\kre\LightObject.hpp" />
     <ClInclude Include="..\..\src\kre\Material.hpp" />
     <ClInclude Include="..\..\src\kre\MaterialOpenGL.hpp" />
@@ -540,7 +541,6 @@
     <ClCompile Include="..\..\src\code_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\code_editor_widget.cpp" />
     <ClCompile Include="..\..\src\collision_utils.cpp" />
-    <ClCompile Include="..\..\src\Color.cpp" />
     <ClCompile Include="..\..\src\ColorTransform.cpp" />
     <ClCompile Include="..\..\src\compress.cpp" />
     <ClCompile Include="..\..\src\controls.cpp" />
@@ -591,6 +591,7 @@
     <ClCompile Include="..\..\src\framed_gui_element.cpp" />
     <ClCompile Include="..\..\src\ft_iface.cpp" />
     <ClCompile Include="..\..\src\game_registry.cpp" />
+    <ClCompile Include="..\..\src\geometry_callable.cpp" />
     <ClCompile Include="..\..\src\globals.cpp" />
     <ClCompile Include="..\..\src\graphical_font.cpp" />
     <ClCompile Include="..\..\src\graphical_font_label.cpp" />
@@ -619,13 +620,13 @@
     <ClCompile Include="..\..\src\kre\CanvasOGL.cpp" />
     <ClCompile Include="..\..\src\kre\ClipScope.cpp" />
     <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Color.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceSDL.cpp" />
     <ClCompile Include="..\..\src\kre\EffectsOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\FboOpenGL.cpp" />
-    <ClCompile Include="..\..\src\kre\filesystem.cpp" />
     <ClCompile Include="..\..\src\kre\Font.cpp" />
     <ClCompile Include="..\..\src\kre\FontSDL.cpp" />
     <ClCompile Include="..\..\src\kre\Frustum.cpp" />
@@ -694,7 +695,6 @@
     <ClCompile Include="..\..\src\preferences.cpp" />
     <ClCompile Include="..\..\src\preprocessor.cpp" />
     <ClCompile Include="..\..\src\preview_tileset_widget.cpp" />
-    <ClCompile Include="..\..\src\profile_timer.cpp" />
     <ClCompile Include="..\..\src\progress_bar.cpp" />
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
@@ -813,7 +813,7 @@
     <Library Include="vpxmt.lib" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="..\..\src\kre\Geometry.inl" />
+    <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

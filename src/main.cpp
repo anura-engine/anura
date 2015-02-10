@@ -76,12 +76,12 @@
 #include "unit_test.hpp"
 #include "variant_utils.hpp"
 
-#include "kre/CameraObject.hpp"
-#include "kre/SDLWrapper.hpp"
-#include "kre/Font.hpp"
-#include "kre/SceneGraph.hpp"
-#include "kre/SceneNode.hpp"
-#include "kre/WindowManager.hpp"
+#include "CameraObject.hpp"
+#include "SDLWrapper.hpp"
+#include "Font.hpp"
+#include "SceneGraph.hpp"
+#include "SceneNode.hpp"
+#include "WindowManager.hpp"
 
 #if defined(__APPLE__)
     #include "TargetConditionals.h"
@@ -594,7 +594,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 			update_window.set_message(msg);
 
-			const float ratio = nbytes_needed <= 0 ? 0.0 : float(nbytes_obtained)/float(nbytes_needed);
+			const float ratio = nbytes_needed <= 0 ? 0 : static_cast<float>(nbytes_obtained)/static_cast<float>(nbytes_needed);
 			update_window.set_progress(ratio);
 			update_window.draw();
 
@@ -608,7 +608,7 @@ extern "C" int main(int argcount, char* argvec[])
 			}
 
 			const int target_end = profile::get_tick_time() + 50;
-			while(profile::get_tick_time() < target_end && (cl || anura_cl)) {
+			while(static_cast<int>(profile::get_tick_time()) < target_end && (cl || anura_cl)) {
 				if(cl && !cl->process()) {
 					if(cl->error().empty() == false) {
 						LOG_ERROR("Error while updating module: " << cl->error().c_str());
@@ -677,7 +677,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	SDL::SDL_ptr manager(new SDL::SDL());
 
-	WindowManagerPtr main_wnd = WindowManager::factory("SDL", "opengl");
+	WindowManagerPtr main_wnd = WindowManager::createInstance("SDL", "opengl");
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
 
@@ -694,7 +694,7 @@ extern "C" int main(int argcount, char* argvec[])
 		: module::get_default_font());
 
 	i18n::init ();
-	LOG( "After i18n::init()" );
+	LOG_DEBUG("After i18n::init()");
 
 	// Read auto-save file if it exists.
 	if(sys::file_exists(preferences::auto_save_file_path()) 

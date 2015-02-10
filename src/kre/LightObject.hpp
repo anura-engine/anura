@@ -24,7 +24,7 @@
 #pragma once
 
 #include "SceneObject.hpp"
-#include "Util.hpp"
+#include "util.hpp"
 
 namespace KRE
 {
@@ -63,7 +63,6 @@ namespace KRE
 		variant write() const;
 		LightPtr clone();
 	private:
-		DISALLOW_DEFAULT_AND_ASSIGN(Light);
 		LightType type_;
 		glm::vec3 position_;
 		Color ambient_color_;
@@ -75,5 +74,8 @@ namespace KRE
 		float constant_attenuation_;
 		float linear_attenuation_;
 		float quadratic_attenuation_;
+
+		Light();
+		void operator=(const Light&);
 	};
 }

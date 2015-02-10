@@ -22,7 +22,7 @@
 */
 #include <map>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "filesystem.hpp"
 #include "graphical_font.hpp"

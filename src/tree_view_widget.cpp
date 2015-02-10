@@ -27,8 +27,8 @@
 #include <boost/algorithm/string/replace.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
 
 #include "dropdown_widget.hpp"
 #include "filesystem.hpp"

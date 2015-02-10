@@ -24,7 +24,7 @@
 #pragma once
 
 #include <memory>
-#include "../variant.hpp"
+#include "variant.hpp"
 #include "Blittable.hpp"
 
 namespace KRE
@@ -32,7 +32,7 @@ namespace KRE
 	class RenderTarget : public Blittable
 	{
 	public:
-		explicit RenderTarget(unsigned width, unsigned height, 
+		explicit RenderTarget(int width, int height, 
 			unsigned color_plane_count=1, 
 			bool depth=false, 
 			bool stencil=false, 
@@ -48,9 +48,9 @@ namespace KRE
 		void unapply();
 		void clear();
 
-		unsigned width() const { return width_; }
-		unsigned height() const { return height_; }
-		unsigned getColorPlanes() const { return color_attachments_; }
+		int width() const { return width_; }
+		int height() const { return height_; }
+		int getColorPlanes() const { return color_attachments_; }
 		bool getDepthPlane() const { return depth_attachment_; }
 		bool getStencilPlane() const { return stencil_attachment_; }
 		bool usesMultiSampling() const { return multi_sampling_; }
@@ -71,13 +71,13 @@ namespace KRE
 		virtual void handleClear() = 0;
 		virtual RenderTargetPtr handleClone() = 0;
 
-		unsigned width_;
-		unsigned height_;
-		unsigned color_attachments_;
+		int width_;
+		int height_;
+		int color_attachments_;
 		bool depth_attachment_;
 		bool stencil_attachment_;
 		bool multi_sampling_;
-		unsigned multi_samples_;
+		int multi_samples_;
 
 		Color clear_color_;
 

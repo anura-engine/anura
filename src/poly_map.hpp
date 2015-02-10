@@ -23,13 +23,13 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "widget.hpp"
 
 namespace geometry
 {
-	typedef Geometry::Point<double> fpoint;
+	typedef geometry::Point<double> fpoint;
 	typedef std::vector<fpoint> fpoint_list;	
 
 	struct edge

@@ -29,7 +29,7 @@
 #include <map>
 #include <string>
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "formula_callable.hpp"
 #include "level_object_fwd.hpp"

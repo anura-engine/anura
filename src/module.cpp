@@ -348,7 +348,7 @@ void set_core_module_name(const std::string& module_name)
 		variant v = json::parse_from_file(fname);
 		std::string def_font = "FreeSans";
 		std::string def_font_cjk = "unifont";
-	boost::intrusive_ptr<graphics::color> speech_dialog_bg_color(new graphics::color(85, 53, 53, 255));
+		auto speech_dialog_bg_color = std::make_shared<KRE::Color>(85, 53, 53, 255);
 		variant player_type;
 
 		const std::string constants_path = make_base_module_path(name) + "data/constants.cfg";
@@ -397,7 +397,7 @@ void set_core_module_name(const std::string& module_name)
 				}
 			}
 		if(v.has_key("speech_dialog_background_color")) {
-			speech_dialog_bg_color.reset(new graphics::color(v["speech_dialog_background_color"]));
+			speech_dialog_bg_color = std::make_shared<KRE::Color>(v["speech_dialog_background_color"]);
 		}
 			if(v.has_key("build_requirements")) {
 				const variant& br = v["build_requirements"];
@@ -445,10 +445,10 @@ void set_core_module_name(const std::string& module_name)
 		return i18n::is_locale_cjk() ? loaded_paths().front().default_font_cjk : loaded_paths().front().default_font;
 	}
 
-const boost::intrusive_ptr<graphics::color>& get_speech_dialog_bg_color()
-{
-	return loaded_paths().front().speech_dialog_bg_color;
-}
+	const KRE::ColorPtr& get_speech_dialog_bg_color()
+	{
+		return loaded_paths().front().speech_dialog_bg_color;
+	}
 
 	variant get_default_preferences()
 	{
@@ -1288,7 +1288,7 @@ const char* InstallImagePath = ".";
 	bool wrote_version = false;
 	if(sys::file_exists(module_cfg_path)) {
 		try {
-			variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_NO_PREPROCESSOR);
+			variant node = json::parse(sys::read_file(module_cfg_path), json::JSON_PARSE_OPTIONS::NO_PREPROCESSOR);
 			node.add_attr_mutation(variant("version"), new_module_version);
 			sys::write_file(module_cfg_path, node.write_json());
 			wrote_version = true;

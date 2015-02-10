@@ -21,8 +21,8 @@
 	   distribution.
 */
 
-#include "kre/DisplayDevice.hpp"
-#include "kre/WindowManager.hpp"
+#include "DisplayDevice.hpp"
+#include "WindowManager.hpp"
 
 #include <cstdio>
 #include <cmath>

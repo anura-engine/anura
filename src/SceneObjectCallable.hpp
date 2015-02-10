@@ -23,7 +23,9 @@
 
 #pragma once
 
-#include "kre/SceneObject.hpp"
+#include "SceneObject.hpp"
+#include "Util.hpp"
+
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"
 

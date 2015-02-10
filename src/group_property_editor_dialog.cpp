@@ -24,7 +24,7 @@
 #ifndef NO_EDITOR
 #include <sstream>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "button.hpp"
 #include "editor.hpp"

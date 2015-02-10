@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,6 +23,12 @@
 
 #pragma once
 
+#include <vector>
+#include <string>
+
+#define DISALLOW_ASSIGN(TypeName) \
+	void operator=(const TypeName&)
+
 #define DISALLOW_COPY_AND_ASSIGN(TypeName)  \
     TypeName(const TypeName&);              \
     void operator=(const TypeName&)
@@ -32,9 +38,7 @@
     TypeName(const TypeName&);                      \
     void operator=(const TypeName&)
 
-#define DISALLOW_DEFAULT_AND_ASSIGN(TypeName)	\
-    TypeName();									\
-    void operator=(const TypeName&)
-
-#define DISALLOW_ASSIGN(TypeName)		\
-	void operator=(const TypeName&)
+namespace util
+{
+	std::vector<std::string> split(const std::string& s, const std::string& eol);
+}

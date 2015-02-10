@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "BlendOGL.hpp"
 #include "MaterialOpenGL.hpp"
 #include "TextureOpenGL.hpp"
@@ -92,6 +92,6 @@ namespace KRE
 		ASSERT_LOG(node.has_key("image") || node.has_key("texture"), "Must have either 'image' or 'texture' attribute.");
 		const std::string image_name = node.has_key("image") ? node["image"].as_string() : node["texture"].as_string();
 		auto surface = Surface::create(image_name);
-		return TexturePtr(new OpenGLTexture(surface, node));
+		return TexturePtr(new OpenGLTexture(node, surface));
 	}
 }

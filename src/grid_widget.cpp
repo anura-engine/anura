@@ -25,9 +25,9 @@
 #include <functional>
 #include <iostream>
 
-#include "kre/Canvas.hpp"
-#include "kre/ClipScope.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "ClipScope.hpp"
+#include "WindowManager.hpp"
 
 #include "controls.hpp"
 #include "formula_callable_visitor.hpp"

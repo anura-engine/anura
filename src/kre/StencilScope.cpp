@@ -21,9 +21,8 @@
 	   distribution.
 */
 
-#pragma once
-
 #include "DisplayDevice.hpp"
+#include "StencilScope.hpp"
 
 namespace KRE
 {

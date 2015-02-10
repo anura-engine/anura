@@ -31,7 +31,7 @@
 #include "cairo.hpp"
 #endif
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 #include "ColorTransform.hpp"
 
 #include "achievements.hpp"

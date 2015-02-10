@@ -24,7 +24,7 @@
 #pragma once
 
 #include <cstdint>
-#include "../Color.hpp"
+#include "Color.hpp"
 
 namespace KRE
 {

@@ -26,10 +26,10 @@
 #include <memory>
 #include <string>
 #include "Blend.hpp"
-#include "../Color.hpp"
-#include "Geometry.hpp"
+#include "Color.hpp"
+#include "geometry.hpp"
 #include "Surface.hpp"
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {
@@ -63,7 +63,7 @@ namespace KRE
 			LINEAR,
 			ANISOTROPIC,
 		};
-		explicit Texture(const SurfacePtr& surface, const variant& node);
+		explicit Texture(const variant& node, const SurfacePtr& surface=nullptr);
 		explicit Texture(const SurfacePtr& surface, 
 			Type type=Type::TEXTURE_2D, 
 			int mipmap_levels=0);
@@ -72,7 +72,6 @@ namespace KRE
 			unsigned depth,
 			PixelFormat::PF fmt, 
 			Texture::Type type);
-		explicit Texture(const variant& node);
 		// Constrcutor to create paletteized texture from a file name and optional surface.
 		explicit Texture(const SurfacePtr& surf, const SurfacePtr& palette);
 		virtual ~Texture();
@@ -150,10 +149,10 @@ namespace KRE
 		void setBlendMode(const BlendMode& bm) { blend_mode_.reset(new BlendMode(bm)); }
 
 		template<typename N, typename T>
-		const Geometry::Rect<N> getNormalisedTextureCoords(const Geometry::Rect<T>& r) {
+		const geometry::Rect<N> getNormalisedTextureCoords(const geometry::Rect<T>& r) {
 			float w = static_cast<float>(surface_width_);
 			float h = static_cast<float>(surface_height_);
-			return Geometry::Rect<N>(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
+			return geometry::Rect<N>(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
 		}
 
 		// Can return NULL if not-implemented, invalid underlying surface.

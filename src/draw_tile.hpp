@@ -23,8 +23,8 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
-#include "kre/Material.hpp"
+#include "geometry.hpp"
+#include "Material.hpp"
 
 #include "level_object_fwd.hpp"
 

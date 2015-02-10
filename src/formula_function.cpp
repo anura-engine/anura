@@ -36,7 +36,7 @@
 #define bmround	round
 #endif
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "array_callable.hpp"
 #include "asserts.hpp"

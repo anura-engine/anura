@@ -35,7 +35,7 @@
 #include "vpx/vpx_decoder.h"
 #include "vpx/vp8dx.h"
 
-#include "kre/Texture.hpp"
+#include "Texture.hpp"
 
 #include "widget.hpp"
 

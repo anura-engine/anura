@@ -23,7 +23,7 @@
 
 #include <glm/gtc/type_ptr.hpp>
 #include <glm/gtc/matrix_transform.hpp>
-#include "../Color.hpp"
+#include "Color.hpp"
 #include "ClipScopeOGL.hpp"
 #include "ShadersOpenGL.hpp"
 #include "StencilScopeOGL.hpp"

@@ -24,7 +24,7 @@
 #ifndef NO_EDITOR
 #include <vector>
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "asserts.hpp"
 #include "controls.hpp"

@@ -28,7 +28,7 @@
 
 #include "boost/intrusive_ptr.hpp"
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 
 #include "controls.hpp"
 #include "current_generator.hpp"

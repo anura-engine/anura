@@ -24,8 +24,9 @@
 #include <string>
 #include <vector>
 
-#include "kre/DisplayDevice.hpp"
-#include "kre/WindowManager.hpp"
+#include "DisplayDevice.hpp"
+#include "RenderTarget.hpp"
+#include "WindowManager.hpp"
 
 #include "level.hpp"
 #include "string_utils.hpp"
@@ -80,26 +81,32 @@ UTILITY(render_level)
 
 		KRE::SurfacePtr level_surface = KRE::Surface::create(lvl_width, lvl_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
 
-		texture_frame_buffer::init(seg_width, seg_height);
+		auto fbo = KRE::DisplayDevice::renderTargetInstance(seg_width, seg_height);
+		fbo->setClearColor(KRE::Color(0,0,0));
 
 		for(int y = lvl->boundaries().y(); y < lvl->boundaries().y2(); y += seg_height) {
 			for(int x = lvl->boundaries().x(); x < lvl->boundaries().x2(); x += seg_width) {
-				texture_frame_buffer::render_scope scope;
-				get_main_window()->prepare_raster();
-				glClearColor(0.0, 0.0, 0.0, 0.0);
-				glClear(GL_COLOR_BUFFER_BIT);
-				glPushMatrix();
-	
-				glTranslatef(-x, -y, 0);
+				fbo->apply();
+				fbo->clear();
+				// XXX figure out why the translate was needed.
+				//glPushMatrix();
+				//glTranslatef(-x, -y, 0);
 				lvl->draw(x, y, seg_width, seg_height);
-				glPopMatrix();
+				//glPopMatrix();
+				fbo->unapply();
 
 				wnd->swap();
 
+				std::vector<uint8_t> data;
+				KRE::DisplayDevice::getCurrent()->readPixels(0, 0, seg_width, seg_height, KRE::ReadFormat::RGB, KRE::AttrFormat::BYTE, data);
+
 				auto s = KRE::Surface::create(seg_width, seg_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
-
-				glReadPixels(0, 0, seg_width, seg_height, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
-
+				s->writePixels(&data[0]);
+				
+				// XXX double check the logic below for pixel ordering.
+				// If we need a different format we can always change the value of KRE::ReadFormat in the readPixels call
+				// to what is needed.
+				/*glReadPixels(0, 0, seg_width, seg_height, GL_RGB, GL_UNSIGNED_BYTE, s->pixels);
 				unsigned char* pixels = (unsigned char*)s->pixels;
 
 				for(int n = 0; n != seg_height/2; ++n) {
@@ -108,7 +115,7 @@ UTILITY(render_level)
 					for(int m = 0; m != seg_width*3; ++m) {
 						std::swap(s1[m], s2[m]);
 					}
-				}
+				}*/
 
 				rect src_rect(0, 0, seg_width, seg_height);
 				rect dst_rect(x - lvl->boundaries().x(), y - lvl->boundaries().y(), 0, 0);

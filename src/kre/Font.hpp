@@ -24,7 +24,7 @@
 #pragma once
 
 #include "Texture.hpp"
-#include "Util.hpp"
+#include "util.hpp"
 
 namespace KRE
 {

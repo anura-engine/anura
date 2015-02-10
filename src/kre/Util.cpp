@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,21 +21,25 @@
 	   distribution.
 */
 
-#pragma once
+#include "util.hpp"
 
-#include "kre/Geometry.hpp"
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
-namespace Geometry
+namespace util
 {
-	class RectCallable : public game_logic::FormulaCallable
+	std::vector<std::string> split(const std::string& str, const std::string& delimiters)
 	{
-	public:
-		static RectCallable* create(const rect& r);
-	private:
-		RectCallable(const rect& r) : r_(r) {}
-		DECLARE_CALLABLE(RectCallable)
-		rect r_;
-	};
+		std::vector<std::string> v;
+		std::string::size_type start = 0;
+		auto pos = str.find_first_of(delimiters, start);
+		while(pos != std::string::npos) {
+			if(pos != start) { // ignore empty tokens
+				v.emplace_back(str, start, pos - start);
+			}
+			start = pos + 1;
+			pos = str.find_first_of(delimiters, start);
+		}
+		if(start < str.length()) { // ignore trailing delimiter
+			v.emplace_back(str, start, str.length() - start); // add what's left of the string
+		}
+		return v;
+	}
 }

@@ -21,27 +21,22 @@
 	   distribution.
 */
 
-#include "rect_callable.hpp"
+#pragma once
 
-namespace Geometry
+#include "geometry.hpp"
+#include "formula_callable.hpp"
+#include "formula_callable_definition.hpp"
+
+class RectCallable;
+typedef boost::intrusive_ptr<RectCallable> RectCallablePtr;
+
+class RectCallable : public game_logic::FormulaCallable
 {
-	RectCallable* RectCallable::create(const rect& r)
-	{
+	DECLARE_CALLABLE(RectCallable);
+	rect rect_;
+	explicit RectCallable(const rect& r) : rect_(r) {}
+public:
+	static game_logic::FormulaCallable* create(const rect& r) {
 		return new RectCallable(r);
 	}
-
-	BEGIN_DEFINE_CALLABLE_NOBASE(RectCallable)
-	DEFINE_FIELD(x, "int")
-		return variant(obj.r_.x());
-	DEFINE_FIELD(y, "int")
-		return variant(obj.r_.y());
-	DEFINE_FIELD(x2, "int")
-		return variant(obj.r_.x2());
-	DEFINE_FIELD(y2, "int")
-		return variant(obj.r_.y2());
-	DEFINE_FIELD(w, "int")
-		return variant(obj.r_.w());
-	DEFINE_FIELD(h, "int")
-		return variant(obj.r_.h());
-	END_DEFINE_CALLABLE(RectCallable)
-}
+};

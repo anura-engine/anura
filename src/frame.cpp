@@ -27,8 +27,8 @@
 
 #include <boost/lexical_cast.hpp>
 
-#include "kre/DisplayDevice.hpp"
-#include "kre/TextureUtils.hpp"
+#include "DisplayDevice.hpp"
+#include "TextureUtils.hpp"
 
 #include "asserts.hpp"
 #include "frame.hpp"

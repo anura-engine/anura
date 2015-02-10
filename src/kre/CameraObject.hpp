@@ -23,10 +23,10 @@
 
 #pragma once
 
+#include <glm/gtc/type_ptr.hpp>
+
 #include "Frustum.hpp"
 #include "SceneObject.hpp"
-#include "WindowManagerFwd.hpp"
-#include <glm/gtc/type_ptr.hpp>
 
 namespace KRE
 {
@@ -34,11 +34,10 @@ namespace KRE
 	{
 	public:
 		enum CameraType { CAMERA_PERSPECTIVE, CAMERA_ORTHOGONAL };
-		Camera(const std::string& name, const WindowManagerPtr& wnd);
+		explicit Camera(const std::string& name);
 		explicit Camera(const std::string& name, int left, int right, int top, int bottom);
-		explicit Camera(const std::string& name, const WindowManagerPtr& wnd, float fov, float aspect, float near_clip, float far_clip);
-		explicit Camera(const variant& node, const WindowManagerPtr& wnd);
-		~Camera();
+		explicit Camera(const std::string& name, float fov, float aspect, float near_clip, float far_clip);
+		explicit Camera(const variant& node);
 
 		void setMouseSpeed(float ms) { mouse_speed_ = ms; }
 		void setSpeed(float spd) { speed_ = spd; }
@@ -82,11 +81,32 @@ namespace KRE
 		glm::vec3 screenToWorld(int x, int y, int wx, int wy) const;
 		glm::ivec3 getFacing(const glm::vec3& coords) const;
 
-		// should this be SceneObjectPtr clone(); ? 
-		// and should this be in the SceneObject class as overridable.
 		CameraPtr clone();
 
 		variant write();
+
+#if _MSC_VER < 1800
+		// Handling for MSVC versions that don't support variadic templates.
+		static CameraPtr createInstance(const std::string& name) {
+			return std::make_shared<Camera>(name);
+		}
+		static CameraPtr createInstance(const std::string& name, int left, int right, int top, int bottom) {
+			return std::make_shared<Camera>(name, left, top, right, bottom);
+		}
+		static CameraPtr createInstance(const std::string& name, float fov, float aspect, float near_clip, float far_clip) {
+			return std::make_shared<Camera>(name, fov, aspect, near_clip, far_clip);
+		}
+		static CameraPtr createInstance(const variant& node) {
+			return std::make_shared<Camera>(node);
+		}
+#else
+		template<typename... T>
+		static CameraPtr createInstance(T&& ... args) {
+			return CameraPtr(new Camera(std::forward<T>(args)...));
+		}
+#endif
+
+		void createFrustum();
 
 	private:
 		void computeView();

@@ -28,8 +28,8 @@
 
 #include "SDL.h"
 
-#include "kre/Geometry.hpp"
-#include "kre/Texture.hpp"
+#include "geometry.hpp"
+#include "Texture.hpp"
 #include "Color.hpp"
 
 #include "asserts.hpp"

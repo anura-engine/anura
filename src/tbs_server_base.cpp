@@ -307,7 +307,7 @@ namespace tbs
 
 		int games_size = games_.size();
 
-		foreach(game_info_ptr& g, games_) {
+		for(auto& g : games_) {
 			if(deletes.count(g)) {
 				g.reset();
 			}
@@ -417,7 +417,7 @@ namespace tbs
 			g->game_state->process();
 		}
 
-		foreach(game_info_ptr g, games_) {
+		for(auto g : games_) {
 			flush_game_messages(*g);
 		}
 

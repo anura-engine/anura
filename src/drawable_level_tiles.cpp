@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "drawable_level_tiles.hpp"
 

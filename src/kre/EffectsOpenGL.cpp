@@ -34,7 +34,7 @@ namespace KRE
 		{
 			ASSERT_LOG(node.has_key("pattern"), "StippleEffect requires 'pattern' attribute: " << node.to_debug_string());
 			pattern_ = static_cast<unsigned>(node["pattern"].as_int());
-			factor_ = node["factor"].as_int(1);
+			factor_ = node["factor"].as_int32(1);
 		}
 
 		void StippleEffect::apply()

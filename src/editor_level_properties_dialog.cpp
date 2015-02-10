@@ -26,7 +26,7 @@
 #include <algorithm>
 #include <iostream>
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "background.hpp"
 #include "button.hpp"

@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/Font.hpp"
+#include "Font.hpp"
 
 #include "asserts.hpp"
 #include "checkbox.hpp"
@@ -78,7 +78,7 @@ namespace gui
 
 		g->addCol(new Label("Disabled Opacity:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){this->widget_->setDisabledOpacity(int(f*255.0));}, 
-			this->widget_->disabledOpacity()/255.0, 1));
+			this->widget_->disabledOpacity()/255.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
 			.addCol(new Checkbox(WidgetPtr(new Label("Visible", text_size_, font_name_)), 
@@ -88,7 +88,7 @@ namespace gui
 
 		g->addCol(new Label("Alpha:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){widget_->setAlpha(int(f*255.0));}, 
-			this->widget_->getAlpha()/255.0, 1));
+			this->widget_->getAlpha()/255.0f, 1));
 
 		std::vector<std::string> sections = FramedGuiElement::getElements();
 		sections.insert(sections.begin(), "<<none>>");
@@ -117,10 +117,10 @@ namespace gui
 
 		g->addCol(new Label("pad width:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){widget_->setPadding(int(f*100.0), widget_->getPadHeight());}, 
-			widget_->getPadWidth()/100.0, 1));
+			widget_->getPadWidth()/100.0f, 1));
 		g->addCol(new Label("pad height:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){widget_->setPadding(widget_->getPadWidth(), int(f*100.0));}, 
-			widget_->getPadHeight()/100.0, 1));
+			widget_->getPadHeight()/100.0f, 1));
 
 		TextEditorWidgetPtr tooltip_edit = new TextEditorWidget(150, 30);
 		tooltip_edit->setText(widget_->tooltipText());
@@ -129,7 +129,7 @@ namespace gui
 			.addCol(tooltip_edit);
 		g->addCol(new Label("Tooltip Height:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){widget_->setTooltipFontSize(int(f*72.0+6.0));}, 
-			(widget_->tooltipFontSize()-6.0)/72.0, 1));
+			(widget_->tooltipFontSize()-6.0f)/72.0f, 1));
 		
 		std::vector<std::string> fonts = KRE::Font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");
@@ -165,7 +165,7 @@ namespace gui
 
 		g->addCol(new Label("Tooltip Delay:", getTextSize(), font()))
 			.addCol(new Slider(120, [&](double f){widget_->setTooltipDelay(int(f*5000.0));}, 
-			widget_->getTooltipDelay()/5000.0, 1));
+			widget_->getTooltipDelay()/5000.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
 			.addCol(new Checkbox(WidgetPtr(new Label("Claim Mouse Events", text_size_, font_name_)), 

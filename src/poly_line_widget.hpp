@@ -25,7 +25,7 @@
 
 #include <vector>
 
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "random.hpp"
 #include "widget.hpp"
 

@@ -25,9 +25,9 @@
 #include <iostream>
 
 #include "Color.hpp"
-#include "kre/Canvas.hpp"
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
 
 #include "input.hpp"
 #include "message_dialog.hpp"

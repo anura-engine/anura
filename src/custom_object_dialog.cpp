@@ -32,7 +32,7 @@
 
 #include <math.h>
 
-#include "kre/Font.hpp"
+#include "Font.hpp"
 
 #include "animation_creator.hpp"
 #include "animation_widget.hpp"

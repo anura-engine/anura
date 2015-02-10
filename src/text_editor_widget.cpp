@@ -25,10 +25,10 @@
 
 #include <algorithm>
 
-#include "kre/Canvas.hpp"
-#include "kre/DisplayDevice.hpp"
-#include "kre/Font.hpp"
-#include "kre/WindowManager.hpp"
+#include "Canvas.hpp"
+#include "DisplayDevice.hpp"
+#include "Font.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "clipboard.hpp"

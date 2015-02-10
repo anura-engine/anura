@@ -27,9 +27,6 @@
 #include <cairo-ft.h>
 
 #include "Font.hpp"
-#include "../logger.hpp"
-#include "../ft_iface.hpp"
-#include "../profile_timer.hpp"
 
 namespace KRE
 {

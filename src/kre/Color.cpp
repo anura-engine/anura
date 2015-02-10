@@ -225,7 +225,7 @@ namespace KRE
 		float convert_numeric(const variant& node)
 		{
 			if(node.is_int()) {
-				return clamp<int>(node.as_int(), 0, 255) / 255.0f;
+				return clamp<int>(node.as_int32(), 0, 255) / 255.0f;
 			} else if(node.is_float()) {
 				return clamp<float>(node.as_float(), 0.0f, 1.0f);
 			} else if(node.is_string()) {

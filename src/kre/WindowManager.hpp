@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "../Color.hpp"
+#include "Color.hpp"
 #include "DisplayDevice.hpp"
 #include "Material.hpp"
 #include "PixelFormat.hpp"
@@ -112,7 +112,7 @@ namespace KRE
 
 		void notifyNewWindowSize(unsigned new_width, unsigned new_height);
 
-		static WindowManagerPtr factory(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
+		static WindowManagerPtr createInstance(const std::string& title, const std::string& wnd_hint="", const std::string& rend_hint="");
 		static std::vector<WindowManagerPtr> getWindowList();
 		static WindowManagerPtr getWindowFromID(unsigned id);
 		static WindowManagerPtr getMainWindow();

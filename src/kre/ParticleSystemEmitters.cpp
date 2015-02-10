@@ -21,12 +21,12 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "ParticleSystem.hpp"
 #include "ParticleSystemAffectors.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "ParticleSystemParameters.hpp"
-#include "../variant_utils.hpp"
+#include "variant_utils.hpp"
 
 namespace KRE
 {
@@ -131,7 +131,7 @@ namespace KRE
 		public:
 			CircleEmitter(ParticleSystemContainer* parent, const variant& node) 			
 				: Emitter(parent, node), 
-				circle_radius_(parameter::factory(node["circle_radius"])),
+				circle_radius_(Parameter::factory(node["circle_radius"])),
 				circle_step_(node["circle_step"].as_float(0.1f)), 
 				circle_angle_(node["circle_angle"].as_float(0)), 
 				circle_random_(node["emit_random"].as_bool(true)) {
@@ -146,7 +146,7 @@ namespace KRE
 					angle = t * circle_step_;
 				}
 
-				const float r = circle_radius_->get_value();
+				const float r = circle_radius_->getValue();
 				p.initial.position.x += r * sin(angle + circle_angle_);
 				p.initial.position.y += r * cos(angle + circle_angle_);
 			}
@@ -154,7 +154,7 @@ namespace KRE
 				return new CircleEmitter(*this);
 			}
 		private:
-			parameter_ptr circle_radius_;
+			ParameterPtr circle_radius_;
 			float circle_step_;
 			float circle_angle_;
 			bool circle_random_;
@@ -345,16 +345,16 @@ namespace KRE
 				glm::detail::tvec4<unsigned char> end;
 				ASSERT_LOG(node["start_colour_range"].is_list() && node["start_colour_range"].num_elements() == 4,
 					"PSYSTEM2: 'start_colour_range' should be a list of 4 elements.");
-				start.r = node["start_colour_range"][0].as_int();
-				start.g = node["start_colour_range"][1].as_int();
-				start.b = node["start_colour_range"][2].as_int();
-				start.a = node["start_colour_range"][3].as_int();
+				start.r = node["start_colour_range"][0].as_int32();
+				start.g = node["start_colour_range"][1].as_int32();
+				start.b = node["start_colour_range"][2].as_int32();
+				start.a = node["start_colour_range"][3].as_int32();
 				ASSERT_LOG(node["end_colour_range"].is_list() && node["end_colour_range"].num_elements() == 4,
 					"PSYSTEM2: 'end_colour_range' should be a list of 4 elements.");
-				end.r = node["end_colour_range"][0].as_int();
-				end.g = node["end_colour_range"][1].as_int();
-				end.b = node["end_colour_range"][2].as_int();
-				end.a = node["end_colour_range"][3].as_int();
+				end.r = node["end_colour_range"][0].as_int32();
+				end.g = node["end_colour_range"][1].as_int32();
+				end.b = node["end_colour_range"][2].as_int32();
+				end.a = node["end_colour_range"][3].as_int32();
 				color_range_.reset(new color_range(std::make_pair(start,end)));
 			}
 			if(node.has_key("particle_width")) {
@@ -479,7 +479,7 @@ namespace KRE
 							technique_->addEmitter(e);
 						}
 					} else if(emits_type_ == EmitsType::AFFECTOR) {
-						size_t cnt = calculateParticlesToEmit(t, technique_->getAffectorQuota(), technique_->getActiveAffectors().size());
+						size_t cnt = calculateParticlesToEmit(t, technique_->getAffectorQuota(), technique_->getInstancedAffectors().size());
 						for(int n = 0; n != cnt; ++n) {
 							AffectorPtr a = getParentContainer()->cloneAffector(emits_name_);
 							a->emitted_by = this;
@@ -654,10 +654,5 @@ namespace KRE
 			ASSERT_LOG(false, "PSYSTEM2: Unrecognised emitter type: " << ntype);
 			return NULL;
 		}
-
-		BEGIN_DEFINE_CALLABLE(emitter, emit_object)
-		DEFINE_FIELD(dummy, "null")
-			return variant();
-		END_DEFINE_CALLABLE(emitter)
 	}
 }

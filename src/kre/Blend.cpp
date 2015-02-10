@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "Blend.hpp"
 #include "DisplayDevice.hpp"
 

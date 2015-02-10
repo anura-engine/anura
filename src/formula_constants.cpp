@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/WindowManager.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "controls.hpp"

@@ -53,7 +53,7 @@ namespace graphics
 			ASSERT_LOG(s->getPixelFormat()->bytesPerPixel() == 4, "PALETTE " << id << " NOT IN 32bpp PIXEL FORMAT");
 
 			const uint32_t* pixels = reinterpret_cast<const uint32_t*>(s->pixelsWriteable());
-			for(unsigned n = 0; n < s->width() * s->height() - 1; n += 2) {
+			for(int n = 0; n < s->width() * s->height() - 1; n += 2) {
 				def.mapping.insert(std::pair<uint32_t,uint32_t>(pixels[0], pixels[1]));
 				pixels += 2;
 			}

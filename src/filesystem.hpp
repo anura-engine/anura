@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include <functional>
 #include <map>
 #include <string>
 #include <vector>
@@ -40,11 +41,12 @@ namespace sys
 						  std::vector<std::string>* files,
 						  std::vector<std::string>* dirs=NULL);
 
+	typedef std::map<std::string, std::string> file_path_map;
 	//Function which given a directory, will recurse through all sub-directories,
 	//and find each distinct filename. It will fill the files map such that the
 	//keys are filenames and the values are the full path to the file.
 	void get_unique_filenames_under_dir(const std::string& dir,
-										std::map<std::string, std::string>* file_map,
+										file_path_map* file_map,
 										const std::string& prefix);
 
 	//creates a dir if it doesn't exist and returns the path

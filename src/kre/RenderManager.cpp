@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "RenderManager.hpp"
 #include "RenderQueue.hpp"
 
@@ -31,17 +31,21 @@ namespace KRE
 	{
 	}
 
-	RenderManager::~RenderManager()
+	RenderManagerPtr RenderManager::getInstance()
 	{
+		static RenderManagerPtr res = std::make_shared<RenderManager>();
+		return res;
 	}
 
-	void RenderManager::addQueue(int priority, RenderQueuePtr queue)
+	RenderQueuePtr RenderManager::addQueue(int priority, const std::string& queue_name)
 	{
+		RenderQueuePtr queue = RenderQueue::create(queue_name);
 		auto it = render_queues_.find(priority);
 		if(it != render_queues_.end()) {
 			LOG_WARN("Replacing queue " << it->second->name() << " at priority " << priority << " with queue " << queue->name());
 		}
 		render_queues_[priority] = queue;
+		return queue;
 	}
 
 	void RenderManager::removeQueue(int priority)

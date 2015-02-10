@@ -97,29 +97,29 @@ namespace KRE
 	class SurfaceSDL : public Surface
 	{
 	public:
-		SurfaceSDL(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
-			unsigned row_pitch, 
+		SurfaceSDL(int width, 
+			int height, 
+			int bpp, 
+			int row_pitch, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
 			const void* pixels);
-		SurfaceSDL(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
+		SurfaceSDL(int width, 
+			int height, 
+			int bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
 		SurfaceSDL(const std::string& filename);
 		SurfaceSDL(SDL_Surface* surface);
-		SurfaceSDL(unsigned width, unsigned height, PixelFormat::PF format);
+		SurfaceSDL(int width, int height, PixelFormat::PF format);
 		virtual ~SurfaceSDL();
 		const void* pixels() const override;
 		void* pixelsWriteable() override;
-		void writePixels(unsigned bpp, 
+		void writePixels(int bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
@@ -127,15 +127,15 @@ namespace KRE
 			const void* pixels) override;
 		void writePixels(const void* pixels) override;
 		void fillRect(const rect& dst_rect, const Color& color) override;
-		unsigned width() override {
+		int width() const override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->w;
 		}
-		unsigned height() override {
+		int height() const override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->h;
 		}
-		unsigned rowPitch() override {
+		int rowPitch() const override {
 			ASSERT_LOG(surface_ != NULL, "surface_ is null");
 			return surface_->pitch;
 		}
@@ -161,24 +161,24 @@ namespace KRE
 		const rect getClipRect() override;
 
 		static SurfacePtr createFromFile(const std::string&, PixelFormat::PF fmt, SurfaceConvertFn fn);
-		static SurfacePtr createFromPixels(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
-			unsigned row_pitch, 
+		static SurfacePtr createFromPixels(int width, 
+			int height, 
+			int bpp, 
+			int row_pitch, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask, 
 			const void* pixels);
-		static SurfacePtr createFromMask(unsigned width, 
-			unsigned height, 
-			unsigned bpp, 
+		static SurfacePtr createFromMask(int width, 
+			int height, 
+			int bpp, 
 			uint32_t rmask, 
 			uint32_t gmask, 
 			uint32_t bmask, 
 			uint32_t amask);
-		static SurfacePtr SurfaceSDL::createFromFormat(unsigned width,
-			unsigned height,
+		static SurfacePtr createFromFormat(int width,
+			int height,
 			PixelFormat::PF fmt);
 
 		void lock() override;

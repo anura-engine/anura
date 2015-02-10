@@ -22,8 +22,8 @@
 */
 #include <functional>
 
-#include "kre/WindowManager.hpp"
-#include "kre/ClipScope.hpp"
+#include "WindowManager.hpp"
+#include "ClipScope.hpp"
 
 #include "asserts.hpp"
 #include "i18n.hpp"

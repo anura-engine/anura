@@ -23,9 +23,9 @@
 
 #pragma once
 
-#include "kre/Geometry.hpp"
-#include "kre/SceneObject.hpp"
-#include "kre/SceneUtil.hpp"
+#include "geometry.hpp"
+#include "SceneObject.hpp"
+#include "SceneUtil.hpp"
 #include "Color.hpp"
 
 #include "entity_fwd.hpp"

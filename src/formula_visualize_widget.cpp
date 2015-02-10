@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/Canvas.hpp"
+#include "Canvas.hpp"
 
 #include "dialog.hpp"
 #include "formula_visualize_widget.hpp"

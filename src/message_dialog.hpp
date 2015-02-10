@@ -26,8 +26,8 @@
 #include <string>
 #include <vector>
 
-#include "kre/Geometry.hpp"
-#include "kre/Texture.hpp"
+#include "geometry.hpp"
+#include "Texture.hpp"
 
 class MessageDialog
 {

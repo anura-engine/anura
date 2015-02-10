@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "kre/DisplayDevice.hpp"
+#include "DisplayDevice.hpp"
 
 #include "solid_map.hpp"
 #include "string_utils.hpp"

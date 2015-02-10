@@ -37,5 +37,8 @@ namespace KRE
 
 		class Context;
 		typedef std::shared_ptr<Context> ContextPtr;
+
+		class Matrix;
+		typedef std::shared_ptr<Matrix> MatrixPtr;
 	}
 }

@@ -23,9 +23,13 @@
 
 #include <SDL.h>
 
+#include <boost/bind.hpp>
+#include <cstdint>
+
 #include "asserts.hpp"
 #include "formula.hpp"
 #include "preferences.hpp"
+#include "profile_timer.hpp"
 #include "tbs_bot.hpp"
 #include "tbs_web_server.hpp"
 
@@ -61,10 +65,8 @@ private:
   		  host_(host), 
   		  port_(port), 
   		  script_(v["script"].as_list()),
-		  timer_(service), 
   		  has_quit_(false), 
-  		  timer_proxy_(nullptr)
-		  script_(v["script"].as_list()),
+  		  timer_proxy_(nullptr),
 		  on_create_(game_logic::Formula::createOptionalFormula(v["on_create"])),
 		  on_message_(game_logic::Formula::createOptionalFormula(v["on_message"]))
 
@@ -98,7 +100,7 @@ private:
 			return;
 		}
 		if(on_create_) {
-			LOG_DEBUG("YYY: call on_create: " << inptr_t(this) << " -> " << intptr_t(on_create_.get()));
+			LOG_DEBUG("YYY: call on_create: " << intptr_t(this) << " -> " << intptr_t(on_create_.get()));
 			executeCommand(on_create_->execute(*this));
 			on_create_.reset();
 		}
@@ -151,7 +153,7 @@ private:
 			message_type_ = type;
 			message_callable_ = callable;
 
-		variant msg = callable->query_value("message");
+		variant msg = callable->queryValue("message");
 		if(msg.is_map() && msg["type"] == variant("player_quit")) {
 			std::map<variant,variant> quit_msg;
 			quit_msg[variant("session_id")] = variant(session_id_);
@@ -168,7 +170,7 @@ private:
 			return;
 		} else {
 			const int ms = profile::get_tick_time();
-			LOG_INFO("BOT: handle_message @ " << ms << " : " << type << "... ( " << callable->query_value("message").write_json() << " )");
+			LOG_INFO("BOT: handle_message @ " << ms << " : " << type << "... ( " << callable->queryValue("message").write_json() << " )");
 			executeCommand(on_message_->execute(*this));
 			const int time_taken = profile::get_tick_time() - ms;
 			LOG_INFO("BOT: handled message in " << time_taken << "ms");

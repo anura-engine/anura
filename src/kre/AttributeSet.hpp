@@ -30,11 +30,11 @@
 #include <functional>
 #include <memory>
 #include <vector>
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "Blend.hpp"
-#include "../Color.hpp"
+#include "Color.hpp"
 #include "DisplayDeviceFwd.hpp"
-#include "Util.hpp"
+#include "util.hpp"
 
 namespace KRE
 {
@@ -240,11 +240,11 @@ namespace KRE
 			return elements_.size();
 		}
 		void bind() {
-			ASSERT_LOG(GetDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
+			ASSERT_LOG(getDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
 			getDeviceBufferData()->bind();
 		}		
 		void unbind() {
-			ASSERT_LOG(GetDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
+			ASSERT_LOG(getDeviceBufferData() != NULL, "Bind call on null hardware attribute buffer.");
 			getDeviceBufferData()->unbind();
 		}
 		const_iterator begin() const {

@@ -24,7 +24,7 @@
 #include "asserts.hpp"
 #include "collision_utils.hpp"
 #include "frame.hpp"
-#include "kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "level.hpp"
 #include "object_events.hpp"
 #include "solid_map.hpp"

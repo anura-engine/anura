@@ -1744,7 +1744,7 @@ void CustomObjectType::loadVariations() const
 	}
 }
 
-#include "kre/Texture.hpp"
+#include "Texture.hpp"
 
 BENCHMARK(CustomObjectTypeLoad)
 {

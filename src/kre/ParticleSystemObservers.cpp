@@ -22,6 +22,7 @@
 */
 
 #include "ParticleSystemObservers.hpp"
+#include "ParticleSystem.hpp"
 
 namespace KRE
 {
@@ -38,15 +39,15 @@ namespace KRE
 					return new clear_event_handler(*this);
 				}
 			private:
-				bool handle_process(technique* tech, float t) override {
+				bool handle_process(Technique* tech, float t) override {
 					ASSERT_LOG(tech != nullptr, "technique was null pointer.");
 					if(!seen_particles_) {
-						if(tech->active_particles().size() > 0) {
+						if(tech->getActiveParticles().size() > 0) {
 							seen_particles_ = true;
 						}
 					} else {
 						// no particles left
-						if(tech->active_particles().size() == 0) {
+						if(tech->getActiveParticles().size() == 0) {
 							return true;
 						}
 					}
@@ -57,7 +58,7 @@ namespace KRE
 		}
 
 		event_handler::event_handler(const variant& node)
-			: name_(node["name"].as_string_default()),
+			: name_(node["name"].as_string()),
 			  enabled_(node["enabled"].as_bool(true)),
 			  observe_till_event_(node["observe_till_event"].as_bool(false)),
 			  actions_executed_(false)
@@ -68,7 +69,7 @@ namespace KRE
 		{
 		}
 
-		void event_handler::process(technique* tech, float t)
+		void event_handler::process(Technique* tech, float t)
 		{
 			if(enabled_) {
 				if(observe_till_event_ && actions_executed_) {
@@ -85,7 +86,7 @@ namespace KRE
 			actions_.emplace_back(evt);
 		}
 
-		void event_handler::process_actions(technique* tech, float t)
+		void event_handler::process_actions(Technique* tech, float t)
 		{
 			for(auto a : actions_) {
 				a->execute(tech, t);
@@ -105,7 +106,7 @@ namespace KRE
 		}
 
 		action::action(const variant& node)
-			: name_(node["name"].as_string_default())
+			: name_(node["name"].as_string())
 		{
 			// XXX
 		}
@@ -114,7 +115,7 @@ namespace KRE
 		{
 		}
 		
-		void action::execute(technique* tech, float t)
+		void action::execute(Technique* tech, float t)
 		{
 			// XXX
 		}

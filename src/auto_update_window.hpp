@@ -1,7 +1,9 @@
 #pragma once
 
 #include <string>
-#include <SDL.h>
+
+#include "SDLWrapper.hpp"
+#include "WindowManager.hpp"
 
 class auto_update_window
 {
@@ -15,7 +17,8 @@ public:
 	void process();
 	void draw() const;
 private:
-	SDL_Window* window_;
+	KRE::WindowManagerPtr window_;
+	SDL::SDL_ptr manager_;
 	int nframes_;
 	int start_time_;
 	std::string message_;

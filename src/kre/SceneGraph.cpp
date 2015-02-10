@@ -24,7 +24,7 @@
 #include <functional>
 #include <map>
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 #include "SceneGraph.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
@@ -33,13 +33,6 @@ namespace KRE
 {
 	namespace 
 	{
-		typedef std::map<std::string, ObjectTypeFunction> SceneObjectFactoryLookupTable;
-		SceneObjectFactoryLookupTable& get_object_factory()
-		{
-			static SceneObjectFactoryLookupTable res;
-			return res;
-		}
-
 		typedef std::map<std::string, std::function<SceneNodePtr(SceneGraph* sg, const variant&)>> SceneNodeRegistry;
 		SceneNodeRegistry& get_scene_node_registry()
 		{
@@ -107,20 +100,6 @@ namespace KRE
 		}
 		get_scene_node_registry()[type] = create_fn;
 		
-	}
-
-	/*SceneObjectPtr SceneGraph::createObject(const std::string& type, const std::string& name) 
-	{
-		auto it = get_object_factory().find(type);
-		ASSERT_LOG(it == get_object_factory().end(), "Couldn't find a way to create the following type of object: " << type);
-		return it->second(name);
-	}*/
-
-	void SceneGraph::registerObjectType(const std::string& type, ObjectTypeFunction fn)
-	{
-		auto it = get_object_factory().find(type);
-		ASSERT_LOG(it != get_object_factory().end(), "Type(" << type << ") already registered");
-		get_object_factory()[type] = fn;
 	}
 
 	void SceneGraph::renderSceneHelper(const RenderManagerPtr& renderer, 

@@ -24,7 +24,7 @@
 #include <string>
 #include <cairo.h>
 
-#include "kre/Material.hpp"
+#include "Material.hpp"
 
 #include "formula_callable.hpp"
 #include "formula_callable_definition.hpp"

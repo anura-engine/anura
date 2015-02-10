@@ -30,8 +30,6 @@
 
 namespace KRE
 {
-	typedef std::function<SceneObjectPtr(const std::string&)> ObjectTypeFunction;
-
 	class SceneGraph
 	{
 	public:
@@ -46,7 +44,6 @@ namespace KRE
 	
 		void process(double);
 
-		static void registerObjectType(const std::string& type, ObjectTypeFunction fn);
 		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)>);
 	private:
 		std::string name_;

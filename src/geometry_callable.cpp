@@ -21,32 +21,19 @@
 	   distribution.
 */
 
-#include "SDL.h"
+#include "geometry_callable.hpp"
 
-#include "profile_timer.hpp"
-
-namespace profile 
-{
-	manager::manager(const char* const str) : name(str)
-	{
-		frequency = SDL_GetPerformanceFrequency();
-		t1 = SDL_GetPerformanceCounter();
-	}
-
-	manager::~manager()
-	{
-		t2 = SDL_GetPerformanceCounter();
-		elapsedTime = (t2 - t1) * 1000.0 / frequency;
-		std::cerr << name << ": " << elapsedTime << " milliseconds" << std::endl;
-	}
-
-	unsigned get_tick_time()
-	{
-		return profile::get_tick_time();
-	}
-
-	void delay(unsigned ticks)
-	{
-		profile::delay(ticks);
-	}
-}
+BEGIN_DEFINE_CALLABLE_NOBASE(RectCallable)
+DEFINE_FIELD(x, "int")
+	return variant(obj.rect_.x());
+DEFINE_FIELD(y, "int")
+	return variant(obj.rect_.y());
+DEFINE_FIELD(x2, "int")
+	return variant(obj.rect_.x2());
+DEFINE_FIELD(y2, "int")
+	return variant(obj.rect_.y2());
+DEFINE_FIELD(w, "int")
+	return variant(obj.rect_.w());
+DEFINE_FIELD(h, "int")
+	return variant(obj.rect_.h());
+END_DEFINE_CALLABLE(RectCallable)

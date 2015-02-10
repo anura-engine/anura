@@ -1,24 +1,17 @@
 /*
-	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
-	
-	This software is provided 'as-is', without any express or implied
-	warranty. In no event will the authors be held liable for any damages
-	arising from the use of this software.
+   Copyright 2014 Kristina Simpson <sweet.kristas@gmail.com>
 
-	Permission is granted to anyone to use this software for any purpose,
-	including commercial applications, and to alter it and redistribute it
-	freely, subject to the following restrictions:
+   Licensed under the Apache License, Version 2.0 (the "License");
+   you may not use this file except in compliance with the License.
+   You may obtain a copy of the License at
 
-	   1. The origin of this software must not be misrepresented; you must not
-	   claim that you wrote the original software. If you use this software
-	   in a product, an acknowledgement in the product documentation would be
-	   appreciated but is not required.
+       http://www.apache.org/licenses/LICENSE-2.0
 
-	   2. Altered source versions must be plainly marked as such, and must not be
-	   misrepresented as being the original software.
-
-	   3. This notice may not be removed or altered from any source
-	   distribution.
+   Unless required by applicable law or agreed to in writing, software
+   distributed under the License is distributed on an "AS IS" BASIS,
+   WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+   See the License for the specific language governing permissions and
+   limitations under the License.
 */
 
 #pragma once
@@ -27,10 +20,10 @@
 #include <sstream>
 #include <vector>
 
-#include "../asserts.hpp"
-#include "../variant.hpp"
+#include "asserts.hpp"
+#include "variant.hpp"
 
-namespace Geometry
+namespace geometry
 {
 	template<typename T>
 	struct Point {
@@ -40,7 +33,15 @@ namespace Geometry
 		explicit Point(const variant& v);
 		explicit Point(const std::vector<T>& v);
 		variant write() const;
-
+		void clear() { x = T(0); y = T(0); }
+		void operator +=(const Point& p) {
+			x += p.x;
+			y += p.y;
+		}
+		void operator -=(const Point& p) {
+			x -= p.x;
+			y -= p.y;
+		}
 		union {
 			struct { T x, y; };
 			T buf[2];
@@ -53,6 +54,22 @@ namespace Geometry
 	bool operator!=(const Point<T>& a, const Point<T>& b);
 	template<typename T> inline
 	bool operator<(const Point<T>& a, const Point<T>& b);
+	template<typename T> inline
+	Point<T> operator+(const Point<T>& lhs, const Point<T>& rhs);
+	template<typename T> inline
+	Point<T> operator-(const Point<T>& lhs, const Point<T>& rhs);
+	template<typename T, typename D> inline
+	Point<T> operator*(const Point<T>& lhs, const Point<D>& rhs);
+	template<typename T> inline
+	Point<T> operator*(const Point<T>& lhs, float scalar);
+	template<typename T> inline
+	Point<T> operator*(const Point<T>& lhs, double scalar);
+
+	template<typename T> inline
+	std::ostream& operator<<(std::ostream& os, const Point<T>& p);
+
+	template<typename T> inline
+	Point<T> normalize(const Point<T>& p);
 
 	template<> inline Point<int>::Point(const variant& v)
 	{
@@ -64,15 +81,13 @@ namespace Geometry
 	{
 	public:
 		inline explicit Rect(T x=0, T y=0, T w=0, T h=0);
+		inline explicit Rect(const Point<T>& xy, T w=0, T h=0);
 		explicit Rect(const std::vector<T>& v);
 		explicit Rect(const std::string& s);
 		explicit Rect(const variant& v);
 		explicit Rect(const Point<T>& p1, const Point<T>& p2) {
 			top_left_ = p1;
 			bottom_right_ = p2;
-		}
-		explicit Rect(const Point<T>& p1) {
-			bottom_right_ = top_left_ = p1;
 		}
 		static Rect FromCoordinates(T x1, T y1, T x2, T y2);
 		static Rect from_coordinates(T x1, T y1, T x2, T y2) {
@@ -110,11 +125,39 @@ namespace Geometry
 		T y2() const { return bottom_right_.y; }
 		T w() const { return bottom_right_.x - top_left_.x; }
 		T h() const { return bottom_right_.y - top_left_.y; }
+		Point<T> dimensions() const { return Point<T>(w(), h()); }
 
-		T mid_x() const { return (x1() + x2())/2; }
-		T mid_y() const { return (y1() + y2())/2; }
+		T mid_x() const { return (x1() + x2())/static_cast<T>(2); }
+		T mid_y() const { return (y1() + y2())/static_cast<T>(2); }
+
+		void set_x(const T& new_x) { top_left_.x = new_x; }
+		void set_y(const T& new_y) { top_left_.y = new_y; }
+		void set_w(const T& new_w) { bottom_right_.x = top_left_.x + new_w; }
+		void set_h(const T& new_h) { bottom_right_.y = top_left_.y + new_h; }
+
+		void set_top_left(const T& new_x, const T& new_y) { 
+			top_left_.x = new_x; 
+			top_left_.y = new_y; 
+		}
+		void set_xy(const T& new_x, const T& new_y) { set_top_left(new_x, new_y); }
+		void set_bottom_right(const T& new_x2, const T& new_y2) { 
+			bottom_right_.x = new_x2; 
+			bottom_right_.y = new_y2; 
+		}
+		void set_width_height(const T& new_w, const T& new_h) { 
+			bottom_right_.x = top_left_.x + new_w; 
+			bottom_right_.y = top_left_.y + new_h; 
+		}
+		void set_wh(const T& new_w, const T& new_h) { set_width_height(new_w, new_h); }
+		void set(const T x, const T y, const T w, const T h) {
+			*this = Rect<T>(x,y,w,h);
+		}
+
+		Point<T> mid() const { return Point<T>((x1() + x2())/static_cast<T>(2), (y1() + y2())/static_cast<T>(2)); }
 
 		bool empty() const { return w() == 0 || h() == 0; }
+
+		T perimeter(T line_thickness=T()) const { return w()*2+h()*2-line_thickness*2; }
 
 		const Point<T>& top_left() const { return top_left_; }
 		const Point<T>& bottom_right() const { return bottom_right_; }
@@ -142,6 +185,21 @@ namespace Geometry
 		Point<T> top_left_;
 		Point<T> bottom_right_;
 	};
+
+	template<typename T> inline
+	bool operator<(const Rect<T>& a, const Rect<T>& b);
+
+	template<typename T, typename D> inline
+	Rect<T> operator*(const Rect<T>& lhs, D scalar);
+
+	template<typename T, typename D> inline
+	Rect<D> operator/(const Rect<T>& lhs, D scalar);
+
+	template<typename T> inline
+	Rect<T> operator*(const Rect<T>& lhs, const Point<T>& scalar);
+
+	template<typename T> inline
+	Rect<T> operator+(const Rect<T>& r, const Point<T>& p);
 
 	template<> inline 
 	Rect<int>::Rect(const variant& v)
@@ -173,7 +231,7 @@ namespace Geometry
 		if(v.is_list()) {
 			std::vector<float> vec;
 			for(size_t n = 0; n != v.num_elements(); ++n) {
-				vec.push_back(float(v.as_float()));
+				vec.push_back(v.as_float());
 			}
 			from_vector(vec);
 			return;
@@ -192,10 +250,10 @@ namespace Geometry
 	}
 }
 
-#include "Geometry.inl"
+#include "geometry.inl"
 
-typedef Geometry::Point<int> point;
-typedef Geometry::Point<float> pointf;
+typedef geometry::Point<int> point;
+typedef geometry::Point<float> pointf;
 
-typedef Geometry::Rect<int> rect;
-typedef Geometry::Rect<float> rectf;
+typedef geometry::Rect<int> rect;
+typedef geometry::Rect<float> rectf;

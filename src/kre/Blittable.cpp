@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2003-2013 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -74,7 +74,7 @@ namespace KRE
 		setMaterial(DisplayDevice::createMaterial("blittable", std::vector<TexturePtr>(1,tex)));
 	}
 
-	void Blittable::preRender(const WindowManagerPtr& wnd)
+	void Blittable::preRender(const WindowManagerPtr& wm)
 	{
 		float offs_x = 0.0f;
 		float offs_y = 0.0f;

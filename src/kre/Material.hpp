@@ -24,9 +24,9 @@
 #pragma once
 
 #include "Blend.hpp"
-#include "Geometry.hpp"
+#include "geometry.hpp"
 #include "Texture.hpp"
-#include "../variant.hpp"
+#include "variant.hpp"
 
 namespace KRE
 {
@@ -61,19 +61,19 @@ namespace KRE
 
 		const rectf getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it);
 		template<typename T>
-		const rectf getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const Geometry::Rect<T>& r) {
+		const rectf getNormalisedTextureCoords(const std::vector<TexturePtr>::const_iterator& it, const geometry::Rect<T>& r) {
 			float w = static_cast<float>((*it)->width());
 			float h = static_cast<float>((*it)->height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 		template<typename T>
-		const rectf getNormalisedTextureCoords(const Geometry::Rect<T>& r) {
+		const rectf getNormalisedTextureCoords(const geometry::Rect<T>& r) {
 			float w = static_cast<float>(width());
 			float h = static_cast<float>(height());
 			return rectf(static_cast<float>(r.x())/w, static_cast<float>(r.y())/h, static_cast<float>(r.x2())/w, static_cast<float>(r.y2())/h);
 		}
 
-		template<typename T> void setCoords(const Geometry::Rect<T>& r) {
+		template<typename T> void setCoords(const geometry::Rect<T>& r) {
 			draw_rect_ = r.template as_type<float>();
 		}
 		const rectf& getCoords() const { return draw_rect_; }

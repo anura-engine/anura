@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "kre/Surface.hpp"
+#include "Surface.hpp"
 
 namespace graphics
 {
