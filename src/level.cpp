@@ -1557,15 +1557,16 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		}
 	}
 
+	KRE::Color color = KRE::Color::colorWhite();
+	glm::vec2 position;
+
 	if(editor_ && layer == highlight_layer_) {
 		const float alpha = static_cast<float>(0.3f + (1.0f+sin(draw_count/5.0f))*0.35f);
-		glColor4f(1.0, 1.0, 1.0, alpha);
+		color.setAlpha(alpha);
 
 	} else if(editor_ && hidden_layers_.count(layer)) {
-		glColor4f(1.0, 1.0, 1.0, 0.3);
+		color.setAlpha(0.3f);
 	}
-
-	glPushMatrix();
 
 	// parallax scrolling for tiles.
 	auto tile_map_iterator = tile_maps_.find(layer);
@@ -1576,7 +1577,8 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		const int diffx = ((scrollx - 100)*x)/100;
 		const int diffy = ((scrolly - 100)*y)/100;
 
-		glTranslatef(diffx, diffy, 0.0);
+		position.x = static_cast<float>(diffx);
+		position.y = static_cast<float>(diffy);
 		
 		//here, we adjust the screen bounds (they're a first order optimization) to account for the parallax shift
 		x -= diffx;
@@ -1585,18 +1587,13 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 
 	typedef std::vector<LevelTile>::const_iterator itor;
 	std::pair<itor,itor> range = std::equal_range(tiles_.begin(), tiles_.end(), layer, level_tile_zorder_comparer());
-
-	itor tile_itor = std::lower_bound(range.first, range.second, y,
-	                          level_tile_y_pos_comparer());
-
+	itor tile_itor = std::lower_bound(range.first, range.second, y, level_tile_y_pos_comparer());
 	if(tile_itor == range.second) {
-		glPopMatrix();
 		return;
 	}
 
-	std::map<int, layer_blit_info>::iterator layer_itor = blit_cache_.find(layer);
-	if(layer_itor == blit_cache_.end()) {
-		glPopMatrix();
+	auto opaque_it = opaques_.find(layer);
+	if(opaque_it == opaques_.end()) {
 		return;
 	}
 
@@ -1765,6 +1762,9 @@ void Level::prepare_tiles_for_drawing()
 		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
 			continue;
 		}
+
+		auto& opaques = opaques_[tiles[n].zorder];
+		auto& transparent = transparent_[tiles[n].zorder];
 
 		layer_blit_info& blit_info = blit_cache_[tiles_[n].zorder];
 		if(blit_info.xbase == -1) {

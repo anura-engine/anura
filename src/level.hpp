@@ -43,6 +43,7 @@
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
 #include "hex_map.hpp"
+#include "LayerBlitInfo.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
 #include "speech_dialog.hpp"
@@ -619,6 +620,9 @@ private:
 	bool show_builtin_settings_;
 
 	LevelPtr suspended_level_;
+
+	std::map<int, LayerBlitInfo> opaques_;
+	std::map<int, LayerBlitInfo> translucent_;
 };
 
 bool entity_in_current_level(const Entity* e);

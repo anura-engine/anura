@@ -332,6 +332,7 @@
     <ClInclude Include="..\..\src\kre\WindowManagerFwd.hpp" />
     <ClInclude Include="..\..\src\label.hpp" />
     <ClInclude Include="..\..\src\language_dialog.hpp" />
+    <ClInclude Include="..\..\src\LayerBlitInfo.hpp" />
     <ClInclude Include="..\..\src\level.hpp" />
     <ClInclude Include="..\..\src\level_logic.hpp" />
     <ClInclude Include="..\..\src\level_object.hpp" />
@@ -667,6 +668,7 @@
     <ClCompile Include="..\..\src\kre\WindowManager.cpp" />
     <ClCompile Include="..\..\src\label.cpp" />
     <ClCompile Include="..\..\src\language_dialog.cpp" />
+    <ClCompile Include="..\..\src\LayerBlitInfo.cpp" />
     <ClCompile Include="..\..\src\level.cpp" />
     <ClCompile Include="..\..\src\level_logic.cpp" />
     <ClCompile Include="..\..\src\level_object.cpp" />
