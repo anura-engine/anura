@@ -1330,6 +1330,12 @@ COMMAND_LINE_UTILITY(svg_render_scaling)
 	context.render_svg(argv.front());
 	IMG_SavePNG("output-large.png", context.get_surface().get());
 	}
+
+	{
+	cairo_context context(64, 64);
+	context.render_svg(argv.front());
+	IMG_SavePNG("output-very-small.png", context.get_surface().get());
+	}
 }
 
 }
