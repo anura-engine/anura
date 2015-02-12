@@ -1553,7 +1553,7 @@ namespace box2d
 			varray.emplace_back(static_cast<float>(vertices[n].x * this_world->scale()), 
 				static_cast<float>(vertices[n].y * this_world->scale()));
 		}
-		canvas->drawPolygon(varray, KRE::Color(color.r*0.5, color.g*0.5, color.b*0.5, 0.5));
+		canvas->drawPolygon(varray, KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
 		canvas->drawLineLoop(varray, 1.0f, KRE::Color(color.r, color.g, color.b));
 	}
 
@@ -1568,7 +1568,7 @@ namespace box2d
 		auto canvas = KRE::Canvas::getInstance();
 		canvas->drawSolidCircle(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
 			radius, 
-			KRE::Color(color.r*0.5, color.g*0.5, color.b*0.5, 0.5));
+			KRE::Color(color.r*0.5f, color.g*0.5f, color.b*0.5f, 0.5f));
 		b2Vec2 p = center + radius * axis;
 		canvas->drawLine(pointf(center.x * this_world->scale(), center.y * this_world->scale()), 
 			pointf(p.x, p.y), 

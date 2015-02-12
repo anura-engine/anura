@@ -233,7 +233,7 @@ namespace KRE
 		parent_ = parent;
 	}
 
-	void SceneNode::process(double)
+	void SceneNode::process(float)
 	{
 		// nothing need be done as default
 	}

@@ -81,7 +81,7 @@ namespace gui
 		ButtonPtr copy_to_palette_;
 		void copyToPaletteFn();
 
-		void SliderChange(int n, double p);
+		void sliderChange(int n, float p);
 		void textChange(int n);
 		void textTabPressed(int n);
 

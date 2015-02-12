@@ -187,8 +187,8 @@ namespace gui
 		std::string id_;
 		bool disabled_;
 		uint8_t disabled_opacity_;
-		unsigned tooltip_display_delay_;
-		unsigned tooltip_ticks_;
+		int tooltip_display_delay_;
+		int tooltip_ticks_;
 		int display_alpha_;
 		int pad_h_;
 		int pad_w_;

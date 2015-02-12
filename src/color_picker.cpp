@@ -185,90 +185,19 @@ namespace gui
 
 	namespace 
 	{
-		struct rgb
-		{
-			uint8_t r, g, b;
-		};
-
-		struct hsv
-		{
-			uint8_t h, s, v;
-		};
-
-		hsv rgb_to_hsv(uint8_t r, uint8_t g, uint8_t b)
-		{
-			hsv out;
-			uint8_t min_color, max_color, delta;
-
-			min_color = std::min(r, std::min(g, b));
-			max_color = std::max(r, std::max(g, b));
-
-			delta = max_color - min_color;
-			out.v = max_color;
-			if(out.v == 0) {
-				out.s = 0;
-				out.h = 0;
-				return out;
-			}
-
-			out.s = uint8_t(255.0 * delta / out.v);
-			if(out.s == 0) {
-				out.h = 0;
-				return out;
-			}
-
-			if(r == max_color) {
-				out.h = uint8_t(43.0 * (g-b)/delta);
-			} else if(g == max_color) {
-				out.h = 85 + uint8_t(43.0 * (b-r)/delta);
-			} else {
-				out.h = 171 + uint8_t(43.0 * (r-g)/delta);
-			}
-			return out;
-		}
-
-		rgb hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v)
-		{
-			rgb out;
-			uint8_t region, remainder, p, q, t;
-
-			if(s == 0) {
-				out.r = out.g = out.b = v;
-			} else {
-				region = h / 43;
-				remainder = (h - (region * 43)) * 6; 
-
-				p = (v * (255 - s)) >> 8;
-				q = (v * (255 - ((s * remainder) >> 8))) >> 8;
-				t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
-
-				switch(region)
-				{
-					case 0:  out.r = v; out.g = t; out.b = p; break;
-					case 1:  out.r = q; out.g = v; out.b = p; break;
-					case 2:  out.r = p; out.g = v; out.b = t; break;
-					case 3:  out.r = p; out.g = q; out.b = v; break;
-					case 4:  out.r = t; out.g = p; out.b = v; break;
-					default: out.r = v; out.g = p; out.b = q; break;
-				}
-			}
-			return out;
-		}
-
 		void draw_colored_circle(int x, int y, int radius) 
 		{
 			auto canvas = KRE::Canvas::getInstance();
 
-			static std::vector<uint8_t> carray;
+			static std::vector<glm::u8vec4> carray;
 			if(carray.empty()) {
-				carray.push_back(255); carray.push_back(255); carray.push_back(255); carray.push_back(255);
-				for(double angle = 0; angle < M_PI * 2.0; angle += 0.0245436926) {
-					const rgb cc = hsv_to_rgb(uint8_t(angle*255.0/(M_PI*2.0)), 255, 255);
-					carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
+				carray.emplace_back(255, 255, 255, 255);
+				for(float angle = 0; angle < static_cast<float>(M_PI * 2.0); angle += 0.0245436926f) {
+					auto cc = KRE::Color::from_hsv(angle/static_cast<float>(M_PI * 2.0), 1.0f, 1.0f);
+					carray.emplace_back(cc.as_u8vec4());
 				}
 				//repeat the first coordinate to complete the circle.
-				const rgb cc = hsv_to_rgb(0, 255, 255);
-				carray.push_back(cc.r); carray.push_back(cc.g); carray.push_back(cc.b); carray.push_back(255);
+				carray.emplace_back(carray[1]);
 			}
 			canvas->drawSolidCircle(point(x, y), static_cast<float>(radius), carray);
 		}
@@ -320,16 +249,14 @@ namespace gui
 		const double r = sqrt(x*x + y*y);
 		const double angle = atan2(y, x);
 		if(r <= wheel_radius_) {
-			hue_ = uint8_t(angle*255.0/(M_PI*2.0));
-			saturation_ = uint8_t(r/wheel_radius_ * 255.0);
+			hue_ = static_cast<uint8_t>(angle*255.0/(M_PI*2.0));
+			saturation_ = static_cast<uint8_t>(r/wheel_radius_ * 255.0);
 			value_ = 255;
 
-			rgb out = hsv_to_rgb(hue_, saturation_, value_);
-			red_ = out.r; green_ = out.g; blue_ = out.b;
 			if(main_color_selected_) {
-				primary_ = KRE::Color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color::from_hsv(hue_, saturation_, value_);
 			} else {
-				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color::from_hsv(hue_, saturation_, value_);
 			}
 
 			setTextFromColor(main_color_selected_ ? primary_ : secondary_);
@@ -431,7 +358,7 @@ namespace gui
 		g_->setLoc(5, color_box_length_ + wheel_radius_*2 + 40);
 		for(int n = 0; n != 7; ++n) {
 			labels.push_back(new Label(label_text[n], KRE::Color::colorAntiquewhite(), 12, "Montaga-Regular"));
-			s_.push_back(new Slider(50, std::bind(&ColorPicker::SliderChange, this, n, _1), 0, 1));
+			s_.push_back(new Slider(50, std::bind(&ColorPicker::sliderChange, this, n, _1), 0, 1));
 			t_.push_back(new TextEditorWidget(40));
 			t_.back()->setOnUserChangeHandler(std::bind(&ColorPicker::textChange, this, n));
 			t_.back()->setOnTabHandler(std::bind(&ColorPicker::textTabPressed, this, n));
@@ -460,7 +387,7 @@ namespace gui
 		}
 	}
 
-	void ColorPicker::SliderChange(int n, double p)
+	void ColorPicker::sliderChange(int n, float p)
 	{
 		ASSERT_LOG(size_t(n) < s_.size(), "ColorPicker::SliderChange: invalid array access: " << n << " >= " << s_.size());
 		if(n >= 0 && n <= 2) {
@@ -469,12 +396,14 @@ namespace gui
 			case 1:  green_ = uint8_t(255.0 * p); break;
 			default: blue_ = uint8_t(255.0 * p); break;
 			}
-			hsv out = rgb_to_hsv(red_, green_, blue_);
-			hue_ = out.h; saturation_ = out.s; value_ = out.v;
 			if(main_color_selected_) {
 				primary_ = KRE::Color(red_, green_, blue_, alpha_);
+				auto out = primary_.to_hsv();
+				hue_ = out[0]; saturation_ = out[1]; value_ = out[2];
 			} else {
 				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
+				auto out = secondary_.to_hsv();
+				hue_ = out[0]; saturation_ = out[1]; value_ = out[2];
 			}
 		} else if(n >= 3 && n <= 5) {
 			switch(n) {
@@ -482,12 +411,12 @@ namespace gui
 			case 4:  saturation_ = uint8_t(255.0 * p); break;
 			default: value_ = uint8_t(255.0 * p); break;
 			}
-			rgb out = hsv_to_rgb(hue_, saturation_, value_);
-			red_ = out.r; green_ = out.g; blue_ = out.b;
 			if(main_color_selected_) {
-				primary_ = KRE::Color(red_, green_, blue_, alpha_);
+				primary_ = KRE::Color::from_hsv(hue_, saturation_, value_, alpha_);
+				red_ = primary_.ri(); green_ = primary_.gi(); blue_ = primary_.bi();
 			} else {
-				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
+				secondary_ = KRE::Color::from_hsv(hue_, saturation_, value_, alpha_);
+				red_ = secondary_.ri(); green_ = secondary_.gi(); blue_ = secondary_.bi();
 			}
 		} else {
 			// alpha
@@ -543,17 +472,24 @@ namespace gui
 			case 5:  value_ = val; break;
 			default: alpha_ = val; break;
 		}
-		if(n <= 2) {
-			hsv out = rgb_to_hsv(red_, green_, blue_);
-			hue_ = out.h; saturation_ = out.s; value_ = out.v;
-		} else if(n <= 5) {
-			rgb out = hsv_to_rgb(hue_, saturation_, value_);
-			red_ = out.r; green_ = out.g; blue_ = out.b;
-		}
 		if(main_color_selected_) {
-			primary_ = KRE::Color(red_, green_, blue_, alpha_);
+			if(n <= 2) {
+				primary_ = KRE::Color(red_, green_, blue_, alpha_);
+				auto out = primary_.to_hsv();
+				hue_ = out[0]; saturation_ = out[1]; value_ = out[2];
+			} else if(n <= 5) {
+				primary_ = KRE::Color::from_hsv(hue_, saturation_, value_, alpha_);
+				red_ = primary_.ri(); green_ = primary_.gi(); blue_ = primary_.bi();
+			}
 		} else {
-			secondary_ = KRE::Color(red_, green_, blue_, alpha_);
+			if(n <= 2) {
+				secondary_ = KRE::Color(red_, green_, blue_, alpha_);
+				auto out = secondary_.to_hsv();
+				hue_ = out[0]; saturation_ = out[1]; value_ = out[2];
+			} else if(n <= 5) {
+				secondary_ = KRE::Color::from_hsv(hue_, saturation_, value_, alpha_);
+				red_ = secondary_.ri(); green_ = secondary_.gi(); blue_ = secondary_.bi();
+			}
 		}
 		setTextFromColor(primary_);
 		setSlidersFromColor(main_color_selected_ ? primary_ : secondary_);
@@ -566,14 +502,14 @@ namespace gui
 	void ColorPicker::setSlidersFromColor(const KRE::Color& c)
 	{
 		ASSERT_LOG(s_.size() == 7, "Didn't find the correct number of Sliders.");
-		s_[0]->setPosition(static_cast<float>(c.r()/255.0));
-		s_[1]->setPosition(static_cast<float>(c.g()/255.0));
-		s_[2]->setPosition(static_cast<float>(c.b()/255.0));
-		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
-		s_[3]->setPosition(static_cast<float>(out.h/255.0));
-		s_[4]->setPosition(static_cast<float>(out.s/255.0));
-		s_[5]->setPosition(static_cast<float>(out.v/255.0));
-		s_[6]->setPosition(static_cast<float>(alpha_/255.0));
+		s_[0]->setPosition(c.red());
+		s_[1]->setPosition(c.green());
+		s_[2]->setPosition(c.blue());
+		auto out = c.to_hsv_vec4();
+		s_[3]->setPosition(out[0]);
+		s_[4]->setPosition(out[1]);
+		s_[5]->setPosition(out[2]);
+		s_[6]->setPosition(out[3]);
 	}
 
 	void ColorPicker::setTextFromColor(const KRE::Color& c, int n)
@@ -585,28 +521,28 @@ namespace gui
 			t_[0]->setText(str.str(), false);
 		}
 		if(n != 1) {
-			str.str(std::string()); str << int(c.g());
+			str.str(std::string()); str << c.gi();
 			t_[1]->setText(str.str(), false);
 		}
 		if(n != 2) {
-			str.str(std::string()); str << int(c.b());
+			str.str(std::string()); str << c.bi();
 			t_[2]->setText(str.str(), false);
 		}
-		hsv out = rgb_to_hsv(c.r_int(), c.g_int(), c.b_int());
+		auto out = c.to_hsv();
 		if(n != 3) {
-			str.str(std::string()); str << int(out.h);
+			str.str(std::string()); str << out[0];
 			t_[3]->setText(str.str(), false);
 		}
 		if(n != 4) {
-			str.str(std::string()); str << int(out.s);
+			str.str(std::string()); str << out[1];
 			t_[4]->setText(str.str(), false);
 		}
 		if(n != 5) {
-			str.str(std::string()); str << int(out.v);
+			str.str(std::string()); str << out[2];
 			t_[5]->setText(str.str(), false);
 		}
 		if(n != 6) {
-			str.str(std::string()); str << int(alpha_);
+			str.str(std::string()); str << static_cast<int>(alpha_);
 			t_[6]->setText(str.str(), false);
 		}
 	}
@@ -632,10 +568,10 @@ namespace gui
 
 	void ColorPicker::setHSVFromColor(const KRE::Color& in_color)
 	{
-		hsv out = rgb_to_hsv(in_color.r_int(), in_color.g_int(), in_color.b_int());
-		hue_ = out.h;
-		saturation_ = out.s;
-		value_ = out.v;
+		auto out = in_color.to_hsv();
+		hue_ = out[0];
+		saturation_ = out[1];
+		value_ = out[2];
 	}
 
 	BEGIN_DEFINE_CALLABLE(ColorPicker, Widget)

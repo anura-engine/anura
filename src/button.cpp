@@ -340,9 +340,9 @@ namespace gui
 	/*
 		GridPtr g(new Grid(2));
 		g->addCol(new label("H Pad:", d->getTextSize(), d->font()));
-		g->addCol(new Slider(120, [&](double f){this->setDim(0,0); this->setHPadding(int(f*100.0));}, hpadding_/100.0, 1));
+		g->addCol(new Slider(120, [&](float f){this->setDim(0,0); this->setHPadding(static_cast<int>(f*100.0f));}, hpadding_/100.0f, 1));
 		g->addCol(new label("V Pad:", d->getTextSize(), d->font()));
-		g->addCol(new Slider(120, [&](double f){this->setDim(0,0); this->setVPadding(int(f*100.0));}, vpadding_/100.0, 1));
+		g->addCol(new Slider(120, [&](float f){this->setDim(0,0); this->setVPadding(static_cast<int>(f*100.0f));}, vpadding_/100.0f, 1));
 
 		std::vector<std::string> v;
 		v.push_back("normal");

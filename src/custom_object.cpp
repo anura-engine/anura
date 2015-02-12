@@ -60,7 +60,6 @@
 #include "playable_custom_object.hpp"
 #include "preferences.hpp"
 #include "profile_timer.hpp"
-#include "rect_callable.hpp"
 #include "string_utils.hpp"
 //#include "surface_formula.hpp"
 #include "variant.hpp"
@@ -1271,7 +1270,7 @@ void CustomObject::draw(int xx, int yy) const
 		}
 
 		if(!v.empty()) {
-			KRE::Canvas::getInstance()->drawPoints(v, 2.0f, KRE::Color(1.0, 0.0, 0.0));
+			KRE::Canvas::getInstance()->drawPoints(v, 2.0f, KRE::Color(1.0f, 0.0f, 0.0f));
 		}
 	}
 

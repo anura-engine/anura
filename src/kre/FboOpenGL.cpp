@@ -241,7 +241,7 @@ namespace KRE
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 		auto& color = getClearColor();
-		glClearColor(color.rf(), color.gf(), color.bf(), color.af());
+		glClearColor(color.red(), color.green(), color.blue(), color.alpha());
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 	}

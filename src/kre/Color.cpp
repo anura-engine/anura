@@ -201,21 +201,21 @@ namespace KRE
 			return res;
 		}
 
-		double convert_string_to_number(const std::string& str)
+		float convert_string_to_number(const std::string& str)
 		{
 			try {
-				double value = boost::lexical_cast<double>(str);
+				float value = boost::lexical_cast<float>(str);
 				if(value > 1.0) {
 					// Assume it's an integer value.
-					return static_cast<float>(value / 255.0);
-				} else if(value < 1.0) {
-					return static_cast<float>(value);
+					return value / 255.0f;
+				} else if(value < 1.0f) {
+					return value;
 				} else {
 					// value = 1.0 -- check the string to try and disambiguate
 					if(str == "1" || str.find('.') == std::string::npos) {
-						return 1.0 / 255.0;
+						return 1.0f / 255.0f;
 					}
-					return 1.0;
+					return 1.0f;
 				}
 			} catch(boost::bad_lexical_cast&) {
 				ASSERT_LOG(false, "unable to convert value to number: " << str);
@@ -229,44 +229,54 @@ namespace KRE
 			} else if(node.is_float()) {
 				return clamp<float>(node.as_float(), 0.0f, 1.0f);
 			} else if(node.is_string()) {
-				return static_cast<float>(convert_string_to_number(node.as_string()));
+				return convert_string_to_number(node.as_string());
 			}
 			ASSERT_LOG(false, "attribute of Color value was expected to be numeric type.");
 			return 1.0f;
 		}
 
-		uint8_t convert_hex_digit(char d) 
+		bool convert_hex_digit(char d, int* value) 
 		{
-			uint8_t value = 0;
 			if(d >= 'A' && d <= 'F') {
-				value = d - 'A' + 10;
+				*value = d - 'A' + 10;
 			} else if(d >= 'a' && d <= 'f') {
-				value = d - 'a' + 10;
+				*value = d - 'a' + 10;
 			} else if(d >= '0' && d <= '9') {
-				value = d - '0';
+				*value = d - '0';
 			} else {
-				ASSERT_LOG(false, "Unrecognised hex digit: " << d);
+				return false;
 			}
-			return value;
+			return true;
 		}
 
-		Color color_from_hex_string(const std::string& colstr)
+		bool color_from_hex_string(const std::string& colstr, Color* value)
 		{
 			std::string s = colstr;
-			ASSERT_LOG(!s.empty(), "No color detail found in string.");
+			if(s.empty()) {
+				return false;
+			}
 			if(s[0] == '#') {
 				s = s.substr(1);
 			}
-			ASSERT_LOG(s.length() == 3 || s.length() == 6, "Expected length of color definition to be 3 or 6 characters long, found: " << s);
-			if(s.length() == 3) {
-				int r_hex = convert_hex_digit(s[1]);
-				int g_hex = convert_hex_digit(s[2]);
-				int b_hex = convert_hex_digit(s[3]);
-				return Color((r_hex << 4) | r_hex, (g_hex << 4) | g_hex, (b_hex << 4) | b_hex);
+			if(s.length() != 3 && s.length() != 6) {
+				return false;
 			}
-			return Color((convert_hex_digit(s[1]) << 4) | convert_hex_digit(s[2]),
-				(convert_hex_digit(s[3]) << 4) | convert_hex_digit(s[4]),
-				(convert_hex_digit(s[5]) << 4) | convert_hex_digit(s[6]));
+			if(s.length() == 3) {
+				int r_hex = 0, g_hex = 0, b_hex = 0;
+				if(convert_hex_digit(s[1], &r_hex) && convert_hex_digit(s[2], &g_hex) && convert_hex_digit(s[3], &b_hex)) {
+					*value = Color((r_hex << 4) | r_hex, (g_hex << 4) | g_hex, (b_hex << 4) | b_hex);
+					return true;
+				}
+				return false;
+			}
+			int rh_hex = 0, rl_hex = 0, gh_hex = 0, gl_hex = 0, bh_hex = 0, bl_hex = 0;
+			if(convert_hex_digit(s[1], &rh_hex) && convert_hex_digit(s[2], &rl_hex) 
+				&& convert_hex_digit(s[3], &gh_hex) && convert_hex_digit(s[4], &gl_hex)
+				&& convert_hex_digit(s[5], &bh_hex) && convert_hex_digit(s[6], &bl_hex)) {
+					*value = Color((rh_hex << 4) | rl_hex, (gh_hex << 4) | gl_hex, (bh_hex << 4) | bl_hex);
+					return true;
+			}
+			return false;
 		}
 
 		std::vector<std::string> split(const std::string& input, const std::string& re) {
@@ -274,7 +284,188 @@ namespace KRE
 			boost::regex regex(re);
 			boost::sregex_token_iterator first(input.begin(), input.end(), regex, -1), last;
 			return std::vector<std::string>(first, last);
-		}	
+		}
+
+		bool color_from_hsv_string(const std::string& colstr, Color* color)
+		{
+			if(colstr.empty()) {
+				return false;
+			}
+			if(colstr.size() > 5 && colstr.substr(0,4) == "hsv(") {
+				float hsv_col[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+				auto buf = split(colstr, ",| |;");
+				unsigned n = 0;
+				for(auto& s : buf) {
+					hsv_col[n] = convert_string_to_number(s);
+					if(++n >= 4) {
+						break;
+					}
+				}
+				*color = Color::from_hsv(hsv_col[0], hsv_col[1], hsv_col[2], hsv_col[3]);
+				return true;
+			}
+			return false;
+		}
+
+		struct rgb
+		{
+			uint8_t r, g, b;
+		};
+
+		struct hsv
+		{
+			uint8_t h, s, v;
+		};
+
+		hsv rgb_to_hsv(uint8_t r, uint8_t g, uint8_t b)
+		{
+			hsv out;
+			uint8_t min_color, max_color, delta;
+
+			min_color = std::min(r, std::min(g, b));
+			max_color = std::max(r, std::max(g, b));
+
+			delta = max_color - min_color;
+			out.v = max_color;
+			if(out.v == 0) {
+				out.s = 0;
+				out.h = 0;
+				return out;
+			}
+
+			out.s = static_cast<uint8_t>(255.0f * delta / out.v);
+			if(out.s == 0) {
+				out.h = 0;
+				return out;
+			}
+
+			if(r == max_color) {
+				out.h = static_cast<uint8_t>(43.0f * (g-b)/delta);
+			} else if(g == max_color) {
+				out.h = 85 + static_cast<uint8_t>(43.0f * (b-r)/delta);
+			} else {
+				out.h = 171 + static_cast<uint8_t>(43.0f * (r-g)/delta);
+			}
+			return out;
+		}
+
+		rgb hsv_to_rgb(uint8_t h, uint8_t s, uint8_t v)
+		{
+			rgb out;
+			uint8_t region, remainder, p, q, t;
+
+			if(s == 0) {
+				out.r = out.g = out.b = v;
+			} else {
+				region = h / 43;
+				remainder = (h - (region * 43)) * 6; 
+
+				p = (v * (255 - s)) >> 8;
+				q = (v * (255 - ((s * remainder) >> 8))) >> 8;
+				t = (v * (255 - ((s * (255 - remainder)) >> 8))) >> 8;
+
+				switch(region)
+				{
+					case 0:  out.r = v; out.g = t; out.b = p; break;
+					case 1:  out.r = q; out.g = v; out.b = p; break;
+					case 2:  out.r = p; out.g = v; out.b = t; break;
+					case 3:  out.r = p; out.g = q; out.b = v; break;
+					case 4:  out.r = t; out.g = p; out.b = v; break;
+					default: out.r = v; out.g = p; out.b = q; break;
+				}
+			}
+			return out;
+		}
+
+		void hsv_to_rgb(const float h, const float s, const float v, float* const out)
+		{
+			if(std::abs(s) < FLT_EPSILON) {
+				out[0] = out[1] = out[2] = v;
+			} else {
+				const float h_dash = h * 360.0f;
+				// n.b. we assume h is scaled 0-1 rather than 0-360, hence the scaling factor is 6 rather than 60
+				const float region = h_dash / 60.0f;
+				const int int_region = static_cast<int>(std::floor(region));
+				const float remainder = h_dash - static_cast<float>(int_region);
+
+				const float p = v * (1.0f - s);
+				const float q = v * (1.0f - s * remainder);
+				const float t = v * (1.0f - s * (1.0f - remainder));
+
+				switch(int_region)
+				{
+					case 0:  out[0] = v; out[1] = t; out[2] = p; break;
+					case 1:  out[0] = q; out[1] = v; out[2] = p; break;
+					case 2:  out[0] = p; out[1] = v; out[2] = t; break;
+					case 3:  out[0] = p; out[1] = q; out[2] = v; break;
+					case 4:  out[0] = t; out[1] = p; out[2] = v; break;
+					default: out[0] = v; out[1] = p; out[2] = q; break;
+				}
+			}
+		}
+
+		void rgb_to_hsv(const float* const rgbf, float* const out)
+		{
+			const float min_color = std::min(rgbf[0], std::min(rgbf[1], rgbf[2]));
+			const float max_color = std::max(rgbf[0], std::max(rgbf[1], rgbf[2]));
+			const float delta = max_color - min_color;
+
+			out[2] = max_color;
+			if(std::abs(out[2]) < FLT_EPSILON) {
+				out[1] = 0;
+				out[0] = 0;
+				return;
+			}
+
+			out[1] = delta / out[2];
+			if(std::abs(out[1]) < FLT_EPSILON) {
+				out[0] = 0;
+				return;
+			}
+
+			if(rgbf[0] == max_color) {
+				out[0] = (43.0f * (rgbf[1]-rgbf[2])/delta);
+			} else if(rgbf[1] == max_color) {
+				out[0] = (85.0f/255.0f) + ((43.0f/255.0f) * (rgbf[2]-rgbf[0])/delta);
+			} else {
+				out[0] = (171.0f/255.0f) + ((43.0f/255.0f) * (rgbf[0]-rgbf[1])/delta);
+			}
+		}
+
+		bool color_from_basic_string(const std::string& colstr, Color* color)
+		{
+			float value[4] = { 1.0f, 1.0f, 1.0f, 1.0f };
+			auto buf = split(colstr, ",| |;");
+			if(buf.size() == 0) {
+				return false;
+			}
+			unsigned n = 0;
+			for(auto& s : buf) {
+				value[n] = convert_string_to_number(s);
+				if(++n >= 4) {
+					break;
+				}
+			}
+			*color = Color(value[0], value[1], value[2], value[3]);
+			return true;
+		}
+
+		bool color_from_string(const std::string& colstr, Color* color)
+		{
+			ASSERT_LOG(!colstr.empty(), "Empty string passed to Color constructor.");
+			auto it = get_color_table().find(colstr);
+			if(it == get_color_table().end()) {
+				if(!color_from_hsv_string(colstr, color)) {
+					if(!color_from_hex_string(colstr, color)) {
+						if(!color_from_basic_string(colstr, color)) {
+							ASSERT_LOG(false, "Couldn't parse color '" << colstr << "' from string value.");
+						}
+					}
+				}
+			}
+			*color = it->second;
+			return true;
+		}
 	}
 
 	Color::Color()
@@ -289,7 +480,7 @@ namespace KRE
 	{
 	}
 
-	Color::Color(const double r, const double g, const double b, const double a)
+	Color::Color(const float r, const float g, const float b, const float a)
 	{
 		color_[0] = float(r);
 		color_[1] = float(g);
@@ -305,18 +496,29 @@ namespace KRE
 		color_[3] = clamp<int>(a,0,255)/255.0f;
 	}
 
+	Color::Color(const glm::vec4& value)
+	{
+		color_[0] = value.r;
+		color_[1] = value.g;
+		color_[2] = value.b;
+		color_[3] = value.a;
+	}
+
+	Color::Color(const glm::u8vec4& value)
+	{
+		color_[0] = clamp<int>(value.r,0,255)/255.0f;
+		color_[1] = clamp<int>(value.g,0,255)/255.0f;
+		color_[2] = clamp<int>(value.b,0,255)/255.0f;
+		color_[3] = clamp<int>(value.a,0,255)/255.0f;
+	}
+
 	Color::Color(const variant& node)
 	{
 		color_[0] = color_[1] = color_[2] = 0.0f;
 		color_[3] = 1.0f;
 
 		if(node.is_string()) {
-			const std::string& colstr = node.as_string();
-			auto it = get_color_table().find(colstr);
-			if(it == get_color_table().end()) {
-				*this = color_from_hex_string(colstr);
-			}
-			*this = it->second;
+			color_from_string(node.as_string(), this);
 		} else if(node.is_list()) {
 			ASSERT_LOG(node.num_elements() == 3 || node.num_elements() == 4,
 				"Color nodes must be lists of 3 or 4 numbers.");
@@ -390,25 +592,7 @@ namespace KRE
 	Color::Color(const std::string& colstr)
 	{
 		ASSERT_LOG(!colstr.empty(), "Empty string passed to Color constructor.");
-		auto it = get_color_table().find(colstr);
-		if(it == get_color_table().end()) {
-			if(colstr[0] == '#') {
-				*this = color_from_hex_string(colstr);
-			} else if(colstr.find(',') != std::string::npos) {
-				std::fill(color_, color_+3, 1.0f);
-				auto buf = split(colstr, ",| |;");
-				unsigned n = 0;
-				for(auto& s : buf) {
-					color_[n] = static_cast<float>(convert_string_to_number(s));
-					if(++n >= 4) {
-						break;
-					}
-				}
-			} else {
-				ASSERT_LOG(false, "Couldn't parse color '" << colstr << "' in known color list");
-			}
-		}
-		*this = it->second;
+		color_from_string(colstr, this);
 	}
 
 	void Color::setAlpha(int a)
@@ -416,39 +600,39 @@ namespace KRE
 		color_[3] = clamp<int>(a, 0, 255) / 255.0f;
 	}
 
-	void Color::setAlpha(double a)
+	void Color::setAlpha(float a)
 	{
-		color_[3] = clamp<float>(float(a), 0.0f, 1.0f);
+		color_[3] = clamp<float>(a, 0.0f, 1.0f);
 	}
 
-	void Color::setRed(int a)
+	void Color::setRed(int r)
 	{
-		color_[0] = clamp<int>(a, 0, 255) / 255.0f;
+		color_[0] = clamp<int>(r, 0, 255) / 255.0f;
 	}
 
-	void Color::setRed(double a)
+	void Color::setRed(float r)
 	{
-		color_[0] = clamp<float>(float(a), 0.0f, 1.0f);
+		color_[0] = clamp<float>(r, 0.0f, 1.0f);
 	}
 
-	void Color::setGreen(int a)
+	void Color::setGreen(int g)
 	{
-		color_[1] = clamp<int>(a, 0, 255) / 255.0f;
+		color_[1] = clamp<int>(g, 0, 255) / 255.0f;
 	}
 
-	void Color::setGreen(double a)
+	void Color::setGreen(float g)
 	{
-		color_[1] = clamp<float>(float(a), 0.0f, 1.0f);
+		color_[1] = clamp<float>(g, 0.0f, 1.0f);
 	}
 
-	void Color::setBlue(int a)
+	void Color::setBlue(int b)
 	{
-		color_[2] = clamp<int>(a, 0, 255) / 255.0f;
+		color_[2] = clamp<int>(b, 0, 255) / 255.0f;
 	}
 
-	void Color::setBlue(double a)
+	void Color::setBlue(float b)
 	{
-		color_[2] = clamp<float>(float(a), 0.0f, 1.0f);
+		color_[2] = clamp<float>(b, 0.0f, 1.0f);
 	}
 
 	ColorPtr Color::factory(const std::string& name)
@@ -474,5 +658,60 @@ namespace KRE
 	Color operator*(const Color& lhs, const Color& rhs)
 	{
 		return Color(lhs.r()*rhs.r(), lhs.g()*rhs.g(), lhs.b()*rhs.b(), lhs.a()*rhs.a());
+	}
+
+	void Color::preMultiply(int alpha)
+	{
+		// ignore current alpha and multiply all the colors by the given alpha, setting the new alpha to fully opaque
+		const float a = static_cast<float>(clamp<int>(alpha, 0, 255) / 255.0f);
+		color_[0] *= a;
+		color_[1] *= a;
+		color_[2] *= a;
+		color_[3] = 1.0f;
+	}
+
+	void Color::preMultiply(float alpha)
+	{
+		// ignore current alpha and multiply all the colors by the given alpha, setting the new alpha to fully opaque
+		const float a = clamp<float>(alpha, 0.0f, 1.0f);
+		color_[0] *= a;
+		color_[1] *= a;
+		color_[2] *= a;
+		color_[3] = 1.0f;
+	}
+
+	void Color::preMultiply()
+	{
+		color_[0] *= color_[3];
+		color_[1] *= color_[3];
+		color_[2] *= color_[3];
+		color_[3] = 1.0f;
+	}
+	
+	glm::u8vec4 Color::to_hsv() const
+	{
+		hsv outp = rgb_to_hsv(ri(), gi(), bi());
+		return glm::u8vec4(outp.h, outp.s, outp.v, ai());
+	}
+
+	glm::vec4 Color::to_hsv_vec4() const
+	{
+		glm::vec4 vec;
+		rgb_to_hsv(color_, glm::value_ptr(vec));
+		return vec;
+	}
+
+	Color Color::from_hsv(int h, int s, int v, int a)
+	{
+		rgb outp = hsv_to_rgb(h, s, v);
+		return Color(outp.r, outp.g, outp.b, a);
+	}
+
+	Color Color::from_hsv(float h, float s, float v, float a)
+	{
+		glm::vec4 outp;
+		outp.a = a;
+		hsv_to_rgb(h, s, v, glm::value_ptr(outp));
+		return Color(outp);
 	}
 }

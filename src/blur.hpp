@@ -36,7 +36,7 @@ class Frame;
 class BlurInfo
 {
 public:
-	BlurInfo(double alpha, double fade, int granularity);
+	BlurInfo(float alpha, float fade, int granularity);
 
 	//function to copy settings into another BlurInfo instance. This will
 	//keep our BlurFrames as they are, but copy in the alpha/fade/granularity
@@ -64,11 +64,11 @@ private:
 		double x, y;
 		bool facing, upside_down;
 		float rotate;
-		double fade;
+		float fade;
 	};
 
-	double alpha_;
-	double fade_;
+	float alpha_;
+	float fade_;
 	int granularity_;
 	std::deque<BlurFrame> frames_;
 };

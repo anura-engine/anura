@@ -475,7 +475,7 @@ namespace KRE
 		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
 	}
 
-	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const std::vector<uint8_t>& color) const 
+	void CanvasOGL::drawSolidCircle(const point& centre, float radius, const std::vector<glm::u8vec4>& color) const 
 	{
 		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
 	}
@@ -504,7 +504,7 @@ namespace KRE
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 
-	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<uint8_t>& color) const 
+	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const 
 	{
 		glm::mat4 mvp = mvp_ * glm::translate(glm::mat4(1.0f), glm::vec3(centre.x, centre.y, 0.0f)) * getModelMatrix();
 
@@ -514,7 +514,7 @@ namespace KRE
 
 		// XXX figure out a nice way to do this with shaders.
 		std::vector<glm::vec2> varray;
-		varray.reserve(color.size()/4);
+		varray.reserve(color.size());
 		varray.emplace_back(0.0f, 0.0f);
 		for(double angle = 0; angle < M_PI * 2.0; angle += (M_PI*2.0*4.0)/color.size()) {
 				varray.emplace_back(radius*cos(angle), radius*sin(angle));

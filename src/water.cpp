@@ -98,7 +98,7 @@ void Water::init()
 	line2_->addAttributeDesc(AttributeDesc(AttrType::COLOR, 4, AttrFormat::UNSIGNED_BYTE, true, sizeof(vertex_color), offsetof(vertex_color, color)));
 	seg2->addAttribute(AttributeBasePtr(line2_));
 	seg2->setDrawMode(DrawMode::LINE_STRIP);
-	seg2->setColor(Color(0.0, 0.9, 0.75, 0.5));
+	seg2->setColor(Color(0.0f, 0.9f, 0.75f, 0.5f));
 	addAttributeSet(seg2);
 }
 
@@ -172,10 +172,10 @@ bool Water::drawArea(const Water::area& a) const
 	KRE::Color water_color = a.color_;
 
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE)) {
-		const double max_color = std::max(water_color.r(), std::max(water_color.g(), water_color.b()));
-		water_color.setRed((max_color - water_color.r())/8.0);
-		water_color.setGreen((max_color - water_color.g())/8.0);
-		water_color.setBlue((max_color - water_color.b())/8.0);
+		const float max_color = std::max(water_color.r(), std::max(water_color.g(), water_color.b()));
+		water_color.setRed((max_color - water_color.r())/8.0f);
+		water_color.setGreen((max_color - water_color.g())/8.0f);
+		water_color.setBlue((max_color - water_color.b())/8.0f);
 	}
 
 	float vertices[] = {

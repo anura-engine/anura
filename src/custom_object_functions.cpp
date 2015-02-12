@@ -2863,7 +2863,7 @@ namespace
 				return;
 			}
 
-			BlurInfo blur(double(alpha_)/1000.0, double(fade_)/1000.0, granularity_);
+			BlurInfo blur(alpha_/1000.0f, fade_/1000.0f, granularity_);
 			ob.set_blur(&blur);
 		}
 	};

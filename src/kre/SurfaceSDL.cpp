@@ -535,9 +535,9 @@ namespace KRE
 		return Color(SDL_MapRGB(pf_, r, g, b));
 	}
 
-	Color SDLPixelFormat::mapRGB(double r, double g, double b)
+	Color SDLPixelFormat::mapRGB(float r, float g, float b)
 	{
-		return Color(SDL_MapRGB(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0)));
+		return Color(SDL_MapRGB(pf_, static_cast<uint8_t>(r*255.0f), static_cast<uint8_t>(g*255.0f), static_cast<uint8_t>(b*255.0f)));
 	}
 
 	Color SDLPixelFormat::mapRGBA(int r, int g, int b, int a)
@@ -545,9 +545,9 @@ namespace KRE
 		return Color(SDL_MapRGBA(pf_, r, g, b, a));
 	}
 
-	Color SDLPixelFormat::mapRGBA(double r, double g, double b, double a)
+	Color SDLPixelFormat::mapRGBA(float r, float g, float b, float a)
 	{
-		return Color(SDL_MapRGBA(pf_, static_cast<uint8_t>(r*255.0), static_cast<uint8_t>(g*255.0), static_cast<uint8_t>(b*255.0), static_cast<uint8_t>(a*255.0)));
+		return Color(SDL_MapRGBA(pf_, static_cast<uint8_t>(r*255.0f), static_cast<uint8_t>(g*255.0f), static_cast<uint8_t>(b*255.0f), static_cast<uint8_t>(a*255.0f)));
 	}
 
 	void SDLPixelFormat::getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)

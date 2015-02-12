@@ -78,9 +78,9 @@ namespace KRE
 		PixelFormat::PF getFormat() const override;
 
 		Color mapRGB(int r, int g, int b) override;
-		Color mapRGB(double r, double g, double b) override;
+		Color mapRGB(float r, float g, float b) override;
 		Color mapRGBA(int r, int g, int b, int a) override;
-		Color mapRGBA(double r, double g, double b, double a) override;
+		Color mapRGBA(float r, float g, float b, float a) override;
 
 		void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) override;
 

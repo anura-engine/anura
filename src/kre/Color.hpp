@@ -26,6 +26,7 @@
 #include <memory>
 #include <string>
 #include <glm/gtc/type_precision.hpp>
+#include <glm/gtc/type_ptr.hpp>
 
 #include "variant.hpp"
 
@@ -47,26 +48,28 @@ namespace KRE
 	public:
 		Color();
 		~Color();
-		explicit Color(const double r, const double g, const double b, const double a=1.0);
+		explicit Color(const float r, const float g, const float b, const float a=1.0f);
 		explicit Color(const int r, const int g, const int b, const int a=255);
 		explicit Color(const std::string& s);
 		explicit Color(const variant& node);
+		explicit Color(const glm::vec4& value);
+		explicit Color(const glm::u8vec4& value);
 		explicit Color(unsigned long n, ColorByteOrder order=ColorByteOrder::RGBA);
 
-		double r() const { return color_[0]; }
-		double g() const { return color_[1]; }
-		double b() const { return color_[2]; }
-		double a() const { return color_[3]; }
+		float r() const { return color_[0]; }
+		float g() const { return color_[1]; }
+		float b() const { return color_[2]; }
+		float a() const { return color_[3]; }
 
-		double red() const { return color_[0]; }
-		double green() const { return color_[1]; }
-		double blue() const { return color_[2]; }
-		double alpha() const { return color_[3]; }
+		float red() const { return color_[0]; }
+		float green() const { return color_[1]; }
+		float blue() const { return color_[2]; }
+		float alpha() const { return color_[3]; }
 
-		float rf() const { return static_cast<float>(color_[0]); }
-		float gf() const { return static_cast<float>(color_[1]); }
-		float bf() const { return static_cast<float>(color_[2]); }
-		float af() const { return static_cast<float>(color_[3]); }
+		int ri() const { return static_cast<int>(255*color_[0]); }
+		int gi() const { return static_cast<int>(255*color_[1]); }
+		int bi() const { return static_cast<int>(255*color_[2]); }
+		int ai() const { return static_cast<int>(255*color_[3]); }
 
 		int r_int() const { return static_cast<int>(255*color_[0]); }
 		int g_int() const { return static_cast<int>(255*color_[1]); }
@@ -74,16 +77,16 @@ namespace KRE
 		int a_int() const { return static_cast<int>(255*color_[3]); }
 
 		void setRed(int a);
-		void setRed(double a);
+		void setRed(float a);
 
 		void setGreen(int a);
-		void setGreen(double a);
+		void setGreen(float a);
 
 		void setBlue(int a);
-		void setBlue(double a);
+		void setBlue(float a);
 
 		void setAlpha(int a);
-		void setAlpha(double a);
+		void setAlpha(float a);
 
 		unsigned long asARGB() const {
 			return (a_int() << 24) | (r_int() << 16) | (g_int() << 8) | b_int();
@@ -93,15 +96,36 @@ namespace KRE
 			return (r_int() << 24) | (b_int() << 16) | (b_int() << 8) | a_int();
 		}
 
-		glm::u8vec4 as_u8vec4() const {
+		glm::u8vec4 as_u8vec4(ColorByteOrder order=ColorByteOrder::RGBA) const {
+			switch(order) {
+			case ColorByteOrder::BGRA: return glm::u8vec4(b_int(), g_int(), r_int(), a_int());
+			case ColorByteOrder::ARGB: return glm::u8vec4(a_int(), r_int(), g_int(), b_int());
+			case ColorByteOrder::ABGR: return glm::u8vec4(a_int(), b_int(), g_int(), r_int());
+			default: break;
+			}
 			return glm::u8vec4(r_int(), g_int(), b_int(), a_int());
 		}
 
-		const float* asFloatVector() const {
+		const float* asFloatVector(ColorByteOrder order=ColorByteOrder::RGBA) const {
+			switch(order) {
+			case ColorByteOrder::BGRA: return glm::value_ptr(glm::vec4(color_[2], color_[1], color_[0], color_[3]));
+			case ColorByteOrder::ARGB: return glm::value_ptr(glm::vec4(color_[3], color_[0], color_[1], color_[2]));
+			case ColorByteOrder::ABGR: return glm::value_ptr(glm::vec4(color_[3], color_[2], color_[1], color_[0]));
+			default: break;
+			}
 			return color_;
 		}
 
+		glm::u8vec4 to_hsv() const;
+		glm::vec4 to_hsv_vec4() const;
+		static Color from_hsv(int h, int s, int v, int a=255);
+		static Color from_hsv(float h, float s, float v, float a=1.0f);
+
 		variant write() const;
+
+		void preMultiply();
+		void preMultiply(int alpha);
+		void preMultiply(float alpha);
 
 		static ColorPtr factory(const std::string& name);
 

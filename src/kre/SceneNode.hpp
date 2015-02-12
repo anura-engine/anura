@@ -53,7 +53,7 @@ namespace KRE
 		const RenderTargetPtr getRenderTarget() const { return render_target_; }
 		void renderNode(const RenderManagerPtr& renderer, SceneNodeParams* rp);
 		SceneGraph* parentGraph() { return scene_graph_; }
-		virtual void process(double);
+		virtual void process(float);
 		virtual void notifyNodeAttached(SceneNode* parent);
 		void setNodeName(const std::string& s) { name_ = s; }
 		const std::string& getNodeName() const { return name_; }

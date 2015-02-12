@@ -942,9 +942,6 @@
     <ClInclude Include="..\..\src\surface_palette.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\rect_callable.hpp">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\settings_dialog.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -1914,9 +1911,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\surface_palette.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\rect_callable.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\settings_dialog.cpp">

@@ -3184,7 +3184,7 @@ void editor::draw_gui() const
 
 		e.setPos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
-			KRE::Canvas::ColorManager cm(KRE::Color(1.0, 1.0, 1.0, 0.5));
+			KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.5f));
 			all_characters()[cur_object_].preview_frame()->draw(e.x(), e.y(), face_right_, upside_down_);
 		}
 	}
@@ -3196,7 +3196,7 @@ void editor::draw_gui() const
 			y = ypos_ + mousey*zoom_;
 		}
 		point p = hex::HexMap::getTilePosFromPixelPos(x, y);
-		KRE::Canvas::ColorManager cm(KRE::Color(1.0, 1.0, 1.0, 0.7));
+		KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.7f));
 		hex::HexObject::getEditorTiles()[get_hex_tileset()]->getgetEditorInfo().draw(p.x, p.y);
 	}
 

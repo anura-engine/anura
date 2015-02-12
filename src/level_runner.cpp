@@ -188,7 +188,7 @@ namespace
 	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade) 
 	{
 		auto& wnd = KRE::WindowManager::getMainWindow();
-		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,wnd->width(),wnd->height()),KRE::Color(0.0,0.0,0.0,0.5*fade));
+		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,wnd->width(),wnd->height()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
 	}
 
 	void flip_scene(const Level& lvl, screen_position& screen_pos, float amount) 

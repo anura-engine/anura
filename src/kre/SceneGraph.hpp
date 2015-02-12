@@ -42,7 +42,7 @@ namespace KRE
 		void renderScene(const RenderManagerPtr& renderer);
 		void renderSceneHelper(const RenderManagerPtr& renderer, the::tree<SceneNodePtr>::pre_iterator& it, SceneNodeParams* snp);
 	
-		void process(double);
+		void process(float);
 
 		static void registerFactoryFunction(const std::string& type, std::function<SceneNodePtr(SceneGraph*,const variant&)>);
 	private:

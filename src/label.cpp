@@ -282,7 +282,7 @@ namespace gui
 			.addCol(text_edit);
 
 		g->addCol(new Label("Size:", d->getTextSize(), d->font())).
-			addCol(new Slider(120, [&](double f){setFontSize(int(f*72.0+6.0));}, (size()-6.0)/72.0, 1));
+			addCol(new Slider(120, [&](float f){setFontSize(static_cast<int>(f*72.0f+6.0f));}, (size()-6.0f)/72.0f, 1));
 
 		std::vector<std::string> fonts = font::getAvailableFonts();
 		fonts.insert(fonts.begin(), "");

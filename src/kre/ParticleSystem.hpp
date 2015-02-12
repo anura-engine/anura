@@ -232,7 +232,7 @@ namespace KRE
 			std::vector<EmitterPtr> cloneEmitters();
 			std::vector<AffectorPtr> cloneAffectors();
 
-			void process(double current_time) override;
+			void process(float current_time) override;
 		private:
 			void notifyNodeAttached(SceneNode* parent) override;
 			std::vector<ParticleSystemPtr> active_particle_systems_;

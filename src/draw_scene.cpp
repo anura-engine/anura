@@ -381,7 +381,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	}
 
 	if(pos.flip_rotate) {
-		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
+		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
 		wnd->clear(KRE::ClearFlags::COLOR);
 
 		const double angle = sin(0.5f*static_cast<float>(M_PI*pos.flip_rotate)/1000.0f);
@@ -480,9 +480,9 @@ void render_scene(Level& lvl, const screen_position& pos)
 		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
 		ASSERT_LOG(f.get() != NULL, "COULD NOT LOAD DEFAULT FONT");
 		const rect r = f->dimensions(scene_title());
-		const double alpha = scene_title_duration_ > 10 ? 1.0 : scene_title_duration_/10.0;
-		f->draw(wnd->width()/2 - r.w()/2 + 2, wnd->height()/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0., 0., 0., 0.5*alpha));
-		f->draw(wnd->width()/2 - r.w()/2, wnd->height()/2 - r.h()/2, scene_title(), 2, KRE::Color(1.,1.,1.,alpha));
+		const float alpha = scene_title_duration_ > 10 ? 1.0f : scene_title_duration_/10.0f;
+		f->draw(wnd->width()/2 - r.w()/2 + 2, wnd->height()/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0., 0.5f*alpha));
+		f->draw(wnd->width()/2 - r.w()/2, wnd->height()/2 - r.h()/2, scene_title(), 2, KRE::Color(1.f,1.f,1.f,alpha));
 	}
 	
 	if(current_achievement && current_achievement_duration > 0) {
@@ -490,7 +490,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 
 		ConstGuiSectionPtr left = GuiSection::get("achievements_left");
 		ConstGuiSectionPtr right = GuiSection::get("achievements_right");
-		ConstGuiSectionPtr main = GuiSection::get("achievements_main");
+		ConstGuiSectionPtr mainsec = GuiSection::get("achievements_main");
 
 		const ConstGraphicalFontPtr title_font = GraphicalFont::get("white_outline");
 		const ConstGraphicalFontPtr main_font = GraphicalFont::get("door_label");
@@ -507,17 +507,17 @@ void render_scene(Level& lvl, const screen_position& pos)
 		const int xpos = wnd->width() - 16 - left->width() - right->width() - width;
 		const int ypos = 16;
 
-		const double alpha = current_achievement_duration > 10 ? 1.0 : current_achievement_duration/10.0;
+		const float alpha = current_achievement_duration > 10 ? 1.0f : current_achievement_duration/10.0f;
 
-		KRE::Canvas::ColorManager cm1(KRE::Color(1.0, 1.0, 1.0, alpha));
+		KRE::Canvas::ColorManager cm1(KRE::Color(1.0f, 1.0f, 1.0f, alpha));
 		left->blit(xpos, ypos);
-		main->blit(xpos + left->width(), ypos, width, main->height());
+		mainsec->blit(xpos + left->width(), ypos, width, mainsec->height());
 		right->blit(xpos + left->width() + width, ypos);
 
 		title_font->draw(xpos + left->width(), ypos - 10, title_text);
 		main_font->draw(xpos + left->width(), ypos + 24, name);
 
-		KRE::Canvas::ColorManager cm2(KRE::Color(0.0, 1.0, 0.0, alpha));
+		KRE::Canvas::ColorManager cm2(KRE::Color(0.0f, 1.0f, 0.0f, alpha));
 		main_font->draw(xpos + left->width(), ypos + 48, description);
 	}
 	

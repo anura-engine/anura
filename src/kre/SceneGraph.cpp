@@ -122,7 +122,7 @@ namespace KRE
 		renderSceneHelper(renderer, it, &snp);
 	}
 
-	void SceneGraph::process(double elapsed_time)
+	void SceneGraph::process(float elapsed_time)
 	{
 		the::tree<SceneNodePtr>::pre_iterator it = graph_.begin();
 		for(; it != graph_.end(); ++it) {

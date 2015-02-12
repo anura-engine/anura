@@ -77,7 +77,7 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Disabled Opacity:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){this->widget_->setDisabledOpacity(int(f*255.0));}, 
+			.addCol(new Slider(120, [&](float f){this->widget_->setDisabledOpacity(static_cast<int>(f*255.0f));}, 
 			this->widget_->disabledOpacity()/255.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
@@ -87,7 +87,7 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Alpha:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setAlpha(int(f*255.0));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setAlpha(static_cast<int>(f*255.0f));}, 
 			this->widget_->getAlpha()/255.0f, 1));
 
 		std::vector<std::string> sections = FramedGuiElement::getElements();
@@ -116,10 +116,10 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("pad width:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setPadding(int(f*100.0), widget_->getPadHeight());}, 
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(static_cast<int>(f*100.0f), widget_->getPadHeight());}, 
 			widget_->getPadWidth()/100.0f, 1));
 		g->addCol(new Label("pad height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setPadding(widget_->getPadWidth(), int(f*100.0));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setPadding(widget_->getPadWidth(), static_cast<int>(f*100.0f));}, 
 			widget_->getPadHeight()/100.0f, 1));
 
 		TextEditorWidgetPtr tooltip_edit = new TextEditorWidget(150, 30);
@@ -128,7 +128,7 @@ namespace gui
 		g->addCol(new Label("Tooltip:", text_size_, font_name_))
 			.addCol(tooltip_edit);
 		g->addCol(new Label("Tooltip Height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setTooltipFontSize(int(f*72.0+6.0));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipFontSize(static_cast<int>(f*72.0f+6.0f));}, 
 			(widget_->tooltipFontSize()-6.0f)/72.0f, 1));
 		
 		std::vector<std::string> fonts = KRE::Font::getAvailableFonts();
@@ -164,7 +164,7 @@ namespace gui
 		}));
 
 		g->addCol(new Label("Tooltip Delay:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setTooltipDelay(int(f*5000.0));}, 
+			.addCol(new Slider(120, [&](float f){widget_->setTooltipDelay(static_cast<int>(f*5000.0f));}, 
 			widget_->getTooltipDelay()/5000.0f, 1));
 
 		g->addCol(new Label("", getTextSize(), font()))
@@ -180,18 +180,18 @@ namespace gui
 			BUTTON_SIZE_NORMAL_RESOLUTION));
 
 		g->addCol(new Label("Width:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setDim(int(f*width()), widget_->height());}, 
-			widget_->width()/double(width()), 1));
+			.addCol(new Slider(120, [&](float f){widget_->setDim(int(f*width()), widget_->height());}, 
+			widget_->width()/static_cast<float>(width()), 1));
 		g->addCol(new Label("Height:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setDim(widget_->width(), int(f*height()));}, 
-			widget_->height()/double(height()), 1));
+			.addCol(new Slider(120, [&](float f){widget_->setDim(widget_->width(), int(f*height()));}, 
+			widget_->height()/static_cast<float>(height()), 1));
 
 		g->addCol(new Label("X:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setLoc(int(f*width()), widget_->y());}, 
-			widget_->x()/double(width()), 1));
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(int(f*width()), widget_->y());}, 
+			widget_->x()/static_cast<float>(width()), 1));
 		g->addCol(new Label("Y:", getTextSize(), font()))
-			.addCol(new Slider(120, [&](double f){widget_->setLoc(widget_->x(), int(f*height()));}, 
-			widget_->y()/double(height()), 1));
+			.addCol(new Slider(120, [&](float f){widget_->setLoc(widget_->x(), int(f*height()));}, 
+			widget_->y()/static_cast<float>(height()), 1));
 
 		Grid* zg = new Grid(3);
 		TextEditorWidgetPtr z_edit = new TextEditorWidget(60, 30);

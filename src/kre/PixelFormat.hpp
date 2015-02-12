@@ -118,9 +118,9 @@ namespace KRE
 		virtual PF getFormat() const = 0;
 
 		virtual Color mapRGB(int r, int g, int b) = 0;
-		virtual Color mapRGB(double r, double g, double b) = 0;
+		virtual Color mapRGB(float r, float g, float b) = 0;
 		virtual Color mapRGBA(int r, int g, int b, int a) = 0;
-		virtual Color mapRGBA(double r, double g, double b, double a) = 0;
+		virtual Color mapRGBA(float r, float g, float b, float a) = 0;
 
 		virtual void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) = 0; 
 

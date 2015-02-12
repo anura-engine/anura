@@ -176,7 +176,7 @@ UNIT_TEST(decimal_output) {
 
 UNIT_TEST(decimal_mul) {
 	for(int64_t n = 0; n < 45000; n += 1000) {
-		CHECK_EQ(n*(n > 0 ? n : -n), (decimal::from_int(n)*decimal::from_int(n > 0 ? n : -n)).as_int());
+		CHECK_EQ(n*(n > 0 ? n : -n), (decimal::from_int(static_cast<int>(n))*decimal::from_int(static_cast<int>(n > 0 ? n : -n))).as_int());
 	}
 
 

@@ -24,7 +24,7 @@
 #include "blur.hpp"
 #include "frame.hpp"
 
-BlurInfo::BlurInfo(double alpha, double fade, int granularity)
+BlurInfo::BlurInfo(float alpha, float fade, int granularity)
   : alpha_(alpha), fade_(fade), granularity_(granularity)
 {
 }
@@ -43,7 +43,7 @@ void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
 		f.fade -= fade_;
 	}
 
-	while(!frames_.empty() && frames_.front().fade <= 0.0) {
+	while(!frames_.empty() && frames_.front().fade <= 0.0f) {
 		frames_.pop_front();
 	}
 
@@ -64,7 +64,7 @@ void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
 void BlurInfo::draw() const
 {
 	for(const BlurFrame& f : frames_) {
-		f.object_frame->draw(static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate, KRE::Color(1.0, 1.0, 1.0, f.fade));
+		f.object_frame->draw(static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate, KRE::Color(1.0f, 1.0f, 1.0f, f.fade));
 	}
 }
 

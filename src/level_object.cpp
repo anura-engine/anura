@@ -955,8 +955,8 @@ COMMAND_LINE_UTILITY(annotate_tilesheet)
 
 	unsigned char* p = reinterpret_cast<unsigned char*>(surf->pixelsWriteable());
 
-	for(unsigned ypos = BaseTileSize; ypos < surf->height(); ypos += BaseTileSize) {
-		for(unsigned xpos = 0; xpos < surf->width(); ++xpos) {
+	for(int ypos = BaseTileSize; ypos < surf->height(); ypos += BaseTileSize) {
+		for(int xpos = 0; xpos < surf->width(); ++xpos) {
 			unsigned char* pos = p + (ypos * surf->width() + xpos)*4;
 			pos[0] = 0xf9;
 			pos[1] = 0x30;
@@ -965,8 +965,8 @@ COMMAND_LINE_UTILITY(annotate_tilesheet)
 		}
 	}
 
-	for(unsigned xpos = BaseTileSize; xpos < surf->width(); xpos += BaseTileSize) {
-		for(unsigned ypos = 0; ypos < surf->height(); ++ypos) {
+	for(int xpos = BaseTileSize; xpos < surf->width(); xpos += BaseTileSize) {
+		for(int ypos = 0; ypos < surf->height(); ++ypos) {
 			unsigned char* pos = p + (ypos * surf->width() + xpos)*4;
 			pos[0] = 0xf9;
 			pos[1] = 0x30;

@@ -544,7 +544,7 @@ namespace KRE
 		{
 		}
 
-		void ParticleSystemContainer::process(double current_time)
+		void ParticleSystemContainer::process(float current_time)
 		{
 			//LOG_DEBUG("ParticleSystemContainer::Process: " << current_time);
 			for(auto ps : active_particle_systems_) {

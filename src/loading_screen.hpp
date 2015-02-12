@@ -49,5 +49,5 @@ private:
 	KRE::TexturePtr background_;
 	KRE::TexturePtr splash_;
 
-	unsigned started_at_;
+	int started_at_;
 };

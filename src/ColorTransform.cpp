@@ -38,13 +38,13 @@ namespace KRE
 	ColorTransform::ColorTransform()
 //		: add_rgba_()
 	{
-		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
-		add_rgba_[0] = add_rgba_[2] = add_rgba_[2] = add_rgba_[3] = 0.0;
+		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0f;
+		add_rgba_[0] = add_rgba_[2] = add_rgba_[2] = add_rgba_[3] = 0.0f;
 	}
 
 	ColorTransform::ColorTransform(const Color& color)
 	{
-		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
+		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0f;
 		add_rgba_[0] = color.r();
 		add_rgba_[1] = color.g();
 		add_rgba_[2] = color.b();
@@ -53,15 +53,15 @@ namespace KRE
 
 	ColorTransform::ColorTransform(const variant& v)
 	{
-		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0;
-		add_rgba_[0] = add_rgba_[1] = add_rgba_[2] = add_rgba_[3] = 0.0;
+		mul_rgba_[0] = mul_rgba_[1] = mul_rgba_[2] = mul_rgba_[3] = 1.0f;
+		add_rgba_[0] = add_rgba_[1] = add_rgba_[2] = add_rgba_[3] = 0.0f;
 
 		if(v.is_list()) {
 			for(unsigned n = 0; n != 4; ++n) {
 				if(n < v.num_elements()) {
-					add_rgba_[n] = v[n].as_int() / 255.0;
+					add_rgba_[n] = v[n].as_int() / 255.0f;
 				} else {
-					add_rgba_[n] = 1.0;
+					add_rgba_[n] = 1.0f;
 				}
 			}
 		} else if(v.is_map()) {
@@ -70,9 +70,9 @@ namespace KRE
 				for(unsigned n = 0; n != 4; ++n) {
 					if(n < a.num_elements()) {
 						if(a.is_int()) {
-							add_rgba_[n] = a[n].as_int() / 255.0;
+							add_rgba_[n] = a[n].as_int() / 255.0f;
 						} else {
-							add_rgba_[n] = a[n].as_double();
+							add_rgba_[n] = a[n].as_float();
 						}
 					}
 				}
@@ -82,9 +82,9 @@ namespace KRE
 				for(unsigned n = 0; n != 4; ++n) {
 					if(n < m.num_elements()) {
 						if(m.is_int()) {
-							add_rgba_[n] = m[n].as_int() / 255.0;
+							add_rgba_[n] = m[n].as_int() / 255.0f;
 						} else {
-							add_rgba_[n] = m[n].as_double();
+							add_rgba_[n] = m[n].as_float();
 						}
 					}
 				}
@@ -92,7 +92,7 @@ namespace KRE
 		}
 	}
 
-	ColorTransform::ColorTransform(double mr, double mg, double mb, double ma, double ar, double ag, double ab, double aa)
+	ColorTransform::ColorTransform(float mr, float mg, float mb, float ma, float ar, float ag, float ab, float aa)
 	{
 		mul_rgba_[0] = mr;
 		mul_rgba_[1] = mg;
@@ -106,14 +106,14 @@ namespace KRE
 
 	ColorTransform::ColorTransform(int mr, int mg, int mb, int ma, int ar, int ag, int ab, int aa)
 	{
-		mul_rgba_[0] = mr/255.0;
-		mul_rgba_[1] = mg/255.0;
-		mul_rgba_[2] = mb/255.0;
-		mul_rgba_[3] = ma/255.0;
-		add_rgba_[0] = ar/255.0;
-		add_rgba_[1] = ag/255.0;
-		add_rgba_[2] = ab/255.0;
-		add_rgba_[3] = aa/255.0;
+		mul_rgba_[0] = mr/255.0f;
+		mul_rgba_[1] = mg/255.0f;
+		mul_rgba_[2] = mb/255.0f;
+		mul_rgba_[3] = ma/255.0f;
+		add_rgba_[0] = ar/255.0f;
+		add_rgba_[1] = ag/255.0f;
+		add_rgba_[2] = ab/255.0f;
+		add_rgba_[3] = aa/255.0f;
 	}
 
 	ColorTransform::ColorTransform(int ar, int ag, int ab, int aa)
@@ -122,10 +122,10 @@ namespace KRE
 		mul_rgba_[1] = 0;
 		mul_rgba_[2] = 0;
 		mul_rgba_[3] = 0;
-		add_rgba_[0] = ar/255.0;
-		add_rgba_[1] = ag/255.0;
-		add_rgba_[2] = ab/255.0;
-		add_rgba_[3] = aa/255.0;
+		add_rgba_[0] = ar/255.0f;
+		add_rgba_[1] = ag/255.0f;
+		add_rgba_[2] = ab/255.0f;
+		add_rgba_[3] = aa/255.0f;
 	}
 
 	ColorTransform::~ColorTransform()
@@ -237,14 +237,14 @@ namespace KRE
 
 	bool operator==(const ColorTransform& a, const ColorTransform& b)
 	{
-		return std::abs(a.addRed()-b.addRed())<DBL_EPSILON 
-			&& std::abs(a.addGreen()-b.addGreen())<DBL_EPSILON
-			&& std::abs(a.addBlue()-b.addBlue())<DBL_EPSILON
-			&& std::abs(a.addAlpha()-b.addAlpha())<DBL_EPSILON
-			&& std::abs(a.mulRed()-b.mulRed())<DBL_EPSILON
-			&& std::abs(a.mulGreen()-b.mulGreen())<DBL_EPSILON
-			&& std::abs(a.mulBlue()-b.mulBlue())<DBL_EPSILON
-			&& std::abs(a.mulAlpha()-b.mulAlpha())<DBL_EPSILON;
+		return std::abs(a.addRed()-b.addRed())<FLT_EPSILON 
+			&& std::abs(a.addGreen()-b.addGreen())<FLT_EPSILON 
+			&& std::abs(a.addBlue()-b.addBlue())<FLT_EPSILON 
+			&& std::abs(a.addAlpha()-b.addAlpha())<FLT_EPSILON 
+			&& std::abs(a.mulRed()-b.mulRed())<FLT_EPSILON 
+			&& std::abs(a.mulGreen()-b.mulGreen())<FLT_EPSILON 
+			&& std::abs(a.mulBlue()-b.mulBlue())<FLT_EPSILON 
+			&& std::abs(a.mulAlpha()-b.mulAlpha())<FLT_EPSILON ;
 	}
 
 	bool operator!=(const ColorTransform& a, const ColorTransform& b)

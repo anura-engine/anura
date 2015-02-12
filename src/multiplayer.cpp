@@ -380,7 +380,7 @@ namespace multiplayer
 			int delay = 0;
 			int last_send = -1;
 
-			const unsigned game_start = profile::get_tick_time() + 1000;
+			const int game_start = profile::get_tick_time() + 1000;
 			boost::array<char, 1024> receive_buf;
 			while(profile::get_tick_time() < game_start) {
 				const int ticks = profile::get_tick_time();
@@ -506,7 +506,7 @@ namespace multiplayer
 				}
 
 				if(start_time.size() > 0) {
-					const unsigned start_time_avg = std::accumulate(start_time.begin(), start_time.end(), 0)/start_time.size();
+					const int start_time_avg = std::accumulate(start_time.begin(), start_time.end(), 0)/start_time.size();
 					if(profile::get_tick_time() >= start_time_avg) {
 						break;
 					}
