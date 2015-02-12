@@ -1763,22 +1763,18 @@ void Level::prepare_tiles_for_drawing()
 			continue;
 		}
 
-		auto& opaques = opaques_[tiles[n].zorder];
-		auto& transparent = transparent_[tiles[n].zorder];
+		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
 
-		layer_blit_info& blit_info = blit_cache_[tiles_[n].zorder];
-		if(blit_info.xbase == -1) {
-			blit_info.texture_id = tiles_[n].object->texture().getId();
-			blit_info.xbase = tiles_[n].x;
-			blit_info.ybase = tiles_[n].y;
+		if(!blit_cache_info.isInitialised()) {
+			blit_cache_info.setTexture(tiles_[n].object->texture());
+			blit_cache_info.setBase(tiles_[n].x, tiles_[n].y);
 		}
 
-		if(tiles_[n].x < blit_info.xbase) {
-			blit_info.xbase = tiles_[n].x;
+		if(tiles_[n].x < blit_cache_info.xbase()) {
+			blit_cache_info.setXbase(tiles_[n].x);
 		}
-
-		if(tiles_[n].y < blit_info.ybase) {
-			blit_info.ybase = tiles_[n].y;
+		if(tiles_[n].y < blit_cache_info.ybase()) {
+			blit_cache_info.setYbase(tiles_[n].y);
 		}
 	}
 
@@ -1791,7 +1787,7 @@ void Level::prepare_tiles_for_drawing()
 			tiles_[n].draw_disabled = true;
 			if(!solid_color_rects_.empty()) {
 				solid_color_rect& r = solid_color_rects_.back();
-				if(r.layer == tiles_[n].zorder && r.color.rgba() == tiles_[n].object->getSolidColor()->rgba() && r.area.y() == tiles_[n].y && r.area.x() + r.area.w() == tiles_[n].x) {
+				if(r.layer == tiles_[n].zorder && r.color == *tiles_[n].object->getSolidColor() && r.area.y() == tiles_[n].y && r.area.x() + r.area.w() == tiles_[n].x) {
 					r.area = rect(r.area.x(), r.area.y(), r.area.w() + TileSize, r.area.h());
 					continue;
 				}
@@ -1805,12 +1801,12 @@ void Level::prepare_tiles_for_drawing()
 			continue;
 		}
 
-		layer_blit_info& blit_info = blit_cache_[tiles_[n].zorder];
+		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
 
 		tiles_[n].draw_disabled = false;
 
 		blit_info.blit_vertexes.resize(blit_info.blit_vertexes.size() + 4);
-		const int npoints = level_object::calculateTileCorners(&blit_info.blit_vertexes[blit_info.blit_vertexes.size() - 4], tiles_[n]);
+		const int npoints = LevelObject::calculateTileCorners(&blit_info.blit_vertexes[blit_info.blit_vertexes.size() - 4], tiles_[n]);
 		if(npoints == 0) {
 			blit_info.blit_vertexes.resize(blit_info.blit_vertexes.size() - 4);
 		} else {

@@ -24,8 +24,22 @@
 #pragma once
 
 #include "SceneObject.hpp"
+#include "Texture.hpp"
 
-struct LayerBlitInfo : public KRE::SceneObject
+class LayerBlitInfo : public KRE::SceneObject
 {
+public:
 	LayerBlitInfo();
+	void setTexture(KRE::TexturePtr tex) { tex_ = tex; }
+	bool isInitialised() const { return initialised_; }
+	int xbase() const { return xbase_; }
+	int ybase() const { return ybase_; }
+	void setXbase(int xb) { xbase_ = xb; }
+	void setYbase(int yb) { ybase_ = yb; }
+	void setBase(int xb, int yb) { xbase_ = xb; ybase_ = yb; initialised_ = true; }
+private:
+	KRE::TexturePtr tex_;
+	int xbase_;
+	int ybase_;
+	bool initialised_;
 };

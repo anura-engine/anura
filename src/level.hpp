@@ -621,8 +621,7 @@ private:
 
 	LevelPtr suspended_level_;
 
-	std::map<int, LayerBlitInfo> opaques_;
-	std::map<int, LayerBlitInfo> translucent_;
+	std::map<int, LayerBlitInfo> blit_cache_;
 };
 
 bool entity_in_current_level(const Entity* e);
