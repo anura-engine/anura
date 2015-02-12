@@ -31,6 +31,9 @@ public:
 	void write_png(const std::string& fname);
 
 	void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
+
+	float width() const { return width_; }
+	float height() const { return height_; }
 private:
 	cairo_context(const cairo_context&);
 	void operator=(const cairo_context&);
