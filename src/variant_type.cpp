@@ -2002,7 +2002,7 @@ variant_type_ptr parse_variant_type(const variant& original_str,
 					}
 				}
 
-				ASSERT_COND(i1 == i2 || i1->equals(")") || i1->equals(","), "UNEXPECTED TOKENS WHEN PARSING FUNCTION:\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
+				ASSERT_COND(i1 == i2 || i1->equals(")") || i1->equals(","), "UNEXPECTED TOKENS WHEN PARSING FUNCTION: " << std::string(i1->begin, i1->end) << "\n" << game_logic::pinpoint_location(original_str, (i1-1)->end));
 
 				if(i1->equals(",")) {
 					++i1;
