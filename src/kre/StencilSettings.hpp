@@ -82,6 +82,7 @@ namespace KRE
 		bool enabled() const { return enabled_; }
 		StencilFace face() const { return face_; }
 		StencilFunc func() const { return func_; }
+		void setMask(unsigned mask) { mask_ = mask; }
 		unsigned mask() const { return mask_; }
 		int ref() const { return ref_; }
 		unsigned ref_mask() const { return ref_mask_; } 

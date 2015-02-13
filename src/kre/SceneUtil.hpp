@@ -51,4 +51,11 @@ namespace KRE
 		glm::vec2 vtx;
 		glm::vec2 tc;
 	};
+
+	struct short_vertex_color
+	{
+		short_vertex_color(const glm::u16vec2& v, const glm::u8vec4& c) : vertex(v), color(c) {}
+		glm::u16vec2 vertex;
+		glm::u8vec4 color;
+	};
 }

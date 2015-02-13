@@ -57,9 +57,12 @@ int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t,
 	result->emplace_back(glm::u16vec2(x,y), glm::vec2(coords.x(), coords.y()));
 	result->emplace_back(glm::u16vec2(x,y2), glm::vec2(coords.x(), coords.y2()));
 	result->emplace_back(glm::u16vec2(x2,y), glm::vec2(coords.x2(), coords.y()));
+
+	result->emplace_back(glm::u16vec2(x,y2), glm::vec2(coords.x(), coords.y2()));
+	result->emplace_back(glm::u16vec2(x2,y), glm::vec2(coords.x2(), coords.y()));
 	result->emplace_back(glm::u16vec2(x2,y2), glm::vec2(coords.x2(), coords.y2()));
 
-	return 4;
+	return 6;
 }
 
 bool is_tile_opaque(const KRE::TexturePtr& t, int tile_num)

@@ -120,4 +120,11 @@ namespace KRE
 			glStencilMask(0);
 		}
 	}
+
+	void StencilScopeOGL::handleUpdatedMask()
+	{
+		if(getSettings().enabled()) {
+			glStencilMaskSeparate(convert_face(getSettings().face()), getSettings().mask());
+		}
+	}
 }

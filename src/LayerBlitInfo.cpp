@@ -29,8 +29,8 @@ void LayerBlitInfo::addTextureToList(KRE::TexturePtr tex)
 	tex_list_.emplace_back(tex);
 }
 
-void LayerBlitInfo::init()
+void LayerBlitInfo::setVertices(std::vector<tile_corner>* op, std::vector<tile_corner>* tr)
 {
-	opaques_->update(&vertices_o);
-	transparent_->update(&vertices_t);
+	opaques_->update(op);
+	transparent_->update(tr);
 }

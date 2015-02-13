@@ -23,28 +23,13 @@
 
 #pragma once
 
-#include "Blend.hpp"
+#include "SceneObject.hpp"
 
-namespace KRE
+class RectRenderable : public KRE::SceneObject
 {
-	class BlendModeScopeOGL : public BlendModeScope
-	{
-	public:
-		explicit BlendModeScopeOGL(const BlendMode& bm);
-		~BlendModeScopeOGL();
-	private:
-		void handleApply() const override;
-		void handleUnapply() const override;
-	};
-
-	class BlendEquationImplOGL : public BlendEquationImplBase
-	{
-	public:
-		BlendEquationImplOGL();
-		~BlendEquationImplOGL();
-		void apply(const BlendEquation& eqn) const override;
-		void clear(const BlendEquation& eqn) const override;
-	private:
-		DISALLOW_COPY_AND_ASSIGN(BlendEquationImplOGL);
-	};
-}
+public:
+	RectRenderable();
+	void update(const rect& r, const KRE::Color& color);
+private:
+	std::shared_ptr<KRE::Attribute<glm::u16vec2>> r_;
+};

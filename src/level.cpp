@@ -25,6 +25,9 @@
 #include <iostream>
 #include <math.h>
 
+#include "Blend.hpp"
+#include "RenderTarget.hpp"
+#include "StencilScope.hpp"
 #include "WindowManager.hpp"
 
 #include "asserts.hpp"
@@ -51,6 +54,7 @@
 #include "preprocessor.hpp"
 #include "profile_timer.hpp"
 #include "random.hpp"
+#include "rect_renderable.hpp"
 #include "sound.hpp"
 #include "stats.hpp"
 #include "string_utils.hpp"
@@ -188,7 +192,7 @@ namespace
 {
 	KRE::ColorTransform default_dark_color() 
 	{
-		return KRE::ColorTransform(1.0, 1.0, 1.0, 1.0, 0.0, 0.0, 0.0, 0.0);
+		return KRE::ColorTransform(1.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f, 0.0f);
 	}
 
 	variant_type_ptr g_player_type;
@@ -1592,17 +1596,19 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		return;
 	}
 
-
-
 	auto layer_itor = blit_cache_.find(layer);
 	if(layer_itor == blit_cache_.end()) {
 		return;
 	}
 
+	auto& blit_cache_info = layer_itor->second;
+
+	KRE::WindowManager::getMainWindow()->render(&blit_cache_info);
+
+	/*
 	const LevelTile* t = &*tile_itor;
 	const LevelTile* end_tiles = &*tiles_.begin() + tiles_.size();
 
-	auto& blit_cache_info = layer_itor->second;
 
 	const rect tile_positions(x/TileSize - (x < 0 ? 1 : 0), y/TileSize - (y < 0 ? 1 : 0),
 	                          (x + w)/TileSize - (x + w < 0 ? 1 : 0),
@@ -1698,6 +1704,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	glPopMatrix();
 
 	glColor4f(1.0, 1.0, 1.0, 1.0);
+	*/
 }
 
 void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
@@ -1709,10 +1716,8 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 	if(solid.first != solid.second) {
 		const rect viewport(x, y, w, h);
 
-#if !defined(USE_SHADERS)
-		glDisable(GL_TEXTURE_2D);
-		glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
+		RectRenderable rr;
+
 		while(solid.first != solid.second) {
 			rect area = solid.first->area;
 			if(!rects_intersect(area, viewport)) {
@@ -1722,28 +1727,11 @@ void Level::draw_layer_solid(int layer, int x, int y, int w, int h) const
 
 			area = intersection_rect(area, viewport);
 
-			solid.first->color.set_as_current_color();
-			GLshort varray[] = {
-			  GLshort(area.x()), GLshort(area.y()),
-			  GLshort(area.x() + area.w()), GLshort(area.y()),
-			  GLshort(area.x()), GLshort(area.y() + area.h()),
-			  GLshort(area.x() + area.w()), GLshort(area.y() + area.h()),
-			};
-#if defined(USE_SHADERS)
-			gles2::manager gles2_manager(gles2::get_simple_shader());
-			gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, 0, 0, varray);
-#else
-			glVertexPointer(2, GL_SHORT, 0, varray);
-#endif
-			glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
+			rr.update(solid.first->area, solid.first->color);
+			KRE::WindowManager::getMainWindow()->render(&rr);
+			
 			++solid.first;
 		}
-#if !defined(USE_SHADERS)
-		glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-		glEnable(GL_TEXTURE_2D);
-#endif
-		glColor4ub(255, 255, 255, 255);
 	}
 }
 
@@ -1780,6 +1768,8 @@ void Level::prepare_tiles_for_drawing()
 		}
 	}
 
+	std::map<int, std::vector<tile_corner>> vertices_o;
+	std::map<int, std::vector<tile_corner>> vertices_t;
 
 	for(int n = 0; n != tiles_.size(); ++n) {
 		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
@@ -1808,11 +1798,11 @@ void Level::prepare_tiles_for_drawing()
 
 		tiles_[n].draw_disabled = false;
 
-		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &blit_cache_info.vertices_o : &blit_cache_info.vertices_t , tiles_[n]);
+		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &vertices_o[n] : &vertices_t[n] , tiles_[n]);
 		if(npoints > 0) {
 			//blit_cache_info.addTextureToList(tiles_[n].object->texture());
 			if(tiles_[n].object->texture() != blit_cache_info.getTexture()) {
-				ASSERT_LOG(false, "Deal with multiple textures per level tile -- which is a stupid case to have to handle.");
+				ASSERT_LOG(false, "Will no deal with multiple textures per level tile -- is a stupid case to have to handle.");
 				//blit_cache_info.clearTexture();
 			}
 
@@ -1833,8 +1823,9 @@ void Level::prepare_tiles_for_drawing()
 		}
 	}
 
-	for(auto& blit_cache_info : blit_cache_) {
-		blit_cache_info.second.init();
+	for(int n = 0; n != tiles_.size(); ++n) {
+		auto& blit_cache_info = blit_cache_[tiles_[n].zorder];
+		blit_cache_info.setVertices(&vertices_o[n], &vertices_t[n]);
 	}
 
 	for(int n = 1; n < solid_color_rects_.size(); ++n) {
@@ -2010,26 +2001,33 @@ void Level::draw(int x, int y, int w, int h) const
 			water_zorder = water_->zorder();
 		}
 
-		graphics::stencil_scope stencil_settings(true, 0x02, GL_ALWAYS, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_REPLACE);
-		glClear(GL_STENCIL_BUFFER_BIT);
+		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
+			KRE::StencilFace::FRONT_AND_BACK,
+			KRE::StencilFunc::ALWAYS,
+			0xff,
+			0x02,
+			0x02,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::REPLACE));
+		KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::STENCIL);
 
-	#ifdef USE_SHADERS
+
 		frame_buffer_enter_zorder(-100000);
 		const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
 		const int end_alpha_test = get_named_zorder("shadows");
-	#endif
 
 		std::set<int>::const_iterator layer = layers_.begin();
 
 		for(; layer != layers_.end(); ++layer) {
-	#ifdef USE_SHADERS
 			frame_buffer_enter_zorder(*layer);
 			const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
 			gles2::setAlpha_test(alpha_test);
-			glStencilMask(alpha_test ? 0x02 : 0x0);
-	#endif
+			stencil->updateMask(alpha_test ? 0x02 : 0x0);
+			
 			if(!water_drawn && *layer > water_zorder) {
-				water_->draw(x, y, w, h);
+				//water_->draw(x, y, w, h);
+				KRE::WindowManager::getMainWindow()->render(get_water());
 				water_drawn = true;
 			}
 
@@ -2042,30 +2040,27 @@ void Level::draw(int x, int y, int w, int h) const
 		}
 
 		if(!water_drawn) {
-			water_->draw(x, y, w, h);
+			//water_->draw(x, y, w, h);
+			KRE::WindowManager::getMainWindow()->render(get_water());
 			water_drawn = true;
 		}
 
 		int last_zorder = -1000000;
 		while(entity_itor != chars.end()) {
-	#ifdef USE_SHADERS
 			if((*entity_itor)->zorder() != last_zorder) {
 				last_zorder = (*entity_itor)->zorder();
 				frame_buffer_enter_zorder(last_zorder);
 				const bool alpha_test = last_zorder >= begin_alpha_test && last_zorder < end_alpha_test;
 				gles2::setAlpha_test(alpha_test);
-				glStencilMask(alpha_test ? 0x02 : 0x0);
+				stencil->updateMask(alpha_test ? 0x02 : 0x0);
 			}
-	#endif
 
 			draw_entity(**entity_itor, x, y, editor_);
 			++entity_itor;
 		}
 
-	#ifdef USE_SHADERS
 		gles2::setAlpha_test(false);
 		frame_buffer_enter_zorder(1000000);
-	#endif
 
 		if(editor_) {
 			for(const EntityPtr& obj : chars_) {
@@ -2123,20 +2118,24 @@ void Level::draw(int x, int y, int w, int h) const
 		}
 	}
 
-	{
-#if defined(USE_SHADERS)
-	gles2::manager manager(shader_);
-#endif
 	calculate_lighting(start_x, start_y, start_w, start_h);
-	}
 
 	if(g_debug_shadows) {
-		graphics::stencil_scope scope(true, 0x0, GL_EQUAL, 0x02, 0xFF, GL_KEEP, GL_KEEP, GL_KEEP);
-		graphics::draw_rect(rect(x,y,w,h), graphics::color(255, 255, 255, 196 + sin(profile::get_tick_time()/100.0)*8.0));
+		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
+			KRE::StencilFace::FRONT_AND_BACK,
+			KRE::StencilFunc::EQUAL,
+			0xff,
+			0x02,
+			0x00,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::KEEP,
+			KRE::StencilOperation::KEEP));
+		RectRenderable rr;
+		rr.update(rect(x,y,w,h), KRE::Color(255, 255, 255, 196 + sin(profile::get_tick_time()/100.0)*8.0));
+		KRE::WindowManager::getMainWindow()->render(&rr);
 	}
 }
 
-#ifdef USE_SHADERS
 void Level::frame_buffer_enter_zorder(int zorder) const
 {
 	std::vector<gles2::shader_program_ptr> shaders;
@@ -2243,16 +2242,16 @@ void Level::shaders_updated()
 		e.shader.reset();
 	}
 }
-#endif
 
 void Level::calculate_lighting(int x, int y, int w, int h) const
 {
-	if(!dark_ || editor_ || texture_frame_buffer::unsupported()) {
+	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE);
+	if(!dark_ || editor_ || !fbo) {
 		return;
 	}
 
 	//find all the lights in the level
-	static std::vector<const light*> lights;
+	static std::vector<const Light*> lights;
 	lights.clear();
 	for(const EntityPtr& c : active_chars_) {
 		for(const light_ptr& lt : c->lights()) {
@@ -2260,43 +2259,24 @@ void Level::calculate_lighting(int x, int y, int w, int h) const
 		}
 	}
 
-	{
-		glBlendFunc(GL_ONE, GL_ONE);
-		rect screen_area(x, y, w, h);
-		const texture_frame_buffer::render_scope scope;
+	auto rt = KRE::RenderTarget::create(w, h);
 
-		glClearColor(dark_color_.r()/255.0, dark_color_.g()/255.0, dark_color_.b()/255.0, dark_color_.a()/255.0);
-		glClear(GL_COLOR_BUFFER_BIT);
-		const unsigned char color[] = { (unsigned char)dark_color_.r(), (unsigned char)dark_color_.g(), (unsigned char)dark_color_.b(), (unsigned char)dark_color_.a() };
-		for(const light* lt : lights) {
-			lt->draw(screen_area, color);
+	{
+		auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(BlendModeConstants::ONE, BlendModeConstants::ONE));
+		rect screen_area(x, y, w, h);
+		
+		KRE::RenderTarget::RenderScope scope(rt);
+
+		KRE::WindowManager::getMainWindow()->setClearColor(dark_color_);
+		KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::COLOR);
+
+		for(auto lt : lights) {
+			lt->setColor(dark_color_);
+			KRE::WindowManager::getMainWindow()->render(lt);
 		}
 	}
 
-	//now blit the light buffer onto the screen
-	texture_frame_buffer::set_as_currentTexture();
-
-	glPushMatrix();
-	glLoadIdentity();
-
-	const GLfloat tcarray[] = { 0, 0, 0, 1, 1, 0, 1, 1 };
-	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
-	GLfloat varray[] = { 0, (GLfloat)h, 0, 0, (GLfloat)w, (GLfloat)h, (GLfloat)w, 0 };
-#if defined(USE_SHADERS)
-	gles2::active_shader()->prepare_draw();
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
-	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, 
-		preferences::screen_rotated() ? tcarray_rotated : tcarray);
-#else
-	glVertexPointer(2, GL_FLOAT, 0, varray);
-	glTexCoordPointer(2, GL_FLOAT, 0,
-	               preferences::screen_rotated() ? tcarray_rotated : tcarray);
-#endif
-	glBlendFunc(GL_ONE_MINUS_SRC_ALPHA, GL_SRC_ALPHA);
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-	glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-	glPopMatrix();
+	KRE::WindowManager::getMainWindow()->render(rt);
 }
 
 void Level::draw_debug_solid(int x, int y, int w, int h) const

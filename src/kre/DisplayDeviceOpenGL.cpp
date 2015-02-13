@@ -143,6 +143,9 @@ namespace KRE
 	}
 
 	DisplayDeviceOpenGL::DisplayDeviceOpenGL()
+		: seperate_blend_equations_(false),
+		  have_render_to_texture_(false),
+		  npot_textures_(false)
 	{
 	}
 
@@ -160,8 +163,18 @@ namespace KRE
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Register with the render variable factory so we can create 
-		// VBO backed render variables.
+		// Get extensions
+		int extension_count = 0;
+		glGetIntegerv(GL_NUM_EXTENSIONS, &extension_count);
+		for(int n = 0; n != extension_count; ++n) {
+			std::string ext(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, n)));
+			extensions_.emplace(ext);
+			LOG_INFO("Extensions: " << ext);
+		}
+
+		seperate_blend_equations_ = extensions_.find("EXT_blend_equation_separate") != extensions_.end();
+		have_render_to_texture_ = extensions_.find("EXT_framebuffer_object") != extensions_.end();
+		npot_textures_ = extensions_.find("ARB_texture_non_power_of_two") != extensions_.end();
 	}
 
 	void DisplayDeviceOpenGL::printDeviceInfo()
@@ -476,11 +489,13 @@ namespace KRE
 		bool ret_val = false;
 		switch(cap) {
 		case DisplayDeviceCapabilties::NPOT_TEXTURES:
-			// XXX We could put a force npot textures check here.
-			if(GLEW_ARB_texture_non_power_of_two) {
-				ret_val = true;
-			}
-			break;
+			return npot_textures_;
+		case DisplayDeviceCapabilties::BLEND_EQUATION_SEPERATE:
+			return seperate_blend_equations_;
+		case DisplayDeviceCapabilties::RENDER_TO_TEXTURE:
+			return have_render_to_texture_;
+		case DisplayDeviceCapabilties::SHADERS:
+			return true;
 		default:
 			ASSERT_LOG(false, "Unknown value for DisplayDeviceCapabilties given.");
 		}
@@ -618,6 +633,11 @@ namespace KRE
 			return false;
 		}
 		return true;
+	}
+
+	BlendModeScopePtr DisplayDeviceOpenGL::createBlendModeScope(const BlendMode& bm)
+	{
+		return std::make_shared<BlendModeScopeOGL>(bm);
 	}
 
 	EffectPtr DisplayDeviceOpenGL::createEffect(const variant& node)

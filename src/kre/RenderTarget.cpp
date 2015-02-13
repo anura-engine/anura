@@ -148,4 +148,15 @@ namespace KRE
 	{
 		return DisplayDevice::renderTargetInstance(node);
 	}
+
+	RenderTargetPtr RenderTarget::factory(int width, int height, 
+		unsigned color_plane_count, 
+		bool depth, 
+		bool stencil, 
+		bool use_multi_sampling, 
+		unsigned multi_samples)
+	{
+		return DisplayDevice::renderTargetInstance(width, height, color_plane_count, depth, stencil, use_multi_sampling, multi_samples);
+	}
+
 }

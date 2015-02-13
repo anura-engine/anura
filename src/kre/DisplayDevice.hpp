@@ -75,6 +75,8 @@ namespace KRE
 	{
 		NPOT_TEXTURES,
 		BLEND_EQUATION_SEPERATE,
+		RENDER_TO_TEXTURE,
+		SHADERS,
 	};
 
 	enum class ClearFlags {
@@ -168,6 +170,7 @@ namespace KRE
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
+		virtual BlendModeScopePtr createBlendModeScope(const BlendMode& bm) = 0;
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 

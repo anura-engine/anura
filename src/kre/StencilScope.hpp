@@ -35,10 +35,15 @@ namespace KRE
 	class StencilScope
 	{
 	public:
-		StencilScope(const StencilSettings& settings);
 		virtual ~StencilScope();
+		void updateMask(unsigned mask) { settings_.setMask(mask); handleUpdatedMask();} 
+		const StencilSettings& getSettings() { return settings_; }
 		static StencilScopePtr create(const StencilSettings& settings);
+	protected:
+		StencilScope(const StencilSettings& settings);
 	private:
+		virtual void handleUpdatedMask() = 0;
+
 		DISALLOW_COPY_AND_ASSIGN(StencilScope);
 		StencilSettings settings_;
 	};

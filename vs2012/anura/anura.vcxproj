@@ -368,6 +368,7 @@
     <ClInclude Include="..\..\src\raster.hpp" />
     <ClInclude Include="..\..\src\raster_distortion.hpp" />
     <ClInclude Include="..\..\src\rectangle_rotator.hpp" />
+    <ClInclude Include="..\..\src\rect_renderable.hpp" />
     <ClInclude Include="..\..\src\reference_counted_object.hpp" />
     <ClInclude Include="..\..\src\regex_utils.hpp" />
     <ClInclude Include="..\..\src\rich_text_label.hpp" />
@@ -700,6 +701,7 @@
     <ClCompile Include="..\..\src\property_editor_dialog.cpp" />
     <ClCompile Include="..\..\src\random.cpp" />
     <ClCompile Include="..\..\src\rectangle_rotator.cpp" />
+    <ClCompile Include="..\..\src\rect_renderable.cpp" />
     <ClCompile Include="..\..\src\rich_text_label.cpp" />
     <ClCompile Include="..\..\src\SceneObjectCallable.cpp" />
     <ClCompile Include="..\..\src\scrollable_widget.cpp" />

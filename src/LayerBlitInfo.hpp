@@ -44,12 +44,7 @@ public:
 	void setYbase(int yb) { ybase_ = yb; }
 	void setBase(int xb, int yb) { xbase_ = xb; ybase_ = yb; initialised_ = true; }
 
-	std::vector<tile_corner> vertices_o;
-	std::vector<tile_corner> vertices_t;
-	//typedef unsigned long index_type;
-	//std::vector<std::vector<index_type>> indicies;
-
-	void init();
+	void setVertices(std::vector<tile_corner>* op, std::vector<tile_corner>* tr);
 private:
 	KRE::TexturePtr tex_;
 	std::vector<KRE::TexturePtr> tex_list_;

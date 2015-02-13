@@ -121,5 +121,27 @@ namespace KRE
 		BlendModeConstants src_;
 		BlendModeConstants dst_;
 	};
-	
+
+	class BlendModeScope
+	{
+	public:
+		virtual ~BlendModeScope() {
+			handleUnapply();
+		}
+		const BlendMode& getBlendMode() const { return bm_; }
+		static BlendModeScopePtr create(const BlendMode& bm);
+	private:
+		explicit BlendModeScope(const BlendMode& bm) : bm_(bm) {
+			handleApply();
+		}
+
+		virtual void handleApply() const = 0;
+		virtual void handleUnapply() const = 0;
+		const BlendMode& bm_;
+
+		BlendModeScope();
+		BlendModeScope(const BlendModeScope&);
+		void operator=(const BlendModeScope&);
+	};
+
 }

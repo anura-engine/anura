@@ -49,6 +49,7 @@ namespace KRE
 		ClipScopePtr createClipScope(const rect& r) override;
 		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
 		ScissorPtr getScissor(const rect& r) override;
+		BlendModeScopePtr createBlendModeScope(const BlendMode& bm) override;
 
 		EffectPtr createEffect(const variant& node) override;
 
@@ -94,5 +95,11 @@ namespace KRE
 		MaterialPtr handleCreateMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false) override;
 
 		bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data) override;
+
+		std::set<std::string> extensions_;
+
+		bool seperate_blend_equations_;
+		bool have_render_to_texture_;
+		bool npot_textures_;
 	};
 }
