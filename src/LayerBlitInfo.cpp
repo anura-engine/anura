@@ -9,11 +9,28 @@ LayerBlitInfo::LayerBlitInfo()
 {
 	using namespace KRE;
 
-	auto ab = DisplayDevice::createAttributeSet(false, false, false);
-	auto pc = std::make_shared<Attribute<vertex_color>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-	pc->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
-	pc->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
-	ab->addAttribute(pc);
+	auto ab = DisplayDevice::createAttributeSet(true, false, false);
+	opaques_ = std::make_shared<Attribute<tile_corner>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+	opaques_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
+	opaques_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(tile_corner), offsetof(tile_corner, uv)));
+	ab->addAttribute(opaques_);
+
+	transparent_ = std::make_shared<Attribute<tile_corner>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+	transparent_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(tile_corner), offsetof(tile_corner, vertex)));
+	transparent_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(tile_corner), offsetof(tile_corner, uv)));
+	ab->addAttribute(transparent_);
+
 	ab->setDrawMode(DrawMode::TRIANGLES);
 	addAttributeSet(ab);
+}
+
+void LayerBlitInfo::addTextureToList(KRE::TexturePtr tex)
+{
+	tex_list_.emplace_back(tex);
+}
+
+void LayerBlitInfo::init()
+{
+	opaques_->update(&vertices_o);
+	transparent_->update(&vertices_t);
 }

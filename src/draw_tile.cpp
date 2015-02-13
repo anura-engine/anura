@@ -31,7 +31,7 @@ extern int g_tile_scale;
 extern int g_tile_size;
 #define BaseTileSize g_tile_size
 
-int get_tile_corners(tile_corner* result, const KRE::TexturePtr& t, const rect& area, int tile_num, int x, int y, bool reverse)
+int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t, const rect& area, int tile_num, int x, int y, bool reverse)
 {
 	if(tile_num < 0 || area.w() <= 0 || area.h() <= 0 || area.x() < 0 || area.y() < 0) {
 		return 0;
@@ -51,32 +51,13 @@ int get_tile_corners(tile_corner* result, const KRE::TexturePtr& t, const rect& 
 		area_x = 32 - area.x()*g_tile_scale - area.w()*g_tile_scale;
 	}
 
-	x += area_x;
-	y += area.y()*g_tile_scale;
+	const unsigned short x2 = area_x + x + area.w()*g_tile_scale;
+	const unsigned short y2 = area.y()*g_tile_scale + y + area.h()*g_tile_scale;
 
-	result->vertex[0] = x;
-	result->vertex[1] = y;
-	result->uv[0] = coords.x();
-	result->uv[1] = coords.y();
-	++result;
-
-	result->vertex[0] = x;
-	result->vertex[1] = y + area.h()*g_tile_scale;
-	result->uv[0] = coords.x();
-	result->uv[1] = coords.y2();
-	++result;
-
-	result->vertex[0] = x + area.w()*g_tile_scale;
-	result->vertex[1] = y;
-	result->uv[0] = coords.x2();
-	result->uv[1] = coords.y();
-	++result;
-
-	result->vertex[0] = x + area.w()*g_tile_scale;
-	result->vertex[1] = y + area.h()*g_tile_scale;
-	result->uv[0] = coords.x2();
-	result->uv[1] = coords.y2();
-	++result;
+	result->emplace_back(glm::u16vec2(x,y), glm::vec2(coords.x(), coords.y()));
+	result->emplace_back(glm::u16vec2(x,y2), glm::vec2(coords.x(), coords.y2()));
+	result->emplace_back(glm::u16vec2(x2,y), glm::vec2(coords.x2(), coords.y()));
+	result->emplace_back(glm::u16vec2(x2,y2), glm::vec2(coords.x2(), coords.y2()));
 
 	return 4;
 }

@@ -26,20 +26,37 @@
 #include "SceneObject.hpp"
 #include "Texture.hpp"
 
+#include "draw_tile.hpp"
+
 class LayerBlitInfo : public KRE::SceneObject
 {
 public:
 	LayerBlitInfo();
 	void setTexture(KRE::TexturePtr tex) { tex_ = tex; }
+	KRE::TexturePtr getTexture() { return tex_; }
+	void clearTexture() { tex_.reset(); }
+	void addTextureToList(KRE::TexturePtr tex);
+	void clearTextureList() { tex_list_.clear(); }
 	bool isInitialised() const { return initialised_; }
 	int xbase() const { return xbase_; }
 	int ybase() const { return ybase_; }
 	void setXbase(int xb) { xbase_ = xb; }
 	void setYbase(int yb) { ybase_ = yb; }
 	void setBase(int xb, int yb) { xbase_ = xb; ybase_ = yb; initialised_ = true; }
+
+	std::vector<tile_corner> vertices_o;
+	std::vector<tile_corner> vertices_t;
+	//typedef unsigned long index_type;
+	//std::vector<std::vector<index_type>> indicies;
+
+	void init();
 private:
 	KRE::TexturePtr tex_;
+	std::vector<KRE::TexturePtr> tex_list_;
 	int xbase_;
 	int ybase_;
 	bool initialised_;
+
+	std::shared_ptr<KRE::Attribute<tile_corner>> opaques_;
+	std::shared_ptr<KRE::Attribute<tile_corner>> transparent_;
 };

@@ -23,19 +23,21 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
+
 #include "geometry.hpp"
 #include "Material.hpp"
 
 #include "level_object_fwd.hpp"
 
-class tile_corner
+struct tile_corner
 {
-public:
-	short vertex[2];
-	float uv[2];
+	tile_corner(const glm::u16vec2& v, const glm::vec2& st) : vertex(v), uv(st) {}
+	glm::u16vec2 vertex;
+	glm::vec2 uv;
 };
 
-int get_tile_corners(tile_corner* result, const KRE::TexturePtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
+int get_tile_corners(std::vector<tile_corner>* result, const KRE::TexturePtr& t, const rect& area, int tile_num, int x, int y, bool reverse);
 
 bool is_tile_using_alpha_channel(const KRE::TexturePtr& t, int tile_num);
 bool is_tile_opaque(const KRE::TexturePtr& t, int tile_num);

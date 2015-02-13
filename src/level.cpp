@@ -1592,22 +1592,24 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 		return;
 	}
 
-	auto opaque_it = opaques_.find(layer);
-	if(opaque_it == opaques_.end()) {
+
+
+	auto layer_itor = blit_cache_.find(layer);
+	if(layer_itor == blit_cache_.end()) {
 		return;
 	}
 
 	const LevelTile* t = &*tile_itor;
 	const LevelTile* end_tiles = &*tiles_.begin() + tiles_.size();
 
-	layer_blit_info& blit_info = layer_itor->second;
+	auto& blit_cache_info = layer_itor->second;
 
 	const rect tile_positions(x/TileSize - (x < 0 ? 1 : 0), y/TileSize - (y < 0 ? 1 : 0),
 	                          (x + w)/TileSize - (x + w < 0 ? 1 : 0),
 							  (y + h)/TileSize - (y + h < 0 ? 1 : 0));
 
-	auto& opaque_indexes = blit_info.opaque_indexes;
-	auto& translucent_indexes = blit_info.translucent_indexes;
+	auto& opaque_indexes = blit_cache_info.opaque_indexes;
+	auto& translucent_indexes = blit_cache_info.translucent_indexes;
 
 	if(blit_info.tile_positions != tile_positions || editor_) {
 		blit_info.tile_positions = tile_positions;
@@ -1778,6 +1780,7 @@ void Level::prepare_tiles_for_drawing()
 		}
 	}
 
+
 	for(int n = 0; n != tiles_.size(); ++n) {
 		if(!editor_ && (tiles_[n].x <= boundaries().x() - TileSize || tiles_[n].y <= boundaries().y() - TileSize || tiles_[n].x >= boundaries().x2() || tiles_[n].y >= boundaries().y2())) {
 			continue;
@@ -1805,30 +1808,33 @@ void Level::prepare_tiles_for_drawing()
 
 		tiles_[n].draw_disabled = false;
 
-		blit_info.blit_vertexes.resize(blit_info.blit_vertexes.size() + 4);
-		const int npoints = LevelObject::calculateTileCorners(&blit_info.blit_vertexes[blit_info.blit_vertexes.size() - 4], tiles_[n]);
-		if(npoints == 0) {
-			blit_info.blit_vertexes.resize(blit_info.blit_vertexes.size() - 4);
-		} else {
-			blit_info.vertex_texture_ids.push_back(tiles_[n].object->texture().getId());
-			if(blit_info.vertex_texture_ids.back() != blit_info.texture_id) {
-				blit_info.texture_id = GLuint(-1);
+		const int npoints = LevelObject::calculateTileCorners(tiles_[n].object->isOpaque() ? &blit_cache_info.vertices_o : &blit_cache_info.vertices_t , tiles_[n]);
+		if(npoints > 0) {
+			//blit_cache_info.addTextureToList(tiles_[n].object->texture());
+			if(tiles_[n].object->texture() != blit_cache_info.getTexture()) {
+				ASSERT_LOG(false, "Deal with multiple textures per level tile -- which is a stupid case to have to handle.");
+				//blit_cache_info.clearTexture();
 			}
 
-			const int xtile = (tiles_[n].x - blit_info.xbase)/TileSize;
-			const int ytile = (tiles_[n].y - blit_info.ybase)/TileSize;
+			/*const int xtile = (tiles_[n].x - blit_cache_info.xbase())/TileSize;
+			const int ytile = (tiles_[n].y - blit_cache_info.ybase())/TileSize;
 			ASSERT_GE(xtile, 0);
 			ASSERT_GE(ytile, 0);
-			if(blit_info.indexes.size() <= ytile) {
-				blit_info.indexes.resize(ytile+1);
+			if(blit_cache_info.indicies.size() <= ytile) {
+				blit_cache_info.indicies.resize(ytile+1);
 			}
 
-			if(blit_info.indexes[ytile].size() <= xtile) {
-				blit_info.indexes[ytile].resize(xtile+1, TILE_INDEX_TYPE_MAX);
+			if(blit_cache_info.indicies[ytile].size() <= xtile) {
+				blit_cache_info.indicies[ytile].resize(xtile+1, std::numeric_limits<LayerBlitInfo::index_type>::max());
 			}
 
-			blit_info.indexes[ytile][xtile] = (blit_info.blit_vertexes.size() - 4) * (tiles_[n].object->isOpaque() ? 1 : -1);
+			blit_cache_info.indicies[ytile][xtile] = (blit_cache_info.vertices.size() - npoints) * (tiles_[n].object->isOpaque() ? 1 : -1);
+			*/
 		}
+	}
+
+	for(auto& blit_cache_info : blit_cache_) {
+		blit_cache_info.second.init();
 	}
 
 	for(int n = 1; n < solid_color_rects_.size(); ++n) {

@@ -25,7 +25,7 @@
 
 #include <boost/intrusive_ptr.hpp>
 
-class tile_corner;
+struct tile_corner;
 
 struct LevelTile;
 

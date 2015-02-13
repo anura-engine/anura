@@ -821,7 +821,7 @@ namespace
 	}
 }
 
-int LevelObject::calculateTileCorners(tile_corner* result, const LevelTile& t)
+int LevelObject::calculateTileCorners(std::vector<tile_corner>* result, const LevelTile& t)
 {
 	const int random_index = hash_level_object(t.x,t.y);
 	const int tile = t.object->tiles_[random_index%t.object->tiles_.size()];
