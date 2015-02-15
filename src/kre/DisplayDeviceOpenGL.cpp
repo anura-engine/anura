@@ -199,12 +199,12 @@ namespace KRE
 			| clr & ClearFlags::STENCIL ? GL_STENCIL_BUFFER_BIT : 0);
 	}
 
-	void DisplayDeviceOpenGL::setClearColor(float r, float g, float b, float a)
+	void DisplayDeviceOpenGL::setClearColor(float r, float g, float b, float a) const
 	{
 		glClearColor(r, g, b, a);
 	}
 
-	void DisplayDeviceOpenGL::setClearColor(const Color& color)
+	void DisplayDeviceOpenGL::setClearColor(const Color& color) const
 	{
 		glClearColor(float(color.r()), float(color.g()), float(color.b()), float(color.a()));
 	}

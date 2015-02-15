@@ -50,6 +50,5 @@ namespace KRE
 		std::string shader_name_;
 
 		SceneObject();
-		void operator=(const SceneObject&);
 	};
 }

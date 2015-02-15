@@ -58,4 +58,11 @@ namespace KRE
 		glm::u16vec2 vertex;
 		glm::u8vec4 color;
 	};
+
+	struct short_vertex_texcoord
+	{
+		short_vertex_texcoord(const glm::u16vec2& v, const glm::vec2& t) : vertex(v), tc(t) {}
+		glm::u16vec2 vertex;
+		glm::vec2 tc;
+	};
 }

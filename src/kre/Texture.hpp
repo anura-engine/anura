@@ -161,7 +161,7 @@ namespace KRE
 		}
 		template<typename N, typename T>
 		const N getNormalisedTextureCoordH(const T& y) {
-			return static_cast<N>(x) / static_cast<N>(surface_height_);
+			return static_cast<N>(y) / static_cast<N>(surface_height_);
 		}
 
 		// Can return NULL if not-implemented, invalid underlying surface.

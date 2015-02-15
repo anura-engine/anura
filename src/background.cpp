@@ -120,7 +120,7 @@ std::vector<std::string> Background::getAvailableBackgrounds()
 	std::vector<std::string> result;
 	for(const std::string& fname : files) {
 		if(fname.size() > 4 && std::equal(fname.end() - 4, fname.end(), ".cfg")) {
-			result.push_back(std::string(fname.begin(), fname.end() - 4));
+			result.emplace_back(std::string(fname.begin(), fname.end() - 4));
 		}
 	}
 
@@ -128,8 +128,7 @@ std::vector<std::string> Background::getAvailableBackgrounds()
 }
 
 Background::Background(variant node, int palette) 
-	: KRE::SceneObject("Background"),
-	  palette_(palette)
+	: palette_(palette)
 {
 	top_ = KRE::Color(node["top"]);
 	bot_ = KRE::Color(node["bottom"]);
@@ -162,22 +161,31 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
+		auto ab = KRE::DisplayDevice::createAttributeSet(false, false, false);
+		bg.attr_ = std::make_shared<KRE::Attribute<KRE::short_vertex_texcoord>>(KRE::AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
+		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::SHORT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, vertex)));
+		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::TEXTURE, 2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, tc)));
+		ab->addAttribute(bg.attr_);
+		ab->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
+		bg.addAttributeSet(ab);
+
 		if(layer_node.has_key("mode")) {
 			if(layer_node["mode"].is_string()) {
 				std::string blend_mode = layer_node["mode"].as_string_default();
 				if(blend_mode == "GL_MAX" || blend_mode == "MAX") {
-					setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MAX));
+					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MAX));
 				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") { 
-					setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MIN));
+					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MIN));
 				} else {
-					setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_ADD));
+					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_ADD));
 				}
 			} else {
-				setBlendEquation(KRE::BlendEquation(layer_node["mode"]));
+				bg.setBlendEquation(KRE::BlendEquation(layer_node["mode"]));
 			}
 		}
 		
 		bg.color = KRE::Color(layer_node);
+		bg.setColor(bg.color);
 
 		if(layer_node.has_key("color_above")) {
 			bg.color_above.reset(new KRE::Color(layer_node["color_above"]));
@@ -199,7 +207,7 @@ Background::Background(variant node, int palette)
 		bg.foreground = layer_node["foreground"].as_bool(false);
 		bg.tile_upwards = layer_node["tile_upwards"].as_bool(false);
 		bg.tile_downwards = layer_node["tile_downwards"].as_bool(false);
-		layers_.push_back(bg);
+		layers_.emplace_back(bg);
 	}
 }
 
@@ -308,7 +316,7 @@ namespace
 {
 	void calculate_draw_areas(rect area, std::vector<rect>::const_iterator opaque1, std::vector<rect>::const_iterator opaque2, std::vector<rect>* areas) {
 		if(opaque1 == opaque2) {
-			areas->push_back(area);
+			areas->emplace_back(area);
 			return;
 		}
 
@@ -331,12 +339,13 @@ namespace
 			area = sub_areas[0];
 		}
 
-		areas->push_back(area);
+		areas->emplace_back(area);
 	}
 }
 
 void Background::drawLayers(int x, int y, const rect& area_ref, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
 {
+	auto wnd = KRE::WindowManager::getMainWindow();
 	static std::vector<rect> areas;
 	areas.clear();
 	calculate_draw_areas(area_ref, opaque_areas.begin(), opaque_areas.end(), &areas);
@@ -347,19 +356,8 @@ void Background::drawLayers(int x, int y, const rect& area_ref, const std::vecto
 			for(auto& a : areas) {
 				drawLayer(x, y, a, rotation, bg, cycle);
 			}
-
-			if(!blit_queue.empty() && (i+1 == layers_.end() || i->texture != (i+1)->texture || (i+1)->foreground || i->blend != (i+1)->blend)) {
-				if(bg.blend == false) {
-					glDisable(GL_BLEND);
-				}
-				blit_queue.setTexture(bg.texture.getId());
-				blit_queue.do_blit();
-				blit_queue.clear();
-				if(bg.blend == false) {
-					glEnable(GL_BLEND);
-				}
-			}
-
+			wnd->render(&bg);
+			bg.attr_->clear();
 		}
 	}
 }
@@ -370,11 +368,7 @@ void Background::drawForeground(int xpos, int ypos, float rotation, int cycle) c
 	for(auto& bg : layers_) {
 		if(bg.foreground) {
 			drawLayer(xpos, ypos, rect(xpos, ypos, wnd->width(), wnd->height()), rotation, bg, cycle);
-			if(!blit_queue.empty()) {
-				blit_queue.setTexture(bg.texture.getId());
-				blit_queue.do_blit();
-				blit_queue.clear();
-			}
+			wnd->render(&bg);
 		}
 	}
 }
@@ -388,9 +382,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 {	
 	auto wnd = KRE::WindowManager::getMainWindow();
 	const float ScaleImage = 2.0f;
-	unsigned short y1 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100;
-	unsigned short y2 = y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 +
-	                 (bg.y2 - bg.y1)*ScaleImage;
+	unsigned short y1 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_top)/100);
+	unsigned short y2 = static_cast<unsigned short>(y + (bg.yoffset+offset_.y)*ScaleImage - (y*bg.yscale_bot)/100 + (bg.y2 - bg.y1) * ScaleImage);
 
 	if(!bg.tile_downwards && y2 <= y) {
 		return;
@@ -514,14 +507,13 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		xpos *= static_cast<float>(bg.texture->width() + bg.xpad) / static_cast<float>(bg.texture->width());
 	}
 
-	KRE::ColorScope color_scope(bg.color);
-	KRE::BlendEquation::Manager blend(getBlendEquation());
-
 	x = area.x();
 	y = area.y();
 
+	std::vector<KRE::short_vertex_texcoord> q;
+
 	while(screen_width > 0) {
-		const int texture_blit_width = (1.0f - xpos) * bg.texture->width() * ScaleImage;
+		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->width() * ScaleImage);
 		const int blit_width = std::min(texture_blit_width, screen_width);
 
 		if(blit_width > 0) {
@@ -533,17 +525,20 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(xpos);
 			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(xpos2);
 
-			blit_queue.repeat_last();
-			blit_queue.add(x1, y1, u1, v1);
-			blit_queue.repeat_last();
-			blit_queue.add(x2, y1, u2, v1);
-			blit_queue.add(x1, y2, u1, v2);
-			blit_queue.add(x2, y2, u2, v2);
+			if(!q.empty()) {
+				q.emplace_back(q.back());
+			}
+			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
+			q.emplace_back(q.back());
+			q.emplace_back(glm::u16vec2(x2, y1), glm::vec2(u2, v1));
+			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
+			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));
 		}
 
-		x += blit_width + bg.xpad*ScaleImage;
+		x += static_cast<int>(blit_width + bg.xpad * ScaleImage);
 
 		xpos = 0.0f;
-		screen_width -= blit_width + bg.xpad * ScaleImage;
+		screen_width -= static_cast<int>(blit_width + bg.xpad * ScaleImage);
 	}
+	bg.attr_->update(&q, bg.attr_->end());
 }

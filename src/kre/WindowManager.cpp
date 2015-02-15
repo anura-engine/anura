@@ -78,7 +78,7 @@ namespace KRE
 			//destroyWindow();
 		}
 
-		void doCreateWindow(unsigned width, unsigned height) override {
+		void doCreateWindow(int width, int height) override {
 			logical_width_ = width_ = width;
 			logical_height_ = height_ = height;
 
@@ -107,7 +107,7 @@ namespace KRE
 					if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1) != 0) {
 						LOG_WARN("MSAA(" << multiSamples() << ") requested but mutlisample buffer couldn't be allocated.");
 					} else {
-						unsigned msaa = next_pow2(multiSamples());
+						int msaa = next_pow2(multiSamples());
 						if(SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, msaa) != 0) {
 							LOG_INFO("Requested MSAA of " << msaa << " but couldn't allocate");
 						}
@@ -190,7 +190,7 @@ namespace KRE
 			}
 		}
 
-		void setViewPort(int x, int y, unsigned width, unsigned height) override {
+		void setViewPort(int x, int y, int width, int height) override {
 			display_->setViewPort(x, y, width, height);
 		}
 
@@ -203,14 +203,14 @@ namespace KRE
 			SDL_SetWindowIcon(window_.get(), icon.get());
 		}
 		
-		bool setWindowSize(unsigned width, unsigned height) override {
+		bool setWindowSize(int width, int height) override {
 			SDL_SetWindowSize(window_.get(), width, height);
 			width_ = width;
 			height_ = height;
 			return false;
 		}
 
-		bool autoWindowSize(unsigned& width, unsigned& height) override {
+		bool autoWindowSize(int& width, int& height) override {
 			// XXX
 			return false;
 		}
@@ -246,7 +246,7 @@ namespace KRE
 		}
 	protected:
 	private:
-		void handleSetClearColor() override {
+		void handleSetClearColor() const override {
 			if(display_ != NULL) {
 				display_->setClearColor(clear_color_);
 			}
@@ -293,7 +293,7 @@ namespace KRE
 		use_16bpp_ = bpp;
 	}
 
-	void WindowManager::enableMultisampling(bool multi_sampling, unsigned samples) {
+	void WindowManager::enableMultisampling(bool multi_sampling, int samples) {
 		use_multi_sampling_ = multi_sampling;
 		samples_ = samples;
 	}
@@ -326,7 +326,7 @@ namespace KRE
 		}
 	}
 
-	bool WindowManager::setLogicalWindowSize(unsigned width, unsigned height)
+	bool WindowManager::setLogicalWindowSize(int width, int height)
 	{
 		logical_width_ = width;
 		logical_height_ = height;
@@ -356,7 +356,7 @@ namespace KRE
 		WindowManagerPtr main_window = nullptr;
 	}
 
-	void WindowManager::createWindow(unsigned width, unsigned height)
+	void WindowManager::createWindow(int width, int height)
 	{
 		doCreateWindow(width, height);
 	}
@@ -375,7 +375,7 @@ namespace KRE
 		doDestroyWindow();
 	}
 
-	void WindowManager::notifyNewWindowSize(unsigned new_width, unsigned new_height)
+	void WindowManager::notifyNewWindowSize(int new_width, int new_height)
 	{
 		width_ = new_width;
 		height_ = new_height;

@@ -158,7 +158,7 @@ void Level::setAsCurrentLevel()
 			auto_sized = true;
 		}
 
-		unsigned w,h;
+		int w,h;
 		KRE::WindowManager::getMainWindow()->autoWindowSize(w, h);
 		KRE::WindowManager::getMainWindow()->setWindowSize(w, h);
 	}
@@ -503,9 +503,9 @@ Level::Level(const std::string& level_cfg, variant node)
 	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::SHADERS)) {
 		if(node.has_key("shader")) {
 			if(node["shader"].is_string()) {
-				shader_ = graphics::AnuraShader(node["shader"].as_string());
+				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
 			} else {
-				shader_ = graphics::AnuraShader(node["shader"]);
+				shader_.reset(new graphics::AnuraShader(node["shader"]));
 			}
 		}
 	}

@@ -40,8 +40,8 @@ namespace KRE
 		void swap() override;
 		void clear(ClearFlags clr) override;
 
-		void setClearColor(float r, float g, float b, float a) override;
-		void setClearColor(const Color& color) override;
+		void setClearColor(float r, float g, float b, float a) const override;
+		void setClearColor(const Color& color) const override;
 
 		void render(const Renderable* r) const override;
 

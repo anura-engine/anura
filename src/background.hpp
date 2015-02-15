@@ -33,7 +33,7 @@
 #include "variant.hpp"
 
 //class which represents the background to a level.
-class Background : public KRE::SceneObject
+class Background
 {
 public:
 	static void loadModifiedBackgrounds();
@@ -59,7 +59,8 @@ private:
 	int width_, height_;
 	point offset_;
 
-	struct Layer {
+	struct Layer : public KRE::SceneObject {
+		Layer() : KRE::SceneObject("Background::Layer") {}
 		std::string image;
 		std::string image_formula;
 		mutable KRE::TexturePtr texture;
@@ -88,6 +89,8 @@ private:
 		bool notile;
 
 		bool tile_upwards, tile_downwards;
+
+		std::shared_ptr<KRE::Attribute<KRE::short_vertex_texcoord>> attr_;
 	};
 
 	void drawLayer(int x, int y, const rect& area, float rotation, const Layer& bg, int cycle) const;
