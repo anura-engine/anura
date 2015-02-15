@@ -1111,6 +1111,7 @@ void CustomObject::draw(int xx, int yy) const
 	if(frame_ == NULL) {
 		return;
 	}
+	auto wnd = KRE::WindowManager::getMainWindow();
 
 	int offs_x = x();
 	int offs_y = y();
@@ -1154,9 +1155,10 @@ void CustomObject::draw(int xx, int yy) const
 	if(draw_color_) {
 		current_color = draw_color_->toColor();
 	}
+	KRE::ColorScope color_scope(current_color);
 
-	const int draw_x = x();
-	const int draw_y = y();
+	const int draw_x = x() - offs_x;
+	const int draw_y = y() - offs_y;
 
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass
@@ -1178,21 +1180,16 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	if(draw_color_) {
-#if 0
 		if(!draw_color_->fits_in_color()) {
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
+			KRE::BlendModeScope blend_scope(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
 			KRE::ColorTransform transform = *draw_color_;
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
-				transform.toColor().set_as_current_color();
+				KRE::ColorScope color_scope(transform.toColor());
 				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 			}
-
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 
-		glColor4ub(255, 255, 255, 255);
-#endif
 	}
 
 	for(const EntityPtr& attached : attachedObjects()) {
@@ -1202,7 +1199,7 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	for(const graphics::DrawPrimitivePtr& p : DrawPrimitives_) {
-		KRE::WindowManager::getMainWindow()->render(p.get());
+		wnd->render(p.get());
 	}
 
 	drawDebugRects();
@@ -1216,7 +1213,6 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	for(auto& ps : ParticleSystems_) {
-		auto wnd = KRE::WindowManager::getMainWindow();
 		ps.second->draw(wnd, rect(last_draw_position().x/100, last_draw_position().y/100, wnd->width(), wnd->height()), *this);
 	}
 

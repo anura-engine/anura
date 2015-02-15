@@ -78,6 +78,8 @@ namespace KRE
 	ColorTransform operator+(const ColorTransform& a, const ColorTransform& b);
 	ColorTransform operator-(const ColorTransform& a, const ColorTransform& b);
 
+	ColorTransform operator-(const ColorTransform& a, const Color& color);
+
 	bool operator==(const ColorTransform& a, const ColorTransform& b);
 	bool operator!=(const ColorTransform& a, const ColorTransform& b);
 

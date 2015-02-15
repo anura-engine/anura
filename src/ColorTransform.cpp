@@ -156,6 +156,38 @@ namespace KRE
 			a.addAlpha() - b.addAlpha());
 	}
 
+	ColorTransform operator-(const ColorTransform& a, const Color& color)
+	{
+		ColorTransform result = a;
+
+		if(a.addRed() > color.red()) {
+			result.setAddRed(a.addRed() - color.red());
+		} else {
+			result.setAddRed(0);
+		}
+		if(a.addGreen() > color.green()) {
+			result.setAddGreen(a.addGreen() - color.green());
+		} else {
+			result.setAddGreen(0);
+		}
+		if(a.addBlue() > color.blue()) {
+			result.setAddBlue(a.addBlue() - color.blue());
+		} else {
+			result.setAddBlue(0);
+		}
+		if(a.addAlpha() > color.alpha()) {
+			result.setAddAlpha(a.addAlpha() - color.alpha());
+		} else {
+			result.setAddAlpha(0);
+		}
+
+		if(result.addAlpha() > 255) {
+			result.setAddAlpha(255);
+		}
+
+		return result;
+	}
+
 	Color ColorTransform::apply(const Color& color) const
 	{
 		return Color(color.r() * mul_rgba_[0] + add_rgba_[0],
