@@ -26,6 +26,7 @@
 #include <math.h>
 
 #include "Blend.hpp"
+#include "ColorScope.hpp"
 #include "RenderTarget.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"
@@ -40,6 +41,7 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
+#include "hex_object.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -221,6 +223,10 @@ Level::Level(const std::string& level_cfg, variant node)
 	get_all_levels_set().insert(this);
 #endif
 
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE)) {
+		rt_ = KRE::RenderTarget::create(KRE::WindowManager::getMainWindow()->width(), KRE::WindowManager::getMainWindow()->height());
+	}
+
 	LOG_INFO("in level constructor...");
 	const int start_time = profile::get_tick_time();
 
@@ -392,9 +398,9 @@ Level::Level(const std::string& level_cfg, variant node)
 	// hex tiles starts
 	for(variant tile_node : node["hex_tile_map"].as_list()) {
 		hex::HexMapPtr m(new hex::HexMap(tile_node));
-		HexMaps_[m->getZorder()] = m;
-		LOG_INFO("LAYER " << m->getZorder() << " BUILT " << HexMaps_[m->getZorder()]->size() << " tiles");
-		HexMaps_[m->getZorder()]->build();
+		hex_maps_[m->getZorder()] = m;
+		LOG_INFO("LAYER " << m->getZorder() << " BUILT " << hex_maps_[m->getZorder()]->size() << " tiles");
+		hex_maps_[m->getZorder()]->build();
 	}
 	LOG_INFO("done building hex_tile_map..." << profile::get_tick_time());
 	// hex tiles ends
@@ -459,11 +465,11 @@ Level::Level(const std::string& level_cfg, variant node)
 
 	variant bg = node["background"];
 	if(bg.is_map()) {
-		background_.reset(new background(bg, background_palette_));
+		background_.reset(new Background(bg, background_palette_));
 	} else if(node.has_key("background")) {
-		background_ = background::get(node["background"].as_string(), background_palette_);
+		background_ = Background::get(node["background"].as_string(), background_palette_);
 		background_offset_ = point(node["background_offset"]);
-		background_->set_offset(background_offset_);
+		background_->setOffset(background_offset_);
 	}
 
 	if(node.has_key("water")) {
@@ -493,6 +499,16 @@ Level::Level(const std::string& level_cfg, variant node)
 		}
 	}
 #endif
+
+	if(KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::SHADERS)) {
+		if(node.has_key("shader")) {
+			if(node["shader"].is_string()) {
+				shader_ = graphics::AnuraShader(node["shader"].as_string());
+			} else {
+				shader_ = graphics::AnuraShader(node["shader"]);
+			}
+		}
+	}
 
 	const int time_taken_ms = (profile::get_tick_time() - start_time);
 	stats::Entry("load", id()).set("time", variant(time_taken_ms));
@@ -878,7 +894,7 @@ namespace
 
 void Level::start_rebuild_hex_tiles_in_background(const std::vector<int>& layers)
 {
-	HexMaps_[layers[0]]->build();
+	hex_maps_[layers[0]]->build();
 }
 
 void Level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
@@ -1208,8 +1224,8 @@ variant Level::write() const
 		res.add("solid_rect", node.build());
 	}
 
-	for(std::map<int,hex::HexMapPtr>::const_iterator i = HexMaps_.begin(); i != HexMaps_.end(); ++i) {
-		res.add("hex_tile_map", i->second->write());
+	for(auto& i : hex_maps_) {
+		res.add("hex_tile_map", i.second->write());
 	}
 
 	for(auto& i : tile_maps_) {
@@ -1571,6 +1587,7 @@ void Level::draw_layer(int layer, int x, int y, int w, int h) const
 	} else if(editor_ && hidden_layers_.count(layer)) {
 		color.setAlpha(0.3f);
 	}
+	KRE::ColorScope color_scope(color);
 
 	// parallax scrolling for tiles.
 	auto tile_map_iterator = tile_maps_.find(layer);
@@ -1828,7 +1845,7 @@ void Level::prepare_tiles_for_drawing()
 		blit_cache_info.setVertices(&vertices_o[n], &vertices_t[n]);
 	}
 
-	for(int n = 1; n < solid_color_rects_.size(); ++n) {
+	for(int n = 1; n < static_cast<int>(solid_color_rects_.size()); ++n) {
 		solid_color_rect& a = solid_color_rects_[n-1];
 		solid_color_rect& b = solid_color_rects_[n];
 		if(a.area.x() == b.area.x() && a.area.x2() == b.area.x2() && a.area.y() + a.area.h() == b.area.y() && a.layer == b.layer) {
@@ -1881,24 +1898,19 @@ namespace
 
 		const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
+		int diffx = 0;
+		int diffy = 0;
 		if(scroll_speed) {
-			glPushMatrix();
 			const int scrollx = scroll_speed->first;
 			const int scrolly = scroll_speed->second;
 
-			const int diffx = ((scrollx - 1000)*x)/1000;
-			const int diffy = ((scrolly - 1000)*y)/1000;
-
-			glTranslatef(diffx, diffy, 0.0);
+			diffx = ((scrollx - 1000)*x)/1000;
+			diffy = ((scrolly - 1000)*y)/1000;
 		}
 
-		obj.draw(x, y);
+		obj.draw(x + diffx, y + diffy);
 		if(editor) {
 			obj.drawGroup();
-		}
-
-		if(scroll_speed) {
-			glPopMatrix();
 		}
 	}
 
@@ -1906,22 +1918,17 @@ namespace
 	{
 		const std::pair<int,int>* scroll_speed = obj.parallaxScaleMillis();
 
+		int diffx = 0;
+		int diffy = 0;
 		if(scroll_speed) {
-			glPushMatrix();
 			const int scrollx = scroll_speed->first;
 			const int scrolly = scroll_speed->second;
 
-			const int diffx = ((scrollx - 1000)*x)/1000;
-			const int diffy = ((scrolly - 1000)*y)/1000;
-
-			glTranslatef(diffx, diffy, 0.0);
+			diffx = ((scrollx - 1000)*x)/1000;
+			diffy = ((scrolly - 1000)*y)/1000;
 		}
 
-		obj.drawLater(x, y);
-
-		if(scroll_speed) {
-			glPopMatrix();
-		}
+		obj.drawLater(x + diffx, y + diffy);
 	}
 }
 
@@ -1929,6 +1936,9 @@ extern std::vector<rect> background_rects_drawn;
 
 void Level::drawLater(int x, int y, int w, int h) const
 {
+	if(shader_) {
+		ASSERT_LOG(false, "apply shader_ here");
+	}
 	// Delayed drawing for some elements.
 	for(auto e : active_chars_) {
 		draw_entity_later(*e, x, y, editor_);
@@ -1937,6 +1947,9 @@ void Level::drawLater(int x, int y, int w, int h) const
 
 void Level::draw_absolutely_positioned_objects() const
 {
+	if(shader_) {
+		ASSERT_LOG(false, "apply shader_ here");
+	}
 	for(auto e : active_chars_) {
 		if(e->useAbsoluteScreenCoordinates()) {
 			e->draw(0, 0);
@@ -1947,6 +1960,9 @@ void Level::draw_absolutely_positioned_objects() const
 
 void Level::draw(int x, int y, int w, int h) const
 {
+	if(shader_) {
+		ASSERT_LOG(false, "apply shader_ here");
+	}
 	++draw_count;
 
 	const int start_x = x;
@@ -1967,7 +1983,7 @@ void Level::draw(int x, int y, int w, int h) const
 		const std::vector<EntityPtr>* chars_ptr = &active_chars_;
 		std::vector<EntityPtr> editor_chars_buf;
 
-		for(auto& hm : HexMaps_) {
+		for(auto& hm : hex_maps_) {
 			hm.second->draw();
 		}
 	
@@ -2013,16 +2029,16 @@ void Level::draw(int x, int y, int w, int h) const
 		KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::STENCIL);
 
 
-		frame_buffer_enter_zorder(-100000);
+		frameBufferEnterZorder(-100000);
 		const int begin_alpha_test = get_named_zorder("anura_begin_shadow_casting");
 		const int end_alpha_test = get_named_zorder("shadows");
 
 		std::set<int>::const_iterator layer = layers_.begin();
 
 		for(; layer != layers_.end(); ++layer) {
-			frame_buffer_enter_zorder(*layer);
+			frameBufferEnterZorder(*layer);
 			const bool alpha_test = *layer >= begin_alpha_test && *layer < end_alpha_test;
-			gles2::setAlpha_test(alpha_test);
+			graphics::set_alpha_test(alpha_test);
 			stencil->updateMask(alpha_test ? 0x02 : 0x0);
 			
 			if(!water_drawn && *layer > water_zorder) {
@@ -2049,9 +2065,9 @@ void Level::draw(int x, int y, int w, int h) const
 		while(entity_itor != chars.end()) {
 			if((*entity_itor)->zorder() != last_zorder) {
 				last_zorder = (*entity_itor)->zorder();
-				frame_buffer_enter_zorder(last_zorder);
+				frameBufferEnterZorder(last_zorder);
 				const bool alpha_test = last_zorder >= begin_alpha_test && last_zorder < end_alpha_test;
-				gles2::setAlpha_test(alpha_test);
+				graphics::set_alpha_test(alpha_test);
 				stencil->updateMask(alpha_test ? 0x02 : 0x0);
 			}
 
@@ -2059,20 +2075,18 @@ void Level::draw(int x, int y, int w, int h) const
 			++entity_itor;
 		}
 
-		gles2::setAlpha_test(false);
-		frame_buffer_enter_zorder(1000000);
+		graphics::set_alpha_test(false);
+		frameBufferEnterZorder(1000000);
 
 		if(editor_) {
 			for(const EntityPtr& obj : chars_) {
 				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_DIRECTION::NONE)) {
 					//if the entity is colliding with the level, then draw
 					//it in red to mark as 'bad'.
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-					const GLfloat alpha = 0.5 + sin(draw_count/5.0)*0.5;
-					glColor4f(1.0, 0.0, 0.0, alpha);
+					auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
+					const float alpha = 0.5f + std::sin(draw_count / 5.0f) * 0.5f;
+					KRE::ColorScope color_scope(KRE::Color(1.0f, 0.0f, 0.0f, alpha));
 					obj->draw(x, y);
-					glColor4f(1.0, 1.0, 1.0, 1.0);
-					glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 				}
 			}
 		}
@@ -2088,17 +2102,17 @@ void Level::draw(int x, int y, int w, int h) const
 				}
 			}
 
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE);
-			const GLfloat alpha = 0.5 + sin(draw_count/5.0)*0.5;
-			glColor4f(1.0, 1.0, 1.0, alpha);
+			auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
+			const float alpha = 0.5f + sin(draw_count / 5.0f) * 0.5f;
+			KRE::ColorScope color_scope(KRE::Color(1.0f, 0.0f, 1.0f, alpha));
 
 			if(editor_highlight_ && std::count(chars_.begin(), chars_.end(), editor_highlight_)) {
+				auto color = KRE::Color(1.0f, 1.0f, 1.0f, alpha);
 				if(editor_highlight_->wasSpawnedBy().empty() == false) {
-					glColor4f(1.0, 1.0, 0.0, alpha);
+					color.setBlue(0.0f);
 				}
-
+				KRE::ColorScope color_scope(color);
 				draw_entity(*editor_highlight_, x, y, true);
-				glColor4f(1.0, 1.0, 1.0, alpha);
 			}
 
 			for(const EntityPtr& e : editor_selection_) {
@@ -2106,19 +2120,16 @@ void Level::draw(int x, int y, int w, int h) const
 					draw_entity(*e, x, y, true);
 				}
 			}
-
-			glColor4f(1.0, 1.0, 1.0, 1.0);
-			glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 		}
 
 		draw_debug_solid(x, y, w, h);
 
 		if(background_) {
-			background_->draw_foreground(start_x, start_y, 0.0, cycle());
+			background_->drawForeground(start_x, start_y, 0.0f, cycle());
 		}
 	}
 
-	calculate_lighting(start_x, start_y, start_w, start_h);
+	calculateLighting(start_x, start_y, start_w, start_h);
 
 	if(g_debug_shadows) {
 		auto stencil = KRE::StencilScope::create(KRE::StencilSettings(true, 
@@ -2131,41 +2142,40 @@ void Level::draw(int x, int y, int w, int h) const
 			KRE::StencilOperation::KEEP,
 			KRE::StencilOperation::KEEP));
 		RectRenderable rr;
-		rr.update(rect(x,y,w,h), KRE::Color(255, 255, 255, 196 + sin(profile::get_tick_time()/100.0)*8.0));
+		rr.update(rect(x,y,w,h), KRE::Color(255, 255, 255, 196 + static_cast<int>(std::sin(profile::get_tick_time() / 100.0f) * 8.0f)));
 		KRE::WindowManager::getMainWindow()->render(&rr);
 	}
 }
 
-void Level::frame_buffer_enter_zorder(int zorder) const
+void Level::frameBufferEnterZorder(int zorder) const
 {
-	std::vector<gles2::shader_program_ptr> shaders;
+	std::vector<graphics::AnuraShaderPtr> shaders;
 	for(const FrameBufferShaderEntry& e : fb_shaders_) {
 		if(zorder >= e.begin_zorder && zorder <= e.end_zorder) {
 			if(!e.shader) {
 				if(e.shader_node.is_string()) {
-					e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
+					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node.as_string()));
 				} else {
-					e.shader.reset(new gles2::shader_program(e.shader_node));
+					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node));
 				}
 			}
-
 			shaders.push_back(e.shader);
 		}
 	}
 
 	if(shaders != active_fb_shaders_) {
 		if(active_fb_shaders_.empty()) {
-			texture_frame_buffer::set_render_to_texture();
-			glClearColor(0.0, 0.0, 0.0, 0.0);
-			glClear(GL_COLOR_BUFFER_BIT);
+			rt_->renderToThis();
+			rt_->setClearColor(KRE::Color(0,0,0,0));
+			rt_->clear();
 		} else if(shaders.empty()) {
 			//now there are no shaders, flush all to the screen and proceed with
 			//rendering to the screen.
-			flush_frame_buffer_shaders_to_screen();
-			texture_frame_buffer::set_render_to_screen();
+			flushFrameBufferShadersToScreen();
+			rt_->renderToPrevious();
 		} else {
 			bool add_shaders = false;
-			for(const gles2::shader_program_ptr& s : shaders) {
+			for(auto& s : shaders) {
 				if(std::count(active_fb_shaders_.begin(), active_fb_shaders_.end(), s) == 0) {
 					add_shaders = true;
 					break;
@@ -2174,15 +2184,14 @@ void Level::frame_buffer_enter_zorder(int zorder) const
 
 			if(add_shaders) {
 				//this works if we're adding and removing shaders.
-				flush_frame_buffer_shaders_to_screen();
-				texture_frame_buffer::set_render_to_texture();
-				glClearColor(0.0, 0.0, 0.0, 0.0);
-				glClear(GL_COLOR_BUFFER_BIT);
+				rt_->renderToThis();
+				rt_->setClearColor(KRE::Color(0,0,0,0));
+				rt_->clear();
 			} else {
 				//we must just be removing shaders.
-				for(const gles2::shader_program_ptr& s : active_fb_shaders_) {
+				for(auto& s : active_fb_shaders_) {
 					if(std::count(shaders.begin(), shaders.end(), s) == 0) {
-						apply_shader_to_frame_buffer_texture(s, false);
+						applyShaderToFrameBufferTexture(s, false);
 					}
 				}
 			}
@@ -2192,69 +2201,53 @@ void Level::frame_buffer_enter_zorder(int zorder) const
 	}
 }
 
-void Level::flush_frame_buffer_shaders_to_screen() const
+void Level::flushFrameBufferShadersToScreen() const
 {
 	for(int n = 0; n != active_fb_shaders_.size(); ++n) {
-		apply_shader_to_frame_buffer_texture(active_fb_shaders_[n], n == active_fb_shaders_.size()-1);
+		applyShaderToFrameBufferTexture(active_fb_shaders_[n], n == active_fb_shaders_.size()-1);
 	}
 }
 
-void Level::apply_shader_to_frame_buffer_texture(gles2::shader_program_ptr shader, bool render_to_screen) const
+void Level::applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const
 {
-	texture_frame_buffer::set_as_currentTexture();
+	rt_->renderToPrevious();
 
 	if(render_to_screen) {
-		texture_frame_buffer::set_render_to_screen();
+		rt_->renderToPrevious();
 	} else {
-		texture_frame_buffer::switch_texture();
-		texture_frame_buffer::set_render_to_texture();
+		rt_->renderToThis();
 	}
 
-	glPushMatrix();
-	glLoadIdentity();
+	auto wnd = KRE::WindowManager::getMainWindow();
 
-	const GLfloat w = GLfloat(preferences::actual_screen_width());
-	const GLfloat h = GLfloat(preferences::actual_screen_height());
-
-	const GLfloat tcarray[] = { 0, 1, 0, 0, 1, 1, 1, 0 };
-	const GLfloat tcarray_rotated[] = { 0, 1, 1, 1, 0, 0, 1, 0 };
-	GLfloat varray[] = { 0, 0, 0, h, w, 0, w, h };
-
-	GLfloat sprite_area[] = {0, 0, 1, 1};
-	GLfloat draw_area[] = {0.0f, 0.0f, w, h};
-
-	gles2::manager manager(shader);
-	//gles2::active_shader()->shader()->set_sprite_area(sprite_area);
-	gles2::active_shader()->shader()->set_drawArea(draw_area);
-	gles2::active_shader()->shader()->set_cycle(cycle());
-	gles2::active_shader()->shader()->vertex_array(2, GL_FLOAT, GL_FALSE, 0, varray);
-	gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, 
-		preferences::screen_rotated() ? tcarray_rotated : tcarray);
-
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
-
-	glPopMatrix();
+	shader->setDrawArea(rect(0, 0, wnd->width(), wnd->height()));
+	shader->setCycle(cycle());
+	if(preferences::screen_rotated()) {
+		rt_->setRotation(0, glm::vec3(0.0f, 0.0f, 1.0f));
+	}
+	wnd->render(rt_.get());
 }
 
-void Level::shaders_updated()
+void Level::shadersUpdated()
 {
 	for(FrameBufferShaderEntry& e : fb_shaders_) {
 		e.shader.reset();
 	}
 }
 
-void Level::calculate_lighting(int x, int y, int w, int h) const
+void Level::calculateLighting(int x, int y, int w, int h) const
 {
 	bool fbo = KRE::DisplayDevice::checkForFeature(KRE::DisplayDeviceCapabilties::RENDER_TO_TEXTURE);
 	if(!dark_ || editor_ || !fbo) {
 		return;
 	}
+	auto wnd = KRE::WindowManager::getMainWindow();
 
 	//find all the lights in the level
 	static std::vector<const Light*> lights;
 	lights.clear();
 	for(const EntityPtr& c : active_chars_) {
-		for(const light_ptr& lt : c->lights()) {
+		for(const auto& lt : c->lights()) {
 			lights.push_back(lt.get());
 		}
 	}
@@ -2262,21 +2255,21 @@ void Level::calculate_lighting(int x, int y, int w, int h) const
 	auto rt = KRE::RenderTarget::create(w, h);
 
 	{
-		auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(BlendModeConstants::ONE, BlendModeConstants::ONE));
+		auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE));
 		rect screen_area(x, y, w, h);
 		
 		KRE::RenderTarget::RenderScope scope(rt);
 
-		KRE::WindowManager::getMainWindow()->setClearColor(dark_color_);
-		KRE::WindowManager::getMainWindow()->clear(KRE::ClearFlags::COLOR);
+		wnd->setClearColor(dark_color_.applyBlack());
+		wnd->clear(KRE::ClearFlags::COLOR);
 
-		for(auto lt : lights) {
-			lt->setColor(dark_color_);
-			KRE::WindowManager::getMainWindow()->render(lt);
+		KRE::ColorScope color_scope(dark_color_.applyBlack());
+		for(auto& lt : lights) {
+			wnd->render(lt);
 		}
 	}
 
-	KRE::WindowManager::getMainWindow()->render(rt);
+	wnd->render(rt.get());
 }
 
 void Level::draw_debug_solid(int x, int y, int w, int h) const
@@ -2299,49 +2292,29 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 			const int xpixel = (tile_x + xpos)*TileSize;
 			const int ypixel = (tile_y + ypos)*TileSize;
 
+			RectRenderable rr;
 			if(info->all_solid) {
-				graphics::draw_rect(rect(xpixel, ypixel, TileSize, TileSize), info->info.damage ? graphics::color(255, 0, 0, 196) : graphics::color(255, 255, 255, 196));
+				rr.update(rect(xpixel, ypixel, TileSize, TileSize),
+					info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
 			} else {
-				std::vector<GLshort> v;
-#if !defined(USE_SHADERS)
-				glDisable(GL_TEXTURE_2D);
-				glDisableClientState(GL_TEXTURE_COORD_ARRAY);
-#endif
+				std::vector<glm::u16vec2> v;
+
 				for(int suby = 0; suby != TileSize; ++suby) {
 					for(int subx = 0; subx != TileSize; ++subx) {
 						if(info->bitmap.test(suby*TileSize + subx)) {
-							v.push_back(xpixel + subx + 1);
-							v.push_back(ypixel + suby + 1);
+							v.emplace_back(xpixel + subx + 1, ypixel + suby + 1);
 						}
 					}
 				}
 
 				if(!v.empty()) {
-					if(info->info.damage) {
-						glColor4ub(255, 0, 0, 196);
-					} else {
-						glColor4ub(255, 255, 255, 196);
-					}
-
-#if defined(USE_SHADERS)
-					glPointSize(1.0f);
-					gles2::manager gles2_manager(gles2::get_simple_shader());
-					gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &v[0]);
-#else
-					glPointSize(1);
-					glVertexPointer(2, GL_SHORT, 0, &v[0]);
-#endif
-					glDrawArrays(GL_POINTS, 0, v.size()/2);
+					rr.update(&v, info->info.damage ? KRE::Color(255, 0, 0, 196) : KRE::Color(255, 255, 255, 196));
 				}
-#if !defined(USE_SHADERS)
-				glEnableClientState(GL_TEXTURE_COORD_ARRAY);
-				glEnable(GL_TEXTURE_2D);
-#endif
+
 			}
+			KRE::WindowManager::getMainWindow()->render(&rr);
 		}
 	}
-
-	glColor4ub(255, 255, 255, 255);
 }
 
 void Level::draw_background(int x, int y, int rotation) const
@@ -2350,19 +2323,23 @@ void Level::draw_background(int x, int y, int rotation) const
 		return;
 	}
 	auto& wnd = KRE::WindowManager::getMainWindow();
+	if(shader_) {
+		ASSERT_LOG(false, "apply shader_ here");
+	}
 
 	if(background_) {
-#ifdef USE_SHADERS
-		active_fb_shaders_.clear();
-		frame_buffer_enter_zorder(-1000000);
-#endif
+		if(rt_) {
+			active_fb_shaders_.clear();
+			frameBufferEnterZorder(-1000000);
+		}
+
 		static std::vector<rect> opaque_areas;
 		opaque_areas.clear();
 		int screen_width = wnd->width();
 		int screen_height = wnd->height();
 		if(last_draw_position().zoom < 1.0) {
-			screen_width /= last_draw_position().zoom;
-			screen_height /= last_draw_position().zoom;
+			screen_width = static_cast<int>(screen_width / last_draw_position().zoom);
+			screen_height = static_cast<int>(screen_height / last_draw_position().zoom);
 		}
 
 		rect screen_area(x, y, screen_width, screen_height);
@@ -2389,22 +2366,22 @@ void Level::draw_background(int x, int y, int rotation) const
 			}
 		}
 
-		background_->draw(x, y, screen_area, opaque_areas, rotation, cycle());
+		background_->draw(x, y, screen_area, opaque_areas, static_cast<float>(rotation), cycle());
 	} else {
-		wnd->setClearColor(KRE::Color(0.0, 0.0, 0.0, 0.0));
-		wnd->clear(KRE::ClearFlags::DISPLAY_CLEAR_COLOR);
+		wnd->setClearColor(KRE::Color(0.0f, 0.0f, 0.0f, 0.0f));
+		wnd->clear(KRE::ClearFlags::COLOR);
 	}
 }
 
 void Level::process()
 {
-	formula_profiler::instrument instrumentation("LEVEL_PROCESS");
+	formula_profiler::Instrument instrumentation("LEVEL_PROCESS");
 
 	const int LevelPreloadFrequency = 500; //10 seconds
 	//see if we have levels to pre-load. Load one periodically.
 	if((cycle_%LevelPreloadFrequency) == 0) {
 		const int index = cycle_/LevelPreloadFrequency;
-		if(index < preloads_.size()) {
+		if(index < static_cast<int>(preloads_.size())) {
 			preload_level(preloads_[index]);
 		}
 	}
@@ -2423,9 +2400,9 @@ void Level::process()
 
 	editor_dragging_objects_ = false;
 
-	if(iso_world_) {
-		iso_world_->process();
-	}
+	//if(iso_world_) {
+	//	iso_world_->process();
+	//}
 
 	sound::process();
 }
@@ -2458,12 +2435,13 @@ namespace
 
 void Level::set_active_chars()
 {
+	auto wnd = KRE::WindowManager::getMainWindow();
 	const decimal inverse_zoom_level = zoom_level_ != decimal(0) ? (decimal(1.0)/zoom_level_) : decimal(0);
-	const int zoom_buffer = (std::max(decimal(0.0),(inverse_zoom_level - decimal(1.0))) * graphics::screen_width()).as_int(); //pad the screen if we're zoomed out so stuff now-visible becomes active 
+	const int zoom_buffer = (std::max(decimal(0.0),(inverse_zoom_level - decimal(1.0))) * wnd->width()).as_int(); //pad the screen if we're zoomed out so stuff now-visible becomes active 
 	const int screen_left = last_draw_position().x/100 - zoom_buffer;
-	const int screen_right = last_draw_position().x/100 + graphics::screen_width() + zoom_buffer;
+	const int screen_right = last_draw_position().x/100 + wnd->width() + zoom_buffer;
 	const int screen_top = last_draw_position().y/100 - zoom_buffer;
-	const int screen_bottom = last_draw_position().y/100 + graphics::screen_height() + zoom_buffer;
+	const int screen_bottom = last_draw_position().y/100 + wnd->height() + zoom_buffer;
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	active_chars_.clear();
@@ -2472,14 +2450,14 @@ void Level::set_active_chars()
 
 		if(isActive) {
 			if(c->group() >= 0) {
-				assert(c->group() < groups_.size());
+				assert(c->group() < static_cast<int>(groups_.size()));
 				const entity_group& group = groups_[c->group()];
 				active_chars_.insert(active_chars_.end(), group.begin(), group.end());
 			} else {
 				active_chars_.push_back(c);
 			}
 		} else { //char is inactive
-			if( c->diesOnInactive() ){
+			if(c->diesOnInactive()) {
 				if(c->label().empty() == false) {
 					c->dieWithNoEvent();
 					chars_by_label_.erase(c->label());
@@ -2570,7 +2548,7 @@ void Level::erase_char(EntityPtr c)
 	}
 	chars_.erase(std::remove(chars_.begin(), chars_.end(), c), chars_.end());
 	if(c->group() >= 0) {
-		assert(c->group() < groups_.size());
+		assert(c->group() < static_cast<int>(groups_.size()));
 		entity_group& group = groups_[c->group()];
 		group.erase(std::remove(group.begin(), group.end(), c), group.end());
 	}
@@ -2919,7 +2897,7 @@ bool Level::add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, in
 	for(int x = x1; x < x2; x += TileSize) {
 		for(int y = y1; y < y2; y += TileSize) {
 			changed = m.setTile(x, y, tiles[index]) || changed;
-			if(index+1 < tiles.size()) {
+			if(index+1 < static_cast<int>(tiles.size())) {
 				++index;
 			}
 		}
@@ -2942,11 +2920,11 @@ bool Level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2
 		std::swap(y1, y2);
 	}
 
-	std::map<int, hex::HexMapPtr>::iterator it = HexMaps_.find(zorder);
-	if(it == HexMaps_.end()) {
-		HexMaps_[zorder] = hex::HexMapPtr(new hex::HexMap());
+	auto it = hex_maps_.find(zorder);
+	if(it == hex_maps_.end()) {
+		hex_maps_[zorder] = hex::HexMapPtr(new hex::HexMap());
 	}
-	hex::HexMapPtr& m = HexMaps_[zorder];
+	hex::HexMapPtr& m = hex_maps_[zorder];
 	m->setZorder(zorder);
 
 	bool changed = false;
@@ -2956,7 +2934,7 @@ bool Level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2
 		for(int y = y1; y <= y2; y += HexTileSize) {
 			const point p = hex::HexMap::getTilePosFromPixelPos(x, y);
 			changed = m->setTile(p.x, p.y, tiles[index]) || changed;
-			if(index+1 < tiles.size()) {
+			if(index+1 < static_cast<int>(tiles.size())) {
 				++index;
 			}
 		}
@@ -3034,8 +3012,8 @@ void Level::get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::v
 		std::swap(y1, y2);
 	}
 
-	std::map<int, hex::HexMapPtr>::const_iterator map_iterator = HexMaps_.find(zorder);
-	if(map_iterator == HexMaps_.end()) {
+	std::map<int, hex::HexMapPtr>::const_iterator map_iterator = hex_maps_.find(zorder);
+	if(map_iterator == hex_maps_.end()) {
 		tiles.push_back("");
 		return;
 	}
@@ -3406,7 +3384,7 @@ void Level::add_player(EntityPtr p)
 {
 	if(player_) {
 		if(player_ != p) {
-			player_->being_removed();
+			player_->beingRemoved();
 		}
 		chars_.erase(std::remove(chars_.begin(), chars_.end(), player_), chars_.end());
 	}
@@ -3482,9 +3460,9 @@ void Level::add_character(EntityPtr p)
 	layers_.insert(p->zorder());
 
 	const int screen_left = last_draw_position().x/100;
-	const int screen_right = last_draw_position().x/100 + graphics::screen_width();
+	const int screen_right = last_draw_position().x/100 + KRE::WindowManager::getMainWindow()->width();
 	const int screen_top = last_draw_position().y/100;
-	const int screen_bottom = last_draw_position().y/100 + graphics::screen_height();
+	const int screen_bottom = last_draw_position().y/100 + KRE::WindowManager::getMainWindow()->height();
 
 	const rect screen_area(screen_left, screen_top, screen_right - screen_left, screen_bottom - screen_top);
 	if(!active_chars_.empty() && (p->isActive(screen_area) || p->useAbsoluteScreenCoordinates())) {
@@ -3550,7 +3528,7 @@ void Level::set_character_group(EntityPtr c, int group_num)
 
 	//remove any current grouping
 	if(c->group() >= 0) {
-		assert(c->group() < groups_.size());
+		assert(c->group() < static_cast<int>(groups_.size()));
 		entity_group& group = groups_[c->group()];
 		group.erase(std::remove(group.begin(), group.end(), c), group.end());
 	}
@@ -3599,7 +3577,7 @@ const std::string& Level::get_background_id() const
 
 void Level::set_background_by_id(const std::string& id)
 {
-	background_ = background::get(id, background_palette_);
+	background_ = Background::get(id, background_palette_);
 }
 
 BEGIN_DEFINE_CALLABLE_NOBASE(Level)
@@ -3677,7 +3655,7 @@ DEFINE_SET_FIELD
 DEFINE_FIELD(music_volume, "decimal")
 	return variant(sound::get_engine_music_volume());
 DEFINE_SET_FIELD
-	sound::set_engine_music_volume(value.as_decimal().as_float());
+	sound::set_engine_music_volume(value.as_float());
 DEFINE_FIELD(paused, "bool")
 	return variant::from_bool(obj.paused_);
 DEFINE_SET_FIELD
@@ -3735,12 +3713,13 @@ DEFINE_FIELD(num_segments, "int")
 	return variant(unsigned(obj.sub_levels_.size()));
 
 DEFINE_FIELD(camera_position, "[int, int, int, int]")
+	auto wnd = KRE::WindowManager::getMainWindow();
 	std::vector<variant> pos;
 	pos.reserve(4);
 	pos.push_back(variant(last_draw_position().x/100));
 	pos.push_back(variant(last_draw_position().y/100));
-	pos.push_back(variant(graphics::screen_width()));
-	pos.push_back(variant(graphics::screen_height()));
+	pos.push_back(variant(wnd->width()));
+	pos.push_back(variant(wnd->height()));
 	return variant(&pos);
 DEFINE_SET_FIELD
 
@@ -3771,27 +3750,23 @@ DEFINE_SET_FIELD
 	}
 
 DEFINE_FIELD(hexmap, "null|object")
-	if(obj.HexMaps_.empty() == false) {
-		return variant(obj.HexMaps_.rbegin()->second.get());
+	if(obj.hex_maps_.empty() == false) {
+		return variant(obj.hex_maps_.rbegin()->second.get());
 	} else {
 		return variant();
 	}
 
 DEFINE_FIELD(hexmaps, "{int -> object}")
 	std::map<variant, variant> m;
-	std::map<int, hex::HexMapPtr>::const_iterator it = obj.HexMaps_.begin();
-	while(it != obj.HexMaps_.end()) {
+	std::map<int, hex::HexMapPtr>::const_iterator it = obj.hex_maps_.begin();
+	while(it != obj.hex_maps_.end()) {
 		m[variant(it->first)] = variant(it->second.get());
 		++it;
 	}
 	return variant(&m);
 
 DEFINE_FIELD(shader, "null|object")
-#if defined(USE_SHADERS)
-	return variant(obj.shader_.get());
-#else
 	return variant();
-#endif
 
 DEFINE_FIELD(is_paused, "bool")
 	if(LevelRunner::getCurrent()) {
@@ -3808,7 +3783,6 @@ DEFINE_FIELD(editor_selection, "[custom_obj]")
 
 	return variant(&result);
 
-#if defined(USE_SHADERS)
 DEFINE_FIELD(frame_buffer_shaders, "[{begin_zorder: int, end_zorder: int, shader: object|null, shader_info: map|string}]")
 	std::vector<variant> v;
 	for(const FrameBufferShaderEntry& e : obj.fb_shaders_) {
@@ -3835,20 +3809,19 @@ DEFINE_SET_FIELD
 		e.shader_node = v["shader_info"];
 
 		if(v.has_key("shader")) {
-			e.shader.reset(v["shader"].try_convert<gles2::shader_program>());
+			e.shader.reset(v["shader"].try_convert<graphics::AnuraShader>());
 		}
 
 		if(!e.shader) {
 			if(e.shader_node.is_string()) {
-				e.shader = gles2::shader_program::get_global(e.shader_node.as_string());
+				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node.as_string()));
 			} else {
-				e.shader.reset(new gles2::shader_program(e.shader_node));
+				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node));
 			}
 		}
 
 		obj.fb_shaders_.push_back(e);
 	}
-#endif
 
 DEFINE_FIELD(preferences, "object")
 	return variant(preferences::get_settings_obj());
@@ -3868,15 +3841,28 @@ DEFINE_SET_FIELD
 		obj.lock_screen_.reset();
 	}
 
-DEFINE_FIELD(isoworld, "builtin world")
-	ASSERT_LOG(obj.iso_world_, "No world present in level");
-	return variant(obj.iso_world_.get());
-DEFINE_SET_FIELD_TYPE("builtin world|map|null")
-	if(value.is_null()) {
-		obj.iso_world_.reset(); 
+DEFINE_FIELD(shader, "builtin AnuraShader")
+	return variant(obj.shader_.get());
+DEFINE_SET_FIELD_TYPE("string|map|builtin AnuraShader")
+	if(value.is_string()) {
+		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value.as_string()));
+	} else if(value.is_map()) {
+		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value));
 	} else {
-		obj.iso_world_.reset(new voxel::World(value));
+		graphics::AnuraShaderPtr shader_ptr = value.try_convert<graphics::AnuraShader>();
+		ASSERT_LOG(shader_ptr != nullptr, "shader wasn't valid to set: " << value.to_debug_string());
+		obj.shader_ = shader_ptr;
 	}
+
+//DEFINE_FIELD(isoworld, "builtin world")
+//	ASSERT_LOG(obj.iso_world_, "No world present in level");
+//	return variant(obj.iso_world_.get());
+//DEFINE_SET_FIELD_TYPE("builtin world|map|null")
+//	if(value.is_null()) {
+//		obj.iso_world_.reset(); 
+//	} else {
+//		obj.iso_world_.reset(new voxel::World(value));
+//	}
 
 DEFINE_FIELD(mouselook, "bool")
 	return variant::from_bool(obj.is_mouselook_enabled());
@@ -4268,7 +4254,7 @@ void Level::hide_object_classification(const std::string& classification, bool h
 bool Level::object_classification_hidden(const Entity& e) const
 {
 #ifndef NO_EDITOR
-	return e.getEditorInfo() && hidden_object_classifications().count(e.getEditorInfo()->classification());
+	return e.getEditorInfo() && hidden_object_classifications().count(e.getEditorInfo()->getClassification());
 #else
 	return false;
 #endif
@@ -4453,24 +4439,24 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 	//update any x/y co-ordinates to be the same relative to the object's
 	//new position.
 	if(e->getEditorInfo()) {
-		for(const editor_variable_info& var : e->getEditorInfo()->vars_and_properties()) {
-			const variant value = e->queryValue(var.variable_name());
-			switch(var.type()) {
-			case editor_variable_info::XPOSITION:
+		for(const auto& var : e->getEditorInfo()->getVarsAndProperties()) {
+			const variant value = e->queryValue(var.getVariableName());
+			switch(var.getType()) {
+			case VARIABLE_TYPE::XPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_x));
+					e->mutateValue(var.getVariableName(), variant(value.as_int() + delta_x));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
-			case editor_variable_info::YPOSITION:
+			case VARIABLE_TYPE::YPOSITION:
 				if(value.is_int()) {
 					e->handleEvent("editor_changing_variable");
-					e->mutateValue(var.variable_name(), variant(value.as_int() + delta_y));
+					e->mutateValue(var.getVariableName(), variant(value.as_int() + delta_y));
 					e->handleEvent("editor_changed_variable");
 				}
 				break;
-			case editor_variable_info::TYPE_POINTS:
+			case VARIABLE_TYPE::POINTS:
 				if(value.is_list()) {
 					std::vector<variant> new_value;
 					for(variant point : value.as_list()) {
@@ -4482,7 +4468,7 @@ bool Level::relocate_object(EntityPtr e, int new_x, int new_y)
 						}
 					}
 					e->handleEvent("editor_changing_variable");
-					e->mutateValue(var.variable_name(), variant(&new_value));
+					e->mutateValue(var.getVariableName(), variant(&new_value));
 					e->handleEvent("editor_changed_variable");
 				}
 			default:

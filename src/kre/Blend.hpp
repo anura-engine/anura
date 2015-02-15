@@ -50,6 +50,8 @@ namespace KRE
 		BE_ADD,
 		BE_SUBTRACT,
 		BE_REVERSE_SUBTRACT,
+		BE_MIN,
+		BE_MAX,
 	};
 
 	class BlendEquation
@@ -130,11 +132,11 @@ namespace KRE
 		}
 		const BlendMode& getBlendMode() const { return bm_; }
 		static BlendModeScopePtr create(const BlendMode& bm);
-	private:
+	protected:
 		explicit BlendModeScope(const BlendMode& bm) : bm_(bm) {
 			handleApply();
 		}
-
+	private:
 		virtual void handleApply() const = 0;
 		virtual void handleUnapply() const = 0;
 		const BlendMode& bm_;

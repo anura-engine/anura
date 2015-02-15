@@ -55,6 +55,7 @@ namespace KRE
 
 		void loadShadersFromFile(const variant& node) override;
 		ShaderProgramPtr getShaderProgram(const std::string& name) override;
+		ShaderProgramPtr getShaderProgram(const variant& node) override;
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;
 

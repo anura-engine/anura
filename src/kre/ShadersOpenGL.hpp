@@ -112,8 +112,10 @@ namespace KRE
 			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
 
 			static ShaderProgramPtr factory(const std::string& name);
+			static ShaderProgramPtr factory(const variant& node);
 			static ShaderProgramPtr defaultSystemShader();
 			static void loadFromFile(const variant& node);
+			static ShaderProgramPtr getProgramFromVariant(const variant& node);
 
 			ConstActivesMapIterator getColorUniform() const { return u_color_; }
 			ConstActivesMapIterator getLineWidthUniform() const { return u_line_width_; }

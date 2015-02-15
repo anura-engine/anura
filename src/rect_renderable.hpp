@@ -28,8 +28,10 @@
 class RectRenderable : public KRE::SceneObject
 {
 public:
-	RectRenderable();
+	explicit RectRenderable(bool strips=true);
 	void update(const rect& r, const KRE::Color& color);
+	void update(const std::vector<glm::u16vec2>& r, const KRE::Color& color);
+	void update(std::vector<glm::u16vec2>* r, const KRE::Color& color);
 private:
 	std::shared_ptr<KRE::Attribute<glm::u16vec2>> r_;
 };

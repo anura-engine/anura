@@ -96,9 +96,9 @@ namespace KRE
 
 		const std::string& getTitle() const { return title_; }
 
-		void setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255);
-		void setClearColor(float r, float g, float b, float a=1.0f);
-		void setClearColor(const Color& color);
+		void setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a=255) const;
+		void setClearColor(float r, float g, float b, float a=1.0f) const;
+		void setClearColor(const Color& color) const;
 		
 		Color getClearColor() const { return clear_color_; }
 
@@ -121,7 +121,7 @@ namespace KRE
 		unsigned height_;
 		unsigned logical_width_;
 		unsigned logical_height_;
-		Color clear_color_;
+		mutable Color clear_color_;
 
 		DisplayDevicePtr display_;
 	private:

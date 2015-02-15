@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,37 +21,34 @@
 	   distribution.
 */
 
-#include "Shaders.hpp"
-#include "DisplayDevice.hpp"
+#pragma once
+
+#include <list>
+
+#include "Color.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
-	ShaderProgram::ShaderProgram(const variant& node)
-	{
-		if(node.has_key("draw")) {
-			draw_ = node["draw"].as_string();
-		}
-		if(node.has_key("create")) {
-			create_ = node["create"].as_string();
-		}
-	}
+	class ColorScope;
+	typedef std::unique_ptr<ColorScope> ColorScopePtr;
 
-	ShaderProgram::~ShaderProgram()
+	class ColorScope
 	{
-	}
+	public:
+		// We use a list type for the stack type of scopes since iterators
+		// aren't invalidated by removing/adding elements (unless you remove the item
+		// the iterator points to -- but this is the expected case).
+		// Access to the back element and adding new elements is constant.
+		// Only erasing is linear in complexity.
+		typedef std::list<Color> color_stack_type;
+		typedef std::list<Color>::iterator iterator;
 
-	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
-	{
-		return DisplayDevice::getCurrent()->getShaderProgram(name);
-	}
-
-	ShaderProgramPtr ShaderProgram::getProgram(const variant& node)
-	{
-		return DisplayDevice::getCurrent()->getShaderProgram(node);
-	}
-
-	void ShaderProgram::loadFromFile(const variant& node)
-	{
-		DisplayDevice::getCurrent()->loadShadersFromFile(node);
-	}
+		explicit ColorScope(const Color& color);
+		~ColorScope();
+		static const Color& getCurrentColor();
+	private:
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(ColorScope);
+		iterator it_;
+	};
 }

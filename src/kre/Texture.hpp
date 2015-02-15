@@ -155,6 +155,15 @@ namespace KRE
 			return geometry::Rect<N>(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
 		}
 
+		template<typename N, typename T>
+		const N getNormalisedTextureCoordW(const T& x) {
+			return static_cast<N>(x) / static_cast<N>(surface_width_);
+		}
+		template<typename N, typename T>
+		const N getNormalisedTextureCoordH(const T& y) {
+			return static_cast<N>(x) / static_cast<N>(surface_height_);
+		}
+
 		// Can return NULL if not-implemented, invalid underlying surface.
 		virtual const unsigned char* colorAt(int x, int y) const = 0;
 		bool isAlpha(unsigned x, unsigned y) { return alpha_map_[y*width_+x]; }

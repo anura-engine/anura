@@ -39,6 +39,16 @@ namespace KRE
 				case BlendEquationConstants::BE_ADD:				return GL_FUNC_ADD;
 				case BlendEquationConstants::BE_SUBTRACT:			return GL_FUNC_SUBTRACT;
 				case BlendEquationConstants::BE_REVERSE_SUBTRACT:	return GL_FUNC_REVERSE_SUBTRACT;
+				case BlendEquationConstants::BE_MIN:
+					if(GLEW_EXT_blend_minmax) {
+						return GL_MIN_EXT;
+					}
+					break;
+				case BlendEquationConstants::BE_MAX:
+					if(GLEW_EXT_blend_minmax) {
+						return GL_MAX_EXT;
+					}
+					break;
 				default: break;
 			}
 			ASSERT_LOG(false, "Unrecognised blend equation");

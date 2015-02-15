@@ -46,9 +46,9 @@ namespace KRE
 		virtual void preRender(const WindowManagerPtr&) override;
 	private:
 		void handleCreate() override;
-		void handleApply() override;
-		void handleUnapply() override;
-		void handleClear() override;
+		void handleApply() const override;
+		void handleUnapply() const override;
+		void handleClear() const override;
 		RenderTargetPtr handleClone() override;
 		void getDSInfo(GLenum& ds_attachment, GLenum& depth_stencil_internal_format);
 		bool uses_ext_;
@@ -59,7 +59,7 @@ namespace KRE
 
 		unsigned tex_width_;
 		unsigned tex_height_;
-		GLint viewport_[4];
+		mutable GLint viewport_[4];
 
 		FboOpenGL();
 		void operator=(const FboOpenGL&);

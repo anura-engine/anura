@@ -333,13 +333,13 @@ namespace KRE
 		return handleLogicalWindowSizeChange();
 	}
 
-	void WindowManager::setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a)
+	void WindowManager::setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) const
 	{
 		clear_color_ = Color(r,g,b,a);
 		handleSetClearColor();
 	}
 
-	void WindowManager::setClearColor(float r, float g, float b, float a)
+	void WindowManager::setClearColor(float r, float g, float b, float a) const
 	{
 		clear_color_ = Color(r,g,b,a);
 		handleSetClearColor();

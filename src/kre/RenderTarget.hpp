@@ -36,10 +36,13 @@ namespace KRE
 
 		variant write();
 
-		void create();
-		void apply();
-		void unapply();
-		void clear();
+		void on_create();
+		void apply() const;
+		void unapply() const;
+		void clear() const;
+
+		void renderToThis() const { apply(); }
+		void renderToPrevious() const { unapply(); }
 
 		struct RenderScope {
 			RenderScope(RenderTargetPtr rt) : rt_(rt) {
@@ -66,13 +69,13 @@ namespace KRE
 
 		RenderTargetPtr clone();
 
-		static RenderTargetPtr factory(int width, int height, 
+		static RenderTargetPtr create(int width, int height, 
 			unsigned color_plane_count=1, 
 			bool depth=false, 
 			bool stencil=false, 
 			bool use_multi_sampling=false, 
 			unsigned multi_samples=0);
-		static RenderTargetPtr factory(const variant& node);
+		static RenderTargetPtr create(const variant& node);
 	protected:
 		explicit RenderTarget(int width, int height, 
 			unsigned color_plane_count, 
@@ -83,9 +86,9 @@ namespace KRE
 		explicit RenderTarget(const variant& node);
 	private:
 		virtual void handleCreate() = 0;
-		virtual void handleApply() = 0;
-		virtual void handleUnapply() = 0;
-		virtual void handleClear() = 0;
+		virtual void handleApply() const = 0;
+		virtual void handleUnapply() const = 0;
+		virtual void handleClear() const = 0;
 		virtual RenderTargetPtr handleClone() = 0;
 
 		int width_;

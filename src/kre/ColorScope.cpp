@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2003-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,37 +21,40 @@
 	   distribution.
 */
 
-#include "Shaders.hpp"
-#include "DisplayDevice.hpp"
+#include "ColorScope.hpp"
 
 namespace KRE
 {
-	ShaderProgram::ShaderProgram(const variant& node)
+	namespace 
 	{
-		if(node.has_key("draw")) {
-			draw_ = node["draw"].as_string();
+		ColorScope::color_stack_type& get_color_stack()
+		{
+			static ColorScope::color_stack_type res;
+			return res;
 		}
-		if(node.has_key("create")) {
-			create_ = node["create"].as_string();
+
+		const Color& get_default_color()
+		{
+			static Color res = Color::colorWhite();
+			return res;
 		}
 	}
 
-	ShaderProgram::~ShaderProgram()
+	ColorScope::ColorScope(const Color& color)
 	{
+		it_ = get_color_stack().emplace(get_color_stack().end(), color);
 	}
 
-	ShaderProgramPtr ShaderProgram::getProgram(const std::string& name)
+	ColorScope::~ColorScope()
 	{
-		return DisplayDevice::getCurrent()->getShaderProgram(name);
+		get_color_stack().erase(it_);
 	}
 
-	ShaderProgramPtr ShaderProgram::getProgram(const variant& node)
+	const Color& ColorScope::getCurrentColor()
 	{
-		return DisplayDevice::getCurrent()->getShaderProgram(node);
-	}
-
-	void ShaderProgram::loadFromFile(const variant& node)
-	{
-		DisplayDevice::getCurrent()->loadShadersFromFile(node);
+		if(get_color_stack().empty()) {
+			return get_default_color();
+		}
+		return get_color_stack().back();
 	}
 }

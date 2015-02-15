@@ -1,7 +1,7 @@
 #include "DisplayDevice.hpp"
 #include "rect_renderable.hpp"
 
-RectRenderable::RectRenderable()
+RectRenderable::RectRenderable(bool strips)
 	: SceneObject("RectRenderable")
 {
 	using namespace KRE;
@@ -11,7 +11,7 @@ RectRenderable::RectRenderable()
 	r_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(short_vertex_color), offsetof(vertex_color, vertex)));
 	ab->addAttribute(r_);
 
-	ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
+	ab->setDrawMode(strips ? DrawMode::TRIANGLE_STRIP : DrawMode::POINTS);
 	addAttributeSet(ab);
 }
 
@@ -28,3 +28,14 @@ void RectRenderable::update(const rect& r, const KRE::Color& color)
 	r_->update(&vc);
 }
 
+void RectRenderable::update(const std::vector<glm::u16vec2>& rs, const KRE::Color& color)
+{
+	setColor(color);
+	r_->update(rs);
+}
+
+void RectRenderable::update(std::vector<glm::u16vec2>* rs, const KRE::Color& color)
+{
+	setColor(color);
+	r_->update(rs);
+}

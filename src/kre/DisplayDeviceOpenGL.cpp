@@ -285,8 +285,12 @@ namespace KRE
 			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pmat));
 		}
 
-		if(shader->getColorUniform() != shader->uniformsIteratorEnd() && r->isColorSet()) {
-			shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
+		if(shader->getColorUniform() != shader->uniformsIteratorEnd()) {
+			if(r->isColorSet()) {
+				shader->setUniformValue(shader->getColorUniform(), r->getColor().asFloatVector());
+			} else {
+				shader->setUniformValue(shader->getColorUniform(), ColorScope::getCurrentColor().asFloatVector());
+			}
 		}
 
 		// XXX The material may need to set more texture uniforms for multi-texture -- need to do that here.
@@ -510,6 +514,11 @@ namespace KRE
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)
 	{
 		return OpenGL::ShaderProgram::factory(name);
+	}
+
+	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const variant& node)
+	{
+		return OpenGL::ShaderProgram::factory(node);
 	}
 
 	// XXX Need a way to deal with blits with Camera/Lighting.

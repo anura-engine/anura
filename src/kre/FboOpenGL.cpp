@@ -64,7 +64,7 @@ namespace KRE
 		tex_height_(0)
 	{
 		if(op.tex_height_ != 0 && op.tex_width_ != 0) {
-			create();
+			on_create();
 		}
 	}
 
@@ -221,7 +221,7 @@ namespace KRE
 		Blittable::preRender(wnd);
 	}
 
-	void FboOpenGL::handleApply()
+	void FboOpenGL::handleApply() const
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
@@ -230,13 +230,13 @@ namespace KRE
 		glViewport(0, 0, width(), height());
 	}
 
-	void FboOpenGL::handleUnapply()
+	void FboOpenGL::handleUnapply() const
 	{
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		glViewport(viewport_[0], viewport_[1], viewport_[2], viewport_[3]);
 	}
 
-	void FboOpenGL::handleClear()
+	void FboOpenGL::handleClear() const
 	{
 		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);

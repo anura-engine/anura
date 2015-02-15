@@ -34,6 +34,7 @@
 #include "ColorTransform.hpp"
 #include "geometry.hpp"
 
+#include "anura_shader.hpp"
 #if defined(USE_BOX2D)
 #include "b2d_ffl.hpp"
 #endif
@@ -405,7 +406,7 @@ private:
 
 	void do_processing();
 
-	void calculate_lighting(int x, int y, int w, int h) const;
+	void calculateLighting(int x, int y, int w, int h) const;
 
 	bool add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 	bool add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
@@ -522,14 +523,30 @@ private:
 	mutable bool entered_portal_active_;
 	portal entered_portal_;
 
-	std::shared_ptr<background> background_;
+	std::shared_ptr<Background> background_;
 	point background_offset_;
 	int widest_tile_, highest_tile_;
 
 	std::map<int, TileMap> tile_maps_;
 	int xscale_, yscale_;
 
-	std::map<int, hex::HexMapPtr> HexMaps_;
+	std::map<int, hex::HexMapPtr> hex_maps_;
+
+	graphics::AnuraShaderPtr shader_;
+
+	struct FrameBufferShaderEntry {
+		int begin_zorder, end_zorder;
+		variant shader_node;
+		mutable graphics::AnuraShaderPtr shader;
+	};
+	std::vector<FrameBufferShaderEntry> fb_shaders_;
+	mutable std::vector<graphics::AnuraShaderPtr> active_fb_shaders_;
+	mutable variant fb_shaders_variant_;
+
+	void flushFrameBufferShadersToScreen() const;
+	void applyShaderToFrameBufferTexture(graphics::AnuraShaderPtr shader, bool render_to_screen) const;
+	void frameBufferEnterZorder(int zorder) const;
+	void shadersUpdated();
 
 	int save_point_x_, save_point_y_;
 	bool editor_;
@@ -622,6 +639,8 @@ private:
 	LevelPtr suspended_level_;
 
 	std::map<int, LayerBlitInfo> blit_cache_;
+
+	KRE::RenderTargetPtr rt_;
 };
 
 bool entity_in_current_level(const Entity* e);

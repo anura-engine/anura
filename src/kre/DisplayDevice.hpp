@@ -30,7 +30,7 @@
 #include "AttributeSet.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
-#include "Color.hpp"
+#include "ColorScope.hpp"
 #include "DisplayDeviceFwd.hpp"
 #include "Material.hpp"
 #include "Renderable.hpp"
@@ -176,6 +176,7 @@ namespace KRE
 
 		virtual void loadShadersFromFile(const variant& node) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
+		virtual ShaderProgramPtr getShaderProgram(const variant& node) = 0;
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 

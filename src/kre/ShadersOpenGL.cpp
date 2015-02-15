@@ -803,12 +803,60 @@ namespace KRE
 			return it->second;
 		}
 
+		ShaderProgramPtr ShaderProgram::factory(const variant& node)
+		{
+			return getProgramFromVariant(node);
+		}
+
 		ShaderProgramPtr ShaderProgram::defaultSystemShader()
 		{
 			auto& sf = get_shader_factory();
 			auto it = sf.find("default");
 			ASSERT_LOG(it != sf.end(), "No 'default' shader found in the list of shaders.");
 			return it->second;
+		}
+
+		ShaderProgramPtr ShaderProgram::getProgramFromVariant(const variant& node)
+		{
+			auto& sf = get_shader_factory();
+
+			ASSERT_LOG(node.is_map(), "instance must be a map.");
+			ASSERT_LOG(node.has_key("fragment") && node.has_key("vertex") && node.has_key("name"), 
+				"instances must have 'fragment', 'vertex' and 'name' attributes.");
+		
+			const std::string& name = node["name"].as_string();
+			const std::string& vert_data = node["vertex"].as_string();
+			const std::string& frag_data = node["fragment"].as_string();
+
+			auto it = sf.find(name);
+			if(it != sf.end()) {
+				return it->second;
+			}
+
+			auto spp = new ShaderProgram(name, 
+				ShaderDef(name + "_vs", vert_data),
+				ShaderDef(name + "_fs", frag_data),
+				node);
+			auto it = sf.find(name);
+			if(it != sf.end()) {
+				LOG_WARN("Overwriting shader with name: " << name);
+			}
+			sf[name] = ShaderProgramPtr(spp);
+			if(node.has_key("uniforms")) {
+				ASSERT_LOG(node["uniforms"].is_map(), "'uniforms' attribute in shader(" << name << ") must be a map.");
+				for(auto uni : node["uniforms"].as_map()) {
+					spp->setAlternateUniformName(uni.first.as_string(), uni.second.as_string());
+				}
+			}
+			if(node.has_key("attributes")) {
+				ASSERT_LOG(node["attributes"].is_map(), "'attributes' attribute in shader(" << name << ") must be a map.");
+				for(auto attr : node["attributes"].as_map()) {
+					spp->setAlternateAttributeName(attr.first.as_string(), attr.second.as_string());
+				}
+			}
+			spp->setActives();
+
+			return ShaderProgramPtr(spp);
 		}
 
 		void ShaderProgram::loadFromFile(const variant& node)
@@ -819,36 +867,7 @@ namespace KRE
 			ASSERT_LOG(node["instances"].is_list(), "'instances' attribute should be a list.");
 
 			for(auto instance : node["instances"].as_list()) {
-				ASSERT_LOG(instance.is_map(), "Each item in the 'instances' list must be a map.");
-				ASSERT_LOG(instance.has_key("fragment") && instance.has_key("vertex") && instance.has_key("name"), 
-					"instances must have 'fragment', 'vertex' and 'name' attributes.");
-
-				const std::string& name = instance["name"].as_string();
-				const std::string& vert_data = instance["vertex"].as_string();
-				const std::string& frag_data = instance["fragment"].as_string();
-
-				auto spp = new ShaderProgram(name, 
-					ShaderDef(name + "_vs", vert_data),
-					ShaderDef(name + "_fs", frag_data),
-					instance);
-				auto it = sf.find(name);
-				if(it != sf.end()) {
-					LOG_WARN("Overwriting shader with name: " << name);
-				}
-				sf[name] = ShaderProgramPtr(spp);
-				if(instance.has_key("uniforms")) {
-					ASSERT_LOG(instance["uniforms"].is_map(), "'uniforms' attribute in shader(" << name << ") must be a map.");
-					for(auto uni : instance["uniforms"].as_map()) {
-						spp->setAlternateUniformName(uni.first.as_string(), uni.second.as_string());
-					}
-				}
-				if(instance.has_key("attributes")) {
-					ASSERT_LOG(instance["attributes"].is_map(), "'attributes' attribute in shader(" << name << ") must be a map.");
-					for(auto attr : instance["attributes"].as_map()) {
-						spp->setAlternateAttributeName(attr.first.as_string(), attr.second.as_string());
-					}
-				}
-				spp->setActives();
+				getProgramFromVariant(instance);
 			}
 		}
 	}

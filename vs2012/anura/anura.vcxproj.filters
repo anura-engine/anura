@@ -972,6 +972,12 @@
     <ClInclude Include="..\..\src\rect_renderable.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\anura_shader.hpp">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ColorScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\bar_widget.cpp">
@@ -1936,6 +1942,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\rect_renderable.cpp">
       <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\anura_shader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\ColorScope.cpp">
+      <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

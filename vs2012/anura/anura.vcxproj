@@ -163,6 +163,7 @@
     <ClInclude Include="..\..\src\animation_creator.hpp" />
     <ClInclude Include="..\..\src\animation_preview_widget.hpp" />
     <ClInclude Include="..\..\src\animation_widget.hpp" />
+    <ClInclude Include="..\..\src\anura_shader.hpp" />
     <ClInclude Include="..\..\src\array_callable.hpp" />
     <ClInclude Include="..\..\src\asserts.hpp" />
     <ClInclude Include="..\..\src\auto_update_window.hpp" />
@@ -270,6 +271,7 @@
     <ClInclude Include="..\..\src\kre\ClipScope.hpp" />
     <ClInclude Include="..\..\src\kre\ClipScopeOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Color.hpp" />
+    <ClInclude Include="..\..\src\kre\ColorScope.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDevice.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceFwd.hpp" />
     <ClInclude Include="..\..\src\kre\DisplayDeviceOpenGL.hpp" />
@@ -479,6 +481,7 @@
     <ClCompile Include="..\..\src\animation_creator.cpp" />
     <ClCompile Include="..\..\src\animation_preview_widget.cpp" />
     <ClCompile Include="..\..\src\animation_widget.cpp" />
+    <ClCompile Include="..\..\src\anura_shader.cpp" />
     <ClCompile Include="..\..\src\asserts.cpp" />
     <ClCompile Include="..\..\src\auto_update_window.cpp" />
     <ClCompile Include="..\..\src\b2d_ffl.cpp" />
@@ -622,6 +625,7 @@
     <ClCompile Include="..\..\src\kre\ClipScope.cpp" />
     <ClCompile Include="..\..\src\kre\ClipScopeOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Color.cpp" />
+    <ClCompile Include="..\..\src\kre\ColorScope.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDevice.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGL.cpp" />
     <ClCompile Include="..\..\src\kre\DisplayDeviceOpenGLFixed.cpp" />

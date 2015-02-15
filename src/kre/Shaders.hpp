@@ -82,6 +82,7 @@ namespace KRE
 
 		//! Look-up the given shader program name in the list and return it.
 		static ShaderProgramPtr getProgram(const std::string& name);
+		static ShaderProgramPtr getProgram(const variant& node);
 		//! loads the internal store of shader programs from the given file.
 		static void loadFromFile(const variant& node);
 	private:
