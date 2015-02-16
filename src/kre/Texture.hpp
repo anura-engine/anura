@@ -174,6 +174,8 @@ namespace KRE
 
 		const rectf& getSourceRectNormalised() const { return src_rect_norm_; }
 		const rect& getSourceRect() const { return src_rect_; }
+
+		virtual TexturePtr clone() = 0;
 	protected:
 		void setTextureDimensions(unsigned w, unsigned h, unsigned d=0);
 	private:

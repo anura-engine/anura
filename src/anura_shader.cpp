@@ -42,10 +42,21 @@ namespace graphics
 		}
 	}
 
+	void AnuraShader::setSpriteArea(const rect& area)
+	{
+		if(u_sprite_area_) {
+			glm::vec4 da(static_cast<float>(area.x()), 
+				static_cast<float>(area.y()), 
+				static_cast<float>(area.w()),
+				static_cast<float>(area.h()));
+			shader_->setUniform(u_draw_area_, glm::value_ptr(da));
+		}
+	}
+
 	void AnuraShader::setCycle(int cycle)
 	{
 		if(u_draw_area_) {
-			shader_->setUniform(u_draw_area_, reinterpret_cast<void*>(cycle));
+			shader_->setUniform(u_cycle_, reinterpret_cast<void*>(cycle));
 		}
 	}
 

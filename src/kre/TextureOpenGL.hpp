@@ -55,6 +55,8 @@ namespace KRE
 		void update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels) override;
 
 		const unsigned char* colorAt(int x, int y) const override;
+
+		TexturePtr clone() override;
 	private:
 		void createTexture(const PixelFormat::PF& fmt);
 		void rebuild() override;

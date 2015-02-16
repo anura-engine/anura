@@ -16,6 +16,8 @@ namespace graphics
 
 		void setDrawArea(const rect& draw_area);
 		void setCycle(int cycle);
+
+		void setSpriteArea(const rectf& area);
 	private:
 		DECLARE_CALLABLE(AnuraShader);
 		void init();

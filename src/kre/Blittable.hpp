@@ -65,6 +65,8 @@ namespace KRE
 			centre_ = Centre::MANUAL;
 			changed_ = true;
 		}
+		void update(std::vector<vertex_texcoord>* queue);
+		void setDrawMode(DrawMode mode);
 	private:
 		void init();
 		virtual void onTextureChanged() { changed_ = true; }

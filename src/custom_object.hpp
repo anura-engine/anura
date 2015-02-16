@@ -28,6 +28,7 @@
 #include <set>
 #include <stack>
 
+#include "anura_shader.hpp"
 #include "blur.hpp"
 #include "custom_object_type.hpp"
 #include "draw_primitive.hpp"
@@ -531,4 +532,6 @@ private:
 	std::unique_ptr<lua::LuaContext> lua_ptr_;
 	std::unique_ptr<lua::CompiledChunk> lua_chunk_;
 #endif
+
+	graphics::AnuraShaderPtr shader_;
 };

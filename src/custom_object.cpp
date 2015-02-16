@@ -416,6 +416,16 @@ CustomObject::CustomObject(variant node)
 	}
 #endif
 
+	if(node.has_key("shader")) {
+		if(node.has_key("shader")) {
+			if(node["shader"].is_string()) {
+				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
+			} else {
+				shader_.reset(new graphics::AnuraShader(node["shader"]));
+			}
+		}
+	}
+
 	const variant property_data_node = node["property_data"];
 	for(int i = 0; i != type_->getSlotProperties().size(); ++i) {
 		const CustomObjectType::PropertyEntry& e = type_->getSlotProperties()[i];
@@ -1164,15 +1174,15 @@ void CustomObject::draw(int xx, int yy) const
 		//pass
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
-		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), cycle_);
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), cycle_);
 	} else if(custom_draw_.get() != NULL) {
-		frame_->drawCustom(draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	} else if(draw_scale_) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), static_cast<float>(draw_scale_->as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), static_cast<float>(draw_scale_->as_float()));
 	} else if(!draw_area_.get()) {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	} else {
-		frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *draw_area_, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	}
 
 	if(blur_) {
@@ -1186,7 +1196,7 @@ void CustomObject::draw(int xx, int yy) const
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
 				KRE::ColorScope color_scope(transform.toColor());
-				frame_->draw(draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
+				frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 			}
 		}
 

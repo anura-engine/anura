@@ -29,6 +29,7 @@
 #include "Blittable.hpp"
 #include "SceneObject.hpp"
 
+#include "anura_shader.hpp"
 #include "formula.hpp"
 #include "solid_map_fwd.hpp"
 #include "variant.hpp"
@@ -72,9 +73,9 @@ public:
 	std::vector<bool>::const_iterator getAlphaItor(int x, int y, int time, bool face_right) const;
 	const std::vector<bool>& getAlphaBuf() const { return alpha_; }
 
-	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
-	void draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
-	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
+	void draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
+	void draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
+	void draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
 
 	struct CustomPoint {
 		CustomPoint() : pos(0) {}
@@ -82,8 +83,8 @@ public:
 		point offset;
 	};
 
-	void drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
-	void drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
+	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const;
+	void drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const;
 
 	void setImageAsSolid();
 	ConstSolidInfoPtr solid() const { return solid_; }
@@ -109,7 +110,7 @@ public:
 	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;
 	bool hit(int time_in_frame) const;
-	const KRE::TexturePtr& img() const { return blit_target_.getTexture(); }
+	KRE::TexturePtr img() const { return blit_target_.getTexture(); }
 	const rect& area() const { return img_rect_; }
 	int numFrames() const { return nframes_; }
 	int numFramesPerRow() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }

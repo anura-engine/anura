@@ -115,4 +115,14 @@ namespace KRE
 		centre_offset_ = pointf();
 		changed_ = true;
 	}
+
+	void Blittable::update(std::vector<vertex_texcoord>* queue)
+	{
+		attribs_->update(queue);
+	}
+
+	void Blittable::setDrawMode(DrawMode mode)
+	{
+		getAttributeSet().back()->setDrawMode(mode);
+	}
 }

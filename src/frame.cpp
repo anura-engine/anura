@@ -615,7 +615,7 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 	return alpha_.begin() + index;
 }
 
-void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, float rotate) const
+void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate) const
 {
 	const FrameInfo* info = NULL;
 	getRectInTexture(time, info);
@@ -625,7 +625,9 @@ void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, floa
 	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
 	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
-	gles2::active_shader()->shader()->set_sprite_area(blit_target_.getTexture()->getSourceRect());
+	if(shader) {
+		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
@@ -634,7 +636,7 @@ void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, floa
 	wnd->render(&blit_target_);
 }
 
-void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const
+void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const
 {
 	const FrameInfo* info = NULL;
 	getRectInTexture(time, info);
@@ -650,7 +652,9 @@ void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, floa
 	x -= width_delta/2;
 	y -= height_delta/2;
 
-	gles2::active_shader()->shader()->set_sprite_area(blit_target_.getTexture()->getSourceRect());
+	if(shader) {
+		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
+	}
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
@@ -659,7 +663,7 @@ void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, floa
 	wnd->render(&blit_target_);
 }
 
-void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
+void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
 {
 	const FrameInfo* info = NULL;
 	getRectInTexture(time, info);
@@ -677,14 +681,14 @@ void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
 	blit_target_.setDrawRect(rect(x, y, (w + w_adjust*scale_)*(face_right ? 1 : -1), (h + h_adjust*scale_)*(upside_down ? -1 : 1)));
-	blit_target_.getTexture()->setSourceRect(rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust)));
+	blit_target_.getTexture()->setSourceRect(rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
 	blit_target_.getTexture()->setSourceRect(src_rect);
 }
 
 
-void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const
+void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
 	const FrameInfo* info = NULL;
 	getRectInTexture(time, info);
@@ -696,12 +700,12 @@ void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, con
 	int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
 	if(w < 0) {
-		std::swap(rect[0], rect[2]);
+		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
 		w *= -1;
 	}
 
 	if(h < 0) {
-		std::swap(rect[1], rect[3]);
+		r = rectf::from_coordinates(r.x(), r.y2(), r.x2(), r.y());
 		h *= -1;
 	}
 
@@ -711,99 +715,87 @@ void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, con
 		const int w_adjust = area->w() - img_rect_.w();
 		const int h_adjust = area->h() - img_rect_.h();
 
-		rect[0] += GLfloat(x_adjust)/GLfloat(texture_.width());
-		rect[1] += GLfloat(y_adjust)/GLfloat(texture_.height());
-		rect[2] += GLfloat(x_adjust + w_adjust)/GLfloat(texture_.width());
-		rect[3] += GLfloat(y_adjust + h_adjust)/GLfloat(texture_.height());
+		r = rectf::from_coordinates(r.x() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(x_adjust),
+			r.y() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(y_adjust),
+			r.x2() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(x_adjust + w_adjust),
+			r.y2() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(y_adjust + h_adjust));
 
 		w += w_adjust*scale_;
 		h += h_adjust*scale_;
 	}
 
-	std::vector<GLfloat> tcqueue;
-	std::vector<GLshort> vqueue;
+	std::vector<KRE::vertex_texcoord> queue;
+	KRE::Blittable blit;
 
-	const GLfloat center_x = x + GLfloat(w)/2.0;
-	const GLfloat center_y = y + GLfloat(h)/2.0;
+	const float center_x = x + static_cast<float>(w)/2.0f;
+	const float center_y = y + static_cast<float>(h)/2.0f;
 
-	glPushMatrix();
-	glTranslatef(center_x, center_y, 0.0);
-	glRotatef(rotate,0.0,0.0,1.0);
+	blit.setTexture(blit_target_.getTexture()->clone());
+	blit.setPosition(center_x, center_y);
+	blit.setRotation(rotation, glm::vec3(0, 0, 1.0f));
 
 	for(const CustomPoint& p : points) {
-		GLfloat pos = p.pos;
+		float pos = p.pos;
 
 		if(pos > 4.0) {
 			pos = 4.0;
 		}
 
 		int side = static_cast<int>(pos);
-		GLfloat f = pos - static_cast<GLfloat>(side);
+		float f = pos - static_cast<float>(side);
 		if(side >= 4) {
 			side = 0;
 		}
 
-		GLshort xpos, ypos;
-		GLfloat u, v;
+		float xpos, ypos;
+		float u, v;
 		switch(side) {
 		case 0:
-			u = rect[0] + (rect[2] - rect[0])*f;
-			v = rect[1];
-			xpos = GLfloat(x) + GLfloat(w)*f;
-			ypos = y;
+			u =r.x() + r.w() * f;
+			v = r.y();
+			xpos = static_cast<float>(x) + static_cast<float>(w)*f;
+			ypos = static_cast<float>(y);
 			break;
 		case 2:
-			u = rect[2] - (rect[2] - rect[0])*f;
-			v = rect[3];
-			xpos = GLfloat(x + w) - GLfloat(w)*f;
-			ypos = y + h;
+			u = r.x2() - r.w() * f;
+			v = r.y2();
+			xpos = static_cast<float>(x + w) - static_cast<float>(w) * f;
+			ypos = static_cast<float>(y + h);
 			break;
 		case 1:
-			u = rect[2];
-			v = rect[1] + (rect[3] - rect[1])*f;
-			xpos = x + w;
-			ypos = GLfloat(y) + GLfloat(h)*f;
+			u = r.x2();
+			v = r.y() + r.h() * f;
+			xpos = static_cast<float>(x + w);
+			ypos = static_cast<float>(y) + static_cast<float>(h) * f;
 			break;
 		case 3:
-			u = rect[0];
-			v = rect[3] - (rect[3] - rect[1])*f;
-			xpos = x;
-			ypos = GLfloat(y + h) - GLfloat(h)*f;
+			u = r.x();
+			v = r.y2() - r.h() * f;
+			xpos = static_cast<float>(x);
+			ypos = static_cast<float>(y + h) - static_cast<float>(h) * f;
 			break;
 		default:
 			ASSERT_LOG(false, "ILLEGAL CUSTOM FRAME POSITION: " << side);
 			break;
 		}
 
-		xpos += p.offset.x;
-		ypos += p.offset.y;
+		xpos += static_cast<float>(p.offset.x);
+		ypos += static_cast<float>(p.offset.y);
 
-		vqueue.push_back(xpos - center_x);
-		vqueue.push_back(ypos - center_y);
-
-		tcqueue.push_back(u);
-		tcqueue.push_back(v);
+		queue.emplace_back(glm::vec2(xpos - center_x, ypos - center_y), glm::vec2(u, v));
 	}
 
-	ASSERT_LOG(vqueue.size() > 4, "ILLEGAL CUSTOM BLIT: " << vqueue.size());
-#if defined(USE_SHADERS)
-	{
-		gles2::active_shader()->prepare_draw();
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
-	}
-#else
-	glVertexPointer(2, GL_SHORT, 0, &vqueue.front());
-	glTexCoordPointer(2, GL_FLOAT, 0, &tcqueue.front());
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
-#endif
-	glPopMatrix();
+	ASSERT_LOG(queue.size() > 4, "ILLEGAL CUSTOM BLIT: " << queue.size());
+
+	auto wnd = KRE::WindowManager::getMainWindow();
+	blit.update(&queue);
+	blit.preRender(wnd);
+	wnd->render(&blit);
 }
 
 PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
-void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const
+void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotation, int cycle) const
 {
 	const FrameInfo* info = NULL;
 	getRectInTexture(time, info);
@@ -811,74 +803,48 @@ void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelem
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
-
 	int w = info->area.w()*scale_*(face_right ? 1 : -1);
 	int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
 	if(w < 0) {
-		std::swap(rect[0], rect[2]);
+		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
 		w *= -1;
 	}
 
 	if(h < 0) {
-		std::swap(rect[1], rect[3]);
+		r = rectf::from_coordinates(r.x(), r.y2(), r.x2(), r.y());
 		h *= -1;
 	}
-	
 
-	std::vector<GLfloat> tcqueue;
-	std::vector<GLshort> vqueue;
+	std::vector<KRE::vertex_texcoord> queue;
+	KRE::Blittable blit;
 
-	const GLfloat center_x = x + GLfloat(w)/2.0;
-	const GLfloat center_y = y + GLfloat(h)/2.0;
+	const float center_x = x + static_cast<float>(w)/2.0f;
+	const float center_y = y + static_cast<float>(h)/2.0f;
 
-	glPushMatrix();
-//	glTranslatef(center_x, center_y, 0.0);
-//	glRotatef(rotate,0.0,0.0,1.0);
+	blit.setTexture(blit_target_.getTexture()->clone());
+	blit.setRotation(rotation, glm::vec3(0, 0, 1.0f));
 
 	for(int n = 0; n < nelements; ++n) {
-		vqueue.push_back(x + w*xy[0]);
-		vqueue.push_back(y + h*xy[1]);
-
-		tcqueue.push_back(rect[0] + (rect[2]-rect[0])*uv[0]);
-		tcqueue.push_back(rect[1] + (rect[3]-rect[1])*uv[1]);
-
+		queue.emplace_back(glm::vec2(x + w*xy[0], y + h*xy[1]), glm::vec2(r.x() + r.w() * uv[0], r.y() + r.h() * uv[1]));
 		xy += 2;
 		uv += 2;
 	}
 
-#if defined(USE_SHADERS)
-	{
-		GLfloat draw_area[] = {GLfloat(x), GLfloat(y), GLfloat(x+w), GLfloat(y+h)};
-		if(face_right) {
-			std::swap(draw_area[0], draw_area[2]);
-		}
-		gles2::active_shader()->prepare_draw();
-		gles2::active_shader()->shader()->set_sprite_area(rect);
-		gles2::active_shader()->shader()->set_drawArea(draw_area);
-		gles2::active_shader()->shader()->set_cycle(cycle);
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
-	}
+	auto wnd = KRE::WindowManager::getMainWindow();
+	blit.update(&queue);
+	shader->setDrawArea(rect(x, y, w, h));
+	shader->setSpriteArea(r);
+	shader->setCycle(cycle);
+
+	blit.preRender(wnd);
+	wnd->render(&blit);
 
 	if(g_debug_custom_draw) {
-		static graphics::texture tex = graphics::texture::get("white2x2.png");
-		tex.set_as_currentTexture();
-
-		glColor4f(1.0,1.0,1.0,1.0);
-		gles2::active_shader()->prepare_draw();
-		gles2::active_shader()->shader()->vertex_array(2, GL_SHORT, 0, 0, &vqueue.front());
-		gles2::active_shader()->shader()->texture_array(2, GL_FLOAT, GL_FALSE, 0, &tcqueue.front());
-		glDrawArrays(GL_LINE_STRIP, 0, vqueue.size()/2);
+		static auto tex = KRE::Texture::createTexture("white2x2.png");
+		blit.setTexture(tex);
+		blit.setDrawMode(KRE::DrawMode::LINE_STRIP);
 	}
-#else
-	glVertexPointer(2, GL_SHORT, 0, &vqueue.front());
-	glTexCoordPointer(2, GL_FLOAT, 0, &tcqueue.front());
-	glDrawArrays(GL_TRIANGLE_STRIP, 0, tcqueue.size()/2);
-#endif
-
-	glPopMatrix();
 }
 
 void Frame::getRectInTexture(int time, const FrameInfo*& info) const

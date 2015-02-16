@@ -507,4 +507,9 @@ namespace KRE
 		const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
 		return (pixels + (y*s->width() + x)*s->getPixelFormat()->bytesPerPixel());
 	}
+
+	TexturePtr OpenGLTexture::clone()
+	{
+		return TexturePtr(new OpenGLTexture(*this));
+	}
 }
