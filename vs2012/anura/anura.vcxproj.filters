@@ -897,9 +897,6 @@
     <ClInclude Include="..\..\src\kre\Blend.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\kre\BlendOGL.hpp">
-      <Filter>Header Files\kre</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\kre\ScissorOGL.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
@@ -976,6 +973,15 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\kre\ColorScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\BlendModeScope.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\BlendOGL.hpp">
+      <Filter>Header Files\kre</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\kre\ScopeableValue.hpp">
       <Filter>Header Files\kre</Filter>
     </ClInclude>
   </ItemGroup>
@@ -1895,9 +1901,6 @@
     <ClCompile Include="..\..\src\kre\Blend.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\kre\BlendOGL.cpp">
-      <Filter>Source Files\kre</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\kre\Scissor.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
@@ -1947,6 +1950,12 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\kre\ColorScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\BlendModeScope.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\kre\BlendOGL.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
   </ItemGroup>

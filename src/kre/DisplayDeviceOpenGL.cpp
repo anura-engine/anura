@@ -50,24 +50,6 @@ namespace KRE
 		static DisplayDeviceRegistrar<DisplayDeviceOpenGL> ogl_register("opengl");
 	}
 
-	// These basically get attached to renderable's and we can retreive them during the
-	// rendering process. So we store stuff like shader information and shader variables.
-	class OpenGLDeviceData : public DisplayDeviceData
-	{
-	public:
-		OpenGLDeviceData() {
-		}
-		~OpenGLDeviceData() { 
-		}
-		void setShader(OpenGL::ShaderProgramPtr shader) {
-			shader_ = shader;
-		}
-		OpenGL::ShaderProgramPtr getShader() const { return shader_; }
-	private:
-		OpenGL::ShaderProgramPtr shader_;
-		OpenGLDeviceData(const OpenGLDeviceData&);
-	};
-
 	class RenderVariableDeviceData : public DisplayDeviceData
 	{
 	public:
@@ -216,20 +198,24 @@ namespace KRE
 
 	DisplayDeviceDataPtr DisplayDeviceOpenGL::createDisplayDeviceData(const DisplayDeviceDef& def)
 	{
-		OpenGLDeviceData* dd = new OpenGLDeviceData();
+		DisplayDeviceDataPtr dd = std::make_shared<DisplayDeviceData>();
+		OpenGL::ShaderProgramPtr shader;
 		bool use_default_shader = true;
 		for(auto& hints : def.getHints()) {
 			if(hints.first == "shader") {
 				// Need to have retrieved more shader data here.
-				dd->setShader(OpenGL::ShaderProgram::factory(hints.second[0]));
-				use_default_shader = false;
+				shader = OpenGL::ShaderProgram::factory(hints.second[0]);
+				if(shader != nullptr) {
+					dd->setShader(shader);
+				}
 			}
 			// ...
 			// add more hints here if needed.
 		}
 		// If there is no shader hint, we will assume the default system shader.
-		if(use_default_shader) {
-			dd->setShader(OpenGL::ShaderProgram::defaultSystemShader());
+		if(shader == nullptr) {
+			shader = OpenGL::ShaderProgram::defaultSystemShader();
+			dd->setShader(shader);
 		}
 		
 		// XXX Set uniforms from block here.
@@ -237,37 +223,33 @@ namespace KRE
 		for(auto& as : def.getAttributeSet()) {
 			for(auto& attr : as->getAttributes()) {
 				for(auto& desc : attr->getAttrDesc()) {
-					auto ddp = DisplayDeviceDataPtr(new RenderVariableDeviceData(dd->getShader()->getAttributeIterator(desc.getAttrName())));
+					auto ddp = DisplayDeviceDataPtr(new RenderVariableDeviceData(shader->getAttributeIterator(desc.getAttrName())));
 					desc.setDisplayData(ddp);
 				}
 			}
 		}
 
-		return DisplayDeviceDataPtr(dd);
+		return dd;
 	}
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
-		auto dd = std::dynamic_pointer_cast<OpenGLDeviceData>(r->getDisplayData());
-		ASSERT_LOG(dd != NULL, "Failed to cast display data to the type required(OpenGLDeviceData).");
-		auto shader = dd->getShader();
+		auto dd = r->getDisplayData();
+		// XXX work out removing this dynamic_pointer_cast.
+		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(dd->getShader());
+		ASSERT_LOG(shader != NULL, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
 		shader->makeActive();
 
-		BlendEquation::Manager blend(r->getBlendEquation());
-		BlendModeManagerOGL blend_mode(r->getBlendMode());
+		BlendEquationScopeOGL be_scope(*r);
+		BlendModeScopeOGL bm_scope(*r);
 
-		// lighting can be switched on or off at a material level.
-		// so we grab the return of the Material::Apply() function
-		// to find whether to apply it or not.
-		bool use_lighting = true;
-		if(r->getMaterial()) {
-			use_lighting = r->getMaterial()->apply();
-		}
+		// apply lighting/depth check/depth write here.
+		bool use_lighting = false;
 
-		glm::mat4 pmat(1.0f);
+		glm::mat4 pvmat(1.0f);
 		if(r->getCamera()) {
 			// set camera here.
-			pmat = r->getCamera()->getProjectionMat() * r->getCamera()->getViewMat();
+			pvmat = r->getCamera()->getProjectionMat() * r->getCamera()->getViewMat();
 		}
 
 		if(use_lighting) {
@@ -281,8 +263,8 @@ namespace KRE
 		}
 
 		if(shader->getMvpUniform() != shader->uniformsIteratorEnd()) {
-			pmat *= r->getModelMatrix();
-			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pmat));
+			pvmat *= r->getModelMatrix();
+			shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(pvmat));
 		}
 
 		if(shader->getColorUniform() != shader->uniformsIteratorEnd()) {
@@ -315,11 +297,11 @@ namespace KRE
 			std::vector<GLuint> enabled_attribs;
 
 			// apply blend, if any, from attribute set.
-			BlendEquation::Manager attrset_eq(r->getBlendEquation());
-			BlendModeManagerOGL attrset_mode(r->getBlendMode());
+			BlendEquationScopeOGL be_scope(*as);
+			BlendModeScopeOGL bm_scope(*as);
 
-			if(shader->getColorUniform() != shader->uniformsIteratorEnd() && as->getColor()) {
-				shader->setUniformValue(shader->getColorUniform(), as->getColor()->asFloatVector());
+			if(shader->getColorUniform() != shader->uniformsIteratorEnd() && as->isColorSet()) {
+				shader->setUniformValue(shader->getColorUniform(), as->getColor().asFloatVector());
 			}
 
 			for(auto& attr : as->getAttributes()) {
@@ -365,9 +347,6 @@ namespace KRE
 				glDisableVertexAttribArray(attrib);
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
-		}
-		if(r->getMaterial()) {
-			r->getMaterial()->unapply();
 		}
 		if(r->getRenderTarget()) {
 			r->getRenderTarget()->unapply();
@@ -550,10 +529,8 @@ namespace KRE
 		};
 
 		// Apply blend mode from texture if there is any.
-		std::unique_ptr<BlendModeManagerOGL> bmm;
-		if(tex->hasBlendMode()) {
-			bmm.reset(new BlendModeManagerOGL(tex->getBlendMode()));
-		}
+		BlendEquationScopeOGL be_scope(*tex);
+		BlendModeScopeOGL bm_scope(*tex);
 
 		glm::mat4 model = glm::translate(glm::mat4(1.0f), glm::vec3((vx1+vx2)/2.0f,(vy1+vy2)/2.0f,0.0f)) * glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f)) * glm::translate(glm::mat4(1.0f), glm::vec3(-(vx1+vy1)/2.0f,-(vy1+vy1)/2.0f,0.0f));
 		glm::mat4 mvp = glm::ortho(0.0f, 800.0f, 600.0f, 0.0f) * model;
@@ -642,11 +619,6 @@ namespace KRE
 			return false;
 		}
 		return true;
-	}
-
-	BlendModeScopePtr DisplayDeviceOpenGL::createBlendModeScope(const BlendMode& bm)
-	{
-		return std::make_shared<BlendModeScopeOGL>(bm);
 	}
 
 	EffectPtr DisplayDeviceOpenGL::createEffect(const variant& node)

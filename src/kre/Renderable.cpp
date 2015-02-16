@@ -35,8 +35,7 @@ namespace KRE
 		: order_(0),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		color_set_(false)
+		scale_(1.0f)
 	{
 	}
 
@@ -44,8 +43,7 @@ namespace KRE
 		: order_(order), 
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		color_set_(false)
+		scale_(1.0f)
 	{
 	}
 
@@ -53,8 +51,7 @@ namespace KRE
 		: order_(0),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f),
-		color_set_(false)
+		scale_(1.0f)
 	{
 		if(node.has_key("order")) {
 			order_ = node["order"].as_int32();
@@ -125,6 +122,11 @@ namespace KRE
 		if(node.has_key("color")) {
 			setColor(KRE::Color(node["color"]));
 		}
+		if(node.has_key("texture")) {
+			texture_ = DisplayDevice::createTexture(node["texture"]);
+		} else if(node.has_key("image")) {
+			texture_ = DisplayDevice::createTexture(node["image"]);			
+		}
 	}
 
 	Renderable::~Renderable()
@@ -181,9 +183,10 @@ namespace KRE
 		lights_ = lights;
 	}
 
-	void Renderable::setMaterial(const MaterialPtr& material)
+	void Renderable::setTexture(TexturePtr tex)
 	{
-		material_ = material;
+		texture_ = tex;
+		onTextureChanged();
 	}
 
 	void Renderable::setRenderTarget(const RenderTargetPtr& rt)
@@ -191,24 +194,6 @@ namespace KRE
 		render_target_ = rt;
 	}
 	
-	void Renderable::setColor(float r, float g, float b, float a)
-	{
-		color_set_ = true;
-		color_ = Color(r, g, b, a);
-	}
-
-	void Renderable::setColor(int r, int g, int b, int a)
-	{
-		color_set_ = true;
-		color_ = Color(r, g, b, a);
-	}
-
-	void Renderable::setColor(const Color& color)
-	{
-		color_set_ = true;
-		color_ = color;
-	}
-
 	void Renderable::setDisplayData(const DisplayDevicePtr& dd, const DisplayDeviceDef& def)
 	{
 		display_data_ = dd->createDisplayDeviceData(def);

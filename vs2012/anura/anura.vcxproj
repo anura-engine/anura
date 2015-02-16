@@ -263,6 +263,7 @@
     <ClInclude Include="..\..\src\kre\AttributeSet.hpp" />
     <ClInclude Include="..\..\src\kre\AttributeSetOpenGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blend.hpp" />
+    <ClInclude Include="..\..\src\kre\BlendModeScope.hpp" />
     <ClInclude Include="..\..\src\kre\BlendOGL.hpp" />
     <ClInclude Include="..\..\src\kre\Blittable.hpp" />
     <ClInclude Include="..\..\src\kre\CameraObject.hpp" />
@@ -309,6 +310,7 @@
     <ClInclude Include="..\..\src\kre\SceneUtil.hpp" />
     <ClInclude Include="..\..\src\kre\Scissor.hpp" />
     <ClInclude Include="..\..\src\kre\ScissorOGL.hpp" />
+    <ClInclude Include="..\..\src\kre\ScopeableValue.hpp" />
     <ClInclude Include="..\..\src\kre\SDLWrapper.hpp" />
     <ClInclude Include="..\..\src\kre\Shaders.hpp" />
     <ClInclude Include="..\..\src\kre\ShadersOpenGL.hpp" />
@@ -617,6 +619,7 @@
     <ClCompile Include="..\..\src\kre\AttributeSet.cpp" />
     <ClCompile Include="..\..\src\kre\AttributeSetOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Blend.cpp" />
+    <ClCompile Include="..\..\src\kre\BlendModeScope.cpp" />
     <ClCompile Include="..\..\src\kre\BlendOGL.cpp" />
     <ClCompile Include="..\..\src\kre\Blittable.cpp" />
     <ClCompile Include="..\..\src\kre\CameraObject.cpp" />

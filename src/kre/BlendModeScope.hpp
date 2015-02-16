@@ -23,27 +23,30 @@
 
 #pragma once
 
-#include <memory>
+#include <list>
+
+#include "Blend.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {
-	class DisplayDeviceDef;
+	class BlendModeScope
+	{
+	public:
+		// We use a list type for the stack type of scopes since iterators
+		// aren't invalidated by removing/adding elements (unless you remove the item
+		// the iterator points to -- but this is the expected case).
+		// Access to the back element and adding new elements is constant.
+		// Only erasing is linear in complexity.
+		typedef std::list<BlendMode> color_stack_type;
+		typedef std::list<BlendMode>::iterator iterator;
 
-	class DisplayDevice;
-	typedef std::shared_ptr<DisplayDevice> DisplayDevicePtr;
-
-	class DisplayDeviceData;
-	typedef std::shared_ptr<DisplayDeviceData> DisplayDeviceDataPtr;
-
-	class Texture;
-	typedef std::shared_ptr<Texture> TexturePtr;
-
-	class Effect;
-	typedef std::shared_ptr<Effect> EffectPtr;
-
-	class BlendModeScope;
-	typedef std::unique_ptr<BlendModeScope> BlendModeScopePtr;
-
-	class BlendEquationImplBase;
-	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
+		explicit BlendModeScope(const BlendMode& bm);
+		explicit BlendModeScope(const BlendModeConstants& src, const BlendModeConstants& dst);
+		~BlendModeScope();
+		static const BlendMode& getCurrentMode();
+	private:
+		DISALLOW_COPY_ASSIGN_AND_DEFAULT(BlendModeScope);
+		iterator it_;
+	};
 }

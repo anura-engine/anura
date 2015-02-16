@@ -21,29 +21,45 @@
 	   distribution.
 */
 
-#pragma once
-
-#include <memory>
+#include "BlendModeScope.hpp"
 
 namespace KRE
 {
-	class DisplayDeviceDef;
+	namespace 
+	{
+		BlendModeScope::color_stack_type& get_mode_stack()
+		{
+			static BlendModeScope::color_stack_type res;
+			return res;
+		}
 
-	class DisplayDevice;
-	typedef std::shared_ptr<DisplayDevice> DisplayDevicePtr;
+		const BlendMode& get_default_mode()
+		{
+			static BlendMode res = BlendMode();
+			return res;
+		}
+	}
 
-	class DisplayDeviceData;
-	typedef std::shared_ptr<DisplayDeviceData> DisplayDeviceDataPtr;
+	BlendModeScope::BlendModeScope(const BlendMode& bm)
+	{
+		it_ = get_mode_stack().emplace(get_mode_stack().end(), bm);
+	}
 
-	class Texture;
-	typedef std::shared_ptr<Texture> TexturePtr;
+	BlendModeScope::BlendModeScope(const BlendModeConstants& src, const BlendModeConstants& dst)
+	{
+		it_ = get_mode_stack().emplace(get_mode_stack().end(), BlendMode(src, dst));
+	}
 
-	class Effect;
-	typedef std::shared_ptr<Effect> EffectPtr;
+	BlendModeScope::~BlendModeScope()
+	{
+		get_mode_stack().erase(it_);
+	}
 
-	class BlendModeScope;
-	typedef std::unique_ptr<BlendModeScope> BlendModeScopePtr;
-
-	class BlendEquationImplBase;
-	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
+	const BlendMode& BlendModeScope::getCurrentMode()
+	{
+		if(get_mode_stack().empty()) {
+			return get_default_mode();
+		}
+		return get_mode_stack().back();
+	}
 }

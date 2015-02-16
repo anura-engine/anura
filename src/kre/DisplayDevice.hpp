@@ -67,7 +67,10 @@ namespace KRE
 	public:
 		DisplayDeviceData();
 		virtual ~DisplayDeviceData();
+		void setShader(ShaderProgramPtr shader);
+		ShaderProgramPtr getShader() const { return shader_; }
 	private:
+		ShaderProgramPtr shader_;
 		DisplayDeviceData(const DisplayDeviceData&);
 	};
 
@@ -140,8 +143,8 @@ namespace KRE
 		virtual DisplayDeviceId ID() const = 0;
 
 		virtual void setClearColor(uint8_t r, uint8_t g, uint8_t b, uint8_t a) const;
-		virtual void setClearColor(float r, float g, float b, float a) = 0;
-		virtual void setClearColor(const Color& color) = 0;
+		virtual void setClearColor(float r, float g, float b, float a) const = 0;
+		virtual void setClearColor(const Color& color) const = 0;
 
 		virtual void clear(ClearFlags clr) = 0;
 		virtual void swap() = 0;
@@ -170,7 +173,6 @@ namespace KRE
 
 		virtual ClipScopePtr createClipScope(const rect& r) = 0;
 		virtual StencilScopePtr createStencilScope(const StencilSettings& settings) = 0;
-		virtual BlendModeScopePtr createBlendModeScope(const BlendMode& bm) = 0;
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 

@@ -80,6 +80,13 @@ namespace KRE
 		BlendEquationConstants alpha_;
 	};
 
+	inline bool operator==(const BlendEquation& lhs, const BlendEquation& rhs) {
+		return lhs.getRgbEquation() == rhs.getRgbEquation() && lhs.getAlphaEquation()== rhs.getAlphaEquation();
+	}
+	inline bool operator!=(const BlendEquation& lhs, const BlendEquation& rhs) {
+		return !operator==(lhs, rhs);
+	}
+
 	class BlendEquationImplBase
 	{
 	public:
@@ -124,26 +131,10 @@ namespace KRE
 		BlendModeConstants dst_;
 	};
 
-	class BlendModeScope
-	{
-	public:
-		virtual ~BlendModeScope() {
-			handleUnapply();
-		}
-		const BlendMode& getBlendMode() const { return bm_; }
-		static BlendModeScopePtr create(const BlendMode& bm);
-	protected:
-		explicit BlendModeScope(const BlendMode& bm) : bm_(bm) {
-			handleApply();
-		}
-	private:
-		virtual void handleApply() const = 0;
-		virtual void handleUnapply() const = 0;
-		const BlendMode& bm_;
-
-		BlendModeScope();
-		BlendModeScope(const BlendModeScope&);
-		void operator=(const BlendModeScope&);
-	};
-
+	inline bool operator==(const BlendMode& lhs, const BlendMode& rhs) {
+		return lhs.src() == rhs.src() && lhs.dst()== rhs.dst();
+	}
+	inline bool operator!=(const BlendMode& lhs, const BlendMode& rhs) {
+		return !operator==(lhs, rhs);
+	}
 }

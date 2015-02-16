@@ -25,7 +25,7 @@
 #include <iostream>
 #include <math.h>
 
-#include "Blend.hpp"
+#include "BlendModeScope.hpp"
 #include "ColorScope.hpp"
 #include "RenderTarget.hpp"
 #include "StencilScope.hpp"
@@ -2083,7 +2083,7 @@ void Level::draw(int x, int y, int w, int h) const
 				if(!obj->allowLevelCollisions() && entity_collides_with_level(*this, *obj, MOVE_DIRECTION::NONE)) {
 					//if the entity is colliding with the level, then draw
 					//it in red to mark as 'bad'.
-					auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
+					KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE);
 					const float alpha = 0.5f + std::sin(draw_count / 5.0f) * 0.5f;
 					KRE::ColorScope color_scope(KRE::Color(1.0f, 0.0f, 0.0f, alpha));
 					obj->draw(x, y);
@@ -2102,7 +2102,7 @@ void Level::draw(int x, int y, int w, int h) const
 				}
 			}
 
-			auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
+			KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE);
 			const float alpha = 0.5f + sin(draw_count / 5.0f) * 0.5f;
 			KRE::ColorScope color_scope(KRE::Color(1.0f, 0.0f, 1.0f, alpha));
 
@@ -2255,7 +2255,7 @@ void Level::calculateLighting(int x, int y, int w, int h) const
 	auto rt = KRE::RenderTarget::create(w, h);
 
 	{
-		auto blend_scope = KRE::BlendModeScope::create(KRE::BlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE));
+		KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE);
 		rect screen_area(x, y, w, h);
 		
 		KRE::RenderTarget::RenderScope scope(rt);

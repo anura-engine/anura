@@ -25,9 +25,8 @@
 
 #include <memory>
 #include <string>
-#include "Blend.hpp"
-#include "Color.hpp"
 #include "geometry.hpp"
+#include "ScopeableValue.hpp"
 #include "Surface.hpp"
 #include "variant.hpp"
 
@@ -42,7 +41,7 @@ namespace KRE
 	// unpack image height
 	// unpack skip rows, skip pixels
 
-	class Texture
+	class Texture : public ScopeableValue
 	{
 	public:
 		enum class Type {
@@ -98,12 +97,12 @@ namespace KRE
 
 		void internalInit();
 
-		unsigned width() const { return width_; }
-		unsigned height() const { return height_; }
-		unsigned depth() const { return depth_; }
+		int width() const { return width_; }
+		int height() const { return height_; }
+		int depth() const { return depth_; }
 
-		unsigned surfaceWidth() const { return surface_width_; }
-		unsigned surfacehHeight() const { return surface_height_; }
+		int surfaceWidth() const { return surface_width_; }
+		int surfacehHeight() const { return surface_height_; }
 
 		virtual void init() = 0;
 		virtual void bind() = 0;
@@ -144,10 +143,6 @@ namespace KRE
 		int getUnpackAlignment() const { return unpack_alignment_; }
 		void setUnpackAlignment(int align);
 
-		bool hasBlendMode() const { return blend_mode_ != NULL; }
-		const BlendMode getBlendMode() const;
-		void setBlendMode(const BlendMode& bm) { blend_mode_.reset(new BlendMode(bm)); }
-
 		template<typename N, typename T>
 		const geometry::Rect<N> getNormalisedTextureCoords(const geometry::Rect<T>& r) {
 			float w = static_cast<float>(surface_width_);
@@ -171,6 +166,14 @@ namespace KRE
 		std::vector<bool>::const_iterator endAlpha() const { return alpha_map_.end(); }
 
 		static void clearCache();
+
+		// Set source rect in un-normalised co-ordinates.
+		void setSourceRect(const rect& r);
+		// Set source rect in normalised co-ordinates.
+		void setSourceRectNormalised(const rectf& r);
+
+		const rectf& getSourceRectNormalised() const { return src_rect_norm_; }
+		const rect& getSourceRect() const { return src_rect_; }
 	protected:
 		void setTextureDimensions(unsigned w, unsigned h, unsigned d=0);
 	private:
@@ -186,20 +189,21 @@ namespace KRE
 		Texture();
 		SurfacePtr surface_;
 
-		std::unique_ptr<BlendMode> blend_mode_;
-
 		std::vector<bool> alpha_map_;
 		
-		unsigned surface_width_;
-		unsigned surface_height_;
+		int surface_width_;
+		int surface_height_;
 
 		// Width/Height/Depth of the created texture -- may be a 
 		// different size than the surface if things like only
 		// allowing power-of-two textures is in effect.
-		unsigned width_;
-		unsigned height_;
-		unsigned depth_;
+		int width_;
+		int height_;
+		int depth_;
 
 		int unpack_alignment_;
+
+		rect src_rect_;
+		rectf src_rect_norm_;
 	};
 }

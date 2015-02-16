@@ -49,7 +49,6 @@ namespace KRE
 		ClipScopePtr createClipScope(const rect& r) override;
 		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
 		ScissorPtr getScissor(const rect& r) override;
-		BlendModeScopePtr createBlendModeScope(const BlendMode& bm) override;
 
 		EffectPtr createEffect(const variant& node) override;
 

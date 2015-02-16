@@ -39,6 +39,5 @@ namespace KRE
 		void handleApply() override;
 		void handleUnapply() override;
 		TexturePtr createTexture(const variant& node) override;
-		std::unique_ptr<BlendModeManagerOGL> blend_mode_manager_;
 	};
 }

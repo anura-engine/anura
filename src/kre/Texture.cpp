@@ -21,6 +21,14 @@
 	   distribution.
 */
 
+#if defined(_MSC_VER) && _MSC_VER < 1800
+#include <boost/math/special_functions/round.hpp>
+using boost::math::round;
+#else
+#include <cmath>
+using std::round;
+#endif
+
 #include <set>
 #include "asserts.hpp"
 #include "DisplayDevice.hpp"
@@ -62,7 +70,9 @@ namespace KRE
 		width_(0),
 		height_(0),
 		depth_(0),
-		unpack_alignment_(4)
+		unpack_alignment_(4),
+		src_rect_(),
+		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
 		if(surface == nullptr && node.is_string()) {
 			surface_ = Surface::create(node.as_string());
@@ -177,6 +187,7 @@ namespace KRE
 		if(node.has_key("rect")) {
 			ASSERT_LOG(node["rect"].is_list(), "'rect' attribute must be a list of numbers.");
 			ASSERT_LOG(node["rect"].num_elements() >= 4, "'rect' attribute must have at least 4 elements.");
+			setSourceRect(rect(node["rect"]));
 		}
 	}
 
@@ -191,14 +202,16 @@ namespace KRE
 		width_(0),
 		height_(0),
 		depth_(0),
-		unpack_alignment_(4)
+		unpack_alignment_(4),
+		src_rect_(),
+		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
 		internalInit();
 	}
 
-	Texture::Texture(unsigned width, 
-		unsigned height, 
-		unsigned depth,
+	Texture::Texture(int width, 
+		int height, 
+		int depth,
 		PixelFormat::PF fmt, 
 		Type type)
 		: type_(type), 
@@ -210,7 +223,9 @@ namespace KRE
 		width_(width),
 		height_(height),
 		depth_(depth),
-		unpack_alignment_(4)
+		unpack_alignment_(4),
+		src_rect_(),
+		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
 		internalInit();
 	}
@@ -249,6 +264,8 @@ namespace KRE
 			height_ = surface_height_;
 			depth_ = 0;
 		}
+
+		src_rect_ = rect(0, 0, width_, height_);
 
 		const int npixels = width_ * height_;
 		alpha_map_.resize(npixels);
@@ -326,7 +343,7 @@ namespace KRE
 		}
 	}
 
-	void Texture::setTextureDimensions(unsigned w, unsigned h, unsigned d)
+	void Texture::setTextureDimensions(int w, int h, int d)
 	{
 		width_ = w;
 		height_ = h;
@@ -340,10 +357,19 @@ namespace KRE
 		unpack_alignment_ = align;
 	}
 
-	const BlendMode Texture::getBlendMode() const 
-	{ 
-		ASSERT_LOG(blend_mode_ != NULL, "Called getBlendMode(), but BlendMode is null. Maybe call hasBlendMode() first?"); 
-		return *(blend_mode_.get()); 
+	void Texture::setSourceRect(const rect& r)
+	{
+		src_rect_ = r;
+		src_rect_norm_ = getNormalisedTextureCoords<float>(src_rect_);
+	}
+
+	void Texture::setSourceRectNormalised(const rectf& r)
+	{
+		src_rect_norm_ = r;
+		src_rect_ = rect::from_coordinates(static_cast<int>(round(r.x() * width_)),
+			static_cast<int>(round(r.y() * height_)),
+			static_cast<int>(round(r.x2() * width_)),
+			static_cast<int>(round(r.y2() * height_)));
 	}
 
 	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)

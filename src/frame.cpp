@@ -27,8 +27,10 @@
 
 #include <boost/lexical_cast.hpp>
 
+#include "Blittable.hpp"
 #include "DisplayDevice.hpp"
 #include "TextureUtils.hpp"
+#include "WindowManager.hpp"
 
 #include "asserts.hpp"
 #include "frame.hpp"
@@ -143,8 +145,7 @@ void Frame::buildPatterns(variant obj_variant)
 }
 
 Frame::Frame(variant node)
-   : SceneObject("Frame"), 
-	id_(node["id"].as_string()),
+   : id_(node["id"].as_string()),
      variant_id_(id_),
      enter_event_id_(get_object_event_id("enter_" + id_ + "_anim")),
 	 end_event_id_(get_object_event_id("end_" + id_ + "_anim")),
@@ -193,12 +194,13 @@ Frame::Frame(variant node)
 	 collision_areas_inside_frame_(true),
 	 current_palette_(-1)
 {
-	if(node.has_key("obj") == false) {
-		image_ = node["image"].as_string();
+	if(node.has_key("obj") == false) {		
 		if(node.has_key("fbo")) {
-			texture_ = node["fbo"].convert_to<TextureObject>()->texture();
-		} else {
-			texture_ = KRE::Texture::createTexture(image_, node["image_formula"]);
+			blit_target_.setTexture(node["fbo"].convert_to<TextureObject>()->texture());
+		} else if(node.has_key("image")) {
+			blit_target_.setTexture(KRE::Texture::createTexture(node["image"]));
+		} else if(node.has_key("texture")) {
+			blit_target_.setTexture(KRE::Texture::createTexture(node["texture"]));
 		}
 	}
 
@@ -300,7 +302,7 @@ Frame::Frame(variant node)
 			const int h = *i++;
 			info.area = rect(x, y, w, h);
 			frames_.push_back(info);
-			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(texture_->width()), static_cast<int>(texture_->height()))), info.area);
+			ASSERT_EQ(intersection_rect(info.area, rect(0, 0, static_cast<int>(blit_target_.getTexture()->width()), static_cast<int>(blit_target_.getTexture()->height()))), info.area);
 			ASSERT_EQ(w + (info.x_adjust + info.x2_adjust), img_rect_.w());
 			ASSERT_EQ(h + (info.y_adjust + info.y2_adjust), img_rect_.h());
 
@@ -393,10 +395,10 @@ void Frame::setPalettes(unsigned int palettes)
 	const std::string& str = graphics::get_palette_name(npalette);
 	if(str.empty()) {
 		LOG_WARN("No palette from id: " << npalette);
-		texture_ = KRE::Texture::createTexture(image_);
+		blit_target_.setTexture(KRE::Texture::createTexture(image_));
 	} else {
 		auto surf = graphics::SurfaceCache::get(str);
-		texture_ = KRE::Texture::createPalettizedTexture(image_, surf);
+		blit_target_.setTexture(KRE::Texture::createPalettizedTexture(image_, surf));
 		current_palette_ = npalette;
 	}
 }
@@ -411,7 +413,7 @@ void Frame::setColorPalette(unsigned int palettes)
 
 void Frame::setImageAsSolid()
 {
-	solid_ = SolidInfo::createFromTexture(texture_, img_rect_);
+	solid_ = SolidInfo::createFromTexture(blit_target_.getTexture(), img_rect_);
 }
 
 void Frame::playSound(const void* object) const
@@ -426,7 +428,7 @@ void Frame::playSound(const void* object) const
 
 void Frame::buildAlphaFromFrameInfo()
 {
-	if(texture_ == NULL) {
+	if(blit_target_.getTexture() == nullptr) {
 		return;
 	}
 
@@ -438,10 +440,10 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_INDEX_INTO_VECTOR(dst_index, alpha_);
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			ASSERT_LT(area.x(), static_cast<int>(texture_->width()));
-			ASSERT_LE(area.x() + area.w(), static_cast<int>(texture_->width()));
-			ASSERT_LT(area.y() + y, static_cast<int>(texture_->height()));
-			std::vector<bool>::const_iterator src = texture_->getAlphaRow(area.x(), area.y() + y);
+			ASSERT_LT(area.x(), static_cast<int>(blit_target_.getTexture()->width()));
+			ASSERT_LE(area.x() + area.w(), static_cast<int>(blit_target_.getTexture()->width()));
+			ASSERT_LT(area.y() + y, static_cast<int>(blit_target_.getTexture()->height()));
+			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
 			
@@ -460,7 +462,7 @@ void Frame::buildAlphaFromFrameInfo()
 void Frame::buildAlpha()
 {
 	frames_.resize(nframes_);
-	if(texture_ == NULL) {
+	if(blit_target_.getTexture() == nullptr) {
 		return;
 	}
 
@@ -473,9 +475,9 @@ void Frame::buildAlpha()
 		const int ybase = img_rect_.y() + current_row*(img_rect_.h()+pad_);
 
 		if(xbase < 0 || ybase < 0 
-			|| xbase + img_rect_.w() > static_cast<int>(texture_->width())
-			|| ybase + img_rect_.h() > static_cast<int>(texture_->height())) {
-			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << texture_->width() << "," << texture_->height());
+			|| xbase + img_rect_.w() > static_cast<int>(blit_target_.getTexture()->width())
+			|| ybase + img_rect_.h() > static_cast<int>(blit_target_.getTexture()->height())) {
+			LOG_INFO("IMAGE RECT FOR FRAME '" << id_ << "' #" << n << ": " << img_rect_.x() << " + " << current_col << " * (" << img_rect_.w() << "+" << pad_ << ") IS INVALID: " << xbase << ", " << ybase << ", " << (xbase + img_rect_.w()) << ", " << (ybase + img_rect_.h()) << " / " << blit_target_.getTexture()->width() << "," << blit_target_.getTexture()->height());
 			throw Error();
 		}
 
@@ -485,7 +487,7 @@ void Frame::buildAlpha()
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = texture_->getAlphaRow(xbase, ybase + y);
+			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getAlphaRow(xbase, ybase + y);
 			std::copy(src, src + img_rect_.w(), dst);
 		}
 
@@ -500,7 +502,7 @@ void Frame::buildAlpha()
 		
 		int top;
 		for(top = 0; top != img_rect_.h(); ++top) {
-			const std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase, ybase + top);
+			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase, ybase + top);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -508,7 +510,7 @@ void Frame::buildAlpha()
 
 		int bot;
 		for(bot = img_rect_.h(); bot > 0; --bot) {
-			const std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase, ybase + bot-1);
+			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase, ybase + bot-1);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -516,7 +518,7 @@ void Frame::buildAlpha()
 
 		int left;
 		for(left = 0; left < img_rect_.w(); ++left) {
-			std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase + left, ybase);
+			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase + left, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -524,7 +526,7 @@ void Frame::buildAlpha()
 					has_opaque = true;
 				}
 				if(n+1 != img_rect_.h()) {
-					a += texture_->width();
+					a += blit_target_.getTexture()->width();
 				}
 			}
 
@@ -535,7 +537,7 @@ void Frame::buildAlpha()
 
 		int right;
 		for(right = img_rect_.w(); right > 0; --right) {
-			std::vector<bool>::const_iterator a = texture_->getAlphaRow(xbase + right-1, ybase);
+			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase + right-1, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -544,7 +546,7 @@ void Frame::buildAlpha()
 				}
 
 				if(n+1 != img_rect_.h()) {
-					a += texture_->width();
+					a += blit_target_.getTexture()->width();
 				}
 			}
 
@@ -613,62 +615,29 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 	return alpha_.begin() + index;
 }
 
-// XXX Need to fix these up
-#if 0
-void Frame::draw_into_blit_queue(graphics::blit_queue& blit, int x, int y, bool face_right, bool upside_down, int time) const
+void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, float rotate) const
 {
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
-
-	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	y += (info->y_adjust)*scale_;
-	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
-	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
-
-	rect[0] = texture_.translate_coord_x(rect[0]);
-	rect[1] = texture_.translate_coord_y(rect[1]);
-	rect[2] = texture_.translate_coord_x(rect[2]);
-	rect[3] = texture_.translate_coord_y(rect[3]);
-
-	blit.setTexture(texture_.getId());
-
-
-	blit.add(x, y, rect[0], rect[1]);
-	blit.add(x + w, y, rect[2], rect[1]);
-	blit.add(x, y + h, rect[0], rect[3]);
-	blit.add(x + w, y + h, rect[2], rect[3]);
-}
-
-void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate) const
-{
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
+	const FrameInfo* info = NULL;
+	getRectInTexture(time, info);
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
 	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
 	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
-	gles2::active_shader()->shader()->set_sprite_area(rect);
+	gles2::active_shader()->shader()->set_sprite_area(blit_target_.getTexture()->getSourceRect());
 
-	if(rotate == 0) {
-		//if there is no rotation, then we can make a much simpler call
-		graphics::queue_blit_texture(texture_, x, y, w, h, rect[0], rect[1], rect[2], rect[3]);
-		graphics::flush_blit_texture();
-		return;
-	}
-
-	graphics::queue_blit_texture(texture_, x, y, w, h, rotate, rect[0], rect[1], rect[2], rect[3]);
-	graphics::flush_blit_texture();
+	auto wnd = KRE::WindowManager::getMainWindow();
+	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
+	blit_target_.setDrawRect(rect(x, y, w, h));
+	blit_target_.preRender(wnd);
+	wnd->render(&blit_target_);
 }
 
-void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfloat rotate, GLfloat scale) const
+void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const
 {
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
+	const FrameInfo* info = NULL;
+	getRectInTexture(time, info);
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
@@ -681,24 +650,19 @@ void Frame::draw(int x, int y, bool face_right, bool upside_down, int time, GLfl
 	x -= width_delta/2;
 	y -= height_delta/2;
 
-	gles2::active_shader()->shader()->set_sprite_area(rect);
+	gles2::active_shader()->shader()->set_sprite_area(blit_target_.getTexture()->getSourceRect());
 
-	if(rotate == 0) {
-		//if there is no rotation, then we can make a much simpler call
-		graphics::queue_blit_texture(texture_, x, y, w, h, rect[0], rect[1], rect[2], rect[3]);
-		graphics::flush_blit_texture();
-		return;
-	}
-
-	graphics::queue_blit_texture(texture_, x, y, w, h, rotate, rect[0], rect[1], rect[2], rect[3]);
-	graphics::flush_blit_texture();
+	auto wnd = KRE::WindowManager::getMainWindow();
+	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
+	blit_target_.setDrawRect(rect(x, y, w, h));
+	blit_target_.preRender(wnd);
+	wnd->render(&blit_target_);
 }
 
-void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_down, int time, GLfloat rotate) const
+void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
 {
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
+	const FrameInfo* info = NULL;
+	getRectInTexture(time, info);
 
 	const int x_adjust = area.x();
 	const int y_adjust = area.y();
@@ -708,28 +672,23 @@ void Frame::draw(int x, int y, const rect& area, bool face_right, bool upside_do
 	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
 	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
 
-	rect[0] += GLfloat(x_adjust)/GLfloat(texture_.width());
-	rect[1] += GLfloat(y_adjust)/GLfloat(texture_.height());
-	rect[2] += GLfloat(x_adjust + w_adjust)/GLfloat(texture_.width());
-	rect[3] += GLfloat(y_adjust + h_adjust)/GLfloat(texture_.height());
+	const rect src_rect = blit_target_.getTexture()->getSourceRect();
 
-	//the last 4 params are the rectangle of the single, specific frame
-	graphics::blit_texture(texture_, x, y, (w + w_adjust*scale_)*(face_right ? 1 : -1), (h + h_adjust*scale_)*(upside_down ? -1 : 1), rotate + (face_right ? rotate_ : -rotate_),
-	                       rect[0], rect[1], rect[2], rect[3]);
+	auto wnd = KRE::WindowManager::getMainWindow();
+	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
+	blit_target_.setDrawRect(rect(x, y, (w + w_adjust*scale_)*(face_right ? 1 : -1), (h + h_adjust*scale_)*(upside_down ? -1 : 1)));
+	blit_target_.getTexture()->setSourceRect(rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust)));
+	blit_target_.preRender(wnd);
+	wnd->render(&blit_target_);
+	blit_target_.getTexture()->setSourceRect(src_rect);
 }
 
 
-void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, GLfloat rotate) const
+void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotate) const
 {
-	texture_.set_as_currentTexture();
-
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
-	rect[0] = texture_.translate_coord_x(rect[0]);
-	rect[1] = texture_.translate_coord_y(rect[1]);
-	rect[2] = texture_.translate_coord_x(rect[2]);
-	rect[3] = texture_.translate_coord_y(rect[3]);
+	const FrameInfo* info = NULL;
+	getRectInTexture(time, info);
+	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
@@ -844,17 +803,11 @@ void Frame::drawCustom(int x, int y, const std::vector<CustomPoint>& points, con
 
 PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing");
 
-void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, GLfloat rotate, int cycle) const
+void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotate, int cycle) const
 {
-	texture_.set_as_currentTexture();
-
-	const frame_info* info = NULL;
-	GLfloat rect[4];
-	getRectInTexture(time, &rect[0], info);
-	rect[0] = texture_.translate_coord_x(rect[0]);
-	rect[1] = texture_.translate_coord_y(rect[1]);
-	rect[2] = texture_.translate_coord_x(rect[2]);
-	rect[3] = texture_.translate_coord_y(rect[3]);
+	const FrameInfo* info = NULL;
+	getRectInTexture(time, info);
+	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
 
 	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
 	y += info->y_adjust*scale_;
@@ -927,30 +880,27 @@ void Frame::drawCustom(int x, int y, const float* xy, const float* uv, int nelem
 
 	glPopMatrix();
 }
-#endif
 
-void Frame::getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const
+void Frame::getRectInTexture(int time, const FrameInfo*& info) const
 {
 	//picks out a single frame to draw from a whole animation, based on time
-	getRectInFrameNumber(frameNumber(time), output_rect, info);
+	getRectInFrameNumber(frameNumber(time), info);
 }
 
-void Frame::getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info_result) const
+void Frame::getRectInFrameNumber(int nframe, const FrameInfo*& info_result) const
 {
 	const FrameInfo& info = frames_[nframe];
 	info_result = &info;
 
 	if(info.draw_rect_init) {
-		output_rect = info.draw_rect;
 		return;
 	}
 
 	const int current_col = (nframes_per_row_ > 0) ? (nframe % nframes_per_row_) : nframe ;
 	const int current_row = (nframes_per_row_ > 0) ? (nframe/nframes_per_row_) : 0 ;
 
-	output_rect = texture_->getNormalisedTextureCoords<float>(info.area);
-
-	info.draw_rect = output_rect;
+	blit_target_.getTexture()->setSourceRect(info.area);
+	info.draw_rect = blit_target_.getTexture()->getSourceRectNormalised();
 	info.draw_rect_init = true;
 }
 

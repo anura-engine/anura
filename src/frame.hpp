@@ -26,7 +26,7 @@
 #include <string>
 #include <vector>
 
-#include "Material.hpp"
+#include "Blittable.hpp"
 #include "SceneObject.hpp"
 
 #include "formula.hpp"
@@ -35,7 +35,7 @@
 #include <glm/glm.hpp>
 
 
-class Frame : public game_logic::FormulaCallable, public KRE::SceneObject
+class Frame : public game_logic::FormulaCallable
 {
 public:
 	//exception thrown when there's a loading error.
@@ -72,7 +72,7 @@ public:
 	std::vector<bool>::const_iterator getAlphaItor(int x, int y, int time, bool face_right) const;
 	const std::vector<bool>& getAlphaBuf() const { return alpha_; }
 
-	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0, KRE::Color=KRE::Color::colorWhite()) const;
+	void draw(int x, int y, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
 	void draw(int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const;
 	void draw(int x, int y, const rect& area, bool face_right=true, bool upside_down=false, int time=0, float rotate=0) const;
 
@@ -109,7 +109,7 @@ public:
 	int height() const { return static_cast<int>(img_rect_.h()*scale_); }
 	int duration() const;
 	bool hit(int time_in_frame) const;
-	const KRE::TexturePtr& img() const { return texture_; }
+	const KRE::TexturePtr& img() const { return blit_target_.getTexture(); }
 	const rect& area() const { return img_rect_; }
 	int numFrames() const { return nframes_; }
 	int numFramesPerRow() const { return nframes_per_row_ > 0 && nframes_per_row_ < nframes_ ? nframes_per_row_ : nframes_; }
@@ -145,8 +145,8 @@ public:
 private:
 	DECLARE_CALLABLE(Frame);
 
-	void getRectInTexture(int time, rectf& output_rect, const FrameInfo*& info) const;
-	void getRectInFrameNumber(int nframe, rectf& output_rect, const FrameInfo*& info) const;
+	void getRectInTexture(int time, const FrameInfo*& info) const;
+	void getRectInFrameNumber(int nframe, const FrameInfo*& info) const;
 	std::string id_, image_;
 
 	//ID as a variant, useful to be able to get a variant of the ID
@@ -155,7 +155,6 @@ private:
 
 	//ID's used to signal events that occur on this animation.
 	int enter_event_id_, end_event_id_, leave_event_id_, processEvent_id_;
-	KRE::TexturePtr texture_;
 	ConstSolidInfoPtr solid_;
 	rect collide_rect_;
 	rect hit_rect_;
@@ -206,6 +205,8 @@ private:
 	std::vector<PivotSchedule> pivots_;
 
 	void setPalettes(unsigned int palettes);
+
+	mutable KRE::Blittable blit_target_;
 };
 
 typedef boost::intrusive_ptr<Frame> FramePtr;

@@ -26,14 +26,15 @@
 #include <glm/gtx/quaternion.hpp>
 
 #include "AttributeSet.hpp"
-#include "Material.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
+#include "ScopeableValue.hpp"
+#include "Texture.hpp"
 #include "variant.hpp"
 
 namespace KRE
 {
-	class Renderable
+	class Renderable : public ScopeableValue
 	{
 	public:
 		Renderable();
@@ -56,12 +57,6 @@ namespace KRE
 
 		glm::mat4 getModelMatrix() const;
 
-		void setColor(float r, float g, float b, float a=1.0);
-		void setColor(int r, int g, int b, int a=255);
-		void setColor(const Color& color);
-		const Color& getColor() const { return color_; }
-		bool isColorSet() const { return color_set_; }
-
 		size_t getOrder() const { return order_; }
 		void setOrder(size_t o) { order_ = o; }
 
@@ -71,15 +66,8 @@ namespace KRE
 		const LightPtrList& getLights() const { return lights_; }
 		void setLights(const LightPtrList& lights);
 
-		const MaterialPtr& getMaterial() const { return material_; }
-		void setMaterial(const MaterialPtr& material);
-
-		const BlendEquation& getBlendEquation() const { return blend_eqn_; }
-		void setBlendEquation(const BlendEquation& eqn) { blend_eqn_ = eqn; }
-
-		const BlendMode& getBlendMode() const { return blend_mode_; }
-		void setBlendMode(const BlendMode& bm) { blend_mode_ = bm; }
-		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); }
+		TexturePtr getTexture() const { return texture_; }
+		void setTexture(TexturePtr tex);
 
 		const RenderTargetPtr& getRenderTarget() const { return render_target_; }
 		void setRenderTarget(const RenderTargetPtr& rt);
@@ -103,18 +91,16 @@ namespace KRE
 		// Called after draw commands have been sent before anything is torn down.
 		virtual void renderEnd() {}
 	private:
+		virtual void onTextureChanged() {}
+
 		size_t order_;
 		glm::vec3 position_;
 		glm::quat rotation_;
 		glm::vec3 scale_;
 		CameraPtr camera_;
 		LightPtrList lights_;
-		MaterialPtr material_;
+		TexturePtr texture_;
 		RenderTargetPtr render_target_;
-		Color color_;
-		bool color_set_;
-		BlendEquation blend_eqn_;
-		BlendMode blend_mode_;
 
 		std::vector<AttributeSetPtr> attributes_;
 		//std::vector<UniformSetPtr> uniforms_;

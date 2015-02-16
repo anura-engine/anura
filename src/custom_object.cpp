@@ -24,6 +24,7 @@
 #include <boost/math/special_functions/round.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "BlendModeScope.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
 #include "Font.hpp"
@@ -1151,7 +1152,6 @@ void CustomObject::draw(int xx, int yy) const
 	}
 
 	KRE::Color current_color = KRE::Color::colorWhite();
-
 	if(draw_color_) {
 		current_color = draw_color_->toColor();
 	}
@@ -1181,7 +1181,7 @@ void CustomObject::draw(int xx, int yy) const
 
 	if(draw_color_) {
 		if(!draw_color_->fits_in_color()) {
-			KRE::BlendModeScope blend_scope(KRE::BlendMode(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE));
+			KRE::BlendModeScope blend_scope(KRE::BlendModeConstants::BM_SRC_ALPHA, KRE::BlendModeConstants::BM_ONE);
 			KRE::ColorTransform transform = *draw_color_;
 			while(!transform.fits_in_color()) {
 				transform = transform - transform.toColor();
