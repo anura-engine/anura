@@ -959,7 +959,7 @@ void Level::setPlayerVariantType(variant type_str)
 
 	g_player_type = parse_variant_type(type_str);
 
-	ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition("level");
+	ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition("Level");
 	assert(def.get());
 
 	FormulaCallableDefinition* mutable_def = const_cast<FormulaCallableDefinition*>(def.get());
