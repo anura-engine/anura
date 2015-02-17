@@ -167,7 +167,7 @@ const EditorVariableInfo* EditorEntityInfo::getVarInfo(const std::string& var_na
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const EditorVariableInfo* EditorEntityInfo::getPropertyInfo(const std::string& var_name) const
@@ -178,13 +178,13 @@ const EditorVariableInfo* EditorEntityInfo::getPropertyInfo(const std::string& v
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 const EditorVariableInfo* EditorEntityInfo::getVarOrPropertyInfo(const std::string& var_name) const
 {
 	const EditorVariableInfo* result = getVarInfo(var_name);
-	if(result == NULL) {
+	if(result == nullptr) {
 		result = getPropertyInfo(var_name);
 	}
 

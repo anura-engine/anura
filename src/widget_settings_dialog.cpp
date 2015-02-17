@@ -39,7 +39,7 @@ namespace gui
 	WidgetSettingsDialog::WidgetSettingsDialog(int x, int y, int w, int h, WidgetPtr ptr) 
 		: Dialog(x,y,w,h), widget_(ptr), text_size_(14)
 	{
-		ASSERT_LOG(ptr != NULL, "WidgetSettingsDialog::WidgetSettingsDialog: widget_ == NULL");
+		ASSERT_LOG(ptr != nullptr, "WidgetSettingsDialog::WidgetSettingsDialog: widget_ == nullptr");
 		init();
 	}
 
@@ -225,8 +225,8 @@ namespace gui
 
 	void WidgetSettingsDialog::idChanged(TextEditorWidgetPtr text)
 	{
-		ASSERT_LOG(text != NULL, "WidgetSettingsDialog::idChanged: text == NULL");
-		ASSERT_LOG(widget_ != NULL, "WidgetSettingsDialog::idChanged: widget_ == NULL");
+		ASSERT_LOG(text != nullptr, "WidgetSettingsDialog::idChanged: text == nullptr");
+		ASSERT_LOG(widget_ != nullptr, "WidgetSettingsDialog::idChanged: widget_ == nullptr");
 		widget_->setId(text->text());
 	}
 }

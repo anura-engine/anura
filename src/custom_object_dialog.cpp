@@ -267,7 +267,7 @@ namespace editor_dialogs
 		error_text_.clear();
 		assert_recover_scope recover_from_assert;
 		try {
-			object_ = CustomObjectTypePtr(new CustomObjectType(object_template_["id"].as_string(), object_template_, NULL, NULL));
+			object_ = CustomObjectTypePtr(new CustomObjectType(object_template_["id"].as_string(), object_template_, nullptr, nullptr));
 
 			AnimationWidgetPtr preview(new AnimationWidget(128, 128, object_template_));
 			addWidget(preview, width() - border_offset - 128, border_offset + 200);
@@ -498,7 +498,7 @@ namespace editor_dialogs
 			// ignorning these exceptions till we're finished
 			//assert_recover_scope recover_from_assert;
 			//try {
-			//	object_ = CustomObjectTypePtr(new CustomObjectType(object_template_, NULL, NULL));
+			//	object_ = CustomObjectTypePtr(new CustomObjectType(object_template_, nullptr, nullptr));
 			//} catch(validation_failure_exception& e) {
 			//	std::cerr << "error parsing formula: " << e.msg << std::endl;
 			//} catch(type_error& e) {

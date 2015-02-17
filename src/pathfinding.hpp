@@ -117,7 +117,7 @@ namespace pathfinding
 	template<typename N, typename T> inline 
 	std::ostream& operator<<(std::ostream& out, const GraphNode<N,T>& n) {
 		out << "GNODE: " << n.src_.to_string() << " : cost( " << n.f_ << "," << n.g_ << "," << n.h_ 
-			<< ") : parent(" << (n.parent_ == nullptr ? "NULL" : n.parent_->get_node_value().to_string())
+			<< ") : parent(" << (n.parent_ == nullptr ? "nullptr" : n.parent_->get_node_value().to_string())
 			<< ") : (" << n.on_open_list_ << "," << n.on_closed_list_ << ")" << std::endl;
 		return out;
 	}

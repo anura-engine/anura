@@ -95,10 +95,10 @@ namespace lua
 
 		void setSelfCallable(game_logic::FormulaCallable& callable);
 
-		bool execute(const variant& value, game_logic::FormulaCallable* callable=NULL);
+		bool execute(const variant& value, game_logic::FormulaCallable* callable=nullptr);
 
-		bool dostring(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=NULL);
-		bool dofile(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=NULL);
+		bool dostring(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=nullptr);
+		bool dofile(const std::string&name, const std::string& str, game_logic::FormulaCallable* callable=nullptr);
 
 		LuaCompiledPtr compile(const std::string& name, const std::string& str);
 

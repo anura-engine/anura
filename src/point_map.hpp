@@ -88,14 +88,14 @@ private:
 		if(p.y < 0) {
 			const int index = -p.y - 1;
 			if(static_cast<std::vector<Row>::size_type>(index) >= negative_rows_.size()) {
-				return NULL;
+				return nullptr;
 			}
 
 			row = &negative_rows_[index];
 		} else {
 			const unsigned index = static_cast<unsigned>(p.y);
 			if(index >= positive_rows_.size()) {
-				return NULL;
+				return nullptr;
 			}
 
 			row = &positive_rows_[index];
@@ -104,14 +104,14 @@ private:
 		if(p.x < 0) {
 			const int index = -p.x - 1;
 			if(index < 0 || static_cast<unsigned>(index) >= row->negative_cells.size()) {
-				return NULL;
+				return nullptr;
 			}
 
 			return &row->negative_cells[index];
 		} else {
 			const int index = p.x;
 			if(index < 0 || static_cast<unsigned>(index) >= row->positive_cells.size()) {
-				return NULL;
+				return nullptr;
 			}
 
 			return &row->positive_cells[index];

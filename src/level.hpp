@@ -43,7 +43,6 @@
 #include "formula.hpp"
 #include "formula_callable.hpp"
 #include "formula_callable_definition_fwd.hpp"
-#include "hex_map.hpp"
 #include "LayerBlitInfo.hpp"
 #include "level_object.hpp"
 #include "level_solid_map.hpp"
@@ -114,13 +113,13 @@ public:
 	void process();
 	void set_active_chars();
 	void process_draw();
-	bool standable(const rect& r, const SurfaceInfo** info=NULL) const;
-	bool standable(int x, int y, const SurfaceInfo** info=NULL) const;
-	bool standable_tile(int x, int y, const SurfaceInfo** info=NULL) const;
-	bool solid(int x, int y, const SurfaceInfo** info=NULL) const;
-	bool solid(const Entity& e, const std::vector<point>& points, const SurfaceInfo** info=NULL) const;
-	bool solid(const rect& r, const SurfaceInfo** info=NULL) const;
-	bool solid(int xbegin, int ybegin, int w, int h, const SurfaceInfo** info=NULL) const;
+	bool standable(const rect& r, const SurfaceInfo** info=nullptr) const;
+	bool standable(int x, int y, const SurfaceInfo** info=nullptr) const;
+	bool standable_tile(int x, int y, const SurfaceInfo** info=nullptr) const;
+	bool solid(int x, int y, const SurfaceInfo** info=nullptr) const;
+	bool solid(const Entity& e, const std::vector<point>& points, const SurfaceInfo** info=nullptr) const;
+	bool solid(const rect& r, const SurfaceInfo** info=nullptr) const;
+	bool solid(int xbegin, int ybegin, int w, int h, const SurfaceInfo** info=nullptr) const;
 	bool may_be_solid_in_rect(const rect& r) const;
 	void set_solid_area(const rect& r, bool solid);
 	EntityPtr board(int x, int y) const;
@@ -135,11 +134,6 @@ public:
 	void getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
 	bool clear_tile_rect(int x1, int y1, int x2, int y2);
 	bool remove_tiles_at(int x, int y);
-	void add_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile);
-	void add_hex_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
-	void get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const;
-	void getAllHexTilesRect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const;
-	void clear_hex_tile_rect(int x1, int y1, int x2, int y2);
 
 	bool is_mouselook_enabled() const { return mouselook_enabled_; }
 	void set_mouselook(bool ml=true) { mouselook_enabled_ = ml; }
@@ -156,8 +150,8 @@ public:
 	std::vector<EntityPtr> get_characters_in_rect(const rect& r, int screen_xpos, int screen_ypos) const;
 	std::vector<EntityPtr> get_characters_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
 	EntityPtr get_next_character_at_point(int x, int y, int screen_xpos, int screen_ypos) const;
-	const PlayerInfo* player() const { return player_ ? player_->getPlayerInfo() : NULL; }
-	PlayerInfo* player() { return player_ ? player_->getPlayerInfo() : NULL; }
+	const PlayerInfo* player() const { return player_ ? player_->getPlayerInfo() : nullptr; }
+	PlayerInfo* player() { return player_ ? player_->getPlayerInfo() : nullptr; }
 	std::vector<EntityPtr>& players() { return players_; }
 	const std::vector<EntityPtr>& players() const { return players_; }
 	void add_multi_player(EntityPtr p);
@@ -231,7 +225,6 @@ public:
 
 	//a function to start rebuilding tiles in a background thread.
 	void start_rebuild_tiles_in_background(const std::vector<int>& layers);
-	void start_rebuild_hex_tiles_in_background(const std::vector<int>& layers);
 
 	//a function which, if rebuilding tiles has been completed, will update
 	//with the new tiles.
@@ -277,7 +270,7 @@ public:
 	int cycle() const { return cycle_; }
 	bool in_dialog() const { return in_dialog_; }
 	void set_in_dialog(bool value) { in_dialog_ = value; }
-	bool isUnderwater(const rect& r, rect* res_water_area=NULL, variant* v=NULL) const;
+	bool isUnderwater(const rect& r, rect* res_water_area=nullptr, variant* v=nullptr) const;
 
 	void getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const;
 
@@ -317,7 +310,7 @@ public:
 
 	bool is_multiplayer() const { return players_.size() > 1; }
 
-	void get_tile_layers(std::set<int>* all_layers, std::set<int>* hidden_layers=NULL);
+	void get_tile_layers(std::set<int>* all_layers, std::set<int>* hidden_layers=nullptr);
 	void hide_tile_layer(int layer, bool is_hidden);
 
 	void highlight_tile_layer(int layer) { highlight_layer_ = layer; }
@@ -376,7 +369,7 @@ public:
 	int x_resolution() const { return x_resolution_; }
 	int y_resolution() const { return y_resolution_; }
 
-	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = NULL);
+	void launch_new_module(const std::string& module_id, game_logic::ConstFormulaCallablePtr callable = nullptr);
 
 	typedef std::vector<LevelTile>::const_iterator TileItor;
 	std::pair<TileItor, TileItor> tiles_at_loc(int x, int y) const;
@@ -409,7 +402,6 @@ private:
 	void calculateLighting(int x, int y, int w, int h) const;
 
 	bool add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
-	bool add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles);
 
 	void draw_layer(int layer, int x, int y, int w, int h) const;
 	void draw_layer_solid(int layer, int x, int y, int w, int h) const;
@@ -529,8 +521,6 @@ private:
 
 	std::map<int, TileMap> tile_maps_;
 	int xscale_, yscale_;
-
-	std::map<int, hex::HexMapPtr> hex_maps_;
 
 	graphics::AnuraShaderPtr shader_;
 

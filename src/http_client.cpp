@@ -28,7 +28,7 @@
 
 http_client::http_client(const std::string& host, const std::string& port, int session, boost::asio::io_service* service)
   : session_id_(session),
-    io_service_buf_(service ? NULL : new boost::asio::io_service),
+    io_service_buf_(service ? nullptr : new boost::asio::io_service),
 	io_service_(service ? *service : *io_service_buf_),
 	resolution_state_(RESOLUTION_NOT_STARTED),
     resolver_(io_service_),
@@ -196,7 +196,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 			fprintf(stderr, "Error no such file or directory\n");
 			const char* end_headers = strstr(conn->response.c_str(), "\n\n");
 			const char* end_headers2 = strstr(conn->response.c_str(), "\r\n\r\n");
-			if(end_headers2 && (end_headers == NULL || end_headers2 < end_headers)) {
+			if(end_headers2 && (end_headers == nullptr || end_headers2 < end_headers)) {
 				end_headers = end_headers2 + 2;
 			}
 
@@ -217,7 +217,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		int header_term_len = 2;
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
 		const char* end_headers2 = strstr(conn->response.c_str(), "\r\n\r\n");
-		if(end_headers2 && (end_headers == NULL || end_headers2 < end_headers)) {
+		if(end_headers2 && (end_headers == nullptr || end_headers2 < end_headers)) {
 			end_headers = end_headers2;
 			header_term_len = 4;
 		}
@@ -233,7 +233,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 
 			if(content_length) {
 				content_length += strlen("content-length:");
-				const int payload_len = strtol(content_length, NULL, 10);
+				const int payload_len = strtol(content_length, nullptr, 10);
 				if(payload_len > 0) {
 					conn->expected_len = (end_headers - conn->response.c_str()) + payload_len + header_term_len;
 				}
@@ -248,7 +248,7 @@ void http_client::handle_receive(connection_ptr conn, const boost::system::error
 		const char* end_headers = strstr(conn->response.c_str(), "\n\n");
 		int header_term_len = 2;
 		const char* end_headers2 = strstr(conn->response.c_str(), "\r\n\r\n");
-		if(end_headers2 && (end_headers == NULL || end_headers2 < end_headers)) {
+		if(end_headers2 && (end_headers == nullptr || end_headers2 < end_headers)) {
 			end_headers = end_headers2;
 			header_term_len = 4;
 		}

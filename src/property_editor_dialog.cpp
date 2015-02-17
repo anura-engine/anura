@@ -466,7 +466,7 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeNumericProperty(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w)
 	{
-		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : nullptr;
 		if(!var_info) {
 			return;
 		}
@@ -493,7 +493,7 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeNumericPropertySlider(const std::string& id, std::shared_ptr<std::pair<gui::TextEditorWidgetPtr, gui::SliderPtr> >  w, float value)
 	{
-		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : nullptr;
 		if(!var_info) {
 			return;
 		}
@@ -514,7 +514,7 @@ namespace editor_dialogs
 
 	void PropertyEditorDialog::changeEnumProperty(const std::string& id)
 	{
-		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : nullptr;
 		if(!var_info) {
 			return;
 		}
@@ -536,11 +536,11 @@ namespace editor_dialogs
 		mousex -= x();
 		mousey -= y();
 
-		if(static_cast<unsigned>(grid->height()) > KRE::WindowManager::getMainWindow()->height() - mousey) {
+		if(grid->height() > KRE::WindowManager::getMainWindow()->height() - mousey) {
 			mousey = KRE::WindowManager::getMainWindow()->height() - grid->height();
 		}
 
-		if(static_cast<unsigned>(grid->width()) > KRE::WindowManager::getMainWindow()->width() - mousex) {
+		if(grid->width() > KRE::WindowManager::getMainWindow()->width() - mousex) {
 			mousex = KRE::WindowManager::getMainWindow()->width() - grid->width();
 		}
 
@@ -561,7 +561,7 @@ namespace editor_dialogs
 	{
 		const controls::control_backup_scope ctrl_scope;
 
-		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : NULL;
+		const EditorVariableInfo* var_info = getStaticEntity()->getEditorInfo() ? getStaticEntity()->getEditorInfo()->getVarOrPropertyInfo(id) : nullptr;
 		if(!var_info) {
 			return;
 		}
@@ -600,11 +600,11 @@ namespace editor_dialogs
 			mousex -= x();
 			mousey -= y();
 
-			if(static_cast<unsigned>(grid->height()) > KRE::WindowManager::getMainWindow()->height() - mousey) {
+			if(grid->height() > KRE::WindowManager::getMainWindow()->height() - mousey) {
 				mousey = KRE::WindowManager::getMainWindow()->height() - grid->height();
 			}
 
-			if(static_cast<unsigned>(grid->width()) > KRE::WindowManager::getMainWindow()->width() - mousex) {
+			if(grid->width() > KRE::WindowManager::getMainWindow()->width() - mousex) {
 				mousex = KRE::WindowManager::getMainWindow()->width() - grid->width();
 			}
 

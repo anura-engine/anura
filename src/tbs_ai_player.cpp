@@ -32,7 +32,7 @@ namespace tbs
 {
 	ai_player* ai_player::create(game& g, int nplayer)
 	{
-		return NULL; //new default_ai_player(g, nplayer);
+		return nullptr; //new default_ai_player(g, nplayer);
 	}
 
 	ai_player::ai_player(const game& g, int nplayer)

@@ -293,7 +293,7 @@ namespace voxel_object_factory
 	{
 		if(node.is_callable()) {
 			voxel_object_ptr c = node.try_convert<voxel_object>();
-			ASSERT_LOG(c != NULL, "Error converting voxel_object from callable.");
+			ASSERT_LOG(c != nullptr, "Error converting voxel_object from callable.");
 			return c;
 		}
 		ASSERT_LOG(node.has_key("type"), "No 'type' attribute found in definition.");

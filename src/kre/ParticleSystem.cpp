@@ -48,7 +48,7 @@ namespace KRE
 			std::default_random_engine& get_rng_engine() 
 			{
 				static std::unique_ptr<std::default_random_engine> res;
-				if(res == NULL) {
+				if(res == nullptr) {
 					auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 					res.reset(new std::default_random_engine(std::default_random_engine::result_type(seed)));
 				}
@@ -271,7 +271,7 @@ namespace KRE
 			ASSERT_LOG(node.has_key("visual_particle_quota"), "PSYSTEM2: 'Technique' must have 'visual_particle_quota' attribute.");
 			particle_quota_ = node["visual_particle_quota"].as_int32();
 			ASSERT_LOG(node.has_key("material"), "PSYSTEM2: 'Technique' must have 'material' attribute.");
-			setMaterial(DisplayDevice::createMaterial(node["material"]));
+			setTexture(DisplayDevice::createTexture(node["texture"]));
 			//ASSERT_LOG(node.has_key("renderer"), "PSYSTEM2: 'Technique' must have 'renderer' attribute.");
 			//renderer_.reset(new renderer(node["renderer"]));
 			if(node.has_key("emitter")) {
@@ -353,8 +353,8 @@ namespace KRE
 			velocity_(tq.velocity_),
 			particle_system_(tq.particle_system_)
 		{
-			if(tq.getMaterial()) {
-				setMaterial(tq.getMaterial());
+			if(tq.getTexture()) {
+				setTexture(tq.getTexture()->clone());
 			}
 			if(tq.max_velocity_) {
 				max_velocity_.reset(new float(*tq.max_velocity_));
@@ -382,7 +382,7 @@ namespace KRE
 
 		void Technique::setParent(ParticleSystem* parent)
 		{
-			ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
+			ASSERT_LOG(parent != nullptr, "PSYSTEM2: parent is null");
 			particle_system_ = parent;
 		}
 

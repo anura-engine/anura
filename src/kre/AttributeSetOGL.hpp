@@ -63,7 +63,7 @@ namespace KRE
 	
 		explicit AttributeSetOGL(bool indexed, bool instanced);
 		virtual ~AttributeSetOGL();	
-		const void* getIndexArray() const override { return NULL; }
+		const void* getIndexArray() const override { return nullptr; }
 		void bindIndex() override;
 		void unbindIndex() override;
 		bool isHardwareBacked() const override { return true; }

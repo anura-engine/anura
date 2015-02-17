@@ -150,7 +150,7 @@ namespace geometry
 			v.generateVoronoi(srcpts.get(), pts.size(), float(left_), float(right_), float(top_), float(bottom_));
 			for(int n = 0; n != pts.size(); ++n) {
 				int npoints = 0;
-				PolygonPoint* pp = NULL;
+				PolygonPoint* pp = nullptr;
 				v.getSitePoints(n, &npoints, &pp);
 				Polygon* poly = new Polygon(n);
 				for(int m = 0; m != npoints; ++m) {

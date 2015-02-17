@@ -68,12 +68,12 @@ Achievement::Achievement(variant node)
 
 namespace 
 {
-	std::vector<std::string>* achievements = NULL;
+	std::vector<std::string>* achievements = nullptr;
 }
 
 bool Achievement::attain(const std::string& id)
 {
-	if(achievements == NULL) {
+	if(achievements == nullptr) {
 		achievements = new std::vector<std::string>;
 		variant val = preferences::registry()->queryValue("achievements");
 		if(val.is_string()) {

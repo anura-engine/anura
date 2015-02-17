@@ -42,7 +42,7 @@ public:
 
 	void cancel()
 	{
-		bot_ = NULL;
+		bot_ = nullptr;
 	}
 
 	void signal(const boost::system::error_code& error)
@@ -82,7 +82,7 @@ private:
 	fprintf(stderr, "YYY: destroy bot: %p\n", this);
 //	has_quit_ = true;
 		timer_.cancel();
-	if(timer_proxy_ != NULL) {
+	if(timer_proxy_ != nullptr) {
 		timer_proxy_->cancel();
 	}
 	fprintf(stderr, "YYY: done destroy bot: %p\n", this);
@@ -90,7 +90,7 @@ private:
 
 	void bot::process(const boost::system::error_code& error)
 	{
-	timer_proxy_ = NULL;
+	timer_proxy_ = nullptr;
 	if(has_quit_) {
 		return;
 	}

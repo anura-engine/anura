@@ -168,7 +168,7 @@ namespace voxel
 					type = parse_optional_function_type(value);
 					if(type) {
 						bool return_type_specified = false;
-						type->is_function(NULL, NULL, NULL, &return_type_specified);
+						type->is_function(nullptr, nullptr, nullptr, &return_type_specified);
 						ASSERT_LOG(return_type_specified, "Property function definition does not specify a return type for the function, which is required in strict mode for object " << id_ << "." << k);
 					}
 					if(!type) {
@@ -369,7 +369,7 @@ namespace voxel
 	const formula* voxel_object_type::event_handler(int event_id) const
 	{
 		if(event_id < 0 || event_id >= event_handlers_.size()) {
-			return NULL;
+			return nullptr;
 		}
 
 		return event_handlers_[event_id].get();

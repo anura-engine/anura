@@ -69,8 +69,8 @@ int get_solid_dimension_id(const std::string& key)
 
 bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info, ALLOW_PLATFORM allow_platform)
 {
-	if(allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : NULL) ||
-	   allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : NULL)) {
+	if(allow_platform == SOLID_AND_PLATFORMS  && lvl.standable(x, y, info ? &info->surf_info : nullptr) ||
+	   allow_platform != SOLID_AND_PLATFORMS  && lvl.solid(x, y, info ? &info->surf_info : nullptr)) {
 		if(info) {
 			info->readSurfInfo();
 		}
@@ -121,7 +121,7 @@ bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionI
 
 		const SolidInfo* solid = obj->solid();
 
-		if(solid && solid->isSolidAt(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : NULL)) {
+		if(solid && solid->isSolidAt(x - obj->x(), y - obj->y(), info ? &info->collide_with_area_id : nullptr)) {
 			if(info) {
 				info->collide_with = obj;
 				info->friction = obj->getSurfaceFriction();
@@ -160,7 +160,7 @@ bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionI
 
 void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 {
-	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_DIRECTION::NONE, NULL)) {
+	if(!e.allowLevelCollisions() && entity_collides_with_level(lvl, e, MOVE_DIRECTION::NONE, nullptr)) {
 		const SolidInfo* s = e.solid();
 		ASSERT_LOG(s, "ENTITY COLLIDES BUT DOES NOT HAVE SOLID");
 		const Frame& f = e.getCurrentFrame();
@@ -198,7 +198,7 @@ void debug_check_entity_solidity(const Level& lvl, const Entity& e)
 		std::cerr << "COLLIDING OBJECT MAP:\n";
 		for(int y = min_y - 5; y < max_y + 5; ++y) {
 			for(int x = min_x - 5; x < max_x + 5; ++x) {
-				const bool lvl_solid = lvl.solid(x, y, NULL);
+				const bool lvl_solid = lvl.solid(x, y, nullptr);
 				const bool char_solid = solid_points.count(point(x, y)) != 0;
 				if(lvl_solid && char_solid) {
 					std::cerr << "X";
@@ -250,10 +250,10 @@ bool entity_collides_with_entity(const Entity& e, const Entity& other, Collision
 		for(int x = area.x(); x < area.x2(); ++x) {
 			const int our_x = e.isFacingRight() ? x - e.x() : (e.x() + our_frame.width()-1) - x;
 			const int our_y = y - e.y();
-			if(our_solid->isSolidAt(our_x, our_y, info ? &info->area_id : NULL)) {
+			if(our_solid->isSolidAt(our_x, our_y, info ? &info->area_id : nullptr)) {
 				const int other_x = other.isFacingRight() ? x - other.x() : (other.x() + other_frame.width()-1) - x;
 				const int other_y = y - other.y();
-				if(other_solid->isSolidAt(other_x, other_y, info ? &info->collide_with_area_id : NULL)) {
+				if(other_solid->isSolidAt(other_x, other_y, info ? &info->collide_with_area_id : nullptr)) {
 					return true;
 				}
 			}
@@ -294,7 +294,7 @@ bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTIO
 	}
 
 	for(const ConstSolidMapPtr& m : s->solid()) {
-		if(lvl.solid(e, m->dir(dir), info ? &info->surf_info : NULL)) {
+		if(lvl.solid(e, m->dir(dir), info ? &info->surf_info : nullptr)) {
 			if(info) {
 				info->readSurfInfo();
 			}
@@ -515,7 +515,7 @@ bool entity_user_collision_specific_areas(const Entity& a, const std::string& ar
 		return false;
 	}
 
-	const Frame::CollisionArea* area_a = NULL;
+	const Frame::CollisionArea* area_a = nullptr;
 	for(const auto& area : fa.getCollisionAreas()) {
 		if(area.name == area_a_id) {
 			area_a = &area;
@@ -527,7 +527,7 @@ bool entity_user_collision_specific_areas(const Entity& a, const std::string& ar
 		return false;
 	}
 
-	const Frame::CollisionArea* area_b = NULL;
+	const Frame::CollisionArea* area_b = nullptr;
 	for(const Frame::CollisionArea& area : fb.getCollisionAreas()) {
 		if(area.name == area_b_id) {
 			area_b = &area;

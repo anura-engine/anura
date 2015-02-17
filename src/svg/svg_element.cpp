@@ -33,20 +33,20 @@ namespace KRE
 
 		element::element(element* parent, const ptree& pt) 
 			: core_attribs(pt), 
-			visual_attribs_(pt),
-			clipping_attribs_(pt),
-			filter_effect_attribs_(pt),
-			painting_properties_(pt),
-			marker_attribs_(pt),
-			font_attribs_(pt),
-			text_attribs_(pt),
-            parent_(parent == nullptr ? this : parent),
-            external_resources_required_(false),
-			x_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
-			y_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
-			width_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
-			height_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
-			view_box_(0.0,0.0,0.0,0.0)
+			  visual_attribs_(pt),
+			  clipping_attribs_(pt),
+			  filter_effect_attribs_(pt),
+			  painting_properties_(pt),
+			  marker_attribs_(pt),
+			  font_attribs_(pt),
+			  text_attribs_(pt),
+              parent_(parent == nullptr ? this : parent),
+              external_resources_required_(false),
+			  x_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
+			  y_(0,svg_length::SVG_LENGTHTYPE_NUMBER),
+			  width_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
+			  height_(100,svg_length::SVG_LENGTHTYPE_PERCENTAGE),
+			  view_box_(0.0,0.0,0.0,0.0)
 		{
 			auto attributes = pt.get_child_optional("<xmlattr>");
 			if(attributes) {
@@ -221,7 +221,7 @@ namespace KRE
 
 		void use_element::handle_render(render_context& ctx) const
 		{
-			if(xlink_ref_ == NULL) {
+			if(xlink_ref_ == nullptr) {
 				return;
 			}
 

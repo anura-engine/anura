@@ -323,10 +323,10 @@ namespace
 			using std::placeholders::_1;
 			game_logic::MapFormulaCallablePtr callable(new game_logic::MapFormulaCallable);
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
-			if(tbs_client == NULL) {
+			if(tbs_client == nullptr) {
 				tbs::internal_client* tbs_iclient = client_.try_convert<tbs::internal_client>();
 			fprintf(stderr, "XX tbs_send: %d\n", tbs_iclient->session_id());
-				ASSERT_LOG(tbs_iclient != NULL, "tbs_client object isn't valid.");
+				ASSERT_LOG(tbs_iclient != nullptr, "tbs_client object isn't valid.");
 				tbs_iclient->send_request(msg_, tbs_iclient->session_id(), callable, std::bind(tbs_send_event, EntityPtr(&ob), callable, _1));
 			} else {
 				tbs_client->send_request(msg_, callable, std::bind(tbs_send_event, EntityPtr(&ob), callable, _1));
@@ -357,9 +357,9 @@ namespace
 
 		virtual void execute(Level& lvl, Entity& ob) const {
 			tbs::client* tbs_client = client_.try_convert<tbs::client>();
-			if(tbs_client == NULL) {
+			if(tbs_client == nullptr) {
 				tbs::internal_client* iclient = client_.try_convert<tbs::internal_client>();
-				ASSERT_LOG(iclient != NULL, "tbs_client object isn't valid.");
+				ASSERT_LOG(iclient != nullptr, "tbs_client object isn't valid.");
 				iclient->process();
 			} else {
 				tbs_client->process();
@@ -1654,7 +1654,7 @@ namespace
 		const int x = args()[2]->evaluate(variables).as_int();
 		const int y = args()[3]->evaluate(variables).as_int();
 
-		return variant(point_standable(*lvl, *obj, x, y, NULL, SOLID_ONLY));
+		return variant(point_standable(*lvl, *obj, x, y, nullptr, SOLID_ONLY));
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("builtin Level")
 		ARG_TYPE("custom_obj")
@@ -2859,7 +2859,7 @@ namespace
 
 		virtual void execute(Level& lvl, CustomObject& ob) const {
 			if(alpha_ == 0) {
-				ob.set_blur(NULL);
+				ob.set_blur(nullptr);
 				return;
 			}
 
@@ -2992,7 +2992,7 @@ namespace
 
 	FUNCTION_DEF(set_widgets, 1, -1, "set_widgets((optional) obj, widget, ...): Adds a group of widgets to the current object, or the specified object")
 		EntityPtr target = args()[0]->evaluate(variables).try_convert<Entity>();
-		int arg_start = (target == NULL) ? 0 : 1;
+		int arg_start = (target == nullptr) ? 0 : 1;
 		std::vector<variant> widgetsv;
 		for(unsigned i = arg_start; i < args().size(); i++) {
 			variant items = args()[i]->evaluate(variables);
@@ -3304,7 +3304,7 @@ namespace
 		{}
 		virtual void execute(Level& lvl, Entity& ob) const {
 
-			ASSERT_LOG(lvl.iso_world() != NULL, "No 'isoworld' to insert voxel_object into.");
+			ASSERT_LOG(lvl.iso_world() != nullptr, "No 'isoworld' to insert voxel_object into.");
 			lvl.iso_world()->addObject(obj_);
 
 			obj_->executeCommand(instantiation_commands_);

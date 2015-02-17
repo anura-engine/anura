@@ -27,7 +27,7 @@
 
 #include "Color.hpp"
 #include "DisplayDevice.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 #include "PixelFormat.hpp"
 #include "Renderable.hpp"
 #include "WindowManagerFwd.hpp"

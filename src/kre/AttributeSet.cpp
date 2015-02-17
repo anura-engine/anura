@@ -33,13 +33,7 @@ namespace KRE
 		index_type_(IndexType::INDEX_NONE),
 		instance_count_(0),
 		offset_(0),
-		count_(0),
-		color_(),
-		color_set_(false),
-		blend_eqn_(),
-		blend_equation_set_(false),
-		blend_mode_(),
-		blend_mode_set_(false)
+		count_(0)
 	{
 	}
 

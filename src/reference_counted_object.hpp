@@ -32,13 +32,13 @@ class reference_counted_object;
 class weak_ptr_base
 {
 public:
-	explicit weak_ptr_base(const reference_counted_object* obj=NULL);
+	explicit weak_ptr_base(const reference_counted_object* obj=nullptr);
 	~weak_ptr_base();
 	void release();
 
 protected:
 	reference_counted_object* get_obj() const { return const_cast<reference_counted_object*>(obj_); }
-	void init(const reference_counted_object* obj=NULL);
+	void init(const reference_counted_object* obj=nullptr);
 	void remove();
 private:
 	const reference_counted_object* obj_;
@@ -52,12 +52,12 @@ private:
 class reference_counted_object
 {
 public:
-	reference_counted_object() : count_(0), weak_(NULL) {}
-	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0), weak_(NULL) {}
+	reference_counted_object() : count_(0), weak_(nullptr) {}
+	reference_counted_object(const reference_counted_object& /*obj*/) : count_(0), weak_(nullptr) {}
 	reference_counted_object& operator=(const reference_counted_object& /*obj*/) {
 		return *this;
 	}
-	virtual ~reference_counted_object() { if(weak_ != NULL) { weak_->release(); } }
+	virtual ~reference_counted_object() { if(weak_ != nullptr) { weak_->release(); } }
 
 	void add_ref() const { ++count_; }
 	void dec_ref() const { if(--count_ == 0) { delete this; } }

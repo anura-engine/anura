@@ -36,7 +36,7 @@ namespace game_logic
 	class SlotFormulaCallable : public FormulaCallable
 	{
 	public:
-		SlotFormulaCallable() : value_names_(NULL), base_slot_(0)
+		SlotFormulaCallable() : value_names_(nullptr), base_slot_(0)
 		{}
 
 		void setNames(const std::vector<std::string>* names) {

@@ -39,7 +39,7 @@ namespace
 		return instance;
 	}
 
-	const CustomObjectCallable* instance_ptr = NULL;
+	const CustomObjectCallable* instance_ptr = nullptr;
 }
 
 const CustomObjectCallable& CustomObjectCallable::instance()
@@ -345,7 +345,7 @@ int CustomObjectCallable::getSlot(const std::string& key) const
 game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int slot)
 {
 	if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
-		return NULL;
+		return nullptr;
 	}
 
 	return &entries_[slot];
@@ -354,7 +354,7 @@ game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int
 const game_logic::FormulaCallableDefinition::Entry* CustomObjectCallable::getEntry(int slot) const
 {
 	if(slot < 0 || static_cast<unsigned>(slot) >= entries_.size()) {
-		return NULL;
+		return nullptr;
 	}
 
 	return &entries_[slot];

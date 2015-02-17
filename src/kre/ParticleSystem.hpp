@@ -30,7 +30,7 @@
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 #include "ParticleSystemFwd.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
@@ -80,7 +80,7 @@ namespace KRE
 		public:
 			explicit EmitObject(ParticleSystemContainer* parent, const variant& node) 
 				: parent_container_(parent) {
-				ASSERT_LOG(parent != NULL, "PSYSTEM2: parent is null");
+				ASSERT_LOG(parent != nullptr, "PSYSTEM2: parent is null");
 				if(node.has_key("name")) {
 					name_ = node["name"].as_string();
 				} else {
@@ -98,7 +98,7 @@ namespace KRE
 				handleDraw();
 			}
 			ParticleSystemContainer* getParentContainer() { 
-				ASSERT_LOG(parent_container_ != NULL, "PSYSTEM2: parent container is NULL");
+				ASSERT_LOG(parent_container_ != nullptr, "PSYSTEM2: parent container is nullptr");
 				return parent_container_; 
 			}
 			virtual const glm::vec3& getPosition() const;

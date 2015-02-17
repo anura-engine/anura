@@ -47,7 +47,7 @@ void init_voxel_object_functions(variant node);
 class voxel_object_command_callable : public game_logic::FormulaCallable 
 {
 public:
-	voxel_object_command_callable() : expr_(NULL) {}
+	voxel_object_command_callable() : expr_(nullptr) {}
 	void runCommand(voxel::world& world, voxel::user_voxel_object& obj) const;
 
 	void setExpression(const game_logic::FormulaExpression* expr);

@@ -424,7 +424,7 @@ void init_object_definition(variant node, const std::string& id_, CustomObjectCa
 				type = parse_optional_function_type(value);
 				if(is_strict_ && type) {
 					bool return_type_specified = false;
-					type->is_function(NULL, NULL, NULL, &return_type_specified);
+					type->is_function(nullptr, nullptr, nullptr, &return_type_specified);
 					ASSERT_LOG(return_type_specified, "Property function definition does not specify a return type for the function, which is required in strict mode for object " << id_ << "." << k);
 				}
 				if(!type) {
@@ -596,7 +596,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 
 		auto proto_path = module::find(prototype_file_paths(), id + ".cfg");
 		if(proto_path != prototype_file_paths().end()) {
-			ASSERT_LOG(getObjectPath(id) == NULL, "Object " << id << " has a prototype with the same name. Objects and prototypes must have different names");
+			ASSERT_LOG(getObjectPath(id) == nullptr, "Object " << id << " has a prototype with the same name. Objects and prototypes must have different names");
 			variant node = mergePrototype(json::parse_from_file(proto_path->second));
 			CustomObjectCallablePtr callableDefinition(new CustomObjectCallable);
 			callableDefinition->setTypeName("obj " + id);
@@ -611,7 +611,7 @@ FormulaCallableDefinitionPtr CustomObjectType::getDefinition(const std::string& 
 		std::string obj_id(id.begin(), dot_itor);
 
 		const std::string* path = getObjectPath(obj_id + ".cfg");
-		ASSERT_LOG(path != NULL, "No definition for object " << id);
+		ASSERT_LOG(path != nullptr, "No definition for object " << id);
 
 		std::map<std::string, variant> nodes;
 
@@ -686,7 +686,7 @@ const std::string* CustomObjectType::getObjectPath(const std::string& id)
 
 	std::map<std::string, std::string>::const_iterator itor = module::find(object_file_paths(), id);
 	if(itor == object_file_paths().end()) {
-		return NULL;
+		return nullptr;
 	}
 
 	return &itor->second;
@@ -722,7 +722,7 @@ ConstCustomObjectTypePtr CustomObjectType::get(const std::string& id)
 ConstCustomObjectTypePtr CustomObjectType::getOrDie(const std::string& id)
 {
 	const ConstCustomObjectTypePtr res = get(id);
-	ASSERT_LOG(res.get() != NULL, "UNRECOGNIZED OBJECT TYPE: '" << id << "'");
+	ASSERT_LOG(res.get() != nullptr, "UNRECOGNIZED OBJECT TYPE: '" << id << "'");
 
 	return res;
 }
@@ -739,7 +739,7 @@ ConstCustomObjectTypePtr CustomObjectType::getSubObject(const std::string& id) c
 
 CustomObjectTypePtr CustomObjectType::create(const std::string& id)
 {
-	return recreate(id, NULL);
+	return recreate(id, nullptr);
 }
 
 namespace 
@@ -774,7 +774,7 @@ CustomObjectTypePtr CustomObjectType::recreate(const std::string& id,
 			}
 
 			//create the object
-			CustomObjectTypePtr result(new CustomObjectType(node["id"].as_string(), node, NULL, old_type));
+			CustomObjectTypePtr result(new CustomObjectType(node["id"].as_string(), node, nullptr, old_type));
 			object_prototype_paths[id] = proto_paths;
 
 			return result;
@@ -847,7 +847,7 @@ std::map<std::string,CustomObjectType::EditorSummary> CustomObjectType::getEdito
 	for(const std::string& id : getAllIds()) {
 		variant info;
 		const std::string* path = getObjectPath(id + ".cfg");
-		if(path == NULL) {
+		if(path == nullptr) {
 			fprintf(stderr, "NO FILE FOR OBJECT '%s'\n", id.c_str());
 		}
 
@@ -960,7 +960,7 @@ int CustomObjectType::reloadModifiedCode()
 	for(auto i : cache()) {
 		const std::string* path = getObjectPath(i.first + ".cfg");
 
-		if(path == NULL) {
+		if(path == nullptr) {
 			continue;
 		}
 
@@ -1057,7 +1057,7 @@ void CustomObjectType::initEventHandlers(variant node,
 	const CustomObjectCallableExposePrivateScope expose_scope(*callable_definition_);
 	const game_logic::Formula::StrictCheckScope strict_checking(is_strict_ || g_strict_mode_warnings, g_strict_mode_warnings);
 
-	if(symbols == NULL) {
+	if(symbols == nullptr) {
 		symbols = &get_custom_object_functions_symbol_table();
 	}
 
@@ -1189,7 +1189,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 	CustomObjectCallable::instance();
 
-	EditorEntityInfo* EditorInfo = NULL;
+	EditorEntityInfo* EditorInfo = nullptr;
 
 #ifndef NO_EDITOR
 	if(node.has_key("editor_info")) {
@@ -1206,7 +1206,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 		}
 	}
 
-	const bool is_variation = base_type != NULL;
+	const bool is_variation = base_type != nullptr;
 
 	//make it so any formula has these constants defined.
 	const game_logic::ConstantsLoader scope_consts(node["consts"]);
@@ -1214,7 +1214,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 	//if some constants change from base to variation, then we have to
 	//re-parse all formulas.
 	if(scope_consts.same_as_base() == false) {
-		base_type = NULL;
+		base_type = nullptr;
 	}
 
 	if(node.has_key("solid_dimensions")) {
@@ -1327,7 +1327,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 		if(!var_str. empty()) {
 			game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(CUSTOM_OBJECT_VARS);
-			ASSERT_LOG(entry != NULL, "CANNOT FIND VARS ENTRY IN OBJECT");
+			ASSERT_LOG(entry != nullptr, "CANNOT FIND VARS ENTRY IN OBJECT");
 			game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->setStrict(is_strict_);
 			entry->type_definition = def;
@@ -1344,7 +1344,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 
 		if(!var_str.empty()) {
 			game_logic::FormulaCallableDefinition::Entry* entry = callable_definition_->getEntry(CUSTOM_OBJECT_TMP);
-			ASSERT_LOG(entry != NULL, "CANNOT FIND TMP ENTRY IN OBJECT");
+			ASSERT_LOG(entry != nullptr, "CANNOT FIND TMP ENTRY IN OBJECT");
 			game_logic::FormulaCallableDefinitionPtr def = game_logic::execute_command_callable_definition(&var_str[0], &var_str[0] + var_str.size());
 			def->setStrict(is_strict_);
 			entry->type_definition = def;
@@ -1577,7 +1577,7 @@ CustomObjectType::CustomObjectType(const std::string& id, variant node, const Cu
 			}
 		}
 	}
-	initEventHandlers(node, event_handlers_, getFunctionSymbols(), base_type ? &base_type->event_handlers_ : NULL);
+	initEventHandlers(node, event_handlers_, getFunctionSymbols(), base_type ? &base_type->event_handlers_ : nullptr);
 }
 
 CustomObjectType::~CustomObjectType()
@@ -1778,10 +1778,10 @@ UTILITY(object_definition)
 {
 	for(const std::string& arg : args) {
 		ConstCustomObjectTypePtr obj = CustomObjectType::get(arg);
-		ASSERT_LOG(obj.get() != NULL, "NO OBJECT FOUND: " << arg);
+		ASSERT_LOG(obj.get() != nullptr, "NO OBJECT FOUND: " << arg);
 
 		const std::string* fname = CustomObjectType::getObjectPath(arg + ".cfg");
-		ASSERT_LOG(fname != NULL, "NO OBJECT FILE FOUND: " << arg);
+		ASSERT_LOG(fname != nullptr, "NO OBJECT FILE FOUND: " << arg);
 
 		const variant node = CustomObjectType::mergePrototype(json::parse_from_file(*fname));
 

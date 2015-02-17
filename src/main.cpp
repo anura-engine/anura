@@ -289,7 +289,7 @@ extern "C" int main(int argcount, char* argvec[])
 	std::string server = "wesnoth.org";
 	bool is_child_utility = false;
 
-	const char* profile_output = NULL;
+	const char* profile_output = nullptr;
 	std::string profile_output_buf;
 
 	std::string orig_level_cfg = level_cfg;
@@ -486,7 +486,7 @@ extern "C" int main(int argcount, char* argvec[])
 						for(char** a = argvec; *a; ++a) {
 							args.push_back(*a);
 						}
-						args.push_back(NULL);
+						args.push_back(nullptr);
 				
 						exe_name.resize(exe_name.size() - anura_exe_name.size());
 						exe_name += match;
@@ -513,7 +513,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 		//remove any .tmp files that may have been left from previous runs.
 		std::vector<std::string> tmp_files;
-		sys::get_files_in_dir(".", &tmp_files, NULL);
+		sys::get_files_in_dir(".", &tmp_files, nullptr);
 		for(auto f : tmp_files) {
 			if(f.size() > 4 && std::equal(f.end()-4,f.end(),".tmp")) {
 				try {
@@ -642,7 +642,7 @@ extern "C" int main(int argcount, char* argvec[])
 					args.push_back(*a);
 				}
 			}
-			args.push_back(NULL);
+			args.push_back(nullptr);
 			_execv(args[0], &args[0]);
 			LOG_ERROR("Could not exec()");
 		}
@@ -689,7 +689,7 @@ extern "C" int main(int argcount, char* argvec[])
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
-	Font::getInstance()->setDefaultFont(module::get_default_font() == "bitmap" 
+	Font::setDefaultFont(module::get_default_font() == "bitmap" 
 		? "FreeMono" 
 		: module::get_default_font());
 

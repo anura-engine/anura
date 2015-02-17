@@ -195,11 +195,11 @@ namespace i18n
 #if defined(TARGET_OS_HARMATTAN)
 		std::cerr << "Get GConf default client\n";
 		GConfClient *gconf = gconf_client_get_default();
-		locale = std::string(gconf_client_get_string(gconf, "/meegotouch/i18n/region", NULL));
+		locale = std::string(gconf_client_get_string(gconf, "/meegotouch/i18n/region", nullptr));
 #elif defined(TARGET_BLACKBERRY)
 		char *language = 0;
 		char *country = 0;
-		if (BPS_SUCCESS == locale_get(&language, &country) && language!= NULL && country != NULL) {
+		if (BPS_SUCCESS == locale_get(&language, &country) && language!= nullptr && country != nullptr) {
 			std::stringstream ss;
 			ss << language << "_" << country;
 			locale = ss.str();
@@ -209,12 +209,12 @@ namespace i18n
 		}
 #else
 		char *cstr = getenv("LANG");
-		if (cstr != NULL)
+		if (cstr != nullptr)
 			locale = cstr;
 		if (locale.size() < 2)
 		{
 			cstr = getenv("LC_ALL");
-			if (cstr != NULL)
+			if (cstr != nullptr)
 				locale = cstr;
 		}
 	

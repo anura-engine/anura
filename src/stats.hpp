@@ -29,8 +29,8 @@
 
 void http_upload(const std::string& payload, 
 	const std::string& script, 
-	const char* hostname=NULL, 
-	const char* port=NULL);
+	const char* hostname=nullptr, 
+	const char* port=nullptr);
 
 namespace stats 
 {

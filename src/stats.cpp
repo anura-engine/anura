@@ -197,7 +197,7 @@ namespace stats
 
 	namespace 
 	{
-		threading::thread* background_thread = NULL;
+		threading::thread* background_thread = nullptr;
 	}
 
 	Manager::Manager()
@@ -221,7 +221,7 @@ namespace stats
 			flush();
 
 			delete background_thread;
-			background_thread = NULL;
+			background_thread = nullptr;
 		}
 	}
 

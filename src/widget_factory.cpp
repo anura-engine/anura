@@ -66,7 +66,7 @@ namespace widget_factory
 	{
 		if(v.is_callable()) {
 			WidgetPtr w = v.try_convert<Widget>();
-			ASSERT_LOG(w != NULL, "Error converting widget from callable.");
+			ASSERT_LOG(w != nullptr, "Error converting widget from callable.");
 			return w;
 		}
 		ASSERT_LOG(v.is_map(), "TYPE ERROR: widget must be specified by a map, found: " << v.to_debug_string());

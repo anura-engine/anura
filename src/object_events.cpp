@@ -134,7 +134,7 @@ int get_object_event_id(const std::string& str)
 int get_object_event_id_maybe_proto(const std::string& str)
 {
 	const char* proto_str = strstr(str.c_str(), "_PROTO_");
-	if(proto_str != NULL) {
+	if(proto_str != nullptr) {
 		proto_str += 7;
 		return get_object_event_id(std::string(proto_str));
 	}

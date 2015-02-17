@@ -59,29 +59,29 @@ namespace KRE
 		}
 	}
 
-	Texture::Texture(const variant& node, const SurfacePtr& surface)
+	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: type_(Type::TEXTURE_2D), 
-		mipmaps_(0), 
-		max_anisotropy_(1),
-		lod_bias_(0.0f),
-		surface_(surface),
-		surface_width_(-1),
-		surface_height_(-1),
-		width_(0),
-		height_(0),
-		depth_(0),
-		unpack_alignment_(4),
-		src_rect_(),
-		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
+		  mipmaps_(0), 
+		  max_anisotropy_(1),
+		  lod_bias_(0.0f),
+		  surface_width_(-1),
+		  surface_height_(-1),
+		  surfaces_(surfaces),
+		  width_(0),
+		  height_(0),
+		  depth_(0),
+		  unpack_alignment_(4),
+		  src_rect_(),
+		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
-		if(surface == nullptr && node.is_string()) {
-			surface_ = Surface::create(node.as_string());
-		} else if(surface == nullptr && node.has_key("image") && node["image"].is_string()) {
-			surface_ = Surface::create(node["image"].as_string());
+		if(surfaces_.size() == 0 && node.is_string()) {
+			surfaces_.emplace_back(Surface::create(node.as_string()));
+		} else if(surfaces_.size() == 0 && node.has_key("image") && node["image"].is_string()) {
+			surfaces_.emplace_back(Surface::create(node["image"].as_string()));
 		}
-		ASSERT_LOG(surface_ != nullptr, "Error in the surface -- was null.");
-		surface_width_ = surface_->width();
-		surface_height_ = surface_->height();
+		ASSERT_LOG(surfaces_.size() > 0, "Error no surface.");
+		surface_width_ = surfaces_.front()->width();
+		surface_height_ = surfaces_.front()->height();
 
 		internalInit();
 		if(node.has_key("type")) {
@@ -191,46 +191,65 @@ namespace KRE
 		}
 	}
 
-	Texture::Texture(const SurfacePtr& surface, Type type, int mipmap_levels)
+	Texture::Texture(const std::vector<SurfacePtr>& surfaces, Type type, int mipmap_levels)
 		: type_(type), 
-		mipmaps_(mipmap_levels), 
-		max_anisotropy_(1),
-		lod_bias_(0.0f),
-		surface_(surface),
-		surface_width_(surface->width()),
-		surface_height_(surface->height()),
-		width_(0),
-		height_(0),
-		depth_(0),
-		unpack_alignment_(4),
-		src_rect_(),
-		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
+		  mipmaps_(mipmap_levels), 
+		  max_anisotropy_(1),
+		  lod_bias_(0.0f),
+		  surfaces_(surfaces),
+		  surface_width_(-1),
+		  surface_height_(-1),
+		  width_(0),
+		  height_(0),
+		  depth_(0),
+		  unpack_alignment_(4),
+		  src_rect_(),
+		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
+		surface_width_ = surfaces.front()->width();
+		surface_height_ = surfaces.front()->height();
+		for(auto s : surfaces) {
+			ASSERT_LOG(surface_width_ == s->width(), "Surface width didn't match. When creating a multi-surface texture all the surface widths must be the same. May relax this requirement in the future.");
+			ASSERT_LOG(surface_height_ == s->height(), "Surface height didn't match. When creating a multi-surface texture all the surface heights must be the same. May relax this requirement in the future.");
+		}
 		internalInit();
 	}
 
-	Texture::Texture(int width, 
+	Texture::Texture(int count, 
+		int width, 
 		int height, 
 		int depth,
 		PixelFormat::PF fmt, 
-		Type type)
+		Texture::Type type)
 		: type_(type), 
-		mipmaps_(0), 
-		max_anisotropy_(1),
-		lod_bias_(0.0f),
-		surface_width_(width),
-		surface_height_(height),
-		width_(width),
-		height_(height),
-		depth_(depth),
-		unpack_alignment_(4),
-		src_rect_(),
-		src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
+		  mipmaps_(0), 
+		  max_anisotropy_(1),
+		  lod_bias_(0.0f),
+		  surface_width_(width),
+		  surface_height_(height),
+		  width_(width),
+		  height_(height),
+		  depth_(depth),
+		  unpack_alignment_(4),
+		  src_rect_(),
+		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
 		internalInit();
 	}
 
 	Texture::Texture(const SurfacePtr& surf, const SurfacePtr& palette)
+		: type_(Type::TEXTURE_2D), 
+		  mipmaps_(0), 
+		  max_anisotropy_(1),
+		  lod_bias_(0.0f),
+		  surface_width_(surf->width()),
+		  surface_height_(surf->height()),
+		  width_(0),
+		  height_(0),
+		  depth_(0),
+		  unpack_alignment_(4),
+		  src_rect_(),
+		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
 		ASSERT_LOG(false, "Write the texture palette code");
 		internalInit();	
@@ -268,41 +287,45 @@ namespace KRE
 		src_rect_ = rect(0, 0, width_, height_);
 
 		const int npixels = width_ * height_;
-		alpha_map_.resize(npixels);
-		// surfaces with zero for the alpha mask have no alpha channel
-		if(surface_ && surface_->getPixelFormat()->hasAlphaChannel()) {
-			auto fmt = surface_->getPixelFormat();
-			const unsigned char* pixels = reinterpret_cast<const unsigned char*>(surface_->pixels());
-			for(int y = 0; y != height_; ++y) {
-				const unsigned char* pix = pixels;
-				for(int x = 0; x != width_; ++x) {
-					bool alpha = false;
-					uint32_t pixel_value;
-					switch(fmt->bytesPerPixel()) {
-					// XXX - these probably need an endian-ness test. 
-					// Or moved to Surface.
-					case 1: pixel_value = pix[0]; break;						
-					case 2: pixel_value = (pix[1] << 8) | pix[0]; break;
-					case 4: pixel_value = (pix[3] << 24) | (pix[2] << 16) | (pix[1] << 8) | pix[0]; break;
+		alpha_map_.resize(surfaces_.size());
+		int n = 0;
+		for(auto& s : surfaces_) {
+			alpha_map_[n].resize(npixels);
+			// surfaces with zero for the alpha mask have no alpha channel
+			if(s && s->getPixelFormat()->hasAlphaChannel()) {
+				auto fmt = s->getPixelFormat();
+				const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
+				for(int y = 0; y != height_; ++y) {
+					const unsigned char* pix = pixels;
+					for(int x = 0; x != width_; ++x) {
+						bool alpha = false;
+						uint32_t pixel_value;
+						switch(fmt->bytesPerPixel()) {
+						// XXX - these probably need an endian-ness test. 
+						// Or moved to Surface.
+						case 1: pixel_value = pix[0]; break;						
+						case 2: pixel_value = (pix[1] << 8) | pix[0]; break;
+						case 4: pixel_value = (pix[3] << 24) | (pix[2] << 16) | (pix[1] << 8) | pix[0]; break;
+						}
+						auto alpha_value = (((pixel_value & fmt->getAlphaMask()) >> fmt->getAlphaShift()) << fmt->getAlphaLoss());
+						alpha_map_[n][x+y*width_] = alpha_value == 0;
+						pix += fmt->bytesPerPixel();
 					}
-					auto alpha_value = (((pixel_value & fmt->getAlphaMask()) >> fmt->getAlphaShift()) << fmt->getAlphaLoss());
-					alpha_map_[x+y*width_] = alpha_value == 0;
-					pix += fmt->bytesPerPixel();
+					pixels += s->rowPitch();
 				}
-				pixels += surface_->rowPitch();
-			}
 
-		} else {
-			for(int y = 0; y != height_; ++y) {
-				for(int x = 0; x != width_; ++x) {
-					alpha_map_[x + y*width_] = false;
+			} else {
+				for(int y = 0; y != height_; ++y) {
+					for(int x = 0; x != width_; ++x) {
+						alpha_map_[n][x + y*width_] = false;
+					}
 				}
 			}
+			++n;
 		}
-
 	}
 
-	void Texture::setAddressModes(AddressMode u, AddressMode v, AddressMode w, const Color& bc)
+	void Texture::setAddressModes(Texture::AddressMode u, Texture::AddressMode v, Texture::AddressMode w, const Color& bc)
 	{
 		address_mode_[0] = u;
 		address_mode_[1] = v;
@@ -311,7 +334,7 @@ namespace KRE
 		init();
 	}
 
-	void Texture::setAddressModes(const AddressMode uvw[3], const Color& bc)
+	void Texture::setAddressModes(const Texture::AddressMode uvw[3], const Color& bc)
 	{
 		for(int n = 0; n < 3; ++n) {
 			address_mode_[n] = uvw[n];
@@ -320,7 +343,7 @@ namespace KRE
 		init();
 	}
 
-	void Texture::setFiltering(Filtering min, Filtering max, Filtering mip)
+	void Texture::setFiltering(Texture::Filtering min, Texture::Filtering max, Texture::Filtering mip)
 	{
 		filtering_[0] = min;
 		filtering_[1] = max;
@@ -328,7 +351,7 @@ namespace KRE
 		init();
 	}
 
-	void Texture::setFiltering(const Filtering f[3])
+	void Texture::setFiltering(const Texture::Filtering f[3])
 	{
 		for(int n = 0; n < 3; ++n) {
 			filtering_[n] = f[n];
@@ -372,6 +395,11 @@ namespace KRE
 			static_cast<int>(round(r.y2() * height_)));
 	}
 
+	TexturePtr Texture::createTexture(const variant& node)
+	{
+		return DisplayDevice::createTexture(nullptr, true, node);
+	}
+
 	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)
 	{
 		return DisplayDevice::createTexture(filename, type, mipmap_levels);
@@ -405,5 +433,63 @@ namespace KRE
 	TexturePtr Texture::createPalettizedTexture(const SurfacePtr& surf, const SurfacePtr& palette)
 	{
 		return DisplayDevice::createTexture(surf, palette);
+	}
+
+	TexturePtr Texture::createTexture1D(int width, PixelFormat::PF fmt)
+	{
+		return DisplayDevice::createTexture1D(width, fmt);
+	}
+
+	TexturePtr Texture::createTexture2D(int width, int height, PixelFormat::PF fmt)
+	{
+		return DisplayDevice::createTexture2D(width, height, fmt);
+	}
+
+	TexturePtr Texture::createTexture3D(int width, int height, int depth, PixelFormat::PF fmt)
+	{
+		return DisplayDevice::createTexture3D(width, height, depth, fmt);
+	}
+
+	TexturePtr Texture::createTexture2D(int count, int width, int height, PixelFormat::PF fmt)
+	{
+		return DisplayDevice::createTexture2D(count, width, height, fmt);
+	}
+
+	TexturePtr Texture::createTexture2D(const std::vector<std::string>& filenames, const variant& node)
+	{
+		return DisplayDevice::createTexture2D(filenames, node);
+	}
+
+	TexturePtr Texture::createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
+	{
+		return DisplayDevice::createTexture2D(surfaces, cache);
+	}
+
+	bool Texture::isAlpha(unsigned x, unsigned y, int n) const
+	{ 
+		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
+		return alpha_map_[n][y*width_+x]; 
+	}
+
+	std::vector<bool>::const_iterator Texture::getAlphaRow(int x, int y, int n) const 
+	{ 
+		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
+		return alpha_map_[n].begin() + y*width_ + x; 
+	}
+
+	std::vector<bool>::const_iterator Texture::endAlpha(int n) const 
+	{ 
+		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
+		return alpha_map_[n].end(); 
+	}
+
+	void Texture::clearTextures()
+	{
+		texture_registry().clear();
+	}
+
+	void Texture::clearCache()
+	{
+		clearTextures();
 	}
 }

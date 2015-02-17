@@ -342,9 +342,9 @@ bool widget_window::handleEvent(const SDL_Event& event, bool claimed)
 
 		case SDL_MOUSEMOTION: {
 			const SDL_MouseMotionEvent& motion = event.motion;
-			//Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+			//Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 			if(motion.x >= x() && motion.x < x()+width() && motion.y >= y() && motion.y < y()+height()-info_bar_height_ && editor_.tool() < NUM_WIDGET_TOOLS) {
-				if((selected_ != editor_.tool() || placement_ == NULL) && editor_.is_tool_widget()) {
+				if((selected_ != editor_.tool() || placement_ == nullptr) && editor_.is_tool_widget()) {
 					placement_.reset(new gui::GuiSectionWidget(ToolIcons[editor_.tool()], 26, 26));
 					selected_ = editor_.tool();
 				} else if(editor_.tool() == TOOL_SELECT) {

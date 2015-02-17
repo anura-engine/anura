@@ -113,7 +113,7 @@ namespace gui
 		}
 		if(v.has_key("on_quit")) {
 			on_quit_ = std::bind(&Dialog::quitDelegate, this);
-			ASSERT_LOG(getEnvironment() != NULL, "environment not set");
+			ASSERT_LOG(getEnvironment() != nullptr, "environment not set");
 			const variant on_quit_value = v["on_quit"];
 			if(on_quit_value.is_function()) {
 				ASSERT_LOG(on_quit_value.min_function_arguments() == 0, "on_quit_value dialog function should take 0 arguments: " << v.debug_location());
@@ -130,7 +130,7 @@ namespace gui
 		}
 		if(v.has_key("on_close")) {
 			on_close_ = std::bind(&Dialog::closeDelegate, this, _1);
-			ASSERT_LOG(getEnvironment() != NULL, "environment not set");
+			ASSERT_LOG(getEnvironment() != nullptr, "environment not set");
 			const variant on_close_value = v["on_close"];
 			if(on_close_value.is_function()) {
 				ASSERT_LOG(on_close_value.min_function_arguments() <= 1 && on_close_value.max_function_arguments() >= 1, "on_close dialog function should take 1 argument: " << v.debug_location());

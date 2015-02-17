@@ -38,7 +38,7 @@ CurrentGeneratorPtr CurrentGenerator::create(variant node)
 	} else if(type == "rect") {
 		return CurrentGeneratorPtr(new RectCurrentGenerator(node));
 	} else {
-		return NULL;
+		return nullptr;
 	}
 }
 

@@ -83,7 +83,7 @@ const char* ToolIcons[] = {
 	"editor_eyedropper",
 	"editor_rect_select",
 	"editor_flood",
-	NULL
+	nullptr
 };
 
 enum VOXEL_TOOL {
@@ -400,7 +400,7 @@ iso_renderer::iso_renderer(const rect& area)
 iso_renderer::~iso_renderer()
 {
 	if(g_iso_renderer == this) {
-		g_iso_renderer = NULL;
+		g_iso_renderer = nullptr;
 	}
 }
 
@@ -611,7 +611,7 @@ bool iso_renderer::handleEvent(const SDL_Event& event, bool claimed)
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
 
-		Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+		Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			if(motion.xrel) {
 				camera_hangle_ += motion.xrel*0.02;
@@ -689,7 +689,7 @@ void iso_renderer::init()
 		final_texture_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete[] id;});
 		glGenTextures(2, &final_texture_id_[0]);
 		glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
-		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+		glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, tex_width_, tex_height_, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
@@ -701,7 +701,7 @@ void iso_renderer::init()
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 		glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
+		glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, tex_width_, tex_height_, 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr );
 		glBindTexture(GL_TEXTURE_2D, 0);
 
 		framebuffer_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteFramebuffers(2, id); delete[] id;});
@@ -1176,7 +1176,7 @@ bool perspective_renderer::calculate_cursor(int mousex, int mousey)
 
 int perspective_renderer::touching_selection_border(int mousex, int mousey) const
 {
-	if(get_editor().get_selection() == NULL) {
+	if(get_editor().get_selection() == nullptr) {
 		return -1;
 	}
 
@@ -1347,7 +1347,7 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 	case SDL_MOUSEWHEEL: {
 		int mx, my;
 		input::sdl_get_mouse_state(&mx, &my);
-		if(!focus_ || get_editor().get_cursor() == NULL) {
+		if(!focus_ || get_editor().get_cursor() == nullptr) {
 			break;
 		}
 
@@ -1457,7 +1457,7 @@ bool perspective_renderer::handleEvent(const SDL_Event& event, bool claimed)
 		   motion.x <= x() + width() && motion.y <= y() + height()) {
 			focus_ = true;
 
-			Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+			Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 
 			if(!button_state) {
 				selection_border_ = touching_selection_border(motion.x, motion.y);
@@ -1971,7 +1971,7 @@ voxel_editor::voxel_editor(const rect& r, const std::string& fname)
 voxel_editor::~voxel_editor()
 {
 	if(g_voxel_editor == this) {
-		g_voxel_editor = NULL;
+		g_voxel_editor = nullptr;
 	}
 }
 

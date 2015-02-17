@@ -68,7 +68,7 @@ namespace sys
 			if(curdir.empty()) {
 				std::vector<char> buf(1024);
 				const char* const res = getcwd(&buf[0], buf.capacity());
-				if(res != NULL) {
+				if(res != nullptr) {
 					abs_path  = sys::make_conformal_path(res);
 				} else {
 					ASSERT_LOG(false, "getcwd failed");

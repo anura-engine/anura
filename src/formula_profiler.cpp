@@ -69,7 +69,7 @@ namespace formula_profiler
 	Instrument::Instrument(const char* id) : id_(id)
 	{
 		if(profiler_on) {
-			gettimeofday(&tv_, NULL);
+			gettimeofday(&tv_, nullptr);
 		}
 	}
 
@@ -77,7 +77,7 @@ namespace formula_profiler
 	{
 		if(profiler_on) {
 			struct timeval end_tv;
-			gettimeofday(&end_tv, NULL);
+			gettimeofday(&end_tv, nullptr);
 			const int time_us = (end_tv.tv_sec - tv_.tv_sec)*1000000 + (end_tv.tv_usec - tv_.tv_usec);
 			InstrumentationRecord& r = g_instrumentation[id_];
 			r.time_us += (end_tv.tv_sec - tv_.tv_sec)*1000000 + (end_tv.tv_usec - tv_.tv_usec);
@@ -91,7 +91,7 @@ namespace formula_profiler
 		static bool first_call = true;
 
 		struct timeval tv;
-		gettimeofday(&tv, NULL);
+		gettimeofday(&tv, nullptr);
 
 		if(!first_call && g_instrumentation.empty() == false) {
 			const int time_us = (tv.tv_sec - prev_call.tv_sec)*1000000 + (tv.tv_usec - prev_call.tv_usec);
@@ -161,7 +161,7 @@ namespace formula_profiler
 					current_expression_call_stack = get_expression_call_stack();
 
 					for(int n = 0; n != current_expression_call_stack.size(); ++n) {
-						if(current_expression_call_stack[n].expression == NULL) {
+						if(current_expression_call_stack[n].expression == nullptr) {
 							valid = false;
 							break;
 						}
@@ -211,7 +211,7 @@ namespace formula_profiler
 #if defined(_MSC_VER) || TARGET_OS_IPHONE
 			// Crappy windows approximation.
 			sdl_profile_timer = SDL_AddTimer(10, sdl_timer_callback, 0);
-			if(sdl_profile_timer == NULL) {
+			if(sdl_profile_timer == 0) {
 				std::cerr << "Couldn't create a profiling timer!" << std::endl;
 			}
 #else

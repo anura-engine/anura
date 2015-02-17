@@ -129,7 +129,7 @@ namespace gui
 		//where the next widget will be placed by default
 		int add_x_, add_y_;
 
-		KRE::MaterialPtr bg_;
+		KRE::TexturePtr bg_;
 		mutable float bg_alpha_;
 
 		int last_draw_;

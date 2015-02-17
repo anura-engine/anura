@@ -42,7 +42,7 @@ namespace KRE
 				SDL_SetHint(SDL_HINT_RENDER_DRIVER, renderer_hint_.substr(5).c_str());
 			}
 			renderer_ = SDL_CreateRenderer(window_.get(), -1, rnd_flags);
-			ASSERT_LOG(renderer_ != NULL, "Failed to create renderer: " << SDL_GetError());
+			ASSERT_LOG(renderer_ != nullptr, "Failed to create renderer: " << SDL_GetError());
 
 	XXX in swap()
 		SDL_RenderPresent(renderer_);

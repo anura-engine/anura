@@ -98,7 +98,7 @@ void report_assert_msg(const std::string& m)
 
 #endif
 	
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, m.c_str(), "Assertion failed", NULL);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, m.c_str(), "Assertion failed", nullptr);
 }
 
 validation_failure_exception::validation_failure_exception(const std::string& m)

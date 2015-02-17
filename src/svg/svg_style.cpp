@@ -835,7 +835,7 @@ namespace KRE
 				default: break;
 			}
 			
-			if(path_ == FuncIriValue::FUNC_IRI && path_resolved_ != NULL) {
+			if(path_ == FuncIriValue::FUNC_IRI && path_resolved_ != nullptr) {
 				path_resolved_->clip(ctx);
 			}
 		}

@@ -36,8 +36,8 @@ namespace voxel
 	{
 	public:
 		explicit user_voxel_object(const variant& node);
-		void handleEvent(int nevent, const FormulaCallable* context=NULL);
-		void handleEvent(const std::string& event, const FormulaCallable* context=NULL);
+		void handleEvent(int nevent, const FormulaCallable* context=nullptr);
+		void handleEvent(const std::string& event, const FormulaCallable* context=nullptr);
 
 		virtual void process(Level& lvl);
 

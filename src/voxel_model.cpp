@@ -497,7 +497,7 @@ namespace voxel
 			total_size += carray[n].size() * sizeof(uint8_t);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, *vbo_id_);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, total_size, nullptr, GL_STATIC_DRAW);
 		for(int n = FACE_LEFT; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, vattrib_offsets_[n], varray[n].size()*sizeof(GLfloat), &varray[n][0]);
 		}
@@ -638,8 +638,8 @@ namespace voxel
 		ASSERT_LOG(src_model, "Could not find source model: " << src_attach.layer);
 		ASSERT_LOG(dst_model, "Could not find dest model: " << dst_attach.layer);
 
-		const std::pair<std::string, glm::vec3>* src_pivot = NULL;
-		const std::pair<std::string, glm::vec3>* dst_pivot = NULL;
+		const std::pair<std::string, glm::vec3>* src_pivot = nullptr;
+		const std::pair<std::string, glm::vec3>* dst_pivot = nullptr;
 
 		for(const std::pair<std::string, glm::vec3>& p : src_model->pivots_) {
 			if(p.first == src_attach.pivot) {

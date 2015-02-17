@@ -211,7 +211,7 @@ namespace gui
 
 	void Widget::handleProcess()
 	{
-		if(!tooltip_displayed_ && profile::get_tick_time() > tooltip_ticks_ && tooltip_ != NULL) {
+		if(!tooltip_displayed_ && profile::get_tick_time() > tooltip_ticks_ && tooltip_ != nullptr) {
 			gui::set_tooltip(tooltip_);
 			tooltip_displayed_ = true;
 		}
@@ -270,7 +270,7 @@ namespace gui
 		tooltip_font_size_ = fontsize;
 		tooltip_color_ = color;
 		tooltip_font_ = font;
-		if(tooltip_displayed_ && tooltip_ != NULL) {
+		if(tooltip_displayed_ && tooltip_ != nullptr) {
 			if(tooltip_->text == str 
 				&& tooltip_font_size_ == fontsize 
 				&& tooltip_color_.r() == color.r() && tooltip_color_.g() == color.g() && tooltip_color_.b() == color.b() && tooltip_color_.a() == color.a() 
@@ -323,7 +323,7 @@ namespace gui
 		if(visible_) {
 			KRE::Canvas::ModelManager mm(xt, yt, rotate, scale);
 			KRE::Canvas::ColorManager cm(KRE::Color(255,255,255,disabled() ? disabledOpacity() : getAlpha()));
-			if(frame_set_ != NULL) {
+			if(frame_set_ != nullptr) {
 				frame_set_->blit(x() - getPadWidth() - frame_set_->cornerHeight(),
 					y() - getPadHeight() - frame_set_->cornerHeight(), 
 					width() + getPadWidth()*2 + 2*frame_set_->cornerHeight(), 
@@ -687,7 +687,7 @@ namespace gui
 		if(getAlpha() != 256) {
 			res.add("alpha", getAlpha());
 		}
-		if(clipArea() != NULL) {
+		if(clipArea() != nullptr) {
 			if(clipArea()->x() == x() && clipArea()->y() == y() 
 				&& clipArea()->w() == width() && clipArea()->h() == height()) {
 				res.add("clip_to_dimensions", true);

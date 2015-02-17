@@ -28,20 +28,19 @@
 #include <GL/glew.h>
 
 #include "asserts.hpp"
-#include "AttributeSetOpenGL.hpp"
+#include "AttributeSetOGL.hpp"
 #include "BlendOGL.hpp"
 #include "CameraObject.hpp"
 #include "CanvasOGL.hpp"
 #include "ClipScopeOGL.hpp"
-#include "DisplayDeviceOpenGL.hpp"
-#include "EffectsOpenGL.hpp"
-#include "FboOpenGL.hpp"
+#include "DisplayDeviceOGL.hpp"
+#include "EffectsOGL.hpp"
+#include "FboOGL.hpp"
 #include "LightObject.hpp"
-#include "MaterialOpenGL.hpp"
 #include "ScissorOGL.hpp"
-#include "ShadersOpenGL.hpp"
+#include "ShadersOGL.hpp"
 #include "StencilScopeOGL.hpp"
-#include "TextureOpenGL.hpp"
+#include "TextureOGL.hpp"
 
 namespace KRE
 {
@@ -237,7 +236,7 @@ namespace KRE
 		auto dd = r->getDisplayData();
 		// XXX work out removing this dynamic_pointer_cast.
 		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(dd->getShader());
-		ASSERT_LOG(shader != NULL, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
+		ASSERT_LOG(shader != nullptr, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
 		shader->makeActive();
 
 		BlendEquationScopeOGL be_scope(*r);
@@ -285,7 +284,7 @@ namespace KRE
 		/*for(auto& urv : r->UniformRenderVariables()) {
 			for(auto& rvd : urv->VariableDescritionList()) {
 				auto rvdd = std::dynamic_pointer_cast<RenderVariableDeviceData>(rvd->GetDisplayData());
-				ASSERT_LOG(rvdd != NULL, "Unable to cast DeviceData to RenderVariableDeviceData.");
+				ASSERT_LOG(rvdd != nullptr, "Unable to cast DeviceData to RenderVariableDeviceData.");
 				shader->SetUniformValue(rvdd->GetActiveMapIterator(), urv->Value());
 			}
 		}*/
@@ -310,7 +309,7 @@ namespace KRE
 				attr_hw->bind();
 				for(auto& attrdesc : attr->getAttrDesc()) {
 					auto ddp = std::dynamic_pointer_cast<RenderVariableDeviceData>(attrdesc.getDisplayData());
-					ASSERT_LOG(ddp != NULL, "Converting attribute device data was NULL.");
+					ASSERT_LOG(ddp != nullptr, "Converting attribute device data was nullptr.");
 					glEnableVertexAttribArray(ddp->getActiveMapIterator()->second.location);
 					
 					glVertexAttribPointer(ddp->getActiveMapIterator()->second.location, 
@@ -361,38 +360,41 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const variant& node) 
 	{
-		return TexturePtr(new OpenGLTexture(node, nullptr));
+		return std::make_shared<OpenGLTexture>(node, std::vector<SurfacePtr>());
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
 	{
-		return TexturePtr(new OpenGLTexture(node, surface));
+		std::vector<SurfacePtr> surfaces(1, surface);
+		return std::make_shared<OpenGLTexture>(node, surfaces);
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
 	{
-		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
+		std::vector<SurfacePtr> surfaces(1, surface);
+		return std::make_shared<OpenGLTexture>(surfaces, type, mipmap_levels);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture1D(unsigned width, PixelFormat::PF fmt)
 	{
-		return TexturePtr(new OpenGLTexture(width, 0, fmt, Texture::Type::TEXTURE_1D));
+		return std::make_shared<OpenGLTexture>(1, width, 0, fmt, Texture::Type::TEXTURE_1D);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
 	{
-		return TexturePtr(new OpenGLTexture(width, height, fmt, Texture::Type::TEXTURE_2D));
+		return std::make_shared<OpenGLTexture>(1, width, height, fmt, Texture::Type::TEXTURE_2D);
 	}
 	
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
-		return TexturePtr(new OpenGLTexture(width, height, fmt, Texture::Type::TEXTURE_3D, depth));
+		return std::make_shared<OpenGLTexture>(1, width, height, fmt, Texture::Type::TEXTURE_3D, depth);
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
 	{
-		auto surface = Surface::create(filename);
-		return TexturePtr(new OpenGLTexture(surface, type, mipmap_levels));
+		auto surface = Surface::create(filename);		
+		std::vector<SurfacePtr> surfaces(1, surface);
+		return std::make_shared<OpenGLTexture>(surfaces, type, mipmap_levels);
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette)
@@ -400,20 +402,24 @@ namespace KRE
 		return std::make_shared<OpenGLTexture>(surface, palette);
 	}
 
-	MaterialPtr DisplayDeviceOpenGL::handleCreateMaterial(const variant& node)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(int count, int width, int height, PixelFormat::PF fmt)
 	{
-		return MaterialPtr(new OpenGLMaterial(node));
+		return std::make_shared<OpenGLTexture>(count, width, height, fmt, Texture::Type::TEXTURE_2D);
 	}
 
-	MaterialPtr DisplayDeviceOpenGL::handleCreateMaterial(const std::string& name, 
-		const std::vector<TexturePtr>& textures, 
-		const BlendMode& blend, 
-		bool fog, 
-		bool lighting, 
-		bool depth_write, 
-		bool depth_check)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(const std::vector<std::string>& filenames, const variant& node)
 	{
-		return MaterialPtr(new OpenGLMaterial(name, textures, blend, fog, lighting, depth_write, depth_check));
+		std::vector<SurfacePtr> surfaces;
+		surfaces.reserve(filenames.size());
+		for(auto& fn : filenames) {
+			surfaces.emplace_back(Surface::create(fn));
+		}
+		return std::make_shared<OpenGLTexture>(node, surfaces);
+	}
+
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
+	{
+		return std::make_shared<OpenGLTexture>(surfaces, Texture::Type::TEXTURE_2D);
 	}
 
 	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(size_t width, size_t height, 
@@ -504,7 +510,7 @@ namespace KRE
 	void DisplayDeviceOpenGL::doBlitTexture(const TexturePtr& tex, int dstx, int dsty, int dstw, int dsth, float rotation, int srcx, int srcy, int srcw, int srch)
 	{
 		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
-		ASSERT_LOG(texture != NULL, "Texture passed in was not of expected type.");
+		ASSERT_LOG(texture != nullptr, "Texture passed in was not of expected type.");
 
 		const float tx1 = float(srcx) / texture->width();
 		const float ty1 = float(srcy) / texture->height();

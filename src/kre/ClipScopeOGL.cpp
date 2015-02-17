@@ -25,7 +25,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include "Color.hpp"
 #include "ClipScopeOGL.hpp"
-#include "ShadersOpenGL.hpp"
+#include "ShadersOGL.hpp"
 #include "StencilScopeOGL.hpp"
 
 namespace KRE

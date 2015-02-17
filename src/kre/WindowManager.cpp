@@ -65,8 +65,8 @@ namespace KRE
 		SDLWindowManager(const std::string& title, const std::string& renderer_hint) 
 			: WindowManager(title), 
 			renderer_hint_(renderer_hint),
-			renderer_(NULL),
-			context_(NULL) {
+			renderer_(nullptr),
+			context_(nullptr) {
 			if(renderer_hint_.empty()) {
 				renderer_hint_ = "opengl";
 			}
@@ -143,7 +143,7 @@ namespace KRE
 				display_.reset();
 				if(context_) {
 					SDL_GL_DeleteContext(context_);
-					context_ = NULL;
+					context_ = nullptr;
 				}
 				SDL_DestroyWindow(wnd);
 			});
@@ -154,13 +154,13 @@ namespace KRE
 					rnd_flags |= SDL_RENDERER_PRESENTVSYNC;
 				}
 				renderer_ = SDL_CreateRenderer(window_.get(), -1, rnd_flags);
-				ASSERT_LOG(renderer_ != NULL, "Failed to create renderer: " << SDL_GetError());				
+				ASSERT_LOG(renderer_ != nullptr, "Failed to create renderer: " << SDL_GetError());				
 			}
 
-			ASSERT_LOG(window_ != NULL, "Failed to create window: " << SDL_GetError());
+			ASSERT_LOG(window_ != nullptr, "Failed to create window: " << SDL_GetError());
 			if(display_->ID() == DisplayDevice::DISPLAY_DEVICE_OPENGL) {
 				context_ = SDL_GL_CreateContext(window_.get());	
-				ASSERT_LOG(context_ != NULL, "Failed to GL Context: " << SDL_GetError());
+				ASSERT_LOG(context_ != nullptr, "Failed to GL Context: " << SDL_GetError());
 			}
 
 			display_->setClearColor(clear_color_);
@@ -216,12 +216,12 @@ namespace KRE
 		}
 
 		void setWindowTitle(const std::string& title) override {
-			ASSERT_LOG(window_ != NULL, "Window is null");
+			ASSERT_LOG(window_ != nullptr, "Window is null");
 			SDL_SetWindowTitle(window_.get(), title.c_str());		
 		}
 
 		virtual void render(const Renderable* r) const override {
-			ASSERT_LOG(display_ != NULL, "No display to render to.");
+			ASSERT_LOG(display_ != nullptr, "No display to render to.");
 			display_->render(r);
 		}
 
@@ -247,7 +247,7 @@ namespace KRE
 	protected:
 	private:
 		void handleSetClearColor() const override {
-			if(display_ != NULL) {
+			if(display_ != nullptr) {
 				display_->setClearColor(clear_color_);
 			}
 		}
@@ -345,6 +345,12 @@ namespace KRE
 		handleSetClearColor();
 	}
 
+	void WindowManager::setClearColor(const Color& color) const
+	{
+		clear_color_ = color;
+		handleSetClearColor();
+	}
+
 	namespace
 	{
 		std::map<unsigned,WindowManagerPtr>& get_window_list()
@@ -425,7 +431,7 @@ namespace KRE
 		return main_window;
 	}
 
-	WindowManagerPtr getWindowFromID(unsigned id)
+	WindowManagerPtr WindowManager::getWindowFromID(unsigned id)
 	{
 		auto it = get_window_list().find(id);
 		ASSERT_LOG(it != get_window_list().end(), "Couldn't get window from id: " << id);

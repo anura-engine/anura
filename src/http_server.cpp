@@ -112,9 +112,9 @@ namespace http
 		}
 
 		timeval before, after;
-		gettimeofday(&before, NULL);
+		gettimeofday(&before, nullptr);
 		handle_message(socket, recv_buf);
-		gettimeofday(&after, NULL);
+		gettimeofday(&after, nullptr);
 
 		const int ms = (after.tv_sec - before.tv_sec)*1000 + (after.tv_usec - before.tv_usec)/1000;
 		LOG_INFO("handle_incoming_data time: " << ms << "ms");
@@ -191,7 +191,7 @@ namespace http
 			const int content_length = atoi(env["content-length"].c_str());
 			fprintf(stderr, "PARSE content-length: %d\n", content_length);
 
-			const char* payload = NULL;
+			const char* payload = nullptr;
 			const char* payload1 = strstr(msg.c_str(), "\n\n");
 			const char* payload2 = strstr(msg.c_str(), "\r\n\r\n");
 			if(payload1) {

@@ -237,7 +237,7 @@ namespace KRE
 		{
 		public:
 			CairoPath(CairoContext* context) : context_(context) {
-				ASSERT_LOG(context_ != NULL, "Passed an null context");
+				ASSERT_LOG(context_ != nullptr, "Passed an null context");
 			}
 			void MoveTo(const double x, const double y, const bool relative=false) override {
 				path_instructions_.emplace_back(new MoveToInstruction(x, y, relative));
@@ -334,10 +334,9 @@ namespace KRE
 				default:
 					ASSERT_LOG(false, "Unrecognised cairo surface format: " << fmt);
 			}
-			tex_ = DisplayDevice::createTexture(w, h, pffmt);
+			tex_ = Texture::createTexture2D(w, h, pffmt);
 			tex_->setAddressModes(Texture::AddressMode::CLAMP, Texture::AddressMode::CLAMP);
-			auto mat = DisplayDevice::createMaterial("CairoContext", std::vector<TexturePtr>(1,tex_));
-			setMaterial(mat);
+			setTexture(tex_);
 
 			auto as = DisplayDevice::createAttributeSet();
 			attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
@@ -357,7 +356,7 @@ namespace KRE
 			const float vx2 = draw_rect_.x2() + offs_x;
 			const float vy2 = draw_rect_.y2() + offs_y;
 
-			rectf r = getMaterial()->getNormalisedTextureCoords(getMaterial()->getTexture().begin());
+			rectf r = tex_->getSourceRectNormalised();
 
 			std::vector<vertex_texcoord> vertices;
 			vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
@@ -608,14 +607,14 @@ namespace KRE
 		void CairoContext::AddPath(const PathPtr& path)
 		{
 			auto cpath = std::dynamic_pointer_cast<CairoPath>(path);
-			ASSERT_LOG(cpath != NULL, "Couldn't convert path to appropriate type CairoPath");
+			ASSERT_LOG(cpath != nullptr, "Couldn't convert path to appropriate type CairoPath");
 			cpath->execute(context_);
 		}
 
 		void CairoContext::AddSubPath(const PathPtr& path)
 		{
 			auto cpath = std::dynamic_pointer_cast<CairoPath>(path);
-			ASSERT_LOG(cpath != NULL, "Couldn't convert path to appropriate type CairoPath");
+			ASSERT_LOG(cpath != nullptr, "Couldn't convert path to appropriate type CairoPath");
 			cairo_new_sub_path(context_);
 			cpath->execute(context_);
 		}

@@ -103,7 +103,7 @@ namespace editor_dialogs
 				if(search_string.empty() == false) {
 					const std::string id = module::get_id(c.node["type"].as_string());
 					const char* p = strstr(id.c_str(), search_string.c_str());
-					matches = p == id.c_str() || p != NULL && *(p-1) == '_';
+					matches = p == id.c_str() || p != nullptr && *(p-1) == '_';
 				}
 
 				if(matches) {
@@ -126,7 +126,7 @@ namespace editor_dialogs
 					borders.push_back(new gui::BorderWidget(char_button, KRE::Color(0,0,0,0)));
 					grid->addCol(gui::WidgetPtr(borders.back()));
 				} else {
-					borders.push_back(NULL);
+					borders.push_back(nullptr);
 				}
 	
 				++index;

@@ -34,12 +34,12 @@ namespace sys
 
 	//! Populates 'files' with all the files and
 	//! 'dirs' with all the directories in dir.
-	//! If files or dirs are NULL they will not be used.
+	//! If files or dirs are nullptr they will not be used.
 	//!
 	//! Mode determines whether the entire path or just the filename is retrieved.
 	void get_files_in_dir(const std::string& dir,
 						  std::vector<std::string>* files,
-						  std::vector<std::string>* dirs=NULL);
+						  std::vector<std::string>* dirs=nullptr);
 
 	typedef std::map<std::string, std::string> file_path_map;
 	//Function which given a directory, will recurse through all sub-directories,
@@ -82,5 +82,5 @@ namespace sys
 	void notify_on_file_modification(const std::string& path, std::function<void()> handler);
 	void pump_file_modifications();
 
-	bool is_safe_write_path(const std::string& path, std::string* error=NULL);
+	bool is_safe_write_path(const std::string& path, std::string* error=nullptr);
 }

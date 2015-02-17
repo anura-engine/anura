@@ -103,10 +103,10 @@ namespace game_logic
 			  : slots_(slots), id_(id)
 			{
 				const FormulaCallableDefinition* def = type->getDefinition();
-				RAISE_MISMATCH(def != NULL, "Trying to make an interface out of an invalid type");
+				RAISE_MISMATCH(def != nullptr, "Trying to make an interface out of an invalid type");
 				for(const Entry& e : slots) {
 					const FormulaCallableDefinition::Entry* entry = def->getEntryById(e.id);
-					RAISE_MISMATCH(entry != NULL, "Type " << type->to_string() << " does not match interface because it does not contain " << e.id);
+					RAISE_MISMATCH(entry != nullptr, "Type " << type->to_string() << " does not match interface because it does not contain " << e.id);
 					RAISE_MISMATCH(entry->variant_type, "Type " << type->to_string() << " does not match interface because " << e.id << " does not have type information");
 					RAISE_MISMATCH(variant_types_compatible(e.type, entry->variant_type), "Type " << type->to_string() << " does not match interface because " << e.id << " is a " << entry->variant_type->to_string() << " when a " << e.type->to_string() << " is expected");
 
@@ -240,7 +240,7 @@ namespace game_logic
 	FormulaInterfaceInstanceFactory* FormulaInterface::createFactory(variant_type_ptr type) const
 	{
 		if(type->is_interface() == this) {
-			return NULL;
+			return nullptr;
 		}
 
 		if(type->is_map_of().first) {

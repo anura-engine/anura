@@ -555,7 +555,7 @@ namespace voxel
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
 				UserVoxelObjectPtr o = value.try_convert<user_voxel_object>();
-				ASSERT_LOG(o != NULL, "Couldn't convert value to user_voxel_object.");
+				ASSERT_LOG(o != nullptr, "Couldn't convert value to user_voxel_object.");
 				obj.objects_.insert(o.get());
 			} else {				
 				obj.objects_.insert(new user_voxel_object(value[n]));

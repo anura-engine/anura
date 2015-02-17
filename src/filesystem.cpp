@@ -79,19 +79,19 @@ namespace sys
 		}
 		for(directory_iterator it = directory_iterator(p); it != directory_iterator(); ++it) {
 			if(is_directory(it->path()) || is_other(it->path())) {
-				if(dirs != NULL) {
+				if(dirs != nullptr) {
 					dirs->push_back(it->path().filename().generic_string());
 				}
 			} else {
-				if(files != NULL) {
+				if(files != nullptr) {
 					files->push_back(it->path().filename().generic_string());
 				}
 			}
 		}
-		if(files != NULL)
+		if(files != nullptr)
 			std::sort(files->begin(), files->end());
 
-		if (dirs != NULL)
+		if (dirs != nullptr)
 			std::sort(dirs->begin(), dirs->end());
 	}
 
@@ -100,7 +100,7 @@ namespace sys
                                     std::map<std::string, std::string>* file_map,
 									const std::string& prefix)
 	{
-		ASSERT_LOG(file_map != NULL, "get_unique_filenames_under_dir() passed a NULL file_map");
+		ASSERT_LOG(file_map != nullptr, "get_unique_filenames_under_dir() passed a nullptr file_map");
 		path p(dir);
 		if(!is_directory(p)) {
 			return;
@@ -332,7 +332,7 @@ namespace sys
 			FD_ZERO(&read_set);
 			FD_SET(inotify_fd, &read_set);
 			timeval tv = {1, 0};
-			const int select_res = select(inotify_fd+1, &read_set, NULL, NULL, &tv);
+			const int select_res = select(inotify_fd+1, &read_set, nullptr, nullptr, &tv);
 			if(select_res > 0) {
 				inotify_event ev;
 				const int nbytes = read(inotify_fd, &ev, sizeof(ev));
@@ -380,7 +380,7 @@ namespace sys
 		}
 	}
 
-	threading::thread* file_mod_worker_thread = NULL;
+	threading::thread* file_mod_worker_thread = nullptr;
 
 	}
 
@@ -396,7 +396,7 @@ namespace sys
 		}
 
 		delete file_mod_worker_thread;
-		file_mod_worker_thread = NULL;
+		file_mod_worker_thread = nullptr;
 	}
 
 	std::string get_user_data_dir()
@@ -431,14 +431,14 @@ namespace sys
 			handlers.push_back(handler);
 		}
 
-		if(file_mod_worker_thread == NULL) {
+		if(file_mod_worker_thread == nullptr) {
 			file_mod_worker_thread = new threading::thread("file_change_notify", file_mod_worker_thread_fn);
 		}
 	}
 
 	void pump_file_modifications()
 	{
-		if(file_mod_worker_thread == NULL) {
+		if(file_mod_worker_thread == nullptr) {
 			return;
 		}
 

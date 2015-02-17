@@ -38,5 +38,5 @@ const char* get_log_level_as_string(LogLevel l)
 		return log_level_names[l];
 	}
 	ASSERT_LOG(false, "Log level " << l << " is outside valid range");
-	return NULL;
+	return nullptr;
 }

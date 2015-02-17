@@ -73,7 +73,7 @@ namespace gui
 			x = 0;
 		}
 
-		if(static_cast<unsigned>(x) > KRE::WindowManager::getMainWindow()->width()-width) {
+		if(x > KRE::WindowManager::getMainWindow()->width()-width) {
 			x = KRE::WindowManager::getMainWindow()->width()-width;
 		}
 
@@ -81,7 +81,7 @@ namespace gui
 			y = 0;
 		}
 
-		if(static_cast<unsigned>(y) > KRE::WindowManager::getMainWindow()->height()-height) {
+		if(y > KRE::WindowManager::getMainWindow()->height()-height) {
 			y = KRE::WindowManager::getMainWindow()->height()-height;
 		}
 

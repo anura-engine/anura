@@ -208,7 +208,7 @@ public:
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_FUNCTION) {
-			if(type->is_function(NULL, NULL, NULL)) {
+			if(type->is_function(nullptr, nullptr, nullptr)) {
 				return true;
 			}
 		} else if(type_ == variant::VARIANT_TYPE_CALLABLE) {
@@ -230,7 +230,7 @@ public:
 	bool match(const variant& v) const { return false; }
 	bool is_equal(const variant_type& o) const {
 		const variant_type_none* other = dynamic_cast<const variant_type_none*>(&o);
-		return other != NULL;
+		return other != nullptr;
 	}
 
 	std::string to_string_impl() const {
@@ -255,7 +255,7 @@ public:
 	bool match(const variant& v) const { return true; }
 	bool is_equal(const variant_type& o) const {
 		const variant_type_any* other = dynamic_cast<const variant_type_any*>(&o);
-		return other != NULL;
+		return other != nullptr;
 	}
 
 	std::string to_string_impl() const {
@@ -300,7 +300,7 @@ public:
 	}
 	bool is_equal(const variant_type& o) const {
 		const variant_type_commands* other = dynamic_cast<const variant_type_commands*>(&o);
-		return other != NULL;
+		return other != nullptr;
 	}
 
 	std::string to_string_impl() const {
@@ -348,7 +348,7 @@ public:
 	}
 	bool is_equal(const variant_type& o) const {
 		const variant_type_cairo_commands* other = dynamic_cast<const variant_type_cairo_commands*>(&o);
-		return other != NULL;
+		return other != nullptr;
 	}
 
 	std::string to_string_impl() const {
@@ -466,7 +466,7 @@ public:
 
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_custom_object* other = dynamic_cast<const variant_type_custom_object*>(type.get());
-		if(other == NULL) {
+		if(other == nullptr) {
 			return false;
 		}
 
@@ -525,7 +525,7 @@ public:
 
 	bool is_compatible(variant_type_ptr type, std::ostringstream* why) const {
 		const variant_type_voxel_object* other = dynamic_cast<const variant_type_voxel_object*>(type.get());
-		if(other == NULL) {
+		if(other == nullptr) {
 			return false;
 		}
 
@@ -840,13 +840,13 @@ public:
 	}
 
 	const std::map<variant, variant_type_ptr>* is_specific_map() const {
-		if(specific_map_.get() != NULL) {
+		if(specific_map_.get() != nullptr) {
 			return specific_map_.get();
 		}
 
 		for(const auto& t : types_) {
 			if(t->is_specific_map()) {
-				return NULL;
+				return nullptr;
 			}
 		}
 

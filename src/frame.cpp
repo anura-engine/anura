@@ -617,13 +617,13 @@ std::vector<bool>::const_iterator Frame::getAlphaItor(int x, int y, int time, bo
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate) const
 {
-	const FrameInfo* info = NULL;
+	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
-	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	y += info->y_adjust*scale_;
-	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
-	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
+	y += static_cast<int>(info->y_adjust * scale_);
+	const int w = static_cast<int>(info->area.w() * scale_ * (face_right ? 1 : -1));
+	const int h = static_cast<int>(info->area.h() * scale_ * (upside_down ? -1 : 1));
 
 	if(shader) {
 		shader->setSpriteArea(blit_target_.getTexture()->getSourceRectNormalised());
@@ -638,17 +638,17 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right, bool upside_down, int time, float rotate, float scale) const
 {
-	const FrameInfo* info = NULL;
+	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
-	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	y += info->y_adjust*scale_;
-	const int w = info->area.w()*scale_*scale*(face_right ? 1 : -1);
-	const int h = info->area.h()*scale_*scale*(upside_down ? -1 : 1);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
+	y += static_cast<int>(info->y_adjust * scale_);
+	const int w = static_cast<int>(info->area.w() * scale_ * scale * (face_right ? 1 : -1));
+	const int h = static_cast<int>(info->area.h() * scale_ * scale * (upside_down ? -1 : 1));
 
 	//adjust x,y to accomodate scaling so that we scale from the center.
-	const int width_delta = img_rect_.w()*scale_*scale - img_rect_.w()*scale_;
-	const int height_delta = img_rect_.h()*scale_*scale - img_rect_.h()*scale_;
+	const int width_delta = static_cast<int>(img_rect_.w() * scale_ * scale - img_rect_.w() * scale_);
+	const int height_delta = static_cast<int>(img_rect_.h() * scale_ * scale - img_rect_.h() * scale_);
 	x -= width_delta/2;
 	y -= height_delta/2;
 
@@ -665,7 +665,7 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, bool face_right,
 
 void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area, bool face_right, bool upside_down, int time, float rotate) const
 {
-	const FrameInfo* info = NULL;
+	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 
 	const int x_adjust = area.x();
@@ -673,14 +673,14 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 	const int w_adjust = area.w() - img_rect_.w();
 	const int h_adjust = area.h() - img_rect_.h();
 
-	const int w = info->area.w()*scale_*(face_right ? 1 : -1);
-	const int h = info->area.h()*scale_*(upside_down ? -1 : 1);
+	const int w = static_cast<int>(info->area.w() * scale_ * (face_right ? 1 : -1));
+	const int h = static_cast<int>(info->area.h() * scale_ * (upside_down ? -1 : 1));
 
 	const rect src_rect = blit_target_.getTexture()->getSourceRect();
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit_target_.setRotation(rotate, glm::vec3(0, 0, 1.0f));
-	blit_target_.setDrawRect(rect(x, y, (w + w_adjust*scale_)*(face_right ? 1 : -1), (h + h_adjust*scale_)*(upside_down ? -1 : 1)));
+	blit_target_.setDrawRect(rect(x, y, static_cast<int>(w + w_adjust * scale_) * (face_right ? 1 : -1), static_cast<int>(h + h_adjust * scale_) * (upside_down ? -1 : 1)));
 	blit_target_.getTexture()->setSourceRect(rect(src_rect.x() + x_adjust, src_rect.y() + y_adjust, src_rect.w() + x_adjust + w_adjust, src_rect.h() + y_adjust + h_adjust));
 	blit_target_.preRender(wnd);
 	wnd->render(&blit_target_);
@@ -690,14 +690,14 @@ void Frame::draw(graphics::AnuraShaderPtr shader, int x, int y, const rect& area
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std::vector<CustomPoint>& points, const rect* area, bool face_right, bool upside_down, int time, float rotation) const
 {
-	const FrameInfo* info = NULL;
+	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
 
-	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	y += info->y_adjust*scale_;
-	int w = info->area.w()*scale_*(face_right ? 1 : -1);
-	int h = info->area.h()*scale_*(upside_down ? -1 : 1);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
+	y += static_cast<int>(info->y_adjust * scale_);
+	int w = static_cast<int>(info->area.w() * scale_ * (face_right ? 1 : -1));
+	int h = static_cast<int>(info->area.h() * scale_ * (upside_down ? -1 : 1));
 
 	if(w < 0) {
 		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
@@ -709,7 +709,7 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 		h *= -1;
 	}
 
-	if(area != NULL) {
+	if(area != nullptr) {
 		const int x_adjust = area->x();
 		const int y_adjust = area->y();
 		const int w_adjust = area->w() - img_rect_.w();
@@ -720,8 +720,8 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const std:
 			r.x2() + blit_target_.getTexture()->getNormalisedTextureCoordW<float>(x_adjust + w_adjust),
 			r.y2() + blit_target_.getTexture()->getNormalisedTextureCoordH<float>(y_adjust + h_adjust));
 
-		w += w_adjust*scale_;
-		h += h_adjust*scale_;
+		w += static_cast<int>(w_adjust * scale_);
+		h += static_cast<int>(h_adjust * scale_);
 	}
 
 	std::vector<KRE::vertex_texcoord> queue;
@@ -797,14 +797,14 @@ PREF_BOOL(debug_custom_draw, false, "Show debug visualization of custom drawing"
 
 void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const float* xy, const float* uv, int nelements, bool face_right, bool upside_down, int time, float rotation, int cycle) const
 {
-	const FrameInfo* info = NULL;
+	const FrameInfo* info = nullptr;
 	getRectInTexture(time, info);
 	rectf r = blit_target_.getTexture()->getSourceRectNormalised();
 
-	x += (face_right ? info->x_adjust : info->x2_adjust)*scale_;
-	y += info->y_adjust*scale_;
-	int w = info->area.w()*scale_*(face_right ? 1 : -1);
-	int h = info->area.h()*scale_*(upside_down ? -1 : 1);
+	x += static_cast<int>((face_right ? info->x_adjust : info->x2_adjust) * scale_);
+	y += static_cast<int>(info->y_adjust * scale_);
+	int w = static_cast<int>(info->area.w() * scale_ * (face_right ? 1 : -1));
+	int h = static_cast<int>(info->area.h() * scale_ * (upside_down ? -1 : 1));
 
 	if(w < 0) {
 		r = rectf::from_coordinates(r.x2(), r.y(), r.x(), r.y2());
@@ -928,12 +928,12 @@ int Frame::frameNumber(int time) const
 const std::string* Frame::getEvent(int time_in_frame) const
 {
 	if(event_frames_.empty()) {
-		return NULL;
+		return nullptr;
 	}
 
 	std::vector<int>::const_iterator i = std::find(event_frames_.begin(), event_frames_.end(), time_in_frame);
 	if(i == event_frames_.end()) {
-		return NULL;
+		return nullptr;
 	}
 
 	return &event_names_[i - event_frames_.begin()];

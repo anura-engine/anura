@@ -51,7 +51,7 @@ public:
 #ifndef NO_EDITOR
 		return console_.get();
 #endif
-		return NULL;
+		return nullptr;
 	}
 
 	const editor* get_editor() const { return editor_; }

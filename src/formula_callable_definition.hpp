@@ -67,19 +67,19 @@ namespace game_logic
 		virtual const Entry* getEntry(int slot) const = 0;
 		virtual int getNumSlots() const = 0;
 
-		virtual const Entry* getDefaultEntry() const { return NULL; }
+		virtual const Entry* getDefaultEntry() const { return nullptr; }
 
 		Entry* getEntryById(const std::string& key) {
 			const int slot = getSlot(key);
-			if(slot < 0) { return NULL; } else { return getEntry(slot); }
+			if(slot < 0) { return nullptr; } else { return getEntry(slot); }
 		}
 
 		const Entry* getEntryById(const std::string& key) const {
 			const int slot = getSlot(key);
-			if(slot < 0) { return NULL; } else { return getEntry(slot); }
+			if(slot < 0) { return nullptr; } else { return getEntry(slot); }
 		}
 
-		virtual const std::string* getTypeName() const { return !type_name_.empty() ? &type_name_ : NULL; }
+		virtual const std::string* getTypeName() const { return !type_name_.empty() ? &type_name_ : nullptr; }
 		void setTypeName(const std::string& name) { type_name_ = name; }
 
 		virtual bool isStrict() const { return is_strict_; }
@@ -93,10 +93,10 @@ namespace game_logic
 		std::string type_name_;
 	};
 
-	FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=NULL);
+	FormulaCallableDefinitionPtr modify_formula_callable_definition(ConstFormulaCallableDefinitionPtr base_def, int slot, variant_type_ptr new_type, const FormulaCallableDefinition* new_def=nullptr);
 
-	FormulaCallableDefinitionPtr execute_command_callable_definition(const std::string* beg, const std::string* end, ConstFormulaCallableDefinitionPtr base=NULL, variant_type_ptr* begin_types=NULL);
-	FormulaCallableDefinitionPtr execute_command_callable_definition(const FormulaCallableDefinition::Entry* begin, const FormulaCallableDefinition::Entry* end, ConstFormulaCallableDefinitionPtr base=NULL);
+	FormulaCallableDefinitionPtr execute_command_callable_definition(const std::string* beg, const std::string* end, ConstFormulaCallableDefinitionPtr base=nullptr, variant_type_ptr* begin_types=nullptr);
+	FormulaCallableDefinitionPtr execute_command_callable_definition(const FormulaCallableDefinition::Entry* begin, const FormulaCallableDefinition::Entry* end, ConstFormulaCallableDefinitionPtr base=nullptr);
 
 	FormulaCallableDefinitionPtr create_map_formula_callable_definition(variant_type_ptr value_type);
 
@@ -181,7 +181,7 @@ void classname::init_callable_type(std::vector<callable_PropertyEntry>& fields, 
 			int min_args = 0; \
 			type_info.reset(new VariantFunctionTypeInfo); \
 			variant_type_ptr type = parse_variant_type(variant("function" type_str)); \
-			type->is_function(&type_info->variant_types, &type_info->return_type, &min_args, NULL); \
+			type->is_function(&type_info->variant_types, &type_info->return_type, &min_args, nullptr); \
 			type_info->num_unneeded_args = type_info->variant_types.size() - min_args; \
 			type_info->arg_names.resize(type_info->variant_types.size()); \
 		} \

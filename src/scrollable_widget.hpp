@@ -47,7 +47,6 @@ namespace gui
 		int getVirtualHeight() const { return virtual_height_; }
 	private:
 		DECLARE_CALLABLE(ScrollableWidget)
-		void operator=(const ScrollableWidget&);
 		virtual void onSetYscroll(int old_yscroll, int new_yscroll);
 		virtual void handleDraw() const override;
 		virtual bool handleEvent(const SDL_Event& event, bool claimed) override;

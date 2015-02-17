@@ -142,7 +142,7 @@ namespace
 
 	void calculate_normal(SDL_Surface* s, double gs_param[3])
 	{
-		ASSERT_LOG(s != NULL, "FATAL: Invalid surface");
+		ASSERT_LOG(s != nullptr, "FATAL: Invalid surface");
 
 		graphics::setAlpha_for_transparent_colors_in_rgba_surface(s, 0);
 
@@ -211,7 +211,7 @@ namespace
 	graphics::surface make_grayscale(const graphics::surface& src, double* gs_param)
 	{
 		double gs_p[3];
-		if(gs_param == NULL) {
+		if(gs_param == nullptr) {
 			gs_p[0] = 0.21;
 			gs_p[1] = 0.71;
 			gs_p[2] = 0.07;
@@ -412,11 +412,11 @@ namespace
 		graphics::surface mask = extract_alpha_mask(s, shadow_color, graphics::color(255,255,255));
 		// 2) Scale the surface
 		//SDL_Surface* scaled = SDL_CreateRGBSurface(0, mask->w, mask->h, 32, SURFACE_MASK);
-		//SDL_FillRect(scaled, NULL, shadow_color.value());
+		//SDL_FillRect(scaled, nullptr, shadow_color.value());
 		//SDL_Rect scaled_rect = {
 		//	int(distance/2), int(distance/2), int(mask->w-distance/2), int(mask->h-distance/2)
 		//};
-		//SDL_BlitScaled(mask, NULL, scaled, &scaled_rect);
+		//SDL_BlitScaled(mask, nullptr, scaled, &scaled_rect);
 
 		mask = blur_filter(mask, blur_x, blur_y, passes);
 
@@ -708,7 +708,7 @@ namespace
 		surface s_aux = drop_shadow_filter(s, graphics::color(0,0,0), 3, 3, 0.0, 3, 1.0, true, false, 3);
 		//graphics::surface s_aux = extract_alpha_mask(s, graphics::color(0,0,0), graphics::color(255,255,255));
 		//surface s_emb_h = emboss(s_aux, 0);
-		s_aux = make_grayscale(s_aux, NULL);
+		s_aux = make_grayscale(s_aux, nullptr);
 		surface s_norm = calculate_normal2(emboss(s_aux, 0), emboss(s_aux, 90));
 		s_norm = alpha_clip(s_norm, s);
 		//surface s_emb = s_aux;

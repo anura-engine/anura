@@ -76,7 +76,7 @@ class ActivePropertyScope
 	int prev_prop_;
 	bool pop_value_stack_;
 public:
-	ActivePropertyScope(const CustomObject& obj, int prop_num, const variant* value=NULL) 
+	ActivePropertyScope(const CustomObject& obj, int prop_num, const variant* value=nullptr) 
 		: obj_(obj), 
 		prev_prop_(obj.active_property_), 
 		pop_value_stack_(false)
@@ -136,7 +136,7 @@ namespace
 const std::string* CustomObject::currentDebugError()
 {
 	if(current_error_msg == "") {
-		return NULL;
+		return nullptr;
 	}
 
 	return &current_error_msg;
@@ -212,7 +212,7 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("x_schedule")) {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 		}
 
@@ -225,7 +225,7 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("y_schedule")) {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 		}
 
@@ -238,22 +238,22 @@ CustomObject::CustomObject(variant node)
 	}
 
 	if(node.has_key("rotation_schedule")) {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 		}
 
 		position_schedule_->rotation = node["rotation_schedule"].as_list_decimal();	
 	}
 
-	if(position_schedule_.get() != NULL && node.has_key("schedule_speed")) {
+	if(position_schedule_.get() != nullptr && node.has_key("schedule_speed")) {
 		position_schedule_->speed = node["schedule_speed"].as_int();
 	}
 
-	if(position_schedule_.get() != NULL && node.has_key("schedule_base_cycle")) {
+	if(position_schedule_.get() != nullptr && node.has_key("schedule_base_cycle")) {
 		position_schedule_->base_cycle = node["schedule_base_cycle"].as_int();
 	}
 
-	if(position_schedule_.get() != NULL && node.has_key("schedule_expires") && node["schedule_expires"].as_bool()) {
+	if(position_schedule_.get() != nullptr && node.has_key("schedule_expires") && node["schedule_expires"].as_bool()) {
 		position_schedule_->expires = true;
 	}
 
@@ -363,7 +363,7 @@ CustomObject::CustomObject(variant node)
 
 	type_->initEventHandlers(node, event_handlers_);
 
-	can_interact_with_ = getEventHandler(OBJECT_EVENT_INTERACT).get() != NULL;
+	can_interact_with_ = getEventHandler(OBJECT_EVENT_INTERACT).get() != nullptr;
 
 	variant text_node = node["text"];
 	if(!text_node.is_null()) {
@@ -600,11 +600,11 @@ CustomObject::CustomObject(const CustomObject& o)
 	event_handlers_(o.event_handlers_),
 	standing_on_(o.standing_on_),
 	standing_on_prev_x_(o.standing_on_prev_x_), standing_on_prev_y_(o.standing_on_prev_y_),
-	draw_color_(o.draw_color_ ? new KRE::ColorTransform(*o.draw_color_) : NULL),
-	draw_scale_(o.draw_scale_ ? new decimal(*o.draw_scale_) : NULL),
-	draw_area_(o.draw_area_ ? new rect(*o.draw_area_) : NULL),
-	activation_area_(o.activation_area_ ? new rect(*o.activation_area_) : NULL),
-	clip_area_(o.clip_area_ ? new rect(*o.clip_area_) : NULL),
+	draw_color_(o.draw_color_ ? new KRE::ColorTransform(*o.draw_color_) : nullptr),
+	draw_scale_(o.draw_scale_ ? new decimal(*o.draw_scale_) : nullptr),
+	draw_area_(o.draw_area_ ? new rect(*o.draw_area_) : nullptr),
+	activation_area_(o.activation_area_ ? new rect(*o.activation_area_) : nullptr),
+	clip_area_(o.clip_area_ ? new rect(*o.clip_area_) : nullptr),
 	activation_border_(o.activation_border_),
 	can_interact_with_(o.can_interact_with_),
 	ParticleSystems_(o.ParticleSystems_),
@@ -752,14 +752,14 @@ variant CustomObject::write() const
 		res.add("created", true);
 	}
 
-	if(parallax_scale_millis_.get() != NULL) {
+	if(parallax_scale_millis_.get() != nullptr) {
 		if( (type_->parallaxScaleMillisX() !=  parallax_scale_millis_->first) || (type_->parallaxScaleMillisY() !=  parallax_scale_millis_->second)){
 			res.add("parallax_scale_x", parallax_scale_millis_->first);
 			res.add("parallax_scale_y", parallax_scale_millis_->second);
 		}
 	}
 
-	if(platform_area_.get() != NULL) {
+	if(platform_area_.get() != nullptr) {
 		res.add("platform_area", platform_area_->write());
 	}
 
@@ -771,7 +771,7 @@ variant CustomObject::write() const
 		res.add("activation_border", activation_border_);
 	}
 	
-	if(position_schedule_.get() != NULL) {
+	if(position_schedule_.get() != nullptr) {
 		res.add("schedule_speed", position_schedule_->speed);
 		if(position_schedule_->x_pos.empty() == false) {
 			for(int xpos : position_schedule_->x_pos) {
@@ -1055,7 +1055,7 @@ variant CustomObject::write() const
 		res.add("lights", p->write());
 	}
 
-	if(parent_.get() != NULL) {
+	if(parent_.get() != nullptr) {
 		std::string str;
 		variant(parent_.get()).serializeToString(str);
 		res.add("parent", str);
@@ -1119,7 +1119,7 @@ void CustomObject::drawLater(int xx, int yy) const
 
 void CustomObject::draw(int xx, int yy) const
 {
-	if(frame_ == NULL) {
+	if(frame_ == nullptr) {
 		return;
 	}
 	auto wnd = KRE::WindowManager::getMainWindow();
@@ -1175,7 +1175,7 @@ void CustomObject::draw(int xx, int yy) const
 	} else if(custom_draw_xy_.size() >= 6 &&
 	          custom_draw_xy_.size() == custom_draw_uv_.size()) {
 		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, &custom_draw_xy_[0], &custom_draw_uv_[0], custom_draw_xy_.size()/2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), cycle_);
-	} else if(custom_draw_.get() != NULL) {
+	} else if(custom_draw_.get() != nullptr) {
 		frame_->drawCustom(shader_, draw_x-draw_x%2, draw_y-draw_y%2, *custom_draw_, draw_area_.get(), isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()));
 	} else if(draw_scale_) {
 		frame_->draw(shader_, draw_x-draw_x%2, draw_y-draw_y%2, isFacingRight(), isUpsideDown(), time_in_frame_, static_cast<float>(rotate_z_.as_float()), static_cast<float>(draw_scale_->as_float()));
@@ -1252,7 +1252,7 @@ void CustomObject::draw(int xx, int yy) const
 				left.push_back(key_texture);
 				right.push_back(value_texture);
 	
-				if(key_texture->width() > size_t(max_property_width)) {
+				if(key_texture->width() > max_property_width) {
 					max_property_width = key_texture->width();
 				}
 			} catch(validation_failure_exception&) {
@@ -1372,7 +1372,7 @@ void CustomObject::process(Level& lvl)
 	CollisionInfo debug_collide_info;
 	ASSERT_LOG(type_->isStaticObject() || lvl.in_editor() || !entity_collides(Level::current(), *this, MOVE_DIRECTION::NONE, &debug_collide_info), "ENTITY " << getDebugDescription() << " COLLIDES WITH " << (debug_collide_info.collide_with ? debug_collide_info.collide_with->getDebugDescription() : "THE LEVEL") << " AT START OF PROCESS");
 
-	if(parent_.get() != NULL) {
+	if(parent_.get() != nullptr) {
 		const point pos = parent_position();
 		const bool parent_facing = parent_->isFacingRight();
         const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
@@ -1420,7 +1420,7 @@ void CustomObject::process(Level& lvl)
 		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 	
-		if(stand_info.area_id != NULL) {
+		if(stand_info.area_id != nullptr) {
 			callable->add("area", variant(*stand_info.area_id));
 		}
 
@@ -1517,7 +1517,7 @@ void CustomObject::process(Level& lvl)
 		addAnimatedMovement(p.first, p.second);
 	}
 
-	if(position_schedule_.get() != NULL) {
+	if(position_schedule_.get() != nullptr) {
 		const int pos = (cycle_ - position_schedule_->base_cycle)/position_schedule_->speed;
 
 		if(position_schedule_->expires &&
@@ -1786,7 +1786,7 @@ void CustomObject::process(Level& lvl)
 			game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 			variant v(callable);
 	
-			if(collide_info.area_id != NULL) {
+			if(collide_info.area_id != nullptr) {
 				callable->add("area", variant(*collide_info.area_id));
 			}
 
@@ -2034,7 +2034,7 @@ void CustomObject::process(Level& lvl)
 		game_logic::MapFormulaCallable* callable = new game_logic::MapFormulaCallable;
 		variant v(callable);
 
-		if(collide_info.area_id != NULL) {
+		if(collide_info.area_id != nullptr) {
 			callable->add("area", variant(*collide_info.area_id));
 		}
 
@@ -2062,7 +2062,7 @@ void CustomObject::process(Level& lvl)
 
 	if(stand_info.collide_with && standing_on_ != stand_info.collide_with &&
 	   effective_velocity_y < stand_info.collide_with->velocityY()) {
-		stand_info.collide_with = NULL;
+		stand_info.collide_with = nullptr;
 	}
 
 	if(standing_on_ && standing_on_ != stand_info.collide_with) {
@@ -2111,7 +2111,7 @@ void CustomObject::process(Level& lvl)
 
 #if defined(USE_BOX2D)
 	if(body_) {
-		for(b2ContactEdge* ce = body_->get_body_ptr()->GetContactList(); ce != NULL; ce = ce->next) {
+		for(b2ContactEdge* ce = body_->get_body_ptr()->GetContactList(); ce != nullptr; ce = ce->next) {
 			b2Contact* c = ce->contact;
 			// process c
 			if(c->IsTouching()) {
@@ -2343,8 +2343,8 @@ ConstSolidInfoPtr CustomObject::calculatePlatform() const
 	if(platform_solid_info_.get()) {
 		return platform_solid_info_;
 	} else if(platform_area_) {
-		//if platform_solid_info_ is NULL but we have a rect, that
-		//means there is no platform, so return NULL instead of
+		//if platform_solid_info_ is nullptr but we have a rect, that
+		//means there is no platform, so return nullptr instead of
 		//defaulting to the type.
 		return ConstSolidInfoPtr();
 	}
@@ -2455,19 +2455,19 @@ void CustomObject::run_garbage_collection()
 		std::cerr << "PASS " << pass << ": " << safe.size() << " OBJECTS SAFE\n";
 
 		for(gc_object_reference& ref : refs) {
-			if(ref.owner == NULL) {
+			if(ref.owner == nullptr) {
 				continue;
 			}
 
 			if(safe.count(ref.owner)) {
 				restoreGcObjectReference(ref);
-				ref.owner = NULL;
+				ref.owner = nullptr;
 			}
 		}
 	}
 
 	for(gc_object_reference& ref : refs) {
-		if(ref.owner == NULL || !ref.visitor) {
+		if(ref.owner == nullptr || !ref.visitor) {
 			continue;
 		}
 
@@ -2503,7 +2503,7 @@ void CustomObject::beingAdded()
 
 void CustomObject::setAnimatedSchedule(std::shared_ptr<AnimatedMovement> movement)
 {
-	assert(movement.get() != NULL);
+	assert(movement.get() != nullptr);
 	animated_movement_.push_back(movement);
 }
 
@@ -2523,7 +2523,7 @@ void CustomObject::addAnimatedMovement(variant attr_var, variant options)
 
 	const std::string type = queryValueBySlot(CUSTOM_OBJECT_TYPE).as_string();
 	game_logic::FormulaCallableDefinitionPtr def = CustomObjectType::getDefinition(type);
-	ASSERT_LOG(def.get() != NULL, "Could not get definition for object: " << type);
+	ASSERT_LOG(def.get() != nullptr, "Could not get definition for object: " << type);
 
 	std::vector<int> slots;
 	std::vector<variant> begin_values, end_values;
@@ -2644,7 +2644,7 @@ namespace
 
 				if(new_widget->id().empty() == false) {
 					gui::WidgetPtr existing = obj_->getWidgetById(new_widget->id());
-					if(existing != NULL) {
+					if(existing != nullptr) {
 						obj_->removeWidget(existing);
 					}
 				}
@@ -2654,12 +2654,12 @@ namespace
 			}
 			if(value.is_null()) {
 				gui::WidgetPtr w = obj_->getWidgetById(key);
-				if(w != NULL) {
+				if(w != nullptr) {
 					obj_->removeWidget(w);
 				}
 			} else {
 				gui::WidgetPtr w = obj_->getWidgetById(key);
-				ASSERT_LOG(w != NULL, "no widget with identifier " << key << " found");
+				ASSERT_LOG(w != nullptr, "no widget with identifier " << key << " found");
 				obj_->removeWidget(w);
 				obj_->addWidget(widget_factory::create(value, obj_.get()));
 			}
@@ -2895,11 +2895,11 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 	case CUSTOM_OBJECT_WATER_OBJECT: {
 		variant v;
-		Level::current().isUnderwater(solidRect(), NULL, &v);
+		Level::current().isUnderwater(solidRect(), nullptr, &v);
 		return v;
 	}
 	case CUSTOM_OBJECT_DRIVER:            return variant(driver_ ? driver_.get() : this);
-	case CUSTOM_OBJECT_IS_HUMAN:          return variant::from_bool(isHuman() != NULL);
+	case CUSTOM_OBJECT_IS_HUMAN:          return variant::from_bool(isHuman() != nullptr);
 	case CUSTOM_OBJECT_INVINCIBLE:        return variant::from_bool(invincible_ != 0);
 	case CUSTOM_OBJECT_SOUND_VOLUME:      return variant(sound_volume_);
 	case CUSTOM_OBJECT_DESTROYED:         return variant::from_bool(destroyed());
@@ -2936,7 +2936,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_ACTIVATION_AREA: {
-		if(activation_area_.get() != NULL) {
+		if(activation_area_.get() != nullptr) {
 			std::vector<variant> v(4);
 			v[0] = variant(activation_area_->x());
 			v[1] = variant(activation_area_->y());
@@ -2949,7 +2949,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 
 	case CUSTOM_OBJECT_CLIPAREA: {
-		if(clip_area_.get() != NULL) {
+		if(clip_area_.get() != nullptr) {
 			std::vector<variant> v(4);
 			v[0] = variant(clip_area_->x());
 			v[1] = variant(clip_area_->y());
@@ -3157,7 +3157,7 @@ variant CustomObject::getValueBySlot(int slot) const
 	}
 
 	auto entry = CustomObjectCallable::instance().getEntry(slot);
-	if(entry != NULL) {
+	if(entry != nullptr) {
 		return variant();
 	}
 	
@@ -3244,7 +3244,7 @@ variant CustomObject::getValue(const std::string& key) const
 	if(backup_callable_stack_.empty() == false && backup_callable_stack_.top()) {
 		if(backup_callable_stack_.top() != this) {
 			const FormulaCallable* callable = backup_callable_stack_.top();
-			BackupCallableStackScope callable_scope(&backup_callable_stack_, NULL);
+			BackupCallableStackScope callable_scope(&backup_callable_stack_, nullptr);
 			return callable->queryValue(key);
 		}
 	}
@@ -3488,7 +3488,7 @@ void CustomObject::setValue(const std::string& key, const variant& value)
 		}
 
 	} else if(key == "xscale" || key == "yscale") {
-		if(parallax_scale_millis_.get() == NULL) {
+		if(parallax_scale_millis_.get() == nullptr) {
 			parallax_scale_millis_.reset(new std::pair<int,int>(1000,1000));
 		}
 
@@ -4185,7 +4185,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_X_SCHEDULE: {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 			position_schedule_->base_cycle = cycle_;
 		}
@@ -4197,7 +4197,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 	case CUSTOM_OBJECT_Y_SCHEDULE: {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 			position_schedule_->base_cycle = cycle_;
 		}
@@ -4209,7 +4209,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		break;
 	}
 	case CUSTOM_OBJECT_ROTATION_SCHEDULE: {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 			position_schedule_->base_cycle = cycle_;
 		}
@@ -4222,7 +4222,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_SCHEDULE_SPEED: {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 			position_schedule_->base_cycle = cycle_;
 		}
@@ -4233,7 +4233,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 	}
 
 	case CUSTOM_OBJECT_SCHEDULE_EXPIRES: {
-		if(position_schedule_.get() == NULL) {
+		if(position_schedule_.get() == nullptr) {
 			position_schedule_.reset(new PositionSchedule);
 			position_schedule_->base_cycle = cycle_;
 		}
@@ -4441,7 +4441,7 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 		for(int n = 0; n != value.num_elements(); ++n) {
 			if(value[n].is_callable()) {
 				boost::intrusive_ptr<graphics::DrawPrimitive> obj(value[n].try_convert<graphics::DrawPrimitive>());
-				ASSERT_LOG(obj.get() != NULL, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
+				ASSERT_LOG(obj.get() != nullptr, "BAD OBJECT PASSED WHEN SETTING DrawPrimitives");
 				DrawPrimitives_.push_back(obj);
 			} else if(!value[n].is_null()) {
 				DrawPrimitives_.push_back(graphics::DrawPrimitive::create(value[n]));
@@ -4645,7 +4645,7 @@ bool CustomObject::isActive(const rect& screen_area) const
 		return rects_intersect(draw_area, screen_area);
 	}
 	
-	if(parallax_scale_millis_.get() != NULL) {
+	if(parallax_scale_millis_.get() != nullptr) {
 		if(parallax_scale_millis_->first != 1000 || parallax_scale_millis_->second != 1000){
 			const int diffx = ((parallax_scale_millis_->first - 1000)*screen_area.x())/1000;
 			const int diffy = ((parallax_scale_millis_->second - 1000)*screen_area.y())/1000;
@@ -4860,7 +4860,7 @@ bool CustomObject::handleEventInternal(int event, const FormulaCallable* context
 	}
 
 	const game_logic::Formula* type_handler = type_->getEventHandler(event).get();
-	if(type_handler != NULL) {
+	if(type_handler != nullptr) {
 		handlers[nhandlers++] = type_handler;
 	}
 
@@ -4949,15 +4949,15 @@ bool CustomObject::executeCommand(const variant& var)
 		}
 	} else {
 		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
-		if(cmd != NULL) {
+		if(cmd != nullptr) {
 			cmd->runCommand(*this);
 		} else {
 			CustomObjectCommandCallable* cmd = var.try_convert<CustomObjectCommandCallable>();
-			if(cmd != NULL) {
+			if(cmd != nullptr) {
 				cmd->runCommand(Level::current(), *this);
 			} else {
 				EntityCommandCallable* cmd = var.try_convert<EntityCommandCallable>();
-				if(cmd != NULL) {
+				if(cmd != nullptr) {
 					cmd->runCommand(Level::current(), *this);
 				} else {
 					SwallowObjectCommandCallable* cmd = var.try_convert<SwallowObjectCommandCallable>();
@@ -5181,8 +5181,8 @@ void CustomObject::extractGcObjectReferences(std::vector<gc_object_reference>& v
 
 	gc_object_reference visitor;
 	visitor.owner = this;
-	visitor.target = NULL;
-	visitor.from_variant = NULL;
+	visitor.target = nullptr;
+	visitor.from_variant = nullptr;
 	visitor.visitor.reset(new game_logic::FormulaCallableVisitor);
 	for(gui::WidgetPtr w : widgets_) {
 		w->performVisitValues(*visitor.visitor);
@@ -5207,7 +5207,7 @@ void CustomObject::extractGcObjectReferences(EntityPtr& e, std::vector<gc_object
 	gc_object_reference& ref = v.back();
 	ref.owner = this;
 	ref.target = e.get();
-	ref.from_variant = NULL;
+	ref.from_variant = nullptr;
 	ref.from_ptr = &e;
 
 	e.reset();
@@ -5222,7 +5222,7 @@ void CustomObject::extractGcObjectReferences(variant& var, std::vector<gc_object
 			ref.owner = this;
 			ref.target = var.try_convert<Entity>();
 			ref.from_variant = &var;
-			ref.from_ptr = NULL;
+			ref.from_ptr = nullptr;
 
 			var = variant();
 		}
@@ -5275,7 +5275,7 @@ void CustomObject::setText(const std::string& text, const std::string& font, int
 
 bool CustomObject::boardableVehicle() const
 {
-	return type_->isVehicle() && driver_.get() == NULL;
+	return type_->isVehicle() && driver_.get() == nullptr;
 }
 
 void CustomObject::boarded(Level& lvl, const EntityPtr& player)
@@ -5383,7 +5383,7 @@ void CustomObject::shiftPosition(int x, int y)
 		standing_on_prev_y_ += y;
 	}
 
-	if(position_schedule_.get() != NULL) {
+	if(position_schedule_.get() != nullptr) {
 		for(int& xpos : position_schedule_->x_pos) {
 			xpos += x;
 		}
@@ -5393,7 +5393,7 @@ void CustomObject::shiftPosition(int x, int y)
 		}
 	}
 
-	if(activation_area_.get() != NULL) {
+	if(activation_area_.get() != nullptr) {
 		activation_area_.reset(new rect(activation_area_->x() + x,
 		                                activation_area_->y() + y,
 										activation_area_->w(),
@@ -5414,7 +5414,7 @@ void CustomObject::setParent(EntityPtr e, const std::string& pivot_point)
 
 	const point pos = parent_position();
 
-	if(parent_.get() != NULL) {
+	if(parent_.get() != nullptr) {
         const int parent_facing_sign = parent_->isFacingRight() ? 1 : -1;
         relative_x_ = parent_facing_sign * (x() - pos.x);
         relative_y_ = (y() - pos.y);
@@ -5423,7 +5423,7 @@ void CustomObject::setParent(EntityPtr e, const std::string& pivot_point)
 	parent_prev_x_ = pos.x;
 	parent_prev_y_ = pos.y;
     
-	if(parent_.get() != NULL) {
+	if(parent_.get() != nullptr) {
 		parent_prev_facing_ = parent_->isFacingRight();
 	}
 }
@@ -5432,7 +5432,7 @@ int CustomObject::parentDepth(bool* has_human_parent, int cur_depth) const
 {
 	if(!parent_ || cur_depth > 10) {
 		if(has_human_parent) {
-			*has_human_parent = isHuman() != NULL;
+			*has_human_parent = isHuman() != nullptr;
 		}
 		return cur_depth;
 	}
@@ -5504,7 +5504,7 @@ bool CustomObject::isSolidPlatform() const
 
 point CustomObject::parent_position() const
 {
-	if(parent_.get() == NULL) {
+	if(parent_.get() == nullptr) {
 		return point(0,0);
 	}
 
@@ -5689,7 +5689,7 @@ int CustomObject::currentRotation() const
 }
 
 BENCHMARK(custom_object_spike) {
-	static Level* lvl = NULL;
+	static Level* lvl = nullptr;
 	if(!lvl) {	
 		lvl = new Level("test.cfg");
 		static variant v(lvl);

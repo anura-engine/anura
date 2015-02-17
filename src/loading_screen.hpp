@@ -25,7 +25,7 @@
 
 #include <string>
 
-#include "Texture.cpp"
+#include "Texture.hpp"
 
 #include "graphical_font.hpp"
 #include "variant.hpp"

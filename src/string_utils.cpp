@@ -136,7 +136,7 @@ namespace util
 		const char* ptr = val.c_str();
 		for(;;) {
 			const char* end = strstr(ptr, delim.c_str());
-			if(end == NULL) {
+			if(end == nullptr) {
 				result.push_back(std::string(ptr));
 				return result;
 			}
@@ -202,7 +202,7 @@ namespace util
 
 	const char* split_into_ints(const char* s, int* output, int* output_size)
 	{
-		char* endptr = NULL;
+		char* endptr = nullptr;
 		int index = 0;
 		for(;;) {
 			int result = strtol(s, &endptr, 10);

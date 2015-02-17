@@ -34,8 +34,8 @@
 #include <cstring>
 
 
-#ifndef NULL
-#define NULL 0
+#ifndef nullptr
+#define nullptr 0
 #endif
 #define DELETED -2
 

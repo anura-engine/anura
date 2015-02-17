@@ -77,7 +77,7 @@ TileSolidInfo& LevelSolidMap::insertOrFind(const tile_pos& pos)
 
 TileSolidInfo** LevelSolidMap::insertRaw(const tile_pos& pos)
 {
-	row* r = NULL;
+	row* r = nullptr;
 	if(pos.second >= 0) {
 		if(positive_rows_.size() <= static_cast<unsigned>(pos.second)) {
 			positive_rows_.resize(pos.second + 1);
@@ -111,19 +111,19 @@ TileSolidInfo** LevelSolidMap::insertRaw(const tile_pos& pos)
 
 const TileSolidInfo* LevelSolidMap::find(const tile_pos& pos) const
 {
-	const row* r = NULL;
+	const row* r = nullptr;
 	if(pos.second >= 0) {
 		if(static_cast<unsigned>(pos.second) < positive_rows_.size()) {
 			r = &positive_rows_[pos.second];
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	} else {
 		const int index = -(pos.second+1);
 		if(static_cast<unsigned>(index) < negative_rows_.size()) {
 			r = &negative_rows_[index];
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	}
 
@@ -131,14 +131,14 @@ const TileSolidInfo* LevelSolidMap::find(const tile_pos& pos) const
 		if(static_cast<unsigned>(pos.first) < r->positive_cells.size()) {
 			return r->positive_cells[pos.first];
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	} else {
 		const int index = -(pos.first+1);
 		if(static_cast<unsigned>(index) < r->negative_cells.size()) {
 			return r->negative_cells[index];
 		} else {
-			return NULL;
+			return nullptr;
 		}
 	}
 }
@@ -147,7 +147,7 @@ void LevelSolidMap::erase(const tile_pos& pos)
 {
 	TileSolidInfo** info = insertRaw(pos);
 	delete *info;
-	*info = NULL;
+	*info = nullptr;
 }
 
 void LevelSolidMap::clear()

@@ -261,7 +261,7 @@ namespace graphics
 
 			tex_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
 			tex_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
-			if(texture_ == NULL) {
+			if(texture_ == nullptr) {
 				tex_->disable();
 			}
 			ab->addAttribute(tex_);
@@ -860,7 +860,7 @@ namespace graphics
 	{
 		if(v.is_callable()) {
 			DrawPrimitivePtr dp = v.try_convert<DrawPrimitive>();
-			ASSERT_LOG(dp != NULL, "Couldn't convert callable type to DrawPrimitive");
+			ASSERT_LOG(dp != nullptr, "Couldn't convert callable type to DrawPrimitive");
 			return dp;
 		}
 		const std::string type = v["type"].as_string();

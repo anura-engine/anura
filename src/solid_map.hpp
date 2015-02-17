@@ -80,7 +80,7 @@ public:
 	static ConstSolidInfoPtr createFromTexture(const KRE::TexturePtr& t, const rect& area);
 	const std::vector<ConstSolidMapPtr>& solid() const { return solid_; }
 	const rect& area() const { return area_; }
-	bool isSolidAt(int x, int y, const std::string** area_id=NULL) const;
+	bool isSolidAt(int x, int y, const std::string** area_id=nullptr) const;
 private:
 	static ConstSolidInfoPtr createFromSolidMaps(const std::vector<ConstSolidMapPtr>& v);
 

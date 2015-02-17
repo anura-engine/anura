@@ -62,7 +62,7 @@ struct CollisionInfo {
 	//the ID of the area of our body which collided.
 	const std::string* area_id;
 
-	//the object, if any, that we collided with. NULL if we collided with
+	//the object, if any, that we collided with. nullptr if we collided with
 	//a tile in the level.
 	EntityPtr collide_with;
 
@@ -76,21 +76,21 @@ struct CollisionInfo {
 enum ALLOW_PLATFORM { SOLID_ONLY, SOLID_AND_PLATFORMS };
 
 //function which finds it a given point can be stood on.
-bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info=NULL, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
+bool point_standable(const Level& lvl, const Entity& e, int x, int y, CollisionInfo* info=nullptr, ALLOW_PLATFORM allow_platform=SOLID_AND_PLATFORMS);
 
 //function which finds if an Entity's solid area collides with anything, when
 //the object has just moved one pixel in the direction given by 'dir'. If
 //'dir' is MOVE_DIRECTION::NONE, then all pixels will be checked.
-bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=NULL);
+bool entity_collides(Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=nullptr);
 
 void debug_check_entity_solidity(const Level& lvl, const Entity& e);
 
 //function which finds if one Entity collides with another given Entity.
-bool entity_collides_with_entity(const Entity& e, const Entity& other, CollisionInfo* info=NULL);
+bool entity_collides_with_entity(const Entity& e, const Entity& other, CollisionInfo* info=nullptr);
 
 
 //function which finds if an Entity collides with a level tile.
-bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=NULL);
+bool entity_collides_with_level(const Level& lvl, const Entity& e, MOVE_DIRECTION dir, CollisionInfo* info=nullptr);
 
 //function which finds how many pixels in an Entity collide with the level.
 //this is generally used for debug purposes.

@@ -167,7 +167,7 @@ namespace json
 				require_colon(false), 
 				flatten(false), 
 				info(debug_info), 
-				begin_macro(NULL), 
+				begin_macro(nullptr), 
 				use_preprocessor(preprocess) 
 			{}
 			std::map<variant, variant> obj;
@@ -581,7 +581,7 @@ namespace json
 
 	variant parse(const std::string& doc, JSON_PARSE_OPTIONS options)
 	{
-		return parse_internal(doc, "", options, NULL, NULL);
+		return parse_internal(doc, "", options, nullptr, nullptr);
 	}
 
 	variant parse_from_file(const std::string& fname, JSON_PARSE_OPTIONS options)
@@ -607,7 +607,7 @@ namespace json
 			variant result;
 		
 			try {
-				result = parse_internal(data, fname, options, NULL, NULL);
+				result = parse_internal(data, fname, options, nullptr, nullptr);
 			} catch(ParseError& e) {
 				if(!preferences::edit_and_continue()) {
 					throw e;

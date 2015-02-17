@@ -21,23 +21,12 @@
 	   distribution.
 */
 
-#pragma once
-
-#include "BlendOGL.hpp"
-#include "Material.hpp"
-#include "WindowManagerFwd.hpp"
+#include "DisplayDeviceOGLFixed.hpp"
 
 namespace KRE
 {
-	class OpenGLMaterial : public Material
+	namespace
 	{
-	public:
-		OpenGLMaterial(const variant& node);
-		OpenGLMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend=BlendMode(), bool fog=false, bool lighting=false, bool depth_write=false, bool depth_check=false);
-		virtual ~OpenGLMaterial();
-	private:
-		void handleApply() override;
-		void handleUnapply() override;
-		TexturePtr createTexture(const variant& node) override;
-	};
+		//DisplayDeviceRegistrar<DisplayDeviceOpenGLFixed> ogl_register("opengl-fixed");
+	}
 }

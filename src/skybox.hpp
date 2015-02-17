@@ -24,7 +24,7 @@
 /* XXX -- needs fixed and support for cubic textures added.
 #pragma once
 
-#include "Material.hpp"
+#include "Texture.hpp"
 #include "Color.hpp"
 #include "SceneObjectCallable.hpp"
 

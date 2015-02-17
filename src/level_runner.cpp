@@ -77,7 +77,7 @@ namespace
 	PREF_BOOL(reload_modified_objects, false, "Reload object definitions when their file is modified on disk");
 	PREF_INT(mouse_drag_threshold, 1000, "Threshold for how much motion can take place in a mouse drag");
 
-	LevelRunner* current_level_runner = NULL;
+	LevelRunner* current_level_runner = nullptr;
 
 	class current_level_runner_scope 
 	{
@@ -199,7 +199,7 @@ namespace
 
 	void iris_scene(const Level& lvl, screen_position& screen_pos, float amount) 
 	{
-		if(lvl.player() == NULL) {
+		if(lvl.player() == nullptr) {
 			return;
 		}
 		auto& wnd = KRE::WindowManager::getMainWindow();
@@ -672,12 +672,12 @@ LevelRunner::LevelRunner(LevelPtr& lvl, std::string& level_cfg, std::string& ori
 	object_reloads_state_id_(-1),
 	tile_rebuild_state_id_(-1),
 #endif
-	editor_(NULL)
+	editor_(nullptr)
 {
 	quit_ = false;
 	force_return_ = false;
 
-	current_second_ = time(NULL);
+	current_second_ = time(nullptr);
 	current_fps_ = 0;
 	next_fps_ = 0;
 	current_cycles_ = 0;
@@ -737,7 +737,7 @@ void LevelRunner::close_editor()
 	if(editor_->mouselook_mode()) {
 		SDL_SetRelativeMouseMode(SDL_FALSE);
 	}
-	editor_ = NULL;
+	editor_ = nullptr;
 	history_slider_.reset();
 	history_button_.reset();
 	history_trails_.clear();
@@ -755,7 +755,7 @@ bool LevelRunner::play_level()
 {
 	const current_level_runner_scope current_level_runner_setter(this);
 
-	sound::stop_looped_sounds(NULL);
+	sound::stop_looped_sounds(nullptr);
 
 	lvl_->setAsCurrentLevel();
 	bool reversing = false;
@@ -765,7 +765,7 @@ bool LevelRunner::play_level()
 	}
 
 	while(!done && !quit_ && !force_return_) {
-		const Uint8 *key = SDL_GetKeyboardState(NULL);
+		const Uint8 *key = SDL_GetKeyboardState(nullptr);
 		if(key[SDL_SCANCODE_T] && preferences::record_history()
 #ifndef NO_EDITOR
 			&& (!editor_ || !editor_->hasKeyboardFocus())
@@ -844,7 +844,7 @@ bool LevelRunner::play_cycle()
 		controls_lock.reset(new controls::local_controls_lock);
 	}
 
-	if(editor_ && lvl_->player() == NULL && !paused) {
+	if(editor_ && lvl_->player() == nullptr && !paused) {
 		//force the game to paused in the editor with no player.
 		paused = true;
 	}
@@ -872,7 +872,7 @@ bool LevelRunner::play_cycle()
 		// XXX graphics::texture::clear_modified_files_from_cache();
 
 		if(lvl_->cycle()%25 == 0) {
-			background::load_modified_backgrounds();
+			Background::loadModifiedBackgrounds();
 		}
 
 		if(history_trails_.empty() == false && (tile_rebuild_state_id_ != Level::tileRebuildStateId() || history_trails_state_id_ != editor_->level_state_id() || object_reloads_state_id_ != CustomObjectType::numObjectReloads())) {
@@ -899,10 +899,10 @@ bool LevelRunner::play_cycle()
 #endif
 
 	static bool mouselook_state = false;
-	if(mouselook_state != lvl_->is_mouselook_enabled() && editor_ == NULL && !paused) {
+	if(mouselook_state != lvl_->is_mouselook_enabled() && editor_ == nullptr && !paused) {
 		mouselook_state = lvl_->is_mouselook_enabled();
 		SDL_SetRelativeMouseMode(lvl_->is_mouselook_enabled() ? SDL_TRUE : SDL_FALSE);
-		SDL_GetRelativeMouseState(NULL, NULL);
+		SDL_GetRelativeMouseState(nullptr, nullptr);
 	}
 	if(editor_ && mouselook_state) {
 		SDL_SetRelativeMouseMode(SDL_FALSE);
@@ -971,7 +971,7 @@ bool LevelRunner::play_cycle()
 
 		preload_level(save->getPlayerInfo()->currentLevel());
 		transition_scene(*lvl_, last_draw_position(), true, fade_scene);
-		sound::stop_looped_sounds(NULL);
+		sound::stop_looped_sounds(nullptr);
 		boost::intrusive_ptr<Level> new_level = load_level(save->getPlayerInfo()->currentLevel());
 
 		if(!new_level->music().empty()) {
@@ -1063,7 +1063,7 @@ bool LevelRunner::play_cycle()
 				transition_scene(*lvl_, last_draw_position(), true, fade_scene);
 			}
 
-			sound::stop_looped_sounds(NULL);
+			sound::stop_looped_sounds(nullptr);
 
 			boost::intrusive_ptr<Level> new_level(load_level(level_cfg_));
 			if (!preferences::load_compiled() && !new_level->music().empty())
@@ -1111,7 +1111,7 @@ bool LevelRunner::play_cycle()
 			if(player && portal->saved_game == false) {
 				if(portal->new_playable) {
 					player = portal->new_playable->getPlayerInfo();
-					ASSERT_LOG(player != NULL, "Object is not playable: " << portal->new_playable->getDebugDescription());
+					ASSERT_LOG(player != nullptr, "Object is not playable: " << portal->new_playable->getDebugDescription());
 				}
 				player->getEntity().setPos(dest);
 				new_level->add_player(&player->getEntity());
@@ -1171,7 +1171,7 @@ bool LevelRunner::play_cycle()
 
 
 	SDL_StartTextInput();
-	if(MessageDialog::get() == NULL) {
+	if(MessageDialog::get() == nullptr) {
 		SDL_Event event;
 		while(input::sdl_poll_event(&event)) {
 			bool swallowed = false;
@@ -1485,7 +1485,7 @@ bool LevelRunner::play_cycle()
 			}
 			if(mouselook_state) {
 				SDL_SetRelativeMouseMode(SDL_TRUE);
-				SDL_GetRelativeMouseState(NULL, NULL);
+				SDL_GetRelativeMouseState(nullptr, nullptr);
 			}
 		}
 	}
@@ -1547,7 +1547,7 @@ bool LevelRunner::play_cycle()
 			last_draw_position().zoom += amount;
 #endif
 		} else {
-			should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());
+			should_draw = update_camera_position(*lvl_, last_draw_position(), nullptr, !is_skipping_game());
 		}
 
 // XXX Needs rework
@@ -1578,7 +1578,7 @@ bool LevelRunner::play_cycle()
 
 		if(should_draw) {
 #ifndef NO_EDITOR
-			const Uint8 *key = SDL_GetKeyboardState(NULL);
+			const Uint8 *key = SDL_GetKeyboardState(nullptr);
 			if(editor_ && key[SDL_SCANCODE_L] 
 				&& !editor_->hasKeyboardFocus() 
 				&& (!console_ || !console_->hasKeyboardFocus())) {
@@ -1669,7 +1669,7 @@ bool LevelRunner::play_cycle()
 	current_perf.nevents = CustomObject::events_handled_per_second - prev_events_per_second;
 	prev_events_per_second = CustomObject::events_handled_per_second;
 
-	const time_t this_second = time(NULL);
+	const time_t this_second = time(nullptr);
 	if(this_second != current_second_) {
 		current_second_ = this_second;
 		current_fps_ = next_fps_;
@@ -1749,7 +1749,7 @@ void LevelRunner::reverse_cycle()
 	while(input::sdl_poll_event(&event)) {
 	}
 
-	const bool should_draw = update_camera_position(*lvl_, last_draw_position(), NULL, !is_skipping_game());
+	const bool should_draw = update_camera_position(*lvl_, last_draw_position(), nullptr, !is_skipping_game());
 	render_scene(*lvl_, last_draw_position());
 	KRE::WindowManager::getMainWindow()->swap();
 

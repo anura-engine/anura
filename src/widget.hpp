@@ -163,8 +163,6 @@ namespace gui
 	private:
 		DECLARE_CALLABLE(Widget);
 		
-		void operator=(const Widget&);
-
 		virtual void visitValues(game_logic::FormulaCallableVisitor& visitor) {}
 
 		int x_, y_;

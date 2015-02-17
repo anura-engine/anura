@@ -52,7 +52,7 @@ public:
 
 	void getCurrent(const Entity& e, int* velocity_x, int* velocity_y) const;
 
-	bool isUnderwater(const rect& r, rect* water_area=NULL, variant* obj=NULL) const;
+	bool isUnderwater(const rect& r, rect* water_area=nullptr, variant* obj=nullptr) const;
 
 	void addWave(const point& p, double xvelocity, double height, double length, double delta_height, double delta_length);
 

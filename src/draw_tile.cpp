@@ -93,7 +93,7 @@ bool is_tile_using_alpha_channel(const KRE::TexturePtr& t, int tile_num)
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
 			const unsigned char* color = t->colorAt(u, v);
-			ASSERT_LOG(color != NULL, "COULD NOT FIND COLOR IN TEXTURE");
+			ASSERT_LOG(color != nullptr, "COULD NOT FIND COLOR IN TEXTURE");
 			KRE::Color new_color(color[0], color[1], color[2], color[3]);
 			if(new_color.a() != 0 && new_color.a() != 0xFF) {
 				return true;
@@ -115,7 +115,7 @@ bool is_tile_solid_color(const KRE::TexturePtr& t, int tile_num, KRE::Color& col
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
 			const unsigned char* color = t->colorAt(u, v);
-			ASSERT_LOG(color != NULL, "COULD NOT FIND COLOR IN TEXTURE");
+			ASSERT_LOG(color != nullptr, "COULD NOT FIND COLOR IN TEXTURE");
 			KRE::Color new_color(color[0], color[1], color[2], color[3]);
 			if(new_color.a() != 0xFF) {
 				return false;

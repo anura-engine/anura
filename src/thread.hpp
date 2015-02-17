@@ -56,7 +56,7 @@ namespace threading
 		// \param f the function at which the thread should start executing
 		// \param data passed to f
 		//
-		// \pre f != NULL
+		// \pre f != nullptr
 		explicit thread(const std::string& name, std::function<void ()> f);
 
 		// Destroy the thread object. This is done by waiting on the

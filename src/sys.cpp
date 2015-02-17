@@ -44,7 +44,7 @@ namespace sys
 			return false;
 		}
 
-		if(info != NULL) {
+		if(info != nullptr) {
 			info->mem_used_kb = (vm_stat.active_count + vm_stat.inactive_count + vm_stat.wire_count) * (pagesize/1024);
 
 			info->mem_free_kb = vm_stat.free_count * (pagesize/1024);

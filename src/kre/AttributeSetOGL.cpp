@@ -21,7 +21,7 @@
 	   distribution.
 */
 
-#include "AttributeSetOpenGL.hpp"
+#include "AttributeSetOGL.hpp"
 
 namespace KRE
 {

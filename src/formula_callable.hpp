@@ -198,7 +198,7 @@ namespace game_logic
 	class MapFormulaCallable : public FormulaCallable {
 	public:
 		explicit MapFormulaCallable(variant node);
-		explicit MapFormulaCallable(const FormulaCallable* fallback=NULL);
+		explicit MapFormulaCallable(const FormulaCallable* fallback=nullptr);
 		explicit MapFormulaCallable(const std::map<std::string, variant>& m);
 		variant write() const;
 		MapFormulaCallable& add(const std::string& key, const variant& value);

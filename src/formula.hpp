@@ -93,8 +93,8 @@ namespace game_logic
 
 		static const std::set<Formula*>& getAll();
 
-		static FormulaPtr createOptionalFormula(const variant& str, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL, FORMULA_LANGUAGE lang=FORMULA_LANGUAGE::FFL);
-		explicit Formula(const variant& val, FunctionSymbolTable* symbols=NULL, ConstFormulaCallableDefinitionPtr def=NULL);
+		static FormulaPtr createOptionalFormula(const variant& str, FunctionSymbolTable* symbols=nullptr, ConstFormulaCallableDefinitionPtr def=nullptr, FORMULA_LANGUAGE lang=FORMULA_LANGUAGE::FFL);
+		explicit Formula(const variant& val, FunctionSymbolTable* symbols=nullptr, ConstFormulaCallableDefinitionPtr def=nullptr);
 		Formula(const variant& lua_fn, FORMULA_LANGUAGE lang);
 		~Formula();
 		variant execute(const FormulaCallable& variables) const;

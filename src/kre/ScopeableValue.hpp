@@ -51,9 +51,9 @@ namespace KRE
 		void setBlendMode(BlendModeConstants src, BlendModeConstants dst) { blend_mode_.set(src, dst); blend_mode_set_ = true; }
 		void clearBlendMode() { blend_mode_set_ = false; }
 
-		void setColor(float r, float g, float b, float a=1.0);
-		void setColor(int r, int g, int b, int a=255);
-		void setColor(const Color& color);
+		void setColor(float r, float g, float b, float a=1.0) { color_ = Color(r, g, b, a); }
+		void setColor(int r, int g, int b, int a=255) { color_ = Color(r, g, b, a); }
+		void setColor(const Color& color) { color_ = color; }
 		const Color& getColor() const { return color_; }
 		bool isColorSet() const { return color_set_; }
 		void clearColor() { color_set_ = false; }

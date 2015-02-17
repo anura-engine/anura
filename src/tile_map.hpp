@@ -63,7 +63,7 @@ public:
 	~TileMap();
 
 	variant write() const;
-	void buildTiles(std::vector<LevelTile>* tiles, const rect* r=NULL) const;
+	void buildTiles(std::vector<LevelTile>* tiles, const rect* r=nullptr) const;
 	bool setTile(int xpos, int ypos, const std::string& str);
 	int zorder() const { return zorder_; }
 	int getXSpeed() const { return x_speed_; }

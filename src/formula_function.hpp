@@ -56,7 +56,7 @@ namespace game_logic
 	class FormulaExpression : public reference_counted_object 
 	{
 	public:
-		explicit FormulaExpression(const char* name=NULL);
+		explicit FormulaExpression(const char* name=nullptr);
 		virtual ~FormulaExpression() {}
 		virtual variant staticEvaluate(const FormulaCallable& variables) const {
 			return evaluate(variables);
@@ -78,7 +78,7 @@ namespace game_logic
 			return execute(variables);
 		}
 
-		variant evaluateWithMember(const FormulaCallable& variables, std::string& id, variant* variant_id=NULL) const {
+		variant evaluateWithMember(const FormulaCallable& variables, std::string& id, variant* variant_id=nullptr) const {
 	#if !TARGET_OS_IPHONE
 			CallStackManager manager(this, &variables);
 	#endif
@@ -107,7 +107,7 @@ namespace game_logic
 									std::string::const_iterator begin_str,
 									std::string::const_iterator end_str);
 		bool hasDebugInfo() const;
-		std::string debugPinpointLocation(PinpointedLoc* loc=NULL) const;
+		std::string debugPinpointLocation(PinpointedLoc* loc=nullptr) const;
 		std::pair<int, int> debugLocInFile() const;
 
 		void setStr(const std::string& str) { str_ = str; }
@@ -136,7 +136,7 @@ namespace game_logic
 	private:
 		virtual variant execute(const FormulaCallable& variables) const = 0;
 		virtual void staticErrorAnalysis() const {}
-		virtual ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return NULL; }
+		virtual ConstFormulaCallableDefinitionPtr getModifiedDefinitionBasedOnResult(bool result, ConstFormulaCallableDefinitionPtr current_def, variant_type_ptr expression_is_this_type) const { return nullptr; }
 
 		virtual std::vector<ConstExpressionPtr> getChildren() const { return std::vector<ConstExpressionPtr>(); }
 

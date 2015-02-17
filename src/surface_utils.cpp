@@ -30,7 +30,7 @@ namespace graphics
 	{
 		using namespace KRE;
 		auto s = SurfaceCache::get("alpha-colors.png", false);
-		ASSERT_LOG(s != NULL, "COULD NOT LOAD alpha.png");
+		ASSERT_LOG(s != nullptr, "COULD NOT LOAD alpha.png");
 
 		const int npixels = s->width() * s->height();
 		ASSERT_LOG(npixels == 2, "UNEXPECTED SIZE FOR alpha.png");

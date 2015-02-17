@@ -143,7 +143,7 @@ namespace
 				if(nbytes > 0 && nbytes <= buf.size()) {
 					buf.resize(nbytes);
 					buf.push_back(0);
-					*data = buf.empty() ? NULL : &buf.front();
+					*data = buf.empty() ? nullptr : &buf.front();
 					return true;
 				}
 			}

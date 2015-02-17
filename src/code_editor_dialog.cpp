@@ -554,7 +554,7 @@ void CodeEditorDialog::process()
 	const std::string& text = editor_->currentText();
 
 	const gui::code_editor_widget::ObjectInfo info = editor_->get_current_object();
-	const json::Token* selected_token = NULL;
+	const json::Token* selected_token = nullptr;
 	int token_pos = 0;
 	for(const json::Token& token : info.tokens) {
 		const int begin_pos = token.begin - text.c_str();
@@ -567,7 +567,7 @@ void CodeEditorDialog::process()
 	}
 
 	std::vector<Suggestion> suggestions;
-	if(selected_token != NULL) {
+	if(selected_token != nullptr) {
 
 		const bool at_end = token_pos == selected_token->end - selected_token->begin;
 		std::string str(selected_token->begin, selected_token->end);
@@ -620,7 +620,7 @@ void CodeEditorDialog::process()
 					t = formula_tokenizer::get_token(i1, formula_str.end());
 				}
 
-				const formula_tokenizer::Token* selected = NULL;
+				const formula_tokenizer::Token* selected = nullptr;
 				const std::string::const_iterator itor = formula_str.begin() + token_pos;
 
 				for(const formula_tokenizer::Token& tok : tokens) {
@@ -707,7 +707,7 @@ void CodeEditorDialog::process()
 		}
 
 		auto wnd_w = KRE::WindowManager::getMainWindow()->width();
-		if(static_cast<unsigned>(suggestions_grid_->x() + suggestions_grid_->width() + 20) > wnd_w) {
+		if(suggestions_grid_->x() + suggestions_grid_->width() + 20 > wnd_w) {
 			suggestions_grid_->setLoc(wnd_w - suggestions_grid_->width() - 20, suggestions_grid_->y());
 		}
 	}
@@ -891,7 +891,7 @@ void CodeEditorDialog::onMoveCursor()
 				const std::set<game_logic::Formula*>& formulae = game_logic::Formula::getAll();
 				int best_result = -1;
 				variant result_variant;
-				const game_logic::Formula* best_formula = NULL;
+				const game_logic::Formula* best_formula = nullptr;
 				for(const game_logic::Formula* f : formulae) {
 					const variant::debug_info* info = f->strVal().get_debug_info();
 					if(!info || !info->filename || *info->filename != *str_info.filename) {
@@ -1087,7 +1087,7 @@ void edit_and_continue_assert(const std::string& msg, std::function<void()> fn)
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 
-	unsigned w, h;
+	int w, h;
 	wnd->autoWindowSize(w,h);
 	wnd->setWindowSize(w,h);
 

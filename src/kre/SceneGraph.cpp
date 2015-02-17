@@ -57,7 +57,7 @@ namespace KRE
 
 	void SceneGraph::attachNode(SceneNode* parent, SceneNodePtr node) 
 	{
-		if(parent == NULL) {
+		if(parent == nullptr) {
 			graph_.insert(graph_.end_child(), node);
 			node->notifyNodeAttached(graph_.end_child()->get());
 			return;

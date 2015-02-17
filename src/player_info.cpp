@@ -73,7 +73,7 @@ variant PlayerInfo::write() const
 void PlayerInfo::readControls(int cycle)
 {
 	bool status[controls::NUM_CONTROLS];
-	const std::string* user = NULL;
+	const std::string* user = nullptr;
 	controls::get_controlStatus(cycle, slot_, status, &user);
 
 	if(status[controls::CONTROL_LEFT] && status[controls::CONTROL_RIGHT]) {

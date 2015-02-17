@@ -56,7 +56,7 @@ namespace game_logic
 		class simple_definition : public FormulaCallableDefinition
 		{
 		public:
-			simple_definition() : base_(NULL)
+			simple_definition() : base_(nullptr)
 			{}
 
 			int getSlot(const std::string& key) const {
@@ -87,7 +87,7 @@ namespace game_logic
 				slot -= base_getNumSlots();
 
 				if(slot < 0 || slot >= static_cast<int>(entries_.size())) {
-					return NULL;
+					return nullptr;
 				}
 
 				return &entries_[slot];
@@ -101,7 +101,7 @@ namespace game_logic
 				slot -= base_getNumSlots();
 
 				if(slot < 0 || slot >= static_cast<int>(entries_.size())) {
-					return NULL;
+					return nullptr;
 				}
 
 				return &entries_[slot];

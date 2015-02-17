@@ -168,7 +168,7 @@ namespace gui
 	bool ColorPicker::getPaletteColor(int n, KRE::Color* color)
 	{
 		ASSERT_LOG(size_t(n) < palette_.size(), "ColorPicker::getPaletteColor selected color out of range: " << n << " >= " << palette_.size());
-		ASSERT_LOG(color != NULL, "ColorPicker::getPaletteColor: NULL color pointer given");
+		ASSERT_LOG(color != nullptr, "ColorPicker::getPaletteColor: nullptr color pointer given");
 		*color = palette_[size_t(n)];
 		return true;
 	}

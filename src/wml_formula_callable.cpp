@@ -176,7 +176,7 @@ namespace game_logic
 	void wmlFormulaCallableReadScope::registerSerializedObject(intptr_t addr, WmlSerializableFormulaCallablePtr ptr)
 	{
 		//fprintf(stderr, "REGISTER SERIALIZED: 0x%x\n", (int)addr);
-		if(ptr.get() != NULL) {
+		if(ptr.get() != nullptr) {
 			get_registered_objects()[addr] = ptr;
 		}
 	}
@@ -278,9 +278,9 @@ namespace game_logic
 				if(v.is_map() && v.has_key(variant("serialized_objects"))) {
 					for(variant& obj_node : v["serialized_objects"]["character"].as_list()) {
 						game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
-						ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
+						ASSERT_LOG(obj.get() != nullptr, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
 						std::string addr_str = obj->addr();
-						const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
+						const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), nullptr, 16));
 
 						game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 					}

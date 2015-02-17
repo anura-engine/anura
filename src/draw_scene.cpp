@@ -128,7 +128,7 @@ void set_displayed_Achievement(AchievementPtr a)
 	current_achievement_duration = 250;
 }
 
-void draw_scene(Level& lvl, screen_position& pos, const Entity* focus, bool doDraw) 
+void draw_scene(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw) 
 {
 	const bool draw_ready = update_camera_position(lvl, pos, focus, doDraw);
 	if(draw_ready) {
@@ -138,7 +138,7 @@ void draw_scene(Level& lvl, screen_position& pos, const Entity* focus, bool doDr
 
 bool update_camera_position(const Level& lvl, screen_position& pos, const Entity* focus, bool doDraw) 
 {
-	if(focus == NULL && lvl.player()) {
+	if(focus == nullptr && lvl.player()) {
 		focus = &lvl.player()->getEntity();
 	}
 
@@ -361,7 +361,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	return draw_level;
 }
 
-void render_scene(Level& lvl, const screen_position& pos) 
+void render_scene(const Level& lvl, const screen_position& pos) 
 {
 	auto& wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
@@ -377,7 +377,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 	const int camera_rotation = lvl.camera_rotation();
 	if(camera_rotation) {
 		float rotate = static_cast<float>(camera_rotation)/1000.0f;
-		lvl.setRotation(rotate, glm::vec3(0.0f, 0.0f, 1.0f));
+		//lvl.setRotation(rotate, glm::vec3(0.0f, 0.0f, 1.0f));
+		// XXX fixme
 	}
 
 	if(pos.flip_rotate) {
@@ -397,7 +398,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 	int bg_xscroll = xscroll;
 	int bg_yscroll = yscroll;
 
-	lvl.setScale(pos.zoom, pos.zoom);
+	// XXX fixme
+	// lvl.setScale(pos.zoom, pos.zoom);
 	xscroll += static_cast<int>((screen_width/2)*(-1.0/pos.zoom + 1.0));
 	yscroll += static_cast<int>((wnd->height()/2)*(-1.0/pos.zoom + 1.0));
 
@@ -406,7 +408,8 @@ void render_scene(Level& lvl, const screen_position& pos)
 		bg_yscroll = yscroll;
 	}
 
-	lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
+	// XXX fixme
+	// lvl.setPosition(static_cast<float>(-xscroll), static_cast<float>(-yscroll));
 	lvl.draw_background(bg_xscroll, bg_yscroll, camera_rotation);
 
 	int draw_width = screen_width;
@@ -478,7 +481,7 @@ void render_scene(Level& lvl, const screen_position& pos)
 	if(scene_title_duration_ > 0) {
 		--scene_title_duration_;
 		const ConstGraphicalFontPtr f = GraphicalFont::get("default");
-		ASSERT_LOG(f.get() != NULL, "COULD NOT LOAD DEFAULT FONT");
+		ASSERT_LOG(f.get() != nullptr, "COULD NOT LOAD DEFAULT FONT");
 		const rect r = f->dimensions(scene_title());
 		const float alpha = scene_title_duration_ > 10 ? 1.0f : scene_title_duration_/10.0f;
 		f->draw(wnd->width()/2 - r.w()/2 + 2, wnd->height()/2 - r.h()/2 + 2, scene_title(), 2, KRE::Color(0.f, 0.f, 0., 0.5f*alpha));

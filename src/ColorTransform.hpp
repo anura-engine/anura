@@ -58,6 +58,11 @@ namespace KRE
 		void setAddGreen(int ag);
 		void setAddBlue(int ab);
 		void setAddAlpha(int aa);
+		
+		void setAddRed(float ar);
+		void setAddGreen(float ag);
+		void setAddBlue(float ab);
+		void setAddAlpha(float aa);
 
 		Color applyWhite() const;
 		Color applyBlack() const;

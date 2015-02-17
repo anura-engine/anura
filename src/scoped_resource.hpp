@@ -199,7 +199,7 @@ namespace util
 	 */
 	struct close_FILE
 	{
-		void operator()(FILE* f) const { if(f != NULL) { fclose(f); } }
+		void operator()(FILE* f) const { if(f != nullptr) { fclose(f); } }
 	};
 	typedef scoped_resource<FILE*,close_FILE> scoped_FILE;
 }

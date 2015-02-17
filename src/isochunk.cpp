@@ -448,7 +448,7 @@ namespace voxel
 			num_vertices_[n] = varray_[n].size() / 3;
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, vbos_[0]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, total_size, nullptr, GL_STATIC_DRAW);
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, vattrib_offsets_[n], varray_[n].size()*sizeof(GLfloat), &varray_[n][0]);
 		}
@@ -751,7 +751,7 @@ namespace voxel
 			total_size += carray_[n].size() * sizeof(uint8_t);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, total_size, nullptr, GL_STATIC_DRAW);
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, cattrib_offsets_[n], carray_[n].size()*sizeof(uint8_t), &carray_[n][0]);
 		}
@@ -830,7 +830,7 @@ namespace voxel
 			total_size += tarray_[n].size() * sizeof(GLfloat);
 		}
 		glBindBuffer(GL_ARRAY_BUFFER, vbo()[1]);
-		glBufferData(GL_ARRAY_BUFFER, total_size, NULL, GL_STATIC_DRAW);
+		glBufferData(GL_ARRAY_BUFFER, total_size, nullptr, GL_STATIC_DRAW);
 		for(int n = FRONT_FACE; n != MAX_FACES; ++n) {
 			glBufferSubData(GL_ARRAY_BUFFER, tattrib_offsets_[n], tarray_[n].size()*sizeof(GLfloat), &tarray_[n][0]);
 		}
@@ -1239,7 +1239,7 @@ namespace voxel
 		{
 			if(v.is_callable()) {
 				chunk_ptr c = v.try_convert<chunk>();
-				ASSERT_LOG(c != NULL, "Error converting chunk from callable.");
+				ASSERT_LOG(c != nullptr, "Error converting chunk from callable.");
 				return c;
 			}
 			ASSERT_LOG(v.has_key("type"), "No 'type' attribute found in definition.");

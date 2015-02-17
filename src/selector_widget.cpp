@@ -67,7 +67,7 @@ namespace gui
 						w = widget_factory::create(child[1], e);
 					} else {
 						w = child[1].try_convert<Widget>();
-						ASSERT_LOG(w != NULL, "Couldn't convert second element to widget.");
+						ASSERT_LOG(w != nullptr, "Couldn't convert second element to widget.");
 					}
 					list_.push_back(SelectorPair(child[0].as_string(), w));
 				} else if(child.is_string()) {
@@ -82,7 +82,7 @@ namespace gui
 						s = child.has_key("id") ? child["id"].as_string() : child["select_string"].as_string();
 					} else {
 						w = child.try_convert<Widget>();
-						ASSERT_LOG(w != NULL, "Couldn't convert item to widget.");
+						ASSERT_LOG(w != nullptr, "Couldn't convert item to widget.");
 						ASSERT_LOG(!w->id().empty(), "list items must have 'id' attribute");
 						s = w->id();
 					}

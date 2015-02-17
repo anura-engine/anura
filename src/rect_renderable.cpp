@@ -7,8 +7,8 @@ RectRenderable::RectRenderable(bool strips)
 	using namespace KRE;
 
 	auto ab = DisplayDevice::createAttributeSet(false, false, false);
-	r_ = std::make_shared<Attribute<short_vertex_color>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
-	r_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::UNSIGNED_SHORT, false, sizeof(short_vertex_color), offsetof(vertex_color, vertex)));
+	r_ = std::make_shared<Attribute<glm::u16vec2>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+	r_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false));
 	ab->addAttribute(r_);
 
 	ab->setDrawMode(strips ? DrawMode::TRIANGLE_STRIP : DrawMode::POINTS);

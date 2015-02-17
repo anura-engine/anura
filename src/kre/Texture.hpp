@@ -62,17 +62,6 @@ namespace KRE
 			LINEAR,
 			ANISOTROPIC,
 		};
-		explicit Texture(const variant& node, const SurfacePtr& surface=nullptr);
-		explicit Texture(const SurfacePtr& surface, 
-			Type type=Type::TEXTURE_2D, 
-			int mipmap_levels=0);
-		explicit Texture(unsigned width, 
-			unsigned height, 
-			unsigned depth,
-			PixelFormat::PF fmt, 
-			Texture::Type type);
-		// Constrcutor to create paletteized texture from a file name and optional surface.
-		explicit Texture(const SurfacePtr& surf, const SurfacePtr& palette);
 		virtual ~Texture();
 
 		void setAddressModes(AddressMode u, AddressMode v=AddressMode::WRAP, AddressMode w=AddressMode::WRAP, const Color& bc=Color(0.0f,0.0f,0.0f));
@@ -106,7 +95,7 @@ namespace KRE
 
 		virtual void init() = 0;
 		virtual void bind() = 0;
-		virtual unsigned id() = 0;
+		virtual unsigned id(int n = 0) = 0;
 
 		virtual void update(int x, unsigned width, void* pixels) = 0;
 		// Less safe version for updating a multi-texture.
@@ -126,9 +115,13 @@ namespace KRE
 		static TexturePtr createTexture(const SurfacePtr& surface, bool cache);
 		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
 		
-		static TexturePtr createTexture(unsigned width, PixelFormat::PF fmt);
-		static TexturePtr createTexture(unsigned width, unsigned height, PixelFormat::PF fmt);
-		static TexturePtr createTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
+		static TexturePtr createTexture1D(int width, PixelFormat::PF fmt);
+		static TexturePtr createTexture2D(int width, int height, PixelFormat::PF fmt);
+		static TexturePtr createTexture3D(int width, int height, int depth, PixelFormat::PF fmt);
+
+		static TexturePtr createTexture2D(int count, int width, int height, PixelFormat::PF fmt);
+		static TexturePtr createTexture2D(const std::vector<std::string>& filenames, const variant& node);
+		static TexturePtr createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache);
 
 		/* Functions for creating a texture that only has a single channel and an associated
 			secondary texture that is used for doing palette look-ups to get the actual color.
@@ -138,7 +131,8 @@ namespace KRE
 		static TexturePtr createPalettizedTexture(const SurfacePtr& surf);
 		static TexturePtr createPalettizedTexture(const SurfacePtr& surf, const SurfacePtr& palette);
 
-		const SurfacePtr& getSurface() const { return surface_; }
+		const SurfacePtr& getFrontSurface() const { return surfaces_.front(); }
+		std::vector<SurfacePtr> getSurfaces() const { return surfaces_; }
 
 		int getUnpackAlignment() const { return unpack_alignment_; }
 		void setUnpackAlignment(int align);
@@ -159,11 +153,11 @@ namespace KRE
 			return static_cast<N>(y) / static_cast<N>(surface_height_);
 		}
 
-		// Can return NULL if not-implemented, invalid underlying surface.
+		// Can return nullptr if not-implemented, invalid underlying surface.
 		virtual const unsigned char* colorAt(int x, int y) const = 0;
-		bool isAlpha(unsigned x, unsigned y) { return alpha_map_[y*width_+x]; }
-		std::vector<bool>::const_iterator getAlphaRow(int x, int y) const { return alpha_map_.begin() + y*width_ + x; }
-		std::vector<bool>::const_iterator endAlpha() const { return alpha_map_.end(); }
+		bool isAlpha(unsigned x, unsigned y, int n = 0) const;
+		std::vector<bool>::const_iterator getAlphaRow(int x, int y, int n = 0) const;
+		std::vector<bool>::const_iterator endAlpha(int n = 0) const;
 
 		static void clearCache();
 
@@ -177,7 +171,19 @@ namespace KRE
 
 		virtual TexturePtr clone() = 0;
 	protected:
-		void setTextureDimensions(unsigned w, unsigned h, unsigned d=0);
+		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
+		explicit Texture(const std::vector<SurfacePtr>& surfaces,
+			Type type=Type::TEXTURE_2D, 
+			int mipmap_levels=0);
+		explicit Texture(int count, 
+			int width, 
+			int height, 
+			int depth,
+			PixelFormat::PF fmt, 
+			Texture::Type type);
+		// Constrcutor to create paletteized texture from a file name and optional surface.
+		explicit Texture(const SurfacePtr& surf, const SurfacePtr& palette);
+		void setTextureDimensions(int w, int h, int d=0);
 	private:
 		virtual void rebuild() = 0;
 
@@ -189,9 +195,9 @@ namespace KRE
 		int max_anisotropy_;
 		float lod_bias_;
 		Texture();
-		SurfacePtr surface_;
+		std::vector<SurfacePtr> surfaces_;
 
-		std::vector<bool> alpha_map_;
+		std::vector<std::vector<bool>> alpha_map_;
 		
 		int surface_width_;
 		int surface_height_;

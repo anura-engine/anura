@@ -101,7 +101,7 @@ namespace KRE
 		uint32_t amask) : has_data_(false)
 	{
 		surface_ = SDL_CreateRGBSurface(0, width, height, bpp, rmask, gmask, bmask, amask);
-		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
+		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
@@ -117,9 +117,9 @@ namespace KRE
 		uint32_t amask, 
 		const void* pixels) : has_data_(true)
 	{
-		ASSERT_LOG(pixels != NULL, "NULL value for pixels while creating surface.");
+		ASSERT_LOG(pixels != nullptr, "nullptr value for pixels while creating surface.");
 		surface_ = SDL_CreateRGBSurfaceFrom(const_cast<void*>(pixels), width, height, bpp, row_pitch, rmask, gmask, bmask, amask);
-		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
+		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
@@ -127,7 +127,7 @@ namespace KRE
 	SurfaceSDL::SurfaceSDL(const std::string& filename)
 	{
 		surface_ = IMG_Load(filename.c_str());
-		if(surface_ == NULL) {
+		if(surface_ == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
 		}
@@ -138,7 +138,7 @@ namespace KRE
 	SurfaceSDL::SurfaceSDL(SDL_Surface* surface)
 		: surface_(surface)
 	{
-		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
+		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
@@ -151,14 +151,14 @@ namespace KRE
 		ASSERT_LOG(ret != SDL_FALSE, "Unable to convert pixel format to masks: " << SDL_GetError());
 
 		surface_ = SDL_CreateRGBSurface(0, width, height, bpp, rmask, gmask, bmask, amask);
-		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
+		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
 
 	SurfaceSDL::~SurfaceSDL()
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null in destructor");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null in destructor");
 		SDL_FreeSurface(surface_);
 	}
 
@@ -198,7 +198,7 @@ namespace KRE
 
 	const void* SurfaceSDL::pixels() const
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		// technically surface_->locked is an internal implementation detail.
 		// but we'll live with using it.
 		if(SDL_MUSTLOCK(surface_) && !surface_->locked) {
@@ -209,7 +209,7 @@ namespace KRE
 
 	void* SurfaceSDL::pixelsWriteable()
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		// technically surface_->locked is an internal implementation detail.
 		// but we'll live with using it.
 		if(SDL_MUSTLOCK(surface_) && !surface_->locked) {
@@ -220,14 +220,14 @@ namespace KRE
 
 	bool SurfaceSDL::setClipRect(int x, int y, unsigned width, unsigned height)
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		SDL_Rect r = {x,y,width,height};
 		return SDL_SetClipRect(surface_, &r) != SDL_TRUE;
 	}
 
 	void SurfaceSDL::getClipRect(int& x, int& y, unsigned& width, unsigned& height)
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		SDL_Rect r;
 		SDL_GetClipRect(surface_, &r);
 		x = r.x;
@@ -239,14 +239,14 @@ namespace KRE
 
 	bool SurfaceSDL::setClipRect(const rect& r)
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		SDL_Rect sr = {r.x(), r.y(), r.w(), r.h()};
 		return SDL_SetClipRect(surface_, &sr) == SDL_TRUE;
 	}
 
 	const rect SurfaceSDL::getClipRect()
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		SDL_Rect sr;
 		SDL_GetClipRect(surface_, &sr);
 		return rect(sr.x, sr.y, sr.w, sr.h);
@@ -254,7 +254,7 @@ namespace KRE
 
 	void SurfaceSDL::lock() 
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		if(SDL_MUSTLOCK(surface_)) {
 			auto res = SDL_LockSurface(surface_);
 			ASSERT_LOG(res == 0, "Error calling SDL_LockSurface(): " << SDL_GetError());
@@ -263,7 +263,7 @@ namespace KRE
 
 	void SurfaceSDL::unlock() 
 	{
-		ASSERT_LOG(surface_ != NULL, "surface_ is null");
+		ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 		if(SDL_MUSTLOCK(surface_)) {
 			SDL_UnlockSurface(surface_);
 		}
@@ -277,9 +277,9 @@ namespace KRE
 		const void* pixels)
 	{
 		SDL_FreeSurface(surface_);
-		ASSERT_LOG(pixels != NULL, "NULL value for pixels while creating surface.");
+		ASSERT_LOG(pixels != nullptr, "nullptr value for pixels while creating surface.");
 		surface_ = SDL_CreateRGBSurfaceFrom(const_cast<void*>(pixels), width(), height(), bpp, rowPitch(), rmask, gmask, bmask, amask);
-		ASSERT_LOG(surface_ != NULL, "Error creating surface: " << SDL_GetError());
+		ASSERT_LOG(surface_ != nullptr, "Error creating surface: " << SDL_GetError());
 		setPixelFormat(PixelFormatPtr(new SDLPixelFormat(surface_->format->format)));
 	}
 
@@ -336,7 +336,7 @@ namespace KRE
 	SDLPixelFormat::SDLPixelFormat(Uint32 pf)
 	{
 		pf_ = SDL_AllocFormat(pf);
-		ASSERT_LOG(pf_ != NULL, "SDLPixelFormat constructor passed a null pixel format: " << SDL_GetError());
+		ASSERT_LOG(pf_ != nullptr, "SDLPixelFormat constructor passed a null pixel format: " << SDL_GetError());
 	}
 
 	SDLPixelFormat::~SDLPixelFormat()
@@ -527,7 +527,7 @@ namespace KRE
 
 	bool SDLPixelFormat::hasPalette() const 
 	{
-		return pf_->palette != NULL;
+		return pf_->palette != nullptr;
 	}
 
 	Color SDLPixelFormat::mapRGB(int r, int g, int b)
@@ -600,7 +600,7 @@ namespace KRE
 	SurfacePtr SurfaceSDL::createFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceConvertFn fn)
 	{
 		auto s = IMG_Load(filename.c_str());
-		if(s == NULL) {
+		if(s == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
 		}
@@ -622,7 +622,7 @@ namespace KRE
 		alpha = 255;
 		switch(fmt) {
             case PixelFormat::PF::PIXELFORMAT_INDEX1LSB: {
-				ASSERT_LOG(pf_->palette != NULL, "Index type has no palette.");
+				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
 				uint8_t px = *static_cast<const uint8_t*>(pixels) & (1 << ndx) >> ndx;
 				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
 				auto color = pf_->palette->colors[px];
@@ -639,7 +639,7 @@ namespace KRE
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX1MSB: {
-				ASSERT_LOG(pf_->palette != NULL, "Index type has no palette.");
+				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (1 << (7-ndx))) >> (7-ndx);
 				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
 				auto color = pf_->palette->colors[px];
@@ -656,7 +656,7 @@ namespace KRE
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX4LSB: {
-				ASSERT_LOG(pf_->palette != NULL, "Index type has no palette.");
+				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (0xf << ndx)) >> ndx;
 				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
 				auto color = pf_->palette->colors[px];
@@ -673,7 +673,7 @@ namespace KRE
 				break;
 			}
 			case PixelFormat::PF::PIXELFORMAT_INDEX4MSB: {
-				ASSERT_LOG(pf_->palette != NULL, "Index type has no palette.");
+				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
 				uint8_t px = (*static_cast<const uint8_t*>(pixels) & (0xf << (4-ndx))) >> (4-ndx);
 				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
 				auto color = pf_->palette->colors[px];
@@ -690,7 +690,7 @@ namespace KRE
 				break;
 			}
             case PixelFormat::PF::PIXELFORMAT_INDEX8: {
-				ASSERT_LOG(pf_->palette != NULL, "Index type has no palette.");
+				ASSERT_LOG(pf_->palette != nullptr, "Index type has no palette.");
 				uint8_t px = *static_cast<const uint8_t*>(pixels);
 				ASSERT_LOG(px < pf_->palette->ncolors, "Index into palette invalid. " << px << " >= " << pf_->palette->ncolors);
 				auto color = pf_->palette->colors[px];
@@ -825,7 +825,7 @@ namespace KRE
 		ASSERT_LOG(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN, "unknown pixel format to convert to.");
 		if(convert == nullptr) {
 			SDL_PixelFormat* pf = SDL_AllocFormat(get_sdl_pixel_format(fmt));
-			ASSERT_LOG(pf != NULL, "error allocating pixel format: " << SDL_GetError());
+			ASSERT_LOG(pf != nullptr, "error allocating pixel format: " << SDL_GetError());
 			auto surface = new SurfaceSDL(SDL_ConvertSurface(surface_, pf, 0));
 			SDL_FreeFormat(pf);
 			return SurfacePtr(surface);
@@ -868,15 +868,15 @@ namespace KRE
 	void SurfaceSDL::blit(SurfacePtr src, const rect& src_rect) 
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
-		ASSERT_LOG(src_ptr != NULL, "Source pointer was wrong type is not SurfaceSDL");
+		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
 		SDL_Rect sr = {src_rect.x(), src_rect.y(), src_rect.w(), src_rect.h()};
-		SDL_BlitSurface(src_ptr->surface_, &sr, surface_, NULL);
+		SDL_BlitSurface(src_ptr->surface_, &sr, surface_, nullptr);
 	}
 
 	void SurfaceSDL::blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) 
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
-		ASSERT_LOG(src_ptr != NULL, "Source pointer was wrong type is not SurfaceSDL");
+		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
 		SDL_Rect sr = {src_rect.x(), src_rect.y(), src_rect.w(), src_rect.h()};
 		SDL_Rect dr = {dst_rect.x(), dst_rect.y(), dst_rect.w(), dst_rect.h()};
 		SDL_BlitSurface(src_ptr->surface_, &sr, surface_, &dr);
@@ -885,7 +885,7 @@ namespace KRE
 	void SurfaceSDL::blitToScaled(SurfacePtr src, const rect& src_rect, const rect& dst_rect) 
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
-		ASSERT_LOG(src_ptr != NULL, "Source pointer was wrong type is not SurfaceSDL");
+		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
 		SDL_Rect sr = {src_rect.x(), src_rect.y(), src_rect.w(), src_rect.h()};
 		SDL_Rect dr = {dst_rect.x(), dst_rect.y(), dst_rect.w(), dst_rect.h()};
 		SDL_BlitScaled(src_ptr->surface_, &sr, surface_, &dr);
@@ -894,8 +894,8 @@ namespace KRE
 	void SurfaceSDL::blitTo(SurfacePtr src, const rect& dst_rect) 
 	{
 		auto src_ptr = std::dynamic_pointer_cast<SurfaceSDL>(src);
-		ASSERT_LOG(src_ptr != NULL, "Source pointer was wrong type is not SurfaceSDL");
+		ASSERT_LOG(src_ptr != nullptr, "Source pointer was wrong type is not SurfaceSDL");
 		SDL_Rect dr = {dst_rect.x(), dst_rect.y(), dst_rect.w(), dst_rect.h()};
-		SDL_BlitScaled(src_ptr->surface_, NULL, surface_, &dr);
+		SDL_BlitScaled(src_ptr->surface_, nullptr, surface_, &dr);
 	}
 }

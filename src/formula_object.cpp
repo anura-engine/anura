@@ -99,13 +99,13 @@ namespace game_logic
 
 				const Formula::StrictCheckScope strict_checking;
 				if(node.is_string()) {
-					getter = game_logic::Formula::createOptionalFormula(node, NULL, get_class_definition(class_name));
+					getter = game_logic::Formula::createOptionalFormula(node, nullptr, get_class_definition(class_name));
 					ASSERT_LOG(getter, "COULD NOT PARSE CLASS FORMULA " << class_name << "." << prop_name);
 
 					ASSERT_LOG(getter->queryVariantType()->is_any() == false, "COULD NOT INFER TYPE FOR CLASS PROPERTY " << class_name << "." << prop_name << ". SET THIS PROPERTY EXPLICITLY");
 
 					FormulaCallableDefinition::Entry* entry = class_def->getEntryById(prop_name);
-					ASSERT_LOG(entry != NULL, "COULD NOT FIND CLASS PROPERTY ENTRY " << class_name << "." << prop_name);
+					ASSERT_LOG(entry != nullptr, "COULD NOT FIND CLASS PROPERTY ENTRY " << class_name << "." << prop_name);
 
 					entry->setVariantType(getter->queryVariantType());
 					return;
@@ -115,19 +115,19 @@ namespace game_logic
 					}
 
 					if(node["get"].is_string()) {
-						getter = game_logic::Formula::createOptionalFormula(node["get"], NULL, get_class_definition(class_name));
+						getter = game_logic::Formula::createOptionalFormula(node["get"], nullptr, get_class_definition(class_name));
 					}
 
 					if(node["set"].is_string()) {
-						setter = game_logic::Formula::createOptionalFormula(node["set"], NULL, get_class_definition(class_name));
+						setter = game_logic::Formula::createOptionalFormula(node["set"], nullptr, get_class_definition(class_name));
 					}
 
 					default_value = node["default"];
 
 					if(node["initialize"].is_string()) {
-						initializer = game_logic::Formula::createOptionalFormula(node["initialize"], NULL);
+						initializer = game_logic::Formula::createOptionalFormula(node["initialize"], nullptr);
 					} else if(node["init"].is_string()) {
-						initializer = game_logic::Formula::createOptionalFormula(node["init"], NULL);
+						initializer = game_logic::Formula::createOptionalFormula(node["init"], nullptr);
 					}
 
 					variant valid_types = node["type"];
@@ -361,7 +361,7 @@ namespace game_logic
 
 			virtual Entry* getEntry(int slot) {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
-					return NULL;
+					return nullptr;
 				}
 
 				return &slots_[slot];
@@ -369,7 +369,7 @@ namespace game_logic
 
 			virtual const Entry* getEntry(int slot) const {
 				if(slot < 0 || static_cast<unsigned>(slot) >= slots_.size()) {
-					return NULL;
+					return nullptr;
 				}
 
 				return &slots_[slot];
@@ -554,7 +554,7 @@ namespace game_logic
 		if(node["constructor"].is_string()) {
 			const Formula::StrictCheckScope strict_checking;
 
-			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], NULL, class_def));
+			constructor_.push_back(game_logic::Formula::createOptionalFormula(node["constructor"], nullptr, class_def));
 		}
 
 		unit_test_ = node["test"];
@@ -950,7 +950,7 @@ namespace game_logic
 	void FormulaObject::loadAllClasses()
 	{
 		std::vector<std::string> files;
-		module::get_files_in_dir("data/classes/", &files, NULL);
+		module::get_files_in_dir("data/classes/", &files, nullptr);
 		for(std::string f : files) {
 			if(f.size() > 4 && std::equal(f.end()-4,f.end(),".cfg")) {
 				variant node = json::parse_from_file("data/classes/" + f);
@@ -1008,13 +1008,13 @@ namespace game_logic
 			ConstFormulaCallableDefinitionPtr def = get_class_definition(class_->name());
 			for(const variant& key : args.getKeys().as_list()) {
 				std::map<std::string, int>::const_iterator itor = class_->properties().find(key.as_string());
-				if(itor != class_->properties().end() && class_->slots()[itor->second].setter.get() == NULL && class_->slots()[itor->second].variable_slot == -1) {
+				if(itor != class_->properties().end() && class_->slots()[itor->second].setter.get() == nullptr && class_->slots()[itor->second].variable_slot == -1) {
 					if(property_overrides_.size() <= static_cast<unsigned>(itor->second)) {
 						property_overrides_.resize(itor->second+1);
 					}
 
 					//A read-only property. Set the formula to what is passed in.
-					FormulaPtr f(new Formula(args[key], NULL, def));
+					FormulaPtr f(new Formula(args[key], nullptr, def));
 					const FormulaCallableDefinition::Entry* entry = def->getEntryById(key.as_string());
 					ASSERT_LOG(entry, "COULD NOT FIND ENTRY IN CLASS DEFINITION: " << key.as_string());
 					if(entry->variant_type) {
@@ -1389,7 +1389,7 @@ namespace game_logic
 			std::vector<std::string> files;
 
 			const std::string path = "data/classes/";
-			module::get_files_in_dir("data/classes/", &files, NULL);
+			module::get_files_in_dir("data/classes/", &files, nullptr);
 
 			std::vector<std::string> classes;
 
@@ -1411,14 +1411,14 @@ namespace game_logic
 			}
 
 			if(!types.empty()) {
-				g_library_definition = game_logic::execute_command_callable_definition(&classes[0], &classes[0] + classes.size(), NULL);
+				g_library_definition = game_logic::execute_command_callable_definition(&classes[0], &classes[0] + classes.size(), nullptr);
 				game_logic::register_formula_callable_definition("library", g_library_definition);
 
 				for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
 					g_library_definition->getEntry(n)->setVariantType(types[n]);
 				}
 			} else {
-				g_library_definition = game_logic::execute_command_callable_definition(NULL, NULL, NULL, NULL);
+				g_library_definition = game_logic::execute_command_callable_definition(nullptr, nullptr, nullptr, nullptr);
 			}
 		}
 
@@ -1446,7 +1446,7 @@ namespace game_logic
 				if(items_[slot].is_null()) {
 					FormulaCallableDefinitionPtr def = get_library_definition();
 					const FormulaCallableDefinition::Entry* entry = def->getEntry(slot);
-					ASSERT_LOG(entry != NULL, "INVALID SLOT: " << slot);
+					ASSERT_LOG(entry != nullptr, "INVALID SLOT: " << slot);
 					std::string class_name;
 					if(entry->variant_type->is_class(&class_name) == false) {
 						ASSERT_LOG(false, "ERROR IN LIBRARY");
@@ -1464,7 +1464,7 @@ namespace game_logic
 
 	FormulaCallablePtr get_library_object()
 	{
-		if(g_library_obj.get() == NULL) {
+		if(g_library_obj.get() == nullptr) {
 			g_library_obj.reset(new LibraryCallable);
 		}
 

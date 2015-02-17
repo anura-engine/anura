@@ -68,7 +68,7 @@ namespace game_logic
 		}
 
 		virtual const FormulaCallable* value() const { return value_; }
-		virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = NULL; } ref_->reset(); }
+		virtual void destroy_ref() { if((*ref_)->refcount() == 1) { value_ = nullptr; } ref_->reset(); }
 		virtual void restore_ref() { if(!*ref_) { ref_->reset(dynamic_cast<T*>(const_cast<FormulaCallable*>(value_))); } }
 	private:
 		const FormulaCallable* value_;
@@ -80,7 +80,7 @@ namespace game_logic
 	public:
 		template<typename T>
 		void visit(boost::intrusive_ptr<T>* ref) {
-			if(ref->get() == NULL) {
+			if(ref->get() == nullptr) {
 				return;
 			}
 

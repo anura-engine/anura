@@ -40,8 +40,8 @@ namespace KRE
 	public:
 		virtual ~Font();
 		TexturePtr renderText(const std::string& text, const Color& color, int size, bool cache=true, const std::string& font_name="") const;
-		void setDefaultFont(const std::string& font_name);
-		const std::string& getDefaultFont() const { return default_font_name_; }
+		static void setDefaultFont(const std::string& font_name);
+		static const std::string& getDefaultFont();
 		void getTextSize(const std::string& text, int* width, int* height, int size, const std::string& font_name="") const;
 		static void registerFactoryFunction(const std::string& type, std::function<FontPtr()>);
 		static FontPtr getInstance(const std::string& hint="");
@@ -54,7 +54,6 @@ namespace KRE
 		Font();
 	private:
 		DISALLOW_COPY_AND_ASSIGN(Font);
-		std::string default_font_name_;
 		virtual TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const = 0;
 		virtual void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const = 0;
 		virtual void doReloadFontPaths() = 0;

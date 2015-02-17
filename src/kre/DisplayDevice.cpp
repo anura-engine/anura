@@ -83,7 +83,7 @@ namespace KRE
 
 	DisplayDevicePtr DisplayDevice::getCurrent()
 	{
-		ASSERT_LOG(current_display_device() != NULL, "display device is NULL");
+		ASSERT_LOG(current_display_device() != nullptr, "display device is nullptr");
 		return current_display_device();
 	}
 
@@ -170,19 +170,19 @@ namespace KRE
 		return getCurrent()->handleCreateTexture(surface, type, mipmap_levels);
 	}
 
-	TexturePtr DisplayDevice::createTexture(unsigned width, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture1D(unsigned width, PixelFormat::PF fmt)
 	{
-		return getCurrent()->handleCreateTexture(width, fmt);
+		return getCurrent()->handleCreateTexture1D(width, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDevice::createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
 	{
-		return getCurrent()->handleCreateTexture(width, height, fmt, type);
+		return getCurrent()->handleCreateTexture2D(width, height, fmt, type);
 	}
 
-	TexturePtr DisplayDevice::createTexture(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
+	TexturePtr DisplayDevice::createTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
-		return getCurrent()->handleCreateTexture(width, height, depth, fmt);
+		return getCurrent()->handleCreateTexture3D(width, height, depth, fmt);
 	}
 
 	TexturePtr DisplayDevice::createTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
@@ -195,14 +195,19 @@ namespace KRE
 		return getCurrent()->handleCreateTexture(surface, palette);
 	}
 
-	MaterialPtr DisplayDevice::createMaterial(const variant& node)
+	TexturePtr DisplayDevice::createTexture2D(int count, int width, int height, PixelFormat::PF fmt)
 	{
-		return getCurrent()->handleCreateMaterial(node);
+		return getCurrent()->handleCreateTexture2D(count, width, height, fmt);
 	}
 
-	MaterialPtr DisplayDevice::createMaterial(const std::string& name, const std::vector<TexturePtr>& textures, const BlendMode& blend, bool fog, bool lighting, bool depth_write, bool depth_check)
+	TexturePtr DisplayDevice::createTexture2D(const std::vector<std::string>& filenames, const variant& node)
 	{
-		return getCurrent()->handleCreateMaterial(name, textures, blend, fog, lighting, depth_write, depth_check);
+		return getCurrent()->handleCreateTexture2D(filenames, node);
+	}
+
+	TexturePtr DisplayDevice::createTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
+	{
+		return getCurrent()->handleCreateTexture2D(surfaces, cache);
 	}
 
 	RenderTargetPtr DisplayDevice::renderTargetInstance(const variant& node)

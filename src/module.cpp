@@ -476,7 +476,7 @@ void set_core_module_name(const std::string& module_name)
 
 	void load_module_from_file(const std::string& modname, modules* mod_) {
 		variant v = json::parse_from_file("./modules/" + modname + "/module.cfg");
-		ASSERT_LOG(mod_ != NULL, "Invalid module pointer passed.");
+		ASSERT_LOG(mod_ != nullptr, "Invalid module pointer passed.");
 		if(v.is_map()) {
 			ASSERT_LOG(v["min_engine_version"].is_null() == false, "A min_engine_version field in the module.cfg file must be specified.");
 			ASSERT_LOG(v["min_engine_version"] <= preferences::version_decimal(), "The engine version being used (" << preferences::version_decimal()
@@ -904,7 +904,7 @@ COMMAND_LINE_UTILITY(generate_manifest)
 
 		bool done = false;
 
-		std::string* response = NULL;
+		std::string* response = nullptr;
 
 		http_client client(server, port);
 		client.send_request("POST /upload_module", msg, 
@@ -1405,7 +1405,7 @@ const char* InstallImagePath = ".";
 
 		bool done = false;
 
-		std::string* response = NULL;
+		std::string* response = nullptr;
 
 		http_client client(server, port);
 		client.send_request("POST /stats", msg, 

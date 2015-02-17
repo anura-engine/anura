@@ -52,7 +52,7 @@ namespace tbs
 		game_logic::MapFormulaCallablePtr callable, 
 		std::function<void(const std::string&)> handler)
 	{
-		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
+		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
 		send_function send_fn = std::bind(&internal_server::send_msg, server_ptr.get(), _1, session_id, handler, callable);
 		server_ptr->write_queue(send_fn, request, session_id);
 	}
@@ -71,7 +71,7 @@ namespace tbs
 
 	void internal_server::process()
 	{
-		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
+		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
 		server_ptr->handleProcess();
 	}
 
@@ -184,8 +184,8 @@ namespace tbs
 
 	bool internal_server::read_queue(send_function* send_fn, variant* v, int *session_id)
 	{
-		ASSERT_LOG(send_fn != NULL && v != NULL && session_id != NULL,
-			"read_queue called with NULL parameter.");
+		ASSERT_LOG(send_fn != nullptr && v != nullptr && session_id != nullptr,
+			"read_queue called with nullptr parameter.");
 		if(msg_queue_.empty()) {
 			return false;
 		}

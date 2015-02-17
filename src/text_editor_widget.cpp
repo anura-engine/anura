@@ -118,7 +118,7 @@ namespace gui
 	}
 
 	TextEditorWidget::TextEditorWidget(int width, int height)
-	  : last_op_type_(NULL),
+	  : last_op_type_(nullptr),
 		font_size_(14),
 		char_width_(KRE::Font::charWidth(font_size_, monofont())),
 		char_height_(KRE::Font::charHeight(font_size_, monofont())),
@@ -154,7 +154,7 @@ namespace gui
 	}
 
 	TextEditorWidget::TextEditorWidget(const variant& v, game_logic::FormulaCallable* e)
-		: ScrollableWidget(v,e), last_op_type_(NULL), font_size_(14), 
+		: ScrollableWidget(v,e), last_op_type_(nullptr), font_size_(14), 
 		select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 		begin_highlight_line_(-1), end_highlight_line_(-1),
 		has_focus_(v["focus"].as_bool(false)), 
@@ -387,7 +387,7 @@ namespace gui
 
 		const int begin_draw = profile::get_tick_time();
 
-		if(bg_color_.get() != NULL) {
+		if(bg_color_.get() != nullptr) {
 			canvas->drawSolidRect(rect(x(), y(), width(), height()), *bg_color_);
 
 		}
@@ -1433,7 +1433,7 @@ namespace gui
 	TextEditorWidgetPtr TextEditorWidget::clone() const
 	{
 		TextEditorWidgetPtr result = new TextEditorWidget(*this);
-		result->last_op_type_ = NULL;
+		result->last_op_type_ = nullptr;
 		return result;
 	}
 
@@ -1450,7 +1450,7 @@ namespace gui
 
 	bool TextEditorWidget::recordOp(const char* type)
 	{
-		if(type == NULL || type != last_op_type_) {
+		if(type == nullptr || type != last_op_type_) {
 			last_op_type_ = type;
 			return true;
 		} else {

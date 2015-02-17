@@ -34,7 +34,7 @@ namespace tbs
 	class client : public http_client
 	{
 	public:
-		client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=NULL);
+		client(const std::string& host, const std::string& port, int session=-1, boost::asio::io_service* service=nullptr);
 
 		void send_request(variant request, 
 			game_logic::MapFormulaCallablePtr callable, 

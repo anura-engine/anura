@@ -96,7 +96,7 @@ namespace box2d
 		bool active() const;
 		void set_active(bool actv=true);
 
-		void finishLoading(EntityPtr e=NULL);
+		void finishLoading(EntityPtr e=nullptr);
 		std::shared_ptr<b2FixtureDef> create_fixture(const variant& fix);
 
 		variant write();

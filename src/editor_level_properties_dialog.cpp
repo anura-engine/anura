@@ -171,7 +171,7 @@ namespace editor_dialogs
 	void EditorLevelPropertiesDialog::changeBackground()
 	{
 		using namespace gui;
-		std::vector<std::string> backgrounds = background::get_available_backgrounds();
+		std::vector<std::string> backgrounds = Background::getAvailableBackgrounds();
 		if(backgrounds.empty()) {
 			return;
 		}

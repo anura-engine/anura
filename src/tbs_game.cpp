@@ -114,10 +114,10 @@ namespace tbs
 	}
 
 	namespace {
-	game* current_game = NULL;
+	game* current_game = nullptr;
 
 	int generate_game_id() {
-		static int id = int(time(NULL));
+		static int id = int(time(nullptr));
 		return id++;
 	}
 
@@ -163,14 +163,14 @@ namespace tbs
 	{
 		const variant type_var = v["game_type"];
 		if(!type_var.is_string()) {
-			return NULL;
+			return nullptr;
 		}
 
 		std::string type = type_var.as_string();
 		boost::algorithm::to_lower(type);
 		std::map<std::string, game_type>::const_iterator type_itor = all_types().find(type);
 		if(type_itor == all_types().end()) {
-			return NULL;
+			return nullptr;
 		}
 
 		boost::intrusive_ptr<game> result(new game(type_itor->second));
@@ -183,7 +183,7 @@ namespace tbs
 	game::game(const game_type& type)
 	  : type_(type), game_id_(generate_game_id()),
 		started_(false), state_(STATE_SETUP), state_id_(0), rng_seed_(rng::get_seed()), cycle_(0), tick_rate_(50),
-		backup_callable_(NULL)
+		backup_callable_(nullptr)
 	{
 	}
 
@@ -195,7 +195,7 @@ namespace tbs
 		state_id_(0), rng_seed_(rng::get_seed()),
 		cycle_(value["cycle"].as_int(0)),
 		tick_rate_(value["tick_rate"].as_int(50)),
-		backup_callable_(NULL)
+		backup_callable_(nullptr)
 	{
 	}
 
@@ -208,7 +208,7 @@ namespace tbs
 		rng_seed_(doc["rng_seed"].as_int()),
 		cycle_(doc["cycle"].as_int(0)),
 		tick_rate_(doc["tick_rate"].as_int(50)),
-		backup_callable_(NULL),
+		backup_callable_(nullptr),
 		doc_(doc["state"])
 	{
 		log_ = util::split(doc["log"].as_string(), '\n');
@@ -231,7 +231,7 @@ void game::cancel_game()
 	doc_ = variant();
 	ai_.clear();
 	bots_.clear();
-	backup_callable_ = NULL;
+	backup_callable_ = nullptr;
 	std::cerr << "CANCEL GAME: " << refcount() << "\n";
 }
 
@@ -531,7 +531,7 @@ void game::cancel_game()
 	#ifdef USE_DB_CLIENT
 		DEFINE_FIELD(db_client, "builtin DbClient")
 			db_client_ = DbClient::create();
-			if(db_client_.get() == NULL) {
+			if(db_client_.get() == nullptr) {
 				db_client_ = DbClient::create();
 			}
 			return variant(db_client_.get());
@@ -640,7 +640,7 @@ void game::cancel_game()
 			if(var) {
 				*ptr_ = var;
 			} else {
-				ptr_ = NULL;
+				ptr_ = nullptr;
 			}
 		}
 

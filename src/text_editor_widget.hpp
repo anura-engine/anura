@@ -112,7 +112,7 @@ namespace gui
 		bool handleEvent(const SDL_Event& event, bool claimed) override;
 
 		void saveUndoState();
-		bool recordOp(const char* type=NULL);
+		bool recordOp(const char* type=nullptr);
 
 		std::pair<int, int> mousePositiontoRowCol(int x, int y) const;
 
@@ -120,8 +120,6 @@ namespace gui
 
 	private:
 		DECLARE_CALLABLE(TextEditorWidget);
-
-		void operator=(const TextEditorWidget&);
 
 		bool handleMouseButtonDown(const SDL_MouseButtonEvent& event);
 		bool handleMouseButtonUp(const SDL_MouseButtonEvent& event);

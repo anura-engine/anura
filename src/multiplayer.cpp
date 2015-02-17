@@ -252,7 +252,7 @@ namespace multiplayer
 		}
 
 		const char* ptr = str.c_str() + 6;
-		char* end_ptr = NULL;
+		char* end_ptr = nullptr;
 		const int nplayers = strtol(ptr, &end_ptr, 10);
 		ptr = end_ptr;
 		ASSERT_EQ(*ptr, '\n');
@@ -265,7 +265,7 @@ namespace multiplayer
 
 		for(int n = 0; n != nplayers; ++n) {
 			const char* end = strchr(ptr, '\n');
-			ASSERT_LOG(end != NULL, "ERROR PARSING RESPONSE: " << str);
+			ASSERT_LOG(end != nullptr, "ERROR PARSING RESPONSE: " << str);
 			std::string line(ptr, end);
 			ptr = end+1;
 

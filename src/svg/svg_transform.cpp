@@ -334,7 +334,7 @@ namespace KRE
 						}
 						state = STATE_TYPE;					
 					} else {
-						char* end = NULL;
+						char* end = nullptr;
 						double value = strtod(it->c_str(), &end);
 						if(value == 0 && it->c_str() == end) {
 							ASSERT_LOG(false, "Invalid number value: " << *it);

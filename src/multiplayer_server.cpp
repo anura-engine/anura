@@ -214,11 +214,11 @@ namespace multiplayer
 					sockets_info_[socket_it->second].udp_endpoint = endpoint;
 
 					GameInfoPtr& game = sockets_info_[socket_it->second].game;
-					if(udp_buf_[0] == 'Z' && game.get() != NULL && !game->started && game->players.size() >= size_t(game->nplayers)) {
+					if(udp_buf_[0] == 'Z' && game.get() != nullptr && !game->started && game->players.size() >= size_t(game->nplayers)) {
 						bool have_sockets = true;
 						for(const socket_ptr& sock : game->players) {
 							const SocketInfo& info = sockets_info_[sock];
-							if(info.udp_endpoint.get() == NULL) {
+							if(info.udp_endpoint.get() == nullptr) {
 								have_sockets = false;
 							}
 						}
@@ -268,7 +268,7 @@ namespace multiplayer
 					if(udp_buf_[0] != 'Z') {
 						GameInfoPtr game = sockets_info_[socket_it->second].game;
 	
-						if(game.get() != NULL) {
+						if(game.get() != nullptr) {
 							for(int n = 0; n != game->players.size(); ++n) {
 								if(game->players[n] == socket_it->second) {
 									continue;

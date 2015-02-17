@@ -222,7 +222,7 @@ namespace gui
 	void Grid::handleProcess()
 	{
 		for(WidgetPtr w : cells_) {
-			if(w != NULL) {
+			if(w != nullptr) {
 				w->process();
 			}
 		}

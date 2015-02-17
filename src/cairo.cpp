@@ -78,7 +78,7 @@ namespace graphics
 			static std::map<std::string, cairo_surface_t*> cache;
 
 			cairo_surface_t*& result = cache[image];
-			if(result == NULL) {
+			if(result == nullptr) {
 				result = cairo_image_surface_create_from_png(module::map_file(image).c_str());
 				ASSERT_LOG(result, "Could not load cairo image: " << image);
 			}
@@ -88,7 +88,7 @@ namespace graphics
 	}
 
 	cairo_context::cairo_context(int w, int h)
-	  : width_(w), height_(h), temp_pattern_(NULL)
+	  : width_(w), height_(h), temp_pattern_(nullptr)
 	{
 		surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 		cairo_ = cairo_create(surface_);
@@ -105,7 +105,7 @@ namespace graphics
 	{
 		if(temp_pattern_) {
 			cairo_pattern_destroy(temp_pattern_);
-			temp_pattern_ = NULL;
+			temp_pattern_ = nullptr;
 		}
 
 		cairo_destroy(cairo_);
@@ -117,17 +117,17 @@ namespace graphics
 		return cairo_;
 	}
 
-	KRE::MaterialPtr cairo_context::write() const
+	KRE::TexturePtr cairo_context::write() const
 	{
 		std::vector<unsigned> stride (1, cairo_image_surface_get_width(surface_));
-		auto tex = KRE::DisplayDevice::createTexture(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
+		auto tex = KRE::Texture::createTexture2D(width_, height_, KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
 		tex->update(0, 0, width_, height_, stride, cairo_image_surface_get_data(surface_));
 		// Use the blend mode below to give correct for pre-multiplied alpha.
 		// If that doesn't work satisfactorily, then creating a texture with PIXELFORMAT_XRGB8888
 		// might be a better option. 
 		// Naturally if you had the luxury a shader that just ignored the texture alpha would work
 		// just as well.
-		return KRE::DisplayDevice::createMaterial("cairo_surface", tex, KRE::BlendMode(KRE::BlendModeConstants::BM_ONE, KRE::BlendModeConstants::BM_ONE_MINUS_SRC_ALPHA));
+		return tex;
 	}
 
 	void cairo_context::render_svg(const std::string& fname)
@@ -167,7 +167,7 @@ namespace graphics
 	{
 		if(temp_pattern_) {
 			cairo_pattern_destroy(temp_pattern_);
-			temp_pattern_ = NULL;
+			temp_pattern_ = nullptr;
 		}
 
 		if(take_ownership) {
@@ -661,12 +661,12 @@ namespace graphics
 	cairo_text_extents(context.get(), "a", &basic_extents);
 
 	double xpos = 0.0;
-	cairo_get_current_point(context.get(), &xpos, NULL);
+	cairo_get_current_point(context.get(), &xpos, nullptr);
 	for(int n = 0; n != lines.size(); ++n) {
 		cairo_text_path(context.get(), lines[n].c_str());
 		if(n+1 != lines.size()) {
 			double ypos = 0.0;
-			cairo_get_current_point(context.get(), NULL, &ypos);
+			cairo_get_current_point(context.get(), nullptr, &ypos);
 
 			ypos += basic_extents.height*2;
 			cairo_move_to(context.get(), xpos, ypos);
@@ -853,7 +853,7 @@ END_CAIRO_FN
 				} else if(util::c_isspace(*i1) || *i1 == ',') {
 					++i1;
 				} else {
-					char* end = NULL;
+					char* end = nullptr;
 					double d = strtod(i1, &end);
 					ASSERT_LOG(end != i1, "Could not parse svg path: " << i1);
 
@@ -887,12 +887,12 @@ END_CAIRO_FN
 
 			const char* begin = contents.c_str();
 			const char* ptr = strstr(begin, "<path d=\"");
-			while(ptr != NULL) {
+			while(ptr != nullptr) {
 				ptr += 9;
 				output += std::string(begin, ptr);
 
 				const char* end = strstr(ptr, "\"");
-				ASSERT_LOG(end != NULL, "Unexpected end of file: " << ptr);
+				ASSERT_LOG(end != nullptr, "Unexpected end of file: " << ptr);
 
 				output += fix_svg_path(std::string(ptr, end));
 

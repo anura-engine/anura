@@ -52,7 +52,6 @@ namespace editor_dialogs
 	class SegmentEditorDialog;
 	class TilesetEditorDialog;
 	class CustomObjectDialog;
-	class HexTilesetEditorDialog;
 }
 
 class CodeEditorDialog;
@@ -140,9 +139,6 @@ public:
 	int get_tileset() const { return cur_tileset_; }
 	void set_tileset(int index);
 
-	int get_hex_tileset() const { return cur_hex_tileset_; }
-	void set_hex_tileset(int index);
-
 	std::vector<enemy_type>& all_characters() const;
 
 	int get_object() const { return cur_object_; }
@@ -157,7 +153,6 @@ public:
 		TOOL_ADD_OBJECT, 
 		TOOL_SELECT_OBJECT, 
 		TOOL_EDIT_SEGMENTS, 
-		TOOL_EDIT_HEXES, 
 		TOOL_EDIT_VOXELS, 
 		NUM_TOOLS };
 	EDIT_TOOL tool() const;
@@ -268,9 +263,6 @@ private:
 	void draw() const;
 	void draw_selection(int xoffset, int yoffset) const;
 
-	void add_hex_tile_rect(int x1, int y1, int x2, int y2);
-	void remove_hex_tile_rect(int x1, int y1, int x2, int y2);
-
 	void add_tile_rect(int x1, int y1, int x2, int y2);
 	void remove_tile_rect(int x1, int y1, int x2, int y2);
 	void select_tile_rect(int x1, int y1, int x2, int y2);
@@ -326,7 +318,6 @@ private:
 	bool face_right_;
 	bool upside_down_;
 	int cur_tileset_;
-	int cur_hex_tileset_;
 
 	int cur_object_;
 
@@ -338,7 +329,6 @@ private:
 	std::unique_ptr<editor_dialogs::EditorLayersDialog> layers_dialog_;
 	std::unique_ptr<editor_dialogs::PropertyEditorDialog> property_dialog_;
 	std::unique_ptr<editor_dialogs::TilesetEditorDialog> tileset_dialog_;
-	std::unique_ptr<editor_dialogs::HexTilesetEditorDialog> hex_tileset_dialog_;
 	std::unique_ptr<editor_dialogs::SegmentEditorDialog> segment_dialog_;
 
 	std::unique_ptr<CodeEditorDialog> code_dialog_;

@@ -32,12 +32,13 @@ namespace KRE
 	class OpenGLTexture : public Texture
 	{
 	public:
-		explicit OpenGLTexture(const variant& node, const SurfacePtr& surface);
-		explicit OpenGLTexture(const SurfacePtr& surface, 
+		explicit OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces);
+		explicit OpenGLTexture(const std::vector<SurfacePtr>& surfaces, 
 			Type type=Type::TEXTURE_2D, 
 			int mipmap_levels=0);
-		explicit OpenGLTexture(unsigned width, 
-			unsigned height, 			
+		explicit OpenGLTexture(int count,
+			int width, 
+			int height, 			
 			PixelFormat::PF fmt, 
 			Texture::Type type=Type::TEXTURE_2D,
 			unsigned depth=0);
@@ -47,7 +48,7 @@ namespace KRE
 		void bind() override;
 
 		void init() override;
-		unsigned id() override;
+		unsigned id(int n) override;
 
 		void update(int x, unsigned width, void* pixels) override;
 		void update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels) override;
@@ -62,9 +63,8 @@ namespace KRE
 		void rebuild() override;
 
 		// For YUV family textures we need two more texture id's
-		// since we hold them in seperate textures, for everything
-		// else we just use the first one.
-		GLuint texture_id_[3];
+		// since we hold them in seperate textures.
+		std::vector<GLuint> texture_id_;
 
 		PixelFormat::PF pixel_format_;
 		// Set for YUV style textures;

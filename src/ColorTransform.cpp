@@ -248,24 +248,43 @@ namespace KRE
 
 	void ColorTransform::setAddRed(int ar)
 	{
-		add_rgba_[0] = clamp(ar/255.0f, 0.0f, 1.0f);
+		add_rgba_[0] = ar/255.0f;
 	}
 
 	void ColorTransform::setAddGreen(int ag)
 	{
-		add_rgba_[1] = clamp(ag/255.0f, 0.0f, 1.0f);
+		add_rgba_[1] = ag/255.0f;
 	}
 
 	void ColorTransform::setAddBlue(int ab)
 	{
-		add_rgba_[2] = clamp(ab/255.0f, 0.0f, 1.0f);
+		add_rgba_[2] = ab/255.0f;
 	}
 
 	void ColorTransform::setAddAlpha(int aa)
 	{
-		add_rgba_[3] = clamp(aa/255.0f, 0.0f, 1.0f);
+		add_rgba_[3] = aa/255.0f;
 	}
 
+	void ColorTransform::setAddRed(float ar)
+	{
+		add_rgba_[0] = ar;
+	}
+
+	void ColorTransform::setAddGreen(float ag)
+	{
+		add_rgba_[0] = ag;
+	}
+
+	void ColorTransform::setAddBlue(float ab)
+	{
+		add_rgba_[0] = ab;
+	}
+
+	void ColorTransform::setAddAlpha(float aa)
+	{
+		add_rgba_[0] = aa;
+	}
 
 	bool operator==(const ColorTransform& a, const ColorTransform& b)
 	{

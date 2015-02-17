@@ -40,10 +40,6 @@ namespace KRE
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color) const;
 		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color) const;
 
-		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
-		void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color) const override;
-		void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const Color& color) const override;
-
 		void drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotate=0) const override;
 		void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const override;
 		void drawHollowRect(const rect& r, const Color& stroke_color, float rotate=0) const override;

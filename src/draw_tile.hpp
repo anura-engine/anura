@@ -26,7 +26,7 @@
 #include <glm/glm.hpp>
 
 #include "geometry.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 
 #include "level_object_fwd.hpp"
 

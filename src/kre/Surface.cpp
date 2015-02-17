@@ -148,6 +148,11 @@ namespace KRE
 		return std::get<3>(create_fn_tuple)(width, height, fmt);
 	}
 
+	void Surface::clearSurfaceCache()
+	{
+		resetSurfaceCache();
+	}
+
 	void Surface::resetSurfaceCache()
 	{
 		get_surface_cache().clear();

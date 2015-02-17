@@ -46,7 +46,7 @@ namespace controls
 {
 	const char** control_names()
 	{
-		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", NULL };
+		static const char* names[] = { "up", "down", "left", "right", "attack", "jump", "tongue", nullptr };
 		return names;
 	}
 
@@ -241,7 +241,7 @@ namespace controls
 
 	void ignore_current_keypresses()
 	{
-		const Uint8 *state = SDL_GetKeyboardState(NULL);
+		const Uint8 *state = SDL_GetKeyboardState(nullptr);
 		for(int n = 0; n < NUM_CONTROLS; ++n) {
 			key_ignore[n] = state[SDL_GetScancodeFromKey(sdlk[n])] != 0;
 		}
@@ -280,7 +280,7 @@ namespace controls
 		ControlFrame state;
 		if(local_control_locks.empty()) {
 			bool ignore_keypresses = false;
-			const Uint8 *key_state = SDL_GetKeyboardState(NULL);
+			const Uint8 *key_state = SDL_GetKeyboardState(nullptr);
 			for(const key_type& k : control_keys) {
 				if(key_state[SDL_GetScancodeFromKey(k)]) {
 					ignore_keypresses = true;
@@ -288,7 +288,7 @@ namespace controls
 				}
 			}
 
-			Uint32 mouse_buttons = SDL_GetMouseState(NULL, NULL);
+			Uint32 mouse_buttons = SDL_GetMouseState(nullptr, nullptr);
 			for(int n = 0; n < 3; ++n) {
 				if(g_mouse_controls[n] != NUM_CONTROLS && (mouse_buttons&SDL_BUTTON(n+1))) {
 					if(!key_ignore[g_mouse_controls[n]]) {

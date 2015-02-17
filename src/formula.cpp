@@ -58,7 +58,7 @@ namespace
 	//the last formula that was executed; used for outputting debugging info.
 	const game_logic::Formula* last_executed_formula;
 
-	bool _verbatim_StringExpressions = false;
+	bool g_verbatim_string_expressions = false;
 
 	bool g_strict_formula_checking = false;
 	bool g_strict_formula_checking_warnings = false;
@@ -84,8 +84,8 @@ namespace game_logic
 		return all_formulae();
 	}
 
-	void set_verbatim_StringExpressions(bool verbatim) {
-		_verbatim_StringExpressions = verbatim;
+	void set_verbatim_string_expressions(bool verbatim) {
+		g_verbatim_string_expressions = verbatim;
 	}
 	
 	void FormulaCallable::setValue(const std::string& key, const variant& /*value*/)
@@ -145,7 +145,7 @@ namespace game_logic
 		return get_variant_type_from_value(v_);
 	}
 
-	CommandCallable::CommandCallable() : expr_(NULL)
+	CommandCallable::CommandCallable() : expr_(nullptr)
 	{
 	}
 
@@ -174,7 +174,7 @@ namespace game_logic
 	}
 
 	MapFormulaCallable::MapFormulaCallable(variant node)
-	  : FormulaCallable(false), fallback_(NULL)
+	  : FormulaCallable(false), fallback_(nullptr)
 	{
 		for(const auto& value : node.as_map()) {
 			values_[value.first.as_string()] = value.second;
@@ -188,7 +188,7 @@ namespace game_logic
 	
 	MapFormulaCallable::MapFormulaCallable(const std::map<std::string, variant>& values) 
 		: FormulaCallable(false), 
-		fallback_(NULL), 
+		fallback_(nullptr), 
 		values_(values)
 	{}
 	
@@ -653,7 +653,7 @@ namespace game_logic
 			: FormulaExpression("_id"), slot_(slot), id_(id), callable_def_(callable_def)
 			{
 				const FormulaCallableDefinition::Entry* entry = callable_def_->getEntry(slot_);
-				ASSERT_LOG(entry != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
+				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id);
 				entry->access_count++;
 			}
 	
@@ -720,12 +720,12 @@ namespace game_logic
 					}
 				}
 
-				return NULL;
+				return nullptr;
 			}
 
 			void staticErrorAnalysis() const {
 				const FormulaCallableDefinition::Entry* entry = callable_def_->getEntry(slot_);
-				ASSERT_LOG(entry != NULL, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debugPinpointLocation());
+				ASSERT_LOG(entry != nullptr, "COULD NOT FIND DEFINITION IN SLOT CALLABLE: " << id_ << " " << debugPinpointLocation());
 				ASSERT_LOG(entry->isPrivate() == false, "Identifier " << id_ << " is private " << debugPinpointLocation());
 			}
 
@@ -772,7 +772,7 @@ namespace game_logic
 						for(const std::string& k : known_v) {
 							known += k + " \n";
 						}
-						if(callable_def_->getTypeName() != NULL) {
+						if(callable_def_->getTypeName() != nullptr) {
 							STRICT_ERROR("Unknown symbol '" << id_ << "' in " << *callable_def_->getTypeName() << " " << debugPinpointLocation() << "\nKnown symbols: " << known << "\n");
 						} else {
 							STRICT_ERROR("Unknown identifier '" << id_ << "' " << debugPinpointLocation() << "\nIdentifiers that are valid in this scope: " << known << "\n");
@@ -798,7 +798,7 @@ namespace game_logic
 					}
 				}
 
-				return NULL;
+				return nullptr;
 			}
 
 		private:
@@ -831,7 +831,7 @@ namespace game_logic
 					}
 				}
 
-				return NULL;
+				return nullptr;
 			}
 
 			variant executeMember(const FormulaCallable& variables, std::string& id, variant* variant_id) const {
@@ -1095,7 +1095,7 @@ namespace game_logic
 
 				variant_type_ptr fn_type = left_->queryVariantType();
 				std::vector<variant_type_ptr> arg_types;
-				if(fn_type->is_function(&arg_types, NULL, NULL)) {
+				if(fn_type->is_function(&arg_types, nullptr, nullptr)) {
 					for(unsigned n = 0; n < arg_types.size() && n < args.size(); ++n) {
 						const FormulaInterface* interface = arg_types[n]->is_interface();
 
@@ -1160,7 +1160,7 @@ namespace game_logic
 				variant_type_ptr fn_type = left_->queryVariantType();
 				std::vector<variant_type_ptr> arg_types;
 				int min_args = 0;
-				const bool is_function = fn_type->is_function(&arg_types, NULL, &min_args);
+				const bool is_function = fn_type->is_function(&arg_types, nullptr, &min_args);
 
 				ASSERT_LOG(!fn_type->is_type(variant::VARIANT_TYPE_FUNCTION), "Function call on object of type 'function'. Must have a type with a full type signature to call a function on it in strict mode." << debugPinpointLocation());
 				ASSERT_LOG(is_function, "Function call on expression which isn't guaranteed to be a function: " << fn_type->to_string() << " " << debugPinpointLocation());
@@ -1171,7 +1171,7 @@ namespace game_logic
 						if(!variant_types_compatible(arg_types[n], t) && (n >= interfaces_.size() || !interfaces_[n])) {
 							std::string msg = " DOES NOT MATCH ";
 							if(variant_types_compatible(arg_types[n], variant_type::get_null_excluded(t))) {
-								msg = " MIGHT BE NULL ";
+								msg = " MIGHT BE nullptr ";
 							}
 
 							ASSERT_LOG(false,
@@ -1216,7 +1216,7 @@ namespace game_logic
 						return left[variant(right_->str())];
 					}
 
-					ASSERT_LOG(!left.is_null(), "CALL OF DOT OPERATOR ON NULL VALUE: '" << left_->str() << "': " << debugPinpointLocation());
+					ASSERT_LOG(!left.is_null(), "CALL OF DOT OPERATOR ON nullptr VALUE: '" << left_->str() << "': " << debugPinpointLocation());
 					ASSERT_LOG(false, "CALL OF DOT OPERATOR ON ILLEGAL VALUE: " << left.write_json() << " PRODUCED BY '" << left_->str() << "': " << debugPinpointLocation());
 			
 					return left;
@@ -2201,7 +2201,7 @@ namespace game_logic
 		public:
 			explicit StringExpression(std::string str, bool translate = false, FunctionSymbolTable* symbols = 0) : FormulaExpression("_string")
 			{
-				if (!_verbatim_StringExpressions) {
+				if (!g_verbatim_string_expressions) {
 					const Formula::StrictCheckScope strict_checking(false);
 
 					const std::string original = str;
@@ -2329,7 +2329,7 @@ namespace game_logic
 			return precedence_map[std::string(t.begin,t.end)];
 		}
 
-		ExpressionPtr parse_expression(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+		ExpressionPtr parse_expression(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=nullptr);
 
 		void parse_function_args(variant formula_str, const Token* &i1, const Token* i2,
 								 std::vector<std::string>* res,
@@ -2368,7 +2368,7 @@ namespace game_logic
 						}
 
 						const ExpressionPtr expr = parse_expression(
-							formula_str, begin, i1, NULL, NULL);
+							formula_str, begin, i1, nullptr, nullptr);
 
 						boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable);
 						default_values->push_back(expr->evaluate(*callable));
@@ -2455,7 +2455,7 @@ namespace game_logic
 					//Certain special functions take a special callable definition
 					//to evaluate their last argument. Discover what that is here.
 					static const std::string MapCallableFuncs[] = { "count", "filter", "find", "find_or_die", "choose", "map", "count" };
-					if(args.size() >= 2 && function_name != NULL && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
+					if(args.size() >= 2 && function_name != nullptr && std::count(MapCallableFuncs, MapCallableFuncs + sizeof(MapCallableFuncs)/sizeof(*MapCallableFuncs), *function_name)) {
 						std::string value_name = "value";
 
 						static const std::string CustomIdMapCallableFuncs[] = { "filter", "find", "find_or_die", "map" };
@@ -2486,7 +2486,7 @@ namespace game_logic
 					}
 				}
 
-				if(function_name != NULL &&
+				if(function_name != nullptr &&
 				   (n == 1 && (*function_name == "sort" || *function_name == "fold" ||
 							   *function_name == "weighted_graph") ||
 					n == 2 &&  *function_name == "zip")) {
@@ -2501,7 +2501,7 @@ namespace game_logic
 					callable_def = get_variant_comparator_definition(callable_def, value_type);
 				}
 
-				if(function_name != NULL && n == 4 &&
+				if(function_name != nullptr && n == 4 &&
 				   (*function_name == "spawn" || *function_name == "spawn_player")) {
 					//The spawn custom_object_functions take a special child
 					//argument as their last parameter.
@@ -2517,7 +2517,7 @@ namespace game_logic
 					callable_def = game_logic::execute_command_callable_definition(&Items[0], &Items[0] + sizeof(Items)/sizeof(*Items), callable_def, types);
 				}
 
-				if(function_name != NULL && *function_name == "if" && n >= 1) {
+				if(function_name != nullptr && *function_name == "if" && n >= 1) {
 					ConstFormulaCallableDefinitionPtr new_def = res->front()->queryModifiedDefinitionBasedOnResult(n == 1, callable_def);
 					if(new_def) {
 						callable_def = new_def;
@@ -2616,7 +2616,7 @@ namespace game_logic
 			}
 		}
 
-		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=NULL);
+		ExpressionPtr parse_expression_internal(const variant& formula_str, const Token* i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def, bool* can_optimize=nullptr);
 
 		namespace 
 		{
@@ -2758,7 +2758,7 @@ namespace game_logic
 		}
 
 		//only returns a value in the case of a lambda function, otherwise
-		//returns NULL.
+		//returns nullptr.
 		ExpressionPtr parse_function_def(const variant& formula_str, const Token*& i1, const Token* i2, FunctionSymbolTable* symbols, ConstFormulaCallableDefinitionPtr callable_def)
 		{
 			assert(i1->type == FFL_TOKEN_TYPE::KEYWORD && std::string(i1->begin, i1->end) == "def");
@@ -2829,14 +2829,14 @@ namespace game_logic
 				function_var.setDebugInfo(info);
 			}
 	
-			std::shared_ptr<RecursiveFunctionSymbolTable> recursive_symbols(new RecursiveFunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : NULL, variant_types));
+			std::shared_ptr<RecursiveFunctionSymbolTable> recursive_symbols(new RecursiveFunctionSymbolTable(formula_name.empty() ? "recurse" : formula_name, args, default_args, symbols, formula_name.empty() ? callable_def : nullptr, variant_types));
 
 			//create a definition of the callable representing
 			//function arguments.
 			FormulaCallableDefinitionPtr args_definition;
 			ConstFormulaCallableDefinitionPtr args_definition_ptr;
 			if(args.size()) {
-				args_definition = execute_command_callable_definition(&args[0], &args[0] + args.size(), formula_name.empty() ? callable_def : NULL /*only get the surrounding scope if we have a lambda function.*/);
+				args_definition = execute_command_callable_definition(&args[0], &args[0] + args.size(), formula_name.empty() ? callable_def : nullptr /*only get the surrounding scope if we have a lambda function.*/);
 			} else if(formula_name.empty()) {
 				//empty arg lambda function. Give the definition as our context.
 				args_definition_ptr = callable_def;
@@ -2854,10 +2854,10 @@ namespace game_logic
 						continue;
 					}
 
-					ASSERT_LOG(args_definition->getEntryById(args[n]) != NULL, "FORMULA FUNCTION TYPE ARGS MIS-MATCH\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+					ASSERT_LOG(args_definition->getEntryById(args[n]) != nullptr, "FORMULA FUNCTION TYPE ARGS MIS-MATCH\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 
 					ConstFormulaCallableDefinitionPtr def = get_formula_callable_definition(types[n]);
-					ASSERT_LOG(def != NULL, "TYPE NOT FOUND: " << types[n] << "\n" << pinpoint_location(formula_str, i1->begin, i1->end));
+					ASSERT_LOG(def != nullptr, "TYPE NOT FOUND: " << types[n] << "\n" << pinpoint_location(formula_str, i1->begin, i1->end));
 					args_definition->getEntryById(args[n])->type_definition = def;
 				}
 			}
@@ -2933,18 +2933,18 @@ namespace game_logic
 			}
 	
 			int parens = 0;
-			const Token* op = NULL;
-			const Token* fn_call = NULL;
+			const Token* op = nullptr;
+			const Token* fn_call = nullptr;
 	
 			for(const Token* i = i1; i != i2; ++i) {
 				if(fn_call && i+1 == i2 && i->type != FFL_TOKEN_TYPE::RPARENS) {
-					fn_call = NULL;
+					fn_call = nullptr;
 				}
 		
 				if(i->type == FFL_TOKEN_TYPE::LPARENS || i->type == FFL_TOKEN_TYPE::LSQUARE || i->type == FFL_TOKEN_TYPE::LBRACKET) {
 					if(i->type == FFL_TOKEN_TYPE::LPARENS && parens == 0 && i != i1) {
 						fn_call = i;
-					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == NULL || operator_precedence(*op) >= operator_precedence(*i))) {
+					} else if(i->type == FFL_TOKEN_TYPE::LSQUARE && parens == 0 && i != i1 && (i-1)->type != FFL_TOKEN_TYPE::OPERATOR && (op == nullptr || operator_precedence(*op) >= operator_precedence(*i))) {
 						//the square bracket itself is an operator
 						op = i;
 					}
@@ -2954,10 +2954,10 @@ namespace game_logic
 					--parens;
 			
 					if(parens == 0 && i+1 != i2) {
-						fn_call = NULL;
+						fn_call = nullptr;
 					}
 				} else if(parens == 0 && (i->type == FFL_TOKEN_TYPE::OPERATOR || i->type == FFL_TOKEN_TYPE::LEFT_POINTER || i->type == FFL_TOKEN_TYPE::LDUBANGLE && (i2-1)->type == FFL_TOKEN_TYPE::RDUBANGLE)) {
-					if(op == NULL || operator_precedence(*op) >= operator_precedence(*i)) {
+					if(op == nullptr || operator_precedence(*op) >= operator_precedence(*i)) {
 						if(i != i1 && i->end - i->begin == 3 && std::equal(i->begin, i->end, "not")) {
 							//The not operator is always unary and can only
 							//appear at the start of an expression.
@@ -2969,13 +2969,13 @@ namespace game_logic
 				}
 			}
 	
-			if(op != NULL && (op->type == FFL_TOKEN_TYPE::LSQUARE)) {
+			if(op != nullptr && (op->type == FFL_TOKEN_TYPE::LSQUARE)) {
 				//the square bracket operator is handled below, just set the op
-				//to NULL and it'll be handled.
-				op = NULL;
+				//to nullptr and it'll be handled.
+				op = nullptr;
 			}
 	
-			if(op == NULL) {
+			if(op == nullptr) {
 				if(i1->type == FFL_TOKEN_TYPE::LPARENS && (i2-1)->type == FFL_TOKEN_TYPE::RPARENS) {
 					return parse_expression(formula_str, i1+1,i2-1,symbols, callable_def, can_optimize);
 				} else if( (i2-1)->type == FFL_TOKEN_TYPE::RSQUARE) { //check if there is [ ] : either a list definition, or a operator 
@@ -3079,14 +3079,14 @@ namespace game_logic
 							} else {
 								//create a list
 								std::vector<ExpressionPtr> args;
-								parse_args(formula_str,NULL,i1+1,i2-1,&args,symbols, callable_def, can_optimize);
+								parse_args(formula_str,nullptr,i1+1,i2-1,&args,symbols, callable_def, can_optimize);
 								return ExpressionPtr(new ListExpression(args));
 							}
 						} else {
 							//determine if it's an array-style access of a single list element, or a slice.
 							const Token* tok2 = i2-2;
 							int bracket_parens_count = 0;
-							const Token* colon_tok = NULL;
+							const Token* colon_tok = nullptr;
 							while (tok2 != tok){
 								if (tok2->type == FFL_TOKEN_TYPE::RSQUARE || tok2->type == FFL_TOKEN_TYPE::RPARENS) {
 									bracket_parens_count++;
@@ -3096,7 +3096,7 @@ namespace game_logic
 									if(bracket_parens_count != 0){
 											//TODO - handle error - mismatching brackets
 											LOG_ERROR("mismatching brackets or parentheses inside [ ]: '" << std::string((i1+1)->begin, (i2-1)->end) << "'");
-									} else if (colon_tok != NULL){
+									} else if (colon_tok != nullptr){
 											//TODO - handle error - more than one colon.
 											LOG_ERROR("more than one colon inside a slice [:]: '" << std::string((i1+1)->begin, (i2-1)->end) << "'");
 									} else {
@@ -3106,7 +3106,7 @@ namespace game_logic
 								--tok2;	
 							}
 					
-							if(colon_tok != NULL){
+							if(colon_tok != nullptr){
 								ExpressionPtr start, end;
 								if(tok+1 < colon_tok) {
 									start = parse_expression(formula_str, tok+1, colon_tok, symbols, callable_def, can_optimize);
@@ -3154,14 +3154,14 @@ namespace game_logic
 						std::string symbol(i1->begin, i1->end);
 						IdentifierExpression* expr =
 							new IdentifierExpression(symbol, callable_def);
-						const FormulaFunction* fn = symbols ? symbols->getFormulaFunction(symbol) : NULL;
-						if(fn != NULL) {
+						const FormulaFunction* fn = symbols ? symbols->getFormulaFunction(symbol) : nullptr;
+						if(fn != nullptr) {
 							ExpressionPtr function(new LambdaFunctionExpression(fn->args(), fn->getFormula(), 0, fn->getDefaultArgs(), fn->variantTypes(), variant_type::get_any()));
 							expr->set_function(function);
 						}
 						return ExpressionPtr(expr);
 					} else if(i1->type == FFL_TOKEN_TYPE::INTEGER) {
-						int n = strtol(std::string(i1->begin,i1->end).c_str(), NULL, 0);
+						int n = strtol(std::string(i1->begin,i1->end).c_str(), nullptr, 0);
 						return ExpressionPtr(new IntegerExpression(n));
 					} else if(i1->type == FFL_TOKEN_TYPE::DECIMAL) {
 						std::string decimal_string(i1->begin, i1->end);
@@ -3226,7 +3226,7 @@ namespace game_logic
 				}
 			}
 	
-			if(fn_call && (op == NULL ||
+			if(fn_call && (op == nullptr ||
 			   operator_precedence(*op) >= operator_precedence(*fn_call))) {
 				op = fn_call;
 			}
@@ -3284,7 +3284,7 @@ namespace game_logic
 				}
 
 				std::vector<ExpressionPtr> args;
-				parse_args(formula_str,NULL,op+1, i2-1, &args, symbols, callable_def, can_optimize);
+				parse_args(formula_str,nullptr,op+1, i2-1, &args, symbols, callable_def, can_optimize);
 		
 				return ExpressionPtr(new FunctionCallExpression(
 																   parse_expression(formula_str, i1, op, symbols, callable_def, can_optimize), args));
@@ -3293,7 +3293,7 @@ namespace game_logic
 			if(op_name == ".") {
 				ExpressionPtr left(parse_expression(formula_str, i1,op,symbols, callable_def, can_optimize));
 				ConstFormulaCallableDefinitionPtr type_definition = left->getTypeDefinition();
-				ExpressionPtr right(parse_expression(formula_str, op+1,i2,NULL, type_definition, can_optimize));
+				ExpressionPtr right(parse_expression(formula_str, op+1,i2,nullptr, type_definition, can_optimize));
 				return ExpressionPtr(new DotExpression(left, right, type_definition));
 			}
 	
@@ -3321,7 +3321,7 @@ namespace game_logic
 				}
 
 				std::vector<ExpressionPtr> asserts;
-				parse_args(formula_str,NULL,op+1,i2,&asserts,symbols, callable_def, can_optimize);
+				parse_args(formula_str,nullptr,op+1,i2,&asserts,symbols, callable_def, can_optimize);
 
 				ConstFormulaCallableDefinitionPtr def_after_asserts = callable_def;
 				for(ExpressionPtr expr : asserts) {
@@ -3406,7 +3406,7 @@ Formula::Formula(const variant& val, FunctionSymbolTable* symbols, ConstFormulaC
 	if(str_.is_callable()) {
 #if defined(USE_LUA)
 		lua::LuaFunctionReference* fn_ref = val.try_convert<lua::LuaFunctionReference>();
-		ASSERT_LOG(fn_ref != NULL, "FATAL: Couldn't convert function reference to the correct type.");
+		ASSERT_LOG(fn_ref != nullptr, "FATAL: Couldn't convert function reference to the correct type.");
 		expr_.reset(new LuaFnExpression(fn_ref));
 #endif
 		return;
@@ -3518,7 +3518,7 @@ Formula::Formula(const variant& lua_fn, FORMULA_LANGUAGE lang)
 {
 #if defined(USE_LUA)
 	lua::LuaFunctionReference* fn_ref = lua_fn.try_convert<lua::LuaFunctionReference>();
-	ASSERT_LOG(fn_ref != NULL, "FATAL: Couldn't convert function reference to the correct type.");
+	ASSERT_LOG(fn_ref != nullptr, "FATAL: Couldn't convert function reference to the correct type.");
 	expr_.reset(new LuaFnExpression(fn_ref));
 #endif
 }
@@ -3638,7 +3638,7 @@ void Formula::checkBracketsMatch(const std::vector<Token>& tokens) const
 
 Formula::~Formula() {
 	if(last_executed_formula == this) {
-		last_executed_formula = NULL;
+		last_executed_formula = nullptr;
 	}
 
 	str_.remove_formula_using_this(this);
@@ -3709,7 +3709,7 @@ variant Formula::execute(const FormulaCallable& variables) const
 	//Naturally if we throw an exception we DON'T want to restore the
 	//last_executed_formula since we want to report the error.
 	static int execution_stack = 0;
-	const Formula* prev_executed = execution_stack ? last_executed_formula : NULL;
+	const Formula* prev_executed = execution_stack ? last_executed_formula : nullptr;
 	last_executed_formula = this;
 	try {
 		++execution_stack;

@@ -129,6 +129,12 @@ namespace KRE
 			static RenderCache res;
 			return res;
 		}
+
+		std::string& get_default_font()
+		{
+			static std::string res;
+			return res;
+		}
 	}
 
 	void Font::registerFactoryFunction(const std::string& type, std::function<FontPtr()> create_fn)
@@ -207,6 +213,16 @@ namespace KRE
 			font_instance->getCharHeight(size, fn);
 		}
 		return size;
+	}
+
+	void Font::setDefaultFont(const std::string& font_name)
+	{
+		get_default_font() = font_name;
+	}
+
+	const std::string& Font::getDefaultFont()
+	{
+		return get_default_font();
 	}
 
 	Font::Font()

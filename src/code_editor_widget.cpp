@@ -445,8 +445,8 @@ namespace gui
 		const int pos = rowColToTextPos(row, col);
 		const char* ptr = currentText_.c_str() + pos;
 		ASSERT_LOG(pos >= 0 && static_cast<unsigned>(pos) <= currentText_.size(), "Unexpected position in code editor widget: " << pos << " / " << currentText_.size());
-		const json::Token* begin_token = NULL;
-		const json::Token* end_token = NULL;
+		const json::Token* begin_token = nullptr;
+		const json::Token* end_token = nullptr;
 		std::stack<const json::Token*> begin_stack;
 		int nbracket = 0;
 		for(const json::Token& token : tokens_) {

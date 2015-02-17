@@ -51,7 +51,7 @@ public:
 	void add_optional_error_text_area(const std::string& text);
 	bool jump_to_error(const std::string& text);
 
-	void load_file(std::string fname, bool focus=true, std::function<void()>* fn=NULL);
+	void load_file(std::string fname, bool focus=true, std::function<void()>* fn=nullptr);
 
 	bool hasKeyboardFocus() const;
 

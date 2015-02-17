@@ -38,7 +38,7 @@ namespace threading
 	manager::~manager()
 	{
 		for(std::vector<SDL_Thread*>::iterator i = detached_threads.begin(); i != detached_threads.end(); ++i) {
-			SDL_WaitThread(*i,NULL);
+			SDL_WaitThread(*i,nullptr);
 		}
 	}
 
@@ -64,16 +64,16 @@ namespace threading
 
 	void thread::join()
 	{
-		if(thread_ != NULL) {
-			SDL_WaitThread(thread_,NULL);
-			thread_ = NULL;
+		if(thread_ != nullptr) {
+			SDL_WaitThread(thread_,nullptr);
+			thread_ = nullptr;
 		}
 	}
 
 	void thread::detach()
 	{
 		detached_threads.push_back(thread_);
-		thread_ = NULL;
+		thread_ = nullptr;
 	}
 
 	mutex::mutex() : m_(SDL_CreateMutex())

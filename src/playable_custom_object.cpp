@@ -367,7 +367,7 @@ void PlayableCustomObject::setPlayerValueBySlot(int slot, const variant& value)
 			control_lock_.reset();
 			control_lock_.reset(new controls::local_controls_lock(state));
 		} else {
-			ASSERT_LOG(false, "BAD VALUE WHEN SETTING control_lock KEY. A LIST OR NULL IS REQUIRED: " << value.to_debug_string());
+			ASSERT_LOG(false, "BAD VALUE WHEN SETTING control_lock KEY. A LIST OR nullptr IS REQUIRED: " << value.to_debug_string());
 		}
 	break;
 	}

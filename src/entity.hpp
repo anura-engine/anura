@@ -70,8 +70,8 @@ public:
 	virtual void drawGroup() const = 0;
 	PlayerInfo* getPlayerInfo() { return isHuman(); }
 	const PlayerInfo* getPlayerInfo() const { return isHuman(); }
-	virtual const PlayerInfo* isHuman() const { return NULL; }
-	virtual PlayerInfo* isHuman() { return NULL; }
+	virtual const PlayerInfo* isHuman() const { return nullptr; }
+	virtual PlayerInfo* isHuman() { return nullptr; }
 	virtual void process(Level& lvl);
 	virtual bool executeCommand(const variant& var) = 0;
 
@@ -110,7 +110,7 @@ public:
 	int group() const { return group_; }
 	void setGroup(int group) { group_ = group; }
 
-	virtual bool isStandable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const { return false; }
+	virtual bool isStandable(int x, int y, int* friction=nullptr, int* traction=nullptr, int* adjust_y=nullptr) const { return false; }
 
 	virtual bool destroyed() const = 0;
 
@@ -173,8 +173,8 @@ public:
 	virtual bool diesOnInactive() const { return false; } 
 	virtual bool isAlwaysActive() const { return false; } 
 	
-	virtual FormulaCallable* vars() { return NULL; }
-	virtual const FormulaCallable* vars() const { return NULL; }
+	virtual FormulaCallable* vars() { return nullptr; }
+	virtual const FormulaCallable* vars() const { return nullptr; }
 
 	virtual bool isBodyPassthrough() const { return false; }
 
@@ -213,9 +213,9 @@ public:
 	virtual game_logic::ConstFormulaPtr getEventHandler(int key) const { return game_logic::ConstFormulaPtr(); }
 	virtual void setEventHandler(int, game_logic::ConstFormulaPtr f) { return; }
 
-	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=NULL) { return false; }
-	virtual bool handleEvent(int id, const FormulaCallable* context=NULL) { return false; }
-	virtual bool handleEventDelay(int id, const FormulaCallable* context=NULL) { return false; }
+	virtual bool handleEvent(const std::string& id, const FormulaCallable* context=nullptr) { return false; }
+	virtual bool handleEvent(int id, const FormulaCallable* context=nullptr) { return false; }
+	virtual bool handleEventDelay(int id, const FormulaCallable* context=nullptr) { return false; }
 	virtual void resolveDelayedEvents() = 0;
 
 	//function which returns true if this object can be 'interacted' with.
@@ -279,7 +279,7 @@ public:
 
 	virtual bool appearsAtDifficulty(int difficulty) const = 0;
 
-	virtual int parentDepth(bool* has_human_parent=NULL, int cur_depth=0) const { return 0; }
+	virtual int parentDepth(bool* has_human_parent=nullptr, int cur_depth=0) const { return 0; }
 
 	virtual bool editorForceStanding() const = 0;
 

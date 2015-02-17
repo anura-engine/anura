@@ -128,20 +128,20 @@ namespace KRE
 		void writePixels(const void* pixels) override;
 		void fillRect(const rect& dst_rect, const Color& color) override;
 		int width() const override {
-			ASSERT_LOG(surface_ != NULL, "surface_ is null");
+			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 			return surface_->w;
 		}
 		int height() const override {
-			ASSERT_LOG(surface_ != NULL, "surface_ is null");
+			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 			return surface_->h;
 		}
 		int rowPitch() const override {
-			ASSERT_LOG(surface_ != NULL, "surface_ is null");
+			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
 			return surface_->pitch;
 		}
 
 		virtual bool hasData() const override {
-			if(surface_ == NULL) {
+			if(surface_ == nullptr) {
 				return false;
 			}
 			return has_data_;

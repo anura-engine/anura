@@ -43,7 +43,7 @@ FunctionSymbolTable& get_custom_object_functions_symbol_table();
 class EntityCommandCallable : public game_logic::FormulaCallable 
 {
 public:
-	EntityCommandCallable() : expr_(NULL) {}
+	EntityCommandCallable() : expr_(nullptr) {}
 	void runCommand(Level& lvl, Entity& obj) const;
 
 	void setExpression(const game_logic::FormulaExpression* expr);
@@ -64,7 +64,7 @@ private:
 class CustomObjectCommandCallable : public game_logic::FormulaCallable 
 {
 public:
-	CustomObjectCommandCallable() : expr_(NULL) {}
+	CustomObjectCommandCallable() : expr_(nullptr) {}
 	void runCommand(Level& lvl, CustomObject& ob) const;
 
 	void setExpression(const game_logic::FormulaExpression* expr);

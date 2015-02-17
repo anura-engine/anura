@@ -51,7 +51,7 @@ namespace
 	PREF_INT(tile_pattern_search_border, 1, "How many extra tiles to search for patterns");
 
 	const std::map<std::string, int>& str_to_zorder() {
-		static std::map<std::string, int>* instance = NULL;
+		static std::map<std::string, int>* instance = nullptr;
 		if(!instance) {
 			instance = new std::map<std::string, int>;
 			variant node = json::parse_from_file("data/zorder.cfg");
@@ -66,7 +66,7 @@ namespace
 
 	const std::map<int, variant>& zorder_to_str() 
 	{
-		static std::map<int, variant>* instance = NULL;
+		static std::map<int, variant>* instance = nullptr;
 		if(!instance) {
 			instance = new std::map<int, variant>;
 			variant node = json::parse_from_file("data/zorder.cfg");
@@ -470,7 +470,7 @@ TileMap::TileMap(variant node)
 		bool found_end = line.empty();
 		while(!found_end) {
 			const char* end = strchr(ptr, ',');
-			if(end == NULL) {
+			if(end == nullptr) {
 				end = line.c_str() + line.size();
 				found_end = true;
 			}
@@ -559,7 +559,7 @@ void TileMap::buildPatterns()
 			for(const boost::regex*& regex : re) {
 				if(regex && match_regex(e.str, regex)) {
 					accepted_re.push_back(regex);
-					regex = NULL;
+					regex = nullptr;
 					++matches;
 					if(matches == re.size()) {
 						break;
@@ -594,7 +594,7 @@ void TileMap::buildPatterns()
 			for(const boost::regex*& regex : re) {
 				if(regex && match_regex(e.str, regex)) {
 					accepted_re.push_back(regex);
-					regex = NULL;
+					regex = nullptr;
 					++matches;
 					if(matches == re.size()) {
 						break;
@@ -764,7 +764,7 @@ int TileMap::getVariations(int x, int y) const
 	TilePatternCache cache;
 	bool face_right = false;
 	const TilePattern* p = getMatchingPattern(x, y, cache, &face_right);
-	if(p == NULL) {
+	if(p == nullptr) {
 		return 0;
 	}
 
@@ -976,7 +976,7 @@ void TileMap::buildTiles(std::vector<LevelTile>* tiles, const rect* r) const
 
 			bool face_right = true;
 			const TilePattern* p = getMatchingPattern(x, y, cache, &face_right);
-			if(p == NULL) {
+			if(p == nullptr) {
 				continue;
 			}
 
@@ -1036,7 +1036,7 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 		!*getTile(y+1, x) &&
 		!*getTile(y, x-1) &&
 		!*getTile(y, x+1)) {
-		return NULL;
+		return nullptr;
 	}
 
 	const int xpos = xpos_ + x*TileSize;
@@ -1078,7 +1078,7 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 
 		if(match) {
 			if(p.empty) {
-				return NULL;
+				return nullptr;
 			}
 
 			*face_right = false;
@@ -1099,7 +1099,7 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 
 		if(match) {
 			if(p.empty) {
-				return NULL;
+				return nullptr;
 			}
 
 			*face_right = true;
@@ -1107,7 +1107,7 @@ const TilePattern* TileMap::getMatchingPattern(int x, int y, TilePatternCache& c
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool TileMap::setTile(int xpos, int ypos, const std::string& str)

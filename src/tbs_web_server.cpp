@@ -45,7 +45,7 @@ namespace tbs
 	namespace {
 	boost::asio::io_service* g_service;
 	int g_listening_port = -1;
-	web_server* web_server_instance = NULL;
+	web_server* web_server_instance = nullptr;
 	}
 
 	std::string global_debug_str;
@@ -66,7 +66,7 @@ namespace tbs
 	web_server::~web_server()
 	{
 		timer_.cancel();
-		web_server_instance = NULL;
+		web_server_instance = nullptr;
 	}
 
 	void web_server::handlePost(socket_ptr socket, variant doc, const http::environment& env)
@@ -75,12 +75,12 @@ namespace tbs
 		std::map<std::string, std::string>::const_iterator i = env.find("cookie");
 		if(i != env.end()) {
 			const char* cookie_start = strstr(i->second.c_str(), " session=");
-			if(cookie_start != NULL) {
+			if(cookie_start != nullptr) {
 				++cookie_start;
 			} else {
 				cookie_start = strstr(i->second.c_str(), "session=");
 				if(cookie_start != i->second.c_str()) {
-					cookie_start = NULL;
+					cookie_start = nullptr;
 				}
 			}
 

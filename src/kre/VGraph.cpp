@@ -24,8 +24,8 @@
 #include "asserts.hpp"
 #include "VGraph.hpp"
 #include "VGraphCairo.hpp"
-#include "VGraphOpenGL.hpp"
-#include "VGraphOpenGLFixed.hpp"
+#include "VGraphOGL.hpp"
+#include "VGraphOGLFixed.hpp"
 
 namespace KRE
 {

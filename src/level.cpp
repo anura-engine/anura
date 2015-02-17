@@ -41,7 +41,6 @@
 #include "formatter.hpp"
 #include "formula_profiler.hpp"
 #include "json_parser.hpp"
-#include "hex_object.hpp"
 #include "level.hpp"
 #include "level_object.hpp"
 #include "level_runner.hpp"
@@ -394,18 +393,6 @@ Level::Level(const std::string& level_cfg, variant node)
 		std::sort(tiles_.begin(), tiles_.end(), level_tile_zorder_pos_comparer());
 	}
 
-	///////////////////////
-	// hex tiles starts
-	for(variant tile_node : node["hex_tile_map"].as_list()) {
-		hex::HexMapPtr m(new hex::HexMap(tile_node));
-		hex_maps_[m->getZorder()] = m;
-		LOG_INFO("LAYER " << m->getZorder() << " BUILT " << hex_maps_[m->getZorder()]->size() << " tiles");
-		hex_maps_[m->getZorder()]->build();
-	}
-	LOG_INFO("done building hex_tile_map..." << profile::get_tick_time());
-	// hex tiles ends
-	///////////////////////
-
 	if(node.has_key("palettes")) {
 		std::vector<std::string> v = parse_variant_list_or_csv_string(node["palettes"]);
 		for(const std::string& p : v) {
@@ -697,7 +684,7 @@ void Level::finishLoading()
 				obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 				addr_str = obj->addr();
 			}
-			const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
+			const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), nullptr, 16));
 
 			game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 		}
@@ -706,7 +693,7 @@ void Level::finishLoading()
 	for(variant node : wml_chars_) {
 		load_character(node);
 
-		const intptr_t addr_id = static_cast<intptr_t>(strtoll(node["_addr"].as_string().c_str(), NULL, 16));
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(node["_addr"].as_string().c_str(), nullptr, 16));
 		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, chars_.back());
 
 		if(node.has_key("attached_objects")) {
@@ -715,7 +702,7 @@ void Level::finishLoading()
 			std::vector<std::string> v = util::split(node["attached_objects"].as_string());
 			for(const std::string& s : v) {
 				LOG_INFO("ATTACHED: " << s);
-				const intptr_t addr_id = static_cast<intptr_t>(strtoll(s.c_str(), NULL, 16));
+				const intptr_t addr_id = static_cast<intptr_t>(strtoll(s.c_str(), nullptr, 16));
 				game_logic::WmlSerializableFormulaCallablePtr obj = game_logic::wmlFormulaCallableReadScope::getSerializedObject(addr_id);
 				Entity* e = dynamic_cast<Entity*>(obj.get());
 				if(e) {
@@ -769,7 +756,7 @@ void Level::finishLoading()
 	if((g_respect_difficulty || preferences::force_difficulty() != std::numeric_limits<int>::min()) && !editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
-			if(chars_[n].get() != NULL && !chars_[n]->appearsAtDifficulty(difficulty)) {
+			if(chars_[n].get() != nullptr && !chars_[n]->appearsAtDifficulty(difficulty)) {
 				chars_[n] = EntityPtr();
 			}
 		}
@@ -835,13 +822,13 @@ namespace
 	//rebuilding, then queue the requests up.
 
 	//the level we're currently building tiles for.
-	const Level* level_building = NULL;
+	const Level* level_building = nullptr;
 
 	struct level_tile_rebuild_info 
 	{
 		level_tile_rebuild_info() : tile_rebuild_in_progress(false),
 									tile_rebuild_queued(false),
-									rebuild_tile_thread(NULL),
+									rebuild_tile_thread(nullptr),
 									tile_rebuild_complete(false)
 		{}
 
@@ -892,11 +879,6 @@ namespace
 	}
 }
 
-void Level::start_rebuild_hex_tiles_in_background(const std::vector<int>& layers)
-{
-	hex_maps_[layers[0]]->build();
-}
-
 void Level::start_rebuild_tiles_in_background(const std::vector<int>& layers)
 {
 	level_tile_rebuild_info& info = tile_rebuild_map[this];
@@ -942,7 +924,7 @@ void Level::freeze_rebuild_tiles_in_background()
 void Level::unfreeze_rebuild_tiles_in_background()
 {
 	level_tile_rebuild_info& info = tile_rebuild_map[this];
-	if(info.rebuild_tile_thread != NULL) {
+	if(info.rebuild_tile_thread != nullptr) {
 		//a thread is actually in flight calculating tiles, so any requests
 		//would have been queued up anyway.
 		return;
@@ -1002,9 +984,9 @@ void Level::complete_rebuild_tiles_in_background()
 
 	const int begin_time = profile::get_tick_time();
 
-//	ASSERT_LOG(rebuild_tile_thread, "REBUILD TILE THREAD IS NULL");
+//	ASSERT_LOG(rebuild_tile_thread, "REBUILD TILE THREAD IS nullptr");
 	delete info.rebuild_tile_thread;
-	info.rebuild_tile_thread = NULL;
+	info.rebuild_tile_thread = nullptr;
 
 	if(info.rebuild_tile_layers_worker_buffer.empty()) {
 		tiles_.clear();
@@ -1222,10 +1204,6 @@ variant Level::write() const
 		node.add("damage", r.damage);
 
 		res.add("solid_rect", node.build());
-	}
-
-	for(auto& i : hex_maps_) {
-		res.add("hex_tile_map", i.second->write());
 	}
 
 	for(auto& i : tile_maps_) {
@@ -1562,6 +1540,21 @@ namespace
 {
 	//counter incremented every time the level is drawn.
 	int draw_count = 0;
+}
+
+void Level::setPosition(float x, float y, float z)
+{
+	// XXX fixme
+}
+
+void Level::setRotation(float angle, const glm::vec3& axis)
+{
+	// XXX fixme
+}
+
+void Level::setScale(float xs, float ys, float zs)
+{
+	// XXX fixme
 }
 
 void Level::draw_layer(int layer, int x, int y, int w, int h) const
@@ -1983,10 +1976,6 @@ void Level::draw(int x, int y, int w, int h) const
 		const std::vector<EntityPtr>* chars_ptr = &active_chars_;
 		std::vector<EntityPtr> editor_chars_buf;
 
-		for(auto& hm : hex_maps_) {
-			hm.second->draw();
-		}
-	
 		if(editor_) {
 			editor_chars_buf = active_chars_;
 			rect screen_area(x, y, w, h);
@@ -2285,7 +2274,7 @@ void Level::draw_debug_solid(int x, int y, int w, int h) const
 		for(int ypos = 0; ypos < h/TileSize + 4; ++ypos) {
 			const tile_pos pos(tile_x + xpos, tile_y + ypos);
 			const TileSolidInfo* info = solid_.find(pos);
-			if(info == NULL) {
+			if(info == nullptr) {
 				continue;
 			}
 
@@ -2558,7 +2547,7 @@ void Level::erase_char(EntityPtr c)
 
 bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector<point>& points, const SurfaceInfo** surf_info) const
 {
-	const TileSolidInfo* info = NULL;
+	const TileSolidInfo* info = nullptr;
 	int prev_x = std::numeric_limits<int>::min(), prev_y = std::numeric_limits<int>::min();
 
 	const Frame& current_frame = e.getCurrentFrame();
@@ -2599,7 +2588,7 @@ bool Level::isSolid(const LevelSolidMap& map, const Entity& e, const std::vector
 			info = map.find(pos);
 		}
 
-		if(info != NULL) {
+		if(info != nullptr) {
 			if(info->all_solid) {
 				if(surf_info) {
 					*surf_info = &info->info;
@@ -2641,7 +2630,7 @@ bool Level::isSolid(const LevelSolidMap& map, int x, int y, const SurfaceInfo** 
 	}
 
 	const TileSolidInfo* info = map.find(pos);
-	if(info != NULL) {
+	if(info != nullptr) {
 		if(info->all_solid) {
 			if(surf_info) {
 				*surf_info = &info->info;
@@ -2827,23 +2816,6 @@ bool Level::add_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, con
 	return add_tile_rect_vector_internal(zorder, x1, y1, x2, y2, tiles);
 }
 
-void Level::add_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, const std::string& tile)
-{
-	add_hex_tile_rect_vector(zorder, x1, y1, x2, y2, std::vector<std::string>(1, tile));
-}
-
-void Level::add_hex_tile_rect_vector(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
-{
-	if(x1 > x2) {
-		std::swap(x1, x2);
-	}
-
-	if(y1 > y2) {
-		std::swap(y1, y2);
-	}
-	add_hex_tile_rect_vector_internal(zorder, x1, y1, x2, y2, tiles);
-}
-
 void Level::set_tile_layer_speed(int zorder, int x_speed, int y_speed)
 {
 	TileMap& m = tile_maps_[zorder];
@@ -2906,43 +2878,6 @@ bool Level::add_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, in
 	return changed;
 }
 
-bool Level::add_hex_tile_rect_vector_internal(int zorder, int x1, int y1, int x2, int y2, const std::vector<std::string>& tiles)
-{
-	if(tiles.empty()) {
-		return false;
-	}
-
-	if(x1 > x2) {
-		std::swap(x1, x2);
-	}
-
-	if(y1 > y2) {
-		std::swap(y1, y2);
-	}
-
-	auto it = hex_maps_.find(zorder);
-	if(it == hex_maps_.end()) {
-		hex_maps_[zorder] = hex::HexMapPtr(new hex::HexMap());
-	}
-	hex::HexMapPtr& m = hex_maps_[zorder];
-	m->setZorder(zorder);
-
-	bool changed = false;
-	int index = 0;
-	const int HexTileSize = 72;
-	for(int x = x1; x <= x2; x += HexTileSize) {
-		for(int y = y1; y <= y2; y += HexTileSize) {
-			const point p = hex::HexMap::getTilePosFromPixelPos(x, y);
-			changed = m->setTile(p.x, p.y, tiles[index]) || changed;
-			if(index+1 < static_cast<int>(tiles.size())) {
-				++index;
-			}
-		}
-	}
-
-	return changed;
-}
-
 void Level::get_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const
 {
 	if(x1 > x2) {
@@ -2987,47 +2922,6 @@ void Level::getAll_tiles_rect(int x1, int y1, int x2, int y2, std::map<int, std:
 	}
 }
 
-void Level::getAllHexTilesRect(int x1, int y1, int x2, int y2, std::map<int, std::vector<std::string> >& tiles) const
-{
-	for(std::set<int>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
-		if(hidden_layers_.count(*i)) {
-			continue;
-		}
-
-		std::vector<std::string> cleared;
-		get_hex_tile_rect(*i, x1, y1, x2, y2, cleared);
-		if(std::count(cleared.begin(), cleared.end(), "") != cleared.size()) {
-			tiles[*i].swap(cleared);
-		}
-	}
-}
-
-void Level::get_hex_tile_rect(int zorder, int x1, int y1, int x2, int y2, std::vector<std::string>& tiles) const
-{
-	if(x1 > x2) {
-		std::swap(x1, x2);
-	}
-
-	if(y1 > y2) {
-		std::swap(y1, y2);
-	}
-
-	std::map<int, hex::HexMapPtr>::const_iterator map_iterator = hex_maps_.find(zorder);
-	if(map_iterator == hex_maps_.end()) {
-		tiles.push_back("");
-		return;
-	}
-	const hex::HexMapPtr& m = map_iterator->second;
-
-	const int HexTileSize = 72;
-	for(int x = x1; x < x2; x += HexTileSize) {
-		for(int y = y1; y < y2; y += HexTileSize) {
-			hex::HexObjectPtr p = m->getTileFromPixelPos(x, y);
-			tiles.push_back((p) ? p->type() : "");
-		}
-	}
-}
-
 bool Level::clear_tile_rect(int x1, int y1, int x2, int y2)
 {
 	if(x1 > x2) {
@@ -3051,29 +2945,6 @@ bool Level::clear_tile_rect(int x1, int y1, int x2, int y2)
 	}
 	
 	return changed;
-}
-
-void Level::clear_hex_tile_rect(int x1, int y1, int x2, int y2)
-{
-	if(x1 > x2) {
-		std::swap(x1, x2);
-	}
-
-	if(y1 > y2) {
-		std::swap(y1, y2);
-	}
-
-	bool changed = false;
-	std::vector<std::string> v(1, "");
-	for(std::set<int>::const_iterator i = layers_.begin(); i != layers_.end(); ++i) {
-		if(hidden_layers_.count(*i)) {
-			continue;
-		}
-
-		if(add_hex_tile_rect_vector_internal(*i, x1, y1, x2, y2, v)) {
-			changed = true;
-		}
-	}
 }
 
 void Level::add_tile_solid(const LevelTile& t)
@@ -3145,7 +3016,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 
 	tile_pos base(xpos/TileSize, ypos/TileSize);
 	const TileSolidInfo* info = solid_.find(base);
-	if(info == NULL || info->all_solid == false && info->bitmap.any() == false) {
+	if(info == nullptr || info->all_solid == false && info->bitmap.any() == false) {
 		return result;
 	}
 
@@ -3170,7 +3041,7 @@ std::vector<point> Level::get_solid_contiguous_region(int xpos, int ypos) const
 			}
 
 			const TileSolidInfo* info = solid_.find(pos);
-			if(info == NULL || info->all_solid == false && info->bitmap.any() == false) {
+			if(info == nullptr || info->all_solid == false && info->bitmap.any() == false) {
 				continue;
 			}
 
@@ -3191,7 +3062,7 @@ const LevelTile* Level::getTileAt(int x, int y) const
 	if(i != tiles_.end()) {
 		return &*i;
 	} else {
-		return NULL;
+		return nullptr;
 	}
 }
 
@@ -3419,7 +3290,7 @@ void Level::add_player(EntityPtr p)
 	if(!editor_) {
 		const int difficulty = current_difficulty();
 		for(int n = 0; n != chars_.size(); ++n) {
-			if(chars_[n].get() != NULL && !chars_[n]->appearsAtDifficulty(difficulty)) {
+			if(chars_[n].get() != nullptr && !chars_[n]->appearsAtDifficulty(difficulty)) {
 				chars_[n] = EntityPtr();
 			}
 		}
@@ -3490,7 +3361,7 @@ const Level::portal* Level::get_portal() const
 	}
 
 	if(!player_) {
-		return NULL;
+		return nullptr;
 	}
 
 	const rect& r = player_->getBodyRect();
@@ -3507,7 +3378,7 @@ const Level::portal* Level::get_portal() const
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 int Level::group_size(int group) const
@@ -3748,22 +3619,6 @@ DEFINE_SET_FIELD
 	} else {
 		obj.debug_properties_ = value.as_list_string();
 	}
-
-DEFINE_FIELD(hexmap, "null|object")
-	if(obj.hex_maps_.empty() == false) {
-		return variant(obj.hex_maps_.rbegin()->second.get());
-	} else {
-		return variant();
-	}
-
-DEFINE_FIELD(hexmaps, "{int -> object}")
-	std::map<variant, variant> m;
-	std::map<int, hex::HexMapPtr>::const_iterator it = obj.hex_maps_.begin();
-	while(it != obj.hex_maps_.end()) {
-		m[variant(it->first)] = variant(it->second.get());
-		++it;
-	}
-	return variant(&m);
 
 DEFINE_FIELD(shader, "null|object")
 	return variant();
@@ -4588,7 +4443,7 @@ bool Level::executeCommand(const variant& var)
 		}
 	} else {
 		game_logic::CommandCallable* cmd = var.try_convert<game_logic::CommandCallable>();
-		if(cmd != NULL) {
+		if(cmd != nullptr) {
 			cmd->runCommand(*this);
 		}
 	}

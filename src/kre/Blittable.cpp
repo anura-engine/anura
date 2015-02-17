@@ -23,7 +23,6 @@
 
 #include "Blittable.hpp"
 #include "DisplayDevice.hpp"
-#include "Material.hpp"
 
 namespace KRE
 {

@@ -22,7 +22,7 @@
 */
 
 #include "asserts.hpp"
-#include "TextureOpenGL.hpp"
+#include "TextureOGL.hpp"
 
 namespace KRE
 {
@@ -51,42 +51,46 @@ namespace KRE
 		}
 	}
 
-	OpenGLTexture::OpenGLTexture(const variant& node, const SurfacePtr& surface)
-		: Texture(node, surface),
+	OpenGLTexture::OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces)
+		: Texture(node, surfaces),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
 		  type_(GL_UNSIGNED_BYTE),
 		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		  is_yuv_planar_(false)
 	{
-		createTexture(getSurface()->getPixelFormat()->getFormat());
+		texture_id_.resize(surfaces.size());
+		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 	}
 
-	OpenGLTexture::OpenGLTexture(const SurfacePtr& surface, Type type,  int mipmap_levels)
-		: Texture(surface, type, mipmap_levels), 
+	OpenGLTexture::OpenGLTexture(const std::vector<SurfacePtr>& surfaces, Type type, int mipmap_levels)
+		: Texture(surfaces, type, mipmap_levels), 
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
 		  type_(GL_UNSIGNED_BYTE),
 		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		  is_yuv_planar_(false)
 	{
-		createTexture(getSurface()->getPixelFormat()->getFormat());
+		texture_id_.resize(surfaces.size());
+		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 	}
 
-	OpenGLTexture::OpenGLTexture(unsigned width, 
-		unsigned height, 
+	OpenGLTexture::OpenGLTexture(int count,
+		int width, 
+		int height, 
 		PixelFormat::PF fmt, 
 		Type type, 
 		unsigned depth)
-		: Texture(width, height, depth, fmt, type),
+		: Texture(count, width, height, depth, fmt, type),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
 		  type_(GL_UNSIGNED_BYTE),
 		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		  is_yuv_planar_(false)
 	{
+		texture_id_.resize(count);
 		setTextureDimensions(width, height, depth);
 		createTexture(fmt);
 		init();
@@ -100,14 +104,15 @@ namespace KRE
 		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		  is_yuv_planar_(false)
 	{
-		createTexture(getSurface()->getPixelFormat()->getFormat());
+		texture_id_.resize(1);
+		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 		ASSERT_LOG(false, "OpenGLTexture -- deal with surfaces with palette surface");
 	}
 
 	OpenGLTexture::~OpenGLTexture()
 	{
-		glDeleteTextures(is_yuv_planar_ ? 3 : 1, &texture_id_[0]);
+		glDeleteTextures(texture_id_.size(), &texture_id_[0]);
 	}
 
 	void OpenGLTexture::update(int x, unsigned width, void* pixels)
@@ -125,7 +130,7 @@ namespace KRE
 
 	void OpenGLTexture::update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels)
 	{
-
+		ASSERT_LOG(false, "XXX: void OpenGLTexture::update(int x, int y, unsigned width, unsigned height, const int* stride, const void* pixels)");
 	}
 
 	// Stride is the width of the image surface *in pixels*
@@ -361,20 +366,23 @@ namespace KRE
 				ASSERT_LOG(false, "Unrecognised pixel format");
 		}
 
-		int num_textures = is_yuv_planar_ ? 3 : 1;
+		if(is_yuv_planar_) {
+			texture_id_.resize(3);
+		}
+		int num_textures = texture_id_.size();
 		glGenTextures(num_textures, &texture_id_[0]);
 		for(int n = 0; n != num_textures; ++n) {
 			glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
 
-			unsigned w = n>0 ? width()/2 : width();
-			unsigned h = n>0 ? height()/2 : height();
-			unsigned d = n>0 ? depth()/2 : depth();
+			unsigned w = is_yuv_planar_ && n>0 ? width()/2 : width();
+			unsigned h = is_yuv_planar_ && n>0 ? height()/2 : height();
+			unsigned d = is_yuv_planar_ && n>0 ? depth()/2 : depth();
 
 			if(getUnpackAlignment() != 4) {
 				glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 			}
 
-			const void* pixels = getSurface() ? getSurface()->pixels() : 0;
+			const void* pixels = static_cast<int>(getSurfaces().size()) < n && getSurfaces()[n] ? getSurfaces()[n]->pixels() : 0;
 			switch(getType()) {
 				case Type::TEXTURE_1D:
 					glTexImage1D(GetGLTextureType(getType()), 0, internal_format_, w, 0, format_, type_, pixels);
@@ -397,8 +405,7 @@ namespace KRE
 	{
 		GLenum type = GetGLTextureType(getType());
 
-		unsigned num_textures = is_yuv_planar_ ? 3 : 1;
-		for(unsigned n = 0; n != num_textures; ++n) {
+		for(unsigned n = 0; n != texture_id_.size(); ++n) {
 			glBindTexture(type, texture_id_[n]);
 
 			glTexParameteri(type, GL_TEXTURE_WRAP_S, GetGLAddressMode(getAddressModeU()));
@@ -470,27 +477,23 @@ namespace KRE
 	}
 
 	void OpenGLTexture::bind() 
-	{ 
-		if(is_yuv_planar_) {
-			int num_textures = is_yuv_planar_ ? 2 : 0;
-			for(int n = num_textures; n > 0; --n) {
-				glActiveTexture(GL_TEXTURE0 + n); 			
-				glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
-			}
-			glActiveTexture(GL_TEXTURE0);
+	{
+		for(int n = static_cast<int>(texture_id_.size()) - 1; n >= 0; --n) {
+			glActiveTexture(GL_TEXTURE0 + n);
+			glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
 		}
-		glBindTexture(GetGLTextureType(getType()), texture_id_[0]);
 	}
 
-	unsigned OpenGLTexture::id()
+	unsigned OpenGLTexture::id(int n)
 	{
-		return texture_id_[0];
+		ASSERT_LOG(n < static_cast<int>(texture_id_.size()), "Requested texture id outside bounds.");
+		return texture_id_[n];
 	}
 
 	void OpenGLTexture::rebuild()
 	{
-		// Delete the old id
-		glDeleteTextures(is_yuv_planar_ ? 3 : 1, &texture_id_[0]);
+		// Delete the old ids
+		glDeleteTextures(texture_id_.size(), &texture_id_[0]);
 
 		// Re-create the texture
 		createTexture(pixel_format_);
@@ -499,11 +502,11 @@ namespace KRE
 
 	const unsigned char* OpenGLTexture::colorAt(int x, int y) const 
 	{
-		if(getSurface() == NULL) {
+		if(getFrontSurface() == nullptr) {
 			// We could probably try a glTexImage fall-back here. But ugh, slow.
-			return NULL;
+			return nullptr;
 		}
-		auto s = getSurface();
+		auto s = getFrontSurface();
 		const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
 		return (pixels + (y*s->width() + x)*s->getPixelFormat()->bytesPerPixel());
 	}

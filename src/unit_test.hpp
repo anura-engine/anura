@@ -44,8 +44,8 @@ namespace test
 	int register_benchmark_cl(const std::string& name, CommandLineBenchmarkTest test);
 	int register_utility(const std::string& name, UtilityProgram utility, bool needs_video);
 	bool utility_needs_video(const std::string& name);
-	bool run_tests(const std::vector<std::string>* tests=NULL);
-	void run_benchmarks(const std::vector<std::string>* benchmarks=NULL);
+	bool run_tests(const std::vector<std::string>* tests=nullptr);
+	void run_benchmarks(const std::vector<std::string>* benchmarks=nullptr);
 	void run_command_line_benchmark(const std::string& benchmark_name, const std::string& arg);
 	void run_utility(const std::string& utility_name, const std::vector<std::string>& arg);
 

@@ -52,14 +52,14 @@ namespace gui
 		if(v["object"].is_string()) {
 			// type name, has obj_x, obj_y, facing			
 			entity_ = EntityPtr(new CustomObject(v["object"].as_string(), v["obj_x"].as_int(0), v["obj_y"].as_int(0), v["facing"].as_int(1) != 0));
-			entity_->finishLoading(NULL);
+			entity_->finishLoading(nullptr);
 		} else if(v["object"].is_map()) {
 			entity_ = EntityPtr(new CustomObject(v["object"]));
-			entity_->finishLoading(NULL);
+			entity_->finishLoading(nullptr);
 		} else {
 			entity_ = v["object"].try_convert<Entity>();
-			ASSERT_LOG(entity_ != NULL, "Couldn't convert 'object' attribue to an entity");
-			entity_->finishLoading(NULL);
+			ASSERT_LOG(entity_ != nullptr, "Couldn't convert 'object' attribue to an entity");
+			entity_->finishLoading(nullptr);
 			entity_->validate_properties();
 		}
 		if(v.has_key("properties")) {

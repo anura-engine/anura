@@ -27,9 +27,9 @@
 #include <cmath>
 #include <algorithm>
 
-#include "Material.hpp"
 #include "DisplayDevice.hpp"
 #include "WindowManager.hpp"
+#include "Texture.hpp"
 
 #include "asserts.hpp"
 #include "entity.hpp"
@@ -49,7 +49,7 @@ namespace
 	public:
 		explicit ParticleAnimation(variant node) :
 		  id_(node["id"].as_string()),
-		  texture_(KRE::Material::createMaterial(node["image"])),
+		  texture_(KRE::Texture::createTexture(node["image"])),
 		  duration_(node["duration"].as_int()),
 		  reverse_frame_(node["reverse"].as_bool()),
 		  loops_(node["loops"].as_bool(false))
@@ -77,7 +77,7 @@ namespace
 				const rect& area = info.area;
 
 				frame_area a;
-				rectf ra = texture_->getNormalisedTextureCoords(texture_->getTexture().begin(), area);
+				rectf ra = texture_->getSourceRectNormalised();
 				a.u1 = ra.x();
 				a.u2 = ra.x2();
 				a.v1 = ra.y();
@@ -124,13 +124,13 @@ namespace
 			return current_frame % (2* frames_.size()) >= frames_.size();
 		}
 
-		KRE::MaterialPtr getTexture() const { return texture_; }
+		KRE::TexturePtr getTexture() const { return texture_; }
 	
 		int width() const { return width_; }
 		int height() const { return height_; }
 	private:
 		std::string id_;
-		KRE::MaterialPtr texture_;
+		KRE::TexturePtr texture_;
 
 		std::vector<frame_area> frames_;
 		int duration_;
@@ -226,8 +226,6 @@ namespace
 		bool shouldSave() const override { return info_.spawn_rate_ >= 0; }
 		void process(const Entity& e) override;
 		void draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const override;
-
-		void preRender(const KRE::WindowManagerPtr& wm) override;
 	private:
 		DECLARE_CALLABLE(SimpleParticleSystem);
 
@@ -438,7 +436,7 @@ namespace
 			return;
 		}
 		auto pp = particles_.begin();
-		setMaterial(pp->anim->getTexture());
+		setTexture(pp->anim->getTexture());
 		std::vector<KRE::vertex_texture_color> vtc;
 		const int facing = e.isFacingRight() ? 1 : -1;
 

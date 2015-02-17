@@ -23,7 +23,7 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 #include "variant.hpp"
 
 class FramedGuiElement;

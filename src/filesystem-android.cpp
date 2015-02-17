@@ -139,9 +139,9 @@ void get_files_in_dir(const std::string& sdirectory,
 		//LOG("get_files_in_dir() : after split");
 	}
 
-	if(files != NULL)
+	if(files != nullptr)
 		std::sort(files->begin(),files->end());
-	if (dirs != NULL)
+	if (dirs != nullptr)
 		std::sort(dirs->begin(),dirs->end());
 	//LOG("get_files_in_dir : after sorts");
 }
@@ -178,7 +178,7 @@ void get_unique_filenames_under_dir(const std::string& sdir,
 std::string get_dir(const std::string& dir_path)
 {
 	DIR* dir = opendir(dir_path.c_str());
-	if(dir == NULL) {
+	if(dir == nullptr) {
 		const int res = mkdir(dir_path.c_str(),AccessMode);
 		if(res == 0) {
 			dir = opendir(dir_path.c_str());
@@ -187,7 +187,7 @@ std::string get_dir(const std::string& dir_path)
 		}
 	}
 
-	if(dir == NULL)
+	if(dir == nullptr)
 		return "";
 
 	closedir(dir);
@@ -199,7 +199,7 @@ std::string get_user_data_dir()
 {
     std::string dir_path = preferences::user_data_path();
 	DIR* dir = opendir(dir_path.c_str());
-	if(dir == NULL) {
+	if(dir == nullptr) {
 		const int res = mkdir(dir_path.c_str(),AccessMode);
 
 		// Also create the maps directory
@@ -212,7 +212,7 @@ std::string get_user_data_dir()
 		}
 	}
 
-	if(dir == NULL)
+	if(dir == nullptr)
 		return "";
 
 	closedir(dir);
@@ -412,7 +412,7 @@ SDL_RWops* read_sdl_rw_from_asset(const std::string& name)
     }
 	ops->hidden.unknown.data1 = asset;
 	ops->read = aa_rw_read;
-	ops->write = NULL;
+	ops->write = nullptr;
 	ops->seek = aa_rw_seek;
 	ops->close = aa_rw_close;
 	return ops;

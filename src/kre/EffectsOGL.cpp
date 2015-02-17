@@ -22,7 +22,7 @@
 */
 
 #include <GL/glew.h>
-#include "EffectsOpenGL.hpp"
+#include "EffectsOGL.hpp"
 
 namespace KRE
 {

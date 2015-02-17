@@ -147,11 +147,11 @@ namespace editor_dialogs
 
 		int mousex, mousey;
 		input::sdl_get_mouse_state(&mousex, &mousey);
-		if(static_cast<unsigned>(mousex + grid->width()) > KRE::WindowManager::getMainWindow()->width()) {
+		if(mousex + grid->width() > KRE::WindowManager::getMainWindow()->width()) {
 			mousex = KRE::WindowManager::getMainWindow()->width() - grid->width();
 		}
 
-		if(static_cast<unsigned>(mousey + grid->height()) > KRE::WindowManager::getMainWindow()->height()) {
+		if(mousey + grid->height() > KRE::WindowManager::getMainWindow()->height()) {
 			mousey = KRE::WindowManager::getMainWindow()->height() - grid->height();
 		}
 

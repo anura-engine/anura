@@ -173,19 +173,19 @@ VariantFunctionTypeInfo::VariantFunctionTypeInfo() : num_unneeded_args(0)
 struct variant_list {
 
 	variant_list() : begin(elements.begin()), end(elements.end()),
-	                 refcount(0), storage(NULL)
+	                 refcount(0), storage(nullptr)
 	{}
 
 	variant_list(const variant_list& o) :
 	   elements(o.begin, o.end), begin(elements.begin()), end(elements.end()),
-	   refcount(1), storage(NULL)
+	   refcount(1), storage(nullptr)
 	{}
 
 	const variant_list& operator=(const variant_list& o) {
 		elements.assign(o.begin, o.end),
 		begin = elements.begin();
 		end = elements.end();
-		storage = NULL;
+		storage = nullptr;
 		return *this;
 	}
 
@@ -438,7 +438,7 @@ const game_logic::FormulaExpression* variant::get_source_expression() const
 		break;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void variant::set_source_expression(const game_logic::FormulaExpression* expr)
@@ -481,7 +481,7 @@ const variant::debug_info* variant::get_debug_info() const
 		break;
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 std::string variant::debug_location() const
@@ -532,7 +532,7 @@ variant variant::create_function_overload(const std::vector<variant>& fn)
 variant::variant(const game_logic::FormulaCallable* callable)
 	: type_(VARIANT_TYPE_CALLABLE), callable_(callable)
 {
-	if(callable == NULL) {
+	if(callable == nullptr) {
 		type_ = VARIANT_TYPE_NULL;
 		return;
 	}
@@ -553,7 +553,7 @@ variant::variant(std::vector<variant>* array)
 variant::variant(const char* s)
    : type_(VARIANT_TYPE_STRING)
 {
-	if(s == NULL) {
+	if(s == nullptr) {
 		type_ = VARIANT_TYPE_NULL;
 		return;
 	}
@@ -951,7 +951,7 @@ variant variant::operator()(const std::vector<variant>& passed_args) const
 
 	for(size_t n = 0; n != args->size(); ++n) {
 		if(n < fn_->type->variant_types.size() && fn_->type->variant_types[n]) {
-	//		if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(NULL))
+	//		if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(nullptr))
 			if(fn_->type->variant_types[n]->match((*args)[n]) == false) {
 				std::string class_name;
 				if((*args)[n].is_map() && fn_->type->variant_types[n]->is_class(&class_name)) {
@@ -1088,7 +1088,7 @@ bool variant::as_bool() const
 	case VARIANT_TYPE_CALLABLE_LOADING:
 		return true;
 	case VARIANT_TYPE_CALLABLE:
-		return callable_ != NULL;
+		return callable_ != nullptr;
 	case VARIANT_TYPE_LIST:
 		return list_->size() != 0;
 	case VARIANT_TYPE_MAP:
@@ -1277,7 +1277,7 @@ variant* variant::get_attr_mutable(variant key)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 variant* variant::get_index_mutable(int index)
@@ -1288,7 +1288,7 @@ variant* variant::get_index_mutable(int index)
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 void variant::weaken()
@@ -1524,7 +1524,7 @@ variant variant::operator+(const variant& v) const
 			bool adopt_list = false;
 
 			std::vector<variant> res;
-			if(new_size <= list_->elements.capacity() && list_->storage == NULL) {
+			if(new_size <= list_->elements.capacity() && list_->storage == nullptr) {
 				res.swap(list_->elements);
 				adopt_list = true;
 			} else {
@@ -1857,7 +1857,7 @@ void variant::throw_type_error(variant::TYPE t) const
 		for(std::map<variant,variant>::const_iterator i = last_query_map.map_->elements.begin(); i != last_query_map.map_->elements.end(); ++i) {
 			if(this == &i->second) {
 				const debug_info* info = i->first.get_debug_info();
-				if(info == NULL) {
+				if(info == nullptr) {
 					info = last_query_map.get_debug_info();
 				}
 				generate_error(formatter() << "In object at " << *info->filename << " " << info->line << " (column " << info->column << ") attribute for " << i->first << " was " << *this << ", which is a " << variant_type_to_string(type_) << ", must be a " << variant_type_to_string(t));
@@ -2547,7 +2547,7 @@ const std::vector<const game_logic::Formula*>* variant::formulae_using_this() co
 	if(is_string()) {
 		return &string_->formulae_using_this;
 	} else {
-		return NULL;
+		return nullptr;
 	}
 }
 

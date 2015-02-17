@@ -24,7 +24,7 @@
 #pragma once
 
 #include "geometry.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 #include "SceneObject.hpp"
 
 namespace KRE
@@ -46,7 +46,6 @@ namespace KRE
 		Blittable();
 		explicit Blittable(const TexturePtr& tex);
 		virtual ~Blittable();
-		void setTexture(const TexturePtr& tex);
 
 		template<typename T>
 		void setDrawRect(const geometry::Rect<T>& r) {

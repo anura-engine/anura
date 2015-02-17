@@ -59,9 +59,9 @@
 
 std::string multi_byte_from_wide_string(LPCWSTR pwsz, UINT cp) 
 {
-    int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, NULL, NULL);
+    int cch = WideCharToMultiByte(cp, 0, pwsz, -1, 0, 0, nullptr, nullptr);
     char* psz = new char[cch];
-    WideCharToMultiByte(cp, 0, pwsz, -1, psz, cch, NULL, NULL);
+    WideCharToMultiByte(cp, 0, pwsz, -1, psz, cch, nullptr, nullptr);
     std::string st(psz);
     delete[] psz;
 	return st;
@@ -74,12 +74,12 @@ std::string get_windows_error_as_string()
 		FORMAT_MESSAGE_ALLOCATE_BUFFER | 
 		FORMAT_MESSAGE_FROM_SYSTEM | 
 		FORMAT_MESSAGE_IGNORE_INSERTS,
-		NULL,
+		nullptr,
 		GetLastError(),
 		MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT), // Default language
 		(LPTSTR) &lpMsgBuf,
 		0,
-		NULL 
+		nullptr 
 	);
 
 #if defined(_UNICODE)
@@ -106,7 +106,7 @@ public:
 private:
 	WindowsPrefs() {
 		char szPath[MAX_PATH];
-		if(SUCCEEDED(SHGetFolderPathA(NULL, CSIDL_APPDATA, NULL, 0, szPath))) {
+		if(SUCCEEDED(SHGetFolderPathA(nullptr, CSIDL_APPDATA, nullptr, 0, szPath))) {
 			app_data_path_ = std::string(szPath);
 		} else {
 			ASSERT_LOG(false, "Failed to read the application data path: " << get_windows_error_as_string());
@@ -131,7 +131,7 @@ namespace preferences
 	{
 		struct RegisteredSetting 
 		{
-			RegisteredSetting() : persistent(false), int_value(NULL), bool_value(NULL), double_value(NULL), string_value(NULL), helpstring(NULL)
+			RegisteredSetting() : persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), helpstring(nullptr)
 			{}
 			variant write() const {
 				if(int_value) {

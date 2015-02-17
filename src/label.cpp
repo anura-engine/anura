@@ -378,21 +378,17 @@ namespace gui
 		}
 	}
 
-	void DialogLabel::setValue(const std::string& key, const variant& v)
-	{
-		if(key == "progress") {
-			setProgress(v.as_int());
-		}
-		Label::setValue(key, v);
-	}
+	BEGIN_DEFINE_CALLABLE(DialogLabel, Label)
+		DEFINE_FIELD(progress, "int")
+			return variant(obj.progress_);
+		DEFINE_SET_FIELD
+			obj.setProgress(value.as_int());
 
-	variant DialogLabel::getValue(const std::string& key) const
-	{
-		if(key == "progress") {
-			return variant(progress_);
-		}
-		return Label::getValue(key);
-	}
+		DEFINE_FIELD(stages, "int")
+			return variant(obj.stages_);
+		DEFINE_SET_FIELD
+			obj.stages_ = value.as_int();
+	END_DEFINE_CALLABLE(DialogLabel)
 
 	LabelFactory::LabelFactory(const KRE::Color& color, int size)
 	   : color_(color), size_(size)

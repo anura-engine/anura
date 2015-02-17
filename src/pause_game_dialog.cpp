@@ -138,65 +138,65 @@ PAUSE_GAME_RESULT show_pause_game_dialog()
 		// skipping errors
 	}
 	if(v.is_null() == false && v.has_key("music_label")) {
-		t1 = widget_factory::create(v["music_label"], NULL);
+		t1 = widget_factory::create(v["music_label"], nullptr);
 	} else {
 		t1 = WidgetPtr(new GraphicalFontLabel(_("Music Volume:"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("sound_label")) {
-		t2 = widget_factory::create(v["sound_label"], NULL);
+		t2 = widget_factory::create(v["sound_label"], nullptr);
 	} else {
 		t2 = WidgetPtr(new GraphicalFontLabel(_("Sound Volume:"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("resume_label")) {
-		resume_label = widget_factory::create(v["resume_label"], NULL);
+		resume_label = widget_factory::create(v["resume_label"], nullptr);
 	} else {
 		resume_label = WidgetPtr(new GraphicalFontLabel(_("Resume"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("controls_label")) {
-		controls_label = widget_factory::create(v["controls_label"], NULL);
+		controls_label = widget_factory::create(v["controls_label"], nullptr);
 	} else {
 		controls_label = WidgetPtr(new GraphicalFontLabel(_("Controls..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("language_label")) {
-		language_label = widget_factory::create(v["language_label"], NULL);
+		language_label = widget_factory::create(v["language_label"], nullptr);
 	} else {
 		language_label = WidgetPtr(new GraphicalFontLabel(_("Language..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("video_select_label")) {
-		video_select_label = widget_factory::create(v["video_select_label"], NULL);
+		video_select_label = widget_factory::create(v["video_select_label"], nullptr);
 	} else {
 		video_select_label = WidgetPtr(new GraphicalFontLabel(_("Video Options..."), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("return_label")) {
-		return_label = widget_factory::create(v["return_label"], NULL);
+		return_label = widget_factory::create(v["return_label"], nullptr);
 	} else {
 		return_label = WidgetPtr(new GraphicalFontLabel(_("Return to Titlescreen"), "door_label", 2));
 	}
 	if(v.is_null() == false && v.has_key("button_swap_label")) {
-		button_swap_label = widget_factory::create(v["button_swap_label"], NULL);
+		button_swap_label = widget_factory::create(v["button_swap_label"], nullptr);
 	} else {
 		button_swap_label = WidgetPtr(new GraphicalFontLabel(_("Reverse A and B"), "door_label", 2));
 	}
-	if(module::get_module_args() != NULL) {
+	if(module::get_module_args() != nullptr) {
 		variant mod_args = module::get_module_args()->queryValue("from_lobby");
 		if(mod_args.is_bool() && mod_args.as_bool() == true && module::get_module_name() != "lobby") {
 			return_label->setValue("text", variant(_("Return to Lobby")));
 		}
 	}
 	if(v.is_null() == false && v.has_key("exit_label")) {
-		exit_label = widget_factory::create(v["exit_label"], NULL);
+		exit_label = widget_factory::create(v["exit_label"], nullptr);
 	} else {
 		exit_label = WidgetPtr(new GraphicalFontLabel(_("Exit Game"), "door_label", 2));
 	}
-	ASSERT_LOG(t1 != NULL, "Couldn't create music label widget.");
-	ASSERT_LOG(t2 != NULL, "Couldn't create sound label widget.");
-	ASSERT_LOG(resume_label != NULL, "Couldn't create resume label widget.");
-	ASSERT_LOG(controls_label != NULL, "Couldn't create controls label widget.");
-	ASSERT_LOG(language_label != NULL, "Couldn't create language label widget.");
-	ASSERT_LOG(video_select_label != NULL, "Couldn't create video select label widget.");
-	ASSERT_LOG(return_label != NULL, "Couldn't create return label widget.");
-	ASSERT_LOG(exit_label != NULL, "Couldn't create exit label widget.");
-	ASSERT_LOG(button_swap_label != NULL, "Couldn't create button swap label widget.");
+	ASSERT_LOG(t1 != nullptr, "Couldn't create music label widget.");
+	ASSERT_LOG(t2 != nullptr, "Couldn't create sound label widget.");
+	ASSERT_LOG(resume_label != nullptr, "Couldn't create resume label widget.");
+	ASSERT_LOG(controls_label != nullptr, "Couldn't create controls label widget.");
+	ASSERT_LOG(language_label != nullptr, "Couldn't create language label widget.");
+	ASSERT_LOG(video_select_label != nullptr, "Couldn't create video select label widget.");
+	ASSERT_LOG(return_label != nullptr, "Couldn't create return label widget.");
+	ASSERT_LOG(exit_label != nullptr, "Couldn't create exit label widget.");
+	ASSERT_LOG(button_swap_label != nullptr, "Couldn't create button swap label widget.");
 
 	using namespace std::placeholders;
 	WidgetPtr s1(new Slider(slider_width, std::bind(sound::set_music_volume, _1), sound::get_music_volume()));

@@ -26,9 +26,9 @@
 #include <cairo.h>
 #include <stack>
 
-#include "../asserts.hpp"
-#include "../ft_iface.hpp"
-#include "color.hpp"
+#include "asserts.hpp"
+#include "ft_iface.hpp"
+#include "Color.hpp"
 
 namespace KRE
 {
@@ -108,8 +108,8 @@ namespace KRE
 			double opacity_top() const {
 				return opacity_stack_.top();
 			}
-			color_ptr get_current_color() const { return current_color_; }
-			void set_current_color(color_ptr cc) { current_color_ = cc; }
+			ColorPtr get_current_color() const { return current_color_; }
+			void set_current_color(ColorPtr cc) { current_color_ = cc; }
 			unsigned width() const { return width_; }
 			unsigned height() const { return height_; }
 
@@ -124,7 +124,7 @@ namespace KRE
 			font_attribs_set& fa() { return font_attributes_; }
 		private:
 			cairo_t* cairo_;
-			color_ptr current_color_;
+			ColorPtr current_color_;
 			std::stack<paint_ptr> fill_color_stack_;
 			std::stack<paint_ptr> stroke_color_stack_;
 			std::stack<double> opacity_stack_;

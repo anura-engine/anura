@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include "ColorScope.hpp"
+
 #include "blur.hpp"
 #include "frame.hpp"
 
@@ -64,7 +66,8 @@ void BlurInfo::nextFrame(int start_x, int start_y, int end_x, int end_y,
 void BlurInfo::draw() const
 {
 	for(const BlurFrame& f : frames_) {
-		f.object_frame->draw(static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate, KRE::Color(1.0f, 1.0f, 1.0f, f.fade));
+		KRE::ColorScope color_scope(KRE::Color(1.0f, 1.0f, 1.0f, f.fade));
+		f.object_frame->draw(nullptr, static_cast<int>(f.x), static_cast<int>(f.y), f.facing, f.upside_down, f.time_in_frame, f.rotate);
 	}
 }
 

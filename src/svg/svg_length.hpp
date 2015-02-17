@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "../asserts.hpp"
+#include "asserts.hpp"
 
 namespace KRE
 {

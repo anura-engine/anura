@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "geometry.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 
 #include "Color.hpp"
 #include "formula_callable.hpp"
@@ -55,7 +55,7 @@ namespace voxel
 		std::string name;
 		std::string group;
 		variant id;
-		KRE::MaterialPtr tex;
+		KRE::TexturePtr tex;
 		rect area;
 	};
 

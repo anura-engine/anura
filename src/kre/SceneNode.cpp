@@ -49,7 +49,7 @@ namespace KRE
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		scale_(1.0f)
 	{
-		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
 	}
 
 	SceneNode::SceneNode(SceneGraph* sg, const variant& node)
@@ -59,7 +59,7 @@ namespace KRE
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
 		scale_(1.0f)
 	{
-		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
 		if(node.has_key("camera")) {
 			attachCamera(Camera::createInstance(node["camera"]));
 		}
@@ -86,7 +86,7 @@ namespace KRE
 			}
 		}
 		if(node.has_key("render_target")) {
-			auto rt = RenderTarget::factory(node["render_target"]);
+			auto rt = RenderTarget::create(node["render_target"]);
 			attachRenderTarget(rt);
 		}
 	}
@@ -119,15 +119,15 @@ namespace KRE
 
 	void SceneNode::attachNode(const SceneNodePtr& node)
 	{
-		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
 		scene_graph_->attachNode(this, node);
 	}
 
 	void SceneNode::attachObject(const SceneObjectPtr& obj)
 	{
-		ASSERT_LOG(scene_graph_ != NULL, "scene_graph_ was null.");
+		ASSERT_LOG(scene_graph_ != nullptr, "scene_graph_ was null.");
 		auto dd = DisplayDevice::getCurrent();
-		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
+		ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
 		objects_.emplace(obj);
 		obj->setDisplayData(dd, obj->attach(dd));
 	}
@@ -147,7 +147,7 @@ namespace KRE
 		}
 		lights_.emplace(ref,obj);
 		auto dd = DisplayDevice::getCurrent();
-		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
+		ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
 		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 
@@ -155,7 +155,7 @@ namespace KRE
 	{
 		camera_ = obj;
 		auto dd = DisplayDevice::getCurrent();
-		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
+		ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
 		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 
@@ -163,7 +163,7 @@ namespace KRE
 	{
 		render_target_ = obj;
 		auto dd = DisplayDevice::getCurrent();
-		ASSERT_LOG(dd != NULL, "DisplayDevice was null.");
+		ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
 		obj->setDisplayData(dd, obj->attach(dd));		
 	}
 

@@ -84,7 +84,7 @@ namespace module
 
 	void get_files_in_dir(const std::string& dir,
 						  std::vector<std::string>* files,
-						  std::vector<std::string>* dirs=NULL);
+						  std::vector<std::string>* dirs=nullptr);
 
 	void get_files_matching_wildcard(const std::string& pattern,
 									 std::string* dir_out,

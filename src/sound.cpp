@@ -89,7 +89,7 @@ namespace sound
 		}
 
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-		Mix_Music* current_mix_music = NULL;
+		Mix_Music* current_mix_music = nullptr;
 #else
 		bool playing_music = false;
 #endif
@@ -100,7 +100,7 @@ namespace sound
 		{
 #if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 			Mix_FreeMusic(current_mix_music);
-			current_mix_music = NULL;
+			current_mix_music = nullptr;
 #else
 			playing_music = false;
 #endif
@@ -127,7 +127,7 @@ namespace sound
 		void on_sound_finished(int channel)
 		{
 			if(channel >= 0 && static_cast<unsigned>(channel) < channels_to_sounds_playing.size()) {
-				channels_to_sounds_playing[channel].object = NULL;
+				channels_to_sounds_playing[channel].object = nullptr;
 			}
 		}
 
@@ -163,9 +163,9 @@ namespace sound
 				SDL_AudioCVT cvt; /* used to convert .wav to output format when formats differ */
 				Uint8 *tmp_buffer;
 #if defined(__ANDROID__)
-				if(SDL_LoadWAV_RW(sys::read_sdl_rw_from_asset(module::map_file(file).c_str(), 1, &spec, &tmp_buffer, &length) == NULL)
+				if(SDL_LoadWAV_RW(sys::read_sdl_rw_from_asset(module::map_file(file).c_str(), 1, &spec, &tmp_buffer, &length) == nullptr)
 #else
-				if (SDL_LoadWAV(module::map_file(file).c_str(), &spec, &tmp_buffer, &length) == NULL)
+				if (SDL_LoadWAV(module::map_file(file).c_str(), &spec, &tmp_buffer, &length) == nullptr)
 #endif
 				{
 					std::cerr << "Could not load sound: " << file << "\n";
@@ -204,8 +204,8 @@ namespace sound
 	
 		void sdl_stop_channel (int channel)
 		{
-			if (mixer.channels[channel].position == NULL) return; // if the sound was playing in the first place
-			mixer.channels[channel].position = NULL;  /* indicates no sound playing on channel anymore */
+			if (mixer.channels[channel].position == nullptr) return; // if the sound was playing in the first place
+			mixer.channels[channel].position = nullptr;  /* indicates no sound playing on channel anymore */
 			mixer.numSoundsPlaying--;
 			if (mixer.numSoundsPlaying == 0)
 			{
@@ -222,7 +222,7 @@ namespace sound
 			/* for each channel, mix in whatever is playing on that channel */
 			for (i = 0; i < NumChannels; i++)
 			{
-				if (mixer.channels[i].position == NULL)
+				if (mixer.channels[i].position == nullptr)
 				{
 					/* if no sound is playing on this channel */
 					continue;           /* nothing to do for this channel */
@@ -270,7 +270,7 @@ namespace sound
 	
 			/* find a sound channel to play the sound on */
 			for (i = 0; i < NumChannels; i++) {
-				if (mixer.channels[i].position == NULL) {
+				if (mixer.channels[i].position == nullptr) {
 					/* if no sound on this channel, select it */
 					selected_channel = i;
 					break;
@@ -381,10 +381,10 @@ namespace sound
 		mixer.outputSpec.channels = 1;
 		mixer.outputSpec.samples = 256;
 		mixer.outputSpec.callback = sdl_audio_callback;
-		mixer.outputSpec.userdata = NULL;
+		mixer.outputSpec.userdata = nullptr;
 	
 		/* open audio for output */
-		if (SDL_OpenAudio(&mixer.outputSpec, NULL) != 0)
+		if (SDL_OpenAudio(&mixer.outputSpec, nullptr) != 0)
 		{
 			std::cerr << "Opening audio failed\n";
 			sound_ok = false;
@@ -403,7 +403,7 @@ namespace sound
 		loading_threads.clear();
 
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-		Mix_HookMusicFinished(NULL);
+		Mix_HookMusicFinished(nullptr);
 		next_music().clear();
 		Mix_CloseAudio();
 	#else
@@ -466,7 +466,7 @@ namespace sound
 
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
 		Mix_Chunk* chunk = cache[file];
-		if(chunk == NULL) {
+		if(chunk == nullptr) {
 			ASSERT_LOG(!g_assert_on_missing_sound, "FATAL: Sound file: " << file << " missing");
 			return -1;
 		}
@@ -478,7 +478,7 @@ namespace sound
 
 	#else
 		sound& s = cache[file];
-		if(s == NULL) {
+		if(s == nullptr) {
 			return -1;
 		}
 	
@@ -552,7 +552,7 @@ namespace sound
 			if(snd.fade_out_time > 0.0f) {
 				if(snd.time_cnt > snd.fade_out_time) {
 					snd.fade_out_time = 0.0f;
-					snd.object = NULL;
+					snd.object = nullptr;
 					Mix_HaltChannel(n);
 				} else {
 					float volume = snd.volume;
@@ -579,7 +579,7 @@ namespace sound
 			if(channels_to_sounds_playing[n].object == object &&
 			   channels_to_sounds_playing[n].file == file) {
 				if(fade_out_time == 0.0f) {
-					channels_to_sounds_playing[n].object = NULL;
+					channels_to_sounds_playing[n].object = nullptr;
 				}
 				channels_to_sounds_playing[n].fade_out_time = fade_out_time;
 				channels_to_sounds_playing[n].time_cnt = 0.0f;
@@ -605,7 +605,7 @@ namespace sound
 	void stop_looped_sounds(const void* object)
 	{
 		for(int n = 0; n != channels_to_sounds_playing.size(); ++n) {
-			if((object == NULL && channels_to_sounds_playing[n].object != NULL
+			if((object == nullptr && channels_to_sounds_playing[n].object != nullptr
 			   || channels_to_sounds_playing[n].object == object) &&
 			   (channels_to_sounds_playing[n].loops != 0)) {
 	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
@@ -613,17 +613,17 @@ namespace sound
 	#else
 				sdl_stop_channel(n);
 	#endif
-				channels_to_sounds_playing[n].object = NULL;
+				channels_to_sounds_playing[n].object = nullptr;
 			} else if(channels_to_sounds_playing[n].object == object) {
 				//this sound is a looped sound, but make sure it keeps going
 				//until it ends, since this function signals that the associated
 				//object is going away.
-				channels_to_sounds_playing[n].object = NULL;
+				channels_to_sounds_playing[n].object = nullptr;
 			}
 		}
 
 		for(int n = 0; n != queued_sounds.size(); ++n) {
-			if((object == NULL && queued_sounds[n].object != NULL
+			if((object == nullptr && queued_sounds[n].object != nullptr
 			   || queued_sounds[n].object == object) &&
 			   (queued_sounds[n].loops != 0)) {
 				queued_sounds.erase(queued_sounds.begin() + n);
@@ -632,7 +632,7 @@ namespace sound
 				//this sound is a looped sound, but make sure it keeps going
 				//until it ends, since this function signals that the associated
 				//object is going away.
-				queued_sounds[n].object = NULL;
+				queued_sounds[n].object = nullptr;
 			}
 		}
 	}
@@ -679,7 +679,7 @@ namespace sound
 		return sfx_volume;
 	}
 
-	void setSoundVolume(float volume)
+	void set_sound_volume(float volume)
 	{
 		sfx_volume = volume;
 	}
@@ -689,17 +689,18 @@ namespace sound
 		return user_music_volume;
 	}
 
-	namespace {
-	void update_music_volume()
+	namespace 
 	{
-		if(sound_init) {
-	#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
-			Mix_VolumeMusic(static_cast<int>(track_music_volume*user_music_volume*engine_music_volume*MIX_MAX_VOLUME));
-	#else
-			iphone_set_music_volume(track_music_volume*user_music_volume*engine_music_volume);
-	#endif
+		void update_music_volume()
+		{
+			if(sound_init) {
+		#if !TARGET_IPHONE_SIMULATOR && !TARGET_OS_IPHONE
+				Mix_VolumeMusic(static_cast<int>(track_music_volume*user_music_volume*engine_music_volume*MIX_MAX_VOLUME));
+		#else
+				iphone_set_music_volume(track_music_volume*user_music_volume*engine_music_volume);
+		#endif
+			}
 		}
-	}
 	}
 
 	void set_music_volume(float volume)
@@ -735,11 +736,12 @@ namespace sound
 		}
 	}
 
-	namespace {
-	std::map<std::string,std::string>& get_music_paths() {
-		static std::map<std::string,std::string> res;
-		return res;
-	}
+	namespace 
+	{
+		std::map<std::string,std::string>& get_music_paths() {
+			static std::map<std::string,std::string> res;
+			return res;
+		}
 	}
 
 	void load_music_paths() {

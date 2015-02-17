@@ -501,15 +501,15 @@ namespace KRE
 
 		void Affector::handleEmitProcess(float t) 
 		{
-			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
+			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique_ is null");
 			for(auto& e : technique_->getInstancedEmitters()) {
-				ASSERT_LOG(e->emitted_by != NULL, "PSYSTEM2: e->emitted_by is null");
+				ASSERT_LOG(e->emitted_by != nullptr, "PSYSTEM2: e->emitted_by is null");
 				if(!isEmitterExcluded(e->emitted_by->name())) {
 					internalApply(*e,t);
 				}
 			}
 			for(auto& p : technique_->getActiveParticles()) {
-				ASSERT_LOG(p.emitted_by != NULL, "PSYSTEM2: p.emitted_by is null");
+				ASSERT_LOG(p.emitted_by != nullptr, "PSYSTEM2: p.emitted_by is null");
 				if(!isEmitterExcluded(p.emitted_by->name())) {
 					internalApply(p,t);
 				}
@@ -552,7 +552,7 @@ namespace KRE
 			} else {
 				ASSERT_LOG(false, "PSYSTEM2: Unrecognised affector type: " << ntype);
 			}
-			return NULL;
+			return nullptr;
 		}
 
 		TimeColorAffector::TimeColorAffector(ParticleSystemContainer* parent, const variant& node)

@@ -122,7 +122,7 @@ namespace tbs
 		virtual variant getValueDefault(const std::string& key) const override;
 		virtual void setValueDefault(const std::string& key, const variant& value) override;
 
-		virtual ai_player* create_ai() const { return NULL; }
+		virtual ai_player* create_ai() const { return nullptr; }
 
 		const game_type& type_;
 
@@ -157,7 +157,7 @@ namespace tbs
 
 		std::vector<boost::intrusive_ptr<tbs::bot> > bots_;
 
-		void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=NULL);
+		void handleEvent(const std::string& name, game_logic::FormulaCallable* variables=nullptr);
 		void executeCommand(variant cmd);
 
 		mutable DbClientPtr DbClient_;

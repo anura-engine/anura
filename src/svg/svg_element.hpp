@@ -23,7 +23,7 @@
 
 #pragma once
 
-#include "../kre/Geometry.hpp"
+#include "geometry.hpp"
 #include "svg_fwd.hpp"
 #include "svg_render.hpp"
 #include "svg_style.hpp"
@@ -95,7 +95,7 @@ namespace KRE
 			virtual void handle_clip(render_context& ctx) const;
 			virtual void handle_clip_render(render_context& ctx) const = 0;
 
-			// top level parent element. if NULL then this is the top level element.
+			// top level parent element. if nullptr then this is the top level element.
 			element* parent_;
 
 			visual_attribs visual_attribs_;

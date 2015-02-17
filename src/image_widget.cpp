@@ -46,14 +46,6 @@ namespace gui
 		init(w, h);
 	}
 
-	ImageWidget::ImageWidget(KRE::MaterialPtr mat, int w, int h)
-	{
-		// Kind of a fudge if passed a material, we just grab the first texture.
-		texture_ = mat->getTexture().front();
-		setEnvironment();
-		init(w, h);
-	}
-
 	ImageWidget::ImageWidget(const variant& v, game_logic::FormulaCallable* e) 
 		: Widget(v, e)
 	{

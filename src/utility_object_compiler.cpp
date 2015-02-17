@@ -350,7 +350,7 @@ UTILITY(compile_objects)
 		ASSERT_INDEX_INTO_VECTOR(anim->dst_image, surfaces);
 		SurfacePtr dst = surfaces[anim->dst_image];
 		SurfacePtr src = graphics::SurfaceCache::get(anim->src_image);
-		ASSERT_LOG(src.get() != NULL, "COULD NOT LOAD IMAGE: '" << anim->src_image << "'");
+		ASSERT_LOG(src.get() != nullptr, "COULD NOT LOAD IMAGE: '" << anim->src_image << "'");
 		int xdst = 0;
 		for(int f = 0; f != anim->anim->numFrames(); ++f) {
 			const auto& info = anim->anim->frameLayout()[f];

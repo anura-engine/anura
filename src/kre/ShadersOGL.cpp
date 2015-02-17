@@ -25,7 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "asserts.hpp"
-#include "ShadersOpenGL.hpp"
+#include "ShadersOGL.hpp"
 
 namespace KRE
 {
@@ -301,14 +301,14 @@ namespace KRE
 				shader_ = 0;
 			}
 
-			ASSERT_LOG(glCreateShader != NULL, "Something bad happened with Glew shader not initialised.");
+			ASSERT_LOG(glCreateShader != nullptr, "Something bad happened with Glew shader not initialised.");
 			shader_ = glCreateShader(type_);
 			if(shader_ == 0) {
 				std::cerr << "Enable to create shader." << std::endl;
 				return false;
 			}
 			const char* shader_code = code.c_str();
-			glShaderSource(shader_, 1, &shader_code, NULL);
+			glShaderSource(shader_, 1, &shader_code, nullptr);
 			glCompileShader(shader_);
 			glGetShaderiv(shader_, GL_COMPILE_STATUS, &compiled);
 			if(!compiled) {
@@ -317,7 +317,7 @@ namespace KRE
 				if(info_len > 1) {
 					std::vector<char> info_log;
 					info_log.resize(info_len);
-					glGetShaderInfoLog(shader_, info_log.capacity(), NULL, &info_log[0]);
+					glGetShaderInfoLog(shader_, info_log.capacity(), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
 					std::cerr << "Error compiling shader: " << s << std::endl;
 				}
@@ -447,7 +447,7 @@ namespace KRE
 				if(info_len > 1) {
 					std::vector<char> info_log;
 					info_log.resize(info_len);
-					glGetProgramInfoLog(object_, info_log.capacity(), NULL, &info_log[0]);
+					glGetProgramInfoLog(object_, info_log.capacity(), nullptr, &info_log[0]);
 					std::string s(info_log.begin(), info_log.end());
 					std::cerr << "Error linking object: " << s << std::endl;
 				}
@@ -511,7 +511,7 @@ namespace KRE
 				return;
 			}
 			const Actives& u = it->second;
-			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
+			ASSERT_LOG(value != nullptr, "setUniformValue(): value is nullptr");
 			switch(u.type) {
 			case GL_INT:
 			case GL_BOOL:
@@ -608,7 +608,7 @@ namespace KRE
 				return;
 			}
 			const Actives& u = it->second;
-			ASSERT_LOG(value != NULL, "set_uniform(): value is NULL");
+			ASSERT_LOG(value != nullptr, "set_uniform(): value is nullptr");
 			switch(u.type) {
 			case GL_INT:
 			case GL_BOOL:
@@ -640,7 +640,7 @@ namespace KRE
 				return;
 			}
 			const Actives& u = it->second;
-			ASSERT_LOG(value != NULL, "setUniformValue(): value is NULL");
+			ASSERT_LOG(value != nullptr, "setUniformValue(): value is nullptr");
 			switch(u.type) {
 			case GL_FLOAT: {
 				glUniform1f(u.location, *value);
@@ -780,14 +780,14 @@ namespace KRE
 		void ShaderProgram::setUniform(ActivesHandleBasePtr active, const void* value) 
 		{
 			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
-			ASSERT_LOG(ptr != NULL, "Unable to convert active to correct type.");
+			ASSERT_LOG(ptr != nullptr, "Unable to convert active to correct type.");
 			setUniformValue(ptr->getIterator(), value);
 		}
 
 		/*void ShaderProgram::setAttribute(ActivesHandleBasePtr active, const void* value) 
 		{
 			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
-			ASSERT_LOG(ptr != NULL, "Unable to convert active to correct type.");
+			ASSERT_LOG(ptr != nullptr, "Unable to convert active to correct type.");
 			setAttributeValue(ptr->getIterator(), value);
 		}*/
 
@@ -837,7 +837,7 @@ namespace KRE
 				ShaderDef(name + "_vs", vert_data),
 				ShaderDef(name + "_fs", frag_data),
 				node);
-			auto it = sf.find(name);
+			it = sf.find(name);
 			if(it != sf.end()) {
 				LOG_WARN("Overwriting shader with name: " << name);
 			}

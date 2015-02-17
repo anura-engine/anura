@@ -46,7 +46,7 @@ namespace movie
 		  cancel_on_keypress_(cancel_on_keypress), 
 		  playing_(false), 
 		  flags_(0), 
-		  img_(NULL)
+		  img_(nullptr)
 	{
 		file_name_ = module::map_file(file);
 		setLoc(x, y);
@@ -60,7 +60,7 @@ namespace movie
 		  cancel_on_keypress_(false), 
 		  playing_(false), 
 		  flags_(0), 
-		  img_(NULL)
+		  img_(nullptr)
 	{
 		ASSERT_LOG(v.has_key("filename") && v["filename"].is_string(), "Must have at least a 'filename' key or type string");
 		file_name_ = module::map_file(v["filename"].as_string());
@@ -83,12 +83,12 @@ namespace movie
 			"Unknown file header found: " << std::string(&file_hdr_[0], &file_hdr_[4]));
 		frame_hdr_.resize(IVF_FRAME_HDR_SZ);
 
-		auto res = vpx_codec_dec_init(&codec_, vpx_codec_vp8_dx(), NULL, flags_);
+		auto res = vpx_codec_dec_init(&codec_, vpx_codec_vp8_dx(), nullptr, flags_);
 		ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_));
 
 		frame_.resize(256 * 1024);
 		playing_ = true;
-		iter_ = NULL;
+		iter_ = nullptr;
 	}
 
 	vpx::~vpx() 
@@ -97,8 +97,8 @@ namespace movie
 
 	void vpx::genTextures()
 	{
-		ASSERT_LOG(img_ != NULL, "img_ is null");
-		texture_ = KRE::Texture::createTexture(img_->d_w, img_->d_h, KRE::PixelFormat::PF::PIXELFORMAT_YV12);
+		ASSERT_LOG(img_ != nullptr, "img_ is null");
+		texture_ = KRE::Texture::createTexture2D(img_->d_w, img_->d_h, KRE::PixelFormat::PF::PIXELFORMAT_YV12);
 	}
 
 	void vpx::stop()
@@ -109,8 +109,8 @@ namespace movie
 	void vpx::decodeFrame()
 	{
 		if(file_.eof()) {
-			// when file_ has been read call vpx_codec_decode with data as NULL and sz as 0
-			vpx_codec_decode(&codec_, NULL, 0, NULL, 0);
+			// when file_ has been read call vpx_codec_decode with data as nullptr and sz as 0
+			vpx_codec_decode(&codec_, nullptr, 0, nullptr, 0);
 			if(loop_) {
 				file_.clear();
 				file_.seekg(0, std::ios::beg);
@@ -119,8 +119,8 @@ namespace movie
 					"Unknown file header found: " << std::string(&file_hdr_[0], &file_hdr_[4]));
 				frame_hdr_.resize(IVF_FRAME_HDR_SZ);
 
-				iter_ = NULL;
-				img_ = NULL;
+				iter_ = nullptr;
+				img_ = nullptr;
 			
 				file_.read(reinterpret_cast<char*>(&frame_hdr_[0]), IVF_FRAME_HDR_SZ);
 				frame_size_ = mem_get_le32(frame_hdr_);
@@ -129,7 +129,7 @@ namespace movie
 				frame_.resize(frame_size_);
 				file_.read(reinterpret_cast<char*>(&frame_[0]), frame_size_);
 
-				auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, NULL, 0);
+				auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, nullptr, 0);
 				ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_) << " : " << vpx_codec_error_detail(&codec_));
 
 			} else {
@@ -144,7 +144,7 @@ namespace movie
 			frame_.resize(frame_size_);
 			file_.read(reinterpret_cast<char*>(&frame_[0]), frame_size_);
 
-			auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, NULL, 0);
+			auto res = vpx_codec_decode(&codec_, &frame_[0], frame_size_, nullptr, 0);
 			ASSERT_LOG(res == 0, "Codec error: " << vpx_codec_error(&codec_) << " : " << vpx_codec_error_detail(&codec_));
 		}
 	}
@@ -157,12 +157,12 @@ namespace movie
 
 		bool done = false;
 		while(playing_ && !done) {
-			if(img_ == NULL) {
+			if(img_ == nullptr) {
 				decodeFrame();
-				iter_ = NULL;
+				iter_ = nullptr;
 			}
 			img_ = vpx_codec_get_frame(&codec_, &iter_);
-			if(img_ != NULL) {
+			if(img_ != nullptr) {
 				done = true;
 			}
 		}
@@ -201,7 +201,7 @@ namespace movie
 
 	void vpx::handleDraw() const
 	{
-		if(img_ == NULL) {
+		if(img_ == nullptr) {
 			return;
 		}
 

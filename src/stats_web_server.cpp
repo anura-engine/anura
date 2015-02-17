@@ -109,7 +109,7 @@ void web_server::heartbeat()
 	if(++nheartbeat_%3600 == 0) {
 		LOG_INFO("WRITING DATA...");
 		timeval start_time, end_time;
-		gettimeofday(&start_time, NULL);
+		gettimeofday(&start_time, nullptr);
 		variant v = write_stats();
 		std::string data = v.write_json();
 
@@ -126,7 +126,7 @@ void web_server::heartbeat()
 
 		sys::write_file("stats-1.json", data);
 
-		gettimeofday(&end_time, NULL);
+		gettimeofday(&end_time, nullptr);
 
 		const int time_us = (end_time.tv_sec - start_time.tv_sec)*1000000 + (end_time.tv_usec - start_time.tv_usec);
 		LOG_INFO("WROTE STATS IN " << time_us << "us");

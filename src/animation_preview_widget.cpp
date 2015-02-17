@@ -280,7 +280,7 @@ namespace gui
 	}
 
 	AnimationPreviewWidget::AnimationPreviewWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: Widget(v,e), cycle_(0), zoom_label_(NULL), pos_label_(NULL), scale_(0), 
+		: Widget(v,e), cycle_(0), zoom_label_(nullptr), pos_label_(nullptr), scale_(0), 
 		anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), 
 		moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
 	{
@@ -318,7 +318,7 @@ namespace gui
 		}
 	}
 
-	AnimationPreviewWidget::AnimationPreviewWidget(variant obj) : cycle_(0), zoom_label_(NULL), pos_label_(NULL), scale_(0), anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
+	AnimationPreviewWidget::AnimationPreviewWidget(variant obj) : cycle_(0), zoom_label_(nullptr), pos_label_(nullptr), scale_(0), anchor_x_(-1), anchor_y_(-1), anchor_pad_(-1), has_motion_(false), dragging_sides_bitmap_(0), moving_solid_rect_(false), anchor_solid_x_(-1), anchor_solid_y_(-1)
 	{
 		setEnvironment();
 		setObject(obj);
@@ -536,7 +536,7 @@ namespace gui
 
 		const int framex = static_cast<int>(preview_area.x() + (preview_area.w() - frame_->width()*scale)/2);
 		const int framey = static_cast<int>(preview_area.y() + (preview_area.h() - frame_->height()*scale)/2);
-		frame_->draw(framex, framey, true, false, cycle_, 0, scale);
+		frame_->draw(nullptr, framex, framey, true, false, cycle_, 0, scale);
 		if(++cycle_ >= frame_->duration()) {
 			cycle_ = 0;
 		}

@@ -77,7 +77,7 @@ boost::uuids::uuid read_uuid(const std::string& s)
 		buf[1] = *ptr++;
 		buf[2] = 0;
 
-		*itor = static_cast<uint8_t>(strtol(buf, NULL, 16));
+		*itor = static_cast<uint8_t>(strtol(buf, nullptr, 16));
 	}
 
 	return result;

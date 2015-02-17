@@ -84,14 +84,14 @@ public:
 	void checkInitialized();
 
 	int parallaxScaleMillisX() const {
-		if(parallax_scale_millis_ == NULL){
+		if(parallax_scale_millis_ == nullptr){
 			return type_->parallaxScaleMillisX();
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
 	int parallaxScaleMillisY() const {
-		if(parallax_scale_millis_ == NULL){
+		if(parallax_scale_millis_ == nullptr){
 			return type_->parallaxScaleMillisY();
 		}else{
 			return parallax_scale_millis_->second;
@@ -112,7 +112,7 @@ public:
 
 	bool hasFeet() const;
 	
-	virtual bool isStandable(int x, int y, int* friction=NULL, int* traction=NULL, int* adjust_y=NULL) const;
+	virtual bool isStandable(int x, int y, int* friction=nullptr, int* traction=nullptr, int* adjust_y=nullptr) const;
 
 	virtual bool destroyed() const;
 	virtual bool pointCollides(int x, int y) const;
@@ -194,9 +194,9 @@ public:
 	virtual ConstEditorEntityInfoPtr getEditorInfo() const override;
 #endif // !NO_EDITOR
 
-	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=NULL);
-	virtual bool handleEvent(int event, const FormulaCallable* context=NULL);
-	virtual bool handleEventDelay(int event, const FormulaCallable* context=NULL);
+	virtual bool handleEvent(const std::string& event, const FormulaCallable* context=nullptr);
+	virtual bool handleEvent(int event, const FormulaCallable* context=nullptr);
+	virtual bool handleEventDelay(int event, const FormulaCallable* context=nullptr);
 
 	virtual void resolveDelayedEvents();
 
@@ -300,11 +300,11 @@ protected:
 	const std::pair<int,int>* parallaxScaleMillis() const { return parallax_scale_millis_.get(); }
 
 	enum class STANDING_STATUS { NOT_STANDING, BACK_FOOT, FRONT_FOOT };
-	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=NULL) const;
+	STANDING_STATUS isStanding(const Level& lvl, CollisionInfo* info=nullptr) const;
 
 	void setParent(EntityPtr e, const std::string& pivot_point);
 
-	virtual int parentDepth(bool* has_human_parent=NULL, int cur_depth=0) const;
+	virtual int parentDepth(bool* has_human_parent=nullptr, int cur_depth=0) const;
 
 	virtual bool editorForceStanding() const;
 

@@ -163,7 +163,7 @@ public:
 	bool has_key(const variant& key) const;
 	bool has_key(const std::string& key) const;
 
-	bool function_call_valid(const std::vector<variant>& args, std::string* message=NULL, bool allow_partial=false) const;
+	bool function_call_valid(const std::vector<variant>& args, std::string* message=nullptr, bool allow_partial=false) const;
 	variant operator()(const std::vector<variant>& args) const;
 
 	variant instantiate_generic_function(const std::vector<variant_type_ptr>& args) const;
@@ -258,7 +258,7 @@ public:
 	std::vector<variant_type_ptr> function_arg_types() const;
 
 
-	std::string as_string_default(const char* default_value=NULL) const;
+	std::string as_string_default(const char* default_value=nullptr) const;
 	const std::string& as_string() const;
 
 	bool is_callable() const { return type_ == VARIANT_TYPE_CALLABLE; }
@@ -272,7 +272,7 @@ public:
 	template<typename T>
 	T* try_convert() const {
 		if(!is_callable()) {
-			return NULL;
+			return nullptr;
 		}
 
 		return dynamic_cast<T*>(mutable_callable());
@@ -314,7 +314,7 @@ public:
 
 	std::string string_cast() const;
 
-	std::string to_debug_string(std::vector<const game_logic::FormulaCallable*>* seen=NULL) const;
+	std::string to_debug_string(std::vector<const game_logic::FormulaCallable*>* seen=nullptr) const;
 
 	enum write_flags
 	{
@@ -413,7 +413,7 @@ T* convert_variant(const variant& v) {
 template<typename T>
 T* try_convert_variant(const variant& v) {
 	if(!v.is_callable()) {
-		return NULL;
+		return nullptr;
 	}
 
 	return dynamic_cast<T*>(v.mutable_callable());

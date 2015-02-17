@@ -50,7 +50,7 @@ namespace KRE
 		std::default_random_engine& get_rng_engine() 
 		{
 			static std::unique_ptr<std::default_random_engine> res;
-			if(res == NULL) {
+			if(res == nullptr) {
 				auto seed = std::chrono::system_clock::now().time_since_epoch().count();
 				res.reset(new std::default_random_engine((std::default_random_engine::result_type)seed));
 			}

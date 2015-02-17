@@ -70,7 +70,7 @@ namespace gui
 		const float scale = static_cast<float>(std::min(preview_area.w()/frame_->width(), preview_area.h()/frame_->height()));
 		const int framex = preview_area.x() + (preview_area.w() - int(frame_->width()*scale))/2;
 		const int framey = preview_area.y() + (preview_area.h() - int(frame_->height()*scale))/2;
-		frame_->draw(framex, framey, true, false, cycle_, 0, scale);
+		frame_->draw(nullptr, framex, framey, true, false, cycle_, 0, scale);
 		if(++cycle_ >= frame_->duration()) {
 			cycle_ = 0;
 			if(++play_sequence_count_ > max_sequence_plays_) {

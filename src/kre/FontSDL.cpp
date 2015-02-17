@@ -100,12 +100,12 @@ namespace KRE
 			}
 		}
 
-		TTF_Font* font = NULL;
+		TTF_Font* font = nullptr;
 		auto font_pair = std::make_pair(fn, size);
 		auto it = get_font_table().find(font_pair);
 		if(it == get_font_table().end()) {
 			font = TTF_OpenFont(fn.c_str(), size);
-			ASSERT_LOG(font != NULL, "Failed to open font file '" << fn << "': " << TTF_GetError());
+			ASSERT_LOG(font != nullptr, "Failed to open font file '" << fn << "': " << TTF_GetError());
 			get_font_table()[font_pair] = font;
 		} else {
 			font = it->second;
@@ -125,7 +125,7 @@ namespace KRE
 			int height = 0, width = 0;
 			for(auto& line : lines) {
 				parts.emplace_back(TTF_RenderUTF8_Blended(font, line.c_str(), to_SDL_Color(color)));
-				if(parts.back() == NULL) {
+				if(parts.back() == nullptr) {
 					LOG_ERROR("Failed to render string: '" << line << "'\n");
 					throw FontError();
 				}
@@ -143,7 +143,7 @@ namespace KRE
 			for(auto& part : parts) {
 				SDL_Rect rect = {0, ypos, part->w, part->h};
 				SDL_SetSurfaceBlendMode(part, SDL_BLENDMODE_NONE);
-				SDL_BlitSurface(part, NULL, surf->get(), &rect);
+				SDL_BlitSurface(part, nullptr, surf->get(), &rect);
 				ypos += part->h;
 				SDL_FreeSurface(part);
 			}

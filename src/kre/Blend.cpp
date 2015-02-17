@@ -144,11 +144,6 @@ namespace KRE
 		}
 	}
 	
-	BlendModeScopePtr BlendModeScope::create(const BlendMode& bm) 
-	{
-		return DisplayDevice::getCurrent()->createBlendModeScope(bm);
-	}
-
 	variant BlendMode::write() const
 	{
 		if(src_ == BlendModeConstants::BM_ONE && dst_ == BlendModeConstants::BM_ONE) {

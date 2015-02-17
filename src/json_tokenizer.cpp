@@ -70,7 +70,7 @@ namespace json
 		if(i1 == i2) {
 			Token result;
 			result.type = Token::TYPE::NUM_TYPES;
-			result.begin = result.end = NULL;
+			result.begin = result.end = nullptr;
 			return result;
 		}
 

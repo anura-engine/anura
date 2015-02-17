@@ -268,7 +268,7 @@ namespace gui
 		g.reset(new Grid(4));
 		g->setHpad(50);
 		g->addCol(ButtonPtr(new Button(new Label("New", 14), std::bind(&AnimationCreatorDialog::animNew, this))))
-			.addCol(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(NULL)))))
+			.addCol(ButtonPtr(new Button(new Label("Save", 14), std::bind(&AnimationCreatorDialog::animSave, this, static_cast<Dialog*>(nullptr)))))
 			.addCol(ButtonPtr(new Button(new Label("Delete", 14), std::bind(&AnimationCreatorDialog::animDel, this))))
 			.addCol(ButtonPtr(new Button(new Label("Finish", 14), std::bind(&AnimationCreatorDialog::finish, this))));
 		addWidget(g, border_offset, height() - border_offset - g->height());

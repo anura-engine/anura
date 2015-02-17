@@ -89,26 +89,26 @@ public:
 	virtual bool is_numeric() const { return false; }
 	virtual bool is_none() const { return false; }
 	virtual bool is_any() const { return false; }
-	virtual const std::vector<variant_type_ptr>* is_union() const { return NULL; }
+	virtual const std::vector<variant_type_ptr>* is_union() const { return nullptr; }
 	virtual variant_type_ptr is_list_of() const { return variant_type_ptr(); }
-	virtual const std::vector<variant_type_ptr>* is_specific_list() const { return NULL; }
+	virtual const std::vector<variant_type_ptr>* is_specific_list() const { return nullptr; }
 	virtual std::pair<variant_type_ptr,variant_type_ptr> is_map_of() const { return std::pair<variant_type_ptr,variant_type_ptr>(); }
-	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return NULL; }
+	virtual const std::map<variant, variant_type_ptr>* is_specific_map() const { return nullptr; }
 	virtual bool is_type(variant::TYPE type) const { return false; }
-	virtual bool is_class(std::string* class_name=NULL) const { return false; }
-	virtual const std::string* is_builtin() const { return NULL; }
-	virtual const std::string* is_custom_object() const { return NULL; }
-	virtual const std::string* is_voxel_object() const { return NULL; }
+	virtual bool is_class(std::string* class_name=nullptr) const { return false; }
+	virtual const std::string* is_builtin() const { return nullptr; }
+	virtual const std::string* is_custom_object() const { return nullptr; }
+	virtual const std::string* is_voxel_object() const { return nullptr; }
 
-	virtual const std::vector<variant_range>* is_enumerable() const { return NULL; }
+	virtual const std::vector<variant_range>* is_enumerable() const { return nullptr; }
 
-	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=NULL) const { return false; }
-	virtual bool is_generic(std::string* id=NULL) const { return false; }
-	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(NULL, &result, NULL); return result; }
+	virtual bool is_function(std::vector<variant_type_ptr>* args, variant_type_ptr* return_type, int* min_args, bool* return_type_specified=nullptr) const { return false; }
+	virtual bool is_generic(std::string* id=nullptr) const { return false; }
+	virtual variant_type_ptr function_return_type_with_args(const std::vector<variant_type_ptr>& args) const { variant_type_ptr result; is_function(nullptr, &result, nullptr); return result; }
 
-	virtual const game_logic::FormulaCallableDefinition* getDefinition() const { return NULL; }
+	virtual const game_logic::FormulaCallableDefinition* getDefinition() const { return nullptr; }
 
-	virtual const game_logic::FormulaInterface* is_interface() const { return NULL; }
+	virtual const game_logic::FormulaInterface* is_interface() const { return nullptr; }
 
 	void setStr(const std::string& s) const { str_ = s; }
 	const std::string& str() const { return str_; }
@@ -117,7 +117,7 @@ public:
 
 	virtual bool is_equal(const variant_type& o) const = 0;
 
-	virtual bool is_compatible(variant_type_ptr type, std::ostringstream* why=NULL) const { return false; }
+	virtual bool is_compatible(variant_type_ptr type, std::ostringstream* why=nullptr) const { return false; }
 
 	virtual bool maybe_convertible_to(variant_type_ptr type) const { return false; }
 	virtual variant_type_ptr map_generic_types(const std::map<std::string, variant_type_ptr>& mapping) const { return variant_type_ptr(); }
@@ -141,7 +141,7 @@ variant_type_ptr get_variant_type_from_value(const variant& value);
 
 std::string variant_type_is_class_or_null(variant_type_ptr type);
 
-bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why=NULL);
+bool variant_types_compatible(variant_type_ptr to, variant_type_ptr from, std::ostringstream* why=nullptr);
 bool variant_types_might_match(variant_type_ptr to, variant_type_ptr from);
 
 variant_type_ptr parse_variant_type(const variant& original_str,

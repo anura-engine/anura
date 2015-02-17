@@ -35,4 +35,4 @@ namespace game_logic
 std::string preprocess(const std::string& input);
 
 struct preprocessor_error {};
-variant preprocess_string_value(const std::string& input, const game_logic::FormulaCallable* callable=NULL);
+variant preprocess_string_value(const std::string& input, const game_logic::FormulaCallable* callable=nullptr);

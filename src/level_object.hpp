@@ -26,7 +26,7 @@
 #include <vector>
 
 #include "Canvas.hpp"
-#include "Material.hpp"
+#include "Texture.hpp"
 
 #include "Color.hpp"
 #include "formula_callable.hpp"
@@ -36,7 +36,7 @@
 
 struct LevelTile 
 {
-	LevelTile() : object(NULL), draw_disabled(false) {}
+	LevelTile() : object(nullptr), draw_disabled(false) {}
 	bool isSolid(int x, int y) const;
 	int x, y;
 	int layer_from; //which zorder layer causes this tile to be built?
@@ -115,7 +115,7 @@ public:
 	static void writeCompiled();
 
 	static void setCurrentPalette(unsigned int palette);
-	explicit LevelObject(variant node, const char* id=NULL);
+	explicit LevelObject(variant node, const char* id=nullptr);
 	~LevelObject();
 
 	int width() const;

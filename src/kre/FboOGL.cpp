@@ -27,7 +27,8 @@
 
 #include "asserts.hpp"
 #include "DisplayDevice.hpp"
-#include "FboOpenGL.hpp"
+#include "FboOGL.hpp"
+#include "TextureOGL.hpp"
 #include "TextureUtils.hpp"
 #include "WindowManager.hpp"
 
@@ -105,7 +106,7 @@ namespace KRE
 				final_texture_id_ = boost::shared_array<GLuint>(new GLuint[2], [](GLuint* id){glDeleteTextures(2,id); delete[] id;});
 				glGenTextures(2, &final_texture_id_[0]);
 				glBindTexture(GL_TEXTURE_2D, final_texture_id_[0]);
-				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width(), Height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, NULL);
+				glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, Width(), Height(), 0, GL_RGBA8, GL_UNSIGNED_BYTE, nullptr);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -117,7 +118,7 @@ namespace KRE
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 				glTexParameteri(GL_TEXTURE_2D, GL_DEPTH_TEXTURE_MODE, GL_INTENSITY);
-				glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Width(), Height(), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, NULL );
+				glTexImage2D( GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT, Width(), Height(), 0, GL_DEPTH_COMPONENT, GL_UNSIGNED_BYTE, nullptr );
 				glBindTexture(GL_TEXTURE_2D, 0);
 
 				sample_framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
@@ -158,17 +159,10 @@ namespace KRE
 					glBindRenderbuffer(GL_RENDERBUFFER, 0);
 				}
 
-				// Use CreateMaterial.
-				auto dd = DisplayDevice::getCurrent();
-				std::vector<TexturePtr> textures;
-				unsigned color_planes = getColorPlanes();
-				textures.reserve(color_planes);
-				for(unsigned n = 0; n != color_planes; ++n) {
-					textures.emplace_back(dd->createTexture(tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888));
-				}
-				auto mat = dd->createMaterial("fbo_mat", textures);
-				mat->setCoords(rect(0, 0, width(), height()));
-				setMaterial(mat);
+				int color_planes = getColorPlanes();
+				auto tex = Texture::createTexture2D(color_planes, tex_width_, tex_height_, PixelFormat::PF::PIXELFORMAT_BGRA8888);
+				tex->setSourceRect(rect(0, 0, width(), height()));
+				setTexture(tex);
 
 				framebuffer_id_ = std::shared_ptr<GLuint>(new GLuint, [](GLuint* id) {
 					glDeleteFramebuffers(1, id); 
@@ -177,10 +171,8 @@ namespace KRE
 				glGenFramebuffers(1, framebuffer_id_.get());
 				glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 				// attach the texture to FBO color attachment point
-				unsigned n = 0;
-				for(auto t : textures) {
-					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+n, GL_TEXTURE_2D, t->id(), 0);
-					++n;
+				for(int n = 0; n != color_planes; ++n) {
+					glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0+n, GL_TEXTURE_2D, tex->id(n), 0);
 				}
 				if(depth_stencil_buffer_id_) {
 					glFramebufferRenderbuffer(GL_FRAMEBUFFER, ds_attachment, GL_RENDERBUFFER, *depth_stencil_buffer_id_);
@@ -206,7 +198,7 @@ namespace KRE
 
 	void FboOpenGL::preRender(const WindowManagerPtr& wnd)
 	{
-		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
+		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		// XXX wip
 		if(sample_framebuffer_id_) {
 			// using multi-sampling
@@ -223,7 +215,7 @@ namespace KRE
 
 	void FboOpenGL::handleApply() const
 	{
-		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
+		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 
 		glGetIntegerv(GL_VIEWPORT, viewport_);
@@ -238,7 +230,7 @@ namespace KRE
 
 	void FboOpenGL::handleClear() const
 	{
-		ASSERT_LOG(framebuffer_id_ != NULL, "Framebuffer object hasn't been created.");
+		ASSERT_LOG(framebuffer_id_ != nullptr, "Framebuffer object hasn't been created.");
 		glBindFramebuffer(GL_FRAMEBUFFER, *framebuffer_id_);
 		auto& color = getClearColor();
 		glClearColor(color.red(), color.green(), color.blue(), color.alpha());

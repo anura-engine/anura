@@ -64,8 +64,6 @@
 #include "formula.hpp"
 #include "frame.hpp"
 #include "grid_widget.hpp"
-#include "hex_tile.hpp"
-#include "hex_object.hpp"
 #include "image_widget.hpp"
 #include "json_parser.hpp"
 #include "label.hpp"
@@ -85,7 +83,6 @@
 #include "text_editor_widget.hpp"
 #include "tile_map.hpp"
 #include "tileset_editor_dialog.hpp"
-#include "hex_tileset_editor_dialog.hpp"
 #include "tooltip.hpp"
 #include "variant.hpp"
 #include "variant_utils.hpp"
@@ -457,7 +454,6 @@ namespace
 		"Add Objects",
 		"Select Objects",
 		"Edit Level Segments",
-		"Draw Hexagonal Tiles"
 	};
 
 	const char* ToolIcons[] = {
@@ -469,7 +465,6 @@ namespace
 		"editor_add_object", 
 		"editor_select_object", 
 		"editor_rect_select", 
-		"editor_draw_hexes"
 	};
 }
 
@@ -559,19 +554,18 @@ namespace
 
 	//the tiles that we've drawn in the current action.
 	std::vector<point> g_current_draw_tiles;
-	std::vector<point> g_current_draw_hex_tiles;
 
-	const EditorVariableInfo* g_variable_editing = NULL;
+	const EditorVariableInfo* g_variable_editing = nullptr;
 	int g_variable_editing_index = -1;
 	variant g_variable_editing_original_value;
-	const EditorVariableInfo* variable_info_selected(ConstEntityPtr e, int xpos, int ypos, int zoom, int* index_selected=NULL)
+	const EditorVariableInfo* variable_info_selected(ConstEntityPtr e, int xpos, int ypos, int zoom, int* index_selected=nullptr)
 	{
 		if(index_selected) {
 			*index_selected = -1;
 		}
 
 		if(!e || !e->getEditorInfo()) {
-			return NULL;
+			return nullptr;
 		}
 
 		for(const EditorVariableInfo& var : e->getEditorInfo()->getVarsAndProperties()) {
@@ -620,7 +614,7 @@ namespace
 			}
 		}
 
-		return NULL;
+		return nullptr;
 	}
 
 	int round_tile_size(int n)
@@ -827,8 +821,8 @@ editor::editor(const char* level_cfg)
     selected_entity_startx_(0), selected_entity_starty_(0),
     filename_(level_cfg), tool_(TOOL_ADD_RECT),
     done_(false), face_right_(true), upside_down_(false),
-	cur_tileset_(0), cur_object_(0), cur_hex_tileset_(0),
-    current_dialog_(NULL), 
+	cur_tileset_(0), cur_object_(0),
+    current_dialog_(nullptr), 
 	drawing_rect_(false), dragging_(false), level_changed_(0),
 	selected_segment_(-1),
 	mouse_buttons_down_(0), prev_mousex_(-1), prev_mousey_(-1),
@@ -1359,21 +1353,6 @@ void editor::process()
 		pencil_motion(last_xpos, last_ypos, xpos, ypos, buttons&SDL_BUTTON(SDL_BUTTON_LEFT));
 	}
 
-	if(tool() == TOOL_EDIT_HEXES && dragging_ && buttons) {
-		const int xpos = xpos_ + mousex*zoom_;
-		const int ypos = ypos_ + mousey*zoom_;
-		point p(xpos, ypos);
-		if(std::find(g_current_draw_hex_tiles.begin(), g_current_draw_hex_tiles.end(), p) == g_current_draw_hex_tiles.end()) {
-			g_current_draw_hex_tiles.push_back(p);
-
-			if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
-				add_hex_tile_rect(p.x, p.y, p.x, p.y);
-			} else {
-				remove_hex_tile_rect(p.x, p.y, p.x, p.y);
-			}
-		}
-	}
-
 	for(LevelPtr lvl : levels_) {
 		lvl->complete_rebuild_tiles_in_background();
 	}
@@ -1707,7 +1686,7 @@ void editor::handle_scrolling()
 	}
 	const int ScrollSpeed = 24*zoom_;
 	const int FastScrollSpeed = 384*zoom_;
-	const Uint8* keystate = SDL_GetKeyboardState(NULL);
+	const Uint8* keystate = SDL_GetKeyboardState(nullptr);
 
 	if(keystate[SDL_SCANCODE_LEFT]) {
 		xpos_ -= ScrollSpeed;
@@ -2031,17 +2010,6 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 		g_current_draw_tiles.clear();
 		point tile_pos(round_tile_size(p.x), round_tile_size(p.y));
 		g_current_draw_tiles.push_back(tile_pos);
-	} else if(tool() == TOOL_EDIT_HEXES) {
-		drawing_rect_ = false;
-		dragging_ = true;
-		point p(anchorx_, anchory_);
-		if(buttons&SDL_BUTTON(SDL_BUTTON_LEFT)) {
-			add_hex_tile_rect(p.x, p.y, p.x, p.y);
-		} else {
-			remove_hex_tile_rect(p.x, p.y, p.x, p.y);
-		}
-		g_current_draw_hex_tiles.clear();
-		g_current_draw_hex_tiles.push_back(p);
 	} else if(property_dialog_ && variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_)) {
 		g_variable_editing = variable_info_selected(property_dialog_->getEntity(), anchorx_, anchory_, zoom_, &g_variable_editing_index);
 		g_variable_editing_original_value = property_dialog_->getEntity()->queryValue(g_variable_editing->getVariableName());
@@ -2061,7 +2029,7 @@ void editor::handleMouseButtonDown(const SDL_MouseButtonEvent& event)
 			  std::bind(execute_functions, redo),
 			  std::bind(execute_functions, undo));
 
-			g_variable_editing = NULL;
+			g_variable_editing = nullptr;
 			g_variable_editing_original_value = variant();
 			g_variable_editing_index = -1;
 		}
@@ -2235,7 +2203,7 @@ void editor::handleMouseButtonUp(const SDL_MouseButtonEvent& event)
 			end_command_group();
 			property_dialog_->init();
 		}
-		g_variable_editing = NULL;
+		g_variable_editing = nullptr;
 		return;
 	}
 
@@ -2621,9 +2589,6 @@ void editor::remove_tile_rect(int x1, int y1, int x2, int y2)
 		}
 
 		redo.push_back([=](){ lvl->clear_tile_rect(x1, y1, x2, y2); });
-
-		undo.push_back([=](){ lvl->start_rebuild_hex_tiles_in_background(std::vector<int>()); });
-		redo.push_back([=](){ lvl->start_rebuild_hex_tiles_in_background(std::vector<int>()); });
 	}
 
 	executeCommand(std::bind(execute_functions, redo), std::bind(execute_functions, undo));
@@ -2682,73 +2647,6 @@ void editor::select_tile_rect(int x1, int y1, int x2, int y2)
 	executeCommand(
 	  std::bind(&editor::setSelection, this, new_selection),	
 	  std::bind(&editor::setSelection, this, tile_selection_));
-}
-
-void editor::add_hex_tile_rect(int x1, int y1, int x2, int y2)
-{
-	if(x2 < x1) {
-		std::swap(x1, x2);
-	}
-
-	if(y2 < y1) {
-		std::swap(y1, y2);
-	}
-
-	// fudge
-	const int zorder = -1000;
-	std::vector<hex::TileTypePtr>& t = hex::HexObject::getEditorTiles();
-
-	std::vector<std::function<void()> > undo, redo;
-
-	for(LevelPtr lvl : levels_) {
-		std::vector<std::string> old_rect;
-		lvl->get_hex_tile_rect(zorder, x1, y1, x2, y2, old_rect);
-
-		redo.push_back(std::bind(&Level::add_hex_tile_rect, lvl.get(), zorder, x1, y1, x2, y2, t[get_hex_tileset()]->getgetEditorInfo().type));
-		undo.push_back(std::bind(&Level::add_hex_tile_rect_vector, lvl.get(), zorder, x1, y1, x2, y2, old_rect));
-
-		std::vector<int> layers;
-		layers.push_back(zorder);
-		undo.push_back(std::bind(&Level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
-		redo.push_back(std::bind(&Level::start_rebuild_hex_tiles_in_background, lvl.get(), layers));
-	}
-
-	executeCommand(
-	  std::bind(execute_functions, redo),
-	  std::bind(execute_functions, undo));
-
-	if(layers_dialog_) {
-		layers_dialog_->init();
-	}
-}
-
-void editor::remove_hex_tile_rect(int x1, int y1, int x2, int y2)
-{
-	if(x2 < x1) {
-		std::swap(x1, x2);
-	}
-
-	if(y2 < y1) {
-		std::swap(y1, y2);
-	}
-
-	std::vector<std::function<void()> > redo, undo;
-	for(LevelPtr lvl : levels_) {
-
-		std::map<int, std::vector<std::string> > old_tiles;
-		lvl->getAllHexTilesRect(x1, y1, x2, y2, old_tiles);
-		for(std::map<int, std::vector<std::string> >::const_iterator i = old_tiles.begin(); i != old_tiles.end(); ++i) {
-			undo.push_back(std::bind(&Level::add_hex_tile_rect_vector, lvl.get(), i->first, x1, y1, x2, y2, i->second));
-		}
-
-		redo.push_back(std::bind(&Level::clear_hex_tile_rect, lvl.get(), x1, y1, x2, y2));
-		undo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-		redo.push_back(std::bind(&Level::start_rebuild_tiles_in_background, lvl.get(), std::vector<int>()));
-	}
-
-	executeCommand(
-	  std::bind(execute_functions, redo),
-	  std::bind(execute_functions, undo));
 }
 
 void editor::select_magic_wand(int xpos, int ypos)
@@ -2810,16 +2708,6 @@ void editor::set_tileset(int index)
 		lvl->set_tile_layer_speed(tilesets[cur_tileset_].zorder,
 		                          tilesets[cur_tileset_].x_speed,
 								  tilesets[cur_tileset_].y_speed);
-	}
-}
-
-void editor::set_hex_tileset(int index)
-{
-	cur_hex_tileset_ = index;
-	if(cur_hex_tileset_ < 0) {
-		cur_hex_tileset_ = hex::HexObject::getHexTiles().size()-1;
-	} else if(static_cast<unsigned>(cur_hex_tileset_) >= hex::HexObject::getHexTiles().size()) {
-		cur_hex_tileset_ = 0;
 	}
 }
 
@@ -2899,21 +2787,6 @@ void editor::change_tool(EDIT_TOOL tool)
 		segment_dialog_->setSegment(selected_segment_);
 		break;
 	}
-	case TOOL_EDIT_HEXES: {
-		if(hex::HexObject::getHexTiles().size() > 0) {
-			if(!hex_tileset_dialog_) {
-				hex_tileset_dialog_.reset(new editor_dialogs::HexTilesetEditorDialog(*this));
-			}
-			current_dialog_ = hex_tileset_dialog_.get();
-			lvl_->editor_clear_selection();
-		} else {
-			tool_ = last_tool;
-			debug_console::addMessage("There isn't a hex tile definition file or file is empty/invalid!");
-			return;
-		}
-		break;
-	}
-
 	default: {
 		break;
 	}
@@ -3185,19 +3058,8 @@ void editor::draw_gui() const
 		e.setPos(x, y);
 		if(place_entity_in_level(*lvl_, e)) {
 			KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.5f));
-			all_characters()[cur_object_].preview_frame()->draw(e.x(), e.y(), face_right_, upside_down_);
+			all_characters()[cur_object_].preview_frame()->draw(nullptr, e.x(), e.y(), face_right_, upside_down_);
 		}
-	}
-	if(tool() == TOOL_EDIT_HEXES) {
-		int x = (xpos_ + mousex*zoom_);
-		int y = (ypos_ + mousey*zoom_);
-		if(ctrl_pressed) {
-			x = xpos_ + mousex*zoom_;
-			y = ypos_ + mousey*zoom_;
-		}
-		point p = hex::HexMap::getTilePosFromPixelPos(x, y);
-		KRE::Canvas::ColorManager cm(KRE::Color(1.0f, 1.0f, 1.0f, 0.7f));
-		hex::HexObject::getEditorTiles()[get_hex_tileset()]->getgetEditorInfo().draw(p.x, p.y);
 	}
 
 	if(drawing_rect_) {
@@ -3465,15 +3327,6 @@ void editor::draw_gui() const
 	canvas->blitTexture(xtex, 0, rect(10, 80));
 	canvas->blitTexture(ytex, 0, rect(10 + xtex->width(), 80));
 	
-	if(tool() == TOOL_EDIT_HEXES) {
-		point p = hex::HexMap::getTilePosFromPixelPos(xpos_ + mousex*zoom_, ypos_ + mousey*zoom_);
-		auto xptex = KRE::Font::getInstance()->renderText(formatter() << "(" << p.x << ",", KRE::Color::colorWhite(), 14);
-		auto yptex = KRE::Font::getInstance()->renderText(formatter() << p.y << ")", KRE::Color::colorWhite(), 14);
-		canvas->blitTexture(xptex, 0, rect(90, 80));
-		canvas->blitTexture(yptex, 0, rect(90 + xptex->width(), 80));
-		// XXX: generate the name / editor name of the tile under the mouse and display it.
-	}
-
 	if(!code_dialog_ && current_dialog_) {
 		current_dialog_->draw();
 	}

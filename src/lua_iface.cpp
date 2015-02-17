@@ -235,7 +235,7 @@ namespace lua
 			}
 			auto& player = Level::current().player()->getEntity();
 			auto value = symbols.createFunction(fn->name, args, player.getDefinition());
-			if(value == NULL) {
+			if(value == nullptr) {
 				luaL_error(L, "Function not found: %s", fn->name);
 			}
 			auto ret = value->evaluate(player);
@@ -251,7 +251,7 @@ namespace lua
 		{
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,function_str)); // (-0,+0,-)
 			delete[] fn->name;
-			fn->name = NULL;
+			fn->name = nullptr;
 			return 0;
 		}
 
@@ -259,7 +259,7 @@ namespace lua
 		{
 			using namespace game_logic;
 			FormulaCallable* callable = *static_cast<FormulaCallable**>(lua_touserdata(L, 1));	// (-0,+0,-)
-			luaL_argcheck(L, callable != NULL, 1, "'callable' was null");
+			luaL_argcheck(L, callable != nullptr, 1, "'callable' was null");
 			intrusive_ptr_release(callable);
 			return 0;
 		}
@@ -334,8 +334,8 @@ namespace lua
 			FormulaCallable* callable = *static_cast<FormulaCallable**>(luaL_checkudata(L, 2, callable_str));	// (-0,+0,-)
 
 			auto& symbols = get_formula_functions_symbol_table();
-			auto value = symbols.createFunction(fn->name, args, NULL);
-			if(value != NULL) {
+			auto value = symbols.createFunction(fn->name, args, nullptr);
+			if(value != nullptr) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
 					callable->executeCommand(ret);
@@ -345,8 +345,8 @@ namespace lua
 				return 0;
 			}
 
-			value = get_custom_object_functions_symbol_table().createFunction(fn->name, args, NULL);
-			if(value != NULL) {
+			value = get_custom_object_functions_symbol_table().createFunction(fn->name, args, nullptr);
+			if(value != nullptr) {
 				auto ret = value->evaluate(*callable);
 				if(ret.is_callable()) {
 					callable->executeCommand(ret);
@@ -363,7 +363,7 @@ namespace lua
 		{
 			ffl_function_userdata* fn = static_cast<ffl_function_userdata*>(luaL_checkudata(L,1,callable_function_str)); // (-0,+0,-)
 			delete[] fn->name;
-			fn->name = NULL;
+			fn->name = nullptr;
 			return 0;
 		}
 
@@ -407,20 +407,20 @@ namespace lua
 		const luaL_Reg gFFLFunctions[] = {
 			{"__call", call_function},
 			{"__gc", gc_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gLibMetaFunctions[] = {
 			{"__call", call_variant_function},
 			{"__gc", gc_variant_function},
 			{"__index", index_variant_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gFFLCallableFunctions[] = {
 			{"__call", call_callable_function},
 			{"__gc", gc_callable_function},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		const luaL_Reg gCallableFunctions[] = {
@@ -428,7 +428,7 @@ namespace lua
 			{"__newindex", set_callable_index},
 			{"__tostring", serialize_callable},
 			{"__gc", remove_callable_reference},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		static int get_level(lua_State* L) 
@@ -470,7 +470,7 @@ namespace lua
 		static const struct luaL_Reg anura_functions [] = {
 			{"level", get_level},
 			{"lib", get_lib},
-			{NULL, NULL},
+			{nullptr, nullptr},
 		};
 
 		static void push_anura_table(lua_State* L) 
@@ -500,7 +500,7 @@ namespace lua
 			res = dostring("", value.as_string());
 		} else {
 			LuaCompiledPtr compiled = value.try_convert<LuaCompiled>();
-			ASSERT_LOG(compiled != NULL, "FATAL: object given couldn't be converted to type 'lua_compiled'");
+			ASSERT_LOG(compiled != nullptr, "FATAL: object given couldn't be converted to type 'lua_compiled'");
 			res = compiled->run(getContextPtr());
 		}
 		return res;
@@ -628,7 +628,7 @@ namespace lua
 	bool CompiledChunk::run(lua_State* L) const 
 	{
 		chunks_it_ = chunks_.begin();
-		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), NULL, NULL) || lua_pcall(L, 0, 0, 0)) {
+		if(lua_load(L, chunk_reader, reinterpret_cast<void*>(const_cast<CompiledChunk*>(this)), nullptr, nullptr) || lua_pcall(L, 0, 0, 0)) {
 			const char* a = lua_tostring(L, -1);
 			std::cerr << a << "\n";
 			lua_pop(L, 1);

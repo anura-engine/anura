@@ -53,7 +53,7 @@ namespace box2d
 
 	namespace 
 	{
-		b2World *current_world = NULL;
+		b2World *current_world = nullptr;
 		world_ptr this_world;
 
 		typedef std::map<std::string, std::shared_ptr<joint_factory> > joint_factory_map;
@@ -70,7 +70,7 @@ namespace box2d
 		void operator()(b2Body* b) const 
 		{
 			// if the world has destructed the body will already have been destroyed.
-			if(current_world != NULL) {
+			if(current_world != nullptr) {
 				std::cerr << "body_destructor: " << b << std::endl;
 				current_world->DestroyBody(b);
 			}
@@ -79,7 +79,7 @@ namespace box2d
 
 	joint_ptr world::find_joint_by_id(const std::string& key) const
 	{
-		for(b2Joint* j = current_world->GetJointList(); j != NULL; j = j->GetNext()) {
+		for(b2Joint* j = current_world->GetJointList(); j != nullptr; j = j->GetNext()) {
 			std::string* s = (std::string*)j->GetUserData();
 			if(*s == key) {
 				return joint_ptr(new joint(j));
@@ -194,7 +194,7 @@ namespace box2d
 
 	b2World& world::current()
 	{
-		ASSERT_LOG(current_world != NULL, "Access to world::current() denied. world is NULL");
+		ASSERT_LOG(current_world != nullptr, "Access to world::current() denied. world is nullptr");
 		return *current_world;
 	}
 
@@ -210,7 +210,7 @@ namespace box2d
 
 	void world::clear_current_world()
 	{
-		current_world = NULL;
+		current_world = nullptr;
 	}
 
 	variant world::getValue(const std::string& key) const
@@ -501,14 +501,14 @@ namespace box2d
 	void body::finishLoading(EntityPtr e)
 	{
 		world_ptr wp = world::our_world_ptr();
-		if(e != NULL) {
+		if(e != nullptr) {
 			if(body_def_.position.x == 0 && body_def_.position.y == 0) {
 				body_def_.position.x = float(e->x());
 				body_def_.position.y = float(e->y());
 			}
 			body_def_.userData = e.get();
 		} else {
-			body_def_.userData = NULL;
+			body_def_.userData = nullptr;
 		}
 		body_def_.position.x /= wp->scale();
 		body_def_.position.y /= wp->scale();
@@ -522,20 +522,20 @@ namespace box2d
 
 	bool body::active() const
 	{
-		ASSERT_LOG(body_ != NULL, "body_ is NULL in active()");
+		ASSERT_LOG(body_ != nullptr, "body_ is nullptr in active()");
 		return body_->IsActive();
 	}
 
 	void body::set_active(bool actv)
 	{
-		ASSERT_LOG(body_ != NULL, "body_ is NULL in set_active()");
+		ASSERT_LOG(body_ != nullptr, "body_ is nullptr in set_active()");
 		body_->SetActive(actv);
 	}
 
 
 	variant body::getValue(const std::string& key) const
 	{
-		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
+		ASSERT_LOG(body_ != nullptr, "Can't set parameters on this body. body_ == nullptr");
 		if(key == "active") {
 			return variant::from_bool(body_->IsActive());
 		} else if(key == "angle") {
@@ -593,7 +593,7 @@ namespace box2d
 
 	void body::setValue(const std::string& key, const variant& value)
 	{
-		ASSERT_LOG(body_ != NULL, "Can't set parameters on this body. body_ == NULL");
+		ASSERT_LOG(body_ != nullptr, "Can't set parameters on this body. body_ == nullptr");
 		if(key == "active") {
 			body_->SetActive(value.as_bool());
 		} else if(key == "angular_velocity") {
@@ -1112,7 +1112,7 @@ namespace box2d
 	variant joint_factory::write()
 	{
 		variant_builder res;
-		ASSERT_LOG(joint_def_ != NULL, "No joint definition found.");
+		ASSERT_LOG(joint_def_ != nullptr, "No joint definition found.");
 		variant keys = joint_variant_def_.getKeys();
 		for(int n = 0; n != keys.num_elements(); ++n) {
 			res.add(keys[n].as_string(), joint_variant_def_[keys[n]]);
@@ -1128,7 +1128,7 @@ namespace box2d
 
 	variant joint::getValue(const std::string& key) const
 	{
-		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
+		ASSERT_LOG(joint_ != nullptr, "Internal joint has been destroyed.");
 		if(key == "a") {
 			return variant((body*)joint_->GetBodyA()->GetUserData());
 		} else if(key == "b") {
@@ -1438,7 +1438,7 @@ namespace box2d
 
 	void joint::setValue(const std::string& key, const variant& value)
 	{
-		ASSERT_LOG(joint_ != NULL, "Internal joint has been destroyed.");
+		ASSERT_LOG(joint_ != nullptr, "Internal joint has been destroyed.");
 		if(joint_->GetType() == e_revoluteJoint) {
 			b2RevoluteJoint* revolute = (b2RevoluteJoint*)joint_;
 			if(key == "enable_limit") {

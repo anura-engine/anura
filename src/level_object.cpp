@@ -342,7 +342,7 @@ LevelObject::LevelObject(variant node, const char* id)
 	palettes_recognized_(current_palette_set),
 	current_palettes_(0)
 {
-	if(id_.empty() && id != NULL && *id) {
+	if(id_.empty() && id != nullptr && *id) {
 		id_ = id;
 	}
 
@@ -388,12 +388,12 @@ LevelObject::LevelObject(variant node, const char* id)
 		if(!variation.empty() && variation[0] == '+') {
 			//a + symbol at the start of tiles means that it's just a base-10
 			//number. This is generally what is used for compiled tiles.
-			tiles_.push_back(strtol(variation.c_str()+1, NULL, 10));
+			tiles_.push_back(strtol(variation.c_str()+1, nullptr, 10));
 		} else {
 			const int width = std::max<int>(t_->width(), t_->height());
 			ASSERT_LOG(width%BaseTileSize == 0, "image width: " << width << " not multiple of base tile size: " << BaseTileSize);
 			const int base = std::min<int>(32, width/BaseTileSize);
-			tiles_.push_back((base == 1) ? 0 : strtol(variation.c_str(), NULL, base));
+			tiles_.push_back((base == 1) ? 0 : strtol(variation.c_str(), nullptr, base));
 		}
 	}
 
@@ -404,7 +404,7 @@ LevelObject::LevelObject(variant node, const char* id)
 	if(node.has_key("solid_map")) {
 		solid_.resize(width()*height());
 		auto surf = graphics::SurfaceCache::get(node["solid_map"].as_string())->convert(KRE::PixelFormat::PF::PIXELFORMAT_ARGB8888);
-		if(surf != NULL) {
+		if(surf != nullptr) {
 			const uint32_t* p = reinterpret_cast<const uint32_t*>(surf->pixels());
 			for(int n = 0; n != surf->width() * surf->height() && n != solid_.size(); ++n) {
 				uint8_t r, g, b, alpha;
@@ -917,6 +917,36 @@ void LevelObject::getPalettesUsed(std::vector<int>& v) const
 	}
 }
 
+void LevelObject::queueDraw(KRE::CanvasPtr canvas, const LevelTile& t)
+{
+	const int random_index = hash_level_object(t.x,t.y);
+	const int tile_num = t.object->tiles_[random_index%t.object->tiles_.size()];
+
+	// queue_draw_from_tilesheet
+	const rect area = t.object->draw_area_;
+	if(tile_num < 0 || area.w() <= 0 || area.h() <= 0 || area.x() < 0 || area.y() < 0) {
+		return;
+	}
+
+	const int width = std::max<int>(t.object->t_->width(), t.object->t_->height());
+	const int xpos = BaseTileSize*(tile_num%(width/BaseTileSize)) + area.x();
+	const int ypos = BaseTileSize*(tile_num/(width/BaseTileSize)) + area.y();
+
+	rect src_rect(xpos, ypos, xpos + area.w(), ypos + area.h());
+
+	int area_x = area.x() * 2;
+	if(t.face_right) {
+		src_rect = rect::from_coordinates(src_rect.x2(), src_rect.y(), src_rect.x(), src_rect.y2());
+		area_x = 2 * BaseTileSize - area.x() * 2 - area.w() * 2;
+	}
+
+	const int x = t.x + area_x;
+	const int y = t.y + area.y() * 2;
+	rect dst_rect(x, y, area.w() * 2, area.h() * 2);
+
+	canvas->blitTexture(t.object->t_, src_rect, 0, dst_rect);
+}
+
 BEGIN_DEFINE_CALLABLE_NOBASE(LevelObject)
 DEFINE_FIELD(id, "string")
 	return variant(obj.id_);
@@ -951,7 +981,7 @@ COMMAND_LINE_UTILITY(annotate_tilesheet)
 
 	std::string arg = argv.front();
 	auto surf = graphics::SurfaceCache::get(arg);
-	ASSERT_LOG(surf.get() != NULL, "Could not load image: " << arg);
+	ASSERT_LOG(surf.get() != nullptr, "Could not load image: " << arg);
 
 	unsigned char* p = reinterpret_cast<unsigned char*>(surf->pixelsWriteable());
 

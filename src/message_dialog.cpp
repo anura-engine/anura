@@ -69,7 +69,7 @@ namespace
 		return i1;
 	}
 
-	MessageDialog* current_dialog = NULL;
+	MessageDialog* current_dialog = nullptr;
 }
 
 void MessageDialog::showModal(const std::string& text, const std::vector<std::string>* options)
@@ -87,7 +87,7 @@ void MessageDialog::showModal(const std::string& text, const std::vector<std::st
 void MessageDialog::clearModal()
 {
 	delete current_dialog;
-	current_dialog = NULL;
+	current_dialog = nullptr;
 }
 
 MessageDialog* MessageDialog::get()
@@ -124,7 +124,7 @@ MessageDialog::MessageDialog(const std::string& text, const rect& pos,
 		i1 = i2;
 	}
 
-	if(options != NULL) {
+	if(options != nullptr) {
 		for(const std::string& option : *options) 
 		{
 			options_.emplace_back(KRE::Font::getInstance()->renderText(option, KRE::Color::colorBlack(), FontSize));
@@ -166,8 +166,8 @@ void MessageDialog::draw() const
 	if(cur_row_ >= lines_.size() && !options_.empty()) {
 		const int CursorWidth = 8;
 
-		unsigned width = 0;
-		unsigned height = 0;
+		int width = 0;
+		int height = 0;
 		for(const KRE::TexturePtr& t : options_) {
 			if(t->width() > width) {
 				width = t->width();

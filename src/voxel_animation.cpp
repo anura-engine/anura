@@ -309,7 +309,7 @@ bool animation_renderer::handleEvent(const SDL_Event& event, bool claimed)
 	case SDL_MOUSEMOTION: {
 		const SDL_MouseMotionEvent& motion = event.motion;
 
-		Uint8 button_state = input::sdl_get_mouse_state(NULL, NULL);
+		Uint8 button_state = input::sdl_get_mouse_state(nullptr, nullptr);
 		if(dragging_view_ && button_state&SDL_BUTTON(SDL_BUTTON_LEFT)) {
 			if(motion.xrel) {
 				camera_hangle_ += motion.xrel*0.02;

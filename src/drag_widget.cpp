@@ -102,14 +102,14 @@ namespace gui
 		: x_(x), y_(y), w_(w), h_(h), dir_(dir), 
 		drag_start_(drag_start), drag_end_(drag_end), drag_move_(drag_move),
 	
-		old_cursor_(NULL), dragging_handle_(0)
+		old_cursor_(nullptr), dragging_handle_(0)
 	{
 		setEnvironment();
 		init();
 	}
 
 	DragWidget::DragWidget(const variant& v, game_logic::FormulaCallable* e) 
-		: Widget(v,e), old_cursor_(NULL), dragging_handle_(0)
+		: Widget(v,e), old_cursor_(nullptr), dragging_handle_(0)
 	{
 		using std::placeholders::_1;
 		using std::placeholders::_2;
@@ -288,14 +288,14 @@ namespace gui
 			}
 		} else {
 			if(pointInRect(p, getDraggerRect()) || pointInRect(p, getBorderRect())) {
-				if(old_cursor_ == NULL) {
+				if(old_cursor_ == nullptr) {
 					old_cursor_ = SDL_GetCursor();
 					SDL_SetCursor(drag_cursor_.get());
 				}
 			} else {
 				if(old_cursor_) {
 					SDL_SetCursor(old_cursor_);
-					old_cursor_ = NULL;
+					old_cursor_ = nullptr;
 				}
 			}
 		}

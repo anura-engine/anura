@@ -30,8 +30,8 @@
 
 #include "Color.hpp"
 #include "geometry.hpp"
-#include "Material.hpp"
-#include "util.hpp"
+#include "Texture.hpp"
+#include "Util.hpp"
 #include "VGraph.hpp"
 #include "SceneUtil.hpp"
 
@@ -59,10 +59,6 @@ namespace KRE
 		// Blit a texture to the given co-ordinates on the display. Assumes the whole texture is being used.
 		void blitTexture(const TexturePtr& tex, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const;
 		void blitTexture(const TexturePtr& tex, float rotation, int x, int y, const Color& color=Color::colorWhite()) const;
-
-		// Blit's a material from internal co-ordinates to destination screen co-ordinates.
-		virtual void blitTexture(const MaterialPtr& mat, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
-		virtual void blitTexture(const MaterialPtr& mat, const rect& src, float rotation, const rect& dst, const Color& color=Color::colorWhite()) const = 0;
 
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, const Color& stroke_color, float rotate=0) const = 0;
 		virtual void drawSolidRect(const rect& r, const Color& fill_color, float rotate=0) const = 0;

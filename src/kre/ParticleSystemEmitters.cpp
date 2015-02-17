@@ -62,7 +62,7 @@ namespace KRE
 		{
 			static std::shared_ptr<GLuint> res;
 			static GLsizei num_verts = 0;
-			if(res == NULL) {
+			if(res == nullptr) {
 				// XXX This is probably broken since the context will be deleted before this destructor fires.
 				res.reset(new GLuint, [](GLuint* id){glDeleteBuffers(1, id); delete id;});
 				glGenBuffers(1, res.get());
@@ -80,7 +80,7 @@ namespace KRE
 	public:
 		BoxOutline() : color_(0.25f, 1.0f, 0.25f, 1.0f), num_vertices_(0) {
 			shader_ = gles2::shader_program::get_global("line_3d")->shader();
-			ASSERT_LOG(shader_ != NULL, "PSYSTEM2: test_draw_shader_ is null");
+			ASSERT_LOG(shader_ != nullptr, "PSYSTEM2: test_draw_shader_ is null");
 			u_mvp_matrix_ = shader_->get_fixed_uniform("mvp_matrix");
 			ASSERT_LOG(u_mvp_matrix_ != -1, "PSYSTEM2: Uniform 'mvp_matrix' unknown");
 			u_color_ = shader_->get_fixed_uniform("color");
@@ -392,7 +392,7 @@ namespace KRE
 				}*/
 			}
 			// Set a default duration for the emitter.
-			ASSERT_LOG(duration_ != NULL, "PSYSTEM2: duration_ is null");
+			ASSERT_LOG(duration_ != nullptr, "PSYSTEM2: duration_ is null");
 			duration_remaining_ = duration_->getValue(0);
 		}
 
@@ -402,7 +402,7 @@ namespace KRE
 
 		Emitter::Emitter(const Emitter& e)
 			: EmitObject(e),
-			technique_(NULL),
+			technique_(nullptr),
 			emission_rate_(e.emission_rate_),
 			time_to_live_(e.time_to_live_),
 			velocity_(e.velocity_),
@@ -437,7 +437,7 @@ namespace KRE
 
 		void Emitter::handleEmitProcess(float t) 
 		{
-			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique is null");
+			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique is null");
 			std::vector<Particle>& particles = technique_->getActiveParticles();
 
 			float duration = duration_->getValue(static_cast<float>(t));
@@ -446,7 +446,7 @@ namespace KRE
 					std::vector<Particle>::iterator start;
 
 					//create_particles(particles, start, end, t);
-					ASSERT_LOG(technique_ != NULL, "technique_ is null");
+					ASSERT_LOG(technique_ != nullptr, "technique_ is null");
 					size_t cnt = calculateParticlesToEmit(t, technique_->getQuota(), particles.size());
 					// XXX: techincally this shouldn't be needed as we reserve the default quota upon initialising
 					// the particle list. We could hit some pathological case where we allocate particles past
@@ -515,13 +515,13 @@ namespace KRE
 
 				duration_remaining_ -= static_cast<float>(t);
 				if(duration_remaining_ < 0.0f) {
-					ASSERT_LOG(repeat_delay_ != NULL, "PSYSTEM2: repeat_delay_ is null");
+					ASSERT_LOG(repeat_delay_ != nullptr, "PSYSTEM2: repeat_delay_ is null");
 					repeat_delay_remaining_ = repeat_delay_->getValue(t);
 				}
 			} else {
 				repeat_delay_remaining_ -= static_cast<float>(t);
 				if(repeat_delay_remaining_ < 0.0f) {
-					ASSERT_LOG(duration_ != NULL, "PSYSTEM2: duration_ is null");
+					ASSERT_LOG(duration_ != nullptr, "PSYSTEM2: duration_ is null");
 					duration_remaining_ = duration_->getValue(t);
 				}
 			}
@@ -584,7 +584,7 @@ namespace KRE
 
 		int Emitter::getEmittedParticleCountPerCycle(float t)
 		{
-			ASSERT_LOG(emission_rate_ != NULL, "PSYSTEM2: emission_rate_ is NULL");
+			ASSERT_LOG(emission_rate_ != nullptr, "PSYSTEM2: emission_rate_ is nullptr");
 			// at each step we produce emission_rate()*process_step_time particles.
 			float cnt = 0;
 			emission_fraction_ = std::modf(emission_fraction_ + emission_rate_->getValue(t)*t, &cnt);
@@ -593,8 +593,8 @@ namespace KRE
 
 		float Emitter::generateAngle() const
 		{
-			ASSERT_LOG(technique_ != NULL, "PSYSTEM2: technique_ is null");
-			ASSERT_LOG(technique_->getParticleSystem() != NULL, "PSYSTEM2: technique_->get_parent_system() is null");
+			ASSERT_LOG(technique_ != nullptr, "PSYSTEM2: technique_ is null");
+			ASSERT_LOG(technique_->getParticleSystem() != nullptr, "PSYSTEM2: technique_->get_parent_system() is null");
 			float angle = angle_->getValue(technique_->getParticleSystem()->getElapsedTime());
 			if(angle_->type() == ParameterType::FIXED) {
 				return get_random_float() * angle;
@@ -652,7 +652,7 @@ namespace KRE
 				return new SphereSurfaceEmitter(parent, node);
 			}
 			ASSERT_LOG(false, "PSYSTEM2: Unrecognised emitter type: " << ntype);
-			return NULL;
+			return nullptr;
 		}
 	}
 }

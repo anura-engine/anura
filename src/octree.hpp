@@ -66,7 +66,7 @@ namespace graphics
 		void insert(const glm::vec3& pt, const T2& data) 
 		{
 			if(isLeaf()) {
-				is(data_ == NULL) {
+				is(data_ == nullptr) {
 					data_.reset(new std::make_pair(pt, data));
 				} else {
 					T2 old_pt = data_->first;
@@ -89,7 +89,7 @@ namespace graphics
 		void pointsInBox(const glm::vec3& b1, const glm::vec3& b2, std::vector<T2>& results)
 		{
 			if(isLeaf()) {
-				if(data_ != NULL) {
+				if(data_ != nullptr) {
 					if(data_->first.x > b1.x || data_->first.y > b1.y || data_->first.z > b1.z
 						|| data_->first.x < b2.x || data_->first.y < b2.y || data_->first.z < b2.z) {
 						return;

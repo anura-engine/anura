@@ -32,7 +32,7 @@
 class MessageDialog
 {
 public:
-	static void showModal(const std::string& text, const std::vector<std::string>* options=NULL);
+	static void showModal(const std::string& text, const std::vector<std::string>* options=nullptr);
 	static void clearModal();
 	static MessageDialog* get();
 	void draw() const;
@@ -41,7 +41,7 @@ public:
 	int selectedOption() const { return selected_option_; }
 private:
 	MessageDialog(const std::string& text, const rect& pos,
-	              const std::vector<std::string>* options=NULL);
+	              const std::vector<std::string>* options=nullptr);
 	std::string text_;
 	rect pos_;
 	int viewable_lines_;

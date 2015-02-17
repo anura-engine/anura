@@ -36,7 +36,7 @@ namespace rng
 	int generate() 
 	{
 		if(next == UninitSeed) {
-			next = static_cast<unsigned int>(time(NULL));
+			next = static_cast<unsigned int>(time(nullptr));
 		}
 
 		next = next * 1103515245 + 12345;

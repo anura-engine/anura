@@ -531,7 +531,7 @@ namespace gui
 		edit_menu_.reset();
 		TreeViewWidget::init();
 		if(tree_.is_map() && tree_.num_elements() == 0) {
-			row_map_[0] = std::pair<variant*, variant*>((variant*)NULL, &tree_);
+			row_map_[0] = std::pair<variant*, variant*>((variant*)nullptr, &tree_);
 		}
 	}
 
@@ -554,7 +554,7 @@ namespace gui
 				g->swallowClicks(true);
 				g->allowDrawHighlight(true);
 				std::vector<std::string> choices;
-				if(parent_container != NULL) {
+				if(parent_container != nullptr) {
 					choices.push_back("Edit");
 					if(parent_container && parent_container->is_map()) {
 						choices.push_back("Edit Key");
@@ -572,7 +572,7 @@ namespace gui
 				choices.push_back("Add String");
 				choices.push_back("Add List");
 				choices.push_back("Add Map");
-				if(parent_container != NULL) {
+				if(parent_container != nullptr) {
 					choices.push_back("----------------");
 					choices.push_back("Delete");
 				}

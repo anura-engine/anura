@@ -66,7 +66,7 @@ public:
 
 	//play a sound. 'object' is just the address of the object playing the
 	//sound, useful if the sound is later cancelled.
-	void playSound(const void* object=NULL) const;
+	void playSound(const void* object=nullptr) const;
 	bool isAlpha(int x, int y, int time, bool face_right) const;
 
 	//Low level interface to alpha information.

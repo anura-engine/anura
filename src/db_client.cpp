@@ -160,12 +160,12 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			create_options.v.v0.bucket = g_couchbase_bucket.c_str();
 
 			lcb_error_t err = lcb_create(&instance_, &create_options);
-			ASSERT_LOG(err == LCB_SUCCESS, "Could not connect to couchbase server: " << lcb_strerror(NULL, err));
+			ASSERT_LOG(err == LCB_SUCCESS, "Could not connect to couchbase server: " << lcb_strerror(nullptr, err));
 
 			lcb_set_error_callback(instance_, couchbase_error_handler);
 
 			err = lcb_connect(instance_);
-			ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(NULL, err));
+			ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(nullptr, err));
 
 			lcb_set_get_callback(instance_, get_callback);
 		lcb_set_remove_callback(instance_, remove_callback);
@@ -210,7 +210,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			cookie->on_error = [=]() { --*poutstanding; on_error(); };
 
 			lcb_error_t err = lcb_store(instance_, cookie, 1, commands);
-			ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(NULL, err));
+			ASSERT_LOG(err == LCB_SUCCESS, "Error in store: " << lcb_strerror(nullptr, err));
 		}
 
 	virtual void remove(const std::string& key)
@@ -232,7 +232,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		cookie->on_error = [=]() { --*poutstanding; };
 
 		lcb_error_t err = lcb_remove(instance_, cookie, 1, commands);
-		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(NULL, err));
+		ASSERT_LOG(err == LCB_SUCCESS, "Error in remove: " << lcb_strerror(nullptr, err));
 	}
 
 		void get(const std::string& key, std::function<void(variant)> on_done, int lock_seconds)
@@ -257,14 +257,14 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			cookie->on_done = [=](variant v) { --*poutstanding; on_done(v); };
 
 			lcb_error_t err = lcb_get(instance_, cookie, 1, commands);
-			ASSERT_LOG(err == LCB_SUCCESS, "Error in get: " << lcb_strerror(NULL, err));
+			ASSERT_LOG(err == LCB_SUCCESS, "Error in get: " << lcb_strerror(nullptr, err));
 		}
 
 		bool process(int timeout_us)
 		{
 			if(timeout_us > 0) {
 				lcb_error_t error = LCB_SUCCESS;
-				lcb_timer_t timer = lcb_timer_create(instance_, NULL, timeout_us, 0, timer_callback, &error);
+				lcb_timer_t timer = lcb_timer_create(instance_, nullptr, timeout_us, 0, timer_callback, &error);
 				ASSERT_LOG(error == LCB_SUCCESS, "Failed to create lcb timer");
 			}
 			lcb_wait(instance_);
@@ -289,7 +289,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			}
 		}
 
-		ASSERT_LOG(err == LCB_SUCCESS, "Error in store callback: " << lcb_strerror(NULL, err));
+		ASSERT_LOG(err == LCB_SUCCESS, "Error in store callback: " << lcb_strerror(nullptr, err));
 	
 		if(cookie) {
 			const PutInfo* info = reinterpret_cast<const PutInfo*>(cookie);
@@ -304,7 +304,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 	void get_callback(lcb_t instance, const void *cookie, lcb_error_t err,
 					  const lcb_get_resp_t *item)
 	{
-		ASSERT_LOG(err == LCB_SUCCESS || err == LCB_KEY_ENOENT, "Error in get callback: " << lcb_strerror(NULL, err));
+		ASSERT_LOG(err == LCB_SUCCESS || err == LCB_KEY_ENOENT, "Error in get callback: " << lcb_strerror(nullptr, err));
 		if(cookie) {
 			variant v;
 			if(err == LCB_SUCCESS) {

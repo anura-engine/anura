@@ -27,12 +27,12 @@
 #include <string>
 #include <vector>
 
-#include "../ft_iface.hpp"
+#include "ft_iface.hpp"
 #include "svg_fwd.hpp"
 #include "svg_length.hpp"
 #include "svg_paint.hpp"
 #include "svg_render.hpp"
-#include "../uri.hpp"
+#include "uri.hpp"
 #include "utils.hpp"
 
 namespace KRE

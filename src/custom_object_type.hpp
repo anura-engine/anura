@@ -61,7 +61,7 @@ public:
 
 	static game_logic::FormulaCallableDefinitionPtr getDefinition(const std::string& id);
 	static bool isDerivedFrom(const std::string& base, const std::string& derived);
-	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=NULL);
+	static variant mergePrototype(variant node, std::vector<std::string>* proto_paths=nullptr);
 	static const std::string* getObjectPath(const std::string& id);
 	static ConstCustomObjectTypePtr get(const std::string& id);
 	static ConstCustomObjectTypePtr getOrDie(const std::string& id);
@@ -92,9 +92,9 @@ public:
 	void initEventHandlers(variant node,
 	                         event_handler_map& handlers,
 							 game_logic::FunctionSymbolTable* symbols=0,
-							 const event_handler_map* base_handlers=NULL) const;
+							 const event_handler_map* base_handlers=nullptr) const;
 
-	CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type=NULL, const CustomObjectType* old_type=NULL);
+	CustomObjectType(const std::string& id, variant node, const CustomObjectType* base_type=nullptr, const CustomObjectType* old_type=nullptr);
 	~CustomObjectType();
 
 	ConstCustomObjectTypePtr getSubObject(const std::string& id) const;
@@ -114,14 +114,14 @@ public:
 
 	game_logic::ConstFormulaPtr getEventHandler(int event) const;
 	int parallaxScaleMillisX() const {
-		if(parallax_scale_millis_.get() == NULL){
+		if(parallax_scale_millis_.get() == nullptr){
 			return 1000;
 		}else{
 			return parallax_scale_millis_->first;
 		}
 	}
 	int parallaxScaleMillisY() const {
-		if(parallax_scale_millis_.get() == NULL){
+		if(parallax_scale_millis_.get() == nullptr){
 			return 1000;
 		}else{
 			return parallax_scale_millis_->second;
