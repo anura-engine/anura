@@ -23,6 +23,8 @@
 
 // XXX It'd be nice if this was abstracted, then the iphone stuff could be hidden better.
 
+#pragma comment(lib, "SDL2_mixer")
+
 #include <iostream>
 #include <map>
 #include <vector>

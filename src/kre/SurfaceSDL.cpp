@@ -847,12 +847,16 @@ namespace KRE
 		for(size_t h = 0; h != height(); ++h) {
 			int offs = 0;
 			int ndx = 0;
-			uint8_t* pixel_ptr = static_cast<uint8_t*>(surface_->pixels) + h*rowPitch();
-			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + h*rowPitch();
+			int dst_offs = 0;
+			uint8_t* pixel_ptr = static_cast<uint8_t*>(surface_->pixels) + h * rowPitch();
+			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + h * rowPitch();
 			while(offs < width()) {
-				std::tie(offs, ndx) = getPixelFormat()->extractRGBA(pixel_ptr + offs, ndx, red, green, blue, alpha);
+				auto ret = getPixelFormat()->extractRGBA(pixel_ptr + offs, ndx, red, green, blue, alpha);
 				convert(red, green, blue, alpha);
-				dst->getPixelFormat()->encodeRGBA(dst_pixels, red, green, blue, alpha);
+				dst->getPixelFormat()->encodeRGBA(dst_pixel_ptr + dst_offs, red, green, blue, alpha);
+				offs += std::get<0>(ret);
+				ndx = std::get<1>(ret);				
+				dst_offs += dst->getPixelFormat()->bytesPerPixel();
 			}
 		}
 		dst->writePixels(dst_pixels);

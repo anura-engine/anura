@@ -1927,17 +1927,11 @@
   </ItemGroup>
   <ItemGroup>
     <Library Include="Release\lua.lib" />
-    <Library Include="c:\projects\SDL_image\VisualC\Win32\Release\SDL2_image.lib" />
-    <Library Include="c:\projects\SDL_mixer\VisualC\Release\SDL2_mixer.lib" />
-    <Library Include="c:\projects\SDL_ttf\VisualC\Win32\Release\SDL2_ttf.lib" />
     <Library Include="vpxmt.lib" />
     <Library Include="..\..\external\lib\libpng16.lib" />
     <Library Include="..\..\external\lib\cairo.lib" />
-    <Library Include="..\..\external\lib\freetype253.lib" />
     <Library Include="..\..\..\zlib\zlib.lib" />
     <Library Include="..\..\..\glew\lib\glew32.lib" />
-    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2main.lib" />
-    <Library Include="c:\projects\SDL\VisualC\Win32\Release\SDL2.lib" />
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\kre\geometry.inl">

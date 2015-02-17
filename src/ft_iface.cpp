@@ -28,6 +28,8 @@
 #include "module.hpp"
 #include "utf8_to_codepoint.hpp"
 
+#pragma comment(lib, "libfreetype-6")
+
 namespace KRE
 {
 	namespace FT

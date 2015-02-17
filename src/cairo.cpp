@@ -241,6 +241,8 @@ namespace graphics
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(cairo_op)
+		DEFINE_FIELD(dummy, "null")
+			return variant();
 	END_DEFINE_CALLABLE(cairo_op)
 
 	#define BEGIN_CAIRO_FN(a,b) BEGIN_DEFINE_FN(a,b "->builtin cairo_op") std::vector<variant> fn_args; for(int i = 0; i < NUM_FN_ARGS; ++i) { fn_args.push_back(FN_ARG(i)); } return variant(new cairo_op([](cairo_context& context, const std::vector<variant>& args) {

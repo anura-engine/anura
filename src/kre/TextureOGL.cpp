@@ -59,7 +59,7 @@ namespace KRE
 		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
 		  is_yuv_planar_(false)
 	{
-		texture_id_.resize(surfaces.size());
+		texture_id_.resize(getSurfaces().size());
 		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 	}
