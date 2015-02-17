@@ -164,8 +164,8 @@ namespace KRE
 			}
 
 			display_->setClearColor(clear_color_);
-			display_->init(width_, height_);
 			display_->printDeviceInfo();
+			display_->init(width_, height_);
 			display_->clear(ClearFlags::ALL);
 			swap();
 		}

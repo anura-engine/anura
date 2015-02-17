@@ -126,7 +126,9 @@ namespace KRE
 	DisplayDeviceOpenGL::DisplayDeviceOpenGL()
 		: seperate_blend_equations_(false),
 		  have_render_to_texture_(false),
-		  npot_textures_(false)
+		  npot_textures_(false),
+		  major_version_(0),
+		  minor_version_(0)
 	{
 	}
 
@@ -144,13 +146,26 @@ namespace KRE
 		glEnable(GL_BLEND);
 		glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-		// Get extensions
 		int extension_count = 0;
 		glGetIntegerv(GL_NUM_EXTENSIONS, &extension_count);
-		for(int n = 0; n != extension_count; ++n) {
-			std::string ext(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, n)));
-			extensions_.emplace(ext);
-			LOG_INFO("Extensions: " << ext);
+
+		if(major_version_ >= 3) {
+			// Get extensions
+			for(int n = 0; n != extension_count; ++n) {
+				std::string ext(reinterpret_cast<const char*>(glGetStringi(GL_EXTENSIONS, n)));
+				extensions_.emplace(ext);
+				LOG_INFO("Extensions: " << ext);
+			}
+		} else {
+			std::string exts(reinterpret_cast<const char*>(glGetString(GL_EXTENSIONS)));
+			if(glGetError() == GL_NONE) {
+				for(auto& ext : util::split(exts, " ")) {
+					extensions_.emplace(ext);
+					LOG_INFO("Extensions: " << ext);
+				}
+			} else {
+				LOG_ERROR("Couldn't get the GL extension list. Extension count=" << extension_count);
+			}
 		}
 
 		seperate_blend_equations_ = extensions_.find("EXT_blend_equation_separate") != extensions_.end();
@@ -160,16 +175,14 @@ namespace KRE
 
 	void DisplayDeviceOpenGL::printDeviceInfo()
 	{
-		GLint minor_version;
-		GLint major_version;
-		glGetIntegerv(GL_MINOR_VERSION, &minor_version);
-		glGetIntegerv(GL_MAJOR_VERSION, &major_version);
+		glGetIntegerv(GL_MINOR_VERSION, &minor_version_);
+		glGetIntegerv(GL_MAJOR_VERSION, &major_version_);
 		if(glGetError() != GL_NONE) {
 			// fall-back to old glGetStrings method.
 			const char* version_str = reinterpret_cast<const char*>(glGetString(GL_VERSION));
 			std::cerr << "OpenGL version: " << version_str << std::endl;
 		} else {
-			std::cerr << "OpenGL version: " << major_version << "." << minor_version << std::endl;
+			std::cerr << "OpenGL version: " << major_version_ << "." << minor_version_ << std::endl;
 		}
 	}
 

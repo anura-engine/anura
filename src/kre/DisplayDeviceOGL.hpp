@@ -101,5 +101,8 @@ namespace KRE
 		bool seperate_blend_equations_;
 		bool have_render_to_texture_;
 		bool npot_textures_;
+
+		int major_version_;
+		int minor_version_;
 	};
 }
