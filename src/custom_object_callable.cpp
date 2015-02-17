@@ -242,7 +242,7 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 		{ "use_absolute_screen_coordinates", "bool" },
 	
 		{ "widgets", "object/[object|map]|object|map" },
-		{ "widget_list", "[widget]" },
+		{ "widget_list", "[Widget]" },
 		{ "body", "any" },
 		{ "paused", "bool" },
 		{ "mouseover_delay", "int" },

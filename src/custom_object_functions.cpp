@@ -3054,7 +3054,7 @@ namespace
 		ARG_TYPE("object")
 		ARG_TYPE("map")
 	DEFINE_RETURN_TYPE
-		return parse_variant_type(variant("widget"));
+		return parse_variant_type(variant("Widget"));
 	END_FUNCTION_DEF(widget)
 
 	class add_Level_module_command : public EntityCommandCallable {

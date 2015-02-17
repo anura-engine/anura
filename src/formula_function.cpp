@@ -1629,7 +1629,7 @@ namespace game_logic
 			game_logic::Formula::failIfStaticContext();
 			return variant(write_uuid(generate_uuid()));
 		FUNCTION_ARGS_DEF
-			RETURN_TYPE("string directed_graph")
+			RETURN_TYPE("string")
 		END_FUNCTION_DEF(generate_uuid)
 
 		/* XXX Krista to be reworked
@@ -1667,7 +1667,7 @@ namespace game_logic
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("list")
 			ARG_TYPE("any")
-			RETURN_TYPE("builtin directed_graph")
+			RETURN_TYPE("builtin DirectedGraph")
 		END_FUNCTION_DEF(directed_graph)
 
 		FUNCTION_DEF(weighted_graph, 2, 2, "weighted_graph(directed_graph, weight_expression) -> a weighted directed graph")
@@ -1690,8 +1690,8 @@ namespace game_logic
 				}
 				return variant(new pathfinding::WeightedDirectedGraph(dg, &w));
 		FUNCTION_ARGS_DEF
-				ARG_TYPE("builtin directed_graph")
-				RETURN_TYPE("builtin weighted_directed_graph")
+				ARG_TYPE("builtin DirectedGraph")
+				RETURN_TYPE("builtin WeightedDirectedGraph")
 		END_FUNCTION_DEF(weighted_graph)
 
 		FUNCTION_DEF(a_star_search, 4, 4, "a_star_search(weighted_directed_graph, src_node, dst_node, heuristic) -> A list of nodes which represents the 'best' path from src_node to dst_node.")
@@ -1704,7 +1704,7 @@ namespace game_logic
 			boost::intrusive_ptr<MapFormulaCallable> callable(new MapFormulaCallable(&variables));
 			return pathfinding::a_star_search(wg, src_node, dst_node, heuristic, callable);
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("builtin weighted_directed_graph")
+			ARG_TYPE("builtin WeightedDirectedGraph")
 			ARG_TYPE("any")
 			ARG_TYPE("any")
 			ARG_TYPE("any")
@@ -1719,7 +1719,7 @@ namespace game_logic
 			decimal max_cost(args()[2]->evaluate(variables).as_decimal());
 			return pathfinding::path_cost_search(wg, src_node, max_cost);
 		FUNCTION_ARGS_DEF
-			ARG_TYPE("builtin weighted_directed_graph")
+			ARG_TYPE("builtin WeightedDirectedGraph")
 			ARG_TYPE("any")
 			ARG_TYPE("decimal|int")
 			RETURN_TYPE("list")

@@ -373,13 +373,13 @@ namespace gui
 		
 		DEFINE_FIELD(on_change, "null")
 			return variant();
-		DEFINE_SET_FIELD_TYPE("callable")
+		DEFINE_SET_FIELD_TYPE("builtin Callable")
 			obj.on_change_ = std::bind(&DropdownWidget::changeDelegate, obj, _1);
 			obj.change_handler_ = obj.getEnvironment()->createFormula(value);
 		
 		DEFINE_FIELD(on_select, "null")
 			return variant();
-		DEFINE_SET_FIELD_TYPE("callable")
+		DEFINE_SET_FIELD_TYPE("builtin Callable")
 			obj.on_select_ = std::bind(&DropdownWidget::selectDelegate, obj, _1, _2);
 			obj.select_handler_ = obj.getEnvironment()->createFormula(value);
 

@@ -95,7 +95,7 @@ namespace gui
 	}
 
 	BEGIN_DEFINE_CALLABLE(View3DWidget, Widget)
-	DEFINE_FIELD(children, "[widget]")
+	DEFINE_FIELD(children, "[builtin Widget]")
 		std::vector<variant> v;
 	    for(auto w : obj.children_) {
 			v.push_back(variant(w.get()));
