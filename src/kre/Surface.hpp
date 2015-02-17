@@ -55,6 +55,13 @@ namespace KRE
 		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
 	}
 
+	typedef std::function<std::string(const std::string&)> file_filter;
+
+	enum class FileFilterType {
+		LOAD,
+		SAVE,
+	};
+
 	class Surface
 	{
 	public:
@@ -108,6 +115,7 @@ namespace KRE
 		virtual bool setClipRect(const rect& r) = 0;
 		virtual const rect getClipRect() = 0;
 		SurfacePtr convert(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
+		void convertInPlace(PixelFormat::PF fmt, SurfaceConvertFn convert=nullptr);
 
 		unsigned getColorCount(ColorCountFlags flags=ColorCountFlags::NONE);
 
@@ -137,6 +145,9 @@ namespace KRE
 		static SurfacePtr create(int width, int height, PixelFormat::PF fmt);
 
 		static void resetSurfaceCache();
+
+		static void setFileFilter(FileFilterType type, file_filter fn);
+		static file_filter getFileFilter(FileFilterType type);
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);

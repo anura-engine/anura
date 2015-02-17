@@ -126,7 +126,8 @@ namespace KRE
 
 	SurfaceSDL::SurfaceSDL(const std::string& filename)
 	{
-		surface_ = IMG_Load(filename.c_str());
+		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
+		surface_ = IMG_Load(filter(filename).c_str());
 		if(surface_ == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
@@ -599,7 +600,8 @@ namespace KRE
 
 	SurfacePtr SurfaceSDL::createFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceConvertFn fn)
 	{
-		auto s = IMG_Load(filename.c_str());
+		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
+		auto s = IMG_Load(filter(filename).c_str());
 		if(s == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
@@ -860,8 +862,9 @@ namespace KRE
 
 	void SurfaceSDL::savePng(const std::string& filename)
 	{
+		auto filter = Surface::getFileFilter(FileFilterType::SAVE);
 		SurfaceLock lock(SurfacePtr(this));
-		auto err = IMG_SavePNG(surface_, filename.c_str());
+		auto err = IMG_SavePNG(surface_, filter(filename).c_str());
 		ASSERT_LOG(err == 0, "Error saving PNG file: " << SDL_GetError());
 	}
 

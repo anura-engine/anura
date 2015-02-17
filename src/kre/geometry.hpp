@@ -205,20 +205,16 @@ namespace geometry
 	Rect<int>::Rect(const variant& v)
 	{
 		if(v.is_list()) {
-			std::vector<int> vec;
-			for(size_t n = 0; n != v.num_elements(); ++n) {
-				vec.push_back(int(v.as_int()));
-			}
-			from_vector(vec);
+			from_vector(v.as_list_int());
 			return;
 		} else if(v.is_map()) {
 			ASSERT_LOG((v.has_key("x") && v.has_key("y") && v.has_key("w") && v.has_key("h"))
 				|| v.has_key("x1") && v.has_key("y1") && v.has_key("x2") && v.has_key("y2"), 
 				"map must have 'x','y','w','h' or 'x1','y1','x2','y2' attributes.");
 			if(v.has_key("x")) {
-				*this = Rect<int>(int(v["x"].as_int()),int(v["y"].as_int()),int(v["w"].as_int()),int(v["h"].as_int()));
+				*this = Rect<int>(v["x"].as_int32(),v["y"].as_int32(),v["w"].as_int32(),v["h"].as_int32());
 			} else {
-				*this = Rect<int>::FromCoordinates(int(v["x1"].as_int()),int(v["y1"].as_int()),int(v["x2"].as_int()),int(v["y2"].as_int()));
+				*this = Rect<int>::FromCoordinates(v["x1"].as_int32(),v["y1"].as_int32(),v["x2"].as_int32(),v["y2"].as_int32());
 			}
 		} else {
 			ASSERT_LOG(false, "Creating a rect from a variant must be list or map");
@@ -231,7 +227,7 @@ namespace geometry
 		if(v.is_list()) {
 			std::vector<float> vec;
 			for(size_t n = 0; n != v.num_elements(); ++n) {
-				vec.push_back(v.as_float());
+				vec.push_back(v[n].as_float());
 			}
 			from_vector(vec);
 			return;

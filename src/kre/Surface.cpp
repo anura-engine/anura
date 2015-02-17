@@ -79,6 +79,12 @@ namespace KRE
 		return handleConvert(fmt, convert);
 	}
 
+	void Surface::convertInPlace(PixelFormat::PF fmt, SurfaceConvertFn convert)
+	{
+		auto surf = handleConvert(fmt, convert);
+		*this = *surf.get();
+	}
+
 	bool Surface::registerSurfaceCreator(const std::string& name, 
 		SurfaceCreatorFileFn file_fn, 
 		SurfaceCreatorPixelsFn pixels_fn, 
@@ -211,6 +217,29 @@ namespace KRE
 			pix += rowPitch();
 		}
 		return color_list.size();
+	}
+
+	namespace 
+	{
+		std::map<FileFilterType, file_filter>& get_file_filter_map()
+		{
+			static std::map<FileFilterType, file_filter> res;
+			return res;
+		}
+	}
+
+	void Surface::setFileFilter(FileFilterType type, file_filter fn)
+	{
+		get_file_filter_map()[type] = fn;
+	}
+
+	file_filter Surface::getFileFilter(FileFilterType type)
+	{
+		auto it = get_file_filter_map().find(type);
+		if(it == get_file_filter_map().end()) {
+			return [](const std::string& s) { return s; };
+		}
+		return it->second;
 	}
 
 	PixelFormat::PixelFormat()

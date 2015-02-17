@@ -241,7 +241,7 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 	return 0;
 }
 
-extern "C" int main(int argcount, char* argvec[])
+int main(int argcount, char* argvec[])
 {
 	{
 		std::vector<std::string> args;
@@ -688,6 +688,9 @@ extern "C" int main(int argcount, char* argvec[])
 	WindowManagerPtr main_wnd = WindowManager::createInstance("SDL", "opengl");
 	main_wnd->enableVsync(false);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
+	// Set the image loading filter function, so that files are found in the correct place.
+	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
+	Surface::setFileFilter(FileFilterType::SAVE, [](const std::string& s){ return std::string(preferences::user_data_path()) + s; });
 
 	SceneGraphPtr scene = SceneGraph::create("root");
 	SceneNodePtr root = scene->getRootNode();

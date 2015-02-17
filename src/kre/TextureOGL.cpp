@@ -202,10 +202,22 @@ namespace KRE
 		// Set the pixel format being used.
 		pixel_format_ = fmt;
 
+		if(fmt == PixelFormat::PF::PIXELFORMAT_INDEX1LSB
+			|| fmt == PixelFormat::PF::PIXELFORMAT_INDEX1MSB
+			|| fmt == PixelFormat::PF::PIXELFORMAT_INDEX4LSB
+			|| fmt == PixelFormat::PF::PIXELFORMAT_INDEX4MSB
+			|| fmt == PixelFormat::PF::PIXELFORMAT_INDEX8) {
+			for(auto& s : getSurfaces()) {
+				s->convertInPlace(PixelFormat::PF::PIXELFORMAT_ARGB8888);
+			}
+			pixel_format_ = getFrontSurface()->getPixelFormat()->getFormat();
+		}
+
+
 		// Change the format/internalFormat/type depending on the 
 		// data we now about the surface.
 		// XXX these need testing for correctness.
-		switch(fmt) {
+		switch(pixel_format_) {
 			case PixelFormat::PF::PIXELFORMAT_INDEX1LSB:
 			case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:
 			case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:

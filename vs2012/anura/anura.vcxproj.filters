@@ -1916,6 +1916,9 @@
     <ClCompile Include="..\..\src\kre\DisplayDeviceOGLFixed.cpp">
       <Filter>Source Files\kre</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\kre\Util.cpp">
+      <Filter>Source Files\kre</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="..\..\src\anura-resouces.rc">

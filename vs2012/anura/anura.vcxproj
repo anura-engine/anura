@@ -27,7 +27,7 @@
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <CharacterSet>Unicode</CharacterSet>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v110</PlatformToolset>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
@@ -87,11 +87,11 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;IMPLEMENT_SAVE_PNG;USE_BOX2D;USE_GLES2;UTILITY_IN_PROC;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>WIN32;_WINDOWS;NOMINMAX;_CRT_SECURE_NO_WARNINGS;_SCL_SECURE_NO_WARNINGS;HAVE_M_PI;IMPLEMENT_SAVE_PNG;_USE_MATH_DEFINES;USE_ISOMAP;USE_BOX2D;USE_LUA;USE_LIBVPX;USE_SVG;_VARIADIC_MAX=10;_WIN32_WINNT=0x0501;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <StringPooling>true</StringPooling>
       <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
       <DebugInformationFormat>EditAndContinue</DebugInformationFormat>
-      <AdditionalIncludeDirectories>..\..\..\zlib-1.2.7;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost_1_50_0;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Projects\anura\external\include\freetype2;C:\Projects\libvpx;c:\projects\lua\src;C:\Projects\anura\src\svg;c:\projects\anura\include;c:\projects\glew\include;C:\Projects\anura\src\kre;C:\Projects\anura\src;C:\Projects\anura\external\include;..\..\..\zlib;..\..\..\lpng1512;..\..\..\Box2D_v2.2.1;..\..\..\glew-1.9.0\include;..\..\..\boost;..\..\..\SDL\include;..\..\..\SDL_mixer;..\..\..\SDL_image;..\..\..\SDL_ttf;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -654,6 +654,7 @@
     <ClCompile Include="..\..\src\kre\TextureSDL.cpp" />
     <ClCompile Include="..\..\src\kre\UniformBuffer.cpp" />
     <ClCompile Include="..\..\src\kre\UniformBufferOGL.cpp" />
+    <ClCompile Include="..\..\src\kre\Util.cpp" />
     <ClCompile Include="..\..\src\kre\VGraph.cpp" />
     <ClCompile Include="..\..\src\kre\VGraphCairo.cpp" />
     <ClCompile Include="..\..\src\kre\VGraphOGL.cpp" />

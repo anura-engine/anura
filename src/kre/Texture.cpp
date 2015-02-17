@@ -294,32 +294,21 @@ namespace KRE
 			// surfaces with zero for the alpha mask have no alpha channel
 			if(s && s->getPixelFormat()->hasAlphaChannel()) {
 				auto fmt = s->getPixelFormat();
-				const unsigned char* pixels = reinterpret_cast<const unsigned char*>(s->pixels());
+				const uint8_t* pixels = reinterpret_cast<const uint8_t*>(s->pixels());
 				for(int y = 0; y != height_; ++y) {
-					const unsigned char* pix = pixels;
-					for(int x = 0; x != width_; ++x) {
-						bool alpha = false;
-						uint32_t pixel_value;
-						switch(fmt->bytesPerPixel()) {
-						// XXX - these probably need an endian-ness test. 
-						// Or moved to Surface.
-						case 1: pixel_value = pix[0]; break;						
-						case 2: pixel_value = (pix[1] << 8) | pix[0]; break;
-						case 4: pixel_value = (pix[3] << 24) | (pix[2] << 16) | (pix[1] << 8) | pix[0]; break;
-						}
-						auto alpha_value = (((pixel_value & fmt->getAlphaMask()) >> fmt->getAlphaShift()) << fmt->getAlphaLoss());
-						alpha_map_[n][x+y*width_] = alpha_value == 0;
-						pix += fmt->bytesPerPixel();
+					int offs = 0;
+					int ndx = 0;
+					const uint8_t* pixel_ptr = pixels + height_ * s->rowPitch();
+					uint32_t red, green, blue, alpha;
+					while(offs < width()) {
+						int pixel_shift = 0;
+						std::tie(pixel_shift, ndx) = s->getPixelFormat()->extractRGBA(pixel_ptr + offs, ndx, red, green, blue, alpha);
+						offs += pixel_shift;
+						alpha_map_[n][offs+y*width_] = alpha == 0;
 					}
-					pixels += s->rowPitch();
 				}
-
 			} else {
-				for(int y = 0; y != height_; ++y) {
-					for(int x = 0; x != width_; ++x) {
-						alpha_map_[n][x + y*width_] = false;
-					}
-				}
+				std::fill(alpha_map_[n].begin(), alpha_map_[n].end(), false);
 			}
 			++n;
 		}
