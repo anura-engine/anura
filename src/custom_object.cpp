@@ -2925,11 +2925,6 @@ variant CustomObject::getValueBySlot(int slot) const
 		return variant(info.collide_with.get());
 	}
 
-	case CUSTOM_OBJECT_EFFECTS: {
-		// Return shader effects variant list
-		return variant();
-	}
-
 	case CUSTOM_OBJECT_SHADER: {
 		// Return shader variant
 		return variant();
@@ -4014,10 +4009,6 @@ void CustomObject::setValueBySlot(int slot, const variant& value)
 
 	case CUSTOM_OBJECT_SHADER: {
 		/// XXX custom object shader
-		break;
-	}
-	case CUSTOM_OBJECT_EFFECTS: {
-		/// XXX custom object effects
 		break;
 	}
 
