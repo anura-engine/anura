@@ -21,9 +21,9 @@
 	   distribution.
 */
 
-#include "util.hpp"
+#include "Util.hpp"
 
-namespace util
+namespace Util
 {
 	std::vector<std::string> split(const std::string& str, const std::string& delimiters)
 	{

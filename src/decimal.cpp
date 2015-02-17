@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <cstring>
 #include <stdio.h>
 #include <sstream>
 

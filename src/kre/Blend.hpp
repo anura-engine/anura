@@ -24,8 +24,9 @@
 #pragma once
 
 #include "DisplayDeviceFwd.hpp"
+#include "Util.hpp"
+
 #include "variant.hpp"
-#include "util.hpp"
 
 namespace KRE
 {

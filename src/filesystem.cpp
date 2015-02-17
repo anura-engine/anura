@@ -170,7 +170,7 @@ namespace sys
 		return fname;
 	}
 
-	int64_t file_mod_time(const std::string& fname)
+	long long file_mod_time(const std::string& fname)
 	{
 		path p(fname);
 		if(is_regular_file(p)) {

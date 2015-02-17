@@ -38,7 +38,7 @@
     TypeName(const TypeName&);                      \
     void operator=(const TypeName&)
 
-namespace util
+namespace Util
 {
 	std::vector<std::string> split(const std::string& s, const std::string& eol);
 }

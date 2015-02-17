@@ -25,7 +25,7 @@
 
 #include <memory>
 #include "geometry.hpp"
-#include "util.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {

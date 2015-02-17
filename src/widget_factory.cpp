@@ -56,7 +56,7 @@
 #include "slider.hpp"
 #include "text_editor_widget.hpp"
 #include "tree_view_widget.hpp"
-#include "view3D_widget.hpp"
+#include "view3d_widget.hpp"
 
 namespace widget_factory 
 {

@@ -25,8 +25,8 @@
 
 #include <string>
 
-#include "kre/Geometry.hpp"
-#include "kre/Texture.hpp"
+#include "geometry.hpp"
+#include "Texture.hpp"
 #include "variant.hpp"
 
 class GuiSection;

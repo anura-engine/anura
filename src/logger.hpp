@@ -25,6 +25,7 @@
 
 #include <iostream>
 #include <sstream>
+#include <cstring>
 
 enum LogLevel
 {

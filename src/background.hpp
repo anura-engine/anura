@@ -29,6 +29,7 @@
 #include <vector>
 
 #include "geometry.hpp"
+#include "SceneObject.hpp"
 #include "Texture.hpp"
 #include "variant.hpp"
 

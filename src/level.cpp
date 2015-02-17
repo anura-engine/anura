@@ -2311,7 +2311,7 @@ void Level::draw_background(int x, int y, int rotation) const
 	if(show_background_ == false) {
 		return;
 	}
-	auto& wnd = KRE::WindowManager::getMainWindow();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	if(shader_) {
 		ASSERT_LOG(false, "apply shader_ here");
 	}

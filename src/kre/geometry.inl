@@ -269,23 +269,23 @@ namespace geometry
 
 		if(a.x() < b.x()) {
 			//get the left section of the source rectangle
-			*output++ = rect(a.x(), a.y(), b.x() - a.x(), a.h());
+			*output++ = Rect<T>(a.x(), a.y(), b.x() - a.x(), a.h());
 			}
 
 		if(a.x() + a.w() > b.x() + b.w()) {
-			*output++ = rect(b.x() + b.w(), a.y(), (a.x() + a.w()) - (b.x() + b.w()), a.h());
+			*output++ = Rect<T>(b.x() + b.w(), a.y(), (a.x() + a.w()) - (b.x() + b.w()), a.h());
 			}
 
 		if(a.y() < b.y()) {
 			const int x1 = std::max(a.x(), b.x());
 			const int x2 = std::min(a.x() + a.w(), b.x() + b.w());
-			*output++ = rect(x1, a.y(), x2 - x1, b.y() - a.y());
+			*output++ = Rect<T>(x1, a.y(), x2 - x1, b.y() - a.y());
 			}
 
 		if(a.y() + a.h() > b.y() + b.h()) {
 			const int x1 = std::max(a.x(), b.x());
 			const int x2 = std::min(a.x() + a.w(), b.x() + b.w());
-			*output++ = rect(x1, b.y() + b.h(), x2 - x1, (a.y() + a.h()) - (b.y() + b.h()));
+			*output++ = Rect<T>(x1, b.y() + b.h(), x2 - x1, (a.y() + a.h()) - (b.y() + b.h()));
 		}
 
 		return output - begin_output;

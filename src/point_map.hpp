@@ -49,14 +49,14 @@ public:
 		Row* row;
 		if(p.y < 0) {
 			const int index = -p.y - 1;
-			if(static_cast<std::vector<Row>::size_type>(index) >= negative_rows_.size()) {
+			if(static_cast<std::size_t>(index) >= negative_rows_.size()) {
 				negative_rows_.resize((index + 1)*2);
 			}
 
 			row = &negative_rows_[index];
 		} else {
 			const int index = p.y;
-			if(static_cast<std::vector<Row>::size_type>(index) >= positive_rows_.size()) {
+			if(static_cast<std::size_t>(index) >= positive_rows_.size()) {
 				positive_rows_.resize((index + 1)*2);
 			}
 
@@ -65,14 +65,14 @@ public:
 
 		if(p.x < 0) {
 			const int index = -p.x - 1;
-			if(static_cast<std::vector<Row>::size_type>(index) >= row->negative_cells.size()) {
+			if(static_cast<std::size_t>(index) >= row->negative_cells.size()) {
 				row->negative_cells.resize(index+1);
 			}
 
 			row->negative_cells[index] = value;
 		} else {
 			const int index = p.x;
-			if(static_cast<std::vector<Row>::size_type>(index) >= row->positive_cells.size()) {
+			if(static_cast<std::size_t>(index) >= row->positive_cells.size()) {
 				row->positive_cells.resize(index+1);
 			}
 
@@ -87,7 +87,7 @@ private:
 		const Row* row;
 		if(p.y < 0) {
 			const int index = -p.y - 1;
-			if(static_cast<std::vector<Row>::size_type>(index) >= negative_rows_.size()) {
+			if(static_cast<std::size_t>(index) >= negative_rows_.size()) {
 				return nullptr;
 			}
 

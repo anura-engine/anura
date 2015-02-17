@@ -25,7 +25,7 @@
 
 #include "Renderable.hpp"
 #include "SceneFwd.hpp"
-#include "util.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {

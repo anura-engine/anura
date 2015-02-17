@@ -24,7 +24,7 @@
 #pragma once
 
 #include "StencilScope.hpp"
-#include "util.hpp"
+#include "Util.hpp"
 
 namespace KRE
 {

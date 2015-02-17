@@ -142,7 +142,7 @@ namespace utils
 			utf8_str[3] = static_cast<char>(cp & 0x3f)|0x80;
 			n += 3;
 		} else {
-			throw std::exception("Unable to convert codepoint value to utf-8 encoded string.");
+			throw std::runtime_error("Unable to convert codepoint value to utf-8 encoded string.");
 		}
 		return std::string(utf8_str, n);
     }

@@ -223,7 +223,7 @@ namespace KRE
 				getDeviceBufferData()->update(&elements_[0], 0, elements_.size() * sizeof(T));
 			}
 		}
-		void update(const Container<T>& src, iterator& dst) {
+		void update(const Container<T>& src, iterator dst) {
 			auto dst1 = std::distance(elements_.begin(), dst);
 			auto dst2 = std::distance(src.begin(), src.end()) * sizeof(T);
 			elements_.reserve(elements_.size() + src.size());
@@ -232,7 +232,7 @@ namespace KRE
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
 			}
 		}
-		void update(Container<T>* src, iterator& dst) {
+		void update(Container<T>* src, iterator dst) {
 			auto dst1 = std::distance(elements_.begin(), dst);
 			auto dst2 = std::distance(src->begin(), src->end()) * sizeof(T);
 			elements_.reserve(elements_.size() + src->size());

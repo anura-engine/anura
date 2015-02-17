@@ -26,7 +26,7 @@
 #include <vector>
 #include "AttributeSet.hpp"
 #include "RenderTarget.hpp"
-#include "util.hpp"
+#include "Util.hpp"
 #include "variant.hpp"
 
 namespace KRE

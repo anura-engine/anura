@@ -25,8 +25,8 @@
 #include <boost/property_tree/xml_parser.hpp>
 #include <sstream>
 
-#include "../asserts.hpp"
-#include "../kre/Geometry.hpp"
+#include "asserts.hpp"
+#include "geometry.hpp"
 
 #include "svg_element.hpp"
 #include "svg_paint.hpp"

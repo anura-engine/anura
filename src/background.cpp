@@ -267,7 +267,7 @@ variant Background::write() const
 
 void Background::draw(int x, int y, const rect& area, const std::vector<rect>& opaque_areas, float rotation, int cycle) const
 {
-	auto& wnd = KRE::WindowManager::getMainWindow();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	const int height = height_ + offset_.y*2;
 
 	//set the background colors for the level. The area above 'height' is

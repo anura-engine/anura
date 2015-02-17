@@ -121,7 +121,7 @@ namespace KRE
 			surf = new SurfaceSDL(TTF_RenderUTF8_Blended(font, text.c_str(), to_SDL_Color(color)));
 		} else {
 			std::vector<SDL_Surface*> parts;
-			std::vector<std::string> lines = util::split(text, "\n");
+			std::vector<std::string> lines = Util::split(text, "\n");
 			int height = 0, width = 0;
 			for(auto& line : lines) {
 				parts.emplace_back(TTF_RenderUTF8_Blended(font, line.c_str(), to_SDL_Color(color)));

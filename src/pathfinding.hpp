@@ -105,7 +105,6 @@ namespace pathfinding
 			h_ = T(0);
 			parent_ = nullptr;
 		}
-		friend std::ostream& operator<<(std::ostream& out, const GraphNode<N,T>& n);
 	private:
 		T f_, g_, h_;
 		N src_;
@@ -116,9 +115,9 @@ namespace pathfinding
 
 	template<typename N, typename T> inline 
 	std::ostream& operator<<(std::ostream& out, const GraphNode<N,T>& n) {
-		out << "GNODE: " << n.src_.to_string() << " : cost( " << n.f_ << "," << n.g_ << "," << n.h_ 
-			<< ") : parent(" << (n.parent_ == nullptr ? "nullptr" : n.parent_->get_node_value().to_string())
-			<< ") : (" << n.on_open_list_ << "," << n.on_closed_list_ << ")" << std::endl;
+		out << "GNODE: " << n.getNodeValue().to_string() << " : cost( " << n.F() << "," << n.G() << "," << n.H() 
+			<< ") : parent(" << (n.getParent() == nullptr ? "nullptr" : n.getParent()->getNodeValue().to_string())
+			<< ") : (" << n.isOnOpenList() << "," << n.isOnClosedList() << ")" << std::endl;
 		return out;
 	}
 

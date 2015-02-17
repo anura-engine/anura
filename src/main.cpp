@@ -491,7 +491,11 @@ extern "C" int main(int argcount, char* argvec[])
 						exe_name.resize(exe_name.size() - anura_exe_name.size());
 						exe_name += match;
 						args[0] = const_cast<char*>(exe_name.c_str());
+#if defined(_MSC_VER)
 						_execv(args[0], &args[0]);
+#else
+						execv(args[0], &args[0]);
+#endif
 						LOG_ERROR("Could not exec()");
 					}
 				}
@@ -643,7 +647,11 @@ extern "C" int main(int argcount, char* argvec[])
 				}
 			}
 			args.push_back(nullptr);
+#if defined(_MSC_VER)
 			_execv(args[0], &args[0]);
+#else
+			execv(args[0], &args[0]);
+#endif
 			LOG_ERROR("Could not exec()");
 		}
 	}

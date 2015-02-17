@@ -154,7 +154,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 	const int codebar_height = 0;
 #endif
 
-	auto& wnd = KRE::WindowManager::getMainWindow();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	const int screen_width = wnd->width() - (lvl.in_editor() ? sidebar_width : 0);
 	const int screen_height = wnd->height() - (lvl.in_editor() ? codebar_height : 0);
 
@@ -363,7 +363,7 @@ bool update_camera_position(const Level& lvl, screen_position& pos, const Entity
 
 void render_scene(const Level& lvl, const screen_position& pos) 
 {
-	auto& wnd = KRE::WindowManager::getMainWindow();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	auto canvas = KRE::Canvas::getInstance();
 	formula_profiler::Instrument instrumentation("DRAW");
 

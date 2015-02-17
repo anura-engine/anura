@@ -187,7 +187,7 @@ namespace
 
 	void fade_scene(const Level& lvl, screen_position& screen_pos, float fade) 
 	{
-		auto& wnd = KRE::WindowManager::getMainWindow();
+		auto wnd = KRE::WindowManager::getMainWindow();
 		KRE::Canvas::getInstance()->drawSolidRect(rect(0,0,wnd->width(),wnd->height()),KRE::Color(0.0f, 0.0f, 0.0f, 0.5f*fade));
 	}
 
@@ -202,8 +202,8 @@ namespace
 		if(lvl.player() == nullptr) {
 			return;
 		}
-		auto& wnd = KRE::WindowManager::getMainWindow();
-		auto& canvas = KRE::Canvas::getInstance();
+		auto wnd = KRE::WindowManager::getMainWindow();
+		auto canvas = KRE::Canvas::getInstance();
 
 		ConstEntityPtr player = &lvl.player()->getEntity();
 		const point light_pos = player->getMidpoint();
@@ -248,8 +248,8 @@ namespace
 	{
 		const std::string msg = "to be continued...";
 		auto t = KRE::Font::getInstance()->renderText(msg, KRE::Color::colorWhite(), 48);
-		auto& wnd = KRE::WindowManager::getMainWindow();
-		auto& canvas = KRE::Canvas::getInstance();
+		auto wnd = KRE::WindowManager::getMainWindow();
+		auto canvas = KRE::Canvas::getInstance();
 		const int xpos = wnd->width()/2 - t->width()/2;
 		const int ypos = wnd->height()/2 - t->height()/2;
 		for(unsigned n = 0; n <= msg.size(); ++n) {
@@ -419,7 +419,7 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 	}
 
 	// Get the correct window from the ID.
-	auto& wnd = KRE::WindowManager::getWindowFromID(event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID);
+	auto wnd = KRE::WindowManager::getWindowFromID(event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID);
 	
 	const int DragThresholdMilliPx = g_mouse_drag_threshold;
 
@@ -809,7 +809,7 @@ namespace
 
 bool LevelRunner::play_cycle()
 {
-	auto& mwnd = KRE::WindowManager::getMainWindow();
+	auto wnd = KRE::WindowManager::getMainWindow();
 	static SettingsDialog settingsDialog;
 
 	const preferences::alt_frame_time_scope alt_frame_time_scoper(preferences::has_alt_frame_time() && SDL_GetModState()&KMOD_ALT);
@@ -861,7 +861,7 @@ bool LevelRunner::play_cycle()
 
 	if(editor_) {
 		controls::control_backup_scope ctrl_backup;
-		editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(mwnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(mwnd->height())/2);
+		editor_->setPos(last_draw_position().x/100 - (editor_->zoom()-1)*(wnd->width()-editor::sidebar_width())/2, last_draw_position().y/100 - (editor_->zoom()-1)*(wnd->height())/2);
 		editor_->process();
 		lvl_->complete_rebuild_tiles_in_background();
 		lvl_->setAsCurrentLevel();
@@ -1397,10 +1397,10 @@ bool LevelRunner::play_cycle()
 					preferences::set_fullscreen(preferences::fullscreen() == preferences::FULLSCREEN_NONE 
 						? preferences::FULLSCREEN_WINDOWED 
 						: preferences::FULLSCREEN_NONE);
-					mwnd->setFullscreenMode(preferences::fullscreen() == preferences::FULLSCREEN_NONE
+					wnd->setFullscreenMode(preferences::fullscreen() == preferences::FULLSCREEN_NONE
 						? KRE::FullScreenMode::FULLSCREEN_WINDOWED
 						: KRE::FullScreenMode::WINDOWED);
-					mwnd->setWindowSize(preferences::actual_screen_width(), preferences::actual_screen_height());
+					wnd->setWindowSize(preferences::actual_screen_width(), preferences::actual_screen_height());
 				} else if(key == SDLK_F3) {
 					preferences::set_show_fps(!preferences::show_fps());
 				}
