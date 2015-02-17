@@ -804,6 +804,7 @@
     <Library Include="vpxmt.lib" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="..\..\src\custom_object.inc" />
     <None Include="..\..\src\kre\geometry.inl" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
