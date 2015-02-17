@@ -378,7 +378,10 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, const variant& node)
 	{
-		std::vector<SurfacePtr> surfaces(1, surface);
+		std::vector<SurfacePtr> surfaces;
+		if(surface != nullptr) {
+			surfaces.emplace_back(surface);
+		}
 		return std::make_shared<OpenGLTexture>(node, surfaces);
 	}
 
