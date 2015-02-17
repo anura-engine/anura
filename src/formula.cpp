@@ -549,7 +549,7 @@ namespace game_logic
 				if(op == "not") {
 					op_ = OP::NOT;
 				} else if(op == "-") {
-					op_ = OP::NOT;
+					op_ = OP::SUB;
 				} else {
 					ASSERT_LOG(false, "illegal unary operator: '" << op << "'\n" << arg->debugPinpointLocation());
 				}
