@@ -73,8 +73,8 @@ namespace tbs
 
 	void internal_server::process()
 	{
-		ASSERT_LOG(server_ptr != nullptr, "Internal server pointer is nullptr");
-		server_ptr->handleProcess();
+		ASSERT_LOG(server_ptr != NULL, "Internal server pointer is NULL");
+		server_ptr->handle_process();
 	}
 
 	internal_server_manager::internal_server_manager(bool use_internal_server)
@@ -152,7 +152,7 @@ namespace tbs
 		}
 	}
 
-	void internal_server::handleProcess()
+	void internal_server::handle_process()
 	{
 		send_function send_fn;
 		variant request;
@@ -168,7 +168,6 @@ namespace tbs
 		io_service_.poll();
 		io_service_.reset();
 	}
-
 
 	void internal_server::queue_msg(int session_id, const std::string& msg, bool has_priority)
 	{

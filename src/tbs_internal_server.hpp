@@ -44,6 +44,8 @@ namespace tbs
 		internal_server();
 		virtual ~internal_server();
 
+		void handle_process();
+
 		static void send_request(const variant& request, 
 			int session_id,
 			game_logic::MapFormulaCallablePtr callable, 

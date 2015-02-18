@@ -259,7 +259,11 @@ COMMAND_LINE_UTILITY(tbs_server) {
 
 		variant_builder msg;
 		msg.add("type", "server_created_game");
+#if defined(_MSC_VER)
+		msg.add("pid", static_cast<int>(_getpid()));
+#else
 		msg.add("pid", static_cast<int>(getpid()));
+#endif
 		msg.add("game", config["game"]);
 		msg.add("game_id", result->game_state->game_id());
 		msg.add("port", port);

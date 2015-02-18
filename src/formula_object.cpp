@@ -887,28 +887,28 @@ std::map<std::string, std::string>& class_path_map()
 
 variant FormulaObject::generateDiff(variant before, variant b)
 {
-	variant a = deep_clone(before);
+	variant a = deepClone(before);
 
-	std::vector<boost::intrusive_ptr<formula_object> > objects;
+	std::vector<boost::intrusive_ptr<FormulaObject> > objects;
 
-	std::map<boost::uuids::uuid, formula_object*> src, dst;
-	visit_variants(b, [&dst,&objects](variant v) {
-		formula_object* obj = v.try_convert<formula_object>();
+	std::map<boost::uuids::uuid, FormulaObject*> src, dst;
+	visitVariants(b, [&dst,&objects](variant v) {
+		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
 			dst[obj->id_] = obj;
 			obj->previous_.reset();
-			obj->previous_.reset(new formula_object(*obj));
+			obj->previous_.reset(new FormulaObject(*obj));
 			objects.push_back(obj);
 		}});
 
-	visit_variants(a, [&src,&objects](variant v) {
-		formula_object* obj = v.try_convert<formula_object>();
+	visitVariants(a, [&src,&objects](variant v) {
+		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
 			src[obj->id_] = obj;
 			objects.push_back(obj);
 		}});
 
-	std::map<formula_object*, formula_object*> mapping;
+	std::map<FormulaObject*, FormulaObject*> mapping;
 
 	for(auto i = src.begin(); i != src.end(); ++i) {
 		auto j = dst.find(i->first);
@@ -921,7 +921,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 	for(auto i = src.begin(); i != src.end(); ++i) {
 		variant v(i->second);
-		map_object_into_different_tree(v, mapping);
+		mapObjectIntoDifferentTree(v, mapping);
 		auto j = dst.find(i->first);
 		if(j != dst.end() && i->second->variables_ != j->second->variables_) {
 			std::map<variant, variant> node_delta;
@@ -936,7 +936,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 			for(int n = 0; n != j->second->variables_.size(); ++n) {
 				if(i->second->variables_[n] != j->second->variables_[n]) {
-					for(const property_entry& e : i->second->class_->slots()) {
+					for(const PropertyEntry& e : i->second->class_->slots()) {
 						if(e.variable_slot == n) {
 							node_delta[e.name_variant] = j->second->variables_[n];
 							break;
@@ -952,7 +952,7 @@ variant FormulaObject::generateDiff(variant before, variant b)
 	std::vector<variant> new_objects;
 	for(auto i = dst.begin(); i != dst.end(); ++i) {
 		if(src.find(i->first) == src.end()) {
-			new_objects.push_back(i->second->serialize_to_wml());
+			new_objects.push_back(i->second->serializeToWml());
 		}
 	}
 
@@ -973,11 +973,11 @@ variant FormulaObject::generateDiff(variant before, variant b)
 
 void FormulaObject::applyDiff(variant delta)
 {
-	std::map<boost::uuids::uuid, formula_object*> objects;
-	visit_variants(variant(this), [&objects](variant v) {
-		formula_object* obj = v.try_convert<formula_object>();
+	std::map<boost::uuids::uuid, FormulaObject*> objects;
+	visitVariants(variant(this), [&objects](variant v) {
+		FormulaObject* obj = v.try_convert<FormulaObject>();
 		if(obj) {
-			obj->previous_.reset(new formula_object(*obj));
+			obj->previous_.reset(new FormulaObject(*obj));
 			objects[obj->id_] = obj;
 		}});
 
@@ -987,28 +987,28 @@ void FormulaObject::applyDiff(variant delta)
 
 	std::vector<char> data = zip::decompress_known_size(base64::b64decode(data_buf), data_size);
 
-	const game_logic::wml_formula_callable_read_scope read_scope;
+	const game_logic::wmlFormulaCallableReadScope read_scope;
 
 	for(auto p : objects) {
 		std::string addr_str = p.second->addr();
 		if(addr_str.size() > 15) {
 			addr_str.resize(15);
 		}
-		const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
-		game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, p.second);
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, p.second);
 	}
 
 	variant v = json::parse(std::string(data.begin(), data.end()));
 	for(variant obj_node : v["objects"].as_list()) {
-		game_logic::wml_serializable_formula_callable_ptr obj = obj_node.try_convert<game_logic::wml_serializable_formula_callable>();
+		game_logic::WmlSerializableFormulaCallablePtr obj = obj_node.try_convert<game_logic::WmlSerializableFormulaCallable>();
 		ASSERT_LOG(obj.get() != NULL, "ILLEGAL OBJECT FOUND IN SERIALIZATION");
 		std::string addr_str = obj->addr();
 		if(addr_str.size() > 15) {
 			addr_str.resize(15);
 		}
-		const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
+		const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
-		game_logic::wml_formula_callable_read_scope::register_serialized_object(addr_id, obj);
+		game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 	}
 
 	for(variant d : v["deltas"].as_list()) {
@@ -1169,14 +1169,14 @@ void FormulaObject::mapObjectIntoDifferentTree(variant& v, const std::map<Formul
 			}
 		}
 
-	set_addr(write_id());
-}
+		setAddr(write_id());
+	}
 
-std::string formula_object::write_id() const
-{
-	std::string result = write_uuid(id_);
-	result.resize(15);
-	return result;
+	std::string FormulaObject::write_id() const
+	{
+		std::string result = write_uuid(id_);
+		result.resize(15);
+		return result;
 	}
 
 	bool FormulaObject::isA(const std::string& class_name) const
@@ -1228,7 +1228,7 @@ std::string formula_object::write_id() const
 		if(data.is_map() && data["state"].is_map()) {
 		const std::map<variant,variant>& state_map = data["state"].as_map();
 
-		for(const property_entry& entry : class_->slots()) {
+		for(const PropertyEntry& entry : class_->slots()) {
 			if(entry.variable_slot == -1) {
 				continue;
 			}
@@ -1592,15 +1592,15 @@ std::string formula_object::write_id() const
 
 			std::vector<std::string> classes;
 
-		for(auto p : class_path_map()) {
-			const std::string& class_name = p.first;
-			if(std::count(classes.begin(), classes.end(), class_name) == 0) {
-				variant node = json::parse_from_file(p.second);
-				if(node["server_only"].as_bool(false) == false) {
-					classes.push_back(class_name);
+			for(auto p : class_path_map()) {
+				const std::string& class_name = p.first;
+				if(std::count(classes.begin(), classes.end(), class_name) == 0) {
+					variant node = json::parse_from_file(p.second);
+					if(node["server_only"].as_bool(false) == false) {
+						classes.push_back(class_name);
+					}
 				}
 			}
-		}
 
 			std::vector<variant_type_ptr> types;
 			for(const std::string& class_name : classes) {
@@ -1611,15 +1611,17 @@ std::string formula_object::write_id() const
 				g_library_definition = game_logic::execute_command_callable_definition(&classes[0], &classes[0] + classes.size(), nullptr);
 				game_logic::register_formula_callable_definition("library", g_library_definition);
 
-			//first pass we have to just set the basic variant type
-			//without any definitions.
-			for(int n = 0; n != g_library_definition->num_slots(); ++n) {
-				g_library_definition->get_entry(n)->variant_type = types[n];
-			}
+				//first pass we have to just set the basic variant type
+				//without any definitions.
+				for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
+					g_library_definition->getEntry(n)->variant_type = types[n];
+				}
 
-			//this time we do a full set_variant_type() which looks up the
-			//definitions of the type. We can only do this after we have
-			//the first pass done though so lib types can be looked up.
+				//this time we do a full set_variant_type() which looks up the
+				//definitions of the type. We can only do this after we have
+				//the first pass done though so lib types can be looked up.
+				for(int n = 0; n != g_library_definition->getNumSlots(); ++n) {
+					g_library_definition->getEntry(n)->setVariantType(types[n]);
 				}
 			} else {
 				g_library_definition = game_logic::execute_command_callable_definition(nullptr, nullptr, nullptr, nullptr);

@@ -150,7 +150,7 @@ namespace tbs
 
 		std::vector<player> players_;
 
-	std::vector<int> players_disconnected_;
+		std::vector<int> players_disconnected_;
 
 		std::vector<message> outgoing_messages_;
 
@@ -173,7 +173,8 @@ namespace tbs
 		mutable DbClientPtr DbClient_;
 	};
 
-	class game_context {
+	class game_context 
+	{
 		game* old_game_;
 	public:
 		explicit game_context(game* g);

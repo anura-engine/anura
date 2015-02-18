@@ -50,8 +50,8 @@ namespace graphics
 
 		void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
 
-	float width() const { return width_; }
-	float height() const { return height_; }
+		float width() const { return static_cast<float>(width_); }
+		float height() const { return static_cast<float>(height_); }
 	private:
 		cairo_context(const cairo_context&);
 		void operator=(const cairo_context&);
@@ -79,15 +79,11 @@ namespace graphics
 		DECLARE_CALLABLE(cairo_callable);
 	};
 
-namespace cairo_font
-{
+	namespace cairo_font
+	{
+		KRE::TexturePtr render_text_uncached(const std::string& text, const KRE::Color& color, int size, const std::string& font_name="");
 
-graphics::texture render_text_uncached(const std::string& text,
-                                       const SDL_Color& color, int size, const std::string& font_name="");
-
-int char_width(int size, const std::string& fn="");
-int char_height(int size, const std::string& fn="");
-
-
-}
+		int char_width(int size, const std::string& fn="");
+		int char_height(int size, const std::string& fn="");
+	}
 }

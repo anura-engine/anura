@@ -217,7 +217,7 @@ namespace gui
 		bg_color_.reset(new KRE::Color(col));
 	}
 
-	void grid::setFocusColor(const KRE::Color& col)
+	void Grid::setFocusColor(const KRE::Color& col)
 	{
 		focus_color_.reset(new KRE::Color(col));
 	}
@@ -462,7 +462,6 @@ namespace gui
 				if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
 					canvas->drawSolidRect(rect(0,row_height_*selected_row_ - getYscroll(),width(),row_height_), 
 						focus_color_ ? *focus_color_ : KRE::Color(255,0,0,128));
-			}
 				}
 			}
 

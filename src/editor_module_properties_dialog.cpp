@@ -229,7 +229,7 @@ namespace editor_dialogs
 
 	const std::string EditorModulePropertiesDialog::onExit() 
 	{
-		Level::set_player_variant_type(variant());
+		Level::setPlayerVariantType(variant());
 		saveModuleProperties();
 		if(new_mod_) {
 			createNewModule();

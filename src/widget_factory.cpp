@@ -84,8 +84,8 @@ namespace widget_factory
 			return WidgetPtr(new Button(v,e));
 		} else if(wtype == "checkbox") {
 			return WidgetPtr(new Checkbox(v,e));
-	} else if(wtype == "combobox" || wtype == "listbox") {
-		return widget_ptr(new gui::dropdown_widget(v,e));
+		} else if(wtype == "combobox" || wtype == "listbox") {
+			return WidgetPtr(new gui::DropdownWidget(v,e));
 		} else if(wtype == "dialog") {
 			return WidgetPtr(new Dialog(v,e));
 	#ifndef NO_EDITOR

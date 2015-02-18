@@ -82,7 +82,8 @@ namespace tbs
 		std::map<std::string, game_logic::ConstFormulaPtr> handlers;
 	};
 
-	std::map<std::string, game_type> generate_game_types() {
+	std::map<std::string, game_type> generate_game_types() 
+	{
 		LOG_INFO("GENERATE GAME TYPES");
 
 		std::map<std::string, game_type> result;
@@ -103,7 +104,8 @@ namespace tbs
 		return result;
 	}
 
-	std::map<std::string, game_type>& all_types() {
+	std::map<std::string, game_type>& all_types() 
+	{
 		static std::map<std::string, game_type> types = generate_game_types();
 		return types;
 	}
@@ -226,16 +228,16 @@ namespace tbs
 		LOG_INFO("DESTROY GAME");
 	}
 
-void game::cancel_game()
-{
-	players_.clear();
-	outgoing_messages_.clear();
-	doc_ = variant();
-	ai_.clear();
-	bots_.clear();
-	backup_callable_ = nullptr;
-	std::cerr << "CANCEL GAME: " << refcount() << "\n";
-}
+	void game::cancel_game()
+	{
+		players_.clear();
+		outgoing_messages_.clear();
+		doc_ = variant();
+		ai_.clear();
+		bots_.clear();
+		backup_callable_ = nullptr;
+		std::cerr << "CANCEL GAME: " << refcount() << "\n";
+	}
 
 	variant game::write(int nplayer, int processing_ms) const
 	{
@@ -272,16 +274,20 @@ void game::cancel_game()
 			result.add("observer", true);
 		}
 
-	bool send_delta = false;
+		bool send_delta = false;
 
-	if(nplayer >= 0 & nplayer < players_.size() && players_[nplayer].state_id_sent != -1 && players_[nplayer].state_id_sent == players_[nplayer].confirmed_state_id && players_[nplayer].allow_deltas) {
-		send_delta = true;
-	}
+		if(nplayer >= 0 
+			&& nplayer < static_cast<int>(players_.size()) 
+			&& players_[nplayer].state_id_sent != -1 
+			&& players_[nplayer].state_id_sent == players_[nplayer].confirmed_state_id 
+			&& players_[nplayer].allow_deltas) {
+			send_delta = true;
+		}
 
-	variant state_doc;
+		variant state_doc;
 
 		if(type_.handlers.count("transform")) {
-			variant msg = FormulaObject::deep_clone(doc_);
+			variant msg = FormulaObject::deepClone(doc_);
 			game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
 			vars->add("message", msg);
 			vars->add("nplayer", variant(nplayer < 0 ? 0 : nplayer));
@@ -289,19 +295,19 @@ void game::cancel_game()
 
 			state_doc = msg;
 		} else {
-			state_doc = FormulaObject::deep_clone(doc_);
+			state_doc = FormulaObject::deepClone(doc_);
 		}
 
-	if(send_delta) {
-		result.add("delta", formula_object::generate_diff(players_[nplayer].state_sent, state_doc));
-		result.add("delta_basis", players_[nplayer].confirmed_state_id);
-	} else {
-		result.add("state", state_doc);
-	}
+		if(send_delta) {
+			result.add("delta", FormulaObject::generateDiff(players_[nplayer].state_sent, state_doc));
+			result.add("delta_basis", players_[nplayer].confirmed_state_id);
+		} else {
+			result.add("state", state_doc);
+		}
 
-	if(nplayer >= 0 && nplayer < players_.size() && players_[nplayer].allow_deltas) {
-		players_[nplayer].state_id_sent = state_id_;
-		players_[nplayer].state_sent = state_doc;
+		if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && players_[nplayer].allow_deltas) {
+			players_[nplayer].state_id_sent = state_id_;
+			players_[nplayer].state_sent = state_doc;
 		}
 
 		std::string log_str;
@@ -451,7 +457,7 @@ void game::cancel_game()
 
 	void game::send_game_state(int nplayer, int processing_ms)
 	{
-	fprintf(stderr, "SEND GAME STATE: %d\n", nplayer);
+		LOG_DEBUG("SEND GAME STATE: " << nplayer);
 		if(nplayer == -1) {
 			for(int n = 0; n != players().size(); ++n) {
 				send_game_state(n, processing_ms);
@@ -517,13 +523,6 @@ void game::cancel_game()
 	{
 		if(backup_callable_) {
 			backup_callable_->mutateValue(key, value);
-	} else if(key == "players_disconnected") {
-		std::vector<variant> result;
-		for(auto n : players_disconnected_) {
-			result.push_back(variant(n));
-		}
-
-		return variant(&result);
 		}
 	}
 
@@ -532,14 +531,46 @@ void game::cancel_game()
 	BEGIN_DEFINE_CALLABLE_NOBASE(game)
 		DEFINE_FIELD(game, "builtin game")
 			return variant(&obj_instance);
+		
 		DEFINE_FIELD(doc, "any")
 			return obj.doc_;
 		DEFINE_SET_FIELD
 			obj.doc_ = value;
+
+		DEFINE_FIELD(event, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("string|map")
+			if(value.is_string()) {
+				obj.handleEvent(value.as_string());
+			} else if(value.is_map()) {
+				obj.handleEvent(value["event"].as_string(), map_into_callable(value["arg"]).get());
+			}
+
+#ifdef USE_DB_CLIENT
+		DEFINE_FIELD(db_client, "builtin DbClient")
+		if(db_client_.get() == NULL) {
+			db_client_ = DbClient::create();
+		}
+
+		return variant(db_client_.get());
+#else
+		DEFINE_FIELD(db_client, "null")
+		return variant();
+#endif
+
 		DEFINE_FIELD(state_id, "int")
 			return variant(obj.state_id_);
 		DEFINE_SET_FIELD
 			obj.state_id_ = value.as_int();
+			LOG_DEBUG("XXX: @" << profile::get_tick_time() << " state_id = " << obj.state_id_);
+
+		DEFINE_FIELD(log_message, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("string|null")
+			if(!value.is_null()) {
+				obj.log_.emplace_back(value.as_string());
+			}
+
 		DEFINE_FIELD(bots, "[builtin bot]")
 			std::vector<variant> v;
 			for(int n = 0; n != obj.bots_.size(); ++n) {
@@ -560,52 +591,56 @@ void game::cancel_game()
 					obj.bots_.push_back(new_bot);
 				}
 			}
-	#ifdef USE_DB_CLIENT
-		DEFINE_FIELD(db_client, "builtin DbClient")
-			LOG_DEBUG("XXX: @" << profile::get_tick_time() << " state_id = " << state_id_);
-			if(db_client_.get() == nullptr) {
-				db_client_ = DbClient::create();
 
-		if(g_game_server_http_client_to_matchmaking_server != NULL) {
-			http_client& client = *g_game_server_http_client_to_matchmaking_server;
-			variant_builder msg;
-			msg.add("type", "server_finished_game");
-			msg.add("pid", static_cast<int>(getpid()));
+		DEFINE_FIELD("players_disconnected", "[int]")
+			std::vector<variant> result;
+			for(auto n : obj.players_disconnected_) {
+				result.push_back(variant(n));
+			}
+			return variant(&result);
 
-			bool complete = false;
+		DEFINE_FIELD(winner, "null")
+			return variant();
+		DEFINE_SET_FIELD_TYPE("any")
+			std::cout << "WINNER: " << value.write_json() << std::endl;
 
-			client.send_request("POST /server", msg.build().write_json(),
-			  [&complete](std::string response) {
-				complete = true;
-			  },
-			  [&complete](std::string msg) {
-				complete = true;
-				ASSERT_LOG(false, "Could not connect to server: " << msg);
-			  },
-			  [](int a, int b, bool c) {
-			  });
+			if(g_game_server_http_client_to_matchmaking_server != NULL) {
+				http_client& client = *g_game_server_http_client_to_matchmaking_server;
+				variant_builder msg;
+				msg.add("type", "server_finished_game");
+#if defined(_MSC_VER)
+				msg.add("pid", static_cast<int>(_getpid()));
+#else
+				msg.add("pid", static_cast<int>(getpid()));
+#endif
+
+				bool complete = false;
+
+				client.send_request("POST /server", msg.build().write_json(),
+				  [&complete](std::string response) {
+					complete = true;
+				  },
+				  [&complete](std::string msg) {
+					complete = true;
+					ASSERT_LOG(false, "Could not connect to server: " << msg);
+				  },
+				  [](int a, int b, bool c) {
+				  });
 			
-			while(!complete) {
-				client.process();
-			}
-		}
-
-				obj.handleEvent(value["event"].as_string(), map_into_callable(value["arg"]).get());
-			}
-	
-			BEGIN_DEFINE_FN(winner, "(any) -> null")
-				LOG_INFO("WINNER: " << FN_ARG(0).write_json());
-				if(g_tbs_game_exit_on_winner) {
-					game_logic::flush_all_backed_maps();
-					_exit(0);
+				while(!complete) {
+					client.process();
 				}
-				return variant();
-			END_DEFINE_FN
+			}
+			if(g_tbs_game_exit_on_winner) {
+				game_logic::flush_all_backed_maps();
+				_exit(0);
+			}
 	END_DEFINE_CALLABLE(game)
+
 
 	void game::handle_message(int nplayer, const variant& msg)
 	{
-	fprintf(stderr, "HANDLE MESSAGE (((%s)))\n", msg.write_json().c_str());
+		LOG_DEBUG("HANDLE MESSAGE (((" << msg.write_json() << ")))");
 		rng::set_seed(rng_seed_);
 		const std::string type = msg["type"].as_string();
 		if(type == "start_game") {
@@ -613,17 +648,16 @@ void game::cancel_game()
 			return;
 		} else if(type == "request_updates") {
 			if(msg.has_key("state_id") && !doc_.is_null()) {
-			if(nplayer >= 0 && nplayer < players_.size() && msg.has_key("allow_deltas") && msg["allow_deltas"].as_bool() == false) {
-				players_[nplayer].allow_deltas = false;
-			}
+				if(nplayer >= 0 && nplayer < static_cast<int>(players_.size()) && msg.has_key("allow_deltas") && msg["allow_deltas"].as_bool() == false) {
+					players_[nplayer].allow_deltas = false;
+				}
 
 				const variant state_id = msg["state_id"];
 				if(state_id.as_int() != state_id_ && nplayer >= 0) {
-				players_[nplayer].confirmed_state_id = state_id.as_int();
+					players_[nplayer].confirmed_state_id = state_id.as_int();
 					send_game_state(nplayer);
 				} else if(state_id.as_int() == state_id_ && nplayer >= 0 && static_cast<unsigned>(nplayer) < players_.size() && players_[nplayer].confirmed_state_id != state_id_) {
-
-				fprintf(stderr, "XXX: @%d player %d confirm sync %d\n", SDL_GetTicks(), nplayer, state_id_);
+					LOG_DEBUG("XXX: @" << profile::get_tick_time() << " player " << nplayer << " confirm sync " << state_id_);
 					players_[nplayer].confirmed_state_id = state_id_;
 
 					std::ostringstream s;
@@ -652,12 +686,12 @@ void game::cancel_game()
 			}
 			queue_message(m);
 			return;
-	} else if(type == "ping_game") {
-		variant_builder response;
-		response.add("type", "pong_game");
-		response.add("payload", msg);
-		queue_message(response.build().write_json(), nplayer);
-		return;
+		} else if(type == "ping_game") {
+			variant_builder response;
+			response.add("type", "pong_game");
+			response.add("payload", msg);
+			queue_message(response.build().write_json(), nplayer);
+			return;
 		}
 
 		game_logic::MapFormulaCallablePtr vars(new game_logic::MapFormulaCallable);
@@ -670,7 +704,7 @@ void game::cancel_game()
 
 		const auto time_taken = profile::get_tick_time() - start_time;
 
-	fprintf(stderr, "XXX: @%d HANDLED MESSAGE %s\n", SDL_GetTicks(), type.c_str());
+		LOG_DEBUG("XXX: @" << profile::get_tick_time() << " HANDLED MESSAGE " << type);
 
 		send_game_state(-1, time_taken);
 	}
@@ -679,24 +713,30 @@ void game::cancel_game()
 	{
 	}
 
-	namespace {
-	struct backup_callable_scope {
-		game_logic::FormulaCallable** ptr_;
-		game_logic::FormulaCallable* backup_;
-		backup_callable_scope(game_logic::FormulaCallable** ptr, game_logic::FormulaCallable* var) : ptr_(ptr), backup_(*ptr) {
-			if(var) {
-				*ptr_ = var;
-			} else {
-				ptr_ = nullptr;
+	namespace 
+	{
+		struct backup_callable_scope 
+		{
+			game_logic::FormulaCallable** ptr_;
+			game_logic::FormulaCallable* backup_;
+			backup_callable_scope(game_logic::FormulaCallable** ptr, game_logic::FormulaCallable* var) 
+				: ptr_(ptr), 
+				  backup_(*ptr) 
+			{
+				if(var) {
+					*ptr_ = var;
+				} else {
+					ptr_ = nullptr;
+				}
 			}
-		}
 
-		~backup_callable_scope() {
-			if(ptr_) {
-				*ptr_ = backup_;
+			~backup_callable_scope() 
+			{
+				if(ptr_) {
+					*ptr_ = backup_;
+				}
 			}
-		}
-	};
+		};
 	}
 
 	void game::handleEvent(const std::string& name, game_logic::FormulaCallable* variables)
@@ -731,46 +771,46 @@ void game::cancel_game()
 				variant v = f.execute(*callable);
 				executeCommand(v);
 			}
-	}
-}
-
-void game::player_disconnect(int nplayer)
-{
-	variant_builder result;
-	result.add("type", "player_disconnect");
-	result.add("player", players()[nplayer].name);
-	variant msg = result.build();
-	for(int n = 0; n != players().size(); ++n) {
-		if(n != nplayer) {
-			queue_message(msg, n);
 		}
 	}
+
+	void game::player_disconnect(int nplayer)
+	{
+		variant_builder result;
+		result.add("type", "player_disconnect");
+		result.add("player", players()[nplayer].name);
+		variant msg = result.build();
+		for(int n = 0; n != players().size(); ++n) {
+			if(n != nplayer) {
+				queue_message(msg, n);
+			}
+		}
 	
-}
+	}
 
-void game::player_reconnect(int nplayer)
-{
-	variant_builder result;
-	result.add("type", "player_reconnect");
-	result.add("player", players()[nplayer].name);
-	variant msg = result.build();
-	for(int n = 0; n != players().size(); ++n) {
-		if(n != nplayer) {
-			queue_message(msg, n);
+	void game::player_reconnect(int nplayer)
+	{
+		variant_builder result;
+		result.add("type", "player_reconnect");
+		result.add("player", players()[nplayer].name);
+		variant msg = result.build();
+		for(int n = 0; n != players().size(); ++n) {
+			if(n != nplayer) {
+				queue_message(msg, n);
+			}
+		}
+	}
+
+	void game::player_disconnected_for(int nplayer, int time_ms)
+	{
+		if(time_ms >= 60000 && std::find(players_disconnected_.begin(), players_disconnected_.end(), nplayer) == players_disconnected_.end()) {
+			players_disconnected_.push_back(nplayer);
+			handleEvent("player_disconnected");
+			send_game_state();
 		}
 	}
 }
-
-void game::player_disconnected_for(int nplayer, int time_ms)
-{
-	if(time_ms >= 60000 && std::find(players_disconnected_.begin(), players_disconnected_.end(), nplayer) == players_disconnected_.end()) {
-		players_disconnected_.push_back(nplayer);
-		handle_event("player_disconnected");
-		send_game_state();
-		}
-	}
-}
-
+/*
 namespace 
 {
 	bool g_create_bot_game = false;
@@ -786,7 +826,8 @@ namespace
 	}
 }
 
-COMMAND_LINE_UTILITY(tbs_bot_game) {
+COMMAND_LINE_UTILITY(tbs_bot_game) 
+{
 	using namespace tbs;
 	using namespace game_logic;
 
@@ -816,3 +857,4 @@ COMMAND_LINE_UTILITY(tbs_bot_game) {
 		internal_server::process();
 	}
 }
+*/

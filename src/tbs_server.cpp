@@ -41,15 +41,15 @@ namespace tbs
 	using std::placeholders::_1;
 	using std::placeholders::_2;
 
+	extern int g_tbs_server_delay_ms;
+	extern int g_tbs_server_heartbeat_freq;
+
 	namespace 
 	{
-extern int g_tbs_server_delay_ms;
-extern int g_tbs_server_heartbeat_freq;
-
-int time_between_heartbeats()
-{
-	return g_tbs_server_delay_ms * g_tbs_server_heartbeat_freq;
-}
+		int time_between_heartbeats()
+		{
+			return g_tbs_server_delay_ms * g_tbs_server_heartbeat_freq;
+		}
 
 		bool g_exit_server = false;
 	}
@@ -254,7 +254,7 @@ int time_between_heartbeats()
 
 	if(get_num_heartbeat()%10 == 0) {
 		for(auto g : games()) {
-			for(int n = 0; n < g->clients.size() && n < g->game_state->players().size(); ++n) {
+			for(int n = 0; n < static_cast<int>(g->clients.size()) && n < static_cast<int>(g->game_state->players().size()); ++n) {
 				const int session_id = g->clients[n];
 				int time_since_last_contact = 0;
 				if(sessions_to_waiting_connections_.count(session_id) == 0) {

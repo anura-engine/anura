@@ -25,7 +25,6 @@
 
 #include <vector>
 
-#include "color_utils.hpp"
 #include "grid_widget_fwd.hpp"
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
@@ -127,7 +126,7 @@ namespace gui
 		int hpad_, vpad_;
 		bool show_background_;
 
-	boost::shared_ptr<graphics::color> bg_color_, focus_color_;
+		KRE::ColorPtr bg_color_, focus_color_;
 
 		int max_height_;
 

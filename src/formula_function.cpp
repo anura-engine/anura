@@ -641,15 +641,15 @@ namespace game_logic
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(update_object)
 
-FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
-	boost::intrusive_ptr<formula_object> target = args()[0]->evaluate(variables).convert_to<formula_object>();
-	variant clone = formula_object::deep_clone(variant(target.get()));
-	formula_object* obj = clone.try_convert<formula_object>();
-	obj->apply_diff(args()[1]->evaluate(variables));
-	return clone;
-FUNCTION_TYPE_DEF
-	return args()[0]->query_variant_type();
-END_FUNCTION_DEF(apply_delta)
+		FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
+			boost::intrusive_ptr<FormulaObject> target = args()[0]->evaluate(variables).convert_to<FormulaObject>();
+			variant clone = FormulaObject::deepClone(variant(target.get()));
+			FormulaObject* obj = clone.try_convert<FormulaObject>();
+			obj->applyDiff(args()[1]->evaluate(variables));
+			return clone;
+		FUNCTION_TYPE_DEF
+			return args()[0]->queryVariantType();
+		END_FUNCTION_DEF(apply_delta)
 
 		FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
 			Formula::failIfStaticContext();
@@ -758,48 +758,49 @@ END_FUNCTION_DEF(apply_delta)
 			ARG_TYPE("string");
 		END_FUNCTION_DEF(eval)
 
-namespace {
-int g_formula_timeout = -1;
+		namespace 
+		{
+			int g_formula_timeout = -1;
 
-struct timeout_scope {
-	int old_value;
-	explicit timeout_scope(int deadline) : old_value(g_formula_timeout) {
-		if(g_formula_timeout == -1 || deadline > g_formula_timeout) {
-			g_formula_timeout = deadline;
+			struct timeout_scope 
+			{
+				int old_value;
+				explicit timeout_scope(int deadline) : old_value(g_formula_timeout) {
+					if(g_formula_timeout == -1 || deadline > g_formula_timeout) {
+						g_formula_timeout = deadline;
+					}
+				}
+
+				~timeout_scope() {
+					g_formula_timeout = old_value;
+				}
+			};
 		}
-	}
 
-	~timeout_scope() {
-		g_formula_timeout = old_value;
-	}
-};
+	FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
 
-}
+		const int time_ms = SDL_GetTicks() + args()[0]->evaluate(variables).as_int();
+		const timeout_scope scope(time_ms);
+		return args()[1]->evaluate(variables);
 
-FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+	FUNCTION_ARGS_DEF
+		ARG_TYPE("int");
+	FUNCTION_TYPE_DEF
+		return args()[1]->queryVariantType();
+	END_FUNCTION_DEF(eval_with_timeout)
 
-	const int time_ms = SDL_GetTicks() + args()[0]->evaluate(variables).as_int();
-	const timeout_scope scope(time_ms);
-	return args()[1]->evaluate(variables);
+	FUNCTION_DEF(has_timed_out, 0, 0, "has_timed_out(): will evaluate to true iff the timeout specified by an enclosing eval_with_timeout() has elapsed.")
+		game_logic::Formula::failIfStaticContext();
+		if(g_formula_timeout == false) {
+			return variant::from_bool(false);
+		}
 
-FUNCTION_ARGS_DEF
-	ARG_TYPE("int");
-FUNCTION_TYPE_DEF
-	return args()[1]->query_variant_type();
-END_FUNCTION_DEF(eval_with_timeout)
+		const int ticks = SDL_GetTicks();
 
-FUNCTION_DEF(has_timed_out, 0, 0, "has_timed_out(): will evaluate to true iff the timeout specified by an enclosing eval_with_timeout() has elapsed.")
-	game_logic::formula::fail_if_static_context();
-	if(g_formula_timeout == false) {
-		return variant::from_bool(false);
-	}
-
-	const int ticks = SDL_GetTicks();
-
-	return variant::from_bool(ticks >= g_formula_timeout);
-FUNCTION_TYPE_DEF
-	return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
-END_FUNCTION_DEF(has_timed_out)
+		return variant::from_bool(ticks >= g_formula_timeout);
+	FUNCTION_TYPE_DEF
+		return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+	END_FUNCTION_DEF(has_timed_out)
 
 		FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
 			const assert_recover_scope recovery_scope;
@@ -1169,16 +1170,16 @@ END_FUNCTION_DEF(has_timed_out)
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(atan)
 
-FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
-const float ratio1 = args()[0]->evaluate(variables).as_decimal().as_float();
-const float ratio2 = args()[1]->evaluate(variables).as_decimal().as_float();
-return variant(static_cast<decimal>(atan2(ratio1,ratio2)*radians_to_degrees));
-FUNCTION_ARGS_DEF
-ARG_TYPE("int|decimal");
-ARG_TYPE("int|decimal");
-FUNCTION_TYPE_DEF
-return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
-END_FUNCTION_DEF(atan2)
+		FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+			const float ratio1 = args()[0]->evaluate(variables).as_float();
+			const float ratio2 = args()[1]->evaluate(variables).as_float();
+			return variant(atan2(ratio1, ratio2) * radians_to_degrees);
+		FUNCTION_ARGS_DEF
+			ARG_TYPE("int|decimal");
+			ARG_TYPE("int|decimal");
+		FUNCTION_TYPE_DEF
+			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+		END_FUNCTION_DEF(atan2)
     
 		FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
 			const float angle = args()[0]->evaluate(variables).as_float();
@@ -1516,7 +1517,7 @@ END_FUNCTION_DEF(atan2)
 
 FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
 	if(args().size() == 2) {
-		variant_type_ptr type = args()[1]->query_variant_type();
+		variant_type_ptr type = args()[1]->queryVariantType();
 		if(type->is_type(variant::VARIANT_TYPE_INT)) {
 			default_ = variant(0);
 		} else if(type->is_numeric()) {
@@ -3891,7 +3892,6 @@ FUNCTION_DEF_IMPL
 		END_FUNCTION_DEF(write_document)
 
 		FUNCTION_DEF(get_document, 1, 2, "get_document(string filename, [enum {'null_on_failure', 'user_preferences_dir'}] flags): return reference to the given JSON document. flags can contain 'null_on_failure' and 'user_preferences_dir'")
-
 			if(args().size() != 1) {
 				Formula::failIfStaticContext();
 			}
@@ -4705,7 +4705,7 @@ FUNCTION_TYPE_DEF
 END_FUNCTION_DEF(rotate_rect)
 
 FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
-	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();
 	const int x = args()[1]->evaluate(variables).as_int();
 	const int y = args()[2]->evaluate(variables).as_int();
 

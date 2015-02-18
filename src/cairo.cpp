@@ -33,7 +33,6 @@
 #include "DisplayDevice.hpp"
 #include "svg/svg_parse.hpp"
 
-#include "IMG_savepng.h"
 #include "asserts.hpp"
 #include "cairo.hpp"
 #include "filesystem.hpp"
@@ -47,26 +46,28 @@ namespace graphics
 {
 	namespace 
 	{
-struct TextFragment {
-	float xpos, ypos, width, height;
-	std::string font;
-	int font_size;
-	variant tag;
+		struct TextFragment 
+		{
+			float xpos, ypos, width, height;
+			std::string font;
+			int font_size;
+			variant tag;
 
-	std::string text;
-	variant valign;
+			std::string text;
+			variant valign;
 
-	cairo_font_extents_t font_extents;
+			cairo_font_extents_t font_extents;
 
-	std::string svg;
-};
+			std::string svg;
+		};
 
-struct LineOfText {
-	LineOfText() : fragment_width(0.0) {}
-	float fragment_width;
-	std::vector<TextFragment> fragments;
-	variant align;
-};
+		struct LineOfText 
+		{
+			LineOfText() : fragment_width(0.0f) {}
+			float fragment_width;
+			std::vector<TextFragment> fragments;
+			variant align;
+		};
 
 		FT_Library& init_freetype_library()
 		{
@@ -76,34 +77,35 @@ struct LineOfText {
 			return library;
 		}
 
-const std::string& get_font_path_from_name(const std::string& name)
-{
-	static std::map<std::string, std::string> paths;
-	if(paths.empty()) {
-		std::map<std::string, std::string> full_paths;
-		module::get_unique_filenames_under_dir("data/fonts/", &full_paths);
-		for(auto p : full_paths) {
-			auto colon_itor = std::find(p.first.begin(), p.first.end(), ':');
-			std::string key(colon_itor == p.first.end() ? p.first.begin() : colon_itor+1, p.first.end());
-			if(key.size() > 4 &&
-			   (std::equal(key.end()-4, key.end(), ".ttf") ||
-			    std::equal(key.end()-4, key.end(), ".otf"))) {
-				paths[std::string(key.begin(), key.end()-4)] = p.second;
-			}
-		}
-	}
-
-	auto itor = paths.find(name);
-	ASSERT_LOG(itor != paths.end(), "Could not find font: " << name);
-	return itor->second;
-}
-
-FT_Face get_ft_font(const std::string& ttf_name, int index=0)
+		const std::string& get_font_path_from_name(const std::string& name)
 		{
-	if(ttf_name.size() > 4 && std::equal(ttf_name.end()-4, ttf_name.end(), ".otf")) {
-		return get_ft_font(std::string(ttf_name.begin(), ttf_name.end()-4), index);
-	}
-	const std::string& ttf_file = get_font_path_from_name(ttf_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font() : ttf_name);
+			static std::map<std::string, std::string> paths;
+			if(paths.empty()) {
+				std::map<std::string, std::string> full_paths;
+				module::get_unique_filenames_under_dir("data/fonts/", &full_paths);
+				for(auto p : full_paths) {
+					auto colon_itor = std::find(p.first.begin(), p.first.end(), ':');
+					std::string key(colon_itor == p.first.end() ? p.first.begin() : colon_itor+1, p.first.end());
+					if(key.size() > 4 &&
+					   (std::equal(key.end()-4, key.end(), ".ttf") ||
+						std::equal(key.end()-4, key.end(), ".otf"))) {
+						paths[std::string(key.begin(), key.end()-4)] = p.second;
+					}
+				}
+			}
+
+			auto itor = paths.find(name);
+			ASSERT_LOG(itor != paths.end(), "Could not find font: " << name);
+			return itor->second;
+		}
+
+		FT_Face get_ft_font(const std::string& ttf_name, int index=0)
+		{
+			if(ttf_name.size() > 4 && std::equal(ttf_name.end()-4, ttf_name.end(), ".otf")) {
+				return get_ft_font(std::string(ttf_name.begin(), ttf_name.end()-4), index);
+			}
+
+			const std::string& ttf_file = get_font_path_from_name(ttf_name.empty() ? module::get_default_font() == "bitmap" ? "FreeMono" : module::get_default_font() : ttf_name);
 			static FT_Library& library = init_freetype_library();
 
 			static std::map<std::string, FT_Face> cache;
@@ -133,15 +135,18 @@ FT_Face get_ft_font(const std::string& ttf_name, int index=0)
 
 			return result;
 		}
-cairo_context& dummy_context() {
-	static cairo_context* res = new cairo_context(8, 8);
-	return *res;
-}
 
+		cairo_context& dummy_context() 
+		{
+			static cairo_context* res = new cairo_context(8, 8);
+			return *res;
+		}
 	}
 
 	cairo_context::cairo_context(int w, int h)
-	  : width_(w), height_(h), temp_pattern_(nullptr)
+	  : width_(w), 
+	    height_(h), 
+		temp_pattern_(nullptr)
 	{
 		surface_ = cairo_image_surface_create(CAIRO_FORMAT_ARGB32, w, h);
 		cairo_ = cairo_create(surface_);
@@ -262,62 +267,61 @@ cairo_context& dummy_context() {
 		std::vector<variant> args_;
 	};
 
-class cairo_text_fragment : public game_logic::formula_callable
-{
-public:
-	cairo_text_fragment() : x(0), y(0), width(0), height(0) {
-	}
-	variant path, tag;
-	float x, y, width, height;
-private:
-	DECLARE_CALLABLE(cairo_text_fragment);
+	class cairo_text_fragment : public game_logic::FormulaCallable
+	{
+	public:
+		cairo_text_fragment() : x(0), y(0), width(0), height(0) {
+		}
+		variant path, tag;
+		float x, y, width, height;
+	private:
+		DECLARE_CALLABLE(cairo_text_fragment);
+	};
 
-};
-
-BEGIN_DEFINE_CALLABLE_NOBASE(cairo_text_fragment)
-DEFINE_FIELD(path, "builtin cairo_op")
-	return obj.path;
-DEFINE_FIELD(tag, "any")
-	return obj.tag;
-DEFINE_FIELD(x, "decimal")
-	return variant(obj.x);
-DEFINE_FIELD(y, "decimal")
-	return variant(obj.y);
-DEFINE_FIELD(width, "decimal")
-	return variant(obj.width);
-DEFINE_FIELD(height, "decimal")
-	return variant(obj.height);
-END_DEFINE_CALLABLE(cairo_text_fragment)
+	BEGIN_DEFINE_CALLABLE_NOBASE(cairo_text_fragment)
+	DEFINE_FIELD(path, "builtin cairo_op")
+		return obj.path;
+	DEFINE_FIELD(tag, "any")
+		return obj.tag;
+	DEFINE_FIELD(x, "decimal")
+		return variant(obj.x);
+	DEFINE_FIELD(y, "decimal")
+		return variant(obj.y);
+	DEFINE_FIELD(width, "decimal")
+		return variant(obj.width);
+	DEFINE_FIELD(height, "decimal")
+		return variant(obj.height);
+	END_DEFINE_CALLABLE(cairo_text_fragment)
 
 	namespace {
-	struct MarkupEntry {
-		const char* tag;
-		uint8_t values[4];
-	};
+		struct MarkupEntry 
+		{
+			const char* tag;
+			uint8_t values[4];
+		};
 
-	MarkupEntry MarkupMap[] = {
-		{ "ldquo", {0xE2, 0x80, 0x9C, 0x00} },
-		{ "rdquo", {0xE2, 0x80, 0x9D, 0x00} },
-		{ "emdash", { 0xE2, 0x80, 0x94, 0x00 } },
-	};
+		MarkupEntry MarkupMap[] = {
+			{ "ldquo", {0xE2, 0x80, 0x9C, 0x00} },
+			{ "rdquo", {0xE2, 0x80, 0x9D, 0x00} },
+			{ "emdash", { 0xE2, 0x80, 0x94, 0x00 } },
+		};
 
-	void execute_cairo_ops(cairo_context& context, variant v)
-	{
-		if(v.is_null()) {
-			return;
-		}
-
-		if(v.is_list()) {
-			for(int n = 0; n != v.num_elements(); ++n) {
-				execute_cairo_ops(context, v[n]);
+		void execute_cairo_ops(cairo_context& context, variant v)
+		{
+			if(v.is_null()) {
+				return;
 			}
 
-			return;
+			if(v.is_list()) {
+				for(int n = 0; n != v.num_elements(); ++n) {
+					execute_cairo_ops(context, v[n]);
+				}
+
+				return;
+			}
+
+			v.convert_to<cairo_op>()->execute(context);
 		}
-
-		v.convert_to<cairo_op>()->execute(context);
-	}
-
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(cairo_op)
@@ -839,7 +843,7 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 	cairo_context context(8, 8);
 
 	variant info = FN_ARG(0);
-	float width = FN_ARG(1).as_decimal().as_float();
+	float width = FN_ARG(1).as_float();
 	float xpos = 0;
 	float ypos = 0;
 	float line_height = 0;
@@ -894,10 +898,10 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 		cairo_font_extents(context.get(), &font_extents);
 
 		if(font_extents.height > line_height) {
-			line_height = font_extents.height;
+			line_height = static_cast<float>(font_extents.height);
 		}
 
-		float min_line_height = font_extents.height;
+		float min_line_height = static_cast<float>(font_extents.height);
 
 		std::vector<std::string> lines = util::split(text, '\n', 0);
 
@@ -960,14 +964,26 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 					extents = new_extents;
 				}
 
-				TextFragment fragment = { xpos, ypos, extents.width, extents.height, font, font_size, tag, std::string(i1, i2), valign, font_extents, svg };
+				TextFragment fragment = { 
+					xpos, 
+					ypos, 
+					static_cast<float>(extents.width), 
+					static_cast<float>(extents.height), 
+					font, 
+					font_size, 
+					tag, 
+					std::string(i1, i2), 
+					valign, 
+					font_extents, 
+					svg 
+				};
 				output.back().fragments.push_back(fragment);
-				output.back().fragment_width += extents.width;
+				output.back().fragment_width += static_cast<float>(extents.width);
 
 				if(svg.empty() == false) {
 					//advance the text position along to account
 					//for the svg icon, wrapping to next line if necessary
-					float advance = font_extents.height;
+					float advance = static_cast<float>(font_extents.height);
 
 					if(xpos > 0 && xpos + advance > width) {
 						xpos = 0;
@@ -983,7 +999,7 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 				
 				svg = "";
 
-				xpos += extents.x_advance;
+				xpos += static_cast<float>(extents.x_advance);
 
 				i1 = i2;
 			}
@@ -1006,15 +1022,15 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 		float max_descent = 0.0;
 		for(const TextFragment& fragment : line.fragments) {
 			if(fragment.font_extents.height > line_height) {
-				line_height = fragment.font_extents.height;
+				line_height = static_cast<float>(fragment.font_extents.height);
 			}
 
 			if(fragment.font_extents.ascent > max_ascent) {
-				max_ascent = fragment.font_extents.ascent;
+				max_ascent = static_cast<float>(fragment.font_extents.ascent);
 			}
 
 			if(fragment.font_extents.descent > max_descent) {
-				max_descent = fragment.font_extents.descent;
+				max_descent = static_cast<float>(fragment.font_extents.descent);
 			}
 		}
 
@@ -1043,12 +1059,12 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 			if(fragment.valign.is_null() == false) {
 				const std::string& valign = fragment.valign.as_string();
 				if(valign == "top") {
-					fragment_baseline = line_top + fragment.font_extents.ascent;
+					fragment_baseline = line_top + static_cast<float>(fragment.font_extents.ascent);
 				} else if(valign == "bottom") {
-					fragment_baseline = line_bottom - fragment.font_extents.descent;
+					fragment_baseline = line_bottom - static_cast<float>(fragment.font_extents.descent);
 				} else if(valign == "middle") {
 					//average of top and bottom.
-					fragment_baseline = (line_top + fragment.font_extents.ascent + line_bottom - fragment.font_extents.descent)/2.0;
+					fragment_baseline = static_cast<float>((line_top + fragment.font_extents.ascent + line_bottom - fragment.font_extents.descent)/2.0);
 				} else {
 					ASSERT_LOG(valign == "baseline", "Unrecognized valignment: " << valign);
 				}
@@ -1104,9 +1120,9 @@ BEGIN_DEFINE_FN(layout_text, "([{text: string, font: string, size: int, tag: nul
 			area.reserve(4);
 			area.push_back(variant(fragment.width));
 			res->x = fragment.xpos + xpos_align_adjust;
-			res->y = fragment.ypos + fragment_baseline - fragment.font_extents.ascent;
+			res->y = fragment.ypos + fragment_baseline - static_cast<float>(fragment.font_extents.ascent);
 			res->width = fragment.width;
-			res->height = fragment.font_extents.ascent + fragment.font_extents.descent;
+			res->height = static_cast<float>(fragment.font_extents.ascent + fragment.font_extents.descent);
 
 			result.push_back(variant(res));
 		}
@@ -1267,79 +1283,76 @@ END_DEFINE_FN
 	}
 }
 
-namespace cairo_font
-{
+	namespace cairo_font
+	{
+		KRE::TexturePtr render_text_uncached(const std::string& text, const KRE::Color& color, int size, const std::string& font_name)
+		{
+			FT_Face face = get_ft_font(font_name);
+			cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+			cairo_set_font_face(dummy_context().get(), cairo_face);
+			cairo_set_font_size(dummy_context().get(), size);
 
-graphics::texture render_text_uncached(const std::string& text,
-                                       const SDL_Color& color, int size, const std::string& font_name)
-{
-	FT_Face face = get_ft_font(font_name);
-	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_set_font_face(dummy_context().get(), cairo_face);
-	cairo_set_font_size(dummy_context().get(), size);
+			std::vector<float> lengths, heights;
+			float width = 0.0, height = 0.0;
+			std::vector<std::string> lines = util::split(text, '\n');
+			for(auto s : lines) {
+				cairo_text_extents_t extents;
+				cairo_text_extents(dummy_context().get(), s.c_str(), &extents);
+				lengths.push_back(static_cast<float>(extents.width));
+				heights.push_back(static_cast<float>(extents.height));
+				if(static_cast<float>(extents.width) > width) {
+					width = static_cast<float>(extents.width);
+				}
 
-	std::vector<float> lengths, heights;
-	float width = 0.0, height = 0.0;
-	std::vector<std::string> lines = util::split(text, '\n');
-	for(auto s : lines) {
-		cairo_text_extents_t extents;
-		cairo_text_extents(dummy_context().get(), s.c_str(), &extents);
-		lengths.push_back(extents.width);
-		heights.push_back(extents.height);
-		if(extents.width > width) {
-			width = extents.width;
+				height += static_cast<float>(extents.height);
+			}
+
+			cairo_context context(int(width+1), int(height+1));
+
+			{
+				cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
+				cairo_set_font_face(context.get(), cairo_face);
+				cairo_set_font_size(context.get(), size);
+			}
+
+			for(int n = 0; n != lines.size(); ++n) {
+				const std::string& line = lines[n];
+				cairo_translate(context.get(), /*lengths[n]/2*/ 0, heights[n]);
+
+				cairo_new_path(context.get());
+				cairo_show_text(context.get(), line.c_str());
+
+				cairo_translate(context.get(), 0.0, heights[n]);
+			}
+
+
+			return context.write();
+		}
+	}
+
+	COMMAND_LINE_UTILITY(svg_render_scaling)
+	{
+		std::deque<std::string> argv(args.begin(), args.end());
+		if(argv.size() != 1) {
+			fprintf(stderr, "ERROR: Provide one argument: name of svg to convert");
 		}
 
-		height += extents.height;
-	}
+		{
+			cairo_context context(512, 512);
+			context.render_svg(argv.front());
+			context.write_png("output-small.png");
+		}
 
-	cairo_context context(int(width+1), int(height+1));
+		{
+			cairo_context context(1024, 1024);
+			context.render_svg(argv.front());
+			context.write_png("output-large.png");
+		}
 
-	{
-	cairo_font_face_t* cairo_face = cairo_ft_font_face_create_for_ft_face(face, 0);
-	cairo_set_font_face(context.get(), cairo_face);
-	cairo_set_font_size(context.get(), size);
-	}
-
-	for(int n = 0; n != lines.size(); ++n) {
-		const std::string& line = lines[n];
-		cairo_translate(context.get(), /*lengths[n]/2*/ 0, heights[n]);
-
-		cairo_new_path(context.get());
-		cairo_show_text(context.get(), line.c_str());
-
-		cairo_translate(context.get(), 0.0, heights[n]);
-	}
-
-
-	return context.write();
-}
-
-}
-
-COMMAND_LINE_UTILITY(svg_render_scaling)
-{
-	std::deque<std::string> argv(args.begin(), args.end());
-	if(argv.size() != 1) {
-		fprintf(stderr, "ERROR: Provide one argument: name of svg to convert");
-	}
-
-	{
-	cairo_context context(512, 512);
-	context.render_svg(argv.front());
-	IMG_SavePNG("output-small.png", context.get_surface().get());
-	}
-
-	{
-	cairo_context context(1024, 1024);
-	context.render_svg(argv.front());
-	IMG_SavePNG("output-large.png", context.get_surface().get());
-	}
-
-	{
-	cairo_context context(64, 64);
-	context.render_svg(argv.front());
-	IMG_SavePNG("output-very-small.png", context.get_surface().get());
+		{
+			cairo_context context(64, 64);
+			context.render_svg(argv.front());
+			context.write_png("output-very-small.png");
 		}
 	}
 }

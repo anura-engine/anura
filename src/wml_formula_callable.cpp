@@ -283,7 +283,7 @@ namespace game_logic
 						if(addr_str.size() > 15) {
 							addr_str.resize(15);
 						}
-						const intptr_t addr_id = strtoll(addr_str.c_str(), NULL, 16);
+						const intptr_t addr_id = static_cast<intptr_t>(strtoll(addr_str.c_str(), NULL, 16));
 
 						game_logic::wmlFormulaCallableReadScope::registerSerializedObject(addr_id, obj);
 					}

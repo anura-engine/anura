@@ -74,7 +74,6 @@ CustomObjectCallable::CustomObjectCallable(bool is_singleton)
 #define CUSTOM_OBJECT_CALLABLE_INC(def, value, vtype)	{ value, vtype },
 #include "custom_object.inc"
 #undef CUSTOM_OBJECT_CALLABLE_INC
-    { "is_solid", "bool" },
 	};
 	ASSERT_EQ(NUM_CUSTOM_OBJECT_PROPERTIES, sizeof(CustomObjectProperties)/sizeof(*CustomObjectProperties));
 
