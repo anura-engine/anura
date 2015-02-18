@@ -959,7 +959,7 @@ void Level::setPlayerVariantType(variant type_str)
 
 	g_player_type = parse_variant_type(type_str);
 
-	ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition("Level");
+	ConstFormulaCallableDefinitionPtr def = game_logic::get_formula_callable_definition("level");
 	assert(def.get());
 
 	FormulaCallableDefinition* mutable_def = const_cast<FormulaCallableDefinition*>(def.get());
@@ -3701,9 +3701,9 @@ DEFINE_SET_FIELD
 		obj.lock_screen_.reset();
 	}
 
-DEFINE_FIELD(shader, "builtin AnuraShader")
+DEFINE_FIELD(shader, "builtin anura_shader")
 	return variant(obj.shader_.get());
-DEFINE_SET_FIELD_TYPE("string|map|builtin AnuraShader")
+DEFINE_SET_FIELD_TYPE("string|map|builtin anura_shader")
 	if(value.is_string()) {
 		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value.as_string()));
 	} else if(value.is_map()) {

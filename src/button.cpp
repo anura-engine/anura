@@ -315,7 +315,7 @@ variant Button::getColorScheme()
 	}
 
 	BEGIN_DEFINE_CALLABLE(Button, Widget)
-		DEFINE_FIELD(label, "builtin Widget")
+		DEFINE_FIELD(label, "builtin widget")
 			return variant(obj.label_.get());
 	END_DEFINE_CALLABLE(Button)
 

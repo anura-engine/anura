@@ -163,7 +163,7 @@ BEGIN_DEFINE_CALLABLE(CustomObjectWidget, Widget)
 		std::map<variant, variant> m;
 		m[variant("object")] = value;
 		obj.init(variant(&m));
-	DEFINE_FIELD(overlay, "map|builtin Widget|null")
+	DEFINE_FIELD(overlay, "map|builtin widget|null")
 		return variant(obj.overlay_.get());
 	DEFINE_SET_FIELD
 		obj.overlay_ = widget_factory::create(value, obj.getEnvironment());

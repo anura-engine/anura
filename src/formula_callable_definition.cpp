@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <cctype>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -266,8 +267,32 @@ namespace game_logic
 
 	int register_formula_callable_definition(const std::string& id, ConstFormulaCallableDefinitionPtr def)
 	{
-		registry[id] = def;
-		return ++num_definitions;
+		//registry[id] = def;
+		//++num_definitions;
+	
+		std::string modified_id;
+		bool apply_modified = false;
+		for(int n = 0; n != id.size(); ++n) {
+			char c = id[n];
+			if(isupper(c)) {
+				apply_modified = true;
+				if(n != 0 && n != id.size()-1) {
+					modified_id += '_';
+				}
+				c = tolower(c);
+			}
+			modified_id += c;
+		}
+		if(apply_modified) {
+			registry[modified_id] = def;
+			++num_definitions;
+			LOG_DEBUG("Registered modified definition: '" << modified_id << "' from '" << id << "'");
+		} else {
+			registry[id] = def;
+			++num_definitions;
+		}
+
+		return num_definitions;
 	}
 
 	int register_formula_callable_definition(const std::string& id, const std::string& base_id, ConstFormulaCallableDefinitionPtr def)

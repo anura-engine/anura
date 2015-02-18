@@ -1652,7 +1652,7 @@ RETURN_TYPE("bool")
 
 		return variant(point_standable(*lvl, *obj, x, y, nullptr, SOLID_ONLY));
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("builtin Level")
+		ARG_TYPE("builtin level")
 		ARG_TYPE("custom_obj")
 		ARG_TYPE("int")
 		ARG_TYPE("int")
@@ -2376,7 +2376,7 @@ RETURN_TYPE("bool")
 		return result;
 
 	FUNCTION_ARGS_DEF
-		ARG_TYPE("builtin Level")
+		ARG_TYPE("builtin level")
 		ARG_TYPE("string")
 	RETURN_TYPE("custom_obj")
 	END_FUNCTION_DEF(get_object_or_die)
@@ -2606,7 +2606,7 @@ RETURN_TYPE("bool")
 			}
 		} else {
 			variant argMap = args()[0]->evaluate(variables);
-			dst_Level_str = argMap["Level"].as_string_default("");
+			dst_Level_str = argMap["level"].as_string_default("");
 			label = argMap["label"].as_string_default("");
 			if(argMap.has_key("player")) {
 				play = argMap["player"];
@@ -3050,7 +3050,7 @@ RETURN_TYPE("bool")
 		ARG_TYPE("object")
 		ARG_TYPE("map")
 	DEFINE_RETURN_TYPE
-		return parse_variant_type(variant("Widget"));
+		return parse_variant_type(variant("builtin widget"));
 	END_FUNCTION_DEF(widget)
 
 	class add_Level_module_command : public EntityCommandCallable {

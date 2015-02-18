@@ -641,7 +641,7 @@ namespace gui
 	}
 
 	BEGIN_DEFINE_CALLABLE(Dialog, Widget)
-		DEFINE_FIELD(child, "builtin Widget")
+		DEFINE_FIELD(child, "builtin widget")
 			return variant();
 		DEFINE_SET_FIELD
 			WidgetPtr w = widget_factory::create(value, obj.getEnvironment());
