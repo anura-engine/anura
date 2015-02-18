@@ -120,7 +120,7 @@ public:
 		handle_request_fn_ = controller_->queryValue("handle_request");
 		ASSERT_LOG(handle_request_fn_.is_function(), "Could not find handle_request in matchmaking_server class");
 
-		matchmake_fn_ = controller_->query_value("matchmake");
+		matchmake_fn_ = controller_->queryValue("matchmake");
 		ASSERT_LOG(matchmake_fn_.is_function(), "Could not find matchmake function in matchmaking_server class");
 
 		db_client_ = DbClient::create();
