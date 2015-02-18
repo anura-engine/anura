@@ -371,6 +371,15 @@ void set_core_module_name(const std::string& module_name)
 			if(v["abbreviation"].is_null() == false) {
 				abbrev = v["abbreviation"].as_string();
 			}
+
+		if(v["custom_arguments"].is_null() == false) {
+			ASSERT_LOG(v["custom_arguments"].is_map(), "custom_arguments in module.cfg is not a map. Found " << v["custom_arguments"].write_json() << " instead");
+
+			for(auto p : v["custom_arguments"].as_map()) {
+				preferences::register_module_setting(p.first.as_string(), p.second);
+			}
+		}
+
 			if(v["dependencies"].is_null() == false) {
 				if(v["dependencies"].is_string()) {
 					load(v["dependencies"].as_string(), false);

@@ -56,6 +56,11 @@ namespace gui
 		g_color_scheme = backup;
 	}
 
+variant Button::getColorScheme()
+{
+	return g_color_scheme;
+}
+
 	Button::Button(const std::string& str, std::function<void()> onclick)
 	  : label_(new Label(str, KRE::Color::colorWhite())),
 		onclick_(onclick), button_resolution_(BUTTON_SIZE_NORMAL_RESOLUTION),

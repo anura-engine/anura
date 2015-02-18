@@ -52,6 +52,10 @@ namespace game_logic
 
 		static variant deepClone(variant v);
 		static variant deepClone(variant v, std::map<FormulaObject*,FormulaObject*>& mapping);
+		
+		static variant generateDiff(variant a, variant b);
+		void applyDiff(variant delta);
+
 
 		static void reloadClasses();
 		static void loadAllClasses();
@@ -69,6 +73,8 @@ namespace game_logic
 		boost::intrusive_ptr<FormulaObject> clone() const;
 
 		void validate() const;
+
+	std::string write_id() const;
 	private:
 		//construct with type and constructor parameters.
 		//Don't call directly, use create() instead.

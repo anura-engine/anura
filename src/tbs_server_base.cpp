@@ -77,6 +77,7 @@ namespace tbs
 		g->nlast_touch = nheartbeat_;
 
 		std::vector<variant> users = msg["users"].as_list();
+		fprintf(stderr, "ZZZ: Add users: %d\n", (int)users.size());
 		for(int i = 0; i != users.size(); ++i) {
 			const std::string user = users[i]["user"].as_string();
 			const int session_id = users[i]["session_id"].as_int();
@@ -93,9 +94,12 @@ namespace tbs
 			cli_info.last_contact = nheartbeat_;
 			cli_info.session_id = session_id;
 
+			fprintf(stderr, "ZZZ: Add player: %s\n", users[i].write_json().c_str());
+
 			if(users[i]["bot"].as_bool(false) == false) {
 				g->game_state->add_player(user);
 			} else {
+				fprintf(stderr, "ZZZ: Add AI\n");
 				g->game_state->add_ai_player(user, users[i]);
 			}
 
@@ -196,6 +200,9 @@ namespace tbs
 		std::map<int, client_info>::iterator client_itor = clients_.find(session_id);
 		if(client_itor == clients_.end()) {
 			LOG_INFO("BAD SESSION ID: " << session_id << ": " << type);
+			for(auto i : clients_) {
+				fprintf(stderr, "VALID SESSION ID: %d\n", i.first);
+			}
 			send_fn(json::parse("{ \"type\": \"invalid_session\" }"));
 			return;
 		}
@@ -281,18 +288,7 @@ namespace tbs
 				const bool is_first_client = g->clients.front() == session_id;
 				g->clients.erase(std::remove(g->clients.begin(), g->clients.end(), session_id), g->clients.end());
 
-				if(!g->game_state->started()) {
-					g->game_state->remove_player(cli_info.user);
-					if(is_first_client) {
-						g->clients.clear();
-						//TODO: remove joining clients from the game nicely.
-					} else {
-						const std::string msg = create_game_info_msg(g).write_json(true, variant::JSON_COMPLIANT);
-						for(int client : g->clients) {
-							queue_msg(client, msg);
-						}
-					}
-				} else if(g->game_state->get_player_index(cli_info.user) != -1) {
+				if(g->game_state->get_player_index(cli_info.user) != -1) {
 					LOG_INFO("sending quit message...");
 					g->game_state->queue_message("{ type: 'player_quit' }");
 					g->game_state->queue_message(formatter() << "{ type: 'message', message: '" << cli_info.user << " has quit' }");
@@ -401,8 +397,10 @@ namespace tbs
 		}
 	}
 
-	PREF_INT(tbs_server_delay_ms, 50, "");
-	PREF_INT(tbs_server_heartbeat_freq, 10, "");
+	PREF_INT(tbs_server_delay_ms, 20, "");
+	PREF_INT(tbs_server_heartbeat_freq, 1, "");
+
+	int server_base::connection_timeout_ticks() const { return 5000; }
 
 	void server_base::heartbeat(const boost::system::error_code& error)
 	{
@@ -436,7 +434,8 @@ namespace tbs
 
 		for(std::map<int,client_info>::iterator i = clients_.begin();
 		    i != clients_.end(); ) {
-			if(i->second.game && nheartbeat_ - i->second.game->nlast_touch > 600) {
+			if(nheartbeat_ - i->second.last_contact > connection_timeout_ticks() && connection_timeout_ticks() > 0) {
+				quit_games(i->first);
 				clients_.erase(i++);
 			} else {
 				++i;
@@ -492,5 +491,23 @@ namespace tbs
 			doc.set("players", variant(&items));
 		}
 		return doc.build();
+	}
+
+	void server_base::set_last_contact(int session_id)
+	{
+		auto itor = clients_.find(session_id);
+		if(itor != clients_.end()) {
+			itor->second.last_contact = nheartbeat_;
+		}
+	}
+
+	int server_base::get_ms_since_last_contact(int session_id) const
+	{
+		auto itor = clients_.find(session_id);
+		if(itor == clients_.end()) {
+			return 1000000;
+		}
+
+		return (nheartbeat_ - itor->second.last_contact)*g_tbs_server_delay_ms*g_tbs_server_heartbeat_freq;
 	}
 }

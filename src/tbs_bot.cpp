@@ -56,7 +56,7 @@ private:
 	tbs::bot* bot_;
 };
 
-	PREF_INT(tbs_bot_delay_ms, 100, "Artificial delay for tbs bots");
+	PREF_INT(tbs_bot_delay_ms, 20, "Artificial delay for tbs bots");
 
 	bot::bot(boost::asio::io_service& service, const std::string& host, const std::string& port, variant v)
   		: session_id_(v["session_id"].as_int()), 

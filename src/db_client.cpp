@@ -116,8 +116,8 @@ namespace
 
 	void couchbase_error_handler(lcb_t instance, lcb_error_t error, const char* errinfo)
 	{
-		fprintf(stderr, "Database error: %s\n", errinfo);
-		ASSERT_LOG(false, "DB Error");
+		LOG_ERROR("Database error: " << errinfo);
+		ASSERT_LOG(false, "Database Error");
 	}
 
 	void store_callback(lcb_t instance, const void *cookie,
@@ -162,7 +162,7 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 			lcb_error_t err = lcb_create(&instance_, &create_options);
 			ASSERT_LOG(err == LCB_SUCCESS, "Could not connect to couchbase server: " << lcb_strerror(nullptr, err));
 
-			lcb_set_error_callback(instance_, couchbase_error_handler);
+		lcb_set_bootstrap_callback(instance_, couchbase_error_handler);
 
 			err = lcb_connect(instance_);
 			ASSERT_LOG(err == LCB_SUCCESS, "Failed to connect to couchbase server: " << lcb_strerror(nullptr, err));
@@ -263,9 +263,11 @@ void remove_callback(lcb_t instance, const void* cookie, lcb_error_t error, cons
 		bool process(int timeout_us)
 		{
 			if(timeout_us > 0) {
+				/*
 				lcb_error_t error = LCB_SUCCESS;
 				lcb_timer_t timer = lcb_timer_create(instance_, nullptr, timeout_us, 0, timer_callback, &error);
 				ASSERT_LOG(error == LCB_SUCCESS, "Failed to create lcb timer");
+			*/
 			}
 			lcb_wait(instance_);
 

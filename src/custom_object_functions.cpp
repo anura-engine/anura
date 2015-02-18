@@ -1144,7 +1144,7 @@ namespace
 			if(entity_collides(lvl, *obj_, MOVE_DIRECTION::NONE)) {
 				lvl.remove_character(obj_);
 			} else {
-				obj_->checkInitialized();
+				//obj_->checkInitialized();
 			}
 
 			obj_->createObject();
@@ -1587,26 +1587,22 @@ namespace
 		Level* lvl = args()[0]->evaluate(variables).convert_to<Level>();
 		const int x = args()[1]->evaluate(variables).as_int();
 		const int y = args()[2]->evaluate(variables).as_int();
-
 		int w = args().size() >= 4 ? args()[3]->evaluate(variables).as_int() : 1;
 		int h = args().size() >= 5 ? args()[4]->evaluate(variables).as_int() : 1;
-
 		rect r(x, y, w, h);
-
 		if(args().size() >= 6) {
 			//debugging so set the debug rect
 			add_debug_rect(r);
 		}
-
-		return variant(lvl->solid(r));
-	FUNCTION_ARGS_DEF
-		ARG_TYPE("object")
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-		ARG_TYPE("int")
-	RETURN_TYPE("bool")
+	return variant(lvl->solid(r));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
 	END_FUNCTION_DEF(solid)
 
 	FUNCTION_DEF(debug_rect, 2, 4, "debug_rect(int x, int y, (optional)int w=1, (optional) int h=1) -> Draws, for one frame, a rectangle on the Level")

@@ -104,6 +104,8 @@ namespace game_logic
 				v.push_back(variant(bo));
 			}
 			return variant(&v);
+	} else if(id == "MODULE_OPTIONS") {
+		return preferences::get_module_settings();
 		}
 
 		for(auto i = constants_stack.rbegin(); i != constants_stack.rend(); ++i) {

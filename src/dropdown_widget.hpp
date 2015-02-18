@@ -29,6 +29,7 @@
 #include "border_widget.hpp"
 #include "label.hpp"
 #include "grid_widget.hpp"
+#include "image_widget.hpp"
 #include "text_editor_widget.hpp"
 #include "widget.hpp"
 
@@ -68,6 +69,7 @@ namespace gui
 		bool handleMouseup(const SDL_MouseButtonEvent& event, bool claimed);
 		bool handleMouseMotion(const SDL_MouseMotionEvent& event, bool claimed);
 		void executeSelection(int selection);
+		void mouseoverItem(int selection);
 
 		int dropdown_height_;
 		DropdownList list_;
@@ -75,17 +77,31 @@ namespace gui
 		DropdownType type_;
 		TextEditorWidgetPtr editor_;
 		GridPtr dropdown_menu_;
+		std::vector<LabelPtr> labels_;
 		LabelPtr label_;
 		WidgetPtr dropdown_image_;
+		
 		std::function<void(const std::string&)> on_change_;
 		std::function<void(int, const std::string&)> on_select_;
+		
+		WidgetPtr dropdown_image_;
+		std::string normal_image_, focus_image_;
+		std::string font_;
 
 		// delgate 
 		void changeDelegate(const std::string& s);
 		void selectDelegate(int selection, const std::string& s);
+
+		void setColorScheme(const variant& v);
+
 		// FFL formula
 		game_logic::FormulaPtr change_handler_;
 		game_logic::FormulaPtr select_handler_;
+
+		std::unique_ptr<KRE::Color> normal_color_, depressed_color_, focus_color_;
+		std::unique_ptr<KRE::Color> text_normal_color_, text_depressed_color_, text_focus_color_;
+
+		bool in_widget_;
 	};
 
 	typedef boost::intrusive_ptr<DropdownWidget> DropdownWidgetPtr;

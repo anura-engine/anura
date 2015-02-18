@@ -696,7 +696,7 @@ const variant& variant::operator[](size_t n) const
 	must_be(VARIANT_TYPE_LIST);
 	assert(list_);
 	if(n >= list_->size()) {
-		generate_error(formatter() << "invalid index of " << n << " into " << write_json());
+		generate_error(formatter() << "invalid index of " << static_cast<int>(n) << " into " << write_json());
 	}
 
 	return list_->begin[n];
@@ -839,7 +839,24 @@ bool variant::function_call_valid(const std::vector<variant>& passed_args, std::
 		}
 
 		if(message) {
-			*message = "Arguments do not match any overloaded functions";
+			std::ostringstream s;
+			s << "Arguments do not match any overloaded functions.\n";
+			for(int i = 0; i != passed_args.size(); ++i) {
+				s << " Argument " << (i+1) << ": " << passed_args[i].write_json() << "\n";
+			}
+
+			s << "\nFunction signatures:\n";
+			for(const variant& v : multi_fn_->functions) {
+				s << "  (";
+				for(variant_type_ptr type : v.function_arg_types()) {
+					s << type->to_string() << ",";
+				}
+
+				s << ")\n";
+			}
+
+
+			*message = s.str();
 		}
 
 		return false;
@@ -1925,7 +1942,15 @@ void variant::serializeToString(std::string& str) const
 			//from multiple objects. So we record the address of it and
 			//register it to be recorded seperately.
 			char buf[256];
-			sprintf(buf, "deserialize('%p')", obj);
+			if(obj->addr().size()) {
+				std::string addr = obj->addr();
+				if(addr.size() > 15) {
+					addr.resize(15);
+				}
+				sprintf(buf, "deserialize('0x%s')", addr.c_str());
+			} else {
+				sprintf(buf, "deserialize('%p')", obj);
+			}
 			str += buf;
 			return;
 		}

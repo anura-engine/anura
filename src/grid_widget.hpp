@@ -25,6 +25,7 @@
 
 #include <vector>
 
+#include "color_utils.hpp"
 #include "grid_widget_fwd.hpp"
 #include "scrollable_widget.hpp"
 #include "widget.hpp"
@@ -48,6 +49,9 @@ namespace gui
 		virtual void setDim(int w, int h);
 		void addRow(const std::vector<WidgetPtr>& widgets);
 
+		void setBgColor(const KRE::Color& col);
+		void setFocusColor(const KRE::Color& col);
+
 		Grid& addCol(const std::string& str);
 		Grid& addCol(const WidgetPtr& widget=WidgetPtr());
 
@@ -57,6 +61,7 @@ namespace gui
 		Grid& setAlign(int col, ColumnAlign align);
 		Grid& setHpad(int pad);
 		void resetContents(const variant&);
+		Grid& setVpad(int pad);
 		void setHeaderRow(int row) { header_rows_.push_back(row); }
 
 		void setDrawSelectionHighlight(bool val=true) { draw_selection_highlight_ = val; }
@@ -121,6 +126,8 @@ namespace gui
 		callback_type on_select_;
 		int hpad_, vpad_;
 		bool show_background_;
+
+	boost::shared_ptr<graphics::color> bg_color_, focus_color_;
 
 		int max_height_;
 

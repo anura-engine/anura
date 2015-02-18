@@ -21,6 +21,8 @@
 	   distribution.
 */
 
+#include <SDL.h>
+
 #include "asserts.hpp"
 #include "json_parser.hpp"
 #include "tbs_internal_server.hpp"
@@ -201,5 +203,10 @@ namespace tbs
 			cli_info.msg_queue.pop_front();
 			send_fn(game_logic::deserialize_doc_with_objects(msg));
 		}
+	}
+
+	int internal_server::connection_timeout_ticks() const
+	{
+		return -1;
 	}
 }

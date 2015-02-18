@@ -55,7 +55,7 @@ namespace tbs
 	protected:
 		virtual void heartbeat_internal(int send_heartbeat, std::map<int, client_info>& clients);
 	private:
-		void handleProcess();
+		int connection_timeout_ticks() const;
 		void send_msg(const variant& resp, 
 			int session_id,
 			std::function<void(const std::string&)> handler, 

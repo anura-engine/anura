@@ -335,6 +335,7 @@ int main(int argcount, char* argvec[])
 
 	stats::record_program_args(argv);
 
+
 	for(size_t n = 0; n < argv.size(); ++n) {
 		const int argc = argv.size();
 		const std::string arg(argv[n]);
@@ -346,8 +347,18 @@ int main(int argcount, char* argvec[])
 		}
 		if(arg_name == "--module") {
 			if(load_module(arg_value, &argv) != 0) {
-				LOG_INFO("FAILED TO LOAD MODULE: " << arg_value);
-				return -1;
+				bool auto_update = false;
+				for(size_t n = 0; n < argv.size(); ++n) {
+					if(argv[n] == "--auto-update-module") {
+						auto_update = true;
+						break;
+					}
+				}
+
+				if(!auto_update) {
+					LOG_ERROR("FAILED TO LOAD MODULE: " << arg_value);
+					return -1;
+				}
 			}
 			++modules_loaded;
 		} else if(arg == "--tests") {
@@ -512,6 +523,7 @@ int main(int argcount, char* argvec[])
 		LOG_ERROR("cannot create preferences dir!");
 	}
 
+	bool update_require_restart = false;
 	variant_builder update_info;
 	if(g_auto_update_module || g_auto_update_anura != "") {
 
@@ -547,7 +559,6 @@ int main(int argcount, char* argvec[])
 		int start_time = profile::get_tick_time();
 		int original_start_time = profile::get_tick_time();
 		bool timeout = false;
-		bool require_restart = false;
 		LOG_INFO("Requesting update to module from server...");
 		int nupdate_cycle = 0;
 
@@ -619,6 +630,7 @@ int main(int argcount, char* argvec[])
 						update_info.add("module_error", variant(cl->error()));
 					} else {
 						update_info.add("complete_module", true);
+						update_require_restart = cl->nfiles_written() != 0;
 					}
 					cl.reset();
 				}
@@ -629,7 +641,7 @@ int main(int argcount, char* argvec[])
 						update_info.add("anura_error", variant(anura_cl->error()));
 					} else {
 						update_info.add("complete_anura", true);
-						require_restart = anura_cl->nfiles_written() != 0;
+						update_require_restart = anura_cl->nfiles_written() != 0;
 					}
 					anura_cl.reset();
 				}
@@ -638,7 +650,7 @@ int main(int argcount, char* argvec[])
 
 		} //dispose update_window
 
-		if(require_restart) {
+		if(update_require_restart) {
 			std::vector<char*> args;
 			for(char** a = argvec; *a; ++a) {
 				std::string arg(*a);

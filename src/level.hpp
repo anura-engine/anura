@@ -525,6 +525,7 @@ private:
 	graphics::AnuraShaderPtr shader_;
 
 	struct FrameBufferShaderEntry {
+		std::string label;
 		int begin_zorder, end_zorder;
 		variant shader_node;
 		mutable graphics::AnuraShaderPtr shader;

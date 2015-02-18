@@ -86,6 +86,10 @@ namespace tbs
 			int side;
 			bool is_human;
 			int confirmed_state_id;
+
+		mutable variant state_sent;
+		mutable int state_id_sent;
+		bool allow_deltas;
 		};
 
 		int get_player_index(const std::string& nick) const;
@@ -104,6 +108,10 @@ namespace tbs
 		void process();
 	
 		int state_id() const { return state_id_; }
+
+	void player_disconnect(int nplayer);
+	void player_reconnect(int nplayer);
+	void player_disconnected_for(int nplayer, int time_ms);
 
 	protected:
 		void start_game();
@@ -141,6 +149,8 @@ namespace tbs
 		std::string current_message_;
 
 		std::vector<player> players_;
+
+	std::vector<int> players_disconnected_;
 
 		std::vector<message> outgoing_messages_;
 

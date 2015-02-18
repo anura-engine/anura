@@ -48,6 +48,7 @@ namespace tbs
 
 			game_ptr game_state;
 			std::vector<int> clients;
+			std::set<int> clients_disconnected;
 			int nlast_touch;
 			bool quit_server_on_exit;
 		};
@@ -91,7 +92,13 @@ namespace tbs
 
 		variant create_heartbeat_packet(const client_info& cli_info);
 
+		void set_last_contact(int session_id);
+		int get_ms_since_last_contact(int session_id) const;
+		int get_num_heartbeat() const { return nheartbeat_; }
+		const std::vector<game_info_ptr>& games() const { return games_; }
+
 	private:
+		virtual int connection_timeout_ticks() const;
 		variant create_lobby_msg() const;
 		variant create_game_info_msg(game_info_ptr g) const;
 		void status_change();

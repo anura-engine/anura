@@ -128,6 +128,7 @@ namespace gui
 		scroll_pos_(0), xscroll_pos_(0),
 		begin_highlight_line_(-1), end_highlight_line_(-1),
 		has_focus_(false), 
+	editable_(true), 
 		is_dragging_(false),
 		begin_enter_return_(true),
 		last_click_at_(-1),
@@ -158,6 +159,7 @@ namespace gui
 		select_(0,0), cursor_(0,0), scroll_pos_(0), xscroll_pos_(0),
 		begin_highlight_line_(-1), end_highlight_line_(-1),
 		has_focus_(v["focus"].as_bool(false)), 
+	editable_(v["editable"].as_bool(true)), 
 		is_dragging_(false),
 		begin_enter_return_(true),
 		last_click_at_(-1),
@@ -746,13 +748,13 @@ namespace gui
 			return true;
 		}
 
-		if(event.keysym.sym == SDLK_z && (event.keysym.mod&KMOD_CTRL)) {
+		if(editable_ && event.keysym.sym == SDLK_z && (event.keysym.mod&KMOD_CTRL)) {
 			recordOp();
 			undo();
 			return true;
 		}
 
-		if(event.keysym.sym == SDLK_y && (event.keysym.mod&KMOD_CTRL)) {
+		if(editable_ && event.keysym.sym == SDLK_y && (event.keysym.mod&KMOD_CTRL)) {
 			recordOp();
 			redo();
 			return true;
@@ -763,20 +765,20 @@ namespace gui
 			recordOp();
 			handleCopy();
 
-			if(event.keysym.sym == SDLK_x) {
+			if(editable_ && event.keysym.sym == SDLK_x) {
 				saveUndoState();
 				deleteSelection();
 				onChange();
 			}
 
 			return true;
-		} else if(event.keysym.sym == SDLK_v && (event.keysym.mod&KMOD_CTRL)) {
+		} else if(editable_ && event.keysym.sym == SDLK_v && (event.keysym.mod&KMOD_CTRL)) {
 			handlePaste(copy_from_clipboard(false));
 
 			return true;
 		}
 
-		if(event.keysym.mod&KMOD_CTRL) {
+		if(editable_ && (event.keysym.mod&KMOD_CTRL)) {
 			if(event.keysym.sym == SDLK_BACKSPACE) {
 				if(select_ == cursor_) {
 					//We delete the current word behind us. 
@@ -964,8 +966,12 @@ namespace gui
 			break;
 		case SDLK_DELETE:
 		case SDLK_BACKSPACE:
+			if(!editable_) {
+				break;
+			}
 			if(recordOp("delete")) {
 				saveUndoState();
+
 			}
 			if(cursor_ == select_) {
 
@@ -1006,8 +1012,12 @@ namespace gui
 			break;
 
 		case SDLK_RETURN: {
+			if(!editable_) {
+				break;
+			}
 			if(recordOp("enter")) {
 				saveUndoState();
+
 			}
 			if(nrows_ == 1) {
 				if(on_enter_) {
@@ -1056,7 +1066,7 @@ namespace gui
 				on_tab_();
 			} else if(nrows_ == 1) {
 				return false;
-			} else {
+			} else if(editable_) {
 				handleTextInputInternal("\t");
 			}
 		}
@@ -1073,7 +1083,7 @@ namespace gui
 
 	bool TextEditorWidget::handleTextInputInternal(const char* text)
 	{
-		if(!has_focus_) {
+		if(!has_focus_ || !editable_) {
 			return false;
 		}
 
@@ -1108,6 +1118,9 @@ namespace gui
 
 	void TextEditorWidget::handlePaste(std::string txt)
 	{
+		if(!editable_) {
+			return;
+		}
 		recordOp();
 		saveUndoState();
 		deleteSelection();

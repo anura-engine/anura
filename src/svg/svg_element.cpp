@@ -116,9 +116,9 @@ namespace KRE
 			context_save cs(ctx.cairo());
 			// disabled this as cairo scales stuff correctly. Still need to alter at some
 			// point in the future.
-			//if(view_box_.w() != 0 && view_box_.h() != 0) {
-			//	cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
-			//}
+			if(view_box_.w() != 0 && view_box_.h() != 0) {
+				cairo_scale(ctx.cairo(), ctx.width()/view_box_.w(), ctx.height()/view_box_.h());
+			}
 			for(auto trf : transforms_) {
 				trf->apply(ctx);
 			}

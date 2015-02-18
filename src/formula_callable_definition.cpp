@@ -43,8 +43,6 @@ namespace game_logic
 
 	FormulaCallableDefinition::FormulaCallableDefinition() : is_strict_(false), supports_slot_lookups_(true)
 	{
-		int x = 4;
-		ASSERT_LOG((char*)&x - (char*)this > 10000 || (char*)this - (char*)&x > 10000 , "BAD BAD");
 	}
 
 	FormulaCallableDefinition::~FormulaCallableDefinition()

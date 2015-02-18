@@ -27,6 +27,7 @@
 #include "Canvas.hpp"
 
 #include "asserts.hpp"
+#include "button.hpp"
 #include "controls.hpp"
 #include "image_widget.hpp"
 #include "joystick.hpp"
@@ -47,7 +48,8 @@ namespace gui
 		: list_(list), 
 		type_(type), 
 		current_selection_(0), 
-		dropdown_height_(100)
+		dropdown_height_(100),
+		in_widget_(false)
 	{
 		setEnvironment();
 		setDim(width, height);
@@ -67,9 +69,30 @@ namespace gui
 	DropdownWidget::DropdownWidget(const variant& v, game_logic::FormulaCallable* e)
 		: Widget(v,e), 
 		current_selection_(0), 
-		dropdown_height_(100)
+		dropdown_height_(100),
+		in_widget_(false)
 	{
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
+	if(v.has_key("font")) {
+		font_ = v["font"].as_string();
+	}
+
+	if(v.has_key("color_scheme")) {
+		variant m = v["color_scheme"];
+
+		set_color_scheme(m);
+	}
+	
+	if(v.has_key("button_image")) {
+		dropdown_image_ = gui_section_widget_ptr(new gui_section_widget(v["button_image"].as_string()));
+		if(v.has_key("focus_button_image")) {
+			normal_image_ = v["button_image"].as_string();
+			focus_image_ = v["focus_button_image"].as_string();
+		}
+	} else {
+		dropdown_image_ = gui_section_widget_ptr(new gui_section_widget(dropdown_button_image));
+	}
+
 		if(v.has_key("type")) {
 			std::string s = v["type"].as_string();
 			if(s == "combo" || s == "combobox") {
@@ -109,8 +132,16 @@ namespace gui
 	{
 		const int dropdown_image_size = std::max(height(), dropdown_image_->height());
 		label_ = new Label(list_.size() > 0 ? list_[current_selection_] : "No items");
-		label_->setLoc(0, (height() - label_->height()) / 2);
-		dropdown_image_->setLoc(width() - height() + (height() - dropdown_image_->width()) / 2, 
+		if(font_.empty() == false) {
+			label_->set_font(font_);
+		}
+	dropdown_image_->setLoc(width() - height() + (height() - dropdown_image_->width()) / 2, 
+	label_->set_loc((width() - dropdown_image_->width() - 8 - label_->width())/2, (height() - label_->height()) / 2);
+	if(text_normal_color_) {
+		label_->set_color(text_normal_color_->as_sdl_color());
+	}
+
+	dropdown_image_->set_loc(width() - dropdown_image_->width() - 4, 
 			(height() - dropdown_image_->height()) / 2);
 		// go on ask me why there is a +20 in the line below.
 		// because TextEditorWidget uses a magic -20 when setting the width!
@@ -132,12 +163,29 @@ namespace gui
 		dropdown_menu_->setMaxHeight(dropdown_height_);
 		dropdown_menu_->setDim(width(), dropdown_height_);
 		dropdown_menu_->mustSelect();
+		dropdown_menu_->setDim(width(), 0);
+		dropdown_menu_->setVpad(8);
 		for(const std::string& s : list_) {
+
+	if(normal_color_) {
+		dropdown_menu_->set_bg_color(*normal_color_);
+	}
+
+	if(focus_color_) {
+		dropdown_menu_->set_focus_color(*focus_color_);
+	}
+
 			dropdown_menu_->addCol(WidgetPtr(new Label(s, KRE::Color::colorWhite())));
+	for(auto& s : list_) {
+		labels_.emplace_back(LabelPtr(new Label(s, text_normal_color_ ? text_normal_color_ : KRE::Color::colorWhite(), 14, font_)));
+	}
+
+	for(auto item : labels_) {
+		dropdown_menu_->add_col(item);
 		}
 		dropdown_menu_->registerSelectionCallback(std::bind(&DropdownWidget::executeSelection, this, _1));
-		dropdown_menu_->setVisible(false);
-
+	dropdown_menu_->registerMouseoverCallback(std::bind(&dropdown_widget::mouseover_item, this, _1));
+	dropdown_menu_->setVisible(false);
 	}
 
 	void DropdownWidget::setSelection(int selection)
@@ -213,9 +261,13 @@ namespace gui
 		canvas->drawHollowRect(rect(x()+width()-height(), y()-1, height()+1, height()+2),
 			hasFocus() ? KRE::Color::colorWhite() : KRE::Color::colorGrey());
 
-		if(type_ == DropdownType::LIST) {
+	if(normal_color_) {
+		canvas->drawSolidRect(rect(x(), y(), width()+2, height()+2), in_widget_ && focus_color_ ? *focus_color_ : *normal_color_);
+	}
+
+		if(type_ == DropDownType::LIST) {
 			label_->draw(x(), y(), getRotation(), getScale());
-		} else {
+		} else if(type == DropDownType::COMBOBOX) {
 			editor_->draw(x(), y(), getRotation(), getScale());
 		}
 		if(dropdown_image_) {
@@ -295,7 +347,7 @@ namespace gui
 	{
 		point p(event.x, event.y);
 		//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-		if(pointInRect(p, rect(x(), y(), width()+height(), height()))) {
+		if(pointInRect(p, rect(x(), y(), width(), height()))) {
 			claimed = claimMouseEvents();
 			if(dropdown_menu_) {
 				dropdown_menu_->setVisible(!dropdown_menu_->visible());
@@ -316,7 +368,7 @@ namespace gui
 	{
 		point p(event.x, event.y);
 		//int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
-		if(pointInRect(p, rect(x(), y(), width()+height(), height()))) {
+		if(pointInRect(p, rect(x(), y(), width(), height()))) {
 			claimed = claimMouseEvents();
 		}
 		return claimed;
@@ -326,6 +378,25 @@ namespace gui
 	{
 		point p;
 		int button_state = input::sdl_get_mouse_state(&p.x, &p.y);
+	if(in_widget_ != in_widget(event.x, event.y)) {
+		in_widget_ = !in_widget_;
+		if(!in_widget_ && text_normal_color_) {
+			label_->set_color(text_normal_color_->as_sdl_color());
+		}
+
+		if(in_widget_ && text_focus_color_) {
+			label_->set_color(text_focus_color_->as_sdl_color());
+		}
+
+		if(normal_image_.empty() == false) {
+			if(in_widget_) {
+				dropdown_image_->set_gui_section(focus_image_);
+			} else {
+				dropdown_image_->set_gui_section(normal_image_);
+			}
+		}
+		
+	}
 		return claimed;
 	}
 
@@ -353,6 +424,15 @@ namespace gui
 		}
 	}
 
+void dropdown_widget::mouseoverItem(int selection)
+{
+	if(text_normal_color_ && text_focus_color_) {
+		for(int index = 0; index < labels_.size(); ++index) {
+			labels_[index]->setColor(index == selection ? *text_focus_color_ : *text_normal_color_);
+		}
+	}
+}
+
 	int DropdownWidget::getMaxHeight() const
 	{
 		// Maximum height required, including dropdown and borders.
@@ -370,15 +450,8 @@ namespace gui
 				return variant();
 			}
 			return variant(obj.list_[obj.current_selection_]);
-		
-		DEFINE_FIELD(on_change, "null")
-			return variant();
-		DEFINE_SET_FIELD_TYPE("builtin Callable")
-			obj.on_change_ = std::bind(&DropdownWidget::changeDelegate, obj, _1);
-			obj.change_handler_ = obj.getEnvironment()->createFormula(value);
-		
 		DEFINE_FIELD(on_select, "null")
-			return variant();
+
 		DEFINE_SET_FIELD_TYPE("builtin Callable")
 			obj.on_select_ = std::bind(&DropdownWidget::selectDelegate, obj, _1, _2);
 			obj.select_handler_ = obj.getEnvironment()->createFormula(value);
@@ -387,12 +460,6 @@ namespace gui
 			std::vector<variant> v;
 			for(auto& s : obj.list_) {
 				v.emplace_back(variant(s));
-			}
-			return variant(&v);
-		DEFINE_SET_FIELD
-			obj.list_ = value.as_list_string();
-			obj.current_selection_ = 0;
-			
 		DEFINE_FIELD(type, "string")
 			if(obj.type_ == DropdownType::LIST) {
 				return variant("list");
@@ -408,5 +475,31 @@ namespace gui
 				ASSERT_LOG(false, "Unrecognised type: " << s);
 			}
 	END_DEFINE_CALLABLE(DropdownWidget)
+
+void dropdown_widget::setColorScheme(const variant& m)
+{
+	if(m.is_null()) {
+		return;
+	}
+
+	if(m.has_key("normal")) {
+		normal_color_.reset(new KRE::Color(m["normal"]));
+	if(m.has_key("depressed")) {
+		depressed_color_.reset(new KRE::Color(m["depressed"]));
+	}
+	if(m.has_key("focus")) {
+		focus_color_.reset(new KRE::Color(m["focus"]));
+	}
+			return variant(obj.list_[obj.current_selection_]);
+		
+	if(m.has_key("text_normal")) {
+		text_normal_color_.reset(new KRE::Color(m["text_normal"]));
+	}
+	if(m.has_key("text_depressed")) {
+		text_depressed_color_.reset(new KRE::Color(m["text_depressed"]));
+	}
+	if(m.has_key("text_focus")) {
+		text_focus_color_.reset(new KRE::Color(m["text_focus"]));
+	}
 }
 #endif

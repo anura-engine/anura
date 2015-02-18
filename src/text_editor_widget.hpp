@@ -168,6 +168,7 @@ namespace gui
 
 		int begin_highlight_line_, end_highlight_line_;
 	
+	bool editable_;
 		bool has_focus_;
 		bool is_dragging_;
 

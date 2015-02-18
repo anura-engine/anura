@@ -1405,12 +1405,14 @@ namespace game_logic
 		
 				if(left.is_list()) {
 					if(left.num_elements() == 0) {
-						return variant();
+						std::vector<variant> empty;
+						return variant(&empty);
 					}
 					if(end_index >= begin_index) {
 						return left.get_list_slice(begin_index, end_index);
 					} else {
-						return variant();
+						std::vector<variant> empty;
+						return variant(&empty);
 					}
 			
 				} else {
@@ -1433,7 +1435,7 @@ namespace game_logic
 			ExpressionPtr left_, start_, end_;
 		};
 
-		variant_type_ptr get_variant_type_and_or(ExpressionPtr left, ExpressionPtr right) {
+	variant_type_ptr get_variant_type_and_or(ExpressionPtr left, ExpressionPtr right, bool is_or=false) {
 			variant_type_ptr left_type = left->queryVariantType();
 			variant_type_ptr right_type = right->queryVariantType();
 			if(left_type->is_equal(*right_type)) {
@@ -1441,6 +1443,10 @@ namespace game_logic
 			}
 
 			std::vector<variant_type_ptr> types;
+			if(is_or) {
+				//Make it so e.g. (int|null or int) evaluates to int rather than int|null
+				left_type = variant_type::get_null_excluded(left_type);
+			}
 			types.push_back(left_type);
 			types.push_back(right_type);
 			return variant_type::get_union(types);
@@ -1521,7 +1527,7 @@ namespace game_logic
 			}
 
 			variant_type_ptr getVariantType() const {
-				return get_variant_type_and_or(left_, right_);
+				return get_variant_type_and_or(left_, right_, true);
 			}
 
 			ConstFormulaCallableDefinitionPtr
@@ -1698,7 +1704,7 @@ namespace game_logic
 						return;
 					}
 
-					if(left_type->is_type(variant::VARIANT_TYPE_STRING)) {
+					if(left_type->is_type(variant::VARIANT_TYPE_STRING) && variant_type::may_be_null(right_type) == false) {
 						return;
 					}
 
@@ -1769,7 +1775,7 @@ namespace game_logic
 					}
 
 					std::vector<variant_type_ptr> v;
-					v.push_back(left_type);
+					v.push_back(variant_type::get_null_excluded(left_type)); //if the left type is null it can't possibly be returned. e.g. make it so null|int or int will evaluate to int
 					v.push_back(right_type);
 					return variant_type::get_union(v);
 				}

@@ -50,14 +50,24 @@ const std::vector<std::string>& function_helpstrings(const std::string& module);
 
 int register_function_helpstring(const std::string& module, const std::string& str);
 
-#define FUNCTION_DEF(name, min_args, max_args, helpstring) \
+#define FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
 const int name##_dummy_help_var = register_function_helpstring(FunctionModule, helpstring); \
 class name##_function : public FunctionExpression { \
 public: \
-	explicit name##_function(const args_list& args) \
-	  : FunctionExpression(#name, args, min_args, max_args) {} \
-private: \
+	explicit name##_function(const args_list& myargs) \
+	  : FunctionExpression(#name, myargs, min_args, max_args) {
+			  
+#define FUNCTION_DEF_MEMBERS \
+			  } \
+private:
+
+#define FUNCTION_DEF_IMPL \
 	variant execute(const FormulaCallable& variables) const {
+
+#define FUNCTION_DEF(name, min_args, max_args, helpstring) \
+FUNCTION_DEF_CTOR(name, min_args, max_args, helpstring) \
+FUNCTION_DEF_MEMBERS \
+FUNCTION_DEF_IMPL
 
 #define END_FUNCTION_DEF(name) } }; const int name##_dummy_var = register_function_creator(FunctionModule, #name, new SpecificFunctionCreator<name##_function>());
 

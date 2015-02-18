@@ -131,7 +131,7 @@ namespace preferences
 	{
 		struct RegisteredSetting 
 		{
-			RegisteredSetting() : persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), helpstring(nullptr)
+			RegisteredSetting() : persistent(false), int_value(nullptr), bool_value(nullptr), double_value(nullptr), string_value(nullptr), variant_value(nullptr), helpstring(nullptr)
 			{}
 			variant write() const {
 				if(int_value) {
@@ -142,6 +142,8 @@ namespace preferences
 					return variant::from_bool(*bool_value);
 				} else if(double_value) {
 					return variant(*double_value);
+				} else if(variant_value) {
+					return *variant_value;
 				} else {
 					return variant();
 				}
@@ -156,6 +158,8 @@ namespace preferences
 					*bool_value = value.as_bool();
 				} else if(double_value && (value.is_decimal() || value.is_int())) {
 					*double_value = value.as_decimal().as_float();
+				} else if(variant_value) {
+					*variant_value = value;
 				}
 			}
 			bool persistent;
@@ -163,6 +167,7 @@ namespace preferences
 			bool* bool_value;
 			double* double_value;
 			std::string* string_value;
+			variant* variant_value;
 			const char* helpstring;
 		};
 
@@ -229,6 +234,37 @@ namespace preferences
 	{
 		static boost::intrusive_ptr<game_logic::FormulaCallable> obj(new SettingsObject);
 		return obj.get();
+	}
+
+	namespace {
+	std::map<std::string, variant> g_module_settings;
+	variant g_module_settings_variant;
+	}
+
+	void register_module_setting(const std::string& id, variant value)
+	{
+		if(g_module_settings.count(id) == 0) {
+			ASSERT_LOG(g_registered_settings().count(id) == 0, "Multiple definition of module setting, mirrors built-in: " << id);
+			g_module_settings_variant = variant();
+			RegisteredSetting& setting = g_registered_settings()[id];
+			setting.persistent = false;
+			setting.variant_value = &g_module_settings[id];
+			*setting.variant_value = value;
+		}
+	}
+
+	variant get_module_settings()
+	{
+		if(g_module_settings_variant.is_null()) {
+			std::map<variant,variant> result;
+			for(auto p : g_module_settings) {
+				result[variant(p.first)] = p.second;
+			}
+
+			g_module_settings_variant = variant(&result);
+		}
+
+		return g_module_settings_variant;
 	}
 
 	int register_string_setting(const std::string& id, bool persistent, std::string* value, const char* helpstring)
@@ -1285,6 +1321,10 @@ namespace preferences
 			type_safety_checks_ = false;
 		} else if(s == "--tbs-server") {
 			internal_tbs_server_ = true;
+			fprintf(stderr, "TURN ON internal server\n");
+		} else if(s == "--no-tbs-server") {
+			internal_tbs_server_ = false;
+			fprintf(stderr, "TURN OFF internal server\n");
 		} else if(s == "--no-autopause") {
 			allow_autopause_ = false;
 		} else if(s == "--autopause") {
@@ -1321,6 +1361,9 @@ namespace preferences
 						} else {
 							ASSERT_LOG(false, "Invalid value for boolean parameter " << base_name << ". Must be true or false");
 						}
+					} else if(setting.variant_value) {
+						std::string value(equal+1, s.end());
+						*setting.variant_value = variant(value);
 					} else {
 						ASSERT_LOG(false, "Error making sense of preference type " << base_name);
 					}

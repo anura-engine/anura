@@ -52,7 +52,7 @@ namespace tbs
 		handler_ = handler;
 		callable_ = callable;
 
-		std::string request_str = game_logic::serialize_doc_with_objects(request);
+		std::string request_str = game_logic::serialize_doc_with_objects(request).write_json();
 
 		http_client::send_request("POST /tbs", 
 			request_str,

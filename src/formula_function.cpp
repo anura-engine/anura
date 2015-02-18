@@ -77,9 +77,9 @@
 #include <boost/math/special_functions/asinh.hpp>
 #include <boost/math/special_functions/acosh.hpp>
 #include <boost/math/special_functions/atanh.hpp>
-#define asinh boost::math::asinh
-#define acosh boost::math::acosh
-#define atanh boost::math::atanh
+using boost::math::asinh;
+using boost::math::acosh;
+using boost::math::atanh;
 #endif
 
 extern variant g_auto_update_info;
@@ -641,6 +641,16 @@ namespace game_logic
 			return variant_type::get_commands();
 		END_FUNCTION_DEF(update_object)
 
+FUNCTION_DEF(apply_delta, 2, 2, "apply_delta(instance, delta)")
+	boost::intrusive_ptr<formula_object> target = args()[0]->evaluate(variables).convert_to<formula_object>();
+	variant clone = formula_object::deep_clone(variant(target.get()));
+	formula_object* obj = clone.try_convert<formula_object>();
+	obj->apply_diff(args()[1]->evaluate(variables));
+	return clone;
+FUNCTION_TYPE_DEF
+	return args()[0]->query_variant_type();
+END_FUNCTION_DEF(apply_delta)
+
 		FUNCTION_DEF(delay_until_end_of_loading, 1, 1, "delay_until_end_of_loading(string): delays evaluation of the enclosed until loading is finished")
 			Formula::failIfStaticContext();
 			variant s = args()[0]->evaluate(variables);
@@ -747,6 +757,49 @@ namespace game_logic
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
 		END_FUNCTION_DEF(eval)
+
+namespace {
+int g_formula_timeout = -1;
+
+struct timeout_scope {
+	int old_value;
+	explicit timeout_scope(int deadline) : old_value(g_formula_timeout) {
+		if(g_formula_timeout == -1 || deadline > g_formula_timeout) {
+			g_formula_timeout = deadline;
+		}
+	}
+
+	~timeout_scope() {
+		g_formula_timeout = old_value;
+	}
+};
+
+}
+
+FUNCTION_DEF(eval_with_timeout, 2, 2, "eval_with_timeout(int time_ms, expr): evals expr, but with a timeout of time_ms. This will not pre-emptively time out, but while expr is evaluating, has_timed_out() will start evaluating to true if the timeout has elapsed.")
+
+	const int time_ms = SDL_GetTicks() + args()[0]->evaluate(variables).as_int();
+	const timeout_scope scope(time_ms);
+	return args()[1]->evaluate(variables);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("int");
+FUNCTION_TYPE_DEF
+	return args()[1]->query_variant_type();
+END_FUNCTION_DEF(eval_with_timeout)
+
+FUNCTION_DEF(has_timed_out, 0, 0, "has_timed_out(): will evaluate to true iff the timeout specified by an enclosing eval_with_timeout() has elapsed.")
+	game_logic::formula::fail_if_static_context();
+	if(g_formula_timeout == false) {
+		return variant::from_bool(false);
+	}
+
+	const int ticks = SDL_GetTicks();
+
+	return variant::from_bool(ticks >= g_formula_timeout);
+FUNCTION_TYPE_DEF
+	return variant_type::get_type(variant::VARIANT_TYPE_BOOL);
+END_FUNCTION_DEF(has_timed_out)
 
 		FUNCTION_DEF(handle_errors, 2, 2, "handle_errors(expr, failsafe): evaluates 'expr' and returns it. If expr has fatal errors in evaluation, return failsafe instead. 'failsafe' is an expression which receives 'error_msg' and 'context' as parameters.")
 			const assert_recover_scope recovery_scope;
@@ -1116,6 +1169,17 @@ namespace game_logic
 			return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
 		END_FUNCTION_DEF(atan)
 
+FUNCTION_DEF(atan2, 2, 2, "atan2(x): Standard two-param arc tangent function (to allow determining the quadrant of the resulting angle by passing in the sign value of the operands).")
+const float ratio1 = args()[0]->evaluate(variables).as_decimal().as_float();
+const float ratio2 = args()[1]->evaluate(variables).as_decimal().as_float();
+return variant(static_cast<decimal>(atan2(ratio1,ratio2)*radians_to_degrees));
+FUNCTION_ARGS_DEF
+ARG_TYPE("int|decimal");
+ARG_TYPE("int|decimal");
+FUNCTION_TYPE_DEF
+return variant_type::get_type(variant::VARIANT_TYPE_DECIMAL);
+END_FUNCTION_DEF(atan2)
+    
 		FUNCTION_DEF(sinh, 1, 1, "sinh(x): Standard hyperbolic sine function.")
 			const float angle = args()[0]->evaluate(variables).as_float();
 			return variant(static_cast<decimal>(sinh(angle)));
@@ -1450,14 +1514,34 @@ namespace game_logic
 			};
 		}
 
-		FUNCTION_DEF(fold, 2, 3, "fold(list, expr, [default]) -> value")
+FUNCTION_DEF_CTOR(fold, 2, 3, "fold(list, expr, [default]) -> value")
+	if(args().size() == 2) {
+		variant_type_ptr type = args()[1]->query_variant_type();
+		if(type->is_type(variant::VARIANT_TYPE_INT)) {
+			default_ = variant(0);
+		} else if(type->is_numeric()) {
+			default_ = variant(decimal(0));
+		} else if(type->is_type(variant::VARIANT_TYPE_STRING)) {
+			default_ = variant("");
+		} else if(type->is_type(variant::VARIANT_TYPE_LIST) || type->is_list_of()) {
+			std::vector<variant> v;
+			default_ = variant(&v);
+		} else if(type->is_type(variant::VARIANT_TYPE_MAP) || type->is_map_of().first) {
+			std::map<variant,variant> m;
+			default_ = variant(&m);
+		}
+	}
+
+FUNCTION_DEF_MEMBERS
+	variant default_;
+FUNCTION_DEF_IMPL
 			variant list = args()[0]->evaluate(variables);
 			const int size = list.num_elements();
 			if(size == 0) {
 				if(args().size() >= 3) {
 					return args()[2]->evaluate(variables);
 				} else {
-					return variant();
+					return default_;
 				}
 			} else if(size == 1) {
 				return list[0];
@@ -1478,6 +1562,8 @@ namespace game_logic
 			types.push_back(args()[1]->queryVariantType());
 			if(args().size() > 2) {
 				types.push_back(args()[2]->queryVariantType());
+	} else if(default_.is_null()) {
+		types.push_back(variant_type::get_type(variant::VARIANT_TYPE_NULL));
 			}
 
 			return variant_type::get_union(types);
@@ -3796,7 +3882,7 @@ namespace game_logic
 				get_doc_cache()[docname] = doc;
 
 				std::string real_docname = preferences::user_data_path() + docname;
-				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc));
+				sys::write_file(real_docname, game_logic::serialize_doc_with_objects(doc).write_json());
 			}));
 		FUNCTION_ARGS_DEF
 			ARG_TYPE("string");
@@ -4617,6 +4703,33 @@ FUNCTION_TYPE_DEF
 	}
 	return variant_type::get_list(args()[0]->queryVariantType());
 END_FUNCTION_DEF(rotate_rect)
+
+FUNCTION_DEF(solid, 3, 6, "solid(level, int x, int y, (optional)int w=1, (optional) int h=1, (optional) bool debug=false) -> boolean: returns true iff the level contains solid space within the given (x,y,w,h) rectangle. If 'debug' is set, then the tested area will be displayed on-screen.")
+	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	const int x = args()[1]->evaluate(variables).as_int();
+	const int y = args()[2]->evaluate(variables).as_int();
+
+	int w = args().size() >= 4 ? args()[3]->evaluate(variables).as_int() : 1;
+	int h = args().size() >= 5 ? args()[4]->evaluate(variables).as_int() : 1;
+
+	rect r(x, y, w, h);
+
+	if(args().size() >= 6) {
+		//debugging so set the debug rect
+		add_debug_rect(r);
+	}
+
+	return variant(lvl->solid(r));
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("bool")
+RETURN_TYPE("bool")
+END_FUNCTION_DEF(solid)
+
 
 
 UNIT_TEST(modulo_operation) {

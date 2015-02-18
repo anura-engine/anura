@@ -49,6 +49,8 @@ namespace gui
 			variant backup;
 		};
 
+		static variant getColorScheme();
+
 		Button(const std::string& label, std::function<void ()> onclick);
 		Button(WidgetPtr label, std::function<void ()> onclick, BUTTON_STYLE button_style = BUTTON_STYLE_NORMAL, BUTTON_RESOLUTION buttonResolution = BUTTON_SIZE_NORMAL_RESOLUTION);
 		Button(const variant& v, game_logic::FormulaCallable* e);

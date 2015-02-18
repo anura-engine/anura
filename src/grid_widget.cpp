@@ -212,6 +212,16 @@ namespace gui
 		}
 	}
 
+	void Grid::setBgColor(const KRE::Color& col)
+	{
+		bg_color_.reset(new KRE::Color(col));
+	}
+
+	void grid::setFocusColor(const KRE::Color& col)
+	{
+		focus_color_.reset(new KRE::Color(col));
+	}
+
 	void Grid::setDim(int w, int h)
 	{
 		Widget::setDim(w,h);
@@ -291,6 +301,12 @@ namespace gui
 	Grid& Grid::setHpad(int pad)
 	{
 		hpad_ = pad;
+		return *this;
+	}
+
+	Grid& Grid::setVpad(int pad)
+	{
+		vpad_ = pad;
 		return *this;
 	}
 
@@ -430,7 +446,9 @@ namespace gui
 			KRE::ClipScope::Manager clip_scope(rect(xpos, ypos, width(), height()));
 
 			if(show_background_) {
-				canvas->drawSolidRect(rect(0, 0, width(), height()), KRE::Color(50, 50, 50));
+			
+				canvas->drawSolidRect(rect(0, 0, width(), height()), bg_color_ ? *bg_color_ : KRE::Color(50, 50, 50));
+
 			}
 
 			if(draw_selection_highlight_ && default_selection_ >= 0 && default_selection_ < getNRows()) {
@@ -443,7 +461,8 @@ namespace gui
 			if(allow_highlight_ && selected_row_ >= 0 && selected_row_ < getNRows()) {
 				if(std::find(header_rows_.begin(), header_rows_.end(), selected_row_) == header_rows_.end()) {
 					canvas->drawSolidRect(rect(0,row_height_*selected_row_ - getYscroll(),width(),row_height_), 
-						KRE::Color(255,0,0,128));
+						focus_color_ ? *focus_color_ : KRE::Color(255,0,0,128));
+			}
 				}
 			}
 

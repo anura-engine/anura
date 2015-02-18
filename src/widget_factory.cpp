@@ -36,6 +36,7 @@
 #include "custom_object_widget.hpp"
 #include "dialog.hpp"
 #include "drag_widget.hpp"
+#include "dropdown_widget.hpp"
 #include "file_chooser_dialog.hpp"
 #include "graphical_font_label.hpp"
 #include "grid_widget.hpp"
@@ -83,6 +84,8 @@ namespace widget_factory
 			return WidgetPtr(new Button(v,e));
 		} else if(wtype == "checkbox") {
 			return WidgetPtr(new Checkbox(v,e));
+	} else if(wtype == "combobox" || wtype == "listbox") {
+		return widget_ptr(new gui::dropdown_widget(v,e));
 		} else if(wtype == "dialog") {
 			return WidgetPtr(new Dialog(v,e));
 	#ifndef NO_EDITOR
@@ -140,7 +143,7 @@ namespace widget_factory
 		} else if(wtype == "tree") {
 			return WidgetPtr(new TreeViewWidget(v, e));
 		} else {
-			ASSERT_LOG(true, "Unable to create a widget of type " << wtype);
+			ASSERT_LOG(false, "Unable to create a widget of type " << wtype);
 			return WidgetPtr();
 		}
 	}

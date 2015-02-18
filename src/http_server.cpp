@@ -303,6 +303,8 @@ namespace http
 		std::shared_ptr<std::string> str(new std::string(buf.str()));
 		*str += msg;
 
+	fprintf(stderr, "SEND_MSG(((%s)))\n", str->c_str());
+
 		boost::asio::async_write(*socket, boost::asio::buffer(*str),
 								 std::bind(&web_server::handle_send, this, socket, std::placeholders::_1, std::placeholders::_2, str->size(), str));
 	}
