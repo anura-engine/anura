@@ -413,6 +413,7 @@ namespace KRE
 		if(main_window == nullptr) {
 			main_window = wm;
 		}
+		LOG_DEBUG("Added window with id: " << wm->getWindowID());
 		return wm;
 	}
 
@@ -434,7 +435,10 @@ namespace KRE
 	WindowManagerPtr WindowManager::getWindowFromID(unsigned id)
 	{
 		auto it = get_window_list().find(id);
-		ASSERT_LOG(it != get_window_list().end(), "Couldn't get window from id: " << id);
+		//ASSERT_LOG(it != get_window_list().end(), "Couldn't get window from id: " << id);
+		if(it == get_window_list().end()) {
+			return nullptr;
+		}
 		return it->second;
 	}
 }

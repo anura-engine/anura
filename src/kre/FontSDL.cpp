@@ -23,9 +23,6 @@
 
 #pragma comment(lib, "SDL2_ttf")
 
-#include <boost/filesystem.hpp>
-
-#include "module.hpp"
 #include "DisplayDevice.hpp"
 #include "FontSDL.hpp"
 #include "SurfaceSDL.hpp"
@@ -41,29 +38,6 @@ namespace KRE
 		{
 			static FontMap res;
 			return res;
-		}
-
-		std::map<std::string,std::string>& get_font_list()
-		{
-			static sys::file_path_map res;
-			if(res.empty()) {
-				//sys::get_unique_files("data/fonts/", res);
-				module::get_unique_filenames_under_dir("data/fonts/", &res);
-			}
-			return res;
-		}
-
-		// XXX I don't really like this here since it breaks a nice seperation
-		// between application and library.
-		bool get_font_path(const std::string& name, std::string& fontn)
-		{
-			std::map<std::string,std::string>& res = get_font_list();
-			std::map<std::string, std::string>::const_iterator itor = res.find(name);
-			if(itor == res.end()) {
-				return false;
-			}
-			fontn = itor->second;
-			return true;
 		}
 
 		SDL_Color to_SDL_Color(const Color& c)
@@ -92,20 +66,25 @@ namespace KRE
 
 	TTF_Font* FontSDL::getFont(int size, const std::string& font_name) const
 	{
-		std::string fn;
+		std::string fp;
 		std::string fontn = font_name.empty() ? getDefaultFont() : font_name;
-		if(!get_font_path(fontn + ".ttf", fn)) {
-			if(!get_font_path(fontn + ".otf", fn)) {
-				ASSERT_LOG(false, "Unable to find font file for '" << font_name << "'");
+		try {
+			fp = Font::findFontPath(fontn + ".ttf");
+
+		} catch(FontError&) {
+			try {
+				fp = Font::findFontPath(fontn + ".otf");
+			} catch(FontError&) {
+				fp = Font::findFontPath(fontn);
 			}
 		}
 
 		TTF_Font* font = nullptr;
-		auto font_pair = std::make_pair(fn, size);
+		auto font_pair = std::make_pair(fp, size);
 		auto it = get_font_table().find(font_pair);
 		if(it == get_font_table().end()) {
-			font = TTF_OpenFont(fn.c_str(), size);
-			ASSERT_LOG(font != nullptr, "Failed to open font file '" << fn << "': " << TTF_GetError());
+			font = TTF_OpenFont(fp.c_str(), size);
+			ASSERT_LOG(font != nullptr, "Failed to open font file '" << fp << "': " << TTF_GetError());
 			get_font_table()[font_pair] = font;
 		} else {
 			font = it->second;
@@ -127,7 +106,7 @@ namespace KRE
 				parts.emplace_back(TTF_RenderUTF8_Blended(font, line.c_str(), to_SDL_Color(color)));
 				if(parts.back() == nullptr) {
 					LOG_ERROR("Failed to render string: '" << line << "'\n");
-					throw FontError();
+					throw FontError("Failed to render string.");
 				}
 
 				if(parts.back()->w > width) {
@@ -156,25 +135,6 @@ namespace KRE
 		TTF_Font* font = getFont(size, font_name);
 		int res = TTF_SizeUTF8(font, text.c_str(), width, height);
 		ASSERT_LOG(res == 0, "Error calculating size of string: " << TTF_GetError());
-	}
-
-	void FontSDL::doReloadFontPaths() 
-	{
-		get_font_list().clear();
-	}
-
-	std::vector<std::string> FontSDL::handleGetAvailableFonts() 
-	{
-		using namespace boost::filesystem;
-		auto& res = get_font_list();
-		std::vector<std::string> v;
-		for(auto it : res) {
-			path p(it.second);
-			if(p.extension() == ".ttf" || p.extension() == ".otf") {
-				v.push_back(p.stem().generic_string());
-			}
-		}
-		return v;
 	}
 
 	int FontSDL::getCharWidth(int size, const std::string& fn) 

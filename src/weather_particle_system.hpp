@@ -25,6 +25,8 @@
 
 #include <deque>
 
+#include "AttributeSet.hpp"
+
 #include "particle_system.hpp"
 
 struct WeatherParticleSystemInfo 

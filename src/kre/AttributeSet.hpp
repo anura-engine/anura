@@ -72,30 +72,6 @@ namespace KRE
 		intptr_t value_;
 	};
 
-	enum class AttrType {
-		UNKOWN,
-		POSITION,
-		COLOR, 
-		TEXTURE,
-		NORMAL,
-	};
-	enum class AttrFormat {
-		BOOL,
-		HALF_FLOAT,
-		FLOAT,
-		DOUBLE,
-		FIXED,
-		SHORT,
-		UNSIGNED_SHORT,
-		BYTE,
-		UNSIGNED_BYTE,
-		INT,
-		UNSIGNED_INT,
-		INT_2_10_10_10_REV,
-		UNSIGNED_INT_2_10_10_10_REV,
-		UNSIGNED_INT_10F_11F_11F_REV,
-	};
-
 	class AttributeDesc
 	{
 	public:
@@ -226,8 +202,7 @@ namespace KRE
 		void update(const Container<T>& src, iterator dst) {
 			auto dst1 = std::distance(elements_.begin(), dst);
 			auto dst2 = std::distance(src.begin(), src.end()) * sizeof(T);
-			elements_.reserve(elements_.size() + src.size());
-			std::copy(src.begin(), src.end(), dst);
+			std::copy(src.begin(), src.end(), std::inserter(elements_, dst));
 			if(getDeviceBufferData()) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
 			}
@@ -235,8 +210,8 @@ namespace KRE
 		void update(Container<T>* src, iterator dst) {
 			auto dst1 = std::distance(elements_.begin(), dst);
 			auto dst2 = std::distance(src->begin(), src->end()) * sizeof(T);
-			elements_.reserve(elements_.size() + src->size());
-			std::move(src->begin(), src->end(), std::make_move_iterator(dst));
+			//elements_.reserve(elements_.size() + src->size());
+			std::move(src->begin(), src->end(), std::inserter(elements_, dst));
 			if(getDeviceBufferData()) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
 			}
@@ -289,26 +264,6 @@ namespace KRE
 			}
 		}
 		Container<T> elements_;
-	};
-
-	enum class DrawMode {
-		POINTS,
-		LINE_STRIP,
-		LINE_LOOP,
-		LINES,
-		TRIANGLE_STRIP,
-		TRIANGLE_FAN,
-		TRIANGLES,
-		QUAD_STRIP,
-		QUADS,
-		POLYGON,		
-	};
-
-	enum class IndexType {
-		INDEX_NONE,
-		INDEX_UCHAR,
-		INDEX_USHORT,
-		INDEX_ULONG,
 	};
 
 	class AttributeSet : public ScopeableValue

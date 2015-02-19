@@ -22,6 +22,7 @@
 */
 #include <functional>
 
+#include "Canvas.hpp"
 #include "WindowManager.hpp"
 #include "ClipScope.hpp"
 

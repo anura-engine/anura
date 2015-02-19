@@ -28,6 +28,7 @@
 #include <string>
 #include <vector>
 
+#include "AttributeSet.hpp"
 #include "geometry.hpp"
 #include "SceneObject.hpp"
 #include "Texture.hpp"

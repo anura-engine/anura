@@ -34,13 +34,13 @@ namespace KRE
 	public:
 		explicit OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit OpenGLTexture(const std::vector<SurfacePtr>& surfaces, 
-			Type type=Type::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);
 		explicit OpenGLTexture(int count,
 			int width, 
 			int height, 			
 			PixelFormat::PF fmt, 
-			Texture::Type type=Type::TEXTURE_2D,
+			TextureType type=TextureType::TEXTURE_2D,
 			unsigned depth=0);
 		explicit OpenGLTexture(const SurfacePtr& surf, SurfacePtr palette);
 		virtual ~OpenGLTexture();

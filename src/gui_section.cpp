@@ -23,6 +23,7 @@
 
 #include <map>
 
+#include "Canvas.hpp"
 #include "DisplayDevice.hpp"
 
 #include "asserts.hpp"

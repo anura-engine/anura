@@ -30,11 +30,11 @@
 
 #include "asserts.hpp"
 #include "AttributeSet.hpp"
-#include "Texture.hpp"
 #include "ParticleSystemFwd.hpp"
 #include "SceneNode.hpp"
 #include "SceneObject.hpp"
 #include "SceneUtil.hpp"
+#include "Texture.hpp"
 
 namespace KRE
 {

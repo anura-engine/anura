@@ -23,6 +23,7 @@
 
 #pragma once
 
+#include "AttributeSet.hpp"
 #include "SceneObject.hpp"
 #include "Texture.hpp"
 

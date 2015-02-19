@@ -44,12 +44,6 @@ namespace KRE
 	class Texture : public ScopeableValue
 	{
 	public:
-		enum class Type {
-			TEXTURE_1D,
-			TEXTURE_2D,
-			TEXTURE_3D,
-			TEXTURE_CUBIC,
-		};
 		enum class AddressMode {
 			WRAP,
 			CLAMP,
@@ -72,7 +66,7 @@ namespace KRE
 
 		void setBorderColor(const Color& bc);
 
-		Type getType() const { return type_; }
+		TextureType getType() const { return type_; }
 		int getMipMapLevels() const { return mipmaps_; }
 		int getMaxAnisotropy() const { return max_anisotropy_; }
 		AddressMode getAddressModeU() const { return address_mode_[0]; }
@@ -108,7 +102,7 @@ namespace KRE
 
 		// XXX Need to add a pixel filter function, so when we load the surface we apply the filter.
 		static TexturePtr createTexture(const std::string& filename,
-			Type type=Type::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);
 		static TexturePtr createTexture(const variant& node);
 		static TexturePtr createTexture(const std::string& filename, const variant& node);
@@ -173,21 +167,21 @@ namespace KRE
 	protected:
 		explicit Texture(const variant& node, const std::vector<SurfacePtr>& surfaces);
 		explicit Texture(const std::vector<SurfacePtr>& surfaces,
-			Type type=Type::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);
 		explicit Texture(int count, 
 			int width, 
 			int height, 
 			int depth,
 			PixelFormat::PF fmt, 
-			Texture::Type type);
+			TextureType type);
 		// Constrcutor to create paletteized texture from a file name and optional surface.
 		explicit Texture(const SurfacePtr& surf, const SurfacePtr& palette);
 		void setTextureDimensions(int w, int h, int d=0);
 	private:
 		virtual void rebuild() = 0;
 
-		Type type_;
+		TextureType type_;
 		int mipmaps_;
 		AddressMode address_mode_[3]; // u,v,w
 		Filtering filtering_[3]; // minification, magnification, mip

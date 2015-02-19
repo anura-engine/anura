@@ -24,9 +24,11 @@
 #pragma comment(lib, "cairo")
 
 #include "asserts.hpp"
-#include "SceneFwd.hpp"
-#include "VGraphCairo.hpp"
+#include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"
+#include "SceneFwd.hpp"
+#include "Texture.hpp"
+#include "VGraphCairo.hpp"
 
 namespace KRE
 {

@@ -23,20 +23,16 @@
 
 #pragma once
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <string>
 
-#include "AttributeSet.hpp"
-#include "Canvas.hpp"
-#include "ClipScope.hpp"
-#include "ColorScope.hpp"
 #include "DisplayDeviceFwd.hpp"
+#include "geometry.hpp"
+#include "PixelFormat.hpp"
 #include "Renderable.hpp"
-#include "RenderTarget.hpp"
-#include "Scissor.hpp"
-#include "Shaders.hpp"
-#include "StencilScope.hpp"
+#include "StencilSettings.hpp"
 #include "variant.hpp"
 
 namespace KRE
@@ -154,7 +150,7 @@ namespace KRE
 		virtual void render(const Renderable* r) const = 0;
 
 		static TexturePtr createTexture(const std::string& filename, 
-			Texture::Type type=Texture::Type::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);
 
 		static TexturePtr createTexture(const variant& node);
@@ -162,10 +158,10 @@ namespace KRE
 		static TexturePtr createTexture(const SurfacePtr& surface, const SurfacePtr& palette);
 		static TexturePtr createTexture(const SurfacePtr& surface, bool cache, const variant& node);
 		static TexturePtr createTexture(const SurfacePtr& surface, 
-			Texture::Type type=Texture::Type::TEXTURE_2D, 
+			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);
 		static TexturePtr createTexture1D(unsigned width, PixelFormat::PF fmt);
-		static TexturePtr createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D);
+		static TexturePtr createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type=TextureType::TEXTURE_2D);
 		static TexturePtr createTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt);
 
 		static TexturePtr createTexture2D(int count, int width, int height, PixelFormat::PF fmt);
@@ -233,11 +229,11 @@ namespace KRE
 		virtual bool handleReadPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, void* data) = 0;
 		
 		virtual TexturePtr handleCreateTexture(const variant& node) = 0;
-		virtual TexturePtr handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) = 0;
+		virtual TexturePtr handleCreateTexture(const std::string& filename, TextureType type, int mipmap_levels) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) = 0;
-		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) = 0;
+		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels) = 0;
 		virtual TexturePtr handleCreateTexture1D(unsigned width, PixelFormat::PF fmt) = 0;
-		virtual TexturePtr handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) = 0;
+		virtual TexturePtr handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type=TextureType::TEXTURE_2D) = 0;
 		virtual TexturePtr handleCreateTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) = 0;
 		virtual TexturePtr handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette) = 0;
 		virtual TexturePtr handleCreateTexture2D(int count, int width, int height, PixelFormat::PF fmt) = 0;

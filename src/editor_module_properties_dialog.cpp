@@ -239,7 +239,9 @@ namespace editor_dialogs
 		// Reload level paths
 		reload_level_paths();
 		CustomObjectType::ReloadFilePaths();
-		KRE::Font::reloadFontPaths();
+		std::map<std::string,std::string> font_paths;
+		module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+		KRE::Font::setAvailableFonts(font_paths);
 		if(mod_.abbreviation_.empty() == false) {
 			return mod_.abbreviation_ + ":titlescreen.cfg";
 		}

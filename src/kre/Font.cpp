@@ -135,6 +135,12 @@ namespace KRE
 			static std::string res;
 			return res;
 		}
+
+		font_path_cache& get_font_path_cache()
+		{
+			static font_path_cache res;
+			return res;
+		}
 	}
 
 	void Font::registerFactoryFunction(const std::string& type, std::function<FontPtr()> create_fn)
@@ -180,21 +186,37 @@ namespace KRE
 		calcTextSize(text, size, font_name, width, height);
 	}
 
-	void Font::reloadFontPaths()
+	void Font::setAvailableFonts(const std::map<std::string, std::string>& font_map)
 	{
-		auto font_instance = getInstance();
-		if(font_instance) {
-			font_instance->doReloadFontPaths();
-		}
+		font_path_cache() = font_map;
 	}
 
 	std::vector<std::string> Font::getAvailableFonts()
 	{
-		auto font_instance = getInstance();
-		if(font_instance) {
-			return font_instance->handleGetAvailableFonts();
+		std::vector<std::string> res;
+		for(auto& fp : font_path_cache()) {
+			res.emplace_back(fp.first);
 		}
-		return std::vector<std::string>();
+		return res;
+	}
+
+	std::string Font::findFontPath(const std::string& fontname)
+	{
+		auto it = font_path_cache().find(fontname);
+		if(it == font_path_cache().end()) {
+			std::stringstream ss;
+			ss << "Font '" << fontname << "' not found in any available path.\n";
+			ss << "Paths were: ";
+			if(font_path_cache().size() > 0) {
+				for(auto& fp : font_path_cache()) {
+					ss << fp.second << "\n";
+				}
+			} else {
+				ss << "<empty>";
+			}
+			throw FontError(ss.str().c_str());
+		}
+		return it->second;
 	}
 
 	int Font::charWidth(int size, const std::string& fn)

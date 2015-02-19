@@ -27,6 +27,7 @@
 #include "BlendModeScope.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
+#include "ColorScope.hpp"
 #include "Font.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"

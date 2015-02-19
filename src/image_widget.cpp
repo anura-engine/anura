@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "Canvas.hpp"
 #include "DisplayDevice.hpp"
 
 #include "image_widget.hpp"

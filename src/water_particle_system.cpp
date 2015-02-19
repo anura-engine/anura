@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"
 #include "WindowManager.hpp"
 

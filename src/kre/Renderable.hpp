@@ -25,11 +25,9 @@
 
 #include <glm/gtx/quaternion.hpp>
 
-#include "AttributeSet.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
-#include "Texture.hpp"
 #include "variant.hpp"
 
 namespace KRE

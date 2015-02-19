@@ -27,6 +27,7 @@ s	Copyright (C) 2003-2014 by David White <davewx7@gmail.com>
 
 #include "BlendModeScope.hpp"
 #include "ColorScope.hpp"
+#include "Font.hpp"
 #include "RenderTarget.hpp"
 #include "StencilScope.hpp"
 #include "WindowManager.hpp"
@@ -4391,8 +4392,10 @@ void Level::launch_new_module(const std::string& module_id, game_logic::ConstFor
 	module::reload(module_id);
 	reload_level_paths();
 	CustomObjectType::ReloadFilePaths();
-	//Font::reloadFontPaths();
-	LOG_ERROR("Font::reloadFontPaths()");
+
+	std::map<std::string,std::string> font_paths;
+	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+	KRE::Font::setAvailableFonts(font_paths);
 
 	const std::vector<EntityPtr> players = this->players();
 	for(EntityPtr e : players) {

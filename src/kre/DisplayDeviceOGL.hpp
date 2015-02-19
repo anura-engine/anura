@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <set>
+
 #include "DisplayDevice.hpp"
 #include "Texture.hpp"
 #include "ShadersOGL.hpp"
@@ -83,11 +85,11 @@ namespace KRE
 		bool doCheckForFeature(DisplayDeviceCapabilties cap) override;
 
 		TexturePtr handleCreateTexture(const variant& node) override;
-		TexturePtr handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels) override;
+		TexturePtr handleCreateTexture(const std::string& filename, TextureType type, int mipmap_levels) override;
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, const variant& node) override;
-		TexturePtr handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels) override;
+		TexturePtr handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels) override;
 		TexturePtr handleCreateTexture1D(unsigned width, PixelFormat::PF fmt) override;
-		TexturePtr handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type=Texture::Type::TEXTURE_2D) override;
+		TexturePtr handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type=TextureType::TEXTURE_2D) override;
 		TexturePtr handleCreateTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt) override;
 		TexturePtr handleCreateTexture(const SurfacePtr& surface, const SurfacePtr& palette) override;
 		TexturePtr handleCreateTexture2D(int count, int width, int height, PixelFormat::PF fmt) override;

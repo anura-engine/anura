@@ -38,8 +38,6 @@ namespace KRE
 		TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const override;
 		void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const override;
 		TTF_Font* getFont(int size, const std::string& font_name) const;
-		void doReloadFontPaths() override;
-		std::vector<std::string> handleGetAvailableFonts() override;
 		int getCharWidth(int size, const std::string& fn) override;
 		int getCharHeight(int size, const std::string& fn) override;
 	};

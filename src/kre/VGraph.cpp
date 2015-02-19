@@ -22,6 +22,7 @@
 */
 
 #include "asserts.hpp"
+#include "geometry.hpp"
 #include "VGraph.hpp"
 #include "VGraphCairo.hpp"
 #include "VGraphOGL.hpp"

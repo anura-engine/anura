@@ -24,7 +24,16 @@
 #include <map>
 
 #include "asserts.hpp"
+#include "AttributeSet.hpp"
+#include "Canvas.hpp"
+#include "ClipScope.hpp"
 #include "DisplayDevice.hpp"
+#include "Effects.hpp"
+#include "RenderTarget.hpp"
+#include "Scissor.hpp"
+#include "Shaders.hpp"
+#include "StencilScope.hpp"
+#include "Texture.hpp"
 
 namespace KRE
 {
@@ -165,7 +174,7 @@ namespace KRE
 		return tex;
 	}
 
-	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDevice::createTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels)
 	{
 		return getCurrent()->handleCreateTexture(surface, type, mipmap_levels);
 	}
@@ -175,7 +184,7 @@ namespace KRE
 		return getCurrent()->handleCreateTexture1D(width, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDevice::createTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type)
 	{
 		return getCurrent()->handleCreateTexture2D(width, height, fmt, type);
 	}
@@ -185,7 +194,7 @@ namespace KRE
 		return getCurrent()->handleCreateTexture3D(width, height, depth, fmt);
 	}
 
-	TexturePtr DisplayDevice::createTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDevice::createTexture(const std::string& filename, TextureType type, int mipmap_levels)
 	{
 		return getCurrent()->handleCreateTexture(filename, type, mipmap_levels);
 	}

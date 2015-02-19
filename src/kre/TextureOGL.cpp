@@ -39,13 +39,13 @@ namespace KRE
 			return GL_CLAMP_TO_EDGE;
 		}
 
-		GLenum GetGLTextureType(Texture::Type tt) 
+		GLenum GetGLTextureType(TextureType tt) 
 		{
 			switch(tt) {
-				case Texture::Type::TEXTURE_1D:		return GL_TEXTURE_1D;
-				case Texture::Type::TEXTURE_2D:		return GL_TEXTURE_2D;
-				case Texture::Type::TEXTURE_3D:		return GL_TEXTURE_3D;
-				case Texture::Type::TEXTURE_CUBIC:	return GL_TEXTURE_CUBE_MAP;
+				case TextureType::TEXTURE_1D:		return GL_TEXTURE_1D;
+				case TextureType::TEXTURE_2D:		return GL_TEXTURE_2D;
+				case TextureType::TEXTURE_3D:		return GL_TEXTURE_3D;
+				case TextureType::TEXTURE_CUBIC:	return GL_TEXTURE_CUBE_MAP;
 			}
 			return GL_TEXTURE_2D;
 		}
@@ -64,7 +64,7 @@ namespace KRE
 		init();
 	}
 
-	OpenGLTexture::OpenGLTexture(const std::vector<SurfacePtr>& surfaces, Type type, int mipmap_levels)
+	OpenGLTexture::OpenGLTexture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
 		: Texture(surfaces, type, mipmap_levels), 
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
@@ -81,7 +81,7 @@ namespace KRE
 		int width, 
 		int height, 
 		PixelFormat::PF fmt, 
-		Type type, 
+		TextureType type, 
 		unsigned depth)
 		: Texture(count, width, height, depth, fmt, type),
 		  format_(GL_RGBA),
@@ -119,7 +119,7 @@ namespace KRE
 	{
 		ASSERT_LOG(is_yuv_planar_ == false, "1D Texture Update function called on YUV planar format.");
 		glBindTexture(GetGLTextureType(getType()), texture_id_[0]);
-		ASSERT_LOG(getType() == Type::TEXTURE_1D, "Tried to do 1D texture update on non-1D texture");
+		ASSERT_LOG(getType() == TextureType::TEXTURE_1D, "Tried to do 1D texture update on non-1D texture");
 		if(getUnpackAlignment() != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 		}
@@ -146,21 +146,21 @@ namespace KRE
 				glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 			}
 			switch(getType()) {
-				case Type::TEXTURE_1D:
+				case TextureType::TEXTURE_1D:
 					LOG_WARN("Running 2D texture update on 1D texture.");
 					ASSERT_LOG(is_yuv_planar_ == false, "Update of 1D Texture in YUV planar mode.");
 					glTexSubImage1D(GetGLTextureType(getType()), 0, x, width, format_, type_, pixels);
 					break;
-				case Type::TEXTURE_2D:
+				case TextureType::TEXTURE_2D:
 					glTexSubImage2D(GetGLTextureType(getType()), 0, x, y, n>0?width/2:width, n>0?height/2:height, format_, type_, pixels);
 					break;
-				case Type::TEXTURE_3D:
+				case TextureType::TEXTURE_3D:
 					ASSERT_LOG(false, "Tried to do 2D texture update on 3D texture");
-				case Type::TEXTURE_CUBIC:
+				case TextureType::TEXTURE_CUBIC:
 					ASSERT_LOG(false, "No support for updating cubic textures yet.");
 			}
 		
-			if(getMipMapLevels() > 0 && getType() > Type::TEXTURE_1D) {
+			if(getMipMapLevels() > 0 && getType() > TextureType::TEXTURE_1D) {
 				glGenerateMipmap(GetGLTextureType(getType()));
 			}
 		}
@@ -178,20 +178,20 @@ namespace KRE
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 		}
 		switch(getType()) {
-			case Type::TEXTURE_1D:
+			case TextureType::TEXTURE_1D:
 				LOG_WARN("Running 2D texture update on 1D texture. You may get unexpected results.");
 				glTexSubImage1D(GetGLTextureType(getType()), 0, x, width, format_, type_, pixels);
 				break;
-			case Type::TEXTURE_2D:
+			case TextureType::TEXTURE_2D:
 				LOG_WARN("Running 3D texture update on 2D texture. You may get unexpected results.");
 				glTexSubImage2D(GetGLTextureType(getType()), 0, x, y, width, height, format_, type_, pixels);
 				break;
-			case Type::TEXTURE_3D:
+			case TextureType::TEXTURE_3D:
 				glTexSubImage3D(GetGLTextureType(getType()), 0, x, y, z, width, height, depth, format_, type_, pixels);
-			case Type::TEXTURE_CUBIC:
+			case TextureType::TEXTURE_CUBIC:
 				ASSERT_LOG(false, "No support for updating cubic textures yet.");
 		}
-		if(getMipMapLevels() > 0 && getType() > Type::TEXTURE_1D) {
+		if(getMipMapLevels() > 0 && getType() > TextureType::TEXTURE_1D) {
 			glGenerateMipmap(GetGLTextureType(getType()));
 		}
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
@@ -367,7 +367,7 @@ namespace KRE
 				internal_format_ = GL_LUMINANCE;
 				type_ = GL_UNSIGNED_BYTE;
 				is_yuv_planar_ = true;
-				ASSERT_LOG(getType() == Type::TEXTURE_2D, "YUV style pixel format only supported for 2D textures.");
+				ASSERT_LOG(getType() == TextureType::TEXTURE_2D, "YUV style pixel format only supported for 2D textures.");
 				break;
 			case PixelFormat::PF::PIXELFORMAT_YUY2:
 			case PixelFormat::PF::PIXELFORMAT_UYVY:
@@ -396,16 +396,16 @@ namespace KRE
 
 			const void* pixels = static_cast<int>(getSurfaces().size()) < n && getSurfaces()[n] ? getSurfaces()[n]->pixels() : 0;
 			switch(getType()) {
-				case Type::TEXTURE_1D:
+				case TextureType::TEXTURE_1D:
 					glTexImage1D(GetGLTextureType(getType()), 0, internal_format_, w, 0, format_, type_, pixels);
 					break;
-				case Type::TEXTURE_2D:
+				case TextureType::TEXTURE_2D:
 					glTexImage2D(GetGLTextureType(getType()), 0, internal_format_, w, h, 0, format_, type_, pixels);
 					break;
-				case Type::TEXTURE_3D:
+				case TextureType::TEXTURE_3D:
 					glTexImage3D(GetGLTextureType(getType()), 0, internal_format_, w, h, d, 0, format_, type_, pixels);
 					break;
-				case Type::TEXTURE_CUBIC:
+				case TextureType::TEXTURE_CUBIC:
 					// If we are using a cubic texture 		
 					ASSERT_LOG(false, "Implement texturing of cubic texture target");
 			}
@@ -424,13 +424,13 @@ namespace KRE
 			if(getAddressModeU() == AddressMode::BORDER) {
 				glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, getBorderColor().asFloatVector());
 			}
-			if(getType() > Type::TEXTURE_1D) {
+			if(getType() > TextureType::TEXTURE_1D) {
 				glTexParameteri(type, GL_TEXTURE_WRAP_T, GetGLAddressMode(getAddressModeV()));
 				if(getAddressModeV() == AddressMode::BORDER) {
 					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, getBorderColor().asFloatVector());
 				}
 			}
-			if(getType() > Type::TEXTURE_2D) {
+			if(getType() > TextureType::TEXTURE_2D) {
 				glTexParameteri(type, GL_TEXTURE_WRAP_R, GetGLAddressMode(getAddressModeW()));
 				if(getAddressModeW() == AddressMode::BORDER) {
 					glTexParameterfv(type, GL_TEXTURE_BORDER_COLOR, getBorderColor().asFloatVector());
@@ -445,7 +445,7 @@ namespace KRE
 				glTexParameteri(type, GL_TEXTURE_MAX_LEVEL, getMipMapLevels());
 			}
 
-			if(getMipMapLevels() > 0 && getType() > Type::TEXTURE_1D) {
+			if(getMipMapLevels() > 0 && getType() > TextureType::TEXTURE_1D) {
 				// XXX for OGL >= 1.4 < 3 use: glTexParameteri(type, GL_GENERATE_MIPMAP, GL_TRUE)
 				// XXX for OGL < 1.4 manually generate them with glTexImage2D
 				// OGL >= 3 use glGenerateMipmap(type);

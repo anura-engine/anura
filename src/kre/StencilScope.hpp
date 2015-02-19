@@ -24,14 +24,12 @@
 #pragma once
 
 #include <memory>
+#include "DisplayDeviceFwd.hpp"
 #include "StencilSettings.hpp"
 #include "Util.hpp"
 
 namespace KRE
 {
-	class StencilScope;
-	typedef std::unique_ptr<StencilScope> StencilScopePtr;
-
 	class StencilScope
 	{
 	public:

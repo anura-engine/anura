@@ -31,6 +31,7 @@
 #include "AttributeSetOGL.hpp"
 #include "BlendOGL.hpp"
 #include "CameraObject.hpp"
+#include "ColorScope.hpp"
 #include "CanvasOGL.hpp"
 #include "ClipScopeOGL.hpp"
 #include "DisplayDeviceOGL.hpp"
@@ -269,6 +270,10 @@ namespace KRE
 				/// xxx need to set lights here.
 			}
 		}
+		
+		if(r->getTexture()) {
+			r->getTexture()->bind();
+		}
 
 		if(r->getRenderTarget()) {
 			r->getRenderTarget()->apply();
@@ -360,6 +365,7 @@ namespace KRE
 			}
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
+
 		if(r->getRenderTarget()) {
 			r->getRenderTarget()->unapply();
 		}
@@ -385,7 +391,7 @@ namespace KRE
 		return std::make_shared<OpenGLTexture>(node, surfaces);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const SurfacePtr& surface, TextureType type, int mipmap_levels)
 	{
 		std::vector<SurfacePtr> surfaces(1, surface);
 		return std::make_shared<OpenGLTexture>(surfaces, type, mipmap_levels);
@@ -393,20 +399,20 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture1D(unsigned width, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, 0, fmt, Texture::Type::TEXTURE_1D);
+		return std::make_shared<OpenGLTexture>(1, width, 0, fmt, TextureType::TEXTURE_1D);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, Texture::Type type)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(unsigned width, unsigned height, PixelFormat::PF fmt, TextureType type)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, height, fmt, Texture::Type::TEXTURE_2D);
+		return std::make_shared<OpenGLTexture>(1, width, height, fmt, TextureType::TEXTURE_2D);
 	}
 	
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture3D(unsigned width, unsigned height, unsigned depth, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(1, width, height, fmt, Texture::Type::TEXTURE_3D, depth);
+		return std::make_shared<OpenGLTexture>(1, width, height, fmt, TextureType::TEXTURE_3D, depth);
 	}
 
-	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const std::string& filename, Texture::Type type, int mipmap_levels)
+	TexturePtr DisplayDeviceOpenGL::handleCreateTexture(const std::string& filename, TextureType type, int mipmap_levels)
 	{
 		auto surface = Surface::create(filename);		
 		std::vector<SurfacePtr> surfaces(1, surface);
@@ -420,7 +426,7 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(int count, int width, int height, PixelFormat::PF fmt)
 	{
-		return std::make_shared<OpenGLTexture>(count, width, height, fmt, Texture::Type::TEXTURE_2D);
+		return std::make_shared<OpenGLTexture>(count, width, height, fmt, TextureType::TEXTURE_2D);
 	}
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(const std::vector<std::string>& filenames, const variant& node)
@@ -435,7 +441,7 @@ namespace KRE
 
 	TexturePtr DisplayDeviceOpenGL::handleCreateTexture2D(const std::vector<SurfacePtr>& surfaces, bool cache)
 	{
-		return std::make_shared<OpenGLTexture>(surfaces, Texture::Type::TEXTURE_2D);
+		return std::make_shared<OpenGLTexture>(surfaces, TextureType::TEXTURE_2D);
 	}
 
 	RenderTargetPtr DisplayDeviceOpenGL::handleCreateRenderTarget(size_t width, size_t height, 

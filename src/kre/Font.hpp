@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <exception>
+
 #include "Texture.hpp"
 #include "Util.hpp"
 
@@ -31,9 +33,12 @@ namespace KRE
 	class Font;
 	typedef std::shared_ptr<Font> FontPtr;
 
-	struct FontError
+	struct FontError : public std::runtime_error
 	{
+		FontError(const char* errstr) : std::runtime_error(errstr) {}
 	};
+
+	typedef std::map<std::string, std::string> font_path_cache;
 
 	class Font
 	{
@@ -46,7 +51,8 @@ namespace KRE
 		static void registerFactoryFunction(const std::string& type, std::function<FontPtr()>);
 		static FontPtr getInstance(const std::string& hint="");
 		static std::string get_default_monospace_font() { return "FreeMono"; }
-		static void reloadFontPaths();
+		static void setAvailableFonts(const std::map<std::string, std::string>& paths);
+		static std::string findFontPath(const std::string& fontname);
 		static std::vector<std::string> getAvailableFonts();
 		static int charWidth(int size, const std::string& fn="");
 		static int charHeight(int size, const std::string& fn="");
@@ -56,8 +62,6 @@ namespace KRE
 		DISALLOW_COPY_AND_ASSIGN(Font);
 		virtual TexturePtr doRenderText(const std::string& text, const Color& color, int size, const std::string& font_name) const = 0;
 		virtual void calcTextSize(const std::string& text, int size, const std::string& font_name, int* width, int* height) const = 0;
-		virtual void doReloadFontPaths() = 0;
-		virtual std::vector<std::string> handleGetAvailableFonts() = 0;
 		virtual int getCharWidth(int size, const std::string& fn) = 0;
 		virtual int getCharHeight(int size, const std::string& fn) = 0;
 	};

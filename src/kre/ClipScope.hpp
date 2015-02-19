@@ -25,13 +25,11 @@
 
 #include <memory>
 #include "geometry.hpp"
+#include "DisplayDeviceFwd.hpp"
 #include "Util.hpp"
 
 namespace KRE
 {
-	class ClipScope;
-	typedef std::unique_ptr<ClipScope> ClipScopePtr;
-
 	class ClipScope
 	{
 	public:

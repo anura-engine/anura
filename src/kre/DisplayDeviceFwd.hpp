@@ -27,6 +27,57 @@
 
 namespace KRE
 {
+	enum class DrawMode {
+		POINTS,
+		LINE_STRIP,
+		LINE_LOOP,
+		LINES,
+		TRIANGLE_STRIP,
+		TRIANGLE_FAN,
+		TRIANGLES,
+		QUAD_STRIP,
+		QUADS,
+		POLYGON,		
+	};
+
+	enum class IndexType {
+		INDEX_NONE,
+		INDEX_UCHAR,
+		INDEX_USHORT,
+		INDEX_ULONG,
+	};
+
+	enum class TextureType {
+		TEXTURE_1D,
+		TEXTURE_2D,
+		TEXTURE_3D,
+		TEXTURE_CUBIC,
+	};
+
+	enum class AttrType {
+		UNKOWN,
+		POSITION,
+		COLOR, 
+		TEXTURE,
+		NORMAL,
+	};
+	enum class AttrFormat {
+		BOOL,
+		HALF_FLOAT,
+		FLOAT,
+		DOUBLE,
+		FIXED,
+		SHORT,
+		UNSIGNED_SHORT,
+		BYTE,
+		UNSIGNED_BYTE,
+		INT,
+		UNSIGNED_INT,
+		INT_2_10_10_10_REV,
+		UNSIGNED_INT_2_10_10_10_REV,
+		UNSIGNED_INT_10F_11F_11F_REV,
+	};
+
 	class DisplayDeviceDef;
 
 	class DisplayDevice;
@@ -46,4 +97,33 @@ namespace KRE
 
 	class BlendEquationImplBase;
 	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
+
+	class AttributeBase;
+
+	class AttributeSet;
+	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;
+
+	class HardwareAttribute;
+	typedef std::shared_ptr<HardwareAttribute> HardwareAttributePtr;
+
+	class Canvas;
+	typedef std::shared_ptr<Canvas> CanvasPtr;
+
+	class ClipScope;
+	typedef std::unique_ptr<ClipScope> ClipScopePtr;
+
+	class StencilScope;
+	typedef std::unique_ptr<StencilScope> StencilScopePtr;
+
+	class Scissor;
+	typedef std::shared_ptr<Scissor> ScissorPtr;
+
+	class RenderTarget;
+	typedef std::shared_ptr<RenderTarget> RenderTargetPtr;
+
+	class Effect;
+	typedef std::shared_ptr<Effect> EffectPtr;
+
+	class ShaderProgram;
+	typedef std::shared_ptr<ShaderProgram> ShaderProgramPtr;
 }

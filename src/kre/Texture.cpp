@@ -48,19 +48,23 @@ namespace KRE
 
 		void add_to_texture_registry(Texture* tex) 
 		{
+			LOG_DEBUG("Added texture to registry: 0x" << std::hex << tex);
 			texture_registry().insert(tex);
 		}
 
 		void remove_from_texture_registery(Texture* tex)
 		{
-			auto it = texture_registry().find(tex);
-			ASSERT_LOG(it != texture_registry().end(), "tried to erase texture from registry that doesn't exist");
-			texture_registry().erase(it);
+			LOG_DEBUG("Remove texture from registry: 0x" << std::hex << tex);
+			if(tex != nullptr) {
+				auto it = texture_registry().find(tex);
+				LOG_ERROR("Tried to erase texture from registry that doesn't exist");
+				texture_registry().erase(it);
+			}
 		}
 	}
 
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
-		: type_(Type::TEXTURE_2D), 
+		: type_(TextureType::TEXTURE_2D), 
 		  mipmaps_(0), 
 		  max_anisotropy_(1),
 		  lod_bias_(0.0f),
@@ -87,13 +91,13 @@ namespace KRE
 		if(node.has_key("type")) {
 			const std::string& type = node["type"].as_string();
 			if(type == "1d") {
-				type_ = Type::TEXTURE_1D;
+				type_ = TextureType::TEXTURE_1D;
 			} else if(type == "2d") {
-				type_ = Type::TEXTURE_2D;
+				type_ = TextureType::TEXTURE_2D;
 			} else if(type == "3d") {
-				type_ = Type::TEXTURE_3D;
+				type_ = TextureType::TEXTURE_3D;
 			} else if(type == "cubic") {
-				type_ = Type::TEXTURE_CUBIC;
+				type_ = TextureType::TEXTURE_CUBIC;
 			} else {
 				ASSERT_LOG(false, "Unrecognised texture type '" << type << "'. Valid values are 1d,2d,3d and cubic.");
 			}
@@ -191,7 +195,7 @@ namespace KRE
 		}
 	}
 
-	Texture::Texture(const std::vector<SurfacePtr>& surfaces, Type type, int mipmap_levels)
+	Texture::Texture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
 		: type_(type), 
 		  mipmaps_(mipmap_levels), 
 		  max_anisotropy_(1),
@@ -220,7 +224,7 @@ namespace KRE
 		int height, 
 		int depth,
 		PixelFormat::PF fmt, 
-		Texture::Type type)
+		TextureType type)
 		: type_(type), 
 		  mipmaps_(0), 
 		  max_anisotropy_(1),
@@ -238,7 +242,7 @@ namespace KRE
 	}
 
 	Texture::Texture(const SurfacePtr& surf, const SurfacePtr& palette)
-		: type_(Type::TEXTURE_2D), 
+		: type_(TextureType::TEXTURE_2D), 
 		  mipmaps_(0), 
 		  max_anisotropy_(1),
 		  lod_bias_(0.0f),
@@ -257,12 +261,12 @@ namespace KRE
 	
 	Texture::~Texture()
 	{
-		remove_from_texture_registery(this);
+		//remove_from_texture_registery(this);
 	}
 
 	void Texture::internalInit()
 	{
-		add_to_texture_registry(this);
+		//add_to_texture_registry(this);
 
 		for(auto& am : address_mode_) {
 			am = AddressMode::CLAMP;
@@ -389,7 +393,7 @@ namespace KRE
 		return DisplayDevice::createTexture(nullptr, true, node);
 	}
 
-	TexturePtr Texture::createTexture(const std::string& filename, Type type, int mipmap_levels)
+	TexturePtr Texture::createTexture(const std::string& filename, TextureType type, int mipmap_levels)
 	{
 		return DisplayDevice::createTexture(filename, type, mipmap_levels);
 	}

@@ -715,6 +715,9 @@ int main(int argcount, char* argvec[])
 	Font::setDefaultFont(module::get_default_font() == "bitmap" 
 		? "FreeMono" 
 		: module::get_default_font());
+	std::map<std::string,std::string> font_paths;
+	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
+	KRE::Font::setAvailableFonts(font_paths);
 
 	i18n::init ();
 	LOG_DEBUG("After i18n::init()");

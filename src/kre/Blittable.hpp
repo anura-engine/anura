@@ -24,6 +24,7 @@
 #pragma once
 
 #include "geometry.hpp"
+#include "AttributeSet.hpp"
 #include "Texture.hpp"
 #include "SceneObject.hpp"
 
