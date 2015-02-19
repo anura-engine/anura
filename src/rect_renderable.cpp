@@ -2,7 +2,7 @@
 #include "rect_renderable.hpp"
 
 RectRenderable::RectRenderable(bool strips)
-	: SceneObject("RectRenderable")
+	: SceneObject("RectRenderable", true)
 {
 	using namespace KRE;
 

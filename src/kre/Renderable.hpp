@@ -35,7 +35,7 @@ namespace KRE
 	class Renderable : public ScopeableValue
 	{
 	public:
-		Renderable();
+		explicit Renderable();
 		explicit Renderable(size_t order);
 		explicit Renderable(const variant& node);
 		virtual ~Renderable();

@@ -3,7 +3,7 @@
 #include "LayerBlitInfo.hpp"
 
 LayerBlitInfo::LayerBlitInfo()
-	: KRE::SceneObject("layer_blit_info"),
+	: KRE::SceneObject("layer_blit_info", true),
 	  xbase_(0),
 	  ybase_(0),
 	  initialised_(false)

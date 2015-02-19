@@ -61,7 +61,7 @@ public:
 	void setType(const std::string& type) { type_ = type; }
 	const std::string& type() const { return type_; }
 protected:
-	ParticleSystem() : SceneObject("ParticleSystem") {}
+	ParticleSystem() : SceneObject("ParticleSystem", true) {}
 private:
 	DECLARE_CALLABLE(ParticleSystem);
 	std::string type_;

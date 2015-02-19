@@ -27,15 +27,20 @@
 
 namespace KRE
 {
-	SceneObject::SceneObject(const std::string& name)
+	SceneObject::SceneObject(const std::string& name, bool nodeless)
 		: name_(name), 
-		queue_(0)
+		  queue_(0)
 	{
+        if(nodeless) {
+            auto dd = DisplayDevice::getCurrent();
+            ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
+            setDisplayData(dd, attach(dd));
+        }
 	}
 
-	SceneObject::SceneObject(const variant& node)
+	SceneObject::SceneObject(const variant& node, bool nodeless)
 		: Renderable(node),
-		queue_(0)
+		  queue_(0)
 	{
 		if(node.has_key("name")) {
 			name_ = node["name"].as_string();
@@ -46,11 +51,16 @@ namespace KRE
 		if(node.has_key("shader")) {
 			shader_name_ = node["shader"].as_string();
 		}
+        if(nodeless) {
+            auto dd = DisplayDevice::getCurrent();
+            ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
+            setDisplayData(dd, attach(dd));
+        }
 	}
 
 	SceneObject::SceneObject(const SceneObject& op)
 		: name_(op.name_),
-		queue_(op.queue_)
+		  queue_(op.queue_)
 	{
 	}
 

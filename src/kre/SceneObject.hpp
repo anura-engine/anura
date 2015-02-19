@@ -32,8 +32,8 @@ namespace KRE
 	class SceneObject : public Renderable
 	{
 	public:
-		explicit SceneObject(const std::string& name);
-		explicit SceneObject(const variant& node);
+		explicit SceneObject(const std::string& name, bool nodeless=false);
+		explicit SceneObject(const variant& node, bool nodeless=false);
 		SceneObject(const SceneObject& op);
 		virtual ~SceneObject();
 		size_t getQueue() const { return queue_; }

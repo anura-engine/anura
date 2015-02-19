@@ -25,8 +25,8 @@
 
 namespace graphics
 {
-	SceneObjectCallable::SceneObjectCallable(const variant& node)
-		: SceneObject(node)
+	SceneObjectCallable::SceneObjectCallable(const variant& node, bool nodeless)
+		: SceneObject(node, nodeless)
 	{
 	}
 
@@ -34,8 +34,8 @@ namespace graphics
 	{
 	}
 
-	SceneObjectCallable::SceneObjectCallable()
-		: SceneObject("SceneObjectCallable")
+	SceneObjectCallable::SceneObjectCallable(bool nodeless)
+		: SceneObject("SceneObjectCallable", nodeless)
 	{
 	}
 

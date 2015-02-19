@@ -45,7 +45,7 @@ LightPtr Light::createLight(const CustomObject& obj, variant node)
 }
 
 Light::Light(const CustomObject& obj, variant node) 
-	: SceneObjectCallable(node), 
+	: SceneObjectCallable(node, true), 
 	obj_(obj)
 {
 }

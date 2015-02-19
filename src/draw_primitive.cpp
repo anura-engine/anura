@@ -883,7 +883,7 @@ namespace graphics
 	}
 
 	DrawPrimitive::DrawPrimitive(const variant& node)
-		: SceneObject(node)
+		: SceneObject(node, true)
 	{
 	}
 

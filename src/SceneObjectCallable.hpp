@@ -34,8 +34,8 @@ namespace graphics
 	class SceneObjectCallable : public game_logic::FormulaCallable, public KRE::SceneObject
 	{
 	public:
-		SceneObjectCallable();
-		explicit SceneObjectCallable(const variant& node);
+		explicit SceneObjectCallable(bool nodeless=false);
+		explicit SceneObjectCallable(const variant& node, bool nodeless=false);
 		virtual ~SceneObjectCallable();
 	private:
 		DECLARE_CALLABLE(SceneObjectCallable)
