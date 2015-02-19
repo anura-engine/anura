@@ -394,16 +394,29 @@ namespace KRE
 				glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 			}
 
-			const void* pixels = static_cast<int>(getSurfaces().size()) < n && getSurfaces()[n] ? getSurfaces()[n]->pixels() : 0;
+			const void* pixels = n < static_cast<int>(getSurfaces().size()) && getSurfaces()[n] ? getSurfaces()[n]->pixels() : 0;
 			switch(getType()) {
 				case TextureType::TEXTURE_1D:
-					glTexImage1D(GetGLTextureType(getType()), 0, internal_format_, w, 0, format_, type_, pixels);
+					if(pixels == nullptr) {
+						glTexImage1D(GetGLTextureType(getType()), 0, internal_format_, w, 0, format_, type_, 0);
+					} else {
+						glTexImage1D(GetGLTextureType(getType()), 0, internal_format_, getSurfaces()[n]->width(), 0, format_, type_, pixels);
+					}
 					break;
 				case TextureType::TEXTURE_2D:
-					glTexImage2D(GetGLTextureType(getType()), 0, internal_format_, w, h, 0, format_, type_, pixels);
+					if(pixels == nullptr) {
+						glTexImage2D(GetGLTextureType(getType()), 0, internal_format_, w, h, 0, format_, type_, 0);
+					} else {
+						glTexImage2D(GetGLTextureType(getType()), 0, internal_format_, getSurfaces()[n]->width(), getSurfaces()[n]->height(), 0, format_, type_, pixels);
+					}
 					break;
 				case TextureType::TEXTURE_3D:
-					glTexImage3D(GetGLTextureType(getType()), 0, internal_format_, w, h, d, 0, format_, type_, pixels);
+					// XXX this isn't correct fixme.
+					if(pixels == nullptr) {
+						glTexImage3D(GetGLTextureType(getType()), 0, internal_format_, w, h, d, 0, format_, type_, 0);
+					} else {
+						glTexImage3D(GetGLTextureType(getType()), 0, internal_format_, w, h, d, 0, format_, type_, pixels);
+					}
 					break;
 				case TextureType::TEXTURE_CUBIC:
 					// If we are using a cubic texture 		
