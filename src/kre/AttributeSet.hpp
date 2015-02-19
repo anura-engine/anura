@@ -236,7 +236,9 @@ namespace KRE
 			auto dst1 = std::distance(elements_.begin(), dst);
 			auto dst2 = std::distance(src->begin(), src->end()) * sizeof(T);
 			elements_.reserve(elements_.size() + src->size());
-			std::move(src->begin(), src->end(), std::make_move_iterator(dst));
+			//std::move(src->begin(), src->end(), std::make_move_iterator(dst));
+			//std::copy(src->begin(), src->end(), std::back_inserter(dst));
+			elements_.insert(dst, src->begin(), src->end());
 			if(getDeviceBufferData()) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
 			}
@@ -289,26 +291,6 @@ namespace KRE
 			}
 		}
 		Container<T> elements_;
-	};
-
-	enum class DrawMode {
-		POINTS,
-		LINE_STRIP,
-		LINE_LOOP,
-		LINES,
-		TRIANGLE_STRIP,
-		TRIANGLE_FAN,
-		TRIANGLES,
-		QUAD_STRIP,
-		QUADS,
-		POLYGON,		
-	};
-
-	enum class IndexType {
-		INDEX_NONE,
-		INDEX_UCHAR,
-		INDEX_USHORT,
-		INDEX_ULONG,
 	};
 
 	class AttributeSet : public ScopeableValue

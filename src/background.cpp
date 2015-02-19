@@ -161,7 +161,7 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
-		auto ab = KRE::DisplayDevice::createAttributeSet(false, false, false);
+		auto ab = KRE::DisplayDevice::createAttributeSet(true, false, false);
 		bg.attr_ = std::make_shared<KRE::Attribute<KRE::short_vertex_texcoord>>(KRE::AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
 		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::SHORT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, vertex)));
 		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::TEXTURE, 2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, tc)));
@@ -525,11 +525,12 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 			const float u1 = bg.texture->getNormalisedTextureCoordW<float>(xpos);
 			const float u2 = bg.texture->getNormalisedTextureCoordW<float>(xpos2);
 
-			if(!q.empty()) {
-				q.emplace_back(q.back());
-			}
+			//if(!q.empty()) {
+			//	q.emplace_back(q.back());
+			//}
 			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
-			q.emplace_back(q.back());
+			q.emplace_back(glm::u16vec2(x1, y1), glm::vec2(u1, v1));
+			//q.emplace_back(q.back());
 			q.emplace_back(glm::u16vec2(x2, y1), glm::vec2(u2, v1));
 			q.emplace_back(glm::u16vec2(x1, y2), glm::vec2(u1, v2));
 			q.emplace_back(glm::u16vec2(x2, y2), glm::vec2(u2, v2));

@@ -24,6 +24,7 @@
 #include <map>
 
 #include "asserts.hpp"
+#include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"
 
 namespace KRE

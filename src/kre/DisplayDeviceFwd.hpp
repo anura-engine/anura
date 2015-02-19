@@ -27,6 +27,26 @@
 
 namespace KRE
 {
+	enum class DrawMode {
+		POINTS,
+		LINE_STRIP,
+		LINE_LOOP,
+		LINES,
+		TRIANGLE_STRIP,
+		TRIANGLE_FAN,
+		TRIANGLES,
+		QUAD_STRIP,
+		QUADS,
+		POLYGON,		
+	};
+
+	enum class IndexType {
+		INDEX_NONE,
+		INDEX_UCHAR,
+		INDEX_USHORT,
+		INDEX_ULONG,
+	};
+
 	class DisplayDeviceDef;
 
 	class DisplayDevice;
@@ -46,4 +66,10 @@ namespace KRE
 
 	class BlendEquationImplBase;
 	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
+
+	class AttributeSet;
+	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;
+
+	class HardwareAttribute;
+	typedef std::shared_ptr<HardwareAttribute> HardwareAttributePtr;
 }

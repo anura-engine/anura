@@ -48,14 +48,18 @@ namespace KRE
 
 		void add_to_texture_registry(Texture* tex) 
 		{
+			LOG_DEBUG("Added texture to registry: 0x" << std::hex << tex);
 			texture_registry().insert(tex);
 		}
 
 		void remove_from_texture_registery(Texture* tex)
 		{
-			auto it = texture_registry().find(tex);
-			ASSERT_LOG(it != texture_registry().end(), "tried to erase texture from registry that doesn't exist");
-			texture_registry().erase(it);
+			LOG_DEBUG("Remove texture from registry: 0x" << std::hex << tex);
+			if(tex != nullptr) {
+				auto it = texture_registry().find(tex);
+				LOG_ERROR("Tried to erase texture from registry that doesn't exist");
+				texture_registry().erase(it);
+			}
 		}
 	}
 
@@ -257,12 +261,12 @@ namespace KRE
 	
 	Texture::~Texture()
 	{
-		remove_from_texture_registery(this);
+		//remove_from_texture_registery(this);
 	}
 
 	void Texture::internalInit()
 	{
-		add_to_texture_registry(this);
+		//add_to_texture_registry(this);
 
 		for(auto& am : address_mode_) {
 			am = AddressMode::CLAMP;

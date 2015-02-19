@@ -3049,7 +3049,11 @@ RETURN_TYPE("bool")
 	FUNCTION_ARGS_DEF
 		ARG_TYPE("object")
 		ARG_TYPE("map")
-	DEFINE_RETURN_TYPE
+	FUNCTION_TYPE_DEF
+		variant v;
+		if(args()[1]->canReduceToVariant(v) && v.is_map()) {
+			return parse_variant_type(variant(widget_factory::convert_type_to_variant_type_name(v["type"].as_string())));
+		}
 		return parse_variant_type(variant("builtin widget"));
 	END_FUNCTION_DEF(widget)
 

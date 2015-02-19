@@ -24,6 +24,7 @@
 #pragma comment(lib, "cairo")
 
 #include "asserts.hpp"
+#include "AttributeSet.hpp"
 #include "SceneFwd.hpp"
 #include "VGraphCairo.hpp"
 #include "DisplayDevice.hpp"

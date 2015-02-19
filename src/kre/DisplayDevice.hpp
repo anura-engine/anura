@@ -27,7 +27,6 @@
 #include <memory>
 #include <string>
 
-#include "AttributeSet.hpp"
 #include "Canvas.hpp"
 #include "ClipScope.hpp"
 #include "ColorScope.hpp"

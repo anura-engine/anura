@@ -30,6 +30,14 @@
 #include <sys/wait.h>
 #endif
 
+#if defined(_MSC_VER)
+#if defined(_DEBUG)
+#pragma comment(linker, "/SUBSYSTEM:CONSOLE")
+#else
+#pragma comment(linker, "/SUBSYSTEM:WINDOWS")
+#endif
+#endif
+
 #include <boost/lexical_cast.hpp>
 
 #include "asserts.hpp"
@@ -253,8 +261,13 @@ int main(int argcount, char* argvec[])
 	}
 
 #ifdef _MSC_VER
+#if defined(_DEBUG)
 	std::freopen("CON", "w", stderr);
 	std::freopen("CON", "w", stdout);
+#else
+	std::freopen("stdout.txt","w",stdout);
+	std::freopen("stderr.txt","w",stderr);
+#endif
 #endif
 #if defined(__ANDROID__)
 	std::freopen("stdout.txt","w",stdout);

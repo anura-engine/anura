@@ -104,6 +104,7 @@ namespace game_logic
 	int register_formula_callable_definition(const std::string& id, const std::string& base_id, ConstFormulaCallableDefinitionPtr def);
 	bool registered_definition_is_a(const std::string& derived, const std::string& base);
 	ConstFormulaCallableDefinitionPtr get_formula_callable_definition(const std::string& id);
+	std::string modify_class_id(const std::string& id);
 
 	int add_callable_definition_init(void(*fn)());
 	void init_callable_definitions();
@@ -125,7 +126,7 @@ public: \
 	virtual variant getValueBySlot(int slot) const override;  \
 	virtual void setValue(const std::string& key, const variant& value) override; \
 	virtual void setValueBySlot(int slot, const variant& value) override; \
-	virtual std::string getObjectId() const override { return #classname; } \
+	virtual std::string getObjectId() const override { return game_logic::modify_class_id(#classname); } \
 public: \
 	static void init_callable_type(std::vector<callable_PropertyEntry>& v, std::map<std::string, int>& properties); \
 private:
