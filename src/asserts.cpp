@@ -100,7 +100,7 @@ void report_assert_msg(const std::string& m)
 	
 	std::stringstream ss;
 	ss << "Assertion failed\n\n" << m;
-	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, m.c_str(), ss.str().c_str(), nullptr);
+	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", ss.str().c_str(), nullptr);
 }
 
 validation_failure_exception::validation_failure_exception(const std::string& m)
@@ -141,11 +141,11 @@ assert_recover_scope::~assert_recover_scope()
 class StderrStackWalker : public StackWalker
 {
 public:
-	StderrStackWalker() : StackWalker() {}
+	StderrStackWalker() : StackWalker(RetrieveVerbose) {}
 protected:
 	virtual void OnOutput(LPCSTR szText)
 	{
-		fprintf(stderr, "%s", szText);
+		std::cerr << std::string(szText);
 		StackWalker::OnOutput(szText);
 	}
 };

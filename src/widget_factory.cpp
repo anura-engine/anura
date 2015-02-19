@@ -147,4 +147,79 @@ namespace widget_factory
 			return WidgetPtr();
 		}
 	}
+
+	std::string convert_type_to_variant_type_name(const std::string& wtype)
+	{
+		if(wtype == "animation_widget") {
+			return "builtin animation_widget";
+	#ifndef NO_EDITOR
+		} else if(wtype == "animation_preview") {
+			return "builtin animation_preview_widget";
+	#endif
+		} else if(wtype == "border_widget") {
+			return "builtin border_widget";
+		} else if(wtype == "button") {
+			return "builtin button";
+		} else if(wtype == "checkbox") {
+			return "builtin checkbox";
+		} else if(wtype == "combobox" || wtype == "listbox") {
+			return "builtin dropdown_widget";
+		} else if(wtype == "dialog") {
+			return "builtin dialog";
+	#ifndef NO_EDITOR
+		} else if(wtype == "drag_widget") {
+			return "builtin drag_widget";
+	#endif
+		} else if(wtype == "graphical_font_label") {
+			return "builtin graphical_font_label";
+		} else if(wtype == "grid") {
+			return "builtin grid";
+		} else if(wtype == "image") {
+			return "builtin image_widget";
+		} else if(wtype == "section") {
+			return "builtin gui_section_widget";
+		} else if(wtype == "key_button") {
+			return "builtin key_button";
+		} else if(wtype == "label") {
+			return "builtin label";
+		} else if(wtype == "poly_line_widget") {
+			return "builtin poly_line_widget";
+		} else if(wtype == "rich_text_label") {
+			return "builtin rich_text_label";
+		} else if(wtype == "tileset_preview") {
+			return "builtin preview_tileset_widget";
+		} else if(wtype == "scrollbar") {
+			return "builtin scroll_bar_widget";
+		} else if(wtype == "slider") {
+			return "builtin slider";
+		} else if(wtype == "text_editor") {
+			return "builtin text_editor_widget";
+		} else if(wtype == "progress") {
+			return "builtin progress_bar";
+		} else if(wtype == "selector") {
+			return "builtin selector_widget";
+		} else if(wtype == "object") {
+			return "builtin custom_object_widget";
+		} else if(wtype == "bar") {
+			return "builtin bar_widget";
+		} else if(wtype == "color_picker") {
+			return "builtin color_picker";
+		} else if(wtype == "layout") {
+			return "builtin layout_widget";
+		} else if(wtype == "file_chooser") {
+			return "builtin file_chooser_dialog";
+		} else if(wtype == "view3d") {
+			return "builtin view3d_widget";
+		} else if(wtype == "poly_map") {
+			return "builtin poly_map";
+	#if defined(USE_LIBVPX)
+		} else if(wtype == "movie") {
+			return "builtin movie";
+	#endif
+		//} else if(wtype == "scrollable") {
+		} else if(wtype == "tree") {
+			return "builtin tree_view_widget";
+		}
+		return "builtin widget";
+	}
 }

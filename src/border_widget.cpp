@@ -103,7 +103,7 @@ namespace gui
 	}
 
 	BEGIN_DEFINE_CALLABLE(BorderWidget, Widget)
-		DEFINE_FIELD(child, "builtin Widget")
+		DEFINE_FIELD(child, "builtin widget")
 			return variant(obj.child_.get());
 		DEFINE_SET_FIELD
 			obj.child_ = widget_factory::create(value, obj.getEnvironment());

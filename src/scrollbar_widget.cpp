@@ -284,34 +284,34 @@ namespace gui
 			obj.window_pos_ = value.as_int();
 			obj.clipWindowPosition();
 
-		DEFINE_FIELD(up_arrow, "builtin Widget")
+		DEFINE_FIELD(up_arrow, "builtin widget")
 			return variant(obj.up_arrow_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.up_arrow_ = widget_factory::create(value, obj.getEnvironment());
 
-		DEFINE_FIELD(down_arrow, "builtin Widget")
+		DEFINE_FIELD(down_arrow, "builtin widget")
 			return variant(obj.down_arrow_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.down_arrow_ = widget_factory::create(value, obj.getEnvironment());
 
-		DEFINE_FIELD(handle, "builtin Widget")
+		DEFINE_FIELD(handle, "builtin widget")
 			return variant(obj.handle_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.handle_ = widget_factory::create(value, obj.getEnvironment());
 
-		DEFINE_FIELD(handle_bottom, "builtin Widget")
+		DEFINE_FIELD(handle_bottom, "builtin widget")
 			return variant(obj.handle_bot_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.handle_bot_ = widget_factory::create(value, obj.getEnvironment());
 
-		DEFINE_FIELD(handle_top, "builtin Widget")
+		DEFINE_FIELD(handle_top, "builtin widget")
 			return variant(obj.handle_top_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.handle_top_ = widget_factory::create(value, obj.getEnvironment());
 
-		DEFINE_FIELD(background, "builtin Widget")
+		DEFINE_FIELD(background, "builtin widget")
 			return variant(obj.background_.get());
-		DEFINE_SET_FIELD_TYPE("map|builtin Widget")
+		DEFINE_SET_FIELD_TYPE("map|builtin widget")
 			obj.background_ = widget_factory::create(value, obj.getEnvironment());
 
 		DEFINE_FIELD(on_scroll, "null")

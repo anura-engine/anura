@@ -1,3 +1,4 @@
+#include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"
 #include "LayerBlitInfo.hpp"
 

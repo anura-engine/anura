@@ -734,7 +734,7 @@ namespace gui
 	}
 
 	BEGIN_DEFINE_CALLABLE(Grid, Widget)
-		DEFINE_FIELD(children, "[builtin Widget]")
+		DEFINE_FIELD(children, "[builtin widget]")
 			std::vector<variant> v;
 			for(WidgetPtr w : obj.cells_) {
 				v.push_back(variant(w.get()));

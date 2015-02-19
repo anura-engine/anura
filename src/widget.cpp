@@ -483,7 +483,7 @@ namespace gui
 	DEFINE_SET_FIELD
 		obj.h_ = value.as_int();
 
-	DEFINE_FIELD(frameSetName, "string")
+	DEFINE_FIELD(frame_set_name, "string")
 		return variant(obj.frame_set_name_);
 
 	DEFINE_FIELD(alpha, "int")
@@ -504,7 +504,7 @@ namespace gui
 		v.push_back(variant(obj.getPadHeight()));
 		return variant(&v);
 
-	DEFINE_FIELD(children, "[builtin Widget]")
+	DEFINE_FIELD(children, "[builtin widget]")
 		std::vector<variant> v;
 		std::vector<WidgetPtr> w = obj.getChildren();
 		for(auto item : w) {
@@ -518,12 +518,12 @@ namespace gui
 	DEFINE_SET_FIELD
 		obj.disabled_ = value.as_bool();
 
-	DEFINE_FIELD(disabledOpacity, "int")
+	DEFINE_FIELD(disabled_opacity, "int")
 		return variant(static_cast<int>(obj.disabled_opacity_));
 	DEFINE_SET_FIELD
 		obj.disabled_opacity_ = value.as_int();
 
-	DEFINE_FIELD(clipArea, "[int]|null")
+	DEFINE_FIELD(clip_area, "[int]|null")
 		if(obj.clip_area_) {
 			return obj.clip_area_->write();
 		} else {

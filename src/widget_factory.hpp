@@ -29,5 +29,6 @@
 
 namespace widget_factory 
 {
+	std::string convert_type_to_variant_type_name(const std::string& type);
 	gui::WidgetPtr create(const variant& v, game_logic::FormulaCallable* e);
 }

@@ -123,7 +123,7 @@ namespace gui
 	}
 
 	BEGIN_DEFINE_CALLABLE(Checkbox, Button)
-		DEFINE_FIELD(label, "builtin Widget")
+		DEFINE_FIELD(label, "builtin widget")
 			return variant(obj.label_widget_.get());
 		DEFINE_FIELD(checked, "bool")
 			return variant::from_bool(obj.checked_);

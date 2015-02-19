@@ -212,6 +212,8 @@ namespace KRE
 			auto dst2 = std::distance(src->begin(), src->end()) * sizeof(T);
 			//elements_.reserve(elements_.size() + src->size());
 			std::move(src->begin(), src->end(), std::inserter(elements_, dst));
+			//std::copy(src->begin(), src->end(), std::back_inserter(dst));
+			elements_.insert(dst, src->begin(), src->end());
 			if(getDeviceBufferData()) {
 				getDeviceBufferData()->update(&elements_[0], dst1, dst2);
 			}

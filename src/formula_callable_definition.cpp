@@ -21,6 +21,7 @@
 	   distribution.
 */
 
+#include <cctype>
 #include <iostream>
 #include <map>
 #include <vector>
@@ -248,25 +249,44 @@ namespace game_logic
 		return FormulaCallableDefinitionPtr(def);
 	}
 
-	namespace {
-	std::map<std::string, ConstFormulaCallableDefinitionPtr> registry;
-	int num_definitions = 0;
-
-	std::vector<std::function<void()> >& callable_init_routines() {
-		static std::vector<std::function<void()> > v;
-		return v;
-	}
-
-	std::map<std::string, std::string>& g_builtin_bases()
+	namespace 
 	{
-		static std::map<std::string, std::string> instance;
-		return instance;
+		std::map<std::string, ConstFormulaCallableDefinitionPtr> registry;
+		int num_definitions = 0;
+
+		std::vector<std::function<void()> >& callable_init_routines() {
+			static std::vector<std::function<void()> > v;
+			return v;
+		}
+
+		std::map<std::string, std::string>& g_builtin_bases()
+		{
+			static std::map<std::string, std::string> instance;
+			return instance;
+		}
 	}
+	
+	std::string modify_class_id(const std::string& id)
+	{
+		std::string modified_id;
+		bool apply_modified = false;
+		for(int n = 0; n != id.size(); ++n) {
+			char c = id[n];
+			if(isupper(c)) {
+				apply_modified = true;
+				if(n != 0 && n != id.size()-1) {
+					modified_id += '_';
+				}
+				c = tolower(c);
+			}
+			modified_id += c;
+		}
+		return apply_modified ? modified_id : id;
 	}
 
 	int register_formula_callable_definition(const std::string& id, ConstFormulaCallableDefinitionPtr def)
 	{
-		registry[id] = def;
+		registry[modify_class_id(id)] = def;
 		return ++num_definitions;
 	}
 

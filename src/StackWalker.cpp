@@ -49,6 +49,8 @@
  *                       http://www.codeproject.com/KB/applications/leakfinder.aspx?msg=3477467#xx3477467xx
  *  2013-01-07   v14     Runtime Check Error VS2010 Debug Builds fixed:
  *                       http://stackwalker.codeplex.com/workitem/10511
+ *  2015-02-19   v15     Removed username display over privacy concerns.
+ *                       Disabled output from OnLoadModule
  *
  *
  * LICENSE (http://www.opensource.org/licenses/bsd-license.php)
@@ -409,10 +411,7 @@ public:
       if (this->pSGSP(m_hProcess, buf, StackWalker::STACKWALK_MAX_NAMELEN) == FALSE)
         this->m_parent->OnDbgHelpErr("SymGetSearchPath", GetLastError(), 0);
     }
-    char szUserName[1024] = {0};
-    DWORD dwSize = 1024;
-    GetUserNameA(szUserName, &dwSize);
-    this->m_parent->OnSymInit(buf, symOptions, szUserName);
+    this->m_parent->OnSymInit(buf, symOptions);
 
     return TRUE;
   }
@@ -789,7 +788,7 @@ private:
       LPCSTR pdbName = Module.LoadedImageName;
       if (Module.LoadedPdbName[0] != 0)
         pdbName = Module.LoadedPdbName;
-      this->m_parent->OnLoadModule(img, mod, baseAddr, size, result, szSymType, pdbName, fileVersion);
+      //this->m_parent->OnLoadModule(img, mod, baseAddr, size, result, szSymType, pdbName, fileVersion);
     }
     if (szImg != nullptr) free(szImg);
     if (szMod != nullptr) free(szMod);
@@ -1318,10 +1317,10 @@ void StackWalker::OnDbgHelpErr(LPCSTR szFuncName, DWORD gle, DWORD64 addr)
   OnOutput(buffer);
 }
 
-void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions, LPCSTR szUserName)
+void StackWalker::OnSymInit(LPCSTR szSearchPath, DWORD symOptions)
 {
   CHAR buffer[STACKWALK_MAX_NAMELEN];
-  _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "SymInit: Symbol-SearchPath: '%s', symOptions: %d, UserName: '%s'\n", szSearchPath, symOptions, szUserName);
+  _snprintf_s(buffer, STACKWALK_MAX_NAMELEN, "SymInit: Symbol-SearchPath: '%s', symOptions: %d\n", szSearchPath, symOptions);
   OnOutput(buffer);
   // Also display the OS-version
 #if _MSC_VER <= 1200

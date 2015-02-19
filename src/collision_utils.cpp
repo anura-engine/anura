@@ -593,7 +593,7 @@ DEFINE_FIELD(collide_with_area, "string")
 	return variant(*obj.area_b_);
 DEFINE_FIELD(collision_index, "int")
 	return variant(obj.index_);
-DEFINE_FIELD(all_collisions, "[builtin UserCollisionCallable]")
+DEFINE_FIELD(all_collisions, "[builtin user_collision_callable]")
 	return obj.all_collisions_;
 END_DEFINE_CALLABLE(UserCollisionCallable)
 

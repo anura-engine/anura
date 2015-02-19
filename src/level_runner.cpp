@@ -421,6 +421,11 @@ bool LevelRunner::handle_mouse_events(const SDL_Event &event)
 
 	// Get the correct window from the ID.
 	auto wnd = KRE::WindowManager::getWindowFromID(event.type == SDL_MOUSEMOTION ? event.motion.windowID : event.button.windowID);
+	if(wnd == nullptr) {
+		return false;
+	}
+	// windowID seems unreliable at the moment, just get the main window
+	//auto wnd = KRE::WindowManager::getMainWindow();
 	
 	const int DragThresholdMilliPx = g_mouse_drag_threshold;
 
