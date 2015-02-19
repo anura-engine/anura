@@ -729,8 +729,14 @@ int main(int argcount, char* argvec[])
 		? "FreeMono" 
 		: module::get_default_font());
 	std::map<std::string,std::string> font_paths;
+	std::map<std::string,std::string> font_paths2;
 	module::get_unique_filenames_under_dir("data/fonts/", &font_paths);
-	KRE::Font::setAvailableFonts(font_paths);
+	for(auto& fp : font_paths) {
+		font_paths2[module::get_id(fp.first)] = fp.second;
+	}
+	KRE::Font::setAvailableFonts(font_paths2);
+	font_paths.clear();
+	font_paths2.clear();
 
 	i18n::init ();
 	LOG_DEBUG("After i18n::init()");

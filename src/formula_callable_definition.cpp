@@ -293,7 +293,7 @@ namespace game_logic
 	int register_formula_callable_definition(const std::string& id, const std::string& base_id, ConstFormulaCallableDefinitionPtr def)
 	{
 		if(base_id != "") {
-			g_builtin_bases()[modify_class_id(id)] = base_id;
+			g_builtin_bases()[modify_class_id(id)] = modify_class_id(base_id);
 		}
 		return register_formula_callable_definition(modify_class_id(id), def);
 	}

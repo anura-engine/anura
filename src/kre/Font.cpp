@@ -188,13 +188,13 @@ namespace KRE
 
 	void Font::setAvailableFonts(const std::map<std::string, std::string>& font_map)
 	{
-		font_path_cache() = font_map;
+		get_font_path_cache() = font_map;
 	}
 
 	std::vector<std::string> Font::getAvailableFonts()
 	{
 		std::vector<std::string> res;
-		for(auto& fp : font_path_cache()) {
+		for(auto& fp : get_font_path_cache()) {
 			res.emplace_back(fp.first);
 		}
 		return res;
@@ -202,19 +202,20 @@ namespace KRE
 
 	std::string Font::findFontPath(const std::string& fontname)
 	{
-		auto it = font_path_cache().find(fontname);
-		if(it == font_path_cache().end()) {
+		auto it = get_font_path_cache().find(fontname);
+		if(it == get_font_path_cache().end()) {
 			LOG_DEBUG("Font name: " << fontname << " not found.");
 			std::stringstream ss;
 			ss << "Font '" << fontname << "' not found in any available path.\n";
 			ss << "Paths were: ";
-			if(font_path_cache().size() > 0) {
-				for(auto& fp : font_path_cache()) {
+			if(get_font_path_cache().size() > 0) {
+				for(auto& fp : get_font_path_cache()) {
 					ss << fp.second << "\n";
 				}
 			} else {
 				ss << "<empty>";
 			}
+			LOG_DEBUG(ss.str());
 			throw FontError(ss.str().c_str());
 		}
 		LOG_DEBUG("Font name " << it->first << " at " << it->second);
