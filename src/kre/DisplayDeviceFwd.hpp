@@ -99,6 +99,7 @@ namespace KRE
 	typedef std::shared_ptr<BlendEquationImplBase> BlendEquationImplBasePtr;
 
 	class AttributeBase;
+	typedef std::shared_ptr<AttributeBase> AttributeBasePtr;
 
 	class AttributeSet;
 	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;

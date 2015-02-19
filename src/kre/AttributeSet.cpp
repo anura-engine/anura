@@ -37,8 +37,31 @@ namespace KRE
 	{
 	}
 
+	AttributeSet::AttributeSet(const AttributeSet& as)
+		: draw_mode_(as.draw_mode_),
+		  indexed_draw_(as.indexed_draw_),
+		  instanced_draw_(as.instanced_draw_),
+		  index_type_(as.index_type_),
+		  instance_count_(as.instance_count_),
+		  index8_(as.index8_),
+		  index16_(as.index16_),
+		  index32_(as.index32_),
+		  attributes_(),
+		  count_(as.count_),
+		  offset_(as.offset_)
+	{
+		for(auto& attr : as.attributes_) {
+			attributes_.emplace_back(attr->clone());
+		}
+	}
+
 	AttributeSet::~AttributeSet()
 	{
+	}
+
+	AttributeSetPtr AttributeSet::clone()
+	{
+		return std::make_shared<AttributeSet>(*this);
 	}
 
 	void AttributeSet::setDrawMode(DrawMode dm)
@@ -140,5 +163,19 @@ namespace KRE
 		offset_(offset),
 		divisor_(divisor)
 	{
+	}
+
+	AttributeBase::AttributeBase(const AttributeBase& a)  
+		: access_freq_(a.access_freq_),
+		  access_type_(a.access_type_),
+		  offs_(a.offs_),
+		  desc_(a.desc_),
+		  hardware_(),
+		  hardware_buffer_(a.hardware_buffer_),
+		  enabled_(a.enabled_)
+	{
+		if(a.hardware_) {
+			hardware_ = a.hardware_->create(this);
+		}
 	}
 }

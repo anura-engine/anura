@@ -53,26 +53,28 @@ namespace KRE
 
 	OpenGLTexture::OpenGLTexture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: Texture(node, surfaces),
+		  texture_id_(std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [](std::vector<GLuint>* ids){ glDeleteTextures(ids->size(), &(*ids)[0]); delete ids; })),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
-		  type_(GL_UNSIGNED_BYTE),
-		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		  is_yuv_planar_(false)
+		  type_(GL_UNSIGNED_BYTE)
 	{
-		texture_id_.resize(getSurfaces().size());
+		texture_id_->resize(getSurfaces().size());
 		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 	}
 
 	OpenGLTexture::OpenGLTexture(const std::vector<SurfacePtr>& surfaces, TextureType type, int mipmap_levels)
 		: Texture(surfaces, type, mipmap_levels), 
+		  texture_id_(std::make_shared<std::vector<GLuint>>()),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
-		  type_(GL_UNSIGNED_BYTE),
-		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		  is_yuv_planar_(false)
+		  type_(GL_UNSIGNED_BYTE)
 	{
-		texture_id_.resize(surfaces.size());
+		texture_id_->resize(surfaces.size());
 		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 	}
@@ -84,13 +86,14 @@ namespace KRE
 		TextureType type, 
 		unsigned depth)
 		: Texture(count, width, height, depth, fmt, type),
+		  texture_id_(std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [](std::vector<GLuint>* ids){ glDeleteTextures(ids->size(), &(*ids)[0]); delete ids; })),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
-		  type_(GL_UNSIGNED_BYTE),
-		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		  is_yuv_planar_(false)
+		  type_(GL_UNSIGNED_BYTE)
 	{
-		texture_id_.resize(count);
+		texture_id_->resize(count);
 		setTextureDimensions(width, height, depth);
 		createTexture(fmt);
 		init();
@@ -98,13 +101,14 @@ namespace KRE
 
 	OpenGLTexture::OpenGLTexture(const SurfacePtr& surf, SurfacePtr palette)
 		: Texture(surf, palette),
+		  texture_id_(std::shared_ptr<std::vector<GLuint>>(new std::vector<GLuint>, [](std::vector<GLuint>* ids){ glDeleteTextures(ids->size(), &(*ids)[0]); delete ids; })),
+		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
+		  is_yuv_planar_(false),
 		  format_(GL_RGBA),
 		  internal_format_(GL_RGBA),
-		  type_(GL_UNSIGNED_BYTE),
-		  pixel_format_(PixelFormat::PF::PIXELFORMAT_UNKNOWN),
-		  is_yuv_planar_(false)
+		  type_(GL_UNSIGNED_BYTE)
 	{
-		texture_id_.resize(1);
+		texture_id_->resize(1);
 		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
 		ASSERT_LOG(false, "OpenGLTexture -- deal with surfaces with palette surface");
@@ -112,13 +116,12 @@ namespace KRE
 
 	OpenGLTexture::~OpenGLTexture()
 	{
-		glDeleteTextures(texture_id_.size(), &texture_id_[0]);
 	}
 
 	void OpenGLTexture::update(int x, unsigned width, void* pixels)
 	{
 		ASSERT_LOG(is_yuv_planar_ == false, "1D Texture Update function called on YUV planar format.");
-		glBindTexture(GetGLTextureType(getType()), texture_id_[0]);
+		glBindTexture(GetGLTextureType(getType()), (*texture_id_)[0]);
 		ASSERT_LOG(getType() == TextureType::TEXTURE_1D, "Tried to do 1D texture update on non-1D texture");
 		if(getUnpackAlignment() != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
@@ -138,7 +141,7 @@ namespace KRE
 	{
 		int num_textures = is_yuv_planar_ ? 2 : 0;
 		for(int n = num_textures; n >= 0; --n) {
-			glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
+			glBindTexture(GetGLTextureType(getType()), (*texture_id_)[n]);
 			if(stride.size() > size_t(n)) {
 				glPixelStorei(GL_UNPACK_ROW_LENGTH, stride[n]);
 			}
@@ -173,7 +176,7 @@ namespace KRE
 	void OpenGLTexture::update(int x, int y, int z, unsigned width, unsigned height, unsigned depth, void* pixels)
 	{
 		ASSERT_LOG(is_yuv_planar_ == false, "3D Texture Update function called on YUV planar format.");
-		glBindTexture(GetGLTextureType(getType()), texture_id_[0]);
+		glBindTexture(GetGLTextureType(getType()), (*texture_id_)[0]);
 		if(getUnpackAlignment() != 4) {
 			glPixelStorei(GL_UNPACK_ALIGNMENT, getUnpackAlignment());
 		}
@@ -379,12 +382,12 @@ namespace KRE
 		}
 
 		if(is_yuv_planar_) {
-			texture_id_.resize(3);
+			texture_id_->resize(3);
 		}
-		int num_textures = texture_id_.size();
-		glGenTextures(num_textures, &texture_id_[0]);
+		int num_textures = texture_id_->size();
+		glGenTextures(num_textures, &(*texture_id_)[0]);
 		for(int n = 0; n != num_textures; ++n) {
-			glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
+			glBindTexture(GetGLTextureType(getType()), (*texture_id_)[n]);
 
 			unsigned w = is_yuv_planar_ && n>0 ? width()/2 : width();
 			unsigned h = is_yuv_planar_ && n>0 ? height()/2 : height();
@@ -430,8 +433,8 @@ namespace KRE
 	{
 		GLenum type = GetGLTextureType(getType());
 
-		for(unsigned n = 0; n != texture_id_.size(); ++n) {
-			glBindTexture(type, texture_id_[n]);
+		for(unsigned n = 0; n != texture_id_->size(); ++n) {
+			glBindTexture(type, (*texture_id_)[n]);
 
 			glTexParameteri(type, GL_TEXTURE_WRAP_S, GetGLAddressMode(getAddressModeU()));
 			if(getAddressModeU() == AddressMode::BORDER) {
@@ -503,22 +506,22 @@ namespace KRE
 
 	void OpenGLTexture::bind() 
 	{
-		for(int n = static_cast<int>(texture_id_.size()) - 1; n >= 0; --n) {
+		for(int n = static_cast<int>(texture_id_->size()) - 1; n >= 0; --n) {
 			glActiveTexture(GL_TEXTURE0 + n);
-			glBindTexture(GetGLTextureType(getType()), texture_id_[n]);
+			glBindTexture(GetGLTextureType(getType()), (*texture_id_)[n]);
 		}
 	}
 
 	unsigned OpenGLTexture::id(int n)
 	{
-		ASSERT_LOG(n < static_cast<int>(texture_id_.size()), "Requested texture id outside bounds.");
-		return texture_id_[n];
+		ASSERT_LOG(n < static_cast<int>(texture_id_->size()), "Requested texture id outside bounds.");
+		return (*texture_id_)[n];
 	}
 
 	void OpenGLTexture::rebuild()
 	{
 		// Delete the old ids
-		glDeleteTextures(texture_id_.size(), &texture_id_[0]);
+		glDeleteTextures(texture_id_->size(), &(*texture_id_)[0]);
 
 		// Re-create the texture
 		createTexture(pixel_format_);

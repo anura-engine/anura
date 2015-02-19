@@ -67,6 +67,11 @@ namespace KRE
 		glGenBuffers(1, &buffer_id_);
 	}
 
+	HardwareAttributePtr HardwareAttributeOGL::create(AttributeBase* parent)
+	{
+		return std::make_shared<HardwareAttributeOGL>(parent);		
+	}
+
 	HardwareAttributeOGL::~HardwareAttributeOGL()
 	{
 		glDeleteBuffers(1, &buffer_id_);
@@ -114,11 +119,24 @@ namespace KRE
 		}
 	}
 
+	AttributeSetOGL::AttributeSetOGL(const AttributeSetOGL& as)
+		: AttributeSet(as)
+	{
+		if(as.isIndexed()) {
+			glGenBuffers(1, &index_buffer_id_);
+		}
+	}
+
 	AttributeSetOGL::~AttributeSetOGL()
 	{
 		if(isIndexed()) {
 			glDeleteBuffers(1, &index_buffer_id_);
 		}
+	}
+
+	AttributeSetPtr AttributeSetOGL::clone() 
+	{
+		return std::make_shared<AttributeSetOGL>(*this);
 	}
 
 	struct IndexManager

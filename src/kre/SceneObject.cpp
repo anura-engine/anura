@@ -58,12 +58,6 @@ namespace KRE
         }
 	}
 
-	SceneObject::SceneObject(const SceneObject& op)
-		: name_(op.name_),
-		  queue_(op.queue_)
-	{
-	}
-
 	SceneObject::~SceneObject()
 	{
 	}

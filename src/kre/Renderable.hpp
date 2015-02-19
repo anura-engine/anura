@@ -38,6 +38,7 @@ namespace KRE
 		explicit Renderable();
 		explicit Renderable(size_t order);
 		explicit Renderable(const variant& node);
+		Renderable(const Renderable&);
 		virtual ~Renderable();
 
 		void setPosition(const glm::vec3& position);
@@ -104,6 +105,5 @@ namespace KRE
 		//std::vector<UniformSetPtr> uniforms_;
 
 		DisplayDeviceDataPtr display_data_;
-		Renderable(const Renderable&);
 	};
 }

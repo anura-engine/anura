@@ -161,41 +161,42 @@ Background::Background(variant node, int palette)
 			bg.scale = 1;
 		}
 
-		auto ab = KRE::DisplayDevice::createAttributeSet(true, false, false);
-		bg.attr_ = std::make_shared<KRE::Attribute<KRE::short_vertex_texcoord>>(KRE::AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW);
-		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::SHORT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, vertex)));
-		bg.attr_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::TEXTURE, 2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::short_vertex_texcoord), offsetof(KRE::short_vertex_texcoord, tc)));
+		using namespace KRE;
+		auto ab = DisplayDevice::createAttributeSet(true, false, false);
+		bg.attr_ = std::make_shared<Attribute<short_vertex_texcoord>>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW);
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::SHORT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, vertex)));
+		bg.attr_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE, 2, AttrFormat::FLOAT, false, sizeof(short_vertex_texcoord), offsetof(short_vertex_texcoord, tc)));
 		ab->addAttribute(bg.attr_);
-		ab->setDrawMode(KRE::DrawMode::TRIANGLE_STRIP);
+		ab->setDrawMode(DrawMode::TRIANGLE_STRIP);
 		bg.addAttributeSet(ab);
 
 		if(layer_node.has_key("mode")) {
 			if(layer_node["mode"].is_string()) {
 				std::string blend_mode = layer_node["mode"].as_string_default();
 				if(blend_mode == "GL_MAX" || blend_mode == "MAX") {
-					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MAX));
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MAX));
 				} else if(blend_mode == "GL_MIN" || blend_mode == "MIN") { 
-					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_MIN));
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_MIN));
 				} else {
-					bg.setBlendEquation(KRE::BlendEquation(KRE::BlendEquationConstants::BE_ADD));
+					bg.setBlendEquation(BlendEquation(BlendEquationConstants::BE_ADD));
 				}
 			} else {
-				bg.setBlendEquation(KRE::BlendEquation(layer_node["mode"]));
+				bg.setBlendEquation(BlendEquation(layer_node["mode"]));
 			}
 		}
 		
-		bg.color = KRE::Color(layer_node);
+		bg.color = Color(layer_node);
 		bg.setColor(bg.color);
 
 		if(layer_node.has_key("color_above")) {
-			bg.color_above.reset(new KRE::Color(layer_node["color_above"]));
+			bg.color_above.reset(new Color(layer_node["color_above"]));
 			if(palette_ != -1) {
 				*bg.color_above = graphics::map_palette(*bg.color_above, palette);
 			}
 		}
 
 		if(layer_node.has_key("color_below")) {
-			bg.color_below.reset(new KRE::Color(layer_node["color_below"]));
+			bg.color_below.reset(new Color(layer_node["color_below"]));
 			if(palette_ != -1) {
 				*bg.color_below = graphics::map_palette(*bg.color_below, palette);
 			}

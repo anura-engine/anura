@@ -38,6 +38,7 @@ namespace KRE
 		void bind() override;
 		void unbind() override;
 		intptr_t value() override { return 0; }
+		HardwareAttributePtr create(AttributeBase* parent) override;
 	private:
 		GLuint buffer_id_;
 		GLenum access_pattern_;
@@ -62,13 +63,15 @@ namespace KRE
 		};
 	
 		explicit AttributeSetOGL(bool indexed, bool instanced);
+		AttributeSetOGL(const AttributeSetOGL&);
 		virtual ~AttributeSetOGL();	
 		const void* getIndexArray() const override { return nullptr; }
 		void bindIndex() override;
 		void unbindIndex() override;
 		bool isHardwareBacked() const override { return true; }
+		AttributeSetPtr clone() override;
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(AttributeSetOGL);
+		DISALLOW_ASSIGN_AND_DEFAULT(AttributeSetOGL);
 		void handleIndexUpdate() override;
 		GLuint index_buffer_id_;
 	};

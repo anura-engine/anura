@@ -64,7 +64,12 @@ namespace KRE
 
 		// For YUV family textures we need two more texture id's
 		// since we hold them in seperate textures.
-		std::vector<GLuint> texture_id_;
+		// XXX if we're copying a texture we want to use a shared pointer so
+		// we don't accidentally delete textures that are potentially still in use.
+		// Still deciding whether to use a vector of shared_ptr<GLuint>
+		// Whether to store the textures in a registry, with ref-counting.
+		// or what we do here.
+		std::shared_ptr<std::vector<GLuint>> texture_id_;
 
 		PixelFormat::PF pixel_format_;
 		// Set for YUV style textures;

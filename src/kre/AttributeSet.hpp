@@ -37,9 +37,6 @@
 
 namespace KRE
 {
-	class AttributeBase;
-	typedef std::shared_ptr<AttributeBase> AttributeBasePtr;
-
 	// abstract base class for Hardware-buffered attributes.
 	class HardwareAttribute
 	{
@@ -49,7 +46,8 @@ namespace KRE
 		virtual void update(const void* value, ptrdiff_t offset, size_t size) = 0;
 		virtual void bind() {}
 		virtual void unbind() {}
-		virtual intptr_t value() = 0;		
+		virtual intptr_t value() = 0;
+		virtual HardwareAttributePtr create(AttributeBase* parent) = 0;
 	private:
 		AttributeBase* parent_;
 	};
@@ -68,6 +66,9 @@ namespace KRE
 		void bind() {}
 		void unbind() {}
 		intptr_t value() override { return value_; }
+		HardwareAttributePtr create(AttributeBase* parent) override {
+			return std::make_shared<HardwareAttributeImpl>(parent);
+		}
 	private:
 		intptr_t value_;
 	};
@@ -133,10 +134,11 @@ namespace KRE
 	public:
 		AttributeBase(AccessFreqHint freq, AccessTypeHint type)
 			: access_freq_(freq),
-			access_type_(type),
-			offs_(0),
-			enabled_(true) {
+			  access_type_(type),
+			  offs_(0),
+			  enabled_(true) {
 		}
+		AttributeBase(const AttributeBase& a);
 		virtual ~AttributeBase() {}
 		void addAttributeDesc(const AttributeDesc& attrdesc) {
 			desc_.emplace_back(attrdesc);
@@ -156,6 +158,8 @@ namespace KRE
 		void enable(bool e=true) { enabled_ = e; }
 		void disable() { enabled_ = false; }
 		bool isEnabled() const { return enabled_; }
+
+		virtual AttributeBasePtr clone() = 0;
 	private:
 		virtual void handleAttachHardwareBuffer() = 0;
 		AccessFreqHint access_freq_;
@@ -253,8 +257,10 @@ namespace KRE
 		void setOffset(const_iterator& it) {
 			setOffset(std::distance(elements_.begin(), it));
 		}
+		AttributeBasePtr clone() override {
+			return std::make_shared<Attribute<T, Container>>(*this);
+		}
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(Attribute);
 		void handleAttachHardwareBuffer() override {
 			// This just makes sure that if we add any elements
 			// before an attach then they are all updated correctly.
@@ -269,6 +275,7 @@ namespace KRE
 	{
 	public:
 		explicit AttributeSet(bool indexed, bool instanced);
+		AttributeSet(const AttributeSet& as);
 		virtual ~AttributeSet();
 
 		void setDrawMode(DrawMode dm);
@@ -318,6 +325,8 @@ namespace KRE
 		virtual bool isHardwareBacked() const { return false; }
 
 		std::vector<AttributeBasePtr>& getAttributes() { return attributes_; }
+
+		virtual AttributeSetPtr clone();
 	protected:
 		const void* getIndexData() const { 
 			switch(index_type_) {
@@ -329,7 +338,6 @@ namespace KRE
 			ASSERT_LOG(false, "Index type not set to valid value.");
 		};
 	private:
-		DISALLOW_COPY_ASSIGN_AND_DEFAULT(AttributeSet);
 		virtual void handleIndexUpdate() {}
 		DrawMode draw_mode_;
 		bool indexed_draw_;
@@ -342,6 +350,6 @@ namespace KRE
 		std::vector<AttributeBasePtr> attributes_;
 		size_t count_;
 		ptrdiff_t offset_;
+		AttributeSet();
 	};
-	typedef std::shared_ptr<AttributeSet> AttributeSetPtr;
 }

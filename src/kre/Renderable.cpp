@@ -24,9 +24,13 @@
 #include <glm/gtx/quaternion.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
+#include "AttributeSet.hpp"
 #include "CameraObject.hpp"
 #include "DisplayDevice.hpp"
+#include "LightObject.hpp"
 #include "Renderable.hpp"
+#include "RenderTarget.hpp"
+#include "Texture.hpp"
 #include "variant_utils.hpp"
 
 namespace KRE
@@ -126,6 +130,26 @@ namespace KRE
 			texture_ = DisplayDevice::createTexture(node["texture"]);
 		} else if(node.has_key("image")) {
 			texture_ = DisplayDevice::createTexture(node["image"]);			
+		}
+	}
+
+	Renderable::Renderable(const Renderable& r)
+		: order_(r.order_),
+		  position_(r.position_),
+		  rotation_(r.rotation_),
+		  scale_(r.scale_),
+		  camera_(r.camera_),
+		  lights_(),
+		  texture_(r.texture_->clone()),
+		  render_target_(r.render_target_->clone()),
+		  attributes_(),
+		  display_data_()
+	{
+		for(auto& l : r.lights_) {
+			lights_[l.first] = l.second->clone();
+		}
+		for(auto& att : r.attributes_) {
+			attributes_.emplace_back(att->clone());
 		}
 	}
 
