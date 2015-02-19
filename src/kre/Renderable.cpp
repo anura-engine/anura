@@ -140,8 +140,8 @@ namespace KRE
 		  scale_(r.scale_),
 		  camera_(r.camera_),
 		  lights_(),
-		  texture_(r.texture_->clone()),
-		  render_target_(r.render_target_->clone()),
+		  texture_(r.texture_ ? r.texture_->clone() : nullptr),
+		  render_target_(r.render_target_ ? r.render_target_->clone() : nullptr),
 		  attributes_(),
 		  display_data_()
 	{

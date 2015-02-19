@@ -24,8 +24,11 @@
 #include <cstdio>
 
 #ifdef _MSC_VER
+#define WIN32_LEAN_AND_MEAN
+#include <windows.h>
 #include "StackWalker.h"
 #else
+#include <csignal>
 #include <execinfo.h> //for backtrace. May not be available on some platforms.
                       //If not available implement output_backtrace() some
 					  //other way.
@@ -101,6 +104,18 @@ void report_assert_msg(const std::string& m)
 	std::stringstream ss;
 	ss << "Assertion failed\n\n" << m;
 	SDL_ShowSimpleMessageBox(SDL_MESSAGEBOX_ERROR, "Assertion Failed", ss.str().c_str(), nullptr);
+
+
+#if defined(WIN32)
+	DebugBreak();
+    //i*((int *) NULL) = 0;
+    //exit(3);
+#elif defined(__APPLE__)
+    *((int *) NULL) = 0;	/* To continue from here in GDB: "return" then "continue". */
+    raise(SIGABRT);			/* In case above statement gets nixed by the optimizer. */
+#else
+    raise(SIGABRT);			/* To continue from here in GDB: "signal 0". */
+#endif
 }
 
 validation_failure_exception::validation_failure_exception(const std::string& m)
