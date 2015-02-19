@@ -248,6 +248,7 @@ namespace KRE
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
 		auto dd = r->getDisplayData();
+		ASSERT_LOG(dd != nullptr, "Display data was null.");
 		// XXX work out removing this dynamic_pointer_cast.
 		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(dd->getShader());
 		ASSERT_LOG(shader != nullptr, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");

@@ -55,8 +55,8 @@ namespace KRE
 		SDL_version compile_version;
 		const SDL_version *link_version = TTF_Linked_Version();
 		SDL_TTF_VERSION(&compile_version);
-		LOG_INFO("Compiled with SDL_ttf version: " << compile_version.major << "." << compile_version.minor << "." << compile_version.patch);
-		LOG_INFO("Linked   with SDL_ttf version: " << link_version->major << "." << link_version->minor << "." << link_version->patch);
+		LOG_INFO("Compiled with SDL_ttf version: " << static_cast<int>(compile_version.major) << "." << static_cast<int>(compile_version.minor) << "." << static_cast<int>(compile_version.patch));
+		LOG_INFO("Linked   with SDL_ttf version: " << static_cast<int>(link_version->major) << "." << static_cast<int>(link_version->minor) << "." << static_cast<int>(link_version->patch));
 	}
 
 	FontSDL::~FontSDL()
