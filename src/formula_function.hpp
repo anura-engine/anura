@@ -111,7 +111,7 @@ public:
 
 	int ntimes_called() const { return ntimes_called_; }
 
-	variant_type_ptr query_variant_type() const { variant_type_ptr res = get_variant_type(); if(res) { return res; } else { return variant_type::get_any(); } }
+	variant_type_ptr query_variant_type() const { variant_type_ptr res = get_variant_type(); if(res) { if(res->refcount() == 1) { const_cast<variant_type*>(res.get())->set_expr(this); } return res; } else { return variant_type::get_any(); } }
 
 	variant_type_ptr query_mutable_type() const { return get_mutable_type(); }
 

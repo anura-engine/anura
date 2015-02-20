@@ -30,6 +30,7 @@ namespace game_logic
 {
 class formula_callable_definition;
 class formula_interface;
+class formula_expression;
 }
 
 struct types_cfg_scope
@@ -122,6 +123,9 @@ public:
 
 	static bool may_be_null(variant_type_ptr type);
 
+	void set_expr(const game_logic::formula_expression* expr);
+	const game_logic::formula_expression* get_expr() const;
+
 private:
 	virtual variant_type_ptr null_excluded() const { return variant_type_ptr(); }
 	virtual variant_type_ptr subtract(variant_type_ptr other) const { return variant_type_ptr(); }
@@ -131,6 +135,8 @@ private:
 	virtual std::string to_string_impl() const = 0;
 
 	mutable std::string str_;
+
+	boost::intrusive_ptr<const game_logic::formula_expression> expr_;
 };
 
 

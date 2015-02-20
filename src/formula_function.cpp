@@ -4920,7 +4920,42 @@ FUNCTION_ARGS_DEF
 RETURN_TYPE("bool")
 END_FUNCTION_DEF(solid)
 
+FUNCTION_DEF(solid_grid, 5, 9, "solid_grid(level, int x, int y, int w, int h, int stride_x=1, int stride_y=1, int stride_w=1, int stride_h=1)")
+	level* lvl = args()[0]->evaluate(variables).convert_to<level>();
+	const int x = args()[1]->evaluate(variables).as_int();
+	const int y = args()[2]->evaluate(variables).as_int();
+	int w = args()[3]->evaluate(variables).as_int();
+	int h = args()[4]->evaluate(variables).as_int();
 
+	int stride_x = args().size() > 5 ? args()[5]->evaluate(variables).as_int() : 1;
+	int stride_y = args().size() > 6 ? args()[6]->evaluate(variables).as_int() : 1;
+	int stride_w = args().size() > 7 ? args()[7]->evaluate(variables).as_int() : 1;
+	int stride_h = args().size() > 8 ? args()[8]->evaluate(variables).as_int() : 1;
+
+	std::vector<variant> res;
+	res.reserve(w*h);
+
+	for(int xpos = 0; xpos < w; ++xpos) {
+		for(int ypos = 0; ypos < h; ++ypos) {
+			//rect r(x + xpos*stride_x, y + ypos*stride_y, stride_w, stride_h);
+			res.emplace_back(variant::from_bool(lvl->solid(x + xpos*stride_x, y + ypos*stride_y)));
+		}
+	}
+
+	return variant(&res);
+
+FUNCTION_ARGS_DEF
+	ARG_TYPE("object")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+	ARG_TYPE("int")
+RETURN_TYPE("bool")
+END_FUNCTION_DEF(solid_grid)
 
 UNIT_TEST(modulo_operation) {
 	CHECK(game_logic::formula(variant("mod(-5, 20)")).execute() == game_logic::formula(variant("15")).execute(), "test failed");
