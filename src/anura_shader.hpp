@@ -12,7 +12,7 @@ namespace graphics
 	{
 	public:
 		AnuraShader(const std::string& name);
-		AnuraShader(const variant& node);
+		AnuraShader(const std::string& name, const variant& node);
 
 		void setDrawArea(const rect& draw_area);
 		void setCycle(int cycle);
@@ -23,10 +23,10 @@ namespace graphics
 		void init();
 		KRE::ShaderProgramPtr shader_;
 
-		KRE::ActivesHandleBasePtr u_draw_area_;
-		KRE::ActivesHandleBasePtr u_cycle_;
-		KRE::ActivesHandleBasePtr u_discard_;
-		KRE::ActivesHandleBasePtr u_sprite_area_;
+		//KRE::ActivesHandleBasePtr u_draw_area_;
+		//KRE::ActivesHandleBasePtr u_cycle_;
+		//KRE::ActivesHandleBasePtr u_discard_;
+		//KRE::ActivesHandleBasePtr u_sprite_area_;
 	};
 
 	typedef boost::intrusive_ptr<AnuraShader> AnuraShaderPtr;

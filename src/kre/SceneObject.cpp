@@ -27,18 +27,13 @@
 
 namespace KRE
 {
-	SceneObject::SceneObject(const std::string& name, bool nodeless)
+	SceneObject::SceneObject(const std::string& name)
 		: name_(name), 
 		  queue_(0)
 	{
-        if(nodeless) {
-            auto dd = DisplayDevice::getCurrent();
-            ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
-            setDisplayData(dd, attach(dd));
-        }
 	}
 
-	SceneObject::SceneObject(const variant& node, bool nodeless)
+	SceneObject::SceneObject(const variant& node)
 		: Renderable(node),
 		  queue_(0)
 	{
@@ -48,34 +43,9 @@ namespace KRE
 		if(node.has_key("queue_value")) {
 			queue_ = static_cast<size_t>(node["queue_value"].as_int());
 		}
-		if(node.has_key("shader")) {
-			shader_name_ = node["shader"].as_string();
-		}
-        if(nodeless) {
-            auto dd = DisplayDevice::getCurrent();
-            ASSERT_LOG(dd != nullptr, "DisplayDevice was null.");
-            setDisplayData(dd, attach(dd));
-        }
 	}
 
 	SceneObject::~SceneObject()
 	{
-	}
-
-	void SceneObject::setShaderName(const std::string& shader)
-	{
-		// XXX hmm hmm there is no way to update hints currently -- this is a must fix item.
-		// since we can't dynamically change shaders otherwise.
-		shader_name_ = shader;
-	}
-
-	DisplayDeviceDef SceneObject::attach(const DisplayDevicePtr& dd)
-	{
-		DisplayDeviceDef def(getAttributeSet()/*, getUniformSet()*/);
-		if(!shader_name_.empty()) {
-			def.setHint("shader", shader_name_);
-		}
-		doAttach(dd, &def);
-		return def;
 	}
 }

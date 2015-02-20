@@ -47,6 +47,9 @@ namespace KRE
 
 		void render(const Renderable* r) const override;
 
+		// Lets us set a default camera if nothing else is configured.
+		void setDefaultCamera(const CameraPtr& cam) override;
+
 		CanvasPtr getCanvas() override;
 		ClipScopePtr createClipScope(const rect& r) override;
 		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
@@ -54,9 +57,10 @@ namespace KRE
 
 		EffectPtr createEffect(const variant& node) override;
 
-		void loadShadersFromFile(const variant& node) override;
+		void loadShadersFromVariant(const variant& node) override;
 		ShaderProgramPtr getShaderProgram(const std::string& name) override;
 		ShaderProgramPtr getShaderProgram(const variant& node) override;
+		ShaderProgramPtr getDefaultShader() override;
 
 		BlendEquationImplBasePtr getBlendEquationImpl() override;
 
@@ -64,9 +68,6 @@ namespace KRE
 		void printDeviceInfo() override;
 
 		void setViewPort(int x, int y, unsigned width, unsigned height) override;
-
-		virtual DisplayDeviceDataPtr createDisplayDeviceData(const DisplayDeviceDef& def) override;
-
 	private:
 		DisplayDeviceOpenGL(const DisplayDeviceOpenGL&);
 

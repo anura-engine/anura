@@ -183,7 +183,6 @@ namespace graphics
 			void preRender(const KRE::WindowManagerPtr& wnd) override;
 		private:
 			DECLARE_CALLABLE(ArrowPrimitive);
-			void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
 			void init();
 			void setPoints(const variant& points);
 			void curve(const glm::vec2& p1, const glm::vec2& p2, const glm::vec2& p3, std::vector<glm::vec2>* out) const;
@@ -236,20 +235,16 @@ namespace graphics
 			init();
 		}
 
-		void ArrowPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
-		{
-			if(getShaderName().empty()) {
-				if(texture_) {
-					def->setHint("shader", "vtc_shader");
-				} else {
-					def->setHint("shader", "attr_color_shader");
-				}
-			}
-		}
-
 		void ArrowPrimitive::init()
 		{
 			using namespace KRE;
+
+			if(texture_) {
+				setShader(KRE::ShaderProgram::getProgram("vtc_shader"));
+			} else {
+				setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
+			}
+
 			auto ab = DisplayDevice::createAttributeSet(false, false, false);
 			pos_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
 			pos_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false));
@@ -450,7 +445,6 @@ namespace graphics
 
 		private:
 			DECLARE_CALLABLE(WireframeBoxPrimitive);
-			void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
 
 			void init();
 
@@ -486,6 +480,7 @@ namespace graphics
 
 		void WireframeBoxPrimitive::init()
 		{
+			setShader(KRE::ShaderProgram::getProgram("line_3d"));
 			if(b1_.x > b2_.x) {
 				std::swap(b1_.x, b2_.x);
 			}
@@ -526,13 +521,6 @@ namespace graphics
 
 			// might be better doing this in pre-render?
 			pos->update(&varray_);
-		}
-
-		void WireframeBoxPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
-		{
-			if(getShaderName().empty()) {
-				def->setHint("shader", "line_3d");
-			}
 		}
 
 		BEGIN_DEFINE_CALLABLE(WireframeBoxPrimitive, DrawPrimitive)
@@ -594,15 +582,9 @@ namespace graphics
 	private:
 		DECLARE_CALLABLE(BoxPrimitive);
 
-		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override
-		{
-			if(getShaderName().empty()) {
-				def->setHint("shader", "line_3d");
-			}
-		}
-
 		void init()
 		{
+			setShader(KRE::ShaderProgram::getProgram("line_3d"));
 			if(b1_.x > b2_.x) {
 				std::swap(b1_.x, b2_.x);
 			}
@@ -883,15 +865,9 @@ namespace graphics
 	}
 
 	DrawPrimitive::DrawPrimitive(const variant& node)
-		: SceneObject(node, true)
+		: SceneObject(node)
 	{
-	}
-
-	void DrawPrimitive::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def)
-	{
-		if(getShaderName().empty()) {
-			def->setHint("shader", "attr_color_shader");
-		}
+		setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(DrawPrimitive)

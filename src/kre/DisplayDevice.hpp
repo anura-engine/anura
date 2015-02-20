@@ -37,38 +37,6 @@
 
 namespace KRE
 {
-	typedef std::vector<std::string> HintList;
-	typedef std::map<std::string,HintList> HintMap;
-	class DisplayDeviceDef
-	{
-	public:
-		DisplayDeviceDef(const std::vector<AttributeSetPtr>& as/*, const std::vector<UniformSetPtr>& us*/);
-		~DisplayDeviceDef();
-
-		const std::vector<AttributeSetPtr>& getAttributeSet() const { return attributes_; }
-		//const std::vector<UniformSetPtr>& getUniformSet() const { return uniforms_; }
-
-		void setHint(const std::string& hint_name, const std::string& hint);
-		void setHint(const std::string& hint_name, const HintList& hint);
-		HintMap getHints() const { return hints_; }
-	private:
-		HintMap hints_;
-		const std::vector<AttributeSetPtr>& attributes_;
-		//const std::vector<UniformSetPtr>& uniforms_;
-	};
-
-	class DisplayDeviceData
-	{
-	public:
-		DisplayDeviceData();
-		virtual ~DisplayDeviceData();
-		void setShader(ShaderProgramPtr shader);
-		ShaderProgramPtr getShader() const { return shader_; }
-	private:
-		ShaderProgramPtr shader_;
-		DisplayDeviceData(const DisplayDeviceData&);
-	};
-
 	enum class DisplayDeviceCapabilties
 	{
 		NPOT_TEXTURES,
@@ -175,9 +143,12 @@ namespace KRE
 
 		virtual ScissorPtr getScissor(const rect& r) = 0;
 
-		virtual void loadShadersFromFile(const variant& node) = 0;
+		virtual void setDefaultCamera(const CameraPtr& cam) = 0;
+
+		virtual void loadShadersFromVariant(const variant& node) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const std::string& name) = 0;
 		virtual ShaderProgramPtr getShaderProgram(const variant& node) = 0;
+		virtual ShaderProgramPtr getDefaultShader() = 0;
 
 		virtual BlendEquationImplBasePtr getBlendEquationImpl() = 0;
 
@@ -194,8 +165,6 @@ namespace KRE
 		static RenderTargetPtr renderTargetInstance(const variant& node);
 
 		virtual void setViewPort(int x, int y, unsigned width, unsigned height) = 0;
-
-		virtual DisplayDeviceDataPtr createDisplayDeviceData(const DisplayDeviceDef& def) = 0;
 
 		template<typename T>
 		bool readPixels(int x, int y, unsigned width, unsigned height, ReadFormat fmt, AttrFormat type, std::vector<T>& data) {

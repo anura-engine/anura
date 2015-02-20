@@ -32,21 +32,16 @@ namespace KRE
 	class SceneObject : public Renderable
 	{
 	public:
-		explicit SceneObject(const std::string& name, bool nodeless=false);
-		explicit SceneObject(const variant& node, bool nodeless=false);
+		explicit SceneObject(const std::string& name);
+		explicit SceneObject(const variant& node);
 		virtual ~SceneObject();
 		size_t getQueue() const { return queue_; }
 		void setQueue(size_t q) { queue_ = q; }
 		const std::string& objectName() const { return name_; }
 		void setObjectName(const std::string name) { name_ = name; }
-		const std::string& getShaderName() const { return shader_name_; }
-		void setShaderName(const std::string& shader);
-		DisplayDeviceDef attach(const DisplayDevicePtr& dd);
 	private:
-		virtual void doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) {}
 		size_t queue_;
 		std::string name_;
-		std::string shader_name_;
 
 		SceneObject();
 	};

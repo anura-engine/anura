@@ -48,63 +48,28 @@ namespace KRE
 	namespace
 	{
 		static DisplayDeviceRegistrar<DisplayDeviceOpenGL> ogl_register("opengl");
+
+		CameraPtr& get_default_camera()
+		{
+			static CameraPtr res = nullptr;
+			return res;
+		}
 	}
-
-	class RenderVariableDeviceData : public DisplayDeviceData
-	{
-	public:
-		RenderVariableDeviceData() {
-		}
-		~RenderVariableDeviceData() {
-		}
-		RenderVariableDeviceData(const OpenGL::ConstActivesMapIterator& it)
-			: active_iterator_(it) {
-		}
-
-		void setActiveMapIterator(const OpenGL::ConstActivesMapIterator& it) {
-			active_iterator_ = it;
-		}
-		OpenGL::ConstActivesMapIterator getActiveMapIterator() const { return active_iterator_; }
-	private:
-		OpenGL::ConstActivesMapIterator active_iterator_;
-	};
 
 	namespace 
 	{
-		GLenum convert_render_variable_type(AttrFormat type)
-		{
-			switch(type) {
-				case AttrFormat::BOOL:							return GL_BYTE;
-				case AttrFormat::HALF_FLOAT:					return GL_HALF_FLOAT;
-				case AttrFormat::FLOAT:							return GL_FLOAT;
-				case AttrFormat::DOUBLE:						return GL_DOUBLE;
-				case AttrFormat::FIXED:							return GL_FIXED;
-				case AttrFormat::SHORT:							return GL_SHORT;
-				case AttrFormat::UNSIGNED_SHORT:				return GL_UNSIGNED_SHORT;
-				case AttrFormat::BYTE:							return GL_BYTE;
-				case AttrFormat::UNSIGNED_BYTE:					return GL_UNSIGNED_BYTE;
-				case AttrFormat::INT:							return GL_INT;
-				case AttrFormat::UNSIGNED_INT:					return GL_UNSIGNED_INT;
-				case AttrFormat::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
-				case AttrFormat::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
-				case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
-			}
-			ASSERT_LOG(false, "Unrecognised value for variable type.");
-			return GL_NONE;
-		}
-
 		GLenum convert_drawing_mode(DrawMode dm)
 		{
 			switch(dm) {
 				case DrawMode::POINTS:			return GL_POINTS;
 				case DrawMode::LINE_STRIP:		return GL_LINE_STRIP;
-				case DrawMode::LINE_LOOP:			return GL_LINE_LOOP;
-				case DrawMode::LINES:				return GL_LINES;
+				case DrawMode::LINE_LOOP:		return GL_LINE_LOOP;
+				case DrawMode::LINES:			return GL_LINES;
 				case DrawMode::TRIANGLE_STRIP:	return GL_TRIANGLE_STRIP;
-				case DrawMode::TRIANGLE_FAN:		return GL_TRIANGLE_FAN;
-				case DrawMode::TRIANGLES:			return GL_TRIANGLES;
+				case DrawMode::TRIANGLE_FAN:	return GL_TRIANGLE_FAN;
+				case DrawMode::TRIANGLES:		return GL_TRIANGLES;
 				case DrawMode::QUAD_STRIP:		return GL_QUAD_STRIP;
-				case DrawMode::QUADS:				return GL_QUADS;
+				case DrawMode::QUADS:			return GL_QUADS;
 				case DrawMode::POLYGON:			return GL_POLYGON;
 			}
 			ASSERT_LOG(false, "Unrecognised value for drawing mode.");
@@ -209,48 +174,20 @@ namespace KRE
 		// This is a no-action.
 	}
 
-	DisplayDeviceDataPtr DisplayDeviceOpenGL::createDisplayDeviceData(const DisplayDeviceDef& def)
+	ShaderProgramPtr DisplayDeviceOpenGL::getDefaultShader()
 	{
-		DisplayDeviceDataPtr dd = std::make_shared<DisplayDeviceData>();
-		OpenGL::ShaderProgramPtr shader;
-		bool use_default_shader = true;
-		for(auto& hints : def.getHints()) {
-			if(hints.first == "shader") {
-				// Need to have retrieved more shader data here.
-				shader = OpenGL::ShaderProgram::factory(hints.second[0]);
-				if(shader != nullptr) {
-					dd->setShader(shader);
-				}
-			}
-			// ...
-			// add more hints here if needed.
-		}
-		// If there is no shader hint, we will assume the default system shader.
-		if(shader == nullptr) {
-			shader = OpenGL::ShaderProgram::defaultSystemShader();
-			dd->setShader(shader);
-		}
-		
-		// XXX Set uniforms from block here.
+		return OpenGL::ShaderProgram::defaultSystemShader();
+	}
 
-		for(auto& as : def.getAttributeSet()) {
-			for(auto& attr : as->getAttributes()) {
-				for(auto& desc : attr->getAttrDesc()) {
-					auto ddp = DisplayDeviceDataPtr(new RenderVariableDeviceData(shader->getAttributeIterator(desc.getAttrName())));
-					desc.setDisplayData(ddp);
-				}
-			}
-		}
-
-		return dd;
+	void DisplayDeviceOpenGL::setDefaultCamera(const CameraPtr& cam)
+	{
+		get_default_camera() = cam;
 	}
 
 	void DisplayDeviceOpenGL::render(const Renderable* r) const
 	{
-		auto dd = r->getDisplayData();
-		ASSERT_LOG(dd != nullptr, "Display data was null.");
 		// XXX work out removing this dynamic_pointer_cast.
-		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(dd->getShader());
+		auto shader = std::dynamic_pointer_cast<OpenGL::ShaderProgram>(r->getShader());
 		ASSERT_LOG(shader != nullptr, "Failed to cast shader to the type required(OpenGL::ShaderProgram).");
 		shader->makeActive();
 
@@ -264,6 +201,8 @@ namespace KRE
 		if(r->getCamera()) {
 			// set camera here.
 			pvmat = r->getCamera()->getProjectionMat() * r->getCamera()->getViewMat();
+		} else if(get_default_camera() != nullptr) {
+			pvmat = get_default_camera()->getProjectionMat() * get_default_camera()->getViewMat();
 		}
 
 		if(use_lighting) {
@@ -312,7 +251,6 @@ namespace KRE
 		/// XXX Need to create a mapping between attributes and the index value below.
 		for(auto as : r->getAttributeSet()) {
 			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());
-			std::vector<GLuint> enabled_attribs;
 
 			// apply blend, if any, from attribute set.
 			BlendEquationScopeOGL be_scope(*as);
@@ -323,22 +261,7 @@ namespace KRE
 			}
 
 			for(auto& attr : as->getAttributes()) {
-				auto attr_hw = attr->getDeviceBufferData();
-				//auto attrogl = std::dynamic_pointer_cast<AttributeOGL>(attr);
-				attr_hw->bind();
-				for(auto& attrdesc : attr->getAttrDesc()) {
-					auto ddp = std::dynamic_pointer_cast<RenderVariableDeviceData>(attrdesc.getDisplayData());
-					ASSERT_LOG(ddp != nullptr, "Converting attribute device data was nullptr.");
-					glEnableVertexAttribArray(ddp->getActiveMapIterator()->second.location);
-					
-					glVertexAttribPointer(ddp->getActiveMapIterator()->second.location, 
-						attrdesc.getNumElements(), 
-						convert_render_variable_type(attrdesc.getVarType()), 
-						attrdesc.normalise(), 
-						attrdesc.getStride(), 
-						reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
-					enabled_attribs.emplace_back(ddp->getActiveMapIterator()->second.location);
-				}
+				shader->applyAttribute(attr);
 			}
 
 			if(as->isInstanced()) {
@@ -361,9 +284,7 @@ namespace KRE
 				}
 			}
 
-			for(auto attrib : enabled_attribs) {
-				glDisableVertexAttribArray(attrib);
-			}
+			shader->cleanUpAfterDraw();
 			glBindBuffer(GL_ARRAY_BUFFER, 0);
 		}
 
@@ -514,9 +435,9 @@ namespace KRE
 		return ret_val;
 	}
 
-	void DisplayDeviceOpenGL::loadShadersFromFile(const variant& node) 
+	void DisplayDeviceOpenGL::loadShadersFromVariant(const variant& node) 
 	{
-		OpenGL::ShaderProgram::loadFromFile(node);
+		OpenGL::ShaderProgram::loadFromVariant(node);
 	}
 
 	ShaderProgramPtr DisplayDeviceOpenGL::getShaderProgram(const std::string& name)

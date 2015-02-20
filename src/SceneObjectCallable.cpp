@@ -25,8 +25,8 @@
 
 namespace graphics
 {
-	SceneObjectCallable::SceneObjectCallable(const variant& node, bool nodeless)
-		: SceneObject(node, nodeless)
+	SceneObjectCallable::SceneObjectCallable(const variant& node)
+		: SceneObject(node)
 	{
 	}
 
@@ -34,8 +34,8 @@ namespace graphics
 	{
 	}
 
-	SceneObjectCallable::SceneObjectCallable(bool nodeless)
-		: SceneObject("SceneObjectCallable", nodeless)
+	SceneObjectCallable::SceneObjectCallable()
+		: SceneObject("SceneObjectCallable")
 	{
 	}
 
@@ -44,11 +44,6 @@ namespace graphics
 			return variant(obj.objectName());
 		DEFINE_SET_FIELD
 			obj.setObjectName(value.as_string());
-
-		DEFINE_FIELD(shader, "string")
-			return variant(obj.getShaderName());
-		DEFINE_SET_FIELD
-			obj.setShaderName(value.as_string());
 
 		DEFINE_FIELD(position, "[decimal,decimal]|[decimal,decimal,decimal]")
 			auto p = obj.getPosition();

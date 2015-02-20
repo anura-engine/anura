@@ -24,6 +24,7 @@
 #include <math.h>
 
 #include "DisplayDevice.hpp"
+#include "Shaders.hpp"
 
 #include "custom_object.hpp"
 #include "formatter.hpp"
@@ -45,7 +46,7 @@ LightPtr Light::createLight(const CustomObject& obj, variant node)
 }
 
 Light::Light(const CustomObject& obj, variant node) 
-	: SceneObjectCallable(node, true), 
+	: SceneObjectCallable(node), 
 	obj_(obj)
 {
 }
@@ -79,6 +80,8 @@ void CircleLight::init()
 {
 	using namespace KRE;
 	clearAttributeSets();
+
+	setShader(KRE::ShaderProgram::getProgram("attr_color_shader"));
 
 	auto as_fan = DisplayDevice::createAttributeSet(false, false, false);
 	fan_.reset(new Attribute<glm::vec2>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));

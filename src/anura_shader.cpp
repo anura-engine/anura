@@ -17,44 +17,45 @@ namespace graphics
 		 init();
 	}
 
-	AnuraShader::AnuraShader(const variant& node)
-		: shader_(KRE::ShaderProgram::getProgram(node))
+	AnuraShader::AnuraShader(const std::string& name, const variant& node)
 	{
+		KRE::ShaderProgram::loadFromVariant(node);
+		shader_ = KRE::ShaderProgram::getProgram(name);
 		init();
 	}
 
 	void AnuraShader::init()
 	{
-		u_draw_area_ = shader_->getHandle("u_anura_draw_area");
+		/*u_draw_area_ = shader_->getHandle("u_anura_draw_area");
 		u_cycle_ = shader_->getHandle("u_anura_cycle");
 		u_discard_ = shader_->getHandle("u_anura_discard");
-		u_sprite_area_ = shader_->getHandle("u_anura_sprite_area");
+		u_sprite_area_ = shader_->getHandle("u_anura_sprite_area");*/
 	}
 
 	void AnuraShader::setDrawArea(const rect& draw_area)
 	{
-		if(u_draw_area_) {
+		/*if(u_draw_area_) {
 			glm::vec4 da(static_cast<float>(draw_area.x()), 
 				static_cast<float>(draw_area.y()), 
 				static_cast<float>(draw_area.w()),
 				static_cast<float>(draw_area.h()));
 			shader_->setUniform(u_draw_area_, glm::value_ptr(da));
-		}
+		}*/
 	}
 
 	void AnuraShader::setSpriteArea(const rectf& area)
 	{
-		if(u_sprite_area_) {
+		/*if(u_sprite_area_) {
 			glm::vec4 da(area.x(), area.y(), area.w(), area.h());
 			shader_->setUniform(u_draw_area_, glm::value_ptr(da));
-		}
+		}*/
 	}
 
 	void AnuraShader::setCycle(int cycle)
 	{
-		if(u_draw_area_) {
+		/*if(u_draw_area_) {
 			shader_->setUniform(u_cycle_, reinterpret_cast<void*>(cycle));
-		}
+		}*/
 	}
 
 	BEGIN_DEFINE_CALLABLE_NOBASE(AnuraShader)

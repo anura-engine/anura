@@ -42,14 +42,14 @@ namespace
 }
 
 Water::Water()
-  : KRE::SceneObject("water", true),
+  : KRE::SceneObject("water"),
     zorder_(WaterZorder)
 {
 	init();
 }
 
 Water::Water(variant water_node) 
-	: KRE::SceneObject("water", true),
+	: KRE::SceneObject("water"),
 	zorder_(parse_zorder(water_node["zorder"], variant("water"))),
 	current_x_formula_(game_logic::Formula::createOptionalFormula(water_node["current_x_formula"])),
 	current_y_formula_(game_logic::Formula::createOptionalFormula(water_node["current_y_formula"]))

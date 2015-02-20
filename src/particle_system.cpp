@@ -229,10 +229,6 @@ namespace
 	private:
 		DECLARE_CALLABLE(SimpleParticleSystem);
 
-		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override {
-			def->setHint("shader", "vtc_shader");
-		}
-
 		void prepump(const Entity& e);
 
 		const SimpleParticleSystemFactory& factory_;
@@ -266,6 +262,8 @@ namespace
 	  cycle_(0), 
 	  spawn_buildup_(0)
 	{
+		setShader(KRE::ShaderProgram::getProgram("vtc_shader"));
+
 		auto as = KRE::DisplayDevice::createAttributeSet();
 		attrib_.reset(new KRE::Attribute<KRE::vertex_texture_color>(KRE::AccessFreqHint::DYNAMIC, KRE::AccessTypeHint::DRAW));
 		attrib_->addAttributeDesc(KRE::AttributeDesc(KRE::AttrType::POSITION, 2, KRE::AttrFormat::FLOAT, false, sizeof(KRE::vertex_texture_color), offsetof(KRE::vertex_texture_color, vertex)));
@@ -669,6 +667,8 @@ namespace
 			pos_y_(info.pos_y), 
 			pos_y_rand_(info.pos_y_rand) 
 		{
+			setShader(KRE::ShaderProgram::getProgram("point_shader"));
+
 			// turn on hardware-backed, not indexed and instanced draw if available.
 			auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
 			as->setDrawMode(KRE::DrawMode::POINTS);
@@ -782,10 +782,6 @@ namespace
 		}
 	private:
 		DECLARE_CALLABLE(PointParticleSystem);
-		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override {
-			def->setHint("shader", "point_shader");
-		}
-
 		struct Coord {
 			Coord(const glm::vec2& v, const glm::u8vec4& c) : vertex(v), color(c) {}
 			glm::vec2 vertex;

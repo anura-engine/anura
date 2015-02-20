@@ -141,7 +141,6 @@ namespace KRE
 		private:
 			void init();
 			void handleEmitProcess(float t) override;
-			void doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def) override;
 
 			std::shared_ptr<Attribute<vertex_texture_color3>> arv_;
 

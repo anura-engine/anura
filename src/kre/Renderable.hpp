@@ -25,6 +25,7 @@
 
 #include <glm/gtx/quaternion.hpp>
 
+#include "HintMap.hpp"
 #include "RenderQueue.hpp"
 #include "SceneFwd.hpp"
 #include "ScopeableValue.hpp"
@@ -71,8 +72,8 @@ namespace KRE
 		const RenderTargetPtr& getRenderTarget() const { return render_target_; }
 		void setRenderTarget(const RenderTargetPtr& rt);
 
-		void setDisplayData(const DisplayDevicePtr& dd, const DisplayDeviceDef& def);
-		const DisplayDeviceDataPtr& getDisplayData() const { return display_data_; }
+		void setShader(ShaderProgramPtr shader);
+		ShaderProgramPtr getShader() const { return shader_; }
 
 		void addAttributeSet(const AttributeSetPtr& attrset);
 		//void addUniformSet(const UniformSetPtr& uniset);
@@ -100,10 +101,9 @@ namespace KRE
 		LightPtrList lights_;
 		TexturePtr texture_;
 		RenderTargetPtr render_target_;
+		ShaderProgramPtr shader_;
 
 		std::vector<AttributeSetPtr> attributes_;
 		//std::vector<UniformSetPtr> uniforms_;
-
-		DisplayDeviceDataPtr display_data_;
 	};
 }

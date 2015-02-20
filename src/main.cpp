@@ -723,6 +723,9 @@ int main(int argcount, char* argvec[])
 	auto orthocam = std::make_shared<Camera>("orthocam", 0, main_wnd->logicalWidth(), 0, main_wnd->logicalHeight());
 	root->attachCamera(orthocam);
 
+	// Set a default camera in case no other is specified.
+	DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
 	Font::setDefaultFont(module::get_default_font() == "bitmap" 

@@ -28,12 +28,6 @@ namespace KRE
 {
 	ShaderProgram::ShaderProgram(const variant& node)
 	{
-		if(node.has_key("draw")) {
-			draw_ = node["draw"].as_string();
-		}
-		if(node.has_key("create")) {
-			create_ = node["create"].as_string();
-		}
 	}
 
 	ShaderProgram::~ShaderProgram()
@@ -45,13 +39,13 @@ namespace KRE
 		return DisplayDevice::getCurrent()->getShaderProgram(name);
 	}
 
-	ShaderProgramPtr ShaderProgram::getProgram(const variant& node)
+	void ShaderProgram::loadFromVariant(const variant& node)
 	{
-		return DisplayDevice::getCurrent()->getShaderProgram(node);
+		DisplayDevice::getCurrent()->loadShadersFromVariant(node);
 	}
 
-	void ShaderProgram::loadFromFile(const variant& node)
+	ShaderProgramPtr ShaderProgram::getSystemDefault()
 	{
-		DisplayDevice::getCurrent()->loadShadersFromFile(node);
+		return DisplayDevice::getCurrent()->getDefaultShader();
 	}
 }

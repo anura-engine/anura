@@ -23,6 +23,7 @@
 
 #include "AttributeSet.hpp"
 #include "DisplayDevice.hpp"
+#include "Shaders.hpp"
 #include "WindowManager.hpp"
 
 #include <cstdio>
@@ -82,6 +83,8 @@ WaterParticleSystem::WaterParticleSystem(const Entity& e, const WaterParticleSys
 		particles_.push_back(new_p);
 	}
 
+	setShader(KRE::ShaderProgram::getProgram("point_shader"));
+
 	auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
 	as->setDrawMode(KRE::DrawMode::POINTS);
 	addAttributeSet(as);
@@ -106,11 +109,6 @@ void WaterParticleSystem::process(const Entity& e)
 	setColor(info_.color);
 
 }
-
-void WaterParticleSystem::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) {
-	def->setHint("shader", "point_shader");
-}
-
 
 void WaterParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& screen_area, const Entity& e) const
 {

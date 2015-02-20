@@ -30,6 +30,7 @@
 #include "LightObject.hpp"
 #include "Renderable.hpp"
 #include "RenderTarget.hpp"
+#include "Shaders.hpp"
 #include "Texture.hpp"
 #include "variant_utils.hpp"
 
@@ -39,7 +40,8 @@ namespace KRE
 		: order_(0),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f)
+		scale_(1.0f),
+		shader_(ShaderProgram::getSystemDefault())
 	{
 	}
 
@@ -47,7 +49,8 @@ namespace KRE
 		: order_(order), 
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f)
+		scale_(1.0f),
+		shader_(ShaderProgram::getSystemDefault())
 	{
 	}
 
@@ -55,7 +58,8 @@ namespace KRE
 		: order_(0),
 		position_(0.0f),
 		rotation_(1.0f, 0.0f, 0.0f, 0.0f),
-		scale_(1.0f)
+		scale_(1.0f),
+		shader_(ShaderProgram::getSystemDefault())
 	{
 		if(node.has_key("order")) {
 			order_ = node["order"].as_int32();
@@ -142,8 +146,8 @@ namespace KRE
 		  lights_(),
 		  texture_(r.texture_ ? r.texture_->clone() : nullptr),
 		  render_target_(r.render_target_ ? r.render_target_->clone() : nullptr),
-		  attributes_(),
-		  display_data_()
+		  shader_(r.shader_),
+		  attributes_()
 	{
 		for(auto& l : r.lights_) {
 			lights_[l.first] = l.second->clone();
@@ -218,19 +222,28 @@ namespace KRE
 		render_target_ = rt;
 	}
 	
-	void Renderable::setDisplayData(const DisplayDevicePtr& dd, const DisplayDeviceDef& def)
+	void Renderable::clearAttributeSets()
 	{
-		display_data_ = dd->createDisplayDeviceData(def);
+		attributes_.clear();
 	}
 
 	void Renderable::addAttributeSet(const AttributeSetPtr& attrset)
 	{
-		attributes_.emplace_back(attrset);
+		if(shader_) {
+			shader_->configureActives(attrset);
+			attributes_.emplace_back(attrset);
+		} else {
+			LOG_WARN("No shader is set when adding an attribute set");
+		}
 	}
 
-	void Renderable::clearAttributeSets()
+	void Renderable::setShader(ShaderProgramPtr shader)
 	{
-		attributes_.clear();
+		LOG_DEBUG("Reconfiguring attribute sets as new shader specified.");
+		shader_ = shader;
+		for(auto& attrset : attributes_) {
+			shader_->configureActives(attrset);
+		}
 	}
 
 	//void Renderable::clearUniformSets()

@@ -56,7 +56,7 @@ namespace KRE
 	class HardwareAttributeImpl : public HardwareAttribute
 	{
 	public:
-		HardwareAttributeImpl(AttributeBase* parent) : HardwareAttribute(parent) {}
+		HardwareAttributeImpl(AttributeBase* parent) : HardwareAttribute(parent), value_(0) {}
 		virtual ~HardwareAttributeImpl() {}
 		void update(const void* value, ptrdiff_t offset, size_t size) {
 			if(offset == 0) {
@@ -98,8 +98,8 @@ namespace KRE
 		ptrdiff_t getStride() const { return stride_; }
 		ptrdiff_t getOffset() const { return offset_; }
 		size_t getDivisor() const { return divisor_; }
-		void setDisplayData(const DisplayDeviceDataPtr& ddp) { display_data_ = ddp; }
-		const DisplayDeviceDataPtr& getDisplayData() const { return display_data_; }
+		void setLocation(unsigned location) { location_ = location; }
+		unsigned getLocation() const { return location_; }
 	private:
 		AttrType type_;
 		std::string type_name_;
@@ -109,7 +109,7 @@ namespace KRE
 		ptrdiff_t stride_;
 		ptrdiff_t offset_;
 		size_t divisor_;
-		DisplayDeviceDataPtr display_data_;
+		unsigned location_;
 	};
 
 	enum class AccessFreqHint {

@@ -25,6 +25,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "asserts.hpp"
+#include "AttributeSet.hpp"
 #include "ShadersOGL.hpp"
 
 namespace KRE
@@ -283,6 +284,28 @@ namespace KRE
 					}
 				}
 				return res;
+			}
+
+			GLenum convert_render_variable_type(AttrFormat type)
+			{
+				switch(type) {
+					case AttrFormat::BOOL:							return GL_BYTE;
+					case AttrFormat::HALF_FLOAT:					return GL_HALF_FLOAT;
+					case AttrFormat::FLOAT:							return GL_FLOAT;
+					case AttrFormat::DOUBLE:						return GL_DOUBLE;
+					case AttrFormat::FIXED:							return GL_FIXED;
+					case AttrFormat::SHORT:							return GL_SHORT;
+					case AttrFormat::UNSIGNED_SHORT:				return GL_UNSIGNED_SHORT;
+					case AttrFormat::BYTE:							return GL_BYTE;
+					case AttrFormat::UNSIGNED_BYTE:					return GL_UNSIGNED_BYTE;
+					case AttrFormat::INT:							return GL_INT;
+					case AttrFormat::UNSIGNED_INT:					return GL_UNSIGNED_INT;
+					case AttrFormat::INT_2_10_10_10_REV:			return GL_INT_2_10_10_10_REV;
+					case AttrFormat::UNSIGNED_INT_2_10_10_10_REV:	return GL_UNSIGNED_INT_2_10_10_10_REV;
+					case AttrFormat::UNSIGNED_INT_10F_11F_11F_REV:	return GL_UNSIGNED_INT_10F_11F_11F_REV;
+				}
+				ASSERT_LOG(false, "Unrecognised value for variable type.");
+				return GL_NONE;
 			}
 		}
 
@@ -747,54 +770,6 @@ namespace KRE
 			}
 		}
 
-		ActivesHandleBasePtr ShaderProgram::getHandle(const std::string& aname) 
-		{
-			auto it = uniforms_.find(aname);
-			if(it != uniforms_.end()) {
-				return std::make_shared<ActivesHandleBase>(ActivesHandle(it));
-			}
-			auto alt_name_it = uniform_alternate_name_map_.find(aname);
-			if(alt_name_it != uniform_alternate_name_map_.end()) {
-				it = uniforms_.find(alt_name_it->second);
-				if(it != uniforms_.end()) {
-					return std::make_shared<ActivesHandleBase>(ActivesHandle(it));
-				}
-			}
-
-			auto ait = attribs_.find(aname);
-			if(ait != attribs_.end()) {
-				return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
-			}
-			auto aalt_name_it = attribute_alternate_name_map_.find(aname);
-			if(aalt_name_it != attribute_alternate_name_map_.end()) {
-				ait = attribs_.find(aalt_name_it->second);
-				if(ait != attribs_.end()) {
-					return std::make_shared<ActivesHandleBase>(ActivesHandle(ait));
-				}
-			}
-
-			ASSERT_LOG(false, "Couldn't find named active in shader(" << name() << "): " << aname);
-			return ActivesHandleBasePtr();
-		}
-
-		void ShaderProgram::setUniform(ActivesHandleBasePtr active, const void* value) 
-		{
-			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
-			ASSERT_LOG(ptr != nullptr, "Unable to convert active to correct type.");
-			setUniformValue(ptr->getIterator(), value);
-		}
-
-		/*void ShaderProgram::setAttribute(ActivesHandleBasePtr active, const void* value) 
-		{
-			auto ptr = std::dynamic_pointer_cast<ActivesHandle>(active);
-			ASSERT_LOG(ptr != nullptr, "Unable to convert active to correct type.");
-			setAttributeValue(ptr->getIterator(), value);
-		}*/
-
-		void ShaderProgram::applyActives() 
-		{
-		}
-
 		ShaderProgramPtr ShaderProgram::factory(const std::string& name)
 		{
 			auto& sf = get_shader_factory();
@@ -859,16 +834,54 @@ namespace KRE
 			return ShaderProgramPtr(spp);
 		}
 
-		void ShaderProgram::loadFromFile(const variant& node)
+		void ShaderProgram::loadShadersFromVariant(const variant& node)
 		{
 			auto& sf = get_shader_factory();
 
 			ASSERT_LOG(node.has_key("instances"), "Shader data must have 'instances' attribute.");
 			ASSERT_LOG(node["instances"].is_list(), "'instances' attribute should be a list.");
 
-			for(auto instance : node["instances"].as_list()) {
-				getProgramFromVariant(instance);
+			if(node.has_key("instances") && node["instances"].is_list()) {
+				for(auto instance : node["instances"].as_list()) {
+					getProgramFromVariant(instance);
+				}
+			} else {
+				getProgramFromVariant(node);
 			}
+		}
+
+		void ShaderProgram::configureActives(AttributeSetPtr attrset)
+		{
+			for(auto& attr : attrset->getAttributes()) {
+				for(auto& desc : attr->getAttrDesc()) {
+					desc.setLocation(getAttributeIterator(desc.getAttrName())->second.location);
+				}
+			}
+		}
+
+		void ShaderProgram::applyAttribute(AttributeBasePtr attr) 
+		{
+			auto attr_hw = attr->getDeviceBufferData();
+			attr_hw->bind();
+			for(auto& attrdesc : attr->getAttrDesc()) {
+				auto loc = attrdesc.getLocation();
+				glEnableVertexAttribArray(loc);					
+				glVertexAttribPointer(loc, 
+					attrdesc.getNumElements(), 
+					convert_render_variable_type(attrdesc.getVarType()), 
+					attrdesc.normalise(), 
+					attrdesc.getStride(), 
+					reinterpret_cast<const GLvoid*>(attr_hw->value() + attr->getOffset() + attrdesc.getOffset()));
+				enabled_attribs_.emplace_back(loc);
+			}
+		}
+
+		void ShaderProgram::cleanUpAfterDraw()
+		{
+			for(auto attrib : enabled_attribs_) {
+				glDisableVertexAttribArray(attrib);
+			}
+			enabled_attribs_.clear();
 		}
 	}
 }

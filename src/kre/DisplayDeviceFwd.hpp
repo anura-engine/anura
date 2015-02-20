@@ -78,13 +78,8 @@ namespace KRE
 		UNSIGNED_INT_10F_11F_11F_REV,
 	};
 
-	class DisplayDeviceDef;
-
 	class DisplayDevice;
 	typedef std::shared_ptr<DisplayDevice> DisplayDevicePtr;
-
-	class DisplayDeviceData;
-	typedef std::shared_ptr<DisplayDeviceData> DisplayDeviceDataPtr;
 
 	class Texture;
 	typedef std::shared_ptr<Texture> TexturePtr;

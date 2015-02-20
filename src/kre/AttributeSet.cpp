@@ -130,12 +130,12 @@ namespace KRE
 		ptrdiff_t offset,
 		size_t divisor)
 		: type_(type),
-		num_elements_(num_elements),
-		var_type_(var_type),
-		normalise_(normalise),
-		stride_(stride),
-		offset_(offset),
-		divisor_(divisor)
+		  num_elements_(num_elements),
+		  var_type_(var_type),
+		  normalise_(normalise),
+		  stride_(stride),
+		  offset_(offset),
+		  divisor_(divisor)
 	{
 		switch(type_) {
 		case AttrType::POSITION:	type_name_ = "position"; break;
@@ -174,8 +174,6 @@ namespace KRE
 		  hardware_buffer_(a.hardware_buffer_),
 		  enabled_(a.enabled_)
 	{
-		if(a.hardware_) {
-			hardware_ = a.hardware_->create(this);
-		}
+		hardware_ = DisplayDevice::createAttributeBuffer(hardware_, this);
 	}
 }

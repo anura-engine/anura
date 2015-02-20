@@ -72,8 +72,6 @@ public:
 private:
 	DECLARE_CALLABLE(WeatherParticleSystem);
 	
-	void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) override;
-
 	const WeatherParticleSystemFactory& factory_;
 	const WeatherParticleSystemInfo& info_;
 	

@@ -29,6 +29,7 @@
 #include "ParticleSystemParameters.hpp"
 #include "ParticleSystemEmitters.hpp"
 #include "SceneGraph.hpp"
+#include "Shaders.hpp"
 #include "spline.hpp"
 #include "WindowManager.hpp"
 #include "variant_utils.hpp"
@@ -353,6 +354,8 @@ namespace KRE
 			velocity_(tq.velocity_),
 			particle_system_(tq.particle_system_)
 		{
+			setShader(ShaderProgram::getProgram("vtc_shader"));
+
 			if(tq.getTexture()) {
 				setTexture(tq.getTexture()->clone());
 			}
@@ -373,11 +376,6 @@ namespace KRE
 			active_particles_.reserve(particle_quota_);
 
 			init();
-		}
-
-		void Technique::doAttach(const DisplayDevicePtr& dd, DisplayDeviceDef* def)
-		{
-			def->setHint("shader", "vtc_shader");
 		}
 
 		void Technique::setParent(ParticleSystem* parent)

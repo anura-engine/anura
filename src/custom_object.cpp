@@ -422,7 +422,7 @@ CustomObject::CustomObject(variant node)
 			if(node["shader"].is_string()) {
 				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
 			} else {
-				shader_.reset(new graphics::AnuraShader(node["shader"]));
+				shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
 			}
 		}
 	}

@@ -69,16 +69,6 @@ namespace KRE
 		typedef ActivesMap::iterator ActivesMapIterator;
 		typedef ActivesMap::const_iterator ConstActivesMapIterator;
 
-		class ActivesHandle : public ActivesHandleBase
-		{
-		public:
-			ActivesHandle(ConstActivesMapIterator a) : active_(a) {}
-			~ActivesHandle() {}
-			ConstActivesMapIterator getIterator() { return active_; }
-		private:
-			ConstActivesMapIterator active_;
-		};
-
 		typedef std::pair<std::string,std::string> ShaderDef;
 
 		class ShaderProgram;
@@ -108,13 +98,15 @@ namespace KRE
 
 			void makeActive() override;
 
+			void configureActives(AttributeSetPtr attrset) override;
+
 			void setAlternateUniformName(const std::string& name, const std::string& alt_name);
 			void setAlternateAttributeName(const std::string& name, const std::string& alt_name);
 
 			static ShaderProgramPtr factory(const std::string& name);
 			static ShaderProgramPtr factory(const variant& node);
 			static ShaderProgramPtr defaultSystemShader();
-			static void loadFromFile(const variant& node);
+			static void loadShadersFromVariant(const variant& node);
 			static ShaderProgramPtr getProgramFromVariant(const variant& node);
 
 			ConstActivesMapIterator getColorUniform() const { return u_color_; }
@@ -131,11 +123,8 @@ namespace KRE
 			ConstActivesMapIterator uniformsIteratorEnd() const { return uniforms_.end(); }
 			ConstActivesMapIterator attributesIteratorEnd() const { return attribs_.end(); }
 
-			ActivesHandleBasePtr getHandle(const std::string& name) override;
-
-			void setUniform(ActivesHandleBasePtr active, const void*) override;
-
-			void applyActives() override;
+			void applyAttribute(AttributeBasePtr attr) override;
+			void cleanUpAfterDraw() override;
 
 		protected:
 			bool link();
@@ -166,6 +155,8 @@ namespace KRE
 			ConstActivesMapIterator a_texcoord_;
 			ConstActivesMapIterator a_color_;
 			ConstActivesMapIterator a_normal_;
+
+			std::vector<GLuint> enabled_attribs_;
 		};
 	}
 }

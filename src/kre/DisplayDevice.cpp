@@ -129,7 +129,7 @@ namespace KRE
 				return attrib;
 			}
 		}
-		return HardwareAttributePtr(new HardwareAttributeImpl(parent));
+		return std::make_shared<HardwareAttributeImpl>(parent);
 	}
 
 	RenderTargetPtr DisplayDevice::renderTargetInstance(size_t width, size_t height, 
@@ -227,38 +227,5 @@ namespace KRE
 	bool DisplayDevice::checkForFeature(DisplayDeviceCapabilties cap)
 	{
 		return DisplayDevice::getCurrent()->doCheckForFeature(cap);
-	}
-
-	DisplayDeviceDef::DisplayDeviceDef(const std::vector<AttributeSetPtr>& as)
-		: attributes_(as)//, uniforms_(us)
-	{
-	}
-
-	DisplayDeviceDef::~DisplayDeviceDef()
-	{
-	}
-
-	void DisplayDeviceDef::setHint(const std::string& hint_name, const std::string& hint)
-	{
-		HintList hint_list(1,hint);
-		hints_.insert(std::make_pair(hint_name, hint_list));
-	}
-
-	void DisplayDeviceDef::setHint(const std::string& hint_name, const HintList& hint)
-	{
-		hints_[hint_name] = hint;
-	}
-
-	DisplayDeviceData::DisplayDeviceData()
-	{
-	}
-
-	DisplayDeviceData::~DisplayDeviceData()
-	{
-	}
-
-	void DisplayDeviceData::setShader(ShaderProgramPtr shader)
-	{
-		shader_ = shader;
 	}
 }

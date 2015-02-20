@@ -22,6 +22,7 @@
 */
 
 #include "DisplayDevice.hpp"
+#include "Shaders.hpp"
 #include "WindowManager.hpp"
 
 #include <cstdio>
@@ -59,6 +60,7 @@ WeatherParticleSystem::WeatherParticleSystem(const Entity& e, const WeatherParti
 		particles_.push_back(new_p);
 	}
 
+	setShader(KRE::ShaderProgram::getProgram("line_shader"));
 	auto as = KRE::DisplayDevice::createAttributeSet(true, false, true);
 	as->setDrawMode(KRE::DrawMode::POINTS);
 	addAttributeSet(as);
@@ -79,10 +81,6 @@ void WeatherParticleSystem::process(const Entity& e)
 
 	// XXX set line width uniform from "info_.line_width" here
 	setColor(info_.color);
-}
-
-void WeatherParticleSystem::doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def) {
-	def->setHint("shader", "line_shader");
 }
 
 void WeatherParticleSystem::draw(const KRE::WindowManagerPtr& wm, const rect& area, const Entity& e) const

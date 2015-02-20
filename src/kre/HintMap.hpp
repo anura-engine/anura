@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -23,22 +23,23 @@
 
 #pragma once
 
-#include "SceneObject.hpp"
-#include "Util.hpp"
+#include <map>
+#include <string>
+#include <vector>
 
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
-namespace graphics
+namespace KRE
 {
-	class SceneObjectCallable : public game_logic::FormulaCallable, public KRE::SceneObject
+	typedef std::vector<std::string> HintList;
+	typedef std::map<std::string,HintList> HintMap;
+	class HintMapContainer
 	{
 	public:
-		explicit SceneObjectCallable();
-		explicit SceneObjectCallable(const variant& node);
-		virtual ~SceneObjectCallable();
+		HintMapContainer();
+		void setHint(const std::string& hint_name, const std::string& hint);
+		void setHint(const std::string& hint_name, const HintList& hint);
+		const std::vector<std::string>& findHint(const std::string& name) const;
+		HintMap getHints() const { return hints_; }
 	private:
-		DECLARE_CALLABLE(SceneObjectCallable)
-		DISALLOW_ASSIGN(SceneObjectCallable);
+		HintMap hints_;
 	};
 }

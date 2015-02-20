@@ -493,7 +493,7 @@ Level::Level(const std::string& level_cfg, variant node)
 			if(node["shader"].is_string()) {
 				shader_.reset(new graphics::AnuraShader(node["shader"].as_string()));
 			} else {
-				shader_.reset(new graphics::AnuraShader(node["shader"]));
+				shader_.reset(new graphics::AnuraShader(node["shader"]["name"].as_string(), node["shader"]));
 			}
 		}
 	}
@@ -2146,7 +2146,7 @@ void Level::frameBufferEnterZorder(int zorder) const
 				if(e.shader_node.is_string()) {
 					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node.as_string()));
 				} else {
-					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node));
+					e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node["name"].as_string(), e.shader_node));
 				}
 			}
 			shaders.push_back(e.shader);
@@ -3677,7 +3677,7 @@ DEFINE_SET_FIELD
 			if(e.shader_node.is_string()) {
 				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node.as_string()));
 			} else {
-				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node));
+				e.shader = graphics::AnuraShaderPtr(new graphics::AnuraShader(e.shader_node["name"].as_string(), e.shader_node));
 			}
 		}
 
@@ -3708,7 +3708,7 @@ DEFINE_SET_FIELD_TYPE("string|map|builtin anura_shader")
 	if(value.is_string()) {
 		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value.as_string()));
 	} else if(value.is_map()) {
-		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value));
+		obj.shader_ = graphics::AnuraShaderPtr(new graphics::AnuraShader(value["name"].as_string(), value));
 	} else {
 		graphics::AnuraShaderPtr shader_ptr = value.try_convert<graphics::AnuraShader>();
 		ASSERT_LOG(shader_ptr != nullptr, "shader wasn't valid to set: " << value.to_debug_string());

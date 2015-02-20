@@ -28,7 +28,7 @@
 namespace graphics
 {
 	LevelTileObject::LevelTileObject()
-		: SceneObject("LevelTileObject", true)
+		: SceneObject("LevelTileObject")
 	{
 	}
 

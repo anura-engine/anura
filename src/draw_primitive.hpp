@@ -39,7 +39,6 @@ namespace graphics
 		explicit DrawPrimitive(const variant& v);
 	private:
 		DECLARE_CALLABLE(DrawPrimitive);
-		void doAttach(const KRE::DisplayDevicePtr& dd, KRE::DisplayDeviceDef* def);
 	};
 
 	typedef boost::intrusive_ptr<DrawPrimitive> DrawPrimitivePtr;

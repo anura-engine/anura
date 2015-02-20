@@ -1,5 +1,5 @@
 /*
-	Copyright (C) 2012-2014 by Kristina Simpson <sweet.kristas@gmail.com>
+	Copyright (C) 2013-2014 by Kristina Simpson <sweet.kristas@gmail.com>
 	
 	This software is provided 'as-is', without any express or implied
 	warranty. In no event will the authors be held liable for any damages
@@ -21,24 +21,34 @@
 	   distribution.
 */
 
-#pragma once
+#include "asserts.hpp"
+#include "HintMap.hpp"
 
-#include "SceneObject.hpp"
-#include "Util.hpp"
-
-#include "formula_callable.hpp"
-#include "formula_callable_definition.hpp"
-
-namespace graphics
+namespace KRE
 {
-	class SceneObjectCallable : public game_logic::FormulaCallable, public KRE::SceneObject
+	HintMapContainer::HintMapContainer()
 	{
-	public:
-		explicit SceneObjectCallable();
-		explicit SceneObjectCallable(const variant& node);
-		virtual ~SceneObjectCallable();
-	private:
-		DECLARE_CALLABLE(SceneObjectCallable)
-		DISALLOW_ASSIGN(SceneObjectCallable);
-	};
+	}
+
+	const std::vector<std::string>& HintMapContainer::findHint(const std::string& name) const
+	{
+		static std::vector<std::string> no_hint_list;
+		auto it = hints_.find(name);
+		if(it != hints_.end()) {
+			return it->second;
+		}
+		LOG_WARN("No hint named '" << name << "' found.");
+		return no_hint_list;
+	}
+
+	void HintMapContainer::setHint(const std::string& hint_name, const std::string& hint)
+	{
+		HintList hint_list(1,hint);
+		hints_.insert(std::make_pair(hint_name, hint_list));
+	}
+
+	void HintMapContainer::setHint(const std::string& hint_name, const HintList& hint)
+	{
+		hints_[hint_name] = hint;
+	}
 }
