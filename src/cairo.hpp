@@ -27,7 +27,7 @@ public:
 	surface get_surface() const;
 	graphics::texture write() const;
 	
-	void render_svg(const std::string& fname);
+	void render_svg(const std::string& fname, int w, int h);
 	void write_png(const std::string& fname);
 
 	void set_pattern(cairo_pattern_t* pattern, bool take_ownership=true);
