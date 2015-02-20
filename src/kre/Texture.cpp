@@ -288,7 +288,7 @@ namespace KRE
 			depth_ = 0;
 		}
 
-		src_rect_ = rect(0, 0, width_, height_);
+		setSourceRect(rect(0, 0, surface_width_, surface_height_));
 
 		const int npixels = width_ * height_;
 		alpha_map_.resize(surfaces_.size());

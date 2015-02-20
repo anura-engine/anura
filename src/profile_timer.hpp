@@ -67,7 +67,7 @@ namespace profile
 		SDL_Delay(t);
 	}
 
-	inline void delay(double t) 
+	inline void delay(unsigned long t) 
 	{
 		sleep(t);
 	}

@@ -23,13 +23,19 @@
 
 #include "Canvas.hpp"
 #include "DisplayDevice.hpp"
+#include "WindowManager.hpp"
 
 namespace KRE
 {
 	Canvas::Canvas()
 		: width_(0),
-		height_(0)
+		  height_(0)
 	{
+		auto wnd = WindowManager::getMainWindow();
+		if(wnd) {
+			width_ = wnd->logicalWidth();
+			height_ = wnd->logicalHeight();			
+		}
 		model_stack_.emplace(glm::mat4(1.0f));
 	}
 
@@ -70,4 +76,26 @@ namespace KRE
 	{
 		blitTexture(tex, rect(0,0,0,0), rotation, rect(x,y), color);
 	}
+
+	Canvas::ModelManager::ModelManager(int tx, int ty, float rotation, float scale)
+		: canvas_(KRE::Canvas::getInstance())
+	{
+		//glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
+		//glm::mat4 m_rotate  = glm::rotate(m_trans, rotation, glm::vec3(0.0f,0.0f,1.0f));
+		//glm::mat4 model     = glm::scale(m_rotate, glm::vec3(scale));
+		glm::mat4 m_trans   = glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
+		//glm::mat4 m_rotate  = glm::rotate(glm::mat4(1.0f), rotation, glm::vec3(0.0f,0.0f,1.0f));
+		//glm::mat4 m_scale     = glm::scale(glm::mat4(1.0f), glm::vec3(scale));
+		glm::mat4 model = m_trans;
+		if(!canvas_->model_stack_.empty()) {
+			model = model * canvas_->model_stack_.top();
+		}
+		canvas_->model_stack_.emplace(model);
+	}
+
+	Canvas::ModelManager::~ModelManager() 
+	{
+		canvas_->model_stack_.pop();
+	}
 }
+

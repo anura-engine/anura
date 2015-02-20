@@ -62,6 +62,10 @@ namespace KRE
 		SAVE,
 	};
 
+	// When loading an image we can use this function to convert certain
+	// pixels to be alpha zero values.
+	typedef std::function<bool(int r, int g, int b)> alpha_filter;
+
 	class Surface
 	{
 	public:
@@ -148,6 +152,10 @@ namespace KRE
 
 		static void setFileFilter(FileFilterType type, file_filter fn);
 		static file_filter getFileFilter(FileFilterType type);
+
+		static void setAlphaFilter(alpha_filter fn);
+		static alpha_filter getAlphaFilter();
+		static void clearAlphaFilter();
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);

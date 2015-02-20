@@ -22,7 +22,7 @@
 #                     found in PATH), this option has no effect.
 #
 
-OPTIMIZE=yes
+OPTIMIZE?=yes
 CCACHE?=ccache
 USE_CCACHE?=$(shell which $(CCACHE) 2>&1 > /dev/null && echo yes)
 ifneq ($(USE_CCACHE),yes)
@@ -114,6 +114,7 @@ $(BUILD_DIR):
 
 clean:
 	rm -rf $(BUILD_DIR)
+	rm anura
 
 $(foreach bdir,$(BUILD_DIR),$(eval $(call cc-command,$(bdir))))
 

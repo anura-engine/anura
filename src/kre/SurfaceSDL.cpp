@@ -127,10 +127,18 @@ namespace KRE
 	SurfaceSDL::SurfaceSDL(const std::string& filename)
 	{
 		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
-		surface_ = IMG_Load(filter(filename).c_str());
+		auto surface_ = IMG_Load(filter(filename).c_str());
 		if(surface_ == nullptr) {
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
+		}
+		auto filter_fn = Surface::getAlphaFilter();
+		if(filter_fn) {
+			handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](uint32_t& r, uint32_t& g, uint32_t& b, uint32_t& a) {
+				if(filter_fn(r, g, b)) {
+					a = 0;
+				}
+			});	
 		}
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));

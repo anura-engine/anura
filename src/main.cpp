@@ -85,6 +85,7 @@
 #include "variant_utils.hpp"
 
 #include "CameraObject.hpp"
+#include "Canvas.hpp"
 #include "SDLWrapper.hpp"
 #include "Font.hpp"
 #include "SceneGraph.hpp"
@@ -247,6 +248,91 @@ int load_module(const std::string& mod, std::vector<std::string>* argv)
 
 	}	
 	return 0;
+}
+
+struct FreeTextureHolder : public KRE::SceneObject
+{
+	FreeTextureHolder(const std::string& filename)
+		: KRE::SceneObject("FreeTextureHolder") 
+	{
+		using namespace KRE;
+		setColor(1.0f, 1.0f, 1.0f, 1.0f);
+		auto tex = DisplayDevice::createTexture(filename, TextureType::TEXTURE_2D, 4);
+		tex->setFiltering(Texture::Filtering::LINEAR, Texture::Filtering::LINEAR, Texture::Filtering::POINT);
+		tex->setAddressModes(Texture::AddressMode::BORDER, Texture::AddressMode::BORDER);
+		setTexture(tex);
+
+		auto as = DisplayDevice::createAttributeSet();
+		attribs_.reset(new Attribute<vertex_texcoord>(AccessFreqHint::DYNAMIC, AccessTypeHint::DRAW));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::POSITION, 2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, vtx)));
+		attribs_->addAttributeDesc(AttributeDesc(AttrType::TEXTURE,  2, AttrFormat::FLOAT, false, sizeof(vertex_texcoord), offsetof(vertex_texcoord, tc)));
+		as->addAttribute(AttributeBasePtr(attribs_));
+		as->setDrawMode(DrawMode::TRIANGLE_STRIP);
+		
+		addAttributeSet(as);
+	}
+	void preRender(const KRE::WindowManagerPtr& wm) override
+	{
+		const float offs_x = 0.0f;
+		const float offs_y = 0.0f;
+		const float vx1 = draw_rect_.x() + offs_x;
+		const float vy1 = draw_rect_.y() + offs_y;
+		const float vx2 = draw_rect_.x2() + offs_x;
+		const float vy2 = draw_rect_.y2() + offs_y;
+
+		const rectf& r = getTexture()->getSourceRectNormalised();
+
+		std::vector<KRE::vertex_texcoord> vertices;
+		vertices.emplace_back(glm::vec2(vx1,vy1), glm::vec2(r.x(),r.y()));
+		vertices.emplace_back(glm::vec2(vx2,vy1), glm::vec2(r.x2(),r.y()));
+		vertices.emplace_back(glm::vec2(vx1,vy2), glm::vec2(r.x(),r.y2()));
+		vertices.emplace_back(glm::vec2(vx2,vy2), glm::vec2(r.x2(),r.y2()));
+		getAttributeSet().back()->setCount(vertices.size());
+		attribs_->update(&vertices);
+	}
+	template<typename T>
+	void setDrawRect(const geometry::Rect<T>& r) {
+		draw_rect_ = r.template as_type<float>();
+	}
+private:
+	std::shared_ptr<KRE::Attribute<KRE::vertex_texcoord>> attribs_;
+	rectf draw_rect_;
+};
+
+
+struct simple_color
+{
+	simple_color(int r1, int g1, int b1) : r(r1), g(g1), b(b1) {}
+	uint32_t r, g, b;
+};
+void set_alpha_masks()
+{
+	LOG_DEBUG("SETTING ALPHA MASKS");
+	using namespace KRE;
+	std::vector<simple_color> alpha_colors;
+
+	auto surf = Surface::create("alpha-colors.png");
+	for(int y = 0; y != surf->height(); ++y) {
+		int ndx = 0;
+		int offs = 0;
+		auto pix = reinterpret_cast<const unsigned char*>(surf->pixels());
+		while(offs < surf->width()) {
+			uint32_t red, green, blue, alpha;
+			auto var = surf->getPixelFormat()->extractRGBA(pix+offs, ndx, red, green, blue, alpha);
+			offs += std::get<0>(var);
+			ndx = std::get<1>(var);
+			alpha_colors.emplace_back(red, green, blue);
+			LOG_DEBUG("Added alpha color: (" << red << "," << green << "," << blue << ")");
+		}
+	}
+	Surface::setAlphaFilter([&alpha_colors](int r, int g, int b) {
+		for(auto& c : alpha_colors) {
+			if(c.r == r && c.g == g && c.b == b) {
+				return true;
+			}
+		}
+		return false;
+	});
 }
 
 int main(int argcount, char* argvec[])
@@ -711,11 +797,16 @@ int main(int argcount, char* argvec[])
 	SDL::SDL_ptr manager(new SDL::SDL());
 
 	WindowManagerPtr main_wnd = WindowManager::createInstance("SDL", "opengl");
-	main_wnd->enableVsync(false);
+	main_wnd->enableVsync(true);
 	main_wnd->createWindow(preferences::actual_screen_width(), preferences::actual_screen_height());
+
+	auto canvas = Canvas::getInstance();
+
 	// Set the image loading filter function, so that files are found in the correct place.
 	Surface::setFileFilter(FileFilterType::LOAD, [](const std::string& s){ return module::map_file("images/" + s); });
 	Surface::setFileFilter(FileFilterType::SAVE, [](const std::string& s){ return std::string(preferences::user_data_path()) + s; });
+
+	set_alpha_masks();
 
 	SceneGraphPtr scene = SceneGraph::create("root");
 	SceneNodePtr root = scene->getRootNode();
@@ -725,6 +816,18 @@ int main(int argcount, char* argvec[])
 
 	// Set a default camera in case no other is specified.
 	DisplayDevice::getCurrent()->setDefaultCamera(orthocam);
+
+	//@@@ TEST
+	//auto free_tex = std::make_shared<FreeTextureHolder>("backgrounds/loading_screen.png");
+	//free_tex->setDrawRect(rectf(0.0f,0.0f,480.0f,320.0f));
+	//free_tex->setPosition(0.0f, 0.0f);
+
+	//while(1) {
+	//	free_tex->preRender(main_wnd);
+	//	main_wnd->render(free_tex.get());
+	//	main_wnd->swap();
+	//}
+	//@@@ TEST
 
 	// Set the default font to use for rendering. This can of course be overridden when rendering the
 	// text to a texture.
@@ -781,6 +884,7 @@ int main(int argcount, char* argvec[])
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
 		GuiSection::init(gui_node);
 		loader.drawAndIncrement(_("Initializing GUI"));
+		LOG_DEBUG("gui_node " << gui_node.to_debug_string());
 		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));

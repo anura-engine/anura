@@ -1593,7 +1593,6 @@ bool LevelRunner::play_cycle()
 				&& (!console_ || !console_->hasKeyboardFocus())) {
 #endif
 				editor_->toggle_active_level();
-				profile::manager pman("render_scene");
 				render_scene(editor_->get_level(), last_draw_position());
 				editor_->toggle_active_level();
 				lvl_->setAsCurrentLevel();
@@ -1606,7 +1605,11 @@ bool LevelRunner::play_cycle()
 						lvl_->add_draw_character(e);
 					}
 				}
-				render_scene(*lvl_, last_draw_position());
+				{
+					profile::manager pman("render_scene");
+					render_scene(*lvl_, last_draw_position());
+					KRE::Canvas::getInstance()->drawSolidRect(rect(100, 100, 100, 100), KRE::Color("red"));
+				}
 #ifndef NO_EDITOR
 				int index = 0;
 				if(!history_trails_.empty()) {

@@ -40,7 +40,7 @@ using namespace KRE;
 
 FramedGuiElement::FramedGuiElement(variant node)
 	: area_(node["rect"]),
-	cornerHeight_(node["cornerHeight"].as_int()),
+	cornerHeight_(node["corner_height"].as_int()),
 	texture_(Texture::createTexture(node["image"]))
 {
 	top_left_corner_ = rect(area_.x(),area_.y(),cornerHeight_,cornerHeight_);
@@ -72,7 +72,7 @@ std::vector<std::string> FramedGuiElement::getElements()
 
 void FramedGuiElement::init(variant node)
 {
-	for(auto obj : node["FramedGuiElement"].as_list()) {
+	for(auto obj : node["framed_gui_element"].as_list()) {
 		const std::string& id = obj["id"].as_string();
 		cache[id].reset(new FramedGuiElement(obj));
 	}
@@ -101,7 +101,7 @@ void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled, const KRE
 	
   //old code based on the assumption that scale=1 meant drawing to an 400x300 screen
 	
-	int scale = upscaled? 2:1;
+	int scale = upscaled ? 2 : 1;
 	
 	blitSubsection(interior_fill_,x+ cornerHeight_,y+ cornerHeight_,w-2*cornerHeight_,h-2*cornerHeight_, color);
 	
@@ -118,6 +118,6 @@ void FramedGuiElement::blit(int x, int y, int w, int h, bool upscaled, const KRE
 
 void FramedGuiElement::blitSubsection(rect subsection, int x, int y, int w, int h, const KRE::Color& color) const
 {
-	// I can't but help feel the ColorPtr code here is evil. Note that it is a null-deleter.
 	Canvas::getInstance()->blitTexture(texture_, subsection, 0, rect(x,y,w,h), color);
 }
+

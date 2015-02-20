@@ -80,9 +80,13 @@ namespace KRE
 
 		void internalInit();
 
-		int width() const { return width_; }
-		int height() const { return height_; }
-		int depth() const { return depth_; }
+		int actualWidth() const { return width_; }
+		int actualHeight() const { return height_; }
+		int actualDepth() const { return depth_; }
+
+		int width() const { return src_rect_.w(); }
+		int height() const { return src_rect_.h(); }
+		int depth() const { return surfaces_.size(); }
 
 		int surfaceWidth() const { return surface_width_; }
 		int surfacehHeight() const { return surface_height_; }
@@ -135,7 +139,7 @@ namespace KRE
 		const geometry::Rect<N> getNormalisedTextureCoords(const geometry::Rect<T>& r) {
 			float w = static_cast<float>(surface_width_);
 			float h = static_cast<float>(surface_height_);
-			return geometry::Rect<N>(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
+			return geometry::Rect<N>::from_coordinates(static_cast<N>(r.x())/w, static_cast<N>(r.y())/h, static_cast<N>(r.x2())/w, static_cast<N>(r.y2())/h);		
 		}
 
 		template<typename N, typename T>

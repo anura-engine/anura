@@ -226,6 +226,8 @@ namespace KRE
 			static std::map<FileFilterType, file_filter> res;
 			return res;
 		}
+
+		alpha_filter alpha_filter_fn = nullptr;
 	}
 
 	void Surface::setFileFilter(FileFilterType type, file_filter fn)
@@ -240,6 +242,21 @@ namespace KRE
 			return [](const std::string& s) { return s; };
 		}
 		return it->second;
+	}
+
+	void Surface::setAlphaFilter(alpha_filter fn)
+	{
+		alpha_filter_fn = fn;
+	}
+
+	alpha_filter Surface::getAlphaFilter()
+	{
+		return alpha_filter_fn;
+	}
+
+	void Surface::clearAlphaFilter()
+	{
+		alpha_filter_fn = nullptr;
 	}
 
 	PixelFormat::PixelFormat()

@@ -88,14 +88,14 @@ namespace KRE
 				"    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);\n"
 				"}\n";
 			const char* const simple_fs =
-				"uniform bool u_discard;\n"
+				//"uniform bool u_discard;\n"
 				"uniform vec4 u_color;\n"
 				"void main()\n"
 				"{\n"
 				"    gl_FragColor = u_color;\n"
-				"    if(u_discard && gl_FragColor[3] == 0.0) {\n"
-				"        discard;\n"
-				"    }\n"
+				//"    if(u_discard && gl_FragColor[3] == 0.0) {\n"
+				//"        discard;\n"
+				//"    }\n"
 				"}\n";
 
 			const uniform_mapping simple_uniform_mapping[] =

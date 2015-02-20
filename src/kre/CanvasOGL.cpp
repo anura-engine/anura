@@ -50,18 +50,15 @@ namespace KRE
 
 	void CanvasOGL::handleDimensionsChanged()
 	{
-		mvp_ = glm::ortho(0.0f, float(width()), float(height()), 0.0f);
+		mvp_ = glm::ortho(0.0f, static_cast<float>(width()), static_cast<float>(height()), 0.0f);
 	}
 
-	void CanvasOGL::blitTexture(const TexturePtr& tex, const rect& src, float rotation, const rect& dst, const Color& color) const
+	void CanvasOGL::blitTexture(const TexturePtr& texture, const rect& src, float rotation, const rect& dst, const Color& color) const
 	{
-		auto texture = std::dynamic_pointer_cast<OpenGLTexture>(tex);
-		ASSERT_LOG(texture != nullptr, "Texture passed in was not of expected type.");
-
-		const float tx1 = float(src.x()) / texture->width();
-		const float ty1 = float(src.y()) / texture->height();
-		const float tx2 = src.w() == 0 ? 1.0f : float(src.x2()) / texture->width();
-		const float ty2 = src.h() == 0 ? 1.0f : float(src.y2()) / texture->height();
+		const float tx1 = texture->getNormalisedTextureCoordW<float>(src.x());
+		const float ty1 = texture->getNormalisedTextureCoordH<float>(src.y());
+		const float tx2 = texture->getNormalisedTextureCoordW<float>(src.w() == 0 ? texture->width() : src.x2());
+		const float ty2 = texture->getNormalisedTextureCoordH<float>(src.h() == 0 ? texture->height() : src.y2());
 		const float uv_coords[] = {
 			tx1, ty1,
 			tx2, ty1,

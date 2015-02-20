@@ -97,18 +97,8 @@ namespace KRE
 
 		struct ModelManager
 		{
-			ModelManager(int tx, int ty, float rotation, float scale) : canvas_(KRE::Canvas::getInstance()) {
-				glm::mat4 m_trans	= glm::translate(glm::mat4(1.0f), glm::vec3(static_cast<float>(tx), static_cast<float>(ty),0.0f));
-				glm::mat4 m_rotate  = glm::rotate(m_trans, rotation, glm::vec3(0.0f,0.0f,1.0f));
-				glm::mat4 model		= glm::scale(m_rotate, glm::vec3(scale));
-				if(!canvas_->model_stack_.empty()) {
-					model = canvas_->model_stack_.top() * model;
-				}
-				canvas_->model_stack_.emplace(model);
-			}
-			~ModelManager() {
-				canvas_->model_stack_.pop();
-			}
+			ModelManager(int tx, int ty, float rotation, float scale);
+			~ModelManager();
 			CanvasPtr canvas_;
 		};
 

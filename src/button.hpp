@@ -97,8 +97,8 @@ namespace gui
 	
 		ConstFramedGuiElementPtr normal_button_image_set_,depressed_button_image_set_,focus_button_image_set_,current_button_image_set_;
 
-		KRE::ColorPtr normal_color_, depressed_color_, focus_color_;
-		KRE::ColorPtr text_normal_color_, text_depressed_color_, text_focus_color_;
+		KRE::Color normal_color_, depressed_color_, focus_color_;
+		KRE::Color text_normal_color_, text_depressed_color_, text_focus_color_;
 	};
 
 	typedef boost::intrusive_ptr<Button> ButtonPtr;

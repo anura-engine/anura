@@ -147,23 +147,23 @@ variant Button::getColorScheme()
 		}
 
 		if(m.has_key("normal")) {
-			normal_color_.reset(new KRE::Color(m["normal"]));
+			normal_color_ = KRE::Color(m["normal"]);
 		}
 		if(m.has_key("depressed")) {
-			depressed_color_.reset(new KRE::Color(m["depressed"]));
+			depressed_color_ = KRE::Color(m["depressed"]);
 		}
 		if(m.has_key("focus")) {
-			focus_color_.reset(new KRE::Color(m["focus"]));
+			focus_color_ = KRE::Color(m["focus"]);
 		}
 
 		if(m.has_key("text_normal")) {
-			text_normal_color_.reset(new KRE::Color(m["text_normal"]));
+			text_normal_color_ = KRE::Color(m["text_normal"]);
 		}
 		if(m.has_key("text_depressed")) {
-			text_depressed_color_.reset(new KRE::Color(m["text_depressed"]));
+			text_depressed_color_ = KRE::Color(m["text_depressed"]);
 		}
 		if(m.has_key("text_focus")) {
-			text_focus_color_.reset(new KRE::Color(m["text_focus"]));
+			text_focus_color_ = KRE::Color(m["text_focus"]);
 		}
 
 		setup();
@@ -223,17 +223,17 @@ variant Button::getColorScheme()
 	{
 		label_->setLoc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
 
-		const KRE::ColorPtr& col = current_button_image_set_ == normal_button_image_set_ 
+		const KRE::Color& col = current_button_image_set_ == normal_button_image_set_ 
 			? normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? focus_color_ : depressed_color_);
 
-		current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0, *col);
+		current_button_image_set_->blit(x(),y(),width(),height(), button_resolution_ != 0, col);
 
-		const KRE::ColorPtr& text_col = current_button_image_set_ == normal_button_image_set_ 
+		const KRE::Color& text_col = current_button_image_set_ == normal_button_image_set_ 
 			? text_normal_color_ 
 			: (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
-		KRE::Canvas::ColorManager cm(*text_col);
+		KRE::Canvas::ColorManager cm(text_col);
 		label_->draw();
 	}
 
