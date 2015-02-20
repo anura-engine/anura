@@ -84,9 +84,9 @@ namespace gui
 		}
 
 		size_ = v.has_key("size") ? v["size"].as_int() : default_font_size;
-		if(v.has_key("onClick")) {
+		if(v.has_key("on_click")) {
 			ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
-			ffl_click_handler_ = getEnvironment()->createFormula(v["onClick"]);
+			ffl_click_handler_ = getEnvironment()->createFormula(v["on_click"]);
 			on_click_ = std::bind(&Label::click_delegate, this);
 		}
 		if(v.has_key("highlight_color")) {

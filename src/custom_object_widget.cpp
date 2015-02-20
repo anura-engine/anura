@@ -80,8 +80,8 @@ namespace gui
 			variant value = commands_handler_->execute(*callable);
 			entity_->executeCommand(value);
 		}
-		if(v.has_key("onClick")) {
-			click_handler_ = getEnvironment()->createFormula(v["onClick"]);
+		if(v.has_key("on_click")) {
+			click_handler_ = getEnvironment()->createFormula(v["on_click"]);
 			on_click_ = std::bind(&CustomObjectWidget::click, this, _1);
 		}
 		if(v.has_key("on_mouse_enter")) {

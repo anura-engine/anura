@@ -139,9 +139,9 @@ void LoadingScreen::setNumberOfItems(int items)
 void LoadingScreen::finishLoading()
 {
 	//display the splash screen for a minimum amount of time, if there is one.
-	if(splash_ == nullptr) {
-		return;
-	}
+	//if(splash_ == nullptr) {
+	//	return;
+	//}
 
 	while(started_at_ + 3000 > profile::get_tick_time()) {
 		drawAndIncrement("Loading");

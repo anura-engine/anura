@@ -62,9 +62,9 @@ namespace profile
 		}
 	};
 
-	inline void sleep(double t) 
+	inline void sleep(unsigned long t) 
 	{
-		SDL_Delay(static_cast<Uint32>(t * 1000.0));
+		SDL_Delay(t);
 	}
 
 	inline void delay(double t) 

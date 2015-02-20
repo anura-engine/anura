@@ -191,9 +191,9 @@ namespace gui
 			on_change_ = std::bind(&TextEditorWidget::changeDelegate, this);
 			ffl_on_change_ = getEnvironment()->createFormula(v["on_change"]);
 		}
-		if(v.has_key("onMoveCursor")) {
+		if(v.has_key("on_move_cursor")) {
 			onMoveCursor_ = std::bind(&TextEditorWidget::moveCursorDelegate, this);
-			ffl_onMoveCursor_ = getEnvironment()->createFormula(v["onMoveCursor"]);
+			ffl_onMoveCursor_ = getEnvironment()->createFormula(v["on_move_cursor"]);
 		}
 		if(v.has_key("on_enter")) {
 			on_enter_ = std::bind(&TextEditorWidget::enterDelegate, this);
@@ -207,9 +207,9 @@ namespace gui
 			on_escape_ = std::bind(&TextEditorWidget::escapeDelegate, this);
 			ffl_on_escape_ = getEnvironment()->createFormula(v["on_escape"]);
 		}
-		if(v.has_key("onBeginEnter")) {
+		if(v.has_key("on_begin_enter")) {
 			onBeginEnter_ = std::bind(&TextEditorWidget::beginEnterDelegate, this);
-			ffl_onBeginEnter_ = getEnvironment()->createFormula(v["onBeginEnter"]);
+			ffl_onBeginEnter_ = getEnvironment()->createFormula(v["on_begin_enter"]);
 		}
 		if(v.has_key("on_change_focus")) {
 			on_change_focus_ = std::bind(&TextEditorWidget::changeFocusDelgate, this, std::placeholders::_1);

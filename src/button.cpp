@@ -98,11 +98,11 @@ variant Button::getColorScheme()
 		if(!label_var.is_callable()) {
 			label_ = label_var.is_map() ? widget_factory::create(label_var, e) : new Label(label_var.as_string_default("Button"), KRE::Color::colorWhite());
 		}
-		ASSERT_LOG(v.has_key("onClick"), "Button must be supplied with an onClick handler: " << v.write_json() << " " << v.debug_location());
+		ASSERT_LOG(v.has_key("on_click"), "Button must be supplied with an onClick handler: " << v.write_json() << " " << v.debug_location());
 		// create delegate for onclick
 		ASSERT_LOG(getEnvironment() != 0, "You must specify a callable environment");
 
-		const variant on_click_value = v["onClick"];
+		const variant on_click_value = v["on_click"];
 		if(on_click_value.is_function()) {
 			ASSERT_LOG(on_click_value.min_function_arguments() == 0, "onClick button function should take 0 arguments: " << v.debug_location());
 			static const variant fml("fn()");
@@ -401,9 +401,9 @@ variant Button::getColorScheme()
 		res.add("resolution", button_resolution_ == BUTTON_SIZE_NORMAL_RESOLUTION ? "normal" : "double");
 		res.add("style", button_style_ == BUTTON_STYLE_DEFAULT ? "default" : "normal");
 		if(click_handler_) {
-			res.add("onClick", click_handler_->str());
+			res.add("on_click", click_handler_->str());
 		} else {
-			res.add("onClick", "def()");
+			res.add("on_click", "def()");
 		}
 		res.add("label", label_->write());
 		return res.build();

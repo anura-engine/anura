@@ -1593,6 +1593,7 @@ bool LevelRunner::play_cycle()
 				&& (!console_ || !console_->hasKeyboardFocus())) {
 #endif
 				editor_->toggle_active_level();
+				profile::manager pman("render_scene");
 				render_scene(editor_->get_level(), last_draw_position());
 				editor_->toggle_active_level();
 				lvl_->setAsCurrentLevel();

@@ -818,6 +818,7 @@ int main(int argcount, char* argvec[])
 			}
 		}
 	}
+	LOG_INFO("finishloading()");
 
 	formula_profiler::Manager profiler(profile_output);
 
