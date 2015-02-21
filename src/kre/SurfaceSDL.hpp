@@ -82,10 +82,10 @@ namespace KRE
 		Color mapRGBA(int r, int g, int b, int a) override;
 		Color mapRGBA(float r, float g, float b, float a) override;
 
-		void getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a) override;
+		void getRGBA(uint32_t pix, int& r, int& g, int& b, int& a) override;
 
-		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha) override;
-		void encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha) override; 
+		std::tuple<int,int> extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha) override;
+		void encodeRGBA(void* pixels, int red, int green, int blue, int alpha) override; 
 
 		bool hasPalette() const override;
 	private:
@@ -125,7 +125,7 @@ namespace KRE
 			uint32_t bmask, 
 			uint32_t amask,
 			const void* pixels) override;
-		void writePixels(const void* pixels) override;
+		void writePixels(const void* pixels, int size) override;
 		void fillRect(const rect& dst_rect, const Color& color) override;
 		int width() const override {
 			ASSERT_LOG(surface_ != nullptr, "surface_ is null");
@@ -160,7 +160,7 @@ namespace KRE
 		bool setClipRect(const rect& r) override;
 		const rect getClipRect() override;
 
-		static SurfacePtr createFromFile(const std::string&, PixelFormat::PF fmt, SurfaceConvertFn fn);
+		static SurfacePtr createFromFile(const std::string&, PixelFormat::PF fmt, SurfaceFlags flags, SurfaceConvertFn fn);
 		static SurfacePtr createFromPixels(int width, 
 			int height, 
 			int bpp, 
@@ -189,6 +189,7 @@ namespace KRE
 		SDL_Surface* get() { return surface_; }
 	private:
 		SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) override;
+		SurfacePtr runGlobalAlphaFilter() override;
 
 		SDL_Surface* surface_;
 		bool has_data_;

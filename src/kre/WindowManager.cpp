@@ -394,7 +394,7 @@ namespace KRE
 		auto surface = Surface::create(width_, height_, PixelFormat::PF::PIXELFORMAT_RGB24);
 		std::vector<glm::u8vec3> pixels;
 		if(display_->readPixels(0, 0, width_, height_, ReadFormat::RGB, AttrFormat::UNSIGNED_BYTE, pixels)) {
-			surface->writePixels(&pixels[0]);
+			surface->writePixels(&pixels[0], pixels.size() * sizeof(glm::u8vec3));
 			surface->savePng(filename);
 			LOG_INFO("Saved screenshot to: " << filename);
 		} else {

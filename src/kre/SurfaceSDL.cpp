@@ -132,14 +132,6 @@ namespace KRE
 			LOG_ERROR("Failed to load image file: '" << filename << "' : " << IMG_GetError());
 			throw ImageLoadError();
 		}
-		auto filter_fn = Surface::getAlphaFilter();
-		if(filter_fn) {
-			handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](uint32_t& r, uint32_t& g, uint32_t& b, uint32_t& a) {
-				if(filter_fn(r, g, b)) {
-					a = 0;
-				}
-			});	
-		}
 		auto pf = std::make_shared<SDLPixelFormat>(surface_->format->format);
 		setPixelFormat(PixelFormatPtr(pf));
 	}
@@ -181,8 +173,8 @@ namespace KRE
 		uint32_t amask, 
 		const void* pixels)
 	{
-		auto s = std::make_shared<SurfaceSDL>(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
-		return SurfacePtr(s);
+		auto s = std::make_shared<SurfaceSDL>(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);		
+		return s->runGlobalAlphaFilter();
 	}
 
 	SurfacePtr SurfaceSDL::createFromMask(int width, 
@@ -203,6 +195,19 @@ namespace KRE
 	{
 		auto s = std::make_shared<SurfaceSDL>(width, height, fmt);
 		return SurfacePtr(s);
+	}
+
+	SurfacePtr SurfaceSDL::runGlobalAlphaFilter()
+	{
+		auto filter_fn = Surface::getAlphaFilter();
+		if(filter_fn && !(getFlags() & SurfaceFlags::NO_ALPHA_FILTER)) {
+			return handleConvert(PixelFormat::PF::PIXELFORMAT_ARGB8888, [&filter_fn](int& r, int& g, int& b, int& a) {
+				if(filter_fn(r, g, b)) {
+					a = 0;
+				}
+			});	
+		}
+		return shared_from_this();
 	}
 
 	const void* SurfaceSDL::pixels() const
@@ -292,10 +297,14 @@ namespace KRE
 		setPixelFormat(PixelFormatPtr(new SDLPixelFormat(surface_->format->format)));
 	}
 
-	void SurfaceSDL::writePixels(const void* pixels) 
+	void SurfaceSDL::writePixels(const void* pixels, int size) 
 	{
-		SurfaceLock lock(SurfacePtr(this));
-		memcpy(surface_->pixels, pixels, rowPitch() * width());
+		ASSERT_LOG(surface_->pixels != nullptr, "Internal surface had no allocated pixel data.");
+		ASSERT_LOG(surface_->pitch * surface_->h == size, 
+			"Size of the surface didn't match the passed-in size. " << (surface_->pitch * surface_->h) << " != " << size);
+		SDL_LockSurface(surface_);
+		memcpy(surface_->pixels, pixels, size);
+		SDL_UnlockSurface(surface_);
 	}
 
 	void SurfaceSDL::setBlendMode(Surface::BlendMode bm) 
@@ -559,9 +568,14 @@ namespace KRE
 		return Color(SDL_MapRGBA(pf_, static_cast<uint8_t>(r*255.0f), static_cast<uint8_t>(g*255.0f), static_cast<uint8_t>(b*255.0f), static_cast<uint8_t>(a*255.0f)));
 	}
 
-	void SDLPixelFormat::getRGBA(uint32_t pix, uint8_t& r, uint8_t& g, uint8_t& b, uint8_t& a)
+	void SDLPixelFormat::getRGBA(uint32_t pix, int& r, int& g, int& b, int& a)
 	{
-		SDL_GetRGBA(pix, pf_, &r, &g, &b, &a);
+		Uint8 red, green, blue, alpha;
+		SDL_GetRGBA(pix, pf_, &red, &green, &blue, &alpha);
+		r = red;
+		g = green;
+		b = blue;
+		a = alpha;
 	}
 
 	PixelFormat::PF SDLPixelFormat::getFormat() const
@@ -606,7 +620,7 @@ namespace KRE
 		return PF::PIXELFORMAT_UNKNOWN;
 	}
 
-	SurfacePtr SurfaceSDL::createFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceConvertFn fn)
+	SurfacePtr SurfaceSDL::createFromFile(const std::string& filename, PixelFormat::PF fmt, SurfaceFlags flags, SurfaceConvertFn fn)
 	{
 		auto filter = Surface::getFileFilter(FileFilterType::LOAD);
 		auto s = IMG_Load(filter(filename).c_str());
@@ -615,14 +629,15 @@ namespace KRE
 			throw ImageLoadError();
 		}
 		auto surf = std::make_shared<SurfaceSDL>(s);
+		surf->setFlags(flags);
 		// format means don't convert the surface from the loaded format.
 		if(fmt != PixelFormat::PF::PIXELFORMAT_UNKNOWN) {
-			return surf->convert(fmt, fn);
+			return surf->convert(fmt, fn)->runGlobalAlphaFilter();
 		}
-		return SurfacePtr(surf);
+		return surf->runGlobalAlphaFilter();
 	}
 
-	std::tuple<int,int> SDLPixelFormat::extractRGBA(const void* pixels, int ndx, uint32_t& red, uint32_t& green, uint32_t& blue, uint32_t& alpha)
+	std::tuple<int,int> SDLPixelFormat::extractRGBA(const void* pixels, int ndx, int& red, int& green, int& blue, int& alpha)
 	{
 		auto fmt = getFormat();
 		int pixel_shift_return = bytesPerPixel();
@@ -743,13 +758,13 @@ namespace KRE
 					red = (*px) & getRedMask() >> getRedShift();
 				}
 				if(hasGreenChannel()) {
-					green = (*px) & getGreenMask() >> getGreenShift();
+					green = ((*px) & getGreenMask()) >> getGreenShift();
 				}
 				if(hasBlueChannel()) {
-					blue = (*px) & getBlueMask() >> getBlueShift();
+					blue = ((*px) & getBlueMask()) >> getBlueShift();
 				}
 				if(hasAlphaChannel()) {
-					alpha = (*px) & getAlphaMask() >> getAlphaShift();
+					alpha = ((*px) & getAlphaMask()) >> getAlphaShift();
 				}
 				break;
 			}
@@ -765,7 +780,7 @@ namespace KRE
 		return std::make_tuple(pixel_shift_return, ndx);
 	}
 
-	void SDLPixelFormat::encodeRGBA(void* pixels, uint32_t red, uint32_t green, uint32_t blue, uint32_t alpha)
+	void SDLPixelFormat::encodeRGBA(void* pixels, int red, int green, int blue, int alpha)
 	{
 		auto fmt = getFormat();
 		switch(fmt) {
@@ -841,35 +856,29 @@ namespace KRE
 			return SurfacePtr(surface);
 		}
 
-		SurfaceLock lock(SurfacePtr(this));
-		uint32_t red;
-		uint32_t green;
-		uint32_t blue;
-		uint32_t alpha;
-
 		// Create a destination surface
-		auto dst = new SurfaceSDL(width(), height(), fmt);
-		size_t dst_size = dst->rowPitch() * dst->height();
+		ASSERT_LOG(PixelFormat::isIndexedFormat(fmt) == false, "Indexed format can't be handled right now for conversion.");
+		auto dst = std::make_shared<SurfaceSDL>(width(), height(), fmt);
+		int dst_size = dst->rowPitch() * dst->height();
 		void* dst_pixels = new uint8_t[dst_size];
 
-		for(size_t h = 0; h != height(); ++h) {
-			int offs = 0;
-			int ndx = 0;
-			int dst_offs = 0;
-			uint8_t* pixel_ptr = static_cast<uint8_t*>(surface_->pixels) + h * rowPitch();
-			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + h * rowPitch();
-			while(offs < width()) {
-				auto ret = getPixelFormat()->extractRGBA(pixel_ptr + offs, ndx, red, green, blue, alpha);
-				convert(red, green, blue, alpha);
-				dst->getPixelFormat()->encodeRGBA(dst_pixel_ptr + dst_offs, red, green, blue, alpha);
-				offs += std::get<0>(ret);
-				ndx = std::get<1>(ret);				
-				dst_offs += dst->getPixelFormat()->bytesPerPixel();
-			}
+		int dst_bpp = dst->getPixelFormat()->bytesPerPixel();
+		//int pixels_modified = 0;
+		for(auto col : *this) {
+			uint8_t* dst_pixel_ptr = static_cast<uint8_t*>(dst_pixels) + col.y * dst->rowPitch() + col.x * dst_bpp;
+			//int r = col.red, g = col.green, b = col.blue, a = col.alpha;
+			convert(col.red, col.green, col.blue, col.alpha);
+			//if(r != col.red || g != col.green || b != col.blue || a != col.alpha) {
+			//	++pixels_modified;
+			//}
+			dst->getPixelFormat()->encodeRGBA(dst_pixel_ptr, col.red, col.green, col.blue, col.alpha);
 		}
-		dst->writePixels(dst_pixels);
+		//if(pixels_modified) {
+		//	LOG_DEBUG("handleConvert: " << pixels_modified << " pixels changed.");
+		//}
+		dst->writePixels(dst_pixels, dst_size);
 		delete[] static_cast<uint8_t*>(dst_pixels);
-		return SurfacePtr(dst);
+		return dst;
 	}
 
 	void SurfaceSDL::savePng(const std::string& filename)

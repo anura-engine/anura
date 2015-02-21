@@ -297,21 +297,9 @@ namespace KRE
 			alpha_map_[n].resize(npixels);
 			std::fill(alpha_map_[n].begin(), alpha_map_[n].end(), false);
 
-			// surfaces with zero for the alpha mask have no alpha channel
 			if(s && s->getPixelFormat()->hasAlphaChannel()) {
-				auto fmt = s->getPixelFormat();
-				const uint8_t* pixels = reinterpret_cast<const uint8_t*>(s->pixels());
-				for(int y = 0; y != surface_height_; ++y) {
-					int offs = 0;
-					int ndx = 0;
-					const uint8_t* pixel_ptr = pixels + y * s->rowPitch();
-					uint32_t red, green, blue, alpha;
-					while(offs < surface_width_) {
-						auto ret = s->getPixelFormat()->extractRGBA(pixel_ptr + offs, ndx, red, green, blue, alpha);
-						alpha_map_[n][offs+y*width_] = alpha == 0;
-						offs += std::get<0>(ret);
-						ndx = std::get<1>(ret);
-					}
+				for(auto col : *s) {
+					alpha_map_[n][col.x+col.y*width_] = col.alpha == 0;
 				}
 			}
 			++n;

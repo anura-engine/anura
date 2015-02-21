@@ -46,6 +46,7 @@ namespace KRE
 	}
 
 	Surface::Surface()
+		: flags_(SurfaceFlags::NONE)
 	{
 	}
 
@@ -101,20 +102,20 @@ namespace KRE
 		get_surface_creator().erase(it);
 	}
 
-	SurfacePtr Surface::create(const std::string& filename, bool no_cache, PixelFormat::PF fmt, SurfaceConvertFn convert)
+	SurfacePtr Surface::create(const std::string& filename, SurfaceFlags flags, PixelFormat::PF fmt, SurfaceConvertFn convert)
 	{
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to surfaces images from files.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
-		if(!no_cache) {
+		if(flags & SurfaceFlags::NO_CACHE) {
 			auto it = get_surface_cache().find(filename);
 			if(it != get_surface_cache().end()) {
 				return it->second;
 			}
-			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, convert);
+			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
 			get_surface_cache()[filename] = surface;
 			return surface;
 		} 
-		return std::get<0>(create_fn_tuple)(filename, fmt, convert);
+		return std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
 	}
 
 	SurfacePtr Surface::create(int width, 
@@ -199,7 +200,7 @@ namespace KRE
 		for(int y = 0; y < height(); ++y) {
 			for(int x = 0; x < width(); ++x) {
 				const unsigned char* p = pix;
-				uint8_t r, g, b, a;
+				int r, g, b, a;
 				switch(bpp) {
 					case 1: pf_->getRGBA(*p, r, g, b, a); break;
 					case 2: pf_->getRGBA(*reinterpret_cast<const unsigned short*>(p), r, g, b, a); break;
@@ -259,11 +260,102 @@ namespace KRE
 		alpha_filter_fn = nullptr;
 	}
 
+	SurfaceIterator::SurfaceIterator(SurfacePtr surface) 
+		: surface_(surface),
+		  x_(0),
+		  y_(0),
+		  index_(0),
+		  pixels_(nullptr)
+	{
+		pixels_ = reinterpret_cast<const unsigned char*>(surface_->pixels());
+	}
+
+	SurfaceIterator::SurfaceIterator()
+		: surface_(nullptr),
+		  x_(-1),
+		  y_(-1),
+		  index_(0),
+		  pixels_(nullptr)
+	{
+	}
+
+
+	SimpleColor SurfaceIterator::dereference() const 
+	{
+		SurfaceLock lck(surface_);
+		SimpleColor res;
+		int offs = y_ * surface_->rowPitch() + x_ * surface_->getPixelFormat()->bytesPerPixel();
+		std::tie(offs, index_incr_) = surface_->getPixelFormat()->extractRGBA(&pixels_[offs], index_, res.red, res.green, res.blue, res.alpha);
+		res.x = x_;
+		res.y = y_;
+		return res;
+	}
+
+	bool SurfaceIterator::equal(SurfaceIterator const& other) const 
+	{
+		return x_ == other.x_ && y_ == other.y_;
+	}
+
+	void SurfaceIterator::increment() 
+	{
+		if(index_incr_ != 0) {
+			index_ = index_incr_;
+		} else {
+			if(++x_ >= surface_->width()) {
+				if(++y_ >= surface_->height()) {
+					// indicate we reached the end of the surface.
+					y_ = x_ = -1;
+				} else {
+					// reset x to start new row.
+					x_ = 0;
+				}
+			}
+		}
+	}
+
+	void SurfaceIterator::decrement() 
+	{
+		if(--x_ <= 0) {
+			if(--y_ <= 0) {
+				y_ = x_ = 0;
+			} else {
+				x_ = surface_->width() - 1;
+			}
+		}
+	}
+
+	void SurfaceIterator::advance(std::ptrdiff_t n) 
+	{
+		x_ += n;
+		while(x_ >= surface_->width()) {
+			if(++y_ >= surface_->height()) {
+				// indicate we reached the end of the surface.
+				y_ = x_ = -1;
+				break;
+			} else {
+				x_ -= surface_->width();
+			}			
+		}
+	}
+
 	PixelFormat::PixelFormat()
 	{
 	}
 
 	PixelFormat::~PixelFormat()
 	{
+	}
+
+	bool PixelFormat::isIndexedFormat(PixelFormat::PF pf)
+	{
+		switch(pf) {
+		case PixelFormat::PF::PIXELFORMAT_INDEX1LSB:
+		case PixelFormat::PF::PIXELFORMAT_INDEX1MSB:
+		case PixelFormat::PF::PIXELFORMAT_INDEX4LSB:
+		case PixelFormat::PF::PIXELFORMAT_INDEX4MSB:
+			return true;
+		default: break;
+		}
+		return false;
 	}
 }

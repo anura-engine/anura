@@ -23,6 +23,8 @@
 
 #pragma once
 
+#include <boost/iterator/iterator_facade.hpp>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -38,9 +40,15 @@ namespace KRE
 	{
 	};
 
-	typedef std::function<void(uint32_t&,uint32_t&,uint32_t&,uint32_t&)> SurfaceConvertFn;
+	enum class SurfaceFlags {
+		NONE				= 0,
+		NO_CACHE			= 1,
+		NO_ALPHA_FILTER		= 2,
+	};
 
-	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceConvertFn)> SurfaceCreatorFileFn;
+	typedef std::function<void(int&,int&,int&,int&)> SurfaceConvertFn;
+
+	typedef std::function<SurfacePtr(const std::string&, PixelFormat::PF, SurfaceFlags flags, SurfaceConvertFn)> SurfaceCreatorFileFn;
 	typedef std::function<SurfacePtr(int, int, int, int, uint32_t, uint32_t, uint32_t, uint32_t, const void*)> SurfaceCreatorPixelsFn;
 	typedef std::function<SurfacePtr(int, int, int, uint32_t, uint32_t, uint32_t, uint32_t)> SurfaceCreatorMaskFn;
 	typedef std::function<SurfacePtr(int, int, PixelFormat::PF)> SurfaceCreatorFormatFn;
@@ -66,9 +74,61 @@ namespace KRE
 	// pixels to be alpha zero values.
 	typedef std::function<bool(int r, int g, int b)> alpha_filter;
 
-	class Surface
+	class SurfaceLock
 	{
 	public:
+		SurfaceLock(const SurfacePtr& surface);
+		~SurfaceLock();
+	private:
+		SurfacePtr surface_;
+	};
+
+	struct SimpleColor
+	{
+		SimpleColor() : red(0), green(0), blue(0), alpha(0), x(0), y(0) {}
+		SimpleColor(int r, int g, int b, int a=255) : red(r), green(g), blue(b), alpha(a) {}
+		int red, green, blue, alpha;
+		int x, y;
+	};
+
+	class SurfaceIterator;
+
+	class SurfaceIterator : public boost::iterator_facade<SurfaceIterator, SurfacePtr, std::random_access_iterator_tag, SimpleColor>
+	{
+	public:
+		SurfaceIterator();
+		explicit SurfaceIterator(SurfacePtr surface);
+	private:
+		friend class boost::iterator_core_access;
+		
+		SimpleColor dereference() const;
+		bool equal(SurfaceIterator const& other) const;
+		void increment();
+		void decrement();
+		void advance(std::ptrdiff_t n);
+
+		SurfacePtr surface_;
+		int x_;
+		int y_;
+		int index_;
+		mutable int index_incr_;
+		const unsigned char* pixels_;
+	};
+
+	inline bool operator&(SurfaceFlags lhs, SurfaceFlags rhs) {
+		return (static_cast<int>(lhs) & static_cast<int>(rhs)) != 0;
+	}
+
+	inline SurfaceFlags operator|(SurfaceFlags lhs, SurfaceFlags rhs) {
+		return static_cast<SurfaceFlags>(static_cast<int>(lhs) | static_cast<int>(rhs));
+	}
+
+	class Surface : public std::enable_shared_from_this<Surface>
+	{
+	public:
+		typedef SurfaceIterator iterator;
+		typedef const SurfaceIterator const_iterator;
+
 		virtual ~Surface();
 		virtual const void* pixels() const = 0;
 		// This is a potentially dangerous function and significant care must
@@ -78,6 +138,9 @@ namespace KRE
 		virtual int width() const = 0;
 		virtual int height() const = 0;
 		virtual int rowPitch() const = 0;
+
+		iterator begin() { return iterator(shared_from_this()); }
+		iterator end() { return iterator(); }
 
 		virtual void blit(SurfacePtr src, const rect& src_rect) = 0;
 		virtual void blitTo(SurfacePtr src, const rect& src_rect, const rect& dst_rect) = 0;
@@ -90,7 +153,7 @@ namespace KRE
 			uint32_t bmask, 
 			uint32_t amask,
 			const void* pixels) = 0;
-		virtual void writePixels(const void* pixels) = 0;
+		virtual void writePixels(const void* pixels, int size) = 0;
 
 		virtual void fillRect(const rect& dst_rect, const Color& color);
 
@@ -129,7 +192,7 @@ namespace KRE
 			SurfaceCreatorMaskFn mask_fn,
 			SurfaceCreatorFormatFn format_fn);
 		static void unRegisterSurfaceCreator(const std::string& name);
-		static SurfacePtr create(const std::string& filename, bool no_cache=false, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
+		static SurfacePtr create(const std::string& filename, SurfaceFlags flags=SurfaceFlags::NONE, PixelFormat::PF fmt=PixelFormat::PF::PIXELFORMAT_UNKNOWN, SurfaceConvertFn convert=nullptr);
 		static SurfacePtr create(int width, 
 			int height, 
 			int bpp, 
@@ -156,20 +219,16 @@ namespace KRE
 		static void setAlphaFilter(alpha_filter fn);
 		static alpha_filter getAlphaFilter();
 		static void clearAlphaFilter();
+
+		SurfaceFlags getFlags() const { return flags_; }
+		virtual SurfacePtr runGlobalAlphaFilter() = 0;
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);
+		void setFlags(SurfaceFlags flags) { flags_ = flags; }
 	private:
 		virtual SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
+		SurfaceFlags flags_;
 		PixelFormatPtr pf_;
-	};
-
-	class SurfaceLock
-	{
-	public:
-		SurfaceLock(const SurfacePtr& surface);
-		~SurfaceLock();
-	private:
-		SurfacePtr surface_;
 	};
 }
