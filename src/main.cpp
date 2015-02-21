@@ -300,34 +300,20 @@ private:
 };
 
 
-struct simple_color
-{
-	simple_color(int r1, int g1, int b1) : r(r1), g(g1), b(b1) {}
-	uint32_t r, g, b;
-};
 void set_alpha_masks()
 {
 	LOG_DEBUG("SETTING ALPHA MASKS");
 	using namespace KRE;
-	std::vector<simple_color> alpha_colors;
+	std::vector<SimpleColor> alpha_colors;
 
 	auto surf = Surface::create("alpha-colors.png");
-	for(int y = 0; y != surf->height(); ++y) {
-		int ndx = 0;
-		int offs = 0;
-		auto pix = reinterpret_cast<const unsigned char*>(surf->pixels());
-		while(offs < surf->width()) {
-			uint32_t red, green, blue, alpha;
-			auto var = surf->getPixelFormat()->extractRGBA(pix+offs, ndx, red, green, blue, alpha);
-			offs += std::get<0>(var);
-			ndx = std::get<1>(var);
-			alpha_colors.emplace_back(red, green, blue);
-			LOG_DEBUG("Added alpha color: (" << red << "," << green << "," << blue << ")");
-		}
+	for(auto col : *surf) {
+		alpha_colors.emplace_back(col.red, col.green, col.blue);
+		LOG_DEBUG("Added alpha color: (" << col.red << "," << col.green << "," << col.blue << ")");	
 	}
-	Surface::setAlphaFilter([&alpha_colors](int r, int g, int b) {
+	Surface::setAlphaFilter([=](int r, int g, int b) {
 		for(auto& c : alpha_colors) {
-			if(c.r == r && c.g == g && c.b == b) {
+			if(c.red == r && c.green == g && c.blue == b) {
 				return true;
 			}
 		}
