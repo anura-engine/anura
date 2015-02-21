@@ -221,7 +221,7 @@ variant Button::getColorScheme()
 
 	void Button::handleDraw() const
 	{
-		label_->setLoc(x()+width()/2 - label_->width()/2,y()+height()/2 - label_->height()/2);
+		label_->setLoc(width()/2 - label_->width()/2,height()/2 - label_->height()/2);
 
 		const KRE::Color& col = current_button_image_set_ == normal_button_image_set_ 
 			? normal_color_ 
@@ -234,7 +234,7 @@ variant Button::getColorScheme()
 			: (current_button_image_set_ == focus_button_image_set_ ? text_focus_color_ : text_depressed_color_);
 
 		KRE::Canvas::ColorManager cm(text_col);
-		label_->draw();
+		label_->draw(x(),y(),getRotation(),getScale());
 	}
 
 	void Button::handleProcess()
