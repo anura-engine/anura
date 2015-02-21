@@ -100,8 +100,6 @@ void GuiSection::blit(int x, int y, int w, int h) const
 	const int scale = w/area_.w();
 
 	auto canvas = KRE::Canvas::getInstance();
-	canvas->blitTexture(texture_,
-		rect(x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale),
-		0.0f,
-		draw_area_);
+	rect dest(x+x_adjust_*scale, y+y_adjust_*scale, w - x_adjust_*scale - x2_adjust_*scale, h - y_adjust_*scale - y2_adjust_*scale);
+	canvas->blitTexture(texture_, draw_area_, 0.0f, dest);
 }

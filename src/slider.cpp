@@ -76,12 +76,12 @@ namespace gui
 	
 	void Slider::init() const
 	{
-		int slider_y = y() + height()/2 - slider_middle_->height()/2;
-		slider_left_->setLoc(x(), slider_y);
-		slider_middle_->setLoc(x()+slider_left_->width(), slider_y);
+		int slider_y = height()/2 - slider_middle_->height()/2;
+		slider_left_->setLoc(0, slider_y);
+		slider_middle_->setLoc(slider_left_->width(), slider_y);
 		slider_middle_->setDim(width_, slider_middle_->height());
-		slider_right_->setLoc(x()+slider_left_->width()+width_, slider_y);
-		slider_button_->setLoc(x()+slider_left_->width()+static_cast<int>(position_*width_)-slider_button_->width()/2, y());
+		slider_right_->setLoc(slider_left_->width()+width_, slider_y);
+		slider_button_->setLoc(slider_left_->width()+static_cast<int>(position_*width_)-slider_button_->width()/2, 0);
 	}
 
 	bool Slider::inButton(int xloc, int yloc) const
@@ -103,10 +103,10 @@ namespace gui
 		if(hasFocus()) {
 			KRE::Canvas::getInstance()->drawHollowRect(rect(x()-1, y()-1, width()+2, height()+2), KRE::Color(128,128,128,128));
 		}
-		slider_left_->draw();
-		slider_middle_->draw();
-		slider_right_->draw();
-		slider_button_->draw();
+		slider_left_->draw(x(), y(), getRotation(), getScale());
+		slider_middle_->draw(x(), y(), getRotation(), getScale());
+		slider_right_->draw(x(), y(), getRotation(), getScale());
+		slider_button_->draw(x(), y(), getRotation(), getScale());
 	}
 
 	void Slider::changeDelegate(float position)
