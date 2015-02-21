@@ -119,11 +119,11 @@ namespace KRE
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, offsetof(vertex_texcoord, vtx), &vtc[0]);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const void*>(&vtc[0]) + offsetof(vertex_texcoord, vtx));
 		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, offsetof(vertex_texcoord, tc), &vtc[0]);
+		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const void*>(&vtc[0]) + offsetof(vertex_texcoord, tc));
 
-		glDrawArrays(GL_TRIANGLE_STRIP, 0, vtc.size());
+		glDrawArrays(GL_TRIANGLES, 0, vtc.size());
 
 		glDisableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);

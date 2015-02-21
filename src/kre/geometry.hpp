@@ -89,8 +89,20 @@ namespace geometry
 			top_left_ = p1;
 			bottom_right_ = p2;
 		}
-		static Rect FromCoordinates(T x1, T y1, T x2, T y2);
-		static Rect from_coordinates(T x1, T y1, T x2, T y2) {
+
+	    static Rect<T> FromCoordinates(T x1, T y1, T x2, T y2)
+		{
+			if(x1 > x2+1) {
+				std::swap(x1, x2);
+			}
+
+			if(y1 > y2+1) {
+				std::swap(y1, y2);
+			}
+	    return Rect<T>(x1, y1, (x2 - x1) + 1, (y2 - y1) + 1);
+		}
+
+		static Rect<T> from_coordinates(T x1, T y1, T x2, T y2) {
 			return FromCoordinates(x1,y1,x2,y2);
 		}
 
@@ -185,6 +197,19 @@ namespace geometry
 		Point<T> top_left_;
 		Point<T> bottom_right_;
 	};
+
+		template<> inline
+		Rect<float> Rect<float>::FromCoordinates(float x1, float y1, float x2, float y2)
+		{
+			if(x1 > x2) {
+				std::swap(x1, x2);
+			}
+
+			if(y1 > y2) {
+				std::swap(y1, y2);
+			}
+	    return Rect<float>(x1, y1, x2 - x1, y2 - y1);
+		}
 
 	template<typename T> inline
 	bool operator<(const Rect<T>& a, const Rect<T>& b);

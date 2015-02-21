@@ -132,20 +132,6 @@ namespace geometry
 		return Point<T>(p.x/length, p.y/length);
 	}
 
-
-	template<typename T> inline
-	Rect<T> Rect<T>::FromCoordinates(T x1, T y1, T x2, T y2)
-	{
-		if(x1 > x2+1) {
-			std::swap(x1, x2);
-		}
-
-		if(y1 > y2+1) {
-			std::swap(y1, y2);
-		}
-	return Rect(x1, y1, (x2 - x1) + 1, (y2 - y1) + 1);
-	}
-
 	template<typename T> inline
 	Rect<T>::Rect(T x, T y, T w, T h)
 		: top_left_(std::min<T>(x, x + w), std::min<T>(y, y + h)),

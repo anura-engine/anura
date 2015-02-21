@@ -134,18 +134,17 @@ rect GraphicalFont::doDraw(int x, int y, const std::string& text, bool draw_text
 		const rectf& r = it->second.as_type<float>();
 
 		if(draw_text) {
-			const float u1 = r.x()/static_cast<float>(texture_->width());
-			const float v1 = r.y()/static_cast<float>(texture_->height());
-			const float u2 = r.x2()/static_cast<float>(texture_->width());
-			const float v2 = r.y2()/static_cast<float>(texture_->height());
+			const rectf uv = texture_->getNormalisedTextureCoords<float>(it->second);
 
 			const float x = static_cast<float>(xpos & preferences::xypos_draw_mask);
 			const float y = static_cast<float>(ypos & preferences::xypos_draw_mask);
 
-			font_vtxarray.emplace_back(glm::vec2(x,y), glm::vec2(u1,v1));
-			font_vtxarray.emplace_back(glm::vec2(x + (r.w())*size,y), glm::vec2(u2,v1));
-			font_vtxarray.emplace_back(glm::vec2(x + (r.w())*size,y + (r.h())*size), glm::vec2(u2,v2));
-			font_vtxarray.emplace_back(glm::vec2(x,y + (r.h())*size), glm::vec2(u1,v2));
+			font_vtxarray.emplace_back(glm::vec2(x,y), glm::vec2(uv.x1(),uv.y1()));
+			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y), glm::vec2(uv.x2(),uv.y1()));
+			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y + r.h()*size), glm::vec2(uv.x2(),uv.y2()));
+			font_vtxarray.emplace_back(glm::vec2(x + r.w()*size,y + r.h()*size), glm::vec2(uv.x2(),uv.y2()));
+			font_vtxarray.emplace_back(glm::vec2(x,y), glm::vec2(uv.x1(),uv.y1()));
+			font_vtxarray.emplace_back(glm::vec2(x,y + r.h()*size), glm::vec2(uv.x1(),uv.y2()));
 		}
 
 		if(ypos + r.h()*size > y2) {

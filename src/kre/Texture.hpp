@@ -89,7 +89,7 @@ namespace KRE
 		int depth() const { return surfaces_.size(); }
 
 		int surfaceWidth() const { return surface_width_; }
-		int surfacehHeight() const { return surface_height_; }
+		int surfaceHeight() const { return surface_height_; }
 
 		virtual void init() = 0;
 		virtual void bind() = 0;
