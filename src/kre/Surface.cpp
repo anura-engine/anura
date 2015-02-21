@@ -113,6 +113,7 @@ namespace KRE
 			}
 			auto surface = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
 			get_surface_cache()[filename] = surface;
+			surface->init();
 			return surface;
 		} 
 		auto surf = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
@@ -387,11 +388,15 @@ namespace KRE
 
 	bool Surface::isAlpha(unsigned x, unsigned y) const
 	{ 
+		ASSERT_LOG(alpha_map_.size() > 0, "No alpha map found.");
+		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_.size()), "Index exceeds alpha map size.");
 		return alpha_map_[y*width()+x]; 
 	}
 
 	std::vector<bool>::const_iterator Surface::getAlphaRow(int x, int y) const 
 	{ 
+		ASSERT_LOG(alpha_map_.size() > 0, "No alpha map found.");
+		ASSERT_LOG(x + y* width() < static_cast<int>(alpha_map_.size()), "Index exceeds alpha map size.");
 		return alpha_map_.begin() + y*width() + x; 
 	}
 
