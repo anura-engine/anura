@@ -229,7 +229,8 @@ namespace KRE
 		  src_rect_(),
 		  src_rect_norm_(0.0f, 0.0f, 1.0f, 1.0f)
 	{
-		ASSERT_LOG(false, "Write the texture palette code");
+		surfaces_.emplace_back(surf);
+		surfaces_.emplace_back(palette);
 		internalInit();	
 	}
 	
@@ -328,6 +329,12 @@ namespace KRE
 			static_cast<int>(round(r.y() * height_)),
 			static_cast<int>(round(r.x2() * width_)),
 			static_cast<int>(round(r.y2() * height_)));
+	}
+
+	void Texture::addPalette(const SurfacePtr& palette)
+	{
+		surfaces_.emplace_back(palette);
+		handleAddPalette(palette);
 	}
 
 	TexturePtr Texture::createTexture(const variant& node)

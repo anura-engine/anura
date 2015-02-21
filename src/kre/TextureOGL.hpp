@@ -62,6 +62,7 @@ namespace KRE
 	private:
 		void createTexture(const PixelFormat::PF& fmt);
 		void rebuild() override;
+		void handleAddPalette(const SurfacePtr& palette) override;
 
 		// For YUV family textures we need two more texture id's
 		// since we hold them in seperate textures.

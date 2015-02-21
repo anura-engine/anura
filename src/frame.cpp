@@ -386,7 +386,6 @@ void Frame::setPalettes(unsigned int palettes)
 
 	if(palettes == 0) {
 		if(current_palette_ != -1) {
-			auto texture_ = KRE::Texture::createTexture(image_);
 			current_palette_ = -1;
 		}
 		return;
@@ -395,10 +394,11 @@ void Frame::setPalettes(unsigned int palettes)
 	const std::string& str = graphics::get_palette_name(npalette);
 	if(str.empty()) {
 		LOG_WARN("No palette from id: " << npalette);
-		blit_target_.setTexture(KRE::Texture::createTexture(image_));
+		//blit_target_.setTexture(KRE::Texture::createTexture(image_));
 	} else {
-		auto surf = graphics::SurfaceCache::get(str);
-		blit_target_.setTexture(KRE::Texture::createPalettizedTexture(image_, surf));
+		auto surf = graphics::SurfaceCache::get(module::map_file("palette/" + str + ".png"));
+		//blit_target_.setTexture(KRE::Texture::createPalettizedTexture(image_, surf));
+		blit_target_.getTexture()->addPalette(surf);
 		current_palette_ = npalette;
 	}
 }
@@ -833,9 +833,12 @@ void Frame::drawCustom(graphics::AnuraShaderPtr shader, int x, int y, const floa
 
 	auto wnd = KRE::WindowManager::getMainWindow();
 	blit.update(&queue);
-	shader->setDrawArea(rect(x, y, w, h));
-	shader->setSpriteArea(r);
-	shader->setCycle(cycle);
+	if(shader) {
+		//shader->makeActive();
+		shader->setDrawArea(rect(x, y, w, h));
+		shader->setSpriteArea(r);
+		shader->setCycle(cycle);
+	}
 
 	blit.preRender(wnd);
 	wnd->render(&blit);

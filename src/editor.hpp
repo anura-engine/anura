@@ -153,7 +153,6 @@ public:
 		TOOL_ADD_OBJECT, 
 		TOOL_SELECT_OBJECT, 
 		TOOL_EDIT_SEGMENTS, 
-		TOOL_EDIT_VOXELS, 
 		NUM_TOOLS };
 	EDIT_TOOL tool() const;
 	void change_tool(EDIT_TOOL tool);

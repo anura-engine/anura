@@ -118,7 +118,6 @@ namespace KRE
 		texture_ids_.resize(1);
 		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
 		init();
-		ASSERT_LOG(false, "OpenGLTexture -- deal with surfaces with palette surface");
 	}
 
 	OpenGLTexture::~OpenGLTexture()
@@ -205,6 +204,13 @@ namespace KRE
 			glGenerateMipmap(GetGLTextureType(getType()));
 		}
 		glPixelStorei(GL_UNPACK_ALIGNMENT, 4);
+	}
+
+	void OpenGLTexture::handleAddPalette(const SurfacePtr& palette)
+	{
+		texture_ids_.resize(texture_ids_.size() + 1);
+		createTexture(getFrontSurface()->getPixelFormat()->getFormat());
+		//iinit();
 	}
 
 	void OpenGLTexture::createTexture(const PixelFormat::PF& fmt)
