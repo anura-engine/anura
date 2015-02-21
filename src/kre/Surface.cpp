@@ -106,7 +106,7 @@ namespace KRE
 	{
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to surfaces images from files.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
-		if(flags & SurfaceFlags::NO_CACHE) {
+		if(!(flags & SurfaceFlags::NO_CACHE)) {
 			auto it = get_surface_cache().find(filename);
 			if(it != get_surface_cache().end()) {
 				return it->second;
@@ -115,7 +115,9 @@ namespace KRE
 			get_surface_cache()[filename] = surface;
 			return surface;
 		} 
-		return std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
+		auto surf = std::get<0>(create_fn_tuple)(filename, fmt, flags, convert);
+		surf->init();
+		return surf;
 	}
 
 	SurfacePtr Surface::create(int width, 
@@ -131,7 +133,9 @@ namespace KRE
 		// XXX no caching as default?
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixels.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
-		return std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
+		auto surf = std::get<1>(create_fn_tuple)(width, height, bpp, row_pitch, rmask, gmask, bmask, amask, pixels);
+		surf->init();
+		return surf;
 	}
 
 	SurfacePtr Surface::create(int width, 
@@ -145,14 +149,36 @@ namespace KRE
 		// XXX no caching as default?
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from masks.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
-		return std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
+		auto surf = std::get<2>(create_fn_tuple)(width, height, bpp, rmask, gmask, bmask, amask);
+		surf->init();
+		return surf;
 	}
 
 	SurfacePtr Surface::create(int width, int height, PixelFormat::PF fmt)
 	{
 		ASSERT_LOG(get_surface_creator().empty() == false, "No resources registered to create surfaces from pixel format.");
 		auto create_fn_tuple = get_surface_creator().begin()->second;
-		return std::get<3>(create_fn_tuple)(width, height, fmt);
+		auto surf = std::get<3>(create_fn_tuple)(width, height, fmt);
+		surf->init();
+		return surf;
+	}
+
+	void Surface::init()
+	{
+		createAlphaMap();
+	}
+
+	void Surface::createAlphaMap()
+	{
+		const int npixels = width() * height();
+		alpha_map_.resize(npixels);
+		std::fill(alpha_map_.begin(), alpha_map_.end(), false);
+
+		if(getPixelFormat()->hasAlphaChannel()) {
+			for(auto col : *this) {
+				alpha_map_[col.x+col.y*width()] = col.alpha == 0;
+			}
+		}
 	}
 
 	void Surface::clearSurfaceCache()
@@ -358,4 +384,20 @@ namespace KRE
 		}
 		return false;
 	}
+
+	bool Surface::isAlpha(unsigned x, unsigned y) const
+	{ 
+		return alpha_map_[y*width()+x]; 
+	}
+
+	std::vector<bool>::const_iterator Surface::getAlphaRow(int x, int y) const 
+	{ 
+		return alpha_map_.begin() + y*width() + x; 
+	}
+
+	std::vector<bool>::const_iterator Surface::endAlpha() const 
+	{ 
+		return alpha_map_.end(); 
+	}
+
 }

@@ -152,6 +152,11 @@ namespace KRE
 		}
 	}
 
+	void DisplayDeviceOpenGL::clearTextures()
+	{
+		OpenGLTexture::handleClearTextures();
+	}
+
 	void DisplayDeviceOpenGL::clear(ClearFlags clr)
 	{
 		glClear(clr & ClearFlags::COLOR ? GL_COLOR_BUFFER_BIT : 0 

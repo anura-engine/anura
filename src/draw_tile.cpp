@@ -74,7 +74,7 @@ bool is_tile_opaque(const KRE::TexturePtr& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(t->isAlpha(u, v)) {
+			if(t->getFrontSurface()->isAlpha(u, v)) {
 				return false;
 			}
 		}
@@ -144,7 +144,7 @@ rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t->isAlpha(u, v)) {
+			if(!t->getFrontSurface()->isAlpha(u, v)) {
 				top = y;
 				break;
 			}
@@ -155,7 +155,7 @@ rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num)
 		const int v = ypos + y;
 		for(int x = 0; x != BaseTileSize; ++x) {
 			const int u = xpos + x;
-			if(!t->isAlpha(u, v)) {
+			if(!t->getFrontSurface()->isAlpha(u, v)) {
 				bottom = y + 1;
 				break;
 			}
@@ -166,7 +166,7 @@ rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t->isAlpha(u, v)) {
+			if(!t->getFrontSurface()->isAlpha(u, v)) {
 				left = x;
 				break;
 			}
@@ -177,7 +177,7 @@ rect get_tile_non_alpha_area(const KRE::TexturePtr& t, int tile_num)
 		const int u = xpos + x;
 		for(int y = 0; y != BaseTileSize; ++y) {
 			const int v = ypos + y;
-			if(!t->isAlpha(u, v)) {
+			if(!t->getFrontSurface()->isAlpha(u, v)) {
 				right = x + 1;
 				break;
 			}

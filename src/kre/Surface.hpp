@@ -139,6 +139,8 @@ namespace KRE
 		virtual int height() const = 0;
 		virtual int rowPitch() const = 0;
 
+		void init();
+
 		iterator begin() { return iterator(shared_from_this()); }
 		iterator end() { return iterator(); }
 
@@ -222,6 +224,13 @@ namespace KRE
 
 		SurfaceFlags getFlags() const { return flags_; }
 		virtual SurfacePtr runGlobalAlphaFilter() = 0;
+
+		virtual const unsigned char* colorAt(int x, int y) const { return nullptr; }
+		bool isAlpha(unsigned x, unsigned y) const;
+		std::vector<bool>::const_iterator getAlphaRow(int x, int y) const;
+		std::vector<bool>::const_iterator endAlpha() const;
+
+		void createAlphaMap();
 	protected:
 		Surface();
 		void setPixelFormat(PixelFormatPtr pf);
@@ -230,5 +239,6 @@ namespace KRE
 		virtual SurfacePtr handleConvert(PixelFormat::PF fmt, SurfaceConvertFn convert) = 0;
 		SurfaceFlags flags_;
 		PixelFormatPtr pf_;
+		std::vector<bool> alpha_map_;
 	};
 }

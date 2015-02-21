@@ -58,6 +58,7 @@ namespace KRE
 		const unsigned char* colorAt(int x, int y) const override;
 
 		TexturePtr clone() override;
+		static void handleClearTextures();
 	private:
 		void createTexture(const PixelFormat::PF& fmt);
 		void rebuild() override;
@@ -69,7 +70,7 @@ namespace KRE
 		// Still deciding whether to use a vector of shared_ptr<GLuint>
 		// Whether to store the textures in a registry, with ref-counting.
 		// or what we do here.
-		std::shared_ptr<std::vector<GLuint>> texture_id_;
+		std::vector<std::shared_ptr<GLuint>> texture_ids_;
 
 		PixelFormat::PF pixel_format_;
 		// Set for YUV style textures;

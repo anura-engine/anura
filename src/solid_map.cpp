@@ -135,7 +135,7 @@ SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& ar
 	bool found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t->isAlpha(area.x() + x, area.y() + area.h() - 1)) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + x, area.y() + area.h() - 1)) {
 				found_solid = true;
 				break;
 			}
@@ -149,7 +149,7 @@ SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& ar
 	found_solid = false;
 	while(!found_solid && area.h() > 0) {
 		for(int x = 0; x < area.w(); ++x) {
-			if(!t->isAlpha(area.x() + x, area.y())) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + x, area.y())) {
 				found_solid = true;
 				break;
 			}
@@ -163,7 +163,7 @@ SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& ar
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t->isAlpha(area.x(), area.y() + y)) {
+			if(!t->getFrontSurface()->isAlpha(area.x(), area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -177,7 +177,7 @@ SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& ar
 	found_solid = false;
 	while(!found_solid && area.w() > 0) {
 		for(int y = 0; y < area.h(); ++y) {
-			if(!t->isAlpha(area.x() + area.w() - 1, area.y() + y)) {
+			if(!t->getFrontSurface()->isAlpha(area.x() + area.w() - 1, area.y() + y)) {
 				found_solid = true;
 				break;
 			}
@@ -193,15 +193,15 @@ SolidMapPtr SolidMap::createFromTexture(const KRE::TexturePtr& t, const rect& ar
 	solid->solid_.resize(solid->area_.w()*solid->area_.h(), false);
 	for(int y = 0; y < solid->area_.h(); ++y) {
 		for(int x = 0; x < solid->area_.w(); ++x) {
-			bool is_solid = !t->isAlpha(area.x() + x/2, area.y() + y/2);
-			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t->isAlpha(area.x() + x/2, area.y() + y/2 + 1)) {
+			bool is_solid = !t->getFrontSurface()->isAlpha(area.x() + x/2, area.y() + y/2);
+			if(!is_solid && (y&1) && y < solid->area_.h() - 1 && !t->getFrontSurface()->isAlpha(area.x() + x/2, area.y() + y/2 + 1)) {
 				//we are scaling things up by double, so we want to smooth
 				//things out. In the bottom half of an empty source pixel, we
 				//will set it to solid if the pixel below is solid, and the
 				//adjacent horizontal pixel is solid
-				if((x&1) && x < solid->area_.w() - 1 && !t->isAlpha(area.x() + x/2 + 1, area.y() + y/2)) {
+				if((x&1) && x < solid->area_.w() - 1 && !t->getFrontSurface()->isAlpha(area.x() + x/2 + 1, area.y() + y/2)) {
 					is_solid = true;
-				} else if(!(x&1) && x > 0 && !t->isAlpha(area.x() + x/2 - 1, area.y() + y/2)) {
+				} else if(!(x&1) && x > 0 && !t->getFrontSurface()->isAlpha(area.x() + x/2 - 1, area.y() + y/2)) {
 					is_solid = true;
 				}
 			}

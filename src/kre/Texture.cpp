@@ -37,32 +37,6 @@ using std::round;
 
 namespace KRE
 {
-	namespace 
-	{
-		typedef std::set<Texture*> TextureRegistryType;
-		TextureRegistryType& texture_registry()
-		{
-			static TextureRegistryType res;
-			return res;
-		}
-
-		void add_to_texture_registry(Texture* tex) 
-		{
-			LOG_DEBUG("Added texture to registry: 0x" << std::hex << tex);
-			texture_registry().insert(tex);
-		}
-
-		void remove_from_texture_registery(Texture* tex)
-		{
-			LOG_DEBUG("Remove texture from registry: 0x" << std::hex << tex);
-			if(tex != nullptr) {
-				auto it = texture_registry().find(tex);
-				LOG_ERROR("Tried to erase texture from registry that doesn't exist");
-				texture_registry().erase(it);
-			}
-		}
-	}
-
 	Texture::Texture(const variant& node, const std::vector<SurfacePtr>& surfaces)
 		: type_(TextureType::TEXTURE_2D), 
 		  mipmaps_(0), 
@@ -261,13 +235,10 @@ namespace KRE
 	
 	Texture::~Texture()
 	{
-		//remove_from_texture_registery(this);
 	}
 
 	void Texture::internalInit()
 	{
-		//add_to_texture_registry(this);
-
 		for(auto& am : address_mode_) {
 			am = AddressMode::CLAMP;
 		}
@@ -289,21 +260,6 @@ namespace KRE
 		}
 
 		setSourceRect(rect(0, 0, surface_width_, surface_height_));
-
-		const int npixels = width_ * height_;
-		alpha_map_.resize(surfaces_.size());
-		int n = 0;
-		for(auto& s : surfaces_) {
-			alpha_map_[n].resize(npixels);
-			std::fill(alpha_map_[n].begin(), alpha_map_[n].end(), false);
-
-			if(s && s->getPixelFormat()->hasAlphaChannel()) {
-				for(auto col : *s) {
-					alpha_map_[n][col.x+col.y*width_] = col.alpha == 0;
-				}
-			}
-			++n;
-		}
 	}
 
 	void Texture::setAddressModes(Texture::AddressMode u, Texture::AddressMode v, Texture::AddressMode w, const Color& bc)
@@ -342,9 +298,7 @@ namespace KRE
 
 	void Texture::rebuildAll()
 	{
-		for(auto tex : texture_registry()) {
-			tex->rebuild();
-		}
+		ASSERT_LOG(false, "Texture::rebuildAll()");
 	}
 
 	void Texture::setTextureDimensions(int w, int h, int d)
@@ -446,27 +400,9 @@ namespace KRE
 		return DisplayDevice::createTexture2D(surfaces, cache);
 	}
 
-	bool Texture::isAlpha(unsigned x, unsigned y, int n) const
-	{ 
-		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
-		return alpha_map_[n][y*width_+x]; 
-	}
-
-	std::vector<bool>::const_iterator Texture::getAlphaRow(int x, int y, int n) const 
-	{ 
-		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
-		return alpha_map_[n].begin() + y*width_ + x; 
-	}
-
-	std::vector<bool>::const_iterator Texture::endAlpha(int n) const 
-	{ 
-		ASSERT_LOG(n < static_cast<int>(alpha_map_.size()), "Couldn't index into the alpha map for the texture.");
-		return alpha_map_[n].end(); 
-	}
-
 	void Texture::clearTextures()
 	{
-		texture_registry().clear();
+		DisplayDevice::getCurrent()->clearTextures();
 	}
 
 	void Texture::clearCache()

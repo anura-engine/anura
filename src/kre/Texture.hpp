@@ -153,9 +153,6 @@ namespace KRE
 
 		// Can return nullptr if not-implemented, invalid underlying surface.
 		virtual const unsigned char* colorAt(int x, int y) const = 0;
-		bool isAlpha(unsigned x, unsigned y, int n = 0) const;
-		std::vector<bool>::const_iterator getAlphaRow(int x, int y, int n = 0) const;
-		std::vector<bool>::const_iterator endAlpha(int n = 0) const;
 
 		static void clearCache();
 
@@ -195,8 +192,6 @@ namespace KRE
 		Texture();
 		std::vector<SurfacePtr> surfaces_;
 
-		std::vector<std::vector<bool>> alpha_map_;
-		
 		int surface_width_;
 		int surface_height_;
 

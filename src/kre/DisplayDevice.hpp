@@ -117,6 +117,7 @@ namespace KRE
 
 		virtual void render(const Renderable* r) const = 0;
 
+		virtual void clearTextures() = 0;
 		static TexturePtr createTexture(const std::string& filename, 
 			TextureType type=TextureType::TEXTURE_2D, 
 			int mipmap_levels=0);

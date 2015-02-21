@@ -55,6 +55,8 @@ namespace KRE
 		StencilScopePtr createStencilScope(const StencilSettings& settings) override;
 		ScissorPtr getScissor(const rect& r) override;
 
+		void clearTextures() override;
+
 		EffectPtr createEffect(const variant& node) override;
 
 		void loadShadersFromVariant(const variant& node) override;

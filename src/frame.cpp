@@ -90,7 +90,7 @@ void Frame::buildPatterns(variant obj_variant)
 
 		std::vector<KRE::SurfacePtr> surfaces;
 		for(const std::string& fname : files) {
-			surfaces.emplace_back(KRE::Surface::create(dir + "/" + fname, true));
+			surfaces.emplace_back(KRE::Surface::create(dir + "/" + fname));
 
 			ASSERT_LOG(surfaces.back()->width() == surfaces.front()->width() &&
 			           surfaces.back()->height() == surfaces.front()->height(),
@@ -443,7 +443,7 @@ void Frame::buildAlphaFromFrameInfo()
 			ASSERT_LT(area.x(), static_cast<int>(blit_target_.getTexture()->width()));
 			ASSERT_LE(area.x() + area.w(), static_cast<int>(blit_target_.getTexture()->width()));
 			ASSERT_LT(area.y() + y, static_cast<int>(blit_target_.getTexture()->height()));
-			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getAlphaRow(area.x(), area.y() + y);
+			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(area.x(), area.y() + y);
 
 			std::copy(src, src + area.w(), dst);
 			
@@ -487,7 +487,7 @@ void Frame::buildAlpha()
 
 			std::vector<bool>::iterator dst = alpha_.begin() + dst_index;
 
-			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getAlphaRow(xbase, ybase + y);
+			std::vector<bool>::const_iterator src = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + y);
 			std::copy(src, src + img_rect_.w(), dst);
 		}
 
@@ -502,7 +502,7 @@ void Frame::buildAlpha()
 		
 		int top;
 		for(top = 0; top != img_rect_.h(); ++top) {
-			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase, ybase + top);
+			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + top);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -510,7 +510,7 @@ void Frame::buildAlpha()
 
 		int bot;
 		for(bot = img_rect_.h(); bot > 0; --bot) {
-			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase, ybase + bot-1);
+			const std::vector<bool>::const_iterator a = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase, ybase + bot-1);
 			if(std::find(a, a + img_rect_.w(), false) != a + img_rect_.w()) {
 				break;
 			}
@@ -518,7 +518,7 @@ void Frame::buildAlpha()
 
 		int left;
 		for(left = 0; left < img_rect_.w(); ++left) {
-			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase + left, ybase);
+			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase + left, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {
@@ -537,7 +537,7 @@ void Frame::buildAlpha()
 
 		int right;
 		for(right = img_rect_.w(); right > 0; --right) {
-			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getAlphaRow(xbase + right-1, ybase);
+			std::vector<bool>::const_iterator a = blit_target_.getTexture()->getFrontSurface()->getAlphaRow(xbase + right-1, ybase);
 
 			bool has_opaque = false;
 			for(int n = 0; n != img_rect_.h(); ++n) {

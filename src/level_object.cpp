@@ -407,7 +407,7 @@ LevelObject::LevelObject(variant node, const char* id)
 		if(surf != nullptr) {
 			const uint32_t* p = reinterpret_cast<const uint32_t*>(surf->pixels());
 			for(int n = 0; n != surf->width() * surf->height() && n != solid_.size(); ++n) {
-				uint8_t r, g, b, alpha;
+				int r, g, b, alpha;
 				surf->getPixelFormat()->getRGBA(*p++, r, g, b, alpha);
 				if(alpha > 64) {
 					solid_[n] = true;

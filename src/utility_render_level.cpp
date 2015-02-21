@@ -101,7 +101,7 @@ UTILITY(render_level)
 				KRE::DisplayDevice::getCurrent()->readPixels(0, 0, seg_width, seg_height, KRE::ReadFormat::RGB, KRE::AttrFormat::BYTE, data);
 
 				auto s = KRE::Surface::create(seg_width, seg_height, KRE::PixelFormat::PF::PIXELFORMAT_RGB24);
-				s->writePixels(&data[0]);
+				s->writePixels(&data[0], data.size());
 				
 				// XXX double check the logic below for pixel ordering.
 				// If we need a different format we can always change the value of KRE::ReadFormat in the readPixels call
