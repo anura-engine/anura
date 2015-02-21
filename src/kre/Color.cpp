@@ -263,16 +263,16 @@ namespace KRE
 			}
 			if(s.length() == 3) {
 				int r_hex = 0, g_hex = 0, b_hex = 0;
-				if(convert_hex_digit(s[1], &r_hex) && convert_hex_digit(s[2], &g_hex) && convert_hex_digit(s[3], &b_hex)) {
+				if(convert_hex_digit(s[0], &r_hex) && convert_hex_digit(s[1], &g_hex) && convert_hex_digit(s[2], &b_hex)) {
 					*value = Color((r_hex << 4) | r_hex, (g_hex << 4) | g_hex, (b_hex << 4) | b_hex);
 					return true;
 				}
 				return false;
 			}
 			int rh_hex = 0, rl_hex = 0, gh_hex = 0, gl_hex = 0, bh_hex = 0, bl_hex = 0;
-			if(convert_hex_digit(s[1], &rh_hex) && convert_hex_digit(s[2], &rl_hex) 
-				&& convert_hex_digit(s[3], &gh_hex) && convert_hex_digit(s[4], &gl_hex)
-				&& convert_hex_digit(s[5], &bh_hex) && convert_hex_digit(s[6], &bl_hex)) {
+			if(convert_hex_digit(s[0], &rh_hex) && convert_hex_digit(s[1], &rl_hex) 
+				&& convert_hex_digit(s[2], &gh_hex) && convert_hex_digit(s[3], &gl_hex)
+				&& convert_hex_digit(s[4], &bh_hex) && convert_hex_digit(s[5], &bl_hex)) {
 					*value = Color((rh_hex << 4) | rl_hex, (gh_hex << 4) | gl_hex, (bh_hex << 4) | bl_hex);
 					return true;
 			}

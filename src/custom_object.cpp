@@ -1168,8 +1168,8 @@ void CustomObject::draw(int xx, int yy) const
 	}
 	KRE::ColorScope color_scope(current_color);
 
-	const int draw_x = x() - offs_x;
-	const int draw_y = y() - offs_y;
+	const int draw_x = x();// - offs_x;
+	const int draw_y = y();// - offs_y;
 
 	if(type_->isHiddenInGame() && !Level::current().in_editor()) {
 		//pass

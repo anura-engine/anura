@@ -52,7 +52,7 @@ namespace graphics
 			return sys::file_mod_time(fn);
 		}
 
-		const std::string image_path = "images/";
+		const std::string image_path = ""; //"images/";
 	}
 
 	KRE::SurfacePtr SurfaceCache::get(const std::string& key, bool cache_surface, std::string* full_filename)
