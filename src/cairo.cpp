@@ -492,10 +492,6 @@ variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment*
 					extents = new_extents;
 				}
 
-				TextFragment fragment = { xpos, ypos, extents.width, extents.height, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
-				output.back().fragments.push_back(fragment);
-				output.back().fragment_width += extents.width;
-
 				if(svg.empty() == false) {
 					//advance the text position along to account
 					//for the svg icon, wrapping to next line if necessary
@@ -509,8 +505,14 @@ variant layout_text_impl(const TextMarkupFragment* f1, const TextMarkupFragment*
 						output.push_back(LineOfText());
 						output.back().align = align;
 					}
+				}
 
-					xpos += advance;
+				TextFragment fragment = { xpos, ypos, extents.width, extents.height, font, font_size, tag, item.color, std::string(i1, i2), valign, font_extents, svg };
+				output.back().fragments.push_back(fragment);
+				output.back().fragment_width += extents.width;
+
+				if(svg.empty() == false) {
+					xpos += font_extents.height;
 				}
 				
 				svg = "";
