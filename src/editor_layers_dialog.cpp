@@ -58,7 +58,7 @@ namespace editor_dialogs
 
 		for(int layer : all_layers) {
 			const bool hidden = hidden_layers.count(layer) != 0;
-			GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
+			GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
 
 			row_data row = { section, layer, hidden };
 			rows_.push_back(row);
@@ -66,7 +66,7 @@ namespace editor_dialogs
 			g->addCol(WidgetPtr(new Label(formatter() << layer, KRE::Color::colorWhite())));
 		}
 
-		GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "Checkbox-filled" : "Checkbox-empty");
+		GuiSectionWidget* section = new GuiSectionWidget(locked_ ? "checkbox-filled" : "checkbox-empty");
 		g->addCol(WidgetPtr(section));
 		g->addCol(WidgetPtr(new Label("lock", KRE::Color::colorWhite())));
 
@@ -82,7 +82,7 @@ namespace editor_dialogs
 		g.reset(new Grid(2));
 		for(const std::string& classification : all_classifications_) {
 			const bool hidden = editor_.get_level().hidden_object_classifications().count(classification) != 0;
-			GuiSectionWidget* section = new GuiSectionWidget(hidden ? "Checkbox-empty" : "Checkbox-filled");
+			GuiSectionWidget* section = new GuiSectionWidget(hidden ? "checkbox-empty" : "checkbox-filled");
 			g->addCol(WidgetPtr(section));
 			g->addCol(WidgetPtr(new Label(classification, KRE::Color::colorWhite())));
 		}
