@@ -88,14 +88,14 @@ namespace KRE
 				"    gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);\n"
 				"}\n";
 			const char* const simple_fs =
-				//"uniform bool u_discard;\n"
+				"uniform bool u_discard;\n"
 				"uniform vec4 u_color;\n"
 				"void main()\n"
 				"{\n"
 				"    gl_FragColor = u_color;\n"
-				//"    if(u_discard && gl_FragColor[3] == 0.0) {\n"
-				//"        discard;\n"
-				//"    }\n"
+				"    if(u_discard && gl_FragColor[3] == 0.0) {\n"
+				"        discard;\n"
+				"    }\n"
 				"}\n";
 
 			const uniform_mapping simple_uniform_mapping[] =
@@ -111,6 +111,57 @@ namespace KRE
 				{"position", "a_position"},
 				{"", ""},
 			};
+
+			// circle shader definition starts
+			const char* const circle_vs = 
+				"uniform mat4 u_mvp_matrix;\n"
+				"attribute vec2 a_position;\n"
+				"varying vec2 v_position;\n"
+				"void main()\n"
+				"{\n"
+				"	gl_Position = u_mvp_matrix * vec4(a_position, 0.0, 1.0);\n"
+				"	v_position = a_position;\n"
+				"}\n";
+			const char* const circle_fs =
+				"uniform bool u_discard;\n"
+				"uniform vec4 u_color;\n"
+				"uniform float u_outer_radius;\n"
+				"uniform float u_inner_radius;\n"
+				"uniform vec2 u_centre;\n"
+				"uniform vec2 u_screen_dimensions;\n"
+				"varying vec2 v_position;\n"
+				"void main()\n"
+				"{\n"
+				// This adjusts for gl_FragCoord being origin at the bottom-left of the screen.
+				"	vec2 pos = vec2(gl_FragCoord.x, u_screen_dimensions.y - gl_FragCoord.y) - u_centre;\n"
+				"	float dist_squared = dot(pos, pos);\n"
+				"	float r_squared = u_outer_radius*u_outer_radius;\n"
+				"	if(u_inner_radius > 0.0f && dist_squared < u_inner_radius*u_inner_radius) {\n"
+				"		gl_FragColor = mix(vec4(u_color.rgb, 0.0), u_color, smoothstep(u_inner_radius*u_inner_radius-u_inner_radius-0.25, u_inner_radius*u_inner_radius+u_inner_radius-0.25, dist_squared));\n"
+				"	} else if(dist_squared < r_squared) {\n"
+				"		gl_FragColor = mix(u_color, vec4(u_color.rgb, 0.0), smoothstep(r_squared-u_outer_radius+0.25, r_squared+u_outer_radius+0.25, dist_squared));\n"
+				"	} else {\n"
+				"		discard;\n"
+				"	}\n"
+				"}\n";
+
+			const uniform_mapping circle_uniform_mapping[] =
+			{
+				{"mvp_matrix", "u_mvp_matrix"},
+				{"color", "u_color"},
+				{"discard", "u_discard"},
+				{"outer_radius", "u_outer_radius"},
+				{"inner_radius", "u_inner_radius"},
+				{"screen_dimensions", "u_screen_dimensions"},
+				{"centre", "u_centre"},
+				{"", ""},
+			};
+			const attribute_mapping circle_attribue_mapping[] =
+			{
+				{"position", "a_position"},
+				{"", ""},
+			};
+			// circle shader definition ends
 
 			const char* const complex_vs = 
 				"uniform mat4 u_mv_matrix;\n"
@@ -256,6 +307,7 @@ namespace KRE
 				{ "complex", "complex_vs", complex_vs, "complex_fs", complex_fs, complex_uniform_mapping, complex_attribue_mapping },
 				{ "attr_color_shader", "attr_color_vs", attr_color_vs, "attr_color_fs", attr_color_fs, attr_color_uniform_mapping, attr_color_attribue_mapping },
 				{ "vtc_shader", "vtc_vs", vtc_vs, "vtc_fs", vtc_fs, vtc_uniform_mapping, vtc_attribue_mapping },
+				{ "circle", "circle_vs", circle_vs, "circle_fs", circle_fs, circle_uniform_mapping, circle_attribue_mapping },
 			};
 
 			typedef std::map<std::string, ShaderProgramPtr> shader_factory_map;
@@ -442,11 +494,17 @@ namespace KRE
 			auto it = uniforms_.find(attr);
 			if(it == uniforms_.end()) {
 				auto alt_name_it = uniform_alternate_name_map_.find(attr);
-				ASSERT_LOG(alt_name_it != uniform_alternate_name_map_.end(), 
-					"Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
+				if(alt_name_it == uniform_alternate_name_map_.end()) {
+					std::stringstream ss;
+					ss << "Unable to find attribute named: " << attr << " << in shader '" << name_ << "'";
+					throw ShaderUniformError(ss.str().c_str());
+				}
 				it = uniforms_.find(alt_name_it->second);
-				ASSERT_LOG(it != uniforms_.end(), 
-					"Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
+				//ASSERT_LOG(alt_name_it != uniform_alternate_name_map_.end(), 
+				//	"Uniform '" << attr << "' not found in alternate names list and is not a name defined in the shader: " << name_);
+				//it = uniforms_.find(alt_name_it->second);
+				//ASSERT_LOG(it != uniforms_.end(), 
+				//	"Uniform \"" << alt_name_it->second << "\" not found in list, looked up from symbol " << attr << " in shader: " << name_);
 			}
 			return it;
 		}

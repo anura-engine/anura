@@ -119,9 +119,9 @@ namespace KRE
 		// XXX the following line are only temporary, obviously.
 		//shader->SetUniformValue(shader->GetUniformIterator("discard"), 0);
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const void*>(&vtc[0]) + offsetof(vertex_texcoord, vtx));
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, vtx));
 		glEnableVertexAttribArray(shader->getTexcoordAttribute()->second.location);
-		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const void*>(&vtc[0]) + offsetof(vertex_texcoord, tc));
+		glVertexAttribPointer(shader->getTexcoordAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, sizeof(vertex_texcoord), reinterpret_cast<const unsigned char*>(&vtc[0]) + offsetof(vertex_texcoord, tc));
 
 		glDrawArrays(GL_TRIANGLES, 0, vtc.size());
 
@@ -393,73 +393,125 @@ namespace KRE
 		drawSolidCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
 	}
 
-	void CanvasOGL::drawHollowCircle(const point& centre, float radius, const Color& color) const 
+	void CanvasOGL::drawHollowCircle(const point& centre, float outer_radius, float inner_radius, const Color& color) const 
 	{
-		drawHollowCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), radius, color);
+		drawHollowCircle(pointf(static_cast<float>(centre.x), static_cast<float>(centre.y)), outer_radius, inner_radius, color);
 	}
 
 	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const Color& color) const 
 	{
 		glm::mat4 mvp = mvp_ * getModelMatrix();
 
+		rectf vtx(centre.x - radius - 2, centre.y - radius - 2, 2 * radius + 4, 2 * radius + 4);
+		const float vtx_coords[] = {
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x1(), vtx.y2(),
+			vtx.x2(), vtx.y2(),
+		};
+
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("circle");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		static auto radius_it = shader->getUniformIterator("outer_radius");
-		shader->setUniformValue(radius_it, radius);
-		static auto inner_radius_it = shader->getUniformIterator("inner_radius");
-		shader->setUniformValue(inner_radius_it, 0.0f);
+		try {
+			static auto screen_dim = shader->getUniformIterator("screen_dimensions");
+			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(width(), height())));
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto radius_it = shader->getUniformIterator("outer_radius");
+			shader->setUniformValue(radius_it, radius);
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+			shader->setUniformValue(inner_radius_it, 0.0f);
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto centre_it = shader->getUniformIterator("centre");
+			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
+		} catch(ShaderUniformError&) {
+		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, glm::value_ptr(glm::vec2(static_cast<float>(centre.x), static_cast<float>(centre.y))));
-		glDrawArrays(GL_POINTS, 0, 1);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 
 	void CanvasOGL::drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const 
 	{
-		glm::mat4 mvp = mvp_ * glm::translate(glm::mat4(1.0f), glm::vec3(centre.x, centre.y, 0.0f)) * getModelMatrix();
+		glm::mat4 mvp = mvp_ * getModelMatrix();
 
-		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("simple");
+		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("attr_color_shader");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
+		shader->setUniformValue(shader->getColorUniform(), /*getColor().asFloatVector()*/ glm::value_ptr(glm::vec4(1.0f, 1.0f, 1.0f, 1.0f)));
 
 		// XXX figure out a nice way to do this with shaders.
 		std::vector<glm::vec2> varray;
 		varray.reserve(color.size());
-		varray.emplace_back(0.0f, 0.0f);
-		for(double angle = 0; angle < M_PI * 2.0; angle += (M_PI*2.0*4.0)/color.size()) {
-				varray.emplace_back(radius*cos(angle), radius*sin(angle));
+		varray.emplace_back(centre.x, centre.y);
+		// First color co-ordinate is center of the circle
+		for(int n = 0; n != color.size()-2; ++n) {
+			const float angle = static_cast<float>(n) * static_cast<float>(M_PI * 2.0) / static_cast<float>(color.size() - 2);
+			varray.emplace_back(centre.x + radius * std::cos(angle), centre.y + radius * std::sin(angle));
 		}
+		// last co-ordinate is repeated first point on circle.
 		varray.emplace_back(varray[1]);
 
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
 		glEnableVertexAttribArray(shader->getColorAttribute()->second.location);
 		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, &varray[0]);
 		glVertexAttribPointer(shader->getColorAttribute()->second.location, 4, GL_UNSIGNED_BYTE, GL_TRUE, 0, &color[0]);
-		glDrawArrays(GL_TRIANGLE_FAN, 0, 1);
+		glDrawArrays(GL_TRIANGLE_FAN, 0, varray.size());
 		glDisableVertexAttribArray(shader->getColorAttribute()->second.location);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 
 	}
 
-	void CanvasOGL::drawHollowCircle(const pointf& centre, float radius, const Color& color) const 
+	void CanvasOGL::drawHollowCircle(const pointf& centre, float outer_radius, float inner_radius, const Color& color) const 
 	{
 		glm::mat4 mvp = mvp_ * getModelMatrix();
+
+		rectf vtx(centre.x - outer_radius - 2, centre.y - outer_radius - 2, 2 * outer_radius + 4, 2 * outer_radius + 4);
+		const float vtx_coords[] = {
+			vtx.x1(), vtx.y1(),
+			vtx.x2(), vtx.y1(),
+			vtx.x1(), vtx.y2(),
+			vtx.x2(), vtx.y2(),
+		};
 
 		static OpenGL::ShaderProgramPtr shader = OpenGL::ShaderProgram::factory("circle");
 		shader->makeActive();
 		shader->setUniformValue(shader->getMvpUniform(), glm::value_ptr(mvp));
 
-		static auto outer_radius_it = shader->getUniformIterator("outer_radius");
-		shader->setUniformValue(outer_radius_it, radius);
-		static auto inner_radius_it = shader->getUniformIterator("inner_radius");
-		shader->setUniformValue(inner_radius_it, radius-1.0f);	// XXX replace 1.0f with line-width.
+		try {
+			static auto screen_dim = shader->getUniformIterator("screen_dimensions");
+			shader->setUniformValue(screen_dim, glm::value_ptr(glm::vec2(width(), height())));
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto radius_it = shader->getUniformIterator("outer_radius");
+			shader->setUniformValue(radius_it, outer_radius);
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto inner_radius_it = shader->getUniformIterator("inner_radius");
+			shader->setUniformValue(inner_radius_it, inner_radius);
+		} catch(ShaderUniformError&) {
+		}
+		try {
+			static auto centre_it = shader->getUniformIterator("centre");
+			shader->setUniformValue(centre_it, glm::value_ptr(glm::vec2(centre.x, centre.y)));
+		} catch(ShaderUniformError&) {
+		}
 		shader->setUniformValue(shader->getColorUniform(), color.asFloatVector());
 		glEnableVertexAttribArray(shader->getVertexAttribute()->second.location);
-		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, glm::value_ptr(glm::vec2(static_cast<float>(centre.x), static_cast<float>(centre.y))));
-		glDrawArrays(GL_POINTS, 0, 1);
+		glVertexAttribPointer(shader->getVertexAttribute()->second.location, 2, GL_FLOAT, GL_FALSE, 0, vtx_coords);
+		glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
 		glDisableVertexAttribArray(shader->getVertexAttribute()->second.location);
 	}
 

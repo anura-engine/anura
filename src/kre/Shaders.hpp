@@ -24,6 +24,7 @@
 #pragma once
 
 #include <functional>
+#include <exception>
 #include <memory>
 #include <string>
 
@@ -34,6 +35,19 @@
 
 namespace KRE
 {
+	struct ShaderError : public std::runtime_error
+	{
+		ShaderError(const char* what) : std::runtime_error(what) {}
+	};
+	struct ShaderUniformError : public std::runtime_error
+	{
+		ShaderUniformError(const char* what) : std::runtime_error(what) {}
+	};
+	struct ShaderAttributeError : public std::runtime_error
+	{
+		ShaderAttributeError(const char* what) : std::runtime_error(what) {}
+	};
+
 	class ShaderProgram
 	{
 	public:

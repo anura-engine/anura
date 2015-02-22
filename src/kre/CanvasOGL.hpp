@@ -51,12 +51,15 @@ namespace KRE
 		void drawLine(const pointf& p1, const pointf& p2, const Color& color) const override;
 		// Draw filled polygon (i.e. triangle fan) using given color	
 		void drawPolygon(const std::vector<glm::vec2>& points, const Color& color) const override;
+
 		void drawSolidCircle(const point& centre, float radius, const Color& color) const override;
 		void drawSolidCircle(const point& centre, float radius, const std::vector<glm::u8vec4>& color) const override;
-		void drawHollowCircle(const point& centre, float radius, const Color& color) const override;
 		void drawSolidCircle(const pointf& centre, float radius, const Color& color) const override;
 		void drawSolidCircle(const pointf& centre, float radius, const std::vector<glm::u8vec4>& color) const override;
-		void drawHollowCircle(const pointf& centre, float radius, const Color& color) const override;
+
+		void drawHollowCircle(const point& centre, float outer_radius, float inner_radius, const Color& color) const override;
+		void drawHollowCircle(const pointf& centre, float outer_radius, float inner_radius, const Color& color) const override;
+
 		void drawPoints(const std::vector<glm::vec2>& points, float radius, const Color& color=Color::colorWhite()) const override;
 
 		static CanvasPtr getInstance();
