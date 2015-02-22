@@ -45,23 +45,33 @@ namespace KRE
 			SDL_Color color = {c.r_int(), c.g_int(), c.b_int(), c.a_int()};
 			return color;
 		}
+
+		void font_init() {
+			static bool initialised = false;
+			if(!initialised) {
+				initialised = true;
+	
+				int res = TTF_Init();
+				ASSERT_LOG(res != -1, "SDL_ttf initialisation failed: " << TTF_GetError());
+
+				SDL_version compile_version;
+				const SDL_version *link_version = TTF_Linked_Version();
+				SDL_TTF_VERSION(&compile_version);
+				LOG_INFO("Compiled with SDL_ttf version: " << static_cast<int>(compile_version.major) << "." << static_cast<int>(compile_version.minor) << "." << static_cast<int>(compile_version.patch));
+				LOG_INFO("Linked   with SDL_ttf version: " << static_cast<int>(link_version->major) << "." << static_cast<int>(link_version->minor) << "." << static_cast<int>(link_version->patch));
+
+				atexit(TTF_Quit);
+			}
+		}
 	}
 
 	FontSDL::FontSDL()
 	{
-		int res = TTF_Init();
-		ASSERT_LOG(res != -1, "SDL_ttf initialisation failed: " << TTF_GetError());
-
-		SDL_version compile_version;
-		const SDL_version *link_version = TTF_Linked_Version();
-		SDL_TTF_VERSION(&compile_version);
-		LOG_INFO("Compiled with SDL_ttf version: " << static_cast<int>(compile_version.major) << "." << static_cast<int>(compile_version.minor) << "." << static_cast<int>(compile_version.patch));
-		LOG_INFO("Linked   with SDL_ttf version: " << static_cast<int>(link_version->major) << "." << static_cast<int>(link_version->minor) << "." << static_cast<int>(link_version->patch));
+		font_init();
 	}
 
 	FontSDL::~FontSDL()
 	{
-		TTF_Quit();
 	}
 
 	TTF_Font* FontSDL::getFont(int size, const std::string& font_name) const
@@ -96,8 +106,11 @@ namespace KRE
 	{
 		TTF_Font* font = getFont(size, font_name);
 		SurfaceSDL* surf;
-		if(std::find(text.begin(), text.end(), '\n') == text.end()) {
-			surf = new SurfaceSDL(TTF_RenderUTF8_Blended(font, text.c_str(), to_SDL_Color(color)));
+		if(text.find('\n') == std::string::npos) {
+			auto sdl_surf = TTF_RenderUTF8_Blended(font, "test"/*text.c_str()*/, to_SDL_Color(color));
+			ASSERT_LOG(sdl_surf != nullptr, "Rendered surface was empty: " << SDL_GetError());
+			ASSERT_LOG(sdl_surf->w != 0 && sdl_surf->h != 0, "Created surface had 0 width or height. " << sdl_surf->w << "," << sdl_surf->h);
+			surf = new SurfaceSDL(sdl_surf);
 		} else {
 			std::vector<SDL_Surface*> parts;
 			std::vector<std::string> lines = Util::split(text, "\n");

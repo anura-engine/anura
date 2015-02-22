@@ -294,7 +294,7 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		//to transform the iPhone's display, which is fine normally, but
 		//here we have to accomodate the iPhone being "on its side"
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm1(rect(dist_from_bottom/scissor_scale, 0, (graphics::screen_height() - dist_from_bottom)/scissor_scale, graphics::screen_width()/scissor_scale));
+		KRE::Scissor::Manager sm1(rect(dist_from_bottom/scissor_scale, 0, (wnd->height() - dist_from_bottom)/scissor_scale, wnd->width()/scissor_scale));
 #else
 		KRE::Scissor::Manager sm1(rect(0, dist_from_bottom, preferences::actual_screen_width(), preferences::actual_screen_width()*(1-dist_from_bottom/600)));
 #endif
@@ -302,7 +302,7 @@ void Background::draw(int x, int y, const rect& area, const std::vector<rect>& o
 		wnd->clear(KRE::ClearFlags::COLOR);
 
 #if TARGET_OS_IPHONE || TARGET_IPHONE_SIMULATOR
-		KRE::Scissor::Manager sm2(rect(0, 0, dist_from_bottom/scissor_scale, graphics::screen_width()/scissor_scale));
+		KRE::Scissor::Manager sm2(rect(0, 0, dist_from_bottom/scissor_scale, wnd->width()/scissor_scale));
 #else
 		KRE::Scissor::Manager sm2(rect(0, 0, preferences::actual_screen_width(), dist_from_bottom));
 #endif
@@ -406,7 +406,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		}
 
 		if(bg.y2 == 0) {
-			bg.y2 = bg.texture->height();
+			bg.y2 = bg.texture->surfaceHeight();
 		}
 	}
 
@@ -414,8 +414,8 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 		return;
 	}
 
-	ASSERT_GT(bg.texture->height(), 0);
-	ASSERT_GT(bg.texture->width(), 0);
+	ASSERT_GT(bg.texture->surfaceHeight(), 0);
+	ASSERT_GT(bg.texture->surfaceWidth(), 0);
 
 	float v1 = bg.texture->getNormalisedTextureCoordH<float>(bg.y1);
 	float v2 = bg.texture->getNormalisedTextureCoordH<float>(bg.y2);
@@ -494,7 +494,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 
 	const float xscale = static_cast<float>(bg.xscale) / 100.0f;
 	float xpos = (-static_cast<float>(bg.xspeed)*static_cast<float>(cycle)/1000.0f + int(static_cast<float>(x + bg.xoffset)*xscale))
-		/ static_cast<float>((bg.texture->width()+bg.xpad)*ScaleImage) + static_cast<float>(area.x() - x)/static_cast<float>((bg.texture->width()+bg.xpad)*ScaleImage);
+		/ static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage) + static_cast<float>(area.x() - x)/static_cast<float>((bg.texture->surfaceWidth()+bg.xpad)*ScaleImage);
 
 	//clamp xpos into the [0.0, 1.0] range
 	if(xpos > 0) {
@@ -505,7 +505,7 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	}
 
 	if(bg.xpad > 0) {
-		xpos *= static_cast<float>(bg.texture->width() + bg.xpad) / static_cast<float>(bg.texture->width());
+		xpos *= static_cast<float>(bg.texture->surfaceWidth() + bg.xpad) / static_cast<float>(bg.texture->surfaceWidth());
 	}
 
 	x = area.x();
@@ -514,11 +514,11 @@ void Background::drawLayer(int x, int y, const rect& area, float rotation, const
 	std::vector<KRE::short_vertex_texcoord> q;
 
 	while(screen_width > 0) {
-		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->width() * ScaleImage);
+		const int texture_blit_width = static_cast<int>((1.0f - xpos) * bg.texture->surfaceWidth() * ScaleImage);
 		const int blit_width = std::min(texture_blit_width, screen_width);
 
 		if(blit_width > 0) {
-			const float xpos2 = xpos + static_cast<float>(blit_width) / (static_cast<float>(bg.texture->width()) * 2.0f);
+			const float xpos2 = xpos + static_cast<float>(blit_width) / (static_cast<float>(bg.texture->surfaceWidth()) * 2.0f);
 
 			const short x1 = x;
 			const short x2 = x1 + blit_width;

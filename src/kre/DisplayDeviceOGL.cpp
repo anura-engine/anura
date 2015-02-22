@@ -255,6 +255,7 @@ namespace KRE
 		// Need to figure the interaction with shaders.
 		/// XXX Need to create a mapping between attributes and the index value below.
 		for(auto as : r->getAttributeSet()) {
+			ASSERT_LOG(as->getCount() > 0, "No (or negative) number of vertices in attribute set. " << as->getCount());
 			GLenum draw_mode = convert_drawing_mode(as->getDrawMode());
 
 			// apply blend, if any, from attribute set.

@@ -870,7 +870,6 @@ int main(int argcount, char* argvec[])
 		variant gui_node = json::parse_from_file(preferences::load_compiled() ? "data/compiled/gui.cfg" : "data/gui.cfg");
 		GuiSection::init(gui_node);
 		loader.drawAndIncrement(_("Initializing GUI"));
-		LOG_DEBUG("gui_node " << gui_node.to_debug_string());
 		FramedGuiElement::init(gui_node);
 
 		sound::init_music(json::parse_from_file("data/music.cfg"));

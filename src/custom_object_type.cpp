@@ -694,7 +694,6 @@ const std::string* CustomObjectType::getObjectPath(const std::string& id)
 
 ConstCustomObjectTypePtr CustomObjectType::get(const std::string& id)
 {
-	profile::manager pman("CustomObjectType::get");
 	std::string::const_iterator dot_itor = std::find(id.begin(), id.end(), '.');
 	if(dot_itor != id.end()) {
 		ConstCustomObjectTypePtr parent = get(std::string(id.begin(), dot_itor));
